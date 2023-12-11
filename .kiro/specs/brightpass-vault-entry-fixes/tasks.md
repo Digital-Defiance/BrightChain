@@ -1,0 +1,115 @@
+# Implementation Plan
+
+- [x] 1. Write bug condition exploration tests (BEFORE implementing fix)
+  - **Property 1: Bug Condition** — CreateVaultDialog Auto-Unlock & VaultDetailView Add Entry Navigation
+  - **CRITICAL**: This test MUST FAIL on unfixed code — failure confirms the bugs exist
+  - **DO NOT attempt to fix the test or the code when it fails**
+  - **NOTE**: This test encodes the expected behavior — it will validate the fix when it passes after implementation
+  - **GOAL**: Surface counterexamples that demonstrate both bugs exist on the current code
+  - **Scoped PBT Approach**: Scope the property to the concrete failing cases for each bug
+  - **Test file**: `brightpass-react-components/src/lib/components/createVaultDialog.bugfix.property.spec.tsx`
+  - **Bug 1 — CreateVaultDialog does not auto-unlock after creation**:
+    - Render `CreateVaultDialog` with mocked `BrightPassProvider` (`unlockVault`) and `useNavigate`
+    - Mock `brightPassApi.createVault()` to return `VaultMetadata { id: "test-vault-id", name: "Test Vault", ... }`
+    - Submit the form with valid vault name and master password
+    - Assert `unlockVault` was called with `("test-vault-id", masterPassword)` — will FAIL (never called on unfixed code)
+    - Assert `navigate` was called with `/brightpass/vault/test-vault-id` — will FAIL (never called on unfixed code)
+    - From `isBugCondition`: `input.action == "SUBMIT_CREATE_VAULT_FORM" AND createVaultApiCall succeeds`
+  - **Bug 2a — VaultDetailView "Add Entry" navigates to wrong URL (plural)**:
+    - Render `VaultDetailView` with an unlocked vault in context (vaultId = `"abc-123"`)
+    - Click the "Add Entry" button
+    - Assert `navigate` was called with `/brightpass/vault/abc-123/entries/new` (singular) — will FAIL (unfixed code uses plural `/vaults/`)
+    - From `isBugCondition`: `input.action == "CLICK_ADD_ENTRY" AND navigationTarget contains "/vaults/"` (plural)
+  - **Bug 2b — No route exists for entries/new**:
+    - Render `BrightPassRoutes` and navigate to `/brightpass/vault/test-id/entries/new`
+    - Assert that a component renders (not blank) — will FAIL (no route defined on unfixed code)
+    - From `isBugCondition`: `input.action == "NAVIGATE" AND url MATCHES "/brightpass/vault/{id}/entries/new" AND NOT routeExists(url)`
+  - Run tests on UNFIXED code
+  - **EXPECTED OUTCOME**: Tests FAIL (this is correct — it proves the bugs exist)
+  - Document counterexamples found to understand root cause
+  - Mark task complete when tests are written, run, and failure is documented
+  - _Requirements: 1.1, 1.2, 1.3_
+
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
+  - **Property 2: Preservation** — Unchanged Dialog, Routing, and Vault Flows
+  - **IMPORTANT**: Follow observation-first methodology — observe behavior on UNFIXED code first, then write tests
+  - **Test file**: `brightpass-react-components/src/lib/components/createVaultDialog.preservation.property.spec.tsx`
+  - **Preservation A — Dialog cancel flow (Req 3.1)**:
+    - Observe: opening and cancelling `CreateVaultDialog` resets form, calls `onClose()`, does NOT call `createVault`, `unlockVault`, or `navigate`
+    - Write property-based test: for all arbitrary vault name strings, cancelling the dialog always resets form and closes without side effects
+    - Verify test passes on UNFIXED code
+  - **Preservation B — Dialog API error flow (Req 3.2)**:
+    - Observe: when `createVault()` rejects, the dialog shows the generic error message (`Error_Generic`) and remains open
+    - Write property-based test: for all arbitrary error messages/codes, a failed `createVault()` always displays the error alert and does NOT call `unlockVault` or `navigate`
+    - Verify test passes on UNFIXED code
+  - **Preservation C — Existing route rendering (Req 3.3, 3.4, 3.5)**:
+    - Observe: `/brightpass/vault/:vaultId` renders `VaultDetailView`, `/brightpass/vault/:vaultId/audit` renders `AuditLogView`, `/brightpass/tools/generator` renders `PasswordGeneratorPage`
+    - Write property-based test: for all generated vaultId strings, existing routes continue to match and render the correct component
+    - Verify tests pass on UNFIXED code
+  - **Preservation D — Lock vault flow (Req 3.6)**:
+    - Observe: clicking "Lock Vault" in `VaultDetailView` calls `lockVault()` and navigates to `/brightpass`
+    - Write test asserting this behavior is preserved
+    - Verify test passes on UNFIXED code
+  - **Preservation E — MasterPasswordPrompt unlock flow (Req 3.7)**:
+    - Observe: submitting master password in `MasterPasswordPrompt` calls `unlockVault(vaultId, password)` and navigates to `/brightpass/vault/{vaultId}`
+    - Write test asserting this behavior is preserved
+    - Verify test passes on UNFIXED code
+  - Run all preservation tests on UNFIXED code
+  - **EXPECTED OUTCOME**: Tests PASS (this confirms baseline behavior to preserve)
+  - Mark task complete when tests are written, run, and passing on unfixed code
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7_
+
+- [x] 3. Fix for CreateVaultDialog auto-unlock and VaultDetailView entry navigation
+
+  - [x] 3.1 Implement the fix in CreateVaultDialog.tsx
+    - Add `import { useNavigate } from 'react-router-dom'`
+    - Add `import { useBrightPass } from '../context/BrightPassProvider'`
+    - Add `const navigate = useNavigate()` and `const { unlockVault } = useBrightPass()` hooks inside the component
+    - Capture return value: change `await brightPassApi.createVault(values.name, values.masterPassword)` to `const vaultMetadata = await brightPassApi.createVault(values.name, values.masterPassword)`
+    - After successful creation, call `await unlockVault(vaultMetadata.id, values.masterPassword)`
+    - After unlock, call `navigate(\`/brightpass/vault/${vaultMetadata.id}\`)`
+    - Retain existing cleanup: keep `formik.resetForm()`, `onVaultCreated()`, and `onClose()` calls
+    - Follow the pattern established by `MasterPasswordPrompt.handleSubmit`
+    - _Bug_Condition: isBugCondition(input) where input.action == "SUBMIT_CREATE_VAULT_FORM" AND createVaultApiCall succeeds_
+    - _Expected_Behavior: capture vault ID, call unlockVault(id, masterPassword), navigate to /brightpass/vault/{id}_
+    - _Preservation: cancel flow, error flow unchanged per Req 3.1, 3.2_
+    - _Requirements: 2.1_
+
+  - [x] 3.2 Implement the fix in VaultDetailView.tsx
+    - Change "Add Entry" button `onClick` from `navigate(\`/brightpass/vaults/${vaultId}/entries/new\`)` to `navigate(\`/brightpass/vault/${vaultId}/entries/new\`)` (singular `vault`)
+    - _Bug_Condition: isBugCondition(input) where input.action == "CLICK_ADD_ENTRY" AND navigationTarget contains "/vaults/" (plural)_
+    - _Expected_Behavior: navigate to /brightpass/vault/{vaultId}/entries/new (singular)_
+    - _Preservation: all other VaultDetailView behaviors unchanged per Req 3.3, 3.4, 3.6_
+    - _Requirements: 2.2_
+
+  - [x] 3.3 Implement the fix in brightpass-routes.tsx
+    - Add a new `<Route path="vault/:vaultId/entries/new" element={<EntryCreatePlaceholder />} />` inside the `<Route element={<BrightPassLayout />}>` block
+    - Place it BEFORE the existing `vault/:vaultId` route to ensure specificity (more specific routes first)
+    - Create a simple `EntryCreatePlaceholder` component inline (or import if an entry creation component exists) that renders a placeholder page
+    - Update the route comment header to include the new route
+    - _Bug_Condition: isBugCondition(input) where url MATCHES "/brightpass/vault/{id}/entries/new" AND NOT routeExists(url)_
+    - _Expected_Behavior: route matches and renders entry creation view_
+    - _Preservation: all existing routes unchanged per Req 3.3, 3.4, 3.5_
+    - _Requirements: 2.3_
+
+  - [x] 3.4 Verify bug condition exploration test now passes
+    - **Property 1: Expected Behavior** — CreateVaultDialog Auto-Unlock & VaultDetailView Add Entry Navigation
+    - **IMPORTANT**: Re-run the SAME test from task 1 — do NOT write a new test
+    - The test from task 1 encodes the expected behavior
+    - When this test passes, it confirms the expected behavior is satisfied
+    - Run bug condition exploration test from step 1
+    - **EXPECTED OUTCOME**: Test PASSES (confirms bugs are fixed)
+    - _Requirements: 2.1, 2.2, 2.3_
+
+  - [x] 3.5 Verify preservation tests still pass
+    - **Property 2: Preservation** — Unchanged Dialog, Routing, and Vault Flows
+    - **IMPORTANT**: Re-run the SAME tests from task 2 — do NOT write new tests
+    - Run preservation property tests from step 2
+    - **EXPECTED OUTCOME**: Tests PASS (confirms no regressions)
+    - Confirm all tests still pass after fix (no regressions)
+
+- [x] 4. Checkpoint — Ensure all tests pass
+  - Run `yarn nx test brightpass-react-components` and `yarn nx test brightchain-react` to verify all existing and new tests pass
+  - Ensure no regressions in existing property-based tests (Properties 3–21)
+  - Ensure all lint checks pass: `yarn nx lint brightpass-react-components` and `yarn nx lint brightchain-react`
+  - Ask the user if questions arise

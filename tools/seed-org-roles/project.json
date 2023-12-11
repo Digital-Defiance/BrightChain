@@ -1,0 +1,66 @@
+{
+  "name": "tools-seed-org-roles",
+  "sourceRoot": "tools/seed-org-roles/src",
+  "projectType": "application",
+  "implicitDependencies": [
+    "brightchain-lib",
+    "brightchain-api-lib",
+    "brightchain-azure-store"
+  ],
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "dependsOn": ["^build"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/tools-seed-org-roles",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "tools/seed-org-roles/src/main.ts",
+        "tsConfig": "tools/seed-org-roles/tsconfig.app.json",
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          },
+          "external": ["node-forge", "ursa-optional", "argon2", "@root/*"]
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            },
+            "external": ["node-forge", "ursa-optional", "argon2", "@root/*"]
+          }
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "tools-seed-org-roles:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "tools-seed-org-roles:build",
+          "watch": false
+        },
+        "production": {
+          "buildTarget": "tools-seed-org-roles:build",
+          "watch": false
+        }
+      }
+    }
+  }
+}

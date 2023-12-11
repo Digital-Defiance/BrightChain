@@ -1,0 +1,16 @@
+#!/bin/bash
+# /usr/local/bin/brightchain-maildrop
+# Deposits a message into the BrightChain Mail Drop Directory.
+# Called by Postfix via the brightchain-drop pipe transport.
+# Usage: brightchain-maildrop <sender> <recipient>
+#
+# NOTE: Files are written flat into MAIL_DROP_DIR (not into a new/ subdirectory).
+# InboundProcessor uses fs.watch on MAIL_DROP_DIR which is non-recursive on Linux;
+# writing to a subdirectory would cause the watcher to never fire.
+# Atomicity is preserved: write to a hidden .tmp.<name> file then rename.
+MAIL_DROP_DIR="/var/spool/brightchain/incoming"
+FILENAME="$(date +%s).$(hostname -s).$$.$RANDOM"
+mkdir -p "${MAIL_DROP_DIR}"
+cat > "${MAIL_DROP_DIR}/.tmp.${FILENAME}"
+mv "${MAIL_DROP_DIR}/.tmp.${FILENAME}" "${MAIL_DROP_DIR}/${FILENAME}"
+exit 0

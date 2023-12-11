@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+# Block commits that reintroduce raw .ts/.tsx in workspace package.json
+# main/module/types/exports fields. See tools/scripts/check-package-main.mjs.
+set -e
+node tools/scripts/check-package-main.mjs
