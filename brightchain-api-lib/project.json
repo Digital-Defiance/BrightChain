@@ -1,0 +1,75 @@
+{
+  "name": "brightchain-api-lib",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "brightchain-api-lib/src",
+  "projectType": "library",
+  "tags": [
+    "type:lib",
+    "scope:api"
+  ],
+  "implicitDependencies": [
+    "brightchain-lib",
+    "brightchain-test-utils",
+    "digitalburnbag-api-lib",
+    "digitalburnbag-lib",
+    "!brightcal-api-lib"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/brightchain-api-lib",
+        "main": "brightchain-api-lib/src/index.ts",
+        "tsConfig": "brightchain-api-lib/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "brightchain-api-lib",
+            "glob": "*.md",
+            "output": "."
+          },
+          {
+            "input": "brightchain-api-lib",
+            "glob": "package.json",
+            "output": "."
+          },
+          {
+            "input": "brightchain-api-lib/src/lib/templates",
+            "glob": "**/*.ejs",
+            "output": "src/lib/templates"
+          }
+        ]
+      },
+      "dependsOn": [
+        "^build"
+      ],
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "brightchain-api-lib/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "cache": true
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm publish --access public",
+        "cwd": "dist/brightchain-api-lib"
+      }
+    }
+  }
+}

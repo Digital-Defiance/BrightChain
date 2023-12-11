@@ -1,0 +1,60 @@
+# ─── BrightChain Email Gateway — Postfix main.cf (devcontainer) ──────────────
+# This is a DEVELOPMENT/TEST configuration. For production, see:
+#   docs/messaging/email-gateway-postfix-setup.md
+#
+# Test mode features:
+#   - Accepts mail for any domain (not just brightchain.org)
+#   - Delivers all mail to the Mail Drop Directory
+#   - No TLS required
+#   - No external delivery (relayhost is empty, but mynetworks is localhost only)
+
+# Basic identity (fake domain for testing)
+myhostname = mail.brightchain.local
+mydomain = brightchain.local
+myorigin = $mydomain
+mydestination =
+
+# Network settings — localhost only for test mode
+inet_interfaces = all
+inet_protocols = all
+
+# Relay and transport — no external relay in test mode
+relayhost =
+mynetworks = 127.0.0.0/8 [::1]/128
+
+# ─── Test Mode: Accept mail for multiple domains ─────────────────────────────
+# In test mode, we accept mail for both the configured domain AND localhost
+# variants so you can test without real DNS.
+virtual_mailbox_domains = brightchain.org, brightchain.local, localhost, localhost.localdomain
+
+# Recipient validation via BrightChain Recipient Lookup Service (socketmap)
+# The gateway's RecipientLookupService listens on TCP port 2526.
+# In test mode with GATEWAY_TEST_ACCEPT_ALL_RECIPIENTS=true, this always returns OK.
+virtual_mailbox_maps = socketmap:inet:127.0.0.1:2526:virtual
+
+# Inbound mail delivery — deposit into Mail Drop Directory
+virtual_transport = brightchain-drop
+mailbox_size_limit = 26214400
+
+# TLS — disabled in devcontainer (no real certs)
+smtpd_tls_security_level = none
+smtp_tls_security_level = none
+
+# Message size limit (matches GATEWAY_MAX_MESSAGE_SIZE, default 25 MB)
+message_size_limit = 26214400
+
+# ─── Test Mode: Milter configuration ─────────────────────────────────────────
+# In test mode, we can optionally skip DKIM signing.
+# Uncomment to enable OpenDKIM milter (requires opendkim running):
+# smtpd_milters = inet:127.0.0.1:8891
+# non_smtpd_milters = inet:127.0.0.1:8891
+# milter_protocol = 6
+# milter_default_action = accept
+
+# Compatibility level
+compatibility_level = 3.6
+
+# ─── Test Mode: Relaxed restrictions ─────────────────────────────────────────
+# Accept mail from anywhere on localhost without authentication
+smtpd_recipient_restrictions = permit_mynetworks, reject_unauth_destination
+smtpd_relay_restrictions = permit_mynetworks, reject_unauth_destination

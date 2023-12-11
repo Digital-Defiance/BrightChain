@@ -1,0 +1,61 @@
+[submodule "reed-solomon-erasure.wasm"]
+	path = reed-solomon-erasure.wasm
+	url = https://github.com/Digital-Defiance/reed-solomon-erasure.wasm.git
+[submodule "brightchat-lib"]
+	path = brightchat-lib
+	url = https://github.com/Digital-Defiance/brightchat-lib.git
+[submodule "brightchat-react-components"]
+	path = brightchat-react-components
+	url = https://github.com/Digital-Defiance/brightchat-react-components.git
+[submodule "brightmail-lib"]
+	path = brightmail-lib
+	url = https://github.com/Digital-Defiance/brightmail-lib.git
+[submodule "brighthub-lib"]
+	path = brighthub-lib
+	url = https://github.com/Digital-Defiance/brighthub-lib.git
+[submodule "brightpass-lib"]
+	path = brightpass-lib
+	url = https://github.com/Digital-Defiance/brightpass-lib.git
+[submodule "brightmail-react-components"]
+	path = brightmail-react-components
+	url = https://github.com/Digital-Defiance/brightmail-react-components.git
+[submodule "brightpass-react-components"]
+	path = brightpass-react-components
+	url = https://github.com/Digital-Defiance/brightpass-react-components.git
+[submodule "brighthub-react-components"]
+	path = brighthub-react-components
+	url = https://github.com/Digital-Defiance/brighthub-react-components.git
+[submodule "digitalburnbag-react-components"]
+	path = digitalburnbag-react-components
+	url = https://github.com/Digital-Defiance/digitalburnbag-react-components.git
+[submodule "digitalburnbag-lib"]
+	path = digitalburnbag-lib
+	url = https://github.com/Digital-Defiance/digitalburnbag-lib.git
+[submodule "digitalburnbag-api-lib"]
+	path = digitalburnbag-api-lib
+	url = https://github.com/Digital-Defiance/digitalburnbag-api-lib.git
+[submodule "digitalburnbag-sync-client"]
+	path = digitalburnbag-sync-client
+	url = https://github.com/Digital-Defiance/digitalburnbag-sync-client.git
+	branch = burnbag
+[submodule "digitalburnbag-desktop"]
+	path = digitalburnbag-desktop
+	url = https://github.com/Digital-Defiance/digitalburnbag-desktop.git
+[submodule "vscode-brightchain-vfs-explorer"]
+	path = vscode-brightchain-vfs-explorer
+	url = https://github.com/Digital-Defiance/vscode-brightchain-vfs-explorer.git
+[submodule "brightchart-react-components"]
+	path = brightchart-react-components
+	url = https://github.com/Digital-Defiance/brightchart-react-components.git
+[submodule "brightchart-lib"]
+	path = brightchart-lib
+	url = https://github.com/Digital-Defiance/brightchart-lib.git
+[submodule "brightcal-lib"]
+	path = brightcal-lib
+	url = https://github.com/Digital-Defiance/brightcal-lib.git
+[submodule "brightcal-react-components"]
+	path = brightcal-react-components
+	url = https://github.com/Digital-Defiance/brightcal-react-components.git
+[submodule "brightcal-api-lib"]
+	path = brightcal-api-lib
+	url = https://github.com/Digital-Defiance/brightcal-api-lib.git

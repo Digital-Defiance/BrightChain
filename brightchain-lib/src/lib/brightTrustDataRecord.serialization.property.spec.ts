@@ -1,0 +1,386 @@
+/**
+ * @fileoverview Property-based tests for BrightTrustDataRecord serialization
+ *
+ * **Feature: backend-blockstore-brightTrust, Property 28: BrightTrustDataRecord Serialization Round-Trip**
+ * **Validates: Requirements 16.1**
+ *
+ * This test suite verifies that:
+ * - BrightTrustDataRecord can be serialized to DTO and back without data loss
+ * - BrightTrustDataRecord can be serialized to JSON and back without data loss
+ * - All fields are preserved through serialization round-trips
+ */
+
+import {
+  EmailString,
+  GuidV4Uint8Array,
+  HexString,
+  IMemberWithMnemonic,
+  Member,
+  MemberType,
+} from '@digitaldefiance/ecies-lib';
+import fc from 'fast-check';
+import { BrightTrustDataRecord } from './brightTrustDataRecord';
+import { initializeBrightChain } from './init';
+import { SealingService } from './services/sealing.service';
+import { ServiceProvider } from './services/service.provider';
+import { ServiceLocator } from './services/serviceLocator';
+import { uint8ArrayToHex } from './utils/checksumUtils';
+
+// Set a longer timeout for all tests in this file
+jest.setTimeout(60000);
+
+describe('BrightTrustDataRecord Serialization Property Tests', () => {
+  beforeAll(() => {
+    initializeBrightChain();
+    ServiceLocator.setServiceProvider(
+      ServiceProvider.getInstance<GuidV4Uint8Array>(),
+    );
+  });
+
+  afterEach(() => {
+    ServiceProvider.resetInstance();
+  });
+
+  /**
+   * Helper to create a test member with random data
+   */
+  function createTestMember(
+    name: string,
+    email: string,
+  ): IMemberWithMnemonic<GuidV4Uint8Array> {
+    const eciesService =
+      ServiceProvider.getInstance<GuidV4Uint8Array>().eciesService;
+    return Member.newMember<GuidV4Uint8Array>(
+      eciesService,
+      MemberType.User,
+      name,
+      new EmailString(email),
+    );
+  }
+
+  /**
+   * Helper to create a BrightTrustDataRecord by sealing a document
+   */
+  async function createBrightTrustDataRecord(
+    document: unknown,
+    memberCount: number,
+    sharesRequired: number,
+  ): Promise<{
+    record: BrightTrustDataRecord<GuidV4Uint8Array>;
+    members: IMemberWithMnemonic<GuidV4Uint8Array>[];
+  }> {
+    const serviceProvider = ServiceProvider.getInstance<GuidV4Uint8Array>();
+    const sealingService = new SealingService<GuidV4Uint8Array>(
+      serviceProvider.eciesService,
+      serviceProvider.idProvider,
+    );
+
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000000);
+
+    // Create members
+    const members: IMemberWithMnemonic<GuidV4Uint8Array>[] = [];
+    for (let i = 0; i < memberCount; i++) {
+      const uniqueSuffix = `${timestamp}${random}${i}`;
+      const memberWithMnemonic = createTestMember(
+        `Member${i}`,
+        `member${uniqueSuffix}@example.com`,
+      );
+      members.push(memberWithMnemonic);
+    }
+
+    // Seal the document
+    const record = await sealingService.brightTrustSeal(
+      members[0].member,
+      document,
+      members.map((m) => m.member),
+      sharesRequired,
+    );
+
+    return { record, members };
+  }
+
+  describe('Property 28: BrightTrustDataRecord Serialization Round-Trip', () => {
+    /**
+     * Property: For any valid BrightTrustDataRecord, serializing to DTO and back
+     * SHALL preserve all data fields.
+     *
+     * **Validates: Requirements 16.1**
+     */
+    it('should preserve all fields through DTO round-trip', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          // Generate a simple document object
+          fc.record({
+            title: fc.stringMatching(/^[A-Za-z][A-Za-z0-9 ]{0,29}$/),
+            content: fc.stringMatching(/^[A-Za-z0-9 ]{0,100}$/),
+            value: fc.integer({ min: 0, max: 1000000 }),
+          }),
+          async (document) => {
+            const { record, members } = await createBrightTrustDataRecord(
+              document,
+              3,
+              2,
+            );
+
+            // Create a member lookup function for deserialization
+            const memberMap = new Map<string, Member<GuidV4Uint8Array>>();
+            for (const m of members) {
+              const hexId = uint8ArrayToHex(m.member.idBytes) as HexString;
+              memberMap.set(hexId, m.member);
+            }
+
+            const fetchMember = (
+              memberId: GuidV4Uint8Array,
+            ): Member<GuidV4Uint8Array> => {
+              const serviceProvider =
+                ServiceProvider.getInstance<GuidV4Uint8Array>();
+              const hexId = uint8ArrayToHex(
+                serviceProvider.idProvider.toBytes(memberId),
+              ) as HexString;
+              const member = memberMap.get(hexId);
+              if (!member) {
+                throw new Error(`Member not found: ${hexId}`);
+              }
+              return member;
+            };
+
+            // Serialize to DTO
+            const dto = record.toDto();
+
+            // Deserialize from DTO
+            const serviceProvider =
+              ServiceProvider.getInstance<GuidV4Uint8Array>();
+            const restored = BrightTrustDataRecord.fromDto<GuidV4Uint8Array>(
+              dto,
+              fetchMember,
+              serviceProvider.idProvider,
+              serviceProvider.eciesService,
+            );
+
+            // Verify all fields match (using hex comparison for Uint8Arrays)
+            expect(
+              uint8ArrayToHex(serviceProvider.idProvider.toBytes(restored.id)),
+            ).toBe(
+              uint8ArrayToHex(serviceProvider.idProvider.toBytes(record.id)),
+            );
+            expect(uint8ArrayToHex(restored.encryptedData)).toBe(
+              uint8ArrayToHex(record.encryptedData),
+            );
+            expect(uint8ArrayToHex(restored.checksum)).toBe(
+              uint8ArrayToHex(record.checksum),
+            );
+            expect(uint8ArrayToHex(restored.signature)).toBe(
+              uint8ArrayToHex(record.signature),
+            );
+            expect(restored.sharesRequired).toBe(record.sharesRequired);
+            expect(restored.memberIDs.length).toBe(record.memberIDs.length);
+
+            // Verify encrypted shares match
+            expect(restored.encryptedSharesByMemberId.size).toBe(
+              record.encryptedSharesByMemberId.size,
+            );
+            for (const [key, value] of record.encryptedSharesByMemberId) {
+              expect(restored.encryptedSharesByMemberId.has(key)).toBe(true);
+              expect(
+                uint8ArrayToHex(restored.encryptedSharesByMemberId.get(key)!),
+              ).toBe(uint8ArrayToHex(value));
+            }
+          },
+        ),
+        { numRuns: 10 },
+      );
+    });
+
+    /**
+     * Property: For any valid BrightTrustDataRecord, serializing to JSON and back
+     * SHALL preserve all data fields.
+     *
+     * **Validates: Requirements 16.1**
+     */
+    it('should preserve all fields through JSON round-trip', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({
+            data: fc.stringMatching(/^[A-Za-z0-9]{1,50}$/),
+            count: fc.integer({ min: 1, max: 100 }),
+          }),
+          async (document) => {
+            const { record, members } = await createBrightTrustDataRecord(
+              document,
+              4,
+              3,
+            );
+
+            // Create a member lookup function for deserialization
+            const memberMap = new Map<string, Member<GuidV4Uint8Array>>();
+            for (const m of members) {
+              const hexId = uint8ArrayToHex(m.member.idBytes) as HexString;
+              memberMap.set(hexId, m.member);
+            }
+
+            const fetchMember = (
+              memberId: GuidV4Uint8Array,
+            ): Member<GuidV4Uint8Array> => {
+              const serviceProvider =
+                ServiceProvider.getInstance<GuidV4Uint8Array>();
+              const hexId = uint8ArrayToHex(
+                serviceProvider.idProvider.toBytes(memberId),
+              ) as HexString;
+              const member = memberMap.get(hexId);
+              if (!member) {
+                throw new Error(`Member not found: ${hexId}`);
+              }
+              return member;
+            };
+
+            // Serialize to JSON
+            const json = record.toJson();
+
+            // Verify JSON is valid
+            expect(() => JSON.parse(json)).not.toThrow();
+
+            // Deserialize from JSON
+            const serviceProvider =
+              ServiceProvider.getInstance<GuidV4Uint8Array>();
+            const restored = BrightTrustDataRecord.fromJson<GuidV4Uint8Array>(
+              json,
+              fetchMember,
+              serviceProvider.idProvider,
+              serviceProvider.eciesService,
+            );
+
+            // Verify all fields match (using hex comparison for Uint8Arrays)
+            expect(
+              uint8ArrayToHex(serviceProvider.idProvider.toBytes(restored.id)),
+            ).toBe(
+              uint8ArrayToHex(serviceProvider.idProvider.toBytes(record.id)),
+            );
+            expect(uint8ArrayToHex(restored.encryptedData)).toBe(
+              uint8ArrayToHex(record.encryptedData),
+            );
+            expect(uint8ArrayToHex(restored.checksum)).toBe(
+              uint8ArrayToHex(record.checksum),
+            );
+            expect(uint8ArrayToHex(restored.signature)).toBe(
+              uint8ArrayToHex(record.signature),
+            );
+            expect(restored.sharesRequired).toBe(record.sharesRequired);
+            expect(restored.memberIDs.length).toBe(record.memberIDs.length);
+          },
+        ),
+        { numRuns: 10 },
+      );
+    });
+
+    /**
+     * Property: The DTO format should be JSON-serializable.
+     *
+     * **Validates: Requirements 16.1**
+     */
+    it('should produce JSON-serializable DTOs', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({
+            message: fc.stringMatching(/^[A-Za-z0-9 ]{1,30}$/),
+          }),
+          async (document) => {
+            const { record } = await createBrightTrustDataRecord(
+              document,
+              2,
+              2,
+            );
+
+            // Serialize to DTO
+            const dto = record.toDto();
+
+            // Verify DTO can be JSON serialized and deserialized
+            const jsonString = JSON.stringify(dto);
+            const parsed = JSON.parse(jsonString);
+
+            // Verify structure is preserved
+            expect(parsed.id).toBe(dto.id);
+            expect(parsed.creatorId).toBe(dto.creatorId);
+            expect(parsed.encryptedData).toBe(dto.encryptedData);
+            expect(parsed.checksum).toBe(dto.checksum);
+            expect(parsed.signature).toBe(dto.signature);
+            expect(parsed.sharesRequired).toBe(dto.sharesRequired);
+            expect(parsed.memberIDs).toEqual(dto.memberIDs);
+            expect(Object.keys(parsed.encryptedSharesByMemberId)).toEqual(
+              Object.keys(dto.encryptedSharesByMemberId),
+            );
+          },
+        ),
+        { numRuns: 15 },
+      );
+    });
+
+    /**
+     * Property: Serialization should preserve member ID ordering.
+     *
+     * **Validates: Requirements 16.1**
+     */
+    it('should preserve member ID ordering through serialization', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({
+            secret: fc.stringMatching(/^[A-Za-z0-9]{1,20}$/),
+          }),
+          async (document) => {
+            const { record, members } = await createBrightTrustDataRecord(
+              document,
+              5,
+              3,
+            );
+
+            // Create a member lookup function for deserialization
+            const memberMap = new Map<string, Member<GuidV4Uint8Array>>();
+            for (const m of members) {
+              const hexId = uint8ArrayToHex(m.member.idBytes) as HexString;
+              memberMap.set(hexId, m.member);
+            }
+
+            const fetchMember = (
+              memberId: GuidV4Uint8Array,
+            ): Member<GuidV4Uint8Array> => {
+              const serviceProvider =
+                ServiceProvider.getInstance<GuidV4Uint8Array>();
+              const hexId = uint8ArrayToHex(
+                serviceProvider.idProvider.toBytes(memberId),
+              ) as HexString;
+              const member = memberMap.get(hexId);
+              if (!member) {
+                throw new Error(`Member not found: ${hexId}`);
+              }
+              return member;
+            };
+
+            // Serialize and deserialize
+            const dto = record.toDto();
+            const serviceProvider =
+              ServiceProvider.getInstance<GuidV4Uint8Array>();
+            const restored = BrightTrustDataRecord.fromDto<GuidV4Uint8Array>(
+              dto,
+              fetchMember,
+              serviceProvider.idProvider,
+              serviceProvider.eciesService,
+            );
+
+            // Verify member IDs are in the same order
+            expect(restored.memberIDs.length).toBe(record.memberIDs.length);
+            for (let i = 0; i < record.memberIDs.length; i++) {
+              const originalHex = uint8ArrayToHex(
+                serviceProvider.idProvider.toBytes(record.memberIDs[i]),
+              );
+              const restoredHex = uint8ArrayToHex(
+                serviceProvider.idProvider.toBytes(restored.memberIDs[i]),
+              );
+              expect(restoredHex).toBe(originalHex);
+            }
+          },
+        ),
+        { numRuns: 10 },
+      );
+    });
+  });
+});

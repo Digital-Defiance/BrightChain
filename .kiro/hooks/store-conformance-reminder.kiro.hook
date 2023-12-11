@@ -1,0 +1,22 @@
+{
+  "enabled": true,
+  "name": "Store Conformance Reminder",
+  "description": "When core BrightDb persistence files are edited (collection.ts, database.ts, headRegistry.ts, cloudBlockStoreBase.ts, cloudHeadRegistry.ts, memberStore.ts), reminds you to re-run the cloud store conformance tests to verify the change doesn't break Azure/S3 persistence.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "brightchain-db/src/lib/collection.ts",
+      "brightchain-db/src/lib/database.ts",
+      "brightchain-db/src/lib/headRegistry.ts",
+      "brightchain-api-lib/src/lib/stores/cloudBlockStoreBase.ts",
+      "brightchain-api-lib/src/lib/stores/cloudHeadRegistry.ts",
+      "brightchain-lib/src/lib/services/memberStore.ts",
+      "brightchain-lib/src/lib/interfaces/storage/documentTypes.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A core BrightDb persistence file was just modified. This change could affect how data is stored/loaded across all block store backends (memory, disk, Azure, S3). Remind the user: \"Core persistence code changed — consider re-running cloud store conformance tests: `AZURE_CONFORMANCE_TEST=1 AZURE_STORAGE_CONNECTION_STRING='...' yarn nx test brightchain-azure-store --testPathPatterns=conformance` and `S3_CONFORMANCE_TEST=1 AWS_S3_ENDPOINT=http://localhost:4566 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test yarn nx test brightchain-s3-store --testPathPatterns=conformance`\". Only mention this once per conversation, don't repeat it."
+  }
+}
