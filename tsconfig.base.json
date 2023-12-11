@@ -1,0 +1,102 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "Bundler",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "strict": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM"],
+    "types": ["node", "jest"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@brightchain/brightchart-lib": ["brightchart-lib/src/index.ts"],
+      "@brightchain/brightchart-lib/*": ["brightchart-lib/src/*"],
+      "@brightchain/brightchain-lib": ["brightchain-lib/src/index.ts"],
+      "@brightchain/brightchain-lib/*": ["brightchain-lib/src/*"],
+      "@brightchain/brightchain-inituserdb/*": ["brightchain-inituserdb/src/*"],
+      "@brightchain/brightchain-api-lib": ["brightchain-api-lib/src/index.ts"],
+      "@brightchain/brightchain-api-lib/*": ["brightchain-api-lib/src/*"],
+      "@brightchain/db": ["brightchain-db/src/index.ts"],
+      "@brightchain/db/*": ["brightchain-db/src/*"],
+      "@brightchain/brightmail-react-components": [
+        "brightmail-react-components/src/index.ts"
+      ],
+      "@brightchain/brightpass-react-components": [
+        "brightpass-react-components/src/index.ts"
+      ],
+      "@brightchain/brighthub-react-components": [
+        "brighthub-react-components/src/index.ts"
+      ],
+      "@brightchain/brighthub-react-components/*": [
+        "brighthub-react-components/src/*"
+      ],
+      "@brightchain/brightmail-lib": ["brightmail-lib/src/index.ts"],
+      "@brightchain/brightpass-lib": ["brightpass-lib/src/index.ts"],
+      "@brightchain/brightchat-lib": ["brightchat-lib/src/index.ts"],
+      "@brightchain/brightchat-react-components": [
+        "brightchat-react-components/src/index.ts"
+      ],
+      "@brightchain/brighthub-lib": ["brighthub-lib/src/index.ts"],
+      "@brightchain/brighthub-lib/*": ["brighthub-lib/src/*"],
+      "@brightchain/azure-store": ["brightchain-azure-store/src/index.ts"],
+      "@brightchain/s3-store": ["brightchain-s3-store/src/index.ts"],
+      "@brightchain/brightchain-react-components": [
+        "brightchain-react-components/src/index.ts"
+      ],
+      "@brightchain/brightchart-react-components": [
+        "brightchart-react-components/src/index.ts"
+      ],
+      "@brightchain/node-express-suite": [
+        "brightchain-node-express-suite/src/index.ts"
+      ],
+      "@awesome.me/kit-a20d532681/icons": [
+        "node_modules/@awesome.me/kit-a20d532681/icons/modules/index"
+      ],
+      "@awesome.me/kit-a20d532681/icons/*": [
+        "node_modules/@awesome.me/kit-a20d532681/icons/modules/*"
+      ],
+      "@digitaldefiance/node-ecies-lib/src/*": [
+        "node_modules/@digitaldefiance/node-ecies-lib/src/*"
+      ],
+      "@brightchain/digitalburnbag-lib": ["digitalburnbag-lib/src/index.ts"],
+      "@brightchain/digitalburnbag-lib/*": ["digitalburnbag-lib/src/*"],
+      "@brightchain/digitalburnbag-react-components": [
+        "digitalburnbag-react-components/src/index.ts"
+      ],
+      "@brightchain/digitalburnbag-react-components/*": [
+        "digitalburnbag-react-components/src/*"
+      ],
+      "@brightchain/digitalburnbag-api-lib": [
+        "digitalburnbag-api-lib/src/index.ts"
+      ],
+      "@brightchain/digitalburnbag-api-lib/*": ["digitalburnbag-api-lib/src/*"],
+      "@brightchain/digitalburnbag-sync-client": [
+        "digitalburnbag-sync-client/src/index.ts"
+      ],
+      "@brightchain/digitalburnbag-sync-client/*": [
+        "digitalburnbag-sync-client/src/*"
+      ],
+      "@brightchain/vscode-brightchain-vfs-explorer": [
+        "vscode-brightchain-vfs-explorer/src/extension.ts"
+      ],
+      "@brightchain/vscode-brightchain-vfs-explorer/*": [
+        "vscode-brightchain-vfs-explorer/src/*"
+      ],
+      "@brightchain/brightcal-lib": ["brightcal-lib/src/index.ts"],
+      "@brightchain/brightcal-lib/*": ["brightcal-lib/src/*"],
+      "@brightchain/brightcal-api-lib": ["brightcal-api-lib/src/index.ts"],
+      "@brightchain/brightcal-api-lib/*": ["brightcal-api-lib/src/*"],
+      "@brightchain/brightcal-react-components": ["brightcal-react-components/src/index.ts"],
+      "@brightchain/brightcal-react-components/*": ["brightcal-react-components/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "tmp", "dist"]
+}

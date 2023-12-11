@@ -1,0 +1,95 @@
+{
+  "name": "brightchain-inituserdb",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "brightchain-inituserdb/src",
+  "projectType": "application",
+  "implicitDependencies": [
+    "brightchain-lib",
+    "brightchain-api-lib",
+    "brightchain-azure-store"
+  ],
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "dependsOn": ["^build"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/brightchain-inituserdb",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "brightchain-inituserdb/src/main.ts",
+        "tsConfig": "brightchain-inituserdb/tsconfig.app.json",
+        "assets": ["brightchain-inituserdb/src/assets"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          },
+          "external": ["node-forge", "ursa-optional", "argon2", "@root/*"]
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            },
+            "external": ["node-forge", "ursa-optional", "argon2", "@root/*"]
+          }
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["post-build"],
+      "options": {
+        "buildTarget": "brightchain-inituserdb:post-build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "brightchain-inituserdb:post-build",
+          "watch": false
+        },
+        "production": {
+          "buildTarget": "brightchain-inituserdb:post-build",
+          "watch": false
+        }
+      }
+    },
+    "copy-env": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "cp brightchain-inituserdb/.env dist/brightchain-inituserdb/.env"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "brightchain-inituserdb/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "cache": true
+    },
+    "post-build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "commands": [
+          "cp brightchain-inituserdb/.env dist/brightchain-inituserdb/.env",
+          "node -e \"const p=require('./dist/brightchain-inituserdb/package.json'); p.dependencies=p.dependencies||{}; p.dependencies['argon2']='0.40.3'; require('fs').writeFileSync('./dist/brightchain-inituserdb/package.json',JSON.stringify(p,null,2))\"",
+          "cd dist/brightchain-inituserdb && yarn install"
+        ],
+        "parallel": false
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "@brightchain/azure-store",
+  "version": "0.29.27",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "dependencies": {
+    "@azure/identity": "^4.6.0",
+    "@azure/storage-blob": "^12.26.0",
+    "@brightchain/brightchain-api-lib": "^0.29.27",
+    "@brightchain/brightchain-lib": "^0.29.27",
+    "tslib": "^2.3.0"
+  },
+  "scripts": {
+    "build:dev": "npx nx build brightchain-azure-store --configuration=development",
+    "build:prod": "npx nx build brightchain-azure-store --configuration=production"
+  }
+}

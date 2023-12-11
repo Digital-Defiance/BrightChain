@@ -1,0 +1,832 @@
+import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
+import BlockPaddingTransform from '../blockPaddingTransform';
+import { BaseBlock } from '../blocks/base';
+import { ConstituentBlockListBlock } from '../blocks/cbl';
+import { EncryptedBlock } from '../blocks/encrypted';
+import { EphemeralBlock } from '../blocks/ephemeral';
+import { BlockHandle } from '../blocks/handle';
+import { InMemoryBlockTuple } from '../blocks/memoryTuple';
+import { RandomBlock } from '../blocks/random';
+import { WhitenedBlock } from '../blocks/whitened';
+import { Readable } from '../browserStream';
+import { TUPLE } from '../constants';
+import { BlockDataType } from '../enumerations/blockDataType';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
+import { BlockSize } from '../enumerations/blockSize';
+import { BlockType } from '../enumerations/blockType';
+import { TupleErrorType } from '../enumerations/tupleErrorType';
+import { TupleError } from '../errors/tupleError';
+import { IBaseBlock } from '../interfaces/blocks/base';
+import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
+import { PoolId } from '../interfaces/storage/pooledBlockStore';
+import { PrimeTupleGeneratorStream } from '../primeTupleGeneratorStream';
+import { Validator } from '../utils/validator';
+import { CBLService } from './cblService';
+import { ChecksumService } from './checksum.service';
+import { getGlobalServiceProvider } from './globalServiceProvider';
+import { XorService } from './xor';
+
+/**
+ * Options for pool-scoped tuple creation.
+ * When poolId is provided, all blocks used in the tuple are validated
+ * to belong to the specified pool, preventing cross-pool XOR dependencies.
+ *
+ * @see Requirements 3.3
+ */
+export interface TuplePoolOptions {
+  /** Pool that all blocks in the tuple must belong to */
+  poolId?: PoolId;
+}
+
+/**
+ * Type guard to check if a value has a poolId property (string).
+ * Used to safely access poolId on block metadata without unsafe casts.
+ */
+function hasPoolId(value: unknown): value is { poolId: string } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'poolId' in value &&
+    typeof (value as Record<string, unknown>)['poolId'] === 'string'
+  );
+}
+
+/**
+ * TupleService provides utility functions for working with block tuples.
+ * In the Owner Free Filesystem (OFF), tuples are used to:
+ * 1. Store data blocks with random blocks for privacy
+ * 2. Store parity blocks for error correction
+ * 3. Store CBL blocks with their metadata
+ *
+ * @typeParam TID - The platform ID type, defaults to Uint8Array
+ *
+ * @see {@link BlockHandle} - Handle type for disk-based blocks
+ * @see {@link InMemoryBlockTuple} - Tuple type for in-memory blocks
+ * @see Requirements 3.1, 3.2
+ */
+export class TupleService<TID extends PlatformID = Uint8Array> {
+  constructor(
+    private readonly checksumService: ChecksumService,
+    private readonly cblService: CBLService<TID>,
+  ) {}
+
+  /**
+   * Wrap a block source callback with pool membership validation.
+   * When a block is returned, checks that its metadata poolId matches the expected pool.
+   * If the block has no poolId metadata, it passes through (backward compatible).
+   *
+   * @param source - The original block source callback
+   * @param poolId - The expected pool for all blocks
+   * @param blockType - Human-readable block type name for error messages
+   * @returns A wrapped callback that validates pool membership
+   *
+   * @see Requirements 3.1, 3.2, 3.4, 3.5
+   */
+  private wrapWithPoolValidation<T extends BaseBlock>(
+    source: () => T,
+    poolId: PoolId,
+    blockType: string,
+  ): () => T;
+  private wrapWithPoolValidation<T extends BaseBlock>(
+    source: () => T | undefined,
+    poolId: PoolId,
+    blockType: string,
+  ): () => T | undefined;
+  private wrapWithPoolValidation<T extends BaseBlock>(
+    source: () => T | undefined,
+    poolId: PoolId,
+    blockType: string,
+  ): () => T | undefined {
+    return () => {
+      const block = source();
+      if (block) {
+        const metadata = block.metadata;
+        if (hasPoolId(metadata) && metadata.poolId !== poolId) {
+          throw new TupleError(
+            TupleErrorType.PoolBoundaryViolation,
+            undefined,
+            {
+              BLOCK_TYPE: blockType,
+              ACTUAL_POOL: metadata.poolId,
+              EXPECTED_POOL: poolId,
+            },
+          );
+        }
+      }
+      return block;
+    };
+  }
+
+  /**
+   * Convert data to Uint8Array regardless of whether it's a Readable or Uint8Array
+   */
+  private async toUint8Array(data: Uint8Array | Readable): Promise<Uint8Array> {
+    if (data instanceof Uint8Array) {
+      return data;
+    }
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of data) {
+      chunks.push(new Uint8Array(chunk));
+    }
+    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return result;
+  }
+
+  /**
+   * XOR a source block with whitening and random blocks
+   *
+   * @param sourceBlock The source block to XOR (any block type or block handle)
+   * @param whiteners The whitening blocks to XOR with
+   * @param randomBlocks The random blocks to XOR with
+   * @returns A whitened block containing the XOR result
+   * @throws {TupleError} If validation fails or XOR operation fails
+   */
+  public async xorSourceToPrimeWhitened(
+    sourceBlock: IBaseBlock | BlockHandle<BaseBlock>,
+    whiteners: (WhitenedBlock | RandomBlock)[],
+    randomBlocks: RandomBlock[],
+  ): Promise<WhitenedBlock> {
+    // Validate required parameters
+    Validator.validateRequired(
+      sourceBlock,
+      'sourceBlock',
+      'xorSourceToPrimeWhitened',
+    );
+    Validator.validateRequired(
+      whiteners,
+      'whiteners',
+      'xorSourceToPrimeWhitened',
+    );
+    Validator.validateRequired(
+      randomBlocks,
+      'randomBlocks',
+      'xorSourceToPrimeWhitened',
+    );
+
+    if (whiteners.length + randomBlocks.length + 1 !== TUPLE.SIZE) {
+      throw new TupleError(TupleErrorType.InvalidBlockCount);
+    }
+
+    try {
+      // Convert source data to Uint8Array
+      const sourceData = await this.toUint8Array(sourceBlock.data);
+
+      // Create a padded buffer initialized to zeros
+      const paddedData = new Uint8Array(sourceBlock.blockSize);
+      paddedData.set(sourceData);
+
+      // Collect all arrays to XOR together
+      const arraysToXor: Uint8Array[] = [paddedData];
+
+      // Add whitening blocks
+      for (const whitener of whiteners) {
+        if (whitener.blockSize !== sourceBlock.blockSize) {
+          throw new TupleError(TupleErrorType.BlockSizeMismatch);
+        }
+        const whitenerData = await this.toUint8Array(whitener.data);
+        arraysToXor.push(whitenerData);
+      }
+
+      // Add random blocks
+      for (const random of randomBlocks) {
+        if (random.blockSize !== sourceBlock.blockSize) {
+          throw new TupleError(TupleErrorType.BlockSizeMismatch);
+        }
+        const randomData = await this.toUint8Array(random.data);
+        arraysToXor.push(randomData);
+      }
+
+      // XOR all arrays together using XorService
+      const xoredData = XorService.xorMultiple(arraysToXor);
+
+      // Create whitened block with preserved length metadata
+      const now = new Date();
+      // Access metadata safely - it may not exist on all block types
+      const lengthWithoutPadding =
+        'metadata' in sourceBlock
+          ? (sourceBlock as { metadata?: { lengthWithoutPadding?: number } })
+              .metadata?.lengthWithoutPadding
+          : undefined;
+      return await WhitenedBlock.from(
+        sourceBlock.blockSize,
+        xoredData,
+        undefined, // Let constructor calculate checksum
+        now,
+        lengthWithoutPadding, // Pass through original length if available
+        true, // canRead
+        true, // canPersist
+      );
+    } catch (error) {
+      if (error instanceof TupleError) {
+        throw error;
+      }
+      throw new TupleError(TupleErrorType.XorOperationFailed, undefined, {
+        ERROR: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  /**
+   * Create a tuple from a source block and its whitening/random blocks
+   */
+  public async makeTupleFromSourceXor(
+    sourceBlock: IBaseBlock | BlockHandle<BaseBlock>,
+    whiteners: (WhitenedBlock | RandomBlock)[],
+    randomBlocks: RandomBlock[],
+  ): Promise<InMemoryBlockTuple<BaseBlock>> {
+    const primeWhitenedBlock = await this.xorSourceToPrimeWhitened(
+      sourceBlock,
+      whiteners,
+      randomBlocks,
+    );
+
+    return new InMemoryBlockTuple([
+      primeWhitenedBlock,
+      ...whiteners,
+      ...randomBlocks,
+    ]);
+  }
+
+  /**
+   * XOR a whitened block with its whitening blocks to recover the original data
+   * @param creator The member who created the block
+   * @param primeWhitenedBlock The whitened block to recover
+   * @param whiteners The whitening blocks used in the original XOR
+   * @param randomBlocks Optional random blocks used in the original XOR
+   * @returns An ephemeral block containing the recovered data
+   * @throws {TupleError} If validation fails or XOR operation fails
+   */
+  public async xorDestPrimeWhitenedToOwned(
+    creator: Member<TID>,
+    primeWhitenedBlock: WhitenedBlock,
+    whiteners: WhitenedBlock[],
+    randomBlocks: RandomBlock[] = [],
+  ): Promise<IEphemeralBlock<TID>> {
+    // Validate required parameters
+    Validator.validateRequired(
+      creator,
+      'creator',
+      'xorDestPrimeWhitenedToOwned',
+    );
+    Validator.validateRequired(
+      primeWhitenedBlock,
+      'primeWhitenedBlock',
+      'xorDestPrimeWhitenedToOwned',
+    );
+    Validator.validateRequired(
+      whiteners,
+      'whiteners',
+      'xorDestPrimeWhitenedToOwned',
+    );
+
+    try {
+      // Get all block data upfront and ensure they're padded to block size
+      const primeData = await this.toUint8Array(primeWhitenedBlock.data);
+      const paddedPrimeData = new Uint8Array(primeWhitenedBlock.blockSize);
+      paddedPrimeData.set(
+        primeData.subarray(
+          0,
+          Math.min(primeData.length, primeWhitenedBlock.blockSize),
+        ),
+      );
+
+      const whitenerData = await Promise.all(
+        whiteners.map(async (w) => {
+          const data = await this.toUint8Array(w.data);
+          const padded = new Uint8Array(primeWhitenedBlock.blockSize);
+          padded.set(
+            data.subarray(
+              0,
+              Math.min(data.length, primeWhitenedBlock.blockSize),
+            ),
+          );
+          return padded;
+        }),
+      );
+      const randomData = await Promise.all(
+        randomBlocks.map(async (r) => {
+          const data = await this.toUint8Array(r.data);
+          const padded = new Uint8Array(primeWhitenedBlock.blockSize);
+          padded.set(
+            data.subarray(
+              0,
+              Math.min(data.length, primeWhitenedBlock.blockSize),
+            ),
+          );
+          return padded;
+        }),
+      );
+
+      // Verify block sizes
+      [...whiteners, ...randomBlocks].forEach((block) => {
+        if (block.blockSize !== primeWhitenedBlock.blockSize) {
+          throw new TupleError(TupleErrorType.BlockSizeMismatch);
+        }
+      });
+
+      // XOR all arrays together using XorService
+      const arraysToXor = [paddedPrimeData, ...whitenerData, ...randomData];
+      const result = XorService.xorMultiple(arraysToXor);
+
+      // Create owned data block with preserved length metadata
+      const checksum = this.checksumService.calculateChecksum(result);
+      const now = new Date();
+      const lengthWithoutPadding =
+        primeWhitenedBlock.metadata?.lengthWithoutPadding;
+      if (!lengthWithoutPadding) {
+        throw new TupleError(TupleErrorType.MissingParameters);
+      }
+      return await EphemeralBlock.from<TID>(
+        BlockType.EphemeralOwnedDataBlock,
+        BlockDataType.RawData,
+        primeWhitenedBlock.blockSize,
+        result,
+        checksum,
+        creator,
+        now,
+        lengthWithoutPadding,
+      );
+    } catch (error) {
+      if (error instanceof TupleError) {
+        throw error;
+      }
+      throw new TupleError(TupleErrorType.XorOperationFailed, undefined, {
+        ERROR: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  /**
+   * Create a tuple from a whitened block and its whitening blocks
+   */
+  public async makeTupleFromDestXor(
+    creator: Member<TID>,
+    primeWhitenedBlock: WhitenedBlock,
+    whiteners: WhitenedBlock[],
+  ): Promise<InMemoryBlockTuple> {
+    const ownedDataBlock = await this.xorDestPrimeWhitenedToOwned(
+      creator,
+      primeWhitenedBlock,
+      whiteners,
+    );
+
+    return new InMemoryBlockTuple([ownedDataBlock, ...whiteners]);
+  }
+
+  /**
+   * XOR a whitened block with its whitening blocks to recover a CBL
+   */
+  public async xorPrimeWhitenedToCbl(
+    creator: Member<TID>,
+    primeWhitened: WhitenedBlock,
+    whiteners: WhitenedBlock[],
+  ): Promise<ConstituentBlockListBlock> {
+    const ownedBlock = await this.xorDestPrimeWhitenedToOwned(
+      creator,
+      primeWhitened,
+      whiteners,
+    );
+
+    return new ConstituentBlockListBlock<TID>(
+      ownedBlock.data,
+      creator,
+      primeWhitened.blockSize,
+    ) as ConstituentBlockListBlock<Uint8Array>;
+  }
+
+  /**
+   * XOR an encrypted whitened block with its whitening blocks and decrypt to recover a CBL
+   */
+  public async xorPrimeWhitenedEncryptedToCbl(
+    creator: Member<TID>,
+    primeWhitened: WhitenedBlock,
+    whiteners: WhitenedBlock[],
+  ): Promise<ConstituentBlockListBlock<TID>> {
+    const ownedBlock = await this.xorDestPrimeWhitenedToOwned(
+      creator,
+      primeWhitened,
+      whiteners,
+    );
+
+    const encryptedBlock =
+      await getGlobalServiceProvider<TID>().blockService.encrypt(
+        BlockType.EncryptedOwnedDataBlock,
+        ownedBlock,
+        creator,
+      );
+    if (!(encryptedBlock instanceof EncryptedBlock)) {
+      throw new TupleError(TupleErrorType.InvalidBlockType);
+    }
+
+    const decryptedBlock =
+      await getGlobalServiceProvider<TID>().blockService.decrypt(
+        creator,
+        encryptedBlock,
+        BlockType.EphemeralOwnedDataBlock,
+      );
+    return new ConstituentBlockListBlock(
+      decryptedBlock.data,
+      creator,
+      primeWhitened.blockSize,
+    );
+  }
+
+  /**
+   * Process a data stream into tuples and create a CBL
+   * @param creator The member creating the CBL
+   * @param blockSize The block size to use
+   * @param source The source data stream
+   * @param sourceLength The length of the source data
+   * @param whitenedBlockSource Function to get whitened blocks
+   * @param randomBlockSource Function to get random blocks
+   * @param persistTuple Function to persist each tuple
+   * @returns A tuple containing the CBL
+   * @throws {TupleError} If validation fails or processing fails
+   */
+  public async dataStreamToPlaintextTuplesAndCBL(
+    creator: Member<TID>,
+    blockSize: BlockSize,
+    source: Readable,
+    sourceLength: number,
+    whitenedBlockSource: () => WhitenedBlock | undefined,
+    randomBlockSource: () => RandomBlock,
+    persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
+    poolOptions?: TuplePoolOptions,
+  ): Promise<InMemoryBlockTuple> {
+    const now = new Date();
+    // Validate required parameters
+    Validator.validateRequired(
+      creator,
+      'creator',
+      'dataStreamToPlaintextTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      source,
+      'source',
+      'dataStreamToPlaintextTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      whitenedBlockSource,
+      'whitenedBlockSource',
+      'dataStreamToPlaintextTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      randomBlockSource,
+      'randomBlockSource',
+      'dataStreamToPlaintextTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      persistTuple,
+      'persistTuple',
+      'dataStreamToPlaintextTuplesAndCBL',
+    );
+    Validator.validateBlockSize(blockSize, 'dataStreamToPlaintextTuplesAndCBL');
+
+    if (sourceLength <= 0) {
+      throw new TupleError(TupleErrorType.InvalidSourceLength);
+    }
+
+    try {
+      // Wrap source callbacks with pool validation when poolId is specified
+      const effectiveWhitenedSource = poolOptions?.poolId
+        ? this.wrapWithPoolValidation(
+            whitenedBlockSource,
+            poolOptions.poolId,
+            'WhitenedBlock',
+          )
+        : whitenedBlockSource;
+      const effectiveRandomSource = poolOptions?.poolId
+        ? this.wrapWithPoolValidation(
+            randomBlockSource,
+            poolOptions.poolId,
+            'RandomBlock',
+          )
+        : randomBlockSource;
+
+      // Set up processing pipeline
+      const blockPaddingTransform = new BlockPaddingTransform(blockSize);
+      const tupleGeneratorStream = new PrimeTupleGeneratorStream(
+        blockSize,
+        creator,
+        effectiveWhitenedSource,
+        effectiveRandomSource,
+      );
+
+      source.pipe(blockPaddingTransform).pipe(tupleGeneratorStream);
+
+      // Process tuples
+      let blockIDs: Uint8Array = new Uint8Array(0);
+      let blockIDCount = 0;
+
+      await new Promise<void>((resolve, reject) => {
+        tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
+          try {
+            // When pool-scoped, tag the tuple with the poolId so persistTuple
+            // callbacks can store blocks in the correct pool
+            const effectiveTuple = poolOptions?.poolId
+              ? new InMemoryBlockTuple(tuple.blocks, poolOptions.poolId)
+              : tuple;
+            await persistTuple(effectiveTuple);
+            const newBlockIDs = new Uint8Array(
+              blockIDs.length + tuple.blockIdsBuffer.length,
+            );
+            newBlockIDs.set(blockIDs);
+            newBlockIDs.set(tuple.blockIdsBuffer, blockIDs.length);
+            blockIDs = newBlockIDs;
+            blockIDCount += tuple.blocks.length;
+          } catch (error) {
+            reject(error);
+          }
+        });
+
+        tupleGeneratorStream.on('end', resolve);
+        tupleGeneratorStream.on('error', reject);
+      });
+
+      const headerData = this.cblService.makeCblHeader(
+        creator,
+        now,
+        blockIDCount,
+        sourceLength,
+        blockIDs,
+        blockSize,
+        BlockEncryptionType.None,
+      ).headerData;
+
+      const data = new Uint8Array(headerData.length + blockIDs.length);
+      data.set(headerData);
+      data.set(blockIDs, headerData.length);
+      const checksum = this.checksumService.calculateChecksum(data);
+      // Create CBL
+      const cbl = new ConstituentBlockListBlock(data, creator, blockSize);
+
+      // Convert CBL to OwnedDataBlock for tuple creation
+      const ownedBlock = await EphemeralBlock.from(
+        BlockType.EphemeralOwnedDataBlock,
+        BlockDataType.RawData,
+        blockSize,
+        cbl.data,
+        checksum,
+        creator,
+        now,
+        cbl.data.length,
+      );
+
+      // Create tuple for CBL
+      const randomBlocks: RandomBlock[] = [];
+      for (let i = 0; i < TUPLE.RANDOM_BLOCKS_PER_TUPLE; i++) {
+        const block = effectiveRandomSource();
+        if (!block) {
+          throw new TupleError(TupleErrorType.RandomBlockGenerationFailed);
+        }
+        randomBlocks.push(block);
+      }
+
+      const whiteners: (WhitenedBlock | RandomBlock)[] = [];
+      for (let i = TUPLE.RANDOM_BLOCKS_PER_TUPLE; i < TUPLE.SIZE - 1; i++) {
+        const block = effectiveWhitenedSource() ?? effectiveRandomSource();
+        if (!block) {
+          throw new TupleError(TupleErrorType.WhiteningBlockGenerationFailed);
+        }
+        whiteners.push(block);
+      }
+
+      const primeBlock = await this.xorSourceToPrimeWhitened(
+        ownedBlock,
+        whiteners,
+        randomBlocks,
+      );
+
+      const tuple = new InMemoryBlockTuple(
+        [primeBlock, ...whiteners, ...randomBlocks],
+        poolOptions?.poolId,
+      );
+
+      await persistTuple(tuple);
+      return tuple;
+    } catch (error) {
+      if (error instanceof TupleError) {
+        throw error;
+      }
+      throw new TupleError(
+        TupleErrorType.DataStreamProcessingFailed,
+        undefined,
+        {
+          ERROR: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
+  }
+
+  /**
+   * Process a data stream into encrypted tuples and create an encrypted CBL
+   * @param creator The member creating the CBL
+   * @param blockSize The block size to use
+   * @param source The source data stream
+   * @param sourceLength The length of the source data
+   * @param whitenedBlockSource Function to get whitened blocks
+   * @param randomBlockSource Function to get random blocks
+   * @param persistTuple Function to persist each tuple
+   * @returns A tuple containing the encrypted CBL
+   * @throws {TupleError} If validation fails or processing fails
+   */
+  public async dataStreamToEncryptedTuplesAndCBL(
+    creator: Member<TID>,
+    blockSize: BlockSize,
+    source: Readable,
+    sourceLength: number,
+    whitenedBlockSource: () => WhitenedBlock | undefined,
+    randomBlockSource: () => RandomBlock,
+    persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
+    poolOptions?: TuplePoolOptions,
+  ): Promise<InMemoryBlockTuple> {
+    const dateCreated = new Date();
+    // Validate required parameters
+    Validator.validateRequired(
+      creator,
+      'creator',
+      'dataStreamToEncryptedTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      source,
+      'source',
+      'dataStreamToEncryptedTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      whitenedBlockSource,
+      'whitenedBlockSource',
+      'dataStreamToEncryptedTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      randomBlockSource,
+      'randomBlockSource',
+      'dataStreamToEncryptedTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      persistTuple,
+      'persistTuple',
+      'dataStreamToEncryptedTuplesAndCBL',
+    );
+    Validator.validateBlockSize(blockSize, 'dataStreamToEncryptedTuplesAndCBL');
+
+    if (sourceLength <= 0) {
+      throw new TupleError(TupleErrorType.InvalidSourceLength);
+    }
+
+    try {
+      // Wrap source callbacks with pool validation when poolId is specified
+      const effectiveWhitenedSource = poolOptions?.poolId
+        ? this.wrapWithPoolValidation(
+            whitenedBlockSource,
+            poolOptions.poolId,
+            'WhitenedBlock',
+          )
+        : whitenedBlockSource;
+      const effectiveRandomSource = poolOptions?.poolId
+        ? this.wrapWithPoolValidation(
+            randomBlockSource,
+            poolOptions.poolId,
+            'RandomBlock',
+          )
+        : randomBlockSource;
+
+      // Set up encryption pipeline
+      const tupleGeneratorStream = new PrimeTupleGeneratorStream(
+        blockSize,
+        creator,
+        effectiveWhitenedSource,
+        effectiveRandomSource,
+      );
+
+      source.pipe(tupleGeneratorStream);
+
+      // Process tuples
+      let blockIDs: Uint8Array = new Uint8Array(0);
+
+      await new Promise<void>((resolve, reject) => {
+        tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
+          try {
+            // When pool-scoped, tag the tuple with the poolId so persistTuple
+            // callbacks can store blocks in the correct pool
+            const effectiveTuple = poolOptions?.poolId
+              ? new InMemoryBlockTuple(tuple.blocks, poolOptions.poolId)
+              : tuple;
+            await persistTuple(effectiveTuple);
+            const newBlockIDs = new Uint8Array(
+              blockIDs.length + tuple.blockIdsBuffer.length,
+            );
+            newBlockIDs.set(blockIDs);
+            newBlockIDs.set(tuple.blockIdsBuffer, blockIDs.length);
+            blockIDs = newBlockIDs;
+          } catch (error) {
+            reject(error);
+          }
+        });
+
+        tupleGeneratorStream.on('end', resolve);
+        tupleGeneratorStream.on('error', reject);
+      });
+      const cblHeader = this.cblService.makeCblHeader(
+        creator,
+        dateCreated,
+        blockIDs.length,
+        sourceLength,
+        blockIDs,
+        blockSize,
+        BlockEncryptionType.None,
+      );
+      const data = new Uint8Array(
+        cblHeader.headerData.length + blockIDs.length,
+      );
+      data.set(cblHeader.headerData);
+      data.set(blockIDs, cblHeader.headerData.length);
+      const checksum = this.checksumService.calculateChecksum(data);
+
+      // Create and encrypt CBL
+      const cbl = new ConstituentBlockListBlock(data, creator, blockSize);
+
+      const ownedBlock = await EphemeralBlock.from<TID>(
+        BlockType.EphemeralOwnedDataBlock,
+        BlockDataType.RawData,
+        blockSize,
+        cbl.data,
+        checksum,
+        creator,
+        new Date(),
+        cbl.data.length,
+      );
+
+      const encryptedCbl =
+        await getGlobalServiceProvider<TID>().blockService.encrypt(
+          BlockType.EncryptedConstituentBlockListBlock,
+          ownedBlock,
+          creator,
+        );
+
+      // Create tuple for encrypted CBL
+      const randomBlocks: RandomBlock[] = [];
+      for (let i = 0; i < TUPLE.RANDOM_BLOCKS_PER_TUPLE; i++) {
+        const block = effectiveRandomSource();
+        if (!block) {
+          throw new TupleError(TupleErrorType.RandomBlockGenerationFailed);
+        }
+        randomBlocks.push(block);
+      }
+
+      const whiteners: (WhitenedBlock | RandomBlock)[] = [];
+      for (let i = TUPLE.RANDOM_BLOCKS_PER_TUPLE; i < TUPLE.SIZE - 1; i++) {
+        const block = effectiveWhitenedSource() ?? effectiveRandomSource();
+        if (!block) {
+          throw new TupleError(TupleErrorType.WhiteningBlockGenerationFailed);
+        }
+        whiteners.push(block);
+      }
+
+      const primeBlock = await this.xorSourceToPrimeWhitened(
+        encryptedCbl as unknown as EncryptedBlock,
+        whiteners,
+        randomBlocks,
+      );
+
+      const tuple = new InMemoryBlockTuple(
+        [primeBlock, ...whiteners, ...randomBlocks],
+        poolOptions?.poolId,
+      );
+
+      await persistTuple(tuple);
+      return tuple;
+    } catch (error) {
+      if (error instanceof TupleError) {
+        throw error;
+      }
+      throw new TupleError(
+        TupleErrorType.EncryptedDataStreamProcessingFailed,
+        undefined,
+        {
+          ERROR: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
+  }
+
+  /**
+   * Get the number of random blocks needed for a tuple
+   * @param dataLength - The length of the data
+   * @returns The number of random blocks needed
+   * Process a data stream into encrypted tuples and create an encrypted CBL
+   */
+  public getRandomBlockCount(dataLength: number): number {
+    // Scale number of random blocks based on data size
+    const baseCount = Math.ceil(dataLength / 1024); // 1 block per KB
+    return Math.min(
+      Math.max(baseCount, TUPLE.MIN_RANDOM_BLOCKS),
+      TUPLE.MAX_RANDOM_BLOCKS,
+    );
+  }
+}

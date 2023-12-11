@@ -1,0 +1,146 @@
+# Implementation Plan
+
+- [x] 1. Write bug condition exploration test
+  - **Property 1: Bug Condition** - Direct Content Storage in BrightChat Services
+  - **CRITICAL**: This test MUST FAIL on unfixed code — failure confirms the bug exists
+  - **DO NOT attempt to fix the test or the code when it fails**
+  - **NOTE**: This test encodes the expected behavior — it will validate the fix when it passes after implementation
+  - **GOAL**: Surface counterexamples that demonstrate message content is stored directly in BrightDB instead of as blocks
+  - **Scoped PBT Approach**: For each of the three services (ConversationService, GroupService, ChannelService), generate random message content strings and verify that `sendMessage()` stores a block reference (magnet URL) in `encryptedContent` rather than the raw content
+  - **Test file**: `brightchain-lib/src/lib/services/communication/__tests__/blockStorageBugCondition.pbt.spec.ts`
+  - **Setup**: Create instances of ConversationService, GroupService, and ChannelService with a mock `IBlockContentStore` that records calls and returns fake block references
+  - **Bug Condition from design**: `isBugCondition(input)` returns true when `input.operation == 'sendMessage'` AND `input.service IN ['ConversationService', 'GroupService', 'ChannelService']`
+  - **Property assertion**: For all generated content strings, after `sendMessage()`:
+    - `result.encryptedContent` MUST NOT equal the original content string
+    - `result.encryptedContent` MUST be a block reference (magnet URL format or mock reference)
+    - `IBlockContentStore.storeContent()` MUST have been called with the original content
+  - Run test on UNFIXED code
+  - **EXPECTED OUTCOME**: Test FAILS (this is correct — it proves the bug exists: `encryptedContent` contains raw content, `storeContent()` is never called)
+  - Document counterexamples found (e.g., `ConversationService.sendMessage("alice", "bob", "Hello")` returns `encryptedContent: "Hello"` instead of a block reference)
+  - Mark task complete when test is written, run, and failure is documented
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6_
+
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
+  - **Property 2: Preservation** - Non-Content Metadata Operations Unchanged
+  - **IMPORTANT**: Follow observation-first methodology
+  - **Test file**: `brightchain-lib/src/lib/services/communication/__tests__/blockStoragePreservation.pbt.spec.ts`
+  - **Observe on UNFIXED code first**, then write property-based tests capturing observed behavior:
+  - **Conversation metadata preservation**:
+    - Observe: `createOrGetConversation("alice", "bob")` returns conversation with correct participants, epoch 0 key state, timestamps
+    - Observe: `listConversations("alice")` returns conversations sorted by `lastMessageAt` descending
+    - Observe: `sendMessage()` updates `conversation.lastMessageAt` and emits `emitMessageSent` event
+    - Property: For all pairs of member IDs, `createOrGetConversation` produces identical conversation metadata (id, participants, encryptedSharedKey structure, timestamps) with and without `IBlockContentStore`
+  - **Group metadata preservation**:
+    - Observe: `createGroup("test", creatorId, [memberIds])` returns group with correct members, roles, epoch 0 key state
+    - Observe: `addMembers()` wraps all epoch keys for new members
+    - Observe: `removeMember()` / `leaveGroup()` triggers key rotation (epoch increment, re-wrap)
+    - Property: For all group membership operations, metadata (members, roles, encryptedSharedKey, pinnedMessageIds) is identical with and without `IBlockContentStore`
+  - **Channel metadata preservation**:
+    - Observe: `createChannel(name, creatorId, visibility)` returns channel with correct visibility, members, epoch 0
+    - Observe: `joinChannel()` / `leaveChannel()` / `kickMember()` correctly manage membership and key rotation
+    - Observe: `createInvite()` / `redeemInvite()` manage invite tokens correctly
+    - Property: For all channel lifecycle operations, metadata is identical with and without `IBlockContentStore`
+  - **Event emission preservation**:
+    - Property: For all non-content operations (create, join, leave, kick, mute, pin, react), the same event types fire with the same arguments
+  - **Pagination preservation**:
+    - Property: `IPaginatedResult` structure (items, cursor, hasMore) is identical for metadata queries
+  - Run tests on UNFIXED code
+  - **EXPECTED OUTCOME**: Tests PASS (this confirms baseline behavior to preserve)
+  - Mark task complete when tests are written, run, and passing on unfixed code
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10_
+
+- [x] 3. Implement block storage fix for BrightChat services
+
+  - [x] 3.1 Create `IBlockContentStore` interface in `brightchain-lib`
+    - Create new file: `brightchain-lib/src/lib/interfaces/communication/blockContentStore.ts`
+    - Define `IBlockContentStore` interface with three async methods:
+      - `storeContent(content: Uint8Array | string, senderId: string, recipientIds: string[]): Promise<{ blockReference: string }>` — stores content as blocks, announces via gossip, returns magnet URL
+      - `retrieveContent(blockReference: string): Promise<Uint8Array | null>` — retrieves content from block store by reference
+      - `deleteContent(blockReference: string): Promise<void>` — removes content blocks from block store
+    - Export from `brightchain-lib` barrel exports (communication interfaces)
+    - _Bug_Condition: isBugCondition(input) where services store raw content instead of block references_
+    - _Expected_Behavior: Platform-agnostic abstraction enables services in brightchain-lib to delegate to block storage without Node.js dependencies_
+    - _Preservation: No existing interfaces or exports are modified_
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+
+  - [x] 3.2 Update `ConversationService` to use `IBlockContentStore`
+    - Add optional `IBlockContentStore` parameter to constructor (after existing `storageProvider` param)
+    - In `sendMessage()`: if `blockContentStore` is present, call `storeContent(content, senderId, [recipientId])` and set `encryptedContent` to the returned `blockReference` instead of raw `content`
+    - If `blockContentStore` is absent (unit tests, backward compat), fall back to current direct-storage behavior
+    - _Bug_Condition: ConversationService.sendMessage() stores raw content in encryptedContent_
+    - _Expected_Behavior: encryptedContent contains block reference (magnet URL) when IBlockContentStore is injected_
+    - _Preservation: Constructor signature is backward-compatible (new param is optional); all metadata operations unchanged_
+    - _Requirements: 1.1, 2.1, 2.4, 2.5_
+
+  - [x] 3.3 Update `GroupService` to use `IBlockContentStore`
+    - Add optional `IBlockContentStore` parameter to constructor (after existing `storageProvider` param)
+    - In `sendMessage()`: if `blockContentStore` is present, call `storeContent()` and set `encryptedContent` to block reference
+    - In `editMessage()`: if `blockContentStore` is present, store new content as a new block, update `encryptedContent` to new block reference, push old reference to `editHistory`
+    - Fallback to current behavior when `blockContentStore` is absent
+    - _Bug_Condition: GroupService.sendMessage() and editMessage() store raw content_
+    - _Expected_Behavior: encryptedContent contains block reference; edit history contains block references_
+    - _Preservation: Constructor backward-compatible; all membership, key rotation, pin, reaction operations unchanged_
+    - _Requirements: 1.2, 2.2, 2.4, 2.5_
+
+  - [x] 3.4 Update `ChannelService` to use `IBlockContentStore`
+    - Add optional `IBlockContentStore` parameter to constructor (after existing `storageProvider` param)
+    - In `sendMessage()`: if `blockContentStore` is present, call `storeContent()` and set `encryptedContent` to block reference
+    - In `editMessage()`: if `blockContentStore` is present, store new content as a new block, update reference
+    - In `searchMessages()`: if `blockContentStore` is present, retrieve content from block store for each non-deleted message before searching; fall back to current direct string search when absent
+    - Fallback to current behavior when `blockContentStore` is absent
+    - _Bug_Condition: ChannelService.sendMessage(), editMessage(), searchMessages() operate on raw content_
+    - _Expected_Behavior: Content stored/retrieved via block store; search retrieves content before matching_
+    - _Preservation: Constructor backward-compatible; all channel lifecycle, invite, moderation operations unchanged_
+    - _Requirements: 1.3, 2.3, 2.4, 2.5_
+
+  - [x] 3.5 Create `BlockContentStoreAdapter` in `brightchain-api-lib`
+    - Create new file: `brightchain-api-lib/src/lib/services/brightchat/blockContentStoreAdapter.ts`
+    - Implement `IBlockContentStore` interface
+    - Constructor accepts `MessageCBLService` and `IGossipService` dependencies
+    - `storeContent()`: convert string content to `Uint8Array`, delegate to `messageCBLService.createMessage()`, call `gossipService.announceMessage()` with block IDs and delivery metadata, return magnet URL as `blockReference`
+    - `retrieveContent()`: delegate to `messageCBLService.getMessageContent(blockReference)` to reconstruct content from blocks
+    - `deleteContent()`: parse magnet URL, retrieve block IDs from metadata, delete each block from block store
+    - _Bug_Condition: No adapter existed to bridge platform-agnostic interface to Node.js block storage_
+    - _Expected_Behavior: Concrete implementation delegates to MessageCBLService + GossipService following MessagePassingService.sendMessage() pattern_
+    - _Preservation: No existing files modified; new file only_
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.8_
+
+  - [x] 3.6 Update `application.ts` to wire `BlockContentStoreAdapter` into BrightChat services
+    - In the BrightChat communication services initialization section:
+      - Create a `BlockContentStoreAdapter` instance using the existing `MessageCBLService` stub (or real instance) and gossip stub
+      - Pass the adapter to `ConversationService`, `GroupService`, and `ChannelService` constructors as the new `IBlockContentStore` parameter
+      - Register `blockContentStore` in the services container for admin controllers
+    - _Bug_Condition: application.ts creates services without block store integration_
+    - _Expected_Behavior: Services receive IBlockContentStore at construction; adapter registered in service container_
+    - _Preservation: All other service wiring (chatStorageProvider, permissionService, eventEmitter, serverService) unchanged_
+    - _Requirements: 2.1, 2.2, 2.3, 2.4_
+
+  - [x] 3.7 Update `AdminChatController` to use block store for content retrieval and cleanup
+    - In `handleListMessages()`: after reading message metadata from BrightDB, retrieve `IBlockContentStore` from services container, use `retrieveContent()` with the `encryptedContent` field (now a block reference) to build `contentPreview`. Fall back to stored field value if block store unavailable.
+    - In `handleDeleteMessage()`: after soft-deleting BrightDB record, retrieve `IBlockContentStore` from services container, call `deleteContent(blockReference)` to clean up content blocks. Gracefully handle missing block store.
+    - _Bug_Condition: Admin controller reads raw content from BrightDB and doesn't clean up blocks on delete_
+    - _Expected_Behavior: Content preview retrieved from block store; delete cleans up both BrightDB record and block store content_
+    - _Preservation: AdminChatServersController (server/channel/member metadata) completely unchanged; pagination and error handling unchanged_
+    - _Requirements: 1.7, 1.8, 2.6, 2.7_
+
+  - [x] 3.8 Verify bug condition exploration test now passes
+    - **Property 1: Expected Behavior** - Block Storage for Message Content
+    - **IMPORTANT**: Re-run the SAME test from task 1 — do NOT write a new test
+    - The test from task 1 encodes the expected behavior (encryptedContent is a block reference, storeContent was called)
+    - When this test passes, it confirms the expected behavior is satisfied
+    - Run bug condition exploration test from step 1
+    - **EXPECTED OUTCOME**: Test PASSES (confirms bug is fixed — services now store content as blocks)
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+
+  - [x] 3.9 Verify preservation tests still pass
+    - **Property 2: Preservation** - Non-Content Metadata Operations Unchanged
+    - **IMPORTANT**: Re-run the SAME tests from task 2 — do NOT write new tests
+    - Run preservation property tests from step 2
+    - **EXPECTED OUTCOME**: Tests PASS (confirms no regressions — all metadata operations unchanged)
+    - Confirm all tests still pass after fix (no regressions)
+
+- [x] 4. Checkpoint - Ensure all tests pass
+  - Run the full test suite for affected packages: `npx nx test brightchain-lib` and `npx nx test brightchain-api-lib`
+  - Ensure all property-based tests (bug condition + preservation) pass
+  - Ensure no pre-existing tests are broken by the changes
+  - Ask the user if questions arise
