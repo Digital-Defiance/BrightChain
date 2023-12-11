@@ -1,0 +1,42 @@
+/* eslint-disable @nx/enforce-module-boundaries */
+import nxPreset from '../jest.preset.js';
+
+interface NxPreset {
+  moduleNameMapper?: Record<string, string>;
+}
+
+export default {
+  ...nxPreset,
+  displayName: 'brightchain-api',
+  preset: '../jest.preset.js',
+  testEnvironment: 'node',
+  setupFiles: ['reflect-metadata'],
+  transform: {
+    '^.+\\.ts$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+  },
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageDirectory: '../coverage/brightchain-api',
+  moduleNameMapper: {
+    ...(nxPreset as NxPreset).moduleNameMapper,
+    '^@brightchain/brightchain-lib$':
+      '<rootDir>/../brightchain-lib/src/index.ts',
+    '^@brightchain/brightchain-lib/(.*)$':
+      '<rootDir>/../brightchain-lib/src/$1',
+    '^@brightchain/brightchain-api-lib$':
+      '<rootDir>/../brightchain-api-lib/src/index.ts',
+    '^@brightchain/brightchain-api-lib/(.*)$':
+      '<rootDir>/../brightchain-api-lib/src/$1',
+    '^@brightchain/node-express-suite$':
+      '<rootDir>/../brightchain-node-express-suite/src/index.ts',
+    // Redirect Font Awesome kit subpath imports to their module entry points
+    '^@awesome\\.me/kit-a20d532681/icons/(.*)$':
+      '<rootDir>/../node_modules/@awesome.me/kit-a20d532681/icons/modules/$1',
+    '^@awesome\\.me/kit-a20d532681/icons$':
+      '<rootDir>/../node_modules/@awesome.me/kit-a20d532681/icons/modules/index.js',
+    // Redirect uuid imports to the CJS version to avoid ESM issues
+    '^uuid$': '<rootDir>/../node_modules/uuid/dist/cjs/index.js',
+    // Resolve deep subpath imports for node-ecies-lib types
+    '^@digitaldefiance/node-ecies-lib/src/(.*)$':
+      '<rootDir>/../node_modules/@digitaldefiance/node-ecies-lib/src/$1',
+  },
+};

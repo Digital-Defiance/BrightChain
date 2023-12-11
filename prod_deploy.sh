@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+###############################################################################
+# prod_deploy.sh — Production deployment script
+#
+# Usage:
+#   ./prod_deploy.sh              # normal deploy
+#   ./prod_deploy.sh --dry-run    # show what would happen without doing it
+#   ./prod_deploy.sh --skip-build # redeploy without rebuilding
+###############################################################################
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+LOCK_FILE="$SCRIPT_DIR/.deploy.lock"
+LOG_FILE="$SCRIPT_DIR/deploy.log"
+DEPLOY_BRANCH="main"
+DEPLOY_REMOTE="origin"
+
+# ── Flags ────────────────────────────────────────────────────────────────────
+DRY_RUN=false
+SKIP_BUILD=false
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run)    DRY_RUN=true ;;
+    --skip-build) SKIP_BUILD=true ;;
+    -h|--help)
+      sed -n '/^# Usage:/,/^###/p' "$0" | head -n -1
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $arg"
+      exit 1
+      ;;
+  esac
+done
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
+log() {
+  local msg="[$(date -u +"%Y-%m-%dT%H:%M:%SZ")] $*"
+  echo "$msg"
+  echo "$msg" >> "$LOG_FILE"
+}
+
+die() {
+  log "ERROR: $*"
+  exit 1
+}
+
+run() {
+  log "  → $*"
+  if [ "$DRY_RUN" = true ]; then
+    log "  (dry-run, skipped)"
+  else
+    "$@"
+  fi
+}
+
+# ── Concurrency lock ────────────────────────────────────────────────────────
+acquire_lock() {
+  if [ -f "$LOCK_FILE" ]; then
+    local lock_pid
+    lock_pid="$(cat "$LOCK_FILE" 2>/dev/null || true)"
+    if [ -n "${lock_pid:-}" ] && kill -0 "$lock_pid" 2>/dev/null; then
+      die "Another deploy is already running (PID $lock_pid). Aborting."
+    fi
+    log "Removing stale lock file (PID $lock_pid no longer running)."
+    rm -f "$LOCK_FILE"
+  fi
+  echo $$ > "$LOCK_FILE"
+}
+
+release_lock() {
+  rm -f "$LOCK_FILE"
+}
+trap release_lock EXIT
+
+# ── Pre-flight checks ───────────────────────────────────────────────────────
+command -v git  >/dev/null 2>&1 || die "git is not installed"
+command -v yarn >/dev/null 2>&1 || die "yarn is not installed"
+[ -d "$SCRIPT_DIR/.git" ]       || die "Not a git repository: $SCRIPT_DIR"
+
+acquire_lock
+
+log "========== Deploy started =========="
+log "Branch: $DEPLOY_BRANCH | Remote: $DEPLOY_REMOTE | Dry-run: $DRY_RUN | Skip-build: $SKIP_BUILD"
+
+PREV_HEAD="$(git rev-parse HEAD)"
+log "Current HEAD: $PREV_HEAD"
+
+# ── Step 1: Stash local changes (if any) ────────────────────────────────────
+STASH_CREATED=false
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  log "Stashing uncommitted changes..."
+  run git stash push -m "prod_deploy auto-stash $(date -u +%Y%m%dT%H%M%SZ)"
+  STASH_CREATED=true
+else
+  log "Working tree clean, nothing to stash."
+fi
+
+# ── Step 2: Fetch & checkout ────────────────────────────────────────────────
+log "Fetching from $DEPLOY_REMOTE..."
+run git fetch --all
+
+log "Checking out $DEPLOY_BRANCH tracking $DEPLOY_REMOTE/$DEPLOY_BRANCH..."
+run git checkout -B "$DEPLOY_BRANCH" --track "$DEPLOY_REMOTE/$DEPLOY_BRANCH"
+
+log "Updating submodules..."
+run git submodule update --init --recursive
+
+NEW_HEAD="$(git rev-parse HEAD)"
+log "New HEAD: $NEW_HEAD"
+
+# ── Step 3: Restore stashed changes ─────────────────────────────────────────
+if [ "$STASH_CREATED" = true ]; then
+  log "Restoring stashed changes..."
+  if [ "$DRY_RUN" = false ]; then
+    if ! git stash pop; then
+      log "WARNING: Stash pop had conflicts. Your changes are still in the stash."
+      log "  Resolve manually with: git stash show -p | git apply --3way"
+    fi
+  else
+    log "  (dry-run, skipped)"
+  fi
+fi
+
+# ── Step 4: Yarn ────────────────────────────────────────────────────────────
+log "Running yarn..."
+run ./do-yarn.sh --max-depth 2
+
+# ── Step 4: Build ───────────────────────────────────────────────────────────
+BUILD_MAX_RETRIES=3
+if [ "$SKIP_BUILD" = true ]; then
+  log "Skipping build (--skip-build)."
+else
+  log "Building (up to $BUILD_MAX_RETRIES attempts)..."
+  if [ "$DRY_RUN" = false ]; then
+    build_ok=false
+    for attempt in $(seq 1 "$BUILD_MAX_RETRIES"); do
+      log "Build attempt $attempt of $BUILD_MAX_RETRIES..."
+      if ./prod_build.sh; then
+        build_ok=true
+        break
+      fi
+      log "WARNING: Build attempt $attempt failed."
+      if [ "$attempt" -lt "$BUILD_MAX_RETRIES" ]; then
+        log "Retrying in 5 seconds..."
+        sleep 5
+      fi
+    done
+    if [ "$build_ok" = false ]; then
+      die "Build failed after $BUILD_MAX_RETRIES attempts. The server has NOT been restarted. Previous HEAD was $PREV_HEAD."
+    fi
+  else
+    log "  → ./prod_build.sh (dry-run, skipped)"
+  fi
+fi
+
+# ── Step 5: Restart the server ──────────────────────────────────────────────
+log "Stopping current server..."
+run ./term_prod_forever.sh
+
+# Clean up server.log if it exists
+[ -f "$SCRIPT_DIR/server.log" ] && rm -f "$SCRIPT_DIR/server.log"
+
+log "Starting server..."
+run ./prod_forever.sh
+
+log "========== Deploy complete =========="
+log "Deployed $DEPLOY_BRANCH at $(git rev-parse --short HEAD)"

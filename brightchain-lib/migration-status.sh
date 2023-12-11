@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Buffer to Uint8Array Migration Helper Script
+# This script helps identify remaining files that need migration
+
+echo "=== Buffer to Uint8Array Migration Status ==="
+echo ""
+
+echo "Files still using Buffer or randomBytes:"
+find /Volumes/Code/source/repos/BrightChain/brightchain-lib/src -name "*.spec.ts" -exec grep -l "Buffer\|randomBytes" {} \; | sort
+
+echo ""
+echo "=== Common patterns to replace ==="
+echo ""
+echo "1. Imports:"
+echo "   OLD: import { randomBytes } from 'crypto';"
+echo "   NEW: import { arraysEqual, uint8ArrayToHex, hexToUint8Array } from '@digitaldefiance/ecies-lib';"
+echo ""
+echo "2. Data creation:"
+echo "   OLD: const data = randomBytes(size);"
+echo "   NEW: const data = new Uint8Array(size); crypto.getRandomValues(data);"
+echo ""
+echo "3. Buffer allocation:"
+echo "   OLD: const buffer = Buffer.alloc(size);"
+echo "   NEW: const array = new Uint8Array(size);"
+echo ""
+echo "4. Array comparison:"
+echo "   OLD: Buffer.from(a).equals(Buffer.from(b))"
+echo "   NEW: arraysEqual(new Uint8Array(a), new Uint8Array(b))"
+echo ""
+echo "5. Hex conversion:"
+echo "   OLD: buffer.toString('hex')"
+echo "   NEW: uint8ArrayToHex(uint8Array)"
+echo ""
+echo "6. Data concatenation:"
+echo "   OLD: Buffer.concat([buf1, buf2])"
+echo "   NEW: Manual concatenation with set() method"
+echo ""
+
+echo "=== Files completed so far ==="
+echo "✅ cbl.spec.ts"
+echo "✅ base.spec.ts" 
+echo "✅ encrypted.spec.ts"
+echo "✅ ephemeral.spec.ts"
+echo "✅ rawData.spec.ts"
+echo "✅ random.spec.ts"
+echo "✅ whitened.spec.ts"
+echo "✅ checksum.service.spec.ts"
+echo "✅ xorTransform.spec.ts"
+echo "🔄 crc.service.spec.ts (partial)"
+
+echo ""
+echo "=== Next priority files ==="
+echo "- handleTuple.spec.ts"
+echo "- handle.spec.ts"
+echo "- blockService.spec.ts"
+echo "- cblService.spec.ts"
+echo "- tuple.service.spec.ts"

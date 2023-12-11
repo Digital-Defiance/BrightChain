@@ -1,0 +1,10 @@
+#!/bin/bash
+# /usr/local/bin/brightchain-maildrop
+# Deposits a message into the BrightChain Mail Drop Directory.
+# Called by Postfix via the brightchain-drop pipe transport.
+# Usage: brightchain-maildrop <sender> <recipient>
+MAIL_DROP_DIR="/var/spool/brightchain/incoming"
+FILENAME="$(date +%s).$(hostname).$$.$RANDOM"
+cat > "${MAIL_DROP_DIR}/tmp/${FILENAME}"
+mv "${MAIL_DROP_DIR}/tmp/${FILENAME}" "${MAIL_DROP_DIR}/new/${FILENAME}"
+exit 0

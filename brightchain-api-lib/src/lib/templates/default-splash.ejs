@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title><%= siteName %></title>
+    <meta name="description" content="<%= siteDescription %>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+<% if (fontAwesomeKitId) { -%>
+    <script nonce="<%= cspNonce %>" src="https://kit.fontawesome.com/<%= fontAwesomeKitId %>.js" crossorigin="anonymous"></script>
+<% } -%>
+    <script nonce="<%= cspNonce %>">
+      window.APP_CONFIG = <%- JSON.stringify({
+        apiUrl: (siteUrl || serverUrl) + '/api',
+        serverUrl: siteUrl || serverUrl,
+        hostname: typeof hostname !== 'undefined' ? hostname : '',
+        siteTitle: siteName,
+        server: serverUrl,
+        emailDomain: emailDomain,
+        enabledFeatures: enabledFeatures
+      }) %>;
+    </script>
+<% if (typeof headAssets !== 'undefined' && headAssets) { -%>
+    <%- headAssets %>
+<% } -%>
+  </head>
+  <body>
+    <div id="root"></div>
+<% if (typeof bodyScripts !== 'undefined' && bodyScripts) { -%>
+    <%- bodyScripts %>
+<% } -%>
+  </body>
+</html>

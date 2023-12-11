@@ -1,0 +1,81 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# BrightChain Node — Development Docker Compose (with Azurite)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Uses Azurite (Azure Storage emulator) as the block store backend instead of
+# the local disk driver. This mirrors a production Azure Blob Storage setup.
+#
+# Usage:
+#   cp .env.production.example .env   # fill in your values
+#   docker compose -f docker-compose.dev.yml build --no-cache
+#   docker compose -f docker-compose.dev.yml up -d
+#   docker compose -f docker-compose.dev.yml logs
+#   docker compose -f docker-compose.dev.yml down -v
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+
+services:
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: brightchain-azurite
+    restart: unless-stopped
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --loose --skipApiVersionCheck
+    ports:
+      # Expose Blob service for local tooling (Azure Storage Explorer, etc.)
+      - '10000:10000'
+    volumes:
+      - azurite-data:/data
+    healthcheck:
+      test: ['CMD', 'nc', '-z', '127.0.0.1', '10000']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  brightchain-node:
+    image: ghcr.io/digital-defiance/brightchain-node:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        BRIGHTCHAIN_REGISTRY_TOKEN: ${BRIGHTCHAIN_REGISTRY_TOKEN:-}
+    container_name: brightchain-node
+    restart: unless-stopped
+    depends_on:
+      azurite:
+        condition: service_healthy
+    env_file: .env.docker
+    environment:
+      # Override block store to use Azure driver pointing at Azurite
+      BRIGHTCHAIN_BLOCKSTORE_TYPE: azure
+      BRIGHTCHAIN_BLOCKSTORE_PATH: /data/blockstore
+      AZURE_STORAGE_CONNECTION_STRING: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+      AZURE_STORAGE_CONTAINER_NAME: ${AZURE_STORAGE_CONTAINER_NAME:-brightchain-blocks}
+    ports:
+      # HTTP/WS — API + React frontend + WebSocket
+      - '${PORT:-3000}:3000'
+      # SMTP — inbound email
+      - '25:25'
+      # Submission — authenticated outbound relay
+      - '587:587'
+    volumes:
+      # DKIM private key (operator-provided)
+      - ./dkim:/etc/dkim:ro
+      # TLS certificates (optional — if using Let's Encrypt)
+      - ./certs:/etc/ssl/certs:ro
+      - ./private:/etc/ssl/private:ro
+    healthcheck:
+      test: ['CMD', 'nc', '-z', '127.0.0.1', '3000']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: '50m'
+        max-file: '5'
+
+volumes:
+  azurite-data:
+    driver: local
