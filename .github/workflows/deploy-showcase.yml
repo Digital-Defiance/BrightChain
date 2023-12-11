@@ -1,0 +1,174 @@
+name: Deploy Showcase to GitHub Pages
+
+on:
+  push:
+    branches: [main, burnbag]
+    paths:
+      - 'showcase/**'
+      - 'docs/**'
+      - '.github/workflows/deploy-showcase.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BRIGHTCHAIN_REGISTRY_TOKEN: ${{ secrets.BRIGHTCHAIN_REGISTRY_TOKEN }}
+    steps:
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Self-Whitelist Runner IP (with Retries)
+        run: |
+          RUNNER_IP=$(curl -s https://ifconfig.me)
+          RESOURCE_ID=$(az containerapp show -n verdaccio-registry -g BrightChain --query id -o tsv)
+          
+          # Retry loop to handle (ContainerAppOperationInProgress)
+          for i in {1..5}; do
+            echo "Attempt $i: Whitelisting CI Runner ($RUNNER_IP)..."
+            
+            az rest --method patch --url "${RESOURCE_ID}?api-version=2023-05-01" --body "{
+              \"properties\": {
+                \"configuration\": {
+                  \"ingress\": {
+                    \"external\": true,
+                    \"ipSecurityRestrictions\": [
+                      { \"name\": \"AllowStephenson\", \"ipAddressRange\": \"67.183.70.240/32\", \"action\": \"Allow\" },
+                      { \"name\": \"AllowGitHubRunner\", \"ipAddressRange\": \"$RUNNER_IP/32\", \"action\": \"Allow\" }
+                    ]
+                  }
+                }
+              }
+            }" && break || echo "Azure is busy, retrying in 30s..."
+            
+            sleep 30
+          done
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Enable Yarn Berry
+        run: |
+          corepack enable
+          yarn set version 4.14.1
+
+      - name: Restore Yarn cache
+        id: yarn-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+
+      - name: Configure registries for CI
+        run: |
+          # 1. Force Yarn to use the correct settings
+          yarn config set 'npmScopes["awesome.me"].npmRegistryServer' "https://verdaccio-registry.nicefield-46a11a16.westus2.azurecontainerapps.io"
+          yarn config set 'npmScopes["awesome.me"].npmAlwaysAuth' true
+          yarn config set 'npmScopes["fortawesome"].npmRegistryServer' "https://verdaccio-registry.nicefield-46a11a16.westus2.azurecontainerapps.io"
+          yarn config set 'npmScopes["fortawesome"].npmAlwaysAuth' true
+          yarn config set nodeLinker node-modules
+          
+          # 2. CREATE A PHYSICAL .NPMRC (The 'Silver Bullet' for node-modules linker)
+          # Note: We remove 'https:' from the URL for the config key
+          echo "//verdaccio-registry.nicefield-46a11a16.westus2.azurecontainerapps.io/:_auth=${{ secrets.BRIGHTCHAIN_REGISTRY_TOKEN }}" > .npmrc
+          echo "always-auth=true" >> .npmrc
+          
+          # COPY it to showcase just in case the linker checks there
+          mkdir -p showcase
+          cp .npmrc showcase/.npmrc          
+
+      - name: Ensure Yarn cache directory exists
+        run: mkdir -p .yarn/cache
+
+      # - name: Network Trace
+      #   run: |
+      #     echo "Checking DNS resolution..."
+      #     nslookup verdaccio-registry.nicefield-46a11a16.westus2.azurecontainerapps.io
+      #     echo "Checking Connectivity..."
+      #     curl -v https://verdaccio-registry.nicefield-46a11a16.westus2.azurecontainerapps.io/
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      # - name: Install showcase dependencies
+      #   run: |
+      #     cd showcase
+      #     yarn install --immutable
+
+      - name: Build showcase (React)
+        run: |
+          cd showcase
+          yarn build
+        env:
+          NODE_OPTIONS: '--max-old-space-size=6144'
+          GENERATE_SOURCEMAP: 'false'
+          NODE_ENV: production
+
+      - name: Setup Ruby for Jekyll
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: docs
+
+      - name: Build Jekyll docs
+        run: |
+          cd docs
+          bundle exec jekyll build --destination _site --baseurl /docs
+        env:
+          JEKYLL_ENV: production
+
+      - name: Merge docs into showcase dist
+        run: |
+          mkdir -p ./showcase/dist/docs
+          cp -r ./docs/_site/* ./showcase/dist/docs/
+
+      - name: Add CNAME
+        run: |
+          cp CNAME ./showcase/dist/CNAME
+
+      - name: Fail if docs output is missing
+        run: |
+          if [ ! -f ./showcase/dist/docs/index.html ]; then
+            echo 'Jekyll docs output missing! Build or copy step failed.'
+            exit 1
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './showcase/dist'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

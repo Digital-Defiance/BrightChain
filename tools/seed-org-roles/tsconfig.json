@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "compilerOptions": {
+    "esModuleInterop": true
+  },
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "../../brightchain-lib"
+    },
+    {
+      "path": "../../brightchain-api-lib"
+    }
+  ]
+}

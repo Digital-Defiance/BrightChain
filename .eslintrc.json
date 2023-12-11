@@ -1,0 +1,73 @@
+{
+  "root": true,
+  "ignorePatterns": ["**/out/**", "**/dist/**"],
+  "plugins": ["@nx", "@typescript-eslint", "prettier", "jest"],
+  "rules": {
+    "prettier/prettier": "error"
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "@nx/enforce-module-boundaries": [
+          "error",
+          {
+            "enforceBuildableLibDependency": true,
+            "allow": [],
+            "depConstraints": [
+              {
+                "sourceTag": "type:lib",
+                "onlyDependOnLibsWithTags": ["type:lib"]
+              },
+              {
+                "sourceTag": "type:app",
+                "onlyDependOnLibsWithTags": ["type:lib", "type:app"]
+              },
+              {
+                "sourceTag": "*",
+                "onlyDependOnLibsWithTags": ["*"]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "extends": [
+        "plugin:@nx/typescript",
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:prettier/recommended"
+      ],
+      "parserOptions": {
+        "projectService": true
+      },
+      "rules": {
+        "@typescript-eslint/explicit-module-boundary-types": "off"
+      }
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "extends": ["plugin:@nx/javascript"],
+      "rules": {}
+    },
+    {
+      "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx", "*.test.ts", "*.test.tsx", "**/__tests__/**/*.ts", "**/__tests__/**/*.tsx", "**/__mocks__/**/*.ts"],
+      "extends": ["plugin:jest/recommended"],
+      "env": {
+        "jest": true,
+        "node": true
+      },
+      "rules": {
+        "jest/no-conditional-expect": "off",
+        "jest/no-jasmine-globals": "warn",
+        "jest/expect-expect": "off",
+        "jest/no-standalone-expect": "off",
+        "jest/no-done-callback": "warn",
+        "jest/no-disabled-tests": "warn",
+        "jest/no-mocks-import": "off"
+      }
+    }
+  ]
+}

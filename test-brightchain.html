@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BrightChain Test</title>
+</head>
+<body>
+    <h1>BrightChain Test</h1>
+    <div id="output"></div>
+    
+    <script type="module">
+        import { BrightChain, BlockSize, initializeBrightChain } from '../brightchain-lib/dist/index.js';
+        
+        async function test() {
+            const output = document.getElementById('output');
+            
+            try {
+                // Initialize BrightChain
+                initializeBrightChain();
+                output.innerHTML += '<p>✅ BrightChain initialized</p>';
+                
+                // Create BrightChain instance
+                const brightChain = new BrightChain(BlockSize.Small);
+                output.innerHTML += '<p>✅ BrightChain instance created</p>';
+                
+                // Test file storage
+                const testData = new TextEncoder().encode("Hello, BrightChain!");
+                const receipt = await brightChain.storeFile(testData, "test.txt");
+                output.innerHTML += `<p>✅ File stored: ${receipt.fileName} (${receipt.blockCount} blocks)</p>`;
+                
+                // Test file retrieval
+                const retrievedData = await brightChain.retrieveFile(receipt);
+                const retrievedText = new TextDecoder().decode(retrievedData);
+                output.innerHTML += `<p>✅ File retrieved: "${retrievedText}"</p>`;
+                
+                output.innerHTML += '<p><strong>🎉 All tests passed!</strong></p>';
+                
+            } catch (error) {
+                output.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+                console.error(error);
+            }
+        }
+        
+        test();
+    </script>
+</body>
+</html>

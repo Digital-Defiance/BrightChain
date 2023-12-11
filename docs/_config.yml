@@ -1,0 +1,59 @@
+title: BrightChain Documentation
+description: >-
+  Documentation for BrightChain — a decentralized application platform
+  built on the Owner-Free Filesystem concept.
+baseurl: /docs
+url: https://github.brightchain.org
+
+remote_theme: just-the-docs/just-the-docs@v0.10.0
+
+# Use pretty permalinks to avoid .md in URLs
+permalink: pretty
+
+ga_tracking: G-N3M6QH8EFY
+
+# Aux links (top-right)
+aux_links:
+  GitHub: https://github.com/Digital-Defiance/BrightChain
+  Showcase: https://github.brightchain.org/
+
+# Footer
+footer_content: >-
+  &copy; Digital Defiance &mdash; BrightChain is open-source under the
+  <a href="https://github.com/Digital-Defiance/BrightChain/blob/main/LICENSE">project license</a>.
+
+# Color scheme
+color_scheme: dark
+
+# Enable search
+search_enabled: true
+search.button: true
+
+# Back-to-top button
+back_to_top: true
+back_to_top_text: 'Back to top'
+
+# Heading anchor links
+heading_anchors: true
+
+# Navigation structure
+nav_sort: case_insensitive
+
+# Exclude files from Jekyll build
+exclude:
+  - _template.md
+  - '*.spec.md'
+  - node_modules/
+  - Gemfile.lock
+
+# Default front matter
+defaults:
+  - scope:
+      path: ''
+    values:
+      layout: default
+  - scope:
+      path: 'walkthroughs'
+    values:
+      layout: default
+      parent: Walkthroughs

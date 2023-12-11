@@ -1,0 +1,450 @@
+/**
+ * DirectMessageController — REST API for direct message conversations.
+ *
+ * Routes:
+ *   POST   /                              — Send a direct message
+ *   GET    /                              — List conversations (paginated)
+ *   GET    /:conversationId/messages      — Get messages (paginated, cursor-based)
+ *   DELETE /:conversationId/messages/:messageId — Delete a message
+ *   POST   /:conversationId/promote       — Promote conversation to group
+ *
+ * Requirements: 1.1, 1.2, 1.3, 1.4, 1.5
+ */
+
+import {
+  ConversationMessageNotFoundError,
+  ConversationNotFoundError,
+  ConversationNotMessageAuthorError,
+  ConversationService,
+  GroupPromotionNotConfiguredError,
+  IDeleteMessageResponse,
+  IGetMessagesResponse,
+  IListConversationsResponse,
+  IPromoteToGroupResponse,
+  ISendDirectMessageResponse,
+  NotParticipantError,
+  RecipientNotReachableError,
+} from '@brightchain/brightchain-lib';
+import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import {
+  ApiErrorResponse,
+  ApiRequestHandler,
+  TypedHandlers,
+  routeConfig,
+} from '@digitaldefiance/node-express-suite';
+import { IBrightChainApplication } from '../../interfaces/application';
+import { DefaultBackendIdType } from '../../shared-types';
+import {
+  deleteConversationMessageValidation,
+  getConversationMessagesValidation,
+  listConversationsValidation,
+  promoteConversationValidation,
+  sendDirectMessageValidation,
+} from '../../utils/communicationValidation';
+import {
+  forbiddenError,
+  handleError,
+  internalError,
+  notFoundError,
+  validationError,
+} from '../../utils/errorResponse';
+import { BaseController } from '../base';
+
+type ConversationApiResponse =
+  | ISendDirectMessageResponse
+  | IListConversationsResponse
+  | IGetMessagesResponse
+  | IDeleteMessageResponse
+  | IPromoteToGroupResponse
+  | ApiErrorResponse;
+
+interface DirectMessageHandlers extends TypedHandlers {
+  sendDirectMessage: ApiRequestHandler<
+    ISendDirectMessageResponse | ApiErrorResponse
+  >;
+  listConversations: ApiRequestHandler<
+    IListConversationsResponse | ApiErrorResponse
+  >;
+  getConversationMessages: ApiRequestHandler<
+    IGetMessagesResponse | ApiErrorResponse
+  >;
+  deleteMessage: ApiRequestHandler<IDeleteMessageResponse | ApiErrorResponse>;
+  promoteToGroup: ApiRequestHandler<IPromoteToGroupResponse | ApiErrorResponse>;
+}
+
+interface SendDMRequestBody {
+  body: { recipientId?: string; conversationId?: string; content?: string; senderId?: string };
+}
+
+interface ListConversationsQuery {
+  query: { cursor?: string; limit?: string; memberId?: string };
+}
+
+interface GetMessagesParams {
+  params: { conversationId: string };
+  query: { cursor?: string; limit?: string; memberId?: string };
+}
+
+interface DeleteMessageParams {
+  params: { conversationId: string; messageId: string };
+  query: { memberId?: string };
+}
+
+interface PromoteParams {
+  params: { conversationId: string };
+  body: { newMemberIds?: string[]; memberId?: string };
+  query: { memberId?: string };
+}
+
+/**
+ * Controller for direct message conversations.
+ *
+ * @requirements 1.1, 1.2, 1.3, 1.4, 1.5
+ */
+export class DirectMessageController<
+  TID extends PlatformID = DefaultBackendIdType,
+> extends BaseController<
+  TID,
+  ConversationApiResponse,
+  DirectMessageHandlers,
+  CoreLanguageCode
+> {
+  private conversationService: ConversationService | null = null;
+
+  constructor(application: IBrightChainApplication<TID>) {
+    super(application);
+  }
+
+  /**
+   * Inject the ConversationService dependency.
+   */
+  public setConversationService(service: ConversationService): void {
+    this.conversationService = service;
+  }
+
+  private getConversationService(): ConversationService {
+    if (!this.conversationService) {
+      throw new Error('ConversationService not initialized');
+    }
+    return this.conversationService;
+  }
+
+  /**
+   * Extract the authenticated member ID from the JWT session.
+   * Falls back to body/query senderId/memberId for testing when auth is disabled.
+   */
+  private getMemberId(req: unknown): string {
+    const user = (req as { user?: { id?: string } }).user;
+    if (user && typeof user.id === 'string') return user.id;
+    throw new Error('No authenticated user');
+  }
+
+  protected initRouteDefinitions(): void {
+    const auth = {
+      useAuthentication: true,
+      useCryptoAuthentication: false,
+    };
+
+    this.routeDefinitions = [
+      routeConfig('post', '/', {
+        ...auth,
+        handlerKey: 'sendDirectMessage',
+        validation: () => sendDirectMessageValidation,
+      }),
+      routeConfig('get', '/', {
+        ...auth,
+        handlerKey: 'listConversations',
+        validation: () => listConversationsValidation,
+      }),
+      routeConfig('get', '/:conversationId/messages', {
+        ...auth,
+        handlerKey: 'getConversationMessages',
+        validation: () => getConversationMessagesValidation,
+      }),
+      routeConfig('delete', '/:conversationId/messages/:messageId', {
+        ...auth,
+        handlerKey: 'deleteMessage',
+        validation: () => deleteConversationMessageValidation,
+      }),
+      routeConfig('post', '/:conversationId/promote', {
+        ...auth,
+        handlerKey: 'promoteToGroup',
+        validation: () => promoteConversationValidation,
+      }),
+    ];
+
+    this.handlers = {
+      sendDirectMessage: this.handleSendDirectMessage.bind(this),
+      listConversations: this.handleListConversations.bind(this),
+      getConversationMessages: this.handleGetConversationMessages.bind(this),
+      deleteMessage: this.handleDeleteMessage.bind(this),
+      promoteToGroup: this.handlePromoteToGroup.bind(this),
+    };
+  }
+
+  /**
+   * POST /
+   * Send a direct message. Creates conversation if needed.
+   * If content is omitted, creates/returns the conversation without sending a message.
+   * @requirements 1.1, 1.5
+   */
+  private async handleSendDirectMessage(req: unknown): Promise<{
+    statusCode: number;
+    response: ISendDirectMessageResponse | ApiErrorResponse;
+  }> {
+    try {
+      const { recipientId: rawRecipientId, conversationId, content } = (req as SendDMRequestBody).body;
+
+      const senderId = this.getMemberId(req);
+      const service = this.getConversationService();
+
+      // Resolve the recipientId: either from the request body directly,
+      // or by looking up the other participant in an existing conversation.
+      let recipientId = rawRecipientId;
+      if (!recipientId && conversationId) {
+        const conversation = service.getConversation(conversationId);
+        if (!conversation) {
+          return notFoundError('Conversation', conversationId);
+        }
+        // The other participant is the recipient
+        recipientId = conversation.participants.find((p) => p !== senderId);
+        if (!recipientId) {
+          return forbiddenError('Not a participant of this conversation');
+        }
+      }
+
+      if (!recipientId) {
+        return validationError('Missing required field: recipientId or conversationId');
+      }
+
+      await this.ensureMemberKeys(senderId, recipientId);
+
+      // Register the authenticated sender as a known member so that
+      // the reachability check inside ConversationService.sendMessage()
+      // recognises them.
+      service.registerMember(senderId);
+
+      // When the recipientId was resolved from an existing conversation,
+      // the recipient is already a validated participant — register them
+      // so the reachability check passes. For new conversations where the
+      // recipientId is supplied directly, do NOT pre-register — the
+      // service's isReachable() check must verify the recipient actually
+      // exists. Blocked-member checks still apply inside isReachable()
+      // independently of knownMembers registration.
+      if (!rawRecipientId && conversationId) {
+        service.registerMember(recipientId);
+      }
+
+      // If no content provided, just create/get the conversation
+      if (!content) {
+        const conversation = await service.createOrGetConversation(senderId, recipientId);
+        return {
+          statusCode: 201,
+          response: {
+            status: 'success',
+            data: {
+              id: conversation.id,
+              contextType: 'conversation',
+              contextId: conversation.id,
+              senderId,
+              encryptedContent: '',
+              createdAt: conversation.createdAt,
+              editHistory: [],
+              deleted: false,
+              pinned: false,
+              reactions: [],
+              keyEpoch: 0,
+              attachments: [],
+            },
+            message: 'Conversation created',
+          } satisfies ISendDirectMessageResponse,
+        };
+      }
+
+      const message = await service.sendMessage(senderId, recipientId, content, conversationId);
+
+      return {
+        statusCode: 201,
+        response: {
+          status: 'success',
+          data: message,
+          message: 'Message sent',
+        } satisfies ISendDirectMessageResponse,
+      };
+    } catch (error) {
+      return this.mapServiceError(error);
+    }
+  }
+
+  /**
+   * GET /
+   * List conversations for the authenticated member.
+   * @requirements 1.2
+   */
+  private async handleListConversations(req: unknown): Promise<{
+    statusCode: number;
+    response: IListConversationsResponse | ApiErrorResponse;
+  }> {
+    try {
+      const { cursor, limit } = (req as ListConversationsQuery).query;
+      const memberId = this.getMemberId(req);
+      const service = this.getConversationService();
+
+      const result = await service.listConversations(
+        memberId,
+        cursor,
+        limit ? parseInt(limit, 10) : undefined,
+      );
+
+      return {
+        statusCode: 200,
+        response: {
+          status: 'success',
+          data: result,
+          message: 'Conversations listed',
+        } satisfies IListConversationsResponse,
+      };
+    } catch (error) {
+      return this.mapServiceError(error);
+    }
+  }
+
+  /**
+   * GET /:conversationId/messages
+   * Get messages in a conversation (cursor-based pagination).
+   * @requirements 1.3
+   */
+  private async handleGetConversationMessages(req: unknown): Promise<{
+    statusCode: number;
+    response: IGetMessagesResponse | ApiErrorResponse;
+  }> {
+    try {
+      const { conversationId } = (req as GetMessagesParams).params;
+      const { cursor, limit } = (req as GetMessagesParams).query;
+      const memberId = this.getMemberId(req);
+      const service = this.getConversationService();
+
+      const result = await service.getMessages(
+        conversationId,
+        memberId,
+        cursor,
+        limit ? parseInt(limit, 10) : undefined,
+      );
+
+      return {
+        statusCode: 200,
+        response: {
+          status: 'success',
+          data: result,
+          message: 'Messages retrieved',
+        } satisfies IGetMessagesResponse,
+      };
+    } catch (error) {
+      return this.mapServiceError(error);
+    }
+  }
+
+  /**
+   * DELETE /:conversationId/messages/:messageId
+   * Delete a message authored by the requesting member.
+   * @requirements 1.4
+   */
+  private async handleDeleteMessage(req: unknown): Promise<{
+    statusCode: number;
+    response: IDeleteMessageResponse | ApiErrorResponse;
+  }> {
+    try {
+      const { conversationId, messageId } = (req as DeleteMessageParams).params;
+      const memberId = this.getMemberId(req);
+      const service = this.getConversationService();
+
+      await service.deleteMessage(conversationId, messageId, memberId);
+
+      return {
+        statusCode: 200,
+        response: {
+          status: 'success',
+          data: { deleted: true },
+          message: 'Message deleted',
+        } satisfies IDeleteMessageResponse,
+      };
+    } catch (error) {
+      return this.mapServiceError(error);
+    }
+  }
+
+  /**
+   * POST /:conversationId/promote
+   * Promote a conversation to a group.
+   * @requirements 2.1, 2.2, 2.3
+   */
+  private async handlePromoteToGroup(req: unknown): Promise<{
+    statusCode: number;
+    response: IPromoteToGroupResponse | ApiErrorResponse;
+  }> {
+    try {
+      const { conversationId } = (req as PromoteParams).params;
+      const { newMemberIds } = (req as PromoteParams).body;
+      const memberId = this.getMemberId(req);
+      const service = this.getConversationService();
+
+      if (!newMemberIds || !Array.isArray(newMemberIds)) {
+        return validationError('Missing required field: newMemberIds');
+      }
+
+      await this.ensureMemberKeys(memberId, ...newMemberIds);
+      const group = await service.promoteToGroup(
+        conversationId,
+        newMemberIds,
+        memberId,
+      );
+
+      return {
+        statusCode: 200,
+        response: {
+          status: 'success',
+          data: group,
+          message: 'Conversation promoted to group',
+        } satisfies IPromoteToGroupResponse,
+      };
+    } catch (error) {
+      return this.mapServiceError(error);
+    }
+  }
+
+  /**
+   * Map service-layer errors to appropriate HTTP responses.
+   * Ensures uniform error format for blocked/non-existent members (Req 1.5).
+   */
+  private mapServiceError(error: unknown): {
+    statusCode: number;
+    response: ApiErrorResponse;
+  } {
+    if (error instanceof RecipientNotReachableError) {
+      return notFoundError('Recipient', 'unknown');
+    }
+    if (error instanceof ConversationNotFoundError) {
+      return notFoundError('Conversation', 'unknown');
+    }
+    if (error instanceof NotParticipantError) {
+      return forbiddenError(error.message);
+    }
+    if (error instanceof ConversationMessageNotFoundError) {
+      return notFoundError('Message', 'unknown');
+    }
+    if (error instanceof ConversationNotMessageAuthorError) {
+      return forbiddenError(error.message);
+    }
+    if (error instanceof GroupPromotionNotConfiguredError) {
+      return internalError(error);
+    }
+    return handleError(error);
+  }
+}
+
+/**
+ * Alias for DirectMessageController used by ApiRouter.
+ * The router mounts this at /api/conversations.
+ */
+export { DirectMessageController as ConversationController };

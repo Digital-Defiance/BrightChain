@@ -1,0 +1,239 @@
+import { TUPLE } from '../constants';
+import { BrightChainStrings } from '../enumerations';
+import BlockDataType from '../enumerations/blockDataType';
+import BlockType from '../enumerations/blockType';
+import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
+import { HandleTupleError } from '../errors/handleTupleError';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
+import { translate } from '../i18n';
+import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
+import { PoolId } from '../interfaces/storage/pooledBlockStore';
+import { getGlobalServiceProvider } from '../services/globalServiceProvider';
+import { Checksum } from '../types/checksum';
+import { BaseBlock } from './base';
+import { BlockHandle } from './handle';
+import { RawDataBlock } from './rawData';
+
+/**
+ * Interface for stores that can store blocks
+ */
+interface IBlockStore {
+  setData(block: RawDataBlock): Promise<void>;
+  get<T extends BaseBlock>(checksum: Checksum): BlockHandle<T>;
+}
+
+/**
+ * A tuple of block handles that can be XORed together.
+ * Used for whitening and reconstruction operations.
+ *
+ * @typeParam T - The block type for handles in this tuple. Defaults to BaseBlock.
+ *
+ * @remarks
+ * - All handles in a tuple must have the same block size
+ * - The tuple size is fixed at TUPLE.SIZE (typically 3)
+ * - XOR operations produce a new RawDataBlock
+ *
+ * @example
+ * ```typescript
+ * // Create a tuple of RawDataBlock handles
+ * const tuple = new BlockHandleTuple<RawDataBlock>(handles);
+ *
+ * // XOR all blocks and store the result
+ * const result = await tuple.xor(blockStore, metadata);
+ *
+ * // Verify all blocks in the tuple
+ * const isValid = await tuple.verify();
+ * ```
+ *
+ * @see {@link BlockHandle} - The handle type used in tuples
+ * @see Requirements 3.1, 3.2
+ */
+export class BlockHandleTuple<T extends BaseBlock = BaseBlock> {
+  private readonly _handles: BlockHandle<T>[];
+  private readonly _poolId?: PoolId;
+
+  /**
+   * Create a new BlockHandleTuple.
+   *
+   * @param handles - Array of block handles. Must have exactly TUPLE.SIZE elements.
+   * @param poolId - Optional pool identifier. When provided, validates all handles belong to this pool.
+   * @throws {HandleTupleError} If the number of handles is not TUPLE.SIZE
+   * @throws {HandleTupleError} If handles have different block sizes
+   * @throws {HandleTupleError} If poolId is provided and any handle belongs to a different pool
+   */
+  constructor(handles: BlockHandle<T>[], poolId?: PoolId) {
+    if (handles.length !== TUPLE.SIZE) {
+      throw new HandleTupleError(HandleTupleErrorType.InvalidTupleSize);
+    }
+
+    // Verify all blocks have the same size
+    const blockSize = handles[0].blockSize;
+    if (!handles.every((h) => h.blockSize === blockSize)) {
+      throw new HandleTupleError(HandleTupleErrorType.BlockSizeMismatch);
+    }
+
+    // Validate pool membership when poolId is specified
+    if (poolId) {
+      for (const handle of handles) {
+        const handlePool = handle.poolId;
+        if (handlePool && handlePool !== poolId) {
+          throw new HandleTupleError(
+            HandleTupleErrorType.PoolMismatch,
+            undefined,
+            undefined,
+            {
+              blockId: handle.idChecksum.toHex(),
+              actualPool: handlePool,
+              expectedPool: poolId,
+            },
+          );
+        }
+      }
+    }
+
+    this._handles = handles;
+    this._poolId = poolId;
+  }
+
+  /**
+   * The pool this tuple is scoped to, if any.
+   */
+  public get poolId(): PoolId | undefined {
+    return this._poolId;
+  }
+
+  /**
+   * The handles in this tuple
+   */
+  public get handles(): BlockHandle<T>[] {
+    return this._handles;
+  }
+
+  /**
+   * The block IDs as a concatenated buffer
+   */
+  public get blockIdsBuffer(): Uint8Array {
+    const blockIdArrays = this.blockIds.map((checksum) =>
+      checksum.toUint8Array(),
+    );
+    const totalLength = blockIdArrays.reduce((sum, id) => sum + id.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const id of blockIdArrays) {
+      result.set(id, offset);
+      offset += id.length;
+    }
+    return result;
+  }
+
+  /**
+   * The block IDs in this tuple
+   */
+  public get blockIds(): Checksum[] {
+    return this.handles.map((handle) => handle.idChecksum);
+  }
+
+  /**
+   * XOR all blocks in the tuple and store the result
+   * @param blockStore - The store to write the result to
+   * @param destBlockMetadata - Metadata for the resulting block
+   * @returns A handle to the resulting block
+   */
+  public async xor(
+    blockStore: IBlockStore,
+    destBlockMetadata: IBaseBlockMetadata,
+  ): Promise<BlockHandle<RawDataBlock>> {
+    if (!this.handles.length) {
+      throw new HandleTupleError(HandleTupleErrorType.NoBlocksToXor);
+    }
+
+    // Load all block data
+    const blockData = await Promise.all(
+      this.handles.map(async (handle) => {
+        try {
+          return handle.data;
+        } catch (error) {
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_BlockHandleTuple_FailedToLoadBlockTemplate,
+            {
+              CHECKSUM: handle.idChecksum.toHex(),
+              ERROR:
+                error instanceof Error
+                  ? error.message
+                  : translate(BrightChainStrings.Error_Unexpected_Error),
+            },
+          );
+        }
+      }),
+    );
+
+    // XOR all blocks together
+    let result = new Uint8Array(blockData[0] as Uint8Array);
+    for (let i = 1; i < blockData.length; i++) {
+      const current = blockData[i] as Uint8Array;
+      if (current.length !== result.length) {
+        throw new HandleTupleError(HandleTupleErrorType.BlockSizesMustMatch);
+      }
+
+      const xored = new Uint8Array(result.length);
+      for (let j = 0; j < result.length; j++) {
+        xored[j] = result[j] ^ current[j];
+      }
+      result = xored;
+    }
+
+    // Calculate checksum for the result
+    const checksum =
+      getGlobalServiceProvider().checksumService.calculateChecksum(result);
+
+    // Create a RawDataBlock for the result with the provided metadata
+    const block = new RawDataBlock(
+      this.handles[0].blockSize,
+      result,
+      destBlockMetadata.dateCreated
+        ? new Date(destBlockMetadata.dateCreated)
+        : new Date(),
+      checksum,
+      BlockType.RawData,
+      BlockDataType.RawData,
+      true,
+      true,
+    );
+
+    // Store the result
+    try {
+      await blockStore.setData(block);
+      return blockStore.get<RawDataBlock>(checksum);
+    } catch (error) {
+      // If block already exists, that's okay - just return a handle to it
+      if (
+        error instanceof Error &&
+        (error.message.includes('already exists') ||
+          error.message.includes('Error_StoreErrorBlockAlreadyExists'))
+      ) {
+        return blockStore.get<RawDataBlock>(checksum);
+      }
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_BlockHandleTuple_FailedToStoreXorResultTemplate,
+        {
+          ERROR:
+            error instanceof Error
+              ? error.message
+              : translate(BrightChainStrings.Error_Unexpected_Error),
+        },
+      );
+    }
+  }
+
+  /**
+   * Verify all blocks in the tuple
+   */
+  public async verify(): Promise<boolean> {
+    try {
+      await Promise.all(this.handles.map((handle) => handle.validateAsync()));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}

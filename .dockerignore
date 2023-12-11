@@ -1,0 +1,47 @@
+# Dependencies & caches
+**/node_modules
+.nx/cache
+.yarn/cache
+.yarn/install-state.gz
+
+# Build output (rebuilt inside Docker)
+**/dist
+
+# Dev tooling
+.devcontainer
+.git
+.github
+.idea
+.claude
+.codex
+.cursor
+.gemini
+.kiro
+.codacy
+
+# Test & CI artifacts
+coverage
+*.log
+test-dev.log
+
+# E2E projects (not needed for production build)
+brightchain-lib-e2e
+brightchain-api-e2e
+brightchain-react-e2e
+
+# Desktop / VS Code extension (not part of the node)
+digitalburnbag-desktop
+vscode-brightchain-vfs-explorer
+
+# Submodules (not needed — deps come from npm)
+Lumen
+express-suite
+
+# Docs & showcase
+docs
+showcase
+CNAME
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,353 @@
+import { render, screen } from '@testing-library/react';
+import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
+
+// Mock ecies-lib to prevent heavy crypto/i18n initialization at module load time
+jest.mock('@digitaldefiance/ecies-lib', () => ({
+  IECIESConfig: {},
+  Member: { newMember: jest.fn() },
+  EmailString: jest.fn(),
+  CrcService: jest.fn().mockImplementation(() => ({
+    crc16: jest.fn(() => new Uint8Array(2)),
+  })),
+}));
+
+// Mock suite-core-lib — its module-level code instantiates ObjectIdProvider
+// and calls createI18nStringKeysFromEnum, both of which fail without full
+// ecies-lib and i18n-lib runtimes. We only need the three named exports
+// that app.tsx actually uses.
+jest.mock('@digitaldefiance/suite-core-lib', () => ({
+  SuiteCoreComponentId: 'suite-core',
+  SuiteCoreStringKey: new Proxy(
+    {},
+    { get: (_target, prop) => `suite-core:${String(prop)}` },
+  ),
+  SuiteCoreStringKeyValue: {},
+}));
+
+// Mock BrightChainSoupDemo to avoid module-level code execution
+jest.mock('@brightchain/brightchain-react-components', () => ({
+  BrightChainSoupDemo: () => (
+    <div data-testid="soup-demo">BrightChainSoupDemo Mock</div>
+  ),
+  BrightChainLogo: (_props: Record<string, unknown>) => (
+    <div data-testid="brightchain-logo">BrightChainLogo Mock</div>
+  ),
+  BrightChainLogoI18N: (_props: Record<string, unknown>) => (
+    <div data-testid="brightchain-logo-i18n">BrightChainLogoI18N Mock</div>
+  ),
+  BrightChainSubLogo: (props: Record<string, unknown>) => (
+    <span data-testid="brightchain-sub-logo">
+      {String((props as unknown as Record<string, unknown>).subText || '')}
+    </span>
+  ),
+  BrightPassDemo: () => (
+    <div data-testid="brightpass-demo">BrightPassDemo Mock</div>
+  ),
+  DatabaseDemo: () => <div data-testid="database-demo">DatabaseDemo Mock</div>,
+  IdentityDemo: () => <div data-testid="identity-demo">IdentityDemo Mock</div>,
+  MessagingDemo: () => (
+    <div data-testid="messaging-demo">MessagingDemo Mock</div>
+  ),
+  StoragePoolsDemo: () => (
+    <div data-testid="storage-pools-demo">StoragePoolsDemo Mock</div>
+  ),
+}));
+
+// Mock brighthub-react-components to avoid real useI18n calls
+jest.mock('@brightchain/brighthub-react-components', () => ({
+  useBrightHubMenuItems: jest.fn(() => ({ options: [], nextIndex: 0 })),
+  BrightHubLayout: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="brighthub-layout">{children}</div>
+  ),
+}));
+
+// Mock brightchain-lib to prevent i18n initialization
+jest.mock('@brightchain/brightchain-lib', () => ({
+  // Communication enums — required by brightchat-react-components at module
+  // evaluation time (useChatWebSocket.ts uses them as computed property keys).
+  CommunicationEventType: {
+    MESSAGE_SENT: 'communication:message_sent',
+    MESSAGE_EDITED: 'communication:message_edited',
+    MESSAGE_DELETED: 'communication:message_deleted',
+    TYPING_START: 'communication:typing_start',
+    TYPING_STOP: 'communication:typing_stop',
+    REACTION_ADDED: 'communication:reaction_added',
+    REACTION_REMOVED: 'communication:reaction_removed',
+    PRESENCE_CHANGED: 'communication:presence_changed',
+    MEMBER_JOINED: 'communication:member_joined',
+    MEMBER_LEFT: 'communication:member_left',
+    SERVER_CHANNEL_CREATED: 'communication:server_channel_created',
+    SERVER_CHANNEL_DELETED: 'communication:server_channel_deleted',
+    SERVER_MEMBER_JOINED: 'communication:server_member_joined',
+    SERVER_MEMBER_REMOVED: 'communication:server_member_removed',
+    KEY_ROTATED: 'communication:key_rotated',
+  },
+  PresenceStatus: {
+    ONLINE: 'online',
+    OFFLINE: 'offline',
+    IDLE: 'idle',
+    DO_NOT_DISTURB: 'dnd',
+  },
+  DefaultRole: {
+    OWNER: 'owner',
+    ADMIN: 'admin',
+    MODERATOR: 'moderator',
+    MEMBER: 'member',
+  },
+  Permission: {
+    SEND_MESSAGES: 'send_messages',
+    DELETE_OWN_MESSAGES: 'delete_own_messages',
+    DELETE_ANY_MESSAGE: 'delete_any_message',
+    MANAGE_MEMBERS: 'manage_members',
+    MANAGE_ROLES: 'manage_roles',
+    MANAGE_CHANNEL: 'manage_channel',
+    CREATE_INVITES: 'create_invites',
+    PIN_MESSAGES: 'pin_messages',
+    MUTE_MEMBERS: 'mute_members',
+    KICK_MEMBERS: 'kick_members',
+  },
+  DEFAULT_ROLE_PERMISSIONS: {
+    owner: [
+      'send_messages',
+      'delete_own_messages',
+      'delete_any_message',
+      'manage_members',
+      'manage_roles',
+      'manage_channel',
+      'create_invites',
+      'pin_messages',
+      'mute_members',
+      'kick_members',
+    ],
+    admin: [
+      'send_messages',
+      'delete_own_messages',
+      'delete_any_message',
+      'manage_members',
+      'create_invites',
+      'pin_messages',
+      'mute_members',
+      'kick_members',
+    ],
+    moderator: [
+      'send_messages',
+      'delete_own_messages',
+      'delete_any_message',
+      'pin_messages',
+      'mute_members',
+      'kick_members',
+    ],
+    member: ['send_messages', 'delete_own_messages'],
+  },
+  ChannelVisibility: {
+    PUBLIC: 'public',
+    PRIVATE: 'private',
+    SECRET: 'secret',
+    INVISIBLE: 'invisible',
+  },
+  constants: { CONSTANTS: {} },
+  CoreConstants: { Site: 'BrightChain' },
+  BrightChainComponentId: 'BrightChain',
+  BrightChainStrings: new Proxy(
+    {},
+    { get: (_target: unknown, prop: string) => `BrightChain:${String(prop)}` },
+  ),
+  registerI18nComponentPackage: jest.fn(),
+  createTranslations: <T,>(translations: T) => translations,
+  EnumLanguageTranslation: {},
+  ISuiteCoreConstants: {},
+  BrightChainFeatures: {
+    BrightChat: 'BrightChat',
+    BrightHub: 'BrightHub',
+    BrightMail: 'BrightMail',
+    BrightPass: 'BrightPass',
+    DigitalBurnbag: 'DigitalBurnbag',
+  },
+
+  CONSTANTS: {
+    THEME_COLORS: {
+      CHAIN_BLUE: '#1976d2',
+      CHAIN_BLUE_LIGHT: '#42a5f5',
+      CHAIN_BLUE_DARK: '#1565c0',
+      BRIGHT_CYAN: '#00bcd4',
+      BRIGHT_CYAN_LIGHT: '#4dd0e1',
+      BRIGHT_CYAN_DARK: '#0097a7',
+      ERROR_RED: '#d32f2f',
+      ALERT_ORANGE: '#ed6c02',
+      SECURE_GREEN: '#2e7d32',
+    },
+  },
+  THEME_COLORS: {
+    CHAIN_BLUE: '#1976d2',
+    CHAIN_BLUE_LIGHT: '#42a5f5',
+    CHAIN_BLUE_DARK: '#1565c0',
+    BRIGHT_CYAN: '#00bcd4',
+    BRIGHT_CYAN_LIGHT: '#4dd0e1',
+    BRIGHT_CYAN_DARK: '#0097a7',
+    ERROR_RED: '#d32f2f',
+    ALERT_ORANGE: '#ed6c02',
+    SECURE_GREEN: '#2e7d32',
+    TAGLINE_COLOR: '#666666',
+  },
+  i18nEngine: {
+    translate: jest.fn((key: string) => key),
+    setLanguage: jest.fn(),
+    getLanguage: jest.fn(() => 'en'),
+    registerEnum: jest.fn(() => ({})),
+    translateEnum: jest.fn((_enumType: unknown, value: unknown) =>
+      String(value),
+    ),
+  },
+  ChecksumService: jest.fn().mockImplementation(() => ({
+    calculateChecksum: jest.fn(),
+    checksumBufferLength: 64,
+  })),
+  ServiceLocator: {
+    setServiceProvider: jest.fn(),
+  },
+  MemoryBlockStore: jest.fn().mockImplementation(() => ({
+    put: jest.fn(),
+    getData: jest.fn(),
+    getRandomBlocks: jest.fn(),
+  })),
+  BlockService: jest.fn().mockImplementation(() => ({
+    ingestFile: jest.fn(),
+  })),
+  Member: jest.fn().mockImplementation(() => ({})),
+  RawDataBlock: jest.fn().mockImplementation(() => ({
+    idChecksum: new Uint8Array(64),
+  })),
+  BlockSize: {
+    Small: 1024,
+  },
+  uint8ArrayToHex: jest.fn((arr: Uint8Array) =>
+    Array.from(arr)
+      .map((b: number) => b.toString(16).padStart(2, '0'))
+      .join(''),
+  ),
+}));
+
+// Must come after mocking brightchain-lib
+import App from './app';
+
+// Mock brightchat-react-components to avoid transitive dependency on
+// express-suite-react-components (which has its own node_modules copy
+// inside brightchat-react-components, so the jest.mock below doesn't
+// intercept it).
+jest.mock('@brightchain/brightchat-react-components', () => ({
+  useBrightChatMenuItems: jest.fn(() => ({ options: [], nextIndex: 0 })),
+  useChatApi: jest.fn(() => ({
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+  })),
+}));
+
+// Mock all suite components and i18n to avoid dependency on real backend/auth.
+jest.mock('@digitaldefiance/express-suite-react-components', () => ({
+  createAuthenticatedApiClient: jest.fn(() => ({
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+    interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
+  })),
+  useAuthenticatedApi: jest.fn(() => ({
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+    interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
+  })),
+  AuthenticatedApiProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="authenticated-api-provider">{children}</div>
+  ),
+  AppThemeProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="app-theme-provider">{children}</div>
+  ),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="auth-provider">{children}</div>
+  ),
+  SuiteConfigProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="suite-config-provider">{children}</div>
+  ),
+  MenuProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="menu-provider">{children}</div>
+  ),
+  I18nProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="i18n-provider">{children}</div>
+  ),
+  ApiAccess: () => <div>ApiAccess</div>,
+  BackupCodeLoginWrapper: () => <div>BackupCodeLoginWrapper</div>,
+  BackupCodesWrapper: () => <div>BackupCodesWrapper</div>,
+  ChangePasswordFormWrapper: () => <div>ChangePasswordFormWrapper</div>,
+  ForgotPasswordFormWrapper: () => <div>ForgotPasswordFormWrapper</div>,
+  ResetPasswordFormWrapper: () => <div>ResetPasswordFormWrapper</div>,
+  LoginFormWrapper: () => <div>LoginFormWrapper</div>,
+  LogoutPageWrapper: () => <div>LogoutPageWrapper</div>,
+  PrivateRoute: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+  RegisterFormWrapper: () => <div>RegisterFormWrapper</div>,
+  TDivBranded: (_props: Record<string, unknown>) => (
+    <div data-testid="branded-div">BrightChain</div>
+  ),
+  TImgAlt: (_props: Record<string, unknown>) => (
+    <img data-testid="img-alt" alt="mock" />
+  ),
+  TopMenu: ({ Logo }: { Logo: React.ReactNode }) => (
+    <div data-testid="top-menu">{Logo}</div>
+  ),
+  TranslatedTitle: () => <title>BrightChain</title>,
+  UnAuthRoute: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  UserSettingsFormWrapper: () => <div>UserSettingsFormWrapper</div>,
+  VerifyEmailPageWrapper: () => <div>VerifyEmailPageWrapper</div>,
+  useI18n: () => ({
+    tComponent: (_componentId: string, key: string) => key,
+    t: (key: string) => key,
+    tBranded: (key: string) => key,
+    language: 'en',
+    setLanguage: jest.fn(),
+  }),
+  createMenuType: (value: string) => value,
+  MenuTypes: { SideMenu: 'SideMenu', UserMenu: 'UserMenu' },
+  IMenuConfig: {},
+  useMenu: () => ({
+    registerMenuOption: jest.fn(),
+    unregisterMenuOption: jest.fn(),
+    menuOptions: [],
+  }),
+  useAuth: () => ({
+    admin: false,
+    userData: null,
+    isAuthenticated: false,
+  }),
+}));
+
+jest.mock('@digitaldefiance/i18n-lib', () => ({
+  ...jest.requireActual('@digitaldefiance/i18n-lib'),
+  LanguageRegistry: { getCodeLabelMap: () => ({ en: 'English' }) },
+}));
+
+describe('App', () => {
+  it('renders without crashing', () => {
+    const { baseElement } = render(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>,
+    );
+    expect(baseElement).toBeTruthy();
+  });
+
+  it('shows the splash welcome text', () => {
+    render(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>,
+    );
+    const element = screen.getByText(/Splash_Welcome/i);
+    expect(element).toBeTruthy();
+  });
+});

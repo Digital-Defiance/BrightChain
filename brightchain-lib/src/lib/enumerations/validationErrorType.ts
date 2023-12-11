@@ -1,0 +1,15 @@
+export enum ValidationErrorType {
+  FileNameRequired = 'FileNameRequired',
+  FileNameEmpty = 'FileNameEmpty',
+  FileNameWhitespace = 'FileNameWhitespace',
+  FileNameTooLong = 'FileNameTooLong',
+  FileNameInvalidChar = 'FileNameInvalidChar',
+  FileNameControlChars = 'FileNameControlChars',
+  FileNamePathTraversal = 'FileNamePathTraversal',
+  MimeTypeRequired = 'MimeTypeRequired',
+  MimeTypeEmpty = 'MimeTypeEmpty',
+  MimeTypeWhitespace = 'MimeTypeWhitespace',
+  MimeTypeLowercase = 'MimeTypeLowercase',
+  MimeTypeTooLong = 'MimeTypeTooLong',
+  MimeTypeInvalidFormat = 'MimeTypeInvalidFormat',
+}

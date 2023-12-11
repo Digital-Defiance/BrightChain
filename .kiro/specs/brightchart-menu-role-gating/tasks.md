@@ -1,0 +1,123 @@
+# Implementation Plan
+
+- [x] 1. Write bug condition exploration tests
+  - **Property 1: Bug Condition** - Role Permission Over-Grant and Route Bypass
+  - **CRITICAL**: This test MUST FAIL on unfixed code — failure confirms the bug exists
+  - **DO NOT attempt to fix the test or the code when it fails**
+  - **NOTE**: This test encodes the expected behavior — it will validate the fix when it passes after implementation
+  - **GOAL**: Surface counterexamples that demonstrate all three bug conditions exist
+  - **Scoped PBT Approach**: Scope the property to the concrete failing cases:
+    - `permissionsForRole(REGISTERED_NURSE)` returns ALL_PERMISSIONS instead of a restricted set
+    - `permissionsForRole(PHYSICIAN)` includes Admin-level permissions (PatientPermission.Admin, ClinicalPermission.ClinicalAdmin, BillingPermission.BillingAdmin, etc.)
+    - `permissionsForRole(MEDICAL_ASSISTANT)` includes billing and order permissions it should not have
+  - Test file: `brightchart-react-components/src/lib/shell/hooks/__tests__/useHealthcareRoles.bugCondition.spec.ts`
+  - **Bug Condition from design**: `isBugCondition(input)` where `input.roleCode != PATIENT AND permissionsForRole(input.roleCode) == ALL_PERMISSIONS AND permissionsForRole(input.roleCode) != expectedPermissionsForRole(input.roleCode)`
+  - **Expected Behavior assertions**:
+    - For PHYSICIAN/DENTIST/VETERINARIAN: permissions include Patient R/W, Clinical R/W, Encounter R/W, Document R/W, Order R/W/Sign, Scheduling R/W — but NO Admin-level permissions and NO Billing permissions
+    - For REGISTERED_NURSE: permissions include Patient R, Clinical R/W, Encounter R/W, Document R, Scheduling R/W — NO orders, NO billing, NO admin
+    - For MEDICAL_ASSISTANT: permissions include Patient R/W, Clinical R, Encounter R, Scheduling R/W, Document R — NO clinical write, NO encounter write, NO orders, NO billing, NO admin
+    - For unknown role codes: `permissionsForRole('UNKNOWN')` returns PATIENT_PERMISSIONS (most restrictive), not ALL_PERMISSIONS
+  - **Property-based test**: For all role codes in [PHYSICIAN, REGISTERED_NURSE, MEDICAL_ASSISTANT, DENTIST, VETERINARIAN], assert that `permissionsForRole(roleCode)` does NOT contain any Admin-level permission (PatientPermission.Admin, ClinicalPermission.ClinicalAdmin, EncounterPermission.EncounterAdmin, DocumentPermission.DocumentAdmin, OrderPermission.OrderAdmin, SchedulingPermission.SchedulingAdmin, BillingPermission.BillingAdmin)
+  - Run test on UNFIXED code
+  - **EXPECTED OUTCOME**: Test FAILS (this is correct — it proves the bug exists because all non-patient roles currently get ALL_PERMISSIONS including Admin-level)
+  - Document counterexamples found (e.g., "permissionsForRole(REGISTERED_NURSE) returns 22 permissions including PatientPermission.Admin instead of expected ~10")
+  - Mark task complete when test is written, run, and failure is documented
+  - _Requirements: 1.1, 2.1_
+
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
+  - **Property 2: Preservation** - Authorized Access Paths Unchanged
+  - **IMPORTANT**: Follow observation-first methodology
+  - Test file: `brightchart-react-components/src/lib/shell/hooks/__tests__/useHealthcareRoles.preservation.spec.ts`
+  - **Observe on UNFIXED code**:
+    - `permissionsForRole(PATIENT)` returns PATIENT_PERMISSIONS (4 permissions: PatientPermission.Read, ClinicalPermission.ClinicalRead, SchedulingPermission.SchedulingRead, BillingPermission.BillingRead)
+    - `permissionsForRole(ADMIN)` returns ALL_PERMISSIONS (22 permissions) — this is correct and should remain unchanged
+    - PATIENT_PERMISSIONS array contains exactly [PatientPermission.Read, ClinicalPermission.ClinicalRead, SchedulingPermission.SchedulingRead, BillingPermission.BillingRead]
+    - ALL_PERMISSIONS array contains exactly 22 permission strings covering all permission enums
+  - **Write property-based tests capturing observed behavior**:
+    - For PATIENT role: `permissionsForRole(PATIENT)` always returns exactly PATIENT_PERMISSIONS (4 read-only permissions)
+    - For ADMIN role: `permissionsForRole(ADMIN)` always returns exactly ALL_PERMISSIONS (22 permissions)
+    - For any role code: `permissionsForRole(roleCode)` returns a subset of ALL_PERMISSIONS (no invented permissions)
+    - For any role code: returned permissions array has no duplicates
+    - PATIENT_PERMISSIONS is a strict subset of ALL_PERMISSIONS
+  - Verify tests PASS on UNFIXED code
+  - **EXPECTED OUTCOME**: Tests PASS (this confirms baseline behavior to preserve)
+  - Mark task complete when tests are written, run, and passing on unfixed code
+  - _Requirements: 3.1, 3.2, 3.3, 3.5, 3.6_
+
+- [x] 3. Implement role-specific permission sets in useHealthcareRoles.ts
+
+  - [x] 3.1 Define role-specific permission constants and update permissionsForRole()
+    - File: `brightchart-react-components/src/lib/shell/hooks/useHealthcareRoles.ts`
+    - Define `PHYSICIAN_PERMISSIONS`: PatientPermission.Read, PatientPermission.Write, ClinicalPermission.ClinicalRead, ClinicalPermission.ClinicalWrite, EncounterPermission.EncounterRead, EncounterPermission.EncounterWrite, DocumentPermission.DocumentRead, DocumentPermission.DocumentWrite, OrderPermission.OrderRead, OrderPermission.OrderWrite, OrderPermission.OrderSign (if exists, else OrderAdmin as sign proxy), SchedulingPermission.SchedulingRead, SchedulingPermission.SchedulingWrite
+    - Define `REGISTERED_NURSE_PERMISSIONS`: PatientPermission.Read, ClinicalPermission.ClinicalRead, ClinicalPermission.ClinicalWrite, EncounterPermission.EncounterRead, EncounterPermission.EncounterWrite, DocumentPermission.DocumentRead, SchedulingPermission.SchedulingRead, SchedulingPermission.SchedulingWrite
+    - Define `MEDICAL_ASSISTANT_PERMISSIONS`: PatientPermission.Read, PatientPermission.Write, ClinicalPermission.ClinicalRead, EncounterPermission.EncounterRead, SchedulingPermission.SchedulingRead, SchedulingPermission.SchedulingWrite, DocumentPermission.DocumentRead
+    - `ADMIN` case returns ALL_PERMISSIONS (unchanged)
+    - `DENTIST` and `VETERINARIAN` cases return PHYSICIAN_PERMISSIONS
+    - `default` case returns PATIENT_PERMISSIONS (most restrictive) instead of ALL_PERMISSIONS
+    - Update the switch statement in `permissionsForRole()` with explicit cases for PHYSICIAN, REGISTERED_NURSE, MEDICAL_ASSISTANT, ADMIN, DENTIST, VETERINARIAN
+    - _Bug_Condition: isBugCondition(input) where input.roleCode != PATIENT AND permissionsForRole(input.roleCode) == ALL_PERMISSIONS_
+    - _Expected_Behavior: Each role receives only its designated permission set per design specification_
+    - _Preservation: PATIENT returns PATIENT_PERMISSIONS (unchanged), ADMIN returns ALL_PERMISSIONS (unchanged)_
+    - _Requirements: 1.1, 2.1_
+
+  - [x] 3.2 Fix fallback logic to use PATIENT as default role
+    - File: `brightchart-react-components/src/lib/shell/hooks/useHealthcareRoles.ts`
+    - In the `fallbackRoles` useMemo, change the first pushed role from PHYSICIAN to PATIENT
+    - Only add PHYSICIAN if `userData?.rolePrivileges` indicates clinical access
+    - Keep ADMIN fallback gated behind `userData?.rolePrivileges?.admin`
+    - The PATIENT role entry should be first in the array so it becomes `initialRole` (the `healthcareRoles[0]` assignment)
+    - _Bug_Condition: NOT input.apiReachable AND fallbackRole() == PHYSICIAN_
+    - _Expected_Behavior: fallbackRole() == PATIENT when API unreachable_
+    - _Preservation: When API returns valid roles, those are used instead of fallback (unchanged)_
+    - _Requirements: 1.4, 2.4, 3.6_
+
+  - [x] 3.3 Create RoleGuardedRoute component
+    - File: `brightchart-react-components/src/lib/shell/components/RoleGuardedRoute.tsx` (NEW)
+    - Follow the pattern of existing `PermissionGuardedRoute.tsx`
+    - Props: `allowedRoles: string[]`, `children: React.ReactNode`
+    - Read `activeRole.roleCode` from `useActiveContext()`
+    - If `allowedRoles.includes(activeRole.roleCode)` → render children
+    - Otherwise → render `<AccessDenied />`
+    - Export the component and its props interface
+    - Add to the barrel export in `brightchart-react-components/src/index.ts` (or relevant barrel file)
+    - _Bug_Condition: NOT isRoleAuthorizedForWorkspace(input.roleCode, input.targetWorkspace) AND workspaceRouteRenders_
+    - _Expected_Behavior: Route renders AccessDenied when role not in allowedRoles_
+    - _Preservation: Route renders children when role IS in allowedRoles_
+    - _Requirements: 2.2, 2.3_
+
+  - [x] 3.4 Add route guards to workspace routes in brightchart-routes.tsx
+    - File: `brightchain-react/src/app/brightchart-routes.tsx`
+    - Import `RoleGuardedRoute` from `@brightchain/brightchart-react-components`
+    - Import role constants: PHYSICIAN, REGISTERED_NURSE, MEDICAL_ASSISTANT, DENTIST, VETERINARIAN, PATIENT, ADMIN
+    - Wrap `clinician/*` route element: `<RoleGuardedRoute allowedRoles={[PHYSICIAN, REGISTERED_NURSE, MEDICAL_ASSISTANT, DENTIST, VETERINARIAN]}>`
+    - Wrap `portal/*` route element: `<RoleGuardedRoute allowedRoles={[PATIENT]}>`
+    - Wrap `front-desk/*` route element: `<RoleGuardedRoute allowedRoles={[PHYSICIAN, REGISTERED_NURSE, MEDICAL_ASSISTANT, DENTIST, VETERINARIAN]}>`
+    - Wrap `billing/*` route element: `<RoleGuardedRoute allowedRoles={[PHYSICIAN, REGISTERED_NURSE, MEDICAL_ASSISTANT, DENTIST, VETERINARIAN, ADMIN]}>`
+    - Wrap `admin/*` route element: `<RoleGuardedRoute allowedRoles={[ADMIN]}>`
+    - _Bug_Condition: Any authenticated user can navigate to any workspace URL without role check_
+    - _Expected_Behavior: Each workspace route only renders for authorized roles, AccessDenied otherwise_
+    - _Preservation: Authorized role holders continue to access their workspaces as before_
+    - _Requirements: 1.2, 1.3, 1.5, 2.2, 2.3, 2.5, 3.1, 3.2, 3.3, 3.4_
+
+  - [x] 3.5 Verify bug condition exploration test now passes
+    - **Property 1: Expected Behavior** - Role Permission Over-Grant and Route Bypass
+    - **IMPORTANT**: Re-run the SAME test from task 1 — do NOT write a new test
+    - The test from task 1 encodes the expected behavior (role-specific permission sets)
+    - When this test passes, it confirms the expected behavior is satisfied
+    - Run: `yarn nx test brightchart-react-components --testPathPatterns="useHealthcareRoles.bugCondition"`
+    - **EXPECTED OUTCOME**: Test PASSES (confirms bug is fixed — each role now gets only its designated permissions)
+    - _Requirements: 2.1_
+
+  - [x] 3.6 Verify preservation tests still pass
+    - **Property 2: Preservation** - Authorized Access Paths Unchanged
+    - **IMPORTANT**: Re-run the SAME tests from task 2 — do NOT write new tests
+    - Run: `yarn nx test brightchart-react-components --testPathPatterns="useHealthcareRoles.preservation"`
+    - **EXPECTED OUTCOME**: Tests PASS (confirms no regressions — PATIENT and ADMIN permissions unchanged, all permissions are valid subsets)
+    - Confirm all preservation tests still pass after fix (no regressions)
+
+- [x] 4. Checkpoint - Ensure all tests pass
+  - Run full test suite for affected projects: `yarn nx test brightchart-react-components` and `yarn nx test brightchain-react`
+  - Ensure all bug condition exploration tests pass (confirming fix works)
+  - Ensure all preservation tests pass (confirming no regressions)
+  - Ensure no pre-existing tests are broken by the changes
+  - Ask the user if questions arise
