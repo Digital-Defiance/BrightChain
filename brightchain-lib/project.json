@@ -1,0 +1,101 @@
+{
+  "name": "brightchain-lib",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "brightchain-lib/src",
+  "projectType": "library",
+  "tags": [
+    "type:lib",
+    "scope:core"
+  ],
+  "targets": {
+    "browser-verify": {
+      "command": "node brightchain-lib/scripts/verify-browser-build.mjs"
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "outputPath": "dist/brightchain-lib",
+        "main": "brightchain-lib/src/index.ts",
+        "tsConfig": "brightchain-lib/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "brightchain-lib",
+            "glob": "*.md",
+            "output": "."
+          },
+          {
+            "input": "brightchain-lib",
+            "glob": "package.json",
+            "output": "."
+          }
+        ]
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
+    },
+    "publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm publish --access public",
+        "cwd": "dist/brightchain-lib"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "brightchain-lib/**/*.ts"
+        ]
+      }
+    },
+    "validate-i18n": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node tools/scripts/validate-i18n.js"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "jestConfig": "brightchain-lib/jest.config.ts",
+        "setupFilesAfterEnv": [
+          "<rootDir>/jest.setup.ts"
+        ],
+        "codeCoverage": false,
+        "coverageReporters": [
+          "text",
+          "lcov",
+          "html"
+        ],
+        "collectCoverageFrom": [
+          "src/**/*.ts"
+        ]
+      },
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true,
+          "coverageReporters": [
+            "text",
+            "lcov"
+          ],
+          "collectCoverageFrom": [
+            "src/**/*.ts"
+          ]
+        }
+      }
+    }
+  }
+}

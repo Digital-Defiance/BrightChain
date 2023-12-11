@@ -1,0 +1,15 @@
+// Full Node.js exports (includes all functionality)
+// For browser-only exports, use './browser'
+export * from './lib';
+
+// Export constants with named exports for backward compatibility
+export {
+  BC_FEC,
+  CBL,
+  default as CONSTANTS,
+  SEALING,
+  SITE,
+  THEME_COLORS,
+  TUPLE,
+} from './lib/constants';
+export { EciesConfig } from './lib/ecies-config';

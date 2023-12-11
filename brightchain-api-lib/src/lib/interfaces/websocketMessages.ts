@@ -1,0 +1,373 @@
+/**
+ * WebSocket message interfaces for the Block Availability and Discovery Protocol
+ */
+
+import type { BlockId } from '@brightchain/brightchain-lib';
+
+import {
+  DiscoveryMessageType,
+  GossipMessageType,
+  HeartbeatMessageType,
+  MessagePassingType,
+} from '../enumerations/websocketMessageType';
+
+/**
+ * Base WebSocket message structure
+ */
+export interface IWebSocketMessage<T = unknown> {
+  type: string;
+  payload: T;
+  timestamp: string;
+  requestId?: string;
+}
+
+// ===== Discovery Protocol Messages =====
+
+/**
+ * Bloom filter request message
+ */
+export interface IBloomFilterRequest {
+  type: DiscoveryMessageType.BLOOM_FILTER_REQUEST;
+  payload: {
+    nodeId: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Bloom filter response message
+ */
+export interface IBloomFilterResponse {
+  type: DiscoveryMessageType.BLOOM_FILTER_RESPONSE;
+  payload: {
+    nodeId: string;
+    bloomFilter: {
+      data: string; // Base64 encoded Uint8Array
+      hashCount: number;
+      bitCount: number;
+      itemCount: number;
+    };
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Block query message
+ */
+export interface IBlockQueryMessage {
+  type: DiscoveryMessageType.BLOCK_QUERY;
+  payload: {
+    blockId: BlockId;
+    requestingNodeId: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Block query response message
+ */
+export interface IBlockQueryResponse {
+  type: DiscoveryMessageType.BLOCK_QUERY_RESPONSE;
+  payload: {
+    blockId: BlockId;
+    hasBlock: boolean;
+    nodeId: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Manifest request message
+ */
+export interface IManifestRequest {
+  type: DiscoveryMessageType.MANIFEST_REQUEST;
+  payload: {
+    nodeId: string;
+    sinceTimestamp?: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Manifest response message
+ */
+export interface IManifestResponse {
+  type: DiscoveryMessageType.MANIFEST_RESPONSE;
+  payload: {
+    nodeId: string;
+    blockIds: BlockId[];
+    generatedAt: string;
+    checksum: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+// ===== Gossip Protocol Messages =====
+
+/**
+ * Block announcement message
+ */
+export interface IBlockAnnouncementMessage {
+  type: GossipMessageType.BLOCK_ANNOUNCEMENT;
+  payload: {
+    blockId: BlockId;
+    nodeId: string;
+    ttl: number;
+  };
+  timestamp: string;
+}
+
+/**
+ * Block removal message
+ */
+export interface IBlockRemovalMessage {
+  type: GossipMessageType.BLOCK_REMOVAL;
+  payload: {
+    blockId: BlockId;
+    nodeId: string;
+    ttl: number;
+  };
+  timestamp: string;
+}
+
+/**
+ * Pool gossip announcement payload carried inside gossip batches.
+ * Used for pool creation/update and pool removal announcements.
+ *
+ * @see Requirements 8.1, 8.2, 8.4
+ */
+export interface IPoolGossipAnnouncement {
+  type: 'pool_announce' | 'pool_remove';
+  poolId: string;
+  nodeId: string;
+  blockCount: number;
+  totalSize: number;
+  encrypted: boolean;
+  encryptedMetadata?: string;
+  ttl: number;
+}
+
+/**
+ * Pool announcement message
+ *
+ * @see Requirements 8.1, 8.2
+ */
+export interface IPoolAnnouncementMessage {
+  type: GossipMessageType.POOL_ANNOUNCEMENT;
+  payload: IPoolGossipAnnouncement;
+  timestamp: string;
+}
+
+/**
+ * Pool removal message
+ *
+ * @see Requirements 8.4
+ */
+export interface IPoolRemovalMessage {
+  type: GossipMessageType.POOL_REMOVAL;
+  payload: IPoolGossipAnnouncement;
+  timestamp: string;
+}
+
+/**
+ * Pool list request message for discovery queries
+ *
+ * @see Requirements 7.1
+ */
+export interface IPoolListRequestMessage {
+  type: GossipMessageType.POOL_LIST_REQUEST;
+  payload: {
+    requestingNodeId: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Pool list response message for discovery queries
+ *
+ * @see Requirements 7.1
+ */
+export interface IPoolListResponseMessage {
+  type: GossipMessageType.POOL_LIST_RESPONSE;
+  payload: {
+    nodeId: string;
+    pools: IPoolGossipAnnouncement[];
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Announcement batch message
+ */
+export interface IAnnouncementBatchMessage {
+  type: GossipMessageType.ANNOUNCEMENT_BATCH;
+  payload: {
+    announcements: Array<{
+      type: 'add' | 'remove' | 'ack';
+      blockId: BlockId;
+      nodeId: string;
+      ttl: number;
+      messageDelivery?: {
+        messageId: string;
+        recipientIds: string[];
+        priority: 'normal' | 'high';
+        blockIds: BlockId[];
+        cblBlockId: BlockId;
+        ackRequired: boolean;
+      };
+      deliveryAck?: {
+        messageId: string;
+        recipientId: string;
+        status: 'delivered' | 'read' | 'failed' | 'bounced';
+        originalSenderNode: string;
+      };
+    }>;
+    /** Present when the batch is encrypted; announcements array is empty */
+    encryptedPayload?: string;
+    /** Sender node ID, present when encryptedPayload is set */
+    senderNodeId?: string;
+  };
+  timestamp: string;
+}
+
+/**
+ * Encrypted gossip payload — an ECIES-encrypted announcement batch.
+ * Used as an alternative to the plaintext announcements array when
+ * the batch contains sensitive metadata (messageDelivery / deliveryAck).
+ */
+export interface IEncryptedGossipPayload {
+  /** Base64-encoded ECIES ciphertext in WithLength format */
+  encryptedPayload: string;
+  /** Node ID of the sender that encrypted this payload */
+  senderNodeId: string;
+}
+
+// ===== Heartbeat Messages =====
+
+/**
+ * Ping message
+ */
+export interface IPingMessage {
+  type: HeartbeatMessageType.PING;
+  payload: {
+    nodeId: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Pong message
+ */
+export interface IPongMessage {
+  type: HeartbeatMessageType.PONG;
+  payload: {
+    nodeId: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+// ===== Message Passing Messages =====
+
+/**
+ * Message send message
+ */
+export interface IMessageSendMessage {
+  type: MessagePassingType.MESSAGE_SEND;
+  payload: {
+    messageId: string;
+    senderId: string;
+    recipients: string[];
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Message received message
+ */
+export interface IMessageReceivedMessage {
+  type: MessagePassingType.MESSAGE_RECEIVED;
+  payload: {
+    messageId: string;
+    recipientId: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Message acknowledgment message
+ */
+export interface IMessageAckMessage {
+  type: MessagePassingType.MESSAGE_ACK;
+  payload: {
+    messageId: string;
+    recipientId: string;
+    status: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Message query message
+ */
+export interface IMessageQueryMessage {
+  type: MessagePassingType.MESSAGE_QUERY;
+  payload: {
+    recipientId?: string;
+    senderId?: string;
+    messageType?: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Event subscribe message
+ */
+export interface IEventSubscribeMessage {
+  type: MessagePassingType.EVENT_SUBSCRIBE;
+  payload: {
+    types?: string[];
+    senderId?: string;
+    recipientId?: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Union type of all WebSocket messages
+ */
+export type WebSocketMessage =
+  | IBloomFilterRequest
+  | IBloomFilterResponse
+  | IBlockQueryMessage
+  | IBlockQueryResponse
+  | IManifestRequest
+  | IManifestResponse
+  | IBlockAnnouncementMessage
+  | IBlockRemovalMessage
+  | IAnnouncementBatchMessage
+  | IPoolAnnouncementMessage
+  | IPoolRemovalMessage
+  | IPoolListRequestMessage
+  | IPoolListResponseMessage
+  | IPingMessage
+  | IPongMessage
+  | IMessageSendMessage
+  | IMessageReceivedMessage
+  | IMessageAckMessage
+  | IMessageQueryMessage
+  | IEventSubscribeMessage;
