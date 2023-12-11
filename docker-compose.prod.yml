@@ -1,0 +1,51 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# BrightChain Node — Production Docker Compose
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Usage:
+#   cp .env.production.example .env   # fill in your values
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+
+services:
+  brightchain-node:
+    image: ghcr.io/digital-defiance/brightchain-node:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        FONTAWESOME_NPM_AUTH_TOKEN: ${FONTAWESOME_NPM_AUTH_TOKEN:-}
+    container_name: brightchain-node
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      # HTTP/WS — API + React frontend + WebSocket
+      - "${PORT:-3000}:3000"
+      # SMTP — inbound email
+      - "25:25"
+      # Submission — authenticated outbound relay
+      - "587:587"
+    volumes:
+      # Persistent block store
+      - blockstore:/data/blockstore
+      # DKIM private key (operator-provided)
+      - ./dkim:/etc/dkim:ro
+      # TLS certificates (optional — if using Let's Encrypt)
+      - ./certs:/etc/ssl/certs:ro
+      - ./private:/etc/ssl/private:ro
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "3000"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+volumes:
+  blockstore:
+    driver: local

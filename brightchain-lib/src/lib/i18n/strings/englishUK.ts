@@ -1,0 +1,31 @@
+import { ComponentStrings } from '@digitaldefiance/i18n-lib';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../../enumerations/brightChainStrings';
+import { AmericanEnglishStrings } from './englishUs';
+
+export const BritishEnglishStrings: ComponentStrings<BrightChainStringKey> = {
+  ...AmericanEnglishStrings,
+  // Override spelling differences between British and American English
+
+  // Service Provider Errors - "initialized" -> "initialised"
+  [BrightChainStrings.Error_ServiceProvider_NotInitialized]:
+    'ServiceProvider has not been initialised',
+
+  // Block Service Errors - "initialized" -> "initialised"
+  [BrightChainStrings.Error_BlockServiceError_AlreadyInitialized]:
+    'BlockService subsystem already initialised',
+  [BrightChainStrings.Error_BlockServiceError_Uninitialized]:
+    'BlockService subsystem not initialised',
+
+  // BrightTrust Error - "initialized" -> "initialised"
+  [BrightChainStrings.Error_BrightTrustError_Uninitialized]:
+    'BrightTrust subsystem not initialised',
+
+  // Document Error - "initialized" -> "initialised"
+  [BrightChainStrings.Error_DocumentError_AlreadyInitialized]:
+    'Document subsystem is already initialised',
+  [BrightChainStrings.Error_DocumentError_Uninitialized]:
+    'Document subsystem is not initialised',
+};

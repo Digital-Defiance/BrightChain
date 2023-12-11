@@ -1,0 +1,76 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+/Lumen
+express-suite
+test-outputs/
+test-output.*
+brightchain-lib/.cache/
+.npmrc
+.npmrc.bak
+.yarnrc.yml.bak
+.env
+.env.test*
+.qodo/
+
+# compiled output
+dist
+tmp
+/out-tsc
+
+# dependencies
+node_modules
+
+# Yarn Berry - ignore cache and machine-specific state
+.yarn/cache
+.yarn/install-state.gz
+.yarn/global
+.yarn/sdks
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+.nx/cache
+.nx/workspace-data
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md
+
+
+#Ignore cursor AI rules
+.cursor/rules/codacy.mdc
+
+vite.config.*.timestamp*
+
+# Verdaccio local cache
+.verdaccio/

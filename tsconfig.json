@@ -1,0 +1,30 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node", "jest"]
+  },
+  "include": [
+    "*.ts",
+    "brightchain-lib/**/*.ts",
+    "brightchain-api-lib/**/*.ts",
+    "brightchain-api/**/*.ts",
+    "brightchain-api-e2e/**/*.ts",
+    "brightchain-db/**/*.ts",
+    "brightchain-react/**/*.ts",
+    "brightchain-react/**/*.tsx",
+    "brightchain-react-e2e/**/*.ts",
+    "brightchain-test-utils/**/*.ts",
+    "brightchain-inituserdb/**/*.ts",
+    "showcase/**/*.ts",
+    "showcase/**/*.tsx",
+    "brightchat-lib/**/*.ts",
+    "digitalburnbag-lib/**/*.ts",
+    "tests/**/*.ts",
+    "types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/dist/**",
+    "tmp"
+  ]
+}

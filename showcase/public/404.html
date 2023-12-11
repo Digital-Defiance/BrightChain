@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      // Only redirect to SPA for non-/docs/ routes
+      if (!location.pathname.startsWith('/docs/')) {
+        sessionStorage.redirect = location.href;
+        window.location.replace('/');
+      }
+      // If /docs/, do nothing: let GitHub Pages try to serve the static file
+    </script>
+  </head>
+  <body></body>
+</html>

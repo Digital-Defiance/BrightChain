@@ -1,0 +1,342 @@
+# Implementation Plan: GPG & S/MIME Encryption
+
+## Overview
+
+This plan implements full GPG (OpenPGP) and S/MIME encryption, signing, decryption, and verification for BrightMail. Work proceeds bottom-up: shared types/interfaces first, then core services (GpgKeyManager, SmimeCertificateManager, RecipientKeyResolver), then EmailEncryptionService extensions, then the API layer (KeyStoreController), and finally the frontend UI enhancements (EncryptionSelector, KeyManagementSettings). Each task builds on the previous, and testing sub-tasks are placed close to the implementation they validate.
+
+## Tasks
+
+- [x] 1. Add new dependencies and extend MessageEncryptionScheme enum
+  - [x] 1.1 Install openpgp, pkijs, @peculiar/x509, and @peculiar/asn1-pkcs12 in brightchain-lib
+    - Run `yarn add openpgp pkijs @peculiar/x509 @peculiar/asn1-pkcs12` in the brightchain-lib project root
+    - Run `yarn add -D @types/openpgp` if type definitions are separate (openpgp ships its own types, verify)
+    - _Requirements: Design Dependency Summary_
+  - [x] 1.2 Add GPG value to MessageEncryptionScheme enum
+    - Edit `brightchain-lib/src/lib/enumerations/messaging/messageEncryptionScheme.ts`
+    - Add `GPG = 'gpg'` to the enum, preserving all existing values (NONE, SHARED_KEY, RECIPIENT_KEYS, S_MIME)
+    - Update the JSDoc comment to include GPG
+    - _Requirements: 10.1, 10.2_
+  - [x] 1.3 Add new EmailErrorType values for GPG and S/MIME operations
+    - Edit `brightchain-lib/src/lib/enumerations/messaging/emailErrorType.ts`
+    - Add: `GPG_KEYGEN_FAILED`, `GPG_INVALID_KEY`, `GPG_ENCRYPT_FAILED`, `GPG_DECRYPT_FAILED`, `GPG_VERIFY_FAILED`, `GPG_KEYSERVER_ERROR`, `SMIME_INVALID_CERT`, `SMIME_PKCS12_FAILED`, `SMIME_ENCRYPT_FAILED`, `SMIME_DECRYPT_FAILED`, `SMIME_VERIFY_FAILED`, `PRIVATE_KEY_MISSING`, `RECIPIENT_KEY_MISSING`
+    - _Requirements: Design Error Handling Strategy_
+  - [x] 1.4 Write unit tests for MessageEncryptionScheme enum extension
+    - Verify GPG value exists with string `'gpg'`
+    - Verify all existing values are unchanged
+    - _Requirements: 10.1, 10.2, 10.3_
+
+- [x] 2. Create shared interfaces and data models in brightchain-lib
+  - [x] 2.1 Create GPG key interfaces
+    - Create `brightchain-lib/src/lib/interfaces/messaging/gpgKey.ts`
+    - Define `IGpgKeyMetadata` (keyId, fingerprint, createdAt, expiresAt, userId, algorithm)
+    - Define `IGpgKeyPair` (publicKeyArmored, privateKeyArmored, metadata)
+    - Define `IGpgEncryptionResult`, `IGpgSignatureResult`, `IGpgVerificationResult`
+    - Export from `brightchain-lib/src/lib/interfaces/messaging/index.ts`
+    - _Requirements: 1.1, 1.3, 4.1, 5.3_
+  - [x] 2.2 Create S/MIME certificate interfaces
+    - Create `brightchain-lib/src/lib/interfaces/messaging/smimeCertificate.ts`
+    - Define `ISmimeCertificateMetadata` (subject, issuer, serialNumber, validFrom, validTo, emailAddresses, fingerprint, isExpired)
+    - Define `ISmimeCertificateBundle` (certificatePem, privateKeyPem, metadata)
+    - Define `ISmimeEncryptionResult`, `ISmimeSignatureResult`, `ISmimeVerificationResult`
+    - Export from `brightchain-lib/src/lib/interfaces/messaging/index.ts`
+    - _Requirements: 6.1, 6.3, 7.1, 8.1, 9.2_
+  - [x] 2.3 Create IKeyStore interface and related types
+    - Create `brightchain-lib/src/lib/interfaces/messaging/keyStore.ts`
+    - Define `IKeyStoreEntry<TId>` with fields: id, userId, type, associatedEmail, publicMaterial, privateMaterial, metadata, createdAt, updatedAt
+    - Define `IEncryptionPreference<TId>` with fields: userId, contactEmail, scheme
+    - Define `IKeyStore<TId>` interface with GPG operations (storeGpgKeyPair, storeGpgPublicKey, getGpgKeyPair, getGpgPublicKey, deleteGpgKeyPair), S/MIME operations (storeSmimeCertificate, storeSmimeContactCert, getSmimeCertificate, getSmimeContactCert, deleteSmimeCertificate), encryption preferences (setEncryptionPreference, getEncryptionPreference), and query (getKeysForEmail)
+    - Export from `brightchain-lib/src/lib/interfaces/messaging/index.ts`
+    - _Requirements: 1.2, 2.5, 6.2, 6.6, 13.1, 13.2_
+  - [x] 2.4 Create RecipientKeyResolver interface
+    - Create `brightchain-lib/src/lib/interfaces/messaging/recipientKeyResolver.ts`
+    - Define `IRecipientKeyAvailability` (email, hasGpgKey, hasSmimeCert, hasEciesKey, isInternal)
+    - Define `IResolvedRecipientKeys` (gpgKeys, smimeCerts, eciesKeys, missingGpg, missingSmime, missingEcies)
+    - Define `IRecipientKeyResolver` interface with resolveAvailability and resolveKeysForScheme methods
+    - Export from `brightchain-lib/src/lib/interfaces/messaging/index.ts`
+    - _Requirements: 2.3, 11.1, 11.2, 11.7_
+  - [x] 2.5 Extend IEmailEncryptionMetadata and IEmailInput interfaces
+    - Edit `brightchain-lib/src/lib/services/messaging/emailEncryptionService.ts` to add gpgEncryptedMessage, gpgSignature, gpgSignerKeyId, cmsEncryptedContent, cmsSignature, smimeSignerSubject fields to `IEmailEncryptionMetadata`
+    - Edit `brightchain-lib/src/lib/services/messaging/emailMessageService.ts` to add recipientGpgKeys, recipientSmimeCerts, senderGpgPrivateKey, senderGpgPassphrase, senderSmimeCert, senderSmimePrivateKey, signMessage fields to `IEmailInput`
+    - _Requirements: 3.3, 3.4, 4.4, 7.3, 8.4_
+
+- [x] 3. Implement GpgKeyManager service
+  - [x] 3.1 Create GpgKeyManager class with key generation and import/export
+    - Create `brightchain-lib/src/lib/services/messaging/gpgKeyManager.ts`
+    - Implement `generateKeyPair(name, email, passphrase)` using openpgp.generateKey() — returns IGpgKeyPair
+    - Implement `importPublicKey(armoredKey)` — validates and parses ASCII-armored PGP public key, returns IGpgKeyMetadata
+    - Implement `exportPublicKey(publicKeyArmored)` — returns the ASCII-armored string
+    - Implement `validatePublicKey(armoredKey)` — returns boolean for well-formedness check
+    - Throw EmailError with GPG_KEYGEN_FAILED / GPG_INVALID_KEY on failures
+    - _Requirements: 1.1, 1.4, 2.1, 2.2, 2.4, 2.6_
+  - [x] 3.2 Add GPG encryption and decryption methods
+    - Implement `encrypt(content, recipientPublicKeysArmored)` — encrypts Uint8Array content for multiple recipients using openpgp.encrypt(), returns IGpgEncryptionResult
+    - Implement `decrypt(encryptedMessage, privateKeyArmored, passphrase)` — decrypts OpenPGP message, returns Uint8Array
+    - Throw EmailError with GPG_ENCRYPT_FAILED / GPG_DECRYPT_FAILED on failures, including affected recipient email in error details
+    - _Requirements: 3.1, 3.4, 3.5, 5.1, 5.5_
+  - [x] 3.3 Add GPG signing and verification methods
+    - Implement `sign(content, privateKeyArmored, passphrase)` — creates detached OpenPGP signature, returns IGpgSignatureResult
+    - Implement `verify(content, signature, signerPublicKeyArmored)` — verifies detached signature, returns IGpgVerificationResult with valid status, signerKeyId, and reason
+    - _Requirements: 4.1, 4.2, 5.2, 5.3, 5.4_
+  - [x] 3.4 Add keyserver publish and search methods
+    - Implement `publishToKeyserver(publicKeyArmored, keyserverUrl)` — submits public key to HKP keyserver
+    - Implement `searchKeyserver(email, keyserverUrl)` — queries keyserver for public keys matching email
+    - Throw EmailError with GPG_KEYSERVER_ERROR on failures
+    - _Requirements: 2.1, 2.3_
+  - [x] 3.5 Write unit tests for GpgKeyManager
+    - Test key generation produces valid OpenPGP keypair with correct userId
+    - Test import/export of ASCII-armored public keys
+    - Test validatePublicKey rejects malformed input
+    - Test encrypt/decrypt round-trip for single and multiple recipients
+    - Test sign/verify round-trip
+    - Test error cases: invalid key, wrong passphrase, expired key
+    - _Requirements: 1.1, 1.4, 2.2, 2.4, 3.1, 3.5, 4.1, 5.1, 5.4, 15.1, 15.3_
+
+- [x] 4. Implement SmimeCertificateManager service
+  - [x] 4.1 Create SmimeCertificateManager class with certificate import and validation
+    - Create `brightchain-lib/src/lib/services/messaging/smimeCertificateManager.ts`
+    - Implement `importCertificate(content, format)` — validates and parses PEM or DER X.509 certificate using @peculiar/x509, returns ISmimeCertificateMetadata
+    - Implement `importPkcs12(data, password)` — extracts certificate and private key from PKCS#12 bundle using @peculiar/asn1-pkcs12, returns ISmimeCertificateBundle
+    - Implement `exportCertificatePem(certificatePem)` — returns PEM string
+    - Implement `validateCertificate(content, format)` — returns boolean for well-formedness check
+    - Throw EmailError with SMIME_INVALID_CERT / SMIME_PKCS12_FAILED on failures
+    - _Requirements: 6.1, 6.2, 6.4, 6.5, 6.7_
+  - [x] 4.2 Add S/MIME CMS encryption and decryption methods
+    - Implement `encrypt(content, recipientCertificatesPem)` — encrypts using CMS/PKCS#7 via pkijs, returns ISmimeEncryptionResult with application/pkcs7-mime content type
+    - Implement `decrypt(encryptedContent, certificatePem, privateKeyPem)` — decrypts CMS/PKCS#7 content, returns Uint8Array
+    - Throw EmailError with SMIME_ENCRYPT_FAILED / SMIME_DECRYPT_FAILED on failures
+    - _Requirements: 7.1, 7.3, 7.4, 9.1, 9.5_
+  - [x] 4.3 Add S/MIME CMS signing and verification methods
+    - Implement `sign(content, certificatePem, privateKeyPem)` — creates CMS detached signature, returns ISmimeSignatureResult
+    - Implement `verify(content, signature, signerCertificatePem)` — verifies CMS detached signature, returns ISmimeVerificationResult with valid status, signerSubject, and reason
+    - _Requirements: 8.1, 8.2, 9.2, 9.3, 9.4_
+  - [x] 4.4 Write unit tests for SmimeCertificateManager
+    - Test PEM and DER certificate import and validation
+    - Test PKCS#12 import with correct and incorrect passwords
+    - Test validateCertificate rejects malformed input
+    - Test CMS encrypt/decrypt round-trip
+    - Test CMS sign/verify round-trip
+    - Test expired certificate import succeeds but isExpired flag is set
+    - Test error cases: invalid cert, wrong password, expired cert encryption blocked
+    - _Requirements: 6.1, 6.2, 6.4, 6.5, 7.1, 7.4, 8.1, 9.1, 9.4, 15.2_
+
+- [x] 5. Checkpoint — Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+
+- [x] 6. Extend EmailEncryptionService with GPG and real S/MIME methods
+  - [x] 6.1 Add GPG encryption/decryption methods to EmailEncryptionService
+    - Edit `brightchain-lib/src/lib/services/messaging/emailEncryptionService.ts`
+    - Add `GpgKeyManager` as a dependency (injected or instantiated)
+    - Implement `encryptGpg(content, recipientPublicKeysArmored, senderPrivateKeyArmored?, senderPassphrase?)` — delegates to GpgKeyManager.encrypt(), sets scheme to GPG, returns IPerRecipientEncryptionResult with gpgEncryptedMessage in metadata
+    - Implement `decryptGpg(encryptedContent, privateKeyArmored, passphrase)` — delegates to GpgKeyManager.decrypt(), returns Uint8Array
+    - Throw EmailError with PRIVATE_KEY_MISSING when private key is not provided
+    - _Requirements: 3.1, 3.3, 3.4, 5.1, 5.5, 14.1_
+  - [x] 6.2 Add GPG signing/verification methods to EmailEncryptionService
+    - Implement `signGpg(content, privateKeyArmored, passphrase)` — delegates to GpgKeyManager.sign(), returns ISignatureResult
+    - Implement `verifyGpg(content, signature, signerPublicKeyArmored)` — delegates to GpgKeyManager.verify(), returns boolean
+    - _Requirements: 4.1, 4.2, 4.4, 5.2, 5.3, 5.4_
+  - [x] 6.3 Upgrade S/MIME methods from HMAC stubs to real CMS operations
+    - Add `SmimeCertificateManager` as a dependency
+    - Implement `encryptSmimeReal(content, recipientCertificatesPem, senderCertPem?, senderPrivateKeyPem?)` — delegates to SmimeCertificateManager.encrypt(), sets scheme to S_MIME, returns IPerRecipientEncryptionResult with cmsEncryptedContent in metadata
+    - Implement `decryptSmimeReal(encryptedContent, certificatePem, privateKeyPem)` — delegates to SmimeCertificateManager.decrypt(), returns Uint8Array
+    - Implement `signSmime(content, certificatePem, privateKeyPem)` — delegates to SmimeCertificateManager.sign(), returns ISignatureResult
+    - Implement `verifySmime(content, signature, signerCertificatePem)` — delegates to SmimeCertificateManager.verify(), returns boolean
+    - _Requirements: 7.1, 7.3, 7.4, 8.1, 8.2, 8.4, 9.1, 9.2, 9.3, 9.4, 9.5_
+  - [x] 6.4 Write unit tests for EmailEncryptionService GPG and S/MIME methods
+    - Test encryptGpg/decryptGpg round-trip
+    - Test signGpg/verifyGpg round-trip
+    - Test encryptSmimeReal/decryptSmimeReal round-trip
+    - Test signSmime/verifySmime round-trip
+    - Test sign-then-encrypt flow for both GPG and S/MIME (sign before encrypt per Requirements 4.2, 8.2)
+    - Test error cases: missing private key, invalid key, expired cert
+    - Test scheme metadata is correctly set to GPG or S_MIME
+    - _Requirements: 3.1, 3.3, 4.1, 4.2, 5.1, 5.3, 7.1, 8.1, 8.2, 9.1, 9.3_
+
+- [x] 7. Implement RecipientKeyResolver service
+  - [x] 7.1 Create RecipientKeyResolver class
+    - Create `brightchain-lib/src/lib/services/messaging/recipientKeyResolver.ts`
+    - Implement `IRecipientKeyResolver` interface
+    - Accept `IKeyStore` as a constructor dependency
+    - Implement `resolveAvailability(emails)` — queries KeyStore for each email, returns IRecipientKeyAvailability[] indicating which key types are available
+    - Implement `resolveKeysForScheme(emails, scheme)` — resolves actual keys/certs for the given scheme, returns IResolvedRecipientKeys with populated maps and missing lists
+    - Throw EmailError with RECIPIENT_KEY_MISSING when required keys are missing
+    - _Requirements: 2.3, 3.2, 7.2, 11.7, 14.1, 14.2, 14.4_
+  - [x] 7.2 Write unit tests for RecipientKeyResolver
+    - Test resolveAvailability returns correct availability for mixed recipients
+    - Test resolveKeysForScheme returns keys and identifies missing recipients
+    - Test with internal-only, external-only, and mixed recipient sets
+    - Mock IKeyStore for all tests
+    - _Requirements: 2.3, 3.2, 7.2, 14.1, 14.2, 14.4_
+
+- [x] 8. Add multipart/signed message assembly to EmailMessageService
+  - [x] 8.1 Implement assembleMultipartSigned helper method
+    - Edit `brightchain-lib/src/lib/services/messaging/emailMessageService.ts`
+    - Add private method `assembleMultipartSigned(bodyPart, signature, scheme)` that wraps message content and detached signature into multipart/signed MIME structure
+    - For GPG (scheme=GPG): use `protocol="application/pgp-signature"` and `micalg=pgp-sha256` per RFC 3156
+    - For S/MIME (scheme=S_MIME): use `protocol="application/pkcs7-signature"` and `micalg=sha-256` per RFC 5751
+    - Returns an IMimePart representing the multipart/signed structure
+    - _Requirements: 4.4, 8.4_
+  - [x] 8.2 Integrate GPG and S/MIME encryption into email send flow
+    - Update the send flow in EmailMessageService to handle `encryptionScheme === GPG` and `encryptionScheme === S_MIME` (real CMS)
+    - When signMessage is true and scheme is GPG: call EmailEncryptionService.signGpg(), then assembleMultipartSigned()
+    - When signMessage is true and scheme is S_MIME: call EmailEncryptionService.signSmime(), then assembleMultipartSigned()
+    - When encryption is enabled: call encryptGpg() or encryptSmimeReal() as appropriate
+    - Sign before encrypt per Requirements 4.2, 8.2
+    - _Requirements: 3.1, 3.3, 4.1, 4.2, 4.4, 7.1, 7.3, 8.1, 8.2, 8.4_
+  - [x] 8.3 Write unit tests for multipart/signed assembly and send flow integration
+    - Test assembleMultipartSigned produces correct MIME structure for GPG
+    - Test assembleMultipartSigned produces correct MIME structure for S/MIME
+    - Test send flow with GPG encryption and signing
+    - Test send flow with S/MIME encryption and signing
+    - Test sign-before-encrypt ordering
+    - _Requirements: 4.2, 4.4, 8.2, 8.4_
+
+- [x] 9. Checkpoint — Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 10. Implement KeyStoreService and KeyStoreController in brightchain-api-lib
+  - [x] 10.1 Create KeyStoreService implementing IKeyStore with BrightDB
+    - Create `brightchain-api-lib/src/lib/services/keyStoreService.ts`
+    - Implement `IKeyStore<string>` interface backed by BrightDB
+    - Use `encryption_keys` collection for key/certificate documents
+    - Use `encryption_preferences` collection for preference documents
+    - Encrypt private key material at rest using AES-256-GCM with user's account key before writing to DB
+    - Store IV and auth tag alongside encrypted private material in the document
+    - Create indexes: `{ userId: 1, type: 1 }` (unique), `{ associatedEmail: 1, type: 1 }`, `{ userId: 1 }`
+    - Create index for preferences: `{ userId: 1, contactEmail: 1 }` (unique compound)
+    - _Requirements: 1.2, 2.5, 6.2, 6.6, 13.1, 13.2_
+  - [x] 10.2 Create KeyStoreController with REST endpoints
+    - Create `brightchain-api-lib/src/lib/controllers/api/keyStore.ts`
+    - POST `/keys/gpg/generate` — accepts passphrase, calls GpgKeyManager.generateKeyPair(), stores via KeyStoreService
+    - POST `/keys/gpg/import` — accepts ASCII-armored public key, validates, stores
+    - POST `/keys/gpg/publish` — retrieves user's public key, calls GpgKeyManager.publishToKeyserver()
+    - GET `/keys/gpg/export` — returns user's public key in ASCII armor
+    - DELETE `/keys/gpg` — deletes user's GPG keypair from KeyStore
+    - POST `/keys/smime/import` — accepts PEM cert or PKCS#12 file + password, validates, stores
+    - GET `/keys/smime` — returns S/MIME certificate metadata
+    - DELETE `/keys/smime` — deletes user's S/MIME certificate
+    - GET `/keys/resolve/:email` — calls RecipientKeyResolver.resolveAvailability()
+    - PUT `/keys/preferences` — sets encryption preference (global or per-contact)
+    - GET `/keys/preferences` — returns encryption preferences
+    - Validate encryption scheme values against complete MessageEncryptionScheme enum including GPG
+    - _Requirements: 1.1, 1.2, 1.3, 1.5, 2.1, 2.2, 2.6, 6.1, 6.2, 6.3, 6.6, 10.3, 13.1, 13.2_
+  - [x] 10.3 Write unit tests for KeyStoreController
+    - Test GPG keypair generation endpoint
+    - Test GPG public key import and export endpoints
+    - Test GPG keypair deletion endpoint
+    - Test S/MIME certificate import (PEM and PKCS#12) endpoint
+    - Test S/MIME certificate metadata retrieval and deletion endpoints
+    - Test key resolution endpoint
+    - Test encryption preference get/set endpoints
+    - Test validation rejects invalid encryption scheme values
+    - Mock KeyStoreService and GpgKeyManager/SmimeCertificateManager
+    - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 6.1, 6.2, 6.3, 10.3, 13.1, 13.2_
+
+- [x] 11. Checkpoint — Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+
+- [x] 12. Enhance EncryptionSelector component
+  - [x] 12.1 Update EncryptionSelector props and option filtering logic
+    - Edit `brightmail-react-components/src/lib/EncryptionSelector.tsx`
+    - Add new props: `hasGpgKey: boolean`, `hasSmimeCert: boolean`, `hasExternalRecipients?: boolean`, `senderGpgKeyMissing?: boolean`
+    - Extract option filtering into a pure function `getAvailableEncryptionOptions(hasGpgKey, hasSmimeCert, hasExternalRecipients)` that returns the filtered options array
+    - Include GPG option only when `hasGpgKey` is true
+    - Include S/MIME option only when `hasSmimeCert` is true
+    - Include ECIES (RECIPIENT_KEYS) only when `hasExternalRecipients` is false (internal-only)
+    - Always include NONE
+    - Replace the static `ENCRYPTION_OPTIONS` array with the dynamic filtered result
+    - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
+  - [x] 12.2 Add GPG-specific warnings to EncryptionSelector
+    - Show warning when GPG is selected but sender has no GPG private key (`senderGpgKeyMissing`)
+    - Show warning when GPG or S/MIME is selected and recipients are missing required keys (use existing `recipientWarnings` prop)
+    - Show ECIES external recipient warning when ECIES is selected with external recipients
+    - _Requirements: 3.2, 4.3, 7.2, 8.3, 11.7, 14.3_
+  - [x] 12.3 Write unit tests for EncryptionSelector enhancements
+    - Test getAvailableEncryptionOptions returns correct options for all combinations of hasGpgKey, hasSmimeCert, hasExternalRecipients
+    - Test GPG option appears only when hasGpgKey is true
+    - Test S/MIME option appears only when hasSmimeCert is true
+    - Test ECIES option hidden when hasExternalRecipients is true
+    - Test NONE is always present
+    - Test GPG sender key missing warning renders
+    - Test recipient key missing warnings render for GPG and S/MIME
+    - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7_
+
+- [x] 13. Enhance KeyManagementSettings component
+  - [x] 13.1 Extend KeyManagementSettings props and add GPG subsection
+    - Edit `brightmail-react-components/src/lib/KeyManagementSettings.tsx`
+    - Add new props: `gpgKeyMetadata?: IGpgKeyMetadata`, `smimeCertMetadata?: ISmimeCertificateMetadata`, `hasGpgPrivateKey: boolean`, `hasSmimePrivateKey: boolean`, `onGenerateGpgKeyPair: (passphrase: string) => Promise<void>`, `onExportGpgPublicKey: () => Promise<string>`, `onImportSmimePkcs12: (data: Uint8Array, password: string) => Promise<void>`, `onPublishGpgKey: () => Promise<void>`, `onImportGpgByEmail: (email: string) => Promise<void>`, `defaultEncryptionPreference: MessageEncryptionScheme`, `onSetDefaultPreference: (scheme: MessageEncryptionScheme) => Promise<void>`
+    - Add GPG subsection UI: generate keypair button (with passphrase input dialog), import public key, export public key, publish to keyserver, delete keypair
+    - Display GPG key metadata (keyId, fingerprint, createdAt, userId) when a keypair exists
+    - Show prompt to generate or import when no GPG keypair is configured
+    - _Requirements: 1.3, 1.5, 2.1, 2.6, 12.1, 12.2, 12.4_
+  - [x] 13.2 Add S/MIME subsection and default preference selector
+    - Add S/MIME subsection UI: import certificate (PEM file upload), import PKCS#12 (.p12/.pfx with password dialog), view certificate details, delete certificate
+    - Display S/MIME certificate metadata (subject, issuer, serialNumber, validFrom, validTo, emailAddresses) when a certificate exists
+    - Show expired certificate warning when `smimeCertMetadata?.isExpired` is true
+    - Show prompt to import when no S/MIME certificate is configured
+    - Add default encryption preference dropdown (None, GPG, S/MIME, ECIES) with save handler
+    - _Requirements: 6.3, 6.4, 12.1, 12.3, 12.5, 12.6, 13.1_
+  - [x] 13.3 Write unit tests for KeyManagementSettings enhancements
+    - Test GPG subsection renders generate button when no keypair exists
+    - Test GPG subsection renders metadata and export/delete options when keypair exists
+    - Test S/MIME subsection renders import prompt when no certificate exists
+    - Test S/MIME subsection renders metadata and delete option when certificate exists
+    - Test expired certificate warning renders
+    - Test default encryption preference selector renders and calls handler
+    - _Requirements: 1.3, 1.5, 6.3, 6.4, 12.2, 12.3, 12.4, 12.5, 12.6_
+
+- [x] 14. Integrate ComposeView with RecipientKeyResolver and default preferences
+  - [x] 14.1 Wire ComposeView to resolve recipient keys and pre-select encryption scheme
+    - Update the ComposeView component (or its parent container) to call the `/keys/resolve/:email` API for each recipient when recipients change
+    - Use resolved availability to pass `hasGpgKey`, `hasSmimeCert`, `hasExternalRecipients` to EncryptionSelector
+    - Call `/keys/preferences` API to get default encryption preference
+    - Pre-select encryption scheme based on per-contact preference (if exists for first recipient), falling back to global default
+    - If pre-selected scheme is unavailable (missing keys/certs), fall back to NONE and display informational message
+    - Pass recipient warnings (missing keys list) to EncryptionSelector when GPG or S/MIME is selected
+    - _Requirements: 3.2, 7.2, 11.7, 13.3, 13.4, 14.3_
+  - [x] 14.2 Add GPG passphrase dialog for send and decrypt flows
+    - Create a PassphraseDialog modal component that prompts for GPG passphrase
+    - Show dialog when sending with GPG signing or opening a GPG-encrypted message
+    - Pass passphrase in API request body (HTTPS only), clear from component state after API call completes
+    - Never persist passphrase to localStorage or cookies
+    - _Requirements: 4.1, 5.1, Design GPG Passphrase Handling_
+  - [x] 14.3 Write unit tests for ComposeView encryption integration
+    - Test encryption scheme pre-selection from default preferences
+    - Test fallback to NONE when preferred scheme is unavailable
+    - Test recipient key resolution triggers on recipient change
+    - Test passphrase dialog appears for GPG operations
+    - Test passphrase is cleared from state after use
+    - _Requirements: 13.3, 13.4, 14.3_
+
+- [x] 15. Wire barrel exports and ensure cross-package integration
+  - [x] 15.1 Update barrel exports in brightchain-lib
+    - Update `brightchain-lib/src/lib/services/messaging/index.ts` to export GpgKeyManager, SmimeCertificateManager, RecipientKeyResolver
+    - Update `brightchain-lib/src/lib/interfaces/messaging/index.ts` to export all new interfaces (IGpgKeyMetadata, IGpgKeyPair, ISmimeCertificateMetadata, ISmimeCertificateBundle, IKeyStore, IKeyStoreEntry, IEncryptionPreference, IRecipientKeyResolver, IRecipientKeyAvailability, IResolvedRecipientKeys)
+    - Update `brightchain-lib/src/lib/enumerations/messaging/index.ts` to ensure GPG enum value is exported
+    - _Requirements: 10.1, 10.2_
+  - [x] 15.2 Update barrel exports in brightchain-api-lib
+    - Update `brightchain-api-lib/src/lib/controllers/api/index.ts` to export KeyStoreController
+    - Register KeyStoreController routes in the API router
+    - _Requirements: 10.3_
+  - [x] 15.3 Write integration tests for end-to-end GPG and S/MIME flows
+    - Test full GPG flow: generate keypair → import contact public key → encrypt message → decrypt message → verify signature
+    - Test full S/MIME flow: import PKCS#12 → import contact cert → encrypt message → decrypt message → verify signature
+    - Test mixed recipient scenario: GPG encryption for all recipients with available keys
+    - Test encryption preference fallback: preferred scheme unavailable → falls back to NONE
+    - _Requirements: 3.1, 5.1, 7.1, 9.1, 14.1, 14.2, 14.4_
+
+- [x] 16. Final checkpoint — Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+## Notes
+
+- Tasks marked with `*` are optional and can be skipped for faster MVP
+- Each task references specific requirements for traceability
+- Checkpoints ensure incremental validation
+- All new shared types/interfaces go in brightchain-lib per workspace conventions
+- Node.js-specific implementations (KeyStoreService with BrightDB) go in brightchain-api-lib
+- Frontend components go in brightmail-react-components
+- The design uses TypeScript throughout — all implementations use TypeScript
+- Unit tests validate specific examples and edge cases
+- Integration tests validate end-to-end flows across services

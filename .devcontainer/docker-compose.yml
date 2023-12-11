@@ -1,0 +1,15 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../..:/workspaces:cached
+    command: sleep infinity
+    env_file:
+      - .env
+    network_mode: host
+    ports:
+      - "3000:3000"
+      - "25:25"
+      - "587:587"
