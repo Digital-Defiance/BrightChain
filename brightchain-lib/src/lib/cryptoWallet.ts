@@ -4,6 +4,7 @@ import {
   createCipheriv,
   createDecipheriv,
   createECDH,
+  CipherGCMTypes,
 } from 'crypto';
 import { hdkey } from 'ethereumjs-wallet';
 
@@ -16,7 +17,7 @@ export class EthereumECIES {
   private static readonly symmetricKeyLength =
     EthereumECIES.symmetricKeyBits / 8;
   private static readonly symmetricKeyMode = 'gcm';
-  private static readonly symmetricAlgorithmConfiguration = `${EthereumECIES.symmetricAlgorithm}-${EthereumECIES.symmetricKeyBits}-${EthereumECIES.symmetricKeyMode}`;
+  private static readonly symmetricAlgorithmConfiguration = `${EthereumECIES.symmetricAlgorithm}-${EthereumECIES.symmetricKeyBits}-${EthereumECIES.symmetricKeyMode}` as CipherGCMTypes;
 
   public static generateKeyPairFromMnemonic(mnemonic: string): {
     privateKey: string;
@@ -33,7 +34,7 @@ export class EthereumECIES {
       .getWallet();
 
     const privateKey = wallet.getPrivateKey().toString('hex');
-    const publicKey = wallet.getPublicKey().toString('hex');
+    const publicKey = '04' + wallet.getPublicKey().toString('hex');
 
     return { privateKey, publicKey };
   }
@@ -41,6 +42,8 @@ export class EthereumECIES {
   public static encrypt(receiverPublicKeyHex: string, message: string): string {
     const ecdh = createECDH(EthereumECIES.curveName);
     ecdh.generateKeys();
+    const ephemeralPublicKey = ecdh.getPublicKey().toString('hex');
+
     const sharedSecret = ecdh.computeSecret(receiverPublicKeyHex, 'hex');
 
     const iv = randomBytes(EthereumECIES.ivLength);
@@ -53,12 +56,13 @@ export class EthereumECIES {
     let encrypted = cipher.update(message, 'utf8', 'hex');
     encrypted += cipher.final('hex');
 
-    const ephemeralPublicKey = ecdh.getPublicKey().toString('hex');
-    return `${ephemeralPublicKey}:${iv.toString('hex')}:${encrypted}`;
+    const authTag = cipher.getAuthTag().toString('hex');
+
+    return `${ephemeralPublicKey}:${iv.toString('hex')}:${authTag}:${encrypted}`;
   }
 
   public static decrypt(privateKeyHex: string, encryptedData: string): string {
-    const [ephemeralPublicKeyHex, ivHex, encrypted] = encryptedData.split(':');
+    const [ephemeralPublicKeyHex, ivHex, authTag, encrypted] = encryptedData.split(':');
 
     const ecdh = createECDH(EthereumECIES.curveName);
     ecdh.setPrivateKey(privateKeyHex, 'hex');
@@ -69,6 +73,8 @@ export class EthereumECIES {
       sharedSecret.subarray(0, EthereumECIES.symmetricKeyLength),
       Buffer.from(ivHex, 'hex')
     );
+
+    decipher.setAuthTag(Buffer.from(authTag, 'hex'));
 
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
