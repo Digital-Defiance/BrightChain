@@ -1,10 +1,9 @@
 import * as uuid from 'uuid';
 import { BrightChainMember } from './brightChainMember';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
-import { ec as EC } from 'elliptic';
 import { IMemberShareCount } from './interfaces/memberShareCount';
-import { GuidV4, ShortHexGuid } from './guid';
-import { ChecksumBuffer } from './types';
+import { GuidV4 } from './guid';
+import { ChecksumBuffer, ShortHexGuid } from './types';
 import { EthereumECIES } from './ethereumECIES';
 
 export class QuorumDataRecord {

@@ -1,9 +1,10 @@
 import { IMemberShareCount } from './interfaces/memberShareCount';
 import { BrightChainMember } from './brightChainMember';
 import { MemberType } from './enumerations/memberType';
-import { GuidV4, ShortHexGuid } from './guid';
+import { GuidV4 } from './guid';
 import StaticHelpersSealing from './staticHelpers.sealing';
 import { EmailString } from './emailString';
+import { ShortHexGuid } from './types';
 
 describe('brightchainQuorum', () => {
   it('should determine the correct number of shares when no additional information is given', () => {

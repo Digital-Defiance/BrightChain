@@ -1,14 +1,5 @@
 import {
   GuidV4,
-  guidBrandToLength,
-  isFullHexGuid,
-  isShortHexGuid,
-  lengthToGuidBrand,
-  verifyGuid,
-  toFullHexFromBigInt,
-  toShortHexGuid,
-  toFullHexGuid,
-  toRawGuidBuffer,
 } from './guid';
 import { FullHexGuid } from './types';
 import { GuidBrandType } from './enumerations/guidBrandType';
@@ -52,30 +43,30 @@ describe('guid', () => {
   });
   it('should test verifyGuid with validate=false', () => {
     const uuidStr: FullHexGuid = uuid.v4() as FullHexGuid;
-    expect(verifyGuid(GuidBrandType.FullHexGuid, uuidStr, false)).toBeTruthy();
+    expect(GuidV4.verifyGuid(GuidBrandType.FullHexGuid, uuidStr, false)).toBeTruthy();
   });
   it('should test verifyGuid with validate=true', () => {
     const uuidStr: FullHexGuid = uuid.v4() as FullHexGuid;
-    expect(verifyGuid(GuidBrandType.FullHexGuid, uuidStr, true)).toBeTruthy();
+    expect(GuidV4.verifyGuid(GuidBrandType.FullHexGuid, uuidStr, true)).toBeTruthy();
   });
   it('should test an unknown type', () => {
     const uuidStr: FullHexGuid = uuid.v4() as FullHexGuid;
-    expect(verifyGuid(GuidBrandType.Unknown, uuidStr, true)).toBeFalsy();
+    expect(GuidV4.verifyGuid(GuidBrandType.Unknown, uuidStr, true)).toBeFalsy();
   });
   it('should test guidBrandToLength with an unknown type', () => {
-    expect(() => guidBrandToLength(GuidBrandType.Unknown)).toThrow();
+    expect(() => GuidV4.guidBrandToLength(GuidBrandType.Unknown)).toThrow();
   });
   it('should test lengthToGuidBrand with an unknown type', () => {
-    expect(() => lengthToGuidBrand(0, false)).toThrow();
-    expect(() => lengthToGuidBrand(0, true)).toThrow();
+    expect(() => GuidV4.lengthToGuidBrand(0, false)).toThrow();
+    expect(() => GuidV4.lengthToGuidBrand(0, true)).toThrow();
   });
   it('should test isFullHexGuid with invalid id buffer and string', () => {
-    expect(isFullHexGuid('x'.repeat(36), true)).toBeFalsy();
-    expect(isFullHexGuid(Buffer.from('x'.repeat(36)), true)).toBeFalsy();
+    expect(GuidV4.isFullHexGuid('x'.repeat(36), true)).toBeFalsy();
+    expect(GuidV4.isFullHexGuid(Buffer.from('x'.repeat(36)), true)).toBeFalsy();
   });
   it('it should test isShortHexGuid with an invalid guid', () => {
-    expect(isShortHexGuid('a'.repeat(32), true)).toBeFalsy();
-    expect(isShortHexGuid(Buffer.from('a'.repeat(32)), true)).toBeFalsy();
+    expect(GuidV4.isShortHexGuid('a'.repeat(32), true)).toBeFalsy();
+    expect(GuidV4.isShortHexGuid(Buffer.from('a'.repeat(32)), true)).toBeFalsy();
   });
   it('should test isShortHexGuid with a valid guid', () => {
     const uuidStr: FullHexGuid = uuid.v4() as FullHexGuid;
@@ -84,61 +75,61 @@ describe('guid', () => {
     const shortHexGuid = guidV4.asShortHexGuid;
     expect(shortHexGuidBuffer.length).toEqual(32);
     expect(shortHexGuid.length).toEqual(32);
-    expect(isShortHexGuid(shortHexGuidBuffer, true)).toBeTruthy();
-    expect(isShortHexGuid(shortHexGuid, true)).toBeTruthy();
+    expect(GuidV4.isShortHexGuid(shortHexGuidBuffer, true)).toBeTruthy();
+    expect(GuidV4.isShortHexGuid(shortHexGuid, true)).toBeTruthy();
   });
   it('should test toFullHexFromBigInt', () => {
     const guid = GuidV4.new();
-    const fullHex = toFullHexFromBigInt(guid.asBigIntGuid);
+    const fullHex = GuidV4.toFullHexFromBigInt(guid.asBigIntGuid);
     expect(fullHex).toEqual(guid.asFullHexGuid);
   });
   it('should handle invalid FullHexGuid input', () => {
-    expect(isFullHexGuid('invalid-guid', true)).toBeFalsy();
-    expect(isFullHexGuid(Buffer.from('invalid-guid'), true)).toBeFalsy();
+    expect(GuidV4.isFullHexGuid('invalid-guid', true)).toBeFalsy();
+    expect(GuidV4.isFullHexGuid(Buffer.from('invalid-guid'), true)).toBeFalsy();
   });
 
   it('should handle invalid ShortHexGuid input', () => {
-    expect(isShortHexGuid('invalid-guid', true)).toBeFalsy();
-    expect(isShortHexGuid(Buffer.from('invalid-guid'), true)).toBeFalsy();
+    expect(GuidV4.isShortHexGuid('invalid-guid', true)).toBeFalsy();
+    expect(GuidV4.isShortHexGuid(Buffer.from('invalid-guid'), true)).toBeFalsy();
   });
 
   it('should throw error for invalid guid conversion', () => {
-    expect(() => toFullHexGuid('invalid-guid')).toThrow();
-    expect(() => toShortHexGuid('invalid-guid')).toThrow();
+    expect(() => GuidV4.toFullHexGuid('invalid-guid')).toThrow();
+    expect(() => GuidV4.toShortHexGuid('invalid-guid')).toThrow();
   });
 
   it('should throw error for invalid guid buffer conversion', () => {
-    expect(() => toRawGuidBuffer('invalid-guid')).toThrow();
+    expect(() => GuidV4.toRawGuidBuffer('invalid-guid')).toThrow();
   });
 
   it('should verify invalid guid with verifyGuid function', () => {
-    expect(verifyGuid(GuidBrandType.FullHexGuid, 'invalid-guid', true)).toBeFalsy();
+    expect(GuidV4.verifyGuid(GuidBrandType.FullHexGuid, 'invalid-guid', true)).toBeFalsy();
   });
 
   it('should handle empty string and buffer inputs', () => {
-    expect(isFullHexGuid('', true)).toBeFalsy();
-    expect(isShortHexGuid(Buffer.alloc(0), true)).toBeFalsy();
+    expect(GuidV4.isFullHexGuid('', true)).toBeFalsy();
+    expect(GuidV4.isShortHexGuid(Buffer.alloc(0), true)).toBeFalsy();
   });
 
   it('should handle null and undefined inputs', () => {
-    expect(() => isFullHexGuid(null as unknown as string, true)).toThrow();
-    expect(() => isShortHexGuid(undefined as unknown as Buffer, true)).toThrow();
+    expect(() => GuidV4.isFullHexGuid(null as unknown as string, true)).toThrow();
+    expect(() => GuidV4.isShortHexGuid(undefined as unknown as Buffer, true)).toThrow();
   });
 
   it('should validate a valid FullHexGuid', () => {
     const validUuid = uuid.v4();
-    expect(isFullHexGuid(validUuid, true)).toBeTruthy();
+    expect(GuidV4.isFullHexGuid(validUuid, true)).toBeTruthy();
   });
 
   it('should validate a valid ShortHexGuid', () => {
     const validUuid = uuid.v4().replace(/-/g, '');
-    expect(isShortHexGuid(validUuid, true)).toBeTruthy();
+    expect(GuidV4.isShortHexGuid(validUuid, true)).toBeTruthy();
   });
 
   it('should correctly convert between FullHexGuid and ShortHexGuid', () => {
     const fullHexGuid = uuid.v4() as string;
-    const shortHexGuid = toShortHexGuid(fullHexGuid);
-    const convertedBackToFullHex = toFullHexGuid(shortHexGuid);
+    const shortHexGuid = GuidV4.toShortHexGuid(fullHexGuid);
+    const convertedBackToFullHex = GuidV4.toFullHexGuid(shortHexGuid);
     expect(convertedBackToFullHex).toEqual(fullHexGuid);
   });
 });

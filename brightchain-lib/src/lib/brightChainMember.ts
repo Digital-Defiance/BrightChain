@@ -1,12 +1,13 @@
 import * as uuid from 'uuid';
 import { randomBytes } from 'crypto';
 import { MemberType } from './enumerations/memberType';
-import { GuidV4, ShortHexGuid } from './guid';
+import { GuidV4 } from './guid';
 import { EmailString } from './emailString';
 import { IReadOnlyBasicObjectDTO } from './interfaces/readOnlyBasicObjectDto';
 import { IMemberDTO } from './interfaces/memberDto';
 import { EthereumECIES } from './ethereumECIES';
 import Wallet from 'ethereumjs-wallet';
+import { ShortHexGuid } from './types';
 /**
  * A member of Brightchain.
  * @param id The unique identifier for this member.
@@ -92,6 +93,7 @@ export class BrightChainMember implements IReadOnlyBasicObjectDTO {
       testDecrypted = EthereumECIES.decrypt(value, testMessage);
     }
     catch (e) {
+      testDecrypted = undefined;
     }
     if (!testDecrypted || testDecrypted.toString('hex') !== nonce.toString('hex')) {
       throw new Error('Incorrect or invalid private key for public key');
@@ -118,7 +120,7 @@ export class BrightChainMember implements IReadOnlyBasicObjectDTO {
     if (this._wallet) {
       throw new Error('Wallet already loaded');
     }
-    const { wallet, seed } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
+    const { wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
     const keyPair = EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
     if (keyPair.publicKey.toString('hex') !== this.publicKey.toString('hex')) {
       throw new Error('Incorrect or invalid mnemonic for public key');
@@ -134,9 +136,6 @@ export class BrightChainMember implements IReadOnlyBasicObjectDTO {
    * @returns
    */
   public sign(data: Buffer): Buffer {
-    if (!this.hasPrivateKey) {
-      throw new Error('No key pair');
-    }
     const signature = EthereumECIES.signMessage(data, this.privateKey);
     return signature;
   }
@@ -173,7 +172,7 @@ export class BrightChainMember implements IReadOnlyBasicObjectDTO {
   ): BrightChainMember {
     const newId = new GuidV4(uuid.v4()).asShortHexGuid;
     const mnemonic = EthereumECIES.generateNewMnemonic();
-    const { seed, wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
+    const { wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
     const keyPair = EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
     return new BrightChainMember(
       memberType,

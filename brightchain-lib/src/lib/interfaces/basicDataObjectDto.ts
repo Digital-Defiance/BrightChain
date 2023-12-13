@@ -1,5 +1,4 @@
-import { ChecksumString } from "../checksumBrand";
-import { ShortHexGuid } from "../guid";
+import { ChecksumString, ShortHexGuid } from "../types";
 import { IBasicObjectDTO } from "./basicObjectDto";
 
 export interface IBasicDataObjectDTO extends IBasicObjectDTO {

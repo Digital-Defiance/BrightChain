@@ -1,8 +1,7 @@
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
-import { ChecksumString } from '../types';
+import { ChecksumString, ShortHexGuid } from '../types';
 import { EmailString } from '../emailString';
-import { ShortHexGuid } from '../guid';
 import { MemberType } from '../enumerations/memberType';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { Block } from './block';

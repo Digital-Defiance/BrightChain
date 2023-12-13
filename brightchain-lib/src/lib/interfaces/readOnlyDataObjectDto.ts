@@ -1,5 +1,4 @@
-import { ChecksumString } from "../types";
-import { ShortHexGuid } from "../guid";
+import { ChecksumString, ShortHexGuid } from "../types";
 import { IBasicDataObjectDTO } from "./basicDataObjectDto";
 import { IReadOnlyBasicObjectDTO } from "./readOnlyBasicObjectDto";
 
