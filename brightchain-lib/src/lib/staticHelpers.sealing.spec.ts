@@ -97,7 +97,7 @@ describe('brightchainQuorum', () => {
       );
     }).toThrow();
   });
-  it('should not lose information converting betweeen map and arrays', () => {
+  it('should not lose information converting between map and arrays', () => {
     const memberIds: ShortHexGuid[] = [
       GuidV4.new().asShortHexGuid,
       GuidV4.new().asShortHexGuid,
