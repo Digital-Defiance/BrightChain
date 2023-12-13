@@ -1,12 +1,10 @@
 import * as uuid from 'uuid';
 import { BrightChainMember } from './brightChainMember';
 import { EmailString } from './emailString';
-import { GuidV4, ShortHexGuid } from './guid';
-import { MemberKeyUse } from './enumerations/memberKeyUse';
 import { MemberType } from './enumerations/memberType';
-import { StaticHelpersKeyPair } from './staticHelpers.keypair';
 import { EthereumECIES } from './ethereumECIES';
 import { faker } from '@faker-js/faker';
+import { ShortHexGuid } from './types';
 describe('brightchain', () => {
   let alice: BrightChainMember, bob: BrightChainMember, noKeyCharlie: BrightChainMember;
   beforeEach(() => {
@@ -36,7 +34,7 @@ describe('brightchain', () => {
   });
   it('should fail to create with an invalid id', () => {
     const mnemonic = EthereumECIES.generateNewMnemonic();
-    const { seed, wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
+    const { wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
     const keyPair = EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
     expect(
       () =>
@@ -75,7 +73,7 @@ describe('brightchain', () => {
   });
   it('should fail to create with a made up id', () => {
     const mnemonic = EthereumECIES.generateNewMnemonic();
-    const { seed, wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
+    const { wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
     const keyPair = EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
     expect(
       () =>

@@ -1,12 +1,11 @@
 import { combine, getConfig, init, share, Shares } from 'secrets.js-34r7h';
 import { QuorumDataRecord } from './quorumDataRecord';
-import { ShortHexGuid } from './guid';
 import { IMemberShareCount } from './interfaces/memberShareCount';
 import { ISortedMemberShareCountArrays } from './interfaces/sortedMemberShareCountArrays';
 import { BrightChainMember } from './brightChainMember';
 import { IQoroumSealResults } from './interfaces/quoromSealResults';
 import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
-import { EncryptedShares } from './types';
+import { EncryptedShares, ShortHexGuid } from './types';
 import { EthereumECIES } from './ethereumECIES';
 
 /**
