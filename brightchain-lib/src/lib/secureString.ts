@@ -1,7 +1,8 @@
-import { FullHexGuid, FullHexGuidBuffer, GuidV4 } from './guid';
+import { GuidV4 } from './guid';
 import { createHash } from 'crypto';
 import { StaticHelpersKeyPair } from './staticHelpers.keypair';
 import { StaticHelpersPbkdf2 } from './staticHelpers.pbkdf2';
+import { FullHexGuid, FullHexGuidBuffer } from './types';
 
 /**
  * A secure string buffer is a buffer whose intent is to prevent the raw password from being stored in memory.

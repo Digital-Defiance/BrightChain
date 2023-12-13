@@ -1,9 +1,9 @@
 import { BrightChainMember } from '../brightChainMember';
-import { ChecksumString } from '../types';
-import { ShortHexGuid, toShortHexGuid } from '../guid';
+import { ChecksumString, ShortHexGuid } from '../types';
 import { IReadOnlyDataObjectDTO } from '../interfaces/readOnlyDataObjectDto';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { BlockSize, lengthToBlockSize, validateBlockSize } from '../enumerations/blockSizes';
+import { GuidV4 } from '../guid';
 
 export class Block implements IReadOnlyDataObjectDTO {
   constructor(
@@ -69,7 +69,7 @@ export class Block implements IReadOnlyDataObjectDTO {
     const data = Buffer.from(parsed.data, 'hex');
     const dateCreated = new Date(parsed.dateCreated);
     try {
-      const memberId = toShortHexGuid(parsed.createdBy);
+      const memberId = GuidV4.toShortHexGuid(parsed.createdBy);
       const member = fetchMember(memberId);
       if (member.id != memberId) {
         throw new Error('Member mismatch');
