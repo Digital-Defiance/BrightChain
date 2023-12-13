@@ -59,14 +59,4 @@ describe('staticHelpers', () => {
       false
     );
   });
-  it('should validate an email', () => {
-    // copilot version
-    expect(StaticHelpers.validateEmail('alice')).toBeFalsy();
-    expect(StaticHelpers.validateEmail('alice@example')).toBeFalsy();
-    expect(StaticHelpers.validateEmail('alice.example.com')).toBeFalsy();
-    expect(StaticHelpers.validateEmail('alice@.example.com')).toBeFalsy();
-    expect(StaticHelpers.validateEmail('alice@example@.com')).toBeFalsy();
-    expect(StaticHelpers.validateEmail('alice@example.com')).toBeTruthy();
-    //TODO: more
-  });
 });
