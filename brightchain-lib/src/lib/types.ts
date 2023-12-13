@@ -6,6 +6,7 @@ import { ISimplePublicKeyOnlyBuffer } from "./interfaces/simplePublicKeyOnlyBuff
 import { ISimpleKeyPairBuffer } from "./interfaces/simpleKeyPairBuffer";
 import { KeyType } from "./enumerations/keyType";
 import { MemberKeyUse } from "./enumerations/memberKeyUse";
+import { GuidBrandType } from "./enumerations/guidBrandType";
 
 export type EncryptedShares = Array<string>;
 export type KeyTypeString = KeyType.Ed25519 | KeyType.Secp256k1 | KeyType.Rsa4096;
@@ -24,4 +25,41 @@ export type ChecksumString = Brand<
   string,
   'Sha3Checksum',
   'ChecksumString'
+>;
+
+export type FullHexGuidBuffer = Brand<
+  Buffer,
+  'GuidV4',
+  GuidBrandType.FullHexGuid
+>;
+export type ShortHexGuidBuffer = Brand<
+  Buffer,
+  'GuidV4',
+  GuidBrandType.ShortHexGuid
+>;
+export type Base64GuidBuffer = Brand<
+  Buffer,
+  'GuidV4',
+  GuidBrandType.Base64Guid
+>;
+export type BigIntGuid = Brand<bigint, 'GuidV4', GuidBrandType.BigIntGuid>;
+export type FullHexGuid = Brand<
+  string,
+  'GuidV4',
+  GuidBrandType.FullHexGuidBuffer
+>;
+export type ShortHexGuid = Brand<
+  string,
+  'GuidV4',
+  GuidBrandType.ShortHexGuidBuffer
+>;
+export type Base64Guid = Brand<
+  string,
+  'GuidV4',
+  GuidBrandType.Base64GuidBuffer
+>;
+export type RawGuidBuffer = Brand<
+  Buffer,
+  'GuidV4',
+  GuidBrandType.RawGuidBuffer
 >;

@@ -1,54 +1,7 @@
 import * as uuid from 'uuid';
 import { AnyBrand, Brand } from 'ts-brand';
-
-export enum GuidBrandType {
-  Unknown = 'Unknown',
-  FullHexGuid = 'FullHexGuid',
-  ShortHexGuid = 'ShortHexGuid',
-  Base64Guid = 'Base64Guid',
-  BigIntGuid = 'BigIntGuid',
-  FullHexGuidBuffer = 'FullHexGuidBuffer',
-  ShortHexGuidBuffer = 'ShortHexGuidBuffer',
-  Base64GuidBuffer = 'Base64GuidBuffer',
-  RawGuidBuffer = 'RawGuidBuffer',
-}
-
-export type FullHexGuidBuffer = Brand<
-  Buffer,
-  'GuidV4',
-  GuidBrandType.FullHexGuid
->;
-export type ShortHexGuidBuffer = Brand<
-  Buffer,
-  'GuidV4',
-  GuidBrandType.ShortHexGuid
->;
-export type Base64GuidBuffer = Brand<
-  Buffer,
-  'GuidV4',
-  GuidBrandType.Base64Guid
->;
-export type BigIntGuid = Brand<bigint, 'GuidV4', GuidBrandType.BigIntGuid>;
-export type FullHexGuid = Brand<
-  string,
-  'GuidV4',
-  GuidBrandType.FullHexGuidBuffer
->;
-export type ShortHexGuid = Brand<
-  string,
-  'GuidV4',
-  GuidBrandType.ShortHexGuidBuffer
->;
-export type Base64Guid = Brand<
-  string,
-  'GuidV4',
-  GuidBrandType.Base64GuidBuffer
->;
-export type RawGuidBuffer = Brand<
-  Buffer,
-  'GuidV4',
-  GuidBrandType.RawGuidBuffer
->;
+import { GuidBrandType } from './enumerations/guidBrandType';
+import { Base64Guid, Base64GuidBuffer, BigIntGuid, FullHexGuid, FullHexGuidBuffer, RawGuidBuffer, ShortHexGuid, ShortHexGuidBuffer } from './types';
 
 export const lengthMap: Map<GuidBrandType, number> = new Map<
   GuidBrandType,
@@ -116,58 +69,41 @@ export function isFullHexGuid(
   fullHexGuidValue: string | Buffer,
   validate?: boolean
 ): boolean {
-  let result = false;
-  if (fullHexGuidValue instanceof Buffer) {
-    result =
-      fullHexGuidValue.length ===
-      guidBrandToLength(GuidBrandType.FullHexGuidBuffer);
+  const expectedLength = fullHexGuidValue instanceof Buffer
+    ? guidBrandToLength(GuidBrandType.FullHexGuidBuffer)
+    : guidBrandToLength(GuidBrandType.FullHexGuid);
+
+  if (fullHexGuidValue.length !== expectedLength) {
+    return false;
   }
-  result =
-    fullHexGuidValue.length === guidBrandToLength(GuidBrandType.FullHexGuid);
-  if (result && validate === true) {
-    if (fullHexGuidValue instanceof Buffer) {
-      if (!uuid.validate(fullHexGuidValue.toString())) {
-        return false;
-      }
-    } else if (typeof fullHexGuidValue === 'string') {
-      if (!uuid.validate(fullHexGuidValue)) {
-        return false;
-      }
-    }
+
+  if (validate && !uuid.validate(fullHexGuidValue.toString())) {
+    return false;
   }
-  return result;
+
+  return true;
 }
 
 export function isShortHexGuid(
   shortHexGuidValue: string | Buffer,
   validate?: boolean
 ): boolean {
-  let result = false;
-  if (shortHexGuidValue instanceof Buffer) {
-    result =
-      shortHexGuidValue.length ===
-      guidBrandToLength(GuidBrandType.ShortHexGuidBuffer);
-  } else if (typeof shortHexGuidValue === 'string') {
-    result =
-      shortHexGuidValue.length ===
-      guidBrandToLength(GuidBrandType.ShortHexGuid);
+  const expectedLength = shortHexGuidValue instanceof Buffer
+    ? guidBrandToLength(GuidBrandType.ShortHexGuidBuffer)
+    : guidBrandToLength(GuidBrandType.ShortHexGuid);
+
+  if (shortHexGuidValue.length !== expectedLength) {
+    return false;
   }
-  if (result && validate === true) {
-    const rawGuidBufferFromShortHex: Buffer =
-      toRawGuidBuffer(shortHexGuidValue);
-    if (
-      rawGuidBufferFromShortHex.length !==
-      guidBrandToLength(GuidBrandType.RawGuidBuffer)
-    ) {
-      return false;
-    }
-    if (
-      !uuid.validate(toFullHexGuid(rawGuidBufferFromShortHex.toString('hex')))
-    ) {
+
+  if (validate) {
+    const rawGuidBuffer = toRawGuidBuffer(shortHexGuidValue);
+    if (!uuid.validate(toFullHexGuid(rawGuidBuffer.toString('hex')))) {
       return false;
     }
   }
-  return result;
+
+  return true;
 }
 
 export function isBase64Guid(
@@ -293,8 +229,7 @@ export function fullHexFromBase64(base64: string | Base64Guid): FullHexGuid {
 
 export function toRawGuidBuffer(value: AnyBrand): RawGuidBuffer {
   const expectedBrand = whichBrand(value);
-  const verifiedBrand = verifyGuid(expectedBrand, value);
-  if (!verifiedBrand) {
+  if (!verifyGuid(expectedBrand, value)) {
     throw new Error(`Invalid guid brand: ${value}`);
   }
   let rawGuidBufferResult: RawGuidBuffer = Buffer.alloc(0) as RawGuidBuffer;
@@ -344,13 +279,8 @@ export function toRawGuidBuffer(value: AnyBrand): RawGuidBuffer {
     default:
       throw new Error(`Unknown guid brand: ${value}`);
   }
-  const expectedLength = guidBrandToLength(GuidBrandType.RawGuidBuffer);
-  if (rawGuidBufferResult.length !== expectedLength) {
-    throw new Error(
-      `Invalid guid brand: ${value}/${rawGuidBufferResult.toString('hex')}/${
-        rawGuidBufferResult.length
-      } != ${expectedLength}`
-    );
+  if (rawGuidBufferResult.length !== guidBrandToLength(GuidBrandType.RawGuidBuffer)) {
+    throw new Error(`Invalid guid length: ${rawGuidBufferResult.length}, expected: ${guidBrandToLength(GuidBrandType.RawGuidBuffer)}`);
   }
   return rawGuidBufferResult;
 }

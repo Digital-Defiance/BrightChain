@@ -1,5 +1,4 @@
-import * as secrets from 'secrets.js-34r7h';
-import { Shares } from 'secrets.js-34r7h';
+import { combine, getConfig, init, share, Shares } from 'secrets.js-34r7h';
 import { QuorumDataRecord } from './quorumDataRecord';
 import { ShortHexGuid } from './guid';
 import { IMemberShareCount } from './interfaces/memberShareCount';
@@ -8,7 +7,6 @@ import { BrightChainMember } from './brightChainMember';
 import { IQoroumSealResults } from './interfaces/quoromSealResults';
 import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 import { EncryptedShares } from './types';
-import { StaticHelpersKeyPair } from './staticHelpers.keypair';
 import { EthereumECIES } from './ethereumECIES';
 
 /**
@@ -29,8 +27,8 @@ export default abstract class StaticHelpersSealing {
     const bits = Math.max(3, Math.ceil(Math.log2(maxShares)));
 
     // secrets.init requires a CSPRNG type, get the current one
-    const config = secrets.getConfig();
-    secrets.init(bits, config.typeCSPRNG);
+    const config = getConfig();
+    init(bits, config.typeCSPRNG);
   }
 
   /**
@@ -231,7 +229,7 @@ export default abstract class StaticHelpersSealing {
     // alice: 1 share, bob (required): 3 shares, carol: 1 share = total 5 shares
     // split the key using shamir's secret sharing
     StaticHelpersSealing.reinitSecrets(amongstMemberIds.length);
-    const keyShares = secrets.share(
+    const keyShares = share(
       encryptedData.key.toString('hex'),
       sortedShareCounts.totalShares,
       sharesRequired
@@ -262,7 +260,7 @@ export default abstract class StaticHelpersSealing {
   ): T {
     // reconstitute the document key from the shares
     StaticHelpersSealing.reinitSecrets(recoveredShares.length);
-    const combined = secrets.combine(recoveredShares);
+    const combined = combine(recoveredShares);
     const key = Buffer.from(combined, 'hex'); // hex?
     return StaticHelpersSymmetric.symmetricDecrypt<T>(encryptedData, key);
   }
