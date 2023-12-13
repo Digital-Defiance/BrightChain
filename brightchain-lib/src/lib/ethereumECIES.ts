@@ -6,8 +6,10 @@ import {
   createECDH,
   CipherGCMTypes,
 } from 'crypto';
-import { hdkey } from 'ethereumjs-wallet';
+import Wallet, { hdkey } from 'ethereumjs-wallet';
+import { bufferToHex, ecrecover, ecsign, hashPersonalMessage, publicToAddress, toBuffer } from 'ethereumjs-util';
 import { ISimpleKeyPairBuffer } from './interfaces/simpleKeyPairBuffer';
+import { SecureBuffer } from './secureBuffer';
 
 export class EthereumECIES {
   private static readonly curveName = 'secp256k1';
@@ -30,17 +32,28 @@ export class EthereumECIES {
     return mnemonic;
   }
 
-  public static generateKeyPairFromMnemonic(mnemonic: string): ISimpleKeyPairBuffer {
+  public static walletFromSeed(seed: Buffer): Wallet {
+    const hdWallet = hdkey.fromMasterSeed(seed);
+    return hdWallet
+      .derivePath(EthereumECIES.primaryKeyDerivationPath)
+      .getWallet();
+  }
+
+  public static walletAndSeedFromMnemonic(mnemonic: string): { seed: SecureBuffer, wallet: Wallet } {
     if (!validateMnemonic(mnemonic)) {
       throw new Error('Invalid mnemonic');
     }
 
     const seed = mnemonicToSeedSync(mnemonic);
-    const hdWallet = hdkey.fromMasterSeed(seed);
-    const wallet = hdWallet
-      .derivePath(EthereumECIES.primaryKeyDerivationPath)
-      .getWallet();
+    const wallet = EthereumECIES.walletFromSeed(seed);
 
+    return {
+      seed: new SecureBuffer(seed),
+      wallet,
+    };
+  }
+
+  public static walletToSimpleKeyPairBuffer(wallet: Wallet): ISimpleKeyPairBuffer {
     const privateKey = wallet.getPrivateKey();
     // 04 + publicKey
     const buf04 = new Uint8Array(1);
@@ -48,6 +61,17 @@ export class EthereumECIES {
     const publicKey = Buffer.concat([buf04, wallet.getPublicKey()]);
 
     return { privateKey, publicKey };
+  }
+
+  public static seedToSimpleKeyPairBuffer(seed: Buffer): ISimpleKeyPairBuffer {
+    const wallet = EthereumECIES.walletFromSeed(seed);
+
+    return EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
+  }
+
+  public static mnemonicToSimpleKeyPairBuffer(mnemonic: string): ISimpleKeyPairBuffer {
+    const { seed } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
+    return EthereumECIES.seedToSimpleKeyPairBuffer(seed.value);
   }
 
   public static encrypt(receiverPublicKey: Buffer, message: Buffer): Buffer {
@@ -104,5 +128,42 @@ export class EthereumECIES {
   public static decryptString(privateKeyHex: string, encryptedDataHex: string): string {
     const decryptedData = this.decrypt(Buffer.from(privateKeyHex, 'hex'), Buffer.from(encryptedDataHex, 'hex'));
     return decryptedData.toString('utf8');
+  }
+
+  public static signMessage(privateKey: Buffer, message: Buffer): Buffer {
+    const messageHash = hashPersonalMessage(message);
+    const signature = ecsign(messageHash, privateKey);
+    return Buffer.concat([
+      toBuffer(signature.r),
+      toBuffer(signature.s),
+      toBuffer(signature.v - 27)
+    ]);
+  }
+
+  public static verifyMessage(senderPublicKey: Buffer, message: Buffer, signature: Buffer): boolean {
+    if (signature.length !== 65) {
+      throw new Error('Invalid signature');
+    }
+    // if the sender public key length is 65, it should have a 04 prefix
+    // it should otherwise be 64 bytes
+    // throw an error if it is not
+    if (senderPublicKey.length !== 65 && senderPublicKey.length !== 64) {
+      throw new Error('Invalid sender public key');
+    }
+    if (senderPublicKey.length === 65 && senderPublicKey[0] !== 4) {
+      throw new Error('Invalid sender public key');
+    }
+    const has04Prefix = senderPublicKey.length === 65 && senderPublicKey[0] === 4;
+    const messageHash = hashPersonalMessage(message);
+    const r = signature.subarray(0, 32);
+    const s = signature.subarray(32, 64);
+    const v = signature[64] + 27; // Ensure v is correctly adjusted
+
+    const publicKey = ecrecover(messageHash, v, r, s);
+    const derivedAddress = publicToAddress(publicKey);
+    // strip the 04 prefix from the public key
+    const knownAddress = publicToAddress(has04Prefix ? senderPublicKey.subarray(1) : senderPublicKey);
+
+    return derivedAddress.equals(knownAddress);
   }
 }

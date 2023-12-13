@@ -31,18 +31,11 @@ export default class BrightChainQuorum {
   private readonly _members: SimpleStore<ShortHexGuid, BrightChainMember>;
 
   /**
-   * Collection of signing public keys for each member of the quorum.
+   * Collection of public keys for each member of the quorum.
    * This may include members not on this node.
    * Never erase, only add/update.
    */
-  private readonly _memberSigningPublicKeysByMemberId: BufferStore<ShortHexGuid>;
-
-  /**
-   * Collection of data keys for each member of the quorum.
-   * This may include members not on this node.
-   * Never erase, only add/update.
-   */
-  private readonly _memberDataPublicKeysByMemberId: BufferStore<ShortHexGuid>;
+  private readonly _memberPublicKeysByMemberId: BufferStore<ShortHexGuid>;
 
   /**
    * Collection of key shares that this quorum node has taken responsbility for
@@ -66,8 +59,7 @@ export default class BrightChainQuorum {
     }
 
     this._members = new SimpleStore<ShortHexGuid, BrightChainMember>();
-    this._memberSigningPublicKeysByMemberId = new BufferStore<ShortHexGuid>();
-    this._memberDataPublicKeysByMemberId = new BufferStore<ShortHexGuid>();
+    this._memberPublicKeysByMemberId = new BufferStore<ShortHexGuid>();
     this._documentKeySharesById = new SimpleStore<ShortHexGuid, EncryptedShares>();
     this._documentsById = new SimpleStore<ShortHexGuid, QuorumDataRecord>();
 
@@ -84,14 +76,12 @@ export default class BrightChainQuorum {
    */
   protected storeMember(member: BrightChainMember) {
     this._members.set(member.id, member);
-    this._memberSigningPublicKeysByMemberId.set(
+    this._memberPublicKeysByMemberId.set(
       member.id,
-      member.signingPublicKey
+      member.publicKey
     );
-    this._memberDataPublicKeysByMemberId.set(member.id, member.dataPublicKey);
     this._members.save();
-    this._memberSigningPublicKeysByMemberId.save();
-    this._memberDataPublicKeysByMemberId.save();
+    this._memberPublicKeysByMemberId.save();
   }
 
   /**

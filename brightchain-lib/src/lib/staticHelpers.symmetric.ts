@@ -2,12 +2,9 @@ import {
   createCipheriv,
   createDecipheriv,
   randomBytes,
-  publicEncrypt,
-  privateDecrypt,
 } from 'crypto';
 import { ISymmetricEncryptionResults } from './interfaces/symmetricEncryptionResults';
 import { StaticHelpersKeyPair } from './staticHelpers.keypair';
-import { SealResults } from './sealResults';
 
 /**
  * @description
@@ -108,34 +105,5 @@ export abstract class StaticHelpersSymmetric {
         key
       ).toString()
     ) as T;
-  }
-
-  public static seal<T>(data: T, publicKey: Buffer): SealResults {
-    // encrypt the data with a new symmetric key
-    const encrypted = StaticHelpersSymmetric.symmetricEncrypt<T>(data);
-    // encrypt the symmetric key with the asymmetric key for the user
-    const encryptedData = publicEncrypt(
-      StaticHelpersKeyPair.DataPublicEncryptOptions(publicKey),
-      encrypted.key
-    );
-    // return the encrypted symmetric key and the encrypted data
-    return new SealResults(
-      encrypted.encryptedData,
-      encryptedData,
-    );
-  }
-
-  public static unseal<T>(sealedData: SealResults, privateKey: Buffer) {
-    // decrypt the symmetric key with the private key
-    const decryptedKey: Buffer = privateDecrypt(
-      StaticHelpersKeyPair.DataPrivateDecryptOptions(privateKey),
-      sealedData.encryptedKey
-    );
-    // decrypt the data with the symmetric key
-    const decryptedData = StaticHelpersSymmetric.symmetricDecrypt<T>(
-      sealedData.encryptedData,
-      decryptedKey
-    );
-    return decryptedData;
   }
 }

@@ -1,11 +1,11 @@
 import * as uuid from 'uuid';
 import { BrightChainMember } from './brightChainMember';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
-import { StaticHelpersElliptic } from './staticHelpers.elliptic';
 import { ec as EC } from 'elliptic';
 import { IMemberShareCount } from './interfaces/memberShareCount';
 import { GuidV4, ShortHexGuid } from './guid';
 import { ChecksumBuffer } from './types';
+import { EthereumECIES } from './ethereumECIES';
 
 export class QuorumDataRecord {
   public readonly id: ShortHexGuid;
@@ -15,7 +15,7 @@ export class QuorumDataRecord {
    * sha-3 hash of the encrypted data
    */
   public readonly checksum: ChecksumBuffer;
-  public readonly signature: EC.Signature | null;
+  public readonly signature: Buffer | null;
   public readonly memberIDs: ShortHexGuid[];
   public readonly sharesRequired: number;
   public readonly dateCreated: Date;
@@ -28,7 +28,7 @@ export class QuorumDataRecord {
     encryptedData: Buffer,
     shareCountsByMemberId?: Array<IMemberShareCount>,
     checksum?: ChecksumBuffer,
-    signature?: EC.Signature,
+    signature?: Buffer,
     id?: string,
     dateCreated?: Date,
     dateUpdated?: Date
@@ -72,13 +72,9 @@ export class QuorumDataRecord {
     this.checksum = calculatedChecksum;
     this.signature = signature ?? creator.sign(this.checksum);
     if (
-      !StaticHelpersElliptic.verifySignature(
-        this.encryptedData,
-        this.signature,
-        creator.signingPublicKey
-      )
+      !EthereumECIES.verifyMessage(creator.publicKey, this.encryptedData, this.signature)
     ) {
-      //throw new Error('Invalid signature');
+      throw new Error('Invalid signature');
     }
 
     // don't create a new date object with nearly identical values to the existing one

@@ -9,6 +9,7 @@ import { IQoroumSealResults } from './interfaces/quoromSealResults';
 import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 import { EncryptedShares } from './types';
 import { StaticHelpersKeyPair } from './staticHelpers.keypair';
+import { EthereumECIES } from './ethereumECIES';
 
 /**
  * @description Static helper functions for Brightchain Quorum. Encryption and other utilities.
@@ -307,14 +308,8 @@ export default abstract class StaticHelpersSealing {
       );
       for (let j = 0; j < sharesForMember.length; j++) {
         const share = sharesForMember[j];
-        const encryptedKeyShare = StaticHelpersSymmetric.seal<string>(
-          share,
-          member.dataPublicKey
-        );
-        encryptedSharesForMember[i] =
-          StaticHelpersKeyPair.SealResultsToBuffer(
-            encryptedKeyShare
-          ).toString('hex');
+        const encryptedKeyShare = EthereumECIES.encrypt(member.publicKey, Buffer.from(share));
+        encryptedSharesForMember[i] = encryptedKeyShare.toString('hex');
       }
       encryptedSharesByMemberId.set(member.id, encryptedSharesForMember);
     }
@@ -365,16 +360,8 @@ export default abstract class StaticHelpersSealing {
       const shareCount = sortedMembers.shares[i];
       for (let j = 0; j < shareCount; j++) {
         const encryptedKeyShareHex = encryptedShares[shareIndex++];
-        const decryptedPrivateKey =
-          StaticHelpersKeyPair.recoverDataKeyFromSigningKey(member);
-        const encryptedKeyShare = StaticHelpersKeyPair.BufferToSealResults(
-          Buffer.from(encryptedKeyShareHex, 'hex')
-        );
-        const decryptedKeyShare = StaticHelpersSymmetric.unseal<string>(
-          encryptedKeyShare,
-          decryptedPrivateKey
-        );
-        decryptedShares[i] = decryptedKeyShare;
+        const decryptedKeyShare = EthereumECIES.decrypt(member.privateKey, Buffer.from(encryptedKeyShareHex, 'hex'));
+        decryptedShares[i] = decryptedKeyShare.toString('hex');
       }
     }
     return decryptedShares as Shares;
