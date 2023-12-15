@@ -71,7 +71,11 @@ export class QuorumDataRecord {
     this.checksum = calculatedChecksum;
     this.signature = signature ?? creator.sign(this.checksum);
     if (
-      !EthereumECIES.verifyMessage(creator.publicKey, this.encryptedData, this.signature)
+      !EthereumECIES.verifyMessage(
+        creator.publicKey,
+        this.encryptedData,
+        this.signature
+      )
     ) {
       throw new Error('Invalid signature');
     }

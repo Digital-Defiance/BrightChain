@@ -90,11 +90,13 @@ export class BrightChainMember {
     let testDecrypted;
     try {
       testDecrypted = EthereumECIES.decrypt(value, testMessage);
-    }
-    catch (e) {
+    } catch (e) {
       testDecrypted = undefined;
     }
-    if (!testDecrypted || testDecrypted.toString('hex') !== nonce.toString('hex')) {
+    if (
+      !testDecrypted ||
+      testDecrypted.toString('hex') !== nonce.toString('hex')
+    ) {
       throw new Error('Incorrect or invalid private key for public key');
     }
     this._privateKey = value;
