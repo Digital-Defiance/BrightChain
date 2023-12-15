@@ -6,7 +6,9 @@ import { EthereumECIES } from './ethereumECIES';
 import { faker } from '@faker-js/faker';
 import { ShortHexGuid } from './types';
 describe('brightchain', () => {
-  let alice: BrightChainMember, bob: BrightChainMember, noKeyCharlie: BrightChainMember;
+  let alice: BrightChainMember,
+    bob: BrightChainMember,
+    noKeyCharlie: BrightChainMember;
   beforeEach(() => {
     alice = BrightChainMember.newMember(
       MemberType.User,
@@ -50,9 +52,9 @@ describe('brightchain', () => {
     ).toThrow('Invalid member ID');
   });
   it('should fail to sign when there is no signing key', () => {
-    expect(() => noKeyCharlie.sign(Buffer.from(faker.lorem.sentence()))).toThrow(
-      'No private key'
-    );
+    expect(() =>
+      noKeyCharlie.sign(Buffer.from(faker.lorem.sentence()))
+    ).toThrow('No private key');
   });
   it('should fail to verify when there is no signing key', () => {
     expect(() => {
@@ -136,7 +138,11 @@ describe('brightchain', () => {
   });
   it('should fail to create a user with an invalid email', () => {
     expect(() => {
-      BrightChainMember.newMember(MemberType.User, 'Nope', new EmailString('x!foo'));
+      BrightChainMember.newMember(
+        MemberType.User,
+        'Nope',
+        new EmailString('x!foo')
+      );
     }).toThrow('Email is invalid');
   });
   it('should check whether a user has a private key', () => {

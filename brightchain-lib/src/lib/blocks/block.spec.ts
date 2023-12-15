@@ -1,11 +1,11 @@
 import { randomBytes } from 'crypto';
-import { BrightChainMember } from '../brightChainMember';
-import { EmailString } from '../emailString';
-import { MemberType } from '../enumerations/memberType';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { Block } from './block';
-import { BlockSize, blockSizeToLength, validBlockSizes } from '../enumerations/blockSizes';
-import exp = require('constants');
+import {
+  BlockSize,
+  blockSizeToLength,
+  validBlockSizes,
+} from '../enumerations/blockSizes';
 
 function randomBlockSize(not?: BlockSize): BlockSize {
   // TODO: determine deadlock/speed issues?
@@ -24,7 +24,7 @@ describe('block', () => {
     BlockSize.Small,
     BlockSize.Medium,
   ];
-  testBlockSizes.forEach(blockSize => {
+  testBlockSizes.forEach((blockSize) => {
     const blockLength: number = blockSizeToLength(blockSize);
     const data = randomBytes(blockLength);
     const checksum = StaticHelpersChecksum.calculateChecksum(data);
@@ -82,23 +82,13 @@ describe('block', () => {
         );
       });
       it('should make dateCreated value when not provided', () => {
-        const newBlock = new Block(
-          data,
-          undefined,
-          checksum
-        );
+        const newBlock = new Block(data, undefined, checksum);
         expect(newBlock.dateCreated).toBeTruthy();
         expect(newBlock.dateCreated).toBeInstanceOf(Date);
       });
       it('should xor with same block sizes', async () => {
-        const blockA = new Block(
-          data,
-          new Date()
-        );
-        const blockB = new Block(
-          randomBytes(blockLength),
-          new Date()
-        );
+        const blockA = new Block(data, new Date());
+        const blockB = new Block(randomBytes(blockLength), new Date());
         const blockC = await blockA.xor(blockB);
         const expectedData = Buffer.alloc(blockLength);
         for (let i = 0; i < blockLength; i++) {
@@ -143,17 +133,9 @@ describe('block', () => {
     blockBytesA.fill(0);
     const blockBytesB = Buffer.alloc(blockSizeToLength(blockSizeB));
     blockBytesB.fill(0);
-    const blockA = new Block(
-      blockBytesA,
-      new Date()
-    );
-    const blockB = new Block(
-      blockBytesB,
-      new Date()
-    );
-    expect(blockA.xor(blockB)).rejects.toThrow(
-      'Block sizes do not match'
-    );
+    const blockA = new Block(blockBytesA, new Date());
+    const blockB = new Block(blockBytesB, new Date());
+    expect(blockA.xor(blockB)).rejects.toThrow('Block sizes do not match');
   });
   it('should be validated when created with newBlock and no checksum', () => {
     const blockSize = randomBlockSize();
@@ -176,7 +158,8 @@ describe('block', () => {
     const blockData = randomBytes(blockLength);
     const badChecksumData = Buffer.alloc(blockSize);
     badChecksumData.fill(0);
-    const badChecksum = StaticHelpersChecksum.calculateChecksum(badChecksumData);
+    const badChecksum =
+      StaticHelpersChecksum.calculateChecksum(badChecksumData);
     badChecksum[0] = 0;
     expect(() => Block.newBlock(blockData, new Date(), badChecksum)).toThrow(
       'Checksum mismatch'

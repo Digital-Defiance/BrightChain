@@ -41,7 +41,10 @@ export class BrightChainQuorum {
    * Collection of key shares that this quorum node has taken responsbility for
    * -- these should be encrypted with each member's private key
    */
-  private readonly _documentKeySharesById: SimpleStore<ShortHexGuid, EncryptedShares>;
+  private readonly _documentKeySharesById: SimpleStore<
+    ShortHexGuid,
+    EncryptedShares
+  >;
 
   /**
    * Collection of encrypted documents that this quorum node has taken responsibility for
@@ -60,7 +63,10 @@ export class BrightChainQuorum {
 
     this._members = new SimpleStore<ShortHexGuid, BrightChainMember>();
     this._memberPublicKeysByMemberId = new BufferStore<ShortHexGuid>();
-    this._documentKeySharesById = new SimpleStore<ShortHexGuid, EncryptedShares>();
+    this._documentKeySharesById = new SimpleStore<
+      ShortHexGuid,
+      EncryptedShares
+    >();
     this._documentsById = new SimpleStore<ShortHexGuid, QuorumDataRecord>();
 
     this.nodeAgent = nodeAgent;
@@ -76,10 +82,7 @@ export class BrightChainQuorum {
    */
   protected storeMember(member: BrightChainMember) {
     this._members.set(member.id, member);
-    this._memberPublicKeysByMemberId.set(
-      member.id,
-      member.publicKey
-    );
+    this._memberPublicKeysByMemberId.set(member.id, member.publicKey);
     this._members.save();
     this._memberPublicKeysByMemberId.save();
   }
