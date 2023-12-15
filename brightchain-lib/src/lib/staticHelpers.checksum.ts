@@ -1,5 +1,5 @@
-import { createHash } from 'crypto';
-import { ChecksumBuffer } from './types';
+import { sha3_512 } from 'js-sha3';
+import { ChecksumBuffer, ChecksumString } from './types';
 
 /**
  * @description
@@ -13,10 +13,6 @@ import { ChecksumBuffer } from './types';
 export abstract class StaticHelpersChecksum {
   public static readonly Sha3DefaultHashBits: number = 512;
 
-  public static CryptoChecksumVerificationAlgorithm(bits: number): string {
-    return `sha3-${bits.toString()}`;
-  }
-
   /**
    * unused/future/unsupported on my platform/version.
    */
@@ -24,13 +20,7 @@ export abstract class StaticHelpersChecksum {
 
   public static calculateChecksum(data: Buffer): ChecksumBuffer {
     return Buffer.from(
-      createHash(
-        StaticHelpersChecksum.CryptoChecksumVerificationAlgorithm(
-          StaticHelpersChecksum.Sha3DefaultHashBits
-        )
-      )
-        .update(data)
-        .digest('hex'),
+      sha3_512.update(data).hex(),
       'hex'
     ) as ChecksumBuffer;
   }
@@ -41,5 +31,13 @@ export abstract class StaticHelpersChecksum {
       calculatedChecksum.length == checksum.length &&
       calculatedChecksum.equals(checksum)
     );
+  }
+
+  public static checksumBufferToChecksumString(checksumBuffer: ChecksumBuffer): ChecksumString {
+    return checksumBuffer.toString('hex') as ChecksumString;
+  }
+
+  public static checksumStringToChecksumBuffer(checksumString: ChecksumString): ChecksumBuffer {
+    return Buffer.from(checksumString, 'hex') as ChecksumBuffer;
   }
 }

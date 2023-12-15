@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { GuidV4 } from './guid';
-import { StaticHelpersKeyPair } from './staticHelpers.keypair';
+import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 import { StaticHelpersPbkdf2 } from './staticHelpers.pbkdf2';
 import { FullHexGuid, FullHexGuidBuffer } from './types';
 
@@ -51,7 +51,7 @@ export class SecureBuffer {
             return Buffer.alloc(0);
         }
         const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(this.idBuffer, this._salt);
-        const decryptionResult = StaticHelpersKeyPair.symmetricDecryptBuffer(this._encryptedValue, idKey.hash);
+        const decryptionResult = StaticHelpersSymmetric.symmetricDecryptBuffer(this._encryptedValue, idKey.hash);
         if (decryptionResult.length !== this._length) {
             throw new Error('Decrypted value length does not match expected length');
         }
@@ -94,12 +94,12 @@ export class SecureBuffer {
     }
     private encryptData(data: string | Buffer, salt?: Buffer): { encryptedData: Buffer, salt: Buffer } {
         const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(this.idBuffer, salt);
-        const encryptionResult = StaticHelpersKeyPair.symmetricEncryptBuffer(Buffer.isBuffer(data) ? data : Buffer.from(data, SecureBuffer.stringEncoding), idKey.hash);
+        const encryptionResult = StaticHelpersSymmetric.symmetricEncryptBuffer(Buffer.isBuffer(data) ? data : Buffer.from(data, SecureBuffer.stringEncoding), idKey.hash);
         return { encryptedData: encryptionResult.encryptedData, salt: idKey.salt };
     }
     private decryptData(data: Buffer): Buffer {
         const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(this.idBuffer, this._salt);
-        const decryptionResult = StaticHelpersKeyPair.symmetricDecryptBuffer(data, idKey.hash);
+        const decryptionResult = StaticHelpersSymmetric.symmetricDecryptBuffer(data, idKey.hash);
         return decryptionResult;
     }
 }

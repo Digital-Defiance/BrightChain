@@ -1,6 +1,6 @@
 import { GuidV4 } from './guid';
 import { createHash } from 'crypto';
-import { StaticHelpersKeyPair } from './staticHelpers.keypair';
+import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 import { StaticHelpersPbkdf2 } from './staticHelpers.pbkdf2';
 import { FullHexGuid, FullHexGuidBuffer } from './types';
 
@@ -93,12 +93,12 @@ export class SecureString {
   }
   private encryptData(data: string | Buffer, salt?: Buffer): { encryptedData: Buffer, salt: Buffer } {
     const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(this.idBuffer, salt);
-    const encryptionResult = StaticHelpersKeyPair.symmetricEncryptBuffer(Buffer.isBuffer(data) ? data : Buffer.from(data, SecureString.encoding), idKey.hash);
+    const encryptionResult = StaticHelpersSymmetric.symmetricEncryptBuffer(Buffer.isBuffer(data) ? data : Buffer.from(data, SecureString.encoding), idKey.hash);
     return { encryptedData: encryptionResult.encryptedData, salt: idKey.salt };
   }
   private decryptData(data: Buffer): Buffer {
     const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(this.idBuffer, this._salt);
-    const decryptionResult = StaticHelpersKeyPair.symmetricDecryptBuffer(data, idKey.hash);
+    const decryptionResult = StaticHelpersSymmetric.symmetricDecryptBuffer(data, idKey.hash);
     return decryptionResult;
   }
 }

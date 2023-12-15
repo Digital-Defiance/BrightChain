@@ -3,17 +3,16 @@ import { randomBytes } from 'crypto';
 import { MemberType } from './enumerations/memberType';
 import { GuidV4 } from './guid';
 import { EmailString } from './emailString';
-import { IReadOnlyBasicObjectDTO } from './interfaces/readOnlyBasicObjectDto';
 import { IMemberDTO } from './interfaces/memberDto';
 import { EthereumECIES } from './ethereumECIES';
 import Wallet from 'ethereumjs-wallet';
-import { ShortHexGuid } from './types';
+import { ChecksumBuffer, ShortHexGuid } from './types';
 /**
  * A member of Brightchain.
  * @param id The unique identifier for this member.
  * @param name The name of this member.
  */
-export class BrightChainMember implements IReadOnlyBasicObjectDTO {
+export class BrightChainMember {
   public readonly publicKey: Buffer;
   private _wallet: Wallet | undefined;
   private _privateKey: Buffer | undefined;
@@ -149,13 +148,6 @@ export class BrightChainMember implements IReadOnlyBasicObjectDTO {
   public verify(signature: Buffer, data: Buffer): boolean {
     return EthereumECIES.verifyMessage(this.publicKey, data, signature);
   }
-
-  // public publicEncrypt(data: Buffer): Buffer {
-  //   if (!this._signingKeyPair) {
-  //     throw new Error('No key pair');
-  //   }
-  //   return publicEncrypt(this._signingKeyPair.getPublic(), data);
-  // }
 
   /**
    * Create a new member and generate its keys

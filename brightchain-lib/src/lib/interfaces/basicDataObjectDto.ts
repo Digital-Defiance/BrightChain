@@ -1,19 +1,15 @@
-import { ChecksumString, ShortHexGuid } from "../types";
+import { HexString, ShortHexGuid } from "../types";
 import { IBasicObjectDTO } from "./basicObjectDto";
 
 export interface IBasicDataObjectDTO extends IBasicObjectDTO {
   /**
    * ID of the data object. checksum of the data.
    */
-  id: ChecksumString;
+  id: string;
   /**
    * The data to be stored
    */
-  data: Uint8Array;
-  /**
-   * The ID of the member who created this object
-   */
-  createdBy: ShortHexGuid;
+  data: HexString;
   /**
    * The date this object was created
    */

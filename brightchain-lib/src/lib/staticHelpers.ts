@@ -1,6 +1,7 @@
 import Rand from 'rand-seed';
 import { BrightChainMember } from './brightChainMember';
 import { MemberType } from './enumerations/memberType';
+import { HexString } from './types';
 
 /**
  * @description Static helper functions for Brightchain Quorum. Encryption and other utilities.
@@ -70,5 +71,13 @@ export abstract class StaticHelpers {
       }
     }
     return true;
+  }
+
+  public static bufferToHexString(buffer: Buffer): HexString {
+    return buffer.toString('hex') as HexString;
+  }
+
+  public static HexStringToBuffer(hexString: HexString): Buffer {
+    return Buffer.from(hexString, 'hex');
   }
 }
