@@ -1,7 +1,7 @@
 import { randomBytes, pbkdf2Sync } from 'crypto';
 import { IPbkf2Config } from './interfaces/pbkdf2Config';
 import { IPbkdf2Result } from './interfaces/pbkdf2Result';
-import { StaticHelpersKeyPair } from './staticHelpers.keypair';
+import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 
 /**
  * @description
@@ -27,7 +27,7 @@ export abstract class StaticHelpersPbkdf2 {
     // larger numbers mean better security, less
     const config = {
       // size of the generated hash
-      hashBytes: StaticHelpersKeyPair.SymmetricKeyBytes,
+      hashBytes: StaticHelpersSymmetric.SymmetricKeyBytes,
       // larger salt means hashed passwords are more resistant to rainbow table, but
       // you get diminishing returns pretty fast
       saltBytes: 16,

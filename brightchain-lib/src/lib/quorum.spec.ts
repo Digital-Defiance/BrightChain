@@ -1,7 +1,7 @@
 import { BrightChainMember } from './brightChainMember';
 import { EmailString } from './emailString';
 import { MemberType } from './enumerations/memberType';
-import BrightChainQuorum from './quorum';
+import { BrightChainQuorum } from './quorum';
 describe('quorum', () => {
   it('should create a quorum', () => {
     const nodeOwner = BrightChainMember.newMember(
