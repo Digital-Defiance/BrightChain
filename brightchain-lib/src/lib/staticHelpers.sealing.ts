@@ -16,7 +16,7 @@ import { EthereumECIES } from './ethereumECIES';
  * - Uses crypto for AES encryption
  * - Uses crypto for RSA key generation, encryption/decryption
  */
-export default abstract class StaticHelpersSealing {
+export abstract class StaticHelpersSealing {
   /**
    * Reconfigure secrets.js to have the right number of bits for the number of shares needed
    * @param maxShares

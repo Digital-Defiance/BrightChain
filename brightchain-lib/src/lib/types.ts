@@ -16,6 +16,7 @@ export type SimpleKeyPair = Brand<SimplePublicKeyOnly, 'SimpleKeyPair'>;
 export type SimplePublicKeyOnly = Brand<ISimplePublicKeyOnly, 'SimplePublicKeyOnly'>;
 export type SimpleKeyPairBuffer = Brand<ISimpleKeyPairBuffer, 'SimpleKeyPairBuffer'>;
 export type SimplePublicKeyOnlyBuffer = Brand<ISimplePublicKeyOnlyBuffer, 'SimplePublicKeyOnlyBuffer'>;
+export type HexString = Brand<string, 'HexString'>;
 export type ChecksumBuffer = Brand<
   Buffer,
   'Sha3Checksum',

@@ -37,7 +37,7 @@ export const enum BlockSize {
   /// <summary>
   /// Large size, such as large data files over 4M up to many terabytes.
   /// </summary>
-  Large = 2 ** 30, // 1073741824
+  Large = 2 ** 26, // 67108864
 }
 
 export const blockSizes = [
@@ -69,7 +69,7 @@ export const blockSizeLengths = [
   2 ** 10,
   2 ** 12,
   2 ** 20,
-  2 ** 30,
+  2 ** 26,
 ];
 
 export function lengthToBlockSize(length: number): BlockSize {
@@ -90,4 +90,16 @@ export function blockSizeToLength(blockSize: BlockSize): number {
 
 export function validateBlockSize(length: number): boolean {
   return blockSizeLengths.indexOf(length) >= 1; // ignore 0 = unknown
+}
+
+/**
+ * Finds the next largest block size for a given length
+ * @param length 
+ */
+export function nextLargestBlockSize(length: number): BlockSize {
+  const index = blockSizeLengths.findIndex((size) => size >= length);
+  if (index < 0) {
+    return BlockSize.Unknown;
+  }
+  return blockSizes[index];
 }

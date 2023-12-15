@@ -662,6 +662,11 @@ isexe@^2.0.0:
   resolved "https://registry.yarnpkg.com/isexe/-/isexe-2.0.0.tgz#e8fbf374dc556ff8947a10dcb0572d633f2cfa10"
   integrity sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==
 
+js-sha3@^0.9.2:
+  version "0.9.2"
+  resolved "https://registry.yarnpkg.com/js-sha3/-/js-sha3-0.9.2.tgz#a5ba3967ddf5a095f7b3389ef14a6297b10d6409"
+  integrity sha512-8kgvwd03wNGQG1GRvl3yy1Yt40sICAcIMsDU2ZLgoL0Z6z9rkRmf9Vd+bi/gYSzgAqMUGl/jiDKu0J8AWFd+BQ==
+
 keccak@^3.0.0:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/keccak/-/keccak-3.0.4.tgz#edc09b89e633c0549da444432ecf062ffadee86d"

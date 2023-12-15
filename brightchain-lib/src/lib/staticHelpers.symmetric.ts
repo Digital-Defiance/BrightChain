@@ -4,7 +4,6 @@ import {
   randomBytes,
 } from 'crypto';
 import { ISymmetricEncryptionResults } from './interfaces/symmetricEncryptionResults';
-import { StaticHelpersKeyPair } from './staticHelpers.keypair';
 
 /**
  * @description
@@ -16,47 +15,66 @@ import { StaticHelpersKeyPair } from './staticHelpers.keypair';
  * - Uses crypto for RSA key generation, encryption/decryption
  */
 export abstract class StaticHelpersSymmetric {
+  public static readonly SymmetricKeyAlgorithm = 'aes';
+  /**
+   * The symmetric algorithm key size
+   */
+  public static readonly SymmetricKeyBits = 256;
+
+  /**
+   * Helper to convert the bits to bytes for the symmetric key size
+   */
+  public static readonly SymmetricKeyBytes =
+    StaticHelpersSymmetric.SymmetricKeyBits / 8;
+
+  /**
+   * The symmetric algorithm data mode (CBC/CTR, etc)
+   */
+  public static readonly SymmetricKeyMode = 'ctr';
+
+  /**
+   * The number of bytes to use for the AES IV
+   */
+  public static readonly SymmetricKeyIvBytes = 16;
+
+  /**
+   * The encryption algorithm (cipher) type string to be used.
+   * @type {String}
+   * @const
+   * @private
+   */
+  public static readonly SymmetricAlgorithmType: string = `${StaticHelpersSymmetric.SymmetricKeyAlgorithm}-${StaticHelpersSymmetric.SymmetricKeyBits}-${StaticHelpersSymmetric.SymmetricKeyMode}`;
+
   /**
    * Encrypt data with AES
    * @param data
    * @param encryptionKey
-   * @param useBuffer
    * @returns
    */
-  public static symmetricEncrypt<T>(
-    data: T,
-    encryptionKey?: Buffer,
-    useBuffer?: boolean
+  public static symmetricEncryptBuffer(
+    data: Buffer,
+    encryptionKey?: Buffer
   ): ISymmetricEncryptionResults {
-    const hasToJSON = data && typeof data === 'object' && (data as any).toJSON;
-    const dataBuffer =
-      useBuffer === true && Buffer.isBuffer(data)
-        ? data
-        : Buffer.from(
-          hasToJSON ? (data as any).toJSON() : JSON.stringify(data),
-          'utf8'
-        );
     if (
       encryptionKey &&
-      encryptionKey.length != StaticHelpersKeyPair.SymmetricKeyBytes
+      encryptionKey.length != StaticHelpersSymmetric.SymmetricKeyBytes
     )
       throw new Error(
-        `Encryption key must be ${StaticHelpersKeyPair.SymmetricKeyBytes} bytes long`
+        `Encryption key must be ${StaticHelpersSymmetric.SymmetricKeyBytes} bytes long`
       );
 
     // encrypt the document using AES-256 and the key
     // Initialization Vector
-    const ivBuffer = randomBytes(StaticHelpersKeyPair.SymmetricKeyIvBytes);
-    const key =
-      encryptionKey ?? randomBytes(StaticHelpersKeyPair.SymmetricKeyBytes);
+    const ivBuffer = randomBytes(StaticHelpersSymmetric.SymmetricKeyIvBytes);
+    const key: Buffer = encryptionKey ?? randomBytes(this.SymmetricKeyBytes);
     const cipher = createCipheriv(
-      StaticHelpersKeyPair.SymmetricAlgorithmType,
+      StaticHelpersSymmetric.SymmetricAlgorithmType,
       key,
       ivBuffer
     );
 
-    const ciphertextBuffer = cipher.update(dataBuffer);
-    const encryptionIvPlusData = Buffer.concat([
+    const ciphertextBuffer = cipher.update(data);
+    const encryptionIvPlusData: Buffer = Buffer.concat([
       ivBuffer,
       ciphertextBuffer,
       cipher.final(),
@@ -79,17 +97,68 @@ export abstract class StaticHelpersSymmetric {
   ): Buffer {
     const ivBuffer = encryptedData.subarray(
       0,
-      StaticHelpersKeyPair.SymmetricKeyIvBytes
+      StaticHelpersSymmetric.SymmetricKeyIvBytes
     );
     const ciphertextBuffer = encryptedData.subarray(
-      StaticHelpersKeyPair.SymmetricKeyIvBytes
+      StaticHelpersSymmetric.SymmetricKeyIvBytes
     );
     const decipher = createDecipheriv(
-      StaticHelpersKeyPair.SymmetricAlgorithmType,
+      StaticHelpersSymmetric.SymmetricAlgorithmType,
       key,
       ivBuffer
     );
-    return decipher.update(ciphertextBuffer);
+    const decryptedDataBuffer = decipher.update(ciphertextBuffer);
+    return decryptedDataBuffer;
+  }
+  /**
+   * Encrypt data with AES
+   * @param data
+   * @param encryptionKey
+   * @param useBuffer
+   * @returns
+   */
+  public static symmetricEncrypt<T>(
+    data: T,
+    encryptionKey?: Buffer,
+    useBuffer?: boolean
+  ): ISymmetricEncryptionResults {
+    const hasToJSON = data && typeof data === 'object' && (data as any).toJSON;
+    const dataBuffer =
+      useBuffer === true && Buffer.isBuffer(data)
+        ? data
+        : Buffer.from(
+          hasToJSON ? (data as any).toJSON() : JSON.stringify(data),
+          'utf8'
+        );
+    if (
+      encryptionKey &&
+      encryptionKey.length != StaticHelpersSymmetric.SymmetricKeyBytes
+    )
+      throw new Error(
+        `Encryption key must be ${StaticHelpersSymmetric.SymmetricKeyBytes} bytes long`
+      );
+
+    // encrypt the document using AES-256 and the key
+    // Initialization Vector
+    const ivBuffer = randomBytes(StaticHelpersSymmetric.SymmetricKeyIvBytes);
+    const key =
+      encryptionKey ?? randomBytes(StaticHelpersSymmetric.SymmetricKeyBytes);
+    const cipher = createCipheriv(
+      StaticHelpersSymmetric.SymmetricAlgorithmType,
+      key,
+      ivBuffer
+    );
+
+    const ciphertextBuffer = cipher.update(dataBuffer);
+    const encryptionIvPlusData = Buffer.concat([
+      ivBuffer,
+      ciphertextBuffer,
+      cipher.final(),
+    ]);
+    return {
+      encryptedData: encryptionIvPlusData,
+      key: key,
+    };
   }
 
   /**

@@ -38,7 +38,6 @@ export * from './lib/secureBuffer';
 export * from './lib/secureString';
 export * from './lib/staticHelpers';
 export * from './lib/staticHelpers.checksum';
-export * from './lib/staticHelpers.keypair';
 export * from './lib/staticHelpers.pbkdf2';
 export * from './lib/staticHelpers.sealing';
 export * from './lib/staticHelpers.symmetric';

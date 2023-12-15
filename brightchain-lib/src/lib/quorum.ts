@@ -2,14 +2,14 @@ import { Shares } from 'secrets.js-34r7h';
 import * as uuid from 'uuid';
 import { EncryptedShares, ShortHexGuid } from './types';
 import { QuorumDataRecord } from './quorumDataRecord';
-import StaticHelpersSealing from './staticHelpers.sealing';
+import { StaticHelpersSealing } from './staticHelpers.sealing';
 import { GuidV4 } from './guid';
 import { BrightChainMember } from './brightChainMember';
 import { SimpleStore } from './stores/simpleStore';
 import { BufferStore } from './stores/bufferStore';
 import { IMemberShareCount } from './interfaces/memberShareCount';
 
-export default class BrightChainQuorum {
+export class BrightChainQuorum {
   /**
    * Member ID, uuid
    */

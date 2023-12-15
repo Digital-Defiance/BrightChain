@@ -51,7 +51,7 @@ describe('brightchain', () => {
   });
   it('should fail to sign when there is no signing key', () => {
     expect(() => noKeyCharlie.sign(Buffer.from(faker.lorem.sentence()))).toThrow(
-      'No key pair'
+      'No private key'
     );
   });
   it('should fail to verify when there is no signing key', () => {
@@ -59,7 +59,7 @@ describe('brightchain', () => {
       const message = Buffer.from(faker.lorem.sentence());
       const signature = alice.sign(message);
       noKeyCharlie.verify(signature, message);
-    }).toThrow('No key pair');
+    }).toThrow('No private key');
   });
   it('should unload a private key when called', () => {
     const dwight = BrightChainMember.newMember(
