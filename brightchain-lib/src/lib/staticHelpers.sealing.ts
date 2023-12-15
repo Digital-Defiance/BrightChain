@@ -305,7 +305,10 @@ export abstract class StaticHelpersSealing {
       );
       for (let j = 0; j < sharesForMember.length; j++) {
         const share = sharesForMember[j];
-        const encryptedKeyShare = EthereumECIES.encrypt(member.publicKey, Buffer.from(share));
+        const encryptedKeyShare = EthereumECIES.encrypt(
+          member.publicKey,
+          Buffer.from(share)
+        );
         encryptedSharesForMember[i] = encryptedKeyShare.toString('hex');
       }
       encryptedSharesByMemberId.set(member.id, encryptedSharesForMember);
@@ -357,7 +360,10 @@ export abstract class StaticHelpersSealing {
       const shareCount = sortedMembers.shares[i];
       for (let j = 0; j < shareCount; j++) {
         const encryptedKeyShareHex = encryptedShares[shareIndex++];
-        const decryptedKeyShare = EthereumECIES.decrypt(member.privateKey, Buffer.from(encryptedKeyShareHex, 'hex'));
+        const decryptedKeyShare = EthereumECIES.decrypt(
+          member.privateKey,
+          Buffer.from(encryptedKeyShareHex, 'hex')
+        );
         decryptedShares[i] = decryptedKeyShare.toString('hex');
       }
     }

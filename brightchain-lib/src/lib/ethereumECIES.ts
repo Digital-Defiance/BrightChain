@@ -7,7 +7,13 @@ import {
   CipherGCMTypes,
 } from 'crypto';
 import Wallet, { hdkey } from 'ethereumjs-wallet';
-import { bufferToHex, ecrecover, ecsign, hashPersonalMessage, publicToAddress, toBuffer } from 'ethereumjs-util';
+import {
+  ecrecover,
+  ecsign,
+  hashPersonalMessage,
+  publicToAddress,
+  toBuffer,
+} from 'ethereumjs-util';
 import { ISimpleKeyPairBuffer } from './interfaces/simpleKeyPairBuffer';
 import { SecureBuffer } from './secureBuffer';
 
@@ -25,7 +31,8 @@ export class EthereumECIES {
   private static readonly symmetricKeyLength =
     EthereumECIES.symmetricKeyBits / 8;
   private static readonly symmetricKeyMode = 'gcm';
-  private static readonly symmetricAlgorithmConfiguration = `${EthereumECIES.symmetricAlgorithm}-${EthereumECIES.symmetricKeyBits}-${EthereumECIES.symmetricKeyMode}` as CipherGCMTypes;
+  private static readonly symmetricAlgorithmConfiguration =
+    `${EthereumECIES.symmetricAlgorithm}-${EthereumECIES.symmetricKeyBits}-${EthereumECIES.symmetricKeyMode}` as CipherGCMTypes;
 
   public static generateNewMnemonic(): string {
     const mnemonic = generateMnemonic(EthereumECIES.mnemonicStrength);
@@ -39,7 +46,10 @@ export class EthereumECIES {
       .getWallet();
   }
 
-  public static walletAndSeedFromMnemonic(mnemonic: string): { seed: SecureBuffer, wallet: Wallet } {
+  public static walletAndSeedFromMnemonic(mnemonic: string): {
+    seed: SecureBuffer;
+    wallet: Wallet;
+  } {
     if (!validateMnemonic(mnemonic)) {
       throw new Error('Invalid mnemonic');
     }
@@ -53,7 +63,9 @@ export class EthereumECIES {
     };
   }
 
-  public static walletToSimpleKeyPairBuffer(wallet: Wallet): ISimpleKeyPairBuffer {
+  public static walletToSimpleKeyPairBuffer(
+    wallet: Wallet
+  ): ISimpleKeyPairBuffer {
     const privateKey = wallet.getPrivateKey();
     // 04 + publicKey
     const buf04 = new Uint8Array(1);
@@ -69,7 +81,9 @@ export class EthereumECIES {
     return EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
   }
 
-  public static mnemonicToSimpleKeyPairBuffer(mnemonic: string): ISimpleKeyPairBuffer {
+  public static mnemonicToSimpleKeyPairBuffer(
+    mnemonic: string
+  ): ISimpleKeyPairBuffer {
     const { seed } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
     return EthereumECIES.seedToSimpleKeyPairBuffer(seed.value);
   }
@@ -99,8 +113,13 @@ export class EthereumECIES {
   public static decrypt(privateKey: Buffer, encryptedData: Buffer): Buffer {
     const ephemeralPublicKey = encryptedData.slice(0, 65);
     const iv = encryptedData.subarray(65, 65 + EthereumECIES.ivLength);
-    const authTag = encryptedData.subarray(65 + EthereumECIES.ivLength, 65 + EthereumECIES.ivLength + EthereumECIES.authTagLength);
-    const encrypted = encryptedData.subarray(65 + EthereumECIES.ivLength + EthereumECIES.authTagLength);
+    const authTag = encryptedData.subarray(
+      65 + EthereumECIES.ivLength,
+      65 + EthereumECIES.ivLength + EthereumECIES.authTagLength
+    );
+    const encrypted = encryptedData.subarray(
+      65 + EthereumECIES.ivLength + EthereumECIES.authTagLength
+    );
 
     const ecdh = createECDH(EthereumECIES.curveName);
     ecdh.setPrivateKey(privateKey);
@@ -120,13 +139,25 @@ export class EthereumECIES {
     return decrypted;
   }
 
-  public static encryptString(receiverPublicKeyHex: string, message: string): string {
-    const encryptedData = this.encrypt(Buffer.from(receiverPublicKeyHex, 'hex'), Buffer.from(message, 'utf8'));
+  public static encryptString(
+    receiverPublicKeyHex: string,
+    message: string
+  ): string {
+    const encryptedData = this.encrypt(
+      Buffer.from(receiverPublicKeyHex, 'hex'),
+      Buffer.from(message, 'utf8')
+    );
     return encryptedData.toString('hex');
   }
 
-  public static decryptString(privateKeyHex: string, encryptedDataHex: string): string {
-    const decryptedData = this.decrypt(Buffer.from(privateKeyHex, 'hex'), Buffer.from(encryptedDataHex, 'hex'));
+  public static decryptString(
+    privateKeyHex: string,
+    encryptedDataHex: string
+  ): string {
+    const decryptedData = this.decrypt(
+      Buffer.from(privateKeyHex, 'hex'),
+      Buffer.from(encryptedDataHex, 'hex')
+    );
     return decryptedData.toString('utf8');
   }
 
@@ -136,11 +167,15 @@ export class EthereumECIES {
     return Buffer.concat([
       toBuffer(signature.r),
       toBuffer(signature.s),
-      toBuffer(signature.v - 27)
+      toBuffer(signature.v - 27),
     ]);
   }
 
-  public static verifyMessage(senderPublicKey: Buffer, message: Buffer, signature: Buffer): boolean {
+  public static verifyMessage(
+    senderPublicKey: Buffer,
+    message: Buffer,
+    signature: Buffer
+  ): boolean {
     if (signature.length !== 65) {
       throw new Error('Invalid signature');
     }
@@ -153,7 +188,8 @@ export class EthereumECIES {
     if (senderPublicKey.length === 65 && senderPublicKey[0] !== 4) {
       throw new Error('Invalid sender public key');
     }
-    const has04Prefix = senderPublicKey.length === 65 && senderPublicKey[0] === 4;
+    const has04Prefix =
+      senderPublicKey.length === 65 && senderPublicKey[0] === 4;
     const messageHash = hashPersonalMessage(message);
     const r = signature.subarray(0, 32);
     const s = signature.subarray(32, 64);
@@ -162,7 +198,9 @@ export class EthereumECIES {
     const publicKey = ecrecover(messageHash, v, r, s);
     const derivedAddress = publicToAddress(publicKey);
     // strip the 04 prefix from the public key
-    const knownAddress = publicToAddress(has04Prefix ? senderPublicKey.subarray(1) : senderPublicKey);
+    const knownAddress = publicToAddress(
+      has04Prefix ? senderPublicKey.subarray(1) : senderPublicKey
+    );
 
     return derivedAddress.equals(knownAddress);
   }

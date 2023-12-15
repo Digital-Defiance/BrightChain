@@ -19,13 +19,13 @@ export abstract class StaticHelpersChecksum {
   public static readonly EnableOaepHash: boolean = true;
 
   public static calculateChecksum(data: Buffer): ChecksumBuffer {
-    return Buffer.from(
-      sha3_512.update(data).hex(),
-      'hex'
-    ) as ChecksumBuffer;
+    return Buffer.from(sha3_512.update(data).hex(), 'hex') as ChecksumBuffer;
   }
 
-  public static validateChecksum(data: Buffer, checksum: ChecksumBuffer): boolean {
+  public static validateChecksum(
+    data: Buffer,
+    checksum: ChecksumBuffer
+  ): boolean {
     const calculatedChecksum = StaticHelpersChecksum.calculateChecksum(data);
     return (
       calculatedChecksum.length == checksum.length &&
@@ -33,11 +33,15 @@ export abstract class StaticHelpersChecksum {
     );
   }
 
-  public static checksumBufferToChecksumString(checksumBuffer: ChecksumBuffer): ChecksumString {
+  public static checksumBufferToChecksumString(
+    checksumBuffer: ChecksumBuffer
+  ): ChecksumString {
     return checksumBuffer.toString('hex') as ChecksumString;
   }
 
-  public static checksumStringToChecksumBuffer(checksumString: ChecksumString): ChecksumBuffer {
+  public static checksumStringToChecksumBuffer(
+    checksumString: ChecksumString
+  ): ChecksumBuffer {
     return Buffer.from(checksumString, 'hex') as ChecksumBuffer;
   }
 }

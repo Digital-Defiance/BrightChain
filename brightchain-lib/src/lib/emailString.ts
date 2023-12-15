@@ -1,4 +1,4 @@
-import validator from "validator";
+import validator from 'validator';
 
 export class EmailString {
     public readonly email: string;

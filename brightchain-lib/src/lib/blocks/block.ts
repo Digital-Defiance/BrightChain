@@ -1,9 +1,5 @@
 import { Readable, Transform, Writable } from 'stream';
-import {
-  ChecksumBuffer,
-  ChecksumString,
-  ShortHexGuid,
-} from '../types';
+import { ChecksumBuffer, ChecksumString } from '../types';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import {
   BlockSize,
@@ -12,17 +8,12 @@ import {
   nextLargestBlockSize,
   validateBlockSize,
 } from '../enumerations/blockSizes';
-import { GuidV4 } from '../guid';
 import { BlockDto } from './blockDto';
 import { randomBytes } from 'crypto';
 import { StaticHelpers } from '../staticHelpers';
 
 export class Block {
-  constructor(
-    data: Buffer,
-    dateCreated?: Date,
-    checksum?: ChecksumBuffer
-  ) {
+  constructor(data: Buffer, dateCreated?: Date, checksum?: ChecksumBuffer) {
     if (!validateBlockSize(data.length)) {
       throw new Error(`Data length ${data.length} is not a valid block size`);
     }
@@ -120,18 +111,14 @@ export class Block {
   public toJson(): string {
     return JSON.stringify(this.toDto());
   }
-  public static fromDto(
-    dto: BlockDto,
-  ): Block {
+  public static fromDto(dto: BlockDto): Block {
     return new Block(
       StaticHelpers.HexStringToBuffer(dto.data),
       new Date(dto.dateCreated),
       StaticHelpersChecksum.checksumStringToChecksumBuffer(dto.id)
     );
   }
-  public static fromJson(
-    json: string,
-  ): Block {
+  public static fromJson(json: string): Block {
     const dto = JSON.parse(json) as BlockDto;
     const block = Block.fromDto(dto);
     if (!block.validate()) {

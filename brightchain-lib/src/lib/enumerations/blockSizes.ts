@@ -94,7 +94,7 @@ export function validateBlockSize(length: number): boolean {
 
 /**
  * Finds the next largest block size for a given length
- * @param length 
+ * @param length
  */
 export function nextLargestBlockSize(length: number): BlockSize {
   const index = blockSizeLengths.findIndex((size) => size >= length);

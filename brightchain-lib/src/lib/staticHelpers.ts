@@ -49,8 +49,8 @@ export abstract class StaticHelpers {
 
   /**
    * Read a number from a Buffer as a 32-bit unsigned integer. The buffer must contain 4 bytes.
-   * @param buffer 
-   * @returns 
+   * @param buffer
+   * @returns
    */
   public static bufferToValueBigEndian(buffer: Buffer): number {
     if (buffer.length !== 4) {

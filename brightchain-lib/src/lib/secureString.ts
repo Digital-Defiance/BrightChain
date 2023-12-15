@@ -32,7 +32,10 @@ export class SecureString {
     const encryptionResult = this.encryptData(data);
     this._encryptedValue = encryptionResult.encryptedData;
     this._salt = encryptionResult.salt;
-    this._encryptedChecksum = this.createEncryptedChecksum(data, encryptionResult.salt);
+    this._encryptedChecksum = this.createEncryptedChecksum(
+      data,
+      encryptionResult.salt
+    );
   }
   public get id(): FullHexGuid {
     return this._id.asFullHexGuid;
@@ -88,17 +91,34 @@ export class SecureString {
     return this.generateChecksum(data) === checksum;
   }
   private validateEncryptedChecksum(data: string | Buffer): boolean {
-    const decryptedChecksum = this.decryptData(this._encryptedChecksum).toString(SecureString.encoding);
+    const decryptedChecksum = this.decryptData(
+      this._encryptedChecksum
+    ).toString(SecureString.encoding);
     return this.validateChecksum(data, decryptedChecksum);
   }
-  private encryptData(data: string | Buffer, salt?: Buffer): { encryptedData: Buffer, salt: Buffer } {
-    const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(this.idBuffer, salt);
-    const encryptionResult = StaticHelpersSymmetric.symmetricEncryptBuffer(Buffer.isBuffer(data) ? data : Buffer.from(data, SecureString.encoding), idKey.hash);
+  private encryptData(
+    data: string | Buffer,
+    salt?: Buffer
+  ): { encryptedData: Buffer; salt: Buffer } {
+    const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(
+      this.idBuffer,
+      salt
+    );
+    const encryptionResult = StaticHelpersSymmetric.symmetricEncryptBuffer(
+      Buffer.isBuffer(data) ? data : Buffer.from(data, SecureString.encoding),
+      idKey.hash
+    );
     return { encryptedData: encryptionResult.encryptedData, salt: idKey.salt };
   }
   private decryptData(data: Buffer): Buffer {
-    const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(this.idBuffer, this._salt);
-    const decryptionResult = StaticHelpersSymmetric.symmetricDecryptBuffer(data, idKey.hash);
+    const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(
+      this.idBuffer,
+      this._salt
+    );
+    const decryptionResult = StaticHelpersSymmetric.symmetricDecryptBuffer(
+      data,
+      idKey.hash
+    );
     return decryptionResult;
   }
 }
