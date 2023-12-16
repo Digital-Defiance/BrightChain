@@ -1,13 +1,12 @@
 import { Shares } from 'secrets.js-34r7h';
 import * as uuid from 'uuid';
-import { EncryptedShares, ShortHexGuid } from './types';
+import { ShortHexGuid } from './types';
 import { QuorumDataRecord } from './quorumDataRecord';
 import { StaticHelpersSealing } from './staticHelpers.sealing';
 import { GuidV4 } from './guid';
 import { BrightChainMember } from './brightChainMember';
 import { SimpleStore } from './stores/simpleStore';
 import { BufferStore } from './stores/bufferStore';
-import { IMemberShareCount } from './interfaces/memberShareCount';
 
 export class BrightChainQuorum {
   /**
@@ -38,15 +37,6 @@ export class BrightChainQuorum {
   private readonly _memberPublicKeysByMemberId: BufferStore<ShortHexGuid>;
 
   /**
-   * Collection of key shares that this quorum node has taken responsbility for
-   * -- these should be encrypted with each member's private key
-   */
-  private readonly _documentKeySharesById: SimpleStore<
-    ShortHexGuid,
-    EncryptedShares
-  >;
-
-  /**
    * Collection of encrypted documents that this quorum node has taken responsibility for
    */
   private readonly _documentsById: SimpleStore<ShortHexGuid, QuorumDataRecord>;
@@ -63,10 +53,6 @@ export class BrightChainQuorum {
 
     this._members = new SimpleStore<ShortHexGuid, BrightChainMember>();
     this._memberPublicKeysByMemberId = new BufferStore<ShortHexGuid>();
-    this._documentKeySharesById = new SimpleStore<
-      ShortHexGuid,
-      EncryptedShares
-    >();
     this._documentsById = new SimpleStore<ShortHexGuid, QuorumDataRecord>();
 
     this.nodeAgent = nodeAgent;
@@ -94,7 +80,7 @@ export class BrightChainQuorum {
    * @returns
    */
   public hasDocument(id: ShortHexGuid): boolean {
-    return this._documentsById.has(id) && this._documentKeySharesById.has(id);
+    return this._documentsById.has(id);
   }
 
   /**
@@ -108,33 +94,17 @@ export class BrightChainQuorum {
     agent: BrightChainMember,
     document: T,
     amongstMembers: BrightChainMember[],
-    shareCountByMemberId?: Array<IMemberShareCount>
+    sharesRequired?: number,
   ): QuorumDataRecord {
     const newDoc = StaticHelpersSealing.quorumSeal<T>(
       agent,
       document,
-      amongstMembers.map((m) => m.id),
-      shareCountByMemberId
+      amongstMembers,
+      sharesRequired
     );
-    if (amongstMembers.length !== (newDoc.keyShares as Array<string>).length)
-      throw new Error('Key share count does not match member list size');
-
-    const encryptedShares: Map<ShortHexGuid, EncryptedShares> =
-      StaticHelpersSealing.encryptSharesForMembers(
-        newDoc.keyShares,
-        amongstMembers,
-        shareCountByMemberId
-      );
-    const combinedShares: EncryptedShares = new Array<string>();
-    encryptedShares.forEach((shares) => {
-      shares.forEach((share) => combinedShares.push(share));
-    });
-
-    this._documentsById.set(newDoc.record.id, newDoc.record);
-    this._documentKeySharesById.set(newDoc.record.id, combinedShares);
+    this._documentsById.set(newDoc.id, newDoc);
     this._documentsById.save();
-    this._documentKeySharesById.save();
-    return newDoc.record;
+    return newDoc;
   }
 
   /**
@@ -149,7 +119,7 @@ export class BrightChainQuorum {
       throw new Error('Document not found');
     }
 
-    const restoredDoc = StaticHelpersSealing.quorumUnlock<T>(
+    const restoredDoc = StaticHelpersSealing.quorumUnseal<T>(
       shares,
       doc.encryptedData
     );

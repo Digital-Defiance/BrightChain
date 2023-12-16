@@ -137,8 +137,7 @@ export class BrightChainMember {
    * @returns
    */
   public sign(data: Buffer): Buffer {
-    const signature = EthereumECIES.signMessage(data, this.privateKey);
-    return signature;
+    return EthereumECIES.signMessage(this.privateKey, data);
   }
 
   /**
