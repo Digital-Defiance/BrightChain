@@ -48,8 +48,8 @@ describe('brightchain staticHelpers.symmetric', () => {
   });
   it('should symmetrically encrypt and decrypt a string', () => {
     const testString = faker.lorem.sentence();
-    const encrypted = StaticHelpersSymmetric.symmetricEncrypt(testString);
-    const decrypted = StaticHelpersSymmetric.symmetricDecrypt(
+    const encrypted = StaticHelpersSymmetric.symmetricEncryptJson<string>(testString);
+    const decrypted = StaticHelpersSymmetric.symmetricDecryptJson<string>(
       encrypted.encryptedData,
       encrypted.key
     );
@@ -58,8 +58,8 @@ describe('brightchain staticHelpers.symmetric', () => {
 
   it('should symmetrically encrypt and decrypt an object', () => {
     const testObject = { message: faker.lorem.sentence() };
-    const encrypted = StaticHelpersSymmetric.symmetricEncrypt(testObject);
-    const decrypted = StaticHelpersSymmetric.symmetricDecrypt(
+    const encrypted = StaticHelpersSymmetric.symmetricEncryptJson<object>(testObject);
+    const decrypted = StaticHelpersSymmetric.symmetricDecryptJson<object>(
       encrypted.encryptedData,
       encrypted.key
     );
@@ -67,8 +67,8 @@ describe('brightchain staticHelpers.symmetric', () => {
   });
 
   it('should handle empty string input', () => {
-    const encrypted = StaticHelpersSymmetric.symmetricEncrypt('');
-    const decrypted = StaticHelpersSymmetric.symmetricDecrypt(
+    const encrypted = StaticHelpersSymmetric.symmetricEncryptJson<string>('');
+    const decrypted = StaticHelpersSymmetric.symmetricDecryptJson<string>(
       encrypted.encryptedData,
       encrypted.key
     );
@@ -77,7 +77,7 @@ describe('brightchain staticHelpers.symmetric', () => {
 
   it('should throw an error for null input', () => {
     expect(() => {
-      StaticHelpersSymmetric.symmetricEncrypt(null);
+      StaticHelpersSymmetric.symmetricEncryptJson<unknown>(null);
     }).toThrow(Error);
   });
 });

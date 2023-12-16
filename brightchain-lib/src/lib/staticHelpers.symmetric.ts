@@ -1,6 +1,10 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 import { ISymmetricEncryptionResults } from './interfaces/symmetricEncryptionResults';
 
+function hasToJsonMethod<T>(obj: T): obj is T & { toJSON: () => string } {
+  return typeof obj === 'object' && obj !== null && 'toJSON' in obj;
+}
+
 /**
  * @description
  * Static helper functions for BrightChain and BrightChain Quorum. Encryption and other utilities.
@@ -113,57 +117,20 @@ export abstract class StaticHelpersSymmetric {
    * @param useBuffer
    * @returns
    */
-  public static symmetricEncrypt<T>(
+  public static symmetricEncryptJson<T>(
     data: T,
     encryptionKey?: Buffer,
   ): ISymmetricEncryptionResults {
     if (data === null || data === undefined) {
       throw new Error('Data to encrypt cannot be null or undefined');
     }
-    const hasToJSON = data && typeof data === 'object' && (data as any).toJSON;
-    const isString = typeof data === 'string';
-    const isHexString = isString && data.length % 2 == 0 && data.match(/^[0-9A-Fa-f]*$/);
     let dataBuffer: Buffer;
-    if (isHexString) {
-      dataBuffer = Buffer.from(data as string, 'hex');
-    } else if (isString) {
-      dataBuffer = Buffer.from(data as string, 'utf8');
-    } else if (Buffer.isBuffer(data)) {
-      dataBuffer = data;
-    } else if (hasToJSON) {
-      dataBuffer = Buffer.from((data as any).toJSON(), 'utf8');
+    if (hasToJsonMethod<T>(data)) {
+      dataBuffer = Buffer.from(data.toJSON(), 'utf8');
     } else {
       dataBuffer = Buffer.from(JSON.stringify(data), 'utf8');
     }
-    if (
-      encryptionKey &&
-      encryptionKey.length != StaticHelpersSymmetric.SymmetricKeyBytes
-    )
-      throw new Error(
-        `Encryption key must be ${StaticHelpersSymmetric.SymmetricKeyBytes} bytes long`
-      );
-
-    // encrypt the document using AES-256 and the key
-    // Initialization Vector
-    const ivBuffer = randomBytes(StaticHelpersSymmetric.SymmetricKeyIvBytes);
-    const key =
-      encryptionKey ?? randomBytes(StaticHelpersSymmetric.SymmetricKeyBytes);
-    const cipher = createCipheriv(
-      StaticHelpersSymmetric.SymmetricAlgorithmType,
-      key,
-      ivBuffer
-    );
-
-    const ciphertextBuffer = cipher.update(dataBuffer);
-    const encryptionIvPlusData = Buffer.concat([
-      ivBuffer,
-      ciphertextBuffer,
-      cipher.final(),
-    ]);
-    return {
-      encryptedData: encryptionIvPlusData,
-      key: key,
-    };
+    return StaticHelpersSymmetric.symmetricEncryptBuffer(dataBuffer, encryptionKey);
   }
 
   /**
@@ -172,12 +139,12 @@ export abstract class StaticHelpersSymmetric {
    * @param key
    * @returns
    */
-  public static symmetricDecrypt<T>(encryptedData: Buffer, key: Buffer): T {
+  public static symmetricDecryptJson<T>(encryptedData: Buffer, key: Buffer): T {
     return JSON.parse(
       StaticHelpersSymmetric.symmetricDecryptBuffer(
         encryptedData,
         key
-      ).toString()
+      ).toString('utf8')
     ) as T;
   }
 }

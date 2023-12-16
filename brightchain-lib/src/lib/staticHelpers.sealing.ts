@@ -63,7 +63,7 @@ export abstract class StaticHelpersSealing {
     }
     sharesRequired = sharesRequired ?? amongstMembers.length;
     this.validateQuorumSealInputs(amongstMembers, sharesRequired);
-    const encryptedData = StaticHelpersSymmetric.symmetricEncrypt<T>(data);
+    const encryptedData = StaticHelpersSymmetric.symmetricEncryptJson<T>(data);
 
     // TODO: consider computing the number of shares a user needs if you want to consider them "required"
     // eg if you normally would have say 3 shares and require 2 but require that one of the members is a specific one
@@ -123,7 +123,7 @@ export abstract class StaticHelpersSealing {
     StaticHelpersSealing.reinitSecrets(decryptedShares.length);
     const combined = secrets.combine(decryptedShares);
     const key = Buffer.from(combined, 'hex'); // hex?
-    return StaticHelpersSymmetric.symmetricDecrypt<T>(document.encryptedData, key);
+    return StaticHelpersSymmetric.symmetricDecryptJson<T>(document.encryptedData, key);
   }
 
   /**
