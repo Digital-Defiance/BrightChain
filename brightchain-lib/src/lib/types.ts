@@ -6,7 +6,6 @@ import { ISimplePublicKeyOnlyBuffer } from "./interfaces/simplePublicKeyOnlyBuff
 import { ISimpleKeyPairBuffer } from "./interfaces/simpleKeyPairBuffer";
 import { GuidBrandType } from "./enumerations/guidBrandType";
 
-export type EncryptedShares = Array<string>;
 export type KeyPairBufferWithUnEncryptedPrivateKey = Brand<IKeyPairBufferWithUnEncryptedPrivateKey, 'KeyPairBufferWithUnEncryptedPrivateKey'>;
 export type SigningKeyPrivateKeyInfo = Brand<ISigningKeyPrivateKeyInfo, 'SigningKeyPrivateKeyInfo'>;
 export type SimpleKeyPair = Brand<SimplePublicKeyOnly, 'SimpleKeyPair'>;

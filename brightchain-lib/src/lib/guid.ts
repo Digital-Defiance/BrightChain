@@ -21,6 +21,9 @@ export class GuidV4 {
       throw new Error(`Invalid guid: ${value}`);
     }
     this._value = GuidV4.toRawGuidBuffer(value);
+    if (!uuid.validate(this.asFullHexGuid)) {
+      throw new Error(`Invalid guid: ${value}`);
+    }
   }
 
   private static readonly lengthMap: Map<GuidBrandType, number> = new Map<
@@ -237,7 +240,7 @@ export class GuidV4 {
     throw new Error(`Unknown guid brand: ${value}`);
   }
 
-  public static toFullHexGuid(guid: string): FullHexGuid {
+  public static toFullHexGuid(guid: ShortHexGuid | FullHexGuid | string): FullHexGuid {
     if (guid.length == 32) {
       // insert dashes
       const str = guid.replace(
@@ -346,8 +349,7 @@ export class GuidV4 {
       GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer)
     ) {
       throw new Error(
-        `Invalid guid length: ${
-          rawGuidBufferResult.length
+        `Invalid guid length: ${rawGuidBufferResult.length
         }, expected: ${GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer)}`
       );
     }

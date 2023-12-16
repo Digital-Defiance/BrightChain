@@ -1,20 +1,20 @@
-import * as uuid from 'uuid';
 import { BrightChainMember } from './brightChainMember';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
-import { IMemberShareCount } from './interfaces/memberShareCount';
 import { GuidV4 } from './guid';
-import { ChecksumBuffer, ShortHexGuid } from './types';
+import { ChecksumBuffer, HexString, ShortHexGuid } from './types';
 import { EthereumECIES } from './ethereumECIES';
+import { QuorumDataRecordDto } from './quorumDataRecordDto';
 
 export class QuorumDataRecord {
   public readonly id: ShortHexGuid;
   public readonly encryptedData: Buffer;
-  public static readonly checksumBits: number = 512;
+  public readonly encryptedSharesByMemberId: Map<ShortHexGuid, Buffer>;
   /**
    * sha-3 hash of the encrypted data
    */
   public readonly checksum: ChecksumBuffer;
-  public readonly signature: Buffer | null;
+  public readonly creator: BrightChainMember;
+  public readonly signature: Buffer;
   public readonly memberIDs: ShortHexGuid[];
   public readonly sharesRequired: number;
   public readonly dateCreated: Date;
@@ -25,17 +25,14 @@ export class QuorumDataRecord {
     memberIDs: ShortHexGuid[],
     sharesRequired: number,
     encryptedData: Buffer,
-    shareCountsByMemberId?: Array<IMemberShareCount>,
+    encryptedSharesByMemberId: Map<ShortHexGuid, Buffer>,
     checksum?: ChecksumBuffer,
     signature?: Buffer,
-    id?: string,
+    id?: ShortHexGuid,
     dateCreated?: Date,
     dateUpdated?: Date
   ) {
     if (id !== undefined) {
-      if (!uuid.validate(id)) {
-        throw new Error('Invalid quorum data record ID');
-      }
       this.id = new GuidV4(id).asShortHexGuid;
     } else {
       this.id = GuidV4.new().asShortHexGuid;
@@ -51,29 +48,21 @@ export class QuorumDataRecord {
     if (sharesRequired != -1 && sharesRequired < 2) {
       throw new Error('Shares required must be at least 2');
     }
-    // the share radio member ids must be a subset of the member ids
-    if (shareCountsByMemberId) {
-      for (let i = 0; i < shareCountsByMemberId.length; i++) {
-        const shareRatio = shareCountsByMemberId[i];
-        if (!memberIDs.includes(shareRatio.memberId)) {
-          throw new Error('Share count member ID not found in member IDs');
-        }
-      }
-    }
-
     this.sharesRequired = sharesRequired;
     this.encryptedData = encryptedData;
+    this.encryptedSharesByMemberId = encryptedSharesByMemberId;
     const calculatedChecksum =
       StaticHelpersChecksum.calculateChecksum(encryptedData);
-    if (checksum && checksum !== calculatedChecksum) {
+    if (checksum && checksum.compare(calculatedChecksum) != 0) {
       throw new Error('Invalid checksum');
     }
     this.checksum = calculatedChecksum;
+    this.creator = creator;
     this.signature = signature ?? creator.sign(this.checksum);
     if (
       !EthereumECIES.verifyMessage(
         creator.publicKey,
-        this.encryptedData,
+        this.checksum,
         this.signature
       )
     ) {
@@ -90,5 +79,53 @@ export class QuorumDataRecord {
     };
     this.dateCreated = dateCreated ?? now();
     this.dateUpdated = dateUpdated ?? now();
+  }
+  public toDto(): QuorumDataRecordDto {
+    const encryptedSharesByMemberId: { [key: string]: HexString } = {};
+    this.encryptedSharesByMemberId.forEach((v, k) => {
+      encryptedSharesByMemberId[k] = v.toString('hex') as HexString;
+    });
+    return {
+      id: this.id,
+      creatorId: this.creator.id,
+      encryptedData: this.encryptedData.toString('hex') as HexString,
+      encryptedSharesByMemberId,
+      checksum: StaticHelpersChecksum.checksumBufferToChecksumString(
+        this.checksum
+      ),
+      signature: this.signature.toString('hex') as HexString,
+      memberIDs: this.memberIDs,
+      sharesRequired: this.sharesRequired,
+      dateCreated: this.dateCreated,
+      dateUpdated: this.dateUpdated,
+    };
+  }
+  public static fromDto(dto: QuorumDataRecordDto, fetchMember: (memberId: ShortHexGuid) => BrightChainMember): QuorumDataRecord {
+    const encryptedSharesByMemberId = new Map<ShortHexGuid, Buffer>();
+    Object.keys(dto.encryptedSharesByMemberId).forEach((k) => {
+      encryptedSharesByMemberId.set(
+        k as ShortHexGuid,
+        Buffer.from(dto.encryptedSharesByMemberId[k], 'hex')
+      );
+    });
+    return new QuorumDataRecord(
+      fetchMember(dto.creatorId),
+      dto.memberIDs,
+      dto.sharesRequired,
+      Buffer.from(dto.encryptedData, 'hex'),
+      encryptedSharesByMemberId,
+      StaticHelpersChecksum.checksumStringToChecksumBuffer(dto.checksum),
+      Buffer.from(dto.signature, 'hex'),
+      dto.id,
+      dto.dateCreated,
+      dto.dateUpdated
+    );
+  }
+  public toJson(): string {
+    return JSON.stringify(this.toDto());
+  }
+  public static fromJson(json: string, fetchMember: (memberId: ShortHexGuid) => BrightChainMember): QuorumDataRecord {
+    const dto = JSON.parse(json) as QuorumDataRecordDto;
+    return QuorumDataRecord.fromDto(dto, fetchMember);
   }
 }
