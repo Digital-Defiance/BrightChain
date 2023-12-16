@@ -116,16 +116,25 @@ export abstract class StaticHelpersSymmetric {
   public static symmetricEncrypt<T>(
     data: T,
     encryptionKey?: Buffer,
-    useBuffer?: boolean
   ): ISymmetricEncryptionResults {
+    if (data === null || data === undefined) {
+      throw new Error('Data to encrypt cannot be null or undefined');
+    }
     const hasToJSON = data && typeof data === 'object' && (data as any).toJSON;
-    const dataBuffer =
-      useBuffer === true && Buffer.isBuffer(data)
-        ? data
-        : Buffer.from(
-          hasToJSON ? (data as any).toJSON() : JSON.stringify(data),
-          'utf8'
-        );
+    const isString = typeof data === 'string';
+    const isHexString = isString && data.length % 2 == 0 && data.match(/^[0-9A-Fa-f]*$/);
+    let dataBuffer: Buffer;
+    if (isHexString) {
+      dataBuffer = Buffer.from(data as string, 'hex');
+    } else if (isString) {
+      dataBuffer = Buffer.from(data as string, 'utf8');
+    } else if (Buffer.isBuffer(data)) {
+      dataBuffer = data;
+    } else if (hasToJSON) {
+      dataBuffer = Buffer.from((data as any).toJSON(), 'utf8');
+    } else {
+      dataBuffer = Buffer.from(JSON.stringify(data), 'utf8');
+    }
     if (
       encryptionKey &&
       encryptionKey.length != StaticHelpersSymmetric.SymmetricKeyBytes
