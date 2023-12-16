@@ -113,15 +113,16 @@ export class BrightChainQuorum {
    * @param shares
    * @returns
    */
-  public getDocument<T>(id: ShortHexGuid, shares: Shares): T {
+  public getDocument<T>(id: ShortHexGuid, memberIds: ShortHexGuid[]): T {
     const doc = this._documentsById.get(id);
     if (!doc) {
       throw new Error('Document not found');
     }
+    const members: BrightChainMember[] = memberIds.map((id) => this._members.get(id));
 
     const restoredDoc = StaticHelpersSealing.quorumUnseal<T>(
-      shares,
-      doc.encryptedData
+      doc,
+      members
     );
     if (!restoredDoc) {
       throw new Error('Unable to restore document');
