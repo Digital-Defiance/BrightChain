@@ -1,4 +1,4 @@
-import { combine, getConfig, init, share, Shares } from 'secrets.js-34r7h';
+import * as secrets from 'secrets.js-34r7h';
 import { QuorumDataRecord } from './quorumDataRecord';
 import { IMemberShareCount } from './interfaces/memberShareCount';
 import { ISortedMemberShareCountArrays } from './interfaces/sortedMemberShareCountArrays';
@@ -24,10 +24,13 @@ export abstract class StaticHelpersSealing {
   public static reinitSecrets(maxShares: number) {
     // must have at least 3 bits, making the minimum max shares 2^3 = 8
     const bits = Math.max(3, Math.ceil(Math.log2(maxShares)));
+    if (bits < 3 || bits > 20) {
+      throw new Error('Bits must be between 3 and 20');
+    }
 
     // secrets.init requires a CSPRNG type, get the current one
-    const config = getConfig();
-    init(bits, config.typeCSPRNG);
+    const config = secrets.getConfig();
+    secrets.init(bits, config.typeCSPRNG);
   }
 
   /**
@@ -184,6 +187,18 @@ export abstract class StaticHelpersSealing {
     return countMap;
   }
 
+  private static validateQuorumSealInputs(
+    amongstMemberIds: ShortHexGuid[], sharesRequired?: number
+  ) {
+    if (amongstMemberIds.length < 2) {
+      throw new Error('At least two members are required');
+    }
+    sharesRequired = sharesRequired ?? amongstMemberIds.length;
+    if (sharesRequired < 2 || sharesRequired > amongstMemberIds.length) {
+      throw new Error('Invalid number of shares required');
+    }
+  }
+
   /**
    * Using shamir's secret sharing, split the given data into the given number of shares
    * @param data
@@ -202,17 +217,7 @@ export abstract class StaticHelpersSealing {
       throw new Error('At least two members are required');
     }
     sharesRequired = sharesRequired ?? amongstMemberIds.length;
-    if (sharesRequired < 0) {
-      throw new Error('Shares required must be greater than zero');
-    }
-    if (sharesRequired > amongstMemberIds.length) {
-      throw new Error(
-        'Shares required threshold cannot be greater than the number of members'
-      );
-    }
-    if (sharesRequired < 2) {
-      throw new Error('At least two shares/members are required');
-    }
+    this.validateQuorumSealInputs(amongstMemberIds, sharesRequired);
     const sharesByMemberIdMap: Map<ShortHexGuid, number> =
       StaticHelpersSealing.determineShareCountsByMemberId(
         amongstMemberIds,
@@ -228,7 +233,7 @@ export abstract class StaticHelpersSealing {
     // alice: 1 share, bob (required): 3 shares, carol: 1 share = total 5 shares
     // split the key using shamir's secret sharing
     StaticHelpersSealing.reinitSecrets(amongstMemberIds.length);
-    const keyShares = share(
+    const keyShares = secrets.share(
       encryptedData.key.toString('hex'),
       sortedShareCounts.totalShares,
       sharesRequired
@@ -254,12 +259,12 @@ export abstract class StaticHelpersSealing {
    * @returns
    */
   public static quorumUnlock<T>(
-    recoveredShares: Shares,
+    recoveredShares: secrets.Shares,
     encryptedData: Buffer
   ): T {
     // reconstitute the document key from the shares
     StaticHelpersSealing.reinitSecrets(recoveredShares.length);
-    const combined = combine(recoveredShares);
+    const combined = secrets.combine(recoveredShares);
     const key = Buffer.from(combined, 'hex'); // hex?
     return StaticHelpersSymmetric.symmetricDecrypt<T>(encryptedData, key);
   }
@@ -271,7 +276,7 @@ export abstract class StaticHelpersSealing {
    * @returns
    */
   public static encryptSharesForMembers(
-    shares: Shares,
+    shares: secrets.Shares,
     members: BrightChainMember[],
     shareCountByMemberId?: Array<IMemberShareCount>
   ): Map<ShortHexGuid, EncryptedShares> {
@@ -283,7 +288,7 @@ export abstract class StaticHelpersSealing {
     const sortedMembers = StaticHelpersSealing.shareCountsMapToSortedArrays(
       shareCountsByMemberId
     );
-    const sharesByMemberId = new Map<ShortHexGuid, Shares>();
+    const sharesByMemberId = new Map<ShortHexGuid, secrets.Shares>();
     const encryptedSharesByMemberId = new Map<ShortHexGuid, EncryptedShares>();
     let shareIndex = 0;
     for (let i = 0; i < sortedMembers.memberIds.length; i++) {
@@ -334,7 +339,7 @@ export abstract class StaticHelpersSealing {
     encryptedShares: EncryptedShares,
     members: BrightChainMember[],
     shareCountByMemberId?: Array<IMemberShareCount>
-  ): Shares {
+  ): secrets.Shares {
     const shareCountsByMemberId: Map<ShortHexGuid, number> =
       StaticHelpersSealing.determineShareCountsByMemberId(
         members.map((v) => v.id),
@@ -367,6 +372,6 @@ export abstract class StaticHelpersSealing {
         decryptedShares[i] = decryptedKeyShare.toString('hex');
       }
     }
-    return decryptedShares as Shares;
+    return decryptedShares as secrets.Shares;
   }
 }
