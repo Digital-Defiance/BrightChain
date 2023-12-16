@@ -1,6 +1,6 @@
 import { randomBytes } from 'crypto';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { Block } from './block';
+import { BaseBlock } from './baseBlock';
 import {
   BlockSize,
   blockSizeToLength,
@@ -9,13 +9,15 @@ import {
 
 function randomBlockSize(not?: BlockSize): BlockSize {
   // TODO: determine deadlock/speed issues?
-  while (true) {
+  let count = 0;
+  while (count++ < 1000) {
     const randomIndex = Math.floor(Math.random() * validBlockSizes.length);
     const newBlockSize = validBlockSizes[randomIndex];
     if (newBlockSize !== not) {
       return newBlockSize;
     }
   }
+  throw new Error('Could not find a random block size');
 }
 
 describe('block', () => {
@@ -29,7 +31,7 @@ describe('block', () => {
     const data = randomBytes(blockLength);
     const checksum = StaticHelpersChecksum.calculateChecksum(data);
     const dateCreated = new Date();
-    const block = new Block(data, dateCreated, checksum);
+    const block = new BaseBlock(data, dateCreated, checksum);
     describe(`with block size ${blockSize}`, () => {
       it('should create a block', () => {
         expect(block).toBeTruthy();
@@ -55,7 +57,7 @@ describe('block', () => {
       it('should deserialize a block from JSON ', () => {
         const json = block.toJson();
 
-        const rebuiltBlock = Block.fromJson(json);
+        const rebuiltBlock = BaseBlock.fromJson(json);
 
         expect(rebuiltBlock).toBeDefined();
         expect(rebuiltBlock.id).toEqual(block.id);
@@ -69,7 +71,7 @@ describe('block', () => {
         const badChecksum = StaticHelpersChecksum.calculateChecksum(
           Buffer.from(badData)
         );
-        const badBlock = new Block(data, dateCreated, badChecksum);
+        const badBlock = new BaseBlock(data, dateCreated, badChecksum);
         expect(badBlock.validate()).toBeFalsy();
         expect(badBlock.validated).toBeFalsy();
       });
@@ -77,19 +79,19 @@ describe('block', () => {
       it('should throw when making a block of a bad size', () => {
         const longData = Buffer.alloc(blockSizeToLength(blockSize) + 1);
         longData.fill(0);
-        expect(() => new Block(longData, dateCreated)).toThrow(
+        expect(() => new BaseBlock(longData, dateCreated)).toThrow(
           `Data length ${longData.length} is not a valid block size`
         );
       });
       it('should make dateCreated value when not provided', () => {
-        const newBlock = new Block(data, undefined, checksum);
+        const newBlock = new BaseBlock(data, undefined, checksum);
         expect(newBlock.dateCreated).toBeTruthy();
         expect(newBlock.dateCreated).toBeInstanceOf(Date);
       });
-      it('should xor with same block sizes', async () => {
-        const blockA = new Block(data, new Date());
-        const blockB = new Block(randomBytes(blockLength), new Date());
-        const blockC = await blockA.xor(blockB);
+      it('should xor stream with same block sizes', async () => {
+        const blockA = new BaseBlock(data, new Date());
+        const blockB = new BaseBlock(randomBytes(blockLength), new Date());
+        const blockC = await blockA.xorStreamAsync(blockB);
         const expectedData = Buffer.alloc(blockLength);
         for (let i = 0; i < blockLength; i++) {
           expectedData[i] = blockA.data[i] ^ blockB.data[i];
@@ -99,14 +101,45 @@ describe('block', () => {
           StaticHelpersChecksum.calculateChecksum(expectedData)
         );
       });
-      it('should maintain data integrity after XOR operation', async () => {
+      it('should maintain data integrity after XOR stream operation', async () => {
         const originalDataB = randomBytes(blockLength);
-        const blockB = new Block(originalDataB, new Date());
-        const blockC = await block.xor(blockB);
+        const blockB = new BaseBlock(originalDataB, new Date());
+        const blockC = await block.xorStreamAsync(blockB);
         // block C xor with block A should equal block B
-        const blockD = await blockC.xor(block);
+        const blockD = await blockC.xorStreamAsync(block);
         // block C xor with block B should equal block A
-        const blockE = await blockC.xor(blockB);
+        const blockE = await blockC.xorStreamAsync(blockB);
+        expect(block.data).toEqual(data);
+        expect(block.validated).toBeTruthy();
+        expect(blockB.data).toEqual(originalDataB);
+        expect(blockB.validated).toBeTruthy();
+        expect(blockC.validated).toBeTruthy();
+        expect(blockD.data).toEqual(originalDataB);
+        expect(blockD.validated).toBeTruthy();
+        expect(blockE.data).toEqual(data);
+        expect(blockE.validated).toBeTruthy();
+      });
+      it('should xor with same block sizes', () => {
+        const blockA = new BaseBlock(data, new Date());
+        const blockB = new BaseBlock(randomBytes(blockLength), new Date());
+        const blockC = blockA.xor(blockB);
+        const expectedData = Buffer.alloc(blockLength);
+        for (let i = 0; i < blockLength; i++) {
+          expectedData[i] = blockA.data[i] ^ blockB.data[i];
+        }
+        expect(blockC.data).toEqual(expectedData);
+        expect(blockC.id).toEqual(
+          StaticHelpersChecksum.calculateChecksum(expectedData)
+        );
+      });
+      it('should maintain data integrity after XOR operation', () => {
+        const originalDataB = randomBytes(blockLength);
+        const blockB = new BaseBlock(originalDataB, new Date());
+        const blockC = block.xor(blockB);
+        // block C xor with block A should equal block B
+        const blockD = blockC.xor(block);
+        // block C xor with block B should equal block A
+        const blockE = blockC.xor(blockB);
         expect(block.data).toEqual(data);
         expect(block.validated).toBeTruthy();
         expect(blockB.data).toEqual(originalDataB);
@@ -122,9 +155,20 @@ describe('block', () => {
   it('should throw when making an empty block', () => {
     const data = Buffer.alloc(0);
     const dateCreated = new Date();
-    expect(() => new Block(data, dateCreated)).toThrow(
+    expect(() => new BaseBlock(data, dateCreated)).toThrow(
       `Data length ${data.length} is not a valid block size`
     );
+  });
+  it('should not xor stream with different block sizes', async () => {
+    const blockSizeA = randomBlockSize();
+    const blockSizeB = randomBlockSize(blockSizeA);
+    const blockBytesA = Buffer.alloc(blockSizeToLength(blockSizeA));
+    blockBytesA.fill(0);
+    const blockBytesB = Buffer.alloc(blockSizeToLength(blockSizeB));
+    blockBytesB.fill(0);
+    const blockA = new BaseBlock(blockBytesA, new Date());
+    const blockB = new BaseBlock(blockBytesB, new Date());
+    expect(blockA.xorStreamAsync(blockB)).rejects.toThrow('Block sizes do not match');
   });
   it('should not xor with different block sizes', async () => {
     const blockSizeA = randomBlockSize();
@@ -133,15 +177,15 @@ describe('block', () => {
     blockBytesA.fill(0);
     const blockBytesB = Buffer.alloc(blockSizeToLength(blockSizeB));
     blockBytesB.fill(0);
-    const blockA = new Block(blockBytesA, new Date());
-    const blockB = new Block(blockBytesB, new Date());
-    expect(blockA.xor(blockB)).rejects.toThrow('Block sizes do not match');
+    const blockA = new BaseBlock(blockBytesA, new Date());
+    const blockB = new BaseBlock(blockBytesB, new Date());
+    expect(() => blockA.xor(blockB)).toThrow('Block sizes do not match');
   });
   it('should be validated when created with newBlock and no checksum', () => {
     const blockSize = randomBlockSize();
     const blockLength = blockSizeToLength(blockSize);
     const blockData = randomBytes(blockLength);
-    const block = Block.newBlock(blockData);
+    const block = BaseBlock.newBlock(blockData);
     expect(block.validated).toBeTruthy();
   });
   it('should be validated when created with newBlock and a checksum', () => {
@@ -149,7 +193,7 @@ describe('block', () => {
     const blockLength = blockSizeToLength(blockSize);
     const blockData = randomBytes(blockLength);
     const blockChecksum = StaticHelpersChecksum.calculateChecksum(blockData);
-    const block = Block.newBlock(blockData, new Date(), blockChecksum);
+    const block = BaseBlock.newBlock(blockData, new Date(), blockChecksum);
     expect(block.validated).toBeTruthy();
   });
   it('should throw when created with newBlock and a bad checksum', () => {
@@ -161,7 +205,7 @@ describe('block', () => {
     const badChecksum =
       StaticHelpersChecksum.calculateChecksum(badChecksumData);
     badChecksum[0] = 0;
-    expect(() => Block.newBlock(blockData, new Date(), badChecksum)).toThrow(
+    expect(() => BaseBlock.newBlock(blockData, new Date(), badChecksum)).toThrow(
       'Checksum mismatch'
     );
   });

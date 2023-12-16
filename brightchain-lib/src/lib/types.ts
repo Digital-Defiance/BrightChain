@@ -4,12 +4,9 @@ import { ISigningKeyPrivateKeyInfo } from "./interfaces/signgingKeyPrivateKeyInf
 import { ISimplePublicKeyOnly } from "./interfaces/simplePublicKeyOnly";
 import { ISimplePublicKeyOnlyBuffer } from "./interfaces/simplePublicKeyOnlyBuffer";
 import { ISimpleKeyPairBuffer } from "./interfaces/simpleKeyPairBuffer";
-import { KeyType } from "./enumerations/keyType";
-import { MemberKeyUse } from "./enumerations/memberKeyUse";
 import { GuidBrandType } from "./enumerations/guidBrandType";
 
 export type EncryptedShares = Array<string>;
-export type KeyTypeString = KeyType.Ed25519 | KeyType.Secp256k1 | KeyType.Rsa4096;
 export type KeyPairBufferWithUnEncryptedPrivateKey = Brand<IKeyPairBufferWithUnEncryptedPrivateKey, 'KeyPairBufferWithUnEncryptedPrivateKey'>;
 export type SigningKeyPrivateKeyInfo = Brand<ISigningKeyPrivateKeyInfo, 'SigningKeyPrivateKeyInfo'>;
 export type SimpleKeyPair = Brand<SimplePublicKeyOnly, 'SimpleKeyPair'>;
