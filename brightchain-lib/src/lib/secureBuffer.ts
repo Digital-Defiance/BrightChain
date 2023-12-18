@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import { GuidV4 } from './guid';
 import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 import { StaticHelpersPbkdf2 } from './staticHelpers.pbkdf2';
-import { FullHexGuid, FullHexGuidBuffer } from './types';
+import { FullHexGuid, RawGuidBuffer } from './types';
 
 /**
  * A secure string buffer is a buffer whose intent is to prevent the raw password from being stored in memory.
@@ -46,8 +46,8 @@ export class SecureBuffer {
     public get id(): FullHexGuid {
         return this._id.asFullHexGuid;
     }
-    public get idBuffer(): FullHexGuidBuffer {
-        return this._id.asFullHexGuidBuffer;
+    public get idBuffer(): RawGuidBuffer {
+        return this._id.asRawGuidBuffer;
     }
     public get originalLength(): number {
         return this._length;

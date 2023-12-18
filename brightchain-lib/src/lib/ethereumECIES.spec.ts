@@ -4,6 +4,7 @@ import { ISimpleKeyPairBuffer } from './interfaces/simpleKeyPairBuffer';
 import { mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { randomBytes } from 'crypto';
 import Wallet from 'ethereumjs-wallet';
+import { SignatureBuffer } from './types';
 
 describe('EthereumECIES', () => {
   const testMnemonic = EthereumECIES.generateNewMnemonic();
@@ -141,7 +142,7 @@ describe('EthereumECIES', () => {
   });
   it('should sign a message', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: Buffer = EthereumECIES.signMessage(
+    const signature: SignatureBuffer = EthereumECIES.signMessage(
       keyPair.privateKey,
       message
     );
@@ -150,7 +151,7 @@ describe('EthereumECIES', () => {
   });
   it('should verify a signature using a 04 prefixed public key', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: Buffer = EthereumECIES.signMessage(
+    const signature: SignatureBuffer = EthereumECIES.signMessage(
       keyPair.privateKey,
       message
     );
@@ -167,7 +168,7 @@ describe('EthereumECIES', () => {
       mnemonicToSeedSync(testMnemonic)
     );
     expect(wallet).toBeInstanceOf(Wallet);
-    const signature: Buffer = EthereumECIES.signMessage(
+    const signature: SignatureBuffer = EthereumECIES.signMessage(
       wallet.getPrivateKey(),
       message
     );
@@ -180,7 +181,7 @@ describe('EthereumECIES', () => {
   });
   it('should throw when an invalid public key is given that is 65 bytes but not prefixed with 04', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: Buffer = EthereumECIES.signMessage(
+    const signature: SignatureBuffer = EthereumECIES.signMessage(
       keyPair.privateKey,
       message
     );
@@ -193,7 +194,7 @@ describe('EthereumECIES', () => {
   });
   it('should throw when an invalid public key is given that is neither 64 nor 65 bytes', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: Buffer = EthereumECIES.signMessage(
+    const signature: SignatureBuffer = EthereumECIES.signMessage(
       keyPair.privateKey,
       message
     );
@@ -204,7 +205,7 @@ describe('EthereumECIES', () => {
   });
   it('should return false when a different public key is given', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: Buffer = EthereumECIES.signMessage(
+    const signature: SignatureBuffer = EthereumECIES.signMessage(
       keyPair.privateKey,
       message
     );
@@ -215,7 +216,7 @@ describe('EthereumECIES', () => {
   });
   it('should return false when a the message is altered', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: Buffer = EthereumECIES.signMessage(
+    const signature: SignatureBuffer = EthereumECIES.signMessage(
       keyPair.privateKey,
       message
     );
@@ -227,11 +228,11 @@ describe('EthereumECIES', () => {
 
   it('should return false when a the signature is altered', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: Buffer = EthereumECIES.signMessage(
+    const signature: SignatureBuffer = EthereumECIES.signMessage(
       keyPair.privateKey,
       message
     );
-    const modifiedSignature: Buffer = Buffer.copyBytesFrom(signature);
+    const modifiedSignature: SignatureBuffer = Buffer.copyBytesFrom(signature) as SignatureBuffer;
     modifiedSignature[62] = 0;
     modifiedSignature[63] = 0;
     expect(
@@ -243,7 +244,7 @@ describe('EthereumECIES', () => {
   });
   it('should throw when an invalid signature is given to verify', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const badSignature: Buffer = randomBytes(1);
+    const badSignature: SignatureBuffer = randomBytes(1) as SignatureBuffer;
     expect(() => {
       EthereumECIES.verifyMessage(keyPair.publicKey, message, badSignature);
     }).toThrow('Invalid signature');
