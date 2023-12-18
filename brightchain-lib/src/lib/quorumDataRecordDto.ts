@@ -1,4 +1,4 @@
-import { ChecksumString, HexString, ShortHexGuid } from "./types";
+import { ChecksumString, HexString, ShortHexGuid, SignatureString } from "./types";
 
 export interface QuorumDataRecordDto {
   id: ShortHexGuid;
@@ -9,7 +9,7 @@ export interface QuorumDataRecordDto {
    * sha-3 hash of the encrypted data
    */
   checksum: ChecksumString;
-  signature: HexString;
+  signature: SignatureString;
   memberIDs: ShortHexGuid[];
   sharesRequired: number;
   dateCreated: Date;

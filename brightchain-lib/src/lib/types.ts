@@ -13,27 +13,19 @@ export type SimplePublicKeyOnly = Brand<ISimplePublicKeyOnly, 'SimplePublicKeyOn
 export type SimpleKeyPairBuffer = Brand<ISimpleKeyPairBuffer, 'SimpleKeyPairBuffer'>;
 export type SimplePublicKeyOnlyBuffer = Brand<ISimplePublicKeyOnlyBuffer, 'SimplePublicKeyOnlyBuffer'>;
 export type HexString = Brand<string, 'HexString'>;
+export type SignatureString = Brand<HexString, 'SignatureString'>;
+export type SignatureBuffer = Brand<Buffer, 'SignatureBuffer'>
 export type ChecksumBuffer = Brand<
   Buffer,
   'Sha3Checksum',
   'ChecksumBuffer'
 >;
 export type ChecksumString = Brand<
-  string,
+  HexString,
   'Sha3Checksum',
   'ChecksumString'
 >;
 
-export type FullHexGuidBuffer = Brand<
-  Buffer,
-  'GuidV4',
-  GuidBrandType.FullHexGuid
->;
-export type ShortHexGuidBuffer = Brand<
-  Buffer,
-  'GuidV4',
-  GuidBrandType.ShortHexGuid
->;
 export type Base64GuidBuffer = Brand<
   Buffer,
   'GuidV4',
@@ -43,12 +35,12 @@ export type BigIntGuid = Brand<bigint, 'GuidV4', GuidBrandType.BigIntGuid>;
 export type FullHexGuid = Brand<
   string,
   'GuidV4',
-  GuidBrandType.FullHexGuidBuffer
+  GuidBrandType.FullHexGuid
 >;
 export type ShortHexGuid = Brand<
   string,
   'GuidV4',
-  GuidBrandType.ShortHexGuidBuffer
+  GuidBrandType.ShortHexGuid
 >;
 export type Base64Guid = Brand<
   string,
