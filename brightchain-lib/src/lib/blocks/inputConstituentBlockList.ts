@@ -1,6 +1,5 @@
-import { BlockType } from "../enumerations/blockType";
-import { EphemeralBlock } from "./ephemeral";
+import { ConstituentBlockListBlock } from "./constituentBlockList";
 
-export class InputConstituentBlockListBlock extends EphemeralBlock {
-  public readonly blockType = BlockType.InputConstituentBlockList;
+export class InputConstituentBlockListBlock extends ConstituentBlockListBlock {
+  public override readonly reconstituted: boolean = false;
 }
