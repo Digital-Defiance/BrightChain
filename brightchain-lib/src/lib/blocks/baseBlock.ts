@@ -15,8 +15,8 @@ import { BlockType } from '../enumerations/blockType';
 
 export class BaseBlock {
   public readonly blockType: BlockType = BlockType.Unknown;
-  public readonly ephemeral: boolean = false;
   public readonly reconstituted: boolean = false;
+  public readonly hasHeader: boolean = false;
   constructor(data: Buffer, dateCreated?: Date, checksum?: ChecksumBuffer) {
     if (!validateBlockSize(data.length)) {
       throw new Error(`Data length ${data.length} is not a valid block size`);

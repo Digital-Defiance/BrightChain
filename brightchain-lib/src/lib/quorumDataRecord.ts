@@ -1,7 +1,7 @@
 import { BrightChainMember } from './brightChainMember';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
 import { GuidV4 } from './guid';
-import { ChecksumBuffer, HexString, ShortHexGuid } from './types';
+import { ChecksumBuffer, HexString, ShortHexGuid, SignatureBuffer } from './types';
 import { EthereumECIES } from './ethereumECIES';
 import { QuorumDataRecordDto } from './quorumDataRecordDto';
 
@@ -14,7 +14,7 @@ export class QuorumDataRecord {
    */
   public readonly checksum: ChecksumBuffer;
   public readonly creator: BrightChainMember;
-  public readonly signature: Buffer;
+  public readonly signature: SignatureBuffer;
   public readonly memberIDs: ShortHexGuid[];
   public readonly sharesRequired: number;
   public readonly dateCreated: Date;
@@ -27,7 +27,7 @@ export class QuorumDataRecord {
     encryptedData: Buffer,
     encryptedSharesByMemberId: Map<ShortHexGuid, Buffer>,
     checksum?: ChecksumBuffer,
-    signature?: Buffer,
+    signature?: SignatureBuffer,
     id?: ShortHexGuid,
     dateCreated?: Date,
     dateUpdated?: Date
@@ -93,7 +93,7 @@ export class QuorumDataRecord {
       checksum: StaticHelpersChecksum.checksumBufferToChecksumString(
         this.checksum
       ),
-      signature: this.signature.toString('hex') as HexString,
+      signature: EthereumECIES.signatureBufferToSignatureString(this.signature),
       memberIDs: this.memberIDs,
       sharesRequired: this.sharesRequired,
       dateCreated: this.dateCreated,
@@ -115,7 +115,7 @@ export class QuorumDataRecord {
       Buffer.from(dto.encryptedData, 'hex'),
       encryptedSharesByMemberId,
       StaticHelpersChecksum.checksumStringToChecksumBuffer(dto.checksum),
-      Buffer.from(dto.signature, 'hex'),
+      EthereumECIES.signatureStringToSignatureBuffer(dto.signature),
       dto.id,
       dto.dateCreated,
       dto.dateUpdated
