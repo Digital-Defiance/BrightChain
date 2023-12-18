@@ -6,7 +6,7 @@ import { EmailString } from './emailString';
 import { IMemberDTO } from './interfaces/memberDto';
 import { EthereumECIES } from './ethereumECIES';
 import Wallet from 'ethereumjs-wallet';
-import { ChecksumBuffer, ShortHexGuid } from './types';
+import { ChecksumBuffer, ShortHexGuid, SignatureBuffer } from './types';
 /**
  * A member of Brightchain.
  * @param id The unique identifier for this member.
@@ -136,7 +136,7 @@ export class BrightChainMember {
    * @param options
    * @returns
    */
-  public sign(data: Buffer): Buffer {
+  public sign(data: Buffer): SignatureBuffer {
     return EthereumECIES.signMessage(this.privateKey, data);
   }
 
@@ -146,7 +146,7 @@ export class BrightChainMember {
    * @param data
    * @returns
    */
-  public verify(signature: Buffer, data: Buffer): boolean {
+  public verify(signature: SignatureBuffer, data: Buffer): boolean {
     return EthereumECIES.verifyMessage(this.publicKey, data, signature);
   }
 
