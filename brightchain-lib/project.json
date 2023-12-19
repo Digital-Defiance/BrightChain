@@ -31,7 +31,9 @@
       "configurations": {
         "ci": {
           "ci": true,
-          "codeCoverage": true
+          "codeCoverage": true,
+          "coverageReporters": ["text", "lcov"],
+          "collectCoverageFrom": ["src/**/*.ts"]
         }
       }
     }
