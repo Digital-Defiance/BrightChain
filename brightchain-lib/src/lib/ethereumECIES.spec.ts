@@ -27,6 +27,12 @@ describe('EthereumECIES', () => {
     expect(wallet.getPublicKey()).toHaveLength(64);
   });
 
+  it('should throw for an invalid mnemonic', () => {
+    expect(() => {
+      EthereumECIES.mnemonicToSimpleKeyPairBuffer('invalid mnemonic');
+    }).toThrow('Invalid mnemonic');
+  });
+
   test('walletAndSeedFromMnemonic should generate valid wallet and seed', () => {
     const { seed, wallet } =
       EthereumECIES.walletAndSeedFromMnemonic(testMnemonic);
