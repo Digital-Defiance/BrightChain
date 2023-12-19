@@ -99,13 +99,12 @@ export const cblBlockMaxIDCounts = [
  * Maximum file sizes for each block size using a CBL and raw blocks
  */
 export const maxFileSizesWithCBL = [
-  0,
-  blockSizeLengths[0] * cblBlockMaxIDCounts[0], // 9 * 2**8 = 2304
-  blockSizeLengths[1] * cblBlockMaxIDCounts[1], // 25 * 2**9 = 12800
-  blockSizeLengths[2] * cblBlockMaxIDCounts[2], // 57 * 2**10 = 58368
-  blockSizeLengths[3] * cblBlockMaxIDCounts[3], // 249 * 2**12 = 1019904
-  blockSizeLengths[4] * cblBlockMaxIDCounts[4], // 65529 * 2**20 = 68712136704
-  blockSizeLengths[5] * cblBlockMaxIDCounts[5], // 4194297 * 2**26 = 281474506948608
+  BigInt(blockSizeLengths[0]) * BigInt(cblBlockMaxIDCounts[0]), // 9 * 2**8 = 2304
+  BigInt(blockSizeLengths[1]) * BigInt(cblBlockMaxIDCounts[1]), // 25 * 2**9 = 12800
+  BigInt(blockSizeLengths[2]) * BigInt(cblBlockMaxIDCounts[2]), // 57 * 2**10 = 58368
+  BigInt(blockSizeLengths[3]) * BigInt(cblBlockMaxIDCounts[3]), // 249 * 2**12 = 1019904
+  BigInt(blockSizeLengths[4]) * BigInt(cblBlockMaxIDCounts[4]), // 65529 * 2**20 = 68712136704
+  BigInt(blockSizeLengths[5]) * BigInt(cblBlockMaxIDCounts[5]), // 4194297 * 2**26 = 281474506948608
 ];
 
 export function lengthToBlockSize(length: number): BlockSize {
