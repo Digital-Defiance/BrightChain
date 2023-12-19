@@ -5,6 +5,10 @@ import {
   validateBlockSize,
   blockSizeLengths,
   validBlockSizes,
+  maxFileSizesWithCBL,
+  cblBlockMaxIDCounts,
+  maxFileSizesWithData,
+  cblBlockDataLengths,
 } from '../enumerations/blockSizes';
 describe('blockSizes', () => {
   it('should have the expected members', () => {
@@ -52,14 +56,47 @@ describe('blockSizes', () => {
 
   });
   it('should test validateBlockSize', () => {
-    expect(validateBlockSize(256)).toBe(true);
-    expect(validateBlockSize(512)).toBe(true);
-    expect(validateBlockSize(1024)).toBe(true);
-    expect(validateBlockSize(4096)).toBe(true);
-    expect(validateBlockSize(1048576)).toBe(true);
-    expect(validateBlockSize(67108864)).toBe(true);
+    expect(validateBlockSize(BlockSize.Micro)).toBe(true);
+    expect(validateBlockSize(BlockSize.Message)).toBe(true);
+    expect(validateBlockSize(BlockSize.Tiny)).toBe(true);
+    expect(validateBlockSize(BlockSize.Small)).toBe(true);
+    expect(validateBlockSize(BlockSize.Medium)).toBe(true);
+    expect(validateBlockSize(BlockSize.Large)).toBe(true);
     //expect unexpected sizes to be false
-    expect(validateBlockSize(0)).toBe(false);
+    expect(validateBlockSize(BlockSize.Unknown)).toBe(false);
     expect(validateBlockSize(1)).toBe(false);
+    expect(validateBlockSize(123)).toBe(false);
+  });
+  it('should test maxFileSizesWithData', () => {
+    expect(maxFileSizesWithData[0]).toBe(154);
+    expect(maxFileSizesWithData[1]).toBe(410);
+    expect(maxFileSizesWithData[2]).toBe(922);
+    expect(maxFileSizesWithData[3]).toBe(3994);
+    expect(maxFileSizesWithData[4]).toBe(1048474);
+    expect(maxFileSizesWithData[5]).toBe(67108762);
+  });
+  it('should test cblBlockDataLengths', () => {
+    expect(cblBlockDataLengths[0]).toBe(146);
+    expect(cblBlockDataLengths[1]).toBe(402);
+    expect(cblBlockDataLengths[2]).toBe(914);
+    expect(cblBlockDataLengths[3]).toBe(3986);
+    expect(cblBlockDataLengths[4]).toBe(1048466);
+    expect(cblBlockDataLengths[5]).toBe(67108754);
+  });
+  it('should test cblBlockMaxIDCounts', () => {
+    expect(cblBlockMaxIDCounts[0]).toBe(9);
+    expect(cblBlockMaxIDCounts[1]).toBe(25);
+    expect(cblBlockMaxIDCounts[2]).toBe(57);
+    expect(cblBlockMaxIDCounts[3]).toBe(249);
+    expect(cblBlockMaxIDCounts[4]).toBe(65529);
+    expect(cblBlockMaxIDCounts[5]).toBe(4194297);
+  });
+  it('should test maxFileSizesWithCBL', () => {
+    expect(maxFileSizesWithCBL[0]).toBe(2304n);
+    expect(maxFileSizesWithCBL[1]).toBe(12800n);
+    expect(maxFileSizesWithCBL[2]).toBe(58368n);
+    expect(maxFileSizesWithCBL[3]).toBe(1019904n);
+    expect(maxFileSizesWithCBL[4]).toBe(68712136704n);
+    expect(maxFileSizesWithCBL[5]).toBe(281474506948608n);
   });
 });
