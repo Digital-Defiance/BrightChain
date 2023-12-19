@@ -14,6 +14,11 @@ BrightChain proposes a feature called "Brokered Anonymity" where activities can 
 
 The quorum will be an important aspect of BrightChain. That work is still in the future as well.
 
+## Documentation/Overview
+
+- See [BrightChain Summary](./docs/BrightChain Summary.md) for a high level overview of the BrightChain system.
+- See [Brightchain Writeup](./docs/Brightchain Writeup.md) for a more detailed overview of the BrightChain system.
+
 ## Development
 
 Prerequisites:
