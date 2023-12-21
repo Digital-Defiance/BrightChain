@@ -20,10 +20,6 @@ export enum GuidBrandType {
    */
   BigIntGuid = 'BigIntGuid',
   /**
-   * Base64 Guid, in a buffer, 24 characters
-   */
-  Base64GuidBuffer = 'Base64GuidBuffer',
-  /**
    * Raw Guid, in a buffer, 16 bytes
    */
   RawGuidBuffer = 'RawGuidBuffer',
