@@ -26,11 +26,6 @@ export type ChecksumString = Brand<
   'ChecksumString'
 >;
 
-export type Base64GuidBuffer = Brand<
-  Buffer,
-  'GuidV4',
-  GuidBrandType.Base64Guid
->;
 export type BigIntGuid = Brand<bigint, 'GuidV4', GuidBrandType.BigIntGuid>;
 export type FullHexGuid = Brand<
   string,
@@ -45,7 +40,7 @@ export type ShortHexGuid = Brand<
 export type Base64Guid = Brand<
   string,
   'GuidV4',
-  GuidBrandType.Base64GuidBuffer
+  GuidBrandType.Base64Guid
 >;
 export type RawGuidBuffer = Brand<
   Buffer,
