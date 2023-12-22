@@ -10,18 +10,6 @@ export class BufferStore<K> implements ISimpleStore<K, Buffer> {
     this._data = new Map<K, string>();
   }
   /**
-   * Load the store from a file
-   */
-  public load(): void {
-    // not supported
-  }
-  /**
-   * Persist the store to a file
-   */
-  public save(): void {
-    // not supported
-  }
-  /**
    * Whether the store has the given key, without respect to its type
    * @param key
    * @returns

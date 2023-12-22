@@ -1,11 +1,8 @@
-import { Readable, Transform } from 'stream';
 import { ChecksumBuffer, ChecksumString } from '../types';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import {
   BlockSize,
-  blockSizeToLength,
   lengthToBlockSize,
-  nextLargestBlockSize,
   validateBlockSize,
 } from '../enumerations/blockSizes';
 import { BlockDto } from './blockDto';
@@ -16,7 +13,6 @@ import { BlockType } from '../enumerations/blockType';
 export class BaseBlock {
   public readonly blockType: BlockType = BlockType.Unknown;
   public readonly reconstituted: boolean = false;
-  public readonly hasHeader: boolean = false;
   constructor(data: Buffer, dateCreated?: Date, checksum?: ChecksumBuffer) {
     if (!validateBlockSize(data.length)) {
       throw new Error(`Data length ${data.length} is not a valid block size`);
@@ -40,9 +36,6 @@ export class BaseBlock {
     return lengthToBlockSize(this.data.length);
   }
   public readonly data: Buffer;
-  public get dataStream(): Readable {
-    return Readable.from(this.data);
-  }
   public get checksumString(): ChecksumString {
     return StaticHelpersChecksum.checksumBufferToChecksumString(this.id);
   }
@@ -54,56 +47,6 @@ export class BaseBlock {
     const validated = rawChecksum.equals(this.id);
     this._validated = validated;
     return validated;
-  }
-  public xorStreamTransform(other: BaseBlock): Transform {
-    if (this.blockSize !== other.blockSize) {
-      throw new Error('Block sizes do not match');
-    }
-
-    let index = 0;
-    const xorTransform = new Transform({
-      transform(chunk, encoding, callback) {
-        const result = Buffer.alloc(chunk.length);
-        for (let i = 0; i < chunk.length; i++) {
-          result[i] = chunk[i] ^ other.data[index + i];
-        }
-        index += chunk.length;
-        this.push(result);
-        callback();
-      },
-    });
-
-    this.dataStream.pipe(xorTransform);
-    return xorTransform;
-  }
-  public async xorStreamAsync(other: BaseBlock): Promise<BaseBlock> {
-    if (this.blockSize !== other.blockSize) {
-      throw new Error('Block sizes do not match');
-    }
-
-    return new Promise((resolve, reject) => {
-      // Perform XOR operation
-      const xorStream = this.xorStreamTransform(other);
-
-      // Collect XOR result
-      const xorResult = Buffer.alloc(this.data.length);
-      let offset = 0;
-
-      xorStream.on('data', (chunk) => {
-        chunk.copy(xorResult, offset);
-        offset += chunk.length;
-      });
-
-      xorStream.on('end', () => {
-        // xorResult now contains the XOR of this block and other block
-        resolve(new BaseBlock(xorResult));
-      });
-
-      xorStream.on('error', (err) => {
-        console.error('Error during XOR operation:', err);
-        reject(err);
-      });
-    });
   }
   public xor(other: BaseBlock): BaseBlock {
     if (this.blockSize !== other.blockSize) {
@@ -142,12 +85,15 @@ export class BaseBlock {
     return block;
   }
   public static newBlock(
+    blockSize: BlockSize,
     data: Buffer,
     dateCreated?: Date,
     checksum?: ChecksumBuffer
   ): BaseBlock {
-    const blockSize = nextLargestBlockSize(data.length);
-    const blockLength = blockSizeToLength(blockSize);
+    const blockLength = blockSize as number;
+    if (data.length > blockLength) {
+      throw new Error('Data is too large for block size');
+    }
     // fill the buffer with zeros to the next block size
     const buffer = Buffer.alloc(blockLength);
     // copy the data into the buffer
