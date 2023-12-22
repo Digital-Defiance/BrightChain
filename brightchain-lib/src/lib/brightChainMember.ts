@@ -187,9 +187,9 @@ export class BrightChainMember {
    * @param data - The data to encrypt.
    * @returns The encrypted data.
    */
-  encryptData(data: string | Buffer, publicKey?: Buffer): Buffer {
+  encryptData(data: string | Buffer): Buffer {
     const bufferData = Buffer.isBuffer(data) ? data : Buffer.from(data);
-    return EthereumECIES.encrypt(publicKey ?? this.publicKey, bufferData);
+    return EthereumECIES.encrypt(this.publicKey, bufferData);
   }
 
   /**

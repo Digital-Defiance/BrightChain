@@ -12,11 +12,7 @@ import { ChecksumBuffer, ChecksumString } from './types';
  */
 export abstract class StaticHelpersChecksum {
   public static readonly Sha3DefaultHashBits: number = 512;
-
-  /**
-   * unused/future/unsupported on my platform/version.
-   */
-  public static readonly EnableOaepHash: boolean = true;
+  public static readonly Sha3ChecksumBufferLength = 64;
 
   public static calculateChecksum(data: Buffer): ChecksumBuffer {
     return Buffer.from(sha3_512.update(data).hex(), 'hex') as ChecksumBuffer;

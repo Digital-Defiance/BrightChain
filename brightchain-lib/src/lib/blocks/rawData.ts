@@ -1,6 +1,6 @@
 import { BlockType } from "../enumerations/blockType";
-import { EphemeralBlock } from "./ephemeral";
+import { BaseBlock } from "./base";
 
-export class RawDataBlock extends EphemeralBlock {
+export class RawDataBlock extends BaseBlock {
   public override readonly blockType: BlockType = BlockType.RawData;
 }
