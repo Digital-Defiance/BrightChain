@@ -1,9 +1,8 @@
 import { randomBytes } from 'crypto';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { BaseBlock } from './baseBlock';
+import { BaseBlock } from './base';
 import {
   BlockSize,
-  blockSizeToLength,
   validBlockSizes,
 } from '../enumerations/blockSizes';
 
@@ -26,8 +25,8 @@ describe('block', () => {
     BlockSize.Small,
     BlockSize.Medium,
   ];
-  testBlockSizes.forEach((blockSize) => {
-    const blockLength: number = blockSizeToLength(blockSize);
+  testBlockSizes.forEach((blockSize: BlockSize) => {
+    const blockLength: number = blockSize as number;
     const data = randomBytes(blockLength);
     const checksum = StaticHelpersChecksum.calculateChecksum(data);
     const dateCreated = new Date();
@@ -77,7 +76,7 @@ describe('block', () => {
       });
 
       it('should throw when making a block of a bad size', () => {
-        const longData = Buffer.alloc(blockSizeToLength(blockSize) + 1);
+        const longData = Buffer.alloc((blockSize as number) + 1);
         longData.fill(0);
         expect(() => new BaseBlock(longData, dateCreated)).toThrow(
           `Data length ${longData.length} is not a valid block size`
@@ -87,37 +86,6 @@ describe('block', () => {
         const newBlock = new BaseBlock(data, undefined, checksum);
         expect(newBlock.dateCreated).toBeTruthy();
         expect(newBlock.dateCreated).toBeInstanceOf(Date);
-      });
-      it('should xor stream with same block sizes', async () => {
-        const blockA = new BaseBlock(data, new Date());
-        const blockB = new BaseBlock(randomBytes(blockLength), new Date());
-        const blockC = await blockA.xorStreamAsync(blockB);
-        const expectedData = Buffer.alloc(blockLength);
-        for (let i = 0; i < blockLength; i++) {
-          expectedData[i] = blockA.data[i] ^ blockB.data[i];
-        }
-        expect(blockC.data).toEqual(expectedData);
-        expect(blockC.id).toEqual(
-          StaticHelpersChecksum.calculateChecksum(expectedData)
-        );
-      });
-      it('should maintain data integrity after XOR stream operation', async () => {
-        const originalDataB = randomBytes(blockLength);
-        const blockB = new BaseBlock(originalDataB, new Date());
-        const blockC = await block.xorStreamAsync(blockB);
-        // block C xor with block A should equal block B
-        const blockD = await blockC.xorStreamAsync(block);
-        // block C xor with block B should equal block A
-        const blockE = await blockC.xorStreamAsync(blockB);
-        expect(block.data).toEqual(data);
-        expect(block.validated).toBeTruthy();
-        expect(blockB.data).toEqual(originalDataB);
-        expect(blockB.validated).toBeTruthy();
-        expect(blockC.validated).toBeTruthy();
-        expect(blockD.data).toEqual(originalDataB);
-        expect(blockD.validated).toBeTruthy();
-        expect(blockE.data).toEqual(data);
-        expect(blockE.validated).toBeTruthy();
       });
       it('should xor with same block sizes', () => {
         const blockA = new BaseBlock(data, new Date());
@@ -159,23 +127,12 @@ describe('block', () => {
       `Data length ${data.length} is not a valid block size`
     );
   });
-  it('should not xor stream with different block sizes', async () => {
-    const blockSizeA = randomBlockSize();
-    const blockSizeB = randomBlockSize(blockSizeA);
-    const blockBytesA = Buffer.alloc(blockSizeToLength(blockSizeA));
-    blockBytesA.fill(0);
-    const blockBytesB = Buffer.alloc(blockSizeToLength(blockSizeB));
-    blockBytesB.fill(0);
-    const blockA = new BaseBlock(blockBytesA, new Date());
-    const blockB = new BaseBlock(blockBytesB, new Date());
-    expect(blockA.xorStreamAsync(blockB)).rejects.toThrow('Block sizes do not match');
-  });
   it('should not xor with different block sizes', async () => {
     const blockSizeA = randomBlockSize();
     const blockSizeB = randomBlockSize(blockSizeA);
-    const blockBytesA = Buffer.alloc(blockSizeToLength(blockSizeA));
+    const blockBytesA = Buffer.alloc(blockSizeA as number);
     blockBytesA.fill(0);
-    const blockBytesB = Buffer.alloc(blockSizeToLength(blockSizeB));
+    const blockBytesB = Buffer.alloc(blockSizeB as number);
     blockBytesB.fill(0);
     const blockA = new BaseBlock(blockBytesA, new Date());
     const blockB = new BaseBlock(blockBytesB, new Date());
@@ -183,29 +140,29 @@ describe('block', () => {
   });
   it('should be validated when created with newBlock and no checksum', () => {
     const blockSize = randomBlockSize();
-    const blockLength = blockSizeToLength(blockSize);
+    const blockLength = blockSize as number;
     const blockData = randomBytes(blockLength);
-    const block = BaseBlock.newBlock(blockData);
+    const block = BaseBlock.newBlock(blockSize, blockData);
     expect(block.validated).toBeTruthy();
   });
   it('should be validated when created with newBlock and a checksum', () => {
     const blockSize = randomBlockSize();
-    const blockLength = blockSizeToLength(blockSize);
+    const blockLength = blockSize as number;
     const blockData = randomBytes(blockLength);
     const blockChecksum = StaticHelpersChecksum.calculateChecksum(blockData);
-    const block = BaseBlock.newBlock(blockData, new Date(), blockChecksum);
+    const block = BaseBlock.newBlock(blockSize, blockData, new Date(), blockChecksum);
     expect(block.validated).toBeTruthy();
   });
   it('should throw when created with newBlock and a bad checksum', () => {
     const blockSize = randomBlockSize();
-    const blockLength = blockSizeToLength(blockSize);
+    const blockLength = blockSize as number;
     const blockData = randomBytes(blockLength);
     const badChecksumData = Buffer.alloc(blockSize);
     badChecksumData.fill(0);
     const badChecksum =
       StaticHelpersChecksum.calculateChecksum(badChecksumData);
     badChecksum[0] = 0;
-    expect(() => BaseBlock.newBlock(blockData, new Date(), badChecksum)).toThrow(
+    expect(() => BaseBlock.newBlock(blockSize, blockData, new Date(), badChecksum)).toThrow(
       'Checksum mismatch'
     );
   });

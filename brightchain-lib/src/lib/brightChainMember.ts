@@ -1,4 +1,3 @@
-import * as uuid from 'uuid';
 import { randomBytes } from 'crypto';
 import { MemberType } from './enumerations/memberType';
 import { GuidV4 } from './guid';
@@ -6,7 +5,7 @@ import { EmailString } from './emailString';
 import { IMemberDTO } from './interfaces/memberDto';
 import { EthereumECIES } from './ethereumECIES';
 import Wallet from 'ethereumjs-wallet';
-import { ChecksumBuffer, ShortHexGuid, SignatureBuffer } from './types';
+import { ShortHexGuid, SignatureBuffer } from './types';
 /**
  * A member of Brightchain.
  * @param id The unique identifier for this member.
@@ -16,11 +15,11 @@ export class BrightChainMember {
   public readonly publicKey: Buffer;
   private _wallet: Wallet | undefined;
   private _privateKey: Buffer | undefined;
-  public readonly id: ShortHexGuid;
+  public readonly id: GuidV4;
   public readonly memberType: MemberType;
   public readonly name: string;
   public readonly contactEmail: EmailString;
-  public readonly creatorId: ShortHexGuid;
+  public readonly creatorId: GuidV4;
   public readonly dateCreated: Date;
   public readonly dateUpdated: Date;
   constructor(
@@ -30,22 +29,16 @@ export class BrightChainMember {
     publicKey: Buffer,
     privateKey?: Buffer,
     wallet?: Wallet,
-    id?: ShortHexGuid,
+    id?: GuidV4,
     dateCreated?: Date,
     dateUpdated?: Date,
-    creatorId?: ShortHexGuid
+    creatorId?: GuidV4
   ) {
     this.memberType = memberType;
     if (id !== undefined) {
-      let newGuid: GuidV4;
-      try {
-        newGuid = new GuidV4(id);
-      } catch (e) {
-        throw new Error('Invalid member ID');
-      }
-      this.id = newGuid.asShortHexGuid;
+      this.id = id;
     } else {
-      this.id = GuidV4.new().asShortHexGuid;
+      this.id = GuidV4.new();
     }
     this.name = name;
     if (!this.name || this.name.length == 0) {
@@ -163,7 +156,7 @@ export class BrightChainMember {
     contactEmail: EmailString,
     creator?: BrightChainMember
   ): BrightChainMember {
-    const newId = new GuidV4(uuid.v4()).asShortHexGuid;
+    const newId = GuidV4.new();
     const mnemonic = EthereumECIES.generateNewMnemonic();
     const { wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
     const keyPair = EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
@@ -187,9 +180,9 @@ export class BrightChainMember {
    * @param data - The data to encrypt.
    * @returns The encrypted data.
    */
-  encryptData(data: string | Buffer, publicKey?: Buffer): Buffer {
+  encryptData(data: string | Buffer): Buffer {
     const bufferData = Buffer.isBuffer(data) ? data : Buffer.from(data);
-    return EthereumECIES.encrypt(publicKey ?? this.publicKey, bufferData);
+    return EthereumECIES.encrypt(this.publicKey, bufferData);
   }
 
   /**
@@ -203,12 +196,12 @@ export class BrightChainMember {
 
   toJSON(): string {
     const memberDTO: IMemberDTO = {
-      id: this.id,
+      id: this.id.asShortHexGuid,
       type: this.memberType,
       name: this.name,
       contactEmail: this.contactEmail.toJSON(),
       publicKey: this.publicKey.toString('hex'),
-      createdBy: this.creatorId as string,
+      createdBy: this.creatorId.asShortHexGuid as string,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
     };
@@ -227,10 +220,10 @@ export class BrightChainMember {
       Buffer.from(parsedMember.publicKey, 'hex'),
       undefined,
       undefined,
-      parsedMember.id as ShortHexGuid,
+      new GuidV4(parsedMember.id as ShortHexGuid),
       parsedMember.dateCreated,
       parsedMember.dateUpdated,
-      parsedMember.createdBy as ShortHexGuid
+      new GuidV4(parsedMember.createdBy as ShortHexGuid)
     );
   }
 }

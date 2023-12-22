@@ -83,7 +83,7 @@ export abstract class StaticHelpersSealing {
 
     const dataRecord = new QuorumDataRecord(
       agent,
-      amongstMembers.map((m) => m.id),
+      amongstMembers.map((m) => m.id.asShortHexGuid),
       sharesRequired,
       encryptedData.encryptedData,
       encryptedSharesByMemberId,
@@ -109,7 +109,7 @@ export abstract class StaticHelpersSealing {
     );
     for (let i = 0; i < membersWithPrivateKey.length; i++) {
       const member = membersWithPrivateKey[i];
-      const encryptedKeyShareHex = document.encryptedSharesByMemberId.get(member.id);
+      const encryptedKeyShareHex = document.encryptedSharesByMemberId.get(member.id.asShortHexGuid);
       if (!encryptedKeyShareHex) {
         throw new Error('Encrypted share not found');
       }
@@ -153,7 +153,7 @@ export abstract class StaticHelpersSealing {
         member.publicKey,
         Buffer.from(shareForMember, 'hex')
       );
-      encryptedSharesByMemberId.set(member.id, encryptedKeyShare);
+      encryptedSharesByMemberId.set(member.id.asShortHexGuid, encryptedKeyShare);
     }
 
     return encryptedSharesByMemberId;
@@ -173,7 +173,7 @@ export abstract class StaticHelpersSealing {
     );
     for (let i = 0; i < memberIds.length; i++) {
       const memberId = memberIds[i];
-      const member = members.find((v) => v.id == memberId);
+      const member = members.find((v) => v.id.asShortHexGuid == memberId);
       if (!member) {
         throw new Error('Member not found');
       }

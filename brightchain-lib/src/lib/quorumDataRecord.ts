@@ -87,7 +87,7 @@ export class QuorumDataRecord {
     });
     return {
       id: this.id,
-      creatorId: this.creator.id,
+      creatorId: this.creator.id.asShortHexGuid,
       encryptedData: this.encryptedData.toString('hex') as HexString,
       encryptedSharesByMemberId,
       checksum: StaticHelpersChecksum.checksumBufferToChecksumString(

@@ -67,10 +67,8 @@ export class BrightChainQuorum {
    * @param member
    */
   protected storeMember(member: BrightChainMember) {
-    this._members.set(member.id, member);
-    this._memberPublicKeysByMemberId.set(member.id, member.publicKey);
-    this._members.save();
-    this._memberPublicKeysByMemberId.save();
+    this._members.set(member.id.asShortHexGuid, member);
+    this._memberPublicKeysByMemberId.set(member.id.asShortHexGuid, member.publicKey);
   }
 
   /**
@@ -103,7 +101,6 @@ export class BrightChainQuorum {
       sharesRequired
     );
     this._documentsById.set(newDoc.id, newDoc);
-    this._documentsById.save();
     return newDoc;
   }
 

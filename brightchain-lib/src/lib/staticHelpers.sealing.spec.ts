@@ -59,7 +59,7 @@ describe('brightchainQuorum', () => {
     );
     const sealedJson = sealedDocument.toJson();
     const rebuiltDocument = QuorumDataRecord.fromJson(sealedJson, (memberId: ShortHexGuid) => {
-      return members.find((v) => v.id == memberId) as BrightChainMember;
+      return members.find((v) => v.id.asShortHexGuid == memberId) as BrightChainMember;
     });
     const unlockedDocument = StaticHelpersSealing.quorumUnseal<{
       hello: string;

@@ -16,12 +16,4 @@ export interface IJsonStore<K> {
    * @param value
    */
   set<V>(key: K, value: V): void;
-  /**
-   * Load the store from a file
-   */
-  load(): void;
-  /**
-   * Persist the store to a file
-   */
-  save(): void;
 }
