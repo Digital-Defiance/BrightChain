@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
-import { BaseBlock } from "./baseBlock";
-import { BlockSize, blockSizeToLength } from "../enumerations/blockSizes";
+import { BaseBlock } from "./base";
+import { BlockSize } from "../enumerations/blockSizes";
 import { BlockType } from "../enumerations/blockType";
 import { ChecksumBuffer } from "../types";
 
@@ -10,7 +10,7 @@ export class RandomBlock extends BaseBlock {
     super(data, dateCreated, checksum);
   }
   public static new(blockSize: BlockSize): RandomBlock {
-    const data = randomBytes(blockSizeToLength(blockSize));
+    const data = randomBytes(blockSize as number);
     return new RandomBlock(data);
   }
   public static reconstitute(data: Buffer, dateCreated?: Date, checksum?: ChecksumBuffer): RandomBlock {

@@ -255,4 +255,9 @@ describe('EthereumECIES', () => {
       EthereumECIES.verifyMessage(keyPair.publicKey, message, badSignature);
     }).toThrow('Invalid signature');
   });
+  it('should validate ecie overhead length', () => {
+    const inputData = Buffer.from(faker.lorem.sentence());
+    const encryptedData = EthereumECIES.encrypt(keyPair.publicKey, inputData);
+    expect(encryptedData.length).toBe(EthereumECIES.ecieOverheadLength + inputData.length);
+  });
 });

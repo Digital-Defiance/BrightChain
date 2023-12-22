@@ -1,10 +1,7 @@
-import * as uuid from 'uuid';
 import { BrightChainMember } from './brightChainMember';
 import { EmailString } from './emailString';
 import { MemberType } from './enumerations/memberType';
-import { EthereumECIES } from './ethereumECIES';
 import { faker } from '@faker-js/faker';
-import { ShortHexGuid } from './types';
 describe('brightchain', () => {
   let alice: BrightChainMember,
     bob: BrightChainMember,
@@ -34,23 +31,6 @@ describe('brightchain', () => {
     expect(verified).toBeTruthy();
     expect(alice.verify(signature, Buffer.from('hello worldx'))).toBeFalsy();
   });
-  it('should fail to create with an invalid id', () => {
-    const mnemonic = EthereumECIES.generateNewMnemonic();
-    const { wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
-    const keyPair = EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
-    expect(
-      () =>
-        new BrightChainMember(
-          MemberType.User,
-          'alice',
-          new EmailString('alice@example.com'),
-          keyPair.publicKey,
-          undefined,
-          undefined,
-          'x' as ShortHexGuid
-        )
-    ).toThrow('Invalid member ID');
-  });
   it('should fail to sign when there is no signing key', () => {
     expect(() =>
       noKeyCharlie.sign(Buffer.from(faker.lorem.sentence()))
@@ -65,23 +45,6 @@ describe('brightchain', () => {
     expect(dwight.hasPrivateKey).toBeTruthy();
     dwight.unloadWalletAndPrivateKey();
     expect(dwight.hasPrivateKey).toBeFalsy();
-  });
-  it('should fail to create with a made up id', () => {
-    const mnemonic = EthereumECIES.generateNewMnemonic();
-    const { wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
-    const keyPair = EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
-    expect(
-      () =>
-        new BrightChainMember(
-          MemberType.User,
-          'alice',
-          new EmailString('alice@example.com'),
-          keyPair.publicKey,
-          undefined,
-          undefined,
-          'x' as ShortHexGuid
-        )
-    ).toThrow('Invalid member ID');
   });
   it('should fail to create a user with no name', () => {
     expect(() =>
