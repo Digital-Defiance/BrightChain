@@ -158,7 +158,7 @@ export class GuidV4 {
 
   public static isRawGuidBuffer(value: Buffer | RawGuidBuffer): boolean {
     const result =
-        value.length === GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer);
+      value.length === GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer);
     if (result) {
       if (!uuid.validate(GuidV4.toFullHexGuid(value.toString('hex')))) {
         return false;
@@ -174,8 +174,8 @@ export class GuidV4 {
       result = value >= 1n && bigIntString.length <= 32;
     }
     if (result) {
-        const fromBigInt = GuidV4.toFullHexFromBigInt(value);
-        result = uuid.validate(fromBigInt);
+      const fromBigInt = GuidV4.toFullHexFromBigInt(value);
+      result = uuid.validate(fromBigInt);
     }
     return result;
   }
