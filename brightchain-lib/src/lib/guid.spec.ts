@@ -244,7 +244,7 @@ describe('guid', () => {
     it('should convert fullHexFromBase64 correctly', () => {
       jest.spyOn(uuid, 'validate').mockReturnValue(true);
       expect(GuidV4.fullHexFromBase64('VUnIOiD6ShGufZ3D8Wgeng==')).toBe('5549c83a-20fa-4a11-ae7d-9dc3f1681e9e');
-  });
+    });
 
     describe('toRawGuidBuffer', () => {
       it('should throw for invalid guid brand', () => {
