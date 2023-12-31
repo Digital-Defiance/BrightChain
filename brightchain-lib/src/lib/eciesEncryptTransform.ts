@@ -6,7 +6,7 @@ import { randomBytes } from "crypto";
 /**
  * Given encrypt the incoming stream in chunks of blocksize - ecieOverheadLength
  */
-export class EcieEncryptionTransform extends Transform {
+export class EciesEncryptionTransform extends Transform {
     private readonly chunkSize: number;
     private readonly receiverPublicKey: Buffer;
     constructor(blockSize: BlockSize, receiverPublicKey: Buffer) {
