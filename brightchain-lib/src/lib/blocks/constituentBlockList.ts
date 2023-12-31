@@ -13,6 +13,7 @@ import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { TupleSize } from '../constants';
 import { BlockHandleTuple } from './handleTuple';
 import { BlockHandle } from './handle';
+import { BrightChainMember } from '../brightChainMember';
 
 export class ConstituentBlockListBlock extends EphemeralBlock {
   public static readonly CblHeaderSize = 101;
@@ -35,14 +36,22 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     }
     return cblBlockIds;
   }
+  public getCblBlockIdData(): Buffer {
+    const offset = ConstituentBlockListBlock.CblHeaderSize;
+    const cblBlockIdData = this.data.subarray(
+      offset,
+      offset + StaticHelpersChecksum.Sha3ChecksumBufferLength * this.cblAddressCount
+    );
+    return cblBlockIdData;
+  }
   public getHandleTuples(getDiskBlockPath: (id: ChecksumBuffer, blockSize: BlockSize) => string): BlockHandleTuple[] {
     // loop through the cblBlockIds and create a handle tuple for each set of TupleSize
     const handleTuples: BlockHandleTuple[] = [];
     let offset = ConstituentBlockListBlock.CblHeaderSize;
-    for (let i=0; i< this.cblAddressCount; i+= TupleSize) {
+    for (let i = 0; i < this.cblAddressCount; i += TupleSize) {
       // gather TupleSize addresses from the data, starting at the offset
       const cblBlockIds: ChecksumBuffer[] = [];
-      for (let j=0; j<TupleSize; j++) {
+      for (let j = 0; j < TupleSize; j++) {
         const cblBlockId = this.data.subarray(
           offset,
           offset + StaticHelpersChecksum.Sha3ChecksumBufferLength
@@ -151,6 +160,11 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     }
   }
 
+  public validateSignature(creator: BrightChainMember): boolean {
+    const checksum = StaticHelpersChecksum.calculateChecksum(this.getCblBlockIdData());
+    return creator.verify(this.creatorSignature, checksum);
+  }
+
   public static readonly cblBlockDataLengths = [
     blockSizeLengths[0] - ConstituentBlockListBlock.CblHeaderSize, // 2**8 - 101 = 155
     blockSizeLengths[1] - ConstituentBlockListBlock.CblHeaderSize, // 2**9 - 101 = 411
@@ -167,31 +181,31 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
   public static readonly cblBlockMaxIDCounts = [
     Math.floor(
       ConstituentBlockListBlock.cblBlockDataLengths[0] /
-        StaticHelpersChecksum.Sha3ChecksumBufferLength
+      StaticHelpersChecksum.Sha3ChecksumBufferLength
     ), // 155 / 64 = 2
     Math.floor(
       ConstituentBlockListBlock.cblBlockDataLengths[1] /
-        StaticHelpersChecksum.Sha3ChecksumBufferLength
+      StaticHelpersChecksum.Sha3ChecksumBufferLength
     ), // 411 / 64 = 6
     Math.floor(
       ConstituentBlockListBlock.cblBlockDataLengths[2] /
-        StaticHelpersChecksum.Sha3ChecksumBufferLength
+      StaticHelpersChecksum.Sha3ChecksumBufferLength
     ), // 923 / 64 = 14
     Math.floor(
       ConstituentBlockListBlock.cblBlockDataLengths[3] /
-        StaticHelpersChecksum.Sha3ChecksumBufferLength
+      StaticHelpersChecksum.Sha3ChecksumBufferLength
     ), // 3995 / 64 = 62
     Math.floor(
       ConstituentBlockListBlock.cblBlockDataLengths[4] /
-        StaticHelpersChecksum.Sha3ChecksumBufferLength
+      StaticHelpersChecksum.Sha3ChecksumBufferLength
     ), // 1048475 / 64 = 16382
     Math.floor(
       ConstituentBlockListBlock.cblBlockDataLengths[5] /
-        StaticHelpersChecksum.Sha3ChecksumBufferLength
+      StaticHelpersChecksum.Sha3ChecksumBufferLength
     ), // 67108763 / 64 = 1048574
     Math.floor(
       ConstituentBlockListBlock.cblBlockDataLengths[6] /
-        StaticHelpersChecksum.Sha3ChecksumBufferLength
+      StaticHelpersChecksum.Sha3ChecksumBufferLength
     ), // 268435355 / 64 = 4194302
   ];
 
@@ -211,19 +225,19 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
    */
   public static readonly maxFileSizesWithCBL = [
     BigInt(blockSizeLengths[0]) *
-      BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[0]), // 0 * 2**8 = 0
+    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[0]), // 0 * 2**8 = 0
     BigInt(blockSizeLengths[1]) *
-      BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[1]), // 1 * 2**9 = 512 (512b)
+    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[1]), // 1 * 2**9 = 512 (512b)
     BigInt(blockSizeLengths[2]) *
-      BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[2]), // 2 * 2**10 = 2048 (2KiB)
+    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[2]), // 2 * 2**10 = 2048 (2KiB)
     BigInt(blockSizeLengths[3]) *
-      BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[3]), // 12 * 2**12 = 49152 (48KiB)
+    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[3]), // 12 * 2**12 = 49152 (48KiB)
     BigInt(blockSizeLengths[4]) *
-      BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[4]), // 3276 * 2**20 = 3435134976 (3.1GiB)
+    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[4]), // 3276 * 2**20 = 3435134976 (3.1GiB)
     BigInt(blockSizeLengths[5]) *
-      BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[5]), // 209714 * 2**26 = 14073668304896 (12.79TiB)
+    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[5]), // 209714 * 2**26 = 14073668304896 (12.79TiB)
     BigInt(blockSizeLengths[6]) *
-      BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[6]), // 838860 * 2**28 = 225179766620160 (225.2TiB)
+    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[6]), // 838860 * 2**28 = 225179766620160 (225.2TiB)
   ];
 
   /**

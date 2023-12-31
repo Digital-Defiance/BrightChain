@@ -10,7 +10,7 @@ import { randomBytes } from 'crypto';
 import { InMemoryBlockTuple } from './blocks/memoryTuple'
 import { RandomBlock } from './blocks/random';
 import { RandomBlocksPerTuple, TupleSize } from './constants';
-import { EcieEncryptionTransform } from './ecieEncryptTransform';
+import { EciesEncryptionTransform } from './eciesEncryptTransform';
 import { TupleGeneratorStream } from './tupleGeneratorStream';
 import { ReadStream } from 'fs';
 import { WhitenedBlock } from './blocks/whitened';
@@ -42,7 +42,7 @@ export abstract class BlockService {
     persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
   ): Promise<ConstituentBlockListBlock> {
     // read the dataStream chunks and encrypt each batch of chunkSize, thus encrypting each block and ending up with blocksize bytes per block
-    const ecieEncryptTransform = new EcieEncryptionTransform(blockSize, creator.publicKey);
+    const ecieEncryptTransform = new EciesEncryptionTransform(blockSize, creator.publicKey);
     const tupleGeneratorStream = new TupleGeneratorStream(blockSize, whitenedBlockSource, randomBlockSource);
     source.pipe(ecieEncryptTransform).pipe(tupleGeneratorStream);
     let blockIDs: Buffer = Buffer.alloc(0);

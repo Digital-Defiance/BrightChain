@@ -1,10 +1,10 @@
-import { EcieEncryptionTransform } from "./ecieEncryptTransform";
+import { EciesEncryptionTransform } from "./eciesEncryptTransform";
 import { EthereumECIES } from "./ethereumECIES";
 import { BlockSize } from "./enumerations/blockSizes";
 
 jest.mock('./ethereumECIES');
 
-describe('EcieEncryptionTransform Unit Tests', () => {
+describe('EciesEncryptionTransform Unit Tests', () => {
     const blockSize = BlockSize.Small;
     const keypair = {
         publicKey: Buffer.alloc(0),
@@ -20,7 +20,7 @@ describe('EcieEncryptionTransform Unit Tests', () => {
         });
     });
     const testEncryption = (inputData: Buffer) => {
-        const transform = new EcieEncryptionTransform(blockSize, keypair.publicKey);
+        const transform = new EciesEncryptionTransform(blockSize, keypair.publicKey);
         let encryptedData = Buffer.alloc(0);
 
         transform.on('data', (chunk) => {

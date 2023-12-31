@@ -1,18 +1,18 @@
-import { EcieEncryptionTransform } from "./ecieEncryptTransform";
+import { EciesEncryptionTransform } from "./eciesEncryptTransform";
 import { EthereumECIES } from "./ethereumECIES";
 import { BlockSize } from "./enumerations/blockSizes";
 import { Readable } from "stream";
 import { randomBytes } from "crypto";
 
 
-describe('EcieEncryptionTransform Integration Tests', () => {
+describe('EciesEncryptionTransform Integration Tests', () => {
     const blockSize = BlockSize.Small; // Numeric value representing the number of bytes
     const chunkSize = blockSize - EthereumECIES.ecieOverheadLength;
     const mnemonic = EthereumECIES.generateNewMnemonic();
     const keypair = EthereumECIES.mnemonicToSimpleKeyPairBuffer(mnemonic);
 
     const testEndToEndEncryption = async (inputData: Buffer): Promise<Buffer> => {
-        const transform = new EcieEncryptionTransform(blockSize, keypair.publicKey);
+        const transform = new EciesEncryptionTransform(blockSize, keypair.publicKey);
         const encryptedChunks: Buffer[] = [];
         const readable = new Readable({
             read() {
