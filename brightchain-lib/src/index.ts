@@ -24,7 +24,6 @@ export * from './lib/interfaces/simplePublicKeyOnlyBuffer';
 export * from './lib/interfaces/simpleStore';
 export * from './lib/interfaces/symmetricEncryptionResults';
 export * from './lib/types';
-export * from './lib/minimalisticUtils';
 export * from './lib/stores/bufferStore';
 export * from './lib/stores/jsonStore';
 export * from './lib/stores/simpleStore';
