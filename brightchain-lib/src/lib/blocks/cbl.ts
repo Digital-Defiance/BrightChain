@@ -1,6 +1,7 @@
 import {
   BlockSize,
   blockSizeLengths,
+  lengthToBlockSizeIndex,
   validBlockSizes,
 } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
@@ -14,15 +15,20 @@ import { TupleSize } from '../constants';
 import { BlockHandleTuple } from './handleTuple';
 import { BlockHandle } from './handle';
 import { BrightChainMember } from '../brightChainMember';
+import { EncryptedConstituentBlockListBlock } from './encryptedCbl';
 
+/**
+ * Constituent Block List
+ * Instance cannot be encrypted, see EncryptedConstituentBlockListBlock
+ */
 export class ConstituentBlockListBlock extends EphemeralBlock {
-  public static readonly CblHeaderSize = 101;
+  public static readonly CblHeaderSize = 102;
   public override readonly blockType = BlockType.ConstituentBlockList;
-  public override readonly reconstituted: boolean = true;
   public readonly creatorId: RawGuidBuffer;
   public readonly creatorSignature: SignatureBuffer;
   public readonly originalDataLength: bigint;
   public readonly cblAddressCount: number;
+  public readonly tupleSize: number;
   public getCblBlockIds(): ChecksumBuffer[] {
     let offset = ConstituentBlockListBlock.CblHeaderSize;
     const cblBlockIds: ChecksumBuffer[] = [];
@@ -64,6 +70,10 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     }
     return handleTuples;
   }
+  public override encrypt(creator: BrightChainMember): EncryptedConstituentBlockListBlock {
+    const encrypted = super.encrypt(creator);
+    return encrypted as EncryptedConstituentBlockListBlock;
+  }
   public static makeCblHeader(
     creatorId: RawGuidBuffer,
     creatorSignature: SignatureBuffer,
@@ -88,28 +98,33 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     cblAddressCountBuffer.writeUInt32BE(cblAddressCount);
     const originalDataLengthBuffer = Buffer.alloc(8);
     originalDataLengthBuffer.writeBigInt64BE(originalEncryptedDataLength);
+    const tupleSizeBuffer = Buffer.alloc(1);
+    tupleSizeBuffer.writeUInt8(TupleSize);
     const header = Buffer.concat([
       creatorId, // 16 bytes
       creatorSignature, // 65 bytes
       dateCreatedBuffer, // 8 bytes
       cblAddressCountBuffer, // 4 bytes
       originalDataLengthBuffer, // 8 bytes
-    ]); // 101 bytes
+      tupleSizeBuffer, // 1 byte
+    ]); // 102 bytes
     if (header.length != ConstituentBlockListBlock.CblHeaderSize) {
       throw new Error('Header length is incorrect');
     }
     return header;
   }
-  public static readCBLHeader(data: Buffer): {
-    creatorId: RawGuidBuffer;
+  public static readCBLHeader(data: Buffer, blockSize: BlockSize): {
+    creatorId: GuidV4;
     creatorSignature: SignatureBuffer;
     dateCreated: Date;
     cblAddressCount: number;
     originalDataLength: bigint;
+    tupleSize: number;
   } {
     let offset = 0;
     const creatorLength = GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer);
-    const creatorId = data.subarray(offset, creatorLength) as RawGuidBuffer;
+    const creatorIdBuffer = data.subarray(offset, creatorLength) as RawGuidBuffer;
+    const creatorId = new GuidV4(creatorIdBuffer);
     offset += creatorLength;
     const creatorSignature = data.subarray(
       offset,
@@ -117,45 +132,65 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     ) as SignatureBuffer;
     offset += EthereumECIES.signatureLength;
     const dateCreated = new Date(Number(data.readBigInt64BE(offset)));
+    // if date created is not in the past, error
+    if (dateCreated > new Date()) {
+      throw new Error('Date created is in the future');
+    }
     offset += 8;
     const cblAddressCount = data.readUInt32BE(offset);
     offset += 4;
     const originalDataLength = data.readBigInt64BE(offset);
     offset += 8;
+    const tupleSize = data.readUInt8(offset);
+    offset += 1;
+    if (cblAddressCount % tupleSize !== 0) {
+      throw new Error('CBL address count must be a multiple of TupleSize');
+    }
+    // if address count is larger than the max for the block size, error
+    const blockSizeIndex = lengthToBlockSizeIndex(blockSize as number);
+    const cblBlockMaxIDCountsForBlockSize = ConstituentBlockListBlock.cblBlockMaxIDCounts[blockSizeIndex];
+    if (cblAddressCount * StaticHelpersChecksum.Sha3ChecksumBufferLength > cblBlockMaxIDCountsForBlockSize) {
+      throw new Error('CBL address count is larger than the max for the block size');
+    }
     return {
       creatorId,
       creatorSignature,
       cblAddressCount,
       originalDataLength,
       dateCreated,
+      tupleSize
     };
   }
-  public static newFromBuffer(data: Buffer) {
-    const cblData = ConstituentBlockListBlock.readCBLHeader(data);
+  public static newFromPlaintextBuffer(plaintextData: Buffer, blockSize: BlockSize) {
+    const cblData = ConstituentBlockListBlock.readCBLHeader(plaintextData, blockSize);
     const cblBlock = new ConstituentBlockListBlock(
-      cblData.creatorId,
+      blockSize,
+      cblData.creatorId.asRawGuidBuffer,
       cblData.creatorSignature,
       cblData.originalDataLength,
       cblData.cblAddressCount,
-      data,
+      plaintextData,
       cblData.dateCreated
     );
     return cblBlock;
   }
   constructor(
+    blockSize: BlockSize,
     creatorId: RawGuidBuffer,
     creatorSignature: SignatureBuffer,
     originalDataLength: bigint,
     cblAddressCount: number,
     data: Buffer,
-    dateCreated?: Date
+    dateCreated?: Date,
+    tupleSize?: number,
   ) {
-    super(data, dateCreated);
+    super(blockSize, data, false, false, ConstituentBlockListBlock.CblHeaderSize + (cblAddressCount * StaticHelpersChecksum.Sha3ChecksumBufferLength), dateCreated);
     this.creatorId = creatorId;
     this.creatorSignature = creatorSignature;
     this.originalDataLength = originalDataLength;
     this.cblAddressCount = cblAddressCount;
-    if (this.cblAddressCount % TupleSize !== 0) {
+    this.tupleSize = tupleSize ?? TupleSize;
+    if (this.cblAddressCount % this.tupleSize !== 0) {
       throw new Error('CBL address count must be a multiple of TupleSize');
     }
   }
@@ -165,14 +200,23 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     return creator.verify(this.creatorSignature, checksum);
   }
 
+
   public static readonly cblBlockDataLengths = [
-    blockSizeLengths[0] - ConstituentBlockListBlock.CblHeaderSize, // 2**8 - 101 = 155
-    blockSizeLengths[1] - ConstituentBlockListBlock.CblHeaderSize, // 2**9 - 101 = 411
-    blockSizeLengths[2] - ConstituentBlockListBlock.CblHeaderSize, // 2**10 - 101 = 923
-    blockSizeLengths[3] - ConstituentBlockListBlock.CblHeaderSize, // 2**12 - 101 = 3995
-    blockSizeLengths[4] - ConstituentBlockListBlock.CblHeaderSize, // 2**20 - 101 = 1048475
-    blockSizeLengths[5] - ConstituentBlockListBlock.CblHeaderSize, // 2**26 - 101 = 67108763
-    blockSizeLengths[6] - ConstituentBlockListBlock.CblHeaderSize, // 2**28 - 101 = 268435355
+    blockSizeLengths[0] - ConstituentBlockListBlock.CblHeaderSize, // 2**9 - 102 = 410
+    blockSizeLengths[1] - ConstituentBlockListBlock.CblHeaderSize, // 2**10 - 102 = 922
+    blockSizeLengths[2] - ConstituentBlockListBlock.CblHeaderSize, // 2**12 - 102 = 3994
+    blockSizeLengths[3] - ConstituentBlockListBlock.CblHeaderSize, // 2**20 - 102 = 1048474
+    blockSizeLengths[4] - ConstituentBlockListBlock.CblHeaderSize, // 2**26 - 102 = 67108762
+    blockSizeLengths[5] - ConstituentBlockListBlock.CblHeaderSize, // 2**28 - 102 = 268435354
+  ];
+
+  public static readonly cblBlockDataLengthsWithEcieEncryption = [
+    this.cblBlockDataLengths[0] - EthereumECIES.ecieOverheadLength, // 410 - 97 = 313
+    this.cblBlockDataLengths[1] - EthereumECIES.ecieOverheadLength, // 922 - 97 = 825
+    this.cblBlockDataLengths[2] - EthereumECIES.ecieOverheadLength, // 3994 - 97 = 3897
+    this.cblBlockDataLengths[3] - EthereumECIES.ecieOverheadLength, // 1048474 - 97 = 1048377
+    this.cblBlockDataLengths[4] - EthereumECIES.ecieOverheadLength, // 67108762 - 97 = 67108665
+    this.cblBlockDataLengths[5] - EthereumECIES.ecieOverheadLength, // 268435354 - 97 = 268435257
   ];
 
   /**
@@ -180,43 +224,38 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
    */
   public static readonly cblBlockMaxIDCounts = [
     Math.floor(
-      ConstituentBlockListBlock.cblBlockDataLengths[0] /
+      ConstituentBlockListBlock.cblBlockDataLengthsWithEcieEncryption[0] /
       StaticHelpersChecksum.Sha3ChecksumBufferLength
-    ), // 155 / 64 = 2
+    ), // 313 / 64 = 4
     Math.floor(
-      ConstituentBlockListBlock.cblBlockDataLengths[1] /
+      ConstituentBlockListBlock.cblBlockDataLengthsWithEcieEncryption[1] /
       StaticHelpersChecksum.Sha3ChecksumBufferLength
-    ), // 411 / 64 = 6
+    ), // 825 / 64 = 12
     Math.floor(
-      ConstituentBlockListBlock.cblBlockDataLengths[2] /
+      ConstituentBlockListBlock.cblBlockDataLengthsWithEcieEncryption[2] /
       StaticHelpersChecksum.Sha3ChecksumBufferLength
-    ), // 923 / 64 = 14
+    ), // 3897 / 64 = 60
     Math.floor(
-      ConstituentBlockListBlock.cblBlockDataLengths[3] /
+      ConstituentBlockListBlock.cblBlockDataLengthsWithEcieEncryption[3] /
       StaticHelpersChecksum.Sha3ChecksumBufferLength
-    ), // 3995 / 64 = 62
+    ), // 1048377 / 64 = 16380
     Math.floor(
-      ConstituentBlockListBlock.cblBlockDataLengths[4] /
+      ConstituentBlockListBlock.cblBlockDataLengthsWithEcieEncryption[4] /
       StaticHelpersChecksum.Sha3ChecksumBufferLength
-    ), // 1048475 / 64 = 16382
+    ), // 67108665 / 64 = 1048572
     Math.floor(
-      ConstituentBlockListBlock.cblBlockDataLengths[5] /
+      ConstituentBlockListBlock.cblBlockDataLengthsWithEcieEncryption[5] /
       StaticHelpersChecksum.Sha3ChecksumBufferLength
-    ), // 67108763 / 64 = 1048574
-    Math.floor(
-      ConstituentBlockListBlock.cblBlockDataLengths[6] /
-      StaticHelpersChecksum.Sha3ChecksumBufferLength
-    ), // 268435355 / 64 = 4194302
+    ), // 268435257 / 64 = 4194300
   ];
 
   public static readonly cblBlockMaxTupleCounts = [
-    Math.floor(ConstituentBlockListBlock.cblBlockMaxIDCounts[0] / TupleSize), // 2 / 5 = 0
-    Math.floor(ConstituentBlockListBlock.cblBlockMaxIDCounts[1] / TupleSize), // 6 / 5 = 1
-    Math.floor(ConstituentBlockListBlock.cblBlockMaxIDCounts[2] / TupleSize), // 14 / 5 = 2
-    Math.floor(ConstituentBlockListBlock.cblBlockMaxIDCounts[3] / TupleSize), // 62 / 5 = 12
-    Math.floor(ConstituentBlockListBlock.cblBlockMaxIDCounts[4] / TupleSize), // 16382 / 5 = 3276
-    Math.floor(ConstituentBlockListBlock.cblBlockMaxIDCounts[5] / TupleSize), // 1048574 / 5 = 209714
-    Math.floor(ConstituentBlockListBlock.cblBlockMaxIDCounts[6] / TupleSize), // 4194302 / 5 = 838860
+    Math.floor(ConstituentBlockListBlock.cblBlockMaxIDCounts[0] / TupleSize), // 4 / 3 = 1
+    Math.floor(ConstituentBlockListBlock.cblBlockMaxIDCounts[1] / TupleSize), // 12 / 3 = 4
+    Math.floor(ConstituentBlockListBlock.cblBlockMaxIDCounts[2] / TupleSize), // 60 / 3 = 20
+    Math.floor(ConstituentBlockListBlock.cblBlockMaxIDCounts[3] / TupleSize), // 16380 / 3 = 5460
+    Math.floor(ConstituentBlockListBlock.cblBlockMaxIDCounts[4] / TupleSize), // 1048572 / 3 = 349524
+    Math.floor(ConstituentBlockListBlock.cblBlockMaxIDCounts[5] / TupleSize), // 4194300 / 3 = 1398100
   ];
 
   /**
@@ -225,19 +264,17 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
    */
   public static readonly maxFileSizesWithCBL = [
     BigInt(blockSizeLengths[0]) *
-    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[0]), // 0 * 2**8 = 0
+    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[0]), // 1 * 2**9 = 512 (0.5KiB)
     BigInt(blockSizeLengths[1]) *
-    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[1]), // 1 * 2**9 = 512 (512b)
+    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[1]), // 4 * 2**10 = 4096 (4KiB)
     BigInt(blockSizeLengths[2]) *
-    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[2]), // 2 * 2**10 = 2048 (2KiB)
+    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[2]), // 20 * 2**12 = 81920 (80KiB)
     BigInt(blockSizeLengths[3]) *
-    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[3]), // 12 * 2**12 = 49152 (48KiB)
+    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[3]), // 5460 * 2**20 = 5725224960 (5.33GiB)
     BigInt(blockSizeLengths[4]) *
-    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[4]), // 3276 * 2**20 = 3435134976 (3.1GiB)
+    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[4]), // 349524 * 2**26 = 23456158580736 (21.33TiB)
     BigInt(blockSizeLengths[5]) *
-    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[5]), // 209714 * 2**26 = 14073668304896 (12.79TiB)
-    BigInt(blockSizeLengths[6]) *
-    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[6]), // 838860 * 2**28 = 225179766620160 (225.2TiB)
+    BigInt(ConstituentBlockListBlock.cblBlockMaxTupleCounts[5]), // 1398100 * 2**28 = 375299611033600 (341.3TiB)
   ];
 
   /**
@@ -255,12 +292,4 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     }
     return validBlockSizes[index];
   }
-
-  public static readonly ValidCBLBlockSizes = [
-    BlockSize.Tiny,
-    BlockSize.Small,
-    BlockSize.Medium,
-    BlockSize.Large,
-    BlockSize.Huge,
-  ];
 }

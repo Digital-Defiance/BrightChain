@@ -5,15 +5,16 @@ import {
 } from './enumerations/blockSizes';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
 import { BrightChainMember } from './brightChainMember';
-import { ConstituentBlockListBlock } from './blocks/constituentBlockList';
+import { ConstituentBlockListBlock } from './blocks/cbl';
 import { randomBytes } from 'crypto';
 import { InMemoryBlockTuple } from './blocks/memoryTuple'
 import { RandomBlock } from './blocks/random';
 import { RandomBlocksPerTuple, TupleSize } from './constants';
-import { EciesEncryptionTransform } from './eciesEncryptTransform';
+import { EciesEncryptionTransform } from './transforms/eciesEncryptTransform';
 import { TupleGeneratorStream } from './tupleGeneratorStream';
 import { ReadStream } from 'fs';
 import { WhitenedBlock } from './blocks/whitened';
+import { EthereumECIES } from './ethereumECIES';
 
 export abstract class BlockService {
   public static readonly TupleSize = TupleSize;
@@ -53,10 +54,7 @@ export abstract class BlockService {
       addressCount += tuple.blocks.length;
     });
     const blockIdDataLength = blockIDs.length;
-    const cblBlockSize = BlockService.getBlockSizeForData(blockIdDataLength);
-    if (cblBlockSize === BlockSize.Unknown) {
-      throw new Error('Unable to fit CBL block ids into largest block');
-    }
+    const encryptedCBLDataLength = ConstituentBlockListBlock.CblHeaderSize + blockIdDataLength + EthereumECIES.ecieOverheadLength;
     const cblSignature = creator.sign(StaticHelpersChecksum.calculateChecksum(blockIDs));
     const cblHeader = ConstituentBlockListBlock.makeCblHeader(
       creator.id.asRawGuidBuffer,
@@ -65,19 +63,24 @@ export abstract class BlockService {
       addressCount,
       sourceLength
     );
-    const neededPadding = cblBlockSize - cblHeader.length - blockIdDataLength;
+    const neededPadding = blockSize - encryptedCBLDataLength;
+    if (neededPadding < 0) {
+      throw new Error('CBL block too small to fit block ids');
+    }
     const cblPadding = randomBytes(neededPadding);
     const cblData = Buffer.concat([
       cblHeader,
       blockIDs,
       cblPadding,
     ]);
+    const encryptedCblData = await creator.encryptData(cblData);
     const cblBlock = new ConstituentBlockListBlock(
+      blockSize,
       creator.id.asRawGuidBuffer,
       cblSignature,
       sourceLength,
       addressCount,
-      cblData,
+      encryptedCblData,
       new Date()
     );
     return cblBlock;

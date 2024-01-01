@@ -1,2 +1,2 @@
-export const TupleSize = 5;
+export const TupleSize = 3;
 export const RandomBlocksPerTuple = 2;

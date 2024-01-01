@@ -37,7 +37,7 @@ export class TupleGeneratorStream extends Transform {
   private makeTuple(): void {
     const blockData = this.buffer.subarray(0, this.blockSize);
     this.buffer = this.buffer.subarray(this.blockSize);
-    const block: EphemeralBlock = new EphemeralBlock(blockData);
+    const block: EphemeralBlock = new EphemeralBlock(this.blockSize, blockData, false, false, blockData.length);
     let sourceBlocks: BaseBlock[] = [block];
     const finalBlocks: BaseBlock[] = [];
     for (let i = 0; i < RandomBlocksPerTuple; i++) {

@@ -1,7 +1,7 @@
 import { ReadStream, WriteStream, createReadStream, createWriteStream, existsSync } from 'fs';
 import { BlockSize } from '../enumerations/blockSizes';
 import { ChecksumBuffer } from '../types';
-import { ChecksumTransform } from '../checksumTransform';
+import { ChecksumTransform } from '../transforms/checksumTransform';
 
 /**
  * A block handle is a reference to a block in a block store.

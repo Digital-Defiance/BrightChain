@@ -9,7 +9,6 @@ describe('blockSizes', () => {
   it('should have the expected members', () => {
     // BlockSize is an enum with assigned number values
     expect(BlockSize.Unknown).toBe(0);
-    expect(BlockSize.Micro).toBe(256);
     expect(BlockSize.Message).toBe(512);
     expect(BlockSize.Tiny).toBe(1024);
     expect(BlockSize.Small).toBe(4096);
@@ -19,7 +18,6 @@ describe('blockSizes', () => {
   });
   it('should validate the blockSizes/blockSizeLengths const arrays', () => {
     expect(validBlockSizes).toEqual([
-      BlockSize.Micro,
       BlockSize.Message,
       BlockSize.Tiny,
       BlockSize.Small,
@@ -28,11 +26,10 @@ describe('blockSizes', () => {
       BlockSize.Huge,
     ]);
     expect(blockSizeLengths).toEqual([
-      256, 512, 1024, 4096, 1048576, 67108864, 268435456,
+      512, 1024, 4096, 1048576, 67108864, 268435456,
     ]);
   });
   it('should test lengthToBlockSize', () => {
-    expect(lengthToBlockSize(256)).toBe(BlockSize.Micro);
     expect(lengthToBlockSize(512)).toBe(BlockSize.Message);
     expect(lengthToBlockSize(1024)).toBe(BlockSize.Tiny);
     expect(lengthToBlockSize(4096)).toBe(BlockSize.Small);
@@ -46,7 +43,6 @@ describe('blockSizes', () => {
     expect(lengthToBlockSize(268435455)).toBe(BlockSize.Unknown);
   });
   it('should test validateBlockSize', () => {
-    expect(validateBlockSize(BlockSize.Micro)).toBe(true);
     expect(validateBlockSize(BlockSize.Message)).toBe(true);
     expect(validateBlockSize(BlockSize.Tiny)).toBe(true);
     expect(validateBlockSize(BlockSize.Small)).toBe(true);

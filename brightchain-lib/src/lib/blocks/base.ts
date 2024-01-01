@@ -3,21 +3,55 @@ import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import {
   BlockSize,
   lengthToBlockSize,
-  validateBlockSize,
 } from '../enumerations/blockSizes';
 import { BlockDto } from './blockDto';
 import { randomBytes } from 'crypto';
 import { StaticHelpers } from '../staticHelpers';
 import { BlockType } from '../enumerations/blockType';
+import { BrightChainMember } from '../brightChainMember';
+import { EthereumECIES } from '../ethereumECIES';
 
 export class BaseBlock {
   public readonly blockType: BlockType = BlockType.Unknown;
-  public readonly reconstituted: boolean = false;
-  constructor(data: Buffer, dateCreated?: Date, checksum?: ChecksumBuffer) {
-    if (!validateBlockSize(data.length)) {
-      throw new Error(`Data length ${data.length} is not a valid block size`);
+  public readonly encrypted: boolean;
+  public readonly blockSize: BlockSize;
+  public readonly lengthBeforeEncryption: number;
+  public readonly rawData: boolean;
+  constructor(blockSize: BlockSize, data: Buffer, rawData: boolean, encrypted: boolean, lengthBeforeEncryption: number, dateCreated?: Date, checksum?: ChecksumBuffer) {
+    // data must either be unencrypted and less than or equal to the block size - overhead
+    // or encrypted and equal to the block size
+    if (encrypted && rawData) {
+      throw new Error('Block cannot be encrypted and raw data');
     }
-    this.data = data;
+    this.blockSize = blockSize;
+    this.rawData = rawData;
+    this.encrypted = encrypted;
+    if (encrypted) {
+      this.data = data;
+      if (data.length !== blockSize as number) {
+        throw new Error(
+          `Encrypted data length ${data.length} is not a valid block size`
+        );
+      }
+      this.lengthBeforeEncryption = lengthBeforeEncryption;
+      if (this.lengthBeforeEncryption > (blockSize as number - EthereumECIES.ecieOverheadLength)) {
+        throw new Error(
+          `Length before encryption ${this.lengthBeforeEncryption} is too large for block size ${blockSize}`
+        );
+      }
+    } else {
+      this.data = data;
+      if (rawData && data.length !== blockSize as number) {
+        throw new Error(
+          `Raw data length ${data.length} is not valid for block size ${blockSize}`
+        );
+      } else if (!rawData && (data.length > (blockSize as number - EthereumECIES.ecieOverheadLength))) {
+        throw new Error(
+          `Data length ${data.length} is too large for block size ${blockSize}`
+        );
+      }
+      this.lengthBeforeEncryption = data.length;
+    }
     if (checksum) {
       this.id = checksum;
     } else {
@@ -27,14 +61,35 @@ export class BaseBlock {
     }
     this.dateCreated = dateCreated ?? new Date();
   }
+  public encrypt(creator: BrightChainMember): BaseBlock {
+    if (this.encrypted) {
+      throw new Error('Block is already encrypted');
+    }
+    if (this.rawData) {
+      throw new Error('Cannot encrypt raw data');
+    }
+    const neededPadding = this.blockSize as number - this.data.length - EthereumECIES.ecieOverheadLength;
+    const padding = randomBytes(neededPadding);
+    const paddedData = Buffer.concat([this.data, padding]);
+    const encryptedData = creator.encryptData(paddedData);
+    if (encryptedData.length !== this.blockSize) {
+      throw new Error('Encrypted data length does not match block size');
+    }
+    return new BaseBlock(this.blockSize, encryptedData, false, true, this.lengthBeforeEncryption, this.dateCreated);
+  }
+  public decrypt(creator: BrightChainMember): BaseBlock {
+    if (!this.encrypted) {
+      throw new Error('Block is not encrypted');
+    }
+    const decryptedData = creator.decryptData(this.data);
+    const data = decryptedData.subarray(0, this.lengthBeforeEncryption);
+    return new BaseBlock(this.blockSize, data, false, false, this.lengthBeforeEncryption, this.dateCreated);
+  }
   private _validated: boolean = false;
   public get validated(): boolean {
     return this._validated;
   }
   public readonly id: ChecksumBuffer;
-  public get blockSize(): BlockSize {
-    return lengthToBlockSize(this.data.length);
-  }
   public readonly data: Buffer;
   public get checksumString(): ChecksumString {
     return StaticHelpersChecksum.checksumBufferToChecksumString(this.id);
@@ -42,7 +97,7 @@ export class BaseBlock {
   public readonly dateCreated: Date;
   public validate(): boolean {
     const rawChecksum = StaticHelpersChecksum.calculateChecksum(
-      Buffer.from(this.data)
+      this.data
     );
     const validated = rawChecksum.equals(this.id);
     this._validated = validated;
@@ -52,14 +107,22 @@ export class BaseBlock {
     if (this.blockSize !== other.blockSize) {
       throw new Error('Block sizes do not match');
     }
-
-    const result = Buffer.alloc(this.data.length);
-    for (let i = 0; i < this.data.length; i++) {
+    // we can only xor raw data and encrypted blocks
+    // this ensures that we have blockSize bytes in the buffer
+    if ((this.encrypted && !other.encrypted) || (!this.encrypted && other.encrypted)) {
+      throw new Error('Cannot xor non-raw and non-encrypted blocks');
+    }
+    const blockSize = this.blockSize as number;
+    const result = Buffer.alloc(blockSize);
+    for (let i = 0; i < blockSize; i++) {
       result[i] = this.data[i] ^ other.data[i];
     }
-    return new BaseBlock(result);
+    return new BaseBlock(this.blockSize, result, true, false, blockSize);
   }
   public toDto(): BlockDto {
+    if (!this.rawData) {
+      throw new Error('Only raw data blocks can be converted to DTO');
+    }
     return {
       id: StaticHelpersChecksum.checksumBufferToChecksumString(this.id),
       data: StaticHelpers.bufferToHexString(this.data),
@@ -70,8 +133,13 @@ export class BaseBlock {
     return JSON.stringify(this.toDto());
   }
   public static fromDto(dto: BlockDto): BaseBlock {
+    const dataLength = dto.data.length / 2;
     return new BaseBlock(
+      lengthToBlockSize(dataLength),
       StaticHelpers.HexStringToBuffer(dto.data),
+      true,
+      false,
+      dataLength,
       new Date(dto.dateCreated),
       StaticHelpersChecksum.checksumStringToChecksumBuffer(dto.id)
     );
@@ -87,12 +155,21 @@ export class BaseBlock {
   public static newBlock(
     blockSize: BlockSize,
     data: Buffer,
+    rawData: boolean,
+    encrypted: boolean,
+    lengthBeforeEncryption: number,
     dateCreated?: Date,
     checksum?: ChecksumBuffer
   ): BaseBlock {
     const blockLength = blockSize as number;
-    if (data.length > blockLength) {
-      throw new Error('Data is too large for block size');
+    if (encrypted && data.length !== blockLength) {
+      throw new Error(
+        `Encrypted data length ${data.length} is not a valid block size`
+      );
+    } else if (!rawData && data.length > (blockLength - EthereumECIES.ecieOverheadLength)) {
+      throw new Error(
+        `Data length ${data.length} is too large for block size ${blockSize}`
+      );
     }
     // fill the buffer with zeros to the next block size
     const buffer = Buffer.alloc(blockLength);
@@ -102,7 +179,7 @@ export class BaseBlock {
     const fillLength = blockLength - data.length;
     const fillBuffer = randomBytes(fillLength);
     fillBuffer.copy(buffer, data.length);
-    const block = new BaseBlock(buffer, dateCreated, checksum);
+    const block = new BaseBlock(blockSize, buffer, rawData, encrypted, lengthBeforeEncryption, dateCreated, checksum);
     if (checksum && !block.validate()) {
       throw new Error('Checksum mismatch');
     }
