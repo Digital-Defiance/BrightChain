@@ -3,10 +3,11 @@ import { DiskBlockStore } from "./diskBlockStore";
 import { BlockSize } from "../enumerations/blockSizes";
 import { BlockHandle } from "../blocks/handle";
 import { ChecksumBuffer } from "../types";
-import { ChecksumTransform } from "../checksumTransform";
-import { XorTransform } from '../xorTransform';
+import { ChecksumTransform } from "../transforms/checksumTransform";
+import { XorTransform } from '../transforms/xorTransform';
 import { file } from 'tmp';
 import { BaseBlock } from "../blocks/base";
+import { BlockType } from "../enumerations/blockType";
 
 export class DiskBlockAsyncStore extends DiskBlockStore {
   constructor(storePath: string, blockSize: BlockSize) {
@@ -20,7 +21,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
     const blockHandle = new BlockHandle(key, this._blockSize, this.blockPath(key));
     return blockHandle;
   }
-  public getData(key: ChecksumBuffer): BaseBlock {
+  public getData(key: ChecksumBuffer, blockType: BlockType): BaseBlock {
     const blockPath = this.blockPath(key);
     const data = readFileSync(blockPath);
     if (data.length !== this._blockSize) {
@@ -28,7 +29,13 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
     }
     const statResults = statSync(blockPath);
     const dateCreated = statResults.ctime;
-    return new BaseBlock(data, dateCreated);
+    switch (blockType) {
+      case BlockType.RawData:
+      case BlockType.Random:
+        return new BaseBlock(this._blockSize, data, true, false, this._blockSize, dateCreated, key);
+      default:
+        throw new Error(`Invalid block type ${blockType}`);
+    }
   }
   public setData(block: BaseBlock) {
     if (block.blockSize !== this._blockSize) {

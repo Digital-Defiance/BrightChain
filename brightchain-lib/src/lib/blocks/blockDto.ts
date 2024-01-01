@@ -1,5 +1,5 @@
 import { IBasicDataObjectDTO } from '../interfaces/basicDataObjectDto';
-import { ChecksumString, HexString, ShortHexGuid } from '../types';
+import { ChecksumString, HexString } from '../types';
 
 export interface BlockDto extends IBasicDataObjectDTO {
   id: ChecksumString;

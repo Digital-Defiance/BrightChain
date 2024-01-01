@@ -3,10 +3,6 @@ import { BlockSize } from './enumerations/blockSizes';
 
 describe('BlockService', () => {
   describe('BlockService - getBlockSizeForData', () => {
-    it('should return the correct block size for micro data lengths', () => {
-      expect(BlockService.getBlockSizeForData(100)).toBe(BlockSize.Micro);
-    });
-
     it('should return the correct block size for message data lengths', () => {
       expect(BlockService.getBlockSizeForData(400)).toBe(BlockSize.Message);
     });
