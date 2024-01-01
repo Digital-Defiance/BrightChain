@@ -10,11 +10,6 @@ export const enum BlockSize {
   Unknown = 0,
 
   /// <summary>
-  /// Best for extremely small messages. 256b.
-  /// </summary>
-  Micro = 2 ** 8, // 256 (256b)
-
-  /// <summary>
   /// Message size, such as a small data blob, currently 512b.
   /// </summary>
   Message = 2 ** 9, // 512 (512b)
@@ -46,7 +41,6 @@ export const enum BlockSize {
 }
 
 export const validBlockSizes = [
-  BlockSize.Micro,
   BlockSize.Message,
   BlockSize.Tiny,
   BlockSize.Small,
@@ -56,7 +50,6 @@ export const validBlockSizes = [
 ];
 
 export const blockSizeLengths = [
-  256,
   512,
   1024,
   4096,
@@ -66,7 +59,6 @@ export const blockSizeLengths = [
 ];
 
 export const validBlockSizeStrings = [
-  'Micro',
   'Message',
   'Tiny',
   'Small',
@@ -74,6 +66,26 @@ export const validBlockSizeStrings = [
   'Large',
   'Huge',
 ];
+
+export const BlockSizeInfo: Map<BlockSize, { length: number, name: string }> = new Map<BlockSize, { length: number, name: string }>();
+for (let i = 0; i < validBlockSizes.length; i++) {
+  BlockSizeInfo.set(validBlockSizes[i], { length: blockSizeLengths[i], name: validBlockSizeStrings[i] });
+}
+export function blockSizeInfoBySize(blockSize: BlockSize): { length: number, name: string } {
+  const result = BlockSizeInfo.get(blockSize);
+  if (!result) {
+    throw new Error(`Invalid block size ${blockSize}`);
+  }
+  return result;
+}
+
+export function lengthToBlockSizeIndex(length: number): number {
+  const index = blockSizeLengths.indexOf(length);
+  if (index < 0) {
+    throw new Error(`Invalid block size length ${length}`);
+  }
+  return index;
+}
 
 export function lengthToBlockSize(length: number): BlockSize {
   const index = blockSizeLengths.indexOf(length);

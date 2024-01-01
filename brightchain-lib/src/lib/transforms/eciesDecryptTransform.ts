@@ -1,6 +1,6 @@
 import { Transform, TransformCallback, TransformOptions } from 'stream';
-import { EthereumECIES } from './ethereumECIES';
-import { BlockSize } from './enumerations/blockSizes';
+import { EthereumECIES } from '../ethereumECIES';
+import { BlockSize } from '../enumerations/blockSizes';
 
 export class EciesDecryptionTransform extends Transform {
   private readonly blockSize: number;

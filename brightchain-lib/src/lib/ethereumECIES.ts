@@ -25,7 +25,7 @@ export class EthereumECIES {
   public static readonly ivLength = 16;
   public static readonly signatureLength = 65;
   public static readonly publicKeyLength = 65;
-  public static readonly ecieOverheadLength = EthereumECIES.publicKeyLength + EthereumECIES.ivLength + EthereumECIES.authTagLength;
+  public static readonly ecieOverheadLength = EthereumECIES.publicKeyLength + EthereumECIES.ivLength + EthereumECIES.authTagLength; // 97 bytes
   /**
    * Mnemonic strength in bits. This will produce a 32-bit key for ECDSA.
    */

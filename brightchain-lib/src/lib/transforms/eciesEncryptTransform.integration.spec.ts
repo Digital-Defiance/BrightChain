@@ -1,6 +1,6 @@
 import { EciesEncryptionTransform } from "./eciesEncryptTransform";
-import { EthereumECIES } from "./ethereumECIES";
-import { BlockSize } from "./enumerations/blockSizes";
+import { EthereumECIES } from "../ethereumECIES";
+import { BlockSize } from "../enumerations/blockSizes";
 import { Readable } from "stream";
 import { randomBytes } from "crypto";
 

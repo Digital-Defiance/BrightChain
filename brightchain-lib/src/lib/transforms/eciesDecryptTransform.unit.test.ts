@@ -1,8 +1,8 @@
 import { EciesDecryptionTransform } from "./eciesDecryptTransform";
-import { EthereumECIES } from "./ethereumECIES";
-import { BlockSize } from "./enumerations/blockSizes";
+import { EthereumECIES } from "../ethereumECIES";
+import { BlockSize } from "../enumerations/blockSizes";
 
-jest.mock('./ethereumECIES');
+jest.mock('../ethereumECIES');
 
 describe('EciesDecryptionTransform Unit Tests', () => {
   const blockSize = BlockSize.Small;

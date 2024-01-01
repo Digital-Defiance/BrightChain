@@ -1,6 +1,6 @@
 import { Transform, TransformCallback } from "stream";
-import { EthereumECIES } from "./ethereumECIES";
-import { BlockSize } from "./enumerations/blockSizes";
+import { EthereumECIES } from "../ethereumECIES";
+import { BlockSize } from "../enumerations/blockSizes";
 import { randomBytes } from "crypto";
 
 /**

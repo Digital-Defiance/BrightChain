@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "dependencies": {
     "@faker-js/faker": "^8.3.1",
+    "@subspace/reed-solomon-erasure.wasm": "^0.2.5",
     "axios": "^1.6.2",
     "bip39": "^3.1.0",
     "bn.js": "^5.2.1",
@@ -26,6 +27,7 @@
   "typings": "./src/index.d.ts",
   "devDependencies": {
     "@types/elliptic": "^6.4.18",
+    "@types/tmp": "^0.2.6",
     "@types/uuid": "^9.0.7",
     "@types/validator": "^13.11.7"
   }

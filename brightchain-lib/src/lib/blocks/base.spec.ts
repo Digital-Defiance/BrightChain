@@ -5,6 +5,10 @@ import {
   BlockSize,
   validBlockSizes,
 } from '../enumerations/blockSizes';
+import { BrightChainMember } from '../brightChainMember';
+import MemberType from '../enumerations/memberType';
+import { EmailString } from '../emailString';
+import { EthereumECIES } from '../ethereumECIES';
 
 function randomBlockSize(not?: BlockSize): BlockSize {
   // TODO: determine deadlock/speed issues?
@@ -21,6 +25,7 @@ function randomBlockSize(not?: BlockSize): BlockSize {
 
 describe('block', () => {
   const testBlockSizes: BlockSize[] = [
+    BlockSize.Message,
     BlockSize.Tiny,
     BlockSize.Small,
     BlockSize.Medium,
@@ -30,7 +35,7 @@ describe('block', () => {
     const data = randomBytes(blockLength);
     const checksum = StaticHelpersChecksum.calculateChecksum(data);
     const dateCreated = new Date();
-    const block = new BaseBlock(data, dateCreated, checksum);
+    const block = new BaseBlock(blockSize, data, true, false, data.length, dateCreated, checksum);
     describe(`with block size ${blockSize}`, () => {
       it('should create a block', () => {
         expect(block).toBeTruthy();
@@ -70,7 +75,7 @@ describe('block', () => {
         const badChecksum = StaticHelpersChecksum.calculateChecksum(
           Buffer.from(badData)
         );
-        const badBlock = new BaseBlock(data, dateCreated, badChecksum);
+        const badBlock = new BaseBlock(blockSize, data, true, false, blockLength, dateCreated, badChecksum);
         expect(badBlock.validate()).toBeFalsy();
         expect(badBlock.validated).toBeFalsy();
       });
@@ -78,18 +83,18 @@ describe('block', () => {
       it('should throw when making a block of a bad size', () => {
         const longData = Buffer.alloc((blockSize as number) + 1);
         longData.fill(0);
-        expect(() => new BaseBlock(longData, dateCreated)).toThrow(
-          `Data length ${longData.length} is not a valid block size`
+        expect(() => new BaseBlock(blockSize, longData, true, false, longData.length, dateCreated)).toThrow(
+          `Raw data length ${longData.length} is not valid for block size ${blockSize}`
         );
       });
       it('should make dateCreated value when not provided', () => {
-        const newBlock = new BaseBlock(data, undefined, checksum);
+        const newBlock = new BaseBlock(blockSize, data, true, false, blockLength, undefined, checksum);
         expect(newBlock.dateCreated).toBeTruthy();
         expect(newBlock.dateCreated).toBeInstanceOf(Date);
       });
       it('should xor with same block sizes', () => {
-        const blockA = new BaseBlock(data, new Date());
-        const blockB = new BaseBlock(randomBytes(blockLength), new Date());
+        const blockA = new BaseBlock(blockSize, data, true, false, blockLength, new Date());
+        const blockB = new BaseBlock(blockSize, randomBytes(blockLength), true, false, blockLength, new Date());
         const blockC = blockA.xor(blockB);
         const expectedData = Buffer.alloc(blockLength);
         for (let i = 0; i < blockLength; i++) {
@@ -102,7 +107,7 @@ describe('block', () => {
       });
       it('should maintain data integrity after XOR operation', () => {
         const originalDataB = randomBytes(blockLength);
-        const blockB = new BaseBlock(originalDataB, new Date());
+        const blockB = new BaseBlock(blockSize, originalDataB, true, false, blockLength, new Date());
         const blockC = block.xor(blockB);
         // block C xor with block A should equal block B
         const blockD = blockC.xor(block);
@@ -118,13 +123,25 @@ describe('block', () => {
         expect(blockE.data).toEqual(data);
         expect(blockE.validated).toBeTruthy();
       });
+      it('should encrypt and decrypt a block', () => {
+        const brightChainMember = BrightChainMember.newMember(MemberType.System, 'test', new EmailString('test@example.com'));
+        const dataLength = blockLength - EthereumECIES.ecieOverheadLength;
+        const encryptableBlock = new BaseBlock(blockSize, data.subarray(0, dataLength), false, false, dataLength);
+        const encryptedBlock = encryptableBlock.encrypt(brightChainMember);
+        expect(encryptedBlock.encrypted).toBeTruthy();
+        expect(encryptedBlock.validated).toBeTruthy();
+        const decryptedBlock = encryptedBlock.decrypt(brightChainMember);
+        expect(decryptedBlock.encrypted).toBeFalsy();
+        expect(decryptedBlock.validated).toBeTruthy();
+        expect(decryptedBlock.data).toStrictEqual(encryptableBlock.data);
+      });
     });
   });
   it('should throw when making an empty block', () => {
     const data = Buffer.alloc(0);
     const dateCreated = new Date();
-    expect(() => new BaseBlock(data, dateCreated)).toThrow(
-      `Data length ${data.length} is not a valid block size`
+    expect(() => new BaseBlock(BlockSize.Tiny, data, true, false, 0, dateCreated)).toThrow(
+      `Raw data length ${data.length} is not valid for block size ${BlockSize.Tiny as number}`
     );
   });
   it('should not xor with different block sizes', async () => {
@@ -134,15 +151,15 @@ describe('block', () => {
     blockBytesA.fill(0);
     const blockBytesB = Buffer.alloc(blockSizeB as number);
     blockBytesB.fill(0);
-    const blockA = new BaseBlock(blockBytesA, new Date());
-    const blockB = new BaseBlock(blockBytesB, new Date());
+    const blockA = new BaseBlock(blockSizeA, blockBytesA, true, false, blockSizeA as number, new Date());
+    const blockB = new BaseBlock(blockSizeB, blockBytesB, true, false, blockSizeB as number, new Date());
     expect(() => blockA.xor(blockB)).toThrow('Block sizes do not match');
   });
   it('should be validated when created with newBlock and no checksum', () => {
     const blockSize = randomBlockSize();
     const blockLength = blockSize as number;
     const blockData = randomBytes(blockLength);
-    const block = BaseBlock.newBlock(blockSize, blockData);
+    const block = BaseBlock.newBlock(blockSize, blockData, true, false, blockLength);
     expect(block.validated).toBeTruthy();
   });
   it('should be validated when created with newBlock and a checksum', () => {
@@ -150,7 +167,7 @@ describe('block', () => {
     const blockLength = blockSize as number;
     const blockData = randomBytes(blockLength);
     const blockChecksum = StaticHelpersChecksum.calculateChecksum(blockData);
-    const block = BaseBlock.newBlock(blockSize, blockData, new Date(), blockChecksum);
+    const block = BaseBlock.newBlock(blockSize, blockData, true, false, blockLength, new Date(), blockChecksum);
     expect(block.validated).toBeTruthy();
   });
   it('should throw when created with newBlock and a bad checksum', () => {
@@ -162,7 +179,7 @@ describe('block', () => {
     const badChecksum =
       StaticHelpersChecksum.calculateChecksum(badChecksumData);
     badChecksum[0] = 0;
-    expect(() => BaseBlock.newBlock(blockSize, blockData, new Date(), badChecksum)).toThrow(
+    expect(() => BaseBlock.newBlock(blockSize, blockData, true, false, blockLength, new Date(), badChecksum)).toThrow(
       'Checksum mismatch'
     );
   });
