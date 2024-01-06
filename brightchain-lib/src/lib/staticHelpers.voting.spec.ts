@@ -1,6 +1,7 @@
 import { generateRandomKeysSync } from 'paillier-bigint';
 import { StaticHelpersVoting } from './staticHelpers.voting';
 import { EthereumECIES } from './ethereumECIES';
+import { randomBytes } from 'crypto';
 describe('staticHelpers.voting', () => {
   const mnemonic = EthereumECIES.generateNewMnemonic();
   const { wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
@@ -24,6 +25,24 @@ describe('staticHelpers.voting', () => {
       const votingPublicKey = StaticHelpersVoting.bufferToVotingPublicKey(votingPublicKeyBuffer);
       expect(votingPublicKey.n).toEqual(votingKeypair.publicKey.n);
       expect(votingPublicKey.g).toEqual(votingKeypair.publicKey.g);
+    });
+  });
+  describe('general functionality', () => {
+    it('should be able to decrypt with a recovered keypair', () => {
+      // ensure that a recovered keypair can be used to encrypt and decrypt data
+      // pick a random bigint
+      const data = randomBytes(32);
+      const dataBigInt = BigInt('0x' + data.toString('hex'));
+      const encrypted = votingKeypair.publicKey.encrypt(dataBigInt);
+      const votingPublicKeyBuffer = StaticHelpersVoting.votingPublicKeyToBuffer(votingKeypair.publicKey);
+      const encryptedPrivateKey = StaticHelpersVoting.keyPairToEncryptedPrivateKey(votingKeypair, keyPair.publicKey);
+      const recoveredPublicKey = StaticHelpersVoting.bufferToVotingPublicKey(votingPublicKeyBuffer);
+      const recoveredKeyPair = {
+        publicKey: recoveredPublicKey,
+        privateKey: StaticHelpersVoting.encryptedPrivateKeyToKeyPair(encryptedPrivateKey, keyPair.privateKey, recoveredPublicKey)
+      };
+      const decrypted = recoveredKeyPair.privateKey.decrypt(encrypted);
+      expect(decrypted).toEqual(dataBigInt);
     });
   });
 });
