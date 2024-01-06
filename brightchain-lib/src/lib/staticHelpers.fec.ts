@@ -14,7 +14,7 @@ export class StaticHelpersFec {
      * @param parityShards The number of parity shards.
      * @param fecOnly If true, only the parity shards will be returned.
      */
-    public async fecEncode(data: Buffer, shardSize: number, dataShards: number, parityShards: number, fecOnly: boolean): Promise<Buffer> {
+    public static async fecEncode(data: Buffer, shardSize: number, dataShards: number, parityShards: number, fecOnly: boolean): Promise<Buffer> {
         if (data.length !== shardSize * dataShards) {
             throw new Error("Invalid data length");
         }
@@ -42,7 +42,7 @@ export class StaticHelpersFec {
      * @param shardsAvailable An array of booleans indicating which shards are available.
      * @returns 
      */
-    public async fecDecode(data: Buffer, shardSize: number, dataShards: number, parityShards: number, shardsAvailable: boolean[]): Promise<Buffer> {
+    public static async fecDecode(data: Buffer, shardSize: number, dataShards: number, parityShards: number, shardsAvailable: boolean[]): Promise<Buffer> {
         if (data.length !== shardSize * (dataShards + parityShards)) {
             throw new Error("Invalid data length");
         }
@@ -57,7 +57,7 @@ export class StaticHelpersFec {
      * @param parityBlocks The number of parity blocks to produce.
      * @returns The parity blocks.
      */
-    public async createParityBlocks(input: BaseBlock, parityBlocks: number): Promise<ParityBlock[]> {
+    public static async createParityBlocks(input: BaseBlock, parityBlocks: number): Promise<ParityBlock[]> {
         const shardSize = input.blockSize > StaticHelpersFec.MaximumShardSize ? StaticHelpersFec.MaximumShardSize : input.blockSize;
         const requiredShards = Math.ceil(input.blockSize / shardSize);
         // work on the input data in chunks of up to 1MB (the maximum size of a shard)
@@ -71,7 +71,7 @@ export class StaticHelpersFec {
         // for each of the required shards, produce N parity shards, aggregate them together by block
         for (let i = 0; i < requiredShards; i++) {
             const chunk = input.data.subarray(i * shardSize, (i + 1) * shardSize);
-            const chunkParity = await this.fecEncode(chunk, shardSize, 1, parityBlocks, true);
+            const chunkParity = await StaticHelpersFec.fecEncode(chunk, shardSize, 1, parityBlocks, true);
             for (let j=0; j<parityBlocks; j++) {
                 const parityChunk = chunkParity.subarray(j * shardSize, (j + 1) * shardSize);
                 resultParityBlocks[j] = Buffer.concat([resultParityBlocks[j], parityChunk]);
@@ -86,7 +86,7 @@ export class StaticHelpersFec {
         }
         return result;
     }
-    public async recoverDataBlocks(damagedBlock: BaseBlock, parityBlocks: ParityBlock[]): Promise<BaseBlock> {
+    public static async recoverDataBlocks(damagedBlock: BaseBlock, parityBlocks: ParityBlock[]): Promise<BaseBlock> {
         const shardSize = damagedBlock.blockSize > StaticHelpersFec.MaximumShardSize ? StaticHelpersFec.MaximumShardSize : damagedBlock.blockSize;
         const requiredShards = Math.ceil(damagedBlock.blockSize / shardSize);
         // divide the damaged block into shards
@@ -102,7 +102,7 @@ export class StaticHelpersFec {
             for (let j=0; j<parityBlocks.length; j++) {
                 damagedShard = Buffer.concat([damagedShard, parityBlocks[j].data.subarray(i * shardSize, (i + 1) * shardSize)]);
             }
-            const recoveredShard = await this.fecDecode(damagedShard, shardSize, 1, parityBlocks.length, availableShards);
+            const recoveredShard = await StaticHelpersFec.fecDecode(damagedShard, shardSize, 1, parityBlocks.length, availableShards);
             recoveredBlock = Buffer.concat([recoveredBlock, recoveredShard]);
         }
         if (recoveredBlock.length !== damagedBlock.blockSize) {

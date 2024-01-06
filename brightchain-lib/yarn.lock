@@ -211,6 +211,11 @@ base-x@^3.0.2:
   dependencies:
     safe-buffer "^5.0.1"
 
+bigint-crypto-utils@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/bigint-crypto-utils/-/bigint-crypto-utils-3.3.0.tgz#72ad00ae91062cf07f2b1def9594006c279c1d77"
+  integrity sha512-jOTSb+drvEDxEq6OuUybOAv/xxoh3cuYRUIPyu8sSHQNKM303UQ2R1DAo45o1AkcIXw6fzbaFI1+xGGdaXs2lg==
+
 bip39@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/bip39/-/bip39-3.1.0.tgz#c55a418deaf48826a6ceb34ac55b3ee1577e18a3"
@@ -946,6 +951,13 @@ p-map@^4.0.0:
   integrity sha512-/bjOqmgETBYB5BoEeGVea8dmvHb2m9GLy1E9W43yeyfP6QQCZGFNa+XRceJEuDB6zqr+gKpIAmlLebMpykw/MQ==
   dependencies:
     aggregate-error "^3.0.0"
+
+paillier-bigint@^3.4.3:
+  version "3.4.3"
+  resolved "https://registry.yarnpkg.com/paillier-bigint/-/paillier-bigint-3.4.3.tgz#6de37d6a334540298aeff633a9a5268b32ec7bb6"
+  integrity sha512-82otV7H/gBiQeYjsmc/Zo029GoJDnAFyoMWQMsUgfya50W8dYRVgvUR/lHO0yrS7MfMwgE8fCeEIBF0IucLYFw==
+  dependencies:
+    bigint-crypto-utils "^3.3.0"
 
 path-is-absolute@^1.0.0:
   version "1.0.1"

@@ -1,4 +1,5 @@
 import { randomBytes } from 'crypto';
+import { generateRandomKeysSync, KeyPair as PaillierKeyPair } from 'paillier-bigint';
 import { MemberType } from './enumerations/memberType';
 import { GuidV4 } from './guid';
 import { EmailString } from './emailString';
@@ -6,6 +7,7 @@ import { IMemberDTO } from './interfaces/memberDto';
 import { EthereumECIES } from './ethereumECIES';
 import Wallet from 'ethereumjs-wallet';
 import { ShortHexGuid, SignatureBuffer } from './types';
+import { StaticHelpersVoting } from './staticHelpers.voting';
 /**
  * A member of Brightchain.
  * @param id The unique identifier for this member.
@@ -15,6 +17,8 @@ export class BrightChainMember {
   public readonly publicKey: Buffer;
   private _wallet: Wallet | undefined;
   private _privateKey: Buffer | undefined;
+  public readonly votingPublicKey: Buffer;
+  public readonly encryptedVotingPrivateKey: Buffer;
   public readonly id: GuidV4;
   public readonly memberType: MemberType;
   public readonly name: string;
@@ -26,6 +30,8 @@ export class BrightChainMember {
     memberType: MemberType,
     name: string,
     contactEmail: EmailString,
+    votingPublicKey: Buffer,
+    encryptedVotingPrivateKey: Buffer,
     publicKey: Buffer,
     privateKey?: Buffer,
     wallet?: Wallet,
@@ -50,6 +56,8 @@ export class BrightChainMember {
     this.contactEmail = contactEmail;
 
     this.publicKey = publicKey;
+    this.votingPublicKey = votingPublicKey;
+    this.encryptedVotingPrivateKey = encryptedVotingPrivateKey;
     this._privateKey = privateKey;
     this._wallet = wallet;
 
@@ -142,6 +150,13 @@ export class BrightChainMember {
   public verify(signature: SignatureBuffer, data: Buffer): boolean {
     return EthereumECIES.verifyMessage(this.publicKey, data, signature);
   }
+  public get votingKeyPair(): PaillierKeyPair {
+    const votingPublicKey = StaticHelpersVoting.bufferToVotingPublicKey(this.votingPublicKey);
+    return {
+      publicKey: votingPublicKey,
+      privateKey: StaticHelpersVoting.encryptedPrivateKeyToKeyPair(this.encryptedVotingPrivateKey, this.privateKey, votingPublicKey)
+    };
+  }
 
   /**
    * Create a new member and generate its keys
@@ -160,10 +175,13 @@ export class BrightChainMember {
     const mnemonic = EthereumECIES.generateNewMnemonic();
     const { wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
     const keyPair = EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
+    const votingKeypair = generateRandomKeysSync(StaticHelpersVoting.votingKeyPairBitLength);
     return new BrightChainMember(
       memberType,
       name,
       contactEmail,
+      StaticHelpersVoting.votingPublicKeyToBuffer(votingKeypair.publicKey),
+      StaticHelpersVoting.keyPairToEncryptedPrivateKey(votingKeypair, keyPair.publicKey),
       keyPair.publicKey,
       keyPair.privateKey,
       wallet,
@@ -200,6 +218,8 @@ export class BrightChainMember {
       type: this.memberType,
       name: this.name,
       contactEmail: this.contactEmail.toJSON(),
+      votingPublicKey: this.votingPublicKey.toString('hex'),
+      encryptedVotingPrivateKey: this.encryptedVotingPrivateKey.toString('hex'),
       publicKey: this.publicKey.toString('hex'),
       createdBy: this.creatorId.asShortHexGuid as string,
       dateCreated: this.dateCreated,
@@ -217,6 +237,8 @@ export class BrightChainMember {
       parsedMember.type,
       parsedMember.name,
       contactEmail,
+      Buffer.from(parsedMember.votingPublicKey, 'hex'),
+      Buffer.from(parsedMember.encryptedVotingPrivateKey, 'hex'),
       Buffer.from(parsedMember.publicKey, 'hex'),
       undefined,
       undefined,

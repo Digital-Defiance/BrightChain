@@ -7,6 +7,8 @@ export interface IMemberDTO extends IBasicObjectDTO {
   type: MemberType;
   name: string;
   contactEmail: string;
+  votingPublicKey: string;
+  encryptedVotingPrivateKey: string;
   publicKey: string;
   createdBy: string;
   dateCreated: Date;
