@@ -2,6 +2,7 @@ import { KeyPair as PaillierKeyPair } from 'paillier-bigint';
 import { SimpleKeyPairBuffer as ECKeyPairBuffer, SignatureBuffer } from '../types';
 import { createHash, randomBytes } from 'crypto';
 import { EthereumECIES } from '../ethereumECIES';
+import { BrightChainMember } from '../brightChainMember';
 export class VotingPoll {
   public readonly options: string[];
   public readonly votes: bigint[];
@@ -14,13 +15,14 @@ export class VotingPoll {
     this.ecKeyPair = ecKeyPair;
     this.votes = votes;
   }
-  public generateReceipt(): Buffer {
+  public generateEncryptedReceipt(member: BrightChainMember): Buffer {
     const randomNonce = randomBytes(16).toString('hex');
-    const hash = Buffer.from(createHash('sha256').update(`${Date.now()}-${randomNonce}`).digest('hex'), 'hex');
+    const hash = Buffer.from(createHash('sha256').update(`${Date.now()}-${randomNonce}-${member.id.asShortHexGuid}`).digest('hex'), 'hex');
     const signature = EthereumECIES.signMessage(this.ecKeyPair.privateKey, hash);
     const receipt = Buffer.concat([hash, signature]);
     this.receipts.add(receipt);
-    return receipt;
+    const encryptedReceipt = EthereumECIES.encrypt(member.publicKey, receipt);
+    return encryptedReceipt;
   }
   public verifyReceipt(receipt: Buffer): boolean {
     if (this.receipts.has(receipt)) {
@@ -34,7 +36,7 @@ export class VotingPoll {
     }
     return verified;
   }
-  public vote(optionIndex: number): Buffer {
+  public vote(optionIndex: number, member: BrightChainMember): Buffer {
     if (optionIndex < 0 || optionIndex >= this.options.length) {
       throw new Error(`Invalid option index ${optionIndex}`);
     }
@@ -46,7 +48,7 @@ export class VotingPoll {
         this.votes[i] = this.paillierKeyPair.publicKey.addition(this.votes[i], this.paillierKeyPair.publicKey.encrypt(0n));
       }
     }
-    return this.generateReceipt();
+    return this.generateEncryptedReceipt(member);
   }
   public get tallies(): bigint[] {
     return this.votes.map(encryptedVote => this.paillierKeyPair.privateKey.decrypt(encryptedVote));
