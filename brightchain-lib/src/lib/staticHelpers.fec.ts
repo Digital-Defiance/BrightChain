@@ -1,6 +1,7 @@
 import { ReedSolomonErasure } from "@subspace/reed-solomon-erasure.wasm";
 import { BlockSize } from "./enumerations/blockSizes";
 import { BaseBlock } from "./blocks/base";
+import { ParityBlock } from "./blocks/parity";
 
 export class StaticHelpersFec {
     public static MaximumShardSize = BlockSize.Medium as number;
@@ -56,7 +57,7 @@ export class StaticHelpersFec {
      * @param parityBlocks The number of parity blocks to produce.
      * @returns The parity blocks.
      */
-    public async createParityBlocks(input: BaseBlock, parityBlocks: number): Promise<BaseBlock[]> {
+    public async createParityBlocks(input: BaseBlock, parityBlocks: number): Promise<ParityBlock[]> {
         const shardSize = input.blockSize > StaticHelpersFec.MaximumShardSize ? StaticHelpersFec.MaximumShardSize : input.blockSize;
         const requiredShards = Math.ceil(input.blockSize / shardSize);
         // work on the input data in chunks of up to 1MB (the maximum size of a shard)
@@ -76,16 +77,16 @@ export class StaticHelpersFec {
                 resultParityBlocks[j] = Buffer.concat([resultParityBlocks[j], parityChunk]);
             }
         }
-        const result: BaseBlock[] = [];
+        const result: ParityBlock[] = [];
         for (let i = 0; i < parityBlocks; i++) {
             if (resultParityBlocks[i].length !== input.blockSize) {
                 throw new Error(`Invalid parity block size ${resultParityBlocks[i].length} for block size ${input.blockSize}`);
             }
-            result.push(new BaseBlock(input.blockSize, resultParityBlocks[i], true, false, input.blockSize));
+            result.push(new ParityBlock(input.blockSize, resultParityBlocks[i]));
         }
         return result;
     }
-    public async recoverDataBlocks(damagedBlock: BaseBlock, parityBlocks: BaseBlock[]): Promise<BaseBlock> {
+    public async recoverDataBlocks(damagedBlock: BaseBlock, parityBlocks: ParityBlock[]): Promise<BaseBlock> {
         const shardSize = damagedBlock.blockSize > StaticHelpersFec.MaximumShardSize ? StaticHelpersFec.MaximumShardSize : damagedBlock.blockSize;
         const requiredShards = Math.ceil(damagedBlock.blockSize / shardSize);
         // divide the damaged block into shards
