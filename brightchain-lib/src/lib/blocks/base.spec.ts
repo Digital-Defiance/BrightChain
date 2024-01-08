@@ -127,7 +127,7 @@ describe('block', () => {
       it('should encrypt and decrypt a block', () => {
         const brightChainMember = BrightChainMember.newMember(MemberType.System, 'test', new EmailString('test@example.com'));
         const dataLength = blockLength - EthereumECIES.ecieOverheadLength;
-        const encryptableBlock = new BaseBlock(blockSize, data.subarray(0, dataLength), BlockDataType.RawData, dataLength);
+        const encryptableBlock = new BaseBlock(blockSize, data.subarray(0, dataLength), BlockDataType.EphemeralStructuredData, dataLength);
         const encryptedBlock = encryptableBlock.encrypt(brightChainMember);
         expect(encryptedBlock.encrypted).toBeTruthy();
         expect(encryptedBlock.validated).toBeTruthy();
