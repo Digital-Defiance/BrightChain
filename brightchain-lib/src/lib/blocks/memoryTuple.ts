@@ -17,7 +17,7 @@ export class InMemoryBlockTuple {
     public xor<T extends BaseBlock>(): T {
         let block: BaseBlock = this.blocks[0];
         for (let i = 1; i < this.blocks.length; i++) {
-            block = block.xor(this.blocks[i]);
+            block = block.xor<T>(this.blocks[i]);
         }
         return block as T;
     }

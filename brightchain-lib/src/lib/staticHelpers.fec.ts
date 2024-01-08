@@ -2,6 +2,7 @@ import { ReedSolomonErasure } from "@subspace/reed-solomon-erasure.wasm";
 import { BlockSize } from "./enumerations/blockSizes";
 import { BaseBlock } from "./blocks/base";
 import { ParityBlock } from "./blocks/parity";
+import { BlockDataType } from "./enumerations/blockDataType";
 
 export class StaticHelpersFec {
     public static MaximumShardSize = BlockSize.Medium as number;
@@ -108,6 +109,6 @@ export class StaticHelpersFec {
         if (recoveredBlock.length !== damagedBlock.blockSize) {
             throw new Error(`Invalid recovered block size ${recoveredBlock.length} for block size ${damagedBlock.blockSize}`);
         }
-        return new BaseBlock(damagedBlock.blockSize, recoveredBlock, true, false, damagedBlock.blockSize);
+        return new BaseBlock(damagedBlock.blockSize, recoveredBlock, BlockDataType.RawData, damagedBlock.blockSize);
     }
 }   
