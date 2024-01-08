@@ -37,10 +37,10 @@ describe('blockSizes', () => {
     expect(lengthToBlockSize(67108864)).toBe(BlockSize.Large);
     expect(lengthToBlockSize(268435456)).toBe(BlockSize.Huge);
     //expect non-matching sizes to be unknown
-    expect(lengthToBlockSize(0)).toBe(BlockSize.Unknown);
-    expect(lengthToBlockSize(1)).toBe(BlockSize.Unknown);
-    expect(lengthToBlockSize(67108863)).toBe(BlockSize.Unknown);
-    expect(lengthToBlockSize(268435455)).toBe(BlockSize.Unknown);
+    expect(() => lengthToBlockSize(0)).toThrow();
+    expect(() => lengthToBlockSize(1)).toThrow();;
+    expect(() => lengthToBlockSize(67108863)).toThrow();
+    expect(() => lengthToBlockSize(268435455)).toThrow();
   });
   it('should test validateBlockSize', () => {
     expect(validateBlockSize(BlockSize.Message)).toBe(true);
