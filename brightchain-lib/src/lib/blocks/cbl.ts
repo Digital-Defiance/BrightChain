@@ -16,6 +16,7 @@ import { BlockHandleTuple } from './handleTuple';
 import { BlockHandle } from './handle';
 import { BrightChainMember } from '../brightChainMember';
 import { EncryptedConstituentBlockListBlock } from './encryptedCbl';
+import { BaseBlock } from './base';
 
 /**
  * Constituent Block List
@@ -152,6 +153,15 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     if (cblAddressCount * StaticHelpersChecksum.Sha3ChecksumBufferLength > cblBlockMaxIDCountsForBlockSize) {
       throw new Error('CBL address count is larger than the max for the block size');
     }
+    if (cblAddressCount < 0) {
+      throw new Error('CBL address count must be positive');
+    }
+    if (originalDataLength < 0 || originalDataLength > ConstituentBlockListBlock.maxFileSizesWithCBL[blockSizeIndex]) {
+      throw new Error('Original data length is out of range');
+    }
+    if (tupleSize < 2 || tupleSize > 15) {
+      throw new Error('Tuple size is out of range');
+    }
     return {
       creatorId,
       creatorSignature,
@@ -194,7 +204,20 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
       throw new Error('CBL address count must be a multiple of TupleSize');
     }
   }
-
+  public static fromBlock(block: BaseBlock): ConstituentBlockListBlock {
+    const cblHeader = ConstituentBlockListBlock.readCBLHeader(block.data, block.blockSize);
+    const cblBlock = new ConstituentBlockListBlock(
+      block.blockSize,
+      cblHeader.creatorId.asRawGuidBuffer,
+      cblHeader.creatorSignature,
+      cblHeader.originalDataLength,
+      cblHeader.cblAddressCount,
+      block.data,
+      cblHeader.dateCreated,
+      cblHeader.tupleSize
+    );
+    return cblBlock;
+  }
   public validateSignature(creator: BrightChainMember): boolean {
     const checksum = StaticHelpersChecksum.calculateChecksum(this.getCblBlockIdData());
     return creator.verify(this.creatorSignature, checksum);
