@@ -88,10 +88,7 @@ export function lengthToBlockSizeIndex(length: number): number {
 }
 
 export function lengthToBlockSize(length: number): BlockSize {
-  const index = blockSizeLengths.indexOf(length);
-  if (index < 0) {
-    return BlockSize.Unknown;
-  }
+  const index = lengthToBlockSizeIndex(length);
   return validBlockSizes[index];
 }
 
