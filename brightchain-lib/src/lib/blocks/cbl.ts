@@ -17,6 +17,7 @@ import { BlockHandle } from './handle';
 import { BrightChainMember } from '../brightChainMember';
 import { EncryptedConstituentBlockListBlock } from './encryptedCbl';
 import { BaseBlock } from './base';
+import { BlockDataType } from '../enumerations/blockDataType';
 
 /**
  * Constituent Block List
@@ -24,6 +25,7 @@ import { BaseBlock } from './base';
  */
 export class ConstituentBlockListBlock extends EphemeralBlock {
   public static readonly CblHeaderSize = 102;
+  public static readonly CblHeaderSizeWithoutSignature = ConstituentBlockListBlock.CblHeaderSize - EthereumECIES.signatureLength;
   public override readonly blockType = BlockType.ConstituentBlockList;
   public readonly creatorId: RawGuidBuffer;
   public readonly creatorSignature: SignatureBuffer;
@@ -47,7 +49,7 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     const offset = ConstituentBlockListBlock.CblHeaderSize;
     const cblBlockIdData = this.data.subarray(
       offset,
-      offset + StaticHelpersChecksum.Sha3ChecksumBufferLength * this.cblAddressCount
+      offset + (StaticHelpersChecksum.Sha3ChecksumBufferLength * this.cblAddressCount)
     );
     return cblBlockIdData;
   }
@@ -75,21 +77,13 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     const encrypted = super.encrypt(creator);
     return encrypted as EncryptedConstituentBlockListBlock;
   }
-  public static makeCblHeader(
-    creatorId: RawGuidBuffer,
-    creatorSignature: SignatureBuffer,
+  public static makeCblHeaderAndSign(
+    creator: BrightChainMember,
     dateCreated: Date,
     cblAddressCount: number,
-    originalEncryptedDataLength: bigint
+    originalEncryptedDataLength: bigint,
+    addressList: Buffer,
   ): Buffer {
-    if (
-      creatorId.length !== GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer)
-    ) {
-      throw new Error('Creator ID must be a raw guid buffer');
-    }
-    if (creatorSignature.length != EthereumECIES.signatureLength) {
-      throw new Error('Creator signature must be a valid signature');
-    }
     if (cblAddressCount % TupleSize !== 0) {
       throw new Error('CBL address count must be a multiple of TupleSize');
     }
@@ -102,17 +96,20 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     const tupleSizeBuffer = Buffer.alloc(1);
     tupleSizeBuffer.writeUInt8(TupleSize);
     const header = Buffer.concat([
-      creatorId, // 16 bytes
-      creatorSignature, // 65 bytes
+      creator.id.asRawGuidBuffer, // 16 bytes
       dateCreatedBuffer, // 8 bytes
       cblAddressCountBuffer, // 4 bytes
       originalDataLengthBuffer, // 8 bytes
       tupleSizeBuffer, // 1 byte
+      //creatorSignature, // 65 bytes
     ]); // 102 bytes
-    if (header.length != ConstituentBlockListBlock.CblHeaderSize) {
+    if (header.length != ConstituentBlockListBlock.CblHeaderSizeWithoutSignature) {
       throw new Error('Header length is incorrect');
     }
-    return header;
+    const toSign = Buffer.concat([header, addressList]);
+    const checksum = StaticHelpersChecksum.calculateChecksum(toSign);
+    const creatorSignature = creator.sign(checksum);
+    return Buffer.concat([header, creatorSignature]);
   }
   public static readCBLHeader(data: Buffer, blockSize: BlockSize): {
     creatorId: GuidV4;
@@ -127,11 +124,6 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     const creatorIdBuffer = data.subarray(offset, creatorLength) as RawGuidBuffer;
     const creatorId = new GuidV4(creatorIdBuffer);
     offset += creatorLength;
-    const creatorSignature = data.subarray(
-      offset,
-      offset + EthereumECIES.signatureLength
-    ) as SignatureBuffer;
-    offset += EthereumECIES.signatureLength;
     const dateCreated = new Date(Number(data.readBigInt64BE(offset)));
     // if date created is not in the past, error
     if (dateCreated > new Date()) {
@@ -144,6 +136,11 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     offset += 8;
     const tupleSize = data.readUInt8(offset);
     offset += 1;
+    const creatorSignature = data.subarray(
+      offset,
+      offset + EthereumECIES.signatureLength
+    ) as SignatureBuffer;
+    offset += EthereumECIES.signatureLength;
     if (cblAddressCount % tupleSize !== 0) {
       throw new Error('CBL address count must be a multiple of TupleSize');
     }
@@ -184,6 +181,12 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     );
     return cblBlock;
   }
+  public static fromBaseBlock(block: BaseBlock): ConstituentBlockListBlock {
+    if (block.encrypted) {
+      throw new Error('Cannot create CBL from encrypted block');
+    }
+    return ConstituentBlockListBlock.newFromPlaintextBuffer(block.data, block.blockSize);
+  }
   constructor(
     blockSize: BlockSize,
     creatorId: RawGuidBuffer,
@@ -194,7 +197,7 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     dateCreated?: Date,
     tupleSize?: number,
   ) {
-    super(blockSize, data, false, false, ConstituentBlockListBlock.CblHeaderSize + (cblAddressCount * StaticHelpersChecksum.Sha3ChecksumBufferLength), dateCreated);
+    super(blockSize, data, BlockDataType.EphemeralStructuredData, ConstituentBlockListBlock.CblHeaderSize + (cblAddressCount * StaticHelpersChecksum.Sha3ChecksumBufferLength), dateCreated);
     this.creatorId = creatorId;
     this.creatorSignature = creatorSignature;
     this.originalDataLength = originalDataLength;
@@ -204,22 +207,9 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
       throw new Error('CBL address count must be a multiple of TupleSize');
     }
   }
-  public static fromBlock(block: BaseBlock): ConstituentBlockListBlock {
-    const cblHeader = ConstituentBlockListBlock.readCBLHeader(block.data, block.blockSize);
-    const cblBlock = new ConstituentBlockListBlock(
-      block.blockSize,
-      cblHeader.creatorId.asRawGuidBuffer,
-      cblHeader.creatorSignature,
-      cblHeader.originalDataLength,
-      cblHeader.cblAddressCount,
-      block.data,
-      cblHeader.dateCreated,
-      cblHeader.tupleSize
-    );
-    return cblBlock;
-  }
   public validateSignature(creator: BrightChainMember): boolean {
-    const checksum = StaticHelpersChecksum.calculateChecksum(this.getCblBlockIdData());
+    const headerMinusSignature = this.data.subarray(0, ConstituentBlockListBlock.CblHeaderSizeWithoutSignature);
+    const checksum = StaticHelpersChecksum.calculateChecksum(Buffer.concat([headerMinusSignature, this.getCblBlockIdData()]));
     return creator.verify(this.creatorSignature, checksum);
   }
 

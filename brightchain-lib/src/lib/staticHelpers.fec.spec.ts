@@ -2,6 +2,7 @@ import { randomBytes } from "crypto";
 import { StaticHelpersFec } from "./staticHelpers.fec";
 import { BlockSize } from "./enumerations/blockSizes";
 import { BaseBlock } from "./blocks/base";
+import { BlockDataType } from "./enumerations/blockDataType";
 
 function buildAvailableBlocks(dataBlocks: number, parityBlocks: number): boolean[] {
     const availableBlocks: boolean[] = [];
@@ -40,7 +41,7 @@ describe('staticHelpers.fec', () => {
             it(`should produce parity blocks that can be used to recover from errors with size ${blockSize} and ${parityBlockCount} parity blocks`, async () => {
                 const input = randomBytes(blockSize);
                 const originalInput = Buffer.from(input);
-                const inputBlock = new BaseBlock(blockSize, input, true, false, blockSize as number);
+                const inputBlock = new BaseBlock(blockSize, input, BlockDataType.RawData, blockSize as number);
                 const parityBlocks = await StaticHelpersFec.createParityBlocks(inputBlock, parityBlockCount);
                 // damage the input block
                 // we want to make sure to damage each 1 mb chunk of the input block by at least a few bytes,
@@ -55,7 +56,7 @@ describe('staticHelpers.fec', () => {
                         inputBlock.data[randomOffset] = Math.floor(Math.random() * 255);
                     }
                 }
-                const damagedBlock = new BaseBlock(blockSize, inputBlock.data, true, false, blockSize as number);
+                const damagedBlock = new BaseBlock(blockSize, inputBlock.data, BlockDataType.RawData, blockSize as number);
                 const recoveredBlock = await StaticHelpersFec.recoverDataBlocks(damagedBlock, parityBlocks);
                 expect(recoveredBlock.data).toStrictEqual(originalInput);
             });

@@ -6,6 +6,7 @@ import { WhitenedBlock } from './blocks/whitened';
 import { BlockSize } from './enumerations/blockSizes';
 import { InMemoryBlockTuple } from './blocks/memoryTuple';
 import { BaseBlock } from './blocks/base';
+import { BlockDataType } from './enumerations/blockDataType';
 
 /**
  * Given a stream of data, produce a stream of tuples by breaking the data into blocks and producing tuples from the blocks
@@ -37,7 +38,7 @@ export class TupleGeneratorStream extends Transform {
   private makeTuple(): void {
     const blockData = this.buffer.subarray(0, this.blockSize);
     this.buffer = this.buffer.subarray(this.blockSize);
-    const block: EphemeralBlock = new EphemeralBlock(this.blockSize, blockData, false, false, blockData.length);
+    const block: EphemeralBlock = new EphemeralBlock(this.blockSize, blockData, BlockDataType.EphemeralStructuredData, blockData.length);
     let sourceBlocks: BaseBlock[] = [block];
     const finalBlocks: BaseBlock[] = [];
     for (let i = 0; i < RandomBlocksPerTuple; i++) {

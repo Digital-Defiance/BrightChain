@@ -3,7 +3,6 @@ import {
   validBlockSizes,
   blockSizeLengths,
 } from './enumerations/blockSizes';
-import { StaticHelpersChecksum } from './staticHelpers.checksum';
 import { BrightChainMember } from './brightChainMember';
 import { ConstituentBlockListBlock } from './blocks/cbl';
 import { randomBytes } from 'crypto';
@@ -15,6 +14,9 @@ import { TupleGeneratorStream } from './tupleGeneratorStream';
 import { ReadStream } from 'fs';
 import { WhitenedBlock } from './blocks/whitened';
 import { EthereumECIES } from './ethereumECIES';
+import { EncryptedCblTuple } from './blocks/encryptedCblTuple';
+import { EncryptedConstituentBlockListBlock } from './blocks/encryptedCbl';
+import { BaseBlock } from './blocks/base';
 
 export abstract class BlockService {
   public static readonly TupleSize = TupleSize;
@@ -41,7 +43,7 @@ export abstract class BlockService {
     whitenedBlockSource: () => WhitenedBlock | undefined,
     randomBlockSource: () => RandomBlock,
     persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
-  ): Promise<ConstituentBlockListBlock> {
+  ): Promise<EncryptedCblTuple> {
     // read the dataStream chunks and encrypt each batch of chunkSize, thus encrypting each block and ending up with blocksize bytes per block
     const ecieEncryptTransform = new EciesEncryptionTransform(blockSize, creator.publicKey);
     const tupleGeneratorStream = new TupleGeneratorStream(blockSize, whitenedBlockSource, randomBlockSource);
@@ -55,13 +57,12 @@ export abstract class BlockService {
     });
     const blockIdDataLength = blockIDs.length;
     const encryptedCBLDataLength = ConstituentBlockListBlock.CblHeaderSize + blockIdDataLength + EthereumECIES.ecieOverheadLength;
-    const cblSignature = creator.sign(StaticHelpersChecksum.calculateChecksum(blockIDs));
-    const cblHeader = ConstituentBlockListBlock.makeCblHeader(
-      creator.id.asRawGuidBuffer,
-      cblSignature,
+    const cblHeader = ConstituentBlockListBlock.makeCblHeaderAndSign(
+      creator,
       new Date(),
       addressCount,
-      sourceLength
+      sourceLength,
+      blockIDs
     );
     const neededPadding = blockSize - encryptedCBLDataLength;
     if (neededPadding < 0) {
@@ -74,15 +75,32 @@ export abstract class BlockService {
       cblPadding,
     ]);
     const encryptedCblData = await creator.encryptData(cblData);
-    const cblBlock = new ConstituentBlockListBlock(
+    const cblBlock = new EncryptedConstituentBlockListBlock(
       blockSize,
-      creator.id.asRawGuidBuffer,
-      cblSignature,
-      sourceLength,
-      addressCount,
       encryptedCblData,
+      encryptedCBLDataLength,
       new Date()
     );
-    return cblBlock;
+    // produce a tuple from the cblBlock
+    let sourceBlocks: BaseBlock[] = [cblBlock];
+    const finalBlocks: BaseBlock[] = [];
+    for (let i = 0; i < RandomBlocksPerTuple; i++) {
+      const b = randomBlockSource();
+      sourceBlocks.push(b);
+      finalBlocks.push(b);
+    }
+    for (let i = RandomBlocksPerTuple; i < TupleSize - 1; i++) {
+      const b = whitenedBlockSource() ?? randomBlockSource();
+      sourceBlocks.push(b);
+      finalBlocks.push(b);
+    }
+    let tuple = new EncryptedCblTuple(sourceBlocks);
+    const resultBlock = tuple.xor<WhitenedBlock>();
+    finalBlocks.push(resultBlock);
+    // clear blocks to free memory/allow GC
+    sourceBlocks = [];
+    // clear tuple to free memory/allow GC and replace with the final tuple
+    tuple = new EncryptedCblTuple(finalBlocks);
+    return tuple;
   }
 }
