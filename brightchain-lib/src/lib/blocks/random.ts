@@ -1,13 +1,15 @@
 import { randomBytes } from "crypto";
 import { BaseBlock } from "./base";
-import { BlockSize } from "../enumerations/blockSizes";
+import { BlockSize, lengthToBlockSize } from "../enumerations/blockSizes";
 import { BlockType } from "../enumerations/blockType";
 import { ChecksumBuffer } from "../types";
+import { BlockDataType } from "../enumerations/blockDataType";
 
 export class RandomBlock extends BaseBlock {
   public override readonly blockType = BlockType.Random;
   private constructor(data: Buffer, dateCreated?: Date, checksum?: ChecksumBuffer) {
-    super(data, dateCreated, checksum);
+    const blockSize = lengthToBlockSize(data.length);
+    super(blockSize, data, BlockDataType.RawData, data.length, dateCreated, checksum);
   }
   public static new(blockSize: BlockSize): RandomBlock {
     const data = randomBytes(blockSize as number);

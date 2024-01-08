@@ -6,4 +6,6 @@ export enum BlockType {
   FECData = 3,
   OwnedDataBlock = 4,
   ConstituentBlockList = 5,
+  EncryptedOwnedDataBlock = 6,
+  EncryptedConstituentBlockListBlock = 7,
 }
