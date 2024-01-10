@@ -4,13 +4,13 @@ import { createHash, randomBytes } from 'crypto';
 import { EthereumECIES } from '../ethereumECIES';
 import { BrightChainMember } from '../brightChainMember';
 export class VotingPoll {
-  public readonly options: string[];
+  public readonly choices: string[];
   public readonly votes: bigint[];
   public readonly paillierKeyPair: PaillierKeyPair;
   public readonly ecKeyPair: ECKeyPairBuffer;
   public readonly receipts: Set<Buffer> = new Set<Buffer>();
-  constructor(options: string[], paillierKeyPair: PaillierKeyPair, ecKeyPair: ECKeyPairBuffer, votes: bigint[]) {
-    this.options = options;
+  constructor(choices: string[], paillierKeyPair: PaillierKeyPair, ecKeyPair: ECKeyPairBuffer, votes: bigint[]) {
+    this.choices = choices;
     this.paillierKeyPair = paillierKeyPair;
     this.ecKeyPair = ecKeyPair;
     this.votes = votes;
@@ -36,13 +36,13 @@ export class VotingPoll {
     }
     return verified;
   }
-  public vote(optionIndex: number, member: BrightChainMember): Buffer {
-    if (optionIndex < 0 || optionIndex >= this.options.length) {
-      throw new Error(`Invalid option index ${optionIndex}`);
+  public vote(choiceIndex: number, member: BrightChainMember): Buffer {
+    if (choiceIndex < 0 || choiceIndex >= this.choices.length) {
+      throw new Error(`Invalid option index ${choiceIndex}`);
     }
     // vote a 1 for the selected candidate and a 0 for all others
-    for (let i = 0; i < this.options.length; i++) {
-      if (i == optionIndex) {
+    for (let i = 0; i < this.choices.length; i++) {
+      if (i == choiceIndex) {
         this.votes[i] = this.paillierKeyPair.publicKey.addition(this.votes[i], this.paillierKeyPair.publicKey.encrypt(1n));
       } else {
         this.votes[i] = this.paillierKeyPair.publicKey.addition(this.votes[i], this.paillierKeyPair.publicKey.encrypt(0n));
@@ -53,7 +53,7 @@ export class VotingPoll {
   public get tallies(): bigint[] {
     return this.votes.map(encryptedVote => this.paillierKeyPair.privateKey.decrypt(encryptedVote));
   }
-  public get leadingOption(): string {
+  public get leadingChoice(): string {
     const tallies = this.tallies;
     let leadingOptionIndex = 0;
     for (let i = 1; i < tallies.length; i++) {
@@ -61,14 +61,14 @@ export class VotingPoll {
         leadingOptionIndex = i;
       }
     }
-    return this.options[leadingOptionIndex];
+    return this.choices[leadingOptionIndex];
   }
-  public static newPoll(candidates: string[], paillierKeyPair: PaillierKeyPair, ecKeyPair: ECKeyPairBuffer): VotingPoll {
-    const votes = new Array<bigint>(candidates.length);
-    for (let i = 0; i < candidates.length; i++) {
+  public static newPoll(choices: string[], paillierKeyPair: PaillierKeyPair, ecKeyPair: ECKeyPairBuffer): VotingPoll {
+    const votes = new Array<bigint>(choices.length);
+    for (let i = 0; i < choices.length; i++) {
       votes[i] = paillierKeyPair.publicKey.encrypt(0n);
     }
 
-    return new VotingPoll(candidates, paillierKeyPair, ecKeyPair, votes);
+    return new VotingPoll(choices, paillierKeyPair, ecKeyPair, votes);
   }
 }
