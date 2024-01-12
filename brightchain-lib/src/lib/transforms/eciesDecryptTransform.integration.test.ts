@@ -1,11 +1,11 @@
 import { EciesDecryptionTransform } from "./eciesDecryptTransform";
-import { EthereumECIES } from "../ethereumECIES";
+import { StaticHelpersECIES } from "../staticHelpers.ECIES";
 import { BlockSize } from "../enumerations/blockSizes";
 import { Readable } from "stream";
 import { randomBytes } from "crypto";
 
 function makeEncryptedBlocks(inputData: Buffer, blockSize: BlockSize, publicKey: Buffer): Buffer {
-  const chunkSize = blockSize - EthereumECIES.ecieOverheadLength;
+  const chunkSize = blockSize - StaticHelpersECIES.ecieOverheadLength;
   let encryptedBuffer = Buffer.alloc(0);
   for (let i = 0; i < inputData.length; i += chunkSize) {
     let block = inputData.subarray(i, i + chunkSize);
@@ -14,7 +14,7 @@ function makeEncryptedBlocks(inputData: Buffer, blockSize: BlockSize, publicKey:
       const padding = randomBytes(chunkSize - block.length);
       block = Buffer.concat([block, padding]);
     }
-    const encryptedBlock = EthereumECIES.encrypt(publicKey, block);
+    const encryptedBlock = StaticHelpersECIES.encrypt(publicKey, block);
     encryptedBuffer = Buffer.concat([encryptedBuffer, encryptedBlock]);
   }
   return encryptedBuffer;
@@ -22,9 +22,9 @@ function makeEncryptedBlocks(inputData: Buffer, blockSize: BlockSize, publicKey:
 
 describe('EciesDecryptionTransform Integration Tests', () => {
   const blockSize = BlockSize.Small; // Numeric value representing the number of bytes
-  const chunkSize = blockSize - EthereumECIES.ecieOverheadLength;
-  const mnemonic = EthereumECIES.generateNewMnemonic();
-  const keypair = EthereumECIES.mnemonicToSimpleKeyPairBuffer(mnemonic);
+  const chunkSize = blockSize - StaticHelpersECIES.ecieOverheadLength;
+  const mnemonic = StaticHelpersECIES.generateNewMnemonic();
+  const keypair = StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer(mnemonic);
 
   const testEndToEndDecryption = async (inputData: Buffer): Promise<Buffer> => {
     // Encrypt the data using makeEncryptedBlocks
