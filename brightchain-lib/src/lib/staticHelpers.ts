@@ -80,4 +80,17 @@ export abstract class StaticHelpers {
   public static HexStringToBuffer(hexString: HexString): Buffer {
     return Buffer.from(hexString, 'hex');
   }
+
+  public static bigIntToLengthEncodedBuffer(bigInt: bigint): Buffer {
+    const hexBuffer = Buffer.from(bigInt.toString(16), 'hex');
+    const lengthBuffer = Buffer.alloc(4);
+    lengthBuffer.writeUInt32BE(hexBuffer.length);
+    return Buffer.concat([lengthBuffer, hexBuffer]);
+  }
+
+  public static lengthEncodedBufferToBigInt(buffer: Buffer): bigint {
+    const length = buffer.readUInt32BE(0);
+    const hexString = buffer.subarray(4, 4 + length).toString('hex');
+    return BigInt('0x' + hexString);
+  }
 }

@@ -6,7 +6,7 @@ import {
 } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { GuidBrandType } from '../enumerations/guidBrandType';
-import { EthereumECIES } from '../ethereumECIES';
+import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { GuidV4 } from '../guid';
 import { ChecksumBuffer, RawGuidBuffer, SignatureBuffer } from '../types';
 import { EphemeralBlock } from './ephemeral';
@@ -25,7 +25,7 @@ import { BlockDataType } from '../enumerations/blockDataType';
  */
 export class ConstituentBlockListBlock extends EphemeralBlock {
   public static readonly CblHeaderSize = 102;
-  public static readonly CblHeaderSizeWithoutSignature = ConstituentBlockListBlock.CblHeaderSize - EthereumECIES.signatureLength;
+  public static readonly CblHeaderSizeWithoutSignature = ConstituentBlockListBlock.CblHeaderSize - StaticHelpersECIES.signatureLength;
   public override readonly blockType = BlockType.ConstituentBlockList;
   public readonly creatorId: RawGuidBuffer;
   public readonly creatorSignature: SignatureBuffer;
@@ -138,9 +138,9 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
     offset += 1;
     const creatorSignature = data.subarray(
       offset,
-      offset + EthereumECIES.signatureLength
+      offset + StaticHelpersECIES.signatureLength
     ) as SignatureBuffer;
-    offset += EthereumECIES.signatureLength;
+    offset += StaticHelpersECIES.signatureLength;
     if (cblAddressCount % tupleSize !== 0) {
       throw new Error('CBL address count must be a multiple of TupleSize');
     }
@@ -224,12 +224,12 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
   ];
 
   public static readonly cblBlockDataLengthsWithEcieEncryption = [
-    this.cblBlockDataLengths[0] - EthereumECIES.ecieOverheadLength, // 410 - 97 = 313
-    this.cblBlockDataLengths[1] - EthereumECIES.ecieOverheadLength, // 922 - 97 = 825
-    this.cblBlockDataLengths[2] - EthereumECIES.ecieOverheadLength, // 3994 - 97 = 3897
-    this.cblBlockDataLengths[3] - EthereumECIES.ecieOverheadLength, // 1048474 - 97 = 1048377
-    this.cblBlockDataLengths[4] - EthereumECIES.ecieOverheadLength, // 67108762 - 97 = 67108665
-    this.cblBlockDataLengths[5] - EthereumECIES.ecieOverheadLength, // 268435354 - 97 = 268435257
+    this.cblBlockDataLengths[0] - StaticHelpersECIES.ecieOverheadLength, // 410 - 97 = 313
+    this.cblBlockDataLengths[1] - StaticHelpersECIES.ecieOverheadLength, // 922 - 97 = 825
+    this.cblBlockDataLengths[2] - StaticHelpersECIES.ecieOverheadLength, // 3994 - 97 = 3897
+    this.cblBlockDataLengths[3] - StaticHelpersECIES.ecieOverheadLength, // 1048474 - 97 = 1048377
+    this.cblBlockDataLengths[4] - StaticHelpersECIES.ecieOverheadLength, // 67108762 - 97 = 67108665
+    this.cblBlockDataLengths[5] - StaticHelpersECIES.ecieOverheadLength, // 268435354 - 97 = 268435257
   ];
 
   /**

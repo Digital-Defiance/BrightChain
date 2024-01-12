@@ -100,7 +100,7 @@ export class BrightChainQuorum {
       amongstMembers,
       sharesRequired
     );
-    this._documentsById.set(newDoc.id, newDoc);
+    this._documentsById.set(newDoc.id.asShortHexGuid, newDoc);
     return newDoc;
   }
 

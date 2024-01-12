@@ -1,14 +1,15 @@
 import { KeyPair as PaillierKeyPair } from 'paillier-bigint';
 import { SimpleKeyPairBuffer as ECKeyPairBuffer, SignatureBuffer } from '../types';
 import { createHash, randomBytes } from 'crypto';
-import { EthereumECIES } from '../ethereumECIES';
+import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { BrightChainMember } from '../brightChainMember';
+import { StaticHelpersVoting } from '../staticHelpers.voting';
 export class VotingPoll {
   public readonly choices: string[];
   public readonly votes: bigint[];
-  public readonly paillierKeyPair: PaillierKeyPair;
-  public readonly ecKeyPair: ECKeyPairBuffer;
-  public readonly receipts: Set<Buffer> = new Set<Buffer>();
+  private readonly paillierKeyPair: PaillierKeyPair;
+  private readonly ecKeyPair: ECKeyPairBuffer;
+  public readonly receipts: Map<Buffer, Buffer> = new Map<Buffer, Buffer>();
   constructor(choices: string[], paillierKeyPair: PaillierKeyPair, ecKeyPair: ECKeyPairBuffer, votes: bigint[]) {
     this.choices = choices;
     this.paillierKeyPair = paillierKeyPair;
@@ -18,22 +19,28 @@ export class VotingPoll {
   public generateEncryptedReceipt(member: BrightChainMember): Buffer {
     const randomNonce = randomBytes(16).toString('hex');
     const hash = Buffer.from(createHash('sha256').update(`${Date.now()}-${randomNonce}-${member.id.asShortHexGuid}`).digest('hex'), 'hex');
-    const signature = EthereumECIES.signMessage(this.ecKeyPair.privateKey, hash);
+    const signature = StaticHelpersECIES.signMessage(this.ecKeyPair.privateKey, hash);
     const receipt = Buffer.concat([hash, signature]);
-    this.receipts.add(receipt);
-    const encryptedReceipt = EthereumECIES.encrypt(member.publicKey, receipt);
+    const encryptedReceipt = StaticHelpersECIES.encrypt(member.publicKey, receipt);
+    this.receipts.set(member.id.asRawGuidBuffer, encryptedReceipt);
     return encryptedReceipt;
   }
-  public verifyReceipt(receipt: Buffer): boolean {
-    if (this.receipts.has(receipt)) {
-      return true;
+  public memberVoted(member: BrightChainMember): boolean {
+    return this.receipts.has(member.id.asRawGuidBuffer);
+  }
+  public verifyReceipt(member: BrightChainMember, encryptedReceipt: Buffer): boolean {
+    const memberId = member.id.asRawGuidBuffer;
+    const foundReceipt = this.receipts.get(memberId);
+    if (!foundReceipt) {
+      return false;
     }
-    const hash = receipt.subarray(0, 32);
-    const signature = receipt.subarray(32) as SignatureBuffer;
-    const verified = EthereumECIES.verifyMessage(this.ecKeyPair.publicKey, hash, signature);
-    if (verified) {
-      this.receipts.add(receipt);
+    if (Buffer.compare(foundReceipt, encryptedReceipt) !== 0) {
+      return false;
     }
+    const decryptedReceipt = StaticHelpersECIES.decrypt(this.ecKeyPair.privateKey, encryptedReceipt);
+    const hash = decryptedReceipt.subarray(0, 32);
+    const signature = decryptedReceipt.subarray(32) as SignatureBuffer;
+    const verified = StaticHelpersECIES.verifyMessage(this.ecKeyPair.publicKey, hash, signature);
     return verified;
   }
   public vote(choiceIndex: number, member: BrightChainMember): Buffer {
@@ -53,6 +60,9 @@ export class VotingPoll {
   public get tallies(): bigint[] {
     return this.votes.map(encryptedVote => this.paillierKeyPair.privateKey.decrypt(encryptedVote));
   }
+  public getTally(choiceIndex: number): bigint {
+    return this.paillierKeyPair.privateKey.decrypt(this.votes[choiceIndex]);
+  }
   public get leadingChoice(): string {
     const tallies = this.tallies;
     let leadingOptionIndex = 0;
@@ -70,5 +80,12 @@ export class VotingPoll {
     }
 
     return new VotingPoll(choices, paillierKeyPair, ecKeyPair, votes);
+  }
+  public static newPollWithKeys(choices: string[]): { poll: VotingPoll, paillierKeyPair: PaillierKeyPair, ecKeyPair: ECKeyPairBuffer } {
+    const paillierKeyPair = StaticHelpersVoting.generateVotingKeyPair();
+    const mnemonic = StaticHelpersECIES.generateNewMnemonic();
+    const ecKeyPair = StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer(mnemonic) as ECKeyPairBuffer;
+    const poll = VotingPoll.newPoll(choices, paillierKeyPair, ecKeyPair);
+    return { poll, paillierKeyPair, ecKeyPair };
   }
 }

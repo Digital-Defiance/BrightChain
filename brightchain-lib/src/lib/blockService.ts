@@ -13,7 +13,7 @@ import { EciesEncryptionTransform } from './transforms/eciesEncryptTransform';
 import { TupleGeneratorStream } from './tupleGeneratorStream';
 import { ReadStream } from 'fs';
 import { WhitenedBlock } from './blocks/whitened';
-import { EthereumECIES } from './ethereumECIES';
+import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import { EncryptedCblTuple } from './blocks/encryptedCblTuple';
 import { EncryptedConstituentBlockListBlock } from './blocks/encryptedCbl';
 import { BaseBlock } from './blocks/base';
@@ -56,7 +56,7 @@ export abstract class BlockService {
       addressCount += tuple.blocks.length;
     });
     const blockIdDataLength = blockIDs.length;
-    const encryptedCBLDataLength = ConstituentBlockListBlock.CblHeaderSize + blockIdDataLength + EthereumECIES.ecieOverheadLength;
+    const encryptedCBLDataLength = ConstituentBlockListBlock.CblHeaderSize + blockIdDataLength + StaticHelpersECIES.ecieOverheadLength;
     const cblHeader = ConstituentBlockListBlock.makeCblHeaderAndSign(
       creator,
       new Date(),
