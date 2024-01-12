@@ -10,13 +10,12 @@ import { InMemoryBlockTuple } from './blocks/memoryTuple'
 import { RandomBlock } from './blocks/random';
 import { RandomBlocksPerTuple, TupleSize } from './constants';
 import { EciesEncryptionTransform } from './transforms/eciesEncryptTransform';
-import { TupleGeneratorStream } from './tupleGeneratorStream';
+import { PrimeTupleGeneratorStream } from './primeTupleGeneratorStream';
 import { ReadStream } from 'fs';
 import { WhitenedBlock } from './blocks/whitened';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import { EncryptedCblTuple } from './blocks/encryptedCblTuple';
 import { EncryptedConstituentBlockListBlock } from './blocks/encryptedCbl';
-import { BaseBlock } from './blocks/base';
 
 export abstract class BlockService {
   public static readonly TupleSize = TupleSize;
@@ -46,7 +45,7 @@ export abstract class BlockService {
   ): Promise<EncryptedCblTuple> {
     // read the dataStream chunks and encrypt each batch of chunkSize, thus encrypting each block and ending up with blocksize bytes per block
     const ecieEncryptTransform = new EciesEncryptionTransform(blockSize, creator.publicKey);
-    const tupleGeneratorStream = new TupleGeneratorStream(blockSize, whitenedBlockSource, randomBlockSource);
+    const tupleGeneratorStream = new PrimeTupleGeneratorStream(blockSize, whitenedBlockSource, randomBlockSource);
     source.pipe(ecieEncryptTransform).pipe(tupleGeneratorStream);
     let blockIDs: Buffer = Buffer.alloc(0);
     let addressCount = 0;
@@ -75,32 +74,23 @@ export abstract class BlockService {
       cblPadding,
     ]);
     const encryptedCblData = await creator.encryptData(cblData);
-    const cblBlock = new EncryptedConstituentBlockListBlock(
+    const sourceCblBlock = new EncryptedConstituentBlockListBlock(
       blockSize,
       encryptedCblData,
       encryptedCBLDataLength,
       new Date()
     );
-    // produce a tuple from the cblBlock
-    let sourceBlocks: BaseBlock[] = [cblBlock];
-    const finalBlocks: BaseBlock[] = [];
+    const randomBlocks: RandomBlock[] = [];
     for (let i = 0; i < RandomBlocksPerTuple; i++) {
       const b = randomBlockSource();
-      sourceBlocks.push(b);
-      finalBlocks.push(b);
+      randomBlocks.push(b);
     }
+    const whiteners: WhitenedBlock[] = [];
     for (let i = RandomBlocksPerTuple; i < TupleSize - 1; i++) {
       const b = whitenedBlockSource() ?? randomBlockSource();
-      sourceBlocks.push(b);
-      finalBlocks.push(b);
+      whiteners.push(b);
     }
-    let tuple = new EncryptedCblTuple(sourceBlocks);
-    const resultBlock = tuple.xor<WhitenedBlock>();
-    finalBlocks.push(resultBlock);
-    // clear blocks to free memory/allow GC
-    sourceBlocks = [];
-    // clear tuple to free memory/allow GC and replace with the final tuple
-    tuple = new EncryptedCblTuple(finalBlocks);
-    return tuple;
+    const primeBlock = InMemoryBlockTuple.xorSourceToPrimeWhitened(sourceCblBlock, whiteners, randomBlocks);
+    return new EncryptedCblTuple([primeBlock, ...whiteners, ...randomBlocks]);
   }
 }
