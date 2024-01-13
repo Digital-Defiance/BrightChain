@@ -43,7 +43,7 @@ export class InMemoryBlockTuple {
         for(let i=0;i<randomBlocks.length;i++) {
             block = block.xor<WhitenedBlock>(randomBlocks[i]);
         }
-        return block as WhitenedBlock;
+        return new WhitenedBlock(block.blockSize, block.data, block.dateCreated, block.id);
     }
     public static makeTupleFromSourceXor(sourceBlock: BaseBlock | EncryptedOwnedDataBlock, whiteners: WhitenedBlock[], randomBlocks: RandomBlock[]): InMemoryBlockTuple {
         const primeWhitenedBlock = this.xorSourceToPrimeWhitened(sourceBlock, whiteners, randomBlocks);
@@ -55,7 +55,7 @@ export class InMemoryBlockTuple {
         for(let i=0;i<whiteners.length;i++) {
             block = block.xor<BaseBlock>(whiteners[i]);
         }
-        return block as OwnedDataBlock;
+        return new OwnedDataBlock(block.blockSize, block.data, block.lengthBeforeEncryption, block.dateCreated, block.id);
     }
     public static makeTupleFromDestXor(primeWhitenedBlock: WhitenedBlock, whiteners: WhitenedBlock[]): InMemoryBlockTuple {
         const ownedDataBlock = this.xorDestPrimeWhitenedToOwned(primeWhitenedBlock, whiteners);
