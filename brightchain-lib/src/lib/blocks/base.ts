@@ -10,7 +10,7 @@ import { StaticHelpers } from '../staticHelpers';
 import { BlockType } from '../enumerations/blockType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BrightChainMember } from '../brightChainMember';
-import { EthereumECIES } from '../ethereumECIES';
+import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 
 export class BaseBlock {
   public readonly blockType: BlockType = BlockType.Unknown;
@@ -30,7 +30,7 @@ export class BaseBlock {
         );
       }
       this.lengthBeforeEncryption = lengthBeforeEncryption;
-      if (this.lengthBeforeEncryption > (blockSize as number - EthereumECIES.ecieOverheadLength)) {
+      if (this.lengthBeforeEncryption > (blockSize as number - StaticHelpersECIES.ecieOverheadLength)) {
         throw new Error(
           `Length before encryption ${this.lengthBeforeEncryption} is too large for block size ${blockSize}`
         );
@@ -41,7 +41,7 @@ export class BaseBlock {
         throw new Error(
           `Raw data length ${data.length} is not valid for block size ${blockSize}`
         );
-      } else if ((blockDataType == BlockDataType.EphemeralStructuredData) && (data.length > (blockSize as number - EthereumECIES.ecieOverheadLength))) {
+      } else if ((blockDataType == BlockDataType.EphemeralStructuredData) && (data.length > (blockSize as number - StaticHelpersECIES.ecieOverheadLength))) {
         throw new Error(
           `Data length ${data.length} is too large for block size ${blockSize}`
         );
@@ -69,7 +69,7 @@ export class BaseBlock {
     } else if (this.rawData) {
       throw new Error('Cannot encrypt raw data');
     }
-    const neededPadding = this.blockSize as number - this.data.length - EthereumECIES.ecieOverheadLength;
+    const neededPadding = this.blockSize as number - this.data.length - StaticHelpersECIES.ecieOverheadLength;
     const padding = randomBytes(neededPadding);
     const paddedData = Buffer.concat([this.data, padding]);
     const encryptedData = creator.encryptData(paddedData);
@@ -163,7 +163,7 @@ export class BaseBlock {
       throw new Error(
         `Encrypted data length ${data.length} is not a valid block size`
       );
-    } else if ((blockDataType == BlockDataType.EphemeralStructuredData) && data.length > (blockLength - EthereumECIES.ecieOverheadLength)) {
+    } else if ((blockDataType == BlockDataType.EphemeralStructuredData) && data.length > (blockLength - StaticHelpersECIES.ecieOverheadLength)) {
       throw new Error(
         `Data length ${data.length} is too large for block size ${blockSize}`
       );

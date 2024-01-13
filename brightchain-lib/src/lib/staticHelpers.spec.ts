@@ -59,4 +59,22 @@ describe('staticHelpers', () => {
       false
     );
   });
+  describe('bigIntToLengthEncodedBuffer', () => {
+    it('should encode a bigint correctly', () => {
+      const bigInt = BigInt(1234567890);
+      const buffer = StaticHelpers.bigIntToLengthEncodedBuffer(bigInt);
+      expect(buffer.length).toBeGreaterThan(4); // Ensure there is a length encoding
+      const length = buffer.readUInt32BE(0);
+      expect(length).toBe(buffer.length - 4); // Check length encoding correctness
+    });
+  });
+
+  describe('lengthEncodedBufferToBigInt', () => {
+    it('should decode a length-encoded buffer correctly', () => {
+      const bigInt = BigInt(1234567890);
+      const buffer = StaticHelpers.bigIntToLengthEncodedBuffer(bigInt);
+      const result = StaticHelpers.lengthEncodedBufferToBigInt(buffer);
+      expect(result).toBe(bigInt);
+    });
+  });
 });

@@ -2,11 +2,11 @@ import { BrightChainMember } from './brightChainMember';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
 import { GuidV4 } from './guid';
 import { ChecksumBuffer, HexString, ShortHexGuid, SignatureBuffer } from './types';
-import { EthereumECIES } from './ethereumECIES';
+import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import { QuorumDataRecordDto } from './quorumDataRecordDto';
 
 export class QuorumDataRecord {
-  public readonly id: ShortHexGuid;
+  public readonly id: GuidV4;
   public readonly encryptedData: Buffer;
   public readonly encryptedSharesByMemberId: Map<ShortHexGuid, Buffer>;
   /**
@@ -33,9 +33,9 @@ export class QuorumDataRecord {
     dateUpdated?: Date
   ) {
     if (id !== undefined) {
-      this.id = new GuidV4(id).asShortHexGuid;
+      this.id = new GuidV4(id);
     } else {
-      this.id = GuidV4.new().asShortHexGuid;
+      this.id = GuidV4.new();
     }
 
     if (memberIDs.length != 0 && memberIDs.length < 2) {
@@ -60,7 +60,7 @@ export class QuorumDataRecord {
     this.creator = creator;
     this.signature = signature ?? creator.sign(this.checksum);
     if (
-      !EthereumECIES.verifyMessage(
+      !StaticHelpersECIES.verifyMessage(
         creator.publicKey,
         this.checksum,
         this.signature
@@ -86,14 +86,14 @@ export class QuorumDataRecord {
       encryptedSharesByMemberId[k] = v.toString('hex') as HexString;
     });
     return {
-      id: this.id,
+      id: this.id.asShortHexGuid,
       creatorId: this.creator.id.asShortHexGuid,
       encryptedData: this.encryptedData.toString('hex') as HexString,
       encryptedSharesByMemberId,
       checksum: StaticHelpersChecksum.checksumBufferToChecksumString(
         this.checksum
       ),
-      signature: EthereumECIES.signatureBufferToSignatureString(this.signature),
+      signature: StaticHelpersECIES.signatureBufferToSignatureString(this.signature),
       memberIDs: this.memberIDs,
       sharesRequired: this.sharesRequired,
       dateCreated: this.dateCreated,
@@ -115,7 +115,7 @@ export class QuorumDataRecord {
       Buffer.from(dto.encryptedData, 'hex'),
       encryptedSharesByMemberId,
       StaticHelpersChecksum.checksumStringToChecksumBuffer(dto.checksum),
-      EthereumECIES.signatureStringToSignatureBuffer(dto.signature),
+      StaticHelpersECIES.signatureStringToSignatureBuffer(dto.signature),
       dto.id,
       dto.dateCreated,
       dto.dateUpdated

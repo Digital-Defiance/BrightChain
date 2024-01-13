@@ -1,8 +1,8 @@
 import { EciesEncryptionTransform } from "./eciesEncryptTransform";
-import { EthereumECIES } from "../ethereumECIES";
+import { StaticHelpersECIES } from "../staticHelpers.ECIES";
 import { BlockSize } from "../enumerations/blockSizes";
 
-jest.mock('../ethereumECIES');
+jest.mock('../staticHelpers.ECIES');
 
 describe('EciesEncryptionTransform Unit Tests', () => {
     const blockSize = BlockSize.Small;
@@ -12,10 +12,10 @@ describe('EciesEncryptionTransform Unit Tests', () => {
     };
 
     beforeEach(() => {
-        EthereumECIES.encrypt = jest.fn((publicKey, data) => {
+        StaticHelpersECIES.encrypt = jest.fn((publicKey, data) => {
             return Buffer.from(data.map(byte => (byte + 1) % 256));
         });
-        EthereumECIES.decrypt = jest.fn((publicKey, data) => {
+        StaticHelpersECIES.decrypt = jest.fn((publicKey, data) => {
             return Buffer.from(data.map(byte => (byte + 255) % 256));
         });
     });
@@ -34,7 +34,7 @@ describe('EciesEncryptionTransform Unit Tests', () => {
         const decryptedData: Buffer[] = [];
         for (let i = 0; i < encryptedData.length; i += blockSize) {
             const block = encryptedData.subarray(i, i + blockSize);
-            const decryptedBlock = EthereumECIES.decrypt(keypair.privateKey, block);
+            const decryptedBlock = StaticHelpersECIES.decrypt(keypair.privateKey, block);
             decryptedData.push(decryptedBlock);
         }
 
@@ -52,12 +52,12 @@ describe('EciesEncryptionTransform Unit Tests', () => {
     });
 
     it('encrypts and decrypts data that is exactly the chunk size', () => {
-        const inputData = Buffer.alloc(blockSize - EthereumECIES.ecieOverheadLength, 'a');
+        const inputData = Buffer.alloc(blockSize - StaticHelpersECIES.ecieOverheadLength, 'a');
         testEncryption(inputData);
     });
 
     it('encrypts and decrypts data that spans multiple chunks', () => {
-        const inputData = Buffer.alloc((blockSize - EthereumECIES.ecieOverheadLength) * 2 + 10, 'a');
+        const inputData = Buffer.alloc((blockSize - StaticHelpersECIES.ecieOverheadLength) * 2 + 10, 'a');
         testEncryption(inputData);
     });
 });

@@ -1,5 +1,5 @@
 import { Transform, TransformCallback, TransformOptions } from 'stream';
-import { EthereumECIES } from '../ethereumECIES';
+import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { BlockSize } from '../enumerations/blockSizes';
 
 export class EciesDecryptionTransform extends Transform {
@@ -22,7 +22,7 @@ export class EciesDecryptionTransform extends Transform {
       this.buffer = this.buffer.subarray(this.blockSize);
 
       try {
-        const decryptedChunk = EthereumECIES.decrypt(this.privateKey, blockToDecrypt);
+        const decryptedChunk = StaticHelpersECIES.decrypt(this.privateKey, blockToDecrypt);
         this.push(decryptedChunk);
       } catch (error) {
         return callback(new Error('Decryption failed'));
@@ -38,7 +38,7 @@ export class EciesDecryptionTransform extends Transform {
       // Note: This assumes that the remaining data is a complete and valid block.
       // If your protocol allows partial blocks or requires special handling for the last block, adjust here.
       try {
-        const decryptedChunk = EthereumECIES.decrypt(this.privateKey, this.buffer);
+        const decryptedChunk = StaticHelpersECIES.decrypt(this.privateKey, this.buffer);
         this.push(decryptedChunk);
       } catch (error) {
         return callback(new Error('Decryption of final block failed'));

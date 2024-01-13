@@ -18,14 +18,14 @@ import { ISimpleKeyPairBuffer } from './interfaces/simpleKeyPairBuffer';
 import { SecureBuffer } from './secureBuffer';
 import { HexString, SignatureBuffer, SignatureString } from './types';
 
-export class EthereumECIES {
+export class StaticHelpersECIES {
   public static readonly curveName = 'secp256k1';
   public static readonly primaryKeyDerivationPath = "m/44'/60'/0'/0/0";
   public static readonly authTagLength = 16;
   public static readonly ivLength = 16;
   public static readonly signatureLength = 65;
   public static readonly publicKeyLength = 65;
-  public static readonly ecieOverheadLength = EthereumECIES.publicKeyLength + EthereumECIES.ivLength + EthereumECIES.authTagLength; // 97 bytes
+  public static readonly ecieOverheadLength = StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength + StaticHelpersECIES.authTagLength; // 97 bytes
   /**
    * Mnemonic strength in bits. This will produce a 32-bit key for ECDSA.
    */
@@ -33,20 +33,20 @@ export class EthereumECIES {
   public static readonly symmetricAlgorithm = 'aes';
   public static readonly symmetricKeyBits = 256;
   public static readonly symmetricKeyLength =
-    EthereumECIES.symmetricKeyBits / 8;
+    StaticHelpersECIES.symmetricKeyBits / 8;
   public static readonly symmetricKeyMode = 'gcm';
   public static readonly symmetricAlgorithmConfiguration =
-    `${EthereumECIES.symmetricAlgorithm}-${EthereumECIES.symmetricKeyBits}-${EthereumECIES.symmetricKeyMode}` as CipherGCMTypes;
+    `${StaticHelpersECIES.symmetricAlgorithm}-${StaticHelpersECIES.symmetricKeyBits}-${StaticHelpersECIES.symmetricKeyMode}` as CipherGCMTypes;
 
   public static generateNewMnemonic(): string {
-    const mnemonic = generateMnemonic(EthereumECIES.mnemonicStrength);
+    const mnemonic = generateMnemonic(StaticHelpersECIES.mnemonicStrength);
     return mnemonic;
   }
 
   public static walletFromSeed(seed: Buffer): Wallet {
     const hdWallet = hdkey.fromMasterSeed(seed);
     return hdWallet
-      .derivePath(EthereumECIES.primaryKeyDerivationPath)
+      .derivePath(StaticHelpersECIES.primaryKeyDerivationPath)
       .getWallet();
   }
 
@@ -59,7 +59,7 @@ export class EthereumECIES {
     }
 
     const seed = mnemonicToSeedSync(mnemonic);
-    const wallet = EthereumECIES.walletFromSeed(seed);
+    const wallet = StaticHelpersECIES.walletFromSeed(seed);
 
     return {
       seed: new SecureBuffer(seed),
@@ -80,29 +80,29 @@ export class EthereumECIES {
   }
 
   public static seedToSimpleKeyPairBuffer(seed: Buffer): ISimpleKeyPairBuffer {
-    const wallet = EthereumECIES.walletFromSeed(seed);
+    const wallet = StaticHelpersECIES.walletFromSeed(seed);
 
-    return EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
+    return StaticHelpersECIES.walletToSimpleKeyPairBuffer(wallet);
   }
 
   public static mnemonicToSimpleKeyPairBuffer(
     mnemonic: string
   ): ISimpleKeyPairBuffer {
-    const { seed } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
-    return EthereumECIES.seedToSimpleKeyPairBuffer(seed.value);
+    const { seed } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
+    return StaticHelpersECIES.seedToSimpleKeyPairBuffer(seed.value);
   }
 
   public static encrypt(receiverPublicKey: Buffer, message: Buffer): Buffer {
-    const ecdh = createECDH(EthereumECIES.curveName);
+    const ecdh = createECDH(StaticHelpersECIES.curveName);
     ecdh.generateKeys();
     const ephemeralPublicKey = ecdh.getPublicKey();
 
     const sharedSecret = ecdh.computeSecret(receiverPublicKey);
 
-    const iv = randomBytes(EthereumECIES.ivLength);
+    const iv = randomBytes(StaticHelpersECIES.ivLength);
     const cipher = createCipheriv(
-      EthereumECIES.symmetricAlgorithmConfiguration,
-      sharedSecret.subarray(0, EthereumECIES.symmetricKeyLength),
+      StaticHelpersECIES.symmetricAlgorithmConfiguration,
+      sharedSecret.subarray(0, StaticHelpersECIES.symmetricKeyLength),
       iv
     );
 
@@ -115,23 +115,23 @@ export class EthereumECIES {
   }
 
   public static decrypt(privateKey: Buffer, encryptedData: Buffer): Buffer {
-    const ephemeralPublicKey = encryptedData.subarray(0, EthereumECIES.publicKeyLength);
-    const iv = encryptedData.subarray(EthereumECIES.publicKeyLength, EthereumECIES.publicKeyLength + EthereumECIES.ivLength);
+    const ephemeralPublicKey = encryptedData.subarray(0, StaticHelpersECIES.publicKeyLength);
+    const iv = encryptedData.subarray(StaticHelpersECIES.publicKeyLength, StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength);
     const authTag = encryptedData.subarray(
-      EthereumECIES.publicKeyLength + EthereumECIES.ivLength,
-      EthereumECIES.publicKeyLength + EthereumECIES.ivLength + EthereumECIES.authTagLength
+      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
+      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength + StaticHelpersECIES.authTagLength
     );
     const encrypted = encryptedData.subarray(
-      EthereumECIES.publicKeyLength + EthereumECIES.ivLength + EthereumECIES.authTagLength
+      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength + StaticHelpersECIES.authTagLength
     );
 
-    const ecdh = createECDH(EthereumECIES.curveName);
+    const ecdh = createECDH(StaticHelpersECIES.curveName);
     ecdh.setPrivateKey(privateKey);
     const sharedSecret = ecdh.computeSecret(ephemeralPublicKey);
 
     const decipher = createDecipheriv(
-      EthereumECIES.symmetricAlgorithmConfiguration,
-      sharedSecret.subarray(0, EthereumECIES.symmetricKeyLength),
+      StaticHelpersECIES.symmetricAlgorithmConfiguration,
+      sharedSecret.subarray(0, StaticHelpersECIES.symmetricKeyLength),
       iv
     );
 
@@ -180,20 +180,20 @@ export class EthereumECIES {
     message: Buffer,
     signature: SignatureBuffer
   ): boolean {
-    if (signature.length !== EthereumECIES.signatureLength) {
+    if (signature.length !== StaticHelpersECIES.signatureLength) {
       throw new Error('Invalid signature');
     }
     // if the sender public key length is 65, it should have a 04 prefix
     // it should otherwise be 64 bytes
     // throw an error if it is not
-    if (senderPublicKey.length !== EthereumECIES.publicKeyLength && senderPublicKey.length !== 64) {
+    if (senderPublicKey.length !== StaticHelpersECIES.publicKeyLength && senderPublicKey.length !== 64) {
       throw new Error('Invalid sender public key');
     }
-    if (senderPublicKey.length === EthereumECIES.publicKeyLength && senderPublicKey[0] !== 4) {
+    if (senderPublicKey.length === StaticHelpersECIES.publicKeyLength && senderPublicKey[0] !== 4) {
       throw new Error('Invalid sender public key');
     }
     const has04Prefix =
-      senderPublicKey.length === EthereumECIES.publicKeyLength && senderPublicKey[0] === 4;
+      senderPublicKey.length === StaticHelpersECIES.publicKeyLength && senderPublicKey[0] === 4;
     const messageHash = hashPersonalMessage(message);
     const r = signature.subarray(0, 32);
     const s = signature.subarray(32, 64);
