@@ -16,6 +16,9 @@ import { WhitenedBlock } from './blocks/whitened';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import { EncryptedCblTuple } from './blocks/encryptedCblTuple';
 import { EncryptedConstituentBlockListBlock } from './blocks/encryptedCbl';
+import BlockPaddingTransform from './blockPaddingTransform';
+import { SignatureBuffer } from './types';
+import { CblTuple } from './blocks/cblTuple';
 
 export abstract class BlockService {
   public static readonly TupleSize = TupleSize;
@@ -30,6 +33,68 @@ export abstract class BlockService {
       }
     }
     return BlockSize.Unknown;
+  }
+  /**
+   * Given a file that is very large, encrypt it via stream and break it into blocks and produce a stream of input blocks
+   */
+  public static async dataStreamToPlaintextTuplesAndCBL(
+    creator: BrightChainMember,
+    blockSize: BlockSize,
+    source: ReadStream,
+    sourceLength: bigint,
+    whitenedBlockSource: () => WhitenedBlock | undefined,
+    randomBlockSource: () => RandomBlock,
+    persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
+  ): Promise<CblTuple> {
+    // read the dataStream chunks and encrypt each batch of chunkSize, thus encrypting each block and ending up with blocksize bytes per block
+    const blockPaddingTransform = new BlockPaddingTransform(blockSize);
+    const tupleGeneratorStream = new PrimeTupleGeneratorStream(blockSize, whitenedBlockSource, randomBlockSource);
+    source.pipe(blockPaddingTransform).pipe(tupleGeneratorStream);
+    let blockIDs: Buffer = Buffer.alloc(0);
+    let addressCount = 0;
+    tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
+      await persistTuple(tuple);
+      blockIDs = Buffer.concat([blockIDs, tuple.blockIdsBuffer]);
+      addressCount += tuple.blocks.length;
+    });
+    const blockIdDataLength = blockIDs.length;
+    const CblDataLength = ConstituentBlockListBlock.CblHeaderSize + blockIdDataLength;
+    const cblHeader = ConstituentBlockListBlock.makeCblHeaderAndSign(
+      creator,
+      new Date(),
+      addressCount,
+      sourceLength,
+      blockIDs
+    );
+    const signature = cblHeader.subarray(ConstituentBlockListBlock.CblHeaderSizeWithoutSignature) as SignatureBuffer;
+    if (signature.length !== StaticHelpersECIES.signatureLength) {
+      throw new Error('CBL signature length is incorrect');
+    }
+    const cblData = Buffer.concat([
+      cblHeader,
+      blockIDs,
+    ]);
+    const sourceCblBlock = new ConstituentBlockListBlock(
+      blockSize,
+      creator.id.asRawGuidBuffer,
+      signature,
+      sourceLength,
+      addressCount,
+      cblData,
+      new Date()
+    );
+    const randomBlocks: RandomBlock[] = [];
+    for (let i = 0; i < RandomBlocksPerTuple; i++) {
+      const b = randomBlockSource();
+      randomBlocks.push(b);
+    }
+    const whiteners: WhitenedBlock[] = [];
+    for (let i = RandomBlocksPerTuple; i < TupleSize - 1; i++) {
+      const b = whitenedBlockSource() ?? randomBlockSource();
+      whiteners.push(b);
+    }
+    const primeBlock = InMemoryBlockTuple.xorSourceToPrimeWhitened(sourceCblBlock, whiteners, randomBlocks);
+    return new CblTuple([primeBlock, ...whiteners, ...randomBlocks]);
   }
   /**
    * Given a file that is very large, encrypt it via stream and break it into blocks and produce a stream of input blocks
