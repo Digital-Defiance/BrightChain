@@ -75,7 +75,7 @@ export class ConstituentBlockListBlock extends EphemeralBlock {
   }
   public override encrypt(creator: BrightChainMember): EncryptedConstituentBlockListBlock {
     const encrypted = super.encrypt(creator);
-    return encrypted as EncryptedConstituentBlockListBlock;
+    return new EncryptedConstituentBlockListBlock(encrypted.blockSize, encrypted.data, this.lengthBeforeEncryption, encrypted.dateCreated, encrypted.id);
   }
   public static makeCblHeaderAndSign(
     creator: BrightChainMember,
