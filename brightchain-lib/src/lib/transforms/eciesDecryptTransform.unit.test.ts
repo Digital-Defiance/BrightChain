@@ -1,8 +1,8 @@
 import { EciesDecryptionTransform } from "./eciesDecryptTransform";
-import { EthereumECIES } from "../ethereumECIES";
+import { StaticHelpersECIES } from "../staticHelpers.ECIES";
 import { BlockSize } from "../enumerations/blockSizes";
 
-jest.mock('../ethereumECIES');
+jest.mock('../staticHelpers.ECIES');
 
 describe('EciesDecryptionTransform Unit Tests', () => {
   const blockSize = BlockSize.Small;
@@ -12,10 +12,10 @@ describe('EciesDecryptionTransform Unit Tests', () => {
   };
 
   beforeEach(() => {
-    EthereumECIES.encrypt = jest.fn((publicKey, data) => {
+    StaticHelpersECIES.encrypt = jest.fn((publicKey, data) => {
       return Buffer.from(data.map(byte => (byte + 1) % 256));
     });
-    EthereumECIES.decrypt = jest.fn((privateKey, data) => {
+    StaticHelpersECIES.decrypt = jest.fn((privateKey, data) => {
       return Buffer.from(data.map(byte => (byte + 255) % 256));
     });
   });
@@ -29,7 +29,7 @@ describe('EciesDecryptionTransform Unit Tests', () => {
     });
 
     // First, encrypt the data
-    const encryptedData = EthereumECIES.encrypt(keypair.publicKey, inputData);
+    const encryptedData = StaticHelpersECIES.encrypt(keypair.publicKey, inputData);
     // Write encrypted data to the transform
     transform.write(encryptedData);
     transform.end();
@@ -44,12 +44,12 @@ describe('EciesDecryptionTransform Unit Tests', () => {
   });
 
   it('decrypts data that is exactly the chunk size', () => {
-    const inputData = Buffer.alloc(blockSize - EthereumECIES.ecieOverheadLength, 'a');
+    const inputData = Buffer.alloc(blockSize - StaticHelpersECIES.ecieOverheadLength, 'a');
     testDecryption(inputData);
   });
 
   it('decrypts data that spans multiple chunks', () => {
-    const inputData = Buffer.alloc((blockSize - EthereumECIES.ecieOverheadLength) * 2 + 10, 'a');
+    const inputData = Buffer.alloc((blockSize - StaticHelpersECIES.ecieOverheadLength) * 2 + 10, 'a');
     testDecryption(inputData);
   });
 });

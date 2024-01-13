@@ -4,7 +4,7 @@ import { MemberType } from './enumerations/memberType';
 import { GuidV4 } from './guid';
 import { EmailString } from './emailString';
 import { IMemberDTO } from './interfaces/memberDto';
-import { EthereumECIES } from './ethereumECIES';
+import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import Wallet from 'ethereumjs-wallet';
 import { ShortHexGuid, SignatureBuffer } from './types';
 import { StaticHelpersVoting } from './staticHelpers.voting';
@@ -87,10 +87,10 @@ export class BrightChainMember {
   }
   public set privateKey(value: Buffer) {
     const nonce = randomBytes(32);
-    const testMessage = EthereumECIES.encrypt(this.publicKey, nonce);
+    const testMessage = StaticHelpersECIES.encrypt(this.publicKey, nonce);
     let testDecrypted;
     try {
-      testDecrypted = EthereumECIES.decrypt(value, testMessage);
+      testDecrypted = StaticHelpersECIES.decrypt(value, testMessage);
     } catch (e) {
       testDecrypted = undefined;
     }
@@ -122,8 +122,8 @@ export class BrightChainMember {
     if (this._wallet) {
       throw new Error('Wallet already loaded');
     }
-    const { wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
-    const keyPair = EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
+    const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
+    const keyPair = StaticHelpersECIES.walletToSimpleKeyPairBuffer(wallet);
     if (keyPair.publicKey.toString('hex') !== this.publicKey.toString('hex')) {
       throw new Error('Incorrect or invalid mnemonic for public key');
     }
@@ -138,7 +138,7 @@ export class BrightChainMember {
    * @returns
    */
   public sign(data: Buffer): SignatureBuffer {
-    return EthereumECIES.signMessage(this.privateKey, data);
+    return StaticHelpersECIES.signMessage(this.privateKey, data);
   }
 
   /**
@@ -148,7 +148,7 @@ export class BrightChainMember {
    * @returns
    */
   public verify(signature: SignatureBuffer, data: Buffer): boolean {
-    return EthereumECIES.verifyMessage(this.publicKey, data, signature);
+    return StaticHelpersECIES.verifyMessage(this.publicKey, data, signature);
   }
   public get votingKeyPair(): PaillierKeyPair {
     const votingPublicKey = StaticHelpersVoting.bufferToVotingPublicKey(this.votingPublicKey);
@@ -172,9 +172,9 @@ export class BrightChainMember {
     creator?: BrightChainMember
   ): BrightChainMember {
     const newId = GuidV4.new();
-    const mnemonic = EthereumECIES.generateNewMnemonic();
-    const { wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
-    const keyPair = EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
+    const mnemonic = StaticHelpersECIES.generateNewMnemonic();
+    const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
+    const keyPair = StaticHelpersECIES.walletToSimpleKeyPairBuffer(wallet);
     const votingKeypair = generateRandomKeysSync(StaticHelpersVoting.votingKeyPairBitLength);
     return new BrightChainMember(
       memberType,
@@ -200,7 +200,7 @@ export class BrightChainMember {
    */
   encryptData(data: string | Buffer): Buffer {
     const bufferData = Buffer.isBuffer(data) ? data : Buffer.from(data);
-    return EthereumECIES.encrypt(this.publicKey, bufferData);
+    return StaticHelpersECIES.encrypt(this.publicKey, bufferData);
   }
 
   /**
@@ -209,7 +209,7 @@ export class BrightChainMember {
    * @returns The decrypted data.
    */
   decryptData(encryptedData: Buffer) {
-    return EthereumECIES.decrypt(this.privateKey, encryptedData);
+    return StaticHelpersECIES.decrypt(this.privateKey, encryptedData);
   }
 
   toJSON(): string {

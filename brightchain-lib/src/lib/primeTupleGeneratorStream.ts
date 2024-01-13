@@ -5,13 +5,12 @@ import { RandomBlock } from './blocks/random';
 import { WhitenedBlock } from './blocks/whitened';
 import { BlockSize } from './enumerations/blockSizes';
 import { InMemoryBlockTuple } from './blocks/memoryTuple';
-import { BaseBlock } from './blocks/base';
 import { BlockDataType } from './enumerations/blockDataType';
 
 /**
- * Given a stream of data, produce a stream of tuples by breaking the data into blocks and producing tuples from the blocks
+ * Given a stream of data blocks, produce a stream of prime tuples by breaking the data into blocks and producing tuples from the blocks
  */
-export class TupleGeneratorStream extends Transform {
+export class PrimeTupleGeneratorStream extends Transform {
   private blockSize: number;
   private buffer: Buffer;
   private randomBlockSource: () => RandomBlock;
@@ -36,28 +35,23 @@ export class TupleGeneratorStream extends Transform {
   }
 
   private makeTuple(): void {
+    if (this.buffer.length < this.blockSize) {
+      return;
+    }
     const blockData = this.buffer.subarray(0, this.blockSize);
     this.buffer = this.buffer.subarray(this.blockSize);
-    const block: EphemeralBlock = new EphemeralBlock(this.blockSize, blockData, BlockDataType.EphemeralStructuredData, blockData.length);
-    let sourceBlocks: BaseBlock[] = [block];
-    const finalBlocks: BaseBlock[] = [];
+    const sourceBlock: EphemeralBlock = new EphemeralBlock(this.blockSize, blockData, BlockDataType.EphemeralStructuredData, blockData.length);
+    const randomBlocks: RandomBlock[] = [];
     for (let i = 0; i < RandomBlocksPerTuple; i++) {
       const b = this.randomBlockSource();
-      sourceBlocks.push(b);
-      finalBlocks.push(b);
+      randomBlocks.push(b);
     }
+    const whiteners: WhitenedBlock[] = [];
     for (let i = RandomBlocksPerTuple; i < TupleSize - 1; i++) {
       const b = this.whitenedBlockSource() ?? this.randomBlockSource();
-      sourceBlocks.push(b);
-      finalBlocks.push(b);
+      whiteners.push(b);
     }
-    let tuple = new InMemoryBlockTuple(sourceBlocks);
-    const resultBlock = tuple.xor<WhitenedBlock>();
-    finalBlocks.push(resultBlock);
-    // clear blocks to free memory/allow GC
-    sourceBlocks = [];
-    // clear tuple to free memory/allow GC and replace with the final tuple
-    tuple = new InMemoryBlockTuple(finalBlocks);
+    const tuple = InMemoryBlockTuple.makeTupleFromSourceXor(sourceBlock, whiteners, randomBlocks);
     this.push(tuple);
   }
 
