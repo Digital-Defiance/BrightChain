@@ -1,5 +1,5 @@
 import { Transform, TransformCallback } from "stream";
-import { EthereumECIES } from "../ethereumECIES";
+import { StaticHelpersECIES } from "../staticHelpers.ECIES";
 import { BlockSize } from "../enumerations/blockSizes";
 import { randomBytes } from "crypto";
 
@@ -11,7 +11,7 @@ export class EciesEncryptionTransform extends Transform {
     private readonly receiverPublicKey: Buffer;
     constructor(blockSize: BlockSize, receiverPublicKey: Buffer) {
         super();
-        this.chunkSize = (blockSize as number) - EthereumECIES.ecieOverheadLength;
+        this.chunkSize = (blockSize as number) - StaticHelpersECIES.ecieOverheadLength;
         this.receiverPublicKey = receiverPublicKey;
     }
     // gather data until we have a chunkSize worth, then encrypt it and push it out
@@ -21,7 +21,7 @@ export class EciesEncryptionTransform extends Transform {
         while (this.buffer.length >= this.chunkSize) {
             const chunkToEncrypt = this.buffer.subarray(0, this.chunkSize);
             this.buffer = this.buffer.subarray(this.chunkSize);
-            const encryptedChunk = EthereumECIES.encrypt(this.receiverPublicKey, chunkToEncrypt);
+            const encryptedChunk = StaticHelpersECIES.encrypt(this.receiverPublicKey, chunkToEncrypt);
             this.push(encryptedChunk);
         }
         callback();
@@ -33,13 +33,13 @@ export class EciesEncryptionTransform extends Transform {
                 // Process a full chunk
                 const chunkToEncrypt = this.buffer.subarray(0, this.chunkSize);
                 this.buffer = this.buffer.subarray(this.chunkSize);
-                const encryptedChunk = EthereumECIES.encrypt(this.receiverPublicKey, chunkToEncrypt);
+                const encryptedChunk = StaticHelpersECIES.encrypt(this.receiverPublicKey, chunkToEncrypt);
                 this.push(encryptedChunk);
             } else {
                 // Handle the last chunk which might be smaller than chunkSize
                 const padding = randomBytes(this.chunkSize - this.buffer.length);
                 const finalChunkToEncrypt = Buffer.concat([this.buffer, padding]);
-                const encryptedChunk = EthereumECIES.encrypt(this.receiverPublicKey, finalChunkToEncrypt);
+                const encryptedChunk = StaticHelpersECIES.encrypt(this.receiverPublicKey, finalChunkToEncrypt);
                 this.push(encryptedChunk);
                 break; // Exit the loop as this is the last chunk
             }

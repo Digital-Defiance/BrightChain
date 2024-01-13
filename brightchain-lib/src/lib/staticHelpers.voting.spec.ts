@@ -1,11 +1,11 @@
 import { generateRandomKeysSync } from 'paillier-bigint';
 import { StaticHelpersVoting } from './staticHelpers.voting';
-import { EthereumECIES } from './ethereumECIES';
+import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import { randomBytes } from 'crypto';
 describe('staticHelpers.voting', () => {
-  const mnemonic = EthereumECIES.generateNewMnemonic();
-  const { wallet } = EthereumECIES.walletAndSeedFromMnemonic(mnemonic);
-  const keyPair = EthereumECIES.walletToSimpleKeyPairBuffer(wallet);
+  const mnemonic = StaticHelpersECIES.generateNewMnemonic();
+  const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
+  const keyPair = StaticHelpersECIES.walletToSimpleKeyPairBuffer(wallet);
   const votingKeypair = generateRandomKeysSync(StaticHelpersVoting.votingKeyPairBitLength);
   describe('private key algorithms', () => {
     it('should encrypt and decrypt a private key', () => {
