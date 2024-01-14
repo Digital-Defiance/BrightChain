@@ -7,7 +7,6 @@ import { ChecksumTransform } from "../transforms/checksumTransform";
 import { XorTransform } from '../transforms/xorTransform';
 import { file } from 'tmp';
 import { BaseBlock } from "../blocks/base";
-import { BlockType } from "../enumerations/blockType";
 
 export class DiskBlockAsyncStore extends DiskBlockStore {
   constructor(storePath: string, blockSize: BlockSize) {
@@ -21,21 +20,10 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
     const blockHandle = new BlockHandle(key, this._blockSize, this.blockPath(key));
     return blockHandle;
   }
-  public getData(key: ChecksumBuffer, blockType: BlockType): BaseBlock {
-    const blockPath = this.blockPath(key);
-    const data = readFileSync(blockPath);
-    if (data.length !== this._blockSize) {
-      throw new Error(`Block size mismatch. Expected ${this._blockSize} but got ${data.length}.`);
-    }
-    const statResults = statSync(blockPath);
-    const dateCreated = statResults.ctime;
-    switch (blockType) {
-      case BlockType.RawData:
-      case BlockType.Random:
-        return new BaseBlock(this._blockSize, data, true, false, this._blockSize, dateCreated, key);
-      default:
-        throw new Error(`Invalid block type ${blockType}`);
-    }
+  public getData(key: ChecksumBuffer): BaseBlock {
+    const handle = this.get(key);
+    const metadata = handle.metadata;
+    return new BaseBlock(this._blockSize, handle.getDataSync(), metadata.dataType, metadata.lengthBeforeEncryption, metadata.dateCreated, key);
   }
   public setData(block: BaseBlock) {
     if (block.blockSize !== this._blockSize) {
@@ -49,6 +37,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
       throw new Error(`Block path ${blockPath} already exists`);
     }
     writeFileSync(blockPath, block.data);
+    writeFileSync(this.metadataPath(block.id), JSON.stringify(block.metadata));
   }
   public async xor(blocks: BlockHandle[]): Promise<BlockHandle> {
     return new Promise((resolve, reject) => {

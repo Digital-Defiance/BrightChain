@@ -16,6 +16,9 @@ export class DiskBlockStore {
     const blockSizeString = sizeToSizeString(this._blockSize);
     return join(this._storePath, blockSizeString, checksumString[0], checksumString[1], checksumString);
   }
+  public metadataPath(blockId: ChecksumBuffer): string {
+    return this.blockPath(blockId) + ".m.json";
+  }
   public ensureBlockPath(blockId: ChecksumBuffer): void {
     const blockDir = this.blockDir(blockId);
     if (!existsSync(blockDir)) {

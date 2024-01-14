@@ -1,7 +1,8 @@
-import { ReadStream, WriteStream, createReadStream, createWriteStream, existsSync } from 'fs';
+import { ReadStream, WriteStream, createReadStream, createWriteStream, existsSync, readFileSync } from 'fs';
 import { BlockSize } from '../enumerations/blockSizes';
 import { ChecksumBuffer } from '../types';
 import { ChecksumTransform } from '../transforms/checksumTransform';
+import { BlockMetadata } from '../interfaces/blockMetadata';
 
 /**
  * A block handle is a reference to a block in a block store.
@@ -13,6 +14,13 @@ export class BlockHandle {
   public readonly path: string;
   public get dataLength(): number {
     return this.blockSize as number;
+  }
+  public get metadata(): BlockMetadata {
+    const path = this.path + '.m.json';
+    return JSON.parse(readFileSync(path).toString()) as BlockMetadata;
+  }
+  public getDataSync(): Buffer {
+    return readFileSync(this.path);
   }
   public getReadStream(): ReadStream {
     const stream = createReadStream(this.path);
