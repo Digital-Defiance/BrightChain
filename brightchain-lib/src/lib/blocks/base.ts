@@ -11,6 +11,7 @@ import { BlockType } from '../enumerations/blockType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BrightChainMember } from '../brightChainMember';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { BlockMetadata } from '../interfaces/blockMetadata';
 
 export class BaseBlock {
   public readonly blockType: BlockType = BlockType.Unknown;
@@ -181,5 +182,14 @@ export class BaseBlock {
       throw new Error('Checksum mismatch');
     }
     return block;
+  }
+  public get metadata(): BlockMetadata {
+    return {
+      size: this.blockSize,
+      type: this.blockType,
+      dataType: this.blockDataType,
+      lengthBeforeEncryption: this.lengthBeforeEncryption,
+      dateCreated: this.dateCreated,
+    };
   }
 }
