@@ -9,6 +9,7 @@ import { file } from 'tmp';
 import { BaseBlock } from "../blocks/base";
 import { BlockMetadata } from "../interfaces/blockMetadata";
 import XorMultipleTransformStream from "../transforms/xorMultipleTransform";
+import { Readable, Transform } from "stream";
 
 export class DiskBlockAsyncStore extends DiskBlockStore {
   constructor(storePath: string, blockSize: BlockSize) {
@@ -41,41 +42,63 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
     writeFileSync(blockPath, block.data);
     writeFileSync(this.metadataPath(block.id), JSON.stringify(block.metadata));
   }
-  public async xor(blocks: BlockHandle[], metadata: BlockMetadata): Promise<BlockHandle> {
+  public async xor(blocks: BlockHandle[], destBlockMetadata: BlockMetadata): Promise<BlockHandle> {
     return new Promise((resolve, reject) => {
-      file((err: Error | null, tempFilePath: string) => {
-        if (err) throw err;
-        const writeStream = createWriteStream(tempFilePath);
-        const readStreams = [...blocks.map((block) => block.getReadStream())];
+      this.createTempFile((err, tempFilePath) => {
+        if (err) return reject(err);
+
+        const readStreams = this.createReadStreams(blocks);
         const xorStream = new XorMultipleTransformStream(readStreams);
         const checksumStream = new ChecksumTransform();
-        // When all read streams end, end the xorStream
-        let endedStreams = 0;
-        readStreams.forEach(readStream => {
-          readStream.on('end', () => {
-            if (++endedStreams === readStreams.length) {
-              xorStream.end();
-            }
-          });
-        });
-        // Create a write stream for the output
-        xorStream.pipe(checksumStream).pipe(writeStream);
-        checksumStream.on('checksum', (checksumBuffer) => {
-          const checksum = checksumBuffer.toString('hex');
-          const newPath = this.blockPath(checksum);
-          if (existsSync(newPath)) {
-            throw new Error(`Block path ${newPath} already exists`);
-          }
 
-          rename(tempFilePath, newPath, (err) => {
-            if (err) return reject(err);
-            const newBlockHandle = new BlockHandle(checksumBuffer, this._blockSize, this.blockPath(checksumBuffer));
-            writeFileSync(this.metadataPath(checksumBuffer), JSON.stringify(metadata));
-            resolve(newBlockHandle);
-          });
-        });
+        this.handleReadStreamEnds(readStreams, xorStream);
+
+        const writeStream = createWriteStream(tempFilePath);
+        xorStream.pipe(checksumStream).pipe(writeStream);
+
+        this.handleChecksum(checksumStream, tempFilePath, destBlockMetadata, resolve, reject);
         writeStream.on('error', reject);
       });
+    });
+  }
+
+  private createTempFile(callback: (err: Error | null, tempFilePath: string) => void) {
+    file(callback);
+  }
+
+  private createReadStreams(blocks: BlockHandle[]): Readable[] {
+    return blocks.map(block => block.getReadStream());
+  }
+
+  private handleReadStreamEnds(readStreams: Readable[], xorStream: Transform) {
+    let endedStreams = 0;
+    readStreams.forEach(readStream => {
+      readStream.on('end', () => {
+        if (++endedStreams === readStreams.length) {
+          xorStream.end();
+        }
+      });
+    });
+  }
+
+  private handleChecksum(checksumStream: ChecksumTransform, tempFilePath: string, metadata: BlockMetadata, resolve: (value: BlockHandle) => void, reject: (reason?: any) => void) {
+    checksumStream.on('checksum', (checksumBuffer) => {
+      const checksum = checksumBuffer.toString('hex');
+      const newPath = this.blockPath(checksum);
+      if (existsSync(newPath)) {
+        return reject(new Error(`Block path ${newPath} already exists`));
+      }
+
+      this.renameAndWriteMetadata(tempFilePath, newPath, checksumBuffer as ChecksumBuffer, metadata, resolve, reject);
+    });
+  }
+
+  private renameAndWriteMetadata(tempFilePath: string, newPath: string, checksumBuffer: ChecksumBuffer, metadata: BlockMetadata, resolve: (value: BlockHandle) => void, reject: (reason?: any) => void) {
+    rename(tempFilePath, newPath, (err) => {
+      if (err) return reject(err);
+      const newBlockHandle = new BlockHandle(checksumBuffer, this._blockSize, this.blockPath(checksumBuffer));
+      writeFileSync(this.metadataPath(checksumBuffer), JSON.stringify(metadata));
+      resolve(newBlockHandle);
     });
   }
 }
