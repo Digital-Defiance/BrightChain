@@ -1,4 +1,4 @@
-import { createWriteStream, existsSync, readFileSync, rename, statSync, writeFileSync } from "fs";
+import { createWriteStream, existsSync, rename, writeFileSync } from "fs";
 import { DiskBlockStore } from "./diskBlockStore";
 import { BlockSize } from "../enumerations/blockSizes";
 import { BlockHandle } from "../blocks/handle";
@@ -7,6 +7,8 @@ import { ChecksumTransform } from "../transforms/checksumTransform";
 import { XorTransform } from '../transforms/xorTransform';
 import { file } from 'tmp';
 import { BaseBlock } from "../blocks/base";
+import { BlockMetadata } from "../interfaces/blockMetadata";
+import XorMultipleTransformStream from "../transforms/xorMultipleTransform";
 
 export class DiskBlockAsyncStore extends DiskBlockStore {
   constructor(storePath: string, blockSize: BlockSize) {
@@ -39,13 +41,13 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
     writeFileSync(blockPath, block.data);
     writeFileSync(this.metadataPath(block.id), JSON.stringify(block.metadata));
   }
-  public async xor(blocks: BlockHandle[]): Promise<BlockHandle> {
+  public async xor(blocks: BlockHandle[], metadata: BlockMetadata): Promise<BlockHandle> {
     return new Promise((resolve, reject) => {
-      file((err: Error, tempFilePath: string) => {
+      file((err: Error | null, tempFilePath: string) => {
         if (err) throw err;
         const writeStream = createWriteStream(tempFilePath);
-        const xorStream = new XorTransform();
         const readStreams = [...blocks.map((block) => block.getReadStream())];
+        const xorStream = new XorMultipleTransformStream(readStreams);
         const checksumStream = new ChecksumTransform();
         // When all read streams end, end the xorStream
         let endedStreams = 0;
@@ -68,6 +70,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
           rename(tempFilePath, newPath, (err) => {
             if (err) return reject(err);
             const newBlockHandle = new BlockHandle(checksumBuffer, this._blockSize, this.blockPath(checksumBuffer));
+            writeFileSync(this.metadataPath(checksumBuffer), JSON.stringify(metadata));
             resolve(newBlockHandle);
           });
         });
