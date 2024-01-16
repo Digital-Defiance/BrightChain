@@ -3,7 +3,7 @@ import { ChecksumBuffer } from "../types";
 import { join } from "path";
 import { BlockSize, sizeToSizeString } from "../enumerations/blockSizes";
 
-export class DiskBlockStore {
+export abstract class DiskBlockStore {
   public readonly _storePath: string;
   public readonly _blockSize: BlockSize;
   public blockDir(blockId: ChecksumBuffer): string {
