@@ -4,8 +4,8 @@ import { EphemeralBlock } from './blocks/ephemeral';
 import { RandomBlock } from './blocks/random';
 import { WhitenedBlock } from './blocks/whitened';
 import { BlockSize } from './enumerations/blockSizes';
-import { InMemoryBlockTuple } from './blocks/memoryTuple';
 import { BlockDataType } from './enumerations/blockDataType';
+import { StaticHelpersTuple } from './staticHelpers.tuple';
 
 /**
  * Given a stream of data blocks, produce a stream of prime tuples by breaking the data into blocks and producing tuples from the blocks
@@ -51,7 +51,7 @@ export class PrimeTupleGeneratorStream extends Transform {
       const b = this.whitenedBlockSource() ?? this.randomBlockSource();
       whiteners.push(b);
     }
-    const tuple = InMemoryBlockTuple.makeTupleFromSourceXor(sourceBlock, whiteners, randomBlocks);
+    const tuple = StaticHelpersTuple.makeTupleFromSourceXor(sourceBlock, whiteners, randomBlocks);
     this.push(tuple);
   }
 
