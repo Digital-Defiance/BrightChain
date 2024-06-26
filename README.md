@@ -12,7 +12,9 @@ Future development includes completing the block generation and recovery process
 
 BrightChain proposes a feature called "Brokered Anonymity" where activities can be conducted anonymously with identity information removed but encrypted and held aside only able to be reconstructed by a majority of members in the quorum in the event of a FISA warrant or other legal process- otherwise if the digital statute of limitations expires, the identifying information is lost forever and the anonymity is preserved.
 
-The quorum will be an important aspect of BrightChain. That work is still in the future as well.
+The quorum will be an important aspect of BrightChain and current development includes methods for sealing and unsealing documents amongst groups of users with the ability to require that only a certain percentage of the original users be required to unseal. Much of the Quorum work is still in the future as well.
+
+There is also code in place for voting with [Paillier](https://en.wikipedia.org/wiki/Paillier_cryptosystem) encryption.
 
 ## Documentation/Overview
 
