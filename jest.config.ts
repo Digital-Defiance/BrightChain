@@ -1,5 +1,7 @@
+import type { Config } from '@jest/types';
 import { getJestProjects } from '@nx/jest';
 
-export default {
+const config: Config.InitialOptions = {
   projects: getJestProjects(),
 };
+export default config;
