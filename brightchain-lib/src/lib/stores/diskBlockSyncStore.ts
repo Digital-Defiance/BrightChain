@@ -4,7 +4,7 @@ import { ChecksumBuffer } from "../types";
 import { BlockSize } from "../enumerations/blockSizes";
 import { ISimpleStore } from "../interfaces/simpleStore";
 import { DiskBlockStore } from "./diskBlockStore";
-import { BlockMetadata } from "../interfaces/blockMetadata";
+import { IBlockMetadata } from "../interfaces/blockMetadata";
 import { BlockDataType } from "../enumerations/blockDataType";
 
 export class DiskBlockSyncStore extends DiskBlockStore implements ISimpleStore<ChecksumBuffer, BaseBlock> {
@@ -21,7 +21,7 @@ export class DiskBlockSyncStore extends DiskBlockStore implements ISimpleStore<C
     if (blockData.length !== this._blockSize) {
       throw new Error(`Block size mismatch. Expected ${this._blockSize} but got ${blockData.length}.`);
     }
-    const metadata = JSON.parse(readFileSync(this.metadataPath(key)).toString()) as BlockMetadata;
+    const metadata = JSON.parse(readFileSync(this.metadataPath(key)).toString()) as IBlockMetadata;
     const block = new BaseBlock(this._blockSize, blockData, metadata.dataType, metadata.lengthBeforeEncryption, metadata.dateCreated, key);
     if (!block.validate()) {
       throw new Error(`Block ${key.toString('hex')} failed validation`);

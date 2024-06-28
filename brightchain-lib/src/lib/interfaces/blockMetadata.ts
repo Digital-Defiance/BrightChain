@@ -2,7 +2,7 @@ import { BlockDataType } from "../enumerations/blockDataType";
 import { BlockSize } from "../enumerations/blockSizes";
 import { BlockType } from "../enumerations/blockType";
 
-export interface BlockMetadata {
+export interface IBlockMetadata {
   size: BlockSize;
   type: BlockType;
   dataType: BlockDataType;
