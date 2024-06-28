@@ -11,7 +11,7 @@ import { BlockType } from '../enumerations/blockType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BrightChainMember } from '../brightChainMember';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
-import { BlockMetadata } from '../interfaces/blockMetadata';
+import { IBlockMetadata } from '../interfaces/blockMetadata';
 
 export class BaseBlock {
   public readonly blockType: BlockType = BlockType.Unknown;
@@ -183,7 +183,7 @@ export class BaseBlock {
     }
     return block;
   }
-  public get metadata(): BlockMetadata {
+  public get metadata(): IBlockMetadata {
     return {
       size: this.blockSize,
       type: this.blockType,

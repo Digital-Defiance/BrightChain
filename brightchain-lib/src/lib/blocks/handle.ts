@@ -2,7 +2,7 @@ import { ReadStream, WriteStream, createReadStream, createWriteStream, existsSyn
 import { BlockSize } from '../enumerations/blockSizes';
 import { ChecksumBuffer } from '../types';
 import { ChecksumTransform } from '../transforms/checksumTransform';
-import { BlockMetadata } from '../interfaces/blockMetadata';
+import { IBlockMetadata } from '../interfaces/blockMetadata';
 
 /**
  * A block handle is a reference to a block in a block store.
@@ -15,9 +15,9 @@ export class BlockHandle {
   public get dataLength(): number {
     return this.blockSize as number;
   }
-  public get metadata(): BlockMetadata {
+  public get metadata(): IBlockMetadata {
     const path = this.path + '.m.json';
-    return JSON.parse(readFileSync(path).toString()) as BlockMetadata;
+    return JSON.parse(readFileSync(path).toString()) as IBlockMetadata;
   }
   public getDataSync(): Buffer {
     return readFileSync(this.path);

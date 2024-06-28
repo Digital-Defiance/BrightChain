@@ -1,11 +1,11 @@
-import { HexString, ShortHexGuid } from "../types";
+import { HexString } from "../types";
 import { IBasicObjectDTO } from "./basicObjectDto";
 
 export interface IBasicDataObjectDTO extends IBasicObjectDTO {
   /**
    * ID of the data object. checksum of the data.
    */
-  id: string;
+  id: HexString;
   /**
    * The data to be stored
    */

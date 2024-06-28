@@ -7,7 +7,7 @@ import { ChecksumTransform } from "../transforms/checksumTransform";
 import { XorTransform } from '../transforms/xorTransform';
 import { file } from 'tmp';
 import { BaseBlock } from "../blocks/base";
-import { BlockMetadata } from "../interfaces/blockMetadata";
+import { IBlockMetadata } from "../interfaces/blockMetadata";
 import XorMultipleTransformStream from "../transforms/xorMultipleTransform";
 import { Readable, Transform, Writable } from "stream";
 import MemoryWritableStream from "../memoryWriteableStream";
@@ -43,7 +43,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
     writeFileSync(blockPath, block.data);
     writeFileSync(this.metadataPath(block.id), JSON.stringify(block.metadata));
   }
-  public async xor(blocks: BlockHandle[], destBlockMetadata: BlockMetadata): Promise<BaseBlock> {
+  public async xor(blocks: BlockHandle[], destBlockMetadata: IBlockMetadata): Promise<BaseBlock> {
     return new Promise((resolve, reject) => {
 
         const readStreams = this.createReadStreams(blocks);
@@ -75,7 +75,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
     });
   }
 
-  private handleChecksum(checksumStream: ChecksumTransform, writeStream: MemoryWritableStream, metadata: BlockMetadata, resolve: (value: BaseBlock) => void, reject: (reason?: any) => void) {
+  private handleChecksum(checksumStream: ChecksumTransform, writeStream: MemoryWritableStream, metadata: IBlockMetadata, resolve: (value: BaseBlock) => void, reject: (reason?: any) => void) {
     checksumStream.on('checksum', (checksumBuffer) => {
       const block = new BaseBlock(this._blockSize, writeStream.data, metadata.dataType, metadata.lengthBeforeEncryption, metadata.dateCreated, checksumBuffer);
       resolve(block);
