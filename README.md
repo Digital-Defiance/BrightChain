@@ -1,5 +1,7 @@
 # BrightChain
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5306f297097a42409ff2bd332e05e717)](https://app.codacy.com/gh/Digital-Defiance/BrightChain?utm_source=github.com&utm_medium=referral&utm_content=Digital-Defiance/BrightChain&utm_campaign=Badge_Grade)
+
 This is the repository containing code for the pre-alpha research concept called BrightChain, based in part on the [Owner Free Filesystem](https://en.wikipedia.org/wiki/OFFSystem). BrightChain was conceived before IPFS was created and has been started and re-started several times over the last decade. It started out in C# and is now a Node/TypeScript project. You'll notice many similarities with IPFS as well as [Prometheus](https://github.com/Prometheus-SCN).
 
 Currently the repository is an NX monorepo with only one project, "brightchain-lib" which contains the core BrightChain functionality that will be used by the to-be-created brightchain node application and quorum application.
