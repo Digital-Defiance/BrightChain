@@ -3,7 +3,7 @@ import type { Config } from '@jest/types';
 /* eslint-disable */
 const config: Config.InitialOptions = {
   displayName: 'brightchain-lib',
-  preset: '../jest.preset.js',
+  preset: 'ts-jest',
   testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
