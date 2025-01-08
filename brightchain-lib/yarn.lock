@@ -19,7 +19,7 @@ __metadata:
     bip39: "npm:^3.1.0"
     bn.js: "npm:^5.2.1"
     clsx: "npm:^2.0.0"
-    elliptic: "npm:6.5.7"
+    elliptic: "npm:6.6.0"
     ethereumjs-util: "npm:^7.1.5"
     ethereumjs-wallet: "npm:^1.0.2"
     js-sha3: "npm:^0.9.2"
@@ -936,9 +936,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"elliptic@npm:6.5.7":
-  version: 6.5.7
-  resolution: "elliptic@npm:6.5.7"
+"elliptic@npm:6.6.0":
+  version: 6.6.0
+  resolution: "elliptic@npm:6.6.0"
   dependencies:
     bn.js: "npm:^4.11.9"
     brorand: "npm:^1.1.0"
@@ -947,7 +947,7 @@ __metadata:
     inherits: "npm:^2.0.4"
     minimalistic-assert: "npm:^1.0.1"
     minimalistic-crypto-utils: "npm:^1.0.1"
-  checksum: 10c0/799959b6c54ea3564e8961f35abdf8c77e37617f3051614b05ab1fb6a04ddb65bd1caa75ed1bae375b15dda312a0f79fed26ebe76ecf05c5a7af244152a601b8
+  checksum: 10c0/42eb3492e218017bf8923a5d14a86f414952f2f771361805b3ae9f380923b5da53e203d0d92be95cb0a248858a78db7db5934a346e268abb757e6fe561d401c9
   languageName: node
   linkType: hard
 
