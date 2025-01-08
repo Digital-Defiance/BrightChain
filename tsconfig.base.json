@@ -17,7 +17,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@BrightChain/brightchain-lib": ["brightchain-lib/src/index.ts"],
+      "@BrightChain/brightchain-lib": ["brightchain-lib/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
