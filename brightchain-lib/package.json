@@ -30,6 +30,8 @@
     "@types/elliptic": "^6.4.18",
     "@types/tmp": "^0.2.6",
     "@types/uuid": "^9.0.7",
-    "@types/validator": "^13.11.7"
+    "@types/validator": "^13.11.7",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2"
   }
 }
