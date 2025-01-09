@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
+    "build:all": "NODE_ENV=production npx nx run-many --target=build --all --configuration=production",
+    "build:all:dev": "NODE_ENV=development npx nx run-many --target=build --all --configuration=development",
+    "brightchain-lib:test": "npx nx test brightchain-lib",
     "brightchain-lib:test:ci": "npx nx test brightchain-lib --configuration=ci"
   },
   "private": true,
