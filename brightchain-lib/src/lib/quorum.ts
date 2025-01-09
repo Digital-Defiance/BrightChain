@@ -1,4 +1,3 @@
-import { Shares } from 'secrets.js-34r7h';
 import * as uuid from 'uuid';
 import { ShortHexGuid } from './types';
 import { QuorumDataRecord } from './quorumDataRecord';
@@ -68,7 +67,10 @@ export class BrightChainQuorum {
    */
   protected storeMember(member: BrightChainMember) {
     this._members.set(member.id.asShortHexGuid, member);
-    this._memberPublicKeysByMemberId.set(member.id.asShortHexGuid, member.publicKey);
+    this._memberPublicKeysByMemberId.set(
+      member.id.asShortHexGuid,
+      member.publicKey
+    );
   }
 
   /**
@@ -83,16 +85,17 @@ export class BrightChainQuorum {
 
   /**
    * Encrypts and adds a document to the quorum.
-   * @param document
-   * @param amongstMembers
-   * @param membersRequired
-   * @returns
+   * @param agent The agent whose credentials are used to encrypt the document
+   * @param document The document to be encrypted
+   * @param amongstMembers The members who will be able to decrypt the document
+   * @param sharesRequired The number of members required to decrypt the document
+   * @returns The document record
    */
   public addDocument<T>(
     agent: BrightChainMember,
     document: T,
     amongstMembers: BrightChainMember[],
-    sharesRequired?: number,
+    sharesRequired?: number
   ): QuorumDataRecord {
     const newDoc = StaticHelpersSealing.quorumSeal<T>(
       agent,
@@ -106,8 +109,8 @@ export class BrightChainQuorum {
 
   /**
    * Ratrieves a document from the quorum using decrypted shares
-   * @param id
-   * @param shares
+   * @param id The document ID
+   * @param memberIds The member IDs that will be used to decrypt the document
    * @returns
    */
   public getDocument<T>(id: ShortHexGuid, memberIds: ShortHexGuid[]): T {
@@ -115,12 +118,11 @@ export class BrightChainQuorum {
     if (!doc) {
       throw new Error('Document not found');
     }
-    const members: BrightChainMember[] = memberIds.map((id) => this._members.get(id));
-
-    const restoredDoc = StaticHelpersSealing.quorumUnseal<T>(
-      doc,
-      members
+    const members: BrightChainMember[] = memberIds.map((id) =>
+      this._members.get(id)
     );
+
+    const restoredDoc = StaticHelpersSealing.quorumUnseal<T>(doc, members);
     if (!restoredDoc) {
       throw new Error('Unable to restore document');
     }
@@ -140,6 +142,6 @@ export class BrightChainQuorum {
     // check whether the supplied list of members are included in the document share distributions
     // as well as whether the number of members is sufficient to unlock the document
     throw new Error('Not implemented');
-    throw new Error(members.length.toString());
+    // throw new Error(members.length.toString());
   }
 }

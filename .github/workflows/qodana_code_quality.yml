@@ -15,10 +15,30 @@ jobs:
       pull-requests: write
       checks: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
-          fetch-depth: 0  # a full history is required for pull request analysis
+          ref: ${{ github.event.pull_request.head.sha }} # to check out the actual pull request commit, not the merge commit
+          fetch-depth: 0 # a full history is required for pull request analysis
+
+      - name: Clean workspace
+        run: |
+          rm -rf node_modules
+          rm -rf dist
+          rm -rf .cache
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Enable Yarn Berry
+        run: |
+          corepack enable
+          yarn set version 4.5.3
+
+      - name: Install dependencies
+        run: |
+          ./do-yarn.sh --immutable
+
       - name: 'Qodana Scan'
         uses: JetBrains/qodana-action@v2024.2
         with:

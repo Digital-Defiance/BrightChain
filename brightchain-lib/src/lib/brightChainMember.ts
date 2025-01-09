@@ -1,5 +1,8 @@
 import { randomBytes } from 'crypto';
-import { generateRandomKeysSync, KeyPair as PaillierKeyPair } from 'paillier-bigint';
+import {
+  generateRandomKeysSync,
+  KeyPair as PaillierKeyPair,
+} from 'paillier-bigint';
 import { MemberType } from './enumerations/memberType';
 import { GuidV4 } from './guid';
 import { EmailString } from './emailString';
@@ -134,7 +137,6 @@ export class BrightChainMember {
   /**
    * Sign the data using the loaded key pair.
    * @param data
-   * @param options
    * @returns
    */
   public sign(data: Buffer): SignatureBuffer {
@@ -151,18 +153,25 @@ export class BrightChainMember {
     return StaticHelpersECIES.verifyMessage(this.publicKey, data, signature);
   }
   public get votingKeyPair(): PaillierKeyPair {
-    const votingPublicKey = StaticHelpersVoting.bufferToVotingPublicKey(this.votingPublicKey);
+    const votingPublicKey = StaticHelpersVoting.bufferToVotingPublicKey(
+      this.votingPublicKey
+    );
     return {
       publicKey: votingPublicKey,
-      privateKey: StaticHelpersVoting.encryptedPrivateKeyToKeyPair(this.encryptedVotingPrivateKey, this.privateKey, votingPublicKey)
+      privateKey: StaticHelpersVoting.encryptedPrivateKeyToKeyPair(
+        this.encryptedVotingPrivateKey,
+        this.privateKey,
+        votingPublicKey
+      ),
     };
   }
 
   /**
    * Create a new member and generate its keys
-   * @param type
+   * @param memberType
    * @param name
    * @param contactEmail
+   * @param creator
    * @returns
    */
   public static newMember(
@@ -175,13 +184,18 @@ export class BrightChainMember {
     const mnemonic = StaticHelpersECIES.generateNewMnemonic();
     const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
     const keyPair = StaticHelpersECIES.walletToSimpleKeyPairBuffer(wallet);
-    const votingKeypair = generateRandomKeysSync(StaticHelpersVoting.votingKeyPairBitLength);
+    const votingKeypair = generateRandomKeysSync(
+      StaticHelpersVoting.votingKeyPairBitLength
+    );
     return new BrightChainMember(
       memberType,
       name,
       contactEmail,
       StaticHelpersVoting.votingPublicKeyToBuffer(votingKeypair.publicKey),
-      StaticHelpersVoting.keyPairToEncryptedPrivateKey(votingKeypair, keyPair.publicKey),
+      StaticHelpersVoting.keyPairToEncryptedPrivateKey(
+        votingKeypair,
+        keyPair.publicKey
+      ),
       keyPair.publicKey,
       keyPair.privateKey,
       wallet,

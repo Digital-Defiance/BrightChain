@@ -107,19 +107,17 @@ export abstract class StaticHelpersSymmetric {
       key,
       ivBuffer
     );
-    const decryptedDataBuffer = decipher.update(ciphertextBuffer);
-    return decryptedDataBuffer;
+    return decipher.update(ciphertextBuffer);
   }
   /**
    * Encrypt data with AES
    * @param data
    * @param encryptionKey
-   * @param useBuffer
    * @returns
    */
   public static symmetricEncryptJson<T>(
     data: T,
-    encryptionKey?: Buffer,
+    encryptionKey?: Buffer
   ): ISymmetricEncryptionResults {
     if (data === null || data === undefined) {
       throw new Error('Data to encrypt cannot be null or undefined');
@@ -130,7 +128,10 @@ export abstract class StaticHelpersSymmetric {
     } else {
       dataBuffer = Buffer.from(JSON.stringify(data), 'utf8');
     }
-    return StaticHelpersSymmetric.symmetricEncryptBuffer(dataBuffer, encryptionKey);
+    return StaticHelpersSymmetric.symmetricEncryptBuffer(
+      dataBuffer,
+      encryptionKey
+    );
   }
 
   /**

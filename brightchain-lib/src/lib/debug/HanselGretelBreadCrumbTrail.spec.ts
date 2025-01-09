@@ -136,11 +136,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
   it('should console log if enabled', () => {
     const traceLog: Array<IBreadCrumbTrace> = [];
     const originalConsoleLog = console.log;
-    let logCount = 0;
-    const logFunc = (...args: unknown[]) => {
-      logCount++;
-      //originalConsoleLog(args);
-    };
+    const logFunc = jest.fn();
     console.log = logFunc;
     let emit = false;
     HanselGretelBreadCrumbTrail.addCrumb(
@@ -149,7 +145,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
       'HanselGretelBreadCrumbTrail.spec.ts'
     );
     //expect console.log not to have been called
-    expect(logCount).toBe(0);
+    expect(logFunc).not.toHaveBeenCalled();
     emit = true;
     HanselGretelBreadCrumbTrail.addCrumb(
       emit,
@@ -157,7 +153,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
       'HanselGretelBreadCrumbTrail.spec.ts'
     );
     // expect console.log to have been called
-    expect(logCount).toBe(1);
+    expect(logFunc).toHaveBeenCalledTimes(1);
     console.log = originalConsoleLog;
   });
 });
