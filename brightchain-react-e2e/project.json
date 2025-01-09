@@ -1,0 +1,19 @@
+{
+  "name": "brightchain-react-e2e",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "brightchain-react-e2e/src",
+  "implicitDependencies": ["brightchain-react"],
+  "targets": {
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "outputs": ["{workspaceRoot}/dist/.playwright/brightchain-react-e2e"],
+      "options": {
+        "config": "brightchain-react-e2e/playwright.config.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

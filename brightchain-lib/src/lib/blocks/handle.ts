@@ -1,4 +1,11 @@
-import { ReadStream, WriteStream, createReadStream, createWriteStream, existsSync, readFileSync } from 'fs';
+import {
+  ReadStream,
+  WriteStream,
+  createReadStream,
+  createWriteStream,
+  existsSync,
+  readFileSync,
+} from 'fs';
 import { BlockSize } from '../enumerations/blockSizes';
 import { ChecksumBuffer } from '../types';
 import { ChecksumTransform } from '../transforms/checksumTransform';
@@ -23,15 +30,13 @@ export class BlockHandle {
     return readFileSync(this.path);
   }
   public getReadStream(): ReadStream {
-    const stream = createReadStream(this.path);
-    return stream;
+    return createReadStream(this.path);
   }
   public getWriteStream(overwrite = false): WriteStream {
     if (existsSync(this.path) && !overwrite) {
       throw new Error('File already exists');
     }
-    const stream = createWriteStream(this.path);
-    return stream;
+    return createWriteStream(this.path);
   }
   public async calculateChecksum(): Promise<ChecksumBuffer> {
     return new Promise((resolve, reject) => {

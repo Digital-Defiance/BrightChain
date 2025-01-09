@@ -25,7 +25,10 @@ export class StaticHelpersECIES {
   public static readonly ivLength = 16;
   public static readonly signatureLength = 65;
   public static readonly publicKeyLength = 65;
-  public static readonly ecieOverheadLength = StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength + StaticHelpersECIES.authTagLength; // 97 bytes
+  public static readonly ecieOverheadLength =
+    StaticHelpersECIES.publicKeyLength +
+    StaticHelpersECIES.ivLength +
+    StaticHelpersECIES.authTagLength; // 97 bytes
   /**
    * Mnemonic strength in bits. This will produce a 32-bit key for ECDSA.
    */
@@ -39,8 +42,7 @@ export class StaticHelpersECIES {
     `${StaticHelpersECIES.symmetricAlgorithm}-${StaticHelpersECIES.symmetricKeyBits}-${StaticHelpersECIES.symmetricKeyMode}` as CipherGCMTypes;
 
   public static generateNewMnemonic(): string {
-    const mnemonic = generateMnemonic(StaticHelpersECIES.mnemonicStrength);
-    return mnemonic;
+    return generateMnemonic(StaticHelpersECIES.mnemonicStrength);
   }
 
   public static walletFromSeed(seed: Buffer): Wallet {
@@ -115,14 +117,24 @@ export class StaticHelpersECIES {
   }
 
   public static decrypt(privateKey: Buffer, encryptedData: Buffer): Buffer {
-    const ephemeralPublicKey = encryptedData.subarray(0, StaticHelpersECIES.publicKeyLength);
-    const iv = encryptedData.subarray(StaticHelpersECIES.publicKeyLength, StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength);
+    const ephemeralPublicKey = encryptedData.subarray(
+      0,
+      StaticHelpersECIES.publicKeyLength
+    );
+    const iv = encryptedData.subarray(
+      StaticHelpersECIES.publicKeyLength,
+      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength
+    );
     const authTag = encryptedData.subarray(
       StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
-      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength + StaticHelpersECIES.authTagLength
+      StaticHelpersECIES.publicKeyLength +
+        StaticHelpersECIES.ivLength +
+        StaticHelpersECIES.authTagLength
     );
     const encrypted = encryptedData.subarray(
-      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength + StaticHelpersECIES.authTagLength
+      StaticHelpersECIES.publicKeyLength +
+        StaticHelpersECIES.ivLength +
+        StaticHelpersECIES.authTagLength
     );
 
     const ecdh = createECDH(StaticHelpersECIES.curveName);
@@ -165,7 +177,10 @@ export class StaticHelpersECIES {
     return decryptedData.toString('utf8');
   }
 
-  public static signMessage(privateKey: Buffer, message: Buffer): SignatureBuffer {
+  public static signMessage(
+    privateKey: Buffer,
+    message: Buffer
+  ): SignatureBuffer {
     const messageHash = hashPersonalMessage(message);
     const signature = ecsign(messageHash, privateKey);
     return Buffer.concat([
@@ -186,14 +201,21 @@ export class StaticHelpersECIES {
     // if the sender public key length is 65, it should have a 04 prefix
     // it should otherwise be 64 bytes
     // throw an error if it is not
-    if (senderPublicKey.length !== StaticHelpersECIES.publicKeyLength && senderPublicKey.length !== 64) {
+    if (
+      senderPublicKey.length !== StaticHelpersECIES.publicKeyLength &&
+      senderPublicKey.length !== 64
+    ) {
       throw new Error('Invalid sender public key');
     }
-    if (senderPublicKey.length === StaticHelpersECIES.publicKeyLength && senderPublicKey[0] !== 4) {
+    if (
+      senderPublicKey.length === StaticHelpersECIES.publicKeyLength &&
+      senderPublicKey[0] !== 4
+    ) {
       throw new Error('Invalid sender public key');
     }
     const has04Prefix =
-      senderPublicKey.length === StaticHelpersECIES.publicKeyLength && senderPublicKey[0] === 4;
+      senderPublicKey.length === StaticHelpersECIES.publicKeyLength &&
+      senderPublicKey[0] === 4;
     const messageHash = hashPersonalMessage(message);
     const r = signature.subarray(0, 32);
     const s = signature.subarray(32, 64);
@@ -214,7 +236,9 @@ export class StaticHelpersECIES {
   ): SignatureBuffer {
     return Buffer.from(signatureString, 'hex') as SignatureBuffer;
   }
-  public static signatureBufferToSignatureString(signatureBuffer: SignatureBuffer): SignatureString {
+  public static signatureBufferToSignatureString(
+    signatureBuffer: SignatureBuffer
+  ): SignatureString {
     return signatureBuffer.toString('hex') as SignatureString;
   }
 }
