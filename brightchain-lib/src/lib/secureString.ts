@@ -1,5 +1,5 @@
 import { GuidV4 } from './guid';
-import { createHash } from 'crypto';
+import { createHash, timingSafeEqual } from 'crypto';
 import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 import { StaticHelpersPbkdf2 } from './staticHelpers.pbkdf2';
 import { FullHexGuid, RawGuidBuffer } from './types';
@@ -36,6 +36,11 @@ export class SecureString {
       data,
       encryptionResult.salt
     );
+  }
+  public dispose(): void {
+    this._encryptedValue.fill(0);
+    this._salt.fill(0);
+    this._encryptedChecksum.fill(0);
   }
   public get id(): FullHexGuid {
     return this._id.asFullHexGuid;
@@ -88,7 +93,10 @@ export class SecureString {
     return result.encryptedData;
   }
   private validateChecksum(data: string | Buffer, checksum: string): boolean {
-    return this.generateChecksum(data) === checksum;
+    return timingSafeEqual(
+      Buffer.from(this.generateChecksum(data), 'hex'),
+      Buffer.from(checksum, 'hex')
+    );
   }
   private validateEncryptedChecksum(data: string | Buffer): boolean {
     const decryptedChecksum = this.decryptData(
