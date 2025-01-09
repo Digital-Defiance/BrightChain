@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Clean workspace
+        run: |
+          rm -rf node_modules
+          rm -rf dist
+          rm -rf .cache
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Enable Yarn Berry
+        run: |
+          corepack enable
+          yarn set version 4.5.3
+
+      - name: Clear Yarn cache
+        run: yarn cache clean
+
+      - name: Install dependencies
+        run: |
+          ./do-yarn.sh --immutable
+
+      - uses: nrwl/nx-set-shas@v4
+
+      # Run lint, test, build, and e2e tasks explicitly
+      - name: Run Lint
+        run: npx nx run-many --target=lint --all --skip-nx-cache --parallel=3
+
+      - name: Run Tests
+        run: npx nx run-many --target=test --all --skip-nx-cache --parallel=3
+
+      - name: Run Build
+        run: npx nx run-many --target=build --all --skip-nx-cache --parallel=3
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run E2E Tests
+        run: npx nx run-many --target=e2e --all --skip-nx-cache --parallel=3
+        env:
+          CI: true
+        timeout-minutes: 10
+
+      - name: Upload coverage to Codacy
+        run: bash <(curl -Ls https://coverage.codacy.com/get.sh)
