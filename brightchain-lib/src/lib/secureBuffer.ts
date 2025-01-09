@@ -1,4 +1,4 @@
-import { createHash } from 'crypto';
+import { createHash, timingSafeEqual } from 'crypto';
 import { GuidV4 } from './guid';
 import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 import { StaticHelpersPbkdf2 } from './staticHelpers.pbkdf2';
@@ -36,6 +36,11 @@ export class SecureBuffer {
       data,
       encryptionResult.salt
     );
+  }
+  public dispose(): void {
+    this._encryptedValue.fill(0);
+    this._salt.fill(0);
+    this._encryptedChecksum.fill(0);
   }
   public static fromString(
     data: string,
@@ -98,7 +103,10 @@ export class SecureBuffer {
     return result.encryptedData;
   }
   private validateChecksum(data: string | Buffer, checksum: string): boolean {
-    return this.generateChecksum(data) === checksum;
+    return timingSafeEqual(
+      Buffer.from(this.generateChecksum(data), 'hex'),
+      Buffer.from(checksum, 'hex')
+    );
   }
   private validateEncryptedChecksum(data: string | Buffer): boolean {
     const decryptedChecksum = this.decryptData(
