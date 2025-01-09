@@ -85,9 +85,6 @@ export class BrightChainMember {
     }
     return this._privateKey;
   }
-  public get privateKeyLoaded(): boolean {
-    return this._privateKey !== undefined;
-  }
   public set privateKey(value: Buffer) {
     const nonce = randomBytes(32);
     const testMessage = StaticHelpersECIES.encrypt(this.publicKey, nonce);
@@ -104,6 +101,9 @@ export class BrightChainMember {
       throw new Error('Incorrect or invalid private key for public key');
     }
     this._privateKey = value;
+  }
+  public get privateKeyLoaded(): boolean {
+    return this._privateKey !== undefined;
   }
   public get wallet(): Wallet {
     if (!this._wallet) {

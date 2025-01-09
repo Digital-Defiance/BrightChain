@@ -12,9 +12,9 @@ import { EncryptedOwnedDataBlock } from './blocks/encryptedOwnedData';
 export class CblStream extends Readable {
   private readonly cbl: ConstituentBlockListBlock;
   private readonly getWhitenedBlock: (blockId: ChecksumBuffer) => BaseBlock;
-  private currentTupleIndex: number = 0;
+  private currentTupleIndex = 0;
   private currentData: BaseBlock | null = null;
-  private overallReadOffset: bigint = 0n;
+  private overallReadOffset = 0n;
   private currentDataOffset = 0;
   private readonly maxTuple: number;
   private readonly creatorForDecryption?: BrightChainMember;
