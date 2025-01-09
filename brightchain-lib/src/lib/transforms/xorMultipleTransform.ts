@@ -55,7 +55,7 @@ export class XorMultipleTransformStream extends Transform {
 
       // Update buffers
       this.buffers = this.buffers.map((buffer, index) =>
-        this.streamEnded[index] ? buffer : buffer.slice(minLength)
+        this.streamEnded[index] ? buffer : buffer.subarray(minLength)
       );
     }
   }

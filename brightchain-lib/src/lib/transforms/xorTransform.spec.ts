@@ -16,13 +16,19 @@ describe('XorTransform', () => {
     chunks: Buffer[],
     callback: (result: Buffer) => void
   ) => {
-    chunks.forEach((chunk) => xorTransform._transform(chunk, 'utf8', () => {}));
+    chunks.forEach((chunk) =>
+      xorTransform._transform(chunk, 'utf8', () => {
+        // do nothing
+      })
+    );
 
     xorTransform.on('data', (result) => {
       callback(result);
     });
 
-    xorTransform._flush(() => {});
+    xorTransform._flush(() => {
+      // do nothing
+    });
   };
 
   it('should apply XOR correctly for multiple chunks', (done) => {
