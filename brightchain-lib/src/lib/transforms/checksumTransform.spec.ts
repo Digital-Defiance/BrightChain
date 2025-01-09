@@ -21,7 +21,9 @@ describe('ChecksumTransform', () => {
     callback: (checksum: Buffer) => void
   ) => {
     chunks.forEach((chunk) =>
-      checksumTransform._transform(chunk, 'utf8', () => {})
+      checksumTransform._transform(chunk, 'utf8', () => {
+        // do nothing
+      })
     );
 
     checksumTransform.on('checksum', (checksum) => {
