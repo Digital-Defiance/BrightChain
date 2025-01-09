@@ -115,10 +115,6 @@ export class SecureString {
       this.idBuffer,
       this._salt
     );
-    const decryptionResult = StaticHelpersSymmetric.symmetricDecryptBuffer(
-      data,
-      idKey.hash
-    );
-    return decryptionResult;
+    return StaticHelpersSymmetric.symmetricDecryptBuffer(data, idKey.hash);
   }
 }

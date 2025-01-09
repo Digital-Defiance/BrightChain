@@ -38,7 +38,7 @@ describe('blockSizes', () => {
     expect(lengthToBlockSize(268435456)).toBe(BlockSize.Huge);
     //expect non-matching sizes to be unknown
     expect(() => lengthToBlockSize(0)).toThrow();
-    expect(() => lengthToBlockSize(1)).toThrow();;
+    expect(() => lengthToBlockSize(1)).toThrow();
     expect(() => lengthToBlockSize(67108863)).toThrow();
     expect(() => lengthToBlockSize(268435455)).toThrow();
   });

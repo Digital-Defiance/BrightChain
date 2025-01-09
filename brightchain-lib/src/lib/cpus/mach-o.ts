@@ -96,7 +96,7 @@ export function handleUnixThreadCommand(
   commandBuffer: Buffer
 ) {
   const offset = 4;
-  cpu.Registers[CpuRegisters.EAX] = commandBuffer[offset + 0]; // eax
+  cpu.Registers[CpuRegisters.EAX] = commandBuffer[offset]; // eax
   cpu.Registers[CpuRegisters.ECX] = commandBuffer[offset + 2]; // ecx
   cpu.Registers[CpuRegisters.EDX] = commandBuffer[offset + 3]; // edx
   cpu.Registers[CpuRegisters.EBX] = commandBuffer[offset + 1]; // ebx

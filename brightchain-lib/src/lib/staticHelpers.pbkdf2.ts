@@ -25,7 +25,7 @@ export abstract class StaticHelpersPbkdf2 {
    */
   public static pbkdf2Config(iterations?: number): IPbkf2Config {
     // larger numbers mean better security, less
-    const config = {
+    return {
       // size of the generated hash
       hashBytes: StaticHelpersSymmetric.SymmetricKeyBytes,
       // larger salt means hashed passwords are more resistant to rainbow table, but
@@ -37,7 +37,6 @@ export abstract class StaticHelpersPbkdf2 {
       // second
       iterations: iterations ?? StaticHelpersPbkdf2.Pbkdf2IterationsPerSecond, //old given value: 872791,
     };
-    return config;
   }
 
   /**
@@ -67,11 +66,10 @@ export abstract class StaticHelpersPbkdf2 {
     if (hashBytes.length !== config.hashBytes) {
       throw new Error('Hash length does not match expected length');
     }
-    const result: IPbkdf2Result = {
+    return {
       salt: saltBytes,
       hash: hashBytes,
       iterations: config.iterations,
     };
-    return result;
   }
 }

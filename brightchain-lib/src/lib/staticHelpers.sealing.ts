@@ -22,8 +22,13 @@ export abstract class StaticHelpersSealing {
    * @param maxShares
    */
   public static reinitSecrets(maxShares: number) {
-    if (maxShares < StaticHelpersSealing.MinimumShares || maxShares > StaticHelpersSealing.MaximumShares) {
-      throw new Error(`Invalid number of shares, must be between ${StaticHelpersSealing.MinimumShares} and ${StaticHelpersSealing.MaximumShares}`);
+    if (
+      maxShares < StaticHelpersSealing.MinimumShares ||
+      maxShares > StaticHelpersSealing.MaximumShares
+    ) {
+      throw new Error(
+        `Invalid number of shares, must be between ${StaticHelpersSealing.MinimumShares} and ${StaticHelpersSealing.MaximumShares}`
+      );
     }
     // must have at least 3 bits, making the minimum max shares 2^3 = 8
     // and the max shares is 2^20 - 1 = 1048575
@@ -38,24 +43,35 @@ export abstract class StaticHelpersSealing {
   }
 
   public static validateQuorumSealInputs(
-    amongstMembers: BrightChainMember[], sharesRequired?: number
+    amongstMembers: BrightChainMember[],
+    sharesRequired?: number
   ) {
     if (amongstMembers.length < StaticHelpersSealing.MinimumShares) {
-      throw new Error(`At least ${StaticHelpersSealing.MinimumShares} members are required`);
+      throw new Error(
+        `At least ${StaticHelpersSealing.MinimumShares} members are required`
+      );
     }
     if (amongstMembers.length > StaticHelpersSealing.MaximumShares) {
-      throw new Error(`Too many members, maximum is ${StaticHelpersSealing.MaximumShares}`);
+      throw new Error(
+        `Too many members, maximum is ${StaticHelpersSealing.MaximumShares}`
+      );
     }
     sharesRequired = sharesRequired ?? amongstMembers.length;
-    if (sharesRequired < StaticHelpersSealing.MinimumShares || sharesRequired > amongstMembers.length) {
-      throw new Error(`Invalid number of shares required, must be between ${StaticHelpersSealing.MinimumShares} and ${amongstMembers.length}`);
+    if (
+      sharesRequired < StaticHelpersSealing.MinimumShares ||
+      sharesRequired > amongstMembers.length
+    ) {
+      throw new Error(
+        `Invalid number of shares required, must be between ${StaticHelpersSealing.MinimumShares} and ${amongstMembers.length}`
+      );
     }
   }
 
   /**
    * Using shamir's secret sharing, split the given data into the given number of shares
+   * @param agent
    * @param data
-   * @param amongstMemberIds
+   * @param amongstMembers
    * @param sharesRequired
    * @returns
    */
@@ -80,22 +96,21 @@ export abstract class StaticHelpersSealing {
       sharesRequired
     );
     // distribute the key shares to the members
-    const encryptedSharesByMemberId = StaticHelpersSealing.encryptSharesForMembers(
-      keyShares,
-      amongstMembers
-    );
+    const encryptedSharesByMemberId =
+      StaticHelpersSealing.encryptSharesForMembers(keyShares, amongstMembers);
 
-    const dataRecord = new QuorumDataRecord(
+    return new QuorumDataRecord(
       agent,
       amongstMembers.map((m) => m.id.asShortHexGuid),
       sharesRequired,
       encryptedData.encryptedData,
-      encryptedSharesByMemberId,
+      encryptedSharesByMemberId
     );
-    return dataRecord;
   }
 
-  public static allMembersHavePrivateKey(members: BrightChainMember[]): boolean {
+  public static allMembersHavePrivateKey(
+    members: BrightChainMember[]
+  ): boolean {
     let allHavePrivateKey = true;
     for (const member of members) {
       if (!member.privateKeyLoaded) {
@@ -108,11 +123,14 @@ export abstract class StaticHelpersSealing {
 
   /**
    * Given a quorum sealed document, decrypt the shares using the given members' private keys
-   * @param document 
-   * @param membersWithPrivateKey 
-   * @returns 
+   * @param document
+   * @param membersWithPrivateKey
+   * @returns
    */
-  public static decryptShares(document: QuorumDataRecord, membersWithPrivateKey: BrightChainMember[]): secrets.Shares {
+  public static decryptShares(
+    document: QuorumDataRecord,
+    membersWithPrivateKey: BrightChainMember[]
+  ): secrets.Shares {
     if (membersWithPrivateKey.length < document.sharesRequired) {
       throw new Error('Not enough members to unlock the document');
     }
@@ -124,7 +142,9 @@ export abstract class StaticHelpersSealing {
     );
     for (let i = 0; i < membersWithPrivateKey.length; i++) {
       const member = membersWithPrivateKey[i];
-      const encryptedKeyShareHex = document.encryptedSharesByMemberId.get(member.id.asShortHexGuid);
+      const encryptedKeyShareHex = document.encryptedSharesByMemberId.get(
+        member.id.asShortHexGuid
+      );
       if (!encryptedKeyShareHex) {
         throw new Error('Encrypted share not found');
       }
@@ -139,8 +159,8 @@ export abstract class StaticHelpersSealing {
 
   /**
    * Using shamir's secret sharing, recombine the given shares into the original data
-   * @param recoveredShares
-   * @param encryptedData
+   * @param document The document to unlock
+   * @param membersWithPrivateKey The members who will be able to unlock the document
    * @returns
    */
   public static quorumUnseal<T>(
@@ -150,7 +170,10 @@ export abstract class StaticHelpersSealing {
     if (membersWithPrivateKey.length < document.sharesRequired) {
       throw new Error('Not enough members to unlock the document');
     }
-    return StaticHelpersSealing.quoromUnsealWithShares<T>(document, StaticHelpersSealing.decryptShares(document, membersWithPrivateKey));
+    return StaticHelpersSealing.quoromUnsealWithShares<T>(
+      document,
+      StaticHelpersSealing.decryptShares(document, membersWithPrivateKey)
+    );
   }
 
   /**
@@ -161,13 +184,16 @@ export abstract class StaticHelpersSealing {
    */
   public static quoromUnsealWithShares<T>(
     document: QuorumDataRecord,
-    recoveredShares: secrets.Shares,
+    recoveredShares: secrets.Shares
   ): T {
     // reconstitute the document key from the shares
     StaticHelpersSealing.reinitSecrets(document.encryptedSharesByMemberId.size);
     const combined = secrets.combine(recoveredShares);
     const key = Buffer.from(combined, 'hex');
-    return StaticHelpersSymmetric.symmetricDecryptJson<T>(document.encryptedData, key);
+    return StaticHelpersSymmetric.symmetricDecryptJson<T>(
+      document.encryptedData,
+      key
+    );
   }
 
   /**
@@ -178,10 +204,12 @@ export abstract class StaticHelpersSealing {
    */
   public static encryptSharesForMembers(
     shares: secrets.Shares,
-    members: BrightChainMember[],
+    members: BrightChainMember[]
   ): Map<ShortHexGuid, Buffer> {
     if (shares.length != members.length) {
-      throw new Error('The number of shares does not match the number of members');
+      throw new Error(
+        'The number of shares does not match the number of members'
+      );
     }
     const memberIds = members.map((v) => v.id);
     const encryptedSharesByMemberId = new Map<ShortHexGuid, Buffer>();
@@ -197,7 +225,10 @@ export abstract class StaticHelpersSealing {
         member.publicKey,
         Buffer.from(shareForMember, 'hex')
       );
-      encryptedSharesByMemberId.set(member.id.asShortHexGuid, encryptedKeyShare);
+      encryptedSharesByMemberId.set(
+        member.id.asShortHexGuid,
+        encryptedKeyShare
+      );
     }
 
     return encryptedSharesByMemberId;
@@ -208,13 +239,11 @@ export abstract class StaticHelpersSealing {
    */
   public static decryptSharesForMembers(
     encryptedSharesByMemberId: Map<ShortHexGuid, Buffer>,
-    members: BrightChainMember[],
+    members: BrightChainMember[]
   ): secrets.Shares {
     // for each encrypted share, find the member from the members array and decrypt it
     const memberIds = Array.from(encryptedSharesByMemberId.keys());
-    const decryptedShares: secrets.Shares = new Array<string>(
-      memberIds.length
-    );
+    const decryptedShares: secrets.Shares = new Array<string>(memberIds.length);
     for (let i = 0; i < memberIds.length; i++) {
       const memberId = memberIds[i];
       const member = members.find((v) => v.id.asShortHexGuid == memberId);

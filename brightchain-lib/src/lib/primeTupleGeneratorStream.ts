@@ -11,12 +11,17 @@ import { StaticHelpersTuple } from './staticHelpers.tuple';
  * Given a stream of data blocks, produce a stream of prime tuples by breaking the data into blocks and producing tuples from the blocks
  */
 export class PrimeTupleGeneratorStream extends Transform {
-  private blockSize: number;
+  private readonly blockSize: number;
   private buffer: Buffer;
-  private randomBlockSource: () => RandomBlock;
-  private whitenedBlockSource: () => WhitenedBlock | undefined;
+  private readonly randomBlockSource: () => RandomBlock;
+  private readonly whitenedBlockSource: () => WhitenedBlock | undefined;
 
-  constructor(blockSize: BlockSize, whitenedBlockSource: () => WhitenedBlock | undefined, randomBlockSource: () => RandomBlock, options?: TransformOptions) {
+  constructor(
+    blockSize: BlockSize,
+    whitenedBlockSource: () => WhitenedBlock | undefined,
+    randomBlockSource: () => RandomBlock,
+    options?: TransformOptions
+  ) {
     super({ ...options, objectMode: true }); // Ensure objectMode is true
     this.blockSize = blockSize as number;
     this.buffer = Buffer.alloc(0);
@@ -24,7 +29,11 @@ export class PrimeTupleGeneratorStream extends Transform {
     this.whitenedBlockSource = whitenedBlockSource;
   }
 
-  public override _transform(chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback): void {
+  public override _transform(
+    chunk: Buffer,
+    encoding: BufferEncoding,
+    callback: TransformCallback
+  ): void {
     this.buffer = Buffer.concat([this.buffer, chunk]);
 
     while (this.buffer.length >= this.blockSize) {
@@ -40,7 +49,12 @@ export class PrimeTupleGeneratorStream extends Transform {
     }
     const blockData = this.buffer.subarray(0, this.blockSize);
     this.buffer = this.buffer.subarray(this.blockSize);
-    const sourceBlock: EphemeralBlock = new EphemeralBlock(this.blockSize, blockData, BlockDataType.EphemeralStructuredData, blockData.length);
+    const sourceBlock: EphemeralBlock = new EphemeralBlock(
+      this.blockSize,
+      blockData,
+      BlockDataType.EphemeralStructuredData,
+      blockData.length
+    );
     const randomBlocks: RandomBlock[] = [];
     for (let i = 0; i < RandomBlocksPerTuple; i++) {
       const b = this.randomBlockSource();
@@ -51,7 +65,11 @@ export class PrimeTupleGeneratorStream extends Transform {
       const b = this.whitenedBlockSource() ?? this.randomBlockSource();
       whiteners.push(b);
     }
-    const tuple = StaticHelpersTuple.makeTupleFromSourceXor(sourceBlock, whiteners, randomBlocks);
+    const tuple = StaticHelpersTuple.makeTupleFromSourceXor(
+      sourceBlock,
+      whiteners,
+      randomBlocks
+    );
     this.push(tuple);
   }
 

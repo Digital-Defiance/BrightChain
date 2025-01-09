@@ -4,7 +4,6 @@ import {
   getInterruptInstruction,
   getSysCallInstruction,
   getX83Instruction,
-  X83Instructions,
 } from './instructionTables';
 import CpuRegisters from '../enumerations/cpuRegisters';
 import { X86Cpu } from './x86Cpu';
@@ -60,8 +59,7 @@ export function movl(cpu: X86Cpu): () => void {
       offset = 0;
     }
     const sp = cpu.Registers[reg] + offset;
-    const value = cpu.read(4);
-    cpu.Stack[sp] = value;
+    cpu.Stack[sp] = cpu.read(4);
   };
 }
 
@@ -215,7 +213,7 @@ export function fn0x0fAfImul(cpu: X86Cpu): () => void {
   };
 }
 
-export function noOp(cpu: X86Cpu): () => void {
+export function noOp(): () => void {
   return function () {
     // noop
   };
