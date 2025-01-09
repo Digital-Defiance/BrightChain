@@ -115,7 +115,7 @@ export class BaseBlock {
       this.dateCreated
     );
   }
-  private _validated: boolean = false;
+  private _validated = false;
   public get validated(): boolean {
     return this._validated;
   }

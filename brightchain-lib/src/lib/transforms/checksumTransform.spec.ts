@@ -28,7 +28,9 @@ describe('ChecksumTransform', () => {
       callback(Buffer.isBuffer(checksum) ? checksum : Buffer.from(checksum));
     });
 
-    checksumTransform._flush(() => {});
+    checksumTransform._flush(() => {
+      // do nothing
+    });
   };
 
   it('should produce the same checksum for multiple chunks as for the whole buffer', (done) => {
