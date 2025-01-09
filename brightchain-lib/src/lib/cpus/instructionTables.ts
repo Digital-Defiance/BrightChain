@@ -60,7 +60,7 @@ export function buildInstructionArray(cpu: X86Cpu): Array<() => void> {
   const instructionList = buildInstructionMapForCpu(cpu);
   const instructionArray = new Array<() => void>(0xff);
   for (let i = 0; i < instructionArray.length; i++) {
-    instructionArray[i] = instructions.noOp(cpu);
+    instructionArray[i] = instructions.noOp();
   }
   instructionList.forEach((value, key) => {
     instructionArray[key] = value;
@@ -115,7 +115,7 @@ export function fn0x0fInstructions(cpu: X86Cpu): Map<number, () => void> {
     [0xaf, instructions.fn0x0fAfImul(cpu)],
 
     // noop
-    [0x1f, instructions.noOp(cpu)],
+    [0x1f, instructions.noOp()],
   ]);
 }
 
