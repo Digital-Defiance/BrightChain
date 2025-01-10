@@ -1,10 +1,10 @@
 import { Transform, TransformCallback, TransformOptions } from 'stream';
-import { TupleSize, RandomBlocksPerTuple } from './constants';
 import { EphemeralBlock } from './blocks/ephemeral';
 import { RandomBlock } from './blocks/random';
 import { WhitenedBlock } from './blocks/whitened';
-import { BlockSize } from './enumerations/blockSizes';
+import { RANDOM_BLOCKS_PER_TUPLE, TUPLE_SIZE } from './constants';
 import { BlockDataType } from './enumerations/blockDataType';
+import { BlockSize } from './enumerations/blockSizes';
 import { StaticHelpersTuple } from './staticHelpers.tuple';
 
 /**
@@ -20,7 +20,7 @@ export class PrimeTupleGeneratorStream extends Transform {
     blockSize: BlockSize,
     whitenedBlockSource: () => WhitenedBlock | undefined,
     randomBlockSource: () => RandomBlock,
-    options?: TransformOptions
+    options?: TransformOptions,
   ) {
     super({ ...options, objectMode: true }); // Ensure objectMode is true
     this.blockSize = blockSize as number;
@@ -32,7 +32,7 @@ export class PrimeTupleGeneratorStream extends Transform {
   public override _transform(
     chunk: Buffer,
     encoding: BufferEncoding,
-    callback: TransformCallback
+    callback: TransformCallback,
   ): void {
     this.buffer = Buffer.concat([this.buffer, chunk]);
 
@@ -53,22 +53,22 @@ export class PrimeTupleGeneratorStream extends Transform {
       this.blockSize,
       blockData,
       BlockDataType.EphemeralStructuredData,
-      blockData.length
+      blockData.length,
     );
     const randomBlocks: RandomBlock[] = [];
-    for (let i = 0; i < RandomBlocksPerTuple; i++) {
+    for (let i = 0; i < RANDOM_BLOCKS_PER_TUPLE; i++) {
       const b = this.randomBlockSource();
       randomBlocks.push(b);
     }
     const whiteners: WhitenedBlock[] = [];
-    for (let i = RandomBlocksPerTuple; i < TupleSize - 1; i++) {
+    for (let i = RANDOM_BLOCKS_PER_TUPLE; i < TUPLE_SIZE - 1; i++) {
       const b = this.whitenedBlockSource() ?? this.randomBlockSource();
       whiteners.push(b);
     }
     const tuple = StaticHelpersTuple.makeTupleFromSourceXor(
       sourceBlock,
       whiteners,
-      randomBlocks
+      randomBlocks,
     );
     this.push(tuple);
   }

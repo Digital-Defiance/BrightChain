@@ -1,6 +1,6 @@
-import { EciesDecryptionTransform } from "./eciesDecryptTransform";
-import { StaticHelpersECIES } from "../staticHelpers.ECIES";
-import { BlockSize } from "../enumerations/blockSizes";
+import { BlockSize } from '../enumerations/blockSizes';
+import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { EciesDecryptionTransform } from './eciesDecryptTransform';
 
 jest.mock('../staticHelpers.ECIES');
 
@@ -13,15 +13,18 @@ describe('EciesDecryptionTransform Unit Tests', () => {
 
   beforeEach(() => {
     StaticHelpersECIES.encrypt = jest.fn((publicKey, data) => {
-      return Buffer.from(data.map(byte => (byte + 1) % 256));
+      return Buffer.from(data.map((byte) => (byte + 1) % 256));
     });
     StaticHelpersECIES.decrypt = jest.fn((privateKey, data) => {
-      return Buffer.from(data.map(byte => (byte + 255) % 256));
+      return Buffer.from(data.map((byte) => (byte + 255) % 256));
     });
   });
 
   const testDecryption = (inputData: Buffer) => {
-    const transform = new EciesDecryptionTransform(keypair.privateKey, blockSize);
+    const transform = new EciesDecryptionTransform(
+      keypair.privateKey,
+      blockSize,
+    );
     let decryptedData = Buffer.alloc(0);
 
     transform.on('data', (chunk) => {
@@ -29,7 +32,10 @@ describe('EciesDecryptionTransform Unit Tests', () => {
     });
 
     // First, encrypt the data
-    const encryptedData = StaticHelpersECIES.encrypt(keypair.publicKey, inputData);
+    const encryptedData = StaticHelpersECIES.encrypt(
+      keypair.publicKey,
+      inputData,
+    );
     // Write encrypted data to the transform
     transform.write(encryptedData);
     transform.end();
@@ -44,12 +50,18 @@ describe('EciesDecryptionTransform Unit Tests', () => {
   });
 
   it('decrypts data that is exactly the chunk size', () => {
-    const inputData = Buffer.alloc(blockSize - StaticHelpersECIES.ecieOverheadLength, 'a');
+    const inputData = Buffer.alloc(
+      blockSize - StaticHelpersECIES.ecieOverheadLength,
+      'a',
+    );
     testDecryption(inputData);
   });
 
   it('decrypts data that spans multiple chunks', () => {
-    const inputData = Buffer.alloc((blockSize - StaticHelpersECIES.ecieOverheadLength) * 2 + 10, 'a');
+    const inputData = Buffer.alloc(
+      (blockSize - StaticHelpersECIES.ecieOverheadLength) * 2 + 10,
+      'a',
+    );
     testDecryption(inputData);
   });
 });

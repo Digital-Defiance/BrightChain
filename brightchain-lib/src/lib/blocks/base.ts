@@ -1,14 +1,14 @@
-import { ChecksumBuffer, ChecksumString } from '../types';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { BlockSize, lengthToBlockSize } from '../enumerations/blockSizes';
-import { BlockDto } from './blockDto';
 import { randomBytes } from 'crypto';
-import { StaticHelpers } from '../staticHelpers';
-import { BlockType } from '../enumerations/blockType';
-import { BlockDataType } from '../enumerations/blockDataType';
 import { BrightChainMember } from '../brightChainMember';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { BlockDataType } from '../enumerations/blockDataType';
+import { BlockSize, lengthToBlockSize } from '../enumerations/blockSizes';
+import { BlockType } from '../enumerations/blockType';
 import { IBlockMetadata } from '../interfaces/blockMetadata';
+import { StaticHelpers } from '../staticHelpers';
+import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ChecksumBuffer, ChecksumString } from '../types';
+import { BlockDto } from './blockDto';
 
 export class BaseBlock {
   public readonly blockType: BlockType = BlockType.Unknown;
@@ -21,7 +21,7 @@ export class BaseBlock {
     blockDataType: BlockDataType,
     lengthBeforeEncryption: number,
     dateCreated?: Date,
-    checksum?: ChecksumBuffer
+    checksum?: ChecksumBuffer,
   ) {
     // data must either be unencrypted and less than or equal to the block size - overhead
     // or encrypted and equal to the block size
@@ -31,7 +31,7 @@ export class BaseBlock {
       this.data = data;
       if (data.length !== (blockSize as number)) {
         throw new Error(
-          `Encrypted data length ${data.length} is not a valid block size`
+          `Encrypted data length ${data.length} is not a valid block size`,
         );
       }
       this.lengthBeforeEncryption = lengthBeforeEncryption;
@@ -40,7 +40,7 @@ export class BaseBlock {
         (blockSize as number) - StaticHelpersECIES.ecieOverheadLength
       ) {
         throw new Error(
-          `Length before encryption ${this.lengthBeforeEncryption} is too large for block size ${blockSize}`
+          `Length before encryption ${this.lengthBeforeEncryption} is too large for block size ${blockSize}`,
         );
       }
     } else {
@@ -50,7 +50,7 @@ export class BaseBlock {
         data.length !== (blockSize as number)
       ) {
         throw new Error(
-          `Raw data length ${data.length} is not valid for block size ${blockSize}`
+          `Raw data length ${data.length} is not valid for block size ${blockSize}`,
         );
       } else if (
         blockDataType == BlockDataType.EphemeralStructuredData &&
@@ -58,7 +58,7 @@ export class BaseBlock {
           (blockSize as number) - StaticHelpersECIES.ecieOverheadLength
       ) {
         throw new Error(
-          `Data length ${data.length} is too large for block size ${blockSize}`
+          `Data length ${data.length} is too large for block size ${blockSize}`,
         );
       }
       this.lengthBeforeEncryption = data.length;
@@ -98,7 +98,7 @@ export class BaseBlock {
       encryptedData,
       BlockDataType.EncryptedData,
       this.lengthBeforeEncryption,
-      this.dateCreated
+      this.dateCreated,
     );
   }
   public decrypt(creator: BrightChainMember): BaseBlock {
@@ -112,7 +112,7 @@ export class BaseBlock {
       data,
       BlockDataType.EphemeralStructuredData,
       this.lengthBeforeEncryption,
-      this.dateCreated
+      this.dateCreated,
     );
   }
   private _validated = false;
@@ -133,7 +133,7 @@ export class BaseBlock {
   }
   public xor<T extends BaseBlock>(
     other: BaseBlock,
-    otherDataType?: BlockDataType
+    otherDataType?: BlockDataType,
   ): T {
     if (this.blockSize !== other.blockSize) {
       throw new Error('Block sizes do not match');
@@ -150,7 +150,7 @@ export class BaseBlock {
       this.blockSize,
       result,
       otherDataType ?? BlockDataType.RawData,
-      blockSize
+      blockSize,
     ) as T;
   }
   public toDto(): BlockDto {
@@ -174,7 +174,7 @@ export class BaseBlock {
       BlockDataType.RawData,
       dataLength,
       new Date(dto.dateCreated),
-      StaticHelpersChecksum.checksumStringToChecksumBuffer(dto.id)
+      StaticHelpersChecksum.checksumStringToChecksumBuffer(dto.id),
     );
   }
   public static fromJson(json: string): BaseBlock {
@@ -191,7 +191,7 @@ export class BaseBlock {
     blockDataType: BlockDataType,
     lengthBeforeEncryption: number,
     dateCreated?: Date,
-    checksum?: ChecksumBuffer
+    checksum?: ChecksumBuffer,
   ): BaseBlock {
     const blockLength = blockSize as number;
     if (
@@ -199,14 +199,14 @@ export class BaseBlock {
       data.length !== blockLength
     ) {
       throw new Error(
-        `Encrypted data length ${data.length} is not a valid block size`
+        `Encrypted data length ${data.length} is not a valid block size`,
       );
     } else if (
       blockDataType == BlockDataType.EphemeralStructuredData &&
       data.length > blockLength - StaticHelpersECIES.ecieOverheadLength
     ) {
       throw new Error(
-        `Data length ${data.length} is too large for block size ${blockSize}`
+        `Data length ${data.length} is too large for block size ${blockSize}`,
       );
     }
     // fill the buffer with zeros to the next block size
@@ -223,7 +223,7 @@ export class BaseBlock {
       blockDataType,
       lengthBeforeEncryption,
       dateCreated,
-      checksum
+      checksum,
     );
     if (checksum && !block.validate()) {
       throw new Error('Checksum mismatch');

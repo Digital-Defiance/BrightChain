@@ -18,7 +18,7 @@ describe('staticHelpers', () => {
         randomValue >> 16,
         randomValue >> 8,
         randomValue,
-      ])
+      ]),
     );
   });
   it('should correctly read a value from a buffer back to a number', () => {
@@ -40,23 +40,23 @@ describe('staticHelpers', () => {
     const alice = BrightChainMember.newMember(
       MemberType.User,
       'alice',
-      new EmailString('alice@example.com')
+      new EmailString('alice@example.com'),
     );
     const bob = BrightChainMember.newMember(
       MemberType.Admin,
       'bob',
-      new EmailString('bob@example.com')
+      new EmailString('bob@example.com'),
     );
     const charlie = BrightChainMember.newMember(
       MemberType.System,
       'charlie',
-      new EmailString('charlie@example.com')
+      new EmailString('charlie@example.com'),
     );
 
     expect(StaticHelpers.membersAreAllUsers([alice, bob])).toEqual(true);
 
     expect(StaticHelpers.membersAreAllUsers([alice, bob, charlie])).toEqual(
-      false
+      false,
     );
   });
   describe('bigIntToLengthEncodedBuffer', () => {
