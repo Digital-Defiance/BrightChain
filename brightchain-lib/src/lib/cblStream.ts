@@ -1,29 +1,53 @@
 import { Readable } from 'stream';
+import { BlockService } from './blockService';
 import { ConstituentBlockListBlock } from './blocks/cbl';
-import { BaseBlock } from './blocks/base';
-import { ChecksumBuffer } from './types';
-import { StaticHelpersChecksum } from './staticHelpers.checksum';
-import { WhitenedBlock } from './blocks/whitened';
-import { BrightChainMember } from './brightChainMember';
+import { EncryptedOwnedDataBlock } from './blocks/encryptedOwnedData';
+import { BlockHandle } from './blocks/handle';
 import { InMemoryBlockTuple } from './blocks/memoryTuple';
 import { OwnedDataBlock } from './blocks/ownedData';
-import { EncryptedOwnedDataBlock } from './blocks/encryptedOwnedData';
+import { WhitenedBlock } from './blocks/whitened';
+import { BrightChainMember } from './brightChainMember';
+import { StaticHelpersChecksum } from './staticHelpers.checksum';
+import { ChecksumBuffer } from './types';
 
+/**
+ * CblStream provides streaming access to data stored in a ConstituentBlockListBlock.
+ * In the Owner Free Filesystem (OFF), data is stored as:
+ * 1. A CBL containing addresses of data blocks
+ * 2. Each data block is XORed with random blocks for privacy
+ * 3. The CBL itself may be encrypted for privacy
+ *
+ * This stream:
+ * 1. Reads block addresses from the CBL
+ * 2. Loads the corresponding whitened blocks
+ * 3. XORs them together to recover the original data
+ * 4. Decrypts the data if needed
+ */
 export class CblStream extends Readable {
   private readonly cbl: ConstituentBlockListBlock;
-  private readonly getWhitenedBlock: (blockId: ChecksumBuffer) => BaseBlock;
+  private readonly getWhitenedBlock: (blockId: ChecksumBuffer) => WhitenedBlock;
   private currentTupleIndex = 0;
-  private currentData: BaseBlock | null = null;
+  private currentData: OwnedDataBlock | null = null;
   private overallReadOffset = 0n;
   private currentDataOffset = 0;
   private readonly maxTuple: number;
   private readonly creatorForDecryption?: BrightChainMember;
+
   constructor(
     cbl: ConstituentBlockListBlock,
     getWhitenedBlock: (blockId: ChecksumBuffer) => WhitenedBlock,
-    creatorForDecryption?: BrightChainMember
+    creatorForDecryption?: BrightChainMember,
   ) {
     super();
+
+    if (!cbl) {
+      throw new Error('CBL is required');
+    }
+
+    if (!getWhitenedBlock) {
+      throw new Error('getWhitenedBlock function is required');
+    }
+
     this.cbl = cbl;
     this.getWhitenedBlock = getWhitenedBlock;
     this.maxTuple = cbl.cblAddressCount / cbl.tupleSize;
@@ -31,15 +55,17 @@ export class CblStream extends Readable {
     this.currentDataOffset = -1;
     this.creatorForDecryption = creatorForDecryption;
   }
+
   override _read(size: number): void {
     const bytesRemaining = this.cbl.originalDataLength - this.overallReadOffset;
     let stillToRead =
       bytesRemaining > BigInt(size) ? size : Number(bytesRemaining);
+
     while (stillToRead > 0) {
-      // if we have no data, read some
+      // If we have no data or have read all current data, read next tuple
       if (
         !this.currentData ||
-        this.currentDataOffset >= this.currentData.lengthBeforeEncryption
+        this.currentDataOffset >= this.currentData.data.length
       ) {
         this.readData();
         if (!this.currentData) {
@@ -47,18 +73,20 @@ export class CblStream extends Readable {
           break;
         }
       }
-      // read up to lengthBeforeEncryption bytes from the current data
-      // we have lengthBeforeEncryption - currentDataOffset bytes left in the current data
+
+      // Read up to size bytes from the current data
       const bytesToRead = Math.min(
         stillToRead,
-        this.currentData.lengthBeforeEncryption - this.currentDataOffset
+        this.currentData.data.length - this.currentDataOffset,
       );
+
       this.push(
         this.currentData.data.subarray(
           this.currentDataOffset,
-          this.currentDataOffset + bytesToRead
-        )
+          this.currentDataOffset + bytesToRead,
+        ),
       );
+
       this.overallReadOffset += BigInt(bytesToRead);
       this.currentDataOffset += bytesToRead;
       stillToRead -= bytesToRead;
@@ -70,34 +98,73 @@ export class CblStream extends Readable {
       }
     }
   }
-  private readData() {
+
+  private readData(): void {
     if (this.currentTupleIndex >= this.maxTuple) {
       this.push(null);
       this.currentData = null;
       this.currentDataOffset = -1;
       return;
     }
-    /* the data addresses start at ConstituentBlockListBlock.CblHeaderSize and we need to read
-     * cbl.tupleSize addresses (ChecksumBuffer) from the array of addresses */
-    const startOffset =
-      ConstituentBlockListBlock.CblHeaderSize +
-      this.cbl.tupleSize * this.currentTupleIndex;
-    const blocks: WhitenedBlock[] = [];
-    for (let i = 0; i < this.cbl.tupleSize; i++) {
-      const address = this.cbl.data.subarray(
-        startOffset + i * StaticHelpersChecksum.Sha3ChecksumBufferLength,
-        startOffset + (i + 1) * StaticHelpersChecksum.Sha3ChecksumBufferLength
-      ) as ChecksumBuffer;
-      blocks.push(this.getWhitenedBlock(address));
+
+    try {
+      // Calculate start offset for this tuple's addresses
+      const startOffset =
+        ConstituentBlockListBlock.CblHeaderSize +
+        this.cbl.tupleSize * this.currentTupleIndex;
+
+      // Load all blocks in the tuple
+      const blocks: BlockHandle[] = [];
+      for (let i = 0; i < this.cbl.tupleSize; i++) {
+        const address = this.cbl.data.subarray(
+          startOffset + i * StaticHelpersChecksum.Sha3ChecksumBufferLength,
+          startOffset +
+            (i + 1) * StaticHelpersChecksum.Sha3ChecksumBufferLength,
+        ) as ChecksumBuffer;
+
+        const whitenedBlock = this.getWhitenedBlock(address);
+        if (!whitenedBlock) {
+          throw new Error(`Failed to load block: ${address.toString('hex')}`);
+        }
+
+        // Create a handle from the whitened block
+        blocks.push(
+          new BlockHandle(
+            whitenedBlock.idChecksum,
+            whitenedBlock.blockSize,
+            '', // Path not needed since we have the data
+          ),
+        );
+      }
+
+      // Create tuple and XOR blocks
+      const tuple = new InMemoryBlockTuple(blocks);
+      const xoredData = tuple.xor();
+
+      // Decrypt if needed
+      if (this.creatorForDecryption) {
+        if (!(xoredData instanceof EncryptedOwnedDataBlock)) {
+          throw new Error('Expected encrypted data block');
+        }
+        this.currentData = BlockService.decrypt(
+          this.creatorForDecryption,
+          xoredData,
+        );
+      } else {
+        if (!(xoredData instanceof OwnedDataBlock)) {
+          throw new Error('Expected owned data block');
+        }
+        this.currentData = xoredData;
+      }
+
+      this.currentTupleIndex++;
+      this.currentDataOffset = 0;
+    } catch (error) {
+      this.destroy(
+        error instanceof Error
+          ? error
+          : new Error('Unknown error reading data'),
+      );
     }
-    const tuple = new InMemoryBlockTuple(blocks);
-    if (this.creatorForDecryption) {
-      const data = tuple.xor<EncryptedOwnedDataBlock>();
-      this.currentData = data.decrypt(this.creatorForDecryption);
-    } else {
-      this.currentData = tuple.xor<OwnedDataBlock>();
-    }
-    this.currentTupleIndex++;
-    this.currentDataOffset = 0;
   }
 }

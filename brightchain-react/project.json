@@ -3,6 +3,7 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "brightchain-react/src",
   "projectType": "application",
+  "implicitDependencies": ["brightchain-lib", "brightchain-api"],
   "tags": [],
   "targets": {
     "build": {
@@ -20,7 +21,7 @@
           "brightchain-react/src/favicon.ico",
           "brightchain-react/src/assets"
         ],
-        "styles": ["brightchain-react/src/styles.css"],
+        "styles": ["brightchain-react/src/styles.scss"],
         "scripts": [],
         "webpackConfig": "brightchain-react/webpack.config.js"
       },

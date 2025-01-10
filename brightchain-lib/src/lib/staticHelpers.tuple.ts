@@ -1,114 +1,215 @@
 import { ReadStream } from 'fs';
+import BlockPaddingTransform from './blockPaddingTransform';
 import { BaseBlock } from './blocks/base';
 import { ConstituentBlockListBlock } from './blocks/cbl';
 import { EncryptedOwnedDataBlock } from './blocks/encryptedOwnedData';
+import { BlockHandle } from './blocks/handle';
 import { InMemoryBlockTuple } from './blocks/memoryTuple';
 import { OwnedDataBlock } from './blocks/ownedData';
 import { RandomBlock } from './blocks/random';
 import { WhitenedBlock } from './blocks/whitened';
+import { BlockService } from './blockService';
 import { BrightChainMember } from './brightChainMember';
+import { RANDOM_BLOCKS_PER_TUPLE, TUPLE_SIZE } from './constants';
 import { BlockSize } from './enumerations/blockSizes';
-import BlockPaddingTransform from './blockPaddingTransform';
 import { PrimeTupleGeneratorStream } from './primeTupleGeneratorStream';
-import { StaticHelpersECIES } from './staticHelpers.ECIES';
-import { SignatureBuffer } from './types';
-import { RandomBlocksPerTuple, TupleSize } from './constants';
-import { EciesEncryptionTransform } from './transforms/eciesEncryptTransform';
-import { randomBytes } from 'crypto';
-import { EncryptedConstituentBlockListBlock } from './blocks/encryptedCbl';
+import { EciesEncryptTransform } from './transforms/eciesEncryptTransform';
 
+/**
+ * StaticHelpersTuple provides utility functions for working with block tuples.
+ * In the Owner Free Filesystem (OFF), tuples are used to:
+ * 1. Store data blocks with random blocks for privacy
+ * 2. Store parity blocks for error correction
+ * 3. Store CBL blocks with their metadata
+ */
 export abstract class StaticHelpersTuple {
+  /**
+   * XOR a source block with whitening and random blocks
+   */
   public static xorSourceToPrimeWhitened(
-    sourceBlock: BaseBlock | EncryptedOwnedDataBlock,
+    sourceBlock: BaseBlock | BlockHandle,
     whiteners: WhitenedBlock[],
-    randomBlocks: RandomBlock[]
+    randomBlocks: RandomBlock[],
   ): WhitenedBlock {
-    let block: BaseBlock = sourceBlock;
-    for (let i = 0; i < whiteners.length; i++) {
-      block = block.xor<WhitenedBlock>(whiteners[i]);
+    // Validate parameters
+    if (!sourceBlock || !whiteners || !randomBlocks) {
+      throw new Error('All parameters are required');
     }
-    for (let i = 0; i < randomBlocks.length; i++) {
-      block = block.xor<WhitenedBlock>(randomBlocks[i]);
+
+    if (whiteners.length + randomBlocks.length + 1 !== TUPLE_SIZE) {
+      throw new Error('Invalid number of blocks for tuple');
     }
-    return new WhitenedBlock(
-      block.blockSize,
-      block.data,
-      block.dateCreated,
-      block.id
-    );
+
+    try {
+      // XOR with whitening blocks
+      const xoredData = Buffer.from(sourceBlock.data);
+      for (const whitener of whiteners) {
+        if (whitener.blockSize !== sourceBlock.blockSize) {
+          throw new Error('Block size mismatch');
+        }
+        const whitenerData = whitener.data;
+        for (let i = 0; i < xoredData.length; i++) {
+          xoredData[i] ^= whitenerData[i];
+        }
+      }
+
+      // XOR with random blocks
+      for (const random of randomBlocks) {
+        if (random.blockSize !== sourceBlock.blockSize) {
+          throw new Error('Block size mismatch');
+        }
+        const randomData = random.data;
+        for (let i = 0; i < xoredData.length; i++) {
+          xoredData[i] ^= randomData[i];
+        }
+      }
+
+      // Create whitened block
+      return new WhitenedBlock(
+        sourceBlock.blockSize,
+        xoredData,
+        undefined, // Let constructor calculate checksum
+        new Date(),
+      );
+    } catch (error) {
+      throw new Error(
+        `Failed to XOR blocks: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+      );
+    }
   }
+
+  /**
+   * Create a tuple from a source block and its whitening/random blocks
+   */
   public static makeTupleFromSourceXor(
-    sourceBlock: BaseBlock | EncryptedOwnedDataBlock,
+    sourceBlock: BaseBlock | BlockHandle,
     whiteners: WhitenedBlock[],
-    randomBlocks: RandomBlock[]
+    randomBlocks: RandomBlock[],
   ): InMemoryBlockTuple {
     const primeWhitenedBlock = this.xorSourceToPrimeWhitened(
       sourceBlock,
       whiteners,
-      randomBlocks
+      randomBlocks,
     );
+
     return new InMemoryBlockTuple([
       primeWhitenedBlock,
       ...whiteners,
       ...randomBlocks,
     ]);
   }
+
+  /**
+   * XOR a whitened block with its whitening blocks to recover the original data
+   */
   public static xorDestPrimeWhitenedToOwned(
     primeWhitenedBlock: WhitenedBlock,
-    whiteners: WhitenedBlock[]
+    whiteners: WhitenedBlock[],
   ): OwnedDataBlock {
-    let block: BaseBlock = primeWhitenedBlock;
-    for (let i = 0; i < whiteners.length; i++) {
-      block = block.xor<BaseBlock>(whiteners[i]);
+    // Validate parameters
+    if (!primeWhitenedBlock || !whiteners) {
+      throw new Error('All parameters are required');
     }
-    return new OwnedDataBlock(
-      block.blockSize,
-      block.data,
-      block.lengthBeforeEncryption,
-      block.dateCreated,
-      block.id
-    );
+
+    try {
+      // XOR with whitening blocks
+      const xoredData = Buffer.from(primeWhitenedBlock.data);
+      for (const whitener of whiteners) {
+        if (whitener.blockSize !== primeWhitenedBlock.blockSize) {
+          throw new Error('Block size mismatch');
+        }
+        const whitenerData = whitener.data;
+        for (let i = 0; i < xoredData.length; i++) {
+          xoredData[i] ^= whitenerData[i];
+        }
+      }
+
+      // Create owned data block
+      return new OwnedDataBlock(
+        BrightChainMember.anonymous(),
+        primeWhitenedBlock.blockSize,
+        xoredData,
+        undefined, // Let constructor calculate checksum
+        new Date(),
+        xoredData.length,
+      );
+    } catch (error) {
+      throw new Error(
+        `Failed to XOR blocks: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+      );
+    }
   }
+
+  /**
+   * Create a tuple from a whitened block and its whitening blocks
+   */
   public static makeTupleFromDestXor(
     primeWhitenedBlock: WhitenedBlock,
-    whiteners: WhitenedBlock[]
+    whiteners: WhitenedBlock[],
   ): InMemoryBlockTuple {
     const ownedDataBlock = this.xorDestPrimeWhitenedToOwned(
       primeWhitenedBlock,
-      whiteners
+      whiteners,
     );
+
     return new InMemoryBlockTuple([ownedDataBlock, ...whiteners]);
   }
+
+  /**
+   * XOR a whitened block with its whitening blocks to recover a CBL
+   */
   public static xorPrimeWhitenedToCbl(
     primeWhitened: WhitenedBlock,
-    whiteners: WhitenedBlock[]
+    whiteners: WhitenedBlock[],
   ): ConstituentBlockListBlock {
-    const resultBlock = StaticHelpersTuple.xorDestPrimeWhitenedToOwned(
+    const ownedBlock = StaticHelpersTuple.xorDestPrimeWhitenedToOwned(
       primeWhitened,
-      whiteners
+      whiteners,
     );
-    return ConstituentBlockListBlock.newFromPlaintextBuffer(
-      resultBlock.data,
-      resultBlock.blockSize
+
+    return new ConstituentBlockListBlock(
+      ownedBlock.blockSize,
+      BrightChainMember.anonymous(),
+      BigInt(ownedBlock.data.length),
+      [], // No addresses yet
+      ownedBlock.dateCreated,
     );
   }
+
+  /**
+   * XOR an encrypted whitened block with its whitening blocks and decrypt to recover a CBL
+   */
   public static xorPrimeWhitenedEncryptedToCbl(
     primeWhitened: WhitenedBlock,
     whiteners: WhitenedBlock[],
-    creator: BrightChainMember
+    creator: BrightChainMember,
   ): ConstituentBlockListBlock {
-    let resultBlock = StaticHelpersTuple.xorDestPrimeWhitenedToOwned(
+    const ownedBlock = StaticHelpersTuple.xorDestPrimeWhitenedToOwned(
       primeWhitened,
-      whiteners
+      whiteners,
     );
-    resultBlock = resultBlock.decrypt(creator);
-    return ConstituentBlockListBlock.newFromPlaintextBuffer(
-      resultBlock.data,
-      resultBlock.blockSize
+
+    const encryptedBlock = BlockService.encrypt(
+      creator,
+      ownedBlock,
+    ) as EncryptedOwnedDataBlock;
+    const decryptedBlock = BlockService.decrypt(creator, encryptedBlock);
+
+    return new ConstituentBlockListBlock(
+      decryptedBlock.blockSize,
+      creator,
+      BigInt(decryptedBlock.data.length),
+      [], // No addresses yet
+      decryptedBlock.dateCreated,
     );
   }
+
   /**
-   * Given a file that is very large, encrypt it via stream and break it into blocks and produce a stream of input blocks
+   * Process a data stream into tuples and create a CBL
    */
   public static async dataStreamToPlaintextTuplesAndCBL(
     creator: BrightChainMember,
@@ -117,71 +218,114 @@ export abstract class StaticHelpersTuple {
     sourceLength: bigint,
     whitenedBlockSource: () => WhitenedBlock | undefined,
     randomBlockSource: () => RandomBlock,
-    persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>
+    persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
   ): Promise<InMemoryBlockTuple> {
-    // read the dataStream chunks and encrypt each batch of chunkSize, thus encrypting each block and ending up with blocksize bytes per block
-    const blockPaddingTransform = new BlockPaddingTransform(blockSize);
-    const tupleGeneratorStream = new PrimeTupleGeneratorStream(
-      blockSize,
-      whitenedBlockSource,
-      randomBlockSource
-    );
-    source.pipe(blockPaddingTransform).pipe(tupleGeneratorStream);
-    let blockIDs: Buffer = Buffer.alloc(0);
-    let addressCount = 0;
-    tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
+    // Validate parameters
+    if (
+      !creator ||
+      !source ||
+      !whitenedBlockSource ||
+      !randomBlockSource ||
+      !persistTuple
+    ) {
+      throw new Error('All parameters are required');
+    }
+
+    if (sourceLength <= 0n) {
+      throw new Error('Source length must be positive');
+    }
+
+    try {
+      // Set up processing pipeline
+      const blockPaddingTransform = new BlockPaddingTransform(blockSize);
+      const tupleGeneratorStream = new PrimeTupleGeneratorStream(
+        blockSize,
+        whitenedBlockSource,
+        randomBlockSource,
+      );
+
+      source.pipe(blockPaddingTransform).pipe(tupleGeneratorStream);
+
+      // Process tuples
+      let blockIDs: Buffer = Buffer.alloc(0);
+
+      await new Promise<void>((resolve, reject) => {
+        tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
+          try {
+            await persistTuple(tuple);
+            blockIDs = Buffer.concat([blockIDs, tuple.blockIdsBuffer]);
+          } catch (error) {
+            reject(error);
+          }
+        });
+
+        tupleGeneratorStream.on('end', resolve);
+        tupleGeneratorStream.on('error', reject);
+      });
+
+      // Create CBL
+      const cbl = new ConstituentBlockListBlock(
+        blockSize,
+        creator,
+        sourceLength,
+        [], // Addresses will be added from blockIDs
+        new Date(),
+      );
+
+      // Convert CBL to OwnedDataBlock for tuple creation
+      const ownedBlock = new OwnedDataBlock(
+        creator,
+        blockSize,
+        cbl.data,
+        undefined, // Let constructor calculate checksum
+        new Date(),
+        cbl.data.length,
+      );
+
+      // Create tuple for CBL
+      const randomBlocks: RandomBlock[] = [];
+      for (let i = 0; i < RANDOM_BLOCKS_PER_TUPLE; i++) {
+        const block = randomBlockSource();
+        if (!block) {
+          throw new Error('Failed to get random block');
+        }
+        randomBlocks.push(block);
+      }
+
+      const whiteners: WhitenedBlock[] = [];
+      for (let i = RANDOM_BLOCKS_PER_TUPLE; i < TUPLE_SIZE - 1; i++) {
+        const block = whitenedBlockSource() ?? randomBlockSource();
+        if (!block) {
+          throw new Error('Failed to get whitening/random block');
+        }
+        whiteners.push(block);
+      }
+
+      const primeBlock = StaticHelpersTuple.xorSourceToPrimeWhitened(
+        ownedBlock,
+        whiteners,
+        randomBlocks,
+      );
+
+      const tuple = new InMemoryBlockTuple([
+        primeBlock,
+        ...whiteners,
+        ...randomBlocks,
+      ]);
+
       await persistTuple(tuple);
-      blockIDs = Buffer.concat([blockIDs, tuple.blockIdsBuffer]);
-      addressCount += tuple.blocks.length;
-    });
-    const cblHeader = ConstituentBlockListBlock.makeCblHeaderAndSign(
-      creator,
-      new Date(),
-      addressCount,
-      sourceLength,
-      blockIDs
-    );
-    const signature = cblHeader.subarray(
-      ConstituentBlockListBlock.CblHeaderSizeWithoutSignature
-    ) as SignatureBuffer;
-    if (signature.length !== StaticHelpersECIES.signatureLength) {
-      throw new Error('CBL signature length is incorrect');
+      return tuple;
+    } catch (error) {
+      throw new Error(
+        `Failed to process data stream: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+      );
     }
-    const cblData = Buffer.concat([cblHeader, blockIDs]);
-    const sourceCblBlock = new ConstituentBlockListBlock(
-      blockSize,
-      creator.id.asRawGuidBuffer,
-      signature,
-      sourceLength,
-      addressCount,
-      cblData,
-      new Date()
-    );
-    const randomBlocks: RandomBlock[] = [];
-    for (let i = 0; i < RandomBlocksPerTuple; i++) {
-      const b = randomBlockSource();
-      randomBlocks.push(b);
-    }
-    const whiteners: WhitenedBlock[] = [];
-    for (let i = RandomBlocksPerTuple; i < TupleSize - 1; i++) {
-      const b = whitenedBlockSource() ?? randomBlockSource();
-      whiteners.push(b);
-    }
-    const primeBlock = StaticHelpersTuple.xorSourceToPrimeWhitened(
-      sourceCblBlock,
-      whiteners,
-      randomBlocks
-    );
-    const newTuple = new InMemoryBlockTuple([
-      primeBlock,
-      ...whiteners,
-      ...randomBlocks,
-    ]);
-    await persistTuple(newTuple);
-    return newTuple;
   }
+
   /**
-   * Given a file that is very large, encrypt it via stream and break it into blocks and produce a stream of input blocks
+   * Process a data stream into encrypted tuples and create an encrypted CBL
    */
   public static async dataStreamToEncryptedTuplesAndCBL(
     creator: BrightChainMember,
@@ -190,72 +334,114 @@ export abstract class StaticHelpersTuple {
     sourceLength: bigint,
     whitenedBlockSource: () => WhitenedBlock | undefined,
     randomBlockSource: () => RandomBlock,
-    persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>
+    persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
   ): Promise<InMemoryBlockTuple> {
-    // read the dataStream chunks and encrypt each batch of chunkSize, thus encrypting each block and ending up with blocksize bytes per block
-    const ecieEncryptTransform = new EciesEncryptionTransform(
-      blockSize,
-      creator.publicKey
-    );
-    const tupleGeneratorStream = new PrimeTupleGeneratorStream(
-      blockSize,
-      whitenedBlockSource,
-      randomBlockSource
-    );
-    source.pipe(ecieEncryptTransform).pipe(tupleGeneratorStream);
-    let blockIDs: Buffer = Buffer.alloc(0);
-    let addressCount = 0;
-    tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
+    // Validate parameters
+    if (
+      !creator ||
+      !source ||
+      !whitenedBlockSource ||
+      !randomBlockSource ||
+      !persistTuple
+    ) {
+      throw new Error('All parameters are required');
+    }
+
+    if (sourceLength <= 0n) {
+      throw new Error('Source length must be positive');
+    }
+
+    try {
+      // Set up encryption pipeline
+      const ecieEncryptTransform = new EciesEncryptTransform(
+        blockSize,
+        creator.publicKey,
+      );
+      const tupleGeneratorStream = new PrimeTupleGeneratorStream(
+        blockSize,
+        whitenedBlockSource,
+        randomBlockSource,
+      );
+
+      source.pipe(ecieEncryptTransform).pipe(tupleGeneratorStream);
+
+      // Process tuples
+      let blockIDs: Buffer = Buffer.alloc(0);
+
+      await new Promise<void>((resolve, reject) => {
+        tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
+          try {
+            await persistTuple(tuple);
+            blockIDs = Buffer.concat([blockIDs, tuple.blockIdsBuffer]);
+          } catch (error) {
+            reject(error);
+          }
+        });
+
+        tupleGeneratorStream.on('end', resolve);
+        tupleGeneratorStream.on('error', reject);
+      });
+
+      // Create and encrypt CBL
+      const cbl = new ConstituentBlockListBlock(
+        blockSize,
+        creator,
+        sourceLength,
+        [], // Addresses will be added from blockIDs
+        new Date(),
+      );
+
+      // Convert CBL to OwnedDataBlock for encryption
+      const ownedBlock = new OwnedDataBlock(
+        creator,
+        blockSize,
+        cbl.data,
+        undefined, // Let constructor calculate checksum
+        new Date(),
+        cbl.data.length,
+      );
+
+      const encryptedCbl = BlockService.encrypt(creator, ownedBlock);
+
+      // Create tuple for encrypted CBL
+      const randomBlocks: RandomBlock[] = [];
+      for (let i = 0; i < RANDOM_BLOCKS_PER_TUPLE; i++) {
+        const block = randomBlockSource();
+        if (!block) {
+          throw new Error('Failed to get random block');
+        }
+        randomBlocks.push(block);
+      }
+
+      const whiteners: WhitenedBlock[] = [];
+      for (let i = RANDOM_BLOCKS_PER_TUPLE; i < TUPLE_SIZE - 1; i++) {
+        const block = whitenedBlockSource() ?? randomBlockSource();
+        if (!block) {
+          throw new Error('Failed to get whitening/random block');
+        }
+        whiteners.push(block);
+      }
+
+      const primeBlock = StaticHelpersTuple.xorSourceToPrimeWhitened(
+        encryptedCbl,
+        whiteners,
+        randomBlocks,
+      );
+
+      const tuple = new InMemoryBlockTuple([
+        primeBlock,
+        ...whiteners,
+        ...randomBlocks,
+      ]);
+
       await persistTuple(tuple);
-      blockIDs = Buffer.concat([blockIDs, tuple.blockIdsBuffer]);
-      addressCount += tuple.blocks.length;
-    });
-    const blockIdDataLength = blockIDs.length;
-    const encryptedCBLDataLength =
-      ConstituentBlockListBlock.CblHeaderSize +
-      blockIdDataLength +
-      StaticHelpersECIES.ecieOverheadLength;
-    const cblHeader = ConstituentBlockListBlock.makeCblHeaderAndSign(
-      creator,
-      new Date(),
-      addressCount,
-      sourceLength,
-      blockIDs
-    );
-    const neededPadding = blockSize - encryptedCBLDataLength;
-    if (neededPadding < 0) {
-      throw new Error('CBL block too small to fit block ids');
+      return tuple;
+    } catch (error) {
+      throw new Error(
+        `Failed to process encrypted data stream: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+      );
     }
-    const cblPadding = randomBytes(neededPadding);
-    const cblData = Buffer.concat([cblHeader, blockIDs, cblPadding]);
-    const encryptedCblData = await creator.encryptData(cblData);
-    const sourceCblBlock = new EncryptedConstituentBlockListBlock(
-      blockSize,
-      encryptedCblData,
-      encryptedCBLDataLength,
-      new Date()
-    );
-    const randomBlocks: RandomBlock[] = [];
-    for (let i = 0; i < RandomBlocksPerTuple; i++) {
-      const b = randomBlockSource();
-      randomBlocks.push(b);
-    }
-    const whiteners: WhitenedBlock[] = [];
-    for (let i = RandomBlocksPerTuple; i < TupleSize - 1; i++) {
-      const b = whitenedBlockSource() ?? randomBlockSource();
-      whiteners.push(b);
-    }
-    const primeBlock = StaticHelpersTuple.xorSourceToPrimeWhitened(
-      sourceCblBlock,
-      whiteners,
-      randomBlocks
-    );
-    const newTuple = new InMemoryBlockTuple([
-      primeBlock,
-      ...whiteners,
-      ...randomBlocks,
-    ]);
-    await persistTuple(newTuple);
-    return newTuple;
   }
 }

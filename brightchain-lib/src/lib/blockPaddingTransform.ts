@@ -15,7 +15,7 @@ class BlockPaddingTransform extends Transform {
   override _transform(
     chunk: Buffer,
     encoding: string,
-    callback: TransformCallback
+    callback: TransformCallback,
   ): void {
     this.buffer = Buffer.concat([this.buffer, chunk]);
 

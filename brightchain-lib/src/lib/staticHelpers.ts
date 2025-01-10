@@ -22,7 +22,7 @@ export abstract class StaticHelpers {
   public static GenerateNValuesOfYBits(
     n: number,
     y: number,
-    seed?: string
+    seed?: string,
   ): bigint[] {
     const rand = new Rand(seed);
     const values: bigint[] = new Array<bigint>(n);
@@ -66,7 +66,10 @@ export abstract class StaticHelpers {
    */
   public static membersAreAllUsers(members: BrightChainMember[]): boolean {
     for (const member of members) {
-      if (member.memberType == MemberType.System) {
+      if (
+        member.memberType == MemberType.System ||
+        member.memberType == MemberType.Anonymous
+      ) {
         return false;
       }
     }
