@@ -1,4 +1,4 @@
-import { Sequelize, DataTypes } from 'sequelize';
+import { DataTypes, Sequelize } from 'sequelize';
 const sequelize = new Sequelize('sqlite::memory:');
 
 const User = sequelize.define(
@@ -20,7 +20,7 @@ const User = sequelize.define(
   },
   {
     // Other model options go here
-  }
+  },
 );
 
 // `sequelize.define` also returns the model

@@ -1,72 +1,141 @@
-import { EciesEncryptionTransform } from "./eciesEncryptTransform";
-import { StaticHelpersECIES } from "../staticHelpers.ECIES";
-import { BlockSize } from "../enumerations/blockSizes";
-import { Readable } from "stream";
-import { randomBytes } from "crypto";
+import { createECDH, randomBytes } from 'crypto';
+import { BlockSize } from '../enumerations/blockSizes';
+import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { EciesDecryptionTransform } from './eciesDecryptTransform';
+import { EciesEncryptTransform } from './eciesEncryptTransform';
 
+describe('EciesEncryptTransform Integration Tests', () => {
+  const blockSize = BlockSize.Small;
+  // Create real ECDH keys for actual encryption/decryption
+  const ecdh = createECDH(StaticHelpersECIES.curveName);
+  ecdh.generateKeys();
+  // Get raw keys
+  const keypair = {
+    privateKey: ecdh.getPrivateKey(),
+    publicKey: ecdh.getPublicKey(), // Use raw public key directly
+  };
 
-describe('EciesEncryptionTransform Integration Tests', () => {
-    const blockSize = BlockSize.Small; // Numeric value representing the number of bytes
-    const chunkSize = blockSize - StaticHelpersECIES.ecieOverheadLength;
-    const mnemonic = StaticHelpersECIES.generateNewMnemonic();
-    const keypair = StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer(mnemonic);
+  const testEncryptionDecryption = (
+    inputData: Buffer,
+    done: jest.DoneCallback,
+  ) => {
+    const encryptTransform = new EciesEncryptTransform(
+      blockSize,
+      keypair.publicKey,
+    );
+    let encryptedData = Buffer.alloc(0);
+    const decryptTransform = new EciesDecryptionTransform(
+      keypair.privateKey,
+      blockSize,
+    );
+    let decryptedData = Buffer.alloc(0);
 
-    const testEndToEndEncryption = async (inputData: Buffer): Promise<Buffer> => {
-        const transform = new EciesEncryptionTransform(blockSize, keypair.publicKey);
-        const encryptedChunks: Buffer[] = [];
-        const readable = new Readable({
-            read() {
-                this.push(inputData);
-                this.push(null); // End the stream
-            }
-        });
+    encryptTransform.on('data', (chunk: Buffer) => {
+      encryptedData = Buffer.concat([encryptedData, chunk]);
+    });
 
-        readable.pipe(transform);
+    encryptTransform.on('error', (error: Error) => {
+      done(error);
+    });
 
-        for await (const chunk of transform) {
-            encryptedChunks.push(chunk);
-        }
+    decryptTransform.on('data', (chunk: Buffer) => {
+      decryptedData = Buffer.concat([decryptedData, chunk]);
+    });
 
-        // Concatenate the encrypted chunks and then decrypt in blocksize chunks
-        const encryptedData = Buffer.concat(encryptedChunks);
-        const decryptedChunks: Buffer[] = [];
-        for (let i = 0; i < encryptedData.length; i += blockSize) {
-            const block = encryptedData.subarray(i, i + blockSize);
-            const decryptedBlock = StaticHelpersECIES.decrypt(keypair.privateKey, block);
-            decryptedChunks.push(decryptedBlock);
-        }
+    decryptTransform.on('error', (error) => {
+      done(error);
+    });
 
-        // Concatenate the decrypted chunks
-        const decryptedData = Buffer.concat(decryptedChunks);
-        // Slice to match the original inputData length
-        return decryptedData.subarray(0, inputData.length);
-    };
-
-    it('correctly encrypts and decrypts data spanning multiple blocks', async () => {
-        const testDataLength = chunkSize * 3; // Ensuring data spans multiple blocks
-        const inputData = randomBytes(testDataLength); // Create test data
-        const decryptedData = await testEndToEndEncryption(inputData);
-
+    decryptTransform.on('end', () => {
+      try {
         expect(decryptedData).toEqual(inputData);
+        done();
+      } catch (error) {
+        done(error);
+      }
     });
 
-    it('correctly encrypts and decrypts data shorter than a block', async () => {
-        const testDataLength = chunkSize - 1; // Ensuring data is less than one block
-        const inputData = randomBytes(testDataLength); // Create test data
-        const decryptedData = await testEndToEndEncryption(inputData);
+    encryptTransform.pipe(decryptTransform);
+    encryptTransform.write(inputData);
+    encryptTransform.end();
+  };
 
-        // Truncate the decrypted data to the length of the original input data
-        const truncatedDecryptedData = decryptedData.subarray(0, inputData.length);
-        expect(truncatedDecryptedData).toEqual(inputData);
+  it('encrypts and decrypts data that is less than the chunk size', (done) => {
+    const inputData = Buffer.from('short data');
+    testEncryptionDecryption(inputData, done);
+  });
+
+  it('encrypts and decrypts data that is exactly the chunk size', (done) => {
+    const inputData = Buffer.alloc(
+      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength,
+      'a',
+    );
+    testEncryptionDecryption(inputData, done);
+  });
+
+  it('encrypts and decrypts data that spans multiple chunks', (done) => {
+    const inputData = Buffer.alloc(
+      ((blockSize as number) - StaticHelpersECIES.eciesOverheadLength) * 2 + 10,
+      'a',
+    );
+    testEncryptionDecryption(inputData, done);
+  });
+
+  it('handles empty input correctly', (done) => {
+    const encryptTransform = new EciesEncryptTransform(
+      blockSize,
+      keypair.publicKey,
+    );
+    let encryptedData = Buffer.alloc(0);
+
+    encryptTransform.on('data', (chunk: Buffer) => {
+      encryptedData = Buffer.concat([encryptedData, chunk]);
     });
 
-    it('correctly encrypts and decrypts data spanning multiple blocks with a final block that is less than a block', async () => {
-        const testDataLength = chunkSize * 3 + 1; // Ensuring data spans multiple blocks
-        const inputData = randomBytes(testDataLength); // Create test data
-        const decryptedData = await testEndToEndEncryption(inputData);
+    // Handle encryption completion
+    encryptTransform.on('end', () => {
+      expect(encryptedData.length).toBe(0);
 
-        // Truncate the decrypted data to the length of the original input data
-        const truncatedDecryptedData = decryptedData.subarray(0, inputData.length);
-        expect(truncatedDecryptedData).toEqual(inputData);
+      const decryptTransform = new EciesDecryptionTransform(
+        keypair.privateKey,
+        blockSize,
+      );
+      let decryptedData = Buffer.alloc(0);
+
+      decryptTransform.on('data', (chunk: Buffer) => {
+        decryptedData = Buffer.concat([decryptedData, chunk]);
+      });
+
+      // Handle decryption completion
+      decryptTransform.on('end', () => {
+        try {
+          expect(decryptedData.length).toBe(0);
+          done();
+        } catch (error) {
+          done(error);
+        }
+      });
+
+      decryptTransform.write(encryptedData);
+      decryptTransform.end();
     });
+
+    encryptTransform.end();
+  });
+
+  it('handles large data correctly', (done) => {
+    const inputData = randomBytes(1024 * 1024); // 1MB
+    testEncryptionDecryption(inputData, done);
+  });
+
+  describe('random data tests', () => {
+    const sizes = [100, 500, 1000, 5000, 10000];
+
+    sizes.forEach((size) => {
+      it(`handles data of size ${size} correctly`, (done) => {
+        const inputData = randomBytes(size);
+        testEncryptionDecryption(inputData, done);
+      });
+    });
+  });
 });

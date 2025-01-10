@@ -20,7 +20,7 @@ export abstract class StaticHelpersChecksum {
 
   public static validateChecksum(
     data: Buffer,
-    checksum: ChecksumBuffer
+    checksum: ChecksumBuffer,
   ): boolean {
     const calculatedChecksum = StaticHelpersChecksum.calculateChecksum(data);
     return (
@@ -30,13 +30,13 @@ export abstract class StaticHelpersChecksum {
   }
 
   public static checksumBufferToChecksumString(
-    checksumBuffer: ChecksumBuffer
+    checksumBuffer: ChecksumBuffer,
   ): ChecksumString {
     return checksumBuffer.toString('hex') as ChecksumString;
   }
 
   public static checksumStringToChecksumBuffer(
-    checksumString: ChecksumString
+    checksumString: ChecksumString,
   ): ChecksumBuffer {
     return Buffer.from(checksumString, 'hex') as ChecksumBuffer;
   }
