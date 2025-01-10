@@ -1,242 +1,139 @@
-import { ChecksumBuffer, ChecksumString } from '../types';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { BlockSize, lengthToBlockSize } from '../enumerations/blockSizes';
-import { BlockDto } from './blockDto';
-import { randomBytes } from 'crypto';
-import { StaticHelpers } from '../staticHelpers';
-import { BlockType } from '../enumerations/blockType';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BrightChainMember } from '../brightChainMember';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
-import { IBlockMetadata } from '../interfaces/blockMetadata';
+import { BlockSize } from '../enumerations/blockSizes';
+import { BlockType } from '../enumerations/blockType';
+import { IBlock } from '../interfaces/blockBase';
+import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ChecksumBuffer, ChecksumString } from '../types';
 
-export class BaseBlock {
-  public readonly blockType: BlockType = BlockType.Unknown;
-  public readonly blockSize: BlockSize;
-  public readonly lengthBeforeEncryption: number;
-  public readonly blockDataType: BlockDataType;
+/**
+ * BaseBlocks do not contain data or metadata
+ * They hold the data for the block and the checksum
+ * Derived classes will have the data and/or metadata either on disk or in memory
+ */
+export abstract class BaseBlock implements IBlock {
+  /**
+   * The size of the block
+   */
+  private readonly _blockSize: BlockSize;
+  /**
+   * The id/checksum of the block
+   */
+  private readonly _checksum: ChecksumBuffer;
+  /**
+   * The type of the block
+   */
+  private readonly _blockType: BlockType;
+  /**
+   * The type of data in the block
+   */
+  private readonly _blockDataType: BlockDataType;
+  /**
+   * Whether the block can be read
+   */
+  private readonly _canRead: boolean;
+  /**
+   * Whether the block can be persisted to disk
+   */
+  private readonly _canPersist: boolean;
+  /**
+   * Create a new BaseBlock
+   * @param type - The type of the block
+   * @param blockDataType - The type of data in the block
+   * @param blockSize - The size of the block
+   * @param checksum - The id/checksum of the block
+   * @param creator - The block creator id/object
+   * @param canRead - Whether the block can be read
+   * @param canPersist - Whether the block can be persisted to disk
+   */
   constructor(
-    blockSize: BlockSize,
-    data: Buffer,
+    type: BlockType,
     blockDataType: BlockDataType,
-    lengthBeforeEncryption: number,
-    dateCreated?: Date,
-    checksum?: ChecksumBuffer
+    blockSize: BlockSize,
+    checksum: ChecksumBuffer,
+    canRead = true,
+    canPersist = true,
   ) {
-    // data must either be unencrypted and less than or equal to the block size - overhead
-    // or encrypted and equal to the block size
-    this.blockSize = blockSize;
-    this.blockDataType = blockDataType;
-    if (blockDataType == BlockDataType.EncryptedData) {
-      this.data = data;
-      if (data.length !== (blockSize as number)) {
-        throw new Error(
-          `Encrypted data length ${data.length} is not a valid block size`
-        );
-      }
-      this.lengthBeforeEncryption = lengthBeforeEncryption;
-      if (
-        this.lengthBeforeEncryption >
-        (blockSize as number) - StaticHelpersECIES.ecieOverheadLength
-      ) {
-        throw new Error(
-          `Length before encryption ${this.lengthBeforeEncryption} is too large for block size ${blockSize}`
-        );
-      }
-    } else {
-      this.data = data;
-      if (
-        blockDataType == BlockDataType.RawData &&
-        data.length !== (blockSize as number)
-      ) {
-        throw new Error(
-          `Raw data length ${data.length} is not valid for block size ${blockSize}`
-        );
-      } else if (
-        blockDataType == BlockDataType.EphemeralStructuredData &&
-        data.length >
-          (blockSize as number) - StaticHelpersECIES.ecieOverheadLength
-      ) {
-        throw new Error(
-          `Data length ${data.length} is too large for block size ${blockSize}`
-        );
-      }
-      this.lengthBeforeEncryption = data.length;
-    }
-    if (checksum) {
-      this.id = checksum;
-    } else {
-      this.id = StaticHelpersChecksum.calculateChecksum(this.data);
-      this._validated = true;
-    }
-    this.dateCreated = dateCreated ?? new Date();
+    this._blockType = type;
+    this._blockDataType = blockDataType;
+    this._blockSize = blockSize;
+    this._checksum = checksum;
+    this._canRead = canRead;
+    this._canPersist = canPersist;
   }
-  public get encrypted() {
-    return this.blockDataType == BlockDataType.EncryptedData;
+  /**
+   * The size of the block
+   */
+  public get blockSize(): BlockSize {
+    return this._blockSize;
   }
-  public get rawData() {
-    return this.blockDataType == BlockDataType.RawData;
+  /**
+   * The id/checksum of the block
+   */
+  public get idChecksum(): ChecksumBuffer {
+    return this._checksum;
   }
-  public encrypt(creator: BrightChainMember): BaseBlock {
-    if (this.encrypted) {
-      throw new Error('Block is already encrypted');
-    } else if (this.rawData) {
-      throw new Error('Cannot encrypt raw data');
-    }
-    const neededPadding =
-      (this.blockSize as number) -
-      this.data.length -
-      StaticHelpersECIES.ecieOverheadLength;
-    const padding = randomBytes(neededPadding);
-    const paddedData = Buffer.concat([this.data, padding]);
-    const encryptedData = creator.encryptData(paddedData);
-    if (encryptedData.length !== this.blockSize) {
-      throw new Error('Encrypted data length does not match block size');
-    }
-    return new BaseBlock(
-      this.blockSize,
-      encryptedData,
-      BlockDataType.EncryptedData,
-      this.lengthBeforeEncryption,
-      this.dateCreated
-    );
+  /**
+   * The type of the block
+   */
+  public get blockType(): BlockType {
+    return this._blockType;
   }
-  public decrypt(creator: BrightChainMember): BaseBlock {
-    if (!this.encrypted) {
-      throw new Error('Block is not encrypted');
-    }
-    const decryptedData = creator.decryptData(this.data);
-    const data = decryptedData.subarray(0, this.lengthBeforeEncryption);
-    return new BaseBlock(
-      this.blockSize,
-      data,
-      BlockDataType.EphemeralStructuredData,
-      this.lengthBeforeEncryption,
-      this.dateCreated
-    );
+  /**
+   * The type of data in the block
+   */
+  public get blockDataType(): BlockDataType {
+    return this._blockDataType;
   }
-  private _validated = false;
-  public get validated(): boolean {
-    return this._validated;
+  /**
+   * The raw data in the block, either from disk or memory
+   */
+  public abstract get data(): Buffer;
+  /**
+   * The data in the block, excluding any metadata or other overhead
+   */
+  public get payload(): Buffer {
+    return this.data.subarray(this.overhead);
   }
-  public readonly id: ChecksumBuffer;
-  public readonly data: Buffer;
+  /**
+   * Whether the block's data has been validated against the checksum/id
+   */
+  public abstract get validated(): boolean;
+  /**
+   * The id/checksum as a string
+   */
   public get checksumString(): ChecksumString {
-    return StaticHelpersChecksum.checksumBufferToChecksumString(this.id);
-  }
-  public readonly dateCreated: Date;
-  public validate(): boolean {
-    const rawChecksum = StaticHelpersChecksum.calculateChecksum(this.data);
-    const validated = rawChecksum.equals(this.id);
-    this._validated = validated;
-    return validated;
-  }
-  public xor<T extends BaseBlock>(
-    other: BaseBlock,
-    otherDataType?: BlockDataType
-  ): T {
-    if (this.blockSize !== other.blockSize) {
-      throw new Error('Block sizes do not match');
-    }
-    if (this.data.length !== other.data.length) {
-      throw new Error('Block data lengths do not match');
-    }
-    const blockSize = this.blockSize as number;
-    const result = Buffer.alloc(blockSize);
-    for (let i = 0; i < blockSize; i++) {
-      result[i] = this.data[i] ^ other.data[i];
-    }
-    return new BaseBlock(
-      this.blockSize,
-      result,
-      otherDataType ?? BlockDataType.RawData,
-      blockSize
-    ) as T;
-  }
-  public toDto(): BlockDto {
-    if (!this.rawData) {
-      throw new Error('Only raw data blocks can be converted to DTO');
-    }
-    return {
-      id: StaticHelpersChecksum.checksumBufferToChecksumString(this.id),
-      data: StaticHelpers.bufferToHexString(this.data),
-      dateCreated: this.dateCreated,
-    };
-  }
-  public toJson(): string {
-    return JSON.stringify(this.toDto());
-  }
-  public static fromDto(dto: BlockDto): BaseBlock {
-    const dataLength = dto.data.length / 2;
-    return new BaseBlock(
-      lengthToBlockSize(dataLength),
-      StaticHelpers.HexStringToBuffer(dto.data),
-      BlockDataType.RawData,
-      dataLength,
-      new Date(dto.dateCreated),
-      StaticHelpersChecksum.checksumStringToChecksumBuffer(dto.id)
+    return StaticHelpersChecksum.checksumBufferToChecksumString(
+      this.idChecksum,
     );
   }
-  public static fromJson(json: string): BaseBlock {
-    const dto = JSON.parse(json) as BlockDto;
-    const block = BaseBlock.fromDto(dto);
-    if (!block.validate()) {
-      throw new Error('Checksum mismatch');
-    }
-    return block;
+  /**
+   * Whether the block can be accessed/read
+   */
+  public get canRead(): boolean {
+    return this._canRead;
   }
-  public static newBlock(
-    blockSize: BlockSize,
-    data: Buffer,
-    blockDataType: BlockDataType,
-    lengthBeforeEncryption: number,
-    dateCreated?: Date,
-    checksum?: ChecksumBuffer
-  ): BaseBlock {
-    const blockLength = blockSize as number;
-    if (
-      blockDataType == BlockDataType.EncryptedData &&
-      data.length !== blockLength
-    ) {
-      throw new Error(
-        `Encrypted data length ${data.length} is not a valid block size`
-      );
-    } else if (
-      blockDataType == BlockDataType.EphemeralStructuredData &&
-      data.length > blockLength - StaticHelpersECIES.ecieOverheadLength
-    ) {
-      throw new Error(
-        `Data length ${data.length} is too large for block size ${blockSize}`
-      );
-    }
-    // fill the buffer with zeros to the next block size
-    const buffer = Buffer.alloc(blockLength);
-    // copy the data into the buffer
-    data.copy(buffer);
-    // fill the rest with random bytes
-    const fillLength = blockLength - data.length;
-    const fillBuffer = randomBytes(fillLength);
-    fillBuffer.copy(buffer, data.length);
-    const block = new BaseBlock(
-      blockSize,
-      buffer,
-      blockDataType,
-      lengthBeforeEncryption,
-      dateCreated,
-      checksum
-    );
-    if (checksum && !block.validate()) {
-      throw new Error('Checksum mismatch');
-    }
-    return block;
+  /**
+   * Whether the block can be persisted to disk
+   */
+  public get canPersist(): boolean {
+    return this._canPersist;
   }
-  public get metadata(): IBlockMetadata {
-    return {
-      size: this.blockSize,
-      type: this.blockType,
-      dataType: this.blockDataType,
-      lengthBeforeEncryption: this.lengthBeforeEncryption,
-      dateCreated: this.dateCreated,
-    };
+  /**
+   * The unusable overhead of the block
+   */
+  public get overhead(): number {
+    return 0;
+  }
+  /**
+   * The usable capacity of the block without the overhead
+   */
+  public get capacity(): number {
+    return (this.blockSize as number) - this.overhead;
+  }
+  /**
+   * The overhead portion of the block's data
+   */
+  public get layerOverheadData(): Buffer {
+    return this.data.subarray(0, this.overhead);
   }
 }

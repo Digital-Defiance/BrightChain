@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title><%= title %></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+    <script nonce="<%= cspNonce %>"></script>
+    <base href="<%= baseHref %>" />
+    <script nonce="<%= cspNonce %>" type="module" src="<%= siteUrl %><%= baseHref %>static/js/runtime.js"></script>
+    <script nonce="<%= cspNonce %>" src="<%= siteUrl %><%= baseHref %>static/js/main.js"></script>
+    <script nonce="<%= cspNonce %>" src="<%= siteUrl %><%= baseHref %>static/js/vendor.js"></script>
+    <script nonce="<%= cspNonce %>" src="https://kit.fontawesome.com/<%= fontawesomeKitId %>.js" crossorigin="anonymous"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

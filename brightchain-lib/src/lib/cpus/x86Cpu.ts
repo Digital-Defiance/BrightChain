@@ -3,8 +3,8 @@
 'use strict';
 import { CpuRegisters } from '../enumerations/cpuRegisters';
 import {
-  syscallInstructions,
   buildInstructionArray,
+  syscallInstructions,
 } from './instructionTables';
 
 export class X86Cpu {
@@ -27,7 +27,7 @@ export class X86Cpu {
   constructor(
     memory: ArrayBuffer | Uint8Array | number,
     registers: number | Uint32Array,
-    pc: number
+    pc: number,
   ) {
     if (memory instanceof Uint8Array) {
       this.Program = memory;
@@ -88,7 +88,7 @@ export class X86Cpu {
   public static new(
     memory: number | Uint32Array | ArrayBuffer,
     registers: number | Uint32Array,
-    pc = -1
+    pc = -1,
   ): X86Cpu {
     const cpu = new X86Cpu(memory, registers, pc);
     cpu.Registers[CpuRegisters.ESP] = 1023;
@@ -105,7 +105,7 @@ export class X86Cpu {
   public static run(
     memory: number | Uint32Array | ArrayBuffer,
     registers: number | Uint32Array,
-    pc: number
+    pc: number,
   ): X86Cpu {
     const cpu = new X86Cpu(memory, registers, pc);
     cpu.Registers[CpuRegisters.ESP] = 1023;

@@ -1,11 +1,15 @@
-import { EciesDecryptionTransform } from "./eciesDecryptTransform";
-import { StaticHelpersECIES } from "../staticHelpers.ECIES";
-import { BlockSize } from "../enumerations/blockSizes";
-import { Readable } from "stream";
-import { randomBytes } from "crypto";
+import { randomBytes } from 'crypto';
+import { Readable } from 'stream';
+import { BlockSize } from '../enumerations/blockSizes';
+import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { EciesDecryptionTransform } from './eciesDecryptTransform';
 
-function makeEncryptedBlocks(inputData: Buffer, blockSize: BlockSize, publicKey: Buffer): Buffer {
-  const chunkSize = blockSize - StaticHelpersECIES.ecieOverheadLength;
+function makeEncryptedBlocks(
+  inputData: Buffer,
+  blockSize: BlockSize,
+  publicKey: Buffer,
+): Buffer {
+  const chunkSize = blockSize - StaticHelpersECIES.eciesOverheadLength;
   let encryptedBuffer = Buffer.alloc(0);
   for (let i = 0; i < inputData.length; i += chunkSize) {
     let block = inputData.subarray(i, i + chunkSize);
@@ -22,22 +26,29 @@ function makeEncryptedBlocks(inputData: Buffer, blockSize: BlockSize, publicKey:
 
 describe('EciesDecryptionTransform Integration Tests', () => {
   const blockSize = BlockSize.Small; // Numeric value representing the number of bytes
-  const chunkSize = blockSize - StaticHelpersECIES.ecieOverheadLength;
+  const chunkSize = blockSize - StaticHelpersECIES.eciesOverheadLength;
   const mnemonic = StaticHelpersECIES.generateNewMnemonic();
   const keypair = StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer(mnemonic);
 
   const testEndToEndDecryption = async (inputData: Buffer): Promise<Buffer> => {
     // Encrypt the data using makeEncryptedBlocks
-    const encryptedData = makeEncryptedBlocks(inputData, blockSize, keypair.publicKey);
+    const encryptedData = makeEncryptedBlocks(
+      inputData,
+      blockSize,
+      keypair.publicKey,
+    );
 
     // Now decrypt the data
-    const decryptionTransform = new EciesDecryptionTransform(keypair.privateKey, blockSize);
+    const decryptionTransform = new EciesDecryptionTransform(
+      keypair.privateKey,
+      blockSize,
+    );
     const decryptedChunks: Buffer[] = [];
     const readableForDecryption = new Readable({
       read() {
         this.push(encryptedData);
         this.push(null); // End the stream
-      }
+      },
     });
 
     readableForDecryption.pipe(decryptionTransform);

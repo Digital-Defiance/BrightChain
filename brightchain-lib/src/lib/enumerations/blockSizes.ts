@@ -1,4 +1,13 @@
 /**
+ * Block size exponents (2^x)
+ */
+export const blockSizeExponents = [9, 10, 12, 20, 26, 28];
+/**
+ * Block size lengths
+ */
+export const blockSizeLengths = [512, 1024, 4096, 1048576, 67108864, 268435456];
+
+/**
  * Block size enumeration
  * Block sizes are powers of 2, starting at 256b
  * Raw data size. Unfilled blocks are filled with random data.
@@ -10,34 +19,34 @@ export const enum BlockSize {
   Unknown = 0,
 
   /// <summary>
-  /// Message size, such as a small data blob, currently 512b.
+  /// Message size, such as a small data blob. (512b)
   /// </summary>
-  Message = 2 ** 9, // 512 (512b)
+  Message = 512,
 
   /// <summary>
-  /// Tiny size, such as smaller messages and configs, currently 1K.
+  /// Tiny size, such as smaller messages and configs. (1KiB)
   /// </summary>
-  Tiny = 2 ** 10, // 1024 (1KiB)
+  Tiny = 1024,
 
   /// <summary>
-  /// Small size, such as small data files up to a mb or so depending on desired block count, currently 4K.
+  /// Small size, such as small data files up to a mb or so depending on desired block count. (4KiB)
   /// </summary>
-  Small = 2 ** 12, // 4096 (4KiB)
+  Small = 4096,
 
   /// <summary>
-  /// Medium size, such as medium data files up to 5-100mb, currently 1M.
+  /// Medium size, such as medium data files up to 5-100mb. (1MiB)
   /// </summary>
-  Medium = 2 ** 20, // 1048576 (1MiB)
+  Medium = 1048576,
 
   /// <summary>
-  /// Large size, such as large data files over 4M up to many terabytes.
+  /// Large size, such as large data files over 4M up to many terabytes. (64MiB)
   /// </summary>
-  Large = 2 ** 26, // 67108864 (64MiB)
+  Large = 67108864,
 
   /// <summary>
-  /// Huge size, such as huge data files over 64M up to many petabytes.
+  /// Huge size, such as huge data files over 64M up to many petabytes. (256MiB)
   /// </summary>
-  Huge = 2 ** 28, // 268435456 (256MiB)
+  Huge = 268435456,
 }
 
 export const validBlockSizes = [
@@ -49,15 +58,6 @@ export const validBlockSizes = [
   BlockSize.Huge,
 ];
 
-export const blockSizeLengths = [
-  512,
-  1024,
-  4096,
-  1048576,
-  67108864,
-  268435456,
-];
-
 export const validBlockSizeStrings = [
   'Message',
   'Tiny',
@@ -67,11 +67,18 @@ export const validBlockSizeStrings = [
   'Huge',
 ];
 
-export const BlockSizeInfo: Map<BlockSize, { length: number, name: string }> = new Map<BlockSize, { length: number, name: string }>();
+export const BlockSizeInfo: Map<BlockSize, { length: number; name: string }> =
+  new Map<BlockSize, { length: number; name: string }>();
 for (let i = 0; i < validBlockSizes.length; i++) {
-  BlockSizeInfo.set(validBlockSizes[i], { length: blockSizeLengths[i], name: validBlockSizeStrings[i] });
+  BlockSizeInfo.set(validBlockSizes[i], {
+    length: blockSizeLengths[i],
+    name: validBlockSizeStrings[i],
+  });
 }
-export function blockSizeInfoBySize(blockSize: BlockSize): { length: number, name: string } {
+export function blockSizeInfoBySize(blockSize: BlockSize): {
+  length: number;
+  name: string;
+} {
   const result = BlockSizeInfo.get(blockSize);
   if (!result) {
     throw new Error(`Invalid block size ${blockSize}`);

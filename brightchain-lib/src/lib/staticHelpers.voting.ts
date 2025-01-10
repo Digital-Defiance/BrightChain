@@ -1,7 +1,7 @@
 import {
   KeyPair,
-  PublicKey,
   PrivateKey,
+  PublicKey,
   generateRandomKeysSync,
 } from 'paillier-bigint';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
@@ -12,7 +12,7 @@ export abstract class StaticHelpersVoting {
   }
   public static keyPairToEncryptedPrivateKey(
     keyPair: KeyPair,
-    walletPublicKey: Buffer
+    walletPublicKey: Buffer,
   ): Buffer {
     const lambda = Buffer.from(keyPair.privateKey.lambda.toString(16), 'hex');
     const lambdaLengthBuffer = Buffer.alloc(4);
@@ -20,22 +20,22 @@ export abstract class StaticHelpersVoting {
     const mu = Buffer.from(keyPair.privateKey.mu.toString(16), 'hex');
     return StaticHelpersECIES.encrypt(
       walletPublicKey,
-      Buffer.concat([lambdaLengthBuffer, lambda, mu])
+      Buffer.concat([lambdaLengthBuffer, lambda, mu]),
     );
   }
   public static encryptedPrivateKeyToKeyPair(
     encryptedPrivateKey: Buffer,
     walletPrivateKey: Buffer,
-    votingPublicKey: PublicKey
+    votingPublicKey: PublicKey,
   ): PrivateKey {
-    const decryptedPrivateKeyBuffer = StaticHelpersECIES.decrypt(
+    const decryptedPrivateKeyBuffer = StaticHelpersECIES.decryptWithHeader(
       walletPrivateKey,
-      encryptedPrivateKey
+      encryptedPrivateKey,
     );
     const lambdaLength = decryptedPrivateKeyBuffer.readUInt32BE(0);
     const lambdaBuffer = decryptedPrivateKeyBuffer.subarray(
       4,
-      4 + lambdaLength
+      4 + lambdaLength,
     );
     const muBuffer = decryptedPrivateKeyBuffer.subarray(4 + lambdaLength);
     const lambda = BigInt('0x' + lambdaBuffer.toString('hex'));

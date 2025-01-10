@@ -1,8 +1,8 @@
 export enum QuorumDataRecordActionType {
-  Seal,
-  Unseal,
-  Reseal,
-  ValidateHeldKeys,
-  ValidateRecordIntegrity,
+  Seal = 'Seal',
+  Unseal = 'Unseal',
+  Reseal = 'Reseal',
+  ValidateHeldKeys = 'ValidateHeldKeys',
+  ValidateRecordIntegrity = 'ValidateRecordIntegrity',
 }
 export default QuorumDataRecordActionType;

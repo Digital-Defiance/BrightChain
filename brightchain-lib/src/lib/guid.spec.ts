@@ -1,14 +1,16 @@
+import * as uuid from 'uuid';
+import { GuidBrandType } from './enumerations/guidBrandType';
 import { GuidV4 } from './guid';
 import { FullHexGuid, RawGuidBuffer } from './types';
-import { GuidBrandType } from './enumerations/guidBrandType';
-import * as uuid from 'uuid';
 
 jest.mock('uuid');
 
 describe('guid', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(uuid, 'v4').mockImplementation(() => '5549c83a-20fa-4a11-ae7d-9dc3f1681e9e');
+    jest
+      .spyOn(uuid, 'v4')
+      .mockImplementation(() => '5549c83a-20fa-4a11-ae7d-9dc3f1681e9e');
   });
   it('should create a new guid', () => {
     jest.spyOn(uuid, 'validate').mockReturnValue(true);
@@ -22,7 +24,9 @@ describe('guid', () => {
   it('should throw an error for invalid guid validation in constructor', () => {
     const validGuidFormat = '12345678-1234-1234-1234-1234567890ab'; // Valid format but assume invalid UUID
     jest.spyOn(uuid, 'validate').mockReturnValue(false); // Mock validate to return false
-    expect(() => new GuidV4(validGuidFormat)).toThrow(`Invalid guid: ${validGuidFormat}`);
+    expect(() => new GuidV4(validGuidFormat)).toThrow(
+      `Invalid guid: ${validGuidFormat}`,
+    );
   });
   it('should convert uuid to and from bigint', () => {
     jest.spyOn(uuid, 'validate').mockReturnValue(true);
@@ -55,16 +59,12 @@ describe('guid', () => {
   it('should test verifyGuid with validate=false', () => {
     jest.spyOn(uuid, 'validate').mockReturnValue(false);
     const uuidStr: FullHexGuid = uuid.v4() as FullHexGuid;
-    expect(
-      GuidV4.verifyGuid(GuidBrandType.FullHexGuid, uuidStr)
-    ).toBeFalsy();
+    expect(GuidV4.verifyGuid(GuidBrandType.FullHexGuid, uuidStr)).toBeFalsy();
   });
   it('should test verifyGuid with validate=true', () => {
     jest.spyOn(uuid, 'validate').mockReturnValue(true);
     const uuidStr: FullHexGuid = uuid.v4() as FullHexGuid;
-    expect(
-      GuidV4.verifyGuid(GuidBrandType.FullHexGuid, uuidStr)
-    ).toBeTruthy();
+    expect(GuidV4.verifyGuid(GuidBrandType.FullHexGuid, uuidStr)).toBeTruthy();
   });
   it('should test an unknown type', () => {
     const uuidStr: FullHexGuid = uuid.v4() as FullHexGuid;
@@ -96,7 +96,7 @@ describe('guid', () => {
     expect(shortHexGuid.length).toEqual(32);
     expect(GuidV4.isShortHexGuid(shortHexGuid)).toBeTruthy();
   });
-  describe("toFullHexFromBigInt", () => {
+  describe('toFullHexFromBigInt', () => {
     it('should test toFullHexFromBigInt', () => {
       jest.spyOn(uuid, 'validate').mockReturnValue(true);
       const guid = GuidV4.new();
@@ -107,7 +107,9 @@ describe('guid', () => {
       expect(() => GuidV4.toFullHexFromBigInt(-1n)).toThrow('Invalid Guid');
     });
     it('should throw when bigint hex length is > 32', () => {
-      expect(() => GuidV4.toFullHexFromBigInt(0xffffffffffffffffffffffffffffffffffn)).toThrow('Invalid Guid');
+      expect(() =>
+        GuidV4.toFullHexFromBigInt(0xffffffffffffffffffffffffffffffffffn),
+      ).toThrow('Invalid Guid');
     });
   });
   it('should handle invalid FullHexGuid input string', () => {
@@ -129,7 +131,7 @@ describe('guid', () => {
 
   it('should verify invalid guid with verifyGuid function', () => {
     expect(
-      GuidV4.verifyGuid(GuidBrandType.FullHexGuid, 'invalid-guid')
+      GuidV4.verifyGuid(GuidBrandType.FullHexGuid, 'invalid-guid'),
     ).toBeFalsy();
   });
 
@@ -138,9 +140,7 @@ describe('guid', () => {
   });
 
   it('should handle null and undefined inputs', () => {
-    expect(() =>
-      GuidV4.isFullHexGuid(null as unknown as string)
-    ).toThrow();
+    expect(() => GuidV4.isFullHexGuid(null as unknown as string)).toThrow();
   });
 
   it('should validate a valid FullHexGuid', () => {
@@ -190,7 +190,9 @@ describe('guid', () => {
       expect(() => GuidV4.lengthToGuidBrand(16, true)).not.toThrow();
     });
     it('should handle the second continue branch in lengthToGuidBrand', () => {
-      expect(() => GuidV4.lengthToGuidBrand(16, false)).toThrow('Unknown guid length: 16');
+      expect(() => GuidV4.lengthToGuidBrand(16, false)).toThrow(
+        'Unknown guid length: 16',
+      );
     });
 
     describe('isBase64Guid', () => {
@@ -214,7 +216,11 @@ describe('guid', () => {
     describe('isBigIntGuid', () => {
       it('should return false when bigint is too long', () => {
         jest.spyOn(uuid, 'validate').mockReturnValueOnce(false);
-        expect(GuidV4.isBigIntGuid(BigInt('12345678901234567890123456789012345678901234567890'))).toBe(false);
+        expect(
+          GuidV4.isBigIntGuid(
+            BigInt('12345678901234567890123456789012345678901234567890'),
+          ),
+        ).toBe(false);
       });
 
       it('should return false in catch block for negative numbers', () => {
@@ -229,7 +235,7 @@ describe('guid', () => {
     describe('toFullHexGuid', () => {
       it('should handle the guid.length == 36 branch', () => {
         expect(
-          GuidV4.toFullHexGuid('12345678-1234-1234-1234-1234567890ab')
+          GuidV4.toFullHexGuid('12345678-1234-1234-1234-1234567890ab'),
         ).toBe('12345678-1234-1234-1234-1234567890ab');
       });
     });
@@ -237,13 +243,17 @@ describe('guid', () => {
     describe('toShortHexGuid', () => {
       it('should handle the guid.length == 24 branch', () => {
         jest.spyOn(uuid, 'validate').mockReturnValue(true);
-        expect(GuidV4.toShortHexGuid('MTIzNDU2Nzg5MDEyMzQ1Njc4')).toBe('313233343536373839303132333435363738');
+        expect(GuidV4.toShortHexGuid('MTIzNDU2Nzg5MDEyMzQ1Njc4')).toBe(
+          '313233343536373839303132333435363738',
+        );
       });
     });
 
     it('should convert fullHexFromBase64 correctly', () => {
       jest.spyOn(uuid, 'validate').mockReturnValue(true);
-      expect(GuidV4.fullHexFromBase64('VUnIOiD6ShGufZ3D8Wgeng==')).toBe('5549c83a-20fa-4a11-ae7d-9dc3f1681e9e');
+      expect(GuidV4.fullHexFromBase64('VUnIOiD6ShGufZ3D8Wgeng==')).toBe(
+        '5549c83a-20fa-4a11-ae7d-9dc3f1681e9e',
+      );
     });
 
     describe('toRawGuidBuffer', () => {
@@ -263,15 +273,29 @@ describe('guid', () => {
         expect(() => GuidV4.toRawGuidBuffer('invalid')).toThrow();
       });
       it('should throw when raw guid buffer length isnt correct', () => {
-        jest.spyOn(GuidV4, 'whichBrand').mockReturnValue(GuidBrandType.RawGuidBuffer);
-        expect(() => GuidV4.toRawGuidBuffer(Buffer.from('abcdef', 'hex') as RawGuidBuffer)).toThrow();
+        jest
+          .spyOn(GuidV4, 'whichBrand')
+          .mockReturnValue(GuidBrandType.RawGuidBuffer);
+        expect(() =>
+          GuidV4.toRawGuidBuffer(Buffer.from('abcdef', 'hex') as RawGuidBuffer),
+        ).toThrow();
       });
     });
   });
   it('should throw when we break the rules', () => {
-    jest.spyOn(GuidV4, 'whichBrand').mockReturnValue(GuidBrandType.RawGuidBuffer);
+    jest
+      .spyOn(GuidV4, 'whichBrand')
+      .mockReturnValue(GuidBrandType.RawGuidBuffer);
     jest.spyOn(GuidV4, 'verifyGuid').mockReturnValue(true);
     jest.spyOn(uuid, 'validate').mockReturnValue(false);
-    expect(() => new GuidV4(Buffer.from('5549c83a20fa4a11ae7d9dc3f1681e9e', 'hex') as RawGuidBuffer)).toThrow();
+    expect(
+      () =>
+        new GuidV4(
+          Buffer.from(
+            '5549c83a20fa4a11ae7d9dc3f1681e9e',
+            'hex',
+          ) as RawGuidBuffer,
+        ),
+    ).toThrow();
   });
 });

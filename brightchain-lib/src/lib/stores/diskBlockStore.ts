@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync } from 'fs';
-import { ChecksumBuffer } from '../types';
 import { join } from 'path';
 import { BlockSize, sizeToSizeString } from '../enumerations/blockSizes';
+import { ChecksumBuffer } from '../types';
 
 export abstract class DiskBlockStore {
   public readonly _storePath: string;
@@ -13,7 +13,7 @@ export abstract class DiskBlockStore {
       this._storePath,
       blockSizeString,
       checksumString[0],
-      checksumString[1]
+      checksumString[1],
     );
   }
   public blockPath(blockId: ChecksumBuffer): string {
@@ -24,7 +24,7 @@ export abstract class DiskBlockStore {
       blockSizeString,
       checksumString[0],
       checksumString[1],
-      checksumString
+      checksumString,
     );
   }
   public metadataPath(blockId: ChecksumBuffer): string {

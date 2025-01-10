@@ -1,32 +1,42 @@
 import { BrightChainMember } from '../brightChainMember';
-import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
+import { BlockType } from '../enumerations/blockType';
+import { GuidV4 } from '../guid';
+import { IEncryptedBlock } from '../interfaces/encryptedBlock';
 import { ChecksumBuffer } from '../types';
-import { BaseBlock } from './base';
-import { ConstituentBlockListBlock } from './cbl';
+import { EncryptedOwnedDataBlock } from './encryptedOwnedData';
 
-export class EncryptedConstituentBlockListBlock extends BaseBlock {
+export class EncryptedConstituentBlockListBlock
+  extends EncryptedOwnedDataBlock
+  implements IEncryptedBlock
+{
+  /**
+   * Creates an instance of EncryptedConstituentBlockListBlock.
+   * @param blockSize - The size of the block
+   * @param data - The encrypted data
+   * @param checksum - The checksum of the data
+   * @param creator - The creator of the block
+   * @param dateCreated - The date the block was created
+   * @param lengthBeforeEncryption - The length of the data before encryption, if known
+   */
   constructor(
     blockSize: BlockSize,
     data: Buffer,
-    lengthBeforeEncryption: number,
+    checksum?: ChecksumBuffer,
+    creator?: BrightChainMember | GuidV4,
+    lengthBeforeEncryption?: number,
     dateCreated?: Date,
-    checksum?: ChecksumBuffer
+    canRead = true,
   ) {
     super(
       blockSize,
       data,
-      BlockDataType.EncryptedData,
+      checksum,
+      creator,
       lengthBeforeEncryption,
       dateCreated,
-      checksum
-    );
-  }
-  public override decrypt(creator: BrightChainMember): BaseBlock {
-    const result = super.decrypt(creator);
-    return ConstituentBlockListBlock.newFromPlaintextBuffer(
-      result.data,
-      result.blockSize
+      canRead,
+      BlockType.EncryptedConstituentBlockListBlock,
     );
   }
 }
