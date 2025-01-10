@@ -1,5 +1,5 @@
-import * as uuid from 'uuid';
 import { AnyBrand } from 'ts-brand';
+import * as uuid from 'uuid';
 import { GuidBrandType } from './enumerations/guidBrandType';
 import {
   Base64Guid,
@@ -18,7 +18,7 @@ export class GuidV4 {
       | ShortHexGuid
       | Base64Guid
       | BigIntGuid
-      | RawGuidBuffer
+      | RawGuidBuffer,
   ) {
     const expectedBrand = GuidV4.whichBrand(value);
     const verifiedBrand = GuidV4.verifyGuid(expectedBrand, value);
@@ -88,7 +88,7 @@ export class GuidV4 {
       | ShortHexGuid
       | Base64Guid
       | BigIntGuid
-      | RawGuidBuffer
+      | RawGuidBuffer,
   ): boolean {
     const verifyFunc = GuidV4.verifyFunctions.get(guidBrand);
     if (verifyFunc === undefined) {
@@ -107,7 +107,7 @@ export class GuidV4 {
 
   public static lengthToGuidBrand(
     length: number,
-    isBuffer: boolean
+    isBuffer: boolean,
   ): GuidBrandType {
     for (const [brand, len] of GuidV4.lengthMap) {
       if (len === length) {
@@ -137,7 +137,7 @@ export class GuidV4 {
   }
 
   public static isShortHexGuid(
-    shortHexGuidValue: string | ShortHexGuid
+    shortHexGuidValue: string | ShortHexGuid,
   ): boolean {
     const expectedLength = GuidV4.guidBrandToLength(GuidBrandType.ShortHexGuid);
 
@@ -199,13 +199,13 @@ export class GuidV4 {
   }
 
   public static toFullHexGuid(
-    guid: ShortHexGuid | FullHexGuid | string
+    guid: ShortHexGuid | FullHexGuid | string,
   ): FullHexGuid {
     if (guid.length == GuidV4.guidBrandToLength(GuidBrandType.ShortHexGuid)) {
       // insert dashes
       const str = guid.replace(
         /(.{8})(.{4})(.{4})(.{4})(.{12})/,
-        '$1-$2-$3-$4-$5'
+        '$1-$2-$3-$4-$5',
       );
       return str as FullHexGuid;
     } else if (
@@ -218,7 +218,7 @@ export class GuidV4 {
   }
 
   public static toShortHexGuid(
-    guid: string | FullHexGuid | ShortHexGuid | Base64Guid
+    guid: string | FullHexGuid | ShortHexGuid | Base64Guid,
   ): ShortHexGuid {
     if (guid.length == GuidV4.guidBrandToLength(GuidBrandType.ShortHexGuid)) {
       return guid as ShortHexGuid;
@@ -260,7 +260,7 @@ export class GuidV4 {
 
   public static fullHexFromBase64(base64: string | Base64Guid): FullHexGuid {
     return GuidV4.toFullHexGuid(
-      Buffer.from(base64, 'base64').toString('hex')
+      Buffer.from(base64, 'base64').toString('hex'),
     ) as FullHexGuid;
   }
 
@@ -271,13 +271,13 @@ export class GuidV4 {
       case GuidBrandType.FullHexGuid:
         rawGuidBufferResult = Buffer.from(
           GuidV4.toShortHexGuid(value as FullHexGuid),
-          'hex'
+          'hex',
         ) as RawGuidBuffer;
         break;
       case GuidBrandType.ShortHexGuid:
         rawGuidBufferResult = Buffer.from(
           GuidV4.toShortHexGuid(value as ShortHexGuid),
-          'hex'
+          'hex',
         ) as RawGuidBuffer;
         break;
       case GuidBrandType.Base64Guid:
@@ -289,7 +289,7 @@ export class GuidV4 {
       case GuidBrandType.BigIntGuid:
         rawGuidBufferResult = Buffer.from(
           GuidV4.toShortHexGuid(GuidV4.toFullHexFromBigInt(value as bigint)),
-          'hex'
+          'hex',
         ) as RawGuidBuffer;
         break;
       default:
@@ -302,9 +302,18 @@ export class GuidV4 {
       throw new Error(
         `Invalid guid length: ${
           rawGuidBufferResult.length
-        }, expected: ${GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer)}`
+        }, expected: ${GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer)}`,
       );
     }
     return rawGuidBufferResult;
+  }
+
+  /**
+   * Compare two GuidV4 instances
+   * @param other - The other GuidV4 instance to compare
+   * @returns True if the two GuidV4 instances are equal, false otherwise
+   */
+  public equals(other: GuidV4): boolean {
+    return Buffer.compare(this._value, other._value) === 0;
   }
 }

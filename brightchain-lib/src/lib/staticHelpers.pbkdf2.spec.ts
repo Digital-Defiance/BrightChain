@@ -7,7 +7,7 @@ describe('brightchain staticHelpers.pbkdf2', () => {
     const derivedKey2 = StaticHelpersPbkdf2.deriveKeyFromPassword(
       password,
       derivedKey.salt,
-      derivedKey.iterations
+      derivedKey.iterations,
     );
     expect(derivedKey.hash).toEqual(derivedKey2.hash);
   });

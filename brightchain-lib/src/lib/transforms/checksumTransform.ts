@@ -11,7 +11,7 @@ export class ChecksumTransform extends Transform {
   public override _transform(
     chunk: Buffer,
     encoding: BufferEncoding,
-    callback: TransformCallback
+    callback: TransformCallback,
   ) {
     this.sha3.update(chunk);
     callback(null, chunk);

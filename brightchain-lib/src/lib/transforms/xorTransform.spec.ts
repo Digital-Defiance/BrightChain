@@ -14,12 +14,12 @@ describe('XorTransform', () => {
   const simulateChunkProcessing = (
     xorTransform: XorTransform,
     chunks: Buffer[],
-    callback: (result: Buffer) => void
+    callback: (result: Buffer) => void,
   ) => {
     chunks.forEach((chunk) =>
       xorTransform._transform(chunk, 'utf8', () => {
         // do nothing
-      })
+      }),
     );
 
     xorTransform.on('data', (result) => {
@@ -65,7 +65,7 @@ describe('XorTransform', () => {
     const xorTransform = new XorTransform();
     simulateChunkProcessing(xorTransform, chunks, (result) => {
       expect(result.subarray(0, expectedXorResult.length)).toEqual(
-        expectedXorResult
+        expectedXorResult,
       );
       done();
     });

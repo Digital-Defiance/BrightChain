@@ -1,27 +1,29 @@
-import { randomBytes } from 'crypto';
-import {
-  generateRandomKeysSync,
-  KeyPair as PaillierKeyPair,
-} from 'paillier-bigint';
+import { createECDH, randomBytes } from 'crypto';
+import Wallet from 'ethereumjs-wallet';
+import { KeyPair as PaillierKeyPair } from 'paillier-bigint';
+import { EmailString } from './emailString';
 import { MemberType } from './enumerations/memberType';
 import { GuidV4 } from './guid';
-import { EmailString } from './emailString';
 import { IMemberDTO } from './interfaces/memberDto';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
-import Wallet from 'ethereumjs-wallet';
-import { ShortHexGuid, SignatureBuffer } from './types';
 import { StaticHelpersVoting } from './staticHelpers.voting';
+import { StaticHelpersVotingDerivation } from './staticHelpers.voting.derivation';
+import { ShortHexGuid, SignatureBuffer } from './types';
+
 /**
  * A member of Brightchain.
- * @param id The unique identifier for this member.
- * @param name The name of this member.
+ * In the Owner Free Filesystem (OFF), members are used to:
+ * 1. Sign and verify blocks
+ * 2. Encrypt and decrypt data
+ * 3. Participate in voting
+ * 4. Establish ownership of blocks
  */
 export class BrightChainMember {
   public readonly publicKey: Buffer;
   private _wallet: Wallet | undefined;
   private _privateKey: Buffer | undefined;
+  // Store voting public key for operations that don't need private key
   public readonly votingPublicKey: Buffer;
-  public readonly encryptedVotingPrivateKey: Buffer;
   public readonly id: GuidV4;
   public readonly memberType: MemberType;
   public readonly name: string;
@@ -29,19 +31,19 @@ export class BrightChainMember {
   public readonly creatorId: GuidV4;
   public readonly dateCreated: Date;
   public readonly dateUpdated: Date;
+
   constructor(
     memberType: MemberType,
     name: string,
     contactEmail: EmailString,
-    votingPublicKey: Buffer,
-    encryptedVotingPrivateKey: Buffer,
     publicKey: Buffer,
+    votingPublicKey: Buffer,
     privateKey?: Buffer,
     wallet?: Wallet,
     id?: GuidV4,
     dateCreated?: Date,
     dateUpdated?: Date,
-    creatorId?: GuidV4
+    creatorId?: GuidV4,
   ) {
     this.memberType = memberType;
     if (id !== undefined) {
@@ -60,7 +62,6 @@ export class BrightChainMember {
 
     this.publicKey = publicKey;
     this.votingPublicKey = votingPublicKey;
-    this.encryptedVotingPrivateKey = encryptedVotingPrivateKey;
     this._privateKey = privateKey;
     this._wallet = wallet;
 
@@ -76,21 +77,75 @@ export class BrightChainMember {
     this.dateUpdated = dateUpdated ?? now();
     this.creatorId = creatorId ?? this.id;
   }
+
+  /**
+   * Create an anonymous member for use with blocks that don't need a real owner.
+   * In the Owner Free Filesystem (OFF), anonymous members are used for:
+   * 1. Temporary blocks during processing
+   * 2. System-generated blocks
+   * 3. Blocks that don't require ownership tracking
+   */
+  public static anonymous(): BrightChainMember {
+    const mnemonic = StaticHelpersECIES.generateNewMnemonic();
+    const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
+
+    // Create ECDH key pair for consistent format
+    const ecdh = createECDH(StaticHelpersECIES.curveName);
+    ecdh.generateKeys();
+    const privateKey = ecdh.getPrivateKey();
+    // Get public key in uncompressed format (includes 0x04 prefix)
+    const publicKeyWithPrefix = ecdh.getPublicKey(null, 'uncompressed');
+
+    // Get raw public key (without 0x04 prefix) for voting key derivation
+    const rawPublicKey = publicKeyWithPrefix.subarray(1);
+    // Derive voting keys
+    const votingKeypair =
+      StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
+        privateKey,
+        rawPublicKey,
+      );
+    // Convert voting public key to buffer
+    const votingPublicKeyBuffer = StaticHelpersVoting.votingPublicKeyToBuffer(
+      votingKeypair.publicKey,
+    );
+
+    // Create member with ECDH keys and derived voting public key
+    return new BrightChainMember(
+      MemberType.Anonymous,
+      'Anonymous',
+      new EmailString('anonymous@brightchain.org'),
+      publicKeyWithPrefix,
+      votingPublicKeyBuffer,
+      privateKey,
+      wallet,
+    );
+  }
+
   public get hasPrivateKey(): boolean {
     return this._privateKey !== undefined;
   }
+
   public get privateKey(): Buffer {
     if (!this._privateKey) {
       throw new Error('No private key');
     }
     return this._privateKey;
   }
+
   public set privateKey(value: Buffer) {
     const nonce = randomBytes(32);
-    const testMessage = StaticHelpersECIES.encrypt(this.publicKey, nonce);
+    // Ensure 0x04 prefix for encryption
+    const publicKeyForEncryption =
+      this.publicKey[0] === 0x04
+        ? this.publicKey
+        : Buffer.concat([Buffer.from([0x04]), this.publicKey]);
+    const testMessage = StaticHelpersECIES.encrypt(
+      publicKeyForEncryption,
+      nonce,
+    );
     let testDecrypted;
     try {
-      testDecrypted = StaticHelpersECIES.decrypt(value, testMessage);
+      testDecrypted = StaticHelpersECIES.decryptWithHeader(value, testMessage);
     } catch (e) {
       testDecrypted = undefined;
     }
@@ -102,36 +157,47 @@ export class BrightChainMember {
     }
     this._privateKey = value;
   }
+
   public get privateKeyLoaded(): boolean {
     return this._privateKey !== undefined;
   }
+
   public get wallet(): Wallet {
     if (!this._wallet) {
       throw new Error('No wallet');
     }
     return this._wallet;
   }
+
   public unloadPrivateKey(): void {
     this._privateKey = undefined;
   }
+
   public unloadWallet(): void {
     this._wallet = undefined;
   }
+
   public unloadWalletAndPrivateKey(): void {
     this.unloadWallet();
     this.unloadPrivateKey();
   }
+
   public loadWallet(mnemonic: string): void {
     if (this._wallet) {
       throw new Error('Wallet already loaded');
     }
     const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
-    const keyPair = StaticHelpersECIES.walletToSimpleKeyPairBuffer(wallet);
-    if (keyPair.publicKey.toString('hex') !== this.publicKey.toString('hex')) {
+    const privateKey = wallet.getPrivateKey();
+    const publicKey = wallet.getPublicKey();
+    const publicKeyWithPrefix = Buffer.concat([Buffer.from([0x04]), publicKey]);
+
+    if (
+      publicKeyWithPrefix.toString('hex') !== this.publicKey.toString('hex')
+    ) {
       throw new Error('Incorrect or invalid mnemonic for public key');
     }
     this._wallet = wallet;
-    this._privateKey = keyPair.privateKey;
+    this._privateKey = privateKey;
   }
 
   /**
@@ -152,18 +218,26 @@ export class BrightChainMember {
   public verify(signature: SignatureBuffer, data: Buffer): boolean {
     return StaticHelpersECIES.verifyMessage(this.publicKey, data, signature);
   }
+
+  /**
+   * Get the voting key pair derived from ECDH keys.
+   * Public key can be derived by anyone with the ECDH public key.
+   * Private key can only be derived by someone with the ECDH private key.
+   */
   public get votingKeyPair(): PaillierKeyPair {
-    const votingPublicKey = StaticHelpersVoting.bufferToVotingPublicKey(
-      this.votingPublicKey
+    // Get raw public key (without 0x04 prefix)
+    const rawPublicKey =
+      this.publicKey[0] === 0x04 ? this.publicKey.subarray(1) : this.publicKey;
+
+    // Derive voting keys from ECDH keys
+    if (!this._privateKey) {
+      throw new Error('Private key required to derive voting key pair');
+    }
+
+    return StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
+      this._privateKey,
+      rawPublicKey,
     );
-    return {
-      publicKey: votingPublicKey,
-      privateKey: StaticHelpersVoting.encryptedPrivateKeyToKeyPair(
-        this.encryptedVotingPrivateKey,
-        this.privateKey,
-        votingPublicKey
-      ),
-    };
   }
 
   /**
@@ -178,33 +252,59 @@ export class BrightChainMember {
     memberType: MemberType,
     name: string,
     contactEmail: EmailString,
-    creator?: BrightChainMember
+    creator?: BrightChainMember,
   ): BrightChainMember {
+    // Validate inputs first
+    if (!name || name.length == 0) {
+      throw new Error('Member name missing');
+    }
+    if (name.trim() != name) {
+      throw new Error('Member name has leading or trailing spaces');
+    }
+    if (!contactEmail || contactEmail.toString().length == 0) {
+      throw new Error('Email missing');
+    }
+    if (contactEmail.toString().trim() != contactEmail.toString()) {
+      throw new Error('Email has leading or trailing spaces');
+    }
+
     const newId = GuidV4.new();
     const mnemonic = StaticHelpersECIES.generateNewMnemonic();
     const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
-    const keyPair = StaticHelpersECIES.walletToSimpleKeyPairBuffer(wallet);
-    const votingKeypair = generateRandomKeysSync(
-      StaticHelpersVoting.votingKeyPairBitLength
+
+    // Create ECDH key pair for consistent format
+    const ecdh = createECDH(StaticHelpersECIES.curveName);
+    ecdh.setPrivateKey(wallet.getPrivateKey());
+    const privateKey = ecdh.getPrivateKey();
+    // Get public key in uncompressed format (includes 0x04 prefix)
+    const publicKeyWithPrefix = ecdh.getPublicKey(null, 'uncompressed');
+
+    // Get raw public key (without 0x04 prefix) for voting key derivation
+    const rawPublicKey = publicKeyWithPrefix.subarray(1);
+    // Derive voting keys
+    const votingKeypair =
+      StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
+        privateKey,
+        rawPublicKey,
+      );
+    // Convert voting public key to buffer
+    const votingPublicKeyBuffer = StaticHelpersVoting.votingPublicKeyToBuffer(
+      votingKeypair.publicKey,
     );
+
     return new BrightChainMember(
       memberType,
       name,
       contactEmail,
-      StaticHelpersVoting.votingPublicKeyToBuffer(votingKeypair.publicKey),
-      StaticHelpersVoting.keyPairToEncryptedPrivateKey(
-        votingKeypair,
-        keyPair.publicKey
-      ),
-      keyPair.publicKey,
-      keyPair.privateKey,
+      publicKeyWithPrefix, // Store with prefix
+      votingPublicKeyBuffer,
+      privateKey,
       wallet,
       newId,
       undefined,
       undefined,
-      creator?.id ?? newId
+      creator?.id ?? newId,
     );
-    // TODO: question: should creatorId only be allowed to be the same as the ID for the first member/node agent/creator?
   }
 
   /**
@@ -214,6 +314,11 @@ export class BrightChainMember {
    */
   encryptData(data: string | Buffer): Buffer {
     const bufferData = Buffer.isBuffer(data) ? data : Buffer.from(data);
+    // Create ECDH instance for encryption
+    const ecdh = createECDH(StaticHelpersECIES.curveName);
+    // Generate ephemeral key pair
+    ecdh.generateKeys();
+    // Use public key directly since it's already in ECDH format
     return StaticHelpersECIES.encrypt(this.publicKey, bufferData);
   }
 
@@ -223,7 +328,11 @@ export class BrightChainMember {
    * @returns The decrypted data.
    */
   decryptData(encryptedData: Buffer) {
-    return StaticHelpersECIES.decrypt(this.privateKey, encryptedData);
+    // Create ECDH instance for decryption
+    const ecdh = createECDH(StaticHelpersECIES.curveName);
+    // Set private key
+    ecdh.setPrivateKey(this.privateKey);
+    return StaticHelpersECIES.decryptWithHeader(this.privateKey, encryptedData);
   }
 
   toJSON(): string {
@@ -232,9 +341,8 @@ export class BrightChainMember {
       type: this.memberType,
       name: this.name,
       contactEmail: this.contactEmail.toJSON(),
-      votingPublicKey: this.votingPublicKey.toString('hex'),
-      encryptedVotingPrivateKey: this.encryptedVotingPrivateKey.toString('hex'),
       publicKey: this.publicKey.toString('hex'),
+      votingPublicKey: this.votingPublicKey.toString('hex'),
       createdBy: this.creatorId.asShortHexGuid as string,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
@@ -242,24 +350,23 @@ export class BrightChainMember {
 
     return JSON.stringify(memberDTO);
   }
+
   fromJSON(json: string): BrightChainMember {
     const parsedMember: IMemberDTO = JSON.parse(json) as IMemberDTO;
-    console.log('parsedMember', parsedMember);
     const contactEmail = new EmailString(parsedMember.contactEmail);
 
     return new BrightChainMember(
       parsedMember.type,
       parsedMember.name,
       contactEmail,
-      Buffer.from(parsedMember.votingPublicKey, 'hex'),
-      Buffer.from(parsedMember.encryptedVotingPrivateKey, 'hex'),
       Buffer.from(parsedMember.publicKey, 'hex'),
+      Buffer.from(parsedMember.votingPublicKey, 'hex'),
       undefined,
       undefined,
       new GuidV4(parsedMember.id as ShortHexGuid),
       parsedMember.dateCreated,
       parsedMember.dateUpdated,
-      new GuidV4(parsedMember.createdBy as ShortHexGuid)
+      new GuidV4(parsedMember.createdBy as ShortHexGuid),
     );
   }
 }

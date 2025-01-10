@@ -54,7 +54,7 @@ export function readBinary(buffer: Buffer): X86Cpu {
 export function handleCommand(
   cpu: X86Cpu,
   buffer: Buffer,
-  commandBuffer: Buffer
+  commandBuffer: Buffer,
 ) {
   const command = commandBuffer[0];
   switch (command) {
@@ -72,7 +72,7 @@ export function handleCommand(
 export function handleSegmentCommand(
   cpu: X86Cpu,
   buffer: Buffer,
-  commandBuffer: Buffer
+  commandBuffer: Buffer,
 ) {
   const vmAddress = commandBuffer[6] >> 2;
   const vmSize = commandBuffer[7] >> 2;
@@ -93,7 +93,7 @@ export function handleSegmentCommand(
 export function handleUnixThreadCommand(
   cpu: X86Cpu,
   buffer: Buffer,
-  commandBuffer: Buffer
+  commandBuffer: Buffer,
 ) {
   const offset = 4;
   cpu.Registers[CpuRegisters.EAX] = commandBuffer[offset]; // eax

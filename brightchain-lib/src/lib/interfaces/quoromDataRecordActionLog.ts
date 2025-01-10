@@ -1,6 +1,6 @@
-import { QuorumDataRecordActionEventType } from "../enumerations/actionEvent";
-import { QuorumDataRecordActionType } from "../enumerations/actionType";
-import { IBasicObjectDTO } from "./basicObjectDto";
+import { QuorumDataRecordActionEventType } from '../enumerations/actionEvent';
+import { QuorumDataRecordActionType } from '../enumerations/actionType';
+import { IBasicObjectDTO } from './basicObjectDto';
 
 export interface QuorumDataRecordActionLog extends IBasicObjectDTO {
   readonly eventId: string;
