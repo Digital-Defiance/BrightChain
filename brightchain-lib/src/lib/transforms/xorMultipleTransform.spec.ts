@@ -18,32 +18,38 @@ describe('XorTransformStream', () => {
     return result;
   }
 
-  test('XORs data from multiple streams correctly', done => {
+  test('XORs data from multiple streams correctly', (done) => {
     const input1 = createMockStream('Hello');
     const input2 = createMockStream('World');
 
     const xorStream = new XorMultipleTransformStream([input1, input2]);
     const chunks: Buffer[] = [];
 
-    xorStream.on('data', chunk => chunks.push(chunk));
+    xorStream.on('data', (chunk) => chunks.push(chunk));
     xorStream.on('end', () => {
-      const expectedResult = xorBuffers([bufferFromText('Hello'), bufferFromText('World')]);
+      const expectedResult = xorBuffers([
+        bufferFromText('Hello'),
+        bufferFromText('World'),
+      ]);
       const result = Buffer.concat(chunks);
       expect(result).toEqual(expectedResult);
       done();
     });
   });
 
-  test('Handles streams of different lengths', done => {
+  test('Handles streams of different lengths', (done) => {
     const input1 = createMockStream('Short');
     const input2 = createMockStream('A bit longer');
 
     const xorStream = new XorMultipleTransformStream([input1, input2]);
     const chunks: Buffer[] = [];
 
-    xorStream.on('data', chunk => chunks.push(chunk));
+    xorStream.on('data', (chunk) => chunks.push(chunk));
     xorStream.on('end', () => {
-      const expectedResult = xorBuffers([bufferFromText('Short'), bufferFromText('A bit longer')]);
+      const expectedResult = xorBuffers([
+        bufferFromText('Short'),
+        bufferFromText('A bit longer'),
+      ]);
       const result = Buffer.concat(chunks);
       expect(result).toEqual(expectedResult);
       done();

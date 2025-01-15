@@ -14,7 +14,7 @@ export class AsymmetricKeyFragment {
     keyRole: KeyRole,
     keyFragmentType: KeyFragmentType,
     keyStorageFormat: KeyStorageFormat,
-    keyFragment: string | Buffer | Uint8Array
+    keyFragment: string | Buffer | Uint8Array,
   ) {
     this.keyType = keyType;
     this.keyRole = keyRole;

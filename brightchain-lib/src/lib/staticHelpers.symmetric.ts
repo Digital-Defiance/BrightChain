@@ -53,14 +53,14 @@ export abstract class StaticHelpersSymmetric {
    */
   public static symmetricEncryptBuffer(
     data: Buffer,
-    encryptionKey?: Buffer
+    encryptionKey?: Buffer,
   ): ISymmetricEncryptionResults {
     if (
       encryptionKey &&
       encryptionKey.length != StaticHelpersSymmetric.SymmetricKeyBytes
     )
       throw new Error(
-        `Encryption key must be ${StaticHelpersSymmetric.SymmetricKeyBytes} bytes long`
+        `Encryption key must be ${StaticHelpersSymmetric.SymmetricKeyBytes} bytes long`,
       );
 
     // encrypt the document using AES-256 and the key
@@ -70,7 +70,7 @@ export abstract class StaticHelpersSymmetric {
     const cipher = createCipheriv(
       StaticHelpersSymmetric.SymmetricAlgorithmType,
       key,
-      ivBuffer
+      ivBuffer,
     );
 
     const ciphertextBuffer = cipher.update(data);
@@ -93,19 +93,19 @@ export abstract class StaticHelpersSymmetric {
    */
   public static symmetricDecryptBuffer(
     encryptedData: Buffer,
-    key: Buffer
+    key: Buffer,
   ): Buffer {
     const ivBuffer = encryptedData.subarray(
       0,
-      StaticHelpersSymmetric.SymmetricKeyIvBytes
+      StaticHelpersSymmetric.SymmetricKeyIvBytes,
     );
     const ciphertextBuffer = encryptedData.subarray(
-      StaticHelpersSymmetric.SymmetricKeyIvBytes
+      StaticHelpersSymmetric.SymmetricKeyIvBytes,
     );
     const decipher = createDecipheriv(
       StaticHelpersSymmetric.SymmetricAlgorithmType,
       key,
-      ivBuffer
+      ivBuffer,
     );
     return decipher.update(ciphertextBuffer);
   }
@@ -117,7 +117,7 @@ export abstract class StaticHelpersSymmetric {
    */
   public static symmetricEncryptJson<T>(
     data: T,
-    encryptionKey?: Buffer
+    encryptionKey?: Buffer,
   ): ISymmetricEncryptionResults {
     if (data === null || data === undefined) {
       throw new Error('Data to encrypt cannot be null or undefined');
@@ -130,7 +130,7 @@ export abstract class StaticHelpersSymmetric {
     }
     return StaticHelpersSymmetric.symmetricEncryptBuffer(
       dataBuffer,
-      encryptionKey
+      encryptionKey,
     );
   }
 
@@ -144,8 +144,8 @@ export abstract class StaticHelpersSymmetric {
     return JSON.parse(
       StaticHelpersSymmetric.symmetricDecryptBuffer(
         encryptedData,
-        key
-      ).toString('utf8')
+        key,
+      ).toString('utf8'),
     ) as T;
   }
 }

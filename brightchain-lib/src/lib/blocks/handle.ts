@@ -7,9 +7,9 @@ import {
   readFileSync,
 } from 'fs';
 import { BlockSize } from '../enumerations/blockSizes';
-import { ChecksumBuffer } from '../types';
-import { ChecksumTransform } from '../transforms/checksumTransform';
 import { IBlockMetadata } from '../interfaces/blockMetadata';
+import { ChecksumTransform } from '../transforms/checksumTransform';
+import { ChecksumBuffer } from '../types';
 
 /**
  * A block handle is a reference to a block in a block store.

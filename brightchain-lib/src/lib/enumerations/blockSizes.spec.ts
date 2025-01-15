@@ -1,8 +1,8 @@
 import {
   BlockSize,
+  blockSizeLengths,
   lengthToBlockSize,
   validateBlockSize,
-  blockSizeLengths,
   validBlockSizes,
 } from './blockSizes';
 describe('blockSizes', () => {
