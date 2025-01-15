@@ -1,4 +1,4 @@
-import { randomBytes, pbkdf2Sync } from 'crypto';
+import { pbkdf2Sync, randomBytes } from 'crypto';
 import { IPbkf2Config } from './interfaces/pbkdf2Config';
 import { IPbkdf2Result } from './interfaces/pbkdf2Result';
 import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
@@ -49,7 +49,7 @@ export abstract class StaticHelpersPbkdf2 {
   public static deriveKeyFromPassword(
     password: Buffer,
     salt?: Buffer,
-    iterations?: number
+    iterations?: number,
   ): IPbkdf2Result {
     const config = StaticHelpersPbkdf2.pbkdf2Config(iterations);
     const saltBytes = salt ?? randomBytes(config.saltBytes);
@@ -61,7 +61,7 @@ export abstract class StaticHelpersPbkdf2 {
       saltBytes,
       config.iterations,
       config.hashBytes,
-      'sha512'
+      'sha512',
     );
     if (hashBytes.length !== config.hashBytes) {
       throw new Error('Hash length does not match expected length');

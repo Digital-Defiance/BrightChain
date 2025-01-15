@@ -27,7 +27,9 @@ describe('BlockService', () => {
       expect(BlockService.getBlockSizeForData(268435400)).toBe(BlockSize.Huge);
     });
     it('should return Unknown for data length exceeding maximum limits', () => {
-      expect(BlockService.getBlockSizeForData(268435500)).toBe(BlockSize.Unknown);
+      expect(BlockService.getBlockSizeForData(268435500)).toBe(
+        BlockSize.Unknown,
+      );
     });
 
     it('should return Unknown for negative data length', () => {

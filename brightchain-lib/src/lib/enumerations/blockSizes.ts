@@ -49,14 +49,7 @@ export const validBlockSizes = [
   BlockSize.Huge,
 ];
 
-export const blockSizeLengths = [
-  512,
-  1024,
-  4096,
-  1048576,
-  67108864,
-  268435456,
-];
+export const blockSizeLengths = [512, 1024, 4096, 1048576, 67108864, 268435456];
 
 export const validBlockSizeStrings = [
   'Message',
@@ -67,11 +60,18 @@ export const validBlockSizeStrings = [
   'Huge',
 ];
 
-export const BlockSizeInfo: Map<BlockSize, { length: number, name: string }> = new Map<BlockSize, { length: number, name: string }>();
+export const BlockSizeInfo: Map<BlockSize, { length: number; name: string }> =
+  new Map<BlockSize, { length: number; name: string }>();
 for (let i = 0; i < validBlockSizes.length; i++) {
-  BlockSizeInfo.set(validBlockSizes[i], { length: blockSizeLengths[i], name: validBlockSizeStrings[i] });
+  BlockSizeInfo.set(validBlockSizes[i], {
+    length: blockSizeLengths[i],
+    name: validBlockSizeStrings[i],
+  });
 }
-export function blockSizeInfoBySize(blockSize: BlockSize): { length: number, name: string } {
+export function blockSizeInfoBySize(blockSize: BlockSize): {
+  length: number;
+  name: string;
+} {
   const result = BlockSizeInfo.get(blockSize);
   if (!result) {
     throw new Error(`Invalid block size ${blockSize}`);

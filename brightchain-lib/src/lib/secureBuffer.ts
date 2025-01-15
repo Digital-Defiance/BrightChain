@@ -1,7 +1,7 @@
 import { createHash, timingSafeEqual } from 'crypto';
 import { GuidV4 } from './guid';
-import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 import { StaticHelpersPbkdf2 } from './staticHelpers.pbkdf2';
+import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 import { FullHexGuid, RawGuidBuffer } from './types';
 
 /**
@@ -34,7 +34,7 @@ export class SecureBuffer {
     this._salt = encryptionResult.salt;
     this._encryptedChecksum = this.createEncryptedChecksum(
       data,
-      encryptionResult.salt
+      encryptionResult.salt,
     );
   }
   public dispose(): void {
@@ -44,7 +44,7 @@ export class SecureBuffer {
   }
   public static fromString(
     data: string,
-    encoding: BufferEncoding = SecureBuffer.stringEncoding
+    encoding: BufferEncoding = SecureBuffer.stringEncoding,
   ): SecureBuffer {
     return new SecureBuffer(Buffer.from(data, encoding));
   }
@@ -63,11 +63,11 @@ export class SecureBuffer {
     }
     const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(
       this.idBuffer,
-      this._salt
+      this._salt,
     );
     const decryptionResult = StaticHelpersSymmetric.symmetricDecryptBuffer(
       this._encryptedValue,
-      idKey.hash
+      idKey.hash,
     );
     if (decryptionResult.length !== this._length) {
       throw new Error('Decrypted value length does not match expected length');
@@ -105,35 +105,35 @@ export class SecureBuffer {
   private validateChecksum(data: string | Buffer, checksum: string): boolean {
     return timingSafeEqual(
       Buffer.from(this.generateChecksum(data), 'hex'),
-      Buffer.from(checksum, 'hex')
+      Buffer.from(checksum, 'hex'),
     );
   }
   private validateEncryptedChecksum(data: string | Buffer): boolean {
     const decryptedChecksum = this.decryptData(
-      this._encryptedChecksum
+      this._encryptedChecksum,
     ).toString(SecureBuffer.stringEncoding);
     return this.validateChecksum(data, decryptedChecksum);
   }
   private encryptData(
     data: string | Buffer,
-    salt?: Buffer
+    salt?: Buffer,
   ): { encryptedData: Buffer; salt: Buffer } {
     const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(
       this.idBuffer,
-      salt
+      salt,
     );
     const encryptionResult = StaticHelpersSymmetric.symmetricEncryptBuffer(
       Buffer.isBuffer(data)
         ? data
         : Buffer.from(data, SecureBuffer.stringEncoding),
-      idKey.hash
+      idKey.hash,
     );
     return { encryptedData: encryptionResult.encryptedData, salt: idKey.salt };
   }
   private decryptData(data: Buffer): Buffer {
     const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(
       this.idBuffer,
-      this._salt
+      this._salt,
     );
     return StaticHelpersSymmetric.symmetricDecryptBuffer(data, idKey.hash);
   }

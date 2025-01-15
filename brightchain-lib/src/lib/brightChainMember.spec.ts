@@ -1,7 +1,7 @@
+import { faker } from '@faker-js/faker';
 import { BrightChainMember } from './brightChainMember';
 import { EmailString } from './emailString';
 import { MemberType } from './enumerations/memberType';
-import { faker } from '@faker-js/faker';
 describe('brightchain', () => {
   let alice: BrightChainMember,
     bob: BrightChainMember,
@@ -10,17 +10,17 @@ describe('brightchain', () => {
     alice = BrightChainMember.newMember(
       MemberType.User,
       'Alice Smith',
-      new EmailString('alice@example.com')
+      new EmailString('alice@example.com'),
     );
     bob = BrightChainMember.newMember(
       MemberType.User,
       'Bob Smith',
-      new EmailString('bob@example.com')
+      new EmailString('bob@example.com'),
     );
     noKeyCharlie = BrightChainMember.newMember(
       MemberType.User,
       'Charlie Smith',
-      new EmailString('charlie@example.com')
+      new EmailString('charlie@example.com'),
     );
     noKeyCharlie.unloadWalletAndPrivateKey();
   });
@@ -33,14 +33,14 @@ describe('brightchain', () => {
   });
   it('should fail to sign when there is no signing key', () => {
     expect(() =>
-      noKeyCharlie.sign(Buffer.from(faker.lorem.sentence()))
+      noKeyCharlie.sign(Buffer.from(faker.lorem.sentence())),
     ).toThrow('No private key');
   });
   it('should unload a private key when called', () => {
     const dwight = BrightChainMember.newMember(
       MemberType.User,
       'Dwight Smith',
-      new EmailString('dwight@example.com')
+      new EmailString('dwight@example.com'),
     );
     expect(dwight.hasPrivateKey).toBeTruthy();
     dwight.unloadWalletAndPrivateKey();
@@ -51,8 +51,8 @@ describe('brightchain', () => {
       BrightChainMember.newMember(
         MemberType.User,
         '',
-        new EmailString('alice@example.com')
-      )
+        new EmailString('alice@example.com'),
+      ),
     ).toThrow('Member name missing');
   });
   it('should fail to create a user with whitespace at the start or end of their name', () => {
@@ -60,20 +60,24 @@ describe('brightchain', () => {
       BrightChainMember.newMember(
         MemberType.User,
         'alice ',
-        new EmailString('alice@example.com')
-      )
+        new EmailString('alice@example.com'),
+      ),
     ).toThrow('Member name has leading or trailing spaces');
     expect(() =>
       BrightChainMember.newMember(
         MemberType.User,
         ' alice',
-        new EmailString('alice@example.com')
-      )
+        new EmailString('alice@example.com'),
+      ),
     ).toThrow('Member name has leading or trailing spaces');
   });
   it('should fail to create a user with no email', () => {
     expect(() =>
-      BrightChainMember.newMember(MemberType.User, 'alice', new EmailString(''))
+      BrightChainMember.newMember(
+        MemberType.User,
+        'alice',
+        new EmailString(''),
+      ),
     ).toThrow('Email missing');
   });
   it('should fail to create a user with an email that has whitespace at the start or end', () => {
@@ -81,15 +85,15 @@ describe('brightchain', () => {
       BrightChainMember.newMember(
         MemberType.User,
         'alice',
-        new EmailString(' alice@example.com')
-      )
+        new EmailString(' alice@example.com'),
+      ),
     ).toThrow('Email has leading or trailing spaces');
     expect(() =>
       BrightChainMember.newMember(
         MemberType.User,
         'alice',
-        new EmailString('alice@example.com ')
-      )
+        new EmailString('alice@example.com '),
+      ),
     ).toThrow('Email has leading or trailing spaces');
   });
   it('should fail to create a user with an invalid email', () => {
@@ -97,7 +101,7 @@ describe('brightchain', () => {
       BrightChainMember.newMember(
         MemberType.User,
         'Nope',
-        new EmailString('x!foo')
+        new EmailString('x!foo'),
       );
     }).toThrow('Email is invalid');
   });

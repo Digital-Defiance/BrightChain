@@ -27,13 +27,13 @@ export class XorMultipleTransformStream extends Transform {
   processData(): void {
     if (
       this.buffers.every(
-        (buffer, index) => buffer !== null || this.streamEnded[index]
+        (buffer, index) => buffer !== null || this.streamEnded[index],
       )
     ) {
       const minLength = Math.min(
         ...this.buffers.map((buffer, index) =>
-          this.streamEnded[index] ? 0 : buffer.length
-        )
+          this.streamEnded[index] ? 0 : buffer.length,
+        ),
       );
 
       if (minLength === 0) {
@@ -47,7 +47,7 @@ export class XorMultipleTransformStream extends Transform {
         xorResult[i] = this.buffers.reduce(
           (acc, buffer, index) =>
             this.streamEnded[index] ? acc : acc ^ buffer[i],
-          0
+          0,
         );
       }
 
@@ -55,7 +55,7 @@ export class XorMultipleTransformStream extends Transform {
 
       // Update buffers
       this.buffers = this.buffers.map((buffer, index) =>
-        this.streamEnded[index] ? buffer : buffer.subarray(minLength)
+        this.streamEnded[index] ? buffer : buffer.subarray(minLength),
       );
     }
   }
@@ -69,7 +69,7 @@ export class XorMultipleTransformStream extends Transform {
   override _transform(
     chunk: Buffer,
     encoding: string,
-    callback: TransformCallback
+    callback: TransformCallback,
   ): void {
     // This transform does not use the incoming chunk directly
     callback();
