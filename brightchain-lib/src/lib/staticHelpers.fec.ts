@@ -1,8 +1,8 @@
 import { ReedSolomonErasure } from '@subspace/reed-solomon-erasure.wasm';
-import { BlockSize } from './enumerations/blockSizes';
 import { BaseBlock } from './blocks/base';
 import { ParityBlock } from './blocks/parity';
 import { BlockDataType } from './enumerations/blockDataType';
+import { BlockSize } from './enumerations/blockSizes';
 
 export class StaticHelpersFec {
   public static MaximumShardSize = BlockSize.Medium as number;
@@ -20,7 +20,7 @@ export class StaticHelpersFec {
     shardSize: number,
     dataShards: number,
     parityShards: number,
-    fecOnly: boolean
+    fecOnly: boolean,
   ): Promise<Buffer> {
     if (data.length !== shardSize * dataShards) {
       throw new Error('Invalid data length');
@@ -56,7 +56,7 @@ export class StaticHelpersFec {
     shardSize: number,
     dataShards: number,
     parityShards: number,
-    shardsAvailable: boolean[]
+    shardsAvailable: boolean[],
   ): Promise<Buffer> {
     if (data.length !== shardSize * (dataShards + parityShards)) {
       throw new Error('Invalid data length');
@@ -66,7 +66,7 @@ export class StaticHelpersFec {
       data,
       dataShards,
       parityShards,
-      shardsAvailable
+      shardsAvailable,
     );
     return Buffer.from(data).subarray(0, shardSize * dataShards);
   }
@@ -78,7 +78,7 @@ export class StaticHelpersFec {
    */
   public static async createParityBlocks(
     input: BaseBlock,
-    parityBlocks: number
+    parityBlocks: number,
   ): Promise<ParityBlock[]> {
     const shardSize =
       input.blockSize > StaticHelpersFec.MaximumShardSize
@@ -101,12 +101,12 @@ export class StaticHelpersFec {
         shardSize,
         1,
         parityBlocks,
-        true
+        true,
       );
       for (let j = 0; j < parityBlocks; j++) {
         const parityChunk = chunkParity.subarray(
           j * shardSize,
-          (j + 1) * shardSize
+          (j + 1) * shardSize,
         );
         resultParityBlocks[j] = Buffer.concat([
           resultParityBlocks[j],
@@ -118,7 +118,7 @@ export class StaticHelpersFec {
     for (let i = 0; i < parityBlocks; i++) {
       if (resultParityBlocks[i].length !== input.blockSize) {
         throw new Error(
-          `Invalid parity block size ${resultParityBlocks[i].length} for block size ${input.blockSize}`
+          `Invalid parity block size ${resultParityBlocks[i].length} for block size ${input.blockSize}`,
         );
       }
       result.push(new ParityBlock(input.blockSize, resultParityBlocks[i]));
@@ -127,7 +127,7 @@ export class StaticHelpersFec {
   }
   public static async recoverDataBlocks(
     damagedBlock: BaseBlock,
-    parityBlocks: ParityBlock[]
+    parityBlocks: ParityBlock[],
   ): Promise<BaseBlock> {
     const shardSize =
       damagedBlock.blockSize > StaticHelpersFec.MaximumShardSize
@@ -145,7 +145,7 @@ export class StaticHelpersFec {
     for (let i = 0; i < requiredShards; i++) {
       let damagedShard = damagedBlock.data.subarray(
         i * shardSize,
-        (i + 1) * shardSize
+        (i + 1) * shardSize,
       );
       for (let j = 0; j < parityBlocks.length; j++) {
         damagedShard = Buffer.concat([
@@ -158,20 +158,20 @@ export class StaticHelpersFec {
         shardSize,
         1,
         parityBlocks.length,
-        availableShards
+        availableShards,
       );
       recoveredBlock = Buffer.concat([recoveredBlock, recoveredShard]);
     }
     if (recoveredBlock.length !== damagedBlock.blockSize) {
       throw new Error(
-        `Invalid recovered block size ${recoveredBlock.length} for block size ${damagedBlock.blockSize}`
+        `Invalid recovered block size ${recoveredBlock.length} for block size ${damagedBlock.blockSize}`,
       );
     }
     return new BaseBlock(
       damagedBlock.blockSize,
       recoveredBlock,
       BlockDataType.RawData,
-      damagedBlock.blockSize
+      damagedBlock.blockSize,
     );
   }
 }

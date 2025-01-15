@@ -1,13 +1,13 @@
+import { RANDOM_BLOCKS_PER_TUPLE, TUPLE_SIZE } from './constants';
 import {
   BlockSize,
-  validBlockSizes,
   blockSizeLengths,
+  validBlockSizes,
 } from './enumerations/blockSizes';
-import { RandomBlocksPerTuple, TupleSize } from './constants';
 
 export abstract class BlockService {
-  public static readonly TupleSize = TupleSize;
-  public static readonly RandomBlocksPerTuple = RandomBlocksPerTuple;
+  public static readonly TupleSize = TUPLE_SIZE;
+  public static readonly RandomBlocksPerTuple = RANDOM_BLOCKS_PER_TUPLE;
   public static getBlockSizeForData(dataLength: number): BlockSize {
     if (dataLength < BigInt(0)) {
       return BlockSize.Unknown;

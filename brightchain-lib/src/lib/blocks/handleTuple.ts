@@ -1,4 +1,4 @@
-import { TupleSize } from '../constants';
+import { TUPLE_SIZE } from '../constants';
 import { IBlockMetadata } from '../interfaces/blockMetadata';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 import { ChecksumBuffer } from '../types';
@@ -14,7 +14,7 @@ export class BlockHandleTuple {
   }
   public async xor(
     diskBlockStore: DiskBlockAsyncStore,
-    destBlockMetadata: IBlockMetadata
+    destBlockMetadata: IBlockMetadata,
   ): Promise<BlockHandle> {
     // how do we end up with a handle- write the block out? to what?
     throw new Error('Method not implemented.');
@@ -22,8 +22,8 @@ export class BlockHandleTuple {
   }
   constructor(handles: BlockHandle[]) {
     this.handles = handles;
-    if (handles.length !== TupleSize) {
-      throw new Error(`Tuple size must be ${TupleSize}`);
+    if (handles.length !== TUPLE_SIZE) {
+      throw new Error(`Tuple size must be ${TUPLE_SIZE}`);
     }
   }
 }

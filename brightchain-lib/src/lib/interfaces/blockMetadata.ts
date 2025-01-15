@@ -1,6 +1,6 @@
-import { BlockDataType } from "../enumerations/blockDataType";
-import { BlockSize } from "../enumerations/blockSizes";
-import { BlockType } from "../enumerations/blockType";
+import { BlockDataType } from '../enumerations/blockDataType';
+import { BlockSize } from '../enumerations/blockSizes';
+import { BlockType } from '../enumerations/blockType';
 
 export interface IBlockMetadata {
   size: BlockSize;

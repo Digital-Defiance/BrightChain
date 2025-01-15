@@ -1,6 +1,6 @@
-import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
-import { randomBytes } from 'crypto';
 import { faker } from '@faker-js/faker';
+import { randomBytes } from 'crypto';
+import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 
 describe('brightchain staticHelpers.symmetric', () => {
   it('should symmetric encrypt and decrypt with provided key', () => {
@@ -9,14 +9,14 @@ describe('brightchain staticHelpers.symmetric', () => {
 
     const encrypted = StaticHelpersSymmetric.symmetricEncryptBuffer(
       testData,
-      testKey
+      testKey,
     );
     expect(encrypted).toBeDefined();
     expect(encrypted.encryptedData).not.toEqual(testData);
 
     const decrypted = StaticHelpersSymmetric.symmetricDecryptBuffer(
       encrypted.encryptedData,
-      testKey
+      testKey,
     );
     expect(decrypted.toString('utf-8')).toEqual(testData.toString('utf-8'));
   });
@@ -30,7 +30,7 @@ describe('brightchain staticHelpers.symmetric', () => {
 
     const decrypted = StaticHelpersSymmetric.symmetricDecryptBuffer(
       encrypted.encryptedData,
-      encrypted.key
+      encrypted.key,
     );
     expect(decrypted.toString('utf-8')).toEqual(testData.toString('utf-8'));
   });
@@ -39,7 +39,7 @@ describe('brightchain staticHelpers.symmetric', () => {
     const testData = Buffer.from(faker.lorem.sentence(), 'utf-8');
     const shortKey = Buffer.alloc(
       StaticHelpersSymmetric.SymmetricKeyBytes - 1,
-      'a'
+      'a',
     );
 
     expect(() => {
@@ -48,20 +48,22 @@ describe('brightchain staticHelpers.symmetric', () => {
   });
   it('should symmetrically encrypt and decrypt a string', () => {
     const testString = faker.lorem.sentence();
-    const encrypted = StaticHelpersSymmetric.symmetricEncryptJson<string>(testString);
+    const encrypted =
+      StaticHelpersSymmetric.symmetricEncryptJson<string>(testString);
     const decrypted = StaticHelpersSymmetric.symmetricDecryptJson<string>(
       encrypted.encryptedData,
-      encrypted.key
+      encrypted.key,
     );
     expect(decrypted).toEqual(testString);
   });
 
   it('should symmetrically encrypt and decrypt an object', () => {
     const testObject = { message: faker.lorem.sentence() };
-    const encrypted = StaticHelpersSymmetric.symmetricEncryptJson<object>(testObject);
+    const encrypted =
+      StaticHelpersSymmetric.symmetricEncryptJson<object>(testObject);
     const decrypted = StaticHelpersSymmetric.symmetricDecryptJson<object>(
       encrypted.encryptedData,
-      encrypted.key
+      encrypted.key,
     );
     expect(decrypted).toEqual(testObject);
   });
@@ -70,7 +72,7 @@ describe('brightchain staticHelpers.symmetric', () => {
     const encrypted = StaticHelpersSymmetric.symmetricEncryptJson<string>('');
     const decrypted = StaticHelpersSymmetric.symmetricDecryptJson<string>(
       encrypted.encryptedData,
-      encrypted.key
+      encrypted.key,
     );
     expect(decrypted).toEqual('');
   });
