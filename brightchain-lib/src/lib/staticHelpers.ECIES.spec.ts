@@ -1,9 +1,9 @@
-import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import { faker } from '@faker-js/faker';
-import { ISimpleKeyPairBuffer } from './interfaces/simpleKeyPairBuffer';
 import { mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import { randomBytes } from 'crypto';
 import Wallet from 'ethereumjs-wallet';
+import { ISimpleKeyPairBuffer } from './interfaces/simpleKeyPairBuffer';
+import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import { SignatureBuffer } from './types';
 
 describe('StaticHelpersECIES', () => {
@@ -90,13 +90,13 @@ describe('StaticHelpersECIES', () => {
     const message = faker.lorem.sentence();
     const encrypted = StaticHelpersECIES.encryptString(
       keyPair.publicKey.toString('hex'),
-      message
+      message,
     );
     expect(encrypted).toBeDefined();
 
     const decrypted = StaticHelpersECIES.decryptString(
       keyPair.privateKey.toString('hex'),
-      encrypted
+      encrypted,
     );
     expect(decrypted).toBe(message);
   });
@@ -108,7 +108,7 @@ describe('StaticHelpersECIES', () => {
 
     const wrongPrivateKey = Buffer.from(
       'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
-      'hex'
+      'hex',
     );
     expect(() => {
       StaticHelpersECIES.decrypt(wrongPrivateKey, encrypted);
@@ -119,7 +119,7 @@ describe('StaticHelpersECIES', () => {
     const message = faker.lorem.sentence();
     const encrypted = StaticHelpersECIES.encryptString(
       keyPair.publicKey.toString('hex'),
-      message
+      message,
     );
     expect(encrypted).toBeDefined();
 
@@ -139,7 +139,8 @@ describe('StaticHelpersECIES', () => {
       'b96e9ccb774cc33213cbcb2c69d3cdae17b0fe4888a1ccd343cbd1a17fd98b18';
     const expectedPublicKey =
       '0405b7d0996e99c4a49e6c3b83288f4740d53662839eab1d97d14660696944b8bbe24fabdd03888410ace3fa4c5a809e398f036f7b99d04f82a012dca95701d103';
-    const seed = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic).seed.value;
+    const seed =
+      StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic).seed.value;
     const testKeyPair = StaticHelpersECIES.seedToSimpleKeyPairBuffer(seed);
 
     expect(seed.toString('hex')).toEqual(expectedSeed);
@@ -150,7 +151,7 @@ describe('StaticHelpersECIES', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
     const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
       keyPair.privateKey,
-      message
+      message,
     );
     expect(signature).toBeDefined();
     expect(signature).toBeInstanceOf(Buffer);
@@ -159,29 +160,29 @@ describe('StaticHelpersECIES', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
     const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
       keyPair.privateKey,
-      message
+      message,
     );
     const verified: boolean = StaticHelpersECIES.verifyMessage(
       keyPair.publicKey,
       message,
-      signature
+      signature,
     );
     expect(verified).toBe(true);
   });
   it('should verify a signature using a public key straight from the wallet', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
     const wallet: Wallet = StaticHelpersECIES.walletFromSeed(
-      mnemonicToSeedSync(testMnemonic)
+      mnemonicToSeedSync(testMnemonic),
     );
     expect(wallet).toBeInstanceOf(Wallet);
     const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
       wallet.getPrivateKey(),
-      message
+      message,
     );
     const verified: boolean = StaticHelpersECIES.verifyMessage(
       wallet.getPublicKey(),
       message,
-      signature
+      signature,
     );
     expect(verified).toBe(true);
   });
@@ -189,7 +190,7 @@ describe('StaticHelpersECIES', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
     const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
       keyPair.privateKey,
-      message
+      message,
     );
     // mangle the public key by changing the 04 prefix
     const newPublicKey: Buffer = Buffer.from(keyPair.publicKey);
@@ -202,7 +203,7 @@ describe('StaticHelpersECIES', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
     const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
       keyPair.privateKey,
-      message
+      message,
     );
     const newPublicKey: Buffer = randomBytes(63);
     expect(() => {
@@ -213,22 +214,22 @@ describe('StaticHelpersECIES', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
     const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
       keyPair.privateKey,
-      message
+      message,
     );
     const newPublicKey: Buffer = randomBytes(64);
-    expect(StaticHelpersECIES.verifyMessage(newPublicKey, message, signature)).toBe(
-      false
-    );
+    expect(
+      StaticHelpersECIES.verifyMessage(newPublicKey, message, signature),
+    ).toBe(false);
   });
   it('should return false when a the message is altered', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
     const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
       keyPair.privateKey,
-      message
+      message,
     );
     message[0] = ' '.charCodeAt(0);
     expect(
-      StaticHelpersECIES.verifyMessage(keyPair.publicKey, message, signature)
+      StaticHelpersECIES.verifyMessage(keyPair.publicKey, message, signature),
     ).toBe(false);
   });
 
@@ -236,28 +237,43 @@ describe('StaticHelpersECIES', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
     const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
       keyPair.privateKey,
-      message
+      message,
     );
-    const modifiedSignature: SignatureBuffer = Buffer.copyBytesFrom(signature) as SignatureBuffer;
+    const modifiedSignature: SignatureBuffer = Buffer.copyBytesFrom(
+      signature,
+    ) as SignatureBuffer;
     modifiedSignature[62] = 0;
     modifiedSignature[63] = 0;
     expect(
-      StaticHelpersECIES.verifyMessage(keyPair.publicKey, message, signature)
+      StaticHelpersECIES.verifyMessage(keyPair.publicKey, message, signature),
     ).toBe(true);
     expect(
-      StaticHelpersECIES.verifyMessage(keyPair.publicKey, message, modifiedSignature)
+      StaticHelpersECIES.verifyMessage(
+        keyPair.publicKey,
+        message,
+        modifiedSignature,
+      ),
     ).toBe(false);
   });
   it('should throw when an invalid signature is given to verify', () => {
     const message: Buffer = Buffer.from(faker.lorem.sentence());
     const badSignature: SignatureBuffer = randomBytes(1) as SignatureBuffer;
     expect(() => {
-      StaticHelpersECIES.verifyMessage(keyPair.publicKey, message, badSignature);
+      StaticHelpersECIES.verifyMessage(
+        keyPair.publicKey,
+        message,
+        badSignature,
+      );
     }).toThrow('Invalid signature');
   });
   it('should validate ecie overhead length', () => {
     const inputData = Buffer.from(faker.lorem.sentence());
-    const encryptedData = StaticHelpersECIES.encrypt(keyPair.publicKey, inputData);
-    expect(encryptedData.length).toBe(StaticHelpersECIES.ecieOverheadLength + inputData.length);
+    const encryptedData = StaticHelpersECIES.encrypt(
+      keyPair.publicKey,
+      inputData,
+    );
+    expect(encryptedData.length).toBe(
+      StaticHelpersECIES.ecieOverheadLength + inputData.length,
+    );
   });
 });

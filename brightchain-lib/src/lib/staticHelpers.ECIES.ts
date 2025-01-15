@@ -1,12 +1,11 @@
 import { generateMnemonic, mnemonicToSeedSync, validateMnemonic } from 'bip39';
 import {
-  randomBytes,
+  CipherGCMTypes,
   createCipheriv,
   createDecipheriv,
   createECDH,
-  CipherGCMTypes,
+  randomBytes,
 } from 'crypto';
-import Wallet, { hdkey } from 'ethereumjs-wallet';
 import {
   ecrecover,
   ecsign,
@@ -14,6 +13,7 @@ import {
   publicToAddress,
   toBuffer,
 } from 'ethereumjs-util';
+import Wallet, { hdkey } from 'ethereumjs-wallet';
 import { ISimpleKeyPairBuffer } from './interfaces/simpleKeyPairBuffer';
 import { SecureBuffer } from './secureBuffer';
 import { HexString, SignatureBuffer, SignatureString } from './types';
@@ -70,7 +70,7 @@ export class StaticHelpersECIES {
   }
 
   public static walletToSimpleKeyPairBuffer(
-    wallet: Wallet
+    wallet: Wallet,
   ): ISimpleKeyPairBuffer {
     const privateKey = wallet.getPrivateKey();
     // 04 + publicKey
@@ -88,7 +88,7 @@ export class StaticHelpersECIES {
   }
 
   public static mnemonicToSimpleKeyPairBuffer(
-    mnemonic: string
+    mnemonic: string,
   ): ISimpleKeyPairBuffer {
     const { seed } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
     return StaticHelpersECIES.seedToSimpleKeyPairBuffer(seed.value);
@@ -105,7 +105,7 @@ export class StaticHelpersECIES {
     const cipher = createCipheriv(
       StaticHelpersECIES.symmetricAlgorithmConfiguration,
       sharedSecret.subarray(0, StaticHelpersECIES.symmetricKeyLength),
-      iv
+      iv,
     );
 
     let encrypted = cipher.update(message);
@@ -119,22 +119,22 @@ export class StaticHelpersECIES {
   public static decrypt(privateKey: Buffer, encryptedData: Buffer): Buffer {
     const ephemeralPublicKey = encryptedData.subarray(
       0,
-      StaticHelpersECIES.publicKeyLength
+      StaticHelpersECIES.publicKeyLength,
     );
     const iv = encryptedData.subarray(
       StaticHelpersECIES.publicKeyLength,
-      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength
+      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
     );
     const authTag = encryptedData.subarray(
       StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
       StaticHelpersECIES.publicKeyLength +
         StaticHelpersECIES.ivLength +
-        StaticHelpersECIES.authTagLength
+        StaticHelpersECIES.authTagLength,
     );
     const encrypted = encryptedData.subarray(
       StaticHelpersECIES.publicKeyLength +
         StaticHelpersECIES.ivLength +
-        StaticHelpersECIES.authTagLength
+        StaticHelpersECIES.authTagLength,
     );
 
     const ecdh = createECDH(StaticHelpersECIES.curveName);
@@ -144,7 +144,7 @@ export class StaticHelpersECIES {
     const decipher = createDecipheriv(
       StaticHelpersECIES.symmetricAlgorithmConfiguration,
       sharedSecret.subarray(0, StaticHelpersECIES.symmetricKeyLength),
-      iv
+      iv,
     );
 
     decipher.setAuthTag(authTag);
@@ -157,29 +157,29 @@ export class StaticHelpersECIES {
 
   public static encryptString(
     receiverPublicKeyHex: string,
-    message: string
+    message: string,
   ): string {
     const encryptedData = this.encrypt(
       Buffer.from(receiverPublicKeyHex, 'hex'),
-      Buffer.from(message, 'utf8')
+      Buffer.from(message, 'utf8'),
     );
     return encryptedData.toString('hex');
   }
 
   public static decryptString(
     privateKeyHex: string,
-    encryptedDataHex: string
+    encryptedDataHex: string,
   ): string {
     const decryptedData = this.decrypt(
       Buffer.from(privateKeyHex, 'hex'),
-      Buffer.from(encryptedDataHex, 'hex')
+      Buffer.from(encryptedDataHex, 'hex'),
     );
     return decryptedData.toString('utf8');
   }
 
   public static signMessage(
     privateKey: Buffer,
-    message: Buffer
+    message: Buffer,
   ): SignatureBuffer {
     const messageHash = hashPersonalMessage(message);
     const signature = ecsign(messageHash, privateKey);
@@ -193,7 +193,7 @@ export class StaticHelpersECIES {
   public static verifyMessage(
     senderPublicKey: Buffer,
     message: Buffer,
-    signature: SignatureBuffer
+    signature: SignatureBuffer,
   ): boolean {
     if (signature.length !== StaticHelpersECIES.signatureLength) {
       throw new Error('Invalid signature');
@@ -225,19 +225,19 @@ export class StaticHelpersECIES {
     const derivedAddress = publicToAddress(publicKey);
     // strip the 04 prefix from the public key
     const knownAddress = publicToAddress(
-      has04Prefix ? senderPublicKey.subarray(1) : senderPublicKey
+      has04Prefix ? senderPublicKey.subarray(1) : senderPublicKey,
     );
 
     return derivedAddress.equals(knownAddress);
   }
 
   public static signatureStringToSignatureBuffer(
-    signatureString: HexString
+    signatureString: HexString,
   ): SignatureBuffer {
     return Buffer.from(signatureString, 'hex') as SignatureBuffer;
   }
   public static signatureBufferToSignatureString(
-    signatureBuffer: SignatureBuffer
+    signatureBuffer: SignatureBuffer,
   ): SignatureString {
     return signatureBuffer.toString('hex') as SignatureString;
   }
