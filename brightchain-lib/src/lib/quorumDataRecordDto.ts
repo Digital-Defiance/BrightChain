@@ -1,4 +1,9 @@
-import { ChecksumString, HexString, ShortHexGuid, SignatureString } from "./types";
+import {
+  ChecksumString,
+  HexString,
+  ShortHexGuid,
+  SignatureString,
+} from './types';
 
 export interface QuorumDataRecordDto {
   id: ShortHexGuid;

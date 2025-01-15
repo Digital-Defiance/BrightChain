@@ -22,7 +22,7 @@ export abstract class StaticHelpers {
   public static GenerateNValuesOfYBits(
     n: number,
     y: number,
-    seed?: string
+    seed?: string,
   ): bigint[] {
     const rand = new Rand(seed);
     const values: bigint[] = new Array<bigint>(n);

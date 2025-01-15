@@ -1,16 +1,16 @@
 import { randomBytes } from 'crypto';
+import Wallet from 'ethereumjs-wallet';
 import {
   generateRandomKeysSync,
   KeyPair as PaillierKeyPair,
 } from 'paillier-bigint';
+import { EmailString } from './emailString';
 import { MemberType } from './enumerations/memberType';
 import { GuidV4 } from './guid';
-import { EmailString } from './emailString';
 import { IMemberDTO } from './interfaces/memberDto';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
-import Wallet from 'ethereumjs-wallet';
-import { ShortHexGuid, SignatureBuffer } from './types';
 import { StaticHelpersVoting } from './staticHelpers.voting';
+import { ShortHexGuid, SignatureBuffer } from './types';
 /**
  * A member of Brightchain.
  * @param id The unique identifier for this member.
@@ -41,7 +41,7 @@ export class BrightChainMember {
     id?: GuidV4,
     dateCreated?: Date,
     dateUpdated?: Date,
-    creatorId?: GuidV4
+    creatorId?: GuidV4,
   ) {
     this.memberType = memberType;
     if (id !== undefined) {
@@ -154,14 +154,14 @@ export class BrightChainMember {
   }
   public get votingKeyPair(): PaillierKeyPair {
     const votingPublicKey = StaticHelpersVoting.bufferToVotingPublicKey(
-      this.votingPublicKey
+      this.votingPublicKey,
     );
     return {
       publicKey: votingPublicKey,
       privateKey: StaticHelpersVoting.encryptedPrivateKeyToKeyPair(
         this.encryptedVotingPrivateKey,
         this.privateKey,
-        votingPublicKey
+        votingPublicKey,
       ),
     };
   }
@@ -178,14 +178,14 @@ export class BrightChainMember {
     memberType: MemberType,
     name: string,
     contactEmail: EmailString,
-    creator?: BrightChainMember
+    creator?: BrightChainMember,
   ): BrightChainMember {
     const newId = GuidV4.new();
     const mnemonic = StaticHelpersECIES.generateNewMnemonic();
     const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
     const keyPair = StaticHelpersECIES.walletToSimpleKeyPairBuffer(wallet);
     const votingKeypair = generateRandomKeysSync(
-      StaticHelpersVoting.votingKeyPairBitLength
+      StaticHelpersVoting.votingKeyPairBitLength,
     );
     return new BrightChainMember(
       memberType,
@@ -194,7 +194,7 @@ export class BrightChainMember {
       StaticHelpersVoting.votingPublicKeyToBuffer(votingKeypair.publicKey),
       StaticHelpersVoting.keyPairToEncryptedPrivateKey(
         votingKeypair,
-        keyPair.publicKey
+        keyPair.publicKey,
       ),
       keyPair.publicKey,
       keyPair.privateKey,
@@ -202,7 +202,7 @@ export class BrightChainMember {
       newId,
       undefined,
       undefined,
-      creator?.id ?? newId
+      creator?.id ?? newId,
     );
     // TODO: question: should creatorId only be allowed to be the same as the ID for the first member/node agent/creator?
   }
@@ -259,7 +259,7 @@ export class BrightChainMember {
       new GuidV4(parsedMember.id as ShortHexGuid),
       parsedMember.dateCreated,
       parsedMember.dateUpdated,
-      new GuidV4(parsedMember.createdBy as ShortHexGuid)
+      new GuidV4(parsedMember.createdBy as ShortHexGuid),
     );
   }
 }

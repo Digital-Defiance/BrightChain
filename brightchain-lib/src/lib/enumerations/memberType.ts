@@ -1,7 +1,7 @@
 export enum MemberType {
-  System,
-  User,
-  Admin,
+  Admin = 'Admin',
+  System = 'System',
+  User = 'User',
 }
 
 export default MemberType;

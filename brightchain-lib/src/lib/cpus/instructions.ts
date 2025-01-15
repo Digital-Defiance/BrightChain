@@ -1,3 +1,4 @@
+import CpuRegisters from '../enumerations/cpuRegisters';
 import {
   getFn0x0fInstruction,
   getFn0x81Instruction,
@@ -5,7 +6,6 @@ import {
   getSysCallInstruction,
   getX83Instruction,
 } from './instructionTables';
-import CpuRegisters from '../enumerations/cpuRegisters';
 import { X86Cpu } from './x86Cpu';
 
 // pop reg
@@ -276,7 +276,7 @@ export function sysCallExit(cpu: X86Cpu): () => void {
   return function () {
     console.log(
       'Program returned %s',
-      cpu.Stack[cpu.Registers[CpuRegisters.ESP + 1]]
+      cpu.Stack[cpu.Registers[CpuRegisters.ESP + 1]],
     );
     cpu.PC = -1;
   };

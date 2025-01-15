@@ -11,7 +11,7 @@ export class EncryptedConstituentBlockListBlock extends BaseBlock {
     data: Buffer,
     lengthBeforeEncryption: number,
     dateCreated?: Date,
-    checksum?: ChecksumBuffer
+    checksum?: ChecksumBuffer,
   ) {
     super(
       blockSize,
@@ -19,14 +19,14 @@ export class EncryptedConstituentBlockListBlock extends BaseBlock {
       BlockDataType.EncryptedData,
       lengthBeforeEncryption,
       dateCreated,
-      checksum
+      checksum,
     );
   }
   public override decrypt(creator: BrightChainMember): BaseBlock {
     const result = super.decrypt(creator);
     return ConstituentBlockListBlock.newFromPlaintextBuffer(
       result.data,
-      result.blockSize
+      result.blockSize,
     );
   }
 }

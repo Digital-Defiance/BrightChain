@@ -1,14 +1,14 @@
 import { existsSync, writeFileSync } from 'fs';
-import { DiskBlockStore } from './diskBlockStore';
-import { BlockSize } from '../enumerations/blockSizes';
-import { BlockHandle } from '../blocks/handle';
-import { ChecksumBuffer } from '../types';
-import { ChecksumTransform } from '../transforms/checksumTransform';
-import { BaseBlock } from '../blocks/base';
-import { IBlockMetadata } from '../interfaces/blockMetadata';
-import XorMultipleTransformStream from '../transforms/xorMultipleTransform';
 import { Readable, Transform } from 'stream';
+import { BaseBlock } from '../blocks/base';
+import { BlockHandle } from '../blocks/handle';
+import { BlockSize } from '../enumerations/blockSizes';
+import { IBlockMetadata } from '../interfaces/blockMetadata';
 import MemoryWritableStream from '../memoryWriteableStream';
+import { ChecksumTransform } from '../transforms/checksumTransform';
+import XorMultipleTransformStream from '../transforms/xorMultipleTransform';
+import { ChecksumBuffer } from '../types';
+import { DiskBlockStore } from './diskBlockStore';
 
 export class DiskBlockAsyncStore extends DiskBlockStore {
   constructor(storePath: string, blockSize: BlockSize) {
@@ -30,13 +30,13 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
       metadata.dataType,
       metadata.lengthBeforeEncryption,
       metadata.dateCreated,
-      key
+      key,
     );
   }
   public setData(block: BaseBlock) {
     if (block.blockSize !== this._blockSize) {
       throw new Error(
-        `Block size mismatch. Expected ${this._blockSize} but got ${block.blockSize}.`
+        `Block size mismatch. Expected ${this._blockSize} but got ${block.blockSize}.`,
       );
     }
     if (!block.validated) {
@@ -51,7 +51,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
   }
   public async xor(
     blocks: BlockHandle[],
-    destBlockMetadata: IBlockMetadata
+    destBlockMetadata: IBlockMetadata,
   ): Promise<BaseBlock> {
     return new Promise((resolve, reject) => {
       const readStreams = this.createReadStreams(blocks);
@@ -68,7 +68,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
         writeStream,
         destBlockMetadata,
         resolve,
-        reject
+        reject,
       );
       writeStream.on('error', reject);
     });
@@ -94,7 +94,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
     writeStream: MemoryWritableStream,
     metadata: IBlockMetadata,
     resolve: (value: BaseBlock) => void,
-    reject: (reason?: any) => void
+    reject: (reason?: any) => void,
   ) {
     checksumStream.on('checksum', (checksumBuffer) => {
       const block = new BaseBlock(
@@ -103,7 +103,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
         metadata.dataType,
         metadata.lengthBeforeEncryption,
         metadata.dateCreated,
-        checksumBuffer
+        checksumBuffer,
       );
       resolve(block);
     });
