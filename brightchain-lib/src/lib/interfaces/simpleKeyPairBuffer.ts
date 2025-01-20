@@ -1,4 +1,4 @@
-import { ISimplePublicKeyOnlyBuffer } from "./simplePublicKeyOnlyBuffer";
+import { ISimplePublicKeyOnlyBuffer } from './simplePublicKeyOnlyBuffer';
 
 export interface ISimpleKeyPairBuffer extends ISimplePublicKeyOnlyBuffer {
   publicKey: Buffer;

@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { SecureString } from "./secureString";
+import { SecureString } from './secureString';
 
 describe('SecureString', () => {
   describe('constructor', () => {
@@ -42,11 +42,15 @@ describe('SecureString', () => {
     });
 
     it('should return the correct value as hex string', () => {
-      expect(secureString.valueAsHexString).toBe(Buffer.from(testString).toString('hex'));
+      expect(secureString.valueAsHexString).toBe(
+        Buffer.from(testString).toString('hex'),
+      );
     });
 
     it('should return the correct value as base64 string', () => {
-      expect(secureString.valueAsBase64String).toBe(Buffer.from(testString).toString('base64'));
+      expect(secureString.valueAsBase64String).toBe(
+        Buffer.from(testString).toString('base64'),
+      );
     });
   });
 
