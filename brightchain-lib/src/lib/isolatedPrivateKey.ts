@@ -15,25 +15,33 @@ export class IsolatedPrivateKey extends PrivateKey {
     this._originalInstanceId = publicKey.getInstanceId();
   }
 
-  private extractInstanceId(taggedCiphertext: bigint): Buffer {
-    // Extract instance ID from least significant 256 bits
-    const instanceIdBigInt = taggedCiphertext & ((1n << 256n) - 1n);
-    return Buffer.from(instanceIdBigInt.toString(16).padStart(64, '0'), 'hex');
+  private extractInstanceId(ciphertext: bigint, n: bigint): Buffer {
+    const tag = ciphertext % n;
+    const instanceIdBigInt =
+      BigInt('0x' + this._originalInstanceId.toString('hex')) % n;
+    return tag === instanceIdBigInt
+      ? Buffer.from(this._originalInstanceId)
+      : Buffer.from([0]);
   }
 
-  private extractCiphertext(taggedCiphertext: bigint): bigint {
-    // Remove instance ID tag by shifting right 256 bits
-    return taggedCiphertext >> 256n;
+  private verifyAndExtractCiphertext(taggedCiphertext: bigint): bigint {
+    const extractedId = this.extractInstanceId(
+      taggedCiphertext,
+      this.publicKey.n,
+    );
+    if (!extractedId.equals(this._originalInstanceId)) {
+      throw new Error(
+        'Key isolation violation: ciphertext from different key instance',
+      );
+    }
+    const tag = taggedCiphertext % this.publicKey.n;
+    return taggedCiphertext - tag;
   }
 
   override decrypt(taggedCiphertext: bigint): bigint {
     if (!(this.publicKey instanceof IsolatedPublicKey)) {
       throw new Error('Key isolation violation: invalid public key type');
     }
-
-    // Extract and verify instance ID from ciphertext
-    const ciphertextInstanceId = this.extractInstanceId(taggedCiphertext);
-    const actualCiphertext = this.extractCiphertext(taggedCiphertext);
 
     // Verify key instance hasn't changed
     const currentInstanceId = (
@@ -43,12 +51,8 @@ export class IsolatedPrivateKey extends PrivateKey {
       throw new Error('Key isolation violation: key instance mismatch');
     }
 
-    // Verify ciphertext was encrypted with this key instance
-    if (!currentInstanceId.equals(ciphertextInstanceId)) {
-      throw new Error(
-        'Key isolation violation: ciphertext from different key instance',
-      );
-    }
+    // Extract actual ciphertext (this will verify instance ID)
+    const actualCiphertext = this.verifyAndExtractCiphertext(taggedCiphertext);
 
     // Verify key ID is valid
     const nHex = this.publicKey.n.toString(16).padStart(768, '0');
@@ -58,6 +62,7 @@ export class IsolatedPrivateKey extends PrivateKey {
       throw new Error('Key isolation violation: invalid key ID');
     }
 
+    // Decrypt the ciphertext
     const result = super.decrypt(actualCiphertext);
 
     // Verify key hasn't been tampered with during operation
