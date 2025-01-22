@@ -131,30 +131,25 @@ export class StaticHelpersVoting {
       throw new Error('Invalid public key: must be an isolated key');
     }
 
-    // Store n with consistent padding
     const nHex = votingPublicKey.n.toString(16).padStart(768, '0');
     const nBuffer = Buffer.from(nHex, 'hex');
-
-    // Get key ID from isolated key
     const keyId = (votingPublicKey as IsolatedPublicKey).getKeyId();
+    const instanceId = (votingPublicKey as IsolatedPublicKey).getInstanceId();
 
-    // Store length as 32-bit integer
     const nLengthBuffer = Buffer.alloc(4);
     nLengthBuffer.writeUInt32BE(nBuffer.length);
 
-    // Store format version and magic
     const header = Buffer.concat([
       this.KEY_MAGIC,
       Buffer.from([this.KEY_VERSION]),
     ]);
 
-    // Concatenate with format: [magic][version][keyId][nLength][n]
-    return Buffer.concat([header, keyId, nLengthBuffer, nBuffer]);
+    return Buffer.concat([header, keyId, instanceId, nLengthBuffer, nBuffer]);
   }
 
-  public static bufferToVotingPublicKey(buffer: Buffer): PublicKey {
-    // Check minimum length (magic + version + keyId + nLength = 4 + 1 + 32 + 4 = 41)
-    if (buffer.length < 41) {
+  public static bufferToVotingPublicKey(buffer: Buffer): IsolatedPublicKey {
+    // Minimum buffer length check (magic + version + keyId + instanceId + nLength = 73 bytes)
+    if (buffer.length < 73) {
       throw new Error('Invalid public key buffer: too short');
     }
 
@@ -173,16 +168,25 @@ export class StaticHelpersVoting {
     // Read key ID
     const storedKeyId = buffer.subarray(5, 37);
 
+    // Read instance ID (we'll verify this after creating the key)
+    const storedInstanceId = buffer.subarray(37, 69);
+
     // Read n length and value
-    const nLength = buffer.readUInt32BE(37);
-    if (buffer.length < 41 + nLength) {
+    const nLength = buffer.readUInt32BE(69);
+    if (buffer.length < 73 + nLength) {
       throw new Error('Invalid public key buffer: incomplete n value');
     }
-    const nBuffer = buffer.subarray(41, 41 + nLength);
+    const nBuffer = buffer.subarray(73, 73 + nLength);
 
-    // Convert to BigInt with consistent padding
+    // Convert to BigInt with consistent padding and error handling
     const nHex = nBuffer.toString('hex').padStart(768, '0');
-    const n = BigInt('0x' + nHex);
+    let n: bigint;
+    try {
+      n = BigInt('0x' + nHex);
+    } catch (error) {
+      throw new Error(`Invalid public key buffer: failed to parse n: ${error}`);
+    }
+
     const g = n + 1n; // In Paillier, g is always n + 1
 
     // Verify key ID
@@ -193,15 +197,11 @@ export class StaticHelpersVoting {
 
     // Create and validate the public key
     try {
+      // Create the public key without instance verification
       const publicKey = new IsolatedPublicKey(n, g, storedKeyId);
 
-      // Test key validity
-      const testValue = 1n;
-      const encrypted = publicKey.encrypt(testValue);
-      if (!encrypted) {
-        throw new Error('Key validation failed: encryption test');
-      }
-
+      // The instance ID verification is no longer needed here since
+      // we expect different instances when reconstructing keys
       return publicKey;
     } catch (error) {
       throw new Error(

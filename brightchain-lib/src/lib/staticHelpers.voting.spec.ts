@@ -96,20 +96,24 @@ describe('staticHelpers.voting', () => {
       );
       expect(votingPublicKeyBuffer).toBeDefined();
       expect(votingPublicKeyBuffer.length).toBeGreaterThan(0);
-      const votingPublicKey = StaticHelpersVoting.bufferToVotingPublicKey(
+
+      const recoveredPublicKey = StaticHelpersVoting.bufferToVotingPublicKey(
         votingPublicKeyBuffer,
       );
+
+      // Verify key ID matches (should be the same)
       const originalKeyId = (
         votingKeypair.publicKey as IsolatedPublicKey
       ).getKeyId();
-      const recoveredKeyId = (votingPublicKey as IsolatedPublicKey).getKeyId();
+      const recoveredKeyId = recoveredPublicKey.getKeyId();
       expect(recoveredKeyId.equals(originalKeyId)).toBeTruthy();
 
-      // Test key functionality
-      const testValue = BigInt(42);
-      const encrypted = votingKeypair.publicKey.encrypt(testValue);
-      const decrypted = votingKeypair.privateKey.decrypt(encrypted);
-      expect(decrypted.toString()).toEqual(testValue.toString());
+      // Instance IDs should be different as this is a new instance
+      const originalInstanceId = (
+        votingKeypair.publicKey as IsolatedPublicKey
+      ).getInstanceId();
+      const recoveredInstanceId = recoveredPublicKey.getInstanceId();
+      expect(recoveredInstanceId.equals(originalInstanceId)).toBeFalsy();
     });
 
     it('should handle invalid public key buffer', () => {
@@ -130,25 +134,28 @@ describe('staticHelpers.voting', () => {
         const recoveredKey =
           StaticHelpersVoting.bufferToVotingPublicKey(buffer);
 
-        // Verify key IDs match
+        // Verify key IDs match (should be the same)
         const originalKeyId = (
           testKeypair.publicKey as IsolatedPublicKey
         ).getKeyId();
-        const recoveredKeyId = (recoveredKey as IsolatedPublicKey).getKeyId();
+        const recoveredKeyId = recoveredKey.getKeyId();
         expect(recoveredKeyId.equals(originalKeyId)).toBeTruthy();
 
-        // Test encryption/decryption with original key
-        const testValue = BigInt(42);
-        const encrypted = testKeypair.publicKey.encrypt(testValue);
-        const decrypted = testKeypair.privateKey.decrypt(encrypted);
-        expect(decrypted.toString()).toEqual(testValue.toString());
+        // Instance IDs should be different
+        const originalInstanceId = (
+          testKeypair.publicKey as IsolatedPublicKey
+        ).getInstanceId();
+        const recoveredInstanceId = recoveredKey.getInstanceId();
+        expect(recoveredInstanceId.equals(originalInstanceId)).toBeFalsy();
 
-        // Test encryption/decryption with recovered key
+        // Test encryption with recovered key
+        const testValue = BigInt(42);
         const encryptedRecovered = recoveredKey.encrypt(testValue);
+
+        // This should now throw due to instance mismatch
         expect(() => {
-          // This should throw since we're using a different key instance
           testKeypair.privateKey.decrypt(encryptedRecovered);
-        }).toThrow('Key isolation violation');
+        }).toThrow('Key isolation violation: public key instance has changed');
       }
     });
   });

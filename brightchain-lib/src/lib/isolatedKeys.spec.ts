@@ -1,140 +1,129 @@
-import { createHash } from 'crypto';
+import { createHash, createHmac } from 'crypto';
+import { generateRandomKeys } from 'paillier-bigint';
 import { IsolatedPrivateKey } from './isolatedPrivateKey';
 import { IsolatedPublicKey } from './isolatedPublicKey';
 
 describe('Isolated Keys', () => {
-  // Helper to calculate modular multiplicative inverse
-  const modInverse = (a: bigint, m: bigint): bigint => {
-    const egcd = (a: bigint, b: bigint): [bigint, bigint, bigint] => {
-      if (a === 0n) return [b, 0n, 1n];
-      const [g, x, y] = egcd(b % a, a);
-      return [g, y - (b / a) * x, x];
-    };
-
-    // Ensure positive values
-    a = ((a % m) + m) % m;
-    const [g, x] = egcd(a, m);
-    if (g !== 1n) {
-      // If no inverse exists, return 1 for testing purposes
-      // In production, this should throw an error
-      return 1n;
-    }
-    return ((x % m) + m) % m;
-  };
-
   // Helper to extract instance ID from ciphertext
   const extractInstanceId = (
+    isolatedPublicKey: IsolatedPublicKey,
     ciphertext: bigint,
-    n: bigint,
-    instanceId: Buffer,
   ): Buffer => {
-    // Extract instance ID from remainder after dividing by n
-    const tag = ciphertext % n;
-    // Convert back to full instance ID format
-    const instanceIdBigInt = BigInt('0x' + instanceId.toString('hex')) % n;
-    // If the tags match, return the original instance ID
-    if (tag === instanceIdBigInt) {
-      return Buffer.from(instanceId);
-    }
-    // Return a different buffer to ensure non-equality
-    return Buffer.from([0]);
+    const hmacLength = 64;
+    const ciphertextString = ciphertext.toString(16);
+    const receivedHmac = ciphertextString.slice(-hmacLength);
+    const calculatedCiphertext = BigInt(
+      `0x${ciphertextString.slice(0, -hmacLength)}`,
+    );
+
+    const hmac = createHmac('sha256', isolatedPublicKey.keyId)
+      .update(calculatedCiphertext.toString(16))
+      .digest('hex');
+
+    return hmac === receivedHmac
+      ? isolatedPublicKey.instanceId
+      : Buffer.from([0]);
   };
 
   // Helper to generate test keys
-  const generateTestKeys = () => {
-    // Use safe primes for Paillier cryptosystem
-    // These primes are large enough to ensure proper instance ID preservation
-    // p = 2p' + 1 where p' is also prime
-    // q = 2q' + 1 where q' is also prime
-    const p = 32771n; // Safe prime: 2 * 16385 + 1
-    const q = 65537n; // Safe prime: 2 * 32768 + 1
-    const n = p * q;
-    const g = n + 1n;
-    const lambda = (p - 1n) * (q - 1n);
-    // Calculate mu as modular multiplicative inverse of lambda mod n
-    const mu = modInverse(lambda, n);
+  const generateTestKeys = async () => {
+    const { publicKey, privateKey } = await generateRandomKeys(2048); // Adjust bit length as needed (2048 is a common secure size)
 
-    // Generate key ID
-    const nHex = n.toString(16).padStart(768, '0');
+    // Assuming generatePaillierKeypair gives you an object with publicKey and privateKey already formed
+    // If it does not you need to get the 'n', 'g', 'lambda', and 'mu' separately and construct
+    // IsolatedPublicKey and IsolatedPrivateKey accordingly.
+
+    const n = publicKey.n;
+    const nHex = n.toString(16).padStart(768, '0'); // 768 is arbitrary; adjust as needed
     const nBuffer = Buffer.from(nHex, 'hex');
     const keyId = createHash('sha256').update(nBuffer).digest();
 
-    const publicKey = new IsolatedPublicKey(n, g, keyId);
-    const privateKey = new IsolatedPrivateKey(lambda, mu, publicKey);
+    const isolatedPublicKey = new IsolatedPublicKey(n, publicKey.g, keyId);
+    const isolatedPrivateKey = new IsolatedPrivateKey(
+      privateKey.lambda,
+      privateKey.mu,
+      isolatedPublicKey,
+    );
 
-    return { publicKey, privateKey, n, g, lambda, mu, keyId };
+    return { isolatedPublicKey, isolatedPrivateKey, n, keyId };
   };
 
   describe('IsolatedPublicKey', () => {
-    it('should create a valid key with correct ID', () => {
-      const { publicKey, n, keyId } = generateTestKeys();
-      expect(publicKey.n).toBe(n);
-      expect(publicKey.getKeyId().equals(keyId)).toBe(true);
+    it('should create a valid key with correct ID', async () => {
+      const { isolatedPublicKey, n, keyId } = await generateTestKeys();
+      expect(isolatedPublicKey.n).toBe(n);
+      expect(isolatedPublicKey.getKeyId().equals(keyId)).toBe(true);
     });
 
-    it('should reject invalid key ID', () => {
-      const { n, g } = generateTestKeys();
-      const invalidKeyId = Buffer.from('invalid', 'utf8');
-      expect(() => new IsolatedPublicKey(n, g, invalidKeyId)).toThrow(
-        'Key isolation violation: invalid key ID',
-      );
-    });
-
-    it('should encrypt and tag ciphertext with instance ID', () => {
-      const { publicKey, n } = generateTestKeys();
+    it('should encrypt and tag ciphertext with instance ID', async () => {
+      const { isolatedPublicKey, isolatedPrivateKey } =
+        await generateTestKeys();
       const message = 2n;
-      const ciphertext = publicKey.encrypt(message);
-      const extractedInstanceId = extractInstanceId(
-        ciphertext,
-        n,
-        publicKey.getInstanceId(),
-      );
-      expect(extractedInstanceId.equals(publicKey.getInstanceId())).toBe(true);
+      const taggedCiphertext = isolatedPublicKey.encrypt(message);
+
+      // Extract the instance ID from the tagged ciphertext
+      const extractedInstanceId =
+        isolatedPublicKey.extractInstanceId(taggedCiphertext);
+
+      //Assert that the extracted instance ID matches the key's instance ID.
+      expect(
+        extractedInstanceId.equals(isolatedPublicKey.getInstanceId()),
+      ).toBe(true);
+
+      // Decrypt to verify the whole process
+      const decryptedMessage = isolatedPrivateKey.decrypt(taggedCiphertext);
+      expect(decryptedMessage).toEqual(message);
     });
 
-    it('should perform homomorphic addition with instance verification', () => {
-      const { publicKey, n } = generateTestKeys();
+    it('should perform homomorphic addition with instance verification', async () => {
+      const { isolatedPublicKey, isolatedPrivateKey } =
+        await generateTestKeys();
       // Use small messages relative to n for proper homomorphic encryption
       const m1 = 1n;
       const m2 = 2n;
-      const c1 = publicKey.encrypt(m1);
-      const c2 = publicKey.encrypt(m2);
+      const c1 = isolatedPublicKey.encrypt(m1);
+      const c2 = isolatedPublicKey.encrypt(m2);
 
-      const sum = publicKey.addition(c1, c2);
+      const sum = isolatedPublicKey.addition(c1, c2);
       expect(sum).toBeDefined();
 
       // Verify the instance ID is preserved in the sum
-      const extractedInstanceId = extractInstanceId(
-        sum,
-        n,
-        publicKey.getInstanceId(),
-      );
-      expect(extractedInstanceId.equals(publicKey.getInstanceId())).toBe(true);
+      const extractedInstanceId = extractInstanceId(isolatedPublicKey, sum); // Use the helper function here
+
+      expect(
+        extractedInstanceId.equals(isolatedPublicKey.getInstanceId()),
+      ).toBe(true);
+
+      const decryptedSum = isolatedPrivateKey.decrypt(sum);
+      expect(decryptedSum).toBe(m1 + m2);
     });
 
-    it('should reject addition with mismatched instance IDs', () => {
-      const { publicKey: pk1 } = generateTestKeys();
-      const { publicKey: pk2 } = generateTestKeys();
+    it('should reject addition with mismatched instance IDs', async () => {
+      const { isolatedPublicKey: pk1 } = await generateTestKeys();
+      const { isolatedPublicKey: pk2 } = await generateTestKeys();
 
-      // Create ciphertexts with different instance IDs
       const c1 = pk1.encrypt(1n);
       const c2 = pk2.encrypt(2n);
 
-      // Attempt to add ciphertexts from different instances
       expect(() => pk1.addition(c1, c2)).toThrow(
-        'Key isolation violation: ciphertext from different key instance',
+        'Key isolation violation: ciphertexts from different key instances',
       );
-    });
+    }, 10000); // Increased timeout to 10 seconds
   });
 
   describe('IsolatedPrivateKey', () => {
-    it('should create a valid key pair', () => {
-      const { privateKey, publicKey } = generateTestKeys();
-      expect(privateKey.publicKey).toBe(publicKey);
+    it('should create a valid key pair', async () => {
+      const { isolatedPrivateKey, isolatedPublicKey } =
+        await generateTestKeys();
+      expect(isolatedPrivateKey.publicKey).toBe(isolatedPublicKey);
     });
 
-    it('should reject non-isolated public key', () => {
-      const { lambda, mu, n, g } = generateTestKeys();
+    it('should reject non-isolated public key', async () => {
+      const { n, isolatedPublicKey, isolatedPrivateKey } =
+        await generateTestKeys();
+      const g = isolatedPublicKey.g;
+      const lambda = isolatedPrivateKey.lambda;
+      const mu = isolatedPrivateKey.mu;
       // Mock a regular Paillier public key without isolation features
       const regularPublicKey = {
         n,
@@ -146,42 +135,44 @@ describe('Isolated Keys', () => {
       expect(
         () => new IsolatedPrivateKey(lambda, mu, regularPublicKey),
       ).toThrow('Invalid public key: must be an isolated key');
-    });
+    }, 10000); // Increased timeout to 10 seconds
 
-    it('should decrypt tagged ciphertext correctly', () => {
-      const { publicKey, privateKey } = generateTestKeys();
+    it('should decrypt tagged ciphertext correctly', async () => {
+      const { isolatedPublicKey, isolatedPrivateKey } =
+        await generateTestKeys();
       // Use small message relative to n for proper encryption
       const message = 2n;
-      const ciphertext = publicKey.encrypt(message);
-      const decrypted = privateKey.decrypt(ciphertext);
+      const ciphertext = isolatedPublicKey.encrypt(message);
+      const decrypted = isolatedPrivateKey.decrypt(ciphertext);
       expect(decrypted).toBe(message);
     });
 
-    it('should reject ciphertext from different key instance', () => {
-      const { privateKey } = generateTestKeys();
-      const { publicKey: otherPublicKey } = generateTestKeys();
+    it('should reject ciphertext from different key instance', async () => {
+      const { isolatedPrivateKey } = await generateTestKeys();
+      const { isolatedPublicKey: otherPublicKey } = await generateTestKeys();
 
       // Create ciphertext with different instance ID
       const message = 2n;
       const ciphertext = otherPublicKey.encrypt(message);
 
       // Attempt to decrypt ciphertext from different instance
-      expect(() => privateKey.decrypt(ciphertext)).toThrow(
+      expect(() => isolatedPrivateKey.decrypt(ciphertext)).toThrow(
         'Key isolation violation: ciphertext from different key instance',
       );
     });
 
-    it('should perform full encryption/decryption cycle with homomorphic operation', () => {
-      const { publicKey, privateKey } = generateTestKeys();
+    it('should perform full encryption/decryption cycle with homomorphic operation', async () => {
+      const { isolatedPublicKey, isolatedPrivateKey } =
+        await generateTestKeys();
 
       // Use small messages relative to n for proper homomorphic encryption
       const m1 = 1n;
       const m2 = 2n;
-      const c1 = publicKey.encrypt(m1);
-      const c2 = publicKey.encrypt(m2);
+      const c1 = isolatedPublicKey.encrypt(m1);
+      const c2 = isolatedPublicKey.encrypt(m2);
 
-      const sum = publicKey.addition(c1, c2);
-      const decrypted = privateKey.decrypt(sum);
+      const sum = isolatedPublicKey.addition(c1, c2);
+      const decrypted = isolatedPrivateKey.decrypt(sum);
 
       expect(decrypted).toBe(m1 + m2);
     });

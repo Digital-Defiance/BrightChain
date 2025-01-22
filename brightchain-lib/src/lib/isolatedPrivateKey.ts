@@ -1,10 +1,11 @@
-import { createHash } from 'crypto';
+import { createHmac } from 'crypto';
 import { PrivateKey } from 'paillier-bigint';
 import { IsolatedPublicKey } from './isolatedPublicKey';
 
 export class IsolatedPrivateKey extends PrivateKey {
   private readonly _originalKeyId: Buffer;
   private readonly _originalInstanceId: Buffer;
+  private readonly _originalPublicKey: IsolatedPublicKey;
 
   constructor(lambda: bigint, mu: bigint, publicKey: IsolatedPublicKey) {
     super(lambda, mu, publicKey);
@@ -13,67 +14,43 @@ export class IsolatedPrivateKey extends PrivateKey {
     }
     this._originalKeyId = publicKey.getKeyId();
     this._originalInstanceId = publicKey.getInstanceId();
-  }
-
-  private extractInstanceId(ciphertext: bigint, n: bigint): Buffer {
-    const tag = ciphertext % n;
-    const instanceIdBigInt =
-      BigInt('0x' + this._originalInstanceId.toString('hex')) % n;
-    return tag === instanceIdBigInt
-      ? Buffer.from(this._originalInstanceId)
-      : Buffer.from([0]);
-  }
-
-  private verifyAndExtractCiphertext(taggedCiphertext: bigint): bigint {
-    const extractedId = this.extractInstanceId(
-      taggedCiphertext,
-      this.publicKey.n,
-    );
-    if (!extractedId.equals(this._originalInstanceId)) {
-      throw new Error(
-        'Key isolation violation: ciphertext from different key instance',
-      );
-    }
-    const tag = taggedCiphertext % this.publicKey.n;
-    return taggedCiphertext - tag;
+    this._originalPublicKey = publicKey;
   }
 
   override decrypt(taggedCiphertext: bigint): bigint {
-    if (!(this.publicKey instanceof IsolatedPublicKey)) {
-      throw new Error('Key isolation violation: invalid public key type');
-    }
-
     // Verify key instance hasn't changed
-    const currentInstanceId = (
-      this.publicKey as IsolatedPublicKey
-    ).getInstanceId();
-    if (!this._originalInstanceId.equals(currentInstanceId)) {
-      throw new Error('Key isolation violation: key instance mismatch');
+    const currentPublicKey = this.publicKey as IsolatedPublicKey;
+
+    if (!currentPublicKey.getInstanceId().equals(this._originalInstanceId)) {
+      throw new Error(
+        'Key isolation violation: public key instance has changed',
+      );
     }
 
-    // Extract actual ciphertext (this will verify instance ID)
-    const actualCiphertext = this.verifyAndExtractCiphertext(taggedCiphertext);
+    const hmacLength = 64;
+    const ciphertextString = taggedCiphertext.toString(16);
+    const receivedHmac = ciphertextString.slice(-hmacLength);
+    const ciphertextHex = ciphertextString.slice(0, -hmacLength);
 
-    // Verify key ID is valid
-    const nHex = this.publicKey.n.toString(16).padStart(768, '0');
-    const nBuffer = Buffer.from(nHex, 'hex');
-    const computedKeyId = createHash('sha256').update(nBuffer).digest();
-    if (!this._originalKeyId.equals(computedKeyId)) {
-      throw new Error('Key isolation violation: invalid key ID');
+    let ciphertextBigInt: bigint;
+    try {
+      ciphertextBigInt = BigInt(`0x${ciphertextHex}`);
+    } catch (error) {
+      throw new Error('Key isolation violation: invalid ciphertext format');
     }
 
-    // Decrypt the ciphertext
-    const result = super.decrypt(actualCiphertext);
+    // Calculate expected HMAC using original key ID and instance ID
+    const expectedHmac = createHmac(
+      'sha256',
+      Buffer.concat([this._originalKeyId, this._originalInstanceId]),
+    )
+      .update(ciphertextBigInt.toString(16))
+      .digest('hex');
 
-    // Verify key hasn't been tampered with during operation
-    if (
-      !this._originalKeyId.equals(
-        (this.publicKey as IsolatedPublicKey).getKeyId(),
-      )
-    ) {
-      throw new Error('Key isolation violation: key modified during operation');
+    if (receivedHmac !== expectedHmac) {
+      throw new Error('Key isolation violation: HMAC verification failed');
     }
 
-    return result;
+    return super.decrypt(ciphertextBigInt);
   }
 }
