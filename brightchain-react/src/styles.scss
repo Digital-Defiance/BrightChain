@@ -1,0 +1,95 @@
+$brightchain-orange: #f3901b;
+$brightchain-darkblue: #0f6c99;
+$brightchain-lightblue: #14a7df;
+$brightchain-yellow: #f7c544;
+$brightchain-green: #2f642f;
+
+$caribbean-current: #286470;
+$process-cyan: #50bbe8;
+$xanthous: #f6af1a;
+$off-red-rgb: #fd0001;
+$columbia-blue: #c5e4f0;
+
+$gradient-top: linear-gradient(
+  0deg,
+  #286470,
+  #50bbe8,
+  #f6af1a,
+  #fd0001,
+  #c5e4f0
+);
+$gradient-right: linear-gradient(
+  90deg,
+  #286470,
+  #50bbe8,
+  #f6af1a,
+  #fd0001,
+  #c5e4f0
+);
+$gradient-bottom: linear-gradient(
+  180deg,
+  #286470,
+  #50bbe8,
+  #f6af1a,
+  #fd0001,
+  #c5e4f0
+);
+$gradient-left: linear-gradient(
+  270deg,
+  #286470,
+  #50bbe8,
+  #f6af1a,
+  #fd0001,
+  #c5e4f0
+);
+$gradient-top-right: linear-gradient(
+  45deg,
+  #286470,
+  #50bbe8,
+  #f6af1a,
+  #fd0001,
+  #c5e4f0
+);
+$gradient-bottom-right: linear-gradient(
+  135deg,
+  #286470,
+  #50bbe8,
+  #f6af1a,
+  #fd0001,
+  #c5e4f0
+);
+$gradient-top-left: linear-gradient(
+  225deg,
+  #286470,
+  #50bbe8,
+  #f6af1a,
+  #fd0001,
+  #c5e4f0
+);
+$gradient-bottom-left: linear-gradient(
+  315deg,
+  #286470,
+  #50bbe8,
+  #f6af1a,
+  #fd0001,
+  #c5e4f0
+);
+$gradient-radial: radial-gradient(#286470, #50bbe8, #f6af1a, #fd0001, #c5e4f0);
+
+@font-face {
+  font-family: 'Acier BAT Display Gris';
+  src:
+    url('/assets/fonts/acier-bat-display-gris.woff2') format('woff2'),
+    url('/assets/fonts/acier-bat-display-gris.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Acumin Pro Extra Condensed Black';
+  src:
+    url('/assets/fonts/acumin-pro-extra-condensed-black.woff2') format('woff2'),
+    url('/assets/fonts/acumin-pro-extra-condensed-black.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}

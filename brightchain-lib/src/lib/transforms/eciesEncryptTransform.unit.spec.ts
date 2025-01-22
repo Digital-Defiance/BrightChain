@@ -1,63 +1,116 @@
-import { EciesEncryptionTransform } from "./eciesEncryptTransform";
-import { StaticHelpersECIES } from "../staticHelpers.ECIES";
-import { BlockSize } from "../enumerations/blockSizes";
+import { randomBytes } from 'crypto';
+import { BlockSize } from '../enumerations/blockSizes';
+import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { EciesEncryptTransform } from './eciesEncryptTransform';
 
-jest.mock('../staticHelpers.ECIES');
+describe('EciesEncryptTransform Unit Tests', () => {
+  beforeAll(() => {
+    console.error = jest.fn();
+  });
+  const blockSize = BlockSize.Small;
+  const mnemonic = StaticHelpersECIES.generateNewMnemonic();
+  const keypair = StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer(mnemonic);
 
-describe('EciesEncryptionTransform Unit Tests', () => {
-    const blockSize = BlockSize.Small;
-    const keypair = {
-        publicKey: Buffer.alloc(0),
-        privateKey: Buffer.alloc(0),
-    };
+  it('should be instantiated with correct parameters', () => {
+    const transform = new EciesEncryptTransform(blockSize, keypair.publicKey);
+    expect(transform).toBeDefined();
+  });
 
-    beforeEach(() => {
-        StaticHelpersECIES.encrypt = jest.fn((publicKey, data) => {
-            return Buffer.from(data.map(byte => (byte + 1) % 256));
-        });
-        StaticHelpersECIES.decrypt = jest.fn((publicKey, data) => {
-            return Buffer.from(data.map(byte => (byte + 255) % 256));
-        });
+  it('should handle empty input', (done) => {
+    const transform = new EciesEncryptTransform(blockSize, keypair.publicKey);
+    const chunks: Buffer[] = [];
+
+    transform.on('data', (chunk: Buffer) => {
+      chunks.push(chunk);
     });
-    const testEncryption = (inputData: Buffer) => {
-        const transform = new EciesEncryptionTransform(blockSize, keypair.publicKey);
-        let encryptedData = Buffer.alloc(0);
 
-        transform.on('data', (chunk) => {
-            encryptedData = Buffer.concat([encryptedData, chunk]);
-        });
+    transform.on('end', () => {
+      expect(chunks.length).toBe(0);
+      done();
+    });
 
-        transform.write(inputData);
-        transform.end();
+    transform.end();
+  });
 
-        // Split the encrypted data into blocks and decrypt each one
-        const decryptedData: Buffer[] = [];
-        for (let i = 0; i < encryptedData.length; i += blockSize) {
-            const block = encryptedData.subarray(i, i + blockSize);
-            const decryptedBlock = StaticHelpersECIES.decrypt(keypair.privateKey, block);
-            decryptedData.push(decryptedBlock);
+  it('should encrypt input data', (done) => {
+    const transform = new EciesEncryptTransform(blockSize, keypair.publicKey);
+    const inputData = randomBytes(100);
+    const chunks: Buffer[] = [];
+
+    transform.on('data', (chunk: Buffer) => {
+      chunks.push(chunk);
+    });
+
+    transform.on('end', () => {
+      expect(chunks.length).toBe(1);
+      const encryptedData = Buffer.concat(chunks);
+
+      // Verify the encrypted data can be decrypted
+      const decryptedData = StaticHelpersECIES.decrypt(
+        keypair.privateKey,
+        encryptedData,
+      );
+      expect(decryptedData).toEqual(inputData);
+      done();
+    });
+
+    transform.write(inputData);
+    transform.end();
+  });
+
+  it('should handle streaming input', (done) => {
+    const transform = new EciesEncryptTransform(blockSize, keypair.publicKey);
+    const inputData = randomBytes(1000);
+    const chunks: Buffer[] = [];
+
+    // Split input into multiple chunks
+    const inputChunks = [
+      inputData.subarray(0, 300),
+      inputData.subarray(300, 700),
+      inputData.subarray(700),
+    ];
+
+    transform.on('data', (chunk: Buffer) => {
+      chunks.push(chunk);
+    });
+
+    transform.on('end', () => {
+      const encryptedData = Buffer.concat(chunks);
+
+      // Verify the encrypted data can be decrypted
+      const decryptedData = StaticHelpersECIES.decrypt(
+        keypair.privateKey,
+        encryptedData,
+      );
+      expect(decryptedData).toEqual(inputData);
+      done();
+    });
+
+    // Write chunks with some delay to simulate streaming
+    inputChunks.forEach((chunk, index) => {
+      setTimeout(() => {
+        transform.write(chunk);
+        if (index === inputChunks.length - 1) {
+          transform.end();
         }
+      }, index * 10);
+    });
+  });
 
-        // Concatenate decrypted data and remove padding from the last block
-        const decryptedBuffer = Buffer.concat(decryptedData);
-        const finalDecryptedData = decryptedBuffer.subarray(0, inputData.length);
+  it('should throw error with invalid public key', (done) => {
+    jest.setTimeout(10000); // Increase timeout to 10 seconds
+    const invalidPublicKey = randomBytes(32); // Wrong size for public key
+    const transform = new EciesEncryptTransform(blockSize, invalidPublicKey);
+    const inputData = randomBytes(100);
 
-        // Compare the final decrypted data with the original input data
-        expect(finalDecryptedData).toEqual(inputData);
-    };
-
-    it('encrypts and decrypts data that is less than the chunk size', () => {
-        const inputData = Buffer.from('short data');
-        testEncryption(inputData);
+    transform.on('error', (error) => {
+      expect(error).toBeDefined();
+      expect(error.message).toContain('Encryption failed');
+      expect(console.error).toHaveBeenCalled();
+      done();
     });
 
-    it('encrypts and decrypts data that is exactly the chunk size', () => {
-        const inputData = Buffer.alloc(blockSize - StaticHelpersECIES.ecieOverheadLength, 'a');
-        testEncryption(inputData);
-    });
-
-    it('encrypts and decrypts data that spans multiple chunks', () => {
-        const inputData = Buffer.alloc((blockSize - StaticHelpersECIES.ecieOverheadLength) * 2 + 10, 'a');
-        testEncryption(inputData);
-    });
+    transform.write(inputData);
+    transform.end();
+  });
 });
