@@ -1,9 +1,14 @@
 import { BrightChainMember } from './brightChainMember';
-import { StaticHelpersChecksum } from './staticHelpers.checksum';
 import { GuidV4 } from './guid';
-import { ChecksumBuffer, HexString, ShortHexGuid, SignatureBuffer } from './types';
-import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import { QuorumDataRecordDto } from './quorumDataRecordDto';
+import { StaticHelpersChecksum } from './staticHelpers.checksum';
+import { StaticHelpersECIES } from './staticHelpers.ECIES';
+import {
+  ChecksumBuffer,
+  HexString,
+  ShortHexGuid,
+  SignatureBuffer,
+} from './types';
 
 export class QuorumDataRecord {
   public readonly id: GuidV4;
@@ -30,7 +35,7 @@ export class QuorumDataRecord {
     signature?: SignatureBuffer,
     id?: ShortHexGuid,
     dateCreated?: Date,
-    dateUpdated?: Date
+    dateUpdated?: Date,
   ) {
     if (id !== undefined) {
       this.id = new GuidV4(id);
@@ -63,7 +68,7 @@ export class QuorumDataRecord {
       !StaticHelpersECIES.verifyMessage(
         creator.publicKey,
         this.checksum,
-        this.signature
+        this.signature,
       )
     ) {
       throw new Error('Invalid signature');
@@ -91,21 +96,26 @@ export class QuorumDataRecord {
       encryptedData: this.encryptedData.toString('hex') as HexString,
       encryptedSharesByMemberId,
       checksum: StaticHelpersChecksum.checksumBufferToChecksumString(
-        this.checksum
+        this.checksum,
       ),
-      signature: StaticHelpersECIES.signatureBufferToSignatureString(this.signature),
+      signature: StaticHelpersECIES.signatureBufferToSignatureString(
+        this.signature,
+      ),
       memberIDs: this.memberIDs,
       sharesRequired: this.sharesRequired,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
     };
   }
-  public static fromDto(dto: QuorumDataRecordDto, fetchMember: (memberId: ShortHexGuid) => BrightChainMember): QuorumDataRecord {
+  public static fromDto(
+    dto: QuorumDataRecordDto,
+    fetchMember: (memberId: ShortHexGuid) => BrightChainMember,
+  ): QuorumDataRecord {
     const encryptedSharesByMemberId = new Map<ShortHexGuid, Buffer>();
     Object.keys(dto.encryptedSharesByMemberId).forEach((k) => {
       encryptedSharesByMemberId.set(
         k as ShortHexGuid,
-        Buffer.from(dto.encryptedSharesByMemberId[k], 'hex')
+        Buffer.from(dto.encryptedSharesByMemberId[k], 'hex'),
       );
     });
     return new QuorumDataRecord(
@@ -118,13 +128,16 @@ export class QuorumDataRecord {
       StaticHelpersECIES.signatureStringToSignatureBuffer(dto.signature),
       dto.id,
       dto.dateCreated,
-      dto.dateUpdated
+      dto.dateUpdated,
     );
   }
   public toJson(): string {
     return JSON.stringify(this.toDto());
   }
-  public static fromJson(json: string, fetchMember: (memberId: ShortHexGuid) => BrightChainMember): QuorumDataRecord {
+  public static fromJson(
+    json: string,
+    fetchMember: (memberId: ShortHexGuid) => BrightChainMember,
+  ): QuorumDataRecord {
     const dto = JSON.parse(json) as QuorumDataRecordDto;
     return QuorumDataRecord.fromDto(dto, fetchMember);
   }

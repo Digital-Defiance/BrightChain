@@ -1,49 +1,58 @@
-import { Transform, TransformCallback } from "stream";
-import { StaticHelpersECIES } from "../staticHelpers.ECIES";
-import { BlockSize } from "../enumerations/blockSizes";
-import { randomBytes } from "crypto";
+import { Transform, TransformCallback } from 'stream';
+import { BlockSize } from '../enumerations/blockSizes';
+import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 
 /**
- * Given encrypt the incoming stream in chunks of blocksize - ecieOverheadLength
+ * Transform stream that encrypts data using ECIES encryption
  */
-export class EciesEncryptionTransform extends Transform {
-    private readonly chunkSize: number;
-    private readonly receiverPublicKey: Buffer;
-    constructor(blockSize: BlockSize, receiverPublicKey: Buffer) {
-        super();
-        this.chunkSize = (blockSize as number) - StaticHelpersECIES.ecieOverheadLength;
-        this.receiverPublicKey = receiverPublicKey;
-    }
-    // gather data until we have a chunkSize worth, then encrypt it and push it out
-    private buffer: Buffer = Buffer.alloc(0);
-    public override _transform(chunk: Buffer, encoding: BufferEncoding, callback: TransformCallback): void {
-        this.buffer = Buffer.concat([this.buffer, chunk]);
-        while (this.buffer.length >= this.chunkSize) {
-            const chunkToEncrypt = this.buffer.subarray(0, this.chunkSize);
-            this.buffer = this.buffer.subarray(this.chunkSize);
-            const encryptedChunk = StaticHelpersECIES.encrypt(this.receiverPublicKey, chunkToEncrypt);
-            this.push(encryptedChunk);
-        }
-        callback();
+export class EciesEncryptTransform extends Transform {
+  private readonly blockSize: number;
+  private readonly receiverPublicKey: Buffer;
+  private readonly buffer: Buffer[] = [];
+  private totalLength = 0;
+
+  constructor(blockSize: BlockSize, receiverPublicKey: Buffer) {
+    super();
+    this.blockSize = blockSize as number;
+    this.receiverPublicKey = receiverPublicKey;
+  }
+
+  public override _transform(
+    chunk: Buffer,
+    encoding: BufferEncoding,
+    callback: TransformCallback,
+  ): void {
+    this.buffer.push(chunk);
+    this.totalLength += chunk.length;
+    callback();
+  }
+
+  public override _flush(callback: TransformCallback): void {
+    if (this.totalLength === 0) {
+      callback();
+      return;
     }
 
-    public override _flush(callback: TransformCallback): void {
-        while (this.buffer.length > 0) {
-            if (this.buffer.length >= this.chunkSize) {
-                // Process a full chunk
-                const chunkToEncrypt = this.buffer.subarray(0, this.chunkSize);
-                this.buffer = this.buffer.subarray(this.chunkSize);
-                const encryptedChunk = StaticHelpersECIES.encrypt(this.receiverPublicKey, chunkToEncrypt);
-                this.push(encryptedChunk);
-            } else {
-                // Handle the last chunk which might be smaller than chunkSize
-                const padding = randomBytes(this.chunkSize - this.buffer.length);
-                const finalChunkToEncrypt = Buffer.concat([this.buffer, padding]);
-                const encryptedChunk = StaticHelpersECIES.encrypt(this.receiverPublicKey, finalChunkToEncrypt);
-                this.push(encryptedChunk);
-                break; // Exit the loop as this is the last chunk
-            }
-        }
-        callback();
+    // Combine all chunks
+    const data = Buffer.concat(this.buffer, this.totalLength);
+
+    try {
+      // Encrypt all data at once
+      const encryptedData = StaticHelpersECIES.encrypt(
+        this.receiverPublicKey,
+        data,
+      );
+      this.push(encryptedData);
+      callback();
+    } catch (error) {
+      console.error('Encryption error details:', {
+        error,
+        publicKeyLength: this.receiverPublicKey.length,
+        publicKeyPrefix: this.receiverPublicKey[0],
+        dataLength: data.length,
+        blockSize: this.blockSize,
+      });
+      callback(error instanceof Error ? error : new Error('Encryption failed'));
     }
+  }
 }

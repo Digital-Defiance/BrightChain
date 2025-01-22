@@ -18,7 +18,7 @@ describe('staticHelpers', () => {
         randomValue >> 16,
         randomValue >> 8,
         randomValue,
-      ])
+      ]),
     );
   });
   it('should correctly read a value from a buffer back to a number', () => {
@@ -37,26 +37,20 @@ describe('staticHelpers', () => {
     });
   });
   it('should flag when there is a non-user member', () => {
-    const alice = BrightChainMember.newMember(
-      MemberType.User,
-      'alice',
-      new EmailString('alice@example.com')
-    );
-    const bob = BrightChainMember.newMember(
-      MemberType.Admin,
-      'bob',
-      new EmailString('bob@example.com')
-    );
-    const charlie = BrightChainMember.newMember(
+    const systemMember = BrightChainMember.newMember(
       MemberType.System,
-      'charlie',
-      new EmailString('charlie@example.com')
+      'System Member',
+      new EmailString('system@example.com'),
     );
-
-    expect(StaticHelpers.membersAreAllUsers([alice, bob])).toEqual(true);
-
-    expect(StaticHelpers.membersAreAllUsers([alice, bob, charlie])).toEqual(
-      false
+    const userMember = BrightChainMember.newMember(
+      MemberType.User,
+      'User Member',
+      new EmailString('user@example.com'),
+    );
+    expect(StaticHelpers.membersAreAllUsers([userMember])).toBe(true);
+    expect(StaticHelpers.membersAreAllUsers([systemMember])).toBe(false);
+    expect(StaticHelpers.membersAreAllUsers([systemMember, userMember])).toBe(
+      false,
     );
   });
   describe('bigIntToLengthEncodedBuffer', () => {

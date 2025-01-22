@@ -12,7 +12,7 @@ export class XorTransform extends Transform {
   public override _transform(
     chunk: Buffer,
     encoding: BufferEncoding,
-    callback: TransformCallback
+    callback: TransformCallback,
   ) {
     if (this.firstChunk) {
       this.xorChunk = chunk;

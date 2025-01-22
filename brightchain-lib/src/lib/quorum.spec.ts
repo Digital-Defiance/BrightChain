@@ -7,7 +7,7 @@ describe('quorum', () => {
     const nodeOwner = BrightChainMember.newMember(
       MemberType.System,
       'Node Owner',
-      new EmailString('owner@example.com')
+      new EmailString('owner@example.com'),
     );
     const quorum = new BrightChainQuorum(nodeOwner, 'Test Quorum');
     expect(quorum).toBeTruthy();

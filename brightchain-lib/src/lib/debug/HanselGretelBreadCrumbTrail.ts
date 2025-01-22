@@ -47,8 +47,8 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
             context: this.context,
           },
           null,
-          2
-        )
+          2,
+        ),
       );
     }
   }
@@ -75,7 +75,7 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
       functionName,
       traceLevel,
       maxEntries,
-      ...args
+      ...args,
     );
   }
   public addCrumb(...args: Array<unknown>): HanselGretelBreadCrumbTrail {
@@ -86,7 +86,7 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
       this.functionName,
       this.traceLevel,
       this.maxEntries,
-      ...args
+      ...args,
     );
   }
   public async addCrumbAsync(
@@ -112,12 +112,12 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
       [this.functionName, functionName].join('>'),
       this.traceLevel,
       this.maxEntries,
-      ...args
+      ...args,
     );
   }
   public addCrumbWithCallback(
     doCallback: (
-      crumbResult: HanselGretelBreadCrumbTrail
+      crumbResult: HanselGretelBreadCrumbTrail,
     ) => HanselGretelBreadCrumbTrail,
     ...args: Array<unknown>
   ): HanselGretelBreadCrumbTrail {
@@ -127,7 +127,7 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
   public forkAndAddCrumbWithCallback(
     functionName: string,
     doCallback: (
-      crumbResult: HanselGretelBreadCrumbTrail
+      crumbResult: HanselGretelBreadCrumbTrail,
     ) => HanselGretelBreadCrumbTrail,
     ...args: Array<unknown>
   ): HanselGretelBreadCrumbTrail {
@@ -199,7 +199,7 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
   }
 
   public findTraces(
-    criteria: Partial<IBreadCrumbTrace>
+    criteria: Partial<IBreadCrumbTrace>,
   ): Array<IBreadCrumbTrace> {
     return this.traceLog.filter((trace) =>
       Object.entries(criteria).every(([key, value]) => {
@@ -208,7 +208,7 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
           return this.isEqual(traceValue, value);
         }
         return traceValue === value;
-      })
+      }),
     );
   }
 }

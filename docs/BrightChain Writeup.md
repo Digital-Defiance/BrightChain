@@ -1,7 +1,9 @@
 # BrightChain and The Revolution Network:
+
 ## Bright Block Soup
 
 ### The Revolution Network / Bright Block Soup / BrightChain
+
 Hi, I'm Jessica Mulein. I spent a number of years essentially in the dark reinventing the blockchain- a little like Leibniz and Newton developing calculus independently. I've been assembling a number of years of ideas and separate projects into essentially one big project which I'm about to describe.
 
 It has previously been called a few things:
@@ -17,9 +19,9 @@ I think ultimately what is going to shake out is this:
 
 - BrightChain is the technology (like BlockChain) used behind The Revolution Network
 - Five by Five social is likely going to be the front-end/face of the Revolution Network
-- People will access blocks via API from brightchain.net
-- People will access the site from fivebyfive.social
-- Site info/splash pages will be at brightchain.net/therevolution.network
+- People will access blocks via API from brightchain.io
+- People will access the site from brightchain.io
+- Site info/splash pages will be at brightchain.io
 
 At its core, the Revolution Network is not an app or any one app. It is a protocol/network. It provides an incentive driven ecosystem that inherently is designed to bring out the best collaborators in the network. Users are incentivized by the algorithms of the network to be philanthropic, collaborative, and provide content and resources to the network. It also provides a unique and, prior to this, proprietary mechanism to provide true anonymity while still maintaining an ability to moderate the network. Aberrant behaviors in the network are disincentivized and penalized.
 
@@ -37,27 +39,28 @@ Now, imagine you have a bowl of Alphabet Soup. In it are a bunch of jumbled lett
 
 With that sort of thinking in mind, lets continue.
 
-When we're packaging soup, we like to put it all in cans of the same size. But we do have different size cans like the family size and the standard 8 oz. Let's say we have a can of very special soup that we can dump out and it spells our message exactly. In order to keep the soup looking random, everything that gets put in must be randomized. Therefore we have a random soup can generator whose sole purpose is to have random cans with mixed alphabet messages ready to go for this. Say now we take the special can with our actual message and mix it using a mathematical operation on called an Exclusive OR (XOR). Each letter is affected in order by the added can of random soup and the resultant can looks totally random but in fact has all of the data you put in, though it is now dependent on the other can. This can looks random, but it is still heavily correlated to the original message. We then mix it with more cans in order to dilute the original flavor/message. We need to keep track of exactly which can types we used and they all must be different. Once the message has been mixed with enough random cans, we can safely put it out on the market and nobody will know what it actually says. 
+When we're packaging soup, we like to put it all in cans of the same size. But we do have different size cans like the family size and the standard 8 oz. Let's say we have a can of very special soup that we can dump out and it spells our message exactly. In order to keep the soup looking random, everything that gets put in must be randomized. Therefore we have a random soup can generator whose sole purpose is to have random cans with mixed alphabet messages ready to go for this. Say now we take the special can with our actual message and mix it using a mathematical operation on called an Exclusive OR (XOR). Each letter is affected in order by the added can of random soup and the resultant can looks totally random but in fact has all of the data you put in, though it is now dependent on the other can. This can looks random, but it is still heavily correlated to the original message. We then mix it with more cans in order to dilute the original flavor/message. We need to keep track of exactly which can types we used and they all must be different. Once the message has been mixed with enough random cans, we can safely put it out on the market and nobody will know what it actually says.
 
 We throw away the can of special, original soup.
 
 In order to get your original can of soup back, you need to know which flavor of soups are needed and what order to put them in to be able to reconstruct your original message so you go and get a can with that recipe in it.
+
 - Message M
 - Random cans/flavors A B C
 - Resultant can/flavor Z
-- ```M ^ A ^ B ^ C = Z```
-now we throw out M and keep A, B, C and Z. These are different soup flavors.
-To get M back, ```A ^ B ^ C ^ Z = M```
+- `M ^ A ^ B ^ C = Z`
+  now we throw out M and keep A, B, C and Z. These are different soup flavors.
+  To get M back, `A ^ B ^ C ^ Z = M`
 
 Assuming your message is bigger than one can, we keep doing this over and over in order until we've covered the entire message.
 
 Anyone is free to ask the store for a can of A, B, C, even Z. But unless you know the recipe for your original can, you can't get it back- especially if there are essentially unlimited flavors. Someone needs to go to the store with a billion flavors and know to ask for your four.
 Now we have an open market where anyone can walk in, add soup flavors and request flavors with no questions asked. It's up to everyone to keep their own secret recipe safe.
 
-Getting back to the network here, we can actually keep your recipe in another random can/block and put that into the network as well since it looks random. This makes long recipes (big files) easier to keep since you'll hopefully only need to keep track of a few cans types in order to keep your recipe. These essentially take the form of magnet links something like https://brightchain.net/blocks?recipe=A+B+C+Z
+Getting back to the network here, we can actually keep your recipe in another random can/block and put that into the network as well since it looks random. This makes long recipes (big files) easier to keep since you'll hopefully only need to keep track of a few cans types in order to keep your recipe. These essentially take the form of magnet links something like https://brightchain.io/api/block?recipe=A+B+C+Z
 
-In order to identify the blocks, they will need an identifier. In BrightChain, the SHA3 of the block's full data packet is the id. There is no reason to store multiple identical blocks. *I suspect that there will be a link to a separate option block in order to deal with optional parameters.
-For more information on the math, please check the OFFSystem wikipedia entry linked above. It also has links which discuss the overall 
+In order to identify the blocks, they will need an identifier. In BrightChain, the SHA3 of the block's full data packet is the id. There is no reason to store multiple identical blocks. \*I suspect that there will be a link to a separate option block in order to deal with optional parameters.
+For more information on the math, please check the OFFSystem wikipedia entry linked above. It also has links which discuss the overall
 
 efficiencies as measured empirically on the network when it was active.
 
@@ -65,6 +68,7 @@ Now, the Revolution Network has a way to store data out in the open, without enc
 
 Unlike BitClout which decided to store data off-chain due to the cost involved, The Revolution Network solves this with the massive distributed filesystem. Users will be encouraged to contribute disk resources and this will help their Valuation
 On to Part 2: Authentication
+
  
 
 ### Part 2: Authentication
@@ -74,11 +78,12 @@ A SECP256k1 curve like Ethereum will be used.
 
 The network has a handful of different agents that perform different actions and each has its own key pair, the public key of which will be published on the network and stored in the configuration.
 
-For each agent or user, we generate a BIP39/32 mnemonic and associated keypair. The public key is recorded on the chain associated with the User's account object. The BIP39/32 mnemonic is then used as a seed to derive the private key which is not stored in the network. Whenever an action like signing occurs, this will be done on the client which will have the key in memory and the result will be sent back to the network. Each Quorum node will have an Agent account which will have its mnemonic/private key stored in the memory of the Quorum node whom they are the primary agent for. 
+For each agent or user, we generate a BIP39/32 mnemonic and associated keypair. The public key is recorded on the chain associated with the User's account object. The BIP39/32 mnemonic is then used as a seed to derive the private key which is not stored in the network. Whenever an action like signing occurs, this will be done on the client which will have the key in memory and the result will be sent back to the network. Each Quorum node will have an Agent account which will have its mnemonic/private key stored in the memory of the Quorum node whom they are the primary agent for.
 
 Let's move on to Central Authority / The Quorum and Identity which will cover Anonymity and Moderation.
 
 ### Part 3: Identity and Central Authority - The Quorum
+
 While the entire network is decentralized, there is a segmented unit of central authority called The Quorum.
 
 At its core, it uses generation of a computed amount of Forward Error Correction (in the form of Shamir's Secret Sharing) pre-generated, set aside, and broken up into shards so that only once a majority of the desired/precomputed percentage is acquired, the data can be reconstructed.
@@ -101,9 +106,11 @@ Lets say Mallory's virus or bad content goes in the network a while and is repor
 At some point the FEC data on the posts could even be expired and deleted. It might be stored separately so this can happen. Once the "statute of limitations expires" that data could be deleted and the original identity never recovered.
 This section has now provided a means to Identify, Authenticate and Moderate users in the network.
 Next we get into the Reputation system, and ultimately how your Reputation is your Valuation.
+
  
 
 ### Part 4: Reputation and Valuation
+
 ( This section likely needs the most help )
 
 Like most blockchain technologies, your content has a worth and a cost.
@@ -123,6 +130,7 @@ People who contribute resources like storage and bandwidth may have a higher val
 - The math of this still needs to be worked out.
 
 #### Reputation, Part 2
+
 Some time ago, I watched a series on Amazon called Upload. In it, people constantly gave eachother ratings for things. Thanks for the coffee, the ride, just to be nice- whatever. This got me thinking about a universal reputation system.
 
 As User Bob rates things, (which will have a proof of work requirement commensurate with his current reputation), those ratings themselves have a value based on his reputation and affect the rated people and things concordantly.
@@ -160,8 +168,11 @@ Joules here
 Joules there
 
 On to Part 5: Digital Contracts and Secure Virtual Machine
+
  
+
 ### Part 5: Digital Contracts and Secure Virtual Machine
+
 (to be written)
 At this time, BrightChain is focusing on the basics of block access and data consistency. In the near future, CIL/CLR based digital contracts will need to be executed on a virtual state machine of some kind. TBD.
 

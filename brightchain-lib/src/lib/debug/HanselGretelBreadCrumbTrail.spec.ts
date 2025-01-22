@@ -20,7 +20,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
       traceLog,
       'HanselGretelBreadCrumbTrail.spec.ts',
       BreadCrumbTraceLevel.Debug,
-      1000
+      1000,
     );
     expect(firstCrumb.date).toBeDefined();
     expect(firstCrumb.IBreadCrumbTrace).toEqual(
@@ -28,7 +28,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
         date: firstCrumb.date,
         functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
         functionArgs: [],
-      })
+      }),
     );
     const secondCrumb = firstCrumb.addCrumb('trace 1');
     expect(secondCrumb.IBreadCrumbTrace).toEqual(
@@ -36,10 +36,10 @@ describe('HanselGretelBreadCrumbTrail', () => {
         date: secondCrumb.date,
         functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
         functionArgs: ['trace 1'],
-      })
+      }),
     );
     expect(secondCrumb.date.getUTCMilliseconds()).toBeGreaterThanOrEqual(
-      firstCrumb.date.getUTCMilliseconds()
+      firstCrumb.date.getUTCMilliseconds(),
     );
   });
   it('should trace deeper', () => {
@@ -50,7 +50,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
       traceLog,
       'HanselGretelBreadCrumbTrail.spec.ts',
       BreadCrumbTraceLevel.Debug,
-      1000
+      1000,
     );
     expect(firstCrumb.date).toBeDefined();
     expect(firstCrumb.IBreadCrumbTrace).toEqual(
@@ -58,7 +58,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
         date: firstCrumb.date,
         functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
         functionArgs: [],
-      })
+      }),
     );
     const forkedCrumb = firstCrumb.forkAndAddCrumb('trace 1', 'trace 2');
     expect(forkedCrumb.IBreadCrumbTrace).toEqual(
@@ -66,10 +66,10 @@ describe('HanselGretelBreadCrumbTrail', () => {
         date: forkedCrumb.date,
         functionName: 'HanselGretelBreadCrumbTrail.spec.ts>trace 1',
         functionArgs: ['trace 2'],
-      })
+      }),
     );
     expect(forkedCrumb.date.getUTCMilliseconds()).toBeGreaterThanOrEqual(
-      firstCrumb.date.getUTCMilliseconds()
+      firstCrumb.date.getUTCMilliseconds(),
     );
   });
   it('should trace with self logging callback', () => {
@@ -80,7 +80,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
       traceLog,
       'HanselGretelBreadCrumbTrail.spec.ts',
       BreadCrumbTraceLevel.Debug,
-      1000
+      1000,
     );
     expect(firstCrumb.date).toBeDefined();
     expect(firstCrumb.IBreadCrumbTrace).toEqual(
@@ -88,7 +88,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
         date: firstCrumb.date,
         functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
         functionArgs: [],
-      })
+      }),
     );
     const newTrace = 'trace 1';
     const newTraceCompleted = `${newTrace} callback completed`;
@@ -98,7 +98,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
           date: crumbResult.date,
           functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
           functionArgs: [newTrace],
-        })
+        }),
       );
       return crumbResult.addCrumb(newTraceCompleted);
     }, newTrace);
@@ -107,7 +107,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
         date: secondCrumb.date,
         functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
         functionArgs: [newTraceCompleted],
-      })
+      }),
     );
   });
   it('should fork and trace with self logging callback', () => {
@@ -118,7 +118,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
       traceLog,
       'HanselGretelBreadCrumbTrail.spec.ts',
       BreadCrumbTraceLevel.Debug,
-      1000
+      1000,
     );
     expect(firstCrumb.date).toBeDefined();
     expect(firstCrumb.IBreadCrumbTrace).toEqual(
@@ -126,7 +126,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
         date: firstCrumb.date,
         functionName: 'HanselGretelBreadCrumbTrail.spec.ts',
         functionArgs: [],
-      })
+      }),
     );
     const newSection = 'section 1';
     const newTrace = 'trace 1';
@@ -139,18 +139,18 @@ describe('HanselGretelBreadCrumbTrail', () => {
             date: crumbResult.date,
             functionName: 'HanselGretelBreadCrumbTrail.spec.ts>section 1',
             functionArgs: [newTrace],
-          })
+          }),
         );
         return crumbResult.addCrumb(newTraceCompleted);
       },
-      newTrace
+      newTrace,
     );
     expect(secondCrumb.IBreadCrumbTrace).toEqual(
       HanselGretelBreadCrumbTrail.IBreadCrumbTrace({
         date: secondCrumb.date,
         functionName: 'HanselGretelBreadCrumbTrail.spec.ts>section 1',
         functionArgs: [newTraceCompleted],
-      })
+      }),
     );
   });
   it('should console log if enabled', () => {
@@ -165,7 +165,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
       traceLog,
       'HanselGretelBreadCrumbTrail.spec.ts',
       BreadCrumbTraceLevel.Debug,
-      1000
+      1000,
     );
     //expect console.log not to have been called
     expect(logFunc).not.toHaveBeenCalled();
@@ -176,7 +176,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
       traceLog,
       'HanselGretelBreadCrumbTrail.spec.ts',
       BreadCrumbTraceLevel.Debug,
-      1000
+      1000,
     );
     // expect console.log to have been called
     expect(logFunc).toHaveBeenCalledTimes(1);
@@ -184,7 +184,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
   });
   it('should handle async operations', async () => {
     const asyncOperation = new Promise((resolve) =>
-      setTimeout(() => resolve('done'), 100)
+      setTimeout(() => resolve('done'), 100),
     );
     const breadcrumbTrail = new HanselGretelBreadCrumbTrail(
       context,
@@ -192,7 +192,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
       traceLog,
       'asyncTest',
       BreadCrumbTraceLevel.Debug,
-      10
+      10,
     );
     const resultTrail = await breadcrumbTrail.addCrumbAsync(asyncOperation);
 
@@ -210,7 +210,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
       traceLog,
       'memoryTest',
       BreadCrumbTraceLevel.Debug,
-      maxEntries
+      maxEntries,
     );
 
     for (let i = 0; i < maxEntries + 2; i++) {
@@ -228,7 +228,7 @@ describe('HanselGretelBreadCrumbTrail', () => {
       traceLog,
       'filterTest',
       BreadCrumbTraceLevel.Debug,
-      10
+      10,
     );
     breadcrumbTrail.addCrumb('trace 1');
     breadcrumbTrail.addCrumb('trace 2');
@@ -237,7 +237,6 @@ describe('HanselGretelBreadCrumbTrail', () => {
     const filteredCrumbs = breadcrumbTrail.findTraces({
       functionArgs: ['trace 2'],
     });
-    console.log('Filtered Crumbs:', filteredCrumbs);
     expect(filteredCrumbs.length).toBe(1);
     expect(filteredCrumbs[0].functionArgs).toContain('trace 2');
   });

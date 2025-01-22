@@ -1,11 +1,11 @@
 import * as uuid from 'uuid';
-import { ShortHexGuid } from './types';
+import { BrightChainMember } from './brightChainMember';
+import { GuidV4 } from './guid';
 import { QuorumDataRecord } from './quorumDataRecord';
 import { StaticHelpersSealing } from './staticHelpers.sealing';
-import { GuidV4 } from './guid';
-import { BrightChainMember } from './brightChainMember';
-import { SimpleStore } from './stores/simpleStore';
 import { BufferStore } from './stores/bufferStore';
+import { SimpleStore } from './stores/simpleStore';
+import { ShortHexGuid } from './types';
 
 export class BrightChainQuorum {
   /**
@@ -69,7 +69,7 @@ export class BrightChainQuorum {
     this._members.set(member.id.asShortHexGuid, member);
     this._memberPublicKeysByMemberId.set(
       member.id.asShortHexGuid,
-      member.publicKey
+      member.publicKey,
     );
   }
 
@@ -95,13 +95,13 @@ export class BrightChainQuorum {
     agent: BrightChainMember,
     document: T,
     amongstMembers: BrightChainMember[],
-    sharesRequired?: number
+    sharesRequired?: number,
   ): QuorumDataRecord {
     const newDoc = StaticHelpersSealing.quorumSeal<T>(
       agent,
       document,
       amongstMembers,
-      sharesRequired
+      sharesRequired,
     );
     this._documentsById.set(newDoc.id.asShortHexGuid, newDoc);
     return newDoc;
@@ -119,7 +119,7 @@ export class BrightChainQuorum {
       throw new Error('Document not found');
     }
     const members: BrightChainMember[] = memberIds.map((id) =>
-      this._members.get(id)
+      this._members.get(id),
     );
 
     const restoredDoc = StaticHelpersSealing.quorumUnseal<T>(doc, members);
