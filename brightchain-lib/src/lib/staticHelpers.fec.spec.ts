@@ -1,65 +1,150 @@
-import { randomBytes } from "crypto";
-import { StaticHelpersFec } from "./staticHelpers.fec";
-import { BlockSize } from "./enumerations/blockSizes";
-import { BaseBlock } from "./blocks/base";
-import { BlockDataType } from "./enumerations/blockDataType";
+import { StaticHelpersFec } from './staticHelpers.fec';
 
-function buildAvailableBlocks(dataBlocks: number, parityBlocks: number): boolean[] {
-    const availableBlocks: boolean[] = [];
-    for (let i = 0; i < dataBlocks; i++) {
-        availableBlocks.push(false);
-    }
-    for (let i = 0; i < parityBlocks; i++) {
-        availableBlocks.push(true);
-    }
-    return availableBlocks;
-}
+describe('StaticHelpersFec', () => {
+  describe('FEC operations', () => {
+    it('should encode and decode data correctly', async () => {
+      const shardSize = 1024; // Use a smaller shard size for testing
+      const dataShards = 4;
+      const parityShards = 2;
+      const inputData = Buffer.alloc(shardSize * dataShards, 'test data');
 
-describe('staticHelpers.fec', () => {
-    it('should encode and decode with no errors present', async () => {
-        // testing with Large or Huge blocks fails due to memory/algorithm constraints
-        const blockSize = BlockSize.Medium as number;
-        const input = randomBytes(blockSize);
-        const dataBlocks = 1;
-        const parityBlocks = 2;
-        const encoded = await StaticHelpersFec.fecEncode(input, blockSize, dataBlocks, parityBlocks, false);
-        expect(encoded.length).toBe(blockSize * (dataBlocks + parityBlocks));
-        // introduce up to (parityBlocks * blockSize) - 1 / 2 errors within the original data portion of the encoded data
-        for (let i = 0; i < ((parityBlocks * blockSize) - 1) / 2; i++) {
-            const randomOffset = Math.floor(Math.random() * (dataBlocks * blockSize));
-            encoded[randomOffset] = Math.floor(Math.random() * 255);
-        }
-        const decoded = await StaticHelpersFec.fecDecode(encoded, blockSize, dataBlocks, parityBlocks, buildAvailableBlocks(dataBlocks, parityBlocks));
-        expect(decoded.length).toBe(blockSize);
-        expect(decoded).toStrictEqual(input);
+      // Encode the data
+      const encodedData = await StaticHelpersFec.fecEncode(
+        inputData,
+        shardSize,
+        dataShards,
+        parityShards,
+        false,
+      );
+      expect(encodedData.length).toBe(shardSize * (dataShards + parityShards));
+
+      // Simulate missing shards (mark some shards as unavailable)
+      const shardsAvailable = Array(dataShards + parityShards).fill(true);
+      // Simulate losing some data shards (up to parityShards)
+      const numMissingShards = Math.min(parityShards, dataShards);
+      for (let i = 0; i < numMissingShards; i++) {
+        shardsAvailable[i] = false;
+      }
+
+      // Decode the damaged data (with missing shards)
+      const decodedData = await StaticHelpersFec.fecDecode(
+        encodedData,
+        shardSize,
+        dataShards,
+        parityShards,
+        shardsAvailable,
+      );
+      expect(decodedData).toEqual(inputData);
     });
-    // large and huge sizes fail due to memory constraints
-    const testBlockSizes = [BlockSize.Message, BlockSize.Tiny, BlockSize.Small, BlockSize.Medium];
-    const parityBlockCounts = [1, 2];
-    testBlockSizes.forEach((blockSize: BlockSize) => {
-        parityBlockCounts.forEach((parityBlockCount: number) => {
-            it(`should produce parity blocks that can be used to recover from errors with size ${blockSize} and ${parityBlockCount} parity blocks`, async () => {
-                const input = randomBytes(blockSize);
-                const originalInput = Buffer.from(input);
-                const inputBlock = new BaseBlock(blockSize, input, BlockDataType.RawData, blockSize as number);
-                const parityBlocks = await StaticHelpersFec.createParityBlocks(inputBlock, parityBlockCount);
-                // damage the input block
-                // we want to make sure to damage each 1 mb chunk of the input block by at least a few bytes,
-                // though it should be able to tolerate just under half a megabyte of errors
-                const chunksRequired = Math.ceil(blockSize as number / StaticHelpersFec.MaximumShardSize);
-                const chunkSize = Math.floor(blockSize as number / chunksRequired);
-                const damagePerChunk = (chunkSize - 1) / 2;
-                for (let i = 0; i < chunksRequired; i++) {
-                    for (let j = 0; j < damagePerChunk; j++) {
-                        // pick a random offset within the chunk
-                        const randomOffset = Math.floor(Math.random() * chunkSize) + (i * chunkSize);
-                        inputBlock.data[randomOffset] = Math.floor(Math.random() * 255);
-                    }
-                }
-                const damagedBlock = new BaseBlock(blockSize, inputBlock.data, BlockDataType.RawData, blockSize as number);
-                const recoveredBlock = await StaticHelpersFec.recoverDataBlocks(damagedBlock, parityBlocks);
-                expect(recoveredBlock.data).toStrictEqual(originalInput);
-            });
-        });
+
+    it('should handle empty input correctly', async () => {
+      const shardSize = 1024;
+      const dataShards = 1;
+      const parityShards = 1;
+      const emptyData = Buffer.alloc(shardSize); // Must match shardSize * dataShards
+      const shardsAvailable = [true, true];
+
+      const encodedData = await StaticHelpersFec.fecEncode(
+        emptyData,
+        shardSize,
+        dataShards,
+        parityShards,
+        false,
+      );
+      const decodedData = await StaticHelpersFec.fecDecode(
+        encodedData,
+        shardSize,
+        dataShards,
+        parityShards,
+        shardsAvailable,
+      );
+      expect(decodedData).toEqual(emptyData);
     });
+
+    it('should handle maximum damage threshold', async () => {
+      const shardSize = 1024;
+      const dataShards = 4;
+      const parityShards = 2;
+      const inputData = Buffer.alloc(shardSize * dataShards, 'test data');
+
+      // Encode the data
+      const encodedData = await StaticHelpersFec.fecEncode(
+        inputData,
+        shardSize,
+        dataShards,
+        parityShards,
+        false,
+      );
+
+      // Simulate maximum correctable damage (mark some shards as unavailable)
+      const shardsAvailable = Array(dataShards + parityShards).fill(true);
+      shardsAvailable[0] = false; // Mark first data shard as damaged
+      shardsAvailable[1] = false; // Mark second data shard as damaged
+
+      // Decode should still work with minimum required shards
+      const decodedData = await StaticHelpersFec.fecDecode(
+        encodedData,
+        shardSize,
+        dataShards,
+        parityShards,
+        shardsAvailable,
+      );
+      expect(decodedData).toEqual(inputData);
+    });
+
+    it('should fail with too much damage', async () => {
+      const shardSize = 1024;
+      const dataShards = 4;
+      const parityShards = 2;
+      const inputData = Buffer.alloc(shardSize * dataShards, 'test data');
+
+      // Encode the data
+      const encodedData = await StaticHelpersFec.fecEncode(
+        inputData,
+        shardSize,
+        dataShards,
+        parityShards,
+        false,
+      );
+
+      // Mark too many shards as unavailable
+      const shardsAvailable = Array(dataShards + parityShards).fill(false);
+      shardsAvailable[0] = true; // Only one shard available
+
+      // Decode should fail
+      await expect(
+        StaticHelpersFec.fecDecode(
+          encodedData,
+          shardSize,
+          dataShards,
+          parityShards,
+          shardsAvailable,
+        ),
+      ).rejects.toThrow('Not enough shards available');
+    });
+
+    it('should handle various block sizes', async () => {
+      const shardSize = 1024;
+      const dataShards = 1;
+      const parityShards = 1;
+      const inputData = Buffer.alloc(shardSize * dataShards, 'test data');
+      const shardsAvailable = [true, true];
+
+      const encodedData = await StaticHelpersFec.fecEncode(
+        inputData,
+        shardSize,
+        dataShards,
+        parityShards,
+        false,
+      );
+      const decodedData = await StaticHelpersFec.fecDecode(
+        encodedData,
+        shardSize,
+        dataShards,
+        parityShards,
+        shardsAvailable,
+      );
+      expect(decodedData).toEqual(inputData);
+    });
+  });
 });

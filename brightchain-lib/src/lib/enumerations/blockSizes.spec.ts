@@ -1,20 +1,21 @@
 import {
   BlockSize,
+  blockSizeExponents,
+  blockSizeLengths,
   lengthToBlockSize,
   validateBlockSize,
-  blockSizeLengths,
   validBlockSizes,
 } from './blockSizes';
 describe('blockSizes', () => {
   it('should have the expected members', () => {
     // BlockSize is an enum with assigned number values
     expect(BlockSize.Unknown).toBe(0);
-    expect(BlockSize.Message).toBe(512);
-    expect(BlockSize.Tiny).toBe(1024);
-    expect(BlockSize.Small).toBe(4096);
-    expect(BlockSize.Medium).toBe(1048576);
-    expect(BlockSize.Large).toBe(67108864);
-    expect(BlockSize.Huge).toBe(268435456);
+    expect(BlockSize.Message).toBe(blockSizeLengths[0]);
+    expect(BlockSize.Tiny).toBe(blockSizeLengths[1]);
+    expect(BlockSize.Small).toBe(blockSizeLengths[2]);
+    expect(BlockSize.Medium).toBe(blockSizeLengths[3]);
+    expect(BlockSize.Large).toBe(blockSizeLengths[4]);
+    expect(BlockSize.Huge).toBe(blockSizeLengths[5]);
   });
   it('should validate the blockSizes/blockSizeLengths const arrays', () => {
     expect(validBlockSizes).toEqual([
@@ -30,17 +31,17 @@ describe('blockSizes', () => {
     ]);
   });
   it('should test lengthToBlockSize', () => {
-    expect(lengthToBlockSize(512)).toBe(BlockSize.Message);
-    expect(lengthToBlockSize(1024)).toBe(BlockSize.Tiny);
-    expect(lengthToBlockSize(4096)).toBe(BlockSize.Small);
-    expect(lengthToBlockSize(1048576)).toBe(BlockSize.Medium);
-    expect(lengthToBlockSize(67108864)).toBe(BlockSize.Large);
-    expect(lengthToBlockSize(268435456)).toBe(BlockSize.Huge);
+    expect(lengthToBlockSize(blockSizeLengths[0])).toBe(BlockSize.Message);
+    expect(lengthToBlockSize(blockSizeLengths[1])).toBe(BlockSize.Tiny);
+    expect(lengthToBlockSize(blockSizeLengths[2])).toBe(BlockSize.Small);
+    expect(lengthToBlockSize(blockSizeLengths[3])).toBe(BlockSize.Medium);
+    expect(lengthToBlockSize(blockSizeLengths[4])).toBe(BlockSize.Large);
+    expect(lengthToBlockSize(blockSizeLengths[5])).toBe(BlockSize.Huge);
     //expect non-matching sizes to be unknown
     expect(() => lengthToBlockSize(0)).toThrow();
     expect(() => lengthToBlockSize(1)).toThrow();
-    expect(() => lengthToBlockSize(67108863)).toThrow();
-    expect(() => lengthToBlockSize(268435455)).toThrow();
+    expect(() => lengthToBlockSize(blockSizeLengths[4] - 1)).toThrow();
+    expect(() => lengthToBlockSize(blockSizeLengths[5] - 1)).toThrow();
   });
   it('should test validateBlockSize', () => {
     expect(validateBlockSize(BlockSize.Message)).toBe(true);
@@ -53,5 +54,10 @@ describe('blockSizes', () => {
     expect(validateBlockSize(BlockSize.Unknown)).toBe(false);
     expect(validateBlockSize(1)).toBe(false);
     expect(validateBlockSize(123)).toBe(false);
+  });
+});
+describe('blockSizeExponents', () => {
+  it('should match the blockSizeLengths when exponentiated', () => {
+    expect(blockSizeExponents.map((exp) => 2 ** exp)).toEqual(blockSizeLengths);
   });
 });

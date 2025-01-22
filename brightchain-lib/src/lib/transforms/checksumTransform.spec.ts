@@ -1,10 +1,10 @@
-import { ChecksumTransform } from './checksumTransform';
 import { sha3_512 } from 'js-sha3';
+import { ChecksumTransform } from './checksumTransform';
 
 describe('ChecksumTransform', () => {
   let checksumTransform: ChecksumTransform;
   const testData = Buffer.from(
-    'This is a test data buffer to validate checksum consistency.'
+    'This is a test data buffer to validate checksum consistency.',
   );
 
   beforeEach(() => {
@@ -18,12 +18,12 @@ describe('ChecksumTransform', () => {
   const simulateChunkProcessing = (
     checksumTransform: ChecksumTransform,
     chunks: Buffer[],
-    callback: (checksum: Buffer) => void
+    callback: (checksum: Buffer) => void,
   ) => {
     chunks.forEach((chunk) =>
       checksumTransform._transform(chunk, 'utf8', () => {
         // do nothing
-      })
+      }),
     );
 
     checksumTransform.on('checksum', (checksum) => {

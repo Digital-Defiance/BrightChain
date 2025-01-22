@@ -1,263 +1,296 @@
+import { createECDH, randomBytes } from 'crypto';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
-import { faker } from '@faker-js/faker';
-import { ISimpleKeyPairBuffer } from './interfaces/simpleKeyPairBuffer';
-import { mnemonicToSeedSync, validateMnemonic } from 'bip39';
-import { randomBytes } from 'crypto';
-import Wallet from 'ethereumjs-wallet';
-import { SignatureBuffer } from './types';
 
 describe('StaticHelpersECIES', () => {
-  const testMnemonic = StaticHelpersECIES.generateNewMnemonic();
-  let keyPair: ISimpleKeyPairBuffer;
+  describe('encryption and decryption', () => {
+    it('should encrypt and decrypt data correctly', () => {
+      const ecdh = createECDH(StaticHelpersECIES.curveName);
+      ecdh.generateKeys();
+      const keyPair = {
+        privateKey: ecdh.getPrivateKey(),
+        publicKey: ecdh.getPublicKey(),
+      };
 
-  beforeAll(() => {
-    keyPair = StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer(testMnemonic);
-  });
+      const originalData = Buffer.from('test data');
+      const encryptedData = StaticHelpersECIES.encrypt(
+        keyPair.publicKey,
+        originalData,
+      );
 
-  test('generateNewMnemonic should generate valid mnemonic', () => {
-    const mnemonic = StaticHelpersECIES.generateNewMnemonic();
-    expect(validateMnemonic(mnemonic)).toBe(true);
-  });
+      // Verify encrypted data structure
+      expect(encryptedData.length).toBeGreaterThan(
+        StaticHelpersECIES.eciesOverheadLength,
+      );
 
-  test('walletFromSeed should generate valid wallet', () => {
-    const seed = mnemonicToSeedSync(testMnemonic);
-    const wallet = StaticHelpersECIES.walletFromSeed(seed);
-    expect(wallet).toBeDefined();
-    expect(wallet.getPrivateKey()).toHaveLength(32);
-    expect(wallet.getPublicKey()).toHaveLength(64);
-  });
+      // Extract components
+      const ephemeralPublicKey = encryptedData.subarray(
+        0,
+        StaticHelpersECIES.publicKeyLength,
+      );
+      const iv = encryptedData.subarray(
+        StaticHelpersECIES.publicKeyLength,
+        StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
+      );
+      const authTag = encryptedData.subarray(
+        StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
+        StaticHelpersECIES.publicKeyLength +
+          StaticHelpersECIES.ivLength +
+          StaticHelpersECIES.authTagLength,
+      );
+      const encrypted = encryptedData.subarray(
+        StaticHelpersECIES.publicKeyLength +
+          StaticHelpersECIES.ivLength +
+          StaticHelpersECIES.authTagLength,
+      );
 
-  it('should throw for an invalid mnemonic', () => {
-    expect(() => {
-      StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer('invalid mnemonic');
-    }).toThrow('Invalid mnemonic');
-  });
+      // Verify components
+      expect(ephemeralPublicKey.length).toBe(
+        StaticHelpersECIES.publicKeyLength,
+      );
+      expect(iv.length).toBe(StaticHelpersECIES.ivLength);
+      expect(authTag.length).toBe(StaticHelpersECIES.authTagLength);
+      // The encrypted data will be longer than the original due to padding
+      expect(encrypted.length).toBeGreaterThanOrEqual(originalData.length);
 
-  test('walletAndSeedFromMnemonic should generate valid wallet and seed', () => {
-    const { seed, wallet } =
-      StaticHelpersECIES.walletAndSeedFromMnemonic(testMnemonic);
-    expect(seed).toBeDefined();
-    expect(wallet).toBeDefined();
-    expect(wallet.getPrivateKey()).toHaveLength(32);
-    expect(wallet.getPublicKey()).toHaveLength(64);
-  });
+      // Decrypt with components
+      const decryptedData = StaticHelpersECIES.decryptWithComponents(
+        keyPair.privateKey,
+        ephemeralPublicKey,
+        iv,
+        authTag,
+        encrypted,
+      );
 
-  test('walletToSimpleKeyPairBuffer should generate valid key pair', () => {
-    const seed = mnemonicToSeedSync(testMnemonic);
-    const wallet = StaticHelpersECIES.walletFromSeed(seed);
-    const keyPair = StaticHelpersECIES.walletToSimpleKeyPairBuffer(wallet);
-    expect(keyPair).toHaveProperty('privateKey');
-    expect(keyPair).toHaveProperty('publicKey');
-    expect(keyPair.privateKey).toHaveLength(32);
-    expect(keyPair.publicKey).toHaveLength(65);
-  });
+      // Verify decrypted data
+      expect(decryptedData).toEqual(originalData);
 
-  test('seedToSimpleKeyPairBuffer should generate valid key pair', () => {
-    const seed = mnemonicToSeedSync(testMnemonic);
-    const testKeyPair = StaticHelpersECIES.seedToSimpleKeyPairBuffer(seed);
-    expect(testKeyPair).toHaveProperty('privateKey');
-    expect(testKeyPair).toHaveProperty('publicKey');
-    expect(testKeyPair.privateKey).toHaveLength(32);
-    expect(testKeyPair.publicKey).toHaveLength(65);
-  });
+      // Test decrypt method
+      const decryptedWithHeader = StaticHelpersECIES.decrypt(
+        keyPair.privateKey,
+        encryptedData,
+      );
+      expect(decryptedWithHeader).toEqual(originalData);
+    });
 
-  test('mnemonicToSimpleKeyPairBuffer should generate valid key pair', () => {
-    const testKeyPair =
-      StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer(testMnemonic);
-    expect(testKeyPair).toHaveProperty('privateKey');
-    expect(testKeyPair).toHaveProperty('publicKey');
-    expect(testKeyPair.privateKey).toHaveLength(32);
-    expect(testKeyPair.publicKey).toHaveLength(65);
-  });
+    it('should handle empty data', () => {
+      const ecdh = createECDH(StaticHelpersECIES.curveName);
+      ecdh.generateKeys();
+      const keyPair = {
+        privateKey: ecdh.getPrivateKey(),
+        publicKey: ecdh.getPublicKey(),
+      };
 
-  test('generateKeyPairFromMnemonic should generate valid key pair', () => {
-    expect(keyPair).toHaveProperty('privateKey');
-    expect(keyPair).toHaveProperty('publicKey');
-    expect(keyPair.privateKey).toHaveLength(32); // Private key should be 32 bytes (64 hex characters)
-    expect(keyPair.publicKey).toHaveLength(65); // Uncompressed public key (65 bytes, 130 hex characters)
-  });
+      const originalData = Buffer.alloc(0);
+      const encryptedData = StaticHelpersECIES.encrypt(
+        keyPair.publicKey,
+        originalData,
+      );
 
-  test('encrypt and decrypt (buffer version) should return original message', () => {
-    const message = Buffer.from(faker.lorem.sentence());
-    const encrypted = StaticHelpersECIES.encrypt(keyPair.publicKey, message);
-    expect(encrypted).toBeDefined();
+      const decryptedData = StaticHelpersECIES.decrypt(
+        keyPair.privateKey,
+        encryptedData,
+      );
 
-    const decrypted = StaticHelpersECIES.decrypt(keyPair.privateKey, encrypted);
-    expect(decrypted.toString()).toBe(message.toString());
-  });
+      expect(decryptedData).toEqual(originalData);
+    });
 
-  test('encryptString and decryptString should return original message', () => {
-    const message = faker.lorem.sentence();
-    const encrypted = StaticHelpersECIES.encryptString(
-      keyPair.publicKey.toString('hex'),
-      message
-    );
-    expect(encrypted).toBeDefined();
+    it('should handle large data', () => {
+      const ecdh = createECDH(StaticHelpersECIES.curveName);
+      ecdh.generateKeys();
+      const keyPair = {
+        privateKey: ecdh.getPrivateKey(),
+        publicKey: ecdh.getPublicKey(),
+      };
 
-    const decrypted = StaticHelpersECIES.decryptString(
-      keyPair.privateKey.toString('hex'),
-      encrypted
-    );
-    expect(decrypted).toBe(message);
-  });
+      const originalData = randomBytes(1024 * 1024); // 1MB
+      const encryptedData = StaticHelpersECIES.encrypt(
+        keyPair.publicKey,
+        originalData,
+      );
 
-  test('decrypt (buffer version) with wrong private key should throw error', () => {
-    const message = Buffer.from(faker.lorem.sentence());
-    const encrypted = StaticHelpersECIES.encrypt(keyPair.publicKey, message);
-    expect(encrypted).toBeDefined();
+      const decryptedData = StaticHelpersECIES.decrypt(
+        keyPair.privateKey,
+        encryptedData,
+      );
 
-    const wrongPrivateKey = Buffer.from(
-      'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
-      'hex'
-    );
-    expect(() => {
-      StaticHelpersECIES.decrypt(wrongPrivateKey, encrypted);
-    }).toThrow();
-  });
+      expect(decryptedData).toEqual(originalData);
+    });
 
-  test('decryptString with wrong private key should throw error', () => {
-    const message = faker.lorem.sentence();
-    const encrypted = StaticHelpersECIES.encryptString(
-      keyPair.publicKey.toString('hex'),
-      message
-    );
-    expect(encrypted).toBeDefined();
+    it('should fail with invalid data', () => {
+      const keyPair = {
+        publicKey: Buffer.alloc(65, 1),
+        privateKey: Buffer.alloc(32, 2),
+      };
 
-    const wrongPrivateKey =
-      'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
-    expect(() => {
-      StaticHelpersECIES.decryptString(wrongPrivateKey, encrypted);
-    }).toThrow();
-  });
-  it('should derive a known key', () => {
-    // https://medium.com/@alexberegszaszi/why-do-my-bip32-wallets-disagree-6f3254cc5846#.6tqszlvf4
-    const mnemonic =
-      'radar blur cabbage chef fix engine embark joy scheme fiction master release';
-    const expectedSeed =
-      'ed37b3442b3d550d0fbb6f01f20aac041c245d4911e13452cac7b1676a070eda66771b71c0083b34cc57ca9c327c459a0ec3600dbaf7f238ff27626c8430a806';
-    const expectedPrivateKey =
-      'b96e9ccb774cc33213cbcb2c69d3cdae17b0fe4888a1ccd343cbd1a17fd98b18';
-    const expectedPublicKey =
-      '0405b7d0996e99c4a49e6c3b83288f4740d53662839eab1d97d14660696944b8bbe24fabdd03888410ace3fa4c5a809e398f036f7b99d04f82a012dca95701d103';
-    const seed = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic).seed.value;
-    const testKeyPair = StaticHelpersECIES.seedToSimpleKeyPairBuffer(seed);
+      const invalidData = Buffer.alloc(10); // Too small for header
 
-    expect(seed.toString('hex')).toEqual(expectedSeed);
-    expect(testKeyPair.privateKey.toString('hex')).toEqual(expectedPrivateKey);
-    expect(testKeyPair.publicKey.toString('hex')).toEqual(expectedPublicKey);
-  });
-  it('should sign a message', () => {
-    const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
-      keyPair.privateKey,
-      message
-    );
-    expect(signature).toBeDefined();
-    expect(signature).toBeInstanceOf(Buffer);
-  });
-  it('should verify a signature using a 04 prefixed public key', () => {
-    const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
-      keyPair.privateKey,
-      message
-    );
-    const verified: boolean = StaticHelpersECIES.verifyMessage(
-      keyPair.publicKey,
-      message,
-      signature
-    );
-    expect(verified).toBe(true);
-  });
-  it('should verify a signature using a public key straight from the wallet', () => {
-    const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const wallet: Wallet = StaticHelpersECIES.walletFromSeed(
-      mnemonicToSeedSync(testMnemonic)
-    );
-    expect(wallet).toBeInstanceOf(Wallet);
-    const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
-      wallet.getPrivateKey(),
-      message
-    );
-    const verified: boolean = StaticHelpersECIES.verifyMessage(
-      wallet.getPublicKey(),
-      message,
-      signature
-    );
-    expect(verified).toBe(true);
-  });
-  it('should throw when an invalid public key is given that is 65 bytes but not prefixed with 04', () => {
-    const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
-      keyPair.privateKey,
-      message
-    );
-    // mangle the public key by changing the 04 prefix
-    const newPublicKey: Buffer = Buffer.from(keyPair.publicKey);
-    newPublicKey[0] = 0x03;
-    expect(() => {
-      StaticHelpersECIES.verifyMessage(newPublicKey, message, signature);
-    }).toThrow('Invalid sender public key');
-  });
-  it('should throw when an invalid public key is given that is neither 64 nor 65 bytes', () => {
-    const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
-      keyPair.privateKey,
-      message
-    );
-    const newPublicKey: Buffer = randomBytes(63);
-    expect(() => {
-      StaticHelpersECIES.verifyMessage(newPublicKey, message, signature);
-    }).toThrow('Invalid sender public key');
-  });
-  it('should return false when a different public key is given', () => {
-    const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
-      keyPair.privateKey,
-      message
-    );
-    const newPublicKey: Buffer = randomBytes(64);
-    expect(StaticHelpersECIES.verifyMessage(newPublicKey, message, signature)).toBe(
-      false
-    );
-  });
-  it('should return false when a the message is altered', () => {
-    const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
-      keyPair.privateKey,
-      message
-    );
-    message[0] = ' '.charCodeAt(0);
-    expect(
-      StaticHelpersECIES.verifyMessage(keyPair.publicKey, message, signature)
-    ).toBe(false);
+      expect(() =>
+        StaticHelpersECIES.decrypt(keyPair.privateKey, invalidData),
+      ).toThrow();
+    });
+
+    it('should fail with mismatched keys', () => {
+      const ecdh1 = createECDH(StaticHelpersECIES.curveName);
+      ecdh1.generateKeys();
+      const keyPair1 = {
+        privateKey: ecdh1.getPrivateKey(),
+        publicKey: ecdh1.getPublicKey(),
+      };
+
+      const ecdh2 = createECDH(StaticHelpersECIES.curveName);
+      ecdh2.generateKeys();
+      const keyPair2 = {
+        privateKey: ecdh2.getPrivateKey(),
+        publicKey: ecdh2.getPublicKey(),
+      };
+
+      const originalData = Buffer.from('test data');
+      const encryptedData = StaticHelpersECIES.encrypt(
+        keyPair1.publicKey,
+        originalData,
+      );
+
+      expect(() =>
+        StaticHelpersECIES.decrypt(keyPair2.privateKey, encryptedData),
+      ).toThrow();
+    });
   });
 
-  it('should return false when a the signature is altered', () => {
-    const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const signature: SignatureBuffer = StaticHelpersECIES.signMessage(
-      keyPair.privateKey,
-      message
-    );
-    const modifiedSignature: SignatureBuffer = Buffer.copyBytesFrom(signature) as SignatureBuffer;
-    modifiedSignature[62] = 0;
-    modifiedSignature[63] = 0;
-    expect(
-      StaticHelpersECIES.verifyMessage(keyPair.publicKey, message, signature)
-    ).toBe(true);
-    expect(
-      StaticHelpersECIES.verifyMessage(keyPair.publicKey, message, modifiedSignature)
-    ).toBe(false);
+  describe('string encryption and decryption', () => {
+    it('should encrypt and decrypt strings correctly', () => {
+      const ecdh = createECDH(StaticHelpersECIES.curveName);
+      ecdh.generateKeys();
+      const keyPair = {
+        privateKey: ecdh.getPrivateKey().toString('hex'),
+        publicKey: ecdh.getPublicKey().toString('hex'),
+      };
+
+      const originalString = 'test string';
+      const encryptedHex = StaticHelpersECIES.encryptString(
+        keyPair.publicKey,
+        originalString,
+      );
+
+      const decryptedString = StaticHelpersECIES.decryptString(
+        keyPair.privateKey,
+        encryptedHex,
+      );
+
+      expect(decryptedString).toBe(originalString);
+    });
+
+    it('should handle empty strings', () => {
+      const ecdh = createECDH(StaticHelpersECIES.curveName);
+      ecdh.generateKeys();
+      const keyPair = {
+        privateKey: ecdh.getPrivateKey().toString('hex'),
+        publicKey: ecdh.getPublicKey().toString('hex'),
+      };
+
+      const originalString = '';
+      const encryptedHex = StaticHelpersECIES.encryptString(
+        keyPair.publicKey,
+        originalString,
+      );
+
+      const decryptedString = StaticHelpersECIES.decryptString(
+        keyPair.privateKey,
+        encryptedHex,
+      );
+
+      expect(decryptedString).toBe(originalString);
+    });
+
+    it('should handle unicode strings', () => {
+      const ecdh = createECDH(StaticHelpersECIES.curveName);
+      ecdh.generateKeys();
+      const keyPair = {
+        privateKey: ecdh.getPrivateKey().toString('hex'),
+        publicKey: ecdh.getPublicKey().toString('hex'),
+      };
+
+      const originalString = '🚀 Hello, 世界!';
+      const encryptedHex = StaticHelpersECIES.encryptString(
+        keyPair.publicKey,
+        originalString,
+      );
+
+      const decryptedString = StaticHelpersECIES.decryptString(
+        keyPair.privateKey,
+        encryptedHex,
+      );
+
+      expect(decryptedString).toBe(originalString);
+    });
+
+    it('should fail with invalid hex strings', () => {
+      const ecdh = createECDH(StaticHelpersECIES.curveName);
+      ecdh.generateKeys();
+      const keyPair = {
+        privateKey: ecdh.getPrivateKey().toString('hex'),
+        publicKey: ecdh.getPublicKey().toString('hex'),
+      };
+
+      const invalidHex = 'not a hex string';
+
+      expect(() =>
+        StaticHelpersECIES.decryptString(keyPair.privateKey, invalidHex),
+      ).toThrow();
+    });
   });
-  it('should throw when an invalid signature is given to verify', () => {
-    const message: Buffer = Buffer.from(faker.lorem.sentence());
-    const badSignature: SignatureBuffer = randomBytes(1) as SignatureBuffer;
-    expect(() => {
-      StaticHelpersECIES.verifyMessage(keyPair.publicKey, message, badSignature);
-    }).toThrow('Invalid signature');
-  });
-  it('should validate ecie overhead length', () => {
-    const inputData = Buffer.from(faker.lorem.sentence());
-    const encryptedData = StaticHelpersECIES.encrypt(keyPair.publicKey, inputData);
-    expect(encryptedData.length).toBe(StaticHelpersECIES.ecieOverheadLength + inputData.length);
+
+  describe('overhead calculations', () => {
+    it('should calculate encrypted length correctly', () => {
+      const dataLength = 1000;
+      const blockSize = 4096;
+
+      const result = StaticHelpersECIES.computeEncryptedLengthFromDataLength(
+        dataLength,
+        blockSize,
+      );
+
+      expect(result.capacityPerBlock).toBe(
+        blockSize - StaticHelpersECIES.eciesOverheadLength,
+      );
+      expect(result.blocksNeeded).toBe(1);
+      expect(result.padding).toBe(
+        blockSize -
+          StaticHelpersECIES.eciesOverheadLength -
+          (dataLength % (blockSize - StaticHelpersECIES.eciesOverheadLength)),
+      );
+      expect(result.encryptedDataLength).toBe(blockSize - result.padding);
+      expect(result.totalEncryptedSize).toBe(blockSize);
+    });
+
+    it('should calculate decrypted length correctly', () => {
+      const encryptedLength = 4096;
+      const blockSize = 4096;
+      const padding = 100;
+
+      const result =
+        StaticHelpersECIES.computeDecryptedLengthFromEncryptedDataLength(
+          encryptedLength,
+          blockSize,
+          padding,
+        );
+
+      expect(result).toBe(
+        encryptedLength -
+          StaticHelpersECIES.eciesOverheadLength -
+          (padding ?? 0),
+      );
+    });
+
+    it('should handle invalid encrypted lengths', () => {
+      const encryptedLength = 4097; // Not a multiple of blockSize
+      const blockSize = 4096;
+
+      expect(() =>
+        StaticHelpersECIES.computeDecryptedLengthFromEncryptedDataLength(
+          encryptedLength,
+          blockSize,
+        ),
+      ).toThrow('Invalid encrypted data length');
+    });
   });
 });

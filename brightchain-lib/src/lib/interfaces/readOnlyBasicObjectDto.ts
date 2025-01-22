@@ -1,5 +1,5 @@
-import { HexString } from "../types";
-import { IBasicObjectDTO } from "./basicObjectDto";
+import { HexString } from '../types';
+import { IBasicObjectDTO } from './basicObjectDto';
 
 export interface IReadOnlyBasicObjectDTO extends IBasicObjectDTO {
   readonly id: HexString;

@@ -38,7 +38,7 @@ export class JsonStore<K> implements IJsonStore<K> {
       value && typeof value === 'object' && (value as any).toJSON;
     this._data.set(
       key,
-      hasToJSON ? (value as any).toJSON() : JSON.stringify(value)
+      hasToJSON ? (value as any).toJSON() : JSON.stringify(value),
     );
   }
 }

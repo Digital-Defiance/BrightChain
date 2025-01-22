@@ -1,10 +1,10 @@
-import { X86Cpu } from './x86Cpu';
+import { CpuInstructions } from '../enumerations/cpuInstructions';
 import { CpuRegisters } from '../enumerations/cpuRegisters';
 import * as instructions from './instructions';
-import { CpuInstructions } from '../enumerations/cpuInstructions';
+import { X86Cpu } from './x86Cpu';
 
 export function buildInstructionMapForCpu(
-  cpu: X86Cpu
+  cpu: X86Cpu,
 ): Map<number, () => void> {
   return new Map<number, () => void>([
     [CpuInstructions.fn0x0f, instructions.invokeFn0x0f(cpu)],
@@ -69,7 +69,7 @@ export function buildInstructionArray(cpu: X86Cpu): Array<() => void> {
 }
 
 export function X83Instructions(
-  cpu: X86Cpu
+  cpu: X86Cpu,
 ): Map<number, (reg: number, op2: number) => void> {
   return new Map<number, (reg: number, op2: number) => void>([
     // add
@@ -84,7 +84,7 @@ export function X83Instructions(
 }
 
 export function fn0x81Instructions(
-  cpu: X86Cpu
+  cpu: X86Cpu,
 ): Map<number, (reg: number, value?: number) => void> {
   return new Map<number, (reg: number, value?: number) => void>([
     // sub
@@ -129,7 +129,7 @@ export function getSysCallInstruction(cpu: X86Cpu, opcode: number): () => void {
 
 export function getInterruptInstruction(
   cpu: X86Cpu,
-  opcode: number
+  opcode: number,
 ): () => void {
   const instruction = cpu.Interrupts.get(opcode);
   if (instruction === undefined) {
@@ -148,7 +148,7 @@ export function getFn0x0fInstruction(cpu: X86Cpu, opcode: number): () => void {
 
 export function getFn0x81Instruction(
   cpu: X86Cpu,
-  opcode: number
+  opcode: number,
 ): (reg: number, value?: number) => void {
   const instruction = fn0x81Instructions(cpu).get(opcode);
   if (instruction === undefined) {
@@ -159,7 +159,7 @@ export function getFn0x81Instruction(
 
 export function getX83Instruction(
   cpu: X86Cpu,
-  opcode: number
+  opcode: number,
 ): (reg: number, op2: number) => void {
   const instruction = X83Instructions(cpu).get(opcode);
   if (instruction === undefined) {

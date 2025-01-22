@@ -3,7 +3,7 @@ import { HexString } from '../types';
 
 export interface IBasicObjectDTO<
   I extends AnyBrand = HexString,
-  D extends Date | string = Date
+  D extends Date | string = Date,
 > {
   /**
    * ID of the data object. Must be unique, usually UUID v4.
