@@ -1,5 +1,6 @@
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
+import { EmailString } from '../emailString';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
@@ -33,19 +34,15 @@ describe('ConstituentBlockListBlock', () => {
   let creator: BrightChainMember;
   let dataAddresses: Array<ChecksumBuffer>;
 
-  beforeEach(() => {
+  beforeAll(() => {
     // Create an anonymous member with User type
-    const anonymous = BrightChainMember.anonymous();
-    creator = new BrightChainMember(
+    creator = BrightChainMember.newMember(
       MemberType.User,
-      'Anonymous',
-      anonymous.contactEmail,
-      anonymous.publicKey,
-      anonymous.votingPublicKey,
-      anonymous.privateKey,
-      anonymous.wallet,
+      'Test User',
+      new EmailString('test@example.com'),
     );
-
+  });
+  beforeEach(() => {
     // Create some mock addresses
     dataAddresses = Array(3)
       .fill(null)

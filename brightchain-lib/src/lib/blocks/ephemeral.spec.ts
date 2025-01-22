@@ -1,8 +1,10 @@
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
+import { EmailString } from '../emailString';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import MemberType from '../enumerations/memberType';
 import { GuidV4 } from '../guid';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
@@ -60,8 +62,12 @@ class TestEphemeralBlock extends EphemeralBlock {
 describe('EphemeralBlock', () => {
   let creator: BrightChainMember;
 
-  beforeEach(() => {
-    creator = BrightChainMember.anonymous();
+  beforeAll(() => {
+    creator = BrightChainMember.newMember(
+      MemberType.User,
+      'test',
+      new EmailString('test@example.com'),
+    );
   });
 
   it('should construct correctly', () => {

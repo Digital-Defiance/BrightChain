@@ -1,7 +1,9 @@
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
+import { EmailString } from '../emailString';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import MemberType from '../enumerations/memberType';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer } from '../types';
@@ -54,8 +56,12 @@ class TestEncryptedBlock extends EncryptedBlock {
 describe('EncryptedBlock', () => {
   let creator: BrightChainMember;
 
-  beforeEach(() => {
-    creator = BrightChainMember.anonymous();
+  beforeAll(() => {
+    creator = BrightChainMember.newMember(
+      MemberType.User,
+      'Alice',
+      new EmailString('alice@example.com'),
+    );
   });
 
   it('should construct correctly with encryption overhead', () => {

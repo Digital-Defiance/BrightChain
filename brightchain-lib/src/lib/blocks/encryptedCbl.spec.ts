@@ -1,7 +1,9 @@
 import { BrightChainMember } from '../brightChainMember';
 import { TUPLE_SIZE } from '../constants';
+import { EmailString } from '../emailString';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import MemberType from '../enumerations/memberType';
 import { GuidV4 } from '../guid';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
@@ -116,15 +118,20 @@ describe('EncryptedConstituentBlockListBlock', () => {
   let cblBlock: ConstituentBlockListBlock;
   let testDate: Date;
 
+  beforeAll(() => {
+    encryptor = BrightChainMember.newMember(
+      MemberType.User,
+      'Test User',
+      new EmailString('test@example.com'),
+    );
+  });
+
   beforeEach(() => {
     // Create a fixed date for consistent testing
     testDate = new Date(Date.now() - 1000); // 1 second ago, using timestamp to avoid any timezone issues
 
     // Create a GuidV4 creator since it doesn't require signature validation
     creator = GuidV4.new();
-
-    // Create an anonymous member for encryption
-    encryptor = BrightChainMember.anonymous();
 
     blockSize = BlockSize.Small;
 

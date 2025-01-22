@@ -78,49 +78,6 @@ export class BrightChainMember {
     this.creatorId = creatorId ?? this.id;
   }
 
-  /**
-   * Create an anonymous member for use with blocks that don't need a real owner.
-   * In the Owner Free Filesystem (OFF), anonymous members are used for:
-   * 1. Temporary blocks during processing
-   * 2. System-generated blocks
-   * 3. Blocks that don't require ownership tracking
-   */
-  public static anonymous(): BrightChainMember {
-    const mnemonic = StaticHelpersECIES.generateNewMnemonic();
-    const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
-
-    // Create ECDH key pair for consistent format
-    const ecdh = createECDH(StaticHelpersECIES.curveName);
-    ecdh.generateKeys();
-    const privateKey = ecdh.getPrivateKey();
-    // Get public key in uncompressed format (includes 0x04 prefix)
-    const publicKeyWithPrefix = ecdh.getPublicKey(null, 'uncompressed');
-
-    // Get raw public key (without 0x04 prefix) for voting key derivation
-    const rawPublicKey = publicKeyWithPrefix.subarray(1);
-    // Derive voting keys
-    const votingKeypair =
-      StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
-        privateKey,
-        rawPublicKey,
-      );
-    // Convert voting public key to buffer
-    const votingPublicKeyBuffer = StaticHelpersVoting.votingPublicKeyToBuffer(
-      votingKeypair.publicKey,
-    );
-
-    // Create member with ECDH keys and derived voting public key
-    return new BrightChainMember(
-      MemberType.Anonymous,
-      'Anonymous',
-      new EmailString('anonymous@brightchain.org'),
-      publicKeyWithPrefix,
-      votingPublicKeyBuffer,
-      privateKey,
-      wallet,
-    );
-  }
-
   public get hasPrivateKey(): boolean {
     return this._privateKey !== undefined;
   }

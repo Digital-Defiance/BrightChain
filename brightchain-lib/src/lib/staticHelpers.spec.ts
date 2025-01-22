@@ -42,7 +42,6 @@ describe('staticHelpers', () => {
       'System Member',
       new EmailString('system@example.com'),
     );
-    const anonymousMember = BrightChainMember.anonymous();
     const userMember = BrightChainMember.newMember(
       MemberType.User,
       'User Member',
@@ -50,7 +49,6 @@ describe('staticHelpers', () => {
     );
     expect(StaticHelpers.membersAreAllUsers([userMember])).toBe(true);
     expect(StaticHelpers.membersAreAllUsers([systemMember])).toBe(false);
-    expect(StaticHelpers.membersAreAllUsers([anonymousMember])).toBe(false);
     expect(StaticHelpers.membersAreAllUsers([systemMember, userMember])).toBe(
       false,
     );

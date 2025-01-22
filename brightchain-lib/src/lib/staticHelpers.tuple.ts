@@ -105,6 +105,7 @@ export abstract class StaticHelpersTuple {
    * XOR a whitened block with its whitening blocks to recover the original data
    */
   public static xorDestPrimeWhitenedToOwned(
+    creator: BrightChainMember,
     primeWhitenedBlock: WhitenedBlock,
     whiteners: WhitenedBlock[],
   ): OwnedDataBlock {
@@ -128,7 +129,7 @@ export abstract class StaticHelpersTuple {
 
       // Create owned data block
       return new OwnedDataBlock(
-        BrightChainMember.anonymous(),
+        creator,
         primeWhitenedBlock.blockSize,
         xoredData,
         undefined, // Let constructor calculate checksum
@@ -148,10 +149,12 @@ export abstract class StaticHelpersTuple {
    * Create a tuple from a whitened block and its whitening blocks
    */
   public static makeTupleFromDestXor(
+    creator: BrightChainMember,
     primeWhitenedBlock: WhitenedBlock,
     whiteners: WhitenedBlock[],
   ): InMemoryBlockTuple {
     const ownedDataBlock = this.xorDestPrimeWhitenedToOwned(
+      creator,
       primeWhitenedBlock,
       whiteners,
     );
@@ -163,17 +166,19 @@ export abstract class StaticHelpersTuple {
    * XOR a whitened block with its whitening blocks to recover a CBL
    */
   public static xorPrimeWhitenedToCbl(
+    creator: BrightChainMember,
     primeWhitened: WhitenedBlock,
     whiteners: WhitenedBlock[],
   ): ConstituentBlockListBlock {
     const ownedBlock = StaticHelpersTuple.xorDestPrimeWhitenedToOwned(
+      creator,
       primeWhitened,
       whiteners,
     );
 
     return new ConstituentBlockListBlock(
       ownedBlock.blockSize,
-      BrightChainMember.anonymous(),
+      creator,
       BigInt(ownedBlock.data.length),
       [], // No addresses yet
       ownedBlock.dateCreated,
@@ -184,11 +189,12 @@ export abstract class StaticHelpersTuple {
    * XOR an encrypted whitened block with its whitening blocks and decrypt to recover a CBL
    */
   public static xorPrimeWhitenedEncryptedToCbl(
+    creator: BrightChainMember,
     primeWhitened: WhitenedBlock,
     whiteners: WhitenedBlock[],
-    creator: BrightChainMember,
   ): ConstituentBlockListBlock {
     const ownedBlock = StaticHelpersTuple.xorDestPrimeWhitenedToOwned(
+      creator,
       primeWhitened,
       whiteners,
     );
