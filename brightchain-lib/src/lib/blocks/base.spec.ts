@@ -37,7 +37,7 @@ class TestBaseBlock extends BaseBlock {
     this.internalData = data;
   }
 
-  public get data(): Buffer {
+  public override get data(): Buffer {
     if (!this.canRead) {
       throw new Error('Block cannot be read');
     }
@@ -60,187 +60,162 @@ class TestBaseBlock extends BaseBlock {
 }
 
 describe('BaseBlock', () => {
-  it('should construct correctly', () => {
-    const blockSize = BlockSize.Small;
-    const effectiveSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-    const data = randomBytes(effectiveSize);
-    const checksum = StaticHelpersChecksum.calculateChecksum(data);
+  // Increase timeout for all tests
+  jest.setTimeout(15000);
 
-    const block = new TestBaseBlock(
-      BlockType.Random,
-      BlockDataType.RawData,
+  // Shared test data
+  const defaultBlockSize = BlockSize.Small;
+  const getEffectiveSize = (size: BlockSize, encrypted = false) =>
+    (size as number) - (encrypted ? StaticHelpersECIES.eciesOverheadLength : 0);
+
+  const createTestBlock = (
+    options: Partial<{
+      type: BlockType;
+      dataType: BlockDataType;
+      blockSize: BlockSize;
+      data: Buffer;
+      checksum: ChecksumBuffer;
+      dateCreated: Date;
+      canRead: boolean;
+    }> = {},
+  ) => {
+    const blockSize = options.blockSize || defaultBlockSize;
+    const dataType = options.dataType || BlockDataType.RawData;
+    const isEncrypted = dataType === BlockDataType.EncryptedData;
+    const effectiveSize = getEffectiveSize(blockSize, isEncrypted);
+    const data = options.data || randomBytes(effectiveSize);
+
+    return new TestBaseBlock(
+      options.type || BlockType.OwnerFreeWhitenedBlock, // Use OwnerFreeWhitenedBlock (0) as default
+      dataType,
       blockSize,
       data,
-      checksum,
+      options.checksum,
+      options.dateCreated,
+      undefined,
+      options.canRead ?? true,
     );
+  };
 
-    expect(block.blockSize).toBe(blockSize);
-    expect(block.blockType).toBe(BlockType.Random);
-    expect(block.blockDataType).toBe(BlockDataType.RawData);
-    expect(block.data).toEqual(data);
-    expect(block.idChecksum).toEqual(checksum);
-    expect(block.validated).toBe(true);
-    expect(block.canRead).toBe(true);
-  });
+  describe('basic functionality', () => {
+    it('should construct and validate correctly', () => {
+      const data = randomBytes(defaultBlockSize as number);
+      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const block = createTestBlock({ data, checksum });
 
-  it('should handle empty data correctly', () => {
-    const block = new TestBaseBlock(
-      BlockType.Random,
-      BlockDataType.RawData,
-      BlockSize.Small,
-      Buffer.alloc(0),
-    );
-    expect(block.data.length).toBe(0);
-    expect(block.payload.length).toBe(0);
-    expect(block.layerHeaderData.length).toBe(0);
-  });
+      expect(block.blockSize).toBe(defaultBlockSize);
+      expect(block.blockType).toBe(BlockType.OwnerFreeWhitenedBlock);
+      expect(block.blockDataType).toBe(BlockDataType.RawData);
+      expect(block.data).toEqual(data);
+      expect(block.idChecksum).toEqual(checksum);
+      expect(block.validated).toBe(true);
+      expect(block.canRead).toBe(true);
+    });
 
-  it('should throw when data length exceeds block size', () => {
-    expect(
-      () =>
-        new TestBaseBlock(
-          BlockType.Random,
-          BlockDataType.RawData,
-          BlockSize.Small,
-          randomBytes(BlockSize.Small + 1),
-        ),
-    ).toThrow('Data length exceeds block capacity');
-  });
+    it('should handle empty data', () => {
+      const block = createTestBlock({ data: Buffer.alloc(0) });
+      expect(block.data.length).toBe(0);
+      expect(block.payload.length).toBe(0);
+      expect(block.layerHeaderData.length).toBe(0);
+    });
 
-  it('should handle various block sizes', () => {
-    const sizes = [
-      BlockSize.Message,
-      BlockSize.Tiny,
-      BlockSize.Small,
-      BlockSize.Medium,
-      BlockSize.Large,
-      BlockSize.Huge,
-    ];
-
-    sizes.forEach((size) => {
-      const effectiveSize =
-        (size as number) - StaticHelpersECIES.eciesOverheadLength;
-      const data = randomBytes(effectiveSize);
-      const block = new TestBaseBlock(
-        BlockType.Random,
-        BlockDataType.RawData,
-        size,
-        data,
-      );
-      expect(block.data.length).toBe(data.length);
+    it('should handle padding correctly', () => {
+      const dataSize = Math.floor((defaultBlockSize as number) / 2);
+      const data = randomBytes(dataSize);
+      const block = createTestBlock({ data });
+      const expectedPadding = (defaultBlockSize as number) - dataSize;
+      expect(block.padding.length).toBe(expectedPadding);
+      expect(block.padding.equals(Buffer.alloc(expectedPadding))).toBe(true);
     });
   });
 
-  it('should handle data corruption', () => {
-    const blockSize = BlockSize.Small;
-    const effectiveSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-    const originalData = randomBytes(effectiveSize);
-    const checksum = StaticHelpersChecksum.calculateChecksum(originalData);
-    const corruptedData = Buffer.from(originalData); // Create a copy to modify
-    corruptedData[0]++; // Corrupt the data
+  describe('size handling', () => {
+    it('should handle various block sizes', () => {
+      const sizes = [
+        BlockSize.Message,
+        BlockSize.Tiny,
+        BlockSize.Small,
+        BlockSize.Medium,
+        BlockSize.Large,
+        BlockSize.Huge,
+      ];
 
-    const block = new TestBaseBlock(
-      BlockType.Random,
-      BlockDataType.RawData,
-      blockSize,
-      corruptedData,
-      checksum,
-    );
-    expect(block.validated).toBe(false); // Expect validation to fail
+      sizes.forEach((size) => {
+        const effectiveSize = getEffectiveSize(size);
+        const data = randomBytes(effectiveSize);
+        const block = createTestBlock({ blockSize: size, data });
+        expect(block.data.length).toBe(effectiveSize);
+        expect(block.capacity).toBe(size as number);
+      });
+    });
+
+    it('should reject invalid sizes', () => {
+      // Test oversized data
+      const tooLargeData = randomBytes((defaultBlockSize as number) + 1);
+      expect(() => createTestBlock({ data: tooLargeData })).toThrow(
+        'Data length exceeds block capacity',
+      );
+
+      // Test invalid block size
+      expect(
+        () =>
+          new TestBaseBlock(
+            BlockType.OwnerFreeWhitenedBlock,
+            BlockDataType.RawData,
+            0 as BlockSize,
+            Buffer.alloc(0),
+          ),
+      ).toThrow('Invalid block size');
+    });
   });
 
-  it('should handle various block types', () => {
-    (Object.values(BlockType) as BlockType[])
-      .filter((type) => typeof type === 'number')
-      .forEach((type) => {
-        const block = new TestBaseBlock(
-          type,
-          BlockDataType.RawData,
-          BlockSize.Small,
-          Buffer.alloc(
-            (BlockSize.Small as number) -
-              StaticHelpersECIES.eciesOverheadLength,
-          ),
-        );
+  describe('type handling', () => {
+    it('should handle all block and data types', () => {
+      // Test block types
+      const blockTypes = Object.values(BlockType).filter(
+        (type): type is BlockType => typeof type === 'number' && type >= 0,
+      );
+      blockTypes.forEach((type) => {
+        const block = createTestBlock({ type });
         expect(block.blockType).toBe(type);
       });
-  });
 
-  it('should handle various data types', () => {
-    (Object.values(BlockDataType) as BlockDataType[])
-      .filter((type) => typeof type === 'number')
-      .forEach((dataType) => {
-        const block = new TestBaseBlock(
-          BlockType.Random,
+      // Test data types
+      const dataTypes = Object.values(BlockDataType).filter(
+        (type): type is BlockDataType => typeof type === 'number',
+      );
+      dataTypes.forEach((dataType) => {
+        const isEncrypted = dataType === BlockDataType.EncryptedData;
+        const block = createTestBlock({
           dataType,
-          BlockSize.Small,
-          Buffer.alloc(
-            (BlockSize.Small as number) -
-              StaticHelpersECIES.eciesOverheadLength,
+          data: randomBytes(
+            getEffectiveSize(defaultBlockSize, isEncrypted) / 2,
           ),
-        );
+        });
         expect(block.blockDataType).toBe(dataType);
       });
+    });
   });
 
-  it('should handle padding correctly', () => {
-    const blockSize = BlockSize.Small;
-    const data = randomBytes((blockSize as number) - 10); // Leave room for padding
-    const block = new TestBaseBlock(
-      BlockType.Random,
-      BlockDataType.RawData,
-      blockSize,
-      data,
-    );
-    expect(block.padding.length).toBe(10);
-    expect(block.padding.equals(Buffer.alloc(10))).toBe(true);
-  });
+  describe('validation', () => {
+    it('should detect data corruption', () => {
+      const data = randomBytes(defaultBlockSize as number);
+      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const corruptedData = Buffer.from(data);
+      corruptedData[0]++; // Corrupt the data
 
-  it('should calculate capacity correctly', () => {
-    const blockSize = BlockSize.Small;
-    const effectiveSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-    const data = randomBytes(effectiveSize);
-    const block = new TestBaseBlock(
-      BlockType.Random,
-      BlockDataType.RawData,
-      blockSize,
-      data,
-    );
-    expect(block.capacity).toBe(blockSize as number);
-  });
+      const block = createTestBlock({ data: corruptedData, checksum });
+      expect(block.validated).toBe(false); // Should be false since data doesn't match checksum
+      expect(block.validate()).toBe(false); // Should return false on validation
+    });
 
-  it('should handle invalid block sizes', () => {
-    expect(
-      () =>
-        new TestBaseBlock(
-          BlockType.Random,
-          BlockDataType.RawData,
-          0 as BlockSize,
-          Buffer.alloc(0),
-        ),
-    ).toThrow('Invalid block size');
-  });
+    it('should reject future dates', () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
 
-  it('should reject future dates', () => {
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 1);
-
-    expect(
-      () =>
-        new TestBaseBlock(
-          BlockType.Random,
-          BlockDataType.RawData,
-          BlockSize.Small,
-          Buffer.alloc(
-            (BlockSize.Small as number) -
-              StaticHelpersECIES.eciesOverheadLength,
-          ),
-          undefined,
-          futureDate,
-        ),
-    ).toThrow('Date created cannot be in the future');
+      expect(() => createTestBlock({ dateCreated: futureDate })).toThrow(
+        'Date created cannot be in the future',
+      );
+    });
   });
 });

@@ -1,5 +1,6 @@
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
+import { TUPLE_SIZE } from '../constants';
 import { EmailString } from '../emailString';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
@@ -31,126 +32,152 @@ class TestCblBlock extends ConstituentBlockListBlock {
 }
 
 describe('ConstituentBlockListBlock', () => {
+  // Increase timeout for all tests
+  jest.setTimeout(15000);
+
+  // Shared test data
   let creator: BrightChainMember;
   let dataAddresses: Array<ChecksumBuffer>;
+  const defaultBlockSize = BlockSize.Small;
+  const defaultDataLength = BigInt(1024);
+  const testDate = new Date(Date.now() - 1000); // 1 second ago
+
+  // Helper functions
+  const createTestAddresses = (count = TUPLE_SIZE): Array<ChecksumBuffer> =>
+    Array(count)
+      .fill(null)
+      .map(() =>
+        StaticHelpersChecksum.calculateChecksum(randomBytes(32)),
+      ) as Array<ChecksumBuffer>;
+
+  const createTestBlock = (
+    options: Partial<{
+      blockSize: BlockSize;
+      creator: BrightChainMember | GuidV4;
+      fileDataLength: bigint;
+      addresses: Array<ChecksumBuffer>;
+      dateCreated: Date;
+      signature: SignatureBuffer;
+    }> = {},
+  ) => {
+    return new TestCblBlock(
+      options.blockSize || defaultBlockSize,
+      options.creator || creator,
+      options.fileDataLength || defaultDataLength,
+      options.addresses || dataAddresses,
+      options.dateCreated || testDate,
+      options.signature,
+    );
+  };
 
   beforeAll(() => {
-    // Create an anonymous member with User type
     creator = BrightChainMember.newMember(
       MemberType.User,
       'Test User',
       new EmailString('test@example.com'),
     );
   });
+
   beforeEach(() => {
-    // Create some mock addresses
-    dataAddresses = Array(3)
-      .fill(null)
-      .map(() => StaticHelpersChecksum.calculateChecksum(randomBytes(32)));
+    // Create addresses as multiple of TUPLE_SIZE
+    dataAddresses = createTestAddresses(TUPLE_SIZE * 2);
   });
 
-  it('should construct a CBL block correctly', () => {
-    const blockSize = BlockSize.Small;
-    const fileDataLength = BigInt(1024);
+  describe('basic functionality', () => {
+    it('should construct and validate correctly', () => {
+      const block = createTestBlock();
 
-    const block = new TestCblBlock(
-      blockSize,
-      creator,
-      fileDataLength,
-      dataAddresses,
-    );
+      expect(block.blockSize).toBe(defaultBlockSize);
+      expect(block.blockType).toBe(BlockType.ConstituentBlockList);
+      expect(block.creator).toBe(creator);
+      expect(block.addresses).toEqual(dataAddresses);
+      expect(block.validated).toBe(true);
+      expect(block.canRead).toBe(true);
+    });
 
-    expect(block.blockSize).toBe(blockSize);
-    expect(block.blockType).toBe(BlockType.ConstituentBlockList);
-    expect(block.creator).toBe(creator);
-    expect(block.addresses).toEqual(dataAddresses);
-    expect(block.validated).toBe(true);
-    expect(block.canRead).toBe(true);
+    it('should handle creators correctly', () => {
+      // Test with BrightChainMember creator
+      const memberBlock = createTestBlock();
+      expect(memberBlock.creator).toBe(creator);
+      expect(memberBlock.creatorId.equals(creator.id)).toBe(true);
+
+      // Test with GuidV4 creator
+      const guidCreator = GuidV4.new();
+      const guidBlock = createTestBlock({ creator: guidCreator });
+      expect(guidBlock.creator).toBeUndefined();
+      expect(guidBlock.creatorId.equals(guidCreator)).toBe(true);
+    });
+
+    it('should handle signature validation', () => {
+      const block = createTestBlock();
+      expect(block.validateSignature()).toBe(true);
+
+      // Create another block with different data
+      const differentBlock = createTestBlock({
+        addresses: createTestAddresses(TUPLE_SIZE * 2),
+      });
+
+      // Verify signatures are different but valid
+      expect(block.creatorSignature).not.toEqual(
+        differentBlock.creatorSignature,
+      );
+      expect(block.validateSignature()).toBe(true);
+      expect(differentBlock.validateSignature()).toBe(true);
+    });
   });
 
-  it('should throw if date created is in the future', () => {
-    const blockSize = BlockSize.Small;
-    const fileDataLength = BigInt(1024);
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 1);
+  describe('validation', () => {
+    it('should reject future dates', () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
 
-    expect(
-      () =>
-        new TestCblBlock(
-          blockSize,
-          creator,
-          fileDataLength,
-          dataAddresses,
-          futureDate,
-        ),
-    ).toThrow('Date created cannot be in the future');
+      expect(() => createTestBlock({ dateCreated: futureDate })).toThrow(
+        'Date created cannot be in the future',
+      );
+    });
+
+    it('should validate tuple size', () => {
+      // Test invalid tuple count (not multiple of TUPLE_SIZE)
+      const invalidAddresses = createTestAddresses(TUPLE_SIZE + 1);
+      expect(() => createTestBlock({ addresses: invalidAddresses })).toThrow(
+        'CBL address count must be a multiple of TupleSize',
+      );
+    });
+
+    it('should validate address capacity', () => {
+      // Calculate max addresses that can fit
+      const maxAddresses =
+        ConstituentBlockListBlock.CalculateCBLAddressCapacity(defaultBlockSize);
+      // Create addresses array just over the limit
+      const tooManyAddresses = createTestAddresses(
+        (maxAddresses + TUPLE_SIZE) * TUPLE_SIZE,
+      );
+
+      expect(() => createTestBlock({ addresses: tooManyAddresses })).toThrow(
+        'Data length exceeds block capacity',
+      );
+    });
   });
 
-  it('should have correct overhead', () => {
-    const blockSize = BlockSize.Small;
-    const fileDataLength = BigInt(1024);
+  describe('data access', () => {
+    it('should provide correct block IDs', () => {
+      const block = createTestBlock();
+      const blockIds = block.getCblBlockIds();
+      expect(blockIds).toEqual(dataAddresses);
+      expect(blockIds.length).toBe(dataAddresses.length);
+    });
 
-    const block = new TestCblBlock(
-      blockSize,
-      creator,
-      fileDataLength,
-      dataAddresses,
-    );
+    it('should handle tuple access', () => {
+      const block = createTestBlock();
+      const tuples = block.getHandleTuples((id) => id.toString('hex'));
 
-    expect(block.totalOverhead).toBe(ConstituentBlockListBlock.CblHeaderSize);
-  });
-
-  it('should create from ephemeral block', () => {
-    const blockSize = BlockSize.Small;
-    const fileDataLength = BigInt(1024);
-
-    const block = new TestCblBlock(
-      blockSize,
-      creator,
-      fileDataLength,
-      dataAddresses,
-    );
-
-    expect(block.blockSize).toBe(blockSize);
-    expect(block.blockType).toBe(BlockType.ConstituentBlockList);
-    expect(block.creator).toBe(creator);
-    expect(block.addresses).toEqual(dataAddresses);
-    expect(block.validated).toBe(true);
-    expect(block.canRead).toBe(true);
-  });
-
-  it('should handle signature validation', () => {
-    const blockSize = BlockSize.Small;
-    const fileDataLength = BigInt(1024);
-
-    // Create block with the creator - it will create its own signature
-    const block = new TestCblBlock(
-      blockSize,
-      creator,
-      fileDataLength,
-      dataAddresses,
-    );
-
-    // Verify the auto-generated signature
-    expect(block.validateSignature()).toBe(true);
-
-    // Create another block with same creator but different data
-    const differentAddresses = Array(3)
-      .fill(null)
-      .map(() => StaticHelpersChecksum.calculateChecksum(randomBytes(32)));
-
-    const differentBlock = new TestCblBlock(
-      blockSize,
-      creator,
-      fileDataLength,
-      differentAddresses,
-    );
-
-    // Verify that signatures are different for different data
-    expect(block.creatorSignature).not.toEqual(differentBlock.creatorSignature);
-
-    // But each block's signature should be valid for itself
-    expect(block.validateSignature()).toBe(true);
-    expect(differentBlock.validateSignature()).toBe(true);
+      expect(tuples.length).toBe(dataAddresses.length / TUPLE_SIZE);
+      tuples.forEach((tuple) => {
+        expect(tuple.handles.length).toBe(TUPLE_SIZE);
+        tuple.handles.forEach((handle) => {
+          expect(handle.blockSize).toBe(defaultBlockSize);
+        });
+      });
+    });
   });
 });

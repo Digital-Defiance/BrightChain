@@ -104,6 +104,26 @@ export class IsolatedPublicKey extends PublicKey {
     return this.tagCiphertext(ciphertext);
   }
 
+  override multiply(ciphertext: bigint, constant: bigint): bigint {
+    this.verifyKeyId();
+    const instanceId = this.extractInstanceId(ciphertext);
+
+    if (!instanceId.equals(this._currentInstanceId)) {
+      throw new Error(
+        'Key isolation violation: ciphertext from different key instance',
+      );
+    }
+
+    const hmacLength = 64;
+    const ciphertextString = ciphertext.toString(16);
+    const actualCiphertext = BigInt(
+      `0x${ciphertextString.slice(0, -hmacLength)}`,
+    );
+
+    const product = super.multiply(actualCiphertext, constant);
+    return this.tagCiphertext(product);
+  }
+
   override addition(a: bigint, b: bigint): bigint {
     this.verifyKeyId();
     const aInstanceID = this.extractInstanceId(a);

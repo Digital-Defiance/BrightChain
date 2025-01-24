@@ -4,6 +4,7 @@ import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { GuidV4 } from '../guid';
 import { IEncryptedBlock } from '../interfaces/encryptedBlock';
+import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer } from '../types';
 import { EphemeralBlock } from './ephemeral';
@@ -63,17 +64,29 @@ export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
       }
     }
 
+    // Calculate checksum from entire data buffer if not provided
+    const finalChecksum =
+      checksum ?? StaticHelpersChecksum.calculateChecksum(data);
+
+    // Validate checksum before calling super
+    if (checksum) {
+      const computedChecksum = StaticHelpersChecksum.calculateChecksum(data);
+      if (!computedChecksum.equals(checksum)) {
+        throw new Error('Checksum mismatch');
+      }
+    }
+
     super(
       type,
       BlockDataType.EncryptedData,
       blockSize,
       data,
-      checksum,
+      finalChecksum,
       creator,
       dateCreated,
-      actualDataLength,
+      actualDataLength ?? data.length - StaticHelpersECIES.eciesOverheadLength, // Use unencrypted length
       canRead,
-      true, // encrypted flag
+      true, // Set encrypted flag to true since this is an encrypted block
       canPersist,
     );
   }
