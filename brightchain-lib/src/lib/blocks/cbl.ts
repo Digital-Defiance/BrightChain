@@ -1,3 +1,4 @@
+import { Readable } from 'stream';
 import { BrightChainMember } from '../brightChainMember';
 import { MAX_TUPLE_SIZE, MIN_TUPLE_SIZE, TUPLE_SIZE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -256,6 +257,9 @@ export class ConstituentBlockListBlock
     block: BaseBlock,
     creator?: BrightChainMember,
   ): ConstituentBlockListBlock {
+    if (block.data instanceof Readable) {
+      throw new Error('Block.data must be a buffer');
+    }
     const metadata = ConstituentBlockListBlock.parseMetadata(block.data);
     const addressData = block.data.subarray(
       ConstituentBlockListBlock.CblHeaderSize,
@@ -311,21 +315,29 @@ export class ConstituentBlockListBlock
     );
 
     const data = Buffer.concat([headerData, addresses]);
-    const cblDataSize =
-      ConstituentBlockListBlock.CblHeaderSize +
-      cblAddressCount * StaticHelpersChecksum.Sha3ChecksumBufferLength;
+    const checksum = StaticHelpersChecksum.calculateChecksum(data);
+    const metadata = {
+      size: blockSize,
+      type: BlockType.ConstituentBlockList,
+      blockSize,
+      blockType: BlockType.ConstituentBlockList,
+      dataType: BlockDataType.EphemeralStructuredData,
+      dateCreated: dateCreated?.toISOString() ?? new Date().toISOString(),
+      lengthBeforeEncryption: data.length,
+      creator,
+      encrypted: false,
+    };
 
     super(
       BlockType.ConstituentBlockList,
       BlockDataType.EphemeralStructuredData,
       blockSize,
       data,
-      undefined,
-      creator,
+      checksum,
       dateCreated,
-      cblDataSize,
+      metadata,
       true, // canRead
-      false, // encrypted
+      true, // canPersist
     );
 
     // Only validate signature if creator is a BrightChainMember and signature is provided
@@ -360,9 +372,9 @@ export class ConstituentBlockListBlock
   /**
    * Get Block Handle Tuples for the CBL block
    */
-  public getHandleTuples(
+  public async getHandleTuples(
     getDiskBlockPath: (id: ChecksumBuffer, blockSize: BlockSize) => string,
-  ): Array<BlockHandleTuple> {
+  ): Promise<Array<BlockHandleTuple>> {
     if (!this.canRead) {
       throw new Error('Block cannot be read');
     }
@@ -371,13 +383,18 @@ export class ConstituentBlockListBlock
 
     for (let i = 0; i < blockIds.length; i += this.tupleSize) {
       const tupleIds = blockIds.slice(i, i + this.tupleSize);
-      const handles = tupleIds.map(
-        (id) =>
-          new BlockHandle(
-            id,
+      const handles = await Promise.all(
+        tupleIds.map((id) =>
+          BlockHandle.createFromPath(
             this.blockSize,
             getDiskBlockPath(id, this.blockSize),
+            id,
+            undefined, // dateCreated
+            undefined, // metadata
+            true, // canRead
+            true, // canPersist
           ),
+        ),
       );
       handleTuples.push(new BlockHandleTuple(handles));
     }

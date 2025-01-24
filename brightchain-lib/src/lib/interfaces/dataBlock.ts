@@ -63,26 +63,6 @@ export interface IDataBlock extends IBlock {
   get canDecrypt(): boolean;
 
   /**
-   * Whether the block's data has been validated.
-   * Used for:
-   * 1. Integrity assurance
-   * 2. Operation safety
-   * 3. Error prevention
-   */
-  get validated(): boolean;
-
-  /**
-   * Trigger data validation.
-   * Checks:
-   * 1. Checksum correctness
-   * 2. Data integrity
-   * 3. Format validity
-   *
-   * @returns True if validation succeeds
-   */
-  validate(): boolean;
-
-  /**
    * Whether the block can be cryptographically signed.
    * Determined by:
    * 1. Block type

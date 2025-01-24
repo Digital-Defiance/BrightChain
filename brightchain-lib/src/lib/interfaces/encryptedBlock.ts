@@ -4,7 +4,7 @@ export interface IEncryptedBlock extends IDataBlock {
   /**
    * The length of the encrypted data
    */
-  get encryptedLength(): number;
+  get encryptedLength(): number | bigint;
   /**
    * The ephemeral public key used to encrypt the data
    */

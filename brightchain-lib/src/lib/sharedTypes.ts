@@ -1,5 +1,6 @@
 import { Request, RequestHandler, Response } from 'express';
 import { ValidationChain } from 'express-validator';
+import MemberType from './enumerations/memberType';
 import { StringLanguages } from './enumerations/stringLanguages';
 import { StringNames } from './enumerations/stringNames';
 import { IApiErrorResponse } from './interfaces/responses/apiError';
@@ -91,3 +92,35 @@ export type LanguageFlagCollection = { [key in StringLanguages]: string };
 export type LanguageCodeCollection = { [key in StringLanguages]: string };
 
 export const DefaultLanguage: StringLanguages = StringLanguages.EnglishUS;
+
+export type BlocksApiRequest = Request<
+  {
+    blockId?: string;
+  },
+  Record<string, unknown>,
+  {
+    cblData?: string;
+    shouldEncrypt?: boolean;
+    shouldPersist?: boolean;
+    encryptorId?: string;
+  },
+  {
+    decryptorId?: string;
+  }
+>;
+
+export type MemberApiRequest = Request<
+  {
+    memberId?: string;
+  },
+  Record<string, unknown>,
+  {
+    name: string;
+    email: string;
+    memberType: MemberType;
+    passphrase?: string;
+  },
+  {
+    passphrase?: string;
+  }
+>;

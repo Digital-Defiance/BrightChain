@@ -174,6 +174,23 @@ export function lengthToBlockSize(length: number): BlockSize {
 }
 
 /**
+ * Convert a byte length to the closest BlockSize enum value.
+ * @param length - The length in bytes
+ * @returns The closest BlockSize enum value
+ */
+export function lengthToClosestBlockSize(length: number): BlockSize {
+  if (length < 0) {
+    throw new Error(`Invalid block size length ${length}`);
+  }
+  for (let i = 0; i < blockSizeLengths.length; i++) {
+    if (length <= blockSizeLengths[i]) {
+      return validBlockSizes[i];
+    }
+  }
+  return BlockSize.Huge;
+}
+
+/**
  * Validate if a length matches a valid block size.
  * @param length - The length to validate
  * @returns True if the length is a valid block size

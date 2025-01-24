@@ -52,10 +52,10 @@ export class BlockService {
   /**
    * Encrypt a block using ECIES
    */
-  public static encrypt(
+  public static async encrypt(
     creator: BrightChainMember,
     block: OwnedDataBlock,
-  ): EncryptedOwnedDataBlock | EncryptedConstituentBlockListBlock {
+  ): Promise<EncryptedOwnedDataBlock | EncryptedConstituentBlockListBlock> {
     if (!block.canEncrypt) {
       throw new Error('Block cannot be encrypted');
     }
@@ -95,33 +95,37 @@ export class BlockService {
 
     // Create encrypted block based on input block type
     if (block.blockType === BlockType.ConstituentBlockList) {
-      return new EncryptedConstituentBlockListBlock(
+      return await EncryptedConstituentBlockListBlock.from(
+        BlockType.ConstituentBlockList,
+        BlockDataType.EncryptedData,
         block.blockSize,
         fullData,
         StaticHelpersChecksum.calculateChecksum(fullData),
         creator,
-        block.data.length,
         block.dateCreated,
+        block.data.length,
       );
     }
 
-    return new EncryptedOwnedDataBlock(
+    return await EncryptedOwnedDataBlock.from(
+      BlockType.EncryptedOwnedDataBlock,
+      BlockDataType.EncryptedData,
       block.blockSize,
       fullData,
       StaticHelpersChecksum.calculateChecksum(fullData),
       creator,
-      block.data.length,
       block.dateCreated,
+      block.data.length,
     );
   }
 
   /**
    * Decrypt a block using ECIES
    */
-  public static decrypt(
+  public static async decrypt(
     creator: BrightChainMember,
     block: EncryptedOwnedDataBlock | EncryptedConstituentBlockListBlock,
-  ): OwnedDataBlock {
+  ): Promise<OwnedDataBlock> {
     if (!block.canDecrypt) {
       throw new Error('Block cannot be decrypted');
     }
@@ -134,11 +138,13 @@ export class BlockService {
       block.payload,
     );
 
-    return new OwnedDataBlock(
-      creator,
+    return await OwnedDataBlock.from(
+      BlockType.OwnedDataBlock,
+      BlockDataType.RawData,
       block.blockSize,
       decryptedData,
-      undefined,
+      StaticHelpersChecksum.calculateChecksum(decryptedData),
+      creator,
       block.dateCreated,
       decryptedData.length,
     );
@@ -147,14 +153,14 @@ export class BlockService {
   /**
    * Create a new block with the specified parameters
    */
-  public static createBlock(
+  public static async createBlock(
     blockSize: BlockSize,
     blockType: BlockType,
     blockDataType: BlockDataType,
     data: Buffer,
     creator?: BrightChainMember,
     checksum?: ChecksumBuffer,
-  ): IBlock {
+  ): Promise<IBlock> {
     if (data.length === 0) {
       throw new Error('Data cannot be empty');
     }
@@ -170,11 +176,16 @@ export class BlockService {
       blockDataType === BlockDataType.EncryptedData &&
       creator instanceof BrightChainMember
     ) {
-      return new EncryptedOwnedDataBlock(
+      const finalChecksum =
+        checksum ?? StaticHelpersChecksum.calculateChecksum(data);
+      return await EncryptedOwnedDataBlock.from(
+        blockType,
+        blockDataType,
         blockSize,
         data,
-        checksum,
+        finalChecksum,
         creator,
+        undefined,
         data.length,
       );
     }
@@ -184,21 +195,30 @@ export class BlockService {
       blockDataType === BlockDataType.EphemeralStructuredData &&
       creator instanceof BrightChainMember
     ) {
-      return new EncryptedConstituentBlockListBlock(
+      const finalChecksum =
+        checksum ?? StaticHelpersChecksum.calculateChecksum(data);
+      return await EncryptedConstituentBlockListBlock.from(
+        blockType,
+        blockDataType,
         blockSize,
         data,
-        checksum,
+        finalChecksum,
         creator,
+        undefined,
         data.length,
       );
     }
 
     // Handle owned data - create anonymous creator if none provided
-    return new OwnedDataBlock(
-      creator ?? GuidV4.new(),
+    const finalChecksum =
+      checksum ?? StaticHelpersChecksum.calculateChecksum(data);
+    return await OwnedDataBlock.from(
+      blockType,
+      blockDataType,
       blockSize,
       data,
-      checksum,
+      finalChecksum,
+      creator ?? GuidV4.new(),
       undefined,
       data.length,
     );

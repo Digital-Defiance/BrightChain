@@ -1,6 +1,7 @@
 import { BrightChainMember } from '../brightChainMember';
 import { TUPLE_SIZE } from '../constants';
 import { EmailString } from '../emailString';
+import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
@@ -34,50 +35,34 @@ class TestCblBlock extends ConstituentBlockListBlock {
 
 // Test class for encrypted CBL that properly implements abstract methods
 class TestEncryptedCblBlock extends EncryptedConstituentBlockListBlock {
-  private readonly _internalData: Buffer;
-  private readonly _internalCreator?: BrightChainMember | GuidV4;
-  private readonly _internalActualDataLength?: number;
-
-  constructor(
+  public static override async from(
+    type: BlockType,
+    dataType: BlockDataType,
     blockSize: BlockSize,
     data: Buffer,
-    checksum?: ChecksumBuffer,
+    checksum: ChecksumBuffer,
     creator?: BrightChainMember | GuidV4,
-    actualDataLength?: number,
     dateCreated?: Date,
-  ) {
-    super(blockSize, data, checksum, creator, actualDataLength, dateCreated);
-    this._internalData = data;
-    this._internalCreator = creator;
-    this._internalActualDataLength = actualDataLength;
-  }
+    actualDataLength?: number,
+    canRead = true,
+    canPersist = true,
+  ): Promise<TestEncryptedCblBlock> {
+    // Call parent class's from() to ensure proper validation
+    const block = await EncryptedConstituentBlockListBlock.from(
+      type,
+      dataType,
+      blockSize,
+      data,
+      checksum,
+      creator,
+      dateCreated,
+      actualDataLength,
+      canRead,
+      canPersist,
+    );
 
-  public override get data(): Buffer {
-    if (!this.canRead) {
-      throw new Error('Block cannot be read');
-    }
-    return this._internalData;
-  }
-
-  public override get creator(): BrightChainMember | undefined {
-    return this._internalCreator instanceof BrightChainMember
-      ? this._internalCreator
-      : undefined;
-  }
-
-  public override get actualDataLength(): number {
-    return this._internalActualDataLength ?? this._internalData.length;
-  }
-
-  public override get payload(): Buffer {
-    if (!this.canRead) {
-      throw new Error('Block cannot be read');
-    }
-    const start = StaticHelpersECIES.eciesOverheadLength;
-    const end =
-      start +
-      (this._internalActualDataLength ?? this._internalData.length - start);
-    return this._internalData.subarray(start, end);
+    // Cast to our test class type
+    return block as TestEncryptedCblBlock;
   }
 }
 
@@ -138,6 +123,33 @@ describe('EncryptedConstituentBlockListBlock', () => {
     return StaticHelpersECIES.signMessage(encryptor.privateKey, checksum);
   };
 
+  const createTestBlock = async (
+    data: Buffer,
+    options: Partial<{
+      type: BlockType;
+      blockSize: BlockSize;
+      checksum: ChecksumBuffer;
+      creator: BrightChainMember | GuidV4;
+      actualDataLength: number;
+      dateCreated: Date;
+      canRead: boolean;
+      canPersist: boolean;
+    }> = {},
+  ) => {
+    return TestEncryptedCblBlock.from(
+      options.type ?? BlockType.EncryptedConstituentBlockListBlock,
+      BlockDataType.EncryptedData,
+      options.blockSize ?? blockSize,
+      data,
+      options.checksum ?? StaticHelpersChecksum.calculateChecksum(data),
+      options.creator ?? creator,
+      options.dateCreated ?? testDate,
+      options.actualDataLength,
+      options.canRead ?? true,
+      options.canPersist ?? true,
+    );
+  };
+
   beforeAll(() => {
     encryptor = BrightChainMember.newMember(
       MemberType.User,
@@ -168,11 +180,15 @@ describe('EncryptedConstituentBlockListBlock', () => {
   });
 
   describe('basic functionality', () => {
-    it('should construct and handle metadata correctly', () => {
-      const encryptedBlock = EncryptedConstituentBlockListBlock.fromCbl(
-        cblBlock,
-        encryptor,
+    it('should construct and handle metadata correctly', async () => {
+      const originalData = cblBlock.data;
+      const encryptedData = StaticHelpersECIES.encrypt(
+        encryptor.publicKey,
+        originalData,
       );
+      const encryptedBlock = await createTestBlock(encryptedData, {
+        actualDataLength: originalData.length,
+      });
 
       // Basic properties
       expect(encryptedBlock.blockSize).toBe(blockSize);
@@ -182,7 +198,7 @@ describe('EncryptedConstituentBlockListBlock', () => {
       expect(encryptedBlock.encrypted).toBe(true);
       expect(encryptedBlock.canRead).toBe(true);
       // actualDataLength should be the length of the original CBL data before encryption
-      expect(encryptedBlock.actualDataLength).toBe(cblBlock.data.length);
+      expect(encryptedBlock.actualDataLength).toBe(originalData.length);
 
       // Encryption metadata
       expect(encryptedBlock.ephemeralPublicKey.length).toBe(
@@ -197,58 +213,52 @@ describe('EncryptedConstituentBlockListBlock', () => {
       );
     });
 
-    it('should handle creators correctly', () => {
-      // Test with GuidV4 creator
-      const guidBlock = new TestEncryptedCblBlock(
-        blockSize,
-        StaticHelpersECIES.encrypt(encryptor.publicKey, cblBlock.data),
-        undefined,
-        creator,
-        cblBlock.actualDataLength,
-        testDate,
+    it('should handle creators correctly', async () => {
+      const encryptedData = StaticHelpersECIES.encrypt(
+        encryptor.publicKey,
+        cblBlock.data,
       );
+
+      // Test with GuidV4 creator
+      const guidBlock = await createTestBlock(encryptedData, {
+        creator,
+      });
       expect(guidBlock.creator).toBeUndefined();
       expect(guidBlock.creatorId).toBe(creator);
 
       // Test with BrightChainMember creator
-      const memberBlock = EncryptedConstituentBlockListBlock.fromCbl(
-        cblBlock,
-        encryptor,
-      );
+      const memberBlock = await createTestBlock(encryptedData, {
+        creator: encryptor,
+      });
       expect(memberBlock.creator).toBe(encryptor);
       expect(memberBlock.creatorId).toBe(encryptor.id);
     });
 
-    it('should handle payload correctly', () => {
-      const encryptedBlock = EncryptedConstituentBlockListBlock.fromCbl(
-        cblBlock,
-        encryptor,
+    it('should handle payload correctly', async () => {
+      const originalData = cblBlock.data;
+      const encryptedData = StaticHelpersECIES.encrypt(
+        encryptor.publicKey,
+        originalData,
       );
-      expect(encryptedBlock.payload.length).toBe(
-        encryptedBlock.data.length - StaticHelpersECIES.eciesOverheadLength,
-      );
+      const encryptedBlock = await createTestBlock(encryptedData, {
+        actualDataLength: originalData.length,
+      });
+      expect(encryptedBlock.payload.length).toBe(originalData.length);
     });
   });
 
   describe('validation', () => {
-    it('should validate checksum', () => {
+    it('should validate checksum', async () => {
       const encryptedData = StaticHelpersECIES.encrypt(
         encryptor.publicKey,
         cblBlock.data,
       );
       const checksum = StaticHelpersChecksum.calculateChecksum(encryptedData);
-      const block = new TestEncryptedCblBlock(
-        blockSize,
-        encryptedData,
-        checksum,
-        creator,
-        cblBlock.actualDataLength,
-        testDate,
-      );
+      const block = await createTestBlock(encryptedData, { checksum });
       expect(block.idChecksum).toEqual(checksum);
     });
 
-    it('should handle invalid inputs', () => {
+    it('should handle invalid inputs', async () => {
       const encryptedData = StaticHelpersECIES.encrypt(
         encryptor.publicKey,
         cblBlock.data,
@@ -256,44 +266,22 @@ describe('EncryptedConstituentBlockListBlock', () => {
 
       // Test future date
       const futureDate = new Date(Date.now() + 86400000);
-      expect(
-        () =>
-          new TestEncryptedCblBlock(
-            blockSize,
-            encryptedData,
-            undefined,
-            creator,
-            cblBlock.data.length,
-            futureDate,
-          ),
-      ).toThrow('Date created cannot be in the future');
+      await expect(
+        createTestBlock(encryptedData, { dateCreated: futureDate }),
+      ).rejects.toThrow('Date created cannot be in the future');
 
       // Test oversized data
       const tooLargeData = Buffer.alloc((blockSize as number) + 1);
-      expect(
-        () =>
-          new TestEncryptedCblBlock(
-            blockSize,
-            tooLargeData,
-            undefined,
-            creator,
-            tooLargeData.length,
-            testDate,
-          ),
-      ).toThrow('Data length exceeds block capacity');
+      await expect(createTestBlock(tooLargeData)).rejects.toThrow(
+        'Data length exceeds block capacity',
+      );
 
       // Test invalid actual data length
-      expect(
-        () =>
-          new TestEncryptedCblBlock(
-            blockSize,
-            encryptedData,
-            undefined,
-            creator,
-            (blockSize as number) + 1,
-            testDate,
-          ),
-      ).toThrow('Data length exceeds block capacity');
+      await expect(
+        createTestBlock(encryptedData, {
+          actualDataLength: (blockSize as number) + 1,
+        }),
+      ).rejects.toThrow('Data length exceeds block capacity');
     });
   });
 });

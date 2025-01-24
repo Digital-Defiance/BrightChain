@@ -4,6 +4,7 @@ import { BrightChainMember } from './brightChainMember';
 import { EmailString } from './emailString';
 import { MemberType } from './enumerations/memberType';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
+import { StaticHelpersVoting } from './staticHelpers.voting';
 
 describe('brightchain', () => {
   let alice: BrightChainMember,
@@ -218,8 +219,14 @@ describe('brightchain', () => {
       );
 
       // Verify voting public key matches
-      expect(reloadedMember.votingPublicKey.toString('hex')).toEqual(
-        newMember.votingPublicKey.toString('hex'),
+      expect(
+        StaticHelpersVoting.votingPublicKeyToBuffer(
+          reloadedMember.votingPublicKey,
+        ).toString('hex'),
+      ).toEqual(
+        StaticHelpersVoting.votingPublicKeyToBuffer(
+          newMember.votingPublicKey,
+        ).toString('hex'),
       );
     });
 
@@ -241,8 +248,14 @@ describe('brightchain', () => {
       );
 
       // Voting keys should be different
-      expect(member.votingPublicKey.toString('hex')).not.toEqual(
-        member2.votingPublicKey.toString('hex'),
+      expect(
+        StaticHelpersVoting.votingPublicKeyToBuffer(
+          member.votingPublicKey,
+        ).toString('hex'),
+      ).not.toEqual(
+        StaticHelpersVoting.votingPublicKeyToBuffer(
+          member2.votingPublicKey,
+        ).toString('hex'),
       );
     });
   });
