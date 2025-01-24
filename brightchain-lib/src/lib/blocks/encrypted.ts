@@ -2,12 +2,19 @@ import { BrightChainMember } from '../brightChainMember';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
-import { IEncryptedBlock } from '../interfaces/encryptedBlock';
+import { IBlockMetadata } from '../interfaces/blockMetadata';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer } from '../types';
 import { EphemeralBlock } from './ephemeral';
+
+interface IEncryptedBlockMetadata extends IBlockMetadata {
+  lengthBeforeEncryption: number;
+  encrypted: boolean;
+  creator?: BrightChainMember | GuidV4;
+}
 
 /**
  * Base class for encrypted blocks.
@@ -19,88 +26,128 @@ import { EphemeralBlock } from './ephemeral';
  * Encryption Header:
  * [Ephemeral Public Key (65 bytes)][IV (16 bytes)][Auth Tag (16 bytes)]
  */
-export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
-  /**
-   * Creates an instance of EncryptedBlock.
-   * @param type - The type of the block
-   * @param blockSize - The size of the block
-   * @param data - The encrypted data
-   * @param checksum - The checksum of the data
-   * @param creator - The creator of the block
-   * @param dateCreated - The date the block was created
-   * @param actualDataLength - The length of the data before encryption, if known
-   * @param canRead - Whether the block can be read
-   * @param canPersist - Whether the block can be persisted
-   */
-  constructor(
+export abstract class EncryptedBlock extends EphemeralBlock {
+  public static override async from(
+    this: new (
+      type: BlockType,
+      dataType: BlockDataType,
+      blockSize: BlockSize,
+      data: Buffer,
+      checksum: ChecksumBuffer,
+      dateCreated?: Date,
+      metadata?: IEncryptedBlockMetadata,
+      canRead?: boolean,
+      canPersist?: boolean,
+    ) => EncryptedBlock,
     type: BlockType,
+    dataType: BlockDataType,
     blockSize: BlockSize,
     data: Buffer,
-    checksum?: ChecksumBuffer,
+    checksum: ChecksumBuffer,
     creator?: BrightChainMember | GuidV4,
     dateCreated?: Date,
     actualDataLength?: number,
     canRead = true,
     canPersist = true,
-  ) {
+  ): Promise<EncryptedBlock> {
+    // Validate data length
     if (data.length < StaticHelpersECIES.eciesOverheadLength) {
       throw new Error('Data too short to contain encryption header');
     }
 
-    // For encrypted blocks, we need to validate both:
-    // 1. The total data length (including encryption header) against block size
-    // 2. The actual data length against available capacity
+    // Total data length must not exceed block size
+    if (data.length > (blockSize as number)) {
+      throw new Error('Data length exceeds block capacity');
+    }
+
+    // For encrypted blocks with known actual data length:
+    // 1. The actual data length must not exceed available capacity
+    // 2. The total encrypted length must not exceed block size
     if (actualDataLength !== undefined) {
       const availableCapacity =
         (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
       if (actualDataLength > availableCapacity) {
         throw new Error('Data length exceeds block capacity');
       }
-      // Total encrypted length will be actualDataLength + overhead
-      const totalLength =
-        actualDataLength + StaticHelpersECIES.eciesOverheadLength;
-      if (totalLength > (blockSize as number)) {
-        throw new Error('Data length exceeds block capacity');
-      }
     }
 
-    // Calculate checksum from entire data buffer if not provided
-    const finalChecksum =
-      checksum ?? StaticHelpersChecksum.calculateChecksum(data);
-
-    // Validate checksum before calling super
-    if (checksum) {
-      const computedChecksum = StaticHelpersChecksum.calculateChecksum(data);
-      if (!computedChecksum.equals(checksum)) {
-        throw new Error('Checksum mismatch');
-      }
+    // Calculate and validate checksum
+    const computedChecksum = StaticHelpersChecksum.calculateChecksum(data);
+    if (checksum && !computedChecksum.equals(checksum)) {
+      throw new ChecksumMismatchError(checksum, computedChecksum);
     }
+    const finalChecksum = checksum ?? computedChecksum;
 
-    super(
+    const metadata: IEncryptedBlockMetadata = {
+      size: blockSize,
+      type,
+      blockSize,
+      blockType: type,
+      dataType: BlockDataType.EncryptedData,
+      dateCreated: (dateCreated ?? new Date()).toISOString(),
+      lengthBeforeEncryption:
+        actualDataLength ??
+        data.length - StaticHelpersECIES.eciesOverheadLength,
+      creator,
+      encrypted: true,
+    };
+
+    return new this(
       type,
       BlockDataType.EncryptedData,
       blockSize,
       data,
       finalChecksum,
-      creator,
       dateCreated,
-      actualDataLength ?? data.length - StaticHelpersECIES.eciesOverheadLength, // Use unencrypted length
+      metadata,
       canRead,
-      true, // Set encrypted flag to true since this is an encrypted block
       canPersist,
     );
   }
 
   /**
-   * The length of the encrypted data is the actual data length plus the overhead of the encryption
+   * Creates an instance of EncryptedBlock.
+   * @param type - The type of the block
+   * @param dataType - The type of data in the block
+   * @param blockSize - The size of the block
+   * @param data - The encrypted data
+   * @param checksum - The checksum of the data
+   * @param dateCreated - The date the block was created
+   * @param metadata - The block metadata
+   * @param canRead - Whether the block can be read
+   * @param canPersist - Whether the block can be persisted
    */
-  public get encryptedLength(): number {
+  protected constructor(
+    type: BlockType,
+    dataType: BlockDataType,
+    blockSize: BlockSize,
+    data: Buffer,
+    checksum: ChecksumBuffer,
+    dateCreated?: Date,
+    metadata?: IEncryptedBlockMetadata,
+    canRead = true,
+    canPersist = true,
+  ) {
+    super(
+      type,
+      dataType,
+      blockSize,
+      data,
+      checksum,
+      dateCreated,
+      metadata,
+      canRead,
+      canPersist,
+    );
+  }
+
+  /**
+   * The length of the encrypted data as a number (for internal use)
+   */
+  protected get encryptedLengthNumber(): number {
     if (this.actualDataLength === undefined) {
       throw new Error('Actual data length is unknown');
     }
-
-    // The encrypted length is the length of the data buffer, which includes both
-    // the encryption header and the encrypted payload
     return this.data.length;
   }
 
@@ -212,5 +259,25 @@ export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
     // 2. Subtract the ECIES overhead
     // This ensures proper capacity calculation for encrypted blocks
     return this.blockSize - StaticHelpersECIES.eciesOverheadLength;
+  }
+
+  /**
+   * Override validateAsync to handle encrypted data properly
+   * For encrypted blocks, we need to validate the checksum on the entire data buffer
+   * since the encryption header is part of the data
+   */
+  public override async validateAsync(): Promise<void> {
+    if (!this.idChecksum) {
+      throw new Error('No checksum provided');
+    }
+
+    // Calculate checksum on the entire data buffer for encrypted blocks
+    const computedChecksum = await StaticHelpersChecksum.calculateChecksumAsync(
+      this.data,
+    );
+    const validated = computedChecksum.equals(this.idChecksum);
+    if (!validated) {
+      throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
+    }
   }
 }

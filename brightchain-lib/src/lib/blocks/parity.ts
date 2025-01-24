@@ -41,9 +41,18 @@ export class ParityBlock extends RawDataBlock {
     }
 
     // XOR all blocks together
-    let result = blocks[0].data;
+    const firstData = blocks[0].data;
+    if (!(firstData instanceof Buffer)) {
+      throw new Error('Block data must be Buffer');
+    }
+    let result = firstData;
+
     for (let i = 1; i < blocks.length; i++) {
       const current = blocks[i].data;
+      if (!(current instanceof Buffer)) {
+        throw new Error('Block data must be Buffer');
+      }
+
       if (current.length !== result.length) {
         throw new Error('Block sizes must match');
       }
@@ -137,6 +146,14 @@ export class ParityBlock extends RawDataBlock {
   public xor<T extends BaseBlock>(other: T): T {
     if (this.blockSize !== other.blockSize) {
       throw new Error('Block sizes must match');
+    }
+
+    if (!(this.data instanceof Buffer)) {
+      throw new Error('Block data must be Buffer');
+    }
+
+    if (!(other.data instanceof Buffer)) {
+      throw new Error('Other block data must be Buffer');
     }
 
     const result = Buffer.alloc(this.data.length);

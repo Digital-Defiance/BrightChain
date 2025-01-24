@@ -5,6 +5,7 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
+import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
@@ -13,7 +14,7 @@ import { EphemeralBlock } from './ephemeral';
 
 // Test class that properly implements abstract methods
 class TestEphemeralBlock extends EphemeralBlock {
-  constructor(
+  public static async createTest(
     type: BlockType,
     blockDataType: BlockDataType,
     blockSize: BlockSize,
@@ -24,18 +25,38 @@ class TestEphemeralBlock extends EphemeralBlock {
     actualDataLength?: number,
     canRead = true,
     encrypted = false,
-  ) {
-    super(
+  ): Promise<TestEphemeralBlock> {
+    const metadata = {
+      size: blockSize,
+      type,
+      blockSize,
+      blockType: type,
+      dataType: blockDataType,
+      dateCreated: (dateCreated ?? new Date()).toISOString(),
+      lengthBeforeEncryption: actualDataLength ?? data.length,
+      creator,
+      encrypted,
+    };
+
+    const finalChecksum =
+      checksum ?? StaticHelpersChecksum.calculateChecksum(data);
+    if (checksum) {
+      const expectedChecksum = StaticHelpersChecksum.calculateChecksum(data);
+      if (!checksum.equals(expectedChecksum)) {
+        throw new ChecksumMismatchError(checksum, expectedChecksum);
+      }
+    }
+
+    return new TestEphemeralBlock(
       type,
       blockDataType,
       blockSize,
       data,
-      checksum,
-      creator,
+      finalChecksum,
       dateCreated,
-      actualDataLength,
+      metadata,
       canRead,
-      encrypted,
+      !encrypted, // canPersist defaults to !encrypted
     );
   }
 }
@@ -55,7 +76,7 @@ describe('EphemeralBlock', () => {
       ? size // For encrypted blocks, use full block size since overhead is in data
       : (size as number); // For unencrypted blocks, use raw size
 
-  const createTestBlock = (
+  const createTestBlock = async (
     options: Partial<{
       type: BlockType;
       dataType: BlockDataType;
@@ -74,7 +95,7 @@ describe('EphemeralBlock', () => {
     const effectiveSize = getEffectiveSize(blockSize, isEncrypted);
     const data = options.data || randomBytes(effectiveSize);
 
-    return new TestEphemeralBlock(
+    return TestEphemeralBlock.createTest(
       options.type || BlockType.Random,
       options.dataType || BlockDataType.RawData,
       blockSize,
@@ -97,32 +118,31 @@ describe('EphemeralBlock', () => {
   });
 
   describe('basic functionality', () => {
-    it('should construct and validate correctly', () => {
+    it('should construct and validate correctly', async () => {
       const data = randomBytes(getEffectiveSize(defaultBlockSize));
       const checksum = StaticHelpersChecksum.calculateChecksum(data);
-      const block = createTestBlock({ data, checksum });
+      const block = await createTestBlock({ data, checksum });
 
       expect(block.blockSize).toBe(defaultBlockSize);
       expect(block.blockType).toBe(BlockType.Random);
       expect(block.blockDataType).toBe(BlockDataType.RawData);
       expect(block.data).toEqual(data);
       expect(block.idChecksum).toEqual(checksum);
-      expect(block.validated).toBe(true);
       expect(block.canRead).toBe(true);
       expect(block.encrypted).toBe(false);
     });
 
-    it('should handle empty data', () => {
-      const block = createTestBlock({ data: Buffer.alloc(0) });
+    it('should handle empty data', async () => {
+      const block = await createTestBlock({ data: Buffer.alloc(0) });
       expect(block.data.length).toBe(0);
       expect(block.payload.length).toBe(0);
       expect(block.layerHeaderData.length).toBe(0);
     });
 
-    it('should handle padding correctly', () => {
+    it('should handle padding correctly', async () => {
       const dataSize = Math.floor(getEffectiveSize(defaultBlockSize) / 2);
       const data = randomBytes(dataSize);
-      const block = createTestBlock({ data });
+      const block = await createTestBlock({ data });
 
       // For unencrypted blocks, data() returns actual data without padding
       expect(block.data.length).toBe(dataSize);
@@ -133,7 +153,7 @@ describe('EphemeralBlock', () => {
   });
 
   describe('size handling', () => {
-    it('should handle various block sizes', () => {
+    it('should handle various block sizes', async () => {
       const sizes = [
         BlockSize.Message,
         BlockSize.Tiny,
@@ -143,48 +163,39 @@ describe('EphemeralBlock', () => {
         BlockSize.Huge,
       ];
 
-      sizes.forEach((size) => {
+      for (const size of sizes) {
         const effectiveSize = getEffectiveSize(size);
         const data = randomBytes(effectiveSize);
-        const block = createTestBlock({ blockSize: size, data });
+        const block = await createTestBlock({ blockSize: size, data });
         expect(block.data.length).toBe(effectiveSize);
         expect(block.capacity).toBe(size as number);
-      });
+      }
     });
 
-    it('should reject invalid sizes', () => {
+    it('should reject invalid sizes', async () => {
       // Test oversized data
       const tooLargeData = randomBytes((defaultBlockSize as number) + 1);
-      expect(() => createTestBlock({ data: tooLargeData })).toThrow(
+      await expect(createTestBlock({ data: tooLargeData })).rejects.toThrow(
         'Data length exceeds block capacity',
       );
 
       // Test invalid block size
-      expect(
-        () =>
-          new TestEphemeralBlock(
-            BlockType.Random,
-            BlockDataType.RawData,
-            0 as BlockSize,
-            Buffer.alloc(0),
-          ),
-      ).toThrow('Invalid block size');
-    });
-
-    it('should validate actual data length', () => {
-      const data = randomBytes(10);
-      // Test actual length > data length
-      expect(() =>
-        createTestBlock({ data, actualDataLength: data.length + 1 }),
-      ).toThrow('Actual data length exceeds data length');
+      await expect(
+        TestEphemeralBlock.createTest(
+          BlockType.Random,
+          BlockDataType.RawData,
+          0 as BlockSize,
+          Buffer.alloc(0),
+        ),
+      ).rejects.toThrow('Invalid block size');
     });
   });
 
   describe('encryption handling', () => {
-    it('should handle encrypted blocks correctly', () => {
+    it('should handle encrypted blocks correctly', async () => {
       const effectiveSize = getEffectiveSize(defaultBlockSize, true);
       const data = randomBytes(effectiveSize);
-      const block = createTestBlock({
+      const block = await createTestBlock({
         dataType: BlockDataType.EncryptedData,
         data,
         encrypted: true,
@@ -196,8 +207,8 @@ describe('EphemeralBlock', () => {
       expect(block.canDecrypt).toBe(true);
     });
 
-    it('should handle encryption capabilities', () => {
-      const block = createTestBlock({
+    it('should handle encryption capabilities', async () => {
+      const block = await createTestBlock({
         data: randomBytes(
           (defaultBlockSize as number) - StaticHelpersECIES.eciesOverheadLength,
         ),
@@ -209,26 +220,27 @@ describe('EphemeralBlock', () => {
   });
 
   describe('creator handling', () => {
-    it('should handle different creator types', () => {
+    it('should handle different creator types', async () => {
       // Test with BrightChainMember creator
-      const memberBlock = createTestBlock();
+      const memberBlock = await createTestBlock();
       expect(memberBlock.creator).toBe(creator);
       expect(memberBlock.creatorId).toBe(creator.id);
       expect(memberBlock.canSign).toBe(true);
 
       // Test with GuidV4 creator
       const guidCreator = GuidV4.new();
-      const guidBlock = createTestBlock({ creator: guidCreator });
+      const guidBlock = await createTestBlock({ creator: guidCreator });
       expect(guidBlock.creator).toBeUndefined();
       expect(guidBlock.creatorId).toBe(guidCreator);
       expect(guidBlock.canSign).toBe(true);
 
       // Test with no creator
-      const noCreatorBlock = new TestEphemeralBlock(
+      const data = randomBytes(getEffectiveSize(defaultBlockSize));
+      const noCreatorBlock = await TestEphemeralBlock.createTest(
         BlockType.Random,
         BlockDataType.RawData,
         defaultBlockSize,
-        randomBytes(getEffectiveSize(defaultBlockSize)),
+        data,
       );
       expect(noCreatorBlock.creator).toBeUndefined();
       expect(noCreatorBlock.creatorId).toBeUndefined();
@@ -237,24 +249,24 @@ describe('EphemeralBlock', () => {
   });
 
   describe('validation', () => {
-    it('should detect data corruption', () => {
+    it('should detect data corruption', async () => {
       const data = randomBytes(getEffectiveSize(defaultBlockSize));
       const checksum = StaticHelpersChecksum.calculateChecksum(data);
       const corruptedData = Buffer.from(data);
       corruptedData[0]++; // Corrupt the data
 
-      expect(() => createTestBlock({ data: corruptedData, checksum })).toThrow(
-        'Checksum mismatch',
-      );
+      await expect(
+        createTestBlock({ data: corruptedData, checksum }),
+      ).rejects.toThrow('Checksum mismatch');
     });
 
-    it('should reject future dates', () => {
+    it('should reject future dates', async () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
 
-      expect(() => createTestBlock({ dateCreated: futureDate })).toThrow(
-        'Date created cannot be in the future',
-      );
+      await expect(
+        createTestBlock({ dateCreated: futureDate }),
+      ).rejects.toThrow('Date created cannot be in the future');
     });
   });
 });

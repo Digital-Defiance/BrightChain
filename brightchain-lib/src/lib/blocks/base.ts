@@ -1,6 +1,8 @@
+import { Readable } from 'stream';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { IBlock } from '../interfaces/blockBase';
 import { IBlockMetadata } from '../interfaces/blockMetadata';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
@@ -29,10 +31,9 @@ export abstract class BaseBlock implements IBlock {
   protected readonly _metadata: IBlockMetadata;
   protected readonly _canRead: boolean;
   protected readonly _canPersist: boolean;
-  protected _validated: boolean;
 
   /**
-   * Create a new BaseBlock
+   * Creates a new BaseBlock instance asynchronously
    * @param type - Block type (raw, encrypted, CBL, etc)
    * @param dataType - Type of data contained
    * @param blockSize - Size category for the block
@@ -43,12 +44,105 @@ export abstract class BaseBlock implements IBlock {
    * @param canRead - Whether block can be read
    * @param canPersist - Whether block can be stored
    */
-  constructor(
+  public static async createAsync<T extends BaseBlock>(
+    this: new (
+      type: BlockType,
+      dataType: BlockDataType,
+      blockSize: BlockSize,
+      checksum: ChecksumBuffer,
+      dateCreated?: Date,
+      metadata?: IBlockMetadata,
+      canRead?: boolean,
+      canPersist?: boolean,
+    ) => T,
     type: BlockType,
     dataType: BlockDataType,
     blockSize: BlockSize,
-    data: Buffer,
+    data: Readable | Buffer,
     checksum?: ChecksumBuffer,
+    dateCreated?: Date,
+    metadata?: IBlockMetadata,
+    canRead = true,
+    canPersist = true,
+  ): Promise<T> {
+    const calculatedChecksum =
+      await StaticHelpersChecksum.calculateChecksumAsync(data);
+
+    if (checksum && !calculatedChecksum.equals(checksum)) {
+      throw new ChecksumMismatchError(checksum, calculatedChecksum);
+    }
+
+    return new this(
+      type,
+      dataType,
+      blockSize,
+      calculatedChecksum,
+      dateCreated,
+      metadata,
+      canRead,
+      canPersist,
+    ) as T;
+  }
+
+  /**
+   * Creates a new BaseBlock instance synchronously with a pre-calculated checksum
+   * @param type - Block type (raw, encrypted, CBL, etc)
+   * @param dataType - Type of data contained
+   * @param blockSize - Size category for the block
+   * @param checksum - Pre-calculated checksum
+   * @param dateCreated - Creation timestamp
+   * @param metadata - Optional block metadata
+   * @param canRead - Whether block can be read
+   * @param canPersist - Whether block can be stored
+   */
+  protected static _createSync<T extends BaseBlock>(
+    this: new (
+      type: BlockType,
+      dataType: BlockDataType,
+      blockSize: BlockSize,
+      checksum: ChecksumBuffer,
+      dateCreated?: Date,
+      metadata?: IBlockMetadata,
+      canRead?: boolean,
+      canPersist?: boolean,
+    ) => T,
+    type: BlockType,
+    dataType: BlockDataType,
+    blockSize: BlockSize,
+    checksum: ChecksumBuffer,
+    dateCreated?: Date,
+    metadata?: IBlockMetadata,
+    canRead = true,
+    canPersist = true,
+  ): T {
+    return new this(
+      type,
+      dataType,
+      blockSize,
+      checksum,
+      dateCreated,
+      metadata,
+      canRead,
+      canPersist,
+    ) as T;
+  }
+
+  /**
+   * Internal constructor - use static createAsync() method instead
+   * @param type - Block type (raw, encrypted, CBL, etc)
+   * @param dataType - Type of data contained
+   * @param blockSize - Size category for the block
+   * @param checksum - Block checksum
+   * @param dateCreated - Creation timestamp
+   * @param metadata - Optional block metadata
+   * @param canRead - Whether block can be read
+   * @param canPersist - Whether block can be stored
+   */
+  protected constructor(
+    type: BlockType,
+    dataType: BlockDataType,
+    blockSize: BlockSize,
+    checksum: ChecksumBuffer,
     dateCreated?: Date,
     metadata?: IBlockMetadata,
     canRead = true,
@@ -59,41 +153,20 @@ export abstract class BaseBlock implements IBlock {
       throw new Error('Invalid block size');
     }
 
+    // Store basic properties first so capacity calculation works
+    this._blockSize = blockSize;
+    this._blockType = type;
+    this._blockDataType = dataType;
+    this._canRead = canRead;
+    this._canPersist = canPersist;
+    this._checksum = checksum;
+
     // Validate date
     const now = new Date();
     this._dateCreated = dateCreated ?? now;
     if (this._dateCreated > now) {
       throw new Error('Date created cannot be in the future');
     }
-
-    // Store basic properties
-    this._blockSize = blockSize;
-    this._blockType = type;
-    this._blockDataType = dataType;
-    this._canRead = canRead;
-    this._canPersist = canPersist;
-
-    // For encrypted blocks, the data includes both the encryption header and encrypted payload
-    // For unencrypted blocks, the data is just the raw payload
-    const maxDataSize = blockSize as number;
-    const effectiveCapacity =
-      dataType === BlockDataType.EncryptedData
-        ? maxDataSize // For encrypted blocks, use full block size
-        : maxDataSize - this.totalOverhead; // For unencrypted blocks, account for headers
-
-    if (data.length > effectiveCapacity) {
-      throw new Error('Data length exceeds block capacity');
-    }
-
-    // Calculate or verify checksum
-    const calculatedChecksum = StaticHelpersChecksum.calculateChecksum(data);
-    if (checksum) {
-      this._validated = calculatedChecksum.equals(checksum);
-    } else {
-      this._validated = true; // We calculated it ourselves
-      checksum = calculatedChecksum;
-    }
-    this._checksum = checksum;
 
     // Store or create metadata
     this._metadata = metadata ?? {
@@ -103,7 +176,7 @@ export abstract class BaseBlock implements IBlock {
       blockType: type,
       dataType,
       dateCreated: this._dateCreated.toISOString(),
-      lengthBeforeEncryption: data.length,
+      lengthBeforeEncryption: 0,
     };
   }
 
@@ -159,13 +232,6 @@ export abstract class BaseBlock implements IBlock {
   }
 
   /**
-   * Whether the block's checksum has been validated
-   */
-  public get validated(): boolean {
-    return this._validated;
-  }
-
-  /**
    * Whether the block can be read
    */
   public get canRead(): boolean {
@@ -182,19 +248,12 @@ export abstract class BaseBlock implements IBlock {
   /**
    * Validate the block's checksum
    */
-  public validate(): boolean {
-    if (!this.canRead) {
-      throw new Error('Block cannot be read');
-    }
-    const computedChecksum = StaticHelpersChecksum.calculateChecksum(this.data);
-    this._validated = computedChecksum.equals(this.idChecksum);
-    return this._validated;
-  }
+  public abstract validateAsync(): Promise<void>;
 
   /**
    * Get the complete block data including headers and payload
    */
-  public abstract get data(): Buffer;
+  public abstract get data(): Buffer | Readable;
 
   /**
    * Get this layer's header data

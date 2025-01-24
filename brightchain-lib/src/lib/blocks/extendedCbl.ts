@@ -1,6 +1,8 @@
 import { BrightChainMember } from '../brightChainMember';
 import { BlockSize, validBlockSizes } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { ChecksumMismatchError } from '../errors/checksumMismatch';
+import { MetadataMismatchError } from '../errors/metadataMismatch';
 import { GuidV4 } from '../guid';
 import { IExtendedConstituentBlockListBlockHeader } from '../interfaces/ecblHeader';
 import { IExtendedConstituentBlockListBlock } from '../interfaces/extendedCbl';
@@ -227,28 +229,25 @@ export class ExtendedCBL
 
   /**
    * Validate the block's data and structure
-   * @returns true if valid, false otherwise
+   * @throws {ChecksumMismatchError} If checksums do not match
+   * @throws {MetadataMismatchError} If metadata does not match stored values
    */
-  public override validate(): boolean {
-    try {
-      // Validate base CBL structure
-      if (!super.validate()) {
-        return false;
-      }
+  public override async validateAsync(): Promise<void> {
+    // Validate base CBL structure
+    await super.validateAsync();
 
-      // Validate file metadata by parsing this layer's header
-      const { fileName, mimeType } = ExtendedCBL.parseMetadata(
-        this.layerHeaderData,
-      );
+    // Validate file metadata by parsing this layer's header
+    const { fileName, mimeType } = ExtendedCBL.parseMetadata(
+      this.layerHeaderData,
+    );
 
-      // Verify metadata matches stored values
-      return (
-        fileName === this.fileName &&
-        mimeType === this.mimeType &&
-        this.data.length === this.blockSize
-      );
-    } catch (error) {
-      return false;
+    // Verify metadata matches stored values
+    if (
+      fileName !== this.fileName ||
+      mimeType !== this.mimeType ||
+      this.data.length !== this.blockSize
+    ) {
+      throw new MetadataMismatchError();
     }
   }
 

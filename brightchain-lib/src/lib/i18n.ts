@@ -1,14 +1,50 @@
 import constants from './constants';
+import { BlockSizeTranslations } from './enumeration-translations/blockSize';
 import { MemberTypeTranslations } from './enumeration-translations/memberType';
 import { QuorumDataRecordActionTypeTranslations } from './enumeration-translations/quorumDataRecordAction';
 import { StringLanguages } from './enumerations/stringLanguages';
 import { StringNames } from './enumerations/stringNames';
 import { TranslatableEnumType } from './enumerations/translatableEnum';
-import { TranslatableEnum, TranslationsMap } from './i18n.types';
+import {
+  StringOrObject,
+  TranslatableEnum,
+  TranslationsMap,
+} from './i18n.types';
 import { ILanguageContext } from './interfaces/languageContext';
 import { LanguageCodes } from './languageCodes';
 import { DefaultLanguage, StringsCollection } from './sharedTypes';
 import { Strings } from './strings';
+
+/**
+ * Helper function to set a nested value in an object
+ */
+function setNestedValue(
+  obj: { [key: string]: StringOrObject },
+  path: string[],
+  value: string,
+): void {
+  let current = obj;
+
+  for (let i = 0; i < path.length - 1; i++) {
+    const key = path[i];
+    if (!(key in current)) {
+      current[key] = {};
+    } else if (typeof current[key] === 'string') {
+      throw new Error(
+        `Key conflict detected: Key '${key}' is assigned both a value and an object.`,
+      );
+    }
+    current = current[key] as { [key: string]: StringOrObject };
+  }
+
+  const lastKey = path[path.length - 1];
+  if (typeof current[lastKey] === 'object') {
+    throw new Error(
+      `Key conflict detected: Cannot assign string to key '${lastKey}' because it's already used as an object.`,
+    );
+  }
+  current[lastKey] = value;
+}
 
 /**
  * Builds a nested object from a flat object.
@@ -17,38 +53,15 @@ import { Strings } from './strings';
  */
 export const buildNestedI18n = (
   strings: StringsCollection,
-): Record<string, any> => {
-  const result: Record<string, any> = {};
+): Record<string, StringOrObject> => {
+  const result: { [key: string]: StringOrObject } = {};
 
   Object.entries(strings).forEach(([key, value]) => {
     const keys = key.split('_');
-    let current = result;
-
-    keys.forEach((k, index) => {
-      if (index === keys.length - 1) {
-        // Assign the value at the deepest level
-        if (typeof current[k] === 'object' && current[k] !== null) {
-          throw new Error(
-            `Key conflict detected: Cannot assign string to key '${k}' because it's already used as an object.`,
-          );
-        }
-        current[k] = value;
-      } else {
-        // Create nested objects if they don't exist
-        if (!(k in current)) {
-          current[k] = {};
-        } else if (typeof current[k] !== 'object' || current[k] === null) {
-          // Conflict detected
-          throw new Error(
-            `Key conflict detected: Key '${k}' is assigned both a value and an object.`,
-          );
-        }
-        current = current[k];
-      }
-    });
+    setNestedValue(result, keys, value);
   });
 
-  return result;
+  return result as Record<string, StringOrObject>;
 };
 
 /**
@@ -58,7 +71,7 @@ export const buildNestedI18n = (
  */
 export const buildNestedI18nForLanguage = (
   language: StringLanguages,
-): Record<string, any> => {
+): Record<string, StringOrObject> => {
   if (!Strings[language]) {
     throw new Error(`Strings not found for language: ${language}`);
   }
@@ -97,7 +110,8 @@ export function replaceVariables(
     if (otherVars && varName in otherVars) {
       replacement = otherVars[varName];
     } else if (varName in constants) {
-      replacement = (constants as any)[varName].toString(); // Handle non-string constants
+      const constantValue = constants[varName as keyof typeof constants];
+      replacement = constantValue?.toString() ?? '';
     }
     //If the variable is not found in constants or otherVars, leave it unchanged
     result = result.replace(variable, replacement);
@@ -136,6 +150,7 @@ export const translate = (
  * Translation map
  */
 export const translationsMap: TranslationsMap = {
+  [TranslatableEnumType.BlockSize]: BlockSizeTranslations,
   [TranslatableEnumType.MemberType]: MemberTypeTranslations,
   [TranslatableEnumType.QuorumDataRecordAction]:
     QuorumDataRecordActionTypeTranslations,
@@ -154,9 +169,10 @@ export const translateEnum = (
   const lang = language ?? GlobalLanguageContext.language;
   const translations = translationsMap[type];
   if (translations && translations[lang]) {
-    const enumTranslations = translations[lang] as Record<string, string>;
-    if (enumTranslations[value]) {
-      return enumTranslations[value];
+    const enumTranslations = translations[lang];
+    // value is already the correct string literal type from the enum
+    if (value in enumTranslations) {
+      return enumTranslations[value as keyof typeof enumTranslations];
     }
   }
   throw new Error(

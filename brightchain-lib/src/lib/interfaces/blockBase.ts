@@ -1,6 +1,8 @@
+import { Readable } from 'stream';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumBuffer, ChecksumString } from '../types';
 
 /**
@@ -78,7 +80,7 @@ export interface IBlock {
    * The raw data in the block, including all headers and payload.
    * Format: [Layer 0 Header][Layer 1 Header][...][Layer N Header][Payload][Padding]
    */
-  get data(): Buffer;
+  get data(): Buffer | Readable;
 
   /**
    * The block's checksum as a string.
@@ -157,11 +159,13 @@ export interface IBlock {
   get padding(): Buffer;
 
   /**
-   * Whether the block's data has been validated.
-   * Validation includes:
-   * 1. Checksum verification
-   * 2. Size constraints
-   * 3. Format requirements
+   * Trigger data validation.
+   * Checks:
+   * 1. Checksum correctness
+   * 2. Data integrity
+   * 3. Format validity
+   *
+   * @throws {ChecksumMismatchError} If the checksum does not match
    */
-  get validated(): boolean;
+  validateAsync(): Promise<void>;
 }

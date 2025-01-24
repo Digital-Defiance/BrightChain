@@ -125,10 +125,8 @@ export class BlockHandleTuple {
    */
   public async verify(): Promise<boolean> {
     try {
-      const results = await Promise.all(
-        this.handles.map((handle) => handle.verifyChecksum()),
-      );
-      return results.every((result) => result);
+      await Promise.all(this.handles.map((handle) => handle.validateAsync()));
+      return true;
     } catch {
       return false;
     }

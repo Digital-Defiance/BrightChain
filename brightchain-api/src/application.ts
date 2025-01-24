@@ -1,4 +1,8 @@
-import { debugLog, HandleableError } from '@BrightChain/brightchain-lib';
+import {
+  debugLog,
+  HandleableError,
+  SecureKeyStorage,
+} from '@BrightChain/brightchain-lib';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import { Server } from 'http';
 import { environment } from './environment';
@@ -13,6 +17,8 @@ import { handleError, sendApiMessageResponse } from './utils';
  */
 export class App implements IApplication {
   private static instance: App | null = null;
+  private readonly keyStorage: SecureKeyStorage;
+
   /**
    * Express application instance
    */
@@ -48,6 +54,7 @@ export class App implements IApplication {
     this._ready = false;
     this.expressApp = express();
     this.server = null;
+    this.keyStorage = SecureKeyStorage.getInstance();
   }
 
   /**
@@ -62,6 +69,7 @@ export class App implements IApplication {
         );
         process.exit(1);
       }
+      await this.keyStorage.initializeFromEnvironment();
 
       // init all middlewares and routes
       Middlewares.init(this.expressApp);

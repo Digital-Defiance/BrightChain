@@ -66,10 +66,7 @@ export abstract class StaticHelpers {
    */
   public static membersAreAllUsers(members: BrightChainMember[]): boolean {
     for (const member of members) {
-      if (
-        member.memberType == MemberType.System ||
-        member.memberType == MemberType.Anonymous
-      ) {
+      if (member.memberType == MemberType.System) {
         return false;
       }
     }

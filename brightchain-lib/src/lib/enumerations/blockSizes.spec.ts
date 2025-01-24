@@ -3,6 +3,7 @@ import {
   blockSizeExponents,
   blockSizeLengths,
   lengthToBlockSize,
+  lengthToClosestBlockSize,
   validateBlockSize,
   validBlockSizes,
 } from './blockSizes';
@@ -54,6 +55,35 @@ describe('blockSizes', () => {
     expect(validateBlockSize(BlockSize.Unknown)).toBe(false);
     expect(validateBlockSize(1)).toBe(false);
     expect(validateBlockSize(123)).toBe(false);
+  });
+
+  describe('lengthToClosestBlockSize', () => {
+    it('should match exact block sizes', () => {
+      expect(lengthToClosestBlockSize(512)).toBe(BlockSize.Message);
+      expect(lengthToClosestBlockSize(1024)).toBe(BlockSize.Tiny);
+      expect(lengthToClosestBlockSize(4096)).toBe(BlockSize.Small);
+      expect(lengthToClosestBlockSize(1048576)).toBe(BlockSize.Medium);
+      expect(lengthToClosestBlockSize(67108864)).toBe(BlockSize.Large);
+      expect(lengthToClosestBlockSize(268435456)).toBe(BlockSize.Huge);
+    });
+
+    it('should return closest block size for values between sizes', () => {
+      expect(lengthToClosestBlockSize(511)).toBe(BlockSize.Message);
+      expect(lengthToClosestBlockSize(1023)).toBe(BlockSize.Tiny);
+      expect(lengthToClosestBlockSize(4095)).toBe(BlockSize.Small);
+      expect(lengthToClosestBlockSize(1048575)).toBe(BlockSize.Medium);
+      expect(lengthToClosestBlockSize(67108863)).toBe(BlockSize.Large);
+      expect(lengthToClosestBlockSize(268435455)).toBe(BlockSize.Huge);
+    });
+
+    it('should handle edge cases', () => {
+      expect(lengthToClosestBlockSize(0)).toBe(BlockSize.Message);
+      expect(() => lengthToClosestBlockSize(-1)).toThrow(
+        'Invalid block size length -1',
+      );
+      expect(lengthToClosestBlockSize(268435457)).toBe(BlockSize.Huge);
+      expect(lengthToClosestBlockSize(536870912)).toBe(BlockSize.Huge);
+    });
   });
 });
 describe('blockSizeExponents', () => {

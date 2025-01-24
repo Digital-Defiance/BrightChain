@@ -160,6 +160,11 @@ export class StaticHelpersFec {
         .fill(null)
         .map(() => Buffer.alloc(0));
 
+      // Ensure input data is a Buffer
+      if (!(input.data instanceof Buffer)) {
+        throw new Error('Input data must be a Buffer');
+      }
+
       // Process each chunk
       for (let i = 0; i < requiredShards; i++) {
         const chunk = input.data.subarray(i * shardSize, (i + 1) * shardSize);
@@ -234,15 +239,23 @@ export class StaticHelpersFec {
       // Set up shard availability array
       const availableShards = [false, ...Array(parityBlocks.length).fill(true)];
 
+      // Ensure damaged block data is a Buffer
+      if (!(damagedBlock.data instanceof Buffer)) {
+        throw new Error('Damaged block data must be a Buffer');
+      }
+
       // Recover each shard
       let recoveredBlock = Buffer.alloc(0);
       for (let i = 0; i < requiredShards; i++) {
         // Combine damaged and parity data for this shard
         const shardData = Buffer.concat([
           damagedBlock.data.subarray(i * shardSize, (i + 1) * shardSize),
-          ...parityBlocks.map((block) =>
-            block.data.subarray(i * shardSize, (i + 1) * shardSize),
-          ),
+          ...parityBlocks.map((block) => {
+            if (!(block.data instanceof Buffer)) {
+              throw new Error('Parity block data must be a Buffer');
+            }
+            return block.data.subarray(i * shardSize, (i + 1) * shardSize);
+          }),
         ]);
 
         // Recover this shard

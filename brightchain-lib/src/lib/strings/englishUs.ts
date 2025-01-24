@@ -10,7 +10,12 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Common_Logo]: 'Logo',
   [StringNames.Common_Site]: site,
   [StringNames.Common_Unauthorized]: 'Unauthorized',
+  [StringNames.Error_ChecksumMismatchTemplate]:
+    'Checksum mismatch: expected {EXPECTED}, got {CHECKSUM}',
+  [StringNames.Error_InvalidBlockSizeTemplate]:
+    'Invalid block size: {BLOCK_SIZE}',
   [StringNames.Error_InvalidLanguageCode]: 'Invalid language code.',
+  [StringNames.Error_MetadataMismatch]: 'Metadata mismatch.',
   [StringNames.Error_TokenExpired]: 'Token expired.',
   [StringNames.Error_TokenInvalid]: 'Token invalid.',
   [StringNames.Error_UnexpectedError]: 'An unexpected error occurred.',

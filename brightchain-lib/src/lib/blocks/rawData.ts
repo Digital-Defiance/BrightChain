@@ -30,20 +30,21 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
     }
 
     const calculatedChecksum = StaticHelpersChecksum.calculateChecksum(data);
+    const metadata = BlockMetadata.create(
+      blockSize,
+      BlockType.RawData,
+      BlockDataType.RawData,
+      data.length,
+      dateCreated ?? now,
+    );
+
     super(
       BlockType.RawData,
       BlockDataType.RawData,
       blockSize,
-      data,
       checksum ?? calculatedChecksum,
       dateCreated ?? now,
-      BlockMetadata.create(
-        blockSize,
-        BlockType.RawData,
-        BlockDataType.RawData,
-        data.length,
-        dateCreated ?? now,
-      ),
+      metadata,
       canRead,
       canPersist,
     );
@@ -110,10 +111,19 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
   /**
    * Validate the block's data against its checksum
    */
-  public override validate(): boolean {
+  protected validate(): boolean {
     return StaticHelpersChecksum.calculateChecksum(this._data).equals(
       this.idChecksum,
     );
+  }
+
+  /**
+   * Validate the block's data against its checksum asynchronously
+   */
+  public override async validateAsync(): Promise<void> {
+    if (!this.validate()) {
+      throw new Error('Checksum mismatch');
+    }
   }
 
   /**

@@ -112,6 +112,11 @@ export enum BlockType {
    * 3. File system integration
    */
   ExtendedConstituentBlockListBlock = 9,
+
+  /**
+   * A block encrypted for multiple recipients.
+   */
+  MultiEncryptedBlock = 10,
 }
 
 export default BlockType;

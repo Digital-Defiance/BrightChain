@@ -4679,6 +4679,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/crc@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "@types/crc@npm:4.0.0"
+  dependencies:
+    crc: "npm:*"
+  checksum: 10c0/2f5ac37ec43fc1ab92f715a2a7f1c52015141a89aa4efbc51036a58210e923b29bd0ae7ddb6ba39f3db7fd9f13ed3071e778d3961d60c520991958c4c3634180
+  languageName: node
+  linkType: hard
+
 "@types/debug@npm:^4.1.8":
   version: 4.1.12
   resolution: "@types/debug@npm:4.1.12"
@@ -6655,6 +6664,7 @@ __metadata:
     "@swc/helpers": "npm:0.5.15"
     "@testing-library/react": "npm:15.0.6"
     "@types/cors": "npm:^2.8.17"
+    "@types/crc": "npm:^4.0.0"
     "@types/ejs": "npm:^3.1.5"
     "@types/elliptic": "npm:^6.4.18"
     "@types/express": "npm:~4.17.13"
@@ -6681,6 +6691,7 @@ __metadata:
     clsx: "npm:^2.0.0"
     cookie: "npm:0.7.0"
     cors: "npm:^2.8.5"
+    crc: "npm:^4.3.2"
     cypress: "npm:13.17.0"
     ejs: "npm:^3.1.10"
     elliptic: "npm:6.6.1"
@@ -7593,6 +7604,18 @@ __metadata:
     typescript:
       optional: true
   checksum: 10c0/0382a9ed13208f8bfc22ca2f62b364855207dffdb73dc26e150ade78c3093f1cf56172df2dd460c8caf2afa91c0ed4ec8a88c62f8f9cd1cf423d26506aa8797a
+  languageName: node
+  linkType: hard
+
+"crc@npm:*, crc@npm:^4.3.2":
+  version: 4.3.2
+  resolution: "crc@npm:4.3.2"
+  peerDependencies:
+    buffer: ">=6.0.3"
+  peerDependenciesMeta:
+    buffer:
+      optional: true
+  checksum: 10c0/61b36f9be3ade1bea49bd45a7e59ecbe1c2d75f043425680dcb37ebf753be65517c41bc3d485d63b2016d7c7fa5669854d366775e18fe698c95de27e27c41528
   languageName: node
   linkType: hard
 

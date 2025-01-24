@@ -1,4 +1,5 @@
 import { BrightChainMember } from '../brightChainMember';
+import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { GuidV4 } from '../guid';
@@ -24,28 +25,23 @@ import { EncryptedOwnedDataBlock } from './encryptedOwnedData';
  * - Padding: Random data to fill block size
  */
 export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock {
-  /**
-   * Creates an instance of EncryptedConstituentBlockListBlock.
-   * @param blockSize - The size of the block
-   * @param data - The encrypted data
-   * @param checksum - The checksum of the data
-   * @param creator - The creator of the block
-   * @param lengthBeforeEncryption - The length of the data before encryption
-   * @param dateCreated - The date the block was created
-   */
-  constructor(
+  public static override async from(
+    type: BlockType,
+    dataType: BlockDataType,
     blockSize: BlockSize,
     data: Buffer,
-    checksum?: ChecksumBuffer,
+    checksum: ChecksumBuffer,
     creator?: BrightChainMember | GuidV4,
-    lengthBeforeEncryption?: number,
     dateCreated?: Date,
-  ) {
+    actualDataLength?: number,
+    canRead = true,
+    canPersist = true,
+  ): Promise<EncryptedConstituentBlockListBlock> {
     // Store parameters for validation
     const finalData = data;
     const finalChecksum = checksum;
     const finalCreator = creator;
-    const finalLength = lengthBeforeEncryption;
+    const finalLength = actualDataLength;
 
     // Validate date first, before any other validation
     const now = new Date();
@@ -100,29 +96,46 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
       if (finalLength > maxUnencryptedLength) {
         throw new Error('Data length exceeds block capacity');
       }
+
+      // Validate total length with overhead
+      const totalLength = finalLength + StaticHelpersECIES.eciesOverheadLength;
+      if (totalLength > maxDataSize) {
+        throw new Error('Data length with overhead exceeds block capacity');
+      }
     }
 
-    // For encrypted CBL blocks, we want them to be both readable and persistable
-    super(
+    const metadata = {
+      size: blockSize,
+      type,
+      blockSize,
+      blockType: type,
+      dataType: BlockDataType.EncryptedData,
+      dateCreated: finalDate.toISOString(),
+      lengthBeforeEncryption: finalLength ?? data.length,
+      creator: finalCreator,
+      encrypted: true,
+    };
+
+    return new EncryptedConstituentBlockListBlock(
+      type,
+      BlockDataType.EncryptedData,
       blockSize,
       finalData,
       finalChecksum,
-      finalCreator,
-      finalLength,
-      dateCreated,
-      true, // Always readable
-      true, // Always persistable
-      BlockType.EncryptedConstituentBlockListBlock,
+      finalDate,
+      metadata,
+      canRead,
+      canPersist,
     );
   }
 
   /**
    * Create an encrypted CBL block from a plaintext CBL block
    */
-  public static fromCbl(
+  public static async fromCbl(
     cbl: ConstituentBlockListBlock,
     encryptor: BrightChainMember,
-  ): EncryptedConstituentBlockListBlock {
+  ): Promise<EncryptedConstituentBlockListBlock> {
     if (!cbl.canEncrypt) {
       throw new Error('CBL block cannot be encrypted');
     }
@@ -143,16 +156,63 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
       throw new Error('Original block must have a creator');
     }
 
-    // Use the original block's date
-    const blockDate = cbl.dateCreated;
-
-    return new EncryptedConstituentBlockListBlock(
+    return EncryptedConstituentBlockListBlock.from(
+      BlockType.EncryptedConstituentBlockListBlock,
+      BlockDataType.EncryptedData,
       cbl.blockSize,
       encryptedData,
-      undefined, // Let constructor calculate checksum
+      StaticHelpersChecksum.calculateChecksum(encryptedData),
       encryptor, // Use encryptor as creator since they're encrypting the data
+      cbl.dateCreated,
       cbl.actualDataLength,
-      blockDate,
+      true, // Always readable
+      true, // Always persistable
+    );
+  }
+
+  /**
+   * Creates an instance of EncryptedConstituentBlockListBlock.
+   * @param type - The type of the block
+   * @param dataType - The type of data in the block
+   * @param blockSize - The size of the block
+   * @param data - The encrypted data
+   * @param checksum - The checksum of the data
+   * @param dateCreated - The date the block was created
+   * @param metadata - The block metadata
+   * @param canRead - Whether the block can be read
+   * @param canPersist - Whether the block can be persisted
+   */
+  protected constructor(
+    type: BlockType,
+    dataType: BlockDataType,
+    blockSize: BlockSize,
+    data: Buffer,
+    checksum: ChecksumBuffer,
+    dateCreated?: Date,
+    metadata?: {
+      size: BlockSize;
+      type: BlockType;
+      blockSize: BlockSize;
+      blockType: BlockType;
+      dataType: BlockDataType;
+      dateCreated: string;
+      lengthBeforeEncryption: number;
+      creator?: BrightChainMember | GuidV4;
+      encrypted: boolean;
+    },
+    canRead = true,
+    canPersist = true,
+  ) {
+    super(
+      type,
+      dataType,
+      blockSize,
+      data,
+      checksum,
+      dateCreated,
+      metadata,
+      canRead,
+      canPersist,
     );
   }
 
@@ -179,5 +239,20 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
    */
   public override get canSign(): boolean {
     return this.creator !== undefined;
+  }
+
+  /**
+   * Get the encrypted payload data (excluding the encryption header)
+   * For CBL blocks, we need to return only the actual data without padding
+   */
+  public override get payload(): Buffer {
+    if (!this.canRead) {
+      throw new Error('Block cannot be read');
+    }
+    // Skip the encryption header and return only the actual data length
+    return this.data.subarray(
+      StaticHelpersECIES.eciesOverheadLength,
+      StaticHelpersECIES.eciesOverheadLength + this.actualDataLength,
+    );
   }
 }

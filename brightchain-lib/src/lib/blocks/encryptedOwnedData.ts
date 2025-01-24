@@ -1,4 +1,5 @@
 import { BrightChainMember } from '../brightChainMember';
+import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { GuidV4 } from '../guid';
@@ -20,59 +21,114 @@ import { EncryptedBlock } from './encrypted';
  * - Padding: Random data to fill block size
  */
 export class EncryptedOwnedDataBlock extends EncryptedBlock {
-  /**
-   * Creates an instance of EncryptedOwnedDataBlock.
-   * @param blockSize - The size of the block
-   * @param data - The encrypted data
-   * @param checksum - The checksum of the data
-   * @param creator - The creator/owner of the block
-   * @param lengthBeforeEncryption - The length of the data before encryption
-   * @param dateCreated - The date the block was created
-   * @param canRead - Whether the block can be read
-   * @param canPersist - Whether the block can be persisted
-   * @param blockType - The type of the block (defaults to EncryptedOwnedDataBlock)
-   */
-  constructor(
+  public static override async from(
+    type: BlockType,
+    dataType: BlockDataType,
     blockSize: BlockSize,
     data: Buffer,
-    checksum?: ChecksumBuffer,
+    checksum: ChecksumBuffer,
     creator?: BrightChainMember | GuidV4,
-    lengthBeforeEncryption?: number,
     dateCreated?: Date,
+    actualDataLength?: number,
     canRead = true,
     canPersist = true,
-    blockType: BlockType = BlockType.EncryptedOwnedDataBlock,
-  ) {
+  ): Promise<EncryptedOwnedDataBlock> {
     // Validate data exists
     if (!data || data.length === 0) {
       throw new Error('Data is required');
     }
 
     // Validate length before encryption
-    if (lengthBeforeEncryption !== undefined) {
-      if (lengthBeforeEncryption <= 0) {
+    if (actualDataLength !== undefined) {
+      if (actualDataLength <= 0) {
         throw new Error('Length before encryption must be positive');
       }
 
-      const minLength =
-        lengthBeforeEncryption + StaticHelpersECIES.eciesOverheadLength;
-      if (data.length < minLength) {
-        throw new Error(
-          `Data length (${data.length}) too small for encrypted data of length ${lengthBeforeEncryption}`,
-        );
+      // Validate total length with overhead
+      const totalLength =
+        actualDataLength + StaticHelpersECIES.eciesOverheadLength;
+      if (totalLength > (blockSize as number)) {
+        throw new Error('Data length with overhead exceeds block capacity');
       }
 
-      // Let parent class handle max size validation
+      // Validate minimum length
+      const minLength =
+        actualDataLength + StaticHelpersECIES.eciesOverheadLength;
+      if (data.length < minLength) {
+        throw new Error(
+          `Data length (${data.length}) too small for encrypted data of length ${actualDataLength}`,
+        );
+      }
     }
 
-    super(
-      blockType,
+    const metadata = {
+      size: blockSize,
+      type,
+      blockSize,
+      blockType: type,
+      dataType: BlockDataType.EncryptedData,
+      dateCreated: (dateCreated ?? new Date()).toISOString(),
+      lengthBeforeEncryption:
+        actualDataLength ??
+        data.length - StaticHelpersECIES.eciesOverheadLength,
+      creator,
+      encrypted: true,
+    };
+
+    return new EncryptedOwnedDataBlock(
+      type,
+      BlockDataType.EncryptedData,
       blockSize,
       data,
       checksum,
-      creator,
       dateCreated,
-      lengthBeforeEncryption,
+      metadata,
+      canRead,
+      canPersist,
+    );
+  }
+
+  /**
+   * Creates an instance of EncryptedOwnedDataBlock.
+   * @param type - The type of the block
+   * @param dataType - The type of data in the block
+   * @param blockSize - The size of the block
+   * @param data - The encrypted data
+   * @param checksum - The checksum of the data
+   * @param dateCreated - The date the block was created
+   * @param metadata - The block metadata
+   * @param canRead - Whether the block can be read
+   * @param canPersist - Whether the block can be persisted
+   */
+  protected constructor(
+    type: BlockType,
+    dataType: BlockDataType,
+    blockSize: BlockSize,
+    data: Buffer,
+    checksum: ChecksumBuffer,
+    dateCreated?: Date,
+    metadata?: {
+      size: BlockSize;
+      type: BlockType;
+      blockSize: BlockSize;
+      blockType: BlockType;
+      dataType: BlockDataType;
+      dateCreated: string;
+      lengthBeforeEncryption: number;
+      creator?: BrightChainMember | GuidV4;
+      encrypted: boolean;
+    },
+    canRead = true,
+    canPersist = true,
+  ) {
+    super(
+      type,
+      dataType,
+      blockSize,
+      data,
+      checksum,
+      dateCreated,
+      metadata,
       canRead,
       canPersist,
     );
@@ -102,5 +158,15 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
    */
   public override get canSign(): boolean {
     return this.creator !== undefined;
+  }
+
+  /**
+   * The length of the encrypted data
+   */
+  public get encryptedLength(): number {
+    if (this.actualDataLength === undefined) {
+      throw new Error('Actual data length is unknown');
+    }
+    return this.data.length;
   }
 }

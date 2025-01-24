@@ -21,23 +21,77 @@ import { BaseBlock } from './base';
  * It can load the block data and metadata on demand.
  */
 export class BlockHandle extends BaseBlock {
-  private readonly _path: string;
-  private _cachedData: Buffer | null = null;
-  private _cachedMetadata: IBlockMetadata | null = null;
+  protected _path: string;
+  protected _cachedData: Buffer | null = null;
+  protected _cachedMetadata: IBlockMetadata | null = null;
 
-  constructor(id: ChecksumBuffer, blockSize: BlockSize, path: string) {
+  /**
+   * Constructor - prefer using static createFromPath() method instead
+   */
+  constructor(
+    type: BlockType,
+    dataType: BlockDataType,
+    blockSize: BlockSize,
+    checksum: ChecksumBuffer,
+    dateCreated?: Date,
+    metadata?: IBlockMetadata,
+    canRead = true,
+    canPersist = true,
+  ) {
     super(
+      type,
+      dataType,
+      blockSize,
+      checksum,
+      dateCreated,
+      metadata,
+      canRead,
+      canPersist,
+    );
+    this._path = '';
+  }
+
+  /**
+   * Create a new block handle from a file path
+   */
+  public static async createFromPath(
+    blockSize: BlockSize,
+    path: string,
+    checksum?: ChecksumBuffer,
+    dateCreated?: Date,
+    metadata?: IBlockMetadata,
+    canRead = true,
+    canPersist = true,
+  ): Promise<BlockHandle> {
+    if (!existsSync(path)) {
+      throw new Error(`File not found: ${path}`);
+    }
+    const data = readFileSync(path);
+
+    // If no checksum provided, calculate it
+    if (!checksum) {
+      checksum = await StaticHelpersChecksum.calculateChecksumAsync(data);
+    }
+
+    // Create the handle with the checksum
+    const block = new BlockHandle(
       BlockType.Handle,
       BlockDataType.RawData,
       blockSize,
-      Buffer.alloc(0), // Empty buffer since data is loaded on demand
-      id,
-      undefined, // dateCreated
-      undefined, // metadata will be loaded on demand
-      true, // canRead
-      true, // canPersist
+      checksum,
+      dateCreated,
+      metadata,
+      canRead,
+      canPersist,
     );
-    this._path = path;
+    block._path = path;
+
+    // Validate if we calculated the checksum ourselves
+    if (!checksum) {
+      await block.validateAsync();
+    }
+
+    return block;
   }
 
   /**
@@ -55,34 +109,22 @@ export class BlockHandle extends BaseBlock {
   }
 
   /**
-   * Get the usable capacity after accounting for overhead
-   */
-  public override get capacity(): number {
-    return this.blockSize - this.totalOverhead;
-  }
-
-  /**
-   * The path to the block file
+   * Get the block's path
    */
   public get path(): string {
     return this._path;
   }
 
   /**
-   * The raw data in the block, loaded on demand
+   * Get the block data
    */
-  public override get data(): Buffer {
-    if (!this.canRead) {
-      throw new Error('Block cannot be read');
-    }
+  public get data(): Buffer {
     if (!this._cachedData) {
       if (!existsSync(this.path)) {
         throw new Error(`Block file not found: ${this.path}`);
       }
-      this._cachedData = readFileSync(this.path);
-      if (this._cachedData.length !== this.blockSize) {
-        throw new Error('Block file size mismatch');
-      }
+      const fileData = readFileSync(this.path);
+      this._cachedData = fileData;
     }
     return this._cachedData;
   }
@@ -111,7 +153,7 @@ export class BlockHandle extends BaseBlock {
         try {
           const metadataJson = readFileSync(metadataPath).toString();
           this._cachedMetadata = BlockMetadata.fromJSON(metadataJson);
-        } catch (error) {
+        } catch (error: unknown) {
           if (error instanceof Error) {
             throw new Error(`Invalid block metadata: ${error.message}`);
           }
@@ -120,18 +162,6 @@ export class BlockHandle extends BaseBlock {
       }
     }
     return this._cachedMetadata;
-  }
-
-  /**
-   * Whether the block's data has been validated
-   */
-  public override get validated(): boolean {
-    try {
-      const checksum = StaticHelpersChecksum.calculateChecksum(this.data);
-      return checksum.equals(this.idChecksum);
-    } catch {
-      return false;
-    }
   }
 
   /**
@@ -175,12 +205,12 @@ export class BlockHandle extends BaseBlock {
         resolve(checksum);
       });
 
-      readStream.on('error', (error) => {
+      readStream.on('error', (error: Error) => {
         checksumTransform.destroy();
         reject(error);
       });
 
-      checksumTransform.on('error', (error) => {
+      checksumTransform.on('error', (error: Error) => {
         readStream.destroy();
         reject(error);
       });
@@ -195,12 +225,10 @@ export class BlockHandle extends BaseBlock {
   /**
    * Verify the block's checksum matches its ID
    */
-  public async verifyChecksum(): Promise<boolean> {
-    try {
-      const checksum = await this.calculateChecksum();
-      return checksum.equals(this.idChecksum);
-    } catch {
-      return false;
+  public async validateAsync(): Promise<void> {
+    const checksum = await this.calculateChecksum();
+    if (!checksum.equals(this.idChecksum)) {
+      throw new Error('Checksum validation failed');
     }
   }
 

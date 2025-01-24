@@ -1,4 +1,8 @@
+import { faker } from '@faker-js/faker';
 import { createECDH, randomBytes } from 'crypto';
+import { BrightChainMember } from './brightChainMember';
+import { EmailString } from './emailString';
+import MemberType from './enumerations/memberType';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
 
 describe('StaticHelpersECIES', () => {
@@ -205,5 +209,133 @@ describe('StaticHelpersECIES', () => {
         ),
       ).toThrow('Invalid encrypted data length');
     });
+  });
+});
+
+describe('multi-recipient encryption', () => {
+  const recipients = Array.from({ length: 3 }).map(() => {
+    return BrightChainMember.newMember(
+      MemberType.System,
+      faker.person.fullName(),
+      new EmailString(faker.internet.email()),
+    );
+  });
+
+  const testData = Buffer.from('test data for multiple recipients');
+
+  it('should encrypt for multiple recipients and allow each to decrypt', () => {
+    // Encrypt for all recipients
+    const encrypted = StaticHelpersECIES.encryptMultiple(recipients, testData);
+    const encryptedBuffer =
+      StaticHelpersECIES.multipleEncryptResultsToBuffer(encrypted);
+    const expectedOverheadLength =
+      StaticHelpersECIES.computeMultipleECIESOverheadLength(recipients.length);
+    const expectedHeaderLength =
+      expectedOverheadLength -
+      StaticHelpersECIES.eciesMultipleMessageOverheadLength;
+    if (encryptedBuffer.headerLength != expectedHeaderLength) {
+      throw new Error('Invalid header length');
+    }
+    if (
+      encryptedBuffer.data.length !=
+      expectedOverheadLength + testData.length
+    ) {
+      throw new Error('Invalid encrypted data length');
+    }
+
+    // Verify structure
+    expect(encrypted.recipientIds.length).toBe(recipients.length);
+    expect(encrypted.encryptedKeys.length).toBe(recipients.length);
+    expect(encrypted.encryptedMessage).toBeDefined();
+
+    // Each recipient should be able to decrypt
+    for (const recipient of recipients) {
+      const decrypted = StaticHelpersECIES.decryptMultipleECIEForRecipient(
+        encrypted,
+        recipient,
+      );
+      expect(decrypted).toEqual(testData);
+    }
+  });
+
+  it('should correctly encode and decode multi-recipient encryption to buffer', () => {
+    const encrypted = StaticHelpersECIES.encryptMultiple(recipients, testData);
+
+    // Convert to buffer
+    const { data } =
+      StaticHelpersECIES.multipleEncryptResultsToBuffer(encrypted);
+
+    // Decode from buffer
+    const decoded = StaticHelpersECIES.bufferToMultiRecipientEncryption(data);
+
+    // Verify structure matches
+    expect(decoded.recipientIds.length).toBe(encrypted.recipientIds.length);
+    expect(
+      decoded.recipientIds.every((id, i) =>
+        id.equals(encrypted.recipientIds[i]),
+      ),
+    ).toBe(true);
+    expect(decoded.encryptedKeys).toEqual(encrypted.encryptedKeys);
+    expect(decoded.encryptedMessage).toEqual(encrypted.encryptedMessage);
+
+    // Verify each recipient can still decrypt
+    for (const recipient of recipients) {
+      const decrypted = StaticHelpersECIES.decryptMultipleECIEForRecipient(
+        decoded,
+        recipient,
+      );
+      expect(decrypted).toEqual(testData);
+    }
+  });
+
+  it('should reject decryption for non-recipient', () => {
+    const encrypted = StaticHelpersECIES.encryptMultiple(
+      recipients.slice(0, 2), // Only encrypt for first two recipients
+      testData,
+    );
+
+    // Try to decrypt with the third recipient
+    expect(() =>
+      StaticHelpersECIES.decryptMultipleECIEForRecipient(
+        encrypted,
+        recipients[2],
+      ),
+    ).toThrow('Recipient not found in recipient IDs');
+  });
+
+  it('should handle empty data', () => {
+    const emptyData = Buffer.alloc(0);
+    const encrypted = StaticHelpersECIES.encryptMultiple(recipients, emptyData);
+
+    for (const recipient of recipients) {
+      const decrypted = StaticHelpersECIES.decryptMultipleECIEForRecipient(
+        encrypted,
+        recipient,
+      );
+      expect(decrypted).toEqual(emptyData);
+    }
+  });
+
+  it('should handle large data', () => {
+    const largeData = randomBytes(64 * 1024); // 64KB
+    const encrypted = StaticHelpersECIES.encryptMultiple(recipients, largeData);
+
+    for (const recipient of recipients) {
+      const decrypted = StaticHelpersECIES.decryptMultipleECIEForRecipient(
+        encrypted,
+        recipient,
+      );
+      expect(decrypted).toEqual(largeData);
+    }
+  });
+
+  it('should throw error when recipient count exceeds uint16', () => {
+    const tooManyRecipients = Array.from({ length: 65536 }).map(
+      () => recipients[0],
+    );
+
+    expect(() =>
+      StaticHelpersECIES.encryptMultiple(tooManyRecipients, testData),
+    ).toThrow('Too many recipients');
   });
 });

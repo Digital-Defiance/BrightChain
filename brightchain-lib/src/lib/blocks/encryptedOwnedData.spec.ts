@@ -21,7 +21,7 @@ describe('EncryptedOwnedDataBlock', () => {
     );
   });
 
-  it('should construct correctly with default block type', () => {
+  it('should construct correctly with default block type', async () => {
     const blockSize = BlockSize.Small;
     // Calculate the maximum data size that can fit in the block after encryption
     // The encrypted data will include ECIES overhead, so we need to account for that
@@ -35,11 +35,14 @@ describe('EncryptedOwnedDataBlock', () => {
       originalData,
     );
 
-    const block = new EncryptedOwnedDataBlock(
+    const block = await EncryptedOwnedDataBlock.from(
+      BlockType.EncryptedOwnedDataBlock,
+      BlockDataType.EncryptedData,
       blockSize,
       encryptedData,
-      undefined,
+      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
       member,
+      undefined,
       originalData.length,
     );
 
@@ -51,7 +54,7 @@ describe('EncryptedOwnedDataBlock', () => {
     expect(block.canEncrypt).toBe(false);
   });
 
-  it('should construct correctly with custom block type', () => {
+  it('should construct correctly with custom block type', async () => {
     const blockSize = BlockSize.Small;
     const maxDataSize =
       (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
@@ -63,22 +66,21 @@ describe('EncryptedOwnedDataBlock', () => {
     );
 
     const customBlockType = BlockType.EncryptedConstituentBlockListBlock;
-    const block = new EncryptedOwnedDataBlock(
+    const block = await EncryptedOwnedDataBlock.from(
+      customBlockType,
+      BlockDataType.EncryptedData,
       blockSize,
       encryptedData,
-      undefined,
+      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
       member,
-      originalData.length,
       undefined,
-      true, // canRead
-      true, // canPersist
-      customBlockType, // blockType
+      originalData.length,
     );
 
     expect(block.blockType).toBe(customBlockType);
   });
 
-  it('should handle creator as GuidV4', () => {
+  it('should handle creator as GuidV4', async () => {
     const blockSize = BlockSize.Small;
     const maxDataSize =
       (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
@@ -90,11 +92,14 @@ describe('EncryptedOwnedDataBlock', () => {
     );
 
     const creatorId = GuidV4.new();
-    const block = new EncryptedOwnedDataBlock(
+    const block = await EncryptedOwnedDataBlock.from(
+      BlockType.EncryptedOwnedDataBlock,
+      BlockDataType.EncryptedData,
       blockSize,
       encryptedData,
-      undefined,
+      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
       creatorId,
+      undefined,
       originalData.length,
     );
 
@@ -102,7 +107,7 @@ describe('EncryptedOwnedDataBlock', () => {
     expect(block.creator).toBeUndefined();
   });
 
-  it('should handle creator as BrightChainMember', () => {
+  it('should handle creator as BrightChainMember', async () => {
     const blockSize = BlockSize.Small;
     const maxDataSize =
       (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
@@ -113,11 +118,14 @@ describe('EncryptedOwnedDataBlock', () => {
       originalData,
     );
 
-    const block = new EncryptedOwnedDataBlock(
+    const block = await EncryptedOwnedDataBlock.from(
+      BlockType.EncryptedOwnedDataBlock,
+      BlockDataType.EncryptedData,
       blockSize,
       encryptedData,
-      undefined,
+      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
       member,
+      undefined,
       originalData.length,
     );
 
@@ -125,7 +133,7 @@ describe('EncryptedOwnedDataBlock', () => {
     expect(block.creator).toBe(member);
   });
 
-  it('should validate checksum when provided', () => {
+  it('should validate checksum when provided', async () => {
     const blockSize = BlockSize.Small;
     const maxDataSize =
       (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
@@ -137,19 +145,22 @@ describe('EncryptedOwnedDataBlock', () => {
     );
 
     const checksum = StaticHelpersChecksum.calculateChecksum(encryptedData);
-    const block = new EncryptedOwnedDataBlock(
+    const block = await EncryptedOwnedDataBlock.from(
+      BlockType.EncryptedOwnedDataBlock,
+      BlockDataType.EncryptedData,
       blockSize,
       encryptedData,
       checksum,
       member,
+      undefined,
       originalData.length,
     );
 
-    expect(block.validated).toBe(true);
+    await block.validateAsync();
     expect(block.idChecksum).toEqual(checksum);
   });
 
-  it('should handle read permissions correctly', () => {
+  it('should handle read permissions correctly', async () => {
     const blockSize = BlockSize.Small;
     const maxDataSize =
       (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
@@ -160,13 +171,15 @@ describe('EncryptedOwnedDataBlock', () => {
       originalData,
     );
 
-    const block = new EncryptedOwnedDataBlock(
+    const block = await EncryptedOwnedDataBlock.from(
+      BlockType.EncryptedOwnedDataBlock,
+      BlockDataType.EncryptedData,
       blockSize,
       encryptedData,
-      undefined,
+      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
       member,
-      originalData.length,
       undefined,
+      originalData.length,
       false, // canRead = false
     );
 
@@ -174,7 +187,7 @@ describe('EncryptedOwnedDataBlock', () => {
     expect(() => block.data).toThrow('Block cannot be read');
   });
 
-  it('should handle date validation', () => {
+  it('should handle date validation', async () => {
     const blockSize = BlockSize.Small;
     const maxDataSize =
       (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
@@ -186,20 +199,21 @@ describe('EncryptedOwnedDataBlock', () => {
     );
 
     const futureDate = new Date(Date.now() + 100000);
-    expect(
-      () =>
-        new EncryptedOwnedDataBlock(
-          blockSize,
-          encryptedData,
-          undefined,
-          member,
-          originalData.length,
-          futureDate,
-        ),
-    ).toThrow('Date created cannot be in the future');
+    await expect(
+      EncryptedOwnedDataBlock.from(
+        BlockType.EncryptedOwnedDataBlock,
+        BlockDataType.EncryptedData,
+        blockSize,
+        encryptedData,
+        await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
+        member,
+        futureDate,
+        originalData.length,
+      ),
+    ).rejects.toThrow('Date created cannot be in the future');
   });
 
-  it('should handle encryption metadata correctly', () => {
+  it('should handle encryption metadata correctly', async () => {
     const blockSize = BlockSize.Small;
     const maxDataSize =
       (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
@@ -210,11 +224,14 @@ describe('EncryptedOwnedDataBlock', () => {
       originalData,
     );
 
-    const block = new EncryptedOwnedDataBlock(
+    const block = await EncryptedOwnedDataBlock.from(
+      BlockType.EncryptedOwnedDataBlock,
+      BlockDataType.EncryptedData,
       blockSize,
       encryptedData,
-      undefined,
+      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
       member,
+      undefined,
       originalData.length,
     );
 
