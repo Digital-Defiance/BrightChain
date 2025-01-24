@@ -1,5 +1,6 @@
 import { createECDH, createHash, createHmac } from 'crypto';
 import { KeyPair } from 'paillier-bigint';
+import { SecureDeterministicDRBG } from './drbg';
 import { IsolatedPrivateKey } from './isolatedPrivateKey';
 import { IsolatedPublicKey } from './isolatedPublicKey';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
@@ -7,7 +8,7 @@ import { StaticHelpersVoting } from './staticHelpers.voting';
 
 export class StaticHelpersVotingDerivation {
   private static readonly PRIME_GEN_INFO = 'PaillierPrimeGen';
-  private static readonly PRIME_TEST_ITERATIONS = 64; // Increased for better security
+  private static readonly PRIME_TEST_ITERATIONS = 256; // Further increased for stronger security guarantees
 
   /**
    * HKDF implementation following RFC 5869
@@ -105,6 +106,59 @@ export class StaticHelpersVotingDerivation {
     return result;
   }
 
+  private static generateDeterministicPrime(
+    drbg: SecureDeterministicDRBG,
+    numBits: number,
+  ): bigint {
+    const maxAttempts = 20000; // Increased for better probability of finding strong primes
+    const numBytes = Math.ceil(numBits / 8);
+    let attempts = 0;
+
+    // Pre-compute bit masks
+    const highBitMask = 1n << BigInt(numBits - 1);
+    const lengthMask = (1n << BigInt(numBits)) - 1n;
+
+    while (attempts < maxAttempts) {
+      attempts++;
+
+      // Generate random bytes
+      const bytes = drbg.generateBytes(numBytes);
+
+      // Convert to bigint efficiently
+      let num = BigInt(0);
+      for (const byte of bytes) {
+        num = (num << 8n) | BigInt(byte);
+      }
+
+      // Ensure exact bit length and odd number
+      num = (num & lengthMask) | highBitMask | 1n;
+
+      // Skip if bit length is wrong
+      if (num.toString(2).length !== numBits) {
+        continue;
+      }
+
+      // Extended small prime sieve for better efficiency
+      if (
+        num % 3n === 0n ||
+        num % 5n === 0n ||
+        num % 7n === 0n ||
+        num % 11n === 0n ||
+        num % 13n === 0n ||
+        num % 17n === 0n
+      ) {
+        continue;
+      }
+
+      // Full primality test
+      if (this.millerRabinTest(num, this.PRIME_TEST_ITERATIONS)) {
+        return num;
+      }
+    }
+
+    throw new Error(`Failed to generate prime after ${maxAttempts} attempts`);
+  }
+
   /**
    * Generate a probable prime number using deterministic randomness
    */
@@ -113,62 +167,12 @@ export class StaticHelpersVotingDerivation {
     bits: number,
   ): KeyPair {
     // Generate a deterministic prime number
-    const generatePrime = (prefix: string, numBits: number): bigint => {
-      let attempt = 0;
-      const maxAttempts = 1000;
-
-      while (attempt < maxAttempts) {
-        // Generate deterministic bytes for this attempt
-        const attemptSeed = createHash('sha512')
-          .update(seed)
-          .update(prefix)
-          .update(attempt.toString())
-          .digest();
-
-        // Generate bytes for prime candidate
-        const bytes = Buffer.alloc(Math.ceil(numBits / 8));
-        let offset = 0;
-        let currentHash = attemptSeed;
-
-        while (offset < bytes.length) {
-          currentHash = createHash('sha512').update(currentHash).digest();
-          const bytesToCopy = Math.min(
-            currentHash.length,
-            bytes.length - offset,
-          );
-          currentHash.copy(bytes, offset, 0, bytesToCopy);
-          offset += bytesToCopy;
-        }
-
-        // Convert to BigInt and ensure correct bit length
-        let num = BigInt('0x' + bytes.toString('hex'));
-        num = num % (1n << BigInt(numBits)); // Ensure not too large
-        num = num | (1n << BigInt(numBits - 1)); // Set high bit
-        num = num | 1n; // Make odd
-
-        // Check if it's prime and suitable for RSA
-        if (this.millerRabinTest(num, this.PRIME_TEST_ITERATIONS)) {
-          // Additional checks for RSA suitability
-          const numMinus1 = num - 1n;
-          if (this.millerRabinTest(numMinus1 / 2n, 8)) {
-            continue; // Skip if (p-1)/2 is prime (Pollard p-1 attack)
-          }
-          return num;
-        }
-
-        attempt++;
-      }
-
-      throw new Error('Failed to generate suitable prime');
-    };
-
+    const drbg = new SecureDeterministicDRBG(seed); // Initialize DRBG with the seed
     try {
-      // Calculate prime size for desired key length
       const primeBits = Math.ceil(bits / 2) + 1; // Extra bit for safety
+      const p = this.generateDeterministicPrime(drbg, primeBits);
 
-      // Generate two distinct primes
-      const p = generatePrime('p', primeBits);
-      const q = generatePrime('q', primeBits);
+      const q = this.generateDeterministicPrime(drbg, primeBits);
 
       if (p === q) {
         throw new Error('Generated identical primes');
@@ -188,8 +192,11 @@ export class StaticHelpersVotingDerivation {
       const privateKey = new IsolatedPrivateKey(lambda, mu, publicKey);
 
       // Verify key length
-      if (n.toString(2).length < bits) {
-        throw new Error('Generated key pair too small');
+      const actualBits = n.toString(2).length;
+      if (actualBits < bits) {
+        throw new Error(
+          `Generated key pair too small: ${actualBits} bits < ${bits} bits`,
+        );
       }
 
       // Test the key pair
@@ -202,9 +209,8 @@ export class StaticHelpersVotingDerivation {
 
       return { publicKey, privateKey };
     } catch (error) {
-      // If anything fails, try again with a new seed
-      const newSeed = createHash('sha512').update(seed).digest();
-      return this.generateDeterministicKeyPair(newSeed, bits);
+      console.error('Error in generateDeterministicKeyPair: ', error);
+      throw error;
     }
   }
 

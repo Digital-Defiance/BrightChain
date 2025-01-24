@@ -4,17 +4,27 @@ import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { EciesDecryptionTransform } from './eciesDecryptTransform';
 
 describe('EciesDecryptionTransform Unit Tests', () => {
-  beforeAll(() => {
-    console.error = jest.fn();
-  });
+  const mockLogger = {
+    error: jest.fn(),
+    log: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn(),
+  } as unknown as Console;
+
   const blockSize = BlockSize.Small;
   const mnemonic = StaticHelpersECIES.generateNewMnemonic();
   const keypair = StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer(mnemonic);
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   it('should be instantiated with correct parameters', () => {
     const transform = new EciesDecryptionTransform(
       keypair.privateKey,
       blockSize,
+      undefined,
+      mockLogger,
     );
     expect(transform).toBeDefined();
   });
@@ -23,6 +33,8 @@ describe('EciesDecryptionTransform Unit Tests', () => {
     const transform = new EciesDecryptionTransform(
       keypair.privateKey,
       blockSize,
+      undefined,
+      mockLogger,
     );
     const chunks: Buffer[] = [];
 
@@ -42,6 +54,8 @@ describe('EciesDecryptionTransform Unit Tests', () => {
     const transform = new EciesDecryptionTransform(
       keypair.privateKey,
       blockSize,
+      undefined,
+      mockLogger,
     );
     const inputData = randomBytes(100);
     const encryptedData = StaticHelpersECIES.encrypt(
@@ -69,6 +83,8 @@ describe('EciesDecryptionTransform Unit Tests', () => {
     const transform = new EciesDecryptionTransform(
       keypair.privateKey,
       blockSize,
+      undefined,
+      mockLogger,
     );
     const inputData = randomBytes(1000);
     const encryptedData = StaticHelpersECIES.encrypt(
@@ -94,23 +110,20 @@ describe('EciesDecryptionTransform Unit Tests', () => {
       done();
     });
 
-    // Write chunks with some delay to simulate streaming
-    inputChunks.forEach((chunk, index) => {
-      setTimeout(() => {
-        transform.write(chunk);
-        if (index === inputChunks.length - 1) {
-          transform.end();
-        }
-      }, index * 10);
+    // Write chunks immediately without artificial delays
+    inputChunks.forEach((chunk) => {
+      transform.write(chunk);
     });
-  });
+    transform.end();
+  }, 30000);
 
   it('should throw error with invalid private key', (done) => {
-    jest.setTimeout(10000); // Increase timeout to 10 seconds
     const invalidPrivateKey = randomBytes(32); // Wrong format for private key
     const transform = new EciesDecryptionTransform(
       invalidPrivateKey,
       blockSize,
+      undefined,
+      mockLogger,
     );
     const inputData = randomBytes(100);
     const encryptedData = StaticHelpersECIES.encrypt(
@@ -121,24 +134,27 @@ describe('EciesDecryptionTransform Unit Tests', () => {
     transform.on('error', (error) => {
       expect(error).toBeDefined();
       expect(error.message).toContain('Decryption failed');
-      expect(console.error).toHaveBeenCalled();
+      expect(mockLogger.error).toHaveBeenCalled();
       done();
     });
 
     transform.write(encryptedData);
     transform.end();
-  });
+  }, 10000);
 
   it('should throw error with corrupted encrypted data', (done) => {
     const transform = new EciesDecryptionTransform(
       keypair.privateKey,
       blockSize,
+      undefined,
+      mockLogger,
     );
     const corruptedData = randomBytes(200); // Random data that's not properly encrypted
 
     transform.on('error', (error) => {
       expect(error).toBeDefined();
       expect(error.message).toContain('Decryption failed');
+      expect(mockLogger.error).toHaveBeenCalled();
       done();
     });
 

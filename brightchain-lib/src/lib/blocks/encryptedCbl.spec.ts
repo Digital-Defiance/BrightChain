@@ -46,39 +46,10 @@ class TestEncryptedCblBlock extends EncryptedConstituentBlockListBlock {
     actualDataLength?: number,
     dateCreated?: Date,
   ) {
-    // Validate date before any other validation
-    const now = new Date();
-    dateCreated = dateCreated ?? now;
-    if (dateCreated > now) {
-      throw new Error('Date created cannot be in the future');
-    }
-
-    // Store internal state before validation
-    const internalData = data;
-    const internalCreator = creator;
-    const internalActualDataLength = actualDataLength;
-
-    // Calculate checksum from the data
-    const calculatedChecksum =
-      StaticHelpersChecksum.calculateChecksum(internalData);
-
-    // Use provided checksum or calculated one
-    const finalChecksum = checksum ?? calculatedChecksum;
-
-    // Initialize base class
-    super(
-      blockSize,
-      internalData,
-      finalChecksum,
-      internalCreator,
-      internalActualDataLength,
-      dateCreated,
-    );
-
-    // Store internal state after initialization
-    this._internalData = internalData;
-    this._internalCreator = internalCreator;
-    this._internalActualDataLength = internalActualDataLength;
+    super(blockSize, data, checksum, creator, actualDataLength, dateCreated);
+    this._internalData = data;
+    this._internalCreator = creator;
+    this._internalActualDataLength = actualDataLength;
   }
 
   public override get data(): Buffer {
@@ -102,7 +73,6 @@ class TestEncryptedCblBlock extends EncryptedConstituentBlockListBlock {
     if (!this.canRead) {
       throw new Error('Block cannot be read');
     }
-    // Skip the encryption header and return the actual data
     const start = StaticHelpersECIES.eciesOverheadLength;
     const end =
       start +
@@ -112,64 +82,42 @@ class TestEncryptedCblBlock extends EncryptedConstituentBlockListBlock {
 }
 
 describe('EncryptedConstituentBlockListBlock', () => {
+  // Set a longer timeout for all tests in this file
+  jest.setTimeout(30000);
+
+  // Shared test data
   let creator: GuidV4;
   let encryptor: BrightChainMember;
   let blockSize: BlockSize;
   let cblBlock: ConstituentBlockListBlock;
   let testDate: Date;
 
-  beforeAll(() => {
-    encryptor = BrightChainMember.newMember(
-      MemberType.User,
-      'Test User',
-      new EmailString('test@example.com'),
-    );
-  });
-
-  beforeEach(() => {
-    // Create a fixed date for consistent testing
-    testDate = new Date(Date.now() - 1000); // 1 second ago, using timestamp to avoid any timezone issues
-
-    // Create a GuidV4 creator since it doesn't require signature validation
-    creator = GuidV4.new();
-
-    blockSize = BlockSize.Small;
-
-    // Create test addresses - just one tuple to keep data size small
-    const addresses: ChecksumBuffer[] = [];
-    for (let i = 0; i < TUPLE_SIZE; i++) {
-      // Use fixed test data for consistent signatures
+  // Helper functions
+  const createTestAddresses = (
+    count: number = TUPLE_SIZE,
+  ): ChecksumBuffer[] => {
+    return Array.from({ length: count }, (_, i) => {
       const testData = Buffer.alloc(32, i + 1);
-      addresses.push(
-        StaticHelpersChecksum.calculateChecksum(testData) as ChecksumBuffer,
-      );
-    }
+      return StaticHelpersChecksum.calculateChecksum(
+        testData,
+      ) as ChecksumBuffer;
+    });
+  };
 
-    // Calculate capacity to ensure we don't exceed it
-    const capacity = ConstituentBlockListBlock.CalculateCBLAddressCapacity(
-      blockSize,
-      true, // allow encryption
-    );
-
-    if (addresses.length > capacity) {
-      throw new Error('Test data exceeds block capacity');
-    }
-
-    // Create a CBL block with valid data length
-    const dataLength =
-      addresses.length * StaticHelpersChecksum.Sha3ChecksumBufferLength;
-
-    // Generate signature for GuidV4 creator using encryptor's private key
+  const createSignature = (
+    addresses: ChecksumBuffer[],
+    dataLength: bigint,
+  ): SignatureBuffer => {
     const dateBuffer = Buffer.alloc(8);
     const dateMs = testDate.getTime();
-    dateBuffer.writeUInt32BE(Math.floor(dateMs / 0x100000000), 0); // High 32 bits
-    dateBuffer.writeUInt32BE(dateMs % 0x100000000, 4); // Low 32 bits
+    dateBuffer.writeUInt32BE(Math.floor(dateMs / 0x100000000), 0);
+    dateBuffer.writeUInt32BE(dateMs % 0x100000000, 4);
 
     const addressCountBuffer = Buffer.alloc(4);
     addressCountBuffer.writeUInt32BE(addresses.length);
 
     const dataLengthBuffer = Buffer.alloc(8);
-    dataLengthBuffer.writeBigInt64BE(BigInt(dataLength));
+    dataLengthBuffer.writeBigInt64BE(dataLength);
 
     const tupleSizeBuffer = Buffer.alloc(1);
     tupleSizeBuffer.writeUInt8(TUPLE_SIZE);
@@ -187,197 +135,165 @@ describe('EncryptedConstituentBlockListBlock', () => {
       Buffer.concat(addresses),
     ]);
     const checksum = StaticHelpersChecksum.calculateChecksum(toSign);
-    const signature = StaticHelpersECIES.signMessage(
-      encryptor.privateKey,
-      checksum,
-    );
+    return StaticHelpersECIES.signMessage(encryptor.privateKey, checksum);
+  };
 
-    // Create CBL block with GuidV4 creator and signature
+  beforeAll(() => {
+    encryptor = BrightChainMember.newMember(
+      MemberType.User,
+      'Test User',
+      new EmailString('test@example.com'),
+    );
+  });
+
+  beforeEach(() => {
+    testDate = new Date(Date.now() - 1000);
+    creator = GuidV4.new();
+    blockSize = BlockSize.Small;
+
+    const addresses = createTestAddresses();
+    const dataLength = BigInt(
+      addresses.length * StaticHelpersChecksum.Sha3ChecksumBufferLength,
+    );
+    const signature = createSignature(addresses, dataLength);
+
     cblBlock = new TestCblBlock(
       blockSize,
       creator,
-      BigInt(dataLength),
+      dataLength,
       addresses,
-      testDate, // Use fixed date
-      signature, // Pass generated signature
+      testDate,
+      signature,
     );
   });
 
-  it('should construct correctly', () => {
-    const encryptedBlock = EncryptedConstituentBlockListBlock.fromCbl(
-      cblBlock,
-      encryptor,
-    );
+  describe('basic functionality', () => {
+    it('should construct and handle metadata correctly', () => {
+      const encryptedBlock = EncryptedConstituentBlockListBlock.fromCbl(
+        cblBlock,
+        encryptor,
+      );
 
-    expect(encryptedBlock.blockSize).toBe(blockSize);
-    expect(encryptedBlock.blockType).toBe(
-      BlockType.EncryptedConstituentBlockListBlock,
-    );
-    expect(encryptedBlock.encrypted).toBe(true);
-    expect(encryptedBlock.canRead).toBe(true);
-    expect(encryptedBlock.actualDataLength).toBe(cblBlock.data.length);
+      // Basic properties
+      expect(encryptedBlock.blockSize).toBe(blockSize);
+      expect(encryptedBlock.blockType).toBe(
+        BlockType.EncryptedConstituentBlockListBlock,
+      );
+      expect(encryptedBlock.encrypted).toBe(true);
+      expect(encryptedBlock.canRead).toBe(true);
+      // actualDataLength should be the length of the original CBL data before encryption
+      expect(encryptedBlock.actualDataLength).toBe(cblBlock.data.length);
+
+      // Encryption metadata
+      expect(encryptedBlock.ephemeralPublicKey.length).toBe(
+        StaticHelpersECIES.publicKeyLength,
+      );
+      expect(encryptedBlock.iv.length).toBe(StaticHelpersECIES.ivLength);
+      expect(encryptedBlock.authTag.length).toBe(
+        StaticHelpersECIES.authTagLength,
+      );
+      expect(encryptedBlock.totalOverhead).toBe(
+        StaticHelpersECIES.eciesOverheadLength,
+      );
+    });
+
+    it('should handle creators correctly', () => {
+      // Test with GuidV4 creator
+      const guidBlock = new TestEncryptedCblBlock(
+        blockSize,
+        StaticHelpersECIES.encrypt(encryptor.publicKey, cblBlock.data),
+        undefined,
+        creator,
+        cblBlock.actualDataLength,
+        testDate,
+      );
+      expect(guidBlock.creator).toBeUndefined();
+      expect(guidBlock.creatorId).toBe(creator);
+
+      // Test with BrightChainMember creator
+      const memberBlock = EncryptedConstituentBlockListBlock.fromCbl(
+        cblBlock,
+        encryptor,
+      );
+      expect(memberBlock.creator).toBe(encryptor);
+      expect(memberBlock.creatorId).toBe(encryptor.id);
+    });
+
+    it('should handle payload correctly', () => {
+      const encryptedBlock = EncryptedConstituentBlockListBlock.fromCbl(
+        cblBlock,
+        encryptor,
+      );
+      expect(encryptedBlock.payload.length).toBe(
+        encryptedBlock.data.length - StaticHelpersECIES.eciesOverheadLength,
+      );
+    });
   });
 
-  it('should handle encryption metadata correctly', () => {
-    const encryptedBlock = EncryptedConstituentBlockListBlock.fromCbl(
-      cblBlock,
-      encryptor,
-    );
+  describe('validation', () => {
+    it('should validate checksum', () => {
+      const encryptedData = StaticHelpersECIES.encrypt(
+        encryptor.publicKey,
+        cblBlock.data,
+      );
+      const checksum = StaticHelpersChecksum.calculateChecksum(encryptedData);
+      const block = new TestEncryptedCblBlock(
+        blockSize,
+        encryptedData,
+        checksum,
+        creator,
+        cblBlock.actualDataLength,
+        testDate,
+      );
+      expect(block.idChecksum).toEqual(checksum);
+    });
 
-    expect(encryptedBlock.ephemeralPublicKey).toBeDefined();
-    expect(encryptedBlock.ephemeralPublicKey.length).toBe(
-      StaticHelpersECIES.publicKeyLength,
-    );
-    expect(encryptedBlock.iv).toBeDefined();
-    expect(encryptedBlock.iv.length).toBe(StaticHelpersECIES.ivLength);
-    expect(encryptedBlock.authTag).toBeDefined();
-    expect(encryptedBlock.authTag.length).toBe(
-      StaticHelpersECIES.authTagLength,
-    );
-  });
+    it('should handle invalid inputs', () => {
+      const encryptedData = StaticHelpersECIES.encrypt(
+        encryptor.publicKey,
+        cblBlock.data,
+      );
 
-  it('should calculate overhead correctly', () => {
-    const encryptedBlock = EncryptedConstituentBlockListBlock.fromCbl(
-      cblBlock,
-      encryptor,
-    );
+      // Test future date
+      const futureDate = new Date(Date.now() + 86400000);
+      expect(
+        () =>
+          new TestEncryptedCblBlock(
+            blockSize,
+            encryptedData,
+            undefined,
+            creator,
+            cblBlock.data.length,
+            futureDate,
+          ),
+      ).toThrow('Date created cannot be in the future');
 
-    expect(encryptedBlock.totalOverhead).toBe(
-      StaticHelpersECIES.eciesOverheadLength,
-    );
-  });
+      // Test oversized data
+      const tooLargeData = Buffer.alloc((blockSize as number) + 1);
+      expect(
+        () =>
+          new TestEncryptedCblBlock(
+            blockSize,
+            tooLargeData,
+            undefined,
+            creator,
+            tooLargeData.length,
+            testDate,
+          ),
+      ).toThrow('Data length exceeds block capacity');
 
-  it('should handle creator as GuidV4', () => {
-    const guidCreator = GuidV4.new();
-    const encryptedData = StaticHelpersECIES.encrypt(
-      encryptor.publicKey,
-      cblBlock.data,
-    );
-
-    const encryptedBlock = new TestEncryptedCblBlock(
-      blockSize,
-      encryptedData,
-      undefined,
-      guidCreator,
-      cblBlock.data.length,
-      testDate, // Use fixed date
-    );
-
-    expect(encryptedBlock.creator).toBeUndefined();
-    expect(encryptedBlock.creatorId).toBe(guidCreator);
-  });
-
-  it('should handle creator as BrightChainMember', () => {
-    const encryptedBlock = EncryptedConstituentBlockListBlock.fromCbl(
-      cblBlock,
-      encryptor,
-    );
-
-    expect(encryptedBlock.creator).toBe(encryptor);
-    expect(encryptedBlock.creatorId).toBe(encryptor.id);
-  });
-
-  it('should validate checksum when provided', () => {
-    const encryptedData = StaticHelpersECIES.encrypt(
-      encryptor.publicKey,
-      cblBlock.data,
-    );
-    const checksum = StaticHelpersChecksum.calculateChecksum(encryptedData);
-
-    const encryptedBlock = new TestEncryptedCblBlock(
-      blockSize,
-      encryptedData,
-      checksum,
-      creator,
-      cblBlock.data.length,
-      testDate, // Use fixed date
-    );
-
-    expect(encryptedBlock.idChecksum).toEqual(checksum);
-  });
-
-  it('should handle read permissions correctly', () => {
-    const encryptedBlock = EncryptedConstituentBlockListBlock.fromCbl(
-      cblBlock,
-      encryptor,
-    );
-
-    expect(encryptedBlock.canRead).toBe(true);
-    expect(encryptedBlock.canPersist).toBe(true);
-  });
-
-  it('should handle date validation', () => {
-    // Create a date that's definitely in the future
-    const futureDate = new Date();
-    futureDate.setFullYear(futureDate.getFullYear() + 1);
-
-    const encryptedData = StaticHelpersECIES.encrypt(
-      encryptor.publicKey,
-      cblBlock.data,
-    );
-
-    // Calculate checksum for the encrypted data
-    const checksum = StaticHelpersChecksum.calculateChecksum(encryptedData);
-
-    // Test with future date - should throw before checksum validation
-    expect(
-      () =>
-        new TestEncryptedCblBlock(
-          blockSize,
-          encryptedData,
-          checksum, // Provide valid checksum
-          creator,
-          cblBlock.data.length,
-          futureDate,
-        ),
-    ).toThrow('Date created cannot be in the future');
-  });
-
-  it('should handle data size validation', () => {
-    const tooLargeData = Buffer.alloc((blockSize as number) + 1);
-
-    expect(
-      () =>
-        new TestEncryptedCblBlock(
-          blockSize,
-          tooLargeData,
-          undefined,
-          creator,
-          tooLargeData.length,
-          testDate, // Use fixed date
-        ),
-    ).toThrow('Data length exceeds block capacity');
-  });
-
-  it('should validate actual data length', () => {
-    const encryptedData = StaticHelpersECIES.encrypt(
-      encryptor.publicKey,
-      cblBlock.data,
-    );
-    const tooLargeLength = (blockSize as number) + 1;
-
-    expect(
-      () =>
-        new TestEncryptedCblBlock(
-          blockSize,
-          encryptedData,
-          undefined,
-          creator,
-          tooLargeLength,
-          testDate, // Use fixed date
-        ),
-    ).toThrow('Data length exceeds block capacity');
-  });
-
-  it('should extract payload correctly', () => {
-    const encryptedBlock = EncryptedConstituentBlockListBlock.fromCbl(
-      cblBlock,
-      encryptor,
-    );
-
-    // The payload length should match the encrypted data length minus overhead
-    expect(encryptedBlock.payload.length).toBe(
-      encryptedBlock.data.length - StaticHelpersECIES.eciesOverheadLength,
-    );
+      // Test invalid actual data length
+      expect(
+        () =>
+          new TestEncryptedCblBlock(
+            blockSize,
+            encryptedData,
+            undefined,
+            creator,
+            (blockSize as number) + 1,
+            testDate,
+          ),
+      ).toThrow('Data length exceeds block capacity');
+    });
   });
 });

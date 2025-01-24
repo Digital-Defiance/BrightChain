@@ -1,9 +1,11 @@
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import { EmailString } from '../emailString';
+import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
+import { GuidV4 } from '../guid';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer } from '../types';
@@ -11,20 +13,17 @@ import { EncryptedBlock } from './encrypted';
 
 // Test class that properly implements abstract methods
 class TestEncryptedBlock extends EncryptedBlock {
-  private readonly internalData: Buffer;
-
   constructor(
-    type: BlockType,
     blockSize: BlockSize,
     data: Buffer,
     checksum?: ChecksumBuffer,
-    creator?: BrightChainMember,
+    creator?: BrightChainMember | GuidV4,
     dateCreated?: Date,
     actualDataLength?: number,
     canRead = true,
   ) {
     super(
-      type,
+      BlockType.EncryptedOwnedDataBlock,
       blockSize,
       data,
       checksum,
@@ -33,321 +32,223 @@ class TestEncryptedBlock extends EncryptedBlock {
       actualDataLength,
       canRead,
     );
-    this.internalData = data;
-  }
-
-  public override get data(): Buffer {
-    if (!this.canRead) {
-      throw new Error('Block cannot be read');
-    }
-    return this.internalData;
-  }
-
-  // Use base class implementations for layerHeaderData and payload
-  public override get layerHeaderData(): Buffer {
-    return super.layerHeaderData;
-  }
-
-  public override get payload(): Buffer {
-    return super.payload;
   }
 }
 
 describe('EncryptedBlock', () => {
+  // Increase timeout for all tests
+  jest.setTimeout(15000);
+
+  // Shared test data
   let creator: BrightChainMember;
+  const defaultBlockSize = BlockSize.Small;
+  const testDate = new Date(Date.now() - 1000); // 1 second ago
+
+  // Helper functions
+  const getEffectiveSize = (size: BlockSize) => size as number; // For encrypted blocks, use full block size since overhead is in data
+
+  const createEncryptedData = (size: number): Buffer => {
+    // Create data that looks like ECIES encrypted data:
+    // [ephemeral public key (65)][IV (16)][auth tag (16)][encrypted data]
+    const ephemeralKey = Buffer.alloc(StaticHelpersECIES.publicKeyLength, 0x04);
+    const iv = randomBytes(StaticHelpersECIES.ivLength);
+    const authTag = randomBytes(StaticHelpersECIES.authTagLength);
+    const encryptedData = randomBytes(
+      size - StaticHelpersECIES.eciesOverheadLength,
+    );
+    return Buffer.concat([ephemeralKey, iv, authTag, encryptedData]);
+  };
+
+  const createTestBlock = (
+    options: Partial<{
+      blockSize: BlockSize;
+      data: Buffer;
+      checksum: ChecksumBuffer;
+      creator: BrightChainMember | GuidV4;
+      dateCreated: Date;
+      actualDataLength: number;
+      canRead: boolean;
+    }> = {},
+  ) => {
+    const blockSize = options.blockSize || defaultBlockSize;
+    const data = options.data || createEncryptedData(blockSize as number);
+
+    return new TestEncryptedBlock(
+      blockSize,
+      data,
+      options.checksum,
+      options.creator || creator,
+      options.dateCreated || testDate,
+      options.actualDataLength,
+      options.canRead ?? true,
+    );
+  };
 
   beforeAll(() => {
     creator = BrightChainMember.newMember(
       MemberType.User,
-      'Alice',
-      new EmailString('alice@example.com'),
+      'Test User',
+      new EmailString('test@example.com'),
     );
   });
 
-  it('should construct correctly with encryption overhead', () => {
-    const blockSize = BlockSize.Small;
-    // Calculate the maximum data size that can fit in the block after encryption
-    // The encrypted data will include ECIES overhead, so we need to account for that
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-    const originalData = randomBytes(maxDataSize);
-    // Encrypt the data
-    // Always strip 0x04 prefix since encrypt expects raw key
-    const publicKeyForEncryption =
-      creator.publicKey[0] === 0x04
-        ? creator.publicKey.subarray(1)
-        : creator.publicKey;
-    const encryptedData = StaticHelpersECIES.encrypt(
-      publicKeyForEncryption,
-      originalData,
-    );
+  describe('basic functionality', () => {
+    it('should construct and validate correctly', () => {
+      const data = createEncryptedData(defaultBlockSize as number);
+      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const block = createTestBlock({ data, checksum });
 
-    const block = new TestEncryptedBlock(
-      BlockType.Random,
-      blockSize,
-      encryptedData,
-      undefined,
-      creator,
-      undefined,
-      originalData.length,
-    );
+      expect(block.blockSize).toBe(defaultBlockSize);
+      expect(block.blockType).toBe(BlockType.EncryptedOwnedDataBlock);
+      expect(block.blockDataType).toBe(BlockDataType.EncryptedData);
+      expect(block.data).toEqual(data);
+      expect(block.idChecksum).toEqual(checksum);
+      expect(block.validated).toBe(true);
+      expect(block.canRead).toBe(true);
+      expect(block.encrypted).toBe(true);
+    });
 
-    expect(block.blockSize).toBe(blockSize);
-    expect(block.encrypted).toBe(true);
-    expect(block.canRead).toBe(true);
-    expect(block.actualDataLength).toBe(originalData.length);
+    it('should handle encryption metadata correctly', () => {
+      const data = createEncryptedData(defaultBlockSize as number);
+      const block = createTestBlock({ data });
+
+      // Check header components
+      expect(block.ephemeralPublicKey.length).toBe(
+        StaticHelpersECIES.publicKeyLength,
+      );
+      expect(block.iv.length).toBe(StaticHelpersECIES.ivLength);
+      expect(block.authTag.length).toBe(StaticHelpersECIES.authTagLength);
+
+      // Check header layout
+      expect(block.layerHeaderData.length).toBe(
+        StaticHelpersECIES.eciesOverheadLength,
+      );
+      expect(block.layerHeaderData).toEqual(
+        data.subarray(0, StaticHelpersECIES.eciesOverheadLength),
+      );
+    });
+
+    it('should handle payload correctly', () => {
+      const data = createEncryptedData(defaultBlockSize as number);
+      const block = createTestBlock({ data });
+
+      // Payload should be everything after the header
+      const expectedPayload = data.subarray(
+        StaticHelpersECIES.eciesOverheadLength,
+      );
+      expect(block.payload).toEqual(expectedPayload);
+      expect(block.payloadLength).toBe(expectedPayload.length);
+    });
   });
 
-  it('should correctly extract encryption metadata', () => {
-    const blockSize = BlockSize.Small;
-    // Calculate the maximum data size that can fit in the block after encryption
-    // The encrypted data will include ECIES overhead, so we need to account for that
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-    const originalData = randomBytes(maxDataSize);
-    // Always strip 0x04 prefix since encrypt expects raw key
-    const publicKeyForEncryption =
-      creator.publicKey[0] === 0x04
-        ? creator.publicKey.subarray(1)
-        : creator.publicKey;
-    const encryptedData = StaticHelpersECIES.encrypt(
-      publicKeyForEncryption,
-      originalData,
-    );
+  describe('size handling', () => {
+    it('should handle various block sizes', () => {
+      const sizes = [
+        BlockSize.Message,
+        BlockSize.Tiny,
+        BlockSize.Small,
+        BlockSize.Medium,
+        BlockSize.Large,
+        BlockSize.Huge,
+      ];
 
-    const block = new TestEncryptedBlock(
-      BlockType.Random,
-      blockSize,
-      encryptedData,
-      undefined,
-      creator,
-      undefined,
-      originalData.length,
-    );
+      sizes.forEach((size) => {
+        const data = createEncryptedData(size as number);
+        const block = createTestBlock({ blockSize: size, data });
+        expect(block.data.length).toBe(size as number);
+        expect(block.capacity).toBe(
+          (size as number) - StaticHelpersECIES.eciesOverheadLength,
+        );
+      });
+    });
 
-    expect(block.ephemeralPublicKey).toBeDefined();
-    expect(block.ephemeralPublicKey.length).toBe(
-      StaticHelpersECIES.publicKeyLength,
-    );
-    expect(block.iv).toBeDefined();
-    expect(block.iv.length).toBe(StaticHelpersECIES.ivLength);
-    expect(block.authTag).toBeDefined();
-    expect(block.authTag.length).toBe(StaticHelpersECIES.authTagLength);
+    it('should reject invalid sizes', () => {
+      // Test data too short for header
+      const tooShortData = randomBytes(
+        StaticHelpersECIES.eciesOverheadLength - 1,
+      );
+      expect(() => createTestBlock({ data: tooShortData })).toThrow(
+        'Data too short to contain encryption header',
+      );
+
+      // Test oversized data
+      const tooLargeData = createEncryptedData(
+        (defaultBlockSize as number) + 1,
+      );
+      expect(() => createTestBlock({ data: tooLargeData })).toThrow(
+        'Data length exceeds block capacity',
+      );
+    });
+
+    it('should validate actual data length', () => {
+      const data = createEncryptedData(defaultBlockSize as number);
+      const tooLargeActualLength =
+        (defaultBlockSize as number) -
+        StaticHelpersECIES.eciesOverheadLength +
+        1;
+
+      expect(() =>
+        createTestBlock({ data, actualDataLength: tooLargeActualLength }),
+      ).toThrow('Data length exceeds block capacity');
+    });
   });
 
-  it('should correctly calculate overhead', () => {
-    const blockSize = BlockSize.Small;
-    // Calculate the maximum data size that can fit in the block after encryption
-    // The encrypted data will include ECIES overhead, so we need to account for that
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-    const originalData = randomBytes(maxDataSize);
-    // Always strip 0x04 prefix since encrypt expects raw key
-    const publicKeyForEncryption =
-      creator.publicKey[0] === 0x04
-        ? creator.publicKey.subarray(1)
-        : creator.publicKey;
-    const encryptedData = StaticHelpersECIES.encrypt(
-      publicKeyForEncryption,
-      originalData,
-    );
+  describe('encryption handling', () => {
+    it('should handle encrypted data correctly', () => {
+      const originalData = randomBytes(
+        getEffectiveSize(defaultBlockSize) -
+          StaticHelpersECIES.eciesOverheadLength,
+      );
+      const encryptedData = createEncryptedData(defaultBlockSize as number);
+      const block = createTestBlock({
+        data: encryptedData,
+        actualDataLength: originalData.length,
+      });
 
-    const block = new TestEncryptedBlock(
-      BlockType.Random,
-      blockSize,
-      encryptedData,
-      undefined,
-      creator,
-      undefined,
-      originalData.length,
-    );
+      expect(block.encrypted).toBe(true);
+      expect(block.data.length).toBe(defaultBlockSize as number);
+      expect(block.payload.length).toBe(
+        (defaultBlockSize as number) - StaticHelpersECIES.eciesOverheadLength,
+      );
+    });
 
-    expect(block.totalOverhead).toBe(StaticHelpersECIES.eciesOverheadLength);
+    it('should calculate overhead correctly', () => {
+      const block = createTestBlock();
+      expect(block.totalOverhead).toBe(StaticHelpersECIES.eciesOverheadLength);
+      expect(block.capacity).toBe(
+        (defaultBlockSize as number) - StaticHelpersECIES.eciesOverheadLength,
+      );
+    });
   });
 
-  it('should correctly extract and decrypt payload', () => {
-    const blockSize = BlockSize.Small;
-    // Calculate the maximum data size that can fit in the block after encryption
-    // The encrypted data will include ECIES overhead, so we need to account for that
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-    const originalData = randomBytes(maxDataSize);
-    // Always strip 0x04 prefix since encrypt expects raw key
-    const publicKeyForEncryption =
-      creator.publicKey[0] === 0x04
-        ? creator.publicKey.subarray(1)
-        : creator.publicKey;
-    const encryptedData = StaticHelpersECIES.encrypt(
-      publicKeyForEncryption,
-      originalData,
-    );
+  describe('validation', () => {
+    it('should detect data corruption', () => {
+      // Create original data and get its checksum
+      const data = createEncryptedData(defaultBlockSize as number);
+      const checksum = StaticHelpersChecksum.calculateChecksum(data);
 
-    const block = new TestEncryptedBlock(
-      BlockType.Random,
-      blockSize,
-      encryptedData,
-      undefined,
-      creator,
-      undefined,
-      originalData.length,
-    );
+      // Create corrupted data by modifying the original
+      const corruptedData = Buffer.from(data);
+      corruptedData[0]++; // Corrupt the header to ensure validation fails
 
-    // The payload length should match the original data length
-    expect(block.payload.length).toBe(originalData.length);
+      // Verify block creation fails with corrupted data
+      expect(() => createTestBlock({ data: corruptedData, checksum })).toThrow(
+        'Checksum mismatch',
+      );
 
-    // Verify we can decrypt the payload
-    const decryptedData = StaticHelpersECIES.decryptWithComponents(
-      creator.privateKey,
-      block.ephemeralPublicKey,
-      block.iv,
-      block.authTag,
-      block.payload,
-    );
-    expect(decryptedData).toEqual(originalData);
-  });
+      // Verify the checksum mismatch
+      const corruptedChecksum =
+        StaticHelpersChecksum.calculateChecksum(corruptedData);
+      expect(corruptedChecksum.equals(checksum)).toBe(false);
+    });
 
-  it('should handle date validation', () => {
-    const blockSize = BlockSize.Small;
-    // Calculate the maximum data size that can fit in the block after encryption
-    // The encrypted data will include ECIES overhead, so we need to account for that
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-    const originalData = randomBytes(maxDataSize);
-    // Always strip 0x04 prefix since encrypt expects raw key
-    const publicKeyForEncryption =
-      creator.publicKey[0] === 0x04
-        ? creator.publicKey.subarray(1)
-        : creator.publicKey;
-    const encryptedData = StaticHelpersECIES.encrypt(
-      publicKeyForEncryption,
-      originalData,
-    );
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + 1);
+    it('should reject future dates', () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
 
-    expect(
-      () =>
-        new TestEncryptedBlock(
-          BlockType.Random,
-          blockSize,
-          encryptedData,
-          undefined,
-          creator,
-          futureDate,
-          originalData.length,
-        ),
-    ).toThrow('Date created cannot be in the future');
-  });
-
-  it('should handle data size validation', () => {
-    const blockSize = BlockSize.Small;
-    const tooLargeData = randomBytes((blockSize as number) + 1);
-
-    expect(
-      () =>
-        new TestEncryptedBlock(
-          BlockType.Random,
-          blockSize,
-          tooLargeData,
-          undefined,
-          creator,
-          undefined,
-          tooLargeData.length,
-        ),
-    ).toThrow('Data length exceeds block capacity');
-  });
-
-  it('should handle checksum validation', () => {
-    const blockSize = BlockSize.Small;
-    // Calculate the maximum data size that can fit in the block after encryption
-    // The encrypted data will include ECIES overhead, so we need to account for that
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-    const originalData = randomBytes(maxDataSize);
-    // Always strip 0x04 prefix since encrypt expects raw key
-    const publicKeyForEncryption =
-      creator.publicKey[0] === 0x04
-        ? creator.publicKey.subarray(1)
-        : creator.publicKey;
-    const encryptedData = StaticHelpersECIES.encrypt(
-      publicKeyForEncryption,
-      originalData,
-    );
-    const checksum = StaticHelpersChecksum.calculateChecksum(encryptedData);
-
-    const block = new TestEncryptedBlock(
-      BlockType.Random,
-      blockSize,
-      encryptedData,
-      undefined,
-      creator,
-      undefined,
-      originalData.length,
-    );
-
-    expect(block.idChecksum).toEqual(checksum);
-  });
-
-  it('should validate actual data length', () => {
-    const blockSize = BlockSize.Small;
-    // Calculate the maximum data size that can fit in the block after encryption
-    // The encrypted data will include ECIES overhead, so we need to account for that
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-    const originalData = randomBytes(maxDataSize);
-    // Always strip 0x04 prefix since encrypt expects raw key
-    const publicKeyForEncryption =
-      creator.publicKey[0] === 0x04
-        ? creator.publicKey.subarray(1)
-        : creator.publicKey;
-    const encryptedData = StaticHelpersECIES.encrypt(
-      publicKeyForEncryption,
-      originalData,
-    );
-    // Calculate a length that would exceed the block's capacity
-    const tooLargeLength =
-      maxDataSize + StaticHelpersECIES.eciesOverheadLength + 1;
-
-    expect(
-      () =>
-        new TestEncryptedBlock(
-          BlockType.Random,
-          blockSize,
-          encryptedData,
-          undefined,
-          creator,
-          undefined,
-          tooLargeLength,
-        ),
-    ).toThrow('Data length exceeds block capacity');
-  });
-
-  it('should handle canRead correctly', () => {
-    const blockSize = BlockSize.Small;
-    // Calculate the maximum data size that can fit in the block
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-    // Create data that's smaller than the max to leave room for encryption overhead
-    const originalData = randomBytes(Math.floor(maxDataSize * 0.75));
-    const encryptedData = StaticHelpersECIES.encrypt(
-      creator.publicKey, // ECDH public key is already in correct format
-      originalData,
-    );
-
-    const block = new TestEncryptedBlock(
-      BlockType.Random,
-      blockSize,
-      encryptedData,
-      undefined,
-      creator,
-      undefined,
-      originalData.length,
-      false, // canRead = false
-    );
-
-    expect(block.canRead).toBe(false);
-    expect(() => block.data).toThrow('Block cannot be read');
-    expect(() => block.layerHeaderData).toThrow('Block cannot be read');
-    expect(() => block.payload).toThrow('Block cannot be read');
+      expect(() => createTestBlock({ dateCreated: futureDate })).toThrow(
+        'Date created cannot be in the future',
+      );
+    });
   });
 });

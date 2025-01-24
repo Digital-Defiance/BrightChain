@@ -151,7 +151,7 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
       encryptedData,
       undefined, // Let constructor calculate checksum
       encryptor, // Use encryptor as creator since they're encrypting the data
-      cbl.data.length,
+      cbl.actualDataLength,
       blockDate,
     );
   }
