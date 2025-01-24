@@ -2,6 +2,7 @@ import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import { TUPLE_SIZE } from '../constants';
 import { EmailString } from '../emailString';
+import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
@@ -9,6 +10,7 @@ import { GuidV4 } from '../guid';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { ChecksumBuffer, SignatureBuffer } from '../types';
 import { ConstituentBlockListBlock } from './cbl';
+import { BlockHandle } from './handle';
 
 // Test class that properly implements abstract methods
 class TestCblBlock extends ConstituentBlockListBlock {
@@ -84,15 +86,17 @@ describe('ConstituentBlockListBlock', () => {
   });
 
   describe('basic functionality', () => {
-    it('should construct and validate correctly', () => {
+    it('should construct and validate correctly', async () => {
       const block = createTestBlock();
 
       expect(block.blockSize).toBe(defaultBlockSize);
       expect(block.blockType).toBe(BlockType.ConstituentBlockList);
       expect(block.creator).toBe(creator);
       expect(block.addresses).toEqual(dataAddresses);
-      expect(block.validated).toBe(true);
       expect(block.canRead).toBe(true);
+
+      // Validate should complete without throwing
+      await expect(block.validateAsync()).resolves.not.toThrow();
     });
 
     it('should handle creators correctly', () => {
@@ -167,17 +171,41 @@ describe('ConstituentBlockListBlock', () => {
       expect(blockIds.length).toBe(dataAddresses.length);
     });
 
-    it('should handle tuple access', () => {
-      const block = createTestBlock();
-      const tuples = block.getHandleTuples((id) => id.toString('hex'));
+    it('should handle tuple access', async () => {
+      // Mock BlockHandle.createFromPath
+      const originalCreateFromPath = BlockHandle.createFromPath;
+      BlockHandle.createFromPath = jest
+        .fn()
+        .mockImplementation((blockSize, path, id) =>
+          Promise.resolve(
+            new BlockHandle(
+              BlockType.Handle,
+              BlockDataType.RawData,
+              blockSize,
+              id,
+              undefined, // dateCreated
+              undefined, // metadata
+              true, // canRead
+              true, // canPersist
+            ),
+          ),
+        );
 
-      expect(tuples.length).toBe(dataAddresses.length / TUPLE_SIZE);
-      tuples.forEach((tuple) => {
-        expect(tuple.handles.length).toBe(TUPLE_SIZE);
-        tuple.handles.forEach((handle) => {
-          expect(handle.blockSize).toBe(defaultBlockSize);
+      try {
+        const block = createTestBlock();
+        const tuples = await block.getHandleTuples((id) => id.toString('hex'));
+
+        expect(tuples.length).toBe(dataAddresses.length / TUPLE_SIZE);
+        tuples.forEach((tuple) => {
+          expect(tuple.handles.length).toBe(TUPLE_SIZE);
+          tuple.handles.forEach((handle) => {
+            expect(handle.blockSize).toBe(defaultBlockSize);
+          });
         });
-      });
+      } finally {
+        // Restore original function
+        BlockHandle.createFromPath = originalCreateFromPath;
+      }
     });
   });
 });

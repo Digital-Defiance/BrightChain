@@ -13,6 +13,5 @@ export const MemberTypeTranslations: MemberTypeLanguageTranslation = {
     [MemberType.Admin]: 'Admin',
     [MemberType.System]: 'System',
     [MemberType.User]: 'User',
-    [MemberType.Anonymous]: 'Anonymous',
   },
 };

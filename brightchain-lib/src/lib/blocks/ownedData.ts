@@ -20,15 +20,19 @@ import { EphemeralBlock } from './ephemeral';
  * Use encrypt() to convert to an EncryptedOwnedDataBlock.
  */
 export class OwnedDataBlock extends EphemeralBlock {
-  constructor(
-    creator: BrightChainMember | GuidV4,
+  public static override async from(
+    type: BlockType,
+    dataType: BlockDataType,
     blockSize: BlockSize,
     data: Buffer,
-    checksum?: ChecksumBuffer,
+    checksum: ChecksumBuffer,
+    creator?: BrightChainMember | GuidV4,
     dateCreated?: Date,
     actualDataLength?: number,
     canRead = true,
-  ) {
+    encrypted = false,
+    canPersist = true,
+  ): Promise<OwnedDataBlock> {
     // Validate creator
     if (!creator) {
       throw new Error('Creator is required');
@@ -64,17 +68,74 @@ export class OwnedDataBlock extends EphemeralBlock {
       );
     }
 
-    super(
-      BlockType.OwnedDataBlock,
-      BlockDataType.EphemeralStructuredData,
+    const metadata = {
+      size: blockSize,
+      type,
+      blockSize,
+      blockType: type,
+      dataType: BlockDataType.EphemeralStructuredData,
+      dateCreated: (dateCreated ?? new Date()).toISOString(),
+      lengthBeforeEncryption: actualDataLength ?? data.length,
+      creator,
+      encrypted,
+    };
+
+    return new OwnedDataBlock(
+      type,
+      dataType,
       blockSize,
       data,
       checksum,
-      creator,
       dateCreated,
-      actualDataLength,
+      metadata,
       canRead,
-      false, // Not encrypted yet
+      canPersist,
+    );
+  }
+
+  /**
+   * Creates an instance of OwnedDataBlock.
+   * @param type - The type of the block
+   * @param dataType - The type of data in the block
+   * @param blockSize - The size of the block
+   * @param data - The data
+   * @param checksum - The checksum of the data
+   * @param dateCreated - The date the block was created
+   * @param metadata - The block metadata
+   * @param canRead - Whether the block can be read
+   * @param canPersist - Whether the block can be persisted
+   */
+  protected constructor(
+    type: BlockType,
+    dataType: BlockDataType,
+    blockSize: BlockSize,
+    data: Buffer,
+    checksum: ChecksumBuffer,
+    dateCreated?: Date,
+    metadata?: {
+      size: BlockSize;
+      type: BlockType;
+      blockSize: BlockSize;
+      blockType: BlockType;
+      dataType: BlockDataType;
+      dateCreated: string;
+      lengthBeforeEncryption: number;
+      creator?: BrightChainMember | GuidV4;
+      encrypted: boolean;
+    },
+    canRead = true,
+    canPersist = true,
+  ) {
+    super(
+      type,
+      dataType,
+      blockSize,
+      data,
+      checksum,
+      dateCreated,
+      metadata,
+      canRead,
+      canPersist,
     );
   }
 
@@ -83,7 +144,9 @@ export class OwnedDataBlock extends EphemeralBlock {
    * @param creator The member who will own the encrypted block
    * @returns A new EncryptedOwnedDataBlock
    */
-  public encrypt(creator: BrightChainMember): EncryptedOwnedDataBlock {
+  public async encrypt(
+    creator: BrightChainMember,
+  ): Promise<EncryptedOwnedDataBlock> {
     // Validate creator
     if (!creator) {
       throw new Error('Creator is required for encryption');
@@ -97,7 +160,14 @@ export class OwnedDataBlock extends EphemeralBlock {
     }
 
     // Encrypt using BlockService
-    return BlockService.encrypt(creator, this) as EncryptedOwnedDataBlock;
+    const encryptedBlock = await BlockService.encrypt(creator, this);
+
+    // Ensure we got the expected block type
+    if (!(encryptedBlock instanceof EncryptedOwnedDataBlock)) {
+      throw new Error('Unexpected encrypted block type');
+    }
+
+    return encryptedBlock;
   }
 
   /**

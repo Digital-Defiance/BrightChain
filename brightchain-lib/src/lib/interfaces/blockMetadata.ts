@@ -50,7 +50,7 @@ export interface IBlockMetadata extends Record<string, unknown> {
    * 2. Decryption validation
    * 3. Storage optimization
    */
-  lengthBeforeEncryption?: number;
+  originalDataLength?: number;
 
   /**
    * Block creation timestamp.
@@ -83,7 +83,7 @@ export const BlockMetadata = {
    * @param size - Block size category
    * @param type - Block type classification
    * @param dataType - Type of stored data
-   * @param lengthBeforeEncryption - Original data length for encrypted blocks
+   * @param originalDataLength - Original data length for encrypted blocks
    * @param dateCreated - Block creation timestamp
    * @returns Complete metadata object
    */
@@ -91,14 +91,14 @@ export const BlockMetadata = {
     size: BlockSize,
     type: BlockType,
     dataType: BlockDataType,
-    lengthBeforeEncryption?: number,
+    originalDataLength?: number,
     dateCreated = new Date(),
   ): IBlockMetadata {
     return {
       size,
       type,
       dataType,
-      lengthBeforeEncryption,
+      originalDataLength,
       dateCreated: dateCreated.toISOString(),
     };
   },
@@ -130,7 +130,7 @@ export const BlockMetadata = {
         size: data.size as BlockSize,
         type: data.type as BlockType,
         dataType: data.dataType as BlockDataType,
-        lengthBeforeEncryption: data.lengthBeforeEncryption,
+        originalDataLength: data.originalDataLength,
       };
     } catch (error) {
       throw new Error(

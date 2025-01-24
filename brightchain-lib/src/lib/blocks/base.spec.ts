@@ -2,6 +2,7 @@ import { randomBytes } from 'crypto';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { IBlockMetadata } from '../interfaces/blockMetadata';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
@@ -11,6 +12,11 @@ import { BaseBlock } from './base';
 // Test class that properly implements abstract methods
 class TestBaseBlock extends BaseBlock {
   private readonly internalData: Buffer;
+
+  // Test helper to corrupt data
+  public corruptData(index: number, value: number): void {
+    this.internalData[index] = value;
+  }
 
   constructor(
     type: BlockType,
@@ -23,18 +29,47 @@ class TestBaseBlock extends BaseBlock {
     canRead = true,
     canPersist = true,
   ) {
+    // Validate data length against block capacity
+    const effectiveSize =
+      blockDataType === BlockDataType.EncryptedData
+        ? blockSize
+        : (blockSize as number);
+    if (data.length > effectiveSize) {
+      throw new Error('Data length exceeds block capacity');
+    }
+
+    const expectedChecksum = StaticHelpersChecksum.calculateChecksum(data);
+    if (checksum) {
+      if (!checksum.equals(expectedChecksum)) {
+        throw new ChecksumMismatchError(checksum, expectedChecksum);
+      }
+    }
     super(
       type,
       blockDataType,
       blockSize,
-      data,
-      checksum,
+      checksum ?? expectedChecksum,
       dateCreated,
       metadata,
       canRead,
       canPersist,
     );
     this.internalData = data;
+  }
+
+  /**
+   * Re-validate the block
+   * @throws ChecksumMismatchError
+   * @returns true
+   */
+  public async validateAsync(): Promise<void> {
+    const expectedChecksum = await StaticHelpersChecksum.calculateChecksumAsync(
+      this.data,
+    );
+    const result = this.idChecksum.equals(expectedChecksum);
+    if (!result) {
+      throw new ChecksumMismatchError(this.idChecksum, expectedChecksum);
+    }
   }
 
   public override get data(): Buffer {
@@ -94,6 +129,7 @@ describe('BaseBlock', () => {
       options.dateCreated,
       undefined,
       options.canRead ?? true,
+      true, // canPersist
     );
   };
 
@@ -108,7 +144,6 @@ describe('BaseBlock', () => {
       expect(block.blockDataType).toBe(BlockDataType.RawData);
       expect(block.data).toEqual(data);
       expect(block.idChecksum).toEqual(checksum);
-      expect(block.validated).toBe(true);
       expect(block.canRead).toBe(true);
     });
 
@@ -198,15 +233,19 @@ describe('BaseBlock', () => {
   });
 
   describe('validation', () => {
-    it('should detect data corruption', () => {
+    it('should detect data corruption', async () => {
+      // First create a valid block
       const data = randomBytes(defaultBlockSize as number);
       const checksum = StaticHelpersChecksum.calculateChecksum(data);
-      const corruptedData = Buffer.from(data);
-      corruptedData[0]++; // Corrupt the data
+      const block = createTestBlock({ data, checksum });
 
-      const block = createTestBlock({ data: corruptedData, checksum });
-      expect(block.validated).toBe(false); // Should be false since data doesn't match checksum
-      expect(block.validate()).toBe(false); // Should return false on validation
+      // Then corrupt the internal data after creation
+      block.corruptData(0, block.data[0] + 1); // Increment the first byte
+
+      // Now validateAsync() should fail
+      await expect(block.validateAsync()).rejects.toThrow(
+        ChecksumMismatchError,
+      );
     });
 
     it('should reject future dates', () => {
