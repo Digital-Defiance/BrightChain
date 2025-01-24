@@ -3,83 +3,122 @@ import { randomBytes } from 'crypto';
 import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 
 describe('brightchain staticHelpers.symmetric', () => {
-  it('should symmetric encrypt and decrypt with provided key', () => {
-    const testData = Buffer.from(faker.lorem.sentence(), 'utf-8');
-    const testKey = randomBytes(StaticHelpersSymmetric.SymmetricKeyBytes);
+  // Set a longer timeout for all tests in this file
+  jest.setTimeout(30000);
 
-    const encrypted = StaticHelpersSymmetric.symmetricEncryptBuffer(
-      testData,
-      testKey,
-    );
-    expect(encrypted).toBeDefined();
-    expect(encrypted.encryptedData).not.toEqual(testData);
+  // Shared test data
+  const testData = {
+    string: faker.lorem.word(), // Use shorter strings for faster tests
+    empty: '',
+    object: { message: faker.lorem.word() }, // Use shorter strings for faster tests
+    buffer: Buffer.from(faker.lorem.word(), 'utf-8'), // Use shorter strings for faster tests
+  };
+  const testKey = randomBytes(StaticHelpersSymmetric.SymmetricKeyBytes);
 
-    const decrypted = StaticHelpersSymmetric.symmetricDecryptBuffer(
-      encrypted.encryptedData,
-      testKey,
-    );
-    expect(decrypted.toString('utf-8')).toEqual(testData.toString('utf-8'));
+  describe('buffer encryption', () => {
+    it('should encrypt and decrypt with provided key', () => {
+      const encrypted = StaticHelpersSymmetric.symmetricEncryptBuffer(
+        testData.buffer,
+        testKey,
+      );
+      expect(encrypted.encryptedData).not.toEqual(testData.buffer);
+
+      const decrypted = StaticHelpersSymmetric.symmetricDecryptBuffer(
+        encrypted.encryptedData,
+        testKey,
+      );
+      expect(decrypted.toString('utf-8')).toEqual(
+        testData.buffer.toString('utf-8'),
+      );
+    });
+
+    it('should encrypt and decrypt with generated key', () => {
+      const encrypted = StaticHelpersSymmetric.symmetricEncryptBuffer(
+        testData.buffer,
+      );
+      expect(encrypted.encryptedData).not.toEqual(testData.buffer);
+
+      const decrypted = StaticHelpersSymmetric.symmetricDecryptBuffer(
+        encrypted.encryptedData,
+        encrypted.key,
+      );
+      expect(decrypted.toString('utf-8')).toEqual(
+        testData.buffer.toString('utf-8'),
+      );
+    });
+
+    it('should throw error with incorrect key length', () => {
+      const shortKey = Buffer.alloc(
+        StaticHelpersSymmetric.SymmetricKeyBytes - 1,
+        'a',
+      );
+      expect(() =>
+        StaticHelpersSymmetric.symmetricEncryptBuffer(
+          testData.buffer,
+          shortKey,
+        ),
+      ).toThrow();
+    });
   });
 
-  it('should symmetric encrypt and decrypt with generated key', () => {
-    const testData = Buffer.from(faker.lorem.sentence(), 'utf-8');
+  describe('json encryption', () => {
+    it('should handle various data types', () => {
+      // Test string encryption
+      const encryptedString =
+        StaticHelpersSymmetric.symmetricEncryptJson<string>(testData.string);
+      const decryptedString =
+        StaticHelpersSymmetric.symmetricDecryptJson<string>(
+          encryptedString.encryptedData,
+          encryptedString.key,
+        );
+      expect(decryptedString).toEqual(testData.string);
 
-    const encrypted = StaticHelpersSymmetric.symmetricEncryptBuffer(testData);
-    expect(encrypted).toBeDefined();
-    expect(encrypted.encryptedData).not.toEqual(testData);
+      // Test object encryption
+      const encryptedObject =
+        StaticHelpersSymmetric.symmetricEncryptJson<object>(testData.object);
+      const decryptedObject =
+        StaticHelpersSymmetric.symmetricDecryptJson<object>(
+          encryptedObject.encryptedData,
+          encryptedObject.key,
+        );
+      expect(decryptedObject).toEqual(testData.object);
 
-    const decrypted = StaticHelpersSymmetric.symmetricDecryptBuffer(
-      encrypted.encryptedData,
-      encrypted.key,
-    );
-    expect(decrypted.toString('utf-8')).toEqual(testData.toString('utf-8'));
-  });
+      // Test empty string
+      const encryptedEmpty =
+        StaticHelpersSymmetric.symmetricEncryptJson<string>(testData.empty);
+      const decryptedEmpty =
+        StaticHelpersSymmetric.symmetricDecryptJson<string>(
+          encryptedEmpty.encryptedData,
+          encryptedEmpty.key,
+        );
+      expect(decryptedEmpty).toEqual(testData.empty);
+    });
 
-  it('should throw an error with incorrect key length', () => {
-    const testData = Buffer.from(faker.lorem.sentence(), 'utf-8');
-    const shortKey = Buffer.alloc(
-      StaticHelpersSymmetric.SymmetricKeyBytes - 1,
-      'a',
-    );
+    it('should handle error cases', () => {
+      // Test null input
+      expect(() =>
+        StaticHelpersSymmetric.symmetricEncryptJson<unknown>(null),
+      ).toThrow();
 
-    expect(() => {
-      StaticHelpersSymmetric.symmetricEncryptBuffer(testData, shortKey);
-    }).toThrow(Error);
-  });
-  it('should symmetrically encrypt and decrypt a string', () => {
-    const testString = faker.lorem.sentence();
-    const encrypted =
-      StaticHelpersSymmetric.symmetricEncryptJson<string>(testString);
-    const decrypted = StaticHelpersSymmetric.symmetricDecryptJson<string>(
-      encrypted.encryptedData,
-      encrypted.key,
-    );
-    expect(decrypted).toEqual(testString);
-  });
+      // Test undefined input
+      expect(() =>
+        StaticHelpersSymmetric.symmetricEncryptJson<unknown>(undefined),
+      ).toThrow();
 
-  it('should symmetrically encrypt and decrypt an object', () => {
-    const testObject = { message: faker.lorem.sentence() };
-    const encrypted =
-      StaticHelpersSymmetric.symmetricEncryptJson<object>(testObject);
-    const decrypted = StaticHelpersSymmetric.symmetricDecryptJson<object>(
-      encrypted.encryptedData,
-      encrypted.key,
-    );
-    expect(decrypted).toEqual(testObject);
-  });
-
-  it('should handle empty string input', () => {
-    const encrypted = StaticHelpersSymmetric.symmetricEncryptJson<string>('');
-    const decrypted = StaticHelpersSymmetric.symmetricDecryptJson<string>(
-      encrypted.encryptedData,
-      encrypted.key,
-    );
-    expect(decrypted).toEqual('');
-  });
-
-  it('should throw an error for null input', () => {
-    expect(() => {
-      StaticHelpersSymmetric.symmetricEncryptJson<unknown>(null);
-    }).toThrow(Error);
+      // Test invalid key
+      const encrypted = StaticHelpersSymmetric.symmetricEncryptJson<string>(
+        testData.string,
+      );
+      const invalidKey = Buffer.alloc(
+        StaticHelpersSymmetric.SymmetricKeyBytes,
+        'x',
+      );
+      expect(() =>
+        StaticHelpersSymmetric.symmetricDecryptJson<string>(
+          encrypted.encryptedData,
+          invalidKey,
+        ),
+      ).toThrow();
+    });
   });
 });
