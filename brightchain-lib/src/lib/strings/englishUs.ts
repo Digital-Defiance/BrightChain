@@ -15,6 +15,8 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_InvalidBlockSizeTemplate]:
     'Invalid block size: {BLOCK_SIZE}',
   [StringNames.Error_InvalidLanguageCode]: 'Invalid language code.',
+  [StringNames.Error_InvalidTupleCountTemplate]:
+    'Invalid tuple count ({TUPLE_COUNT}), must be between {MIN_TUPLE_SIZE} and {MAX_TUPLE_SIZE}',
   [StringNames.Error_MetadataMismatch]: 'Metadata mismatch.',
   [StringNames.Error_TokenExpired]: 'Token expired.',
   [StringNames.Error_TokenInvalid]: 'Token invalid.',

@@ -1,13 +1,12 @@
 import { BrightChainMember } from '../brightChainMember';
 import { BlockSize, validBlockSizes } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
-import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { MetadataMismatchError } from '../errors/metadataMismatch';
 import { GuidV4 } from '../guid';
 import { IExtendedConstituentBlockListBlockHeader } from '../interfaces/ecblHeader';
 import { IExtendedConstituentBlockListBlock } from '../interfaces/extendedCbl';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { ChecksumBuffer, RawGuidBuffer, SignatureBuffer } from '../types';
+import { ChecksumBuffer, SignatureBuffer } from '../types';
 import { ConstituentBlockListBlock } from './cbl';
 
 /**
@@ -144,7 +143,9 @@ export class ExtendedCBL
       this.mimeType = normalizedMimeType;
 
       // Validate the combined structure
-      if (!this.validate()) {
+      try {
+        this.validateSync();
+      } catch (error) {
         throw new Error('Invalid ExtendedCBL structure');
       }
     } catch (error: unknown) {
@@ -228,7 +229,31 @@ export class ExtendedCBL
   }
 
   /**
-   * Validate the block's data and structure
+   * Synchronously validate the block's data and structure
+   * @throws {ChecksumMismatchError} If checksums do not match
+   * @throws {MetadataMismatchError} If metadata does not match stored values
+   */
+  public override validateSync(): void {
+    // Validate base CBL structure
+    super.validateSync();
+
+    // Validate file metadata by parsing this layer's header
+    const { fileName, mimeType } = ExtendedCBL.parseMetadata(
+      this.layerHeaderData,
+    );
+
+    // Verify metadata matches stored values
+    if (
+      fileName !== this.fileName ||
+      mimeType !== this.mimeType ||
+      this.data.length !== this.blockSize
+    ) {
+      throw new MetadataMismatchError();
+    }
+  }
+
+  /**
+   * Asynchronously validate the block's data and structure
    * @throws {ChecksumMismatchError} If checksums do not match
    * @throws {MetadataMismatchError} If metadata does not match stored values
    */
@@ -252,132 +277,25 @@ export class ExtendedCBL
   }
 
   /**
-   * Parse an ExtendedCBL from raw data
-   * @param data - Raw block data
-   * @param blockSize - Block size category
-   * @returns New ExtendedCBL instance
-   * @throws If data is invalid or corrupted
+   * Validate the creator's signature
+   * @param creator - Optional creator to validate against (uses block's creator if not provided)
    */
-  public static fromData(data: Buffer, blockSize: BlockSize): ExtendedCBL {
-    try {
-      // Validate block size
-      ExtendedCBL.validateBlockSize(blockSize);
-
-      if (!data || data.length !== blockSize) {
-        throw new Error(
-          `Invalid data length: ${data?.length ?? 0}, expected: ${blockSize}`,
-        );
-      }
-
-      // Calculate section boundaries
-      const cblHeaderEnd = ConstituentBlockListBlock.CblHeaderSize;
-      const metadataEnd = cblHeaderEnd + ExtendedCBL.FileMetadataHeaderSize;
-
-      // Extract and parse metadata
-      const metadataData = data.subarray(cblHeaderEnd, metadataEnd);
-      const { fileName, mimeType } = ExtendedCBL.parseMetadata(metadataData);
-
-      // Extract block references
-      const blockReferences = data.subarray(metadataEnd);
-
-      // Extract CBL header data
-      const cblHeaderData = data.subarray(0, cblHeaderEnd);
-
-      // Parse CBL header fields
-      const creatorId = new GuidV4(
-        cblHeaderData.subarray(0, 16) as RawGuidBuffer,
-      );
-      const dateCreated = new Date(Number(cblHeaderData.readBigInt64BE(16)));
-      const addressCount = cblHeaderData.readUInt32BE(24);
-      const originalDataLength = cblHeaderData.readBigInt64BE(28);
-      const tupleSize = cblHeaderData.readUInt8(36);
-      const signature = cblHeaderData.subarray(37, 102) as SignatureBuffer;
-
-      // Parse block references into addresses
-      const addresses: ChecksumBuffer[] = [];
-      for (let i = 0; i < addressCount; i++) {
-        const start = i * StaticHelpersChecksum.Sha3ChecksumBufferLength;
-        const end = start + StaticHelpersChecksum.Sha3ChecksumBufferLength;
-        const address = blockReferences.subarray(start, end) as ChecksumBuffer;
-        addresses.push(address);
-      }
-
-      // Create the ExtendedCBL
-      const extendedCbl = new ExtendedCBL(
-        blockSize,
-        creatorId,
-        originalDataLength,
-        addresses,
-        fileName,
-        mimeType,
-        dateCreated,
-        signature,
-        tupleSize,
-      );
-
-      // Validate complete structure
-      if (!extendedCbl.validate()) {
-        throw new Error('Invalid ExtendedCBL structure');
-      }
-
-      return extendedCbl;
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(`Failed to parse ExtendedCBL: ${error.message}`);
-      }
-      throw new Error('Failed to parse ExtendedCBL: Unknown error');
+  public override validateSignature(): boolean;
+  public override validateSignature(creator: BrightChainMember): boolean;
+  public override validateSignature(creator?: BrightChainMember): boolean {
+    if (!this.canRead) {
+      throw new Error('Block cannot be read');
     }
-  }
 
-  /**
-   * Create an ExtendedCBL from a base CBL
-   * @param cbl - Base CBL to extend
-   * @param fileName - Original file name
-   * @param mimeType - File content MIME type
-   * @returns New ExtendedCBL instance
-   */
-  public static fromCBL(
-    cbl: ConstituentBlockListBlock,
-    fileName: string,
-    mimeType: string,
-  ): ExtendedCBL {
-    try {
-      if (!cbl) {
-        throw new Error('CBL is required');
-      }
-
-      // Validate CBL
-      if (!cbl.validate()) {
-        throw new Error('Invalid CBL data');
-      }
-
-      // Create ExtendedCBL
-      const extendedCbl = new ExtendedCBL(
-        cbl.blockSize,
-        cbl.creatorId,
-        cbl.originalDataLength,
-        cbl.addresses,
-        fileName,
-        mimeType,
-        cbl.dateCreated,
-        cbl.creatorSignature,
-        cbl.tupleSize,
-      );
-
-      // Validate complete structure
-      if (!extendedCbl.validate()) {
-        throw new Error('Invalid ExtendedCBL structure');
-      }
-
-      return extendedCbl;
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(
-          `Failed to create ExtendedCBL from CBL: ${error.message}`,
-        );
-      }
-      throw new Error('Failed to create ExtendedCBL from CBL: Unknown error');
+    const validationCreator = creator ?? this.creator;
+    if (!validationCreator) {
+      throw new Error('Creator is required for signature validation');
     }
+
+    return ConstituentBlockListBlock.ValidateSignature(
+      this.data,
+      validationCreator,
+    );
   }
 
   // Static helper methods
@@ -616,5 +534,14 @@ export class ExtendedCBL
       mimeTypeLength,
       mimeType,
     };
+  }
+
+  /**
+   * Alias for validateSync() to maintain compatibility
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
+   * @throws {MetadataMismatchError} If metadata does not match stored values
+   */
+  public override validate(): void {
+    this.validateSync();
   }
 }

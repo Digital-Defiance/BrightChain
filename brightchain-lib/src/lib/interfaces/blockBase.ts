@@ -159,13 +159,30 @@ export interface IBlock {
   get padding(): Buffer;
 
   /**
-   * Trigger data validation.
+   * Asynchronously validate the block's data.
    * Checks:
    * 1. Checksum correctness
    * 2. Data integrity
    * 3. Format validity
    *
-   * @throws {ChecksumMismatchError} If the checksum does not match
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
    */
   validateAsync(): Promise<void>;
+
+  /**
+   * Synchronously validate the block's data.
+   * Checks:
+   * 1. Checksum correctness
+   * 2. Data integrity
+   * 3. Format validity
+   *
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
+   */
+  validateSync(): void;
+
+  /**
+   * Alias for validateSync() to maintain compatibility.
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
+   */
+  validate(): void;
 }

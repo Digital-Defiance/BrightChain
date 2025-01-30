@@ -62,6 +62,21 @@ class TestBaseBlock extends BaseBlock {
    * @throws ChecksumMismatchError
    * @returns true
    */
+  public validateSync(): void {
+    const expectedChecksum = StaticHelpersChecksum.calculateChecksum(
+      this.internalData,
+    );
+    const result = this.idChecksum.equals(expectedChecksum);
+    if (!result) {
+      throw new ChecksumMismatchError(this.idChecksum, expectedChecksum);
+    }
+  }
+
+  /**
+   * Re-validate the block
+   * @throws ChecksumMismatchError
+   * @returns true
+   */
   public async validateAsync(): Promise<void> {
     const expectedChecksum = await StaticHelpersChecksum.calculateChecksumAsync(
       this.data,

@@ -94,7 +94,7 @@ export const stringNameToI18nKey = (name: StringNames) =>
  */
 export function replaceVariables(
   str: string,
-  otherVars?: Record<string, string>,
+  otherVars?: Record<string, string | number>,
 ): string {
   const variables = str.match(/\{(.+?)\}/g);
   if (!variables) {
@@ -108,7 +108,10 @@ export function replaceVariables(
     let replacement = '';
 
     if (otherVars && varName in otherVars) {
-      replacement = otherVars[varName];
+      replacement =
+        typeof otherVars[varName] === 'string'
+          ? otherVars[varName]
+          : otherVars[varName].toString();
     } else if (varName in constants) {
       const constantValue = constants[varName as keyof typeof constants];
       replacement = constantValue?.toString() ?? '';
@@ -129,7 +132,7 @@ export function replaceVariables(
 export const translate = (
   name: StringNames,
   language?: StringLanguages,
-  otherVars?: Record<string, string>,
+  otherVars?: Record<string, string | number>,
 ): string => {
   const lang = language ?? GlobalLanguageContext.language;
   if (!Strings[lang]) {

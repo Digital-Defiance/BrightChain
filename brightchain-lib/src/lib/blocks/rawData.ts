@@ -1,6 +1,7 @@
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { BlockMetadata } from '../interfaces/blockMetadata';
 import { IDataBlock } from '../interfaces/dataBlock';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
@@ -109,21 +110,40 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
   }
 
   /**
-   * Validate the block's data against its checksum
+   * Internal validation logic
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
    */
-  protected validate(): boolean {
-    return StaticHelpersChecksum.calculateChecksum(this._data).equals(
-      this.idChecksum,
+  protected validateInternal(): void {
+    const calculatedChecksum = StaticHelpersChecksum.calculateChecksum(
+      this._data,
     );
+    if (!calculatedChecksum.equals(this.idChecksum)) {
+      throw new ChecksumMismatchError(this.idChecksum, calculatedChecksum);
+    }
   }
 
   /**
-   * Validate the block's data against its checksum asynchronously
+   * Synchronously validate the block's data
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
+   */
+  public override validateSync(): void {
+    this.validateInternal();
+  }
+
+  /**
+   * Asynchronously validate the block's data
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
    */
   public override async validateAsync(): Promise<void> {
-    if (!this.validate()) {
-      throw new Error('Checksum mismatch');
-    }
+    this.validateInternal();
+  }
+
+  /**
+   * Alias for validateSync() to maintain compatibility
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
+   */
+  public override validate(): void {
+    this.validateSync();
   }
 
   /**

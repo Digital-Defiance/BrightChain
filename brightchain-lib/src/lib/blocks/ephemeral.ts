@@ -226,9 +226,29 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
   }
 
   /**
-   * Trigger validation and return the result
-   * @throws {ChecksumMismatchError} If the checksum does not match
-   * @returns {boolean} True if the block is valid, false otherwise
+   * Synchronously validate the block's data and structure
+   * @throws {ChecksumMismatchError} If checksums do not match
+   */
+  public validateSync(): void {
+    // For both encrypted and unencrypted blocks,
+    // validate against the provided checksum
+    if (!this.idChecksum) {
+      throw new Error('No checksum provided');
+    }
+
+    // Calculate checksum on actual data length, excluding padding
+    const computedChecksum = StaticHelpersChecksum.calculateChecksum(
+      this._data.subarray(0, this._actualDataLength),
+    );
+    const validated = computedChecksum.equals(this.idChecksum);
+    if (!validated) {
+      throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
+    }
+  }
+
+  /**
+   * Asynchronously validate the block's data and structure
+   * @throws {ChecksumMismatchError} If checksums do not match
    */
   public override async validateAsync(): Promise<void> {
     // For both encrypted and unencrypted blocks,

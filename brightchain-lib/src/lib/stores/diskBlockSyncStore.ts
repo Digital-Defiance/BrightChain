@@ -15,10 +15,12 @@ export class DiskBlockSyncStore
   constructor(storePath: string, blockSize: BlockSize) {
     super(storePath, blockSize);
   }
+
   has(key: ChecksumBuffer): boolean {
     const blockPath = this.blockPath(key);
     return existsSync(blockPath);
   }
+
   get(key: ChecksumBuffer): BaseBlock {
     const blockPath = this.blockPath(key);
     const blockData = readFileSync(blockPath);
@@ -37,11 +39,10 @@ export class DiskBlockSyncStore
       new Date(metadata.dateCreated), // Convert string to Date
       key,
     );
-    if (!block.validate()) {
-      throw new Error(`Block ${key.toString('hex')} failed validation`);
-    }
+    block.validateSync();
     return block;
   }
+
   set(key: ChecksumBuffer, value: BaseBlock): void {
     if (value.blockDataType == BlockDataType.EphemeralStructuredData) {
       throw new Error(`Cannot store ephemeral structured data`);
@@ -60,7 +61,7 @@ export class DiskBlockSyncStore
     } else {
       this.ensureBlockPath(value.idChecksum);
     }
-    writeFileSync(blockPath, value.data);
+    writeFileSync(blockPath, value.data.toString());
     writeFileSync(
       this.metadataPath(value.idChecksum),
       JSON.stringify(value.metadata),

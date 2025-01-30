@@ -246,9 +246,24 @@ export abstract class BaseBlock implements IBlock {
   }
 
   /**
-   * Validate the block's checksum
+   * Asynchronously validate the block's checksum and data integrity
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
    */
   public abstract validateAsync(): Promise<void>;
+
+  /**
+   * Synchronously validate the block's checksum and data integrity
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
+   */
+  public abstract validateSync(): void;
+
+  /**
+   * Alias for validateSync() to maintain compatibility
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
+   */
+  public validate(): void {
+    return this.validateSync();
+  }
 
   /**
    * Get the complete block data including headers and payload

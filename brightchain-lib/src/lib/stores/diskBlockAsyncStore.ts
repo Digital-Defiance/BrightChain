@@ -2,7 +2,9 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { Readable, Transform } from 'stream';
 import { BlockHandle } from '../blocks/handle';
 import { RawDataBlock } from '../blocks/rawData';
+import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
+import { BlockType } from '../enumerations/blockType';
 import { IBlockMetadata } from '../interfaces/blockMetadata';
 import MemoryWritableStream from '../memoryWriteableStream';
 import { ChecksumTransform } from '../transforms/checksumTransform';
@@ -31,7 +33,18 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
    * Get a handle to a block
    */
   public get(key: ChecksumBuffer): BlockHandle {
-    return new BlockHandle(key, this._blockSize, this.blockPath(key));
+    const handle = new BlockHandle(
+      BlockType.Handle,
+      BlockDataType.RawData,
+      this._blockSize,
+      key,
+      new Date(),
+      undefined, // metadata
+      true, // canRead
+      true, // canPersist
+    );
+    handle.setPath(this.blockPath(key));
+    return handle;
   }
 
   /**
@@ -86,8 +99,10 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
       );
     }
 
-    if (!block.validated) {
-      throw new Error('Block is not validated');
+    try {
+      block.validate();
+    } catch (error) {
+      throw new Error('Block validation failed');
     }
 
     const blockPath = this.blockPath(block.idChecksum);
