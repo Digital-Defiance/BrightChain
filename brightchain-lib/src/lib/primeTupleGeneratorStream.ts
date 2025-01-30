@@ -4,8 +4,12 @@ import { OwnedDataBlock } from './blocks/ownedData';
 import { RandomBlock } from './blocks/random';
 import { WhitenedBlock } from './blocks/whitened';
 import { RANDOM_BLOCKS_PER_TUPLE, TUPLE_SIZE } from './constants';
+import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
+import { BlockType } from './enumerations/blockType';
+import { InvalidTupleCountError } from './errors/invalidTupleCount';
 import { GuidV4 } from './guid';
+import { StaticHelpersChecksum } from './staticHelpers.checksum';
 
 /**
  * PrimeTupleGeneratorStream transforms input data into tuples of blocks.
@@ -85,7 +89,7 @@ export class PrimeTupleGeneratorStream extends Transform {
     }
   }
 
-  private makeTuple(): void {
+  private async makeTuple(): Promise<void> {
     if (this.buffer.length < this.blockSize) {
       return;
     }
@@ -95,11 +99,13 @@ export class PrimeTupleGeneratorStream extends Transform {
       const blockData = this.buffer.subarray(0, this.blockSize);
       this.buffer = this.buffer.subarray(this.blockSize);
 
-      const sourceBlock = new OwnedDataBlock(
-        GuidV4.new(), // Anonymous creator
+      const sourceBlock = await OwnedDataBlock.from(
+        BlockType.OwnedDataBlock,
+        BlockDataType.RawData,
         this.blockSize,
         blockData,
-        undefined, // Let constructor calculate checksum
+        StaticHelpersChecksum.calculateChecksum(blockData),
+        GuidV4.new(), // Anonymous creator
         new Date(),
         blockData.length,
       );
@@ -125,8 +131,9 @@ export class PrimeTupleGeneratorStream extends Transform {
       }
 
       // Create and validate tuple
-      if (randomBlocks.length + whiteners.length + 1 !== TUPLE_SIZE) {
-        throw new Error('Invalid tuple size');
+      const blockCount = randomBlocks.length + whiteners.length + 1;
+      if (blockCount !== TUPLE_SIZE) {
+        throw new InvalidTupleCountError(blockCount);
       }
 
       // XOR blocks together

@@ -8,6 +8,7 @@ export enum StringNames {
   Error_ChecksumMismatchTemplate = 'error_checksumMismatchTemplate',
   Error_InvalidBlockSizeTemplate = 'error_invalidBlockSizeTemplate',
   Error_InvalidLanguageCode = 'error_invalidLanguageCode',
+  Error_InvalidTupleCountTemplate = 'error_invalidTupleCountTemplate',
   Error_MetadataMismatch = 'error_metadataMismatch',
   Error_TokenExpired = 'error_tokenExpired',
   Error_TokenInvalid = 'error_tokenInvalid',

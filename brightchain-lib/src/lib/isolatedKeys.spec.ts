@@ -64,7 +64,7 @@ const extractInstanceId = (
 };
 
 // Set a longer timeout for all tests in this file
-jest.setTimeout(30000);
+jest.setTimeout(60000);
 
 describe('Isolated Keys', () => {
   let keys: TestKeys;

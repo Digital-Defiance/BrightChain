@@ -7,6 +7,8 @@ import { InMemoryBlockTuple } from './blocks/memoryTuple';
 import { OwnedDataBlock } from './blocks/ownedData';
 import { WhitenedBlock } from './blocks/whitened';
 import { BrightChainMember } from './brightChainMember';
+import { BlockDataType } from './enumerations/blockDataType';
+import { BlockType } from './enumerations/blockType';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
 import { ChecksumBuffer } from './types';
 
@@ -56,7 +58,7 @@ export class CblStream extends Readable {
     this.creatorForDecryption = creatorForDecryption;
   }
 
-  override _read(size: number): void {
+  override async _read(size: number): Promise<void> {
     const bytesRemaining = this.cbl.originalDataLength - this.overallReadOffset;
     let stillToRead =
       bytesRemaining > BigInt(size) ? size : Number(bytesRemaining);
@@ -67,7 +69,7 @@ export class CblStream extends Readable {
         !this.currentData ||
         this.currentDataOffset >= this.currentData.data.length
       ) {
-        this.readData();
+        await this.readData();
         if (!this.currentData) {
           // No more data available
           break;
@@ -99,7 +101,7 @@ export class CblStream extends Readable {
     }
   }
 
-  private readData(): void {
+  private async readData(): Promise<void> {
     if (this.currentTupleIndex >= this.maxTuple) {
       this.push(null);
       this.currentData = null;
@@ -130,9 +132,14 @@ export class CblStream extends Readable {
         // Create a handle from the whitened block
         blocks.push(
           new BlockHandle(
-            whitenedBlock.idChecksum,
+            BlockType.Handle, // type
+            BlockDataType.RawData, // dataType
             whitenedBlock.blockSize,
-            '', // Path not needed since we have the data
+            whitenedBlock.idChecksum,
+            new Date(), // dateCreated
+            undefined, // metadata
+            true, // canRead
+            true, // canPersist
           ),
         );
       }
@@ -146,7 +153,7 @@ export class CblStream extends Readable {
         if (!(xoredData instanceof EncryptedOwnedDataBlock)) {
           throw new Error('Expected encrypted data block');
         }
-        this.currentData = BlockService.decrypt(
+        this.currentData = await BlockService.decrypt(
           this.creatorForDecryption,
           xoredData,
         );

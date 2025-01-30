@@ -1,4 +1,5 @@
 import { ReadStream } from 'fs';
+import { Readable } from 'stream';
 import BlockPaddingTransform from './blockPaddingTransform';
 import { BaseBlock } from './blocks/base';
 import { ConstituentBlockListBlock } from './blocks/cbl';
@@ -11,8 +12,11 @@ import { WhitenedBlock } from './blocks/whitened';
 import { BlockService } from './blockService';
 import { BrightChainMember } from './brightChainMember';
 import { RANDOM_BLOCKS_PER_TUPLE, TUPLE_SIZE } from './constants';
+import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
+import { BlockType } from './enumerations/blockType';
 import { PrimeTupleGeneratorStream } from './primeTupleGeneratorStream';
+import { StaticHelpersChecksum } from './staticHelpers.checksum';
 import { EciesEncryptTransform } from './transforms/eciesEncryptTransform';
 
 /**
@@ -24,13 +28,27 @@ import { EciesEncryptTransform } from './transforms/eciesEncryptTransform';
  */
 export abstract class StaticHelpersTuple {
   /**
+   * Convert data to Buffer regardless of whether it's a Readable or Buffer
+   */
+  private static async toBuffer(data: Buffer | Readable): Promise<Buffer> {
+    if (Buffer.isBuffer(data)) {
+      return data;
+    }
+    const chunks: Buffer[] = [];
+    for await (const chunk of data) {
+      chunks.push(Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
+  }
+
+  /**
    * XOR a source block with whitening and random blocks
    */
-  public static xorSourceToPrimeWhitened(
+  public static async xorSourceToPrimeWhitened(
     sourceBlock: BaseBlock | BlockHandle,
     whiteners: WhitenedBlock[],
     randomBlocks: RandomBlock[],
-  ): WhitenedBlock {
+  ): Promise<WhitenedBlock> {
     // Validate parameters
     if (!sourceBlock || !whiteners || !randomBlocks) {
       throw new Error('All parameters are required');
@@ -41,13 +59,16 @@ export abstract class StaticHelpersTuple {
     }
 
     try {
+      // Convert source data to Buffer
+      const sourceData = await StaticHelpersTuple.toBuffer(sourceBlock.data);
+
       // XOR with whitening blocks
-      const xoredData = Buffer.from(sourceBlock.data);
+      const xoredData = Buffer.from(sourceData);
       for (const whitener of whiteners) {
         if (whitener.blockSize !== sourceBlock.blockSize) {
           throw new Error('Block size mismatch');
         }
-        const whitenerData = whitener.data;
+        const whitenerData = await StaticHelpersTuple.toBuffer(whitener.data);
         for (let i = 0; i < xoredData.length; i++) {
           xoredData[i] ^= whitenerData[i];
         }
@@ -58,7 +79,7 @@ export abstract class StaticHelpersTuple {
         if (random.blockSize !== sourceBlock.blockSize) {
           throw new Error('Block size mismatch');
         }
-        const randomData = random.data;
+        const randomData = await StaticHelpersTuple.toBuffer(random.data);
         for (let i = 0; i < xoredData.length; i++) {
           xoredData[i] ^= randomData[i];
         }
@@ -83,12 +104,12 @@ export abstract class StaticHelpersTuple {
   /**
    * Create a tuple from a source block and its whitening/random blocks
    */
-  public static makeTupleFromSourceXor(
+  public static async makeTupleFromSourceXor(
     sourceBlock: BaseBlock | BlockHandle,
     whiteners: WhitenedBlock[],
     randomBlocks: RandomBlock[],
-  ): InMemoryBlockTuple {
-    const primeWhitenedBlock = this.xorSourceToPrimeWhitened(
+  ): Promise<InMemoryBlockTuple> {
+    const primeWhitenedBlock = await this.xorSourceToPrimeWhitened(
       sourceBlock,
       whiteners,
       randomBlocks,
@@ -104,35 +125,42 @@ export abstract class StaticHelpersTuple {
   /**
    * XOR a whitened block with its whitening blocks to recover the original data
    */
-  public static xorDestPrimeWhitenedToOwned(
+  public static async xorDestPrimeWhitenedToOwned(
     creator: BrightChainMember,
     primeWhitenedBlock: WhitenedBlock,
     whiteners: WhitenedBlock[],
-  ): OwnedDataBlock {
+  ): Promise<OwnedDataBlock> {
     // Validate parameters
     if (!primeWhitenedBlock || !whiteners) {
       throw new Error('All parameters are required');
     }
 
     try {
+      // Convert prime whitened data to Buffer
+      const primeData = await StaticHelpersTuple.toBuffer(
+        primeWhitenedBlock.data,
+      );
+
       // XOR with whitening blocks
-      const xoredData = Buffer.from(primeWhitenedBlock.data);
+      const xoredData = Buffer.from(primeData);
       for (const whitener of whiteners) {
         if (whitener.blockSize !== primeWhitenedBlock.blockSize) {
           throw new Error('Block size mismatch');
         }
-        const whitenerData = whitener.data;
+        const whitenerData = await StaticHelpersTuple.toBuffer(whitener.data);
         for (let i = 0; i < xoredData.length; i++) {
           xoredData[i] ^= whitenerData[i];
         }
       }
 
       // Create owned data block
-      return new OwnedDataBlock(
-        creator,
+      return await OwnedDataBlock.from(
+        BlockType.OwnedDataBlock,
+        BlockDataType.RawData,
         primeWhitenedBlock.blockSize,
         xoredData,
-        undefined, // Let constructor calculate checksum
+        StaticHelpersChecksum.calculateChecksum(xoredData),
+        creator,
         new Date(),
         xoredData.length,
       );
@@ -148,12 +176,12 @@ export abstract class StaticHelpersTuple {
   /**
    * Create a tuple from a whitened block and its whitening blocks
    */
-  public static makeTupleFromDestXor(
+  public static async makeTupleFromDestXor(
     creator: BrightChainMember,
     primeWhitenedBlock: WhitenedBlock,
     whiteners: WhitenedBlock[],
-  ): InMemoryBlockTuple {
-    const ownedDataBlock = this.xorDestPrimeWhitenedToOwned(
+  ): Promise<InMemoryBlockTuple> {
+    const ownedDataBlock = await this.xorDestPrimeWhitenedToOwned(
       creator,
       primeWhitenedBlock,
       whiteners,
@@ -165,12 +193,12 @@ export abstract class StaticHelpersTuple {
   /**
    * XOR a whitened block with its whitening blocks to recover a CBL
    */
-  public static xorPrimeWhitenedToCbl(
+  public static async xorPrimeWhitenedToCbl(
     creator: BrightChainMember,
     primeWhitened: WhitenedBlock,
     whiteners: WhitenedBlock[],
-  ): ConstituentBlockListBlock {
-    const ownedBlock = StaticHelpersTuple.xorDestPrimeWhitenedToOwned(
+  ): Promise<ConstituentBlockListBlock> {
+    const ownedBlock = await StaticHelpersTuple.xorDestPrimeWhitenedToOwned(
       creator,
       primeWhitened,
       whiteners,
@@ -188,22 +216,23 @@ export abstract class StaticHelpersTuple {
   /**
    * XOR an encrypted whitened block with its whitening blocks and decrypt to recover a CBL
    */
-  public static xorPrimeWhitenedEncryptedToCbl(
+  public static async xorPrimeWhitenedEncryptedToCbl(
     creator: BrightChainMember,
     primeWhitened: WhitenedBlock,
     whiteners: WhitenedBlock[],
-  ): ConstituentBlockListBlock {
-    const ownedBlock = StaticHelpersTuple.xorDestPrimeWhitenedToOwned(
+  ): Promise<ConstituentBlockListBlock> {
+    const ownedBlock = await StaticHelpersTuple.xorDestPrimeWhitenedToOwned(
       creator,
       primeWhitened,
       whiteners,
     );
 
-    const encryptedBlock = BlockService.encrypt(
-      creator,
-      ownedBlock,
-    ) as EncryptedOwnedDataBlock;
-    const decryptedBlock = BlockService.decrypt(creator, encryptedBlock);
+    const encryptedBlock = await BlockService.encrypt(creator, ownedBlock);
+    if (!(encryptedBlock instanceof EncryptedOwnedDataBlock)) {
+      throw new Error('Expected encrypted owned data block');
+    }
+
+    const decryptedBlock = await BlockService.decrypt(creator, encryptedBlock);
 
     return new ConstituentBlockListBlock(
       decryptedBlock.blockSize,
@@ -279,11 +308,13 @@ export abstract class StaticHelpersTuple {
       );
 
       // Convert CBL to OwnedDataBlock for tuple creation
-      const ownedBlock = new OwnedDataBlock(
-        creator,
+      const ownedBlock = await OwnedDataBlock.from(
+        BlockType.OwnedDataBlock,
+        BlockDataType.RawData,
         blockSize,
         cbl.data,
-        undefined, // Let constructor calculate checksum
+        StaticHelpersChecksum.calculateChecksum(cbl.data),
+        creator,
         new Date(),
         cbl.data.length,
       );
@@ -307,7 +338,7 @@ export abstract class StaticHelpersTuple {
         whiteners.push(block);
       }
 
-      const primeBlock = StaticHelpersTuple.xorSourceToPrimeWhitened(
+      const primeBlock = await StaticHelpersTuple.xorSourceToPrimeWhitened(
         ownedBlock,
         whiteners,
         randomBlocks,
@@ -398,16 +429,18 @@ export abstract class StaticHelpersTuple {
       );
 
       // Convert CBL to OwnedDataBlock for encryption
-      const ownedBlock = new OwnedDataBlock(
-        creator,
+      const ownedBlock = await OwnedDataBlock.from(
+        BlockType.OwnedDataBlock,
+        BlockDataType.RawData,
         blockSize,
         cbl.data,
-        undefined, // Let constructor calculate checksum
+        StaticHelpersChecksum.calculateChecksum(cbl.data),
+        creator,
         new Date(),
         cbl.data.length,
       );
 
-      const encryptedCbl = BlockService.encrypt(creator, ownedBlock);
+      const encryptedCbl = await BlockService.encrypt(creator, ownedBlock);
 
       // Create tuple for encrypted CBL
       const randomBlocks: RandomBlock[] = [];
@@ -428,7 +461,7 @@ export abstract class StaticHelpersTuple {
         whiteners.push(block);
       }
 
-      const primeBlock = StaticHelpersTuple.xorSourceToPrimeWhitened(
+      const primeBlock = await StaticHelpersTuple.xorSourceToPrimeWhitened(
         encryptedCbl,
         whiteners,
         randomBlocks,

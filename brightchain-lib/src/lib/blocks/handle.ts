@@ -9,6 +9,7 @@ import {
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { BlockMetadata, IBlockMetadata } from '../interfaces/blockMetadata';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { ChecksumTransform } from '../transforms/checksumTransform';
@@ -109,6 +110,14 @@ export class BlockHandle extends BaseBlock {
   }
 
   /**
+   * Set the block's path
+   * @param path - The path to set
+   */
+  public setPath(path: string): void {
+    this._path = path;
+  }
+
+  /**
    * Get the block's path
    */
   public get path(): string {
@@ -191,7 +200,7 @@ export class BlockHandle extends BaseBlock {
   }
 
   /**
-   * Calculate the checksum of the block data
+   * Calculate the checksum of the block data asynchronously
    */
   public async calculateChecksum(): Promise<ChecksumBuffer> {
     return new Promise((resolve, reject) => {
@@ -223,13 +232,44 @@ export class BlockHandle extends BaseBlock {
   }
 
   /**
-   * Verify the block's checksum matches its ID
+   * Calculate the checksum of the block data synchronously
    */
-  public async validateAsync(): Promise<void> {
+  public calculateChecksumSync(): ChecksumBuffer {
+    if (!existsSync(this.path)) {
+      throw new Error(`Block file not found: ${this.path}`);
+    }
+    const data = readFileSync(this.path);
+    return StaticHelpersChecksum.calculateChecksum(data);
+  }
+
+  /**
+   * Verify the block's checksum matches its ID asynchronously
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
+   */
+  public override async validateAsync(): Promise<void> {
     const checksum = await this.calculateChecksum();
     if (!checksum.equals(this.idChecksum)) {
-      throw new Error('Checksum validation failed');
+      throw new ChecksumMismatchError(this.idChecksum, checksum);
     }
+  }
+
+  /**
+   * Verify the block's checksum matches its ID synchronously
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
+   */
+  public override validateSync(): void {
+    const checksum = this.calculateChecksumSync();
+    if (!checksum.equals(this.idChecksum)) {
+      throw new ChecksumMismatchError(this.idChecksum, checksum);
+    }
+  }
+
+  /**
+   * Alias for validateSync() to maintain compatibility
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
+   */
+  public override validate(): void {
+    this.validateSync();
   }
 
   /**

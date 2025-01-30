@@ -1,5 +1,8 @@
+import { Readable } from 'stream';
 import { TUPLE_SIZE } from '../constants';
+import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
+import { BlockType } from '../enumerations/blockType';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
 import { BlockHandle } from './handle';
@@ -64,29 +67,59 @@ export class InMemoryBlockTuple {
   }
 
   /**
+   * Convert a Readable stream to a Buffer
+   * @param readable - The readable stream to convert
+   * @returns Promise that resolves to a Buffer
+   */
+  private static async streamToBuffer(readable: Readable): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+    for await (const chunk of readable) {
+      chunks.push(Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
+  }
+
+  /**
+   * Convert data to Buffer regardless of whether it's a Readable or Buffer
+   * @param data - The data to convert
+   * @returns Promise that resolves to a Buffer
+   */
+  private static async toBuffer(data: Readable | Buffer): Promise<Buffer> {
+    if (Buffer.isBuffer(data)) {
+      return data;
+    }
+    return InMemoryBlockTuple.streamToBuffer(data);
+  }
+
+  /**
    * XOR all blocks together
    * @returns A new RawDataBlock containing the XOR result
    */
-  public xor(): RawDataBlock {
+  public async xor(): Promise<RawDataBlock> {
     if (!this._blocks.length) {
       throw new Error('No blocks to XOR');
     }
 
     try {
       // Load and copy first block's data
-      const result = Buffer.from(this._blocks[0].data);
+      const result = Buffer.alloc(
+        (await InMemoryBlockTuple.toBuffer(this._blocks[0].data)).length,
+      );
+      (await InMemoryBlockTuple.toBuffer(this._blocks[0].data)).copy(result);
 
       // XOR with remaining blocks
       for (let i = 1; i < this._blocks.length; i++) {
-        const current = this._blocks[i].data;
+        const currentData = await InMemoryBlockTuple.toBuffer(
+          this._blocks[i].data,
+        );
 
-        if (current.length !== result.length) {
+        if (currentData.length !== result.length) {
           throw new Error('Block sizes must match');
         }
 
         // XOR in place
         for (let j = 0; j < result.length; j++) {
-          result[j] ^= current[j];
+          result[j] ^= currentData[j];
         }
       }
 
@@ -112,17 +145,34 @@ export class InMemoryBlockTuple {
    * Create a tuple from block IDs
    * This creates disk-based blocks using BlockHandle
    */
-  public static fromIds(
+  public static async fromIds(
     blockIDs: ChecksumBuffer[],
     blockSize: BlockSize,
     getBlockPath: (id: ChecksumBuffer) => string,
-  ): InMemoryBlockTuple {
+  ): Promise<InMemoryBlockTuple> {
     if (blockIDs.length !== TUPLE_SIZE) {
       throw new Error(`Expected ${TUPLE_SIZE} block IDs`);
     }
 
-    const handles = blockIDs.map(
-      (id) => new BlockHandle(id, blockSize, getBlockPath(id)),
+    const handles = await Promise.all(
+      blockIDs.map(
+        (id: ChecksumBuffer) =>
+          new BlockHandle(
+            BlockType.Handle,
+            BlockDataType.RawData,
+            blockSize,
+            id,
+            new Date(),
+            {
+              size: blockSize,
+              type: BlockType.Handle,
+              dataType: BlockDataType.RawData,
+              dateCreated: new Date().toISOString(),
+            },
+            true,
+            true,
+          ),
+      ),
     );
 
     return new InMemoryBlockTuple(handles);
