@@ -71,7 +71,7 @@
     "@babel/core": "^7.14.5",
     "@babel/preset-react": "^7.14.5",
     "@faker-js/faker": "^8.3.1",
-    "@nrwl/react": "^17.2.1",
+    "@nrwl/react": "^19.8.4",
     "@nx/cypress": "20.3.1",
     "@nx/devkit": "20.3.1",
     "@nx/esbuild": "20.3.1",
