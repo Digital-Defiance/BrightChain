@@ -1,3 +1,4 @@
+import { Readable } from 'stream';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
@@ -86,16 +87,44 @@ export class WhitenedBlock extends RawDataBlock {
   }
 
   /**
+   * Convert a Readable stream to a Buffer
+   * @param readable - The readable stream to convert
+   * @returns Promise that resolves to a Buffer
+   */
+  private static async streamToBuffer(readable: Readable): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+    for await (const chunk of readable) {
+      chunks.push(Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
+  }
+
+  /**
+   * Convert data to Buffer regardless of whether it's a Readable or Buffer
+   * @param data - The data to convert
+   * @returns Promise that resolves to a Buffer
+   */
+  private static async toBuffer(data: Readable | Buffer): Promise<Buffer> {
+    if (Buffer.isBuffer(data)) {
+      return data;
+    }
+    return WhitenedBlock.streamToBuffer(data);
+  }
+
+  /**
    * XOR this block with another block
    */
-  public xor<T extends BaseBlock>(other: T): T {
+  public async xor<T extends BaseBlock>(other: T): Promise<T> {
     if (this.blockSize !== other.blockSize) {
       throw new Error('Block sizes must match');
     }
 
-    const result = Buffer.alloc(this.data.length);
-    for (let i = 0; i < this.data.length; i++) {
-      result[i] = this.data[i] ^ other.data[i];
+    const thisData = await WhitenedBlock.toBuffer(this.data);
+    const otherData = await WhitenedBlock.toBuffer(other.data);
+
+    const result = Buffer.alloc(thisData.length);
+    for (let i = 0; i < thisData.length; i++) {
+      result[i] = thisData[i] ^ otherData[i];
     }
 
     // Create a new instance of the same type as the input block

@@ -31,6 +31,8 @@ export * from './lib/enumerations/translatableEnum';
 export * from './lib/errors/checksumMismatch';
 export * from './lib/errors/expressValidation';
 export * from './lib/errors/handleable';
+export * from './lib/errors/invalidBlockSize';
+export * from './lib/errors/invalidTupleCount';
 export * from './lib/errors/missingValidatedData';
 export * from './lib/errors/tokenExpired';
 export * from './lib/errors/tokenInvalid';

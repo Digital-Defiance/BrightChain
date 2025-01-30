@@ -640,6 +640,43 @@ export class ConstituentBlockListBlock
     return this.blockSize - this.totalOverhead;
   }
 
+  /**
+   * Synchronously validate the block's data and structure
+   * @throws {ChecksumMismatchError} If checksums do not match
+   */
+  public override validateSync(): void {
+    // Call parent validation first
+    super.validateSync();
+
+    // Validate signature if creator exists
+    if (this.creator && !this.validateSignature()) {
+      throw new Error('Invalid creator signature');
+    }
+
+    // Validate CBL-specific fields
+    if (
+      this.cblAddressCount < 0 ||
+      this.cblAddressCount % this.tupleSize !== 0
+    ) {
+      throw new Error('Invalid CBL address count');
+    }
+
+    if (this.originalDataLength < 0n) {
+      throw new Error('Original data length cannot be negative');
+    }
+
+    if (this.tupleSize < MIN_TUPLE_SIZE || this.tupleSize > MAX_TUPLE_SIZE) {
+      throw new Error(
+        `Tuple size must be between ${MIN_TUPLE_SIZE} and ${MAX_TUPLE_SIZE}`,
+      );
+    }
+
+    // Validate date
+    if (this.dateCreated > new Date()) {
+      throw new Error('Date created cannot be in the future');
+    }
+  }
+
   public override get dateCreated(): Date {
     if (!this.canRead) {
       throw new Error('Block cannot be read');
