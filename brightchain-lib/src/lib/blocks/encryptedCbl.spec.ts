@@ -6,6 +6,7 @@ import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
 import { GuidV4 } from '../guid';
+import { ICBLBlockMetadata } from '../interfaces/cblBlockMetadata';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer, SignatureBuffer } from '../types';
@@ -22,13 +23,39 @@ class TestCblBlock extends ConstituentBlockListBlock {
     dateCreated?: Date,
     signature?: SignatureBuffer,
   ) {
+    dateCreated = dateCreated ?? new Date();
+    const metadata: ICBLBlockMetadata = {
+      size: blockSize,
+      dateCreated: dateCreated.toISOString(),
+      fileDataLength,
+      creator: creator,
+      originalDataLength:
+        dataAddresses.length * StaticHelpersChecksum.Sha3ChecksumBufferLength,
+      encrypted: false,
+      type: BlockType.ConstituentBlockList,
+      dataType: BlockDataType.EphemeralStructuredData,
+    };
+    const blockHeader = ConstituentBlockListBlock.makeCblHeader(
+      creator,
+      dateCreated,
+      dataAddresses.length,
+      fileDataLength,
+      Buffer.concat(dataAddresses),
+      signature,
+    );
+    const data = Buffer.concat([
+      blockHeader.headerData,
+      Buffer.concat(dataAddresses),
+    ]);
+    const checksum = StaticHelpersChecksum.calculateChecksum(data);
     super(
       blockSize,
       creator,
-      fileDataLength,
-      dataAddresses,
+      metadata,
+      data,
+      checksum,
       dateCreated,
-      signature,
+      blockHeader.signature,
     );
   }
 }

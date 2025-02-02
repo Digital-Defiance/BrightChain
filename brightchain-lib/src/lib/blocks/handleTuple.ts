@@ -1,4 +1,6 @@
 import { TUPLE_SIZE } from '../constants';
+import BlockDataType from '../enumerations/blockDataType';
+import BlockType from '../enumerations/blockType';
 import { IBlockMetadata } from '../interfaces/blockMetadata';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
@@ -103,8 +105,10 @@ export class BlockHandleTuple {
         ? new Date(destBlockMetadata.dateCreated)
         : new Date(),
       checksum,
-      (destBlockMetadata['canRead'] as boolean | undefined) ?? true,
-      (destBlockMetadata['canPersist'] as boolean | undefined) ?? true,
+      BlockType.RawData,
+      BlockDataType.RawData,
+      true,
+      true,
     );
 
     // Store the result

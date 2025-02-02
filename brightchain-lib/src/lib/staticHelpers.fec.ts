@@ -2,7 +2,9 @@ import { ReedSolomonErasure } from '@subspace/reed-solomon-erasure.wasm';
 import { BaseBlock } from './blocks/base';
 import { ParityBlock } from './blocks/parity';
 import { RawDataBlock } from './blocks/rawData';
+import BlockDataType from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
+import BlockType from './enumerations/blockType';
 
 /**
  * StaticHelpersFec provides Forward Error Correction (FEC) functionality.
@@ -282,6 +284,8 @@ export class StaticHelpersFec {
         recoveredBlock,
         new Date(),
         undefined, // Let constructor calculate checksum
+        BlockType.RawData,
+        BlockDataType.RawData,
         true, // canRead
         true, // canPersist
       );

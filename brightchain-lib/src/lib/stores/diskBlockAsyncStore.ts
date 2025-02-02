@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { Readable, Transform } from 'stream';
+import { BlockMetadata } from '../blockMetadata';
 import { BlockHandle } from '../blocks/handle';
 import { RawDataBlock } from '../blocks/rawData';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -36,10 +37,13 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
     const handle = new BlockHandle(
       BlockType.Handle,
       BlockDataType.RawData,
-      this._blockSize,
       key,
-      new Date(),
-      undefined, // metadata
+      new BlockMetadata(
+        this._blockSize,
+        BlockType.Handle,
+        BlockDataType.RawData,
+        this._blockSize as number,
+      ), // metadata
       true, // canRead
       true, // canPersist
     );
@@ -84,6 +88,8 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
       data,
       dateCreated,
       key,
+      BlockType.RawData,
+      BlockDataType.RawData,
       true, // canRead
       true, // canPersist
     );
@@ -148,6 +154,8 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
             writeStream.data,
             new Date(destBlockMetadata.dateCreated),
             checksumBuffer,
+            BlockType.RawData,
+            BlockDataType.RawData,
             true, // canRead
             true, // canPersist
           );

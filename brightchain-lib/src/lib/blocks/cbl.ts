@@ -1,5 +1,7 @@
 import { Readable } from 'stream';
+import { BlockMetadata } from '../blockMetadata';
 import { BrightChainMember } from '../brightChainMember';
+import { CblBlockMetadata } from '../cblBlockMetadata';
 import { MAX_TUPLE_SIZE, MIN_TUPLE_SIZE, TUPLE_SIZE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize, lengthToBlockSize } from '../enumerations/blockSizes';
@@ -86,11 +88,11 @@ export class ConstituentBlockListBlock
    * The signature is placed at the end of the header and signs both the header fields
    * and the address data that follows.
    */
-  private static makeCblHeader(
+  public static makeCblHeader(
     creator: BrightChainMember | GuidV4,
     dateCreated: Date,
     cblAddressCount: number,
-    originalDataLength: bigint,
+    fileDataLength: bigint,
     addressList: Buffer,
     signature?: SignatureBuffer,
     tupleSize = TUPLE_SIZE,
@@ -106,7 +108,7 @@ export class ConstituentBlockListBlock
     cblAddressCountBuffer.writeUInt32BE(cblAddressCount);
 
     const originalDataLengthBuffer = Buffer.alloc(8);
-    originalDataLengthBuffer.writeBigInt64BE(originalDataLength);
+    originalDataLengthBuffer.writeBigInt64BE(fileDataLength);
 
     const tupleSizeBuffer = Buffer.alloc(1);
     tupleSizeBuffer.writeUInt8(tupleSize);
@@ -170,7 +172,7 @@ export class ConstituentBlockListBlock
    * @param data The raw block data (full block with data and padding)
    * @returns The CBL header fields
    */
-  public static parseMetadata(
+  public static parseHeader(
     data: Buffer,
     creatorForValidation?: BrightChainMember,
   ): IConstituentBlockListBlockHeader {
@@ -253,23 +255,31 @@ export class ConstituentBlockListBlock
    * @param creator - The creator of the block
    * @returns The CBL block
    */
-  public static fromBuffer(
+  public static fromBaseBlockBuffer(
     block: BaseBlock,
-    creator?: BrightChainMember,
+    creator: BrightChainMember,
   ): ConstituentBlockListBlock {
     if (block.data instanceof Readable) {
       throw new Error('Block.data must be a buffer');
     }
-    const metadata = ConstituentBlockListBlock.parseMetadata(block.data);
+    const metadata = ConstituentBlockListBlock.parseHeader(block.data, creator);
     const addressData = block.data.subarray(
       ConstituentBlockListBlock.CblHeaderSize,
     );
-    return new ConstituentBlockListBlock(
+    const cblMetadata: CblBlockMetadata = new CblBlockMetadata(
       block.blockSize,
-      creator ?? metadata.creatorId,
+      block.blockType,
+      block.blockDataType,
+      addressData.length,
       metadata.originalDataLength,
-      ConstituentBlockListBlock.addressDataToAddresses(addressData),
       metadata.dateCreated,
+      creator,
+    );
+    return new ConstituentBlockListBlock(
+      creator,
+      cblMetadata,
+      block.data,
+      block.idChecksum,
       metadata.creatorSignature,
     );
   }
@@ -278,63 +288,17 @@ export class ConstituentBlockListBlock
    * Create a new CBL block
    */
   constructor(
-    blockSize: BlockSize,
     creator: BrightChainMember | GuidV4,
-    originalDataLength: bigint,
-    dataAddresses: Array<ChecksumBuffer>,
-    dateCreated?: Date,
+    metadata: CblBlockMetadata,
+    data: Buffer,
+    checksum: ChecksumBuffer,
     signature?: SignatureBuffer,
-    tupleSize = TUPLE_SIZE,
   ) {
-    if (!dateCreated) {
-      dateCreated = new Date();
-    }
-
-    if (dateCreated > new Date()) {
-      throw new Error('Date created cannot be in the future');
-    }
-
-    if (originalDataLength < 0) {
-      throw new Error('Original data length cannot be negative');
-    }
-
-    const cblAddressCount = dataAddresses.length;
-    if (cblAddressCount % tupleSize !== 0) {
-      throw new Error('CBL address count must be a multiple of TupleSize');
-    }
-
-    const addresses = Buffer.concat(dataAddresses);
-    const { headerData } = ConstituentBlockListBlock.makeCblHeader(
-      creator,
-      dateCreated,
-      cblAddressCount,
-      originalDataLength,
-      addresses,
-      signature,
-      tupleSize,
-    );
-
-    const data = Buffer.concat([headerData, addresses]);
-    const checksum = StaticHelpersChecksum.calculateChecksum(data);
-    const metadata = {
-      size: blockSize,
-      type: BlockType.ConstituentBlockList,
-      blockSize,
-      blockType: BlockType.ConstituentBlockList,
-      dataType: BlockDataType.EphemeralStructuredData,
-      dateCreated: dateCreated?.toISOString() ?? new Date().toISOString(),
-      lengthBeforeEncryption: data.length,
-      creator,
-      encrypted: false,
-    };
-
     super(
       BlockType.ConstituentBlockList,
       BlockDataType.EphemeralStructuredData,
-      blockSize,
       data,
       checksum,
-      dateCreated,
       metadata,
       true, // canRead
       true, // canPersist
@@ -386,11 +350,14 @@ export class ConstituentBlockListBlock
       const handles = await Promise.all(
         tupleIds.map((id) =>
           BlockHandle.createFromPath(
-            this.blockSize,
             getDiskBlockPath(id, this.blockSize),
+            new BlockMetadata(
+              this._blockSize,
+              this._blockType,
+              this._blockDataType,
+              this._data.length,
+            ), // metadata
             id,
-            undefined, // dateCreated
-            undefined, // metadata
             true, // canRead
             true, // canPersist
           ),

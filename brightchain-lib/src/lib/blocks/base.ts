@@ -1,4 +1,5 @@
 import { Readable } from 'stream';
+import { BlockMetadata } from '../blockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
@@ -28,7 +29,7 @@ export abstract class BaseBlock implements IBlock {
   protected readonly _blockDataType: BlockDataType;
   protected readonly _checksum: ChecksumBuffer;
   protected readonly _dateCreated: Date;
-  protected readonly _metadata: IBlockMetadata;
+  protected readonly _metadata: BlockMetadata;
   protected readonly _canRead: boolean;
   protected readonly _canPersist: boolean;
 
@@ -141,20 +142,18 @@ export abstract class BaseBlock implements IBlock {
   protected constructor(
     type: BlockType,
     dataType: BlockDataType,
-    blockSize: BlockSize,
     checksum: ChecksumBuffer,
-    dateCreated?: Date,
-    metadata?: IBlockMetadata,
+    metadata: BlockMetadata,
     canRead = true,
     canPersist = true,
   ) {
     // Validate block size
-    if (!blockSize || (blockSize as number) <= 0) {
+    if (!metadata.size || (metadata.size as number) <= 0) {
       throw new Error('Invalid block size');
     }
 
     // Store basic properties first so capacity calculation works
-    this._blockSize = blockSize;
+    this._blockSize = metadata.size;
     this._blockType = type;
     this._blockDataType = dataType;
     this._canRead = canRead;
@@ -163,21 +162,13 @@ export abstract class BaseBlock implements IBlock {
 
     // Validate date
     const now = new Date();
-    this._dateCreated = dateCreated ?? now;
+    this._dateCreated = metadata ? new Date(metadata?.dateCreated) : now;
     if (this._dateCreated > now) {
       throw new Error('Date created cannot be in the future');
     }
 
     // Store or create metadata
-    this._metadata = metadata ?? {
-      size: blockSize,
-      type: type,
-      blockSize,
-      blockType: type,
-      dataType,
-      dateCreated: this._dateCreated.toISOString(),
-      lengthBeforeEncryption: 0,
-    };
+    this._metadata = metadata;
   }
 
   /**
@@ -227,7 +218,7 @@ export abstract class BaseBlock implements IBlock {
   /**
    * Block metadata for storage
    */
-  public get metadata(): IBlockMetadata {
+  public get metadata(): BlockMetadata {
     return this._metadata;
   }
 

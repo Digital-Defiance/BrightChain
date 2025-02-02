@@ -1,5 +1,6 @@
 import { BrightChainMember } from '../brightChainMember';
 import { EmailString } from '../emailString';
+import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import {
   BlockSize,
@@ -88,19 +89,14 @@ export class MultiEncryptedBlock
       }),
     );
 
-    const metadata = {
-      size: blockSize,
-      type,
+    const metadata = new EncryptedBlockMetadata(
       blockSize,
-      blockType: type,
-      dataType: BlockDataType.EncryptedData,
-      dateCreated: (dateCreated ?? new Date()).toISOString(),
-      lengthBeforeEncryption:
-        actualDataLength ??
-        data.length - StaticHelpersECIES.eciesOverheadLength,
+      type,
+      BlockDataType.EncryptedData,
+      actualDataLength ?? data.length - StaticHelpersECIES.eciesOverheadLength,
       creator,
-      encrypted: true,
-    };
+      dateCreated ?? new Date(),
+    );
 
     // Create a padded buffer with zeros
     const paddedData = Buffer.alloc(blockSize);
@@ -110,10 +106,8 @@ export class MultiEncryptedBlock
     return new MultiEncryptedBlock(
       type,
       dataType,
-      blockSize,
       paddedData,
       finalChecksum,
-      dateCreated,
       metadata,
       canRead,
       canPersist,
@@ -162,21 +156,9 @@ export class MultiEncryptedBlock
   public constructor(
     type: BlockType,
     dataType: BlockDataType,
-    blockSize: BlockSize,
     data: Buffer,
     checksum: ChecksumBuffer,
-    dateCreated?: Date,
-    metadata?: {
-      size: BlockSize;
-      type: BlockType;
-      blockSize: BlockSize;
-      blockType: BlockType;
-      dataType: BlockDataType;
-      dateCreated: string;
-      lengthBeforeEncryption: number;
-      creator?: BrightChainMember | GuidV4;
-      encrypted: boolean;
-    },
+    metadata: EncryptedBlockMetadata,
     canRead = true,
     canPersist = true,
     recipients: BrightChainMember[] = [],
@@ -190,10 +172,8 @@ export class MultiEncryptedBlock
     super(
       type,
       dataType,
-      blockSize,
       combinedData,
       checksum,
-      dateCreated,
       metadata,
       canRead,
       canPersist,
@@ -202,23 +182,6 @@ export class MultiEncryptedBlock
     this._recipients = recipients;
     this._encryptedKeys = encryptedKeys;
     this._encryptedMessageData = encryptedMessage;
-  }
-
-  /**
-   * The length of the encrypted data as a bigint (implements IMultiEncryptedBlock)
-   */
-  public get encryptedLength(): bigint {
-    if (this.actualDataLength === undefined) {
-      throw new Error('Actual data length is unknown');
-    }
-    return BigInt(this.data.length);
-  }
-
-  /**
-   * The length of the encrypted data as a number (overrides base class)
-   */
-  protected override get encryptedLengthNumber(): number {
-    return Number(this.encryptedLength);
   }
 
   /**

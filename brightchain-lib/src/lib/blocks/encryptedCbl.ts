@@ -1,4 +1,5 @@
 import { BrightChainMember } from '../brightChainMember';
+import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
@@ -104,25 +105,20 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
       }
     }
 
-    const metadata = {
-      size: blockSize,
-      type,
+    const metadata = new EncryptedBlockMetadata(
       blockSize,
-      blockType: type,
-      dataType: BlockDataType.EncryptedData,
-      dateCreated: finalDate.toISOString(),
-      lengthBeforeEncryption: finalLength ?? data.length,
-      creator: finalCreator,
-      encrypted: true,
-    };
+      type,
+      BlockDataType.EncryptedData,
+      finalLength ?? data.length,
+      finalCreator,
+      finalDate,
+    );
 
     return new EncryptedConstituentBlockListBlock(
       type,
       BlockDataType.EncryptedData,
-      blockSize,
       finalData,
       finalChecksum,
-      finalDate,
       metadata,
       canRead,
       canPersist,
@@ -156,12 +152,15 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
       throw new Error('Original block must have a creator');
     }
 
+    const checksum =
+      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData);
+
     return EncryptedConstituentBlockListBlock.from(
       BlockType.EncryptedConstituentBlockListBlock,
       BlockDataType.EncryptedData,
       cbl.blockSize,
       encryptedData,
-      StaticHelpersChecksum.calculateChecksum(encryptedData),
+      checksum,
       encryptor, // Use encryptor as creator since they're encrypting the data
       cbl.dateCreated,
       cbl.actualDataLength,
@@ -182,38 +181,16 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
    * @param canRead - Whether the block can be read
    * @param canPersist - Whether the block can be persisted
    */
-  protected constructor(
+  public constructor(
     type: BlockType,
     dataType: BlockDataType,
-    blockSize: BlockSize,
     data: Buffer,
     checksum: ChecksumBuffer,
-    dateCreated?: Date,
-    metadata?: {
-      size: BlockSize;
-      type: BlockType;
-      blockSize: BlockSize;
-      blockType: BlockType;
-      dataType: BlockDataType;
-      dateCreated: string;
-      lengthBeforeEncryption: number;
-      creator?: BrightChainMember | GuidV4;
-      encrypted: boolean;
-    },
+    metadata: EncryptedBlockMetadata,
     canRead = true,
     canPersist = true,
   ) {
-    super(
-      type,
-      dataType,
-      blockSize,
-      data,
-      checksum,
-      dateCreated,
-      metadata,
-      canRead,
-      canPersist,
-    );
+    super(type, dataType, data, checksum, metadata, canRead, canPersist);
   }
 
   /**

@@ -29,6 +29,8 @@ export class RandomBlock extends RawDataBlock {
       data,
       dateCreated,
       checksum,
+      BlockType.Random,
+      BlockDataType.RawData,
       true, // canRead
       true, // canPersist
     );

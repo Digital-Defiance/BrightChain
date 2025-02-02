@@ -80,7 +80,7 @@ export abstract class StaticHelpersChecksum {
   ): boolean {
     const calculatedChecksum = StaticHelpersChecksum.calculateChecksum(data);
     return (
-      calculatedChecksum.length == checksum.length &&
+      calculatedChecksum.length === checksum.length &&
       calculatedChecksum.equals(checksum)
     );
   }
@@ -98,7 +98,7 @@ export abstract class StaticHelpersChecksum {
     const calculatedChecksum =
       await StaticHelpersChecksum.calculateChecksumAsync(data);
     return (
-      calculatedChecksum.length == checksum.length &&
+      calculatedChecksum.length === checksum.length &&
       calculatedChecksum.equals(checksum)
     );
   }

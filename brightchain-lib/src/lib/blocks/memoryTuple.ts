@@ -1,4 +1,5 @@
 import { Readable } from 'stream';
+import { BlockMetadata } from '../blockMetadata';
 import { TUPLE_SIZE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
@@ -129,6 +130,8 @@ export class InMemoryBlockTuple {
         result,
         new Date(),
         undefined, // Let constructor calculate checksum
+        BlockType.RawData,
+        BlockDataType.RawData,
         true, // canRead
         true, // canPersist
       );
@@ -160,15 +163,13 @@ export class InMemoryBlockTuple {
           new BlockHandle(
             BlockType.Handle,
             BlockDataType.RawData,
-            blockSize,
             id,
-            new Date(),
-            {
-              size: blockSize,
-              type: BlockType.Handle,
-              dataType: BlockDataType.RawData,
-              dateCreated: new Date().toISOString(),
-            },
+            new BlockMetadata(
+              blockSize,
+              BlockType.Handle,
+              BlockDataType.RawData,
+              blockSize as number,
+            ),
             true,
             true,
           ),

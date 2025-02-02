@@ -4,20 +4,14 @@ import { BrightChainMember } from '../brightChainMember';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
-import { IBlockMetadata } from '../interfaces/blockMetadata';
 import { IDataBlock } from '../interfaces/dataBlock';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
-
-interface IEphemeralBlockMetadata extends IBlockMetadata {
-  lengthBeforeEncryption: number;
-  encrypted: boolean;
-  creator?: BrightChainMember | GuidV4;
-}
 
 /**
  * Ephemeral blocks are blocks that are not stored on disk, but are either input blocks or reconstituted blocks.
@@ -53,25 +47,21 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
       throw new ChecksumMismatchError(checksum, calculatedChecksum);
     }
 
-    const metadata: IEphemeralBlockMetadata = {
-      size: blockSize,
-      type,
+    const metadata: EphemeralBlockMetadata = new EphemeralBlockMetadata(
       blockSize,
-      blockType: type,
+      type,
       dataType,
-      dateCreated: (dateCreated ?? new Date()).toISOString(),
-      lengthBeforeEncryption: actualDataLength ?? data.length,
-      creator,
+      actualDataLength ?? data.length,
       encrypted,
-    };
+      creator,
+      dateCreated ?? new Date(),
+    );
 
     return new EphemeralBlock(
       type,
       dataType,
-      blockSize,
       data,
       checksum,
-      dateCreated,
       metadata,
       canRead,
       canPersist,
@@ -115,11 +105,9 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
   protected constructor(
     type: BlockType,
     dataType: BlockDataType,
-    blockSize: BlockSize,
     data: Buffer | Readable,
     checksum: ChecksumBuffer,
-    dateCreated?: Date,
-    metadata?: IEphemeralBlockMetadata,
+    metadata: EphemeralBlockMetadata,
     canRead = true,
     canPersist = false,
   ) {
@@ -128,19 +116,10 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     }
 
     // Initialize base class
-    super(
-      type,
-      dataType,
-      blockSize,
-      checksum,
-      dateCreated,
-      metadata,
-      canRead,
-      canPersist,
-    );
+    super(type, dataType, checksum, metadata, canRead, canPersist);
 
     // Validate data length against block size
-    const maxDataSize = blockSize as number;
+    const maxDataSize = metadata.size as number;
     if (data.length > maxDataSize) {
       throw new Error('Data length exceeds block capacity');
     }
@@ -159,7 +138,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
 
     // Store block properties
     this._data = paddedData;
-    this._actualDataLength = metadata.lengthBeforeEncryption;
+    this._actualDataLength = metadata.lengthWithoutPadding;
     this._encrypted = metadata.encrypted;
 
     // Handle creator from metadata
@@ -238,7 +217,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
 
     // Calculate checksum on actual data length, excluding padding
     const computedChecksum = StaticHelpersChecksum.calculateChecksum(
-      this._data.subarray(0, this._actualDataLength),
+      this._data,
     );
     const validated = computedChecksum.equals(this.idChecksum);
     if (!validated) {
@@ -250,7 +229,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
    * Asynchronously validate the block's data and structure
    * @throws {ChecksumMismatchError} If checksums do not match
    */
-  public override async validateAsync(): Promise<void> {
+  public async validateAsync(): Promise<void> {
     // For both encrypted and unencrypted blocks,
     // validate against the provided checksum
     if (!this.idChecksum) {
@@ -259,7 +238,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
 
     // Calculate checksum on actual data length, excluding padding
     const computedChecksum = await StaticHelpersChecksum.calculateChecksumAsync(
-      this._data.subarray(0, this._actualDataLength),
+      this._data,
     );
     const validated = computedChecksum.equals(this.idChecksum);
     if (!validated) {

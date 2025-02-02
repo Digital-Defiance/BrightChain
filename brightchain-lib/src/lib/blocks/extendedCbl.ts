@@ -1,4 +1,6 @@
 import { BrightChainMember } from '../brightChainMember';
+import { CblBlockMetadata } from '../cblBlockMetadata';
+import BlockDataType from '../enumerations/blockDataType';
 import { BlockSize, validBlockSizes } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { MetadataMismatchError } from '../errors/metadataMismatch';
@@ -127,15 +129,44 @@ export class ExtendedCBL
         );
       }
 
-      // Create base CBL block first
-      super(
-        blockSize,
+      const baseHeader = ConstituentBlockListBlock.makeCblHeader(
         creator,
+        dateCreated ?? new Date(),
+        dataAddresses.length,
         fileDataLength,
-        dataAddresses,
-        dateCreated,
+        Buffer.concat(dataAddresses),
         signature,
         tupleSize,
+      );
+
+      const extendedHeader = ExtendedCBL.createFileMetadataHeader(
+        fileName,
+        mimeType,
+      );
+
+      const data = Buffer.concat([
+        baseHeader.headerData,
+        extendedHeader,
+        Buffer.concat(dataAddresses),
+      ]);
+
+      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+
+      // Create base CBL block first
+      super(
+        creator,
+        new CblBlockMetadata(
+          blockSize,
+          BlockType.ExtendedConstituentBlockListBlock,
+          BlockDataType.EphemeralStructuredData,
+          dataAddresses.length * StaticHelpersChecksum.Sha3ChecksumBufferLength,
+          fileDataLength,
+          dateCreated,
+          creator,
+        ),
+        data,
+        checksum,
+        signature,
       );
 
       // Store normalized strings
@@ -237,9 +268,14 @@ export class ExtendedCBL
     // Validate base CBL structure
     super.validateSync();
 
+    if (this.creator === undefined) {
+      throw new Error("Creator can't be undefined");
+    }
+
     // Validate file metadata by parsing this layer's header
-    const { fileName, mimeType } = ExtendedCBL.parseMetadata(
+    const { fileName, mimeType } = ExtendedCBL.parseHeader(
       this.layerHeaderData,
+      this.creator,
     );
 
     // Verify metadata matches stored values
@@ -261,9 +297,14 @@ export class ExtendedCBL
     // Validate base CBL structure
     await super.validateAsync();
 
+    if (this.creator === undefined) {
+      throw new Error("Creator can't be undefined");
+    }
+
     // Validate file metadata by parsing this layer's header
-    const { fileName, mimeType } = ExtendedCBL.parseMetadata(
+    const { fileName, mimeType } = ExtendedCBL.parseHeader(
       this.layerHeaderData,
+      this.creator,
     );
 
     // Verify metadata matches stored values
@@ -493,15 +534,20 @@ export class ExtendedCBL
   /**
    * Parse metadata from a buffer
    * @param data - Metadata buffer
+   * @param creatorForValidation - Creator for signature validation
    * @returns Parsed metadata fields
    */
-  public static override parseMetadata(
+  public static override parseHeader(
     data: Buffer,
+    creatorForValidation: BrightChainMember,
   ): IExtendedConstituentBlockListBlockHeader {
     if (!data || data.length < ExtendedCBL.FileMetadataHeaderSize) {
       throw new Error('Invalid metadata buffer');
     }
-    const cblData = ConstituentBlockListBlock.parseMetadata(data);
+    const cblData = ConstituentBlockListBlock.parseHeader(
+      data,
+      creatorForValidation,
+    );
 
     // Read lengths
     const fileNameLength = data.readUInt16BE(

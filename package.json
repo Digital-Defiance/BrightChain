@@ -9,6 +9,7 @@
     "brightchain-lib:build": "npx nx run brightchain-lib:build:production --configuration=production",
     "brightchain-lib:test": "npx nx test brightchain-lib",
     "brightchain-lib:test:ci": "npx nx test brightchain-lib --configuration=ci",
+    "brightchain-lib:test:force": "rm -rf node_modules/.cache && rm -rf .nx/cache && rm -rf dist && rm -rf tmp && npx nx reset && NODE_ENV=test npx nx test brightchain-lib --skip-nx-cache --configuration=production",
     "lint": "eslint '**/*.{ts,tsx}'",
     "lint:fix": "eslint '**/*.{ts,tsx}' --fix",
     "prettier:check": "prettier --check '**/*.{ts,tsx}'",
