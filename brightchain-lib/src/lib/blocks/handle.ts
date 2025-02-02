@@ -119,7 +119,7 @@ export class BlockHandle extends BaseBlock {
       const fileData = readFileSync(this.path);
       this._cachedData = fileData;
     }
-    return this._cachedData;
+    return this._cachedData.subarray(0, this.metadata.lengthWithoutPadding);
   }
 
   /**

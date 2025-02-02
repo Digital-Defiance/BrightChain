@@ -12,12 +12,15 @@ export class ExtendedCblBlockMetadata
 {
   private readonly _fileName: string;
   private readonly _mimeType: string;
+
   public get fileName(): string {
     return this._fileName;
   }
+
   public get mimeType(): string {
     return this._mimeType;
   }
+
   constructor(
     size: BlockSize,
     lengthWithoutPadding: number,
@@ -39,6 +42,7 @@ export class ExtendedCblBlockMetadata
     this._fileName = fileName;
     this._mimeType = mimeType;
   }
+
   public static override fromInterface(
     metadata: IExtendedCblBlockMetadata,
   ): ExtendedCblBlockMetadata {
