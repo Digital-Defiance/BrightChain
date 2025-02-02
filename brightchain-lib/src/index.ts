@@ -50,6 +50,7 @@ export * from './lib/interfaces/dataAndSigningKeys';
 export * from './lib/interfaces/dataKeyComponents';
 export * from './lib/interfaces/encryptionLength';
 export * from './lib/interfaces/energyTransaction';
+export * from './lib/interfaces/ephemeralBlockMetadata';
 export * from './lib/interfaces/jsonStore';
 export * from './lib/interfaces/keyPairBufferWithUnEncryptedPrivateKey';
 export * from './lib/interfaces/keyringEntry';

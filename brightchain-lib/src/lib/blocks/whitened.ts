@@ -23,7 +23,16 @@ export class WhitenedBlock extends RawDataBlock {
     canRead = true,
     canPersist = true,
   ) {
-    super(blockSize, data, dateCreated, checksum, canRead, canPersist);
+    super(
+      blockSize,
+      data,
+      dateCreated,
+      checksum,
+      BlockType.OwnerFreeWhitenedBlock,
+      BlockDataType.RawData,
+      canRead,
+      canPersist,
+    );
   }
 
   /**

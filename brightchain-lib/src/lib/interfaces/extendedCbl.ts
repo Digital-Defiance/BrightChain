@@ -15,10 +15,10 @@ export interface IExtendedConstituentBlockListBlock
   /**
    * Original file name from source system
    */
-  fileName: string;
+  get fileName(): string;
 
   /**
    * File content MIME type
    */
-  mimeType: string;
+  get mimeType(): string;
 }

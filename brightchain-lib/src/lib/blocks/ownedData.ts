@@ -3,6 +3,7 @@ import { BrightChainMember } from '../brightChainMember';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { GuidV4 } from '../guid';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer } from '../types';
@@ -68,25 +69,21 @@ export class OwnedDataBlock extends EphemeralBlock {
       );
     }
 
-    const metadata = {
-      size: blockSize,
-      type,
+    const metadata: EphemeralBlockMetadata = new EphemeralBlockMetadata(
       blockSize,
-      blockType: type,
-      dataType: BlockDataType.EphemeralStructuredData,
-      dateCreated: (dateCreated ?? new Date()).toISOString(),
-      lengthBeforeEncryption: actualDataLength ?? data.length,
-      creator,
+      type,
+      BlockDataType.EphemeralStructuredData,
+      actualDataLength ?? data.length,
       encrypted,
-    };
+      creator,
+      dateCreated ?? new Date(),
+    );
 
     return new OwnedDataBlock(
       type,
       dataType,
-      blockSize,
       data,
       checksum,
-      dateCreated,
       metadata,
       canRead,
       canPersist,
@@ -108,35 +105,13 @@ export class OwnedDataBlock extends EphemeralBlock {
   protected constructor(
     type: BlockType,
     dataType: BlockDataType,
-    blockSize: BlockSize,
     data: Buffer,
     checksum: ChecksumBuffer,
-    dateCreated?: Date,
-    metadata?: {
-      size: BlockSize;
-      type: BlockType;
-      blockSize: BlockSize;
-      blockType: BlockType;
-      dataType: BlockDataType;
-      dateCreated: string;
-      lengthBeforeEncryption: number;
-      creator?: BrightChainMember | GuidV4;
-      encrypted: boolean;
-    },
+    metadata: EphemeralBlockMetadata,
     canRead = true,
     canPersist = true,
   ) {
-    super(
-      type,
-      dataType,
-      blockSize,
-      data,
-      checksum,
-      dateCreated,
-      metadata,
-      canRead,
-      canPersist,
-    );
+    super(type, dataType, data, checksum, metadata, canRead, canPersist);
   }
 
   /**

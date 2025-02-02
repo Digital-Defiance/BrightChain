@@ -1,4 +1,5 @@
 import { BrightChainMember } from '../brightChainMember';
+import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
@@ -61,27 +62,20 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
       }
     }
 
-    const metadata = {
-      size: blockSize,
-      type,
+    const metadata = new EncryptedBlockMetadata(
       blockSize,
-      blockType: type,
-      dataType: BlockDataType.EncryptedData,
-      dateCreated: (dateCreated ?? new Date()).toISOString(),
-      lengthBeforeEncryption:
-        actualDataLength ??
-        data.length - StaticHelpersECIES.eciesOverheadLength,
+      type,
+      BlockDataType.EncryptedData,
+      actualDataLength ?? data.length - StaticHelpersECIES.eciesOverheadLength,
       creator,
-      encrypted: true,
-    };
+      dateCreated ?? new Date(),
+    );
 
     return new EncryptedOwnedDataBlock(
       type,
       BlockDataType.EncryptedData,
-      blockSize,
       data,
       checksum,
-      dateCreated,
       metadata,
       canRead,
       canPersist,
@@ -100,38 +94,16 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
    * @param canRead - Whether the block can be read
    * @param canPersist - Whether the block can be persisted
    */
-  protected constructor(
+  public constructor(
     type: BlockType,
     dataType: BlockDataType,
-    blockSize: BlockSize,
     data: Buffer,
     checksum: ChecksumBuffer,
-    dateCreated?: Date,
-    metadata?: {
-      size: BlockSize;
-      type: BlockType;
-      blockSize: BlockSize;
-      blockType: BlockType;
-      dataType: BlockDataType;
-      dateCreated: string;
-      lengthBeforeEncryption: number;
-      creator?: BrightChainMember | GuidV4;
-      encrypted: boolean;
-    },
+    metadata: EncryptedBlockMetadata,
     canRead = true,
     canPersist = true,
   ) {
-    super(
-      type,
-      dataType,
-      blockSize,
-      data,
-      checksum,
-      dateCreated,
-      metadata,
-      canRead,
-      canPersist,
-    );
+    super(type, dataType, data, checksum, metadata, canRead, canPersist);
   }
 
   /**
@@ -158,15 +130,5 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
    */
   public override get canSign(): boolean {
     return this.creator !== undefined;
-  }
-
-  /**
-   * The length of the encrypted data
-   */
-  public get encryptedLength(): number {
-    if (this.actualDataLength === undefined) {
-      throw new Error('Actual data length is unknown');
-    }
-    return this.data.length;
   }
 }

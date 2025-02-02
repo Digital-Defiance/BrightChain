@@ -1,20 +1,18 @@
 import { BrightChainMember } from '../brightChainMember';
+import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
-import { IBlockMetadata } from '../interfaces/blockMetadata';
+import { IEncryptedBlock } from '../interfaces/encryptedBlock';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer } from '../types';
+import { EncryptedConstituentBlockListBlock } from './encryptedCbl';
+import { EncryptedOwnedDataBlock } from './encryptedOwnedData';
 import { EphemeralBlock } from './ephemeral';
-
-interface IEncryptedBlockMetadata extends IBlockMetadata {
-  lengthBeforeEncryption: number;
-  encrypted: boolean;
-  creator?: BrightChainMember | GuidV4;
-}
 
 /**
  * Base class for encrypted blocks.
@@ -26,19 +24,11 @@ interface IEncryptedBlockMetadata extends IBlockMetadata {
  * Encryption Header:
  * [Ephemeral Public Key (65 bytes)][IV (16 bytes)][Auth Tag (16 bytes)]
  */
-export abstract class EncryptedBlock extends EphemeralBlock {
+export abstract class EncryptedBlock
+  extends EphemeralBlock
+  implements IEncryptedBlock
+{
   public static override async from(
-    this: new (
-      type: BlockType,
-      dataType: BlockDataType,
-      blockSize: BlockSize,
-      data: Buffer,
-      checksum: ChecksumBuffer,
-      dateCreated?: Date,
-      metadata?: IEncryptedBlockMetadata,
-      canRead?: boolean,
-      canPersist?: boolean,
-    ) => EncryptedBlock,
     type: BlockType,
     dataType: BlockDataType,
     blockSize: BlockSize,
@@ -48,6 +38,8 @@ export abstract class EncryptedBlock extends EphemeralBlock {
     dateCreated?: Date,
     actualDataLength?: number,
     canRead = true,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    encrypted = true,
     canPersist = true,
   ): Promise<EncryptedBlock> {
     // Validate data length
@@ -78,41 +70,47 @@ export abstract class EncryptedBlock extends EphemeralBlock {
     }
     const finalChecksum = checksum ?? computedChecksum;
 
-    const metadata: IEncryptedBlockMetadata = {
-      size: blockSize,
-      type,
+    const metadata: EphemeralBlockMetadata = new EphemeralBlockMetadata(
       blockSize,
-      blockType: type,
-      dataType: BlockDataType.EncryptedData,
-      dateCreated: (dateCreated ?? new Date()).toISOString(),
-      lengthBeforeEncryption:
-        actualDataLength ??
-        data.length - StaticHelpersECIES.eciesOverheadLength,
-      creator,
-      encrypted: true,
-    };
-
-    return new this(
       type,
       BlockDataType.EncryptedData,
-      blockSize,
-      data,
-      finalChecksum,
+      actualDataLength ?? data.length - StaticHelpersECIES.eciesOverheadLength,
+      false,
+      creator,
       dateCreated,
-      metadata,
-      canRead,
-      canPersist,
     );
+
+    if (type === BlockType.EncryptedConstituentBlockListBlock) {
+      return new EncryptedConstituentBlockListBlock(
+        BlockType.EncryptedConstituentBlockListBlock,
+        BlockDataType.EncryptedData,
+        data,
+        finalChecksum,
+        EncryptedBlockMetadata.fromEphemeralBlockMetadata(metadata),
+        canRead,
+        canPersist,
+      );
+    } else if (type === BlockType.EncryptedOwnedDataBlock) {
+      return new EncryptedOwnedDataBlock(
+        BlockType.EncryptedOwnedDataBlock,
+        BlockDataType.EncryptedData,
+        data,
+        finalChecksum,
+        EncryptedBlockMetadata.fromEphemeralBlockMetadata(metadata),
+        canRead,
+        canPersist,
+      );
+    } else {
+      throw new Error(`Invalid block type ${type}`);
+    }
   }
 
   /**
    * Creates an instance of EncryptedBlock.
    * @param type - The type of the block
    * @param dataType - The type of data in the block
-   * @param blockSize - The size of the block
    * @param data - The encrypted data
    * @param checksum - The checksum of the data
-   * @param dateCreated - The date the block was created
    * @param metadata - The block metadata
    * @param canRead - Whether the block can be read
    * @param canPersist - Whether the block can be persisted
@@ -120,35 +118,17 @@ export abstract class EncryptedBlock extends EphemeralBlock {
   protected constructor(
     type: BlockType,
     dataType: BlockDataType,
-    blockSize: BlockSize,
     data: Buffer,
     checksum: ChecksumBuffer,
-    dateCreated?: Date,
-    metadata?: IEncryptedBlockMetadata,
+    metadata: EphemeralBlockMetadata,
     canRead = true,
     canPersist = true,
   ) {
-    super(
-      type,
-      dataType,
-      blockSize,
-      data,
-      checksum,
-      dateCreated,
-      metadata,
-      canRead,
-      canPersist,
-    );
+    super(type, dataType, data, checksum, metadata, canRead, canPersist);
   }
 
-  /**
-   * The length of the encrypted data as a number (for internal use)
-   */
-  protected get encryptedLengthNumber(): number {
-    if (this.actualDataLength === undefined) {
-      throw new Error('Actual data length is unknown');
-    }
-    return this.data.length;
+  public get encryptedLength(): number {
+    return this.actualDataLength + StaticHelpersECIES.eciesOverheadLength;
   }
 
   /**
@@ -237,7 +217,10 @@ export abstract class EncryptedBlock extends EphemeralBlock {
     // 1. Skip the encryption header (ephemeral public key + IV + auth tag)
     // 2. Return the entire encrypted data (including padding)
     // 3. Ensure we return exactly blockSize - overhead bytes
-    return this.data.subarray(StaticHelpersECIES.eciesOverheadLength);
+    return this.data.subarray(
+      StaticHelpersECIES.eciesOverheadLength,
+      StaticHelpersECIES.eciesOverheadLength + this.actualDataLength,
+    );
   }
 
   /**
@@ -259,25 +242,5 @@ export abstract class EncryptedBlock extends EphemeralBlock {
     // 2. Subtract the ECIES overhead
     // This ensures proper capacity calculation for encrypted blocks
     return this.blockSize - StaticHelpersECIES.eciesOverheadLength;
-  }
-
-  /**
-   * Override validateAsync to handle encrypted data properly
-   * For encrypted blocks, we need to validate the checksum on the entire data buffer
-   * since the encryption header is part of the data
-   */
-  public override async validateAsync(): Promise<void> {
-    if (!this.idChecksum) {
-      throw new Error('No checksum provided');
-    }
-
-    // Calculate checksum on the entire data buffer for encrypted blocks
-    const computedChecksum = await StaticHelpersChecksum.calculateChecksumAsync(
-      this.data,
-    );
-    const validated = computedChecksum.equals(this.idChecksum);
-    if (!validated) {
-      throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
-    }
   }
 }
