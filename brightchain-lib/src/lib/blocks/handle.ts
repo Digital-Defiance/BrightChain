@@ -6,11 +6,10 @@ import {
   existsSync,
   readFileSync,
 } from 'fs';
+import { BlockMetadata } from '../blockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
-import { BlockMetadata, IBlockMetadata } from '../interfaces/blockMetadata';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { ChecksumTransform } from '../transforms/checksumTransform';
 import { ChecksumBuffer } from '../types';
@@ -24,7 +23,7 @@ import { BaseBlock } from './base';
 export class BlockHandle extends BaseBlock {
   protected _path: string;
   protected _cachedData: Buffer | null = null;
-  protected _cachedMetadata: IBlockMetadata | null = null;
+  protected _cachedMetadata: BlockMetadata | null = null;
 
   /**
    * Constructor - prefer using static createFromPath() method instead
@@ -32,23 +31,12 @@ export class BlockHandle extends BaseBlock {
   constructor(
     type: BlockType,
     dataType: BlockDataType,
-    blockSize: BlockSize,
     checksum: ChecksumBuffer,
-    dateCreated?: Date,
-    metadata?: IBlockMetadata,
+    metadata: BlockMetadata,
     canRead = true,
     canPersist = true,
   ) {
-    super(
-      type,
-      dataType,
-      blockSize,
-      checksum,
-      dateCreated,
-      metadata,
-      canRead,
-      canPersist,
-    );
+    super(type, dataType, checksum, metadata, canRead, canPersist);
     this._path = '';
   }
 
@@ -56,11 +44,9 @@ export class BlockHandle extends BaseBlock {
    * Create a new block handle from a file path
    */
   public static async createFromPath(
-    blockSize: BlockSize,
     path: string,
+    metadata: BlockMetadata,
     checksum?: ChecksumBuffer,
-    dateCreated?: Date,
-    metadata?: IBlockMetadata,
     canRead = true,
     canPersist = true,
   ): Promise<BlockHandle> {
@@ -78,9 +64,7 @@ export class BlockHandle extends BaseBlock {
     const block = new BlockHandle(
       BlockType.Handle,
       BlockDataType.RawData,
-      blockSize,
       checksum,
-      dateCreated,
       metadata,
       canRead,
       canPersist,
@@ -148,15 +132,16 @@ export class BlockHandle extends BaseBlock {
   /**
    * Block metadata, loaded on demand
    */
-  public override get metadata(): IBlockMetadata {
+  public override get metadata(): BlockMetadata {
     if (!this._cachedMetadata) {
       const metadataPath = `${this.path}.m.json`;
       if (!existsSync(metadataPath)) {
         // If no metadata file exists, create default metadata
-        this._cachedMetadata = BlockMetadata.create(
+        this._cachedMetadata = new BlockMetadata(
           this.blockSize,
           BlockType.Handle,
           BlockDataType.RawData,
+          this.data.length,
         );
       } else {
         try {

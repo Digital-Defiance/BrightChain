@@ -1,8 +1,8 @@
+import { BlockMetadata } from '../blockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
-import { BlockMetadata } from '../interfaces/blockMetadata';
 import { IDataBlock } from '../interfaces/dataBlock';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { ChecksumBuffer } from '../types';
@@ -20,6 +20,8 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
     data: Buffer,
     dateCreated?: Date,
     checksum?: ChecksumBuffer,
+    blockType: BlockType = BlockType.RawData,
+    blockDataType: BlockDataType = BlockDataType.RawData,
     canRead = true,
     canPersist = true,
   ) {
@@ -31,20 +33,18 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
     }
 
     const calculatedChecksum = StaticHelpersChecksum.calculateChecksum(data);
-    const metadata = BlockMetadata.create(
+    const metadata = new BlockMetadata(
       blockSize,
-      BlockType.RawData,
-      BlockDataType.RawData,
+      blockType,
+      blockDataType,
       data.length,
       dateCreated ?? now,
     );
 
     super(
-      BlockType.RawData,
-      BlockDataType.RawData,
-      blockSize,
+      blockType,
+      blockDataType,
       checksum ?? calculatedChecksum,
-      dateCreated ?? now,
       metadata,
       canRead,
       canPersist,

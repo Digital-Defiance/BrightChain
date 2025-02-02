@@ -1,8 +1,12 @@
 import { createECDH, randomBytes } from 'crypto';
+import { BaseBlock } from './blocks/base';
+import { ConstituentBlockListBlock } from './blocks/cbl';
 import { EncryptedConstituentBlockListBlock } from './blocks/encryptedCbl';
 import { EncryptedOwnedDataBlock } from './blocks/encryptedOwnedData';
 import { OwnedDataBlock } from './blocks/ownedData';
+import { RawDataBlock } from './blocks/rawData';
 import { BrightChainMember } from './brightChainMember';
+import { CblBlockMetadata } from './cblBlockMetadata';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
 import { BlockType } from './enumerations/blockType';
@@ -10,6 +14,7 @@ import { GuidV4 } from './guid';
 import { IBlock } from './interfaces/blockBase';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
+import { DiskBlockAsyncStore } from './stores/diskBlockAsyncStore';
 import { ChecksumBuffer } from './types';
 
 /**
@@ -167,7 +172,7 @@ export class BlockService {
 
     if (data.length > blockSize) {
       throw new Error(
-        `Data length (${data.length}) exceeds block size (${blockSize})`,
+        `Data length (${data.length}) exceeds block size (${blockSize}). Please use a larger block size or split the data into multiple blocks.`,
       );
     }
 
@@ -212,15 +217,159 @@ export class BlockService {
     // Handle owned data - create anonymous creator if none provided
     const finalChecksum =
       checksum ?? StaticHelpersChecksum.calculateChecksum(data);
-    return await OwnedDataBlock.from(
-      blockType,
-      blockDataType,
-      blockSize,
-      data,
-      finalChecksum,
-      creator ?? GuidV4.new(),
-      undefined,
-      data.length,
+    if (
+      blockDataType === BlockDataType.EncryptedData &&
+      creator instanceof BrightChainMember
+    ) {
+      return await EncryptedOwnedDataBlock.from(
+        blockType,
+        blockDataType,
+        blockSize,
+        data,
+        finalChecksum,
+        creator,
+        undefined,
+        data.length,
+      );
+    } else if (
+      blockDataType === BlockDataType.EphemeralStructuredData &&
+      creator instanceof BrightChainMember
+    ) {
+      return await EncryptedConstituentBlockListBlock.from(
+        blockType,
+        blockDataType,
+        blockSize,
+        data,
+        finalChecksum,
+        creator,
+        undefined,
+        data.length,
+      );
+    } else {
+      return await OwnedDataBlock.from(
+        blockType,
+        blockDataType,
+        blockSize,
+        data,
+        finalChecksum,
+        creator ?? GuidV4.new(),
+        undefined,
+        data.length,
+      );
+    }
+  }
+
+  /**
+   * Break up input file into blocks
+   * @param fileData - The input file data
+   * @param blockSize - The size of each block
+   * @returns An array of blocks
+   */
+  public static breakFileIntoBlocks(
+    fileData: Buffer,
+    blockSize: BlockSize,
+  ): Buffer[] {
+    const blocks: Buffer[] = [];
+    const blockSizeNumber = blockSize as number;
+    for (let i = 0; i < fileData.length; i += blockSizeNumber) {
+      blocks.push(fileData.subarray(i, i + blockSizeNumber));
+    }
+    return blocks;
+  }
+
+  /**
+   * XOR blocks with whiteners
+   * @param blocks - The blocks to XOR
+   * @param whiteners - The whiteners to use
+   * @returns The XORed blocks
+   */
+  public static xorBlocksWithWhiteners(
+    blocks: Buffer[],
+    whiteners: Buffer[],
+  ): Buffer[] {
+    if (blocks.length !== whiteners.length) {
+      throw new Error('Number of blocks and whiteners must be the same');
+    }
+
+    const xorBlocks: Buffer[] = [];
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      const whitener = whiteners[i];
+      const xorBlock = Buffer.alloc(block.length);
+      for (let j = 0; j < block.length; j++) {
+        xorBlock[j] = block[j] ^ whitener[j];
+      }
+      xorBlocks.push(xorBlock);
+    }
+    return xorBlocks;
+  }
+
+  /**
+   * Create and store CBL
+   * @param blocks - The blocks to include in the CBL
+   * @param creator - The creator of the CBL
+   * @returns The created CBL
+   */
+  public static async createAndStoreCBL(
+    blocks: BaseBlock[],
+    creator: BrightChainMember,
+    fileDataLength: bigint,
+  ): Promise<ConstituentBlockListBlock> {
+    if (blocks.length === 0) {
+      throw new Error('Blocks array must not be empty');
+    }
+    const blockIds = await Promise.all(blocks.map((block) => block.idChecksum));
+    if (!blocks.every((block) => block.blockSize === blocks[0].blockSize)) {
+      throw new Error('All blocks must have the same block size');
+    }
+    const metadata: CblBlockMetadata = new CblBlockMetadata(
+      BlockSize.Huge,
+      BlockType.ConstituentBlockList,
+      BlockDataType.EphemeralStructuredData,
+      StaticHelpersChecksum.Sha3ChecksumBufferLength * blocks.length,
+      fileDataLength,
+      blocks[0].dateCreated,
+      creator,
     );
+    const blockIdsBuffer = Buffer.concat(blockIds);
+    const header = ConstituentBlockListBlock.makeCblHeader(
+      creator,
+      new Date(metadata.dateCreated),
+      blockIds.length,
+      metadata.fileDataLength,
+      blockIdsBuffer,
+    );
+    const data = Buffer.concat([header.headerData, blockIdsBuffer]);
+    const checksum = StaticHelpersChecksum.calculateChecksum(data);
+    const cbl = new ConstituentBlockListBlock(
+      creator,
+      metadata,
+      data,
+      checksum,
+    );
+
+    // Store the CBL (implementation depends on the storage mechanism)
+    // For example, you might store it in a database or a file system
+    // Here, we'll just return the CBL for now
+    return cbl;
+  }
+
+  /**
+   * Store a CBL block to disk using DiskBlockAsyncStore
+   * @param cbl - The CBL block to store
+   * @param store - The DiskBlockAsyncStore instance
+   */
+  public static async storeCBLToDisk(
+    cbl: ConstituentBlockListBlock,
+    store: DiskBlockAsyncStore,
+  ): Promise<void> {
+    // Convert CBL to RawDataBlock before storing
+    const rawData = new RawDataBlock(
+      cbl.blockSize,
+      cbl.data,
+      cbl.dateCreated,
+      cbl.idChecksum,
+    );
+    await store.setData(rawData);
   }
 }

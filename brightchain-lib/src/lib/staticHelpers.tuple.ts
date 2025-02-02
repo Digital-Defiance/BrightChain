@@ -11,13 +11,13 @@ import { RandomBlock } from './blocks/random';
 import { WhitenedBlock } from './blocks/whitened';
 import { BlockService } from './blockService';
 import { BrightChainMember } from './brightChainMember';
+import { CblBlockMetadata } from './cblBlockMetadata';
 import { RANDOM_BLOCKS_PER_TUPLE, TUPLE_SIZE } from './constants';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
 import { BlockType } from './enumerations/blockType';
 import { PrimeTupleGeneratorStream } from './primeTupleGeneratorStream';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
-import { EciesEncryptTransform } from './transforms/eciesEncryptTransform';
 
 /**
  * StaticHelpersTuple provides utility functions for working with block tuples.
@@ -154,12 +154,14 @@ export abstract class StaticHelpersTuple {
       }
 
       // Create owned data block
+      const checksum =
+        await StaticHelpersChecksum.calculateChecksumAsync(xoredData);
       return await OwnedDataBlock.from(
         BlockType.OwnedDataBlock,
         BlockDataType.RawData,
         primeWhitenedBlock.blockSize,
         xoredData,
-        StaticHelpersChecksum.calculateChecksum(xoredData),
+        checksum,
         creator,
         new Date(),
         xoredData.length,
@@ -203,13 +205,24 @@ export abstract class StaticHelpersTuple {
       primeWhitened,
       whiteners,
     );
+    const header = ConstituentBlockListBlock.parseHeader(
+      ownedBlock.data,
+      creator,
+    );
 
     return new ConstituentBlockListBlock(
-      ownedBlock.blockSize,
       creator,
-      BigInt(ownedBlock.data.length),
-      [], // No addresses yet
-      ownedBlock.dateCreated,
+      new CblBlockMetadata(
+        ownedBlock.blockSize,
+        BlockType.ConstituentBlockList,
+        BlockDataType.EphemeralStructuredData,
+        header.cblAddressCount * StaticHelpersChecksum.Sha3ChecksumBufferLength,
+        header.originalDataLength,
+        header.dateCreated,
+        creator,
+      ),
+      ownedBlock.data,
+      ownedBlock.idChecksum,
     );
   }
 
@@ -233,13 +246,9 @@ export abstract class StaticHelpersTuple {
     }
 
     const decryptedBlock = await BlockService.decrypt(creator, encryptedBlock);
-
-    return new ConstituentBlockListBlock(
-      decryptedBlock.blockSize,
+    return ConstituentBlockListBlock.fromBaseBlockBuffer(
+      decryptedBlock,
       creator,
-      BigInt(decryptedBlock.data.length),
-      [], // No addresses yet
-      decryptedBlock.dateCreated,
     );
   }
 
@@ -255,6 +264,7 @@ export abstract class StaticHelpersTuple {
     randomBlockSource: () => RandomBlock,
     persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
   ): Promise<InMemoryBlockTuple> {
+    const now = new Date();
     // Validate parameters
     if (
       !creator ||
@@ -283,12 +293,14 @@ export abstract class StaticHelpersTuple {
 
       // Process tuples
       let blockIDs: Buffer = Buffer.alloc(0);
+      let blockIDCount = 0;
 
       await new Promise<void>((resolve, reject) => {
         tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
           try {
             await persistTuple(tuple);
             blockIDs = Buffer.concat([blockIDs, tuple.blockIdsBuffer]);
+            blockIDCount += tuple.blocks.length;
           } catch (error) {
             reject(error);
           }
@@ -298,13 +310,31 @@ export abstract class StaticHelpersTuple {
         tupleGeneratorStream.on('error', reject);
       });
 
+      const data = Buffer.concat([
+        ConstituentBlockListBlock.makeCblHeader(
+          creator,
+          now,
+          blockIDCount,
+          sourceLength,
+          blockIDs,
+        ).headerData,
+        blockIDs,
+      ]);
+      const checksum = StaticHelpersChecksum.calculateChecksum(data);
       // Create CBL
       const cbl = new ConstituentBlockListBlock(
-        blockSize,
         creator,
-        sourceLength,
-        [], // Addresses will be added from blockIDs
-        new Date(),
+        new CblBlockMetadata(
+          blockSize,
+          BlockType.ConstituentBlockList,
+          BlockDataType.EphemeralStructuredData,
+          blockIDs.length,
+          sourceLength,
+          now,
+          creator,
+        ),
+        data,
+        checksum,
       );
 
       // Convert CBL to OwnedDataBlock for tuple creation
@@ -313,9 +343,9 @@ export abstract class StaticHelpersTuple {
         BlockDataType.RawData,
         blockSize,
         cbl.data,
-        StaticHelpersChecksum.calculateChecksum(cbl.data),
+        checksum,
         creator,
-        new Date(),
+        now,
         cbl.data.length,
       );
 
@@ -373,6 +403,7 @@ export abstract class StaticHelpersTuple {
     randomBlockSource: () => RandomBlock,
     persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
   ): Promise<InMemoryBlockTuple> {
+    const dateCreated = new Date();
     // Validate parameters
     if (
       !creator ||
@@ -390,17 +421,13 @@ export abstract class StaticHelpersTuple {
 
     try {
       // Set up encryption pipeline
-      const ecieEncryptTransform = new EciesEncryptTransform(
-        blockSize,
-        creator.publicKey,
-      );
       const tupleGeneratorStream = new PrimeTupleGeneratorStream(
         blockSize,
         whitenedBlockSource,
         randomBlockSource,
       );
 
-      source.pipe(ecieEncryptTransform).pipe(tupleGeneratorStream);
+      source.pipe(tupleGeneratorStream);
 
       // Process tuples
       let blockIDs: Buffer = Buffer.alloc(0);
@@ -418,23 +445,41 @@ export abstract class StaticHelpersTuple {
         tupleGeneratorStream.on('end', resolve);
         tupleGeneratorStream.on('error', reject);
       });
+      const cblHeader = ConstituentBlockListBlock.makeCblHeader(
+        creator,
+        dateCreated,
+        blockIDs.length,
+        sourceLength,
+        Buffer.concat([blockIDs]),
+      );
+      const data = Buffer.concat([
+        cblHeader.headerData,
+        Buffer.concat([blockIDs]),
+      ]);
+      const checksum = StaticHelpersChecksum.calculateChecksum(data);
 
       // Create and encrypt CBL
       const cbl = new ConstituentBlockListBlock(
-        blockSize,
         creator,
-        sourceLength,
-        [], // Addresses will be added from blockIDs
-        new Date(),
+        new CblBlockMetadata(
+          blockSize,
+          BlockType.ConstituentBlockList,
+          BlockDataType.EphemeralStructuredData,
+          blockIDs.length * StaticHelpersChecksum.Sha3ChecksumBufferLength,
+          sourceLength,
+          dateCreated,
+          creator,
+        ),
+        data,
+        checksum,
       );
 
-      // Convert CBL to OwnedDataBlock for encryption
       const ownedBlock = await OwnedDataBlock.from(
         BlockType.OwnedDataBlock,
         BlockDataType.RawData,
         blockSize,
         cbl.data,
-        StaticHelpersChecksum.calculateChecksum(cbl.data),
+        checksum,
         creator,
         new Date(),
         cbl.data.length,

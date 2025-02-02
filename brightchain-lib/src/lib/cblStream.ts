@@ -134,10 +134,8 @@ export class CblStream extends Readable {
           new BlockHandle(
             BlockType.Handle, // type
             BlockDataType.RawData, // dataType
-            whitenedBlock.blockSize,
             whitenedBlock.idChecksum,
-            new Date(), // dateCreated
-            undefined, // metadata
+            whitenedBlock.metadata, // metadata
             true, // canRead
             true, // canPersist
           ),
