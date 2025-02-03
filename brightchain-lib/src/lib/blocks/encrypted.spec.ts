@@ -1,10 +1,12 @@
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import { EmailString } from '../emailString';
+import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
+import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
 import { IEncryptedBlock } from '../interfaces/encryptedBlock';
@@ -15,12 +17,13 @@ import { EncryptedBlock } from './encrypted';
 
 // Test class that properly implements abstract methods
 class TestEncryptedBlock extends EncryptedBlock implements IEncryptedBlock {
-  public get encryptedLength(): number {
+  public override get encryptedLength(): number {
     if (this.actualDataLength === undefined) {
       throw new Error('Actual data length is unknown');
     }
     return this.data.length;
   }
+
   public static override async from(
     type: BlockType,
     dataType: BlockDataType,
@@ -61,28 +64,22 @@ class TestEncryptedBlock extends EncryptedBlock implements IEncryptedBlock {
     }
     const finalChecksum = checksum ?? computedChecksum;
 
-    const metadata = {
-      size: blockSize,
-      type,
+    const metadata = new EphemeralBlockMetadata(
       blockSize,
-      blockType: type,
-      dataType: BlockDataType.EncryptedData,
-      dateCreated: (dateCreated ?? new Date()).toISOString(),
-      lengthBeforeEncryption:
-        actualDataLength ??
-        data.length - StaticHelpersECIES.eciesOverheadLength,
+      type,
+      BlockDataType.EncryptedData,
+      actualDataLength ?? data.length - StaticHelpersECIES.eciesOverheadLength,
+      true,
       creator,
-      encrypted: true,
-    };
+      dateCreated ?? new Date(),
+    );
 
     return new TestEncryptedBlock(
       type,
-      BlockDataType.EncryptedData,
-      blockSize,
+      dataType,
       data,
       finalChecksum,
-      dateCreated,
-      metadata,
+      EncryptedBlockMetadata.fromEphemeralBlockMetadata(metadata),
       canRead,
       canPersist,
     );
