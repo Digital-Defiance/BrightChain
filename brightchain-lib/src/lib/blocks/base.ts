@@ -32,6 +32,7 @@ export abstract class BaseBlock implements IBlock {
   protected readonly _metadata: BlockMetadata;
   protected readonly _canRead: boolean;
   protected readonly _canPersist: boolean;
+  protected readonly _actualDataLength: number;
 
   /**
    * Creates a new BaseBlock instance asynchronously
@@ -55,6 +56,7 @@ export abstract class BaseBlock implements IBlock {
       metadata?: IBlockMetadata,
       canRead?: boolean,
       canPersist?: boolean,
+      actualDataLength?: number,
     ) => T,
     type: BlockType,
     dataType: BlockDataType,
@@ -65,6 +67,7 @@ export abstract class BaseBlock implements IBlock {
     metadata?: IBlockMetadata,
     canRead = true,
     canPersist = true,
+    actualDataLength?: number,
   ): Promise<T> {
     const calculatedChecksum =
       await StaticHelpersChecksum.calculateChecksumAsync(data);
@@ -82,6 +85,7 @@ export abstract class BaseBlock implements IBlock {
       metadata,
       canRead,
       canPersist,
+      actualDataLength,
     ) as T;
   }
 
@@ -106,6 +110,7 @@ export abstract class BaseBlock implements IBlock {
       metadata?: IBlockMetadata,
       canRead?: boolean,
       canPersist?: boolean,
+      actualDataLength?: number,
     ) => T,
     type: BlockType,
     dataType: BlockDataType,
@@ -115,6 +120,7 @@ export abstract class BaseBlock implements IBlock {
     metadata?: IBlockMetadata,
     canRead = true,
     canPersist = true,
+    actualDataLength?: number,
   ): T {
     return new this(
       type,
@@ -125,6 +131,7 @@ export abstract class BaseBlock implements IBlock {
       metadata,
       canRead,
       canPersist,
+      actualDataLength,
     ) as T;
   }
 
@@ -159,6 +166,7 @@ export abstract class BaseBlock implements IBlock {
     this._canRead = canRead;
     this._canPersist = canPersist;
     this._checksum = checksum;
+    this._actualDataLength = metadata.lengthWithoutPadding;
 
     // Validate date
     const now = new Date();
@@ -275,7 +283,7 @@ export abstract class BaseBlock implements IBlock {
    * Get the length of the payload
    */
   public get payloadLength(): number {
-    return this.payload.length;
+    return this._actualDataLength;
   }
 
   /**
@@ -283,7 +291,7 @@ export abstract class BaseBlock implements IBlock {
    */
   public get padding(): Buffer {
     const paddingLength =
-      this.blockSize - (this.totalOverhead + this.payloadLength);
+      this.blockSize - (this.totalOverhead + this._actualDataLength);
     return Buffer.alloc(paddingLength > 0 ? paddingLength : 0);
   }
 

@@ -4,9 +4,9 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { GuidV4 } from '../guid';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer } from '../types';
 import { EncryptedBlock } from './encrypted';
+import { EncryptedBlockFactory } from './encryptedBlockFactory';
 
 /**
  * EncryptedOwnedDataBlock represents an encrypted block owned by a specific member.
@@ -34,52 +34,18 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
     canRead = true,
     canPersist = true,
   ): Promise<EncryptedOwnedDataBlock> {
-    // Validate data exists
-    if (!data || data.length === 0) {
-      throw new Error('Data is required');
-    }
-
-    // Validate length before encryption
-    if (actualDataLength !== undefined) {
-      if (actualDataLength <= 0) {
-        throw new Error('Length before encryption must be positive');
-      }
-
-      // Validate total length with overhead
-      const totalLength =
-        actualDataLength + StaticHelpersECIES.eciesOverheadLength;
-      if (totalLength > (blockSize as number)) {
-        throw new Error('Data length with overhead exceeds block capacity');
-      }
-
-      // Validate minimum length
-      const minLength =
-        actualDataLength + StaticHelpersECIES.eciesOverheadLength;
-      if (data.length < minLength) {
-        throw new Error(
-          `Data length (${data.length}) too small for encrypted data of length ${actualDataLength}`,
-        );
-      }
-    }
-
-    const metadata = new EncryptedBlockMetadata(
+    return EncryptedBlockFactory.createBlock(
+      type,
+      dataType,
       blockSize,
-      type,
-      BlockDataType.EncryptedData,
-      actualDataLength ?? data.length - StaticHelpersECIES.eciesOverheadLength,
-      creator,
-      dateCreated ?? new Date(),
-    );
-
-    return new EncryptedOwnedDataBlock(
-      type,
-      BlockDataType.EncryptedData,
       data,
       checksum,
-      metadata,
+      creator,
+      dateCreated,
+      actualDataLength,
       canRead,
       canPersist,
-    );
+    ) as Promise<EncryptedOwnedDataBlock>;
   }
 
   /**
@@ -132,3 +98,15 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
     return this.creator !== undefined;
   }
 }
+
+// Register block types with the factory
+EncryptedBlockFactory.registerBlockType(
+  BlockType.EncryptedOwnedDataBlock,
+  EncryptedOwnedDataBlock,
+);
+
+// Register support for EncryptedConstituentBlockListBlock type
+EncryptedBlockFactory.registerBlockType(
+  BlockType.EncryptedConstituentBlockListBlock,
+  EncryptedOwnedDataBlock,
+);

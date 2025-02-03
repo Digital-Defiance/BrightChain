@@ -34,12 +34,6 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     encrypted = false,
     canPersist = true,
   ): Promise<EphemeralBlock> {
-    // Validate data length against block size
-    const maxDataSize = blockSize as number;
-    if (data.length > maxDataSize) {
-      throw new Error('Data length exceeds block capacity');
-    }
-
     const calculatedChecksum =
       await StaticHelpersChecksum.calculateChecksumAsync(data);
 
@@ -72,10 +66,6 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
    * The data in the block
    */
   protected readonly _data: Buffer;
-  /**
-   * The actual data length of the block before any encryption or padding overhead
-   */
-  private readonly _actualDataLength: number;
   /**
    * Whether the block is encrypted
    */
@@ -138,7 +128,6 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
 
     // Store block properties
     this._data = paddedData;
-    this._actualDataLength = metadata.lengthWithoutPadding;
     this._encrypted = metadata.encrypted;
 
     // Handle creator from metadata
@@ -154,7 +143,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
   /**
    * The data in the block
    */
-  public get data(): Buffer {
+  public override get data(): Buffer {
     if (!this.canRead) {
       throw new Error('Block cannot be read');
     }
@@ -208,7 +197,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
    * Synchronously validate the block's data and structure
    * @throws {ChecksumMismatchError} If checksums do not match
    */
-  public validateSync(): void {
+  public override validateSync(): void {
     // For both encrypted and unencrypted blocks,
     // validate against the provided checksum
     if (!this.idChecksum) {
@@ -229,7 +218,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
    * Asynchronously validate the block's data and structure
    * @throws {ChecksumMismatchError} If checksums do not match
    */
-  public async validateAsync(): Promise<void> {
+  public override async validateAsync(): Promise<void> {
     // For both encrypted and unencrypted blocks,
     // validate against the provided checksum
     if (!this.idChecksum) {

@@ -1,17 +1,12 @@
 import { BrightChainMember } from '../brightChainMember';
-import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
-import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
 import { IEncryptedBlock } from '../interfaces/encryptedBlock';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer } from '../types';
-import { EncryptedConstituentBlockListBlock } from './encryptedCbl';
-import { EncryptedOwnedDataBlock } from './encryptedOwnedData';
 import { EphemeralBlock } from './ephemeral';
 
 /**
@@ -28,6 +23,9 @@ export abstract class EncryptedBlock
   extends EphemeralBlock
   implements IEncryptedBlock
 {
+  /**
+   * Create a new encrypted block from data
+   */
   public static override async from(
     type: BlockType,
     dataType: BlockDataType,
@@ -37,72 +35,21 @@ export abstract class EncryptedBlock
     creator?: BrightChainMember | GuidV4,
     dateCreated?: Date,
     actualDataLength?: number,
-    canRead = true,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    encrypted = true,
-    canPersist = true,
+    canRead?: boolean,
+    canPersist?: boolean,
   ): Promise<EncryptedBlock> {
-    // Validate data length
-    if (data.length < StaticHelpersECIES.eciesOverheadLength) {
-      throw new Error('Data too short to contain encryption header');
-    }
-
-    // Total data length must not exceed block size
-    if (data.length > (blockSize as number)) {
-      throw new Error('Data length exceeds block capacity');
-    }
-
-    // For encrypted blocks with known actual data length:
-    // 1. The actual data length must not exceed available capacity
-    // 2. The total encrypted length must not exceed block size
-    if (actualDataLength !== undefined) {
-      const availableCapacity =
-        (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-      if (actualDataLength > availableCapacity) {
-        throw new Error('Data length exceeds block capacity');
-      }
-    }
-
-    // Calculate and validate checksum
-    const computedChecksum = StaticHelpersChecksum.calculateChecksum(data);
-    if (checksum && !computedChecksum.equals(checksum)) {
-      throw new ChecksumMismatchError(checksum, computedChecksum);
-    }
-    const finalChecksum = checksum ?? computedChecksum;
-
-    const metadata: EphemeralBlockMetadata = new EphemeralBlockMetadata(
-      blockSize,
-      type,
-      BlockDataType.EncryptedData,
-      actualDataLength ?? data.length - StaticHelpersECIES.eciesOverheadLength,
-      false,
-      creator,
-      dateCreated,
-    );
-
-    if (type === BlockType.EncryptedConstituentBlockListBlock) {
-      return new EncryptedConstituentBlockListBlock(
-        BlockType.EncryptedConstituentBlockListBlock,
-        BlockDataType.EncryptedData,
-        data,
-        finalChecksum,
-        EncryptedBlockMetadata.fromEphemeralBlockMetadata(metadata),
-        canRead,
-        canPersist,
-      );
-    } else if (type === BlockType.EncryptedOwnedDataBlock) {
-      return new EncryptedOwnedDataBlock(
-        BlockType.EncryptedOwnedDataBlock,
-        BlockDataType.EncryptedData,
-        data,
-        finalChecksum,
-        EncryptedBlockMetadata.fromEphemeralBlockMetadata(metadata),
-        canRead,
-        canPersist,
-      );
-    } else {
-      throw new Error(`Invalid block type ${type}`);
-    }
+    // Suppress unused parameter warnings while providing a base implementation
+    void type;
+    void dataType;
+    void blockSize;
+    void data;
+    void checksum;
+    void creator;
+    void dateCreated;
+    void actualDataLength;
+    void canRead;
+    void canPersist;
+    throw new Error('Method must be implemented by derived class');
   }
 
   /**
@@ -127,6 +74,42 @@ export abstract class EncryptedBlock
     super(type, dataType, data, checksum, metadata, canRead, canPersist);
   }
 
+  /**
+   * Whether the block is encrypted
+   * Always returns true since this is an encrypted block
+   */
+  public override get encrypted(): boolean {
+    return true;
+  }
+
+  /**
+   * Whether the block can be encrypted
+   * Always returns false since this block is already encrypted
+   */
+  public override get canEncrypt(): boolean {
+    return false;
+  }
+
+  /**
+   * Whether the block can be decrypted
+   * Returns true since encrypted blocks can always be decrypted
+   * with the appropriate private key
+   */
+  public override get canDecrypt(): boolean {
+    return true;
+  }
+
+  /**
+   * Whether the block can be signed
+   * Returns true if the block has a creator
+   */
+  public override get canSign(): boolean {
+    return this.creator !== undefined;
+  }
+
+  /**
+   * The length of the encrypted data
+   */
   public get encryptedLength(): number {
     return this.actualDataLength + StaticHelpersECIES.eciesOverheadLength;
   }
@@ -242,5 +225,67 @@ export abstract class EncryptedBlock
     // 2. Subtract the ECIES overhead
     // This ensures proper capacity calculation for encrypted blocks
     return this.blockSize - StaticHelpersECIES.eciesOverheadLength;
+  }
+
+  /**
+   * Asynchronously validate the block's data and structure
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
+   */
+  public override async validateAsync(): Promise<void> {
+    // Call parent validation first
+    await super.validateAsync();
+
+    // Validate encryption header lengths
+    if (
+      this.layerHeaderData.length !== StaticHelpersECIES.eciesOverheadLength
+    ) {
+      throw new Error('Invalid encryption header length');
+    }
+
+    // Validate individual components
+    if (this.ephemeralPublicKey.length !== StaticHelpersECIES.publicKeyLength) {
+      throw new Error('Invalid ephemeral public key length');
+    }
+    if (this.iv.length !== StaticHelpersECIES.ivLength) {
+      throw new Error('Invalid IV length');
+    }
+    if (this.authTag.length !== StaticHelpersECIES.authTagLength) {
+      throw new Error('Invalid auth tag length');
+    }
+  }
+
+  /**
+   * Synchronously validate the block's data and structure
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
+   */
+  public override validateSync(): void {
+    // Call parent validation first
+    super.validateSync();
+
+    // Validate encryption header lengths
+    if (
+      this.layerHeaderData.length !== StaticHelpersECIES.eciesOverheadLength
+    ) {
+      throw new Error('Invalid encryption header length');
+    }
+
+    // Validate individual components
+    if (this.ephemeralPublicKey.length !== StaticHelpersECIES.publicKeyLength) {
+      throw new Error('Invalid ephemeral public key length');
+    }
+    if (this.iv.length !== StaticHelpersECIES.ivLength) {
+      throw new Error('Invalid IV length');
+    }
+    if (this.authTag.length !== StaticHelpersECIES.authTagLength) {
+      throw new Error('Invalid auth tag length');
+    }
+  }
+
+  /**
+   * Alias for validateSync() to maintain compatibility
+   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
+   */
+  public override validate(): void {
+    this.validateSync();
   }
 }
