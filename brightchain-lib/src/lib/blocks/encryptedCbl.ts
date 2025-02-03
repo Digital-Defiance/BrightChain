@@ -8,6 +8,7 @@ import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer } from '../types';
 import { ConstituentBlockListBlock } from './cbl';
+import { EncryptedBlockFactory } from './encryptedBlockFactory';
 import { EncryptedOwnedDataBlock } from './encryptedOwnedData';
 
 /**
@@ -38,12 +39,6 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     canRead = true,
     canPersist = true,
   ): Promise<EncryptedConstituentBlockListBlock> {
-    // Store parameters for validation
-    const finalData = data;
-    const finalChecksum = checksum;
-    const finalCreator = creator;
-    const finalLength = actualDataLength;
-
     // Validate date first, before any other validation
     const now = new Date();
     const finalDate = dateCreated ?? now;
@@ -56,73 +51,25 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
 
     // For encrypted CBL blocks, we need to validate:
     // 1. The minimum data size includes both CBL header and encryption overhead
-    // 2. The actual data length fits within the block's capacity
-    // 3. The length before encryption matches the CBL header size requirements
-
-    // Calculate available capacity for addresses
-    const capacity = ConstituentBlockListBlock.CalculateCBLAddressCapacity(
-      blockSize,
-      true, // allow encryption
-    );
-
-    // Calculate minimum and maximum data sizes
     const minDataSize =
       ConstituentBlockListBlock.CblHeaderSize +
       StaticHelpersECIES.eciesOverheadLength;
-    const maxDataSize = blockSize as number;
-
-    // Validate data size constraints
-    if (finalData.length < minDataSize) {
+    if (data.length < minDataSize) {
       throw new Error('Data too short for encrypted CBL');
     }
-    if (finalData.length > maxDataSize) {
-      throw new Error('Data length exceeds block capacity');
-    }
 
-    // Validate length before encryption
-    if (finalLength !== undefined) {
-      // Must be at least the CBL header size
-      if (finalLength < ConstituentBlockListBlock.CblHeaderSize) {
-        throw new Error(
-          `Length before encryption (${finalLength}) too small for CBL header (${ConstituentBlockListBlock.CblHeaderSize})`,
-        );
-      }
-
-      // Calculate maximum unencrypted length
-      const maxUnencryptedLength =
-        capacity * StaticHelpersChecksum.Sha3ChecksumBufferLength +
-        ConstituentBlockListBlock.CblHeaderSize;
-
-      // Must fit within available capacity
-      if (finalLength > maxUnencryptedLength) {
-        throw new Error('Data length exceeds block capacity');
-      }
-
-      // Validate total length with overhead
-      const totalLength = finalLength + StaticHelpersECIES.eciesOverheadLength;
-      if (totalLength > maxDataSize) {
-        throw new Error('Data length with overhead exceeds block capacity');
-      }
-    }
-
-    const metadata = new EncryptedBlockMetadata(
+    return EncryptedBlockFactory.createBlock(
+      type,
+      dataType,
       blockSize,
-      type,
-      BlockDataType.EncryptedData,
-      finalLength ?? data.length,
-      finalCreator,
+      data,
+      checksum,
+      creator,
       finalDate,
-    );
-
-    return new EncryptedConstituentBlockListBlock(
-      type,
-      BlockDataType.EncryptedData,
-      finalData,
-      finalChecksum,
-      metadata,
+      actualDataLength,
       canRead,
       canPersist,
-    );
+    ) as Promise<EncryptedConstituentBlockListBlock>;
   }
 
   /**
@@ -219,17 +166,116 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
   }
 
   /**
-   * Get the encrypted payload data (excluding the encryption header)
-   * For CBL blocks, we need to return only the actual data without padding
+   * Get the total overhead including CBL header and encryption overhead
+   */
+  public override get totalOverhead(): number {
+    return (
+      super.totalOverhead + // Encryption overhead
+      ConstituentBlockListBlock.CblHeaderSize // CBL header
+    );
+  }
+
+  /**
+   * Get the usable capacity after accounting for all overhead
+   */
+  public override get capacity(): number {
+    return this.blockSize - this.totalOverhead;
+  }
+
+  /**
+   * Get the encrypted payload data (excluding all headers)
    */
   public override get payload(): Buffer {
     if (!this.canRead) {
       throw new Error('Block cannot be read');
     }
-    // Skip the encryption header and return only the actual data length
-    return this.data.subarray(
+
+    // For encrypted CBL blocks:
+    // 1. Skip the encryption header
+    // 2. Skip the CBL header
+    // 3. Return only the actual data (block addresses) without padding
+    const encryptedPayload = this.data.subarray(
       StaticHelpersECIES.eciesOverheadLength,
       StaticHelpersECIES.eciesOverheadLength + this.actualDataLength,
     );
+
+    // The actual data length should be a multiple of the checksum length
+    // since it contains an array of block checksums
+    if (
+      this.actualDataLength % StaticHelpersChecksum.Sha3ChecksumBufferLength !==
+      0
+    ) {
+      throw new Error('Invalid CBL data length');
+    }
+
+    return encryptedPayload;
+  }
+
+  /**
+   * Override validateSync to add CBL-specific validation
+   */
+  public override validateSync(): void {
+    // Call parent validation first
+    super.validateSync();
+
+    // Validate CBL-specific constraints
+    const minDataSize = ConstituentBlockListBlock.CblHeaderSize;
+    if (this.actualDataLength < minDataSize) {
+      throw new Error('Data too short for CBL header');
+    }
+
+    // Validate that the remaining data length (after header) is a multiple of checksum length
+    const dataAfterHeader =
+      this.actualDataLength - ConstituentBlockListBlock.CblHeaderSize;
+    if (
+      dataAfterHeader % StaticHelpersChecksum.Sha3ChecksumBufferLength !==
+      0
+    ) {
+      throw new Error('Invalid CBL data length');
+    }
+
+    // Validate total size fits within block
+    const totalSize =
+      this.actualDataLength + StaticHelpersECIES.eciesOverheadLength;
+    if (totalSize > this.blockSize) {
+      throw new Error('Data length exceeds block capacity');
+    }
+  }
+
+  /**
+   * Override validateAsync to add CBL-specific validation
+   */
+  public override async validateAsync(): Promise<void> {
+    // Call parent validation first
+    await super.validateAsync();
+
+    // Validate CBL-specific constraints
+    const minDataSize = ConstituentBlockListBlock.CblHeaderSize;
+    if (this.actualDataLength < minDataSize) {
+      throw new Error('Data too short for CBL header');
+    }
+
+    // Validate that the remaining data length (after header) is a multiple of checksum length
+    const dataAfterHeader =
+      this.actualDataLength - ConstituentBlockListBlock.CblHeaderSize;
+    if (
+      dataAfterHeader % StaticHelpersChecksum.Sha3ChecksumBufferLength !==
+      0
+    ) {
+      throw new Error('Invalid CBL data length');
+    }
+
+    // Validate total size fits within block
+    const totalSize =
+      this.actualDataLength + StaticHelpersECIES.eciesOverheadLength;
+    if (totalSize > this.blockSize) {
+      throw new Error('Data length exceeds block capacity');
+    }
   }
 }
+
+// Register this block type with the factory
+EncryptedBlockFactory.registerBlockType(
+  BlockType.EncryptedConstituentBlockListBlock,
+  EncryptedConstituentBlockListBlock,
+);

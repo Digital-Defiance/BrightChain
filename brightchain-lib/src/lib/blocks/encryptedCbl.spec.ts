@@ -1,4 +1,5 @@
 import { BrightChainMember } from '../brightChainMember';
+import { CblBlockMetadata } from '../cblBlockMetadata';
 import { TUPLE_SIZE } from '../constants';
 import { EmailString } from '../emailString';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -6,11 +7,11 @@ import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
 import { GuidV4 } from '../guid';
-import { ICBLBlockMetadata } from '../interfaces/cblBlockMetadata';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer, SignatureBuffer } from '../types';
 import { ConstituentBlockListBlock } from './cbl';
+import { EncryptedBlockFactory } from './encryptedBlockFactory';
 import { EncryptedConstituentBlockListBlock } from './encryptedCbl';
 
 // Test class for CBL that properly implements abstract methods
@@ -24,17 +25,15 @@ class TestCblBlock extends ConstituentBlockListBlock {
     signature?: SignatureBuffer,
   ) {
     dateCreated = dateCreated ?? new Date();
-    const metadata: ICBLBlockMetadata = {
-      size: blockSize,
-      dateCreated: dateCreated.toISOString(),
+    const metadata = new CblBlockMetadata(
+      blockSize,
+      BlockType.ConstituentBlockList,
+      BlockDataType.EphemeralStructuredData,
+      dataAddresses.length * StaticHelpersChecksum.Sha3ChecksumBufferLength,
       fileDataLength,
-      creator: creator,
-      originalDataLength:
-        dataAddresses.length * StaticHelpersChecksum.Sha3ChecksumBufferLength,
-      encrypted: false,
-      type: BlockType.ConstituentBlockList,
-      dataType: BlockDataType.EphemeralStructuredData,
-    };
+      dateCreated,
+      creator,
+    );
     const blockHeader = ConstituentBlockListBlock.makeCblHeader(
       creator,
       dateCreated,
@@ -48,21 +47,13 @@ class TestCblBlock extends ConstituentBlockListBlock {
       Buffer.concat(dataAddresses),
     ]);
     const checksum = StaticHelpersChecksum.calculateChecksum(data);
-    super(
-      blockSize,
-      creator,
-      metadata,
-      data,
-      checksum,
-      dateCreated,
-      blockHeader.signature,
-    );
+    super(creator, metadata, data, checksum, blockHeader.signature);
   }
 }
 
 // Test class for encrypted CBL that properly implements abstract methods
 class TestEncryptedCblBlock extends EncryptedConstituentBlockListBlock {
-  public static override async from(
+  public static override from(
     type: BlockType,
     dataType: BlockDataType,
     blockSize: BlockSize,
@@ -74,8 +65,7 @@ class TestEncryptedCblBlock extends EncryptedConstituentBlockListBlock {
     canRead = true,
     canPersist = true,
   ): Promise<TestEncryptedCblBlock> {
-    // Call parent class's from() to ensure proper validation
-    const block = await EncryptedConstituentBlockListBlock.from(
+    return EncryptedBlockFactory.createBlock(
       type,
       dataType,
       blockSize,
@@ -86,10 +76,7 @@ class TestEncryptedCblBlock extends EncryptedConstituentBlockListBlock {
       actualDataLength,
       canRead,
       canPersist,
-    );
-
-    // Cast to our test class type
-    return block as TestEncryptedCblBlock;
+    ) as Promise<TestEncryptedCblBlock>;
   }
 }
 
@@ -235,8 +222,10 @@ describe('EncryptedConstituentBlockListBlock', () => {
       expect(encryptedBlock.authTag.length).toBe(
         StaticHelpersECIES.authTagLength,
       );
+      // Total overhead should include both encryption overhead and CBL header
       expect(encryptedBlock.totalOverhead).toBe(
-        StaticHelpersECIES.eciesOverheadLength,
+        StaticHelpersECIES.eciesOverheadLength +
+          ConstituentBlockListBlock.CblHeaderSize,
       );
     });
 
