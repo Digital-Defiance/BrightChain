@@ -267,13 +267,19 @@ export class BrightChainMember {
     const mnemonic = StaticHelpersECIES.generateNewMnemonic();
     const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
 
-    // Create ECDH key pair
-    const ecdh = createECDH(StaticHelpersECIES.curveName);
-    ecdh.generateKeys(); // Generate fresh keys
-    const privateKey = ecdh.getPrivateKey();
-    const publicKeyWithPrefix = ecdh.getPublicKey(null, 'uncompressed'); // Get uncompressed format with 0x04 prefix
+    // Get private key from wallet
+    const privateKey = wallet.getPrivateKey();
+    // Get public key with 0x04 prefix
+    const publicKeyWithPrefix = Buffer.concat([
+      Buffer.from([0x04]),
+      wallet.getPublicKey(),
+    ]);
 
-    // Derive voting keys using the full public key with prefix
+    // Create ECDH instance for key derivation
+    const ecdh = createECDH(StaticHelpersECIES.curveName);
+    ecdh.setPrivateKey(privateKey);
+
+    // Derive voting keys using the private key and public key
     const votingKeypair =
       StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
         privateKey,

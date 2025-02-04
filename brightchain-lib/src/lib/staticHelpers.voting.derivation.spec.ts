@@ -111,22 +111,38 @@ describe('staticHelpers.voting.derivation', () => {
     });
 
     it('should handle invalid inputs', () => {
-      const invalidPrivKey = Buffer.from('invalid');
-      const invalidPubKey = Buffer.from('invalid');
+      // Test non-Buffer inputs
+      expect(() =>
+        StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
+          'invalid' as unknown as Buffer,
+          publicKey,
+        ),
+      ).toThrow('Private key must be a Buffer');
 
       expect(() =>
         StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
-          invalidPrivKey,
-          publicKey,
+          privateKey,
+          'invalid' as unknown as Buffer,
         ),
-      ).toThrow();
+      ).toThrow('Public key must be a Buffer');
 
+      // Test invalid public key format
+      const invalidPubKey = Buffer.from('0123456789', 'hex'); // Wrong length
       expect(() =>
         StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
           privateKey,
           invalidPubKey,
         ),
-      ).toThrow();
+      ).toThrow('Invalid public key format');
+
+      // Test invalid ECDH key pair
+      const invalidPrivKey = Buffer.from('00'.repeat(32), 'hex'); // All zeros
+      expect(() =>
+        StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
+          invalidPrivKey,
+          publicKey,
+        ),
+      ).toThrow('Invalid ECDH key pair');
     });
 
     it('should maintain homomorphic properties with instance verification', () => {

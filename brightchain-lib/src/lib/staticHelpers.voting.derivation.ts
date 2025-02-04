@@ -246,27 +246,21 @@ export class StaticHelpersVotingDerivation {
     ecdhPubKey: Buffer,
   ): KeyPair {
     // Input validation
-    if (!Buffer.isBuffer(ecdhPrivKey) || ecdhPrivKey.length < 32) {
-      throw new Error('Invalid ECDH private key');
+    if (!Buffer.isBuffer(ecdhPrivKey)) {
+      throw new Error('Private key must be a Buffer');
     }
-    if (
-      !Buffer.isBuffer(ecdhPubKey) ||
-      (ecdhPubKey.length !== 64 && ecdhPubKey.length !== 65) ||
-      (ecdhPubKey.length === 65 && ecdhPubKey[0] !== 0x04)
-    ) {
-      throw new Error('Invalid ECDH public key');
+    if (!Buffer.isBuffer(ecdhPubKey)) {
+      throw new Error('Public key must be a Buffer');
     }
 
-    // Validate key format
-    try {
-      const ecdh = createECDH(StaticHelpersECIES.curveName);
-      ecdh.setPrivateKey(ecdhPrivKey);
-      const testPub = ecdh.getPublicKey();
-      if (testPub.length === 0) {
-        throw new Error('Invalid private key format');
-      }
-    } catch (error) {
-      throw new Error('Invalid ECDH private key');
+    // Normalize public key format
+    const normalizedPubKey =
+      ecdhPubKey.length === 64
+        ? Buffer.concat([Buffer.from([0x04]), ecdhPubKey])
+        : ecdhPubKey;
+
+    if (normalizedPubKey.length !== 65 || normalizedPubKey[0] !== 0x04) {
+      throw new Error('Invalid public key format');
     }
 
     try {

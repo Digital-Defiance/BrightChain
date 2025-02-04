@@ -81,8 +81,11 @@ export abstract class StaticHelpersSealing {
     amongstMembers: BrightChainMember[],
     sharesRequired?: number,
   ): QuorumDataRecord {
-    sharesRequired = sharesRequired ?? amongstMembers.length;
+    if (!amongstMembers || !Array.isArray(amongstMembers)) {
+      throw new Error('amongstMembers must be an array of BrightChainMember');
+    }
     this.validateQuorumSealInputs(amongstMembers, sharesRequired);
+    sharesRequired = sharesRequired ?? amongstMembers.length;
     const encryptedData = StaticHelpersSymmetric.symmetricEncryptJson<T>(data);
 
     // TODO: consider computing the number of shares a user needs if you want to consider them "required"
