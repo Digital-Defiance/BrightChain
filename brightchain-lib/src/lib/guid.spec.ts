@@ -1,16 +1,36 @@
 import * as uuid from 'uuid';
+import { v4 } from 'uuid';
 import { GuidBrandType } from './enumerations/guidBrandType';
 import { GuidV4 } from './guid';
 import { FullHexGuid, RawGuidBuffer } from './types';
+
+type Version4Options = Parameters<typeof v4>[0];
 
 jest.mock('uuid');
 
 describe('guid', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest
-      .spyOn(uuid, 'v4')
-      .mockImplementation(() => '5549c83a-20fa-4a11-ae7d-9dc3f1681e9e');
+    // Mock v4 to handle both string and buffer return types
+    // Create a mock function that matches uuid.v4's behavior
+    const mockV4 = jest
+      .fn()
+      .mockImplementation(
+        (options?: Version4Options, buf?: Uint8Array, offset?: number) => {
+          if (buf) {
+            const bytes = Buffer.from(
+              '5549c83a20fa4a11ae7d9dc3f1681e9e',
+              'hex',
+            );
+            bytes.copy(buf, offset || 0);
+            return buf;
+          }
+          return '5549c83a-20fa-4a11-ae7d-9dc3f1681e9e';
+        },
+      ) as unknown as typeof v4;
+
+    // Mock uuid.v4 with our implementation
+    jest.spyOn(uuid, 'v4').mockImplementation(mockV4);
   });
   it('should create a new guid', () => {
     jest.spyOn(uuid, 'validate').mockReturnValue(true);
@@ -262,7 +282,7 @@ describe('guid', () => {
       });
 
       it('should throw in default case', () => {
-        expect(() => GuidV4.toRawGuidBuffer({} as any)).toThrow();
+        expect(() => GuidV4.toRawGuidBuffer({} as unknown)).toThrow();
       });
 
       it('should throw if rawGuidBufferResult.length is incorrect', () => {

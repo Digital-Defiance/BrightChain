@@ -16,7 +16,8 @@
     "prettier:fix": "prettier --write '**/*.{ts,tsx}'",
     "codacy:upload": "./codacy-upload.sh",
     "aws:configure": "aws configure",
-    "aws:credentials": "aws sts get-session-token --duration-seconds 43200"
+    "aws:credentials": "aws sts get-session-token --duration-seconds 43200",
+    "aws:install": "./install-aws.sh"
   },
   "private": true,
   "dependencies": {
