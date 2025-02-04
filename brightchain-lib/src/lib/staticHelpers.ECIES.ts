@@ -449,10 +449,8 @@ export class StaticHelpersECIES {
 
       // Create ECDH instance and set private key
       const ecdh = createECDH(StaticHelpersECIES.curveName);
-      // If private key has 0x04 prefix, remove it
-      const privateKeyForDecryption =
-        privateKey[0] === 0x04 ? privateKey.subarray(1) : privateKey;
-      ecdh.setPrivateKey(privateKeyForDecryption);
+      // Private key should be used as-is
+      ecdh.setPrivateKey(privateKey);
 
       // Compute shared secret using the complete public key
       const sharedSecret = ecdh.computeSecret(publicKeyForSecret);

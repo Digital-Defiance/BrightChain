@@ -1,19 +1,16 @@
-import { Readable } from 'stream';
 import { BlockMetadata } from '../blockMetadata';
 import { BrightChainMember } from '../brightChainMember';
 import { CblBlockMetadata } from '../cblBlockMetadata';
-import { MAX_TUPLE_SIZE, MIN_TUPLE_SIZE, TUPLE_SIZE } from '../constants';
+import { TUPLE_SIZE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize, lengthToBlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { GuidBrandType } from '../enumerations/guidBrandType';
 import { GuidV4 } from '../guid';
 import { IConstituentBlockListBlock } from '../interfaces/cbl';
-import { IConstituentBlockListBlockHeader } from '../interfaces/cblHeader';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
-import { ChecksumBuffer, RawGuidBuffer, SignatureBuffer } from '../types';
-import { BaseBlock } from './base';
+import { ChecksumBuffer, SignatureBuffer } from '../types';
 import { EphemeralBlock } from './ephemeral';
 import { BlockHandle } from './handle';
 import { BlockHandleTuple } from './handleTuple';
@@ -34,9 +31,6 @@ export class ConstituentBlockListBlock
   extends EphemeralBlock
   implements IConstituentBlockListBlock
 {
-  private readonly _addressData: Buffer;
-  private readonly _creatorSignature: SignatureBuffer;
-
   /**
    * The size of the creator ID in bytes
    */
@@ -47,7 +41,7 @@ export class ConstituentBlockListBlock
   /**
    * Header field offsets
    */
-  private static readonly HeaderOffsets = {
+  public static readonly HeaderOffsets = {
     CreatorId: 0,
     DateCreated: ConstituentBlockListBlock.CreatorLength,
     CblAddressCount: ConstituentBlockListBlock.CreatorLength + 8, // DateCreated is 8 bytes
@@ -59,11 +53,12 @@ export class ConstituentBlockListBlock
   /**
    * Header sizes
    */
-  public static readonly CblHeaderSize =
-    ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
-    StaticHelpersECIES.signatureLength;
+  public static readonly SignatureSize = StaticHelpersECIES.signatureLength;
   public static readonly CblHeaderSizeWithoutSignature =
     ConstituentBlockListBlock.HeaderOffsets.CreatorSignature;
+  public static readonly CblHeaderSize =
+    ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
+    ConstituentBlockListBlock.SignatureSize;
 
   /**
    * Calculate the capacity of a CBL block for addresses, with or without encryption overhead.
@@ -73,17 +68,20 @@ export class ConstituentBlockListBlock
     blockSize: BlockSize,
     allowEncryption = true,
   ): number {
+    // Calculate available space for addresses
     const blockRawCapacity = blockSize as number;
-    const dataCapacityWithoutHeader =
-      blockRawCapacity - ConstituentBlockListBlock.CblHeaderSize;
-    const dataCapacityWithoutHeaderAndECIES =
-      dataCapacityWithoutHeader - StaticHelpersECIES.eciesOverheadLength;
-    return Math.floor(
-      (allowEncryption
-        ? dataCapacityWithoutHeaderAndECIES
-        : dataCapacityWithoutHeader) /
-        StaticHelpersChecksum.Sha3ChecksumBufferLength,
-    );
+    const headerSize = ConstituentBlockListBlock.CblHeaderSize;
+    const encryptionOverhead = allowEncryption
+      ? StaticHelpersECIES.eciesOverheadLength
+      : 0;
+    const availableSpace = blockRawCapacity - headerSize - encryptionOverhead;
+
+    // Calculate how many addresses can fit
+    const addressSize = StaticHelpersChecksum.Sha3ChecksumBufferLength;
+    const addressCapacity = Math.floor(availableSpace / addressSize);
+
+    // Ensure capacity is a multiple of tuple size
+    return Math.floor(addressCapacity / TUPLE_SIZE) * TUPLE_SIZE;
   }
 
   /**
@@ -97,6 +95,7 @@ export class ConstituentBlockListBlock
     cblAddressCount: number,
     fileDataLength: bigint,
     addressList: Buffer,
+    blockSize: BlockSize,
     signature?: SignatureBuffer,
     tupleSize = TUPLE_SIZE,
   ): { headerData: Buffer; signature: SignatureBuffer } {
@@ -130,41 +129,43 @@ export class ConstituentBlockListBlock
       tupleSizeBuffer,
     ]);
 
-    // Sign header + address list
-    const toSign = Buffer.concat([headerWithoutSignature, addressList]);
+    // Sign header + address list + block size
+    const blockSizeBuffer = Buffer.alloc(4);
+    blockSizeBuffer.writeUInt32BE(blockSize);
+    const toSign = Buffer.concat([
+      headerWithoutSignature,
+      addressList,
+      blockSizeBuffer,
+    ]);
     const checksum = StaticHelpersChecksum.calculateChecksum(toSign);
 
     let finalSignature: SignatureBuffer;
     if (creator instanceof BrightChainMember) {
       if (signature) {
-        // Always strip 0x04 prefix for verification since verifyMessage expects raw key
-        const publicKeyForVerification = Buffer.from(
-          creator.publicKey[0] === 0x04
-            ? creator.publicKey.subarray(1)
-            : creator.publicKey,
-        );
-
+        // Use the public key as-is for verification
         if (
           !StaticHelpersECIES.verifyMessage(
-            publicKeyForVerification,
+            creator.publicKey,
             checksum,
             signature,
           )
         ) {
           throw new Error('Invalid signature provided');
         }
-        finalSignature = signature;
+        finalSignature = Buffer.from(signature) as SignatureBuffer;
       } else {
+        // Create signature with private key
+        const privateKeyBuffer = Buffer.from(creator.privateKey);
         finalSignature = StaticHelpersECIES.signMessage(
-          creator.privateKey,
+          privateKeyBuffer,
           checksum,
         );
       }
     } else {
       // For GuidV4 creators, either use provided signature or create empty one
-      finalSignature =
-        signature ??
-        (Buffer.alloc(StaticHelpersECIES.signatureLength) as SignatureBuffer);
+      finalSignature = signature
+        ? (Buffer.from(signature) as SignatureBuffer)
+        : (Buffer.alloc(StaticHelpersECIES.signatureLength) as SignatureBuffer);
     }
 
     // Place signature at end of header
@@ -175,6 +176,75 @@ export class ConstituentBlockListBlock
       signature: finalSignature,
     };
   }
+
+  /**
+   * Validate a block's signature
+   * @param data The full block data
+   * @param creator The creator with public key for verification
+   * @returns True if the signature is valid
+   */
+  public static validateSignature(
+    data: Buffer,
+    creator: BrightChainMember,
+    blockSize?: BlockSize,
+  ): boolean {
+    if (!creator) {
+      throw new Error('Creator must be provided for signature validation');
+    }
+
+    // Get the header without signature
+    const headerWithoutSignature = Buffer.from(
+      data.subarray(
+        0,
+        ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
+      ),
+    );
+
+    // Get the signature from the data
+    const signature = Buffer.from(
+      data.subarray(
+        ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
+        ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
+          StaticHelpersECIES.signatureLength,
+      ),
+    ) as SignatureBuffer;
+
+    // Get the data to verify (header without signature + address data + block size)
+    const addressCount = data.readUInt32BE(
+      ConstituentBlockListBlock.HeaderOffsets.CblAddressCount,
+    );
+    const addressLength =
+      addressCount * StaticHelpersChecksum.Sha3ChecksumBufferLength;
+    const addressData = data.subarray(
+      ConstituentBlockListBlock.CblHeaderSize,
+      ConstituentBlockListBlock.CblHeaderSize + addressLength,
+    );
+    const blockSizeBuffer = Buffer.alloc(4);
+    // Use the provided block size or try to determine it from data length
+    const effectiveBlockSize = blockSize ?? lengthToBlockSize(data.length);
+    blockSizeBuffer.writeUInt32BE(effectiveBlockSize);
+    const toVerify = Buffer.concat([
+      headerWithoutSignature,
+      addressData,
+      blockSizeBuffer,
+    ]);
+
+    // Calculate checksum and verify signature
+    const checksum = StaticHelpersChecksum.calculateChecksum(toVerify);
+
+    return StaticHelpersECIES.verifyMessage(
+      creator.publicKey,
+      checksum,
+      signature,
+    );
+  }
+
+  private _addressData: Buffer;
+  private _cblAddressCount: number;
+  private _creatorSignature: SignatureBuffer;
+  private _originalDataLength: bigint;
+  private _tupleSize: number;
+  private readonly _blockCreatorId: GuidV4;
 
   /**
    * Create a new CBL block
@@ -196,7 +266,11 @@ export class ConstituentBlockListBlock
       true, // canPersist
     );
 
-    // Get address count and validate tuple size
+    // Store creator ID
+    this._blockCreatorId =
+      creator instanceof BrightChainMember ? creator.id : creator;
+
+    // Validate tuple size
     const addressCount = data.readUInt32BE(
       ConstituentBlockListBlock.HeaderOffsets.CblAddressCount,
     );
@@ -207,58 +281,119 @@ export class ConstituentBlockListBlock
       throw new Error('CBL address count must be a multiple of TupleSize');
     }
 
-    // Store address data (without padding) and signature
-    const addressLength =
-      addressCount * StaticHelpersChecksum.Sha3ChecksumBufferLength;
-    this._addressData = data.subarray(
-      ConstituentBlockListBlock.CblHeaderSize,
-      ConstituentBlockListBlock.CblHeaderSize + addressLength,
+    // Verify address count is within capacity
+    const maxAddresses = ConstituentBlockListBlock.CalculateCBLAddressCapacity(
+      this.blockSize,
+      false, // Don't account for encryption overhead since this is raw data
     );
-    this._creatorSignature = data.subarray(
-      ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
-      ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
-        StaticHelpersECIES.signatureLength,
-    ) as SignatureBuffer;
+    if (addressCount > maxAddresses) {
+      throw new Error('Address count exceeds block capacity');
+    }
 
     // Store creator for signature validation
     if (creator instanceof BrightChainMember && signature) {
       // Only validate if a signature was explicitly provided
       // Otherwise the signature was just generated in makeCblHeader
-      const headerWithoutSignature = data.subarray(
-        0,
-        ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
-      );
-      const toVerify = Buffer.concat([
-        headerWithoutSignature,
-        this._addressData,
-      ]);
-      const checksum = StaticHelpersChecksum.calculateChecksum(toVerify);
+      const signatureFromHeader = Buffer.from(
+        data.subarray(
+          ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
+          ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
+            StaticHelpersECIES.signatureLength,
+        ),
+      ) as SignatureBuffer;
 
-      // Always strip 0x04 prefix for verification since verifyMessage expects raw key
-      const publicKeyForVerification = Buffer.from(
-        creator.publicKey[0] === 0x04
-          ? creator.publicKey.subarray(1)
-          : creator.publicKey,
-      );
+      // If the provided signature doesn't match what's in the header,
+      // validate the signature
+      if (!signatureFromHeader.equals(signature)) {
+        if (!ConstituentBlockListBlock.validateSignature(data, creator)) {
+          throw new Error('Invalid creator signature');
+        }
+      }
+    }
 
-      // Only validate if the signature wasn't generated by makeCblHeader
-      const signatureFromHeader = data.subarray(
+    this._creatorSignature = Buffer.from(
+      data.subarray(
         ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
         ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
           StaticHelpersECIES.signatureLength,
-      ) as SignatureBuffer;
+      ),
+    ) as SignatureBuffer;
 
+    // Extract address data before signature validation
+    this._addressData = this.extractAddressData(data);
+    this._cblAddressCount = addressCount;
+    this._originalDataLength = data.readBigInt64BE(
+      ConstituentBlockListBlock.HeaderOffsets.OriginalDataLength,
+    );
+    this._tupleSize = tupleSize;
+
+    // Verify the signature matches what validateSignature() expects
+    if (creator instanceof BrightChainMember) {
+      const blockSizeBuffer = Buffer.alloc(4);
+      blockSizeBuffer.writeUInt32BE(this.blockSize);
+      const toVerify = Buffer.concat([
+        data.subarray(
+          0,
+          ConstituentBlockListBlock.CblHeaderSizeWithoutSignature,
+        ),
+        this._addressData,
+        blockSizeBuffer,
+      ]);
+      const verifyChecksum = StaticHelpersChecksum.calculateChecksum(toVerify);
       if (
-        !signatureFromHeader.equals(signature) &&
         !StaticHelpersECIES.verifyMessage(
-          publicKeyForVerification,
-          checksum,
+          creator.publicKey,
+          verifyChecksum,
           this._creatorSignature,
         )
       ) {
-        throw new Error('Invalid creator signature');
+        throw new Error('Invalid signature');
       }
     }
+  }
+
+  /**
+   * Extract the address data from the raw block data
+   */
+  private extractAddressData(data: Buffer): Buffer {
+    const addressCount = data.readUInt32BE(
+      ConstituentBlockListBlock.HeaderOffsets.CblAddressCount,
+    );
+    const checksumLength = StaticHelpersChecksum.Sha3ChecksumBufferLength;
+    const addressLength = addressCount * checksumLength;
+    const start = ConstituentBlockListBlock.CblHeaderSize;
+    const end = start + addressLength;
+
+    // Verify address count is within capacity
+    const maxAddresses = ConstituentBlockListBlock.CalculateCBLAddressCapacity(
+      this.blockSize,
+      false, // Don't account for encryption overhead since this is raw data
+    );
+    if (addressCount > maxAddresses) {
+      throw new Error('Address count exceeds block capacity');
+    }
+
+    // Verify we have enough data
+    if (end > data.length) {
+      throw new Error('Data buffer is truncated');
+    }
+
+    // Extract address data and create a new buffer to avoid sharing references
+    const addressData = Buffer.from(data.subarray(start, end));
+
+    // Verify each address has the correct length
+    for (let i = 0; i < addressCount; i++) {
+      const s = i * checksumLength;
+      const e = s + checksumLength;
+      const addr = addressData.subarray(s, e);
+      if (addr.length !== checksumLength) {
+        throw new Error(
+          `Invalid address length at index ${i}: ${addr.length}, expected: ${checksumLength}`,
+        );
+      }
+    }
+
+    return addressData;
   }
 
   /**
@@ -268,14 +403,16 @@ export class ConstituentBlockListBlock
     if (!this.canRead) {
       throw new Error('Block cannot be read');
     }
-    const addressCount = this.cblAddressCount;
+    const addressCount = this._cblAddressCount;
     const checksumLength = StaticHelpersChecksum.Sha3ChecksumBufferLength;
     const blockIds: Array<ChecksumBuffer> = [];
 
     for (let i = 0; i < addressCount; i++) {
       const start = i * checksumLength;
       const end = start + checksumLength;
-      blockIds.push(this._addressData.subarray(start, end) as ChecksumBuffer);
+      const addressBuffer = this._addressData.subarray(start, end);
+      // Create a new buffer to avoid sharing references
+      blockIds.push(Buffer.from(addressBuffer) as ChecksumBuffer);
     }
 
     return blockIds;
@@ -293,8 +430,8 @@ export class ConstituentBlockListBlock
     const handleTuples: Array<BlockHandleTuple> = [];
     const blockIds = this.getCblBlockIds();
 
-    for (let i = 0; i < blockIds.length; i += this.tupleSize) {
-      const tupleIds = blockIds.slice(i, i + this.tupleSize);
+    for (let i = 0; i < blockIds.length; i += this._tupleSize) {
+      const tupleIds = blockIds.slice(i, i + this._tupleSize);
       const handles = await Promise.all(
         tupleIds.map((id) =>
           BlockHandle.createFromPath(
@@ -318,92 +455,13 @@ export class ConstituentBlockListBlock
   }
 
   /**
-   * Validate the creator's signature
-   * @param data The full block data
-   * @param creator The creator of the CBL with public key
-   * @returns True if the signature is valid
-   */
-  public static ValidateSignature(
-    data: Buffer,
-    creator: BrightChainMember,
-  ): boolean {
-    // Get the header without signature
-    const headerWithoutSignature = data.subarray(
-      0,
-      ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
-    );
-
-    // Get the address list
-    const addressList = data.subarray(ConstituentBlockListBlock.CblHeaderSize);
-
-    // Create the data to verify (same as what was signed in makeCblHeader)
-    const toVerify = Buffer.concat([headerWithoutSignature, addressList]);
-    const checksum = StaticHelpersChecksum.calculateChecksum(toVerify);
-
-    // Get the signature from the data
-    const signature = data.subarray(
-      ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
-      ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
-        StaticHelpersECIES.signatureLength,
-    ) as SignatureBuffer;
-
-    // Always strip 0x04 prefix for verification since verifyMessage expects raw key
-    const publicKeyForVerification = Buffer.from(
-      creator.publicKey[0] === 0x04
-        ? creator.publicKey.subarray(1)
-        : creator.publicKey,
-    );
-
-    return StaticHelpersECIES.verifyMessage(
-      publicKeyForVerification,
-      checksum,
-      signature,
-    );
-  }
-
-  /**
-   * Validate the creator's signature
-   * The signature covers both the header fields and the address data
-   */
-  public validateSignature(): boolean {
-    if (!this.canRead) {
-      throw new Error('Block cannot be read');
-    }
-    if (!this.creator) {
-      throw new Error('Creator is required for signature validation');
-    }
-
-    const headerWithoutSignature = this.data.subarray(
-      0,
-      ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
-    );
-    const toVerify = Buffer.concat([headerWithoutSignature, this._addressData]);
-    const checksum = StaticHelpersChecksum.calculateChecksum(toVerify);
-
-    // Always strip 0x04 prefix for verification since verifyMessage expects raw key
-    const publicKeyForVerification = Buffer.from(
-      this.creator.publicKey[0] === 0x04
-        ? this.creator.publicKey.subarray(1)
-        : this.creator.publicKey,
-    );
-
-    const result = StaticHelpersECIES.verifyMessage(
-      publicKeyForVerification,
-      checksum,
-      this._creatorSignature,
-    );
-
-    return result;
-  }
-
-  /**
-   * Get the raw address data buffer
+   * Get the raw address data
    */
   public get addressData(): Buffer {
     if (!this.canRead) {
       throw new Error('Block cannot be read');
     }
-    return this._addressData;
+    return Buffer.from(this._addressData);
   }
 
   /**
@@ -413,147 +471,27 @@ export class ConstituentBlockListBlock
     if (!this.canRead) {
       throw new Error('Block cannot be read');
     }
-    const addressCount = this.cblAddressCount;
-    const checksumLength = StaticHelpersChecksum.Sha3ChecksumBufferLength;
-    const addresses: Array<ChecksumBuffer> = [];
-
-    for (let i = 0; i < addressCount; i++) {
-      const start = i * checksumLength;
-      const end = start + checksumLength;
-      addresses.push(this._addressData.subarray(start, end) as ChecksumBuffer);
-    }
-
-    return addresses;
+    return this.getCblBlockIds();
   }
 
   /**
-   * The number of addresses in the CBL
+   * Get the number of addresses in the CBL
    */
   public get cblAddressCount(): number {
     if (!this.canRead) {
       throw new Error('Block cannot be read');
     }
-    const addressCount = this.layerHeaderData.readUInt32BE(
-      ConstituentBlockListBlock.HeaderOffsets.CblAddressCount,
-    );
-    if (
-      addressCount < 0 ||
-      addressCount >
-        ConstituentBlockListBlock.CalculateCBLAddressCapacity(this.blockSize)
-    ) {
-      throw new Error('Invalid CBL address count');
-    }
-    return addressCount;
+    return this._cblAddressCount;
   }
 
   /**
-   * The length of the original data
-   */
-  public get originalDataLength(): bigint {
-    if (!this.canRead) {
-      throw new Error('Block cannot be read');
-    }
-    const dataLength = this.layerHeaderData.readBigInt64BE(
-      ConstituentBlockListBlock.HeaderOffsets.OriginalDataLength,
-    );
-    if (dataLength < 0n) {
-      throw new Error('Original data length cannot be negative');
-    }
-    return dataLength;
-  }
-
-  /**
-   * The size of the tuples
-   */
-  public get tupleSize(): number {
-    if (!this.canRead) {
-      throw new Error('Block cannot be read');
-    }
-    const tupleSize = this.layerHeaderData.readUInt8(
-      ConstituentBlockListBlock.HeaderOffsets.TupleSize,
-    );
-    if (tupleSize < MIN_TUPLE_SIZE || tupleSize > MAX_TUPLE_SIZE) {
-      throw new Error(
-        `Tuple size must be between ${MIN_TUPLE_SIZE} and ${MAX_TUPLE_SIZE}`,
-      );
-    }
-    return tupleSize;
-  }
-
-  /**
-   * The creator signature
-   * Located at the end of the header, just before the address data
+   * Get the creator signature
    */
   public get creatorSignature(): SignatureBuffer {
     if (!this.canRead) {
       throw new Error('Block cannot be read');
     }
-    return this._creatorSignature;
-  }
-
-  /**
-   * Get this layer's header data
-   * Returns the CBL header including signature
-   */
-  public override get layerHeaderData(): Buffer {
-    if (!this.canRead) {
-      throw new Error('Block cannot be read');
-    }
-    return this.data.subarray(0, ConstituentBlockListBlock.CblHeaderSize);
-  }
-
-  /**
-   * Get the complete header data from all layers
-   */
-  public override get fullHeaderData(): Buffer {
-    if (!this.canRead) {
-      throw new Error('Block cannot be read');
-    }
-    return Buffer.concat([super.fullHeaderData, this.layerHeaderData]);
-  }
-
-  /**
-   * Get the usable capacity after accounting for overhead
-   */
-  public override get capacity(): number {
-    return this.blockSize - this.totalOverhead;
-  }
-
-  /**
-   * Synchronously validate the block's data and structure
-   * @throws {ChecksumMismatchError} If checksums do not match
-   */
-  public override validateSync(): void {
-    // Call parent validation first
-    super.validateSync();
-
-    // Validate signature if creator exists
-    if (this.creator && !this.validateSignature()) {
-      throw new Error('Invalid creator signature');
-    }
-
-    // Validate CBL-specific fields
-    if (
-      this.cblAddressCount < 0 ||
-      this.cblAddressCount % this.tupleSize !== 0
-    ) {
-      throw new Error('Invalid CBL address count');
-    }
-
-    if (this.originalDataLength < 0n) {
-      throw new Error('Original data length cannot be negative');
-    }
-
-    if (this.tupleSize < MIN_TUPLE_SIZE || this.tupleSize > MAX_TUPLE_SIZE) {
-      throw new Error(
-        `Tuple size must be between ${MIN_TUPLE_SIZE} and ${MAX_TUPLE_SIZE}`,
-      );
-    }
-
-    // Validate date
-    if (this.dateCreated > new Date()) {
-      throw new Error('Date created cannot be in the future');
-    }
+    return Buffer.from(this._creatorSignature) as SignatureBuffer;
   }
 
   /**
@@ -563,151 +501,47 @@ export class ConstituentBlockListBlock
     if (!this.canRead) {
       throw new Error('Block cannot be read');
     }
-    const creatorId = new GuidV4(
-      this.layerHeaderData.subarray(
-        ConstituentBlockListBlock.HeaderOffsets.CreatorId,
-        ConstituentBlockListBlock.HeaderOffsets.CreatorId +
-          ConstituentBlockListBlock.CreatorLength,
-      ) as RawGuidBuffer,
-    );
-    return creatorId;
+    return this._blockCreatorId;
   }
 
-  public override get dateCreated(): Date {
+  /**
+   * Get the original data length
+   */
+  public get originalDataLength(): bigint {
     if (!this.canRead) {
       throw new Error('Block cannot be read');
     }
-    const dateHigh = this.layerHeaderData.readUInt32BE(
-      ConstituentBlockListBlock.HeaderOffsets.DateCreated,
-    );
-    const dateLow = this.layerHeaderData.readUInt32BE(
-      ConstituentBlockListBlock.HeaderOffsets.DateCreated + 4,
-    );
-    const dateCreated = new Date(
-      Number((BigInt(dateHigh) << 32n) | BigInt(dateLow)),
-    );
-    if (isNaN(dateCreated.getTime())) {
-      throw new Error('Invalid date created');
-    } else if (dateCreated > new Date()) {
-      throw new Error('Date created cannot be in the future');
-    }
-    return dateCreated;
+    return this._originalDataLength;
   }
 
   /**
-   * Parse a CBL header
-   * @param data The raw block data (full block with data and padding)
-   * @returns The CBL header fields
+   * Get the tuple size
    */
-  public static parseHeader(
-    data: Buffer,
-    creatorForValidation?: BrightChainMember,
-  ): IConstituentBlockListBlockHeader {
-    // guid self validates
-    const creatorId = new GuidV4(
-      data.subarray(
-        ConstituentBlockListBlock.HeaderOffsets.CreatorId,
-        ConstituentBlockListBlock.HeaderOffsets.CreatorId +
-          ConstituentBlockListBlock.CreatorLength,
-      ) as RawGuidBuffer,
-    );
-    if (creatorForValidation && !creatorForValidation.id.equals(creatorId)) {
-      throw new Error('Creator ID mismatch');
+  public get tupleSize(): number {
+    if (!this.canRead) {
+      throw new Error('Block cannot be read');
     }
-    const dateHigh = data.readUint32BE(
-      ConstituentBlockListBlock.HeaderOffsets.DateCreated,
-    );
-    const dateLow = data.readUint32BE(
-      ConstituentBlockListBlock.HeaderOffsets.DateCreated + 4,
-    );
-    const dateCreated = new Date(
-      Number((BigInt(dateHigh) << 32n) | BigInt(dateLow)),
-    );
-    if (isNaN(dateCreated.getTime())) {
-      throw new Error('Invalid date created');
-    } else if (dateCreated > new Date()) {
-      throw new Error('Date created cannot be in the future');
-    }
-    const cblAddressCount = data.readUint32BE(
-      ConstituentBlockListBlock.HeaderOffsets.CblAddressCount,
-    );
-    if (
-      cblAddressCount < 0 ||
-      cblAddressCount >
-        ConstituentBlockListBlock.CalculateCBLAddressCapacity(
-          lengthToBlockSize(data.length),
-        )
-    ) {
-      throw new Error('Invalid CBL address count');
-    }
-    const originalDataLength = data.readBigInt64BE(
-      ConstituentBlockListBlock.HeaderOffsets.OriginalDataLength,
-    );
-    if (originalDataLength < 0n) {
-      throw new Error('Original data length cannot be negative');
-    }
-    const tupleSize = data.readUint8(
-      ConstituentBlockListBlock.HeaderOffsets.TupleSize,
-    );
-    if (tupleSize < MIN_TUPLE_SIZE || tupleSize > MAX_TUPLE_SIZE) {
-      throw new Error(
-        `Tuple size must be between ${MIN_TUPLE_SIZE} and ${MAX_TUPLE_SIZE}`,
-      );
-    }
-    const creatorSignature = data.subarray(
-      ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
-      ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
-        StaticHelpersECIES.signatureLength,
-    ) as SignatureBuffer;
-    if (
-      creatorForValidation &&
-      !ConstituentBlockListBlock.ValidateSignature(data, creatorForValidation)
-    ) {
-      throw new Error('Invalid creator signature');
-    }
-
-    return {
-      creatorId,
-      dateCreated,
-      cblAddressCount,
-      originalDataLength,
-      tupleSize,
-      creatorSignature,
-    };
+    return this._tupleSize;
   }
 
   /**
-   * Create a CBL block from a buffer
-   * @param block - The block to convert
-   * @param creator - The creator of the block
-   * @returns The CBL block
+   * Validate the block's signature
+   * @param creator The creator to validate against
+   * @returns True if the signature is valid
    */
-  public static fromBaseBlockBuffer(
-    block: BaseBlock,
-    creator: BrightChainMember,
-  ): ConstituentBlockListBlock {
-    if (block.data instanceof Readable) {
-      throw new Error('Block.data must be a buffer');
+  public validateSignature(creator: BrightChainMember): boolean {
+    if (!this.canRead) {
+      throw new Error('Block cannot be read');
     }
-    const metadata = ConstituentBlockListBlock.parseHeader(block.data, creator);
-    const addressData = block.data.subarray(
-      ConstituentBlockListBlock.CblHeaderSize,
-    );
-    const cblMetadata: CblBlockMetadata = new CblBlockMetadata(
-      block.blockSize,
-      block.blockType,
-      block.blockDataType,
-      addressData.length,
-      metadata.originalDataLength,
-      metadata.dateCreated,
+
+    if (!creator) {
+      throw new Error('Creator must be provided for signature validation');
+    }
+
+    return ConstituentBlockListBlock.validateSignature(
+      this.data,
       creator,
-    );
-    return new ConstituentBlockListBlock(
-      creator,
-      cblMetadata,
-      block.data,
-      block.idChecksum,
-      metadata.creatorSignature,
+      this.blockSize,
     );
   }
 }

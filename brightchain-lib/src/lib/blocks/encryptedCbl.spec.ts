@@ -40,6 +40,7 @@ class TestCblBlock extends ConstituentBlockListBlock {
       dataAddresses.length,
       fileDataLength,
       Buffer.concat(dataAddresses),
+      blockSize,
       signature,
     );
     const data = Buffer.concat([

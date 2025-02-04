@@ -338,6 +338,7 @@ export class BlockService {
       blockIds.length,
       metadata.fileDataLength,
       blockIdsBuffer,
+      metadata.size,
     );
     const data = Buffer.concat([header.headerData, blockIdsBuffer]);
     const checksum = StaticHelpersChecksum.calculateChecksum(data);
