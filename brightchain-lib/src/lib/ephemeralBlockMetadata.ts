@@ -1,5 +1,8 @@
 import { BlockMetadata } from './blockMetadata';
 import { BrightChainMember } from './brightChainMember';
+import { BlockDataType } from './enumerations/blockDataType';
+import { BlockSize } from './enumerations/blockSizes';
+import { BlockType } from './enumerations/blockType';
 import { GuidV4 } from './guid';
 import { IEphemeralBlockMetadata } from './interfaces/ephemeralBlockMetadata';
 
@@ -10,9 +13,9 @@ export class EphemeralBlockMetadata
   private readonly _encrypted: boolean;
   private readonly _creator?: BrightChainMember | GuidV4;
   constructor(
-    size: number,
-    type: number,
-    dataType: number,
+    size: BlockSize,
+    type: BlockType,
+    dataType: BlockDataType,
     lengthWithoutPadding: number,
     encrypted: boolean,
     creator?: BrightChainMember | GuidV4,

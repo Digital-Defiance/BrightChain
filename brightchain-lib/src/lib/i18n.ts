@@ -1,5 +1,6 @@
 import constants from './constants';
 import { BlockSizeTranslations } from './enumeration-translations/blockSize';
+import { BlockTypeTranslations } from './enumeration-translations/blockType';
 import { MemberTypeTranslations } from './enumeration-translations/memberType';
 import { QuorumDataRecordActionTypeTranslations } from './enumeration-translations/quorumDataRecordAction';
 import { StringLanguages } from './enumerations/stringLanguages';
@@ -154,6 +155,7 @@ export const translate = (
  */
 export const translationsMap: TranslationsMap = {
   [TranslatableEnumType.BlockSize]: BlockSizeTranslations,
+  [TranslatableEnumType.BlockType]: BlockTypeTranslations,
   [TranslatableEnumType.MemberType]: MemberTypeTranslations,
   [TranslatableEnumType.QuorumDataRecordAction]:
     QuorumDataRecordActionTypeTranslations,

@@ -79,7 +79,7 @@ describe('blockSizes', () => {
     it('should handle edge cases', () => {
       expect(lengthToClosestBlockSize(0)).toBe(BlockSize.Message);
       expect(() => lengthToClosestBlockSize(-1)).toThrow(
-        'Invalid block size length -1',
+        'Invalid block size: -1',
       );
       expect(lengthToClosestBlockSize(268435457)).toBe(BlockSize.Huge);
       expect(lengthToClosestBlockSize(536870912)).toBe(BlockSize.Huge);

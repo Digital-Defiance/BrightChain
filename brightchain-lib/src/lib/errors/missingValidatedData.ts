@@ -10,5 +10,6 @@ export class MissingValidatedDataError extends Error {
     );
     this.data = data;
     this.name = 'MissingValidatedDataError';
+    Object.setPrototypeOf(this, MissingValidatedDataError.prototype);
   }
 }

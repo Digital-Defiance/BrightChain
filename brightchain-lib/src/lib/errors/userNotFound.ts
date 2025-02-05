@@ -5,5 +5,6 @@ import { HandleableError } from './handleable';
 export class UserNotFoundError extends HandleableError {
   constructor() {
     super(translate(StringNames.Error_UserNotFound));
+    this.name = 'UserNotFoundError';
   }
 }

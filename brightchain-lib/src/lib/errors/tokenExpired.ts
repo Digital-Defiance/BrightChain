@@ -7,5 +7,6 @@ export class TokenExpiredError extends HandleableError {
     super(translate(StringNames.Error_TokenExpired), {
       statusCode: 401,
     });
+    this.name = 'TokenExpiredError';
   }
 }

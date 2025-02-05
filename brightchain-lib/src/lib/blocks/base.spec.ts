@@ -1,8 +1,11 @@
 import { randomBytes } from 'crypto';
 import { BlockMetadata } from '../blockMetadata';
+import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
+import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
@@ -36,7 +39,9 @@ class TestBaseBlock extends BaseBlock {
         ? blockSize
         : (blockSize as number);
     if (data.length > effectiveSize) {
-      throw new Error('Data length exceeds block capacity');
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthExceedsCapacity,
+      );
     }
 
     const expectedChecksum = StaticHelpersChecksum.calculateChecksum(data);
@@ -97,21 +102,21 @@ class TestBaseBlock extends BaseBlock {
 
   public override get data(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     return this.internalData;
   }
 
   public override get layerHeaderData(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     return Buffer.alloc(0);
   }
 
   public override get payload(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     return this.internalData;
   }
@@ -197,7 +202,7 @@ describe('BaseBlock', () => {
       // Test oversized data
       const tooLargeData = randomBytes((defaultBlockSize as number) + 1);
       expect(() => createTestBlock({ data: tooLargeData })).toThrow(
-        'Data length exceeds block capacity',
+        BlockValidationError,
       );
     });
   });
@@ -251,7 +256,7 @@ describe('BaseBlock', () => {
       futureDate.setDate(futureDate.getDate() + 1);
 
       expect(() => createTestBlock({ dateCreated: futureDate })).toThrow(
-        'Date created cannot be in the future',
+        BlockValidationError,
       );
     });
   });

@@ -10,6 +10,83 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Common_Logo]: 'Logo',
   [StringNames.Common_Site]: site,
   [StringNames.Common_Unauthorized]: 'Unauthorized',
+  [StringNames.Error_BlockAccessTemplate]: 'Block cannot be accessed: {REASON}',
+  [StringNames.Error_BlockAccessErrorBlockAlreadyExists]:
+    'Block file already exists',
+  [StringNames.Error_BlockAccessErrorBlockIsNotPersistable]:
+    'Block is not persistable',
+  [StringNames.Error_BlockAccessErrorBlockIsNotReadable]:
+    'Block is not readable',
+  [StringNames.Error_BlockAccessErrorBlockFileNotFoundTemplate]:
+    'Block file not found: {FILE}',
+  [StringNames.Error_BlockAccessCBLCannotBeEncrypted]:
+    'CBL block cannot be encrypted',
+  [StringNames.Error_BlockAccessErrorCreatorMustBeProvided]:
+    'Creator must be provided for signature validation',
+  [StringNames.Error_BlockCapacityTemplate]:
+    'Block capacity exceeded: {DETAILS}',
+  [StringNames.Error_BlockMetadataErrorCreatorRequired]: 'Creator is required',
+  [StringNames.Error_BlockMetadataErrorEncryptorRequired]:
+    'Encryptor is required',
+  [StringNames.Error_BlockMetadataErrorInvalidBlockMetadata]:
+    'Invalid block metadata',
+  [StringNames.Error_BlockMetadataErrorInvalidBlockMetadataTemplate]:
+    'Invalid block metadata: {REASON}',
+  [StringNames.Error_BlockMetadataErrorMetadataRequired]:
+    'Metadata is required',
+  [StringNames.Error_BlockValidationTemplate]:
+    'Block validation failed: {REASON}',
+  [StringNames.Error_BlockValidationErrorActualDataLengthUnknown]:
+    'Actual data length is unknown',
+  [StringNames.Error_BlockValidationErrorAddressCountExceedsCapacity]:
+    'Address count exceeds block capacity',
+  [StringNames.Error_BlockValidationErrorBlockDataNotBuffer]:
+    'Block.data must be a buffer',
+  [StringNames.Error_BlockValidationErrorBlockSizeNegative]:
+    'Block size must be a positive number',
+  [StringNames.Error_BlockValidationErrorCreatorIDMismatch]:
+    'Creator ID mismatch',
+  [StringNames.Error_BlockValidationErrorDataBufferIsTruncated]:
+    'Data buffer is truncated',
+  [StringNames.Error_BlockValidationErrorDataLengthExceedsCapacity]:
+    'Data length exceeds block capacity',
+  [StringNames.Error_BlockValidationErrorDataLengthTooShort]:
+    'Data too short to contain encryption header',
+  [StringNames.Error_BlockValidationErrorDataLengthTooShortForCBLHeader]:
+    'Data too short for CBL header',
+  [StringNames.Error_BlockValidationErrorDataLengthTooShortForEncryptedCBL]:
+    'Data too short for encrypted CBL',
+  [StringNames.Error_BlockValidationErrorEphemeralBlockOnlySupportsBufferData]:
+    'EphemeralBlock only supports Buffer data',
+  [StringNames.Error_BlockValidationErrorFutureCreationDate]:
+    'Block creation date cannot be in the future',
+  [StringNames.Error_BlockValidationErrorInvalidAddressLengthTemplate]:
+    'Invalid address length at index {INDEX}: {LENGTH}, expected: {EXPECTED_LENGTH}',
+  [StringNames.Error_BlockValidationErrorInvalidAuthTagLength]:
+    'Invalid auth tag length',
+  [StringNames.Error_BlockValidationErrorInvalidBlockTypeTemplate]:
+    'Invalid block type: {TYPE}',
+  [StringNames.Error_BlockValidationErrorInvalidCBLAddressCount]:
+    'CBL address count must be a multiple of TupleSize',
+  [StringNames.Error_BlockValidationErrorInvalidCBLDataLength]:
+    'Invalid CBL data length',
+  [StringNames.Error_BlockValidationErrorInvalidDateCreated]:
+    'Invalid date created',
+  [StringNames.Error_BlockValidationErrorInvalidEncryptionHeaderLength]:
+    'Invalid encryption header length',
+  [StringNames.Error_BlockValidationErrorInvalidEphemeralPublicKeyLength]:
+    'Invalid ephemeral public key length',
+  [StringNames.Error_BlockValidationErrorInvalidIVLength]: 'Invalid IV length',
+  [StringNames.Error_BlockValidationErrorInvalidSignature]:
+    'Invalid signature provided',
+  [StringNames.Error_BlockValidationErrorInvalidTupleSizeTemplate]:
+    'Tuple size must be between {MIN_TUPLE_SIZE} and ${MAX_TUPLE_SIZE}',
+  [StringNames.Error_BlockValidationErrorMethodMustBeImplementedByDerivedClass]:
+    'Method must be implemented by derived class',
+  [StringNames.Error_BlockValidationErrorNoChecksum]: 'No checksum provided',
+  [StringNames.Error_BlockValidationErrorOriginalDataLengthNegative]:
+    'Original data length cannot be negative',
+  [StringNames.Error_BlockMetadataTemplate]: 'Block metadata error: {DETAILS}',
   [StringNames.Error_ChecksumMismatchTemplate]:
     'Checksum mismatch: expected {EXPECTED}, got {CHECKSUM}',
   [StringNames.Error_InvalidBlockSizeTemplate]:

@@ -1,16 +1,22 @@
+import { Readable } from 'stream';
 import { BlockMetadata } from '../blockMetadata';
 import { BrightChainMember } from '../brightChainMember';
 import { CblBlockMetadata } from '../cblBlockMetadata';
-import { TUPLE_SIZE } from '../constants';
+import { MAX_TUPLE_SIZE, MIN_TUPLE_SIZE, TUPLE_SIZE } from '../constants';
+import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize, lengthToBlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import { GuidBrandType } from '../enumerations/guidBrandType';
+import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { GuidV4 } from '../guid';
 import { IConstituentBlockListBlock } from '../interfaces/cbl';
+import { IConstituentBlockListBlockHeader } from '../interfaces/cblHeader';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
-import { ChecksumBuffer, SignatureBuffer } from '../types';
+import { ChecksumBuffer, RawGuidBuffer, SignatureBuffer } from '../types';
+import { BaseBlock } from './base';
 import { EphemeralBlock } from './ephemeral';
 import { BlockHandle } from './handle';
 import { BlockHandleTuple } from './handleTuple';
@@ -150,7 +156,9 @@ export class ConstituentBlockListBlock
             signature,
           )
         ) {
-          throw new Error('Invalid signature provided');
+          throw new BlockValidationError(
+            BlockValidationErrorType.InvalidSignature,
+          );
         }
         finalSignature = Buffer.from(signature) as SignatureBuffer;
       } else {
@@ -189,7 +197,7 @@ export class ConstituentBlockListBlock
     blockSize?: BlockSize,
   ): boolean {
     if (!creator) {
-      throw new Error('Creator must be provided for signature validation');
+      throw new BlockAccessError(BlockAccessErrorType.CreatorMustBeProvided);
     }
 
     // Get the header without signature
@@ -278,7 +286,9 @@ export class ConstituentBlockListBlock
       ConstituentBlockListBlock.HeaderOffsets.TupleSize,
     );
     if (addressCount % tupleSize !== 0) {
-      throw new Error('CBL address count must be a multiple of TupleSize');
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidCBLAddressCount,
+      );
     }
 
     // Verify address count is within capacity
@@ -287,7 +297,9 @@ export class ConstituentBlockListBlock
       false, // Don't account for encryption overhead since this is raw data
     );
     if (addressCount > maxAddresses) {
-      throw new Error('Address count exceeds block capacity');
+      throw new BlockValidationError(
+        BlockValidationErrorType.AddressCountExceedsCapacity,
+      );
     }
 
     // Store creator for signature validation
@@ -306,7 +318,9 @@ export class ConstituentBlockListBlock
       // validate the signature
       if (!signatureFromHeader.equals(signature)) {
         if (!ConstituentBlockListBlock.validateSignature(data, creator)) {
-          throw new Error('Invalid creator signature');
+          throw new BlockValidationError(
+            BlockValidationErrorType.InvalidSignature,
+          );
         }
       }
     }
@@ -347,7 +361,9 @@ export class ConstituentBlockListBlock
           this._creatorSignature,
         )
       ) {
-        throw new Error('Invalid signature');
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidSignature,
+        );
       }
     }
   }
@@ -370,12 +386,16 @@ export class ConstituentBlockListBlock
       false, // Don't account for encryption overhead since this is raw data
     );
     if (addressCount > maxAddresses) {
-      throw new Error('Address count exceeds block capacity');
+      throw new BlockValidationError(
+        BlockValidationErrorType.AddressCountExceedsCapacity,
+      );
     }
 
     // Verify we have enough data
     if (end > data.length) {
-      throw new Error('Data buffer is truncated');
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataBufferIsTruncated,
+      );
     }
 
     // Extract address data and create a new buffer to avoid sharing references
@@ -387,8 +407,14 @@ export class ConstituentBlockListBlock
       const e = s + checksumLength;
       const addr = addressData.subarray(s, e);
       if (addr.length !== checksumLength) {
-        throw new Error(
-          `Invalid address length at index ${i}: ${addr.length}, expected: ${checksumLength}`,
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidAddressLength,
+          undefined,
+          {
+            index: i,
+            length: addr.length,
+            expectedLength: checksumLength,
+          },
         );
       }
     }
@@ -401,7 +427,7 @@ export class ConstituentBlockListBlock
    */
   public getCblBlockIds(): Array<ChecksumBuffer> {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     const addressCount = this._cblAddressCount;
     const checksumLength = StaticHelpersChecksum.Sha3ChecksumBufferLength;
@@ -425,7 +451,7 @@ export class ConstituentBlockListBlock
     getDiskBlockPath: (id: ChecksumBuffer, blockSize: BlockSize) => string,
   ): Promise<Array<BlockHandleTuple>> {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     const handleTuples: Array<BlockHandleTuple> = [];
     const blockIds = this.getCblBlockIds();
@@ -459,7 +485,7 @@ export class ConstituentBlockListBlock
    */
   public get addressData(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     return Buffer.from(this._addressData);
   }
@@ -469,7 +495,7 @@ export class ConstituentBlockListBlock
    */
   public get addresses(): Array<ChecksumBuffer> {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     return this.getCblBlockIds();
   }
@@ -479,7 +505,7 @@ export class ConstituentBlockListBlock
    */
   public get cblAddressCount(): number {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     return this._cblAddressCount;
   }
@@ -489,7 +515,7 @@ export class ConstituentBlockListBlock
    */
   public get creatorSignature(): SignatureBuffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     return Buffer.from(this._creatorSignature) as SignatureBuffer;
   }
@@ -499,7 +525,7 @@ export class ConstituentBlockListBlock
    */
   public override get creatorId(): GuidV4 {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     return this._blockCreatorId;
   }
@@ -509,7 +535,7 @@ export class ConstituentBlockListBlock
    */
   public get originalDataLength(): bigint {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     return this._originalDataLength;
   }
@@ -519,9 +545,133 @@ export class ConstituentBlockListBlock
    */
   public get tupleSize(): number {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     return this._tupleSize;
+  }
+
+  /**
+   * Parse a CBL header
+   * @param data The raw block data (full block with data and padding)
+   * @returns The CBL header fields
+   */
+  public static parseHeader(
+    data: Buffer,
+    creatorForValidation?: BrightChainMember,
+  ): IConstituentBlockListBlockHeader {
+    // guid self validates
+    const creatorId = new GuidV4(
+      data.subarray(
+        ConstituentBlockListBlock.HeaderOffsets.CreatorId,
+        ConstituentBlockListBlock.HeaderOffsets.CreatorId +
+          ConstituentBlockListBlock.CreatorLength,
+      ) as RawGuidBuffer,
+    );
+    if (creatorForValidation && !creatorForValidation.id.equals(creatorId)) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.CreatorIDMismatch,
+      );
+    }
+    const dateHigh = data.readUint32BE(
+      ConstituentBlockListBlock.HeaderOffsets.DateCreated,
+    );
+    const dateLow = data.readUint32BE(
+      ConstituentBlockListBlock.HeaderOffsets.DateCreated + 4,
+    );
+    const dateCreated = new Date(
+      Number((BigInt(dateHigh) << 32n) | BigInt(dateLow)),
+    );
+    if (isNaN(dateCreated.getTime())) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidDateCreated,
+      );
+    } else if (dateCreated > new Date()) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.FutureCreationDate,
+      );
+    }
+    const cblAddressCount = data.readUint32BE(
+      ConstituentBlockListBlock.HeaderOffsets.CblAddressCount,
+    );
+    if (
+      cblAddressCount < 0 ||
+      cblAddressCount >
+        ConstituentBlockListBlock.CalculateCBLAddressCapacity(
+          lengthToBlockSize(data.length),
+        )
+    ) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidCBLAddressCount,
+      );
+    }
+    const originalDataLength = data.readBigInt64BE(
+      ConstituentBlockListBlock.HeaderOffsets.OriginalDataLength,
+    );
+    if (originalDataLength < 0n) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.OriginalDataLengthNegative,
+      );
+    }
+    const tupleSize = data.readUint8(
+      ConstituentBlockListBlock.HeaderOffsets.TupleSize,
+    );
+    if (tupleSize < MIN_TUPLE_SIZE || tupleSize > MAX_TUPLE_SIZE) {
+      throw new BlockValidationError(BlockValidationErrorType.InvalidTupleSize);
+    }
+    const creatorSignature = data.subarray(
+      ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
+      ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
+        StaticHelpersECIES.signatureLength,
+    ) as SignatureBuffer;
+    if (
+      creatorForValidation &&
+      !ConstituentBlockListBlock.validateSignature(data, creatorForValidation)
+    ) {
+      throw new BlockValidationError(BlockValidationErrorType.InvalidSignature);
+    }
+
+    return {
+      creatorId,
+      dateCreated,
+      cblAddressCount,
+      originalDataLength,
+      tupleSize,
+      creatorSignature,
+    };
+  }
+
+  /**
+   * Create a CBL block from a buffer
+   * @param block - The block to convert
+   * @param creator - The creator of the block
+   * @returns The CBL block
+   */
+  public static fromBaseBlockBuffer(
+    block: BaseBlock,
+    creator: BrightChainMember,
+  ): ConstituentBlockListBlock {
+    if (block.data instanceof Readable) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.BlockDataNotBuffer,
+      );
+    }
+    const metadata = ConstituentBlockListBlock.parseHeader(block.data, creator);
+    const cblMetadata: CblBlockMetadata = new CblBlockMetadata(
+      block.blockSize,
+      block.blockType,
+      block.blockDataType,
+      block.metadata.lengthWithoutPadding,
+      metadata.originalDataLength,
+      metadata.dateCreated,
+      creator,
+    );
+    return new ConstituentBlockListBlock(
+      creator,
+      cblMetadata,
+      block.data,
+      block.idChecksum,
+      metadata.creatorSignature,
+    );
   }
 
   /**
@@ -531,11 +681,11 @@ export class ConstituentBlockListBlock
    */
   public validateSignature(creator: BrightChainMember): boolean {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
 
     if (!creator) {
-      throw new Error('Creator must be provided for signature validation');
+      throw new BlockAccessError(BlockAccessErrorType.CreatorMustBeProvided);
     }
 
     return ConstituentBlockListBlock.validateSignature(

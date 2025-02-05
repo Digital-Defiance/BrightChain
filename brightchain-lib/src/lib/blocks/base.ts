@@ -1,8 +1,11 @@
 import { Readable } from 'stream';
 import { BlockMetadata } from '../blockMetadata';
+import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize, validateBlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
+import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { IBlock } from '../interfaces/blockBase';
 import { IBlockMetadata } from '../interfaces/blockMetadata';
@@ -155,8 +158,10 @@ export abstract class BaseBlock implements IBlock {
     canPersist = true,
   ) {
     // Validate block size
-    if (!metadata.size || (metadata.size as number) <= 0) {
-      throw new Error('Invalid block size');
+    if (!metadata.size || !validateBlockSize(metadata.size)) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.BlockSizeNegative,
+      );
     }
 
     // Store basic properties first so capacity calculation works
@@ -172,7 +177,9 @@ export abstract class BaseBlock implements IBlock {
     const now = new Date();
     this._dateCreated = metadata ? new Date(metadata?.dateCreated) : now;
     if (this._dateCreated > now) {
-      throw new Error('Date created cannot be in the future');
+      throw new BlockValidationError(
+        BlockValidationErrorType.FutureCreationDate,
+      );
     }
 
     // Store or create metadata
@@ -345,7 +352,7 @@ export abstract class BaseBlock implements IBlock {
    */
   public get fullHeaderData(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     const headers = this.layers.map((layer) => layer.layerHeaderData);
     return Buffer.concat(headers);

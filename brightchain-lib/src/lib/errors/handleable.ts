@@ -29,6 +29,8 @@ export class HandleableError extends Error {
     if (this.cause && this.cause.stack) {
       this.stack = this.stack + '\nCaused by: ' + this.cause.stack;
     }
+
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 
   public get handled(): boolean {
