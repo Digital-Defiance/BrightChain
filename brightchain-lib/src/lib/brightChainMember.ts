@@ -6,7 +6,9 @@ import {
   PublicKey,
 } from 'paillier-bigint';
 import { EmailString } from './emailString';
+import { MemberErrorType } from './enumerations/memberErrorType';
 import { MemberType } from './enumerations/memberType';
+import { MemberError } from './errors/memberError';
 import { GuidV4 } from './guid';
 import { IMemberDTO } from './interfaces/memberDto';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
@@ -57,10 +59,10 @@ export class BrightChainMember {
     }
     this.name = name;
     if (!this.name || this.name.length == 0) {
-      throw new Error('Member name missing');
+      throw new MemberError(MemberErrorType.MissingMemberName);
     }
     if (this.name.trim() != this.name) {
-      throw new Error('Member name has leading or trailing spaces');
+      throw new MemberError(MemberErrorType.InvalidMemberNameWhitespace);
     }
     this.contactEmail = contactEmail;
 
@@ -92,14 +94,14 @@ export class BrightChainMember {
 
   public get votingPublicKey(): PublicKey {
     if (!this._votingPublicKey) {
-      throw new Error('No voting public key');
+      throw new MemberError(MemberErrorType.MissingVotingPublicKey);
     }
     return this._votingPublicKey;
   }
 
   public get votingPrivateKey(): PrivateKey {
     if (!this._votingPrivateKey) {
-      throw new Error('No voting private key');
+      throw new MemberError(MemberErrorType.MissingVotingPrivateKey);
     }
     return this._votingPrivateKey;
   }
@@ -110,7 +112,7 @@ export class BrightChainMember {
 
   public get privateKey(): Buffer {
     if (!this._privateKey) {
-      throw new Error('No private key');
+      throw new MemberError(MemberErrorType.MissingPrivateKey);
     }
     return this._privateKey;
   }
@@ -136,7 +138,7 @@ export class BrightChainMember {
       !testDecrypted ||
       testDecrypted.toString('hex') !== nonce.toString('hex')
     ) {
-      throw new Error('Incorrect or invalid private key for public key');
+      throw new MemberError(MemberErrorType.IncorrectOrInvalidPrivateKey);
     }
     this._privateKey = value;
   }
@@ -147,7 +149,7 @@ export class BrightChainMember {
 
   public get wallet(): Wallet {
     if (!this._wallet) {
-      throw new Error('No wallet');
+      throw new MemberError(MemberErrorType.NoWallet);
     }
     return this._wallet;
   }
@@ -167,7 +169,7 @@ export class BrightChainMember {
 
   public loadWallet(mnemonic: string): void {
     if (this._wallet) {
-      throw new Error('Wallet already loaded');
+      throw new MemberError(MemberErrorType.WalletAlreadyLoaded);
     }
     const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
     const privateKey = wallet.getPrivateKey();
@@ -177,7 +179,7 @@ export class BrightChainMember {
     if (
       publicKeyWithPrefix.toString('hex') !== this.publicKey.toString('hex')
     ) {
-      throw new Error('Incorrect or invalid mnemonic for public key');
+      throw new MemberError(MemberErrorType.InvalidMnemonic);
     }
     this._wallet = wallet;
     this._privateKey = privateKey;
@@ -185,7 +187,7 @@ export class BrightChainMember {
 
   public deriveVotingKeyPair(): void {
     if (!this._privateKey) {
-      throw new Error('No private key');
+      throw new MemberError(MemberErrorType.MissingPrivateKey);
     }
     const { privateKey: votingPrivateKey } =
       StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
@@ -226,7 +228,9 @@ export class BrightChainMember {
 
     // Derive voting keys from ECDH keys
     if (!this._privateKey) {
-      throw new Error('Private key required to derive voting key pair');
+      throw new MemberError(
+        MemberErrorType.PrivateKeyRequiredToDeriveVotingKeyPair,
+      );
     }
 
     return StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
@@ -251,16 +255,16 @@ export class BrightChainMember {
   ): BrightChainMember {
     // Validate inputs first
     if (!name || name.length == 0) {
-      throw new Error('Member name missing');
+      throw new MemberError(MemberErrorType.MissingMemberName);
     }
     if (name.trim() != name) {
-      throw new Error('Member name has leading or trailing spaces');
+      throw new MemberError(MemberErrorType.InvalidMemberNameWhitespace);
     }
     if (!contactEmail || contactEmail.toString().length == 0) {
-      throw new Error('Email missing');
+      throw new MemberError(MemberErrorType.MissingEmail);
     }
     if (contactEmail.toString().trim() != contactEmail.toString()) {
-      throw new Error('Email has leading or trailing spaces');
+      throw new MemberError(MemberErrorType.InvalidEmailWhitespace);
     }
 
     const newId = GuidV4.new();

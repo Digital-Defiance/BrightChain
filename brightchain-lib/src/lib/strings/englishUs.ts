@@ -23,6 +23,8 @@ export const AmericanEnglishStrings: StringsCollection = {
     'CBL block cannot be encrypted',
   [StringNames.Error_BlockAccessErrorCreatorMustBeProvided]:
     'Creator must be provided for signature validation',
+  [StringNames.Error_BlockCannotBeDecrypted]: 'Block cannot be decrypted',
+  [StringNames.Error_BlockCannotBeEncrypted]: 'Block cannot be encrypted',
   [StringNames.Error_BlockCapacityTemplate]:
     'Block capacity exceeded: {DETAILS}',
   [StringNames.Error_BlockMetadataErrorCreatorRequired]: 'Creator is required',
@@ -34,6 +36,8 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Invalid block metadata: {REASON}',
   [StringNames.Error_BlockMetadataErrorMetadataRequired]:
     'Metadata is required',
+  [StringNames.Error_BlockMetadataErrorMissingRequiredMetadata]:
+    'Missing required metadata fields',
   [StringNames.Error_BlockValidationTemplate]:
     'Block validation failed: {REASON}',
   [StringNames.Error_BlockValidationErrorActualDataLengthUnknown]:
@@ -48,6 +52,8 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Creator ID mismatch',
   [StringNames.Error_BlockValidationErrorDataBufferIsTruncated]:
     'Data buffer is truncated',
+  [StringNames.Error_BlockValidationErrorDataCannotBeEmpty]:
+    'Data cannot be empty',
   [StringNames.Error_BlockValidationErrorDataLengthExceedsCapacity]:
     'Data length exceeds block capacity',
   [StringNames.Error_BlockValidationErrorDataLengthTooShort]:
@@ -91,9 +97,41 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Checksum mismatch: expected {EXPECTED}, got {CHECKSUM}',
   [StringNames.Error_InvalidBlockSizeTemplate]:
     'Invalid block size: {BLOCK_SIZE}',
+  [StringNames.Error_InvalidCredentials]: 'Invalid credentials.',
+  [StringNames.Error_InvalidEmail]: 'Invalid email.',
+  [StringNames.Error_InvalidEmailMissing]: 'Missing email.',
+  [StringNames.Error_InvalidEmailWhitespace]:
+    'Email contains trailing or leading whitespace.',
+  [StringNames.Error_InvalidGuid]: 'Invalid GUID.',
+  [StringNames.Error_InvalidGuidTemplate]: 'Invalid GUID: {GUID}',
+  [StringNames.Error_InvalidGuidUnknownBrandTemplate]:
+    'Unknown GUID brand: {BRAND}.',
+  [StringNames.Error_InvalidGuidUnknownLengthTemplate]:
+    'Invalid GUID length: {LENGTH}.',
   [StringNames.Error_InvalidLanguageCode]: 'Invalid language code.',
+  [StringNames.Error_InvalidSessionID]: 'Invalid session ID.',
   [StringNames.Error_InvalidTupleCountTemplate]:
     'Invalid tuple count ({TUPLE_COUNT}), must be between {MIN_TUPLE_SIZE} and {MAX_TUPLE_SIZE}',
+  [StringNames.Error_MemberErrorIncorrectOrInvalidPrivateKey]:
+    'Incorrect or invalid private key for public key',
+  [StringNames.Error_MemberErrorInvalidEmail]: 'Invalid email.',
+  [StringNames.Error_MemberErrorInvalidEmailWhitespace]:
+    'Email contains trailing or leading whitespace.',
+  [StringNames.Error_MemberErrorInvalidMemberName]: 'Invalid member name.',
+  [StringNames.Error_MemberErrorInvalidMemberNameWhitespace]:
+    'Member name contains trailing or leading whitespace.',
+  [StringNames.Error_MemberErrorInvalidMnemonic]: 'Invalid wallet mnemonic.',
+  [StringNames.Error_MemberErrorMissingEmail]: 'Missing email.',
+  [StringNames.Error_MemberErrorMissingMemberName]: 'Missing member name.',
+  [StringNames.Error_MemberErrorMissingVotingPrivateKey]:
+    'Missing voting private key.',
+  [StringNames.Error_MemberErrorMissingVotingPublicKey]:
+    'Missing voting public key.',
+  [StringNames.Error_MemberErrorMissingPrivateKey]: 'Missing private key.',
+  [StringNames.Error_MemberErrorNoWallet]: 'No wallet loaded.',
+  [StringNames.Error_MemberErrorPrivateKeyRequiredToDeriveVotingKeyPair]:
+    'Private key required to derive voting key pair.',
+  [StringNames.Error_MemberErrorWalletAlreadyLoaded]: 'Wallet already loaded.',
   [StringNames.Error_MetadataMismatch]: 'Metadata mismatch.',
   [StringNames.Error_TokenExpired]: 'Token expired.',
   [StringNames.Error_TokenInvalid]: 'Token invalid.',
