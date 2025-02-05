@@ -6,6 +6,7 @@ import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
+import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
@@ -161,7 +162,7 @@ describe('EphemeralBlock', () => {
       // Test oversized data
       const tooLargeData = randomBytes((defaultBlockSize as number) + 1);
       await expect(createTestBlock({ data: tooLargeData })).rejects.toThrow(
-        'Data length exceeds block capacity',
+        BlockValidationError,
       );
     });
   });
@@ -231,7 +232,7 @@ describe('EphemeralBlock', () => {
 
       await expect(
         createTestBlock({ data: corruptedData, checksum }),
-      ).rejects.toThrow('Checksum mismatch');
+      ).rejects.toThrow(ChecksumMismatchError);
     });
 
     it('should reject future dates', async () => {
@@ -240,7 +241,7 @@ describe('EphemeralBlock', () => {
 
       await expect(
         createTestBlock({ dateCreated: futureDate }),
-      ).rejects.toThrow('Date created cannot be in the future');
+      ).rejects.toThrow(BlockValidationError);
     });
   });
 });
