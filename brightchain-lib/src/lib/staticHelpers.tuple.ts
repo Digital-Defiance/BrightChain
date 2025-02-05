@@ -317,6 +317,7 @@ export abstract class StaticHelpersTuple {
           blockIDCount,
           sourceLength,
           blockIDs,
+          blockSize,
         ).headerData,
         blockIDs,
       ]);
@@ -451,6 +452,7 @@ export abstract class StaticHelpersTuple {
         blockIDs.length,
         sourceLength,
         Buffer.concat([blockIDs]),
+        blockSize,
       );
       const data = Buffer.concat([
         cblHeader.headerData,

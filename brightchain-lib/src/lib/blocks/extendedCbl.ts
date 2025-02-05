@@ -86,8 +86,8 @@ export class ExtendedCBL
    * @param dataAddresses - List of data block references
    * @param fileName - Original file name
    * @param mimeType - File content MIME type
-   * @param dateCreated - Block creation timestamp
    * @param signature - Creator's signature
+   * @param dateCreated - Block creation timestamp
    * @param tupleSize - Size of block tuples
    */
   constructor(
@@ -97,8 +97,8 @@ export class ExtendedCBL
     dataAddresses: Array<ChecksumBuffer>,
     fileName: string,
     mimeType: string,
+    signature: SignatureBuffer,
     dateCreated?: Date,
-    signature?: SignatureBuffer,
     tupleSize?: number,
   ) {
     try {
@@ -135,6 +135,7 @@ export class ExtendedCBL
         dataAddresses.length,
         fileDataLength,
         Buffer.concat(dataAddresses),
+        blockSize,
         signature,
         tupleSize,
       );
@@ -333,7 +334,7 @@ export class ExtendedCBL
       throw new Error('Creator is required for signature validation');
     }
 
-    return ConstituentBlockListBlock.ValidateSignature(
+    return ConstituentBlockListBlock.validateSignature(
       this.data,
       validationCreator,
     );

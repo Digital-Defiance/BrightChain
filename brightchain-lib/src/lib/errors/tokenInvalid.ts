@@ -7,5 +7,6 @@ export class TokenInvalidError extends HandleableError {
     super(translate(StringNames.Error_TokenInvalid), {
       statusCode: 401,
     });
+    this.name = 'TokenInvalidError';
   }
 }

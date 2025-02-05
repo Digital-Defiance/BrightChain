@@ -12,6 +12,11 @@
  * - Large blocks (64MB - 256MB): Better for large files, more efficient storage
  */
 
+import { InvalidBlockSizeError } from '../errors/invalidBlockSize';
+import { InvalidBlockSizeLengthError } from '../errors/invalidBlockSizeLength';
+import { translateEnum } from '../i18n';
+import { TranslatableEnumType } from './translatableEnum';
+
 /**
  * Block size exponents (2^x) for calculating block sizes.
  * These are chosen to provide a good range of sizes while maintaining
@@ -110,12 +115,30 @@ export const validBlockSizes = [
  * Used for display and logging purposes.
  */
 export const validBlockSizeStrings = [
-  'Message',
-  'Tiny',
-  'Small',
-  'Medium',
-  'Large',
-  'Huge',
+  translateEnum({
+    type: TranslatableEnumType.BlockSize,
+    value: BlockSize.Message,
+  }),
+  translateEnum({
+    type: TranslatableEnumType.BlockSize,
+    value: BlockSize.Tiny,
+  }),
+  translateEnum({
+    type: TranslatableEnumType.BlockSize,
+    value: BlockSize.Small,
+  }),
+  translateEnum({
+    type: TranslatableEnumType.BlockSize,
+    value: BlockSize.Medium,
+  }),
+  translateEnum({
+    type: TranslatableEnumType.BlockSize,
+    value: BlockSize.Large,
+  }),
+  translateEnum({
+    type: TranslatableEnumType.BlockSize,
+    value: BlockSize.Huge,
+  }),
 ];
 
 /**
@@ -157,7 +180,7 @@ export function blockSizeInfoBySize(blockSize: BlockSize): {
 export function lengthToBlockSizeIndex(length: number): number {
   const index = blockSizeLengths.indexOf(length);
   if (index < 0) {
-    throw new Error(`Invalid block size length ${length}`);
+    throw new InvalidBlockSizeLengthError(length);
   }
   return index;
 }
@@ -180,7 +203,7 @@ export function lengthToBlockSize(length: number): BlockSize {
  */
 export function lengthToClosestBlockSize(length: number): BlockSize {
   if (length < 0) {
-    throw new Error(`Invalid block size length ${length}`);
+    throw new InvalidBlockSizeLengthError(length);
   }
   for (let i = 0; i < blockSizeLengths.length; i++) {
     if (length <= blockSizeLengths[i]) {
@@ -208,7 +231,7 @@ export function validateBlockSize(length: number): boolean {
 export function sizeToSizeString(blockSize: BlockSize): string {
   const index = validBlockSizes.indexOf(blockSize);
   if (index < 0) {
-    throw new Error(`Invalid block size ${blockSize}`);
+    throw new InvalidBlockSizeError(blockSize);
   }
   return validBlockSizeStrings[index];
 }

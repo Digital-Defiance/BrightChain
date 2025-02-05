@@ -1,5 +1,7 @@
 import { BrightChainMember } from './brightChainMember';
+import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
+import { BlockType } from './enumerations/blockType';
 import { EphemeralBlockMetadata } from './ephemeralBlockMetadata';
 import { GuidV4 } from './guid';
 import { ICBLBlockMetadata } from './interfaces/cblBlockMetadata';
@@ -14,8 +16,8 @@ export class CblBlockMetadata
   }
   constructor(
     size: BlockSize,
-    type: number,
-    dataType: number,
+    type: BlockType,
+    dataType: BlockDataType,
     originalDataLength: number,
     fileDataLength: bigint,
     dateCreated?: Date,

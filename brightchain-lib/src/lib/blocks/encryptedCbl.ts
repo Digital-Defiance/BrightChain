@@ -1,8 +1,16 @@
 import { BrightChainMember } from '../brightChainMember';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
+import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
+import { BlockMetadataErrorType } from '../enumerations/blockMetadataErrorType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
+import {
+  BlockAccessError,
+  BlockMetadataError,
+  BlockValidationError,
+} from '../errors/block';
 import { GuidV4 } from '../guid';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
@@ -43,10 +51,14 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     const now = new Date();
     const finalDate = dateCreated ?? now;
     if (isNaN(finalDate.getTime())) {
-      throw new Error('Invalid date created');
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidDateCreated,
+      );
     }
     if (finalDate > now) {
-      throw new Error('Date created cannot be in the future');
+      throw new BlockValidationError(
+        BlockValidationErrorType.FutureCreationDate,
+      );
     }
 
     // For encrypted CBL blocks, we need to validate:
@@ -55,7 +67,9 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
       ConstituentBlockListBlock.CblHeaderSize +
       StaticHelpersECIES.eciesOverheadLength;
     if (data.length < minDataSize) {
-      throw new Error('Data too short for encrypted CBL');
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthTooShortForEncryptedCBL,
+      );
     }
 
     return EncryptedBlockFactory.createBlock(
@@ -80,11 +94,11 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     encryptor: BrightChainMember,
   ): Promise<EncryptedConstituentBlockListBlock> {
     if (!cbl.canEncrypt) {
-      throw new Error('CBL block cannot be encrypted');
+      throw new BlockAccessError(BlockAccessErrorType.CBLCannotBeEncrypted);
     }
 
     if (!encryptor) {
-      throw new Error('Encryptor is required');
+      throw new BlockMetadataError(BlockMetadataErrorType.EncryptorRequired);
     }
 
     // Encrypt the CBL data
@@ -96,7 +110,7 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     // The creator of the encrypted block should be the same as the original block
     // This maintains the ownership chain and allows for signature validation
     if (!cbl.creator && !cbl.creatorId) {
-      throw new Error('Original block must have a creator');
+      throw new BlockMetadataError(BlockMetadataErrorType.CreatorRequired);
     }
 
     const checksum =
@@ -187,7 +201,7 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
    */
   public override get payload(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
 
     // For encrypted CBL blocks:
@@ -205,7 +219,9 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
       this.actualDataLength % StaticHelpersChecksum.Sha3ChecksumBufferLength !==
       0
     ) {
-      throw new Error('Invalid CBL data length');
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidCBLDataLength,
+      );
     }
 
     return encryptedPayload;
@@ -221,7 +237,9 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     // Validate CBL-specific constraints
     const minDataSize = ConstituentBlockListBlock.CblHeaderSize;
     if (this.actualDataLength < minDataSize) {
-      throw new Error('Data too short for CBL header');
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthTooShortForCBLHeader,
+      );
     }
 
     // Validate that the remaining data length (after header) is a multiple of checksum length
@@ -231,14 +249,18 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
       dataAfterHeader % StaticHelpersChecksum.Sha3ChecksumBufferLength !==
       0
     ) {
-      throw new Error('Invalid CBL data length');
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidCBLDataLength,
+      );
     }
 
     // Validate total size fits within block
     const totalSize =
       this.actualDataLength + StaticHelpersECIES.eciesOverheadLength;
     if (totalSize > this.blockSize) {
-      throw new Error('Data length exceeds block capacity');
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthExceedsCapacity,
+      );
     }
   }
 
@@ -252,7 +274,9 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     // Validate CBL-specific constraints
     const minDataSize = ConstituentBlockListBlock.CblHeaderSize;
     if (this.actualDataLength < minDataSize) {
-      throw new Error('Data too short for CBL header');
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthTooShortForCBLHeader,
+      );
     }
 
     // Validate that the remaining data length (after header) is a multiple of checksum length
@@ -262,14 +286,18 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
       dataAfterHeader % StaticHelpersChecksum.Sha3ChecksumBufferLength !==
       0
     ) {
-      throw new Error('Invalid CBL data length');
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidCBLDataLength,
+      );
     }
 
     // Validate total size fits within block
     const totalSize =
       this.actualDataLength + StaticHelpersECIES.eciesOverheadLength;
     if (totalSize > this.blockSize) {
-      throw new Error('Data length exceeds block capacity');
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthExceedsCapacity,
+      );
     }
   }
 }

@@ -3,7 +3,9 @@ import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
+import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
@@ -52,12 +54,16 @@ export class EncryptedBlockFactory {
   ): Promise<EncryptedBlock> {
     // Validate data length
     if (data.length < StaticHelpersECIES.eciesOverheadLength) {
-      throw new Error('Data too short to contain encryption header');
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthTooShort,
+      );
     }
 
     // Total data length must not exceed block size
     if (data.length > (blockSize as number)) {
-      throw new Error('Data length exceeds block capacity');
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthExceedsCapacity,
+      );
     }
 
     // For encrypted blocks with known actual data length:
@@ -67,7 +73,9 @@ export class EncryptedBlockFactory {
       const availableCapacity =
         (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
       if (actualDataLength > availableCapacity) {
-        throw new Error('Data length exceeds block capacity');
+        throw new BlockValidationError(
+          BlockValidationErrorType.DataLengthExceedsCapacity,
+        );
       }
     }
 
@@ -90,7 +98,10 @@ export class EncryptedBlockFactory {
 
     const Constructor = this.blockConstructors[type];
     if (!Constructor) {
-      throw new Error(`Invalid block type ${type}`);
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidBlockType,
+        type,
+      );
     }
 
     return new Constructor(
