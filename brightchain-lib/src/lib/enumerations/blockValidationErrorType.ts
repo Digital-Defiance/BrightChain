@@ -7,6 +7,7 @@ export enum BlockValidationErrorType {
   BlockSizeNegative = 'BlockSizeNegative',
   CreatorIDMismatch = 'CreatorIDMismatch',
   DataBufferIsTruncated = 'DataBufferIsTruncated',
+  DataCannotBeEmpty = 'DataCannotBeEmpty',
   DataLengthExceedsCapacity = 'DataLengthExceedsCapacity',
   DataLengthTooShort = 'DataLengthTooShort',
   DataLengthTooShortForCBLHeader = 'DataLengthTooShortForCBLHeader',
@@ -42,6 +43,8 @@ export const BlockValidationErrorTypes: {
     StringNames.Error_BlockValidationErrorBlockSizeNegative,
   [BlockValidationErrorType.DataBufferIsTruncated]:
     StringNames.Error_BlockValidationErrorDataBufferIsTruncated,
+  [BlockValidationErrorType.DataCannotBeEmpty]:
+    StringNames.Error_BlockValidationErrorDataCannotBeEmpty,
   [BlockValidationErrorType.CreatorIDMismatch]:
     StringNames.Error_BlockValidationErrorCreatorIDMismatch,
   [BlockValidationErrorType.DataLengthExceedsCapacity]:

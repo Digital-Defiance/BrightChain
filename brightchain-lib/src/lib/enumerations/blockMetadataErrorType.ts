@@ -5,6 +5,7 @@ export enum BlockMetadataErrorType {
   EncryptorRequired = 'EncryptorRequired',
   InvalidBlockMetadata = 'InvalidBlockMetadata',
   MetadataRequired = 'MetadataRequired',
+  MissingRequiredMetadata = 'MissingRequiredMetadata',
 }
 
 export const BlockMetadataErrorTypes: {
@@ -18,4 +19,6 @@ export const BlockMetadataErrorTypes: {
     StringNames.Error_BlockMetadataErrorInvalidBlockMetadata,
   [BlockMetadataErrorType.MetadataRequired]:
     StringNames.Error_BlockMetadataErrorMetadataRequired,
+  [BlockMetadataErrorType.MissingRequiredMetadata]:
+    StringNames.Error_BlockMetadataErrorMissingRequiredMetadata,
 };

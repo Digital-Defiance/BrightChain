@@ -10,6 +10,12 @@ import { CblBlockMetadata } from './cblBlockMetadata';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
 import { BlockType } from './enumerations/blockType';
+import { BlockValidationErrorType } from './enumerations/blockValidationErrorType';
+import {
+  BlockValidationError,
+  CannotDecryptBlockError,
+  CannotEncryptBlockError,
+} from './errors/block';
 import { GuidV4 } from './guid';
 import { IBlock } from './interfaces/blockBase';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
@@ -62,7 +68,7 @@ export class BlockService {
     block: OwnedDataBlock,
   ): Promise<EncryptedOwnedDataBlock | EncryptedConstituentBlockListBlock> {
     if (!block.canEncrypt) {
-      throw new Error('Block cannot be encrypted');
+      throw new CannotEncryptBlockError();
     }
 
     // Create encryption metadata
@@ -132,7 +138,7 @@ export class BlockService {
     block: EncryptedOwnedDataBlock | EncryptedConstituentBlockListBlock,
   ): Promise<OwnedDataBlock> {
     if (!block.canDecrypt) {
-      throw new Error('Block cannot be decrypted');
+      throw new CannotDecryptBlockError();
     }
 
     const decryptedData = StaticHelpersECIES.decryptWithComponents(
@@ -167,12 +173,14 @@ export class BlockService {
     checksum?: ChecksumBuffer,
   ): Promise<IBlock> {
     if (data.length === 0) {
-      throw new Error('Data cannot be empty');
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataCannotBeEmpty,
+      );
     }
 
     if (data.length > blockSize) {
-      throw new Error(
-        `Data length (${data.length}) exceeds block size (${blockSize}). Please use a larger block size or split the data into multiple blocks.`,
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthExceedsCapacity,
       );
     }
 
