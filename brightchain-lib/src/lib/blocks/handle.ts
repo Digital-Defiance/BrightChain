@@ -7,8 +7,11 @@ import {
   readFileSync,
 } from 'fs';
 import { BlockMetadata } from '../blockMetadata';
+import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
+import { BlockMetadataErrorType } from '../enumerations/blockMetadataErrorType';
 import { BlockType } from '../enumerations/blockType';
+import { BlockAccessError, BlockMetadataError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { ChecksumTransform } from '../transforms/checksumTransform';
@@ -51,7 +54,7 @@ export class BlockHandle extends BaseBlock {
     canPersist = true,
   ): Promise<BlockHandle> {
     if (!existsSync(path)) {
-      throw new Error(`File not found: ${path}`);
+      throw new BlockAccessError(BlockAccessErrorType.BlockFileNotFound, path);
     }
     const data = readFileSync(path);
 
@@ -114,7 +117,10 @@ export class BlockHandle extends BaseBlock {
   public get data(): Buffer {
     if (!this._cachedData) {
       if (!existsSync(this.path)) {
-        throw new Error(`Block file not found: ${this.path}`);
+        throw new BlockAccessError(
+          BlockAccessErrorType.BlockFileNotFound,
+          this.path,
+        );
       }
       const fileData = readFileSync(this.path);
       this._cachedData = fileData;
@@ -149,9 +155,14 @@ export class BlockHandle extends BaseBlock {
           this._cachedMetadata = BlockMetadata.fromJSON(metadataJson);
         } catch (error: unknown) {
           if (error instanceof Error) {
-            throw new Error(`Invalid block metadata: ${error.message}`);
+            throw new BlockMetadataError(
+              BlockMetadataErrorType.InvalidBlockMetadata,
+              error.message,
+            );
           }
-          throw new Error('Invalid block metadata');
+          throw new BlockMetadataError(
+            BlockMetadataErrorType.InvalidBlockMetadata,
+          );
         }
       }
     }
@@ -163,10 +174,13 @@ export class BlockHandle extends BaseBlock {
    */
   public getReadStream(): ReadStream {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     if (!existsSync(this.path)) {
-      throw new Error(`Block file not found: ${this.path}`);
+      throw new BlockAccessError(
+        BlockAccessErrorType.BlockFileNotFound,
+        this.path,
+      );
     }
     return createReadStream(this.path);
   }
@@ -176,10 +190,10 @@ export class BlockHandle extends BaseBlock {
    */
   public getWriteStream(overwrite = false): WriteStream {
     if (!this.canPersist) {
-      throw new Error('Block cannot be persisted');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotPersistable);
     }
     if (existsSync(this.path) && !overwrite) {
-      throw new Error('Block file already exists');
+      throw new BlockAccessError(BlockAccessErrorType.BlockAlreadyExists);
     }
     return createWriteStream(this.path);
   }
@@ -221,7 +235,10 @@ export class BlockHandle extends BaseBlock {
    */
   public calculateChecksumSync(): ChecksumBuffer {
     if (!existsSync(this.path)) {
-      throw new Error(`Block file not found: ${this.path}`);
+      throw new BlockAccessError(
+        BlockAccessErrorType.BlockFileNotFound,
+        this.path,
+      );
     }
     const data = readFileSync(this.path);
     return StaticHelpersChecksum.calculateChecksum(data);

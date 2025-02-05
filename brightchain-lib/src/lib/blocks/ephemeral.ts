@@ -1,10 +1,18 @@
 import { randomBytes } from 'crypto';
 import { Readable } from 'stream';
 import { BrightChainMember } from '../brightChainMember';
+import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
+import { BlockMetadataErrorType } from '../enumerations/blockMetadataErrorType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
+import {
+  BlockAccessError,
+  BlockMetadataError,
+  BlockValidationError,
+} from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
 import { IDataBlock } from '../interfaces/dataBlock';
@@ -102,16 +110,20 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     canPersist = false,
   ) {
     if (data instanceof Readable) {
-      throw new Error('EphemeralBlock only supports Buffer data');
+      throw new BlockValidationError(
+        BlockValidationErrorType.EphemeralBlockOnlySupportsBufferData,
+      );
     }
 
     // Initialize base class
     super(type, dataType, checksum, metadata, canRead, canPersist);
 
     // Validate data length against block size
-    const maxDataSize = metadata.size as number;
+    const maxDataSize = metadata.size;
     if (data.length > maxDataSize) {
-      throw new Error('Data length exceeds block capacity');
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthExceedsCapacity,
+      );
     }
 
     // Handle padding
@@ -123,7 +135,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     }
 
     if (!metadata) {
-      throw new Error('Metadata is required for ephemeral blocks');
+      throw new BlockMetadataError(BlockMetadataErrorType.MetadataRequired);
     }
 
     // Store block properties
@@ -145,7 +157,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
    */
   public override get data(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     // For encrypted blocks, return the entire data buffer since it includes the header
     // For unencrypted blocks, return only the actual data (no padding)
@@ -182,7 +194,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     return (
       !this._encrypted &&
       this._actualDataLength + StaticHelpersECIES.eciesOverheadLength <=
-        (this.blockSize as number)
+        this.blockSize
     );
   }
 
@@ -201,7 +213,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     // For both encrypted and unencrypted blocks,
     // validate against the provided checksum
     if (!this.idChecksum) {
-      throw new Error('No checksum provided');
+      throw new BlockValidationError(BlockValidationErrorType.NoChecksum);
     }
 
     // Calculate checksum on actual data length, excluding padding
@@ -222,7 +234,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     // For both encrypted and unencrypted blocks,
     // validate against the provided checksum
     if (!this.idChecksum) {
-      throw new Error('No checksum provided');
+      throw new BlockValidationError(BlockValidationErrorType.NoChecksum);
     }
 
     // Calculate checksum on actual data length, excluding padding
@@ -265,7 +277,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
    */
   public override get layerHeaderData(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     // Return empty buffer by default, but allow derived classes to override
     return Buffer.alloc(0);
@@ -276,7 +288,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
    */
   public override get payload(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     // For encrypted blocks, let derived class handle payload extraction
     // For unencrypted blocks, return the actual data (no padding)

@@ -1,8 +1,11 @@
 import { BrightChainMember } from '../brightChainMember';
+import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
+import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { GuidV4 } from '../guid';
 import { IEncryptedBlock } from '../interfaces/encryptedBlock';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
@@ -49,7 +52,9 @@ export abstract class EncryptedBlock
     void actualDataLength;
     void canRead;
     void canPersist;
-    throw new Error('Method must be implemented by derived class');
+    throw new BlockValidationError(
+      BlockValidationErrorType.MethodMustBeImplementedByDerivedClass,
+    );
   }
 
   /**
@@ -119,7 +124,7 @@ export abstract class EncryptedBlock
    */
   public get ephemeralPublicKey(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     // Get the ephemeral public key (already includes 0x04 prefix)
     const key = this.layerHeaderData.subarray(
@@ -127,7 +132,9 @@ export abstract class EncryptedBlock
       StaticHelpersECIES.publicKeyLength,
     );
     if (key.length !== StaticHelpersECIES.publicKeyLength) {
-      throw new Error('Invalid ephemeral public key length');
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
+      );
     }
     return key;
   }
@@ -137,14 +144,14 @@ export abstract class EncryptedBlock
    */
   public get iv(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     const iv = this.layerHeaderData.subarray(
       StaticHelpersECIES.publicKeyLength,
       StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
     );
     if (iv.length !== StaticHelpersECIES.ivLength) {
-      throw new Error('Invalid IV length');
+      throw new BlockValidationError(BlockValidationErrorType.InvalidIVLength);
     }
     return iv;
   }
@@ -154,7 +161,7 @@ export abstract class EncryptedBlock
    */
   public get authTag(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     // The auth tag is after the ephemeral public key (with 0x04 prefix) and IV
     const start =
@@ -163,7 +170,9 @@ export abstract class EncryptedBlock
 
     const tag = this.layerHeaderData.subarray(start, end);
     if (tag.length !== StaticHelpersECIES.authTagLength) {
-      throw new Error('Invalid auth tag length');
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidAuthTagLength,
+      );
     }
     return tag;
   }
@@ -182,7 +191,7 @@ export abstract class EncryptedBlock
    */
   public override get layerHeaderData(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     // For encrypted blocks, the header is always at the start of the data
     // since EphemeralBlock has no header data
@@ -194,7 +203,7 @@ export abstract class EncryptedBlock
    */
   public override get payload(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     // For encrypted blocks:
     // 1. Skip the encryption header (ephemeral public key + IV + auth tag)
@@ -239,18 +248,24 @@ export abstract class EncryptedBlock
     if (
       this.layerHeaderData.length !== StaticHelpersECIES.eciesOverheadLength
     ) {
-      throw new Error('Invalid encryption header length');
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidEncryptionHeaderLength,
+      );
     }
 
     // Validate individual components
     if (this.ephemeralPublicKey.length !== StaticHelpersECIES.publicKeyLength) {
-      throw new Error('Invalid ephemeral public key length');
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
+      );
     }
     if (this.iv.length !== StaticHelpersECIES.ivLength) {
-      throw new Error('Invalid IV length');
+      throw new BlockValidationError(BlockValidationErrorType.InvalidIVLength);
     }
     if (this.authTag.length !== StaticHelpersECIES.authTagLength) {
-      throw new Error('Invalid auth tag length');
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidAuthTagLength,
+      );
     }
   }
 
@@ -266,18 +281,24 @@ export abstract class EncryptedBlock
     if (
       this.layerHeaderData.length !== StaticHelpersECIES.eciesOverheadLength
     ) {
-      throw new Error('Invalid encryption header length');
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidEncryptionHeaderLength,
+      );
     }
 
     // Validate individual components
     if (this.ephemeralPublicKey.length !== StaticHelpersECIES.publicKeyLength) {
-      throw new Error('Invalid ephemeral public key length');
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
+      );
     }
     if (this.iv.length !== StaticHelpersECIES.ivLength) {
-      throw new Error('Invalid IV length');
+      throw new BlockValidationError(BlockValidationErrorType.InvalidIVLength);
     }
     if (this.authTag.length !== StaticHelpersECIES.authTagLength) {
-      throw new Error('Invalid auth tag length');
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidAuthTagLength,
+      );
     }
   }
 

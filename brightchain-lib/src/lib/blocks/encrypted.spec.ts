@@ -5,8 +5,10 @@ import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import MemberType from '../enumerations/memberType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
+import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
 import { IEncryptedBlock } from '../interfaces/encryptedBlock';
@@ -19,7 +21,9 @@ import { EncryptedBlock } from './encrypted';
 class TestEncryptedBlock extends EncryptedBlock implements IEncryptedBlock {
   public override get encryptedLength(): number {
     if (this.actualDataLength === undefined) {
-      throw new Error('Actual data length is unknown');
+      throw new BlockValidationError(
+        BlockValidationErrorType.ActualDataLengthUnknown,
+      );
     }
     return this.data.length;
   }
@@ -38,12 +42,16 @@ class TestEncryptedBlock extends EncryptedBlock implements IEncryptedBlock {
   ): Promise<TestEncryptedBlock> {
     // Validate data length
     if (data.length < StaticHelpersECIES.eciesOverheadLength) {
-      throw new Error('Data too short to contain encryption header');
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthTooShort,
+      );
     }
 
     // Total data length must not exceed block size
     if (data.length > (blockSize as number)) {
-      throw new Error('Data length exceeds block capacity');
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthExceedsCapacity,
+      );
     }
 
     // For encrypted blocks with known actual data length:
@@ -53,7 +61,9 @@ class TestEncryptedBlock extends EncryptedBlock implements IEncryptedBlock {
       const availableCapacity =
         (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
       if (actualDataLength > availableCapacity) {
-        throw new Error('Data length exceeds block capacity');
+        throw new BlockValidationError(
+          BlockValidationErrorType.DataLengthExceedsCapacity,
+        );
       }
     }
 
@@ -221,7 +231,7 @@ describe('EncryptedBlock', () => {
         StaticHelpersECIES.eciesOverheadLength - 1,
       );
       await expect(createTestBlock({ data: tooShortData })).rejects.toThrow(
-        'Data too short to contain encryption header',
+        BlockValidationError,
       );
 
       // Test oversized data
@@ -229,7 +239,7 @@ describe('EncryptedBlock', () => {
         (defaultBlockSize as number) + 1,
       );
       await expect(createTestBlock({ data: tooLargeData })).rejects.toThrow(
-        'Data length exceeds block capacity',
+        BlockValidationError,
       );
     });
 
@@ -242,7 +252,7 @@ describe('EncryptedBlock', () => {
 
       await expect(
         createTestBlock({ data, actualDataLength: tooLargeActualLength }),
-      ).rejects.toThrow('Data length exceeds block capacity');
+      ).rejects.toThrow(BlockValidationError);
     });
   });
 
@@ -287,7 +297,7 @@ describe('EncryptedBlock', () => {
       // Verify block creation fails with corrupted data
       await expect(
         createTestBlock({ data: corruptedData, checksum }),
-      ).rejects.toThrow('Checksum mismatch');
+      ).rejects.toThrow(ChecksumMismatchError);
 
       // Verify the checksum mismatch
       const corruptedChecksum =
@@ -301,7 +311,7 @@ describe('EncryptedBlock', () => {
 
       await expect(
         createTestBlock({ dateCreated: futureDate }),
-      ).rejects.toThrow('Date created cannot be in the future');
+      ).rejects.toThrow(BlockValidationError);
     });
   });
 });

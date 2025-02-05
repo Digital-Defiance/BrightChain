@@ -5,6 +5,7 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
+import { BlockValidationError } from '../errors/block';
 import { GuidV4 } from '../guid';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
@@ -184,7 +185,9 @@ describe('EncryptedOwnedDataBlock', () => {
     );
 
     expect(block.canRead).toBe(false);
-    expect(() => block.data).toThrow('Block cannot be read');
+    expect(() => block.data).toThrow(
+      'Block cannot be accessed: Block is not readable',
+    );
   });
 
   it('should handle date validation', async () => {
@@ -210,7 +213,7 @@ describe('EncryptedOwnedDataBlock', () => {
         futureDate,
         originalData.length,
       ),
-    ).rejects.toThrow('Date created cannot be in the future');
+    ).rejects.toThrow(BlockValidationError);
   });
 
   it('should handle encryption metadata correctly', async () => {

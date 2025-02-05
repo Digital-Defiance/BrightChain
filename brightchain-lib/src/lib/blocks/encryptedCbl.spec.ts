@@ -6,6 +6,7 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
+import { BlockValidationError } from '../errors/block';
 import { GuidV4 } from '../guid';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
@@ -285,12 +286,12 @@ describe('EncryptedConstituentBlockListBlock', () => {
       const futureDate = new Date(Date.now() + 86400000);
       await expect(
         createTestBlock(encryptedData, { dateCreated: futureDate }),
-      ).rejects.toThrow('Date created cannot be in the future');
+      ).rejects.toThrow(BlockValidationError);
 
       // Test oversized data
       const tooLargeData = Buffer.alloc((blockSize as number) + 1);
       await expect(createTestBlock(tooLargeData)).rejects.toThrow(
-        'Data length exceeds block capacity',
+        BlockValidationError,
       );
 
       // Test invalid actual data length
@@ -298,7 +299,7 @@ describe('EncryptedConstituentBlockListBlock', () => {
         createTestBlock(encryptedData, {
           actualDataLength: (blockSize as number) + 1,
         }),
-      ).rejects.toThrow('Data length exceeds block capacity');
+      ).rejects.toThrow(BlockValidationError);
     });
   });
 });
