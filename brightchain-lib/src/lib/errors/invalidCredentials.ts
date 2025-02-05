@@ -3,11 +3,11 @@ import { StringNames } from '../enumerations/stringNames';
 import { translate } from '../i18n';
 import { HandleableError } from './handleable';
 
-export class UserNotFoundError extends HandleableError {
-  constructor(statusCode = 404, language?: StringLanguages) {
-    super(translate(StringNames.Error_UserNotFound, language), {
+export class InvalidCredentialsError extends HandleableError {
+  constructor(language?: StringLanguages, statusCode = 401) {
+    super(translate(StringNames.Error_InvalidCredentials, language), {
       statusCode,
     });
-    this.name = 'UserNotFoundError';
+    this.name = 'InvalidCredentialsError';
   }
 }

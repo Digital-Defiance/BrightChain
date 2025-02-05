@@ -4,12 +4,15 @@ import {
   ChecksumBuffer,
   EmailString,
   GuidV4,
+  InvalidCredentialsError,
+  InvalidSessionIDError,
   JsonResponse,
   MemberApiRequest,
   MemberType,
   RouteConfig,
   StaticHelpersVoting,
   TypedHandlers,
+  UserNotFoundError,
 } from '@BrightChain/brightchain-lib';
 import { randomBytes } from 'crypto';
 import { Request } from 'express';
@@ -88,7 +91,7 @@ export class SessionsController extends BaseController<
     const { memberId, mnemonic } = req.body;
 
     if (!memberId || !mnemonic) {
-      throw new Error('Invalid credentials');
+      throw new InvalidCredentialsError();
     }
 
     // Get member data from members controller
@@ -101,7 +104,7 @@ export class SessionsController extends BaseController<
 
     const { response } = result;
     if (!response.success) {
-      throw new Error('User not found');
+      throw new UserNotFoundError();
     }
 
     // Get member data from block store
@@ -133,7 +136,7 @@ export class SessionsController extends BaseController<
       // Load wallet and derive keys
       member.loadWallet(mnemonic);
     } catch (error) {
-      throw new Error('Invalid credentials');
+      throw new InvalidCredentialsError();
     }
 
     // Generate session token
@@ -164,7 +167,7 @@ export class SessionsController extends BaseController<
     const { sessionId } = req.params;
 
     if (!sessionId) {
-      throw new Error('Invalid session ID');
+      throw new InvalidSessionIDError();
     }
 
     // Remove session

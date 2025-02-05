@@ -1,4 +1,6 @@
 import validator from 'validator';
+import { InvalidEmailErrorType } from './enumerations/invalidEmailType';
+import { InvalidEmailError } from './errors/invalidEmail';
 
 /**
  * EmailString represents a validated email address.
@@ -16,13 +18,13 @@ export class EmailString {
   constructor(email: string) {
     const trimmedEmail = email.trim();
     if (trimmedEmail.length == 0) {
-      throw new Error('Email missing');
+      throw new InvalidEmailError(InvalidEmailErrorType.Missing);
     }
     if (trimmedEmail.length != email.length) {
-      throw new Error('Email has leading or trailing spaces');
+      throw new InvalidEmailError(InvalidEmailErrorType.Whitespace);
     }
     if (!validator.isEmail(trimmedEmail)) {
-      throw new Error('Email is invalid');
+      throw new InvalidEmailError(InvalidEmailErrorType.Invalid);
     }
     this.email = trimmedEmail;
   }
