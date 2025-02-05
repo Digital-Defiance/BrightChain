@@ -1,6 +1,8 @@
 import BlockDataType from './enumerations/blockDataType';
+import { BlockMetadataErrorType } from './enumerations/blockMetadataErrorType';
 import { BlockSize } from './enumerations/blockSizes';
 import BlockType from './enumerations/blockType';
+import { BlockMetadataError } from './errors/block';
 import { IBlockMetadata } from './interfaces/blockMetadata';
 
 /**
@@ -69,7 +71,9 @@ export class BlockMetadata implements IBlockMetadata {
 
       // Validate required fields
       if (!data.size || !data.type || !data.dataType || !data.dateCreated) {
-        throw new Error('Missing required metadata fields');
+        throw new BlockMetadataError(
+          BlockMetadataErrorType.MissingRequiredMetadata,
+        );
       }
 
       // Convert types and maintain extensibility

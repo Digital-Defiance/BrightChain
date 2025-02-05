@@ -68,7 +68,7 @@ export async function requireOneOfValidatedFieldsAsync<T = Promise<void>>(
 ): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     if (req.validatedBody === undefined) {
-      throw new Error('No validated body found on the request');
+      throw new MissingValidatedDataError();
     }
     const validatedBody = req.validatedBody;
     // return 422 if none of the fields are valid
@@ -95,7 +95,7 @@ export function requireValidatedFieldsOrThrow<T = void>(
   callback: () => T,
 ): T {
   if (req.validatedBody === undefined) {
-    throw new Error('No validated body found on the request');
+    throw new MissingValidatedDataError();
   }
   const validatedBody = req.validatedBody;
   fields.forEach((field) => {

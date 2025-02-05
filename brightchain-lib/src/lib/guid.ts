@@ -1,6 +1,8 @@
 import { AnyBrand } from 'ts-brand';
 import * as uuid from 'uuid';
 import { GuidBrandType } from './enumerations/guidBrandType';
+import { GuidErrorType } from './enumerations/guidErrorType';
+import { GuidError } from './errors/guidError';
 import {
   Base64Guid,
   BigIntGuid,
@@ -23,11 +25,25 @@ export class GuidV4 {
     const expectedBrand = GuidV4.whichBrand(value);
     const verifiedBrand = GuidV4.verifyGuid(expectedBrand, value);
     if (!verifiedBrand) {
-      throw new Error(`Invalid guid: ${value}`);
+      const valueBuffer =
+        value instanceof Buffer
+          ? (value as RawGuidBuffer)
+          : (Buffer.from(value.toString()) as RawGuidBuffer);
+      throw new GuidError(
+        GuidErrorType.InvalidWithGuid,
+        undefined,
+        undefined,
+        valueBuffer,
+      );
     }
     this._value = GuidV4.toRawGuidBuffer(value);
     if (!uuid.validate(this.asFullHexGuid)) {
-      throw new Error(`Invalid guid: ${value}`);
+      throw new GuidError(
+        GuidErrorType.InvalidWithGuid,
+        undefined,
+        undefined,
+        this._value,
+      );
     }
   }
 
@@ -100,7 +116,7 @@ export class GuidV4 {
   public static guidBrandToLength(guidBrand: GuidBrandType): number {
     const guid = GuidV4.lengthMap.get(guidBrand);
     if (guid === undefined) {
-      throw new Error(`Unknown guid brand: ${guidBrand}`);
+      throw new GuidError(GuidErrorType.UnknownBrand, guidBrand);
     }
     return guid as number;
   }
@@ -119,7 +135,7 @@ export class GuidV4 {
         return brand;
       }
     }
-    throw new Error(`Unknown guid length: ${length}`);
+    throw new GuidError(GuidErrorType.UnknownLength, undefined, length);
   }
 
   public static isFullHexGuid(fullHexGuidValue: string | FullHexGuid): boolean {
@@ -213,7 +229,7 @@ export class GuidV4 {
     ) {
       return guid as FullHexGuid;
     } else {
-      throw new Error('Invalid Guid');
+      throw new GuidError(GuidErrorType.Invalid);
     }
   }
 
@@ -233,17 +249,17 @@ export class GuidV4 {
     ) {
       return Buffer.from(guid, 'base64').toString('hex') as ShortHexGuid;
     } else {
-      throw new Error('Invalid Guid');
+      throw new GuidError(GuidErrorType.Invalid);
     }
   }
 
   public static toFullHexFromBigInt(bigInt: bigint): FullHexGuid {
     if (bigInt < 0n) {
-      throw new Error('Invalid Guid');
+      throw new GuidError(GuidErrorType.Invalid);
     }
     const uuidBigInt = bigInt.toString(16).padStart(32, '0');
     if (uuidBigInt.length !== 32) {
-      throw new Error('Invalid Guid');
+      throw new GuidError(GuidErrorType.Invalid);
     }
     const rebuiltUuid =
       uuidBigInt.slice(0, 8) +
@@ -293,16 +309,16 @@ export class GuidV4 {
         ) as RawGuidBuffer;
         break;
       default:
-        throw new Error(`Unknown guid brand: ${value}`);
+        throw new GuidError(GuidErrorType.UnknownBrand, value);
     }
     if (
       rawGuidBufferResult.length !==
       GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer)
     ) {
-      throw new Error(
-        `Invalid guid length: ${
-          rawGuidBufferResult.length
-        }, expected: ${GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer)}`,
+      throw new GuidError(
+        GuidErrorType.UnknownLength,
+        undefined,
+        rawGuidBufferResult.length,
       );
     }
     return rawGuidBufferResult;
