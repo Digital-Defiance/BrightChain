@@ -2,7 +2,9 @@ import { faker } from '@faker-js/faker';
 import { createECDH, randomBytes } from 'crypto';
 import { BrightChainMember } from './brightChainMember';
 import { EmailString } from './emailString';
+import { EciesErrorType } from './enumerations/eciesErrorType';
 import MemberType from './enumerations/memberType';
+import { EciesError } from './errors/eciesError';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
 
 describe('StaticHelpersECIES', () => {
@@ -115,9 +117,11 @@ describe('StaticHelpersECIES', () => {
     it('should fail with invalid data or mismatched keys', () => {
       // Invalid data
       const invalidData = Buffer.alloc(10);
-      expect(() =>
-        StaticHelpersECIES.decrypt(keyPair.privateKey, invalidData),
-      ).toThrow();
+      expect(() => {
+        return StaticHelpersECIES.decrypt(keyPair.privateKey, invalidData);
+      }).toThrowType(EciesError, (error: EciesError) => {
+        expect(error.reason).toBe(EciesErrorType.InvalidEphemeralPublicKey);
+      });
 
       // Mismatched keys
       const otherEcdh = createECDH(StaticHelpersECIES.curveName);
@@ -126,9 +130,14 @@ describe('StaticHelpersECIES', () => {
         keyPair.publicKey,
         testData,
       );
-      expect(() =>
-        StaticHelpersECIES.decrypt(otherEcdh.getPrivateKey(), encryptedData),
-      ).toThrow();
+      expect(() => {
+        return StaticHelpersECIES.decrypt(
+          otherEcdh.getPrivateKey(),
+          encryptedData,
+        );
+      }).toThrowType(EciesError, (error: EciesError) => {
+        expect(error.reason).toBe(EciesErrorType.InvalidEphemeralPublicKey);
+      });
     });
   });
 
@@ -156,9 +165,14 @@ describe('StaticHelpersECIES', () => {
 
     it('should fail with invalid hex strings', () => {
       const invalidHex = 'not a hex string';
-      expect(() =>
-        StaticHelpersECIES.decryptString(keyPairHex.privateKey, invalidHex),
-      ).toThrow();
+      expect(() => {
+        return StaticHelpersECIES.decryptString(
+          keyPairHex.privateKey,
+          invalidHex,
+        );
+      }).toThrowType(EciesError, (error: EciesError) => {
+        expect(error.reason).toBe(EciesErrorType.InvalidEphemeralPublicKey);
+      });
     });
   });
 
@@ -202,12 +216,14 @@ describe('StaticHelpersECIES', () => {
       );
 
       // Test invalid length
-      expect(() =>
-        StaticHelpersECIES.computeDecryptedLengthFromEncryptedDataLength(
+      expect(() => {
+        return StaticHelpersECIES.computeDecryptedLengthFromEncryptedDataLength(
           blockSize + 1,
           blockSize,
-        ),
-      ).toThrow('Invalid encrypted data length');
+        );
+      }).toThrowType(EciesError, (error: EciesError) => {
+        expect(error.reason).toBe(EciesErrorType.InvalidEncryptedDataLength);
+      });
     });
   });
 });
@@ -234,13 +250,13 @@ describe('multi-recipient encryption', () => {
       expectedOverheadLength -
       StaticHelpersECIES.eciesMultipleMessageOverheadLength;
     if (encryptedBuffer.headerLength != expectedHeaderLength) {
-      throw new Error('Invalid header length');
+      throw new EciesError(EciesErrorType.InvalidHeaderLength);
     }
     if (
       encryptedBuffer.data.length !=
       expectedOverheadLength + testData.length
     ) {
-      throw new Error('Invalid encrypted data length');
+      throw new EciesError(EciesErrorType.InvalidEncryptedDataLength);
     }
 
     // Verify structure
@@ -295,12 +311,14 @@ describe('multi-recipient encryption', () => {
     );
 
     // Try to decrypt with the third recipient
-    expect(() =>
-      StaticHelpersECIES.decryptMultipleECIEForRecipient(
+    expect(() => {
+      return StaticHelpersECIES.decryptMultipleECIEForRecipient(
         encrypted,
         recipients[2],
-      ),
-    ).toThrow('Recipient not found in recipient IDs');
+      );
+    }).toThrowType(EciesError, (error: EciesError) => {
+      expect(error.reason).toBe(EciesErrorType.RecipientNotFound);
+    });
   });
 
   it('should handle empty data', () => {
@@ -334,8 +352,10 @@ describe('multi-recipient encryption', () => {
       () => recipients[0],
     );
 
-    expect(() =>
-      StaticHelpersECIES.encryptMultiple(tooManyRecipients, testData),
-    ).toThrow('Too many recipients');
+    expect(() => {
+      return StaticHelpersECIES.encryptMultiple(tooManyRecipients, testData);
+    }).toThrowType(EciesError, (error: EciesError) => {
+      expect(error.reason).toBe(EciesErrorType.TooManyRecipients);
+    });
   });
 });

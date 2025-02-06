@@ -1,5 +1,7 @@
 import { createHash, createHmac, randomBytes } from 'crypto';
 import { PublicKey } from 'paillier-bigint';
+import { IsolatedKeyErrorType } from './enumerations/isolatedKeyErrorType';
+import { IsolatedKeyError } from './errors/isolatedKeyError';
 
 export class IsolatedPublicKey extends PublicKey {
   public static isIsolatedPublicKey(key: PublicKey): key is IsolatedPublicKey {
@@ -109,9 +111,7 @@ export class IsolatedPublicKey extends PublicKey {
     const instanceId = this.extractInstanceId(ciphertext);
 
     if (!instanceId.equals(this._currentInstanceId)) {
-      throw new Error(
-        'Key isolation violation: ciphertext from different key instance',
-      );
+      throw new IsolatedKeyError(IsolatedKeyErrorType.KeyIsolationViolation);
     }
 
     const hmacLength = 64;
@@ -133,9 +133,7 @@ export class IsolatedPublicKey extends PublicKey {
       !aInstanceID.equals(this._currentInstanceId) ||
       !bInstanceID.equals(this._currentInstanceId)
     ) {
-      throw new Error(
-        'Key isolation violation: ciphertexts from different key instances',
-      );
+      throw new IsolatedKeyError(IsolatedKeyErrorType.KeyIsolationViolation);
     }
 
     const hmacLength = 64;
@@ -154,7 +152,7 @@ export class IsolatedPublicKey extends PublicKey {
     const nBuffer = Buffer.from(nHex, 'hex');
     const computedKeyId = createHash('sha256').update(nBuffer).digest();
     if (!this.keyId.equals(computedKeyId)) {
-      throw new Error('Key isolation violation: invalid key ID');
+      throw new IsolatedKeyError(IsolatedKeyErrorType.KeyIsolationViolation);
     }
   }
 }

@@ -27,5 +27,7 @@ export class GuidError extends HandleableError {
     this.name = 'GuidError';
     this.reason = reason;
     this.brand = brand;
+    this.length = length;
+    this.guid = guid;
   }
 }

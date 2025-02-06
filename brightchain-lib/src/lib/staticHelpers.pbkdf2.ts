@@ -1,4 +1,6 @@
 import { pbkdf2Sync, randomBytes } from 'crypto';
+import { Pbkdf2ErrorType } from './enumerations/pbkdf2ErrorType';
+import { Pbkdf2Error } from './errors/pbkdf2Error';
 import { IPbkf2Config } from './interfaces/pbkdf2Config';
 import { IPbkdf2Result } from './interfaces/pbkdf2Result';
 import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
@@ -54,7 +56,7 @@ export abstract class StaticHelpersPbkdf2 {
     const config = StaticHelpersPbkdf2.pbkdf2Config(iterations);
     const saltBytes = salt ?? randomBytes(config.saltBytes);
     if (saltBytes.length !== config.saltBytes) {
-      throw new Error('Salt length does not match expected length');
+      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidSaltLength);
     }
     const hashBytes = pbkdf2Sync(
       password,
@@ -64,7 +66,7 @@ export abstract class StaticHelpersPbkdf2 {
       'sha512',
     );
     if (hashBytes.length !== config.hashBytes) {
-      throw new Error('Hash length does not match expected length');
+      throw new Pbkdf2Error(Pbkdf2ErrorType.InvalidHashLength);
     }
     return {
       salt: saltBytes,

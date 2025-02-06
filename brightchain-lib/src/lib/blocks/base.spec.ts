@@ -92,10 +92,9 @@ class TestBaseBlock extends BaseBlock {
    */
   public async validateAsync(): Promise<void> {
     const expectedChecksum = await StaticHelpersChecksum.calculateChecksumAsync(
-      this.data,
+      this.internalData,
     );
-    const result = this.idChecksum.equals(expectedChecksum);
-    if (!result) {
+    if (!this.idChecksum.equals(expectedChecksum)) {
       throw new ChecksumMismatchError(this.idChecksum, expectedChecksum);
     }
   }
@@ -201,8 +200,13 @@ describe('BaseBlock', () => {
     it('should reject invalid sizes', () => {
       // Test oversized data
       const tooLargeData = randomBytes((defaultBlockSize as number) + 1);
-      expect(() => createTestBlock({ data: tooLargeData })).toThrow(
+      expect(() => createTestBlock({ data: tooLargeData })).toThrowType(
         BlockValidationError,
+        (error: BlockValidationError) => {
+          expect(error.reason).toBe(
+            BlockValidationErrorType.DataLengthExceedsCapacity,
+          );
+        },
       );
     });
   });
@@ -243,20 +247,33 @@ describe('BaseBlock', () => {
       const block = createTestBlock({ data, checksum });
 
       // Then corrupt the internal data after creation
-      block.corruptData(0, block.data[0] + 1); // Increment the first byte
+      block.corruptData(0, (block.data[0] + 1) % 256); // Increment the first byte
 
-      // Now validateAsync() should fail
-      await expect(block.validateAsync()).rejects.toThrow(
-        ChecksumMismatchError,
-      );
+      // Calculate what the new checksum should be after corruption
+      const newChecksum = StaticHelpersChecksum.calculateChecksum(block.data);
+
+      try {
+        await block.validateAsync();
+        fail('Expected validateAsync to throw');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ChecksumMismatchError);
+        const checksumError = error as ChecksumMismatchError;
+        expect(checksumError.checksum).toEqual(block.idChecksum);
+        expect(checksumError.expected).toEqual(newChecksum);
+      }
     });
 
     it('should reject future dates', () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
 
-      expect(() => createTestBlock({ dateCreated: futureDate })).toThrow(
+      expect(() => createTestBlock({ dateCreated: futureDate })).toThrowType(
         BlockValidationError,
+        (error: BlockValidationError) => {
+          expect(error.reason).toBe(
+            BlockValidationErrorType.FutureCreationDate,
+          );
+        },
       );
     });
   });

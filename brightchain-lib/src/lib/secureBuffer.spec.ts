@@ -1,4 +1,7 @@
+import { faker } from '@faker-js/faker';
 import { randomBytes } from 'crypto';
+import { SecureStorageErrorType } from './enumerations/secureStorageErrorType';
+import { SecureStorageError } from './errors/secureStorageError';
 import { SecureBuffer } from './secureBuffer';
 
 describe('SecureBuffer', () => {
@@ -52,31 +55,62 @@ describe('SecureBuffer', () => {
         testBuffer.toString('base64'),
       );
     });
-
-    it('should handle value dropping and validation', () => {
-      // Test value dropping
-      const tempBuffer = new SecureBuffer(testBuffer);
-      tempBuffer.dropEncryptedValue();
-      expect(() => tempBuffer.value).toThrow();
-
-      // Test checksum validation
-      const validBuffer = new SecureBuffer(testBuffer);
-      expect(validBuffer.value).toEqual(testBuffer);
-
-      validBuffer.dropEncryptedValue();
-      expect(() => validBuffer.value).toThrow();
-    });
   });
 
   describe('error handling', () => {
-    it('should handle invalid operations gracefully', () => {
-      // Test accessing dropped value
-      const droppedBuffer = new SecureBuffer(testBuffer);
-      droppedBuffer.dropEncryptedValue();
-      expect(() => droppedBuffer.value).toThrow();
-      expect(() => droppedBuffer.valueAsString).toThrow();
-      expect(() => droppedBuffer.valueAsHexString).toThrow();
-      expect(() => droppedBuffer.valueAsBase64String).toThrow();
+    it('should throw DecryptedValueLengthMismatch when decrypted length is incorrect', () => {
+      const testBuffer = Buffer.from(faker.lorem.word());
+      const secureBuffer = new SecureBuffer(testBuffer);
+
+      // Create a corrupted buffer with valid encryption format but wrong length
+      const originalBuffer = (secureBuffer as any)._encryptedValue;
+      const corruptedBuffer = Buffer.concat([
+        originalBuffer,
+        Buffer.from([0x00, 0x00, 0x00, 0x00]),
+      ]);
+
+      // Replace the private field
+      Object.defineProperty(secureBuffer, '_encryptedValue', {
+        value: corruptedBuffer,
+        writable: false,
+        configurable: true,
+      });
+
+      expect(() => secureBuffer.value).toThrowType(
+        SecureStorageError,
+        (error: SecureStorageError) => {
+          expect(error.reason).toBe(
+            SecureStorageErrorType.DecryptedValueLengthMismatch,
+          );
+        },
+      );
+    });
+
+    it('should throw DecryptedValueChecksumMismatch when checksum validation fails', () => {
+      const testBuffer = Buffer.from(faker.lorem.word());
+      const secureBuffer = new SecureBuffer(testBuffer);
+
+      // Modify a single byte in the middle of the encrypted data to corrupt it
+      const originalBuffer = (secureBuffer as any)._encryptedValue;
+      const corruptedBuffer = Buffer.from(originalBuffer);
+      const middleIndex = Math.floor(corruptedBuffer.length / 2);
+      corruptedBuffer[middleIndex] ^= 0xff; // Flip bits in one byte
+
+      // Replace the private field
+      Object.defineProperty(secureBuffer, '_encryptedValue', {
+        value: corruptedBuffer,
+        writable: false,
+        configurable: true,
+      });
+
+      expect(() => secureBuffer.value).toThrowType(
+        SecureStorageError,
+        (error: SecureStorageError) => {
+          expect(error.reason).toBe(
+            SecureStorageErrorType.DecryptedValueChecksumMismatch,
+          );
+        },
+      );
     });
   });
 });

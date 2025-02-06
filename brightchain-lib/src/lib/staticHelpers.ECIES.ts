@@ -15,7 +15,9 @@ import {
 } from 'ethereumjs-util';
 import Wallet, { hdkey } from 'ethereumjs-wallet';
 import { BrightChainMember } from './brightChainMember';
+import { EciesErrorType } from './enumerations/eciesErrorType';
 import { GuidBrandType } from './enumerations/guidBrandType';
+import { EciesError } from './errors/eciesError';
 import { GuidV4 } from './guid';
 import { IEncryptionLength } from './interfaces/encryptionLength';
 import { MultiRecipientEncryption as IMultiRecipientEncryption } from './interfaces/multiRecipientEncryption';
@@ -131,7 +133,7 @@ export class StaticHelpersECIES {
     wallet: Wallet;
   } {
     if (!validateMnemonic(mnemonic)) {
-      throw new Error('Invalid mnemonic');
+      throw new EciesError(EciesErrorType.InvalidMnemonic);
     }
 
     const seed = mnemonicToSeedSync(mnemonic);
@@ -167,7 +169,6 @@ export class StaticHelpersECIES {
    */
   public static seedToSimpleKeyPairBuffer(seed: Buffer): ISimpleKeyPairBuffer {
     const wallet = StaticHelpersECIES.walletFromSeed(seed);
-
     return StaticHelpersECIES.walletToSimpleKeyPairBuffer(wallet);
   }
 
@@ -207,11 +208,23 @@ export class StaticHelpersECIES {
       sharedSecret = ecdh.computeSecret(publicKeyForSecret);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        console.error('Error computing shared secret:', error.message, {
-          receiverPublicKey: receiverPublicKey.toString('hex'),
-        });
+        if (
+          'code' in error &&
+          error.code === 'ERR_CRYPTO_ECDH_INVALID_PUBLIC_KEY'
+        ) {
+          throw new EciesError(EciesErrorType.InvalidEphemeralPublicKey);
+        }
+        // Wrap any other errors in EciesError
+        throw new EciesError(
+          EciesErrorType.InvalidEphemeralPublicKey,
+          undefined,
+          {
+            error: error.message,
+          },
+        );
       }
-      throw error;
+      // For non-Error throws, still wrap in EciesError
+      throw new EciesError(EciesErrorType.InvalidEphemeralPublicKey);
     }
 
     // Get ephemeral public key (already has 0x04 prefix)
@@ -246,9 +259,7 @@ export class StaticHelpersECIES {
   ): IMultiRecipientEncryption {
     const Uint16BEMax = 65535;
     if (recipients.length > Uint16BEMax) {
-      throw new Error(
-        `Too many recipients: ${recipients.length} > ${Uint16BEMax}`,
-      );
+      throw new EciesError(EciesErrorType.TooManyRecipients);
     }
 
     // Generate random AES-256 key
@@ -284,7 +295,7 @@ export class StaticHelpersECIES {
       message.length + StaticHelpersECIES.eciesMultipleMessageOverheadLength !=
       encryptedMessage.length
     ) {
-      throw new Error('Message length mismatch');
+      throw new EciesError(EciesErrorType.MessageLengthMismatch);
     }
 
     return {
@@ -317,7 +328,7 @@ export class StaticHelpersECIES {
     if (
       encryptedKeyLength != multiRecipientEncryption.encryptedKeys[0].length
     ) {
-      throw new Error('Invalid encrypted key length');
+      throw new EciesError(EciesErrorType.InvalidEncryptedKeyLength);
     }
 
     const encryptedKeys = Buffer.concat(multiRecipientEncryption.encryptedKeys);
@@ -469,14 +480,24 @@ export class StaticHelpersECIES {
 
       return decrypted;
     } catch (error: unknown) {
-      if (
-        error instanceof Error &&
-        'code' in error &&
-        error.code === 'ERR_CRYPTO_ECDH_INVALID_PUBLIC_KEY'
-      ) {
-        throw new Error('Invalid ephemeral public key');
+      if (error instanceof Error) {
+        if (
+          'code' in error &&
+          error.code === 'ERR_CRYPTO_ECDH_INVALID_PUBLIC_KEY'
+        ) {
+          throw new EciesError(EciesErrorType.InvalidEphemeralPublicKey);
+        }
+        // Wrap any other errors in EciesError
+        throw new EciesError(
+          EciesErrorType.InvalidEphemeralPublicKey,
+          undefined,
+          {
+            error: error.message,
+          },
+        );
       }
-      throw error;
+      // For non-Error throws, still wrap in EciesError
+      throw new EciesError(EciesErrorType.InvalidEphemeralPublicKey);
     }
   }
 
@@ -543,7 +564,7 @@ export class StaticHelpersECIES {
       id.equals(recipient.id),
     );
     if (recipientIndex === -1) {
-      throw new Error('Recipient not found in recipient IDs');
+      throw new EciesError(EciesErrorType.RecipientNotFound);
     }
     const encryptedKey = encryptedData.encryptedKeys[recipientIndex];
     const decryptedKey = StaticHelpersECIES.decrypt(
@@ -642,7 +663,7 @@ export class StaticHelpersECIES {
     signature: SignatureBuffer,
   ): boolean {
     if (signature.length !== StaticHelpersECIES.signatureLength) {
-      throw new Error('Invalid signature');
+      throw new EciesError(EciesErrorType.InvalidSignature);
     }
     // if the sender public key length is 65, it should have a 04 prefix
     // it should otherwise be 64 bytes
@@ -651,13 +672,13 @@ export class StaticHelpersECIES {
       senderPublicKey.length !== StaticHelpersECIES.publicKeyLength &&
       senderPublicKey.length !== 64
     ) {
-      throw new Error('Invalid sender public key');
+      throw new EciesError(EciesErrorType.InvalidSenderPublicKey);
     }
     if (
       senderPublicKey.length === StaticHelpersECIES.publicKeyLength &&
       senderPublicKey[0] !== 4
     ) {
-      throw new Error('Invalid sender public key');
+      throw new EciesError(EciesErrorType.InvalidSenderPublicKey);
     }
     const has04Prefix =
       senderPublicKey.length === StaticHelpersECIES.publicKeyLength &&
@@ -737,7 +758,7 @@ export class StaticHelpersECIES {
     // calculate the number of blocks needed to store the data
     const numBlocks = Math.ceil(encryptedDataLength / blockSize);
     if (numBlocks * blockSize !== encryptedDataLength) {
-      throw new Error('Invalid encrypted data length');
+      throw new EciesError(EciesErrorType.InvalidEncryptedDataLength);
     }
     // calculate the ecies overhead for all blocks
     const overhead = numBlocks * StaticHelpersECIES.eciesOverheadLength;

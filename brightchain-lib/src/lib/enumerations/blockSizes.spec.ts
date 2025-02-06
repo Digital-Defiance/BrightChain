@@ -1,3 +1,4 @@
+import { InvalidBlockSizeLengthError } from '../errors/invalidBlockSizeLength';
 import {
   BlockSize,
   blockSizeExponents,
@@ -39,10 +40,30 @@ describe('blockSizes', () => {
     expect(lengthToBlockSize(blockSizeLengths[4])).toBe(BlockSize.Large);
     expect(lengthToBlockSize(blockSizeLengths[5])).toBe(BlockSize.Huge);
     //expect non-matching sizes to be unknown
-    expect(() => lengthToBlockSize(0)).toThrow();
-    expect(() => lengthToBlockSize(1)).toThrow();
-    expect(() => lengthToBlockSize(blockSizeLengths[4] - 1)).toThrow();
-    expect(() => lengthToBlockSize(blockSizeLengths[5] - 1)).toThrow();
+    expect(() => lengthToBlockSize(0)).toThrowType(
+      InvalidBlockSizeLengthError,
+      (error: InvalidBlockSizeLengthError) => {
+        expect(error.blockSize).toBe(0);
+      },
+    );
+    expect(() => lengthToBlockSize(1)).toThrowType(
+      InvalidBlockSizeLengthError,
+      (error: InvalidBlockSizeLengthError) => {
+        expect(error.blockSize).toBe(1);
+      },
+    );
+    expect(() => lengthToBlockSize(blockSizeLengths[4] - 1)).toThrowType(
+      InvalidBlockSizeLengthError,
+      (error: InvalidBlockSizeLengthError) => {
+        expect(error.blockSize).toBe(blockSizeLengths[4] - 1);
+      },
+    );
+    expect(() => lengthToBlockSize(blockSizeLengths[5] - 1)).toThrowType(
+      InvalidBlockSizeLengthError,
+      (error: InvalidBlockSizeLengthError) => {
+        expect(error.blockSize).toBe(blockSizeLengths[5] - 1);
+      },
+    );
   });
   it('should test validateBlockSize', () => {
     expect(validateBlockSize(BlockSize.Message)).toBe(true);

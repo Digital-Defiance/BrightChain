@@ -1,3 +1,5 @@
+import { StoreErrorType } from '../enumerations/storeErrorType';
+import { StoreError } from '../errors/storeError';
 import { ISimpleStore } from '../interfaces/simpleStore';
 
 export class SimpleStore<K, V> implements ISimpleStore<K, V> {
@@ -21,7 +23,24 @@ export class SimpleStore<K, V> implements ISimpleStore<K, V> {
   public get(key: K): V {
     const value = this._data.get(key);
     if (value === undefined) {
-      throw new Error(`Key not found: ${key}`);
+      let keyString;
+      if (typeof key === 'string') {
+        keyString = key;
+      } else if (key && typeof key === 'object' && 'toString' in key) {
+        keyString = key.toString();
+      } else if (
+        key &&
+        typeof key === 'object' &&
+        'toJSON' in key &&
+        typeof key.toJSON === 'function'
+      ) {
+        keyString = key.toJSON();
+      } else {
+        keyString = JSON.stringify(key);
+      }
+      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+        KEY: keyString,
+      });
     }
     return value;
   }

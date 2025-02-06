@@ -1,4 +1,6 @@
 import { createHash, timingSafeEqual } from 'crypto';
+import { SecureStorageErrorType } from './enumerations/secureStorageErrorType';
+import { SecureStorageError } from './errors/secureStorageError';
 import { GuidV4 } from './guid';
 import { StaticHelpersPbkdf2 } from './staticHelpers.pbkdf2';
 import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
@@ -70,10 +72,14 @@ export class SecureBuffer {
       idKey.hash,
     );
     if (decryptionResult.length !== this._length) {
-      throw new Error('Decrypted value length does not match expected length');
+      throw new SecureStorageError(
+        SecureStorageErrorType.DecryptedValueLengthMismatch,
+      );
     }
     if (!this.validateEncryptedChecksum(decryptionResult)) {
-      throw new Error('Decrypted value checksum does not match');
+      throw new SecureStorageError(
+        SecureStorageErrorType.DecryptedValueChecksumMismatch,
+      );
     }
     return decryptionResult;
   }

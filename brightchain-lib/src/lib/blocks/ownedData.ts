@@ -3,7 +3,9 @@ import { BrightChainMember } from '../brightChainMember';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { OwnedDataErrorType } from '../enumerations/ownedDataErrorType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
+import { OwnedDataError } from '../errors/ownedDataError';
 import { GuidV4 } from '../guid';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer } from '../types';
@@ -36,37 +38,35 @@ export class OwnedDataBlock extends EphemeralBlock {
   ): Promise<OwnedDataBlock> {
     // Validate creator
     if (!creator) {
-      throw new Error('Creator is required');
+      throw new OwnedDataError(OwnedDataErrorType.CreatorRequired);
     }
 
     // Validate data
     if (!data || data.length === 0) {
-      throw new Error('Data is required');
+      throw new OwnedDataError(OwnedDataErrorType.DataRequired);
     }
 
     if (data.length > blockSize) {
-      throw new Error(
-        `Data length (${data.length}) exceeds block size (${blockSize})`,
-      );
+      throw new OwnedDataError(OwnedDataErrorType.DataLengthExceedsCapacity);
     }
 
     // Validate actual data length
     if (actualDataLength !== undefined) {
       if (actualDataLength <= 0) {
-        throw new Error('Actual data length must be positive');
+        throw new OwnedDataError(OwnedDataErrorType.ActualDataLengthNegative);
       }
 
       if (actualDataLength > data.length) {
-        throw new Error('Actual data length cannot exceed data length');
+        throw new OwnedDataError(
+          OwnedDataErrorType.ActualDataLengthExceedsDataLength,
+        );
       }
     }
 
     // Check if block has enough space for encryption
     const encryptionOverhead = StaticHelpersECIES.eciesOverheadLength;
     if (data.length + encryptionOverhead > blockSize) {
-      throw new Error(
-        `Data length (${data.length}) plus encryption overhead (${encryptionOverhead}) exceeds block size (${blockSize})`,
-      );
+      throw new OwnedDataError(OwnedDataErrorType.DataLengthExceedsCapacity);
     }
 
     const metadata: EphemeralBlockMetadata = new EphemeralBlockMetadata(
@@ -124,14 +124,12 @@ export class OwnedDataBlock extends EphemeralBlock {
   ): Promise<EncryptedOwnedDataBlock> {
     // Validate creator
     if (!creator) {
-      throw new Error('Creator is required for encryption');
+      throw new OwnedDataError(OwnedDataErrorType.CreatorRequiredForEncryption);
     }
 
     // Check if block can be encrypted
     if (!this.canEncrypt) {
-      throw new Error(
-        'Block cannot be encrypted, not enough space left in block',
-      );
+      throw new OwnedDataError(OwnedDataErrorType.DataLengthExceedsCapacity);
     }
 
     // Encrypt using BlockService
@@ -139,7 +137,7 @@ export class OwnedDataBlock extends EphemeralBlock {
 
     // Ensure we got the expected block type
     if (!(encryptedBlock instanceof EncryptedOwnedDataBlock)) {
-      throw new Error('Unexpected encrypted block type');
+      throw new OwnedDataError(OwnedDataErrorType.UnexpectedEncryptedBlockType);
     }
 
     return encryptedBlock;

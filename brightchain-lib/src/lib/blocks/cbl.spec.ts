@@ -4,12 +4,13 @@ import { BrightChainMember } from '../brightChainMember';
 import { CblBlockMetadata } from '../cblBlockMetadata';
 import { TUPLE_SIZE } from '../constants';
 import { EmailString } from '../emailString';
+import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import MemberType from '../enumerations/memberType';
-import { BlockValidationError } from '../errors/block';
+import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { GuidV4 } from '../guid';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
@@ -373,8 +374,11 @@ describe('ConstituentBlockListBlock', () => {
     it('should require creator for signature validation', () => {
       const block = createTestBlock();
       // @ts-expect-error Testing that validateSignature requires a creator parameter
-      expect(() => block.validateSignature()).toThrow(
-        'Creator must be provided for signature validation',
+      expect(() => block.validateSignature()).toThrowType(
+        BlockAccessError,
+        (error: BlockAccessError) => {
+          expect(error.reason).toBe(BlockAccessErrorType.CreatorMustBeProvided);
+        },
       );
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
@@ -385,17 +389,26 @@ describe('ConstituentBlockListBlock', () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
 
-      expect(() => createTestBlock({ dateCreated: futureDate })).toThrow(
+      expect(() => createTestBlock({ dateCreated: futureDate })).toThrowType(
         BlockValidationError,
+        (error: BlockValidationError) => {
+          expect(error.reason).toBe(
+            BlockValidationErrorType.FutureCreationDate,
+          );
+        },
       );
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
     it('should validate tuple size', () => {
       const invalidAddresses = createTestAddresses(TUPLE_SIZE + 1);
-      expect(() => createTestBlock({ addresses: invalidAddresses })).toThrow(
-        BlockValidationError,
-      );
+      expect(() =>
+        createTestBlock({ addresses: invalidAddresses }),
+      ).toThrowType(BlockValidationError, (error: BlockValidationError) => {
+        expect(error.reason).toBe(
+          BlockValidationErrorType.InvalidCBLAddressCount,
+        );
+      });
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
@@ -406,9 +419,13 @@ describe('ConstituentBlockListBlock', () => {
         (maxAddresses + TUPLE_SIZE) * TUPLE_SIZE,
       );
 
-      expect(() => createTestBlock({ addresses: tooManyAddresses })).toThrow(
-        BlockValidationError,
-      );
+      expect(() =>
+        createTestBlock({ addresses: tooManyAddresses }),
+      ).toThrowType(BlockValidationError, (error: BlockValidationError) => {
+        expect(error.reason).toBe(
+          BlockValidationErrorType.AddressCountExceedsCapacity,
+        );
+      });
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
   });
@@ -480,9 +497,15 @@ describe('ConstituentBlockListBlock', () => {
         new EmailString('different@example.com'),
       );
 
-      expect(() =>
+      try {
         ConstituentBlockListBlock.parseHeader(block.data, differentCreator),
-      ).toThrow(BlockValidationError);
+          fail('Expected an error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(BlockValidationError);
+        expect((error as BlockValidationError).reason).toBe(
+          BlockValidationErrorType.CreatorIDMismatch,
+        );
+      }
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
@@ -502,7 +525,9 @@ describe('ConstituentBlockListBlock', () => {
 
       expect(() =>
         ConstituentBlockListBlock.parseHeader(invalidData, creator),
-      ).toThrow(BlockValidationError);
+      ).toThrowType(BlockValidationError, (error: BlockValidationError) => {
+        expect(error.reason).toBe(BlockValidationErrorType.InvalidDateCreated);
+      });
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
@@ -518,7 +543,11 @@ describe('ConstituentBlockListBlock', () => {
 
       expect(() =>
         ConstituentBlockListBlock.parseHeader(invalidData, creator),
-      ).toThrow(BlockValidationError);
+      ).toThrowType(BlockValidationError, (error: BlockValidationError) => {
+        expect(error.reason).toBe(
+          BlockValidationErrorType.InvalidCBLAddressCount,
+        );
+      });
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
@@ -534,7 +563,11 @@ describe('ConstituentBlockListBlock', () => {
 
       expect(() =>
         ConstituentBlockListBlock.parseHeader(invalidData, creator),
-      ).toThrow(BlockValidationError);
+      ).toThrowType(BlockValidationError, (error: BlockValidationError) => {
+        expect(error.reason).toBe(
+          BlockValidationErrorType.OriginalDataLengthNegative,
+        );
+      });
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
@@ -550,7 +583,9 @@ describe('ConstituentBlockListBlock', () => {
 
       expect(() =>
         ConstituentBlockListBlock.parseHeader(invalidData, creator),
-      ).toThrow(BlockValidationError);
+      ).toThrowType(BlockValidationError, (error: BlockValidationError) => {
+        expect(error.reason).toBe(BlockValidationErrorType.InvalidTupleSize);
+      });
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
   });
@@ -579,7 +614,9 @@ describe('ConstituentBlockListBlock', () => {
 
       expect(() =>
         ConstituentBlockListBlock.fromBaseBlockBuffer(invalidBlock, creator),
-      ).toThrow(BlockValidationError);
+      ).toThrowType(BlockValidationError, (error: BlockValidationError) => {
+        expect(error.reason).toBe(BlockValidationErrorType.BlockDataNotBuffer);
+      });
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
