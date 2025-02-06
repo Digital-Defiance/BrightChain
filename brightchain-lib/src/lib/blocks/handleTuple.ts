@@ -1,6 +1,8 @@
 import { TUPLE_SIZE } from '../constants';
 import BlockDataType from '../enumerations/blockDataType';
 import BlockType from '../enumerations/blockType';
+import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
+import { HandleTupleError } from '../errors/handleTupleError';
 import { IBlockMetadata } from '../interfaces/blockMetadata';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
@@ -17,13 +19,13 @@ export class BlockHandleTuple {
 
   constructor(handles: BlockHandle[]) {
     if (handles.length !== TUPLE_SIZE) {
-      throw new Error(`Tuple size must be ${TUPLE_SIZE}`);
+      throw new HandleTupleError(HandleTupleErrorType.InvalidTupleSize);
     }
 
     // Verify all blocks have the same size
     const blockSize = handles[0].blockSize;
     if (!handles.every((h) => h.blockSize === blockSize)) {
-      throw new Error('All blocks in tuple must have the same size');
+      throw new HandleTupleError(HandleTupleErrorType.BlockSizeMismatch);
     }
 
     this._handles = handles;
@@ -61,7 +63,7 @@ export class BlockHandleTuple {
     destBlockMetadata: IBlockMetadata,
   ): Promise<BlockHandle> {
     if (!this.handles.length) {
-      throw new Error('No blocks to XOR');
+      throw new HandleTupleError(HandleTupleErrorType.NoBlocksToXor);
     }
 
     // Load all block data
@@ -84,7 +86,7 @@ export class BlockHandleTuple {
     for (let i = 1; i < blockData.length; i++) {
       const current = blockData[i];
       if (current.length !== result.length) {
-        throw new Error('Block sizes must match');
+        throw new HandleTupleError(HandleTupleErrorType.BlockSizesMustMatch);
       }
 
       const xored = Buffer.alloc(result.length);

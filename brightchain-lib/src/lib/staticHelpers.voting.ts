@@ -5,6 +5,8 @@ import {
   PublicKey,
   generateRandomKeysSync,
 } from 'paillier-bigint';
+import { VotingErrorType } from './enumerations/votingErrorType';
+import { VotingError } from './errors/votingError';
 import { IsolatedPrivateKey } from './isolatedPrivateKey';
 import { IsolatedPublicKey } from './isolatedPublicKey';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
@@ -41,10 +43,12 @@ export class StaticHelpersVoting {
     walletPublicKey: Buffer,
   ): Buffer {
     if (!(keyPair.publicKey instanceof IsolatedPublicKey)) {
-      throw new Error('Invalid key pair: public key must be isolated');
+      throw new VotingError(VotingErrorType.InvalidKeyPairPublicKeyNotIsolated);
     }
     if (!(keyPair.privateKey instanceof IsolatedPrivateKey)) {
-      throw new Error('Invalid key pair: private key must be isolated');
+      throw new VotingError(
+        VotingErrorType.InvalidKeyPairPrivateKeyNotIsolated,
+      );
     }
 
     // Convert lambda and mu to hex buffers, padding with zeros if needed
@@ -82,7 +86,7 @@ export class StaticHelpersVoting {
     votingPublicKey: PublicKey,
   ): PrivateKey {
     if (!(votingPublicKey instanceof IsolatedPublicKey)) {
-      throw new Error('Invalid public key: must be an isolated key');
+      throw new VotingError(VotingErrorType.InvalidPublicKeyNotIsolated);
     }
 
     // If private key has 0x04 prefix, remove it since ECDH expects raw private key
@@ -128,7 +132,7 @@ export class StaticHelpersVoting {
 
   public static votingPublicKeyToBuffer(votingPublicKey: PublicKey): Buffer {
     if (!(votingPublicKey instanceof IsolatedPublicKey)) {
-      throw new Error('Invalid public key: must be an isolated key');
+      throw new VotingError(VotingErrorType.InvalidPublicKeyNotIsolated);
     }
 
     const nHex = votingPublicKey.n.toString(16).padStart(768, '0');
@@ -150,19 +154,19 @@ export class StaticHelpersVoting {
   public static bufferToVotingPublicKey(buffer: Buffer): IsolatedPublicKey {
     // Minimum buffer length check (magic + version + keyId + instanceId + nLength = 73 bytes)
     if (buffer.length < 73) {
-      throw new Error('Invalid public key buffer: too short');
+      throw new VotingError(VotingErrorType.InvalidPublicKeyBufferTooShort);
     }
 
     // Verify magic
     const magic = buffer.subarray(0, 4);
     if (!magic.equals(this.KEY_MAGIC)) {
-      throw new Error('Invalid public key buffer: wrong magic');
+      throw new VotingError(VotingErrorType.InvalidPublicKeyBufferWrongMagic);
     }
 
     // Read version
     const version = buffer[4];
     if (version !== this.KEY_VERSION) {
-      throw new Error('Unsupported public key version');
+      throw new VotingError(VotingErrorType.UnsupportedPublicKeyVersion);
     }
 
     // Read key ID
@@ -171,7 +175,7 @@ export class StaticHelpersVoting {
     // Read n length and value
     const nLength = buffer.readUInt32BE(69);
     if (buffer.length < 73 + nLength) {
-      throw new Error('Invalid public key buffer: incomplete n value');
+      throw new VotingError(VotingErrorType.InvalidPublicKeyBufferIncompleteN);
     }
     const nBuffer = buffer.subarray(73, 73 + nLength);
 
@@ -181,7 +185,11 @@ export class StaticHelpersVoting {
     try {
       n = BigInt('0x' + nHex);
     } catch (error) {
-      throw new Error(`Invalid public key buffer: failed to parse n: ${error}`);
+      throw new VotingError(
+        VotingErrorType.InvalidPublicKeyBufferFailedToParseN,
+        undefined,
+        { ERROR: error instanceof Error ? error.message : String(error) },
+      );
     }
 
     const g = n + 1n; // In Paillier, g is always n + 1
@@ -189,7 +197,7 @@ export class StaticHelpersVoting {
     // Verify key ID
     const computedKeyId = createHash('sha256').update(nBuffer).digest();
     if (!computedKeyId.equals(storedKeyId)) {
-      throw new Error('Invalid public key: key ID mismatch');
+      throw new VotingError(VotingErrorType.InvalidPublicKeyIdMismatch);
     }
 
     // Create and validate the public key
@@ -199,10 +207,10 @@ export class StaticHelpersVoting {
       publicKey.updateInstanceId(); // Generate a new instance ID for the recovered key
       return publicKey;
     } catch (error) {
-      throw new Error(
-        `Invalid public key parameters: ${
-          error instanceof Error ? error.message : 'unknown error'
-        }`,
+      throw new VotingError(
+        VotingErrorType.InvalidPublicKeyBufferFailedToParseN,
+        undefined,
+        { ERROR: error instanceof Error ? error.message : String(error) },
       );
     }
   }

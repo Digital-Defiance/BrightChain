@@ -1,6 +1,8 @@
 import { createECDH, createHash, createHmac } from 'crypto';
 import { KeyPair } from 'paillier-bigint';
 import { SecureDeterministicDRBG } from './drbg';
+import { VotingDerivationErrorType } from './enumerations/votingDerivationErrorType';
+import { VotingDerivationError } from './errors/votingDerivationError';
 import { IsolatedPrivateKey } from './isolatedPrivateKey';
 import { IsolatedPublicKey } from './isolatedPublicKey';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
@@ -156,7 +158,9 @@ export class StaticHelpersVotingDerivation {
       }
     }
 
-    throw new Error(`Failed to generate prime after ${maxAttempts} attempts`);
+    throw new VotingDerivationError(
+      VotingDerivationErrorType.FailedToGeneratePrime,
+    );
   }
 
   /**
@@ -175,7 +179,9 @@ export class StaticHelpersVotingDerivation {
       const q = this.generateDeterministicPrime(drbg, primeBits);
 
       if (p === q) {
-        throw new Error('Generated identical primes');
+        throw new VotingDerivationError(
+          VotingDerivationErrorType.IdenticalPrimes,
+        );
       }
 
       // Calculate RSA parameters
@@ -194,8 +200,10 @@ export class StaticHelpersVotingDerivation {
       // Verify key length
       const actualBits = n.toString(2).length;
       if (actualBits < bits) {
-        throw new Error(
-          `Generated key pair too small: ${actualBits} bits < ${bits} bits`,
+        throw new VotingDerivationError(
+          VotingDerivationErrorType.KeyPairTooSmall,
+          undefined,
+          { ACTUAL_BITS: actualBits, REQUIRED_BITS: bits },
         );
       }
 
@@ -204,7 +212,9 @@ export class StaticHelpersVotingDerivation {
       const encrypted = publicKey.encrypt(testValue);
       const decrypted = privateKey.decrypt(encrypted);
       if (decrypted !== testValue) {
-        throw new Error('Key pair validation failed');
+        throw new VotingDerivationError(
+          VotingDerivationErrorType.KeyPairValidationFailed,
+        );
       }
 
       return { publicKey, privateKey };
@@ -234,7 +244,10 @@ export class StaticHelpersVotingDerivation {
     };
 
     const [g, x] = egcd(a, m);
-    if (g !== 1n) throw new Error('Modular inverse does not exist');
+    if (g !== 1n)
+      throw new VotingDerivationError(
+        VotingDerivationErrorType.ModularInverseDoesNotExist,
+      );
     return ((x % m) + m) % m;
   }
 
@@ -247,10 +260,14 @@ export class StaticHelpersVotingDerivation {
   ): KeyPair {
     // Input validation
     if (!Buffer.isBuffer(ecdhPrivKey)) {
-      throw new Error('Private key must be a Buffer');
+      throw new VotingDerivationError(
+        VotingDerivationErrorType.PrivateKeyMustBeBuffer,
+      );
     }
     if (!Buffer.isBuffer(ecdhPubKey)) {
-      throw new Error('Public key must be a Buffer');
+      throw new VotingDerivationError(
+        VotingDerivationErrorType.PublicKeyMustBeBuffer,
+      );
     }
 
     // Normalize public key format
@@ -260,7 +277,9 @@ export class StaticHelpersVotingDerivation {
         : ecdhPubKey;
 
     if (normalizedPubKey.length !== 65 || normalizedPubKey[0] !== 0x04) {
-      throw new Error('Invalid public key format');
+      throw new VotingDerivationError(
+        VotingDerivationErrorType.InvalidPublicKeyFormat,
+      );
     }
 
     try {
@@ -279,7 +298,9 @@ export class StaticHelpersVotingDerivation {
         ecdh.setPrivateKey(privateKeyForSecret);
         sharedSecret = ecdh.computeSecret(publicKeyForSecret);
       } catch (error) {
-        throw new Error('Invalid ECDH key pair');
+        throw new VotingDerivationError(
+          VotingDerivationErrorType.InvalidEcdhKeyPair,
+        );
       }
 
       // Generate seed for key generation
@@ -292,7 +313,11 @@ export class StaticHelpersVotingDerivation {
       );
     } catch (error) {
       if (error instanceof Error) {
-        throw new Error(`Failed to derive voting keys: ${error.message}`);
+        throw new VotingDerivationError(
+          VotingDerivationErrorType.FailedToDeriveVotingKeys,
+          undefined,
+          { ERROR: error.message },
+        );
       }
       throw error;
     }

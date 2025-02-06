@@ -4,6 +4,8 @@ import { TUPLE_SIZE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
+import { MemoryTupleError } from '../errors/memoryTupleError';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
 import { BlockHandle } from './handle';
@@ -27,13 +29,16 @@ export class InMemoryBlockTuple {
 
   constructor(blocks: (BaseBlock | BlockHandle)[]) {
     if (blocks.length !== TUPLE_SIZE) {
-      throw new Error(`Tuple must have ${TUPLE_SIZE} blocks`);
+      throw new MemoryTupleError(
+        MemoryTupleErrorType.InvalidTupleSize,
+        TUPLE_SIZE,
+      );
     }
 
     // Verify all blocks have the same size
     this._blockSize = blocks[0].blockSize;
     if (!blocks.every((b) => b.blockSize === this._blockSize)) {
-      throw new Error('All blocks in tuple must have the same size');
+      throw new MemoryTupleError(MemoryTupleErrorType.BlockSizeMismatch);
     }
 
     this._blocks = blocks;
@@ -98,7 +103,7 @@ export class InMemoryBlockTuple {
    */
   public async xor(): Promise<RawDataBlock> {
     if (!this._blocks.length) {
-      throw new Error('No blocks to XOR');
+      throw new MemoryTupleError(MemoryTupleErrorType.NoBlocksToXor);
     }
 
     try {
@@ -115,7 +120,7 @@ export class InMemoryBlockTuple {
         );
 
         if (currentData.length !== result.length) {
-          throw new Error('Block sizes must match');
+          throw new MemoryTupleError(MemoryTupleErrorType.BlockSizeMismatch);
         }
 
         // XOR in place
@@ -136,11 +141,10 @@ export class InMemoryBlockTuple {
         true, // canPersist
       );
     } catch (error) {
-      throw new Error(
-        `Failed to XOR blocks: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      );
+      if (error instanceof MemoryTupleError) {
+        throw error;
+      }
+      throw new MemoryTupleError(MemoryTupleErrorType.InvalidBlockCount);
     }
   }
 
@@ -154,26 +158,30 @@ export class InMemoryBlockTuple {
     getBlockPath: (id: ChecksumBuffer) => string,
   ): Promise<InMemoryBlockTuple> {
     if (blockIDs.length !== TUPLE_SIZE) {
-      throw new Error(`Expected ${TUPLE_SIZE} block IDs`);
+      throw new MemoryTupleError(
+        MemoryTupleErrorType.ExpectedBlockIds,
+        TUPLE_SIZE,
+      );
     }
 
     const handles = await Promise.all(
-      blockIDs.map(
-        (id: ChecksumBuffer) =>
-          new BlockHandle(
+      blockIDs.map((id: ChecksumBuffer) => {
+        const handle = new BlockHandle(
+          BlockType.Handle,
+          BlockDataType.RawData,
+          id,
+          new BlockMetadata(
+            blockSize,
             BlockType.Handle,
             BlockDataType.RawData,
-            id,
-            new BlockMetadata(
-              blockSize,
-              BlockType.Handle,
-              BlockDataType.RawData,
-              blockSize as number,
-            ),
-            true,
-            true,
+            blockSize as number,
           ),
-      ),
+          true,
+          true,
+        );
+        handle.setPath(getBlockPath(id));
+        return handle;
+      }),
     );
 
     return new InMemoryBlockTuple(handles);
@@ -187,7 +195,10 @@ export class InMemoryBlockTuple {
     blocks: (BaseBlock | BlockHandle)[],
   ): InMemoryBlockTuple {
     if (blocks.length !== TUPLE_SIZE) {
-      throw new Error(`Expected ${TUPLE_SIZE} blocks`);
+      throw new MemoryTupleError(
+        MemoryTupleErrorType.ExpectedBlocks,
+        TUPLE_SIZE,
+      );
     }
 
     return new InMemoryBlockTuple(blocks);

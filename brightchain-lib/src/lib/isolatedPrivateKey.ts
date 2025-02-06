@@ -1,5 +1,7 @@
 import { createHmac } from 'crypto';
 import { PrivateKey } from 'paillier-bigint';
+import { IsolatedKeyErrorType } from './enumerations/isolatedKeyErrorType';
+import { IsolatedKeyError } from './errors/isolatedKeyError';
 import { IsolatedPublicKey } from './isolatedPublicKey';
 
 export class IsolatedPrivateKey extends PrivateKey {
@@ -9,7 +11,7 @@ export class IsolatedPrivateKey extends PrivateKey {
 
   constructor(lambda: bigint, mu: bigint, publicKey: IsolatedPublicKey) {
     if (!(publicKey instanceof IsolatedPublicKey)) {
-      throw new Error('Invalid public key: must be an isolated key');
+      throw new IsolatedKeyError(IsolatedKeyErrorType.InvalidPublicKey);
     }
     super(lambda, mu, publicKey);
     this._originalKeyId = publicKey.getKeyId();
@@ -20,7 +22,7 @@ export class IsolatedPrivateKey extends PrivateKey {
   override decrypt(taggedCiphertext: bigint): bigint {
     // First verify if we're using a recovered key by checking the public key instance
     if (!(this.publicKey instanceof IsolatedPublicKey)) {
-      throw new Error('Invalid public key: must be an isolated key');
+      throw new IsolatedKeyError(IsolatedKeyErrorType.InvalidPublicKey);
     }
 
     // Compare instance IDs before any ciphertext operations
@@ -29,9 +31,7 @@ export class IsolatedPrivateKey extends PrivateKey {
 
     // This check must happen before any ciphertext operations
     if (!currentInstanceId.equals(this._originalInstanceId)) {
-      throw new Error(
-        'Key isolation violation: public key instance has changed',
-      );
+      throw new IsolatedKeyError(IsolatedKeyErrorType.InvalidKeyId);
     }
 
     // Now that we've verified the instance ID, we can proceed with ciphertext operations
@@ -52,24 +52,16 @@ export class IsolatedPrivateKey extends PrivateKey {
 
       // Verify HMAC
       if (receivedHmac !== expectedHmac) {
-        throw new Error(
-          'Key isolation violation: ciphertext from different key instance',
-        );
+        throw new IsolatedKeyError(IsolatedKeyErrorType.InvalidKeyFormat);
       }
 
       // Finally decrypt the ciphertext
       return super.decrypt(ciphertextBigInt);
     } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message ===
-          'Key isolation violation: public key instance has changed'
-      ) {
+      if (error instanceof IsolatedKeyError) {
         throw error;
       }
-      throw new Error(
-        'Key isolation violation: ciphertext from different key instance',
-      );
+      throw new IsolatedKeyError(IsolatedKeyErrorType.InvalidKeyFormat);
     }
   }
 }

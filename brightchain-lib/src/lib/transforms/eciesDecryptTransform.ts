@@ -1,5 +1,7 @@
 import { Transform, TransformCallback, TransformOptions } from 'stream';
 import { BlockSize } from '../enumerations/blockSizes';
+import { StreamErrorType } from '../enumerations/streamErrorType';
+import { StreamError } from '../errors/streamError';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 
 export class EciesDecryptionTransform extends Transform {
@@ -78,7 +80,7 @@ export class EciesDecryptionTransform extends Transform {
       // Handle any remaining data in buffer
       if (this.buffer.length > 0) {
         if (this.buffer.length < StaticHelpersECIES.eciesOverheadLength) {
-          throw new Error('Incomplete encrypted block');
+          throw new StreamError(StreamErrorType.IncompleteEncryptedBlock);
         }
 
         const decryptedBlock = StaticHelpersECIES.decryptWithHeader(

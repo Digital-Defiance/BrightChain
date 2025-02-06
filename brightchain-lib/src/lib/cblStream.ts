@@ -9,6 +9,8 @@ import { WhitenedBlock } from './blocks/whitened';
 import { BrightChainMember } from './brightChainMember';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockType } from './enumerations/blockType';
+import { CblErrorType } from './enumerations/cblErrorType';
+import { CblError } from './errors/cblError';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
 import { ChecksumBuffer } from './types';
 
@@ -43,11 +45,11 @@ export class CblStream extends Readable {
     super();
 
     if (!cbl) {
-      throw new Error('CBL is required');
+      throw new CblError(CblErrorType.CblRequired);
     }
 
     if (!getWhitenedBlock) {
-      throw new Error('getWhitenedBlock function is required');
+      throw new CblError(CblErrorType.WhitenedBlockFunctionRequired);
     }
 
     this.cbl = cbl;
@@ -126,7 +128,7 @@ export class CblStream extends Readable {
 
         const whitenedBlock = this.getWhitenedBlock(address);
         if (!whitenedBlock) {
-          throw new Error(`Failed to load block: ${address.toString('hex')}`);
+          throw new CblError(CblErrorType.FailedToLoadBlock);
         }
 
         // Create a handle from the whitened block
@@ -149,7 +151,7 @@ export class CblStream extends Readable {
       // Decrypt if needed
       if (this.creatorForDecryption) {
         if (!(xoredData instanceof EncryptedOwnedDataBlock)) {
-          throw new Error('Expected encrypted data block');
+          throw new CblError(CblErrorType.ExpectedEncryptedDataBlock);
         }
         this.currentData = await BlockService.decrypt(
           this.creatorForDecryption,
@@ -157,7 +159,7 @@ export class CblStream extends Readable {
         );
       } else {
         if (!(xoredData instanceof OwnedDataBlock)) {
-          throw new Error('Expected owned data block');
+          throw new CblError(CblErrorType.ExpectedOwnedDataBlock);
         }
         this.currentData = xoredData;
       }

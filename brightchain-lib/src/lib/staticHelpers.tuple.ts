@@ -16,6 +16,8 @@ import { RANDOM_BLOCKS_PER_TUPLE, TUPLE_SIZE } from './constants';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
 import { BlockType } from './enumerations/blockType';
+import { TupleErrorType } from './enumerations/tupleErrorType';
+import { TupleError } from './errors/tupleError';
 import { PrimeTupleGeneratorStream } from './primeTupleGeneratorStream';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
 
@@ -51,11 +53,11 @@ export abstract class StaticHelpersTuple {
   ): Promise<WhitenedBlock> {
     // Validate parameters
     if (!sourceBlock || !whiteners || !randomBlocks) {
-      throw new Error('All parameters are required');
+      throw new TupleError(TupleErrorType.MissingParameters);
     }
 
     if (whiteners.length + randomBlocks.length + 1 !== TUPLE_SIZE) {
-      throw new Error('Invalid number of blocks for tuple');
+      throw new TupleError(TupleErrorType.InvalidBlockCount);
     }
 
     try {
@@ -66,7 +68,7 @@ export abstract class StaticHelpersTuple {
       const xoredData = Buffer.from(sourceData);
       for (const whitener of whiteners) {
         if (whitener.blockSize !== sourceBlock.blockSize) {
-          throw new Error('Block size mismatch');
+          throw new TupleError(TupleErrorType.BlockSizeMismatch);
         }
         const whitenerData = await StaticHelpersTuple.toBuffer(whitener.data);
         for (let i = 0; i < xoredData.length; i++) {
@@ -77,7 +79,7 @@ export abstract class StaticHelpersTuple {
       // XOR with random blocks
       for (const random of randomBlocks) {
         if (random.blockSize !== sourceBlock.blockSize) {
-          throw new Error('Block size mismatch');
+          throw new TupleError(TupleErrorType.BlockSizeMismatch);
         }
         const randomData = await StaticHelpersTuple.toBuffer(random.data);
         for (let i = 0; i < xoredData.length; i++) {
@@ -93,11 +95,12 @@ export abstract class StaticHelpersTuple {
         new Date(),
       );
     } catch (error) {
-      throw new Error(
-        `Failed to XOR blocks: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      );
+      if (error instanceof TupleError) {
+        throw error;
+      }
+      throw new TupleError(TupleErrorType.XorOperationFailed, undefined, {
+        ERROR: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -132,7 +135,7 @@ export abstract class StaticHelpersTuple {
   ): Promise<OwnedDataBlock> {
     // Validate parameters
     if (!primeWhitenedBlock || !whiteners) {
-      throw new Error('All parameters are required');
+      throw new TupleError(TupleErrorType.MissingParameters);
     }
 
     try {
@@ -145,7 +148,7 @@ export abstract class StaticHelpersTuple {
       const xoredData = Buffer.from(primeData);
       for (const whitener of whiteners) {
         if (whitener.blockSize !== primeWhitenedBlock.blockSize) {
-          throw new Error('Block size mismatch');
+          throw new TupleError(TupleErrorType.BlockSizeMismatch);
         }
         const whitenerData = await StaticHelpersTuple.toBuffer(whitener.data);
         for (let i = 0; i < xoredData.length; i++) {
@@ -167,11 +170,12 @@ export abstract class StaticHelpersTuple {
         xoredData.length,
       );
     } catch (error) {
-      throw new Error(
-        `Failed to XOR blocks: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      );
+      if (error instanceof TupleError) {
+        throw error;
+      }
+      throw new TupleError(TupleErrorType.XorOperationFailed, undefined, {
+        ERROR: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -242,7 +246,7 @@ export abstract class StaticHelpersTuple {
 
     const encryptedBlock = await BlockService.encrypt(creator, ownedBlock);
     if (!(encryptedBlock instanceof EncryptedOwnedDataBlock)) {
-      throw new Error('Expected encrypted owned data block');
+      throw new TupleError(TupleErrorType.InvalidBlockType);
     }
 
     const decryptedBlock = await BlockService.decrypt(creator, encryptedBlock);
@@ -273,11 +277,11 @@ export abstract class StaticHelpersTuple {
       !randomBlockSource ||
       !persistTuple
     ) {
-      throw new Error('All parameters are required');
+      throw new TupleError(TupleErrorType.MissingParameters);
     }
 
     if (sourceLength <= 0n) {
-      throw new Error('Source length must be positive');
+      throw new TupleError(TupleErrorType.InvalidSourceLength);
     }
 
     try {
@@ -355,7 +359,7 @@ export abstract class StaticHelpersTuple {
       for (let i = 0; i < RANDOM_BLOCKS_PER_TUPLE; i++) {
         const block = randomBlockSource();
         if (!block) {
-          throw new Error('Failed to get random block');
+          throw new TupleError(TupleErrorType.RandomBlockGenerationFailed);
         }
         randomBlocks.push(block);
       }
@@ -364,7 +368,7 @@ export abstract class StaticHelpersTuple {
       for (let i = RANDOM_BLOCKS_PER_TUPLE; i < TUPLE_SIZE - 1; i++) {
         const block = whitenedBlockSource() ?? randomBlockSource();
         if (!block) {
-          throw new Error('Failed to get whitening/random block');
+          throw new TupleError(TupleErrorType.WhiteningBlockGenerationFailed);
         }
         whiteners.push(block);
       }
@@ -384,10 +388,15 @@ export abstract class StaticHelpersTuple {
       await persistTuple(tuple);
       return tuple;
     } catch (error) {
-      throw new Error(
-        `Failed to process data stream: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
+      if (error instanceof TupleError) {
+        throw error;
+      }
+      throw new TupleError(
+        TupleErrorType.DataStreamProcessingFailed,
+        undefined,
+        {
+          ERROR: error instanceof Error ? error.message : String(error),
+        },
       );
     }
   }
@@ -413,11 +422,11 @@ export abstract class StaticHelpersTuple {
       !randomBlockSource ||
       !persistTuple
     ) {
-      throw new Error('All parameters are required');
+      throw new TupleError(TupleErrorType.MissingParameters);
     }
 
     if (sourceLength <= 0n) {
-      throw new Error('Source length must be positive');
+      throw new TupleError(TupleErrorType.InvalidSourceLength);
     }
 
     try {
@@ -494,7 +503,7 @@ export abstract class StaticHelpersTuple {
       for (let i = 0; i < RANDOM_BLOCKS_PER_TUPLE; i++) {
         const block = randomBlockSource();
         if (!block) {
-          throw new Error('Failed to get random block');
+          throw new TupleError(TupleErrorType.RandomBlockGenerationFailed);
         }
         randomBlocks.push(block);
       }
@@ -503,7 +512,7 @@ export abstract class StaticHelpersTuple {
       for (let i = RANDOM_BLOCKS_PER_TUPLE; i < TUPLE_SIZE - 1; i++) {
         const block = whitenedBlockSource() ?? randomBlockSource();
         if (!block) {
-          throw new Error('Failed to get whitening/random block');
+          throw new TupleError(TupleErrorType.WhiteningBlockGenerationFailed);
         }
         whiteners.push(block);
       }
@@ -523,10 +532,15 @@ export abstract class StaticHelpersTuple {
       await persistTuple(tuple);
       return tuple;
     } catch (error) {
-      throw new Error(
-        `Failed to process encrypted data stream: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
+      if (error instanceof TupleError) {
+        throw error;
+      }
+      throw new TupleError(
+        TupleErrorType.EncryptedDataStreamProcessingFailed,
+        undefined,
+        {
+          ERROR: error instanceof Error ? error.message : String(error),
+        },
       );
     }
   }
