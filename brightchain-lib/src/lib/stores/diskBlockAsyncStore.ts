@@ -6,6 +6,8 @@ import { RawDataBlock } from '../blocks/rawData';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { StoreErrorType } from '../enumerations/storeErrorType';
+import { StoreError } from '../errors/storeError';
 import { IBlockMetadata } from '../interfaces/blockMetadata';
 import MemoryWritableStream from '../memoryWriteableStream';
 import { ChecksumTransform } from '../transforms/checksumTransform';
@@ -57,12 +59,14 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
   public getData(key: ChecksumBuffer): RawDataBlock {
     const blockPath = this.blockPath(key);
     if (!existsSync(blockPath)) {
-      throw new Error(`Block file not found: ${blockPath}`);
+      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+        KEY: blockPath,
+      });
     }
 
     const data = readFileSync(blockPath);
     if (data.length !== this._blockSize) {
-      throw new Error('Block file size mismatch');
+      throw new StoreError(StoreErrorType.BlockFileSizeMismatch);
     }
 
     const metadataPath = `${blockPath}.m.json`;
@@ -75,11 +79,9 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
           dateCreated = new Date(metadata.dateCreated);
         }
       } catch (error) {
-        throw new Error(
-          `Invalid block metadata: ${
-            error instanceof Error ? error.message : 'Unknown error'
-          }`,
-        );
+        throw new StoreError(StoreErrorType.InvalidBlockMetadata, undefined, {
+          ERROR: error instanceof Error ? error.message : String(error),
+        });
       }
     }
 
@@ -100,20 +102,20 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
    */
   public setData(block: RawDataBlock): void {
     if (block.blockSize !== this._blockSize) {
-      throw new Error(
-        `Block size mismatch. Expected ${this._blockSize} but got ${block.blockSize}.`,
-      );
+      throw new StoreError(StoreErrorType.BlockSizeMismatch);
+    }
+
+    const blockPath = this.blockPath(block.idChecksum);
+    if (existsSync(blockPath)) {
+      throw new StoreError(StoreErrorType.BlockPathAlreadyExists, undefined, {
+        PATH: blockPath,
+      });
     }
 
     try {
       block.validate();
     } catch (error) {
-      throw new Error('Block validation failed');
-    }
-
-    const blockPath = this.blockPath(block.idChecksum);
-    if (existsSync(blockPath)) {
-      throw new Error(`Block path ${blockPath} already exists`);
+      throw new StoreError(StoreErrorType.BlockValidationFailed);
     }
 
     writeFileSync(blockPath, block.data);
@@ -131,7 +133,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
     destBlockMetadata: IBlockMetadata,
   ): Promise<RawDataBlock> {
     if (!blocks.length) {
-      throw new Error('No blocks provided');
+      throw new StoreError(StoreErrorType.NoBlocksProvided);
     }
 
     return new Promise((resolve, reject) => {

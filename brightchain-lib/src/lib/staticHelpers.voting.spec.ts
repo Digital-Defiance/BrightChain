@@ -1,5 +1,11 @@
 import { createECDH, ECDH } from 'crypto';
 import { KeyPair } from 'paillier-bigint';
+import { EciesErrorType } from './enumerations/eciesErrorType';
+import { IsolatedKeyErrorType } from './enumerations/isolatedKeyErrorType';
+import { VotingErrorType } from './enumerations/votingErrorType';
+import { EciesError } from './errors/eciesError';
+import { IsolatedKeyError } from './errors/isolatedKeyError';
+import { VotingError } from './errors/votingError';
 import { IsolatedPrivateKey } from './isolatedPrivateKey';
 import { IsolatedPublicKey } from './isolatedPublicKey';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
@@ -71,7 +77,9 @@ describe('staticHelpers.voting', () => {
           votingKeypair as unknown as KeyPair,
           invalidPublicKey,
         );
-      }).toThrow();
+      }).toThrowType(EciesError, (error: EciesError) => {
+        expect(error.reason).toBe(EciesErrorType.InvalidEphemeralPublicKey);
+      });
     });
 
     it('should maintain key security through encryption/decryption cycle', () => {
@@ -137,7 +145,9 @@ describe('staticHelpers.voting', () => {
       const invalidBuffer = Buffer.from('invalid');
       expect(() => {
         StaticHelpersVoting.bufferToVotingPublicKey(invalidBuffer);
-      }).toThrow();
+      }).toThrowType(VotingError, (error: VotingError) => {
+        expect(error.type).toBe(VotingErrorType.InvalidPublicKeyBufferTooShort);
+      });
     });
 
     it('should preserve key properties through buffer conversion', () => {
@@ -166,9 +176,9 @@ describe('staticHelpers.voting', () => {
         // This should now throw due to instance mismatch
         expect(() => {
           testKeypair.privateKey.decrypt(encryptedRecovered);
-        }).toThrow(
-          'Key isolation violation: ciphertext from different key instance',
-        );
+        }).toThrowType(IsolatedKeyError, (error: IsolatedKeyError) => {
+          expect(error.reason).toBe(IsolatedKeyErrorType.InvalidKeyFormat);
+        });
       }
     });
   });

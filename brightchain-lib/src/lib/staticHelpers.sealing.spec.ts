@@ -1,6 +1,8 @@
 import { BrightChainMember } from './brightChainMember';
 import { EmailString } from './emailString';
 import { MemberType } from './enumerations/memberType';
+import { SealingErrorType } from './enumerations/sealingErrorType';
+import { SealingError } from './errors/sealingError';
 import { QuorumDataRecord } from './quorumDataRecord';
 import { StaticHelpersSealing } from './staticHelpers.sealing';
 import { ShortHexGuid } from './types';
@@ -95,7 +97,9 @@ describe('brightchainQuorum', () => {
     it('should throw error for insufficient members', () => {
       expect(() =>
         StaticHelpersSealing.quorumUnseal(sealedDocument, [alice]),
-      ).toThrow();
+      ).toThrowType(SealingError, (error: SealingError) => {
+        expect(error.type).toEqual(SealingErrorType.NotEnoughMembersToUnlock);
+      });
     });
   });
 
@@ -103,17 +107,26 @@ describe('brightchainQuorum', () => {
     it('should throw error for invalid members', () => {
       expect(() =>
         StaticHelpersSealing.quorumSeal(alice, { data: 123 }, [], 1),
-      ).toThrow();
+      ).toThrowType(SealingError, (error: SealingError) => {
+        expect(error.type).toEqual(SealingErrorType.NotEnoughMembersToUnlock);
+      });
     });
 
     describe('reinitSecrets', () => {
       it('should throw error for invalid maxShares', () => {
-        expect(() => StaticHelpersSealing.reinitSecrets(0)).toThrow();
+        expect(() => StaticHelpersSealing.reinitSecrets(0)).toThrowType(
+          SealingError,
+          (error: SealingError) => {
+            expect(error.type).toEqual(SealingErrorType.InvalidBitRange);
+          },
+        );
         expect(() =>
           StaticHelpersSealing.reinitSecrets(
             StaticHelpersSealing.MaximumShares + 1,
           ),
-        ).toThrow();
+        ).toThrowType(SealingError, (error: SealingError) => {
+          expect(error.type).toEqual(SealingErrorType.InvalidBitRange);
+        });
       });
 
       it('should correctly initialize secrets for valid maxShares', () => {
@@ -125,23 +138,31 @@ describe('brightchainQuorum', () => {
       it('should throw error for invalid member count', () => {
         expect(() =>
           StaticHelpersSealing.validateQuorumSealInputs([], 2),
-        ).toThrow();
+        ).toThrowType(SealingError, (error: SealingError) => {
+          expect(error.type).toEqual(SealingErrorType.NotEnoughMembersToUnlock);
+        });
 
         const tooManyMembers = Array(
           StaticHelpersSealing.MaximumShares + 1,
         ).fill(alice);
         expect(() =>
           StaticHelpersSealing.validateQuorumSealInputs(tooManyMembers, 2),
-        ).toThrow();
+        ).toThrowType(SealingError, (error: SealingError) => {
+          expect(error.type).toEqual(SealingErrorType.TooManyMembersToUnlock);
+        });
       });
 
       it('should throw error for invalid sharesRequired', () => {
         expect(() =>
           StaticHelpersSealing.validateQuorumSealInputs([alice, bob], 0),
-        ).toThrow();
+        ).toThrowType(SealingError, (error: SealingError) => {
+          expect(error.type).toEqual(SealingErrorType.NotEnoughMembersToUnlock);
+        });
         expect(() =>
           StaticHelpersSealing.validateQuorumSealInputs([alice, bob], 3),
-        ).toThrow();
+        ).toThrowType(SealingError, (error: SealingError) => {
+          expect(error.type).toEqual(SealingErrorType.NotEnoughMembersToUnlock);
+        });
       });
     });
   });

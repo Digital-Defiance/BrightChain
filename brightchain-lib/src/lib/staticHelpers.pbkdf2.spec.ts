@@ -1,4 +1,6 @@
 import { randomBytes } from 'crypto';
+import { Pbkdf2ErrorType } from './enumerations/pbkdf2ErrorType';
+import { Pbkdf2Error } from './errors/pbkdf2Error';
 import { StaticHelpersPbkdf2 } from './staticHelpers.pbkdf2';
 import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 
@@ -76,13 +78,17 @@ describe('brightchain staticHelpers.pbkdf2', () => {
       const shortSalt = Buffer.alloc(15);
       expect(() =>
         StaticHelpersPbkdf2.deriveKeyFromPassword(testPassword, shortSalt),
-      ).toThrow('Salt length does not match expected length');
+      ).toThrowType(Pbkdf2Error, (error: Pbkdf2Error) => {
+        expect(error.reason).toBe(Pbkdf2ErrorType.InvalidSaltLength);
+      });
 
       // Test salt too long
       const longSalt = Buffer.alloc(17);
       expect(() =>
         StaticHelpersPbkdf2.deriveKeyFromPassword(testPassword, longSalt),
-      ).toThrow('Salt length does not match expected length');
+      ).toThrowType(Pbkdf2Error, (error: Pbkdf2Error) => {
+        expect(error.reason).toBe(Pbkdf2ErrorType.InvalidSaltLength);
+      });
     });
 
     it('should handle invalid inputs', () => {
@@ -91,15 +97,21 @@ describe('brightchain staticHelpers.pbkdf2', () => {
         StaticHelpersPbkdf2.deriveKeyFromPassword(
           undefined as unknown as Buffer,
         ),
-      ).toThrow();
+      ).toThrow(
+        'The "password" argument must be of type string or an instance of ArrayBuffer, Buffer, TypedArray, or DataView. Received undefined',
+      );
 
       // Test invalid iterations
       expect(() =>
         StaticHelpersPbkdf2.deriveKeyFromPassword(testPassword, testSalt, -1),
-      ).toThrow();
+      ).toThrow(
+        'The value of "iterations" is out of range. It must be >= 1 && <= 2147483647. Received -1',
+      );
       expect(() =>
         StaticHelpersPbkdf2.deriveKeyFromPassword(testPassword, testSalt, 0),
-      ).toThrow();
+      ).toThrow(
+        'The value of "iterations" is out of range. It must be >= 1 && <= 2147483647. Received 0',
+      );
     });
   });
 });

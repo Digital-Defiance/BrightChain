@@ -1,10 +1,12 @@
+import { toThrowType } from './src/test/matchers/errorMatchers';
+
 expect.addSnapshotSerializer({
   test: (val) => typeof val === 'bigint',
   print: (val) => `${(val as bigint).toString()}n`,
 });
 
 expect.extend({
-  toBeBigInt(received: any, argument: bigint) {
+  toBeBigInt(received: unknown, argument: bigint) {
     const pass = received === argument;
     if (pass) {
       return {
@@ -28,4 +30,5 @@ expect.extend({
       actual: received.toString(), //This converts to String
     };
   },
+  toThrowType,
 });

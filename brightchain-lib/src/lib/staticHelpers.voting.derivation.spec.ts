@@ -1,4 +1,6 @@
 import { createECDH, ECDH } from 'crypto';
+import { VotingDerivationErrorType } from './enumerations/votingDerivationErrorType';
+import { VotingDerivationError } from './errors/votingDerivationError';
 import { IsolatedPrivateKey } from './isolatedPrivateKey';
 import { IsolatedPublicKey } from './isolatedPublicKey';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
@@ -117,14 +119,22 @@ describe('staticHelpers.voting.derivation', () => {
           'invalid' as unknown as Buffer,
           publicKey,
         ),
-      ).toThrow('Private key must be a Buffer');
+      ).toThrowType(VotingDerivationError, (error: VotingDerivationError) => {
+        expect(error.type).toBe(
+          VotingDerivationErrorType.PrivateKeyMustBeBuffer,
+        );
+      });
 
       expect(() =>
         StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
           privateKey,
           'invalid' as unknown as Buffer,
         ),
-      ).toThrow('Public key must be a Buffer');
+      ).toThrowType(VotingDerivationError, (error: VotingDerivationError) => {
+        expect(error.type).toBe(
+          VotingDerivationErrorType.PublicKeyMustBeBuffer,
+        );
+      });
 
       // Test invalid public key format
       const invalidPubKey = Buffer.from('0123456789', 'hex'); // Wrong length
@@ -133,7 +143,11 @@ describe('staticHelpers.voting.derivation', () => {
           privateKey,
           invalidPubKey,
         ),
-      ).toThrow('Invalid public key format');
+      ).toThrowType(VotingDerivationError, (error: VotingDerivationError) => {
+        expect(error.type).toBe(
+          VotingDerivationErrorType.InvalidPublicKeyFormat,
+        );
+      });
 
       // Test invalid ECDH key pair
       const invalidPrivKey = Buffer.from('00'.repeat(32), 'hex'); // All zeros
@@ -142,7 +156,11 @@ describe('staticHelpers.voting.derivation', () => {
           invalidPrivKey,
           publicKey,
         ),
-      ).toThrow('Invalid ECDH key pair');
+      ).toThrowType(VotingDerivationError, (error: VotingDerivationError) => {
+        expect(error.type).toBe(
+          VotingDerivationErrorType.FailedToDeriveVotingKeys,
+        );
+      });
     });
 
     it('should maintain homomorphic properties with instance verification', () => {

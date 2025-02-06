@@ -1,5 +1,7 @@
 import { createHash, createHmac } from 'crypto';
 import { generateRandomKeys } from 'paillier-bigint';
+import { IsolatedKeyErrorType } from './enumerations/isolatedKeyErrorType';
+import { IsolatedKeyError } from './errors/isolatedKeyError';
 import { IsolatedPrivateKey } from './isolatedPrivateKey';
 import { IsolatedPublicKey } from './isolatedPublicKey';
 
@@ -131,8 +133,11 @@ describe('Isolated Keys', () => {
       const c1 = keys.isolatedPublicKey.encrypt(1n);
       const c2 = otherKeys.isolatedPublicKey.encrypt(2n);
 
-      expect(() => keys.isolatedPublicKey.addition(c1, c2)).toThrow(
-        'Key isolation violation: ciphertexts from different key instances',
+      expect(() => keys.isolatedPublicKey.addition(c1, c2)).toThrowType(
+        IsolatedKeyError,
+        (error: IsolatedKeyError) => {
+          expect(error.reason).toBe(IsolatedKeyErrorType.KeyIsolationViolation);
+        },
       );
     });
   });
@@ -155,7 +160,9 @@ describe('Isolated Keys', () => {
 
       expect(
         () => new IsolatedPrivateKey(lambda, mu, regularPublicKey),
-      ).toThrow('Invalid public key: must be an isolated key');
+      ).toThrowType(IsolatedKeyError, (error: IsolatedKeyError) => {
+        expect(error.reason).toBe(IsolatedKeyErrorType.InvalidPublicKey);
+      });
     });
 
     it('should decrypt tagged ciphertext correctly', () => {
@@ -169,8 +176,11 @@ describe('Isolated Keys', () => {
       const message = 2n;
       const ciphertext = otherKeys.isolatedPublicKey.encrypt(message);
 
-      expect(() => keys.isolatedPrivateKey.decrypt(ciphertext)).toThrow(
-        'Key isolation violation: ciphertext from different key instance',
+      expect(() => keys.isolatedPrivateKey.decrypt(ciphertext)).toThrowType(
+        IsolatedKeyError,
+        (error: IsolatedKeyError) => {
+          expect(error.reason).toBe(IsolatedKeyErrorType.InvalidKeyFormat);
+        },
       );
     });
 

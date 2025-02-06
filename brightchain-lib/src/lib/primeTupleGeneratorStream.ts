@@ -7,7 +7,9 @@ import { RANDOM_BLOCKS_PER_TUPLE, TUPLE_SIZE } from './constants';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
 import { BlockType } from './enumerations/blockType';
+import { StreamErrorType } from './enumerations/streamErrorType';
 import { InvalidTupleCountError } from './errors/invalidTupleCount';
+import { StreamError } from './errors/streamError';
 import { GuidV4 } from './guid';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
 
@@ -43,15 +45,15 @@ export class PrimeTupleGeneratorStream extends Transform {
 
     // Validate parameters
     if (!blockSize) {
-      throw new Error('Block size is required');
+      throw new StreamError(StreamErrorType.BlockSizeRequired);
     }
 
     if (!whitenedBlockSource) {
-      throw new Error('Whitened block source is required');
+      throw new StreamError(StreamErrorType.WhitenedBlockSourceRequired);
     }
 
     if (!randomBlockSource) {
-      throw new Error('Random block source is required');
+      throw new StreamError(StreamErrorType.RandomBlockSourceRequired);
     }
 
     this.blockSize = blockSize;
@@ -68,7 +70,7 @@ export class PrimeTupleGeneratorStream extends Transform {
     try {
       // Validate chunk
       if (!Buffer.isBuffer(chunk)) {
-        throw new Error('Input must be a buffer');
+        throw new StreamError(StreamErrorType.InputMustBeBuffer);
       }
 
       // Add chunk to buffer
@@ -115,7 +117,7 @@ export class PrimeTupleGeneratorStream extends Transform {
       for (let i = 0; i < RANDOM_BLOCKS_PER_TUPLE; i++) {
         const block = this.randomBlockSource();
         if (!block) {
-          throw new Error('Failed to get random block');
+          throw new StreamError(StreamErrorType.FailedToGetRandomBlock);
         }
         randomBlocks.push(block);
       }
@@ -125,7 +127,7 @@ export class PrimeTupleGeneratorStream extends Transform {
       for (let i = RANDOM_BLOCKS_PER_TUPLE; i < TUPLE_SIZE - 1; i++) {
         const block = this.whitenedBlockSource() ?? this.randomBlockSource();
         if (!block) {
-          throw new Error('Failed to get whitening/random block');
+          throw new StreamError(StreamErrorType.FailedToGetWhiteningBlock);
         }
         whiteners.push(block);
       }

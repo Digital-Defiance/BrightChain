@@ -1,6 +1,8 @@
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { BlockSize, sizeToSizeString } from '../enumerations/blockSizes';
+import { StoreErrorType } from '../enumerations/storeErrorType';
+import { StoreError } from '../errors/storeError';
 import { ChecksumBuffer } from '../types';
 
 /**
@@ -13,11 +15,11 @@ export abstract class DiskBlockStore {
 
   protected constructor(storePath: string, blockSize: BlockSize) {
     if (!storePath) {
-      throw new Error('Store path is required');
+      throw new StoreError(StoreErrorType.StorePathRequired);
     }
 
     if (!blockSize) {
-      throw new Error('Block size is required');
+      throw new StoreError(StoreErrorType.BlockSizeRequired);
     }
 
     this._storePath = storePath;
@@ -35,12 +37,12 @@ export abstract class DiskBlockStore {
    */
   protected blockDir(blockId: ChecksumBuffer): string {
     if (!blockId || blockId.length === 0) {
-      throw new Error('Block ID is required');
+      throw new StoreError(StoreErrorType.BlockIdRequired);
     }
 
     const checksumString = blockId.toString('hex');
     if (checksumString.length < 2) {
-      throw new Error('Invalid block ID: too short');
+      throw new StoreError(StoreErrorType.InvalidBlockIdTooShort);
     }
 
     const blockSizeString = sizeToSizeString(this._blockSize);
@@ -58,12 +60,12 @@ export abstract class DiskBlockStore {
    */
   protected blockPath(blockId: ChecksumBuffer): string {
     if (!blockId || blockId.length === 0) {
-      throw new Error('Block ID is required');
+      throw new StoreError(StoreErrorType.BlockIdRequired);
     }
 
     const checksumString = blockId.toString('hex');
     if (checksumString.length < 2) {
-      throw new Error('Invalid block ID: too short');
+      throw new StoreError(StoreErrorType.InvalidBlockIdTooShort);
     }
 
     const blockSizeString = sizeToSizeString(this._blockSize);
@@ -82,7 +84,7 @@ export abstract class DiskBlockStore {
    */
   protected metadataPath(blockId: ChecksumBuffer): string {
     if (!blockId || blockId.length === 0) {
-      throw new Error('Block ID is required');
+      throw new StoreError(StoreErrorType.BlockIdRequired);
     }
 
     return this.blockPath(blockId) + '.m.json';
@@ -93,7 +95,7 @@ export abstract class DiskBlockStore {
    */
   protected ensureBlockPath(blockId: ChecksumBuffer): void {
     if (!blockId || blockId.length === 0) {
-      throw new Error('Block ID is required');
+      throw new StoreError(StoreErrorType.BlockIdRequired);
     }
 
     const blockDir = this.blockDir(blockId);
@@ -101,10 +103,12 @@ export abstract class DiskBlockStore {
       try {
         mkdirSync(blockDir, { recursive: true });
       } catch (error) {
-        throw new Error(
-          `Failed to create block directory: ${
-            error instanceof Error ? error.message : 'Unknown error'
-          }`,
+        throw new StoreError(
+          StoreErrorType.BlockDirectoryCreationFailed,
+          undefined,
+          {
+            ERROR: error instanceof Error ? error.message : String(error),
+          },
         );
       }
     }

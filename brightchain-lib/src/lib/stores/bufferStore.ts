@@ -1,9 +1,13 @@
+import { StoreErrorType } from '../enumerations/storeErrorType';
+import { StoreError } from '../errors/storeError';
 import { ISimpleStore } from '../interfaces/simpleStore';
 
 /**
  * Similar to a SimpleStore except that contents are loaded and expected to be buffers and be serialized to/from hex
  */
-export class BufferStore<K> implements ISimpleStore<K, Buffer> {
+export class BufferStore<K extends string | number>
+  implements ISimpleStore<K, Buffer>
+{
   private _data: Map<K, string>;
 
   constructor() {
@@ -24,7 +28,9 @@ export class BufferStore<K> implements ISimpleStore<K, Buffer> {
   public get(key: K): Buffer {
     const value = this._data.get(key);
     if (value === undefined) {
-      throw new Error(`Key not found: ${key}`);
+      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+        KEY: key,
+      });
     }
     return Buffer.from(value, 'hex');
   }

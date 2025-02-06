@@ -2,7 +2,11 @@ import { faker } from '@faker-js/faker';
 import Wallet from 'ethereumjs-wallet';
 import { BrightChainMember } from './brightChainMember';
 import { EmailString } from './emailString';
+import { InvalidEmailErrorType } from './enumerations/invalidEmailType';
+import { MemberErrorType } from './enumerations/memberErrorType';
 import { MemberType } from './enumerations/memberType';
+import { InvalidEmailError } from './errors/invalidEmail';
+import { MemberError } from './errors/memberError';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import { StaticHelpersVoting } from './staticHelpers.voting';
 
@@ -41,7 +45,9 @@ describe('brightchain', () => {
     it('should fail to sign when there is no signing key', () => {
       expect(() =>
         noKeyCharlie.sign(Buffer.from(faker.lorem.sentence())),
-      ).toThrow('No private key');
+      ).toThrowType(MemberError, (error: MemberError) => {
+        expect(error.type).toBe(MemberErrorType.MissingPrivateKey);
+      });
     });
 
     it('should unload a private key when called', () => {
@@ -64,7 +70,9 @@ describe('brightchain', () => {
           '',
           new EmailString('alice@example.com'),
         ),
-      ).toThrow('Member name missing');
+      ).toThrowType(MemberError, (error: MemberError) => {
+        expect(error.type).toBe(MemberErrorType.MissingMemberName);
+      });
     });
 
     it('should fail to create a user with whitespace at the start or end of their name', () => {
@@ -74,14 +82,18 @@ describe('brightchain', () => {
           'alice ',
           new EmailString('alice@example.com'),
         ),
-      ).toThrow('Member name has leading or trailing spaces');
+      ).toThrowType(MemberError, (error: MemberError) => {
+        expect(error.type).toBe(MemberErrorType.InvalidMemberNameWhitespace);
+      });
       expect(() =>
         BrightChainMember.newMember(
           MemberType.User,
           ' alice',
           new EmailString('alice@example.com'),
         ),
-      ).toThrow('Member name has leading or trailing spaces');
+      ).toThrowType(MemberError, (error: MemberError) => {
+        expect(error.type).toBe(MemberErrorType.InvalidMemberNameWhitespace);
+      });
     });
 
     it('should fail to create a user with no email', () => {
@@ -91,7 +103,9 @@ describe('brightchain', () => {
           'alice',
           new EmailString(''),
         ),
-      ).toThrow('Email missing');
+      ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
+        expect(error.reason).toBe(InvalidEmailErrorType.Missing);
+      });
     });
 
     it('should fail to create a user with an email that has whitespace at the start or end', () => {
@@ -101,14 +115,18 @@ describe('brightchain', () => {
           'alice',
           new EmailString(' alice@example.com'),
         ),
-      ).toThrow('Email has leading or trailing spaces');
+      ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
+        expect(error.reason).toBe(InvalidEmailErrorType.Whitespace);
+      });
       expect(() =>
         BrightChainMember.newMember(
           MemberType.User,
           'alice',
           new EmailString('alice@example.com '),
         ),
-      ).toThrow('Email has leading or trailing spaces');
+      ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
+        expect(error.reason).toBe(InvalidEmailErrorType.Whitespace);
+      });
     });
 
     it('should fail to create a user with an invalid email', () => {
@@ -118,7 +136,9 @@ describe('brightchain', () => {
           'Nope',
           new EmailString('x!foo'),
         );
-      }).toThrow('Email is invalid');
+      }).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
+        expect(error.reason).toBe(InvalidEmailErrorType.Invalid);
+      });
     });
 
     it('should check whether a user has a private key', () => {
@@ -187,17 +207,30 @@ describe('brightchain', () => {
       // Unload the wallet and private key
       newMember.unloadWalletAndPrivateKey();
       expect(newMember.hasPrivateKey).toBeFalsy();
-      expect(() => newMember.wallet).toThrow('No wallet');
+      expect(() => newMember.wallet).toThrowType(
+        MemberError,
+        (error: MemberError) => {
+          expect(error.type).toBe(MemberErrorType.NoWallet);
+        },
+      );
 
       // Generate a new mnemonic (this should fail to load)
       const wrongMnemonic = StaticHelpersECIES.generateNewMnemonic();
-      expect(() => newMember.loadWallet(wrongMnemonic)).toThrow(
-        'Incorrect or invalid mnemonic for public key',
+      expect(() => newMember.loadWallet(wrongMnemonic)).toThrowType(
+        MemberError,
+        (error: MemberError) => {
+          expect(error.type).toBe(MemberErrorType.InvalidMnemonic);
+        },
       );
 
       // The member should still not have a private key
       expect(newMember.hasPrivateKey).toBeFalsy();
-      expect(() => newMember.wallet).toThrow('No wallet');
+      expect(() => newMember.wallet).toThrowType(
+        MemberError,
+        (error: MemberError) => {
+          expect(error.type).toBe(MemberErrorType.NoWallet);
+        },
+      );
 
       // Create a new member with same keys to simulate reloading from storage
       const reloadedMember = new BrightChainMember(

@@ -1,5 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { randomBytes } from 'crypto';
+import { SymmetricErrorType } from './enumerations/symmetricErrorType';
+import { SymmetricError } from './errors/symmetricError';
 import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
 
 describe('brightchain staticHelpers.symmetric', () => {
@@ -57,7 +59,9 @@ describe('brightchain staticHelpers.symmetric', () => {
           testData.buffer,
           shortKey,
         ),
-      ).toThrow();
+      ).toThrowType(SymmetricError, (error: SymmetricError) => {
+        expect(error.reason).toBe(SymmetricErrorType.InvalidKeyLength);
+      });
     });
   });
 
@@ -98,12 +102,16 @@ describe('brightchain staticHelpers.symmetric', () => {
       // Test null input
       expect(() =>
         StaticHelpersSymmetric.symmetricEncryptJson<unknown>(null),
-      ).toThrow();
+      ).toThrowType(SymmetricError, (error: SymmetricError) => {
+        expect(error.reason).toBe(SymmetricErrorType.DataNullOrUndefined);
+      });
 
       // Test undefined input
       expect(() =>
         StaticHelpersSymmetric.symmetricEncryptJson<unknown>(undefined),
-      ).toThrow();
+      ).toThrowType(SymmetricError, (error: SymmetricError) => {
+        expect(error.reason).toBe(SymmetricErrorType.DataNullOrUndefined);
+      });
 
       // Test invalid key
       const encrypted = StaticHelpersSymmetric.symmetricEncryptJson<string>(
@@ -118,7 +126,9 @@ describe('brightchain staticHelpers.symmetric', () => {
           encrypted.encryptedData,
           invalidKey,
         ),
-      ).toThrow();
+      ).toThrowType(SyntaxError, (error: SyntaxError) => {
+        expect(error.message.startsWith('Unexpected token'));
+      });
     });
   });
 });

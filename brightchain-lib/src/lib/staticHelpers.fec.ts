@@ -5,6 +5,8 @@ import { RawDataBlock } from './blocks/rawData';
 import BlockDataType from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
 import BlockType from './enumerations/blockType';
+import { FecErrorType } from './enumerations/fecErrorType';
+import { FecError } from './errors/fecError';
 
 /**
  * StaticHelpersFec provides Forward Error Correction (FEC) functionality.
@@ -37,23 +39,25 @@ export class StaticHelpersFec {
   ): Promise<Buffer> {
     // Validate parameters
     if (!data || data.length === 0) {
-      throw new Error('Data is required');
+      throw new FecError(FecErrorType.DataRequired);
     }
 
     if (data.length !== shardSize * dataShards) {
-      throw new Error(
-        `Invalid data length: ${data.length}, expected ${shardSize * dataShards}`,
-      );
+      throw new FecError(FecErrorType.InvalidDataLength, undefined, {
+        LENGTH: data.length.toString(),
+        EXPECTED: (shardSize * dataShards).toString(),
+      });
     }
 
     if (shardSize > StaticHelpersFec.MaximumShardSize) {
-      throw new Error(
-        `Shard size ${shardSize} exceeds maximum ${StaticHelpersFec.MaximumShardSize}`,
-      );
+      throw new FecError(FecErrorType.ShardSizeExceedsMaximum, undefined, {
+        SIZE: shardSize.toString(),
+        MAXIMUM: StaticHelpersFec.MaximumShardSize.toString(),
+      });
     }
 
     if (dataShards <= 0 || parityShards <= 0) {
-      throw new Error('Invalid shard counts');
+      throw new FecError(FecErrorType.InvalidShardCounts);
     }
 
     try {
@@ -69,11 +73,9 @@ export class StaticHelpersFec {
         ? Buffer.from(shards.subarray(shardSize * dataShards))
         : Buffer.from(shards);
     } catch (error) {
-      throw new Error(
-        `FEC encoding failed: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      );
+      throw new FecError(FecErrorType.FecEncodingFailed, undefined, {
+        ERROR: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }
 
@@ -90,29 +92,29 @@ export class StaticHelpersFec {
   ): Promise<Buffer> {
     // Validate parameters
     if (!data || data.length === 0) {
-      throw new Error('Data is required');
+      throw new FecError(FecErrorType.DataRequired);
     }
 
     if (data.length !== shardSize * (dataShards + parityShards)) {
-      throw new Error(
-        `Invalid data length: ${data.length}, expected ${
-          shardSize * (dataShards + parityShards)
-        }`,
-      );
+      throw new FecError(FecErrorType.InvalidDataLength, undefined, {
+        LENGTH: data.length.toString(),
+        EXPECTED: (shardSize * (dataShards + parityShards)).toString(),
+      });
     }
 
     if (
       !shardsAvailable ||
       shardsAvailable.length !== dataShards + parityShards
     ) {
-      throw new Error('Invalid shards available array');
+      throw new FecError(FecErrorType.InvalidShardsAvailableArray);
     }
 
     const availableCount = shardsAvailable.filter((x) => x).length;
     if (availableCount < dataShards) {
-      throw new Error(
-        `Not enough shards available: ${availableCount}, need ${dataShards}`,
-      );
+      throw new FecError(FecErrorType.NotEnoughShardsAvailable, undefined, {
+        AVAILABLE: availableCount.toString(),
+        REQUIRED: dataShards.toString(),
+      });
     }
 
     try {
@@ -126,11 +128,9 @@ export class StaticHelpersFec {
       );
       return Buffer.from(data).subarray(0, shardSize * dataShards);
     } catch (error) {
-      throw new Error(
-        `FEC decoding failed: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      );
+      throw new FecError(FecErrorType.FecDecodingFailed, undefined, {
+        ERROR: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }
 
@@ -143,11 +143,11 @@ export class StaticHelpersFec {
   ): Promise<ParityBlock[]> {
     // Validate parameters
     if (!input) {
-      throw new Error('Input block is required');
+      throw new FecError(FecErrorType.InputBlockRequired);
     }
 
     if (parityBlocks <= 0) {
-      throw new Error('Number of parity blocks must be positive');
+      throw new FecError(FecErrorType.ParityBlockCountMustBePositive);
     }
 
     const shardSize =
@@ -164,7 +164,7 @@ export class StaticHelpersFec {
 
       // Ensure input data is a Buffer
       if (!(input.data instanceof Buffer)) {
-        throw new Error('Input data must be a Buffer');
+        throw new FecError(FecErrorType.InputDataMustBeBuffer);
       }
 
       // Process each chunk
@@ -194,18 +194,17 @@ export class StaticHelpersFec {
       // Validate and create parity blocks
       return resultParityBlocks.map((parityData) => {
         if (parityData.length !== input.blockSize) {
-          throw new Error(
-            `Invalid parity block size: ${parityData.length}, expected ${input.blockSize}`,
-          );
+          throw new FecError(FecErrorType.InvalidParityBlockSize, undefined, {
+            SIZE: parityData.length.toString(),
+            EXPECTED: input.blockSize.toString(),
+          });
         }
         return new ParityBlock(input.blockSize, parityData);
       });
     } catch (error) {
-      throw new Error(
-        `Failed to create parity blocks: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      );
+      throw new FecError(FecErrorType.FecEncodingFailed, undefined, {
+        ERROR: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }
 
@@ -218,17 +217,17 @@ export class StaticHelpersFec {
   ): Promise<RawDataBlock> {
     // Validate parameters
     if (!damagedBlock) {
-      throw new Error('Damaged block is required');
+      throw new FecError(FecErrorType.DamagedBlockRequired);
     }
 
     if (!parityBlocks || parityBlocks.length === 0) {
-      throw new Error('Parity blocks are required');
+      throw new FecError(FecErrorType.ParityBlocksRequired);
     }
 
     if (
       !parityBlocks.every((block) => block.blockSize === damagedBlock.blockSize)
     ) {
-      throw new Error('All blocks must have the same size');
+      throw new FecError(FecErrorType.BlockSizeMismatch);
     }
 
     try {
@@ -243,7 +242,7 @@ export class StaticHelpersFec {
 
       // Ensure damaged block data is a Buffer
       if (!(damagedBlock.data instanceof Buffer)) {
-        throw new Error('Damaged block data must be a Buffer');
+        throw new FecError(FecErrorType.DamagedBlockDataMustBeBuffer);
       }
 
       // Recover each shard
@@ -254,7 +253,7 @@ export class StaticHelpersFec {
           damagedBlock.data.subarray(i * shardSize, (i + 1) * shardSize),
           ...parityBlocks.map((block) => {
             if (!(block.data instanceof Buffer)) {
-              throw new Error('Parity block data must be a Buffer');
+              throw new FecError(FecErrorType.ParityBlockDataMustBeBuffer);
             }
             return block.data.subarray(i * shardSize, (i + 1) * shardSize);
           }),
@@ -274,9 +273,10 @@ export class StaticHelpersFec {
 
       // Validate and create recovered block
       if (recoveredBlock.length !== damagedBlock.blockSize) {
-        throw new Error(
-          `Invalid recovered block size: ${recoveredBlock.length}, expected ${damagedBlock.blockSize}`,
-        );
+        throw new FecError(FecErrorType.InvalidRecoveredBlockSize, undefined, {
+          SIZE: recoveredBlock.length.toString(),
+          EXPECTED: damagedBlock.blockSize.toString(),
+        });
       }
 
       return new RawDataBlock(
@@ -290,11 +290,9 @@ export class StaticHelpersFec {
         true, // canPersist
       );
     } catch (error) {
-      throw new Error(
-        `Failed to recover data block: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      );
+      throw new FecError(FecErrorType.FecDecodingFailed, undefined, {
+        ERROR: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }
 }

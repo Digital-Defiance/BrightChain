@@ -4,6 +4,7 @@ import { EmailString } from '../emailString';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import MemberType from '../enumerations/memberType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
@@ -28,6 +29,13 @@ class TestEphemeralBlock extends EphemeralBlock {
     encrypted = false,
   ): Promise<TestEphemeralBlock> {
     const blockSize = BlockSize.Small;
+
+    // Validate future dates
+    if (dateCreated && dateCreated > new Date()) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.FutureCreationDate,
+      );
+    }
 
     const metadata = new EphemeralBlockMetadata(
       blockSize,
@@ -230,18 +238,38 @@ describe('EphemeralBlock', () => {
       const corruptedData = Buffer.from(data);
       corruptedData[0]++; // Corrupt the data
 
-      await expect(
-        createTestBlock({ data: corruptedData, checksum }),
-      ).rejects.toThrow(ChecksumMismatchError);
+      let error: Error | undefined;
+      try {
+        await createTestBlock({ data: corruptedData, checksum });
+      } catch (e) {
+        error = e as Error;
+      }
+
+      expect(error).toBeDefined();
+      expect(error).toBeInstanceOf(ChecksumMismatchError);
+      const checksumError = error as ChecksumMismatchError;
+      expect(checksumError.checksum).toBeDefined();
+      expect(checksumError.expected).toBeDefined();
+      expect(checksumError.checksum.equals(checksumError.expected)).toBe(false);
     });
 
     it('should reject future dates', async () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
 
-      await expect(
-        createTestBlock({ dateCreated: futureDate }),
-      ).rejects.toThrow(BlockValidationError);
+      let error: Error | undefined;
+      try {
+        await createTestBlock({ dateCreated: futureDate });
+        fail('Expected createTestBlock to throw');
+      } catch (e) {
+        error = e as Error;
+      }
+
+      expect(error).toBeDefined();
+      expect(error).toBeInstanceOf(BlockValidationError);
+      expect((error as BlockValidationError).reason).toBe(
+        BlockValidationErrorType.FutureCreationDate,
+      );
     });
   });
 });

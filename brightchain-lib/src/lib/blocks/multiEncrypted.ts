@@ -8,6 +8,8 @@ import {
 } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { MemberType } from '../enumerations/memberType';
+import { MultiEncryptedErrorType } from '../enumerations/multiEncryptedErrorType';
+import { MultiEncryptedError } from '../errors/multiEncryptedError';
 import { GuidV4 } from '../guid';
 import { IMultiEncryptedBlock } from '../interfaces/multiEncryptedBlock';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
@@ -47,7 +49,7 @@ export class MultiEncryptedBlock
     canPersist = true,
   ): Promise<MultiEncryptedBlock> {
     if (data.length < StaticHelpersECIES.eciesOverheadLength) {
-      throw new Error('Data too short to contain encryption header');
+      throw new MultiEncryptedError(MultiEncryptedErrorType.DataTooShort);
     }
 
     // For encrypted blocks, we need to validate both:
@@ -57,13 +59,17 @@ export class MultiEncryptedBlock
       const availableCapacity =
         (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
       if (actualDataLength > availableCapacity) {
-        throw new Error('Data length exceeds block capacity');
+        throw new MultiEncryptedError(
+          MultiEncryptedErrorType.DataLengthExceedsCapacity,
+        );
       }
       // Total encrypted length will be actualDataLength + overhead
       const totalLength =
         actualDataLength + StaticHelpersECIES.eciesOverheadLength;
       if (totalLength > (blockSize as number)) {
-        throw new Error('Data length exceeds block capacity');
+        throw new MultiEncryptedError(
+          MultiEncryptedErrorType.DataLengthExceedsCapacity,
+        );
       }
     }
 
@@ -204,7 +210,9 @@ export class MultiEncryptedBlock
   public override get creator(): BrightChainMember {
     const creator = super.creator;
     if (!(creator instanceof BrightChainMember)) {
-      throw new Error('Creator must be a BrightChainMember');
+      throw new MultiEncryptedError(
+        MultiEncryptedErrorType.CreatorMustBeMember,
+      );
     }
     return creator;
   }
@@ -221,7 +229,7 @@ export class MultiEncryptedBlock
    */
   public override get ephemeralPublicKey(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new MultiEncryptedError(MultiEncryptedErrorType.BlockNotReadable);
     }
     // Get the ephemeral public key (already includes 0x04 prefix)
     const key = this.layerHeaderData.subarray(
@@ -229,7 +237,9 @@ export class MultiEncryptedBlock
       StaticHelpersECIES.publicKeyLength,
     );
     if (key.length !== StaticHelpersECIES.publicKeyLength) {
-      throw new Error('Invalid ephemeral public key length');
+      throw new MultiEncryptedError(
+        MultiEncryptedErrorType.InvalidEphemeralPublicKeyLength,
+      );
     }
     return key;
   }
@@ -239,14 +249,14 @@ export class MultiEncryptedBlock
    */
   public override get iv(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new MultiEncryptedError(MultiEncryptedErrorType.BlockNotReadable);
     }
     const iv = this.layerHeaderData.subarray(
       StaticHelpersECIES.publicKeyLength,
       StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
     );
     if (iv.length !== StaticHelpersECIES.ivLength) {
-      throw new Error('Invalid IV length');
+      throw new MultiEncryptedError(MultiEncryptedErrorType.InvalidIVLength);
     }
     return iv;
   }
@@ -256,7 +266,7 @@ export class MultiEncryptedBlock
    */
   public override get authTag(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new MultiEncryptedError(MultiEncryptedErrorType.BlockNotReadable);
     }
     // The auth tag is after the ephemeral public key (with 0x04 prefix) and IV
     const start =
@@ -265,7 +275,9 @@ export class MultiEncryptedBlock
 
     const tag = this.layerHeaderData.subarray(start, end);
     if (tag.length !== StaticHelpersECIES.authTagLength) {
-      throw new Error('Invalid auth tag length');
+      throw new MultiEncryptedError(
+        MultiEncryptedErrorType.InvalidAuthTagLength,
+      );
     }
     return tag;
   }
@@ -284,7 +296,7 @@ export class MultiEncryptedBlock
    */
   public override get layerHeaderData(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new MultiEncryptedError(MultiEncryptedErrorType.BlockNotReadable);
     }
     // For encrypted blocks, the header is always at the start of the data
     // since EphemeralBlock has no header data
@@ -296,7 +308,7 @@ export class MultiEncryptedBlock
    */
   public override get payload(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new MultiEncryptedError(MultiEncryptedErrorType.BlockNotReadable);
     }
     // For encrypted blocks:
     // 1. Skip the encryption header (ephemeral public key + IV + auth tag)
@@ -336,7 +348,7 @@ export class MultiEncryptedBlock
       await StaticHelpersChecksum.calculateChecksumAsync(this.data);
 
     if (!calculatedChecksum.equals(this.idChecksum)) {
-      throw new Error('Checksum mismatch');
+      throw new MultiEncryptedError(MultiEncryptedErrorType.ChecksumMismatch);
     }
   }
 }

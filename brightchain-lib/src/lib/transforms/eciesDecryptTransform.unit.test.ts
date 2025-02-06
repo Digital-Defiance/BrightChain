@@ -1,5 +1,7 @@
 import { randomBytes } from 'crypto';
 import { BlockSize } from '../enumerations/blockSizes';
+import { EciesErrorType } from '../enumerations/eciesErrorType';
+import { EciesError } from '../errors/eciesError';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { EciesDecryptionTransform } from './eciesDecryptTransform';
 
@@ -131,9 +133,10 @@ describe('EciesDecryptionTransform Unit Tests', () => {
       inputData,
     );
 
-    transform.on('error', (error) => {
+    transform.on('error', (error: EciesError) => {
       expect(error).toBeDefined();
-      expect(error.message).toContain('Decryption failed');
+      expect(error.reason).toBe(EciesErrorType.InvalidEphemeralPublicKey);
+      expect(error.message).toContain('Invalid ephemeral public key');
       expect(mockLogger.error).toHaveBeenCalled();
       done();
     });
@@ -153,7 +156,7 @@ describe('EciesDecryptionTransform Unit Tests', () => {
 
     transform.on('error', (error) => {
       expect(error).toBeDefined();
-      expect(error.message).toContain('Decryption failed');
+      expect(error.message).toContain('Invalid ephemeral public key');
       expect(mockLogger.error).toHaveBeenCalled();
       done();
     });

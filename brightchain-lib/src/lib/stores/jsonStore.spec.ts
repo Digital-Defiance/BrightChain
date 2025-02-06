@@ -1,3 +1,5 @@
+import { StoreErrorType } from '../enumerations/storeErrorType';
+import { StoreError } from '../errors/storeError';
 import { JsonStore } from './jsonStore';
 
 describe('jsonStore', () => {
@@ -19,6 +21,12 @@ describe('jsonStore', () => {
   it('should throw an error when getting a nonexistent key', () => {
     const store = new JsonStore<string>();
     const key = 'key';
-    expect(() => store.get(key)).toThrow(`Key not found: ${key}`);
+    expect(() => store.get(key)).toThrowType(
+      StoreError,
+      (error: StoreError) => {
+        expect(error.type).toBe(StoreErrorType.KeyNotFound);
+        expect(error.params?.['KEY']).toEqual(key);
+      },
+    );
   });
 });

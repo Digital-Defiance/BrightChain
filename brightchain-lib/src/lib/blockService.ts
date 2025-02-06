@@ -8,6 +8,7 @@ import { RawDataBlock } from './blocks/rawData';
 import { BrightChainMember } from './brightChainMember';
 import { CblBlockMetadata } from './cblBlockMetadata';
 import { BlockDataType } from './enumerations/blockDataType';
+import { BlockServiceErrorType } from './enumerations/blockServiceErrorType';
 import { BlockSize } from './enumerations/blockSizes';
 import { BlockType } from './enumerations/blockType';
 import { BlockValidationErrorType } from './enumerations/blockValidationErrorType';
@@ -16,6 +17,7 @@ import {
   CannotDecryptBlockError,
   CannotEncryptBlockError,
 } from './errors/block';
+import { BlockServiceError } from './errors/blockServiceError';
 import { GuidV4 } from './guid';
 import { IBlock } from './interfaces/blockBase';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
@@ -286,23 +288,24 @@ export class BlockService {
   }
 
   /**
-   * XOR blocks with whiteners
+   * XOR blocks with whiteners in a round-robin fashion
    * @param blocks - The blocks to XOR
-   * @param whiteners - The whiteners to use
+   * @param whiteners - The whiteners to use (will be reused if fewer than blocks)
    * @returns The XORed blocks
    */
   public static xorBlocksWithWhiteners(
     blocks: Buffer[],
     whiteners: Buffer[],
   ): Buffer[] {
-    if (blocks.length !== whiteners.length) {
-      throw new Error('Number of blocks and whiteners must be the same');
+    if (whiteners.length === 0) {
+      throw new BlockServiceError(BlockServiceErrorType.NoWhitenersProvided);
     }
 
     const xorBlocks: Buffer[] = [];
     for (let i = 0; i < blocks.length; i++) {
       const block = blocks[i];
-      const whitener = whiteners[i];
+      // Use round-robin to select whitener
+      const whitener = whiteners[i % whiteners.length];
       const xorBlock = Buffer.alloc(block.length);
       for (let j = 0; j < block.length; j++) {
         xorBlock[j] = block[j] ^ whitener[j];
@@ -324,11 +327,11 @@ export class BlockService {
     fileDataLength: bigint,
   ): Promise<ConstituentBlockListBlock> {
     if (blocks.length === 0) {
-      throw new Error('Blocks array must not be empty');
+      throw new BlockServiceError(BlockServiceErrorType.EmptyBlocksArray);
     }
     const blockIds = await Promise.all(blocks.map((block) => block.idChecksum));
     if (!blocks.every((block) => block.blockSize === blocks[0].blockSize)) {
-      throw new Error('All blocks must have the same block size');
+      throw new BlockServiceError(BlockServiceErrorType.BlockSizeMismatch);
     }
     const metadata: CblBlockMetadata = new CblBlockMetadata(
       BlockSize.Huge,
