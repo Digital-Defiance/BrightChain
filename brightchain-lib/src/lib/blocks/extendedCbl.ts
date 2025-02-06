@@ -3,6 +3,8 @@ import { CblBlockMetadata } from '../cblBlockMetadata';
 import BlockDataType from '../enumerations/blockDataType';
 import { BlockSize, validBlockSizes } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
+import { ExtendedCblError } from '../errors/extendedCblError';
 import { MetadataMismatchError } from '../errors/metadataMismatch';
 import { GuidV4 } from '../guid';
 import { IExtendedConstituentBlockListBlockHeader } from '../interfaces/ecblHeader';
@@ -123,9 +125,10 @@ export class ExtendedCBL
         dataAddresses.length * StaticHelpersChecksum.Sha3ChecksumBufferLength;
 
       if ((blockSize as number) < requiredSize) {
-        throw new Error(
-          `Block size ${blockSize} is too small to hold CBL data (${ConstituentBlockListBlock.CblHeaderSize}) + ` +
-            `metadata (${metadataSize}) + addresses (${dataAddresses.length * StaticHelpersChecksum.Sha3ChecksumBufferLength})`,
+        throw new ExtendedCblError(
+          ExtendedCblErrorType.InsufficientCapacity,
+          blockSize,
+          requiredSize,
         );
       }
 
@@ -178,13 +181,18 @@ export class ExtendedCBL
       try {
         this.validateSync();
       } catch (error) {
-        throw new Error('Invalid ExtendedCBL structure');
+        throw new ExtendedCblError(ExtendedCblErrorType.InvalidStructure);
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        throw new Error(`Failed to create ExtendedCBL: ${error.message}`);
+        throw new ExtendedCblError(
+          ExtendedCblErrorType.CreationFailed,
+          undefined,
+          undefined,
+          `: ${error.message}`,
+        );
       }
-      throw new Error('Failed to create ExtendedCBL: Unknown error');
+      throw new ExtendedCblError(ExtendedCblErrorType.CreationFailed);
     }
   }
 
@@ -270,7 +278,7 @@ export class ExtendedCBL
     super.validateSync();
 
     if (this.creator === undefined) {
-      throw new Error("Creator can't be undefined");
+      throw new ExtendedCblError(ExtendedCblErrorType.CreatorUndefined);
     }
 
     // Validate file metadata by parsing this layer's header
@@ -299,7 +307,7 @@ export class ExtendedCBL
     await super.validateAsync();
 
     if (this.creator === undefined) {
-      throw new Error("Creator can't be undefined");
+      throw new ExtendedCblError(ExtendedCblErrorType.CreatorUndefined);
     }
 
     // Validate file metadata by parsing this layer's header
@@ -326,12 +334,14 @@ export class ExtendedCBL
   public override validateSignature(creator: BrightChainMember): boolean;
   public override validateSignature(creator?: BrightChainMember): boolean {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new ExtendedCblError(ExtendedCblErrorType.BlockNotReadable);
     }
 
     const validationCreator = creator ?? this.creator;
     if (!validationCreator) {
-      throw new Error('Creator is required for signature validation');
+      throw new ExtendedCblError(
+        ExtendedCblErrorType.CreatorRequiredForSignature,
+      );
     }
 
     return ConstituentBlockListBlock.validateSignature(
@@ -354,67 +364,64 @@ export class ExtendedCBL
 
   private static validateFileNameFormat(fileName: string): void {
     if (!fileName) {
-      throw new Error('File name is required');
+      throw new ExtendedCblError(ExtendedCblErrorType.FileNameRequired);
     }
 
     const trimmed = fileName.trim();
     if (trimmed.length === 0) {
-      throw new Error('File name cannot be empty');
+      throw new ExtendedCblError(ExtendedCblErrorType.FileNameEmpty);
     }
 
     if (fileName !== trimmed) {
-      throw new Error('File name cannot start or end with spaces');
+      throw new ExtendedCblError(ExtendedCblErrorType.FileNameWhitespace);
     }
 
     if (fileName.length > ExtendedCBL.MaxFileNameLength) {
-      throw new Error(
-        `File name length ${fileName.length} exceeds maximum ${ExtendedCBL.MaxFileNameLength}`,
-      );
+      throw new ExtendedCblError(ExtendedCblErrorType.FileNameInvalidChar);
     }
 
     // Check for special characters
     for (const char of ExtendedCBL.InvalidSpecialChars) {
       if (fileName.includes(char)) {
-        throw new Error(`File name contains invalid character: ${char}`);
+        throw new ExtendedCblError(ExtendedCblErrorType.FileNameInvalidChar);
       }
     }
 
     // Check for control characters
     if (ExtendedCBL.hasControlChars(fileName)) {
-      throw new Error('File name contains control characters');
+      throw new ExtendedCblError(ExtendedCblErrorType.FileNameControlChars);
     }
 
-    if (fileName.includes('..')) {
-      throw new Error('File name cannot contain path traversal');
+    // Check for path traversal
+    if (/(^|[\\/])\.\.($|[\\/])/.test(fileName)) {
+      throw new ExtendedCblError(ExtendedCblErrorType.FileNamePathTraversal);
     }
   }
 
   private static validateMimeTypeFormat(mimeType: string): void {
     if (!mimeType) {
-      throw new Error('MIME type is required');
+      throw new ExtendedCblError(ExtendedCblErrorType.MimeTypeRequired);
     }
 
     const trimmed = mimeType.trim().toLowerCase();
     if (trimmed.length === 0) {
-      throw new Error('MIME type cannot be empty');
+      throw new ExtendedCblError(ExtendedCblErrorType.MimeTypeEmpty);
     }
 
     if (mimeType !== trimmed) {
-      throw new Error('MIME type cannot start or end with spaces');
+      throw new ExtendedCblError(ExtendedCblErrorType.MimeTypeWhitespace);
     }
 
     if (mimeType.length > ExtendedCBL.MaxMimeTypeLength) {
-      throw new Error(
-        `MIME type length ${mimeType.length} exceeds maximum ${ExtendedCBL.MaxMimeTypeLength}`,
-      );
+      throw new ExtendedCblError(ExtendedCblErrorType.MimeTypeInvalidFormat);
     }
 
     if (mimeType !== mimeType.toLowerCase()) {
-      throw new Error('MIME type must be lowercase');
+      throw new ExtendedCblError(ExtendedCblErrorType.MimeTypeLowercase);
     }
 
     if (!ExtendedCBL.MimeTypePattern.test(mimeType)) {
-      throw new Error('Invalid MIME type format');
+      throw new ExtendedCblError(ExtendedCblErrorType.MimeTypeInvalidFormat);
     }
   }
 
@@ -428,19 +435,17 @@ export class ExtendedCBL
 
   private static validateBlockSize(blockSize: BlockSize): void {
     if (!blockSize || (blockSize as number) <= 0) {
-      throw new Error('Invalid block size');
+      throw new ExtendedCblError(ExtendedCblErrorType.InvalidBlockSize);
     }
 
     // Validate block size is a valid enum value
     if (!validBlockSizes.includes(blockSize)) {
-      throw new Error(`Invalid block size: ${blockSize}`);
+      throw new ExtendedCblError(ExtendedCblErrorType.InvalidBlockSize);
     }
 
     const totalOverhead = ExtendedCBL.calculateTotalOverhead();
     if ((blockSize as number) <= totalOverhead) {
-      throw new Error(
-        `Block size (${blockSize}) must be greater than total overhead (${totalOverhead})`,
-      );
+      throw new ExtendedCblError(ExtendedCblErrorType.InvalidBlockSize);
     }
   }
 
@@ -449,10 +454,10 @@ export class ExtendedCBL
     mimeTypeLength: number,
   ): void {
     if (fileNameLength <= 0) {
-      throw new Error('File name cannot be empty');
+      throw new ExtendedCblError(ExtendedCblErrorType.FileNameEmpty);
     }
     if (mimeTypeLength <= 0) {
-      throw new Error('MIME type cannot be empty');
+      throw new ExtendedCblError(ExtendedCblErrorType.MimeTypeEmpty);
     }
 
     const totalSize = ExtendedCBL.calculateMetadataSize(
@@ -460,7 +465,7 @@ export class ExtendedCBL
       mimeTypeLength,
     );
     if (totalSize > ExtendedCBL.FileMetadataHeaderSize) {
-      throw new Error('Metadata size exceeds maximum allowed size');
+      throw new ExtendedCblError(ExtendedCblErrorType.MetadataSizeExceeded);
     }
   }
 
@@ -475,7 +480,7 @@ export class ExtendedCBL
 
     // Validate total size is not negative (could happen with very large values)
     if (totalSize < 0) {
-      throw new Error('Total metadata size cannot be negative');
+      throw new ExtendedCblError(ExtendedCblErrorType.MetadataSizeNegative);
     }
 
     return totalSize;
@@ -543,7 +548,7 @@ export class ExtendedCBL
     creatorForValidation: BrightChainMember,
   ): IExtendedConstituentBlockListBlockHeader {
     if (!data || data.length < ExtendedCBL.FileMetadataHeaderSize) {
-      throw new Error('Invalid metadata buffer');
+      throw new ExtendedCblError(ExtendedCblErrorType.InvalidMetadataBuffer);
     }
     const cblData = ConstituentBlockListBlock.parseHeader(
       data,

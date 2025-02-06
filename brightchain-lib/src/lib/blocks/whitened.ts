@@ -2,6 +2,8 @@ import { Readable } from 'stream';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
+import { WhitenedError } from '../errors/whitenedError';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
@@ -54,7 +56,7 @@ export class WhitenedBlock extends RawDataBlock {
    */
   public override get payload(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new WhitenedError(WhitenedErrorType.BlockNotReadable);
     }
     // For whitened blocks, like raw data blocks, the payload is the entire data
     return this.data;
@@ -125,7 +127,7 @@ export class WhitenedBlock extends RawDataBlock {
    */
   public async xor<T extends BaseBlock>(other: T): Promise<T> {
     if (this.blockSize !== other.blockSize) {
-      throw new Error('Block sizes must match');
+      throw new WhitenedError(WhitenedErrorType.BlockSizeMismatch);
     }
 
     const thisData = await WhitenedBlock.toBuffer(this.data);
@@ -173,12 +175,10 @@ export class WhitenedBlock extends RawDataBlock {
     randomData: Buffer,
   ): WhitenedBlock {
     if (data.length !== randomData.length) {
-      throw new Error('Data and random data lengths must match');
+      throw new WhitenedError(WhitenedErrorType.DataLengthMismatch);
     }
     if (data.length > blockSize) {
-      throw new Error(
-        `Data length (${data.length}) exceeds block size (${blockSize})`,
-      );
+      throw new WhitenedError(WhitenedErrorType.InvalidBlockSize);
     }
 
     const result = Buffer.alloc(data.length);

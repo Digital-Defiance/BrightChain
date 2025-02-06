@@ -70,7 +70,7 @@ class TestEncryptedBlock extends EncryptedBlock implements IEncryptedBlock {
     // Calculate and validate checksum
     const computedChecksum = StaticHelpersChecksum.calculateChecksum(data);
     if (checksum && !computedChecksum.equals(checksum)) {
-      throw new ChecksumMismatchError(checksum, computedChecksum);
+      throw new ChecksumMismatchError(computedChecksum, checksum);
     }
     const finalChecksum = checksum ?? computedChecksum;
 
@@ -105,7 +105,6 @@ describe('EncryptedBlock', () => {
   const defaultBlockSize = BlockSize.Small;
   const testDate = new Date(Date.now() - 1000); // 1 second ago
 
-  // Helper functions
   const getEffectiveSize = (size: BlockSize) => size as number; // For encrypted blocks, use full block size since overhead is in data
 
   const createEncryptedData = (size: number): Buffer => {
@@ -233,6 +232,11 @@ describe('EncryptedBlock', () => {
       await expect(createTestBlock({ data: tooShortData })).rejects.toThrow(
         BlockValidationError,
       );
+      await expect(
+        createTestBlock({ data: tooShortData }),
+      ).rejects.toMatchObject({
+        reason: BlockValidationErrorType.DataLengthTooShort,
+      });
 
       // Test oversized data
       const tooLargeData = createEncryptedData(
@@ -241,6 +245,11 @@ describe('EncryptedBlock', () => {
       await expect(createTestBlock({ data: tooLargeData })).rejects.toThrow(
         BlockValidationError,
       );
+      await expect(
+        createTestBlock({ data: tooLargeData }),
+      ).rejects.toMatchObject({
+        reason: BlockValidationErrorType.DataLengthExceedsCapacity,
+      });
     });
 
     it('should validate actual data length', async () => {
@@ -253,9 +262,56 @@ describe('EncryptedBlock', () => {
       await expect(
         createTestBlock({ data, actualDataLength: tooLargeActualLength }),
       ).rejects.toThrow(BlockValidationError);
+      await expect(
+        createTestBlock({ data, actualDataLength: tooLargeActualLength }),
+      ).rejects.toMatchObject({
+        reason: BlockValidationErrorType.DataLengthExceedsCapacity,
+      });
     });
   });
 
+  describe('validation', () => {
+    it('should detect data corruption', async () => {
+      // Create original data and get its checksum
+      const data = createEncryptedData(defaultBlockSize as number);
+      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+
+      // Create corrupted data by modifying the original
+      const corruptedData = Buffer.from(data);
+      corruptedData[0]++; // Corrupt the header to ensure validation fails
+
+      // Calculate corrupted checksum before the test
+      const corruptedChecksum =
+        StaticHelpersChecksum.calculateChecksum(corruptedData);
+
+      // Verify block creation fails with corrupted data and check error details
+      const error = await createTestBlock({
+        data: corruptedData,
+        checksum,
+      }).catch((e) => e);
+
+      expect(error).toBeInstanceOf(ChecksumMismatchError);
+      expect(error instanceof ChecksumMismatchError).toBe(true);
+      // The error constructor takes (expected, computed) so the properties are:
+      // error.expected = checksum (the one we passed in)
+      // error.checksum = corruptedChecksum (the one computed from corrupted data)
+      expect(error.expected.toString('hex')).toBe(checksum.toString('hex'));
+      expect(error.checksum.toString('hex')).toBe(
+        corruptedChecksum.toString('hex'),
+      );
+    });
+
+    it('should reject future dates', async () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+
+      await expect(
+        createTestBlock({ dateCreated: futureDate }),
+      ).rejects.toMatchObject({
+        reason: BlockValidationErrorType.FutureCreationDate,
+      });
+    });
+  });
   describe('encryption handling', () => {
     it('should handle encrypted data correctly', async () => {
       const originalData = randomBytes(
@@ -281,37 +337,6 @@ describe('EncryptedBlock', () => {
       expect(block.capacity).toBe(
         (defaultBlockSize as number) - StaticHelpersECIES.eciesOverheadLength,
       );
-    });
-  });
-
-  describe('validation', () => {
-    it('should detect data corruption', async () => {
-      // Create original data and get its checksum
-      const data = createEncryptedData(defaultBlockSize as number);
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
-
-      // Create corrupted data by modifying the original
-      const corruptedData = Buffer.from(data);
-      corruptedData[0]++; // Corrupt the header to ensure validation fails
-
-      // Verify block creation fails with corrupted data
-      await expect(
-        createTestBlock({ data: corruptedData, checksum }),
-      ).rejects.toThrow(ChecksumMismatchError);
-
-      // Verify the checksum mismatch
-      const corruptedChecksum =
-        StaticHelpersChecksum.calculateChecksum(corruptedData);
-      expect(corruptedChecksum.equals(checksum)).toBe(false);
-    });
-
-    it('should reject future dates', async () => {
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 1);
-
-      await expect(
-        createTestBlock({ dateCreated: futureDate }),
-      ).rejects.toThrow(BlockValidationError);
     });
   });
 });

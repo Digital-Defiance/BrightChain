@@ -1,5 +1,7 @@
 import * as uuid from 'uuid';
 import { BrightChainMember } from './brightChainMember';
+import { QuorumErrorType } from './enumerations/quorumErrorType';
+import { QuorumError } from './errors/quorumError';
 import { GuidV4 } from './guid';
 import { QuorumDataRecord } from './quorumDataRecord';
 import { StaticHelpersSealing } from './staticHelpers.sealing';
@@ -43,7 +45,7 @@ export class BrightChainQuorum {
   constructor(nodeAgent: BrightChainMember, name: string, id?: string) {
     if (id !== undefined) {
       if (!uuid.validate(id)) {
-        throw new Error('Invalid quorum ID');
+        throw new QuorumError(QuorumErrorType.InvalidQuorumId);
       }
       this.id = new GuidV4(id).asShortHexGuid;
     } else {
@@ -116,7 +118,7 @@ export class BrightChainQuorum {
   public getDocument<T>(id: ShortHexGuid, memberIds: ShortHexGuid[]): T {
     const doc = this._documentsById.get(id);
     if (!doc) {
-      throw new Error('Document not found');
+      throw new QuorumError(QuorumErrorType.DocumentNotFound);
     }
     const members: BrightChainMember[] = memberIds.map((id) =>
       this._members.get(id),
@@ -124,7 +126,7 @@ export class BrightChainQuorum {
 
     const restoredDoc = StaticHelpersSealing.quorumUnseal<T>(doc, members);
     if (!restoredDoc) {
-      throw new Error('Unable to restore document');
+      throw new QuorumError(QuorumErrorType.UnableToRestoreDocument);
     }
     return restoredDoc;
   }
@@ -137,11 +139,11 @@ export class BrightChainQuorum {
   public canUnlock(id: ShortHexGuid, members: BrightChainMember[]) {
     const doc = this._documentsById.get(id);
     if (!doc) {
-      throw new Error('Document not found');
+      throw new QuorumError(QuorumErrorType.DocumentNotFound);
     }
     // check whether the supplied list of members are included in the document share distributions
     // as well as whether the number of members is sufficient to unlock the document
-    throw new Error('Not implemented');
+    throw new QuorumError(QuorumErrorType.NotImplemented);
     // throw new Error(members.length.toString());
   }
 }

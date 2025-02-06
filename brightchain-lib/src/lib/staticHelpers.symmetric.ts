@@ -1,4 +1,6 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
+import { SymmetricErrorType } from './enumerations/symmetricErrorType';
+import { SymmetricError } from './errors/symmetricError';
 import { ISymmetricEncryptionResults } from './interfaces/symmetricEncryptionResults';
 
 function hasToJsonMethod<T>(obj: T): obj is T & { toJSON: () => string } {
@@ -59,9 +61,7 @@ export abstract class StaticHelpersSymmetric {
       encryptionKey &&
       encryptionKey.length != StaticHelpersSymmetric.SymmetricKeyBytes
     )
-      throw new Error(
-        `Encryption key must be ${StaticHelpersSymmetric.SymmetricKeyBytes} bytes long`,
-      );
+      throw new SymmetricError(SymmetricErrorType.InvalidKeyLength);
 
     // encrypt the document using AES-256 and the key
     // Initialization Vector
@@ -120,7 +120,7 @@ export abstract class StaticHelpersSymmetric {
     encryptionKey?: Buffer,
   ): ISymmetricEncryptionResults {
     if (data === null || data === undefined) {
-      throw new Error('Data to encrypt cannot be null or undefined');
+      throw new SymmetricError(SymmetricErrorType.DataNullOrUndefined);
     }
     let dataBuffer: Buffer;
     if (hasToJsonMethod<T>(data)) {

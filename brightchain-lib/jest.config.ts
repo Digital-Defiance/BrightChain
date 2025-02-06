@@ -1,9 +1,7 @@
-import type { Config } from '@jest/types';
-
 /* eslint-disable */
-const config: Config.InitialOptions = {
+export default {
   displayName: 'brightchain-lib',
-  preset: 'ts-jest',
+  preset: '../jest.preset.js',
   testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
@@ -11,6 +9,8 @@ const config: Config.InitialOptions = {
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../coverage/brightchain-lib',
   snapshotSerializers: ['<rootDir>/bigIntSerializer.ts'],
+  setupFilesAfterEnv: [
+    '<rootDir>/src/test/setup.ts',
+    '<rootDir>/jest.setup.ts',
+  ],
 };
-
-export default config;

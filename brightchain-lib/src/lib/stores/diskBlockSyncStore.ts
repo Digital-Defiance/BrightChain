@@ -3,6 +3,8 @@ import { BaseBlock } from '../blocks/base';
 import { RawDataBlock } from '../blocks/rawData';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
+import { StoreErrorType } from '../enumerations/storeErrorType';
+import { StoreError } from '../errors/storeError';
 import { IBlockMetadata } from '../interfaces/blockMetadata';
 import { ISimpleStore } from '../interfaces/simpleStore';
 import { ChecksumBuffer } from '../types';
@@ -25,9 +27,7 @@ export class DiskBlockSyncStore
     const blockPath = this.blockPath(key);
     const blockData = readFileSync(blockPath);
     if (blockData.length !== this._blockSize) {
-      throw new Error(
-        `Block size mismatch. Expected ${this._blockSize} but got ${blockData.length}.`,
-      );
+      throw new StoreError(StoreErrorType.BlockFileSizeMismatch);
     }
     const metadata = JSON.parse(
       readFileSync(this.metadataPath(key)).toString(),
@@ -45,19 +45,22 @@ export class DiskBlockSyncStore
 
   set(key: ChecksumBuffer, value: BaseBlock): void {
     if (value.blockDataType == BlockDataType.EphemeralStructuredData) {
-      throw new Error(`Cannot store ephemeral structured data`);
+      throw new StoreError(StoreErrorType.CannotStoreEphemeralData);
     }
     if (Buffer.compare(key, value.idChecksum) !== 0) {
-      throw new Error(`Key ${key} does not match block ID ${value.idChecksum}`);
+      throw new StoreError(StoreErrorType.BlockIdMismatch, undefined, {
+        KEY: key.toString('hex'),
+        BLOCK_ID: value.idChecksum.toString('hex'),
+      });
     }
     if (value.blockSize !== this._blockSize) {
-      throw new Error(
-        `Block size mismatch. Expected ${this._blockSize} but got ${value.blockSize}.`,
-      );
+      throw new StoreError(StoreErrorType.BlockSizeMismatch);
     }
     const blockPath = this.blockPath(value.idChecksum);
     if (existsSync(blockPath)) {
-      throw new Error(`Block path ${blockPath} already exists`);
+      throw new StoreError(StoreErrorType.BlockPathAlreadyExists, undefined, {
+        PATH: blockPath,
+      });
     } else {
       this.ensureBlockPath(value.idChecksum);
     }

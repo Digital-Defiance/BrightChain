@@ -2,6 +2,8 @@ import { createCipheriv, createDecipheriv, randomBytes, scrypt } from 'crypto';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { promisify } from 'util';
+import { SystemKeyringErrorType } from './enumerations/systemKeyringErrorType';
+import { SystemKeyringError } from './errors/systemKeyringError';
 import { IKeyringEntry } from './interfaces/keyringEntry';
 
 const scryptAsync = promisify(scrypt);
@@ -65,7 +67,7 @@ export class SystemKeyring {
 
     const entry = this.keys.get(id);
     if (!entry) {
-      throw new Error(`Key ${id} not found`);
+      throw new SystemKeyringError(SystemKeyringErrorType.KeyNotFound, id);
     }
 
     const key = await this.deriveKey(password, entry.salt);
@@ -91,7 +93,7 @@ export class SystemKeyring {
   private checkRateLimit(id: string): void {
     const accessCount = this.accessLog.get(id) || 0;
     if (accessCount >= this.maxAccessRate) {
-      throw new Error('Rate limit exceeded');
+      throw new SystemKeyringError(SystemKeyringErrorType.RateLimitExceeded);
     }
   }
 
