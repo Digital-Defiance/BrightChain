@@ -149,8 +149,10 @@ export class OwnedDataBlock extends EphemeralBlock {
    */
   public override get canEncrypt(): boolean {
     return (
+      (this.blockType === BlockType.OwnedDataBlock ||
+        this.blockType === BlockType.ConstituentBlockList) &&
       this.data.length + StaticHelpersECIES.eciesOverheadLength <=
-      this.blockSize
+        this.blockSize
     );
   }
 

@@ -5,9 +5,9 @@
 | brightchain-lib/src/index.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/blockMetadata.ts | 61.90% | 66.67% | 12.50% |
 | brightchain-lib/src/lib/blockPaddingTransform.ts | 0.00% | 0.00% | 0.00% |
-| brightchain-lib/src/lib/blockService.ts | 34.38% | 10.00% | 18.92% |
+| brightchain-lib/src/lib/blockService.ts | 94.32% | 100.00% | 75.68% |
 | brightchain-lib/src/lib/brightChainMember.ts | 69.09% | 68.18% | 63.41% |
-| brightchain-lib/src/lib/cblBlockMetadata.ts | 80.00% | 50.00% | 0.00% |
+| brightchain-lib/src/lib/cblBlockMetadata.ts | 100.00% | 100.00% | 0.00% |
 | brightchain-lib/src/lib/cblStream.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/constants.ts | 100.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/drbg.ts | 97.06% | 100.00% | 0.00% |
@@ -23,7 +23,7 @@
 | brightchain-lib/src/lib/isolatedPrivateKey.ts | 90.32% | 100.00% | 60.00% |
 | brightchain-lib/src/lib/isolatedPublicKey.ts | 93.10% | 91.67% | 71.43% |
 | brightchain-lib/src/lib/languageCodes.ts | 50.00% | 0.00% | 0.00% |
-| brightchain-lib/src/lib/memoryWriteableStream.ts | 0.00% | 0.00% | 0.00% |
+| brightchain-lib/src/lib/memoryWriteableStream.ts | 28.57% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/operationCost.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/primeTupleGeneratorStream.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/quorum.ts | 47.37% | 28.57% | 16.67% |
@@ -49,21 +49,21 @@
 | brightchain-lib/src/lib/systemKeyring.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/utils.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/blocks/base.ts | 72.73% | 60.87% | 41.67% |
-| brightchain-lib/src/lib/blocks/cbl.ts | 81.38% | 77.78% | 53.45% |
+| brightchain-lib/src/lib/blocks/cbl.ts | 82.98% | 77.78% | 58.62% |
 | brightchain-lib/src/lib/blocks/encrypted.ts | 47.89% | 61.11% | 0.00% |
 | brightchain-lib/src/lib/blocks/encryptedBlockFactory.ts | 89.29% | 100.00% | 57.14% |
 | brightchain-lib/src/lib/blocks/encryptedCbl.ts | 29.69% | 27.27% | 0.00% |
 | brightchain-lib/src/lib/blocks/encryptedOwnedData.ts | 91.67% | 80.00% | 50.00% |
-| brightchain-lib/src/lib/blocks/ephemeral.ts | 73.91% | 75.00% | 44.44% |
+| brightchain-lib/src/lib/blocks/ephemeral.ts | 75.36% | 81.25% | 44.44% |
 | brightchain-lib/src/lib/blocks/extendedCbl.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/blocks/handle.ts | 18.60% | 4.55% | 0.00% |
 | brightchain-lib/src/lib/blocks/handleTuple.ts | 30.95% | 30.00% | 0.00% |
 | brightchain-lib/src/lib/blocks/memoryTuple.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/blocks/multiEncrypted.ts | 44.87% | 23.53% | 25.93% |
-| brightchain-lib/src/lib/blocks/ownedData.ts | 26.32% | 0.00% | 0.00% |
+| brightchain-lib/src/lib/blocks/ownedData.ts | 61.54% | 66.67% | 54.17% |
 | brightchain-lib/src/lib/blocks/parity.ts | 57.14% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/blocks/random.ts | 0.00% | 0.00% | 0.00% |
-| brightchain-lib/src/lib/blocks/rawData.ts | 20.59% | 0.00% | 0.00% |
+| brightchain-lib/src/lib/blocks/rawData.ts | 44.12% | 13.33% | 50.00% |
 | brightchain-lib/src/lib/blocks/whitened.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/cpus/instructionTables.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/cpus/instructions.ts | 0.00% | 0.00% | 0.00% |
@@ -121,7 +121,7 @@
 | brightchain-lib/src/lib/enumerations/votingDerivationErrorType.ts | 100.00% | 100.00% | 100.00% |
 | brightchain-lib/src/lib/enumerations/votingErrorType.ts | 100.00% | 100.00% | 100.00% |
 | brightchain-lib/src/lib/enumerations/whitenedErrorType.ts | 0.00% | 0.00% | 0.00% |
-| brightchain-lib/src/lib/errors/blockServiceError.ts | 57.14% | 0.00% | 0.00% |
+| brightchain-lib/src/lib/errors/blockServiceError.ts | 100.00% | 100.00% | 0.00% |
 | brightchain-lib/src/lib/errors/cblError.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/errors/checksumMismatch.ts | 100.00% | 100.00% | 0.00% |
 | brightchain-lib/src/lib/errors/eciesError.ts | 100.00% | 100.00% | 0.00% |
@@ -163,15 +163,15 @@
 | brightchain-lib/src/lib/errors/block/blockCapacity.ts | 66.67% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/errors/block/blockMetadata.ts | 62.50% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/errors/block/blockValidation.ts | 100.00% | 100.00% | 50.00% |
-| brightchain-lib/src/lib/errors/block/cannotDecrypt.ts | 66.67% | 0.00% | 0.00% |
-| brightchain-lib/src/lib/errors/block/cannotEncrypt.ts | 66.67% | 0.00% | 0.00% |
+| brightchain-lib/src/lib/errors/block/cannotDecrypt.ts | 100.00% | 100.00% | 0.00% |
+| brightchain-lib/src/lib/errors/block/cannotEncrypt.ts | 100.00% | 100.00% | 0.00% |
 | brightchain-lib/src/lib/errors/block/index.ts | 100.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/keys/asymmetricKeyFragment.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/keys/memberKeyContainer.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/models/user.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/stores/bufferStore.ts | 100.00% | 100.00% | 100.00% |
-| brightchain-lib/src/lib/stores/diskBlockAsyncStore.ts | 0.00% | 0.00% | 0.00% |
-| brightchain-lib/src/lib/stores/diskBlockStore.ts | 0.00% | 0.00% | 0.00% |
+| brightchain-lib/src/lib/stores/diskBlockAsyncStore.ts | 18.42% | 5.88% | 0.00% |
+| brightchain-lib/src/lib/stores/diskBlockStore.ts | 27.50% | 14.29% | 0.00% |
 | brightchain-lib/src/lib/stores/diskBlockSyncStore.ts | 0.00% | 0.00% | 0.00% |
 | brightchain-lib/src/lib/stores/jsonStore.ts | 100.00% | 100.00% | 83.33% |
 | brightchain-lib/src/lib/stores/simpleStore.ts | 70.59% | 100.00% | 14.29% |
@@ -189,6 +189,6 @@
 
 ## Summary
 
-- **Line Coverage**: 51.60%
-- **Function Coverage**: 46.36%
-- **Branch Coverage**: 37.43%
+- **Line Coverage**: 53.85%
+- **Function Coverage**: 48.94%
+- **Branch Coverage**: 40.92%

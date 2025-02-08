@@ -1,4 +1,3 @@
-import { createECDH, randomBytes } from 'crypto';
 import { BaseBlock } from './blocks/base';
 import { ConstituentBlockListBlock } from './blocks/cbl';
 import { EncryptedConstituentBlockListBlock } from './blocks/encryptedCbl';
@@ -73,38 +72,11 @@ export class BlockService {
       throw new CannotEncryptBlockError();
     }
 
-    // Create encryption metadata
-    const ecdh = createECDH(StaticHelpersECIES.curveName);
-    ecdh.generateKeys();
-    const ephemeralPublicKey = ecdh.getPublicKey();
-    const iv = randomBytes(StaticHelpersECIES.ivLength);
-
-    // Encrypt the data
+    // Encrypt the data - StaticHelpersECIES.encrypt already includes ephemeral public key, iv, and authTag
     const encryptedBuffer = StaticHelpersECIES.encrypt(
       creator.publicKey,
       block.data,
     );
-
-    // Extract components from encrypted buffer
-    const authTag = encryptedBuffer.subarray(
-      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
-      StaticHelpersECIES.publicKeyLength +
-        StaticHelpersECIES.ivLength +
-        StaticHelpersECIES.authTagLength,
-    );
-    const encryptedData = encryptedBuffer.subarray(
-      StaticHelpersECIES.publicKeyLength +
-        StaticHelpersECIES.ivLength +
-        StaticHelpersECIES.authTagLength,
-    );
-
-    // Combine encryption metadata with encrypted data
-    const fullData = Buffer.concat([
-      ephemeralPublicKey,
-      iv,
-      authTag,
-      encryptedData,
-    ]);
 
     // Create encrypted block based on input block type
     if (block.blockType === BlockType.ConstituentBlockList) {
@@ -112,8 +84,8 @@ export class BlockService {
         BlockType.ConstituentBlockList,
         BlockDataType.EncryptedData,
         block.blockSize,
-        fullData,
-        StaticHelpersChecksum.calculateChecksum(fullData),
+        encryptedBuffer,
+        StaticHelpersChecksum.calculateChecksum(encryptedBuffer),
         creator,
         block.dateCreated,
         block.data.length,
@@ -124,8 +96,8 @@ export class BlockService {
       BlockType.EncryptedOwnedDataBlock,
       BlockDataType.EncryptedData,
       block.blockSize,
-      fullData,
-      StaticHelpersChecksum.calculateChecksum(fullData),
+      encryptedBuffer,
+      StaticHelpersChecksum.calculateChecksum(encryptedBuffer),
       creator,
       block.dateCreated,
       block.data.length,
