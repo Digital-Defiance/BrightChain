@@ -127,6 +127,7 @@ export enum StringNames {
   Error_VotingErrorInvalidPublicKeyIdMismatch = 'error_votingErrorInvalidPublicKeyIdMismatch',
   Error_StoreErrorKeyNotFoundTemplate = 'error_storeErrorKeyNotFoundTemplate',
   Error_StoreErrorStorePathRequired = 'error_storeErrorStorePathRequired',
+  Error_StoreErrorStorePathNotFound = 'error_storeErrorStorePathNotFound',
   Error_StoreErrorBlockSizeRequired = 'error_storeErrorBlockSizeRequired',
   Error_StoreErrorBlockIdRequired = 'error_storeErrorBlockIdRequired',
   Error_StoreErrorInvalidBlockIdTooShort = 'error_storeErrorInvalidBlockIdTooShort',

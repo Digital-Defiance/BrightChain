@@ -90,46 +90,62 @@ describe('BlockService', () => {
       });
     });
 
-    describe('xorBlocksWithWhiteners', () => {
-      it('should XOR blocks with whiteners', () => {
-        const blocks = [Buffer.from([1, 2, 3]), Buffer.from([4, 5, 6])];
-        const whiteners = [Buffer.from([10, 20, 30])];
+    describe('XOR Operations', () => {
+      describe('xorBlockWithWhiteners', () => {
+        it('should XOR a single block with all whiteners', () => {
+          const block = Buffer.from([1, 2, 3]);
+          const whiteners = [Buffer.from([10, 20, 30]), Buffer.from([5, 7, 9])];
 
-        const result = BlockService.xorBlocksWithWhiteners(blocks, whiteners);
+          const result = BlockService.xorBlockWithWhiteners(block, whiteners);
 
-        // XOR results: 1^10=11, 2^20=22, 3^30=29
-        expect(result[0]).toEqual(Buffer.from([11, 22, 29]));
-        // Same whitener used again: 4^10=14, 5^20=17, 6^30=24
-        expect(result[1]).toEqual(Buffer.from([14, 17, 24]));
+          // XOR results: 1^10^5=14, 2^20^7=17, 3^30^9=20
+          expect(result).toEqual(Buffer.from([14, 17, 20]));
+        });
+
+        it('should throw error when no whiteners provided', () => {
+          const block = Buffer.from([1, 2, 3]);
+          const whiteners: Buffer[] = [];
+
+          expect(() => {
+            BlockService.xorBlockWithWhiteners(block, whiteners);
+          }).toThrow(
+            new BlockServiceError(BlockServiceErrorType.NoWhitenersProvided),
+          );
+        });
       });
 
-      it('should throw error when no whiteners provided', () => {
-        const blocks = [Buffer.from([1, 2, 3])];
-        const whiteners: Buffer[] = [];
+      describe('xorBlocksWithWhitenersRoundRobin', () => {
+        it('should XOR blocks with whiteners in round-robin fashion', () => {
+          const blocks = [
+            Buffer.from([1, 1]),
+            Buffer.from([2, 2]),
+            Buffer.from([3, 3]),
+          ];
+          const whiteners = [Buffer.from([10, 10]), Buffer.from([20, 20])];
 
-        expect(() => {
-          BlockService.xorBlocksWithWhiteners(blocks, whiteners);
-        }).toThrow(
-          new BlockServiceError(BlockServiceErrorType.NoWhitenersProvided),
-        );
-      });
+          const result = BlockService.xorBlocksWithWhitenersRoundRobin(
+            blocks,
+            whiteners,
+          );
 
-      it('should handle multiple whiteners in round-robin fashion', () => {
-        const blocks = [
-          Buffer.from([1, 1]),
-          Buffer.from([2, 2]),
-          Buffer.from([3, 3]),
-        ];
-        const whiteners = [Buffer.from([10, 10]), Buffer.from([20, 20])];
+          // First block XORed with first whitener
+          expect(result[0]).toEqual(Buffer.from([11, 11]));
+          // Second block XORed with second whitener
+          expect(result[1]).toEqual(Buffer.from([22, 22]));
+          // Third block XORed with first whitener again
+          expect(result[2]).toEqual(Buffer.from([9, 9]));
+        });
 
-        const result = BlockService.xorBlocksWithWhiteners(blocks, whiteners);
+        it('should throw error when no whiteners provided', () => {
+          const blocks = [Buffer.from([1, 2, 3])];
+          const whiteners: Buffer[] = [];
 
-        // First block XORed with first whitener
-        expect(result[0]).toEqual(Buffer.from([11, 11]));
-        // Second block XORed with second whitener
-        expect(result[1]).toEqual(Buffer.from([22, 22]));
-        // Third block XORed with first whitener again
-        expect(result[2]).toEqual(Buffer.from([9, 9]));
+          expect(() => {
+            BlockService.xorBlocksWithWhitenersRoundRobin(blocks, whiteners);
+          }).toThrow(
+            new BlockServiceError(BlockServiceErrorType.NoWhitenersProvided),
+          );
+        });
       });
     });
   });
