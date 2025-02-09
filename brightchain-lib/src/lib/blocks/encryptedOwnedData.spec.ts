@@ -7,12 +7,13 @@ import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
 import { BlockValidationError } from '../errors/block';
 import { GuidV4 } from '../guid';
+import { IMemberWithMnemonic } from '../interfaces/memberWithMnemonic';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { EncryptedOwnedDataBlock } from './encryptedOwnedData';
 
 describe('EncryptedOwnedDataBlock', () => {
-  let member: BrightChainMember;
+  let member: IMemberWithMnemonic;
 
   beforeAll(() => {
     member = BrightChainMember.newMember(
@@ -32,7 +33,7 @@ describe('EncryptedOwnedDataBlock', () => {
     // Encrypt the data and log details
     // Use public key directly - StaticHelpersECIES will handle the prefix
     const encryptedData = StaticHelpersECIES.encrypt(
-      member.publicKey,
+      member.member.publicKey,
       originalData,
     );
 
@@ -42,7 +43,7 @@ describe('EncryptedOwnedDataBlock', () => {
       blockSize,
       encryptedData,
       await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
-      member,
+      member.member,
       undefined,
       originalData.length,
     );
@@ -62,7 +63,7 @@ describe('EncryptedOwnedDataBlock', () => {
     const originalData = randomBytes(maxDataSize);
     // Use public key directly - StaticHelpersECIES will handle the prefix
     const encryptedData = StaticHelpersECIES.encrypt(
-      member.publicKey,
+      member.member.publicKey,
       originalData,
     );
 
@@ -73,7 +74,7 @@ describe('EncryptedOwnedDataBlock', () => {
       blockSize,
       encryptedData,
       await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
-      member,
+      member.member,
       undefined,
       originalData.length,
     );
@@ -88,7 +89,7 @@ describe('EncryptedOwnedDataBlock', () => {
     const originalData = randomBytes(maxDataSize);
     // Use public key directly - StaticHelpersECIES will handle the prefix
     const encryptedData = StaticHelpersECIES.encrypt(
-      member.publicKey,
+      member.member.publicKey,
       originalData,
     );
 
@@ -115,7 +116,7 @@ describe('EncryptedOwnedDataBlock', () => {
     const originalData = randomBytes(maxDataSize);
     // Use public key directly - StaticHelpersECIES will handle the prefix
     const encryptedData = StaticHelpersECIES.encrypt(
-      member.publicKey,
+      member.member.publicKey,
       originalData,
     );
 
@@ -125,13 +126,13 @@ describe('EncryptedOwnedDataBlock', () => {
       blockSize,
       encryptedData,
       await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
-      member,
+      member.member,
       undefined,
       originalData.length,
     );
 
-    expect(block.creatorId).toEqual(member.id);
-    expect(block.creator).toBe(member);
+    expect(block.creatorId).toEqual(member.member.id);
+    expect(block.creator).toEqual(member.member);
   });
 
   it('should validate checksum when provided', async () => {
@@ -141,7 +142,7 @@ describe('EncryptedOwnedDataBlock', () => {
     const originalData = randomBytes(maxDataSize);
     // Use public key directly - StaticHelpersECIES will handle the prefix
     const encryptedData = StaticHelpersECIES.encrypt(
-      member.publicKey,
+      member.member.publicKey,
       originalData,
     );
 
@@ -152,7 +153,7 @@ describe('EncryptedOwnedDataBlock', () => {
       blockSize,
       encryptedData,
       checksum,
-      member,
+      member.member,
       undefined,
       originalData.length,
     );
@@ -168,7 +169,7 @@ describe('EncryptedOwnedDataBlock', () => {
     const originalData = randomBytes(maxDataSize);
     // Use public key directly - StaticHelpersECIES will handle the prefix
     const encryptedData = StaticHelpersECIES.encrypt(
-      member.publicKey,
+      member.member.publicKey,
       originalData,
     );
 
@@ -178,7 +179,7 @@ describe('EncryptedOwnedDataBlock', () => {
       blockSize,
       encryptedData,
       await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
-      member,
+      member.member,
       undefined,
       originalData.length,
       false, // canRead = false
@@ -197,7 +198,7 @@ describe('EncryptedOwnedDataBlock', () => {
     const originalData = randomBytes(maxDataSize);
     // Use public key directly - StaticHelpersECIES will handle the prefix
     const encryptedData = StaticHelpersECIES.encrypt(
-      member.publicKey,
+      member.member.publicKey,
       originalData,
     );
 
@@ -209,7 +210,7 @@ describe('EncryptedOwnedDataBlock', () => {
         blockSize,
         encryptedData,
         await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
-        member,
+        member.member,
         futureDate,
         originalData.length,
       ),
@@ -223,7 +224,7 @@ describe('EncryptedOwnedDataBlock', () => {
     const originalData = randomBytes(maxDataSize);
     // Use public key directly - StaticHelpersECIES will handle the prefix
     const encryptedData = StaticHelpersECIES.encrypt(
-      member.publicKey,
+      member.member.publicKey,
       originalData,
     );
 
@@ -233,7 +234,7 @@ describe('EncryptedOwnedDataBlock', () => {
       blockSize,
       encryptedData,
       await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
-      member,
+      member.member,
       undefined,
       originalData.length,
     );
@@ -250,7 +251,7 @@ describe('EncryptedOwnedDataBlock', () => {
 
     // Verify we can decrypt the payload
     const decryptedData = StaticHelpersECIES.decryptWithComponents(
-      member.privateKey,
+      member.member.privateKey,
       ephemeralPublicKey,
       iv,
       authTag,

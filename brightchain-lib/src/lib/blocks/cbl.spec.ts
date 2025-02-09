@@ -498,7 +498,10 @@ describe('ConstituentBlockListBlock', () => {
       );
 
       try {
-        ConstituentBlockListBlock.parseHeader(block.data, differentCreator),
+        ConstituentBlockListBlock.parseHeader(
+          block.data,
+          differentCreator.member,
+        ),
           fail('Expected an error to be thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(BlockValidationError);

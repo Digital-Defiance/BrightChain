@@ -3,6 +3,7 @@ import { EmailString } from './emailString';
 import { MemberType } from './enumerations/memberType';
 import { SealingErrorType } from './enumerations/sealingErrorType';
 import { SealingError } from './errors/sealingError';
+import { IMemberWithMnemonic } from './interfaces/memberWithMnemonic';
 import { QuorumDataRecord } from './quorumDataRecord';
 import { StaticHelpersSealing } from './staticHelpers.sealing';
 import { ShortHexGuid } from './types';
@@ -12,10 +13,10 @@ jest.setTimeout(30000);
 
 describe('brightchainQuorum', () => {
   // Shared test data
-  let alice: BrightChainMember;
-  let bob: BrightChainMember;
-  let charlie: BrightChainMember;
-  let david: BrightChainMember;
+  let alice: IMemberWithMnemonic;
+  let bob: IMemberWithMnemonic;
+  let charlie: IMemberWithMnemonic;
+  let david: IMemberWithMnemonic;
   let members: BrightChainMember[];
   const testDocument = { hello: 'world' };
 
@@ -41,8 +42,8 @@ describe('brightchainQuorum', () => {
       'David',
       new EmailString('david@example.com'),
     );
-    david.unloadWalletAndPrivateKey(); // Pre-configure david without private key
-    members = [alice, bob, charlie];
+    david.member.unloadWalletAndPrivateKey(); // Pre-configure david without private key
+    members = [alice.member, bob.member, charlie.member];
   });
 
   describe('allMembersHavePrivateKey', () => {
@@ -53,7 +54,7 @@ describe('brightchainQuorum', () => {
     });
 
     it('should return false when one member does not have a private key loaded', () => {
-      const membersWithDavid = [...members, david];
+      const membersWithDavid = [...members, david.member];
       expect(
         StaticHelpersSealing.allMembersHavePrivateKey(membersWithDavid),
       ).toEqual(false);
@@ -66,7 +67,7 @@ describe('brightchainQuorum', () => {
     beforeAll(() => {
       // Create sealed document once for reuse
       sealedDocument = StaticHelpersSealing.quorumSeal(
-        alice,
+        alice.member,
         testDocument,
         members,
       );
@@ -96,7 +97,7 @@ describe('brightchainQuorum', () => {
 
     it('should throw error for insufficient members', () => {
       expect(() =>
-        StaticHelpersSealing.quorumUnseal(sealedDocument, [alice]),
+        StaticHelpersSealing.quorumUnseal(sealedDocument, [alice.member]),
       ).toThrowType(SealingError, (error: SealingError) => {
         expect(error.type).toEqual(SealingErrorType.NotEnoughMembersToUnlock);
       });
@@ -106,7 +107,7 @@ describe('brightchainQuorum', () => {
   describe('input validation', () => {
     it('should throw error for invalid members', () => {
       expect(() =>
-        StaticHelpersSealing.quorumSeal(alice, { data: 123 }, [], 1),
+        StaticHelpersSealing.quorumSeal(alice.member, { data: 123 }, [], 1),
       ).toThrowType(SealingError, (error: SealingError) => {
         expect(error.type).toEqual(SealingErrorType.NotEnoughMembersToUnlock);
       });
@@ -154,12 +155,18 @@ describe('brightchainQuorum', () => {
 
       it('should throw error for invalid sharesRequired', () => {
         expect(() =>
-          StaticHelpersSealing.validateQuorumSealInputs([alice, bob], 0),
+          StaticHelpersSealing.validateQuorumSealInputs(
+            [alice.member, bob.member],
+            0,
+          ),
         ).toThrowType(SealingError, (error: SealingError) => {
           expect(error.type).toEqual(SealingErrorType.NotEnoughMembersToUnlock);
         });
         expect(() =>
-          StaticHelpersSealing.validateQuorumSealInputs([alice, bob], 3),
+          StaticHelpersSealing.validateQuorumSealInputs(
+            [alice.member, bob.member],
+            3,
+          ),
         ).toThrowType(SealingError, (error: SealingError) => {
           expect(error.type).toEqual(SealingErrorType.NotEnoughMembersToUnlock);
         });

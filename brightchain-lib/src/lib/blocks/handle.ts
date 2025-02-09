@@ -170,7 +170,7 @@ export class BlockHandle extends BaseBlock {
       } else {
         try {
           const metadataJson = readFileSync(metadataPath).toString();
-          this._cachedMetadata = BlockMetadata.fromJSON(metadataJson);
+          this._cachedMetadata = BlockMetadata.fromJson(metadataJson);
         } catch (error: unknown) {
           if (error instanceof Error) {
             throw new BlockMetadataError(

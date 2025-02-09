@@ -8,6 +8,7 @@ import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
 import { BlockValidationError } from '../errors/block';
 import { GuidV4 } from '../guid';
+import { IMemberWithMnemonic } from '../interfaces/memberWithMnemonic';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer, SignatureBuffer } from '../types';
@@ -88,7 +89,7 @@ describe('EncryptedConstituentBlockListBlock', () => {
 
   // Shared test data
   let creator: GuidV4;
-  let encryptor: BrightChainMember;
+  let encryptor: IMemberWithMnemonic;
   let blockSize: BlockSize;
   let cblBlock: ConstituentBlockListBlock;
   let testDate: Date;
@@ -136,7 +137,10 @@ describe('EncryptedConstituentBlockListBlock', () => {
       Buffer.concat(addresses),
     ]);
     const checksum = StaticHelpersChecksum.calculateChecksum(toSign);
-    return StaticHelpersECIES.signMessage(encryptor.privateKey, checksum);
+    return StaticHelpersECIES.signMessage(
+      encryptor.member.privateKey,
+      checksum,
+    );
   };
 
   const createTestBlock = async (
@@ -199,7 +203,7 @@ describe('EncryptedConstituentBlockListBlock', () => {
     it('should construct and handle metadata correctly', async () => {
       const originalData = cblBlock.data;
       const encryptedData = StaticHelpersECIES.encrypt(
-        encryptor.publicKey,
+        encryptor.member.publicKey,
         originalData,
       );
       const encryptedBlock = await createTestBlock(encryptedData, {
@@ -233,7 +237,7 @@ describe('EncryptedConstituentBlockListBlock', () => {
 
     it('should handle creators correctly', async () => {
       const encryptedData = StaticHelpersECIES.encrypt(
-        encryptor.publicKey,
+        encryptor.member.publicKey,
         cblBlock.data,
       );
 
@@ -246,16 +250,16 @@ describe('EncryptedConstituentBlockListBlock', () => {
 
       // Test with BrightChainMember creator
       const memberBlock = await createTestBlock(encryptedData, {
-        creator: encryptor,
+        creator: encryptor.member,
       });
-      expect(memberBlock.creator).toBe(encryptor);
-      expect(memberBlock.creatorId).toBe(encryptor.id);
+      expect(memberBlock.creator).toBe(encryptor.member);
+      expect(memberBlock.creatorId).toBe(encryptor.member.id);
     });
 
     it('should handle payload correctly', async () => {
       const originalData = cblBlock.data;
       const encryptedData = StaticHelpersECIES.encrypt(
-        encryptor.publicKey,
+        encryptor.member.publicKey,
         originalData,
       );
       const encryptedBlock = await createTestBlock(encryptedData, {
@@ -268,7 +272,7 @@ describe('EncryptedConstituentBlockListBlock', () => {
   describe('validation', () => {
     it('should validate checksum', async () => {
       const encryptedData = StaticHelpersECIES.encrypt(
-        encryptor.publicKey,
+        encryptor.member.publicKey,
         cblBlock.data,
       );
       const checksum = StaticHelpersChecksum.calculateChecksum(encryptedData);
@@ -278,7 +282,7 @@ describe('EncryptedConstituentBlockListBlock', () => {
 
     it('should handle invalid inputs', async () => {
       const encryptedData = StaticHelpersECIES.encrypt(
-        encryptor.publicKey,
+        encryptor.member.publicKey,
         cblBlock.data,
       );
 

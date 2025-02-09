@@ -7,13 +7,14 @@ import { MemberErrorType } from './enumerations/memberErrorType';
 import { MemberType } from './enumerations/memberType';
 import { InvalidEmailError } from './errors/invalidEmail';
 import { MemberError } from './errors/memberError';
+import { IMemberWithMnemonic } from './interfaces/memberWithMnemonic';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import { StaticHelpersVoting } from './staticHelpers.voting';
 
 describe('brightchain', () => {
-  let alice: BrightChainMember,
-    bob: BrightChainMember,
-    noKeyCharlie: BrightChainMember;
+  let alice: IMemberWithMnemonic,
+    bob: IMemberWithMnemonic,
+    noKeyCharlie: IMemberWithMnemonic;
   beforeAll(() => {
     alice = BrightChainMember.newMember(
       MemberType.User,
@@ -30,21 +31,23 @@ describe('brightchain', () => {
       'Charlie Smith',
       new EmailString('charlie@example.com'),
     );
-    noKeyCharlie.unloadWalletAndPrivateKey();
+    noKeyCharlie.member.unloadWalletAndPrivateKey();
   });
 
   describe('basic member operations', () => {
     it('should sign and verify a message for a member', () => {
       const message = Buffer.from('hello world');
-      const signature = alice.sign(message);
-      const verified = alice.verify(signature, message);
+      const signature = alice.member.sign(message);
+      const verified = alice.member.verify(signature, message);
       expect(verified).toBeTruthy();
-      expect(alice.verify(signature, Buffer.from('hello worldx'))).toBeFalsy();
+      expect(
+        alice.member.verify(signature, Buffer.from('hello worldx')),
+      ).toBeFalsy();
     });
 
     it('should fail to sign when there is no signing key', () => {
       expect(() =>
-        noKeyCharlie.sign(Buffer.from(faker.lorem.sentence())),
+        noKeyCharlie.member.sign(Buffer.from(faker.lorem.sentence())),
       ).toThrowType(MemberError, (error: MemberError) => {
         expect(error.type).toBe(MemberErrorType.MissingPrivateKey);
       });
@@ -56,9 +59,9 @@ describe('brightchain', () => {
         'Dwight Smith',
         new EmailString('dwight@example.com'),
       );
-      expect(dwight.hasPrivateKey).toBeTruthy();
-      dwight.unloadWalletAndPrivateKey();
-      expect(dwight.hasPrivateKey).toBeFalsy();
+      expect(dwight.member.hasPrivateKey).toBeTruthy();
+      dwight.member.unloadWalletAndPrivateKey();
+      expect(dwight.member.hasPrivateKey).toBeFalsy();
     });
   });
 
@@ -142,15 +145,15 @@ describe('brightchain', () => {
     });
 
     it('should check whether a user has a private key', () => {
-      expect(bob.hasPrivateKey).toEqual(true);
-      expect(noKeyCharlie.hasPrivateKey).toEqual(false);
+      expect(bob.member.hasPrivateKey).toEqual(true);
+      expect(noKeyCharlie.member.hasPrivateKey).toEqual(false);
     });
   });
 
   describe('BIP39 mnemonic and wallet functionality', () => {
     let mnemonic: string;
     let wallet: Wallet;
-    let member: BrightChainMember;
+    let member: IMemberWithMnemonic;
     beforeAll(() => {
       mnemonic = StaticHelpersECIES.generateNewMnemonic();
       const { wallet: w } =
@@ -182,7 +185,7 @@ describe('brightchain', () => {
 
     it('should maintain key consistency between wallet and ECDH', () => {
       // Get the public key from the member (which uses ECDH internally)
-      const memberPublicKey = member.publicKey;
+      const memberPublicKey = member.member.publicKey;
 
       // The public key should be in uncompressed format with 0x04 prefix
       expect(memberPublicKey[0]).toEqual(0x04);
@@ -201,13 +204,13 @@ describe('brightchain', () => {
       );
 
       // Store the original keys
-      const originalPublicKey = newMember.publicKey;
-      const originalPrivateKey = newMember.privateKey;
+      const originalPublicKey = newMember.member.publicKey;
+      const originalPrivateKey = newMember.member.privateKey;
 
       // Unload the wallet and private key
-      newMember.unloadWalletAndPrivateKey();
-      expect(newMember.hasPrivateKey).toBeFalsy();
-      expect(() => newMember.wallet).toThrowType(
+      newMember.member.unloadWalletAndPrivateKey();
+      expect(newMember.member.hasPrivateKey).toBeFalsy();
+      expect(() => newMember.member.wallet).toThrowType(
         MemberError,
         (error: MemberError) => {
           expect(error.type).toBe(MemberErrorType.NoWallet);
@@ -216,7 +219,7 @@ describe('brightchain', () => {
 
       // Generate a new mnemonic (this should fail to load)
       const wrongMnemonic = StaticHelpersECIES.generateNewMnemonic();
-      expect(() => newMember.loadWallet(wrongMnemonic)).toThrowType(
+      expect(() => newMember.member.loadWallet(wrongMnemonic)).toThrowType(
         MemberError,
         (error: MemberError) => {
           expect(error.type).toBe(MemberErrorType.InvalidMnemonic);
@@ -224,8 +227,8 @@ describe('brightchain', () => {
       );
 
       // The member should still not have a private key
-      expect(newMember.hasPrivateKey).toBeFalsy();
-      expect(() => newMember.wallet).toThrowType(
+      expect(newMember.member.hasPrivateKey).toBeFalsy();
+      expect(() => newMember.member.wallet).toThrowType(
         MemberError,
         (error: MemberError) => {
           expect(error.type).toBe(MemberErrorType.NoWallet);
@@ -238,7 +241,7 @@ describe('brightchain', () => {
         'Test User',
         new EmailString('test@example.com'),
         originalPublicKey,
-        newMember.votingPublicKey, // Include the voting public key
+        newMember.member.votingPublicKey, // Include the voting public key
       );
       // Set the private key using the setter to ensure proper validation
       reloadedMember.privateKey = originalPrivateKey;
@@ -258,7 +261,7 @@ describe('brightchain', () => {
         ).toString('hex'),
       ).toEqual(
         StaticHelpersVoting.votingPublicKeyToBuffer(
-          newMember.votingPublicKey,
+          newMember.member.votingPublicKey,
         ).toString('hex'),
       );
     });
@@ -271,25 +274,41 @@ describe('brightchain', () => {
       );
 
       // Public keys should be different
-      expect(member.publicKey.toString('hex')).not.toEqual(
-        member2.publicKey.toString('hex'),
+      expect(member.member.publicKey.toString('hex')).not.toEqual(
+        member2.member.publicKey.toString('hex'),
       );
 
       // Private keys should be different
-      expect(member.privateKey.toString('hex')).not.toEqual(
-        member2.privateKey.toString('hex'),
+      expect(member.member.privateKey.toString('hex')).not.toEqual(
+        member2.member.privateKey.toString('hex'),
       );
 
       // Voting keys should be different
       expect(
         StaticHelpersVoting.votingPublicKeyToBuffer(
-          member.votingPublicKey,
+          member.member.votingPublicKey,
         ).toString('hex'),
       ).not.toEqual(
         StaticHelpersVoting.votingPublicKeyToBuffer(
-          member2.votingPublicKey,
+          member2.member.votingPublicKey,
         ).toString('hex'),
       );
+    });
+  });
+  describe('json', () => {
+    it('should serialize and deserialize correctly', () => {
+      const memberJson = alice.member.toJson();
+      const reloadedMember = BrightChainMember.fromJson(memberJson);
+      reloadedMember.loadWallet(alice.mnemonic);
+      const encrypted = StaticHelpersECIES.encrypt(
+        alice.member.publicKey,
+        Buffer.from('hello world'),
+      );
+      const decrypted = StaticHelpersECIES.decrypt(
+        reloadedMember.privateKey,
+        encrypted,
+      );
+      expect(decrypted.toString()).toEqual('hello world');
     });
   });
 });

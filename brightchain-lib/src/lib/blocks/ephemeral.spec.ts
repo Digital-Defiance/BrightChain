@@ -10,6 +10,7 @@ import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
+import { IMemberWithMnemonic } from '../interfaces/memberWithMnemonic';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer } from '../types';
@@ -73,7 +74,7 @@ describe('EphemeralBlock', () => {
   jest.setTimeout(15000);
 
   // Shared test data
-  let creator: BrightChainMember;
+  let creator: IMemberWithMnemonic;
   const defaultBlockSize = BlockSize.Small;
   const testDate = new Date(Date.now() - 1000); // 1 second ago
 
@@ -105,7 +106,7 @@ describe('EphemeralBlock', () => {
       options.dataType || BlockDataType.RawData,
       data,
       options.checksum,
-      options.creator || creator,
+      options.creator || creator.member,
       options.dateCreated || testDate,
       options.actualDataLength,
       options.canRead ?? true,
@@ -207,8 +208,8 @@ describe('EphemeralBlock', () => {
     it('should handle different creator types', async () => {
       // Test with BrightChainMember creator
       const memberBlock = await createTestBlock();
-      expect(memberBlock.creator).toBe(creator);
-      expect(memberBlock.creatorId).toBe(creator.id);
+      expect(memberBlock.creator).toBe(creator.member);
+      expect(memberBlock.creatorId).toBe(creator.member.id);
       expect(memberBlock.canSign).toBe(true);
 
       // Test with GuidV4 creator

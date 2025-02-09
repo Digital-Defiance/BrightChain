@@ -86,7 +86,7 @@ export class GuidV4 {
   public toString(): Base64Guid {
     return this.asBase64Guid as Base64Guid;
   }
-  public toJSON(): string {
+  public toJson(): string {
     return this.asBase64Guid;
   }
   public get asBigIntGuid(): BigIntGuid {

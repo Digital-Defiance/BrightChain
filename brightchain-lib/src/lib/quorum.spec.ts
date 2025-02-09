@@ -9,7 +9,7 @@ describe('quorum', () => {
       'Node Owner',
       new EmailString('owner@example.com'),
     );
-    const quorum = new BrightChainQuorum(nodeOwner, 'Test Quorum');
+    const quorum = new BrightChainQuorum(nodeOwner.member, 'Test Quorum');
     expect(quorum).toBeTruthy();
     expect(quorum.name).toEqual('Test Quorum');
   });

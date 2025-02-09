@@ -31,10 +31,10 @@ export class SimpleStore<K, V> implements ISimpleStore<K, V> {
       } else if (
         key &&
         typeof key === 'object' &&
-        'toJSON' in key &&
-        typeof key.toJSON === 'function'
+        'toJson' in key &&
+        typeof key.toJson === 'function'
       ) {
-        keyString = key.toJSON();
+        keyString = key.toJson();
       } else {
         keyString = JSON.stringify(key);
       }

@@ -44,7 +44,7 @@ export class BlockMetadata implements IBlockMetadata {
    * Convert metadata to JSON string
    * @returns JSON representation of metadata
    */
-  public toJSON(): string {
+  public toJson(): string {
     return JSON.stringify({
       size: this.size,
       type: this.type,
@@ -65,7 +65,7 @@ export class BlockMetadata implements IBlockMetadata {
    * @returns Parsed metadata object
    * @throws If JSON is invalid or required fields are missing
    */
-  public static fromJSON(json: string): BlockMetadata {
+  public static fromJson(json: string): BlockMetadata {
     try {
       const data = JSON.parse(json);
 
