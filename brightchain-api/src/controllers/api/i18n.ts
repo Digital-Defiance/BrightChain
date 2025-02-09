@@ -1,6 +1,7 @@
 import {
   ApiErrorResponse,
   ApiRequestHandler,
+  ApiResponse,
   buildNestedI18nForLanguage,
   IStatusCodeResponse,
   JsonResponse,
@@ -20,7 +21,7 @@ interface I18nHandlers extends TypedHandlers<JsonResponse | ApiErrorResponse> {
   i18n: ApiRequestHandler<JsonResponse | ApiErrorResponse>;
 }
 
-export class I18nController extends BaseController<any, I18nHandlers> {
+export class I18nController extends BaseController<ApiResponse, I18nHandlers> {
   constructor(application: IApplication) {
     super(application);
     this.handlers = {

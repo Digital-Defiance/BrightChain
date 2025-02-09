@@ -1,12 +1,12 @@
 import {
   ApiRequestHandler,
-  IGetBlocksResponse,
+  ApiResponse,
+  IGetBlockResponse,
+  IStoreBlockResponse,
   TypedHandlers,
 } from '@BrightChain/brightchain-lib';
 
-export interface BlocksHandlers extends TypedHandlers<IGetBlocksResponse> {
-  storeCbl: ApiRequestHandler<IGetBlocksResponse>;
-  retrieveCbl: ApiRequestHandler<IGetBlocksResponse>;
-  storeBlock: ApiRequestHandler<IGetBlocksResponse>;
-  getBlock: ApiRequestHandler<IGetBlocksResponse>;
+export interface BlocksHandlers extends TypedHandlers<ApiResponse> {
+  storeBlock: ApiRequestHandler<IStoreBlockResponse>;
+  getBlock: ApiRequestHandler<IGetBlockResponse>;
 }

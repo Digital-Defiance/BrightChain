@@ -11,6 +11,7 @@ import { BlockSize } from './enumerations/blockSizes';
 import { BlockType } from './enumerations/blockType';
 import { MemberType } from './enumerations/memberType';
 import { BlockServiceError } from './errors/blockServiceError';
+import { IMemberWithMnemonic } from './interfaces/memberWithMnemonic';
 import { StaticHelpersChecksum } from './staticHelpers.checksum';
 import { DiskBlockAsyncStore } from './stores/diskBlockAsyncStore';
 
@@ -151,7 +152,7 @@ describe('BlockService', () => {
   });
 
   describe('Encryption Operations', () => {
-    let testMember: BrightChainMember;
+    let testMember: IMemberWithMnemonic;
     let testData: Buffer;
     let testBlock: OwnedDataBlock;
 
@@ -174,14 +175,14 @@ describe('BlockService', () => {
         BlockSize.Small, // Use larger block size to accommodate encryption overhead
         testData,
         checksum,
-        testMember,
+        testMember.member,
       );
     });
 
     describe('encrypt', () => {
       it('should encrypt a block using ECIES', async () => {
         const encryptedBlock = await BlockService.encrypt(
-          testMember,
+          testMember.member,
           testBlock,
         );
 
@@ -189,7 +190,7 @@ describe('BlockService', () => {
         expect(encryptedBlock.blockSize).toBe(testBlock.blockSize);
         expect(encryptedBlock.creator).toBeDefined();
         expect((encryptedBlock.creator as BrightChainMember).id).toEqual(
-          testMember.id,
+          testMember.member.id,
         );
         expect(encryptedBlock.canDecrypt).toBe(true);
 
@@ -203,13 +204,13 @@ describe('BlockService', () => {
       it('should decrypt an encrypted block back to original data', async () => {
         // First encrypt the block
         const encryptedBlock = await BlockService.encrypt(
-          testMember,
+          testMember.member,
           testBlock,
         );
 
         // Then decrypt it
         const decryptedBlock = await BlockService.decrypt(
-          testMember,
+          testMember.member,
           encryptedBlock,
         );
 
@@ -218,17 +219,17 @@ describe('BlockService', () => {
         expect(decryptedBlock.blockSize).toBe(testBlock.blockSize);
         expect(decryptedBlock.creator).toBeDefined();
         expect((decryptedBlock.creator as BrightChainMember).id).toEqual(
-          testMember.id,
+          testMember.member.id,
         );
       });
 
       it('should maintain data integrity through encrypt/decrypt cycle', async () => {
         const encryptedBlock = await BlockService.encrypt(
-          testMember,
+          testMember.member,
           testBlock,
         );
         const decryptedBlock = await BlockService.decrypt(
-          testMember,
+          testMember.member,
           encryptedBlock,
         );
 
@@ -245,7 +246,7 @@ describe('BlockService', () => {
   });
 
   describe('Block Creation', () => {
-    let testMember: BrightChainMember;
+    let testMember: IMemberWithMnemonic;
     let testData: Buffer;
 
     beforeEach(() => {
@@ -277,7 +278,7 @@ describe('BlockService', () => {
           BlockType.OwnedDataBlock,
           BlockDataType.RawData,
           testData,
-          testMember,
+          testMember.member,
         );
 
         expect(block.blockSize).toBe(BlockSize.Message);
@@ -286,7 +287,7 @@ describe('BlockService', () => {
         expect((block as OwnedDataBlock).creator).toBeDefined();
         expect(
           ((block as OwnedDataBlock).creator as BrightChainMember).id,
-        ).toEqual(testMember.id);
+        ).toEqual(testMember.member.id);
       });
 
       it('should throw error when data is empty', async () => {
@@ -328,7 +329,7 @@ describe('BlockService', () => {
           BlockType.EncryptedOwnedDataBlock,
           BlockDataType.EncryptedData,
           testData,
-          testMember,
+          testMember.member,
         );
 
         expect(block.blockType).toBe(BlockType.EncryptedOwnedDataBlock);
@@ -355,7 +356,7 @@ describe('BlockService', () => {
                 BlockSize.Message,
                 data,
                 checksum,
-                testMember,
+                testMember.member,
               );
             }),
         );
@@ -364,7 +365,7 @@ describe('BlockService', () => {
       it('should create and store CBL', async () => {
         const cbl = await BlockService.createAndStoreCBL(
           blocks,
-          testMember,
+          testMember.member,
           BigInt(
             blocks.reduce((sum, block) => {
               const data = block.data;
@@ -375,13 +376,15 @@ describe('BlockService', () => {
 
         expect(cbl.blockType).toBe(BlockType.ConstituentBlockList);
         expect(cbl.creator).toBeDefined();
-        expect((cbl.creator as BrightChainMember).id).toEqual(testMember.id);
+        expect((cbl.creator as BrightChainMember).id).toEqual(
+          testMember.member.id,
+        );
         expect(cbl.blockSize).toBe(BlockSize.Huge);
       });
 
       it('should throw error when blocks array is empty', async () => {
         await expect(
-          BlockService.createAndStoreCBL([], testMember, BigInt(0)),
+          BlockService.createAndStoreCBL([], testMember.member, BigInt(0)),
         ).rejects.toThrow(
           new BlockServiceError(BlockServiceErrorType.EmptyBlocksArray),
         );
@@ -397,13 +400,13 @@ describe('BlockService', () => {
           StaticHelpersChecksum.calculateChecksum(
             Buffer.from('Different size block'),
           ),
-          testMember,
+          testMember.member,
         );
 
         await expect(
           BlockService.createAndStoreCBL(
             [...blocks, differentSizeBlock],
-            testMember,
+            testMember.member,
             BigInt(1000),
           ),
         ).rejects.toThrow(
@@ -429,7 +432,7 @@ describe('BlockService', () => {
 
         const cbl = await BlockService.createAndStoreCBL(
           blocks,
-          testMember,
+          testMember.member,
           BigInt(
             blocks.reduce((sum, block) => {
               const data = block.data;
@@ -459,7 +462,7 @@ describe('BlockService', () => {
 
         await expect(
           BlockService.encrypt(
-            testMember,
+            testMember.member,
             nonEncryptableBlock as OwnedDataBlock,
           ),
         ).rejects.toThrow('Block cannot be encrypted');
@@ -475,7 +478,7 @@ describe('BlockService', () => {
 
         await expect(
           BlockService.decrypt(
-            testMember,
+            testMember.member,
             nonDecryptableBlock as EncryptedOwnedDataBlock,
           ),
         ).rejects.toThrow('Block cannot be decrypted');

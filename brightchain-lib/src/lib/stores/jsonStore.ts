@@ -36,11 +36,11 @@ export class JsonStore<K extends string | number> implements IJsonStore<K> {
    * @param value
    */
   public set<V>(key: K, value: V): void {
-    const hasToJSON = value && typeof value === 'object' && 'toJSON' in value;
+    const hasToJSON = value && typeof value === 'object' && 'toJson' in value;
     this._data.set(
       key,
       hasToJSON
-        ? (value as { toJSON(): string }).toJSON()
+        ? (value as { toJson(): string }).toJson()
         : JSON.stringify(value),
     );
   }

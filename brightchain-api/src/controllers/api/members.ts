@@ -1,5 +1,7 @@
 import {
+  BlockDataType,
   BlockSize,
+  BlockType,
   BrightChainMember,
   ChecksumBuffer,
   ConstituentBlockListBlock,
@@ -14,6 +16,7 @@ import {
   StringNames,
   translate,
 } from '@BrightChain/brightchain-lib';
+import { CblBlockMetadata } from 'brightchain-lib/src/lib/cblBlockMetadata';
 import { IApplication } from '../../interfaces/application';
 import { MembersResponse } from '../../interfaces/membersResponse';
 import { BaseController } from '../base';
@@ -75,18 +78,23 @@ export class MembersController extends BaseController<
     }
 
     // Create new member with generated keys
-    const member = BrightChainMember.newMember(
+    const { member, mnemonic } = BrightChainMember.newMember(
       memberType,
       name,
       new EmailString(email),
     );
 
     // Store member data in a CBL block
-    const memberData = member.toJSON();
+    const memberData = member.toJson();
     const dataBuffer = Buffer.from(memberData);
     const cblBlock = new ConstituentBlockListBlock(
-      this.blockStore.blockSize,
       member.id, // Use member ID as creator
+      new CblBlockMetadata(
+        this.blockStore.blockSize,
+        BlockType.ConstituentBlockList,
+        BlockDataType.EphemeralStructuredData,
+        dataBuffer.length,
+      ),
       BigInt(dataBuffer.length),
       [], // No addresses yet since this is a new block
       new Date(),

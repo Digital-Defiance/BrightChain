@@ -12,6 +12,7 @@ import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
 import { IEncryptedBlock } from '../interfaces/encryptedBlock';
+import { IMemberWithMnemonic } from '../interfaces/memberWithMnemonic';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer } from '../types';
@@ -101,7 +102,7 @@ describe('EncryptedBlock', () => {
   jest.setTimeout(15000);
 
   // Shared test data
-  let creator: BrightChainMember;
+  let creator: IMemberWithMnemonic;
   const defaultBlockSize = BlockSize.Small;
   const testDate = new Date(Date.now() - 1000); // 1 second ago
 
@@ -141,7 +142,7 @@ describe('EncryptedBlock', () => {
       blockSize,
       data,
       checksum,
-      options.creator || creator,
+      options.creator || creator.member,
       options.dateCreated || testDate,
       options.actualDataLength,
     );

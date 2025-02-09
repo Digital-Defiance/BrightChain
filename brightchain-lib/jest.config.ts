@@ -2,7 +2,7 @@
 export default {
   displayName: 'brightchain-lib',
   preset: '../jest.preset.js',
-  testEnvironment: 'node',
+  testEnvironment: '<rootDir>/src/test/customEnvironment.ts',
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },

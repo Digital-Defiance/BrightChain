@@ -47,11 +47,14 @@ describe('staticHelpers', () => {
       'User Member',
       new EmailString('user@example.com'),
     );
-    expect(StaticHelpers.membersAreAllUsers([userMember])).toBe(true);
-    expect(StaticHelpers.membersAreAllUsers([systemMember])).toBe(false);
-    expect(StaticHelpers.membersAreAllUsers([systemMember, userMember])).toBe(
-      false,
-    );
+    expect(StaticHelpers.membersAreAllUsers([userMember.member])).toBe(true);
+    expect(StaticHelpers.membersAreAllUsers([systemMember.member])).toBe(false);
+    expect(
+      StaticHelpers.membersAreAllUsers([
+        systemMember.member,
+        userMember.member,
+      ]),
+    ).toBe(false);
   });
   describe('bigIntToLengthEncodedBuffer', () => {
     it('should encode a bigint correctly', () => {

@@ -40,17 +40,17 @@ The `EmailString` class represents a validated email address. It ensures that th
   console.log(email1.equals(email2)); // Output: true
   ```
 
-### toJSON
+### toJson
 
 - **Purpose**: Converts the email address to a JSON string.
 - **Returns**: The email address as a JSON string.
 - **Example**:
   ```typescript
   const email = new EmailString('test@example.com');
-  console.log(email.toJSON()); // Output: "test@example.com"
+  console.log(email.toJson()); // Output: "test@example.com"
   ```
 
-### fromJSON
+### fromJson
 
 - **Purpose**: Creates an `EmailString` instance from a JSON string.
 - **Parameters**:
@@ -58,7 +58,7 @@ The `EmailString` class represents a validated email address. It ensures that th
 - **Returns**: The `EmailString` instance.
 - **Example**:
   ```typescript
-  const email = EmailString.fromJSON('test@example.com');
+  const email = EmailString.fromJson('"test@example.com"');
   ```
 
 ### length

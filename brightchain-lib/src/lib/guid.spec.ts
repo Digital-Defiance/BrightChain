@@ -266,10 +266,10 @@ describe('guid', () => {
       expect(typeof guid.toString()).toBe('string');
     });
 
-    it('should return Base64 string for toJSON', () => {
+    it('should return Base64 string for toJson', () => {
       jest.spyOn(uuid, 'validate').mockReturnValue(true);
       const guid = GuidV4.new();
-      expect(typeof guid.toJSON()).toBe('string');
+      expect(typeof guid.toJson()).toBe('string');
     });
   });
 
