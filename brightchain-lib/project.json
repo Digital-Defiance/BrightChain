@@ -28,7 +28,7 @@
       "options": {
         "jestConfig": "brightchain-lib/jest.config.ts",
         "setupFilesAfterEnv": ["<rootDir>/jest.setup.ts"],
-        "codeCoverage": true,
+        "codeCoverage": false,
         "coverageReporters": ["text", "lcov", "html"],
         "collectCoverageFrom": ["src/**/*.ts"]
       },

@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { BaseBlock } from './blocks/base';
 import { ConstituentBlockListBlock } from './blocks/cbl';
 import { EncryptedConstituentBlockListBlock } from './blocks/encryptedCbl';
@@ -6,6 +7,7 @@ import { OwnedDataBlock } from './blocks/ownedData';
 import { RawDataBlock } from './blocks/rawData';
 import { BrightChainMember } from './brightChainMember';
 import { CblBlockMetadata } from './cblBlockMetadata';
+import { OFFS_CACHE_PERCENTAGE } from './constants';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockServiceErrorType } from './enumerations/blockServiceErrorType';
 import { BlockSize } from './enumerations/blockSizes';
@@ -260,12 +262,74 @@ export class BlockService {
   }
 
   /**
-   * XOR blocks with whiteners in a round-robin fashion
+   * Generate whiteners following OFFS guidelines
+   * @param blockSize - Size of each whitener block
+   * @param count - Number of whiteners to generate
+   * @param store - DiskBlockAsyncStore to use for cached blocks
+   * @returns Array of whitener buffers and their checksums
+   */
+  public static async generateWhiteners(
+    blockSize: BlockSize,
+    count: number,
+    store: DiskBlockAsyncStore,
+  ): Promise<{ whiteners: Buffer[]; checksums: ChecksumBuffer[] }> {
+    const whiteners: Buffer[] = [];
+    const checksums: ChecksumBuffer[] = [];
+
+    // Get random blocks from store according to OFFS percentage
+    const targetCacheCount = Math.floor(count * OFFS_CACHE_PERCENTAGE);
+    const cachedBlocks = await store.getRandomBlocks(targetCacheCount);
+
+    // Use the cached blocks we got
+    for (const blockChecksum of cachedBlocks) {
+      const block = await store.getData(blockChecksum);
+      whiteners.push(block.data);
+      checksums.push(blockChecksum);
+    }
+
+    // Generate new random blocks for the remainder
+    const remainingCount = count - whiteners.length;
+    for (let i = 0; i < remainingCount; i++) {
+      const whitener = randomBytes(blockSize as number);
+      const checksum = StaticHelpersChecksum.calculateChecksum(whitener);
+      whiteners.push(whitener);
+      checksums.push(checksum);
+    }
+
+    return { whiteners, checksums };
+  }
+
+  /**
+   * XOR a single block with all whiteners
+   * @param block - The block to XOR
+   * @param whiteners - The whiteners to use
+   * @returns The XORed block
+   */
+  public static xorBlockWithWhiteners(
+    block: Buffer,
+    whiteners: Buffer[],
+  ): Buffer {
+    if (whiteners.length === 0) {
+      throw new BlockServiceError(BlockServiceErrorType.NoWhitenersProvided);
+    }
+
+    const xorBlock = Buffer.from(block);
+    // XOR with all whiteners
+    for (const whitener of whiteners) {
+      for (let j = 0; j < whitener.length; j++) {
+        xorBlock[j] = xorBlock[j] ^ whitener[j];
+      }
+    }
+    return xorBlock;
+  }
+
+  /**
+   * XOR multiple blocks with whiteners in a round-robin fashion
    * @param blocks - The blocks to XOR
    * @param whiteners - The whiteners to use (will be reused if fewer than blocks)
-   * @returns The XORed blocks
+   * @returns Array of XORed blocks
    */
-  public static xorBlocksWithWhiteners(
+  public static xorBlocksWithWhitenersRoundRobin(
     blocks: Buffer[],
     whiteners: Buffer[],
   ): Buffer[] {
@@ -273,18 +337,14 @@ export class BlockService {
       throw new BlockServiceError(BlockServiceErrorType.NoWhitenersProvided);
     }
 
-    const xorBlocks: Buffer[] = [];
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i];
-      // Use round-robin to select whitener
-      const whitener = whiteners[i % whiteners.length];
-      const xorBlock = Buffer.alloc(block.length);
+    return blocks.map((block, blockIndex) => {
+      const xorBlock = Buffer.from(block);
+      const whitener = whiteners[blockIndex % whiteners.length];
       for (let j = 0; j < block.length; j++) {
-        xorBlock[j] = block[j] ^ whitener[j];
+        xorBlock[j] = xorBlock[j] ^ whitener[j];
       }
-      xorBlocks.push(xorBlock);
-    }
-    return xorBlocks;
+      return xorBlock;
+    });
   }
 
   /**

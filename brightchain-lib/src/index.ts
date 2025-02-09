@@ -93,6 +93,7 @@ export * from './lib/interfaces/basicObjectDto';
 export * from './lib/interfaces/blockMetadata';
 export * from './lib/interfaces/breadCrumbContext';
 export * from './lib/interfaces/breadCrumbTrace';
+export * from './lib/interfaces/cblIndexEntry';
 export * from './lib/interfaces/clusterKeys';
 export * from './lib/interfaces/dataAndSigningKeys';
 export * from './lib/interfaces/dataKeyComponents';
