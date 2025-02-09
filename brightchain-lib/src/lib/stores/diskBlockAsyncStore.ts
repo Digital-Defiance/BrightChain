@@ -1,10 +1,17 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from 'fs';
+import { join } from 'path';
 import { Readable, Transform } from 'stream';
 import { BlockMetadata } from '../blockMetadata';
 import { BlockHandle } from '../blocks/handle';
 import { RawDataBlock } from '../blocks/rawData';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize, sizeToSizeString } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
@@ -17,7 +24,8 @@ import { DiskBlockStore } from './diskBlockStore';
 
 /**
  * DiskBlockAsyncStore provides asynchronous operations for storing and retrieving blocks from disk.
- * It supports block metadata, XOR operations, and stream-based data handling.
+ * It supports raw block storage and XOR operations with stream-based data handling.
+ * Blocks are stored as raw data without metadata - their meaning is derived from CBLs.
  */
 export class DiskBlockAsyncStore extends DiskBlockStore {
   constructor(storePath: string, blockSize: BlockSize) {
@@ -42,10 +50,10 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
       key,
       new BlockMetadata(
         this._blockSize,
-        BlockType.Handle,
+        BlockType.RawData,
         BlockDataType.RawData,
-        this._blockSize as number,
-      ), // metadata
+        this._blockSize,
+      ),
       true, // canRead
       true, // canPersist
     );
@@ -59,9 +67,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
   public getData(key: ChecksumBuffer): RawDataBlock {
     const blockPath = this.blockPath(key);
     if (!existsSync(blockPath)) {
-      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
-        KEY: blockPath,
-      });
+      throw new StoreError(StoreErrorType.KeyNotFound);
     }
 
     const data = readFileSync(blockPath);
@@ -69,21 +75,9 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
       throw new StoreError(StoreErrorType.BlockFileSizeMismatch);
     }
 
-    const metadataPath = `${blockPath}.m.json`;
-    let dateCreated = new Date();
-    if (existsSync(metadataPath)) {
-      try {
-        const metadataJson = readFileSync(metadataPath).toString();
-        const metadata = JSON.parse(metadataJson);
-        if (metadata.dateCreated) {
-          dateCreated = new Date(metadata.dateCreated);
-        }
-      } catch (error) {
-        throw new StoreError(StoreErrorType.InvalidBlockMetadata, undefined, {
-          ERROR: error instanceof Error ? error.message : String(error),
-        });
-      }
-    }
+    // Use file creation time as block creation time
+    const stats = statSync(blockPath);
+    const dateCreated = stats.birthtime;
 
     return new RawDataBlock(
       this._blockSize,
@@ -91,7 +85,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
       dateCreated,
       key,
       BlockType.RawData,
-      BlockDataType.RawData,
+      BlockDataType.EphemeralStructuredData, // Use EphemeralStructuredData as default
       true, // canRead
       true, // canPersist
     );
@@ -107,9 +101,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
 
     const blockPath = this.blockPath(block.idChecksum);
     if (existsSync(blockPath)) {
-      throw new StoreError(StoreErrorType.BlockPathAlreadyExists, undefined, {
-        PATH: blockPath,
-      });
+      throw new StoreError(StoreErrorType.BlockPathAlreadyExists);
     }
 
     try {
@@ -118,11 +110,20 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
       throw new StoreError(StoreErrorType.BlockValidationFailed);
     }
 
-    writeFileSync(blockPath, block.data);
-    writeFileSync(
-      this.metadataPath(block.idChecksum),
-      JSON.stringify(block.metadata),
-    );
+    // Ensure block directory exists before writing
+    this.ensureBlockPath(block.idChecksum);
+
+    try {
+      writeFileSync(blockPath, block.data);
+    } catch (error) {
+      throw new StoreError(
+        StoreErrorType.BlockDirectoryCreationFailed,
+        undefined,
+        {
+          ERROR: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
   }
 
   /**
@@ -137,7 +138,15 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
     }
 
     return new Promise((resolve, reject) => {
-      const readStreams = this.createReadStreams(blocks);
+      // Create read streams from the full block data
+      const readStreams = blocks.map((block) => {
+        const data = block.fullData; // Use fullData to get padded content
+        const stream = new Readable();
+        stream.push(data);
+        stream.push(null);
+        return stream;
+      });
+
       const xorStream = new XorMultipleTransformStream(readStreams);
       const checksumStream = new ChecksumTransform();
       const writeStream = new MemoryWritableStream();
@@ -157,7 +166,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
             new Date(destBlockMetadata.dateCreated),
             checksumBuffer,
             BlockType.RawData,
-            BlockDataType.RawData,
+            destBlockMetadata.dataType, // Use the metadata's dataType
             true, // canRead
             true, // canPersist
           );
@@ -229,5 +238,77 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
         // Ignore errors during cleanup
       }
     });
+  }
+
+  /**
+   * Get random block checksums from the store
+   * @param count - Maximum number of blocks to return
+   * @returns Array of random block checksums
+   */
+  public async getRandomBlocks(count: number): Promise<ChecksumBuffer[]> {
+    const blockSizeString = sizeToSizeString(this._blockSize);
+    const basePath = join(this._storePath, blockSizeString);
+    if (!existsSync(basePath)) {
+      return [];
+    }
+
+    const blocks: ChecksumBuffer[] = [];
+    const firstLevelDirs = readdirSync(basePath);
+
+    // Randomly select first level directories until we have enough blocks
+    while (blocks.length < count && firstLevelDirs.length > 0) {
+      // Pick a random first level directory
+      const randomFirstIndex = Math.floor(
+        Math.random() * firstLevelDirs.length,
+      );
+      const firstDir = firstLevelDirs[randomFirstIndex];
+      const firstLevelPath = join(basePath, firstDir);
+
+      if (!existsSync(firstLevelPath)) {
+        // Remove invalid directory and continue
+        firstLevelDirs.splice(randomFirstIndex, 1);
+        continue;
+      }
+
+      // Get second level directories
+      const secondLevelDirs = readdirSync(firstLevelPath);
+      if (secondLevelDirs.length === 0) {
+        // Remove empty directory and continue
+        firstLevelDirs.splice(randomFirstIndex, 1);
+        continue;
+      }
+
+      // Pick a random second level directory
+      const randomSecondIndex = Math.floor(
+        Math.random() * secondLevelDirs.length,
+      );
+      const secondDir = secondLevelDirs[randomSecondIndex];
+      const secondLevelPath = join(firstLevelPath, secondDir);
+
+      if (!existsSync(secondLevelPath)) {
+        continue;
+      }
+
+      // Get block files
+      const blockFiles = readdirSync(secondLevelPath).filter(
+        (file) => !file.endsWith('.m.json'),
+      );
+
+      if (blockFiles.length === 0) {
+        continue;
+      }
+
+      // Pick a random block
+      const randomBlockIndex = Math.floor(Math.random() * blockFiles.length);
+      const blockFile = blockFiles[randomBlockIndex];
+      blocks.push(Buffer.from(blockFile, 'hex') as ChecksumBuffer);
+
+      // Remove used directory if we still need more blocks
+      if (blocks.length < count) {
+        firstLevelDirs.splice(randomFirstIndex, 1);
+      }
+    }
+
+    return blocks;
   }
 }

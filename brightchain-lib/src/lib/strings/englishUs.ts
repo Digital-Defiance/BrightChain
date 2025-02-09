@@ -227,6 +227,7 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Invalid public key: key ID mismatch',
   [StringNames.Error_StoreErrorKeyNotFoundTemplate]: 'Key not found: {KEY}',
   [StringNames.Error_StoreErrorStorePathRequired]: 'Store path is required',
+  [StringNames.Error_StoreErrorStorePathNotFound]: 'Store path not found',
   [StringNames.Error_StoreErrorBlockSizeRequired]: 'Block size is required',
   [StringNames.Error_StoreErrorBlockIdRequired]: 'Block ID is required',
   [StringNames.Error_StoreErrorInvalidBlockIdTooShort]:

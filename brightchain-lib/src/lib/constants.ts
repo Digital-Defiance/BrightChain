@@ -36,6 +36,9 @@ export const ECIES_OVERHEAD_SIZE = 97;
 export const MIN_TUPLE_SIZE = 2;
 export const MAX_TUPLE_SIZE = 10;
 
+// Constants for OFFS whitener generation
+export const OFFS_CACHE_PERCENTAGE = 0.7; // 70% from cache, 30% new random blocks
+
 export default {
   BCRYPT_ROUNDS,
   EMAIL_FROM,
@@ -48,4 +51,5 @@ export default {
   ECIES_OVERHEAD_SIZE,
   MIN_TUPLE_SIZE,
   MAX_TUPLE_SIZE,
+  OFFS_CACHE_PERCENTAGE,
 };

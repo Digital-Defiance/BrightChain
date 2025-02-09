@@ -17,6 +17,7 @@ import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { ChecksumTransform } from '../transforms/checksumTransform';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
+import { RawDataBlock } from './rawData';
 
 /**
  * A block handle is a reference to a block in a block store.
@@ -112,7 +113,7 @@ export class BlockHandle extends BaseBlock {
   }
 
   /**
-   * Get the block data
+   * Get the block data without padding
    */
   public get data(): Buffer {
     if (!this._cachedData) {
@@ -126,6 +127,23 @@ export class BlockHandle extends BaseBlock {
       this._cachedData = fileData;
     }
     return this._cachedData.subarray(0, this.metadata.lengthWithoutPadding);
+  }
+
+  /**
+   * Get the full block data including padding
+   */
+  public get fullData(): Buffer {
+    if (!this._cachedData) {
+      if (!existsSync(this.path)) {
+        throw new BlockAccessError(
+          BlockAccessErrorType.BlockFileNotFound,
+          this.path,
+        );
+      }
+      const fileData = readFileSync(this.path);
+      this._cachedData = fileData;
+    }
+    return this._cachedData;
   }
 
   /**
@@ -280,5 +298,20 @@ export class BlockHandle extends BaseBlock {
   public clearCache(): void {
     this._cachedData = null;
     this._cachedMetadata = null;
+  }
+
+  public get block(): RawDataBlock {
+    const newBlock = new RawDataBlock(
+      this.blockSize,
+      this.fullData,
+      this.dateCreated,
+      this.idChecksum,
+      this.blockType,
+      this.blockDataType,
+      this.canRead,
+      this.canPersist,
+    );
+    newBlock.validateSync();
+    return newBlock;
   }
 }
