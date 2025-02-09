@@ -57,12 +57,12 @@ describe('EmailString', () => {
   it('should serialize to JSON correctly', () => {
     (validator.isEmail as jest.Mock).mockReturnValue(true);
     const email = new EmailString('test@example.com');
-    expect(email.toJSON()).toBe('test@example.com');
+    expect(email.toJson()).toBe('"test@example.com"');
   });
 
   it('should create an email object from JSON', () => {
     (validator.isEmail as jest.Mock).mockReturnValue(true);
-    const email = EmailString.fromJSON('test@example.com');
+    const email = EmailString.fromJson('"test@example.com"');
     expect(email.toString()).toBe('test@example.com');
   });
 

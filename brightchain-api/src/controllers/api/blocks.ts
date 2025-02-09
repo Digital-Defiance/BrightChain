@@ -1,8 +1,11 @@
 import {
+  ApiErrorResponse,
   ApiRequestHandler,
+  ApiResponse,
   IGetBlockResponse,
   IStoreBlockResponse,
-  RouteConfig,
+  routeConfig,
+  TypedHandlers,
 } from '@BrightChain/brightchain-lib';
 import { IApplication } from '../../interfaces/application';
 import {
@@ -10,14 +13,17 @@ import {
   StoreBlockRequest,
 } from '../../interfaces/blockRequest';
 import { IBlockService } from '../../interfaces/blocks';
-import { BlocksHandlers } from '../../interfaces/blocksHandlers';
-import { BlocksResponse } from '../../interfaces/blocksResponse';
 import { BlockServiceFactory } from '../../services/blockServiceFactory';
 import { BaseController } from '../base';
 import { SessionsController } from './sessions';
 
+interface BlocksHandlers extends TypedHandlers<ApiResponse> {
+  storeBlock: ApiRequestHandler<IStoreBlockResponse | ApiErrorResponse>;
+  getBlock: ApiRequestHandler<IGetBlockResponse | ApiErrorResponse>;
+}
+
 export class BlocksController extends BaseController<
-  BlocksResponse,
+  ApiResponse,
   BlocksHandlers
 > {
   private blocksService: IBlockService;
@@ -30,19 +36,15 @@ export class BlocksController extends BaseController<
 
   protected initRouteDefinitions(): void {
     this.routeDefinitions = [
-      {
-        method: 'post',
-        path: '/',
-        handlerKey: 'storeBlock',
+      routeConfig<ApiResponse, BlocksHandlers>('post', '/', {
         useAuthentication: true,
-      },
-      {
-        method: 'get',
-        path: '/:blockId',
+        handlerKey: 'storeBlock',
+      }),
+      routeConfig<ApiResponse, BlocksHandlers>('get', '/:blockId', {
         handlerKey: 'getBlock',
         useAuthentication: true,
-      },
-    ] as RouteConfig<BlocksResponse, BlocksHandlers>[];
+      }),
+    ];
 
     this.handlers = {
       storeBlock: this.handleStoreBlock.bind(this),
@@ -50,9 +52,9 @@ export class BlocksController extends BaseController<
     };
   }
 
-  private handleStoreBlock: ApiRequestHandler<IStoreBlockResponse> = async (
-    req,
-  ) => {
+  private handleStoreBlock: ApiRequestHandler<
+    IStoreBlockResponse | ApiErrorResponse
+  > = async (req) => {
     const {
       data,
       canRead = true,
@@ -77,32 +79,18 @@ export class BlocksController extends BaseController<
     return {
       statusCode: 200,
       response: {
-        success: true,
         blockId,
         message: 'Block stored successfully',
       },
     };
   };
 
-  private handleGetBlock: ApiRequestHandler<IGetBlockResponse> = async (
-    req,
-  ) => {
+  private handleGetBlock: ApiRequestHandler<
+    IGetBlockResponse | ApiErrorResponse
+  > = async (req) => {
     const { blockId } = (req as GetBlockRequest).params;
 
-    // Get authenticated member from session
-    const sessionsController = this.application.getController(
-      'sessions',
-    ) as SessionsController;
-    const member = sessionsController.getMemberFromSession(
-      req.headers.authorization as string,
-    );
-
     const block = await this.blocksService.getBlock(blockId);
-
-    // Check if member has read access
-    if (!block.canRead || block.creatorId !== member.id.toString()) {
-      throw new Error('Access denied');
-    }
 
     return {
       statusCode: 200,

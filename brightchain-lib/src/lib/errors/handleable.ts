@@ -41,7 +41,7 @@ export class HandleableError extends Error {
     this._handled = value;
   }
 
-  public toJSON(): Record<string, unknown> {
+  public toJson(): Record<string, unknown> {
     return {
       name: this.name,
       message: this.message,
@@ -50,7 +50,7 @@ export class HandleableError extends Error {
       stack: this.stack,
       cause:
         this.cause instanceof HandleableError
-          ? this.cause.toJSON()
+          ? this.cause.toJson()
           : this.cause?.message,
       ...(this.sourceData ? { sourceData: this.sourceData } : {}),
     };

@@ -11,6 +11,7 @@ import { MemberType } from './enumerations/memberType';
 import { MemberError } from './errors/memberError';
 import { GuidV4 } from './guid';
 import { IMemberDTO } from './interfaces/memberDto';
+import { IMemberWithMnemonic } from './interfaces/memberWithMnemonic';
 import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import { StaticHelpersVoting } from './staticHelpers.voting';
 import { StaticHelpersVotingDerivation } from './staticHelpers.voting.derivation';
@@ -252,7 +253,7 @@ export class BrightChainMember {
     name: string,
     contactEmail: EmailString,
     creator?: BrightChainMember,
-  ): BrightChainMember {
+  ): IMemberWithMnemonic {
     // Validate inputs first
     if (!name || name.length == 0) {
       throw new MemberError(MemberErrorType.MissingMemberName);
@@ -290,19 +291,22 @@ export class BrightChainMember {
         publicKeyWithPrefix,
       );
 
-    return new BrightChainMember(
-      memberType,
-      name,
-      contactEmail,
-      publicKeyWithPrefix, // Store with prefix
-      votingKeypair.publicKey,
-      privateKey,
-      wallet,
-      newId,
-      undefined,
-      undefined,
-      creator?.id ?? newId,
-    );
+    return {
+      member: new BrightChainMember(
+        memberType,
+        name,
+        contactEmail,
+        publicKeyWithPrefix, // Store with prefix
+        votingKeypair.publicKey,
+        privateKey,
+        wallet,
+        newId,
+        undefined,
+        undefined,
+        creator?.id ?? newId,
+      ),
+      mnemonic,
+    };
   }
 
   /**
@@ -310,7 +314,7 @@ export class BrightChainMember {
    * @param data - The data to encrypt.
    * @returns The encrypted data.
    */
-  encryptData(data: string | Buffer): Buffer {
+  public encryptData(data: string | Buffer): Buffer {
     const bufferData = Buffer.isBuffer(data) ? data : Buffer.from(data);
     // Create ECDH instance for encryption
     const ecdh = createECDH(StaticHelpersECIES.curveName);
@@ -325,7 +329,7 @@ export class BrightChainMember {
    * @param encryptedData - The data to decrypt.
    * @returns The decrypted data.
    */
-  decryptData(encryptedData: Buffer) {
+  public decryptData(encryptedData: Buffer) {
     // Create ECDH instance for decryption
     const ecdh = createECDH(StaticHelpersECIES.curveName);
     // Set private key
@@ -333,16 +337,16 @@ export class BrightChainMember {
     return StaticHelpersECIES.decryptWithHeader(this.privateKey, encryptedData);
   }
 
-  toJSON(): string {
+  public toJson(): string {
     const memberDTO: IMemberDTO = {
       id: this.id.asShortHexGuid,
       type: this.memberType,
       name: this.name,
-      contactEmail: this.contactEmail.toJSON(),
-      publicKey: this.publicKey.toString('hex'),
+      contactEmail: this.contactEmail.toString(),
+      publicKey: this.publicKey.toString('base64'),
       votingPublicKey: StaticHelpersVoting.votingPublicKeyToBuffer(
         this.votingPublicKey,
-      ).toString('hex'),
+      ).toString('base64'),
       createdBy: this.creatorId.asShortHexGuid as string,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
@@ -351,7 +355,7 @@ export class BrightChainMember {
     return JSON.stringify(memberDTO);
   }
 
-  fromJSON(json: string): BrightChainMember {
+  public static fromJson(json: string): BrightChainMember {
     const parsedMember: IMemberDTO = JSON.parse(json) as IMemberDTO;
     const contactEmail = new EmailString(parsedMember.contactEmail);
 
@@ -359,9 +363,9 @@ export class BrightChainMember {
       parsedMember.type,
       parsedMember.name,
       contactEmail,
-      Buffer.from(parsedMember.publicKey, 'hex'),
+      Buffer.from(parsedMember.publicKey, 'base64'),
       StaticHelpersVoting.bufferToVotingPublicKey(
-        Buffer.from(parsedMember.votingPublicKey, 'hex'),
+        Buffer.from(parsedMember.votingPublicKey, 'base64'),
       ),
       undefined,
       undefined,

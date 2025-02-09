@@ -2,6 +2,7 @@ import {
   AccountStatusTypeEnum,
   ApiErrorResponse,
   ApiRequestHandler,
+  ApiResponse,
   HandleableError,
   IApiMessageResponse,
   ICreateUserBasics,
@@ -31,7 +32,7 @@ import { RequestUserService } from '../../services/requestUser';
 import { UserService } from '../../services/user';
 import { BaseController } from '../base';
 
-interface IUserHandlers extends TypedHandlers<any> {
+interface IUserHandlers extends TypedHandlers<ApiResponse> {
   login: ApiRequestHandler<ILoginResponse | ApiErrorResponse>;
   changePassword: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   tokenVerifiedResponse: ApiRequestHandler<IRequestUserResponse>;
@@ -48,7 +49,7 @@ interface IUserHandlers extends TypedHandlers<any> {
 /**
  * Controller for user-related routes
  */
-export class UserController extends BaseController<any, IUserHandlers> {
+export class UserController extends BaseController<ApiResponse, IUserHandlers> {
   private readonly jwtService: JwtService;
   private readonly userService: UserService;
   private readonly mailService: MailService;

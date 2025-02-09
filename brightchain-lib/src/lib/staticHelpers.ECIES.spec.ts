@@ -234,7 +234,7 @@ describe('multi-recipient encryption', () => {
       MemberType.System,
       faker.person.fullName(),
       new EmailString(faker.internet.email()),
-    );
+    ).member;
   });
 
   const testData = Buffer.from('test data for multiple recipients');

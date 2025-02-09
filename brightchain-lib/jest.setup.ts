@@ -1,9 +1,7 @@
+import bigIntSerializer from './bigIntSerializer';
 import { toThrowType } from './src/test/matchers/errorMatchers';
 
-expect.addSnapshotSerializer({
-  test: (val) => typeof val === 'bigint',
-  print: (val) => `${(val as bigint).toString()}n`,
-});
+expect.addSnapshotSerializer(bigIntSerializer);
 
 expect.extend({
   toBeBigInt(received: unknown, argument: bigint) {

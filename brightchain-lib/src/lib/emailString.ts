@@ -50,8 +50,8 @@ export class EmailString {
    * Converts the email address to a JSON string.
    * @returns The email address as a JSON string.
    */
-  public toJSON(): string {
-    return this.email;
+  public toJson(): string {
+    return JSON.stringify(this.email);
   }
 
   /**
@@ -59,8 +59,8 @@ export class EmailString {
    * @param email - The JSON string representing the email address.
    * @returns The EmailString instance.
    */
-  public static fromJSON(email: string): EmailString {
-    return new EmailString(email);
+  public static fromJson(email: string): EmailString {
+    return new EmailString(JSON.parse(email));
   }
 
   /**

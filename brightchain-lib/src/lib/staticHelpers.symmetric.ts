@@ -3,8 +3,8 @@ import { SymmetricErrorType } from './enumerations/symmetricErrorType';
 import { SymmetricError } from './errors/symmetricError';
 import { ISymmetricEncryptionResults } from './interfaces/symmetricEncryptionResults';
 
-function hasToJsonMethod<T>(obj: T): obj is T & { toJSON: () => string } {
-  return typeof obj === 'object' && obj !== null && 'toJSON' in obj;
+function hasToJsonMethod<T>(obj: T): obj is T & { toJson: () => string } {
+  return typeof obj === 'object' && obj !== null && 'toJson' in obj;
 }
 
 /**
@@ -124,7 +124,7 @@ export abstract class StaticHelpersSymmetric {
     }
     let dataBuffer: Buffer;
     if (hasToJsonMethod<T>(data)) {
-      dataBuffer = Buffer.from(data.toJSON(), 'utf8');
+      dataBuffer = Buffer.from(data.toJson(), 'utf8');
     } else {
       dataBuffer = Buffer.from(JSON.stringify(data), 'utf8');
     }
