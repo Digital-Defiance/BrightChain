@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -76,7 +77,11 @@ export abstract class EncryptedBlock
     canRead = true,
     canPersist = true,
   ) {
-    super(type, dataType, data, checksum, metadata, canRead, canPersist);
+    // Create a properly sized buffer filled with random data
+    const finalData = randomBytes(metadata.size as number);
+    // Copy data into the final buffer, preserving the full block size
+    data.copy(finalData, 0, 0, Math.min(data.length, metadata.size as number));
+    super(type, dataType, finalData, checksum, metadata, canRead, canPersist);
   }
 
   /**
@@ -113,7 +118,7 @@ export abstract class EncryptedBlock
   }
 
   /**
-   * The length of the encrypted data
+   * The length of the encrypted data including overhead and padding
    */
   public get encryptedLength(): number {
     return this.actualDataLength + StaticHelpersECIES.eciesOverheadLength;
@@ -200,40 +205,39 @@ export abstract class EncryptedBlock
 
   /**
    * Get the encrypted payload data (excluding the encryption header)
+   * This includes both the actual data and the random padding
    */
   public override get payload(): Buffer {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
-    // For encrypted blocks:
-    // 1. Skip the encryption header (ephemeral public key + IV + auth tag)
-    // 2. Return the entire encrypted data (including padding)
-    // 3. Ensure we return exactly blockSize - overhead bytes
+    const headerLength = this.layerHeaderData.length;
     return this.data.subarray(
-      StaticHelpersECIES.eciesOverheadLength,
-      StaticHelpersECIES.eciesOverheadLength + this.actualDataLength,
+      headerLength,
+      headerLength + this.encryptedLength,
     );
   }
 
   /**
-   * Get the length of the payload
+   * Get the length of the payload including padding
    */
   public override get payloadLength(): number {
     // For encrypted blocks:
-    // The payload length should be the length of the encrypted data
-    // without the encryption header
-    return this.data.length - StaticHelpersECIES.eciesOverheadLength;
+    // Return the full payload length including padding
+    return this.encryptedLength;
   }
 
   /**
    * Get the usable capacity after accounting for overhead
    */
   public override get capacity(): number {
-    // For encrypted blocks, we need to:
-    // 1. Start with the full block size
-    // 2. Subtract the ECIES overhead
-    // This ensures proper capacity calculation for encrypted blocks
-    return this.blockSize - StaticHelpersECIES.eciesOverheadLength;
+    // For encrypted blocks:
+    // The usable capacity is the block size minus the encryption overhead
+    // This is the maximum amount of data that can be stored in the block
+    const totalCapacity =
+      this.blockSize - StaticHelpersECIES.eciesOverheadLength;
+    // Ensure we never return a negative capacity
+    return Math.max(0, totalCapacity);
   }
 
   /**
@@ -267,6 +271,27 @@ export abstract class EncryptedBlock
         BlockValidationErrorType.InvalidAuthTagLength,
       );
     }
+
+    // Validate data length
+    if (this.data.length !== this.blockSize) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataBufferIsTruncated,
+      );
+    }
+
+    // Validate actual data length
+    if (this.actualDataLength > this.capacity) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthExceedsCapacity,
+      );
+    }
+
+    // Validate encrypted length
+    if (this.encryptedLength > this.blockSize) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthExceedsCapacity,
+      );
+    }
   }
 
   /**
@@ -298,6 +323,27 @@ export abstract class EncryptedBlock
     if (this.authTag.length !== StaticHelpersECIES.authTagLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidAuthTagLength,
+      );
+    }
+
+    // Validate data length
+    if (this.data.length !== this.blockSize) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataBufferIsTruncated,
+      );
+    }
+
+    // Validate actual data length
+    if (this.actualDataLength > this.capacity) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthExceedsCapacity,
+      );
+    }
+
+    // Validate encrypted length
+    if (this.encryptedLength > this.blockSize) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthExceedsCapacity,
       );
     }
   }

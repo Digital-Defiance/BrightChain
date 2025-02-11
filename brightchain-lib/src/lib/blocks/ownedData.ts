@@ -1,10 +1,13 @@
+import { randomBytes } from 'crypto';
 import { BlockService } from '../blockService';
 import { BrightChainMember } from '../brightChainMember';
+import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { OwnedDataErrorType } from '../enumerations/ownedDataErrorType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
+import { BlockAccessError } from '../errors/block';
 import { OwnedDataError } from '../errors/ownedDataError';
 import { GuidV4 } from '../guid';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
@@ -63,42 +66,42 @@ export class OwnedDataBlock extends EphemeralBlock {
       }
     }
 
-    // Check if block has enough space for encryption
-    const encryptionOverhead = StaticHelpersECIES.eciesOverheadLength;
-    if (data.length + encryptionOverhead > blockSize) {
-      throw new OwnedDataError(OwnedDataErrorType.DataLengthExceedsCapacity);
-    }
-
     const metadata: EphemeralBlockMetadata = new EphemeralBlockMetadata(
       blockSize,
       type,
-      BlockDataType.EphemeralStructuredData,
+      dataType,
       actualDataLength ?? data.length,
       encrypted,
       creator,
       dateCreated ?? new Date(),
     );
 
-    return new OwnedDataBlock(
+    // Create buffer with crypto-secure random padding
+    const paddedData = Buffer.from(randomBytes(blockSize));
+    // Copy actual data into the padded buffer
+    data.copy(paddedData, 0, 0, metadata.lengthWithoutPadding);
+
+    const block = new OwnedDataBlock(
       type,
       dataType,
-      data,
+      paddedData,
       checksum,
       metadata,
       canRead,
       canPersist,
     );
+
+    return block;
   }
 
   /**
    * Creates an instance of OwnedDataBlock.
    * @param type - The type of the block
    * @param dataType - The type of data in the block
-   * @param blockSize - The size of the block
    * @param data - The data
    * @param checksum - The checksum of the data
-   * @param dateCreated - The date the block was created
    * @param metadata - The block metadata
+   * @param paddedData - The padded data for XOR operations
    * @param canRead - Whether the block can be read
    * @param canPersist - Whether the block can be persisted
    */
@@ -144,6 +147,17 @@ export class OwnedDataBlock extends EphemeralBlock {
   }
 
   /**
+   * Get the full padded data buffer for XOR operations
+   * @internal
+   */
+  protected override get paddedData(): Buffer {
+    if (!this.canRead) {
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
+    }
+    return this._data;
+  }
+
+  /**
    * Whether the block can be encrypted
    * Returns true if there is enough space for encryption overhead
    */
@@ -151,7 +165,8 @@ export class OwnedDataBlock extends EphemeralBlock {
     return (
       (this.blockType === BlockType.OwnedDataBlock ||
         this.blockType === BlockType.ConstituentBlockList) &&
-      this.data.length + StaticHelpersECIES.eciesOverheadLength <=
+      this.metadata.lengthWithoutPadding +
+        StaticHelpersECIES.eciesOverheadLength <=
         this.blockSize
     );
   }

@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto';
 import { ReadStream } from 'fs';
 import { Readable } from 'stream';
 import BlockPaddingTransform from './blockPaddingTransform';
@@ -64,14 +65,20 @@ export abstract class StaticHelpersTuple {
       // Convert source data to Buffer
       const sourceData = await StaticHelpersTuple.toBuffer(sourceBlock.data);
 
+      // Create a padded buffer initialized to zeros
+      const paddedData = Buffer.alloc(sourceBlock.blockSize);
+      sourceData.copy(paddedData);
+
+      // XOR operations will be performed on the padded data
+      const xoredData = Buffer.from(paddedData);
+
       // XOR with whitening blocks
-      const xoredData = Buffer.from(sourceData);
       for (const whitener of whiteners) {
         if (whitener.blockSize !== sourceBlock.blockSize) {
           throw new TupleError(TupleErrorType.BlockSizeMismatch);
         }
         const whitenerData = await StaticHelpersTuple.toBuffer(whitener.data);
-        for (let i = 0; i < xoredData.length; i++) {
+        for (let i = 0; i < sourceBlock.blockSize; i++) {
           xoredData[i] ^= whitenerData[i];
         }
       }
@@ -82,17 +89,21 @@ export abstract class StaticHelpersTuple {
           throw new TupleError(TupleErrorType.BlockSizeMismatch);
         }
         const randomData = await StaticHelpersTuple.toBuffer(random.data);
-        for (let i = 0; i < xoredData.length; i++) {
+        for (let i = 0; i < sourceBlock.blockSize; i++) {
           xoredData[i] ^= randomData[i];
         }
       }
 
-      // Create whitened block
-      return new WhitenedBlock(
+      // Create whitened block with preserved length metadata
+      const now = new Date();
+      return await WhitenedBlock.from(
         sourceBlock.blockSize,
         xoredData,
         undefined, // Let constructor calculate checksum
-        new Date(),
+        now,
+        sourceBlock.metadata?.lengthWithoutPadding, // Pass through original length if available
+        true, // canRead
+        true, // canPersist
       );
     } catch (error) {
       if (error instanceof TupleError) {
@@ -132,6 +143,7 @@ export abstract class StaticHelpersTuple {
     creator: BrightChainMember,
     primeWhitenedBlock: WhitenedBlock,
     whiteners: WhitenedBlock[],
+    randomBlocks: RandomBlock[] = [],
   ): Promise<OwnedDataBlock> {
     // Validate parameters
     if (!primeWhitenedBlock || !whiteners) {
@@ -139,35 +151,87 @@ export abstract class StaticHelpersTuple {
     }
 
     try {
-      // Convert prime whitened data to Buffer
+      // Start with a padded buffer filled with cryptographically secure random data
+      const result = randomBytes(primeWhitenedBlock.blockSize);
+
+      // Get all block data upfront and ensure they're padded
       const primeData = await StaticHelpersTuple.toBuffer(
         primeWhitenedBlock.data,
       );
+      const whitenerData = await Promise.all(
+        whiteners.map(async (w) => {
+          const data = await StaticHelpersTuple.toBuffer(w.data);
+          const padded = randomBytes(primeWhitenedBlock.blockSize);
+          data.copy(
+            padded,
+            0,
+            0,
+            Math.min(data.length, primeWhitenedBlock.blockSize),
+          );
+          return padded;
+        }),
+      );
+      const randomData = await Promise.all(
+        randomBlocks.map(async (r) => {
+          const data = await StaticHelpersTuple.toBuffer(r.data);
+          const padded = randomBytes(primeWhitenedBlock.blockSize);
+          data.copy(
+            padded,
+            0,
+            0,
+            Math.min(data.length, primeWhitenedBlock.blockSize),
+          );
+          return padded;
+        }),
+      );
 
-      // XOR with whitening blocks
-      const xoredData = Buffer.from(primeData);
-      for (const whitener of whiteners) {
-        if (whitener.blockSize !== primeWhitenedBlock.blockSize) {
+      // Verify block sizes
+      [...whiteners, ...randomBlocks].forEach((block) => {
+        if (block.blockSize !== primeWhitenedBlock.blockSize) {
           throw new TupleError(TupleErrorType.BlockSizeMismatch);
         }
-        const whitenerData = await StaticHelpersTuple.toBuffer(whitener.data);
-        for (let i = 0; i < xoredData.length; i++) {
-          xoredData[i] ^= whitenerData[i];
+      });
+
+      // Copy prime data to result buffer, preserving random padding
+      primeData.copy(
+        result,
+        0,
+        0,
+        Math.min(primeData.length, primeWhitenedBlock.blockSize),
+      );
+
+      // XOR with whitening blocks
+      for (const data of whitenerData) {
+        for (let i = 0; i < primeWhitenedBlock.blockSize; i++) {
+          result[i] ^= data[i];
         }
       }
 
-      // Create owned data block
+      // XOR with random blocks
+      for (const data of randomData) {
+        for (let i = 0; i < primeWhitenedBlock.blockSize; i++) {
+          result[i] ^= data[i];
+        }
+      }
+
+      // Create owned data block with preserved length metadata
       const checksum =
-        await StaticHelpersChecksum.calculateChecksumAsync(xoredData);
+        await StaticHelpersChecksum.calculateChecksumAsync(result);
+      const now = new Date();
+      const lengthWithoutPadding =
+        primeWhitenedBlock.metadata?.lengthWithoutPadding;
+      if (!lengthWithoutPadding) {
+        throw new TupleError(TupleErrorType.MissingParameters);
+      }
       return await OwnedDataBlock.from(
         BlockType.OwnedDataBlock,
         BlockDataType.RawData,
         primeWhitenedBlock.blockSize,
-        xoredData,
+        result,
         checksum,
         creator,
-        new Date(),
-        xoredData.length,
+        now,
+        lengthWithoutPadding,
       );
     } catch (error) {
       if (error instanceof TupleError) {

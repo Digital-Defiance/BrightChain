@@ -150,15 +150,6 @@ export interface IBlock {
   get payloadLength(): number;
 
   /**
-   * The padding after the payload.
-   * Padding ensures:
-   * 1. Fixed block sizes
-   * 2. Data privacy
-   * 3. XOR compatibility
-   */
-  get padding(): Buffer;
-
-  /**
    * Asynchronously validate the block's data.
    * Checks:
    * 1. Checksum correctness
