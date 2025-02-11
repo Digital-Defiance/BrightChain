@@ -80,14 +80,42 @@ export class BlockService {
       block.data,
     );
 
+    // Create padded buffer filled with random data for the payload area only
+    const payloadBuffer = randomBytes(
+      block.blockSize - StaticHelpersECIES.eciesOverheadLength,
+    );
+    // Create final buffer
+    const finalBuffer = Buffer.alloc(block.blockSize);
+    // Copy ECIES header (ephemeral public key, IV, auth tag)
+    encryptedBuffer.copy(
+      finalBuffer,
+      0,
+      0,
+      StaticHelpersECIES.eciesOverheadLength,
+    );
+    // Copy encrypted data into payload area
+    encryptedBuffer.copy(
+      finalBuffer,
+      StaticHelpersECIES.eciesOverheadLength,
+      StaticHelpersECIES.eciesOverheadLength,
+      Math.min(encryptedBuffer.length, block.blockSize),
+    );
+    // Fill remaining space with random data
+    payloadBuffer.copy(
+      finalBuffer,
+      StaticHelpersECIES.eciesOverheadLength +
+        encryptedBuffer.length -
+        StaticHelpersECIES.eciesOverheadLength,
+    );
+
     // Create encrypted block based on input block type
     if (block.blockType === BlockType.ConstituentBlockList) {
       return await EncryptedConstituentBlockListBlock.from(
         BlockType.ConstituentBlockList,
         BlockDataType.EncryptedData,
         block.blockSize,
-        encryptedBuffer,
-        StaticHelpersChecksum.calculateChecksum(encryptedBuffer),
+        finalBuffer,
+        StaticHelpersChecksum.calculateChecksum(finalBuffer),
         creator,
         block.dateCreated,
         block.data.length,
@@ -98,8 +126,8 @@ export class BlockService {
       BlockType.EncryptedOwnedDataBlock,
       BlockDataType.EncryptedData,
       block.blockSize,
-      encryptedBuffer,
-      StaticHelpersChecksum.calculateChecksum(encryptedBuffer),
+      finalBuffer,
+      StaticHelpersChecksum.calculateChecksum(finalBuffer),
       creator,
       block.dateCreated,
       block.data.length,
@@ -117,23 +145,32 @@ export class BlockService {
       throw new CannotDecryptBlockError();
     }
 
+    // Get the encrypted payload (excluding random padding)
+    const encryptedPayload = block.data.subarray(
+      StaticHelpersECIES.eciesOverheadLength,
+      StaticHelpersECIES.eciesOverheadLength + block.actualDataLength,
+    );
+
     const decryptedData = StaticHelpersECIES.decryptWithComponents(
       creator.privateKey,
       block.ephemeralPublicKey,
       block.iv,
       block.authTag,
-      block.payload,
+      encryptedPayload,
     );
+
+    // Create unpadded data buffer
+    const unpaddedData = decryptedData.subarray(0, block.actualDataLength);
 
     return await OwnedDataBlock.from(
       BlockType.OwnedDataBlock,
       BlockDataType.RawData,
       block.blockSize,
-      decryptedData,
-      StaticHelpersChecksum.calculateChecksum(decryptedData),
+      unpaddedData,
+      StaticHelpersChecksum.calculateChecksum(unpaddedData),
       creator,
       block.dateCreated,
-      decryptedData.length,
+      unpaddedData.length,
     );
   }
 
@@ -165,18 +202,19 @@ export class BlockService {
       blockDataType === BlockDataType.EncryptedData &&
       creator instanceof BrightChainMember
     ) {
-      const finalChecksum =
-        checksum ?? StaticHelpersChecksum.calculateChecksum(data);
-      return await EncryptedOwnedDataBlock.from(
-        blockType,
-        blockDataType,
+      // Create a temporary OwnedDataBlock to encrypt
+      const tempBlock = await OwnedDataBlock.from(
+        BlockType.OwnedDataBlock,
+        BlockDataType.RawData,
         blockSize,
         data,
-        finalChecksum,
+        checksum ?? StaticHelpersChecksum.calculateChecksum(data),
         creator,
         undefined,
         data.length,
       );
+      // Encrypt the block
+      return await this.encrypt(creator, tempBlock);
     }
 
     // Handle CBL data
@@ -256,7 +294,11 @@ export class BlockService {
     const blocks: Buffer[] = [];
     const blockSizeNumber = blockSize as number;
     for (let i = 0; i < fileData.length; i += blockSizeNumber) {
-      blocks.push(fileData.subarray(i, i + blockSizeNumber));
+      const blockData = fileData.subarray(
+        i,
+        Math.min(i + blockSizeNumber, fileData.length),
+      );
+      blocks.push(blockData);
     }
     return blocks;
   }

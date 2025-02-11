@@ -324,7 +324,7 @@ export class MultiEncryptedBlock
     // For encrypted blocks:
     // The payload length should be the length of the encrypted data
     // without the encryption header
-    return this.data.length - StaticHelpersECIES.eciesOverheadLength;
+    return this.encryptedLength;
   }
 
   /**

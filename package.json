@@ -20,7 +20,8 @@
     "aws:install": "./install-aws.sh",
     "test:dev": "NODE_ENV=test npx nx test brightchain-lib --skip-nx-cache --configuration=development",
     "test:ci": "NODE_ENV=test npx nx test brightchain-lib --skip-nx-cache --configuration=ci",
-    "coverage:md:generate": "node tools/scripts/coverage-to-markdown.mjs"
+    "coverage:md:generate": "node tools/scripts/coverage-to-markdown.mjs",
+    "commands": "./list-scripts.sh"
   },
   "private": true,
   "dependencies": {
