@@ -1,4 +1,4 @@
-import { createECDH } from 'crypto';
+import { createECDH, randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import { EmailString } from '../emailString';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -42,25 +42,29 @@ describe('MultiEncryptedBlock', () => {
     const encryptedBuffer =
       StaticHelpersECIES.multipleEncryptResultsToBuffer(encryptedResult);
 
-    // Create a padded buffer with zeros
-    const paddedData = Buffer.alloc(
-      lengthToClosestBlockSize(encryptedBuffer.data.length),
+    // Calculate the minimum block size needed for our data
+    const blockSize = lengthToClosestBlockSize(encryptedBuffer.data.length);
+
+    // Create a padded buffer with random data
+    const paddedData = randomBytes(blockSize);
+    // Copy data into the final buffer, preserving the full block size
+    encryptedBuffer.data.copy(
+      paddedData,
+      0,
+      0,
+      Math.min(encryptedBuffer.data.length, blockSize),
     );
-    encryptedBuffer.data.copy(paddedData, 0);
 
     // Calculate checksum of the padded data
     const calculatedChecksum =
       await StaticHelpersChecksum.calculateChecksumAsync(paddedData);
-
-    // Calculate the minimum block size needed for our data
-    const blockSize = lengthToClosestBlockSize(encryptedBuffer.data.length);
 
     // Create the block with encrypted data
     const block = await MultiEncryptedBlock.from(
       BlockType.MultiEncryptedBlock,
       BlockDataType.EncryptedData,
       blockSize,
-      encryptedBuffer.data,
+      paddedData, // Use the padded data that matches our checksum
       calculatedChecksum, // Pass the pre-calculated checksum
       recipient,
       undefined,
