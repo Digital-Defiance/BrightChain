@@ -176,15 +176,6 @@ describe('BaseBlock', () => {
       expect(block.payload.length).toBe(0);
       expect(block.layerHeaderData.length).toBe(0);
     });
-
-    it('should handle padding correctly', () => {
-      const dataSize = Math.floor((defaultBlockSize as number) / 2);
-      const data = randomBytes(dataSize);
-      const block = createTestBlock({ data });
-      const expectedPadding = (defaultBlockSize as number) - dataSize;
-      expect(block.padding.length).toBe(expectedPadding);
-      expect(block.padding.equals(Buffer.alloc(expectedPadding))).toBe(true);
-    });
   });
 
   describe('size handling', () => {

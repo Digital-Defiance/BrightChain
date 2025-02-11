@@ -294,15 +294,6 @@ export abstract class BaseBlock implements IBlock {
   }
 
   /**
-   * Get the padding after the payload
-   */
-  public get padding(): Buffer {
-    const paddingLength =
-      this.blockSize - (this.totalOverhead + this._actualDataLength);
-    return Buffer.alloc(paddingLength > 0 ? paddingLength : 0);
-  }
-
-  /**
    * Get all layers in the inheritance chain
    */
   public get layers(): IBlock[] {

@@ -1,4 +1,5 @@
 import { Readable } from 'stream';
+import { BlockMetadata } from '../blockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
@@ -192,5 +193,59 @@ export class WhitenedBlock extends RawDataBlock {
       StaticHelpersChecksum.calculateChecksum(result),
       new Date(),
     );
+  }
+
+  /**
+   * Create a new whitened block with specified length metadata
+   */
+  public static async from(
+    blockSize: BlockSize,
+    data: Buffer,
+    checksum?: ChecksumBuffer,
+    dateCreated?: Date,
+    lengthWithoutPadding?: number,
+    canRead = true,
+    canPersist = true,
+  ): Promise<WhitenedBlock> {
+    // Ensure data is padded to block size
+    const paddedData = Buffer.alloc(blockSize);
+    data.copy(paddedData);
+
+    // Create metadata with original length
+    const metadata = new BlockMetadata(
+      blockSize,
+      BlockType.OwnerFreeWhitenedBlock,
+      BlockDataType.RawData,
+      lengthWithoutPadding ?? data.length,
+      dateCreated ?? new Date(),
+    );
+
+    // Create block with padded data and preserve padding
+    const block = new WhitenedBlock(
+      blockSize,
+      paddedData,
+      checksum,
+      dateCreated,
+      canRead,
+      canPersist,
+    );
+
+    // Override the data property to ensure it keeps the padding
+    Object.defineProperty(block, 'data', {
+      value: paddedData,
+      writable: false,
+      enumerable: true,
+      configurable: false,
+    });
+
+    // Override the metadata created in RawDataBlock constructor
+    Object.defineProperty(block, 'metadata', {
+      value: metadata,
+      writable: false,
+      enumerable: true,
+      configurable: false,
+    });
+
+    return block;
   }
 }

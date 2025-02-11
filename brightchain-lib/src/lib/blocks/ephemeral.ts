@@ -159,11 +159,22 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
-    // For encrypted blocks, return the entire data buffer since it includes the header
-    // For unencrypted blocks, return only the actual data (no padding)
-    return this._encrypted || this._actualDataLength === this._data.length
+    // For encrypted blocks, return the full data including padding
+    // For unencrypted blocks, return only the actual data length
+    return this._encrypted
       ? this._data
-      : this._data.subarray(0, this._actualDataLength);
+      : this._data.subarray(0, this.metadata.lengthWithoutPadding);
+  }
+
+  /**
+   * Get the full padded data buffer for XOR operations
+   * @internal
+   */
+  protected get paddedData(): Buffer {
+    if (!this.canRead) {
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
+    }
+    return this._data;
   }
 
   /**

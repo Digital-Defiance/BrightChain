@@ -165,7 +165,7 @@ describe('BlockService', () => {
       );
 
       // Create test data large enough for encryption
-      testData = Buffer.alloc(1024);
+      testData = Buffer.alloc(256); // Smaller size to accommodate encryption overhead
       testData.fill('x');
       const checksum = StaticHelpersChecksum.calculateChecksum(testData);
 

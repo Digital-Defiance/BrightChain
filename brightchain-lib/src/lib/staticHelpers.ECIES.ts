@@ -197,12 +197,23 @@ export class StaticHelpersECIES {
     let sharedSecret: Buffer;
     // Generate shared secret
     try {
-      // For ECDH, public key must be in uncompressed format (0x04 + x + y)
-      // If key doesn't start with 0x04, add it
-      const publicKeyForSecret =
-        receiverPublicKey[0] === 0x04
-          ? receiverPublicKey
-          : Buffer.concat([Buffer.from([0x04]), receiverPublicKey]);
+      // Ensure public key is in correct format (65 bytes with 0x04 prefix)
+      let publicKeyForSecret: Buffer;
+      if (receiverPublicKey.length === StaticHelpersECIES.publicKeyLength) {
+        if (receiverPublicKey[0] !== 0x04) {
+          throw new EciesError(EciesErrorType.InvalidEphemeralPublicKey);
+        }
+        publicKeyForSecret = receiverPublicKey;
+      } else if (
+        receiverPublicKey.length === StaticHelpersECIES.rawPublicKeyLength
+      ) {
+        publicKeyForSecret = Buffer.concat([
+          Buffer.from([0x04]),
+          receiverPublicKey,
+        ]);
+      } else {
+        throw new EciesError(EciesErrorType.InvalidEphemeralPublicKey);
+      }
 
       // Compute shared secret using the complete public key
       sharedSecret = ecdh.computeSecret(publicKeyForSecret);
@@ -451,20 +462,20 @@ export class StaticHelpersECIES {
   ): Buffer {
     // Generate shared secret
     try {
-      // For ECDH, public key must be in uncompressed format (0x04 + x + y)
-      // If key doesn't start with 0x04, add it
-      const publicKeyForSecret =
-        ephemeralPublicKey[0] === 0x04
-          ? ephemeralPublicKey
-          : Buffer.concat([Buffer.from([0x04]), ephemeralPublicKey]);
+      // Validate ephemeral public key format
+      if (
+        ephemeralPublicKey.length !== StaticHelpersECIES.publicKeyLength ||
+        ephemeralPublicKey[0] !== 0x04
+      ) {
+        throw new EciesError(EciesErrorType.InvalidEphemeralPublicKey);
+      }
 
       // Create ECDH instance and set private key
       const ecdh = createECDH(StaticHelpersECIES.curveName);
-      // Private key should be used as-is
       ecdh.setPrivateKey(privateKey);
 
       // Compute shared secret using the complete public key
-      const sharedSecret = ecdh.computeSecret(publicKeyForSecret);
+      const sharedSecret = ecdh.computeSecret(ephemeralPublicKey);
 
       // Create decipher
       const decipher = createDecipheriv(

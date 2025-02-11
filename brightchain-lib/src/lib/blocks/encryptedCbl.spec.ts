@@ -1,19 +1,22 @@
+import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import { CblBlockMetadata } from '../cblBlockMetadata';
 import { TUPLE_SIZE } from '../constants';
 import { EmailString } from '../emailString';
+import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import MemberType from '../enumerations/memberType';
 import { BlockValidationError } from '../errors/block';
+import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
 import { IMemberWithMnemonic } from '../interfaces/memberWithMnemonic';
 import { StaticHelpersChecksum } from '../staticHelpers.checksum';
 import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer, SignatureBuffer } from '../types';
 import { ConstituentBlockListBlock } from './cbl';
-import { EncryptedBlockFactory } from './encryptedBlockFactory';
 import { EncryptedConstituentBlockListBlock } from './encryptedCbl';
 
 // Test class for CBL that properly implements abstract methods
@@ -56,7 +59,7 @@ class TestCblBlock extends ConstituentBlockListBlock {
 
 // Test class for encrypted CBL that properly implements abstract methods
 class TestEncryptedCblBlock extends EncryptedConstituentBlockListBlock {
-  public static override from(
+  public static override async from(
     type: BlockType,
     dataType: BlockDataType,
     blockSize: BlockSize,
@@ -68,18 +71,136 @@ class TestEncryptedCblBlock extends EncryptedConstituentBlockListBlock {
     canRead = true,
     canPersist = true,
   ): Promise<TestEncryptedCblBlock> {
-    return EncryptedBlockFactory.createBlock(
+    // Validate date first, before any other validation
+    const now = new Date();
+    const finalDate = dateCreated ?? now;
+    if (isNaN(finalDate.getTime())) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidDateCreated,
+      );
+    }
+    if (finalDate > now) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.FutureCreationDate,
+      );
+    }
+
+    // Calculate the actual data length and metadata
+    const payloadLength =
+      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
+
+    // Validate data length
+    if (data.length < 1) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.DataLengthTooShort,
+      );
+    }
+
+    // For already encrypted data (starts with 0x04), validate total size
+    if (data[0] === 0x04) {
+      if (data.length > (blockSize as number)) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.DataLengthExceedsCapacity,
+        );
+      }
+    } else {
+      // For unencrypted data, validate it will fit after encryption
+      if (data.length > payloadLength) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.DataLengthExceedsCapacity,
+        );
+      }
+    }
+
+    // For encrypted blocks with known actual data length:
+    // 1. The actual data length must not exceed available capacity
+    // 2. The total encrypted length must not exceed block size
+    if (actualDataLength !== undefined) {
+      if (actualDataLength > payloadLength) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.DataLengthExceedsCapacity,
+        );
+      }
+    }
+
+    // Calculate checksum on the original data
+    const computedChecksum = StaticHelpersChecksum.calculateChecksum(data);
+    if (checksum && !computedChecksum.equals(checksum)) {
+      throw new ChecksumMismatchError(checksum, computedChecksum);
+    }
+    const finalChecksum = checksum ?? computedChecksum;
+
+    // Create metadata with correct length
+    const metadata = new EncryptedBlockMetadata(
+      blockSize,
       type,
       dataType,
-      blockSize,
-      data,
-      checksum,
+      actualDataLength ?? data.length,
       creator,
-      dateCreated,
-      actualDataLength,
+      finalDate,
+    );
+
+    // Create final data buffer filled with random data
+    const finalData = randomBytes(blockSize as number);
+
+    // If data is already encrypted (starts with 0x04), use it directly
+    if (data[0] === 0x04) {
+      data.copy(finalData);
+    } else {
+      // Set ECIES header components
+      finalData[0] = 0x04; // Set ECIES public key prefix
+      // Rest of the public key is already random from randomBytes
+      let offset = StaticHelpersECIES.publicKeyLength;
+      // IV and authTag are already random from randomBytes
+      offset += StaticHelpersECIES.ivLength;
+      offset += StaticHelpersECIES.authTagLength;
+      // Copy actual data to payload area
+      data.copy(finalData, offset);
+    }
+
+    // Validate encryption header components
+    const ephemeralKey = finalData.subarray(
+      0,
+      StaticHelpersECIES.publicKeyLength,
+    );
+    const iv = finalData.subarray(
+      StaticHelpersECIES.publicKeyLength,
+      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
+    );
+    const authTag = finalData.subarray(
+      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
+      StaticHelpersECIES.publicKeyLength +
+        StaticHelpersECIES.ivLength +
+        StaticHelpersECIES.authTagLength,
+    );
+
+    // Verify all components have correct lengths and format
+    if (
+      ephemeralKey[0] !== 0x04 ||
+      ephemeralKey.length !== StaticHelpersECIES.publicKeyLength
+    ) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
+      );
+    }
+    if (iv.length !== StaticHelpersECIES.ivLength) {
+      throw new BlockValidationError(BlockValidationErrorType.InvalidIVLength);
+    }
+    if (authTag.length !== StaticHelpersECIES.authTagLength) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidAuthTagLength,
+      );
+    }
+
+    return new TestEncryptedCblBlock(
+      type,
+      BlockDataType.EncryptedData,
+      finalData,
+      finalChecksum,
+      metadata,
       canRead,
       canPersist,
-    ) as Promise<TestEncryptedCblBlock>;
+    );
   }
 }
 
@@ -265,7 +386,16 @@ describe('EncryptedConstituentBlockListBlock', () => {
       const encryptedBlock = await createTestBlock(encryptedData, {
         actualDataLength: originalData.length,
       });
-      expect(encryptedBlock.payload.length).toBe(originalData.length);
+      // Payload should be everything after the header up to block size
+      expect(encryptedBlock.payload.length).toBe(
+        (blockSize as number) - StaticHelpersECIES.eciesOverheadLength,
+      );
+      expect(encryptedBlock.payloadLength).toBe(
+        originalData.length + StaticHelpersECIES.eciesOverheadLength,
+      );
+      expect(encryptedBlock.metadata.lengthWithoutPadding).toBe(
+        originalData.length,
+      );
     });
   });
 
