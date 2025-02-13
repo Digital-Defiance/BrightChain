@@ -1,22 +1,23 @@
 import { StringLanguages } from '../enumerations/stringLanguages';
-import {
-  SymmetricErrorType,
-  SymmetricErrorTypes,
-} from '../enumerations/symmetricErrorType';
-import { translate } from '../i18n';
-import { StaticHelpersSymmetric } from '../staticHelpers.symmetric';
-import { HandleableError } from './handleable';
+import StringNames from '../enumerations/stringNames';
+import { SymmetricErrorType } from '../enumerations/symmetricErrorType';
+import { SymmetricService } from '../services/symmetric.service';
+import { TypedError } from './typedError';
 
-export class SymmetricError extends HandleableError {
-  public readonly reason: SymmetricErrorType;
-  constructor(reason: SymmetricErrorType, language?: StringLanguages) {
-    super(
-      translate(SymmetricErrorTypes[reason], language, {
-        KEY_BITS: StaticHelpersSymmetric.SymmetricKeyBits,
-        KEY_BYTES: StaticHelpersSymmetric.SymmetricKeyBytes,
-      }),
-    );
+export class SymmetricError extends TypedError<SymmetricErrorType> {
+  protected get reasonMap(): Record<SymmetricErrorType, StringNames> {
+    return {
+      [SymmetricErrorType.DataNullOrUndefined]:
+        StringNames.Error_SymmetricDataNullOrUndefined,
+      [SymmetricErrorType.InvalidKeyLength]:
+        StringNames.Error_SymmetricInvalidKeyLengthTemplate,
+    };
+  }
+  constructor(type: SymmetricErrorType, language?: StringLanguages) {
+    super(type, language, {
+      KEY_BITS: SymmetricService.symmetricKeyBits,
+      KEY_BYTES: SymmetricService.symmetricKeyBytes,
+    });
     this.name = 'SymmetricError';
-    this.reason = reason;
   }
 }

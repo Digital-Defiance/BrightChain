@@ -3,15 +3,14 @@ import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
 import { BlockType } from './enumerations/blockType';
 import { EphemeralBlockMetadata } from './ephemeralBlockMetadata';
-import { GuidV4 } from './guid';
-import { ICBLBlockMetadata } from './interfaces/cblBlockMetadata';
+import { ICBLBlockMetadata } from './interfaces/blocks/metadata/cblBlockMetadata';
 
 export class CblBlockMetadata
   extends EphemeralBlockMetadata
   implements ICBLBlockMetadata
 {
-  private readonly _fileDataLength: bigint;
-  public get fileDataLength(): bigint {
+  private readonly _fileDataLength: number;
+  public get fileDataLength(): number {
     return this._fileDataLength;
   }
   constructor(
@@ -19,9 +18,9 @@ export class CblBlockMetadata
     type: BlockType,
     dataType: BlockDataType,
     originalDataLength: number,
-    fileDataLength: bigint,
+    fileDataLength: number,
+    creator: BrightChainMember,
     dateCreated?: Date,
-    creator?: BrightChainMember | GuidV4,
   ) {
     super(
       size,

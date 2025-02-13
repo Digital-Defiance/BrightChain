@@ -1,27 +1,35 @@
-import { createHash, timingSafeEqual } from 'crypto';
+import { BinaryToTextEncoding, createHash, timingSafeEqual } from 'crypto';
 import { SecureStorageErrorType } from './enumerations/secureStorageErrorType';
 import { SecureStorageError } from './errors/secureStorageError';
 import { GuidV4 } from './guid';
-import { StaticHelpersPbkdf2 } from './staticHelpers.pbkdf2';
-import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
+import { Pbkdf2Service } from './services/pbkdf2.service';
+import { SymmetricService } from './services/symmetric.service';
 import { FullHexGuid, RawGuidBuffer } from './types';
 
 /**
  * A secure string buffer is a buffer whose intent is to prevent the raw password from being stored in memory.
  */
 export class SecureString {
-  private static readonly hashAlgorithm: string = 'sha256';
-  private static readonly encoding: BufferEncoding = 'utf8';
+  private static readonly hashAlgorithm: string = 'sha256' as const;
+  private static readonly encoding: BufferEncoding = 'utf8' as const;
+  private static readonly checksumEncoding: BinaryToTextEncoding =
+    'hex' as const;
+  private static readonly checksumBufferEncoding: BufferEncoding =
+    'hex' as const;
   private readonly _isNull: boolean;
   private readonly _id: GuidV4;
   private readonly _length: number;
   private readonly _encryptedValue: Buffer;
   private readonly _salt: Buffer;
   private readonly _encryptedChecksum: Buffer;
-  constructor(data?: string | null) {
+  constructor(data?: string | Buffer | null) {
     this._id = GuidV4.new();
     // don't bother encrypting null/undefined
-    if (data === null || data === undefined) {
+    if (
+      data === null ||
+      data === undefined ||
+      (Buffer.isBuffer(data) && data.length === 0)
+    ) {
       this._isNull = true;
       this._length = 0;
       this._encryptedValue = Buffer.alloc(0);
@@ -82,6 +90,12 @@ export class SecureString {
   public get valueAsBase64String(): string {
     return this.valueAsBuffer.toString('base64');
   }
+  public get checksum(): string {
+    const decryptedChecksum = this.decryptData(
+      this._encryptedChecksum,
+    ).toString(SecureString.encoding);
+    return decryptedChecksum;
+  }
   /**
    * Provided for test/debug purposes only
    */
@@ -91,7 +105,9 @@ export class SecureString {
     this._encryptedChecksum.fill(0);
   }
   private generateChecksum(data: string | Buffer): string {
-    return createHash(SecureString.hashAlgorithm).update(data).digest('hex');
+    return createHash(SecureString.hashAlgorithm)
+      .update(data)
+      .digest(SecureString.checksumEncoding);
   }
   private createEncryptedChecksum(data: string | Buffer, salt: Buffer): Buffer {
     const checksum = this.generateChecksum(data);
@@ -100,8 +116,11 @@ export class SecureString {
   }
   private validateChecksum(data: string | Buffer, checksum: string): boolean {
     return timingSafeEqual(
-      Buffer.from(this.generateChecksum(data), 'hex'),
-      Buffer.from(checksum, 'hex'),
+      Buffer.from(
+        this.generateChecksum(data),
+        SecureString.checksumBufferEncoding,
+      ),
+      Buffer.from(checksum, SecureString.checksumBufferEncoding),
     );
   }
   private validateEncryptedChecksum(data: string | Buffer): boolean {
@@ -114,21 +133,21 @@ export class SecureString {
     data: string | Buffer,
     salt?: Buffer,
   ): { encryptedData: Buffer; salt: Buffer } {
-    const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(
-      this.idBuffer,
-      salt,
-    );
-    const encryptionResult = StaticHelpersSymmetric.symmetricEncryptBuffer(
+    const idKey = Pbkdf2Service.deriveKeyFromPassword(this.idBuffer, salt);
+    const encryptionResult = SymmetricService.encryptBuffer(
       Buffer.isBuffer(data) ? data : Buffer.from(data, SecureString.encoding),
       idKey.hash,
     );
-    return { encryptedData: encryptionResult.encryptedData, salt: idKey.salt };
+    return {
+      encryptedData: encryptionResult.encryptedData,
+      salt: idKey.salt,
+    };
   }
   private decryptData(data: Buffer): Buffer {
-    const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(
+    const idKey = Pbkdf2Service.deriveKeyFromPassword(
       this.idBuffer,
       this._salt,
     );
-    return StaticHelpersSymmetric.symmetricDecryptBuffer(data, idKey.hash);
+    return SymmetricService.decryptBuffer(data, idKey.hash);
   }
 }

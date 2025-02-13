@@ -1,24 +1,35 @@
 import { BrightChainMember } from './brightChainMember';
+import { ECIES } from './constants';
 import BlockDataType from './enumerations/blockDataType';
 import BlockType from './enumerations/blockType';
 import { EphemeralBlockMetadata } from './ephemeralBlockMetadata';
-import { GuidV4 } from './guid';
-import { IEncryptedBlockMetadata } from './interfaces/encryptedBlockMetadata';
-import { StaticHelpersECIES } from './staticHelpers.ECIES';
+import { IEncryptedBlockMetadata } from './interfaces/blocks/metadata/encryptedBlockMetadata';
+import { ECIESService } from './services/ecies.service';
 
 export class EncryptedBlockMetadata
   extends EphemeralBlockMetadata
   implements IEncryptedBlockMetadata
 {
+  private static readonly eciesService = new ECIESService();
+  private _recipientCount?: number;
+
   public get encryptedLength(): number {
-    return this.lengthWithoutPadding + StaticHelpersECIES.eciesOverheadLength;
+    return this.lengthWithoutPadding + ECIES.OVERHEAD_SIZE;
+  }
+
+  public get recipientCount(): number | undefined {
+    return this._recipientCount;
+  }
+
+  public set recipientCount(value: number | undefined) {
+    this._recipientCount = value;
   }
   constructor(
     size: number,
     type: BlockType,
     dataType: BlockDataType,
     lengthWithoutPadding: number,
-    creator?: BrightChainMember | GuidV4,
+    creator: BrightChainMember,
     dateCreated?: Date,
   ) {
     super(

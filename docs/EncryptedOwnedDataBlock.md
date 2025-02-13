@@ -17,7 +17,7 @@ The `EncryptedOwnedDataBlock` class represents an encrypted block owned by a spe
   - `checksum` (ChecksumBuffer): The checksum of the data.
   - `creator` (BrightChainMember | GuidV4): The creator of the block.
   - `dateCreated` (Date): The date the block was created.
-  - `actualDataLength` (number): The actual data length before encryption.
+  - `lengthBeforeEncryption` (number): The actual data length before encryption.
   - `canRead` (boolean): Whether the block can be read.
   - `canPersist` (boolean): Whether the block can be persisted.
 - **Returns**: A new `EncryptedOwnedDataBlock` instance.
@@ -77,16 +77,6 @@ The `EncryptedOwnedDataBlock` class represents an encrypted block owned by a spe
 - **Example**:
   ```typescript
   console.log(block.canDecrypt);
-  ```
-
-### canSign
-
-- **Purpose**: Whether the block can be signed.
-- **Type**: Getter.
-- **Returns**: True if the block has any creator, false otherwise.
-- **Example**:
-  ```typescript
-  console.log(block.canSign);
   ```
 
 ### encryptedLength

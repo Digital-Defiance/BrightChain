@@ -3,8 +3,7 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
-import { IDataBlock } from '../interfaces/dataBlock';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ServiceLocator } from '../services/serviceLocator';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
 
@@ -12,7 +11,7 @@ import { BaseBlock } from './base';
  * RawDataBlock represents a block containing raw, unencrypted data.
  * It provides basic data storage and validation capabilities.
  */
-export class RawDataBlock extends BaseBlock implements IDataBlock {
+export class RawDataBlock extends BaseBlock {
   private readonly _data: Buffer;
 
   constructor(
@@ -25,6 +24,9 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
     canRead = true,
     canPersist = true,
   ) {
+    if (!data) {
+      throw new Error('Data cannot be null or undefined');
+    }
     const now = new Date();
     if (data.length > blockSize) {
       throw new Error(
@@ -32,7 +34,10 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
       );
     }
 
-    const calculatedChecksum = StaticHelpersChecksum.calculateChecksum(data);
+    const calculatedChecksum =
+      ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+        data,
+      );
     const metadata = new BlockMetadata(
       blockSize,
       blockType,
@@ -74,10 +79,14 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
     return this._data;
   }
 
+  public get layerOverhead(): number {
+    return 0;
+  }
+
   /**
    * The actual length of the data
    */
-  public get actualDataLength(): number {
+  public get lengthBeforeEncryption(): number {
     return this._data.length;
   }
 
@@ -103,20 +112,14 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
   }
 
   /**
-   * Whether the block can be signed
-   */
-  public get canSign(): boolean {
-    return false;
-  }
-
-  /**
    * Internal validation logic
    * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
    */
   protected validateInternal(): void {
-    const calculatedChecksum = StaticHelpersChecksum.calculateChecksum(
-      this._data,
-    );
+    const calculatedChecksum =
+      ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+        this._data,
+      );
     if (!calculatedChecksum.equals(this.idChecksum)) {
       throw new ChecksumMismatchError(this.idChecksum, calculatedChecksum);
     }
@@ -159,12 +162,5 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
    */
   public override get fullHeaderData(): Buffer {
     return Buffer.concat([super.fullHeaderData, this.layerHeaderData]);
-  }
-
-  /**
-   * Get the usable capacity after accounting for overhead
-   */
-  public override get capacity(): number {
-    return this.blockSize - this.totalOverhead;
   }
 }

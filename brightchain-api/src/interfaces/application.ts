@@ -1,8 +1,12 @@
-import { BrightChainMember, TypedHandlers } from '@BrightChain/brightchain-lib';
+import {
+  ApiResponse,
+  BrightChainMember,
+  TypedHandlers,
+} from '@BrightChain/brightchain-lib';
 import { BlocksController } from '../controllers/api/blocks';
 import { MembersController } from '../controllers/api/members';
 import { SessionsController } from '../controllers/api/sessions';
-import { ApiResponse, BaseController } from '../controllers/base';
+import { BaseController } from '../controllers/base';
 
 export interface IApplication {
   getController(name: 'blocks'): BlocksController;

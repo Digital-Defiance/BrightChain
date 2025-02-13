@@ -1,25 +1,31 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  statSync,
+  writeFileSync,
+} from 'fs';
 import { join } from 'path';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { EncryptedConstituentBlockListBlock } from '../blocks/encryptedCbl';
-import { RawDataBlock } from '../blocks/rawData';
-import { BlockService } from '../blockService';
-import { CblBlockMetadata } from '../cblBlockMetadata';
-import { TUPLE_SIZE } from '../constants';
+import { BrightChainMember } from '../brightChainMember';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
+import { CblErrorType } from '../enumerations/cblErrorType';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { TranslatableEnumType } from '../enumerations/translatableEnum';
+import { CblError } from '../errors/cblError';
 import { StoreError } from '../errors/storeError';
 import { GuidV4 } from '../guid';
 import { translateEnum } from '../i18n';
-import { ICBLIndexEntry } from '../interfaces/cblIndexEntry';
 import { ISimpleStoreAsync } from '../interfaces/simpleStoreAsync';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { ChecksumBuffer, RawGuidBuffer } from '../types';
-import { DiskBlockAsyncStore } from './diskBlockAsyncStore';
+import { BlockService } from '../services/blockService';
+import { CBLService } from '../services/cblService';
+import { ChecksumService } from '../services/checksum.service';
+import { ServiceLocator } from '../services/serviceLocator';
+import { ChecksumBuffer } from '../types';
 
 /**
  * CBLStore provides storage for Constituent Block Lists (CBLs).
@@ -36,32 +42,33 @@ export class CBLStore
   private readonly _storePath: string;
   private readonly _cblPath: string;
   private readonly _indexPath: string;
-  private readonly _blockStore: DiskBlockAsyncStore;
   private readonly _blockSize: BlockSize;
+  private readonly _blockService: BlockService;
+  private readonly _cblService: CBLService;
+  private readonly _checksumService: ChecksumService;
+  private _activeUser?: BrightChainMember;
 
-  constructor(storePath: string, blockSize: BlockSize) {
-    if (!storePath) {
+  constructor(config: { storePath: string; blockSize: BlockSize }) {
+    if (!config.storePath) {
       throw new StoreError(StoreErrorType.StorePathRequired);
     }
+    if (!config.blockSize) {
+      throw new StoreError(StoreErrorType.BlockSizeRequired);
+    }
 
-    this._blockSize = blockSize;
-    this._storePath = storePath;
+    this._blockSize = config.blockSize;
+    this._storePath = config.storePath;
     this._cblPath = join(
       this._storePath,
       translateEnum({
         type: TranslatableEnumType.BlockSize,
         value: this._blockSize,
-      }),
+      }).toLowerCase(),
     );
-    this._indexPath = join(
-      storePath,
-      translateEnum({ type: TranslatableEnumType.BlockSize, value: blockSize }),
-      'index',
-    );
-    this._blockStore = new DiskBlockAsyncStore(storePath, blockSize);
+    this._indexPath = join(this._cblPath, 'index');
 
     // Ensure store directories exist
-    if (!existsSync(storePath)) {
+    if (!existsSync(config.storePath)) {
       throw new StoreError(StoreErrorType.StorePathNotFound);
     }
 
@@ -74,90 +81,47 @@ export class CBLStore
     if (!existsSync(this._cblPath)) {
       mkdirSync(this._cblPath, { recursive: true });
     }
+
+    this._blockService = ServiceLocator.getServiceProvider().blockService;
+    this._cblService = ServiceLocator.getServiceProvider().cblService;
+    this._checksumService = ServiceLocator.getServiceProvider().checksumService;
   }
 
   /**
-   * Store a CBL and its block tuple addresses
+   * Set the active user
+   * Used to validate CBLs, etc
+   * @param user The active user
+   */
+  public setActiveUser(user: BrightChainMember): void {
+    this._activeUser = user;
+  }
+
+  /**
+   * Store a CBL block
    */
   public async set(
     key: ChecksumBuffer,
     value: ConstituentBlockListBlock | EncryptedConstituentBlockListBlock,
   ): Promise<void> {
+    const userForvalidation = value.creator ?? this._activeUser;
+    if (userForvalidation === undefined) {
+      throw new CblError(CblErrorType.CreatorRequiredForSignature);
+    }
+    // validate signature before writing
+    this._cblService.validateSignature(value.data, userForvalidation);
+
     if (!key.equals(value.idChecksum)) {
       throw new StoreError(StoreErrorType.BlockIdMismatch);
     }
-    const now = new Date();
-    const cblPath = this.getCBLPath(value.idChecksum);
-    const indexPath = this.getIndexPath(value.idChecksum);
-    if (existsSync(cblPath) || existsSync(indexPath)) {
+
+    const blockPath = this.getBlockPath(value.idChecksum);
+    if (existsSync(blockPath)) {
       throw new StoreError(StoreErrorType.BlockPathAlreadyExists);
     }
 
-    // Generate whiteners for OFFS
-    const { whiteners } = await BlockService.generateWhiteners(
-      value.blockSize,
-      TUPLE_SIZE - 1, // One less than tuple size since we have the main block
-      this._blockStore,
-    );
-
-    const resultBuffer = BlockService.xorBlockWithWhiteners(
-      value.data,
-      whiteners,
-    );
-    const resultBlock = new RawDataBlock(
-      value.blockSize,
-      resultBuffer,
-      now,
-      StaticHelpersChecksum.calculateChecksum(resultBuffer),
-      BlockType.RawData,
-      BlockDataType.RawData,
-      true, // canRead
-      true, // canPersist
-    );
-
-    // Store main block
-    if (!(await this._blockStore.has(resultBlock.idChecksum))) {
-      await this._blockStore.setData(resultBlock);
-    }
-    // Store whitener blocks and collect all addresses
-    const blockAddresses: ChecksumBuffer[] = [resultBlock.idChecksum];
-    for (const whitener of whiteners) {
-      const whitenerBlock = new RawDataBlock(
-        value.blockSize,
-        whitener,
-        now,
-        StaticHelpersChecksum.calculateChecksum(whitener),
-        BlockType.RawData,
-        BlockDataType.RawData,
-        true, // canRead
-        true, // canPersist
-      );
-      if (!(await this._blockStore.has(whitenerBlock.idChecksum))) {
-        await this._blockStore.setData(whitenerBlock);
-      }
-      blockAddresses.push(whitenerBlock.idChecksum);
-    }
-
-    // Store index entry
-    const indexEntry: ICBLIndexEntry = {
-      encrypted: value instanceof EncryptedConstituentBlockListBlock,
-      blockType: value.blockType,
-      dataType: value.blockDataType,
-      addresses: blockAddresses.map((address: ChecksumBuffer) =>
-        address.toString('hex'),
-      ),
-      dateCreated: value.dateCreated.toISOString(),
-      creatorId:
-        value.creatorId?.asRawGuidBuffer.toString('base64') ??
-        GuidV4.new().asRawGuidBuffer.toString('base64'),
-      fileDataLength:
-        value instanceof ConstituentBlockListBlock
-          ? (value.metadata as CblBlockMetadata).fileDataLength.toString()
-          : undefined,
-      blockDataLength: value.actualDataLength,
-    };
-
-    writeFileSync(indexPath, JSON.stringify(indexEntry, null, 2));
+    // Store the CBL block directly
+    this.ensureBlockPath(value.idChecksum);
+    writeFileSync(blockPath, value.data);
   }
 
   /**
@@ -165,116 +129,124 @@ export class CBLStore
    */
   public async get(
     checksum: ChecksumBuffer,
-  ): Promise<ConstituentBlockListBlock | EncryptedConstituentBlockListBlock> {
-    const indexPath = this.getIndexPath(checksum);
-    if (!existsSync(indexPath)) {
+    hydrateGuid: (guid: GuidV4) => Promise<BrightChainMember>,
+  ): Promise<ConstituentBlockListBlock> {
+    const blockPath = this.getBlockPath(checksum);
+    if (!existsSync(blockPath)) {
       throw new StoreError(StoreErrorType.KeyNotFound);
     }
 
-    // Read index entry
-    const indexEntry: ICBLIndexEntry = JSON.parse(
-      readFileSync(indexPath, 'utf8'),
-    ) as ICBLIndexEntry;
-    const addresses = indexEntry.addresses.map(
-      (address: string) => Buffer.from(address, 'hex') as ChecksumBuffer,
-    );
-
-    // Read all blocks
-    const blocks = await Promise.all(
-      addresses.map((address) => this._blockStore.get(address)),
-    );
-
-    // First block is the XORed result, rest are whiteners
-    // To recover original data, XOR the stored result with all whiteners again
-    // since XOR is its own inverse when applied twice
-    const xorData = Buffer.from(blocks[0].fullData);
-    for (let i = 1; i < blocks.length; i++) {
-      const whitener = blocks[i].fullData;
-      for (let j = 0; j < xorData.length; j++) {
-        xorData[j] ^= whitener[j];
+    // Read the CBL block directly
+    const cblData = readFileSync(blockPath);
+    if (this._cblService.isEncrypted(cblData)) {
+      // must decrypt block using creator key before we can do anything
+      if (this._activeUser === undefined) {
+        throw new CblError(CblErrorType.UserRequiredForDecryption);
       }
+      const fileStat = statSync(blockPath);
+      const dateCreated = fileStat.mtime;
+      const encryptedCbl = new EncryptedConstituentBlockListBlock(
+        BlockType.EncryptedConstituentBlockListBlock,
+        BlockDataType.EncryptedData,
+        cblData,
+        checksum,
+        new EncryptedBlockMetadata(
+          this._blockSize,
+          BlockType.EncryptedConstituentBlockListBlock,
+          BlockDataType.EncryptedData,
+          cblData.length,
+          this._activeUser,
+          dateCreated,
+        ),
+        true,
+      );
+      const decryptedCbl = new ConstituentBlockListBlock(
+        (await BlockService.decrypt(this._activeUser, encryptedCbl)).data,
+        this._activeUser,
+      );
+      if (!decryptedCbl.validateSignature()) {
+        throw new CblError(CblErrorType.InvalidSignature);
+      }
+      return Promise.resolve(decryptedCbl);
     }
-    if (!xorData) {
-      throw new StoreError(StoreErrorType.KeyNotFound);
+    const cblInfo = this._cblService.parseHeader(cblData);
+
+    // Hydrate the creator
+    const creator =
+      this._activeUser && this._activeUser.id.equals(cblInfo.creatorId)
+        ? this._activeUser
+        : await hydrateGuid(cblInfo.creatorId);
+
+    // Create the appropriate CBL type
+    const cbl = new ConstituentBlockListBlock(cblData, creator);
+    if (!cbl.validateSignature()) {
+      throw new CblError(CblErrorType.InvalidSignature);
     }
-    const resultChecksum = StaticHelpersChecksum.calculateChecksum(xorData);
-    if (!resultChecksum.equals(checksum)) {
-      throw new StoreError(StoreErrorType.BlockIdMismatch);
-    }
-    return indexEntry.encrypted
-      ? new EncryptedConstituentBlockListBlock(
-          indexEntry.blockType,
-          indexEntry.dataType,
-          xorData,
-          checksum,
-          new EncryptedBlockMetadata(
-            this._blockSize,
-            indexEntry.blockType,
-            indexEntry.dataType,
-            indexEntry.blockDataLength,
-            new GuidV4(
-              Buffer.from(indexEntry.creatorId, 'base64') as RawGuidBuffer,
-            ),
-            new Date(indexEntry.dateCreated),
-          ),
-          true,
-          true,
-        )
-      : new ConstituentBlockListBlock(
-          new GuidV4(
-            Buffer.from(indexEntry.creatorId, 'base64') as RawGuidBuffer,
-          ),
-          new CblBlockMetadata(
-            this._blockSize,
-            indexEntry.blockType,
-            indexEntry.dataType,
-            indexEntry.blockDataLength,
-            BigInt(
-              indexEntry.fileDataLength
-                ? indexEntry.fileDataLength
-                : this._blockSize,
-            ),
-            new Date(indexEntry.dateCreated),
-          ),
-          xorData,
-          checksum,
-        );
+    return Promise.resolve(cbl);
   }
 
   /**
    * Check if a CBL exists
    */
   public has(checksum: ChecksumBuffer): boolean {
-    const indexPath = this.getIndexPath(checksum);
-    return existsSync(indexPath);
+    const blockPath = this.getBlockPath(checksum);
+    return existsSync(blockPath);
   }
 
   /**
    * Get the addresses for a CBL
    */
-  public getCBLAddresses(checksum: ChecksumBuffer): ChecksumBuffer[] {
-    const indexPath = this.getIndexPath(checksum);
-    if (!existsSync(indexPath)) {
+  public async getCBLAddresses(
+    checksum: ChecksumBuffer,
+    hydrateFunction: (guid: GuidV4) => Promise<BrightChainMember>,
+  ): Promise<ChecksumBuffer[]> {
+    const blockPath = this.getBlockPath(checksum);
+    if (!existsSync(blockPath)) {
       throw new StoreError(StoreErrorType.KeyNotFound);
     }
+    if (!this.has(checksum)) {
+      throw new StoreError(StoreErrorType.KeyNotFound);
+    }
+    const cbl = await this.get(checksum, hydrateFunction);
 
-    const indexEntry = JSON.parse(readFileSync(indexPath, 'utf8'));
-    return indexEntry.addresses.map(
-      (address: string) => Buffer.from(address, 'hex') as ChecksumBuffer,
-    );
+    return cbl.addresses;
   }
 
   /**
    * Get path for CBL data file
    */
-  private getCBLPath(checksum: ChecksumBuffer): string {
-    return join(this._cblPath, checksum.toString('hex'));
+  private getBlockPath(checksum: ChecksumBuffer): string {
+    const checksumHex = checksum.toString('hex');
+    const firstDir = checksumHex.substring(0, 2);
+    const secondDir = checksumHex.substring(2, 4);
+    return join(
+      this._storePath,
+      translateEnum({
+        type: TranslatableEnumType.BlockSize,
+        value: this._blockSize,
+      }),
+      firstDir,
+      secondDir,
+      checksumHex,
+    );
   }
 
   /**
-   * Get path for CBL index entry
+   * Ensure the block path exists
    */
-  private getIndexPath(checksum: ChecksumBuffer): string {
-    return join(this._indexPath, `${checksum.toString('hex')}.json`);
+  private ensureBlockPath(checksum: ChecksumBuffer): void {
+    const checksumHex = checksum.toString('hex');
+    const firstDir = checksumHex.substring(0, 2);
+    const secondDir = checksumHex.substring(2, 4);
+    const blockDir = join(
+      this._storePath,
+      translateEnum({
+        type: TranslatableEnumType.BlockSize,
+        value: this._blockSize,
+      }),
+      firstDir,
+      secondDir,
+    );
+    mkdirSync(blockDir, { recursive: true });
   }
 }
