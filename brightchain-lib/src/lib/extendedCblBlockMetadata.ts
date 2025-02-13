@@ -3,8 +3,7 @@ import { CblBlockMetadata } from './cblBlockMetadata';
 import BlockDataType from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
 import BlockType from './enumerations/blockType';
-import { GuidV4 } from './guid';
-import { IExtendedCblBlockMetadata } from './interfaces/extendedCblBlockMetadata';
+import { IExtendedCblBlockMetadata } from './interfaces/blocks/metadata/extendedCblBlockMetadata';
 
 export class ExtendedCblBlockMetadata
   extends CblBlockMetadata
@@ -24,11 +23,11 @@ export class ExtendedCblBlockMetadata
   constructor(
     size: BlockSize,
     lengthWithoutPadding: number,
-    fileDataLength: bigint,
+    fileDataLength: number,
     fileName: string,
     mimeType: string,
+    creator: BrightChainMember,
     dateCreated?: Date,
-    creator?: BrightChainMember | GuidV4,
   ) {
     super(
       size,
@@ -36,8 +35,8 @@ export class ExtendedCblBlockMetadata
       BlockDataType.EphemeralStructuredData,
       lengthWithoutPadding,
       fileDataLength,
-      dateCreated,
       creator,
+      dateCreated,
     );
     this._fileName = fileName;
     this._mimeType = mimeType;
@@ -52,8 +51,8 @@ export class ExtendedCblBlockMetadata
       metadata.fileDataLength,
       metadata.fileName,
       metadata.mimeType,
-      metadata.dateCreated,
       metadata.creator,
+      metadata.dateCreated,
     );
   }
 }

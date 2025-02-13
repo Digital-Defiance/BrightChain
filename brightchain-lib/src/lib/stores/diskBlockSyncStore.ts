@@ -5,7 +5,7 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
-import { IBlockMetadata } from '../interfaces/blockMetadata';
+import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
 import { ISimpleStore } from '../interfaces/simpleStore';
 import { ChecksumBuffer } from '../types';
 import { DiskBlockStore } from './diskBlockStore';
@@ -14,8 +14,8 @@ export class DiskBlockSyncStore
   extends DiskBlockStore
   implements ISimpleStore<ChecksumBuffer, BaseBlock>
 {
-  constructor(storePath: string, blockSize: BlockSize) {
-    super(storePath, blockSize);
+  constructor(config: { storePath: string; blockSize: BlockSize }) {
+    super(config);
   }
 
   has(key: ChecksumBuffer): boolean {
@@ -31,7 +31,7 @@ export class DiskBlockSyncStore
     }
     const metadata = JSON.parse(
       readFileSync(this.metadataPath(key)).toString(),
-    ) as IBlockMetadata;
+    ) as IBaseBlockMetadata;
     // Create a concrete block instance using RawDataBlock
     const block = new RawDataBlock(
       this._blockSize,

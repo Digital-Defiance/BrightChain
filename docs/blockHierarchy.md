@@ -139,7 +139,6 @@ classDiagram
     EphemeralBlock <|-- ConstituentBlockListBlock
     EphemeralBlock <|-- MultiEncryptedBlock
     EncryptedBlock <|-- EncryptedCBL
-    EncryptedBlock <|-- EncryptedOwnedDataBlock
     ConstituentBlockListBlock <|-- ExtendedCBL
 
     %% Encryption Capabilities
@@ -180,13 +179,13 @@ classDiagram
         +dateCreated: Date
         +addressCount: number
         +signature: Buffer
-        +overhead: 98 bytes
+        +overhead: 106 bytes
     }
 
     class ExtendedCBL {
         +fileName: string
         +mimeType: string
-        +overhead: 512 bytes
+        +overhead: varies
     }
 
     class MultiEncryptedBlock {
@@ -212,13 +211,7 @@ classDiagram
 
     class EncryptedCBL {
         +encrypted CBL data
-        +overhead: 97 + 98 bytes
-    }
-
-    class EncryptedOwnedDataBlock {
-        +ownerId: string
-        +ownerSignature: Buffer
-        +overhead: 97 + signature bytes
+        +overhead: 97 + 106 bytes
     }
 
     %% Note

@@ -1,50 +1,100 @@
 import BlockType from '../../enumerations/blockType';
-import {
-  BlockValidationErrorType,
-  BlockValidationErrorTypes,
-} from '../../enumerations/blockValidationErrorType';
+import { BlockValidationErrorType } from '../../enumerations/blockValidationErrorType';
 import { StringLanguages } from '../../enumerations/stringLanguages';
 import { StringNames } from '../../enumerations/stringNames';
 import { TranslatableEnumType } from '../../enumerations/translatableEnum';
-import { translate, translateEnum } from '../../i18n';
-import { HandleableError } from '../handleable';
+import { translateEnum } from '../../i18n';
+import { TypedWithReasonError } from '../typedWithReasonError';
 
-export class BlockValidationError extends HandleableError {
-  public readonly reason: BlockValidationErrorType;
+export class BlockValidationError extends TypedWithReasonError<BlockValidationErrorType> {
   public readonly blockType?: BlockType;
   public readonly addressLength?: {
     index: number;
     length: number;
     expectedLength: number;
   };
+  public get reasonMap(): Record<BlockValidationErrorType, StringNames> {
+    return {
+      [BlockValidationErrorType.ActualDataLengthUnknown]:
+        StringNames.Error_BlockValidationErrorActualDataLengthUnknown,
+      [BlockValidationErrorType.AddressCountExceedsCapacity]:
+        StringNames.Error_BlockValidationErrorAddressCountExceedsCapacity,
+      [BlockValidationErrorType.BlockDataNotBuffer]:
+        StringNames.Error_BlockValidationErrorBlockDataNotBuffer,
+      [BlockValidationErrorType.BlockSizeNegative]:
+        StringNames.Error_BlockValidationErrorBlockSizeNegative,
+      [BlockValidationErrorType.DataBufferIsTruncated]:
+        StringNames.Error_BlockValidationErrorDataBufferIsTruncated,
+      [BlockValidationErrorType.DataCannotBeEmpty]:
+        StringNames.Error_BlockValidationErrorDataCannotBeEmpty,
+      [BlockValidationErrorType.CreatorIDMismatch]:
+        StringNames.Error_BlockValidationErrorCreatorIDMismatch,
+      [BlockValidationErrorType.DataLengthExceedsCapacity]:
+        StringNames.Error_BlockValidationErrorDataLengthExceedsCapacity,
+      [BlockValidationErrorType.DataLengthTooShort]:
+        StringNames.Error_BlockValidationErrorDataLengthTooShort,
+      [BlockValidationErrorType.DataLengthTooShortForCBLHeader]:
+        StringNames.Error_BlockValidationErrorDataLengthTooShortForCBLHeader,
+      [BlockValidationErrorType.DataLengthTooShortForEncryptedCBL]:
+        StringNames.Error_BlockValidationErrorDataLengthTooShortForEncryptedCBL,
+      [BlockValidationErrorType.EphemeralBlockOnlySupportsBufferData]:
+        StringNames.Error_BlockValidationErrorEphemeralBlockOnlySupportsBufferData,
+      [BlockValidationErrorType.FutureCreationDate]:
+        StringNames.Error_BlockValidationErrorFutureCreationDate,
+      [BlockValidationErrorType.InvalidAddressLength]:
+        StringNames.Error_BlockValidationErrorInvalidAddressLengthTemplate,
+      [BlockValidationErrorType.InvalidAuthTagLength]:
+        StringNames.Error_BlockValidationErrorInvalidAuthTagLength,
+      [BlockValidationErrorType.InvalidBlockType]:
+        StringNames.Error_BlockValidationErrorInvalidBlockTypeTemplate,
+      [BlockValidationErrorType.InvalidCBLAddressCount]:
+        StringNames.Error_BlockValidationErrorInvalidCBLAddressCount,
+      [BlockValidationErrorType.InvalidCBLDataLength]:
+        StringNames.Error_BlockValidationErrorInvalidCBLDataLength,
+      [BlockValidationErrorType.InvalidDateCreated]:
+        StringNames.Error_BlockValidationErrorInvalidDateCreated,
+      [BlockValidationErrorType.InvalidEncryptionHeaderLength]:
+        StringNames.Error_BlockValidationErrorInvalidEncryptionHeaderLength,
+      [BlockValidationErrorType.InvalidEphemeralPublicKeyLength]:
+        StringNames.Error_BlockValidationErrorInvalidEphemeralPublicKeyLength,
+      [BlockValidationErrorType.InvalidIVLength]:
+        StringNames.Error_BlockValidationErrorInvalidIVLength,
+      [BlockValidationErrorType.InvalidSignature]:
+        StringNames.Error_BlockValidationErrorInvalidSignature,
+      [BlockValidationErrorType.InvalidTupleSize]:
+        StringNames.Error_BlockValidationErrorInvalidTupleSizeTemplate,
+      [BlockValidationErrorType.MethodMustBeImplementedByDerivedClass]:
+        StringNames.Error_BlockValidationErrorMethodMustBeImplementedByDerivedClass,
+      [BlockValidationErrorType.NoChecksum]:
+        StringNames.Error_BlockValidationErrorNoChecksum,
+      [BlockValidationErrorType.OriginalDataLengthNegative]:
+        StringNames.Error_BlockValidationErrorOriginalDataLengthNegative,
+    };
+  }
   constructor(
-    reason: BlockValidationErrorType,
+    type: BlockValidationErrorType,
     blockType?: BlockType,
     addressLength?: { index: number; length: number; expectedLength: number },
     language?: StringLanguages,
   ) {
-    super(
-      translate(StringNames.Error_BlockValidationTemplate, language, {
-        REASON: translate(BlockValidationErrorTypes[reason], language),
-        ...(blockType
-          ? {
-              TYPE: translateEnum({
-                type: TranslatableEnumType.BlockType,
-                value: blockType,
-              }),
-            }
-          : {}),
-        ...(addressLength
-          ? {
-              INDEX: addressLength.index,
-              LENGTH: addressLength.length,
-              EXPECTED_LENGTH: addressLength.expectedLength,
-            }
-          : {}),
-      }),
-    );
+    super(StringNames.Error_BlockValidationErrorTemplate, type, language, {
+      ...(blockType
+        ? {
+            TYPE: translateEnum({
+              type: TranslatableEnumType.BlockType,
+              value: blockType,
+            }),
+          }
+        : {}),
+      ...(addressLength
+        ? {
+            INDEX: addressLength.index,
+            LENGTH: addressLength.length,
+            EXPECTED_LENGTH: addressLength.expectedLength,
+          }
+        : {}),
+    });
     this.name = 'BlockValidationError';
-    this.reason = reason;
     this.blockType = blockType;
     this.addressLength = addressLength;
   }

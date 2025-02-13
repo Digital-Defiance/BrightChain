@@ -1,8 +1,8 @@
 import { BrightChainMember } from './brightChainMember';
 import { GuidV4 } from './guid';
 import { QuorumDataRecordDto } from './quorumDataRecordDto';
-import { StaticHelpersChecksum } from './staticHelpers.checksum';
-import { StaticHelpersECIES } from './staticHelpers.ECIES';
+import { ChecksumService } from './services/checksum.service';
+import { ECIESService } from './services/ecies.service';
 import {
   ChecksumBuffer,
   HexString,
@@ -11,6 +11,10 @@ import {
 } from './types';
 
 export class QuorumDataRecord {
+  public static readonly checksumService: ChecksumService =
+    new ChecksumService();
+  public static readonly eciesService: ECIESService = new ECIESService();
+
   public readonly id: GuidV4;
   public readonly encryptedData: Buffer;
   public readonly encryptedSharesByMemberId: Map<ShortHexGuid, Buffer>;
@@ -57,7 +61,7 @@ export class QuorumDataRecord {
     this.encryptedData = encryptedData;
     this.encryptedSharesByMemberId = encryptedSharesByMemberId;
     const calculatedChecksum =
-      StaticHelpersChecksum.calculateChecksum(encryptedData);
+      QuorumDataRecord.checksumService.calculateChecksum(encryptedData);
     if (checksum && checksum.compare(calculatedChecksum) != 0) {
       throw new Error('Invalid checksum');
     }
@@ -65,7 +69,7 @@ export class QuorumDataRecord {
     this.creator = creator;
     this.signature = signature ?? creator.sign(this.checksum);
     if (
-      !StaticHelpersECIES.verifyMessage(
+      !QuorumDataRecord.eciesService.verifyMessage(
         creator.publicKey,
         this.checksum,
         this.signature,
@@ -95,10 +99,10 @@ export class QuorumDataRecord {
       creatorId: this.creator.id.asShortHexGuid,
       encryptedData: this.encryptedData.toString('hex') as HexString,
       encryptedSharesByMemberId,
-      checksum: StaticHelpersChecksum.checksumBufferToChecksumString(
+      checksum: QuorumDataRecord.checksumService.checksumToHexString(
         this.checksum,
       ),
-      signature: StaticHelpersECIES.signatureBufferToSignatureString(
+      signature: QuorumDataRecord.eciesService.signatureBufferToSignatureString(
         this.signature,
       ),
       memberIDs: this.memberIDs,
@@ -124,8 +128,10 @@ export class QuorumDataRecord {
       dto.sharesRequired,
       Buffer.from(dto.encryptedData, 'hex'),
       encryptedSharesByMemberId,
-      StaticHelpersChecksum.checksumStringToChecksumBuffer(dto.checksum),
-      StaticHelpersECIES.signatureStringToSignatureBuffer(dto.signature),
+      QuorumDataRecord.checksumService.hexStringToChecksum(dto.checksum),
+      QuorumDataRecord.eciesService.signatureStringToSignatureBuffer(
+        dto.signature,
+      ),
       dto.id,
       dto.dateCreated,
       dto.dateUpdated,

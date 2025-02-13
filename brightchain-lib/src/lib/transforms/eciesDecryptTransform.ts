@@ -1,14 +1,16 @@
 import { Transform, TransformCallback, TransformOptions } from 'stream';
+import { ECIES } from '../constants';
 import { BlockSize } from '../enumerations/blockSizes';
 import { StreamErrorType } from '../enumerations/streamErrorType';
 import { StreamError } from '../errors/streamError';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ECIESService } from '../services/ecies.service';
 
 export class EciesDecryptionTransform extends Transform {
   private readonly blockSize: number;
   private readonly privateKey: Buffer;
   private buffer: Buffer;
   private readonly logger: Console;
+  private readonly eciesService: ECIESService;
 
   constructor(
     privateKey: Buffer,
@@ -21,6 +23,7 @@ export class EciesDecryptionTransform extends Transform {
     this.privateKey = privateKey;
     this.blockSize = blockSize as number;
     this.buffer = Buffer.alloc(0);
+    this.eciesService = new ECIESService();
   }
 
   public override _transform(
@@ -43,7 +46,7 @@ export class EciesDecryptionTransform extends Transform {
         this.buffer = this.buffer.subarray(this.blockSize);
 
         try {
-          const decryptedBlock = StaticHelpersECIES.decryptWithHeader(
+          const decryptedBlock = this.eciesService.decryptWithHeader(
             this.privateKey,
             encryptedBlock,
           );
@@ -79,11 +82,11 @@ export class EciesDecryptionTransform extends Transform {
     try {
       // Handle any remaining data in buffer
       if (this.buffer.length > 0) {
-        if (this.buffer.length < StaticHelpersECIES.eciesOverheadLength) {
+        if (this.buffer.length < ECIES.OVERHEAD_SIZE) {
           throw new StreamError(StreamErrorType.IncompleteEncryptedBlock);
         }
 
-        const decryptedBlock = StaticHelpersECIES.decryptWithHeader(
+        const decryptedBlock = this.eciesService.decryptWithHeader(
           this.privateKey,
           this.buffer,
         );

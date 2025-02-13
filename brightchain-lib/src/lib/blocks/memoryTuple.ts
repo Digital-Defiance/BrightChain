@@ -1,6 +1,5 @@
 import { Readable } from 'stream';
-import { BlockMetadata } from '../blockMetadata';
-import { TUPLE_SIZE } from '../constants';
+import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
@@ -22,16 +21,16 @@ import { RawDataBlock } from './rawData';
  * 2. Disk-based blocks (BlockHandle) for persistent storage
  */
 export class InMemoryBlockTuple {
-  public static readonly TupleSize = TUPLE_SIZE;
+  public static readonly TupleSize = TUPLE.SIZE;
 
   private readonly _blocks: (BaseBlock | BlockHandle)[];
   private readonly _blockSize: BlockSize;
 
   constructor(blocks: (BaseBlock | BlockHandle)[]) {
-    if (blocks.length !== TUPLE_SIZE) {
+    if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.InvalidTupleSize,
-        TUPLE_SIZE,
+        TUPLE.SIZE,
       );
     }
 
@@ -157,30 +156,22 @@ export class InMemoryBlockTuple {
     blockSize: BlockSize,
     getBlockPath: (id: ChecksumBuffer) => string,
   ): Promise<InMemoryBlockTuple> {
-    if (blockIDs.length !== TUPLE_SIZE) {
+    if (blockIDs.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.ExpectedBlockIds,
-        TUPLE_SIZE,
+        TUPLE.SIZE,
       );
     }
 
     const handles = await Promise.all(
       blockIDs.map((id: ChecksumBuffer) => {
-        const handle = new BlockHandle(
-          BlockType.Handle,
-          BlockDataType.RawData,
+        return new BlockHandle(
+          getBlockPath(id),
+          blockSize,
           id,
-          new BlockMetadata(
-            blockSize,
-            BlockType.Handle,
-            BlockDataType.RawData,
-            blockSize as number,
-          ),
-          true,
-          true,
+          true, // canRead
+          true, // canPersist
         );
-        handle.setPath(getBlockPath(id));
-        return handle;
       }),
     );
 
@@ -194,10 +185,10 @@ export class InMemoryBlockTuple {
   public static fromBlocks(
     blocks: (BaseBlock | BlockHandle)[],
   ): InMemoryBlockTuple {
-    if (blocks.length !== TUPLE_SIZE) {
+    if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.ExpectedBlocks,
-        TUPLE_SIZE,
+        TUPLE.SIZE,
       );
     }
 

@@ -2,6 +2,7 @@ import { createCipheriv, createDecipheriv, randomBytes, scrypt } from 'crypto';
 import { promises as fs } from 'fs';
 import { join } from 'path';
 import { promisify } from 'util';
+import { KEYRING_ALGORITHM_CONFIGURATION } from './constants';
 import { SystemKeyringErrorType } from './enumerations/systemKeyringErrorType';
 import { SystemKeyringError } from './errors/systemKeyringError';
 import { IKeyringEntry } from './interfaces/keyringEntry';
@@ -42,7 +43,7 @@ export class SystemKeyring {
     const iv = randomBytes(16);
     const key = await this.deriveKey(password, salt);
 
-    const cipher = createCipheriv('aes-256-gcm', key, iv);
+    const cipher = createCipheriv(KEYRING_ALGORITHM_CONFIGURATION, key, iv);
     const encryptedData = Buffer.concat([
       cipher.update(data),
       cipher.final(),
@@ -71,7 +72,11 @@ export class SystemKeyring {
     }
 
     const key = await this.deriveKey(password, entry.salt);
-    const decipher = createDecipheriv('aes-256-gcm', key, entry.iv);
+    const decipher = createDecipheriv(
+      KEYRING_ALGORITHM_CONFIGURATION,
+      key,
+      entry.iv,
+    );
 
     const authTagPos = entry.encryptedData.length - 16;
     const authTag = entry.encryptedData.slice(authTagPos);

@@ -1,10 +1,10 @@
-import { TUPLE_SIZE } from '../constants';
+import { TUPLE } from '../constants';
 import BlockDataType from '../enumerations/blockDataType';
 import BlockType from '../enumerations/blockType';
 import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
 import { HandleTupleError } from '../errors/handleTupleError';
-import { IBlockMetadata } from '../interfaces/blockMetadata';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
+import { ServiceProvider } from '../services/service.provider';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 import { ChecksumBuffer } from '../types';
 import { BlockHandle } from './handle';
@@ -18,7 +18,7 @@ export class BlockHandleTuple {
   private readonly _handles: BlockHandle[];
 
   constructor(handles: BlockHandle[]) {
-    if (handles.length !== TUPLE_SIZE) {
+    if (handles.length !== TUPLE.SIZE) {
       throw new HandleTupleError(HandleTupleErrorType.InvalidTupleSize);
     }
 
@@ -60,7 +60,7 @@ export class BlockHandleTuple {
    */
   public async xor(
     diskBlockStore: DiskBlockAsyncStore,
-    destBlockMetadata: IBlockMetadata,
+    destBlockMetadata: IBaseBlockMetadata,
   ): Promise<BlockHandle> {
     if (!this.handles.length) {
       throw new HandleTupleError(HandleTupleErrorType.NoBlocksToXor);
@@ -97,7 +97,8 @@ export class BlockHandleTuple {
     }
 
     // Calculate checksum for the result
-    const checksum = StaticHelpersChecksum.calculateChecksum(result);
+    const checksum =
+      ServiceProvider.getInstance().checksumService.calculateChecksum(result);
 
     // Create a RawDataBlock for the result with the provided metadata
     const block = new RawDataBlock(

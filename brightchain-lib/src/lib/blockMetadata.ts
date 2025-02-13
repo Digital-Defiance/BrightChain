@@ -3,13 +3,13 @@ import { BlockMetadataErrorType } from './enumerations/blockMetadataErrorType';
 import { BlockSize } from './enumerations/blockSizes';
 import BlockType from './enumerations/blockType';
 import { BlockMetadataError } from './errors/block';
-import { IBlockMetadata } from './interfaces/blockMetadata';
+import { IBaseBlockMetadata } from './interfaces/blocks/metadata/blockMetadata';
 
 /**
  * BlockMetadata provides utility functions for working with block metadata.
  * These functions ensure consistent metadata handling across the system.
  */
-export class BlockMetadata implements IBlockMetadata {
+export class BlockMetadata implements IBaseBlockMetadata {
   private readonly _size: BlockSize;
   private readonly _type: BlockType;
   private readonly _dataType: BlockDataType;
@@ -30,7 +30,7 @@ export class BlockMetadata implements IBlockMetadata {
     this._dateCreated = dateCreated;
   }
 
-  public static fromInterface(metadata: IBlockMetadata): BlockMetadata {
+  public static fromInterface(metadata: IBaseBlockMetadata): BlockMetadata {
     return new BlockMetadata(
       metadata.size,
       metadata.type,
@@ -49,7 +49,7 @@ export class BlockMetadata implements IBlockMetadata {
       size: this.size,
       type: this.type,
       dataType: this.dataType,
-      originalDataLength: this.lengthWithoutPadding,
+      lengthWithoutPadding: this.lengthWithoutPadding,
       dateCreated: this.dateCreated,
     });
   }
@@ -83,7 +83,7 @@ export class BlockMetadata implements IBlockMetadata {
         size: data.size as BlockSize,
         type: data.type as BlockType,
         dataType: data.dataType as BlockDataType,
-        lengthWithoutPadding: data.originalDataLength,
+        lengthWithoutPadding: data.lengthWithoutPadding,
       } as BlockMetadata;
     } catch (error) {
       throw new Error(
