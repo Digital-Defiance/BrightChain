@@ -1,5 +1,5 @@
 import QuorumDataRecordActionType from './enumerations/actionType';
-import { BlockSize } from './enumerations/blockSizes';
+import { BlockSize } from './enumerations/blockSize';
 import BlockType from './enumerations/blockType';
 import MemberType from './enumerations/memberType';
 import { StringLanguages } from './enumerations/stringLanguages';
