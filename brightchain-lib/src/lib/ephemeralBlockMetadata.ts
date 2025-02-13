@@ -11,14 +11,14 @@ export class EphemeralBlockMetadata
   implements IEphemeralBlockMetadata
 {
   private readonly _encrypted: boolean;
-  private readonly _creator?: BrightChainMember | GuidV4;
+  private readonly _creator: BrightChainMember | GuidV4;
   constructor(
     size: BlockSize,
     type: BlockType,
     dataType: BlockDataType,
     lengthWithoutPadding: number,
     encrypted: boolean,
-    creator?: BrightChainMember | GuidV4,
+    creator: BrightChainMember | GuidV4,
     dateCreated?: Date,
   ) {
     super(size, type, dataType, lengthWithoutPadding, dateCreated);
@@ -28,7 +28,7 @@ export class EphemeralBlockMetadata
   public get encrypted(): boolean {
     return this._encrypted;
   }
-  public get creator(): BrightChainMember | GuidV4 | undefined {
+  public get creator(): BrightChainMember | GuidV4 {
     return this._creator;
   }
   public static override fromInterface(

@@ -5,7 +5,8 @@ import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
 import { WhitenedError } from '../errors/whitenedError';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ChecksumService } from '../services/checksum.service';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
@@ -18,6 +19,15 @@ import { RawDataBlock } from './rawData';
  * 3. Provide privacy without encryption overhead
  */
 export class WhitenedBlock extends RawDataBlock {
+  protected static override checksumService: ChecksumService;
+
+  protected static override initialize() {
+    super.initialize();
+    if (!WhitenedBlock.checksumService) {
+      WhitenedBlock.checksumService = ServiceProvider.getChecksumService();
+    }
+  }
+
   constructor(
     blockSize: BlockSize,
     data: Buffer,
@@ -153,7 +163,7 @@ export class WhitenedBlock extends RawDataBlock {
       this.blockSize,
       result,
       new Date(),
-      StaticHelpersChecksum.calculateChecksum(result),
+      WhitenedBlock.checksumService.calculateChecksum(result),
       this.canRead && other.canRead,
       this.canPersist && other.canPersist,
     );
@@ -187,10 +197,11 @@ export class WhitenedBlock extends RawDataBlock {
       result[i] = data[i] ^ randomData[i];
     }
 
+    WhitenedBlock.initialize();
     return new WhitenedBlock(
       blockSize,
       result,
-      StaticHelpersChecksum.calculateChecksum(result),
+      WhitenedBlock.checksumService.calculateChecksum(result),
       new Date(),
     );
   }

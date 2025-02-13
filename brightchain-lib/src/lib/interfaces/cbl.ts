@@ -72,7 +72,7 @@ export interface IConstituentBlockListBlock extends IDataBlock {
    * 2. Storage planning
    * 3. Reconstruction verification
    */
-  get originalDataLength(): bigint;
+  get originalDataLength(): number;
 
   /**
    * Size of block tuples.
@@ -94,4 +94,14 @@ export interface IConstituentBlockListBlock extends IDataBlock {
    * @returns True if the signature is valid
    */
   validateSignature(creator: BrightChainMember): boolean;
+
+  /**
+   * Get the address capacity of the block
+   */
+  get addressCapacity(): number;
+
+  /**
+   * Get the encrypted address capacity of the block
+   */
+  get encryptedAddressCapacity(): number;
 }

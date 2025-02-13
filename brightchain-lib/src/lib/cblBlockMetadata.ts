@@ -10,8 +10,8 @@ export class CblBlockMetadata
   extends EphemeralBlockMetadata
   implements ICBLBlockMetadata
 {
-  private readonly _fileDataLength: bigint;
-  public get fileDataLength(): bigint {
+  private readonly _fileDataLength: number;
+  public get fileDataLength(): number {
     return this._fileDataLength;
   }
   constructor(
@@ -19,9 +19,9 @@ export class CblBlockMetadata
     type: BlockType,
     dataType: BlockDataType,
     originalDataLength: number,
-    fileDataLength: bigint,
+    fileDataLength: number,
+    creator: BrightChainMember | GuidV4,
     dateCreated?: Date,
-    creator?: BrightChainMember | GuidV4,
   ) {
     super(
       size,

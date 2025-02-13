@@ -1,23 +1,35 @@
 import { mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { RawDataBlock } from '../blocks/rawData';
+import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { StoreErrorType } from '../enumerations/storeErrorType';
+import { BlockAccessError } from '../errors/block';
 import { StoreError } from '../errors/storeError';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ChecksumService } from '../services/checksum.service';
+import { ServiceProvider } from '../services/service.provider';
 import { DiskBlockAsyncStore } from './diskBlockAsyncStore';
 
 describe('DiskBlockAsyncStore', () => {
   let store: DiskBlockAsyncStore;
-  const testDir = join(__dirname, 'test-store');
+  let checksumService: ChecksumService;
+  const testDir = join('/tmp', 'brightchain');
   const blockSize = BlockSize.Message;
 
   beforeEach(() => {
-    // Create test directory
+    // Create test directory with proper structure
     mkdirSync(testDir, { recursive: true });
-    store = new DiskBlockAsyncStore(testDir, blockSize);
+    // Create block size subdirectory using hex representation
+    const blockSizeDir = join(testDir, blockSize.toString(16).padStart(8, '0'));
+    mkdirSync(blockSizeDir, { recursive: true });
+    // Create first and second level directories for test blocks
+    const firstLevelDir = join(blockSizeDir, '00');
+    const secondLevelDir = join(firstLevelDir, '00');
+    mkdirSync(secondLevelDir, { recursive: true });
+    store = new DiskBlockAsyncStore({ storePath: testDir, blockSize });
+    checksumService = ServiceProvider.getChecksumService();
   });
 
   afterEach(() => {
@@ -26,9 +38,21 @@ describe('DiskBlockAsyncStore', () => {
   });
 
   describe('Basic Operations', () => {
+    it('should throw when getting non-existent block handle', () => {
+      const data = Buffer.alloc(blockSize, 'x');
+      const checksum = checksumService.calculateChecksum(data);
+
+      expect(() => store.get(checksum)).toThrowType(
+        BlockAccessError,
+        (error: BlockAccessError) => {
+          expect(error.type).toBe(BlockAccessErrorType.BlockFileNotFound);
+        },
+      );
+    });
+
     it('should store and retrieve block data', async () => {
       const data = Buffer.alloc(blockSize, 'x');
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = checksumService.calculateChecksum(data);
       const block = new RawDataBlock(
         blockSize,
         data,
@@ -40,24 +64,51 @@ describe('DiskBlockAsyncStore', () => {
         true,
       );
 
-      // Store block
-      store.setData(block);
+      // Ensure directory exists and store block
+      const blockDir = join(
+        testDir,
+        blockSize.toString(16).padStart(8, '0'),
+        checksum.toString('hex').substring(0, 2),
+        checksum.toString('hex').substring(2, 4),
+      );
+      mkdirSync(blockDir, { recursive: true });
+      await store.setData(block);
 
       // Check if block exists
       const exists = await store.has(checksum);
       expect(exists).toBe(true);
 
       // Retrieve block
-      const retrieved = store.getData(checksum);
+      const retrieved = await store.getData(checksum);
       expect(retrieved.data).toEqual(data);
       expect(retrieved.blockSize).toBe(blockSize);
       expect(retrieved.blockType).toBe(BlockType.RawData);
       expect(retrieved.dateCreated).toBeInstanceOf(Date);
     });
 
-    it('should get block handle', () => {
+    it('should get block handle', async () => {
       const data = Buffer.alloc(blockSize, 'x');
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = checksumService.calculateChecksum(data);
+      const block = new RawDataBlock(
+        blockSize,
+        data,
+        new Date(),
+        checksum,
+        BlockType.RawData,
+        BlockDataType.RawData,
+        true,
+        true,
+      );
+
+      // Ensure directory exists and store block
+      const blockDir = join(
+        testDir,
+        blockSize.toString(16).padStart(8, '0'),
+        checksum.toString('hex').substring(0, 2),
+        checksum.toString('hex').substring(2, 4),
+      );
+      mkdirSync(blockDir, { recursive: true });
+      await store.setData(block);
 
       const handle = store.get(checksum);
       expect(handle.blockType).toBe(BlockType.Handle);
@@ -68,19 +119,28 @@ describe('DiskBlockAsyncStore', () => {
   });
 
   describe('Error Cases', () => {
-    it('should throw error when getting non-existent block', () => {
-      const nonExistentChecksum = StaticHelpersChecksum.calculateChecksum(
+    it('should throw error when getting non-existent block', async () => {
+      const nonExistentChecksum = checksumService.calculateChecksum(
         Buffer.from('nonexistent'),
       );
 
-      expect(() => store.getData(nonExistentChecksum)).toThrowError(
-        new StoreError(StoreErrorType.KeyNotFound),
-      );
+      try {
+        await store.getData(nonExistentChecksum);
+        fail('Expected error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(StoreError);
+        if (error instanceof StoreError) {
+          expect(error.type).toBe(StoreErrorType.KeyNotFound);
+          expect(error.params?.['KEY']).toBe(
+            nonExistentChecksum.toString('hex'),
+          );
+        }
+      }
     });
 
-    it('should throw error when storing block with wrong size', () => {
+    it('should throw error when storing block with wrong size', async () => {
       const wrongSizeData = Buffer.alloc(blockSize, 'x');
-      const checksum = StaticHelpersChecksum.calculateChecksum(wrongSizeData);
+      const checksum = checksumService.calculateChecksum(wrongSizeData);
       const block = new RawDataBlock(
         BlockSize.Tiny, // Different size than store's blockSize
         wrongSizeData,
@@ -92,14 +152,14 @@ describe('DiskBlockAsyncStore', () => {
         true,
       );
 
-      expect(() => store.setData(block)).toThrowError(
+      await expect(store.setData(block)).rejects.toThrowError(
         new StoreError(StoreErrorType.BlockSizeMismatch),
       );
     });
 
-    it('should throw error when storing block that already exists', () => {
+    it('should throw error when storing block that already exists', async () => {
       const data = Buffer.alloc(blockSize, 'x');
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = checksumService.calculateChecksum(data);
       const block = new RawDataBlock(
         blockSize,
         data,
@@ -111,8 +171,16 @@ describe('DiskBlockAsyncStore', () => {
         true,
       );
 
-      store.setData(block);
-      expect(() => store.setData(block)).toThrowError(
+      // Ensure directory exists and store block
+      const blockDir = join(
+        testDir,
+        blockSize.toString(16).padStart(8, '0'),
+        checksum.toString('hex').substring(0, 2),
+        checksum.toString('hex').substring(2, 4),
+      );
+      mkdirSync(blockDir, { recursive: true });
+      await store.setData(block);
+      await expect(store.setData(block)).rejects.toThrowError(
         new StoreError(StoreErrorType.BlockPathAlreadyExists),
       );
     });
@@ -125,7 +193,7 @@ describe('DiskBlockAsyncStore', () => {
         blockSize,
         Buffer.alloc(blockSize, 0x01),
         new Date(),
-        StaticHelpersChecksum.calculateChecksum(Buffer.alloc(blockSize, 0x01)),
+        checksumService.calculateChecksum(Buffer.alloc(blockSize, 0x01)),
         BlockType.RawData,
         BlockDataType.RawData,
         true,
@@ -136,16 +204,30 @@ describe('DiskBlockAsyncStore', () => {
         blockSize,
         Buffer.alloc(blockSize, 0x02),
         new Date(),
-        StaticHelpersChecksum.calculateChecksum(Buffer.alloc(blockSize, 0x02)),
+        checksumService.calculateChecksum(Buffer.alloc(blockSize, 0x02)),
         BlockType.RawData,
         BlockDataType.RawData,
         true,
         true,
       );
 
-      // Store blocks
-      store.setData(block1);
-      store.setData(block2);
+      // Ensure directory exists and store blocks
+      const blockDir1 = join(
+        testDir,
+        blockSize.toString(16).padStart(8, '0'),
+        block1.idChecksum.toString('hex').substring(0, 2),
+        block1.idChecksum.toString('hex').substring(2, 4),
+      );
+      const blockDir2 = join(
+        testDir,
+        blockSize.toString(16).padStart(8, '0'),
+        block2.idChecksum.toString('hex').substring(0, 2),
+        block2.idChecksum.toString('hex').substring(2, 4),
+      );
+      mkdirSync(blockDir1, { recursive: true });
+      mkdirSync(blockDir2, { recursive: true });
+      await store.setData(block1);
+      await store.setData(block2);
 
       // Get handles
       const handle1 = store.get(block1.idChecksum);

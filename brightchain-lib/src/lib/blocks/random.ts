@@ -3,7 +3,8 @@ import { Readable } from 'stream';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ChecksumService } from '../services/checksum.service';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
@@ -14,12 +15,22 @@ import { RawDataBlock } from './rawData';
  * where data blocks are XORed with random blocks to make them meaningless on their own.
  */
 export class RandomBlock extends RawDataBlock {
-  private constructor(
+  protected static override checksumService: ChecksumService;
+
+  protected static override initialize() {
+    super.initialize();
+    if (!RandomBlock.checksumService) {
+      RandomBlock.checksumService = ServiceProvider.getChecksumService();
+    }
+  }
+
+  public constructor(
     blockSize: BlockSize,
     data: Buffer,
     dateCreated?: Date,
     checksum?: ChecksumBuffer,
   ) {
+    RandomBlock.initialize();
     if (data.length !== blockSize) {
       throw new Error('Data length must match block size');
     }
@@ -39,9 +50,10 @@ export class RandomBlock extends RawDataBlock {
   /**
    * Create a new random block
    */
-  public static new(blockSize: BlockSize): RandomBlock {
+  public static new(blockSize: BlockSize, dateCreated?: Date): RandomBlock {
+    RandomBlock.initialize();
     const data = randomBytes(blockSize as number);
-    return new RandomBlock(blockSize, data);
+    return new RandomBlock(blockSize, data, dateCreated);
   }
 
   /**
@@ -53,6 +65,7 @@ export class RandomBlock extends RawDataBlock {
     dateCreated?: Date,
     checksum?: ChecksumBuffer,
   ): RandomBlock {
+    RandomBlock.initialize();
     return new RandomBlock(blockSize, data, dateCreated, checksum);
   }
 
@@ -168,7 +181,7 @@ export class RandomBlock extends RawDataBlock {
       this.blockSize,
       result,
       new Date(),
-      StaticHelpersChecksum.calculateChecksum(result),
+      RandomBlock.checksumService.calculateChecksum(result),
       this.canRead && other.canRead,
       this.canPersist && other.canPersist,
     );

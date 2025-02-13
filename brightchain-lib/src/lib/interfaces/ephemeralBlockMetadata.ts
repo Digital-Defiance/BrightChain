@@ -10,5 +10,5 @@ export interface IEphemeralBlockMetadata extends IBlockMetadata {
   /**
    * The creator of the block
    */
-  get creator(): BrightChainMember | GuidV4 | undefined;
+  get creator(): BrightChainMember | GuidV4;
 }

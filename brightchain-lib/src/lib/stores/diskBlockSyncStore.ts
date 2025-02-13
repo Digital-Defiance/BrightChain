@@ -14,8 +14,8 @@ export class DiskBlockSyncStore
   extends DiskBlockStore
   implements ISimpleStore<ChecksumBuffer, BaseBlock>
 {
-  constructor(storePath: string, blockSize: BlockSize) {
-    super(storePath, blockSize);
+  constructor(config: { storePath: string; blockSize: BlockSize }) {
+    super(config);
   }
 
   has(key: ChecksumBuffer): boolean {

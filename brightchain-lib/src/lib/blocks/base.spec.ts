@@ -1,5 +1,6 @@
 import { randomBytes } from 'crypto';
 import { BlockMetadata } from '../blockMetadata';
+import { ECIES } from '../constants';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
@@ -7,8 +8,8 @@ import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ChecksumService } from '../services/checksum.service';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
 
@@ -44,7 +45,8 @@ class TestBaseBlock extends BaseBlock {
       );
     }
 
-    const expectedChecksum = StaticHelpersChecksum.calculateChecksum(data);
+    const expectedChecksum =
+      ServiceProvider.getChecksumService().calculateChecksum(data);
     if (checksum) {
       if (!checksum.equals(expectedChecksum)) {
         throw new ChecksumMismatchError(checksum, expectedChecksum);
@@ -76,9 +78,8 @@ class TestBaseBlock extends BaseBlock {
    * @returns true
    */
   public validateSync(): void {
-    const expectedChecksum = StaticHelpersChecksum.calculateChecksum(
-      this.internalData,
-    );
+    const expectedChecksum =
+      ServiceProvider.getChecksumService().calculateChecksum(this.internalData);
     const result = this.idChecksum.equals(expectedChecksum);
     if (!result) {
       throw new ChecksumMismatchError(this.idChecksum, expectedChecksum);
@@ -91,9 +92,8 @@ class TestBaseBlock extends BaseBlock {
    * @returns true
    */
   public async validateAsync(): Promise<void> {
-    const expectedChecksum = await StaticHelpersChecksum.calculateChecksumAsync(
-      this.internalData,
-    );
+    const expectedChecksum =
+      ServiceProvider.getChecksumService().calculateChecksum(this.internalData);
     if (!this.idChecksum.equals(expectedChecksum)) {
       throw new ChecksumMismatchError(this.idChecksum, expectedChecksum);
     }
@@ -125,10 +125,20 @@ describe('BaseBlock', () => {
   // Increase timeout for all tests
   jest.setTimeout(15000);
 
+  let checksumService: ChecksumService;
+
+  beforeEach(() => {
+    checksumService = ServiceProvider.getChecksumService();
+  });
+
+  afterEach(() => {
+    ServiceProvider.resetInstance();
+  });
+
   // Shared test data
   const defaultBlockSize = BlockSize.Small;
   const getEffectiveSize = (size: BlockSize, encrypted = false) =>
-    (size as number) - (encrypted ? StaticHelpersECIES.eciesOverheadLength : 0);
+    (size as number) - (encrypted ? ECIES.OVERHEAD_SIZE : 0);
 
   const createTestBlock = (
     options: Partial<{
@@ -143,7 +153,9 @@ describe('BaseBlock', () => {
     const dataType = options.dataType || BlockDataType.RawData;
     const isEncrypted = dataType === BlockDataType.EncryptedData;
     const effectiveSize = getEffectiveSize(defaultBlockSize, isEncrypted);
-    const data = options.data || randomBytes(effectiveSize);
+    const data = Buffer.isBuffer(options.data)
+      ? options.data
+      : randomBytes(effectiveSize);
 
     return new TestBaseBlock(
       options.type || BlockType.OwnerFreeWhitenedBlock, // Use OwnerFreeWhitenedBlock (0) as default
@@ -159,7 +171,7 @@ describe('BaseBlock', () => {
   describe('basic functionality', () => {
     it('should construct and validate correctly', () => {
       const data = randomBytes(defaultBlockSize as number);
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = checksumService.calculateChecksum(data);
       const block = createTestBlock({ data, checksum });
 
       expect(block.blockSize).toBe(defaultBlockSize);
@@ -194,7 +206,7 @@ describe('BaseBlock', () => {
       expect(() => createTestBlock({ data: tooLargeData })).toThrowType(
         BlockValidationError,
         (error: BlockValidationError) => {
-          expect(error.reason).toBe(
+          expect(error.type).toBe(
             BlockValidationErrorType.DataLengthExceedsCapacity,
           );
         },
@@ -234,14 +246,14 @@ describe('BaseBlock', () => {
     it('should detect data corruption', async () => {
       // First create a valid block
       const data = randomBytes(defaultBlockSize as number);
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = checksumService.calculateChecksum(data);
       const block = createTestBlock({ data, checksum });
 
       // Then corrupt the internal data after creation
       block.corruptData(0, (block.data[0] + 1) % 256); // Increment the first byte
 
       // Calculate what the new checksum should be after corruption
-      const newChecksum = StaticHelpersChecksum.calculateChecksum(block.data);
+      const newChecksum = checksumService.calculateChecksum(block.data);
 
       try {
         await block.validateAsync();
@@ -261,9 +273,7 @@ describe('BaseBlock', () => {
       expect(() => createTestBlock({ dateCreated: futureDate })).toThrowType(
         BlockValidationError,
         (error: BlockValidationError) => {
-          expect(error.reason).toBe(
-            BlockValidationErrorType.FutureCreationDate,
-          );
+          expect(error.type).toBe(BlockValidationErrorType.FutureCreationDate);
         },
       );
     });

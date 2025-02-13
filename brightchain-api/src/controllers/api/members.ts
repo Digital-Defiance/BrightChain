@@ -1,4 +1,5 @@
 import {
+  BlockCapacityError,
   BlockDataType,
   BlockSize,
   BlockType,
@@ -8,15 +9,17 @@ import {
   DiskBlockAsyncStore,
   EmailString,
   GuidV4,
+  lengthToClosestBlockSize,
   MemberApiRequest,
   MembersHandlers,
   RawDataBlock,
   RouteConfig,
-  StaticHelpersVoting,
   StringNames,
   translate,
 } from '@BrightChain/brightchain-lib';
+import { EphemeralBlock } from 'brightchain-lib/src/lib/blocks/ephemeral';
 import { CblBlockMetadata } from 'brightchain-lib/src/lib/cblBlockMetadata';
+import { ChecksumService } from 'brightchain-lib/src/lib/services/checksum.service';
 import { IApplication } from '../../interfaces/application';
 import { MembersResponse } from '../../interfaces/membersResponse';
 import { BaseController } from '../base';
@@ -25,17 +28,19 @@ export class MembersController extends BaseController<
   MembersResponse,
   MembersHandlers
 > {
-  public blockStore: DiskBlockAsyncStore;
-  private memberBlockMap: Map<string, string>; // Maps member IDs to their latest block IDs
+  public readonly blockStore: DiskBlockAsyncStore;
+  private readonly memberBlockMap: Map<string, string>; // Maps member IDs to their latest block IDs
+  private readonly checksumService: ChecksumService;
 
   constructor(application: IApplication) {
     super(application);
     // Initialize block store with configured path and block size
-    this.blockStore = new DiskBlockAsyncStore(
-      process.env.BLOCK_STORE_PATH || './blocks',
-      BlockSize.Medium,
-    );
+    this.blockStore = new DiskBlockAsyncStore({
+      storePath: process.env.BLOCK_STORE_PATH || './blocks',
+      blockSize: BlockSize.Medium,
+    });
     this.memberBlockMap = new Map();
+    this.checksumService = new ChecksumService();
   }
 
   protected initRouteDefinitions(): void {
@@ -84,9 +89,23 @@ export class MembersController extends BaseController<
       new EmailString(email),
     );
 
-    // Store member data in a CBL block
     const memberData = member.toJson();
     const dataBuffer = Buffer.from(memberData);
+    const blockSize = lengthToClosestBlockSize(dataBuffer.length);
+    if (blockSize < dataBuffer.length) {
+      throw new BlockCapacityError(blockSize, dataBuffer.length);
+    }
+    const checksum = this.checksumService.calculateChecksum(dataBuffer);
+    const now = new Date();
+    const ephemeralBlock = EphemeralBlock.from(
+      BlockType.OwnedDataBlock,
+      BlockDataType.EphemeralStructuredData,
+      blockSize,
+      dataBuffer,
+      checksum,
+      member,
+      now,
+    );
     const cblBlock = new ConstituentBlockListBlock(
       member.id, // Use member ID as creator
       new CblBlockMetadata(
@@ -121,16 +140,17 @@ export class MembersController extends BaseController<
     }
 
     return {
-      statusCode: 200,
+      statusCode: 201,
       response: {
         success: true,
-        memberId: member.id.toString(),
+        memberId: member.id.toString('hex'),
         blockId,
         publicKey: member.publicKey.toString('hex'),
         votingPublicKey: StaticHelpersVoting.votingPublicKeyToBuffer(
           member.votingPublicKey,
         ).toString('hex'),
         message: 'Member created successfully',
+        mnemonic: mnemonic,
       },
     };
   }

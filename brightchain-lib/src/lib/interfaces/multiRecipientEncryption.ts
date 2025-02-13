@@ -1,6 +1,6 @@
 import { GuidV4 } from '../guid';
 
-export interface MultiRecipientEncryption {
+export interface IMultiRecipientEncryption {
   encryptedMessage: Buffer;
   recipientIds: GuidV4[];
   encryptedKeys: Buffer[];

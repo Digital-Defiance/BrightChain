@@ -3,9 +3,8 @@ import { join } from 'path';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { EncryptedConstituentBlockListBlock } from '../blocks/encryptedCbl';
 import { RawDataBlock } from '../blocks/rawData';
-import { BlockService } from '../blockService';
 import { CblBlockMetadata } from '../cblBlockMetadata';
-import { TUPLE_SIZE } from '../constants';
+import { TUPLE } from '../constants';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
@@ -17,7 +16,8 @@ import { GuidV4 } from '../guid';
 import { translateEnum } from '../i18n';
 import { ICBLIndexEntry } from '../interfaces/cblIndexEntry';
 import { ISimpleStoreAsync } from '../interfaces/simpleStoreAsync';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { BlockService } from '../services/blockService';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer, RawGuidBuffer } from '../types';
 import { DiskBlockAsyncStore } from './diskBlockAsyncStore';
 
@@ -38,14 +38,18 @@ export class CBLStore
   private readonly _indexPath: string;
   private readonly _blockStore: DiskBlockAsyncStore;
   private readonly _blockSize: BlockSize;
+  private readonly checksumService = ServiceProvider.getChecksumService();
 
-  constructor(storePath: string, blockSize: BlockSize) {
-    if (!storePath) {
+  constructor(config: { storePath: string; blockSize: BlockSize }) {
+    if (!config.storePath) {
       throw new StoreError(StoreErrorType.StorePathRequired);
     }
+    if (!config.blockSize) {
+      throw new StoreError(StoreErrorType.BlockSizeRequired);
+    }
 
-    this._blockSize = blockSize;
-    this._storePath = storePath;
+    this._blockSize = config.blockSize;
+    this._storePath = config.storePath;
     this._cblPath = join(
       this._storePath,
       translateEnum({
@@ -54,14 +58,18 @@ export class CBLStore
       }),
     );
     this._indexPath = join(
-      storePath,
-      translateEnum({ type: TranslatableEnumType.BlockSize, value: blockSize }),
+      config.storePath,
+      translateEnum({
+        type: TranslatableEnumType.BlockSize,
+        value: config.blockSize,
+      }),
       'index',
     );
-    this._blockStore = new DiskBlockAsyncStore(storePath, blockSize);
+    this._blockStore = new DiskBlockAsyncStore(config);
+    BlockService.initialize(this._blockStore);
 
     // Ensure store directories exist
-    if (!existsSync(storePath)) {
+    if (!existsSync(config.storePath)) {
       throw new StoreError(StoreErrorType.StorePathNotFound);
     }
 
@@ -94,10 +102,9 @@ export class CBLStore
     }
 
     // Generate whiteners for OFFS
-    const { whiteners } = await BlockService.generateWhiteners(
+    const whiteners = await BlockService.gatherWhiteners(
       value.blockSize,
-      TUPLE_SIZE - 1, // One less than tuple size since we have the main block
-      this._blockStore,
+      TUPLE.SIZE - 1, // One less than tuple size since we have the main block
     );
 
     const resultBuffer = BlockService.xorBlockWithWhiteners(
@@ -108,7 +115,7 @@ export class CBLStore
       value.blockSize,
       resultBuffer,
       now,
-      StaticHelpersChecksum.calculateChecksum(resultBuffer),
+      this.checksumService.calculateChecksum(resultBuffer),
       BlockType.RawData,
       BlockDataType.RawData,
       true, // canRead
@@ -122,20 +129,10 @@ export class CBLStore
     // Store whitener blocks and collect all addresses
     const blockAddresses: ChecksumBuffer[] = [resultBlock.idChecksum];
     for (const whitener of whiteners) {
-      const whitenerBlock = new RawDataBlock(
-        value.blockSize,
-        whitener,
-        now,
-        StaticHelpersChecksum.calculateChecksum(whitener),
-        BlockType.RawData,
-        BlockDataType.RawData,
-        true, // canRead
-        true, // canPersist
-      );
-      if (!(await this._blockStore.has(whitenerBlock.idChecksum))) {
-        await this._blockStore.setData(whitenerBlock);
+      if (!(await this._blockStore.has(whitener.idChecksum))) {
+        await this._blockStore.setData(whitener);
       }
-      blockAddresses.push(whitenerBlock.idChecksum);
+      blockAddresses.push(whitener.idChecksum);
     }
 
     // Store index entry
@@ -154,7 +151,7 @@ export class CBLStore
         value instanceof ConstituentBlockListBlock
           ? (value.metadata as CblBlockMetadata).fileDataLength.toString()
           : undefined,
-      blockDataLength: value.actualDataLength,
+      blockDataLength: value.lengthBeforeEncryption,
     };
 
     writeFileSync(indexPath, JSON.stringify(indexEntry, null, 2));
@@ -197,7 +194,7 @@ export class CBLStore
     if (!xorData) {
       throw new StoreError(StoreErrorType.KeyNotFound);
     }
-    const resultChecksum = StaticHelpersChecksum.calculateChecksum(xorData);
+    const resultChecksum = this.checksumService.calculateChecksum(xorData);
     if (!resultChecksum.equals(checksum)) {
       throw new StoreError(StoreErrorType.BlockIdMismatch);
     }
@@ -217,27 +214,14 @@ export class CBLStore
             ),
             new Date(indexEntry.dateCreated),
           ),
-          true,
+          ServiceProvider.getECIESService(),
           true,
         )
       : new ConstituentBlockListBlock(
+          xorData,
           new GuidV4(
             Buffer.from(indexEntry.creatorId, 'base64') as RawGuidBuffer,
           ),
-          new CblBlockMetadata(
-            this._blockSize,
-            indexEntry.blockType,
-            indexEntry.dataType,
-            indexEntry.blockDataLength,
-            BigInt(
-              indexEntry.fileDataLength
-                ? indexEntry.fileDataLength
-                : this._blockSize,
-            ),
-            new Date(indexEntry.dateCreated),
-          ),
-          xorData,
-          checksum,
         );
   }
 

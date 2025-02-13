@@ -1,5 +1,6 @@
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
+import { ECIES } from '../constants';
 import { EmailString } from '../emailString';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
@@ -8,12 +9,14 @@ import MemberType from '../enumerations/memberType';
 import { BlockValidationError } from '../errors/block';
 import { GuidV4 } from '../guid';
 import { IMemberWithMnemonic } from '../interfaces/memberWithMnemonic';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ChecksumService } from '../services/checksum.service';
+import { ECIESService } from '../services/ecies.service';
 import { EncryptedOwnedDataBlock } from './encryptedOwnedData';
 
 describe('EncryptedOwnedDataBlock', () => {
   let member: IMemberWithMnemonic;
+  const eciesService = new ECIESService();
+  const checksumService = new ChecksumService();
 
   beforeAll(() => {
     member = BrightChainMember.newMember(
@@ -27,12 +30,11 @@ describe('EncryptedOwnedDataBlock', () => {
     const blockSize = BlockSize.Small;
     // Calculate the maximum data size that can fit in the block after encryption
     // The encrypted data will include ECIES overhead, so we need to account for that
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
+    const maxDataSize = (blockSize as number) - ECIES.OVERHEAD_SIZE;
     const originalData = randomBytes(maxDataSize);
     // Encrypt the data and log details
-    // Use public key directly - StaticHelpersECIES will handle the prefix
-    const encryptedData = StaticHelpersECIES.encrypt(
+    // Use public key directly - ECIESService will handle the prefix
+    const encryptedData = eciesService.encrypt(
       member.member.publicKey,
       originalData,
     );
@@ -42,7 +44,7 @@ describe('EncryptedOwnedDataBlock', () => {
       BlockDataType.EncryptedData,
       blockSize,
       encryptedData,
-      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
+      checksumService.calculateChecksum(encryptedData),
       member.member,
       undefined,
       originalData.length,
@@ -58,11 +60,10 @@ describe('EncryptedOwnedDataBlock', () => {
 
   it('should construct correctly with custom block type', async () => {
     const blockSize = BlockSize.Small;
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
+    const maxDataSize = (blockSize as number) - ECIES.OVERHEAD_SIZE;
     const originalData = randomBytes(maxDataSize);
-    // Use public key directly - StaticHelpersECIES will handle the prefix
-    const encryptedData = StaticHelpersECIES.encrypt(
+    // Use public key directly - ECIESService will handle the prefix
+    const encryptedData = eciesService.encrypt(
       member.member.publicKey,
       originalData,
     );
@@ -73,7 +74,7 @@ describe('EncryptedOwnedDataBlock', () => {
       BlockDataType.EncryptedData,
       blockSize,
       encryptedData,
-      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
+      checksumService.calculateChecksum(encryptedData),
       member.member,
       undefined,
       originalData.length,
@@ -84,11 +85,10 @@ describe('EncryptedOwnedDataBlock', () => {
 
   it('should handle creator as GuidV4', async () => {
     const blockSize = BlockSize.Small;
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
+    const maxDataSize = (blockSize as number) - ECIES.OVERHEAD_SIZE;
     const originalData = randomBytes(maxDataSize);
-    // Use public key directly - StaticHelpersECIES will handle the prefix
-    const encryptedData = StaticHelpersECIES.encrypt(
+    // Use public key directly - ECIESService will handle the prefix
+    const encryptedData = eciesService.encrypt(
       member.member.publicKey,
       originalData,
     );
@@ -99,7 +99,7 @@ describe('EncryptedOwnedDataBlock', () => {
       BlockDataType.EncryptedData,
       blockSize,
       encryptedData,
-      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
+      checksumService.calculateChecksum(encryptedData),
       creatorId,
       undefined,
       originalData.length,
@@ -111,11 +111,10 @@ describe('EncryptedOwnedDataBlock', () => {
 
   it('should handle creator as BrightChainMember', async () => {
     const blockSize = BlockSize.Small;
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
+    const maxDataSize = (blockSize as number) - ECIES.OVERHEAD_SIZE;
     const originalData = randomBytes(maxDataSize);
-    // Use public key directly - StaticHelpersECIES will handle the prefix
-    const encryptedData = StaticHelpersECIES.encrypt(
+    // Use public key directly - ECIESService will handle the prefix
+    const encryptedData = eciesService.encrypt(
       member.member.publicKey,
       originalData,
     );
@@ -125,7 +124,7 @@ describe('EncryptedOwnedDataBlock', () => {
       BlockDataType.EncryptedData,
       blockSize,
       encryptedData,
-      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
+      checksumService.calculateChecksum(encryptedData),
       member.member,
       undefined,
       originalData.length,
@@ -137,16 +136,15 @@ describe('EncryptedOwnedDataBlock', () => {
 
   it('should validate checksum when provided', async () => {
     const blockSize = BlockSize.Small;
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
+    const maxDataSize = (blockSize as number) - ECIES.OVERHEAD_SIZE;
     const originalData = randomBytes(maxDataSize);
-    // Use public key directly - StaticHelpersECIES will handle the prefix
-    const encryptedData = StaticHelpersECIES.encrypt(
+    // Use public key directly - ECIESService will handle the prefix
+    const encryptedData = eciesService.encrypt(
       member.member.publicKey,
       originalData,
     );
 
-    const checksum = StaticHelpersChecksum.calculateChecksum(encryptedData);
+    const checksum = checksumService.calculateChecksum(encryptedData);
     const block = await EncryptedOwnedDataBlock.from(
       BlockType.EncryptedOwnedDataBlock,
       BlockDataType.EncryptedData,
@@ -164,11 +162,10 @@ describe('EncryptedOwnedDataBlock', () => {
 
   it('should handle read permissions correctly', async () => {
     const blockSize = BlockSize.Small;
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
+    const maxDataSize = (blockSize as number) - ECIES.OVERHEAD_SIZE;
     const originalData = randomBytes(maxDataSize);
-    // Use public key directly - StaticHelpersECIES will handle the prefix
-    const encryptedData = StaticHelpersECIES.encrypt(
+    // Use public key directly - ECIESService will handle the prefix
+    const encryptedData = eciesService.encrypt(
       member.member.publicKey,
       originalData,
     );
@@ -178,7 +175,7 @@ describe('EncryptedOwnedDataBlock', () => {
       BlockDataType.EncryptedData,
       blockSize,
       encryptedData,
-      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
+      checksumService.calculateChecksum(encryptedData),
       member.member,
       undefined,
       originalData.length,
@@ -193,11 +190,10 @@ describe('EncryptedOwnedDataBlock', () => {
 
   it('should handle date validation', async () => {
     const blockSize = BlockSize.Small;
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
+    const maxDataSize = (blockSize as number) - ECIES.OVERHEAD_SIZE;
     const originalData = randomBytes(maxDataSize);
-    // Use public key directly - StaticHelpersECIES will handle the prefix
-    const encryptedData = StaticHelpersECIES.encrypt(
+    // Use public key directly - ECIESService will handle the prefix
+    const encryptedData = eciesService.encrypt(
       member.member.publicKey,
       originalData,
     );
@@ -209,7 +205,7 @@ describe('EncryptedOwnedDataBlock', () => {
         BlockDataType.EncryptedData,
         blockSize,
         encryptedData,
-        await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
+        checksumService.calculateChecksum(encryptedData),
         member.member,
         futureDate,
         originalData.length,
@@ -219,11 +215,10 @@ describe('EncryptedOwnedDataBlock', () => {
 
   it('should handle encryption metadata correctly', async () => {
     const blockSize = BlockSize.Small;
-    const maxDataSize =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
+    const maxDataSize = (blockSize as number) - ECIES.OVERHEAD_SIZE;
     const originalData = randomBytes(maxDataSize);
-    // Use public key directly - StaticHelpersECIES will handle the prefix
-    const encryptedData = StaticHelpersECIES.encrypt(
+    // Use public key directly - ECIESService will handle the prefix
+    const encryptedData = eciesService.encrypt(
       member.member.publicKey,
       originalData,
     );
@@ -233,7 +228,7 @@ describe('EncryptedOwnedDataBlock', () => {
       BlockDataType.EncryptedData,
       blockSize,
       encryptedData,
-      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData),
+      checksumService.calculateChecksum(encryptedData),
       member.member,
       undefined,
       originalData.length,
@@ -245,13 +240,15 @@ describe('EncryptedOwnedDataBlock', () => {
     const authTag = block.authTag;
 
     // Verify components have correct lengths
-    expect(ephemeralPublicKey.length).toBe(StaticHelpersECIES.publicKeyLength);
-    expect(iv.length).toBe(StaticHelpersECIES.ivLength);
-    expect(authTag.length).toBe(StaticHelpersECIES.authTagLength);
+    expect(ephemeralPublicKey.length).toBe(ECIES.PUBLIC_KEY_LENGTH);
+    expect(iv.length).toBe(ECIES.IV_LENGTH);
+    expect(authTag.length).toBe(ECIES.AUTH_TAG_LENGTH);
+    expect(member.member.privateKey).not.toBeUndefined();
 
     // Verify we can decrypt the payload
-    const decryptedData = StaticHelpersECIES.decryptWithComponents(
-      member.member.privateKey,
+    const decryptedData = eciesService.decryptWithComponents(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      member.member.privateKey!,
       ephemeralPublicKey,
       iv,
       authTag,

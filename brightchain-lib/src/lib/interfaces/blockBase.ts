@@ -2,7 +2,6 @@ import { Readable } from 'stream';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
-import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumBuffer, ChecksumString } from '../types';
 
 /**

@@ -5,7 +5,7 @@ export interface IConstituentBlockListBlockHeader {
   creatorId: GuidV4;
   dateCreated: Date;
   cblAddressCount: number;
-  originalDataLength: bigint;
+  originalDataLength: number;
   tupleSize: number;
   creatorSignature: SignatureBuffer;
 }

@@ -3,7 +3,7 @@ import { InMemoryBlockTuple } from './blocks/memoryTuple';
 import { OwnedDataBlock } from './blocks/ownedData';
 import { RandomBlock } from './blocks/random';
 import { WhitenedBlock } from './blocks/whitened';
-import { RANDOM_BLOCKS_PER_TUPLE, TUPLE_SIZE } from './constants';
+import { TUPLE } from './constants';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
 import { BlockType } from './enumerations/blockType';
@@ -11,7 +11,7 @@ import { StreamErrorType } from './enumerations/streamErrorType';
 import { InvalidTupleCountError } from './errors/invalidTupleCount';
 import { StreamError } from './errors/streamError';
 import { GuidV4 } from './guid';
-import { StaticHelpersChecksum } from './staticHelpers.checksum';
+import { ServiceProvider } from './services/service.provider';
 
 /**
  * PrimeTupleGeneratorStream transforms input data into tuples of blocks.
@@ -34,6 +34,7 @@ export class PrimeTupleGeneratorStream extends Transform {
   private buffer: Buffer;
   private readonly randomBlockSource: () => RandomBlock;
   private readonly whitenedBlockSource: () => WhitenedBlock | undefined;
+  private readonly checksumService = ServiceProvider.getChecksumService();
 
   constructor(
     blockSize: BlockSize,
@@ -62,11 +63,11 @@ export class PrimeTupleGeneratorStream extends Transform {
     this.whitenedBlockSource = whitenedBlockSource;
   }
 
-  public override _transform(
+  public override async _transform(
     chunk: Buffer,
     encoding: BufferEncoding,
     callback: TransformCallback,
-  ): void {
+  ): Promise<void> {
     try {
       // Validate chunk
       if (!Buffer.isBuffer(chunk)) {
@@ -78,7 +79,7 @@ export class PrimeTupleGeneratorStream extends Transform {
 
       // Process complete blocks
       while (this.buffer.length >= this.blockSize) {
-        this.makeTuple();
+        await this.makeTuple();
       }
 
       callback();
@@ -106,7 +107,7 @@ export class PrimeTupleGeneratorStream extends Transform {
         BlockDataType.RawData,
         this.blockSize,
         blockData,
-        StaticHelpersChecksum.calculateChecksum(blockData),
+        this.checksumService.calculateChecksum(blockData),
         GuidV4.new(), // Anonymous creator
         new Date(),
         blockData.length,
@@ -114,7 +115,7 @@ export class PrimeTupleGeneratorStream extends Transform {
 
       // Get random blocks
       const randomBlocks: RandomBlock[] = [];
-      for (let i = 0; i < RANDOM_BLOCKS_PER_TUPLE; i++) {
+      for (let i = 0; i < TUPLE.RANDOM_BLOCKS_PER_TUPLE; i++) {
         const block = this.randomBlockSource();
         if (!block) {
           throw new StreamError(StreamErrorType.FailedToGetRandomBlock);
@@ -124,7 +125,7 @@ export class PrimeTupleGeneratorStream extends Transform {
 
       // Get whitening blocks (or random blocks if whitening not available)
       const whiteners: WhitenedBlock[] = [];
-      for (let i = RANDOM_BLOCKS_PER_TUPLE; i < TUPLE_SIZE - 1; i++) {
+      for (let i = TUPLE.RANDOM_BLOCKS_PER_TUPLE; i < TUPLE.SIZE - 1; i++) {
         const block = this.whitenedBlockSource() ?? this.randomBlockSource();
         if (!block) {
           throw new StreamError(StreamErrorType.FailedToGetWhiteningBlock);
@@ -134,7 +135,7 @@ export class PrimeTupleGeneratorStream extends Transform {
 
       // Create and validate tuple
       const blockCount = randomBlocks.length + whiteners.length + 1;
-      if (blockCount !== TUPLE_SIZE) {
+      if (blockCount !== TUPLE.SIZE) {
         throw new InvalidTupleCountError(blockCount);
       }
 
@@ -164,11 +165,11 @@ export class PrimeTupleGeneratorStream extends Transform {
     }
   }
 
-  public override _flush(callback: TransformCallback): void {
+  public override async _flush(callback: TransformCallback): Promise<void> {
     try {
       // Process any remaining complete blocks
       while (this.buffer.length >= this.blockSize) {
-        this.makeTuple();
+        await this.makeTuple();
       }
 
       // Handle any remaining data
@@ -177,7 +178,7 @@ export class PrimeTupleGeneratorStream extends Transform {
         const paddedData = Buffer.alloc(this.blockSize);
         this.buffer.copy(paddedData);
         this.buffer = paddedData;
-        this.makeTuple();
+        await this.makeTuple();
       }
 
       callback();

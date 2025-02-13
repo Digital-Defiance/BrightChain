@@ -1,10 +1,11 @@
-import { TUPLE_SIZE } from '../constants';
+import { TUPLE } from '../constants';
 import BlockDataType from '../enumerations/blockDataType';
 import BlockType from '../enumerations/blockType';
 import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
 import { HandleTupleError } from '../errors/handleTupleError';
 import { IBlockMetadata } from '../interfaces/blockMetadata';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ChecksumService } from '../services/checksum.service';
+import { ServiceProvider } from '../services/service.provider';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 import { ChecksumBuffer } from '../types';
 import { BlockHandle } from './handle';
@@ -15,10 +16,18 @@ import { RawDataBlock } from './rawData';
  * Used for whitening and reconstruction operations.
  */
 export class BlockHandleTuple {
+  private static checksumService: ChecksumService;
   private readonly _handles: BlockHandle[];
 
+  private static initialize() {
+    if (!BlockHandleTuple.checksumService) {
+      BlockHandleTuple.checksumService = ServiceProvider.getChecksumService();
+    }
+  }
+
   constructor(handles: BlockHandle[]) {
-    if (handles.length !== TUPLE_SIZE) {
+    BlockHandleTuple.initialize();
+    if (handles.length !== TUPLE.SIZE) {
       throw new HandleTupleError(HandleTupleErrorType.InvalidTupleSize);
     }
 
@@ -97,7 +106,7 @@ export class BlockHandleTuple {
     }
 
     // Calculate checksum for the result
-    const checksum = StaticHelpersChecksum.calculateChecksum(result);
+    const checksum = BlockHandleTuple.checksumService.calculateChecksum(result);
 
     // Create a RawDataBlock for the result with the provided metadata
     const block = new RawDataBlock(

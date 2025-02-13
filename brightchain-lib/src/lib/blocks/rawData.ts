@@ -4,7 +4,8 @@ import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { IDataBlock } from '../interfaces/dataBlock';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ChecksumService } from '../services/checksum.service';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
 
@@ -13,7 +14,15 @@ import { BaseBlock } from './base';
  * It provides basic data storage and validation capabilities.
  */
 export class RawDataBlock extends BaseBlock implements IDataBlock {
+  protected static override checksumService: ChecksumService;
   private readonly _data: Buffer;
+
+  protected static override initialize() {
+    super.initialize();
+    if (!RawDataBlock.checksumService) {
+      RawDataBlock.checksumService = ServiceProvider.getChecksumService();
+    }
+  }
 
   constructor(
     blockSize: BlockSize,
@@ -25,6 +34,9 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
     canRead = true,
     canPersist = true,
   ) {
+    if (!data) {
+      throw new Error('Data cannot be null or undefined');
+    }
     const now = new Date();
     if (data.length > blockSize) {
       throw new Error(
@@ -32,7 +44,9 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
       );
     }
 
-    const calculatedChecksum = StaticHelpersChecksum.calculateChecksum(data);
+    RawDataBlock.initialize();
+    const calculatedChecksum =
+      RawDataBlock.checksumService.calculateChecksum(data);
     const metadata = new BlockMetadata(
       blockSize,
       blockType,
@@ -77,7 +91,7 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
   /**
    * The actual length of the data
    */
-  public get actualDataLength(): number {
+  public get lengthBeforeEncryption(): number {
     return this._data.length;
   }
 
@@ -114,7 +128,7 @@ export class RawDataBlock extends BaseBlock implements IDataBlock {
    * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
    */
   protected validateInternal(): void {
-    const calculatedChecksum = StaticHelpersChecksum.calculateChecksum(
+    const calculatedChecksum = RawDataBlock.checksumService.calculateChecksum(
       this._data,
     );
     if (!calculatedChecksum.equals(this.idChecksum)) {

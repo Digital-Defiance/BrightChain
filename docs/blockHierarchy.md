@@ -169,7 +169,7 @@ classDiagram
         +dateCreated: Date
         +addressCount: number
         +signature: Buffer
-        +overhead: 102 bytes
+        +overhead: 98 bytes
     }
 
     class ExtendedCBL {
