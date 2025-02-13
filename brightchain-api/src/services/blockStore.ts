@@ -13,10 +13,10 @@ export class BlockStoreService extends BaseService implements IBlockStore {
 
   constructor(application: IApplication) {
     super(application);
-    this.store = new DiskBlockAsyncStore(
-      process.env.BLOCK_STORE_PATH || './blocks',
-      BlockSize.Medium,
-    );
+    this.store = new DiskBlockAsyncStore({
+      storePath: process.env.BLOCK_STORE_PATH || './blocks',
+      blockSize: BlockSize.Medium,
+    });
   }
 
   /**

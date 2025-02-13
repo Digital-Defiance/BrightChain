@@ -1,17 +1,48 @@
-import {
-  BlockServiceErrorType,
-  BlockServiceErrorTypes,
-} from '../enumerations/blockServiceErrorType';
+import { BlockServiceErrorType } from '../enumerations/blockServiceErrorType';
 import { StringLanguages } from '../enumerations/stringLanguages';
-import { translate } from '../i18n';
-import { HandleableError } from './handleable';
+import StringNames from '../enumerations/stringNames';
+import { TypedError } from './typedError';
 
-export class BlockServiceError extends HandleableError {
-  public readonly reason: BlockServiceErrorType;
+export class BlockServiceError extends TypedError<BlockServiceErrorType> {
+  public get reasonMap(): Record<BlockServiceErrorType, StringNames> {
+    return {
+      [BlockServiceErrorType.EmptyBlocksArray]:
+        StringNames.Error_BlockServiceErrorEmptyBlocksArray,
+      [BlockServiceErrorType.BlockSizeMismatch]:
+        StringNames.Error_BlockServiceErrorBlockSizeMismatch,
+      [BlockServiceErrorType.NoWhitenersProvided]:
+        StringNames.Error_BlockServiceErrorNoWhiteners,
+      [BlockServiceErrorType.AlreadyInitialized]:
+        StringNames.Error_BlockServiceErrorAlreadyInitialized,
+      [BlockServiceErrorType.Uninitialized]:
+        StringNames.Error_BlockServiceErrorUninitialized,
+      [BlockServiceErrorType.BlockAlreadyExists]:
+        StringNames.Error_BlockServiceErrorBlockAlreadyExistsTemplate,
+      [BlockServiceErrorType.RecipientRequiredForEncryption]:
+        StringNames.Error_BlockServiceErrorRecipientRequiredForEncryption,
+      [BlockServiceErrorType.CannotDetermineLength]:
+        StringNames.Error_BlockServiceErrorCannotDetermineFileLength,
+      [BlockServiceErrorType.CannotDetermineBlockSize]:
+        StringNames.Error_BlockServiceErrorUnableToDetermineBlockSize,
+      [BlockServiceErrorType.FilePathNotProvided]:
+        StringNames.Error_BlockServiceErrorFilePathNotProvided,
+      [BlockServiceErrorType.CannotDetermineFileName]:
+        StringNames.Error_BlockServiceErrorCannotDetermineFileName,
+      [BlockServiceErrorType.CannotDetermineMimeType]:
+        StringNames.Error_BlockServiceErrorCannotDetermineMimeType,
+      [BlockServiceErrorType.InvalidBlockData]:
+        StringNames.Error_BlockServiceErrorInvalidBlockData,
+      [BlockServiceErrorType.InvalidBlockType]:
+        StringNames.Error_BlockServiceErrorInvalidBlockType,
+    };
+  }
 
-  constructor(reason: BlockServiceErrorType, language?: StringLanguages) {
-    super(translate(BlockServiceErrorTypes[reason], language));
+  constructor(
+    type: BlockServiceErrorType,
+    language?: StringLanguages,
+    otherVars?: Record<string, string | number>,
+  ) {
+    super(type, language, otherVars);
     this.name = 'BlockServiceError';
-    this.reason = reason;
   }
 }

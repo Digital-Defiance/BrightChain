@@ -1,13 +1,15 @@
-import { TUPLE_SIZE } from '../constants';
+import { Readable } from 'stream';
+import { TUPLE } from '../constants';
 import BlockDataType from '../enumerations/blockDataType';
 import BlockType from '../enumerations/blockType';
 import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
 import { HandleTupleError } from '../errors/handleTupleError';
-import { IBlockMetadata } from '../interfaces/blockMetadata';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
+import { ChecksumService } from '../services/checksum.service';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 import { ChecksumBuffer } from '../types';
-import { BlockHandle } from './handle';
+import { BaseBlock } from './base';
+import { BlockHandleType } from './handle';
 import { RawDataBlock } from './rawData';
 
 /**
@@ -15,10 +17,10 @@ import { RawDataBlock } from './rawData';
  * Used for whitening and reconstruction operations.
  */
 export class BlockHandleTuple {
-  private readonly _handles: BlockHandle[];
+  private readonly _handles: BlockHandleType<BaseBlock>[];
 
-  constructor(handles: BlockHandle[]) {
-    if (handles.length !== TUPLE_SIZE) {
+  constructor(handles: BlockHandleType<BaseBlock>[]) {
+    if (handles.length !== TUPLE.SIZE) {
       throw new HandleTupleError(HandleTupleErrorType.InvalidTupleSize);
     }
 
@@ -34,7 +36,7 @@ export class BlockHandleTuple {
   /**
    * The handles in this tuple
    */
-  public get handles(): BlockHandle[] {
+  public get handles(): BlockHandleType<BaseBlock>[] {
     return this._handles;
   }
 
@@ -54,14 +56,16 @@ export class BlockHandleTuple {
 
   /**
    * XOR all blocks in the tuple and store the result
+   * @param checksumService - The checksum service to use
    * @param diskBlockStore - The store to write the result to
    * @param destBlockMetadata - Metadata for the resulting block
-   * @returns A handle to the resulting block
+   * @returns A RawDataBlock containing the XOR result
    */
   public async xor(
+    checksumService: ChecksumService,
     diskBlockStore: DiskBlockAsyncStore,
-    destBlockMetadata: IBlockMetadata,
-  ): Promise<BlockHandle> {
+    destBlockMetadata: IBaseBlockMetadata,
+  ): Promise<RawDataBlock> {
     if (!this.handles.length) {
       throw new HandleTupleError(HandleTupleErrorType.NoBlocksToXor);
     }
@@ -82,9 +86,22 @@ export class BlockHandleTuple {
     );
 
     // XOR all blocks together
-    let result = blockData[0];
+    // For Node.js streams
+    async function streamToBuffer(readable: Readable): Promise<Buffer> {
+      return new Promise<Buffer>((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        readable.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+        readable.on('end', () => resolve(Buffer.concat(chunks)));
+        readable.on('error', reject);
+      });
+    }
+    let result =
+      blockData[0] instanceof Readable
+        ? await streamToBuffer(blockData[0])
+        : blockData[0];
     for (let i = 1; i < blockData.length; i++) {
-      const current = blockData[i];
+      const bd = blockData[i];
+      const current = bd instanceof Readable ? await streamToBuffer(bd) : bd;
       if (current.length !== result.length) {
         throw new HandleTupleError(HandleTupleErrorType.BlockSizesMustMatch);
       }
@@ -96,8 +113,8 @@ export class BlockHandleTuple {
       result = xored;
     }
 
-    // Calculate checksum for the result
-    const checksum = StaticHelpersChecksum.calculateChecksum(result);
+    // Calculate checksum for the result using injected service
+    const checksum = checksumService.calculateChecksum(result);
 
     // Create a RawDataBlock for the result with the provided metadata
     const block = new RawDataBlock(
@@ -115,8 +132,8 @@ export class BlockHandleTuple {
 
     // Store the result
     try {
-      diskBlockStore.setData(block);
-      return diskBlockStore.get(checksum);
+      await diskBlockStore.setData(block);
+      return block;
     } catch (error) {
       throw new Error(
         `Failed to store XOR result: ${

@@ -1,6 +1,10 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
+test-outputs/
+test-output.*
+brightchain-lib/.cache/
 .env
+.qodo/
 
 # compiled output
 dist
@@ -42,3 +46,4 @@ Thumbs.db
 
 .nx/cache
 .nx/workspace-data
+.qodo

@@ -16,7 +16,7 @@ describe('EmailString', () => {
     expect(() => new EmailString('')).toThrowType(
       InvalidEmailError,
       (error: InvalidEmailError) => {
-        expect(error.reason).toBe(InvalidEmailErrorType.Missing);
+        expect(error.type).toBe(InvalidEmailErrorType.Missing);
       },
     );
   });
@@ -25,7 +25,7 @@ describe('EmailString', () => {
     expect(() => new EmailString(' test@example.com ')).toThrowType(
       InvalidEmailError,
       (error: InvalidEmailError) => {
-        expect(error.reason).toBe(InvalidEmailErrorType.Whitespace);
+        expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
       },
     );
   });
@@ -35,7 +35,7 @@ describe('EmailString', () => {
     expect(() => new EmailString('invalid')).toThrowType(
       InvalidEmailError,
       (error: InvalidEmailError) => {
-        expect(error.reason).toBe(InvalidEmailErrorType.Invalid);
+        expect(error.type).toBe(InvalidEmailErrorType.Invalid);
       },
     );
   });

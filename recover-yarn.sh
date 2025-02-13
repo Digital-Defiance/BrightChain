@@ -8,6 +8,8 @@ fi
 echo "Clearing .yarnrc, .yarnrc.yml, and .yarn"
 rm -rf .yarnrc .yarnrc.yml .yarn
 
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+
 echo "Enabling corepack"
 if [ $NEED_SUDO -eq 1 ]; then
   sudo npx corepack enable
