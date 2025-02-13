@@ -1,3 +1,6 @@
+import { BrightChainMember } from '../brightChainMember';
+import { GuidV4 } from '../guid';
+
 export interface ISimpleStoreAsync<K, V> {
   /**
    * Whether the store has the given key, without respect to its type
@@ -9,7 +12,10 @@ export interface ISimpleStoreAsync<K, V> {
    * Gets the value from the store the key is present or throws an error
    * @param key
    */
-  get(key: K): Promise<V>;
+  get(
+    key: K,
+    hydrateGuid: (guid: GuidV4) => Promise<BrightChainMember>,
+  ): Promise<V>;
   /**
    * Adds the key and value to the store
    * @param key

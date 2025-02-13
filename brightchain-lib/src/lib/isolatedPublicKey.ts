@@ -1,5 +1,6 @@
 import { createHash, createHmac, randomBytes } from 'crypto';
 import { PublicKey } from 'paillier-bigint';
+import { VOTING } from './constants';
 import { IsolatedKeyErrorType } from './enumerations/isolatedKeyErrorType';
 import { IsolatedKeyError } from './errors/isolatedKeyError';
 
@@ -27,11 +28,11 @@ export class IsolatedPublicKey extends PublicKey {
     n: bigint,
     uniqueInstanceSalt: Buffer,
   ): Buffer {
-    return createHash('sha256')
+    return createHash(VOTING.HASH_ALGORITHM)
       .update(
         Buffer.concat([
           keyId,
-          Buffer.from(n.toString(16), 'hex'),
+          Buffer.from(n.toString(VOTING.KEY_RADIX), VOTING.KEY_FORMAT),
           uniqueInstanceSalt,
         ]),
       )
@@ -62,13 +63,15 @@ export class IsolatedPublicKey extends PublicKey {
   private tagCiphertext(ciphertext: bigint): bigint {
     // Include instanceId in the HMAC calculation to ensure instance isolation
     const tag = createHmac(
-      'sha256',
+      VOTING.HASH_ALGORITHM,
       Buffer.concat([this.keyId, this._currentInstanceId]),
     )
-      .update(ciphertext.toString(16))
-      .digest('hex');
+      .update(ciphertext.toString(VOTING.KEY_RADIX))
+      .digest(VOTING.DIGEST_FORMAT);
     const hmacLength = 64;
-    const ciphertextHex = ciphertext.toString(16).padStart(hmacLength * 2, '0');
+    const ciphertextHex = ciphertext
+      .toString(VOTING.KEY_RADIX)
+      .padStart(hmacLength * 2, '0');
     const taggedCiphertextString = ciphertextHex + tag;
     return BigInt(`0x${taggedCiphertextString}`);
   }
@@ -84,11 +87,11 @@ export class IsolatedPublicKey extends PublicKey {
 
       // Calculate HMAC using the current instance ID
       const expectedHmac = createHmac(
-        'sha256',
+        VOTING.HASH_ALGORITHM,
         Buffer.concat([this.keyId, this._currentInstanceId]),
       )
-        .update(calculatedCiphertext.toString(16))
-        .digest('hex');
+        .update(calculatedCiphertext.toString(VOTING.KEY_RADIX))
+        .digest(VOTING.DIGEST_FORMAT);
 
       // If HMAC matches, this ciphertext was encrypted with our current instance ID
       return receivedHmac === expectedHmac
@@ -115,7 +118,7 @@ export class IsolatedPublicKey extends PublicKey {
     }
 
     const hmacLength = 64;
-    const ciphertextString = ciphertext.toString(16);
+    const ciphertextString = ciphertext.toString(VOTING.KEY_RADIX);
     const actualCiphertext = BigInt(
       `0x${ciphertextString.slice(0, -hmacLength)}`,
     );
@@ -137,8 +140,8 @@ export class IsolatedPublicKey extends PublicKey {
     }
 
     const hmacLength = 64;
-    const aCiphertextString = a.toString(16);
-    const bCiphertextString = b.toString(16);
+    const aCiphertextString = a.toString(VOTING.KEY_RADIX);
+    const bCiphertextString = b.toString(VOTING.KEY_RADIX);
 
     const aCiphertext = BigInt(`0x${aCiphertextString.slice(0, -hmacLength)}`);
     const bCiphertext = BigInt(`0x${bCiphertextString.slice(0, -hmacLength)}`);
@@ -148,9 +151,13 @@ export class IsolatedPublicKey extends PublicKey {
   }
 
   public verifyKeyId(): void {
-    const nHex = this.n.toString(16).padStart(768, '0');
-    const nBuffer = Buffer.from(nHex, 'hex');
-    const computedKeyId = createHash('sha256').update(nBuffer).digest();
+    const nHex = this.n
+      .toString(VOTING.KEY_RADIX)
+      .padStart(VOTING.PUB_KEY_OFFSET, '0');
+    const nBuffer = Buffer.from(nHex, VOTING.KEY_FORMAT);
+    const computedKeyId = createHash(VOTING.HASH_ALGORITHM)
+      .update(nBuffer)
+      .digest();
     if (!this.keyId.equals(computedKeyId)) {
       throw new IsolatedKeyError(IsolatedKeyErrorType.KeyIsolationViolation);
     }
