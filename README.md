@@ -14,7 +14,7 @@ NOTE: The brightchain-api portion of the repo is currently a mess and incomplete
 
 BrightChain integrates several groundbreaking technologies:
 
-- **Advanced Blockchain Architecture**: Built on Ethereum's foundation but engineered without proof-of-work constraints, offering improved efficiency and sustainability
+- **Advanced Blockchain Architecture**: Built on Ethereum's keyspace and foundation but engineered without proof-of-work constraints, offering improved efficiency and sustainability
 - **Decentralized Storage**: A peer-to-peer distributed file system enabling secure, resilient data storage across the network
 - **Identity Management**: A sophisticated decentralized identity provider ensuring user privacy and control
 - **Owner-Free File System**: Implementation of OFF System principles for secure resource sharing with legal compliance
