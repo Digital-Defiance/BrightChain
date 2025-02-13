@@ -1,5 +1,6 @@
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
+import { ECIES } from '../constants';
 import { EmailString } from '../emailString';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -13,8 +14,8 @@ import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
 import { IEncryptedBlock } from '../interfaces/encryptedBlock';
 import { IMemberWithMnemonic } from '../interfaces/memberWithMnemonic';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ECIESService } from '../services/ecies.service';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer } from '../types';
 import { EncryptedBlock } from './encrypted';
 
@@ -30,12 +31,14 @@ class TestEncryptedBlock extends EncryptedBlock implements IEncryptedBlock {
     checksum: ChecksumBuffer,
     creator?: BrightChainMember | GuidV4,
     dateCreated?: Date,
-    actualDataLength?: number,
+    lengthBeforeEncryption?: number,
     canRead = true,
     canPersist = true,
   ): Promise<TestEncryptedBlock> {
+    const eciesService = ServiceProvider.getECIESService();
+
     // Validate data length
-    if (data.length < StaticHelpersECIES.eciesOverheadLength) {
+    if (data.length < eciesService.eciesOverheadLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.DataLengthTooShort,
       );
@@ -51,10 +54,10 @@ class TestEncryptedBlock extends EncryptedBlock implements IEncryptedBlock {
     // For encrypted blocks with known actual data length:
     // 1. The actual data length must not exceed available capacity
     // 2. The total encrypted length must not exceed block size
-    if (actualDataLength !== undefined) {
+    if (lengthBeforeEncryption !== undefined) {
       const availableCapacity =
-        (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-      if (actualDataLength > availableCapacity) {
+        (blockSize as number) - eciesService.eciesOverheadLength;
+      if (lengthBeforeEncryption > availableCapacity) {
         throw new BlockValidationError(
           BlockValidationErrorType.DataLengthExceedsCapacity,
         );
@@ -68,7 +71,8 @@ class TestEncryptedBlock extends EncryptedBlock implements IEncryptedBlock {
     data.copy(finalData, 0, 0, Math.min(data.length, blockSize as number));
 
     // Calculate and validate checksum on the final data
-    const computedChecksum = StaticHelpersChecksum.calculateChecksum(finalData);
+    const computedChecksum =
+      ServiceProvider.getChecksumService().calculateChecksum(finalData);
     if (checksum && !computedChecksum.equals(checksum)) {
       throw new ChecksumMismatchError(computedChecksum, checksum);
     }
@@ -78,7 +82,7 @@ class TestEncryptedBlock extends EncryptedBlock implements IEncryptedBlock {
       blockSize,
       type,
       BlockDataType.EncryptedData,
-      actualDataLength ?? data.length - StaticHelpersECIES.eciesOverheadLength,
+      lengthBeforeEncryption ?? data.length - eciesService.eciesOverheadLength,
       true,
       creator,
       dateCreated ?? new Date(),
@@ -90,6 +94,7 @@ class TestEncryptedBlock extends EncryptedBlock implements IEncryptedBlock {
       finalData,
       finalChecksum,
       EncryptedBlockMetadata.fromEphemeralBlockMetadata(metadata),
+      eciesService,
       canRead,
       canPersist,
     );
@@ -102,6 +107,8 @@ describe('EncryptedBlock', () => {
 
   // Shared test data
   let creator: IMemberWithMnemonic;
+  let eciesService: ECIESService;
+  let checksumService = ServiceProvider.getChecksumService();
   const defaultBlockSize = BlockSize.Small;
   const testDate = new Date(Date.now() - 1000); // 1 second ago
 
@@ -112,7 +119,7 @@ describe('EncryptedBlock', () => {
     const finalData = randomBytes(size);
 
     // Set ECIES header components
-    finalData[0] = 0x04; // Set ECIES public key prefix
+    finalData[0] = ECIES.PUBLIC_KEY_MAGIC; // Set ECIES public key prefix
     // Rest of the buffer is already random data which serves as:
     // - Rest of public key (64 bytes after 0x04)
     // - IV (16 bytes)
@@ -129,14 +136,14 @@ describe('EncryptedBlock', () => {
       checksum: ChecksumBuffer;
       creator: BrightChainMember | GuidV4;
       dateCreated: Date;
-      actualDataLength: number;
+      lengthBeforeEncryption: number;
       canRead: boolean;
     }> = {},
   ) => {
     const blockSize = options.blockSize || defaultBlockSize;
     const data = options.data || createEncryptedData(blockSize as number);
     const checksum =
-      options.checksum ?? StaticHelpersChecksum.calculateChecksum(data);
+      options.checksum ?? checksumService.calculateChecksum(data);
 
     return TestEncryptedBlock.from(
       BlockType.EncryptedOwnedDataBlock,
@@ -146,7 +153,7 @@ describe('EncryptedBlock', () => {
       checksum,
       options.creator || creator.member,
       options.dateCreated || testDate,
-      options.actualDataLength,
+      options.lengthBeforeEncryption,
     );
   };
 
@@ -156,6 +163,8 @@ describe('EncryptedBlock', () => {
       'Test User',
       new EmailString('test@example.com'),
     );
+    eciesService = ServiceProvider.getECIESService();
+    checksumService = ServiceProvider.getChecksumService();
   });
 
   describe('basic functionality', () => {
@@ -168,9 +177,9 @@ describe('EncryptedBlock', () => {
       expect(block.blockDataType).toBe(BlockDataType.EncryptedData);
       // Don't compare data directly since it includes random padding
       expect(block.data.length).toBe(defaultBlockSize as number);
-      expect(
-        block.data.subarray(0, StaticHelpersECIES.eciesOverheadLength),
-      ).toEqual(data.subarray(0, StaticHelpersECIES.eciesOverheadLength));
+      expect(block.data.subarray(0, eciesService.eciesOverheadLength)).toEqual(
+        data.subarray(0, eciesService.eciesOverheadLength),
+      );
       expect(block.canRead).toBe(true);
       expect(block.encrypted).toBe(true);
     });
@@ -180,18 +189,16 @@ describe('EncryptedBlock', () => {
       const block = await createTestBlock({ data });
 
       // Check header components
-      expect(block.ephemeralPublicKey.length).toBe(
-        StaticHelpersECIES.publicKeyLength,
-      );
-      expect(block.iv.length).toBe(StaticHelpersECIES.ivLength);
-      expect(block.authTag.length).toBe(StaticHelpersECIES.authTagLength);
+      expect(block.ephemeralPublicKey.length).toBe(ECIES.PUBLIC_KEY_LENGTH);
+      expect(block.iv.length).toBe(ECIES.IV_LENGTH);
+      expect(block.authTag.length).toBe(ECIES.AUTH_TAG_LENGTH);
 
       // Check header layout
       expect(block.layerHeaderData.length).toBe(
-        StaticHelpersECIES.eciesOverheadLength,
+        eciesService.eciesOverheadLength,
       );
       expect(block.layerHeaderData).toEqual(
-        data.subarray(0, StaticHelpersECIES.eciesOverheadLength),
+        data.subarray(0, eciesService.eciesOverheadLength),
       );
     });
 
@@ -199,17 +206,17 @@ describe('EncryptedBlock', () => {
       const data = createEncryptedData(defaultBlockSize as number);
       const block = await createTestBlock({
         data,
-        actualDataLength:
-          (defaultBlockSize as number) - StaticHelpersECIES.eciesOverheadLength,
+        lengthBeforeEncryption:
+          (defaultBlockSize as number) - eciesService.eciesOverheadLength,
       });
 
       // Payload should be everything after the header up to block size
       expect(block.payload.length).toBe(
-        (defaultBlockSize as number) - StaticHelpersECIES.eciesOverheadLength,
+        (defaultBlockSize as number) - eciesService.eciesOverheadLength,
       );
       expect(block.payloadLength).toBe(defaultBlockSize as number);
       expect(block.metadata.lengthWithoutPadding).toBe(
-        (defaultBlockSize as number) - StaticHelpersECIES.eciesOverheadLength,
+        (defaultBlockSize as number) - eciesService.eciesOverheadLength,
       );
     });
   });
@@ -230,16 +237,14 @@ describe('EncryptedBlock', () => {
         const block = await createTestBlock({ blockSize: size, data });
         expect(block.data.length).toBe(size as number);
         expect(block.capacity).toBe(
-          (size as number) - StaticHelpersECIES.eciesOverheadLength,
+          (size as number) - eciesService.eciesOverheadLength,
         );
       }
     });
 
     it('should reject invalid sizes', async () => {
       // Test data too short for header
-      const tooShortData = randomBytes(
-        StaticHelpersECIES.eciesOverheadLength - 1,
-      );
+      const tooShortData = randomBytes(eciesService.eciesOverheadLength - 1);
       await expect(createTestBlock({ data: tooShortData })).rejects.toThrow(
         BlockValidationError,
       );
@@ -266,15 +271,13 @@ describe('EncryptedBlock', () => {
     it('should validate actual data length', async () => {
       const data = createEncryptedData(defaultBlockSize as number);
       const tooLargeActualLength =
-        (defaultBlockSize as number) -
-        StaticHelpersECIES.eciesOverheadLength +
-        1;
+        (defaultBlockSize as number) - eciesService.eciesOverheadLength + 1;
 
       await expect(
-        createTestBlock({ data, actualDataLength: tooLargeActualLength }),
+        createTestBlock({ data, lengthBeforeEncryption: tooLargeActualLength }),
       ).rejects.toThrow(BlockValidationError);
       await expect(
-        createTestBlock({ data, actualDataLength: tooLargeActualLength }),
+        createTestBlock({ data, lengthBeforeEncryption: tooLargeActualLength }),
       ).rejects.toMatchObject({
         reason: BlockValidationErrorType.DataLengthExceedsCapacity,
       });
@@ -285,7 +288,7 @@ describe('EncryptedBlock', () => {
     it('should detect data corruption', async () => {
       // Create original data and get its checksum
       const data = createEncryptedData(defaultBlockSize as number);
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = checksumService.calculateChecksum(data);
 
       // Create corrupted data by modifying the original
       const corruptedData = Buffer.from(data);
@@ -293,7 +296,7 @@ describe('EncryptedBlock', () => {
 
       // Calculate corrupted checksum before the test
       const corruptedChecksum =
-        StaticHelpersChecksum.calculateChecksum(corruptedData);
+        checksumService.calculateChecksum(corruptedData);
 
       // Verify block creation fails with corrupted data and check error details
       const error = await createTestBlock({
@@ -327,28 +330,27 @@ describe('EncryptedBlock', () => {
   describe('encryption handling', () => {
     it('should handle encrypted data correctly', async () => {
       const originalData = randomBytes(
-        getEffectiveSize(defaultBlockSize) -
-          StaticHelpersECIES.eciesOverheadLength,
+        getEffectiveSize(defaultBlockSize) - eciesService.eciesOverheadLength,
       );
       const encryptedData = createEncryptedData(defaultBlockSize as number);
       const block = await createTestBlock({
         data: encryptedData,
-        actualDataLength: originalData.length,
+        lengthBeforeEncryption: originalData.length,
       });
 
       expect(block.encrypted).toBe(true);
       expect(block.data.length).toBe(defaultBlockSize as number);
       expect(block.payload.length).toBe(
-        (defaultBlockSize as number) - StaticHelpersECIES.eciesOverheadLength,
+        (defaultBlockSize as number) - eciesService.eciesOverheadLength,
       );
       expect(block.metadata.lengthWithoutPadding).toBe(originalData.length);
     });
 
     it('should calculate overhead correctly', async () => {
       const block = await createTestBlock();
-      expect(block.totalOverhead).toBe(StaticHelpersECIES.eciesOverheadLength);
+      expect(block.totalOverhead).toBe(eciesService.eciesOverheadLength);
       expect(block.capacity).toBe(
-        (defaultBlockSize as number) - StaticHelpersECIES.eciesOverheadLength,
+        (defaultBlockSize as number) - eciesService.eciesOverheadLength,
       );
     });
   });

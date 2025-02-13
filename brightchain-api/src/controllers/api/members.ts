@@ -17,6 +17,7 @@ import {
   translate,
 } from '@BrightChain/brightchain-lib';
 import { CblBlockMetadata } from 'brightchain-lib/src/lib/cblBlockMetadata';
+import { SerializableBuffer } from 'brightchain-lib/src/lib/serializableBuffer';
 import { IApplication } from '../../interfaces/application';
 import { MembersResponse } from '../../interfaces/membersResponse';
 import { BaseController } from '../base';
@@ -161,7 +162,10 @@ export class MembersController extends BaseController<
     }
 
     // Get member data from block store
-    const checksumBuffer = Buffer.from(blockId, 'hex') as ChecksumBuffer;
+    const checksumBuffer = SerializableBuffer.from(
+      blockId,
+      'hex',
+    ) as ChecksumBuffer;
     const block = this.blockStore.getData(checksumBuffer);
 
     // Parse member data
@@ -219,7 +223,10 @@ export class MembersController extends BaseController<
     }
 
     // Get member from block store
-    const checksumBuffer = Buffer.from(blockId, 'hex') as ChecksumBuffer;
+    const checksumBuffer = SerializableBuffer.from(
+      blockId,
+      'hex',
+    ) as ChecksumBuffer;
     const block = this.blockStore.getData(checksumBuffer);
     const memberData = block.data.toString();
     const memberJson = JSON.parse(memberData);

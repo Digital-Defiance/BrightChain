@@ -1,5 +1,8 @@
 import { randomBytes } from 'crypto';
+import { BlockChecksum } from '../access/checksum';
+import { BlockECIES } from '../access/ecies';
 import { BrightChainMember } from '../brightChainMember';
+import { ECIES } from '../constants';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
@@ -8,10 +11,11 @@ import { BlockValidationErrorType } from '../enumerations/blockValidationErrorTy
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ECIESService } from '../services/ecies.service';
 import { ChecksumBuffer } from '../types';
+import { BlockCreator } from './blockCreator';
 import { EncryptedBlock } from './encrypted';
+import { BlockServices } from './services';
 
 /**
  * EncryptedOwnedDataBlock represents an encrypted block owned by a specific member.
@@ -35,7 +39,7 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
     checksum: ChecksumBuffer,
     creator?: BrightChainMember | GuidV4,
     dateCreated?: Date,
-    actualDataLength?: number,
+    lengthBeforeEncryption?: number,
     canRead = true,
     canPersist = true,
   ): Promise<EncryptedOwnedDataBlock> {
@@ -55,7 +59,7 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
 
     // Calculate available capacity
     const availableCapacity =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
+      (blockSize as number) - BlockECIES.eciesOverheadLength;
 
     // Validate data length
     if (data.length < 1) {
@@ -65,7 +69,7 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
     }
 
     // For already encrypted data (starts with 0x04), validate total size
-    if (data[0] === 0x04) {
+    if (data[0] === ECIES.PUBLIC_KEY_MAGIC) {
       if (data.length !== (blockSize as number)) {
         throw new BlockValidationError(
           BlockValidationErrorType.DataBufferIsTruncated,
@@ -83,8 +87,8 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
     // For encrypted blocks with known actual data length:
     // 1. The actual data length must not exceed available capacity
     // 2. The total encrypted length must not exceed block size
-    if (actualDataLength !== undefined) {
-      if (actualDataLength > availableCapacity) {
+    if (lengthBeforeEncryption !== undefined) {
+      if (lengthBeforeEncryption > availableCapacity) {
         throw new BlockValidationError(
           BlockValidationErrorType.DataLengthExceedsCapacity,
         );
@@ -99,66 +103,64 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
       blockSize,
       type,
       dataType,
-      actualDataLength ?? data.length,
+      lengthBeforeEncryption ?? data.length,
       creator,
       finalDate,
     );
 
     // If data is already encrypted (starts with 0x04), use it directly
-    if (data[0] === 0x04) {
+    if (data[0] === ECIES.PUBLIC_KEY_MAGIC) {
       // Copy data into the final buffer, preserving the full block size
       data.copy(finalData, 0, 0, Math.min(data.length, blockSize as number));
 
       // Validate encryption header components
-      const ephemeralKey = finalData.subarray(
-        0,
-        StaticHelpersECIES.publicKeyLength,
-      );
+      const ephemeralKey = finalData.subarray(0, BlockECIES.publicKeyLength);
       const iv = finalData.subarray(
-        StaticHelpersECIES.publicKeyLength,
-        StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
+        BlockECIES.publicKeyLength,
+        BlockECIES.publicKeyLength + BlockECIES.ivLength,
       );
       const authTag = finalData.subarray(
-        StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
-        StaticHelpersECIES.publicKeyLength +
-          StaticHelpersECIES.ivLength +
-          StaticHelpersECIES.authTagLength,
+        BlockECIES.publicKeyLength + BlockECIES.ivLength,
+        BlockECIES.publicKeyLength +
+          BlockECIES.ivLength +
+          BlockECIES.authTagLength,
       );
 
       // Verify all components have correct lengths and format
       if (
-        ephemeralKey[0] !== 0x04 ||
-        ephemeralKey.length !== StaticHelpersECIES.publicKeyLength
+        ephemeralKey[0] !== ECIES.PUBLIC_KEY_MAGIC ||
+        ephemeralKey.length !== BlockECIES.publicKeyLength
       ) {
         throw new BlockValidationError(
           BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
         );
       }
-      if (iv.length !== StaticHelpersECIES.ivLength) {
+      if (iv.length !== BlockECIES.ivLength) {
         throw new BlockValidationError(
           BlockValidationErrorType.InvalidIVLength,
         );
       }
-      if (authTag.length !== StaticHelpersECIES.authTagLength) {
+      if (authTag.length !== BlockECIES.authTagLength) {
         throw new BlockValidationError(
           BlockValidationErrorType.InvalidAuthTagLength,
         );
       }
 
       // Calculate checksum on the final data
-      const computedChecksum =
-        StaticHelpersChecksum.calculateChecksum(finalData);
+      const computedChecksum = BlockChecksum.calculateChecksum(finalData);
       if (checksum && !computedChecksum.equals(checksum)) {
         throw new ChecksumMismatchError(checksum, computedChecksum);
       }
       const finalChecksum = checksum ?? computedChecksum;
 
+      const eciesService = BlockServices.getECIESService();
       return new EncryptedOwnedDataBlock(
         type,
         BlockDataType.EncryptedData,
         finalData,
         finalChecksum,
         metadata,
+        eciesService,
         canRead,
         canPersist,
       );
@@ -166,12 +168,12 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
 
     // For unencrypted data:
     // Set ECIES header components
-    finalData[0] = 0x04; // Set ECIES public key prefix
+    finalData[0] = ECIES.PUBLIC_KEY_MAGIC; // Set ECIES public key prefix
     // Rest of the public key is already random from randomBytes
-    let offset = StaticHelpersECIES.publicKeyLength;
+    let offset = BlockECIES.publicKeyLength;
     // IV and authTag are already random from randomBytes
-    offset += StaticHelpersECIES.ivLength;
-    offset += StaticHelpersECIES.authTagLength;
+    offset += BlockECIES.ivLength;
+    offset += BlockECIES.authTagLength;
     // Copy actual data to payload area, preserving the full block size
     data.copy(
       finalData,
@@ -188,52 +190,51 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
     }
 
     // Validate encryption header components
-    const ephemeralKey = finalData.subarray(
-      0,
-      StaticHelpersECIES.publicKeyLength,
-    );
+    const ephemeralKey = finalData.subarray(0, BlockECIES.publicKeyLength);
     const iv = finalData.subarray(
-      StaticHelpersECIES.publicKeyLength,
-      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
+      BlockECIES.publicKeyLength,
+      BlockECIES.publicKeyLength + BlockECIES.ivLength,
     );
     const authTag = finalData.subarray(
-      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
-      StaticHelpersECIES.publicKeyLength +
-        StaticHelpersECIES.ivLength +
-        StaticHelpersECIES.authTagLength,
+      BlockECIES.publicKeyLength + BlockECIES.ivLength,
+      BlockECIES.publicKeyLength +
+        BlockECIES.ivLength +
+        BlockECIES.authTagLength,
     );
 
     // Verify all components have correct lengths and format
     if (
-      ephemeralKey[0] !== 0x04 ||
-      ephemeralKey.length !== StaticHelpersECIES.publicKeyLength
+      ephemeralKey[0] !== ECIES.PUBLIC_KEY_MAGIC ||
+      ephemeralKey.length !== BlockECIES.publicKeyLength
     ) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
       );
     }
-    if (iv.length !== StaticHelpersECIES.ivLength) {
+    if (iv.length !== BlockECIES.ivLength) {
       throw new BlockValidationError(BlockValidationErrorType.InvalidIVLength);
     }
-    if (authTag.length !== StaticHelpersECIES.authTagLength) {
+    if (authTag.length !== BlockECIES.authTagLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidAuthTagLength,
       );
     }
 
     // Calculate checksum on the final data
-    const computedChecksum = StaticHelpersChecksum.calculateChecksum(finalData);
+    const computedChecksum = BlockChecksum.calculateChecksum(finalData);
     if (checksum && !computedChecksum.equals(checksum)) {
       throw new ChecksumMismatchError(checksum, computedChecksum);
     }
     const finalChecksum = checksum ?? computedChecksum;
 
+    const eciesService = BlockServices.getECIESService();
     return new EncryptedOwnedDataBlock(
       type,
       BlockDataType.EncryptedData,
       finalData,
       finalChecksum,
       metadata,
+      eciesService,
       canRead,
       canPersist,
     );
@@ -248,6 +249,7 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
    * @param checksum - The checksum of the data
    * @param dateCreated - The date the block was created
    * @param metadata - The block metadata
+   * @param eciesService - The ECIES service to use for encryption/decryption
    * @param canRead - Whether the block can be read
    * @param canPersist - Whether the block can be persisted
    */
@@ -257,10 +259,20 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
     data: Buffer,
     checksum: ChecksumBuffer,
     metadata: EncryptedBlockMetadata,
+    eciesService: ECIESService,
     canRead = true,
     canPersist = true,
   ) {
-    super(type, dataType, data, checksum, metadata, canRead, canPersist);
+    super(
+      type,
+      dataType,
+      data,
+      checksum,
+      metadata,
+      eciesService,
+      canRead,
+      canPersist,
+    );
   }
 
   /**
@@ -289,3 +301,9 @@ export class EncryptedOwnedDataBlock extends EncryptedBlock {
     return this.creator !== undefined;
   }
 }
+
+// Register block creator
+BlockCreator.register(
+  BlockType.EncryptedOwnedDataBlock,
+  EncryptedOwnedDataBlock.from,
+);

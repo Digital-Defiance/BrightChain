@@ -2,7 +2,7 @@ import { randomBytes } from 'crypto';
 import { BlockSize } from '../enumerations/blockSizes';
 import { EciesErrorType } from '../enumerations/eciesErrorType';
 import { EciesError } from '../errors/eciesError';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ECIESService } from '../services/ecies.service';
 import { EciesEncryptTransform } from './eciesEncryptTransform';
 
 describe('EciesEncryptTransform Unit Tests', () => {
@@ -14,11 +14,15 @@ describe('EciesEncryptTransform Unit Tests', () => {
   } as unknown as Console;
 
   const blockSize = BlockSize.Small;
-  const mnemonic = StaticHelpersECIES.generateNewMnemonic();
-  const keypair = StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer(mnemonic);
+  let eciesService: ECIESService;
+  let mnemonic: string;
+  let keypair: { privateKey: Buffer; publicKey: Buffer };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    eciesService = new ECIESService();
+    mnemonic = eciesService.generateNewMnemonic();
+    keypair = eciesService.mnemonicToSimpleKeyPairBuffer(mnemonic);
   });
 
   it('should be instantiated with correct parameters', () => {
@@ -68,7 +72,7 @@ describe('EciesEncryptTransform Unit Tests', () => {
       const encryptedData = Buffer.concat(chunks);
 
       // Verify the encrypted data can be decrypted
-      const decryptedData = StaticHelpersECIES.decrypt(
+      const decryptedData = eciesService.decrypt(
         keypair.privateKey,
         encryptedData,
       );
@@ -104,7 +108,7 @@ describe('EciesEncryptTransform Unit Tests', () => {
       const encryptedData = Buffer.concat(chunks);
 
       // Verify the encrypted data can be decrypted
-      const decryptedData = StaticHelpersECIES.decrypt(
+      const decryptedData = eciesService.decrypt(
         keypair.privateKey,
         encryptedData,
       );

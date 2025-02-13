@@ -3,8 +3,10 @@ import { BaseBlock } from './blocks/base';
 import { ConstituentBlockListBlock } from './blocks/cbl';
 import { EncryptedConstituentBlockListBlock } from './blocks/encryptedCbl';
 import { EncryptedOwnedDataBlock } from './blocks/encryptedOwnedData';
+import { BlockEncryption } from './blocks/encryption';
 import { OwnedDataBlock } from './blocks/ownedData';
 import { RawDataBlock } from './blocks/rawData';
+import { BlockServices } from './blocks/services';
 import { BrightChainMember } from './brightChainMember';
 import { CblBlockMetadata } from './cblBlockMetadata';
 import { OFFS_CACHE_PERCENTAGE } from './constants';
@@ -21,8 +23,6 @@ import {
 import { BlockServiceError } from './errors/blockServiceError';
 import { GuidV4 } from './guid';
 import { IBlock } from './interfaces/blockBase';
-import { StaticHelpersChecksum } from './staticHelpers.checksum';
-import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import { DiskBlockAsyncStore } from './stores/diskBlockAsyncStore';
 import { ChecksumBuffer } from './types';
 
@@ -73,85 +73,35 @@ export class BlockService {
     if (!block.canEncrypt) {
       throw new CannotEncryptBlockError();
     }
-
-    // Encrypt the data - StaticHelpersECIES.encrypt already includes ephemeral public key, iv, and authTag
-    const encryptedBuffer = StaticHelpersECIES.encrypt(
-      creator.publicKey,
-      block.data,
-    );
-
-    // Create padded buffer filled with random data for the payload area only
-    const payloadBuffer = randomBytes(
-      block.blockSize - StaticHelpersECIES.eciesOverheadLength,
-    );
-    // Create final buffer
-    const finalBuffer = Buffer.alloc(block.blockSize);
-    // Copy ECIES header (ephemeral public key, IV, auth tag)
-    encryptedBuffer.copy(
-      finalBuffer,
-      0,
-      0,
-      StaticHelpersECIES.eciesOverheadLength,
-    );
-    // Copy encrypted data into payload area
-    encryptedBuffer.copy(
-      finalBuffer,
-      StaticHelpersECIES.eciesOverheadLength,
-      StaticHelpersECIES.eciesOverheadLength,
-      Math.min(encryptedBuffer.length, block.blockSize),
-    );
-    // Fill remaining space with random data
-    payloadBuffer.copy(
-      finalBuffer,
-      StaticHelpersECIES.eciesOverheadLength +
-        encryptedBuffer.length -
-        StaticHelpersECIES.eciesOverheadLength,
-    );
-
-    // Create encrypted block based on input block type
-    if (block.blockType === BlockType.ConstituentBlockList) {
-      return await EncryptedConstituentBlockListBlock.from(
-        BlockType.ConstituentBlockList,
-        BlockDataType.EncryptedData,
-        block.blockSize,
-        finalBuffer,
-        StaticHelpersChecksum.calculateChecksum(finalBuffer),
-        creator,
-        block.dateCreated,
-        block.data.length,
-      );
-    }
-
-    return await EncryptedOwnedDataBlock.from(
-      BlockType.EncryptedOwnedDataBlock,
-      BlockDataType.EncryptedData,
-      block.blockSize,
-      finalBuffer,
-      StaticHelpersChecksum.calculateChecksum(finalBuffer),
-      creator,
-      block.dateCreated,
-      block.data.length,
-    );
+    return BlockEncryption.encrypt(creator, block);
   }
 
   /**
    * Decrypt a block using ECIES
    */
+  private static getServices() {
+    return {
+      eciesService: BlockServices.getECIESService(),
+      checksumService: BlockServices.getChecksumService(),
+    };
+  }
+
   public static async decrypt(
     creator: BrightChainMember,
     block: EncryptedOwnedDataBlock | EncryptedConstituentBlockListBlock,
   ): Promise<OwnedDataBlock> {
+    const { eciesService, checksumService } = this.getServices();
     if (!block.canDecrypt) {
       throw new CannotDecryptBlockError();
     }
 
     // Get the encrypted payload (excluding random padding)
     const encryptedPayload = block.data.subarray(
-      StaticHelpersECIES.eciesOverheadLength,
-      StaticHelpersECIES.eciesOverheadLength + block.actualDataLength,
+      eciesService.eciesOverheadLength,
+      eciesService.eciesOverheadLength + block.lengthBeforeEncryption,
     );
 
-    const decryptedData = StaticHelpersECIES.decryptWithComponents(
+    const decryptedData = eciesService.decryptWithComponents(
       creator.privateKey,
       block.ephemeralPublicKey,
       block.iv,
@@ -160,14 +110,17 @@ export class BlockService {
     );
 
     // Create unpadded data buffer
-    const unpaddedData = decryptedData.subarray(0, block.actualDataLength);
+    const unpaddedData = decryptedData.subarray(
+      0,
+      block.lengthBeforeEncryption,
+    );
 
     return await OwnedDataBlock.from(
       BlockType.OwnedDataBlock,
       BlockDataType.RawData,
       block.blockSize,
       unpaddedData,
-      StaticHelpersChecksum.calculateChecksum(unpaddedData),
+      checksumService.calculateChecksum(unpaddedData),
       creator,
       block.dateCreated,
       unpaddedData.length,
@@ -202,13 +155,15 @@ export class BlockService {
       blockDataType === BlockDataType.EncryptedData &&
       creator instanceof BrightChainMember
     ) {
+      // Get services
+      const { checksumService } = this.getServices();
       // Create a temporary OwnedDataBlock to encrypt
       const tempBlock = await OwnedDataBlock.from(
         BlockType.OwnedDataBlock,
         BlockDataType.RawData,
         blockSize,
         data,
-        checksum ?? StaticHelpersChecksum.calculateChecksum(data),
+        checksum ?? checksumService.calculateChecksum(data),
         creator,
         undefined,
         data.length,
@@ -222,8 +177,8 @@ export class BlockService {
       blockDataType === BlockDataType.EphemeralStructuredData &&
       creator instanceof BrightChainMember
     ) {
-      const finalChecksum =
-        checksum ?? StaticHelpersChecksum.calculateChecksum(data);
+      const { checksumService } = this.getServices();
+      const finalChecksum = checksum ?? checksumService.calculateChecksum(data);
       return await EncryptedConstituentBlockListBlock.from(
         blockType,
         blockDataType,
@@ -237,8 +192,8 @@ export class BlockService {
     }
 
     // Handle owned data - create anonymous creator if none provided
-    const finalChecksum =
-      checksum ?? StaticHelpersChecksum.calculateChecksum(data);
+    const { checksumService } = this.getServices();
+    const finalChecksum = checksum ?? checksumService.calculateChecksum(data);
     if (
       blockDataType === BlockDataType.EncryptedData &&
       creator instanceof BrightChainMember
@@ -333,7 +288,8 @@ export class BlockService {
     const remainingCount = count - whiteners.length;
     for (let i = 0; i < remainingCount; i++) {
       const whitener = randomBytes(blockSize as number);
-      const checksum = StaticHelpersChecksum.calculateChecksum(whitener);
+      const { checksumService } = this.getServices();
+      const checksum = checksumService.calculateChecksum(whitener);
       whiteners.push(whitener);
       checksums.push(checksum);
     }
@@ -407,11 +363,12 @@ export class BlockService {
     if (!blocks.every((block) => block.blockSize === blocks[0].blockSize)) {
       throw new BlockServiceError(BlockServiceErrorType.BlockSizeMismatch);
     }
+    const { checksumService } = this.getServices();
     const metadata: CblBlockMetadata = new CblBlockMetadata(
       BlockSize.Huge,
       BlockType.ConstituentBlockList,
       BlockDataType.EphemeralStructuredData,
-      StaticHelpersChecksum.Sha3ChecksumBufferLength * blocks.length,
+      checksumService.checksumBufferLength * blocks.length,
       fileDataLength,
       blocks[0].dateCreated,
       creator,
@@ -426,7 +383,7 @@ export class BlockService {
       metadata.size,
     );
     const data = Buffer.concat([header.headerData, blockIdsBuffer]);
-    const checksum = StaticHelpersChecksum.calculateChecksum(data);
+    const checksum = checksumService.calculateChecksum(data);
     const cbl = new ConstituentBlockListBlock(
       creator,
       metadata,

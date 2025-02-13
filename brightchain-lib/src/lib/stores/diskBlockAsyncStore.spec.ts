@@ -1,23 +1,28 @@
 import { mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { RawDataBlock } from '../blocks/rawData';
+import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { StoreErrorType } from '../enumerations/storeErrorType';
+import { BlockAccessError } from '../errors/block';
 import { StoreError } from '../errors/storeError';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ChecksumService } from '../services/checksum.service';
+import { ServiceProvider } from '../services/service.provider';
 import { DiskBlockAsyncStore } from './diskBlockAsyncStore';
 
 describe('DiskBlockAsyncStore', () => {
   let store: DiskBlockAsyncStore;
-  const testDir = join(__dirname, 'test-store');
+  let checksumService: ChecksumService;
+  const testDir = join('/tmp', 'brightchain');
   const blockSize = BlockSize.Message;
 
   beforeEach(() => {
     // Create test directory
     mkdirSync(testDir, { recursive: true });
     store = new DiskBlockAsyncStore(testDir, blockSize);
+    checksumService = ServiceProvider.getChecksumService();
   });
 
   afterEach(() => {
@@ -26,9 +31,21 @@ describe('DiskBlockAsyncStore', () => {
   });
 
   describe('Basic Operations', () => {
+    it('should throw when getting non-existent block handle', () => {
+      const data = Buffer.alloc(blockSize, 'x');
+      const checksum = checksumService.calculateChecksum(data);
+
+      expect(() => store.get(checksum)).toThrowType(
+        BlockAccessError,
+        (error: BlockAccessError) => {
+          expect(error.reason).toBe(BlockAccessErrorType.BlockFileNotFound);
+        },
+      );
+    });
+
     it('should store and retrieve block data', async () => {
       const data = Buffer.alloc(blockSize, 'x');
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = checksumService.calculateChecksum(data);
       const block = new RawDataBlock(
         blockSize,
         data,
@@ -57,7 +74,20 @@ describe('DiskBlockAsyncStore', () => {
 
     it('should get block handle', () => {
       const data = Buffer.alloc(blockSize, 'x');
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = checksumService.calculateChecksum(data);
+      const block = new RawDataBlock(
+        blockSize,
+        data,
+        new Date(),
+        checksum,
+        BlockType.RawData,
+        BlockDataType.RawData,
+        true,
+        true,
+      );
+
+      // Store block
+      store.setData(block);
 
       const handle = store.get(checksum);
       expect(handle.blockType).toBe(BlockType.Handle);
@@ -69,7 +99,7 @@ describe('DiskBlockAsyncStore', () => {
 
   describe('Error Cases', () => {
     it('should throw error when getting non-existent block', () => {
-      const nonExistentChecksum = StaticHelpersChecksum.calculateChecksum(
+      const nonExistentChecksum = checksumService.calculateChecksum(
         Buffer.from('nonexistent'),
       );
 
@@ -80,7 +110,7 @@ describe('DiskBlockAsyncStore', () => {
 
     it('should throw error when storing block with wrong size', () => {
       const wrongSizeData = Buffer.alloc(blockSize, 'x');
-      const checksum = StaticHelpersChecksum.calculateChecksum(wrongSizeData);
+      const checksum = checksumService.calculateChecksum(wrongSizeData);
       const block = new RawDataBlock(
         BlockSize.Tiny, // Different size than store's blockSize
         wrongSizeData,
@@ -99,7 +129,7 @@ describe('DiskBlockAsyncStore', () => {
 
     it('should throw error when storing block that already exists', () => {
       const data = Buffer.alloc(blockSize, 'x');
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = checksumService.calculateChecksum(data);
       const block = new RawDataBlock(
         blockSize,
         data,
@@ -125,7 +155,7 @@ describe('DiskBlockAsyncStore', () => {
         blockSize,
         Buffer.alloc(blockSize, 0x01),
         new Date(),
-        StaticHelpersChecksum.calculateChecksum(Buffer.alloc(blockSize, 0x01)),
+        checksumService.calculateChecksum(Buffer.alloc(blockSize, 0x01)),
         BlockType.RawData,
         BlockDataType.RawData,
         true,
@@ -136,7 +166,7 @@ describe('DiskBlockAsyncStore', () => {
         blockSize,
         Buffer.alloc(blockSize, 0x02),
         new Date(),
-        StaticHelpersChecksum.calculateChecksum(Buffer.alloc(blockSize, 0x02)),
+        checksumService.calculateChecksum(Buffer.alloc(blockSize, 0x02)),
         BlockType.RawData,
         BlockDataType.RawData,
         true,

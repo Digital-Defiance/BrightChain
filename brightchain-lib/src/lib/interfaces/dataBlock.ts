@@ -33,7 +33,7 @@ export interface IDataBlock extends IBlock {
    * 2. Overhead calculation
    * 3. Efficiency analysis
    */
-  get actualDataLength(): number;
+  get lengthBeforeEncryption(): number;
 
   /**
    * Whether the block's data is encrypted.

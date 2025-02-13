@@ -1,18 +1,22 @@
 import { createHash, randomBytes } from 'crypto';
 import { KeyPair as PaillierKeyPair } from 'paillier-bigint';
+import { BlockServices } from '../blocks/services';
 import { BrightChainMember } from '../brightChainMember';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
-import { StaticHelpersVoting } from '../staticHelpers.voting';
+import { ServiceProvider } from '../services/service.provider';
 import {
   SimpleKeyPairBuffer as ECKeyPairBuffer,
   SignatureBuffer,
 } from '../types';
+
 export class VotingPoll {
+  private static readonly eciesService = ServiceProvider.getECIESService();
+
   public readonly choices: string[];
   public readonly votes: bigint[];
   private readonly paillierKeyPair: PaillierKeyPair;
   private readonly ecKeyPair: ECKeyPairBuffer;
   public readonly receipts: Map<Buffer, Buffer> = new Map<Buffer, Buffer>();
+
   constructor(
     choices: string[],
     paillierKeyPair: PaillierKeyPair,
@@ -24,6 +28,7 @@ export class VotingPoll {
     this.ecKeyPair = ecKeyPair;
     this.votes = votes;
   }
+
   public generateEncryptedReceipt(member: BrightChainMember): Buffer {
     const randomNonce = randomBytes(16).toString('hex');
     const hash = Buffer.from(
@@ -32,21 +37,23 @@ export class VotingPoll {
         .digest('hex'),
       'hex',
     );
-    const signature = StaticHelpersECIES.signMessage(
+    const signature = VotingPoll.eciesService.signMessage(
       this.ecKeyPair.privateKey,
       hash,
     );
     const receipt = Buffer.concat([hash, signature]);
-    const encryptedReceipt = StaticHelpersECIES.encrypt(
+    const encryptedReceipt = VotingPoll.eciesService.encrypt(
       member.publicKey,
       receipt,
     );
     this.receipts.set(member.id.asRawGuidBuffer, encryptedReceipt);
     return encryptedReceipt;
   }
+
   public memberVoted(member: BrightChainMember): boolean {
     return this.receipts.has(member.id.asRawGuidBuffer);
   }
+
   public verifyReceipt(
     member: BrightChainMember,
     encryptedReceipt: Buffer,
@@ -59,18 +66,19 @@ export class VotingPoll {
     if (Buffer.compare(foundReceipt, encryptedReceipt) !== 0) {
       return false;
     }
-    const decryptedReceipt = StaticHelpersECIES.decryptWithHeader(
+    const decryptedReceipt = VotingPoll.eciesService.decryptWithHeader(
       this.ecKeyPair.privateKey,
       encryptedReceipt,
     );
     const hash = decryptedReceipt.subarray(0, 32);
     const signature = decryptedReceipt.subarray(32) as SignatureBuffer;
-    return StaticHelpersECIES.verifyMessage(
+    return VotingPoll.eciesService.verifyMessage(
       this.ecKeyPair.publicKey,
       hash,
       signature,
     );
   }
+
   public vote(choiceIndex: number, member: BrightChainMember): Buffer {
     if (choiceIndex < 0 || choiceIndex >= this.choices.length) {
       throw new Error(`Invalid option index ${choiceIndex}`);
@@ -91,14 +99,17 @@ export class VotingPoll {
     }
     return this.generateEncryptedReceipt(member);
   }
+
   public get tallies(): bigint[] {
     return this.votes.map((encryptedVote) =>
       this.paillierKeyPair.privateKey.decrypt(encryptedVote),
     );
   }
+
   public getTally(choiceIndex: number): bigint {
     return this.paillierKeyPair.privateKey.decrypt(this.votes[choiceIndex]);
   }
+
   public get leadingChoice(): string {
     const tallies = this.tallies;
     let leadingOptionIndex = 0;
@@ -109,6 +120,7 @@ export class VotingPoll {
     }
     return this.choices[leadingOptionIndex];
   }
+
   public static newPoll(
     choices: string[],
     paillierKeyPair: PaillierKeyPair,
@@ -121,14 +133,16 @@ export class VotingPoll {
 
     return new VotingPoll(choices, paillierKeyPair, ecKeyPair, votes);
   }
+
   public static newPollWithKeys(choices: string[]): {
     poll: VotingPoll;
     paillierKeyPair: PaillierKeyPair;
     ecKeyPair: ECKeyPairBuffer;
   } {
-    const paillierKeyPair = StaticHelpersVoting.generateVotingKeyPair();
-    const mnemonic = StaticHelpersECIES.generateNewMnemonic();
-    const ecKeyPair = StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer(
+    const paillierKeyPair =
+      BlockServices.getVotingService().generateVotingKeyPair();
+    const mnemonic = VotingPoll.eciesService.generateNewMnemonic();
+    const ecKeyPair = VotingPoll.eciesService.mnemonicToSimpleKeyPairBuffer(
       mnemonic,
     ) as ECKeyPairBuffer;
     const poll = VotingPoll.newPoll(choices, paillierKeyPair, ecKeyPair);

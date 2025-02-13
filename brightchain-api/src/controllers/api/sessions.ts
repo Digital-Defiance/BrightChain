@@ -14,6 +14,7 @@ import {
   TypedHandlers,
   UserNotFoundError,
 } from '@BrightChain/brightchain-lib';
+import { SerializableBuffer } from 'brightchain-lib/src/lib/serializableBuffer';
 import { randomBytes } from 'crypto';
 import { Request } from 'express';
 import { IApplication } from '../../interfaces/application';
@@ -108,7 +109,7 @@ export class SessionsController extends BaseController<
     }
 
     // Get member data from block store
-    const checksumBuffer = Buffer.from(
+    const checksumBuffer = SerializableBuffer.from(
       response.blockId || '',
       'hex',
     ) as ChecksumBuffer;

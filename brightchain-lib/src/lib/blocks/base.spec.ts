@@ -7,10 +7,12 @@ import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ChecksumService } from '../services/checksum.service';
+import { ECIESService } from '../services/ecies.service';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
+import { BlockServices } from './services';
 
 // Test class that properly implements abstract methods
 class TestBaseBlock extends BaseBlock {
@@ -44,7 +46,8 @@ class TestBaseBlock extends BaseBlock {
       );
     }
 
-    const expectedChecksum = StaticHelpersChecksum.calculateChecksum(data);
+    const expectedChecksum =
+      BlockServices.getChecksumService().calculateChecksum(data);
     if (checksum) {
       if (!checksum.equals(expectedChecksum)) {
         throw new ChecksumMismatchError(checksum, expectedChecksum);
@@ -76,9 +79,8 @@ class TestBaseBlock extends BaseBlock {
    * @returns true
    */
   public validateSync(): void {
-    const expectedChecksum = StaticHelpersChecksum.calculateChecksum(
-      this.internalData,
-    );
+    const expectedChecksum =
+      BlockServices.getChecksumService().calculateChecksum(this.internalData);
     const result = this.idChecksum.equals(expectedChecksum);
     if (!result) {
       throw new ChecksumMismatchError(this.idChecksum, expectedChecksum);
@@ -91,9 +93,8 @@ class TestBaseBlock extends BaseBlock {
    * @returns true
    */
   public async validateAsync(): Promise<void> {
-    const expectedChecksum = await StaticHelpersChecksum.calculateChecksumAsync(
-      this.internalData,
-    );
+    const expectedChecksum =
+      BlockServices.getChecksumService().calculateChecksum(this.internalData);
     if (!this.idChecksum.equals(expectedChecksum)) {
       throw new ChecksumMismatchError(this.idChecksum, expectedChecksum);
     }
@@ -125,10 +126,22 @@ describe('BaseBlock', () => {
   // Increase timeout for all tests
   jest.setTimeout(15000);
 
+  let checksumService: ChecksumService;
+
+  beforeEach(() => {
+    checksumService = ServiceProvider.getChecksumService();
+    BlockServices.setChecksumService(checksumService);
+  });
+
+  afterEach(() => {
+    BlockServices.setChecksumService(undefined);
+  });
+
   // Shared test data
   const defaultBlockSize = BlockSize.Small;
+  const eciesService = new ECIESService();
   const getEffectiveSize = (size: BlockSize, encrypted = false) =>
-    (size as number) - (encrypted ? StaticHelpersECIES.eciesOverheadLength : 0);
+    (size as number) - (encrypted ? eciesService.eciesOverheadLength : 0);
 
   const createTestBlock = (
     options: Partial<{
@@ -159,7 +172,7 @@ describe('BaseBlock', () => {
   describe('basic functionality', () => {
     it('should construct and validate correctly', () => {
       const data = randomBytes(defaultBlockSize as number);
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = checksumService.calculateChecksum(data);
       const block = createTestBlock({ data, checksum });
 
       expect(block.blockSize).toBe(defaultBlockSize);
@@ -234,14 +247,14 @@ describe('BaseBlock', () => {
     it('should detect data corruption', async () => {
       // First create a valid block
       const data = randomBytes(defaultBlockSize as number);
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = checksumService.calculateChecksum(data);
       const block = createTestBlock({ data, checksum });
 
       // Then corrupt the internal data after creation
       block.corruptData(0, (block.data[0] + 1) % 256); // Increment the first byte
 
       // Calculate what the new checksum should be after corruption
-      const newChecksum = StaticHelpersChecksum.calculateChecksum(block.data);
+      const newChecksum = checksumService.calculateChecksum(block.data);
 
       try {
         await block.validateAsync();

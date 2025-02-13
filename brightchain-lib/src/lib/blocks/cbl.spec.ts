@@ -2,7 +2,7 @@ import { createECDH, randomBytes } from 'crypto';
 import { Readable } from 'stream';
 import { BrightChainMember } from '../brightChainMember';
 import { CblBlockMetadata } from '../cblBlockMetadata';
-import { TUPLE_SIZE } from '../constants';
+import { CHECKSUM, ECIES, TUPLE } from '../constants';
 import { EmailString } from '../emailString';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -12,12 +12,22 @@ import { BlockValidationErrorType } from '../enumerations/blockValidationErrorTy
 import MemberType from '../enumerations/memberType';
 import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { GuidV4 } from '../guid';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
-import { StaticHelpersVotingDerivation } from '../staticHelpers.voting.derivation';
+import { ChecksumService } from '../services/checksum.service';
+import { ECIESService } from '../services/ecies.service';
+import { ServiceProvider } from '../services/service.provider';
+import { VotingService } from '../services/voting.service';
 import { ChecksumBuffer, SignatureBuffer } from '../types';
 import { ConstituentBlockListBlock } from './cbl';
 import { BlockHandle } from './handle';
+import { BlockServices } from './services';
+
+// Helper to ensure tuple size is valid
+const ensureTupleSize = (count: number): number => {
+  if (count < TUPLE.MIN_SIZE || count > TUPLE.MAX_SIZE) {
+    throw new BlockValidationError(BlockValidationErrorType.InvalidTupleSize);
+  }
+  return count;
+};
 
 // Test class that properly implements abstract methods
 class TestCblBlock extends ConstituentBlockListBlock {
@@ -32,7 +42,7 @@ class TestCblBlock extends ConstituentBlockListBlock {
     dateCreated = dateCreated ?? new Date();
 
     // Validate tuple size before creating block
-    if (dataAddresses.length % TUPLE_SIZE !== 0) {
+    if (dataAddresses.length % TUPLE.SIZE !== 0) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidCBLAddressCount,
       );
@@ -40,14 +50,17 @@ class TestCblBlock extends ConstituentBlockListBlock {
 
     // Create copies of the address buffers to prevent sharing references
     const addressCopies = dataAddresses.map((addr, index) => {
-      if (addr.length !== StaticHelpersChecksum.Sha3ChecksumBufferLength) {
+      if (
+        addr.length !== BlockServices.getChecksumService().checksumBufferLength
+      ) {
         throw new BlockValidationError(
           BlockValidationErrorType.InvalidAddressLength,
           undefined,
           {
             index,
             length: addr.length,
-            expectedLength: StaticHelpersChecksum.Sha3ChecksumBufferLength,
+            expectedLength:
+              BlockServices.getChecksumService().checksumBufferLength,
           },
         );
       }
@@ -83,7 +96,7 @@ class TestCblBlock extends ConstituentBlockListBlock {
     originalDataLengthBuffer.writeBigInt64BE(fileDataLength);
 
     const tupleSizeBuffer = Buffer.alloc(1);
-    tupleSizeBuffer.writeUInt8(TUPLE_SIZE);
+    tupleSizeBuffer.writeUInt8(TUPLE.SIZE);
 
     // Create header without signature
     const creatorId =
@@ -113,9 +126,9 @@ class TestCblBlock extends ConstituentBlockListBlock {
           blockSizeBuffer,
         ]);
         const signatureChecksum =
-          StaticHelpersChecksum.calculateChecksum(toSign);
+          BlockServices.getChecksumService().calculateChecksum(toSign);
         const privateKeyBuffer = Buffer.from(creator.privateKey);
-        finalSignature = StaticHelpersECIES.signMessage(
+        finalSignature = TestCblBlock.eciesService.signMessage(
           privateKeyBuffer,
           signatureChecksum,
         );
@@ -129,9 +142,10 @@ class TestCblBlock extends ConstituentBlockListBlock {
         addressBuffer,
         blockSizeBuffer,
       ]);
-      const verifyChecksum = StaticHelpersChecksum.calculateChecksum(toVerify);
+      const verifyChecksum =
+        BlockServices.getChecksumService().calculateChecksum(toVerify);
       if (
-        !StaticHelpersECIES.verifyMessage(
+        !TestCblBlock.eciesService.verifyMessage(
           creator.publicKey,
           verifyChecksum,
           finalSignature,
@@ -144,7 +158,7 @@ class TestCblBlock extends ConstituentBlockListBlock {
     } else {
       finalSignature = signature
         ? (Buffer.from(signature) as SignatureBuffer)
-        : (Buffer.alloc(StaticHelpersECIES.signatureLength) as SignatureBuffer);
+        : (Buffer.alloc(ECIES.SIGNATURE_LENGTH) as SignatureBuffer);
     }
 
     // Create metadata with full block size
@@ -183,7 +197,8 @@ class TestCblBlock extends ConstituentBlockListBlock {
     }
 
     // Calculate checksum on the complete data including padding
-    const blockChecksum = StaticHelpersChecksum.calculateChecksum(data);
+    const blockChecksum =
+      BlockServices.getChecksumService().calculateChecksum(data);
 
     // Call parent constructor with complete data
     super(creator, metadata, data, blockChecksum, finalSignature);
@@ -224,20 +239,22 @@ describe('ConstituentBlockListBlock', () => {
   let dataAddresses: Array<ChecksumBuffer>;
   const defaultBlockSize = BlockSize.Small; // 4KB block size
   const defaultDataLength = BigInt(1024);
+  const eciesService = new ECIESService();
+  let checksumService: ChecksumService;
 
   // Helper functions
   const createTestAddresses = (
-    count = TUPLE_SIZE,
+    count: number = ensureTupleSize(TUPLE.SIZE),
     startIndex = 0,
   ): Array<ChecksumBuffer> => {
     const addresses = Array(count)
       .fill(null)
       .map((_, index) => {
-        const data = Buffer.alloc(32);
+        const data = Buffer.alloc(CHECKSUM.SHA3_BUFFER_LENGTH);
         data.writeUInt32BE(startIndex + index, 0);
         // Add some random data to ensure uniqueness
         data.writeUInt32BE(Math.floor(Math.random() * 0xffffffff), 4);
-        return StaticHelpersChecksum.calculateChecksum(data) as ChecksumBuffer;
+        return checksumService.calculateChecksum(data) as ChecksumBuffer;
       });
 
     // Verify all addresses are unique
@@ -285,24 +302,20 @@ describe('ConstituentBlockListBlock', () => {
   };
 
   beforeAll(() => {
-    const mnemonic = StaticHelpersECIES.generateNewMnemonic();
-    const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
+    const mnemonic = eciesService.generateNewMnemonic();
+    const { wallet } = eciesService.walletAndSeedFromMnemonic(mnemonic);
     const privateKey = wallet.getPrivateKey();
     const publicKey = Buffer.concat([
-      Buffer.from([0x04]),
+      Buffer.from([ECIES.PUBLIC_KEY_MAGIC]),
       wallet.getPublicKey(),
     ]);
 
     // Create ECDH instance for key derivation
-    const ecdh = createECDH(StaticHelpersECIES.curveName);
+    const ecdh = createECDH(ECIES.CURVE_NAME);
     ecdh.setPrivateKey(privateKey);
 
     // Derive voting keys
-    const votingKeypair =
-      StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
-        privateKey,
-        publicKey,
-      );
+    const votingKeypair = VotingService.generateVotingKeyPair();
 
     creator = new BrightChainMember(
       MemberType.User,
@@ -316,7 +329,13 @@ describe('ConstituentBlockListBlock', () => {
   });
 
   beforeEach(() => {
-    dataAddresses = createTestAddresses(TUPLE_SIZE);
+    checksumService = ServiceProvider.getChecksumService();
+    BlockServices.setChecksumService(checksumService);
+    dataAddresses = createTestAddresses(ensureTupleSize(TUPLE.SIZE));
+  });
+
+  afterEach(() => {
+    BlockServices.setChecksumService(undefined);
   });
 
   describe('basic functionality', () => {
@@ -352,7 +371,10 @@ describe('ConstituentBlockListBlock', () => {
       expect(isValid).toBe(true);
 
       // Create a block with different addresses to verify unique signatures
-      const differentAddresses = createTestAddresses(TUPLE_SIZE, 1000); // Start at a different index
+      const differentAddresses = createTestAddresses(
+        ensureTupleSize(TUPLE.SIZE),
+        1000,
+      ); // Start at a different index
       const differentBlock = createTestBlock({
         addresses: differentAddresses,
       });
@@ -401,7 +423,9 @@ describe('ConstituentBlockListBlock', () => {
     });
 
     it('should validate tuple size', () => {
-      const invalidAddresses = createTestAddresses(TUPLE_SIZE + 1);
+      const invalidAddresses = createTestAddresses(
+        ensureTupleSize(TUPLE.SIZE + 1),
+      );
       expect(() =>
         createTestBlock({ addresses: invalidAddresses }),
       ).toThrowType(BlockValidationError, (error: BlockValidationError) => {
@@ -413,11 +437,14 @@ describe('ConstituentBlockListBlock', () => {
     });
 
     it('should validate address capacity', () => {
+      // Calculate a number of addresses that exceeds capacity but stays within tuple size limits
       const maxAddresses =
         ConstituentBlockListBlock.CalculateCBLAddressCapacity(defaultBlockSize);
-      const tooManyAddresses = createTestAddresses(
-        (maxAddresses + TUPLE_SIZE) * TUPLE_SIZE,
-      );
+      const tupleSize = TUPLE.SIZE;
+      // Create just enough addresses to exceed capacity while being a multiple of tupleSize
+      const addressCount =
+        Math.ceil((maxAddresses + 1) / tupleSize) * tupleSize;
+      const tooManyAddresses = createTestAddresses(addressCount);
 
       expect(() =>
         createTestBlock({ addresses: tooManyAddresses }),
@@ -445,26 +472,38 @@ describe('ConstituentBlockListBlock', () => {
       const originalCreateFromPath = BlockHandle.createFromPath;
       BlockHandle.createFromPath = jest
         .fn()
-        .mockImplementation(async (path, metadata, id) =>
-          Promise.resolve(
-            new BlockHandle(
-              BlockType.Handle,
-              BlockDataType.RawData,
-              id,
-              metadata,
-              true,
-              true,
-            ),
-          ),
-        );
+        .mockImplementation(async (path, blockSize, id) => {
+          // Create a mock handle that doesn't rely on file system
+          const mockHandle = {
+            path,
+            blockSize,
+            id,
+            canRead: true,
+            canPersist: true,
+            data: Buffer.alloc(blockSize),
+            metadata: {
+              blockSize,
+              blockType: BlockType.Handle,
+              blockDataType: BlockDataType.RawData,
+              lengthWithoutPadding: blockSize,
+              dateCreated: new Date(),
+            },
+            equals: (other: { id: ChecksumBuffer }) => id.equals(other.id),
+            toString: () => path,
+          };
+
+          // Cast to BlockHandle since we've implemented all required properties
+          const handle = mockHandle as unknown as BlockHandle;
+          return handle;
+        });
 
       try {
         const block = createTestBlock();
         const tuples = await block.getHandleTuples((id) => id.toString('hex'));
 
-        expect(tuples.length).toBe(dataAddresses.length / TUPLE_SIZE);
+        expect(tuples.length).toBe(dataAddresses.length / TUPLE.SIZE);
         tuples.forEach((tuple) => {
-          expect(tuple.handles.length).toBe(TUPLE_SIZE);
+          expect(tuple.handles.length).toBe(TUPLE.SIZE);
           tuple.handles.forEach((handle) => {
             expect(handle.blockSize).toBe(defaultBlockSize);
           });
@@ -484,7 +523,7 @@ describe('ConstituentBlockListBlock', () => {
       expect(header.creatorId.equals(creator.id)).toBe(true);
       expect(header.cblAddressCount).toBe(dataAddresses.length);
       expect(header.originalDataLength).toBe(defaultDataLength);
-      expect(header.tupleSize).toBe(TUPLE_SIZE);
+      expect(header.tupleSize).toBe(TUPLE.SIZE);
       expect(header.creatorSignature).toEqual(block.creatorSignature);
       expect(mockConsoleError).not.toHaveBeenCalled();
     });

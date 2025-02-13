@@ -1,3 +1,5 @@
+import { SerializableBuffer } from '../serializableBuffer';
+
 export interface ISimplePublicKeyOnlyBuffer {
-  publicKey: Buffer;
+  publicKey: SerializableBuffer;
 }

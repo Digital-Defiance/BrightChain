@@ -7,7 +7,6 @@ import {
 } from 'fs';
 import { join } from 'path';
 import { Readable, Transform } from 'stream';
-import { BlockMetadata } from '../blockMetadata';
 import { BlockHandle } from '../blocks/handle';
 import { RawDataBlock } from '../blocks/rawData';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -44,21 +43,14 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
    * Get a handle to a block
    */
   public get(key: ChecksumBuffer): BlockHandle {
-    const handle = new BlockHandle(
-      BlockType.Handle,
-      BlockDataType.RawData,
+    const blockPath = this.blockPath(key);
+    return new BlockHandle(
+      blockPath,
+      this._blockSize,
       key,
-      new BlockMetadata(
-        this._blockSize,
-        BlockType.RawData,
-        BlockDataType.RawData,
-        this._blockSize,
-      ),
       true, // canRead
       true, // canPersist
     );
-    handle.setPath(this.blockPath(key));
-    return handle;
   }
 
   /**

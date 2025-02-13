@@ -1,8 +1,7 @@
 import { Readable } from 'stream';
-import { BlockMetadata } from '../blockMetadata';
 import { BrightChainMember } from '../brightChainMember';
 import { CblBlockMetadata } from '../cblBlockMetadata';
-import { MAX_TUPLE_SIZE, MIN_TUPLE_SIZE, TUPLE_SIZE } from '../constants';
+import { CHECKSUM, TUPLE } from '../constants';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize, lengthToBlockSize } from '../enumerations/blockSizes';
@@ -13,13 +12,11 @@ import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { GuidV4 } from '../guid';
 import { IConstituentBlockListBlock } from '../interfaces/cbl';
 import { IConstituentBlockListBlockHeader } from '../interfaces/cblHeader';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
 import { ChecksumBuffer, RawGuidBuffer, SignatureBuffer } from '../types';
 import { BaseBlock } from './base';
-import { EphemeralBlock } from './ephemeral';
 import { BlockHandle } from './handle';
 import { BlockHandleTuple } from './handleTuple';
+import { OwnedDataBlock } from './ownedData';
 
 /**
  * Constituent Block List
@@ -34,7 +31,7 @@ import { BlockHandleTuple } from './handleTuple';
  * and the address data that follows, ensuring integrity of the entire structure.
  */
 export class ConstituentBlockListBlock
-  extends EphemeralBlock
+  extends OwnedDataBlock
   implements IConstituentBlockListBlock
 {
   /**
@@ -59,12 +56,21 @@ export class ConstituentBlockListBlock
   /**
    * Header sizes
    */
-  public static readonly SignatureSize = StaticHelpersECIES.signatureLength;
-  public static readonly CblHeaderSizeWithoutSignature =
-    ConstituentBlockListBlock.HeaderOffsets.CreatorSignature;
-  public static readonly CblHeaderSize =
-    ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
-    ConstituentBlockListBlock.SignatureSize;
+  private static getSignatureSize() {
+    ConstituentBlockListBlock.initialize();
+    return ConstituentBlockListBlock.eciesService.signatureLength;
+  }
+
+  public static get CblHeaderSizeWithoutSignature(): number {
+    return ConstituentBlockListBlock.HeaderOffsets.CreatorSignature;
+  }
+
+  public static get CblHeaderSize(): number {
+    return (
+      ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
+      ConstituentBlockListBlock.getSignatureSize()
+    );
+  }
 
   /**
    * Calculate the capacity of a CBL block for addresses, with or without encryption overhead.
@@ -78,16 +84,16 @@ export class ConstituentBlockListBlock
     const blockRawCapacity = blockSize as number;
     const headerSize = ConstituentBlockListBlock.CblHeaderSize;
     const encryptionOverhead = allowEncryption
-      ? StaticHelpersECIES.eciesOverheadLength
+      ? ConstituentBlockListBlock.eciesService.eciesOverheadLength
       : 0;
     const availableSpace = blockRawCapacity - headerSize - encryptionOverhead;
 
     // Calculate how many addresses can fit
-    const addressSize = StaticHelpersChecksum.Sha3ChecksumBufferLength;
+    const addressSize = CHECKSUM.SHA3_BUFFER_LENGTH;
     const addressCapacity = Math.floor(availableSpace / addressSize);
 
     // Ensure capacity is a multiple of tuple size
-    return Math.floor(addressCapacity / TUPLE_SIZE) * TUPLE_SIZE;
+    return Math.floor(addressCapacity / TUPLE.SIZE) * TUPLE.SIZE;
   }
 
   /**
@@ -103,7 +109,7 @@ export class ConstituentBlockListBlock
     addressList: Buffer,
     blockSize: BlockSize,
     signature?: SignatureBuffer,
-    tupleSize = TUPLE_SIZE,
+    tupleSize = TUPLE.SIZE,
   ): { headerData: Buffer; signature: SignatureBuffer } {
     const dateCreatedBuffer = Buffer.alloc(8);
     dateCreatedBuffer.writeUInt32BE(
@@ -143,14 +149,16 @@ export class ConstituentBlockListBlock
       addressList,
       blockSizeBuffer,
     ]);
-    const checksum = StaticHelpersChecksum.calculateChecksum(toSign);
+    ConstituentBlockListBlock.initialize();
+    const checksum =
+      ConstituentBlockListBlock.checksumService.calculateChecksum(toSign);
 
     let finalSignature: SignatureBuffer;
     if (creator instanceof BrightChainMember) {
       if (signature) {
         // Use the public key as-is for verification
         if (
-          !StaticHelpersECIES.verifyMessage(
+          !ConstituentBlockListBlock.eciesService.verifyMessage(
             creator.publicKey,
             checksum,
             signature,
@@ -164,7 +172,7 @@ export class ConstituentBlockListBlock
       } else {
         // Create signature with private key
         const privateKeyBuffer = Buffer.from(creator.privateKey);
-        finalSignature = StaticHelpersECIES.signMessage(
+        finalSignature = ConstituentBlockListBlock.eciesService.signMessage(
           privateKeyBuffer,
           checksum,
         );
@@ -173,7 +181,9 @@ export class ConstituentBlockListBlock
       // For GuidV4 creators, either use provided signature or create empty one
       finalSignature = signature
         ? (Buffer.from(signature) as SignatureBuffer)
-        : (Buffer.alloc(StaticHelpersECIES.signatureLength) as SignatureBuffer);
+        : (Buffer.alloc(
+            ConstituentBlockListBlock.eciesService.signatureLength,
+          ) as SignatureBuffer);
     }
 
     // Place signature at end of header
@@ -213,7 +223,7 @@ export class ConstituentBlockListBlock
       data.subarray(
         ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
         ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
-          StaticHelpersECIES.signatureLength,
+          ConstituentBlockListBlock.eciesService.signatureLength,
       ),
     ) as SignatureBuffer;
 
@@ -221,8 +231,7 @@ export class ConstituentBlockListBlock
     const addressCount = data.readUInt32BE(
       ConstituentBlockListBlock.HeaderOffsets.CblAddressCount,
     );
-    const addressLength =
-      addressCount * StaticHelpersChecksum.Sha3ChecksumBufferLength;
+    const addressLength = addressCount * CHECKSUM.SHA3_BUFFER_LENGTH;
     const addressData = data.subarray(
       ConstituentBlockListBlock.CblHeaderSize,
       ConstituentBlockListBlock.CblHeaderSize + addressLength,
@@ -238,9 +247,11 @@ export class ConstituentBlockListBlock
     ]);
 
     // Calculate checksum and verify signature
-    const checksum = StaticHelpersChecksum.calculateChecksum(toVerify);
+    ConstituentBlockListBlock.initialize();
+    const checksum =
+      ConstituentBlockListBlock.checksumService.calculateChecksum(toVerify);
 
-    return StaticHelpersECIES.verifyMessage(
+    return ConstituentBlockListBlock.eciesService.verifyMessage(
       creator.publicKey,
       checksum,
       signature,
@@ -310,7 +321,7 @@ export class ConstituentBlockListBlock
         data.subarray(
           ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
           ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
-            StaticHelpersECIES.signatureLength,
+            ConstituentBlockListBlock.eciesService.signatureLength,
         ),
       ) as SignatureBuffer;
 
@@ -329,7 +340,7 @@ export class ConstituentBlockListBlock
       data.subarray(
         ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
         ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
-          StaticHelpersECIES.signatureLength,
+          ConstituentBlockListBlock.eciesService.signatureLength,
       ),
     ) as SignatureBuffer;
 
@@ -353,9 +364,10 @@ export class ConstituentBlockListBlock
         this._addressData,
         blockSizeBuffer,
       ]);
-      const verifyChecksum = StaticHelpersChecksum.calculateChecksum(toVerify);
+      const verifyChecksum =
+        ConstituentBlockListBlock.checksumService.calculateChecksum(toVerify);
       if (
-        !StaticHelpersECIES.verifyMessage(
+        !ConstituentBlockListBlock.eciesService.verifyMessage(
           creator.publicKey,
           verifyChecksum,
           this._creatorSignature,
@@ -375,7 +387,7 @@ export class ConstituentBlockListBlock
     const addressCount = data.readUInt32BE(
       ConstituentBlockListBlock.HeaderOffsets.CblAddressCount,
     );
-    const checksumLength = StaticHelpersChecksum.Sha3ChecksumBufferLength;
+    const checksumLength = CHECKSUM.SHA3_BUFFER_LENGTH;
     const addressLength = addressCount * checksumLength;
     const start = ConstituentBlockListBlock.CblHeaderSize;
     const end = start + addressLength;
@@ -430,7 +442,7 @@ export class ConstituentBlockListBlock
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     const addressCount = this._cblAddressCount;
-    const checksumLength = StaticHelpersChecksum.Sha3ChecksumBufferLength;
+    const checksumLength = CHECKSUM.SHA3_BUFFER_LENGTH;
     const blockIds: Array<ChecksumBuffer> = [];
 
     for (let i = 0; i < addressCount; i++) {
@@ -462,12 +474,7 @@ export class ConstituentBlockListBlock
         tupleIds.map((id) =>
           BlockHandle.createFromPath(
             getDiskBlockPath(id, this.blockSize),
-            new BlockMetadata(
-              this._blockSize,
-              this._blockType,
-              this._blockDataType,
-              this._data.length,
-            ),
+            this.blockSize,
             id,
             true, // canRead
             true, // canPersist
@@ -615,14 +622,15 @@ export class ConstituentBlockListBlock
     const tupleSize = data.readUint8(
       ConstituentBlockListBlock.HeaderOffsets.TupleSize,
     );
-    if (tupleSize < MIN_TUPLE_SIZE || tupleSize > MAX_TUPLE_SIZE) {
+    if (tupleSize < TUPLE.MIN_SIZE || tupleSize > TUPLE.MAX_SIZE) {
       throw new BlockValidationError(BlockValidationErrorType.InvalidTupleSize);
     }
     const creatorSignature = data.subarray(
       ConstituentBlockListBlock.HeaderOffsets.CreatorSignature,
       ConstituentBlockListBlock.HeaderOffsets.CreatorSignature +
-        StaticHelpersECIES.signatureLength,
+        ConstituentBlockListBlock.eciesService.signatureLength,
     ) as SignatureBuffer;
+    ConstituentBlockListBlock.initialize();
     if (
       creatorForValidation &&
       !ConstituentBlockListBlock.validateSignature(data, creatorForValidation)

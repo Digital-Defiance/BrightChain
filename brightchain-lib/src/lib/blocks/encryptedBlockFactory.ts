@@ -1,5 +1,6 @@
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
+import { ECIES } from '../constants';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
@@ -9,12 +10,15 @@ import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ChecksumService } from '../services/checksum.service';
+import { ECIESService } from '../services/ecies.service';
 import { ChecksumBuffer } from '../types';
 import { EncryptedBlock } from './encrypted';
 
 export class EncryptedBlockFactory {
+  private static readonly eciesService = new ECIESService();
+  private static readonly checksumService = new ChecksumService();
+
   private static blockConstructors: {
     [key: string]: new (
       type: BlockType,
@@ -50,7 +54,7 @@ export class EncryptedBlockFactory {
     checksum: ChecksumBuffer,
     creator?: BrightChainMember | GuidV4,
     dateCreated?: Date,
-    actualDataLength?: number,
+    lengthBeforeEncryption?: number,
     canRead = true,
     canPersist = true,
   ): Promise<EncryptedBlock> {
@@ -65,7 +69,7 @@ export class EncryptedBlockFactory {
 
     // Calculate the actual data length and metadata
     const payloadLength =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
+      (blockSize as number) - this.eciesService.eciesOverheadLength;
 
     // Validate data length
     if (data.length < 1) {
@@ -84,8 +88,8 @@ export class EncryptedBlockFactory {
     // For encrypted blocks with known actual data length:
     // 1. The actual data length must not exceed available capacity
     // 2. The total encrypted length must not exceed block size
-    if (actualDataLength !== undefined) {
-      if (actualDataLength > payloadLength) {
+    if (lengthBeforeEncryption !== undefined) {
+      if (lengthBeforeEncryption > payloadLength) {
         throw new BlockValidationError(
           BlockValidationErrorType.DataLengthExceedsCapacity,
         );
@@ -93,7 +97,7 @@ export class EncryptedBlockFactory {
     }
 
     // Calculate checksum on the original data
-    const computedChecksum = StaticHelpersChecksum.calculateChecksum(data);
+    const computedChecksum = this.checksumService.calculateChecksum(data);
     if (checksum && !computedChecksum.equals(checksum)) {
       throw new ChecksumMismatchError(checksum, computedChecksum);
     }
@@ -104,14 +108,14 @@ export class EncryptedBlockFactory {
       blockSize,
       type,
       BlockDataType.EncryptedData,
-      actualDataLength ?? data.length,
+      lengthBeforeEncryption ?? data.length,
       false,
       creator,
       dateCreated,
     );
 
     // If data is already encrypted (starts with 0x04), use it directly
-    if (data[0] === 0x04) {
+    if (data[0] === ECIES.PUBLIC_KEY_MAGIC) {
       // Create a properly sized buffer
       const finalData = Buffer.alloc(blockSize as number);
       data.copy(finalData);
@@ -131,22 +135,22 @@ export class EncryptedBlockFactory {
     const finalData = Buffer.alloc(blockSize as number);
 
     // Generate encryption headers
-    const ephemeralPublicKey = Buffer.alloc(StaticHelpersECIES.publicKeyLength);
-    const keyData = randomBytes(StaticHelpersECIES.publicKeyLength - 1);
-    ephemeralPublicKey[0] = 0x04; // Set ECIES public key prefix
+    const ephemeralPublicKey = Buffer.alloc(this.eciesService.publicKeyLength);
+    const keyData = randomBytes(this.eciesService.publicKeyLength - 1);
+    ephemeralPublicKey[0] = ECIES.PUBLIC_KEY_MAGIC; // Set ECIES public key prefix
     keyData.copy(ephemeralPublicKey, 1); // Copy after prefix
 
-    const iv = randomBytes(StaticHelpersECIES.ivLength);
-    const authTag = randomBytes(StaticHelpersECIES.authTagLength);
+    const iv = randomBytes(this.eciesService.ivLength);
+    const authTag = randomBytes(this.eciesService.authTagLength);
 
     // Copy headers to final buffer
     let offset = 0;
     ephemeralPublicKey.copy(finalData, offset);
-    offset += StaticHelpersECIES.publicKeyLength;
+    offset += this.eciesService.publicKeyLength;
     iv.copy(finalData, offset);
-    offset += StaticHelpersECIES.ivLength;
+    offset += this.eciesService.ivLength;
     authTag.copy(finalData, offset);
-    offset += StaticHelpersECIES.authTagLength;
+    offset += this.eciesService.authTagLength;
 
     // Copy data to payload area
     data.copy(finalData, offset);
@@ -165,9 +169,9 @@ export class EncryptedBlockFactory {
     // Verify the ephemeral public key is valid
     const ephemeralKeyCheck = finalDataCopy.slice(
       0,
-      StaticHelpersECIES.publicKeyLength,
+      this.eciesService.publicKeyLength,
     );
-    if (ephemeralKeyCheck[0] !== 0x04) {
+    if (ephemeralKeyCheck[0] !== ECIES.PUBLIC_KEY_MAGIC) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
       );

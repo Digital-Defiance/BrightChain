@@ -1,5 +1,4 @@
 import { randomBytes } from 'crypto';
-import { BlockService } from '../blockService';
 import { BrightChainMember } from '../brightChainMember';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -10,9 +9,10 @@ import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockAccessError } from '../errors/block';
 import { OwnedDataError } from '../errors/ownedDataError';
 import { GuidV4 } from '../guid';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer } from '../types';
 import { EncryptedOwnedDataBlock } from './encryptedOwnedData';
+import { BlockEncryption } from './encryption';
 import { EphemeralBlock } from './ephemeral';
 
 /**
@@ -34,7 +34,7 @@ export class OwnedDataBlock extends EphemeralBlock {
     checksum: ChecksumBuffer,
     creator?: BrightChainMember | GuidV4,
     dateCreated?: Date,
-    actualDataLength?: number,
+    lengthBeforeEncryption?: number,
     canRead = true,
     encrypted = false,
     canPersist = true,
@@ -54,12 +54,12 @@ export class OwnedDataBlock extends EphemeralBlock {
     }
 
     // Validate actual data length
-    if (actualDataLength !== undefined) {
-      if (actualDataLength <= 0) {
+    if (lengthBeforeEncryption !== undefined) {
+      if (lengthBeforeEncryption <= 0) {
         throw new OwnedDataError(OwnedDataErrorType.ActualDataLengthNegative);
       }
 
-      if (actualDataLength > data.length) {
+      if (lengthBeforeEncryption > data.length) {
         throw new OwnedDataError(
           OwnedDataErrorType.ActualDataLengthExceedsDataLength,
         );
@@ -70,7 +70,7 @@ export class OwnedDataBlock extends EphemeralBlock {
       blockSize,
       type,
       dataType,
-      actualDataLength ?? data.length,
+      lengthBeforeEncryption ?? data.length,
       encrypted,
       creator,
       dateCreated ?? new Date(),
@@ -136,7 +136,7 @@ export class OwnedDataBlock extends EphemeralBlock {
     }
 
     // Encrypt using BlockService
-    const encryptedBlock = await BlockService.encrypt(creator, this);
+    const encryptedBlock = await BlockEncryption.encrypt(creator, this);
 
     // Ensure we got the expected block type
     if (!(encryptedBlock instanceof EncryptedOwnedDataBlock)) {
@@ -162,11 +162,11 @@ export class OwnedDataBlock extends EphemeralBlock {
    * Returns true if there is enough space for encryption overhead
    */
   public override get canEncrypt(): boolean {
+    const eciesService = ServiceProvider.getECIESService();
     return (
       (this.blockType === BlockType.OwnedDataBlock ||
         this.blockType === BlockType.ConstituentBlockList) &&
-      this.metadata.lengthWithoutPadding +
-        StaticHelpersECIES.eciesOverheadLength <=
+      this.metadata.lengthWithoutPadding + eciesService.eciesOverheadLength <=
         this.blockSize
     );
   }

@@ -3,7 +3,7 @@ import { EncryptedOwnedDataBlock } from './blocks/encryptedOwnedData';
 import { OwnedDataBlock } from './blocks/ownedData';
 import { BlockService } from './blockService';
 import { BrightChainMember } from './brightChainMember';
-import { TUPLE_SIZE } from './constants';
+import { TUPLE } from './constants';
 import { EmailString } from './emailString';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockServiceErrorType } from './enumerations/blockServiceErrorType';
@@ -12,10 +12,17 @@ import { BlockType } from './enumerations/blockType';
 import { MemberType } from './enumerations/memberType';
 import { BlockServiceError } from './errors/blockServiceError';
 import { IMemberWithMnemonic } from './interfaces/memberWithMnemonic';
-import { StaticHelpersChecksum } from './staticHelpers.checksum';
+import { ChecksumService } from './services/checksum.service';
+import { ServiceProvider } from './services/service.provider';
 import { DiskBlockAsyncStore } from './stores/diskBlockAsyncStore';
 
 describe('BlockService', () => {
+  let checksumService: ChecksumService;
+
+  beforeEach(() => {
+    checksumService = ServiceProvider.getChecksumService();
+  });
+
   describe('getBlockSizeForData', () => {
     it('should return Message size for small data', () => {
       expect(BlockService.getBlockSizeForData(400)).toBe(BlockSize.Message);
@@ -167,7 +174,7 @@ describe('BlockService', () => {
       // Create test data large enough for encryption
       testData = Buffer.alloc(256); // Smaller size to accommodate encryption overhead
       testData.fill('x');
-      const checksum = StaticHelpersChecksum.calculateChecksum(testData);
+      const checksum = checksumService.calculateChecksum(testData);
 
       testBlock = await OwnedDataBlock.from(
         BlockType.OwnedDataBlock,
@@ -234,9 +241,8 @@ describe('BlockService', () => {
         );
 
         // Compare checksums to verify data integrity
-        const originalChecksum =
-          StaticHelpersChecksum.calculateChecksum(testData);
-        const decryptedChecksum = StaticHelpersChecksum.calculateChecksum(
+        const originalChecksum = checksumService.calculateChecksum(testData);
+        const decryptedChecksum = checksumService.calculateChecksum(
           decryptedBlock.data,
         );
 
@@ -343,13 +349,13 @@ describe('BlockService', () => {
 
       beforeEach(async () => {
         // Create blocks in multiples of TUPLE_SIZE (3)
-        const blockCount = TUPLE_SIZE; // Match TUPLE_SIZE from constants.ts
+        const blockCount = TUPLE.SIZE; // Match TUPLE_SIZE from constants.ts
         blocks = await Promise.all(
           Array(blockCount)
             .fill(null)
             .map(async (_, i) => {
               const data = Buffer.from(`Block ${i} data`);
-              const checksum = StaticHelpersChecksum.calculateChecksum(data);
+              const checksum = checksumService.calculateChecksum(data);
               return OwnedDataBlock.from(
                 BlockType.OwnedDataBlock,
                 BlockDataType.RawData,
@@ -397,7 +403,7 @@ describe('BlockService', () => {
           BlockDataType.RawData,
           BlockSize.Small, // Different size
           Buffer.from('Different size block'),
-          StaticHelpersChecksum.calculateChecksum(
+          checksumService.calculateChecksum(
             Buffer.from('Different size block'),
           ),
           testMember.member,

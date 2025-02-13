@@ -1,0 +1,562 @@
+import { createECDH, createHash, createHmac } from 'crypto';
+import {
+  KeyPair,
+  PrivateKey,
+  PublicKey,
+  generateRandomKeysSync,
+} from 'paillier-bigint';
+import { CHECKSUM, ECIES, VOTING } from '../constants';
+import { SecureDeterministicDRBG } from '../drbg';
+import { VotingErrorType } from '../enumerations/votingErrorType';
+import { VotingError } from '../errors/votingError';
+import { IsolatedPrivateKey } from '../isolatedPrivateKey';
+import { IsolatedPublicKey } from '../isolatedPublicKey';
+import { ECIESService } from './ecies.service';
+
+/**
+ * Service for handling voting operations.
+ * This service provides functionality for:
+ * - Generating voting key pairs
+ * - Converting keys to/from buffers
+ * - Encrypting/decrypting private keys
+ * - Managing voting key formats and versions
+ */
+export class VotingService {
+  public static readonly eciesService = new ECIESService();
+
+  /**
+   * HKDF implementation following RFC 5869
+   */
+  public static HKDF(
+    secret: Buffer,
+    salt: Buffer | null,
+    info: string,
+    length: number,
+  ): Buffer {
+    // 1. Extract
+    const hmac = createHmac(
+      'sha512',
+      salt || Buffer.alloc(CHECKSUM.SHA3_BUFFER_LENGTH, 0),
+    );
+    hmac.update(secret);
+    const prk = hmac.digest();
+
+    // 2. Expand
+    const N = Math.ceil(length / CHECKSUM.SHA3_BUFFER_LENGTH); // SHA-512 produces 64 bytes
+    const T = new Array<Buffer>(N);
+    let prev = Buffer.alloc(0);
+
+    for (let i = 0; i < N; i++) {
+      const hmac = createHmac('sha512', prk);
+      hmac.update(
+        Buffer.concat([prev, Buffer.from(info), Buffer.from([i + 1])]),
+      );
+      T[i] = hmac.digest();
+      prev = T[i];
+    }
+
+    return Buffer.concat(T).slice(0, length);
+  }
+
+  /**
+   * Miller-Rabin primality test with deterministic witnesses
+   */
+  public static millerRabinTest(n: bigint, k: number): boolean {
+    if (n <= 1n || n === 4n) return false;
+    if (n <= 3n) return true;
+
+    // Write n-1 as 2^r * d
+    let d = n - 1n;
+    let r = 0;
+    while (d % 2n === 0n) {
+      d /= 2n;
+      r++;
+    }
+
+    // Use first k prime numbers as witnesses
+    const witnesses = [2n, 3n, 5n, 7n, 11n, 13n, 17n, 19n, 23n, 29n, 31n, 37n];
+
+    // Witness loop
+    const witnessLoop = (a: bigint): boolean => {
+      let x = VotingService.modPow(a, d, n);
+      if (x === 1n || x === n - 1n) return true;
+
+      for (let i = 1; i < r; i++) {
+        x = (x * x) % n;
+        if (x === 1n) return false;
+        if (x === n - 1n) return true;
+      }
+
+      return false;
+    };
+
+    // Test with deterministic witnesses
+    for (let i = 0; i < Math.min(k, witnesses.length); i++) {
+      const a = (witnesses[i] % (n - 2n)) + 2n;
+      if (!witnessLoop(a)) return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Modular exponentiation for BigInt
+   */
+  public static modPow(
+    base: bigint,
+    exponent: bigint,
+    modulus: bigint,
+  ): bigint {
+    if (modulus === 1n) return 0n;
+
+    let result = 1n;
+    base = base % modulus;
+
+    while (exponent > 0n) {
+      if (exponent % 2n === 1n) {
+        result = (result * base) % modulus;
+      }
+      base = (base * base) % modulus;
+      exponent = exponent / 2n;
+    }
+
+    return result;
+  }
+
+  /**
+   * Calculate least common multiple
+   */
+  public static lcm(a: bigint, b: bigint): bigint {
+    const gcd = (x: bigint, y: bigint): bigint =>
+      y === 0n ? x : gcd(y, x % y);
+    return (a * b) / gcd(a, b);
+  }
+
+  /**
+   * Calculate modular multiplicative inverse using extended Euclidean algorithm
+   */
+  public static modInverse(a: bigint, m: bigint): bigint {
+    const egcd = (a: bigint, b: bigint): [bigint, bigint, bigint] => {
+      if (a === 0n) return [b, 0n, 1n];
+      const [g, x, y] = egcd(b % a, a);
+      return [g, y - (b / a) * x, x];
+    };
+
+    const [g, x] = egcd(a, m);
+    if (g !== 1n)
+      throw new VotingError(VotingErrorType.ModularInverseDoesNotExist);
+    return ((x % m) + m) % m;
+  }
+
+  /**
+   * Derive Paillier voting keys from ECDH key pair
+   */
+  public static deriveVotingKeysFromECDH(
+    ecdhPrivKey: Buffer,
+    ecdhPubKey: Buffer,
+  ): KeyPair {
+    // Input validation
+    if (!Buffer.isBuffer(ecdhPrivKey)) {
+      throw new VotingError(VotingErrorType.PrivateKeyMustBeBuffer);
+    }
+    if (!Buffer.isBuffer(ecdhPubKey)) {
+      throw new VotingError(VotingErrorType.PublicKeyMustBeBuffer);
+    }
+
+    // Normalize public key format
+    const normalizedPubKey =
+      ecdhPubKey.length === ECIES.RAW_PUBLIC_KEY_LENGTH
+        ? Buffer.concat([Buffer.from([ECIES.PUBLIC_KEY_MAGIC]), ecdhPubKey])
+        : ecdhPubKey;
+
+    if (
+      normalizedPubKey.length !== ECIES.PUBLIC_KEY_LENGTH ||
+      normalizedPubKey[0] !== ECIES.PUBLIC_KEY_MAGIC
+    ) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyFormat);
+    }
+
+    try {
+      // 1. Compute ECDH shared secret
+      const ecdh = createECDH(ECIES.CURVE_NAME);
+
+      let sharedSecret: Buffer;
+      try {
+        // Handle key formatting
+        const privateKeyForSecret = ecdhPrivKey;
+        const publicKeyForSecret =
+          ecdhPubKey.length === ECIES.PUBLIC_KEY_LENGTH
+            ? ecdhPubKey
+            : Buffer.concat([
+                Buffer.from([ECIES.PUBLIC_KEY_MAGIC]),
+                ecdhPubKey,
+              ]);
+
+        ecdh.setPrivateKey(privateKeyForSecret);
+        sharedSecret = ecdh.computeSecret(publicKeyForSecret);
+      } catch (error) {
+        throw new VotingError(VotingErrorType.InvalidEcdhKeyPair);
+      }
+
+      // Generate seed for key generation
+      const keyGenSeed = VotingService.HKDF(
+        sharedSecret,
+        null,
+        VOTING.PRIME_GEN_INFO,
+        CHECKSUM.SHA3_BUFFER_LENGTH,
+      );
+
+      // Generate deterministic key pair
+      return VotingService.generateDeterministicKeyPair(
+        keyGenSeed,
+        VOTING.KEYPAIR_BIT_LENGTH,
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new VotingError(
+          VotingErrorType.FailedToDeriveVotingKeys,
+          undefined,
+          { ERROR: error.message },
+        );
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Generate a deterministic prime number using deterministic randomness
+   */
+  public static generateDeterministicPrime(
+    drbg: SecureDeterministicDRBG,
+    numBits: number,
+  ): bigint {
+    const maxAttempts = 20000; // Increased for better probability of finding strong primes
+    const numBytes = Math.ceil(numBits / 8);
+    let attempts = 0;
+
+    // Pre-compute bit masks
+    const highBitMask = 1n << BigInt(numBits - 1);
+    const lengthMask = (1n << BigInt(numBits)) - 1n;
+
+    while (attempts < maxAttempts) {
+      attempts++;
+
+      // Generate random bytes
+      const bytes = drbg.generateBytes(numBytes);
+
+      // Convert to bigint efficiently
+      let num = BigInt(0);
+      for (const byte of bytes) {
+        num = (num << 8n) | BigInt(byte);
+      }
+
+      // Ensure exact bit length and odd number
+      num = (num & lengthMask) | highBitMask | 1n;
+
+      // Skip if bit length is wrong
+      if (num.toString(2).length !== numBits) {
+        continue;
+      }
+
+      // Extended small prime sieve for better efficiency
+      if (
+        num % 3n === 0n ||
+        num % 5n === 0n ||
+        num % 7n === 0n ||
+        num % 11n === 0n ||
+        num % 13n === 0n ||
+        num % 17n === 0n
+      ) {
+        continue;
+      }
+
+      // Full primality test
+      if (VotingService.millerRabinTest(num, VOTING.PRIME_TEST_ITERATIONS)) {
+        return num;
+      }
+    }
+
+    throw new VotingError(VotingErrorType.FailedToGeneratePrime);
+  }
+
+  /**
+   * Generate a deterministic key pair using a seed
+   */
+  public static generateDeterministicKeyPair(
+    seed: Buffer,
+    bits: number,
+  ): KeyPair {
+    // Generate a deterministic prime number
+    const drbg = new SecureDeterministicDRBG(seed); // Initialize DRBG with the seed
+    try {
+      const primeBits = Math.ceil(bits / 2) + 1; // Extra bit for safety
+      const p = VotingService.generateDeterministicPrime(drbg, primeBits);
+
+      const q = VotingService.generateDeterministicPrime(drbg, primeBits);
+
+      if (p === q) {
+        throw new VotingError(VotingErrorType.IdenticalPrimes);
+      }
+
+      // Calculate RSA parameters
+      const n = p * q;
+      const lambda = VotingService.lcm(p - 1n, q - 1n);
+      const mu = VotingService.modInverse(lambda, n);
+      const g = n + 1n;
+
+      // Create isolated key pair with consistent padding
+      const nHex = n.toString(16).padStart(768, '0');
+      const nBuffer = Buffer.from(nHex, 'hex');
+      const keyId = createHash('sha256').update(nBuffer).digest();
+      const publicKey = new IsolatedPublicKey(n, g, keyId);
+      const privateKey = new IsolatedPrivateKey(lambda, mu, publicKey);
+
+      // Verify key length
+      const actualBits = n.toString(2).length;
+      if (actualBits < bits) {
+        throw new VotingError(VotingErrorType.KeyPairTooSmall, undefined, {
+          ACTUAL_BITS: actualBits,
+          REQUIRED_BITS: bits,
+        });
+      }
+
+      // Test the key pair
+      const testValue = 42n;
+      const encrypted = publicKey.encrypt(testValue);
+      const decrypted = privateKey.decrypt(encrypted);
+      if (decrypted !== testValue) {
+        throw new VotingError(VotingErrorType.KeyPairValidationFailed);
+      }
+
+      return { publicKey, privateKey };
+    } catch (error) {
+      console.error('Error in generateDeterministicKeyPair: ', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate a new voting key pair
+   * @returns KeyPair containing isolated public and private keys
+   */
+  public static generateVotingKeyPair(): KeyPair {
+    const keyPair = generateRandomKeysSync(VOTING.KEYPAIR_BIT_LENGTH);
+
+    // Create isolated public key with consistent padding
+    const nHex = keyPair.publicKey.n.toString(16).padStart(768, '0');
+    const nBuffer = Buffer.from(nHex, 'hex');
+    const keyId = createHash('sha256').update(nBuffer).digest();
+    const isolatedPublicKey = new IsolatedPublicKey(
+      keyPair.publicKey.n,
+      keyPair.publicKey.g,
+      keyId,
+    );
+
+    // Create isolated private key
+    const isolatedPrivateKey = new IsolatedPrivateKey(
+      keyPair.privateKey.lambda,
+      keyPair.privateKey.mu,
+      isolatedPublicKey,
+    );
+
+    return { publicKey: isolatedPublicKey, privateKey: isolatedPrivateKey };
+  }
+
+  /**
+   * Convert a key pair to an encrypted private key
+   * @param keyPair The key pair to convert
+   * @param walletPublicKey The wallet public key to encrypt with
+   * @returns Encrypted private key as a Buffer
+   */
+  public static keyPairToEncryptedPrivateKey(
+    keyPair: KeyPair,
+    walletPublicKey: Buffer,
+  ): Buffer {
+    if (!(keyPair.publicKey instanceof IsolatedPublicKey)) {
+      throw new VotingError(VotingErrorType.InvalidKeyPairPublicKeyNotIsolated);
+    }
+    if (!(keyPair.privateKey instanceof IsolatedPrivateKey)) {
+      throw new VotingError(
+        VotingErrorType.InvalidKeyPairPrivateKeyNotIsolated,
+      );
+    }
+
+    // Convert lambda and mu to hex buffers, padding with zeros if needed
+    const lambda = Buffer.from(
+      keyPair.privateKey.lambda.toString(16).padStart(768, '0'),
+      'hex',
+    );
+    const mu = Buffer.from(
+      keyPair.privateKey.mu.toString(16).padStart(768, '0'),
+      'hex',
+    );
+
+    // Create length buffers
+    const lambdaLengthBuffer = Buffer.alloc(4);
+    lambdaLengthBuffer.writeUInt32BE(lambda.length);
+    const muLengthBuffer = Buffer.alloc(4);
+    muLengthBuffer.writeUInt32BE(mu.length);
+
+    // Always strip 0x04 prefix if present since we expect raw public key
+    const publicKeyForEncryption =
+      walletPublicKey[0] === ECIES.PUBLIC_KEY_MAGIC
+        ? walletPublicKey.subarray(1)
+        : walletPublicKey;
+
+    // Pass public key directly to encrypt which will handle prefix
+    return VotingService.eciesService.encrypt(
+      publicKeyForEncryption,
+      Buffer.concat([lambdaLengthBuffer, lambda, muLengthBuffer, mu]),
+    );
+  }
+
+  /**
+   * Convert an encrypted private key back to a key pair
+   * @param encryptedPrivateKey The encrypted private key
+   * @param walletPrivateKey The wallet private key to decrypt with
+   * @param votingPublicKey The corresponding voting public key
+   * @returns The decrypted private key
+   */
+  public static encryptedPrivateKeyToKeyPair(
+    encryptedPrivateKey: Buffer,
+    walletPrivateKey: Buffer,
+    votingPublicKey: PublicKey,
+  ): PrivateKey {
+    if (!(votingPublicKey instanceof IsolatedPublicKey)) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyNotIsolated);
+    }
+
+    // If private key has 0x04 prefix, remove it since ECDH expects raw private key
+    const privateKeyForDecryption =
+      walletPrivateKey[0] === ECIES.PUBLIC_KEY_MAGIC
+        ? walletPrivateKey.subarray(1)
+        : walletPrivateKey;
+
+    const decryptedPrivateKeyBuffer =
+      VotingService.eciesService.decryptWithHeader(
+        privateKeyForDecryption,
+        encryptedPrivateKey,
+      );
+
+    // Read lambda length and extract lambda buffer
+    const lambdaLength = decryptedPrivateKeyBuffer.readUInt32BE(0);
+    const lambdaBuffer = decryptedPrivateKeyBuffer.subarray(
+      4,
+      4 + lambdaLength,
+    );
+
+    // Read mu length and extract mu buffer
+    const muLength = decryptedPrivateKeyBuffer.readUInt32BE(4 + lambdaLength);
+    const muBuffer = decryptedPrivateKeyBuffer.subarray(
+      8 + lambdaLength,
+      8 + lambdaLength + muLength,
+    );
+
+    // Convert buffers to BigInts, preserving leading zeros
+    const lambda = BigInt(
+      '0x' + lambdaBuffer.toString('hex').padStart(768, '0'),
+    );
+    const mu = BigInt('0x' + muBuffer.toString('hex').padStart(768, '0'));
+
+    return new IsolatedPrivateKey(
+      lambda,
+      mu,
+      votingPublicKey as IsolatedPublicKey,
+    );
+  }
+
+  /**
+   * Convert a voting public key to a buffer
+   * @param votingPublicKey The public key to convert
+   * @returns Buffer containing the serialized public key
+   */
+  public static votingPublicKeyToBuffer(votingPublicKey: PublicKey): Buffer {
+    if (!(votingPublicKey instanceof IsolatedPublicKey)) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyNotIsolated);
+    }
+
+    const nHex = votingPublicKey.n.toString(16).padStart(768, '0');
+    const nBuffer = Buffer.from(nHex, 'hex');
+    const keyId = (votingPublicKey as IsolatedPublicKey).getKeyId();
+    const instanceId = (votingPublicKey as IsolatedPublicKey).getInstanceId();
+
+    const nLengthBuffer = Buffer.alloc(4);
+    nLengthBuffer.writeUInt32BE(nBuffer.length);
+
+    const header = Buffer.concat([
+      VOTING.KEY_MAGIC,
+      Buffer.from([VOTING.KEY_VERSION]),
+    ]);
+
+    return Buffer.concat([header, keyId, instanceId, nLengthBuffer, nBuffer]);
+  }
+
+  /**
+   * Convert a buffer back to a voting public key
+   * @param buffer The buffer containing the serialized public key
+   * @returns The deserialized public key
+   */
+  public static bufferToVotingPublicKey(buffer: Buffer): IsolatedPublicKey {
+    // Minimum buffer length check (magic + version + keyId + instanceId + nLength = 73 bytes)
+    if (buffer.length < 73) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyBufferTooShort);
+    }
+
+    // Verify magic
+    const magic = buffer.subarray(0, 4);
+    if (!magic.equals(VOTING.KEY_MAGIC)) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyBufferWrongMagic);
+    }
+
+    // Read version
+    const version = buffer[4];
+    if (version !== VOTING.KEY_VERSION) {
+      throw new VotingError(VotingErrorType.UnsupportedPublicKeyVersion);
+    }
+
+    // Read key ID
+    const storedKeyId = buffer.subarray(5, 37);
+
+    // Read n length and value
+    const nLength = buffer.readUInt32BE(69);
+    if (buffer.length < 73 + nLength) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyBufferIncompleteN);
+    }
+    const nBuffer = buffer.subarray(73, 73 + nLength);
+
+    // Convert to BigInt with consistent padding and error handling
+    const nHex = nBuffer.toString('hex').padStart(768, '0');
+    let n: bigint;
+    try {
+      n = BigInt('0x' + nHex);
+    } catch (error) {
+      throw new VotingError(
+        VotingErrorType.InvalidPublicKeyBufferFailedToParseN,
+        undefined,
+        { ERROR: error instanceof Error ? error.message : String(error) },
+      );
+    }
+
+    const g = n + 1n; // In Paillier, g is always n + 1
+
+    // Verify key ID
+    const computedKeyId = createHash('sha256').update(nBuffer).digest();
+    if (!computedKeyId.equals(storedKeyId)) {
+      throw new VotingError(VotingErrorType.InvalidPublicKeyIdMismatch);
+    }
+
+    // Create and validate the public key
+    try {
+      // Create a new public key and update its instance ID
+      const publicKey = new IsolatedPublicKey(n, g, storedKeyId);
+      publicKey.updateInstanceId(); // Generate a new instance ID for the recovered key
+      return publicKey;
+    } catch (error) {
+      throw new VotingError(
+        VotingErrorType.InvalidPublicKeyBufferFailedToParseN,
+        undefined,
+        { ERROR: error instanceof Error ? error.message : String(error) },
+      );
+    }
+  }
+}

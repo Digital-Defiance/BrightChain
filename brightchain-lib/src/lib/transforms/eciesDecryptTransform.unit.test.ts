@@ -2,7 +2,7 @@ import { randomBytes } from 'crypto';
 import { BlockSize } from '../enumerations/blockSizes';
 import { EciesErrorType } from '../enumerations/eciesErrorType';
 import { EciesError } from '../errors/eciesError';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ECIESService } from '../services/ecies.service';
 import { EciesDecryptionTransform } from './eciesDecryptTransform';
 
 describe('EciesDecryptionTransform Unit Tests', () => {
@@ -14,11 +14,15 @@ describe('EciesDecryptionTransform Unit Tests', () => {
   } as unknown as Console;
 
   const blockSize = BlockSize.Small;
-  const mnemonic = StaticHelpersECIES.generateNewMnemonic();
-  const keypair = StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer(mnemonic);
+  let eciesService: ECIESService;
+  let mnemonic: string;
+  let keypair: { privateKey: Buffer; publicKey: Buffer };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    eciesService = new ECIESService();
+    mnemonic = eciesService.generateNewMnemonic();
+    keypair = eciesService.mnemonicToSimpleKeyPairBuffer(mnemonic);
   });
 
   it('should be instantiated with correct parameters', () => {
@@ -60,10 +64,7 @@ describe('EciesDecryptionTransform Unit Tests', () => {
       mockLogger,
     );
     const inputData = randomBytes(100);
-    const encryptedData = StaticHelpersECIES.encrypt(
-      keypair.publicKey,
-      inputData,
-    );
+    const encryptedData = eciesService.encrypt(keypair.publicKey, inputData);
     const chunks: Buffer[] = [];
 
     transform.on('data', (chunk: Buffer) => {
@@ -89,10 +90,7 @@ describe('EciesDecryptionTransform Unit Tests', () => {
       mockLogger,
     );
     const inputData = randomBytes(1000);
-    const encryptedData = StaticHelpersECIES.encrypt(
-      keypair.publicKey,
-      inputData,
-    );
+    const encryptedData = eciesService.encrypt(keypair.publicKey, inputData);
     const chunks: Buffer[] = [];
 
     // Split encrypted data into multiple chunks
@@ -128,10 +126,7 @@ describe('EciesDecryptionTransform Unit Tests', () => {
       mockLogger,
     );
     const inputData = randomBytes(100);
-    const encryptedData = StaticHelpersECIES.encrypt(
-      keypair.publicKey,
-      inputData,
-    );
+    const encryptedData = eciesService.encrypt(keypair.publicKey, inputData);
 
     transform.on('error', (error: EciesError) => {
       expect(error).toBeDefined();

@@ -14,8 +14,6 @@
 
 import { InvalidBlockSizeError } from '../errors/invalidBlockSize';
 import { InvalidBlockSizeLengthError } from '../errors/invalidBlockSizeLength';
-import { translateEnum } from '../i18n';
-import { TranslatableEnumType } from './translatableEnum';
 
 /**
  * Block size exponents (2^x) for calculating block sizes.
@@ -35,7 +33,7 @@ export const blockSizeLengths = [512, 1024, 4096, 1048576, 67108864, 268435456];
  * Each size is optimized for specific use cases and provides different
  * trade-offs between storage efficiency and performance.
  */
-export const enum BlockSize {
+export enum BlockSize {
   /**
    * Invalid or unknown block size.
    * Used for error conditions and initialization.
@@ -115,30 +113,12 @@ export const validBlockSizes = [
  * Used for display and logging purposes.
  */
 export const validBlockSizeStrings = [
-  translateEnum({
-    type: TranslatableEnumType.BlockSize,
-    value: BlockSize.Message,
-  }),
-  translateEnum({
-    type: TranslatableEnumType.BlockSize,
-    value: BlockSize.Tiny,
-  }),
-  translateEnum({
-    type: TranslatableEnumType.BlockSize,
-    value: BlockSize.Small,
-  }),
-  translateEnum({
-    type: TranslatableEnumType.BlockSize,
-    value: BlockSize.Medium,
-  }),
-  translateEnum({
-    type: TranslatableEnumType.BlockSize,
-    value: BlockSize.Large,
-  }),
-  translateEnum({
-    type: TranslatableEnumType.BlockSize,
-    value: BlockSize.Huge,
-  }),
+  'Message',
+  'Tiny',
+  'Small',
+  'Medium',
+  'Large',
+  'Huge',
 ];
 
 /**

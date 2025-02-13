@@ -2,19 +2,21 @@ import { mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { CblBlockMetadata } from '../cblBlockMetadata';
-import { TUPLE_SIZE } from '../constants';
+import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
 import { GuidV4 } from '../guid';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ChecksumService } from '../services/checksum.service';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer } from '../types';
 import { CBLStore } from './cblStore';
 
 describe('CBLStore', () => {
   let store: CBLStore;
+  let checksumService: ChecksumService;
   const testDir = join(__dirname, 'test-cbl-store');
   const blockSize = BlockSize.Message;
 
@@ -22,6 +24,7 @@ describe('CBLStore', () => {
     // Create test directory
     mkdirSync(testDir, { recursive: true });
     store = new CBLStore(testDir, blockSize);
+    checksumService = ServiceProvider.getChecksumService();
   });
 
   afterEach(() => {
@@ -37,11 +40,9 @@ describe('CBLStore', () => {
 
       // Create some test addresses
       const addresses: ChecksumBuffer[] = [];
-      for (let i = 0; i < TUPLE_SIZE; i++) {
+      for (let i = 0; i < TUPLE.SIZE; i++) {
         addresses.push(
-          StaticHelpersChecksum.calculateChecksum(
-            Buffer.from(`test-block-${i}`),
-          ),
+          checksumService.calculateChecksum(Buffer.from(`test-block-${i}`)),
         );
       }
 
@@ -60,7 +61,7 @@ describe('CBLStore', () => {
       const data = Buffer.concat([headerData, addressList]);
       const padding = Buffer.alloc(blockSize - (data.length % blockSize));
       const paddedData = Buffer.concat([data, padding]);
-      const checksum = StaticHelpersChecksum.calculateChecksum(paddedData);
+      const checksum = checksumService.calculateChecksum(paddedData);
 
       const metadata = new CblBlockMetadata(
         blockSize,
@@ -103,11 +104,9 @@ describe('CBLStore', () => {
 
       // Create some test addresses
       const addresses: ChecksumBuffer[] = [];
-      for (let i = 0; i < TUPLE_SIZE; i++) {
+      for (let i = 0; i < TUPLE.SIZE; i++) {
         addresses.push(
-          StaticHelpersChecksum.calculateChecksum(
-            Buffer.from(`test-block-${i}`),
-          ),
+          checksumService.calculateChecksum(Buffer.from(`test-block-${i}`)),
         );
       }
 
@@ -126,7 +125,7 @@ describe('CBLStore', () => {
       const data = Buffer.concat([headerData, addressList]);
       const padding = Buffer.alloc(blockSize - (data.length % blockSize));
       const paddedData = Buffer.concat([data, padding]);
-      const checksum = StaticHelpersChecksum.calculateChecksum(paddedData);
+      const checksum = checksumService.calculateChecksum(paddedData);
 
       const metadata = new CblBlockMetadata(
         blockSize,
@@ -150,15 +149,15 @@ describe('CBLStore', () => {
 
       // Get addresses
       const retrievedAddresses = store.getCBLAddresses(checksum);
-      // Should be a multiple of TUPLE_SIZE (original block + whiteners + padding)
-      expect(retrievedAddresses.length % TUPLE_SIZE).toBe(0);
-      expect(retrievedAddresses.length).toBeGreaterThanOrEqual(TUPLE_SIZE);
+      // Should be a multiple of TUPLE.SIZE (original block + whiteners + padding)
+      expect(retrievedAddresses.length % TUPLE.SIZE).toBe(0);
+      expect(retrievedAddresses.length).toBeGreaterThanOrEqual(TUPLE.SIZE);
     });
   });
 
   describe('Error Cases', () => {
     it('should throw error when getting non-existent CBL', async () => {
-      const nonExistentChecksum = StaticHelpersChecksum.calculateChecksum(
+      const nonExistentChecksum = checksumService.calculateChecksum(
         Buffer.from('nonexistent'),
       );
 
@@ -174,11 +173,9 @@ describe('CBLStore', () => {
 
       // Create some test addresses
       const addresses: ChecksumBuffer[] = [];
-      for (let i = 0; i < TUPLE_SIZE; i++) {
+      for (let i = 0; i < TUPLE.SIZE; i++) {
         addresses.push(
-          StaticHelpersChecksum.calculateChecksum(
-            Buffer.from(`test-block-${i}`),
-          ),
+          checksumService.calculateChecksum(Buffer.from(`test-block-${i}`)),
         );
       }
 
@@ -197,7 +194,7 @@ describe('CBLStore', () => {
       const data = Buffer.concat([headerData, addressList]);
       const padding = Buffer.alloc(blockSize - (data.length % blockSize));
       const paddedData = Buffer.concat([data, padding]);
-      const checksum = StaticHelpersChecksum.calculateChecksum(paddedData);
+      const checksum = checksumService.calculateChecksum(paddedData);
 
       const metadata = new CblBlockMetadata(
         blockSize,
@@ -224,7 +221,7 @@ describe('CBLStore', () => {
     });
 
     it('should throw error when getting addresses for non-existent CBL', () => {
-      const nonExistentChecksum = StaticHelpersChecksum.calculateChecksum(
+      const nonExistentChecksum = checksumService.calculateChecksum(
         Buffer.from('nonexistent'),
       );
 

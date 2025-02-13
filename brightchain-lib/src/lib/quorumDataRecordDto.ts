@@ -17,6 +17,6 @@ export interface QuorumDataRecordDto {
   signature: SignatureString;
   memberIDs: ShortHexGuid[];
   sharesRequired: number;
-  dateCreated: Date;
-  dateUpdated: Date;
+  dateCreated: string;
+  dateUpdated: string;
 }

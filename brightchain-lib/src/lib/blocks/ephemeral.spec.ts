@@ -11,10 +11,13 @@ import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
 import { IMemberWithMnemonic } from '../interfaces/memberWithMnemonic';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ChecksumService } from '../services/checksum.service';
+import { ECIESService } from '../services/ecies.service';
+import { ServiceProvider } from '../services/service.provider';
+import { initializeTestServices } from '../test/service.initializer.helper';
 import { ChecksumBuffer } from '../types';
 import { EphemeralBlock } from './ephemeral';
+import { BlockServices } from './services';
 
 // Test class that properly implements abstract methods
 class TestEphemeralBlock extends EphemeralBlock {
@@ -25,7 +28,7 @@ class TestEphemeralBlock extends EphemeralBlock {
     checksum?: ChecksumBuffer,
     creator?: BrightChainMember | GuidV4,
     dateCreated?: Date,
-    actualDataLength?: number,
+    lengthBeforeEncryption?: number,
     canRead = true,
     encrypted = false,
   ): Promise<TestEphemeralBlock> {
@@ -42,16 +45,16 @@ class TestEphemeralBlock extends EphemeralBlock {
       blockSize,
       type,
       blockDataType,
-      actualDataLength ?? data.length,
+      lengthBeforeEncryption ?? data.length,
       encrypted,
       creator,
       dateCreated ?? new Date(),
     );
 
-    const finalChecksum =
-      checksum ?? StaticHelpersChecksum.calculateChecksum(data);
+    const checksumService = BlockServices.getChecksumService();
+    const finalChecksum = checksum ?? checksumService.calculateChecksum(data);
     if (checksum) {
-      const expectedChecksum = StaticHelpersChecksum.calculateChecksum(data);
+      const expectedChecksum = checksumService.calculateChecksum(data);
       if (!checksum.equals(expectedChecksum)) {
         throw new ChecksumMismatchError(checksum, expectedChecksum);
       }
@@ -75,6 +78,8 @@ describe('EphemeralBlock', () => {
 
   // Shared test data
   let creator: IMemberWithMnemonic;
+  let eciesService: ECIESService;
+  let checksumService: ChecksumService;
   const defaultBlockSize = BlockSize.Small;
   const testDate = new Date(Date.now() - 1000); // 1 second ago
 
@@ -92,7 +97,7 @@ describe('EphemeralBlock', () => {
       checksum: ChecksumBuffer;
       creator: BrightChainMember | GuidV4;
       dateCreated: Date;
-      actualDataLength: number;
+      lengthBeforeEncryption: number;
       canRead: boolean;
       encrypted: boolean;
     }> = {},
@@ -108,24 +113,30 @@ describe('EphemeralBlock', () => {
       options.checksum,
       options.creator || creator.member,
       options.dateCreated || testDate,
-      options.actualDataLength,
+      options.lengthBeforeEncryption,
       options.canRead ?? true,
       isEncrypted,
     );
   };
 
   beforeAll(() => {
+    initializeTestServices();
     creator = BrightChainMember.newMember(
       MemberType.User,
       'Test User',
       new EmailString('test@example.com'),
     );
+    eciesService = ServiceProvider.getECIESService();
+  });
+
+  beforeEach(() => {
+    checksumService = ServiceProvider.getChecksumService();
   });
 
   describe('basic functionality', () => {
     it('should construct and validate correctly', async () => {
       const data = randomBytes(getEffectiveSize(defaultBlockSize));
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = checksumService.calculateChecksum(data);
       const block = await createTestBlock({ data, checksum });
 
       expect(block.blockSize).toBe(defaultBlockSize);
@@ -152,7 +163,7 @@ describe('EphemeralBlock', () => {
       // For unencrypted blocks, data() returns actual data without padding
       expect(block.data.length).toBe(dataSize);
       // But internal buffer is padded to full size
-      expect(block.actualDataLength).toBe(dataSize);
+      expect(block.lengthBeforeEncryption).toBe(dataSize);
       expect(block.blockSize).toBe(defaultBlockSize);
     });
   });
@@ -195,7 +206,7 @@ describe('EphemeralBlock', () => {
     it('should handle encryption capabilities', async () => {
       const block = await createTestBlock({
         data: randomBytes(
-          (defaultBlockSize as number) - StaticHelpersECIES.eciesOverheadLength,
+          (defaultBlockSize as number) - eciesService.eciesOverheadLength,
         ),
       });
       expect(block.encrypted).toBe(false);
@@ -235,7 +246,7 @@ describe('EphemeralBlock', () => {
   describe('validation', () => {
     it('should detect data corruption', async () => {
       const data = randomBytes(getEffectiveSize(defaultBlockSize));
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = checksumService.calculateChecksum(data);
       const corruptedData = Buffer.from(data);
       corruptedData[0]++; // Corrupt the data
 

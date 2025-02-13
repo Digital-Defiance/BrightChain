@@ -1,5 +1,6 @@
 import { BrightChainMember } from '../brightChainMember';
 import { CblBlockMetadata } from '../cblBlockMetadata';
+import { CHECKSUM } from '../constants';
 import BlockDataType from '../enumerations/blockDataType';
 import { BlockSize, validBlockSizes } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
@@ -9,55 +10,24 @@ import { MetadataMismatchError } from '../errors/metadataMismatch';
 import { GuidV4 } from '../guid';
 import { IExtendedConstituentBlockListBlockHeader } from '../interfaces/ecblHeader';
 import { IExtendedConstituentBlockListBlock } from '../interfaces/extendedCbl';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer, SignatureBuffer } from '../types';
 import { ConstituentBlockListBlock } from './cbl';
 
-/**
- * ExtendedCBL extends ConstituentBlockListBlock with file-specific metadata
- * in the Owner Free Filesystem (OFF).
- *
- * Structure:
- * [Base Block Header]
- * [Ephemeral Block Header]
- * [CBL Header]
- * [File Metadata Header]
- * [Block References]
- * [Padding]
- *
- * The layered structure ensures:
- * 1. Each layer adds its own header data
- * 2. Headers are concatenated in inheritance order
- * 3. Each layer can validate its own header
- * 4. Total overhead is sum of all layers
- */
 export class ExtendedCBL
   extends ConstituentBlockListBlock
   implements IExtendedConstituentBlockListBlock
 {
-  /**
-   * Fixed size in bytes reserved for file metadata header.
-   * This size must be:
-   * 1. Large enough to store typical file names and MIME types
-   * 2. Small enough to leave space for block data
-   * 3. Fixed to ensure consistent block structure
-   * 4. Power of 2 for alignment efficiency
-   * 5. Balanced between overhead and usable space
-   */
-  protected static readonly FileMetadataHeaderSize = 512; // 512 bytes for metadata
-
-  /**
-   * Header field offsets within the file metadata section
-   */
+  protected static override readonly checksumService =
+    ServiceProvider.getChecksumService();
+  protected static readonly FileMetadataHeaderSize = 512;
   private static readonly FileMetadataOffsets = {
-    FileNameLength: 0, // 2 bytes
-    FileName: 2, // Variable length
-    // MimeTypeLength and MimeType offsets are calculated based on fileName length
+    FileNameLength: 0,
+    FileName: 2,
   } as const;
-
-  private static readonly MaxFileNameLength = 255; // Standard max file name length
-  private static readonly MaxMimeTypeLength = 127; // Reasonable limit for MIME type
-  private static readonly MimeTypePattern = /^[a-z0-9-]+\/[a-z0-9-]+$/; // Lowercase MIME type pattern
+  private static readonly MaxFileNameLength = 255;
+  private static readonly MaxMimeTypeLength = 127;
+  private static readonly MimeTypePattern = /^[a-z0-9-]+\/[a-z0-9-]+$/;
   private static readonly InvalidSpecialChars = [
     '<',
     '>',
@@ -69,29 +39,9 @@ export class ExtendedCBL
     '?',
     '*',
   ];
+  public readonly fileName!: string;
+  public readonly mimeType!: string;
 
-  /**
-   * Original file name from source system
-   */
-  public readonly fileName: string;
-
-  /**
-   * File content MIME type
-   */
-  public readonly mimeType: string;
-
-  /**
-   * Create a new ExtendedCBL
-   * @param blockSize - Size category for the block
-   * @param creator - Block creator
-   * @param fileDataLength - Original file data length
-   * @param dataAddresses - List of data block references
-   * @param fileName - Original file name
-   * @param mimeType - File content MIME type
-   * @param signature - Creator's signature
-   * @param dateCreated - Block creation timestamp
-   * @param tupleSize - Size of block tuples
-   */
   constructor(
     blockSize: BlockSize,
     creator: BrightChainMember | GuidV4,
@@ -122,7 +72,7 @@ export class ExtendedCBL
       const requiredSize =
         ConstituentBlockListBlock.CblHeaderSize +
         metadataSize +
-        dataAddresses.length * StaticHelpersChecksum.Sha3ChecksumBufferLength;
+        dataAddresses.length * CHECKSUM.SHA3_BUFFER_LENGTH;
 
       if ((blockSize as number) < requiredSize) {
         throw new ExtendedCblError(
@@ -154,7 +104,7 @@ export class ExtendedCBL
         Buffer.concat(dataAddresses),
       ]);
 
-      const checksum = StaticHelpersChecksum.calculateChecksum(data);
+      const checksum = ExtendedCBL.checksumService.calculateChecksum(data);
 
       // Create base CBL block first
       super(
@@ -163,7 +113,7 @@ export class ExtendedCBL
           blockSize,
           BlockType.ExtendedConstituentBlockListBlock,
           BlockDataType.EphemeralStructuredData,
-          dataAddresses.length * StaticHelpersChecksum.Sha3ChecksumBufferLength,
+          dataAddresses.length * CHECKSUM.SHA3_BUFFER_LENGTH,
           fileDataLength,
           dateCreated,
           creator,
@@ -196,83 +146,6 @@ export class ExtendedCBL
     }
   }
 
-  /**
-   * Get the complete block data including all headers and payload.
-   * Format: [Base Headers][CBL Headers][File Metadata Header][Block References][Padding]
-   */
-  public override get data(): Buffer {
-    // Get base CBL data without its payload
-    const baseCblData = super.data.subarray(0, super.totalOverhead);
-
-    // Create metadata header
-    const metadataHeader = ExtendedCBL.createFileMetadataHeader(
-      this.fileName,
-      this.mimeType,
-    );
-
-    // Get CBL payload (block references)
-    const blockReferences = super.payload;
-
-    // Calculate padding size
-    const contentLength =
-      baseCblData.length + metadataHeader.length + blockReferences.length;
-    const paddingLength = Math.max(
-      0,
-      (this.blockSize as number) - contentLength,
-    );
-
-    // Create parts array
-    const parts = [
-      baseCblData, // Base and CBL headers
-      metadataHeader, // File metadata header
-      blockReferences, // Block references from CBL
-    ];
-
-    // Only add padding if needed
-    if (paddingLength > 0) {
-      parts.push(Buffer.alloc(paddingLength, 0));
-    }
-
-    // Combine all parts in correct order
-    return Buffer.concat(parts);
-  }
-
-  /**
-   * Total overhead including file metadata.
-   * Overhead = Base Header + CBL Header + File Metadata Header
-   */
-  public override get totalOverhead(): number {
-    return super.totalOverhead + ExtendedCBL.FileMetadataHeaderSize;
-  }
-
-  /**
-   * Get this layer's header data.
-   * Format: [File Name Length (2)][File Name][MIME Type Length (2)][MIME Type][Padding]
-   */
-  public override get layerHeaderData(): Buffer {
-    return ExtendedCBL.createFileMetadataHeader(this.fileName, this.mimeType);
-  }
-
-  /**
-   * Block type is ExtendedConstituentBlockListBlock
-   */
-  public override get blockType(): BlockType {
-    return BlockType.ExtendedConstituentBlockListBlock;
-  }
-
-  /**
-   * Get the payload data (block references), excluding all headers.
-   * This is the same as the CBL payload since we only add metadata in the header.
-   */
-  public override get payload(): Buffer {
-    return super.payload;
-  }
-
-  /**
-   * Synchronously validate the block's data and structure
-   * @throws {ChecksumMismatchError} If checksums do not match
-   * @throws {MetadataMismatchError} If metadata does not match stored values
-   */
   public override validateSync(): void {
     // Validate base CBL structure
     super.validateSync();
@@ -297,11 +170,6 @@ export class ExtendedCBL
     }
   }
 
-  /**
-   * Asynchronously validate the block's data and structure
-   * @throws {ChecksumMismatchError} If checksums do not match
-   * @throws {MetadataMismatchError} If metadata does not match stored values
-   */
   public override async validateAsync(): Promise<void> {
     // Validate base CBL structure
     await super.validateAsync();
@@ -326,31 +194,22 @@ export class ExtendedCBL
     }
   }
 
-  /**
-   * Validate the creator's signature
-   * @param creator - Optional creator to validate against (uses block's creator if not provided)
-   */
-  public override validateSignature(): boolean;
-  public override validateSignature(creator: BrightChainMember): boolean;
-  public override validateSignature(creator?: BrightChainMember): boolean {
-    if (!this.canRead) {
-      throw new ExtendedCblError(ExtendedCblErrorType.BlockNotReadable);
-    }
-
-    const validationCreator = creator ?? this.creator;
-    if (!validationCreator) {
-      throw new ExtendedCblError(
-        ExtendedCblErrorType.CreatorRequiredForSignature,
-      );
-    }
-
-    return ConstituentBlockListBlock.validateSignature(
-      this.data,
-      validationCreator,
-    );
+  public override get layerHeaderData(): Buffer {
+    return ExtendedCBL.createFileMetadataHeader(this.fileName, this.mimeType);
   }
 
-  // Static helper methods
+  public override get blockType(): BlockType {
+    return BlockType.ExtendedConstituentBlockListBlock;
+  }
+
+  public override get payload(): Buffer {
+    return super.payload;
+  }
+
+  public override get totalOverhead(): number {
+    return super.totalOverhead + ExtendedCBL.FileMetadataHeaderSize;
+  }
+
   private static hasControlChars(str: string): boolean {
     for (let i = 0; i < str.length; i++) {
       const code = str.charCodeAt(i);
@@ -537,12 +396,6 @@ export class ExtendedCBL
     return header;
   }
 
-  /**
-   * Parse metadata from a buffer
-   * @param data - Metadata buffer
-   * @param creatorForValidation - Creator for signature validation
-   * @returns Parsed metadata fields
-   */
   public static override parseHeader(
     data: Buffer,
     creatorForValidation: BrightChainMember,
@@ -586,14 +439,5 @@ export class ExtendedCBL
       mimeTypeLength,
       mimeType,
     };
-  }
-
-  /**
-   * Alias for validateSync() to maintain compatibility
-   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
-   * @throws {MetadataMismatchError} If metadata does not match stored values
-   */
-  public override validate(): void {
-    this.validateSync();
   }
 }

@@ -4,7 +4,7 @@ import {
   SymmetricErrorTypes,
 } from '../enumerations/symmetricErrorType';
 import { translate } from '../i18n';
-import { StaticHelpersSymmetric } from '../staticHelpers.symmetric';
+import { SymmetricService } from '../services/symmetric.service';
 import { HandleableError } from './handleable';
 
 export class SymmetricError extends HandleableError {
@@ -12,8 +12,8 @@ export class SymmetricError extends HandleableError {
   constructor(reason: SymmetricErrorType, language?: StringLanguages) {
     super(
       translate(SymmetricErrorTypes[reason], language, {
-        KEY_BITS: StaticHelpersSymmetric.SymmetricKeyBits,
-        KEY_BYTES: StaticHelpersSymmetric.SymmetricKeyBytes,
+        KEY_BITS: SymmetricService.symmetricKeyBits,
+        KEY_BYTES: SymmetricService.symmetricKeyBytes,
       }),
     );
     this.name = 'SymmetricError';

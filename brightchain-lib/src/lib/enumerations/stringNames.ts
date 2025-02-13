@@ -243,6 +243,8 @@ export enum StringNames {
   Error_MemoryTupleErrorInvalidBlockCount = 'error_memoryTupleErrorInvalidBlockCount',
   Error_MemoryTupleErrorExpectedBlockIdsTemplate = 'error_memoryTupleErrorExpectedBlockIdsTemplate',
   Error_MemoryTupleErrorExpectedBlocksTemplate = 'error_memoryTupleErrorExpectedBlocksTemplate',
+  Error_DocumentInvalidValueTemplate = 'error_documentInvalidValueTemplate',
+  Error_DocumentFieldRequiredTemplate = 'error_documentFieldRequiredTemplate',
   Error_MetadataMismatch = 'error_metadataMismatch',
   Error_TokenExpired = 'error_tokenExpired',
   Error_TokenInvalid = 'error_tokenInvalid',

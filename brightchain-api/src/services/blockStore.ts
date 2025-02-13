@@ -4,6 +4,7 @@ import {
   DiskBlockAsyncStore,
   RawDataBlock,
 } from '@BrightChain/brightchain-lib';
+import { SerializableBuffer } from 'brightchain-lib/src/lib/serializableBuffer';
 import { IApplication } from '../interfaces/application';
 import { IBlockStore } from '../interfaces/blockStore';
 import { BaseService } from './base';
@@ -33,7 +34,10 @@ export class BlockStoreService extends BaseService implements IBlockStore {
    * @implements {IBlockStore.getBlock}
    */
   public async getBlock(blockId: string): Promise<RawDataBlock> {
-    const checksumBuffer = Buffer.from(blockId, 'hex') as ChecksumBuffer;
+    const checksumBuffer = SerializableBuffer.from(
+      blockId,
+      'hex',
+    ) as ChecksumBuffer;
     return this.store.getData(checksumBuffer);
   }
 

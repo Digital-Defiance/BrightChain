@@ -10,6 +10,16 @@ export enum VotingErrorType {
   InvalidPublicKeyBufferIncompleteN = 'InvalidPublicKeyBufferIncompleteN',
   InvalidPublicKeyBufferFailedToParseN = 'InvalidPublicKeyBufferFailedToParseN',
   InvalidPublicKeyIdMismatch = 'InvalidPublicKeyIdMismatch',
+  ModularInverseDoesNotExist = 'ModularInverseDoesNotExist',
+  PrivateKeyMustBeBuffer = 'PrivateKeyMustBeBuffer',
+  PublicKeyMustBeBuffer = 'PublicKeyMustBeBuffer',
+  InvalidPublicKeyFormat = 'InvalidPublicKeyFormat',
+  InvalidEcdhKeyPair = 'InvalidEcdhKeyPair',
+  FailedToDeriveVotingKeys = 'FailedToDeriveVotingKeys',
+  FailedToGeneratePrime = 'FailedToGeneratePrime',
+  IdenticalPrimes = 'IdenticalPrimes',
+  KeyPairTooSmall = 'KeyPairTooSmall',
+  KeyPairValidationFailed = 'KeyPairValidationFailed',
 }
 
 export const VotingErrorTypes: {
@@ -33,4 +43,24 @@ export const VotingErrorTypes: {
     StringNames.Error_VotingErrorInvalidPublicKeyBufferFailedToParseNTemplate,
   [VotingErrorType.InvalidPublicKeyIdMismatch]:
     StringNames.Error_VotingErrorInvalidPublicKeyIdMismatch,
+  [VotingErrorType.ModularInverseDoesNotExist]:
+    StringNames.Error_VotingDerivationErrorModularInverseDoesNotExist,
+  [VotingErrorType.PrivateKeyMustBeBuffer]:
+    StringNames.Error_VotingDerivationErrorPrivateKeyMustBeBuffer,
+  [VotingErrorType.PublicKeyMustBeBuffer]:
+    StringNames.Error_VotingDerivationErrorPublicKeyMustBeBuffer,
+  [VotingErrorType.InvalidPublicKeyFormat]:
+    StringNames.Error_VotingDerivationErrorInvalidPublicKeyFormat,
+  [VotingErrorType.InvalidEcdhKeyPair]:
+    StringNames.Error_VotingDerivationErrorInvalidEcdhKeyPair,
+  [VotingErrorType.FailedToDeriveVotingKeys]:
+    StringNames.Error_VotingDerivationErrorFailedToDeriveVotingKeysTemplate,
+  [VotingErrorType.FailedToGeneratePrime]:
+    StringNames.Error_VotingDerivationErrorFailedToGeneratePrime,
+  [VotingErrorType.IdenticalPrimes]:
+    StringNames.Error_VotingDerivationErrorIdenticalPrimes,
+  [VotingErrorType.KeyPairTooSmall]:
+    StringNames.Error_VotingDerivationErrorKeyPairTooSmallTemplate,
+  [VotingErrorType.KeyPairValidationFailed]:
+    StringNames.Error_VotingDerivationErrorKeyPairValidationFailed,
 };

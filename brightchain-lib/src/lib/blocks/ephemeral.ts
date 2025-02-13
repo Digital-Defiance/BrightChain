@@ -16,8 +16,8 @@ import {
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { GuidV4 } from '../guid';
 import { IDataBlock } from '../interfaces/dataBlock';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ECIESService } from '../services/ecies.service';
+import { ServiceInitializer } from '../services/service.initializer';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
 
@@ -26,6 +26,15 @@ import { BaseBlock } from './base';
  * Ephemeral blocks should never be written to disk and are therefore memory-only.
  */
 export class EphemeralBlock extends BaseBlock implements IDataBlock {
+  protected static eciesService: ECIESService;
+
+  protected static override initialize() {
+    super.initialize();
+    if (!EphemeralBlock.eciesService) {
+      EphemeralBlock.eciesService = ServiceInitializer.getECIESService();
+    }
+  }
+
   /**
    * Creates a new ephemeral block
    */
@@ -37,13 +46,16 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     checksum: ChecksumBuffer,
     creator?: BrightChainMember | GuidV4,
     dateCreated?: Date,
-    actualDataLength?: number,
+    lengthBeforeEncryption?: number,
     canRead = true,
     encrypted = false,
     canPersist = true,
   ): Promise<EphemeralBlock> {
+    EphemeralBlock.initialize();
     const calculatedChecksum =
-      await StaticHelpersChecksum.calculateChecksumAsync(data);
+      await EphemeralBlock.checksumService.calculateChecksumForStream(
+        Readable.from(data),
+      );
 
     if (!calculatedChecksum.equals(checksum)) {
       throw new ChecksumMismatchError(checksum, calculatedChecksum);
@@ -53,7 +65,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
       blockSize,
       type,
       dataType,
-      actualDataLength ?? data.length,
+      lengthBeforeEncryption ?? data.length,
       encrypted,
       creator,
       dateCreated ?? new Date(),
@@ -109,6 +121,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     canRead = true,
     canPersist = false,
   ) {
+    EphemeralBlock.initialize();
     if (data instanceof Readable) {
       throw new BlockValidationError(
         BlockValidationErrorType.EphemeralBlockOnlySupportsBufferData,
@@ -187,8 +200,8 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
   /**
    * The actual data length of the block before any encryption or padding overhead
    */
-  public get actualDataLength(): number {
-    return this._actualDataLength;
+  public get lengthBeforeEncryption(): number {
+    return this._lengthBeforeEncryption;
   }
 
   /**
@@ -202,9 +215,11 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
    * Whether the block can be encrypted
    */
   public get canEncrypt(): boolean {
+    EphemeralBlock.initialize();
     return (
       !this._encrypted &&
-      this._actualDataLength + StaticHelpersECIES.eciesOverheadLength <=
+      this._lengthBeforeEncryption +
+        EphemeralBlock.eciesService.eciesOverheadLength <=
         this.blockSize
     );
   }
@@ -228,7 +243,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     }
 
     // Calculate checksum on actual data length, excluding padding
-    const computedChecksum = StaticHelpersChecksum.calculateChecksum(
+    const computedChecksum = EphemeralBlock.checksumService.calculateChecksum(
       this._data,
     );
     const validated = computedChecksum.equals(this.idChecksum);
@@ -249,9 +264,10 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     }
 
     // Calculate checksum on actual data length, excluding padding
-    const computedChecksum = await StaticHelpersChecksum.calculateChecksumAsync(
-      this._data,
-    );
+    const computedChecksum =
+      await EphemeralBlock.checksumService.calculateChecksumForStream(
+        Readable.from(this._data),
+      );
     const validated = computedChecksum.equals(this.idChecksum);
     if (!validated) {
       throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
@@ -305,7 +321,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     // For unencrypted blocks, return the actual data (no padding)
     return this._encrypted
       ? this.data
-      : this._data.subarray(0, this._actualDataLength);
+      : this._data.subarray(0, this._lengthBeforeEncryption);
   }
 
   /**
@@ -314,6 +330,6 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
   public override get payloadLength(): number {
     // For encrypted blocks, let derived class handle length calculation
     // For unencrypted blocks, use actual data length
-    return this._encrypted ? super.payloadLength : this._actualDataLength;
+    return this._encrypted ? super.payloadLength : this._lengthBeforeEncryption;
   }
 }

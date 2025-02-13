@@ -4,14 +4,19 @@ import BlockType from './enumerations/blockType';
 import { EphemeralBlockMetadata } from './ephemeralBlockMetadata';
 import { GuidV4 } from './guid';
 import { IEncryptedBlockMetadata } from './interfaces/encryptedBlockMetadata';
-import { StaticHelpersECIES } from './staticHelpers.ECIES';
+import { ECIESService } from './services/ecies.service';
 
 export class EncryptedBlockMetadata
   extends EphemeralBlockMetadata
   implements IEncryptedBlockMetadata
 {
+  private static readonly eciesService = new ECIESService();
+
   public get encryptedLength(): number {
-    return this.lengthWithoutPadding + StaticHelpersECIES.eciesOverheadLength;
+    return (
+      this.lengthWithoutPadding +
+      EncryptedBlockMetadata.eciesService.eciesOverheadLength
+    );
   }
   constructor(
     size: number,

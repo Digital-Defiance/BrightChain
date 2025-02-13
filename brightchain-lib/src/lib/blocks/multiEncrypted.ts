@@ -1,4 +1,6 @@
+import { BlockChecksum } from '../access/checksum';
 import { BrightChainMember } from '../brightChainMember';
+import { ECIES } from '../constants';
 import { EmailString } from '../emailString';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -12,9 +14,9 @@ import { MultiEncryptedErrorType } from '../enumerations/multiEncryptedErrorType
 import { MultiEncryptedError } from '../errors/multiEncryptedError';
 import { GuidV4 } from '../guid';
 import { IMultiEncryptedBlock } from '../interfaces/multiEncryptedBlock';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
-import { StaticHelpersVoting } from '../staticHelpers.voting';
+import { ECIESService } from '../services/ecies.service';
+import { ServiceProvider } from '../services/service.provider';
+import { VotingService } from '../services/voting.service';
 import { ChecksumBuffer } from '../types';
 import { EncryptedBlock } from './encrypted';
 
@@ -44,28 +46,30 @@ export class MultiEncryptedBlock
     checksum?: ChecksumBuffer,
     creator?: BrightChainMember | GuidV4,
     dateCreated?: Date,
-    actualDataLength?: number,
+    lengthBeforeEncryption?: number,
     canRead = true,
     canPersist = true,
   ): Promise<MultiEncryptedBlock> {
-    if (data.length < StaticHelpersECIES.eciesOverheadLength) {
+    const eciesService = ServiceProvider.getECIESService();
+
+    if (data.length < eciesService.eciesOverheadLength) {
       throw new MultiEncryptedError(MultiEncryptedErrorType.DataTooShort);
     }
 
     // For encrypted blocks, we need to validate both:
     // 1. The total data length (including encryption header) against block size
     // 2. The actual data length against available capacity
-    if (actualDataLength !== undefined) {
+    if (lengthBeforeEncryption !== undefined) {
       const availableCapacity =
-        (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
-      if (actualDataLength > availableCapacity) {
+        (blockSize as number) - eciesService.eciesOverheadLength;
+      if (lengthBeforeEncryption > availableCapacity) {
         throw new MultiEncryptedError(
           MultiEncryptedErrorType.DataLengthExceedsCapacity,
         );
       }
       // Total encrypted length will be actualDataLength + overhead
       const totalLength =
-        actualDataLength + StaticHelpersECIES.eciesOverheadLength;
+        lengthBeforeEncryption + eciesService.eciesOverheadLength;
       if (totalLength > (blockSize as number)) {
         throw new MultiEncryptedError(
           MultiEncryptedErrorType.DataLengthExceedsCapacity,
@@ -74,20 +78,23 @@ export class MultiEncryptedBlock
     }
 
     // Calculate checksum if not provided
-    const finalChecksum =
-      checksum ?? (await StaticHelpersChecksum.calculateChecksumAsync(data));
+    const finalChecksum = checksum ?? BlockChecksum.calculateChecksum(data);
+
+    // Create a padded buffer with zeros
+    const paddedData = Buffer.alloc(blockSize);
+    data.copy(paddedData, 0);
 
     // Parse the encrypted data to get recipients and keys
     const blockMetadata =
-      StaticHelpersECIES.bufferToMultiRecipientEncryption(data);
+      eciesService.bufferToMultiRecipientEncryption(paddedData);
     const recipients = await Promise.all(
-      blockMetadata.recipientIds.map(async (id) => {
+      blockMetadata.recipientIds.map(async (id: GuidV4) => {
         return new BrightChainMember(
           MemberType.User,
           `Member ${id.toString()}`,
           new EmailString('unknown@example.com'),
-          Buffer.alloc(65),
-          await StaticHelpersVoting.generateVotingKeyPair().publicKey,
+          Buffer.alloc(ECIES.PUBLIC_KEY_LENGTH),
+          await VotingService.generateVotingKeyPair().publicKey,
           undefined,
           undefined,
           id,
@@ -99,22 +106,19 @@ export class MultiEncryptedBlock
       blockSize,
       type,
       BlockDataType.EncryptedData,
-      actualDataLength ?? data.length - StaticHelpersECIES.eciesOverheadLength,
+      lengthBeforeEncryption ?? data.length - eciesService.eciesOverheadLength,
       creator,
       dateCreated ?? new Date(),
     );
 
-    // Create a padded buffer with zeros
-    const paddedData = Buffer.alloc(blockSize);
-    data.copy(paddedData, 0);
-
-    // Create and return the block with padded data
+    // Create and return the block
     return new MultiEncryptedBlock(
       type,
       dataType,
       paddedData,
       finalChecksum,
       metadata,
+      eciesService,
       canRead,
       canPersist,
       recipients,
@@ -128,7 +132,7 @@ export class MultiEncryptedBlock
     creator?: BrightChainMember | GuidV4,
   ): Promise<MultiEncryptedBlock> {
     const blockSize = lengthToClosestBlockSize(data.length);
-    const checksum = await StaticHelpersChecksum.calculateChecksumAsync(data);
+    const checksum = BlockChecksum.calculateChecksum(data);
 
     return MultiEncryptedBlock.from(
       BlockType.MultiEncryptedBlock,
@@ -153,6 +157,7 @@ export class MultiEncryptedBlock
    * @param checksum - The checksum of the data
    * @param dateCreated - The date the block was created
    * @param metadata - The block metadata
+   * @param eciesService - The ECIES service to use for encryption/decryption
    * @param canRead - Whether the block can be read
    * @param canPersist - Whether the block can be persisted
    * @param recipients - The recipients who can decrypt this block
@@ -165,6 +170,7 @@ export class MultiEncryptedBlock
     data: Buffer,
     checksum: ChecksumBuffer,
     metadata: EncryptedBlockMetadata,
+    eciesService: ECIESService,
     canRead = true,
     canPersist = true,
     recipients: BrightChainMember[] = [],
@@ -181,6 +187,7 @@ export class MultiEncryptedBlock
       combinedData,
       checksum,
       metadata,
+      eciesService,
       canRead,
       canPersist,
     );
@@ -234,9 +241,9 @@ export class MultiEncryptedBlock
     // Get the ephemeral public key (already includes 0x04 prefix)
     const key = this.layerHeaderData.subarray(
       0,
-      StaticHelpersECIES.publicKeyLength,
+      this.eciesService.publicKeyLength,
     );
-    if (key.length !== StaticHelpersECIES.publicKeyLength) {
+    if (key.length !== this.eciesService.publicKeyLength) {
       throw new MultiEncryptedError(
         MultiEncryptedErrorType.InvalidEphemeralPublicKeyLength,
       );
@@ -252,10 +259,10 @@ export class MultiEncryptedBlock
       throw new MultiEncryptedError(MultiEncryptedErrorType.BlockNotReadable);
     }
     const iv = this.layerHeaderData.subarray(
-      StaticHelpersECIES.publicKeyLength,
-      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
+      this.eciesService.publicKeyLength,
+      this.eciesService.publicKeyLength + this.eciesService.ivLength,
     );
-    if (iv.length !== StaticHelpersECIES.ivLength) {
+    if (iv.length !== this.eciesService.ivLength) {
       throw new MultiEncryptedError(MultiEncryptedErrorType.InvalidIVLength);
     }
     return iv;
@@ -270,11 +277,11 @@ export class MultiEncryptedBlock
     }
     // The auth tag is after the ephemeral public key (with 0x04 prefix) and IV
     const start =
-      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength;
-    const end = start + StaticHelpersECIES.authTagLength;
+      this.eciesService.publicKeyLength + this.eciesService.ivLength;
+    const end = start + this.eciesService.authTagLength;
 
     const tag = this.layerHeaderData.subarray(start, end);
-    if (tag.length !== StaticHelpersECIES.authTagLength) {
+    if (tag.length !== this.eciesService.authTagLength) {
       throw new MultiEncryptedError(
         MultiEncryptedErrorType.InvalidAuthTagLength,
       );
@@ -288,7 +295,7 @@ export class MultiEncryptedBlock
    * encryption header is part of the data buffer
    */
   public override get totalOverhead(): number {
-    return StaticHelpersECIES.eciesOverheadLength;
+    return this.eciesService.eciesOverheadLength;
   }
 
   /**
@@ -300,7 +307,7 @@ export class MultiEncryptedBlock
     }
     // For encrypted blocks, the header is always at the start of the data
     // since EphemeralBlock has no header data
-    return this.data.subarray(0, StaticHelpersECIES.eciesOverheadLength);
+    return this.data.subarray(0, this.eciesService.eciesOverheadLength);
   }
 
   /**
@@ -314,7 +321,7 @@ export class MultiEncryptedBlock
     // 1. Skip the encryption header (ephemeral public key + IV + auth tag)
     // 2. Return the entire encrypted data (including padding)
     // 3. Ensure we return exactly blockSize - overhead bytes
-    return this.data.subarray(StaticHelpersECIES.eciesOverheadLength);
+    return this.data.subarray(this.eciesService.eciesOverheadLength);
   }
 
   /**
@@ -335,7 +342,7 @@ export class MultiEncryptedBlock
     // 1. Start with the full block size
     // 2. Subtract the ECIES overhead
     // This ensures proper capacity calculation for encrypted blocks
-    return this.blockSize - StaticHelpersECIES.eciesOverheadLength;
+    return this.blockSize - this.eciesService.eciesOverheadLength;
   }
 
   /**
@@ -344,8 +351,7 @@ export class MultiEncryptedBlock
   public override async validateAsync(): Promise<void> {
     // For encrypted blocks, we need to validate the checksum of the entire data
     // since the encryption process includes padding
-    const calculatedChecksum =
-      await StaticHelpersChecksum.calculateChecksumAsync(this.data);
+    const calculatedChecksum = BlockChecksum.calculateChecksum(this.data);
 
     if (!calculatedChecksum.equals(this.idChecksum)) {
       throw new MultiEncryptedError(MultiEncryptedErrorType.ChecksumMismatch);

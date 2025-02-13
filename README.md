@@ -8,6 +8,8 @@
 
 This is the repository containing code for the pre-alpha research concept called BrightChain, based in part on the [Owner Free Filesystem](https://en.wikipedia.org/wiki/OFFSystem). BrightChain was conceived before IPFS was created and has been started and re-started several times over the last decade. It started out in C# and is now a Node/TypeScript project. You'll notice many similarities with IPFS as well as [Prometheus](https://github.com/Prometheus-SCN).
 
+NOTE: The brightchain-api portion of the repo is currently a mess and incomplete- it is largely code i brought over from another project. It will not progress much until I get the library part of the code more complete (getting very close!) and I have just worked out the details of a document interface (Mongoose style Document) that I hope to use with the block store. Once I can store user accounts and whatnot, I will work on the API.
+
 Currently the repository is an NX monorepo with only one project, "brightchain-lib" which contains the core BrightChain functionality that will be used by the to-be-created brightchain node application and quorum application.
 
 The repository is still undergoing development and although data integrity has been verified at the block level including the XOR functionality, work is in progress on developing the more complex block generation, whitening, and reconstruction phases.
@@ -29,18 +31,17 @@ There is also code in place for voting with [Paillier](https://en.wikipedia.org/
 
 ## Development
 
-Prerequisites:
-    - optional: Docker Desktop
-    - If you opt to run the code locally instead of Docker Desktop using the DevContainer, you'll need NodeJS 20 or higher installed. Otherwise it will be installed into the container for you.
+Prerequisites: - optional: Docker Desktop - If you opt to run the code locally instead of Docker Desktop using the DevContainer, you'll need NodeJS 20 or higher installed. Otherwise it will be installed into the container for you.
 
 Steps:
-  - Clone the repository.
-  - Open the repository in VSCode.
-  - If you're using the Dev Container:
-    - Install the Dev Container extension if required and you intend to use the Dev Container.
-    - Open the command palette and select "Remote-Containers: Reopen in Container" to open the Dev Container.
-  - Open a terminal in VSCode and run yarn in the root of the repository and in the brightchain-lib project.
-  - npx nx test brightchain-lib to run the unit tests.
+
+- Clone the repository.
+- Open the repository in VSCode.
+- If you're using the Dev Container:
+  - Install the Dev Container extension if required and you intend to use the Dev Container.
+  - Open the command palette and select "Remote-Containers: Reopen in Container" to open the Dev Container.
+- Open a terminal in VSCode and run yarn in the root of the repository and in the brightchain-lib project.
+- npx nx test brightchain-lib to run the unit tests.
 
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 

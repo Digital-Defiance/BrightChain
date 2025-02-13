@@ -9,7 +9,7 @@ import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { GuidV4 } from '../guid';
 import { IEncryptedBlock } from '../interfaces/encryptedBlock';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ECIESService } from '../services/ecies.service';
 import { ChecksumBuffer } from '../types';
 import { EphemeralBlock } from './ephemeral';
 
@@ -27,6 +27,37 @@ export abstract class EncryptedBlock
   extends EphemeralBlock
   implements IEncryptedBlock
 {
+  protected readonly eciesService: ECIESService;
+
+  /**
+   * Creates an instance of EncryptedBlock.
+   * @param type - The type of the block
+   * @param dataType - The type of data in the block
+   * @param data - The encrypted data
+   * @param checksum - The checksum of the data
+   * @param metadata - The block metadata
+   * @param eciesService - The ECIES service to use for encryption/decryption
+   * @param canRead - Whether the block can be read
+   * @param canPersist - Whether the block can be persisted
+   */
+  protected constructor(
+    type: BlockType,
+    dataType: BlockDataType,
+    data: Buffer,
+    checksum: ChecksumBuffer,
+    metadata: EphemeralBlockMetadata,
+    eciesService: ECIESService,
+    canRead = true,
+    canPersist = true,
+  ) {
+    // Create a properly sized buffer filled with random data
+    const finalData = randomBytes(metadata.size as number);
+    // Copy data into the final buffer, preserving the full block size
+    data.copy(finalData, 0, 0, Math.min(data.length, metadata.size as number));
+    super(type, dataType, finalData, checksum, metadata, canRead, canPersist);
+    this.eciesService = eciesService;
+  }
+
   /**
    * Create a new encrypted block from data
    */
@@ -38,7 +69,7 @@ export abstract class EncryptedBlock
     checksum: ChecksumBuffer,
     creator?: BrightChainMember | GuidV4,
     dateCreated?: Date,
-    actualDataLength?: number,
+    lengthBeforeEncryption?: number,
     canRead?: boolean,
     canPersist?: boolean,
   ): Promise<EncryptedBlock> {
@@ -50,38 +81,12 @@ export abstract class EncryptedBlock
     void checksum;
     void creator;
     void dateCreated;
-    void actualDataLength;
+    void lengthBeforeEncryption;
     void canRead;
     void canPersist;
     throw new BlockValidationError(
       BlockValidationErrorType.MethodMustBeImplementedByDerivedClass,
     );
-  }
-
-  /**
-   * Creates an instance of EncryptedBlock.
-   * @param type - The type of the block
-   * @param dataType - The type of data in the block
-   * @param data - The encrypted data
-   * @param checksum - The checksum of the data
-   * @param metadata - The block metadata
-   * @param canRead - Whether the block can be read
-   * @param canPersist - Whether the block can be persisted
-   */
-  protected constructor(
-    type: BlockType,
-    dataType: BlockDataType,
-    data: Buffer,
-    checksum: ChecksumBuffer,
-    metadata: EphemeralBlockMetadata,
-    canRead = true,
-    canPersist = true,
-  ) {
-    // Create a properly sized buffer filled with random data
-    const finalData = randomBytes(metadata.size as number);
-    // Copy data into the final buffer, preserving the full block size
-    data.copy(finalData, 0, 0, Math.min(data.length, metadata.size as number));
-    super(type, dataType, finalData, checksum, metadata, canRead, canPersist);
   }
 
   /**
@@ -121,7 +126,7 @@ export abstract class EncryptedBlock
    * The length of the encrypted data including overhead and padding
    */
   public get encryptedLength(): number {
-    return this.actualDataLength + StaticHelpersECIES.eciesOverheadLength;
+    return this.lengthBeforeEncryption + this.eciesService.eciesOverheadLength;
   }
 
   /**
@@ -134,9 +139,9 @@ export abstract class EncryptedBlock
     // Get the ephemeral public key (already includes 0x04 prefix)
     const key = this.layerHeaderData.subarray(
       0,
-      StaticHelpersECIES.publicKeyLength,
+      this.eciesService.publicKeyLength,
     );
-    if (key.length !== StaticHelpersECIES.publicKeyLength) {
+    if (key.length !== this.eciesService.publicKeyLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
       );
@@ -152,10 +157,10 @@ export abstract class EncryptedBlock
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     const iv = this.layerHeaderData.subarray(
-      StaticHelpersECIES.publicKeyLength,
-      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
+      this.eciesService.publicKeyLength,
+      this.eciesService.publicKeyLength + this.eciesService.ivLength,
     );
-    if (iv.length !== StaticHelpersECIES.ivLength) {
+    if (iv.length !== this.eciesService.ivLength) {
       throw new BlockValidationError(BlockValidationErrorType.InvalidIVLength);
     }
     return iv;
@@ -170,11 +175,11 @@ export abstract class EncryptedBlock
     }
     // The auth tag is after the ephemeral public key (with 0x04 prefix) and IV
     const start =
-      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength;
-    const end = start + StaticHelpersECIES.authTagLength;
+      this.eciesService.publicKeyLength + this.eciesService.ivLength;
+    const end = start + this.eciesService.authTagLength;
 
     const tag = this.layerHeaderData.subarray(start, end);
-    if (tag.length !== StaticHelpersECIES.authTagLength) {
+    if (tag.length !== this.eciesService.authTagLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidAuthTagLength,
       );
@@ -188,7 +193,7 @@ export abstract class EncryptedBlock
    * encryption header is part of the data buffer
    */
   public override get totalOverhead(): number {
-    return StaticHelpersECIES.eciesOverheadLength;
+    return this.eciesService.eciesOverheadLength;
   }
 
   /**
@@ -200,7 +205,7 @@ export abstract class EncryptedBlock
     }
     // For encrypted blocks, the header is always at the start of the data
     // since EphemeralBlock has no header data
-    return this.data.subarray(0, StaticHelpersECIES.eciesOverheadLength);
+    return this.data.subarray(0, this.eciesService.eciesOverheadLength);
   }
 
   /**
@@ -235,7 +240,7 @@ export abstract class EncryptedBlock
     // The usable capacity is the block size minus the encryption overhead
     // This is the maximum amount of data that can be stored in the block
     const totalCapacity =
-      this.blockSize - StaticHelpersECIES.eciesOverheadLength;
+      this.blockSize - this.eciesService.eciesOverheadLength;
     // Ensure we never return a negative capacity
     return Math.max(0, totalCapacity);
   }
@@ -249,24 +254,22 @@ export abstract class EncryptedBlock
     await super.validateAsync();
 
     // Validate encryption header lengths
-    if (
-      this.layerHeaderData.length !== StaticHelpersECIES.eciesOverheadLength
-    ) {
+    if (this.layerHeaderData.length !== this.eciesService.eciesOverheadLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidEncryptionHeaderLength,
       );
     }
 
     // Validate individual components
-    if (this.ephemeralPublicKey.length !== StaticHelpersECIES.publicKeyLength) {
+    if (this.ephemeralPublicKey.length !== this.eciesService.publicKeyLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
       );
     }
-    if (this.iv.length !== StaticHelpersECIES.ivLength) {
+    if (this.iv.length !== this.eciesService.ivLength) {
       throw new BlockValidationError(BlockValidationErrorType.InvalidIVLength);
     }
-    if (this.authTag.length !== StaticHelpersECIES.authTagLength) {
+    if (this.authTag.length !== this.eciesService.authTagLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidAuthTagLength,
       );
@@ -280,7 +283,7 @@ export abstract class EncryptedBlock
     }
 
     // Validate actual data length
-    if (this.actualDataLength > this.capacity) {
+    if (this.lengthBeforeEncryption > this.capacity) {
       throw new BlockValidationError(
         BlockValidationErrorType.DataLengthExceedsCapacity,
       );
@@ -303,24 +306,22 @@ export abstract class EncryptedBlock
     super.validateSync();
 
     // Validate encryption header lengths
-    if (
-      this.layerHeaderData.length !== StaticHelpersECIES.eciesOverheadLength
-    ) {
+    if (this.layerHeaderData.length !== this.eciesService.eciesOverheadLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidEncryptionHeaderLength,
       );
     }
 
     // Validate individual components
-    if (this.ephemeralPublicKey.length !== StaticHelpersECIES.publicKeyLength) {
+    if (this.ephemeralPublicKey.length !== this.eciesService.publicKeyLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
       );
     }
-    if (this.iv.length !== StaticHelpersECIES.ivLength) {
+    if (this.iv.length !== this.eciesService.ivLength) {
       throw new BlockValidationError(BlockValidationErrorType.InvalidIVLength);
     }
-    if (this.authTag.length !== StaticHelpersECIES.authTagLength) {
+    if (this.authTag.length !== this.eciesService.authTagLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidAuthTagLength,
       );
@@ -334,7 +335,7 @@ export abstract class EncryptedBlock
     }
 
     // Validate actual data length
-    if (this.actualDataLength > this.capacity) {
+    if (this.lengthBeforeEncryption > this.capacity) {
       throw new BlockValidationError(
         BlockValidationErrorType.DataLengthExceedsCapacity,
       );

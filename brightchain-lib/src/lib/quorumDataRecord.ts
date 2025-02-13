@@ -1,16 +1,30 @@
 import { BrightChainMember } from './brightChainMember';
 import { GuidV4 } from './guid';
 import { QuorumDataRecordDto } from './quorumDataRecordDto';
-import { StaticHelpersChecksum } from './staticHelpers.checksum';
-import { StaticHelpersECIES } from './staticHelpers.ECIES';
+import { ChecksumService } from './services/checksum.service';
+import { ECIESService } from './services/ecies.service';
+import { ServiceProvider } from './services/service.provider';
 import {
   ChecksumBuffer,
   HexString,
   ShortHexGuid,
   SignatureBuffer,
+  SignatureString,
 } from './types';
 
 export class QuorumDataRecord {
+  private static eciesService: ECIESService;
+  private static checksumService: ChecksumService;
+
+  private static initialize() {
+    if (!QuorumDataRecord.eciesService) {
+      QuorumDataRecord.eciesService = ServiceProvider.getECIESService();
+    }
+    if (!QuorumDataRecord.checksumService) {
+      QuorumDataRecord.checksumService = ServiceProvider.getChecksumService();
+    }
+  }
+
   public readonly id: GuidV4;
   public readonly encryptedData: Buffer;
   public readonly encryptedSharesByMemberId: Map<ShortHexGuid, Buffer>;
@@ -56,8 +70,9 @@ export class QuorumDataRecord {
     this.sharesRequired = sharesRequired;
     this.encryptedData = encryptedData;
     this.encryptedSharesByMemberId = encryptedSharesByMemberId;
+    QuorumDataRecord.initialize();
     const calculatedChecksum =
-      StaticHelpersChecksum.calculateChecksum(encryptedData);
+      QuorumDataRecord.checksumService.calculateChecksum(encryptedData);
     if (checksum && checksum.compare(calculatedChecksum) != 0) {
       throw new Error('Invalid checksum');
     }
@@ -65,7 +80,7 @@ export class QuorumDataRecord {
     this.creator = creator;
     this.signature = signature ?? creator.sign(this.checksum);
     if (
-      !StaticHelpersECIES.verifyMessage(
+      !QuorumDataRecord.eciesService.verifyMessage(
         creator.publicKey,
         this.checksum,
         this.signature,
@@ -95,16 +110,16 @@ export class QuorumDataRecord {
       creatorId: this.creator.id.asShortHexGuid,
       encryptedData: this.encryptedData.toString('hex') as HexString,
       encryptedSharesByMemberId,
-      checksum: StaticHelpersChecksum.checksumBufferToChecksumString(
+      checksum: QuorumDataRecord.checksumService.checksumToHexString(
         this.checksum,
       ),
-      signature: StaticHelpersECIES.signatureBufferToSignatureString(
+      signature: QuorumDataRecord.eciesService.signatureBufferToSignatureString(
         this.signature,
-      ),
+      ) as SignatureString,
       memberIDs: this.memberIDs,
       sharesRequired: this.sharesRequired,
-      dateCreated: this.dateCreated,
-      dateUpdated: this.dateUpdated,
+      dateCreated: this.dateCreated.toISOString(),
+      dateUpdated: this.dateUpdated.toISOString(),
     };
   }
   public static fromDto(
@@ -124,11 +139,13 @@ export class QuorumDataRecord {
       dto.sharesRequired,
       Buffer.from(dto.encryptedData, 'hex'),
       encryptedSharesByMemberId,
-      StaticHelpersChecksum.checksumStringToChecksumBuffer(dto.checksum),
-      StaticHelpersECIES.signatureStringToSignatureBuffer(dto.signature),
+      QuorumDataRecord.checksumService.hexStringToChecksum(dto.checksum),
+      QuorumDataRecord.eciesService.signatureStringToSignatureBuffer(
+        dto.signature,
+      ),
       dto.id,
-      dto.dateCreated,
-      dto.dateUpdated,
+      new Date(dto.dateCreated),
+      new Date(dto.dateUpdated),
     );
   }
   public toJson(): string {
@@ -138,7 +155,12 @@ export class QuorumDataRecord {
     json: string,
     fetchMember: (memberId: ShortHexGuid) => BrightChainMember,
   ): QuorumDataRecord {
-    const dto = JSON.parse(json) as QuorumDataRecordDto;
+    const parsed = JSON.parse(json);
+    const dto = {
+      ...parsed,
+      dateCreated: new Date(parsed.dateCreated),
+      dateUpdated: new Date(parsed.dateUpdated),
+    } as QuorumDataRecordDto;
     return QuorumDataRecord.fromDto(dto, fetchMember);
   }
 }

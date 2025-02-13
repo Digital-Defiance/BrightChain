@@ -2,8 +2,8 @@ import { createHash, timingSafeEqual } from 'crypto';
 import { SecureStorageErrorType } from './enumerations/secureStorageErrorType';
 import { SecureStorageError } from './errors/secureStorageError';
 import { GuidV4 } from './guid';
-import { StaticHelpersPbkdf2 } from './staticHelpers.pbkdf2';
-import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
+import { Pbkdf2Service } from './services/pbkdf2.service';
+import { SymmetricService } from './services/symmetric.service';
 import { FullHexGuid, RawGuidBuffer } from './types';
 
 /**
@@ -114,21 +114,18 @@ export class SecureString {
     data: string | Buffer,
     salt?: Buffer,
   ): { encryptedData: Buffer; salt: Buffer } {
-    const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(
-      this.idBuffer,
-      salt,
-    );
-    const encryptionResult = StaticHelpersSymmetric.symmetricEncryptBuffer(
+    const idKey = Pbkdf2Service.deriveKeyFromPassword(this.idBuffer, salt);
+    const encryptionResult = SymmetricService.encryptBuffer(
       Buffer.isBuffer(data) ? data : Buffer.from(data, SecureString.encoding),
       idKey.hash,
     );
     return { encryptedData: encryptionResult.encryptedData, salt: idKey.salt };
   }
   private decryptData(data: Buffer): Buffer {
-    const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(
+    const idKey = Pbkdf2Service.deriveKeyFromPassword(
       this.idBuffer,
       this._salt,
     );
-    return StaticHelpersSymmetric.symmetricDecryptBuffer(data, idKey.hash);
+    return SymmetricService.decryptBuffer(data, idKey.hash);
   }
 }

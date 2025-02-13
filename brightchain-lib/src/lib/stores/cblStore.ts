@@ -5,7 +5,7 @@ import { EncryptedConstituentBlockListBlock } from '../blocks/encryptedCbl';
 import { RawDataBlock } from '../blocks/rawData';
 import { BlockService } from '../blockService';
 import { CblBlockMetadata } from '../cblBlockMetadata';
-import { TUPLE_SIZE } from '../constants';
+import { TUPLE } from '../constants';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
@@ -17,7 +17,7 @@ import { GuidV4 } from '../guid';
 import { translateEnum } from '../i18n';
 import { ICBLIndexEntry } from '../interfaces/cblIndexEntry';
 import { ISimpleStoreAsync } from '../interfaces/simpleStoreAsync';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer, RawGuidBuffer } from '../types';
 import { DiskBlockAsyncStore } from './diskBlockAsyncStore';
 
@@ -38,6 +38,7 @@ export class CBLStore
   private readonly _indexPath: string;
   private readonly _blockStore: DiskBlockAsyncStore;
   private readonly _blockSize: BlockSize;
+  private readonly checksumService = ServiceProvider.getChecksumService();
 
   constructor(storePath: string, blockSize: BlockSize) {
     if (!storePath) {
@@ -96,7 +97,7 @@ export class CBLStore
     // Generate whiteners for OFFS
     const { whiteners } = await BlockService.generateWhiteners(
       value.blockSize,
-      TUPLE_SIZE - 1, // One less than tuple size since we have the main block
+      TUPLE.SIZE - 1, // One less than tuple size since we have the main block
       this._blockStore,
     );
 
@@ -108,7 +109,7 @@ export class CBLStore
       value.blockSize,
       resultBuffer,
       now,
-      StaticHelpersChecksum.calculateChecksum(resultBuffer),
+      this.checksumService.calculateChecksum(resultBuffer),
       BlockType.RawData,
       BlockDataType.RawData,
       true, // canRead
@@ -126,7 +127,7 @@ export class CBLStore
         value.blockSize,
         whitener,
         now,
-        StaticHelpersChecksum.calculateChecksum(whitener),
+        this.checksumService.calculateChecksum(whitener),
         BlockType.RawData,
         BlockDataType.RawData,
         true, // canRead
@@ -154,7 +155,7 @@ export class CBLStore
         value instanceof ConstituentBlockListBlock
           ? (value.metadata as CblBlockMetadata).fileDataLength.toString()
           : undefined,
-      blockDataLength: value.actualDataLength,
+      blockDataLength: value.lengthBeforeEncryption,
     };
 
     writeFileSync(indexPath, JSON.stringify(indexEntry, null, 2));
@@ -197,7 +198,7 @@ export class CBLStore
     if (!xorData) {
       throw new StoreError(StoreErrorType.KeyNotFound);
     }
-    const resultChecksum = StaticHelpersChecksum.calculateChecksum(xorData);
+    const resultChecksum = this.checksumService.calculateChecksum(xorData);
     if (!resultChecksum.equals(checksum)) {
       throw new StoreError(StoreErrorType.BlockIdMismatch);
     }
@@ -217,7 +218,7 @@ export class CBLStore
             ),
             new Date(indexEntry.dateCreated),
           ),
-          true,
+          ServiceProvider.getECIESService(),
           true,
         )
       : new ConstituentBlockListBlock(

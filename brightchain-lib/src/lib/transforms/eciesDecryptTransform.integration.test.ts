@@ -1,17 +1,24 @@
 import { randomBytes } from 'crypto';
 import { Readable } from 'stream';
 import { BlockSize } from '../enumerations/blockSizes';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ECIESService } from '../services/ecies.service';
 import { EciesDecryptionTransform } from './eciesDecryptTransform';
-
-function encryptData(inputData: Buffer, publicKey: Buffer): Buffer {
-  return StaticHelpersECIES.encrypt(publicKey, inputData);
-}
 
 describe('EciesDecryptionTransform Integration Tests', () => {
   const blockSize = BlockSize.Small;
-  const mnemonic = StaticHelpersECIES.generateNewMnemonic();
-  const keypair = StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer(mnemonic);
+  let eciesService: ECIESService;
+  let mnemonic: string;
+  let keypair: { privateKey: Buffer; publicKey: Buffer };
+
+  beforeEach(() => {
+    eciesService = new ECIESService();
+    mnemonic = eciesService.generateNewMnemonic();
+    keypair = eciesService.mnemonicToSimpleKeyPairBuffer(mnemonic);
+  });
+
+  function encryptData(inputData: Buffer, publicKey: Buffer): Buffer {
+    return eciesService.encrypt(publicKey, inputData);
+  }
 
   const testEndToEndDecryption = async (inputData: Buffer): Promise<Buffer> => {
     // Encrypt the data
@@ -54,7 +61,7 @@ describe('EciesDecryptionTransform Integration Tests', () => {
   });
 
   it('correctly decrypts data that was encrypted and is exactly one block', async () => {
-    const testDataLength = blockSize - StaticHelpersECIES.eciesOverheadLength;
+    const testDataLength = blockSize - eciesService.eciesOverheadLength;
     const inputData = randomBytes(testDataLength);
     const decryptedData = await testEndToEndDecryption(inputData);
     expect(decryptedData).toEqual(inputData);

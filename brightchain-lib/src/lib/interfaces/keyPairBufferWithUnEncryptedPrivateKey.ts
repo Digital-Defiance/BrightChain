@@ -1,7 +1,8 @@
 import { ISimplePublicKeyOnlyBuffer } from './simplePublicKeyOnlyBuffer';
+import { SerializableBuffer } from '../serializableBuffer';
 
 export interface IKeyPairBufferWithUnEncryptedPrivateKey
   extends ISimplePublicKeyOnlyBuffer {
-  publicKey: Buffer;
-  privateKey: Buffer;
+  publicKey: SerializableBuffer;
+  privateKey: SerializableBuffer;
 }

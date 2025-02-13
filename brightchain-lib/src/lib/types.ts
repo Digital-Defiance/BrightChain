@@ -5,6 +5,7 @@ import { ISigningKeyPrivateKeyInfo } from './interfaces/signgingKeyPrivateKeyInf
 import { ISimpleKeyPairBuffer } from './interfaces/simpleKeyPairBuffer';
 import { ISimplePublicKeyOnly } from './interfaces/simplePublicKeyOnly';
 import { ISimplePublicKeyOnlyBuffer } from './interfaces/simplePublicKeyOnlyBuffer';
+import { SerializableBuffer } from './serializableBuffer';
 
 export type KeyPairBufferWithUnEncryptedPrivateKey = Brand<
   IKeyPairBufferWithUnEncryptedPrivateKey,
@@ -29,8 +30,12 @@ export type SimplePublicKeyOnlyBuffer = Brand<
 >;
 export type HexString = Brand<string, 'HexString'>;
 export type SignatureString = Brand<HexString, 'SignatureString'>;
-export type SignatureBuffer = Brand<Buffer, 'SignatureBuffer'>;
-export type ChecksumBuffer = Brand<Buffer, 'Sha3Checksum', 'ChecksumBuffer'>;
+export type SignatureBuffer = Brand<SerializableBuffer, 'SignatureBuffer'>;
+export type ChecksumBuffer = Brand<
+  SerializableBuffer,
+  'Sha3Checksum',
+  'ChecksumBuffer'
+>;
 export type ChecksumString = Brand<HexString, 'Sha3Checksum', 'ChecksumString'>;
 
 export type BigIntGuid = Brand<bigint, 'GuidV4', GuidBrandType.BigIntGuid>;
@@ -38,7 +43,7 @@ export type FullHexGuid = Brand<string, 'GuidV4', GuidBrandType.FullHexGuid>;
 export type ShortHexGuid = Brand<string, 'GuidV4', GuidBrandType.ShortHexGuid>;
 export type Base64Guid = Brand<string, 'GuidV4', GuidBrandType.Base64Guid>;
 export type RawGuidBuffer = Brand<
-  Buffer,
+  SerializableBuffer,
   'GuidV4',
   GuidBrandType.RawGuidBuffer
 >;

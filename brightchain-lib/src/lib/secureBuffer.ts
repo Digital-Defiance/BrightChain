@@ -2,8 +2,8 @@ import { createHash, timingSafeEqual } from 'crypto';
 import { SecureStorageErrorType } from './enumerations/secureStorageErrorType';
 import { SecureStorageError } from './errors/secureStorageError';
 import { GuidV4 } from './guid';
-import { StaticHelpersPbkdf2 } from './staticHelpers.pbkdf2';
-import { StaticHelpersSymmetric } from './staticHelpers.symmetric';
+import { Pbkdf2Service } from './services/pbkdf2.service';
+import { SymmetricService } from './services/symmetric.service';
 import { FullHexGuid, RawGuidBuffer } from './types';
 
 /**
@@ -63,11 +63,11 @@ export class SecureBuffer {
     if (this._length === 0) {
       return Buffer.alloc(0);
     }
-    const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(
+    const idKey = Pbkdf2Service.deriveKeyFromPassword(
       this.idBuffer,
       this._salt,
     );
-    const decryptionResult = StaticHelpersSymmetric.symmetricDecryptBuffer(
+    const decryptionResult = SymmetricService.decryptBuffer(
       this._encryptedValue,
       idKey.hash,
     );
@@ -124,11 +124,8 @@ export class SecureBuffer {
     data: string | Buffer,
     salt?: Buffer,
   ): { encryptedData: Buffer; salt: Buffer } {
-    const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(
-      this.idBuffer,
-      salt,
-    );
-    const encryptionResult = StaticHelpersSymmetric.symmetricEncryptBuffer(
+    const idKey = Pbkdf2Service.deriveKeyFromPassword(this.idBuffer, salt);
+    const encryptionResult = SymmetricService.encryptBuffer(
       Buffer.isBuffer(data)
         ? data
         : Buffer.from(data, SecureBuffer.stringEncoding),
@@ -137,10 +134,10 @@ export class SecureBuffer {
     return { encryptedData: encryptionResult.encryptedData, salt: idKey.salt };
   }
   private decryptData(data: Buffer): Buffer {
-    const idKey = StaticHelpersPbkdf2.deriveKeyFromPassword(
+    const idKey = Pbkdf2Service.deriveKeyFromPassword(
       this.idBuffer,
       this._salt,
     );
-    return StaticHelpersSymmetric.symmetricDecryptBuffer(data, idKey.hash);
+    return SymmetricService.decryptBuffer(data, idKey.hash);
   }
 }

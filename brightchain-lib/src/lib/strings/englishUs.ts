@@ -86,7 +86,7 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_BlockValidationErrorInvalidSignature]:
     'Invalid signature provided',
   [StringNames.Error_BlockValidationErrorInvalidTupleSizeTemplate]:
-    'Tuple size must be between {MIN_TUPLE_SIZE} and {MAX_TUPLE_SIZE}',
+    'Tuple size must be between {TUPLE.MIN_SIZE} and {TUPLE.MAX_SIZE}',
   [StringNames.Error_BlockValidationErrorMethodMustBeImplementedByDerivedClass]:
     'Method must be implemented by derived class',
   [StringNames.Error_BlockValidationErrorNoChecksum]: 'No checksum provided',
@@ -347,7 +347,7 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_InvalidLanguageCode]: 'Invalid language code.',
   [StringNames.Error_InvalidSessionID]: 'Invalid session ID.',
   [StringNames.Error_InvalidTupleCountTemplate]:
-    'Invalid tuple count ({TUPLE_COUNT}), must be between {MIN_TUPLE_SIZE} and {MAX_TUPLE_SIZE}',
+    'Invalid tuple count ({TUPLE_COUNT}), must be between {TUPLE.MIN_SIZE} and {TUPLE.MAX_SIZE}',
   [StringNames.Error_MemberErrorIncorrectOrInvalidPrivateKey]:
     'Incorrect or invalid private key for public key',
   [StringNames.Error_MemberErrorInvalidEmail]: 'Invalid email.',
@@ -368,7 +368,7 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_MemberErrorPrivateKeyRequiredToDeriveVotingKeyPair]:
     'Private key required to derive voting key pair.',
   [StringNames.Error_MemberErrorWalletAlreadyLoaded]: 'Wallet already loaded.',
-  [StringNames.Error_MemoryTupleErrorInvalidTupleSizeTemplate]: `Tuple must have {TUPLE_SIZE} blocks`,
+  [StringNames.Error_MemoryTupleErrorInvalidTupleSizeTemplate]: `Tuple must have {TUPLE.SIZE} blocks`,
   [StringNames.Error_MultiEncryptedErrorDataTooShort]:
     'Data too short to contain encryption header',
   [StringNames.Error_MultiEncryptedErrorDataLengthExceedsCapacity]:
@@ -391,7 +391,7 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Data and random data lengths must match',
   [StringNames.Error_WhitenedErrorInvalidBlockSize]: 'Invalid block size',
   [StringNames.Error_HandleTupleErrorInvalidTupleSizeTemplate]:
-    'Invalid tuple size ({TUPLE_SIZE})',
+    'Invalid tuple size ({TUPLE.SIZE})',
   [StringNames.Error_HandleTupleErrorBlockSizeMismatch]:
     'All blocks in tuple must have the same size',
   [StringNames.Error_HandleTupleErrorNoBlocksToXor]: 'No blocks to XOR',
@@ -412,8 +412,8 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_MemoryTupleErrorNoBlocksToXor]: 'No blocks to XOR',
   [StringNames.Error_MemoryTupleErrorInvalidBlockCount]:
     'Invalid number of blocks for tuple',
-  [StringNames.Error_MemoryTupleErrorExpectedBlockIdsTemplate]: `Expected {TUPLE_SIZE} block IDs`,
-  [StringNames.Error_MemoryTupleErrorExpectedBlocksTemplate]: `Expected {TUPLE_SIZE} blocks`,
+  [StringNames.Error_MemoryTupleErrorExpectedBlockIdsTemplate]: `Expected {TUPLE.SIZE} block IDs`,
+  [StringNames.Error_MemoryTupleErrorExpectedBlocksTemplate]: `Expected {TUPLE.SIZE} blocks`,
   [StringNames.Error_MetadataMismatch]: 'Metadata mismatch.',
   [StringNames.Error_TokenExpired]: 'Token expired.',
   [StringNames.Error_TokenInvalid]: 'Token invalid.',
@@ -428,6 +428,8 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Register_Error]: 'An error occurred during registration.',
   [StringNames.Register_Success]: 'Registration successful.',
   [StringNames.Validation_InvalidLanguage]: 'Invalid language.',
+  [StringNames.Error_DocumentInvalidValueTemplate]: 'Invalid value for {KEY}',
+  [StringNames.Error_DocumentFieldRequiredTemplate]: 'Field {KEY} is required.',
 };
 
 export default AmericanEnglishStrings;

@@ -5,6 +5,7 @@ import {
   PrivateKey,
   PublicKey,
 } from 'paillier-bigint';
+import { ECIES } from './constants';
 import { EmailString } from './emailString';
 import { MemberErrorType } from './enumerations/memberErrorType';
 import { MemberType } from './enumerations/memberType';
@@ -12,9 +13,8 @@ import { MemberError } from './errors/memberError';
 import { GuidV4 } from './guid';
 import { IMemberDTO } from './interfaces/memberDto';
 import { IMemberWithMnemonic } from './interfaces/memberWithMnemonic';
-import { StaticHelpersECIES } from './staticHelpers.ECIES';
-import { StaticHelpersVoting } from './staticHelpers.voting';
-import { StaticHelpersVotingDerivation } from './staticHelpers.voting.derivation';
+import { ECIESService } from './services/ecies.service';
+import { VotingService } from './services/voting.service';
 import { ShortHexGuid, SignatureBuffer } from './types';
 
 /**
@@ -26,6 +26,7 @@ import { ShortHexGuid, SignatureBuffer } from './types';
  * 4. Establish ownership of blocks
  */
 export class BrightChainMember {
+  private readonly eciesService: ECIESService;
   public readonly publicKey: Buffer;
   private _wallet: Wallet | undefined;
   private _privateKey: Buffer | undefined;
@@ -52,6 +53,7 @@ export class BrightChainMember {
     dateUpdated?: Date,
     creatorId?: GuidV4,
   ) {
+    this.eciesService = new ECIESService();
     this.memberType = memberType;
     if (id !== undefined) {
       this.id = id;
@@ -85,10 +87,7 @@ export class BrightChainMember {
     this.creatorId = creatorId ?? this.id;
     if (privateKey) {
       const { privateKey: _votingPrivateKey } =
-        StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
-          privateKey,
-          publicKey,
-        );
+        VotingService.deriveVotingKeysFromECDH(privateKey, publicKey);
       this._votingPrivateKey = _votingPrivateKey;
     }
   }
@@ -122,16 +121,19 @@ export class BrightChainMember {
     const nonce = randomBytes(32);
     // Ensure 0x04 prefix for encryption
     const publicKeyForEncryption =
-      this.publicKey[0] === 0x04
+      this.publicKey[0] === ECIES.PUBLIC_KEY_MAGIC
         ? this.publicKey
-        : Buffer.concat([Buffer.from([0x04]), this.publicKey]);
-    const testMessage = StaticHelpersECIES.encrypt(
+        : Buffer.concat([
+            Buffer.from([ECIES.PUBLIC_KEY_MAGIC]),
+            this.publicKey,
+          ]);
+    const testMessage = this.eciesService.encrypt(
       publicKeyForEncryption,
       nonce,
     );
     let testDecrypted;
     try {
-      testDecrypted = StaticHelpersECIES.decryptWithHeader(value, testMessage);
+      testDecrypted = this.eciesService.decryptWithHeader(value, testMessage);
     } catch (e) {
       testDecrypted = undefined;
     }
@@ -172,10 +174,13 @@ export class BrightChainMember {
     if (this._wallet) {
       throw new MemberError(MemberErrorType.WalletAlreadyLoaded);
     }
-    const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
+    const { wallet } = this.eciesService.walletAndSeedFromMnemonic(mnemonic);
     const privateKey = wallet.getPrivateKey();
     const publicKey = wallet.getPublicKey();
-    const publicKeyWithPrefix = Buffer.concat([Buffer.from([0x04]), publicKey]);
+    const publicKeyWithPrefix = Buffer.concat([
+      Buffer.from([ECIES.PUBLIC_KEY_MAGIC]),
+      publicKey,
+    ]);
 
     if (
       publicKeyWithPrefix.toString('hex') !== this.publicKey.toString('hex')
@@ -191,10 +196,7 @@ export class BrightChainMember {
       throw new MemberError(MemberErrorType.MissingPrivateKey);
     }
     const { privateKey: votingPrivateKey } =
-      StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
-        this._privateKey,
-        this.publicKey,
-      );
+      VotingService.deriveVotingKeysFromECDH(this._privateKey, this.publicKey);
     this._votingPrivateKey = votingPrivateKey;
   }
 
@@ -204,7 +206,7 @@ export class BrightChainMember {
    * @returns
    */
   public sign(data: Buffer): SignatureBuffer {
-    return StaticHelpersECIES.signMessage(this.privateKey, data);
+    return this.eciesService.signMessage(this.privateKey, data);
   }
 
   /**
@@ -214,7 +216,7 @@ export class BrightChainMember {
    * @returns
    */
   public verify(signature: SignatureBuffer, data: Buffer): boolean {
-    return StaticHelpersECIES.verifyMessage(this.publicKey, data, signature);
+    return this.eciesService.verifyMessage(this.publicKey, data, signature);
   }
 
   /**
@@ -225,7 +227,9 @@ export class BrightChainMember {
   public get votingKeyPair(): PaillierKeyPair {
     // Get raw public key (without 0x04 prefix)
     const rawPublicKey =
-      this.publicKey[0] === 0x04 ? this.publicKey.subarray(1) : this.publicKey;
+      this.publicKey[0] === ECIES.PUBLIC_KEY_MAGIC
+        ? this.publicKey.subarray(1)
+        : this.publicKey;
 
     // Derive voting keys from ECDH keys
     if (!this._privateKey) {
@@ -234,7 +238,7 @@ export class BrightChainMember {
       );
     }
 
-    return StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
+    return VotingService.deriveVotingKeysFromECDH(
       this._privateKey,
       rawPublicKey,
     );
@@ -268,28 +272,28 @@ export class BrightChainMember {
       throw new MemberError(MemberErrorType.InvalidEmailWhitespace);
     }
 
+    const eciesService = new ECIESService();
     const newId = GuidV4.new();
-    const mnemonic = StaticHelpersECIES.generateNewMnemonic();
-    const { wallet } = StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
+    const mnemonic = eciesService.generateNewMnemonic();
+    const { wallet } = eciesService.walletAndSeedFromMnemonic(mnemonic);
 
     // Get private key from wallet
     const privateKey = wallet.getPrivateKey();
     // Get public key with 0x04 prefix
     const publicKeyWithPrefix = Buffer.concat([
-      Buffer.from([0x04]),
+      Buffer.from([ECIES.PUBLIC_KEY_MAGIC]),
       wallet.getPublicKey(),
     ]);
 
     // Create ECDH instance for key derivation
-    const ecdh = createECDH(StaticHelpersECIES.curveName);
+    const ecdh = createECDH(eciesService.curveName);
     ecdh.setPrivateKey(privateKey);
 
     // Derive voting keys using the private key and public key
-    const votingKeypair =
-      StaticHelpersVotingDerivation.deriveVotingKeysFromECDH(
-        privateKey,
-        publicKeyWithPrefix,
-      );
+    const votingKeypair = VotingService.deriveVotingKeysFromECDH(
+      privateKey,
+      publicKeyWithPrefix,
+    );
 
     return {
       member: new BrightChainMember(
@@ -317,11 +321,11 @@ export class BrightChainMember {
   public encryptData(data: string | Buffer): Buffer {
     const bufferData = Buffer.isBuffer(data) ? data : Buffer.from(data);
     // Create ECDH instance for encryption
-    const ecdh = createECDH(StaticHelpersECIES.curveName);
+    const ecdh = createECDH(this.eciesService.curveName);
     // Generate ephemeral key pair
     ecdh.generateKeys();
     // Use public key directly since it's already in ECDH format
-    return StaticHelpersECIES.encrypt(this.publicKey, bufferData);
+    return this.eciesService.encrypt(this.publicKey, bufferData);
   }
 
   /**
@@ -331,10 +335,10 @@ export class BrightChainMember {
    */
   public decryptData(encryptedData: Buffer) {
     // Create ECDH instance for decryption
-    const ecdh = createECDH(StaticHelpersECIES.curveName);
+    const ecdh = createECDH(this.eciesService.curveName);
     // Set private key
     ecdh.setPrivateKey(this.privateKey);
-    return StaticHelpersECIES.decryptWithHeader(this.privateKey, encryptedData);
+    return this.eciesService.decryptWithHeader(this.privateKey, encryptedData);
   }
 
   public toJson(): string {
@@ -344,7 +348,7 @@ export class BrightChainMember {
       name: this.name,
       contactEmail: this.contactEmail.toString(),
       publicKey: this.publicKey.toString('base64'),
-      votingPublicKey: StaticHelpersVoting.votingPublicKeyToBuffer(
+      votingPublicKey: VotingService.votingPublicKeyToBuffer(
         this.votingPublicKey,
       ).toString('base64'),
       createdBy: this.creatorId.asShortHexGuid as string,
@@ -364,7 +368,7 @@ export class BrightChainMember {
       parsedMember.name,
       contactEmail,
       Buffer.from(parsedMember.publicKey, 'base64'),
-      StaticHelpersVoting.bufferToVotingPublicKey(
+      VotingService.bufferToVotingPublicKey(
         Buffer.from(parsedMember.votingPublicKey, 'base64'),
       ),
       undefined,
