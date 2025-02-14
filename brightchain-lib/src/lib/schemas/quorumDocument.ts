@@ -3,13 +3,15 @@ import { SchemaDefinition } from '../document';
 import { QuorumDocument } from '../documents/quorumDocument';
 import { GuidV4 } from '../guid';
 import { SerializableBuffer } from '../serializableBuffer';
+import { ChecksumBuffer, SignatureBuffer } from '../types';
 
 export const QuorumDocumentSchema: SchemaDefinition<QuorumDocument> = {
   checksum: {
     type: Object,
     required: true,
-    serialize: (value: SerializableBuffer) => value.serialize(),
-    hydrate: (value: string) => SerializableBuffer.hydrate(value),
+    serialize: (value: ChecksumBuffer) => value.serialize(),
+    hydrate: (value: string) =>
+      SerializableBuffer.hydrate(value) as ChecksumBuffer,
   },
   creator: {
     type: Object,
@@ -20,8 +22,9 @@ export const QuorumDocumentSchema: SchemaDefinition<QuorumDocument> = {
   signature: {
     type: Object,
     required: true,
-    serialize: (value: SerializableBuffer) => value.serialize(),
-    hydrate: (value: string) => SerializableBuffer.hydrate(value),
+    serialize: (value: SignatureBuffer) => value.serialize(),
+    hydrate: (value: string) =>
+      SerializableBuffer.hydrate(value) as SignatureBuffer,
   },
   memberIDs: {
     type: Array,
