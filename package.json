@@ -121,7 +121,7 @@
     "babel-jest": "29.7.0",
     "cypress": "13.17.0",
     "esbuild": "^0.19.2",
-    "eslint": "^8.56.0",
+    "eslint": "^9.20.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-cypress": "^2.13.4",
     "eslint-plugin-import": "2.31.0",
