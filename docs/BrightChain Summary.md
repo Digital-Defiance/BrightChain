@@ -2,7 +2,7 @@
 
 ## 1. Abstract
 
-BrightChain aims to become the de facto international and interplanetary standard for data storage, identity, and digital contract fulfillment. At its heart is a concept introduced by The Owner Free File System which breaks a file up into source blocks and merges them with blocks of random data using an “exclusive or” operation and discards the source blocks. Added on top of that, we introduce identity/anonymity, reputation, block revocation and expiration. What the Owner Free Filesystem called “whitening”, we call “Brightening” and where BrightChain gets its name.
+BrightChain aims to become the de facto international and interplanetary standard for data storage, identity, and digital contract fulfillment. At its heart is a concept introduced by The Owner Free File System which breaks a file up into source blocks and merges them with blocks of random data using an “exclusive or” operation and discards the source blocks. Added on top of that, we introduce identity/anonymity, voting, reputation, block revocation and expiration, and a confidential quorum. What the Owner Free Filesystem called “whitening”, we call “Brightening” and where BrightChain gets its name.
 
 ## 2. Problem
 
@@ -11,6 +11,8 @@ BrightChain addresses not one, but three central problems:
 1. **Wasted unused storage, lack of storage where needed.**
 
    Computers and devices with unused storage are everywhere, and yet no mainstream solutions exist to both make use of the wasted space, as well as to ensure that participating nodes have immunity to takedown requests.
+
+   Similarly, there are many places where excess compute capacity is available and a lack where it is needed. Brightchain also intends to implement distributed compute, and make use of unused compute resources.
 
 2. **Wasted Energy in Blockchain**
 
