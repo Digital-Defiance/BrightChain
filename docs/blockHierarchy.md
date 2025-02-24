@@ -1,4 +1,6 @@
-# Block Hierarchy for Owner Free File System
+# Block Hierarchy for BrightChain
+
+BrightChain has concepts for a few different block types. Blocks on disk have no inherent meaning, but at various phases of certain processes, they may have temporary meaning like whether the source is a random block or a reused block as a whitener. Ephemeral blocks in memory can have several different meanings, and should never be committed to disk.
 
 ## Core Blocks
 
@@ -129,16 +131,20 @@ This structure better supports the Owner Free File System by:
 classDiagram
     %% Base Inheritance
     BaseBlock <|-- RawDataBlock
-    BaseBlock <|-- EncryptedBlock
-    BaseBlock <|-- ConstituentBlockListBlock
+    BaseBlock <|-- EphemeralBlock
     RawDataBlock <|-- ParityBlock
     RawDataBlock <|-- RandomBlock
-    EncryptedBlock <|-- MultiEncryptedBlock
+    RawDataBlock <|-- WhitenedBlock
+    EphemeralBlock <|-- EncryptedBlock
+    EphemeralBlock <|-- ConstituentBlockListBlock
+    EphemeralBlock <|-- MultiEncryptedBlock
+    EncryptedBlock <|-- EncryptedCBL
+    EncryptedBlock <|-- EncryptedOwnedDataBlock
     ConstituentBlockListBlock <|-- ExtendedCBL
 
     %% Encryption Capabilities
-    ConstituentBlockListBlock ..> EncryptedBlock: can be encrypted as
-    ExtendedCBL ..> EncryptedBlock: can be encrypted as
+    ConstituentBlockListBlock ..> EncryptedCBL: can be encrypted as
+    ExtendedCBL ..> EncryptedCBL: can be encrypted as
     RawDataBlock ..> EncryptedBlock: can be encrypted as
 
     class BaseBlock {
@@ -147,7 +153,6 @@ classDiagram
         +blockDataType: BlockDataType
         +idChecksum: ChecksumBuffer
         +layerHeaderData: Buffer
-        +totalOverhead: number
         +validateSync()
     }
 
@@ -155,6 +160,12 @@ classDiagram
         +data: Buffer
         +payload: Buffer
         +overhead: 0 bytes
+    }
+
+    class EphemeralBlock {
+        +encrypted: boolean
+        +canEncrypt: boolean
+        +canDecrypt: boolean
     }
 
     class EncryptedBlock {
@@ -169,7 +180,7 @@ classDiagram
         +dateCreated: Date
         +addressCount: number
         +signature: Buffer
-        +overhead: 102 bytes
+        +overhead: 98 bytes
     }
 
     class ExtendedCBL {
@@ -181,7 +192,6 @@ classDiagram
     class MultiEncryptedBlock {
         +recipients: BrightChainMember[]
         +encryptedKeys: Buffer[]
-        +encryptedData: Buffer
         +overhead: varies
     }
 
@@ -193,6 +203,22 @@ classDiagram
     class RandomBlock {
         +random data
         +overhead: 0 bytes
+    }
+
+    class WhitenedBlock {
+        +whiteningData: Buffer
+        +overhead: 0 bytes
+    }
+
+    class EncryptedCBL {
+        +encrypted CBL data
+        +overhead: 97 + 98 bytes
+    }
+
+    class EncryptedOwnedDataBlock {
+        +ownerId: string
+        +ownerSignature: Buffer
+        +overhead: 97 + signature bytes
     }
 
     %% Note
