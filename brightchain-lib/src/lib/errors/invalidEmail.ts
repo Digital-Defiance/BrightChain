@@ -1,18 +1,21 @@
-import {
-  InvalidEmailErrorType,
-  InvalidEmailErrorTypes,
-} from '../enumerations/invalidEmailType';
+import { InvalidEmailErrorType } from '../enumerations/invalidEmailType';
 import { StringLanguages } from '../enumerations/stringLanguages';
-import { translate } from '../i18n';
-import { HandleableError } from './handleable';
+import StringNames from '../enumerations/stringNames';
+import { TypedError } from './typedError';
 
-export class InvalidEmailError extends HandleableError {
-  public readonly reason: InvalidEmailErrorType;
-  constructor(reason: InvalidEmailErrorType, language?: StringLanguages) {
-    super(translate(InvalidEmailErrorTypes[reason], language), {
+export class InvalidEmailError extends TypedError<InvalidEmailErrorType> {
+  public get reasonMap(): Record<InvalidEmailErrorType, StringNames> {
+    return {
+      [InvalidEmailErrorType.Invalid]: StringNames.Error_InvalidEmail,
+      [InvalidEmailErrorType.Missing]: StringNames.Error_InvalidEmailMissing,
+      [InvalidEmailErrorType.Whitespace]:
+        StringNames.Error_InvalidEmailWhitespace,
+    };
+  }
+  constructor(type: InvalidEmailErrorType, language?: StringLanguages) {
+    super(type, language, {
       statusCode: 422,
     });
     this.name = 'InvalidEmailError';
-    this.reason = reason;
   }
 }

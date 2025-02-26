@@ -1,5 +1,3 @@
-import { StringNames } from './stringNames';
-
 export enum MultiEncryptedErrorType {
   DataTooShort = 'DataTooShort',
   DataLengthExceedsCapacity = 'DataLengthExceedsCapacity',
@@ -9,25 +7,6 @@ export enum MultiEncryptedErrorType {
   InvalidIVLength = 'InvalidIVLength',
   InvalidAuthTagLength = 'InvalidAuthTagLength',
   ChecksumMismatch = 'ChecksumMismatch',
+  RecipientMismatch = 'RecipientMismatch',
+  RecipientsAlreadyLoaded = 'RecipientsAlreadyLoaded',
 }
-
-export const MultiEncryptedErrorTypes: {
-  [key in MultiEncryptedErrorType]: StringNames;
-} = {
-  [MultiEncryptedErrorType.DataTooShort]:
-    StringNames.Error_MultiEncryptedErrorDataTooShort,
-  [MultiEncryptedErrorType.DataLengthExceedsCapacity]:
-    StringNames.Error_MultiEncryptedErrorDataLengthExceedsCapacity,
-  [MultiEncryptedErrorType.CreatorMustBeMember]:
-    StringNames.Error_MultiEncryptedErrorCreatorMustBeMember,
-  [MultiEncryptedErrorType.BlockNotReadable]:
-    StringNames.Error_MultiEncryptedErrorBlockNotReadable,
-  [MultiEncryptedErrorType.InvalidEphemeralPublicKeyLength]:
-    StringNames.Error_MultiEncryptedErrorInvalidEphemeralPublicKeyLength,
-  [MultiEncryptedErrorType.InvalidIVLength]:
-    StringNames.Error_MultiEncryptedErrorInvalidIVLength,
-  [MultiEncryptedErrorType.InvalidAuthTagLength]:
-    StringNames.Error_MultiEncryptedErrorInvalidAuthTagLength,
-  [MultiEncryptedErrorType.ChecksumMismatch]:
-    StringNames.Error_MultiEncryptedErrorChecksumMismatch,
-};

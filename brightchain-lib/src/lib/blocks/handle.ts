@@ -5,15 +5,16 @@ import {
   createWriteStream,
   existsSync,
   readFileSync,
+  statSync,
 } from 'fs';
 import { BlockMetadata } from '../blockMetadata';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockMetadataErrorType } from '../enumerations/blockMetadataErrorType';
+import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
-import { BlockAccessError, BlockMetadataError } from '../errors/block';
+import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumTransform } from '../transforms/checksumTransform';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
@@ -26,22 +27,39 @@ import { RawDataBlock } from './rawData';
  */
 export class BlockHandle extends BaseBlock {
   protected _path: string;
+
   protected _cachedData: Buffer | null = null;
-  protected _cachedMetadata: BlockMetadata | null = null;
+  protected override _blockSize: BlockSize;
 
   /**
    * Constructor - prefer using static createFromPath() method instead
    */
   constructor(
-    type: BlockType,
-    dataType: BlockDataType,
+    path: string,
+    blockSize: BlockSize,
     checksum: ChecksumBuffer,
-    metadata: BlockMetadata,
     canRead = true,
     canPersist = true,
   ) {
-    super(type, dataType, checksum, metadata, canRead, canPersist);
-    this._path = '';
+    if (!existsSync(path)) {
+      throw new BlockAccessError(BlockAccessErrorType.BlockFileNotFound, path);
+    }
+    super(
+      BlockType.Handle,
+      BlockDataType.RawData,
+      checksum,
+      new BlockMetadata(
+        blockSize,
+        BlockType.Handle,
+        BlockDataType.RawData,
+        statSync(path).size,
+        new Date(statSync(path).birthtime),
+      ),
+      canRead,
+      canPersist,
+    );
+    this._path = path;
+    this._blockSize = blockSize;
   }
 
   /**
@@ -49,7 +67,7 @@ export class BlockHandle extends BaseBlock {
    */
   public static async createFromPath(
     path: string,
-    metadata: BlockMetadata,
+    blockSize: BlockSize,
     checksum?: ChecksumBuffer,
     canRead = true,
     canPersist = true,
@@ -57,30 +75,20 @@ export class BlockHandle extends BaseBlock {
     if (!existsSync(path)) {
       throw new BlockAccessError(BlockAccessErrorType.BlockFileNotFound, path);
     }
-    const data = readFileSync(path);
 
     // If no checksum provided, calculate it
     if (!checksum) {
-      checksum = await StaticHelpersChecksum.calculateChecksumAsync(data);
+      checksum =
+        await ServiceProvider.getInstance().checksumService.calculateChecksumForStream(
+          createReadStream(path),
+        );
     }
 
-    // Create the handle with the checksum
-    const block = new BlockHandle(
-      BlockType.Handle,
-      BlockDataType.RawData,
-      checksum,
-      metadata,
-      canRead,
-      canPersist,
-    );
-    block._path = path;
+    return new BlockHandle(path, blockSize, checksum, canRead, canPersist);
+  }
 
-    // Validate if we calculated the checksum ourselves
-    if (!checksum) {
-      await block.validateAsync();
-    }
-
-    return block;
+  public override get layerOverhead(): number {
+    return 0; // Handle blocks don't add overhead
   }
 
   /**
@@ -115,7 +123,10 @@ export class BlockHandle extends BaseBlock {
   /**
    * Get the block data without padding
    */
-  public get data(): Buffer {
+  public override get data(): Buffer {
+    if (!this.canRead) {
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
+    }
     if (!this._cachedData) {
       if (!existsSync(this.path)) {
         throw new BlockAccessError(
@@ -123,10 +134,9 @@ export class BlockHandle extends BaseBlock {
           this.path,
         );
       }
-      const fileData = readFileSync(this.path);
-      this._cachedData = fileData;
+      this._cachedData = readFileSync(this.path);
     }
-    return this._cachedData.subarray(0, this.metadata.lengthWithoutPadding);
+    return this._cachedData;
   }
 
   /**
@@ -154,37 +164,23 @@ export class BlockHandle extends BaseBlock {
   }
 
   /**
-   * Block metadata, loaded on demand
+   * Block metadata from filesystem
    */
   public override get metadata(): BlockMetadata {
-    if (!this._cachedMetadata) {
-      const metadataPath = `${this.path}.m.json`;
-      if (!existsSync(metadataPath)) {
-        // If no metadata file exists, create default metadata
-        this._cachedMetadata = new BlockMetadata(
-          this.blockSize,
-          BlockType.Handle,
-          BlockDataType.RawData,
-          this.data.length,
-        );
-      } else {
-        try {
-          const metadataJson = readFileSync(metadataPath).toString();
-          this._cachedMetadata = BlockMetadata.fromJson(metadataJson);
-        } catch (error: unknown) {
-          if (error instanceof Error) {
-            throw new BlockMetadataError(
-              BlockMetadataErrorType.InvalidBlockMetadata,
-              error.message,
-            );
-          }
-          throw new BlockMetadataError(
-            BlockMetadataErrorType.InvalidBlockMetadata,
-          );
-        }
-      }
+    if (!existsSync(this._path)) {
+      throw new BlockAccessError(
+        BlockAccessErrorType.BlockFileNotFound,
+        this._path,
+      );
     }
-    return this._cachedMetadata;
+    const stats = statSync(this._path);
+    return new BlockMetadata(
+      this._blockSize,
+      BlockType.Handle,
+      BlockDataType.RawData,
+      stats.size,
+      new Date(stats.birthtime),
+    );
   }
 
   /**
@@ -259,7 +255,9 @@ export class BlockHandle extends BaseBlock {
       );
     }
     const data = readFileSync(this.path);
-    return StaticHelpersChecksum.calculateChecksum(data);
+    return ServiceProvider.getInstance().checksumService.calculateChecksum(
+      data,
+    );
   }
 
   /**
@@ -297,7 +295,6 @@ export class BlockHandle extends BaseBlock {
    */
   public clearCache(): void {
     this._cachedData = null;
-    this._cachedMetadata = null;
   }
 
   public get block(): RawDataBlock {
