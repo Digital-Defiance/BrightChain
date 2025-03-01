@@ -2,6 +2,7 @@ import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import CONSTANTS, { ECIES } from '../constants';
 import { EmailString } from '../emailString';
+import BlockType from '../enumerations/blockType';
 import { EciesErrorType } from '../enumerations/eciesErrorType';
 import { GuidBrandType } from '../enumerations/guidBrandType';
 import MemberType from '../enumerations/memberType';
@@ -192,63 +193,71 @@ describe('ECIESService', () => {
       const overhead =
         service.calculateECIESMultipleRecipientOverhead(recipientsCount);
       expect(overhead).toBe(
-        ECIES.MULTIPLE.IV_LENGTH +
-          ECIES.MULTIPLE.AUTH_TAG_LENGTH +
+        ECIES.MULTIPLE.IV_SIZE +
+          ECIES.MULTIPLE.AUTH_TAG_SIZE +
           CONSTANTS.UINT64_SIZE +
           CONSTANTS.UINT16_SIZE +
           recipientsCount *
             GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer) +
-          recipientsCount * ECIES.MULTIPLE.ENCRYPTED_KEY_LENGTH,
+          recipientsCount * ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE,
       );
     });
 
     it('should build ECIES multiple recipient header correctly', () => {
-      const iv = randomBytes(ECIES.MULTIPLE.IV_LENGTH);
-      const authTag = randomBytes(ECIES.MULTIPLE.AUTH_TAG_LENGTH);
-      const recipients = [sender, recipient];
-      const encryptedKeys = recipients.map(() =>
-        randomBytes(ECIES.MULTIPLE.ENCRYPTED_KEY_LENGTH),
+      const iv = randomBytes(ECIES.MULTIPLE.IV_SIZE);
+      const authTag = randomBytes(ECIES.MULTIPLE.AUTH_TAG_SIZE);
+      const recipientIds = [sender.id, recipient.id];
+      const recipientKeys = recipientIds.map(() =>
+        randomBytes(ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE),
       );
       const dataLength = 1000;
 
       const header = service.buildECIESMultipleRecipientHeader(
-        iv,
-        authTag,
-        recipients,
-        encryptedKeys,
-        dataLength,
+        {
+          iv,
+          authTag,
+          recipientIds,
+          recipientKeys,
+          originalMessageLength: dataLength,
+          encryptedMessage: randomBytes(dataLength),
+        },
+        BlockType.MultiEncryptedBlock,
       );
 
       const expectedHeaderLengthV1 =
-        service.calculateECIESMultipleRecipientOverhead(recipients.length);
+        service.calculateECIESMultipleRecipientOverhead(recipientIds.length);
       const expectedHeaderLengthV2 =
-        ECIES.MULTIPLE.IV_LENGTH +
-        ECIES.MULTIPLE.AUTH_TAG_LENGTH +
+        ECIES.MULTIPLE.IV_SIZE +
+        ECIES.MULTIPLE.AUTH_TAG_SIZE +
         CONSTANTS.UINT64_SIZE +
         CONSTANTS.UINT16_SIZE +
-        recipients.length *
+        recipientIds.length *
           GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer) +
-        encryptedKeys.length * ECIES.MULTIPLE.ENCRYPTED_KEY_LENGTH;
+        recipientKeys.length * ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE;
 
       expect(header.length).toBe(expectedHeaderLengthV1);
       expect(header.length).toBe(expectedHeaderLengthV2);
     });
 
     it('should parse multi-encrypted header correctly', () => {
-      const iv = randomBytes(ECIES.MULTIPLE.IV_LENGTH);
-      const authTag = randomBytes(ECIES.MULTIPLE.AUTH_TAG_LENGTH);
-      const recipients = [sender, recipient];
-      const encryptedKeys = recipients.map(() =>
-        randomBytes(ECIES.MULTIPLE.ENCRYPTED_KEY_LENGTH),
+      const iv = randomBytes(ECIES.MULTIPLE.IV_SIZE);
+      const authTag = randomBytes(ECIES.MULTIPLE.AUTH_TAG_SIZE);
+      const recipientIds = [sender.id, recipient.id];
+      const recipientKeys = recipientIds.map(() =>
+        randomBytes(ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE),
       );
       const dataLength = 1000;
 
       const header = service.buildECIESMultipleRecipientHeader(
-        iv,
-        authTag,
-        recipients,
-        encryptedKeys,
-        dataLength,
+        {
+          iv,
+          authTag,
+          recipientIds,
+          recipientKeys,
+          originalMessageLength: dataLength,
+          encryptedMessage: randomBytes(dataLength),
+        },
+        BlockType.MultiEncryptedBlock,
       );
 
       const parsedHeader = service.parseMultiEncryptedHeader(header);
@@ -256,21 +265,21 @@ describe('ECIESService', () => {
       expect(parsedHeader.iv).toEqual(iv);
       expect(parsedHeader.authTag).toEqual(authTag);
       expect(parsedHeader.dataLength).toBe(dataLength);
-      expect(parsedHeader.recipientCount).toBe(recipients.length);
-      expect(parsedHeader.recipientIds).toEqual(recipients.map((r) => r.id));
-      expect(parsedHeader.recipientKeys).toEqual(encryptedKeys);
+      expect(parsedHeader.recipientCount).toBe(recipientIds.length);
+      expect(parsedHeader.recipientIds).toEqual(recipientIds);
+      expect(parsedHeader.recipientKeys).toEqual(recipientKeys);
     });
 
     it('should throw error for invalid data length in parseMultiEncryptedHeader', () => {
       const invalidData = Buffer.alloc(
-        ECIES.MULTIPLE.IV_LENGTH +
-          ECIES.MULTIPLE.AUTH_TAG_LENGTH +
+        ECIES.MULTIPLE.IV_SIZE +
+          ECIES.MULTIPLE.AUTH_TAG_SIZE +
           CONSTANTS.UINT64_SIZE +
           CONSTANTS.UINT16_SIZE,
       );
       invalidData.writeBigUint64BE(
-        BigInt(ECIES.MULTIPLE.MAX_DATA_LENGTH + 1),
-        ECIES.MULTIPLE.IV_LENGTH + ECIES.MULTIPLE.AUTH_TAG_LENGTH,
+        BigInt(ECIES.MULTIPLE.MAX_DATA_SIZE + 1),
+        ECIES.MULTIPLE.IV_SIZE + ECIES.MULTIPLE.AUTH_TAG_SIZE,
       );
 
       expect(() => service.parseMultiEncryptedHeader(invalidData)).toThrowType(
@@ -282,8 +291,8 @@ describe('ECIESService', () => {
     });
 
     it('should throw error for invalid recipient count in parseMultiEncryptedHeader', () => {
-      const iv = randomBytes(ECIES.MULTIPLE.IV_LENGTH);
-      const authTag = randomBytes(ECIES.MULTIPLE.AUTH_TAG_LENGTH);
+      const iv = randomBytes(ECIES.MULTIPLE.IV_SIZE);
+      const authTag = randomBytes(ECIES.MULTIPLE.AUTH_TAG_SIZE);
       const dataLength = 1000;
       const invalidRecipientCount = ECIES.MULTIPLE.MAX_RECIPIENTS + 1;
       const dataLengthBuffer = Buffer.alloc(CONSTANTS.UINT64_SIZE);

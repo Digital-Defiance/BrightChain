@@ -4,13 +4,38 @@ import {
   SecureKeyStorage,
 } from '@BrightChain/brightchain-lib';
 import express, { Application, NextFunction, Request, Response } from 'express';
+import { readdirSync, readFileSync } from 'fs';
 import { Server } from 'http';
+import { createServer } from 'https';
+import { resolve } from 'path';
 import { environment } from './environment';
 import { IApplication } from './interfaces/application';
 import { Middlewares } from './middlewares';
 import { ApiRouter } from './routers/api';
 import { AppRouter } from './routers/app';
 import { handleError, sendApiMessageResponse } from './utils';
+
+function locatePEMRoot(): string {
+  const files = readdirSync(resolve(__dirname, '../..'));
+  const pemFiles = files.filter(
+    (file: string) =>
+      file.match(/localhost\+\d+-key\.pem$/) ||
+      file.match(/localhost\+\d+\.pem$/),
+  );
+  if (pemFiles.length < 2) {
+    throw new HandleableError('PEM files not found in root directory');
+  }
+  const roots = pemFiles.map((file: string) => {
+    const result = /(.*)\/(localhost\+\d+)(.*)\.pem/.exec(
+      resolve(__dirname, '../..', file),
+    );
+    return result ? `${result[1]}/${result[2]}` : undefined;
+  });
+  if (roots.some((root) => root !== roots[0])) {
+    throw new HandleableError('PEM roots do not match');
+  }
+  return roots[0]!;
+}
 
 /**
  * Application class
@@ -105,6 +130,22 @@ export class App implements IApplication {
           );
         },
       );
+
+      try {
+        const result = locatePEMRoot();
+        const certPath = resolve(result + '.pem');
+        const keyPath = resolve(result + '-key.pem');
+        const options = {
+          key: readFileSync(keyPath),
+          cert: readFileSync(certPath),
+        };
+
+        createServer(options, this.expressApp).listen(443, () => {
+          console.log(`[ ready ] https://${this.environment.host}:443`);
+        });
+      } catch (err) {
+        console.error('Failed to start HTTPS server:', err);
+      }
     } catch (err) {
       console.error('Failed to start the application:', err);
       process.exit(1);

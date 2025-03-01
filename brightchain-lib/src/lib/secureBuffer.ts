@@ -92,7 +92,9 @@ export class SecureBuffer {
         throw error;
       }
       // Convert AES-GCM authentication errors to SecureStorageError
-      throw new SecureStorageError(SecureStorageErrorType.DecryptedValueChecksumMismatch);
+      throw new SecureStorageError(
+        SecureStorageErrorType.DecryptedValueChecksumMismatch,
+      );
     }
   }
   public get valueAsString(): string {
@@ -130,14 +132,20 @@ export class SecureBuffer {
   }
   private validateChecksum(data: string | Buffer, checksum: string): boolean {
     const generatedChecksum = this.generateChecksum(data);
-    const generatedBuffer = Buffer.from(generatedChecksum, SecureBuffer.checksumBufferEncoding);
-    const checksumBuffer = Buffer.from(checksum, SecureBuffer.checksumBufferEncoding);
-    
+    const generatedBuffer = Buffer.from(
+      generatedChecksum,
+      SecureBuffer.checksumBufferEncoding,
+    );
+    const checksumBuffer = Buffer.from(
+      checksum,
+      SecureBuffer.checksumBufferEncoding,
+    );
+
     // CRITICAL: Check buffer lengths before timingSafeEqual
     if (generatedBuffer.length !== checksumBuffer.length) {
       return false;
     }
-    
+
     return timingSafeEqual(generatedBuffer, checksumBuffer);
   }
   private validateEncryptedChecksum(data: string | Buffer): boolean {

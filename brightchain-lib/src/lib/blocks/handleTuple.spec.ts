@@ -4,7 +4,7 @@ import { join } from 'path';
 import { BlockMetadata } from '../blockMetadata';
 import { TUPLE } from '../constants';
 import BlockDataType from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
 import { HandleTupleError } from '../errors/handleTupleError';
 import { ChecksumService } from '../services/checksum.service';

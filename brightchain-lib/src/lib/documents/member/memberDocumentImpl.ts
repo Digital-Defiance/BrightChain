@@ -2,7 +2,7 @@ import { BaseBlock } from '../../blocks/base';
 import { ConstituentBlockListBlock } from '../../blocks/cbl';
 import { RawDataBlock } from '../../blocks/rawData';
 import { BrightChainMember } from '../../brightChainMember';
-import { BlockSize } from '../../enumerations/blockSizes';
+import { BlockSize } from '../../enumerations/blockSize';
 import { MemberErrorType } from '../../enumerations/memberErrorType';
 import { MemberError } from '../../errors/memberError';
 import { IMemberStorageData } from '../../interfaces/member/storage';

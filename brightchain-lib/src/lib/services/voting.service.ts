@@ -59,7 +59,7 @@ export class VotingService {
       prev = T[i];
     }
 
-    return Buffer.concat(T).slice(0, length);
+    return Buffer.concat(T).subarray(0, length);
   }
 
   /**
@@ -454,7 +454,7 @@ export class VotingService {
         : walletPrivateKey;
 
     const decryptedPrivateKeyBuffer =
-      ServiceProvider.getInstance().eciesService.decryptWithHeader(
+      ServiceProvider.getInstance().eciesService.decryptSingleWithHeader(
         privateKeyForDecryption,
         encryptedPrivateKey,
       );

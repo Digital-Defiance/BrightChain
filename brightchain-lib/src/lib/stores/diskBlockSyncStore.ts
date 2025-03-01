@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { BaseBlock } from '../blocks/base';
 import { RawDataBlock } from '../blocks/rawData';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
 import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';

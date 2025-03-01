@@ -5160,6 +5160,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/moment-timezone@npm:^0.5.30":
+  version: 0.5.30
+  resolution: "@types/moment-timezone@npm:0.5.30"
+  dependencies:
+    moment-timezone: "npm:*"
+  checksum: 10c0/bdaffcec51073393cebacacf4880195fd5b1e1e4657ce84b5526d7721ad426a89dbb27c350cd172ab78e11dd9f306a6d9061c46535334ce293c493b49b4415ec
+  languageName: node
+  linkType: hard
+
 "@types/ms@npm:*":
   version: 2.1.0
   resolution: "@types/ms@npm:2.1.0"
@@ -6906,6 +6915,7 @@ __metadata:
     "@types/helmet": "npm:^4.0.0"
     "@types/jest": "npm:29.5.14"
     "@types/jsonwebtoken": "npm:^9.0.7"
+    "@types/moment-timezone": "npm:^0.5.30"
     "@types/node": "npm:18.16.9"
     "@types/react": "npm:18.3.1"
     "@types/react-dom": "npm:18.3.0"
@@ -6926,6 +6936,7 @@ __metadata:
     cookie: "npm:0.7.1"
     cors: "npm:^2.8.5"
     crc: "npm:^4.3.2"
+    currency-codes: "npm:^2.2.0"
     cypress: "npm:13.17.0"
     ejs: "npm:^3.1.10"
     elliptic: "npm:6.6.1"
@@ -6955,6 +6966,7 @@ __metadata:
     js-sha3: "npm:^0.9.2"
     jsonwebtoken: "npm:^9.0.2"
     lcov-parse: "npm:^1.0.0"
+    moment-timezone: "npm:^0.6.0"
     nx: "npm:20.4.1"
     paillier-bigint: "npm:^3.4.3"
     path-to-regexp: "npm:1.9.0"
@@ -8150,6 +8162,16 @@ __metadata:
   version: 3.1.3
   resolution: "csstype@npm:3.1.3"
   checksum: 10c0/80c089d6f7e0c5b2bd83cf0539ab41474198579584fa10d86d0cafe0642202343cbc119e076a0b1aece191989477081415d66c9fefbf3c957fc2fc4b7009f248
+  languageName: node
+  linkType: hard
+
+"currency-codes@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "currency-codes@npm:2.2.0"
+  dependencies:
+    first-match: "npm:~0.0.1"
+    nub: "npm:~0.0.0"
+  checksum: 10c0/1abc8b08a6be6173ac768c3f076448771ce5f707248160983f2d17df5ea6b8ade74e89623e75fd86a0de7ee8c7e7d945602d29404067b23806c80d78c5b5f8ff
   languageName: node
   linkType: hard
 
@@ -10092,6 +10114,13 @@ __metadata:
   dependencies:
     semver-regex: "npm:^4.0.5"
   checksum: 10c0/f1ef79d0850e0bd1eba03def02892d31feccdef75129c14b2a2d1cec563e2c51ad5a01f6a7a2d59ddbf9ecca1014ff8a6353ff2e2885e004f7a81ab1488899d4
+  languageName: node
+  linkType: hard
+
+"first-match@npm:~0.0.1":
+  version: 0.0.1
+  resolution: "first-match@npm:0.0.1"
+  checksum: 10c0/1639a2ba8cab9b1e5c2c91120b0c5090124ed25326422162de583dcdda103294cb33c271b19c5d7ac4e48c9ad1d134dd108de76a5b840823d767b5c84afab915
   languageName: node
   linkType: hard
 
@@ -13671,6 +13700,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"moment-timezone@npm:*, moment-timezone@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "moment-timezone@npm:0.6.0"
+  dependencies:
+    moment: "npm:^2.29.4"
+  checksum: 10c0/16164cf321d8be0bf7d43855286b426c94c8200e0634f2e42cf469f591c6a230ac43f37d3826d76b05ac221f69a571400323fb8625e3d4e8669f4d9ab00fe779
+  languageName: node
+  linkType: hard
+
 "moment-timezone@npm:^0.5.43":
   version: 0.5.47
   resolution: "moment-timezone@npm:0.5.47"
@@ -14036,6 +14074,13 @@ __metadata:
   dependencies:
     boolbase: "npm:^1.0.0"
   checksum: 10c0/5fee7ff309727763689cfad844d979aedd2204a817fbaaf0e1603794a7c20db28548d7b024692f953557df6ce4a0ee4ae46cd8ebd9b36cfb300b9226b567c479
+  languageName: node
+  linkType: hard
+
+"nub@npm:~0.0.0":
+  version: 0.0.0
+  resolution: "nub@npm:0.0.0"
+  checksum: 10c0/25f3c6612378d79a468b12b143325a4c25c331c2f26b3b4ef940950c016781687301956262709491d1d805d55e7b3e1cf82f5b18f475d0533266484c09db5c6c
   languageName: node
   linkType: hard
 

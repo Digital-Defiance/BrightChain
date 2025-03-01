@@ -2,7 +2,7 @@ import { BrightChainMember } from '../brightChainMember';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import BlockDataType from '../enumerations/blockDataType';
 import { BlockMetadataErrorType } from '../enumerations/blockMetadataErrorType';
-import { BlockSize, lengthToBlockSize } from '../enumerations/blockSizes';
+import { BlockSize, lengthToBlockSize } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
 import { CblErrorType } from '../enumerations/cblErrorType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
@@ -13,7 +13,7 @@ import { ICBLCore } from '../interfaces/blocks/cblBase';
 import { ServiceLocator } from '../services/serviceLocator';
 import { ChecksumBuffer, SignatureBuffer } from '../types';
 import { EphemeralBlock } from './ephemeral';
-import { BlockHandle } from './handle';
+import { createBlockHandleFromPath } from './handle';
 import { BlockHandleTuple } from './handleTuple';
 
 /**
@@ -199,20 +199,8 @@ export abstract class CBLBase extends EphemeralBlock implements ICBLCore {
   /**
    * The address data for the CBL.
    */
-  public override get payload(): Buffer {
+  public override get layerPayload(): Buffer {
     return this.addressData;
-  }
-
-  public override get availableCapacity(): number {
-    const result =
-      ServiceLocator.getServiceProvider().blockCapacityCalculator.calculateCapacity(
-        {
-          blockSize: this.blockSize,
-          blockType: this.blockType,
-          usesStandardEncryption: false,
-        },
-      );
-    return result.availableCapacity;
   }
 
   public override get totalOverhead(): number {
@@ -283,7 +271,7 @@ export abstract class CBLBase extends EphemeralBlock implements ICBLCore {
     this.ensureHeaderValidated();
     const headerLength =
       ServiceLocator.getServiceProvider().cblService.getHeaderLength(this.data);
-    return this.data.slice(0, headerLength);
+    return this.data.subarray(0, headerLength);
   }
 
   /**
@@ -302,7 +290,8 @@ export abstract class CBLBase extends EphemeralBlock implements ICBLCore {
       const tupleIds = blockIds.slice(i, i + tupleSize);
       const handles = await Promise.all(
         tupleIds.map((id) =>
-          BlockHandle.createFromPath(
+          createBlockHandleFromPath(
+            EphemeralBlock,
             getDiskBlockPath(id, this.blockSize),
             this.blockSize,
             id,

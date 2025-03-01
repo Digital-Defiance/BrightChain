@@ -153,10 +153,11 @@ export class SealingService {
       if (!encryptedKeyShareHex) {
         throw new SealingError(SealingErrorType.EncryptedShareNotFound);
       }
-      const decryptedKeyShare = SealingService.eciesService.decryptWithHeader(
-        member.privateKey,
-        encryptedKeyShareHex,
-      );
+      const decryptedKeyShare =
+        SealingService.eciesService.decryptSingleWithHeader(
+          member.privateKey,
+          encryptedKeyShareHex,
+        );
       decryptedShares[i] = decryptedKeyShare.toString('hex');
     }
     return decryptedShares;
@@ -266,10 +267,11 @@ export class SealingService {
       if (!encryptedKeyShareHex) {
         throw new SealingError(SealingErrorType.EncryptedShareNotFound);
       }
-      const decryptedKeyShare = SealingService.eciesService.decryptWithHeader(
-        member.privateKey,
-        encryptedKeyShareHex,
-      );
+      const decryptedKeyShare =
+        SealingService.eciesService.decryptSingleWithHeader(
+          member.privateKey,
+          encryptedKeyShareHex,
+        );
       decryptedShares[i] = decryptedKeyShare.toString('hex');
     }
     return decryptedShares;

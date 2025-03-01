@@ -11,4 +11,6 @@ export enum BlockServiceErrorType {
   CannotDetermineLength = 'CannotDetermineLength',
   CannotDetermineMimeType = 'CannotDetermineMimeType',
   FilePathNotProvided = 'FilePathNotProvided',
+  InvalidBlockData = 'InvalidBlockData',
+  InvalidBlockType = 'InvalidBlockType',
 }

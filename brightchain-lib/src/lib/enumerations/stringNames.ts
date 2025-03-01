@@ -1,4 +1,12 @@
 export enum StringNames {
+  // admin
+  Admin_StringNotFoundForLanguageTemplate = 'Admin_StringNotFoundForLanguageTemplate',
+  // i18n errors
+  Error_NoTranslationsForEnumTemplate = 'Error_NoTranslationsForEnumTemplate',
+  Error_LanguageNotFoundForEnumTemplate = 'Error_LanguageNotFoundForEnumTemplate',
+  Error_NoTranslationsForEnumLanguageTemplate = 'Error_NoTranslationsForEnumLanguageTemplate',
+  Error_UnknownEnumValueForEnumTemplate = 'Error_UnknownEnumValueForEnumTemplate',
+  Error_LanguageNotFoundInStringsTemplate = 'Error_LanguageNotFoundInStringsTemplate',
   // Block Access Errors
   Error_BlockAccessTemplate = 'Error_BlockAccessTemplate',
   Error_BlockAccessErrorBlockAlreadyExists = 'Error_BlockAccessErrorBlockAlreadyExists',
@@ -37,6 +45,13 @@ export enum StringNames {
   Error_BlockValidationErrorMethodMustBeImplementedByDerivedClass = 'Error_BlockValidationErrorMethodMustBeImplementedByDerivedClass',
   Error_BlockValidationErrorNoChecksum = 'Error_BlockValidationErrorNoChecksum',
   Error_BlockValidationErrorOriginalDataLengthNegative = 'Error_BlockValidationErrorOriginalDataLengthNegative',
+  Error_BlockValidationErrorInvalidRecipientCount = 'Error_BlockValidationErrorInvalidRecipientCount',
+  Error_BlockValidationErrorInvalidRecipientIds = 'Error_BlockValidationErrorInvalidRecipientIds',
+  Error_BlockValidationErrorInvalidRecipientKeys = 'Error_BlockValidationErrorInvalidRecipientKeys',
+  Error_BlockValidationErrorInvalidEncryptionType = 'Error_BlockValidationErrorInvalidEncryptionType',
+  Error_BlockValidationErrorInvalidCreator = 'Error_BlockValidationErrorInvalidCreator',
+  Error_BlockValidationErrorEncryptionRecipientNotFoundInRecipients = 'Error_BlockValidationErrorEncryptionRecipientNotFoundInRecipients',
+  Error_BlockValidationErrorEncryptionRecipientHasNoPrivateKey = 'Error_BlockValidationErrorEncryptionRecipientHasNoPrivateKey',
 
   // Buffer Errors
   Error_BufferErrorInvalidBufferTypeTemplate = 'Error_BufferErrorInvalidBufferTypeTemplate',
@@ -63,6 +78,7 @@ export enum StringNames {
   Error_BlockCapacityInvalidFileName = 'Error_BlockCapacityInvalidFileName',
   Error_BlockCapacityInvalidMimetype = 'Error_BlockCapacityInvalidMimetype',
   Error_BlockCapacityInvalidRecipientCount = 'Error_BlockCapacityInvalidRecipientCount',
+  Error_BlockCapacityInvalidExtendedCblData = 'Error_BlockCapacityInvalidExtendedCblData',
 
   // Block Service Errors
   Error_BlockServiceErrorBlockWhitenerCountMismatch = 'Error_BlockServiceErrorBlockWhitenerCountMismatch',
@@ -79,6 +95,8 @@ export enum StringNames {
   Error_BlockServiceErrorCannotDetermineMimeType = 'Error_BlockServiceErrorCannotDetermineMimeType',
   Error_BlockServiceErrorFilePathNotProvided = 'Error_BlockServiceErrorFilePathNotProvided',
   Error_BlockServiceErrorUnableToDetermineBlockSize = 'Error_BlockServiceErrorUnableToDetermineBlockSize',
+  Error_BlockServiceErrorInvalidBlockData = 'Error_BlockServiceErrorInvalidBlockData',
+  Error_BlockServiceErrorInvalidBlockType = 'Error_BlockServiceErrorInvalidBlockType',
 
   // Member Errors
   Error_MemberErrorIncorrectOrInvalidPrivateKey = 'Error_MemberErrorIncorrectOrInvalidPrivateKey',
@@ -189,6 +207,8 @@ export enum StringNames {
   Error_EciesErrorInvalidRecipientCount = 'Error_EciesErrorInvalidRecipientCount',
   Error_EciesErrorFileSizeTooLarge = 'Error_EciesErrorFileSizeTooLarge',
   Error_EciesErrorInvalidDataLength = 'Error_EciesErrorInvalidDataLength',
+  Error_EciesErrorInvalidBlockType = 'Error_EciesErrorInvalidBlockType',
+  Error_EciesErrorInvalidMessageCrc = 'Error_EciesErrorInvalidMessageCrc',
 
   // Store Errors
   Error_StoreErrorInvalidBlockMetadataTemplate = 'Error_StoreErrorInvalidBlockMetadataTemplate',
@@ -283,6 +303,11 @@ export enum StringNames {
   Error_BlockErrorCannotEncrypt = 'Error_BlockErrorCannotEncrypt',
   Error_BlockErrorCannotDecrypt = 'Error_BlockErrorCannotDecrypt',
   Error_BlockErrorCreatorPrivateKeyRequired = 'Error_BlockErrorCreatorPrivateKeyRequired',
+  Error_BlockErrorInvalidMultiEncryptionRecipientCount = 'Error_BlockErrorInvalidMultiEncryptionRecipientCount',
+  Error_BlockErrorInvalidNewBlockType = 'Error_BlockErrorInvalidNewBlockType',
+  Error_BlockErrorUnexpectedEphemeralBlockType = 'Error_BlockErrorUnexpectedEphemeralBlockType',
+  Error_BlockErrorRecipientRequired = 'Error_BlockErrorRecipientRequired',
+  Error_BlockErrorRecipientKeyRequired = 'Error_BlockErrorRecipientKeyRequired',
 
   // Whitened Errors
   Error_WhitenedErrorBlockNotReadable = 'Error_WhitenedErrorBlockNotReadable',

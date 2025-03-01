@@ -4,10 +4,9 @@ import { CBLBase } from './cblBase';
 
 /**
  * Constituent Block List
- * Instance cannot be encrypted, see EncryptedConstituentBlockListBlock
  *
  * Header Structure:
- * [CreatorId][DateCreated][AddressCount][OriginalDataLength][TupleSize][CreatorSignature]
+ * [CreatorId][DateCreated][AddressCount][TupleSize][OriginalDataLength][OriginalDataChecksum][CreatorSignature]
  * Followed by:
  * [Address Data][Padding]
  *

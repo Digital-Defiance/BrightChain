@@ -1,6 +1,6 @@
 import { createECDH, randomBytes } from 'crypto';
 import { ECIES } from '../constants';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { ECIESService } from '../services/ecies.service';
 import { EciesDecryptionTransform } from './eciesDecryptTransform';
 import { EciesEncryptTransform } from './eciesEncryptTransform';

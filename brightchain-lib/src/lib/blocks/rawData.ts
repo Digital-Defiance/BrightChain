@@ -1,7 +1,9 @@
 import { BlockMetadata } from '../blockMetadata';
+import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
+import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ServiceLocator } from '../services/serviceLocator';
 import { ChecksumBuffer } from '../types';
@@ -71,16 +73,27 @@ export class RawDataBlock extends BaseBlock {
   /**
    * The data in the block, excluding any metadata or other overhead
    */
-  public override get payload(): Buffer {
+  public override get layerPayload(): Buffer {
     if (!this.canRead) {
-      throw new Error('Block cannot be read');
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     // For raw data blocks, the payload is the entire data
     return this._data;
   }
 
-  public get layerOverhead(): number {
+  public get layerOverheadSize(): number {
     return 0;
+  }
+
+  public get layerPayloadSize(): number {
+    return this._data.length;
+  }
+
+  public get layerData(): Buffer {
+    if (!this.canRead) {
+      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
+    }
+    return this._data;
   }
 
   /**

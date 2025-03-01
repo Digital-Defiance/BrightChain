@@ -1,4 +1,5 @@
-import { BlockSize } from '../enumerations/blockSizes';
+import { EncryptedBlockType } from '../enumerations/blockEncryptionType';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 
 /**
@@ -7,10 +8,12 @@ import { BlockType } from '../enumerations/blockType';
 export interface IBlockCapacityParams {
   blockSize: BlockSize;
   blockType: BlockType;
-  filename?: string;
-  mimetype?: string;
+  cbl?: {
+    fileName: string;
+    mimeType: string;
+  };
+  encryptionType: EncryptedBlockType;
   recipientCount?: number;
-  usesStandardEncryption: boolean;
 }
 
 /**
@@ -18,9 +21,9 @@ export interface IBlockCapacityParams {
  */
 export interface IOverheadBreakdown {
   baseHeader: number;
-  typeSpecificHeader: number;
-  encryptionOverhead?: number;
-  variableOverhead?: number;
+  typeSpecificOverhead: number;
+  encryptionOverhead: number;
+  variableOverhead: number;
 }
 
 /**

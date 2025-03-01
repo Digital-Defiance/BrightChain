@@ -2,10 +2,11 @@ import { existsSync } from 'fs';
 import { readFile, readdir, stat, unlink, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { Readable, Transform } from 'stream';
+import { BaseBlock } from '../blocks/base';
 import { BlockHandle } from '../blocks/handle';
 import { RawDataBlock } from '../blocks/rawData';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize, blockSizeToSizeString } from '../enumerations/blockSizes';
+import { BlockSize, blockSizeToSizeString } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
@@ -37,9 +38,9 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
   /**
    * Get a handle to a block
    */
-  public get(key: ChecksumBuffer): BlockHandle {
+  public get<T extends BaseBlock>(key: ChecksumBuffer): BlockHandle<T> {
     const blockPath = this.blockPath(key);
-    return new BlockHandle(
+    return new BlockHandle<T>(
       blockPath,
       this._blockSize,
       key,
@@ -144,8 +145,8 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
   /**
    * XOR multiple blocks together
    */
-  public async xor(
-    blocks: BlockHandle[],
+  public async xor<T extends BaseBlock>(
+    blocks: BlockHandle<T>[],
     destBlockMetadata: IBaseBlockMetadata,
   ): Promise<RawDataBlock> {
     if (!blocks.length) {
@@ -219,7 +220,9 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
   /**
    * Create read streams for blocks
    */
-  private createReadStreams(blocks: BlockHandle[]): Readable[] {
+  private createReadStreams<T extends BaseBlock>(
+    blocks: BlockHandle<T>[],
+  ): Readable[] {
     return blocks.map((block) => block.getReadStream());
   }
 

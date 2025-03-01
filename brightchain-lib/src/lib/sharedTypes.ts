@@ -12,6 +12,8 @@ import { ChecksumString } from './types';
 
 export type DefaultIdType = ChecksumString;
 
+export type LanguageContext = 'admin' | 'user';
+
 /**
  * Validated body for express-validator
  */
@@ -170,3 +172,7 @@ export type StaticMethods<T> = {
     ...args: unknown[]
   ) => Document<T> | Promise<Document<T>> | unknown;
 };
+
+export const DefaultCurrencyCode = 'USD';
+
+export type CurrencyPosition = 'prefix' | 'postfix' | 'infix';

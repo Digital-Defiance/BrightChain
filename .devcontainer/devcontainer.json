@@ -13,13 +13,24 @@
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  "forwardPorts": [3000],
+  "forwardPorts": [
+    443,
+    3000,
+    4200,
+    27017
+  ],
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "./setup-nvm.sh && ./npm-install-globals.sh && ./do-yarn.sh && git config --global --add safe.directory /workspaces/BrightChain",
+  "postCreateCommand": "bash ./.devcontainer/post-create.sh && . /usr/local/share/nvm/nvm.sh && nvm use 22",
   // Configure tool-specific properties.
   // "customizations": {},
   // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  "remoteUser": "root",
+  "remoteUser": "node",
+  "shutdownAction": "none",
+  "userEnvProbe": "none",
+  "updateRemoteUserUID": false,
+  "remoteEnv": {
+    "SHELL": "/bin/bash"
+  },
   "customizations": {
     "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
@@ -39,8 +50,6 @@
         "MermaidChart.vscode-mermaid-chart",
         "Graphite.gti-vscode",
         "Orta.vscode-jest",
-        "Google.geminicodeassist",
-        "GoogleCloudTools.cloudcode",
         "saoudrizwan.claude-dev",
         "Codium.codium",
         "bierner.markdown-mermaid"

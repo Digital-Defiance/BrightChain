@@ -1,11 +1,35 @@
 import { Buffer } from 'buffer';
 import { Brand } from 'ts-brand';
 import { GuidBrandType } from './enumerations/guidBrandType';
+import { StringLanguages } from './enumerations/stringLanguages';
 import { IKeyPairBufferWithUnEncryptedPrivateKey } from './interfaces/keyPairBufferWithUnEncryptedPrivateKey';
 import { ISigningKeyPrivateKeyInfo } from './interfaces/signgingKeyPrivateKeyInfo';
 import { ISimpleKeyPairBuffer } from './interfaces/simpleKeyPairBuffer';
 import { ISimplePublicKeyOnly } from './interfaces/simplePublicKeyOnly';
 import { ISimplePublicKeyOnlyBuffer } from './interfaces/simplePublicKeyOnlyBuffer';
+
+/**
+ * Generic translation type for any enumeration
+ */
+export type EnumTranslation<T extends string | number> = {
+  [K in T]: string;
+};
+
+/**
+ * Generic language translation type for any enumeration
+ */
+export type EnumLanguageTranslation<T extends string | number> = {
+  [L in StringLanguages]: EnumTranslation<T>;
+};
+
+/**
+ * Helper function to create typed translations for an enumeration
+ */
+export function createTranslations<T extends string | number>(
+  translations: EnumLanguageTranslation<T>,
+): EnumLanguageTranslation<T> {
+  return translations;
+}
 
 export type KeyPairBufferWithUnEncryptedPrivateKey = Brand<
   IKeyPairBufferWithUnEncryptedPrivateKey,

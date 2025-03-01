@@ -3,7 +3,7 @@ import { BlockMetadata } from '../blockMetadata';
 import { ECIES } from '../constants';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import { BlockAccessError, BlockValidationError } from '../errors/block';

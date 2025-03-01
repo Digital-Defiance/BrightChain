@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
 import { BlockDataType } from '../../enumerations/blockDataType';
-import { BlockSize } from '../../enumerations/blockSizes';
+import { BlockSize } from '../../enumerations/blockSize';
 import { BlockType } from '../../enumerations/blockType';
 import { ChecksumBuffer, ChecksumString } from '../../types';
 
@@ -115,7 +115,7 @@ export interface IBaseBlock {
    * The actual data payload, excluding headers and padding.
    * This is the data that was originally stored in the block.
    */
-  get payload(): Buffer;
+  get layerPayload(): Buffer;
 
   /**
    * The complete header data from all layers.
@@ -127,7 +127,7 @@ export interface IBaseBlock {
   /**
    * The length of the layer's header data
    */
-  get layerOverhead(): number;
+  get layerOverheadSize(): number;
 
   /**
    * This layer's header data.
@@ -139,20 +139,18 @@ export interface IBaseBlock {
   get layerHeaderData(): Buffer;
 
   /**
+   * Gets the layer's data including header and payload
+   */
+  get layerData(): Buffer;
+
+  /**
    * The length of the payload before padding.
    * Used to:
    * 1. Calculate padding size
    * 2. Access payload data
    * 3. Verify block structure
    */
-  get payloadLength(): number;
-
-  /**
-   * Get the available capacity for payload data in this block.
-   * This represents the maximum amount of data that can be stored
-   * in the block after accounting for all overhead.
-   */
-  get availableCapacity(): number;
+  get layerPayloadSize(): number;
 
   /**
    * Asynchronously validate the block's data.

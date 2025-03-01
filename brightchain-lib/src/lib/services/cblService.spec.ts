@@ -3,7 +3,8 @@ import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import { CHECKSUM, TUPLE } from '../constants';
 import { EmailString } from '../emailString';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
+import { BlockSize } from '../enumerations/blockSize';
 import MemberType from '../enumerations/memberType';
 import { CblError } from '../errors/cblError';
 import { BlockCapacityCalculator } from './blockCapacity.service';
@@ -50,6 +51,7 @@ describe('CBLService', () => {
       100,
       Buffer.alloc(0),
       BlockSize.Small,
+      BlockEncryptionType.None,
       { fileName: 'test.txt', mimeType: 'text/plain' },
     ).headerData;
   }
@@ -95,6 +97,7 @@ describe('CBLService', () => {
         dataLength,
         addressList,
         BlockSize.Small,
+        BlockEncryptionType.None,
         undefined,
         tupleSize,
       );
@@ -172,6 +175,7 @@ describe('CBLService', () => {
         100,
         Buffer.alloc(0),
         BlockSize.Small,
+        BlockEncryptionType.None,
       ).headerData;
 
       expect(() => cblService.getFileNameLength(nonExtendedHeader)).toThrow(
@@ -314,6 +318,7 @@ describe('CBLService', () => {
         1000,
         addressList,
         BlockSize.Small,
+        BlockEncryptionType.None,
       );
 
       // Combine header with address list
@@ -369,6 +374,7 @@ describe('CBLService', () => {
         1000,
         addressList,
         blockSize,
+        BlockEncryptionType.None,
       );
 
       // Calculate total size needed

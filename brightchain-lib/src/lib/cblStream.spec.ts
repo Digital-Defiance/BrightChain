@@ -5,7 +5,8 @@ import { BrightChainMember } from './brightChainMember';
 import { CblStream } from './cblStream';
 import { TUPLE } from './constants';
 import { EmailString } from './emailString';
-import { BlockSize } from './enumerations/blockSizes';
+import { BlockEncryptionType } from './enumerations/blockEncryptionType';
+import { BlockSize } from './enumerations/blockSize';
 import { CblErrorType } from './enumerations/cblErrorType';
 import MemberType from './enumerations/memberType';
 import { CblError } from './errors/cblError';
@@ -63,6 +64,7 @@ describe('CblStream', () => {
       data.length,
       addressList,
       blockSize,
+      BlockEncryptionType.None,
     );
 
     // Combine header and address list

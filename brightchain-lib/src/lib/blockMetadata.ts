@@ -1,6 +1,6 @@
 import BlockDataType from './enumerations/blockDataType';
 import { BlockMetadataErrorType } from './enumerations/blockMetadataErrorType';
-import { BlockSize } from './enumerations/blockSizes';
+import { BlockSize } from './enumerations/blockSize';
 import BlockType from './enumerations/blockType';
 import { BlockMetadataError } from './errors/block';
 import { IBaseBlockMetadata } from './interfaces/blocks/metadata/blockMetadata';
@@ -30,16 +30,6 @@ export class BlockMetadata implements IBaseBlockMetadata {
     this._dateCreated = dateCreated;
   }
 
-  public static fromInterface(metadata: IBaseBlockMetadata): BlockMetadata {
-    return new BlockMetadata(
-      metadata.size,
-      metadata.type,
-      metadata.dataType,
-      metadata.lengthWithoutPadding,
-      metadata.dateCreated,
-    );
-  }
-
   /**
    * Convert metadata to JSON string
    * @returns JSON representation of metadata
@@ -54,6 +44,19 @@ export class BlockMetadata implements IBaseBlockMetadata {
     });
   }
 
+  public static fromJsonValidator(data: any): void {
+    // Validate required fields
+    if (!data.size || !data.type || !data.dataType || !data.dateCreated) {
+      throw new BlockMetadataError(
+        BlockMetadataErrorType.MissingRequiredMetadata,
+      );
+    }
+  }
+
+  public static fromJsonAdditionalData<T extends Record<string, any>>(data): T {
+    return {} as T;
+  }
+
   /**
    * Parse metadata from JSON representation.
    * Handles:
@@ -65,26 +68,26 @@ export class BlockMetadata implements IBaseBlockMetadata {
    * @returns Parsed metadata object
    * @throws If JSON is invalid or required fields are missing
    */
-  public static fromJson(json: string): BlockMetadata {
+  public static fromJson<
+    B extends BlockMetadata,
+    T extends Record<string, any>,
+  >(json: string): B & T {
     try {
       const data = JSON.parse(json);
 
       // Validate required fields
-      if (!data.size || !data.type || !data.dataType || !data.dateCreated) {
-        throw new BlockMetadataError(
-          BlockMetadataErrorType.MissingRequiredMetadata,
-        );
-      }
+      this.fromJsonValidator(data);
 
       // Convert types and maintain extensibility
       return {
         ...data,
+        ...this.fromJsonAdditionalData(data),
         dateCreated: data.dateCreated, // Already a string
         size: data.size as BlockSize,
         type: data.type as BlockType,
         dataType: data.dataType as BlockDataType,
         lengthWithoutPadding: data.lengthWithoutPadding,
-      } as BlockMetadata;
+      } as B & T;
     } catch (error) {
       throw new Error(
         `Failed to parse metadata: ${
