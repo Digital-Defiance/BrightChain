@@ -46,7 +46,7 @@ export class MemberCblService {
       const blocks: RawDataBlock[] = [];
       let offset = 0;
       while (offset < memberData.length) {
-        const chunk = memberData.slice(
+        const chunk = memberData.subarray(
           offset,
           offset + (BlockSize.Small as number),
         );

@@ -30,10 +30,7 @@ import { EphemeralBlock } from './ephemeral';
  * Encryption Header:
  * [Ephemeral Public Key (65 bytes)][IV (16 bytes)][Auth Tag (16 bytes)]
  */
-export abstract class EncryptedBlock
-  extends EphemeralBlock
-  implements IEncryptedBlock
-{
+export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
   /**
    * Creates an instance of EncryptedBlock.
    * @param type - The type of the block
@@ -44,7 +41,7 @@ export abstract class EncryptedBlock
    * @param canRead - Whether the block can be read
    * @param canPersist - Whether the block can be persisted
    */
-  protected constructor(
+  public constructor(
     type: BlockType,
     dataType: BlockDataType,
     data: Buffer,

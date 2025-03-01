@@ -6,7 +6,6 @@ import { Readable } from 'stream';
 import { BaseBlock } from '../blocks/base';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { EncryptedBlock } from '../blocks/encrypted';
-import { EncryptedConstituentBlockListBlock } from '../blocks/encryptedCbl';
 import { BlockEncryption } from '../blocks/encryption';
 import { EphemeralBlock } from '../blocks/ephemeral';
 import { ExtendedCBL } from '../blocks/extendedCbl';
@@ -97,7 +96,7 @@ export class BlockService {
   public static async encrypt(
     creator: BrightChainMember,
     block: EphemeralBlock,
-  ): Promise<EncryptedBlock | EncryptedConstituentBlockListBlock> {
+  ): Promise<EncryptedBlock> {
     if (!block.canEncrypt) {
       throw new CannotEncryptBlockError();
     }
@@ -112,7 +111,7 @@ export class BlockService {
 
   public static async decrypt(
     creator: BrightChainMember,
-    block: EncryptedBlock | EncryptedConstituentBlockListBlock,
+    block: EncryptedBlock,
   ): Promise<EphemeralBlock> {
     if (creator.privateKey === undefined) {
       throw new EciesError(EciesErrorType.PrivateKeyNotLoaded);
@@ -213,7 +212,7 @@ export class BlockService {
         ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
           data,
         );
-      return await EncryptedConstituentBlockListBlock.from(
+      return await EncryptedBlock.from(
         blockType,
         blockDataType,
         blockSize,
@@ -249,7 +248,7 @@ export class BlockService {
       blockDataType === BlockDataType.EphemeralStructuredData &&
       creator instanceof BrightChainMember
     ) {
-      return await EncryptedConstituentBlockListBlock.from(
+      return await EncryptedBlock.from(
         blockType,
         blockDataType,
         blockSize,

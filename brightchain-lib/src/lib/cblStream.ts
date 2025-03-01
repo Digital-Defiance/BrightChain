@@ -65,9 +65,10 @@ export class CblStream extends Readable {
       return;
     }
 
-    const bytesRemaining = this.cbl.originalDataLength - this.overallReadOffset;
-    let stillToRead =
-      bytesRemaining > BigInt(size) ? size : Number(bytesRemaining);
+    // Convert originalDataLength to number if it's a BigInt
+    const originalDataLength = this.cbl.originalDataLength;
+    const bytesRemaining = originalDataLength - this.overallReadOffset;
+    let stillToRead = bytesRemaining > size ? size : bytesRemaining;
 
     while (stillToRead > 0) {
       // If we have no data or have read all current data, read next tuple

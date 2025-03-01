@@ -79,8 +79,8 @@ export class SystemKeyring {
     );
 
     const authTagPos = entry.encryptedData.length - 16;
-    const authTag = entry.encryptedData.slice(authTagPos);
-    const encryptedData = entry.encryptedData.slice(0, authTagPos);
+    const authTag = entry.encryptedData.subarray(authTagPos);
+    const encryptedData = entry.encryptedData.subarray(0, authTagPos);
 
     decipher.setAuthTag(authTag);
 

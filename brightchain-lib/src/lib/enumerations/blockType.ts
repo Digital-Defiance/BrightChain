@@ -14,7 +14,6 @@
  *
  * Organization & Management:
  * - ConstituentBlockList (CBL): Lists of block references and metadata
- * - EncryptedConstituentBlockListBlock: Encrypted CBLs
  * - Handle: References to blocks stored elsewhere
  */
 export enum BlockType {
@@ -109,6 +108,11 @@ export enum BlockType {
    * A block encrypted for multiple recipients.
    */
   MultiEncryptedBlock = 33,
+
+  /**
+   * A CBL encrypted for multiple recipients.
+   */
+  MultiEncryptedConstituentBlockListBlock = 34,
 
   /**
    * A reference to a block stored elsewhere.

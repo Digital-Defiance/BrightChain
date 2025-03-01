@@ -19,7 +19,6 @@ export interface IBlockCapacityParams {
 export interface IOverheadBreakdown {
   baseHeader: number;
   typeSpecificHeader: number;
-  encryptionOverhead?: number;
   variableOverhead?: number;
 }
 

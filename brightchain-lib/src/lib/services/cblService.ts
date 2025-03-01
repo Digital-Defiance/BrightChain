@@ -32,8 +32,9 @@ export class CBLService {
     return {
       dateCreated: Buffer.alloc(CONSTANTS.UINT32_SIZE * 2),
       addressCount: Buffer.alloc(CONSTANTS.UINT32_SIZE),
-      dataLength: Buffer.alloc(CONSTANTS.UINT64_SIZE),
       tupleSize: Buffer.alloc(CONSTANTS.UINT8_SIZE),
+      dataLength: Buffer.alloc(CONSTANTS.UINT64_SIZE),
+      dataChecksum: Buffer.alloc(CONSTANTS.CHECKSUM.SHA3_BUFFER_LENGTH),
       blockSize: Buffer.alloc(CONSTANTS.UINT32_SIZE),
       fileNameLength: Buffer.alloc(CONSTANTS.UINT16_SIZE),
       mimeTypeLength: Buffer.alloc(CONSTANTS.UINT8_SIZE),
@@ -59,14 +60,20 @@ export class CBLService {
   public static readonly AddressCountSize: number = CONSTANTS.UINT32_SIZE;
 
   /**
+   * Length of the tuple size field in the header
+   */
+  public static readonly TupleSizeSize: number = CONSTANTS.UINT8_SIZE;
+
+  /**
    * Length of the original data length field in the header
    */
   public static readonly DataLengthSize: number = CONSTANTS.UINT64_SIZE;
 
   /**
-   * Length of the tuple size field in the header
+   * Length of the data checksum field in the header
    */
-  public static readonly TupleSizeSize: number = CONSTANTS.UINT8_SIZE;
+  public static readonly DataChecksumSize: number =
+    CONSTANTS.CHECKSUM.SHA3_BUFFER_LENGTH;
 
   /**
    * Length of the is extended header field in the header
@@ -90,22 +97,25 @@ export class CBLService {
     CBLService.DateCreatedOffset + CBLService.DateSize;
 
   /**
-   * Offset of the original data length field in the header
-   */
-  public static readonly OriginalDataLengthOffset: number =
-    CBLService.CblAddressCountOffset + CBLService.AddressCountSize;
-
-  /**
    * Offset of the tuple size field in the header
    */
   public static readonly TupleSizeOffset: number =
+    CBLService.CblAddressCountOffset + CBLService.AddressCountSize;
+
+  /**
+   * Offset of the original data length field in the header
+   */
+  public static readonly OriginalDataLengthOffset: number =
+    CBLService.TupleSizeOffset + CBLService.TupleSizeSize;
+
+  public static readonly OriginalChecksumOffset: number =
     CBLService.OriginalDataLengthOffset + CBLService.DataLengthSize;
 
   /**
    * Offset of the is extended header field in the header
    */
   public static readonly IsExtendedHeaderOffset: number =
-    CBLService.TupleSizeOffset + CBLService.TupleSizeSize;
+    CBLService.OriginalChecksumOffset + CBLService.DataChecksumSize;
 
   /**
    * Offset of the creator signature field in the header
@@ -143,8 +153,9 @@ export class CBLService {
     CreatorId: 0,
     DateCreated: CBLService.DateCreatedOffset,
     CblAddressCount: CBLService.CblAddressCountOffset,
-    OriginalDataLength: CBLService.OriginalDataLengthOffset,
     TupleSize: CBLService.TupleSizeOffset,
+    OriginalDataLength: CBLService.OriginalDataLengthOffset,
+    OriginalDataChecksum: CBLService.OriginalChecksumOffset,
     CreatorSignature: CBLService.BaseHeaderCreatorSignatureOffset,
     IsExtendedHeader: CBLService.IsExtendedHeaderOffset,
     FileNameLength: CBLService.FileNameLengthOffset,
@@ -212,18 +223,6 @@ export class CBLService {
   }
 
   /**
-   * Get the original data length from the header
-   */
-  public getOriginalDataLength(header: Buffer): number {
-    if (this.isEncrypted(header)) {
-      throw new CblError(CblErrorType.CblEncrypted);
-    }
-    return Number(
-      header.readBigUint64BE(CBLService.HeaderOffsets.OriginalDataLength),
-    );
-  }
-
-  /**
    * Get the tuple size from the header
    */
   public getTupleSize(header: Buffer): number {
@@ -231,6 +230,34 @@ export class CBLService {
       throw new CblError(CblErrorType.CblEncrypted);
     }
     return header.readUInt8(CBLService.HeaderOffsets.TupleSize);
+  }
+
+  /**
+   * Get the original data length from the header
+   */
+  public getOriginalDataLength(header: Buffer): number {
+    if (this.isEncrypted(header)) {
+      throw new CblError(CblErrorType.CblEncrypted);
+    }
+    const bigIntValue = header.readBigUint64BE(
+      CBLService.HeaderOffsets.OriginalDataLength,
+    );
+    return Number(bigIntValue);
+  }
+
+  /**
+   * Get the original data checksum from the header
+   * @param header - The header to get the checksum from
+   * @returns The original data checksum
+   */
+  public getOriginalDataChecksum(header: Buffer): ChecksumBuffer {
+    if (this.isEncrypted(header)) {
+      throw new CblError(CblErrorType.CblEncrypted);
+    }
+    return header.subarray(
+      CBLService.HeaderOffsets.OriginalDataChecksum,
+      CBLService.DataChecksumSize,
+    ) as ChecksumBuffer;
   }
 
   /**
@@ -396,7 +423,7 @@ export class CBLService {
     }
     const headerLength = this.getHeaderLength(data);
     const addressCount = this.getCblAddressCount(data);
-    return data.slice(
+    return data.subarray(
       headerLength,
       headerLength + addressCount * CHECKSUM.SHA3_BUFFER_LENGTH,
     );
@@ -412,7 +439,7 @@ export class CBLService {
 
     for (let i = 0; i < addressCount; i++) {
       const addressOffset = i * CHECKSUM.SHA3_BUFFER_LENGTH;
-      addresses[i] = addressData.slice(
+      addresses[i] = addressData.subarray(
         addressOffset,
         addressOffset + CHECKSUM.SHA3_BUFFER_LENGTH,
       ) as ChecksumBuffer;
@@ -629,6 +656,10 @@ export class CBLService {
     buffers.tupleSize.writeUInt8(tupleSize);
     buffers.blockSize.writeUInt32BE(blockSize);
 
+    // Calculate a checksum for the original data (empty for now, will be filled in later)
+    const dataChecksum = Buffer.alloc(CONSTANTS.CHECKSUM.SHA3_BUFFER_LENGTH, 0);
+    dataChecksum.copy(buffers.dataChecksum);
+
     const creatorId = creator.id.asRawGuidBuffer;
 
     // Create base header
@@ -636,8 +667,9 @@ export class CBLService {
       creatorId.length +
       buffers.dateCreated.length +
       buffers.addressCount.length +
-      buffers.dataLength.length +
       buffers.tupleSize.length +
+      buffers.dataLength.length +
+      buffers.dataChecksum.length +
       CONSTANTS.UINT8_SIZE; // Extended header flag
 
     const baseHeader = Buffer.alloc(baseHeaderSize);
@@ -650,10 +682,12 @@ export class CBLService {
     offset += buffers.dateCreated.length;
     buffers.addressCount.copy(baseHeader, offset);
     offset += buffers.addressCount.length;
-    buffers.dataLength.copy(baseHeader, offset);
-    offset += buffers.dataLength.length;
     buffers.tupleSize.copy(baseHeader, offset);
     offset += buffers.tupleSize.length;
+    buffers.dataLength.copy(baseHeader, offset);
+    offset += buffers.dataLength.length;
+    buffers.dataChecksum.copy(baseHeader, offset);
+    offset += buffers.dataChecksum.length;
     baseHeader.writeUInt8(extendedCBL ? 1 : 0, offset); // Set extended header flag
 
     // Create extended header if needed

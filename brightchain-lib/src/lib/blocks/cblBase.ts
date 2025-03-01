@@ -283,7 +283,7 @@ export abstract class CBLBase extends EphemeralBlock implements ICBLCore {
     this.ensureHeaderValidated();
     const headerLength =
       ServiceLocator.getServiceProvider().cblService.getHeaderLength(this.data);
-    return this.data.slice(0, headerLength);
+    return this.data.subarray(0, headerLength);
   }
 
   /**

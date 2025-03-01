@@ -33,9 +33,6 @@ export class BlockCapacityCalculator {
     const details: IOverheadBreakdown = {
       baseHeader: 0,
       typeSpecificHeader: 0,
-      encryptionOverhead: params.usesStandardEncryption
-        ? ECIES.OVERHEAD_SIZE
-        : 0,
       variableOverhead: 0,
     };
 
@@ -67,6 +64,10 @@ export class BlockCapacityCalculator {
         alignCapacityToTuple = true;
         break;
 
+      case BlockType.EncryptedOwnedDataBlock:
+        details.typeSpecificHeader = ECIES.OVERHEAD_SIZE;
+        break;
+
       case BlockType.MultiEncryptedBlock:
         if (!params.recipientCount || params.recipientCount < 1) {
           throw new BlockCapacityError(
@@ -90,9 +91,6 @@ export class BlockCapacityCalculator {
       case BlockType.EphemeralOwnedDataBlock:
       case BlockType.OwnerFreeWhitenedBlock:
       case BlockType.FECData:
-      case BlockType.EncryptedOwnedDataBlock:
-      case BlockType.EncryptedConstituentBlockListBlock:
-      case BlockType.EncryptedExtendedConstituentBlockListBlock:
       case BlockType.Handle:
         // These types only have base overhead
         break;
@@ -106,7 +104,6 @@ export class BlockCapacityCalculator {
     const totalOverhead =
       details.baseHeader +
       details.typeSpecificHeader +
-      (details.encryptionOverhead || 0) +
       (details.variableOverhead || 0);
 
     const totalCapacity = params.blockSize as number;

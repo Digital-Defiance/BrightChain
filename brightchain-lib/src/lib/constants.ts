@@ -33,7 +33,7 @@ export const JWT: IJwtConsts = {
  * Constants for CBL (Constituent Block List)
  */
 export const CBL: ICBLConsts = {
-  BASE_OVERHEAD: 106 as const,
+  BASE_OVERHEAD: 170 as const,
   /**
    * Mime type regex pattern for extended cbl
    */

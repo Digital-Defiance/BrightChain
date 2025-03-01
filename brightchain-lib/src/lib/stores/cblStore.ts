@@ -7,7 +7,7 @@ import {
 } from 'fs';
 import { join } from 'path';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
-import { EncryptedConstituentBlockListBlock } from '../blocks/encryptedCbl';
+import { EncryptedBlock } from '../blocks/encrypted';
 import { BrightChainMember } from '../brightChainMember';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -33,11 +33,7 @@ import { ChecksumBuffer } from '../types';
  * Supports both encrypted and plain CBLs.
  */
 export class CBLStore
-  implements
-    ISimpleStoreAsync<
-      ChecksumBuffer,
-      ConstituentBlockListBlock | EncryptedConstituentBlockListBlock
-    >
+  implements ISimpleStoreAsync<ChecksumBuffer, ConstituentBlockListBlock>
 {
   private readonly _storePath: string;
   private readonly _cblPath: string;
@@ -101,7 +97,7 @@ export class CBLStore
    */
   public async set(
     key: ChecksumBuffer,
-    value: ConstituentBlockListBlock | EncryptedConstituentBlockListBlock,
+    value: ConstituentBlockListBlock | EncryptedBlock,
   ): Promise<void> {
     const userForvalidation = value.creator ?? this._activeUser;
     if (userForvalidation === undefined) {
@@ -145,7 +141,7 @@ export class CBLStore
       }
       const fileStat = statSync(blockPath);
       const dateCreated = fileStat.mtime;
-      const encryptedCbl = new EncryptedConstituentBlockListBlock(
+      const encryptedCbl = new EncryptedBlock(
         BlockType.EncryptedConstituentBlockListBlock,
         BlockDataType.EncryptedData,
         cblData,
