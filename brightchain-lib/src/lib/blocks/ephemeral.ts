@@ -184,8 +184,43 @@ export class EphemeralBlock extends BaseBlock implements IEphemeralBlock {
   /**
    * Whether the block can be encrypted
    */
-  public get canEncrypt(): boolean {
-    return this._lengthBeforeEncryption + ECIES.OVERHEAD_SIZE <= this.blockSize;
+  public canEncrypt(): boolean {
+    const capacity =
+      ServiceLocator.getServiceProvider().blockCapacityCalculator.calculateCapacity(
+        {
+          blockSize: this.blockSize,
+          blockType: BlockType.EncryptedOwnedDataBlock,
+          usesStandardEncryption: true,
+        },
+      );
+    return (
+      this._lengthBeforeEncryption + ECIES.OVERHEAD_SIZE <=
+      capacity.availableCapacity
+    );
+  }
+
+  /**
+   * Whether the block can be encrypted for multiple recipients
+   * @param recipientCount number of recipients
+   * @returns
+   */
+  public canMultiEncrypt(recipientCount: number): boolean {
+    const capacity =
+      ServiceLocator.getServiceProvider().blockCapacityCalculator.calculateCapacity(
+        {
+          blockSize: this.blockSize,
+          blockType: BlockType.MultiEncryptedBlock,
+          recipientCount: recipientCount,
+          usesStandardEncryption: false,
+        },
+      );
+    const overhead =
+      ServiceLocator.getServiceProvider().eciesService.calculateECIESMultipleRecipientOverhead(
+        recipientCount,
+      );
+    return (
+      this._lengthBeforeEncryption + overhead <= capacity.availableCapacity
+    );
   }
 
   /**
@@ -280,7 +315,7 @@ export class EphemeralBlock extends BaseBlock implements IEphemeralBlock {
     }
 
     // Check if block can be encrypted
-    if (!this.canEncrypt) {
+    if (!this.canEncrypt()) {
       throw new BlockError(BlockErrorType.CannotEncrypt);
     }
 

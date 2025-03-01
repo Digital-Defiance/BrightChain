@@ -92,7 +92,7 @@ export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
    * Whether the block can be encrypted
    * Always returns false since this block is already encrypted
    */
-  public override get canEncrypt(): boolean {
+  public override canEncrypt(): boolean {
     return false;
   }
 

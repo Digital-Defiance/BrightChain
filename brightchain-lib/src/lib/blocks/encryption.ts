@@ -22,14 +22,15 @@ export class BlockEncryption {
     block: EphemeralBlock,
     newBlockType: BlockType,
   ): Promise<EncryptedBlock> {
-    if (!block.canEncrypt) {
+    if (!block.canEncrypt()) {
       throw new Error('Block cannot be encrypted');
     }
 
-    const encryptedBuffer = ServiceLocator.getServiceProvider().eciesService.encrypt(
-      creator.publicKey,
-      block.data,
-    );
+    const encryptedBuffer =
+      ServiceLocator.getServiceProvider().eciesService.encrypt(
+        creator.publicKey,
+        block.data,
+      );
 
     // Create padded buffer filled with random data for the payload area only
     const payloadBuffer = randomBytes(block.blockSize - ECIES.OVERHEAD_SIZE);

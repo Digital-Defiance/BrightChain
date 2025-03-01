@@ -462,14 +462,16 @@ export class ECIESService {
 
   /**
    * Calculate the overhead for a message encrypted for multiple recipients
-   * @param recipients number of recipients
+   * @param recipientCount number of recipients
    * @returns the overhead size in bytes
    */
-  public calculateECIESMultipleRecipientOverhead(recipients: number): number {
+  public calculateECIESMultipleRecipientOverhead(
+    recipientCount: number,
+  ): number {
     return (
       ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE +
-      recipients * GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer) + // recipient ids
-      recipients * ECIES.MULTIPLE.ENCRYPTED_KEY_LENGTH // recipient encrypted keys
+      recipientCount * GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer) + // recipient ids
+      recipientCount * ECIES.MULTIPLE.ENCRYPTED_KEY_LENGTH // recipient encrypted keys
     );
   }
 

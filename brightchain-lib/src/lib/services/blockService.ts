@@ -9,6 +9,7 @@ import { EncryptedBlock } from '../blocks/encrypted';
 import { BlockEncryption } from '../blocks/encryption';
 import { EphemeralBlock } from '../blocks/ephemeral';
 import { ExtendedCBL } from '../blocks/extendedCbl';
+import { MultiEncryptedBlock } from '../blocks/multiEncrypted';
 import { RandomBlock } from '../blocks/random';
 import { RawDataBlock } from '../blocks/rawData';
 import { BrightChainMember } from '../brightChainMember';
@@ -94,14 +95,14 @@ export class BlockService {
    * Encrypt a block using ECIES
    */
   public static async encrypt(
-    creator: BrightChainMember,
+    recipient: BrightChainMember,
     block: EphemeralBlock,
   ): Promise<EncryptedBlock> {
-    if (!block.canEncrypt) {
+    if (!block.canEncrypt()) {
       throw new CannotEncryptBlockError();
     }
     return BlockEncryption.encrypt(
-      creator,
+      recipient,
       block,
       block instanceof ExtendedCBL
         ? BlockType.ExtendedConstituentBlockListBlock
@@ -109,11 +110,33 @@ export class BlockService {
     );
   }
 
+  /**
+   * Encrypt a block for multiple recipients using ECIES
+   * @param recipients The recipients to encrypt the block for
+   * @param block The block to encrypt
+   * @returns The encrypted block
+   */
+  public static async encryptMultiple(
+    recipients: BrightChainMember[],
+    block: EphemeralBlock,
+  ): Promise<MultiEncryptedBlock> {
+    if (!block.canMultiEncrypt(recipients.length)) {
+      throw new CannotEncryptBlockError();
+    }
+    return await BlockService.encryptMultiple(recipients, block);
+  }
+
+  /**
+   * Decrypt a block using ECIES
+   * @param recipient The recipient to decrypt the block for
+   * @param block The block to decrypt
+   * @returns The decrypted block
+   */
   public static async decrypt(
-    creator: BrightChainMember,
+    recipient: BrightChainMember,
     block: EncryptedBlock,
   ): Promise<EphemeralBlock> {
-    if (creator.privateKey === undefined) {
+    if (recipient.privateKey === undefined) {
       throw new EciesError(EciesErrorType.PrivateKeyNotLoaded);
     }
 
@@ -125,7 +148,7 @@ export class BlockService {
 
     const decryptedData =
       ServiceLocator.getServiceProvider().eciesService.decryptWithComponents(
-        creator.privateKey,
+        recipient.privateKey,
         block.ephemeralPublicKey,
         block.iv,
         block.authTag,
@@ -146,9 +169,52 @@ export class BlockService {
       ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
         unpaddedData,
       ),
-      creator,
+      recipient,
       block.dateCreated,
       unpaddedData.length,
+    );
+  }
+
+  public static async decryptMultiple(
+    recipient: BrightChainMember,
+    block: MultiEncryptedBlock,
+  ): Promise<EphemeralBlock> {
+    if (recipient.privateKey === undefined) {
+      throw new EciesError(EciesErrorType.PrivateKeyNotLoaded);
+    }
+    const multiEncryptionHeader =
+      ServiceLocator.getServiceProvider().eciesService.parseMultiEncryptedHeader(
+        block.data,
+      );
+    const decryptedData =
+      ServiceLocator.getServiceProvider().eciesService.decryptMultipleECIEForRecipient(
+        {
+          recipientIds: multiEncryptionHeader.recipientIds,
+          encryptedKeys: multiEncryptionHeader.recipientKeys,
+          originalMessageLength: multiEncryptionHeader.dataLength,
+          encryptedMessage: block.data.subarray(
+            multiEncryptionHeader.headerSize,
+            multiEncryptionHeader.headerSize + multiEncryptionHeader.dataLength,
+          ),
+        },
+        recipient,
+      );
+    const checksum =
+      ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+        decryptedData,
+      );
+    return EphemeralBlock.from(
+      BlockType.EphemeralOwnedDataBlock,
+      BlockDataType.EphemeralStructuredData,
+      block.blockSize,
+      decryptedData,
+      checksum,
+      block.creator,
+      block.dateCreated,
+      multiEncryptionHeader.dataLength,
+      true,
+      false,
+      false,
     );
   }
 

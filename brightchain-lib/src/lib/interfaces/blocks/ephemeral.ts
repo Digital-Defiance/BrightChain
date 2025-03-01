@@ -29,7 +29,15 @@ export interface IEphemeralBlock extends IBaseBlock {
    * 2. Available space
    * 3. Current state
    */
-  get canEncrypt(): boolean;
+  canEncrypt(): boolean;
+  /**
+   * Whether the block can be encrypted for multiple recipients.
+   * Determined by:
+   * 1. Block type
+   * 2. Available space
+   * 3. Current state
+   */
+  canMultiEncrypt(recipientCount: number): boolean;
   get creator(): BrightChainMember | undefined;
   get data(): Buffer;
 

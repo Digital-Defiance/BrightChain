@@ -1,15 +1,15 @@
-import { EncryptedBlock } from './encrypted';
-import CONSTANTS from '../constants';
-import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
-import { ExtendedCblError } from '../errors/extendedCblError';
-import { IExtendedConstituentBlockListBlock } from '../interfaces/blocks/extendedCbl';
-import { ServiceLocator } from '../services/serviceLocator';
 import { BrightChainMember } from '../brightChainMember';
+import CONSTANTS from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
-import { ChecksumBuffer, ChecksumString, SignatureBuffer } from '../types';
+import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
+import { ExtendedCblError } from '../errors/extendedCblError';
 import { GuidV4 } from '../guid';
+import { IExtendedConstituentBlockListBlock } from '../interfaces/blocks/extendedCbl';
+import { ServiceLocator } from '../services/serviceLocator';
+import { ChecksumBuffer, ChecksumString, SignatureBuffer } from '../types';
+import { EncryptedBlock } from './encrypted';
 
 /**
  * Extended CBL class, which extends the CBL class with additional properties
@@ -47,7 +47,9 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
     const filename = ServiceLocator.getServiceProvider().cblService.getFileName(
       this._data,
     );
-    ServiceLocator.getServiceProvider().cblService.validateFileNameFormat(filename);
+    ServiceLocator.getServiceProvider().cblService.validateFileNameFormat(
+      filename,
+    );
     return filename;
   }
 
@@ -69,7 +71,9 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
     const mimeType = ServiceLocator.getServiceProvider().cblService.getMimeType(
       this._data,
     );
-    ServiceLocator.getServiceProvider().cblService.validateMimeTypeFormat(mimeType);
+    ServiceLocator.getServiceProvider().cblService.validateMimeTypeFormat(
+      mimeType,
+    );
     return mimeType;
   }
 
@@ -112,13 +116,15 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
    */
   public get availableCapacity(): number {
     const result =
-      ServiceLocator.getServiceProvider().blockCapacityCalculator.calculateCapacity({
-        blockSize: this.blockSize,
-        blockType: this.blockType,
-        filename: this.fileName,
-        mimetype: this.mimeType,
-        usesStandardEncryption: false,
-      });
+      ServiceLocator.getServiceProvider().blockCapacityCalculator.calculateCapacity(
+        {
+          blockSize: this.blockSize,
+          blockType: this.blockType,
+          filename: this.fileName,
+          mimetype: this.mimeType,
+          usesStandardEncryption: false,
+        },
+      );
     return result.availableCapacity;
   }
 
@@ -140,13 +146,15 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
    */
   public get encryptedAddressCapacity(): number {
     const result =
-      ServiceLocator.getServiceProvider().blockCapacityCalculator.calculateCapacity({
-        blockSize: this.blockSize,
-        blockType: this.blockType,
-        filename: this.fileName,
-        mimetype: this.mimeType,
-        usesStandardEncryption: true,
-      });
+      ServiceLocator.getServiceProvider().blockCapacityCalculator.calculateCapacity(
+        {
+          blockSize: this.blockSize,
+          blockType: this.blockType,
+          filename: this.fileName,
+          mimetype: this.mimeType,
+          usesStandardEncryption: true,
+        },
+      );
     return Math.floor(
       result.availableCapacity / CONSTANTS.CHECKSUM.SHA3_BUFFER_LENGTH,
     );
@@ -272,8 +280,12 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
     return this._delegate.parent;
   }
 
-  public get canEncrypt(): boolean {
+  public canEncrypt(): boolean {
     return this._delegate.canEncrypt;
+  }
+
+  public canEncryptMultiple(recipientCount: number): boolean {
+    return this._delegate.canEncryptMultiple(recipientCount);
   }
 
   public validateSignature(creator?: BrightChainMember): boolean {
@@ -284,7 +296,9 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
     this._delegate.validate();
   }
 
-  public async encrypt<E extends EncryptedBlock>(newBlockType: BlockType): Promise<E> {
+  public async encrypt<E extends EncryptedBlock>(
+    newBlockType: BlockType,
+  ): Promise<E> {
     return this._delegate.encrypt(newBlockType);
   }
 
