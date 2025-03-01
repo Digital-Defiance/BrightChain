@@ -1,19 +1,26 @@
 import { createECDH, randomBytes } from 'crypto';
+import { ECIES } from '../constants';
 import { BlockSize } from '../enumerations/blockSizes';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ECIESService } from '../services/ecies.service';
 import { EciesDecryptionTransform } from './eciesDecryptTransform';
 import { EciesEncryptTransform } from './eciesEncryptTransform';
 
 describe('EciesEncryptTransform Integration Tests', () => {
   const blockSize = BlockSize.Small;
-  // Create real ECDH keys for actual encryption/decryption
-  const ecdh = createECDH(StaticHelpersECIES.curveName);
-  ecdh.generateKeys();
-  // Get raw keys
-  const keypair = {
-    privateKey: ecdh.getPrivateKey(),
-    publicKey: ecdh.getPublicKey(), // Use raw public key directly
-  };
+  let eciesService: ECIESService;
+  let keypair: { privateKey: Buffer; publicKey: Buffer };
+
+  beforeEach(() => {
+    eciesService = new ECIESService();
+    // Create real ECDH keys for actual encryption/decryption
+    const ecdh = createECDH(eciesService.curveName);
+    ecdh.generateKeys();
+    // Get raw keys
+    keypair = {
+      privateKey: ecdh.getPrivateKey(),
+      publicKey: ecdh.getPublicKey(), // Use raw public key directly
+    };
+  });
 
   const testEncryptionDecryption = (
     inputData: Buffer,
@@ -67,7 +74,7 @@ describe('EciesEncryptTransform Integration Tests', () => {
 
   it('encrypts and decrypts data that is exactly the chunk size', (done) => {
     const inputData = Buffer.alloc(
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength,
+      (blockSize as number) - ECIES.OVERHEAD_SIZE,
       'a',
     );
     testEncryptionDecryption(inputData, done);
@@ -75,7 +82,7 @@ describe('EciesEncryptTransform Integration Tests', () => {
 
   it('encrypts and decrypts data that spans multiple chunks', (done) => {
     const inputData = Buffer.alloc(
-      ((blockSize as number) - StaticHelpersECIES.eciesOverheadLength) * 2 + 10,
+      ((blockSize as number) - ECIES.OVERHEAD_SIZE) * 2 + 10,
       'a',
     );
     testEncryptionDecryption(inputData, done);

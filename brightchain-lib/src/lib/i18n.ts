@@ -47,6 +47,14 @@ function setNestedValue(
   current[lastKey] = value;
 }
 
+function getNestedValue(obj: any, path: string[]): any {
+  return path.reduce(
+    (current, key) =>
+      current && typeof current === 'object' ? current[key] : undefined,
+    obj,
+  );
+}
+
 /**
  * Builds a nested object from a flat object.
  * @param strings The flat object to build the nested object from
@@ -116,6 +124,12 @@ export function replaceVariables(
     } else if (varName in constants) {
       const constantValue = constants[varName as keyof typeof constants];
       replacement = constantValue?.toString() ?? '';
+    } else {
+      const path = varName.split('.');
+      const value = getNestedValue(constants, path);
+      if (value !== undefined) {
+        replacement = value.toString();
+      }
     }
     //If the variable is not found in constants or otherVars, leave it unchanged
     result = result.replace(variable, replacement);

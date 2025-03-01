@@ -1,5 +1,6 @@
 import { createHash, createHmac } from 'crypto';
 import { generateRandomKeys } from 'paillier-bigint';
+import { VOTING } from './constants';
 import { IsolatedKeyErrorType } from './enumerations/isolatedKeyErrorType';
 import { IsolatedKeyError } from './errors/isolatedKeyError';
 import { IsolatedPrivateKey } from './isolatedPrivateKey';
@@ -27,9 +28,9 @@ const generateTestKeys = async (
   // Generate keys with required size
   const { publicKey, privateKey } = await generateRandomKeys(KEY_BITS);
   const n = publicKey.n;
-  const nHex = n.toString(16).padStart(768, '0'); // Match padding in IsolatedPublicKey
-  const nBuffer = Buffer.from(nHex, 'hex');
-  const keyId = createHash('sha256').update(nBuffer).digest();
+  const nHex = n.toString(16).padStart(VOTING.PUB_KEY_OFFSET, '0'); // Match padding in IsolatedPublicKey
+  const nBuffer = Buffer.from(nHex, VOTING.KEY_FORMAT);
+  const keyId = createHash(VOTING.HASH_ALGORITHM).update(nBuffer).digest();
 
   const isolatedPublicKey = new IsolatedPublicKey(n, publicKey.g, keyId);
   const isolatedPrivateKey = new IsolatedPrivateKey(
@@ -54,11 +55,11 @@ const extractInstanceId = (
   );
 
   const hmac = createHmac(
-    'sha256',
+    VOTING.HASH_ALGORITHM,
     Buffer.concat([isolatedPublicKey.keyId, isolatedPublicKey.getInstanceId()]),
   )
     .update(calculatedCiphertext.toString(16))
-    .digest('hex');
+    .digest(VOTING.DIGEST_FORMAT);
 
   return hmac === receivedHmac
     ? isolatedPublicKey.getInstanceId()
@@ -136,7 +137,7 @@ describe('Isolated Keys', () => {
       expect(() => keys.isolatedPublicKey.addition(c1, c2)).toThrowType(
         IsolatedKeyError,
         (error: IsolatedKeyError) => {
-          expect(error.reason).toBe(IsolatedKeyErrorType.KeyIsolationViolation);
+          expect(error.type).toBe(IsolatedKeyErrorType.KeyIsolationViolation);
         },
       );
     });
@@ -144,7 +145,12 @@ describe('Isolated Keys', () => {
 
   describe('IsolatedPrivateKey', () => {
     it('should create a valid key pair', () => {
-      expect(keys.isolatedPrivateKey.publicKey).toBe(keys.isolatedPublicKey);
+      expect(keys.isolatedPrivateKey.publicKey.g).toEqual(
+        keys.isolatedPublicKey.g,
+      );
+      expect(keys.isolatedPrivateKey.publicKey.n).toEqual(
+        keys.isolatedPublicKey.n,
+      );
     });
 
     it('should reject non-isolated public key', () => {
@@ -161,7 +167,7 @@ describe('Isolated Keys', () => {
       expect(
         () => new IsolatedPrivateKey(lambda, mu, regularPublicKey),
       ).toThrowType(IsolatedKeyError, (error: IsolatedKeyError) => {
-        expect(error.reason).toBe(IsolatedKeyErrorType.InvalidPublicKey);
+        expect(error.type).toBe(IsolatedKeyErrorType.InvalidPublicKey);
       });
     });
 
@@ -179,7 +185,7 @@ describe('Isolated Keys', () => {
       expect(() => keys.isolatedPrivateKey.decrypt(ciphertext)).toThrowType(
         IsolatedKeyError,
         (error: IsolatedKeyError) => {
-          expect(error.reason).toBe(IsolatedKeyErrorType.InvalidKeyFormat);
+          expect(error.type).toBe(IsolatedKeyErrorType.InvalidKeyFormat);
         },
       );
     });

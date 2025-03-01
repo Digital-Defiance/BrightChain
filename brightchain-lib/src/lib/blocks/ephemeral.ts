@@ -1,8 +1,10 @@
 import { randomBytes } from 'crypto';
 import { Readable } from 'stream';
 import { BrightChainMember } from '../brightChainMember';
+import { ECIES } from '../constants';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
+import { BlockErrorType } from '../enumerations/blockErrorType';
 import { BlockMetadataErrorType } from '../enumerations/blockMetadataErrorType';
 import { BlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
@@ -10,22 +12,24 @@ import { BlockValidationErrorType } from '../enumerations/blockValidationErrorTy
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import {
   BlockAccessError,
+  BlockError,
   BlockMetadataError,
   BlockValidationError,
 } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
-import { GuidV4 } from '../guid';
-import { IDataBlock } from '../interfaces/dataBlock';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
+import { ServiceLocator } from '../services/serviceLocator';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
+// Remove circular import
+// import { EncryptedBlock } from './encrypted';
+import { BlockEncryption } from './encryption';
 
 /**
  * Ephemeral blocks are blocks that are not stored on disk, but are either input blocks or reconstituted blocks.
  * Ephemeral blocks should never be written to disk and are therefore memory-only.
  */
-export class EphemeralBlock extends BaseBlock implements IDataBlock {
+export class EphemeralBlock extends BaseBlock implements IEphemeralBlock {
   /**
    * Creates a new ephemeral block
    */
@@ -35,15 +39,18 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     blockSize: BlockSize,
     data: Buffer,
     checksum: ChecksumBuffer,
-    creator?: BrightChainMember | GuidV4,
+    creator: BrightChainMember,
     dateCreated?: Date,
-    actualDataLength?: number,
+    lengthBeforeEncryption?: number,
     canRead = true,
     encrypted = false,
     canPersist = true,
   ): Promise<EphemeralBlock> {
+    // Skip validation in test environment
     const calculatedChecksum =
-      await StaticHelpersChecksum.calculateChecksumAsync(data);
+      await ServiceLocator.getServiceProvider().checksumService.calculateChecksumForStream(
+        Readable.from(data),
+      );
 
     if (!calculatedChecksum.equals(checksum)) {
       throw new ChecksumMismatchError(checksum, calculatedChecksum);
@@ -53,7 +60,7 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
       blockSize,
       type,
       dataType,
-      actualDataLength ?? data.length,
+      lengthBeforeEncryption ?? data.length,
       encrypted,
       creator,
       dateCreated ?? new Date(),
@@ -74,18 +81,11 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
    * The data in the block
    */
   protected readonly _data: Buffer;
-  /**
-   * Whether the block is encrypted
-   */
-  private readonly _encrypted: boolean;
+
   /**
    * The block creator object
    */
-  private readonly _creator?: BrightChainMember;
-  /**
-   * The block creator id
-   */
-  private readonly _creatorId?: GuidV4;
+  protected readonly _creator: BrightChainMember;
 
   /**
    * Create a new ephemeral block
@@ -140,16 +140,9 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
 
     // Store block properties
     this._data = paddedData;
-    this._encrypted = metadata.encrypted;
 
     // Handle creator from metadata
-    const creatorId = metadata.creator;
-    if (creatorId instanceof BrightChainMember) {
-      this._creator = creatorId;
-      this._creatorId = creatorId.id;
-    } else if (creatorId instanceof GuidV4) {
-      this._creatorId = creatorId;
-    }
+    this._creator = metadata.creator;
   }
 
   /**
@@ -159,11 +152,8 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
-    // For encrypted blocks, return the full data including padding
-    // For unencrypted blocks, return only the actual data length
-    return this._encrypted
-      ? this._data
-      : this._data.subarray(0, this.metadata.lengthWithoutPadding);
+    // Return only the actual data length, not the padded data
+    return this._data.subarray(0, this._lengthBeforeEncryption);
   }
 
   /**
@@ -187,33 +177,15 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
   /**
    * The actual data length of the block before any encryption or padding overhead
    */
-  public get actualDataLength(): number {
-    return this._actualDataLength;
-  }
-
-  /**
-   * Whether the block is encrypted
-   */
-  public get encrypted(): boolean {
-    return this._encrypted;
+  public get lengthBeforeEncryption(): number {
+    return this._lengthBeforeEncryption;
   }
 
   /**
    * Whether the block can be encrypted
    */
   public get canEncrypt(): boolean {
-    return (
-      !this._encrypted &&
-      this._actualDataLength + StaticHelpersECIES.eciesOverheadLength <=
-        this.blockSize
-    );
-  }
-
-  /**
-   * Whether the block can be decrypted
-   */
-  public get canDecrypt(): boolean {
-    return this._encrypted;
+    return this._lengthBeforeEncryption + ECIES.OVERHEAD_SIZE <= this.blockSize;
   }
 
   /**
@@ -228,9 +200,10 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     }
 
     // Calculate checksum on actual data length, excluding padding
-    const computedChecksum = StaticHelpersChecksum.calculateChecksum(
-      this._data,
-    );
+    const computedChecksum =
+      ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+        this._data,
+      );
     const validated = computedChecksum.equals(this.idChecksum);
     if (!validated) {
       throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
@@ -249,9 +222,10 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     }
 
     // Calculate checksum on actual data length, excluding padding
-    const computedChecksum = await StaticHelpersChecksum.calculateChecksumAsync(
-      this._data,
-    );
+    const computedChecksum =
+      await ServiceLocator.getServiceProvider().checksumService.calculateChecksumForStream(
+        Readable.from(this._data),
+      );
     const validated = computedChecksum.equals(this.idChecksum);
     if (!validated) {
       throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
@@ -263,24 +237,11 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
    * Only returns BrightChainMember creators, not GuidV4 IDs
    */
   public get creator(): BrightChainMember | undefined {
-    return this._creator;
+    return this._creator || undefined;
   }
 
-  /**
-   * The block creator id
-   * For BrightChainMember creators, returns their ID
-   * For GuidV4 creators, returns the GuidV4 directly
-   */
-  public get creatorId(): GuidV4 | undefined {
-    return this._creatorId;
-  }
-
-  /**
-   * Whether the block can be signed
-   * Returns true if the block has any creator (BrightChainMember or GuidV4)
-   */
-  public get canSign(): boolean {
-    return this._creator !== undefined || this._creatorId !== undefined;
+  public override get layerOverhead(): number {
+    return 0;
   }
 
   /**
@@ -301,19 +262,46 @@ export class EphemeralBlock extends BaseBlock implements IDataBlock {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
-    // For encrypted blocks, let derived class handle payload extraction
-    // For unencrypted blocks, return the actual data (no padding)
-    return this._encrypted
-      ? this.data
-      : this._data.subarray(0, this._actualDataLength);
+    return this._data.subarray(
+      this.layerOverhead,
+      this.layerOverhead + this._lengthBeforeEncryption,
+    );
   }
 
   /**
-   * Get the length of the payload
+   * Encrypt this block using the creator's public key
+   * @param creator The member who will own the encrypted block
+   * @returns A new EncryptedOwnedDataBlock
    */
-  public override get payloadLength(): number {
-    // For encrypted blocks, let derived class handle length calculation
-    // For unencrypted blocks, use actual data length
-    return this._encrypted ? super.payloadLength : this._actualDataLength;
+  public async encrypt<E>(newBlockType: BlockType): Promise<E> {
+    // Validate creator
+    if (!this.creator) {
+      throw new BlockError(BlockErrorType.CreatorRequiredForEncryption);
+    }
+
+    // Check if block can be encrypted
+    if (!this.canEncrypt) {
+      throw new BlockError(BlockErrorType.CannotEncrypt);
+    }
+
+    // Encrypt using BlockService
+    const encryptedBlock = await BlockEncryption.encrypt(
+      this.creator,
+      this,
+      newBlockType,
+    );
+
+    // We can't use instanceof EncryptedBlock here due to circular dependency
+    // Instead, check if it implements IEncryptedBlock interface
+    if (
+      !encryptedBlock ||
+      typeof encryptedBlock !== 'object' ||
+      !('decrypt' in encryptedBlock) ||
+      !('ephemeralPublicKey' in encryptedBlock)
+    ) {
+      throw new BlockError(BlockErrorType.UnexpectedEncryptedBlockType);
+    }
+
+    return encryptedBlock as E;
   }
 }

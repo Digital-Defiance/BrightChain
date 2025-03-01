@@ -6,12 +6,27 @@ import { lengthToClosestBlockSize } from '../enumerations/blockSizes';
 import { BlockType } from '../enumerations/blockType';
 import { MemberType } from '../enumerations/memberType';
 import { GuidV4 } from '../guid';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
-import { StaticHelpersVoting } from '../staticHelpers.voting';
+import { ChecksumService } from '../services/checksum.service';
+import { ECIESService } from '../services/ecies.service';
+import { ServiceProvider } from '../services/service.provider';
+import { VotingService } from '../services/voting.service';
 import { MultiEncryptedBlock } from './multiEncrypted';
 
 describe('MultiEncryptedBlock', () => {
+  let eciesService: ECIESService;
+  let checksumService: ChecksumService;
+  let votingService: VotingService;
+
+  beforeEach(() => {
+    eciesService = ServiceProvider.getInstance().eciesService;
+    checksumService = ServiceProvider.getInstance().checksumService;
+    votingService = ServiceProvider.getInstance().votingService;
+  });
+
+  afterEach(() => {
+    ServiceProvider.resetInstance();
+  });
+
   it('should calculate and validate checksum', async () => {
     // Create a test recipient with proper key pair
     const ecdh = createECDH('secp256k1');
@@ -19,7 +34,7 @@ describe('MultiEncryptedBlock', () => {
     const publicKey = ecdh.getPublicKey();
     const privateKey = ecdh.getPrivateKey();
 
-    const votingKeyPair = await StaticHelpersVoting.generateVotingKeyPair();
+    const votingKeyPair = votingService.generateVotingKeyPair();
     const recipient = new BrightChainMember(
       MemberType.User,
       'Test User',
@@ -31,33 +46,31 @@ describe('MultiEncryptedBlock', () => {
       GuidV4.new(), // Use GuidV4.new() to generate GUID
     );
 
-    // Create test data
+    // Create test data and encrypt it
     const data = Buffer.from('test data');
+    const encryptedResult = eciesService.encryptMultiple([recipient], data);
 
-    // Encrypt the data for the recipient
-    const encryptedResult = StaticHelpersECIES.encryptMultiple(
-      [recipient],
-      data,
-    );
-    const encryptedBuffer =
-      StaticHelpersECIES.multipleEncryptResultsToBuffer(encryptedResult);
+    // Use the actual encryptedMessage directly
+    const formattedData = Buffer.concat([
+      encryptedResult.encryptedMessage,
+      Buffer.alloc(0), // No additional data needed
+    ]);
 
     // Calculate the minimum block size needed for our data
-    const blockSize = lengthToClosestBlockSize(encryptedBuffer.data.length);
+    const blockSize = lengthToClosestBlockSize(formattedData.length);
 
     // Create a padded buffer with random data
     const paddedData = randomBytes(blockSize);
     // Copy data into the final buffer, preserving the full block size
-    encryptedBuffer.data.copy(
+    formattedData.copy(
       paddedData,
       0,
       0,
-      Math.min(encryptedBuffer.data.length, blockSize),
+      Math.min(formattedData.length, blockSize),
     );
 
     // Calculate checksum of the padded data
-    const calculatedChecksum =
-      await StaticHelpersChecksum.calculateChecksumAsync(paddedData);
+    const calculatedChecksum = checksumService.calculateChecksum(paddedData);
 
     // Create the block with encrypted data
     const block = await MultiEncryptedBlock.from(

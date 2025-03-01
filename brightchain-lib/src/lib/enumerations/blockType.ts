@@ -66,7 +66,7 @@ export enum BlockType {
    * 2. Access control
    * 3. Metadata support
    */
-  OwnedDataBlock = 4,
+  EphemeralOwnedDataBlock = 10,
 
   /**
    * A block containing references to other blocks.
@@ -75,34 +75,7 @@ export enum BlockType {
    * 2. Storing metadata
    * 3. Building hierarchies
    */
-  ConstituentBlockList = 5,
-
-  /**
-   * An encrypted block with ownership information.
-   * Features:
-   * 1. Data encryption
-   * 2. Owner identification
-   * 3. Access control
-   */
-  EncryptedOwnedDataBlock = 6,
-
-  /**
-   * An encrypted block containing block references.
-   * Used for:
-   * 1. Private block lists
-   * 2. Secure metadata
-   * 3. Protected hierarchies
-   */
-  EncryptedConstituentBlockListBlock = 7,
-
-  /**
-   * A reference to a block stored elsewhere.
-   * Features:
-   * 1. Lazy loading
-   * 2. Memory efficiency
-   * 3. Remote storage support
-   */
-  Handle = 8,
+  ConstituentBlockList = 20,
 
   /**
    * An extended CBL with file metadata.
@@ -111,12 +84,40 @@ export enum BlockType {
    * 2. MIME type tracking
    * 3. File system integration
    */
-  ExtendedConstituentBlockListBlock = 9,
+  ExtendedConstituentBlockListBlock = 21,
+
+  /**
+   * An encrypted block with ownership information.
+   * Features:
+   * 1. Data encryption
+   * 2. Owner identification
+   * 3. Access control
+   */
+  EncryptedOwnedDataBlock = 30,
+
+  /**
+   * An encrypted block containing block references.
+   */
+  EncryptedConstituentBlockListBlock = 31,
+
+  /**
+   * An encrypted block containing block references and metadata.
+   */
+  EncryptedExtendedConstituentBlockListBlock = 32,
 
   /**
    * A block encrypted for multiple recipients.
    */
-  MultiEncryptedBlock = 10,
+  MultiEncryptedBlock = 33,
+
+  /**
+   * A reference to a block stored elsewhere.
+   * Features:
+   * 1. Lazy loading
+   * 2. Memory efficiency
+   * 3. Remote storage support
+   */
+  Handle = 40,
 }
 
 export default BlockType;

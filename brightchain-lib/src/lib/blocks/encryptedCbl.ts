@@ -1,5 +1,7 @@
 import { randomBytes } from 'crypto';
+import { BlockChecksum } from '../access/checksum';
 import { BrightChainMember } from '../brightChainMember';
+import { CBL, ECIES } from '../constants';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -13,12 +15,12 @@ import {
   BlockValidationError,
 } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
-import { GuidV4 } from '../guid';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer } from '../types';
 import { ConstituentBlockListBlock } from './cbl';
-import { EncryptedOwnedDataBlock } from './encryptedOwnedData';
+import { EncryptedBlock } from './encrypted';
+import { EncryptedBlockCreator } from './encryptedBlockCreator';
 
 /**
  * EncryptedConstituentBlockListBlock represents an encrypted version of a ConstituentBlockListBlock.
@@ -35,19 +37,20 @@ import { EncryptedOwnedDataBlock } from './encryptedOwnedData';
  *   - CBL Addresses: Array of block checksums
  * - Padding: Random data to fill block size
  */
-export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock {
-  public static override async from(
+
+// Register block creator first to avoid circular dependencies
+EncryptedBlockCreator.register(
+  BlockType.EncryptedConstituentBlockListBlock,
+  async (
     type: BlockType,
     dataType: BlockDataType,
     blockSize: BlockSize,
     data: Buffer,
     checksum: ChecksumBuffer,
-    creator?: BrightChainMember | GuidV4,
+    creator: BrightChainMember,
     dateCreated?: Date,
-    actualDataLength?: number,
-    canRead = true,
-    canPersist = true,
-  ): Promise<EncryptedConstituentBlockListBlock> {
+    lengthBeforeEncryption?: number,
+  ): Promise<EncryptedBlock> => {
     // Validate date first, before any other validation
     const now = new Date();
     const finalDate = dateCreated ?? now;
@@ -64,9 +67,7 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
 
     // For encrypted CBL blocks, we need to validate:
     // 1. The minimum data size includes both CBL header and encryption overhead
-    const minDataSize =
-      ConstituentBlockListBlock.CblHeaderSize +
-      StaticHelpersECIES.eciesOverheadLength;
+    const minDataSize = CBL.BASE_OVERHEAD + ECIES.OVERHEAD_SIZE;
     if (data.length < minDataSize) {
       throw new BlockValidationError(
         BlockValidationErrorType.DataLengthTooShortForEncryptedCBL,
@@ -74,11 +75,10 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     }
 
     // Calculate the actual data length and metadata
-    const payloadLength =
-      (blockSize as number) - StaticHelpersECIES.eciesOverheadLength;
+    const payloadLength = (blockSize as number) - ECIES.OVERHEAD_SIZE;
 
     // For already encrypted data (starts with 0x04), validate total size
-    if (data[0] === 0x04) {
+    if (data[0] === ECIES.PUBLIC_KEY_MAGIC) {
       if (data.length > (blockSize as number)) {
         throw new BlockValidationError(
           BlockValidationErrorType.DataLengthExceedsCapacity,
@@ -96,8 +96,8 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     // For encrypted blocks with known actual data length:
     // 1. The actual data length must not exceed available capacity
     // 2. The total encrypted length must not exceed block size
-    if (actualDataLength !== undefined) {
-      if (actualDataLength > payloadLength) {
+    if (lengthBeforeEncryption !== undefined) {
+      if (lengthBeforeEncryption > payloadLength) {
         throw new BlockValidationError(
           BlockValidationErrorType.DataLengthExceedsCapacity,
         );
@@ -105,7 +105,7 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     }
 
     // Calculate checksum on the original data
-    const computedChecksum = StaticHelpersChecksum.calculateChecksum(data);
+    const computedChecksum = BlockChecksum.calculateChecksum(data);
     if (checksum && !computedChecksum.equals(checksum)) {
       throw new ChecksumMismatchError(checksum, computedChecksum);
     }
@@ -116,7 +116,7 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
       blockSize,
       type,
       dataType,
-      actualDataLength ?? data.length,
+      lengthBeforeEncryption ?? data.length,
       creator,
       finalDate,
     );
@@ -125,17 +125,17 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     const finalData = randomBytes(blockSize as number);
 
     // If data is already encrypted (starts with 0x04), use it directly
-    if (data[0] === 0x04) {
+    if (data[0] === ECIES.PUBLIC_KEY_MAGIC) {
       // Copy data into the final buffer, preserving the full block size
       data.copy(finalData, 0, 0, Math.min(data.length, blockSize as number));
     } else {
       // Set ECIES header components
-      finalData[0] = 0x04; // Set ECIES public key prefix
+      finalData[0] = ECIES.PUBLIC_KEY_MAGIC; // Set ECIES public key prefix
       // Rest of the public key is already random from randomBytes
-      let offset = StaticHelpersECIES.publicKeyLength;
+      let offset = ECIES.PUBLIC_KEY_LENGTH;
       // IV and authTag are already random from randomBytes
-      offset += StaticHelpersECIES.ivLength;
-      offset += StaticHelpersECIES.authTagLength;
+      offset += ECIES.IV_LENGTH;
+      offset += ECIES.AUTH_TAG_LENGTH;
       // Copy actual data to payload area, preserving the full block size
       data.copy(
         finalData,
@@ -146,34 +146,29 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     }
 
     // Validate encryption header components
-    const ephemeralKey = finalData.subarray(
-      0,
-      StaticHelpersECIES.publicKeyLength,
-    );
+    const ephemeralKey = finalData.subarray(0, ECIES.PUBLIC_KEY_LENGTH);
     const iv = finalData.subarray(
-      StaticHelpersECIES.publicKeyLength,
-      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
+      ECIES.PUBLIC_KEY_LENGTH,
+      ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH,
     );
     const authTag = finalData.subarray(
-      StaticHelpersECIES.publicKeyLength + StaticHelpersECIES.ivLength,
-      StaticHelpersECIES.publicKeyLength +
-        StaticHelpersECIES.ivLength +
-        StaticHelpersECIES.authTagLength,
+      ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH,
+      ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH + ECIES.AUTH_TAG_LENGTH,
     );
 
     // Verify all components have correct lengths and format
     if (
-      ephemeralKey[0] !== 0x04 ||
-      ephemeralKey.length !== StaticHelpersECIES.publicKeyLength
+      ephemeralKey[0] !== ECIES.PUBLIC_KEY_MAGIC ||
+      ephemeralKey.length !== ECIES.PUBLIC_KEY_LENGTH
     ) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
       );
     }
-    if (iv.length !== StaticHelpersECIES.ivLength) {
+    if (iv.length !== ECIES.IV_LENGTH) {
       throw new BlockValidationError(BlockValidationErrorType.InvalidIVLength);
     }
-    if (authTag.length !== StaticHelpersECIES.authTagLength) {
+    if (authTag.length !== ECIES.AUTH_TAG_LENGTH) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidAuthTagLength,
       );
@@ -185,9 +180,37 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
       finalData,
       finalChecksum,
       metadata,
-      canRead,
-      canPersist,
+      true, // Always readable
+      true, // Always persistable
+    ) as EncryptedBlock;
+  },
+);
+
+export class EncryptedConstituentBlockListBlock
+  extends EncryptedBlock
+  implements IEncryptedBlock
+{
+  public static override async from(
+    type: BlockType,
+    dataType: BlockDataType,
+    blockSize: BlockSize,
+    data: Buffer,
+    checksum: ChecksumBuffer,
+    creator: BrightChainMember,
+    dateCreated?: Date,
+    lengthBeforeEncryption?: number,
+  ): Promise<EncryptedConstituentBlockListBlock> {
+    const result = await EncryptedBlockCreator.create(
+      BlockType.EncryptedConstituentBlockListBlock,
+      dataType,
+      blockSize,
+      data,
+      checksum,
+      creator,
+      dateCreated,
+      lengthBeforeEncryption,
     );
+    return result as EncryptedConstituentBlockListBlock;
   }
 
   /**
@@ -206,19 +229,15 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     }
 
     // Encrypt the CBL data
-    const encryptedData = StaticHelpersECIES.encrypt(
+    const encryptedData = ServiceProvider.getInstance().eciesService.encrypt(
       encryptor.publicKey,
       cbl.data,
     );
 
     // The creator of the encrypted block should be the same as the original block
     // This maintains the ownership chain and allows for signature validation
-    if (!cbl.creator && !cbl.creatorId) {
-      throw new BlockMetadataError(BlockMetadataErrorType.CreatorRequired);
-    }
 
-    const checksum =
-      await StaticHelpersChecksum.calculateChecksumAsync(encryptedData);
+    const checksum = await BlockChecksum.calculateChecksum(encryptedData);
 
     return EncryptedConstituentBlockListBlock.from(
       BlockType.EncryptedConstituentBlockListBlock,
@@ -228,9 +247,7 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
       checksum,
       encryptor, // Use encryptor as creator since they're encrypting the data
       cbl.dateCreated,
-      cbl.actualDataLength,
-      true, // Always readable
-      true, // Always persistable
+      cbl.lengthBeforeEncryption,
     );
   }
 
@@ -243,6 +260,7 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
    * @param checksum - The checksum of the data
    * @param dateCreated - The date the block was created
    * @param metadata - The block metadata
+   * @param eciesService - The ECIES service to use for encryption/decryption
    * @param canRead - Whether the block can be read
    * @param canPersist - Whether the block can be persisted
    */
@@ -271,16 +289,22 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
    * Returns true since encrypted blocks can always be decrypted
    * with the appropriate private key
    */
-  public override get canDecrypt(): boolean {
+  public get canDecrypt(): boolean {
     return true;
   }
 
   /**
-   * Whether the block can be signed
-   * Returns true if the block has a creator
+   * Get the available capacity for payload data in this block
    */
-  public override get canSign(): boolean {
-    return this.creator !== undefined;
+  public override get availableCapacity(): number {
+    const blockCapacityCalculator =
+      ServiceProvider.getInstance().blockCapacityCalculator;
+    const result = blockCapacityCalculator.calculateCapacity({
+      blockSize: this.blockSize,
+      blockType: this.blockType,
+      usesStandardEncryption: true,
+    });
+    return result.availableCapacity;
   }
 
   /**
@@ -289,15 +313,8 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
   public override get totalOverhead(): number {
     return (
       super.totalOverhead + // Encryption overhead
-      ConstituentBlockListBlock.CblHeaderSize // CBL header
+      CBL.BASE_OVERHEAD // CBL header
     );
-  }
-
-  /**
-   * Get the usable capacity after accounting for all overhead
-   */
-  public override get capacity(): number {
-    return this.blockSize - this.totalOverhead;
   }
 
   /**
@@ -311,10 +328,7 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     // For encrypted CBL blocks:
     // Return the entire payload area (including random padding)
     // The payload starts after the encryption header and goes to the end of the block
-    return this.data.subarray(
-      StaticHelpersECIES.eciesOverheadLength,
-      this.blockSize,
-    );
+    return this.data.subarray(ECIES.OVERHEAD_SIZE, this.blockSize);
   }
 
   /**
@@ -325,28 +339,23 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     super.validateSync();
 
     // Validate CBL-specific constraints
-    const minDataSize = ConstituentBlockListBlock.CblHeaderSize;
-    if (this.actualDataLength < minDataSize) {
+    const minDataSize = CBL.BASE_OVERHEAD;
+    if (this.lengthBeforeEncryption < minDataSize) {
       throw new BlockValidationError(
         BlockValidationErrorType.DataLengthTooShortForCBLHeader,
       );
     }
 
     // Validate that the remaining data length (after header) is a multiple of checksum length
-    const dataAfterHeader =
-      this.actualDataLength - ConstituentBlockListBlock.CblHeaderSize;
-    if (
-      dataAfterHeader % StaticHelpersChecksum.Sha3ChecksumBufferLength !==
-      0
-    ) {
+    const dataAfterHeader = this.lengthBeforeEncryption - CBL.BASE_OVERHEAD;
+    if (dataAfterHeader % BlockChecksum.checksumBufferLength !== 0) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidCBLDataLength,
       );
     }
 
     // Validate total size fits within block
-    const totalSize =
-      this.actualDataLength + StaticHelpersECIES.eciesOverheadLength;
+    const totalSize = this.lengthBeforeEncryption + ECIES.OVERHEAD_SIZE;
     if (totalSize > this.blockSize) {
       throw new BlockValidationError(
         BlockValidationErrorType.DataLengthExceedsCapacity,
@@ -362,28 +371,23 @@ export class EncryptedConstituentBlockListBlock extends EncryptedOwnedDataBlock 
     await super.validateAsync();
 
     // Validate CBL-specific constraints
-    const minDataSize = ConstituentBlockListBlock.CblHeaderSize;
-    if (this.actualDataLength < minDataSize) {
+    const minDataSize = CBL.BASE_OVERHEAD;
+    if (this.lengthBeforeEncryption < minDataSize) {
       throw new BlockValidationError(
         BlockValidationErrorType.DataLengthTooShortForCBLHeader,
       );
     }
 
     // Validate that the remaining data length (after header) is a multiple of checksum length
-    const dataAfterHeader =
-      this.actualDataLength - ConstituentBlockListBlock.CblHeaderSize;
-    if (
-      dataAfterHeader % StaticHelpersChecksum.Sha3ChecksumBufferLength !==
-      0
-    ) {
+    const dataAfterHeader = this.lengthBeforeEncryption - CBL.BASE_OVERHEAD;
+    if (dataAfterHeader % BlockChecksum.checksumBufferLength !== 0) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidCBLDataLength,
       );
     }
 
     // Validate total size fits within block
-    const totalSize =
-      this.actualDataLength + StaticHelpersECIES.eciesOverheadLength;
+    const totalSize = this.lengthBeforeEncryption + ECIES.OVERHEAD_SIZE;
     if (totalSize > this.blockSize) {
       throw new BlockValidationError(
         BlockValidationErrorType.DataLengthExceedsCapacity,

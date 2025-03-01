@@ -1,21 +1,29 @@
 import { faker } from '@faker-js/faker';
 import Wallet from 'ethereumjs-wallet';
 import { BrightChainMember } from './brightChainMember';
+import { ECIES } from './constants';
 import { EmailString } from './emailString';
 import { InvalidEmailErrorType } from './enumerations/invalidEmailType';
 import { MemberErrorType } from './enumerations/memberErrorType';
 import { MemberType } from './enumerations/memberType';
 import { InvalidEmailError } from './errors/invalidEmail';
 import { MemberError } from './errors/memberError';
-import { IMemberWithMnemonic } from './interfaces/memberWithMnemonic';
-import { StaticHelpersECIES } from './staticHelpers.ECIES';
-import { StaticHelpersVoting } from './staticHelpers.voting';
+import { IMemberWithMnemonic } from './interfaces/member/memberWithMnemonic';
+import { SecureString } from './secureString';
+import { ECIESService } from './services/ecies.service';
+import { ServiceProvider } from './services/service.provider';
+import { VotingService } from './services/voting.service';
 
 describe('brightchain', () => {
   let alice: IMemberWithMnemonic,
     bob: IMemberWithMnemonic,
     noKeyCharlie: IMemberWithMnemonic;
+  let eciesService: ECIESService;
+  let votingService: VotingService;
+
   beforeAll(() => {
+    eciesService = ServiceProvider.getInstance().eciesService;
+    votingService = ServiceProvider.getInstance().votingService;
     alice = BrightChainMember.newMember(
       MemberType.User,
       'Alice Smith',
@@ -107,7 +115,7 @@ describe('brightchain', () => {
           new EmailString(''),
         ),
       ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
-        expect(error.reason).toBe(InvalidEmailErrorType.Missing);
+        expect(error.type).toBe(InvalidEmailErrorType.Missing);
       });
     });
 
@@ -119,7 +127,7 @@ describe('brightchain', () => {
           new EmailString(' alice@example.com'),
         ),
       ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
-        expect(error.reason).toBe(InvalidEmailErrorType.Whitespace);
+        expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
       });
       expect(() =>
         BrightChainMember.newMember(
@@ -128,7 +136,7 @@ describe('brightchain', () => {
           new EmailString('alice@example.com '),
         ),
       ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
-        expect(error.reason).toBe(InvalidEmailErrorType.Whitespace);
+        expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
       });
     });
 
@@ -140,7 +148,7 @@ describe('brightchain', () => {
           new EmailString('x!foo'),
         );
       }).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
-        expect(error.reason).toBe(InvalidEmailErrorType.Invalid);
+        expect(error.type).toBe(InvalidEmailErrorType.Invalid);
       });
     });
 
@@ -151,13 +159,12 @@ describe('brightchain', () => {
   });
 
   describe('BIP39 mnemonic and wallet functionality', () => {
-    let mnemonic: string;
+    let mnemonic: SecureString;
     let wallet: Wallet;
     let member: IMemberWithMnemonic;
     beforeAll(() => {
-      mnemonic = StaticHelpersECIES.generateNewMnemonic();
-      const { wallet: w } =
-        StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
+      mnemonic = eciesService.generateNewMnemonic();
+      const { wallet: w } = eciesService.walletAndSeedFromMnemonic(mnemonic);
       wallet = w;
       member = BrightChainMember.newMember(
         MemberType.User,
@@ -173,7 +180,7 @@ describe('brightchain', () => {
 
     it('should consistently derive keys from the same mnemonic', () => {
       const { wallet: wallet2 } =
-        StaticHelpersECIES.walletAndSeedFromMnemonic(mnemonic);
+        eciesService.walletAndSeedFromMnemonic(mnemonic);
 
       expect(wallet.getPrivateKey().toString('hex')).toEqual(
         wallet2.getPrivateKey().toString('hex'),
@@ -188,11 +195,11 @@ describe('brightchain', () => {
       const memberPublicKey = member.member.publicKey;
 
       // The public key should be in uncompressed format with 0x04 prefix
-      expect(memberPublicKey[0]).toEqual(0x04);
+      expect(memberPublicKey[0]).toEqual(ECIES.PUBLIC_KEY_MAGIC);
 
       // Verify the key length is correct for the curve
       // For secp256k1, public key should be 65 bytes (1 byte prefix + 32 bytes x + 32 bytes y)
-      expect(memberPublicKey.length).toEqual(65);
+      expect(memberPublicKey.length).toEqual(ECIES.PUBLIC_KEY_LENGTH);
     });
 
     it('should handle wallet unload and reload with mnemonic', () => {
@@ -218,7 +225,7 @@ describe('brightchain', () => {
       );
 
       // Generate a new mnemonic (this should fail to load)
-      const wrongMnemonic = StaticHelpersECIES.generateNewMnemonic();
+      const wrongMnemonic = eciesService.generateNewMnemonic();
       expect(() => newMember.member.loadWallet(wrongMnemonic)).toThrowType(
         MemberError,
         (error: MemberError) => {
@@ -244,25 +251,27 @@ describe('brightchain', () => {
         newMember.member.votingPublicKey, // Include the voting public key
       );
       // Set the private key using the setter to ensure proper validation
-      reloadedMember.privateKey = originalPrivateKey;
+      if (originalPrivateKey) {
+        reloadedMember.loadPrivateKey(originalPrivateKey);
+      }
 
       // Verify ECDH keys match
       expect(reloadedMember.publicKey.toString('hex')).toEqual(
         originalPublicKey.toString('hex'),
       );
-      expect(reloadedMember.privateKey.toString('hex')).toEqual(
-        originalPrivateKey.toString('hex'),
+      expect(reloadedMember.privateKey?.toString('hex')).toEqual(
+        originalPrivateKey?.toString('hex'),
       );
 
       // Verify voting public key matches
       expect(
-        StaticHelpersVoting.votingPublicKeyToBuffer(
-          reloadedMember.votingPublicKey,
-        ).toString('hex'),
+        votingService
+          .votingPublicKeyToBuffer(reloadedMember.votingPublicKey)
+          .toString('hex'),
       ).toEqual(
-        StaticHelpersVoting.votingPublicKeyToBuffer(
-          newMember.member.votingPublicKey,
-        ).toString('hex'),
+        votingService
+          .votingPublicKeyToBuffer(newMember.member.votingPublicKey)
+          .toString('hex'),
       );
     });
 
@@ -279,19 +288,19 @@ describe('brightchain', () => {
       );
 
       // Private keys should be different
-      expect(member.member.privateKey.toString('hex')).not.toEqual(
-        member2.member.privateKey.toString('hex'),
+      expect(member.member.privateKey?.toString('hex')).not.toEqual(
+        member2.member.privateKey?.toString('hex'),
       );
 
       // Voting keys should be different
       expect(
-        StaticHelpersVoting.votingPublicKeyToBuffer(
-          member.member.votingPublicKey,
-        ).toString('hex'),
+        votingService
+          .votingPublicKeyToBuffer(member.member.votingPublicKey)
+          .toString('hex'),
       ).not.toEqual(
-        StaticHelpersVoting.votingPublicKeyToBuffer(
-          member2.member.votingPublicKey,
-        ).toString('hex'),
+        votingService
+          .votingPublicKeyToBuffer(member2.member.votingPublicKey)
+          .toString('hex'),
       );
     });
   });
@@ -300,11 +309,14 @@ describe('brightchain', () => {
       const memberJson = alice.member.toJson();
       const reloadedMember = BrightChainMember.fromJson(memberJson);
       reloadedMember.loadWallet(alice.mnemonic);
-      const encrypted = StaticHelpersECIES.encrypt(
+      const encrypted = eciesService.encrypt(
         alice.member.publicKey,
         Buffer.from('hello world'),
       );
-      const decrypted = StaticHelpersECIES.decrypt(
+      if (!reloadedMember.privateKey) {
+        throw new Error('Private key not loaded');
+      }
+      const decrypted = eciesService.decryptWithHeader(
         reloadedMember.privateKey,
         encrypted,
       );

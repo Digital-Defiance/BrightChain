@@ -3,22 +3,21 @@ import { BrightChainMember } from './brightChainMember';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSizes';
 import { BlockType } from './enumerations/blockType';
-import { GuidV4 } from './guid';
-import { IEphemeralBlockMetadata } from './interfaces/ephemeralBlockMetadata';
+import { IEphemeralBlockMetadata } from './interfaces/blocks/metadata/ephemeralBlockMetadata';
 
 export class EphemeralBlockMetadata
   extends BlockMetadata
   implements IEphemeralBlockMetadata
 {
   private readonly _encrypted: boolean;
-  private readonly _creator?: BrightChainMember | GuidV4;
+  private readonly _creator: BrightChainMember;
   constructor(
     size: BlockSize,
     type: BlockType,
     dataType: BlockDataType,
     lengthWithoutPadding: number,
     encrypted: boolean,
-    creator?: BrightChainMember | GuidV4,
+    creator: BrightChainMember,
     dateCreated?: Date,
   ) {
     super(size, type, dataType, lengthWithoutPadding, dateCreated);
@@ -28,7 +27,7 @@ export class EphemeralBlockMetadata
   public get encrypted(): boolean {
     return this._encrypted;
   }
-  public get creator(): BrightChainMember | GuidV4 | undefined {
+  public get creator(): BrightChainMember {
     return this._creator;
   }
   public static override fromInterface(

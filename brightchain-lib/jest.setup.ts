@@ -1,5 +1,9 @@
 import bigIntSerializer from './bigIntSerializer';
+import { initializeTestServices } from './src/lib/test/service.initializer.helper';
 import { toThrowType } from './src/test/matchers/errorMatchers';
+
+// Initialize services before running tests
+initializeTestServices();
 
 expect.addSnapshotSerializer(bigIntSerializer);
 

@@ -1,52 +1,54 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
-	"name": "Node.js & TypeScript",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	// "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
-	"dockerComposeFile": "docker-compose.yml",
-	"service": "app",
+  "name": "Node.js & TypeScript",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  // "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-	"features": {
-		"ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {}
-	},
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [3000],
-	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "./setup-nvm.sh && ./npm-install-globals.sh && ./do-yarn.sh && git config --global --add safe.directory /workspaces/BrightChain",
-	// Configure tool-specific properties.
-	// "customizations": {},
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	"remoteUser": "root",
-	"customizations": {
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/zsh-plugins:0": {}
+  },
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  "forwardPorts": [3000],
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "./setup-nvm.sh && ./npm-install-globals.sh && ./do-yarn.sh && git config --global --add safe.directory /workspaces/BrightChain",
+  // Configure tool-specific properties.
+  // "customizations": {},
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  "remoteUser": "root",
+  "customizations": {
     "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
       "extensions": [
-		"github.vscode-github-actions",
-		"eamodio.gitlens",
-		"ms-azuretools.vscode-docker",
-		"esbenp.prettier-vscode",
-		"ms-vscode-remote.remote-containers",
-		"firsttris.vscode-jest-runner",
-		"ms-playwright.playwright",
-		"nrwl.angular-console",
-		"GitHub.copilot",
-		"GitHub.copilot-chat",
-		"bruno-api-client.bruno",
-		"GitHub.vscode-pull-request-github",
-		"MermaidChart.vscode-mermaid-chart",
-		"Graphite.gti-vscode",
-		"Orta.vscode-jest",
-		"Google.geminicodeassist",
-		"GoogleCloudTools.cloudcode",
-		"saoudrizwan.claude-dev"
-	],
+        "github.vscode-github-actions",
+        "eamodio.gitlens",
+        "ms-azuretools.vscode-docker",
+        "esbenp.prettier-vscode",
+        "ms-vscode-remote.remote-containers",
+        "firsttris.vscode-jest-runner",
+        "ms-playwright.playwright",
+        "nrwl.angular-console",
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "bruno-api-client.bruno",
+        "GitHub.vscode-pull-request-github",
+        "MermaidChart.vscode-mermaid-chart",
+        "Graphite.gti-vscode",
+        "Orta.vscode-jest",
+        "Google.geminicodeassist",
+        "GoogleCloudTools.cloudcode",
+        "saoudrizwan.claude-dev",
+        "Codium.codium",
+        "bierner.markdown-mermaid"
+      ],
       // Set *default* container specific settings.json values on container create.
       "settings": {
         "terminal.integrated.shell.linux": "/usr/bin/zsh"
       }
     }
-	}
+  }
 }

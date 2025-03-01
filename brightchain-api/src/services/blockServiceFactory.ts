@@ -1,5 +1,5 @@
 import { IApplication } from '../interfaces/application';
-import { IBlockService } from '../interfaces/blocks';
+import { IBlockService } from '../interfaces/blockService';
 import { BlocksService } from './blocks';
 
 export class BlockServiceFactory {
