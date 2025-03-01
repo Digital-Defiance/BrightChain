@@ -1,7 +1,7 @@
 import { Readable } from 'stream';
 import { BlockMetadata } from '../blockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
 import { WhitenedError } from '../errors/whitenedError';
@@ -55,7 +55,7 @@ export class WhitenedBlock extends RawDataBlock {
   /**
    * The data in the block, excluding any metadata or other overhead
    */
-  public override get payload(): Buffer {
+  public override get layerPayload(): Buffer {
     if (!this.canRead) {
       throw new WhitenedError(WhitenedErrorType.BlockNotReadable);
     }

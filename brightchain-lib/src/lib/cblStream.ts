@@ -9,7 +9,9 @@ import { BlockDataType } from './enumerations/blockDataType';
 import { BlockType } from './enumerations/blockType';
 import { CblErrorType } from './enumerations/cblErrorType';
 import { CblError } from './errors/cblError';
+import { IEphemeralBlock } from './interfaces/blocks/ephemeral';
 import { BlockService } from './services/blockService';
+import { ServiceLocator } from './services/serviceLocator';
 import { ChecksumBuffer } from './types';
 
 /**
@@ -29,11 +31,12 @@ export class CblStream extends Readable {
   private readonly cbl: ConstituentBlockListBlock;
   private readonly getWhitenedBlock: (blockId: ChecksumBuffer) => WhitenedBlock;
   private currentTupleIndex = 0;
-  private currentData: EphemeralBlock | null = null;
+  private currentData: IEphemeralBlock | null = null;
   private overallReadOffset = 0;
   private currentDataOffset = 0;
   private readonly maxTuple: number;
   private readonly creatorForDecryption?: BrightChainMember;
+  private readonly blockService: BlockService;
 
   constructor(
     cbl: ConstituentBlockListBlock,
@@ -41,6 +44,7 @@ export class CblStream extends Readable {
     creatorForDecryption?: BrightChainMember,
   ) {
     super();
+    this.blockService = ServiceLocator.getServiceProvider().blockService;
 
     if (!cbl) {
       throw new CblError(CblErrorType.CblRequired);
@@ -65,9 +69,10 @@ export class CblStream extends Readable {
       return;
     }
 
-    const bytesRemaining = this.cbl.originalDataLength - this.overallReadOffset;
-    let stillToRead =
-      bytesRemaining > BigInt(size) ? size : Number(bytesRemaining);
+    // Convert originalDataLength to number if it's a BigInt
+    const originalDataLength = this.cbl.originalDataLength;
+    const bytesRemaining = originalDataLength - this.overallReadOffset;
+    let stillToRead = bytesRemaining > size ? size : bytesRemaining;
 
     while (stillToRead > 0) {
       // If we have no data or have read all current data, read next tuple
@@ -155,7 +160,7 @@ export class CblStream extends Readable {
         if (!(this.currentData instanceof EncryptedBlock)) {
           throw new CblError(CblErrorType.ExpectedEncryptedDataBlock);
         }
-        this.currentData = await BlockService.decrypt(
+        this.currentData = await this.blockService.decrypt(
           this.creatorForDecryption,
           this.currentData,
         );

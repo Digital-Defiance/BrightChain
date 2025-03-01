@@ -1,6 +1,6 @@
 import { BrightChainMember } from './brightChainMember';
 import { BlockDataType } from './enumerations/blockDataType';
-import { BlockSize } from './enumerations/blockSizes';
+import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { EphemeralBlockMetadata } from './ephemeralBlockMetadata';
 import { ICBLBlockMetadata } from './interfaces/blocks/metadata/cblBlockMetadata';

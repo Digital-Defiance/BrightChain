@@ -1,4 +1,4 @@
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
 import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';

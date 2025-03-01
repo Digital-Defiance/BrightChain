@@ -6,7 +6,7 @@ import { WhitenedBlock } from './blocks/whitened';
 import { BrightChainMember } from './brightChainMember';
 import { TUPLE } from './constants';
 import { BlockDataType } from './enumerations/blockDataType';
-import { BlockSize } from './enumerations/blockSizes';
+import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { StreamErrorType } from './enumerations/streamErrorType';
 import { InvalidTupleCountError } from './errors/invalidTupleCount';
@@ -154,7 +154,7 @@ export class PrimeTupleGeneratorStream extends Transform {
 
       // Create tuple
       const tuple = new InMemoryBlockTuple([
-        sourceBlock,
+        sourceBlock as EphemeralBlock,
         ...randomBlocks,
         ...whiteners,
       ]);

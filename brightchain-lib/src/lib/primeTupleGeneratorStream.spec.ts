@@ -5,7 +5,7 @@ import { RandomBlock } from './blocks/random';
 import { WhitenedBlock } from './blocks/whitened';
 import { TUPLE } from './constants';
 import { BlockDataType } from './enumerations/blockDataType';
-import { BlockSize } from './enumerations/blockSizes';
+import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { StreamErrorType } from './enumerations/streamErrorType';
 import { StreamError } from './errors/streamError';

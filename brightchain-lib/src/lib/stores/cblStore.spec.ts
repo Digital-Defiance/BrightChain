@@ -4,7 +4,8 @@ import { join } from 'path';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { BrightChainMember } from '../brightChainMember';
 import { EmailString } from '../emailString';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { CblErrorType } from '../enumerations/cblErrorType';
 import MemberType from '../enumerations/memberType';
@@ -53,7 +54,10 @@ describe('CBLStore', () => {
       const dateCreated = new Date();
 
       // Calculate the maximum number of addresses that can fit in the block
-      const maxAddresses = cblService.calculateCBLAddressCapacity(blockSize);
+      const maxAddresses = cblService.calculateCBLAddressCapacity(
+        blockSize,
+        BlockEncryptionType.None,
+      );
 
       // Use a smaller number of addresses to ensure it fits
       const numAddresses = Math.min(3, maxAddresses);
@@ -77,6 +81,7 @@ describe('CBLStore', () => {
         fileDataLength,
         addressList,
         blockSize,
+        BlockEncryptionType.None,
       );
 
       // Combine header and address list and pad to block size
@@ -132,7 +137,10 @@ describe('CBLStore', () => {
       const dateCreated = new Date();
 
       // Calculate the maximum number of addresses that can fit in the block
-      const maxAddresses = cblService.calculateCBLAddressCapacity(blockSize);
+      const maxAddresses = cblService.calculateCBLAddressCapacity(
+        blockSize,
+        BlockEncryptionType.None,
+      );
 
       // Use a smaller number of addresses to ensure it fits
       const numAddresses = Math.min(3, maxAddresses);
@@ -156,6 +164,7 @@ describe('CBLStore', () => {
         fileDataLength,
         addressList,
         blockSize,
+        BlockEncryptionType.None,
       );
 
       // Combine header and address list and pad to block size
@@ -212,7 +221,10 @@ describe('CBLStore', () => {
       const dateCreated = new Date();
 
       // Calculate the maximum number of addresses that can fit in the block
-      const maxAddresses = cblService.calculateCBLAddressCapacity(blockSize);
+      const maxAddresses = cblService.calculateCBLAddressCapacity(
+        blockSize,
+        BlockEncryptionType.None,
+      );
 
       // Use a smaller number of addresses to ensure it fits
       const numAddresses = Math.min(3, maxAddresses);
@@ -236,6 +248,7 @@ describe('CBLStore', () => {
         fileDataLength,
         addressList,
         blockSize,
+        BlockEncryptionType.None,
       );
 
       // Combine header and address list and pad to block size
@@ -269,7 +282,10 @@ describe('CBLStore', () => {
       const dateCreated = new Date();
 
       // Calculate the maximum number of addresses that can fit in the block
-      const maxAddresses = cblService.calculateCBLAddressCapacity(blockSize);
+      const maxAddresses = cblService.calculateCBLAddressCapacity(
+        blockSize,
+        BlockEncryptionType.None,
+      );
 
       // Use a smaller number of addresses to ensure it fits
       const numAddresses = Math.min(1, maxAddresses); // Just use 1 address to be safe
@@ -292,6 +308,7 @@ describe('CBLStore', () => {
         fileDataLength,
         addressList,
         blockSize,
+        BlockEncryptionType.None,
       );
 
       // Combine header and address list and pad to block size

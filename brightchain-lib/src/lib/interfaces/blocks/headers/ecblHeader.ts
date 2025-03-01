@@ -5,17 +5,17 @@ export interface IExtendedConstituentBlockListBlockHeader
   /**
    * Length of the file name
    */
-  get fileNameLength(): number;
+  readonly fileNameLength: number;
   /**
    * Original file name from source system
    */
-  get fileName(): string;
+  readonly fileName: string;
   /**
    * File content MIME type
    */
-  get mimeType(): string;
+  readonly mimeType: string;
   /**
    * Length of the MIME type
    */
-  get mimeTypeLength(): number;
+  readonly mimeTypeLength: number;
 }

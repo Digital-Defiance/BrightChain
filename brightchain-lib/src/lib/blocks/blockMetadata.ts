@@ -1,5 +1,5 @@
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
 

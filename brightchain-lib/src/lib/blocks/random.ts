@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import { Readable } from 'stream';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer } from '../types';

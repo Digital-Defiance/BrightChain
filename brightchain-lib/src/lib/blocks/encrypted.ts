@@ -1,23 +1,31 @@
-import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
-import { ECIES } from '../constants';
+import CONSTANTS, { ECIES, ENCRYPTION } from '../constants';
+import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockErrorType } from '../enumerations/blockErrorType';
-import { BlockSize } from '../enumerations/blockSizes';
-import { BlockType } from '../enumerations/blockType';
+import { BlockSize } from '../enumerations/blockSize';
+import {
+  BlockType,
+  EncryptedBlockTypes,
+  EphemeralBlockTypes,
+} from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
-import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import {
   BlockAccessError,
   BlockError,
   BlockValidationError,
   CannotEncryptBlockError,
 } from '../errors/block';
+import { GuidV4 } from '../guid';
 import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
+import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
+import { IMultiEncryptedParsedHeader } from '../interfaces/multiEncryptedParsedHeader';
+import { ISingleEncryptedParsedHeader } from '../interfaces/singleEncryptedParsedHeader';
 import { ServiceProvider } from '../services/service.provider';
-import { ChecksumBuffer } from '../types';
-import { BlockEncryption } from './encryption';
+import { ServiceLocator } from '../services/serviceLocator';
+import { ChecksumBuffer, RawGuidBuffer } from '../types';
 import { EphemeralBlock } from './ephemeral';
 
 /**
@@ -27,13 +35,20 @@ import { EphemeralBlock } from './ephemeral';
  * Block Structure:
  * [Layer 0 Header][Layer 1 Header][...][Encryption Header][Encrypted Payload][Padding]
  *
- * Encryption Header:
- * [Ephemeral Public Key (65 bytes)][IV (16 bytes)][Auth Tag (16 bytes)]
+ * Single Encryption Header:
+ * [Encryption Type (1 byte)][Recipient GUID (16 bytes)][Ephemeral Public Key (65 bytes)][IV (16 bytes)][Auth Tag (16 bytes)][Data]
+ *
+ * Multi Encryption Header:
+ * [Encryption Type (1 byte)][Data Length (8 bytes)][Recipient count (2 bytes)][Recipient GUIDs (16 bytes * recipientCount)][Recipient keys (129 bytes)][Data]
  */
-export abstract class EncryptedBlock
-  extends EphemeralBlock
-  implements IEncryptedBlock
-{
+export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
+  protected readonly _encryptionType: BlockEncryptionType;
+  protected readonly _recipients: Array<GuidV4>;
+  protected readonly _recipientWithKey: BrightChainMember;
+  protected _cachedEncryptionDetails?:
+    | ISingleEncryptedParsedHeader
+    | IMultiEncryptedParsedHeader = undefined;
+
   /**
    * Creates an instance of EncryptedBlock.
    * @param type - The type of the block
@@ -44,20 +59,53 @@ export abstract class EncryptedBlock
    * @param canRead - Whether the block can be read
    * @param canPersist - Whether the block can be persisted
    */
-  protected constructor(
+  public constructor(
     type: BlockType,
     dataType: BlockDataType,
     data: Buffer,
     checksum: ChecksumBuffer,
-    metadata: EphemeralBlockMetadata,
+    metadata: EncryptedBlockMetadata,
+    recipientWithKey: BrightChainMember,
     canRead = true,
     canPersist = true,
   ) {
-    // Create a properly sized buffer filled with random data
-    const finalData = randomBytes(metadata.size as number);
-    // Copy data into the final buffer, preserving the full block size
-    data.copy(finalData, 0, 0, Math.min(data.length, metadata.size as number));
-    super(type, dataType, finalData, checksum, metadata, canRead, canPersist);
+    super(type, dataType, data, checksum, metadata, canRead, canPersist);
+    const blockEncryptionType = this.layerHeaderData.readUint8(
+      0,
+    ) as BlockEncryptionType;
+    if (
+      metadata.encryptionType !== blockEncryptionType ||
+      !Object.values(BlockEncryptionType).includes(blockEncryptionType)
+    ) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.InvalidEncryptionType,
+      );
+    }
+    this._encryptionType = blockEncryptionType;
+    if (blockEncryptionType === BlockEncryptionType.SingleRecipient) {
+      this._recipients = [
+        new GuidV4(
+          this.layerHeaderData.subarray(
+            ENCRYPTION.ENCRYPTION_TYPE_SIZE,
+            ENCRYPTION.ENCRYPTION_TYPE_SIZE + ENCRYPTION.RECIPIENT_ID_SIZE,
+          ) as RawGuidBuffer,
+        ),
+      ];
+    } else {
+      this._recipients = (
+        this.encryptionDetails as IMultiEncryptedParsedHeader
+      ).recipientIds;
+    }
+    if (!recipientWithKey.hasPrivateKey) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.EncryptionRecipientHasNoPrivateKey,
+      );
+    } else if (!this._recipients.some((r) => r.equals(recipientWithKey.id))) {
+      throw new BlockValidationError(
+        BlockValidationErrorType.EncryptionRecipientNotFoundInRecipients,
+      );
+    }
+    this._recipientWithKey = recipientWithKey;
   }
 
   /**
@@ -74,20 +122,28 @@ export abstract class EncryptedBlock
     lengthBeforeEncryption?: number,
     canRead?: boolean,
     canPersist?: boolean,
+    recipientWithKey?: BrightChainMember,
+    recipientCount?: number,
   ): Promise<EncryptedBlock> {
-    // Suppress unused parameter warnings while providing a base implementation
-    void type;
-    void dataType;
-    void blockSize;
-    void data;
-    void checksum;
-    void creator;
-    void dateCreated;
-    void lengthBeforeEncryption;
-    void canRead;
-    void canPersist;
-    throw new BlockValidationError(
-      BlockValidationErrorType.MethodMustBeImplementedByDerivedClass,
+    const encryptionType = data.readUint8(0) as BlockEncryptionType;
+    return new EncryptedBlock(
+      type,
+      dataType,
+      data,
+      checksum,
+      new EncryptedBlockMetadata(
+        blockSize,
+        type,
+        dataType,
+        lengthBeforeEncryption ?? data.length,
+        creator,
+        encryptionType,
+        recipientCount ?? 1,
+        dateCreated,
+      ),
+      recipientWithKey ?? creator,
+      canRead,
+      canPersist,
     );
   }
 
@@ -95,7 +151,12 @@ export abstract class EncryptedBlock
    * Whether the block can be encrypted
    * Always returns false since this block is already encrypted
    */
-  public override get canEncrypt(): boolean {
+  public override canEncrypt(): boolean {
+    return false;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public override canMultiEncrypt(recipientCount: number): boolean {
     return false;
   }
 
@@ -103,82 +164,87 @@ export abstract class EncryptedBlock
     throw new CannotEncryptBlockError();
   }
 
-  public async decrypt<D>(newBlockType: BlockType): Promise<D> {
-    if (!this.creator) {
-      throw new BlockError(BlockErrorType.CreatorRequired);
-    }
+  /**
+   * The type of encryption used for the block
+   */
+  public get encryptionType(): BlockEncryptionType {
+    return this._encryptionType;
+  }
 
-    if (this.creator.privateKey === undefined) {
+  /**
+   * The recipients of the block
+   */
+  public get recipients(): Array<GuidV4> {
+    return this._recipients;
+  }
+
+  public get recipientWithKey(): BrightChainMember {
+    return this._recipientWithKey;
+  }
+
+  /**
+   * The encryption details parsed from the header
+   */
+  public get encryptionDetails():
+    | ISingleEncryptedParsedHeader
+    | IMultiEncryptedParsedHeader {
+    if (this._cachedEncryptionDetails) {
+      return this._cachedEncryptionDetails;
+    }
+    const encryptionType = this.encryptionType;
+    if (encryptionType === BlockEncryptionType.SingleRecipient) {
+      this._cachedEncryptionDetails =
+        ServiceLocator.getServiceProvider().eciesService.parseSingleEncryptedHeader(
+          this.layerHeaderData.subarray(
+            ENCRYPTION.ENCRYPTION_TYPE_SIZE + ENCRYPTION.RECIPIENT_ID_SIZE,
+          ),
+        );
+    } else if (encryptionType === BlockEncryptionType.MultiRecipient) {
+      this._cachedEncryptionDetails =
+        ServiceLocator.getServiceProvider().eciesService.parseMultiEncryptedHeader(
+          this.layerHeaderData.subarray(ENCRYPTION.ENCRYPTION_TYPE_SIZE),
+        );
+    } else {
+      throw new BlockError(BlockErrorType.UnexpectedEncryptedBlockType);
+    }
+    return this._cachedEncryptionDetails;
+  }
+
+  public async decrypt<D extends IEphemeralBlock>(
+    newBlockType: BlockType,
+  ): Promise<D> {
+    if (!EphemeralBlockTypes.includes(newBlockType)) {
+      throw new BlockError(BlockErrorType.InvalidNewBlockType);
+    } else if (!EncryptedBlockTypes.includes(this.blockType)) {
+      throw new BlockError(BlockErrorType.UnexpectedEncryptedBlockType);
+    } else if (!this.recipientWithKey) {
+      throw new BlockError(BlockErrorType.RecipientRequired);
+    } else if (this.recipientWithKey.privateKey === undefined) {
       throw new BlockError(BlockErrorType.CreatorPrivateKeyRequired);
     }
 
-    const decryptedBlock = await BlockEncryption.decrypt(
-      this.creator,
-      this,
-      newBlockType,
-    );
-    return decryptedBlock as D;
+    return (
+      this.encryptionType === BlockEncryptionType.SingleRecipient
+        ? await ServiceLocator.getServiceProvider().blockService.decrypt(
+            this.recipientWithKey,
+            this,
+            newBlockType,
+          )
+        : await ServiceLocator.getServiceProvider().blockService.decryptMultiple(
+            this.recipientWithKey,
+            this,
+          )
+    ) as D;
   }
 
   /**
-   * The length of the encrypted data including overhead and padding
+   * The block type stored in the header
    */
-  public get encryptedLength(): number {
-    return this.lengthBeforeEncryption + ECIES.OVERHEAD_SIZE;
-  }
-
-  /**
-   * The ephemeral public key used to encrypt the data
-   */
-  public get ephemeralPublicKey(): Buffer {
+  public get blockTypeHeader(): BlockType {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
-    // Get the ephemeral public key (already includes 0x04 prefix)
-    const key = this.layerHeaderData.subarray(0, ECIES.PUBLIC_KEY_LENGTH);
-    if (key.length !== ECIES.PUBLIC_KEY_LENGTH) {
-      throw new BlockValidationError(
-        BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
-      );
-    }
-    return key;
-  }
-
-  /**
-   * The initialization vector used to encrypt the data
-   */
-  public get iv(): Buffer {
-    if (!this.canRead) {
-      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
-    }
-    const iv = this.layerHeaderData.subarray(
-      ECIES.PUBLIC_KEY_LENGTH,
-      ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH,
-    );
-    if (iv.length !== ECIES.IV_LENGTH) {
-      throw new BlockValidationError(BlockValidationErrorType.InvalidIVLength);
-    }
-    return iv;
-  }
-
-  /**
-   * The authentication tag used to encrypt the data
-   */
-  public get authTag(): Buffer {
-    if (!this.canRead) {
-      throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
-    }
-    // The auth tag is after the ephemeral public key (with 0x04 prefix) and IV
-    const start = ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH;
-    const end = start + ECIES.AUTH_TAG_LENGTH;
-
-    const tag = this.layerHeaderData.subarray(start, end);
-    if (tag.length !== ECIES.AUTH_TAG_LENGTH) {
-      throw new BlockValidationError(
-        BlockValidationErrorType.InvalidAuthTagLength,
-      );
-    }
-    return tag;
+    return this.layerHeaderData.readUInt8(0) as BlockType;
   }
 
   /**
@@ -186,8 +252,18 @@ export abstract class EncryptedBlock
    * For encrypted blocks, the overhead is just the ECIES overhead since the
    * encryption header is part of the data buffer
    */
-  public override get totalOverhead(): number {
-    return ECIES.OVERHEAD_SIZE;
+  public override get layerOverheadSize(): number {
+    return (
+      (this.encryptionType === BlockEncryptionType.SingleRecipient
+        ? ECIES.OVERHEAD_SIZE +
+          ENCRYPTION.ENCRYPTION_TYPE_SIZE +
+          ENCRYPTION.RECIPIENT_ID_SIZE
+        : ServiceLocator.getServiceProvider().eciesService.calculateECIESMultipleRecipientOverhead(
+            (this.encryptionDetails as IMultiEncryptedParsedHeader)
+              .recipientCount,
+            false,
+          )) + ENCRYPTION.ENCRYPTION_TYPE_SIZE
+    );
   }
 
   /**
@@ -199,31 +275,30 @@ export abstract class EncryptedBlock
     }
     // For encrypted blocks, the header is always at the start of the data
     // since EphemeralBlock has no header data
-    return this.data.subarray(0, ECIES.OVERHEAD_SIZE);
+    return this.data.subarray(0, this.layerOverheadSize);
   }
 
   /**
-   * Get the encrypted payload data (excluding the encryption header)
-   * This includes both the actual data and the random padding
+   * Get the encrypted payload data (excluding the encryption header and padding)
    */
-  public override get payload(): Buffer {
+  public override get layerPayload(): Buffer {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
-    const headerLength = this.layerHeaderData.length;
+    const headerLength = this.layerOverheadSize;
     return this.data.subarray(
       headerLength,
-      headerLength + this.encryptedLength,
+      headerLength + this.layerPayloadSize,
     );
   }
 
   /**
    * Get the length of the payload including padding
    */
-  public override get payloadLength(): number {
-    // For encrypted blocks:
-    // Return the full payload length including padding
-    return this.encryptedLength;
+  public override get layerPayloadSize(): number {
+    return this.encryptionType === BlockEncryptionType.SingleRecipient
+      ? ECIES.OVERHEAD_SIZE
+      : ECIES.MULTIPLE.ENCRYPTED_MESSAGE_OVERHEAD_SIZE;
   }
 
   /**
@@ -241,19 +316,55 @@ export abstract class EncryptedBlock
       );
     }
 
-    // Validate individual components
-    if (this.ephemeralPublicKey.length !== ECIES.PUBLIC_KEY_LENGTH) {
-      throw new BlockValidationError(
-        BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
-      );
-    }
-    if (this.iv.length !== ECIES.IV_LENGTH) {
-      throw new BlockValidationError(BlockValidationErrorType.InvalidIVLength);
-    }
-    if (this.authTag.length !== ECIES.AUTH_TAG_LENGTH) {
-      throw new BlockValidationError(
-        BlockValidationErrorType.InvalidAuthTagLength,
-      );
+    if (this.encryptionType === BlockEncryptionType.SingleRecipient) {
+      const details: ISingleEncryptedParsedHeader = this
+        .encryptionDetails as ISingleEncryptedParsedHeader;
+
+      // Validate individual components
+      if (details.ephemeralPublicKey.length !== ECIES.PUBLIC_KEY_LENGTH) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
+        );
+      }
+      if (details.iv.length !== ECIES.IV_LENGTH) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidIVLength,
+        );
+      }
+      if (details.authTag.length !== ECIES.AUTH_TAG_LENGTH) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidAuthTagLength,
+        );
+      }
+    } else if (this.encryptionType === BlockEncryptionType.MultiRecipient) {
+      const details: IMultiEncryptedParsedHeader = this
+        .encryptionDetails as IMultiEncryptedParsedHeader;
+
+      if (details.recipientCount < 2) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidRecipientCount,
+        );
+      } else if (details.recipientIds.length !== details.recipientCount) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidRecipientIds,
+        );
+      } else if (
+        details.recipientIds
+          .map((id) => id.asRawGuidBuffer)
+          .some((id) => id.length !== CONSTANTS.GUID_SIZE)
+      ) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidRecipientIds,
+        );
+      } else if (
+        details.recipientKeys.some(
+          (k) => k.length !== ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE,
+        )
+      ) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidRecipientKeys,
+        );
+      }
     }
 
     // Validate data length
@@ -269,7 +380,8 @@ export abstract class EncryptedBlock
       ServiceProvider.getInstance().blockCapacityCalculator.calculateCapacity({
         blockSize: this.blockSize,
         blockType: this.blockType,
-        usesStandardEncryption: true,
+        encryptionType: this.encryptionType,
+        recipientCount: this.recipients.length,
       }).availableCapacity
     ) {
       throw new BlockValidationError(
@@ -300,19 +412,41 @@ export abstract class EncryptedBlock
       );
     }
 
-    // Validate individual components
-    if (this.ephemeralPublicKey.length !== ECIES.PUBLIC_KEY_LENGTH) {
-      throw new BlockValidationError(
-        BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
-      );
-    }
-    if (this.iv.length !== ECIES.IV_LENGTH) {
-      throw new BlockValidationError(BlockValidationErrorType.InvalidIVLength);
-    }
-    if (this.authTag.length !== ECIES.AUTH_TAG_LENGTH) {
-      throw new BlockValidationError(
-        BlockValidationErrorType.InvalidAuthTagLength,
-      );
+    if (this._encryptionType === BlockEncryptionType.SingleRecipient) {
+      const details = this.encryptionDetails as ISingleEncryptedParsedHeader;
+      // Validate individual components
+      if (details.ephemeralPublicKey.length !== ECIES.PUBLIC_KEY_LENGTH) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
+        );
+      }
+      if (details.iv.length !== ECIES.IV_LENGTH) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidIVLength,
+        );
+      }
+      if (details.authTag.length !== ECIES.AUTH_TAG_LENGTH) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidAuthTagLength,
+        );
+      }
+    } else if (this._encryptionType === BlockEncryptionType.MultiRecipient) {
+      const details = this.encryptionDetails as IMultiEncryptedParsedHeader;
+      if (details.recipientCount < 2) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidRecipientCount,
+        );
+      }
+      if (details.recipientIds.length != details.recipientCount) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidRecipientIds,
+        );
+      }
+      if (details.recipientKeys.length != details.recipientCount) {
+        throw new BlockValidationError(
+          BlockValidationErrorType.InvalidRecipientKeys,
+        );
+      }
     }
 
     // Validate data length
@@ -328,7 +462,8 @@ export abstract class EncryptedBlock
       ServiceProvider.getInstance().blockCapacityCalculator.calculateCapacity({
         blockSize: this.blockSize,
         blockType: this.blockType,
-        usesStandardEncryption: true,
+        encryptionType: this.encryptionType,
+        recipientCount: this.recipients.length,
       }).availableCapacity
     ) {
       throw new BlockValidationError(

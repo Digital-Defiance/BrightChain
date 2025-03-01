@@ -2,6 +2,7 @@ import { BlockCapacityCalculator } from '../services/blockCapacity.service';
 import { BlockService } from '../services/blockService';
 import { CBLService } from '../services/cblService';
 import { ChecksumService } from '../services/checksum.service';
+import { CrcService } from '../services/crc.service';
 import { ECIESService } from '../services/ecies.service';
 import { FecService } from '../services/fec.service';
 import { TupleService } from '../services/tuple.service';
@@ -12,6 +13,7 @@ import { VotingService } from '../services/voting.service';
  */
 export interface IServiceProvider {
   readonly checksumService: ChecksumService;
+  readonly crcService: CrcService;
   readonly eciesService: ECIESService;
   readonly cblService: CBLService;
   readonly blockService: BlockService;

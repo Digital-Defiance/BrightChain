@@ -69,6 +69,20 @@ export class BlockValidationError extends TypedWithReasonError<BlockValidationEr
         StringNames.Error_BlockValidationErrorNoChecksum,
       [BlockValidationErrorType.OriginalDataLengthNegative]:
         StringNames.Error_BlockValidationErrorOriginalDataLengthNegative,
+      [BlockValidationErrorType.InvalidRecipientCount]:
+        StringNames.Error_BlockValidationErrorInvalidRecipientCount,
+      [BlockValidationErrorType.InvalidRecipientIds]:
+        StringNames.Error_BlockValidationErrorInvalidRecipientIds,
+      [BlockValidationErrorType.InvalidEncryptionType]:
+        StringNames.Error_BlockValidationErrorInvalidEncryptionType,
+      [BlockValidationErrorType.InvalidCreator]:
+        StringNames.Error_BlockValidationErrorInvalidCreator,
+      [BlockValidationErrorType.EncryptionRecipientNotFoundInRecipients]:
+        StringNames.Error_BlockValidationErrorEncryptionRecipientNotFoundInRecipients,
+      [BlockValidationErrorType.EncryptionRecipientHasNoPrivateKey]:
+        StringNames.Error_BlockValidationErrorEncryptionRecipientHasNoPrivateKey,
+      [BlockValidationErrorType.InvalidRecipientKeys]:
+        StringNames.Error_BlockValidationErrorInvalidRecipientKeys,
     };
   }
   constructor(

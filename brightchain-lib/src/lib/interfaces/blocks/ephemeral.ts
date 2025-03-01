@@ -1,7 +1,7 @@
-import { EncryptedBlock } from '../../blocks/encrypted';
 import { BrightChainMember } from '../../brightChainMember';
 import BlockType from '../../enumerations/blockType';
 import { IBaseBlock } from './base';
+import { IEncryptedBlock } from './encrypted';
 
 export interface IEphemeralBlock extends IBaseBlock {
   /**
@@ -29,9 +29,25 @@ export interface IEphemeralBlock extends IBaseBlock {
    * 2. Available space
    * 3. Current state
    */
-  get canEncrypt(): boolean;
+  canEncrypt(): boolean;
+  /**
+   * Whether the block can be encrypted for multiple recipients.
+   * Determined by:
+   * 1. Block type
+   * 2. Available space
+   * 3. Current state
+   */
+  canMultiEncrypt(recipientCount: number): boolean;
   get creator(): BrightChainMember | undefined;
   get data(): Buffer;
 
-  encrypt<E extends EncryptedBlock>(newBlockType: BlockType): Promise<E>;
+  /**
+   * Encrypt the block for one or more recipients.
+   * @param newBlockType The type of the new encrypted block.
+   * @param recipients The recipients of the new encrypted block.
+   */
+  encrypt<E extends IEncryptedBlock>(
+    newBlockType: BlockType,
+    recipients?: BrightChainMember[],
+  ): Promise<E>;
 }

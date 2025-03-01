@@ -3,6 +3,7 @@ import { BlockCapacityCalculator } from './blockCapacity.service';
 import { BlockService } from './blockService';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
+import { CrcService } from './crc.service';
 import { ECIESService } from './ecies.service';
 import { FecService } from './fec.service';
 import { ServiceLocator } from './serviceLocator';
@@ -15,6 +16,7 @@ import { VotingService } from './voting.service';
 export class ServiceProvider implements IServiceProvider {
   private static instance: ServiceProvider | undefined;
   public readonly checksumService: ChecksumService;
+  public readonly crcService: CrcService;
   public readonly eciesService: ECIESService;
   public readonly cblService: CBLService;
   public readonly blockService: BlockService;
@@ -29,9 +31,10 @@ export class ServiceProvider implements IServiceProvider {
     }
     ServiceProvider.instance = this;
     this.checksumService = new ChecksumService();
+    this.crcService = new CrcService();
     this.eciesService = new ECIESService();
-    this.cblService = new CBLService(this.checksumService, this.eciesService);
     this.blockService = new BlockService();
+    this.cblService = new CBLService(this.checksumService, this.eciesService);
     this.blockCapacityCalculator = new BlockCapacityCalculator(
       this.cblService,
       this.eciesService,

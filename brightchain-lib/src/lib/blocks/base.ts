@@ -2,11 +2,10 @@ import { Readable } from 'stream';
 import { BlockMetadata } from '../blockMetadata';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize, validateBlockSize } from '../enumerations/blockSizes';
+import { BlockSize, validateBlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import { BlockAccessError, BlockValidationError } from '../errors/block';
-import { IBlockCapacityParams } from '../interfaces/blockCapacity';
 import { IBaseBlock } from '../interfaces/blocks/base';
 import { ServiceLocator } from '../services/serviceLocator';
 import { ChecksumBuffer, ChecksumString } from '../types';
@@ -27,7 +26,6 @@ import { ChecksumBuffer, ChecksumString } from '../types';
  */
 export abstract class BaseBlock implements IBaseBlock {
   protected readonly _blockSize: BlockSize;
-  protected readonly _availableCapacity: number;
 
   protected readonly _blockType: BlockType;
   protected readonly _blockDataType: BlockDataType;
@@ -38,6 +36,17 @@ export abstract class BaseBlock implements IBaseBlock {
   protected readonly _canPersist: boolean;
   protected readonly _lengthBeforeEncryption: number;
 
+  /**
+   * Constructs a block.
+   * All derived constructors should trust the data being passed in as relevant to the type of block.
+   * Blocks types that can validate the data are welcome to do so.
+   * @param type Block type
+   * @param dataType Data type
+   * @param checksum Checksum
+   * @param metadata Metadata
+   * @param canRead Whether the block can be read
+   * @param canPersist Whether the block can be persisted
+   */
   protected constructor(
     type: BlockType,
     dataType: BlockDataType,
@@ -70,34 +79,6 @@ export abstract class BaseBlock implements IBaseBlock {
     this._canPersist = canPersist;
     this._checksum = checksum;
     this._lengthBeforeEncryption = metadata.lengthWithoutPadding;
-
-    // Calculate available capacity
-    const capacityParams: IBlockCapacityParams = {
-      blockSize: metadata.size,
-      blockType: type,
-      usesStandardEncryption: false, // Base overhead calculation doesn't include encryption
-    };
-
-    // Add additional parameters if needed based on block type
-    if (
-      type === BlockType.ExtendedConstituentBlockListBlock &&
-      'filename' in metadata &&
-      'mimetype' in metadata
-    ) {
-      capacityParams.filename = metadata.filename as string;
-      capacityParams.mimetype = metadata.mimetype as string;
-    } else if (
-      type === BlockType.MultiEncryptedBlock &&
-      'recipientCount' in metadata
-    ) {
-      capacityParams.recipientCount = metadata.recipientCount as number;
-    }
-
-    const capacityResult =
-      ServiceLocator.getServiceProvider().blockCapacityCalculator.calculateCapacity(
-        capacityParams,
-      );
-    this._availableCapacity = capacityResult.availableCapacity;
 
     // Store or create metadata
     this._metadata = metadata;
@@ -196,7 +177,7 @@ export abstract class BaseBlock implements IBaseBlock {
   /**
    * Get this layer's header data size
    */
-  public abstract get layerOverhead(): number;
+  public abstract get layerOverheadSize(): number;
 
   /**
    * Get this layer's header data
@@ -204,23 +185,19 @@ export abstract class BaseBlock implements IBaseBlock {
   public abstract get layerHeaderData(): Buffer;
 
   /**
+   * Get this layer's data (including headers)
+   */
+  public abstract get layerData(): Buffer;
+
+  /**
    * Get the payload data (excluding headers)
    */
-  public abstract get payload(): Buffer;
+  public abstract get layerPayload(): Buffer;
 
   /**
    * Get the length of the payload
    */
-  public get payloadLength(): number {
-    return this._lengthBeforeEncryption;
-  }
-
-  /**
-   * Get the available capacity for payload data in this block
-   */
-  public get availableCapacity(): number {
-    return this._availableCapacity;
-  }
+  public abstract get layerPayloadSize(): number;
 
   /**
    * Get all layers in the inheritance chain
@@ -231,6 +208,21 @@ export abstract class BaseBlock implements IBaseBlock {
       return parent ? [...collectLayers(parent), block] : [block];
     };
     return collectLayers(this);
+  }
+
+  /**
+   * Get the total header size of all layers below this one
+   */
+  public get lowerLayerHeaderSize(): number {
+    const layers = this.layers;
+    const currentLayerIndex = layers.indexOf(this);
+    if (currentLayerIndex === -1) {
+      throw new Error('Current layer not found in layers');
+    }
+
+    return layers.slice(0, currentLayerIndex).reduce((sum, layer) => {
+      return sum + layer.layerOverheadSize;
+    }, 0);
   }
 
   /**

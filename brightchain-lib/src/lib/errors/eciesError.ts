@@ -40,6 +40,10 @@ export class EciesError extends TypedError<EciesErrorType> {
         StringNames.Error_EciesErrorInvalidDataLength,
       [EciesErrorType.InvalidRecipientCount]:
         StringNames.Error_EciesErrorInvalidRecipientCount,
+      [EciesErrorType.InvalidBlockType]:
+        StringNames.Error_EciesErrorInvalidBlockType,
+      [EciesErrorType.InvalidMessageCrc]:
+        StringNames.Error_EciesErrorInvalidMessageCrc,
     };
   }
 

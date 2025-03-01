@@ -23,6 +23,16 @@ export class BlockError extends TypedError<BlockErrorType> {
         StringNames.Error_BlockErrorUnexpectedEncryptedBlockType,
       [BlockErrorType.CreatorPrivateKeyRequired]:
         StringNames.Error_BlockErrorCreatorPrivateKeyRequired,
+      [BlockErrorType.InvalidMultiEncryptionRecipientCount]:
+        StringNames.Error_BlockErrorInvalidMultiEncryptionRecipientCount,
+      [BlockErrorType.InvalidNewBlockType]:
+        StringNames.Error_BlockErrorInvalidNewBlockType,
+      [BlockErrorType.UnexpectedEphemeralBlockType]:
+        StringNames.Error_BlockErrorUnexpectedEphemeralBlockType,
+      [BlockErrorType.RecipientRequired]:
+        StringNames.Error_BlockErrorRecipientRequired,
+      [BlockErrorType.RecipientKeyRequired]:
+        StringNames.Error_BlockErrorRecipientKeyRequired,
     };
   }
 

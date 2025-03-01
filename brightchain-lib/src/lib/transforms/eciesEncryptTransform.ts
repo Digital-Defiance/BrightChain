@@ -1,5 +1,5 @@
 import { Transform, TransformCallback } from 'stream';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { ECIESService } from '../services/ecies.service';
 
 /**

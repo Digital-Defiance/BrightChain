@@ -1,5 +1,4 @@
 import { IConstituentBlockListBlock } from './cbl';
-import { IExtendedConstituentBlockListBlockHeader } from './headers/ecblHeader';
 
 /**
  * Interface for ExtendedCBL blocks that add file metadata to CBLs.
@@ -12,8 +11,7 @@ import { IExtendedConstituentBlockListBlockHeader } from './headers/ecblHeader';
  * [Padding]
  */
 export interface IExtendedConstituentBlockListBlock
-  extends IConstituentBlockListBlock,
-    IExtendedConstituentBlockListBlockHeader {
+  extends IConstituentBlockListBlock {
   /**
    * Length of the file name
    */

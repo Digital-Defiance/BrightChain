@@ -1,14 +1,32 @@
 import { BrightChainMember } from '../../brightChainMember';
+import { GuidV4 } from '../../guid';
 import { ChecksumBuffer, SignatureBuffer } from '../../types';
 import { IEphemeralBlock } from './ephemeral';
-import { IConstituentBlockListBlockHeader } from './headers/cblHeader';
 
 /**
  * Shared interface for CBL/ECBL
  */
-export interface ICBLCore
-  extends IEphemeralBlock,
-    IConstituentBlockListBlockHeader {
+export interface ICBLCore extends IEphemeralBlock {
+  /**
+   * Creator ID of the CBL
+   */
+  get creatorId(): GuidV4;
+
+  /**
+   * Date the CBL was created
+   */
+  get dateCreated(): Date;
+
+  /**
+   * Number of addresses in the CBL
+   */
+  get cblAddressCount(): number;
+
+  /**
+   * Size of the file represented by the CBL (spanning all blocks)
+   */
+  get originalDataLength(): number;
+
   /**
    * Raw data containing block references.
    * Used for:
@@ -28,20 +46,6 @@ export interface ICBLCore
   get addresses(): Array<ChecksumBuffer>;
 
   /**
-   * Number of block references.
-   * Used for:
-   * 1. Capacity validation
-   * 2. Iteration control
-   * 3. Storage calculation
-   */
-  get cblAddressCount(): number;
-
-  /**
-   * Date the CBL was created.
-   */
-  get dateCreated(): Date;
-
-  /**
    * Cryptographic signature of the creator.
    * Used for:
    * 1. Authenticity verification
@@ -49,12 +53,6 @@ export interface ICBLCore
    * 3. Non-repudiation
    */
   get creatorSignature(): SignatureBuffer;
-
-  /**
-   * Original data length of the file represented by the CBL.
-   * 1. Reconstruction verification
-   */
-  get originalDataLength(): number;
 
   /**
    * Size of block tuples.

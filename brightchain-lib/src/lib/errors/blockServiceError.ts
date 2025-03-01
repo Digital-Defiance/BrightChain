@@ -30,6 +30,10 @@ export class BlockServiceError extends TypedError<BlockServiceErrorType> {
         StringNames.Error_BlockServiceErrorCannotDetermineFileName,
       [BlockServiceErrorType.CannotDetermineMimeType]:
         StringNames.Error_BlockServiceErrorCannotDetermineMimeType,
+      [BlockServiceErrorType.InvalidBlockData]:
+        StringNames.Error_BlockServiceErrorInvalidBlockData,
+      [BlockServiceErrorType.InvalidBlockType]:
+        StringNames.Error_BlockServiceErrorInvalidBlockType,
     };
   }
 

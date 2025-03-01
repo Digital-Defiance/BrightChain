@@ -74,7 +74,10 @@ export class SymmetricService {
   public static decryptBuffer(encryptedData: Buffer, key: Buffer): Buffer {
     const ivBuffer = encryptedData.subarray(0, ECIES.IV_LENGTH);
     const authTagStart = encryptedData.length - ECIES.AUTH_TAG_LENGTH;
-    const ciphertextBuffer = encryptedData.subarray(ECIES.IV_LENGTH, authTagStart);
+    const ciphertextBuffer = encryptedData.subarray(
+      ECIES.IV_LENGTH,
+      authTagStart,
+    );
     const authTag = encryptedData.subarray(authTagStart); // CRITICAL: Extract auth tag
 
     const decipher = createDecipheriv(
