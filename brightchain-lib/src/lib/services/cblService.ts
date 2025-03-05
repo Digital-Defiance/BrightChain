@@ -1,7 +1,11 @@
 import { Buffer } from 'buffer';
 import { BrightChainMember } from '../brightChainMember';
 import CONSTANTS, { CBL, CHECKSUM, ECIES, TUPLE } from '../constants';
-import { BlockSize, lengthToBlockSize } from '../enumerations/blockSizes';
+import {
+  BlockEncryptionType,
+  EncryptedBlockType,
+} from '../enumerations/blockEncryptionType';
+import { BlockSize, lengthToBlockSize } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
 import { CblErrorType } from '../enumerations/cblErrorType';
 import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
@@ -587,16 +591,30 @@ export class CBLService {
   }
 
   /**
+   * Calculates the size of the extended header for CBL, given the file name and MIME type.
+   * @param fileName File name
+   * @param mimeType Mime type
+   * @returns Size of the extended header
+   */
+  public calculateExtendedHeaderSize(
+    fileName: string,
+    mimeType: string,
+  ): number {
+    return (
+      CONSTANTS.UINT16_SIZE +
+      fileName.length +
+      CONSTANTS.UINT8_SIZE +
+      mimeType.length
+    );
+  }
+
+  /**
    * Create an extended header for CBL
    */
   public makeExtendedHeader(fileName: string, mimeType: string): Buffer {
     this.validateFileNameFormat(fileName);
     this.validateMimeTypeFormat(mimeType);
-    const totalLength =
-      CONSTANTS.UINT16_SIZE +
-      fileName.length +
-      CONSTANTS.UINT8_SIZE +
-      mimeType.length;
+    const totalLength = this.calculateExtendedHeaderSize(fileName, mimeType);
     const result = Buffer.alloc(totalLength);
     let offset = 0;
 
@@ -624,6 +642,7 @@ export class CBLService {
     fileDataLength: number,
     addressList: Buffer,
     blockSize: BlockSize,
+    encryptionType: BlockEncryptionType,
     extendedCBL?: { fileName: string; mimeType: string },
     tupleSize: number = TUPLE.SIZE,
   ): { headerData: Buffer; signature: SignatureBuffer } {
@@ -639,7 +658,10 @@ export class CBLService {
     if (extendedCBL && extendedCBL.mimeType.length > CBL.MAX_MIME_TYPE_LENGTH) {
       throw new CblError(CblErrorType.MimeTypeTooLong);
     }
-    if (cblAddressCount > this.calculateCBLAddressCapacity(blockSize)) {
+    if (
+      cblAddressCount >
+      this.calculateCBLAddressCapacity(blockSize, encryptionType)
+    ) {
       throw new CblError(CblErrorType.AddressCountExceedsCapacity);
     }
     // Create buffers for header fields
@@ -806,14 +828,15 @@ export class CBLService {
    */
   public calculateCBLAddressCapacity(
     blockSize: BlockSize,
-    allowEncryption = true,
-    fileName?: string,
-    mimeType?: string,
+    encryptedBlockType: EncryptedBlockType,
+    cbl?: {
+      fileName: string;
+      mimeType: string;
+    },
   ): number {
-    const blockType =
-      fileName && mimeType
-        ? BlockType.ExtendedConstituentBlockListBlock
-        : BlockType.ConstituentBlockList;
+    const blockType = cbl
+      ? BlockType.ExtendedConstituentBlockListBlock
+      : BlockType.ConstituentBlockList;
 
     const blockCapacityCalculator = new BlockCapacityCalculator(
       this,
@@ -822,9 +845,12 @@ export class CBLService {
     const result = blockCapacityCalculator.calculateCapacity({
       blockSize,
       blockType,
-      usesStandardEncryption: allowEncryption,
-      filename: fileName,
-      mimetype: mimeType,
+      encryptionType: encryptedBlockType,
+      ...(cbl
+        ? {
+            cbl,
+          }
+        : {}),
     });
 
     // Calculate how many addresses can fit in the available capacity

@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { EciesErrorType } from '../enumerations/eciesErrorType';
 import { EciesError } from '../errors/eciesError';
 import { SecureString } from '../secureString';

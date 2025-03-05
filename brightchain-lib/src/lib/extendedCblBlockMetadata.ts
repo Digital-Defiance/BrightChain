@@ -1,7 +1,7 @@
 import { BrightChainMember } from './brightChainMember';
 import { CblBlockMetadata } from './cblBlockMetadata';
 import BlockDataType from './enumerations/blockDataType';
-import { BlockSize } from './enumerations/blockSizes';
+import { BlockSize } from './enumerations/blockSize';
 import BlockType from './enumerations/blockType';
 import { IExtendedCblBlockMetadata } from './interfaces/blocks/metadata/extendedCblBlockMetadata';
 

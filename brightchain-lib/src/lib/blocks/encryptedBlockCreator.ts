@@ -1,7 +1,8 @@
 import { BrightChainMember } from '../brightChainMember';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
+import { ISingleEncryptedBlockDetails } from '../interfaces/singleEncryptedBlockDetails';
 import { ChecksumBuffer } from '../types';
 import { EncryptedBlock } from './encrypted';
 
@@ -38,7 +39,7 @@ export class EncryptedBlockCreator {
     creator: BrightChainMember,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,
-  ): Promise<EncryptedBlock> {
+  ): Promise<ISingleEncryptedBlockDetails> {
     const blockCreator = EncryptedBlockCreator.creators.get(type);
     if (!blockCreator) {
       throw new Error(`No creator registered for block type ${type}`);

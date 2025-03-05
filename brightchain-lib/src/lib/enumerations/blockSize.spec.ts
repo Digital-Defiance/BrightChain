@@ -1,4 +1,4 @@
-import { BlockSize, lengthToBlockSize, validateBlockSize } from './blockSizes';
+import { BlockSize, lengthToBlockSize, validateBlockSize } from './blockSize';
 
 describe('BlockSizes', () => {
   describe('validateBlockSize', () => {

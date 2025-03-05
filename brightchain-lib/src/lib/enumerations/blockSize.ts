@@ -107,14 +107,14 @@ export enum BlockSize {
  * List of valid block sizes for validation and iteration.
  * Excludes Unknown size as it's not valid for actual use.
  */
-export const validBlockSizes: BlockSize[] = [
+export const validBlockSizes: readonly BlockSize[] = [
   BlockSize.Message,
   BlockSize.Tiny,
   BlockSize.Small,
   BlockSize.Medium,
   BlockSize.Large,
   BlockSize.Huge,
-];
+] as const;
 
 /**
  * Human-readable names for block sizes.
@@ -128,7 +128,7 @@ export const blockSizeStringNames: Record<BlockSize, StringNames> = {
   [BlockSize.Medium]: StringNames.BlockSize_Medium,
   [BlockSize.Large]: StringNames.BlockSize_Large,
   [BlockSize.Huge]: StringNames.BlockSize_Huge,
-};
+} as const;
 
 /**
  * Map of block sizes to their metadata.
@@ -172,7 +172,7 @@ export const BlockSizeInfo: {
     length: BlockSize.Huge as number,
     name: StringNames.BlockSize_Huge,
   },
-};
+} as const;
 
 /**
  * Validate if a length matches a valid block size.

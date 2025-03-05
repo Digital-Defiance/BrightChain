@@ -2,7 +2,7 @@ import { RawDataBlock } from '../blocks/rawData';
 import { BrightChainMember } from '../brightChainMember';
 import { MemberDocument } from '../documents/member/memberDocumentImpl';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { MemberErrorType } from '../enumerations/memberErrorType';
 import { MemberStatusType } from '../enumerations/memberStatusType';

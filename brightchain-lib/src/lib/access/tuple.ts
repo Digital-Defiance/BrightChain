@@ -2,6 +2,7 @@ import { EphemeralBlock } from '../blocks/ephemeral';
 import { RandomBlock } from '../blocks/random';
 import { WhitenedBlock } from '../blocks/whitened';
 import { BrightChainMember } from '../brightChainMember';
+import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { ITuple } from '../interfaces/tuple';
 import { ServiceProvider } from '../services/service.provider';
 
@@ -44,7 +45,7 @@ export class BlockTuple {
     primeWhitened: WhitenedBlock,
     whiteners: WhitenedBlock[],
     randomBlocks: RandomBlock[],
-  ): Promise<EphemeralBlock> {
+  ): Promise<IEphemeralBlock> {
     return ServiceProvider.getInstance().tupleService.xorDestPrimeWhitenedToOwned(
       creator,
       primeWhitened,

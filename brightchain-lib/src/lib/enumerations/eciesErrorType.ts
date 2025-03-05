@@ -1,9 +1,11 @@
 export enum EciesErrorType {
   InvalidIVLength = 'InvalidIVLength',
   InvalidAuthTagLength = 'InvalidAuthTagLength',
+  InvalidBlockType = 'InvalidBlockType',
   InvalidHeaderLength = 'InvalidHeaderLength',
   InvalidDataLength = 'InvalidDataLength',
   InvalidEncryptedDataLength = 'InvalidEncryptedDataLength',
+  InvalidMessageCrc = 'InvalidMessageCrc',
   InvalidMnemonic = 'InvalidMnemonic',
   MessageLengthMismatch = 'MessageLengthMismatch',
   InvalidEncryptedKeyLength = 'InvalidEncryptedKeyLength',

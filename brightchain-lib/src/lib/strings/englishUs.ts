@@ -49,6 +49,8 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_BlockCapacityInvalidMimetype]: 'Invalid mimetype',
   [StringNames.Error_BlockCapacityInvalidRecipientCount]:
     'Invalid recipient count',
+  [StringNames.Error_BlockCapacityInvalidExtendedCblData]:
+    'Invalid extended CBL data',
 
   // Block validation error
   [StringNames.Error_BlockValidationErrorTemplate]:
@@ -98,6 +100,8 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_BlockValidationErrorInvalidIVLength]: 'Invalid IV length',
   [StringNames.Error_BlockValidationErrorInvalidSignature]:
     'Invalid signature provided',
+  [StringNames.Error_BlockValidationErrorInvalidRecipientIds]:
+    'Invalid recipient IDs',
   [StringNames.Error_BlockValidationErrorInvalidTupleSizeTemplate]:
     'Tuple size must be between {TUPLE.MIN_SIZE} and {TUPLE.MAX_SIZE}',
   [StringNames.Error_BlockValidationErrorMethodMustBeImplementedByDerivedClass]:
@@ -105,6 +109,17 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_BlockValidationErrorNoChecksum]: 'No checksum provided',
   [StringNames.Error_BlockValidationErrorOriginalDataLengthNegative]:
     'Original data length cannot be negative',
+  [StringNames.Error_BlockValidationErrorInvalidEncryptionType]:
+    'Invalid encryption type',
+  [StringNames.Error_BlockValidationErrorInvalidRecipientCount]:
+    'Invalid recipient count',
+  [StringNames.Error_BlockValidationErrorInvalidRecipientKeys]:
+    'Invalid recipient keys',
+  [StringNames.Error_BlockValidationErrorEncryptionRecipientNotFoundInRecipients]:
+    'Encryption recipient not found in recipients',
+  [StringNames.Error_BlockValidationErrorEncryptionRecipientHasNoPrivateKey]:
+    'Encryption recipient has no private key',
+  [StringNames.Error_BlockValidationErrorInvalidCreator]: 'Invalid creator',
   [StringNames.Error_BlockMetadataTemplate]: 'Block metadata error: {REASON}',
   [StringNames.Error_BufferErrorInvalidBufferTypeTemplate]:
     'Invalid buffer type. Expected Buffer, got: {TYPE}',
@@ -172,6 +187,8 @@ export const AmericanEnglishStrings: StringsCollection = {
     'File path not provided',
   [StringNames.Error_BlockServiceErrorUnableToDetermineBlockSize]:
     'Unable to determine block size',
+  [StringNames.Error_BlockServiceErrorInvalidBlockData]: 'Invalid block data',
+  [StringNames.Error_BlockServiceErrorInvalidBlockType]: 'Invalid block type',
 
   // Quorum Error
   [StringNames.Error_QuorumErrorInvalidQuorumId]: 'Invalid quorum ID',
@@ -249,6 +266,8 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Invalid recipient count',
   [StringNames.Error_EciesErrorFileSizeTooLarge]: 'File size too large',
   [StringNames.Error_EciesErrorInvalidDataLength]: 'Invalid data length',
+  [StringNames.Error_EciesErrorInvalidBlockType]: 'Invalid block type',
+  [StringNames.Error_EciesErrorInvalidMessageCrc]: 'Invalid message CRC',
 
   // Voting derivation error
   [StringNames.Error_VotingDerivationErrorFailedToGeneratePrime]:
@@ -580,6 +599,14 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_BlockErrorCannotDecrypt]: 'Block cannot be decrypted',
   [StringNames.Error_BlockErrorCreatorPrivateKeyRequired]:
     'Creator private key is required',
+  [StringNames.Error_BlockErrorInvalidMultiEncryptionRecipientCount]:
+    'Invalid multi-encryption recipient count',
+  [StringNames.Error_BlockErrorInvalidNewBlockType]: 'Invalid new block type',
+  [StringNames.Error_BlockErrorUnexpectedEphemeralBlockType]:
+    'Unexpected ephemeral block type',
+  [StringNames.Error_BlockErrorRecipientRequired]: 'Recipient required',
+  [StringNames.Error_BlockErrorRecipientKeyRequired]:
+    'Recipient private key required',
 
   // Memory Tuple Error
   [StringNames.Error_MemoryTupleErrorBlockSizeMismatch]:

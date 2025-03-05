@@ -65,7 +65,7 @@ export class VotingPoll {
       return false;
     }
     const decryptedReceipt =
-      ServiceProvider.getInstance().eciesService.decryptWithHeader(
+      ServiceProvider.getInstance().eciesService.decryptSingleWithHeader(
         this.ecKeyPair.privateKey,
         encryptedReceipt,
       );

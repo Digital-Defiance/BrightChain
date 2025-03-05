@@ -273,7 +273,7 @@ export class BrightChainMember implements IBrightChainMemberOperational {
     if (!this._privateKey) {
       throw new MemberError(MemberErrorType.MissingPrivateKey);
     }
-    const result = this._eciesService.decryptWithHeader(
+    const result = this._eciesService.decryptSingleWithHeader(
       this._privateKey,
       encryptedData,
     );

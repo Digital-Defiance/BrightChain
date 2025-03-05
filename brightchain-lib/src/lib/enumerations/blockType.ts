@@ -105,16 +105,6 @@ export enum BlockType {
   EncryptedExtendedConstituentBlockListBlock = 32,
 
   /**
-   * A block encrypted for multiple recipients.
-   */
-  MultiEncryptedBlock = 33,
-
-  /**
-   * A CBL encrypted for multiple recipients.
-   */
-  MultiEncryptedConstituentBlockListBlock = 34,
-
-  /**
    * A reference to a block stored elsewhere.
    * Features:
    * 1. Lazy loading
@@ -123,5 +113,27 @@ export enum BlockType {
    */
   Handle = 40,
 }
+
+/**
+ * Block types that are ephemeral and do not have a persistent ID.
+ */
+export const EphemeralBlockTypes: readonly BlockType[] = [
+  BlockType.ConstituentBlockList,
+  BlockType.EphemeralOwnedDataBlock,
+  BlockType.ExtendedConstituentBlockListBlock,
+  BlockType.FECData,
+  BlockType.OwnerFreeWhitenedBlock,
+  BlockType.Random,
+  BlockType.RawData,
+] as const;
+
+/**
+ * Block types that are encrypted
+ */
+export const EncryptedBlockTypes: readonly BlockType[] = [
+  BlockType.EncryptedConstituentBlockListBlock,
+  BlockType.EncryptedExtendedConstituentBlockListBlock,
+  BlockType.EncryptedOwnedDataBlock,
+] as const;
 
 export default BlockType;

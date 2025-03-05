@@ -1,6 +1,7 @@
 import { ICBLConsts } from './cblConsts';
 import { IChecksumConsts } from './checksumConsts';
 import { IECIESConsts } from './eciesConsts';
+import { IEncryptionConsts } from './encryptionConsts';
 import { IFECConsts } from './fecConsts';
 import { IJwtConsts } from './jwtConsts';
 import { IKeyringConsts } from './keyringConsts';
@@ -16,6 +17,7 @@ export interface IConstants {
   ECIES: IECIESConsts;
   FEC: IFECConsts;
   CHECKSUM: IChecksumConsts;
+  ENCRYPTION: IEncryptionConsts;
   TUPLE: ITupleConsts;
   VOTING: IVotingConsts;
   KEYRING: IKeyringConsts;
@@ -35,4 +37,5 @@ export interface IConstants {
   UINT64_SIZE: number;
   UINT64_MAX: bigint;
   HEX_RADIX: number;
+  GUID_SIZE: number;
 }

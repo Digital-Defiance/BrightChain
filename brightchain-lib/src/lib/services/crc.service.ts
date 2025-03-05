@@ -7,7 +7,7 @@ export class CrcService {
    * @param data - The data to checksum
    * @returns The CRC8 checksum as a Buffer
    */
-  public static crc8(data: Buffer): Buffer {
+  public crc8(data: Buffer): Buffer {
     const crc8buf = Buffer.alloc(1);
     const crc8value = crc8(data);
     crc8buf.writeUInt8(crc8value);
@@ -18,9 +18,9 @@ export class CrcService {
    * @param input - The buffer or readable stream to calculate the CRC8 of
    * @returns The CRC8 as a Buffer
    */
-  public static async crc8Async(input: Buffer | Readable): Promise<Buffer> {
+  public async crc8Async(input: Buffer | Readable): Promise<Buffer> {
     if (Buffer.isBuffer(input)) {
-      return Promise.resolve(CrcService.crc8(input));
+      return Promise.resolve(this.crc8(input));
     }
 
     return new Promise((resolve, reject) => {
@@ -48,10 +48,7 @@ export class CrcService {
    * @param expectedCrc - The expected CRC8 checksum
    * @returns True if the checksum matches, false otherwise
    */
-  public static verifyCrc8(
-    data: Buffer,
-    expectedCrc: Buffer | number,
-  ): boolean {
+  public verifyCrc8(data: Buffer, expectedCrc: Buffer | number): boolean {
     const crc8value = crc8(data);
     if (typeof expectedCrc === 'number') {
       return crc8value === expectedCrc;
@@ -66,11 +63,11 @@ export class CrcService {
    * @param expectedCrc8 The CRC8 to validate against
    * @returns True if the CRC8 is valid, false otherwise
    */
-  public static async verifyCrc8Async(
+  public async verifyCrc8Async(
     data: Buffer | Readable,
     expectedCrc8: Buffer,
   ): Promise<boolean> {
-    const calculatedCrc8 = await CrcService.crc8Async(data);
+    const calculatedCrc8 = await this.crc8Async(data);
     return calculatedCrc8.equals(expectedCrc8);
   }
   /**
@@ -78,7 +75,7 @@ export class CrcService {
    * @param data - The data to checksum
    * @returns The CRC16 checksum as a Buffer
    */
-  public static crc16(data: Buffer): Buffer {
+  public crc16(data: Buffer): Buffer {
     const crc16buf = Buffer.alloc(2);
     const crc16value = crc16ccitt(data); // For CRC16-CCITT-FALSE
     crc16buf.writeUInt16BE(crc16value);
@@ -89,9 +86,9 @@ export class CrcService {
    * @param input - The buffer or readable stream to calculate the CRC16 of
    * @returns The CRC16 as a Buffer
    */
-  public static async crc16Async(input: Buffer | Readable): Promise<Buffer> {
+  public async crc16Async(input: Buffer | Readable): Promise<Buffer> {
     if (Buffer.isBuffer(input)) {
-      return Promise.resolve(CrcService.crc16(input));
+      return Promise.resolve(this.crc16(input));
     }
 
     return new Promise((resolve, reject) => {
@@ -119,10 +116,7 @@ export class CrcService {
    * @param expectedCrc - The expected CRC16 checksum
    * @returns True if the checksum matches, false otherwise
    */
-  public static verifyCrc16(
-    data: Buffer,
-    expectedCrc: Buffer | number,
-  ): boolean {
+  public verifyCrc16(data: Buffer, expectedCrc: Buffer | number): boolean {
     const crc16value = crc16ccitt(data); // For CRC16-CCITT-FALSE
     if (typeof expectedCrc === 'number') {
       return crc16value === expectedCrc;
@@ -137,11 +131,11 @@ export class CrcService {
    * @param expectedCrc16 The CRC16 to validate against
    * @returns True if the CRC16 is valid, false otherwise
    */
-  public static async verifyCrc16Async(
+  public async verifyCrc16Async(
     data: Buffer | Readable,
     expectedCrc16: Buffer,
   ): Promise<boolean> {
-    const calculatedCrc16 = await CrcService.crc16Async(data);
+    const calculatedCrc16 = await this.crc16Async(data);
     return calculatedCrc16.equals(expectedCrc16);
   }
   /**
@@ -149,7 +143,7 @@ export class CrcService {
    * @param data - The data to checksum
    * @returns The CRC32 checksum as a Buffer
    */
-  public static crc32(data: Buffer): Buffer {
+  public crc32(data: Buffer): Buffer {
     const crc32value = crc32(data);
     const crc32buf = Buffer.alloc(4);
     crc32buf.writeUInt32BE(crc32value);
@@ -165,9 +159,9 @@ export class CrcService {
    * @param input - The buffer or readable stream to calculate the CRC32 of
    * @returns The CRC32 as a Buffer
    */
-  public static async crc32Async(input: Buffer | Readable): Promise<Buffer> {
+  public async crc32Async(input: Buffer | Readable): Promise<Buffer> {
     if (Buffer.isBuffer(input)) {
-      return Promise.resolve(CrcService.crc32(input));
+      return Promise.resolve(this.crc32(input));
     }
 
     return new Promise((resolve, reject) => {
@@ -180,7 +174,7 @@ export class CrcService {
 
       input.on('end', () => {
         const fullBuffer = Buffer.concat(chunks);
-        resolve(CrcService.crc32(fullBuffer));
+        resolve(this.crc32(fullBuffer));
       });
 
       input.on('error', (error) => {
@@ -194,10 +188,7 @@ export class CrcService {
    * @param expectedCrc - The expected CRC32 checksum
    * @returns True if the checksum matches, false otherwise
    */
-  public static verifyCrc32(
-    data: Buffer,
-    expectedCrc: Buffer | number,
-  ): boolean {
+  public verifyCrc32(data: Buffer, expectedCrc: Buffer | number): boolean {
     const crc32value = crc32(data);
     if (typeof expectedCrc === 'number') {
       return crc32value === expectedCrc;
@@ -212,11 +203,11 @@ export class CrcService {
    * @param expectedCrc32 The CRC32 to validate against
    * @returns True if the CRC32 is valid, false otherwise
    */
-  public static async verifyCrc32Async(
+  public async verifyCrc32Async(
     data: Buffer | Readable,
     expectedCrc32: Buffer,
   ): Promise<boolean> {
-    const calculatedCrc32 = await CrcService.crc32Async(data);
+    const calculatedCrc32 = await this.crc32Async(data);
     return calculatedCrc32.equals(expectedCrc32);
   }
 }

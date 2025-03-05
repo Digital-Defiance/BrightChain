@@ -6,26 +6,27 @@ import { Readable } from 'stream';
 import { BaseBlock } from '../blocks/base';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { EncryptedBlock } from '../blocks/encrypted';
-import { BlockEncryption } from '../blocks/encryption';
+import { EncryptedBlockCreator } from '../blocks/encryptedBlockCreator';
 import { EphemeralBlock } from '../blocks/ephemeral';
 import { ExtendedCBL } from '../blocks/extendedCbl';
-import { MultiEncryptedBlock } from '../blocks/multiEncrypted';
 import { RandomBlock } from '../blocks/random';
 import { RawDataBlock } from '../blocks/rawData';
 import { BrightChainMember } from '../brightChainMember';
 import { CblBlockMetadata } from '../cblBlockMetadata';
-import { ECIES, OFFS_CACHE_PERCENTAGE, TUPLE } from '../constants';
+import { ECIES, ENCRYPTION, OFFS_CACHE_PERCENTAGE, TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
+import { BlockErrorType } from '../enumerations/blockErrorType';
 import { BlockServiceErrorType } from '../enumerations/blockServiceErrorType';
-import { BlockSize } from '../enumerations/blockSizes';
-import { BlockType } from '../enumerations/blockType';
-import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
+import { BlockSize } from '../enumerations/blockSize';
+import { BlockType, EncryptedBlockTypes } from '../enumerations/blockType';
 import { EciesErrorType } from '../enumerations/eciesErrorType';
-import { BlockValidationError, CannotEncryptBlockError } from '../errors/block';
+import { BlockError, CannotEncryptBlockError } from '../errors/block';
 import { BlockServiceError } from '../errors/blockServiceError';
 import { EciesError } from '../errors/eciesError';
-import { GuidV4 } from '../guid';
-import { IBaseBlock } from '../interfaces/blocks/base';
+import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
+import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
+import { ISingleEncryptedMessage } from '../interfaces/singleEncryptedMessage';
 import { ServiceLocator } from '../services/serviceLocator';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 import { ChecksumBuffer } from '../types';
@@ -60,11 +61,60 @@ export class BlockService {
   }
 
   /**
+   * Determine the block type from the first byte of the block data
+   * @param data - The block data buffer
+   * @returns The BlockType enum value
+   * @throws BlockServiceError if the data is too short or the block type is invalid
+   */
+  public determineBlockEncryptionType(data: Buffer): BlockEncryptionType {
+    if (data.length < ENCRYPTION.ENCRYPTION_TYPE_SIZE) {
+      throw new BlockServiceError(BlockServiceErrorType.InvalidBlockData);
+    }
+
+    const blockType = data.readUInt8(0) as BlockEncryptionType;
+
+    // Validate that the block type is a valid enum value
+    if (!Object.values(BlockEncryptionType).includes(blockType)) {
+      throw new BlockServiceError(BlockServiceErrorType.InvalidBlockType);
+    }
+
+    return blockType;
+  }
+
+  /**
+   * Check if a block is encrypted for a single recipient
+   * @param data - The block data buffer
+   * @returns True if the block is encrypted for a single recipient
+   */
+  public isSingleRecipientEncrypted(data: Buffer): boolean {
+    try {
+      const blockType = this.determineBlockEncryptionType(data);
+      return blockType === BlockEncryptionType.SingleRecipient;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Check if a block is encrypted for multiple recipients
+   * @param data - The block data buffer
+   * @returns True if the block is encrypted for multiple recipients
+   */
+  public isMultiRecipientEncrypted(data: Buffer): boolean {
+    try {
+      const blockType = this.determineBlockEncryptionType(data);
+      return blockType === BlockEncryptionType.MultiRecipient;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
    * Get the appropriate block size for a given data length
    * @param dataLength - The length of data in bytes
    * @returns The appropriate BlockSize enum value
    */
-  public static getBlockSizeForData(dataLength: number): BlockSize {
+  public getBlockSizeForData(dataLength: number): BlockSize {
     if (dataLength < 0) {
       return BlockSize.Unknown;
     }
@@ -94,91 +144,156 @@ export class BlockService {
   /**
    * Encrypt a block using ECIES
    */
-  public static async encrypt(
-    recipient: BrightChainMember,
-    block: EphemeralBlock,
-  ): Promise<EncryptedBlock> {
-    if (!block.canEncrypt()) {
-      throw new CannotEncryptBlockError();
+  public async encrypt(
+    newBlockType: BlockType,
+    block: IEphemeralBlock,
+    recipient?: BrightChainMember,
+  ): Promise<ISingleEncryptedMessage> {
+    if (!EncryptedBlockTypes.includes(newBlockType)) {
+      throw new BlockError(BlockErrorType.UnexpectedEncryptedBlockType);
+    } else if (!block.canEncrypt()) {
+      throw new Error('Block cannot be encrypted');
+    } else if (!block.creator) {
+      throw new BlockError(BlockErrorType.CreatorRequired);
     }
-    return BlockEncryption.encrypt(
-      recipient,
-      block,
-      block instanceof ExtendedCBL
-        ? BlockType.ExtendedConstituentBlockListBlock
-        : BlockType.ConstituentBlockList,
+
+    const encryptedBuffer =
+      ServiceLocator.getServiceProvider().eciesService.encrypt(
+        recipient?.publicKey ?? block.creator.publicKey,
+        block.data,
+      );
+
+    // Create padded buffer filled with random data
+    const finalBuffer = randomBytes(block.blockSize);
+
+    // Write the block type to the first byte
+    finalBuffer.writeUInt8(BlockEncryptionType.SingleRecipient, 0);
+
+    // Copy ECIES data (ephemeral public key, IV, auth tag, encrypted message) after the block type byte
+    encryptedBuffer.copy(
+      finalBuffer,
+      ENCRYPTION.ENCRYPTION_TYPE_SIZE,
+      0,
+      encryptedBuffer.length,
+    );
+
+    const checksum =
+      ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+        finalBuffer,
+      );
+
+    return await EncryptedBlockCreator.create(
+      newBlockType,
+      BlockDataType.EncryptedData,
+      block.blockSize,
+      finalBuffer,
+      checksum,
+      recipient ?? block.creator,
+      block.dateCreated,
+      block.data.length,
     );
   }
 
   /**
    * Encrypt a block for multiple recipients using ECIES
-   * @param recipients The recipients to encrypt the block for
+   * @param newBlockType The new block type
    * @param block The block to encrypt
+   * @param recipients The recipients to encrypt the block for
    * @returns The encrypted block
    */
-  public static async encryptMultiple(
-    recipients: BrightChainMember[],
+  public async encryptMultiple(
+    newBlockType: BlockType,
     block: EphemeralBlock,
-  ): Promise<MultiEncryptedBlock> {
-    if (!block.canMultiEncrypt(recipients.length)) {
+    recipients: BrightChainMember[],
+  ): Promise<IEncryptedBlock> {
+    if (!EncryptedBlockTypes.includes(newBlockType)) {
+      throw new BlockError(BlockErrorType.UnexpectedEncryptedBlockType);
+    } else if (!block.canMultiEncrypt(recipients.length)) {
       throw new CannotEncryptBlockError();
+    } else if (!block.creator) {
+      throw new BlockError(BlockErrorType.CreatorRequired);
     }
-    return await BlockService.encryptMultiple(recipients, block);
+    const encryptedMessageDetails =
+      await ServiceLocator.getServiceProvider().eciesService.encryptMultiple(
+        recipients,
+        block.data,
+      );
+    const header =
+      ServiceLocator.getServiceProvider().eciesService.buildECIESMultipleRecipientHeader(
+        encryptedMessageDetails,
+      );
+    const paddingSize =
+      block.blockSize -
+      header.length -
+      encryptedMessageDetails.encryptedMessage.length;
+    const padding = randomBytes(paddingSize);
+    const data = Buffer.concat([
+      header,
+      encryptedMessageDetails.encryptedMessage,
+      padding,
+    ]);
+    const checksum =
+      ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+        data,
+      );
+    return Promise.resolve(
+      await EncryptedBlock.from(
+        newBlockType,
+        BlockDataType.EncryptedData,
+        block.blockSize,
+        data,
+        checksum,
+        block.creator,
+        block.dateCreated,
+        block.lengthBeforeEncryption,
+        true,
+        false,
+      ),
+    );
+  }
+
+  public async decrypt(
+    creator: BrightChainMember,
+    block: EncryptedBlock,
+    newBlockType: BlockType,
+  ): Promise<IEphemeralBlock> {
+    if (creator.privateKey === undefined) {
+      throw new BlockError(BlockErrorType.CreatorPrivateKeyRequired);
+    }
+
+    const decryptedBuffer =
+      ServiceLocator.getServiceProvider().eciesService.decryptSingleWithHeader(
+        creator.privateKey,
+        block.layerPayload,
+      );
+
+    const checksum =
+      ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+        decryptedBuffer,
+      );
+
+    return await EncryptedBlockCreator.create(
+      newBlockType,
+      BlockDataType.EphemeralStructuredData,
+      block.blockSize,
+      decryptedBuffer,
+      checksum,
+      creator,
+      block.dateCreated,
+      block.layerPayloadSize,
+    );
   }
 
   /**
-   * Decrypt a block using ECIES
+   * Decrypts a block encrypted for multiple recipients.
    * @param recipient The recipient to decrypt the block for
    * @param block The block to decrypt
    * @returns The decrypted block
    */
-  public static async decrypt(
+  public async decryptMultiple(
     recipient: BrightChainMember,
-    block: EncryptedBlock,
-  ): Promise<EphemeralBlock> {
-    if (recipient.privateKey === undefined) {
-      throw new EciesError(EciesErrorType.PrivateKeyNotLoaded);
-    }
-
-    // Get the encrypted payload (excluding random padding)
-    const encryptedPayload = block.data.subarray(
-      ECIES.OVERHEAD_SIZE,
-      ECIES.OVERHEAD_SIZE + block.lengthBeforeEncryption,
-    );
-
-    const decryptedData =
-      ServiceLocator.getServiceProvider().eciesService.decryptWithComponents(
-        recipient.privateKey,
-        block.ephemeralPublicKey,
-        block.iv,
-        block.authTag,
-        encryptedPayload,
-      );
-
-    // Create unpadded data buffer
-    const unpaddedData = decryptedData.subarray(
-      0,
-      block.lengthBeforeEncryption,
-    );
-
-    return await EphemeralBlock.from(
-      BlockType.EphemeralOwnedDataBlock,
-      BlockDataType.RawData,
-      block.blockSize,
-      unpaddedData,
-      ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
-        unpaddedData,
-      ),
-      recipient,
-      block.dateCreated,
-      unpaddedData.length,
-    );
-  }
-
-  public static async decryptMultiple(
-    recipient: BrightChainMember,
-    block: MultiEncryptedBlock,
-  ): Promise<EphemeralBlock> {
+    block: IEncryptedBlock,
+  ): Promise<IEphemeralBlock> {
     if (recipient.privateKey === undefined) {
       throw new EciesError(EciesErrorType.PrivateKeyNotLoaded);
     }
@@ -189,12 +304,12 @@ export class BlockService {
     const decryptedData =
       ServiceLocator.getServiceProvider().eciesService.decryptMultipleECIEForRecipient(
         {
-          recipientIds: multiEncryptionHeader.recipientIds,
-          encryptedKeys: multiEncryptionHeader.recipientKeys,
-          originalMessageLength: multiEncryptionHeader.dataLength,
+          ...multiEncryptionHeader,
           encryptedMessage: block.data.subarray(
             multiEncryptionHeader.headerSize,
-            multiEncryptionHeader.headerSize + multiEncryptionHeader.dataLength,
+            multiEncryptionHeader.headerSize +
+              multiEncryptionHeader.dataLength +
+              ECIES.MULTIPLE.ENCRYPTED_MESSAGE_OVERHEAD_SIZE,
           ),
         },
         recipient,
@@ -209,7 +324,7 @@ export class BlockService {
       block.blockSize,
       decryptedData,
       checksum,
-      block.creator,
+      recipient,
       block.dateCreated,
       multiEncryptionHeader.dataLength,
       true,
@@ -219,132 +334,12 @@ export class BlockService {
   }
 
   /**
-   * Create a new block with the specified parameters
-   */
-  public static async createBlock(
-    blockSize: BlockSize,
-    blockType: BlockType,
-    blockDataType: BlockDataType,
-    data: Buffer,
-    creator: BrightChainMember,
-    checksum?: ChecksumBuffer,
-  ): Promise<IBaseBlock> {
-    if (data.length === 0) {
-      throw new BlockValidationError(
-        BlockValidationErrorType.DataCannotBeEmpty,
-      );
-    }
-
-    if (
-      data.length > blockSize ||
-      (blockDataType === BlockDataType.EncryptedData &&
-        data.length + ECIES.OVERHEAD_SIZE > blockSize)
-    ) {
-      throw new BlockValidationError(
-        BlockValidationErrorType.DataLengthExceedsCapacity,
-      );
-    }
-
-    // Handle encrypted data
-    if (
-      blockDataType === BlockDataType.EncryptedData &&
-      creator instanceof BrightChainMember
-    ) {
-      // Create a temporary OwnedDataBlock to encrypt
-      const tempBlock = await EphemeralBlock.from(
-        BlockType.EphemeralOwnedDataBlock,
-        BlockDataType.RawData,
-        blockSize,
-        data,
-        checksum ??
-          ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
-            data,
-          ),
-        creator,
-        undefined,
-        data.length,
-      );
-      // Encrypt the block
-      return await BlockService.encrypt(creator, tempBlock);
-    }
-
-    // Handle CBL data
-    if (
-      blockDataType === BlockDataType.EphemeralStructuredData &&
-      creator instanceof BrightChainMember
-    ) {
-      const finalChecksum =
-        checksum ??
-        ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
-          data,
-        );
-      return await EncryptedBlock.from(
-        blockType,
-        blockDataType,
-        blockSize,
-        data,
-        finalChecksum,
-        creator,
-        undefined,
-        data.length,
-      );
-    }
-
-    // Handle owned data - create anonymous creator if none provided
-    const finalChecksum =
-      checksum ??
-      ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
-        data,
-      );
-    if (
-      blockDataType === BlockDataType.EncryptedData &&
-      creator instanceof BrightChainMember
-    ) {
-      return await EncryptedBlock.from(
-        blockType,
-        blockDataType,
-        blockSize,
-        data,
-        finalChecksum,
-        creator,
-        undefined,
-        data.length,
-      );
-    } else if (
-      blockDataType === BlockDataType.EphemeralStructuredData &&
-      creator instanceof BrightChainMember
-    ) {
-      return await EncryptedBlock.from(
-        blockType,
-        blockDataType,
-        blockSize,
-        data,
-        finalChecksum,
-        creator,
-        undefined,
-        data.length,
-      );
-    } else {
-      return await EphemeralBlock.from(
-        blockType,
-        blockDataType,
-        blockSize,
-        data,
-        finalChecksum,
-        creator ?? GuidV4.new(),
-        undefined,
-        data.length,
-      );
-    }
-  }
-
-  /**
    * Get the length of a file
    * @param fileData - the file data to get the length of
    * @param filePath - the path to the file (optional)
    * @returns the length of the file
    */
-  public static async getFileLength(
+  public async getFileLength(
     fileData: Buffer | Readable,
     filePath?: string, // allow overriding or providing the path
   ): Promise<number> {
@@ -442,7 +437,7 @@ export class BlockService {
    * @param filePath - The path to the file (optional)
    * @param fileSize - The size of the file (optional)
    */
-  public static async processFileInChunks(
+  public async processFileInChunks(
     fileData: Buffer | Readable,
     encrypt: boolean,
     chunkCount: number,
@@ -458,8 +453,8 @@ export class BlockService {
     }
 
     const fileLength =
-      fileSize ?? (await BlockService.getFileLength(fileData, filePath));
-    const blockSize = BlockService.getBlockSizeForData(fileLength);
+      fileSize ?? (await this.getFileLength(fileData, filePath));
+    const blockSize = this.getBlockSizeForData(fileLength);
     if (blockSize === BlockSize.Unknown || (blockSize as number) <= 0) {
       throw new BlockServiceError(
         BlockServiceErrorType.CannotDetermineBlockSize,
@@ -546,7 +541,7 @@ export class BlockService {
    * @param count - Number of whiteners needed
    * @returns Array of whitener buffers and their checksums
    */
-  public static async gatherWhiteners(
+  public async gatherWhiteners(
     blockSize: BlockSize,
     count: number,
     dateCreated?: Date,
@@ -588,7 +583,7 @@ export class BlockService {
    * @param whiteners - The whiteners to use
    * @returns The XORed block
    */
-  public static xorBlockWithWhiteners(
+  public xorBlockWithWhiteners(
     block: Buffer,
     whiteners: (Buffer | RandomBlock | RawDataBlock)[],
   ): Buffer {
@@ -613,7 +608,7 @@ export class BlockService {
    * @param whiteners - The whiteners to use (will be reused if fewer than blocks)
    * @returns Array of XORed blocks
    */
-  public static xorBlocksWithWhitenersRoundRobin(
+  public xorBlocksWithWhitenersRoundRobin(
     blocks: Buffer[],
     whiteners: Buffer[],
   ): Buffer[] {
@@ -639,7 +634,7 @@ export class BlockService {
    */
   private static readonly DEFAULT_CHUNK_SIZE = TUPLE.SIZE * 3; // Process 9 blocks at a time
 
-  public static async createCBL(
+  public async createCBL(
     blocks: BaseBlock[],
     creator: BrightChainMember,
     fileDataLength: number,
@@ -691,6 +686,7 @@ export class BlockService {
       metadata.fileDataLength,
       addressListBuffer,
       cblBlockSize,
+      BlockEncryptionType.None,
     );
 
     // Create final data buffer with exact size
@@ -728,9 +724,7 @@ export class BlockService {
    * Store a CBL block to disk using DiskBlockAsyncStore
    * @param cbl - The CBL block to store
    */
-  public static async storeCBLToDisk(
-    cbl: ConstituentBlockListBlock,
-  ): Promise<void> {
+  public async storeCBLToDisk(cbl: ConstituentBlockListBlock): Promise<void> {
     if (!BlockService.diskBlockAsyncStore) {
       throw new BlockServiceError(BlockServiceErrorType.Uninitialized);
     }
@@ -807,20 +801,20 @@ export class BlockService {
     if (!BlockService.diskBlockAsyncStore) {
       throw new BlockServiceError(BlockServiceErrorType.Uninitialized);
     }
-    const fileSize = await BlockService.getFileLength(fileData);
+    const fileSize = await this.getFileLength(fileData);
     const mimeType = await this.getMimeType(fileData);
     const fileName = this.getFileName(fileData, filePath);
-    const blockSize = BlockService.getBlockSizeForData(fileSize);
+    const blockSize = this.getBlockSizeForData(fileSize);
     const rollbackOperations: (() => Promise<void>)[] = [];
     const blockIDs: ChecksumBuffer[] = [];
     try {
-      await BlockService.processFileInChunks(
+      await this.processFileInChunks(
         fileData,
         encrypt,
         TUPLE.SIZE,
         async (chunkBlocks: Buffer[]) => {
           for (const sourceBlock of chunkBlocks) {
-            const whiteners = await BlockService.gatherWhiteners(
+            const whiteners = await this.gatherWhiteners(
               blockSize,
               TUPLE.SIZE - 1,
               dateCreated,
@@ -836,7 +830,7 @@ export class BlockService {
             );
             const primeBlock = new RawDataBlock(
               blockSize,
-              BlockService.xorBlockWithWhiteners(sourceBlock, whiteners),
+              this.xorBlockWithWhiteners(sourceBlock, whiteners),
               dateCreated,
               undefined,
               BlockType.RawData,
@@ -860,6 +854,7 @@ export class BlockService {
           fileSize,
           Buffer.concat(blockIDs),
           blockSize,
+          BlockEncryptionType.None,
           createECBL
             ? {
                 fileName,
@@ -877,5 +872,19 @@ export class BlockService {
       await Promise.all(rollbackOperations);
       throw e;
     }
+  }
+
+  /**
+   * Convert a stream to a buffer
+   * @param stream - The stream to convert
+   * @returns The buffer
+   */
+  public async streamToBuffer(stream: Readable): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+    return new Promise((resolve, reject) => {
+      stream.on('data', (chunk) => chunks.push(chunk));
+      stream.on('end', () => resolve(Buffer.concat(chunks)));
+      stream.on('error', (err) => reject(err));
+    });
   }
 }

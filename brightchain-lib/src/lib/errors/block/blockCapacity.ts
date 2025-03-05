@@ -1,7 +1,7 @@
 import {
   BlockSize,
   blockSizeToSizeString,
-} from '../../enumerations/blockSizes';
+} from '../../enumerations/blockSize';
 import { StringLanguages } from '../../enumerations/stringLanguages';
 import { StringNames } from '../../enumerations/stringNames';
 import { translate } from '../../i18n';

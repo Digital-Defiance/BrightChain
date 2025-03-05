@@ -1,55 +1,27 @@
-// Remove circular imports
-// import { EncryptedBlock } from '../../blocks/encrypted';
-// import { EphemeralBlock } from '../../blocks/ephemeral';
 import { BrightChainMember } from '../../brightChainMember';
-import { BlockDataType } from '../../enumerations/blockDataType';
-import { BlockSize } from '../../enumerations/blockSizes';
-import { BlockType } from '../../enumerations/blockType';
-import { ChecksumBuffer } from '../../types';
+import { BlockEncryptionType } from '../../enumerations/blockEncryptionType';
+import { GuidV4 } from '../../guid';
+import { IMultiEncryptedParsedHeader } from '../multiEncryptedParsedHeader';
+import { ISingleEncryptedParsedHeader } from '../singleEncryptedParsedHeader';
 import { IEphemeralBlock } from './ephemeral';
 
-/**
- * Interface for encrypted blocks to avoid circular dependencies
- */
 export interface IEncryptedBlock extends IEphemeralBlock {
   /**
-   * The ephemeral public key used to encrypt the block
+   * The type of encryption used for the block
    */
-  get ephemeralPublicKey(): Buffer;
+  get encryptionType(): BlockEncryptionType;
   /**
-   * The initialization vector used to encrypt the block
+   * The recipients of the block
    */
-  get iv(): Buffer;
+  get recipients(): GuidV4[];
   /**
-   * The authentication tag used to encrypt the block
+   * The recipient with private key that will be used to decrypt the block
    */
-  get authTag(): Buffer;
+  get recipientWithKey(): BrightChainMember;
   /**
-   * The encrypted payload
+   * The details of the encryption used for the block
    */
-  get payload(): Buffer;
-  /**
-   * The length of the encrypted payload
-   */
-  get encryptedLength(): number;
-  /**
-   * Decrypt the block
-   */
-  decrypt<D>(newBlockType: BlockType): Promise<D>;
-}
-
-/**
- * Interface for encrypted block creation to avoid circular dependencies
- */
-export interface IEncryptedBlockCreator {
-  from(
-    type: BlockType,
-    dataType: BlockDataType,
-    blockSize: BlockSize,
-    data: Buffer,
-    checksum: ChecksumBuffer,
-    creator: BrightChainMember,
-    dateCreated?: Date,
-    lengthBeforeEncryption?: number,
-  ): Promise<IEncryptedBlock>;
+  get encryptionDetails():
+    | ISingleEncryptedParsedHeader
+    | IMultiEncryptedParsedHeader;
 }

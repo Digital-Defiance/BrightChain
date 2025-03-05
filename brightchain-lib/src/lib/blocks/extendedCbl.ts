@@ -1,15 +1,14 @@
 import { BrightChainMember } from '../brightChainMember';
-import CONSTANTS from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
 import { ExtendedCblError } from '../errors/extendedCblError';
 import { GuidV4 } from '../guid';
+import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IExtendedConstituentBlockListBlock } from '../interfaces/blocks/extendedCbl';
 import { ServiceLocator } from '../services/serviceLocator';
 import { ChecksumBuffer, ChecksumString, SignatureBuffer } from '../types';
-import { EncryptedBlock } from './encrypted';
 
 /**
  * Extended CBL class, which extends the CBL class with additional properties
@@ -111,55 +110,6 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
     }
   }
 
-  /**
-   * Get the available capacity for payload data in this block
-   */
-  public get availableCapacity(): number {
-    const result =
-      ServiceLocator.getServiceProvider().blockCapacityCalculator.calculateCapacity(
-        {
-          blockSize: this.blockSize,
-          blockType: this.blockType,
-          filename: this.fileName,
-          mimetype: this.mimeType,
-          usesStandardEncryption: false,
-        },
-      );
-    return result.availableCapacity;
-  }
-
-  /**
-   * Get the maximum number of addresses that can be stored in a CBL block.
-   * Does not account for encryption overhead.
-   * @returns The maximum number of addresses
-   */
-  public get addressCapacity(): number {
-    return Math.floor(
-      this.availableCapacity / CONSTANTS.CHECKSUM.SHA3_BUFFER_LENGTH,
-    );
-  }
-
-  /**
-   * Get the maximum number of addresses that can be stored in an encrypted CBL block.
-   * Accounts for encryption overhead.
-   * @returns The maximum number of addresses
-   */
-  public get encryptedAddressCapacity(): number {
-    const result =
-      ServiceLocator.getServiceProvider().blockCapacityCalculator.calculateCapacity(
-        {
-          blockSize: this.blockSize,
-          blockType: this.blockType,
-          filename: this.fileName,
-          mimetype: this.mimeType,
-          usesStandardEncryption: true,
-        },
-      );
-    return Math.floor(
-      result.availableCapacity / CONSTANTS.CHECKSUM.SHA3_BUFFER_LENGTH,
-    );
-  }
-
   // Forward all other properties and methods to the delegate
   public get blockSize(): BlockSize {
     return this._delegate.blockSize;
@@ -205,7 +155,7 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
     return this._delegate.creatorId;
   }
 
-  public get payload(): Buffer {
+  public get layerPayload(): Buffer {
     return this._delegate.payload;
   }
 
@@ -260,7 +210,7 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
     return this._delegate.headerValidated;
   }
 
-  public get layerOverhead(): number {
+  public get layerOverheadSize(): number {
     return this._delegate.layerOverhead;
   }
 
@@ -268,7 +218,7 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
     return this._delegate.lengthBeforeEncryption;
   }
 
-  public get payloadLength(): number {
+  public get layerPayloadSize(): number {
     return this._delegate.payloadLength;
   }
 
@@ -284,8 +234,8 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
     return this._delegate.canEncrypt;
   }
 
-  public canEncryptMultiple(recipientCount: number): boolean {
-    return this._delegate.canEncryptMultiple(recipientCount);
+  public canMultiEncrypt(recipientCount: number): boolean {
+    return this._delegate.canMultiEncrypt(recipientCount);
   }
 
   public validateSignature(creator?: BrightChainMember): boolean {
@@ -296,7 +246,7 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
     this._delegate.validate();
   }
 
-  public async encrypt<E extends EncryptedBlock>(
+  public async encrypt<E extends IEncryptedBlock>(
     newBlockType: BlockType,
   ): Promise<E> {
     return this._delegate.encrypt(newBlockType);

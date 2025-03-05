@@ -1,6 +1,6 @@
 import CONSTANTS, { ECIES } from '../constants';
 import { BlockCapacityErrorType } from '../enumerations/blockCapacityErrorType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockCapacityError } from '../errors/blockCapacityError';
 import { ServiceProvider } from './service.provider';

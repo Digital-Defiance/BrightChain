@@ -5,25 +5,25 @@ export interface IConstituentBlockListBlockHeader {
   /**
    * Creator ID of the CBL
    */
-  get creatorId(): GuidV4;
+  readonly creatorId: GuidV4;
   /**
    * Date the CBL was created
    */
-  get dateCreated(): Date;
+  readonly dateCreated: Date;
   /**
    * Number of addresses in the CBL
    */
-  get cblAddressCount(): number;
+  readonly cblAddressCount: number;
   /**
    * Size of the file represented by the CBL (spanning all blocks)
    */
-  get originalDataLength(): number;
+  readonly originalDataLength: number;
   /**
    * Tuple size for the CBL
    */
-  get tupleSize(): number;
+  readonly tupleSize: number;
   /**
    * Signature of the creator
    */
-  get creatorSignature(): SignatureBuffer;
+  readonly creatorSignature: SignatureBuffer;
 }

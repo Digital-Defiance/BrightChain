@@ -1,4 +1,4 @@
-import { BlockSize } from './enumerations/blockSizes';
+import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { DiskBlockAsyncStore } from './stores/diskBlockAsyncStore';
 

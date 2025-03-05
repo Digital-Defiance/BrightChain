@@ -12,7 +12,7 @@ export class BlockECIES {
   }
 
   public static decrypt(privateKey: Buffer, encryptedData: Buffer): Buffer {
-    return ServiceProvider.getInstance().eciesService.decryptWithHeader(
+    return ServiceProvider.getInstance().eciesService.decryptSingleWithHeader(
       privateKey,
       encryptedData,
     );
@@ -25,7 +25,7 @@ export class BlockECIES {
     authTag: Buffer,
     encrypted: Buffer,
   ): Buffer {
-    return ServiceProvider.getInstance().eciesService.decryptWithComponents(
+    return ServiceProvider.getInstance().eciesService.decryptSingleWithComponents(
       privateKey,
       ephemeralPublicKey,
       iv,

@@ -14,7 +14,7 @@ const translations = {
 };
 
 // Import BlockSize after defining translations
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 
 export type BlockSizeTranslation = {
   [key in BlockSize]: string;

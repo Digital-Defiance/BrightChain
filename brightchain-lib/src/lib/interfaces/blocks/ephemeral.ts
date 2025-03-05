@@ -1,7 +1,7 @@
-import { EncryptedBlock } from '../../blocks/encrypted';
 import { BrightChainMember } from '../../brightChainMember';
 import BlockType from '../../enumerations/blockType';
 import { IBaseBlock } from './base';
+import { IEncryptedBlock } from './encrypted';
 
 export interface IEphemeralBlock extends IBaseBlock {
   /**
@@ -41,5 +41,13 @@ export interface IEphemeralBlock extends IBaseBlock {
   get creator(): BrightChainMember | undefined;
   get data(): Buffer;
 
-  encrypt<E extends EncryptedBlock>(newBlockType: BlockType): Promise<E>;
+  /**
+   * Encrypt the block for one or more recipients.
+   * @param newBlockType The type of the new encrypted block.
+   * @param recipients The recipients of the new encrypted block.
+   */
+  encrypt<E extends IEncryptedBlock>(
+    newBlockType: BlockType,
+    recipients?: BrightChainMember[],
+  ): Promise<E>;
 }

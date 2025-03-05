@@ -18,6 +18,8 @@ export class BlockCapacityError extends TypedError<BlockCapacityErrorType> {
         StringNames.Error_BlockCapacityInvalidMimetype,
       [BlockCapacityErrorType.InvalidRecipientCount]:
         StringNames.Error_BlockCapacityInvalidRecipientCount,
+      [BlockCapacityErrorType.InvalidExtendedCblData]:
+        StringNames.Error_BlockCapacityInvalidExtendedCblData,
     };
   }
 

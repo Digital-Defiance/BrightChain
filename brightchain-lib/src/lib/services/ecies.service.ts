@@ -19,14 +19,14 @@ import CONSTANTS, {
   SYMMETRIC_ALGORITHM_CONFIGURATION,
 } from '../constants';
 import { EciesErrorType } from '../enumerations/eciesErrorType';
-import { GuidBrandType } from '../enumerations/guidBrandType';
 import { EciesError } from '../errors/eciesError';
 import { GuidV4 } from '../guid';
 import { IECIESConfig } from '../interfaces/eciesConfig';
 import { IEncryptionLength } from '../interfaces/encryptionLength';
+import { IMultiEncryptedMessage } from '../interfaces/multiEncryptedMessage';
 import { IMultiEncryptedParsedHeader } from '../interfaces/multiEncryptedParsedHeader';
-import { IMultiRecipientEncryption } from '../interfaces/multiRecipientEncryption';
 import { ISimpleKeyPairBuffer } from '../interfaces/simpleKeyPairBuffer';
+import { ISingleEncryptedParsedHeader } from '../interfaces/singleEncryptedParsedHeader';
 import { IWalletSeed } from '../interfaces/walletSeed';
 import { SecureBuffer } from '../secureBuffer';
 import { SecureString } from '../secureString';
@@ -38,6 +38,7 @@ import {
   SignatureBuffer,
   SignatureString,
 } from '../types';
+import { ServiceLocator } from './serviceLocator';
 
 /**
  * Service for handling ECIES encryption/decryption
@@ -206,33 +207,50 @@ export class ECIESService {
   }
 
   /**
+   * Decrypt a singly encrypted message
+   * @param data - The encrypted message
+   * @returns The decrypted message
+   */
+  public parseSingleEncryptedHeader(
+    data: Buffer,
+  ): ISingleEncryptedParsedHeader {
+    const ephemeralPublicKey = data.subarray(0, ECIES.PUBLIC_KEY_LENGTH);
+    const iv = data.subarray(
+      ECIES.PUBLIC_KEY_LENGTH,
+      ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH,
+    );
+    const authTag = data.subarray(
+      ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH,
+      ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH + ECIES.AUTH_TAG_LENGTH,
+    );
+    return {
+      ephemeralPublicKey,
+      iv,
+      authTag,
+      headerSize: ECIES.OVERHEAD_SIZE,
+    };
+  }
+
+  /**
    * Decrypts data encrypted with ECIES using a header
    * @param privateKey The private key to decrypt the data
    * @param encryptedData The data to decrypt
    * @returns The decrypted data
    */
-  public decryptWithHeader(privateKey: Buffer, encryptedData: Buffer): Buffer {
-    const ephemeralPublicKey = encryptedData.subarray(
-      0,
-      ECIES.PUBLIC_KEY_LENGTH,
-    );
-    const iv = encryptedData.subarray(
-      ECIES.PUBLIC_KEY_LENGTH,
-      ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH,
-    );
-    const authTag = encryptedData.subarray(
-      ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH,
-      ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH + ECIES.AUTH_TAG_LENGTH,
-    );
+  public decryptSingleWithHeader(
+    privateKey: Buffer,
+    encryptedData: Buffer,
+  ): Buffer {
+    const details = this.parseSingleEncryptedHeader(encryptedData);
     const encrypted = encryptedData.subarray(
       ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH + ECIES.AUTH_TAG_LENGTH,
     );
 
-    return this.decryptWithComponents(
+    return this.decryptSingleWithComponents(
       privateKey,
-      ephemeralPublicKey,
-      iv,
-      authTag,
+      details.ephemeralPublicKey,
+      details.iv,
+      details.authTag,
       encrypted,
     );
   }
@@ -246,7 +264,7 @@ export class ECIESService {
    * @param encrypted The encrypted data
    * @returns The decrypted data
    */
-  public decryptWithComponents(
+  public decryptSingleWithComponents(
     privateKey: Buffer,
     ephemeralPublicKey: Buffer,
     iv: Buffer,
@@ -369,7 +387,7 @@ export class ECIESService {
   public encryptMultiple(
     recipients: BrightChainMember[],
     message: Buffer,
-  ): IMultiRecipientEncryption {
+  ): IMultiEncryptedMessage {
     if (recipients.length > CONSTANTS.UINT16_MAX) {
       throw new EciesError(EciesErrorType.TooManyRecipients);
     }
@@ -382,7 +400,10 @@ export class ECIESService {
       iv,
     );
 
-    const encrypted = cipher.update(message);
+    const crc16 = ServiceLocator.getServiceProvider().crcService.crc16(message);
+
+    // crc16 goes into the encrypted message so we don't reveal anything about the message in plaintext
+    const encrypted = cipher.update(Buffer.concat([crc16, message]));
     const final = cipher.final();
     const authTag = cipher.getAuthTag();
 
@@ -394,22 +415,29 @@ export class ECIESService {
     }));
 
     const recipientIds = encryptionResults.map(({ id }) => id);
-    const encryptedKeys = encryptionResults.map(
+    const recipientKeys = encryptionResults.map(
       ({ encryptedKey }) => encryptedKey,
     );
 
     if (
-      message.length + ECIES.MULTIPLE.BASE_OVERHEAD_SIZE !==
+      message.length + ECIES.MULTIPLE.ENCRYPTED_MESSAGE_OVERHEAD_SIZE !==
       encryptedMessage.length
     ) {
       throw new EciesError(EciesErrorType.MessageLengthMismatch);
     }
 
+    const headerSize = this.calculateECIESMultipleRecipientOverhead(
+      recipients.length,
+      false,
+    );
+
     return {
-      encryptedMessage,
+      dataLength: message.length,
+      recipientCount: recipients.length,
       recipientIds,
-      encryptedKeys,
-      originalMessageLength: message.length,
+      recipientKeys,
+      encryptedMessage,
+      headerSize,
     };
   }
 
@@ -420,7 +448,7 @@ export class ECIESService {
    * @returns The decrypted message.
    */
   public decryptMultipleECIEForRecipient(
-    encryptedData: IMultiRecipientEncryption,
+    encryptedData: IMultiEncryptedMessage,
     recipient: BrightChainMember,
   ): Buffer {
     if (recipient.privateKey === undefined) {
@@ -432,8 +460,8 @@ export class ECIESService {
     if (recipientIndex === -1) {
       throw new EciesError(EciesErrorType.RecipientNotFound);
     }
-    const encryptedKey = encryptedData.encryptedKeys[recipientIndex];
-    const decryptedKey = this.decryptWithHeader(
+    const encryptedKey = encryptedData.recipientKeys[recipientIndex];
+    const decryptedKey = this.decryptSingleWithHeader(
       recipient.privateKey,
       encryptedKey,
     );
@@ -441,10 +469,10 @@ export class ECIESService {
     const iv = encryptedData.encryptedMessage.subarray(0, ECIES.IV_LENGTH);
     const authTag = encryptedData.encryptedMessage.subarray(
       ECIES.IV_LENGTH,
-      ECIES.MULTIPLE.BASE_OVERHEAD_SIZE,
+      ECIES.MULTIPLE.ENCRYPTED_MESSAGE_OVERHEAD_SIZE,
     );
     const encrypted = encryptedData.encryptedMessage.subarray(
-      ECIES.MULTIPLE.BASE_OVERHEAD_SIZE,
+      ECIES.MULTIPLE.ENCRYPTED_MESSAGE_OVERHEAD_SIZE,
     );
 
     const decipher = createDecipheriv(
@@ -457,22 +485,46 @@ export class ECIESService {
     const decrypted = decipher.update(encrypted);
     const final = decipher.final();
 
-    return Buffer.concat([decrypted, final]);
+    const decryptedMessage = Buffer.concat([decrypted, final]);
+    if (
+      decryptedMessage.length !==
+      encryptedData.dataLength + CONSTANTS.UINT16_SIZE
+    ) {
+      throw new EciesError(EciesErrorType.InvalidDataLength);
+    }
+    const crc16 = decryptedMessage.subarray(0, CONSTANTS.UINT16_SIZE);
+    const calculatedCrc16 =
+      ServiceLocator.getServiceProvider().crcService.crc16(
+        decryptedMessage.subarray(CONSTANTS.UINT16_SIZE),
+      );
+    if (!crc16.equals(calculatedCrc16)) {
+      throw new EciesError(EciesErrorType.InvalidMessageCrc);
+    }
+    return decryptedMessage.subarray(CONSTANTS.UINT16_SIZE);
   }
 
   /**
    * Calculate the overhead for a message encrypted for multiple recipients
    * @param recipientCount number of recipients
+   * @param includeMessageOverhead whether to include the overhead for the encrypted message
    * @returns the overhead size in bytes
    */
   public calculateECIESMultipleRecipientOverhead(
     recipientCount: number,
+    includeMessageOverhead: boolean,
   ): number {
-    return (
-      ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE +
-      recipientCount * GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer) + // recipient ids
-      recipientCount * ECIES.MULTIPLE.ENCRYPTED_KEY_LENGTH // recipient encrypted keys
-    );
+    if (recipientCount < 2) {
+      throw new EciesError(EciesErrorType.InvalidRecipientCount);
+    }
+    const baseOverhead =
+      ECIES.MULTIPLE.DATA_LENGTH_SIZE +
+      ECIES.MULTIPLE.RECIPIENT_COUNT_SIZE +
+      recipientCount * CONSTANTS.GUID_SIZE + // recipient ids
+      recipientCount * ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE; // recipient encrypted keys
+
+    return includeMessageOverhead
+      ? baseOverhead + ECIES.MULTIPLE.ENCRYPTED_MESSAGE_OVERHEAD_SIZE
+      : baseOverhead;
   }
 
   /**
@@ -487,59 +539,52 @@ export class ECIESService {
    * @throws EciesError if the number of encrypted keys does not match the number of recipients
    */
   public buildECIESMultipleRecipientHeader(
-    iv: Buffer,
-    authTag: Buffer,
-    recipients: BrightChainMember[],
-    encryptedKeys: Buffer[],
-    dataLength: number,
+    data: IMultiEncryptedMessage,
   ): Buffer {
-    if (iv.length !== ECIES.MULTIPLE.IV_LENGTH) {
-      throw new EciesError(EciesErrorType.InvalidIVLength);
-    }
-    if (authTag.length !== ECIES.MULTIPLE.AUTH_TAG_LENGTH) {
-      throw new EciesError(EciesErrorType.InvalidAuthTagLength);
-    }
-    if (recipients.length > ECIES.MULTIPLE.MAX_RECIPIENTS) {
+    if (data.recipientIds.length > ECIES.MULTIPLE.MAX_RECIPIENTS) {
       throw new EciesError(EciesErrorType.TooManyRecipients);
-    }
-    if (recipients.length !== encryptedKeys.length) {
+    } else if (data.recipientIds.length !== data.recipientKeys.length) {
       throw new EciesError(EciesErrorType.RecipientKeyCountMismatch);
-    }
-    if (dataLength < 0 || dataLength > ECIES.MULTIPLE.MAX_DATA_LENGTH) {
+    } else if (
+      data.dataLength < 0 ||
+      data.dataLength > ECIES.MULTIPLE.MAX_DATA_SIZE
+    ) {
       throw new EciesError(EciesErrorType.FileSizeTooLarge);
     }
-    const dataLengthBuffer = Buffer.alloc(CONSTANTS.UINT64_SIZE);
-    dataLengthBuffer.writeBigUInt64BE(BigInt(dataLength));
-    const recipientCountBuffer = Buffer.alloc(CONSTANTS.UINT16_SIZE);
-    recipientCountBuffer.writeUInt16BE(recipients.length);
-    const recipientsBuffer = Buffer.alloc(
-      recipients.length * GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer),
+    const dataLengthBuffer = Buffer.alloc(
+      CONSTANTS.ECIES.MULTIPLE.DATA_LENGTH_SIZE,
     );
-    recipients.forEach((recipient, index) => {
+    dataLengthBuffer.writeBigUInt64BE(BigInt(data.dataLength));
+    const recipientCountBuffer = Buffer.alloc(
+      CONSTANTS.ECIES.MULTIPLE.RECIPIENT_COUNT_SIZE,
+    );
+    recipientCountBuffer.writeUInt16BE(data.recipientIds.length);
+    const recipientsBuffer = Buffer.alloc(
+      data.recipientIds.length * CONSTANTS.GUID_SIZE,
+    );
+    data.recipientIds.forEach((recipientId, index) => {
       recipientsBuffer.set(
-        recipient.id.asRawGuidBuffer,
-        index * GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer),
+        recipientId.asRawGuidBuffer,
+        index * CONSTANTS.GUID_SIZE,
       );
     });
     // Validate encrypted key lengths
-    encryptedKeys.forEach((encryptedKey) => {
-      if (encryptedKey.length !== ECIES.MULTIPLE.ENCRYPTED_KEY_LENGTH) {
+    data.recipientKeys.forEach((encryptedKey) => {
+      if (encryptedKey.length !== ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE) {
         throw new EciesError(EciesErrorType.InvalidEncryptedKeyLength);
       }
     });
 
     const encryptedKeysBuffer = Buffer.alloc(
-      encryptedKeys.length * ECIES.MULTIPLE.ENCRYPTED_KEY_LENGTH,
+      data.recipientKeys.length * ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE,
     );
-    encryptedKeys.forEach((encryptedKey, index) => {
+    data.recipientKeys.forEach((encryptedKey, index) => {
       encryptedKeysBuffer.set(
         encryptedKey,
-        index * ECIES.MULTIPLE.ENCRYPTED_KEY_LENGTH,
+        index * ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE,
       );
     });
     return Buffer.concat([
-      iv,
-      authTag,
       dataLengthBuffer,
       recipientCountBuffer,
       recipientsBuffer,
@@ -553,68 +598,68 @@ export class ECIESService {
    * @returns The parsed header.
    */
   public parseMultiEncryptedHeader(data: Buffer): IMultiEncryptedParsedHeader {
-    // make sure there is enough data to read the IV, auth tag, data length, and recipient count
+    // make sure there is enough data to read the block type, IV, auth tag, data length, and recipient count
     if (data.length < ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE) {
       throw new EciesError(EciesErrorType.InvalidDataLength);
     }
-    const iv = data.subarray(0, ECIES.MULTIPLE.IV_LENGTH);
-    const authTag = data.subarray(
-      ECIES.MULTIPLE.IV_LENGTH,
-      ECIES.MULTIPLE.BASE_OVERHEAD_SIZE,
-    );
-    const dataLengthOffset = ECIES.MULTIPLE.BASE_OVERHEAD_SIZE;
-    const dataLength = Number(data.readBigUInt64BE(dataLengthOffset));
-    if (dataLength <= 0 || dataLength > ECIES.MULTIPLE.MAX_DATA_LENGTH) {
+
+    let offset = 0;
+    const dataLength = Number(data.readBigUInt64BE(offset));
+    if (dataLength <= 0 || dataLength > ECIES.MULTIPLE.MAX_DATA_SIZE) {
       throw new EciesError(EciesErrorType.InvalidDataLength);
     }
-    const recipientCountOffset = dataLengthOffset + CONSTANTS.UINT64_SIZE;
-    const recipientCount = data.readUInt16BE(recipientCountOffset);
+    offset += CONSTANTS.ECIES.MULTIPLE.DATA_LENGTH_SIZE;
+
+    const recipientCount = data.readUInt16BE(offset);
     if (recipientCount <= 0 || recipientCount > ECIES.MULTIPLE.MAX_RECIPIENTS) {
       throw new EciesError(EciesErrorType.InvalidRecipientCount);
     }
+    offset += CONSTANTS.ECIES.MULTIPLE.RECIPIENT_COUNT_SIZE;
+
     // make sure there is enough data to read the recipient IDs and encrypted keys
     if (
-      data.length < this.calculateECIESMultipleRecipientOverhead(recipientCount)
+      data.length <
+      this.calculateECIESMultipleRecipientOverhead(recipientCount, false)
     ) {
       throw new EciesError(EciesErrorType.InvalidDataLength);
     }
-    const recipientsOffset = recipientCountOffset + CONSTANTS.UINT16_SIZE;
 
     const recipientIds: GuidV4[] = [];
-    const guidBrandLength = GuidV4.guidBrandToLength(
-      GuidBrandType.RawGuidBuffer,
-    );
     for (let i = 0; i < recipientCount; i++) {
       recipientIds.push(
         new GuidV4(
-          data.subarray(
-            recipientsOffset + i * guidBrandLength,
-            recipientsOffset + (i + 1) * guidBrandLength,
-          ) as RawGuidBuffer,
+          data.subarray(offset, offset + CONSTANTS.GUID_SIZE) as RawGuidBuffer,
         ),
       );
+      offset += CONSTANTS.GUID_SIZE;
     }
-    const recipientKeysOffset =
-      recipientsOffset + recipientCount * guidBrandLength;
     const recipientKeys: Buffer[] = [];
     for (let i = 0; i < recipientCount; i++) {
       recipientKeys.push(
-        data.subarray(
-          recipientKeysOffset + i * ECIES.MULTIPLE.ENCRYPTED_KEY_LENGTH,
-          recipientKeysOffset + (i + 1) * ECIES.MULTIPLE.ENCRYPTED_KEY_LENGTH,
-        ),
+        data.subarray(offset, offset + ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE),
       );
+      offset += ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE;
     }
     return {
-      iv,
-      authTag,
       dataLength,
       recipientCount,
       recipientIds,
       recipientKeys,
-      headerSize:
-        recipientKeysOffset +
-        recipientCount * ECIES.MULTIPLE.ENCRYPTED_KEY_LENGTH,
+      headerSize: offset,
+    };
+  }
+
+  /**
+   * Parses a multi-encrypted buffer into its components.
+   * @param data - The multi-encrypted buffer to parse.
+   * @returns The parsed multi-encrypted buffer.
+   */
+  public parseMultiEncryptedBuffer(data: Buffer): IMultiEncryptedMessage {
+    const header = this.parseMultiEncryptedHeader(data);
+    const encryptedMessage = data.subarray(header.headerSize);
+    return {
+      ...header,
+      encryptedMessage,
     };
   }
 
@@ -683,86 +728,5 @@ export class ECIESService {
     }
     const overhead = numBlocks * ECIES.OVERHEAD_SIZE;
     return encryptedDataLength - overhead - (padding ?? 0);
-  }
-
-  /**
-   * Converts a buffer to a multi-recipient encryption object.
-   * @param data - The buffer to convert.
-   * @returns The multi-recipient encryption object.
-   * @throws EciesError if the buffer is invalid.
-   * @throws EciesError if the buffer is too short.
-   */
-  public bufferToMultiRecipientEncryption(
-    data: Buffer,
-  ): IMultiRecipientEncryption {
-    // Check if we have enough bytes for the recipient count
-    if (data.length < 2) {
-      throw new EciesError(EciesErrorType.InvalidEncryptedDataLength);
-    }
-
-    // Read the number of recipients (2 bytes)
-    const recipientCount = data.readUInt16BE(0);
-    let offset = 2;
-
-    // Check if we have enough bytes for all recipient IDs
-    const guidLength = 16;
-    const totalGuidLength = recipientCount * guidLength;
-    if (offset + totalGuidLength > data.length) {
-      throw new EciesError(EciesErrorType.InvalidEncryptedDataLength);
-    }
-
-    // Read encrypted keys first
-    const encryptedKeys: Buffer[] = [];
-    for (let i = 0; i < recipientCount; i++) {
-      // Check if we have enough bytes for the key length
-      if (offset + 2 > data.length) {
-        throw new EciesError(EciesErrorType.InvalidEncryptedDataLength);
-      }
-      const keyLength = data.readUInt16BE(offset);
-      offset += 2;
-
-      // Check if we have enough bytes for the key data
-      if (offset + keyLength > data.length) {
-        throw new EciesError(EciesErrorType.InvalidEncryptedDataLength);
-      }
-      encryptedKeys.push(data.subarray(offset, offset + keyLength));
-      offset += keyLength;
-    }
-
-    // Read recipient IDs after encrypted keys
-    const recipientIds: GuidV4[] = [];
-    for (let i = 0; i < recipientCount; i++) {
-      // Check if we have enough bytes for the GUID
-      if (offset + 16 > data.length) {
-        throw new EciesError(EciesErrorType.InvalidEncryptedDataLength);
-      }
-      const guidBuffer = data.subarray(offset, offset + 16);
-      recipientIds.push(new GuidV4(guidBuffer as RawGuidBuffer));
-      offset += 16;
-    }
-
-    // Check if we have enough bytes for the original message length
-    if (offset + 4 > data.length) {
-      throw new EciesError(EciesErrorType.InvalidEncryptedDataLength);
-    }
-
-    // Read original message length
-    const originalMessageLength = data.readUInt32BE(offset);
-    offset += 4;
-
-    // Check if we have any remaining data for the encrypted message
-    if (offset >= data.length) {
-      throw new EciesError(EciesErrorType.InvalidEncryptedDataLength);
-    }
-
-    // The rest is the encrypted message
-    const encryptedMessage = data.subarray(offset);
-
-    return {
-      encryptedMessage,
-      recipientIds,
-      encryptedKeys,
-      originalMessageLength,
-    };
   }
 }

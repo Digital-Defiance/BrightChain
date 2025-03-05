@@ -5,7 +5,7 @@ import { Readable, Transform } from 'stream';
 import { BlockHandle } from '../blocks/handle';
 import { RawDataBlock } from '../blocks/rawData';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize, blockSizeToSizeString } from '../enumerations/blockSizes';
+import { BlockSize, blockSizeToSizeString } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';

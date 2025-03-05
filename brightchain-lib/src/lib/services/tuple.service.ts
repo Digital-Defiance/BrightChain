@@ -13,10 +13,12 @@ import { WhitenedBlock } from '../blocks/whitened';
 import { BrightChainMember } from '../brightChainMember';
 import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { TupleErrorType } from '../enumerations/tupleErrorType';
 import { TupleError } from '../errors/tupleError';
+import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { PrimeTupleGeneratorStream } from '../primeTupleGeneratorStream';
 import { BlockService } from './blockService';
 import { CBLService } from './cblService';
@@ -149,7 +151,7 @@ export class TupleService {
     primeWhitenedBlock: WhitenedBlock,
     whiteners: WhitenedBlock[],
     randomBlocks: RandomBlock[] = [],
-  ): Promise<EphemeralBlock> {
+  ): Promise<IEphemeralBlock> {
     // Validate parameters
     if (!primeWhitenedBlock || !whiteners) {
       throw new TupleError(TupleErrorType.MissingParameters);
@@ -259,7 +261,10 @@ export class TupleService {
       whiteners,
     );
 
-    return new InMemoryBlockTuple([ownedDataBlock, ...whiteners]);
+    return new InMemoryBlockTuple([
+      ownedDataBlock as EphemeralBlock,
+      ...whiteners,
+    ]);
   }
 
   /**
@@ -369,6 +374,7 @@ export class TupleService {
           sourceLength,
           blockIDs,
           blockSize,
+          BlockEncryptionType.None,
         ).headerData,
         blockIDs,
       ]);
@@ -408,7 +414,7 @@ export class TupleService {
       }
 
       const primeBlock = await this.xorSourceToPrimeWhitened(
-        ownedBlock,
+        ownedBlock as EphemeralBlock,
         whiteners,
         randomBlocks,
       );
@@ -497,6 +503,7 @@ export class TupleService {
         sourceLength,
         Buffer.concat([blockIDs]),
         blockSize,
+        BlockEncryptionType.None,
       );
       const data = Buffer.concat([
         cblHeader.headerData,
@@ -540,7 +547,7 @@ export class TupleService {
       }
 
       const primeBlock = await this.xorSourceToPrimeWhitened(
-        encryptedCbl,
+        encryptedCbl as EncryptedBlock,
         whiteners,
         randomBlocks,
       );

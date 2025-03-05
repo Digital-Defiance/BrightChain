@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import { Readable } from 'stream';
 import { ECIES } from '../constants';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { SecureString } from '../secureString';
 import { ECIESService } from '../services/ecies.service';
 import { EciesDecryptionTransform } from './eciesDecryptTransform';

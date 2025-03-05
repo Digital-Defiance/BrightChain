@@ -3,7 +3,7 @@ import { BrightChainMember } from '../brightChainMember';
 import { CHECKSUM, TUPLE } from '../constants';
 import { EmailString } from '../emailString';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { MemberType } from '../enumerations/memberType';
 import { ChecksumBuffer } from '../types';

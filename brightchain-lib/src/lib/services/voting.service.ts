@@ -454,7 +454,7 @@ export class VotingService {
         : walletPrivateKey;
 
     const decryptedPrivateKeyBuffer =
-      ServiceProvider.getInstance().eciesService.decryptWithHeader(
+      ServiceProvider.getInstance().eciesService.decryptSingleWithHeader(
         privateKeyForDecryption,
         encryptedPrivateKey,
       );

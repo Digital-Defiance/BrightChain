@@ -8,5 +8,10 @@ export enum BlockErrorType {
   ActualDataLengthExceedsDataLength = 'ActualDataLengthExceedsDataLength',
   CreatorPrivateKeyRequired = 'CreatorPrivateKeyRequired',
   CreatorRequiredForEncryption = 'CreatorRequiredForEncryption',
+  UnexpectedEphemeralBlockType = 'UnexpectedEphemeralBlockType',
   UnexpectedEncryptedBlockType = 'UnexpectedEncryptedBlockType',
+  InvalidNewBlockType = 'InvalidNewBlockType',
+  InvalidMultiEncryptionRecipientCount = 'InvalidMultiEncryptionRecipientCount',
+  RecipientRequired = 'RecipientRequired',
+  RecipientKeyRequired = 'RecipientKeyRequired',
 }

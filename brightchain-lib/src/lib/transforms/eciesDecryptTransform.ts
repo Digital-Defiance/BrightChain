@@ -1,6 +1,6 @@
 import { Transform, TransformCallback, TransformOptions } from 'stream';
 import { ECIES } from '../constants';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { StreamErrorType } from '../enumerations/streamErrorType';
 import { StreamError } from '../errors/streamError';
 import { ECIESService } from '../services/ecies.service';
@@ -46,7 +46,7 @@ export class EciesDecryptionTransform extends Transform {
         this.buffer = this.buffer.subarray(this.blockSize);
 
         try {
-          const decryptedBlock = this.eciesService.decryptWithHeader(
+          const decryptedBlock = this.eciesService.decryptSingleWithHeader(
             this.privateKey,
             encryptedBlock,
           );
@@ -86,7 +86,7 @@ export class EciesDecryptionTransform extends Transform {
           throw new StreamError(StreamErrorType.IncompleteEncryptedBlock);
         }
 
-        const decryptedBlock = this.eciesService.decryptWithHeader(
+        const decryptedBlock = this.eciesService.decryptSingleWithHeader(
           this.privateKey,
           this.buffer,
         );

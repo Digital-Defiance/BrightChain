@@ -5,7 +5,8 @@ import { RawDataBlock } from '../../blocks/rawData';
 import { BrightChainMember } from '../../brightChainMember';
 import { TUPLE } from '../../constants';
 import { BlockDataType } from '../../enumerations/blockDataType';
-import { BlockSize } from '../../enumerations/blockSizes';
+import { BlockEncryptionType } from '../../enumerations/blockEncryptionType';
+import { BlockSize } from '../../enumerations/blockSize';
 import { BlockType } from '../../enumerations/blockType';
 import { MemberErrorType } from '../../enumerations/memberErrorType';
 import { StringLanguages } from '../../enumerations/stringLanguages';
@@ -119,6 +120,7 @@ export class MemberCblService {
           memberData.length,
           Buffer.concat(addresses),
           BlockSize.Small,
+          BlockEncryptionType.None,
         );
 
       // Create CBL block

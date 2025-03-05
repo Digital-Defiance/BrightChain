@@ -79,16 +79,6 @@ The `EncryptedOwnedDataBlock` class represents an encrypted block owned by a spe
   console.log(block.canDecrypt);
   ```
 
-### encryptedLength
-
-- **Purpose**: The length of the encrypted data.
-- **Type**: Getter.
-- **Returns**: The length of the encrypted data.
-- **Example**:
-  ```typescript
-  console.log(block.encryptedLength);
-  ```
-
 ### validateAsync
 
 - **Purpose**: Override validateAsync to handle encrypted data properly.

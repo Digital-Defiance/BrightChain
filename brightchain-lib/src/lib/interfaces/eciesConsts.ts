@@ -25,6 +25,7 @@ export interface IECIESConsts {
   /** Mnemonic strength in bits. This will produce a 32-bit key for ECDSA */
   MNEMONIC_STRENGTH: number;
 
+  /** Total overhead size for encrypted blocks (ephemeral public key + IV + auth tag) */
   OVERHEAD_SIZE: number;
 
   /** Symmetric encryption algorithm configuration */
@@ -40,9 +41,9 @@ export interface IECIESConsts {
    */
   MULTIPLE: {
     /**
-     * Length of the IV + auth tag for the overall message
+     * Length of the IV + auth tag + crc16 for the overall message
      */
-    BASE_OVERHEAD_SIZE: number;
+    ENCRYPTED_MESSAGE_OVERHEAD_SIZE: number;
     /**
      * Length of the IV + auth tag + data length + recipient count for the overall message
      */
@@ -50,7 +51,7 @@ export interface IECIESConsts {
     /**
      * Length of the encrypted key for each recipient
      */
-    ENCRYPTED_KEY_LENGTH: number;
+    ENCRYPTED_KEY_SIZE: number;
     /**
      * Maximum number of recipients for a single message
      * This is limited by the size of the value used to store the recipient count in the header
@@ -59,14 +60,26 @@ export interface IECIESConsts {
     /**
      * Length of the initialization vector
      */
-    IV_LENGTH: number;
+    IV_SIZE: number;
     /**
      * Length of the authentication tag
      */
-    AUTH_TAG_LENGTH: number;
+    AUTH_TAG_SIZE: number;
     /**
      * Maximum length of the data that can be encrypted
      */
-    MAX_DATA_LENGTH: number;
+    MAX_DATA_SIZE: number;
+    /**
+     * Length of the recipient ID
+     */
+    RECIPIENT_ID_SIZE: number;
+    /**
+     * Length of the recipient count
+     */
+    RECIPIENT_COUNT_SIZE: number;
+    /**
+     * Length of the data length
+     */
+    DATA_LENGTH_SIZE: number;
   };
 }

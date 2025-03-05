@@ -20,7 +20,7 @@ BrightChain has concepts for a few different block types. Blocks on disk have no
 
 ## File System Blocks
 
-### ConstituentBlockListBlock extends BaseBlock
+### ConstituentBlockListBlock extends EphemeralBlock
 
 - Stores block references
 - Creator signature
@@ -39,7 +39,7 @@ BrightChain has concepts for a few different block types. Blocks on disk have no
   [Padding]
   ```
 
-### EncryptedBlock extends BaseBlock
+### EncryptedBlock extends EphemeralBlock
 
 - ECIES encryption header
 - Encrypted payload
@@ -61,6 +61,24 @@ BrightChain has concepts for a few different block types. Blocks on disk have no
   ```
   [Base Header]
   [Encryption Header]
+  [Encrypted CBL Data]
+  [Padding]
+  ```
+
+### MultiEncryptedConstituentBlockListBlock extends MultiEncryptedBlock
+
+- CBL encrypted for multiple recipients
+- Allows sharing block references with multiple users
+- Structure:
+  ```
+  [Base Header]
+  [Block Type (1 byte)]
+  [IV (16 bytes)]
+  [Auth Tag (16 bytes)]
+  [Data Length (8 bytes)]
+  [Recipient Count (2 bytes)]
+  [Recipient IDs]
+  [Encrypted Keys]
   [Encrypted CBL Data]
   [Padding]
   ```
@@ -137,12 +155,16 @@ classDiagram
     RawDataBlock <|-- WhitenedBlock
     EphemeralBlock <|-- EncryptedBlock
     EphemeralBlock <|-- ConstituentBlockListBlock
-    EphemeralBlock <|-- MultiEncryptedBlock
+    EncryptedBlock <|-- MultiEncryptedBlock
+    EncryptedBlock <|-- SingleEncryptedBlock
+    EncryptedBlock <|-- MultiEncryptedBlock
     EncryptedBlock <|-- EncryptedCBL
     ConstituentBlockListBlock <|-- ExtendedCBL
+    MultiEncryptedBlock <|-- MultiEncryptedConstituentBlockListBlock
 
     %% Encryption Capabilities
     ConstituentBlockListBlock ..> EncryptedCBL: can be encrypted as
+    ConstituentBlockListBlock ..> MultiEncryptedConstituentBlockListBlock: can be multi-encrypted as
     ExtendedCBL ..> EncryptedCBL: can be encrypted as
     RawDataBlock ..> EncryptedBlock: can be encrypted as
 
@@ -171,7 +193,7 @@ classDiagram
         +ephemeralPublicKey: Buffer[65]
         +iv: Buffer[16]
         +authTag: Buffer[16]
-        +overhead: 97 bytes
+        +overhead: 98 bytes
     }
 
     class ConstituentBlockListBlock {
@@ -194,6 +216,12 @@ classDiagram
         +overhead: varies
     }
 
+    class MultiEncryptedConstituentBlockListBlock {
+        +encrypted CBL data
+        +multiple recipients
+        +overhead: varies
+    }
+
     class ParityBlock {
         +FEC data
         +overhead: 0 bytes
@@ -211,7 +239,7 @@ classDiagram
 
     class EncryptedCBL {
         +encrypted CBL data
-        +overhead: 97 + 170 bytes
+        +overhead: 98 + 170 bytes
     }
 
     %% Note
@@ -223,17 +251,19 @@ classDiagram
 ```mermaid
 flowchart TD
     subgraph Any Block
-        subgraph Encryption [+97 bytes when encrypted]
-            subgraph Specific Block Header
-                subgraph Content
-                    payload["Payload Data"]
+        subgraph Encryption [+98 bytes when encrypted]
+            subgraph MultiEncryption [+varies for multi-encrypted]
+                subgraph Specific Block Header
+                    subgraph Content
+                        payload["Payload Data"]
+                    end
+
+                    class payload default
+
+                    RawData["RawDataBlock<br>+0 bytes"]
+                    CBL["ConstituentBlockListBlock<br>+102 bytes"]
+                    ECBL["ExtendedCBL<br>+512 bytes"]
                 end
-
-                class payload default
-
-                RawData["RawDataBlock<br>+0 bytes"]
-                CBL["ConstituentBlockListBlock<br>+102 bytes"]
-                ECBL["ExtendedCBL<br>+512 bytes"]
             end
         end
     end
@@ -241,7 +271,9 @@ flowchart TD
     classDef default fill:#f5f5f5,stroke:#333,color:#000
     classDef header fill:#d5f5e3,stroke:#196f3d,color:#000
     classDef encrypt fill:#fdebd0,stroke:#9c640c,color:#000
+    classDef multiencrypt fill:#d6eaf8,stroke:#2874a6,color:#000
 
     class RawData,CBL,ECBL header
     class Encryption encrypt
+    class MultiEncryption multiencrypt
 ```

@@ -8,10 +8,11 @@ import {
 import { join } from 'path';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { EncryptedBlock } from '../blocks/encrypted';
+import { MultiEncryptedBlock } from '../blocks/multiEncrypted';
 import { BrightChainMember } from '../brightChainMember';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { CblErrorType } from '../enumerations/cblErrorType';
 import { StoreErrorType } from '../enumerations/storeErrorType';
@@ -43,6 +44,10 @@ export class CBLStore
   private readonly _cblService: CBLService;
   private readonly _checksumService: ChecksumService;
   private _activeUser?: BrightChainMember;
+
+  public setActiveUser(user: BrightChainMember) {
+    this._activeUser = user;
+  }
 
   constructor(config: { storePath: string; blockSize: BlockSize }) {
     if (!config.storePath) {
@@ -84,12 +89,15 @@ export class CBLStore
   }
 
   /**
-   * Set the active user
-   * Used to validate CBLs, etc
-   * @param user The active user
+   * Check if the data is encrypted
+   * @param data The data to check
+   * @returns True if the data is encrypted, false otherwise
    */
-  public setActiveUser(user: BrightChainMember): void {
-    this._activeUser = user;
+  public isEncrypted(data: Buffer): boolean {
+    return (
+      BlockService.isSingleRecipientEncrypted(data) ||
+      BlockService.isMultiRecipientEncrypted(data)
+    );
   }
 
   /**
@@ -97,14 +105,12 @@ export class CBLStore
    */
   public async set(
     key: ChecksumBuffer,
-    value: ConstituentBlockListBlock | EncryptedBlock,
+    value: ConstituentBlockListBlock | EncryptedBlock | MultiEncryptedBlock,
   ): Promise<void> {
     const userForvalidation = value.creator ?? this._activeUser;
     if (userForvalidation === undefined) {
       throw new CblError(CblErrorType.CreatorRequiredForSignature);
     }
-    // validate signature before writing
-    this._cblService.validateSignature(value.data, userForvalidation);
 
     if (!key.equals(value.idChecksum)) {
       throw new StoreError(StoreErrorType.BlockIdMismatch);
@@ -114,6 +120,21 @@ export class CBLStore
     if (existsSync(blockPath)) {
       throw new StoreError(StoreErrorType.BlockPathAlreadyExists);
     }
+
+    // For encrypted blocks, we can't validate the signature directly
+    // We'll validate after decryption during the get operation
+    if (
+      value instanceof EncryptedBlock ||
+      value instanceof MultiEncryptedBlock
+    ) {
+      // Store the encrypted block directly
+      this.ensureBlockPath(value.idChecksum);
+      writeFileSync(blockPath, value.data);
+      return;
+    }
+
+    // For unencrypted blocks, validate signature before writing
+    this._cblService.validateSignature(value.data, userForvalidation);
 
     // Store the CBL block directly
     this.ensureBlockPath(value.idChecksum);
@@ -134,37 +155,85 @@ export class CBLStore
 
     // Read the CBL block directly
     const cblData = readFileSync(blockPath);
+
+    // Check if the data is encrypted
     if (this._cblService.isEncrypted(cblData)) {
-      // must decrypt block using creator key before we can do anything
+      // Must decrypt block using creator key before we can do anything
       if (this._activeUser === undefined) {
         throw new CblError(CblErrorType.UserRequiredForDecryption);
       }
+
       const fileStat = statSync(blockPath);
       const dateCreated = fileStat.mtime;
-      const encryptedCbl = new EncryptedBlock(
-        BlockType.EncryptedConstituentBlockListBlock,
-        BlockDataType.EncryptedData,
-        cblData,
-        checksum,
-        new EncryptedBlockMetadata(
-          this._blockSize,
+
+      // Check if it's multi-encrypted
+      if (BlockService.isMultiRecipientEncrypted(cblData)) {
+        // Handle multi-encrypted CBL
+        const multiEncryptedCbl = new MultiEncryptedBlock(
+          BlockType.MultiEncryptedConstituentBlockListBlock,
+          BlockDataType.EncryptedData,
+          cblData,
+          checksum,
+          new EncryptedBlockMetadata(
+            this._blockSize,
+            BlockType.MultiEncryptedConstituentBlockListBlock,
+            BlockDataType.EncryptedData,
+            cblData.length,
+            this._activeUser,
+            dateCreated,
+          ),
+          true,
+          true,
+          new Map([[this._activeUser.id, this._activeUser]]),
+        );
+
+        const decryptedCbl = new ConstituentBlockListBlock(
+          (
+            await BlockService.decryptMultiple(
+              this._activeUser,
+              multiEncryptedCbl,
+            )
+          ).data,
+          this._activeUser,
+        );
+
+        if (!decryptedCbl.validateSignature()) {
+          throw new CblError(CblErrorType.InvalidSignature);
+        }
+
+        return Promise.resolve(decryptedCbl);
+      } else {
+        // Handle single-recipient encrypted CBL
+        const encryptedCbl = new EncryptedBlock(
           BlockType.EncryptedConstituentBlockListBlock,
           BlockDataType.EncryptedData,
-          cblData.length,
+          cblData,
+          checksum,
+          new EncryptedBlockMetadata(
+            this._blockSize,
+            BlockType.EncryptedConstituentBlockListBlock,
+            BlockDataType.EncryptedData,
+            cblData.length,
+            this._activeUser,
+            dateCreated,
+          ),
+          true,
+        );
+
+        const decryptedCbl = new ConstituentBlockListBlock(
+          (await BlockService.decrypt(this._activeUser, encryptedCbl)).data,
           this._activeUser,
-          dateCreated,
-        ),
-        true,
-      );
-      const decryptedCbl = new ConstituentBlockListBlock(
-        (await BlockService.decrypt(this._activeUser, encryptedCbl)).data,
-        this._activeUser,
-      );
-      if (!decryptedCbl.validateSignature()) {
-        throw new CblError(CblErrorType.InvalidSignature);
+        );
+
+        if (!decryptedCbl.validateSignature()) {
+          throw new CblError(CblErrorType.InvalidSignature);
+        }
+
+        return Promise.resolve(decryptedCbl);
       }
-      return Promise.resolve(decryptedCbl);
     }
+
+    // Handle unencrypted CBL
     const cblInfo = this._cblService.parseHeader(cblData);
 
     // Hydrate the creator
