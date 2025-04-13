@@ -3,8 +3,8 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "brightchain-react/src",
   "projectType": "application",
-  "implicitDependencies": ["brightchain-lib", "brightchain-api"],
   "tags": [],
+  "implicitDependencies": ["brightchain-lib", "brightchain-api"],
   "targets": {
     "build": {
       "executor": "@nx/webpack:webpack",

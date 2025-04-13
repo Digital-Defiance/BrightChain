@@ -1,10 +1,18 @@
+import nxPreset from '../jest.preset.js';
+
 export default {
+  ...nxPreset,
   displayName: 'brightchain-api',
   preset: '../jest.preset.js',
   testEnvironment: 'node',
   transform: {
-    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\.ts$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../coverage/brightchain-api',
+  moduleNameMapper: {
+    ...(nxPreset as any).moduleNameMapper,
+    '^@brightchain/brightchain-lib$': '<rootDir>/../dist/brightchain-lib/src',
+    '^@brightchain/brightchain-lib/(.*)$': '<rootDir>/../dist/brightchain-lib/src/$1',
+  },
 };

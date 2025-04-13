@@ -1,24 +1,29 @@
-import * as uuid from 'uuid';
-import { BrightChainMember } from './brightChainMember';
+import {
+  ECIESService,
+  getEnhancedIdProvider,
+  Member,
+  PlatformID,
+  ShortHexGuid,
+  TypedIdProviderWrapper,
+  uint8ArrayToHex,
+} from '@digitaldefiance/ecies-lib';
 import { QuorumErrorType } from './enumerations/quorumErrorType';
 import { QuorumError } from './errors/quorumError';
-import { GuidV4 } from './guid';
 import { QuorumDataRecord } from './quorumDataRecord';
-import { StaticHelpersSealing } from './staticHelpers.sealing';
-import { BufferStore } from './stores/bufferStore';
+import { SealingService } from './services/sealing.service';
+import { ArrayStore } from './stores/arrayStore';
 import { SimpleStore } from './stores/simpleStore';
-import { ShortHexGuid } from './types';
 
-export class BrightChainQuorum {
+export class BrightChainQuorum<TID extends PlatformID = Uint8Array> {
   /**
    * Member ID, uuid
    */
-  public readonly id: ShortHexGuid;
+  public readonly id: TID;
 
   /**
    * The node owner is the system key pair that is used to sign and verify with Quorum members
    */
-  private readonly nodeAgent: BrightChainMember;
+  private readonly nodeAgent: Member<TID>;
 
   /**
    * The name of the quorum
@@ -28,33 +33,46 @@ export class BrightChainQuorum {
   /**
    * Quorum members collection, keys may or may not be loaded for a given member
    */
-  private readonly _members: SimpleStore<ShortHexGuid, BrightChainMember>;
+  private readonly _members: SimpleStore<ShortHexGuid, Member<TID>>;
 
   /**
    * Collection of public keys for each member of the quorum.
    * This may include members not on this node.
    * Never erase, only add/update.
    */
-  private readonly _memberPublicKeysByMemberId: BufferStore<ShortHexGuid>;
+  private readonly _memberPublicKeysByMemberId: ArrayStore<ShortHexGuid>;
 
   /**
    * Collection of encrypted documents that this quorum node has taken responsibility for
    */
-  private readonly _documentsById: SimpleStore<ShortHexGuid, QuorumDataRecord>;
+  private readonly _documentsById: SimpleStore<
+    ShortHexGuid,
+    QuorumDataRecord<TID>
+  >;
 
-  constructor(nodeAgent: BrightChainMember, name: string, id?: string) {
+  private readonly _sealingService: SealingService<TID>;
+  private readonly _enhancedProvider: TypedIdProviderWrapper<TID>;
+
+  constructor(
+    nodeAgent: Member<TID>,
+    name: string,
+    id?: string,
+    idProvider: TypedIdProviderWrapper<TID> = getEnhancedIdProvider<TID>(),
+    eciesService?: ECIESService<TID>,
+  ) {
     if (id !== undefined) {
-      if (!uuid.validate(id)) {
-        throw new QuorumError(QuorumErrorType.InvalidQuorumId);
-      }
-      this.id = new GuidV4(id).asShortHexGuid;
+      this.id = idProvider.fromBytes(idProvider.deserialize(id));
     } else {
-      this.id = GuidV4.new().asShortHexGuid;
+      this.id = idProvider.fromBytes(idProvider.generate());
     }
-
-    this._members = new SimpleStore<ShortHexGuid, BrightChainMember>();
-    this._memberPublicKeysByMemberId = new BufferStore<ShortHexGuid>();
-    this._documentsById = new SimpleStore<ShortHexGuid, QuorumDataRecord>();
+    this._enhancedProvider = idProvider;
+    this._sealingService = new SealingService<TID>(eciesService, idProvider);
+    this._members = new SimpleStore<ShortHexGuid, Member<TID>>();
+    this._memberPublicKeysByMemberId = new ArrayStore<ShortHexGuid>();
+    this._documentsById = new SimpleStore<
+      ShortHexGuid,
+      QuorumDataRecord<TID>
+    >();
 
     this.nodeAgent = nodeAgent;
     this.name = name;
@@ -67,12 +85,13 @@ export class BrightChainQuorum {
    * Physically add a member to the members collection and key stores
    * @param member
    */
-  protected storeMember(member: BrightChainMember) {
-    this._members.set(member.id.asShortHexGuid, member);
-    this._memberPublicKeysByMemberId.set(
-      member.id.asShortHexGuid,
-      member.publicKey,
-    );
+  protected storeMember(member: Member<TID>) {
+    const provider = getEnhancedIdProvider<TID>();
+    const hexMemberId = uint8ArrayToHex(
+      provider.toBytes(member.id),
+    ) as ShortHexGuid;
+    this._members.set(hexMemberId, member);
+    this._memberPublicKeysByMemberId.set(hexMemberId, member.publicKey);
   }
 
   /**
@@ -93,19 +112,24 @@ export class BrightChainQuorum {
    * @param sharesRequired The number of members required to decrypt the document
    * @returns The document record
    */
-  public addDocument<T>(
-    agent: BrightChainMember,
+  public async addDocument<T>(
+    agent: Member<TID>,
     document: T,
-    amongstMembers: BrightChainMember[],
+    amongstMembers: Member<TID>[],
     sharesRequired?: number,
-  ): QuorumDataRecord {
-    const newDoc = StaticHelpersSealing.quorumSeal<T>(
+  ): Promise<QuorumDataRecord<TID>> {
+    const newDoc = await this._sealingService.quorumSeal<T>(
       agent,
       document,
       amongstMembers,
       sharesRequired,
     );
-    this._documentsById.set(newDoc.id.asShortHexGuid, newDoc);
+    this._documentsById.set(
+      uint8ArrayToHex(
+        this._enhancedProvider.toBytes(newDoc.id),
+      ) as ShortHexGuid,
+      newDoc,
+    );
     return newDoc;
   }
 
@@ -115,16 +139,20 @@ export class BrightChainQuorum {
    * @param memberIds The member IDs that will be used to decrypt the document
    * @returns
    */
-  public getDocument<T>(id: ShortHexGuid, memberIds: ShortHexGuid[]): T {
+  public async getDocument<T>(
+    id: ShortHexGuid,
+    memberIds: ShortHexGuid[],
+  ): Promise<T> {
     const doc = this._documentsById.get(id);
     if (!doc) {
       throw new QuorumError(QuorumErrorType.DocumentNotFound);
     }
-    const members: BrightChainMember[] = memberIds.map((id) =>
-      this._members.get(id),
-    );
+    const members: Member<TID>[] = memberIds.map((id) => this._members.get(id));
 
-    const restoredDoc = StaticHelpersSealing.quorumUnseal<T>(doc, members);
+    const restoredDoc = await this._sealingService.quorumUnseal<T>(
+      doc,
+      members,
+    );
     if (!restoredDoc) {
       throw new QuorumError(QuorumErrorType.UnableToRestoreDocument);
     }
@@ -136,14 +164,22 @@ export class BrightChainQuorum {
    * @param id
    * @param members
    */
-  public canUnlock(id: ShortHexGuid, members: BrightChainMember[]) {
+  public canUnlock(id: ShortHexGuid, members: Member<TID>[]): boolean {
     const doc = this._documentsById.get(id);
     if (!doc) {
       throw new QuorumError(QuorumErrorType.DocumentNotFound);
     }
     // check whether the supplied list of members are included in the document share distributions
     // as well as whether the number of members is sufficient to unlock the document
-    throw new QuorumError(QuorumErrorType.NotImplemented);
-    // throw new Error(members.length.toString());
+    return (
+      members.length >= doc.sharesRequired &&
+      members.every((m) => {
+        const provider = getEnhancedIdProvider<TID>();
+        const memberGuidId = uint8ArrayToHex(
+          provider.toBytes(m.id),
+        ) as ShortHexGuid;
+        return doc.memberIDs.includes(memberGuidId as unknown as TID);
+      })
+    );
   }
 }

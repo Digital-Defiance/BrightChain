@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BreadCrumbTraceLevel } from '../enumerations/breadCrumbTraceLevel';
 import { IBreadCrumbContext } from '../interfaces/breadCrumbContext';
 import { IBreadCrumbTrace } from '../interfaces/breadCrumbTrace';

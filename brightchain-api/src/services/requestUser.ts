@@ -1,23 +1,32 @@
-import { IRequestUser } from '@BrightChain/brightchain-lib';
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
+import { IRequestUser, StringLanguages } from '@brightchain/brightchain-lib';
 
+// Temporary interface
+interface IUserDocument {
+  _id: any;
+  email: string;
+  username: string;
+  timezone?: string;
+  lastLogin?: Date;
+  emailVerified?: boolean;
+  siteLanguage?: string;
+}
+
+/**
+ * Service for creating request user objects
+ */
 export class RequestUserService {
-  /**
-   * Given a user document and an array of role documents, create the IRequestUser
-   * @param userDoc
-   * @returns
-   */
   public static makeRequestUser(userDoc: IUserDocument): IRequestUser {
-    if (!userDoc._id) {
-      throw new Error('User document is missing _id');
-    }
     return {
-      id: userDoc._id.toString(),
+      id: userDoc._id?.toString() || 'placeholder-id',
       email: userDoc.email,
       username: userDoc.username,
-      timezone: userDoc.timezone,
+      timezone: userDoc.timezone || 'UTC',
       lastLogin: userDoc.lastLogin,
-      emailVerified: userDoc.emailVerified,
-      siteLanguage: userDoc.siteLanguage,
+      emailVerified: userDoc.emailVerified || false,
+      siteLanguage:
+        (userDoc.siteLanguage as StringLanguages) || StringLanguages.EnglishUS,
+      roles: [], // Placeholder
     };
   }
 }

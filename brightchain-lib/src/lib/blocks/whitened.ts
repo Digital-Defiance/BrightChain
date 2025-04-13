@@ -1,12 +1,12 @@
+import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { Readable } from 'stream';
 import { BlockMetadata } from '../blockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
 import { WhitenedError } from '../errors/whitenedError';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { ChecksumBuffer } from '../types';
+import { ServiceProvider } from '../services/service.provider';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
 
@@ -21,7 +21,7 @@ export class WhitenedBlock extends RawDataBlock {
   constructor(
     blockSize: BlockSize,
     data: Buffer,
-    checksum?: ChecksumBuffer,
+    checksum?: ChecksumUint8Array,
     dateCreated?: Date,
     canRead = true,
     canPersist = true,
@@ -55,12 +55,12 @@ export class WhitenedBlock extends RawDataBlock {
   /**
    * The data in the block, excluding any metadata or other overhead
    */
-  public override get payload(): Buffer {
+  public override get layerPayload(): Buffer {
     if (!this.canRead) {
       throw new WhitenedError(WhitenedErrorType.BlockNotReadable);
     }
     // For whitened blocks, like raw data blocks, the payload is the entire data
-    return this.data;
+    return Buffer.from(this.data);
   }
 
   /**
@@ -78,24 +78,10 @@ export class WhitenedBlock extends RawDataBlock {
   }
 
   /**
-   * Whether the block can be signed
-   */
-  public override get canSign(): boolean {
-    return false; // Whitened blocks cannot be signed
-  }
-
-  /**
    * Get the complete header data from all layers
    */
   public override get fullHeaderData(): Buffer {
     return Buffer.concat([super.fullHeaderData, this.layerHeaderData]);
-  }
-
-  /**
-   * Get the usable capacity after accounting for overhead
-   */
-  public override get capacity(): number {
-    return this.blockSize - this.totalOverhead;
   }
 
   /**
@@ -116,9 +102,9 @@ export class WhitenedBlock extends RawDataBlock {
    * @param data - The data to convert
    * @returns Promise that resolves to a Buffer
    */
-  private static async toBuffer(data: Readable | Buffer): Promise<Buffer> {
-    if (Buffer.isBuffer(data)) {
-      return data;
+  private static async toBuffer(data: Readable | Uint8Array): Promise<Buffer> {
+    if (Buffer.isBuffer(data) || data instanceof Uint8Array) {
+      return Buffer.from(data);
     }
     return WhitenedBlock.streamToBuffer(data);
   }
@@ -144,16 +130,18 @@ export class WhitenedBlock extends RawDataBlock {
       blockSize: BlockSize,
       data: Buffer,
       dateCreated: Date,
-      checksum: ChecksumBuffer,
+      checksum: ChecksumUint8Array,
       canRead: boolean,
       canPersist: boolean,
     ) => T;
+    const checksum =
+      ServiceProvider.getInstance().checksumService.calculateChecksum(result);
 
     return new Constructor(
       this.blockSize,
       result,
       new Date(),
-      StaticHelpersChecksum.calculateChecksum(result),
+      checksum,
       this.canRead && other.canRead,
       this.canPersist && other.canPersist,
     );
@@ -187,12 +175,10 @@ export class WhitenedBlock extends RawDataBlock {
       result[i] = data[i] ^ randomData[i];
     }
 
-    return new WhitenedBlock(
-      blockSize,
-      result,
-      StaticHelpersChecksum.calculateChecksum(result),
-      new Date(),
-    );
+    const checksum =
+      ServiceProvider.getInstance().checksumService.calculateChecksum(result);
+
+    return new WhitenedBlock(blockSize, result, checksum, new Date());
   }
 
   /**
@@ -201,7 +187,7 @@ export class WhitenedBlock extends RawDataBlock {
   public static async from(
     blockSize: BlockSize,
     data: Buffer,
-    checksum?: ChecksumBuffer,
+    checksum?: ChecksumUint8Array,
     dateCreated?: Date,
     lengthWithoutPadding?: number,
     canRead = true,

@@ -1,7 +1,4 @@
-import { JsonResponse } from '@BrightChain/brightchain-lib';
-
 export interface MembersResponse {
-  [key: string]: JsonResponse | undefined;
   success: boolean;
   message?: string;
   memberId?: string;

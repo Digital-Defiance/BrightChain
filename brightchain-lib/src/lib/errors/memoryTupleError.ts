@@ -1,24 +1,33 @@
-import {
-  MemoryTupleErrorType,
-  MemoryTupleErrorTypes,
-} from '../enumerations/memoryTupleErrorType';
-import { StringLanguages } from '../enumerations/stringLanguages';
-import { translate } from '../i18n';
-import { HandleableError } from './handleable';
+import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
+import { StringLanguage } from '../enumerations/stringLanguages';
+import StringNames from '../enumerations/stringNames';
+import { TypedError } from './typedError';
 
-export class MemoryTupleError extends HandleableError {
-  public readonly reason: MemoryTupleErrorType;
+export class MemoryTupleError extends TypedError<MemoryTupleErrorType> {
+  public get reasonMap(): Record<MemoryTupleErrorType, StringNames> {
+    return {
+      [MemoryTupleErrorType.InvalidTupleSize]:
+        StringNames.Error_MemoryTupleErrorInvalidTupleSizeTemplate,
+      [MemoryTupleErrorType.BlockSizeMismatch]:
+        StringNames.Error_MemoryTupleErrorBlockSizeMismatch,
+      [MemoryTupleErrorType.NoBlocksToXor]:
+        StringNames.Error_MemoryTupleErrorNoBlocksToXor,
+      [MemoryTupleErrorType.InvalidBlockCount]:
+        StringNames.Error_MemoryTupleErrorInvalidBlockCount,
+      [MemoryTupleErrorType.ExpectedBlockIds]:
+        StringNames.Error_MemoryTupleErrorExpectedBlockIdsTemplate,
+      [MemoryTupleErrorType.ExpectedBlocks]:
+        StringNames.Error_MemoryTupleErrorExpectedBlocksTemplate,
+    };
+  }
   constructor(
-    reason: MemoryTupleErrorType,
+    type: MemoryTupleErrorType,
     tupleSize?: number,
-    language?: StringLanguages,
+    _language?: StringLanguage,
   ) {
-    super(
-      translate(MemoryTupleErrorTypes[reason], language, {
-        ...(tupleSize ? { TUPLE_SIZE: tupleSize.toString() } : {}),
-      }),
-    );
+    super(type, undefined, {
+      ...(tupleSize ? { TUPLE_SIZE: tupleSize.toString() } : {}),
+    });
     this.name = 'MemoryTupleError';
-    this.reason = reason;
   }
 }

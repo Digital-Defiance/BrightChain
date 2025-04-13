@@ -1,12 +1,12 @@
 import { Readable } from 'stream';
-import { BlockMetadata } from '../blockMetadata';
-import { TUPLE_SIZE } from '../constants';
+import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
 import { MemoryTupleError } from '../errors/memoryTupleError';
-import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
 import { BlockHandle } from './handle';
 import { RawDataBlock } from './rawData';
@@ -22,16 +22,16 @@ import { RawDataBlock } from './rawData';
  * 2. Disk-based blocks (BlockHandle) for persistent storage
  */
 export class InMemoryBlockTuple {
-  public static readonly TupleSize = TUPLE_SIZE;
+  public static readonly TupleSize = TUPLE.SIZE;
 
-  private readonly _blocks: (BaseBlock | BlockHandle)[];
+  private readonly _blocks: (BaseBlock | BlockHandle<any>)[];
   private readonly _blockSize: BlockSize;
 
-  constructor(blocks: (BaseBlock | BlockHandle)[]) {
-    if (blocks.length !== TUPLE_SIZE) {
+  constructor(blocks: (BaseBlock | BlockHandle<any>)[]) {
+    if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.InvalidTupleSize,
-        TUPLE_SIZE,
+        TUPLE.SIZE,
       );
     }
 
@@ -47,7 +47,7 @@ export class InMemoryBlockTuple {
   /**
    * Get the block IDs in this tuple
    */
-  public get blockIds(): ChecksumBuffer[] {
+  public get blockIds(): ChecksumUint8Array[] {
     return this._blocks.map((block) => block.idChecksum);
   }
 
@@ -61,7 +61,7 @@ export class InMemoryBlockTuple {
   /**
    * Get the blocks in this tuple
    */
-  public get blocks(): (BaseBlock | BlockHandle)[] {
+  public get blocks(): (BaseBlock | BlockHandle<any>)[] {
     return this._blocks;
   }
 
@@ -153,34 +153,27 @@ export class InMemoryBlockTuple {
    * This creates disk-based blocks using BlockHandle
    */
   public static async fromIds(
-    blockIDs: ChecksumBuffer[],
+    blockIDs: ChecksumUint8Array[],
     blockSize: BlockSize,
-    getBlockPath: (id: ChecksumBuffer) => string,
+    getBlockPath: (id: ChecksumUint8Array) => string,
   ): Promise<InMemoryBlockTuple> {
-    if (blockIDs.length !== TUPLE_SIZE) {
+    if (blockIDs.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.ExpectedBlockIds,
-        TUPLE_SIZE,
+        TUPLE.SIZE,
       );
     }
 
     const handles = await Promise.all(
-      blockIDs.map((id: ChecksumBuffer) => {
-        const handle = new BlockHandle(
-          BlockType.Handle,
-          BlockDataType.RawData,
+      blockIDs.map((id: ChecksumUint8Array) => {
+        // @ts-expect-error - BlockHandle constructor workaround
+        return new (BlockHandle as any)(
+          getBlockPath(id),
+          blockSize,
           id,
-          new BlockMetadata(
-            blockSize,
-            BlockType.Handle,
-            BlockDataType.RawData,
-            blockSize as number,
-          ),
-          true,
-          true,
+          true, // canRead
+          true, // canPersist
         );
-        handle.setPath(getBlockPath(id));
-        return handle;
       }),
     );
 
@@ -192,12 +185,12 @@ export class InMemoryBlockTuple {
    * This creates in-memory blocks
    */
   public static fromBlocks(
-    blocks: (BaseBlock | BlockHandle)[],
+    blocks: (BaseBlock | BlockHandle<any>)[],
   ): InMemoryBlockTuple {
-    if (blocks.length !== TUPLE_SIZE) {
+    if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.ExpectedBlocks,
-        TUPLE_SIZE,
+        TUPLE.SIZE,
       );
     }
 

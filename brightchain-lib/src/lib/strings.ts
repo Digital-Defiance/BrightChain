@@ -1,7 +1,6 @@
-import { StringLanguages } from './enumerations/stringLanguages';
-import { MasterStringsCollection } from './sharedTypes';
+import { MasterStringsCollection } from '@digitaldefiance/i18n-lib';
 import AmericanEnglishStrings from './strings/englishUs';
 
-export const Strings: MasterStringsCollection = {
-  [StringLanguages.EnglishUS]: AmericanEnglishStrings,
+export const Strings: MasterStringsCollection<string, string> = {
+  ['en-US']: AmericanEnglishStrings,
 };

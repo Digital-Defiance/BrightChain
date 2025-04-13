@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
 import BlockPaddingTransform from './blockPaddingTransform';
-import { BlockSize } from './enumerations/blockSizes';
+import { BlockSize } from './enumerations/blockSize';
 
 describe('BlockPaddingTransform', () => {
   it('should transform data into blocks of specified size', (done) => {
@@ -123,7 +123,9 @@ describe('BlockPaddingTransform', () => {
     sizes.forEach((size) => {
       const transform = new BlockPaddingTransform(size);
       expect(transform).toBeDefined();
-      expect(() => transform.write(Buffer.alloc(size - 1))).not.toThrow();
+      const testData = new Uint8Array(size - 1);
+      testData.fill(65); // 'A' character code
+      expect(() => transform.write(Buffer.from(testData))).not.toThrow();
     });
   });
 });

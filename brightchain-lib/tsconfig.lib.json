@@ -1,8 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../dist/out-tsc",
+    "outDir": "../dist/brightchain-lib",
     "declaration": true,
+    "declarationMap": true,
+    "composite": true,
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],

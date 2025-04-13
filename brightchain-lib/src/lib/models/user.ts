@@ -7,6 +7,7 @@ const User = sequelize.define(
     id: {
       type: DataTypes.UUIDV4,
       allowNull: false,
+      primaryKey: true,
     },
     // Model attributes are defined here
     firstName: {

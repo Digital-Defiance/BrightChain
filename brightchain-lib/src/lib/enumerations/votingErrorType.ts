@@ -1,5 +1,3 @@
-import { StringNames } from './stringNames';
-
 export enum VotingErrorType {
   InvalidKeyPairPublicKeyNotIsolated = 'InvalidKeyPairPublicKeyNotIsolated',
   InvalidKeyPairPrivateKeyNotIsolated = 'InvalidKeyPairPrivateKeyNotIsolated',
@@ -10,27 +8,27 @@ export enum VotingErrorType {
   InvalidPublicKeyBufferIncompleteN = 'InvalidPublicKeyBufferIncompleteN',
   InvalidPublicKeyBufferFailedToParseN = 'InvalidPublicKeyBufferFailedToParseN',
   InvalidPublicKeyIdMismatch = 'InvalidPublicKeyIdMismatch',
+  PrivateKeyMustBeBuffer = 'PrivateKeyMustBeBuffer',
+  PublicKeyMustBeBuffer = 'PublicKeyMustBeBuffer',
+  InvalidPublicKeyFormat = 'InvalidPublicKeyFormat',
+  InvalidEcdhKeyPair = 'InvalidEcdhKeyPair',
+  FailedToDeriveVotingKeys = 'FailedToDeriveVotingKeys',
+  FailedToGeneratePrime = 'FailedToGeneratePrime',
+  IdenticalPrimes = 'IdenticalPrimes',
+  KeyPairTooSmall = 'KeyPairTooSmall',
+  KeyPairValidationFailed = 'KeyPairValidationFailed',
+  InvalidVotingKeys = 'InvalidVotingKeys',
+  InvalidKeyPair = 'InvalidKeyPair',
+  InvalidPublicKey = 'InvalidPublicKey',
+  InvalidPrivateKey = 'InvalidPrivateKey',
+  InvalidEncryptedKey = 'InvalidEncryptedKey',
+  ModularInverseDoesNotExist = 'ModularInverseDoesNotExist',
+  InvalidPrivateKeyBufferTooShort = 'InvalidPrivateKeyBufferTooShort',
+  InvalidPrivateKeyBufferWrongMagic = 'InvalidPrivateKeyBufferWrongMagic',
+  UnsupportedPrivateKeyVersion = 'UnsupportedPrivateKeyVersion',
+  InvalidPrivateKeyBufferIncompleteLambda = 'InvalidPrivateKeyBufferIncompleteLambda',
+  InvalidPrivateKeyBufferIncompleteMuLength = 'InvalidPrivateKeyBufferIncompleteMuLength',
+  InvalidPrivateKeyBufferIncompleteMu = 'InvalidPrivateKeyBufferIncompleteMu',
+  InvalidPrivateKeyBufferFailedToParse = 'InvalidPrivateKeyBufferFailedToParse',
+  InvalidPrivateKeyBufferFailedToCreate = 'InvalidPrivateKeyBufferFailedToCreate',
 }
-
-export const VotingErrorTypes: {
-  [key in VotingErrorType]: StringNames;
-} = {
-  [VotingErrorType.InvalidKeyPairPublicKeyNotIsolated]:
-    StringNames.Error_VotingErrorInvalidKeyPairPublicKeyNotIsolated,
-  [VotingErrorType.InvalidKeyPairPrivateKeyNotIsolated]:
-    StringNames.Error_VotingErrorInvalidKeyPairPrivateKeyNotIsolated,
-  [VotingErrorType.InvalidPublicKeyNotIsolated]:
-    StringNames.Error_VotingErrorInvalidPublicKeyNotIsolated,
-  [VotingErrorType.InvalidPublicKeyBufferTooShort]:
-    StringNames.Error_VotingErrorInvalidPublicKeyBufferTooShort,
-  [VotingErrorType.InvalidPublicKeyBufferWrongMagic]:
-    StringNames.Error_VotingErrorInvalidPublicKeyBufferWrongMagic,
-  [VotingErrorType.UnsupportedPublicKeyVersion]:
-    StringNames.Error_VotingErrorUnsupportedPublicKeyVersion,
-  [VotingErrorType.InvalidPublicKeyBufferIncompleteN]:
-    StringNames.Error_VotingErrorInvalidPublicKeyBufferIncompleteN,
-  [VotingErrorType.InvalidPublicKeyBufferFailedToParseN]:
-    StringNames.Error_VotingErrorInvalidPublicKeyBufferFailedToParseNTemplate,
-  [VotingErrorType.InvalidPublicKeyIdMismatch]:
-    StringNames.Error_VotingErrorInvalidPublicKeyIdMismatch,
-};

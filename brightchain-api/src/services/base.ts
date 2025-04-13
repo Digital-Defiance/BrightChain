@@ -1,6 +1,9 @@
 import { IApplication } from '../interfaces/application';
 
-export class BaseService {
+/**
+ * Base service class
+ */
+export abstract class BaseService {
   protected application: IApplication;
 
   constructor(application: IApplication) {

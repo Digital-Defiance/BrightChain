@@ -1,4 +1,4 @@
-import { StringLanguages } from '../enumerations/stringLanguages';
+import { LanguageCode } from '@digitaldefiance/i18n-lib';
 import { IRole } from './role';
 
 export interface IRequestUser {
@@ -7,7 +7,7 @@ export interface IRequestUser {
   emailVerified: boolean;
   roles: Array<IRole>;
   username: string;
-  siteLanguage: StringLanguages;
+  siteLanguage: LanguageCode;
   timezone: string;
   lastLogin?: Date;
 }
