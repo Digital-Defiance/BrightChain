@@ -10,11 +10,11 @@ rm -rf .yarnrc .yarnrc.yml .yarn
 
 echo "Enabling corepack"
 if [ $NEED_SUDO -eq 1 ]; then
-  sudo corepack enable
-  sudo corepack prepare yarn@${DEFAULT_YARN_VERSION} --activate
+  sudo npx corepack enable
+  sudo npx corepack prepare yarn@${DEFAULT_YARN_VERSION} --activate
 else
-  corepack enable
-  corepack prepare yarn@${DEFAULT_YARN_VERSION} --activate
+  npx corepack enable
+  npx corepack prepare yarn@${DEFAULT_YARN_VERSION} --activate
 fi
 
 DEFAULT_YARN_VERSION=${DEFAULT_YARN_VERSION:-berry}
