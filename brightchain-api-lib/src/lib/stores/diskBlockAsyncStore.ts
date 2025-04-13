@@ -1,0 +1,328 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { IBlockStore } from '@brightchain/brightchain-lib/lib/interfaces/storage/blockStore';
+import { existsSync } from 'fs';
+import { readFile, readdir, stat, unlink, writeFile } from 'fs/promises';
+import { join } from 'path';
+import { Readable, Transform } from 'stream';
+import { BaseBlock } from '@brightchain/brightchain-lib/lib/blocks/base';
+import { BlockHandle, createBlockHandle } from '@brightchain/brightchain-lib/lib/blocks/handle';
+import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
+import { BlockDataType } from '@brightchain/brightchain-lib/lib/enumerations/blockDataType';
+import { BlockSize, blockSizeToSizeString } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
+import { BlockType } from '@brightchain/brightchain-lib/lib/enumerations/blockType';
+import { StoreErrorType } from '@brightchain/brightchain-lib/lib/enumerations/storeErrorType';
+import { StoreError } from '@brightchain/brightchain-lib/lib/errors/storeError';
+import { IBaseBlockMetadata } from '@brightchain/brightchain-lib/lib/interfaces/blocks/metadata/blockMetadata';
+import { ChecksumUint8Array, uint8ArrayToHex } from '@brightchain/brightchain-lib/lib/types';
+import { DiskBlockStore } from './diskBlockStore';
+import { MemoryWritableStream } from '../transforms/memoryWritableStream';
+import { ChecksumTransform } from '../transforms/checksumTransform';
+import { XorMultipleTransformStream } from '../transforms/xorMultipleTransform';
+
+/**
+ * DiskBlockAsyncStore provides asynchronous operations for storing and retrieving blocks from disk.
+ * It supports raw block storage and XOR operations with stream-based data handling.
+ * Blocks are stored as raw data without metadata - their meaning is derived from CBLs.
+ */
+export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
+  constructor(config: { storePath: string; blockSize: BlockSize }) {
+    super(config);
+  }
+
+  /**
+   * Check if a block exists
+   */
+  public async has(key: ChecksumUint8Array): Promise<boolean> {
+    const blockPath = this.blockPath(key);
+    return existsSync(blockPath);
+  }
+
+  /**
+   * Get a handle to a block
+   */
+  public get<T extends BaseBlock>(key: ChecksumUint8Array): BlockHandle<T> {
+    const blockPath = this.blockPath(key);
+    return createBlockHandle<T>(
+      RawDataBlock as any,
+      blockPath,
+      this._blockSize,
+      key,
+      true, // canRead
+      true, // canPersist
+    );
+  }
+
+  /**
+   * Get a block's data
+   */
+  public async getData(key: ChecksumUint8Array): Promise<RawDataBlock> {
+    const blockPath = this.blockPath(key);
+    if (!existsSync(blockPath)) {
+      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+        KEY: uint8ArrayToHex(key),
+      });
+    }
+
+    let data: Buffer;
+    try {
+      data = await readFile(blockPath);
+    } catch {
+      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+        KEY: uint8ArrayToHex(key),
+      });
+    }
+    if (data.length > this._blockSize) {
+      throw new StoreError(StoreErrorType.BlockFileSizeMismatch);
+    }
+
+    // Use file creation time as block creation time
+    const stats = await stat(blockPath);
+    const dateCreated = stats.birthtime;
+
+    return new RawDataBlock(
+      this._blockSize,
+      data,
+      dateCreated,
+      key,
+      BlockType.RawData,
+      BlockDataType.EphemeralStructuredData, // Use EphemeralStructuredData as default
+      true, // canRead
+      true, // canPersist
+    );
+  }
+
+  /**
+   * Delete a block's data
+   * @param key - The block's checksum
+   */
+  public async deleteData(key: ChecksumUint8Array): Promise<void> {
+    const blockPath = this.blockPath(key);
+    if (!existsSync(blockPath)) {
+      throw new StoreError(StoreErrorType.KeyNotFound);
+    }
+
+    try {
+      await unlink(blockPath);
+    } catch (error) {
+      throw new StoreError(StoreErrorType.BlockDeletionFailed, undefined, {
+        ERROR: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  /**
+   * Store a block's data
+   */
+  public async setData(block: RawDataBlock): Promise<void> {
+    if (block.blockSize !== this._blockSize) {
+      throw new StoreError(StoreErrorType.BlockSizeMismatch);
+    }
+
+    const blockPath = this.blockPath(block.idChecksum);
+    if (existsSync(blockPath)) {
+      throw new StoreError(StoreErrorType.BlockPathAlreadyExists);
+    }
+
+    try {
+      block.validate();
+    } catch {
+      throw new StoreError(StoreErrorType.BlockValidationFailed);
+    }
+
+    // Ensure block directory exists before writing
+    this.ensureBlockPath(block.idChecksum);
+
+    try {
+      await writeFile(blockPath, Buffer.from(block.data));
+    } catch (error) {
+      throw new StoreError(
+        StoreErrorType.BlockDirectoryCreationFailed,
+        undefined,
+        {
+          ERROR: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
+  }
+
+  /**
+   * XOR multiple blocks together
+   */
+  public async xor<T extends BaseBlock>(
+    blocks: BlockHandle<T>[],
+    destBlockMetadata: IBaseBlockMetadata,
+  ): Promise<RawDataBlock> {
+    if (!blocks.length) {
+      throw new StoreError(StoreErrorType.NoBlocksProvided);
+    }
+
+    return new Promise((resolve, reject) => {
+      // Create read streams from the full block data
+      const readStreams = blocks.map((block) => {
+        const data = block.fullData; // Use fullData to get padded content
+        const stream = new Readable();
+        stream.push(Buffer.from(data));
+        stream.push(null);
+        return stream;
+      });
+
+      const xorStream = new XorMultipleTransformStream(readStreams);
+      const checksumStream = new ChecksumTransform();
+      const writeStream = new MemoryWritableStream();
+
+      // Set up pipeline
+      xorStream.pipe(checksumStream).pipe(writeStream);
+
+      // Handle stream ends
+      this.handleReadStreamEnds(readStreams, xorStream);
+
+      // Handle checksum calculation
+      checksumStream.on('checksum', (checksumBuffer) => {
+        try {
+          const block = new RawDataBlock(
+            this._blockSize,
+            writeStream.data,
+            new Date(destBlockMetadata.dateCreated),
+            checksumBuffer,
+            BlockType.RawData,
+            destBlockMetadata.dataType, // Use the metadata's dataType
+            true, // canRead
+            true, // canPersist
+          );
+          resolve(block);
+        } catch (error) {
+          reject(error);
+        } finally {
+          this.cleanupStreams([
+            ...readStreams,
+            xorStream,
+            checksumStream,
+            writeStream,
+          ]);
+        }
+      });
+
+      // Handle errors
+      const handleError = (error: Error) => {
+        this.cleanupStreams([
+          ...readStreams,
+          xorStream,
+          checksumStream,
+          writeStream,
+        ]);
+        reject(error);
+      };
+
+      readStreams.forEach((stream) => stream.on('error', handleError));
+      xorStream.on('error', handleError);
+      checksumStream.on('error', handleError);
+      writeStream.on('error', handleError);
+    });
+  }
+
+  /**
+   * Handle read stream ends
+   */
+  private handleReadStreamEnds(
+    readStreams: Readable[],
+    xorStream: Transform,
+  ): void {
+    let endedStreams = 0;
+    readStreams.forEach((readStream) => {
+      readStream.on('end', () => {
+        if (++endedStreams === readStreams.length) {
+          xorStream.end();
+        }
+      });
+    });
+  }
+
+  /**
+   * Clean up streams
+   */
+  private cleanupStreams(
+    streams: Array<Readable | Transform | MemoryWritableStream>,
+  ): void {
+    streams.forEach((stream) => {
+      try {
+        stream.destroy();
+      } catch {
+        // Ignore errors during cleanup
+      }
+    });
+  }
+
+  /**
+   * Get random block checksums from the store
+   * @param count - Maximum number of blocks to return
+   * @returns Array of random block checksums
+   */
+  public async getRandomBlocks(count: number): Promise<ChecksumUint8Array[]> {
+    const blockSizeString = blockSizeToSizeString(this._blockSize);
+    const basePath = join(this._storePath, blockSizeString);
+    if (!existsSync(basePath)) {
+      return [];
+    }
+
+    const blocks: ChecksumUint8Array[] = [];
+    const firstLevelDirs = await readdir(basePath);
+
+    // Randomly select first level directories until we have enough blocks
+    while (blocks.length < count && firstLevelDirs.length > 0) {
+      // Pick a random first level directory
+      const randomFirstIndex = Math.floor(
+        Math.random() * firstLevelDirs.length,
+      );
+      const firstDir = firstLevelDirs[randomFirstIndex];
+      const firstLevelPath = join(basePath, firstDir);
+
+      if (!existsSync(firstLevelPath)) {
+        // Remove invalid directory and continue
+        firstLevelDirs.splice(randomFirstIndex, 1);
+        continue;
+      }
+
+      // Get second level directories
+      const secondLevelDirs = await readdir(firstLevelPath);
+      if (secondLevelDirs.length === 0) {
+        // Remove empty directory and continue
+        firstLevelDirs.splice(randomFirstIndex, 1);
+        continue;
+      }
+
+      // Pick a random second level directory
+      const randomSecondIndex = Math.floor(
+        Math.random() * secondLevelDirs.length,
+      );
+      const secondDir = secondLevelDirs[randomSecondIndex];
+      const secondLevelPath = join(firstLevelPath, secondDir);
+
+      if (!existsSync(secondLevelPath)) {
+        continue;
+      }
+
+      // Get block files
+      const blockFiles = (await readdir(secondLevelPath)).filter(
+        (file) => !file.endsWith('.m.json'),
+      );
+
+      if (blockFiles.length === 0) {
+        continue;
+      }
+
+      // Pick a random block
+      const randomBlockIndex = Math.floor(Math.random() * blockFiles.length);
+      const blockFile = blockFiles[randomBlockIndex];
+      blocks.push(
+        Buffer.from(blockFile, 'hex') as unknown as ChecksumUint8Array,
+      );
+
+      // Remove used directory if we still need more blocks
+      if (blocks.length < count) {
+        firstLevelDirs.splice(randomFirstIndex, 1);
+      }
+    }
+
+    return blocks;
+  }
+}

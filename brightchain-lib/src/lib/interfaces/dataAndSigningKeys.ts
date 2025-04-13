@@ -1,7 +1,7 @@
+import { ISimpleKeyPair } from '@digitaldefiance/ecies-lib';
 import { ec } from 'elliptic';
-import { ISimpleKeyPairBuffer } from './simpleKeyPairBuffer';
 
 export interface IDataAndSigningKeys {
   signing: ec.KeyPair;
-  data: ISimpleKeyPairBuffer;
+  data: ISimpleKeyPair;
 }

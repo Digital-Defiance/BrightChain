@@ -4,6 +4,6 @@ module.exports = {
   ...nxPreset,
   snapshotSerializers: [
     ...(nxPreset.snapshotSerializers || []),
-    require.resolve('./brightchain-lib/bigIntSerializer'),
+    require.resolve('./brightchain-lib/bigIntSerializer.ts'),
   ],
 };

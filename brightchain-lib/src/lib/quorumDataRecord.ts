@@ -1,46 +1,60 @@
-import { BrightChainMember } from './brightChainMember';
-import { GuidV4 } from './guid';
-import { QuorumDataRecordDto } from './quorumDataRecordDto';
-import { StaticHelpersChecksum } from './staticHelpers.checksum';
-import { StaticHelpersECIES } from './staticHelpers.ECIES';
 import {
-  ChecksumBuffer,
+  arraysEqual,
+  ChecksumUint8Array,
+  ECIESService,
+  getEnhancedIdProvider,
   HexString,
+  hexToUint8Array,
+  Member,
+  PlatformID,
   ShortHexGuid,
-  SignatureBuffer,
-} from './types';
+  SignatureUint8Array,
+  TypedIdProviderWrapper,
+  uint8ArrayToHex,
+} from '@digitaldefiance/ecies-lib';
+import { createECIESService } from './browserConfig';
+import { QuorumDataRecordDto } from './quorumDataRecordDto';
+import { ChecksumService } from './services/checksum.service';
 
-export class QuorumDataRecord {
-  public readonly id: GuidV4;
-  public readonly encryptedData: Buffer;
-  public readonly encryptedSharesByMemberId: Map<ShortHexGuid, Buffer>;
+export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
+  public readonly checksumService: ChecksumService = new ChecksumService();
+  public readonly eciesService: ECIESService<TID> = createECIESService<TID>();
+  public readonly enhancedProvider: TypedIdProviderWrapper<TID>;
+
+  public readonly id: TID;
+  public readonly encryptedData: Uint8Array;
+  public readonly encryptedSharesByMemberId: Map<ShortHexGuid, Uint8Array>;
   /**
    * sha-3 hash of the encrypted data
    */
-  public readonly checksum: ChecksumBuffer;
-  public readonly creator: BrightChainMember;
-  public readonly signature: SignatureBuffer;
-  public readonly memberIDs: ShortHexGuid[];
+  public readonly checksum: ChecksumUint8Array;
+  public readonly creator: Member<TID>;
+  public readonly signature: SignatureUint8Array;
+  public readonly memberIDs: TID[];
   public readonly sharesRequired: number;
   public readonly dateCreated: Date;
   public readonly dateUpdated: Date;
 
   constructor(
-    creator: BrightChainMember,
-    memberIDs: ShortHexGuid[],
+    creator: Member<TID>,
+    memberIDs: TID[],
     sharesRequired: number,
-    encryptedData: Buffer,
-    encryptedSharesByMemberId: Map<ShortHexGuid, Buffer>,
-    checksum?: ChecksumBuffer,
-    signature?: SignatureBuffer,
-    id?: ShortHexGuid,
+    encryptedData: Uint8Array,
+    encryptedSharesByMemberId: Map<ShortHexGuid, Uint8Array>,
+    checksum?: ChecksumUint8Array,
+    signature?: SignatureUint8Array,
+    id?: TID,
     dateCreated?: Date,
     dateUpdated?: Date,
+    enhancedProvider?: TypedIdProviderWrapper<TID>,
+    eciesService?: ECIESService<TID>,
   ) {
+    this.enhancedProvider = enhancedProvider ?? getEnhancedIdProvider<TID>();
+    this.eciesService = eciesService ?? createECIESService<TID>();
     if (id !== undefined) {
-      this.id = new GuidV4(id);
+      this.id = id;
     } else {
-      this.id = GuidV4.new();
+      this.id = this.enhancedProvider.generateTyped();
     }
 
     if (memberIDs.length != 0 && memberIDs.length < 2) {
@@ -53,19 +67,21 @@ export class QuorumDataRecord {
     if (sharesRequired != -1 && sharesRequired < 2) {
       throw new Error('Shares required must be at least 2');
     }
+    this.checksumService = new ChecksumService();
     this.sharesRequired = sharesRequired;
     this.encryptedData = encryptedData;
     this.encryptedSharesByMemberId = encryptedSharesByMemberId;
     const calculatedChecksum =
-      StaticHelpersChecksum.calculateChecksum(encryptedData);
-    if (checksum && checksum.compare(calculatedChecksum) != 0) {
+      this.checksumService.calculateChecksum(encryptedData);
+    if (checksum && !arraysEqual(checksum, calculatedChecksum)) {
       throw new Error('Invalid checksum');
     }
     this.checksum = calculatedChecksum;
     this.creator = creator;
-    this.signature = signature ?? creator.sign(this.checksum);
+    this.signature =
+      signature ?? (creator.sign(this.checksum) as SignatureUint8Array);
     if (
-      !StaticHelpersECIES.verifyMessage(
+      !this.eciesService.verifyMessage(
         creator.publicKey,
         this.checksum,
         this.signature,
@@ -88,45 +104,61 @@ export class QuorumDataRecord {
   public toDto(): QuorumDataRecordDto {
     const encryptedSharesByMemberId: { [key: string]: HexString } = {};
     this.encryptedSharesByMemberId.forEach((v, k) => {
-      encryptedSharesByMemberId[k] = v.toString('hex') as HexString;
+      encryptedSharesByMemberId[k] = uint8ArrayToHex(v) as HexString;
     });
     return {
-      id: this.id.asShortHexGuid,
-      creatorId: this.creator.id.asShortHexGuid,
-      encryptedData: this.encryptedData.toString('hex') as HexString,
+      id: uint8ArrayToHex(
+        this.enhancedProvider.toBytes(this.id),
+      ) as ShortHexGuid,
+      creatorId: uint8ArrayToHex(
+        this.enhancedProvider.toBytes(this.creator.id),
+      ) as ShortHexGuid,
+      encryptedData: uint8ArrayToHex(this.encryptedData) as HexString,
       encryptedSharesByMemberId,
-      checksum: StaticHelpersChecksum.checksumBufferToChecksumString(
-        this.checksum,
-      ),
-      signature: StaticHelpersECIES.signatureBufferToSignatureString(
+      checksum: this.checksumService.checksumToHexString(this.checksum),
+      signature: this.eciesService.signatureBufferToSignatureString(
         this.signature,
       ),
-      memberIDs: this.memberIDs,
+      memberIDs: this.memberIDs.map(
+        (id) =>
+          uint8ArrayToHex(this.enhancedProvider.toBytes(id)) as ShortHexGuid,
+      ),
       sharesRequired: this.sharesRequired,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
     };
   }
-  public static fromDto(
+  public static fromDto<TID extends PlatformID = Uint8Array>(
     dto: QuorumDataRecordDto,
-    fetchMember: (memberId: ShortHexGuid) => BrightChainMember,
-  ): QuorumDataRecord {
-    const encryptedSharesByMemberId = new Map<ShortHexGuid, Buffer>();
+    fetchMember: (memberId: TID) => Member<TID>,
+    enhancedProvider?: TypedIdProviderWrapper<TID>,
+    eciesService?: ECIESService<TID>,
+  ): QuorumDataRecord<TID> {
+    const enhancedProviderToUse =
+      enhancedProvider ?? getEnhancedIdProvider<TID>();
+    const eciesServiceToUse = eciesService ?? createECIESService<TID>();
+    const checksumService = new ChecksumService();
+
+    const encryptedSharesByMemberId = new Map<ShortHexGuid, Uint8Array>();
     Object.keys(dto.encryptedSharesByMemberId).forEach((k) => {
       encryptedSharesByMemberId.set(
         k as ShortHexGuid,
-        Buffer.from(dto.encryptedSharesByMemberId[k], 'hex'),
+        hexToUint8Array(dto.encryptedSharesByMemberId[k]),
       );
     });
-    return new QuorumDataRecord(
-      fetchMember(dto.creatorId),
-      dto.memberIDs,
+    return new QuorumDataRecord<TID>(
+      fetchMember(
+        enhancedProviderToUse.fromBytes(hexToUint8Array(dto.creatorId)),
+      ),
+      dto.memberIDs.map(
+        (id) => enhancedProviderToUse.fromBytes(hexToUint8Array(id)) as TID,
+      ),
       dto.sharesRequired,
-      Buffer.from(dto.encryptedData, 'hex'),
+      hexToUint8Array(dto.encryptedData),
       encryptedSharesByMemberId,
-      StaticHelpersChecksum.checksumStringToChecksumBuffer(dto.checksum),
-      StaticHelpersECIES.signatureStringToSignatureBuffer(dto.signature),
-      dto.id,
+      checksumService.hexStringToChecksum(dto.checksum),
+      eciesServiceToUse.signatureStringToSignatureBuffer(dto.signature),
+      enhancedProviderToUse.fromBytes(hexToUint8Array(dto.id)),
       dto.dateCreated,
       dto.dateUpdated,
     );
@@ -134,11 +166,18 @@ export class QuorumDataRecord {
   public toJson(): string {
     return JSON.stringify(this.toDto());
   }
-  public static fromJson(
+  public static fromJson<TID extends PlatformID = Uint8Array>(
     json: string,
-    fetchMember: (memberId: ShortHexGuid) => BrightChainMember,
-  ): QuorumDataRecord {
+    fetchMember: (memberId: TID) => Member<TID>,
+    enhancedProvider?: TypedIdProviderWrapper<TID>,
+    eciesService?: ECIESService<TID>,
+  ): QuorumDataRecord<TID> {
     const dto = JSON.parse(json) as QuorumDataRecordDto;
-    return QuorumDataRecord.fromDto(dto, fetchMember);
+    return QuorumDataRecord.fromDto<TID>(
+      dto,
+      fetchMember,
+      enhancedProvider,
+      eciesService,
+    );
   }
 }

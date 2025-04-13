@@ -1,9 +1,22 @@
+import { StringsCollection } from '@digitaldefiance/i18n-lib';
 import { StringNames } from '../enumerations/stringNames';
-import { StringsCollection } from '../sharedTypes';
 
 const site = 'BrightChain';
 
-export const AmericanEnglishStrings: StringsCollection = {
+export const AmericanEnglishStrings: StringsCollection<string> = {
+  [StringNames.Admin_StringNotFoundForLanguageTemplate]:
+    'String {NAME} not found for language {LANG}',
+  [StringNames.Error_NoTranslationsForEnumTemplate]:
+    'No translations found for enum: {enumName}',
+  [StringNames.Error_LanguageNotFoundForEnumTemplate]:
+    'Language {lang} not found for enum {enumName}',
+  [StringNames.Error_NoTranslationsForEnumLanguageTemplate]:
+    'Translation not found for {enumName}.{value} in {lang}',
+  [StringNames.Error_UnknownEnumValueForEnumTemplate]:
+    'Unknown enum value: {value} for enum: {enumName}',
+  [StringNames.Error_LanguageNotFoundInStringsTemplate]:
+    'Language {LANG} not found in Strings)',
+  [StringNames.Error_Disposed]: 'Object has been disposed',
   [StringNames.ChangePassword_Success]: 'Password changed successfully.',
   [StringNames.Common_ChangePassword]: 'Change Password',
   [StringNames.Common_Dashboard]: 'Dashboard',
@@ -26,7 +39,9 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_BlockCannotBeDecrypted]: 'Block cannot be decrypted',
   [StringNames.Error_BlockCannotBeEncrypted]: 'Block cannot be encrypted',
   [StringNames.Error_BlockCapacityTemplate]:
-    'Block capacity exceeded: {DETAILS}',
+    'Block capacity exceeded. BlockSize: ({BLOCK_SIZE}), Data: ({DATA_SIZE})',
+  [StringNames.Error_BlockMetadataErrorCreatorIdMismatch]:
+    'Creator ID mismatch',
   [StringNames.Error_BlockMetadataErrorCreatorRequired]: 'Creator is required',
   [StringNames.Error_BlockMetadataErrorEncryptorRequired]:
     'Encryptor is required',
@@ -38,7 +53,20 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Metadata is required',
   [StringNames.Error_BlockMetadataErrorMissingRequiredMetadata]:
     'Missing required metadata fields',
-  [StringNames.Error_BlockValidationTemplate]:
+
+  // Block Capacity Errors
+  [StringNames.Error_BlockCapacityInvalidBlockSize]: 'Invalid block size',
+  [StringNames.Error_BlockCapacityInvalidBlockType]: 'Invalid block type',
+  [StringNames.Error_BlockCapacityCapacityExceeded]: 'Capacity exceeded',
+  [StringNames.Error_BlockCapacityInvalidFileName]: 'Invalid file name',
+  [StringNames.Error_BlockCapacityInvalidMimetype]: 'Invalid mimetype',
+  [StringNames.Error_BlockCapacityInvalidRecipientCount]:
+    'Invalid recipient count',
+  [StringNames.Error_BlockCapacityInvalidExtendedCblData]:
+    'Invalid extended CBL data',
+
+  // Block validation error
+  [StringNames.Error_BlockValidationErrorTemplate]:
     'Block validation failed: {REASON}',
   [StringNames.Error_BlockValidationErrorActualDataLengthUnknown]:
     'Actual data length is unknown',
@@ -85,14 +113,29 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_BlockValidationErrorInvalidIVLength]: 'Invalid IV length',
   [StringNames.Error_BlockValidationErrorInvalidSignature]:
     'Invalid signature provided',
+  [StringNames.Error_BlockValidationErrorInvalidRecipientIds]:
+    'Invalid recipient IDs',
   [StringNames.Error_BlockValidationErrorInvalidTupleSizeTemplate]:
-    'Tuple size must be between {MIN_TUPLE_SIZE} and {MAX_TUPLE_SIZE}',
+    'Tuple size must be between {TUPLE.MIN_SIZE} and {TUPLE.MAX_SIZE}',
   [StringNames.Error_BlockValidationErrorMethodMustBeImplementedByDerivedClass]:
     'Method must be implemented by derived class',
   [StringNames.Error_BlockValidationErrorNoChecksum]: 'No checksum provided',
   [StringNames.Error_BlockValidationErrorOriginalDataLengthNegative]:
     'Original data length cannot be negative',
-  [StringNames.Error_BlockMetadataTemplate]: 'Block metadata error: {DETAILS}',
+  [StringNames.Error_BlockValidationErrorInvalidEncryptionType]:
+    'Invalid encryption type',
+  [StringNames.Error_BlockValidationErrorInvalidRecipientCount]:
+    'Invalid recipient count',
+  [StringNames.Error_BlockValidationErrorInvalidRecipientKeys]:
+    'Invalid recipient keys',
+  [StringNames.Error_BlockValidationErrorEncryptionRecipientNotFoundInRecipients]:
+    'Encryption recipient not found in recipients',
+  [StringNames.Error_BlockValidationErrorEncryptionRecipientHasNoPrivateKey]:
+    'Encryption recipient has no private key',
+  [StringNames.Error_BlockValidationErrorInvalidCreator]: 'Invalid creator',
+  [StringNames.Error_BlockMetadataTemplate]: 'Block metadata error: {REASON}',
+  [StringNames.Error_BufferErrorInvalidBufferTypeTemplate]:
+    'Invalid buffer type. Expected Buffer, got: {TYPE}',
   [StringNames.Error_ChecksumMismatchTemplate]:
     'Checksum mismatch: expected {EXPECTED}, got {CHECKSUM}',
   [StringNames.Error_InvalidBlockSizeTemplate]:
@@ -102,12 +145,16 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_InvalidEmailMissing]: 'Missing email.',
   [StringNames.Error_InvalidEmailWhitespace]:
     'Email contains trailing or leading whitespace.',
+
+  // GUID error
   [StringNames.Error_InvalidGuid]: 'Invalid GUID.',
   [StringNames.Error_InvalidGuidTemplate]: 'Invalid GUID: {GUID}',
   [StringNames.Error_InvalidGuidUnknownBrandTemplate]:
     'Unknown GUID brand: {BRAND}.',
   [StringNames.Error_InvalidGuidUnknownLengthTemplate]:
     'Invalid GUID length: {LENGTH}.',
+
+  // Isolated Key Error
   [StringNames.Error_IsolatedKeyErrorInvalidPublicKey]:
     'Invalid public key: must be an isolated key',
   [StringNames.Error_IsolatedKeyErrorInvalidKeyId]:
@@ -117,10 +164,14 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_IsolatedKeyErrorInvalidKeyType]: 'Invalid key type',
   [StringNames.Error_IsolatedKeyErrorKeyIsolationViolation]:
     'Key isolation violation: ciphertexts from different key instances',
+
+  // PBKDF2 Error
   [StringNames.Error_Pbkdf2InvalidSaltLength]:
     'Salt length does not match expected length',
   [StringNames.Error_Pbkdf2InvalidHashLength]:
     'Hash length does not match expected length',
+
+  // Block Service Error
   [StringNames.Error_BlockServiceErrorBlockWhitenerCountMismatch]:
     'Number of blocks and whiteners must be the same',
   [StringNames.Error_BlockServiceErrorEmptyBlocksArray]:
@@ -129,15 +180,45 @@ export const AmericanEnglishStrings: StringsCollection = {
     'All blocks must have the same block size',
   [StringNames.Error_BlockServiceErrorNoWhitenersProvided]:
     'No whiteners provided',
+  [StringNames.Error_BlockServiceErrorAlreadyInitialized]:
+    'BlockService subsystem already initialized',
+  [StringNames.Error_BlockServiceErrorUninitialized]:
+    'BlockService subsystem not initialized',
+  [StringNames.Error_BlockServiceErrorBlockAlreadyExistsTemplate]:
+    'Block already exists: {ID}',
+  [StringNames.Error_BlockServiceErrorRecipientRequiredForEncryption]:
+    'Recipient is required for encryption',
+  [StringNames.Error_BlockServiceErrorCannotDetermineFileLength]:
+    'Cannot determine file length',
+  [StringNames.Error_BlockServiceErrorCannotDetermineBlockSize]:
+    'Cannot determine block size',
+  [StringNames.Error_BlockServiceErrorCannotDetermineFileName]:
+    'Unable to determine file name',
+  [StringNames.Error_BlockServiceErrorCannotDetermineMimeType]:
+    'Unable to determine MIME type',
+  [StringNames.Error_BlockServiceErrorFilePathNotProvided]:
+    'File path not provided',
+  [StringNames.Error_BlockServiceErrorUnableToDetermineBlockSize]:
+    'Unable to determine block size',
+  [StringNames.Error_BlockServiceErrorInvalidBlockData]: 'Invalid block data',
+  [StringNames.Error_BlockServiceErrorInvalidBlockType]: 'Invalid block type',
+
+  // Quorum Error
   [StringNames.Error_QuorumErrorInvalidQuorumId]: 'Invalid quorum ID',
   [StringNames.Error_QuorumErrorDocumentNotFound]: 'Document not found',
   [StringNames.Error_QuorumErrorUnableToRestoreDocument]:
     'Unable to restore document',
   [StringNames.Error_QuorumErrorNotImplemented]: 'Not implemented',
+  [StringNames.Error_QuorumErrorUninitialized]:
+    'Quorum subsystem not intialized',
+
+  // System Keyring Error
   [StringNames.Error_SystemKeyringErrorKeyNotFoundTemplate]:
     'Key {KEY} not found',
   [StringNames.Error_SystemKeyringErrorRateLimitExceeded]:
     'Rate limit exceeded',
+
+  // FEC error
   [StringNames.Error_FecErrorDataRequired]: 'Data is required',
   [StringNames.Error_FecErrorInvalidShardCounts]: 'Invalid shard counts',
   [StringNames.Error_FecErrorInvalidShardsAvailableArray]:
@@ -170,6 +251,8 @@ export const AmericanEnglishStrings: StringsCollection = {
     'FEC encoding failed: {ERROR}',
   [StringNames.Error_FecErrorFecDecodingFailedTemplate]:
     'FEC decoding failed: {ERROR}',
+
+  // ECIES error
   [StringNames.Error_EciesErrorInvalidHeaderLength]: 'Invalid header length',
   [StringNames.Error_EciesErrorInvalidMnemonic]: 'Invalid mnemonic',
   [StringNames.Error_EciesErrorInvalidEncryptedDataLength]:
@@ -187,6 +270,19 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Invalid sender public key',
   [StringNames.Error_EciesErrorTooManyRecipients]:
     'Too many recipients: exceeds maximum allowed',
+  [StringNames.Error_EciesErrorPrivateKeyNotLoaded]: 'Private key not loaded',
+  [StringNames.Error_EciesErrorRecipientKeyCountMismatch]:
+    'Recipient count does not match key count',
+  [StringNames.Error_EciesErrorInvalidIVLength]: 'Invalid IV length',
+  [StringNames.Error_EciesErrorInvalidAuthTagLength]: 'Invalid auth tag length',
+  [StringNames.Error_EciesErrorInvalidRecipientCount]:
+    'Invalid recipient count',
+  [StringNames.Error_EciesErrorFileSizeTooLarge]: 'File size too large',
+  [StringNames.Error_EciesErrorInvalidDataLength]: 'Invalid data length',
+  [StringNames.Error_EciesErrorInvalidBlockType]: 'Invalid block type',
+  [StringNames.Error_EciesErrorInvalidMessageCrc]: 'Invalid message CRC',
+
+  // Voting derivation error
   [StringNames.Error_VotingDerivationErrorFailedToGeneratePrime]:
     'Failed to generate prime number after maximum attempts',
   [StringNames.Error_VotingDerivationErrorIdenticalPrimes]:
@@ -207,6 +303,8 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Invalid ECDH key pair',
   [StringNames.Error_VotingDerivationErrorFailedToDeriveVotingKeysTemplate]:
     'Failed to derive voting keys: {ERROR}',
+
+  // Voting error
   [StringNames.Error_VotingErrorInvalidKeyPairPublicKeyNotIsolated]:
     'Invalid key pair: public key must be isolated',
   [StringNames.Error_VotingErrorInvalidKeyPairPrivateKeyNotIsolated]:
@@ -225,6 +323,47 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Invalid public key buffer: failed to parse n: {ERROR}',
   [StringNames.Error_VotingErrorInvalidPublicKeyIdMismatch]:
     'Invalid public key: key ID mismatch',
+  [StringNames.Error_VotingErrorModularInverseDoesNotExist]:
+    'Modular multiplicative inverse does not exist',
+  [StringNames.Error_VotingErrorPrivateKeyMustBeBuffer]:
+    'Private key must be a Buffer',
+  [StringNames.Error_VotingErrorPublicKeyMustBeBuffer]:
+    'Public key must be a Buffer',
+  [StringNames.Error_VotingErrorInvalidPublicKeyFormat]:
+    'Invalid public key format',
+  [StringNames.Error_VotingErrorInvalidEcdhKeyPair]: 'Invalid ECDH key pair',
+  [StringNames.Error_VotingErrorFailedToDeriveVotingKeysTemplate]:
+    'Failed to derive voting keys: {ERROR}',
+  [StringNames.Error_VotingErrorFailedToGeneratePrime]:
+    'Failed to generate prime number after maximum attempts',
+  [StringNames.Error_VotingErrorIdenticalPrimes]: 'Generated identical primes',
+  [StringNames.Error_VotingErrorKeyPairTooSmallTemplate]:
+    'Generated key pair too small: {ACTUAL_BITS} bits < {REQUIRED_BITS} bits',
+  [StringNames.Error_VotingErrorKeyPairValidationFailed]:
+    'Key pair validation failed',
+  [StringNames.Error_VotingErrorInvalidVotingKey]: 'Invalid voting key',
+  [StringNames.Error_VotingErrorInvalidKeyPair]: 'Invalid key pair',
+  [StringNames.Error_VotingErrorInvalidPublicKey]: 'Invalid public key',
+  [StringNames.Error_VotingErrorInvalidPrivateKey]: 'Invalid private key',
+  [StringNames.Error_VotingErrorInvalidEncryptedKey]: 'Invalid encrypted key',
+  [StringNames.Error_VotingErrorInvalidPrivateKeyBufferTooShort]:
+    'Invalid private key buffer: too short',
+  [StringNames.Error_VotingErrorInvalidPrivateKeyBufferWrongMagic]:
+    'Invalid private key buffer: wrong magic',
+  [StringNames.Error_VotingErrorUnsupportedPrivateKeyVersion]:
+    'Unsupported private key version',
+  [StringNames.Error_VotingErrorInvalidPrivateKeyBufferIncompleteLambda]:
+    'Invalid private key buffer: incomplete lambda',
+  [StringNames.Error_VotingErrorInvalidPrivateKeyBufferIncompleteMuLength]:
+    'Invalid private key buffer: incomplete mu length',
+  [StringNames.Error_VotingErrorInvalidPrivateKeyBufferIncompleteMu]:
+    'Invalid private key buffer: incomplete mu',
+  [StringNames.Error_VotingErrorInvalidPrivateKeyBufferFailedToParse]:
+    'Invalid private key buffer: failed to parse',
+  [StringNames.Error_VotingErrorInvalidPrivateKeyBufferFailedToCreate]:
+    'Invalid private key buffer: failed to create',
+
+  // Store rror
   [StringNames.Error_StoreErrorKeyNotFoundTemplate]: 'Key not found: {KEY}',
   [StringNames.Error_StoreErrorStorePathRequired]: 'Store path is required',
   [StringNames.Error_StoreErrorStorePathNotFound]: 'Store path not found',
@@ -249,14 +388,23 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Invalid block metadata: {ERROR}',
   [StringNames.Error_StoreErrorBlockDirectoryCreationFailedTemplate]:
     'Failed to create block directory: {ERROR}',
+  [StringNames.Error_StoreErrorBlockDeletionFailedTemplate]:
+    'Failed to delete block: {ERROR}',
+
+  // Secure storage error
   [StringNames.Error_SecureStorageDecryptedValueLengthMismatch]:
     'Decrypted value length does not match expected length',
   [StringNames.Error_SecureStorageDecryptedValueChecksumMismatch]:
     'Decrypted value checksum does not match',
+  [StringNames.Error_SecureStorageValueIsNull]: 'Secure storage value is null',
+
+  // Symmetric Error
   [StringNames.Error_SymmetricDataNullOrUndefined]:
     'Data to encrypt cannot be null or undefined',
   [StringNames.Error_SymmetricInvalidKeyLengthTemplate]:
     'Encryption key must be {KEY_BYTES} bytes long',
+
+  // Tuple Error
   [StringNames.Error_TupleErrorInvalidTupleSize]: 'Invalid tuple size',
   [StringNames.Error_TupleErrorBlockSizeMismatch]:
     'All blocks in tuple must have the same size',
@@ -278,10 +426,12 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Failed to process data stream: {ERROR}',
   [StringNames.Error_TupleErrorEncryptedDataStreamProcessingFailedTemplate]:
     'Failed to process encrypted data stream: {ERROR}',
+
+  // Sealing Error
   [StringNames.Error_SealingErrorInvalidBitRange]:
     'Bits must be between 3 and 20',
   [StringNames.Error_SealingErrorInvalidMemberArray]:
-    'amongstMembers must be an array of BrightChainMember',
+    'amongstMembers must be an array of Member',
   [StringNames.Error_SealingErrorNotEnoughMembersToUnlock]:
     'Not enough members to unlock the document',
   [StringNames.Error_SealingErrorTooManyMembersToUnlock]:
@@ -293,6 +443,8 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_SealingErrorMemberNotFound]: 'Member not found',
   [StringNames.Error_SealingErrorFailedToSealTemplate]:
     'Failed to seal document: {ERROR}',
+
+  // CBL Error
   [StringNames.Error_CblErrorCblRequired]: 'CBL is required',
   [StringNames.Error_CblErrorWhitenedBlockFunctionRequired]:
     'getWhitenedBlock function is required',
@@ -332,6 +484,22 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Failed to create CBL block {ERROR}',
   [StringNames.Error_CblErrorInsufficientCapacityTemplate]:
     'Block size ({BLOCK_SIZE}) is too small to hold CBL data ({DATA_SIZE})',
+  [StringNames.Error_CblErrorNotExtendedCbl]: 'Not an extended CBL',
+  [StringNames.Error_CblErrorInvalidSignature]: 'Invalid CBL signature',
+  [StringNames.Error_CblErrorFileSizeTooLarge]: 'File size too large',
+  [StringNames.Error_CblErrorFileSizeTooLargeForNode]:
+    'File size above the maximum allowable for the current node',
+  [StringNames.Error_CblErrorInvalidTupleSize]: 'Invalid tuple size',
+  [StringNames.Error_CblErrorFileNameTooLong]: 'File name too long',
+  [StringNames.Error_CblErrorMimeTypeTooLong]: 'MIME type too long',
+  [StringNames.Error_CblErrorAddressCountExceedsCapacity]:
+    'Address count exceeds block capacity',
+  [StringNames.Error_CblErrorCblEncrypted]:
+    'CBL is encrypted. Decrypt before use.',
+  [StringNames.Error_CblErrorUserRequiredForDecryption]:
+    'User is required for decryption',
+
+  // Stream Error
   [StringNames.Error_StreamErrorBlockSizeRequired]: 'Block size is required',
   [StringNames.Error_StreamErrorWhitenedBlockSourceRequired]:
     'Whitened block source is required',
@@ -344,16 +512,37 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Failed to get whitening/random block',
   [StringNames.Error_StreamErrorIncompleteEncryptedBlock]:
     'Incomplete encrypted block',
+
   [StringNames.Error_InvalidLanguageCode]: 'Invalid language code.',
   [StringNames.Error_InvalidSessionID]: 'Invalid session ID.',
   [StringNames.Error_InvalidTupleCountTemplate]:
-    'Invalid tuple count ({TUPLE_COUNT}), must be between {MIN_TUPLE_SIZE} and {MAX_TUPLE_SIZE}',
+    'Invalid tuple count ({TUPLE_COUNT}), must be between {TUPLE.MIN_SIZE} and {TUPLE.MAX_SIZE}',
+
+  // Member Error
   [StringNames.Error_MemberErrorIncorrectOrInvalidPrivateKey]:
     'Incorrect or invalid private key for public key',
   [StringNames.Error_MemberErrorInvalidEmail]: 'Invalid email.',
   [StringNames.Error_MemberErrorInvalidEmailWhitespace]:
     'Email contains trailing or leading whitespace.',
+  [StringNames.Error_MemberErrorMissingEncryptionData]:
+    'Missing encryption data.',
+  [StringNames.Error_MemberErrorEncryptionDataTooLarge]:
+    'Encryption data too large.',
+  [StringNames.Error_MemberErrorInvalidEncryptionData]:
+    'Invalid encryption data.',
+  [StringNames.Error_MemberErrorMemberNotFound]: 'Member not found.',
+  [StringNames.Error_MemberErrorMemberAlreadyExists]: 'Member already exists.',
+  [StringNames.Error_MemberErrorInvalidMemberStatus]: 'Invalid member status.',
   [StringNames.Error_MemberErrorInvalidMemberName]: 'Invalid member name.',
+  [StringNames.Error_MemberErrorInsufficientRandomBlocks]:
+    'Insufficient random blocks.',
+  [StringNames.Error_MemberErrorFailedToCreateMemberBlocks]:
+    'Failed to create member blocks.',
+  [StringNames.Error_MemberErrorFailedToHydrateMember]:
+    'Failed to hydrate member.',
+  [StringNames.Error_MemberErrorInvalidMemberData]: 'Invalid member data.',
+  [StringNames.Error_MemberErrorFailedToConvertMemberData]:
+    'Failed to convert member data.',
   [StringNames.Error_MemberErrorInvalidMemberNameWhitespace]:
     'Member name contains trailing or leading whitespace.',
   [StringNames.Error_MemberErrorInvalidMnemonic]: 'Invalid wallet mnemonic.',
@@ -368,13 +557,16 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_MemberErrorPrivateKeyRequiredToDeriveVotingKeyPair]:
     'Private key required to derive voting key pair.',
   [StringNames.Error_MemberErrorWalletAlreadyLoaded]: 'Wallet already loaded.',
-  [StringNames.Error_MemoryTupleErrorInvalidTupleSizeTemplate]: `Tuple must have {TUPLE_SIZE} blocks`,
+  [StringNames.Error_MemberErrorInvalidMemberBlocks]: 'Invalid member blocks.',
+  [StringNames.Error_MemoryTupleErrorInvalidTupleSizeTemplate]: `Tuple must have {TUPLE.SIZE} blocks`,
+
+  // Multi Encrypted Error
   [StringNames.Error_MultiEncryptedErrorDataTooShort]:
     'Data too short to contain encryption header',
   [StringNames.Error_MultiEncryptedErrorDataLengthExceedsCapacity]:
     'Data length exceeds block capacity',
   [StringNames.Error_MultiEncryptedErrorCreatorMustBeMember]:
-    'Creator must be a BrightChainMember',
+    'Creator must be a Member',
   [StringNames.Error_MultiEncryptedErrorBlockNotReadable]:
     'Block cannot be read',
   [StringNames.Error_MultiEncryptedErrorInvalidEphemeralPublicKeyLength]:
@@ -383,37 +575,69 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Error_MultiEncryptedErrorInvalidAuthTagLength]:
     'Invalid auth tag length',
   [StringNames.Error_MultiEncryptedErrorChecksumMismatch]: 'Checksum mismatch',
-  [StringNames.Error_MemoryTupleErrorBlockSizeMismatch]:
-    'All blocks in tuple must have the same size',
+  [StringNames.Error_MultiEncryptedErrorRecipientMismatch]:
+    'Recipient list does not match header recipient count',
+  [StringNames.Error_MultiEncryptedErrorRecipientsAlreadyLoaded]:
+    'Recipients already loaded',
+
+  // Whitened Error
   [StringNames.Error_WhitenedErrorBlockNotReadable]: 'Block cannot be read',
   [StringNames.Error_WhitenedErrorBlockSizeMismatch]: 'Block sizes must match',
   [StringNames.Error_WhitenedErrorDataLengthMismatch]:
     'Data and random data lengths must match',
   [StringNames.Error_WhitenedErrorInvalidBlockSize]: 'Invalid block size',
+
+  // Handle Tuple Error
   [StringNames.Error_HandleTupleErrorInvalidTupleSizeTemplate]:
-    'Invalid tuple size ({TUPLE_SIZE})',
+    'Invalid tuple size ({TUPLE.SIZE})',
   [StringNames.Error_HandleTupleErrorBlockSizeMismatch]:
     'All blocks in tuple must have the same size',
   [StringNames.Error_HandleTupleErrorNoBlocksToXor]: 'No blocks to XOR',
   [StringNames.Error_HandleTupleErrorBlockSizesMustMatch]:
     'Block sizes must match',
-  [StringNames.Error_OwnedDataErrorCreatorRequired]: 'Creator is required',
-  [StringNames.Error_OwnedDataErrorDataRequired]: 'Data is required',
-  [StringNames.Error_OwnedDataErrorDataLengthExceedsCapacity]:
+
+  // Owned Data Error
+  [StringNames.Error_BlockErrorCreatorRequired]: 'Creator is required',
+  [StringNames.Error_BlockErrorDataRequired]: 'Data is required',
+  [StringNames.Error_BlockErrorDataLengthExceedsCapacity]:
     'Data length exceeds block capacity',
-  [StringNames.Error_OwnedDataErrorActualDataLengthNegative]:
+  [StringNames.Error_BlockErrorActualDataLengthNegative]:
     'Actual data length must be positive',
-  [StringNames.Error_OwnedDataErrorActualDataLengthExceedsDataLength]:
+  [StringNames.Error_BlockErrorActualDataLengthExceedsDataLength]:
     'Actual data length cannot exceed data length',
-  [StringNames.Error_OwnedDataErrorCreatorRequiredForEncryption]:
+  [StringNames.Error_BlockErrorCreatorRequiredForEncryption]:
     'Creator is required for encryption',
-  [StringNames.Error_OwnedDataErrorUnexpectedEncryptedBlockType]:
+  [StringNames.Error_BlockErrorUnexpectedEncryptedBlockType]:
     'Unexpected encrypted block type',
+  [StringNames.Error_BlockErrorCannotEncrypt]: 'Block cannot be encrypted',
+  [StringNames.Error_BlockErrorCannotDecrypt]: 'Block cannot be decrypted',
+  [StringNames.Error_BlockErrorCreatorPrivateKeyRequired]:
+    'Creator private key is required',
+  [StringNames.Error_BlockErrorInvalidMultiEncryptionRecipientCount]:
+    'Invalid multi-encryption recipient count',
+  [StringNames.Error_BlockErrorInvalidNewBlockType]: 'Invalid new block type',
+  [StringNames.Error_BlockErrorUnexpectedEphemeralBlockType]:
+    'Unexpected ephemeral block type',
+  [StringNames.Error_BlockErrorRecipientRequired]: 'Recipient required',
+  [StringNames.Error_BlockErrorRecipientKeyRequired]:
+    'Recipient private key required',
+
+  // Memory Tuple Error
+  [StringNames.Error_MemoryTupleErrorBlockSizeMismatch]:
+    'All blocks in tuple must have the same size',
   [StringNames.Error_MemoryTupleErrorNoBlocksToXor]: 'No blocks to XOR',
   [StringNames.Error_MemoryTupleErrorInvalidBlockCount]:
     'Invalid number of blocks for tuple',
-  [StringNames.Error_MemoryTupleErrorExpectedBlockIdsTemplate]: `Expected {TUPLE_SIZE} block IDs`,
-  [StringNames.Error_MemoryTupleErrorExpectedBlocksTemplate]: `Expected {TUPLE_SIZE} blocks`,
+  [StringNames.Error_MemoryTupleErrorExpectedBlockIdsTemplate]: `Expected {TUPLE.SIZE} block IDs`,
+  [StringNames.Error_MemoryTupleErrorExpectedBlocksTemplate]: `Expected {TUPLE.SIZE} blocks`,
+
+  [StringNames.Error_FailedToHydrateTemplate]: 'Failed to hydrate: {ERROR}',
+  [StringNames.Error_FailedToSerializeTemplate]: 'Failed to serialize: {ERROR}',
+  [StringNames.Error_InvalidChecksum]: 'Invalid checksum.',
+  [StringNames.Error_InvalidCreator]: 'Invalid creator.',
+  [StringNames.Error_InvalidIDFormat]: 'Invalid ID format.',
+  [StringNames.Error_InvalidReferences]: 'Invalid references.',
+  [StringNames.Error_InvalidSignature]: 'Invalid signature.',
   [StringNames.Error_MetadataMismatch]: 'Metadata mismatch.',
   [StringNames.Error_TokenExpired]: 'Token expired.',
   [StringNames.Error_TokenInvalid]: 'Token invalid.',
@@ -428,6 +652,35 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Register_Error]: 'An error occurred during registration.',
   [StringNames.Register_Success]: 'Registration successful.',
   [StringNames.Validation_InvalidLanguage]: 'Invalid language.',
+  [StringNames.Validation_InvalidPassword]: 'Invalid password.',
+  [StringNames.Validation_PasswordRegexErrorTemplate]:
+    'Password does not meet requirements: {ERROR}',
+  [StringNames.Error_InsufficientCapacity]: 'Insufficient capacity.',
+  [StringNames.Error_NotImplemented]: 'Not implemented.',
+  [StringNames.Error_LengthExceedsMaximum]: 'Length exceeds maximum.',
+  [StringNames.Error_LengthIsInvalidType]: 'Length is invalid type.',
+  [StringNames.Common_NoActiveRequest]: 'No active request.',
+  [StringNames.Common_NoActiveResponse]: 'No active response.',
+  [StringNames.Common_NoUserOnRequest]: 'No user on request.',
+
+  // Block Sizes
+  [StringNames.BlockSize_Unknown]: 'Unknown',
+  [StringNames.BlockSize_Message]: 'Message',
+  [StringNames.BlockSize_Tiny]: 'Tiny',
+  [StringNames.BlockSize_Small]: 'Small',
+  [StringNames.BlockSize_Medium]: 'Medium',
+  [StringNames.BlockSize_Large]: 'Large',
+  [StringNames.BlockSize_Huge]: 'Huge',
+
+  // Document Error
+  [StringNames.Error_DocumentErrorInvalidValueTemplate]:
+    'Invalid value for {KEY}',
+  [StringNames.Error_DocumentErrorFieldRequiredTemplate]:
+    'Field {KEY} is required.',
+  [StringNames.Error_DocumentErrorAlreadyInitialized]:
+    'Document subsystem is already initialized',
+  [StringNames.Error_DocumentErrorUninitialized]:
+    'Document subsystem is not initialized',
 };
 
 export default AmericanEnglishStrings;

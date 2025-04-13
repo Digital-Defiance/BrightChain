@@ -1,0 +1,19 @@
+{
+  "name": "brightchain-test-utils",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "brightchain-test-utils/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/brightchain-test-utils",
+        "main": "brightchain-test-utils/src/index.ts",
+        "tsConfig": "brightchain-test-utils/tsconfig.lib.json",
+        "assets": ["brightchain-test-utils/*.md"]
+      }
+    }
+  }
+}

@@ -1,5 +1,6 @@
 // src/services/api.ts
-import { LanguageCodes, StringLanguages } from '@BrightChain/brightchain-lib';
+/* eslint-disable @nx/enforce-module-boundaries */
+import { StringLanguages } from '@brightchain/brightchain-lib';
 import axios from 'axios';
 import { environment } from '../environments/environment';
 
@@ -9,8 +10,7 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const languageCode =
-    localStorage.getItem('languageCode') ??
-    LanguageCodes[StringLanguages.EnglishUS];
+    localStorage.getItem('languageCode') ?? StringLanguages.EnglishUS;
   config.headers['Accept-Language'] = languageCode;
   return config;
 });

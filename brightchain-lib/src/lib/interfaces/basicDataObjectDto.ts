@@ -1,7 +1,7 @@
-import { HexString } from '../types';
+import { HexString } from '@digitaldefiance/ecies-lib';
 import { IBasicObjectDTO } from './basicObjectDto';
 
-export interface IBasicDataObjectDTO extends IBasicObjectDTO {
+export interface IBasicDataObjectDTO extends IBasicObjectDTO<HexString, Date> {
   /**
    * ID of the data object. checksum of the data.
    */

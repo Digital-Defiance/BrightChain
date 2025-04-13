@@ -1,8 +1,8 @@
 import type { Config } from '@jest/types';
-import { getJestProjects } from '@nx/jest';
+import { getJestProjectsAsync } from '@nx/jest';
 
 const config: Config.InitialOptions = {
-  projects: getJestProjects(),
+  projects: await getJestProjectsAsync(),
 };
 
 export default config;

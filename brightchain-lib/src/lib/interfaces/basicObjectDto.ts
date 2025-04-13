@@ -1,14 +1,13 @@
-import { AnyBrand } from 'ts-brand';
-import { HexString } from '../types';
+import { PlatformID } from '@digitaldefiance/ecies-lib';
 
 export interface IBasicObjectDTO<
-  I extends AnyBrand = HexString,
+  TID extends PlatformID = Uint8Array,
   D extends Date | string = Date,
 > {
   /**
    * ID of the data object. Must be unique, usually UUID v4.
    */
-  id: I;
+  id: TID;
   /**
    * The date this object was created
    */
