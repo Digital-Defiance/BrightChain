@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import { BlockSize, sizeToSizeString } from '../enumerations/blockSizes';
+import { BlockSize, blockSizeToSizeString } from '../enumerations/blockSize';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
 import { ChecksumBuffer } from '../types';
@@ -13,21 +13,21 @@ export abstract class DiskBlockStore {
   protected readonly _storePath: string;
   protected readonly _blockSize: BlockSize;
 
-  protected constructor(storePath: string, blockSize: BlockSize) {
-    if (!storePath) {
+  protected constructor(config: { storePath: string; blockSize: BlockSize }) {
+    if (!config.storePath) {
       throw new StoreError(StoreErrorType.StorePathRequired);
     }
 
-    if (!blockSize) {
+    if (!config.blockSize) {
       throw new StoreError(StoreErrorType.BlockSizeRequired);
     }
 
-    this._storePath = storePath;
-    this._blockSize = blockSize;
+    this._storePath = config.storePath;
+    this._blockSize = config.blockSize;
 
     // Ensure store path exists
-    if (!existsSync(storePath)) {
-      mkdirSync(storePath, { recursive: true });
+    if (!existsSync(config.storePath)) {
+      mkdirSync(config.storePath, { recursive: true });
     }
   }
 
@@ -45,7 +45,7 @@ export abstract class DiskBlockStore {
       throw new StoreError(StoreErrorType.InvalidBlockIdTooShort);
     }
 
-    const blockSizeString = sizeToSizeString(this._blockSize);
+    const blockSizeString = blockSizeToSizeString(this._blockSize);
     return join(
       this._storePath,
       blockSizeString,
@@ -68,7 +68,7 @@ export abstract class DiskBlockStore {
       throw new StoreError(StoreErrorType.InvalidBlockIdTooShort);
     }
 
-    const blockSizeString = sizeToSizeString(this._blockSize);
+    const blockSizeString = blockSizeToSizeString(this._blockSize);
     return join(
       this._storePath,
       blockSizeString,

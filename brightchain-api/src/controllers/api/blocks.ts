@@ -12,7 +12,7 @@ import {
   GetBlockRequest,
   StoreBlockRequest,
 } from '../../interfaces/blockRequest';
-import { IBlockService } from '../../interfaces/blocks';
+import { IBlockService } from '../../interfaces/blockService';
 import { BlockServiceFactory } from '../../services/blockServiceFactory';
 import { BaseController } from '../base';
 import { SessionsController } from './sessions';

@@ -1,14 +1,14 @@
 import { Readable } from 'stream';
-import { BlockMetadata } from '../blockMetadata';
-import { TUPLE_SIZE } from '../constants';
+import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
 import { MemoryTupleError } from '../errors/memoryTupleError';
+import { ChecksumService } from '../services/checksum.service';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
-import { BlockHandle } from './handle';
+import { BlockHandleType, createBlockHandle } from './handle';
 import { RawDataBlock } from './rawData';
 
 /**
@@ -19,19 +19,19 @@ import { RawDataBlock } from './rawData';
  *
  * This class supports both:
  * 1. In-memory blocks (BaseBlock derivatives) for immediate operations
- * 2. Disk-based blocks (BlockHandle) for persistent storage
+ * 2. Disk-based blocks (BlockHandleType) for persistent storage
  */
 export class InMemoryBlockTuple {
-  public static readonly TupleSize = TUPLE_SIZE;
+  public static readonly TupleSize = TUPLE.SIZE;
 
-  private readonly _blocks: (BaseBlock | BlockHandle)[];
+  private readonly _blocks: (BaseBlock | BlockHandleType<BaseBlock>)[];
   private readonly _blockSize: BlockSize;
 
-  constructor(blocks: (BaseBlock | BlockHandle)[]) {
-    if (blocks.length !== TUPLE_SIZE) {
+  constructor(blocks: (BaseBlock | BlockHandleType<BaseBlock>)[]) {
+    if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.InvalidTupleSize,
-        TUPLE_SIZE,
+        TUPLE.SIZE,
       );
     }
 
@@ -61,7 +61,7 @@ export class InMemoryBlockTuple {
   /**
    * Get the blocks in this tuple
    */
-  public get blocks(): (BaseBlock | BlockHandle)[] {
+  public get blocks(): (BaseBlock | BlockHandleType<BaseBlock>)[] {
     return this._blocks;
   }
 
@@ -150,37 +150,33 @@ export class InMemoryBlockTuple {
 
   /**
    * Create a tuple from block IDs
-   * This creates disk-based blocks using BlockHandle
+   * This creates disk-based blocks using BlockHandleType
    */
   public static async fromIds(
+    checksumService: ChecksumService,
     blockIDs: ChecksumBuffer[],
     blockSize: BlockSize,
     getBlockPath: (id: ChecksumBuffer) => string,
   ): Promise<InMemoryBlockTuple> {
-    if (blockIDs.length !== TUPLE_SIZE) {
+    if (blockIDs.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.ExpectedBlockIds,
-        TUPLE_SIZE,
+        TUPLE.SIZE,
       );
     }
 
     const handles = await Promise.all(
-      blockIDs.map((id: ChecksumBuffer) => {
-        const handle = new BlockHandle(
-          BlockType.Handle,
-          BlockDataType.RawData,
+      blockIDs.map(async (id: ChecksumBuffer) => {
+        // Use createBlockHandle factory function
+        return await createBlockHandle(
+          checksumService,
+          RawDataBlock as unknown as new (...args: unknown[]) => RawDataBlock,
+          getBlockPath(id),
+          blockSize,
           id,
-          new BlockMetadata(
-            blockSize,
-            BlockType.Handle,
-            BlockDataType.RawData,
-            blockSize as number,
-          ),
-          true,
-          true,
+          true, // canRead
+          true, // canPersist
         );
-        handle.setPath(getBlockPath(id));
-        return handle;
       }),
     );
 
@@ -192,12 +188,12 @@ export class InMemoryBlockTuple {
    * This creates in-memory blocks
    */
   public static fromBlocks(
-    blocks: (BaseBlock | BlockHandle)[],
+    blocks: (BaseBlock | BlockHandleType<BaseBlock>)[],
   ): InMemoryBlockTuple {
-    if (blocks.length !== TUPLE_SIZE) {
+    if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.ExpectedBlocks,
-        TUPLE_SIZE,
+        TUPLE.SIZE,
       );
     }
 
