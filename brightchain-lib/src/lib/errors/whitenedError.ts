@@ -1,16 +1,23 @@
 import { StringLanguages } from '../enumerations/stringLanguages';
-import {
-  WhitenedErrorType,
-  WhitenedErrorTypes,
-} from '../enumerations/whitenedErrorType';
-import { translate } from '../i18n';
-import { HandleableError } from './handleable';
+import StringNames from '../enumerations/stringNames';
+import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
+import { TypedError } from './typedError';
 
-export class WhitenedError extends HandleableError {
-  public readonly reason: WhitenedErrorType;
-  constructor(reason: WhitenedErrorType, language?: StringLanguages) {
-    super(translate(WhitenedErrorTypes[reason], language));
+export class WhitenedError extends TypedError<WhitenedErrorType> {
+  public get reasonMap(): Record<WhitenedErrorType, StringNames> {
+    return {
+      [WhitenedErrorType.BlockNotReadable]:
+        StringNames.Error_WhitenedErrorBlockNotReadable,
+      [WhitenedErrorType.BlockSizeMismatch]:
+        StringNames.Error_WhitenedErrorBlockSizeMismatch,
+      [WhitenedErrorType.DataLengthMismatch]:
+        StringNames.Error_WhitenedErrorDataLengthMismatch,
+      [WhitenedErrorType.InvalidBlockSize]:
+        StringNames.Error_WhitenedErrorInvalidBlockSize,
+    };
+  }
+  constructor(type: WhitenedErrorType, language?: StringLanguages) {
+    super(type, undefined);
     this.name = 'WhitenedError';
-    this.reason = reason;
   }
 }

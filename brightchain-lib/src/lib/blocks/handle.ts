@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   ReadStream,
   WriteStream,
@@ -5,221 +6,218 @@ import {
   createWriteStream,
   existsSync,
   readFileSync,
+  statSync,
 } from 'fs';
+import { Readable } from 'stream';
 import { BlockMetadata } from '../blockMetadata';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockMetadataErrorType } from '../enumerations/blockMetadataErrorType';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
-import { BlockAccessError, BlockMetadataError } from '../errors/block';
+import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumTransform } from '../transforms/checksumTransform';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
 
 /**
- * A block handle is a reference to a block in a block store.
- * It does not have the block data itself, but it has the block ID and the block size.
- * It can load the block data and metadata on demand.
+ * Type definition for a BlockHandle - it's the same as T but with additional properties
  */
-export class BlockHandle extends BaseBlock {
-  protected _path: string;
-  protected _cachedData: Buffer | null = null;
-  protected _cachedMetadata: BlockMetadata | null = null;
+export type BlockHandle<T extends BaseBlock> = T & {
+  _path: string;
+  _cachedData: Buffer | null;
+  path: string;
+  setPath(path: string): void;
+  fullData: Buffer;
+  layerData: Buffer;
+  layerPayloadSize: number;
+  getReadStream(): ReadStream;
+  getWriteStream(overwrite?: boolean): WriteStream;
+  calculateChecksum(): Promise<ChecksumUint8Array>;
+  calculateChecksumSync(): ChecksumUint8Array;
+  clearCache(): void;
+  block: RawDataBlock;
+};
 
-  /**
-   * Constructor - prefer using static createFromPath() method instead
-   */
-  constructor(
-    type: BlockType,
-    dataType: BlockDataType,
-    checksum: ChecksumBuffer,
-    metadata: BlockMetadata,
-    canRead = true,
-    canPersist = true,
-  ) {
-    super(type, dataType, checksum, metadata, canRead, canPersist);
-    this._path = '';
+/**
+ * This function creates a "block handle" for a block of type T which extends BaseBlock.
+ * It makes the returned object equivalent to the underlying block type T but replacing
+ * the get data() method with an on-demand load of the block data from the block store
+ * and adding other functions for block handle operations.
+ *
+ * So for createBlockHandle<EphemeralBlock>(...) this function shall return an EphemeralBlock
+ * but with the overriden get data() method to load the block data from the file system
+ * on demand along with other added functions.
+ *
+ * @param blockConstructor - The constructor for the block type T
+ * @param path - The path to the block file
+ * @param blockSize - The block size
+ * @param checksum - The checksum of the block
+ * @param canRead - Whether the block can be read
+ * @param canPersist - Whether the block can be persisted
+ * @param constructorArgs - Additional arguments to pass to the block constructor
+ * @returns A block handle for the specified block type
+ */
+export function createBlockHandle<T extends BaseBlock>(
+  blockConstructor: new (...args: any[]) => T,
+  path: string,
+  blockSize: BlockSize,
+  checksum: ChecksumUint8Array,
+  canRead = true,
+  canPersist = true,
+  ...constructorArgs: any[]
+): BlockHandle<T> {
+  if (!existsSync(path)) {
+    throw new BlockAccessError(BlockAccessErrorType.BlockFileNotFound, path);
   }
 
-  /**
-   * Create a new block handle from a file path
-   */
-  public static async createFromPath(
-    path: string,
-    metadata: BlockMetadata,
-    checksum?: ChecksumBuffer,
-    canRead = true,
-    canPersist = true,
-  ): Promise<BlockHandle> {
-    if (!existsSync(path)) {
-      throw new BlockAccessError(BlockAccessErrorType.BlockFileNotFound, path);
-    }
-    const data = readFileSync(path);
+  // Create the file stats once to avoid repeated file system calls
+  const stats = statSync(path);
 
-    // If no checksum provided, calculate it
-    if (!checksum) {
-      checksum = await StaticHelpersChecksum.calculateChecksumAsync(data);
-    }
+  // Create a basic instance of T
+  // This uses a temporary empty buffer since we'll load data on demand
+  // Use a date slightly in the past to avoid timing issues with validation
+  const creationDate = new Date(Math.min(stats.birthtime.getTime(), Date.now() - 1000));
+  const instance = new blockConstructor(
+    blockSize,
+    Buffer.alloc(0),
+    creationDate,
+    checksum,
+    BlockType.Handle, // Override blockType to indicate it's a handle
+    BlockDataType.RawData,
+    canRead,
+    canPersist,
+    ...constructorArgs,
+  ) as BlockHandle<T>;
 
-    // Create the handle with the checksum
-    const block = new BlockHandle(
-      BlockType.Handle,
-      BlockDataType.RawData,
-      checksum,
-      metadata,
-      canRead,
-      canPersist,
-    );
-    block._path = path;
+  // Add handle-specific properties
+  instance._path = path;
+  instance._cachedData = null;
 
-    // Validate if we calculated the checksum ourselves
-    if (!checksum) {
-      await block.validateAsync();
-    }
+  // Override and add methods
 
-    return block;
-  }
-
-  /**
-   * Get this layer's header data
-   */
-  public override get layerHeaderData(): Buffer {
-    return Buffer.alloc(0); // Handle blocks don't add header data
-  }
-
-  /**
-   * Get the complete header data from all layers
-   */
-  public override get fullHeaderData(): Buffer {
-    return Buffer.concat([super.fullHeaderData, this.layerHeaderData]);
-  }
-
-  /**
-   * Set the block's path
-   * @param path - The path to set
-   */
-  public setPath(path: string): void {
-    this._path = path;
-  }
-
-  /**
-   * Get the block's path
-   */
-  public get path(): string {
-    return this._path;
-  }
-
-  /**
-   * Get the block data without padding
-   */
-  public get data(): Buffer {
-    if (!this._cachedData) {
-      if (!existsSync(this.path)) {
-        throw new BlockAccessError(
-          BlockAccessErrorType.BlockFileNotFound,
-          this.path,
-        );
+  // Override get data()
+  Object.defineProperty(instance, 'data', {
+    get: function () {
+      if (!this.canRead) {
+        throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
       }
-      const fileData = readFileSync(this.path);
-      this._cachedData = fileData;
-    }
-    return this._cachedData.subarray(0, this.metadata.lengthWithoutPadding);
-  }
-
-  /**
-   * Get the full block data including padding
-   */
-  public get fullData(): Buffer {
-    if (!this._cachedData) {
-      if (!existsSync(this.path)) {
-        throw new BlockAccessError(
-          BlockAccessErrorType.BlockFileNotFound,
-          this.path,
-        );
-      }
-      const fileData = readFileSync(this.path);
-      this._cachedData = fileData;
-    }
-    return this._cachedData;
-  }
-
-  /**
-   * The payload is the same as data for handles
-   */
-  public override get payload(): Buffer {
-    return this.data;
-  }
-
-  /**
-   * Block metadata, loaded on demand
-   */
-  public override get metadata(): BlockMetadata {
-    if (!this._cachedMetadata) {
-      const metadataPath = `${this.path}.m.json`;
-      if (!existsSync(metadataPath)) {
-        // If no metadata file exists, create default metadata
-        this._cachedMetadata = new BlockMetadata(
-          this.blockSize,
-          BlockType.Handle,
-          BlockDataType.RawData,
-          this.data.length,
-        );
-      } else {
-        try {
-          const metadataJson = readFileSync(metadataPath).toString();
-          this._cachedMetadata = BlockMetadata.fromJson(metadataJson);
-        } catch (error: unknown) {
-          if (error instanceof Error) {
-            throw new BlockMetadataError(
-              BlockMetadataErrorType.InvalidBlockMetadata,
-              error.message,
-            );
-          }
-          throw new BlockMetadataError(
-            BlockMetadataErrorType.InvalidBlockMetadata,
+      if (!this._cachedData) {
+        if (!existsSync(this._path)) {
+          throw new BlockAccessError(
+            BlockAccessErrorType.BlockFileNotFound,
+            this._path,
           );
         }
+        this._cachedData = readFileSync(this._path);
       }
-    }
-    return this._cachedMetadata;
-  }
+      return this._cachedData;
+    },
+    enumerable: true,
+    configurable: true,
+  });
 
-  /**
-   * Get a read stream for the block data
-   */
-  public getReadStream(): ReadStream {
+  // Add path getter
+  Object.defineProperty(instance, 'path', {
+    get: function () {
+      return this._path;
+    },
+    enumerable: true,
+    configurable: true,
+  });
+
+  // Add setPath method
+  instance.setPath = function (path: string): void {
+    this._path = path;
+  };
+
+  // Add fullData getter
+  Object.defineProperty(instance, 'fullData', {
+    get: function () {
+      return this.data;
+    },
+    enumerable: true,
+    configurable: true,
+  });
+
+  // Override get layerPayload()
+  Object.defineProperty(instance, 'layerPayload', {
+    get: function () {
+      return this.fullData;
+    },
+    enumerable: true,
+    configurable: true,
+  });
+
+  // Add layerData getter
+  Object.defineProperty(instance, 'layerData', {
+    get: function () {
+      return this.fullData;
+    },
+    enumerable: true,
+    configurable: true,
+  });
+
+  // Add layerPayloadSize getter
+  Object.defineProperty(instance, 'layerPayloadSize', {
+    get: function () {
+      return this.fullData.length;
+    },
+    enumerable: true,
+    configurable: true,
+  });
+
+  // Override metadata getter
+  Object.defineProperty(instance, 'metadata', {
+    get: function () {
+      if (!existsSync(this._path)) {
+        throw new BlockAccessError(
+          BlockAccessErrorType.BlockFileNotFound,
+          this._path,
+        );
+      }
+      const stats = statSync(this._path);
+      return new BlockMetadata(
+        this.blockSize,
+        BlockType.Handle,
+        BlockDataType.RawData,
+        stats.size,
+        new Date(stats.birthtime),
+      );
+    },
+    enumerable: true,
+    configurable: true,
+  });
+
+  // Add getReadStream method
+  instance.getReadStream = function (): ReadStream {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
-    if (!existsSync(this.path)) {
+    if (!existsSync(this._path)) {
       throw new BlockAccessError(
         BlockAccessErrorType.BlockFileNotFound,
-        this.path,
+        this._path,
       );
     }
-    return createReadStream(this.path);
-  }
+    return createReadStream(this._path);
+  };
 
-  /**
-   * Get a write stream for the block data
-   */
-  public getWriteStream(overwrite = false): WriteStream {
+  // Add getWriteStream method
+  instance.getWriteStream = function (overwrite = false): WriteStream {
     if (!this.canPersist) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotPersistable);
     }
-    if (existsSync(this.path) && !overwrite) {
+    if (existsSync(this._path) && !overwrite) {
       throw new BlockAccessError(BlockAccessErrorType.BlockAlreadyExists);
     }
-    return createWriteStream(this.path);
-  }
+    return createWriteStream(this._path);
+  };
 
-  /**
-   * Calculate the checksum of the block data asynchronously
-   */
-  public async calculateChecksum(): Promise<ChecksumBuffer> {
+  // Add calculateChecksum method
+  instance.calculateChecksum = async function (): Promise<ChecksumUint8Array> {
     return new Promise((resolve, reject) => {
       const readStream = this.getReadStream();
       const checksumTransform = new ChecksumTransform();
@@ -246,72 +244,105 @@ export class BlockHandle extends BaseBlock {
         readStream.destroy();
       });
     });
-  }
+  };
 
-  /**
-   * Calculate the checksum of the block data synchronously
-   */
-  public calculateChecksumSync(): ChecksumBuffer {
-    if (!existsSync(this.path)) {
+  // Add calculateChecksumSync method
+  instance.calculateChecksumSync = function (): ChecksumUint8Array {
+    if (!existsSync(this._path)) {
       throw new BlockAccessError(
         BlockAccessErrorType.BlockFileNotFound,
-        this.path,
+        this._path,
       );
     }
-    const data = readFileSync(this.path);
-    return StaticHelpersChecksum.calculateChecksum(data);
-  }
-
-  /**
-   * Verify the block's checksum matches its ID asynchronously
-   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
-   */
-  public override async validateAsync(): Promise<void> {
-    const checksum = await this.calculateChecksum();
-    if (!checksum.equals(this.idChecksum)) {
-      throw new ChecksumMismatchError(this.idChecksum, checksum);
-    }
-  }
-
-  /**
-   * Verify the block's checksum matches its ID synchronously
-   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
-   */
-  public override validateSync(): void {
-    const checksum = this.calculateChecksumSync();
-    if (!checksum.equals(this.idChecksum)) {
-      throw new ChecksumMismatchError(this.idChecksum, checksum);
-    }
-  }
-
-  /**
-   * Alias for validateSync() to maintain compatibility
-   * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
-   */
-  public override validate(): void {
-    this.validateSync();
-  }
-
-  /**
-   * Clear any cached data
-   */
-  public clearCache(): void {
-    this._cachedData = null;
-    this._cachedMetadata = null;
-  }
-
-  public get block(): RawDataBlock {
-    const newBlock = new RawDataBlock(
-      this.blockSize,
-      this.fullData,
-      this.dateCreated,
-      this.idChecksum,
-      this.blockType,
-      this.blockDataType,
-      this.canRead,
-      this.canPersist,
+    const data = readFileSync(this._path);
+    return ServiceProvider.getInstance().checksumService.calculateChecksum(
+      data,
     );
-    newBlock.validateSync();
-    return newBlock;
+  };
+
+  // Override validateAsync method
+  instance.validateAsync = async function (): Promise<void> {
+    const checksum = await this.calculateChecksum();
+    if (!Buffer.from(checksum).equals(Buffer.from(this.idChecksum))) {
+      throw new ChecksumMismatchError(this.idChecksum, checksum);
+    }
+  };
+
+  // Override validateSync method
+  instance.validateSync = function (): void {
+    const checksum = this.calculateChecksumSync();
+    if (!Buffer.from(checksum).equals(Buffer.from(this.idChecksum))) {
+      throw new ChecksumMismatchError(this.idChecksum, checksum);
+    }
+  };
+
+  // Override validate method
+  instance.validate = function (): void {
+    this.validateSync();
+  };
+
+  // Add clearCache method
+  instance.clearCache = function (): void {
+    this._cachedData = null;
+  };
+
+  // Add block getter
+  Object.defineProperty(instance, 'block', {
+    get: function () {
+      const newBlock = new RawDataBlock(
+        this.blockSize,
+        this.fullData,
+        this.dateCreated,
+        this.idChecksum,
+        this.blockType,
+        this.blockDataType,
+        this.canRead,
+        this.canPersist,
+      );
+      newBlock.validateSync();
+      return newBlock;
+    },
+    enumerable: true,
+    configurable: true,
+  });
+
+  // Return the augmented instance
+  return instance;
+}
+
+/**
+ * Create a new block handle from a file path
+ */
+export async function createBlockHandleFromPath<T extends BaseBlock>(
+  blockConstructor: new (...args: any[]) => T,
+  path: string,
+  blockSize: BlockSize,
+  checksum?: ChecksumUint8Array,
+  canRead = true,
+  canPersist = true,
+  ...constructorArgs: any[]
+): Promise<BlockHandle<T>> {
+  if (!existsSync(path)) {
+    throw new BlockAccessError(BlockAccessErrorType.BlockFileNotFound, path);
   }
+
+  // If no checksum provided, calculate it
+  if (!checksum) {
+    const nodeStream = createReadStream(path);
+    const webStream = Readable.toWeb(nodeStream) as ReadableStream<Uint8Array>;
+    checksum =
+      await ServiceProvider.getInstance().checksumService.calculateChecksumForStream(
+        webStream,
+      );
+  }
+
+  return createBlockHandle(
+    blockConstructor,
+    path,
+    blockSize,
+    checksum,
+    canRead,
+    canPersist,
+    ...constructorArgs,
+  );
 }

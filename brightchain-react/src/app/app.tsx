@@ -1,69 +1,185 @@
-// Uncomment this line to use CSS modules
-// import styles from './app.module.css';
-import { CssBaseline, ThemeProvider } from '@mui/material';
-
-import { StringLanguages } from '@BrightChain/brightchain-lib';
-import { FC, useEffect } from 'react';
-import { Link, Route, Routes } from 'react-router-dom';
-import { AuthProvider, useAuth } from '../auth-provider';
-import { TranslationProvider } from '../i18n-provider';
-import { MenuProvider } from '../menu-context';
-import { setAuthContextFunctions } from '../services/auth';
-import theme from '../theme';
-import { UserProvider } from '../user-context';
+import { Box, CssBaseline } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { FC, useCallback } from 'react';
+import { Route, Routes, useNavigate } from 'react-router-dom';
+import '../styles.scss';
 import { SplashPage } from './components/splashPage';
-import TranslatedTitle from './components/translatedTitle';
+import { createAppTheme } from '../theme';
+import {
+  MenuProvider,
+  AuthProvider,
+  SuiteConfigProvider,
+  PrivateRoute,
+  UnAuthRoute,
+  TopMenu,
+  TranslatedTitle,
+  LoginFormWrapper,
+  RegisterFormWrapper,
+  LogoutPageWrapper,
+  VerifyEmailPageWrapper,
+  ChangePasswordFormWrapper,
+  UserSettingsFormWrapper,
+  BackupCodeLoginWrapper,
+  BackupCodesWrapper,
+  ApiAccess,
+} from '@digitaldefiance/express-suite-react-components';
+import { environment } from '../environments/environment';
+import { getI18n, constants } from '@brightchain/brightchain-lib';
+import { LanguageRegistry } from '@digitaldefiance/i18n-lib';
+import { IConstants } from '@digitaldefiance/suite-core-lib';
+import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 
-const App: FC = () => {
+const getApiBaseUrl = () => {
+  if (
+    typeof window !== 'undefined' &&
+    (window as any).APP_CONFIG &&
+    (window as any).APP_CONFIG.apiUrl
+  ) {
+    return (window as any).APP_CONFIG.apiUrl;
+  }
+  return environment.apiUrl;
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+// Create ECIES configuration required by AuthProvider
+const eciesConfig: IECIESConfig = {
+  curveName: 'secp256k1',
+  primaryKeyDerivationPath: "m/44'/0'/0'/0/0",
+  mnemonicStrength: 256,
+  symmetricAlgorithm: 'aes-256-gcm',
+  symmetricKeyBits: 256,
+  symmetricKeyMode: 'gcm',
+};
+
+const AuthProviderWithNavigation: FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const navigate = useNavigate();
+
+  const handleLogout = useCallback(() => {
+    navigate('/');
+  }, [navigate]);
+
   return (
-    <TranslationProvider>
-      <TranslatedTitle />
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <AuthProvider>
-          <UserProvider>
-            <MenuProvider>
-              <InnerApp />
-            </MenuProvider>
-          </UserProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </TranslationProvider>
+    <SuiteConfigProvider
+      baseUrl={API_BASE_URL}
+      routes={{
+        dashboard: '/dashboard',
+        login: '/login',
+        register: '/register',
+        verifyEmail: '/verify-email',
+        settings: '/user-settings',
+      }}
+      languages={LanguageRegistry.getCodeLabelMap()}
+    >
+      <AuthProvider
+        baseUrl={API_BASE_URL}
+        constants={constants.CONSTANTS as unknown as IConstants}
+        eciesConfig={eciesConfig}
+        onLogout={handleLogout}
+      >
+        {children}
+      </AuthProvider>
+    </SuiteConfigProvider>
   );
 };
 
-const InnerApp: FC = () => {
-  const { setUser, setLanguage } = useAuth();
-
-  useEffect(() => {
-    setAuthContextFunctions({
-      setUser,
-      setLanguage: (lang: StringLanguages) => {
-        setLanguage(lang);
-      },
-    });
-  }, [setUser, setLanguage]);
-
+const App: FC = () => {
   return (
-    <div>
-      {/* START: routes */}
-      {/* These routes and navigation have been generated for you */}
-      {/* Feel free to move and update them to fit your needs */}
-      <br />
-      <hr />
-      <br />
-      <div role="navigation">
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-        </ul>
-      </div>
-      <Routes>
-        <Route path="/" element={<SplashPage />} />
-      </Routes>
-      {/* END: routes */}
-    </div>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <TranslatedTitle
+        componentId="brightchain.strings"
+        stringKey="BrightChain"
+      />
+      <CssBaseline />
+      <AuthProviderWithNavigation>
+        <InnerApp />
+      </AuthProviderWithNavigation>
+    </LocalizationProvider>
+  );
+};
+
+const LogoComponent = () => (
+  <div style={{ fontWeight: 'bold', fontSize: '1.5rem' }}>BrightChain</div>
+);
+
+const InnerApp: FC = () => {
+  return (
+    <MenuProvider menuConfigs={[]}>
+      <Box className="app-container" sx={{ paddingTop: '64px' }}>
+        <TopMenu Logo={<LogoComponent />} />
+        <Routes>
+          <Route path="/" element={<SplashPage />} />
+          <Route
+            path="/api-access"
+            element={
+              <PrivateRoute>
+                <ApiAccess />
+              </PrivateRoute>
+            }
+          />
+          <Route path="/backup-code" element={<BackupCodeLoginWrapper />} />
+          <Route
+            path="/backup-codes"
+            element={
+              <PrivateRoute>
+                <BackupCodesWrapper />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <UnAuthRoute>
+                <LoginFormWrapper />
+              </UnAuthRoute>
+            }
+          />
+          <Route
+            path="/logout"
+            element={
+              <PrivateRoute>
+                <LogoutPageWrapper />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <UnAuthRoute>
+                <RegisterFormWrapper />
+              </UnAuthRoute>
+            }
+          />
+          <Route
+            path="/change-password"
+            element={
+              <PrivateRoute>
+                <ChangePasswordFormWrapper />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/verify-email"
+            element={
+              <UnAuthRoute>
+                <VerifyEmailPageWrapper />
+              </UnAuthRoute>
+            }
+          />
+          <Route
+            path="/user-settings"
+            element={
+              <PrivateRoute>
+                <UserSettingsFormWrapper />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </Box>
+    </MenuProvider>
   );
 };
 

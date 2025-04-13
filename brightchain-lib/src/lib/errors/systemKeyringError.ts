@@ -1,25 +1,25 @@
 import { StringLanguages } from '../enumerations/stringLanguages';
-import {
-  SystemKeyringErrorType,
-  SystemKeyringErrorTypes,
-} from '../enumerations/systemKeyringErrorType';
-import { translate } from '../i18n';
-import { HandleableError } from './handleable';
+import StringNames from '../enumerations/stringNames';
+import { SystemKeyringErrorType } from '../enumerations/systemKeyringErrorType';
+import { TypedError } from './typedError';
 
-export class SystemKeyringError extends HandleableError {
-  public readonly reason: SystemKeyringErrorType;
-
+export class SystemKeyringError extends TypedError<SystemKeyringErrorType> {
+  public get reasonMap(): Record<SystemKeyringErrorType, StringNames> {
+    return {
+      [SystemKeyringErrorType.KeyNotFound]:
+        StringNames.Error_SystemKeyringErrorKeyNotFoundTemplate,
+      [SystemKeyringErrorType.RateLimitExceeded]:
+        StringNames.Error_SystemKeyringErrorRateLimitExceeded,
+    };
+  }
   constructor(
-    reason: SystemKeyringErrorType,
+    type: SystemKeyringErrorType,
     keyId?: string,
     language?: StringLanguages,
   ) {
-    super(
-      translate(SystemKeyringErrorTypes[reason], language, {
-        ...(keyId ? { KEY: keyId } : {}),
-      }),
-    );
+    super(type, undefined, {
+      ...(keyId ? { KEY: keyId } : {}),
+    });
     this.name = 'SystemKeyringError';
-    this.reason = reason;
   }
 }

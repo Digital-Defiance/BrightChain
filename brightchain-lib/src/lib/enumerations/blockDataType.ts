@@ -8,6 +8,10 @@
  * 2. Data may be encrypted for security
  * 3. Data may be structured for organization
  * 4. Data may be ephemeral for temporary operations
+ *
+ * Value Ranges:
+ * 0-99: Core data types
+ * 100+: Member-related data types
  */
 export enum BlockDataType {
   /**
@@ -51,6 +55,34 @@ export enum BlockDataType {
    * - Temporary operations
    */
   EphemeralStructuredData = 2,
+
+  /**
+   * Public member data.
+   * Characteristics:
+   * 1. Publicly accessible
+   * 2. Basic member information
+   * 3. Network status
+   *
+   * Used in:
+   * - Member discovery
+   * - Network operations
+   * - Public lookups
+   */
+  PublicMemberData = 100,
+
+  /**
+   * Private member data.
+   * Characteristics:
+   * 1. Access controlled
+   * 2. Sensitive information
+   * 3. Personal settings
+   *
+   * Used in:
+   * - Member preferences
+   * - Private information
+   * - Activity history
+   */
+  PrivateMemberData = 101,
 }
 
 export default BlockDataType;

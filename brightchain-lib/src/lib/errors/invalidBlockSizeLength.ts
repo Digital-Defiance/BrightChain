@@ -6,7 +6,7 @@ export class InvalidBlockSizeLengthError extends Error {
   public readonly blockSize: number;
   constructor(blockSize: number, language?: StringLanguages) {
     super(
-      translate(StringNames.Error_InvalidBlockSizeTemplate, language, {
+      translate(StringNames.Error_InvalidBlockSizeTemplate, {
         BLOCK_SIZE: blockSize,
       }),
     );

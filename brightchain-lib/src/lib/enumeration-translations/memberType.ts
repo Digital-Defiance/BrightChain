@@ -1,17 +1,18 @@
 import MemberType from '../enumerations/memberType';
 import { StringLanguages } from '../enumerations/stringLanguages';
+import { registerTranslation } from '../i18n';
+import { createTranslations, EnumLanguageTranslation } from '../types';
 
-export type MemberTypeTranslation = {
-  [key in MemberType]: string;
-};
-export type MemberTypeLanguageTranslation = {
-  [key in StringLanguages]: MemberTypeTranslation;
-};
+export type MemberTypeLanguageTranslation = EnumLanguageTranslation<MemberType>;
 
-export const MemberTypeTranslations: MemberTypeLanguageTranslation = {
-  [StringLanguages.EnglishUS]: {
-    [MemberType.Admin]: 'Admin',
-    [MemberType.System]: 'System',
-    [MemberType.User]: 'User',
-  },
-};
+export const MemberTypeTranslations: MemberTypeLanguageTranslation =
+  registerTranslation(
+    MemberType,
+    createTranslations({
+      [StringLanguages.EnglishUS]: {
+        [MemberType.Admin]: 'Admin',
+        [MemberType.System]: 'System',
+        [MemberType.User]: 'User',
+      },
+    }),
+  );

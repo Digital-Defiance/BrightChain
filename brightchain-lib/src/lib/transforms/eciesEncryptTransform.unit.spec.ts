@@ -1,9 +1,10 @@
 import { randomBytes } from 'crypto';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { EciesErrorType } from '../enumerations/eciesErrorType';
 import { EciesError } from '../errors/eciesError';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { EciesEncryptTransform } from './eciesEncryptTransform';
+import { SecureString } from '@digitaldefiance/ecies-lib';
 
 describe('EciesEncryptTransform Unit Tests', () => {
   const mockLogger = {
@@ -14,11 +15,19 @@ describe('EciesEncryptTransform Unit Tests', () => {
   } as unknown as Console;
 
   const blockSize = BlockSize.Small;
-  const mnemonic = StaticHelpersECIES.generateNewMnemonic();
-  const keypair = StaticHelpersECIES.mnemonicToSimpleKeyPairBuffer(mnemonic);
+  let eciesService: ECIESService;
+  let mnemonic: SecureString;
+  let keypair: {
+    privateKey: Buffer;
+    publicKey: Buffer;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    eciesService = new ECIESService();
+    mnemonic = eciesService.generateNewMnemonic();
+    const kp = eciesService.mnemonicToSimpleKeyPairBuffer(mnemonic);
+    keypair = kp;
   });
 
   it('should be instantiated with correct parameters', () => {
@@ -68,7 +77,8 @@ describe('EciesEncryptTransform Unit Tests', () => {
       const encryptedData = Buffer.concat(chunks);
 
       // Verify the encrypted data can be decrypted
-      const decryptedData = StaticHelpersECIES.decrypt(
+      const decryptedData = eciesService.decryptSimpleOrSingleWithHeader(
+        true,
         keypair.privateKey,
         encryptedData,
       );
@@ -104,7 +114,8 @@ describe('EciesEncryptTransform Unit Tests', () => {
       const encryptedData = Buffer.concat(chunks);
 
       // Verify the encrypted data can be decrypted
-      const decryptedData = StaticHelpersECIES.decrypt(
+      const decryptedData = eciesService.decryptSimpleOrSingleWithHeader(
+        true,
         keypair.privateKey,
         encryptedData,
       );
@@ -119,24 +130,16 @@ describe('EciesEncryptTransform Unit Tests', () => {
     transform.end();
   }, 30000);
 
-  it('should throw error with invalid public key', (done) => {
-    const invalidPublicKey = randomBytes(32); // Wrong size for public key
-    const transform = new EciesEncryptTransform(
-      blockSize,
-      invalidPublicKey,
-      mockLogger,
-    );
-    const inputData = randomBytes(100);
-
-    transform.on('error', (error: EciesError) => {
-      expect(error).toBeDefined();
-      expect(error.reason).toBe(EciesErrorType.InvalidEphemeralPublicKey);
-      expect(error.message).toContain('Invalid ephemeral public key');
-      expect(mockLogger.error).toHaveBeenCalled();
-      done();
-    });
-
-    transform.write(inputData);
-    transform.end();
-  }, 10000);
+  it('should throw error with invalid public key', () => {
+    // The transform should throw an error in the constructor when given an invalid public key
+    const invalidPublicKey = randomBytes(32); // Wrong size for public key (should be 65 bytes)
+    
+    expect(() => {
+      new EciesEncryptTransform(
+        blockSize,
+        invalidPublicKey,
+        mockLogger,
+      );
+    }).toThrow('Invalid public key length');
+  });
 });

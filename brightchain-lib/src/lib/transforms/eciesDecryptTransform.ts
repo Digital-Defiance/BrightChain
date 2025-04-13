@@ -1,26 +1,38 @@
 import { Transform, TransformCallback, TransformOptions } from 'stream';
-import { BlockSize } from '../enumerations/blockSizes';
+import { ECIES } from '../constants';
+import { BlockSize } from '../enumerations/blockSize';
 import { StreamErrorType } from '../enumerations/streamErrorType';
 import { StreamError } from '../errors/streamError';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { ECIESService, getNodeRuntimeConfiguration } from '@digitaldefiance/node-ecies-lib';
+import { EciesEncryptionTypeEnum, GuidV4Provider } from '@digitaldefiance/ecies-lib';
 
 export class EciesDecryptionTransform extends Transform {
   private readonly blockSize: number;
   private readonly privateKey: Buffer;
   private buffer: Buffer;
   private readonly logger: Console;
+  private readonly eciesService: ECIESService;
 
   constructor(
     privateKey: Buffer,
     blockSize: BlockSize,
     options?: TransformOptions,
     logger: Console = console,
+    eciesService?: ECIESService,
   ) {
     super(options);
     this.logger = logger;
     this.privateKey = privateKey;
     this.blockSize = blockSize as number;
     this.buffer = Buffer.alloc(0);
+    
+    // Use provided service or create one with GuidV4Provider config
+    if (eciesService) {
+      this.eciesService = eciesService;
+    } else {
+      const config = getNodeRuntimeConfiguration();
+      this.eciesService = new ECIESService(undefined, config.ECIES);
+    }
   }
 
   public override _transform(
@@ -43,7 +55,8 @@ export class EciesDecryptionTransform extends Transform {
         this.buffer = this.buffer.subarray(this.blockSize);
 
         try {
-          const decryptedBlock = StaticHelpersECIES.decryptWithHeader(
+          const decryptedBlock = this.eciesService.decryptSimpleOrSingleWithHeader(
+            true, // decryptSimple = true
             this.privateKey,
             encryptedBlock,
           );
@@ -79,11 +92,12 @@ export class EciesDecryptionTransform extends Transform {
     try {
       // Handle any remaining data in buffer
       if (this.buffer.length > 0) {
-        if (this.buffer.length < StaticHelpersECIES.eciesOverheadLength) {
+        if (this.buffer.length < ECIES.OVERHEAD_SIZE) {
           throw new StreamError(StreamErrorType.IncompleteEncryptedBlock);
         }
 
-        const decryptedBlock = StaticHelpersECIES.decryptWithHeader(
+        const decryptedBlock = this.eciesService.decryptSimpleOrSingleWithHeader(
+          true, // decryptSimple = true
           this.privateKey,
           this.buffer,
         );

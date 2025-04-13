@@ -1,4 +1,4 @@
-import { GuidV4 } from '../guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 
 export interface IClusterKeys {
   nodeAgents: GuidV4[];

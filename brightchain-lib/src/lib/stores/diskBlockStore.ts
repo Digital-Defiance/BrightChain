@@ -1,9 +1,9 @@
+import { ChecksumUint8Array } from '../types';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import { BlockSize, sizeToSizeString } from '../enumerations/blockSizes';
+import { BlockSize, blockSizeToSizeString } from '../enumerations/blockSize';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
-import { ChecksumBuffer } from '../types';
 
 /**
  * DiskBlockStore provides base functionality for storing blocks on disk.
@@ -13,21 +13,21 @@ export abstract class DiskBlockStore {
   protected readonly _storePath: string;
   protected readonly _blockSize: BlockSize;
 
-  protected constructor(storePath: string, blockSize: BlockSize) {
-    if (!storePath) {
+  protected constructor(config: { storePath: string; blockSize: BlockSize }) {
+    if (!config.storePath) {
       throw new StoreError(StoreErrorType.StorePathRequired);
     }
 
-    if (!blockSize) {
+    if (!config.blockSize) {
       throw new StoreError(StoreErrorType.BlockSizeRequired);
     }
 
-    this._storePath = storePath;
-    this._blockSize = blockSize;
+    this._storePath = config.storePath;
+    this._blockSize = config.blockSize;
 
     // Ensure store path exists
-    if (!existsSync(storePath)) {
-      mkdirSync(storePath, { recursive: true });
+    if (!existsSync(config.storePath)) {
+      mkdirSync(config.storePath, { recursive: true });
     }
   }
 
@@ -35,17 +35,17 @@ export abstract class DiskBlockStore {
    * Get the directory path for a block
    * Directory structure: storePath/blockSize/checksumChar1/checksumChar2/
    */
-  protected blockDir(blockId: ChecksumBuffer): string {
+  protected blockDir(blockId: ChecksumUint8Array): string {
     if (!blockId || blockId.length === 0) {
       throw new StoreError(StoreErrorType.BlockIdRequired);
     }
 
-    const checksumString = blockId.toString('hex');
+    const checksumString = Buffer.from(blockId).toString('hex');
     if (checksumString.length < 2) {
       throw new StoreError(StoreErrorType.InvalidBlockIdTooShort);
     }
 
-    const blockSizeString = sizeToSizeString(this._blockSize);
+    const blockSizeString = blockSizeToSizeString(this._blockSize);
     return join(
       this._storePath,
       blockSizeString,
@@ -58,17 +58,17 @@ export abstract class DiskBlockStore {
    * Get the file path for a block
    * File structure: storePath/blockSize/checksumChar1/checksumChar2/fullChecksum
    */
-  protected blockPath(blockId: ChecksumBuffer): string {
+  protected blockPath(blockId: ChecksumUint8Array): string {
     if (!blockId || blockId.length === 0) {
       throw new StoreError(StoreErrorType.BlockIdRequired);
     }
 
-    const checksumString = blockId.toString('hex');
+    const checksumString = Buffer.from(blockId).toString('hex');
     if (checksumString.length < 2) {
       throw new StoreError(StoreErrorType.InvalidBlockIdTooShort);
     }
 
-    const blockSizeString = sizeToSizeString(this._blockSize);
+    const blockSizeString = blockSizeToSizeString(this._blockSize);
     return join(
       this._storePath,
       blockSizeString,
@@ -82,7 +82,7 @@ export abstract class DiskBlockStore {
    * Get the metadata file path for a block
    * Metadata files are stored alongside block files with a .m.json extension
    */
-  protected metadataPath(blockId: ChecksumBuffer): string {
+  protected metadataPath(blockId: ChecksumUint8Array): string {
     if (!blockId || blockId.length === 0) {
       throw new StoreError(StoreErrorType.BlockIdRequired);
     }
@@ -93,7 +93,7 @@ export abstract class DiskBlockStore {
   /**
    * Ensure the directory structure exists for a block
    */
-  protected ensureBlockPath(blockId: ChecksumBuffer): void {
+  protected ensureBlockPath(blockId: ChecksumUint8Array): void {
     if (!blockId || blockId.length === 0) {
       throw new StoreError(StoreErrorType.BlockIdRequired);
     }

@@ -1,7 +1,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",
@@ -12,13 +11,24 @@
     "strict": true,
     "target": "es2020",
     "module": "esnext",
-    "lib": ["es2020", "dom"],
+    "lib": [
+      "es2020",
+      "dom"
+    ],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@BrightChain/brightchain-lib": ["brightchain-lib/src/index.ts"]
+      "@brightchain/brightchain-lib": [
+        "dist/brightchain-lib"
+      ],
+      "@brightchain/brightchain-api-lib": [
+        "dist/brightchain-api-lib"
+      ]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
 }

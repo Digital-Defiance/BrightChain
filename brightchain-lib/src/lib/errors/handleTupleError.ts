@@ -1,26 +1,31 @@
-import {
-  HandleTupleErrorType,
-  HandleTupleErrorTypes,
-} from '../enumerations/handleTupleErrorType';
+import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
 import { StringLanguages } from '../enumerations/stringLanguages';
-import { translate } from '../i18n';
-import { HandleableError } from './handleable';
+import StringNames from '../enumerations/stringNames';
+import { TypedError } from './typedError';
 
-export class HandleTupleError extends HandleableError {
-  public readonly reason: HandleTupleErrorType;
+export class HandleTupleError extends TypedError<HandleTupleErrorType> {
+  public get reasonMap(): Record<HandleTupleErrorType, StringNames> {
+    return {
+      [HandleTupleErrorType.InvalidTupleSize]:
+        StringNames.Error_HandleTupleErrorInvalidTupleSizeTemplate,
+      [HandleTupleErrorType.BlockSizeMismatch]:
+        StringNames.Error_HandleTupleErrorBlockSizeMismatch,
+      [HandleTupleErrorType.NoBlocksToXor]:
+        StringNames.Error_HandleTupleErrorNoBlocksToXor,
+      [HandleTupleErrorType.BlockSizesMustMatch]:
+        StringNames.Error_HandleTupleErrorBlockSizesMustMatch,
+    };
+  }
   public readonly tupleSize?: number;
   constructor(
-    reason: HandleTupleErrorType,
+    type: HandleTupleErrorType,
     tupleSize?: number,
     language?: StringLanguages,
   ) {
-    super(
-      translate(HandleTupleErrorTypes[reason], language, {
-        ...(tupleSize ? { TUPLE_SIZE: tupleSize.toString() } : {}),
-      }),
-    );
+    super(type, undefined, {
+      ...(tupleSize ? { TUPLE_SIZE: tupleSize.toString() } : {}),
+    });
     this.name = 'HandleTupleError';
-    this.reason = reason;
     this.tupleSize = tupleSize;
   }
 }

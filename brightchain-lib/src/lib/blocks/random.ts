@@ -1,10 +1,10 @@
 import { randomBytes } from 'crypto';
 import { Readable } from 'stream';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { ChecksumBuffer } from '../types';
+import { ServiceProvider } from '../services/service.provider';
+import { ChecksumUint8Array } from '../types';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
 
@@ -14,11 +14,11 @@ import { RawDataBlock } from './rawData';
  * where data blocks are XORed with random blocks to make them meaningless on their own.
  */
 export class RandomBlock extends RawDataBlock {
-  private constructor(
+  public constructor(
     blockSize: BlockSize,
     data: Buffer,
     dateCreated?: Date,
-    checksum?: ChecksumBuffer,
+    checksum?: ChecksumUint8Array,
   ) {
     if (data.length !== blockSize) {
       throw new Error('Data length must match block size');
@@ -39,9 +39,9 @@ export class RandomBlock extends RawDataBlock {
   /**
    * Create a new random block
    */
-  public static new(blockSize: BlockSize): RandomBlock {
+  public static new(blockSize: BlockSize, dateCreated?: Date): RandomBlock {
     const data = randomBytes(blockSize as number);
-    return new RandomBlock(blockSize, data);
+    return new RandomBlock(blockSize, data, dateCreated);
   }
 
   /**
@@ -51,7 +51,7 @@ export class RandomBlock extends RawDataBlock {
     blockSize: BlockSize,
     data: Buffer,
     dateCreated?: Date,
-    checksum?: ChecksumBuffer,
+    checksum?: ChecksumUint8Array,
   ): RandomBlock {
     return new RandomBlock(blockSize, data, dateCreated, checksum);
   }
@@ -85,13 +85,6 @@ export class RandomBlock extends RawDataBlock {
   }
 
   /**
-   * Whether the block can be signed
-   */
-  public override get canSign(): boolean {
-    return false; // Random blocks cannot be signed
-  }
-
-  /**
    * Get this layer's header data
    */
   public override get layerHeaderData(): Buffer {
@@ -104,13 +97,6 @@ export class RandomBlock extends RawDataBlock {
    */
   public override get fullHeaderData(): Buffer {
     return Buffer.concat([super.fullHeaderData, this.layerHeaderData]);
-  }
-
-  /**
-   * Get the usable capacity after accounting for overhead
-   */
-  public override get capacity(): number {
-    return this.blockSize - this.totalOverhead;
   }
 
   /**
@@ -131,9 +117,9 @@ export class RandomBlock extends RawDataBlock {
    * @param data - The data to convert
    * @returns Promise that resolves to a Buffer
    */
-  private static async toBuffer(data: Readable | Buffer): Promise<Buffer> {
-    if (Buffer.isBuffer(data)) {
-      return data;
+  private static async toBuffer(data: Readable | Uint8Array): Promise<Buffer> {
+    if (Buffer.isBuffer(data) || data instanceof Uint8Array) {
+      return Buffer.from(data);
     }
     return RandomBlock.streamToBuffer(data);
   }
@@ -159,7 +145,7 @@ export class RandomBlock extends RawDataBlock {
       blockSize: BlockSize,
       data: Buffer,
       dateCreated: Date,
-      checksum: ChecksumBuffer,
+      checksum: ChecksumUint8Array,
       canRead: boolean,
       canPersist: boolean,
     ) => T;
@@ -168,7 +154,7 @@ export class RandomBlock extends RawDataBlock {
       this.blockSize,
       result,
       new Date(),
-      StaticHelpersChecksum.calculateChecksum(result),
+      ServiceProvider.getInstance().checksumService.calculateChecksum(result),
       this.canRead && other.canRead,
       this.canPersist && other.canPersist,
     );

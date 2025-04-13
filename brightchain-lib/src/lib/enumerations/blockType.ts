@@ -14,7 +14,6 @@
  *
  * Organization & Management:
  * - ConstituentBlockList (CBL): Lists of block references and metadata
- * - EncryptedConstituentBlockListBlock: Encrypted CBLs
  * - Handle: References to blocks stored elsewhere
  */
 export enum BlockType {
@@ -66,7 +65,7 @@ export enum BlockType {
    * 2. Access control
    * 3. Metadata support
    */
-  OwnedDataBlock = 4,
+  EphemeralOwnedDataBlock = 10,
 
   /**
    * A block containing references to other blocks.
@@ -75,34 +74,7 @@ export enum BlockType {
    * 2. Storing metadata
    * 3. Building hierarchies
    */
-  ConstituentBlockList = 5,
-
-  /**
-   * An encrypted block with ownership information.
-   * Features:
-   * 1. Data encryption
-   * 2. Owner identification
-   * 3. Access control
-   */
-  EncryptedOwnedDataBlock = 6,
-
-  /**
-   * An encrypted block containing block references.
-   * Used for:
-   * 1. Private block lists
-   * 2. Secure metadata
-   * 3. Protected hierarchies
-   */
-  EncryptedConstituentBlockListBlock = 7,
-
-  /**
-   * A reference to a block stored elsewhere.
-   * Features:
-   * 1. Lazy loading
-   * 2. Memory efficiency
-   * 3. Remote storage support
-   */
-  Handle = 8,
+  ConstituentBlockList = 20,
 
   /**
    * An extended CBL with file metadata.
@@ -111,12 +83,62 @@ export enum BlockType {
    * 2. MIME type tracking
    * 3. File system integration
    */
-  ExtendedConstituentBlockListBlock = 9,
+  ExtendedConstituentBlockListBlock = 21,
 
   /**
-   * A block encrypted for multiple recipients.
+   * An encrypted block with ownership information.
+   * Features:
+   * 1. Data encryption
+   * 2. Owner identification
+   * 3. Access control
    */
-  MultiEncryptedBlock = 10,
+  EncryptedOwnedDataBlock = 30,
+
+  /**
+   * An encrypted block containing block references.
+   */
+  EncryptedConstituentBlockListBlock = 31,
+
+  /**
+   * An encrypted block containing block references and metadata.
+   */
+  EncryptedExtendedConstituentBlockListBlock = 32,
+
+  /**
+   * A block that has been encrypted multiple times.
+   */
+  MultiEncryptedBlock = 33,
+
+  /**
+   * A reference to a block stored elsewhere.
+   * Features:
+   * 1. Lazy loading
+   * 2. Memory efficiency
+   * 3. Remote storage support
+   */
+  Handle = 40,
 }
+
+/**
+ * Block types that are ephemeral and do not have a persistent ID.
+ */
+export const EphemeralBlockTypes: readonly BlockType[] = [
+  BlockType.ConstituentBlockList,
+  BlockType.EphemeralOwnedDataBlock,
+  BlockType.ExtendedConstituentBlockListBlock,
+  BlockType.FECData,
+  BlockType.OwnerFreeWhitenedBlock,
+  BlockType.Random,
+  BlockType.RawData,
+] as const;
+
+/**
+ * Block types that are encrypted
+ */
+export const EncryptedBlockTypes: readonly BlockType[] = [
+  BlockType.EncryptedConstituentBlockListBlock,
+  BlockType.EncryptedExtendedConstituentBlockListBlock,
+  BlockType.EncryptedOwnedDataBlock,
+] as const;
 
 export default BlockType;

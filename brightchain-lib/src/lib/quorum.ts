@@ -2,9 +2,9 @@ import * as uuid from 'uuid';
 import { BrightChainMember } from './brightChainMember';
 import { QuorumErrorType } from './enumerations/quorumErrorType';
 import { QuorumError } from './errors/quorumError';
-import { GuidV4 } from './guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { QuorumDataRecord } from './quorumDataRecord';
-import { StaticHelpersSealing } from './staticHelpers.sealing';
+import { SealingService } from './services/sealing.service';
 import { BufferStore } from './stores/bufferStore';
 import { SimpleStore } from './stores/simpleStore';
 import { ShortHexGuid } from './types';
@@ -68,9 +68,9 @@ export class BrightChainQuorum {
    * @param member
    */
   protected storeMember(member: BrightChainMember) {
-    this._members.set(member.id.asShortHexGuid, member);
+    this._members.set(member.guidId.asShortHexGuid, member);
     this._memberPublicKeysByMemberId.set(
-      member.id.asShortHexGuid,
+      member.guidId.asShortHexGuid,
       member.publicKey,
     );
   }
@@ -99,7 +99,7 @@ export class BrightChainQuorum {
     amongstMembers: BrightChainMember[],
     sharesRequired?: number,
   ): QuorumDataRecord {
-    const newDoc = StaticHelpersSealing.quorumSeal<T>(
+    const newDoc = SealingService.quorumSeal<T>(
       agent,
       document,
       amongstMembers,
@@ -124,7 +124,7 @@ export class BrightChainQuorum {
       this._members.get(id),
     );
 
-    const restoredDoc = StaticHelpersSealing.quorumUnseal<T>(doc, members);
+    const restoredDoc = SealingService.quorumUnseal<T>(doc, members);
     if (!restoredDoc) {
       throw new QuorumError(QuorumErrorType.UnableToRestoreDocument);
     }
@@ -136,14 +136,19 @@ export class BrightChainQuorum {
    * @param id
    * @param members
    */
-  public canUnlock(id: ShortHexGuid, members: BrightChainMember[]) {
+  public canUnlock(id: ShortHexGuid, members: BrightChainMember[]): boolean {
     const doc = this._documentsById.get(id);
     if (!doc) {
       throw new QuorumError(QuorumErrorType.DocumentNotFound);
     }
     // check whether the supplied list of members are included in the document share distributions
     // as well as whether the number of members is sufficient to unlock the document
-    throw new QuorumError(QuorumErrorType.NotImplemented);
-    // throw new Error(members.length.toString());
+    return (
+      members.length >= doc.sharesRequired &&
+      members.every((m) => {
+        const memberGuidId = m.guidId.asShortHexGuid;
+        return doc.memberIDs.includes(memberGuidId);
+      })
+    );
   }
 }

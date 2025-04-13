@@ -1,18 +1,7 @@
-import { BlockSize, RawDataBlock } from '@BrightChain/brightchain-lib';
+import { BlockSize } from '@brightchain/brightchain-lib';
 
 export interface IBlockStore {
-  /**
-   * Store a block
-   */
-  storeBlock(block: RawDataBlock): Promise<string>;
-
-  /**
-   * Get a block by its ID
-   */
-  getBlock(blockId: string): Promise<RawDataBlock>;
-
-  /**
-   * Get the block size
-   */
   getBlockSize(): BlockSize;
+  storeBlock(blockId: string, data: Buffer): Promise<void>;
+  getBlock(blockId: string): Promise<Buffer>;
 }

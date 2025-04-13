@@ -1,12 +1,12 @@
-import { TUPLE_SIZE } from '../constants';
+import { TUPLE } from '../constants';
 import BlockDataType from '../enumerations/blockDataType';
 import BlockType from '../enumerations/blockType';
 import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
 import { HandleTupleError } from '../errors/handleTupleError';
-import { IBlockMetadata } from '../interfaces/blockMetadata';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
+import { ServiceProvider } from '../services/service.provider';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { BlockHandle } from './handle';
 import { RawDataBlock } from './rawData';
 
@@ -15,10 +15,10 @@ import { RawDataBlock } from './rawData';
  * Used for whitening and reconstruction operations.
  */
 export class BlockHandleTuple {
-  private readonly _handles: BlockHandle[];
+  private readonly _handles: BlockHandle<any>[];
 
-  constructor(handles: BlockHandle[]) {
-    if (handles.length !== TUPLE_SIZE) {
+  constructor(handles: BlockHandle<any>[]) {
+    if (handles.length !== TUPLE.SIZE) {
       throw new HandleTupleError(HandleTupleErrorType.InvalidTupleSize);
     }
 
@@ -34,7 +34,7 @@ export class BlockHandleTuple {
   /**
    * The handles in this tuple
    */
-  public get handles(): BlockHandle[] {
+  public get handles(): BlockHandle<any>[] {
     return this._handles;
   }
 
@@ -48,7 +48,7 @@ export class BlockHandleTuple {
   /**
    * The block IDs in this tuple
    */
-  public get blockIds(): ChecksumBuffer[] {
+  public get blockIds(): ChecksumUint8Array[] {
     return this.handles.map((handle) => handle.idChecksum);
   }
 
@@ -60,8 +60,8 @@ export class BlockHandleTuple {
    */
   public async xor(
     diskBlockStore: DiskBlockAsyncStore,
-    destBlockMetadata: IBlockMetadata,
-  ): Promise<BlockHandle> {
+    destBlockMetadata: IBaseBlockMetadata,
+  ): Promise<BlockHandle<any>> {
     if (!this.handles.length) {
       throw new HandleTupleError(HandleTupleErrorType.NoBlocksToXor);
     }
@@ -97,7 +97,8 @@ export class BlockHandleTuple {
     }
 
     // Calculate checksum for the result
-    const checksum = StaticHelpersChecksum.calculateChecksum(result);
+    const checksum =
+      ServiceProvider.getInstance().checksumService.calculateChecksum(result);
 
     // Create a RawDataBlock for the result with the provided metadata
     const block = new RawDataBlock(

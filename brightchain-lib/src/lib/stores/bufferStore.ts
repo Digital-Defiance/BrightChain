@@ -40,6 +40,6 @@ export class BufferStore<K extends string | number>
    * @param value
    */
   public set(key: K, value: Buffer): void {
-    this._data.set(key, value.toString('hex'));
+    this._data.set(key, Buffer.from(value).toString('hex'));
   }
 }

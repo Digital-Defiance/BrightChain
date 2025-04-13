@@ -1,21 +1,72 @@
 import {
-  debugLog,
-  HandleableError,
   SecureKeyStorage,
-} from '@BrightChain/brightchain-lib';
+} from '@brightchain/brightchain-lib';
+import { HandleableError } from '@digitaldefiance/i18n-lib';
+import { debugLog } from '@digitaldefiance/node-express-suite';
 import express, { Application, NextFunction, Request, Response } from 'express';
+import { readdirSync, readFileSync } from 'fs';
 import { Server } from 'http';
-import { environment } from './environment';
+import { createServer } from 'https';
+import { resolve } from 'path';
+import { getEnvironment } from './environment';
 import { IApplication } from './interfaces/application';
 import { Middlewares } from './middlewares';
 import { ApiRouter } from './routers/api';
 import { AppRouter } from './routers/app';
 import { handleError, sendApiMessageResponse } from './utils';
 
+function locatePEMRoot(): string {
+  const files = readdirSync(resolve(__dirname, '../..'));
+  const pemFiles = files.filter(
+    (file: string) =>
+      file.match(/localhost\+\d+-key\.pem$/) ||
+      file.match(/localhost\+\d+\.pem$/),
+  );
+  if (pemFiles.length < 2) {
+    throw new HandleableError(new Error('PEM files not found in root directory'));
+  }
+  const roots = pemFiles.map((file: string) => {
+    const result = /(.*)\/(localhost\+\d+)(.*)\.pem/.exec(
+      resolve(__dirname, '../..', file),
+    );
+    return result ? `${result[1]}/${result[2]}` : undefined;
+  });
+  if (roots.some((root) => root !== roots[0])) {
+    throw new HandleableError(new Error('PEM roots do not match'));
+  }
+  return roots[0]!;
+}
+
 /**
  * Application class
  */
 export class App implements IApplication {
+  public readonly id: string = 'brightchain-app';
+
+  public get db(): any {
+    return null;
+  }
+
+  // Add missing interface methods
+  public getController(name: string): any {
+    // Placeholder implementation
+    return null;
+  }
+
+  public get nodeAgent(): any {
+    // Placeholder implementation
+    return null;
+  }
+
+  public get clusterAgentPublicKeys(): any {
+    // Placeholder implementation
+    return [];
+  }
+
+  public getModel<T>(name: string): any {
+    // Placeholder implementation
+    return null;
+  }
   private static instance: App | null = null;
   private readonly keyStorage: SecureKeyStorage;
 
@@ -88,23 +139,41 @@ export class App implements IApplication {
           const handleableError =
             err instanceof HandleableError
               ? err
-              : new HandleableError(err.message, { cause: err });
+              : new HandleableError(err, { cause: err });
           handleError(handleableError, res, sendApiMessageResponse, next);
         },
       );
 
       this.server = this.expressApp.listen(
-        environment.developer.port,
-        environment.developer.host,
+        getEnvironment().developer.port,
+        getEnvironment().developer.host,
         () => {
           this._ready = true;
           debugLog(
-            environment.developer.debug,
+            getEnvironment().developer.debug,
             'log',
-            `[ ready ] http://${environment.developer.host}:${environment.developer.port}`,
+            `[ ready ] http://${getEnvironment().developer.host}:${getEnvironment().developer.port}`,
           );
         },
       );
+
+      try {
+        const result = locatePEMRoot();
+        const certPath = resolve(result + '.pem');
+        const keyPath = resolve(result + '-key.pem');
+        const options = {
+          key: readFileSync(keyPath),
+          cert: readFileSync(certPath),
+        };
+
+        createServer(options, this.expressApp).listen(443, () => {
+          console.log(
+            `[ ready ] https://${getEnvironment().developer.host}:443`,
+          );
+        });
+      } catch (err) {
+        console.error('Failed to start HTTPS server:', err);
+      }
     } catch (err) {
       console.error('Failed to start the application:', err);
       process.exit(1);
@@ -117,7 +186,7 @@ export class App implements IApplication {
   public async stop(): Promise<void> {
     if (this.server) {
       debugLog(
-        environment.developer.debug,
+        getEnvironment().developer.debug,
         'log',
         '[ stopping ] Application server',
       );
@@ -135,7 +204,7 @@ export class App implements IApplication {
 
     this._ready = false;
     debugLog(
-      environment.developer.debug,
+      getEnvironment().developer.debug,
       'log',
       '[ stopped ] Application server and database connections',
     );
