@@ -1,16 +1,14 @@
+import { ChecksumString, ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { Readable } from 'stream';
 import { BlockMetadata } from '../blockMetadata';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize, validateBlockSize } from '../enumerations/blockSizes';
+import { BlockSize, validateBlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import { BlockAccessError, BlockValidationError } from '../errors/block';
-import { ChecksumMismatchError } from '../errors/checksumMismatch';
-import { IBlock } from '../interfaces/blockBase';
-import { IBlockMetadata } from '../interfaces/blockMetadata';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
-import { ChecksumBuffer, ChecksumString } from '../types';
+import { IBaseBlock } from '../interfaces/blocks/base';
+import { ServiceLocator } from '../services/serviceLocator';
 
 /**
  * BaseBlock provides core block functionality.
@@ -26,133 +24,33 @@ import { ChecksumBuffer, ChecksumString } from '../types';
  * - Checksum
  * - Date Created
  */
-export abstract class BaseBlock implements IBlock {
+export abstract class BaseBlock implements IBaseBlock {
   protected readonly _blockSize: BlockSize;
+
   protected readonly _blockType: BlockType;
   protected readonly _blockDataType: BlockDataType;
-  protected readonly _checksum: ChecksumBuffer;
+  protected readonly _checksum: ChecksumUint8Array;
   protected readonly _dateCreated: Date;
   protected readonly _metadata: BlockMetadata;
   protected readonly _canRead: boolean;
   protected readonly _canPersist: boolean;
-  protected readonly _actualDataLength: number;
+  protected readonly _lengthBeforeEncryption: number;
 
   /**
-   * Creates a new BaseBlock instance asynchronously
-   * @param type - Block type (raw, encrypted, CBL, etc)
-   * @param dataType - Type of data contained
-   * @param blockSize - Size category for the block
-   * @param data - Block data (may include headers)
-   * @param checksum - Optional checksum (calculated if not provided)
-   * @param dateCreated - Creation timestamp
-   * @param metadata - Optional block metadata
-   * @param canRead - Whether block can be read
-   * @param canPersist - Whether block can be stored
-   */
-  public static async createAsync<T extends BaseBlock>(
-    this: new (
-      type: BlockType,
-      dataType: BlockDataType,
-      blockSize: BlockSize,
-      checksum: ChecksumBuffer,
-      dateCreated?: Date,
-      metadata?: IBlockMetadata,
-      canRead?: boolean,
-      canPersist?: boolean,
-      actualDataLength?: number,
-    ) => T,
-    type: BlockType,
-    dataType: BlockDataType,
-    blockSize: BlockSize,
-    data: Readable | Buffer,
-    checksum?: ChecksumBuffer,
-    dateCreated?: Date,
-    metadata?: IBlockMetadata,
-    canRead = true,
-    canPersist = true,
-    actualDataLength?: number,
-  ): Promise<T> {
-    const calculatedChecksum =
-      await StaticHelpersChecksum.calculateChecksumAsync(data);
-
-    if (checksum && !calculatedChecksum.equals(checksum)) {
-      throw new ChecksumMismatchError(checksum, calculatedChecksum);
-    }
-
-    return new this(
-      type,
-      dataType,
-      blockSize,
-      calculatedChecksum,
-      dateCreated,
-      metadata,
-      canRead,
-      canPersist,
-      actualDataLength,
-    ) as T;
-  }
-
-  /**
-   * Creates a new BaseBlock instance synchronously with a pre-calculated checksum
-   * @param type - Block type (raw, encrypted, CBL, etc)
-   * @param dataType - Type of data contained
-   * @param blockSize - Size category for the block
-   * @param checksum - Pre-calculated checksum
-   * @param dateCreated - Creation timestamp
-   * @param metadata - Optional block metadata
-   * @param canRead - Whether block can be read
-   * @param canPersist - Whether block can be stored
-   */
-  protected static _createSync<T extends BaseBlock>(
-    this: new (
-      type: BlockType,
-      dataType: BlockDataType,
-      blockSize: BlockSize,
-      checksum: ChecksumBuffer,
-      dateCreated?: Date,
-      metadata?: IBlockMetadata,
-      canRead?: boolean,
-      canPersist?: boolean,
-      actualDataLength?: number,
-    ) => T,
-    type: BlockType,
-    dataType: BlockDataType,
-    blockSize: BlockSize,
-    checksum: ChecksumBuffer,
-    dateCreated?: Date,
-    metadata?: IBlockMetadata,
-    canRead = true,
-    canPersist = true,
-    actualDataLength?: number,
-  ): T {
-    return new this(
-      type,
-      dataType,
-      blockSize,
-      checksum,
-      dateCreated,
-      metadata,
-      canRead,
-      canPersist,
-      actualDataLength,
-    ) as T;
-  }
-
-  /**
-   * Internal constructor - use static createAsync() method instead
-   * @param type - Block type (raw, encrypted, CBL, etc)
-   * @param dataType - Type of data contained
-   * @param blockSize - Size category for the block
-   * @param checksum - Block checksum
-   * @param dateCreated - Creation timestamp
-   * @param metadata - Optional block metadata
-   * @param canRead - Whether block can be read
-   * @param canPersist - Whether block can be stored
+   * Constructs a block.
+   * All derived constructors should trust the data being passed in as relevant to the type of block.
+   * Blocks types that can validate the data are welcome to do so.
+   * @param type Block type
+   * @param dataType Data type
+   * @param checksum Checksum
+   * @param metadata Metadata
+   * @param canRead Whether the block can be read
+   * @param canPersist Whether the block can be persisted
    */
   protected constructor(
     type: BlockType,
     dataType: BlockDataType,
-    checksum: ChecksumBuffer,
+    checksum: ChecksumUint8Array,
     metadata: BlockMetadata,
     canRead = true,
     canPersist = true,
@@ -164,16 +62,7 @@ export abstract class BaseBlock implements IBlock {
       );
     }
 
-    // Store basic properties first so capacity calculation works
-    this._blockSize = metadata.size;
-    this._blockType = type;
-    this._blockDataType = dataType;
-    this._canRead = canRead;
-    this._canPersist = canPersist;
-    this._checksum = checksum;
-    this._actualDataLength = metadata.lengthWithoutPadding;
-
-    // Validate date
+    // Validate date first
     const now = new Date();
     this._dateCreated = metadata ? new Date(metadata?.dateCreated) : now;
     if (this._dateCreated > now) {
@@ -181,6 +70,15 @@ export abstract class BaseBlock implements IBlock {
         BlockValidationErrorType.FutureCreationDate,
       );
     }
+
+    // Store basic properties
+    this._blockSize = metadata.size;
+    this._blockType = type;
+    this._blockDataType = dataType;
+    this._canRead = canRead;
+    this._canPersist = canPersist;
+    this._checksum = checksum;
+    this._lengthBeforeEncryption = metadata.lengthWithoutPadding;
 
     // Store or create metadata
     this._metadata = metadata;
@@ -210,7 +108,7 @@ export abstract class BaseBlock implements IBlock {
   /**
    * The block's unique identifier/checksum
    */
-  public get idChecksum(): ChecksumBuffer {
+  public get idChecksum(): ChecksumUint8Array {
     return this._checksum;
   }
 
@@ -218,9 +116,9 @@ export abstract class BaseBlock implements IBlock {
    * The block's checksum as a string
    */
   public get checksumString(): ChecksumString {
-    return StaticHelpersChecksum.checksumBufferToChecksumString(
+    return ServiceLocator.getServiceProvider().checksumService.checksumToHexString(
       this.idChecksum,
-    );
+    ) as ChecksumString;
   }
 
   /**
@@ -274,30 +172,38 @@ export abstract class BaseBlock implements IBlock {
   /**
    * Get the complete block data including headers and payload
    */
-  public abstract get data(): Buffer | Readable;
+  public abstract get data(): Uint8Array | Readable;
+
+  /**
+   * Get this layer's header data size
+   */
+  public abstract get layerOverheadSize(): number;
 
   /**
    * Get this layer's header data
    */
-  public abstract get layerHeaderData(): Buffer;
+  public abstract get layerHeaderData(): Uint8Array;
+
+  /**
+   * Get this layer's data (including headers)
+   */
+  public abstract get layerData(): Uint8Array;
 
   /**
    * Get the payload data (excluding headers)
    */
-  public abstract get payload(): Buffer;
+  public abstract get layerPayload(): Uint8Array;
 
   /**
    * Get the length of the payload
    */
-  public get payloadLength(): number {
-    return this._actualDataLength;
-  }
+  public abstract get layerPayloadSize(): number;
 
   /**
    * Get all layers in the inheritance chain
    */
-  public get layers(): IBlock[] {
-    const collectLayers = (block: IBlock): IBlock[] => {
+  public get layers(): IBaseBlock[] {
+    const collectLayers = (block: IBaseBlock): IBaseBlock[] => {
       const parent = block.parent;
       return parent ? [...collectLayers(parent), block] : [block];
     };
@@ -305,9 +211,24 @@ export abstract class BaseBlock implements IBlock {
   }
 
   /**
+   * Get the total header size of all layers below this one
+   */
+  public get lowerLayerHeaderSize(): number {
+    const layers = this.layers;
+    const currentLayerIndex = layers.indexOf(this);
+    if (currentLayerIndex === -1) {
+      throw new Error('Current layer not found in layers');
+    }
+
+    return layers.slice(0, currentLayerIndex).reduce((sum, layer) => {
+      return sum + layer.layerOverheadSize;
+    }, 0);
+  }
+
+  /**
    * Get the parent layer in the inheritance chain
    */
-  public get parent(): IBlock | null {
+  public get parent(): IBaseBlock | null {
     const proto = Object.getPrototypeOf(this);
     return proto === BaseBlock.prototype ? null : proto;
   }
@@ -328,24 +249,20 @@ export abstract class BaseBlock implements IBlock {
   }
 
   /**
-   * Get the usable capacity after accounting for overhead
-   */
-  public get capacity(): number {
-    // For encrypted blocks, use full block size since overhead is in data buffer
-    // For unencrypted blocks, subtract layer headers from block size
-    return this.blockDataType === BlockDataType.EncryptedData
-      ? this.blockSize
-      : this.blockSize - this.totalOverhead;
-  }
-
-  /**
    * Get the complete header data from all layers
    */
-  public get fullHeaderData(): Buffer {
+  public get fullHeaderData(): Uint8Array {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     const headers = this.layers.map((layer) => layer.layerHeaderData);
-    return Buffer.concat(headers);
+    const totalLength = headers.reduce((sum, arr) => sum + arr.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const arr of headers) {
+      result.set(arr, offset);
+      offset += arr.length;
+    }
+    return result;
   }
 }

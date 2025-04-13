@@ -1,6 +1,6 @@
 {
   "root": true,
-  "ignorePatterns": ["**/*"],
+  "ignorePatterns": [],
   "plugins": ["@nx", "@typescript-eslint", "prettier"],
   "rules": {
     "prettier/prettier": "error"

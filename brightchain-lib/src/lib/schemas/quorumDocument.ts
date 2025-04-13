@@ -1,0 +1,134 @@
+import {
+  ChecksumUint8Array,
+  getEnhancedIdProvider,
+  hexToUint8Array,
+  Member,
+  PlatformID,
+  SignatureUint8Array,
+  uint8ArrayToHex,
+} from '@digitaldefiance/ecies-lib';
+import { generateRandomKeysSync } from 'paillier-bigint';
+import { IQuorumDocument } from '../documents/quorumDocument';
+import { MemberType } from '../enumerations/memberType';
+import { NotImplementedError } from '../errors/notImplemented';
+import { QuorumDataRecord } from '../quorumDataRecord';
+import { SchemaDefinition, SerializedValue } from '../sharedTypes';
+
+export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
+  public isString(value: unknown): boolean {
+    return typeof value === 'string';
+  }
+  public isShortHexGuidArray(value: unknown): boolean {
+    return (
+      Array.isArray(value) &&
+      value.every((v) => this.isString(v) && /^[0-9a-f]{32}$/i.test(v))
+    );
+  }
+
+  // Function to fetch member by ID using the member service
+  public fetchMember(memberId: TID): Member<TID> {
+    // For now, create a placeholder member that will be hydrated later
+    // The actual member data will be loaded when needed through the load() method
+    const { publicKey } = generateRandomKeysSync(2048);
+
+    // Use fromJson to create member synchronously
+    const storage = {
+      id: memberId,
+      type: MemberType.User,
+      name: 'Placeholder',
+      email: 'placeholder@example.com',
+      publicKey: Buffer.alloc(0).toString('base64'),
+      votingPublicKey: publicKey.n.toString(16),
+      creatorId: memberId,
+      dateCreated: new Date().toISOString(),
+      dateUpdated: new Date().toISOString(),
+    };
+
+    return Member.fromJson<TID>(JSON.stringify(storage));
+  }
+
+  public schema: SchemaDefinition<IQuorumDocument<TID>> = {
+    checksum: {
+      type: Object,
+      required: true,
+      serialize: (value: ChecksumUint8Array): string =>
+        Buffer.from(value).toString('hex'),
+      hydrate: (value: string): ChecksumUint8Array => {
+        if (!this.isString(value)) throw new Error('Invalid checksum format');
+        return hexToUint8Array(
+          value as string,
+        ) as unknown as ChecksumUint8Array;
+      },
+    },
+    creatorId: {
+      type: Object,
+      required: true,
+      serialize: (value: ChecksumUint8Array): string => uint8ArrayToHex(value),
+      hydrate: (value: string): ChecksumUint8Array => {
+        if (!this.isString(value)) throw new Error('Invalid creator ID format');
+        const valueBytes = hexToUint8Array(value as string);
+        return valueBytes as ChecksumUint8Array;
+      },
+    },
+    creator: {
+      type: Object,
+      required: false,
+      serialize: (): null => null,
+      hydrate: (): Member<TID> => {
+        throw new NotImplementedError();
+      },
+    },
+    signature: {
+      type: Object,
+      required: true,
+      serialize: (value: SignatureUint8Array): string => uint8ArrayToHex(value),
+      hydrate: (value: string): SignatureUint8Array => {
+        if (!this.isString(value)) throw new Error('Invalid signature format');
+        return hexToUint8Array(value as string) as SignatureUint8Array;
+      },
+    },
+    memberIDs: {
+      type: Array,
+      required: true,
+      serialize: (value: TID[]): string[] =>
+        value.map((id) => getEnhancedIdProvider<TID>().idToString(id)),
+      hydrate: (value: string): TID[] => {
+        if (!Array.isArray(value)) throw new Error('Invalid member IDs format');
+        const provider = getEnhancedIdProvider<TID>();
+        return value.map((id) => provider.idFromString(id));
+      },
+    },
+    sharesRequired: {
+      type: Number,
+      required: true,
+    },
+    dateCreated: {
+      type: Date,
+      required: true,
+    },
+    dateUpdated: {
+      type: Date,
+      required: true,
+    },
+    encryptedData: {
+      type: Object,
+      required: false,
+      serialize: (
+        value: QuorumDataRecord<TID> | undefined,
+      ): SerializedValue | null => {
+        if (!value) return null;
+        const json = value.toJson();
+        return JSON.parse(json);
+      },
+      hydrate: (value: string): QuorumDataRecord<TID> | undefined => {
+        if (value === null || value === undefined) return undefined;
+        if (!this.isString(value) && typeof value !== 'object')
+          throw new Error('Invalid encrypted data format');
+        return QuorumDataRecord.fromJson<TID>(
+          typeof value === 'string' ? value : JSON.stringify(value),
+          this.fetchMember,
+        );
+      },
+    },
+  };
+}

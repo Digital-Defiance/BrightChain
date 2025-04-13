@@ -3,7 +3,7 @@ import {
   HexString,
   ShortHexGuid,
   SignatureString,
-} from './types';
+} from '@digitaldefiance/ecies-lib';
 
 export interface QuorumDataRecordDto {
   id: ShortHexGuid;

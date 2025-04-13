@@ -23,7 +23,7 @@ import {
   toBuffer,
 } from 'ethereumjs-util';
 import Wallet, { hdkey } from 'ethereumjs-wallet';
-import { BrightChainMember } from './brightChainMember';
+import { Member } from './Member';
 import { GuidBrandType } from './enumerations/guidBrandType';
 import { GuidV4 } from './guid';
 import { IEncryptionLength } from './interfaces/encryptionLength';
@@ -127,8 +127,8 @@ describe('StaticHelpersECIES', () => {
       const keyPair2 = StaticHelpersECIES.seedToSimpleKeyPairBuffer(seed2);
       const message = Buffer.from('hello world');
       const recipients = [
-        new BrightChainMember(keyPair1.publicKey, keyPair1.privateKey),
-        new BrightChainMember(keyPair2.publicKey, keyPair2.privateKey),
+        new Member(keyPair1.publicKey, keyPair1.privateKey),
+        new Member(keyPair2.publicKey, keyPair2.privateKey),
       ];
       const encrypted = StaticHelpersECIES.encryptMultiple(recipients, message);
       const decrypted1 = StaticHelpersECIES.decryptMultipleECIEForRecipient(
@@ -340,8 +340,8 @@ describe('StaticHelpersECIES', () => {
   const keyPair2 = StaticHelpersECIES.seedToSimpleKeyPairBuffer(seed2);
   const message = Buffer.from('hello world');
   const recipients = [
-    new BrightChainMember(keyPair1.publicKey, keyPair1.privateKey),
-    new BrightChainMember(keyPair2.publicKey, keyPair2.privateKey),
+    new Member(keyPair1.publicKey, keyPair1.privateKey),
+    new Member(keyPair2.publicKey, keyPair2.privateKey),
   ];
   const encrypted = StaticHelpersECIES.encryptMultiple(recipients, message);
   const decrypted1 = StaticHelpersECIES.decryptMultipleECIEForRecipient(

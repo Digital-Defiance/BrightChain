@@ -1,24 +1,77 @@
-import { render } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 
+// Mock brightchain-lib to prevent i18n initialization
+jest.mock('@brightchain/brightchain-lib', () => ({
+  constants: { CONSTANTS: {} },
+}));
+
+// Must come after mocking brightchain-lib
 import App from './app';
 
+// Mock all suite components and i18n to avoid dependency on real backend/auth.
+jest.mock('@digitaldefiance/express-suite-react-components', () => ({
+  AppThemeProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="app-theme-provider">{children}</div>
+  ),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="auth-provider">{children}</div>
+  ),
+  SuiteConfigProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="suite-config-provider">{children}</div>
+  ),
+  MenuProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="menu-provider">{children}</div>
+  ),
+  ApiAccess: () => <div>ApiAccess</div>,
+  BackupCodeLoginWrapper: () => <div>BackupCodeLoginWrapper</div>,
+  BackupCodesWrapper: () => <div>BackupCodesWrapper</div>,
+  ChangePasswordFormWrapper: () => <div>ChangePasswordFormWrapper</div>,
+  LoginFormWrapper: () => <div>LoginFormWrapper</div>,
+  LogoutPageWrapper: () => <div>LogoutPageWrapper</div>,
+  PrivateRoute: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+  RegisterFormWrapper: () => <div>RegisterFormWrapper</div>,
+  TopMenu: ({ Logo }: { Logo: React.ReactNode }) => (
+    <div data-testid="top-menu">{Logo}</div>
+  ),
+  TranslatedTitle: () => <title>BrightChain</title>,
+  UnAuthRoute: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
+  UserSettingsFormWrapper: () => <div>UserSettingsFormWrapper</div>,
+  VerifyEmailPageWrapper: () => <div>VerifyEmailPageWrapper</div>,
+}));
+
+jest.mock('@digitaldefiance/i18n-lib', () => ({
+  LanguageRegistry: { getCodeLabelMap: () => ({ en: 'English' }) },
+}));
+
+jest.mock('../i18n', () => ({
+  default: {
+    changeLanguage: async () => undefined,
+  },
+}));
+
 describe('App', () => {
-  it('should render successfully', () => {
+  it('renders without crashing', () => {
     const { baseElement } = render(
-      <BrowserRouter>
+      <MemoryRouter>
         <App />
-      </BrowserRouter>,
+      </MemoryRouter>,
     );
     expect(baseElement).toBeTruthy();
   });
 
-  it('should have a greeting as the title', () => {
-    const { getByText } = render(
-      <BrowserRouter>
+  it('shows the splash welcome text', () => {
+    render(
+      <MemoryRouter>
         <App />
-      </BrowserRouter>,
+      </MemoryRouter>,
     );
-    expect(getByText(/Welcome brightchain-react/gi)).toBeTruthy();
+    const element = screen.getByText(/Welcome brightchain-react/i);
+    expect(element).toBeTruthy();
   });
 });

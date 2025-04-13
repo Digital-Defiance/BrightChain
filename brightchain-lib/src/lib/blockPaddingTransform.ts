@@ -1,6 +1,6 @@
 import { randomBytes } from 'crypto';
 import { Transform, TransformCallback } from 'stream';
-import { BlockSize } from './enumerations/blockSizes';
+import { BlockSize } from './enumerations/blockSize';
 
 class BlockPaddingTransform extends Transform {
   private readonly blockSize: number;

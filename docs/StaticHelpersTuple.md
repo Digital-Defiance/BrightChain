@@ -55,7 +55,7 @@ The `StaticHelpersTuple` class provides utility functions for working with block
 
 - **Purpose**: XOR a whitened block with its whitening blocks to recover the original data.
 - **Parameters**:
-  - `creator` (BrightChainMember): The creator of the block.
+  - `creator` (Member): The creator of the block.
   - `primeWhitenedBlock` (WhitenedBlock): The whitened block.
   - `whiteners` (WhitenedBlock[]): The whitening blocks.
 - **Returns**: A new `OwnedDataBlock` instance.
@@ -72,7 +72,7 @@ The `StaticHelpersTuple` class provides utility functions for working with block
 
 - **Purpose**: Create a tuple from a whitened block and its whitening blocks.
 - **Parameters**:
-  - `creator` (BrightChainMember): The creator of the block.
+  - `creator` (Member): The creator of the block.
   - `primeWhitenedBlock` (WhitenedBlock): The whitened block.
   - `whiteners` (WhitenedBlock[]): The whitening blocks.
 - **Returns**: A new `InMemoryBlockTuple` instance.
@@ -89,7 +89,7 @@ The `StaticHelpersTuple` class provides utility functions for working with block
 
 - **Purpose**: XOR a whitened block with its whitening blocks to recover a CBL.
 - **Parameters**:
-  - `creator` (BrightChainMember): The creator of the block.
+  - `creator` (Member): The creator of the block.
   - `primeWhitened` (WhitenedBlock): The whitened block.
   - `whiteners` (WhitenedBlock[]): The whitening blocks.
 - **Returns**: A new `ConstituentBlockListBlock` instance.
@@ -106,7 +106,7 @@ The `StaticHelpersTuple` class provides utility functions for working with block
 
 - **Purpose**: XOR an encrypted whitened block with its whitening blocks and decrypt to recover a CBL.
 - **Parameters**:
-  - `creator` (BrightChainMember): The creator of the block.
+  - `creator` (Member): The creator of the block.
   - `primeWhitened` (WhitenedBlock): The whitened block.
   - `whiteners` (WhitenedBlock[]): The whitening blocks.
 - **Returns**: A new `ConstituentBlockListBlock` instance.
@@ -123,7 +123,7 @@ The `StaticHelpersTuple` class provides utility functions for working with block
 
 - **Purpose**: Process a data stream into tuples and create a CBL.
 - **Parameters**:
-  - `creator` (BrightChainMember): The creator of the block.
+  - `creator` (Member): The creator of the block.
   - `blockSize` (BlockSize): The size of the block.
   - `source` (ReadStream): The data stream.
   - `sourceLength` (bigint): The length of the data stream.
@@ -148,7 +148,7 @@ The `StaticHelpersTuple` class provides utility functions for working with block
 
 - **Purpose**: Process a data stream into encrypted tuples and create an encrypted CBL.
 - **Parameters**:
-  - `creator` (BrightChainMember): The creator of the block.
+  - `creator` (Member): The creator of the block.
   - `blockSize` (BlockSize): The size of the block.
   - `source` (ReadStream): The data stream.
   - `sourceLength` (bigint): The length of the data stream.

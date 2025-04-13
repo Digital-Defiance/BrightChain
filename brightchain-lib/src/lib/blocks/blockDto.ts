@@ -1,5 +1,5 @@
+import { ChecksumString, HexString } from '@digitaldefiance/ecies-lib';
 import { IBasicDataObjectDTO } from '../interfaces/basicDataObjectDto';
-import { ChecksumString, HexString } from '../types';
 
 export interface BlockDto extends IBasicDataObjectDTO {
   id: ChecksumString;

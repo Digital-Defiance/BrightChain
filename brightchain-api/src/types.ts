@@ -1,4 +1,6 @@
-import { IRequestUser, ValidatedBody } from '@BrightChain/brightchain-lib';
+/* eslint-disable @nx/enforce-module-boundaries */
+import { ValidatedBody } from '@brightchain/brightchain-api-lib';
+import { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
 import { ValidationChain } from 'express-validator';
 declare module 'express-serve-static-core' {
   interface Request {
@@ -17,7 +19,7 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
-      user?: IRequestUser;
+      user?: IRequestUserDTO;
       validatedBody?: ValidatedBody<string>;
       validate?: {
         body: (field: string) => ValidationChain;
