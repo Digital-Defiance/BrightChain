@@ -7465,7 +7465,7 @@ __metadata:
     "@mui/material": "npm:^6.3.1"
     "@nrwl/react": "npm:19.8.4"
     "@nx/cypress": "npm:20.7.2"
-    "@nx/devkit": "npm:20.4.1"
+    "@nx/devkit": "npm:20.7.2"
     "@nx/esbuild": "npm:20.4.1"
     "@nx/eslint": "npm:20.4.1"
     "@nx/eslint-plugin": "npm:20.4.1"
