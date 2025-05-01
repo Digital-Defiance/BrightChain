@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
 import BlockPaddingTransform from './blockPaddingTransform';
-import { BlockSize } from './enumerations/blockSizes';
+import { BlockSize } from './enumerations/blockSize';
 
 describe('BlockPaddingTransform', () => {
   it('should transform data into blocks of specified size', (done) => {

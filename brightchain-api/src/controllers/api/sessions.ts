@@ -4,16 +4,18 @@ import {
   ChecksumBuffer,
   EmailString,
   GuidV4,
+  IMemberDTO,
   InvalidCredentialsError,
   InvalidSessionIDError,
   JsonResponse,
   MemberApiRequest,
-  MemberType,
   RouteConfig,
-  StaticHelpersVoting,
+  SecureString,
   TypedHandlers,
   UserNotFoundError,
 } from '@BrightChain/brightchain-lib';
+import { ServiceProvider } from 'brightchain-lib/src/lib/services/service.provider';
+import { ServiceLocator } from 'brightchain-lib/src/lib/services/serviceLocator';
 import { randomBytes } from 'crypto';
 import { Request } from 'express';
 import { IApplication } from '../../interfaces/application';
@@ -88,7 +90,8 @@ export class SessionsController extends BaseController<
     statusCode: number;
     response: SessionsResponse;
   }> {
-    const { memberId, mnemonic } = req.body;
+    const { memberId } = req.body;
+    const mnemonic = new SecureString(req.body.mnemonic);
 
     if (!memberId || !mnemonic) {
       throw new InvalidCredentialsError();
@@ -112,16 +115,18 @@ export class SessionsController extends BaseController<
       response.blockId || '',
       'hex',
     ) as ChecksumBuffer;
-    const block = membersController.blockStore.getData(checksumBuffer);
+    const block = await membersController.blockStore.getData(checksumBuffer);
     const memberData = block.data.toString();
-    const memberJson = JSON.parse(memberData);
+    const memberJson = JSON.parse(memberData) as IMemberDTO<string, string>;
 
     const member = new BrightChainMember(
-      memberJson.type as MemberType,
+      ServiceLocator.getServiceProvider().eciesService,
+      ServiceLocator.getServiceProvider().votingService,
+      memberJson.type,
       memberJson.name,
       new EmailString(memberJson.contactEmail),
       Buffer.from(memberJson.publicKey, 'hex'),
-      StaticHelpersVoting.bufferToVotingPublicKey(
+      ServiceProvider.getInstance().votingService.bufferToVotingPublicKey(
         Buffer.from(memberJson.votingPublicKey, 'hex'),
       ),
       undefined, // privateKey will be loaded from mnemonic
@@ -135,6 +140,7 @@ export class SessionsController extends BaseController<
     try {
       // Load wallet and derive keys
       member.loadWallet(mnemonic);
+      mnemonic.dispose();
     } catch (error) {
       throw new InvalidCredentialsError();
     }

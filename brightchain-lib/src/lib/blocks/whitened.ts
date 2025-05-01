@@ -1,11 +1,11 @@
 import { Readable } from 'stream';
 import { BlockMetadata } from '../blockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
 import { WhitenedError } from '../errors/whitenedError';
-import { StaticHelpersChecksum } from '../staticHelpers.checksum';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer } from '../types';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
@@ -55,7 +55,7 @@ export class WhitenedBlock extends RawDataBlock {
   /**
    * The data in the block, excluding any metadata or other overhead
    */
-  public override get payload(): Buffer {
+  public override get layerPayload(): Buffer {
     if (!this.canRead) {
       throw new WhitenedError(WhitenedErrorType.BlockNotReadable);
     }
@@ -78,24 +78,10 @@ export class WhitenedBlock extends RawDataBlock {
   }
 
   /**
-   * Whether the block can be signed
-   */
-  public override get canSign(): boolean {
-    return false; // Whitened blocks cannot be signed
-  }
-
-  /**
    * Get the complete header data from all layers
    */
   public override get fullHeaderData(): Buffer {
     return Buffer.concat([super.fullHeaderData, this.layerHeaderData]);
-  }
-
-  /**
-   * Get the usable capacity after accounting for overhead
-   */
-  public override get capacity(): number {
-    return this.blockSize - this.totalOverhead;
   }
 
   /**
@@ -148,12 +134,14 @@ export class WhitenedBlock extends RawDataBlock {
       canRead: boolean,
       canPersist: boolean,
     ) => T;
+    const checksum =
+      ServiceProvider.getInstance().checksumService.calculateChecksum(result);
 
     return new Constructor(
       this.blockSize,
       result,
       new Date(),
-      StaticHelpersChecksum.calculateChecksum(result),
+      checksum,
       this.canRead && other.canRead,
       this.canPersist && other.canPersist,
     );
@@ -187,12 +175,10 @@ export class WhitenedBlock extends RawDataBlock {
       result[i] = data[i] ^ randomData[i];
     }
 
-    return new WhitenedBlock(
-      blockSize,
-      result,
-      StaticHelpersChecksum.calculateChecksum(result),
-      new Date(),
-    );
+    const checksum =
+      ServiceProvider.getInstance().checksumService.calculateChecksum(result);
+
+    return new WhitenedBlock(blockSize, result, checksum, new Date());
   }
 
   /**

@@ -38,9 +38,9 @@ export class JwtService extends BaseService {
       userId: userDoc._id.toString(),
     };
     const token = sign(tokenUser, environment.jwtSecret, {
-      algorithm: constants.JWT_ALGO,
+      algorithm: constants.JWT.ALGORITHM,
       allowInsecureKeySizes: false,
-      expiresIn: constants.JWT_EXPIRATION_SEC,
+      expiresIn: constants.JWT.EXPIRATION_SEC,
     });
     return {
       token,
@@ -56,7 +56,7 @@ export class JwtService extends BaseService {
   public async verifyToken(token: string): Promise<ITokenUser> {
     try {
       const decoded = (await verifyAsync(token, environment.jwtSecret, {
-        algorithms: [constants.JWT_ALGO],
+        algorithms: [constants.JWT.ALGORITHM],
       })) as JwtPayload;
 
       if (

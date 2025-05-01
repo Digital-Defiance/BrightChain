@@ -1,4 +1,5 @@
 import { debugLog, translate } from '@BrightChain/brightchain-lib';
+import { SITE } from 'brightchain-lib/src/lib/constants';
 import { StringNames } from 'brightchain-lib/src/lib/enumerations/stringNames';
 import { randomBytes } from 'crypto';
 import ejs from 'ejs';
@@ -102,7 +103,7 @@ export class AppRouter {
     // The "catchall" handler: for any request that doesn't
     // match one above, send back React's index.html file.
     app.get('*', (req: Request, res: Response) => {
-      const cspNonce = randomBytes(32).toString('hex');
+      const cspNonce = randomBytes(SITE.CSP_NONCE_SIZE).toString('hex');
       const title = translate(StringNames.Common_Site);
       if (req.url.endsWith('.js')) {
         res.type('application/javascript');
