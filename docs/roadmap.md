@@ -1,5 +1,7 @@
 # BrightChain Roadmap
 
+* the maintainer of this project has had a sudden downturn in health and does not have as much time left as expected. previously expected to be around a few more years, but it may now be months. The project is considered mothballed.
+
 ## 1. Introduction
 
 This roadmap outlines the further steps needed to achieve the project's goals. BrightChain aims to become the de facto international and interplanetary standard for data storage, identity, and digital contract fulfillment. The project has made significant progress, including the completion of the Owner Free Filesystem and the development of a complete cryptosystem that encompasses symmetrical and asymmetrical encryption as well as homomorphic encryption, all with key derivation techniques (ECIES + our custom Paillier key derivation).
