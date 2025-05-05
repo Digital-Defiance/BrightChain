@@ -3843,6 +3843,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nx/devkit@npm:20.8.1":
+  version: 20.8.1
+  resolution: "@nx/devkit@npm:20.8.1"
+  dependencies:
+    ejs: "npm:^3.1.7"
+    enquirer: "npm:~2.3.6"
+    ignore: "npm:^5.0.4"
+    minimatch: "npm:9.0.3"
+    semver: "npm:^7.5.3"
+    tmp: "npm:~0.2.1"
+    tslib: "npm:^2.3.0"
+    yargs-parser: "npm:21.1.1"
+  peerDependencies:
+    nx: ">= 19 <= 21"
+  checksum: 10c0/e93664c8603bbfdcc26beb31dfe382c422cdb0968d9e5723a1f30fd61828a7d48c032afbe2095fecef329847851d05af205be0938ce82e92810514597f7d2d21
+  languageName: node
+  linkType: hard
+
 "@nx/esbuild@npm:20.4.1":
   version: 20.4.1
   resolution: "@nx/esbuild@npm:20.4.1"
@@ -7465,7 +7483,7 @@ __metadata:
     "@mui/material": "npm:^6.3.1"
     "@nrwl/react": "npm:19.8.4"
     "@nx/cypress": "npm:20.7.2"
-    "@nx/devkit": "npm:20.4.1"
+    "@nx/devkit": "npm:20.8.1"
     "@nx/esbuild": "npm:20.4.1"
     "@nx/eslint": "npm:20.4.1"
     "@nx/eslint-plugin": "npm:20.4.1"
