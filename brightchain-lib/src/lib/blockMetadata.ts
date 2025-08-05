@@ -53,7 +53,7 @@ export class BlockMetadata implements IBaseBlockMetadata {
     }
   }
 
-  public static fromJsonAdditionalData<T extends Record<string, any>>(data): T {
+  public static fromJsonAdditionalData<T extends Record<string, any>>(data: any): T {
     return {} as T;
   }
 
