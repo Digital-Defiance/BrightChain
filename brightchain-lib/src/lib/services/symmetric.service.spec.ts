@@ -107,7 +107,7 @@ describe('SymmetricService', () => {
         expect(error.type).toBe(SymmetricErrorType.DataNullOrUndefined);
       });
 
-      // Test invalid key
+      // Test invalid key - should throw authentication error with AES-GCM
       const encrypted = SymmetricService.encryptJson<string>(testData.string);
       const invalidKey = Buffer.alloc(ECIES.SYMMETRIC.KEY_LENGTH, 'x');
       expect(() =>
@@ -115,9 +115,7 @@ describe('SymmetricService', () => {
           encrypted.encryptedData,
           invalidKey,
         ),
-      ).toThrowType(SyntaxError, (error: SyntaxError) => {
-        expect(error.message.startsWith('Unexpected token'));
-      });
+      ).toThrow(); // AES-GCM will throw authentication error
     });
   });
 });

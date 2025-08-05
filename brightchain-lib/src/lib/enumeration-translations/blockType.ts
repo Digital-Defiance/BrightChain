@@ -19,9 +19,9 @@ export const BlockTypeTranslations: BlockTypeLanguageTranslation = {
       'Extended Constituent Block List',
     [BlockType.EncryptedExtendedConstituentBlockListBlock]:
       'Encrypted Extended Constituent Block List',
+    [BlockType.MultiEncryptedBlock]: 'Multi Encrypted Block',
     [BlockType.FECData]: 'FEC Data',
     [BlockType.Handle]: 'Handle',
-    [BlockType.MultiEncryptedBlock]: 'Multi Encrypted Block',
     [BlockType.EphemeralOwnedDataBlock]: 'Owned Data',
     [BlockType.OwnerFreeWhitenedBlock]: 'Owner Free Whitened',
     [BlockType.Random]: 'Random',

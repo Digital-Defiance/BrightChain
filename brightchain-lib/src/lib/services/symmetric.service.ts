@@ -50,10 +50,14 @@ export class SymmetricService {
     );
 
     const ciphertextBuffer = cipher.update(data);
+    const finalBuffer = cipher.final();
+    const authTag = cipher.getAuthTag(); // CRITICAL: Extract auth tag
+
     const encryptionIvPlusData: Buffer = Buffer.concat([
       ivBuffer,
       ciphertextBuffer,
-      cipher.final(),
+      finalBuffer,
+      authTag, // CRITICAL: Append auth tag
     ]);
     return {
       encryptedData: encryptionIvPlusData,
@@ -69,13 +73,18 @@ export class SymmetricService {
    */
   public static decryptBuffer(encryptedData: Buffer, key: Buffer): Buffer {
     const ivBuffer = encryptedData.subarray(0, ECIES.IV_LENGTH);
-    const ciphertextBuffer = encryptedData.subarray(ECIES.IV_LENGTH);
+    const authTagStart = encryptedData.length - ECIES.AUTH_TAG_LENGTH;
+    const ciphertextBuffer = encryptedData.subarray(ECIES.IV_LENGTH, authTagStart);
+    const authTag = encryptedData.subarray(authTagStart); // CRITICAL: Extract auth tag
+
     const decipher = createDecipheriv(
       SYMMETRIC_ALGORITHM_CONFIGURATION,
       key,
       ivBuffer,
     );
-    return decipher.update(ciphertextBuffer);
+    decipher.setAuthTag(authTag); // CRITICAL: Set auth tag for verification
+
+    return Buffer.concat([decipher.update(ciphertextBuffer), decipher.final()]);
   }
 
   /**
