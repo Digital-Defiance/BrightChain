@@ -15,9 +15,9 @@ import { RawDataBlock } from './rawData';
  * Used for whitening and reconstruction operations.
  */
 export class BlockHandleTuple {
-  private readonly _handles: BlockHandle[];
+  private readonly _handles: BlockHandle<any>[];
 
-  constructor(handles: BlockHandle[]) {
+  constructor(handles: BlockHandle<any>[]) {
     if (handles.length !== TUPLE.SIZE) {
       throw new HandleTupleError(HandleTupleErrorType.InvalidTupleSize);
     }
@@ -34,7 +34,7 @@ export class BlockHandleTuple {
   /**
    * The handles in this tuple
    */
-  public get handles(): BlockHandle[] {
+  public get handles(): BlockHandle<any>[] {
     return this._handles;
   }
 
@@ -61,7 +61,7 @@ export class BlockHandleTuple {
   public async xor(
     diskBlockStore: DiskBlockAsyncStore,
     destBlockMetadata: IBaseBlockMetadata,
-  ): Promise<BlockHandle> {
+  ): Promise<BlockHandle<any>> {
     if (!this.handles.length) {
       throw new HandleTupleError(HandleTupleErrorType.NoBlocksToXor);
     }

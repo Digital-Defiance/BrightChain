@@ -29,7 +29,7 @@ export class SealingError extends TypedError<SealingErrorType> {
     language?: StringLanguages,
     params?: { [key: string]: string | number },
   ) {
-    super(type, language, params);
+    super(type, undefined, params);
     this.name = 'SealingError';
   }
 }

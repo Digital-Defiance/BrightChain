@@ -1,14 +1,20 @@
-import express from 'express';
+import { resolve } from 'path';
+import { App } from './application';
+import { Environment } from './environment';
 
-const host = process.env.HOST ?? 'localhost';
-const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+async function bootstrap() {
+  try {
+    // Initialize environment
+    const envPath = resolve(__dirname, '.env');
+    new Environment(envPath);
+    
+    // Create and start application
+    const app = App.getInstance();
+    await app.start();
+  } catch (error) {
+    console.error('Failed to start application:', error);
+    process.exit(1);
+  }
+}
 
-const app = express();
-
-app.get('/', (req, res) => {
-  res.send({ message: 'Hello API' });
-});
-
-app.listen(port, host, () => {
-  console.log(`[ ready ] http://${host}:${port}`);
-});
+bootstrap();

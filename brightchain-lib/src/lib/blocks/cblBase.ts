@@ -61,7 +61,6 @@ export abstract class CBLBase extends EphemeralBlock implements ICBLCore {
         blockType,
         BlockDataType.EphemeralStructuredData,
         ServiceLocator.getServiceProvider().cblService.getBlockDataLength(data),
-        false,
         creator ?? creatorId,
         dateCreated,
       ),

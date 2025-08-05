@@ -26,7 +26,7 @@ export class GuidError extends TypedError<GuidErrorType> {
     guid?: RawGuidBuffer | Buffer,
     language?: StringLanguages,
   ) {
-    super(type, language, {
+    super(type, undefined, {
       ...(brand ? { BRAND: `${brand}` } : {}),
       ...(length ? { LENGTH: `${length}` } : {}),
       ...(guid ? { GUID: guid.toString('hex') } : {}),

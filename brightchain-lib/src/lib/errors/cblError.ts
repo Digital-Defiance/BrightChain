@@ -74,7 +74,7 @@ export class CblError extends TypedError<CblErrorType> {
     language?: StringLanguages,
     templateParams?: Record<string, string>,
   ) {
-    super(type, language, templateParams);
+    super(type, undefined, templateParams);
     this.name = 'CblError';
   }
 }

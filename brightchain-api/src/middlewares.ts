@@ -1,15 +1,15 @@
-import { SITE } from 'brightchain-lib/src/lib/constants';
+import { constants } from '@BrightChain/brightchain-lib';
 import cors from 'cors';
 import { randomBytes } from 'crypto';
 import { Application, json, Response, urlencoded } from 'express';
 import helmet from 'helmet';
 import { IncomingMessage, ServerResponse } from 'http';
-import { environment } from './environment';
+import { getEnvironment } from './environment';
 
 export class Middlewares {
   private static readonly corsWhitelist = [
     'http://localhost:3000',
-    environment.serverUrl,
+    getEnvironment().serverUrl,
   ];
   private static readonly corsOptionsDelegate = (
     req: cors.CorsRequest,
@@ -35,7 +35,7 @@ export class Middlewares {
   public static init(app: Application): void {
     // CSP nonce
     app.use((req, res, next) => {
-      res.locals.cspNonce = randomBytes(SITE.CSP_NONCE_SIZE).toString('hex');
+      res.locals.cspNonce = randomBytes(constants.SITE.CSP_NONCE_SIZE).toString('hex');
       next();
     });
     // Helmet helps you secure your Express apps by setting various HTTP headers

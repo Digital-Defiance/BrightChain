@@ -29,7 +29,7 @@ export class MultiEncryptedError extends TypedError<MultiEncryptedErrorType> {
     };
   }
   constructor(type: MultiEncryptedErrorType, language?: StringLanguages) {
-    super(type, language);
+    super(type, undefined);
     this.name = 'MultiEncryptedError';
   }
 }

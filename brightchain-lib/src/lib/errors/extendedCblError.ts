@@ -67,7 +67,7 @@ export class ExtendedCblError extends TypedError<ExtendedCblErrorType> {
     error?: string,
     language?: StringLanguages,
   ) {
-    super(type, language, {
+    super(type, undefined, {
       ...(blockSize ? { BLOCK_SIZE: blockSize as number } : {}),
       ...(dataSize ? { DATA_SIZE: dataSize } : {}),
       ...(error ? { ERROR: error } : {}),

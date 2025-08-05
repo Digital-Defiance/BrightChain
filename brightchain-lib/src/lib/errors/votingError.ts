@@ -78,7 +78,7 @@ export class VotingError extends TypedError<VotingErrorType> {
     language?: StringLanguages,
     params?: { [key: string]: string | number },
   ) {
-    super(type, language, params);
+    super(type, undefined, params);
     this.name = 'VotingError';
   }
 }

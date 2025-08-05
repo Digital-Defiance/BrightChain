@@ -13,7 +13,7 @@ export class Pbkdf2Error extends TypedError<Pbkdf2ErrorType> {
     };
   }
   constructor(type: Pbkdf2ErrorType, language?: StringLanguages) {
-    super(type, language);
+    super(type, undefined);
     this.name = 'Pbkdf2Error';
   }
 }

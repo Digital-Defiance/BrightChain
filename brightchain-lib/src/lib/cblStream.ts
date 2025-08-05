@@ -163,6 +163,7 @@ export class CblStream extends Readable {
         this.currentData = await this.blockService.decrypt(
           this.creatorForDecryption,
           this.currentData,
+          BlockType.EphemeralOwnedDataBlock,
         );
       }
 

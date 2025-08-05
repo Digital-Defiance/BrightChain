@@ -3,7 +3,7 @@ import { BlockValidationErrorType } from '../../enumerations/blockValidationErro
 import { StringLanguages } from '../../enumerations/stringLanguages';
 import { StringNames } from '../../enumerations/stringNames';
 import { TranslatableEnumType } from '../../enumerations/translatableEnum';
-import { translateEnum } from '../../i18n';
+import { translate } from '../../i18n';
 import { TypedWithReasonError } from '../typedWithReasonError';
 
 export class BlockValidationError extends TypedWithReasonError<BlockValidationErrorType> {
@@ -91,22 +91,19 @@ export class BlockValidationError extends TypedWithReasonError<BlockValidationEr
     addressLength?: { index: number; length: number; expectedLength: number },
     language?: StringLanguages,
   ) {
-    super(StringNames.Error_BlockValidationErrorTemplate, type, language, {
+    super(StringNames.Error_BlockValidationErrorTemplate, type, {
       ...(blockType
         ? {
-            TYPE: translateEnum({
-              type: TranslatableEnumType.BlockType,
-              value: blockType,
-            }),
+            TYPE: 'BlockType'
           }
         : {}),
       ...(addressLength
         ? {
             INDEX: addressLength.index,
             LENGTH: addressLength.length,
-            EXPECTED_LENGTH: addressLength.expectedLength,
+            EXPECTED_LENGTH: addressLength.expectedLength
           }
-        : {}),
+        : {})
     });
     this.name = 'BlockValidationError';
     this.blockType = blockType;

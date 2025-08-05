@@ -28,7 +28,7 @@ export class BlockCapacityError extends TypedError<BlockCapacityErrorType> {
     language?: StringLanguages,
     otherVars?: Record<string, string | number>,
   ) {
-    super(type, language, otherVars);
+    super(type, undefined, otherVars);
     this.name = 'BlockCapacityError';
 
     // Ensure proper prototype chain for instanceof checks

@@ -5,7 +5,7 @@ import { HandleableError } from './handleable';
 
 export class UserNotFoundError extends HandleableError {
   constructor(statusCode = 404, language?: StringLanguages) {
-    super(translate(StringNames.Error_UserNotFound, language), {
+    super(translate(StringNames.Error_UserNotFound), {
       statusCode,
     });
     this.name = 'UserNotFoundError';

@@ -12,7 +12,6 @@ export class BufferError extends HandleableError {
     super(
       translate(
         StringNames.Error_BufferErrorInvalidBufferTypeTemplate,
-        language,
         {
           TYPE: type,
           ...details,

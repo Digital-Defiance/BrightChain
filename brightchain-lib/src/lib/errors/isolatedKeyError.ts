@@ -21,7 +21,7 @@ export class IsolatedKeyError extends TypedError<IsolatedKeyErrorType> {
     };
   }
   constructor(type: IsolatedKeyErrorType, language?: StringLanguages) {
-    super(type, language);
+    super(type, undefined);
     this.name = 'IsolatedKeyError';
   }
 }

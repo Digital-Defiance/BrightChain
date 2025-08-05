@@ -5,7 +5,7 @@ import { HandleableError } from './handleable';
 
 export class InvalidSessionIDError extends HandleableError {
   constructor(language?: StringLanguages) {
-    super(translate(StringNames.Error_InvalidSessionID, language));
+    super(translate(StringNames.Error_InvalidSessionID));
     this.name = 'InvalidSessionIDError';
   }
 }

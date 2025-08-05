@@ -17,7 +17,7 @@ export class SystemKeyringError extends TypedError<SystemKeyringErrorType> {
     keyId?: string,
     language?: StringLanguages,
   ) {
-    super(type, language, {
+    super(type, undefined, {
       ...(keyId ? { KEY: keyId } : {}),
     });
     this.name = 'SystemKeyringError';

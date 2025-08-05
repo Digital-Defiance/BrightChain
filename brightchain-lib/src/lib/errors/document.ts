@@ -21,7 +21,7 @@ export class DocumentError extends TypedError<DocumentErrorType> {
     otherVars?: Record<string, string | number>,
     language?: StringLanguages,
   ) {
-    super(type, language, otherVars);
+    super(type, undefined, otherVars);
     this.name = 'DocumentError';
   }
 }

@@ -21,7 +21,7 @@ export class BlockMetadataError extends TypedWithReasonError<BlockMetadataErrorT
     };
   }
   constructor(type: BlockMetadataErrorType, language?: StringLanguages) {
-    super(StringNames.Error_BlockMetadataTemplate, type, language);
+    super(StringNames.Error_BlockMetadataTemplate, type, undefined);
     this.name = 'BlockMetadataError';
   }
 }

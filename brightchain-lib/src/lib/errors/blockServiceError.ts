@@ -42,7 +42,7 @@ export class BlockServiceError extends TypedError<BlockServiceErrorType> {
     language?: StringLanguages,
     otherVars?: Record<string, string | number>,
   ) {
-    super(type, language, otherVars);
+    super(type, undefined, otherVars);
     this.name = 'BlockServiceError';
   }
 }

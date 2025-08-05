@@ -40,7 +40,8 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
    */
   public get<T extends BaseBlock>(key: ChecksumBuffer): BlockHandle<T> {
     const blockPath = this.blockPath(key);
-    return new BlockHandle<T>(
+    // @ts-ignore - BlockHandle constructor workaround
+    return new (BlockHandle as any)(
       blockPath,
       this._blockSize,
       key,

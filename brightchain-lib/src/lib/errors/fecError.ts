@@ -49,7 +49,7 @@ export class FecError extends TypedError<FecErrorType> {
     language?: StringLanguages,
     templateParams?: Record<string, string>,
   ) {
-    super(type, language, templateParams);
+    super(type, undefined, templateParams);
     this.name = 'FecError';
   }
 }

@@ -39,7 +39,7 @@ export class EncryptedBlockCreator {
     creator: BrightChainMember,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,
-  ): Promise<ISingleEncryptedBlockDetails> {
+  ): Promise<EncryptedBlock> {
     const blockCreator = EncryptedBlockCreator.creators.get(type);
     if (!blockCreator) {
       throw new Error(`No creator registered for block type ${type}`);

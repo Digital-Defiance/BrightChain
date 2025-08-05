@@ -28,7 +28,7 @@ export class StreamError extends TypedError<StreamErrorType> {
     language?: StringLanguages,
     templateParams?: Record<string, string>,
   ) {
-    super(type, language, templateParams);
+    super(type, undefined, templateParams);
     this.name = 'StreamError';
   }
 }

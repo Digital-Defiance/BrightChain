@@ -52,7 +52,7 @@ export class EciesError extends TypedError<EciesErrorType> {
     language?: StringLanguages,
     templateParams?: Record<string, string>,
   ) {
-    super(type, language, templateParams);
+    super(type, undefined, templateParams);
     this.name = 'EciesError';
 
     // Ensure proper prototype chain for instanceof checks

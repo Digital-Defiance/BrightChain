@@ -5,7 +5,7 @@ import { HandleableError } from './handleable';
 
 export class InvalidIDFormatError extends HandleableError {
   constructor(language?: StringLanguages) {
-    super(translate(StringNames.Error_InvalidIDFormat, language));
+    super(translate(StringNames.Error_InvalidIDFormat));
     this.name = 'InvalidIDFormatError';
   }
 }

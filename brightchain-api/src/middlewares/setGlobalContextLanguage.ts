@@ -3,7 +3,7 @@
 import {
   DefaultLanguage,
   getLanguageCode,
-  GlobalLanguageContext,
+  LanguageContext,
   StringLanguages,
 } from '@BrightChain/brightchain-lib';
 import { NextFunction, Request, Response } from 'express';
@@ -23,6 +23,7 @@ export function setGlobalContextLanguageFromRequest(
       // ignore invalid language header
     }
   }
-  GlobalLanguageContext.language = language;
+  // TODO: Set language context when properly implemented
+  // LanguageContext.language = language;
   next();
 }

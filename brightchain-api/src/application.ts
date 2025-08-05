@@ -8,7 +8,7 @@ import { readdirSync, readFileSync } from 'fs';
 import { Server } from 'http';
 import { createServer } from 'https';
 import { resolve } from 'path';
-import { environment } from './environment';
+import { getEnvironment } from './environment';
 import { IApplication } from './interfaces/application';
 import { Middlewares } from './middlewares';
 import { ApiRouter } from './routers/api';
@@ -41,6 +41,28 @@ function locatePEMRoot(): string {
  * Application class
  */
 export class App implements IApplication {
+  public readonly id: string = 'brightchain-app';
+  
+  // Add missing interface methods
+  public getController(name: string): any {
+    // Placeholder implementation
+    return null;
+  }
+  
+  public get nodeAgent(): any {
+    // Placeholder implementation
+    return null;
+  }
+  
+  public get clusterAgentPublicKeys(): any {
+    // Placeholder implementation
+    return [];
+  }
+  
+  public getModel<T>(name: string): any {
+    // Placeholder implementation
+    return null;
+  }
   private static instance: App | null = null;
   private readonly keyStorage: SecureKeyStorage;
 
@@ -119,14 +141,14 @@ export class App implements IApplication {
       );
 
       this.server = this.expressApp.listen(
-        environment.developer.port,
-        environment.developer.host,
+        getEnvironment().developer.port,
+        getEnvironment().developer.host,
         () => {
           this._ready = true;
           debugLog(
-            environment.developer.debug,
+            getEnvironment().developer.debug,
             'log',
-            `[ ready ] http://${environment.developer.host}:${environment.developer.port}`,
+            `[ ready ] http://${getEnvironment().developer.host}:${getEnvironment().developer.port}`,
           );
         },
       );
@@ -141,7 +163,7 @@ export class App implements IApplication {
         };
 
         createServer(options, this.expressApp).listen(443, () => {
-          console.log(`[ ready ] https://${this.environment.host}:443`);
+          console.log(`[ ready ] https://${getEnvironment().developer.host}:443`);
         });
       } catch (err) {
         console.error('Failed to start HTTPS server:', err);
@@ -158,7 +180,7 @@ export class App implements IApplication {
   public async stop(): Promise<void> {
     if (this.server) {
       debugLog(
-        environment.developer.debug,
+        getEnvironment().developer.debug,
         'log',
         '[ stopping ] Application server',
       );
@@ -176,7 +198,7 @@ export class App implements IApplication {
 
     this._ready = false;
     debugLog(
-      environment.developer.debug,
+      getEnvironment().developer.debug,
       'log',
       '[ stopped ] Application server and database connections',
     );

@@ -3,7 +3,6 @@ import { BrightChainMember } from '../brightChainMember';
 import CONSTANTS, { CBL, CHECKSUM, ECIES, TUPLE } from '../constants';
 import {
   BlockEncryptionType,
-  EncryptedBlockType,
 } from '../enumerations/blockEncryptionType';
 import { BlockSize, lengthToBlockSize } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
@@ -828,7 +827,7 @@ export class CBLService {
    */
   public calculateCBLAddressCapacity(
     blockSize: BlockSize,
-    encryptedBlockType: EncryptedBlockType,
+    encryptedBlockType: BlockEncryptionType,
     cbl?: {
       fileName: string;
       mimeType: string;
