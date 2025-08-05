@@ -298,7 +298,7 @@ export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
   public override get layerPayloadSize(): number {
     return this.encryptionType === BlockEncryptionType.SingleRecipient
       ? ECIES.OVERHEAD_SIZE
-      : ECIES.MULTIPLE.ENCRYPTED_MESSAGE_OVERHEAD_SIZE;
+      : ECIES.MULTIPLE.BASE_OVERHEAD_SIZE;
   }
 
   /**

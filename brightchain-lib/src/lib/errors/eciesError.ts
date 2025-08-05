@@ -6,6 +6,9 @@ import { TypedError } from './typedError';
 export class EciesError extends TypedError<EciesErrorType> {
   public get reasonMap(): Record<EciesErrorType, StringNames> {
     return {
+      [EciesErrorType.CRCError]: StringNames.Error_EciesErrorCrcError,
+      [EciesErrorType.InvalidEncryptionType]:
+        StringNames.Error_EciesErrorInvalidEncryptionType,
       [EciesErrorType.InvalidHeaderLength]:
         StringNames.Error_EciesErrorInvalidHeaderLength,
       [EciesErrorType.InvalidEncryptedDataLength]:

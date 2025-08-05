@@ -40,10 +40,11 @@ export class VotingPoll {
       hash,
     );
     const receipt = Buffer.concat([hash, signature]);
-    const encryptedReceipt = ServiceProvider.getInstance().eciesService.encrypt(
-      member.publicKey,
-      receipt,
-    );
+    const encryptedReceipt =
+      ServiceProvider.getInstance().eciesService.encryptSimpleOrSingle(
+        member.publicKey,
+        receipt,
+      );
     this.receipts.set(member.id.asRawGuidBuffer, encryptedReceipt);
     return encryptedReceipt;
   }
@@ -66,7 +67,7 @@ export class VotingPoll {
     }
     // Use the backward compatible version directly which returns a Buffer
     const decryptedReceipt =
-      ServiceProvider.getInstance().eciesService.decryptSingleWithHeader(
+      ServiceProvider.getInstance().eciesService.decryptSimpleOrSingleWithHeader(
         this.ecKeyPair.privateKey,
         encryptedReceipt,
       );

@@ -40,7 +40,7 @@ export class SymmetricService {
 
     // encrypt the document using AES-256 and the key
     // Initialization Vector
-    const ivBuffer = randomBytes(ECIES.IV_LENGTH);
+    const ivBuffer = randomBytes(ECIES.IV_SIZE);
     const key: Buffer =
       encryptionKey ?? randomBytes(ECIES.SYMMETRIC.KEY_LENGTH);
     const cipher = createCipheriv(
@@ -50,10 +50,14 @@ export class SymmetricService {
     );
 
     const ciphertextBuffer = cipher.update(data);
+    const finalBuffer = cipher.final();
+    const authTag = cipher.getAuthTag(); // CRITICAL: Extract auth tag
+
     const encryptionIvPlusData: Buffer = Buffer.concat([
       ivBuffer,
       ciphertextBuffer,
-      cipher.final(),
+      finalBuffer,
+      authTag, // CRITICAL: Append auth tag
     ]);
     return {
       encryptedData: encryptionIvPlusData,
@@ -68,14 +72,19 @@ export class SymmetricService {
    * @returns Decrypted data as a Buffer
    */
   public static decryptBuffer(encryptedData: Buffer, key: Buffer): Buffer {
-    const ivBuffer = encryptedData.subarray(0, ECIES.IV_LENGTH);
-    const ciphertextBuffer = encryptedData.subarray(ECIES.IV_LENGTH);
+    const ivBuffer = encryptedData.subarray(0, ECIES.IV_SIZE);
+    const authTagStart = encryptedData.length - ECIES.AUTH_TAG_SIZE;
+    const ciphertextBuffer = encryptedData.subarray(ECIES.IV_SIZE, authTagStart);
+    const authTag = encryptedData.subarray(authTagStart); // CRITICAL: Extract auth tag
+
     const decipher = createDecipheriv(
       SYMMETRIC_ALGORITHM_CONFIGURATION,
       key,
       ivBuffer,
     );
-    return decipher.update(ciphertextBuffer);
+    decipher.setAuthTag(authTag); // CRITICAL: Set auth tag for verification
+
+    return Buffer.concat([decipher.update(ciphertextBuffer), decipher.final()]);
   }
 
   /**

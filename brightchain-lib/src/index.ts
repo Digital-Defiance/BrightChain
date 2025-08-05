@@ -149,7 +149,7 @@ export * from './lib/interfaces/role';
 export * from './lib/interfaces/sealingConsts';
 export * from './lib/interfaces/sealResults';
 export * from './lib/interfaces/signedToken';
-export * from './lib/interfaces/signgingKeyPrivateKeyInfo';
+export * from './lib/interfaces/signingKeyPrivateKeyInfo';
 export * from './lib/interfaces/simpleKeyPair';
 export * from './lib/interfaces/simpleKeyPairBuffer';
 export * from './lib/interfaces/simplePublicKeyOnly';

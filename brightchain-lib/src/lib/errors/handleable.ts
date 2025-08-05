@@ -1,18 +1,12 @@
+import { HandleableErrorOptions } from '../interfaces/handleableErrorOptions';
+
 export class HandleableError extends Error {
   public readonly cause?: Error;
   public readonly statusCode: number;
   public readonly sourceData?: unknown;
   private _handled: boolean;
 
-  constructor(
-    message: string,
-    options?: {
-      cause?: Error;
-      handled?: boolean;
-      statusCode?: number;
-      sourceData?: unknown;
-    },
-  ) {
+  constructor(message: string, options?: Partial<HandleableErrorOptions>) {
     super(message);
     this.name = this.constructor.name;
     this.cause = options?.cause;

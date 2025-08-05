@@ -1,3 +1,4 @@
+import { CHECKSUM } from '../constants';
 import { ChecksumService } from './checksum.service';
 import { ECIESService } from './ecies.service';
 import { ServiceProvider } from './service.provider';
@@ -59,7 +60,7 @@ describe('ServiceProvider', () => {
       const service = ServiceProvider.getInstance().checksumService;
       const data = Buffer.from('test data');
       const checksum = service.calculateChecksum(data);
-      expect(checksum.length).toBe(service.checksumBufferLength);
+      expect(checksum.length).toBe(CHECKSUM.SHA3_BUFFER_LENGTH);
     });
 
     it('should provide working ECIESService', () => {

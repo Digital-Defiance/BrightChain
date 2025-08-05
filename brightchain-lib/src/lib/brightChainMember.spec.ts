@@ -343,14 +343,14 @@ describe('brightchain', () => {
         votingService,
       );
       reloadedMember.loadWallet(alice.mnemonic);
-      const encrypted = eciesService.encrypt(
+      const encrypted = eciesService.encryptSimpleOrSingle(
         alice.member.publicKey,
         Buffer.from('hello world'),
       );
       if (!reloadedMember.privateKey) {
         throw new Error('Private key not loaded');
       }
-      const decrypted = eciesService.decryptSingleWithHeader(
+      const decrypted = eciesService.decryptSimpleOrSingleWithHeader(
         reloadedMember.privateKey,
         encrypted,
       );

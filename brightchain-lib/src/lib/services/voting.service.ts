@@ -425,7 +425,7 @@ export class VotingService {
         : walletPublicKey;
 
     // Pass public key directly to encrypt which will handle prefix
-    return ServiceProvider.getInstance().eciesService.encrypt(
+    return ServiceProvider.getInstance().eciesService.encryptSimpleOrSingle(
       publicKeyForEncryption,
       Buffer.concat([lambdaLengthBuffer, lambda, muLengthBuffer, mu]),
     );
@@ -455,7 +455,7 @@ export class VotingService {
 
     // decryptSingleWithHeader now returns the decrypted buffer directly
     const decryptedBuffer =
-      ServiceProvider.getInstance().eciesService.decryptSingleWithHeader(
+      ServiceProvider.getInstance().eciesService.decryptSimpleOrSingleWithHeader(
         privateKeyForDecryption,
         encryptedPrivateKey,
       );

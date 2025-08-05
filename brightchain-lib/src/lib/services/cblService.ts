@@ -85,7 +85,7 @@ export class CBLService {
   /**
    * Length of the creator signature field in the header
    */
-  public static readonly CreatorSignatureSize: number = ECIES.SIGNATURE_LENGTH;
+  public static readonly CreatorSignatureSize: number = ECIES.SIGNATURE_SIZE;
 
   /**
    * Offset of the date field in the header
@@ -728,7 +728,7 @@ export class CBLService {
     const finalSignature: SignatureBuffer =
       creator instanceof BrightChainMember && creator.privateKey
         ? this.eciesService.signMessage(creator.privateKey, checksum)
-        : (Buffer.alloc(ECIES.SIGNATURE_LENGTH, 0) as SignatureBuffer);
+        : (Buffer.alloc(ECIES.SIGNATURE_SIZE, 0) as SignatureBuffer);
 
     // Construct final header
     const headerData = Buffer.concat([

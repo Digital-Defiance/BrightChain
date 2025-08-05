@@ -1,4 +1,6 @@
 export enum EciesErrorType {
+  CRCError = 'CRCError',
+  InvalidEncryptionType = 'InvalidEncryptionType',
   InvalidIVLength = 'InvalidIVLength',
   InvalidAuthTagLength = 'InvalidAuthTagLength',
   InvalidBlockType = 'InvalidBlockType',

@@ -5,7 +5,7 @@ import { ServiceProvider } from '../services/service.provider';
  */
 export class BlockECIES {
   public static encrypt(receiverPublicKey: Buffer, message: Buffer): Buffer {
-    return ServiceProvider.getInstance().eciesService.encrypt(
+    return ServiceProvider.getInstance().eciesService.encryptSimpleOrSingle(
       receiverPublicKey,
       message,
     );
@@ -13,7 +13,7 @@ export class BlockECIES {
 
   public static decrypt(privateKey: Buffer, encryptedData: Buffer): Buffer {
     // Use the backward compatible version directly now which returns Buffer
-    return ServiceProvider.getInstance().eciesService.decryptSingleWithHeader(
+    return ServiceProvider.getInstance().eciesService.decryptSimpleOrSingleWithHeader(
       privateKey,
       encryptedData,
     );

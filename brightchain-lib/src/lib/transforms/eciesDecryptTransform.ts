@@ -71,7 +71,7 @@ export class EciesDecryptionTransform extends Transform {
           try {
             // Decrypt the extracted block
             const { decrypted, consumedBytes } =
-              this.eciesService.decryptSingleWithHeaderEx(
+              this.eciesService.decryptSimpleOrSingleWithHeaderEx(
                 this.privateKey,
                 encryptedBlock,
               );
@@ -202,7 +202,7 @@ export class EciesDecryptionTransform extends Transform {
           // We only need the decrypted part for the final push.
           // We also expect consumedBytes to equal encryptedBlock.length here.
           const { decrypted, consumedBytes } =
-            this.eciesService.decryptSingleWithHeaderEx(
+            this.eciesService.decryptSimpleOrSingleWithHeaderEx(
               this.privateKey,
               encryptedBlock, // Pass only the final block
             );

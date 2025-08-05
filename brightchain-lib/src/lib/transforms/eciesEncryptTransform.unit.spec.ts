@@ -7,6 +7,8 @@ import { ECIESService } from '../services/ecies.service';
 import { EciesEncryptTransform } from './eciesEncryptTransform';
 
 describe('EciesEncryptTransform Unit Tests', () => {
+  let consoleError: typeof console.error;
+
   const mockLogger = {
     error: jest.fn(),
     log: jest.fn(),
@@ -22,11 +24,22 @@ describe('EciesEncryptTransform Unit Tests', () => {
     publicKey: Buffer;
   };
 
+  beforeAll(() => {
+    // Mock console.error to prevent actual logging during tests
+    consoleError = console.error;
+    console.error = jest.fn();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     eciesService = new ECIESService();
     mnemonic = eciesService.generateNewMnemonic();
     keypair = eciesService.mnemonicToSimpleKeyPairBuffer(mnemonic);
+  });
+
+  afterAll(() => {
+    // Restore console.error after all tests
+    console.error = consoleError;
   });
 
   it('should be instantiated with correct parameters', () => {
@@ -75,16 +88,10 @@ describe('EciesEncryptTransform Unit Tests', () => {
       expect(chunks.length).toBe(1);
       const combinedData = Buffer.concat(chunks);
 
-      // Add a debug log to help diagnose the issue
-      console.log(
-        `Combined data length: ${combinedData.length}, first bytes: ${combinedData.subarray(0, 8).toString('hex')}`,
-      );
-
       try {
         // Extract the actual encrypted data from the combined chunk
         // First 4 bytes are the length prefix
         const encryptedLength = combinedData.readUInt32BE(0);
-        console.log(`Extracted length prefix: ${encryptedLength}`);
 
         if (encryptedLength <= 0 || encryptedLength > combinedData.length - 4) {
           throw new Error(
@@ -93,10 +100,9 @@ describe('EciesEncryptTransform Unit Tests', () => {
         }
 
         const encryptedData = combinedData.subarray(4, 4 + encryptedLength);
-        console.log(`Encrypted data length: ${encryptedData.length}`);
 
         // Verify the encrypted data can be decrypted
-        const decryptedData = eciesService.decryptSingleWithHeader(
+        const decryptedData = eciesService.decryptSimpleOrSingleWithHeader(
           keypair.privateKey,
           encryptedData,
         );
@@ -136,21 +142,14 @@ describe('EciesEncryptTransform Unit Tests', () => {
     transform.on('end', () => {
       try {
         const combinedChunks = Buffer.concat(chunks);
-        console.log(
-          `Streaming test - total chunks: ${chunks.length}, combined length: ${combinedChunks.length}`,
-        );
 
         // Extract all the encrypted blocks
         let position = 0;
         const extractedChunks: Buffer[] = [];
 
-        console.log(`Processing chunks from bytes at position ${position}`);
         while (position < combinedChunks.length) {
           // Read length prefix
           const blockLength = combinedChunks.readUInt32BE(position);
-          console.log(
-            `Found block with length: ${blockLength} at position ${position}`,
-          );
 
           if (
             blockLength <= 0 ||
@@ -168,33 +167,23 @@ describe('EciesEncryptTransform Unit Tests', () => {
             position,
             position + blockLength,
           );
-          console.log(
-            `Extracted encrypted block of size ${encryptedBlock.length}`,
-          );
 
           extractedChunks.push(encryptedBlock);
           position += blockLength; // Move to the next block
         }
 
         // We should have encrypted chunks in this test
-        console.log(`Total extracted chunks: ${extractedChunks.length}`);
         expect(extractedChunks.length).toBeGreaterThan(0);
 
         // Combine all extracted encrypted chunks
         const encryptedData = Buffer.concat(extractedChunks);
-        console.log(
-          `Combined extracted encrypted data size: ${encryptedData.length}`,
-        );
 
         // Verify the encrypted data can be decrypted
-        const decryptedData = eciesService.decryptSingleWithHeader(
+        const decryptedData = eciesService.decryptSimpleOrSingleWithHeader(
           keypair.privateKey,
           encryptedData,
         );
 
-        console.log(
-          `Decrypted data length: ${decryptedData.length}, original data length: ${inputData.length}`,
-        );
         expect(decryptedData).toEqual(inputData);
         done();
       } catch (error) {
@@ -239,6 +228,7 @@ describe('EciesEncryptTransform Unit Tests', () => {
         expect(error.type).toBe(EciesErrorType.InvalidEphemeralPublicKey);
         expect(error.message).toContain('Invalid ephemeral public key');
         expect(mockLogger.error).toHaveBeenCalled();
+        expect(console.error).toHaveBeenCalledTimes(1);
         safeDone();
       } catch (testError) {
         safeDone(testError);

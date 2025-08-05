@@ -5,14 +5,8 @@ export interface IECIESConsts {
   /** The primary key derivation path for HD wallets */
   PRIMARY_KEY_DERIVATION_PATH: string;
 
-  /** Length of the authentication tag in bytes */
-  AUTH_TAG_LENGTH: number;
-
-  /** Length of the initialization vector in bytes */
-  IV_LENGTH: number;
-
   /** Length of ECDSA signatures in bytes */
-  SIGNATURE_LENGTH: number;
+  SIGNATURE_SIZE: number;
 
   /** Length of raw public keys in bytes (without 0x04 prefix) */
   RAW_PUBLIC_KEY_LENGTH: number;
@@ -25,9 +19,6 @@ export interface IECIESConsts {
   /** Mnemonic strength in bits. This will produce a 32-bit key for ECDSA */
   MNEMONIC_STRENGTH: number;
 
-  /** Total overhead size for encrypted blocks (ephemeral public key + IV + auth tag) */
-  OVERHEAD_SIZE: number;
-
   /** Symmetric encryption algorithm configuration */
   SYMMETRIC: {
     ALGORITHM: string;
@@ -37,13 +28,55 @@ export interface IECIESConsts {
   };
 
   /**
+   * Length of the initialization vector
+   */
+  IV_SIZE: number;
+  /**
+   * Length of the initialization vector (alias for backward compatibility)
+   */
+  IV_LENGTH: number;
+  /**
+   * Length of the authentication tag
+   */
+  AUTH_TAG_SIZE: number;
+  /**
+   * Default overhead size for ECIES operations
+   */
+  OVERHEAD_SIZE: number;
+
+  SIMPLE: {
+    /**
+     * Length of the block type + IV + auth tag + data length + crc16
+     */
+    FIXED_OVERHEAD_SIZE: number;
+    /**
+     * Maximum length of the data that can be encrypted
+     */
+    MAX_DATA_SIZE: number;
+  };
+
+  /**
+   * ECIES single recipient
+   */
+  SINGLE: {
+    /**
+     * Length of the block type + IV + auth tag + data length + crc16
+     */
+    FIXED_OVERHEAD_SIZE: number;
+    /**
+     * Maximum length of the data that can be encrypted
+     */
+    MAX_DATA_SIZE: number;
+    /**
+     * Length of the data length
+     */
+    DATA_LENGTH_SIZE: number;
+  };
+
+  /**
    * ECIES multiple recipient
    */
   MULTIPLE: {
-    /**
-     * Length of the IV + auth tag + crc16 for the overall message
-     */
-    ENCRYPTED_MESSAGE_OVERHEAD_SIZE: number;
     /**
      * Length of the IV + auth tag + data length + recipient count for the overall message
      */
@@ -57,14 +90,6 @@ export interface IECIESConsts {
      * This is limited by the size of the value used to store the recipient count in the header
      */
     MAX_RECIPIENTS: number;
-    /**
-     * Length of the initialization vector
-     */
-    IV_SIZE: number;
-    /**
-     * Length of the authentication tag
-     */
-    AUTH_TAG_SIZE: number;
     /**
      * Maximum length of the data that can be encrypted
      */

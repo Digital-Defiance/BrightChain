@@ -2,7 +2,7 @@ import { Buffer } from 'buffer';
 import { Brand } from 'ts-brand';
 import { GuidBrandType } from './enumerations/guidBrandType';
 import { IKeyPairBufferWithUnEncryptedPrivateKey } from './interfaces/keyPairBufferWithUnEncryptedPrivateKey';
-import { ISigningKeyPrivateKeyInfo } from './interfaces/signgingKeyPrivateKeyInfo';
+import { ISigningKeyPrivateKeyInfo } from './interfaces/signingKeyPrivateKeyInfo';
 import { ISimpleKeyPairBuffer } from './interfaces/simpleKeyPairBuffer';
 import { ISimplePublicKeyOnly } from './interfaces/simplePublicKeyOnly';
 import { ISimplePublicKeyOnlyBuffer } from './interfaces/simplePublicKeyOnlyBuffer';
@@ -56,6 +56,8 @@ export type Base64Guid = Brand<string, 'GuidV4', GuidBrandType.Base64Guid>;
  */
 export type RawGuidBuffer = Buffer &
   Brand<Buffer, 'GuidV4', GuidBrandType.RawGuidBuffer>;
+
+export type EciesEncryptionType = 'simple' | 'single' | 'multiple';
 
 /**
  * Extended Cipher type with auth tag support

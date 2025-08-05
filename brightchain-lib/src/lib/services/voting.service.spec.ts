@@ -28,8 +28,12 @@ describe('VotingService', () => {
   let keyPair: { privateKey: Buffer; publicKey: Buffer };
   let votingKeypair: TestKeyPair;
   let testKeypairs: TestKeyPair[];
+  let consoleError: typeof console.error;
 
   beforeAll(() => {
+    // Mock console.error to prevent actual logging during tests
+    consoleError = console.error;
+    console.error = jest.fn();
     // Create ECDH key pair
     ecdh = createECDH('secp256k1');
     ecdh.generateKeys();
@@ -48,6 +52,11 @@ describe('VotingService', () => {
         () =>
           ServiceProvider.getInstance().votingService.generateVotingKeyPair() as TestKeyPair,
       );
+  });
+
+  afterAll(() => {
+    // Restore console.error after all tests
+    console.error = consoleError;
   });
 
   describe('private key algorithms', () => {
@@ -82,6 +91,7 @@ describe('VotingService', () => {
         );
       }).toThrowType(EciesError, (error: EciesError) => {
         expect(error.type).toBe(EciesErrorType.SecretComputationFailed);
+        expect(console.error).toHaveBeenCalledTimes(1);
       });
     });
 

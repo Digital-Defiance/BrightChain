@@ -68,7 +68,10 @@ describe('EciesDecryptionTransform Unit Tests', () => {
       mockLogger,
     );
     const inputData = randomBytes(100);
-    const encryptedData = eciesService.encrypt(keypair.publicKey, inputData);
+    const encryptedData = eciesService.encryptSimpleOrSingle(
+      keypair.publicKey,
+      inputData,
+    );
     const chunks: Buffer[] = [];
 
     transform.on('data', (chunk: Buffer) => {
@@ -94,7 +97,10 @@ describe('EciesDecryptionTransform Unit Tests', () => {
       mockLogger,
     );
     const inputData = randomBytes(1000);
-    const encryptedData = eciesService.encrypt(keypair.publicKey, inputData);
+    const encryptedData = eciesService.encryptSimpleOrSingle(
+      keypair.publicKey,
+      inputData,
+    );
     const chunks: Buffer[] = [];
 
     // Split encrypted data into multiple chunks
@@ -130,7 +136,10 @@ describe('EciesDecryptionTransform Unit Tests', () => {
       mockLogger,
     );
     const inputData = randomBytes(100);
-    const encryptedData = eciesService.encrypt(keypair.publicKey, inputData);
+    const encryptedData = eciesService.encryptSimpleOrSingle(
+      keypair.publicKey,
+      inputData,
+    );
 
     transform.on('error', (error: EciesError) => {
       expect(error).toBeDefined();

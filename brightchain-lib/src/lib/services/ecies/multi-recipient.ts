@@ -40,7 +40,7 @@ export class EciesMultiRecipient {
 
     // Generate a random symmetric key
     const symmetricKey = randomBytes(ECIES.SYMMETRIC.KEY_LENGTH);
-    const iv = randomBytes(ECIES.IV_LENGTH);
+    const iv = randomBytes(ECIES.IV_SIZE);
 
     // Encrypt the message with the symmetric key
     const cipher = createCipheriv(
@@ -60,7 +60,7 @@ export class EciesMultiRecipient {
     // Encrypt the symmetric key for each recipient
     const encryptionResults = recipients.map((member) => ({
       id: member.id,
-      encryptedKey: this.cryptoCore.encrypt(member.publicKey, symmetricKey),
+      encryptedKey: this.cryptoCore.encrypt('simple', member.publicKey, symmetricKey),
     }));
 
     const recipientIds = encryptionResults.map(({ id }) => id);
@@ -70,7 +70,7 @@ export class EciesMultiRecipient {
 
     // Verify the encrypted message size
     if (
-      message.length + ECIES.MULTIPLE.ENCRYPTED_MESSAGE_OVERHEAD_SIZE !==
+      message.length + ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE !==
       encryptedMessage.length
     ) {
       throw new EciesError(EciesErrorType.MessageLengthMismatch);
@@ -116,21 +116,22 @@ export class EciesMultiRecipient {
     const encryptedKey = encryptedData.recipientKeys[recipientIndex];
 
     // Decrypt the symmetric key
-    const symmetricKey = this.cryptoCore.decryptSingleWithHeader(
+    const symmetricKey = this.cryptoCore.decryptSimpleOrSingleWithHeader(
+      'simple',
       recipient.privateKey,
       encryptedKey,
     );
 
     // Extract the IV and auth tag from the encrypted message
-    const iv = encryptedData.encryptedMessage.subarray(0, ECIES.IV_LENGTH);
+    const iv = encryptedData.encryptedMessage.subarray(0, ECIES.IV_SIZE);
     const authTag = encryptedData.encryptedMessage.subarray(
-      ECIES.IV_LENGTH,
-      ECIES.IV_LENGTH + ECIES.AUTH_TAG_LENGTH,
+      ECIES.IV_SIZE,
+      ECIES.IV_SIZE + ECIES.AUTH_TAG_SIZE,
     );
 
     // Extract the encrypted content
     const encrypted = encryptedData.encryptedMessage.subarray(
-      ECIES.IV_LENGTH + ECIES.AUTH_TAG_LENGTH,
+      ECIES.IV_SIZE + ECIES.AUTH_TAG_SIZE,
     );
 
     // Decrypt the content with the symmetric key
@@ -188,7 +189,7 @@ export class EciesMultiRecipient {
       recipientCount * ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE; // recipient encrypted keys
 
     return includeMessageOverhead
-      ? baseOverhead + ECIES.MULTIPLE.ENCRYPTED_MESSAGE_OVERHEAD_SIZE
+      ? baseOverhead + ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE
       : baseOverhead;
   }
 

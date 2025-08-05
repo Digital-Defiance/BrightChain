@@ -82,7 +82,7 @@ export class EciesEncryptTransform extends Transform {
           this.receiverPublicKey,
         );
 
-        const encryptedBlock = this.eciesService.encrypt(
+        const encryptedBlock = this.eciesService.encryptSimpleOrSingle(
           normalizedPublicKey,
           blockData,
         );
@@ -173,7 +173,7 @@ export class EciesEncryptTransform extends Transform {
           this.receiverPublicKey,
         );
 
-        const encryptedBlock = this.eciesService.encrypt(
+        const encryptedBlock = this.eciesService.encryptSimpleOrSingle(
           normalizedPublicKey,
           this.buffer,
         );

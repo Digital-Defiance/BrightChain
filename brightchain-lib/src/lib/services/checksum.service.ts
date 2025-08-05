@@ -15,13 +15,6 @@ export class ChecksumService {
   }
 
   /**
-   * Get the length of a checksum buffer in bytes
-   */
-  public get checksumBufferLength(): number {
-    return CHECKSUM.SHA3_BUFFER_LENGTH; // SHA3-512 produces a 64-byte (512-bit) hash
-  }
-
-  /**
    * Calculate a checksum for a buffer
    * @param data - The data to calculate the checksum for
    * @returns The checksum as a Buffer
@@ -67,8 +60,8 @@ export class ChecksumService {
     checksum2: ChecksumBuffer,
   ): boolean {
     if (
-      checksum1.length !== this.checksumBufferLength ||
-      checksum2.length !== this.checksumBufferLength
+      checksum1.length !== CHECKSUM.SHA3_BUFFER_LENGTH ||
+      checksum2.length !== CHECKSUM.SHA3_BUFFER_LENGTH
     ) {
       return false;
     }
@@ -90,7 +83,7 @@ export class ChecksumService {
    * @returns The checksum as a Buffer
    */
   public hexStringToChecksum(hexString: string): ChecksumBuffer {
-    if (hexString.length !== this.checksumBufferLength * 2) {
+    if (hexString.length !== CHECKSUM.SHA3_BUFFER_LENGTH * 2) {
       throw new Error('Invalid checksum hex string length');
     }
     return Buffer.from(hexString, CHECKSUM.ENCODING) as ChecksumBuffer;
@@ -102,7 +95,7 @@ export class ChecksumService {
    * @returns True if the checksum is valid, false otherwise
    */
   public validateChecksum(checksum: ChecksumBuffer): boolean {
-    return checksum.length === this.checksumBufferLength;
+    return checksum.length === CHECKSUM.SHA3_BUFFER_LENGTH;
   }
 
   /**

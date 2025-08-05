@@ -244,6 +244,9 @@ export const AmericanEnglishStrings: StringsCollection = {
     'FEC decoding failed: {ERROR}',
 
   // ECIES error
+  [StringNames.Error_EciesErrorCrcError]: 'CRC error',
+  [StringNames.Error_EciesErrorInvalidEncryptionType]:
+    'Invalid encryption type',
   [StringNames.Error_EciesErrorInvalidHeaderLength]: 'Invalid header length',
   [StringNames.Error_EciesErrorInvalidMnemonic]: 'Invalid mnemonic',
   [StringNames.Error_EciesErrorInvalidEncryptedDataLength]:

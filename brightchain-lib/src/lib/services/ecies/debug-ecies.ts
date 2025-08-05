@@ -79,7 +79,10 @@ function debugEciesFunctions() {
 
     // Alice encrypts a message for Bob
     console.log('Alice encrypts a message for Bob...');
-    const encrypted = service.encrypt(bobPublicKeyWithPrefix, message);
+    const encrypted = service.encryptSimpleOrSingle(
+      bobPublicKeyWithPrefix,
+      message,
+    );
     console.log(
       `Encrypted Data (${encrypted.length} bytes): ${encrypted.toString('hex').substring(0, 32)}...\n`,
     );
@@ -98,7 +101,7 @@ function debugEciesFunctions() {
     // Bob decrypts the message
     console.log('Bob decrypts the message...');
     try {
-      const decrypted = service.decryptSingleWithHeader(
+      const decrypted = service.decryptSimpleOrSingleWithHeader(
         bobPrivateKey,
         encrypted,
       );

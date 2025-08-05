@@ -184,6 +184,8 @@ export enum StringNames {
   Error_FecErrorFecDecodingFailedTemplate = 'Error_FecErrorFecDecodingFailedTemplate',
 
   // ECIES Errors
+  Error_EciesErrorCrcError = 'Error_EciesErrorCrcError',
+  Error_EciesErrorInvalidEncryptionType = 'Error_EciesErrorInvalidEncryptionType',
   Error_EciesErrorInvalidMnemonic = 'Error_EciesErrorInvalidMnemonic',
   Error_EciesErrorInvalidEphemeralPublicKey = 'Error_EciesErrorInvalidEphemeralPublicKey',
   Error_EciesErrorInvalidSenderPublicKey = 'Error_EciesErrorInvalidSenderPublicKey',

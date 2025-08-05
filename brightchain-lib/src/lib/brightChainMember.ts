@@ -272,7 +272,10 @@ export class BrightChainMember implements IBrightChainMemberOperational {
     const bufferData = Buffer.isBuffer(data) ? data : Buffer.from(data);
 
     // Use public key directly since it's already in ECDH format
-    return this._eciesService.encrypt(this._publicKey, bufferData);
+    return this._eciesService.encryptSimpleOrSingle(
+      this._publicKey,
+      bufferData,
+    );
   }
 
   public decryptData(encryptedData: Buffer): Buffer {
@@ -280,7 +283,7 @@ export class BrightChainMember implements IBrightChainMemberOperational {
       throw new MemberError(MemberErrorType.MissingPrivateKey);
     }
     // decryptSingleWithHeader now returns the Buffer directly
-    return this._eciesService.decryptSingleWithHeader(
+    return this._eciesService.decryptSimpleOrSingleWithHeader(
       this._privateKey,
       encryptedData,
     );

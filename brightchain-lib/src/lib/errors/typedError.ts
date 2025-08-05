@@ -6,13 +6,12 @@ import { HandleableError } from './handleable';
 export abstract class TypedError<
   T extends string | number,
 > extends HandleableError {
-  public readonly type: T;
   protected abstract get reasonMap(): Record<T, StringNames>;
 
   constructor(
-    type: T,
-    language?: StringLanguages,
-    otherVars?: Record<string, string | number>,
+    public readonly type: T,
+    public readonly language?: StringLanguages,
+    public readonly otherVars?: Record<string, string | number>,
   ) {
     // Get the reasonMap from the prototype
     const reasonMap = (new.target as typeof TypedError).prototype.reasonMap;

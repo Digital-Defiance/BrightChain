@@ -145,7 +145,7 @@ describe('SecureString', () => {
   });
 
   describe('error handling', () => {
-    it('should throw DecryptedValueLengthMismatch when decrypted length is incorrect', () => {
+    it('should throw DecryptedValueChecksumMismatch when encrypted data is corrupted', () => {
       const testString = faker.lorem.word();
       const secureString = new SecureString(testString);
 
@@ -170,7 +170,7 @@ describe('SecureString', () => {
         SecureStorageError,
         (error: SecureStorageError) => {
           expect(error.type).toBe(
-            SecureStorageErrorType.DecryptedValueLengthMismatch,
+            SecureStorageErrorType.DecryptedValueChecksumMismatch,
           );
         },
       );

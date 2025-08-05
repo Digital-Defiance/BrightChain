@@ -19,8 +19,13 @@ describe('ECIESService', () => {
   let recipient: BrightChainMember;
   let eciesService: ECIESService; // Added
   let votingService: VotingService; // Added
+  let consoleError: typeof console.error;
 
   beforeAll(() => {
+    // mock out console error
+    consoleError = console.error;
+    console.error = jest.fn();
+
     // Get service instances
     eciesService = ServiceProvider.getInstance().eciesService;
     votingService = ServiceProvider.getInstance().votingService;
@@ -41,6 +46,10 @@ describe('ECIESService', () => {
       'recipient',
       new EmailString('recipient@example.com'),
     ).member;
+  });
+  afterAll(() => {
+    // Restore console error
+    console.error = consoleError;
   });
 
   describe('Mnemonic and Wallet Operations', () => {
@@ -73,9 +82,12 @@ describe('ECIESService', () => {
         throw new Error('Recipient private key is undefined');
       }
       const message = Buffer.from('test message');
-      const encrypted = service.encrypt(recipient.publicKey, message);
+      const encrypted = service.encryptSimpleOrSingle(
+        recipient.publicKey,
+        message,
+      );
       // Use decryptSingleWithHeader instead of decryptWithHeader
-      const decrypted = service.decryptSingleWithHeader(
+      const decrypted = service.decryptSimpleOrSingleWithHeader(
         recipient.privateKey,
         encrypted,
       );
@@ -106,9 +118,10 @@ describe('ECIESService', () => {
     it('should throw error for invalid public key', () => {
       const message = Buffer.from('test message');
       const invalidPublicKey = randomBytes(ECIES.RAW_PUBLIC_KEY_LENGTH); // Wrong length
-      expect(() => service.encrypt(invalidPublicKey, message)).toThrow(
-        EciesError,
-      );
+      expect(() =>
+        service.encryptSimpleOrSingle(invalidPublicKey, message),
+      ).toThrow(EciesError);
+      expect(console.error).toHaveBeenCalledTimes(1);
     });
 
     it('should throw error for too many recipients', () => {

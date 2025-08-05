@@ -96,14 +96,8 @@ export const ECIES: IECIESConsts = {
   /** The primary key derivation path for HD wallets */
   PRIMARY_KEY_DERIVATION_PATH: "m/44'/60'/0'/0/0" as const,
 
-  /** Length of the authentication tag in bytes */
-  AUTH_TAG_LENGTH: 16 as const,
-
-  /** Length of the initialization vector in bytes */
-  IV_LENGTH: 16 as const,
-
   /** Length of ECDSA signatures in bytes */
-  SIGNATURE_LENGTH: 65 as const,
+  SIGNATURE_SIZE: 65 as const,
 
   /** Length of raw public keys in bytes (without 0x04 prefix) */
   RAW_PUBLIC_KEY_LENGTH: 64 as const,
@@ -116,9 +110,6 @@ export const ECIES: IECIESConsts = {
   /** Mnemonic strength in bits. This will produce a 32-bit key for ECDSA */
   MNEMONIC_STRENGTH: 256 as const,
 
-  /** Total overhead size for encrypted blocks (block type + public key + IV + auth tag) */
-  OVERHEAD_SIZE: 98 as const, // BLOCK_TYPE_HEADER_SIZE + PUBLIC_KEY_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH
-
   /** Symmetric encryption algorithm configuration */
   SYMMETRIC: {
     ALGORITHM: 'aes' as const,
@@ -127,15 +118,27 @@ export const ECIES: IECIESConsts = {
     MODE: 'gcm' as const,
   },
 
+  IV_SIZE: 16 as const,
+  IV_LENGTH: 16 as const, // Alias for backward compatibility
+  AUTH_TAG_SIZE: 16 as const,
+  OVERHEAD_SIZE: 97 as const, // Default overhead size for ECIES operations
+
+  SIMPLE: {
+    FIXED_OVERHEAD_SIZE: 101, // IV (16) + auth tag (16) + signature (65) + uint32 (4) = 101
+    MAX_DATA_SIZE: 9007199254740991 as const, // 2^53 - 1
+  },
+
+  SINGLE: {
+    FIXED_OVERHEAD_SIZE: 103 as const, // public key (65) + IV (16) + auth tag (16) + data length (4) + crc16 (2)
+    MAX_DATA_SIZE: UINT32_MAX,
+    DATA_LENGTH_SIZE: UINT32_SIZE,
+  },
+
   MULTIPLE: {
-    // Corrected: IV (16) + AuthTag (16) + CRC16 (2) = 34
-    ENCRYPTED_MESSAGE_OVERHEAD_SIZE: 34 as const, // 16 bytes IV + 16 bytes auth tag + 2 bytes CRC16 checksum
-    // Corrected: DATA_LENGTH_SIZE (8) + RECIPIENT_COUNT_SIZE (2) = 10
-    FIXED_OVERHEAD_SIZE: 10 as const, // 8 bytes data length + 2 bytes recipient count
+    // IV (16) + auth tag (16) + recipient count (2) = 34
+    FIXED_OVERHEAD_SIZE: 34 as const, // IV + auth tag + recipient count
     ENCRYPTED_KEY_SIZE: 129 as const, // 65 bytes ephemeral public key + 16 bytes IV + 16 bytes auth tag + 32 bytes encrypted key
     MAX_RECIPIENTS: UINT16_MAX,
-    IV_SIZE: 16 as const,
-    AUTH_TAG_SIZE: 16 as const,
     MAX_DATA_SIZE: 9007199254740991 as const, // 2^53 - 1
     RECIPIENT_ID_SIZE: GUID_SIZE,
     RECIPIENT_COUNT_SIZE: UINT16_SIZE,
@@ -143,19 +146,15 @@ export const ECIES: IECIESConsts = {
   },
 } as const;
 
+export const BLOCK_ECIES = {
+  ENCRYPTION_TYPE_PREAMBLE_SIZE: 1 as const,
+};
+
 export const KEYRING: IKeyringConsts = {
   ALGORITHM: 'aes' as const,
   KEY_BITS: 256 as const,
   MODE: 'gcm' as const,
 } as const;
-
-export const ECIES_OVERHEAD_LENGTH =
-  ECIES.PUBLIC_KEY_LENGTH + // Include 0x04 prefix since we store it
-  ECIES.IV_LENGTH +
-  ECIES.AUTH_TAG_LENGTH;
-
-export const ECIES_MULTIPLE_MESSAGE_OVERHEAD_LENGTH =
-  ECIES.IV_LENGTH + ECIES.AUTH_TAG_LENGTH;
 
 export const KEYRING_ALGORITHM_CONFIGURATION =
   `${KEYRING.ALGORITHM}-${KEYRING.KEY_BITS}-${KEYRING.MODE}` as CipherGCMTypes;
@@ -291,8 +290,6 @@ export const CONSTANTS: IConstants = {
   PBKDF2,
   JWT,
   SITE,
-  ECIES_OVERHEAD_LENGTH,
-  ECIES_MULTIPLE_MESSAGE_OVERHEAD_LENGTH,
   KEYRING_ALGORITHM_CONFIGURATION,
   SYMMETRIC_ALGORITHM_CONFIGURATION,
   UINT8_SIZE,
@@ -302,9 +299,13 @@ export const CONSTANTS: IConstants = {
   UINT32_MAX,
   UINT64_SIZE,
   UINT64_MAX,
-  HEX_RADIX: 16,
+  HEX_RADIX: 16 as const,
   GUID_SIZE,
-};
+} as const;
+
+if (ECIES.SINGLE.DATA_LENGTH_SIZE !== UINT32_SIZE) {
+  throw new Error('Invalid ECIES single data length size');
+}
 
 if (
   TUPLE.MIN_RANDOM_BLOCKS >= TUPLE.MAX_RANDOM_BLOCKS ||
@@ -324,41 +325,24 @@ if (
   throw new Error('Invalid checksum constants');
 }
 
-// if (
-//   ECIES.OVERHEAD_SIZE !==
-//   ECIES.PUBLIC_KEY_LENGTH +
-//     ECIES.IV_LENGTH +
-//     ECIES.AUTH_TAG_LENGTH +
-//     ECIES.SIGNATURE_LENGTH
-// ) {
-//   console.warn(
-//     `WARNING: Invalid ECIES constants: ECIES.OVERHEAD_SIZE: ${ECIES.OVERHEAD_SIZE}, ECIES.PUBLIC_KEY_LENGTH: ${ECIES.PUBLIC_KEY_LENGTH}, ECIES.IV_LENGTH: ${ECIES.IV_LENGTH}, ECIES.AUTH_TAG_LENGTH: ${ECIES.AUTH_TAG_LENGTH}, ECIES.SIGNATURE_LENGTH: ${ECIES.SIGNATURE_LENGTH}`,
-//   );
-// }
-
 if (
-  ECIES_MULTIPLE_MESSAGE_OVERHEAD_LENGTH !==
-  ECIES.IV_LENGTH + ECIES.AUTH_TAG_LENGTH
+  ECIES.SIMPLE.FIXED_OVERHEAD_SIZE !==
+  ECIES.IV_SIZE + ECIES.AUTH_TAG_SIZE + ECIES.SIGNATURE_SIZE + UINT32_SIZE
 ) {
-  throw new Error('Invalid ECIES multiple message overhead constants');
+  console.warn(
+    `WARNING: Invalid ECIES constants: ECIES.SIMPLE.FIXED_OVERHEAD_SIZE: ${ECIES.SIMPLE.FIXED_OVERHEAD_SIZE}, ECIES.IV_LENGTH: ${ECIES.IV_SIZE}, ECIES.AUTH_TAG_LENGTH: ${ECIES.AUTH_TAG_SIZE}, ECIES.SIGNATURE_SIZE: ${ECIES.SIGNATURE_SIZE}`,
+  );
 }
 
 if (
-  ECIES_MULTIPLE_MESSAGE_OVERHEAD_LENGTH !==
-  ECIES.IV_LENGTH + ECIES.AUTH_TAG_LENGTH
+  ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE !==
+  ECIES.IV_SIZE + ECIES.AUTH_TAG_SIZE + UINT16_SIZE
 ) {
   throw new Error('Invalid ECIES multiple message overhead constants');
 }
 
 if (ECIES.PUBLIC_KEY_LENGTH !== ECIES.RAW_PUBLIC_KEY_LENGTH + 1) {
   throw new Error('Invalid ECIES public key length');
-}
-
-if (
-  ECIES_MULTIPLE_MESSAGE_OVERHEAD_LENGTH !==
-  ECIES.IV_LENGTH + ECIES.AUTH_TAG_LENGTH
-) {
-  throw new Error('Invalid ECIES multiple message overhead constants');
 }
 
 if (ECIES.MULTIPLE.RECIPIENT_COUNT_SIZE !== UINT16_SIZE) {

@@ -14,6 +14,13 @@ describe('EciesDecryptionTransform Integration Tests', () => {
     privateKey: Buffer;
     publicKey: Buffer;
   };
+  let consoleError: typeof console.error;
+
+  beforeAll(() => {
+    // Mock console.error to prevent actual logging during tests
+    consoleError = console.error;
+    console.error = jest.fn();
+  });
 
   beforeEach(() => {
     eciesService = new ECIESService();
@@ -21,8 +28,13 @@ describe('EciesDecryptionTransform Integration Tests', () => {
     keypair = eciesService.mnemonicToSimpleKeyPairBuffer(mnemonic);
   });
 
+  afterAll(() => {
+    // Restore console.error after all tests
+    console.error = consoleError;
+  });
+
   function encryptData(inputData: Buffer, publicKey: Buffer): Buffer {
-    return eciesService.encrypt(publicKey, inputData);
+    return eciesService.encryptSimpleOrSingle(publicKey, inputData);
   }
 
   const testEndToEndDecryption = async (inputData: Buffer): Promise<Buffer> => {
@@ -57,6 +69,15 @@ describe('EciesDecryptionTransform Integration Tests', () => {
     const inputData = randomBytes(testDataLength);
     const decryptedData = await testEndToEndDecryption(inputData);
     expect(decryptedData).toEqual(inputData);
+
+    // Expect that console.error was called with specific message
+    expect(console.error).toHaveBeenCalledWith(
+      'Flush error - remaining buffer length mismatch:',
+      expect.objectContaining({
+        remainingBufferLength: expect.any(Number),
+        expectedBlockLength: expect.any(Number),
+      }),
+    );
   });
 
   it('correctly decrypts data that was encrypted and is shorter than a block', async () => {
@@ -65,6 +86,15 @@ describe('EciesDecryptionTransform Integration Tests', () => {
     const inputData = randomBytes(testDataLength);
     const decryptedData = await testEndToEndDecryption(inputData);
     expect(decryptedData).toEqual(inputData);
+
+    // Expect that console.error was called with specific message
+    expect(console.error).toHaveBeenCalledWith(
+      'Flush error - remaining buffer length mismatch:',
+      expect.objectContaining({
+        remainingBufferLength: expect.any(Number),
+        expectedBlockLength: expect.any(Number),
+      }),
+    );
   });
 
   it('correctly decrypts data that was encrypted and is exactly one block', async () => {
@@ -73,5 +103,14 @@ describe('EciesDecryptionTransform Integration Tests', () => {
     const inputData = randomBytes(testDataLength);
     const decryptedData = await testEndToEndDecryption(inputData);
     expect(decryptedData).toEqual(inputData);
+
+    // Expect that console.error was called with specific message
+    expect(console.error).toHaveBeenCalledWith(
+      'Flush error - remaining buffer length mismatch:',
+      expect.objectContaining({
+        remainingBufferLength: expect.any(Number),
+        expectedBlockLength: expect.any(Number),
+      }),
+    );
   });
 });

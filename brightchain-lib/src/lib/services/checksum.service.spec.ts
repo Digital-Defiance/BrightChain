@@ -1,4 +1,5 @@
 import { Readable } from 'stream';
+import { CHECKSUM } from '../constants';
 import { ChecksumBuffer } from '../types';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
@@ -23,7 +24,7 @@ describe('ChecksumService', () => {
       const checksum1 = checksumService.calculateChecksum(testData);
       const checksum2 = checksumService.calculateChecksum(testData);
 
-      expect(checksum1.length).toBe(checksumService.checksumBufferLength);
+      expect(checksum1.length).toBe(CHECKSUM.SHA3_BUFFER_LENGTH);
       expect(checksum1.equals(checksum2)).toBe(true);
       expect(checksumService.compareChecksums(checksum1, checksum2)).toBe(true);
     });
@@ -42,7 +43,7 @@ describe('ChecksumService', () => {
       const emptyBuffer = Buffer.from('');
       const checksum = checksumService.calculateChecksum(emptyBuffer);
 
-      expect(checksum.length).toBe(checksumService.checksumBufferLength);
+      expect(checksum.length).toBe(CHECKSUM.SHA3_BUFFER_LENGTH);
       expect(checksumService.validateChecksum(checksum)).toBe(true);
     });
 
@@ -51,7 +52,7 @@ describe('ChecksumService', () => {
       largeBuffer.fill('A');
       const checksum = checksumService.calculateChecksum(largeBuffer);
 
-      expect(checksum.length).toBe(checksumService.checksumBufferLength);
+      expect(checksum.length).toBe(CHECKSUM.SHA3_BUFFER_LENGTH);
       expect(checksumService.validateChecksum(checksum)).toBe(true);
     });
 
@@ -80,9 +81,7 @@ describe('ChecksumService', () => {
         const checksumString = checksumService.checksumToHexString(checksum);
 
         // Each byte becomes two hex characters
-        expect(checksumString.length).toBe(
-          checksumService.checksumBufferLength * 2,
-        );
+        expect(checksumString.length).toBe(CHECKSUM.SHA3_BUFFER_LENGTH * 2);
       });
     });
 
@@ -125,7 +124,7 @@ describe('ChecksumService', () => {
       const checksum = await checksumService.calculateChecksumForStream(
         bufferToStream(testData),
       );
-      expect(checksum.length).toBe(checksumService.checksumBufferLength);
+      expect(checksum.length).toBe(CHECKSUM.SHA3_BUFFER_LENGTH);
       const checksum2 = await checksumService.calculateChecksumForStream(
         bufferToStream(testData),
       );
@@ -147,7 +146,7 @@ describe('ChecksumService', () => {
       const stream2 = bufferToStream(testData);
       const checksum =
         await checksumService.calculateChecksumForStream(stream1);
-      expect(checksum.length).toBe(checksumService.checksumBufferLength);
+      expect(checksum.length).toBe(CHECKSUM.SHA3_BUFFER_LENGTH);
       const checksum2 =
         await checksumService.calculateChecksumForStream(stream2);
       expect(checksumService.compareChecksums(checksum, checksum2)).toBe(true);
@@ -183,7 +182,7 @@ describe('ChecksumService', () => {
       const streamChecksum =
         await checksumService.calculateChecksumForStream(emptyStream);
 
-      expect(bufferChecksum.length).toBe(checksumService.checksumBufferLength);
+      expect(bufferChecksum.length).toBe(CHECKSUM.SHA3_BUFFER_LENGTH);
       expect(bufferChecksum.equals(streamChecksum)).toBe(true);
     });
 

@@ -140,9 +140,10 @@ export class SessionsController extends BaseController<
     try {
       // Load wallet and derive keys
       member.loadWallet(mnemonic);
-      mnemonic.dispose();
     } catch (error) {
       throw new InvalidCredentialsError();
+    } finally {
+      mnemonic.dispose();
     }
 
     // Generate session token

@@ -11,7 +11,13 @@ import { ExtendedCBL } from '../blocks/extendedCbl';
 import { RandomBlock } from '../blocks/random';
 import { RawDataBlock } from '../blocks/rawData';
 import { BrightChainMember } from '../brightChainMember';
-import { ECIES, ENCRYPTION, OFFS_CACHE_PERCENTAGE, TUPLE } from '../constants';
+import {
+  CHECKSUM,
+  ECIES,
+  ENCRYPTION,
+  OFFS_CACHE_PERCENTAGE,
+  TUPLE,
+} from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockErrorType } from '../enumerations/blockErrorType';
@@ -158,7 +164,7 @@ export class BlockService {
     }
 
     const encryptedBuffer =
-      ServiceLocator.getServiceProvider().eciesService.encrypt(
+      ServiceLocator.getServiceProvider().eciesService.encryptSimpleOrSingle(
         recipient?.publicKey ?? block.creator.publicKey,
         block.data,
       );
@@ -263,7 +269,7 @@ export class BlockService {
 
     // decryptSingleWithHeader now returns the decrypted buffer directly
     const decrypted =
-      ServiceLocator.getServiceProvider().eciesService.decryptSingleWithHeader(
+      ServiceLocator.getServiceProvider().eciesService.decryptSimpleOrSingleWithHeader(
         creator.privateKey,
         block.layerPayload,
       );
@@ -310,7 +316,7 @@ export class BlockService {
             multiEncryptionHeader.headerSize,
             multiEncryptionHeader.headerSize +
               multiEncryptionHeader.dataLength +
-              ECIES.MULTIPLE.ENCRYPTED_MESSAGE_OVERHEAD_SIZE,
+              ECIES.MULTIPLE.BASE_OVERHEAD_SIZE,
           ),
         },
         recipient,
@@ -516,7 +522,7 @@ export class BlockService {
       }
       if (encrypt && recipient) {
         const encryptedData =
-          await ServiceLocator.getServiceProvider().eciesService.encrypt(
+          await ServiceLocator.getServiceProvider().eciesService.encryptSimpleOrSingle(
             recipient.publicKey,
             dataSlice,
           );
@@ -679,9 +685,7 @@ export class BlockService {
     }
 
     // Calculate total size needed for addresses
-    const totalAddressSize =
-      ServiceLocator.getServiceProvider().checksumService.checksumBufferLength *
-      blocks.length;
+    const totalAddressSize = CHECKSUM.SHA3_BUFFER_LENGTH * blocks.length;
 
     // Determine appropriate block size for CBL based on address list size + header
     const estimatedDataSize = CBLService.BaseHeaderSize + totalAddressSize;

@@ -57,7 +57,10 @@ function debugEciesBrightChain() {
 
     // Step 5: Encrypt the message using the public key
     console.log('\nEncrypting message...');
-    const encrypted = eciesService.encrypt(publicKeyWithPrefix, message);
+    const encrypted = eciesService.encryptSimpleOrSingle(
+      publicKeyWithPrefix,
+      message,
+    );
     console.log(`Encrypted size: ${encrypted.length} bytes`);
     console.log(
       `Encrypted data (hex): ${encrypted.toString('hex').substring(0, 32)}...`,
@@ -77,7 +80,7 @@ function debugEciesBrightChain() {
     // Step 7: Decrypt the message using the private key
     console.log('\nDecrypting message...');
     try {
-      const decrypted = eciesService.decryptSingleWithHeader(
+      const decrypted = eciesService.decryptSimpleOrSingleWithHeader(
         privateKey,
         encrypted,
       );

@@ -17,13 +17,6 @@ describe('EciesEncryptTransform Integration Tests', () => {
     // This ensures the public and private keys are correctly formatted for the ECIES operations
     const mnemonic = eciesService.generateNewMnemonic();
     keypair = eciesService.mnemonicToSimpleKeyPairBuffer(mnemonic);
-
-    // Log key information for debugging
-    console.log('Test keypair details:', {
-      privateKeyLength: keypair.privateKey.length,
-      publicKeyLength: keypair.publicKey.length,
-      publicKeyPrefix: keypair.publicKey[0].toString(16), // Should be "04"
-    });
   });
 
   const testEncryptionDecryption = (

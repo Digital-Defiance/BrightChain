@@ -49,7 +49,7 @@ export class EciesSignature {
     data: Buffer,
     signature: SignatureBuffer,
   ): boolean {
-    if (signature.length !== ECIES.SIGNATURE_LENGTH) {
+    if (signature.length !== ECIES.SIGNATURE_SIZE) {
       throw new EciesError(EciesErrorType.InvalidSignature);
     }
 

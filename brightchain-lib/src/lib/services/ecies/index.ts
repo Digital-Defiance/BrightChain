@@ -8,7 +8,12 @@ import { IMultiEncryptedParsedHeader } from '../../interfaces/multiEncryptedPars
 import { ISingleEncryptedParsedHeader } from '../../interfaces/singleEncryptedParsedHeader';
 import { IWalletSeed } from '../../interfaces/walletSeed';
 import { SecureString } from '../../secureString';
-import { HexString, SignatureBuffer, SignatureString } from '../../types';
+import {
+  EciesEncryptionType,
+  HexString,
+  SignatureBuffer,
+  SignatureString,
+} from '../../types';
 
 // Import all the modular components
 import { EciesCryptoCore } from './crypto-core';
@@ -89,28 +94,73 @@ export class ECIESService {
 
   // === Core Encryption/Decryption Methods ===
 
-  public encrypt(receiverPublicKey: Buffer, message: Buffer): Buffer {
-    return this.cryptoCore.encrypt(receiverPublicKey, message);
+  public encryptSimpleOrSingle(
+    encryptionType: EciesEncryptionType,
+    receiverPublicKey: Buffer,
+    message: Buffer,
+    preamble: Buffer = Buffer.alloc(0),
+    options?: { dataLengthSize?: number; maxDataSize?: number },
+  ): Buffer {
+    return this.cryptoCore.encrypt(
+      encryptionType,
+      receiverPublicKey,
+      message,
+      preamble,
+      options,
+    );
   }
 
   public parseSingleEncryptedHeader(
+    encryptionType: EciesEncryptionType,
     data: Buffer,
+    preambleSize: number = 0,
+    options?: {
+      dataLength?: number;
+    },
   ): ISingleEncryptedParsedHeader {
-    return this.cryptoCore.parseSingleEncryptedHeader(data);
+    const { header } = this.cryptoCore.parseSimpleOrSingleEncryptedMessage(
+      encryptionType,
+      data,
+      preambleSize,
+      options,
+    );
+    return header;
   }
 
-  public decryptSingleWithHeader(
+  public decryptSimpleOrSingleWithHeader(
+    encryptionType: EciesEncryptionType,
     privateKey: Buffer,
     encryptedData: Buffer,
+    preambleSize: number = 0,
+    options?: {
+      dataLength?: number;
+    },
   ): Buffer {
-    return this.cryptoCore.decryptSingleWithHeader(privateKey, encryptedData);
+    return this.cryptoCore.decryptSimpleOrSingleWithHeader(
+      encryptionType,
+      privateKey,
+      encryptedData,
+      preambleSize,
+      options,
+    );
   }
 
-  public decryptSingleWithHeaderEx(
+  public decryptSimpleOrSingleWithHeaderEx(
+    encryptionType: EciesEncryptionType,
     privateKey: Buffer,
     encryptedData: Buffer,
+    preambleSize: number = 0,
+    options?: {
+      dataLength?: number;
+    },
   ): { decrypted: Buffer; consumedBytes: number } {
-    return this.cryptoCore.decryptSingleWithHeaderEx(privateKey, encryptedData);
+    return this.cryptoCore.decryptSimpleOrSingleWithHeaderEx(
+      encryptionType,
+      privateKey,
+      encryptedData,
+      preambleSize,
+      options,
+    );
   }
 
   public decryptSingleWithComponents(
@@ -120,7 +170,7 @@ export class ECIESService {
     authTag: Buffer,
     encrypted: Buffer,
   ): { decrypted: Buffer; ciphertextLength?: number } {
-    const decrypted = this.cryptoCore.decryptSingleWithComponents(
+    const decrypted = this.cryptoCore.decryptSimpleOrSingleWithComponents(
       privateKey,
       ephemeralPublicKey,
       iv,

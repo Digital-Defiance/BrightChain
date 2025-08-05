@@ -25,8 +25,6 @@ export interface IConstants {
   PBKDF2: IPBkdf2Consts;
   JWT: IJwtConsts;
   SITE: ISiteConsts;
-  ECIES_OVERHEAD_LENGTH: number;
-  ECIES_MULTIPLE_MESSAGE_OVERHEAD_LENGTH: number;
   KEYRING_ALGORITHM_CONFIGURATION: string;
   SYMMETRIC_ALGORITHM_CONFIGURATION: string;
   UINT8_SIZE: number;

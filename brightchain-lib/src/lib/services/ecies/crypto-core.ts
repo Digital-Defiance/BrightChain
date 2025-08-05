@@ -4,15 +4,26 @@ import {
   createECDH,
   randomBytes,
 } from 'crypto';
-import { ECIES, SYMMETRIC_ALGORITHM_CONFIGURATION } from '../../constants';
+import {
+  ECIES,
+  SYMMETRIC_ALGORITHM_CONFIGURATION,
+  UINT16_SIZE,
+  UINT32_MAX,
+} from '../../constants';
 import { EciesErrorType } from '../../enumerations/eciesErrorType';
 import { EciesError } from '../../errors/eciesError';
 import { IECIESConfig } from '../../interfaces/eciesConfig';
 import { ISingleEncryptedParsedHeader } from '../../interfaces/singleEncryptedParsedHeader';
-import { AuthenticatedCipher, AuthenticatedDecipher } from '../../types';
+import {
+  AuthenticatedCipher,
+  AuthenticatedDecipher,
+  EciesEncryptionType,
+} from '../../types';
+import { ServiceLocator } from '../serviceLocator';
 
 /**
  * Core encryption and decryption functions for ECIES
+ * Includes coverage for simple and single modes, does not cover multiple mode which is in a separate module
  */
 export class EciesCryptoCore {
   private readonly config: IECIESConfig;
@@ -64,12 +75,65 @@ export class EciesCryptoCore {
   }
 
   /**
+   * Get the size of the header for a given encryption type
+   * @param encryptionType The encryption type (single, simple, etc.)
+   * @param options Optional encryption options
+   * @param options.dataLengthSize The size of the data length prefix
+   * @returns
+   */
+  public getHeaderSize(
+    encryptionType: EciesEncryptionType,
+    options?: {
+      dataLengthSize?: number;
+    },
+  ): number {
+    const dataLengthSize =
+      options?.dataLengthSize ?? ECIES.SINGLE.DATA_LENGTH_SIZE;
+    return (
+      ECIES.SIMPLE.FIXED_OVERHEAD_SIZE +
+      (encryptionType === 'multiple' || encryptionType === 'single'
+        ? UINT16_SIZE
+        : 0) +
+      (encryptionType === 'multiple' || encryptionType === 'single'
+        ? dataLengthSize
+        : 0)
+    );
+  }
+
+  /**
    * Encrypt a message with a public key
+   * @param encryptionType The type of encryption (single, simple, etc.)
    * @param receiverPublicKey The public key of the receiver
    * @param message The message to encrypt
+   * @param preamble Optional preamble to prepend to the encrypted message
+   * @param options Optional encryption options
+   * @param options.dataLengthSize The size of the data length prefix
+   * @param options.maxDataSize The maximum size of the data to encrypt
    * @returns The encrypted message
    */
-  public encrypt(receiverPublicKey: Buffer, message: Buffer): Buffer {
+  public encrypt(
+    encryptionType: EciesEncryptionType,
+    receiverPublicKey: Buffer,
+    message: Buffer,
+    preamble: Buffer = Buffer.alloc(0),
+    options?: {
+      dataLengthSize?: number;
+      maxDataSize?: number;
+    },
+  ): Buffer {
+    const maxDataSize = options?.maxDataSize ?? ECIES.SINGLE.MAX_DATA_SIZE;
+    if (
+      (preamble?.length ?? 0) +
+        message.length +
+        this.getHeaderSize(encryptionType, options) >
+      maxDataSize
+    ) {
+      throw new EciesError(EciesErrorType.InvalidDataLength, undefined, {
+        error: 'Message length exceeds maximum allowed size',
+        maxLength: String(UINT32_MAX),
+        messageLength: String(message.length),
+      });
+    }
     // Generate ephemeral ECDH key pair
     const ecdh = createECDH(this.config.curveName);
     ecdh.generateKeys();
@@ -84,9 +148,6 @@ export class EciesCryptoCore {
       // Ensure we're using the properly formatted public key (with 0x04 prefix)
       // Our debugging shows only the full format with prefix works correctly
       sharedSecret = ecdh.computeSecret(normalizedReceiverPublicKey);
-      console.debug(
-        `[DEBUG][encrypt] Generated shared secret of length ${sharedSecret.length}`,
-      );
     } catch (error: unknown) {
       console.error('[ERROR][encrypt] Failed to compute shared secret:', error);
       if (error instanceof Error) {
@@ -123,13 +184,10 @@ export class EciesCryptoCore {
     }
 
     // Generate random IV
-    const iv = randomBytes(ECIES.IV_LENGTH);
+    const iv = randomBytes(ECIES.IV_SIZE);
 
     // Get the key from the shared secret (always use first 32 bytes)
     const symKey = sharedSecret.subarray(0, ECIES.SYMMETRIC.KEY_LENGTH);
-    console.debug(
-      `[DEBUG][encrypt] Using symmetric key of length ${symKey.length}`,
-    );
 
     // Create cipher with the derived symmetric key
     const cipher = createCipheriv(
@@ -148,75 +206,183 @@ export class EciesCryptoCore {
     // Get and explicitly set the authentication tag to max tag length for consistency
     const authTag = cipher.getAuthTag();
 
-    // Debug log for encryption (remove in production)
-    console.debug(`[DEBUG] Encryption - IV: ${iv.toString('hex')}`);
-    console.debug(`[DEBUG] Encryption - Auth tag: ${authTag.toString('hex')}`);
-    console.debug(`[DEBUG] Encryption - Message length: ${message.length}`);
-    console.debug(`[DEBUG] Encryption - Encrypted length: ${encrypted.length}`);
-
     // Add a length prefix to the encrypted data to ensure we can extract the exact number of bytes during decryption
-    const lengthBuffer = Buffer.alloc(4);
-    lengthBuffer.writeUInt32BE(encrypted.length);
+    const lengthBuffer =
+      encryptionType === 'simple' ? Buffer.alloc(0) : Buffer.alloc(4);
+    if (encryptionType === 'multiple' || encryptionType === 'single') {
+      lengthBuffer.writeUInt32BE(encrypted.length);
+    }
 
-    // Format: | ephemeralPublicKey (65) | iv (16) | authTag (16) | length (4) | encryptedData |
-    // IMPORTANT: The actual overhead size is different from ECIES.OVERHEAD_SIZE (98) and should be:
-    // ephemeralPublicKey (65) + iv (16) + authTag (16) + length prefix (4) = 101 bytes
+    // crc of everything, including preamble, header, and encrypted data
+    const crc16 =
+      encryptionType === 'multiple' || encryptionType === 'single'
+        ? ServiceLocator.getServiceProvider().crcService.crc16(
+            Buffer.concat([
+              preamble,
+              ephemeralPublicKey,
+              iv,
+              authTag,
+              lengthBuffer,
+              encrypted,
+            ]),
+          )
+        : Buffer.alloc(0);
+
+    // Format: [optional preamble] | ephemeralPublicKey (65) | iv (16) | authTag (16) | length (4) | crc16 (2) | encryptedData |
     return Buffer.concat([
+      preamble,
       ephemeralPublicKey,
       iv,
       authTag,
       lengthBuffer,
+      crc16,
       encrypted,
     ]);
   }
 
   /**
    * Parse the header from encrypted data
+   * @param encryptionType The type of encryption (single, simple, etc.)
    * @param data The encrypted data
+   * @param preambleSize The size of the preamble, if any
+   * @param options Optional parsing options
+   * @param options.dataLength The expected length of the data
    * @returns The parsed header components
    */
-  public parseSingleEncryptedHeader(
+  public parseSimpleOrSingleEncryptedMessage(
+    encryptionType: EciesEncryptionType,
     data: Buffer,
-  ): ISingleEncryptedParsedHeader {
-    if (data.length < ECIES.OVERHEAD_SIZE) {
+    preambleSize: number = 0,
+    options?: {
+      dataLength?: number;
+    },
+  ): { header: ISingleEncryptedParsedHeader; data: Buffer; remainder: Buffer } {
+    if (encryptionType === 'multiple') {
+      throw new EciesError(EciesErrorType.InvalidEncryptionType, undefined, {
+        error: 'Invalid encryption type for this method',
+        expected: 'single or simple',
+        actual: encryptionType,
+      });
+    }
+    const includeLengthAndCrc = encryptionType === 'single';
+
+    // check for impossible message
+    if (
+      data.length <
+      (includeLengthAndCrc
+        ? ECIES.SINGLE.FIXED_OVERHEAD_SIZE
+        : ECIES.SIMPLE.FIXED_OVERHEAD_SIZE)
+    ) {
       throw new EciesError(
         EciesErrorType.InvalidEncryptedDataLength,
         undefined,
         {
-          required: String(ECIES.OVERHEAD_SIZE),
+          required: String(ECIES.SINGLE.FIXED_OVERHEAD_SIZE),
           actual: String(data.length),
         },
       );
     }
 
-    // Debug the raw data to understand format issues
-    console.debug(`[DEBUG] Parsing header from data of length ${data.length}`);
-    console.debug(
-      `[DEBUG] Full data (first 32 bytes): ${data.subarray(0, Math.min(32, data.length)).toString('hex')}`,
-    );
+    let offset = 0;
+    const preamble = data.subarray(0, preambleSize);
+    offset += preambleSize;
 
     // Extract components from the header
-    const ephemeralPublicKey = data.subarray(0, ECIES.PUBLIC_KEY_LENGTH);
+    const ephemeralPublicKey = data.subarray(
+      offset,
+      offset + ECIES.PUBLIC_KEY_LENGTH,
+    );
+    offset += ECIES.PUBLIC_KEY_LENGTH;
 
     // Make sure we normalize the ephemeral public key
     const normalizedKey = this.normalizePublicKey(ephemeralPublicKey);
 
-    const iv = data.subarray(
-      ECIES.PUBLIC_KEY_LENGTH,
-      ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH,
-    );
+    const iv = data.subarray(offset, offset + ECIES.IV_SIZE);
+    offset += ECIES.IV_SIZE;
 
-    const authTag = data.subarray(
-      ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH,
-      ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH + ECIES.AUTH_TAG_LENGTH,
-    );
+    const authTag = data.subarray(offset, offset + ECIES.AUTH_TAG_SIZE);
+    offset += ECIES.AUTH_TAG_SIZE;
 
-    console.debug(`[DEBUG] Header components:
-      - Ephemeral key: ${ephemeralPublicKey.subarray(0, 16).toString('hex')}...
-      - Normalized key: ${normalizedKey.subarray(0, 16).toString('hex')}...
-      - IV: ${iv.toString('hex')}
-      - Auth tag: ${authTag.toString('hex')}
-    `);
+    // Extract the length prefix (4 bytes) after the header components
+    const dataLengthBuffer = includeLengthAndCrc
+      ? data.subarray(offset, offset + ECIES.SINGLE.DATA_LENGTH_SIZE)
+      : Buffer.alloc(0);
+    if (includeLengthAndCrc) {
+      offset += ECIES.SINGLE.DATA_LENGTH_SIZE;
+    }
+
+    const dataLength = includeLengthAndCrc
+      ? dataLengthBuffer.readUInt32BE(0)
+      : (options?.dataLength ?? -1);
+
+    if (
+      includeLengthAndCrc &&
+      options?.dataLength !== undefined &&
+      dataLength !== options.dataLength
+    ) {
+      throw new EciesError(
+        EciesErrorType.InvalidEncryptedDataLength,
+        undefined,
+        {
+          error: 'Encrypted data length mismatch',
+          expected: String(dataLength),
+          actual: String(options.dataLength),
+        },
+      );
+    }
+
+    const crc16 = includeLengthAndCrc
+      ? data.subarray(offset, offset + UINT16_SIZE)
+      : Buffer.alloc(0);
+    if (includeLengthAndCrc) {
+      offset += UINT16_SIZE;
+    }
+
+    const encryptedData =
+      dataLength > 0
+        ? data.subarray(offset, offset + dataLength)
+        : data.subarray(offset);
+    if (includeLengthAndCrc) {
+      offset += dataLength;
+    }
+
+    if (includeLengthAndCrc && encryptedData.length !== dataLength) {
+      throw new EciesError(
+        EciesErrorType.InvalidEncryptedDataLength,
+        undefined,
+        {
+          error: 'Encrypted data length mismatch',
+          expected: String(dataLength),
+          actual: String(encryptedData.length),
+        },
+      );
+    }
+
+    const remainder = includeLengthAndCrc
+      ? data.subarray(offset)
+      : Buffer.alloc(0);
+
+    if (includeLengthAndCrc) {
+      // validate the crc16
+      const crc16Expected =
+        ServiceLocator.getServiceProvider().crcService.crc16(
+          Buffer.concat([
+            preamble,
+            ephemeralPublicKey,
+            iv,
+            authTag,
+            dataLengthBuffer,
+            encryptedData,
+          ]),
+        );
+      if (crc16Expected.compare(crc16) !== 0) {
+        throw new EciesError(EciesErrorType.CRCError, undefined, {
+          error: 'Invalid CRC16 checksum',
+          expected: crc16Expected.toString('hex'),
+          actual: crc16.toString('hex'),
+        });
+      }
+    }
 
     // Validate all header components have the correct lengths
     if (normalizedKey.length !== ECIES.PUBLIC_KEY_LENGTH) {
@@ -232,27 +398,35 @@ export class EciesCryptoCore {
       );
     }
 
-    if (iv.length !== ECIES.IV_LENGTH) {
+    if (iv.length !== ECIES.IV_SIZE) {
       throw new EciesError(EciesErrorType.InvalidIVLength, undefined, {
         error: 'IV has incorrect length',
-        expected: String(ECIES.IV_LENGTH),
+        expected: String(ECIES.IV_SIZE),
         actual: String(iv.length),
       });
     }
 
-    if (authTag.length !== ECIES.AUTH_TAG_LENGTH) {
+    if (authTag.length !== ECIES.AUTH_TAG_SIZE) {
       throw new EciesError(EciesErrorType.InvalidAuthTagLength, undefined, {
         error: 'Auth tag has incorrect length',
-        expected: String(ECIES.AUTH_TAG_LENGTH),
+        expected: String(ECIES.AUTH_TAG_SIZE),
         actual: String(authTag.length),
       });
     }
 
     return {
-      ephemeralPublicKey: normalizedKey,
-      iv,
-      authTag,
-      headerSize: ECIES.OVERHEAD_SIZE,
+      header: {
+        ephemeralPublicKey: normalizedKey,
+        iv,
+        authTag,
+        dataLength,
+        crc16,
+        headerSize: includeLengthAndCrc
+          ? ECIES.SINGLE.FIXED_OVERHEAD_SIZE
+          : ECIES.SINGLE.FIXED_OVERHEAD_SIZE,
+      },
+      data: encryptedData,
+      remainder,
     };
   }
 
@@ -260,17 +434,32 @@ export class EciesCryptoCore {
    * Decrypts data encrypted with ECIES using a header
    * This method maintains backward compatibility with the original implementation
    * by returning just the Buffer. For detailed information, use decryptSingleWithHeaderEx
+   * @param encryptionType The type of encryption (single, simple, etc.)
    * @param privateKey The private key to decrypt the data
    * @param encryptedData The data to decrypt
+   * @param preambleSize The size of the preamble, if any
+   * @param options Optional decryption options
+   * @param options.dataLength The expected length of the data
    * @returns The decrypted data buffer
    */
-  public decryptSingleWithHeader(
+  public decryptSimpleOrSingleWithHeader(
+    encryptionType: EciesEncryptionType,
     privateKey: Buffer,
     encryptedData: Buffer,
+    preambleSize: number = 0,
+    options?: {
+      dataLength?: number;
+    },
   ): Buffer {
     try {
       // Call the extended version and return only the decrypted buffer for backward compatibility
-      const result = this.decryptSingleWithHeaderEx(privateKey, encryptedData);
+      const result = this.decryptSimpleOrSingleWithHeaderEx(
+        encryptionType,
+        privateKey,
+        encryptedData,
+        preambleSize,
+        options,
+      );
       return result.decrypted;
     } catch (error) {
       if (error instanceof EciesError) {
@@ -284,123 +473,47 @@ export class EciesCryptoCore {
 
   /**
    * Extended version of decryptSingleWithHeader that provides more detailed information
+   * @param encryptionType The type of encryption (single, simple, etc.)
    * @param privateKey The private key to decrypt the data
    * @param encryptedData The data to decrypt
+   * @param preambleSize The size of the preamble, if any
+   * @param options Optional decryption options
+   * @param options.dataLength The expected length of the data
    * @returns The decrypted data and the number of bytes consumed from the input buffer
    */
-  public decryptSingleWithHeaderEx(
+  public decryptSimpleOrSingleWithHeaderEx(
+    encryptionType: EciesEncryptionType,
     privateKey: Buffer,
     encryptedData: Buffer,
+    preambleSize: number = 0,
+    options?: {
+      dataLength?: number;
+    },
   ): { decrypted: Buffer; consumedBytes: number } {
     try {
-      // Check if we have enough data for the header
-      if (encryptedData.length < ECIES.OVERHEAD_SIZE) {
-        throw new EciesError(
-          EciesErrorType.InvalidEncryptedDataLength,
-          undefined,
-          {
-            required: String(ECIES.OVERHEAD_SIZE),
-            actual: String(encryptedData.length),
-          },
-        );
-      }
-
-      // Extract the standard header components (ephPublicKey, IV, authTag)
-      const ephemeralPublicKey = encryptedData.subarray(
-        0,
-        ECIES.PUBLIC_KEY_LENGTH,
-      );
-      const iv = encryptedData.subarray(
-        ECIES.PUBLIC_KEY_LENGTH,
-        ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH,
-      );
-      const authTag = encryptedData.subarray(
-        ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH,
-        ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH + ECIES.AUTH_TAG_LENGTH,
-      );
-
-      // Calculate the actual header size
-      const headerSize =
-        ECIES.PUBLIC_KEY_LENGTH + ECIES.IV_LENGTH + ECIES.AUTH_TAG_LENGTH;
-
-      // Read the length prefix (4 bytes) after the header components
-      if (encryptedData.length < headerSize + 4) {
-        throw new EciesError(
-          EciesErrorType.InvalidEncryptedDataLength,
-          undefined,
-          {
-            error: 'Not enough data for length prefix',
-            required: String(headerSize + 4),
-            actual: String(encryptedData.length),
-          },
-        );
-      }
-
-      // Extract the length prefix and read the message length
-      const lengthPrefix = encryptedData.subarray(headerSize, headerSize + 4);
-      const messageLength = lengthPrefix.readUInt32BE(0);
-
-      // Validate message length to prevent invalid reads
-      if (
-        messageLength <= 0 ||
-        messageLength > encryptedData.length - headerSize - 4
-      ) {
-        throw new EciesError(
-          EciesErrorType.InvalidEncryptedDataLength,
-          undefined,
-          {
-            error: 'Invalid message length from prefix',
-            msgLength: String(messageLength),
-            dataAvailable: String(encryptedData.length - headerSize - 4),
-          },
-        );
-      }
-
-      // Extract the ciphertext using the exact length from the prefix
-      const encryptedCiphertext = encryptedData.subarray(
-        headerSize + 4,
-        headerSize + 4 + messageLength,
+      const { data, header } = this.parseSimpleOrSingleEncryptedMessage(
+        encryptionType,
+        encryptedData,
+        preambleSize,
+        options,
       );
 
       // Normalize the public key (ensuring 0x04 prefix)
-      const normalizedKey = this.normalizePublicKey(ephemeralPublicKey);
-
-      // Add detailed logging for troubleshooting
-      console.debug(
-        `[DEBUG] Decryption details - Public key: ${normalizedKey.length}, ` +
-          `IV: ${iv.length}, Auth tag: ${authTag.length}, ` +
-          `Ciphertext length: ${encryptedCiphertext.length}, ` +
-          `From length prefix: ${messageLength}`,
-      );
+      const normalizedKey = this.normalizePublicKey(header.ephemeralPublicKey);
 
       // Decrypt using components with the normalized key
-      const decrypted = this.decryptSingleWithComponents(
+      const decrypted = this.decryptSimpleOrSingleWithComponents(
         privateKey,
         normalizedKey,
-        iv,
-        authTag,
-        encryptedCiphertext,
+        header.iv,
+        header.authTag,
+        data,
       );
 
-      // Calculate total consumed bytes (header + length prefix + ciphertext)
-      const totalConsumedBytes = headerSize + 4 + messageLength;
-
-      // Sanity check: ensure we didn't consume more than available
-      if (totalConsumedBytes > encryptedData.length) {
-        throw new EciesError(
-          EciesErrorType.InvalidEncryptedDataLength,
-          undefined,
-          {
-            consumed: String(totalConsumedBytes),
-            available: String(encryptedData.length),
-            headerSize: String(headerSize),
-            lengthPrefixSize: '4',
-            messageLength: String(messageLength),
-          },
-        );
-      }
-
-      return { decrypted, consumedBytes: totalConsumedBytes };
+      return {
+        decrypted,
+        consumedBytes: header.dataLength + header.headerSize,
+      };
     } catch (error) {
       if (error instanceof EciesError) {
         throw error;
@@ -420,7 +533,7 @@ export class EciesCryptoCore {
    * @param encrypted The encrypted data
    * @returns The decrypted data
    */
-  public decryptSingleWithComponents(
+  public decryptSimpleOrSingleWithComponents(
     privateKey: Buffer,
     ephemeralPublicKey: Buffer,
     iv: Buffer,
@@ -441,9 +554,6 @@ export class EciesCryptoCore {
       let sharedSecret: Buffer;
       try {
         sharedSecret = ecdh.computeSecret(normalizedEphemeralKey);
-        console.debug(
-          `[DEBUG][decrypt] Generated shared secret of length ${sharedSecret.length}`,
-        );
       } catch (err) {
         console.error('[ERROR][decrypt] Failed to compute shared secret:', err);
         throw new EciesError(EciesErrorType.DecryptionFailed, undefined, {
@@ -455,9 +565,6 @@ export class EciesCryptoCore {
 
       // Get the key from the shared secret (always use first 32 bytes)
       const symKey = sharedSecret.subarray(0, ECIES.SYMMETRIC.KEY_LENGTH);
-      console.debug(
-        `[DEBUG][decrypt] Using symmetric key of length ${symKey.length}`,
-      );
 
       // Create decipher with shared secret-derived key
       const decipher = createDecipheriv(
@@ -466,32 +573,20 @@ export class EciesCryptoCore {
         iv,
       ) as unknown as AuthenticatedDecipher;
 
-      // Debug logs for decryption
-      console.debug(`[DEBUG] Decryption - IV: ${iv.toString('hex')}`);
-      console.debug(
-        `[DEBUG] Decryption - Auth tag: ${authTag.toString('hex')}`,
-      );
-      console.debug(
-        `[DEBUG] Decryption - Encrypted length: ${encrypted.length}`,
-      );
-      console.debug(
-        `[DEBUG] Decryption - Shared secret: ${sharedSecret.toString('hex').substring(0, 16)}...`,
-      );
-
       // Validate the tag and IV
-      if (authTag.length !== ECIES.AUTH_TAG_LENGTH) {
+      if (authTag.length !== ECIES.AUTH_TAG_SIZE) {
         throw new EciesError(EciesErrorType.DecryptionFailed, undefined, {
           error: 'Invalid auth tag length',
-          expected: String(ECIES.AUTH_TAG_LENGTH),
+          expected: String(ECIES.AUTH_TAG_SIZE),
           actual: String(authTag.length),
           stage: 'auth_tag_validation',
         });
       }
 
-      if (iv.length !== ECIES.IV_LENGTH) {
+      if (iv.length !== ECIES.IV_SIZE) {
         throw new EciesError(EciesErrorType.DecryptionFailed, undefined, {
           error: 'Invalid IV length',
-          expected: String(ECIES.IV_LENGTH),
+          expected: String(ECIES.IV_SIZE),
           actual: String(iv.length),
           stage: 'iv_validation',
         });
@@ -510,10 +605,6 @@ export class EciesCryptoCore {
         const firstPart = decipher.update(encrypted);
         const finalPart = decipher.final();
         const result = Buffer.concat([firstPart, finalPart]);
-
-        console.debug(
-          `[DEBUG] Decryption - Decrypted length: ${result.length}`,
-        );
 
         return result;
       } catch (err) {

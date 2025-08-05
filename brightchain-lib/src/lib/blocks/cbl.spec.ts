@@ -85,19 +85,14 @@ class TestCblBlock extends ConstituentBlockListBlock {
 
     // Create copies of the address buffers to prevent sharing references
     const addressCopies = dataAddresses.map((addr, index) => {
-      if (
-        addr.length !==
-        ServiceProvider.getInstance().checksumService.checksumBufferLength
-      ) {
+      if (addr.length !== CHECKSUM.SHA3_BUFFER_LENGTH) {
         throw new BlockValidationError(
           BlockValidationErrorType.InvalidAddressLength,
           undefined,
           {
             index,
             length: addr.length,
-            expectedLength:
-              ServiceProvider.getInstance().checksumService
-                .checksumBufferLength,
+            expectedLength: CHECKSUM.SHA3_BUFFER_LENGTH,
           },
         );
       }
@@ -135,7 +130,7 @@ class TestCblBlock extends ConstituentBlockListBlock {
       );
     }
     const originalDataLengthBuffer = Buffer.alloc(4);
-    originalDataLengthBuffer.writeUint32BE(fileDataLength, 0);
+    originalDataLengthBuffer.writeUInt32BE(fileDataLength, 0);
 
     const tupleSizeBuffer = Buffer.alloc(1);
     tupleSizeBuffer.writeUInt8(TUPLE.SIZE, 0);
@@ -205,7 +200,7 @@ class TestCblBlock extends ConstituentBlockListBlock {
     } else {
       finalSignature = signature
         ? (Buffer.from(signature) as SignatureBuffer)
-        : (Buffer.alloc(ECIES.SIGNATURE_LENGTH) as SignatureBuffer);
+        : (Buffer.alloc(ECIES.SIGNATURE_SIZE) as SignatureBuffer);
     }
 
     // Create final data buffer with padding
