@@ -2,9 +2,11 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../dist/out-tsc",
-    "module": "commonjs",
+    "module": "ESNext",
+    "moduleResolution": "node",
     "types": ["jest", "node"],
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,

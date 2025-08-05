@@ -4,7 +4,7 @@ import {
   RawDataBlock,
 } from '@BrightChain/brightchain-lib';
 import { IApplication } from '../interfaces/application';
-import { IBlockService } from '../interfaces/blocks';
+import { IBlockService } from '../interfaces/blockService';
 import { BaseService } from './base';
 import { BlockStoreService } from './blockStore';
 

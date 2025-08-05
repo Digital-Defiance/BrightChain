@@ -1,0 +1,17 @@
+export enum BlockErrorType {
+  CannotEncrypt = 'CannotEncrypt',
+  CannotDecrypt = 'CannotDecrypt',
+  CreatorRequired = 'CreatorRequired',
+  DataRequired = 'DataRequired',
+  DataLengthExceedsCapacity = 'DataLengthExceedsCapacity',
+  ActualDataLengthNegative = 'ActualDataLengthNegative',
+  ActualDataLengthExceedsDataLength = 'ActualDataLengthExceedsDataLength',
+  CreatorPrivateKeyRequired = 'CreatorPrivateKeyRequired',
+  CreatorRequiredForEncryption = 'CreatorRequiredForEncryption',
+  UnexpectedEphemeralBlockType = 'UnexpectedEphemeralBlockType',
+  UnexpectedEncryptedBlockType = 'UnexpectedEncryptedBlockType',
+  InvalidNewBlockType = 'InvalidNewBlockType',
+  InvalidMultiEncryptionRecipientCount = 'InvalidMultiEncryptionRecipientCount',
+  RecipientRequired = 'RecipientRequired',
+  RecipientKeyRequired = 'RecipientKeyRequired',
+}

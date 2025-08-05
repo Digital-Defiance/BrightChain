@@ -1,5 +1,6 @@
 import { Request, RequestHandler, Response } from 'express';
 import { ValidationChain } from 'express-validator';
+import { Document } from './documents/document';
 import MemberType from './enumerations/memberType';
 import { StringLanguages } from './enumerations/stringLanguages';
 import { StringNames } from './enumerations/stringNames';
@@ -10,6 +11,8 @@ import { IStatusCodeResponse } from './interfaces/responses/statusCode';
 import { ChecksumString } from './types';
 
 export type DefaultIdType = ChecksumString;
+
+export type LanguageContext = 'admin' | 'user';
 
 /**
  * Validated body for express-validator
@@ -124,3 +127,52 @@ export type MemberApiRequest = Request<
     passphrase?: string;
   }
 >;
+
+export type ValidatorFunction = (value: unknown) => boolean;
+
+export type SchemaType =
+  | StringConstructor
+  | NumberConstructor
+  | BooleanConstructor
+  | ObjectConstructor
+  | ArrayConstructor
+  | DateConstructor
+  | ValidatorFunction;
+
+export type SerializedValue =
+  | string
+  | number
+  | boolean
+  | null
+  | SerializedValue[]
+  | { [key: string]: SerializedValue };
+
+export type SchemaTypeOptions<T> = {
+  type: SchemaType;
+  required?: boolean;
+  default?: T;
+  serialize?: (value: T) => SerializedValue;
+  hydrate?: (value: unknown) => T;
+};
+
+export type SchemaDefinition<T> = {
+  [K in keyof T]:
+    | SchemaTypeOptions<T[K]>
+    | SchemaTypeOptions<T[K]>[]
+    | SchemaDefinition<T[K]>;
+};
+
+export type InstanceMethods<T> = {
+  [key: string]: (this: Document<T>, ...args: unknown[]) => unknown;
+};
+
+export type StaticMethods<T> = {
+  [key: string]: (
+    this: typeof Document,
+    ...args: unknown[]
+  ) => Document<T> | Promise<Document<T>> | unknown;
+};
+
+export const DefaultCurrencyCode = 'USD';
+
+export type CurrencyPosition = 'prefix' | 'postfix' | 'infix';

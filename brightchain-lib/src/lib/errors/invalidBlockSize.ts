@@ -1,4 +1,4 @@
-import { BlockSize } from '../enumerations/blockSizes';
+import { BlockSize } from '../enumerations/blockSize';
 import { StringLanguages } from '../enumerations/stringLanguages';
 import { StringNames } from '../enumerations/stringNames';
 import { translate } from '../i18n';
