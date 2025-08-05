@@ -12,15 +12,14 @@ export abstract class TypedWithReasonError<
   constructor(
     reasonTemplate: StringNames,
     type: T,
-    language?: StringLanguages,
     otherVars?: Record<string, string | number>,
   ) {
     const reasonMap = (new.target as typeof TypedWithReasonError).prototype
       .reasonMap;
     super(
-      translate(reasonTemplate, language, {
+      translate(reasonTemplate, {
         ...otherVars,
-        ...{ REASON: translate(reasonMap[type], language) },
+        ...{ REASON: translate(reasonMap[type]) },
       }),
     );
     this.type = type;

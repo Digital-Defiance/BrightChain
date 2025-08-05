@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import moment from 'moment-timezone';
+import * as moment from 'moment-timezone';
 import { GlobalActiveContext } from './global-active-context';
 import { t } from './i18n';
 import { LanguageContext } from './sharedTypes';

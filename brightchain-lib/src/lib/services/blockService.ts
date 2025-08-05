@@ -182,7 +182,7 @@ export class BlockService {
         finalBuffer,
       );
 
-    return await EncryptedBlockCreator.create(
+    const result = await EncryptedBlockCreator.create(
       newBlockType,
       BlockDataType.EncryptedData,
       block.blockSize,
@@ -192,6 +192,7 @@ export class BlockService {
       block.dateCreated,
       block.data.length,
     );
+    return result as any;
   }
 
   /**
@@ -272,7 +273,7 @@ export class BlockService {
         decryptedBuffer,
       );
 
-    return await EncryptedBlockCreator.create(
+    const result = await EncryptedBlockCreator.create(
       newBlockType,
       BlockDataType.EphemeralStructuredData,
       block.blockSize,
@@ -282,6 +283,7 @@ export class BlockService {
       block.dateCreated,
       block.layerPayloadSize,
     );
+    return result as any;
   }
 
   /**
@@ -327,9 +329,6 @@ export class BlockService {
       recipient,
       block.dateCreated,
       multiEncryptionHeader.dataLength,
-      true,
-      false,
-      false,
     );
   }
 

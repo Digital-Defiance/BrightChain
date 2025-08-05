@@ -19,7 +19,7 @@ export class QuorumError extends TypedError<QuorumErrorType> {
     };
   }
   constructor(type: QuorumErrorType, language?: StringLanguages) {
-    super(type, language);
+    super(type, undefined);
     this.name = 'QuorumError';
   }
 }

@@ -1,3 +1,4 @@
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { IConstituentBlockListBlock } from '../interfaces/blocks/cbl';
 import { ServiceLocator } from '../services/serviceLocator';
 import { CBLBase } from './cblBase';
@@ -25,7 +26,7 @@ export class ConstituentBlockListBlock
   public get addressCapacity(): number {
     return ServiceLocator.getServiceProvider().cblService.calculateCBLAddressCapacity(
       this.blockSize,
-      false,
+      BlockEncryptionType.None,
     );
   }
 
@@ -37,7 +38,7 @@ export class ConstituentBlockListBlock
   public get encryptedAddressCapacity(): number {
     return ServiceLocator.getServiceProvider().cblService.calculateCBLAddressCapacity(
       this.blockSize,
-      true,
+      BlockEncryptionType.SingleRecipient,
     );
   }
 }

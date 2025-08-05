@@ -58,7 +58,7 @@ export class MemberError extends TypedError<MemberErrorType> {
     };
   }
   constructor(type: MemberErrorType, language?: StringLanguages) {
-    super(type, language);
+    super(type, undefined);
     this.name = 'MemberError';
   }
 }

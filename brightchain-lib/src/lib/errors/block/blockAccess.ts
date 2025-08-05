@@ -29,7 +29,6 @@ export class BlockAccessError extends TypedWithReasonError<BlockAccessErrorType>
     super(
       StringNames.Error_BlockAccessTemplate,
       type,
-      language,
       file ? { FILE: file } : {},
     );
     this.name = 'BlockAccessError';

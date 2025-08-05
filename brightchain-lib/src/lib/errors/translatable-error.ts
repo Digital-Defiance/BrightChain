@@ -14,7 +14,7 @@ export class TranslatableError extends HandleableError {
     context?: LanguageContext,
     options?: { statusCode?: number },
   ) {
-    super(translate(string, otherVars, language, context), {
+    super(translate(string, otherVars, undefined, context), {
       statusCode: options?.statusCode ?? 500,
     });
     this.name = 'TranslatedError';

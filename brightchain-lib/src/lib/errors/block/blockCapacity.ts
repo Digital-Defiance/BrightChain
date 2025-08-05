@@ -11,7 +11,7 @@ export class BlockCapacityError extends HandleableError {
     language?: StringLanguages,
   ) {
     super(
-      translate(StringNames.Error_BlockCapacityTemplate, language, {
+      translate(StringNames.Error_BlockCapacityTemplate, {
         BLOCK_SIZE: blockSizeToSizeString(blockSize),
         DATA_LENGTH: dataLength,
       }),

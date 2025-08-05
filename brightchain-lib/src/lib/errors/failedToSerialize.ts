@@ -6,7 +6,7 @@ import { HandleableError } from './handleable';
 export class FailedToSerializeError extends HandleableError {
   constructor(message: string, language?: StringLanguages) {
     super(
-      translate(StringNames.Error_FailedToSerializeTemplate, language, {
+      translate(StringNames.Error_FailedToSerializeTemplate, {
         ERROR: message,
       }),
     );

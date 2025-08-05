@@ -8,7 +8,7 @@ import {
 import { join } from 'path';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { EncryptedBlock } from '../blocks/encrypted';
-import { MultiEncryptedBlock } from '../blocks/multiEncrypted';
+// import { MultiEncryptedBlock } from '../blocks/multiEncrypted'; // Removed
 import { BrightChainMember } from '../brightChainMember';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -20,12 +20,13 @@ import { TranslatableEnumType } from '../enumerations/translatableEnum';
 import { CblError } from '../errors/cblError';
 import { StoreError } from '../errors/storeError';
 import { GuidV4 } from '../guid';
-import { translateEnum } from '../i18n';
+import { translate } from '../i18n';
 import { ISimpleStoreAsync } from '../interfaces/simpleStoreAsync';
 import { BlockService } from '../services/blockService';
 import { CBLService } from '../services/cblService';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceLocator } from '../services/serviceLocator';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { ChecksumBuffer } from '../types';
 
 /**
@@ -89,8 +90,8 @@ export class CBLStore
    */
   public isEncrypted(data: Buffer): boolean {
     return (
-      BlockService.isSingleRecipientEncrypted(data) ||
-      BlockService.isMultiRecipientEncrypted(data)
+      ServiceLocator.getServiceProvider().blockService.isSingleRecipientEncrypted(data) ||
+      ServiceLocator.getServiceProvider().blockService.isMultiRecipientEncrypted(data)
     );
   }
 
@@ -99,7 +100,7 @@ export class CBLStore
    */
   public async set(
     key: ChecksumBuffer,
-    value: ConstituentBlockListBlock | EncryptedBlock | MultiEncryptedBlock,
+    value: ConstituentBlockListBlock | EncryptedBlock,
   ): Promise<void> {
     const userForvalidation = value.creator ?? this._activeUser;
     if (userForvalidation === undefined) {
@@ -117,10 +118,7 @@ export class CBLStore
 
     // For encrypted blocks, we can't validate the signature directly
     // We'll validate after decryption during the get operation
-    if (
-      value instanceof EncryptedBlock ||
-      value instanceof MultiEncryptedBlock
-    ) {
+    if (value instanceof EncryptedBlock) {
       // Store the encrypted block directly
       this.ensureBlockPath(value.idChecksum);
       writeFileSync(blockPath, value.data);
@@ -161,29 +159,31 @@ export class CBLStore
       const dateCreated = fileStat.mtime;
 
       // Check if it's multi-encrypted
-      if (BlockService.isMultiRecipientEncrypted(cblData)) {
+      if (ServiceLocator.getServiceProvider().blockService.isMultiRecipientEncrypted(cblData)) {
         // Handle multi-encrypted CBL
-        const multiEncryptedCbl = new MultiEncryptedBlock(
+        const multiEncryptedCbl = new EncryptedBlock(
           BlockType.EncryptedConstituentBlockListBlock,
           BlockDataType.EncryptedData,
           cblData,
           checksum,
           new EncryptedBlockMetadata(
             this._blockSize,
-            BlockType.MultiEncryptedConstituentBlockListBlock,
+            BlockType.EncryptedConstituentBlockListBlock,
             BlockDataType.EncryptedData,
             cblData.length,
             this._activeUser,
+            BlockEncryptionType.MultiRecipient,
+            2,
             dateCreated,
           ),
+          this._activeUser,
           true,
-          true,
-          new Map([[this._activeUser.id, this._activeUser]]),
+          true
         );
 
         const decryptedCbl = new ConstituentBlockListBlock(
           (
-            await BlockService.decryptMultiple(
+            await ServiceLocator.getServiceProvider().blockService.decryptMultiple(
               this._activeUser,
               multiEncryptedCbl,
             )
@@ -209,13 +209,15 @@ export class CBLStore
             BlockDataType.EncryptedData,
             cblData.length,
             this._activeUser,
+            BlockEncryptionType.SingleRecipient,
+            1,
             dateCreated,
           ),
-          true,
+          this._activeUser,
         );
 
         const decryptedCbl = new ConstituentBlockListBlock(
-          (await BlockService.decrypt(this._activeUser, encryptedCbl)).data,
+          (await ServiceLocator.getServiceProvider().blockService.decrypt(this._activeUser, encryptedCbl, BlockType.ConstituentBlockList)).data,
           this._activeUser,
         );
 
@@ -280,10 +282,7 @@ export class CBLStore
     const secondDir = checksumHex.substring(2, 4);
     return join(
       this._storePath,
-      translateEnum({
-        type: TranslatableEnumType.BlockSize,
-        value: this._blockSize,
-      }),
+      this._blockSize.toString(),
       firstDir,
       secondDir,
       checksumHex,
@@ -299,10 +298,7 @@ export class CBLStore
     const secondDir = checksumHex.substring(2, 4);
     const blockDir = join(
       this._storePath,
-      translateEnum({
-        type: TranslatableEnumType.BlockSize,
-        value: this._blockSize,
-      }),
+      this._blockSize.toString(),
       firstDir,
       secondDir,
     );

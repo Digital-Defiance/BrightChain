@@ -46,7 +46,7 @@ export class StoreError extends TypedError<StoreErrorType> {
     language?: StringLanguages,
     params?: { [key: string]: string | number },
   ) {
-    super(type, language, params);
+    super(type, undefined, params);
     this.name = 'StoreError';
     this.params = params;
   }

@@ -1,6 +1,6 @@
 import { CBL, CONSTANTS, ECIES, ENCRYPTION } from '../constants';
 import { BlockCapacityErrorType } from '../enumerations/blockCapacityErrorType';
-import { EncryptedBlockType } from '../enumerations/blockEncryptionType';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { validateBlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockCapacityError } from '../errors/blockCapacityError';
@@ -82,14 +82,14 @@ export class BlockCapacityCalculator {
       ].includes(params.blockType)
     ) {
       if (
-        params.encryptionType === EncryptedBlockType.MultiRecipient &&
+        params.encryptionType === BlockEncryptionType.MultiRecipient &&
         (!params.recipientCount || params.recipientCount < 1)
       ) {
         throw new BlockCapacityError(
           BlockCapacityErrorType.InvalidRecipientCount,
         );
       } else if (
-        params.encryptionType === EncryptedBlockType.MultiRecipient &&
+        params.encryptionType === BlockEncryptionType.MultiRecipient &&
         params.recipientCount &&
         params.recipientCount > ECIES.MULTIPLE.MAX_RECIPIENTS
       ) {
@@ -99,7 +99,7 @@ export class BlockCapacityCalculator {
       }
       details.typeSpecificOverhead += ENCRYPTION.ENCRYPTION_TYPE_SIZE;
       details.encryptionOverhead =
-        params.encryptionType === EncryptedBlockType.MultiRecipient
+        params.encryptionType === BlockEncryptionType.MultiRecipient
           ? this.eciesService.calculateECIESMultipleRecipientOverhead(
               params.recipientCount ?? 0,
               true,

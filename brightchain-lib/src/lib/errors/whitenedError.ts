@@ -17,7 +17,7 @@ export class WhitenedError extends TypedError<WhitenedErrorType> {
     };
   }
   constructor(type: WhitenedErrorType, language?: StringLanguages) {
-    super(type, language);
+    super(type, undefined);
     this.name = 'WhitenedError';
   }
 }

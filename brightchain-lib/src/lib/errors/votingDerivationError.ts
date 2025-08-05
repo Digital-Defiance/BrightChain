@@ -13,7 +13,7 @@ export class VotingDerivationError extends HandleableError {
     language?: StringLanguages,
     params?: { [key: string]: string | number },
   ) {
-    super(translate(VotingDerivationErrorTypes[type], language, params));
+    super(translate(VotingDerivationErrorTypes[type], params));
     this.name = 'VotingDerivationError';
     this.type = type;
   }

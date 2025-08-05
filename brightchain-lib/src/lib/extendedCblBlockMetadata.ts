@@ -42,7 +42,7 @@ export class ExtendedCblBlockMetadata
     this._mimeType = mimeType;
   }
 
-  public static override fromInterface(
+  public static fromInterface(
     metadata: IExtendedCblBlockMetadata,
   ): ExtendedCblBlockMetadata {
     return new ExtendedCblBlockMetadata(

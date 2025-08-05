@@ -36,7 +36,7 @@ export class TupleError extends TypedError<TupleErrorType> {
     language?: StringLanguages,
     params?: { [key: string]: string | number },
   ) {
-    super(type, language, params);
+    super(type, undefined, params);
     this.name = 'TupleError';
   }
 }

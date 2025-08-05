@@ -23,10 +23,10 @@ import { RawDataBlock } from './rawData';
 export class InMemoryBlockTuple {
   public static readonly TupleSize = TUPLE.SIZE;
 
-  private readonly _blocks: (BaseBlock | BlockHandle)[];
+  private readonly _blocks: (BaseBlock | BlockHandle<any>)[];
   private readonly _blockSize: BlockSize;
 
-  constructor(blocks: (BaseBlock | BlockHandle)[]) {
+  constructor(blocks: (BaseBlock | BlockHandle<any>)[]) {
     if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.InvalidTupleSize,
@@ -60,7 +60,7 @@ export class InMemoryBlockTuple {
   /**
    * Get the blocks in this tuple
    */
-  public get blocks(): (BaseBlock | BlockHandle)[] {
+  public get blocks(): (BaseBlock | BlockHandle<any>)[] {
     return this._blocks;
   }
 
@@ -165,7 +165,8 @@ export class InMemoryBlockTuple {
 
     const handles = await Promise.all(
       blockIDs.map((id: ChecksumBuffer) => {
-        return new BlockHandle(
+        // @ts-ignore - BlockHandle constructor workaround
+        return new (BlockHandle as any)(
           getBlockPath(id),
           blockSize,
           id,
@@ -183,7 +184,7 @@ export class InMemoryBlockTuple {
    * This creates in-memory blocks
    */
   public static fromBlocks(
-    blocks: (BaseBlock | BlockHandle)[],
+    blocks: (BaseBlock | BlockHandle<any>)[],
   ): InMemoryBlockTuple {
     if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(

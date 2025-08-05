@@ -18,7 +18,7 @@ export abstract class TypedError<
     const reasonMap = (new.target as typeof TypedError).prototype.reasonMap;
 
     // Call super with the translated message
-    super(translate(reasonMap[type], language, otherVars));
+    super(translate(reasonMap[type], otherVars));
 
     // Set properties
     this.type = type;

@@ -12,7 +12,7 @@ export class ChecksumMismatchError extends Error {
     language?: StringLanguages,
   ) {
     super(
-      translate(StringNames.Error_ChecksumMismatchTemplate, language, {
+      translate(StringNames.Error_ChecksumMismatchTemplate, {
         EXPECTED: expected.toString('hex'),
         CHECKSUM: checksum.toString('hex'),
       }),

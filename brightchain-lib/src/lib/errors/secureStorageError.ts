@@ -13,7 +13,7 @@ export class SecureStorageError extends TypedError<SecureStorageErrorType> {
     };
   }
   constructor(type: SecureStorageErrorType, language?: StringLanguages) {
-    super(type, language);
+    super(type, undefined);
     this.name = 'SecureStorageError';
   }
 }

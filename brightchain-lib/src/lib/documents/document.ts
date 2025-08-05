@@ -3,6 +3,7 @@ import { DocumentErrorType } from '../enumerations/documentErrorType';
 import { DocumentError } from '../errors/document';
 import { BlockService } from '../services/blockService';
 import { MemberCblService } from '../services/member/memberCblService';
+import { ServiceLocator } from '../services/serviceLocator';
 import {
   InstanceMethods,
   SchemaDefinition,
@@ -254,10 +255,10 @@ export class Document<T> {
     // to be overridden by subclasses
     this._dirty = false;
     const json = Buffer.from(this.toJson());
-    const blockSize = BlockService.getBlockSizeForData(json.length);
+    const blockSize = ServiceLocator.getServiceProvider().blockService.getBlockSizeForData(json.length);
     const xorResult = Buffer.alloc(blockSize as number);
     let firstBlock = true;
-    await BlockService.processFileInChunks(
+    await ServiceLocator.getServiceProvider().blockService.processFileInChunks(
       json,
       false,
       TUPLE.SIZE,

@@ -3,6 +3,7 @@ import { BrightChainMember } from '../brightChainMember';
 import { ECIES } from '../constants';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
@@ -25,6 +26,7 @@ export class EncryptedBlockFactory {
       data: Buffer,
       checksum: ChecksumBuffer,
       metadata: EncryptedBlockMetadata,
+      recipientWithKey: BrightChainMember,
       canRead: boolean,
       canPersist: boolean,
     ) => EncryptedBlock;
@@ -38,6 +40,7 @@ export class EncryptedBlockFactory {
       data: Buffer,
       checksum: ChecksumBuffer,
       metadata: EncryptedBlockMetadata,
+      recipientWithKey: BrightChainMember,
       canRead: boolean,
       canPersist: boolean,
     ) => EncryptedBlock,
@@ -107,7 +110,6 @@ export class EncryptedBlockFactory {
       type,
       BlockDataType.EncryptedData,
       lengthBeforeEncryption ?? data.length,
-      false,
       creator,
       dateCreated,
     );
@@ -123,7 +125,12 @@ export class EncryptedBlockFactory {
         BlockDataType.EncryptedData,
         finalData,
         finalChecksum,
-        EncryptedBlockMetadata.fromEphemeralBlockMetadata(updatedMetadata),
+        EncryptedBlockMetadata.fromEphemeralBlockMetadata(
+          updatedMetadata,
+          BlockEncryptionType.SingleRecipient,
+          1,
+        ),
+        creator,
         canRead,
         canPersist,
       );
@@ -180,7 +187,12 @@ export class EncryptedBlockFactory {
       BlockDataType.EncryptedData,
       finalDataCopy,
       finalChecksum,
-      EncryptedBlockMetadata.fromEphemeralBlockMetadata(updatedMetadata),
+      EncryptedBlockMetadata.fromEphemeralBlockMetadata(
+        updatedMetadata,
+        BlockEncryptionType.SingleRecipient,
+        1,
+      ),
+      creator,
       canRead,
       canPersist,
     );

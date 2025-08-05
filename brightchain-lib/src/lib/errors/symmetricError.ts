@@ -14,7 +14,7 @@ export class SymmetricError extends TypedError<SymmetricErrorType> {
     };
   }
   constructor(type: SymmetricErrorType, language?: StringLanguages) {
-    super(type, language, {
+    super(type, undefined, {
       KEY_BITS: SymmetricService.symmetricKeyBits,
       KEY_BYTES: SymmetricService.symmetricKeyBytes,
     });

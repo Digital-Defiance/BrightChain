@@ -1,4 +1,4 @@
-import { EncryptedBlockType } from '../enumerations/blockEncryptionType';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 
@@ -12,7 +12,7 @@ export interface IBlockCapacityParams {
     fileName: string;
     mimeType: string;
   };
-  encryptionType: EncryptedBlockType;
+  encryptionType: BlockEncryptionType;
   recipientCount?: number;
 }
 

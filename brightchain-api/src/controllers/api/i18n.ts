@@ -2,61 +2,48 @@ import {
   ApiErrorResponse,
   ApiRequestHandler,
   ApiResponse,
-  buildNestedI18nForLanguage,
+  IApiMessageResponse,
   IStatusCodeResponse,
-  JsonResponse,
-  languageCodeToStringLanguages,
-  LanguageCodeValues,
-  routeConfig,
-  StringNames,
-  translate,
   TypedHandlers,
 } from '@BrightChain/brightchain-lib';
 import { Request } from 'express';
-import { param } from 'express-validator';
 import { IApplication } from '../../interfaces/application';
 import { BaseController } from '../base';
 
-interface I18nHandlers extends TypedHandlers<JsonResponse | ApiErrorResponse> {
-  i18n: ApiRequestHandler<JsonResponse | ApiErrorResponse>;
+interface II18nHandlers extends TypedHandlers<IApiMessageResponse | ApiErrorResponse> {
+  getStrings: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
 }
 
-export class I18nController extends BaseController<ApiResponse, I18nHandlers> {
+/**
+ * Controller for i18n operations
+ */
+export class I18nController extends BaseController<
+  IApiMessageResponse | ApiErrorResponse,
+  II18nHandlers
+> {
+  public router: any; // Temporary router property
+
   constructor(application: IApplication) {
     super(application);
+    this.router = {}; // Temporary implementation
+  }
+
+  protected initRouteDefinitions(): void {
     this.handlers = {
-      i18n: this.i18n,
+      getStrings: this.handleGetStrings.bind(this),
     };
   }
-  protected initRouteDefinitions(): void {
-    this.routeDefinitions = [
-      routeConfig<JsonResponse | ApiErrorResponse, I18nHandlers>(
-        'get',
-        '/:languageCode',
-        {
-          handlerKey: 'i18n',
-          useAuthentication: false,
-          validation: [
-            param('languageCode')
-              .custom((value: string) => {
-                // value must be one of the valid language codes from LanguageCodes
-                return LanguageCodeValues.includes(value);
-              })
-              .withMessage(translate(StringNames.Error_InvalidLanguageCode)),
-          ],
-          rawJsonHandler: true,
-        },
-      ),
-    ];
-  }
 
-  private i18n: ApiRequestHandler<JsonResponse | ApiErrorResponse> = async (
+  private handleGetStrings: ApiRequestHandler<
+    IApiMessageResponse | ApiErrorResponse
+  > = async (
     req: Request,
-  ): Promise<IStatusCodeResponse<JsonResponse | ApiErrorResponse>> => {
-    const { languageCode } = req.params;
-
-    const language = languageCodeToStringLanguages(languageCode);
-    const i18nTable = buildNestedI18nForLanguage(language);
-    return { statusCode: 200, response: i18nTable };
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+    return {
+      statusCode: 200,
+      response: {
+        message: 'I18n strings not implemented yet',
+      },
+    };
   };
 }

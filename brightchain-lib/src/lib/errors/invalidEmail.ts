@@ -13,7 +13,7 @@ export class InvalidEmailError extends TypedError<InvalidEmailErrorType> {
     };
   }
   constructor(type: InvalidEmailErrorType, language?: StringLanguages) {
-    super(type, language, {
+    super(type, undefined, {
       statusCode: 422,
     });
     this.name = 'InvalidEmailError';

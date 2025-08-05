@@ -22,7 +22,7 @@ export class HandleTupleError extends TypedError<HandleTupleErrorType> {
     tupleSize?: number,
     language?: StringLanguages,
   ) {
-    super(type, language, {
+    super(type, undefined, {
       ...(tupleSize ? { TUPLE_SIZE: tupleSize.toString() } : {}),
     });
     this.name = 'HandleTupleError';

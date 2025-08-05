@@ -6,7 +6,7 @@ import { HandleableError } from './handleable';
 export class FailedToHydrateError extends HandleableError {
   constructor(message: string, language?: StringLanguages) {
     super(
-      translate(StringNames.Error_FailedToHydrateTemplate, language, {
+      translate(StringNames.Error_FailedToHydrateTemplate, {
         ERROR: message,
       }),
     );

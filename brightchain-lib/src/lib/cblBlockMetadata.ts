@@ -27,7 +27,6 @@ export class CblBlockMetadata
       type,
       dataType,
       originalDataLength,
-      false,
       creator,
       dateCreated,
     );

@@ -23,6 +23,7 @@ import { PrimeTupleGeneratorStream } from '../primeTupleGeneratorStream';
 import { BlockService } from './blockService';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
+import { ServiceLocator } from './serviceLocator';
 
 /**
  * TupleService provides utility functions for working with block tuples.
@@ -55,7 +56,7 @@ export class TupleService {
    * XOR a source block with whitening and random blocks
    */
   public async xorSourceToPrimeWhitened(
-    sourceBlock: BaseBlock | BlockHandle,
+    sourceBlock: BaseBlock | BlockHandle<any>,
     whiteners: WhitenedBlock[],
     randomBlocks: RandomBlock[],
   ): Promise<WhitenedBlock> {
@@ -126,7 +127,7 @@ export class TupleService {
    * Create a tuple from a source block and its whitening/random blocks
    */
   public async makeTupleFromSourceXor(
-    sourceBlock: BaseBlock | BlockHandle,
+    sourceBlock: BaseBlock | BlockHandle<any>,
     whiteners: WhitenedBlock[],
     randomBlocks: RandomBlock[],
   ): Promise<InMemoryBlockTuple> {
@@ -298,12 +299,12 @@ export class TupleService {
       whiteners,
     );
 
-    const encryptedBlock = await BlockService.encrypt(creator, ownedBlock);
+    const encryptedBlock = await ServiceLocator.getServiceProvider().blockService.encrypt(BlockType.EncryptedOwnedDataBlock, ownedBlock, creator);
     if (!(encryptedBlock instanceof EncryptedBlock)) {
       throw new TupleError(TupleErrorType.InvalidBlockType);
     }
 
-    const decryptedBlock = await BlockService.decrypt(creator, encryptedBlock);
+    const decryptedBlock = await ServiceLocator.getServiceProvider().blockService.decrypt(creator, encryptedBlock, BlockType.EphemeralOwnedDataBlock);
     return new ConstituentBlockListBlock(decryptedBlock.data, creator);
   }
 
@@ -525,7 +526,7 @@ export class TupleService {
         cbl.data.length,
       );
 
-      const encryptedCbl = await BlockService.encrypt(creator, ownedBlock);
+      const encryptedCbl = await ServiceLocator.getServiceProvider().blockService.encrypt(BlockType.EncryptedConstituentBlockListBlock, ownedBlock, creator);
 
       // Create tuple for encrypted CBL
       const randomBlocks: RandomBlock[] = [];
@@ -547,7 +548,7 @@ export class TupleService {
       }
 
       const primeBlock = await this.xorSourceToPrimeWhitened(
-        encryptedCbl as EncryptedBlock,
+        encryptedCbl as unknown as EncryptedBlock,
         whiteners,
         randomBlocks,
       );

@@ -1,5 +1,44 @@
 import { constants } from '@BrightChain/brightchain-lib';
-import { IEnvironment } from './interfaces/environment';
+import { config } from 'dotenv';
+
+// Temporary interfaces
+interface IEnvironment {
+  jwtSecret: string;
+  fontawesomeKitId: string;
+  sendgridKey: string;
+  emailSender: string;
+  serverUrl: string;
+  developer: {
+    debug: boolean;
+    host: string;
+    port: number;
+    basePath: string;
+  };
+}
+
+// Temporary error classes
+class TranslatableError extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+const StringName = {
+  Admin_Error_EnvironmentNotInitialized: 'Environment not initialized',
+  Admin_Error_EnvironmentAlreadyInitialized: 'Environment already initialized',
+  Admin_LoadingEnvironmentTemplate: 'Loading environment from {PATH}',
+  Admin_Error_FailedToLoadEnvironment: 'Failed to load environment'
+};
+
+function translate(key: string, params?: any): string {
+  let message = key;
+  if (params) {
+    Object.keys(params).forEach(param => {
+      message = message.replace(`{${param}}`, params[param]);
+    });
+  }
+  return message;
+}
 
 export class Environment implements IEnvironment {
   private readonly _environment: IEnvironment;
@@ -35,7 +74,7 @@ export class Environment implements IEnvironment {
       jwtSecret: process.env.JWT_SECRET ?? '3?1g47(h@in!',
       fontawesomeKitId: process.env.FONTAWESOME_KIT_ID ?? '',
       sendgridKey: process.env.SENDGRID_API_KEY ?? '',
-      emailSender: process.env.EMAIL_SENDER ?? constants.SITE.EMAIL_FROM,
+      emailSender: process.env.EMAIL_SENDER ?? 'noreply@example.com',
       serverUrl: process.env.SERVER_URL ?? 'http://localhost:3000',
       developer: {
         debug: process.env.DEBUG === 'true',
@@ -44,6 +83,7 @@ export class Environment implements IEnvironment {
         basePath: process.env.BASE_PATH ?? '/',
       },
     };
+    Environment._instance = this;
   }
   public get jwtSecret(): string {
     return this._environment.jwtSecret;
@@ -69,3 +109,30 @@ export class Environment implements IEnvironment {
     return this._environment.developer;
   }
 }
+
+// Export environment getter function
+export function getEnvironment(): Environment {
+  return Environment.instance;
+}
+
+// Export environment instance (will throw if not initialized)
+export const environment = (() => {
+  try {
+    return Environment.instance;
+  } catch {
+    // Return a default environment for build-time access
+    return {
+      jwtSecret: '3?1g47(h@in!',
+      fontawesomeKitId: '',
+      sendgridKey: '',
+      emailSender: 'noreply@example.com',
+      serverUrl: 'http://localhost:3000',
+      developer: {
+        debug: false,
+        host: 'localhost',
+        port: 3000,
+        basePath: '/',
+      },
+    } as IEnvironment;
+  }
+})();

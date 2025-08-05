@@ -25,7 +25,7 @@ export class MemoryTupleError extends TypedError<MemoryTupleErrorType> {
     tupleSize?: number,
     language?: StringLanguages,
   ) {
-    super(type, language, {
+    super(type, undefined, {
       ...(tupleSize ? { TUPLE_SIZE: tupleSize.toString() } : {}),
     });
     this.name = 'MemoryTupleError';

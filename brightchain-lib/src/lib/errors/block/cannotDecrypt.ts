@@ -5,7 +5,7 @@ import { HandleableError } from '../handleable';
 
 export class CannotDecryptBlockError extends HandleableError {
   constructor(language?: StringLanguages) {
-    super(translate(StringNames.Error_BlockCannotBeDecrypted, language));
+    super(translate(StringNames.Error_BlockCannotBeDecrypted));
     this.name = 'CannotDecryptBlockError';
   }
 }

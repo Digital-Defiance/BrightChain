@@ -41,7 +41,7 @@ export class BlockError extends TypedError<BlockErrorType> {
     language?: StringLanguages,
     otherVars?: Record<string, string | number>,
   ) {
-    super(type, language, otherVars);
+    super(type, undefined, otherVars);
     this.name = 'BlockError';
   }
 }

@@ -156,7 +156,11 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
   }
 
   public get layerPayload(): Buffer {
-    return this._delegate.payload;
+    return this._delegate.layerPayload;
+  }
+
+  public get layerData(): Buffer {
+    return this._delegate.layerData;
   }
 
   public get totalOverhead(): number {

@@ -302,6 +302,13 @@ export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
   }
 
   /**
+   * Get the total encrypted length including headers and payload
+   */
+  public get encryptedLength(): number {
+    return this.layerOverheadSize + this.layerPayloadSize;
+  }
+
+  /**
    * Asynchronously validate the block's data and structure
    * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
    */
