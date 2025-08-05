@@ -1,6 +1,6 @@
 import { Transform, TransformCallback } from 'stream';
-import { BlockSize } from '../enumerations/blockSizes';
-import { StaticHelpersECIES } from '../staticHelpers.ECIES';
+import { BlockSize } from '../enumerations/blockSize';
+import { ECIESService } from '../services/ecies.service';
 
 /**
  * Transform stream that encrypts data using ECIES encryption
@@ -11,6 +11,7 @@ export class EciesEncryptTransform extends Transform {
   private buffer: Buffer;
   private readonly capacityPerBlock: number;
   private readonly logger: Console;
+  private readonly eciesService: ECIESService;
 
   constructor(
     blockSize: BlockSize,
@@ -22,10 +23,11 @@ export class EciesEncryptTransform extends Transform {
     this.blockSize = blockSize as number;
     this.receiverPublicKey = receiverPublicKey;
     this.buffer = Buffer.alloc(0);
+    this.eciesService = new ECIESService();
 
     // Calculate how much data we can encrypt per block
     const { capacityPerBlock } =
-      StaticHelpersECIES.computeEncryptedLengthFromDataLength(
+      this.eciesService.computeEncryptedLengthFromDataLength(
         this.blockSize,
         this.blockSize,
       );
@@ -51,7 +53,7 @@ export class EciesEncryptTransform extends Transform {
         const blockData = this.buffer.subarray(0, this.capacityPerBlock);
         this.buffer = this.buffer.subarray(this.capacityPerBlock);
 
-        const encryptedBlock = StaticHelpersECIES.encrypt(
+        const encryptedBlock = this.eciesService.encrypt(
           this.receiverPublicKey,
           blockData,
         );
@@ -90,7 +92,7 @@ export class EciesEncryptTransform extends Transform {
     try {
       // Handle any remaining data in buffer
       if (this.buffer.length > 0) {
-        const encryptedBlock = StaticHelpersECIES.encrypt(
+        const encryptedBlock = this.eciesService.encrypt(
           this.receiverPublicKey,
           this.buffer,
         );

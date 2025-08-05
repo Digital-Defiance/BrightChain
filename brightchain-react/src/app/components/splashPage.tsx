@@ -6,7 +6,7 @@ export const SplashPage: FC = () => {
   return (
     <Container>
       <Box>
-        <h1>Welcome to BrightChain!</h1>
+        <h1>Welcome brightchain-react</h1>
       </Box>
       <Box>{brightChainLogo}</Box>
     </Container>

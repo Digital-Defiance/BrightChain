@@ -41,6 +41,20 @@ describe('SecureBuffer', () => {
       expect(secureBufferFromString.originalLength).toBe(expectedLength);
       expect(secureBufferFromString.valueAsString).toBe(testString);
     });
+
+    it('should handle empty Buffer', () => {
+      const emptySerializable = Buffer.alloc(0);
+      const secureBuffer = new SecureBuffer(emptySerializable);
+      expect(secureBuffer.originalLength).toBe(0);
+      expect(secureBuffer.value.length).toBe(0);
+    });
+
+    it('should handle Buffer with Unicode content', () => {
+      const unicodeString = '🚀 世界';
+      const testBuffer = Buffer.from(unicodeString);
+      const secureBuffer = new SecureBuffer(testBuffer);
+      expect(secureBuffer.valueAsString).toEqual(unicodeString);
+    });
   });
 
   describe('value access and encoding', () => {
@@ -55,15 +69,25 @@ describe('SecureBuffer', () => {
         testBuffer.toString('base64'),
       );
     });
+
+    it('should generate consistent checksums for Buffer', () => {
+      const testBuffer = randomBytes(32);
+      const secureBuffer1 = new SecureBuffer(testBuffer);
+      const secureBuffer2 = new SecureBuffer(testBuffer);
+      expect(secureBuffer1.checksum).toEqual(secureBuffer2.checksum);
+    });
   });
 
   describe('error handling', () => {
-    it('should throw DecryptedValueLengthMismatch when decrypted length is incorrect', () => {
+    it('should throw DecryptedValueChecksumMismatch when encrypted data is corrupted', () => {
       const testBuffer = Buffer.from(faker.lorem.word());
       const secureBuffer = new SecureBuffer(testBuffer);
 
       // Create a corrupted buffer with valid encryption format but wrong length
-      const originalBuffer = (secureBuffer as any)._encryptedValue;
+      const originalBuffer = Reflect.get(
+        secureBuffer,
+        '_encryptedValue',
+      ) as Buffer;
       const corruptedBuffer = Buffer.concat([
         originalBuffer,
         Buffer.from([0x00, 0x00, 0x00, 0x00]),
@@ -79,8 +103,8 @@ describe('SecureBuffer', () => {
       expect(() => secureBuffer.value).toThrowType(
         SecureStorageError,
         (error: SecureStorageError) => {
-          expect(error.reason).toBe(
-            SecureStorageErrorType.DecryptedValueLengthMismatch,
+          expect(error.type).toBe(
+            SecureStorageErrorType.DecryptedValueChecksumMismatch,
           );
         },
       );
@@ -91,7 +115,10 @@ describe('SecureBuffer', () => {
       const secureBuffer = new SecureBuffer(testBuffer);
 
       // Modify a single byte in the middle of the encrypted data to corrupt it
-      const originalBuffer = (secureBuffer as any)._encryptedValue;
+      const originalBuffer = Reflect.get(
+        secureBuffer,
+        '_encryptedValue',
+      ) as Buffer;
       const corruptedBuffer = Buffer.from(originalBuffer);
       const middleIndex = Math.floor(corruptedBuffer.length / 2);
       corruptedBuffer[middleIndex] ^= 0xff; // Flip bits in one byte
@@ -106,7 +133,37 @@ describe('SecureBuffer', () => {
       expect(() => secureBuffer.value).toThrowType(
         SecureStorageError,
         (error: SecureStorageError) => {
-          expect(error.reason).toBe(
+          expect(error.type).toBe(
+            SecureStorageErrorType.DecryptedValueChecksumMismatch,
+          );
+        },
+      );
+    });
+
+    it('should handle error cases', () => {
+      const testSerializable = randomBytes(32);
+      const secureBuffer = new SecureBuffer(testSerializable);
+
+      // Modify a single byte in the middle of the encrypted data to corrupt it
+      const originalBuffer = Reflect.get(
+        secureBuffer,
+        '_encryptedValue',
+      ) as Buffer;
+      const corruptedBuffer = Buffer.from(originalBuffer);
+      const middleIndex = Math.floor(corruptedBuffer.length / 2);
+      corruptedBuffer[middleIndex] ^= 0xff; // Flip bits in one byte
+
+      // Replace the private field
+      Object.defineProperty(secureBuffer, '_encryptedValue', {
+        value: corruptedBuffer,
+        writable: false,
+        configurable: true,
+      });
+
+      expect(() => secureBuffer.value).toThrowType(
+        SecureStorageError,
+        (error: SecureStorageError) => {
+          expect(error.type).toBe(
             SecureStorageErrorType.DecryptedValueChecksumMismatch,
           );
         },
