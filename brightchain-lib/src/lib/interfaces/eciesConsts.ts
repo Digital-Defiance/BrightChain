@@ -7,6 +7,8 @@ export interface IECIESConsts {
 
   /** Length of the authentication tag in bytes */
   AUTH_TAG_LENGTH: number;
+  /** Length of the authentication tag in bytes (alias for consistency) */
+  AUTH_TAG_SIZE: number;
 
   /** Length of the initialization vector in bytes */
   IV_LENGTH: number;

@@ -84,6 +84,8 @@ export const ECIES: IECIESConsts = {
 
   /** Length of the authentication tag in bytes */
   AUTH_TAG_LENGTH: 16 as const,
+  /** Length of the authentication tag in bytes (alias for consistency) */
+  AUTH_TAG_SIZE: 16 as const,
 
   /** Length of the initialization vector in bytes */
   IV_LENGTH: 16 as const,

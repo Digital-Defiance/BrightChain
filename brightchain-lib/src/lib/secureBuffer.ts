@@ -67,25 +67,33 @@ export class SecureBuffer {
     if (this._length === 0) {
       return Buffer.alloc(0);
     }
-    const idKey = Pbkdf2Service.deriveKeyFromPassword(
-      this.idBuffer,
-      this._salt,
-    );
-    const decryptionResult = SymmetricService.decryptBuffer(
-      this._encryptedValue,
-      idKey.hash,
-    );
-    if (decryptionResult.length !== this._length) {
-      throw new SecureStorageError(
-        SecureStorageErrorType.DecryptedValueLengthMismatch,
+    try {
+      const idKey = Pbkdf2Service.deriveKeyFromPassword(
+        this.idBuffer,
+        this._salt,
       );
-    }
-    if (!this.validateEncryptedChecksum(decryptionResult)) {
-      throw new SecureStorageError(
-        SecureStorageErrorType.DecryptedValueChecksumMismatch,
+      const decryptionResult = SymmetricService.decryptBuffer(
+        this._encryptedValue,
+        idKey.hash,
       );
+      if (decryptionResult.length !== this._length) {
+        throw new SecureStorageError(
+          SecureStorageErrorType.DecryptedValueLengthMismatch,
+        );
+      }
+      if (!this.validateEncryptedChecksum(decryptionResult)) {
+        throw new SecureStorageError(
+          SecureStorageErrorType.DecryptedValueChecksumMismatch,
+        );
+      }
+      return decryptionResult;
+    } catch (error) {
+      if (error instanceof SecureStorageError) {
+        throw error;
+      }
+      // Convert AES-GCM authentication errors to SecureStorageError
+      throw new SecureStorageError(SecureStorageErrorType.DecryptedValueChecksumMismatch);
     }
-    return decryptionResult;
   }
   public get valueAsString(): string {
     return this.value.toString(SecureBuffer.stringEncoding);
@@ -121,13 +129,16 @@ export class SecureBuffer {
     return result.encryptedData;
   }
   private validateChecksum(data: string | Buffer, checksum: string): boolean {
-    return timingSafeEqual(
-      Buffer.from(
-        this.generateChecksum(data),
-        SecureBuffer.checksumBufferEncoding,
-      ),
-      Buffer.from(checksum, SecureBuffer.checksumBufferEncoding),
-    );
+    const generatedChecksum = this.generateChecksum(data);
+    const generatedBuffer = Buffer.from(generatedChecksum, SecureBuffer.checksumBufferEncoding);
+    const checksumBuffer = Buffer.from(checksum, SecureBuffer.checksumBufferEncoding);
+    
+    // CRITICAL: Check buffer lengths before timingSafeEqual
+    if (generatedBuffer.length !== checksumBuffer.length) {
+      return false;
+    }
+    
+    return timingSafeEqual(generatedBuffer, checksumBuffer);
   }
   private validateEncryptedChecksum(data: string | Buffer): boolean {
     const decryptedChecksum = this.decryptData(
