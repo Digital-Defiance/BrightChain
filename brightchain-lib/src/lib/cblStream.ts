@@ -12,7 +12,7 @@ import { CblError } from './errors/cblError';
 import { IEphemeralBlock } from './interfaces/blocks/ephemeral';
 import { BlockService } from './services/blockService';
 import { ServiceLocator } from './services/serviceLocator';
-import { ChecksumBuffer } from './types';
+import { ChecksumUint8Array } from './types';
 
 /**
  * CblStream provides streaming access to data stored in a ConstituentBlockListBlock.
@@ -29,7 +29,9 @@ import { ChecksumBuffer } from './types';
  */
 export class CblStream extends Readable {
   private readonly cbl: ConstituentBlockListBlock;
-  private readonly getWhitenedBlock: (blockId: ChecksumBuffer) => WhitenedBlock;
+  private readonly getWhitenedBlock: (
+    blockId: ChecksumUint8Array,
+  ) => WhitenedBlock;
   private currentTupleIndex = 0;
   private currentData: IEphemeralBlock | null = null;
   private overallReadOffset = 0;
@@ -40,7 +42,7 @@ export class CblStream extends Readable {
 
   constructor(
     cbl: ConstituentBlockListBlock,
-    getWhitenedBlock: (blockId: ChecksumBuffer) => WhitenedBlock,
+    getWhitenedBlock: (blockId: ChecksumUint8Array) => WhitenedBlock,
     creatorForDecryption?: BrightChainMember,
   ) {
     super();

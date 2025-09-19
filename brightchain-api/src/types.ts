@@ -1,4 +1,4 @@
-import { IRequestUser, ValidatedBody } from '@BrightChain/brightchain-lib';
+import { IRequestUser, ValidatedBody } from '@brightchain/brightchain-lib';
 import { ValidationChain } from 'express-validator';
 declare module 'express-serve-static-core' {
   interface Request {

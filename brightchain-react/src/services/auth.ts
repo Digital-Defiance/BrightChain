@@ -4,7 +4,7 @@ import {
   StringLanguages,
   StringNames,
   translate,
-} from '@BrightChain/brightchain-lib';
+} from '@brightchain/brightchain-lib';
 import { isAxiosError } from 'axios';
 import api from './api';
 import authenticatedApi from './authenticatedApi';

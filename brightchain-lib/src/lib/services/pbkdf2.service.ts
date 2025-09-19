@@ -1,7 +1,7 @@
 import { pbkdf2Sync, randomBytes } from 'crypto';
 import { ECIES, PBKDF2 } from '../constants';
 import { Pbkdf2ErrorType } from '../enumerations/pbkdf2ErrorType';
-import { Pbkdf2Error } from '../errors/pbkdf2Error';
+import { Pbkdf2Error } from '../errors/pbkdf2';
 import { IPbkf2Config } from '../interfaces/pbkdf2Config';
 import { IPbkdf2Result } from '../interfaces/pbkdf2Result';
 

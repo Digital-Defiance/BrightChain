@@ -1,6 +1,6 @@
 import { BrightChainMember } from '../../brightChainMember';
 import { GuidV4 } from '../../guid';
-import { ChecksumBuffer, SignatureBuffer } from '../../types';
+import { ChecksumUint8Array, SignatureUint8Array } from '../../types';
 import { IEphemeralBlock } from './ephemeral';
 
 /**
@@ -43,7 +43,7 @@ export interface ICBLCore extends IEphemeralBlock {
    * 2. Data retrieval
    * 3. Integrity verification
    */
-  get addresses(): Array<ChecksumBuffer>;
+  get addresses(): Array<ChecksumUint8Array>;
 
   /**
    * Cryptographic signature of the creator.
@@ -52,7 +52,7 @@ export interface ICBLCore extends IEphemeralBlock {
    * 2. Integrity validation
    * 3. Non-repudiation
    */
-  get creatorSignature(): SignatureBuffer;
+  get creatorSignature(): SignatureUint8Array;
 
   /**
    * Size of block tuples.

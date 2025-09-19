@@ -1,7 +1,7 @@
 import { BrightChainMember } from '../brightChainMember';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockType } from '../enumerations/blockType';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 
 /**
  * Interface for encrypted block creation to avoid circular dependencies
@@ -12,7 +12,7 @@ export interface IEncryptedBlockCreator {
     dataType: BlockDataType,
     blockSize: number,
     data: Buffer,
-    checksum: ChecksumBuffer,
+    checksum: ChecksumUint8Array,
     creator: BrightChainMember,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,

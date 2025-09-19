@@ -1,5 +1,5 @@
 // src/services/api.ts
-import { LanguageCodes, StringLanguages } from '@BrightChain/brightchain-lib';
+import { LanguageCodes, StringLanguages } from '@brightchain/brightchain-lib';
 import axios from 'axios';
 import { environment } from '../environments/environment';
 

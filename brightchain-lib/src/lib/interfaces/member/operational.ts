@@ -4,7 +4,7 @@ import { EmailString } from '../../emailString';
 import { MemberType } from '../../enumerations/memberType';
 import { GuidV4 } from '../../guid';
 import { SecureString } from '../../secureString';
-import { SignatureBuffer } from '../../types';
+import { SignatureUint8Array } from '../../types';
 
 /**
  * Operational interface for member - defines getters and methods
@@ -31,8 +31,8 @@ export interface IBrightChainMemberOperational {
   get hasVotingPrivateKey(): boolean;
 
   // Methods
-  sign(data: Buffer): SignatureBuffer;
-  verify(signature: SignatureBuffer, data: Buffer): boolean;
+  sign(data: Buffer): SignatureUint8Array;
+  verify(signature: SignatureUint8Array, data: Buffer): boolean;
   encryptData(data: string | Buffer): Buffer;
   decryptData(encryptedData: Buffer): Buffer;
   toJson(): string;

@@ -1,4 +1,4 @@
-import { BlockSize } from '@BrightChain/brightchain-lib';
+import { BlockSize } from '@brightchain/brightchain-lib';
 
 export interface IBlockStore {
   getBlockSize(): BlockSize;

@@ -1,6 +1,6 @@
 import { Hasher, sha3_512 } from 'js-sha3';
 import { Transform, TransformCallback } from 'stream';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 
 export class ChecksumTransform extends Transform {
   private sha3: Hasher;
@@ -20,7 +20,7 @@ export class ChecksumTransform extends Transform {
 
   public override _flush(callback: TransformCallback) {
     const checksum = this.sha3.digest();
-    this.emit('checksum', Buffer.from(checksum) as ChecksumBuffer);
+    this.emit('checksum', Buffer.from(checksum) as ChecksumUint8Array);
     callback();
   }
 }

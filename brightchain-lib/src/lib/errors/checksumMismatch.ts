@@ -1,14 +1,14 @@
 import { StringLanguages } from '../enumerations/stringLanguages';
 import { StringNames } from '../enumerations/stringNames';
 import { translate } from '../i18n';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 
 export class ChecksumMismatchError extends Error {
-  public readonly checksum: ChecksumBuffer;
-  public readonly expected: ChecksumBuffer;
+  public readonly checksum: ChecksumUint8Array;
+  public readonly expected: ChecksumUint8Array;
   constructor(
-    checksum: ChecksumBuffer,
-    expected: ChecksumBuffer,
+    checksum: ChecksumUint8Array,
+    expected: ChecksumUint8Array,
     language?: StringLanguages,
   ) {
     super(

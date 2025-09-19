@@ -1,16 +1,16 @@
 import {
   ApiErrorResponse,
   ApiRequestHandler,
-  ApiResponse,
   IApiMessageResponse,
   IStatusCodeResponse,
   TypedHandlers,
-} from '@BrightChain/brightchain-lib';
+} from '@brightchain/brightchain-lib';
 import { Request } from 'express';
 import { IApplication } from '../../interfaces/application';
 import { BaseController } from '../base';
 
-interface II18nHandlers extends TypedHandlers<IApiMessageResponse | ApiErrorResponse> {
+interface II18nHandlers
+  extends TypedHandlers<IApiMessageResponse | ApiErrorResponse> {
   getStrings: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
 }
 

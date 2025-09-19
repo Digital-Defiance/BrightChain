@@ -1,7 +1,7 @@
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { RawDataBlock } from './rawData';
 
 /**
@@ -12,9 +12,9 @@ import { RawDataBlock } from './rawData';
 export class ParityBlock extends RawDataBlock {
   constructor(
     blockSize: BlockSize,
-    data: Buffer,
+    data: Uint8Array,
     dateCreated?: Date,
-    checksum?: ChecksumBuffer,
+    checksum?: ChecksumUint8Array,
     canRead = true,
     canPersist = true,
   ) {

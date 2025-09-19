@@ -1,6 +1,6 @@
 import { BrightChainMember } from '../../brightChainMember';
 import { GuidV4 } from '../../guid';
-import { ChecksumBuffer, SignatureBuffer } from '../../types';
+import { ChecksumUint8Array, SignatureUint8Array } from '../../types';
 
 /**
  * Base interface for all network-related documents
@@ -17,8 +17,8 @@ export interface NetworkDocument {
 
   // Security
   creator: BrightChainMember;
-  signature: SignatureBuffer;
-  checksum: ChecksumBuffer;
+  signature: SignatureUint8Array;
+  checksum: ChecksumUint8Array;
 
   // Network
   ttl?: number; // Time-to-live in seconds
@@ -40,8 +40,8 @@ export abstract class BaseNetworkDocument implements NetworkDocument {
   created: Date;
   updated: Date;
   creator: BrightChainMember;
-  signature: SignatureBuffer;
-  checksum: ChecksumBuffer;
+  signature: SignatureUint8Array;
+  checksum: ChecksumUint8Array;
   ttl?: number;
   replicationFactor?: number;
   priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'CRITICAL';
@@ -74,8 +74,8 @@ export abstract class BaseNetworkDocument implements NetworkDocument {
     this.references = options.references || [];
 
     // Signature and checksum will be set when the document is finalized
-    this.signature = Buffer.alloc(0) as SignatureBuffer;
-    this.checksum = Buffer.alloc(0) as ChecksumBuffer;
+    this.signature = Buffer.alloc(0) as SignatureUint8Array;
+    this.checksum = Buffer.alloc(0) as ChecksumUint8Array;
   }
 
   /**
@@ -84,7 +84,7 @@ export abstract class BaseNetworkDocument implements NetworkDocument {
   async sign(): Promise<void> {
     // Create a buffer of all fields except signature and checksum
     const dataToSign = Buffer.concat([
-      this.id.asRawGuidBuffer,
+      this.id.asRawGuidArray,
       Buffer.from(this.type),
       Buffer.from(this.version.toString()),
       Buffer.from(this.created.toISOString()),
@@ -103,7 +103,7 @@ export abstract class BaseNetworkDocument implements NetworkDocument {
   async verify(): Promise<boolean> {
     // Recreate the signed data buffer
     const dataToVerify = Buffer.concat([
-      this.id.asRawGuidBuffer,
+      this.id.asRawGuidArray,
       Buffer.from(this.type),
       Buffer.from(this.version.toString()),
       Buffer.from(this.created.toISOString()),
@@ -136,7 +136,7 @@ export abstract class BaseNetworkDocument implements NetworkDocument {
     this.updated = new Date();
     this.version++;
     // Clear signature and checksum as they need to be recalculated
-    this.signature = Buffer.alloc(0) as SignatureBuffer;
-    this.checksum = Buffer.alloc(0) as ChecksumBuffer;
+    this.signature = Buffer.alloc(0) as SignatureUint8Array;
+    this.checksum = Buffer.alloc(0) as ChecksumUint8Array;
   }
 }

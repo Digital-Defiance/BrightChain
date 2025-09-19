@@ -9,14 +9,14 @@ import { BlockService } from '../services/blockService';
 import { MemberCblService } from '../services/member/memberCblService';
 import { SealingService } from '../services/sealing.service';
 import { SchemaDefinition } from '../sharedTypes';
-import { ChecksumBuffer, SignatureBuffer } from '../types';
+import { ChecksumUint8Array, SignatureUint8Array } from '../types';
 import { Document } from './document';
 
 export interface IQuorumDocument {
-  checksum: ChecksumBuffer;
-  creatorId: ChecksumBuffer;
+  checksum: ChecksumUint8Array;
+  creatorId: ChecksumUint8Array;
   creator: BrightChainMember;
-  signature: SignatureBuffer;
+  signature: SignatureUint8Array;
   memberIDs: GuidV4[];
   sharesRequired: number;
   dateCreated: Date;
@@ -72,7 +72,7 @@ export class QuorumDocument<
       creator,
       creator,
     );
-    const checksum = Buffer.from(cbl.idChecksum) as ChecksumBuffer;
+    const checksum = Buffer.from(cbl.idChecksum) as ChecksumUint8Array;
 
     // Store creator's CBL ID
     this.set('creatorId', checksum);

@@ -3,7 +3,7 @@ import { join } from 'path';
 import { BlockSize, blockSizeToSizeString } from '../enumerations/blockSize';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 
 /**
  * DiskBlockStore provides base functionality for storing blocks on disk.
@@ -35,7 +35,7 @@ export abstract class DiskBlockStore {
    * Get the directory path for a block
    * Directory structure: storePath/blockSize/checksumChar1/checksumChar2/
    */
-  protected blockDir(blockId: ChecksumBuffer): string {
+  protected blockDir(blockId: ChecksumUint8Array): string {
     if (!blockId || blockId.length === 0) {
       throw new StoreError(StoreErrorType.BlockIdRequired);
     }
@@ -58,7 +58,7 @@ export abstract class DiskBlockStore {
    * Get the file path for a block
    * File structure: storePath/blockSize/checksumChar1/checksumChar2/fullChecksum
    */
-  protected blockPath(blockId: ChecksumBuffer): string {
+  protected blockPath(blockId: ChecksumUint8Array): string {
     if (!blockId || blockId.length === 0) {
       throw new StoreError(StoreErrorType.BlockIdRequired);
     }
@@ -82,7 +82,7 @@ export abstract class DiskBlockStore {
    * Get the metadata file path for a block
    * Metadata files are stored alongside block files with a .m.json extension
    */
-  protected metadataPath(blockId: ChecksumBuffer): string {
+  protected metadataPath(blockId: ChecksumUint8Array): string {
     if (!blockId || blockId.length === 0) {
       throw new StoreError(StoreErrorType.BlockIdRequired);
     }
@@ -93,7 +93,7 @@ export abstract class DiskBlockStore {
   /**
    * Ensure the directory structure exists for a block
    */
-  protected ensureBlockPath(blockId: ChecksumBuffer): void {
+  protected ensureBlockPath(blockId: ChecksumUint8Array): void {
     if (!blockId || blockId.length === 0) {
       throw new StoreError(StoreErrorType.BlockIdRequired);
     }

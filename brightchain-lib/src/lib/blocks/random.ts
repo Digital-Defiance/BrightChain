@@ -4,7 +4,7 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { ServiceProvider } from '../services/service.provider';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
 
@@ -18,7 +18,7 @@ export class RandomBlock extends RawDataBlock {
     blockSize: BlockSize,
     data: Buffer,
     dateCreated?: Date,
-    checksum?: ChecksumBuffer,
+    checksum?: ChecksumUint8Array,
   ) {
     if (data.length !== blockSize) {
       throw new Error('Data length must match block size');
@@ -51,7 +51,7 @@ export class RandomBlock extends RawDataBlock {
     blockSize: BlockSize,
     data: Buffer,
     dateCreated?: Date,
-    checksum?: ChecksumBuffer,
+    checksum?: ChecksumUint8Array,
   ): RandomBlock {
     return new RandomBlock(blockSize, data, dateCreated, checksum);
   }
@@ -145,7 +145,7 @@ export class RandomBlock extends RawDataBlock {
       blockSize: BlockSize,
       data: Buffer,
       dateCreated: Date,
-      checksum: ChecksumBuffer,
+      checksum: ChecksumUint8Array,
       canRead: boolean,
       canPersist: boolean,
     ) => T;

@@ -1,4 +1,3 @@
-import { constants } from '@BrightChain/brightchain-lib';
 import { config } from 'dotenv';
 
 // Temporary interfaces
@@ -27,13 +26,13 @@ const StringName = {
   Admin_Error_EnvironmentNotInitialized: 'Environment not initialized',
   Admin_Error_EnvironmentAlreadyInitialized: 'Environment already initialized',
   Admin_LoadingEnvironmentTemplate: 'Loading environment from {PATH}',
-  Admin_Error_FailedToLoadEnvironment: 'Failed to load environment'
+  Admin_Error_FailedToLoadEnvironment: 'Failed to load environment',
 };
 
 function translate(key: string, params?: any): string {
   let message = key;
   if (params) {
-    Object.keys(params).forEach(param => {
+    Object.keys(params).forEach((param) => {
       message = message.replace(`{${param}}`, params[param]);
     });
   }

@@ -1,9 +1,7 @@
 import { Buffer } from 'buffer';
 import { BrightChainMember } from '../brightChainMember';
 import CONSTANTS, { CBL, CHECKSUM, ECIES, TUPLE } from '../constants';
-import {
-  BlockEncryptionType,
-} from '../enumerations/blockEncryptionType';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize, lengthToBlockSize } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
 import { CblErrorType } from '../enumerations/cblErrorType';
@@ -14,7 +12,11 @@ import { ExtendedCblError } from '../errors/extendedCblError';
 import { GuidV4 } from '../guid';
 import { IConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/cblHeader';
 import { IExtendedConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/ecblHeader';
-import { ChecksumBuffer, RawGuidBuffer, SignatureBuffer } from '../types';
+import {
+  ChecksumUint8Array,
+  RawGuidUint8Array,
+  SignatureUint8Array,
+} from '../types';
 import { BlockCapacityCalculator } from './blockCapacity.service';
 import { ChecksumService } from './checksum.service';
 import { ECIESService } from './ecies.service';
@@ -48,7 +50,7 @@ export class CBLService {
    * Length of the creator field in the header
    */
   public static readonly CreatorLength: number = GuidV4.guidBrandToLength(
-    GuidBrandType.RawGuidBuffer,
+    GuidBrandType.RawGuidUint8Array,
   );
 
   /**
@@ -197,7 +199,7 @@ export class CBLService {
       header.subarray(
         CBLService.HeaderOffsets.CreatorId,
         CBLService.CreatorLength,
-      ) as RawGuidBuffer,
+      ) as RawGuidUint8Array,
     );
   }
 
@@ -253,14 +255,14 @@ export class CBLService {
    * @param header - The header to get the checksum from
    * @returns The original data checksum
    */
-  public getOriginalDataChecksum(header: Buffer): ChecksumBuffer {
+  public getOriginalDataChecksum(header: Buffer): ChecksumUint8Array {
     if (this.isEncrypted(header)) {
       throw new CblError(CblErrorType.CblEncrypted);
     }
     return header.subarray(
       CBLService.HeaderOffsets.OriginalDataChecksum,
       CBLService.DataChecksumSize,
-    ) as ChecksumBuffer;
+    ) as ChecksumUint8Array;
   }
 
   /**
@@ -376,7 +378,7 @@ export class CBLService {
   /**
    * Get the creator signature from the header
    */
-  public getSignature(header: Buffer): SignatureBuffer {
+  public getSignature(header: Buffer): SignatureUint8Array {
     if (this.isEncrypted(header)) {
       throw new CblError(CblErrorType.CblEncrypted);
     }
@@ -387,7 +389,7 @@ export class CBLService {
     return header.subarray(
       signatureOffset,
       signatureOffset + CBLService.CreatorSignatureSize,
-    ) as SignatureBuffer;
+    ) as SignatureUint8Array;
   }
 
   /**
@@ -435,17 +437,17 @@ export class CBLService {
   /**
    * Get the addresses from the CBL
    */
-  public addressDataToAddresses(data: Buffer): ChecksumBuffer[] {
+  public addressDataToAddresses(data: Buffer): ChecksumUint8Array[] {
     const addressData = this.getAddressData(data);
     const addressCount = this.getCblAddressCount(data);
-    const addresses: ChecksumBuffer[] = new Array(addressCount);
+    const addresses: ChecksumUint8Array[] = new Array(addressCount);
 
     for (let i = 0; i < addressCount; i++) {
       const addressOffset = i * CHECKSUM.SHA3_BUFFER_LENGTH;
       addresses[i] = addressData.subarray(
         addressOffset,
         addressOffset + CHECKSUM.SHA3_BUFFER_LENGTH,
-      ) as ChecksumBuffer;
+      ) as ChecksumUint8Array;
     }
 
     return addresses;
@@ -644,7 +646,7 @@ export class CBLService {
     encryptionType: BlockEncryptionType,
     extendedCBL?: { fileName: string; mimeType: string },
     tupleSize: number = TUPLE.SIZE,
-  ): { headerData: Buffer; signature: SignatureBuffer } {
+  ): { headerData: Buffer; signature: SignatureUint8Array } {
     if (fileDataLength > CBL.MAX_INPUT_FILE_SIZE) {
       throw new CblError(CblErrorType.FileSizeTooLarge);
     }
@@ -681,7 +683,7 @@ export class CBLService {
     const dataChecksum = Buffer.alloc(CONSTANTS.CHECKSUM.SHA3_BUFFER_LENGTH, 0);
     dataChecksum.copy(buffers.dataChecksum);
 
-    const creatorId = creator.id.asRawGuidBuffer;
+    const creatorId = creator.id.asRawGuidArray;
 
     // Create base header
     const baseHeaderSize =
@@ -726,10 +728,10 @@ export class CBLService {
 
     const checksum = this.checksumService.calculateChecksum(toSign);
 
-    const finalSignature: SignatureBuffer =
+    const finalSignature: SignatureUint8Array =
       creator instanceof BrightChainMember && creator.privateKey
         ? this.eciesService.signMessage(creator.privateKey, checksum)
-        : (Buffer.alloc(ECIES.SIGNATURE_LENGTH, 0) as SignatureBuffer);
+        : (Buffer.alloc(ECIES.SIGNATURE_LENGTH, 0) as SignatureUint8Array);
 
     // Construct final header
     const headerData = Buffer.concat([

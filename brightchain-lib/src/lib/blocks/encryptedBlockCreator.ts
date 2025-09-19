@@ -2,8 +2,7 @@ import { BrightChainMember } from '../brightChainMember';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
-import { ISingleEncryptedBlockDetails } from '../interfaces/singleEncryptedBlockDetails';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { EncryptedBlock } from './encrypted';
 
 /**
@@ -14,7 +13,7 @@ export type BlockCreatorFunction = (
   dataType: BlockDataType,
   blockSize: BlockSize,
   data: Buffer,
-  checksum: ChecksumBuffer,
+  checksum: ChecksumUint8Array,
   creator: BrightChainMember,
   dateCreated?: Date,
   lengthBeforeEncryption?: number,
@@ -35,7 +34,7 @@ export class EncryptedBlockCreator {
     dataType: BlockDataType,
     blockSize: BlockSize,
     data: Buffer,
-    checksum: ChecksumBuffer,
+    checksum: ChecksumUint8Array,
     creator: BrightChainMember,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,

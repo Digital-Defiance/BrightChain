@@ -22,5 +22,5 @@ export enum GuidBrandType {
   /**
    * Raw Guid, in a buffer, 16 bytes
    */
-  RawGuidBuffer = 'RawGuidBuffer',
+  RawGuidUint8Array = 'RawGuidUint8Array',
 }

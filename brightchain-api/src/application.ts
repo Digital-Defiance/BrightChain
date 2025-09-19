@@ -2,7 +2,7 @@ import {
   debugLog,
   HandleableError,
   SecureKeyStorage,
-} from '@BrightChain/brightchain-lib';
+} from '@brightchain/brightchain-lib';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import { readdirSync, readFileSync } from 'fs';
 import { Server } from 'http';
@@ -42,23 +42,23 @@ function locatePEMRoot(): string {
  */
 export class App implements IApplication {
   public readonly id: string = 'brightchain-app';
-  
+
   // Add missing interface methods
   public getController(name: string): any {
     // Placeholder implementation
     return null;
   }
-  
+
   public get nodeAgent(): any {
     // Placeholder implementation
     return null;
   }
-  
+
   public get clusterAgentPublicKeys(): any {
     // Placeholder implementation
     return [];
   }
-  
+
   public getModel<T>(name: string): any {
     // Placeholder implementation
     return null;
@@ -163,7 +163,9 @@ export class App implements IApplication {
         };
 
         createServer(options, this.expressApp).listen(443, () => {
-          console.log(`[ ready ] https://${getEnvironment().developer.host}:443`);
+          console.log(
+            `[ ready ] https://${getEnvironment().developer.host}:443`,
+          );
         });
       } catch (err) {
         console.error('Failed to start HTTPS server:', err);

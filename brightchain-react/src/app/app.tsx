@@ -2,7 +2,7 @@
 // import styles from './app.module.css';
 import { CssBaseline, ThemeProvider } from '@mui/material';
 
-import { StringLanguages } from '@BrightChain/brightchain-lib';
+import { StringLanguages } from '@brightchain/brightchain-lib';
 import { FC, useEffect } from 'react';
 import { Link, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from '../auth-provider';

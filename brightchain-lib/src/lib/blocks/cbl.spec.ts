@@ -113,7 +113,7 @@ class TestCblBlock extends ConstituentBlockListBlock {
     tupleSizeBuffer.writeUInt8(TUPLE.SIZE, 0);
 
     // Create header without signature
-    const creatorId = creator.id.asRawGuidBuffer;
+    const creatorId = creator.id.asRawGuidArray;
 
     const headerWithoutSignature = Buffer.concat([
       creatorId,

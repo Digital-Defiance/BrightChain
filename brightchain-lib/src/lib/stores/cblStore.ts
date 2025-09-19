@@ -12,22 +12,20 @@ import { EncryptedBlock } from '../blocks/encrypted';
 import { BrightChainMember } from '../brightChainMember';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { CblErrorType } from '../enumerations/cblErrorType';
 import { StoreErrorType } from '../enumerations/storeErrorType';
-import { TranslatableEnumType } from '../enumerations/translatableEnum';
 import { CblError } from '../errors/cblError';
 import { StoreError } from '../errors/storeError';
 import { GuidV4 } from '../guid';
-import { translate } from '../i18n';
 import { ISimpleStoreAsync } from '../interfaces/simpleStoreAsync';
 import { BlockService } from '../services/blockService';
 import { CBLService } from '../services/cblService';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceLocator } from '../services/serviceLocator';
-import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 
 /**
  * CBLStore provides storage for Constituent Block Lists (CBLs).
@@ -35,7 +33,7 @@ import { ChecksumBuffer } from '../types';
  * Supports both encrypted and plain CBLs.
  */
 export class CBLStore
-  implements ISimpleStoreAsync<ChecksumBuffer, ConstituentBlockListBlock>
+  implements ISimpleStoreAsync<ChecksumUint8Array, ConstituentBlockListBlock>
 {
   private readonly _storePath: string;
   private readonly _cblPath: string;
@@ -90,8 +88,12 @@ export class CBLStore
    */
   public isEncrypted(data: Buffer): boolean {
     return (
-      ServiceLocator.getServiceProvider().blockService.isSingleRecipientEncrypted(data) ||
-      ServiceLocator.getServiceProvider().blockService.isMultiRecipientEncrypted(data)
+      ServiceLocator.getServiceProvider().blockService.isSingleRecipientEncrypted(
+        data,
+      ) ||
+      ServiceLocator.getServiceProvider().blockService.isMultiRecipientEncrypted(
+        data,
+      )
     );
   }
 
@@ -99,7 +101,7 @@ export class CBLStore
    * Store a CBL block
    */
   public async set(
-    key: ChecksumBuffer,
+    key: ChecksumUint8Array,
     value: ConstituentBlockListBlock | EncryptedBlock,
   ): Promise<void> {
     const userForvalidation = value.creator ?? this._activeUser;
@@ -137,7 +139,7 @@ export class CBLStore
    * Get a CBL by its checksum
    */
   public async get(
-    checksum: ChecksumBuffer,
+    checksum: ChecksumUint8Array,
     hydrateGuid: (guid: GuidV4) => Promise<BrightChainMember>,
   ): Promise<ConstituentBlockListBlock> {
     const blockPath = this.getBlockPath(checksum);
@@ -159,7 +161,11 @@ export class CBLStore
       const dateCreated = fileStat.mtime;
 
       // Check if it's multi-encrypted
-      if (ServiceLocator.getServiceProvider().blockService.isMultiRecipientEncrypted(cblData)) {
+      if (
+        ServiceLocator.getServiceProvider().blockService.isMultiRecipientEncrypted(
+          cblData,
+        )
+      ) {
         // Handle multi-encrypted CBL
         const multiEncryptedCbl = new EncryptedBlock(
           BlockType.EncryptedConstituentBlockListBlock,
@@ -178,7 +184,7 @@ export class CBLStore
           ),
           this._activeUser,
           true,
-          true
+          true,
         );
 
         const decryptedCbl = new ConstituentBlockListBlock(
@@ -217,7 +223,13 @@ export class CBLStore
         );
 
         const decryptedCbl = new ConstituentBlockListBlock(
-          (await ServiceLocator.getServiceProvider().blockService.decrypt(this._activeUser, encryptedCbl, BlockType.ConstituentBlockList)).data,
+          (
+            await ServiceLocator.getServiceProvider().blockService.decrypt(
+              this._activeUser,
+              encryptedCbl,
+              BlockType.ConstituentBlockList,
+            )
+          ).data,
           this._activeUser,
         );
 
@@ -249,7 +261,7 @@ export class CBLStore
   /**
    * Check if a CBL exists
    */
-  public has(checksum: ChecksumBuffer): boolean {
+  public has(checksum: ChecksumUint8Array): boolean {
     const blockPath = this.getBlockPath(checksum);
     return existsSync(blockPath);
   }
@@ -258,9 +270,9 @@ export class CBLStore
    * Get the addresses for a CBL
    */
   public async getCBLAddresses(
-    checksum: ChecksumBuffer,
+    checksum: ChecksumUint8Array,
     hydrateFunction: (guid: GuidV4) => Promise<BrightChainMember>,
-  ): Promise<ChecksumBuffer[]> {
+  ): Promise<ChecksumUint8Array[]> {
     const blockPath = this.getBlockPath(checksum);
     if (!existsSync(blockPath)) {
       throw new StoreError(StoreErrorType.KeyNotFound);
@@ -276,7 +288,7 @@ export class CBLStore
   /**
    * Get path for CBL data file
    */
-  private getBlockPath(checksum: ChecksumBuffer): string {
+  private getBlockPath(checksum: ChecksumUint8Array): string {
     const checksumHex = checksum.toString('hex');
     const firstDir = checksumHex.substring(0, 2);
     const secondDir = checksumHex.substring(2, 4);
@@ -292,7 +304,7 @@ export class CBLStore
   /**
    * Ensure the block path exists
    */
-  private ensureBlockPath(checksum: ChecksumBuffer): void {
+  private ensureBlockPath(checksum: ChecksumUint8Array): void {
     const checksumHex = checksum.toString('hex');
     const firstDir = checksumHex.substring(0, 2);
     const secondDir = checksumHex.substring(2, 4);

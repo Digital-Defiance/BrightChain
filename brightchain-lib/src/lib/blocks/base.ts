@@ -8,7 +8,7 @@ import { BlockValidationErrorType } from '../enumerations/blockValidationErrorTy
 import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { IBaseBlock } from '../interfaces/blocks/base';
 import { ServiceLocator } from '../services/serviceLocator';
-import { ChecksumBuffer, ChecksumString } from '../types';
+import { ChecksumString, ChecksumUint8Array } from '../types';
 
 /**
  * BaseBlock provides core block functionality.
@@ -29,7 +29,7 @@ export abstract class BaseBlock implements IBaseBlock {
 
   protected readonly _blockType: BlockType;
   protected readonly _blockDataType: BlockDataType;
-  protected readonly _checksum: ChecksumBuffer;
+  protected readonly _checksum: ChecksumUint8Array;
   protected readonly _dateCreated: Date;
   protected readonly _metadata: BlockMetadata;
   protected readonly _canRead: boolean;
@@ -50,7 +50,7 @@ export abstract class BaseBlock implements IBaseBlock {
   protected constructor(
     type: BlockType,
     dataType: BlockDataType,
-    checksum: ChecksumBuffer,
+    checksum: ChecksumUint8Array,
     metadata: BlockMetadata,
     canRead = true,
     canPersist = true,
@@ -108,7 +108,7 @@ export abstract class BaseBlock implements IBaseBlock {
   /**
    * The block's unique identifier/checksum
    */
-  public get idChecksum(): ChecksumBuffer {
+  public get idChecksum(): ChecksumUint8Array {
     return this._checksum;
   }
 
@@ -172,7 +172,7 @@ export abstract class BaseBlock implements IBaseBlock {
   /**
    * Get the complete block data including headers and payload
    */
-  public abstract get data(): Buffer | Readable;
+  public abstract get data(): Uint8Array | Readable;
 
   /**
    * Get this layer's header data size
@@ -182,17 +182,17 @@ export abstract class BaseBlock implements IBaseBlock {
   /**
    * Get this layer's header data
    */
-  public abstract get layerHeaderData(): Buffer;
+  public abstract get layerHeaderData(): Uint8Array;
 
   /**
    * Get this layer's data (including headers)
    */
-  public abstract get layerData(): Buffer;
+  public abstract get layerData(): Uint8Array;
 
   /**
    * Get the payload data (excluding headers)
    */
-  public abstract get layerPayload(): Buffer;
+  public abstract get layerPayload(): Uint8Array;
 
   /**
    * Get the length of the payload
@@ -251,11 +251,18 @@ export abstract class BaseBlock implements IBaseBlock {
   /**
    * Get the complete header data from all layers
    */
-  public get fullHeaderData(): Buffer {
+  public get fullHeaderData(): Uint8Array {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
     const headers = this.layers.map((layer) => layer.layerHeaderData);
-    return Buffer.concat(headers);
+    const totalLength = headers.reduce((sum, arr) => sum + arr.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const arr of headers) {
+      result.set(arr, offset);
+      offset += arr.length;
+    }
+    return result;
   }
 }

@@ -11,7 +11,7 @@ import { CblError } from '../errors/cblError';
 import { GuidV4 } from '../guid';
 import { ICBLCore } from '../interfaces/blocks/cblBase';
 import { ServiceLocator } from '../services/serviceLocator';
-import { ChecksumBuffer, SignatureBuffer } from '../types';
+import { ChecksumUint8Array, SignatureUint8Array } from '../types';
 import { EphemeralBlock } from './ephemeral';
 import { createBlockHandleFromPath } from './handle';
 import { BlockHandleTuple } from './handleTuple';
@@ -158,7 +158,7 @@ export abstract class CBLBase extends EphemeralBlock implements ICBLCore {
   /**
    * The signature of the creator of the CBL
    */
-  public get creatorSignature(): SignatureBuffer {
+  public get creatorSignature(): SignatureUint8Array {
     this.ensureHeaderValidated();
     return ServiceLocator.getServiceProvider().cblService.getSignature(
       this._data,
@@ -188,7 +188,7 @@ export abstract class CBLBase extends EphemeralBlock implements ICBLCore {
   /**
    * The addresses in the CBL
    */
-  public get addresses(): ChecksumBuffer[] {
+  public get addresses(): ChecksumUint8Array[] {
     this.ensureHeaderValidated();
     return ServiceLocator.getServiceProvider().cblService.addressDataToAddresses(
       this._data,
@@ -277,7 +277,7 @@ export abstract class CBLBase extends EphemeralBlock implements ICBLCore {
    * Get Block Handle Tuples for the CBL block
    */
   public async getHandleTuples(
-    getDiskBlockPath: (id: ChecksumBuffer, blockSize: BlockSize) => string,
+    getDiskBlockPath: (id: ChecksumUint8Array, blockSize: BlockSize) => string,
   ): Promise<Array<BlockHandleTuple>> {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);

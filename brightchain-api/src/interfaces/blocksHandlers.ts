@@ -4,7 +4,7 @@ import {
   IGetBlockResponse,
   IStoreBlockResponse,
   TypedHandlers,
-} from '@BrightChain/brightchain-lib';
+} from '@brightchain/brightchain-lib';
 
 export interface BlocksHandlers extends TypedHandlers<ApiResponse> {
   storeBlock: ApiRequestHandler<IStoreBlockResponse>;
