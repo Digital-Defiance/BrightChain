@@ -5,7 +5,7 @@ import {
   IRequestUser,
   LanguageCodes,
   StringLanguages,
-} from '@BrightChain/brightchain-lib';
+} from '@brightchain/brightchain-lib';
 import {
   FC,
   ReactNode,

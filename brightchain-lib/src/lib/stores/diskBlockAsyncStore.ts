@@ -14,7 +14,7 @@ import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata'
 import MemoryWritableStream from '../memoryWriteableStream';
 import { ChecksumTransform } from '../transforms/checksumTransform';
 import XorMultipleTransformStream from '../transforms/xorMultipleTransform';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { DiskBlockStore } from './diskBlockStore';
 
 /**
@@ -30,7 +30,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
   /**
    * Check if a block exists
    */
-  public async has(key: ChecksumBuffer): Promise<boolean> {
+  public async has(key: ChecksumUint8Array): Promise<boolean> {
     const blockPath = this.blockPath(key);
     return existsSync(blockPath);
   }
@@ -38,7 +38,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
   /**
    * Get a handle to a block
    */
-  public get<T extends BaseBlock>(key: ChecksumBuffer): BlockHandle<T> {
+  public get<T extends BaseBlock>(key: ChecksumUint8Array): BlockHandle<T> {
     const blockPath = this.blockPath(key);
     // @ts-ignore - BlockHandle constructor workaround
     return new (BlockHandle as any)(
@@ -53,7 +53,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
   /**
    * Get a block's data
    */
-  public async getData(key: ChecksumBuffer): Promise<RawDataBlock> {
+  public async getData(key: ChecksumUint8Array): Promise<RawDataBlock> {
     const blockPath = this.blockPath(key);
     if (!existsSync(blockPath)) {
       throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
@@ -93,7 +93,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
    * Delete a block's data
    * @param key - The block's checksum
    */
-  public async deleteData(key: ChecksumBuffer): Promise<void> {
+  public async deleteData(key: ChecksumUint8Array): Promise<void> {
     const blockPath = this.blockPath(key);
     if (!existsSync(blockPath)) {
       throw new StoreError(StoreErrorType.KeyNotFound);
@@ -264,14 +264,14 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
    * @param count - Maximum number of blocks to return
    * @returns Array of random block checksums
    */
-  public async getRandomBlocks(count: number): Promise<ChecksumBuffer[]> {
+  public async getRandomBlocks(count: number): Promise<ChecksumUint8Array[]> {
     const blockSizeString = blockSizeToSizeString(this._blockSize);
     const basePath = join(this._storePath, blockSizeString);
     if (!existsSync(basePath)) {
       return [];
     }
 
-    const blocks: ChecksumBuffer[] = [];
+    const blocks: ChecksumUint8Array[] = [];
     const firstLevelDirs = await readdir(basePath);
 
     // Randomly select first level directories until we have enough blocks
@@ -320,7 +320,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
       // Pick a random block
       const randomBlockIndex = Math.floor(Math.random() * blockFiles.length);
       const blockFile = blockFiles[randomBlockIndex];
-      blocks.push(Buffer.from(blockFile, 'hex') as ChecksumBuffer);
+      blocks.push(Buffer.from(blockFile, 'hex') as ChecksumUint8Array);
 
       // Remove used directory if we still need more blocks
       if (blocks.length < count) {

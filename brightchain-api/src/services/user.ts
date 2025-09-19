@@ -1,4 +1,4 @@
-import { ISuccessMessage } from '@BrightChain/brightchain-lib';
+import { ISuccessMessage } from '@brightchain/brightchain-lib';
 import { IApplication } from '../interfaces/application';
 import { BaseService } from './base';
 

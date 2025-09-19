@@ -23,7 +23,7 @@ import {
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { ServiceLocator } from '../services/serviceLocator';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { BaseBlock } from './base';
 // Remove circular import
 // import { EncryptedBlock } from './encrypted';
@@ -43,7 +43,7 @@ export class EphemeralBlock extends BaseBlock implements IEphemeralBlock {
     dataType: BlockDataType,
     blockSize: BlockSize,
     data: Buffer,
-    checksum: ChecksumBuffer,
+    checksum: ChecksumUint8Array,
     creator: BrightChainMember,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,
@@ -107,7 +107,7 @@ export class EphemeralBlock extends BaseBlock implements IEphemeralBlock {
     type: BlockType,
     dataType: BlockDataType,
     data: Buffer | Readable,
-    checksum: ChecksumBuffer,
+    checksum: ChecksumUint8Array,
     metadata: EphemeralBlockMetadata,
     canRead = true,
     canPersist = false,

@@ -2,7 +2,7 @@ import {
   ApiResponse,
   RouteConfig,
   TypedHandlers,
-} from '@BrightChain/brightchain-lib';
+} from '@brightchain/brightchain-lib';
 import { IApplication } from '../interfaces/application';
 
 export abstract class BaseController<

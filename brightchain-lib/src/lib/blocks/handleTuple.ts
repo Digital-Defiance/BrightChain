@@ -6,7 +6,7 @@ import { HandleTupleError } from '../errors/handleTupleError';
 import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
 import { ServiceProvider } from '../services/service.provider';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { BlockHandle } from './handle';
 import { RawDataBlock } from './rawData';
 
@@ -48,7 +48,7 @@ export class BlockHandleTuple {
   /**
    * The block IDs in this tuple
    */
-  public get blockIds(): ChecksumBuffer[] {
+  public get blockIds(): ChecksumUint8Array[] {
     return this.handles.map((handle) => handle.idChecksum);
   }
 

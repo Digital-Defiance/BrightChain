@@ -7,7 +7,11 @@ import { GuidV4 } from '../guid';
 import { QuorumDataRecord } from '../quorumDataRecord';
 import { ServiceProvider } from '../services/service.provider';
 import { SchemaDefinition, SerializedValue } from '../sharedTypes';
-import { ChecksumBuffer, ShortHexGuid, SignatureBuffer } from '../types';
+import {
+  ChecksumUint8Array,
+  ShortHexGuid,
+  SignatureUint8Array,
+} from '../types';
 
 const isString = (value: unknown): value is string => typeof value === 'string';
 const isShortHexGuidArray = (value: unknown): value is ShortHexGuid[] =>
@@ -36,19 +40,19 @@ export const QuorumDocumentSchema: SchemaDefinition<IQuorumDocument> = {
   checksum: {
     type: Object,
     required: true,
-    serialize: (value: ChecksumBuffer): string => value.toString('hex'),
-    hydrate: (value: unknown): ChecksumBuffer => {
+    serialize: (value: ChecksumUint8Array): string => value.toString('hex'),
+    hydrate: (value: unknown): ChecksumUint8Array => {
       if (!isString(value)) throw new Error('Invalid checksum format');
-      return Buffer.from(value, 'hex') as ChecksumBuffer;
+      return Buffer.from(value, 'hex') as ChecksumUint8Array;
     },
   },
   creatorId: {
     type: Object,
     required: true,
-    serialize: (value: ChecksumBuffer): string => value.toString('hex'),
-    hydrate: (value: unknown): ChecksumBuffer => {
+    serialize: (value: ChecksumUint8Array): string => value.toString('hex'),
+    hydrate: (value: unknown): ChecksumUint8Array => {
       if (!isString(value)) throw new Error('Invalid creator ID format');
-      return Buffer.from(value, 'hex') as ChecksumBuffer;
+      return Buffer.from(value, 'hex') as ChecksumUint8Array;
     },
   },
   creator: {
@@ -62,10 +66,10 @@ export const QuorumDocumentSchema: SchemaDefinition<IQuorumDocument> = {
   signature: {
     type: Object,
     required: true,
-    serialize: (value: SignatureBuffer): string => value.toString('hex'),
-    hydrate: (value: unknown): SignatureBuffer => {
+    serialize: (value: SignatureUint8Array): string => value.toString('hex'),
+    hydrate: (value: unknown): SignatureUint8Array => {
       if (!isString(value)) throw new Error('Invalid signature format');
-      return Buffer.from(value, 'hex') as SignatureBuffer;
+      return Buffer.from(value, 'hex') as SignatureUint8Array;
     },
   },
   memberIDs: {

@@ -1,18 +1,10 @@
-import { createHash } from 'crypto';
+import { sha3_512 } from 'js-sha3';
 import { CHECKSUM } from '../constants';
-import { IChecksumConfig } from '../interfaces/checksumConfig';
-import { ChecksumBuffer, ChecksumString } from '../types';
+import { ChecksumString, ChecksumUint8Array } from '../types';
+import { hexToUint8Array, uint8ArrayToHex } from '../utils';
 
 export class ChecksumService {
-  private readonly config: IChecksumConfig;
-
-  constructor(config?: Partial<IChecksumConfig>) {
-    this.config = {
-      algorithm: CHECKSUM.ALGORITHM,
-      encoding: CHECKSUM.ENCODING,
-      ...config,
-    };
-  }
+  constructor() {}
 
   /**
    * Get the length of a checksum buffer in bytes
@@ -26,11 +18,10 @@ export class ChecksumService {
    * @param data - The data to calculate the checksum for
    * @returns The checksum as a Buffer
    */
-  public calculateChecksum(data: Buffer): ChecksumBuffer {
-    const hash = createHash(this.config.algorithm);
+  public calculateChecksum(data: Uint8Array): ChecksumUint8Array {
+    const hash = sha3_512.create();
     hash.update(data);
-    const digest = hash.digest();
-    return Buffer.from(digest) as ChecksumBuffer;
+    return hexToUint8Array(hash.hex()) as ChecksumUint8Array;
   }
 
   /**
@@ -38,13 +29,14 @@ export class ChecksumService {
    * @param buffers - The buffers to calculate the checksum for
    * @returns The checksum as a Buffer
    */
-  public calculateChecksumForBuffers(buffers: Buffer[]): ChecksumBuffer {
-    const hash = createHash(this.config.algorithm);
+  public calculateChecksumForBuffers(
+    buffers: Uint8Array[],
+  ): ChecksumUint8Array {
+    const hash = sha3_512.create();
     for (const buffer of buffers) {
       hash.update(buffer);
     }
-    const digest = hash.digest();
-    return Buffer.from(digest) as ChecksumBuffer;
+    return hexToUint8Array(hash.hex()) as ChecksumUint8Array;
   }
 
   /**
@@ -52,8 +44,43 @@ export class ChecksumService {
    * @param str - The string to calculate the checksum for
    * @returns The checksum as a Buffer
    */
-  public calculateChecksumForString(str: string): ChecksumBuffer {
-    return this.calculateChecksum(Buffer.from(str, 'utf8'));
+  public calculateChecksumForString(str: string): ChecksumUint8Array {
+    const hash = sha3_512.create();
+    hash.update(str);
+    return hexToUint8Array(hash.hex()) as ChecksumUint8Array;
+  }
+
+  /**
+   * Calculate a checksum for a file
+   * @param file - The file object to calculate the checksum for
+   * @returns The checksum as a Uint8Array
+   */
+  public async calculateChecksumForFile(
+    file: File,
+  ): Promise<ChecksumUint8Array> {
+    const arrayBuffer = await file.arrayBuffer();
+    const data = new Uint8Array(arrayBuffer);
+    return this.calculateChecksum(data);
+  }
+
+  /**
+   * Calculate a checksum for a stream
+   * @param stream - The readable stream
+   * @returns The checksum as a Uint8Array
+   */
+  public async calculateChecksumForStream(
+    stream: ReadableStream<Uint8Array>,
+  ): Promise<ChecksumUint8Array> {
+    const hash = sha3_512.create();
+    const reader = stream.getReader();
+    let result: ReadableStreamReadResult<Uint8Array>;
+    do {
+      result = await reader.read();
+      if (result.value) {
+        hash.update(result.value);
+      }
+    } while (!result.done);
+    return hexToUint8Array(hash.hex()) as ChecksumUint8Array;
   }
 
   /**
@@ -63,8 +90,8 @@ export class ChecksumService {
    * @returns True if the checksums are equal, false otherwise
    */
   public compareChecksums(
-    checksum1: ChecksumBuffer,
-    checksum2: ChecksumBuffer,
+    checksum1: ChecksumUint8Array,
+    checksum2: ChecksumUint8Array,
   ): boolean {
     if (
       checksum1.length !== this.checksumBufferLength ||
@@ -72,7 +99,7 @@ export class ChecksumService {
     ) {
       return false;
     }
-    return checksum1.equals(checksum2);
+    return checksum1.every((value, index) => value === checksum2[index]);
   }
 
   /**
@@ -80,8 +107,8 @@ export class ChecksumService {
    * @param checksum - The checksum to convert
    * @returns The checksum as a hex string
    */
-  public checksumToHexString(checksum: ChecksumBuffer): ChecksumString {
-    return checksum.toString(CHECKSUM.ENCODING) as ChecksumString;
+  public checksumToHexString(checksum: ChecksumUint8Array): ChecksumString {
+    return uint8ArrayToHex(checksum) as ChecksumString;
   }
 
   /**
@@ -89,11 +116,11 @@ export class ChecksumService {
    * @param hexString - The hex string to convert
    * @returns The checksum as a Buffer
    */
-  public hexStringToChecksum(hexString: string): ChecksumBuffer {
+  public hexStringToChecksum(hexString: string): ChecksumUint8Array {
     if (hexString.length !== this.checksumBufferLength * 2) {
       throw new Error('Invalid checksum hex string length');
     }
-    return Buffer.from(hexString, CHECKSUM.ENCODING) as ChecksumBuffer;
+    return hexToUint8Array(hexString) as ChecksumUint8Array;
   }
 
   /**
@@ -101,48 +128,7 @@ export class ChecksumService {
    * @param checksum - The checksum to validate
    * @returns True if the checksum is valid, false otherwise
    */
-  public validateChecksum(checksum: ChecksumBuffer): boolean {
+  public validateChecksum(checksum: ChecksumUint8Array): boolean {
     return checksum.length === this.checksumBufferLength;
-  }
-
-  /**
-   * Calculate a checksum for a file
-   * @param filePath - The path to the file
-   * @returns The checksum as a Buffer
-   */
-  public async calculateChecksumForFile(
-    filePath: string,
-  ): Promise<ChecksumBuffer> {
-    const fs = await import('fs/promises');
-    const fileData = await fs.readFile(filePath);
-    return this.calculateChecksum(fileData);
-  }
-
-  /**
-   * Calculate a checksum for a stream
-   * @param stream - The readable stream
-   * @returns The checksum as a Buffer
-   */
-  public calculateChecksumForStream(
-    stream: NodeJS.ReadableStream,
-  ): Promise<ChecksumBuffer> {
-    return new Promise((resolve, reject) => {
-      const hash = createHash(this.config.algorithm);
-      stream.on('data', (chunk) => {
-        // Ensure chunk is a Buffer before updating hash
-        if (Buffer.isBuffer(chunk)) {
-          hash.update(chunk);
-        } else if (typeof chunk === 'number') {
-          hash.update(Buffer.from([chunk]));
-        } else {
-          hash.update(Buffer.from(chunk));
-        }
-      });
-      stream.on('end', () => {
-        const digest = hash.digest();
-        resolve(Buffer.from(digest) as ChecksumBuffer);
-      });
-      stream.on('error', reject);
-    });
   }
 }

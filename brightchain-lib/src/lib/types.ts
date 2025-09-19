@@ -54,9 +54,10 @@ export type SimplePublicKeyOnlyBuffer = Brand<
 >;
 export type HexString = Brand<string, 'HexString'>;
 export type SignatureString = Brand<HexString, 'SignatureString'>;
-export type SignatureBuffer = Buffer & Brand<Buffer, 'SignatureBuffer'>;
-export type ChecksumBuffer = Buffer &
-  Brand<Buffer, 'Sha3Checksum', 'ChecksumBuffer'>;
+export type SignatureUint8Array = Uint8Array &
+  Brand<Uint8Array, 'SignatureUint8Array'>;
+export type ChecksumUint8Array = Uint8Array &
+  Brand<Uint8Array, 'Sha3Checksum', 'ChecksumUint8Array'>;
 export type ChecksumString = Brand<HexString, 'Sha3Checksum', 'ChecksumString'>;
 
 /**
@@ -76,10 +77,14 @@ export type ShortHexGuid = Brand<string, 'GuidV4', GuidBrandType.ShortHexGuid>;
  */
 export type Base64Guid = Brand<string, 'GuidV4', GuidBrandType.Base64Guid>;
 /**
- * GUID stored as a raw buffer
+ * GUID stored as a raw Uint8Array
  */
-export type RawGuidBuffer = Buffer &
-  Brand<Buffer, 'GuidV4', GuidBrandType.RawGuidBuffer>;
+export type RawGuidUint8Array = Uint8Array &
+  Brand<Uint8Array, 'GuidV4', GuidBrandType.RawGuidUint8Array>;
+
+export type BinaryGuid = Uint8Array;
+export type HexGuid = string;
+export type ShortGuid = string;
 
 /**
  * Extended Cipher type with auth tag support

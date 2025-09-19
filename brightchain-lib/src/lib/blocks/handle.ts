@@ -17,7 +17,7 @@ import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ServiceProvider } from '../services/service.provider';
 import { ChecksumTransform } from '../transforms/checksumTransform';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
 
@@ -34,8 +34,8 @@ export type BlockHandle<T extends BaseBlock> = T & {
   layerPayloadSize: number;
   getReadStream(): ReadStream;
   getWriteStream(overwrite?: boolean): WriteStream;
-  calculateChecksum(): Promise<ChecksumBuffer>;
-  calculateChecksumSync(): ChecksumBuffer;
+  calculateChecksum(): Promise<ChecksumUint8Array>;
+  calculateChecksumSync(): ChecksumUint8Array;
   clearCache(): void;
   block: RawDataBlock;
 };
@@ -63,7 +63,7 @@ export function createBlockHandle<T extends BaseBlock>(
   blockConstructor: new (...args: any[]) => T,
   path: string,
   blockSize: BlockSize,
-  checksum: ChecksumBuffer,
+  checksum: ChecksumUint8Array,
   canRead = true,
   canPersist = true,
   ...constructorArgs: any[]
@@ -214,7 +214,7 @@ export function createBlockHandle<T extends BaseBlock>(
   };
 
   // Add calculateChecksum method
-  instance.calculateChecksum = async function (): Promise<ChecksumBuffer> {
+  instance.calculateChecksum = async function (): Promise<ChecksumUint8Array> {
     return new Promise((resolve, reject) => {
       const readStream = this.getReadStream();
       const checksumTransform = new ChecksumTransform();
@@ -244,7 +244,7 @@ export function createBlockHandle<T extends BaseBlock>(
   };
 
   // Add calculateChecksumSync method
-  instance.calculateChecksumSync = function (): ChecksumBuffer {
+  instance.calculateChecksumSync = function (): ChecksumUint8Array {
     if (!existsSync(this._path)) {
       throw new BlockAccessError(
         BlockAccessErrorType.BlockFileNotFound,
@@ -314,7 +314,7 @@ export async function createBlockHandleFromPath<T extends BaseBlock>(
   blockConstructor: new (...args: any[]) => T,
   path: string,
   blockSize: BlockSize,
-  checksum?: ChecksumBuffer,
+  checksum?: ChecksumUint8Array,
   canRead = true,
   canPersist = true,
   ...constructorArgs: any[]

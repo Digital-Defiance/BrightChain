@@ -2,7 +2,7 @@ import {
   ApiResponse,
   BrightChainMember,
   TypedHandlers,
-} from '@BrightChain/brightchain-lib';
+} from '@brightchain/brightchain-lib';
 import { BlocksController } from '../controllers/api/blocks';
 import { MembersController } from '../controllers/api/members';
 import { SessionsController } from '../controllers/api/sessions';

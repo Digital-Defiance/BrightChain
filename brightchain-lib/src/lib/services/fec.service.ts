@@ -27,12 +27,12 @@ export class FecService {
    * This will produce a buffer of size (shardSize * (dataShards + parityShards)) or (shardSize * parityShards) if fecOnly is true.
    */
   public async encode(
-    data: Buffer,
+    data: Uint8Array,
     shardSize: number,
     dataShards: number,
     parityShards: number,
     fecOnly: boolean,
-  ): Promise<Buffer> {
+  ): Promise<Uint8Array> {
     // Validate parameters
     if (!data || data.length === 0) {
       throw new FecError(FecErrorType.DataRequired);
@@ -65,9 +65,7 @@ export class FecService {
         await ReedSolomonErasure.fromCurrentDirectory();
       reedSolomonErasure.encode(shards, dataShards, parityShards);
 
-      return fecOnly
-        ? Buffer.from(shards.subarray(shardSize * dataShards))
-        : Buffer.from(shards);
+      return fecOnly ? shards.subarray(shardSize * dataShards) : shards;
     } catch (error) {
       throw new FecError(FecErrorType.FecEncodingFailed, undefined, {
         ERROR: error instanceof Error ? error.message : 'Unknown error',
@@ -80,12 +78,12 @@ export class FecService {
    * This will produce a buffer of size (shardSize * dataShards).
    */
   public async decode(
-    data: Buffer,
+    data: Uint8Array,
     shardSize: number,
     dataShards: number,
     parityShards: number,
     shardsAvailable: boolean[],
-  ): Promise<Buffer> {
+  ): Promise<Uint8Array> {
     // Validate parameters
     if (!data || data.length === 0) {
       throw new FecError(FecErrorType.DataRequired);
@@ -154,9 +152,9 @@ export class FecService {
 
     try {
       // Create parity blocks by processing input in chunks
-      const resultParityBlocks: Buffer[] = Array(parityBlocks)
+      const resultParityBlocks: Uint8Array[] = Array(parityBlocks)
         .fill(null)
-        .map(() => Buffer.alloc(0));
+        .map(() => new Uint8Array(0));
 
       // Handle both Buffer and Readable cases
       const inputData = input.data;
@@ -181,10 +179,11 @@ export class FecService {
             j * shardSize,
             (j + 1) * shardSize,
           );
-          resultParityBlocks[j] = Buffer.concat([
-            resultParityBlocks[j],
-            parityChunk,
-          ]);
+          const existing = resultParityBlocks[j];
+          const newBlock = new Uint8Array(existing.length + parityChunk.length);
+          newBlock.set(existing);
+          newBlock.set(parityChunk, existing.length);
+          resultParityBlocks[j] = newBlock;
         }
       }
 
@@ -244,19 +243,30 @@ export class FecService {
       }
 
       // Recover each shard
-      let recoveredBlock = Buffer.alloc(0);
+      let recoveredBlock = new Uint8Array(0);
       for (let i = 0; i < requiredShards; i++) {
         // Combine damaged and parity data for this shard
-        const shardData = Buffer.concat([
-          damagedData.subarray(i * shardSize, (i + 1) * shardSize),
-          ...parityBlocks.map((block) => {
-            const parityData = block.data;
-            if (parityData instanceof Readable) {
-              throw new FecError(FecErrorType.ParityBlockDataMustBeBuffer);
-            }
-            return parityData.subarray(i * shardSize, (i + 1) * shardSize);
-          }),
-        ]);
+        const damagedChunk = damagedData.subarray(
+          i * shardSize,
+          (i + 1) * shardSize,
+        );
+        const shardData = new Uint8Array(
+          damagedChunk.length + parityBlocks.length * shardSize,
+        );
+        shardData.set(damagedChunk);
+        let offset = damagedChunk.length;
+        for (const block of parityBlocks) {
+          const parityData = block.data;
+          if (parityData instanceof Readable) {
+            throw new FecError(FecErrorType.ParityBlockDataMustBeBuffer);
+          }
+          const parityChunk = parityData.subarray(
+            i * shardSize,
+            (i + 1) * shardSize,
+          );
+          shardData.set(parityChunk, offset);
+          offset += parityChunk.length;
+        }
 
         // Recover this shard
         const recoveredShard = await this.decode(
@@ -266,8 +276,12 @@ export class FecService {
           parityBlocks.length,
           availableShards,
         );
-
-        recoveredBlock = Buffer.concat([recoveredBlock, recoveredShard]);
+        const newRecoveredBlock = new Uint8Array(
+          recoveredBlock.length + recoveredShard.length,
+        );
+        newRecoveredBlock.set(recoveredBlock);
+        newRecoveredBlock.set(recoveredShard, recoveredBlock.length);
+        recoveredBlock = newRecoveredBlock;
       }
 
       // Validate and create recovered block

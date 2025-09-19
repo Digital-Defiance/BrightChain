@@ -1,0 +1,24 @@
+{
+  "name": "brightchain-api-lib",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "brightchain-api-lib/src",
+  "projectType": "library",
+  "implicitDependencies": ["brightchain-lib", "brightchain-test-utils"],
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/brightchain-api-lib",
+        "main": "brightchain-api-lib/src/index.ts",
+        "tsConfig": "brightchain-api-lib/tsconfig.lib.json",
+        "assets": ["brightchain-api-lib/*.md"]
+      },
+      "dependsOn": ["^build"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

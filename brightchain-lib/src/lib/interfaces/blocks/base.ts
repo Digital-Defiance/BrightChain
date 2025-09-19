@@ -2,7 +2,7 @@ import { Readable } from 'stream';
 import { BlockDataType } from '../../enumerations/blockDataType';
 import { BlockSize } from '../../enumerations/blockSize';
 import { BlockType } from '../../enumerations/blockType';
-import { ChecksumBuffer, ChecksumString } from '../../types';
+import { ChecksumString, ChecksumUint8Array } from '../../types';
 
 /**
  * IBlock defines the contract for all blocks in the Owner Free Filesystem (OFF).
@@ -55,7 +55,7 @@ export interface IBaseBlock {
    * 2. Verify data integrity
    * 3. Reference blocks in CBLs
    */
-  get idChecksum(): ChecksumBuffer;
+  get idChecksum(): ChecksumUint8Array;
 
   /**
    * The type of the block.
@@ -79,7 +79,7 @@ export interface IBaseBlock {
    * The raw data in the block, including all headers and payload.
    * Format: [Layer 0 Header][Layer 1 Header][...][Layer N Header][Payload][Padding]
    */
-  get data(): Buffer | Readable;
+  get data(): Uint8Array | Readable;
 
   /**
    * The block's checksum as a string.
@@ -115,14 +115,14 @@ export interface IBaseBlock {
    * The actual data payload, excluding headers and padding.
    * This is the data that was originally stored in the block.
    */
-  get layerPayload(): Buffer;
+  get layerPayload(): Uint8Array;
 
   /**
    * The complete header data from all layers.
    * Headers are concatenated in inheritance order:
    * [Layer 0 Header][Layer 1 Header][...][Layer N Header]
    */
-  get fullHeaderData(): Buffer;
+  get fullHeaderData(): Uint8Array;
 
   /**
    * The length of the layer's header data
@@ -136,12 +136,12 @@ export interface IBaseBlock {
    * 2. Encryption information
    * 3. Block relationships
    */
-  get layerHeaderData(): Buffer;
+  get layerHeaderData(): Uint8Array;
 
   /**
    * Gets the layer's data including header and payload
    */
-  get layerData(): Buffer;
+  get layerData(): Uint8Array;
 
   /**
    * The length of the payload before padding.

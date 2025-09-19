@@ -1,0 +1,4 @@
+export enum Pbkdf2ProfileEnum {
+  BACKUP_CODES = 'BACKUP_CODES',
+  BROWSER_PASSWORD = 'BROWSER_PASSWORD',
+}

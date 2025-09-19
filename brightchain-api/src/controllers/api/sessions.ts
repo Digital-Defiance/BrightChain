@@ -1,17 +1,17 @@
 import {
   ApiErrorResponse,
   ApiRequestHandler,
-  ApiResponse,
+  BrightChainMember,
   IApiMessageResponse,
   IStatusCodeResponse,
   TypedHandlers,
-  BrightChainMember,
-} from '@BrightChain/brightchain-lib';
+} from '@brightchain/brightchain-lib';
 import { Request } from 'express';
 import { IApplication } from '../../interfaces/application';
 import { BaseController } from '../base';
 
-interface ISessionsHandlers extends TypedHandlers<IApiMessageResponse | ApiErrorResponse> {
+interface ISessionsHandlers
+  extends TypedHandlers<IApiMessageResponse | ApiErrorResponse> {
   getSessions: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
 }
 

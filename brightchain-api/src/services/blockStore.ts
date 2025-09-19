@@ -1,4 +1,4 @@
-import { BlockSize } from '@BrightChain/brightchain-lib';
+import { BlockSize } from '@brightchain/brightchain-lib';
 import { IApplication } from '../interfaces/application';
 import { IBlockStore } from '../interfaces/blockStore';
 import { BaseService } from './base';

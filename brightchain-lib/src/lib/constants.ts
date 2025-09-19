@@ -1,6 +1,7 @@
 import { CipherGCMTypes } from 'crypto';
 import { GuidBrandType } from './enumerations/guidBrandType';
 import { GuidV4 } from './guid';
+import { IBackupCodeConstants } from './interfaces/backupCodeConsts';
 import { ICBLConsts } from './interfaces/cblConsts';
 import { IChecksumConsts } from './interfaces/checksumConsts';
 import { IConstants } from './interfaces/constants';
@@ -14,6 +15,7 @@ import { ISealingConsts } from './interfaces/sealingConsts';
 import { ISiteConsts } from './interfaces/siteConsts';
 import { ITupleConsts } from './interfaces/tupleConsts';
 import { IVotingConsts } from './interfaces/votingConsts';
+import { Pbkdf2Profiles } from './pbkdf2Profiles';
 
 export const UINT8_SIZE: number = 1 as const;
 export const UINT16_SIZE: number = 2 as const;
@@ -23,7 +25,7 @@ export const UINT32_MAX: number = 4294967295 as const;
 export const UINT64_SIZE: number = 8 as const;
 export const UINT64_MAX: bigint = 18446744073709551615n as const;
 export const GUID_SIZE: number = GuidV4.guidBrandToLength(
-  GuidBrandType.RawGuidBuffer,
+  GuidBrandType.RawGuidUint8Array,
 );
 
 export const SITE: ISiteConsts = {
@@ -85,6 +87,29 @@ export const CBL: ICBLConsts = {
  */
 export const OFFS_CACHE_PERCENTAGE = 0.7 as const; // 70% from cache, 30% new random blocks
 
+const ECIES_SYMMETRIC_KEY_SIZE: number = 32 as const;
+const ECIES_PUBLIC_KEY_LENGTH = 65 as const;
+const ECIES_RAW_PUBLIC_KEY_LENGTH = 64 as const;
+const ECIES_IV_SIZE = 16 as const;
+const ECIES_AUTH_TAG_SIZE = 16 as const;
+const ECIES_MULTIPLE_RECIPIENT_ID_SIZE = 16 as const;
+
+// Define the expected value for SIMPLE.FIXED_OVERHEAD_SIZE
+const expectedSimpleOverhead =
+  UINT8_SIZE + ECIES_PUBLIC_KEY_LENGTH + ECIES_IV_SIZE + ECIES_AUTH_TAG_SIZE;
+
+// Define the expected value for MULTIPLE.FIXED_OVERHEAD_SIZE
+// Includes: type (1) + IV (16) + auth tag (16) = 33 (no CRC, AES-GCM provides authentication)
+const expectedMultipleOverhead =
+  UINT8_SIZE + ECIES_IV_SIZE + ECIES_AUTH_TAG_SIZE;
+
+// Update ENCRYPTED_KEY_SIZE to match Simple encryption (no CRC)
+const expectedMultipleEncryptedKeySize =
+  ECIES_PUBLIC_KEY_LENGTH +
+  ECIES_IV_SIZE +
+  ECIES_AUTH_TAG_SIZE +
+  ECIES_SYMMETRIC_KEY_SIZE;
+
 /**
  * Constants for ECIES (Elliptic Curve Integrated Encryption Scheme)
  * These values are critical for cryptographic operations and MUST NOT be changed
@@ -122,26 +147,44 @@ export const ECIES: IECIESConsts = {
   /** Total overhead size for encrypted blocks (block type + public key + IV + auth tag) */
   OVERHEAD_SIZE: 98 as const, // BLOCK_TYPE_HEADER_SIZE + PUBLIC_KEY_LENGTH + IV_LENGTH + AUTH_TAG_LENGTH
 
+  MAX_RAW_DATA_SIZE: 9007199254740991 as const, // 2^53 - 1 (max safe integer for JS)
+
   /** Symmetric encryption algorithm configuration */
   SYMMETRIC: {
     ALGORITHM: 'aes' as const,
     KEY_BITS: 256 as const,
-    KEY_LENGTH: 32 as const, // KEY_BITS / 8
+    KEY_LENGTH: ECIES_SYMMETRIC_KEY_SIZE as const, // KEY_BITS / 8
     MODE: 'gcm' as const,
-  },
+  } as const,
 
+  /**
+   * Message encrypts without data length or crc
+   */
+  SIMPLE: {
+    FIXED_OVERHEAD_SIZE: expectedSimpleOverhead, // type (1) + public key (65) + IV (16) + auth tag (16)
+    DATA_LENGTH_SIZE: 0 as const,
+  } as const,
+
+  /**
+   * Message encrypts with data length but no CRC (AES-GCM provides authentication)
+   */
+  SINGLE: {
+    FIXED_OVERHEAD_SIZE: 106 as const, // type (1) + public key (65) + IV (16) + auth tag (16) + data length (8)
+    DATA_LENGTH_SIZE: 8,
+  } as const,
+
+
+  /**
+   * Message encrypts for multiple recipients
+   */
   MULTIPLE: {
-    ENCRYPTED_MESSAGE_OVERHEAD_SIZE: 32 as const, // 16 bytes IV + 16 bytes auth tag + 16 bytes CRC16 checksum
-    FIXED_OVERHEAD_SIZE: 6 as const, // 4 bytes data length + 2 bytes recipient count
-    ENCRYPTED_KEY_SIZE: 129 as const, // 65 bytes ephemeral public key + 16 bytes IV + 16 bytes auth tag + 32 bytes encrypted key
-    MAX_RECIPIENTS: UINT16_MAX,
-    IV_SIZE: 16 as const,
-    AUTH_TAG_SIZE: 16 as const,
-    MAX_DATA_SIZE: 9007199254740991 as const, // 2^53 - 1
-    RECIPIENT_ID_SIZE: GUID_SIZE,
-    RECIPIENT_COUNT_SIZE: UINT16_SIZE,
-    DATA_LENGTH_SIZE: UINT64_SIZE,
-  },
+    FIXED_OVERHEAD_SIZE: expectedMultipleOverhead, // type (1) + IV (16) + auth tag (16), no CRC
+    ENCRYPTED_KEY_SIZE: expectedMultipleEncryptedKeySize, // 129
+    MAX_RECIPIENTS: 65535,
+    RECIPIENT_ID_SIZE: ECIES_MULTIPLE_RECIPIENT_ID_SIZE,
+    RECIPIENT_COUNT_SIZE: 2,
+    DATA_LENGTH_SIZE: 8,
+  } as const,
 } as const;
 
 export const KEYRING: IKeyringConsts = {
@@ -273,12 +316,38 @@ export const PBKDF2: IPBkdf2Consts = {
   ITERATIONS_PER_SECOND: 1304000 as const,
 } as const;
 
+export const PBKDF2_PROFILES: Pbkdf2Profiles = {
+  BACKUP_CODES: {
+    hashBytes: 32 as const,
+    saltBytes: 16 as const,
+    iterations: 100000 as const,
+    algorithm: 'SHA-256' as const,
+  } as const,
+  BROWSER_PASSWORD: {
+    hashBytes: 32 as const,
+    saltBytes: 64 as const,
+    iterations: 2000000 as const,
+    algorithm: 'SHA-512' as const,
+  } as const,
+};
+
+export const BACKUP_CODES: IBackupCodeConstants = {
+  /**
+   * How many backup codes to generate for users
+   */
+  Count: 10 as const,
+  NormalizedHexRegex: /^[a-z0-9]{32}$/, // exactly 32 lowercase alphanumeric chars
+  DisplayRegex: /^([a-z0-9]{4}-){7}[a-z0-9]{4}$/, // xxxx-xxxx-xxxx-xxxx-xxxx-xxxx-xxxx-xxxx
+} as const;
+
 export const SEALING: ISealingConsts = {
   MIN_SHARES: 2 as const,
   MAX_SHARES: 1048575 as const,
 } as const;
 
 export const CONSTANTS: IConstants = {
+  PBKDF2_PROFILES,
+  BACKUP_CODES,
   CBL,
   OFFS_CACHE_PERCENTAGE,
   ECIES,

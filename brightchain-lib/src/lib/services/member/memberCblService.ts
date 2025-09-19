@@ -12,7 +12,7 @@ import { MemberErrorType } from '../../enumerations/memberErrorType';
 import { StringLanguages } from '../../enumerations/stringLanguages';
 import { MemberError } from '../../errors/memberError';
 import { DiskBlockAsyncStore } from '../../stores/diskBlockAsyncStore';
-import { ChecksumBuffer } from '../../types';
+import { ChecksumUint8Array } from '../../types';
 import { ServiceProvider } from '../service.provider';
 
 /**
@@ -55,7 +55,7 @@ export class MemberCblService {
           BlockSize.Small,
           chunk,
           new Date(),
-          Buffer.alloc(0) as ChecksumBuffer,
+          Buffer.alloc(0) as ChecksumUint8Array,
           BlockType.RawData,
           BlockDataType.PublicMemberData,
           true, // canRead
@@ -106,7 +106,7 @@ export class MemberCblService {
       }
 
       // Get all block addresses
-      const addresses: ChecksumBuffer[] = [];
+      const addresses: ChecksumUint8Array[] = [];
       for (const tuple of tuples) {
         addresses.push(...tuple.blockIds);
       }

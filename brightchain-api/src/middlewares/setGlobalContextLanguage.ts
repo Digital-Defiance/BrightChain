@@ -1,11 +1,8 @@
-// src/middlewares/injectMongooseContext.ts
-
 import {
   DefaultLanguage,
   getLanguageCode,
-  LanguageContext,
   StringLanguages,
-} from '@BrightChain/brightchain-lib';
+} from '@brightchain/brightchain-lib';
 import { NextFunction, Request, Response } from 'express';
 
 export function setGlobalContextLanguageFromRequest(

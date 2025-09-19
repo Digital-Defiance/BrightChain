@@ -1,3 +1,3 @@
 export interface ISimplePublicKeyOnlyBuffer {
-  publicKey: Buffer;
+  publicKey: Uint8Array;
 }

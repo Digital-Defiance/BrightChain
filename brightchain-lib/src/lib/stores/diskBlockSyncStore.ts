@@ -7,23 +7,23 @@ import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
 import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
 import { ISimpleStore } from '../interfaces/simpleStore';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { DiskBlockStore } from './diskBlockStore';
 
 export class DiskBlockSyncStore
   extends DiskBlockStore
-  implements ISimpleStore<ChecksumBuffer, BaseBlock>
+  implements ISimpleStore<ChecksumUint8Array, BaseBlock>
 {
   constructor(config: { storePath: string; blockSize: BlockSize }) {
     super(config);
   }
 
-  has(key: ChecksumBuffer): boolean {
+  has(key: ChecksumUint8Array): boolean {
     const blockPath = this.blockPath(key);
     return existsSync(blockPath);
   }
 
-  get(key: ChecksumBuffer): BaseBlock {
+  get(key: ChecksumUint8Array): BaseBlock {
     const blockPath = this.blockPath(key);
     const blockData = readFileSync(blockPath);
     if (blockData.length !== this._blockSize) {
@@ -43,7 +43,7 @@ export class DiskBlockSyncStore
     return block;
   }
 
-  set(key: ChecksumBuffer, value: BaseBlock): void {
+  set(key: ChecksumUint8Array, value: BaseBlock): void {
     if (value.blockDataType == BlockDataType.EphemeralStructuredData) {
       throw new StoreError(StoreErrorType.CannotStoreEphemeralData);
     }

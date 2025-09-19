@@ -1,5 +1,5 @@
 import { GuidV4 } from '../../../guid';
-import { SignatureBuffer } from '../../../types';
+import { SignatureUint8Array } from '../../../types';
 
 export interface IConstituentBlockListBlockHeader {
   /**
@@ -25,5 +25,5 @@ export interface IConstituentBlockListBlockHeader {
   /**
    * Signature of the creator
    */
-  readonly creatorSignature: SignatureBuffer;
+  readonly creatorSignature: SignatureUint8Array;
 }

@@ -5,7 +5,7 @@ import { VOTING } from '../constants';
 import { ServiceProvider } from '../services/service.provider';
 import {
   SimpleKeyPairBuffer as ECKeyPairBuffer,
-  SignatureBuffer,
+  SignatureUint8Array,
 } from '../types';
 
 export class VotingPoll {
@@ -44,19 +44,19 @@ export class VotingPoll {
       member.publicKey,
       receipt,
     );
-    this.receipts.set(member.id.asRawGuidBuffer, encryptedReceipt);
+    this.receipts.set(member.id.asRawGuidArray, encryptedReceipt);
     return encryptedReceipt;
   }
 
   public memberVoted(member: BrightChainMember): boolean {
-    return this.receipts.has(member.id.asRawGuidBuffer);
+    return this.receipts.has(member.id.asRawGuidArray);
   }
 
   public verifyReceipt(
     member: BrightChainMember,
     encryptedReceipt: Buffer,
   ): boolean {
-    const memberId = member.id.asRawGuidBuffer;
+    const memberId = member.id.asRawGuidArray;
     const foundReceipt = this.receipts.get(memberId);
     if (!foundReceipt) {
       return false;
@@ -70,7 +70,7 @@ export class VotingPoll {
         encryptedReceipt,
       );
     const hash = decryptedReceipt.subarray(0, 32);
-    const signature = decryptedReceipt.subarray(32) as SignatureBuffer;
+    const signature = decryptedReceipt.subarray(32) as SignatureUint8Array;
     return ServiceProvider.getInstance().eciesService.verifyMessage(
       this.ecKeyPair.publicKey,
       hash,

@@ -1,6 +1,6 @@
 // CurseFund-react/src/app/components/user-language-selector.tsx
 
-import { StringLanguages } from '@BrightChain/brightchain-lib';
+import { StringLanguages } from '@brightchain/brightchain-lib';
 import { Button, Menu, MenuItem } from '@mui/material';
 import { FC, MouseEvent, useState } from 'react';
 import { useAuth } from '../../auth-provider';

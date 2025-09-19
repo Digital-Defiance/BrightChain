@@ -1,17 +1,12 @@
 FROM mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm
 
-# Install MongoDB command line tools - though mongo-database-tools not available on arm64
 RUN . /etc/os-release \
   && apt-get update && export DEBIAN_FRONTEND=noninteractive \
   && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-ARG MONGO_TOOLS_VERSION=6.0
 RUN . /etc/os-release \
-    && curl -sSL "https://www.mongodb.org/static/pgp/server-${MONGO_TOOLS_VERSION}.asc" | gpg --dearmor > /usr/share/keyrings/mongodb-archive-keyring.gpg \
-    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/mongodb-archive-keyring.gpg] http://repo.mongodb.org/apt/debian ${VERSION_CODENAME}/mongodb-org/${MONGO_TOOLS_VERSION} main" | tee /etc/apt/sources.list.d/mongodb-org-${MONGO_TOOLS_VERSION}.list \
     && apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y mongodb-mongosh libnss3-tools golang \
-    && if [ "$(dpkg --print-architecture)" = "amd64" ]; then apt-get install -y mongodb-database-tools; fi \
+    && apt-get install -y libnss3-tools golang \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # [Optional] Uncomment this section to install additional OS packages.

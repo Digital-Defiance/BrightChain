@@ -4,7 +4,7 @@ import { MemberStatusType } from '../../enumerations/memberStatusType';
 import { MemberType } from '../../enumerations/memberType';
 import { GuidV4 } from '../../guid';
 import { SecureString } from '../../secureString';
-import { ChecksumBuffer } from '../../types';
+import { ChecksumUint8Array } from '../../types';
 
 /**
  * Public member data stored in CBL
@@ -72,7 +72,7 @@ export interface IMemberReference {
   id: GuidV4;
   type: MemberType;
   dateVerified: Date;
-  publicCBL?: ChecksumBuffer;
+  publicCBL?: ChecksumUint8Array;
 }
 
 /**
@@ -80,8 +80,8 @@ export interface IMemberReference {
  */
 export interface IMemberIndexEntry {
   id: GuidV4;
-  publicCBL: ChecksumBuffer;
-  privateCBL: ChecksumBuffer;
+  publicCBL: ChecksumUint8Array;
+  privateCBL: ChecksumUint8Array;
   type: MemberType;
   status: MemberStatusType;
   lastUpdate: Date;

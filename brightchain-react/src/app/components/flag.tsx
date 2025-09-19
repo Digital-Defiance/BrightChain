@@ -1,4 +1,4 @@
-import { LanguageFlags, StringLanguages } from '@BrightChain/brightchain-lib';
+import { LanguageFlags, StringLanguages } from '@brightchain/brightchain-lib';
 import { Box, SxProps, Theme } from '@mui/material';
 import { FC } from 'react';
 

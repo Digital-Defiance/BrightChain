@@ -1,4 +1,4 @@
-import { IRequestUser, StringLanguages } from '@BrightChain/brightchain-lib';
+import { IRequestUser, StringLanguages } from '@brightchain/brightchain-lib';
 
 // Temporary interface
 interface IUserDocument {
@@ -23,7 +23,8 @@ export class RequestUserService {
       timezone: userDoc.timezone || 'UTC',
       lastLogin: userDoc.lastLogin,
       emailVerified: userDoc.emailVerified || false,
-      siteLanguage: (userDoc.siteLanguage as StringLanguages) || StringLanguages.EnglishUS,
+      siteLanguage:
+        (userDoc.siteLanguage as StringLanguages) || StringLanguages.EnglishUS,
       roles: [], // Placeholder
     };
   }

@@ -34,9 +34,9 @@ import {
   AuthenticatedCipher,
   AuthenticatedDecipher,
   HexString,
-  RawGuidBuffer,
-  SignatureBuffer,
+  RawGuidUint8Array,
   SignatureString,
+  SignatureUint8Array,
 } from '../types';
 import { ServiceLocator } from './serviceLocator';
 
@@ -320,14 +320,14 @@ export class ECIESService {
    * @param data The data to sign.
    * @returns The signature.
    */
-  public signMessage(privateKey: Buffer, data: Buffer): SignatureBuffer {
+  public signMessage(privateKey: Buffer, data: Buffer): SignatureUint8Array {
     const messageHash = hashPersonalMessage(data);
     const signature = ecsign(messageHash, privateKey);
     return Buffer.concat([
       toBuffer(signature.r),
       toBuffer(signature.s),
       toBuffer(signature.v - 27),
-    ]) as unknown as SignatureBuffer;
+    ]) as unknown as SignatureUint8Array;
   }
 
   /**
@@ -340,7 +340,7 @@ export class ECIESService {
   public verifyMessage(
     publicKey: Buffer,
     data: Buffer,
-    signature: SignatureBuffer,
+    signature: SignatureUint8Array,
   ): boolean {
     if (signature.length !== ECIES.SIGNATURE_LENGTH) {
       throw new EciesError(EciesErrorType.InvalidSignature);
@@ -564,7 +564,7 @@ export class ECIESService {
     );
     data.recipientIds.forEach((recipientId, index) => {
       recipientsBuffer.set(
-        recipientId.asRawGuidBuffer,
+        recipientId.asRawGuidArray,
         index * CONSTANTS.GUID_SIZE,
       );
     });
@@ -628,7 +628,10 @@ export class ECIESService {
     for (let i = 0; i < recipientCount; i++) {
       recipientIds.push(
         new GuidV4(
-          data.subarray(offset, offset + CONSTANTS.GUID_SIZE) as RawGuidBuffer,
+          data.subarray(
+            offset,
+            offset + CONSTANTS.GUID_SIZE,
+          ) as RawGuidUint8Array,
         ),
       );
       offset += CONSTANTS.GUID_SIZE;
@@ -670,8 +673,8 @@ export class ECIESService {
    */
   public signatureStringToSignatureBuffer(
     signatureString: HexString,
-  ): SignatureBuffer {
-    return Buffer.from(signatureString, 'hex') as SignatureBuffer;
+  ): SignatureUint8Array {
+    return Buffer.from(signatureString, 'hex') as SignatureUint8Array;
   }
 
   /**
@@ -680,7 +683,7 @@ export class ECIESService {
    * @returns The signature string.
    */
   public signatureBufferToSignatureString(
-    signatureBuffer: SignatureBuffer,
+    signatureBuffer: SignatureUint8Array,
   ): SignatureString {
     return signatureBuffer.toString('hex') as SignatureString;
   }

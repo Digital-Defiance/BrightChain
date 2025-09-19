@@ -1,4 +1,4 @@
-import { BrightChainMember } from '@BrightChain/brightchain-lib';
+import { BrightChainMember } from '@brightchain/brightchain-lib';
 
 export interface IBlockService {
   storeBlock(
@@ -7,6 +7,6 @@ export interface IBlockService {
     canRead?: boolean,
     canPersist?: boolean,
   ): Promise<string>;
-  
+
   getBlock(blockId: string): Promise<{ data: Buffer }>;
 }

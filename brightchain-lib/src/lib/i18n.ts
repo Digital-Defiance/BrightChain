@@ -2,7 +2,7 @@
 import { CONSTANTS } from './constants';
 import { StringLanguages } from './enumerations/stringLanguages';
 import { StringNames } from './enumerations/stringNames';
-import { GlobalActiveContext } from './global-active-context';
+import { GlobalActiveContext } from './globalActiveContext';
 import { LanguageCodes } from './languageCodes';
 import {
   CurrencyPosition,

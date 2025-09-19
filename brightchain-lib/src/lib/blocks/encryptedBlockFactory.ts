@@ -12,7 +12,7 @@ import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumService } from '../services/checksum.service';
 import { ECIESService } from '../services/ecies.service';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { EncryptedBlock } from './encrypted';
 
 export class EncryptedBlockFactory {
@@ -24,7 +24,7 @@ export class EncryptedBlockFactory {
       type: BlockType,
       dataType: BlockDataType,
       data: Buffer,
-      checksum: ChecksumBuffer,
+      checksum: ChecksumUint8Array,
       metadata: EncryptedBlockMetadata,
       recipientWithKey: BrightChainMember,
       canRead: boolean,
@@ -38,7 +38,7 @@ export class EncryptedBlockFactory {
       type: BlockType,
       dataType: BlockDataType,
       data: Buffer,
-      checksum: ChecksumBuffer,
+      checksum: ChecksumUint8Array,
       metadata: EncryptedBlockMetadata,
       recipientWithKey: BrightChainMember,
       canRead: boolean,
@@ -53,7 +53,7 @@ export class EncryptedBlockFactory {
     dataType: BlockDataType,
     blockSize: BlockSize,
     data: Buffer,
-    checksum: ChecksumBuffer,
+    checksum: ChecksumUint8Array,
     creator: BrightChainMember,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,
