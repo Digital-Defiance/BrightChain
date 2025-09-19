@@ -1,6 +1,6 @@
 // src/app/components/TranslatedTitle.tsx
 
-import { StringNames } from '@BrightChain/brightchain-lib';
+import { StringNames } from '@brightchain/brightchain-lib';
 import { FC, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppTranslation } from '../../i18n-provider';

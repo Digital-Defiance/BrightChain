@@ -231,6 +231,7 @@ export enum StringNames {
   // Secure Storage Errors
   Error_SecureStorageDecryptedValueLengthMismatch = 'Error_SecureStorageDecryptedValueLengthMismatch',
   Error_SecureStorageDecryptedValueChecksumMismatch = 'Error_SecureStorageDecryptedValueChecksumMismatch',
+  Error_SecureStorageValueIsNull = 'Error_SecureStorageValueIsNull',
 
   // Sealing Errors
   Error_SealingErrorMissingPrivateKeys = 'Error_SealingErrorMissingPrivateKeys',
@@ -373,6 +374,8 @@ export enum StringNames {
   Error_InvalidReferences = 'Error_InvalidReferences',
   Error_InvalidSessionID = 'Error_InvalidSessionID',
   Error_InvalidSignature = 'Error_InvalidSignature',
+  Error_LengthExceedsMaximum = 'Error_LengthExceedsMaximum',
+  Error_LengthIsInvalidType = 'Error_LengthIsInvalidType',
   Error_MetadataMismatch = 'Error_MetadataMismatch',
   Error_TokenExpired = 'Error_TokenExpired',
   Error_TokenInvalid = 'Error_TokenInvalid',
@@ -396,6 +399,9 @@ export enum StringNames {
   Common_ChangePassword = 'Common_ChangePassword',
   Common_Dashboard = 'Common_Dashboard',
   Common_Logo = 'Common_Logo',
+  Common_NoActiveRequest = 'Common_NoActiveRequest',
+  Common_NoActiveResponse = 'Common_NoActiveResponse',
+  Common_NoUserOnRequest = 'Common_NoUserOnRequest',
   Common_Site = 'Common_Site',
   Common_Unauthorized = 'Common_Unauthorized',
   ForgotPassword_Title = 'ForgotPassword_Title',
@@ -406,6 +412,8 @@ export enum StringNames {
   Register_Error = 'Register_Error',
   Register_Success = 'Register_Success',
   Validation_InvalidLanguage = 'Validation_InvalidLanguage',
+  Validation_InvalidPassword = 'Validation_InvalidPassword',
+  Validation_PasswordRegexErrorTemplate = 'Validation_PasswordRegexErrorTemplate',
 
   // Document Errors
   Error_DocumentErrorInvalidValueTemplate = 'Error_DocumentErrorInvalidValueTemplate',

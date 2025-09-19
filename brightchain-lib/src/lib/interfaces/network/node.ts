@@ -1,7 +1,7 @@
 import { BlockMetadata } from '../../blockMetadata';
 import { DataTemperature } from '../../enumerations/dataTemperature';
 import { GuidV4 } from '../../guid';
-import { ChecksumBuffer } from '../../types';
+import { ChecksumUint8Array } from '../../types';
 
 /**
  * Node capabilities in the BrightChain network
@@ -97,10 +97,10 @@ export interface INode {
   updateStatus(status: NodeStatus): Promise<void>;
 
   // Block operations
-  hasBlock(id: ChecksumBuffer): Promise<boolean>;
-  getBlockMetadata(id: ChecksumBuffer): Promise<BlockMetadata>;
+  hasBlock(id: ChecksumUint8Array): Promise<boolean>;
+  getBlockMetadata(id: ChecksumUint8Array): Promise<BlockMetadata>;
   updateBlockTemperature(
-    id: ChecksumBuffer,
+    id: ChecksumUint8Array,
     temperature: DataTemperature,
   ): Promise<void>;
 

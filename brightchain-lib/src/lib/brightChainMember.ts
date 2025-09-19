@@ -18,7 +18,7 @@ import { SecureString } from './secureString';
 import { ECIESService } from './services/ecies.service';
 import { ServiceProvider } from './services/service.provider';
 import { VotingService } from './services/voting.service';
-import { SignatureBuffer } from './types';
+import { SignatureUint8Array } from './types';
 
 /**
  * A member of Brightchain.
@@ -207,14 +207,14 @@ export class BrightChainMember implements IBrightChainMemberOperational {
     this._votingPrivateKey = votingPrivateKey;
   }
 
-  public sign(data: Buffer): SignatureBuffer {
+  public sign(data: Buffer): SignatureUint8Array {
     if (!this._privateKey) {
       throw new MemberError(MemberErrorType.MissingPrivateKey);
     }
     return this._eciesService.signMessage(this._privateKey, data);
   }
 
-  public verify(signature: SignatureBuffer, data: Buffer): boolean {
+  public verify(signature: SignatureUint8Array, data: Buffer): boolean {
     return this._eciesService.verifyMessage(this._publicKey, data, signature);
   }
 

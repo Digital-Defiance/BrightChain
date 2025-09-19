@@ -1,4 +1,4 @@
-import { StringNames } from '@BrightChain/brightchain-lib';
+import { StringNames } from '@brightchain/brightchain-lib';
 import MenuIcon from '@mui/icons-material/Menu';
 import {
   AppBar,

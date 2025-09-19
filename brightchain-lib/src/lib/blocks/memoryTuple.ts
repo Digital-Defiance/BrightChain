@@ -5,7 +5,7 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
 import { MemoryTupleError } from '../errors/memoryTupleError';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { BaseBlock } from './base';
 import { BlockHandle } from './handle';
 import { RawDataBlock } from './rawData';
@@ -46,7 +46,7 @@ export class InMemoryBlockTuple {
   /**
    * Get the block IDs in this tuple
    */
-  public get blockIds(): ChecksumBuffer[] {
+  public get blockIds(): ChecksumUint8Array[] {
     return this._blocks.map((block) => block.idChecksum);
   }
 
@@ -152,9 +152,9 @@ export class InMemoryBlockTuple {
    * This creates disk-based blocks using BlockHandle
    */
   public static async fromIds(
-    blockIDs: ChecksumBuffer[],
+    blockIDs: ChecksumUint8Array[],
     blockSize: BlockSize,
-    getBlockPath: (id: ChecksumBuffer) => string,
+    getBlockPath: (id: ChecksumUint8Array) => string,
   ): Promise<InMemoryBlockTuple> {
     if (blockIDs.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
@@ -164,7 +164,7 @@ export class InMemoryBlockTuple {
     }
 
     const handles = await Promise.all(
-      blockIDs.map((id: ChecksumBuffer) => {
+      blockIDs.map((id: ChecksumUint8Array) => {
         // @ts-ignore - BlockHandle constructor workaround
         return new (BlockHandle as any)(
           getBlockPath(id),

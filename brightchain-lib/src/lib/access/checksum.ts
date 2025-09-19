@@ -1,5 +1,5 @@
 import { ServiceProvider } from '../services/service.provider';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 
 /**
  * Checksum service access for blocks to avoid circular dependencies
@@ -9,15 +9,15 @@ export class BlockChecksum {
     return ServiceProvider.getInstance().checksumService.checksumBufferLength;
   }
 
-  public static calculateChecksum(data: Buffer): ChecksumBuffer {
+  public static calculateChecksum(data: Buffer): ChecksumUint8Array {
     return ServiceProvider.getInstance().checksumService.calculateChecksum(
       data,
     );
   }
 
   public static compareChecksums(
-    checksum1: ChecksumBuffer,
-    checksum2: ChecksumBuffer,
+    checksum1: ChecksumUint8Array,
+    checksum2: ChecksumUint8Array,
   ): boolean {
     return ServiceProvider.getInstance().checksumService.compareChecksums(
       checksum1,
@@ -25,7 +25,7 @@ export class BlockChecksum {
     );
   }
 
-  public static validateChecksum(checksum: ChecksumBuffer): boolean {
+  public static validateChecksum(checksum: ChecksumUint8Array): boolean {
     return ServiceProvider.getInstance().checksumService.validateChecksum(
       checksum,
     );
@@ -33,7 +33,7 @@ export class BlockChecksum {
 
   public static validateDataChecksum(
     data: Buffer,
-    checksum: ChecksumBuffer,
+    checksum: ChecksumUint8Array,
   ): boolean {
     const calculatedChecksum = this.calculateChecksum(data);
     return this.compareChecksums(calculatedChecksum, checksum);

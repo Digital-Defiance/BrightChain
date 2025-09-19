@@ -11,9 +11,15 @@ import {
   Base64Guid,
   BigIntGuid,
   FullHexGuid,
-  RawGuidBuffer,
+  RawGuidUint8Array,
   ShortHexGuid,
 } from './types';
+import {
+  base64ToUint8Array,
+  hexToUint8Array,
+  uint8ArrayToBase64,
+  uint8ArrayToHex,
+} from './utils';
 
 /**
  * GuidV4 represents a GUID (Globally Unique Identifier) that is compliant with the RFC 4122 standard.
@@ -29,7 +35,7 @@ export class GuidV4 implements IGuidV4 {
   /**
    * GUID is stored internally as a raw 16-byte Buffer.
    */
-  private readonly _value: RawGuidBuffer;
+  private readonly _value: RawGuidUint8Array;
   constructor(
     value:
       | string
@@ -37,7 +43,7 @@ export class GuidV4 implements IGuidV4 {
       | ShortHexGuid
       | Base64Guid
       | BigIntGuid
-      | RawGuidBuffer,
+      | RawGuidUint8Array,
   ) {
     try {
       if (value === null || value === undefined) {
@@ -82,6 +88,42 @@ export class GuidV4 implements IGuidV4 {
     }
   }
 
+  public static isValid(
+    value:
+      | string
+      | FullHexGuid
+      | ShortHexGuid
+      | Base64Guid
+      | BigIntGuid
+      | RawGuidUint8Array,
+  ): boolean {
+    try {
+      if (value === null || value === undefined) {
+        return false;
+      }
+      const strValue = String(value);
+      if (!strValue) {
+        return false;
+      }
+      const expectedBrand = GuidV4.whichBrand(value);
+      const verifiedBrand = GuidV4.verifyGuid(expectedBrand, value);
+      if (!verifiedBrand) {
+        const valueBuffer = Buffer.isBuffer(value)
+          ? value
+          : Buffer.from(strValue);
+        return false;
+      }
+      const buffer = GuidV4.toRawGuidBuffer(value);
+      const fullHex = GuidV4.toFullHexGuid(buffer);
+      if (!uuid.validate(fullHex)) {
+        return false;
+      }
+    } catch (error) {
+      return false;
+    }
+    return true;
+  }
+
   public static validateUuid(value: string): boolean {
     return uuid.validate(value);
   }
@@ -99,7 +141,7 @@ export class GuidV4 implements IGuidV4 {
     [GuidBrandType.FullHexGuid]: 36,
     [GuidBrandType.ShortHexGuid]: 32,
     [GuidBrandType.Base64Guid]: 24,
-    [GuidBrandType.RawGuidBuffer]: 16,
+    [GuidBrandType.RawGuidUint8Array]: 16,
     [GuidBrandType.BigIntGuid]: -1, // Variable length
   };
 
@@ -108,7 +150,7 @@ export class GuidV4 implements IGuidV4 {
     36: GuidBrandType.FullHexGuid,
     32: GuidBrandType.ShortHexGuid,
     24: GuidBrandType.Base64Guid,
-    16: GuidBrandType.RawGuidBuffer,
+    16: GuidBrandType.RawGuidUint8Array,
     // BigIntGuid is variable length, so it is not included in the reverse map
   };
 
@@ -121,13 +163,13 @@ export class GuidV4 implements IGuidV4 {
     [GuidBrandType.ShortHexGuid]: this.isShortHexGuid.bind(this),
     [GuidBrandType.Base64Guid]: this.isBase64Guid.bind(this),
     [GuidBrandType.BigIntGuid]: this.isBigIntGuid.bind(this),
-    [GuidBrandType.RawGuidBuffer]: this.isRawGuidBuffer.bind(this),
+    [GuidBrandType.RawGuidUint8Array]: this.isRawGuidBuffer.bind(this),
   };
 
   /**
    * Returns the GUID as a raw Buffer.
    */
-  public get asRawGuidBuffer(): RawGuidBuffer {
+  public get asRawGuidArray(): RawGuidUint8Array {
     return this._value;
   }
   public static new(): GuidV4 {
@@ -149,7 +191,7 @@ export class GuidV4 implements IGuidV4 {
    * Returns the GUID as a full hex string.
    */
   public get asFullHexGuid(): FullHexGuid {
-    return GuidV4.toFullHexGuid(this._value.toString('hex')) as FullHexGuid;
+    return GuidV4.toFullHexGuid(uint8ArrayToHex(this._value)) as FullHexGuid;
   }
   /**
    * Returns the GUID as a raw Uint8Array.
@@ -180,13 +222,13 @@ export class GuidV4 implements IGuidV4 {
    * Returns the GUID as a bigint.
    */
   public get asBigIntGuid(): BigIntGuid {
-    return BigInt('0x' + this._value.toString('hex')) as BigIntGuid;
+    return BigInt('0x' + uint8ArrayToHex(this._value)) as BigIntGuid;
   }
   /**
    * Returns the GUID as a base64 string.
    */
   public get asBase64Guid(): Base64Guid {
-    return this._value.toString('base64') as Base64Guid;
+    return uint8ArrayToBase64(this._value) as Base64Guid;
   }
 
   /**
@@ -203,7 +245,7 @@ export class GuidV4 implements IGuidV4 {
       | ShortHexGuid
       | Base64Guid
       | BigIntGuid
-      | RawGuidBuffer,
+      | RawGuidUint8Array,
   ): boolean {
     if (guid === null || guid === undefined) {
       return false;
@@ -333,8 +375,8 @@ export class GuidV4 implements IGuidV4 {
 
       if (result) {
         try {
-          const fromBase64: Buffer = GuidV4.toRawGuidBuffer(value);
-          const fullHexGuid = GuidV4.toFullHexGuid(fromBase64.toString('hex'));
+          const fromBase64 = GuidV4.toRawGuidBuffer(value);
+          const fullHexGuid = GuidV4.toFullHexGuid(uint8ArrayToHex(fromBase64));
           return uuid.validate(fullHexGuid);
         } catch {
           return false;
@@ -352,14 +394,14 @@ export class GuidV4 implements IGuidV4 {
    * @returns True if the GUID is a valid raw GUID buffer, false otherwise.
    */
   public static isRawGuidBuffer(
-    value: Buffer | RawGuidBuffer | Buffer,
+    value: Buffer | RawGuidUint8Array | Buffer,
   ): boolean {
     try {
       if (value === null || value === undefined) {
         throw new GuidError(GuidErrorType.Invalid);
       }
       const expectedLength = GuidV4.guidBrandToLength(
-        GuidBrandType.RawGuidBuffer,
+        GuidBrandType.RawGuidUint8Array,
       );
       if (value.length !== expectedLength) {
         return false;
@@ -449,7 +491,7 @@ export class GuidV4 implements IGuidV4 {
    */
   public static toFullHexGuid(
     guid:
-      | RawGuidBuffer
+      | RawGuidUint8Array
       | BigIntGuid
       | Base64Guid
       | ShortHexGuid
@@ -462,7 +504,7 @@ export class GuidV4 implements IGuidV4 {
       return GuidV4.toFullHexFromBigInt(guid);
     } else if (
       Buffer.isBuffer(guid) &&
-      guid.length === GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer)
+      guid.length === GuidV4.guidBrandToLength(GuidBrandType.RawGuidUint8Array)
     ) {
       const shortHex = guid.toString('hex') as ShortHexGuid;
       return GuidV4.shortGuidToFullGuid(shortHex);
@@ -494,7 +536,7 @@ export class GuidV4 implements IGuidV4 {
 
   public static toShortHexGuid(
     guid:
-      | RawGuidBuffer
+      | RawGuidUint8Array
       | BigIntGuid
       | Base64Guid
       | ShortHexGuid
@@ -508,7 +550,7 @@ export class GuidV4 implements IGuidV4 {
       return fullHex.replace(/-/g, '') as ShortHexGuid;
     } else if (
       Buffer.isBuffer(guid) &&
-      guid.length === GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer)
+      guid.length === GuidV4.guidBrandToLength(GuidBrandType.RawGuidUint8Array)
     ) {
       return guid.toString('hex') as ShortHexGuid;
     } else if (Buffer.isBuffer(guid)) {
@@ -568,40 +610,39 @@ export class GuidV4 implements IGuidV4 {
    * @param value The GUID value to convert.
    * @returns The GUID value as a raw GUID buffer.
    */
-  public static toRawGuidBuffer(value: AnyBrand): RawGuidBuffer {
+  public static toRawGuidBuffer(value: AnyBrand): RawGuidUint8Array {
     const expectedBrand = GuidV4.whichBrand(value);
-    let rawGuidBufferResult: RawGuidBuffer = Buffer.alloc(0) as RawGuidBuffer;
+    let rawGuidBufferResult: RawGuidUint8Array;
     switch (expectedBrand) {
       case GuidBrandType.FullHexGuid:
-        rawGuidBufferResult = Buffer.from(
+        rawGuidBufferResult = hexToUint8Array(
           GuidV4.toShortHexGuid(value as FullHexGuid),
-          'hex',
-        ) as RawGuidBuffer;
+        ) as RawGuidUint8Array;
         break;
       case GuidBrandType.ShortHexGuid:
-        rawGuidBufferResult = Buffer.from(
+        rawGuidBufferResult = hexToUint8Array(
           GuidV4.toShortHexGuid(value as ShortHexGuid),
-          'hex',
-        ) as RawGuidBuffer;
+        ) as RawGuidUint8Array;
         break;
       case GuidBrandType.Base64Guid:
-        rawGuidBufferResult = Buffer.from(value, 'base64') as RawGuidBuffer;
+        rawGuidBufferResult = base64ToUint8Array(
+          value as Base64Guid,
+        ) as RawGuidUint8Array;
         break;
-      case GuidBrandType.RawGuidBuffer:
-        rawGuidBufferResult = value as RawGuidBuffer;
+      case GuidBrandType.RawGuidUint8Array:
+        rawGuidBufferResult = value as RawGuidUint8Array;
         break;
       case GuidBrandType.BigIntGuid:
-        rawGuidBufferResult = Buffer.from(
+        rawGuidBufferResult = hexToUint8Array(
           GuidV4.toShortHexGuid(GuidV4.toFullHexFromBigInt(value as bigint)),
-          'hex',
-        ) as RawGuidBuffer;
+        ) as RawGuidUint8Array;
         break;
       default:
         throw new GuidError(GuidErrorType.UnknownBrand, value);
     }
     if (
       rawGuidBufferResult.length !==
-      GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer)
+      GuidV4.guidBrandToLength(GuidBrandType.RawGuidUint8Array)
     ) {
       throw new GuidError(
         GuidErrorType.UnknownLength,
@@ -618,19 +659,21 @@ export class GuidV4 implements IGuidV4 {
    * @returns True if the two GuidV4 instances are equal, false otherwise
    */
   public equals(other: IGuidV4): boolean {
-    return Buffer.compare(this.asRawGuidBuffer, other.asRawGuidBuffer) === 0;
+    return Buffer.compare(this.asRawGuidArray, other.asRawGuidArray) === 0;
   }
 
   /**
    * Compute FEC (Forward Error Correction) for the GUID for Brokered Anonymity
    */
-  public async computeFEC(): Promise<Buffer> {
-    const guidLength = GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer);
+  public async computeFEC(): Promise<Uint8Array> {
+    const guidLength = GuidV4.guidBrandToLength(
+      GuidBrandType.RawGuidUint8Array,
+    );
     const dataShards = 2;
     const parityShards = 1;
     const shardSize = guidLength / dataShards;
-    return ServiceLocator.getServiceProvider().fecService.encode(
-      this.asRawGuidBuffer,
+    return await ServiceLocator.getServiceProvider().fecService.encode(
+      this.asRawGuidArray,
       shardSize,
       dataShards,
       parityShards,
@@ -645,9 +688,11 @@ export class GuidV4 implements IGuidV4 {
    */
   public static async reconstituteFEC(
     fecService: FecService,
-    fecData: Buffer,
-  ): Promise<Buffer> {
-    const guidLength = GuidV4.guidBrandToLength(GuidBrandType.RawGuidBuffer);
+    fecData: Uint8Array,
+  ): Promise<Uint8Array> {
+    const guidLength = GuidV4.guidBrandToLength(
+      GuidBrandType.RawGuidUint8Array,
+    );
     const dataShards = 2;
     const parityShards = 1;
     const shardSize = guidLength / dataShards;

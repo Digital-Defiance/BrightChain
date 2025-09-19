@@ -29,7 +29,7 @@ import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { ISingleEncryptedMessage } from '../interfaces/singleEncryptedMessage';
 import { ServiceLocator } from '../services/serviceLocator';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { CBLService } from './cblService';
 
 /**
@@ -672,7 +672,9 @@ export class BlockService {
       blocks[0].dateCreated,
     );
 
-    const blockIds: ChecksumBuffer[] = blocks.map((block) => block.idChecksum);
+    const blockIds: ChecksumUint8Array[] = blocks.map(
+      (block) => block.idChecksum,
+    );
 
     // Create address list buffer efficiently
     const addressListBuffer = Buffer.concat(blockIds);
@@ -805,7 +807,7 @@ export class BlockService {
     const fileName = this.getFileName(fileData, filePath);
     const blockSize = this.getBlockSizeForData(fileSize);
     const rollbackOperations: (() => Promise<void>)[] = [];
-    const blockIDs: ChecksumBuffer[] = [];
+    const blockIDs: ChecksumUint8Array[] = [];
     try {
       await this.processFileInChunks(
         fileData,

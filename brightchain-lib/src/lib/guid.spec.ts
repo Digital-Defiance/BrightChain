@@ -6,7 +6,7 @@ import { GuidError } from './errors/guidError';
 import { GuidV4 } from './guid';
 import { FecService } from './services/fec.service';
 import { ServiceLocator } from './services/serviceLocator';
-import { BigIntGuid, RawGuidBuffer } from './types';
+import { BigIntGuid, RawGuidUint8Array } from './types';
 
 const DEFAULT_UUID = '5549c83a-20fa-4a11-ae7d-9dc3f1681e9e';
 type Version4Options = Parameters<typeof v4>[0];
@@ -65,7 +65,7 @@ describe('guid', () => {
       const fullHex = guid.asFullHexGuid;
       const shortHex = GuidV4.toShortHexGuid(fullHex);
       const base64 = new GuidV4(shortHex).asBase64Guid;
-      const buffer = new GuidV4(base64).asRawGuidBuffer;
+      const buffer = new GuidV4(base64).asRawGuidArray;
       const bigInt = new GuidV4(buffer).asBigIntGuid;
       const backToFullHex = new GuidV4(bigInt).asFullHexGuid;
 
@@ -129,7 +129,7 @@ describe('guid', () => {
       });
 
       it('should handle invalid buffer to hex conversion', () => {
-        const invalidBuffer = Buffer.from([1, 2, 3]) as RawGuidBuffer;
+        const invalidBuffer = Buffer.from([1, 2, 3]) as RawGuidUint8Array;
         expect(() => new GuidV4(invalidBuffer)).toThrowType(
           GuidError,
           (error: GuidError) => {
@@ -213,22 +213,22 @@ describe('guid', () => {
 
     describe('Buffer Format', () => {
       it('should validate correct buffer length', () => {
-        const validBuffer = Buffer.alloc(16) as RawGuidBuffer;
+        const validBuffer = Buffer.alloc(16) as RawGuidUint8Array;
         expect(GuidV4.isRawGuidBuffer(validBuffer)).toBeTruthy();
       });
 
       it('should reject too short buffer', () => {
-        const shortBuffer = Buffer.alloc(15) as RawGuidBuffer;
+        const shortBuffer = Buffer.alloc(15) as RawGuidUint8Array;
         expect(GuidV4.isRawGuidBuffer(shortBuffer)).toBeFalsy();
       });
 
       it('should reject too long buffer', () => {
-        const longBuffer = Buffer.alloc(17) as RawGuidBuffer;
+        const longBuffer = Buffer.alloc(17) as RawGuidUint8Array;
         expect(GuidV4.isRawGuidBuffer(longBuffer)).toBeFalsy();
       });
 
       it('should reject non-buffer input', () => {
-        expect(GuidV4.isRawGuidBuffer({} as RawGuidBuffer)).toBeFalsy();
+        expect(GuidV4.isRawGuidBuffer({} as RawGuidUint8Array)).toBeFalsy();
       });
     });
 
@@ -302,7 +302,7 @@ describe('guid', () => {
       const guid1 = GuidV4.new();
       const guid2 = new GuidV4(guid1.asBase64Guid);
       const guid3 = new GuidV4(guid1.asBigIntGuid);
-      const guid4 = new GuidV4(guid1.asRawGuidBuffer);
+      const guid4 = new GuidV4(guid1.asRawGuidArray);
 
       expect(guid1.equals(guid2)).toBeTruthy();
       expect(guid2.equals(guid3)).toBeTruthy();

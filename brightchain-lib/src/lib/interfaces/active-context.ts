@@ -1,4 +1,4 @@
-import { CurrencyCode } from '../currency-code';
+import { CurrencyCode } from '../currencyCode';
 import { StringLanguages } from '../enumerations/stringLanguages';
 import { LanguageContext } from '../sharedTypes';
 import { Timezone } from '../timezone';

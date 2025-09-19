@@ -3,7 +3,7 @@ import {
   Base64Guid,
   BigIntGuid,
   FullHexGuid,
-  RawGuidBuffer,
+  RawGuidUint8Array,
   ShortHexGuid,
 } from '../types';
 
@@ -11,7 +11,7 @@ export interface IGuidV4 {
   /**
    * Returns the GUID as a raw buffer.
    */
-  get asRawGuidBuffer(): RawGuidBuffer;
+  get asRawGuidArray(): RawGuidUint8Array;
   /**
    * Returns the GUID as a full hex string.
    */
@@ -54,5 +54,5 @@ export interface IGuidV4 {
    * Computes forward error correction for the GUID for Brokered Anonymity
    * @param fecService The FEC service to use
    */
-  computeFEC(fecService: FecService): Promise<Buffer>;
+  computeFEC(fecService: FecService): Promise<Uint8Array>;
 }

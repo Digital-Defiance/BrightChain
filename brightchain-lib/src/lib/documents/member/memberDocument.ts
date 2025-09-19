@@ -1,6 +1,6 @@
 import { NotImplementedError } from '../../errors/notImplemented';
 import { IMemberStorageData } from '../../interfaces/member/storage';
-import { ChecksumBuffer } from '../../types';
+import { ChecksumUint8Array } from '../../types';
 import { Document } from '../document';
 
 /**
@@ -9,14 +9,14 @@ import { Document } from '../document';
 export abstract class BaseMemberDocument {
   protected publicDocument: Document<IMemberStorageData>;
   protected privateDocument: Document<IMemberStorageData>;
-  protected publicCBLId?: ChecksumBuffer;
-  protected privateCBLId?: ChecksumBuffer;
+  protected publicCBLId?: ChecksumUint8Array;
+  protected privateCBLId?: ChecksumUint8Array;
 
   constructor(
     publicData: IMemberStorageData,
     privateData: IMemberStorageData,
-    publicCBLId?: ChecksumBuffer,
-    privateCBLId?: ChecksumBuffer,
+    publicCBLId?: ChecksumUint8Array,
+    privateCBLId?: ChecksumUint8Array,
   ) {
     this.publicDocument = new Document<IMemberStorageData>(publicData);
     this.privateDocument = new Document<IMemberStorageData>(privateData);
@@ -55,7 +55,7 @@ export abstract class BaseMemberDocument {
   /**
    * Get public CBL ID
    */
-  public getPublicCBL(): ChecksumBuffer {
+  public getPublicCBL(): ChecksumUint8Array {
     if (!this.publicCBLId) {
       throw new Error('Public CBL ID not set');
     }
@@ -65,7 +65,7 @@ export abstract class BaseMemberDocument {
   /**
    * Get private CBL ID
    */
-  public getPrivateCBL(): ChecksumBuffer {
+  public getPrivateCBL(): ChecksumUint8Array {
     if (!this.privateCBLId) {
       throw new Error('Private CBL ID not set');
     }

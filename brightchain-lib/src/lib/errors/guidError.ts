@@ -2,7 +2,7 @@ import { GuidBrandType } from '../enumerations/guidBrandType';
 import { GuidErrorType } from '../enumerations/guidErrorType';
 import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
-import { RawGuidBuffer } from '../types';
+import { RawGuidUint8Array } from '../types';
 import { TypedError } from './typedError';
 
 export class GuidError extends TypedError<GuidErrorType> {
@@ -23,7 +23,7 @@ export class GuidError extends TypedError<GuidErrorType> {
     type: GuidErrorType,
     brand?: GuidBrandType,
     length?: number,
-    guid?: RawGuidBuffer | Buffer,
+    guid?: RawGuidUint8Array | Buffer,
     language?: StringLanguages,
   ) {
     super(type, undefined, {

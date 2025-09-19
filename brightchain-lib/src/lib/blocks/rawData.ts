@@ -6,7 +6,7 @@ import { BlockType } from '../enumerations/blockType';
 import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ServiceLocator } from '../services/serviceLocator';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { BaseBlock } from './base';
 
 /**
@@ -14,13 +14,13 @@ import { BaseBlock } from './base';
  * It provides basic data storage and validation capabilities.
  */
 export class RawDataBlock extends BaseBlock {
-  private readonly _data: Buffer;
+  private readonly _data: Uint8Array;
 
   constructor(
     blockSize: BlockSize,
-    data: Buffer,
+    data: Uint8Array,
     dateCreated?: Date,
-    checksum?: ChecksumBuffer,
+    checksum?: ChecksumUint8Array,
     blockType: BlockType = BlockType.RawData,
     blockDataType: BlockDataType = BlockDataType.RawData,
     canRead = true,
@@ -63,7 +63,7 @@ export class RawDataBlock extends BaseBlock {
   /**
    * The raw data in the block
    */
-  public override get data(): Buffer {
+  public override get data(): Uint8Array {
     if (!this.canRead) {
       throw new Error('Block cannot be read');
     }
@@ -73,7 +73,7 @@ export class RawDataBlock extends BaseBlock {
   /**
    * The data in the block, excluding any metadata or other overhead
    */
-  public override get layerPayload(): Buffer {
+  public override get layerPayload(): Uint8Array {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
@@ -89,7 +89,7 @@ export class RawDataBlock extends BaseBlock {
     return this._data.length;
   }
 
-  public get layerData(): Buffer {
+  public get layerData(): Uint8Array {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }

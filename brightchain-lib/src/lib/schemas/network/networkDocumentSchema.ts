@@ -7,7 +7,7 @@ import { InvalidIDFormatError } from '../../errors/invalidIDFormat';
 import { GuidV4 } from '../../guid';
 import { translate } from '../../i18n';
 import { SchemaDefinition, SerializedValue } from '../../sharedTypes';
-import { ChecksumBuffer, SignatureBuffer } from '../../types';
+import { ChecksumUint8Array, SignatureUint8Array } from '../../types';
 
 const isString = (value: unknown): value is string => typeof value === 'string';
 const isStringArray = (value: unknown): value is string[] =>
@@ -68,25 +68,25 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
   signature: {
     type: Object,
     required: true,
-    serialize: (value: SignatureBuffer): string => value.toString('base64'),
-    hydrate: (value: unknown): SignatureBuffer => {
+    serialize: (value: SignatureUint8Array): string => value.toString('base64'),
+    hydrate: (value: unknown): SignatureUint8Array => {
       if (!isString(value))
         throw new FailedToHydrateError(
           translate(StringNames.Error_InvalidSignature),
         );
-      return Buffer.from(value, 'base64') as SignatureBuffer;
+      return Buffer.from(value, 'base64') as SignatureUint8Array;
     },
   },
   checksum: {
     type: Object,
     required: true,
-    serialize: (value: ChecksumBuffer): string => value.toString('base64'),
-    hydrate: (value: unknown): ChecksumBuffer => {
+    serialize: (value: ChecksumUint8Array): string => value.toString('base64'),
+    hydrate: (value: unknown): ChecksumUint8Array => {
       if (!isString(value))
         throw new FailedToHydrateError(
           translate(StringNames.Error_InvalidChecksum),
         );
-      return Buffer.from(value, 'base64') as ChecksumBuffer;
+      return Buffer.from(value, 'base64') as ChecksumUint8Array;
     },
   },
   ttl: {

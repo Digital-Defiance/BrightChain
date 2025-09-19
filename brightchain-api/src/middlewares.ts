@@ -1,4 +1,4 @@
-import { constants } from '@BrightChain/brightchain-lib';
+import { constants } from '@brightchain/brightchain-lib';
 import cors from 'cors';
 import { randomBytes } from 'crypto';
 import { Application, json, Response, urlencoded } from 'express';
@@ -35,7 +35,9 @@ export class Middlewares {
   public static init(app: Application): void {
     // CSP nonce
     app.use((req, res, next) => {
-      res.locals.cspNonce = randomBytes(constants.SITE.CSP_NONCE_SIZE).toString('hex');
+      res.locals.cspNonce = randomBytes(constants.SITE.CSP_NONCE_SIZE).toString(
+        'hex',
+      );
       next();
     });
     // Helmet helps you secure your Express apps by setting various HTTP headers

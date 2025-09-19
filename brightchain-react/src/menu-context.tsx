@@ -1,5 +1,5 @@
 // src/app/menuContext.tsx
-import { StringNames } from '@BrightChain/brightchain-lib';
+import { StringNames } from '@brightchain/brightchain-lib';
 import {
   Dashboard as DashboardIcon,
   LockOpen as LockOpenIcon,

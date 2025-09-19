@@ -4,10 +4,10 @@ import { QuorumDataRecordDto } from './quorumDataRecordDto';
 import { ChecksumService } from './services/checksum.service';
 import { ECIESService } from './services/ecies.service';
 import {
-  ChecksumBuffer,
+  ChecksumUint8Array,
   HexString,
   ShortHexGuid,
-  SignatureBuffer,
+  SignatureUint8Array,
 } from './types';
 
 export class QuorumDataRecord {
@@ -21,9 +21,9 @@ export class QuorumDataRecord {
   /**
    * sha-3 hash of the encrypted data
    */
-  public readonly checksum: ChecksumBuffer;
+  public readonly checksum: ChecksumUint8Array;
   public readonly creator: BrightChainMember;
-  public readonly signature: SignatureBuffer;
+  public readonly signature: SignatureUint8Array;
   public readonly memberIDs: ShortHexGuid[];
   public readonly sharesRequired: number;
   public readonly dateCreated: Date;
@@ -35,8 +35,8 @@ export class QuorumDataRecord {
     sharesRequired: number,
     encryptedData: Buffer,
     encryptedSharesByMemberId: Map<ShortHexGuid, Buffer>,
-    checksum?: ChecksumBuffer,
-    signature?: SignatureBuffer,
+    checksum?: ChecksumUint8Array,
+    signature?: SignatureUint8Array,
     id?: ShortHexGuid,
     dateCreated?: Date,
     dateUpdated?: Date,

@@ -1,4 +1,4 @@
-import { ISignedToken } from '@BrightChain/brightchain-lib';
+import { ISignedToken } from '@brightchain/brightchain-lib';
 import { IApplication } from '../interfaces/application';
 import { BaseService } from './base';
 

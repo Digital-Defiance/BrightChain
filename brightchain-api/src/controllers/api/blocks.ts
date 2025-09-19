@@ -6,7 +6,7 @@ import {
   IStoreBlockResponse,
   routeConfig,
   TypedHandlers,
-} from '@BrightChain/brightchain-lib';
+} from '@brightchain/brightchain-lib';
 import { IApplication } from '../../interfaces/application';
 import {
   GetBlockRequest,

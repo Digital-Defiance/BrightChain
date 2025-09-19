@@ -5,7 +5,7 @@ import {
   stringNameToI18nKey,
   TranslatableEnum,
   translateEnum,
-} from '@BrightChain/brightchain-lib';
+} from '@brightchain/brightchain-lib';
 import { createContext, FC, ReactNode, useCallback, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,4 +1,4 @@
-import { DefaultIdType } from '@BrightChain/brightchain-lib';
+import { DefaultIdType } from '@brightchain/brightchain-lib';
 import { IApplication } from '../interfaces/application';
 import { BaseService } from './base';
 

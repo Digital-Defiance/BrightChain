@@ -1,5 +1,5 @@
+import { HandleableError } from '@brightchain/brightchain-lib';
 import { NextFunction, Response } from 'express';
-import { HandleableError } from '@BrightChain/brightchain-lib';
 
 /**
  * Find auth token from request headers

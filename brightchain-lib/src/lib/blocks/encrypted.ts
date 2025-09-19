@@ -25,7 +25,7 @@ import { IMultiEncryptedParsedHeader } from '../interfaces/multiEncryptedParsedH
 import { ISingleEncryptedParsedHeader } from '../interfaces/singleEncryptedParsedHeader';
 import { ServiceProvider } from '../services/service.provider';
 import { ServiceLocator } from '../services/serviceLocator';
-import { ChecksumBuffer, RawGuidBuffer } from '../types';
+import { ChecksumUint8Array, RawGuidUint8Array } from '../types';
 import { EphemeralBlock } from './ephemeral';
 
 /**
@@ -63,7 +63,7 @@ export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
     type: BlockType,
     dataType: BlockDataType,
     data: Buffer,
-    checksum: ChecksumBuffer,
+    checksum: ChecksumUint8Array,
     metadata: EncryptedBlockMetadata,
     recipientWithKey: BrightChainMember,
     canRead = true,
@@ -88,7 +88,7 @@ export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
           this.layerHeaderData.subarray(
             ENCRYPTION.ENCRYPTION_TYPE_SIZE,
             ENCRYPTION.ENCRYPTION_TYPE_SIZE + ENCRYPTION.RECIPIENT_ID_SIZE,
-          ) as RawGuidBuffer,
+          ) as RawGuidUint8Array,
         ),
       ];
     } else {
@@ -116,7 +116,7 @@ export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
     dataType: BlockDataType,
     blockSize: BlockSize,
     data: Buffer,
-    checksum: ChecksumBuffer,
+    checksum: ChecksumUint8Array,
     creator: BrightChainMember,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,
@@ -357,7 +357,7 @@ export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
         );
       } else if (
         details.recipientIds
-          .map((id) => id.asRawGuidBuffer)
+          .map((id) => id.asRawGuidArray)
           .some((id) => id.length !== CONSTANTS.GUID_SIZE)
       ) {
         throw new BlockValidationError(

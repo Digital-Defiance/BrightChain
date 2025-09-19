@@ -1,3 +1,5 @@
+import { Pbkdf2Profiles } from '../pbkdf2Profiles';
+import { IBackupCodeConstants } from './backupCodeConsts';
 import { ICBLConsts } from './cblConsts';
 import { IChecksumConsts } from './checksumConsts';
 import { IECIESConsts } from './eciesConsts';
@@ -12,6 +14,8 @@ import { ITupleConsts } from './tupleConsts';
 import { IVotingConsts } from './votingConsts';
 
 export interface IConstants {
+  PBKDF2_PROFILES: Pbkdf2Profiles;
+  BACKUP_CODES: IBackupCodeConstants;
   CBL: ICBLConsts;
   OFFS_CACHE_PERCENTAGE: number;
   ECIES: IECIESConsts;

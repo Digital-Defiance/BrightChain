@@ -4,7 +4,7 @@ import {
   IGetCblResponse,
   IStoreCblResponse,
   TypedHandlers,
-} from '@BrightChain/brightchain-lib';
+} from '@brightchain/brightchain-lib';
 
 export interface CblHandlers extends TypedHandlers<ApiResponse> {
   storeCbl: ApiRequestHandler<IStoreCblResponse>;

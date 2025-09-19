@@ -8,7 +8,11 @@ import { GuidV4 } from '../guid';
 import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IExtendedConstituentBlockListBlock } from '../interfaces/blocks/extendedCbl';
 import { ServiceLocator } from '../services/serviceLocator';
-import { ChecksumBuffer, ChecksumString, SignatureBuffer } from '../types';
+import {
+  ChecksumString,
+  ChecksumUint8Array,
+  SignatureUint8Array,
+} from '../types';
 
 /**
  * Extended CBL class, which extends the CBL class with additional properties
@@ -127,7 +131,7 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
     return this._delegate.addressData;
   }
 
-  public get addresses(): ChecksumBuffer[] {
+  public get addresses(): ChecksumUint8Array[] {
     return this._delegate.addresses;
   }
 
@@ -147,7 +151,7 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
     return this._delegate.tupleSize;
   }
 
-  public get creatorSignature(): SignatureBuffer {
+  public get creatorSignature(): SignatureUint8Array {
     return this._delegate.creatorSignature;
   }
 
@@ -186,7 +190,7 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
     return this._data;
   }
 
-  public get idChecksum(): ChecksumBuffer {
+  public get idChecksum(): ChecksumUint8Array {
     return this._delegate.idChecksum;
   }
 

@@ -1,7 +1,7 @@
 import { randomBytes } from 'crypto';
 import { ECIES, PBKDF2 } from '../constants';
 import { Pbkdf2ErrorType } from '../enumerations/pbkdf2ErrorType';
-import { Pbkdf2Error } from '../errors/pbkdf2Error';
+import { Pbkdf2Error } from '../errors/pbkdf2';
 import { Pbkdf2Service } from './pbkdf2.service';
 
 describe('Pbkdf2Service', () => {

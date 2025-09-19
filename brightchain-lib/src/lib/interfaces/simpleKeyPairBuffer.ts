@@ -1,6 +1,6 @@
 import { ISimplePublicKeyOnlyBuffer } from './simplePublicKeyOnlyBuffer';
 
 export interface ISimpleKeyPairBuffer extends ISimplePublicKeyOnlyBuffer {
-  publicKey: Buffer;
-  privateKey: Buffer;
+  publicKey: Uint8Array;
+  privateKey: Uint8Array;
 }

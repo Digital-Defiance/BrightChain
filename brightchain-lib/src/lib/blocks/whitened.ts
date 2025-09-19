@@ -6,7 +6,7 @@ import { BlockType } from '../enumerations/blockType';
 import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
 import { WhitenedError } from '../errors/whitenedError';
 import { ServiceProvider } from '../services/service.provider';
-import { ChecksumBuffer } from '../types';
+import { ChecksumUint8Array } from '../types';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
 
@@ -21,7 +21,7 @@ export class WhitenedBlock extends RawDataBlock {
   constructor(
     blockSize: BlockSize,
     data: Buffer,
-    checksum?: ChecksumBuffer,
+    checksum?: ChecksumUint8Array,
     dateCreated?: Date,
     canRead = true,
     canPersist = true,
@@ -130,7 +130,7 @@ export class WhitenedBlock extends RawDataBlock {
       blockSize: BlockSize,
       data: Buffer,
       dateCreated: Date,
-      checksum: ChecksumBuffer,
+      checksum: ChecksumUint8Array,
       canRead: boolean,
       canPersist: boolean,
     ) => T;
@@ -187,7 +187,7 @@ export class WhitenedBlock extends RawDataBlock {
   public static async from(
     blockSize: BlockSize,
     data: Buffer,
-    checksum?: ChecksumBuffer,
+    checksum?: ChecksumUint8Array,
     dateCreated?: Date,
     lengthWithoutPadding?: number,
     canRead = true,

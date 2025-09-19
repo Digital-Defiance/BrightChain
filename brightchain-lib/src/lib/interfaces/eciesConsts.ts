@@ -30,6 +30,11 @@ export interface IECIESConsts {
   /** Total overhead size for encrypted blocks (ephemeral public key + IV + auth tag) */
   OVERHEAD_SIZE: number;
 
+  /**
+   * Maximum length of the data that can be encrypted
+   */
+  MAX_RAW_DATA_SIZE: number;
+
   /** Symmetric encryption algorithm configuration */
   SYMMETRIC: {
     ALGORITHM: string;
@@ -39,49 +44,30 @@ export interface IECIESConsts {
   };
 
   /**
-   * ECIES multiple recipient
+   * Message encrypts without data length or crc
+   */
+  SIMPLE: {
+    FIXED_OVERHEAD_SIZE: number; // type (1) + public key (65) + IV (16) + auth tag (16)
+    DATA_LENGTH_SIZE: number;
+  };
+
+  /**
+   * Message encrypts like single but with data Length and crc
+   */
+  SINGLE: {
+    FIXED_OVERHEAD_SIZE: number; // type (1) + public key (65) + IV (16) + auth tag (16) + data length (8) + crc16 (2)
+    DATA_LENGTH_SIZE: number;
+  };
+
+  /**
+   * Message encrypts for multiple recipients
    */
   MULTIPLE: {
-    /**
-     * Length of the IV + auth tag + crc16 for the overall message
-     */
-    ENCRYPTED_MESSAGE_OVERHEAD_SIZE: number;
-    /**
-     * Length of the IV + auth tag + data length + recipient count for the overall message
-     */
     FIXED_OVERHEAD_SIZE: number;
-    /**
-     * Length of the encrypted key for each recipient
-     */
     ENCRYPTED_KEY_SIZE: number;
-    /**
-     * Maximum number of recipients for a single message
-     * This is limited by the size of the value used to store the recipient count in the header
-     */
     MAX_RECIPIENTS: number;
-    /**
-     * Length of the initialization vector
-     */
-    IV_SIZE: number;
-    /**
-     * Length of the authentication tag
-     */
-    AUTH_TAG_SIZE: number;
-    /**
-     * Maximum length of the data that can be encrypted
-     */
-    MAX_DATA_SIZE: number;
-    /**
-     * Length of the recipient ID
-     */
     RECIPIENT_ID_SIZE: number;
-    /**
-     * Length of the recipient count
-     */
     RECIPIENT_COUNT_SIZE: number;
-    /**
-     * Length of the data length
-     */
     DATA_LENGTH_SIZE: number;
   };
 }
