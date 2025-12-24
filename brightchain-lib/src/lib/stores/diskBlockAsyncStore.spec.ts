@@ -152,7 +152,7 @@ describe('DiskBlockAsyncStore', () => {
         true,
       );
 
-      await expect(store.setData(block)).rejects.toThrowError(
+      await expect(store.setData(block)).rejects.toThrow(
         new StoreError(StoreErrorType.BlockSizeMismatch),
       );
     });
@@ -180,7 +180,7 @@ describe('DiskBlockAsyncStore', () => {
       );
       mkdirSync(blockDir, { recursive: true });
       await store.setData(block);
-      await expect(store.setData(block)).rejects.toThrowError(
+      await expect(store.setData(block)).rejects.toThrow(
         new StoreError(StoreErrorType.BlockPathAlreadyExists),
       );
     });
@@ -259,7 +259,7 @@ describe('DiskBlockAsyncStore', () => {
           dataType: BlockDataType.RawData,
           lengthWithoutPadding: blockSize,
         }),
-      ).rejects.toThrowError(new StoreError(StoreErrorType.NoBlocksProvided));
+      ).rejects.toThrow(new StoreError(StoreErrorType.NoBlocksProvided));
     });
   });
 });
