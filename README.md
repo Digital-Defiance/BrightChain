@@ -18,7 +18,7 @@ BrightChain integrates several groundbreaking technologies:
 - **Decentralized Storage**: A peer-to-peer distributed file system enabling secure, resilient data storage across the network
 - **Identity Management**: A sophisticated decentralized identity provider ensuring user privacy and control
 - **Owner-Free File System**: Implementation of OFF System principles for secure resource sharing with legal compliance
-- **Cryptographic Voting**: Secure electoral infrastructure utilizing Paillier encryption and ECDH-derived keys
+- **Homomorphic Voting System**: Revolutionary cryptographic voting infrastructure utilizing Paillier homomorphic encryption with ECDH-derived keys, enabling secure vote tallying without revealing individual votes
 - **Enhanced File Security**: State-of-the-art encryption combining ECIES for key derivation with AES-256-GCM for file security
 - **Digital Governance Framework**: Revolutionary quorum-based system supporting configurable majority requirements for secret reconstruction
 
@@ -27,6 +27,16 @@ BrightChain integrates several groundbreaking technologies:
 ### Brokered Anonymity
 
 BrightChain introduces "Brokered Anonymity," a sophisticated privacy mechanism that enables anonymous operations while maintaining accountability through encrypted identity information. This information can only be reconstructed through majority quorum consensus, typically in response to legal processes like FISA warrants. After a specified period, this identifying information becomes permanently inaccessible, ensuring long-term privacy protection.
+
+### Homomorphic Voting System
+
+BrightChain implements a cutting-edge homomorphic voting system that enables secure, privacy-preserving elections. The system features:
+
+- **ECDH-to-Paillier Bridge**: Novel cryptographic bridge that derives Paillier homomorphic encryption keys from existing ECDSA/ECDH keys
+- **Privacy-Preserving Tallying**: Vote aggregation without revealing individual votes through homomorphic addition
+- **Cross-Platform Determinism**: Identical cryptographic operations across Node.js and browser environments
+- **Cryptographic Security**: 128-bit security level with Miller-Rabin primality testing (256 rounds, error probability < 2^-512)
+- **Timing Attack Resistance**: Constant-time operations and deterministic random bit generation (HMAC-DRBG)
 
 ### Quorum-Based Security
 
@@ -39,7 +49,8 @@ BrightChain is currently implemented as an NX monorepo, with the core functional
 - **Authentication**: Robust implementation using BIP39/32 and SECP256k1
 - **Encryption**: Advanced ECIES encryption utilizing user-specific keys
 - **Data Integrity**: Verified block-level integrity with XOR functionality
-- **Democratic Systems**: Integrated voting mechanisms using Paillier encryption
+- **Homomorphic Voting**: Integrated Paillier homomorphic encryption system with ECDH-to-Paillier key bridge for privacy-preserving vote aggregation
+- **Cross-Platform Cryptography**: Unified cryptographic operations across Node.js and browser environments with deterministic key generation
 
 ## Development Status
 
