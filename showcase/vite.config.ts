@@ -1,7 +1,11 @@
 import alias from '@rollup/plugin-alias';
 import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 import { defineConfig } from 'vite';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Noble ESM aliases for production build
 const nobleAliases = [
