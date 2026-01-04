@@ -1,7 +1,7 @@
 import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { translate } from '../i18n';
-import { HandleableError } from './handleable';
+import { HandleableError } from '@digitaldefiance/i18n-lib';
 
 export abstract class TypedWithReasonError<
   T extends string | number,
@@ -17,10 +17,12 @@ export abstract class TypedWithReasonError<
     const reasonMap = (new.target as typeof TypedWithReasonError).prototype
       .reasonMap;
     super(
-      translate(reasonTemplate, {
-        ...otherVars,
-        ...{ REASON: translate(reasonMap[type]) },
-      }),
+      new Error(
+        translate(reasonTemplate, {
+          ...otherVars,
+          ...{ REASON: translate(reasonMap[type]) },
+        })
+      ),
     );
     this.type = type;
   }

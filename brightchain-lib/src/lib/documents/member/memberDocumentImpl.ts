@@ -173,10 +173,10 @@ export class MemberDocument extends BaseMemberDocument {
       // Create CBL blocks
       const publicBlock = await MemberDocument.cblService
         .getBlockStore()
-        .getData(publicCBL as ChecksumUint8Array);
+        .getData(publicCBL as unknown as ChecksumUint8Array);
       const privateBlock = await MemberDocument.cblService
         .getBlockStore()
-        .getData(privateCBL as ChecksumUint8Array);
+        .getData(privateCBL as unknown as ChecksumUint8Array);
 
       // Ensure blocks are ConstituentBlockListBlocks
       if (
@@ -227,10 +227,10 @@ export class MemberDocument extends BaseMemberDocument {
       // Create blocks to get checksums
       const publicBlock = await MemberDocument.cblService
         .getBlockStore()
-        .getData(publicCBL as ChecksumUint8Array);
+        .getData(publicCBL as unknown as ChecksumUint8Array);
       const privateBlock = await MemberDocument.cblService
         .getBlockStore()
-        .getData(privateCBL as ChecksumUint8Array);
+        .getData(privateCBL as unknown as ChecksumUint8Array);
 
       // Ensure blocks are ConstituentBlockListBlocks
       if (

@@ -51,6 +51,21 @@ BrightChain is currently implemented as an NX monorepo, with the core functional
 - **Data Integrity**: Verified block-level integrity with XOR functionality
 - **Homomorphic Voting**: Integrated Paillier homomorphic encryption system with ECDH-to-Paillier key bridge for privacy-preserving vote aggregation
 - **Cross-Platform Cryptography**: Unified cryptographic operations across Node.js and browser environments with deterministic key generation
+- **Modular Architecture**: Extends base cryptographic constants from [@digitaldefiance](https://github.com/Digital-Defiance) libraries, ensuring consistency and reducing duplication
+
+### Constants Architecture
+
+BrightChain follows a layered constants architecture:
+
+- **brightchain-lib**: Extends `@digitaldefiance/ecies-lib` for core cryptographic constants
+- **brightchain-api-lib**: Extends `@digitaldefiance/node-express-suite` for API and Express constants
+- **BrightChain-specific**: Only defines blockchain-specific constants (CBL, FEC, TUPLE, SEALING, VOTING, etc.)
+
+This architecture ensures:
+- Single source of truth for cryptographic constants
+- Reduced code duplication
+- Consistent security practices across the @digitaldefiance ecosystem
+- Easy maintenance and updates
 
 ## Development Status
 

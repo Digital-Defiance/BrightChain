@@ -1,9 +1,9 @@
+import { StringsCollection } from '@digitaldefiance/i18n-lib';
 import { StringNames } from '../enumerations/stringNames';
-import { StringsCollection } from '../sharedTypes';
 
 const site = 'BrightChain';
 
-export const AmericanEnglishStrings: StringsCollection = {
+export const AmericanEnglishStrings: StringsCollection<string> = {
   [StringNames.Admin_StringNotFoundForLanguageTemplate]:
     'String {NAME} not found for language {LANG}',
   [StringNames.Error_NoTranslationsForEnumTemplate]:
@@ -16,6 +16,7 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Unknown enum value: {value} for enum: {enumName}',
   [StringNames.Error_LanguageNotFoundInStringsTemplate]:
     'Language {LANG} not found in Strings)',
+  [StringNames.Error_Disposed]: 'Object has been disposed',
   [StringNames.ChangePassword_Success]: 'Password changed successfully.',
   [StringNames.Common_ChangePassword]: 'Change Password',
   [StringNames.Common_Dashboard]: 'Dashboard',
@@ -395,6 +396,7 @@ export const AmericanEnglishStrings: StringsCollection = {
     'Decrypted value length does not match expected length',
   [StringNames.Error_SecureStorageDecryptedValueChecksumMismatch]:
     'Decrypted value checksum does not match',
+  [StringNames.Error_SecureStorageValueIsNull]: 'Secure storage value is null',
 
   // Symmetric Error
   [StringNames.Error_SymmetricDataNullOrUndefined]:
@@ -650,8 +652,16 @@ export const AmericanEnglishStrings: StringsCollection = {
   [StringNames.Register_Error]: 'An error occurred during registration.',
   [StringNames.Register_Success]: 'Registration successful.',
   [StringNames.Validation_InvalidLanguage]: 'Invalid language.',
+  [StringNames.Validation_InvalidPassword]: 'Invalid password.',
+  [StringNames.Validation_PasswordRegexErrorTemplate]:
+    'Password does not meet requirements: {ERROR}',
   [StringNames.Error_InsufficientCapacity]: 'Insufficient capacity.',
   [StringNames.Error_NotImplemented]: 'Not implemented.',
+  [StringNames.Error_LengthExceedsMaximum]: 'Length exceeds maximum.',
+  [StringNames.Error_LengthIsInvalidType]: 'Length is invalid type.',
+  [StringNames.Common_NoActiveRequest]: 'No active request.',
+  [StringNames.Common_NoActiveResponse]: 'No active response.',
+  [StringNames.Common_NoUserOnRequest]: 'No user on request.',
 
   // Block Sizes
   [StringNames.BlockSize_Unknown]: 'Unknown',

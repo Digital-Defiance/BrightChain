@@ -1,7 +1,8 @@
+import { EmailString, ECIESService } from '@digitaldefiance/ecies-lib';
 import { faker } from '@faker-js/faker';
 import { BrightChainMember } from '../brightChainMember';
-import { EmailString } from '../emailString';
 import MemberType from '../enumerations/memberType';
+import { ServiceProvider } from '../services/service.provider';
 
 /**
  * Pre-generated test members with consistent keys for testing
@@ -52,8 +53,10 @@ export class TestMembers {
     ];
 
     // Create members with deterministic seeds for consistent keys
-    memberConfigs.forEach((config) => {
+    memberConfigs.forEach(async (config) => {
+      const eciesService = ServiceProvider.getInstance().eciesService;
       const { member } = BrightChainMember.newMember(
+        eciesService,
         config.type,
         config.name,
         new EmailString(config.email),
@@ -83,10 +86,12 @@ export class TestMembers {
   /**
    * Create a new random member for tests that need unique members
    */
-  public static createRandomMember(
+  public static async createRandomMember(
     type: MemberType = MemberType.User,
-  ): BrightChainMember {
+  ): Promise<BrightChainMember> {
+    const eciesService = ServiceProvider.getInstance().eciesService;
     const { member } = BrightChainMember.newMember(
+      eciesService,
       type,
       faker.person.fullName(),
       new EmailString(faker.internet.email()),

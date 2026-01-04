@@ -14,8 +14,9 @@ import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata'
 import MemoryWritableStream from '../memoryWriteableStream';
 import { ChecksumTransform } from '../transforms/checksumTransform';
 import XorMultipleTransformStream from '../transforms/xorMultipleTransform';
-import { ChecksumUint8Array } from '../types';
 import { DiskBlockStore } from './diskBlockStore';
+import { ChecksumUint8Array } from '../types';
+import { uint8ArrayToHex } from '../types';
 
 /**
  * DiskBlockAsyncStore provides asynchronous operations for storing and retrieving blocks from disk.
@@ -57,7 +58,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
     const blockPath = this.blockPath(key);
     if (!existsSync(blockPath)) {
       throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
-        KEY: key.toString('hex'),
+        KEY: uint8ArrayToHex(key),
       });
     }
 
@@ -66,7 +67,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
       data = await readFile(blockPath);
     } catch (error) {
       throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
-        KEY: key.toString('hex'),
+        KEY: uint8ArrayToHex(key),
       });
     }
     if (data.length !== this._blockSize) {
@@ -320,7 +321,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
       // Pick a random block
       const randomBlockIndex = Math.floor(Math.random() * blockFiles.length);
       const blockFile = blockFiles[randomBlockIndex];
-      blocks.push(Buffer.from(blockFile, 'hex') as ChecksumUint8Array);
+      blocks.push(Buffer.from(blockFile, 'hex') as unknown as ChecksumUint8Array);
 
       // Remove used directory if we still need more blocks
       if (blocks.length < count) {

@@ -1,9 +1,11 @@
+import {
+  SecureString as EciesSecureString,
+  EmailString,
+} from '@digitaldefiance/ecies-lib';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { BrightChainMember } from '../brightChainMember';
 import { MemberDocument } from '../documents/memberDocument';
-import { EmailString } from '../emailString';
 import { MemberType } from '../enumerations/memberType';
-import { SecureString } from '../secureString';
-import { ECIESService } from '../services/ecies.service';
 
 /**
  * Pre-generated test members with consistent keys for testing
@@ -14,7 +16,7 @@ export class TestMembers {
     string,
     {
       member: BrightChainMember;
-      mnemonic: SecureString;
+      mnemonic: EciesSecureString;
       document: MemberDocument;
     }
   >();
@@ -22,7 +24,7 @@ export class TestMembers {
   /**
    * Initialize test members if not already done
    */
-  private static initialize() {
+  private static async initialize() {
     if (this.members.size > 0) return;
 
     // Create a set of members with different roles
@@ -60,10 +62,11 @@ export class TestMembers {
     ];
 
     // Create members with deterministic seeds for consistent keys
-    memberConfigs.forEach((config) => {
+    for (const config of memberConfigs) {
       // Generate mnemonic with deterministic seed
       const mnemonic = this.eciesService.generateNewMnemonic();
       const { member: newMember } = BrightChainMember.newMember(
+        this.eciesService,
         config.type,
         config.name,
         new EmailString(config.email),
@@ -78,16 +81,16 @@ export class TestMembers {
         mnemonic,
         document,
       });
-    });
+    }
   }
 
   /**
    * Get a specific pre-generated member
    */
-  public static getMember(
+  public static async getMember(
     key: 'admin' | 'system' | 'user1' | 'user2' | 'user3',
-  ): BrightChainMember {
-    this.initialize();
+  ): Promise<BrightChainMember> {
+    await this.initialize();
     const memberInfo = this.members.get(key);
     if (!memberInfo) {
       throw new Error(`Member ${key} not found`);
@@ -98,10 +101,10 @@ export class TestMembers {
   /**
    * Get a specific pre-generated member's document
    */
-  public static getMemberDocument(
+  public static async getMemberDocument(
     key: 'admin' | 'system' | 'user1' | 'user2' | 'user3',
-  ): MemberDocument {
-    this.initialize();
+  ): Promise<MemberDocument> {
+    await this.initialize();
     const memberInfo = this.members.get(key);
     if (!memberInfo) {
       throw new Error(`Member ${key} not found`);
@@ -112,10 +115,10 @@ export class TestMembers {
   /**
    * Get a specific pre-generated member's mnemonic
    */
-  public static getMemberMnemonic(
+  public static async getMemberMnemonic(
     key: 'admin' | 'system' | 'user1' | 'user2' | 'user3',
-  ): SecureString {
-    this.initialize();
+  ): Promise<EciesSecureString> {
+    await this.initialize();
     const memberInfo = this.members.get(key);
     if (!memberInfo) {
       throw new Error(`Member ${key} not found`);
@@ -126,25 +129,26 @@ export class TestMembers {
   /**
    * Get all pre-generated members
    */
-  public static getAllMembers(): BrightChainMember[] {
-    this.initialize();
+  public static async getAllMembers(): Promise<BrightChainMember[]> {
+    await this.initialize();
     return Array.from(this.members.values()).map((info) => info.member);
   }
 
   /**
    * Create a new random member for tests that need unique members
    */
-  public static createRandomMember(
+  public static async createRandomMember(
     type: MemberType = MemberType.User,
     name = 'Random User',
     email = 'random@test.com',
-  ): {
+  ): Promise<{
     member: BrightChainMember;
-    mnemonic: SecureString;
+    mnemonic: EciesSecureString;
     document: MemberDocument;
-  } {
+  }> {
     const mnemonic = this.eciesService.generateNewMnemonic();
     const { member } = BrightChainMember.newMember(
+      this.eciesService,
       type,
       name,
       new EmailString(email),

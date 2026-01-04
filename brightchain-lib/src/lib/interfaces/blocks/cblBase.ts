@@ -1,5 +1,5 @@
 import { BrightChainMember } from '../../brightChainMember';
-import { GuidV4 } from '../../guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { ChecksumUint8Array, SignatureUint8Array } from '../../types';
 import { IEphemeralBlock } from './ephemeral';
 

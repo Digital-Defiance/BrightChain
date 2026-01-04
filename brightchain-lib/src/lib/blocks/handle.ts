@@ -8,6 +8,7 @@ import {
   readFileSync,
   statSync,
 } from 'fs';
+import { Readable } from 'stream';
 import { BlockMetadata } from '../blockMetadata';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -260,7 +261,7 @@ export function createBlockHandle<T extends BaseBlock>(
   // Override validateAsync method
   instance.validateAsync = async function (): Promise<void> {
     const checksum = await this.calculateChecksum();
-    if (!checksum.equals(this.idChecksum)) {
+    if (!Buffer.from(checksum).equals(Buffer.from(this.idChecksum))) {
       throw new ChecksumMismatchError(this.idChecksum, checksum);
     }
   };
@@ -268,7 +269,7 @@ export function createBlockHandle<T extends BaseBlock>(
   // Override validateSync method
   instance.validateSync = function (): void {
     const checksum = this.calculateChecksumSync();
-    if (!checksum.equals(this.idChecksum)) {
+    if (!Buffer.from(checksum).equals(Buffer.from(this.idChecksum))) {
       throw new ChecksumMismatchError(this.idChecksum, checksum);
     }
   };
@@ -325,9 +326,11 @@ export async function createBlockHandleFromPath<T extends BaseBlock>(
 
   // If no checksum provided, calculate it
   if (!checksum) {
+    const nodeStream = createReadStream(path);
+    const webStream = Readable.toWeb(nodeStream) as ReadableStream<Uint8Array>;
     checksum =
       await ServiceProvider.getInstance().checksumService.calculateChecksumForStream(
-        createReadStream(path),
+        webStream,
       );
   }
 

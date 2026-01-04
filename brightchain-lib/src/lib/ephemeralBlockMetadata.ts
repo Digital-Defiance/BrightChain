@@ -5,7 +5,7 @@ import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { BlockValidationErrorType } from './enumerations/blockValidationErrorType';
 import { BlockValidationError } from './errors/block';
-import { GuidV4 } from './guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { IEphemeralBlockMetadata } from './interfaces/blocks/metadata/ephemeralBlockMetadata';
 
 export class EphemeralBlockMetadata
@@ -35,7 +35,7 @@ export class EphemeralBlockMetadata
       dataType: this.dataType,
       lengthWithoutPadding: this.lengthWithoutPadding,
       dateCreated: this.dateCreated,
-      creator: this.creator.id.serialize(),
+      creator: this.creator.guidId.serialize(),
     });
   }
 

@@ -1,10 +1,9 @@
+import { StringLanguage } from '@brightchain/brightchain-lib';
 import {
-  HandleableError,
-  LanguageContext,
-  StringLanguage,
-  StringName,
-  translate,
-} from '@brightchain/brightchain-lib';
+  getSuiteCoreTranslation,
+  SuiteCoreStringKey,
+} from '@digitaldefiance/suite-core-lib';
+import { HandleableError, LanguageContextSpace } from '@digitaldefiance/i18n-lib';
 
 export class MissingValidatedDataError extends HandleableError {
   public readonly field?: string;
@@ -12,36 +11,27 @@ export class MissingValidatedDataError extends HandleableError {
   constructor(
     data?: string | string[],
     language?: StringLanguage,
-    context?: LanguageContext,
+    context?: LanguageContextSpace,
   ) {
     let message: string;
     let fields: string[] | undefined;
     let field: string | undefined;
     if (data && Array.isArray(data)) {
-      message = `${translate(
-        StringName.Validation_MissingValidatedDataForField,
-        undefined,
-        language,
-        context,
+      message = `${getSuiteCoreTranslation(
+        SuiteCoreStringKey.Validation_MissingValidatedData,
       )}: ${data.join(', ')}`;
       fields = data;
     } else if (data) {
-      message = `${translate(
-        StringName.Validation_MissingValidatedDataForField,
-        undefined,
-        language,
-        context,
+      message = `${getSuiteCoreTranslation(
+        SuiteCoreStringKey.Validation_MissingValidatedData,
       )}: ${String(data)}`;
       field = data as string;
     } else {
-      message = translate(
-        StringName.Validation_MissingValidatedData,
-        undefined,
-        language,
-        context,
+      message = getSuiteCoreTranslation(
+        SuiteCoreStringKey.Validation_MissingValidatedData,
       );
     }
-    super(message, {
+    super(new Error(message), {
       statusCode: 422,
     });
     this.field = field;

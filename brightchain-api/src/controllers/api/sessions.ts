@@ -1,17 +1,16 @@
 import {
   ApiErrorResponse,
   ApiRequestHandler,
-  BrightChainMember,
   IApiMessageResponse,
   IStatusCodeResponse,
   TypedHandlers,
-} from '@brightchain/brightchain-lib';
+} from '@brightchain/brightchain-api-lib';
+import { BrightChainMember } from '@brightchain/brightchain-lib';
 import { Request } from 'express';
 import { IApplication } from '../../interfaces/application';
 import { BaseController } from '../base';
 
-interface ISessionsHandlers
-  extends TypedHandlers<IApiMessageResponse | ApiErrorResponse> {
+interface ISessionsHandlers extends TypedHandlers {
   getSessions: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
 }
 
@@ -40,9 +39,7 @@ export class SessionsController extends BaseController<
 
   private handleGetSessions: ApiRequestHandler<
     IApiMessageResponse | ApiErrorResponse
-  > = async (
-    req: Request,
-  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  > = async (req): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
     return {
       statusCode: 200,
       response: {

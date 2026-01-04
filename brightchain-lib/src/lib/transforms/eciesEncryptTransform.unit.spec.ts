@@ -2,9 +2,9 @@ import { randomBytes } from 'crypto';
 import { BlockSize } from '../enumerations/blockSize';
 import { EciesErrorType } from '../enumerations/eciesErrorType';
 import { EciesError } from '../errors/eciesError';
-import { SecureString } from '../secureString';
-import { ECIESService } from '../services/ecies.service';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { EciesEncryptTransform } from './eciesEncryptTransform';
+import { SecureString } from '@digitaldefiance/ecies-lib';
 
 describe('EciesEncryptTransform Unit Tests', () => {
   const mockLogger = {
@@ -26,7 +26,8 @@ describe('EciesEncryptTransform Unit Tests', () => {
     jest.clearAllMocks();
     eciesService = new ECIESService();
     mnemonic = eciesService.generateNewMnemonic();
-    keypair = eciesService.mnemonicToSimpleKeyPairBuffer(mnemonic);
+    const kp = eciesService.mnemonicToSimpleKeyPairBuffer(mnemonic);
+    keypair = kp;
   });
 
   it('should be instantiated with correct parameters', () => {
@@ -76,7 +77,7 @@ describe('EciesEncryptTransform Unit Tests', () => {
       const encryptedData = Buffer.concat(chunks);
 
       // Verify the encrypted data can be decrypted
-      const decryptedData = eciesService.decryptWithHeader(
+      const decryptedData = eciesService.decryptSingleWithHeader(
         keypair.privateKey,
         encryptedData,
       );
@@ -112,7 +113,7 @@ describe('EciesEncryptTransform Unit Tests', () => {
       const encryptedData = Buffer.concat(chunks);
 
       // Verify the encrypted data can be decrypted
-      const decryptedData = eciesService.decryptWithHeader(
+      const decryptedData = eciesService.decryptSingleWithHeader(
         keypair.privateKey,
         encryptedData,
       );

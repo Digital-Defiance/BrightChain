@@ -6,8 +6,11 @@ import {
   translate,
 } from '@brightchain/brightchain-lib';
 
-export abstract class TypedError<T extends string | number> extends Error {
-  protected abstract get reasonMap(): Record<T, StringName>;
+export abstract class TypedError<
+  T extends string | number,
+  K extends string = StringName,
+> extends Error {
+  protected abstract get reasonMap(): Record<T, K>;
 
   constructor(
     public readonly type: T,

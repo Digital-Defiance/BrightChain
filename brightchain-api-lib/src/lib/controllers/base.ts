@@ -1,13 +1,14 @@
 /// <reference path="../types.d.ts" />
 import {
-  DefaultLanguage,
-  GlobalActiveContext,
-  HandleableError,
   IRequestUserDTO,
   StringLanguages,
-  StringNames,
-  translate,
 } from '@brightchain/brightchain-lib';
+import {
+  SuiteCoreStringKey as StringNames,
+  getSuiteCoreTranslation as translate,
+} from '@digitaldefiance/suite-core-lib';
+import { StringLanguage } from '../interfaces/request-user';
+import { GlobalActiveContext, HandleableError } from '@digitaldefiance/i18n-lib';
 import {
   NextFunction,
   Request,
@@ -24,28 +25,28 @@ import { IUserDocument } from '../documents/user';
 import { ExpressValidationError } from '../errors/express-validation';
 import { MissingValidatedDataError } from '../errors/missing-validated-data';
 import { IApplication } from '../interfaces/application';
-import { authenticateCrypto } from '../middlewares/authenticate-crypto';
-import { authenticateToken } from '../middlewares/authenticate-token';
-import { setGlobalContextLanguageFromRequest } from '../middlewares/set-global-context-language';
 import {
   ApiErrorResponse,
   ApiResponse,
   FlexibleValidationChain,
   RouteConfig,
   SendFunction,
-} from '../shared-types';
+  setGlobalContextLanguageFromRequest,
+  authenticateToken,
+  authenticateCrypto,
+} from '@digitaldefiance/node-express-suite';
 import {
   handleError,
   sendApiMessageResponse,
   sendRawJsonResponse,
-} from '../utils';
+} from '@digitaldefiance/node-express-suite';
 
 export abstract class BaseController<T extends ApiResponse, H extends object> {
   public readonly router: Router;
   private activeRequest: Request | null = null;
   private activeResponse: Response | null = null;
   public readonly application: IApplication;
-  protected routeDefinitions: RouteConfig<H>[] = [];
+  protected routeDefinitions: RouteConfig<H, StringLanguage>[] = [];
   protected handlers: H;
 
   public constructor(application: IApplication) {
@@ -58,7 +59,7 @@ export abstract class BaseController<T extends ApiResponse, H extends object> {
 
   protected abstract initRouteDefinitions(): void;
 
-  private getAuthenticationMiddleware(route: RouteConfig<H>): RequestHandler[] {
+  private getAuthenticationMiddleware(route: RouteConfig<H, StringLanguage>): RequestHandler[] {
     if (route.useAuthentication) {
       return [
         async (req, res, next) => {
@@ -75,13 +76,14 @@ export abstract class BaseController<T extends ApiResponse, H extends object> {
   }
 
   private getCryptoAuthenticationMiddleware(
-    route: RouteConfig<H>,
+    route: RouteConfig<H, StringLanguage>,
   ): RequestHandler[] {
     if (route.useCryptoAuthentication) {
       return [
         async (req, res, next) => {
           try {
-            await authenticateCrypto(this.application, req, res, next);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await authenticateCrypto(this.application, req as any, res as any, next);
           } catch (err) {
             next(err);
           }
@@ -92,7 +94,7 @@ export abstract class BaseController<T extends ApiResponse, H extends object> {
     }
   }
 
-  private getValidationMiddleware(route: RouteConfig<H>): RequestHandler[] {
+  private getValidationMiddleware(route: RouteConfig<H, StringLanguage>): RequestHandler[] {
     if (Array.isArray(route.validation) && route.validation.length > 0) {
       return [
         ...route.validation,
@@ -117,11 +119,11 @@ export abstract class BaseController<T extends ApiResponse, H extends object> {
   }
 
   private createDynamicValidationHandler(
-    validationFn: (lang: StringLanguages) => ValidationChain[],
+    validationFn: (lang: StringLanguage) => ValidationChain[],
   ): RequestHandler {
     return async (req: Request, res: Response, next: NextFunction) => {
       try {
-        const validationArray = validationFn(GlobalActiveContext.language);
+        const validationArray = validationFn(GlobalActiveContext.instance.userLanguage as StringLanguage);
         await Promise.all(validationArray.map((v) => v.run(req)));
         await this.checkRequestValidationAndThrow(
           req,
@@ -135,17 +137,17 @@ export abstract class BaseController<T extends ApiResponse, H extends object> {
     };
   }
 
-  private createRequestHandler(config: RouteConfig<H>): RequestHandler {
+  private createRequestHandler(config: RouteConfig<H, StringLanguage>): RequestHandler {
     return async (req: Request, res: Response<T>, next: NextFunction) => {
       this.activeRequest = req;
       this.activeResponse = res;
 
       if (config.useAuthentication && !this.activeRequest?.user) {
         handleError(
-          new HandleableError(translate(StringNames.Common_Unauthorized), {
+          new HandleableError(new Error(translate(StringNames.Common_Unauthorized)), {
             statusCode: 401,
           }),
-          res as Response<ApiResponse>,
+          res as any,
           sendApiMessageResponse,
           next,
         );
@@ -166,11 +168,11 @@ export abstract class BaseController<T extends ApiResponse, H extends object> {
         if (headers) {
           res.set(headers);
         }
-        sendFunc(statusCode, response, res);
+        sendFunc(statusCode, response, res as any);
       } catch (error) {
         handleError(
           error,
-          res as Response<ApiErrorResponse>,
+          res as any,
           sendApiMessageResponse,
           next,
         );
@@ -182,8 +184,8 @@ export abstract class BaseController<T extends ApiResponse, H extends object> {
    * Initializes the routes for the controller.
    */
   private initializeRoutes(): void {
-    Object.values(this.routeDefinitions).forEach((config: RouteConfig<H>) => {
-      this.router[config.method](
+    Object.values(this.routeDefinitions).forEach((config: RouteConfig<H, StringLanguage>) => {
+      (this.router[config.method] as any)(
         config.path,
         ...[
           ...this.getAuthenticationMiddleware(config),
@@ -205,14 +207,14 @@ export abstract class BaseController<T extends ApiResponse, H extends object> {
    * @param next The next function
    */
   protected async authenticateRequest(
-    route: RouteConfig<H>,
+    route: RouteConfig<H, StringLanguage>,
     req: Request,
     res: Response<T>,
     next: NextFunction,
   ): Promise<void> {
     // Pass the real `next` function directly to the middleware.
     // It will now correctly control the request lifecycle.
-    await authenticateToken(this.application, req, res, next);
+    await authenticateToken(this.application, req as any, res as any, next);
   }
 
   private handleBooleanFields(
@@ -256,7 +258,7 @@ export abstract class BaseController<T extends ApiResponse, H extends object> {
     req: Request,
     res: Response,
     next: NextFunction,
-    validationArray: FlexibleValidationChain = [],
+    validationArray: FlexibleValidationChain<StringLanguage> = [],
   ): void {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -268,7 +270,7 @@ export abstract class BaseController<T extends ApiResponse, H extends object> {
       includeOptionals: false, // Exclude fields that weren't validated
     });
 
-    const language = GlobalActiveContext.language ?? DefaultLanguage;
+    const language = (GlobalActiveContext.instance.userLanguage ?? StringLanguages.EnglishUS) as StringLanguage;
 
     // If validationArray is a function, call it with the language
     const valArray =
@@ -321,7 +323,7 @@ export abstract class BaseController<T extends ApiResponse, H extends object> {
     req: Request,
   ): Promise<IUserDocument> {
     if (!req.user) {
-      throw new HandleableError(translate(StringNames.Common_Unauthorized), {
+      throw new HandleableError(new Error(translate(StringNames.Common_Unauthorized)), {
         statusCode: 401,
       });
     }

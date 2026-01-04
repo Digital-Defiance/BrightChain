@@ -1,4 +1,4 @@
-import { IUsedDirectLoginTokenBase } from '@brightchain/brightchain-lib';
+import { IUsedDirectLoginTokenBase } from '@digitaldefiance/suite-core-lib';
 import { DefaultBackendIdType } from '../shared-types';
 import { IBaseDocument } from './base';
 

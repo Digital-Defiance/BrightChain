@@ -1,5 +1,6 @@
 import { BrightChainMember } from '../../brightChainMember';
-import { GuidV4 } from '../../guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
+import { SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
 import { ChecksumUint8Array, SignatureUint8Array } from '../../types';
 
 /**
@@ -74,8 +75,8 @@ export abstract class BaseNetworkDocument implements NetworkDocument {
     this.references = options.references || [];
 
     // Signature and checksum will be set when the document is finalized
-    this.signature = Buffer.alloc(0) as SignatureUint8Array;
-    this.checksum = Buffer.alloc(0) as ChecksumUint8Array;
+    this.signature = Buffer.alloc(0) as unknown as SignatureUint8Array;
+    this.checksum = Buffer.alloc(0) as unknown as ChecksumUint8Array;
   }
 
   /**
@@ -84,7 +85,7 @@ export abstract class BaseNetworkDocument implements NetworkDocument {
   async sign(): Promise<void> {
     // Create a buffer of all fields except signature and checksum
     const dataToSign = Buffer.concat([
-      this.id.asRawGuidArray,
+      Buffer.from(this.id.asRawGuidBuffer),
       Buffer.from(this.type),
       Buffer.from(this.version.toString()),
       Buffer.from(this.created.toISOString()),
@@ -93,8 +94,9 @@ export abstract class BaseNetworkDocument implements NetworkDocument {
       // Add other fields...
     ]);
 
-    // Sign with creator's key
-    this.signature = this.creator.sign(dataToSign);
+    // Sign with creator's key - convert to Uint8Array for interface compatibility
+    const signatureBuffer = this.creator.sign(dataToSign);
+    this.signature = new Uint8Array(signatureBuffer) as unknown as SignatureUint8Array;
   }
 
   /**
@@ -103,7 +105,7 @@ export abstract class BaseNetworkDocument implements NetworkDocument {
   async verify(): Promise<boolean> {
     // Recreate the signed data buffer
     const dataToVerify = Buffer.concat([
-      this.id.asRawGuidArray,
+      Buffer.from(this.id.asRawGuidBuffer),
       Buffer.from(this.type),
       Buffer.from(this.version.toString()),
       Buffer.from(this.created.toISOString()),
@@ -112,8 +114,11 @@ export abstract class BaseNetworkDocument implements NetworkDocument {
       // Add other fields...
     ]);
 
+    // Convert signature back to Buffer for verification
+    const signatureBuffer = Buffer.from(this.signature) as unknown as SignatureBuffer;
+    
     // Verify with creator's public key
-    return this.creator.verify(this.signature, dataToVerify);
+    return this.creator.verify(signatureBuffer, dataToVerify);
   }
 
   /**
@@ -136,7 +141,7 @@ export abstract class BaseNetworkDocument implements NetworkDocument {
     this.updated = new Date();
     this.version++;
     // Clear signature and checksum as they need to be recalculated
-    this.signature = Buffer.alloc(0) as SignatureUint8Array;
-    this.checksum = Buffer.alloc(0) as ChecksumUint8Array;
+    this.signature = Buffer.alloc(0) as unknown as SignatureUint8Array;
+    this.checksum = Buffer.alloc(0) as unknown as ChecksumUint8Array;
   }
 }

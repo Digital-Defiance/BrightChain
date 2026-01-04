@@ -1,4 +1,4 @@
-import { ModelName } from '@brightchain/brightchain-lib';
+import { ModelName } from '../enumerations/model-name';
 import { Schema } from 'mongoose';
 import { IUserRoleDocument } from '../documents/user-role';
 
@@ -8,23 +8,23 @@ import { IUserRoleDocument } from '../documents/user-role';
 export const UserRoleSchema = new Schema<IUserRoleDocument>(
   {
     userId: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: ModelName.User,
       required: true,
     },
     roleId: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: ModelName.Role,
       required: true,
     },
     createdBy: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: ModelName.User,
       required: true,
       immutable: true,
     },
     updatedBy: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: ModelName.User,
       required: true,
     },
@@ -33,7 +33,7 @@ export const UserRoleSchema = new Schema<IUserRoleDocument>(
       optional: true,
     },
     deletedBy: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: ModelName.User,
       required: false,
       optional: true,

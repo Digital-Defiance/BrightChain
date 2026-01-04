@@ -1,3 +1,3 @@
-export { authenticateCrypto } from './authenticate-crypto';
-export { authenticateToken, findAuthToken } from './authenticate-token';
+export { authenticateCrypto, authenticateToken, findAuthToken } from '@digitaldefiance/node-express-suite';
 export { cleanupCrypto } from './cleanup-crypto';
+

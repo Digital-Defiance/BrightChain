@@ -115,14 +115,14 @@ export interface IBaseBlock {
    * The actual data payload, excluding headers and padding.
    * This is the data that was originally stored in the block.
    */
-  get layerPayload(): Uint8Array;
+  get layerPayload(): Uint8Array | Buffer;
 
   /**
    * The complete header data from all layers.
    * Headers are concatenated in inheritance order:
    * [Layer 0 Header][Layer 1 Header][...][Layer N Header]
    */
-  get fullHeaderData(): Uint8Array;
+  get fullHeaderData(): Uint8Array | Buffer;
 
   /**
    * The length of the layer's header data
@@ -136,12 +136,12 @@ export interface IBaseBlock {
    * 2. Encryption information
    * 3. Block relationships
    */
-  get layerHeaderData(): Uint8Array;
+  get layerHeaderData(): Uint8Array | Buffer;
 
   /**
    * Gets the layer's data including header and payload
    */
-  get layerData(): Uint8Array;
+  get layerData(): Uint8Array | Buffer;
 
   /**
    * The length of the payload before padding.

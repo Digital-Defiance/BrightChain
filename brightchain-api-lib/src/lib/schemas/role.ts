@@ -1,4 +1,5 @@
-import { ModelName, Role } from '@brightchain/brightchain-lib';
+import { Role } from '@digitaldefiance/suite-core-lib';
+import { ModelName } from '../enumerations/model-name';
 import { CallbackWithoutResultAndOptionalError, Schema } from 'mongoose';
 import { IRoleDocument } from '../documents/role';
 
@@ -34,13 +35,13 @@ export const RoleSchema = new Schema<IRoleDocument>(
       immutable: true,
     },
     createdBy: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: ModelName.User,
       required: true,
       immutable: true,
     },
     updatedBy: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: ModelName.User,
       required: true,
     },
@@ -57,7 +58,7 @@ export const RoleSchema = new Schema<IRoleDocument>(
      * The user who deleted the role
      */
     deletedBy: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: ModelName.User,
       required: false,
       optional: true,

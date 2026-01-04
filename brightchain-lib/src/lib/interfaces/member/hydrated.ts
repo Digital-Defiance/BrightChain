@@ -1,8 +1,6 @@
 import { PublicKey } from 'paillier-bigint';
-import { EmailString } from '../../emailString';
+import { EmailString, GuidV4, SecureString } from '@digitaldefiance/ecies-lib';
 import { MemberType } from '../../enumerations/memberType';
-import { GuidV4 } from '../../guid';
-import { SecureString } from '../../secureString';
 
 /**
  * Hydrated format for member data - after basic type conversion but before operational

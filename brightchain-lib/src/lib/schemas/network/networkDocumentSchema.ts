@@ -4,7 +4,7 @@ import StringNames from '../../enumerations/stringNames';
 import { FailedToHydrateError } from '../../errors/failedToHydrate';
 import { FailedToSerializeError } from '../../errors/failedToSerialize';
 import { InvalidIDFormatError } from '../../errors/invalidIDFormat';
-import { GuidV4 } from '../../guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { translate } from '../../i18n';
 import { SchemaDefinition, SerializedValue } from '../../sharedTypes';
 import { ChecksumUint8Array, SignatureUint8Array } from '../../types';
@@ -68,25 +68,25 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
   signature: {
     type: Object,
     required: true,
-    serialize: (value: SignatureUint8Array): string => value.toString('base64'),
+    serialize: (value: SignatureUint8Array): string => Buffer.from(value).toString('base64'),
     hydrate: (value: unknown): SignatureUint8Array => {
       if (!isString(value))
         throw new FailedToHydrateError(
           translate(StringNames.Error_InvalidSignature),
         );
-      return Buffer.from(value, 'base64') as SignatureUint8Array;
+      return Buffer.from(value, 'base64') as unknown as SignatureUint8Array;
     },
   },
   checksum: {
     type: Object,
     required: true,
-    serialize: (value: ChecksumUint8Array): string => value.toString('base64'),
+    serialize: (value: ChecksumUint8Array): string => Buffer.from(value).toString('base64'),
     hydrate: (value: unknown): ChecksumUint8Array => {
       if (!isString(value))
         throw new FailedToHydrateError(
           translate(StringNames.Error_InvalidChecksum),
         );
-      return Buffer.from(value, 'base64') as ChecksumUint8Array;
+      return Buffer.from(value, 'base64') as unknown as ChecksumUint8Array;
     },
   },
   ttl: {

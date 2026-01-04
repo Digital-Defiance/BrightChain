@@ -1,6 +1,6 @@
+import { EmailString } from '@digitaldefiance/ecies-lib';
 import { BrightChainMember } from '../brightChainMember';
 import { SEALING } from '../constants';
-import { EmailString } from '../emailString';
 import { MemberType } from '../enumerations/memberType';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { SealingError } from '../errors/sealingError';

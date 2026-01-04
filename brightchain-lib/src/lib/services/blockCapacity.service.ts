@@ -10,7 +10,7 @@ import {
   IOverheadBreakdown,
 } from '../interfaces/blockCapacity';
 import { CBLService } from '../services/cblService';
-import { ECIESService } from '../services/ecies.service';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 
 /**
  * Service for calculating block capacities based on block type and parameters

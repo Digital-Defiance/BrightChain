@@ -1,4 +1,6 @@
-import { EmailTokenType, ModelName } from '@brightchain/brightchain-lib';
+import { EmailTokenType } from '@digitaldefiance/suite-core-lib';
+import { ModelName } from '../enumerations/model-name';
+// import { EmailTokenType, ModelName } from '@brightchain/brightchain-lib';
 import { Schema } from 'mongoose';
 import validator from 'validator';
 import { IEmailTokenDocument } from '../documents/email-token';
@@ -12,7 +14,7 @@ export const EmailTokenSchema = new Schema<IEmailTokenDocument>(
      * The user ID associated with the token
      */
     userId: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       required: true,
       ref: ModelName.User,
       immutable: true,

@@ -1,8 +1,8 @@
-import { HandleableError } from '@brightchain/brightchain-lib';
+import { HandleableError } from '@digitaldefiance/i18n-lib';
 
 export class RestrictedError extends HandleableError {
   constructor() {
-    super('Access denied for child users', {
+    super(new Error('Access denied for child users'), {
       statusCode: 403,
     });
     this.name = 'RestrictedError';

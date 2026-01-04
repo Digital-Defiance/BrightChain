@@ -1,43 +1,56 @@
-import { IPBkdf2Consts } from '@brightchain/brightchain-lib';
-import { CipherGCMTypes } from 'crypto';
-import { IChecksumConsts } from './checksum-consts';
-import { IEncryptionConsts } from './encryption-consts';
-import { IFECConsts } from './fec-consts';
-import { IKeyringConsts } from './keyring-consts';
-import { PbkdfProfiles } from './pbkdf-profiles';
-import { IWrappedKeyConsts } from './wrapped-key-consts';
+/**
+ * BrightChain API Constants Interfaces
+ * 
+ * This module defines interfaces for API-specific constants.
+ * The main IApiConstants interface extends IConstants from @digitaldefiance/node-express-suite
+ * and adds API-specific constants.
+ * 
+ * @see {@link https://github.com/Digital-Defiance/node-express-suite} for base interface
+ * @module api-constants
+ */
 
-export interface IApiConstants {
+import { IConstants } from '@digitaldefiance/node-express-suite';
+
+/**
+ * Wrapped key constants interface
+ * 
+ * Defines cryptographic parameters for key wrapping operations,
+ * including salt size, IV size, master key size, and minimum iterations.
+ */
+export interface IWrappedKeyConsts {
+  readonly SALT_SIZE: number;
+  readonly IV_SIZE: number;
+  readonly MASTER_KEY_SIZE: number;
+  readonly MIN_ITERATIONS: number;
+}
+
+/**
+ * API Constants interface extending from @digitaldefiance/node-express-suite
+ * 
+ * This interface extends the base IConstants from @digitaldefiance/node-express-suite,
+ * which provides:
+ * - PBKDF2: Password-based key derivation configuration
+ * - CHECKSUM: SHA3 checksum configuration
+ * - FEC: Forward error correction settings
+ * - KEYRING: Keyring algorithm configuration
+ * - ENCRYPTION: Encryption settings
+ * - Express Configuration: Express app settings, CORS, CSP, etc.
+ * - JWT: Base JWT configuration
+ * - Session: Session management settings
+ * 
+ * And adds API-specific constants:
+ * - WRAPPED_KEY: Key wrapping operations
+ * 
+ * @see {@link https://github.com/Digital-Defiance/node-express-suite} for base interface
+ * @interface IApiConstants
+ * @extends {IConstants}
+ */
+export interface IApiConstants extends IConstants {
+  // All base constants (PBKDF2, CHECKSUM, FEC, KEYRING, ENCRYPTION, etc.) 
+  // are inherited from IConstants in @digitaldefiance/node-express-suite
+  
   /**
-   * PBKDF2 key derivation function constants
+   * Wrapped key constants for key wrapping operations
    */
-  PBKDF2: IPBkdf2Consts;
-  /**
-   * Predefined PBKDF2 configuration profiles for different use cases
-   */
-  PBKDF2_PROFILES: PbkdfProfiles;
-  /**
-   * Checksum constants used for data integrity
-   */
-  CHECKSUM: IChecksumConsts;
-  /**
-   * Wrapped Key constants used for the key wrapping service
-   */
-  WRAPPED_KEY: IWrappedKeyConsts;
-  /**
-   * Forward Error Correction constants used for data recovery
-   */
-  FEC: IFECConsts;
-  /**
-   * Keyring constants used for key management
-   */
-  KEYRING: IKeyringConsts;
-  /**
-   * Encryption constants used for encrypted data
-   */
-  ENCRYPTION: IEncryptionConsts;
-  /**
-   * Algorithm configuration string for keyring operations
-   */
-  KEYRING_ALGORITHM_CONFIGURATION: CipherGCMTypes;
+  readonly WRAPPED_KEY: IWrappedKeyConsts;
 }

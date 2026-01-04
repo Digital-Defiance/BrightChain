@@ -41,9 +41,12 @@ export class TupleService {
   /**
    * Convert data to Buffer regardless of whether it's a Readable or Buffer
    */
-  private async toBuffer(data: Buffer | Readable): Promise<Buffer> {
+  private async toBuffer(data: Buffer | Uint8Array | Readable): Promise<Buffer> {
     if (Buffer.isBuffer(data)) {
       return data;
+    }
+    if (data instanceof Uint8Array) {
+      return Buffer.from(data);
     }
     const chunks: Buffer[] = [];
     for await (const chunk of data) {
@@ -57,7 +60,7 @@ export class TupleService {
    */
   public async xorSourceToPrimeWhitened(
     sourceBlock: BaseBlock | BlockHandle<any>,
-    whiteners: WhitenedBlock[],
+    whiteners: (WhitenedBlock | RandomBlock)[],
     randomBlocks: RandomBlock[],
   ): Promise<WhitenedBlock> {
     // Validate parameters
@@ -128,7 +131,7 @@ export class TupleService {
    */
   public async makeTupleFromSourceXor(
     sourceBlock: BaseBlock | BlockHandle<any>,
-    whiteners: WhitenedBlock[],
+    whiteners: (WhitenedBlock | RandomBlock)[],
     randomBlocks: RandomBlock[],
   ): Promise<InMemoryBlockTuple> {
     const primeWhitenedBlock = await this.xorSourceToPrimeWhitened(
@@ -405,7 +408,7 @@ export class TupleService {
         randomBlocks.push(block);
       }
 
-      const whiteners: WhitenedBlock[] = [];
+      const whiteners: (WhitenedBlock | RandomBlock)[] = [];
       for (let i = TUPLE.RANDOM_BLOCKS_PER_TUPLE; i < TUPLE.SIZE - 1; i++) {
         const block = whitenedBlockSource() ?? randomBlockSource();
         if (!block) {
@@ -538,7 +541,7 @@ export class TupleService {
         randomBlocks.push(block);
       }
 
-      const whiteners: WhitenedBlock[] = [];
+      const whiteners: (WhitenedBlock | RandomBlock)[] = [];
       for (let i = TUPLE.RANDOM_BLOCKS_PER_TUPLE; i < TUPLE.SIZE - 1; i++) {
         const block = whitenedBlockSource() ?? randomBlockSource();
         if (!block) {

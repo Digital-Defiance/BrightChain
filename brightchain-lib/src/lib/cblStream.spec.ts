@@ -4,7 +4,6 @@ import { WhitenedBlock } from './blocks/whitened';
 import { BrightChainMember } from './brightChainMember';
 import { CblStream } from './cblStream';
 import { TUPLE } from './constants';
-import { EmailString } from './emailString';
 import { BlockEncryptionType } from './enumerations/blockEncryptionType';
 import { BlockSize } from './enumerations/blockSize';
 import { CblErrorType } from './enumerations/cblErrorType';
@@ -14,7 +13,8 @@ import { CBLService } from './services/cblService';
 import { ChecksumService } from './services/checksum.service';
 import { ServiceProvider } from './services/service.provider';
 import { initializeTestServices } from './test/service.initializer.helper';
-import { ChecksumBuffer } from './types';
+import { EmailString } from '@digitaldefiance/ecies-lib';
+import { ChecksumBuffer } from '@digitaldefiance/node-ecies-lib';
 
 // Mock the CBLBase class to avoid signature validation issues
 jest.mock('./blocks/cblBase', () => {
@@ -40,6 +40,7 @@ describe('CblStream', () => {
   beforeAll(() => {
     initializeTestServices();
     creator = BrightChainMember.newMember(
+      ServiceProvider.getInstance().eciesService,
       MemberType.User,
       'test',
       new EmailString('test@example.com'),

@@ -1,7 +1,7 @@
 import { sha3_512 } from 'js-sha3';
 import { CHECKSUM } from '../constants';
 import { ChecksumString, ChecksumUint8Array } from '../types';
-import { hexToUint8Array, uint8ArrayToHex } from '../utils';
+import { hexToUint8Array, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 
 export class ChecksumService {
   constructor() {}
@@ -16,12 +16,20 @@ export class ChecksumService {
   /**
    * Calculate a checksum for a buffer
    * @param data - The data to calculate the checksum for
-   * @returns The checksum as a Buffer
+   * @returns The checksum as a Buffer with equals method
    */
   public calculateChecksum(data: Uint8Array): ChecksumUint8Array {
     const hash = sha3_512.create();
     hash.update(data);
-    return hexToUint8Array(hash.hex()) as ChecksumUint8Array;
+    const result = hexToUint8Array(hash.hex()) as ChecksumUint8Array;
+    // Add equals method to the checksum
+    (result as any).equals = function (other: ChecksumUint8Array): boolean {
+      if (this.length !== other.length) return false;
+      return this.every(
+        (value: number, index: number) => value === other[index],
+      );
+    };
+    return result;
   }
 
   /**

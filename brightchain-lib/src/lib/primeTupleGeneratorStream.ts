@@ -128,7 +128,7 @@ export class PrimeTupleGeneratorStream extends Transform {
       }
 
       // Get whitening blocks (or random blocks if whitening not available)
-      const whiteners: WhitenedBlock[] = [];
+      const whiteners: (WhitenedBlock | RandomBlock)[] = [];
       for (let i = TUPLE.RANDOM_BLOCKS_PER_TUPLE; i < TUPLE.SIZE - 1; i++) {
         const block = this.whitenedBlockSource() ?? this.randomBlockSource();
         if (!block) {

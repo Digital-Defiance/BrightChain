@@ -5,7 +5,7 @@ import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { SealingError } from '../errors/sealingError';
 import { QuorumDataRecord } from '../quorumDataRecord';
 import { ShortHexGuid } from '../types';
-import { ECIESService } from './ecies.service';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { SymmetricService } from './symmetric.service';
 
 /**
@@ -100,7 +100,7 @@ export class SealingService {
 
     return new QuorumDataRecord(
       agent,
-      amongstMembers.map((m) => m.id.asShortHexGuid),
+      amongstMembers.map((m) => m.guidId.asShortHexGuid),
       sharesRequired,
       encryptedData.encryptedData,
       encryptedSharesByMemberId,
@@ -148,14 +148,14 @@ export class SealingService {
         throw new SealingError(SealingErrorType.MissingPrivateKeys);
       }
       const encryptedKeyShareHex = document.encryptedSharesByMemberId.get(
-        member.id.asShortHexGuid,
+        member.guidId.asShortHexGuid,
       );
       if (!encryptedKeyShareHex) {
         throw new SealingError(SealingErrorType.EncryptedShareNotFound);
       }
       const decryptedKeyShare =
-        SealingService.eciesService.decryptSingleWithHeader(
-          member.privateKey,
+        SealingService.eciesService.decryptSimpleOrSingleWithHeader(
+          false, Buffer.from(member.privateKey.value),
           encryptedKeyShareHex,
         );
       decryptedShares[i] = decryptedKeyShare.toString('hex');
@@ -228,12 +228,13 @@ export class SealingService {
       }
       const shareForMember = shares[i];
 
-      const encryptedKeyShare = SealingService.eciesService.encrypt(
-        member.publicKey,
+      const encryptedKeyShare = SealingService.eciesService.encryptSimpleOrSingle(
+        false, // encryptSimple = false for single encryption
+        Buffer.from(member.publicKey),
         Buffer.from(shareForMember, 'hex'),
       );
       encryptedSharesByMemberId.set(
-        member.id.asShortHexGuid,
+        member.guidId.asShortHexGuid,
         encryptedKeyShare,
       );
     }
@@ -256,7 +257,7 @@ export class SealingService {
     const decryptedShares: secrets.Shares = new Array<string>(memberIds.length);
     for (let i = 0; i < memberIds.length; i++) {
       const memberId = memberIds[i];
-      const member = members.find((v) => v.id.asShortHexGuid == memberId);
+      const member = members.find((v) => v.guidId.asShortHexGuid == memberId);
       if (!member) {
         throw new SealingError(SealingErrorType.MemberNotFound);
       }
@@ -268,8 +269,8 @@ export class SealingService {
         throw new SealingError(SealingErrorType.EncryptedShareNotFound);
       }
       const decryptedKeyShare =
-        SealingService.eciesService.decryptSingleWithHeader(
-          member.privateKey,
+        SealingService.eciesService.decryptSimpleOrSingleWithHeader(
+          false, Buffer.from(member.privateKey.value),
           encryptedKeyShareHex,
         );
       decryptedShares[i] = decryptedKeyShare.toString('hex');

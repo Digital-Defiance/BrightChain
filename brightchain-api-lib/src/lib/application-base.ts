@@ -1,7 +1,14 @@
-// Avoid importing from the barrel (../index) here to prevent circular deps
 import { join } from 'path';
 import { Environment } from './environment';
 import { IApplication } from './interfaces/application';
+import mongoose, { Model } from 'mongoose';
+import {
+  ServiceContainer,
+  PluginManager,
+  IConstants,
+  IBaseDocument,
+} from '@digitaldefiance/node-express-suite';
+import { AppConstants } from './appConstants';
 
 /**
  * Base Application class with core functionality
@@ -10,6 +17,34 @@ export class BaseApplication implements IApplication {
   private _environment: Environment;
   public get environment(): Environment {
     return this._environment;
+  }
+
+  public get constants(): IConstants {
+    return AppConstants;
+  }
+
+  public get db(): typeof mongoose {
+    return mongoose;
+  }
+
+  private _services: ServiceContainer | undefined;
+  public get services(): ServiceContainer {
+    if (!this._services) {
+      this._services = new ServiceContainer();
+    }
+    return this._services;
+  }
+
+  private _plugins: PluginManager | undefined;
+  public get plugins(): PluginManager {
+    if (!this._plugins) {
+      this._plugins = new PluginManager();
+    }
+    return this._plugins;
+  }
+
+  public getModel<U extends IBaseDocument<any, any>>(modelName: string): Model<U> {
+    return mongoose.model<U>(modelName);
   }
 
   public reloadEnvironment(path?: string, override = true): void {

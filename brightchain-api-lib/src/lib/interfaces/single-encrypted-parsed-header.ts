@@ -1,4 +1,4 @@
-import { EciesEncryptionTypeEnum } from '@brightchain/brightchain-lib';
+import { EciesEncryptionTypeEnum } from '@digitaldefiance/ecies-lib';
 
 /**
  * Interface for encrypted messages

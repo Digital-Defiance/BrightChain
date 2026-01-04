@@ -1,4 +1,4 @@
-import { HandleableError } from '@brightchain/brightchain-lib';
+import { HandleableError } from '@digitaldefiance/i18n-lib';
 import { NextFunction, Response } from 'express';
 
 /**

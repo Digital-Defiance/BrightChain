@@ -1,13 +1,13 @@
 import { BrightChainMember } from './brightChainMember';
-import { GuidV4 } from './guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { QuorumDataRecordDto } from './quorumDataRecordDto';
 import { ChecksumService } from './services/checksum.service';
-import { ECIESService } from './services/ecies.service';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import {
   ChecksumUint8Array,
   HexString,
   ShortHexGuid,
-  SignatureUint8Array,
+  SignatureBuffer,
 } from './types';
 
 export class QuorumDataRecord {
@@ -23,7 +23,7 @@ export class QuorumDataRecord {
    */
   public readonly checksum: ChecksumUint8Array;
   public readonly creator: BrightChainMember;
-  public readonly signature: SignatureUint8Array;
+  public readonly signature: SignatureBuffer;
   public readonly memberIDs: ShortHexGuid[];
   public readonly sharesRequired: number;
   public readonly dateCreated: Date;
@@ -36,7 +36,7 @@ export class QuorumDataRecord {
     encryptedData: Buffer,
     encryptedSharesByMemberId: Map<ShortHexGuid, Buffer>,
     checksum?: ChecksumUint8Array,
-    signature?: SignatureUint8Array,
+    signature?: SignatureBuffer,
     id?: ShortHexGuid,
     dateCreated?: Date,
     dateUpdated?: Date,
@@ -62,16 +62,16 @@ export class QuorumDataRecord {
     this.encryptedSharesByMemberId = encryptedSharesByMemberId;
     const calculatedChecksum =
       QuorumDataRecord.checksumService.calculateChecksum(encryptedData);
-    if (checksum && checksum.compare(calculatedChecksum) != 0) {
+    if (checksum && Buffer.compare(checksum, calculatedChecksum) !== 0) {
       throw new Error('Invalid checksum');
     }
     this.checksum = calculatedChecksum;
     this.creator = creator;
-    this.signature = signature ?? creator.sign(this.checksum);
+    this.signature = signature ?? (creator.sign(Buffer.from(this.checksum)) as SignatureBuffer);
     if (
       !QuorumDataRecord.eciesService.verifyMessage(
         creator.publicKey,
-        this.checksum,
+        Buffer.from(this.checksum),
         this.signature,
       )
     ) {
@@ -96,7 +96,7 @@ export class QuorumDataRecord {
     });
     return {
       id: this.id.asShortHexGuid,
-      creatorId: this.creator.id.asShortHexGuid,
+      creatorId: this.creator.guidId.asShortHexGuid,
       encryptedData: this.encryptedData.toString('hex') as HexString,
       encryptedSharesByMemberId,
       checksum: QuorumDataRecord.checksumService.checksumToHexString(
@@ -130,7 +130,7 @@ export class QuorumDataRecord {
       encryptedSharesByMemberId,
       QuorumDataRecord.checksumService.hexStringToChecksum(dto.checksum),
       QuorumDataRecord.eciesService.signatureStringToSignatureBuffer(
-        dto.signature,
+        dto.signature as unknown as HexString,
       ),
       dto.id,
       dto.dateCreated,

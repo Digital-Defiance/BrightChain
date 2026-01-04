@@ -9,14 +9,11 @@ import {
   StringLanguage,
 } from '@brightchain/brightchain-lib';
 import { Request, Response } from 'express';
-import {
-  DefaultBackendIdType,
-  IMongoEnvironment,
-  MongoDbObjectId,
-} from '../../index';
-import { MockBackendBurnbagMember } from '../__tests__/fixtures/mock-backend-burnbag-member';
+import { ObjectId as MongoDbObjectId } from 'bson';
+import { DefaultBackendIdType } from '../shared-types';
+import { IMongoEnvironment } from '../interfaces/environment-mongo';
+import { MockBackendBrightchainMember } from '../__tests__/fixtures/mock-backend-brightchain-member';
 import { makeMockDocument } from '../__tests__/fixtures/mocked-model';
-import { BrightChainMember } from '../backendMember';
 import { IUserDocument } from '../documents/user';
 import { IApplication } from '../interfaces/application';
 import { IEnvironment } from '../interfaces/environment';
@@ -27,6 +24,7 @@ import { JwtService } from '../services/jwt';
 import { RoleService } from '../services/role';
 import { UserService } from '../services/user';
 import { UserController } from './user';
+import { Member } from '@digitaldefiance/ecies-lib';
 
 // This is now the ONLY source for InvalidCredentialsError
 const { InvalidCredentialsError, InvalidPasswordError } = jest.requireActual(
@@ -71,7 +69,7 @@ describe('UserController', () => {
     const { SystemUserService } = require('../services/system-user');
     SystemUserService.getSystemUser.mockClear();
     SystemUserService.getSystemUser.mockReturnValue(
-      new MockBackendBurnbagMember({
+      new MockBackendBrightchainMember({
         type: MemberType.System,
         name: AppConstants.SystemUser,
       }),
@@ -213,9 +211,9 @@ describe('UserController', () => {
         ] as ITokenRole<DefaultBackendIdType>[],
       };
 
-      const userMember = new MockBackendBurnbagMember({
+      const userMember = new MockBackendBrightchainMember({
         type: MemberType.User,
-      }) as unknown as BrightChainMember;
+      }) as unknown as Member;
 
       userServiceInstance.verifyDirectLoginChallenge.mockResolvedValue({
         userDoc: mockUser as unknown as IUserDocument,
@@ -281,9 +279,9 @@ describe('UserController', () => {
         roles: [],
       };
 
-      const userMember = new MockBackendBurnbagMember({
+      const userMember = new MockBackendBrightchainMember({
         type: MemberType.User,
-      }) as unknown as BrightChainMember;
+      }) as unknown as Member;
 
       userServiceInstance.verifyDirectLoginChallenge.mockResolvedValue({
         userDoc: mockUser as unknown as IUserDocument,

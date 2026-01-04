@@ -1,23 +1,21 @@
+import { StringLanguage } from '@brightchain/brightchain-lib';
 import {
   EmailTokenType,
-  HandleableError,
-  StringLanguage,
-  StringName,
-  translate,
-} from '@brightchain/brightchain-lib';
+  getSuiteCoreTranslation,
+  SuiteCoreStringKey,
+} from '@digitaldefiance/suite-core-lib';
+import { HandleableError } from '@digitaldefiance/i18n-lib';
 
 export class EmailTokenFailedToSendError extends HandleableError {
   constructor(tokenType: EmailTokenType, language?: StringLanguage) {
     super(
-      `${translate(StringName.Email_TokenFailedToSend, undefined, language)}: ${
+      new Error(`${getSuiteCoreTranslation(SuiteCoreStringKey.Email_TokenFailedToSend)}: ${
         tokenType === EmailTokenType.AccountVerification
-          ? translate(
-              StringName.TokenType_AccountVerification,
-              undefined,
-              language,
+          ? getSuiteCoreTranslation(
+              SuiteCoreStringKey.TokenType_AccountVerification,
             )
-          : translate(StringName.TokenType_PasswordReset, undefined, language)
-      }`,
+          : getSuiteCoreTranslation(SuiteCoreStringKey.TokenType_PasswordReset)
+      }`),
     );
   }
 }

@@ -150,7 +150,7 @@ export class CblStream extends Readable {
         BlockType.EphemeralOwnedDataBlock,
         BlockDataType.RawData,
         xoredData.blockSize,
-        xoredData.data,
+        Buffer.from(xoredData.data),
         xoredData.idChecksum,
         this.cbl.creator,
         xoredData.metadata.dateCreated,

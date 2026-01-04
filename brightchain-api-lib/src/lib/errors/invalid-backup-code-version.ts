@@ -1,10 +1,13 @@
-import { StringName, translate } from '@brightchain/brightchain-lib';
+import {
+  getSuiteCoreTranslation,
+  SuiteCoreStringKey,
+} from '@digitaldefiance/suite-core-lib';
 
 export class InvalidBackupCodeVersionError extends Error {
   public readonly version: string;
   constructor(version: string) {
     super(
-      translate(StringName.Error_InvalidBackupCodeVersionTemplate, { version }),
+      getSuiteCoreTranslation(SuiteCoreStringKey.Error_InvalidBackupCodeVersionTemplate, { version }),
     );
     this.version = version;
   }

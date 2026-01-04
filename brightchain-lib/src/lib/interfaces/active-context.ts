@@ -1,7 +1,7 @@
 import { CurrencyCode } from '../currencyCode';
 import { StringLanguages } from '../enumerations/stringLanguages';
 import { LanguageContext } from '../sharedTypes';
-import { Timezone } from '../timezone';
+import { Timezone } from '@digitaldefiance/i18n-lib';
 
 export interface IActiveContext {
   /**

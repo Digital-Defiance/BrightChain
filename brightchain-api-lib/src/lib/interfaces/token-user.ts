@@ -1,4 +1,4 @@
-import { ITokenRoleDTO } from '@brightchain/brightchain-lib';
+import { ITokenRoleDTO } from '@digitaldefiance/suite-core-lib';
 
 /**
  * Interface for the user object stored in the JWT token

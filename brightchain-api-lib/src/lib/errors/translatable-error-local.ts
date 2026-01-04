@@ -1,22 +1,22 @@
 // Local TranslatableError to avoid circular dependencies with main lib
 import {
-  HandleableError,
-  LanguageContext,
-  StringLanguage,
-  StringName,
-  translate,
-} from '@brightchain/brightchain-lib';
+  SuiteCoreStringKey,
+  getSuiteCoreTranslation as translate,
+} from '@digitaldefiance/suite-core-lib';
+import { HandleableError, LanguageContextSpace, HandleableErrorOptions } from '@digitaldefiance/i18n-lib';
+import { StringLanguage } from '../interfaces/request-user';
 
 export class TranslatableError extends HandleableError {
   constructor(
-    string: StringName,
+    string: SuiteCoreStringKey,
     otherVars?: Record<string, string | number>,
     language?: StringLanguage,
-    context?: LanguageContext,
-    options?: { statusCode?: number },
+    context?: LanguageContextSpace,
+    options?: HandleableErrorOptions,
   ) {
-    super(translate(string, otherVars, language, context), {
-      statusCode: options?.statusCode ?? 500,
+    super(new Error(translate(string, otherVars, language)), {
+      statusCode: 500,
+      ...options,
     });
     this.name = 'TranslatedError';
   }

@@ -32,16 +32,13 @@ export class X86Cpu {
     if (memory instanceof Uint8Array) {
       this.Program = memory;
     } else if (memory instanceof ArrayBuffer) {
-      // uint32 array from arraybuffer
       this.Program = new Uint8Array(memory);
     } else {
-      // number of bytes
       this.Program = new Uint8Array(memory);
     }
     if (registers instanceof Uint32Array) {
-      this.Registers = new Uint32Array(registers);
+      this.Registers = registers;
     } else {
-      // number of registers
       this.Registers = new Uint32Array(registers);
     }
     this.PC = pc;
@@ -86,7 +83,7 @@ export class X86Cpu {
   }
 
   public static new(
-    memory: number | Uint32Array | ArrayBuffer,
+    memory: number | Uint8Array | ArrayBuffer,
     registers: number | Uint32Array,
     pc = -1,
   ): X86Cpu {
@@ -103,7 +100,7 @@ export class X86Cpu {
   }
 
   public static run(
-    memory: number | Uint32Array | ArrayBuffer,
+    memory: number | Uint8Array | ArrayBuffer,
     registers: number | Uint32Array,
     pc: number,
   ): X86Cpu {

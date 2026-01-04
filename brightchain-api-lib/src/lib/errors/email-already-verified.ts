@@ -1,7 +1,7 @@
-import { HandleableError } from '@brightchain/brightchain-lib';
+import { HandleableError } from '@digitaldefiance/i18n-lib';
 
 export class EmailAlreadyVerifiedError extends HandleableError {
   constructor(userId: string) {
-    super(`Email already verified for userId: ${userId}`);
+    super(new Error(`Email already verified for userId: ${userId}`));
   }
 }

@@ -12,14 +12,12 @@ import { environment } from './environments/environment';
     .use(LanguageDetector)
     .use(initReactI18next)
     .init({
-      fallbackLng: LanguageCodes[StringLanguages.EnglishUS],
+      fallbackLng: StringLanguages.EnglishUS,
       debug: environment.debugI18n,
       interpolation: {
         escapeValue: false, // not needed for React
       },
-      supportedLngs: Object.values(StringLanguages).map(
-        (lang) => LanguageCodes[lang],
-      ),
+      supportedLngs: Object.values(StringLanguages),
       backend: {
         loadPath: '/api/i18n/{{lng}}',
       },

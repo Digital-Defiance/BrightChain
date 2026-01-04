@@ -9,7 +9,7 @@ import { BlockValidationErrorType } from '../enumerations/blockValidationErrorTy
 import MemberType from '../enumerations/memberType';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumService } from '../services/checksum.service';
-import { ECIESService } from '../services/ecies.service';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer, SignatureBuffer } from '../types';
 import { ConstituentBlockListBlock } from './cbl';

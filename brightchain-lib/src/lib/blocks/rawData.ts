@@ -133,7 +133,8 @@ export class RawDataBlock extends BaseBlock {
       ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
         this._data,
       );
-    if (!calculatedChecksum.equals(this.idChecksum)) {
+
+    if (!Buffer.from(calculatedChecksum).equals(Buffer.from(this.idChecksum))) {
       throw new ChecksumMismatchError(this.idChecksum, calculatedChecksum);
     }
   }

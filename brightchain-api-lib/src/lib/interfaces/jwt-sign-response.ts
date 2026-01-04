@@ -1,4 +1,4 @@
-import { ITokenRole, ITokenRoleDTO } from '@brightchain/brightchain-lib';
+import { ITokenRole, ITokenRoleDTO } from '@digitaldefiance/suite-core-lib';
 import { DefaultBackendIdType } from '../shared-types';
 import { ITokenUser } from './token-user';
 

@@ -105,6 +105,11 @@ export enum BlockType {
   EncryptedExtendedConstituentBlockListBlock = 32,
 
   /**
+   * A block that has been encrypted multiple times.
+   */
+  MultiEncryptedBlock = 33,
+
+  /**
    * A reference to a block stored elsewhere.
    * Features:
    * 1. Lazy loading

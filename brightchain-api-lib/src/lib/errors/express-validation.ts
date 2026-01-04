@@ -1,19 +1,13 @@
-import { HandleableError } from '@brightchain/brightchain-lib';
 import { Result, ValidationError } from 'express-validator';
+import { HandleableError } from '@digitaldefiance/i18n-lib';
+import { SuiteCoreStringKey } from '@digitaldefiance/suite-core-lib';
 
 export class ExpressValidationError extends HandleableError {
-  public readonly errors: Result<ValidationError> | ValidationError[];
-  constructor(errors: Result<ValidationError> | ValidationError[]) {
-    const errorsArray = Array.isArray(errors) ? errors : errors.array();
-    const errorCount = errorsArray.length;
-    super(
-      `Validation failed with ${errorCount} error${
-        errorCount === 1 ? '' : 's'
-      }`,
-      { statusCode: 422 },
-    );
+  public readonly errors: Result<ValidationError>;
+
+  constructor(errors: Result<ValidationError>) {
+    super(new Error(SuiteCoreStringKey.ValidationError), { statusCode: 400 });
     this.errors = errors;
     this.name = 'ExpressValidationError';
-    Object.setPrototypeOf(this, ExpressValidationError.prototype);
   }
 }

@@ -1,4 +1,4 @@
-import { AppConstants } from '@brightchain/brightchain-lib';
+import { AppConstants } from './appConstants';
 import cors from 'cors';
 import { randomBytes } from 'crypto';
 import {
@@ -16,11 +16,9 @@ export class Middlewares {
   /**
    * CORS whitelist
    */
-  private static readonly corsWhitelist = [
+  private static readonly corsWhitelist: (string | RegExp)[] = [
     'http://localhost:3000',
     'https://localhost:3000',
-    AppConstants.BurnbagFullHostnameRegex,
-    AppConstants.CanaryFullHostnameRegex,
   ];
 
   /**
@@ -74,10 +72,8 @@ export class Middlewares {
             connectSrc: [
               "'self'",
               'http://localhost:3000',
-              'https://digitaldefiance.com',
-              'https://*.digitaldefiance.com',
-              'https://canaryprotocol.io',
-              'https://*.canaryprotocol.io',
+              'https://brightchain.org',
+              'https://*.brightchain.org',
               'https://ka-p.fontawesome.com',
             ],
             scriptSrc: [

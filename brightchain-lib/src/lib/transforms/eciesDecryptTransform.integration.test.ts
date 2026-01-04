@@ -1,9 +1,9 @@
+import { SecureString } from '@digitaldefiance/ecies-lib';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { randomBytes } from 'crypto';
 import { Readable } from 'stream';
 import { ECIES } from '../constants';
 import { BlockSize } from '../enumerations/blockSize';
-import { SecureString } from '../secureString';
-import { ECIESService } from '../services/ecies.service';
 import { EciesDecryptionTransform } from './eciesDecryptTransform';
 
 describe('EciesDecryptionTransform Integration Tests', () => {
@@ -18,7 +18,8 @@ describe('EciesDecryptionTransform Integration Tests', () => {
   beforeEach(() => {
     eciesService = new ECIESService();
     mnemonic = eciesService.generateNewMnemonic();
-    keypair = eciesService.mnemonicToSimpleKeyPairBuffer(mnemonic);
+    const kp = eciesService.mnemonicToSimpleKeyPairBuffer(mnemonic);
+    keypair = kp;
   });
 
   function encryptData(inputData: Buffer, publicKey: Buffer): Buffer {
@@ -48,6 +49,7 @@ describe('EciesDecryptionTransform Integration Tests', () => {
     }
 
     // Concatenate the decrypted chunks
+    // @ts-expect-error - TS5.9 incorrectly flags Buffer[] as incompatible with Uint8Array[]
     return Buffer.concat(decryptedChunks);
   };
 

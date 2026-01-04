@@ -1,5 +1,4 @@
-import { EmailString } from '../../emailString';
-import { GuidV4 } from '../../guid';
+import { EmailString, GuidV4 } from '@digitaldefiance/ecies-lib';
 import {
   IPrivateMemberData,
   IPublicMemberData,

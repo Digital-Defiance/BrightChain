@@ -2,9 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { BrightChainMember } from '../brightChainMember';
 import { MemberData, MemberDocument } from '../documents/memberDocument';
-import { EmailString } from '../emailString';
 import { MemberType } from '../enumerations/memberType';
-import { GuidV4 } from '../guid';
+import { EmailString, GuidV4 } from '@digitaldefiance/ecies-lib';
 import { ServiceProvider } from '../services/service.provider';
 import { TestMembers } from './testMembers';
 
@@ -27,7 +26,7 @@ describe('Document System Tests', () => {
 
   it('should successfully store and restore a member document', async () => {
     // Create a test member
-    const { member, document } = TestMembers.createRandomMember(
+    const { member, document } = await TestMembers.createRandomMember(
       MemberType.User,
       'Test Store User',
       'store@test.com',

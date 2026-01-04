@@ -5,8 +5,8 @@ import { BlockType } from '../enumerations/blockType';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
-import { ChecksumBuffer } from '../types';
 import { RawDataBlock } from './rawData';
+import { ChecksumBuffer } from '@digitaldefiance/node-ecies-lib';
 
 describe('RawDataBlock', () => {
   let checksumService: ChecksumService;

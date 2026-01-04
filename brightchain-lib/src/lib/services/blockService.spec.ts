@@ -1,14 +1,15 @@
+import { ChecksumUint8Array } from '../types';
+import { BaseBlock } from '../blocks/base';
 import { EphemeralBlock } from '../blocks/ephemeral';
 import { BrightChainMember } from '../brightChainMember';
 import { CHECKSUM, TUPLE } from '../constants';
-import { EmailString } from '../emailString';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { MemberType } from '../enumerations/memberType';
-import { ChecksumBuffer } from '../types';
 import { BlockService } from './blockService';
 import { ServiceProvider } from './service.provider';
+import { EmailString } from '@digitaldefiance/ecies-lib';
 
 // Mock the CBLBase class to avoid signature validation issues
 jest.mock('../blocks/cblBase', () => {
@@ -26,19 +27,28 @@ jest.mock('../blocks/cblBase', () => {
 describe('BlockService', () => {
   let member: BrightChainMember;
   let tinyData: Buffer;
-  let checksum: ChecksumBuffer;
+  let checksum: ChecksumUint8Array;
+  let blockService: BlockService;
 
   beforeEach(async () => {
+    blockService = ServiceProvider.getInstance().blockService;
     // Create minimal test data - just a single byte
     tinyData = Buffer.from([1]);
     checksum =
       ServiceProvider.getInstance().checksumService.calculateChecksum(tinyData);
 
     // Create test member with valid email
+    // Use a safe ID that doesn't start with ECIES magic byte to avoid false positive in isEncrypted
+    const safeId = Buffer.alloc(16);
+    safeId[0] = 0x00; 
+    
     const result = BrightChainMember.newMember(
+      ServiceProvider.getInstance().eciesService,
       MemberType.User,
       'Test',
       new EmailString('test@example.com'),
+      undefined,
+      safeId
     );
     member = result.member;
   });
@@ -54,6 +64,7 @@ describe('BlockService', () => {
 
     // Create test member with valid email
     const { member } = BrightChainMember.newMember(
+      ServiceProvider.getInstance().eciesService,
       MemberType.User,
       'Test',
       new EmailString('test@example.com'),
@@ -61,21 +72,21 @@ describe('BlockService', () => {
 
     try {
       // Create blocks - we need TUPLE.SIZE number of blocks
-      const blocks = [];
+      const blocks: BaseBlock[] = [];
       for (let i = 0; i < TUPLE.SIZE; i++) {
-        const block = await EphemeralBlock.from(
+        const block = (await EphemeralBlock.from(
           BlockType.EphemeralOwnedDataBlock,
           BlockDataType.RawData,
           BlockSize.Message,
           tinyData,
           checksum,
           member,
-        );
+        )) as EphemeralBlock;
         blocks.push(block);
       }
 
       // Create CBL with minimal data
-      const cbl = await BlockService.createCBL(
+      const cbl = await blockService.createCBL(
         blocks,
         member,
         blocks.length, // File length is number of blocks
@@ -97,37 +108,37 @@ describe('BlockService', () => {
   });
 
   it('should reject empty blocks array', async () => {
-    await expect(BlockService.createCBL([], member, 0)).rejects.toThrow(
+    await expect(blockService.createCBL([], member, 0)).rejects.toThrow(
       'Blocks array must not be empty',
     );
   });
 
   it('should reject blocks with different sizes', async () => {
-    const block1 = await EphemeralBlock.from(
+    const block1 = (await EphemeralBlock.from(
       BlockType.EphemeralOwnedDataBlock,
       BlockDataType.RawData,
       BlockSize.Message,
       tinyData,
       checksum,
       member,
-    );
+    )) as EphemeralBlock;
 
     const largerData = Buffer.from([1, 2, 3, 4]);
     const largerChecksum =
       ServiceProvider.getInstance().checksumService.calculateChecksum(
         largerData,
       );
-    const block2 = await EphemeralBlock.from(
+    const block2 = (await EphemeralBlock.from(
       BlockType.EphemeralOwnedDataBlock,
       BlockDataType.RawData,
       BlockSize.Small,
       largerData,
       largerChecksum,
       member,
-    );
+    )) as EphemeralBlock;
 
     await expect(
-      BlockService.createCBL([block1, block2], member, 2),
+      blockService.createCBL([block1, block2], member, 2),
     ).rejects.toThrow('All blocks must have the same block size');
   });
 
@@ -138,20 +149,20 @@ describe('BlockService', () => {
       ServiceProvider.getInstance().checksumService.calculateChecksum(
         smallData,
       );
-    const blocks = [];
+    const blocks: BaseBlock[] = [];
     for (let i = 0; i < TUPLE.SIZE; i++) {
-      const block = await EphemeralBlock.from(
+      const block = (await EphemeralBlock.from(
         BlockType.EphemeralOwnedDataBlock,
         BlockDataType.RawData,
         BlockSize.Small,
         smallData,
         smallChecksum,
         member,
-      );
+      )) as EphemeralBlock;
       blocks.push(block);
     }
 
-    const cbl = await BlockService.createCBL(blocks, member, blocks.length);
+    const cbl = await blockService.createCBL(blocks, member, blocks.length);
 
     expect(cbl).toBeDefined();
     expect(cbl.blockType).toBe(BlockType.ConstituentBlockList);
@@ -164,34 +175,35 @@ describe('BlockService', () => {
     // we need to modify this test to match our mock behavior
 
     // Create blocks
-    const blocks = [];
+    const blocks: BaseBlock[] = [];
     for (let i = 0; i < TUPLE.SIZE; i++) {
-      const block = await EphemeralBlock.from(
+      const block = (await EphemeralBlock.from(
         BlockType.EphemeralOwnedDataBlock,
         BlockDataType.RawData,
         BlockSize.Message,
         tinyData,
         checksum,
         member,
-      );
+      )) as EphemeralBlock;
       blocks.push(block);
     }
 
     // Create CBL with original member
-    const cbl = await BlockService.createCBL(blocks, member, blocks.length);
+    const cbl = await blockService.createCBL(blocks, member, blocks.length);
 
     // Verify signature with correct member - should be true due to our mock
     expect(cbl.validateSignature()).toBe(true);
 
     // Create a different member
     const otherMember = BrightChainMember.newMember(
+      ServiceProvider.getInstance().eciesService,
       MemberType.User,
       'Other',
       new EmailString('other@example.com'),
     ).member;
 
     // Create a CBL with the other member
-    const otherCbl = await BlockService.createCBL(
+    const otherCbl = await blockService.createCBL(
       blocks,
       otherMember,
       blocks.length,
@@ -201,30 +213,30 @@ describe('BlockService', () => {
     // So we'll just verify the CBLs were created with the correct members
     expect(cbl.creator).toBe(member);
     expect(otherCbl.creator).toBe(otherMember);
-    expect(cbl.creatorId.equals(member.id)).toBe(true);
-    expect(otherCbl.creatorId.equals(otherMember.id)).toBe(true);
+    expect(cbl.creatorId.equals(member.guidId)).toBe(true);
+    expect(otherCbl.creatorId.equals(otherMember.guidId)).toBe(true);
   });
 
   it('should validate CBL metadata correctly', async () => {
-    const blocks = [];
+    const blocks: BaseBlock[] = [];
     for (let i = 0; i < TUPLE.SIZE; i++) {
-      const block = await EphemeralBlock.from(
+      const block = (await EphemeralBlock.from(
         BlockType.EphemeralOwnedDataBlock,
         BlockDataType.RawData,
         BlockSize.Medium,
         tinyData,
         checksum,
         member,
-      );
+      )) as EphemeralBlock;
       blocks.push(block);
     }
 
-    const cbl = await BlockService.createCBL(blocks, member, blocks.length);
+    const cbl = await blockService.createCBL(blocks, member, blocks.length);
 
     // Verify metadata
     expect(cbl.blockType).toBe(BlockType.ConstituentBlockList);
     expect(cbl.blockDataType).toBe(BlockDataType.EphemeralStructuredData);
-    expect(cbl.creatorId.equals(member.id)).toBe(true);
+    expect(cbl.creatorId.equals(member.guidId)).toBe(true);
     expect(cbl.originalDataLength).toBe(blocks.length);
     expect(cbl.tupleSize).toBe(TUPLE.SIZE);
     expect(cbl.addresses.length).toBe(blocks.length);

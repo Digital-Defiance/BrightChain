@@ -1,9 +1,9 @@
+import { ChecksumUint8Array } from '../types';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { BlockSize, blockSizeToSizeString } from '../enumerations/blockSize';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
-import { ChecksumUint8Array } from '../types';
 
 /**
  * DiskBlockStore provides base functionality for storing blocks on disk.
@@ -40,7 +40,7 @@ export abstract class DiskBlockStore {
       throw new StoreError(StoreErrorType.BlockIdRequired);
     }
 
-    const checksumString = blockId.toString('hex');
+    const checksumString = Buffer.from(blockId).toString('hex');
     if (checksumString.length < 2) {
       throw new StoreError(StoreErrorType.InvalidBlockIdTooShort);
     }
@@ -63,7 +63,7 @@ export abstract class DiskBlockStore {
       throw new StoreError(StoreErrorType.BlockIdRequired);
     }
 
-    const checksumString = blockId.toString('hex');
+    const checksumString = Buffer.from(blockId).toString('hex');
     if (checksumString.length < 2) {
       throw new StoreError(StoreErrorType.InvalidBlockIdTooShort);
     }

@@ -1,5 +1,6 @@
-import { ModelName, SchemaCollection } from '@brightchain/brightchain-lib';
 import { Connection } from 'mongoose';
+import { ModelName } from '../enumerations/model-name';
+import { SchemaCollection } from '../enumerations/schema-collection';
 import EmailTokenModel from '../models/email-token';
 import MnemonicModel from '../models/mnemonic';
 import RoleModel from '../models/role';
@@ -21,7 +22,7 @@ export function getSchemaMap(connection: Connection): SchemaMap {
      */
     EmailToken: {
       collection: SchemaCollection.EmailToken,
-      model: EmailTokenModel(connection),
+      model: EmailTokenModel,
       modelName: ModelName.EmailToken,
       schema: EmailTokenSchema,
     },
@@ -30,7 +31,7 @@ export function getSchemaMap(connection: Connection): SchemaMap {
      */
     Mnemonic: {
       collection: SchemaCollection.Mnemonic,
-      model: MnemonicModel(connection),
+      model: MnemonicModel,
       modelName: ModelName.Mnemonic,
       schema: MnemonicSchema,
     },
@@ -39,13 +40,13 @@ export function getSchemaMap(connection: Connection): SchemaMap {
      */
     Role: {
       collection: SchemaCollection.Role,
-      model: RoleModel(connection),
+      model: RoleModel,
       modelName: ModelName.Role,
       schema: RoleSchema,
     },
     UsedDirectLoginToken: {
       collection: SchemaCollection.UsedDirectLoginToken,
-      model: UsedDirectLoginTokenModel(connection),
+      model: UsedDirectLoginTokenModel,
       modelName: ModelName.UsedDirectLoginToken,
       schema: UsedDirectLoginTokenSchema,
     },
@@ -54,7 +55,7 @@ export function getSchemaMap(connection: Connection): SchemaMap {
      */
     User: {
       collection: SchemaCollection.User,
-      model: UserModel(connection),
+      model: UserModel,
       modelName: ModelName.User,
       schema: UserSchema,
     },
@@ -63,7 +64,7 @@ export function getSchemaMap(connection: Connection): SchemaMap {
      */
     UserRole: {
       collection: SchemaCollection.UserRole,
-      model: UserRoleModel(connection),
+      model: UserRoleModel,
       modelName: ModelName.UserRole,
       schema: UserRoleSchema,
     },

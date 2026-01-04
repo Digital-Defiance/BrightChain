@@ -9,7 +9,7 @@ import { MemberStatusType } from '../enumerations/memberStatusType';
 import MemberType from '../enumerations/memberType';
 import { MemberError } from '../errors/memberError';
 import { NotImplementedError } from '../errors/notImplemented';
-import { GuidV4 } from '../guid';
+import { GuidV4, SecureString } from '@digitaldefiance/ecies-lib';
 import {
   IMemberChanges,
   IMemberIndexEntry,
@@ -18,7 +18,6 @@ import {
   IMemberStore,
   INewMemberData,
 } from '../interfaces/member/memberData';
-import { SecureString } from '../secureString';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 import { ServiceProvider } from './service.provider';
 
@@ -48,7 +47,9 @@ export class MemberStore implements IMemberStore {
     }
 
     // Create member with BrightChainMember
+    const eciesService = ServiceProvider.getInstance().eciesService;
     const { member, mnemonic } = BrightChainMember.newMember(
+      eciesService,
       data.type,
       data.name,
       data.contactEmail,
@@ -95,14 +96,14 @@ export class MemberStore implements IMemberStore {
     };
 
     // Create BrightChainMember instances
-    const publicMember = BrightChainMember.fromJson(
+    const publicMember = await BrightChainMember.fromJson(
       JSON.stringify({
         ...publicData,
         contactEmail: privateData.contactEmail,
         memberType: data.type,
       }),
     );
-    const privateMember = BrightChainMember.fromJson(
+    const privateMember = await BrightChainMember.fromJson(
       JSON.stringify({
         ...publicData,
         contactEmail: privateData.contactEmail,
@@ -224,8 +225,8 @@ export class MemberStore implements IMemberStore {
 
     // Create document
     const doc = await MemberDocument.createFromCBLs(
-      publicBlock.data,
-      privateBlock.data,
+      Buffer.from(publicBlock.data),
+      Buffer.from(privateBlock.data),
     );
 
     // Convert to BrightChainMember
@@ -248,8 +249,8 @@ export class MemberStore implements IMemberStore {
     const publicBlock = await this.blockStore.getData(indexEntry.publicCBL);
     const privateBlock = await this.blockStore.getData(indexEntry.privateCBL);
     const doc = await MemberDocument.createFromCBLs(
-      publicBlock.data,
-      privateBlock.data,
+      Buffer.from(publicBlock.data),
+      Buffer.from(privateBlock.data),
     );
 
     // Apply changes and create new CBLs

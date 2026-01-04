@@ -1,16 +1,18 @@
 import {
-  EmailString,
-  MemberType,
+   MemberType,
+} from '@brightchain/brightchain-lib';
+import {
+   EmailString,
   SecureBuffer,
   SecureString,
-} from '@brightchain/brightchain-lib';
+} from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
 import { DefaultBackendIdType, SignatureBuffer } from '../../shared-types';
 
 /**
  * Operational interface for member - defines getters and methods
  */
-export interface IBurnbagMemberOperational<
+export interface IBrightchainMemberOperational<
   I extends string | DefaultBackendIdType,
 > {
   // Required getters
@@ -48,6 +50,6 @@ export interface IBurnbagMemberOperational<
  * Extended operational interface for test members
  */
 export interface ITestBrightChainMemberOperational
-  extends IBurnbagMemberOperational<DefaultBackendIdType> {
+  extends IBrightchainMemberOperational<DefaultBackendIdType> {
   get mnemonic(): SecureString | undefined;
 }

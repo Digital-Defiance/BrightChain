@@ -10,7 +10,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const languageCode =
     localStorage.getItem('languageCode') ??
-    LanguageCodes[StringLanguages.EnglishUS];
+    StringLanguages.EnglishUS;
   config.headers['Accept-Language'] = languageCode;
   return config;
 });

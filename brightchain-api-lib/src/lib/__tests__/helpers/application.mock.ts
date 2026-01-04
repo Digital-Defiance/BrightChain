@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { mongoose } from '../../../index';
+import mongoose from 'mongoose';
 
 /**
  * Create a minimal IApplication mock suitable for router/middleware tests.

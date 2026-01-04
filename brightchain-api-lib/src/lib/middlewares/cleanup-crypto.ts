@@ -14,12 +14,12 @@ export function cleanupCrypto(
 
   // Override end function to cleanup before response
   const wrappedEnd = function (this: Response, ...args: unknown[]) {
-    // Cleanup burnbagUser if it exists
-    if (req.burnbagUser) {
+    // Cleanup brightchainUser if it exists
+    if (req.brightchainUser) {
       try {
         // Dispose of sensitive cryptographic material
-        req.burnbagUser.dispose();
-        req.burnbagUser = undefined;
+        req.brightchainUser.dispose();
+        req.brightchainUser = undefined;
       } catch (error) {
         console.error('Error cleaning up crypto resources:', error);
       }

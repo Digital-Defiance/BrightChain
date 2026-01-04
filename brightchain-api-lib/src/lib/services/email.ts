@@ -1,6 +1,11 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
-import { debugLog } from '@brightchain/brightchain-lib';
 import { IApplication } from '../interfaces/application';
+// import { debugLog } from '../utils';
+const debugLog = (debug: boolean, type: string, message: string, ...args: any[]) => {
+  if (debug) {
+    console.log(`[${type}] ${message}`, ...args);
+  }
+};
 
 /**
  * A generic service for sending emails using Amazon SES.

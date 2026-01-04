@@ -1,11 +1,8 @@
-import { mongoose } from '../../index';
 import { Environment } from '../environment';
-import { MongooseDocument, MongooseModel } from '../shared-types';
+import { IApplication as IApplicationBase } from '@digitaldefiance/node-express-suite';
 
-export interface IApplication {
+export interface IApplication extends IApplicationBase {
   get environment(): Environment;
-  get db(): typeof mongoose;
   get ready(): boolean;
   start(): Promise<void>;
-  getModel<T extends MongooseDocument>(modelName: string): MongooseModel<T>;
 }

@@ -10,6 +10,7 @@ export enum MemberType {
   Admin = 'Admin',
   System = 'System',
   User = 'User',
+  Anonymous = 'Anonymous',
 }
 
 export default MemberType;

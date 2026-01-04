@@ -1,4 +1,4 @@
-import { EmailTokenType, IEmailTokenBase } from '@brightchain/brightchain-lib';
+import { EmailTokenType, IEmailTokenBase } from '@digitaldefiance/suite-core-lib';
 import { Types } from 'mongoose';
 
 export type IEmailTokenBackendObject = IEmailTokenBase<

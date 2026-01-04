@@ -1,14 +1,18 @@
 import {
   AccountStatus,
-  AppConstants,
-  CanaryStatus,
-  DefaultLanguage,
-  isValidTimezone,
-  ModelName,
-  StringLanguage,
-  StringName,
-  translate,
-} from '@brightchain/brightchain-lib';
+  SuiteCoreStringKey,
+  getSuiteCoreTranslation as translate,
+} from '@digitaldefiance/suite-core-lib';
+import { ModelName } from '../enumerations/model-name';
+import { StringLanguage } from '../interfaces/request-user';
+import { StringLanguages } from '@brightchain/brightchain-lib';
+// import {
+//   StringLanguage,
+//   StringName,
+//   translate,
+// } from '@brightchain/brightchain-lib';
+import { AppConstants } from '../appConstants';
+import { isValidTimezone } from '@digitaldefiance/i18n-lib';
 import { Schema } from 'mongoose';
 import validator from 'validator';
 import { IUserDocument } from '../documents/user';
@@ -28,7 +32,7 @@ export const UserSchema: Schema = new Schema<IUserDocument>(
       validate: {
         validator: (v: string) => AppConstants.UsernameRegex.test(v),
         message: () =>
-          translate(StringName.Validation_UsernameRegexErrorTemplate),
+          translate(SuiteCoreStringKey.Validation_UsernameRegexErrorTemplate),
       },
     },
     /**
@@ -65,13 +69,6 @@ export const UserSchema: Schema = new Schema<IUserDocument>(
       unique: true,
     },
     /**
-     * Crypted mnemonics/passwords that trigger a duress protocol
-     */
-    duressPasswords: {
-      type: [String],
-      default: [],
-    },
-    /**
      * The timezone for the user
      */
     timezone: {
@@ -83,7 +80,7 @@ export const UserSchema: Schema = new Schema<IUserDocument>(
           return isValidTimezone(v);
         },
         message: (props: { value: string }) =>
-          translate(StringName.Common_NotValidTimeZoneTemplate).replace(
+          translate(SuiteCoreStringKey.Common_NotValidTimeZoneTemplate).replace(
             '{timezone}',
             props.value,
           ),
@@ -94,8 +91,8 @@ export const UserSchema: Schema = new Schema<IUserDocument>(
      */
     siteLanguage: {
       type: String,
-      enum: Object.values(StringLanguage),
-      default: DefaultLanguage,
+      enum: Object.values(StringLanguages),
+      default: 'en-US',
       required: true,
     },
     /**
@@ -115,19 +112,10 @@ export const UserSchema: Schema = new Schema<IUserDocument>(
       default: AccountStatus.PendingEmailVerification,
     },
     /**
-     * Overall status for the user
-     */
-    overallCanaryStatus: {
-      type: String,
-      enum: Object.values(CanaryStatus),
-      default: CanaryStatus.Alive,
-      required: true,
-    },
-    /**
      * The user who created the user.
      */
     createdBy: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: ModelName.User,
       required: true,
       immutable: true,
@@ -136,7 +124,7 @@ export const UserSchema: Schema = new Schema<IUserDocument>(
      * The user who last updated the user.
      */
     updatedBy: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: ModelName.User,
       optional: true,
     },
@@ -148,7 +136,7 @@ export const UserSchema: Schema = new Schema<IUserDocument>(
      * The user who deleted the user.
      */
     deletedBy: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: ModelName.User,
       optional: true,
     },
@@ -156,7 +144,7 @@ export const UserSchema: Schema = new Schema<IUserDocument>(
      * Reference to the mnemonic document
      */
     mnemonicId: {
-      type: Schema.Types.ObjectId,
+      type: Schema.Types.ObjectId as any,
       ref: ModelName.Mnemonic,
       required: false,
     },

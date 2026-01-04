@@ -1,8 +1,8 @@
 import {
   ApiResponse,
-  BrightChainMember,
   TypedHandlers,
-} from '@brightchain/brightchain-lib';
+} from '@brightchain/brightchain-api-lib';
+import { BrightChainMember } from '@brightchain/brightchain-lib';
 import { BlocksController } from '../controllers/api/blocks';
 import { MembersController } from '../controllers/api/members';
 import { SessionsController } from '../controllers/api/sessions';
@@ -15,7 +15,7 @@ export interface IApplication {
   getController(name: 'sessions'): SessionsController;
   getController<TResponse extends ApiResponse>(
     name: string,
-  ): BaseController<TResponse, TypedHandlers<TResponse>>;
+  ): BaseController<TResponse, TypedHandlers>;
   getModel<T>(name: string): any;
   nodeAgent: BrightChainMember;
   clusterAgentPublicKeys: Buffer[];

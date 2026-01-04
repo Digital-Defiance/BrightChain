@@ -1,7 +1,6 @@
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import { ECIES } from '../constants';
-import { EmailString } from '../emailString';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
@@ -12,8 +11,9 @@ import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ServiceProvider } from '../services/service.provider';
-import { ChecksumBuffer } from '../types';
 import { EncryptedBlock } from './encrypted';
+import { ChecksumBuffer } from '@digitaldefiance/node-ecies-lib';
+import { EmailString } from '@digitaldefiance/ecies-lib';
 
 class TestEncryptedBlock extends EncryptedBlock {
   public static override async from(
@@ -72,6 +72,7 @@ describe('EncryptedBlock', () => {
 
   beforeAll(() => {
     creator = BrightChainMember.newMember(
+      ServiceProvider.getInstance().eciesService,
       MemberType.User,
       'Test User',
       new EmailString('test@example.com'),

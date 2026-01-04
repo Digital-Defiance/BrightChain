@@ -1,8 +1,22 @@
 import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { DiskBlockAsyncStore } from './stores/diskBlockAsyncStore';
+import * as fs from 'fs';
+
+// Mock the filesystem module
+jest.mock('fs');
 
 describe('BlockService', () => {
+  beforeEach(() => {
+    // Setup default mocks for fs operations
+    jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+    jest.spyOn(fs, 'mkdirSync').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('should store CBL to disk', () => {
     class MockStore extends DiskBlockAsyncStore {
       constructor() {

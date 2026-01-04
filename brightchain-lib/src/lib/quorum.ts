@@ -2,7 +2,7 @@ import * as uuid from 'uuid';
 import { BrightChainMember } from './brightChainMember';
 import { QuorumErrorType } from './enumerations/quorumErrorType';
 import { QuorumError } from './errors/quorumError';
-import { GuidV4 } from './guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { QuorumDataRecord } from './quorumDataRecord';
 import { SealingService } from './services/sealing.service';
 import { BufferStore } from './stores/bufferStore';
@@ -68,9 +68,9 @@ export class BrightChainQuorum {
    * @param member
    */
   protected storeMember(member: BrightChainMember) {
-    this._members.set(member.id.asShortHexGuid, member);
+    this._members.set(member.guidId.asShortHexGuid, member);
     this._memberPublicKeysByMemberId.set(
-      member.id.asShortHexGuid,
+      member.guidId.asShortHexGuid,
       member.publicKey,
     );
   }
@@ -145,7 +145,10 @@ export class BrightChainQuorum {
     // as well as whether the number of members is sufficient to unlock the document
     return (
       members.length >= doc.sharesRequired &&
-      members.every((m) => doc.memberIDs.includes(m.id.asShortHexGuid))
+      members.every((m) => {
+        const memberGuidId = m.guidId.asShortHexGuid;
+        return doc.memberIDs.includes(memberGuidId);
+      })
     );
   }
 }

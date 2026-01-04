@@ -11,7 +11,7 @@ export class BlockChecksum {
 
   public static calculateChecksum(data: Buffer): ChecksumUint8Array {
     return ServiceProvider.getInstance().checksumService.calculateChecksum(
-      data,
+      new Uint8Array(data),
     );
   }
 

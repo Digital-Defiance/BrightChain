@@ -1,8 +1,6 @@
+import { EmailString, GuidV4, SecureString as EciesSecureString } from '@digitaldefiance/ecies-lib';
 import { BrightChainMember } from '../brightChainMember';
-import { EmailString } from '../emailString';
 import { MemberType } from '../enumerations/memberType';
-import { GuidV4 } from '../guid';
-import { SecureString } from '../secureString';
 import { ServiceProvider } from '../services/service.provider';
 import {
   InstanceMethods,
@@ -34,7 +32,7 @@ const memberSchema: SchemaDefinition<MemberData> = {
 };
 
 export class MemberDocument extends Document<MemberData> {
-  constructor(member: BrightChainMember, mnemonic: SecureString) {
+  constructor(member: BrightChainMember, mnemonic: EciesSecureString) {
     const votingPublicKeyBuffer =
       ServiceProvider.getInstance().votingService.votingPublicKeyToBuffer(
         member.votingPublicKey,
@@ -48,7 +46,7 @@ export class MemberDocument extends Document<MemberData> {
         email: member.email.toString(),
         mnemonic: mnemonic.value || '',
         publicKey: member.publicKey.toString('base64'),
-        privateKey: member.privateKey?.toString('base64') || '',
+        privateKey: member.privateKey?.idUint8Array ? Buffer.from(member.privateKey.idUint8Array).toString('base64') : '',
         votingPublicKey: votingPublicKeyBuffer.toString('base64'),
       },
       memberSchema,
@@ -69,20 +67,20 @@ export class MemberDocument extends Document<MemberData> {
     );
   }
 
-  public toBrightChainMember(): BrightChainMember {
+  public async toBrightChainMember(): Promise<BrightChainMember> {
     const id = new GuidV4(this.get('id'));
     const type = this.get('type') as MemberType;
     const name = this.get('name');
     const email = new EmailString(this.get('email'));
     const publicKey = Buffer.from(this.get('publicKey'), 'base64');
     const privateKey = Buffer.from(this.get('privateKey'), 'base64');
-    const votingPublicKey =
+    const votingPublicKey = await
       ServiceProvider.getInstance().votingService.bufferToVotingPublicKey(
         Buffer.from(this.get('votingPublicKey'), 'base64'),
       );
 
     // Create member and derive voting keys
-    const member = new BrightChainMember(
+    const member = await BrightChainMember.create(
       type,
       name,
       email,
@@ -94,7 +92,7 @@ export class MemberDocument extends Document<MemberData> {
     );
 
     // Derive voting keys from ECDH keys
-    member.deriveVotingKeyPair();
+    await member.deriveVotingKeyPair();
 
     return member;
   }

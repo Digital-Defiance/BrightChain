@@ -1,6 +1,6 @@
 import { FecError, FecErrorType } from '@brightchain/brightchain-lib';
 import { ReedSolomonErasure } from '@subspace/reed-solomon-erasure.wasm';
-import { FEC } from '../constants';
+import { Constants } from '../constants';
 
 /**
  * FecService provides Forward Error Correction (FEC) functionality for filesystem/S3 objects.
@@ -48,10 +48,10 @@ export class FecService {
       });
     }
 
-    if (shardSize > FEC.MAX_SHARD_SIZE) {
+    if (shardSize > Constants.FEC.MAX_SHARD_SIZE) {
       throw new FecError(FecErrorType.ShardSizeExceedsMaximum, undefined, {
         SIZE: shardSize.toString(),
-        MAXIMUM: FEC.MAX_SHARD_SIZE.toString(),
+        MAXIMUM: Constants.FEC.MAX_SHARD_SIZE.toString(),
       });
     }
 
@@ -145,10 +145,10 @@ export class FecService {
     }
 
     if (parityCount <= 0) {
-      throw new FecError(FecErrorType.ParityDataCountMustBePositive);
+      throw new FecError(FecErrorType.ParityBlockCountMustBePositive);
     }
 
-    const shardSize = Math.min(fileData.length, FEC.MAX_SHARD_SIZE);
+    const shardSize = Math.min(fileData.length, Constants.FEC.MAX_SHARD_SIZE);
     const requiredShards = Math.ceil(fileData.length / shardSize);
 
     try {
@@ -209,7 +209,7 @@ export class FecService {
     originalSize: number,
   ): Promise<RecoveryResult> {
     if (!parityData || parityData.length === 0) {
-      throw new FecError(FecErrorType.ParityDataRequired);
+      throw new FecError(FecErrorType.DataRequired);
     }
 
     if (originalSize <= 0) {
@@ -217,7 +217,7 @@ export class FecService {
     }
 
     try {
-      const shardSize = Math.min(originalSize, FEC.MAX_SHARD_SIZE);
+      const shardSize = Math.min(originalSize, Constants.FEC.MAX_SHARD_SIZE);
       const requiredShards = Math.ceil(originalSize / shardSize);
 
       // Set up shard availability array (data shard unavailable, parity shards available)

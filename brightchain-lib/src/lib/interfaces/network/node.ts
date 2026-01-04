@@ -1,6 +1,6 @@
 import { BlockMetadata } from '../../blockMetadata';
 import { DataTemperature } from '../../enumerations/dataTemperature';
-import { GuidV4 } from '../../guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { ChecksumUint8Array } from '../../types';
 
 /**

@@ -1,8 +1,8 @@
 import {
-  debugLog,
-  HandleableError,
   SecureKeyStorage,
 } from '@brightchain/brightchain-lib';
+import { HandleableError } from '@digitaldefiance/i18n-lib';
+import { debugLog } from '@digitaldefiance/node-express-suite';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import { readdirSync, readFileSync } from 'fs';
 import { Server } from 'http';
@@ -23,7 +23,7 @@ function locatePEMRoot(): string {
       file.match(/localhost\+\d+\.pem$/),
   );
   if (pemFiles.length < 2) {
-    throw new HandleableError('PEM files not found in root directory');
+    throw new HandleableError(new Error('PEM files not found in root directory'));
   }
   const roots = pemFiles.map((file: string) => {
     const result = /(.*)\/(localhost\+\d+)(.*)\.pem/.exec(
@@ -32,7 +32,7 @@ function locatePEMRoot(): string {
     return result ? `${result[1]}/${result[2]}` : undefined;
   });
   if (roots.some((root) => root !== roots[0])) {
-    throw new HandleableError('PEM roots do not match');
+    throw new HandleableError(new Error('PEM roots do not match'));
   }
   return roots[0]!;
 }
@@ -42,6 +42,10 @@ function locatePEMRoot(): string {
  */
 export class App implements IApplication {
   public readonly id: string = 'brightchain-app';
+
+  public get db(): any {
+    return null;
+  }
 
   // Add missing interface methods
   public getController(name: string): any {
@@ -135,7 +139,7 @@ export class App implements IApplication {
           const handleableError =
             err instanceof HandleableError
               ? err
-              : new HandleableError(err.message, { cause: err });
+              : new HandleableError(err, { cause: err });
           handleError(handleableError, res, sendApiMessageResponse, next);
         },
       );

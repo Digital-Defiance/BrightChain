@@ -1,4 +1,4 @@
-import { SecureBuffer } from '@brightchain/brightchain-lib';
+import { SecureBuffer } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
 
 export interface IWalletSeed {

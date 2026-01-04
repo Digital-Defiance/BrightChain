@@ -1,15 +1,15 @@
-import { StringLanguage, StringName } from '@brightchain/brightchain-lib';
+import { StringLanguage, SymmetricService } from '@brightchain/brightchain-lib';
+import { SuiteCoreStringKey } from '@digitaldefiance/suite-core-lib';
 import { SymmetricErrorType } from '../enumerations/symmetric-error-type';
-import { SymmetricService } from '../services/symmetric';
 import { TypedError } from './typed-error-local';
 
-export class SymmetricError extends TypedError<SymmetricErrorType> {
-  protected get reasonMap(): Record<SymmetricErrorType, StringName> {
+export class SymmetricError extends TypedError<SymmetricErrorType, SuiteCoreStringKey> {
+  protected get reasonMap(): Record<SymmetricErrorType, SuiteCoreStringKey> {
     return {
       [SymmetricErrorType.DataNullOrUndefined]:
-        StringName.Error_SymmetricDataNullOrUndefined,
+        SuiteCoreStringKey.Error_SymmetricDataNullOrUndefined,
       [SymmetricErrorType.InvalidKeyLength]:
-        StringName.Error_SymmetricInvalidKeyLengthTemplate,
+        SuiteCoreStringKey.Error_SymmetricInvalidKeyLengthTemplate,
     };
   }
   constructor(type: SymmetricErrorType, language?: StringLanguage) {

@@ -1,23 +1,30 @@
 import { createECDH } from 'crypto';
-import Wallet from 'ethereumjs-wallet';
+import { 
+  Member, 
+  ECIESService 
+} from '@digitaldefiance/node-ecies-lib';
+import {
+  EmailString as EciesEmailString, 
+  MemberType as EciesMemberType, 
+  SecureString as EciesSecureString,
+  SecureBuffer as EciesSecureBuffer,
+  EmailString,
+  SecureString,
+  GuidV4,
+} from '@digitaldefiance/ecies-lib';
+import { Wallet } from '@ethereumjs/wallet';
 import {
   KeyPair as PaillierKeyPair,
   PrivateKey,
   PublicKey,
 } from 'paillier-bigint';
 import { ECIES } from './constants';
-import { EmailString } from './emailString';
 import { MemberErrorType } from './enumerations/memberErrorType';
 import { MemberType } from './enumerations/memberType';
 import { MemberError } from './errors/memberError';
-import { GuidV4 } from './guid';
 import { IBrightChainMemberOperational } from './interfaces/member/operational';
 import { IMemberStorageData } from './interfaces/member/storage';
-import { IsolatedPrivateKey } from './isolatedPrivateKey';
-import { SecureString } from './secureString';
-import { ECIESService } from './services/ecies.service';
 import { ServiceProvider } from './services/service.provider';
-import { VotingService } from './services/voting.service';
 import { SignatureUint8Array } from './types';
 
 /**
@@ -27,24 +34,16 @@ import { SignatureUint8Array } from './types';
  * 2. Encrypt and decrypt data
  * 3. Participate in voting
  * 4. Establish ownership of blocks
+ * 
+ * Extends the ECIES-lib Member class and adds BrightChain-specific voting functionality.
+ * Uses Buffer as the ID type (compatible with GuidV4's internal representation).
  */
-export class BrightChainMember implements IBrightChainMemberOperational {
-  private readonly _eciesService: ECIESService;
-  private readonly _votingService: VotingService;
-  private readonly _id: GuidV4;
-  private readonly _type: MemberType;
-  private readonly _name: string;
-  private readonly _email: EmailString;
-  private readonly _publicKey: Buffer;
-  private readonly _votingPublicKey: PublicKey;
-  private readonly _creatorId: GuidV4;
-  private readonly _dateCreated: Date;
-  private readonly _dateUpdated: Date;
-  private _privateKey?: Buffer;
-  private _votingPrivateKey?: PrivateKey;
-  private _wallet?: Wallet;
+export class BrightChainMember extends Member<Buffer> implements IBrightChainMemberOperational {
+  private _votingPublicKeyLoaded: PublicKey;
+  private _guidId: GuidV4;
+  private _guidCreatorId: GuidV4;
 
-  constructor(
+  private constructor(
     type: MemberType,
     name: string,
     email: EmailString,
@@ -57,259 +56,186 @@ export class BrightChainMember implements IBrightChainMemberOperational {
     dateUpdated?: Date,
     creatorId?: GuidV4,
   ) {
-    this._eciesService = ServiceProvider.getInstance().eciesService;
-    this._votingService = ServiceProvider.getInstance().votingService;
-    this._type = type;
-    this._id = id ?? GuidV4.new();
-    this._name = name;
-    if (!this._name || this._name.length == 0) {
-      throw new MemberError(MemberErrorType.MissingMemberName);
-    }
-    if (this._name.trim() != this._name) {
-      throw new MemberError(MemberErrorType.InvalidMemberNameWhitespace);
-    }
-    this._email = email;
-    this._publicKey = publicKey;
-    this._votingPublicKey = votingPublicKey;
-    this._privateKey = privateKey;
-    this._wallet = wallet;
-
-    // don't create a new date object with nearly identical values to the existing one
-    let _now: null | Date = null;
-    const now = function () {
-      if (!_now) {
-        _now = new Date();
-      }
-      return _now;
-    };
-    this._dateCreated = dateCreated ?? now();
-    this._dateUpdated = dateUpdated ?? now();
-    this._creatorId = creatorId ?? this._id;
-
-    if (privateKey) {
-      const { privateKey: _votingPrivateKey } =
-        this._votingService.deriveVotingKeysFromECDH(privateKey, publicKey);
-      this._votingPrivateKey = _votingPrivateKey;
-    }
-  }
-
-  // Required getters
-  public get id(): GuidV4 {
-    return this._id;
-  }
-  public get type(): MemberType {
-    return this._type;
-  }
-  public get name(): string {
-    return this._name;
-  }
-  public get email(): EmailString {
-    return this._email;
-  }
-  public get publicKey(): Buffer {
-    return this._publicKey;
-  }
-  public get votingPublicKey(): PublicKey {
-    return this._votingPublicKey;
-  }
-  public get creatorId(): GuidV4 {
-    return this._creatorId;
-  }
-  public get dateCreated(): Date {
-    return this._dateCreated;
-  }
-  public get dateUpdated(): Date {
-    return this._dateUpdated;
-  }
-
-  // Optional private data getters
-  public get privateKey(): Buffer | undefined {
-    return this._privateKey;
-  }
-  public get votingPrivateKey(): PrivateKey | undefined {
-    return this._votingPrivateKey;
-  }
-  public get wallet(): Wallet {
-    if (!this._wallet) {
-      throw new MemberError(MemberErrorType.NoWallet);
-    }
-    return this._wallet;
-  }
-
-  // State getters
-  public get hasPrivateKey(): boolean {
-    return this._privateKey !== undefined;
-  }
-  public get hasVotingPrivateKey(): boolean {
-    return this._votingPrivateKey !== undefined;
-  }
-
-  public unloadPrivateKey(): void {
-    this._privateKey = undefined;
-  }
-
-  public unloadWallet(): void {
-    this._wallet = undefined;
-  }
-
-  public unloadWalletAndPrivateKey(): void {
-    this.unloadWallet();
-    this.unloadPrivateKey();
-  }
-
-  public loadWallet(mnemonic: SecureString): void {
-    if (this._wallet) {
-      throw new MemberError(MemberErrorType.WalletAlreadyLoaded);
-    }
-    const { wallet } = this._eciesService.walletAndSeedFromMnemonic(mnemonic);
-    const privateKey = wallet.getPrivateKey();
-    const publicKey = wallet.getPublicKey();
-    const publicKeyWithPrefix = Buffer.concat([
-      Buffer.from([ECIES.PUBLIC_KEY_MAGIC]),
+    const eciesService = ServiceProvider.getInstance().eciesService;
+    
+    // Store GuidV4 instances
+    const guidId = id || GuidV4.new();
+    const guidCreatorId = creatorId || guidId;
+    
+    // Call parent constructor with Buffer IDs (GuidV4's internal representation)
+    super(
+      eciesService,
+      type as unknown as EciesMemberType,
+      name,
+      email as unknown as EciesEmailString,
       publicKey,
-    ]);
+      privateKey ? new EciesSecureBuffer(new Uint8Array(privateKey)) : undefined,
+      wallet,
+      Buffer.from(guidId.asRawGuidBuffer),
+      dateCreated,
+      dateUpdated,
+      Buffer.from(guidCreatorId.asRawGuidBuffer),
+    );
 
-    if (
-      publicKeyWithPrefix.toString('hex') !== this._publicKey.toString('hex')
-    ) {
-      throw new MemberError(MemberErrorType.InvalidMnemonic);
-    }
-    this._wallet = wallet;
-    this._privateKey = privateKey;
-    this.deriveVotingKeyPair();
+    // Store GuidV4 instances for BrightChain compatibility
+    this._guidId = guidId;
+    this._guidCreatorId = guidCreatorId;
+    this._votingPublicKeyLoaded = votingPublicKey;
+    
+    // Load the voting public key
+    this.loadVotingKeys(votingPublicKey);
   }
 
   /**
-   * Loads the private key and optionally the voting private key.
+   * Static factory method to create a BrightChainMember asynchronously
+   */
+  public static async create(
+    type: MemberType,
+    name: string,
+    email: EmailString,
+    publicKey: Buffer,
+    votingPublicKey: PublicKey,
+    privateKey?: Buffer,
+    wallet?: Wallet,
+    id?: GuidV4,
+    dateCreated?: Date,
+    dateUpdated?: Date,
+    creatorId?: GuidV4,
+  ): Promise<BrightChainMember> {
+    const member = new BrightChainMember(
+      type,
+      name,
+      email,
+      publicKey,
+      votingPublicKey,
+      privateKey,
+      wallet,
+      id,
+      dateCreated,
+      dateUpdated,
+      creatorId,
+    );
+
+    // If privateKey is provided, derive voting private key
+    if (privateKey) {
+      await member.deriveVotingKeys();
+    }
+
+    return member;
+  }
+
+  // BrightChain-specific voting getters - delegate to parent
+  public override get votingPublicKey(): PublicKey {
+    if (!super.votingPublicKey && !this._votingPublicKeyLoaded) {
+      throw new MemberError(MemberErrorType.MissingVotingPublicKey);
+    }
+    return super.votingPublicKey ?? this._votingPublicKeyLoaded;
+  }
+
+  // Guid accessors for BrightChain compatibility
+  public get guidId(): GuidV4 {
+    return this._guidId;
+  }
+
+  public get guidCreatorId(): GuidV4 {
+    return this._guidCreatorId;
+  }
+
+  public override get hasVotingPrivateKey(): boolean {
+    return super.hasVotingPrivateKey;
+  }
+
+  // Override loadWallet to also derive voting keys
+  public override loadWallet(mnemonic: EciesSecureString): void {
+    // Call parent's loadWallet which validates and loads the wallet
+    super.loadWallet(mnemonic);
+    
+    // Note: Caller should await deriveVotingKeys() after this if needed
+  }
+
+  /**
+   * Loads the private key.
    *
    * @param privateKey The private key to load.
-   * @param votingPrivateKey The voting private key to load.
    */
-  public loadPrivateKey(
-    privateKey: Buffer,
-    votingPrivateKey?: IsolatedPrivateKey,
-  ): void {
-    this._privateKey = privateKey;
-    if (votingPrivateKey) {
-      this._votingPrivateKey = votingPrivateKey;
-    }
+  public override loadPrivateKey(privateKey: EciesSecureBuffer): void {
+    super.loadPrivateKey(privateKey);
+    // Note: Caller should await deriveVotingKeys() after this if needed
   }
 
-  public deriveVotingKeyPair(): void {
-    if (!this._privateKey) {
-      throw new MemberError(MemberErrorType.MissingPrivateKey);
-    }
-    const { privateKey: votingPrivateKey } =
-      this._votingService.deriveVotingKeysFromECDH(
-        this._privateKey,
-        this._publicKey,
-      );
-    this._votingPrivateKey = votingPrivateKey;
+  /**
+   * Derive voting keys using parent's implementation
+   * @deprecated Use parent's deriveVotingKeys() directly
+   */
+  public async deriveVotingKeyPair(): Promise<void> {
+    await super.deriveVotingKeys();
   }
 
-  public sign(data: Buffer): SignatureUint8Array {
-    if (!this._privateKey) {
-      throw new MemberError(MemberErrorType.MissingPrivateKey);
-    }
-    return this._eciesService.signMessage(this._privateKey, data);
+  /**
+   * Wrapper for parent's async deriveVotingKeys method
+   */
+  public override async deriveVotingKeys(): Promise<void> {
+    await super.deriveVotingKeys();
   }
 
-  public verify(signature: SignatureUint8Array, data: Buffer): boolean {
-    return this._eciesService.verifyMessage(this._publicKey, data, signature);
-  }
+  // Note: sign and verify are inherited from parent Member class
+  // Parent signature: sign(data: Buffer): SignatureBuffer
+  // Parent signature: verify(signature: SignatureBuffer, data: Buffer): boolean
 
   public get votingKeyPair(): PaillierKeyPair {
-    // Get raw public key (without 0x04 prefix)
-    const rawPublicKey =
-      this._publicKey[0] === ECIES.PUBLIC_KEY_MAGIC
-        ? this._publicKey.subarray(1)
-        : this._publicKey;
-
-    // Derive voting keys from ECDH keys
-    if (!this._privateKey) {
+    if (!this.votingPublicKey || !this.votingPrivateKey) {
       throw new MemberError(
         MemberErrorType.PrivateKeyRequiredToDeriveVotingKeyPair,
       );
     }
 
-    return this._votingService.deriveVotingKeysFromECDH(
-      this._privateKey,
-      rawPublicKey,
-    );
+    return {
+      publicKey: this.votingPublicKey,
+      privateKey: this.votingPrivateKey,
+    };
   }
 
-  private static readonly MAX_ENCRYPTION_SIZE = 1024 * 1024 * 10; // 10MB limit
-  private static readonly VALID_STRING_REGEX = /^[\x20-\x7E\n\r\t]*$/; // Printable ASCII + common whitespace
+  // Delegate to parent's encryptData and decryptData methods
+  // These are already implemented in the Member base class
 
-  public encryptData(data: string | Buffer): Buffer {
-    // Validate input
-    if (!data) {
-      throw new MemberError(MemberErrorType.MissingEncryptionData);
-    }
+  // Delegate to parent's encryptData and decryptData methods
+  // These are already implemented in the Member base class
 
-    // For string input, validate content
-    if (typeof data === 'string') {
-      if (!BrightChainMember.VALID_STRING_REGEX.test(data)) {
-        throw new MemberError(MemberErrorType.InvalidEncryptionData);
-      }
-    }
-
-    // Check size limit
-    const dataSize = Buffer.isBuffer(data)
-      ? data.length
-      : Buffer.byteLength(data);
-    if (dataSize > BrightChainMember.MAX_ENCRYPTION_SIZE) {
-      throw new MemberError(MemberErrorType.EncryptionDataTooLarge);
-    }
-
-    // Create buffer from validated data
-    const bufferData = Buffer.isBuffer(data) ? data : Buffer.from(data);
-
-    // Use public key directly since it's already in ECDH format
-    return this._eciesService.encrypt(this._publicKey, bufferData);
-  }
-
-  public decryptData(encryptedData: Buffer): Buffer {
-    if (!this._privateKey) {
-      throw new MemberError(MemberErrorType.MissingPrivateKey);
-    }
-    const result = this._eciesService.decryptSingleWithHeader(
-      this._privateKey,
-      encryptedData,
-    );
-    return result;
-  }
-
-  public toJson(): string {
+  public override toJson(): string {
+    const publicKeyUint8 = super.publicKey as Uint8Array;
     const storage: IMemberStorageData = {
-      id: this._id.toString(),
-      type: this._type,
-      name: this._name,
-      email: this._email.toString(),
-      publicKey: this._publicKey.toString('base64'),
-      votingPublicKey: this._votingService
-        .votingPublicKeyToBuffer(this._votingPublicKey)
-        .toString('base64'),
-      creatorId: this._creatorId.toString(),
-      dateCreated: this._dateCreated.toISOString(),
-      dateUpdated: this._dateUpdated.toISOString(),
+      id: this.guidId.toString(),
+      type: this.type,
+      name: this.name,
+      email: this.email.toString(),
+      publicKey: Buffer.from(publicKeyUint8).toString('base64'),
+      // Serialize voting public key (n value as hex string)
+      votingPublicKey: this.votingPublicKey ? this.votingPublicKey.n.toString(16) : '',
+      creatorId: this.guidCreatorId.toString(),
+      dateCreated: this.dateCreated.toISOString(),
+      dateUpdated: this.dateUpdated.toISOString(),
     };
     return JSON.stringify(storage);
   }
 
-  public static fromJson(json: string): BrightChainMember {
+  public static override fromJson(json: string): BrightChainMember {
     const storage: IMemberStorageData = JSON.parse(json);
     const email = new EmailString(storage.email);
-    const votingService = ServiceProvider.getInstance().votingService;
 
+    // Import PublicKey from paillier-bigint to reconstruct voting key
+    const { PublicKey } = require('paillier-bigint');
+    const votingPublicKey = new PublicKey(
+      BigInt('0x' + storage.votingPublicKey),
+      BigInt('0x' + storage.votingPublicKey) + 1n, // g = n + 1 for Paillier
+    );
+
+    // Use synchronous constructor directly
     return new BrightChainMember(
       storage.type,
       storage.name,
       email,
       Buffer.from(storage.publicKey, 'base64'),
-      votingService.bufferToVotingPublicKey(
-        Buffer.from(storage.votingPublicKey, 'base64'),
-      ),
+      votingPublicKey,
       undefined,
       undefined,
       new GuidV4(storage.id),
@@ -319,11 +245,14 @@ export class BrightChainMember implements IBrightChainMemberOperational {
     );
   }
 
-  public static newMember(
+  public static override newMember(
+    eciesService: ECIESService,
     type: MemberType,
     name: string,
     email: EmailString,
-  ): { member: BrightChainMember; mnemonic: SecureString } {
+    forceMnemonic?: EciesSecureString,
+    createdBy?: Buffer,
+  ): { member: BrightChainMember; mnemonic: EciesSecureString } {
     // Validate inputs first
     if (!name || name.length == 0) {
       throw new MemberError(MemberErrorType.MissingMemberName);
@@ -338,9 +267,8 @@ export class BrightChainMember implements IBrightChainMemberOperational {
       throw new MemberError(MemberErrorType.InvalidEmailWhitespace);
     }
 
-    const eciesService = ServiceProvider.getInstance().eciesService;
     const votingService = ServiceProvider.getInstance().votingService;
-    const mnemonic = eciesService.generateNewMnemonic();
+    const mnemonic = forceMnemonic || eciesService.generateNewMnemonic();
     const { wallet } = eciesService.walletAndSeedFromMnemonic(mnemonic);
 
     // Get private key from wallet
@@ -351,30 +279,27 @@ export class BrightChainMember implements IBrightChainMemberOperational {
       wallet.getPublicKey(),
     ]);
 
-    // Create ECDH instance for key derivation
-    const ecdh = createECDH(eciesService.curveName);
-    ecdh.setPrivateKey(privateKey);
+    // Derive voting keys synchronously using a simple approach
+    // Note: For production, you may want to use the async deriveVotingKeys method after creation
+    const { generateRandomKeysSync } = require('paillier-bigint');
+    const votingKeypair = generateRandomKeysSync(2048);
 
-    // Derive voting keys using the private key and public key
-    const votingKeypair = votingService.deriveVotingKeysFromECDH(
-      privateKey,
+    const newId = createdBy ? new GuidV4(createdBy) : GuidV4.new();
+    const member = new BrightChainMember(
+      type,
+      name,
+      email,
       publicKeyWithPrefix,
+      votingKeypair.publicKey,
+      Buffer.from(privateKey),
+      wallet,
+      newId,
+      undefined,
+      undefined,
     );
-
-    const newId = GuidV4.new();
+    
     return {
-      member: new BrightChainMember(
-        type,
-        name,
-        email,
-        publicKeyWithPrefix,
-        votingKeypair.publicKey,
-        privateKey,
-        wallet,
-        newId,
-        undefined,
-        undefined,
-      ),
+      member,
       mnemonic,
     };
   }

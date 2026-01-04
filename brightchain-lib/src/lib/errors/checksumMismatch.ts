@@ -2,6 +2,7 @@ import { StringLanguages } from '../enumerations/stringLanguages';
 import { StringNames } from '../enumerations/stringNames';
 import { translate } from '../i18n';
 import { ChecksumUint8Array } from '../types';
+import { Buffer } from 'buffer';
 
 export class ChecksumMismatchError extends Error {
   public readonly checksum: ChecksumUint8Array;
@@ -13,8 +14,8 @@ export class ChecksumMismatchError extends Error {
   ) {
     super(
       translate(StringNames.Error_ChecksumMismatchTemplate, {
-        EXPECTED: expected.toString('hex'),
-        CHECKSUM: checksum.toString('hex'),
+        EXPECTED: Buffer.from(expected).toString('hex'),
+        CHECKSUM: Buffer.from(checksum).toString('hex'),
       }),
     );
     this.name = 'ChecksumMismatchError';

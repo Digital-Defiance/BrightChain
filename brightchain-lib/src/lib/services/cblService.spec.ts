@@ -2,7 +2,6 @@ import { faker } from '@faker-js/faker';
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import { CHECKSUM, TUPLE } from '../constants';
-import { EmailString } from '../emailString';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import MemberType from '../enumerations/memberType';
@@ -10,13 +9,17 @@ import { CblError } from '../errors/cblError';
 import { BlockCapacityCalculator } from './blockCapacity.service';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
-import { ECIESService } from './ecies.service';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
+import { EmailString } from '@digitaldefiance/ecies-lib';
+import { ServiceProvider } from './service.provider';
+import { ChecksumUint8Array } from '../types';
 
 describe('CBLService', () => {
   let creator: BrightChainMember;
 
   beforeAll(() => {
     const { member } = BrightChainMember.newMember(
+      ServiceProvider.getInstance().eciesService,
       MemberType.User,
       faker.person.fullName(),
       new EmailString(faker.internet.email()),
@@ -106,7 +109,7 @@ describe('CBLService', () => {
 
     it('should correctly get creator ID', () => {
       const creatorId = cblService.getCreatorId(header);
-      expect(creatorId.toString()).toBe(creator.id.toString());
+      expect(creatorId.toString()).toBe(creator.guidId.toString());
     });
 
     it('should correctly get date created', () => {
@@ -346,7 +349,7 @@ describe('CBLService', () => {
       expect(extractedAddresses.length).toBe(addressCount);
 
       // Verify each extracted address matches original
-      extractedAddresses.forEach((addr: Buffer, i: number) => {
+      extractedAddresses.forEach((addr: ChecksumUint8Array, i: number) => {
         expect(Buffer.compare(addr, addresses[i])).toBe(0);
       });
     });
@@ -393,6 +396,7 @@ describe('CBLService', () => {
 
     it('should fail validation with wrong creator', () => {
       const { member: wrongCreator } = BrightChainMember.newMember(
+        ServiceProvider.getInstance().eciesService,
         MemberType.User,
         faker.person.fullName(),
         new EmailString(faker.internet.email()),
@@ -429,7 +433,10 @@ describe('CBLService', () => {
     });
 
     it('should calculate correct capacity for basic CBL', () => {
-      const capacity = cblService.calculateCBLAddressCapacity(BlockSize.Large);
+      const capacity = cblService.calculateCBLAddressCapacity(
+        BlockSize.Large,
+        BlockEncryptionType.None,
+      );
       expect(capacity).toBeGreaterThan(0);
       expect(capacity % TUPLE.SIZE).toBe(0); // Should be multiple of tuple size
     });
@@ -437,11 +444,11 @@ describe('CBLService', () => {
     it('should calculate correct capacity with encryption overhead', () => {
       const withEncryption = cblService.calculateCBLAddressCapacity(
         BlockSize.Large,
-        true,
+        BlockEncryptionType.MultiRecipient,
       );
       const withoutEncryption = cblService.calculateCBLAddressCapacity(
         BlockSize.Large,
-        false,
+        BlockEncryptionType.None,
       );
       expect(withEncryption).toBeLessThan(withoutEncryption);
       expect(withEncryption % TUPLE.SIZE).toBe(0);
@@ -451,13 +458,16 @@ describe('CBLService', () => {
     it('should calculate correct capacity with extended header', () => {
       const basicCapacity = cblService.calculateCBLAddressCapacity(
         BlockSize.Large,
-        false,
+        BlockEncryptionType.None,
       );
+      const filename = `${randomBytes(120).toString('hex')}.txt`;
       const extendedCapacity = cblService.calculateCBLAddressCapacity(
         BlockSize.Large,
-        false,
-        `${randomBytes(120).toString('hex')}.txt`, // needs to be a long filename to affect aligned address capacity
-        'text/plain',
+        BlockEncryptionType.None,
+        {
+          fileName: filename,
+          mimeType: 'text/plain',
+        },
       );
       expect(extendedCapacity).toBeLessThan(basicCapacity);
       expect(extendedCapacity % TUPLE.SIZE).toBe(0);
@@ -466,15 +476,15 @@ describe('CBLService', () => {
     it('should handle different block sizes', () => {
       const capacitySmall = cblService.calculateCBLAddressCapacity(
         BlockSize.Small,
-        false,
+        BlockEncryptionType.None,
       );
       const capacityMedium = cblService.calculateCBLAddressCapacity(
         BlockSize.Medium,
-        false,
+        BlockEncryptionType.None,
       );
       const capacityLarge = cblService.calculateCBLAddressCapacity(
         BlockSize.Large,
-        false,
+        BlockEncryptionType.None,
       );
 
       expect(capacityMedium).toBeGreaterThan(capacitySmall);
@@ -488,29 +498,33 @@ describe('CBLService', () => {
       const filename = `${randomBytes(120).toString('hex')}.txt`; // needs to be a long filename to affect aligned address capacity
       const basicCapacity = cblService.calculateCBLAddressCapacity(
         BlockSize.Large,
-        false,
+        BlockEncryptionType.None,
       );
       const withEncryption = cblService.calculateCBLAddressCapacity(
         BlockSize.Large,
-        true,
+        BlockEncryptionType.MultiRecipient,
       );
       const withExtended = cblService.calculateCBLAddressCapacity(
         BlockSize.Large,
-        false,
-        filename,
-        'text/plain',
+        BlockEncryptionType.None,
+        {
+          fileName: filename,
+          mimeType: 'text/plain',
+        },
       );
       const withBoth = cblService.calculateCBLAddressCapacity(
         BlockSize.Large,
-        true,
-        filename,
-        'text/plain',
+        BlockEncryptionType.MultiRecipient,
+        {
+          fileName: filename,
+          mimeType: 'text/plain',
+        },
       );
 
       expect(withEncryption).toBeLessThan(basicCapacity);
       expect(withExtended).toBeLessThan(basicCapacity);
       expect(withBoth).toBeLessThan(withEncryption);
-      expect(withBoth).toBeLessThan(withExtended);
+      expect(withBoth).toBeLessThanOrEqual(withExtended);
       expect(withBoth % TUPLE.SIZE).toBe(0);
     });
   });

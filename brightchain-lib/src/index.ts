@@ -8,8 +8,15 @@ export * from './lib/blocks/rawData';
 export * from './lib/brightChainMember';
 export * from './lib/cblStream';
 export * as constants from './lib/constants';
+// Export CONSTANTS as default and individual constant groups as named exports
+export { default as CONSTANTS, CBL, FEC, TUPLE, SEALING, JWT, SITE, OFFS_CACHE_PERCENTAGE } from './lib/constants';
+// Export ECIES configuration
+export { EciesConfig } from './lib/ecies-config';
+// Export BRIGHTCHAIN_ECIES for backward compatibility
+export { BRIGHTCHAIN_ECIES } from './lib/brightChainConsts';
 export * from './lib/documents/document';
-export * from './lib/emailString';
+// Removed - now re-exported from ecies-lib above
+// export * from './lib/emailString';
 export * from './lib/enumeration-translations/blockSize';
 export * from './lib/enumeration-translations/blockType';
 export * from './lib/enumeration-translations/memberType';
@@ -31,10 +38,14 @@ export * from './lib/enumerations/cpuRegisters';
 export * from './lib/enumerations/dataTemperature';
 export * from './lib/enumerations/documentErrorType';
 export * from './lib/enumerations/extendedCblErrorType';
-export * from './lib/enumerations/guidBrandType';
+export * from './lib/enumerations/fecErrorType';
+// Removed - now re-exported from ecies-lib at top of file
+// export * from './lib/enumerations/guidBrandType';
 export * from './lib/enumerations/handleTupleErrorType';
-export * from './lib/enumerations/invalidEmailErrorType';
-export * from './lib/enumerations/isolatedKeyErrorType';
+// Removed - now re-exported from ecies-lib at top of file
+// export * from './lib/enumerations/invalidEmailErrorType';
+// Removed - IsolatedKeyError is never thrown/used in codebase  
+// export * from './lib/enumerations/isolatedKeyErrorType';
 export * from './lib/enumerations/keyFragmentType';
 export * from './lib/enumerations/keyRole';
 export * from './lib/enumerations/keyStorageFormat';
@@ -48,11 +59,14 @@ export * from './lib/enumerations/memoryTupleErrorType';
 export * from './lib/enumerations/multiEncryptedErrorType';
 export * from './lib/enumerations/operationType';
 export * from './lib/enumerations/sealingErrorType';
-export * from './lib/enumerations/secureStorageErrorType';
+// Removed - now re-exported from ecies-lib at top of file
+// export * from './lib/enumerations/secureStorageErrorType';
 export * from './lib/enumerations/storeErrorType';
 export * from './lib/enumerations/streamErrorType';
 export * from './lib/enumerations/stringLanguages';
 export * from './lib/enumerations/stringNames';
+// Backward compatibility alias
+export { StringNames as StringName } from './lib/enumerations/stringNames';
 export * from './lib/enumerations/symmetricErrorType';
 export * from './lib/enumerations/systemKeyringErrorType';
 export * from './lib/enumerations/translatableEnum';
@@ -63,22 +77,18 @@ export * from './lib/errors/block';
 export * from './lib/errors/cblError';
 export * from './lib/errors/checksumMismatch';
 export * from './lib/errors/document';
-export * from './lib/errors/expressValidation';
 export * from './lib/errors/extendedCblError';
+export * from './lib/errors/fecError';
 export * from './lib/errors/failedToHydrate';
-export * from './lib/errors/guidError';
-export * from './lib/errors/handleable';
 export * from './lib/errors/handleTupleError';
 export * from './lib/errors/invalidBlockSize';
 export * from './lib/errors/invalidBlockSizeLength';
 export * from './lib/errors/invalidCredentials';
-export * from './lib/errors/invalidEmail';
 export * from './lib/errors/invalidIDFormat';
-export * from './lib/errors/invalidNewPassword';
-export * from './lib/errors/invalidPassword';
 export * from './lib/errors/invalidSessionID';
 export * from './lib/errors/invalidTupleCount';
-export * from './lib/errors/isolatedKeyError';
+// Removed - IsolatedKeyError is never thrown/used in codebase
+// export * from './lib/errors/isolatedKeyError';
 export * from './lib/errors/memberError';
 export * from './lib/errors/memoryTupleError';
 export * from './lib/errors/missingValidatedData';
@@ -89,19 +99,11 @@ export * from './lib/errors/storeError';
 export * from './lib/errors/streamError';
 export * from './lib/errors/symmetricError';
 export * from './lib/errors/systemKeyringError';
-export * from './lib/errors/tokenExpired';
-export * from './lib/errors/tokenInvalid';
 export * from './lib/errors/translatable';
 export * from './lib/errors/typedError';
 export * from './lib/errors/userNotFound';
-export * from './lib/errors/votingDerivationError';
-export * from './lib/errors/votingError';
 export * from './lib/errors/whitenedError';
-export * from './lib/flags';
-export * from './lib/globalActiveContext';
-export * from './lib/guid';
 export * from './lib/i18n';
-export * from './lib/i18n.types';
 export * from './lib/interfaces/basicDataObjectDto';
 export * from './lib/interfaces/basicObjectDto';
 export * from './lib/interfaces/blocks/cblBase';
@@ -119,24 +121,32 @@ export * from './lib/interfaces/convertible';
 export * from './lib/interfaces/dataAndSigningKeys';
 export * from './lib/interfaces/dataKeyComponents';
 export * from './lib/interfaces/dto/request-user';
-export * from './lib/interfaces/eciesConfig';
-export * from './lib/interfaces/eciesConsts';
+
 export * from './lib/interfaces/encryptionLength';
 export * from './lib/interfaces/energyTransaction';
 export * from './lib/interfaces/fecConsts';
-export * from './lib/interfaces/guid';
+// Removed - guid types now re-exported from ecies-lib at top of file
 export * from './lib/interfaces/jsonStore';
 export * from './lib/interfaces/jwtConsts';
-export * from './lib/interfaces/keyPairBufferWithUnEncryptedPrivateKey';
+// Re-export interfaces from node-ecies-lib for backward compatibility
+export type {
+  IKeyPairBufferWithUnEncryptedPrivateKey,
+  ISigningKeyPrivateKeyInfo,
+  ISimpleKeyPair,
+  ISimpleKeyPairBuffer,
+  ISimplePublicKeyOnly,
+  ISimplePublicKeyOnlyBuffer,
+} from '@digitaldefiance/node-ecies-lib';
 export * from './lib/interfaces/keyringConsts';
 export * from './lib/interfaces/keyringEntry';
 export * from './lib/interfaces/member/memberDto';
 export * from './lib/interfaces/member/memberWithMnemonic';
+export * from './lib/interfaces/member/storage';
+export * from './lib/interfaces/member/hydrated';
+export * from './lib/interfaces/member/operational';
 export * from './lib/interfaces/membersHandlers';
 export * from './lib/interfaces/multiEncryptedMessage';
 export * from './lib/interfaces/multiEncryptedParsedHeader';
-export * from './lib/interfaces/pbkdf2Config';
-export * from './lib/interfaces/pbkdf2Result';
 export * from './lib/interfaces/position';
 export * from './lib/interfaces/privateVotingDerivation';
 export * from './lib/interfaces/quoromDataRecordActionLog';
@@ -144,6 +154,8 @@ export * from './lib/interfaces/readOnlyBasicObjectDto';
 export * from './lib/interfaces/readOnlyDataObjectDto';
 export * from './lib/interfaces/requestUser';
 export * from './lib/interfaces/responses/apiError';
+// Backward compatibility alias
+export type { IApiErrorResponse as ApiErrorResponse } from './lib/interfaces/responses/apiError';
 export * from './lib/interfaces/responses/apiExpressValidationError';
 export * from './lib/interfaces/responses/apiMessage';
 export * from './lib/interfaces/responses/getBlock';
@@ -154,13 +166,9 @@ export * from './lib/interfaces/responses/storeBlock';
 export * from './lib/interfaces/responses/storeCbl';
 export * from './lib/interfaces/role';
 export * from './lib/interfaces/sealingConsts';
-export * from './lib/interfaces/sealResults';
+// Removed - file doesn't exist, likely absorbed by ecies-lib
+// export * from './lib/interfaces/sealResults';
 export * from './lib/interfaces/signedToken';
-export * from './lib/interfaces/signgingKeyPrivateKeyInfo';
-export * from './lib/interfaces/simpleKeyPair';
-export * from './lib/interfaces/simpleKeyPairBuffer';
-export * from './lib/interfaces/simplePublicKeyOnly';
-export * from './lib/interfaces/simplePublicKeyOnlyBuffer';
 export * from './lib/interfaces/simpleStore';
 export * from './lib/interfaces/siteConsts';
 export * from './lib/interfaces/successMessage';
@@ -168,24 +176,26 @@ export * from './lib/interfaces/symmetricEncryptionResults';
 export * from './lib/interfaces/tokenUser';
 export * from './lib/interfaces/tupleConfig';
 export * from './lib/interfaces/tupleConsts';
-export * from './lib/interfaces/votingConsts';
 export * from './lib/interfaces/walletSeed';
-export * from './lib/isolatedPrivateKey';
-export * from './lib/isolatedPublicKey';
+// Removed - isolatedPrivateKey and isolatedPublicKey are now provided by @digitaldefiance/ecies-lib
 export * from './lib/keys/asymmetricKeyFragment';
 export * from './lib/keys/memberKeyContainer';
-export * from './lib/languageCodes';
+// Removed duplicate export - LanguageCodes is already exported via './lib/i18n'
+// export * from './lib/languageCodes';
 export * from './lib/memoryWriteableStream';
 export * from './lib/models/user';
 export * from './lib/operationCost';
 export * from './lib/primeTupleGeneratorStream';
 export * from './lib/quorum';
-export * from './lib/sealResults';
-export * from './lib/secureBuffer';
+// Removed - files don't exist, types now re-exported from ecies-lib at top of file
+// export * from './lib/sealResults';
+// export * from './lib/secureBuffer';
 export * from './lib/secureHeapStorage';
 export * from './lib/secureKeyStorage';
-export * from './lib/secureString';
+// Removed - file doesn't exist, type now re-exported from ecies-lib at top of file
+// export * from './lib/secureString';
 export * from './lib/services/blockService';
+export * from './lib/services/symmetric.service';
 export * from './lib/sharedTypes';
 export * from './lib/stores/bufferStore';
 export * from './lib/stores/diskBlockAsyncStore';
@@ -199,5 +209,6 @@ export * from './lib/transforms/eciesEncryptTransform';
 export * from './lib/transforms/xorMultipleTransform';
 export * from './lib/transforms/xorTransform';
 export * from './lib/types';
-export * from './lib/utils';
-export * from './lib/voting/poll';
+// Removed - file doesn't exist
+// export * from './lib/utils';
+// Removed - file does not exist: export * from './lib/voting/poll';

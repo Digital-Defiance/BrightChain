@@ -4,13 +4,12 @@ import {
   IApiMessageResponse,
   IStatusCodeResponse,
   TypedHandlers,
-} from '@brightchain/brightchain-lib';
+} from '@brightchain/brightchain-api-lib';
 import { Request } from 'express';
 import { IApplication } from '../../interfaces/application';
 import { BaseController } from '../base';
 
-interface IMembersHandlers
-  extends TypedHandlers<IApiMessageResponse | ApiErrorResponse> {
+interface IMembersHandlers extends TypedHandlers {
   getMembers: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
 }
 
@@ -33,9 +32,7 @@ export class MembersController extends BaseController<
 
   private handleGetMembers: ApiRequestHandler<
     IApiMessageResponse | ApiErrorResponse
-  > = async (
-    req: Request,
-  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  > = async (req): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
     return {
       statusCode: 200,
       response: {

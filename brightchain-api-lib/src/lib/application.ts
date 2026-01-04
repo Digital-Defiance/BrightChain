@@ -1,9 +1,13 @@
 import {
-  debugLog,
-  HandleableError,
   StringName,
   translate,
 } from '@brightchain/brightchain-lib';
+import { HandleableError } from '@digitaldefiance/i18n-lib';
+import { 
+  getSuiteCoreTranslation,
+  SuiteCoreStringKey,
+} from '@digitaldefiance/suite-core-lib';
+import { debugLog } from '@digitaldefiance/node-express-suite';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import { readFileSync } from 'fs';
 import { Server } from 'http';
@@ -14,7 +18,7 @@ import { Environment } from './environment';
 import { Middlewares } from './middlewares';
 import { ApiRouter } from './routers/api';
 import { AppRouter } from './routers/app';
-import { handleError, sendApiMessageResponse } from './utils';
+import { handleError, sendApiMessageResponse } from '@digitaldefiance/node-express-suite';
 
 /**
  * Application class
@@ -48,10 +52,10 @@ export class App extends BaseApplication {
             err instanceof HandleableError
               ? err
               : new HandleableError(
-                  err.message || translate(StringName.Common_UnexpectedError),
+                  new Error(err.message || translate(StringName.Error_UnexpectedError)),
                   { cause: err },
                 );
-          handleError(handleableError, res, sendApiMessageResponse, next);
+          handleError(handleableError, res as any, sendApiMessageResponse, next);
         },
       );
 
@@ -90,11 +94,8 @@ export class App extends BaseApplication {
                 this.environment.httpsDevPort,
                 () => {
                   console.log(
-                    `[ ${translate(
-                      StringName.Common_Ready,
-                      undefined,
-                      undefined,
-                      'admin',
+                    `[ ${getSuiteCoreTranslation(
+                      SuiteCoreStringKey.Common_Ready,
                     )} ] https://${this.environment.host}:${
                       this.environment.httpsDevPort
                     }`,

@@ -1,8 +1,8 @@
-import { IRoleDTO } from '../dto/role';
+import { IRole } from '../role';
 
 export interface IRequestUserDTO {
   id: string;
-  roles: Array<IRoleDTO>;
+  roles: Array<IRole>;
   username: string;
   email: string;
   expireMemoryMnemonicSeconds?: number;

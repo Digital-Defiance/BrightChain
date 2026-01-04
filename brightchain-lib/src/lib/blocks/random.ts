@@ -117,9 +117,9 @@ export class RandomBlock extends RawDataBlock {
    * @param data - The data to convert
    * @returns Promise that resolves to a Buffer
    */
-  private static async toBuffer(data: Readable | Buffer): Promise<Buffer> {
-    if (Buffer.isBuffer(data)) {
-      return data;
+  private static async toBuffer(data: Readable | Uint8Array): Promise<Buffer> {
+    if (Buffer.isBuffer(data) || data instanceof Uint8Array) {
+      return Buffer.from(data);
     }
     return RandomBlock.streamToBuffer(data);
   }

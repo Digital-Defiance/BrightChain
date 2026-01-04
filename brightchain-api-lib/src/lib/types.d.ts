@@ -1,12 +1,12 @@
 import { IRequestUserDTO } from '@brightchain/brightchain-lib';
 import { ValidationChain } from 'express-validator';
-import { BurnbagMember } from '../burnbag-member';
 import { ValidatedBody } from './shared-types';
+import { Member } from '@digitaldefiance/ecies-lib';
 
 declare module 'express-serve-static-core' {
   interface Request {
     user?: IRequestUserDTO;
-    burnbagUser?: BurnbagMember;
+    brightchainUser?: Member;
     validatedBody?: ValidatedBody<string>;
     validate?: {
       body: (field: string) => ValidationChain;
@@ -22,7 +22,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: IRequestUserDTO;
-      burnbagUser?: BurnbagMember;
+      brightchainUser?: Member;
       validatedBody?: ValidatedBody<string>;
       validate?: {
         body: (field: string) => ValidationChain;

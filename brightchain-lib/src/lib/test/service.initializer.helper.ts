@@ -1,5 +1,5 @@
 import { ChecksumService } from '../services/checksum.service';
-import { ECIESService } from '../services/ecies.service';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 
 /**
  * Creates fresh instances of test services to avoid shared state

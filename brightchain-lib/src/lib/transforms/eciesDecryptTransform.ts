@@ -3,7 +3,8 @@ import { ECIES } from '../constants';
 import { BlockSize } from '../enumerations/blockSize';
 import { StreamErrorType } from '../enumerations/streamErrorType';
 import { StreamError } from '../errors/streamError';
-import { ECIESService } from '../services/ecies.service';
+import { ECIESService, getNodeRuntimeConfiguration } from '@digitaldefiance/node-ecies-lib';
+import { EciesEncryptionTypeEnum, GuidV4Provider } from '@digitaldefiance/ecies-lib';
 
 export class EciesDecryptionTransform extends Transform {
   private readonly blockSize: number;
@@ -17,13 +18,21 @@ export class EciesDecryptionTransform extends Transform {
     blockSize: BlockSize,
     options?: TransformOptions,
     logger: Console = console,
+    eciesService?: ECIESService,
   ) {
     super(options);
     this.logger = logger;
     this.privateKey = privateKey;
     this.blockSize = blockSize as number;
     this.buffer = Buffer.alloc(0);
-    this.eciesService = new ECIESService();
+    
+    // Use provided service or create one with GuidV4Provider config
+    if (eciesService) {
+      this.eciesService = eciesService;
+    } else {
+      const config = getNodeRuntimeConfiguration();
+      this.eciesService = new ECIESService(undefined, config.ECIES);
+    }
   }
 
   public override _transform(
@@ -46,7 +55,8 @@ export class EciesDecryptionTransform extends Transform {
         this.buffer = this.buffer.subarray(this.blockSize);
 
         try {
-          const decryptedBlock = this.eciesService.decryptSingleWithHeader(
+          const decryptedBlock = this.eciesService.decryptSimpleOrSingleWithHeader(
+            true, // decryptSimple = true
             this.privateKey,
             encryptedBlock,
           );
@@ -86,7 +96,8 @@ export class EciesDecryptionTransform extends Transform {
           throw new StreamError(StreamErrorType.IncompleteEncryptedBlock);
         }
 
-        const decryptedBlock = this.eciesService.decryptSingleWithHeader(
+        const decryptedBlock = this.eciesService.decryptSimpleOrSingleWithHeader(
+          true, // decryptSimple = true
           this.privateKey,
           this.buffer,
         );

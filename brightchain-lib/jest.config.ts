@@ -20,8 +20,8 @@ export default {
     '<rootDir>/jest.setup.ts',
   ],
   transformIgnorePatterns: [
-    // Tell Jest to transform node_modules/file-type
-    '/node_modules/(?!file-type|strtok3|token-types|@tokenizer|uint8array-extras).+\\.js$',
+    // Tell Jest to transform these ES modules
+    '/node_modules/(?!file-type|strtok3|token-types|@tokenizer|uint8array-extras|@noble|@scure|@digitaldefiance).+\\.js$',
   ],
   extensionsToTreatAsEsm: ['.ts'],
 };

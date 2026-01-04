@@ -13,7 +13,6 @@ import {
   makeUserModel,
   makeUserRoleModel,
 } from '../__tests__/helpers/model-mocks.mock';
-import { BrightChainMember } from '../backendMember';
 import { BackupCodeService } from './backupCode';
 import { ECIESService } from './ecies';
 import { EmailService } from './email';
@@ -21,6 +20,7 @@ import { KeyWrappingService } from './keyWrapping';
 import { RoleService } from './role';
 import { SystemUserService } from './system-user';
 import { UserService } from './user';
+import { Member } from '@digitaldefiance/ecies-lib';
 
 function makeService(
   userDoc: unknown | null,
@@ -150,7 +150,7 @@ describe('UserService.loginWithPassword', () => {
     };
     const svc = makeService(user);
     const loadWalletSpy = jest
-      .spyOn(BrightChainMember.prototype, 'loadWallet')
+      .spyOn(Member.prototype, 'loadWallet')
       .mockImplementation(() => {
         // do nothing, prevent mnemonic validation
       });
@@ -163,10 +163,10 @@ describe('UserService.loginWithPassword', () => {
       .spyOn((svc as any).keyWrappingService, 'unwrapSecretAsync')
       .mockResolvedValueOnce(new SecureBuffer(Buffer.alloc(32, 1)));
     const enc = jest
-      .spyOn(BrightChainMember.prototype as any, 'encryptData')
+      .spyOn(Member.prototype as any, 'encryptData')
       .mockImplementation((...args: unknown[]) => args[0] as Buffer);
     const dec = jest
-      .spyOn(BrightChainMember.prototype as any, 'decryptData')
+      .spyOn(Member.prototype as any, 'decryptData')
       .mockImplementation((...args: unknown[]) => args[0] as Buffer);
     const sys = jest
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -4,7 +4,7 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
 import { ExtendedCblError } from '../errors/extendedCblError';
-import { GuidV4 } from '../guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IExtendedConstituentBlockListBlock } from '../interfaces/blocks/extendedCbl';
 import { ServiceLocator } from '../services/serviceLocator';

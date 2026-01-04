@@ -1,9 +1,9 @@
+import { AppConstants } from '../appConstants';
+import { debugLog } from '@digitaldefiance/node-express-suite';
 import {
-  AppConstants,
-  debugLog,
-  StringName,
-  translate,
-} from '@brightchain/brightchain-lib';
+  SuiteCoreStringKey,
+  getSuiteCoreTranslation as translate,
+} from '@digitaldefiance/suite-core-lib';
 import ejs from 'ejs';
 import {
   Application,
@@ -14,7 +14,7 @@ import {
 import { existsSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { IApplication } from '../interfaces/application';
-import { handleError, sendApiMessageResponse } from '../utils';
+import { handleError, sendApiMessageResponse } from '@digitaldefiance/node-express-suite';
 import { ApiRouter } from './api';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -83,10 +83,7 @@ export class AppRouter {
             : `:${req.socket.localPort}`;
         console.log(
           `${translate(
-            StringName.Admin_ServingRoute,
-            undefined,
-            undefined,
-            'admin',
+            SuiteCoreStringKey.Admin_ServingRoute,
           )}: ${req.method} ${req.protocol}://${req.hostname}${port}${req.url}`,
         );
         next();
@@ -129,7 +126,7 @@ export class AppRouter {
             'Error serving static file:',
             err,
           );
-          handleError(err, res, sendApiMessageResponse, next);
+          handleError(err, res as any, sendApiMessageResponse, next);
           return;
         }
         next();
@@ -147,15 +144,9 @@ export class AppRouter {
         res.type('application/javascript');
       }
 
-      const isBurnbag = AppConstants.BurnbagHostnameRegex.test(req.hostname);
-      const isCanary = AppConstants.CanaryHostnameRegex.test(req.hostname);
-      const SiteName = isBurnbag
-        ? translate(StringName.SiteBirdBagTemplate)
-        : isCanary
-          ? translate(StringName.SiteCanaryProtocolTemplate)
-          : translate(StringName.SiteBirdBagTemplate);
-      const hostname =
-        isBurnbag || isCanary ? SiteName.toLowerCase() : req.hostname;
+      const SiteName = 'BrightChain';
+        // translate(SuiteCoreStringKey.Common_Site)
+      const hostname = req.hostname;
       const jsFile = this.getAssetFilename(this.assetsDir, /^index-.*\.js$/);
       const cssFile = this.getAssetFilename(this.assetsDir, /^index-.*\.css$/);
       const server =
@@ -168,10 +159,8 @@ export class AppRouter {
         'index',
         {
           cspNonce,
-          isBurnbag: isBurnbag ? 'true' : 'false',
-          isCanary: isCanary ? 'true' : 'false',
           title: SiteName,
-          tagline: translate(StringName.SiteTagline),
+          tagline: 'The Future of Decentralized Storage', // translate(SuiteCoreStringKey.SiteTagline),
           server: server,
           siteUrl: this.apiRouter.application.environment.serverUrl,
           baseHref: this.apiRouter.application.environment.basePath,

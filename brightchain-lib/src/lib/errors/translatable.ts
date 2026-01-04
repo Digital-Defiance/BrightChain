@@ -4,10 +4,10 @@ import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { translate } from '../i18n';
 import { LanguageContext } from '../sharedTypes';
-import { HandleableError } from './handleable';
+import { HandleableError } from '@digitaldefiance/i18n-lib';
 
 export class TranslatableError extends HandleableError {
-  public readonly StringName: StringName;
+  public readonly StringName: StringNames;
   constructor(
     string: StringNames,
     otherVars?: Record<string, string | number>,
@@ -15,7 +15,7 @@ export class TranslatableError extends HandleableError {
     context?: LanguageContext,
     options?: { statusCode?: number },
   ) {
-    super(translate(string, otherVars, undefined, context), {
+    super(new Error(translate(string, otherVars, language)), {
       statusCode: options?.statusCode ?? 500,
     });
     this.name = 'TranslatedError';

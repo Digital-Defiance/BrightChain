@@ -1,4 +1,4 @@
-import { IApiMessageResponse } from '@brightchain/brightchain-lib';
+import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
 import { IMongoErrors } from './mongo-errors';
 
 export interface IApiMongoValidationErrorResponse extends IApiMessageResponse {

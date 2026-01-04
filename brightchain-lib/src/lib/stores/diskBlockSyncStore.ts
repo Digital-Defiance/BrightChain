@@ -1,3 +1,4 @@
+import { ChecksumUint8Array } from '../types';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { BaseBlock } from '../blocks/base';
 import { RawDataBlock } from '../blocks/rawData';
@@ -7,7 +8,6 @@ import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
 import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
 import { ISimpleStore } from '../interfaces/simpleStore';
-import { ChecksumUint8Array } from '../types';
 import { DiskBlockStore } from './diskBlockStore';
 
 export class DiskBlockSyncStore
@@ -49,8 +49,8 @@ export class DiskBlockSyncStore
     }
     if (Buffer.compare(key, value.idChecksum) !== 0) {
       throw new StoreError(StoreErrorType.BlockIdMismatch, undefined, {
-        KEY: key.toString('hex'),
-        BLOCK_ID: value.idChecksum.toString('hex'),
+        KEY: Buffer.from(key).toString('hex'),
+        BLOCK_ID: Buffer.from(value.idChecksum).toString('hex'),
       });
     }
     if (value.blockSize !== this._blockSize) {

@@ -1,7 +1,6 @@
-import { SecureString } from '@brightchain/brightchain-lib';
-import { BrightChainMember } from '../../backendMember';
+import { Member, SecureString } from '@digitaldefiance/ecies-lib';
 
 export interface IBackendMemberWithMnemonic {
-  member: BrightChainMember;
+  member: Member;
   mnemonic: SecureString;
 }

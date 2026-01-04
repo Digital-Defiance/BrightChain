@@ -1,8 +1,8 @@
 import {
-  LanguageContext,
-  StringLanguage,
-  StringName,
-} from '@brightchain/brightchain-lib';
+  SuiteCoreStringKey,
+} from '@digitaldefiance/suite-core-lib';
+import { LanguageContextSpace } from '@digitaldefiance/i18n-lib';
+import { StringLanguage } from '../interfaces/request-user';
 import { TranslatableError } from './translatable-error-local';
 
 export class TokenNotFoundError extends TranslatableError {
@@ -10,11 +10,11 @@ export class TokenNotFoundError extends TranslatableError {
   constructor(
     token: string,
     language?: StringLanguage,
-    context?: LanguageContext,
+    context?: LanguageContextSpace,
     statusCode = 404,
   ) {
     super(
-      StringName.TokenNotFoundTemplate,
+      SuiteCoreStringKey.TokenNotFoundTemplate,
       {
         TOKEN: token,
       },

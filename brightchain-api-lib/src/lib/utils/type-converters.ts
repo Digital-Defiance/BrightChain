@@ -3,7 +3,7 @@ import {
   IRoleFrontendObject,
   IUserFrontendObject,
   IUserRoleFrontendObject,
-} from '@brightchain/brightchain-lib';
+} from '@digitaldefiance/suite-core-lib';
 import { Types } from 'mongoose';
 import { IEmailTokenDocument } from '../documents/email-token';
 import { IRoleDocument } from '../documents/role';
@@ -32,27 +32,27 @@ function objectIdToString(obj: any): any {
 export function userDocumentToFrontend(
   doc: IUserDocument,
 ): IUserFrontendObject {
-  const obj = doc.toObject();
+  const obj = (doc as any).toObject();
   return objectIdToString(obj) as IUserFrontendObject;
 }
 
 export function roleDocumentToFrontend(
   doc: IRoleDocument,
 ): IRoleFrontendObject {
-  const obj = doc.toObject();
+  const obj = (doc as any).toObject();
   return objectIdToString(obj) as IRoleFrontendObject;
 }
 
 export function emailTokenDocumentToFrontend(
   doc: IEmailTokenDocument,
 ): IEmailTokenFrontendObject {
-  const obj = doc.toObject();
+  const obj = (doc as any).toObject();
   return objectIdToString(obj) as IEmailTokenFrontendObject;
 }
 
 export function userRoleDocumentToFrontend(
   doc: IUserRoleDocument,
 ): IUserRoleFrontendObject {
-  const obj = doc.toObject();
+  const obj = (doc as any).toObject();
   return objectIdToString(obj) as IUserRoleFrontendObject;
 }

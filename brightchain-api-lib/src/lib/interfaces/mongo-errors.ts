@@ -1,5 +1,4 @@
-import { Error } from 'mongoose';
-
+// Database-agnostic error interface (was mongoose-specific)
 export interface IMongoErrors {
-  [key: string]: Error.ValidatorError | Error.CastError;
+  [key: string]: { message: string; name: string; path?: string; value?: any };
 }

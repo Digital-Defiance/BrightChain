@@ -13,32 +13,31 @@ export const memberOperationalFactory: IOperationalFactory<
   BrightChainMember
 > = {
   create: (hydrated: IMemberHydratedData): BrightChainMember => {
-    const member = new BrightChainMember(
-      hydrated.type,
-      hydrated.name,
-      hydrated.email,
-      hydrated.publicKey,
-      hydrated.votingPublicKey,
-      undefined,
-      undefined, // wallet - loaded separately with mnemonic if needed
-      hydrated.id,
-      hydrated.dateCreated,
-      hydrated.dateUpdated,
-      hydrated.creatorId,
-    );
+    // Use fromJson to create member synchronously
+    const storage = {
+      id: hydrated.id.toString(),
+      type: hydrated.type,
+      name: hydrated.name,
+      email: hydrated.email.toString(),
+      publicKey: hydrated.publicKey.toString('base64'),
+      votingPublicKey: hydrated.votingPublicKey.n.toString(16),
+      creatorId: hydrated.creatorId.toString(),
+      dateCreated: hydrated.dateCreated.toISOString(),
+      dateUpdated: hydrated.dateUpdated.toISOString(),
+    };
 
-    return member;
+    return BrightChainMember.fromJson(JSON.stringify(storage));
   },
 
   extract: (operational: BrightChainMember): IMemberHydratedData => {
     return {
-      id: operational.id,
+      id: operational.guidId,
       type: operational.type,
       name: operational.name,
       email: operational.email,
       publicKey: operational.publicKey,
       votingPublicKey: operational.votingPublicKey,
-      creatorId: operational.creatorId,
+      creatorId: operational.guidCreatorId,
       dateCreated: operational.dateCreated,
       dateUpdated: operational.dateUpdated,
     };

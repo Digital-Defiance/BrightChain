@@ -19,12 +19,12 @@ function makeRes() {
 }
 
 describe('cleanupCrypto middleware', () => {
-  it('disposes burnbagUser before response ends and leaves adminUser intact', () => {
+  it('disposes brightchainUser before response ends and leaves adminUser intact', () => {
     const req = {
-      burnbagUser: { dispose: jest.fn() },
+      brightchainUser: { dispose: jest.fn() },
       adminUser: { dispose: jest.fn() },
     } as unknown as import('express').Request & {
-      burnbagUser?: { dispose: () => void };
+      brightchainUser?: { dispose: () => void };
       adminUser?: { dispose: () => void };
     };
     const { res } = makeRes();
@@ -35,15 +35,15 @@ describe('cleanupCrypto middleware', () => {
     // call end to trigger cleanup
     (res.end as EndFn)('ok');
 
-    // burnbagUser unset and disposed
-    expect(req.burnbagUser).toBeUndefined();
+    // brightchainUser unset and disposed
+    expect(req.brightchainUser).toBeUndefined();
     // adminUser is not disposed or unset here (singleton safety)
     expect(req.adminUser).toBeDefined();
   });
 
   it('handles missing users safely', () => {
     const req = {} as unknown as import('express').Request & {
-      burnbagUser?: { dispose: () => void };
+      brightchainUser?: { dispose: () => void };
       adminUser?: { dispose: () => void };
     };
     const { res } = makeRes();

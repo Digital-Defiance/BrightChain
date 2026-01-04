@@ -3,6 +3,7 @@ import { fileTypeFromBuffer, fileTypeStream } from 'file-type';
 import { stat } from 'fs/promises';
 import { basename } from 'path';
 import { Readable } from 'stream';
+import { IMember } from '@digitaldefiance/node-ecies-lib';
 import { BaseBlock } from '../blocks/base';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { EncryptedBlock } from '../blocks/encrypted';
@@ -159,7 +160,8 @@ export class BlockService {
 
     const encryptedBuffer =
       ServiceLocator.getServiceProvider().eciesService.encrypt(
-        recipient?.publicKey ?? block.creator.publicKey,
+        'single',
+        (recipient ?? block.creator) as IMember<Buffer>,
         block.data,
       );
 
@@ -216,7 +218,7 @@ export class BlockService {
     }
     const encryptedMessageDetails =
       await ServiceLocator.getServiceProvider().eciesService.encryptMultiple(
-        recipients,
+        recipients as IMember<Buffer>[],
         block.data,
       );
     const header =
@@ -263,8 +265,9 @@ export class BlockService {
     }
 
     const decryptedBuffer =
-      ServiceLocator.getServiceProvider().eciesService.decryptSingleWithHeader(
-        creator.privateKey,
+      ServiceLocator.getServiceProvider().eciesService.decryptSimpleOrSingleWithHeader(
+        false, // decryptSimple = false for single recipient
+        Buffer.from(creator.privateKey.idUint8Array),
         block.layerPayload,
       );
 
@@ -314,7 +317,7 @@ export class BlockService {
               ECIES.MULTIPLE.ENCRYPTED_MESSAGE_OVERHEAD_SIZE,
           ),
         },
-        recipient,
+        recipient as IMember<Buffer>,
       );
     const checksum =
       ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
@@ -486,7 +489,8 @@ export class BlockService {
       if (encrypt && recipient) {
         const encryptedData =
           await ServiceLocator.getServiceProvider().eciesService.encrypt(
-            recipient.publicKey,
+            'single',
+            recipient as any,
             dataSlice,
           );
         chunkDatas.push(encryptedData);
@@ -593,7 +597,7 @@ export class BlockService {
     const xorBlock = Buffer.from(block);
     // XOR with all whiteners
     for (const whitener of whiteners) {
-      const data: Buffer = Buffer.isBuffer(whitener) ? whitener : whitener.data;
+      const data: Buffer = Buffer.isBuffer(whitener) ? whitener : Buffer.from(whitener.data);
       for (let j = 0; j < data.length; j++) {
         xorBlock[j] = xorBlock[j] ^ data[j];
       }
@@ -709,7 +713,7 @@ export class BlockService {
       const chunkIds = blockIds.slice(i, end);
 
       for (const blockId of chunkIds) {
-        blockId.copy(finalData, offset);
+        Buffer.from(blockId).copy(finalData, offset);
         offset += blockId.length;
       }
 
@@ -752,7 +756,7 @@ export class BlockService {
         BlockServiceErrorType.BlockAlreadyExists,
         undefined,
         {
-          ID: block.idChecksum.toString('hex'),
+          ID: Buffer.from(block.idChecksum).toString('hex'),
         },
       );
     }

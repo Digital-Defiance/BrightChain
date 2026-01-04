@@ -1,7 +1,6 @@
 import { JsonResponse } from '../../sharedTypes';
 
-export interface MembersResponse {
-  [key: string]: JsonResponse | undefined;
+export interface MembersResponse extends Record<string, JsonResponse | undefined | string | boolean> {
   memberId?: string;
   blockId?: string;
   publicKey?: string;

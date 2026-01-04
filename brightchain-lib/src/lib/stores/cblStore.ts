@@ -19,13 +19,13 @@ import { CblErrorType } from '../enumerations/cblErrorType';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { CblError } from '../errors/cblError';
 import { StoreError } from '../errors/storeError';
-import { GuidV4 } from '../guid';
 import { ISimpleStoreAsync } from '../interfaces/simpleStoreAsync';
 import { BlockService } from '../services/blockService';
 import { CBLService } from '../services/cblService';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceLocator } from '../services/serviceLocator';
-import { ChecksumUint8Array } from '../types';
+import { ChecksumUint8Array, GuidV4 } from '@digitaldefiance/ecies-lib';
+import { uint8ArrayToHex } from '../types';
 
 /**
  * CBLStore provides storage for Constituent Block Lists (CBLs).
@@ -109,7 +109,9 @@ export class CBLStore
       throw new CblError(CblErrorType.CreatorRequiredForSignature);
     }
 
-    if (!key.equals(value.idChecksum)) {
+
+
+    if (!Buffer.from(key).equals(Buffer.from(value.idChecksum))) {
       throw new StoreError(StoreErrorType.BlockIdMismatch);
     }
 
@@ -246,7 +248,7 @@ export class CBLStore
 
     // Hydrate the creator
     const creator =
-      this._activeUser && this._activeUser.id.equals(cblInfo.creatorId)
+      this._activeUser && this._activeUser.guidId.equals(cblInfo.creatorId)
         ? this._activeUser
         : await hydrateGuid(cblInfo.creatorId);
 
@@ -289,7 +291,7 @@ export class CBLStore
    * Get path for CBL data file
    */
   private getBlockPath(checksum: ChecksumUint8Array): string {
-    const checksumHex = checksum.toString('hex');
+    const checksumHex = uint8ArrayToHex(checksum);
     const firstDir = checksumHex.substring(0, 2);
     const secondDir = checksumHex.substring(2, 4);
     return join(
@@ -305,7 +307,7 @@ export class CBLStore
    * Ensure the block path exists
    */
   private ensureBlockPath(checksum: ChecksumUint8Array): void {
-    const checksumHex = checksum.toString('hex');
+    const checksumHex = uint8ArrayToHex(checksum);
     const firstDir = checksumHex.substring(0, 2);
     const secondDir = checksumHex.substring(2, 4);
     const blockDir = join(

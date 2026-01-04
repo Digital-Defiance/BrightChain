@@ -1,10 +1,11 @@
 import {
   IRoleDTO,
   IRoleFrontendObject,
-  StringLanguage,
-} from '@brightchain/brightchain-lib';
+} from '@digitaldefiance/suite-core-lib';
 import { Types } from 'mongoose';
 import { IRoleBackendObject } from './backend-objects/role';
+
+export type StringLanguage = string;
 
 /**
  * Interface for the user object stored in the request object

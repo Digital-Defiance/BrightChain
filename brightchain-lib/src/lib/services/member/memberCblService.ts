@@ -55,7 +55,7 @@ export class MemberCblService {
           BlockSize.Small,
           chunk,
           new Date(),
-          Buffer.alloc(0) as ChecksumUint8Array,
+          Buffer.alloc(0) as unknown as ChecksumUint8Array,
           BlockType.RawData,
           BlockDataType.PublicMemberData,
           true, // canRead
@@ -183,7 +183,7 @@ export class MemberCblService {
       // Combine blocks and parse JSON
       const memberJson = Buffer.concat(blocks).toString('utf8');
       try {
-        const member = BrightChainMember.fromJson(memberJson);
+        const member = await BrightChainMember.fromJson(memberJson);
 
         // Verify member data
         if (!member.id || !member.type) {

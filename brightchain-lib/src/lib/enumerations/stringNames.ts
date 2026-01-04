@@ -7,6 +7,7 @@ export enum StringNames {
   Error_NoTranslationsForEnumLanguageTemplate = 'Error_NoTranslationsForEnumLanguageTemplate',
   Error_UnknownEnumValueForEnumTemplate = 'Error_UnknownEnumValueForEnumTemplate',
   Error_LanguageNotFoundInStringsTemplate = 'Error_LanguageNotFoundInStringsTemplate',
+  Error_Disposed = 'Error_Disposed',
   // Block Access Errors
   Error_BlockAccessTemplate = 'Error_BlockAccessTemplate',
   Error_BlockAccessErrorBlockAlreadyExists = 'Error_BlockAccessErrorBlockAlreadyExists',

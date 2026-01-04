@@ -1,4 +1,4 @@
-import { GuidV4 } from '../guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 
 export interface IMultiEncryptedParsedHeader {
   /**
@@ -12,7 +12,7 @@ export interface IMultiEncryptedParsedHeader {
   /**
    * The IDs of the recipients
    */
-  readonly recipientIds: GuidV4[];
+  readonly recipientIds: Buffer[] | GuidV4[];
   /**
    * An encrypted version of the symmetric key for each recipient
    */
@@ -21,4 +21,8 @@ export interface IMultiEncryptedParsedHeader {
    * The size of the header, up to the encrypted message start (excludes encrypted message IV+auth tag)
    */
   readonly headerSize: number;
+  /**
+   * The ephemeral public key used for encryption
+   */
+  readonly ephemeralPublicKey?: Buffer;
 }

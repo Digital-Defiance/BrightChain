@@ -81,8 +81,10 @@ describe('RandomBlock', () => {
 
       expect(xoredBlock.data).toEqual(expectedData);
       expect(xoredBlock.blockSize).toBe(defaultBlockSize);
-      expect(xoredBlock.idChecksum).toEqual(
-        checksumService.calculateChecksum(expectedData),
+      // Compare checksums as arrays since ChecksumUint8Array is a typed array
+      const expectedChecksum = checksumService.calculateChecksum(expectedData);
+      expect(Array.from(xoredBlock.idChecksum)).toEqual(
+        Array.from(expectedChecksum),
       );
     });
 

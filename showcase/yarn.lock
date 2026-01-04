@@ -209,9 +209,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/ecies-lib@npm:^4.5.18":
-  version: 4.6.2
-  resolution: "@digitaldefiance/ecies-lib@npm:4.6.2"
+"@digitaldefiance/ecies-lib@npm:^4.7.1":
+  version: 4.7.14
+  resolution: "@digitaldefiance/ecies-lib@npm:4.7.14"
   dependencies:
     "@digitaldefiance/i18n-lib": "npm:3.8.16"
     "@ethereumjs/wallet": "npm:^10.0.0"
@@ -219,13 +219,9 @@ __metadata:
     "@noble/hashes": "npm:1.8.0"
     "@scure/bip32": "npm:1.7.0"
     bson: "npm:^6.10.4"
+    paillier-bigint: "npm:^3.4.1"
     ts-brand: "npm:^0.2.0"
-  peerDependencies:
-    paillier-bigint: ^3.4.1
-  peerDependenciesMeta:
-    paillier-bigint:
-      optional: true
-  checksum: 10c0/ef48798213c8d0dbc1c29b4aa34323adc4a43d776940cc12d7c12831a8ed810945cb437f41b248a25e7ab41cf344ff86c0a0691ecce6e5f655f06628ec8b04c1
+  checksum: 10c0/6e80612d9b165edafd5621c81fc2b63447b4eb896a47403aba4ffbd18034342a5105a553ad6c5efb7c9794a3f0406655ce26b8723c0b56d4f564a9af7819392f
   languageName: node
   linkType: hard
 
@@ -1298,7 +1294,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "brightchain-showcase@workspace:."
   dependencies:
-    "@digitaldefiance/ecies-lib": "npm:^4.5.18"
+    "@digitaldefiance/ecies-lib": "npm:^4.7.1"
     "@digitaldefiance/i18n-lib": "npm:^3.8.16"
     "@eslint/js": "npm:^9.39.1"
     "@ethereumjs/wallet": "npm:^10.0.0"

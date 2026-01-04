@@ -1,6 +1,6 @@
-import { Pbkdf2ProfileEnum } from './enumerations/pbkdf2Profile';
-import { IPbkdf2Config } from './interfaces/pbkdf2Config';
+import { IPbkdf2Config } from '@digitaldefiance/ecies-lib';
 
-export type Pbkdf2Profiles = {
-  [key in Pbkdf2ProfileEnum]: IPbkdf2Config;
-};
+export interface Pbkdf2Profiles {
+  BACKUP_CODES: IPbkdf2Config;
+  BROWSER_PASSWORD: IPbkdf2Config;
+}

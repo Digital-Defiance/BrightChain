@@ -4,7 +4,6 @@ import { RandomBlock } from '../blocks/random';
 import { WhitenedBlock } from '../blocks/whitened';
 import { BrightChainMember } from '../brightChainMember';
 import { ECIES } from '../constants';
-import { EmailString } from '../emailString';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -14,6 +13,7 @@ import { TupleError } from '../errors/tupleError';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
 import { TupleService } from './tuple.service';
+import { EmailString } from '@digitaldefiance/ecies-lib';
 
 describe('TupleService', () => {
   let creator: BrightChainMember;

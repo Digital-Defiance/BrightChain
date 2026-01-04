@@ -8,7 +8,7 @@ import { CblErrorType } from '../enumerations/cblErrorType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockAccessError, BlockMetadataError } from '../errors/block';
 import { CblError } from '../errors/cblError';
-import { GuidV4 } from '../guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { ICBLCore } from '../interfaces/blocks/cblBase';
 import { ServiceLocator } from '../services/serviceLocator';
 import { ChecksumUint8Array, SignatureUint8Array } from '../types';
@@ -35,7 +35,7 @@ export abstract class CBLBase extends EphemeralBlock implements ICBLCore {
       ServiceLocator.getServiceProvider().cblService.isExtendedHeader(data);
     const checksum =
       ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
-        data,
+        new Uint8Array(data),
       );
     const blockSize = lengthToBlockSize(data.length);
     const blockType = isExtendedCbl
@@ -46,7 +46,7 @@ export abstract class CBLBase extends EphemeralBlock implements ICBLCore {
     const creatorId =
       ServiceLocator.getServiceProvider().cblService.getCreatorId(data);
     if (
-      (creator instanceof BrightChainMember && !creatorId.equals(creator.id)) ||
+      (creator instanceof BrightChainMember && !creatorId.equals(creator.guidId)) ||
       (creator instanceof GuidV4 && !creatorId.equals(creator))
     ) {
       throw new BlockMetadataError(BlockMetadataErrorType.CreatorIdMismatch);

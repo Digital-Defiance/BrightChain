@@ -10,10 +10,10 @@ import { HandleTupleError } from '../errors/handleTupleError';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
-import { ChecksumBuffer } from '../types';
 import { BlockHandle } from './handle';
 import { BlockHandleTuple } from './handleTuple';
 import { RawDataBlock } from './rawData';
+import { ChecksumBuffer } from '@digitaldefiance/node-ecies-lib';
 
 // Test helper class to expose protected methods for testing
 class TestDiskBlockAsyncStore extends DiskBlockAsyncStore {

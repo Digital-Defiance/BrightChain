@@ -52,11 +52,11 @@ export class EphemeralBlock extends BaseBlock implements IEphemeralBlock {
   ): Promise<IEphemeralBlock> {
     // Skip validation in test environment
     const calculatedChecksum =
-      await ServiceLocator.getServiceProvider().checksumService.calculateChecksumForStream(
-        Readable.from(data),
+      await ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+        data,
       );
 
-    if (!calculatedChecksum.equals(checksum)) {
+    if (!Buffer.from(calculatedChecksum).equals(Buffer.from(checksum))) {
       throw new ChecksumMismatchError(checksum, calculatedChecksum);
     }
 
@@ -247,7 +247,7 @@ export class EphemeralBlock extends BaseBlock implements IEphemeralBlock {
       ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
         this._data,
       );
-    const validated = computedChecksum.equals(this.idChecksum);
+    const validated = Buffer.from(computedChecksum).equals(Buffer.from(this.idChecksum));
     if (!validated) {
       throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
     }
@@ -266,10 +266,10 @@ export class EphemeralBlock extends BaseBlock implements IEphemeralBlock {
 
     // Calculate checksum on actual data length, excluding padding
     const computedChecksum =
-      await ServiceLocator.getServiceProvider().checksumService.calculateChecksumForStream(
-        Readable.from(this._data),
+      await ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+        this._data,
       );
-    const validated = computedChecksum.equals(this.idChecksum);
+    const validated = Buffer.from(computedChecksum).equals(Buffer.from(this.idChecksum));
     if (!validated) {
       throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
     }

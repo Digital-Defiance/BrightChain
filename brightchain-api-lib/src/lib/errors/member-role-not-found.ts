@@ -1,13 +1,11 @@
-import {
-  LanguageContext,
-  StringLanguage,
-  StringName,
-} from '@brightchain/brightchain-lib';
+import { StringLanguage } from '@brightchain/brightchain-lib';
+import { SuiteCoreStringKey } from '@digitaldefiance/suite-core-lib';
+import { LanguageContextSpace } from '@digitaldefiance/i18n-lib';
 import { TranslatableError } from './translatable-error-local';
 
 export class MemberRoleNotFoundError extends TranslatableError {
-  constructor(language?: StringLanguage, context?: LanguageContext) {
-    super(StringName.MemberRoleNotFound, undefined, language, context);
+  constructor(language?: StringLanguage, context?: LanguageContextSpace) {
+    super(SuiteCoreStringKey.MemberRoleNotFound, undefined, language, context);
     this.name = 'MemberRoleNotFoundError';
     Object.setPrototypeOf(this, MemberRoleNotFoundError.prototype);
   }

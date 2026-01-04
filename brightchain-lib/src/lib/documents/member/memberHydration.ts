@@ -1,5 +1,4 @@
-import { EmailString } from '../../emailString';
-import { GuidV4 } from '../../guid';
+import { EmailString, GuidV4 } from '@digitaldefiance/ecies-lib';
 import { IHydrationSchema } from '../../interfaces/document/base';
 import { IMemberHydratedData } from '../../interfaces/member/hydrated';
 import { IMemberStorageData } from '../../interfaces/member/storage';
@@ -18,10 +17,13 @@ export const memberHydrationSchema: IHydrationSchema<
     const email = new EmailString(storage.email);
     const creatorId = new GuidV4(storage.creatorId);
     const publicKey = Buffer.from(storage.publicKey, 'base64');
-    const votingPublicKey =
-      ServiceProvider.getInstance().votingService.bufferToVotingPublicKey(
-        Buffer.from(storage.votingPublicKey, 'base64'),
-      );
+    
+    // Parse voting public key from hex string
+    const { PublicKey } = require('paillier-bigint');
+    const votingPublicKey = new PublicKey(
+      BigInt('0x' + storage.votingPublicKey),
+      BigInt('0x' + storage.votingPublicKey) + 1n, // g = n + 1 for Paillier
+    );
 
     return {
       id,
@@ -38,10 +40,8 @@ export const memberHydrationSchema: IHydrationSchema<
 
   dehydrate: (hydrated: IMemberHydratedData): IMemberStorageData => {
     // Convert typed fields back to strings
-    const votingPublicKeyBuffer =
-      ServiceProvider.getInstance().votingService.votingPublicKeyToBuffer(
-        hydrated.votingPublicKey,
-      );
+    // Serialize voting public key (n value as hex string)
+    const votingPublicKeyHex = hydrated.votingPublicKey.n.toString(16);
 
     return {
       id: hydrated.id.toString(),
@@ -49,7 +49,7 @@ export const memberHydrationSchema: IHydrationSchema<
       name: hydrated.name,
       email: hydrated.email.toString(),
       publicKey: hydrated.publicKey.toString('base64'),
-      votingPublicKey: votingPublicKeyBuffer.toString('base64'),
+      votingPublicKey: votingPublicKeyHex,
       creatorId: hydrated.creatorId.toString(),
       dateCreated: hydrated.dateCreated.toISOString(),
       dateUpdated: hydrated.dateUpdated.toISOString(),

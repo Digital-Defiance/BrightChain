@@ -5,9 +5,9 @@ export interface IChecksumConsts {
   /** Length of a SHA3 checksum buffer in bytes */
   SHA3_BUFFER_LENGTH: number;
 
-  /** Algorithm name for checksums */
-  ALGORITHM: string;
+  /** algorithm to use for checksum */
+  ALGORITHM: 'sha3-512';
 
-  /** Encoding for checksums */
-  ENCODING: 'hex' | 'base64';
+  /** encoding to use for checksum */
+  ENCODING: 'hex';
 }

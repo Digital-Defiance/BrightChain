@@ -1,15 +1,13 @@
 import {
   AccountStatus,
-  CanaryStatus,
   IUserBase,
-  StringLanguage,
-} from '@brightchain/brightchain-lib';
+} from '@digitaldefiance/suite-core-lib';
+import { StringLanguage } from '../request-user';
 import { DefaultBackendIdType } from '../../shared-types';
 
 export type IUserBackend = IUserBase<
   DefaultBackendIdType,
   Date,
   StringLanguage,
-  AccountStatus,
-  CanaryStatus
+  AccountStatus
 >;

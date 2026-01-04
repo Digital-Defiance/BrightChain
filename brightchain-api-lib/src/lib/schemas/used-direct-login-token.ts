@@ -2,7 +2,7 @@ import { Schema } from 'mongoose';
 import { IUsedDirectLoginTokenDocument } from '../documents/used-direct-login-token';
 export const UsedDirectLoginTokenSchema =
   new Schema<IUsedDirectLoginTokenDocument>({
-    userId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+    userId: { type: Schema.Types.ObjectId as any, required: true, ref: 'User' },
     token: { type: String, required: true },
   });
 

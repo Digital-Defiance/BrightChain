@@ -1,9 +1,9 @@
+import { SecureString } from '@digitaldefiance/ecies-lib';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { randomBytes } from 'crypto';
 import { BlockSize } from '../enumerations/blockSize';
 import { EciesErrorType } from '../enumerations/eciesErrorType';
 import { EciesError } from '../errors/eciesError';
-import { SecureString } from '../secureString';
-import { ECIESService } from '../services/ecies.service';
 import { EciesDecryptionTransform } from './eciesDecryptTransform';
 
 describe('EciesDecryptionTransform Unit Tests', () => {
@@ -26,7 +26,8 @@ describe('EciesDecryptionTransform Unit Tests', () => {
     jest.clearAllMocks();
     eciesService = new ECIESService();
     mnemonic = eciesService.generateNewMnemonic();
-    keypair = eciesService.mnemonicToSimpleKeyPairBuffer(mnemonic);
+    const kp = eciesService.mnemonicToSimpleKeyPairBuffer(mnemonic);
+    keypair = kp;
   });
 
   it('should be instantiated with correct parameters', () => {
@@ -77,6 +78,7 @@ describe('EciesDecryptionTransform Unit Tests', () => {
 
     transform.on('end', () => {
       expect(chunks.length).toBe(1);
+      // @ts-expect-error - TS5.9 incorrectly flags Buffer[] as incompatible with Uint8Array[]
       const decryptedData = Buffer.concat(chunks);
       expect(decryptedData).toEqual(inputData);
       done();
@@ -109,6 +111,7 @@ describe('EciesDecryptionTransform Unit Tests', () => {
     });
 
     transform.on('end', () => {
+      // @ts-expect-error - TS5.9 incorrectly flags Buffer[] as incompatible with Uint8Array[]
       const decryptedData = Buffer.concat(chunks);
       expect(decryptedData).toEqual(inputData);
       done();

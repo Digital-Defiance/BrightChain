@@ -1,5 +1,5 @@
 export interface IKeyringConsts {
-  ALGORITHM: string;
-  KEY_BITS: number;
-  MODE: string;
+  ALGORITHM: 'aes';
+  KEY_BITS: 256;
+  MODE: 'gcm';
 }

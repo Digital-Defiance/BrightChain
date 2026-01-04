@@ -2,17 +2,14 @@ import { faker } from '@faker-js/faker';
 import Wallet from 'ethereumjs-wallet';
 import { BrightChainMember } from './brightChainMember';
 import { ECIES } from './constants';
-import { EmailString } from './emailString';
-import { InvalidEmailErrorType } from './enumerations/invalidEmailType';
 import { MemberErrorType } from './enumerations/memberErrorType';
 import { MemberType } from './enumerations/memberType';
 import { InvalidEmailError } from './errors/invalidEmail';
 import { MemberError } from './errors/memberError';
 import { IMemberWithMnemonic } from './interfaces/member/memberWithMnemonic';
-import { SecureString } from './secureString';
-import { ECIESService } from './services/ecies.service';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { ServiceProvider } from './services/service.provider';
-import { VotingService } from './services/voting.service';
+import { EmailString, InvalidEmailErrorType, SecureString, VotingService } from '@digitaldefiance/ecies-lib';
 
 describe('brightchain', () => {
   let alice: IMemberWithMnemonic,
@@ -21,20 +18,23 @@ describe('brightchain', () => {
   let eciesService: ECIESService;
   let votingService: VotingService;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     eciesService = ServiceProvider.getInstance().eciesService;
     votingService = ServiceProvider.getInstance().votingService;
-    alice = BrightChainMember.newMember(
+    alice = await BrightChainMember.newMember(
+      eciesService,
       MemberType.User,
       'Alice Smith',
       new EmailString('alice@example.com'),
     );
-    bob = BrightChainMember.newMember(
+    bob = await BrightChainMember.newMember(
+      eciesService,
       MemberType.User,
       'Bob Smith',
       new EmailString('bob@example.com'),
     );
-    noKeyCharlie = BrightChainMember.newMember(
+    noKeyCharlie = await BrightChainMember.newMember(
+      eciesService,
       MemberType.User,
       'Charlie Smith',
       new EmailString('charlie@example.com'),
@@ -61,8 +61,9 @@ describe('brightchain', () => {
       });
     });
 
-    it('should unload a private key when called', () => {
-      const dwight = BrightChainMember.newMember(
+    it('should unload a private key when called', async () => {
+      const dwight = await BrightChainMember.newMember(
+        eciesService,
         MemberType.User,
         'Dwight Smith',
         new EmailString('dwight@example.com'),
@@ -74,9 +75,10 @@ describe('brightchain', () => {
   });
 
   describe('member creation validation', () => {
-    it('should fail to create a user with no name', () => {
-      expect(() =>
+    it('should fail to create a user with no name', async () => {
+      await expect(
         BrightChainMember.newMember(
+          eciesService,
           MemberType.User,
           '',
           new EmailString('alice@example.com'),
@@ -86,9 +88,10 @@ describe('brightchain', () => {
       });
     });
 
-    it('should fail to create a user with whitespace at the start or end of their name', () => {
-      expect(() =>
+    it('should fail to create a user with whitespace at the start or end of their name', async () => {
+      await expect(
         BrightChainMember.newMember(
+          eciesService,
           MemberType.User,
           'alice ',
           new EmailString('alice@example.com'),
@@ -96,8 +99,9 @@ describe('brightchain', () => {
       ).toThrowType(MemberError, (error: MemberError) => {
         expect(error.type).toBe(MemberErrorType.InvalidMemberNameWhitespace);
       });
-      expect(() =>
+      await expect(
         BrightChainMember.newMember(
+          eciesService,
           MemberType.User,
           ' alice',
           new EmailString('alice@example.com'),
@@ -107,9 +111,10 @@ describe('brightchain', () => {
       });
     });
 
-    it('should fail to create a user with no email', () => {
-      expect(() =>
+    it('should fail to create a user with no email', async () => {
+      await expect(
         BrightChainMember.newMember(
+          eciesService,
           MemberType.User,
           'alice',
           new EmailString(''),
@@ -119,9 +124,10 @@ describe('brightchain', () => {
       });
     });
 
-    it('should fail to create a user with an email that has whitespace at the start or end', () => {
-      expect(() =>
+    it('should fail to create a user with an email that has whitespace at the start or end', async () => {
+      await expect(
         BrightChainMember.newMember(
+          eciesService,
           MemberType.User,
           'alice',
           new EmailString(' alice@example.com'),
@@ -129,8 +135,9 @@ describe('brightchain', () => {
       ).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
         expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
       });
-      expect(() =>
+      await expect(
         BrightChainMember.newMember(
+          eciesService,
           MemberType.User,
           'alice',
           new EmailString('alice@example.com '),
@@ -140,9 +147,10 @@ describe('brightchain', () => {
       });
     });
 
-    it('should fail to create a user with an invalid email', () => {
-      expect(() => {
-        BrightChainMember.newMember(
+    it('should fail to create a user with an invalid email', async () => {
+      await expect(async () => {
+        await BrightChainMember.newMember(
+          eciesService,
           MemberType.User,
           'Nope',
           new EmailString('x!foo'),
@@ -162,11 +170,12 @@ describe('brightchain', () => {
     let mnemonic: SecureString;
     let wallet: Wallet;
     let member: IMemberWithMnemonic;
-    beforeAll(() => {
+    beforeAll(async () => {
       mnemonic = eciesService.generateNewMnemonic();
       const { wallet: w } = eciesService.walletAndSeedFromMnemonic(mnemonic);
       wallet = w;
-      member = BrightChainMember.newMember(
+      member = await BrightChainMember.newMember(
+        eciesService,
         MemberType.User,
         'Test User',
         new EmailString('test@example.com'),
@@ -202,16 +211,17 @@ describe('brightchain', () => {
       expect(memberPublicKey.length).toEqual(ECIES.PUBLIC_KEY_LENGTH);
     });
 
-    it('should handle wallet unload and reload with mnemonic', () => {
+    it('should handle wallet unload and reload with mnemonic', async () => {
       // Generate a new member
-      const newMember = BrightChainMember.newMember(
+      const newMember = await BrightChainMember.newMember(
+        eciesService,
         MemberType.User,
         'Test User',
         new EmailString('test@example.com'),
       );
 
       // Store the original keys
-      const originalPublicKey = newMember.member.publicKey;
+      const originalPublicKey = Buffer.from(newMember.member.publicKey);
       const originalPrivateKey = newMember.member.privateKey;
 
       // Unload the wallet and private key
@@ -226,7 +236,7 @@ describe('brightchain', () => {
 
       // Generate a new mnemonic (this should fail to load)
       const wrongMnemonic = eciesService.generateNewMnemonic();
-      expect(() => newMember.member.loadWallet(wrongMnemonic)).toThrowType(
+      await expect(newMember.member.loadWallet(wrongMnemonic)).rejects.toThrowType(
         MemberError,
         (error: MemberError) => {
           expect(error.type).toBe(MemberErrorType.InvalidMnemonic);
@@ -243,7 +253,7 @@ describe('brightchain', () => {
       );
 
       // Create a new member with same keys to simulate reloading from storage
-      const reloadedMember = new BrightChainMember(
+      const reloadedMember = await BrightChainMember.create(
         MemberType.User,
         'Test User',
         new EmailString('test@example.com'),
@@ -252,11 +262,11 @@ describe('brightchain', () => {
       );
       // Set the private key using the setter to ensure proper validation
       if (originalPrivateKey) {
-        reloadedMember.loadPrivateKey(originalPrivateKey);
+        await reloadedMember.loadPrivateKey(Buffer.from(originalPrivateKey.value));
       }
 
       // Verify ECDH keys match
-      expect(reloadedMember.publicKey.toString('hex')).toEqual(
+      expect(Buffer.from(reloadedMember.publicKey).toString('hex')).toEqual(
         originalPublicKey.toString('hex'),
       );
       expect(reloadedMember.privateKey?.toString('hex')).toEqual(
@@ -275,21 +285,22 @@ describe('brightchain', () => {
       );
     });
 
-    it('should create unique keys for different members', () => {
-      const member2 = BrightChainMember.newMember(
+    it('should create unique keys for different members', async () => {
+      const member2 = await BrightChainMember.newMember(
+        eciesService,
         MemberType.User,
         'User 2',
         new EmailString('user2@example.com'),
       );
 
       // Public keys should be different
-      expect(member.member.publicKey.toString('hex')).not.toEqual(
-        member2.member.publicKey.toString('hex'),
+      expect(Buffer.from(member.member.publicKey).toString('hex')).not.toEqual(
+        Buffer.from(member2.member.publicKey).toString('hex'),
       );
 
       // Private keys should be different
-      expect(member.member.privateKey?.toString('hex')).not.toEqual(
-        member2.member.privateKey?.toString('hex'),
+      expect(member.member.privateKey?.valueAsHexString).not.toEqual(
+        member2.member.privateKey?.valueAsHexString,
       );
 
       // Voting keys should be different
@@ -305,19 +316,22 @@ describe('brightchain', () => {
     });
   });
   describe('json', () => {
-    it('should serialize and deserialize correctly', () => {
+    it('should serialize and deserialize correctly', async () => {
       const memberJson = alice.member.toJson();
-      const reloadedMember = BrightChainMember.fromJson(memberJson);
-      reloadedMember.loadWallet(alice.mnemonic);
-      const encrypted = eciesService.encrypt(
-        alice.member.publicKey,
+      const reloadedMember = await BrightChainMember.fromJson(memberJson);
+      await reloadedMember.loadWallet(alice.mnemonic);
+      const publicKey = Buffer.from(alice.member.publicKey);
+      const encrypted = await eciesService.encryptSimpleOrSingle(
+        true,
+        publicKey,
         Buffer.from('hello world'),
       );
       if (!reloadedMember.privateKey) {
         throw new Error('Private key not loaded');
       }
-      const decrypted = eciesService.decryptWithHeader(
-        reloadedMember.privateKey,
+      const decrypted = eciesService.decryptSimpleOrSingleWithHeader(
+        true,
+        Buffer.from(reloadedMember.privateKey.value),
         encrypted,
       );
       expect(decrypted.toString()).toEqual('hello world');

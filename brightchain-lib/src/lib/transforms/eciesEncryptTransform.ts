@@ -1,6 +1,8 @@
 import { Transform, TransformCallback } from 'stream';
 import { BlockSize } from '../enumerations/blockSize';
-import { ECIESService } from '../services/ecies.service';
+import { ECIESService, getNodeRuntimeConfiguration } from '@digitaldefiance/node-ecies-lib';
+import { GuidV4Provider } from '@digitaldefiance/ecies-lib';
+import { EciesEncryptionTypeEnum } from '@digitaldefiance/ecies-lib';
 
 /**
  * Transform stream that encrypts data using ECIES encryption
@@ -17,21 +19,29 @@ export class EciesEncryptTransform extends Transform {
     blockSize: BlockSize,
     receiverPublicKey: Buffer,
     logger: Console = console,
+    eciesService?: ECIESService,
   ) {
     super();
     this.logger = logger;
     this.blockSize = blockSize as number;
     this.receiverPublicKey = receiverPublicKey;
     this.buffer = Buffer.alloc(0);
-    this.eciesService = new ECIESService();
+    
+    // Use provided service or create one with GuidV4Provider config
+    if (eciesService) {
+      this.eciesService = eciesService;
+    } else {
+      const config = getNodeRuntimeConfiguration();
+      this.eciesService = new ECIESService(undefined, config.ECIES);
+    }
 
     // Calculate how much data we can encrypt per block
-    const { capacityPerBlock } =
-      this.eciesService.computeEncryptedLengthFromDataLength(
-        this.blockSize,
-        this.blockSize,
-      );
-    this.capacityPerBlock = capacityPerBlock;
+    const encryptedLength = this.eciesService.computeEncryptedLengthFromDataLength(
+      this.blockSize,
+      'simple',
+    );
+    // For Simple encryption, capacity = blockSize - overhead
+    this.capacityPerBlock = this.blockSize - (encryptedLength - this.blockSize);
   }
 
   public override _transform(
@@ -53,7 +63,8 @@ export class EciesEncryptTransform extends Transform {
         const blockData = this.buffer.subarray(0, this.capacityPerBlock);
         this.buffer = this.buffer.subarray(this.capacityPerBlock);
 
-        const encryptedBlock = this.eciesService.encrypt(
+        const encryptedBlock = this.eciesService.encryptSimpleOrSingle(
+          true, // encryptSimple = true
           this.receiverPublicKey,
           blockData,
         );
@@ -92,7 +103,8 @@ export class EciesEncryptTransform extends Transform {
     try {
       // Handle any remaining data in buffer
       if (this.buffer.length > 0) {
-        const encryptedBlock = this.eciesService.encrypt(
+        const encryptedBlock = this.eciesService.encryptSimpleOrSingle(
+          true, // encryptSimple = true
           this.receiverPublicKey,
           this.buffer,
         );

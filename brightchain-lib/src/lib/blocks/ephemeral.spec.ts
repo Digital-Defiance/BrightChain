@@ -1,7 +1,6 @@
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import { ECIES } from '../constants';
-import { EmailString } from '../emailString';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -14,8 +13,9 @@ import { IMemberWithMnemonic } from '../interfaces/member/memberWithMnemonic';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { initializeTestServices } from '../test/service.initializer.helper';
-import { ChecksumBuffer } from '../types';
 import { EphemeralBlock } from './ephemeral';
+import { ChecksumBuffer } from '@digitaldefiance/node-ecies-lib';
+import { EmailString } from '@digitaldefiance/ecies-lib';
 
 // Test class that properly implements abstract methods
 class TestEphemeralBlock extends EphemeralBlock {

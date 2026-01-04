@@ -14,7 +14,6 @@ import { ChecksumService } from './services/checksum.service';
 import { ServiceProvider } from './services/service.provider';
 
 // Mock modules
-jest.mock('./secureString');
 jest.mock('./brightChainMember');
 
 // Create a simple mock member

@@ -1,14 +1,19 @@
+import { 
+  ECIESService,
+  getNodeEciesI18nEngine,
+  getNodeRuntimeConfiguration,
+  VotingService,
+} from '@digitaldefiance/node-ecies-lib';
+import { GuidV4Provider } from '@digitaldefiance/ecies-lib';
 import { IServiceProvider } from '../interfaces/serviceProvider.interface';
 import { BlockCapacityCalculator } from './blockCapacity.service';
 import { BlockService } from './blockService';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
 import { CrcService } from './crc.service';
-import { ECIESService } from './ecies.service';
 import { FecService } from './fec.service';
 import { ServiceLocator } from './serviceLocator';
 import { TupleService } from './tuple.service';
-import { VotingService } from './voting.service';
 
 /**
  * Service provider for dependency injection
@@ -30,9 +35,24 @@ export class ServiceProvider implements IServiceProvider {
       throw new Error('Use ServiceProvider.getInstance() instead of new.');
     }
     ServiceProvider.instance = this;
+    
+    // Initialize ECIES i18n
+    getNodeEciesI18nEngine();
+    
+    // Get ECIES runtime configuration with GuidV4Provider
+    const baseConfig = getNodeRuntimeConfiguration();
+    
+    // Create a new configuration object with GuidV4Provider if needed
+    const eciesConfig = {
+      ...baseConfig,
+      idProvider: baseConfig.idProvider && baseConfig.idProvider instanceof GuidV4Provider
+        ? baseConfig.idProvider
+        : new GuidV4Provider(),
+    };
+    
     this.checksumService = new ChecksumService();
     this.crcService = new CrcService();
-    this.eciesService = new ECIESService();
+    this.eciesService = new ECIESService(eciesConfig, eciesConfig.ECIES);
     this.blockService = new BlockService();
     this.cblService = new CBLService(this.checksumService, this.eciesService);
     this.blockCapacityCalculator = new BlockCapacityCalculator(
@@ -40,7 +60,7 @@ export class ServiceProvider implements IServiceProvider {
       this.eciesService,
     );
     this.tupleService = new TupleService(this.checksumService, this.cblService);
-    this.votingService = new VotingService(this.eciesService);
+    this.votingService = VotingService.getInstance();
     this.fecService = new FecService();
 
     // Register with ServiceLocator

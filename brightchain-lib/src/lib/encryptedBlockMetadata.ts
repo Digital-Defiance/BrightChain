@@ -6,9 +6,9 @@ import BlockType from './enumerations/blockType';
 import { BlockValidationErrorType } from './enumerations/blockValidationErrorType';
 import { EphemeralBlockMetadata } from './ephemeralBlockMetadata';
 import { BlockValidationError } from './errors/block';
-import { GuidV4 } from './guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { IEncryptedBlockMetadata } from './interfaces/blocks/metadata/encryptedBlockMetadata';
-import { ECIESService } from './services/ecies.service';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 
 export class EncryptedBlockMetadata
   extends EphemeralBlockMetadata

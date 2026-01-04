@@ -1,4 +1,4 @@
-import { IRoleBase } from '@brightchain/brightchain-lib';
+import { IRoleBase } from '@digitaldefiance/suite-core-lib';
 import { DefaultBackendIdType } from '../shared-types';
 import { IBaseDocument } from './base';
 

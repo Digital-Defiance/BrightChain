@@ -1,4 +1,4 @@
-import { BrightChainMember } from '../backendMember';
+import { Member } from '@digitaldefiance/ecies-lib';
 import { IRoleDocument } from '../documents/role';
 import { IUserDocument } from '../documents/user';
 import { IUserRoleDocument } from '../documents/user-role';
@@ -11,7 +11,7 @@ export interface IServerInitResult {
   adminMnemonic: string;
   adminPassword: string;
   adminBackupCodes: Array<string>;
-  adminBurnbagMember: BrightChainMember;
+  adminBrightchainMember: Member;
   adminUserRole: IUserRoleDocument;
   memberRole: IRoleDocument;
   memberUser: IUserDocument;
@@ -20,7 +20,7 @@ export interface IServerInitResult {
   memberMnemonic: string;
   memberPassword: string;
   memberBackupCodes: Array<string>;
-  memberBurnbagMember: BrightChainMember;
+  memberBrightchainMember: Member;
   memberUserRole: IUserRoleDocument;
   systemRole: IRoleDocument;
   systemUser: IUserDocument;
@@ -29,6 +29,6 @@ export interface IServerInitResult {
   systemMnemonic: string;
   systemPassword: string;
   systemBackupCodes: Array<string>;
-  systemBurnbagMember: BrightChainMember;
+  systemBrightchainMember: Member;
   systemUserRole: IUserRoleDocument;
 }

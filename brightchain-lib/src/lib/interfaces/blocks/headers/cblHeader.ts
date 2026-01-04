@@ -1,4 +1,4 @@
-import { GuidV4 } from '../../../guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { SignatureUint8Array } from '../../../types';
 
 export interface IConstituentBlockListBlockHeader {

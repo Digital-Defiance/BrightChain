@@ -1,9 +1,10 @@
+import { EmailString, GuidV4 } from '@digitaldefiance/ecies-lib';
+import { ChecksumBuffer } from '@digitaldefiance/node-ecies-lib';
 import { faker } from '@faker-js/faker';
 import { mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { BrightChainMember } from '../brightChainMember';
-import { EmailString } from '../emailString';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -12,11 +13,9 @@ import MemberType from '../enumerations/memberType';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { CblError } from '../errors/cblError';
 import { StoreError } from '../errors/storeError';
-import { GuidV4 } from '../guid';
 import { CBLService } from '../services/cblService';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
-import { ChecksumBuffer } from '../types';
 import { CBLStore } from './cblStore';
 
 describe('CBLStore', () => {
@@ -29,6 +28,7 @@ describe('CBLStore', () => {
 
   beforeAll(() => {
     creator = BrightChainMember.newMember(
+      ServiceProvider.getInstance().eciesService,
       MemberType.User,
       faker.person.fullName(),
       new EmailString(faker.internet.email()),

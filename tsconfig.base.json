@@ -1,7 +1,6 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",
@@ -21,7 +20,10 @@
     "baseUrl": ".",
     "paths": {
       "@brightchain/brightchain-lib": [
-        "brightchain-lib/src/index.ts"
+        "dist/brightchain-lib"
+      ],
+      "@brightchain/brightchain-api-lib": [
+        "dist/brightchain-api-lib"
       ]
     }
   },

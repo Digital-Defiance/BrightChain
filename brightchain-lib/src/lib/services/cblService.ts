@@ -6,20 +6,21 @@ import { BlockSize, lengthToBlockSize } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
 import { CblErrorType } from '../enumerations/cblErrorType';
 import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
-import { GuidBrandType } from '../enumerations/guidBrandType';
+import { GuidBrandType } from '@digitaldefiance/ecies-lib';
 import { CblError } from '../errors/cblError';
 import { ExtendedCblError } from '../errors/extendedCblError';
-import { GuidV4 } from '../guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { IConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/cblHeader';
 import { IExtendedConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/ecblHeader';
 import {
   ChecksumUint8Array,
   RawGuidUint8Array,
   SignatureUint8Array,
+  SignatureBuffer,
 } from '../types';
 import { BlockCapacityCalculator } from './blockCapacity.service';
 import { ChecksumService } from './checksum.service';
-import { ECIESService } from './ecies.service';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 
 /**
  * Service for creating and verifying CBL blocks
@@ -50,7 +51,7 @@ export class CBLService {
    * Length of the creator field in the header
    */
   public static readonly CreatorLength: number = GuidV4.guidBrandToLength(
-    GuidBrandType.RawGuidUint8Array,
+    GuidBrandType.RawGuidBuffer,
   );
 
   /**
@@ -199,7 +200,7 @@ export class CBLService {
       header.subarray(
         CBLService.HeaderOffsets.CreatorId,
         CBLService.CreatorLength,
-      ) as RawGuidUint8Array,
+      ) as unknown as RawGuidUint8Array,
     );
   }
 
@@ -262,7 +263,7 @@ export class CBLService {
     return header.subarray(
       CBLService.HeaderOffsets.OriginalDataChecksum,
       CBLService.DataChecksumSize,
-    ) as ChecksumUint8Array;
+    ) as unknown as ChecksumUint8Array;
   }
 
   /**
@@ -389,7 +390,7 @@ export class CBLService {
     return header.subarray(
       signatureOffset,
       signatureOffset + CBLService.CreatorSignatureSize,
-    ) as SignatureUint8Array;
+    ) as unknown as SignatureUint8Array;
   }
 
   /**
@@ -447,7 +448,7 @@ export class CBLService {
       addresses[i] = addressData.subarray(
         addressOffset,
         addressOffset + CHECKSUM.SHA3_BUFFER_LENGTH,
-      ) as ChecksumUint8Array;
+      ) as unknown as ChecksumUint8Array;
     }
 
     return addresses;
@@ -475,7 +476,7 @@ export class CBLService {
 
     // Check if the creator ID in the header matches the provided creator
     const headerCreatorId = this.getCreatorId(data);
-    if (!headerCreatorId.equals(creator.id)) {
+    if (!headerCreatorId.equals(creator.guidId)) {
       return false;
     }
 
@@ -517,8 +518,8 @@ export class CBLService {
 
     return this.eciesService.verifyMessage(
       creator.publicKey,
-      checksum,
-      signature,
+      Buffer.from(checksum),
+      Buffer.from(signature) as unknown as SignatureBuffer,
     );
   }
 
@@ -683,7 +684,7 @@ export class CBLService {
     const dataChecksum = Buffer.alloc(CONSTANTS.CHECKSUM.SHA3_BUFFER_LENGTH, 0);
     dataChecksum.copy(buffers.dataChecksum);
 
-    const creatorId = creator.id.asRawGuidArray;
+    const creatorId = Buffer.from(creator.guidId.asRawGuidBuffer);
 
     // Create base header
     const baseHeaderSize =
@@ -728,10 +729,26 @@ export class CBLService {
 
     const checksum = this.checksumService.calculateChecksum(toSign);
 
-    const finalSignature: SignatureUint8Array =
+    let signatureBytes =
       creator instanceof BrightChainMember && creator.privateKey
-        ? this.eciesService.signMessage(creator.privateKey, checksum)
-        : (Buffer.alloc(ECIES.SIGNATURE_LENGTH, 0) as SignatureUint8Array);
+        ? new Uint8Array(
+            this.eciesService.signMessage(
+              Buffer.from(creator.privateKey.value),
+              Buffer.from(checksum),
+            ),
+          )
+        : Buffer.alloc(ECIES.SIGNATURE_LENGTH, 0);
+
+    if (signatureBytes.length !== ECIES.SIGNATURE_LENGTH) {
+      const padded = Buffer.alloc(ECIES.SIGNATURE_LENGTH);
+      Buffer.from(signatureBytes).copy(
+        padded,
+        ECIES.SIGNATURE_LENGTH - signatureBytes.length,
+      );
+      signatureBytes = padded;
+    }
+
+    const finalSignature = signatureBytes as unknown as SignatureUint8Array;
 
     // Construct final header
     const headerData = Buffer.concat([
@@ -835,9 +852,18 @@ export class CBLService {
       mimeType: string;
     },
   ): number {
-    const blockType = cbl
-      ? BlockType.ExtendedConstituentBlockListBlock
-      : BlockType.ConstituentBlockList;
+    let blockType: BlockType;
+    if (cbl) {
+      blockType =
+        encryptedBlockType !== BlockEncryptionType.None
+          ? BlockType.EncryptedExtendedConstituentBlockListBlock
+          : BlockType.ExtendedConstituentBlockListBlock;
+    } else {
+      blockType =
+        encryptedBlockType !== BlockEncryptionType.None
+          ? BlockType.EncryptedConstituentBlockListBlock
+          : BlockType.ConstituentBlockList;
+    }
 
     const blockCapacityCalculator = new BlockCapacityCalculator(
       this,
@@ -847,6 +873,8 @@ export class CBLService {
       blockSize,
       blockType,
       encryptionType: encryptedBlockType,
+      recipientCount:
+        encryptedBlockType === BlockEncryptionType.MultiRecipient ? 1 : undefined,
       ...(cbl
         ? {
             cbl,

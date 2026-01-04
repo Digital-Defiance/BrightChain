@@ -1,14 +1,21 @@
-import { AppConstants, IECIESConfig } from '@brightchain/brightchain-lib';
+import { IECIESConfig } from '@digitaldefiance/ecies-lib';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
+import {
+  BackupCodeService,
+  JwtService,
+  RoleService,
+} from '@digitaldefiance/node-express-suite';
+import { AppConstants } from '../appConstants';
 import { UserController } from '../controllers/user';
 import { IApplication } from '../interfaces/application';
-import { BackupCodeService } from '../services/backupCode';
-import { ECIESService } from '../services/ecies/service';
 import { EmailService } from '../services/email';
-import { JwtService } from '../services/jwt';
 import { KeyWrappingService } from '../services/keyWrapping';
-import { RoleService } from '../services/role';
 import { UserService } from '../services/user';
 import { BaseRouter } from './base';
+import { IBrightChainUserBase } from '../documents/user';
+import { DefaultBackendIdType } from '../shared-types';
+import { StringLanguage } from '../interfaces/request-user';
+import { AccountStatus } from '@digitaldefiance/suite-core-lib';
 
 /**
  * Router for the API
@@ -17,7 +24,13 @@ export class ApiRouter extends BaseRouter {
   private readonly userController: UserController;
   private readonly jwtService: JwtService;
   private readonly emailService: EmailService;
-  private readonly userService: UserService;
+  private readonly userService: UserService<
+    IBrightChainUserBase,
+    DefaultBackendIdType,
+    Date,
+    StringLanguage,
+    AccountStatus
+  >;
   private readonly roleService: RoleService;
   private readonly keyWrappingService: KeyWrappingService;
   private readonly eciesService: ECIESService;
@@ -45,7 +58,7 @@ export class ApiRouter extends BaseRouter {
     this.backupCodeService = new BackupCodeService(
       application,
       this.eciesService,
-      this.keyWrappingService,
+      this.keyWrappingService as any,
       this.roleService,
     );
 
@@ -53,7 +66,7 @@ export class ApiRouter extends BaseRouter {
       application,
       this.roleService,
       this.emailService,
-      this.keyWrappingService,
+      this.keyWrappingService as any,
       this.backupCodeService,
     );
     this.userController = new UserController(
@@ -64,6 +77,6 @@ export class ApiRouter extends BaseRouter {
       this.roleService,
       this.eciesService,
     );
-    this.router.use('/user', this.userController.router);
+    this.router.use('/user', this.userController.router as any);
   }
 }

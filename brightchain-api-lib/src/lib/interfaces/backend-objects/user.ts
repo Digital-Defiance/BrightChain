@@ -1,15 +1,13 @@
 import {
   AccountStatus,
-  CanaryStatus,
   IUserBase,
-  StringLanguage,
-} from '@brightchain/brightchain-lib';
+} from '@digitaldefiance/suite-core-lib';
+import { StringLanguage } from '../request-user';
 import { Types } from 'mongoose';
 
 export type IUserBackendObject = IUserBase<
   Types.ObjectId,
   Date,
   StringLanguage,
-  AccountStatus,
-  CanaryStatus
+  AccountStatus
 >;

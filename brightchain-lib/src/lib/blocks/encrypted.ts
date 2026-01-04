@@ -18,7 +18,7 @@ import {
   BlockValidationError,
   CannotEncryptBlockError,
 } from '../errors/block';
-import { GuidV4 } from '../guid';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { IMultiEncryptedParsedHeader } from '../interfaces/multiEncryptedParsedHeader';
@@ -27,6 +27,7 @@ import { ServiceProvider } from '../services/service.provider';
 import { ServiceLocator } from '../services/serviceLocator';
 import { ChecksumUint8Array, RawGuidUint8Array } from '../types';
 import { EphemeralBlock } from './ephemeral';
+import { EciesEncryptionTypeEnum } from '@digitaldefiance/ecies-lib';
 
 /**
  * Base class for encrypted blocks.
@@ -88,19 +89,21 @@ export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
           this.layerHeaderData.subarray(
             ENCRYPTION.ENCRYPTION_TYPE_SIZE,
             ENCRYPTION.ENCRYPTION_TYPE_SIZE + ENCRYPTION.RECIPIENT_ID_SIZE,
-          ) as RawGuidUint8Array,
+          ),
         ),
       ];
     } else {
-      this._recipients = (
-        this.encryptionDetails as IMultiEncryptedParsedHeader
-      ).recipientIds;
+      const details = this.encryptionDetails as IMultiEncryptedParsedHeader;
+      // Convert Buffer[] to GuidV4[] if needed
+      this._recipients = details.recipientIds.map(id => 
+        id instanceof GuidV4 ? id : new GuidV4(new Uint8Array(id) as RawGuidUint8Array)
+      );
     }
     if (!recipientWithKey.hasPrivateKey) {
       throw new BlockValidationError(
         BlockValidationErrorType.EncryptionRecipientHasNoPrivateKey,
       );
-    } else if (!this._recipients.some((r) => r.equals(recipientWithKey.id))) {
+    } else if (!this._recipients.some((r) => r.equals(recipientWithKey.guidId))) {
       throw new BlockValidationError(
         BlockValidationErrorType.EncryptionRecipientNotFoundInRecipients,
       );
@@ -193,16 +196,25 @@ export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
     }
     const encryptionType = this.encryptionType;
     if (encryptionType === BlockEncryptionType.SingleRecipient) {
+      const headerData = Buffer.from(
+        this.layerHeaderData.buffer,
+        this.layerHeaderData.byteOffset + ENCRYPTION.ENCRYPTION_TYPE_SIZE + ENCRYPTION.RECIPIENT_ID_SIZE,
+        this.layerHeaderData.byteLength - ENCRYPTION.ENCRYPTION_TYPE_SIZE - ENCRYPTION.RECIPIENT_ID_SIZE
+      );
       this._cachedEncryptionDetails =
         ServiceLocator.getServiceProvider().eciesService.parseSingleEncryptedHeader(
-          this.layerHeaderData.subarray(
-            ENCRYPTION.ENCRYPTION_TYPE_SIZE + ENCRYPTION.RECIPIENT_ID_SIZE,
-          ),
+          EciesEncryptionTypeEnum.Single,
+          headerData,
         );
     } else if (encryptionType === BlockEncryptionType.MultiRecipient) {
+      const headerData = Buffer.from(
+        this.layerHeaderData.buffer,
+        this.layerHeaderData.byteOffset + ENCRYPTION.ENCRYPTION_TYPE_SIZE,
+        this.layerHeaderData.byteLength - ENCRYPTION.ENCRYPTION_TYPE_SIZE
+      );
       this._cachedEncryptionDetails =
         ServiceLocator.getServiceProvider().eciesService.parseMultiEncryptedHeader(
-          this.layerHeaderData.subarray(ENCRYPTION.ENCRYPTION_TYPE_SIZE),
+          headerData,
         );
     } else {
       throw new BlockError(BlockErrorType.UnexpectedEncryptedBlockType);
@@ -357,7 +369,7 @@ export class EncryptedBlock extends EphemeralBlock implements IEncryptedBlock {
         );
       } else if (
         details.recipientIds
-          .map((id) => id.asRawGuidArray)
+          .map((id) => (id instanceof GuidV4 ? id.asRawGuidBuffer : id))
           .some((id) => id.length !== CONSTANTS.GUID_SIZE)
       ) {
         throw new BlockValidationError(

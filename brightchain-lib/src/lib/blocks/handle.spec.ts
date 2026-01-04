@@ -1,3 +1,4 @@
+import { ChecksumBuffer } from '@digitaldefiance/node-ecies-lib';
 import { randomBytes } from 'crypto';
 import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
@@ -9,7 +10,6 @@ import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
-import { ChecksumBuffer } from '../types';
 import { BlockHandle } from './handle';
 
 describe('BlockHandle', () => {

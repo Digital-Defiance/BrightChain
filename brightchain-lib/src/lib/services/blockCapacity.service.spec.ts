@@ -1,4 +1,5 @@
 import CONSTANTS, { ECIES } from '../constants';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockCapacityErrorType } from '../enumerations/blockCapacityErrorType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -178,7 +179,7 @@ describe('BlockCapacityCalculator', () => {
           blockSize: BlockSize.Small,
           blockType: BlockType.MultiEncryptedBlock,
           recipientCount: ECIES.MULTIPLE.MAX_RECIPIENTS + 1,
-          usesStandardEncryption: false,
+          encryptionType: BlockEncryptionType.MultiRecipient,
         }),
       ).toThrowType(BlockCapacityError, (error: BlockCapacityError) => {
         expect(error.type).toBe(BlockCapacityErrorType.InvalidRecipientCount);
@@ -193,7 +194,7 @@ describe('BlockCapacityCalculator', () => {
           blockSize: BlockSize.Small,
           blockType: BlockType.MultiEncryptedBlock,
           recipientCount: 1000, // Large number of recipients
-          usesStandardEncryption: true,
+          encryptionType: BlockEncryptionType.MultiRecipient,
         });
       }).toThrowType(BlockCapacityError, (error: BlockCapacityError) => {
         expect(error.type).toBe(BlockCapacityErrorType.CapacityExceeded);

@@ -1,14 +1,14 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/brightchain-api-lib",
     "rootDir": "src",
+    "outDir": "../../dist/brightchain-api-lib",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
+    "composite": true,
     "module": "CommonJS",
     "moduleResolution": "node",
-    "composite": true,
     "typeRoots": [
       "../../node_modules/@types",
       "../../node_modules"
@@ -25,5 +25,10 @@
     "src/**/*.test.ts",
     "src/test-setup.ts",
     "src/lib/testUtils.ts"
+  ],
+  "references": [
+    {
+      "path": "../brightchain-lib/tsconfig.lib.json"
+    }
   ]
 }
