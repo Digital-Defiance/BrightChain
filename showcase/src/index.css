@@ -6,11 +6,13 @@
   /* ACS Color Scheme */
   --bg-primary: #0a0e1a;
   --bg-secondary: #111827;
+  --bg-tertiary: #1f2937;
   --text-primary: #ffffff;
   --text-secondary: #9ca3af;
   --accent-primary: #00ff88;
   --accent-secondary: #0099ff;
   --accent-tertiary: #ff6b9d;
+  --gradient-primary: linear-gradient(135deg, #00ff88, #0099ff);
 
   color-scheme: dark;
   color: var(--text-primary);

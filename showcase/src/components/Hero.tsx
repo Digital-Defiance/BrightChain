@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FaGithub } from "react-icons/fa";
+import { FaGithub, FaNewspaper } from "react-icons/fa";
 import "./Hero.css";
 
 interface HeroProps {
@@ -80,6 +80,15 @@ const Hero = ({ scrollY }: HeroProps) => {
           >
             <FaGithub />
             View on GitHub
+          </a>
+          <a
+            href="/blog"
+            className="btn btn-secondary"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <FaNewspaper />
+            Blog
           </a>
         </motion.div>
       </motion.div>

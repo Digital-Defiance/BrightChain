@@ -7,6 +7,17 @@
     <meta name="description" content="BrightChain - Revolutionary blockchain technology combining advanced cryptography, decentralized storage, homomorphic voting, and brokered anonymity. Zero mining waste, IPFS-like P2P storage, and democratic governance." />
     <meta name="keywords" content="Blockchain, Decentralized Storage, Homomorphic Voting, Cryptography, ECIES, AES-256-GCM, Paillier Encryption, Owner-Free File System, OFFS, Brokered Anonymity, Quorum, P2P, IPFS, Ethereum, Sustainable Blockchain" />
     <title>BrightChain - Next-Generation Decentralized Infrastructure</title>
+    <script>
+      // GitHub Pages SPA redirect recovery
+      // Check if we were redirected from a 404 page
+      (function() {
+        var redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        if (redirect && redirect !== location.href) {
+          history.replaceState(null, null, redirect);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
