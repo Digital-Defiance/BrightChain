@@ -3,6 +3,6 @@ import { BlockSize } from '@brightchain/brightchain-lib';
 
 export interface IBlockStore {
   getBlockSize(): BlockSize;
-  storeBlock(blockId: string, data: Buffer): Promise<void>;
+  storeBlock(data: Buffer): Promise<string>;
   getBlock(blockId: string): Promise<Buffer>;
 }

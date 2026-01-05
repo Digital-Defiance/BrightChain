@@ -1,5 +1,5 @@
 import { IRoleDTO, IRoleFrontendObject } from '@digitaldefiance/suite-core-lib';
-import { Types } from 'mongoose';
+import { DefaultBackendIdType } from '../shared-types';
 import { IRoleBackendObject } from './backend-objects/role';
 
 export type StringLanguage = string;
@@ -9,7 +9,7 @@ export type StringLanguage = string;
  * This is not used for mongoose but for request handling
  */
 export interface IRequestUser<
-  I extends Types.ObjectId | string = string,
+  I extends DefaultBackendIdType | string = string,
   R extends
     | Array<IRoleDTO>
     | Array<IRoleFrontendObject>

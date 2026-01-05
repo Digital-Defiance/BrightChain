@@ -1,4 +1,4 @@
-import { Types } from '@digitaldefiance/mongoose-types';
+import { DefaultBackendIdType } from '@brightchain/brightchain-lib';
 import {
   BackupCodeService,
   UserService as BaseUserService,
@@ -14,7 +14,7 @@ import { IApplication } from '../interfaces/application';
 
 export class UserService<
   T,
-  I extends Types.ObjectId | string,
+  I extends string = DefaultBackendIdType,
   D extends Date,
   S extends string,
   A extends string,

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
-import { Types } from '@digitaldefiance/mongoose-types';
+import { DefaultBackendIdType } from '@brightchain/brightchain-lib';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import {
   BackupCodeService,
@@ -19,7 +19,7 @@ import type { IApplication } from '../interfaces/application';
 
 @Controller()
 export class UserController<
-  I extends Types.ObjectId | string = Types.ObjectId,
+  I extends string = DefaultBackendIdType,
   D extends Date = Date,
   S extends string = string,
   A extends string = string,

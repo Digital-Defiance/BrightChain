@@ -1,12 +1,12 @@
 import { SecureString } from '@digitaldefiance/ecies-lib';
 import { Environment as BaseEnvironment } from '@digitaldefiance/node-express-suite';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import mongoose from 'mongoose';
 import { join } from 'path';
 import { Constants } from './constants';
 import { IEnvironment } from './interfaces/environment';
 import { IEnvironmentAws } from './interfaces/environment-aws';
 import { DefaultBackendIdType } from './shared-types';
+import { BlockSize } from '@brightchain/brightchain-lib';
 
 export class Environment
   extends BaseEnvironment<DefaultBackendIdType>
@@ -14,6 +14,9 @@ export class Environment
 {
   private _fontAwesomeKitId: string;
   private _aws: IEnvironmentAws;
+  private _blockStorePath?: string;
+  private _blockStoreBlockSize: BlockSize;
+  private _useMemoryDocumentStore: boolean;
 
   private _adminId: any;
   public override get adminId(): any {
@@ -25,15 +28,9 @@ export class Environment
 
   public override get idAdapter(): (bytes: Uint8Array) => any {
     return (bytes: Uint8Array) => {
-      // TODO: Implement proper ID generation from bytes for ObjectId
-      // For now, return a dummy or try to construct ObjectId
-      // We need mongoose here, but maybe we can just return the bytes as hex string if TId is any?
-      // But the app expects ObjectId probably.
-      // Let's assume we can require mongoose or it's globally available? No.
-      // Let's just return the string for now if that works, or import mongoose.
-      // Better to import mongoose.
+      // Convert bytes to hex-based ID string; datastore layer owns actual ID type
       const hex = Buffer.from(bytes).toString('hex');
-      return new mongoose.Types.ObjectId(hex.padEnd(24, '0').slice(0, 24));
+      return hex.slice(0, 24) as DefaultBackendIdType;
     };
   }
 
@@ -44,6 +41,16 @@ export class Environment
 
     // BrightChain-specific environment variables
     this._fontAwesomeKitId = envObj['FONTAWESOME_KIT_ID'] ?? '';
+
+    this._blockStorePath =
+      envObj['BRIGHTCHAIN_BLOCKSTORE_PATH'] ?? envObj['BLOCKSTORE_PATH'];
+
+    const parsedSize = envObj['BRIGHTCHAIN_BLOCKSIZE_BYTES']
+      ? Number.parseInt(envObj['BRIGHTCHAIN_BLOCKSIZE_BYTES'], 10)
+      : undefined;
+    this._blockStoreBlockSize = (parsedSize ?? BlockSize.Small) as BlockSize;
+
+    this._useMemoryDocumentStore = Boolean(envObj['USE_MEMORY_DOCSTORE']);
 
     this._aws = {
       accessKeyId: new SecureString(envObj['AWS_ACCESS_KEY_ID'] ?? null),
@@ -84,5 +91,17 @@ export class Environment
 
   public get aws(): IEnvironmentAws {
     return this._aws;
+  }
+
+  public get blockStorePath(): string | undefined {
+    return this._blockStorePath;
+  }
+
+  public get blockStoreBlockSize(): BlockSize {
+    return this._blockStoreBlockSize;
+  }
+
+  public get useMemoryDocumentStore(): boolean {
+    return this._useMemoryDocumentStore || !this._blockStorePath;
   }
 }

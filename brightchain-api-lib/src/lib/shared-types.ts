@@ -37,12 +37,9 @@ import type { IUserRoleDocument } from './documents/user-role';
 // import { ObjectIdString } from '@digitaldefiance/ecies-lib';
 export type ObjectIdString = any;
 
-// Database-agnostic type aliases (removing mongoose dependency)
-// These will be no-ops until we implement our own database layer
+// Database-agnostic type aliases (mongo removed)
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type ClientSession = any;
-export type MongooseDocument<T = any> = T & { _id: string };
-export type MongooseModel<_T = any> = any;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 // Use ObjectIdString as the default backend ID type

@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export class MockMongooseQuery {
+/**
+ * Generic database-agnostic mock classes for document and model operations.
+ * These replace Mongoose-specific mocks with a simpler, DB-independent abstraction.
+ */
+
+export class MockQuery {
   private result: any;
 
   constructor(result: any) {
@@ -24,7 +29,7 @@ export class MockMongooseQuery {
   catch = () => this;
 }
 
-export class MockMongooseDocument {
+export class MockDocument {
   private data: any;
 
   constructor(data: any = {}) {
@@ -54,7 +59,7 @@ export class MockMongooseDocument {
   model = () => {};
 }
 
-export class MockMongooseModel {
+export class MockModel {
   private mockData: any;
 
   constructor(mockData: any = null) {
@@ -63,38 +68,38 @@ export class MockMongooseModel {
 
   // Static model methods
   find = () =>
-    new MockMongooseQuery(
+    new MockQuery(
       Array.isArray(this.mockData)
         ? this.mockData
         : [this.mockData].filter(Boolean),
     );
   findOne = () =>
-    new MockMongooseQuery(
+    new MockQuery(
       Array.isArray(this.mockData) ? this.mockData[0] : this.mockData,
     );
   findById = () =>
-    new MockMongooseQuery(
+    new MockQuery(
       Array.isArray(this.mockData) ? this.mockData[0] : this.mockData,
     );
   findOneAndUpdate = () =>
-    new MockMongooseQuery(
+    new MockQuery(
       Array.isArray(this.mockData) ? this.mockData[0] : this.mockData,
     );
   findOneAndDelete = () =>
-    new MockMongooseQuery(
+    new MockQuery(
       Array.isArray(this.mockData) ? this.mockData[0] : this.mockData,
     );
   findByIdAndUpdate = () =>
-    new MockMongooseQuery(
+    new MockQuery(
       Array.isArray(this.mockData) ? this.mockData[0] : this.mockData,
     );
   findByIdAndDelete = () =>
-    new MockMongooseQuery(
+    new MockQuery(
       Array.isArray(this.mockData) ? this.mockData[0] : this.mockData,
     );
 
-  create = () => Promise.resolve(new MockMongooseDocument(this.mockData));
-  insertMany = () => Promise.resolve([new MockMongooseDocument(this.mockData)]);
+  create = () => Promise.resolve(new MockDocument(this.mockData));
+  insertMany = () => Promise.resolve([new MockDocument(this.mockData)]);
 
   updateOne = () => Promise.resolve({ modifiedCount: 1, matchedCount: 1 });
   updateMany = () => Promise.resolve({ modifiedCount: 1, matchedCount: 1 });
@@ -106,8 +111,8 @@ export class MockMongooseModel {
   countDocuments = () => Promise.resolve(1);
   estimatedDocumentCount = () => Promise.resolve(1);
 
-  aggregate = () => new MockMongooseQuery([]);
-  distinct = () => new MockMongooseQuery([]);
+  aggregate = () => new MockQuery([]);
+  distinct = () => new MockQuery([]);
 
   exists = () => Promise.resolve({ _id: 'mock-id' });
 
@@ -118,13 +123,18 @@ export class MockMongooseModel {
 
 export function makeMockDocument<T = any>(
   data: T | null = null,
-): MockMongooseDocument & T {
-  const mockDoc = new MockMongooseDocument(data);
-  return mockDoc as MockMongooseDocument & T;
+): MockDocument & T {
+  const mockDoc = new MockDocument(data);
+  return mockDoc as MockDocument & T;
 }
 
 export function makeMockModel<T = any>(
   mockData: T | T[] | null = null,
-): MockMongooseModel {
-  return new MockMongooseModel(mockData);
+): MockModel {
+  return new MockModel(mockData);
 }
+
+// Legacy aliases for backward compatibility during migration
+export const MockMongooseQuery = MockQuery;
+export const MockMongooseDocument = MockDocument;
+export const MockMongooseModel = MockModel;

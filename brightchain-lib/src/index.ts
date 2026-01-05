@@ -208,6 +208,8 @@ export * from './lib/services/symmetric.service';
 export * from './lib/sharedTypes';
 export * from './lib/stores/bufferStore';
 export * from './lib/stores/diskBlockAsyncStore';
+export * from './lib/stores/blockStoreAdapter';
+export * from './lib/stores/memoryBlockStore';
 export * from './lib/stores/jsonStore';
 export * from './lib/stores/simpleStore';
 export * from './lib/strings/englishUs';

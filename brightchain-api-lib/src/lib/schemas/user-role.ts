@@ -1,49 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Schema } from 'mongoose';
-import { IUserRoleDocument } from '../documents/user-role';
 import { ModelName } from '../enumerations/model-name';
 
-/**
- * Schema for user-role relationships
- */
-export const UserRoleSchema = new Schema<IUserRoleDocument>(
-  {
-    userId: {
-      type: Schema.Types.ObjectId as any,
-      ref: ModelName.User,
-      required: true,
-    },
-    roleId: {
-      type: Schema.Types.ObjectId as any,
-      ref: ModelName.Role,
-      required: true,
-    },
-    createdBy: {
-      type: Schema.Types.ObjectId as any,
-      ref: ModelName.User,
-      required: true,
-      immutable: true,
-    },
-    updatedBy: {
-      type: Schema.Types.ObjectId as any,
-      ref: ModelName.User,
-      required: true,
-    },
-    deletedAt: {
-      type: Date,
-      optional: true,
-    },
-    deletedBy: {
-      type: Schema.Types.ObjectId as any,
-      ref: ModelName.User,
-      required: false,
-      optional: true,
-    },
+// Datastore-agnostic schema metadata for user-role relationships
+export const UserRoleSchema = {
+  name: ModelName.UserRole,
+  fields: {
+    userId: { type: 'id', ref: ModelName.User, required: true },
+    roleId: { type: 'id', ref: ModelName.Role, required: true },
+    createdBy: { type: 'id', ref: ModelName.User, required: true },
+    updatedBy: { type: 'id', ref: ModelName.User, required: true },
+    deletedAt: { type: 'date' },
+    deletedBy: { type: 'id', ref: ModelName.User },
   },
-  { timestamps: true },
-);
-
-// Compound index for efficient queries
-UserRoleSchema.index({ userId: 1, roleId: 1 }, { unique: true });
-UserRoleSchema.index({ userId: 1 });
-UserRoleSchema.index({ roleId: 1 });
+  indexes: [
+    { fields: { userId: 1, roleId: 1 }, options: { unique: true } },
+    { fields: { userId: 1 } },
+    { fields: { roleId: 1 } },
+  ],
+};

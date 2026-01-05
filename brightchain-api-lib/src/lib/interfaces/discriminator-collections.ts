@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Model } from 'mongoose';
-import { IBaseDocument } from '../documents/base';
-
-export interface IDiscriminatorCollections<T extends IBaseDocument<any>> {
-  byType: Record<string, Model<T>>;
-  array: Array<Model<T>>;
+// Database-agnostic discriminator collection holder
+export interface IDiscriminatorCollections<T = unknown> {
+  byType: Record<string, T>;
+  array: Array<T>;
 }

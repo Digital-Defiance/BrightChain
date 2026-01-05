@@ -1,187 +1,82 @@
 /* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
 import { StringLanguages } from '@brightchain/brightchain-lib';
-import {
-  AccountStatus,
-  SuiteCoreStringKey,
-  getSuiteCoreTranslation as translate,
-} from '@digitaldefiance/suite-core-lib';
-import { ModelName } from '../enumerations/model-name';
-// import {
-//   StringLanguage,
-//   StringName,
-//   translate,
-// } from '@brightchain/brightchain-lib';
+import { AccountStatus } from '@digitaldefiance/suite-core-lib';
 import { isValidTimezone } from '@digitaldefiance/i18n-lib';
-import { Schema } from 'mongoose';
 import validator from 'validator';
 import { AppConstants } from '../appConstants';
-import { IUserDocument } from '../documents/user';
+import { ModelName } from '../enumerations/model-name';
 
-/**
- * Schema for users
- */
-export const UserSchema: Schema = new Schema<IUserDocument>(
-  {
-    /**
-     * The unique identifier for the user
-     */
+// Datastore-agnostic schema metadata for users
+export const UserSchema = {
+  name: ModelName.User,
+  fields: {
     username: {
-      type: String,
+      type: 'string',
       required: true,
       unique: true,
-      validate: {
-        validator: (v: string) => AppConstants.UsernameRegex.test(v),
-        message: () =>
-          translate(SuiteCoreStringKey.Validation_UsernameRegexErrorTemplate),
-      },
+      validate: (v: string) => AppConstants.UsernameRegex.test(v),
     },
-    /**
-     * The email address for the user
-     */
     email: {
-      type: String,
+      type: 'string',
       required: true,
       unique: true,
-      validate: {
-        validator: (v: string) => validator.isEmail(v),
-        message: (props: { value: string }) =>
-          `${props.value} is not a valid email address`,
-      },
+      validate: (v: string) => validator.isEmail(v),
     },
     expireMemoryMnemonicSeconds: {
-      type: Number,
-      required: false,
-      min: 0,
+      type: 'number',
       default: AppConstants.DefaultExpireMemoryMnemonicSeconds,
+      min: 0,
     },
     expireMemoryWalletSeconds: {
-      type: Number,
-      required: false,
-      min: 0,
+      type: 'number',
       default: AppConstants.DefaultExpireMemoryWalletSeconds,
+      min: 0,
     },
-    /**
-     * The user's public key, stored in hex format.
-     */
-    publicKey: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    /**
-     * The timezone for the user
-     */
+    publicKey: { type: 'string', required: true, unique: true },
     timezone: {
-      type: String,
+      type: 'string',
       required: true,
       default: 'UTC',
-      validate: {
-        validator: function (v: string) {
-          return isValidTimezone(v);
-        },
-        message: (props: { value: string }) =>
-          translate(SuiteCoreStringKey.Common_NotValidTimeZoneTemplate).replace(
-            '{timezone}',
-            props.value,
-          ),
-      },
+      validate: (v: string) => isValidTimezone(v),
     },
-    /**
-     * The language of the site for the user
-     */
     siteLanguage: {
-      type: String,
+      type: 'string',
       enum: Object.values(StringLanguages),
       default: 'en-US',
       required: true,
     },
-    /**
-     * The date the user last logged in
-     */
-    lastLogin: { type: Date, required: false },
-    /**
-     * Whether the user has verified their email address
-     */
-    emailVerified: { type: Boolean, default: false },
-    /**
-     * The status of the user's account
-     */
+    lastLogin: { type: 'date' },
+    emailVerified: { type: 'boolean', default: false },
     accountStatus: {
-      type: String,
+      type: 'string',
       enum: Object.values(AccountStatus),
       default: AccountStatus.PendingEmailVerification,
     },
-    /**
-     * The user who created the user.
-     */
-    createdBy: {
-      type: Schema.Types.ObjectId as any,
-      ref: ModelName.User,
-      required: true,
-      immutable: true,
-    },
-    /**
-     * The user who last updated the user.
-     */
-    updatedBy: {
-      type: Schema.Types.ObjectId as any,
-      ref: ModelName.User,
-      optional: true,
-    },
-    /**
-     * The date/time the user was deleted.
-     */
-    deletedAt: { type: Date, optional: true },
-    /**
-     * The user who deleted the user.
-     */
-    deletedBy: {
-      type: Schema.Types.ObjectId as any,
-      ref: ModelName.User,
-      optional: true,
-    },
-    /**
-     * Reference to the mnemonic document
-     */
-    mnemonicId: {
-      type: Schema.Types.ObjectId as any,
-      ref: ModelName.Mnemonic,
-      required: false,
-    },
-    /**
-     * Copy of the mnemonic encrypted with the user's public key
-     */
-    mnemonicRecovery: {
-      type: String,
-      required: false,
-    },
-    /**
-     * Password-wrapped ECIES private key (Option B)
-     */
+    createdBy: { type: 'id', ref: ModelName.User, required: true },
+    updatedBy: { type: 'id', ref: ModelName.User },
+    deletedAt: { type: 'date' },
+    deletedBy: { type: 'id', ref: ModelName.User },
+    mnemonicId: { type: 'id', ref: ModelName.Mnemonic },
+    mnemonicRecovery: { type: 'string' },
     passwordWrappedPrivateKey: {
-      type: {
-        salt: { type: String, required: true },
-        iv: { type: String, required: true },
-        authTag: { type: String, required: true },
-        ciphertext: { type: String, required: true },
-        iterations: { type: Number, required: true },
+      type: 'object',
+      fields: {
+        salt: { type: 'string', required: true },
+        iv: { type: 'string', required: true },
+        authTag: { type: 'string', required: true },
+        ciphertext: { type: 'string', required: true },
+        iterations: { type: 'number', required: true },
       },
-      required: false,
     },
-    /**
-     * Array of backup codes to recover mnemonic/private key
-     */
     backupCodes: {
-      type: [
-        {
-          version: { type: String, required: true },
-          checksumSalt: { type: String, required: true },
-          checksum: { type: String, required: true },
-          encrypted: { type: String, required: true },
-        },
-      ],
+      type: 'array',
       default: [],
+      itemShape: {
+        version: { type: 'string', required: true },
+        checksumSalt: { type: 'string', required: true },
+        checksum: { type: 'string', required: true },
+        encrypted: { type: 'string', required: true },
+      },
     },
   },
-  { timestamps: true },
-);
+};

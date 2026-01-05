@@ -1,4 +1,4 @@
 import { IRoleBase, Role } from '@digitaldefiance/suite-core-lib';
-import { Types } from 'mongoose';
+import { DefaultBackendIdType } from '../../shared-types';
 
-export type IRoleBackendObject = IRoleBase<Types.ObjectId, Date, Role>;
+export type IRoleBackendObject = IRoleBase<DefaultBackendIdType, Date, Role>;

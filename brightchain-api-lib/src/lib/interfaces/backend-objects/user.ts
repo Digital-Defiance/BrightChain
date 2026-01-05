@@ -1,9 +1,9 @@
 import { AccountStatus, IUserBase } from '@digitaldefiance/suite-core-lib';
-import { Types } from 'mongoose';
+import { DefaultBackendIdType } from '../../shared-types';
 import { StringLanguage } from '../request-user';
 
 export type IUserBackendObject = IUserBase<
-  Types.ObjectId,
+  DefaultBackendIdType,
   Date,
   StringLanguage,
   AccountStatus

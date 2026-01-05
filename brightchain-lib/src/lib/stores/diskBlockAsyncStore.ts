@@ -70,7 +70,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
         KEY: uint8ArrayToHex(key),
       });
     }
-    if (data.length !== this._blockSize) {
+    if (data.length > this._blockSize) {
       throw new StoreError(StoreErrorType.BlockFileSizeMismatch);
     }
 

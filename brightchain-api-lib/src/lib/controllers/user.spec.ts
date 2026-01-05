@@ -498,7 +498,7 @@ describe('UserController', () => {
         const models: Record<string, any> = {
           Mnemonic: {},
           User: class {
-            // Mimic a Mongoose-like document with validateSync()
+            // Mock document with validation support for backup codes
             private doc: any;
             constructor(data: any) {
               this.doc = data;

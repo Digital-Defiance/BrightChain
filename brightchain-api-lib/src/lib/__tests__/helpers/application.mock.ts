@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import mongoose from 'mongoose';
+import { MemoryDocumentStore } from '../datastore/memory-document-store';
 
 /**
  * Create a minimal IApplication mock suitable for router/middleware tests.
@@ -28,21 +28,20 @@ export function createApplicationMock(
     useTransactions: false,
   };
 
+  const store = new MemoryDocumentStore();
   const application: any = {
     get environment() {
       return { ...(env as any), ...(envOverrides as any) } as any;
     },
-    get db() {
-      return mongoose;
-    },
+    db: store,
     get ready() {
       return true;
     },
     async start() {
       /* noop */
     },
-    getModel(): any {
-      throw new Error('getModel not implemented in test mock');
+    getModel(modelName: string): any {
+      return store.collection(modelName);
     },
     ...(overrides as object),
   } as any;

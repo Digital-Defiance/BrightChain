@@ -1,29 +1,32 @@
-/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-unused-vars */
+/* eslint-disable @nx/enforce-module-boundaries */
 import { BrightChainMember } from '@brightchain/brightchain-lib';
 import { IApplication } from '../interfaces/application';
 import { IBlockService } from '../interfaces/blockService';
+import { BlockStoreService } from './blockStore';
 import { BaseService } from './base';
 
 /**
- * Service for handling block operations
+ * Service for handling block operations backed by the BlockStoreService.
  */
 export class BlocksService extends BaseService implements IBlockService {
+  private readonly blockStore: BlockStoreService;
+
   constructor(application: IApplication) {
     super(application);
+    this.blockStore = new BlockStoreService(application);
   }
 
   async storeBlock(
     dataBuffer: Buffer,
-    member: BrightChainMember,
-    canRead: boolean = true,
-    canPersist: boolean = true,
+    _member: BrightChainMember,
+    _canRead: boolean = true,
+    _canPersist: boolean = true,
   ): Promise<string> {
-    // Temporary implementation
-    return 'block-id-placeholder';
+    return this.blockStore.storeBlock(dataBuffer);
   }
 
   async getBlock(blockId: string): Promise<{ data: Buffer }> {
-    // Temporary implementation
-    return { data: Buffer.from('placeholder data') };
+    const data = await this.blockStore.getBlock(blockId);
+    return { data };
   }
 }

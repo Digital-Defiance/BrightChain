@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Schema } from 'mongoose';
-import { IUsedDirectLoginTokenDocument } from '../documents/used-direct-login-token';
-export const UsedDirectLoginTokenSchema =
-  new Schema<IUsedDirectLoginTokenDocument>({
-    userId: { type: Schema.Types.ObjectId as any, required: true, ref: 'User' },
-    token: { type: String, required: true },
-  });
+import { ModelName } from '../enumerations/model-name';
 
-UsedDirectLoginTokenSchema.index({ userId: 1, token: 1 }, { unique: true });
+// Datastore-agnostic schema metadata for used direct login tokens
+export const UsedDirectLoginTokenSchema = {
+  name: ModelName.UsedDirectLoginToken,
+  fields: {
+    userId: { type: 'id', ref: ModelName.User, required: true },
+    token: { type: 'string', required: true },
+  },
+  indexes: [{ fields: { userId: 1, token: 1 }, options: { unique: true } }],
+};

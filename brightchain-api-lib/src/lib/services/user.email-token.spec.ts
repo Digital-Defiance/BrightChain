@@ -40,10 +40,6 @@ function makeSvc(overrides: {
         secretAccessKey: { value: '' },
         region: 'us-west-2',
       },
-      mongo: {
-        uri: 'mongodb://localhost:27017',
-        transactionTimeout: 60000,
-      },
     },
   );
   const role = new RoleService(application);

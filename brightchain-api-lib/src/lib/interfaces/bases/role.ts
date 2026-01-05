@@ -1,4 +1,4 @@
 import { IRoleBase } from '@digitaldefiance/suite-core-lib';
-import { Types } from 'mongoose';
+import { DefaultBackendIdType } from '@brightchain/brightchain-lib';
 
-export type IRoleBackend = IRoleBase<Types.ObjectId, Date>;
+export type IRoleBackend = IRoleBase<DefaultBackendIdType, Date>;

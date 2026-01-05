@@ -1,4 +1,3 @@
-import { Model, Schema } from 'mongoose';
 import { IBaseDocument } from '../documents/base';
 import { IDiscriminatorCollections } from './discriminator-collections';
 
@@ -14,8 +13,7 @@ export interface ISchema<T extends IBaseDocument<any>> {
   /**
    * The model for the schema
    */
-
-  model: Model<T>;
+  model: unknown;
   /**
    * The name of the model, eg 'Model'
    */
@@ -23,7 +21,7 @@ export interface ISchema<T extends IBaseDocument<any>> {
   /**
    * The schema for the model
    */
-  schema: Schema;
+  schema: unknown;
   /**
    * Discriminators for the model
    */

@@ -38,8 +38,6 @@ export class ApiRouter extends BaseRouter {
   private readonly backupCodeService: BackupCodeService;
   /**
    * Constructor for the API router
-   * @param connection The mongoose connection
-   * @param getModel The function to get a mongoose model by name
    */
   constructor(application: IApplication) {
     super(application);

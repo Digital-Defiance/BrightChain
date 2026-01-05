@@ -1,61 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { EmailTokenType } from '@digitaldefiance/suite-core-lib';
-import { ModelName } from '../enumerations/model-name';
-// import { EmailTokenType, ModelName } from '@brightchain/brightchain-lib';
-import { Schema } from 'mongoose';
 import validator from 'validator';
-import { IEmailTokenDocument } from '../documents/email-token';
+import { ModelName } from '../enumerations/model-name';
 
-/**
- * Schema for email tokens sent to users to verify their accounts or reset passwords
- */
-export const EmailTokenSchema = new Schema<IEmailTokenDocument>(
-  {
-    /**
-     * The user ID associated with the token
-     */
-    userId: {
-      type: Schema.Types.ObjectId as any,
-      required: true,
-      ref: ModelName.User,
-      immutable: true,
-    },
-    /**
-     * The type of email token, eg 'AccountVerification', 'PasswordReset'
-     */
+// Datastore-agnostic schema metadata for email tokens
+export const EmailTokenSchema = {
+  name: ModelName.EmailToken,
+  fields: {
+    userId: { type: 'id', ref: ModelName.User, required: true },
     type: {
-      type: String,
+      type: 'string',
       enum: Object.values(EmailTokenType),
       required: true,
-      immutable: true,
     },
-    /**
-     * The token value
-     */
-    token: { type: String, required: true, immutable: true, unique: true },
-    /**
-     * The email address associated with the token
-     */
+    token: { type: 'string', required: true, unique: true },
     email: {
-      type: String,
+      type: 'string',
       required: true,
-      immutable: true,
-      validate: {
-        validator: (v: string) => validator.isEmail(v),
-        message: (props: { value: string }) =>
-          `${props.value} is not a valid email address!`,
-      },
+      validate: (v: string) => validator.isEmail(v),
     },
-    /**
-     * The date the token was last emailed to the user
-     */
-    lastSent: { type: Date, required: false },
-    /**
-     * The date the token expires
-     */
-    expiresAt: { type: Date, default: Date.now, index: { expires: '1d' } },
+    lastSent: { type: 'date' },
+    expiresAt: { type: 'date', default: () => Date.now() },
   },
-  { timestamps: true },
-);
-
-EmailTokenSchema.index({ userId: 1, email: 1 }, { unique: true });
+  indexes: [{ fields: { userId: 1, email: 1 }, options: { unique: true } }],
+};

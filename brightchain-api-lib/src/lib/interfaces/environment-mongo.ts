@@ -1,4 +1,7 @@
-import { ReadConcernLike, WriteConcern } from 'mongodb';
+// Mongo-specific environment definition removed; this remains for backward compatibility
+// without importing mongodb types.
+type ReadConcernLike = string | { level?: string };
+type WriteConcern = { w?: string | number; j?: boolean; wtimeoutMS?: number };
 
 export interface IMongoEnvironment {
   /**

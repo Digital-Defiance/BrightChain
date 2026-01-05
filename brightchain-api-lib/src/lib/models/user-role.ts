@@ -1,10 +1,9 @@
-import { model } from 'mongoose';
-import { IUserRoleDocument } from '../documents/user-role';
 import { ModelName } from '../enumerations/model-name';
 import { UserRoleSchema } from '../schemas/user-role';
 
-const UserRoleModel = model<IUserRoleDocument>(
-  ModelName.UserRole,
-  UserRoleSchema,
-);
+// Datastore-agnostic placeholder model descriptor
+const UserRoleModel = {
+  modelName: ModelName.UserRole,
+  schema: UserRoleSchema,
+} as const;
 export default UserRoleModel;

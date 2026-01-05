@@ -52,7 +52,6 @@ function makeService(
     {
       mnemonicHmacSecret: new SecureBuffer(Buffer.alloc(32, 1)),
       mnemonicEncryptionKey: new SecureBuffer(Buffer.alloc(32, 2)),
-      mongo: { uri: 'mongodb://localhost:27017', transactionTimeout: 60000 },
     },
   );
   const roleService = new RoleService(application);

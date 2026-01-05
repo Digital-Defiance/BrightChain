@@ -1,7 +1,6 @@
-import { model } from 'mongoose';
-import { IRoleDocument } from '../documents/role';
 import { ModelName } from '../enumerations/model-name';
 import { RoleSchema } from '../schemas/role';
 
-const RoleModel = model<IRoleDocument>(ModelName.Role, RoleSchema);
+// Datastore-agnostic placeholder model descriptor
+const RoleModel = { modelName: ModelName.Role, schema: RoleSchema } as const;
 export default RoleModel;

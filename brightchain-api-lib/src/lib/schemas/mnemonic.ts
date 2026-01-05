@@ -2,22 +2,20 @@ import {
   SuiteCoreStringKey,
   getSuiteCoreTranslation as translate,
 } from '@digitaldefiance/suite-core-lib';
-import { Schema } from 'mongoose';
 import { AppConstants } from '../appConstants';
-import { IMnemonicDocument } from '../documents/mnemonic';
+import { ModelName } from '../enumerations/model-name';
 
-/**
- * Schema for mnemonics
- */
-export const MnemonicSchema: Schema = new Schema<IMnemonicDocument>({
-  hmac: {
-    type: String,
-    required: true,
-    unique: true,
-    index: true, // Add an index for fast lookups
-    validate: {
-      validator: (v: string) => AppConstants.HmacRegex.test(v),
+// Datastore-agnostic schema metadata for mnemonics
+export const MnemonicSchema = {
+  name: ModelName.Mnemonic,
+  fields: {
+    hmac: {
+      type: 'string',
+      required: true,
+      unique: true,
+      validate: (v: string) => AppConstants.HmacRegex.test(v),
       message: () => translate(SuiteCoreStringKey.Validation_HmacRegex),
     },
   },
-});
+  indexes: [{ fields: { hmac: 1 }, options: { unique: true } }],
+};

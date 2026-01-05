@@ -17,6 +17,7 @@ import { Server } from 'http';
 import { createServer } from 'https';
 import { resolve } from 'path';
 import { BaseApplication } from './application-base';
+import { createBlockDocumentStore } from './datastore/block-document-store-factory';
 import { Environment } from './environment';
 import { Middlewares } from './middlewares';
 import { ApiRouter } from './routers/api';
@@ -30,7 +31,14 @@ export class App extends BaseApplication {
   private server: Server | null = null;
 
   constructor(environment: Environment) {
-    super(environment);
+    super(
+      environment,
+      createBlockDocumentStore({
+        storePath: environment.blockStorePath,
+        blockSize: environment.blockStoreBlockSize,
+        useMemory: environment.useMemoryDocumentStore,
+      }),
+    );
     this.expressApp = express();
     this.server = null;
   }

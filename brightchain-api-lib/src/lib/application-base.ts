@@ -4,9 +4,11 @@ import {
   PluginManager,
   ServiceContainer,
 } from '@digitaldefiance/node-express-suite';
-import mongoose, { Model } from 'mongoose';
+import { BlockSize, MemoryBlockStore } from '@brightchain/brightchain-lib';
 import { join } from 'path';
 import { AppConstants } from './appConstants';
+import { BlockDocumentStore } from './datastore/block-document-store';
+import { DocumentStore } from './datastore/document-store';
 import { Environment } from './environment';
 import { IApplication } from './interfaces/application';
 
@@ -23,8 +25,8 @@ export class BaseApplication implements IApplication {
     return AppConstants;
   }
 
-  public get db(): typeof mongoose {
-    return mongoose;
+  public get db(): any {
+    return this.documentStore;
   }
 
   private _services: ServiceContainer | undefined;
@@ -46,8 +48,10 @@ export class BaseApplication implements IApplication {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   public getModel<U extends IBaseDocument<any, any>>(
     modelName: string,
-  ): Model<U> {
-    return mongoose.model<U>(modelName);
+  ): U {
+    // Get a collection from the in-memory document store
+    const collection = this.documentStore.collection(modelName);
+    return collection as unknown as U;
   }
 
   public reloadEnvironment(path?: string, override = true): void {
@@ -72,10 +76,15 @@ export class BaseApplication implements IApplication {
     return this._ready;
   }
 
-  constructor(environment: Environment) {
+  constructor(environment: Environment, documentStore?: DocumentStore) {
     this._ready = false;
     this._environment = environment;
+    this.documentStore =
+      documentStore ??
+      new BlockDocumentStore(new MemoryBlockStore(BlockSize.Small));
   }
+
+  private readonly documentStore: DocumentStore;
 
   /**
    * Start the application and connect to the database

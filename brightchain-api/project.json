@@ -3,8 +3,8 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "brightchain-api/src",
   "projectType": "application",
-  "implicitDependencies": ["brightchain-lib"],
   "tags": [],
+  "implicitDependencies": ["brightchain-lib"],
   "targets": {
     "build": {
       "executor": "@nx/esbuild:esbuild",
@@ -59,7 +59,10 @@
       "executor": "@nx/eslint:lint"
     },
     "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/brightchain-api"],
       "options": {
+        "jestConfig": "brightchain-api/jest.config.ts",
         "passWithNoTests": true
       }
     }

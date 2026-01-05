@@ -1,4 +1,3 @@
-import { Connection } from 'mongoose';
 import { ModelName } from '../enumerations/model-name';
 import { SchemaCollection } from '../enumerations/schema-collection';
 import EmailTokenModel from '../models/email-token';
@@ -15,7 +14,7 @@ import { UsedDirectLoginTokenSchema } from './used-direct-login-token';
 import { UserSchema } from './user';
 import { UserRoleSchema } from './user-role';
 
-export function getSchemaMap(_connection: Connection): SchemaMap {
+export function getSchemaMap(): SchemaMap {
   return {
     /**
      * Model/Collection for email tokens sent to users

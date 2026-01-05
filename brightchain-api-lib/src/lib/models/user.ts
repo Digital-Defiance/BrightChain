@@ -1,7 +1,6 @@
-import { model } from 'mongoose';
-import { IUserDocument } from '../documents/user';
 import { ModelName } from '../enumerations/model-name';
 import { UserSchema } from '../schemas/user';
 
-const UserModel = model<IUserDocument>(ModelName.User, UserSchema);
+// Datastore-agnostic placeholder model descriptor
+const UserModel = { modelName: ModelName.User, schema: UserSchema } as const;
 export default UserModel;

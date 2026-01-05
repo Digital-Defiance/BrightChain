@@ -5,8 +5,6 @@ export * from './lib/application-base';
 export * from './lib/constants';
 export * from './lib/controllers/base';
 export * from './lib/controllers/user';
-export * from './lib/documents/index';
-export * from './lib/documents/used-direct-login-token';
 export * from './lib/enumerations/symmetric-error-type';
 export * from './lib/environment';
 export * from './lib/errors/admin-role-not-found';
@@ -75,20 +73,14 @@ export * from './lib/interfaces/token-user';
 export * from './lib/interfaces/wallet-seed';
 export * from './lib/middlewares';
 // export * from './lib/middlewares/set-global-context-language';
-export * from './lib/documents/email-token';
-export * from './lib/documents/mnemonic';
-export * from './lib/documents/role';
-export * from './lib/documents/used-direct-login-token';
-export * from './lib/documents/user';
 export * from './lib/routers/api';
 export * from './lib/routers/app';
 export * from './lib/routers/base';
-export * from './lib/schemas/email-token';
-export * from './lib/schemas/mnemonic';
-export * from './lib/schemas/role';
-export * from './lib/schemas/schema';
-export * from './lib/schemas/used-direct-login-token';
-export * from './lib/schemas/user';
+export * from './lib/datastore/document-store';
+export * from './lib/datastore/memory-document-store';
+export * from './lib/datastore/document-model-adapter';
+export * from './lib/datastore/block-document-store';
+export * from './lib/datastore/block-document-store-factory';
 // export * from './lib/services/backupCode';
 // export * from './lib/services/base';
 export * from './lib/services/email';
@@ -111,8 +103,6 @@ export type {
   HttpMethod,
   JsonPrimitive,
   JsonResponse,
-  MongooseDocument,
-  MongooseModel,
   RouteConfig,
   SchemaMap,
   SendFunction,

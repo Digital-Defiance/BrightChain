@@ -1,11 +1,11 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 import { StringLanguage } from '@brightchain/brightchain-lib';
-import { Types } from 'mongoose';
+import { DefaultBackendIdType } from '../../shared-types';
 import { IRequestUser } from '../request-user';
 import { IRoleBackendObject } from './role';
 
 export type IRequestUserBackendObject = IRequestUser<
-  Types.ObjectId,
+  DefaultBackendIdType,
   Array<IRoleBackendObject>,
   StringLanguage,
   Date

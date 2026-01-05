@@ -1,10 +1,9 @@
-import { model } from 'mongoose';
-import { IMnemonicDocument } from '../documents/mnemonic';
 import { ModelName } from '../enumerations/model-name';
 import { MnemonicSchema } from '../schemas/mnemonic';
 
-const MnemonicModel = model<IMnemonicDocument>(
-  ModelName.Mnemonic,
-  MnemonicSchema,
-);
+// Datastore-agnostic placeholder model descriptor
+const MnemonicModel = {
+  modelName: ModelName.Mnemonic,
+  schema: MnemonicSchema,
+} as const;
 export default MnemonicModel;

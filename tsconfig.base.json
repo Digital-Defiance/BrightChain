@@ -22,8 +22,14 @@
       "@brightchain/brightchain-lib": [
         "dist/brightchain-lib"
       ],
+      "@brightchain/brightchain-lib/*": [
+        "dist/brightchain-lib/src/*"
+      ],
       "@brightchain/brightchain-api-lib": [
         "dist/brightchain-api-lib"
+      ],
+      "@brightchain/brightchain-api-lib/*": [
+        "dist/brightchain-api-lib/src/*"
       ]
     }
   },

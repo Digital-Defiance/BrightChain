@@ -2,10 +2,10 @@ import {
   EmailTokenType,
   IEmailTokenBase,
 } from '@digitaldefiance/suite-core-lib';
-import { Types } from 'mongoose';
+import { DefaultBackendIdType } from '../../shared-types';
 
 export type IEmailTokenBackendObject = IEmailTokenBase<
-  Types.ObjectId,
+  DefaultBackendIdType,
   Date,
   EmailTokenType
 >;

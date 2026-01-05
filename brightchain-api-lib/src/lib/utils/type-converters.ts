@@ -5,21 +5,22 @@ import {
   IUserFrontendObject,
   IUserRoleFrontendObject,
 } from '@digitaldefiance/suite-core-lib';
-import { Types } from 'mongoose';
 import { IEmailTokenDocument } from '../documents/email-token';
 import { IRoleDocument } from '../documents/role';
 import { IUserDocument } from '../documents/user';
 import { IUserRoleDocument } from '../documents/user-role';
+import { DefaultBackendIdType } from '../shared-types';
 
 // Convert ObjectId to string recursively
 function objectIdToString(obj: any): any {
-  if (obj instanceof Types.ObjectId) {
-    return obj.toString();
-  }
   if (Array.isArray(obj)) {
     return obj.map(objectIdToString);
   }
   if (obj && typeof obj === 'object') {
+    if ('toString' in obj && typeof obj.toString === 'function') {
+      const str = obj.toString();
+      return str as DefaultBackendIdType;
+    }
     const result: any = {};
     for (const [key, value] of Object.entries(obj)) {
       result[key] = objectIdToString(value);
@@ -29,7 +30,7 @@ function objectIdToString(obj: any): any {
   return obj;
 }
 
-// Convert mongoose documents to frontend-compatible objects
+// Convert datastore documents to frontend-compatible objects
 export function userDocumentToFrontend(
   doc: IUserDocument,
 ): IUserFrontendObject {
