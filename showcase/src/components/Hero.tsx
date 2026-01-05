@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
-import { FaGithub, FaNewspaper } from "react-icons/fa";
-import "./Hero.css";
+import { motion } from 'framer-motion';
+import { FaGithub, FaNewspaper } from 'react-icons/fa';
+import './Hero.css';
 
 interface HeroProps {
   scrollY: number;
@@ -30,7 +30,9 @@ const Hero = ({ scrollY }: HeroProps) => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.6 }}
         >
-          <span className="badge-text">🌟 Next-Generation Decentralized Infrastructure</span>
+          <span className="badge-text">
+            🌟 Next-Generation Decentralized Infrastructure
+          </span>
         </motion.div>
 
         <motion.h1
@@ -57,12 +59,14 @@ const Hero = ({ scrollY }: HeroProps) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.8 }}
         >
-          Decentralized storage, homomorphic voting, and brokered anonymity—all powered by
+          Decentralized storage, homomorphic voting, and brokered anonymity—all
+          powered by
           <br />
           advanced cryptography and innovative governance mechanisms.
           <br />
           <span className="hero-highlight">
-            🔐 ECIES + AES-256-GCM • 🗳️ Homomorphic Voting • 🌐 P2P Storage • 🎭 Brokered Anonymity • ⚡ Zero Mining Waste
+            🔐 ECIES + AES-256-GCM • 🗳️ Homomorphic Voting • 🌐 P2P Storage • 🎭
+            Brokered Anonymity • ⚡ Zero Mining Waste
           </span>
         </motion.p>
 

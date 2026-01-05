@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -5,17 +6,17 @@ import {
   JwtService,
   RoleService,
 } from '@digitaldefiance/node-express-suite';
+import { AccountStatus } from '@digitaldefiance/suite-core-lib';
 import { AppConstants } from '../appConstants';
 import { UserController } from '../controllers/user';
+import { IBrightChainUserBase } from '../documents/user';
 import { IApplication } from '../interfaces/application';
+import { StringLanguage } from '../interfaces/request-user';
 import { EmailService } from '../services/email';
 import { KeyWrappingService } from '../services/keyWrapping';
 import { UserService } from '../services/user';
-import { BaseRouter } from './base';
-import { IBrightChainUserBase } from '../documents/user';
 import { DefaultBackendIdType } from '../shared-types';
-import { StringLanguage } from '../interfaces/request-user';
-import { AccountStatus } from '@digitaldefiance/suite-core-lib';
+import { BaseRouter } from './base';
 
 /**
  * Router for the API

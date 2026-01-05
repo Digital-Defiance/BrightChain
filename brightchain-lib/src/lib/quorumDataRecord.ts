@@ -1,8 +1,8 @@
-import { BrightChainMember } from './brightChainMember';
 import { GuidV4 } from '@digitaldefiance/ecies-lib';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
+import { BrightChainMember } from './brightChainMember';
 import { QuorumDataRecordDto } from './quorumDataRecordDto';
 import { ChecksumService } from './services/checksum.service';
-import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import {
   ChecksumUint8Array,
   HexString,
@@ -67,7 +67,9 @@ export class QuorumDataRecord {
     }
     this.checksum = calculatedChecksum;
     this.creator = creator;
-    this.signature = signature ?? (creator.sign(Buffer.from(this.checksum)) as SignatureBuffer);
+    this.signature =
+      signature ??
+      (creator.sign(Buffer.from(this.checksum)) as SignatureBuffer);
     if (
       !QuorumDataRecord.eciesService.verifyMessage(
         creator.publicKey,

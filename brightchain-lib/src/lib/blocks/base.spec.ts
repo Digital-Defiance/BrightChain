@@ -104,7 +104,9 @@ class TestBaseBlock extends BaseBlock {
       ServiceProvider.getInstance().checksumService.calculateChecksum(
         this.internalData,
       );
-    const result = Buffer.from(this.idChecksum).equals(Buffer.from(expectedChecksum));
+    const result = Buffer.from(this.idChecksum).equals(
+      Buffer.from(expectedChecksum),
+    );
     if (!result) {
       throw new ChecksumMismatchError(this.idChecksum, expectedChecksum);
     }
@@ -200,7 +202,9 @@ describe('BaseBlock', () => {
       expect(block.blockType).toBe(BlockType.OwnerFreeWhitenedBlock);
       expect(block.blockDataType).toBe(BlockDataType.RawData);
       expect(block.data).toEqual(data);
-      expect(Buffer.from(block.idChecksum).equals(Buffer.from(checksum))).toBe(true);
+      expect(Buffer.from(block.idChecksum).equals(Buffer.from(checksum))).toBe(
+        true,
+      );
       expect(block.canRead).toBe(true);
     });
 
@@ -359,8 +363,14 @@ describe('BaseBlock', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ChecksumMismatchError);
         const checksumError = error as ChecksumMismatchError;
-        expect(Buffer.from(checksumError.checksum).equals(Buffer.from(block.idChecksum))).toBe(true);
-        expect(Buffer.from(checksumError.expected).equals(Buffer.from(newChecksum))).toBe(true);
+        expect(
+          Buffer.from(checksumError.checksum).equals(
+            Buffer.from(block.idChecksum),
+          ),
+        ).toBe(true);
+        expect(
+          Buffer.from(checksumError.expected).equals(Buffer.from(newChecksum)),
+        ).toBe(true);
       }
     });
 

@@ -1,3 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  ECIESError,
+  ECIESErrorTypeEnum,
+  EmailString,
+  InvalidEmailError,
+  InvalidEmailErrorType,
+  SecureString,
+} from '@digitaldefiance/ecies-lib';
+import {
+  ECIESService,
+  NodeMemberError,
+  VotingService,
+} from '@digitaldefiance/node-ecies-lib';
 import { faker } from '@faker-js/faker';
 import { BrightChainMember } from './brightChainMember';
 import { ECIES } from './constants';
@@ -5,9 +19,7 @@ import { MemberErrorType } from './enumerations/memberErrorType';
 import { MemberType } from './enumerations/memberType';
 import { MemberError } from './errors/memberError';
 import { IMemberWithMnemonic } from './interfaces/member/memberWithMnemonic';
-import { ECIESService, VotingService, NodeMemberError } from '@digitaldefiance/node-ecies-lib';
 import { ServiceProvider } from './services/service.provider';
-import { EmailString, InvalidEmailError, InvalidEmailErrorType, SecureString, ECIESError, ECIESErrorTypeEnum } from '@digitaldefiance/ecies-lib';
 
 describe('brightchain', () => {
   let alice: IMemberWithMnemonic,
@@ -110,24 +122,36 @@ describe('brightchain', () => {
     });
 
     it('should fail to create a user with no email', async () => {
-      expect(() => new EmailString('')).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
-        expect(error.type).toBe(InvalidEmailErrorType.Missing);
-      });
+      expect(() => new EmailString('')).toThrowType(
+        InvalidEmailError,
+        (error: InvalidEmailError) => {
+          expect(error.type).toBe(InvalidEmailErrorType.Missing);
+        },
+      );
     });
 
     it('should fail to create a user with an email that has whitespace at the start or end', async () => {
-      expect(() => new EmailString(' alice@example.com')).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
-        expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
-      });
-      expect(() => new EmailString('alice@example.com ')).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
-        expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
-      });
+      expect(() => new EmailString(' alice@example.com')).toThrowType(
+        InvalidEmailError,
+        (error: InvalidEmailError) => {
+          expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
+        },
+      );
+      expect(() => new EmailString('alice@example.com ')).toThrowType(
+        InvalidEmailError,
+        (error: InvalidEmailError) => {
+          expect(error.type).toBe(InvalidEmailErrorType.Whitespace);
+        },
+      );
     });
 
     it('should fail to create a user with an invalid email', async () => {
-      expect(() => new EmailString('x!foo')).toThrowType(InvalidEmailError, (error: InvalidEmailError) => {
-        expect(error.type).toBe(InvalidEmailErrorType.Invalid);
-      });
+      expect(() => new EmailString('x!foo')).toThrowType(
+        InvalidEmailError,
+        (error: InvalidEmailError) => {
+          expect(error.type).toBe(InvalidEmailErrorType.Invalid);
+        },
+      );
     });
 
     it('should check whether a user has a private key', () => {
@@ -138,7 +162,9 @@ describe('brightchain', () => {
 
   describe('BIP39 mnemonic and wallet functionality', () => {
     let mnemonic: SecureString;
-    let wallet: ReturnType<typeof eciesService.walletAndSeedFromMnemonic>['wallet'];
+    let wallet: ReturnType<
+      typeof eciesService.walletAndSeedFromMnemonic
+    >['wallet'];
     let member: IMemberWithMnemonic;
     beforeAll(async () => {
       mnemonic = eciesService.generateNewMnemonic();
@@ -292,10 +318,12 @@ describe('brightchain', () => {
       // Note: mnemonic is not serialized for security, so we can't reload the wallet
       // We can only verify the public data matches
       expect(Buffer.from(reloadedMember.publicKey).toString('hex')).toEqual(
-        Buffer.from(alice.member.publicKey).toString('hex')
+        Buffer.from(alice.member.publicKey).toString('hex'),
       );
       expect(reloadedMember.name).toEqual(alice.member.name);
-      expect(reloadedMember.email.toString()).toEqual(alice.member.email.toString());
+      expect(reloadedMember.email.toString()).toEqual(
+        alice.member.email.toString(),
+      );
       expect(reloadedMember.type).toEqual(alice.member.type);
     });
   });

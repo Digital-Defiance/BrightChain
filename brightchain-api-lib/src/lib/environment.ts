@@ -1,16 +1,17 @@
-import { 
-  SecureString,
-} from '@digitaldefiance/ecies-lib';
-import {
-  Environment as BaseEnvironment,
-} from '@digitaldefiance/node-express-suite';
+import { SecureString } from '@digitaldefiance/ecies-lib';
+import { Environment as BaseEnvironment } from '@digitaldefiance/node-express-suite';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import mongoose from 'mongoose';
 import { join } from 'path';
 import { Constants } from './constants';
 import { IEnvironment } from './interfaces/environment';
 import { IEnvironmentAws } from './interfaces/environment-aws';
 import { DefaultBackendIdType } from './shared-types';
 
-export class Environment extends BaseEnvironment<DefaultBackendIdType> implements IEnvironment {
+export class Environment
+  extends BaseEnvironment<DefaultBackendIdType>
+  implements IEnvironment
+{
   private _fontAwesomeKitId: string;
   private _aws: IEnvironmentAws;
 
@@ -31,7 +32,6 @@ export class Environment extends BaseEnvironment<DefaultBackendIdType> implement
       // Let's assume we can require mongoose or it's globally available? No.
       // Let's just return the string for now if that works, or import mongoose.
       // Better to import mongoose.
-      const mongoose = require('mongoose');
       const hex = Buffer.from(bytes).toString('hex');
       return new mongoose.Types.ObjectId(hex.padEnd(24, '0').slice(0, 24));
     };
@@ -39,15 +39,17 @@ export class Environment extends BaseEnvironment<DefaultBackendIdType> implement
 
   constructor(path?: string, initialization = false, override = true) {
     super(path, initialization, override, Constants);
-    
+
     const envObj = this.getObject();
 
     // BrightChain-specific environment variables
     this._fontAwesomeKitId = envObj['FONTAWESOME_KIT_ID'] ?? '';
-    
+
     this._aws = {
       accessKeyId: new SecureString(envObj['AWS_ACCESS_KEY_ID'] ?? null),
-      secretAccessKey: new SecureString(envObj['AWS_SECRET_ACCESS_KEY'] ?? null),
+      secretAccessKey: new SecureString(
+        envObj['AWS_SECRET_ACCESS_KEY'] ?? null,
+      ),
       region: envObj['AWS_REGION'] ?? 'us-east-1',
     };
 
@@ -61,12 +63,18 @@ export class Environment extends BaseEnvironment<DefaultBackendIdType> implement
     if (this.production) {
       this.setEnvironment('serverUrl', 'https://brightchain.org');
     }
-    
+
     if (!envObj['API_DIST_DIR']) {
-      this.setEnvironment('apiDistDir', join(process.cwd(), 'dist', 'brightchain-api'));
+      this.setEnvironment(
+        'apiDistDir',
+        join(process.cwd(), 'dist', 'brightchain-api'),
+      );
     }
     if (!envObj['REACT_DIST_DIR']) {
-      this.setEnvironment('reactDistDir', join(process.cwd(), 'dist', 'brightchain-react'));
+      this.setEnvironment(
+        'reactDistDir',
+        join(process.cwd(), 'dist', 'brightchain-react'),
+      );
     }
   }
 

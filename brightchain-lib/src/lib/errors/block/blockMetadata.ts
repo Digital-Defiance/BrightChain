@@ -20,7 +20,7 @@ export class BlockMetadataError extends TypedWithReasonError<BlockMetadataErrorT
         StringNames.Error_BlockMetadataErrorCreatorIdMismatch,
     };
   }
-  constructor(type: BlockMetadataErrorType, language?: StringLanguages) {
+  constructor(type: BlockMetadataErrorType, _language?: StringLanguages) {
     super(StringNames.Error_BlockMetadataTemplate, type, undefined);
     this.name = 'BlockMetadataError';
   }

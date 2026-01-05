@@ -1,5 +1,5 @@
 import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
-import { StringLanguages } from '../enumerations/stringLanguages';
+import { StringLanguage } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { TypedError } from './typedError';
 
@@ -23,7 +23,7 @@ export class MemoryTupleError extends TypedError<MemoryTupleErrorType> {
   constructor(
     type: MemoryTupleErrorType,
     tupleSize?: number,
-    language?: StringLanguages,
+    _language?: StringLanguage,
   ) {
     super(type, undefined, {
       ...(tupleSize ? { TUPLE_SIZE: tupleSize.toString() } : {}),

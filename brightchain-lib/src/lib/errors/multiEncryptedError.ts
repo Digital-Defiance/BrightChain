@@ -28,7 +28,7 @@ export class MultiEncryptedError extends TypedError<MultiEncryptedErrorType> {
         StringNames.Error_MultiEncryptedErrorRecipientsAlreadyLoaded,
     };
   }
-  constructor(type: MultiEncryptedErrorType, language?: StringLanguages) {
+  constructor(type: MultiEncryptedErrorType, _language?: StringLanguages) {
     super(type, undefined);
     this.name = 'MultiEncryptedError';
   }

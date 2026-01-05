@@ -1,5 +1,9 @@
-import { AppConstants } from '../appConstants';
-import { debugLog } from '@digitaldefiance/node-express-suite';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  debugLog,
+  handleError,
+  sendApiMessageResponse,
+} from '@digitaldefiance/node-express-suite';
 import {
   SuiteCoreStringKey,
   getSuiteCoreTranslation as translate,
@@ -14,7 +18,6 @@ import {
 import { existsSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { IApplication } from '../interfaces/application';
-import { handleError, sendApiMessageResponse } from '@digitaldefiance/node-express-suite';
 import { ApiRouter } from './api';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -145,7 +148,7 @@ export class AppRouter {
       }
 
       const SiteName = 'BrightChain';
-        // translate(SuiteCoreStringKey.Common_Site)
+      // translate(SuiteCoreStringKey.Common_Site)
       const hostname = req.hostname;
       const jsFile = this.getAssetFilename(this.assetsDir, /^index-.*\.js$/);
       const cssFile = this.getAssetFilename(this.assetsDir, /^index-.*\.css$/);

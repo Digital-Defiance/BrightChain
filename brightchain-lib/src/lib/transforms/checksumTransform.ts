@@ -1,6 +1,6 @@
-import { ChecksumUint8Array } from '../types';
 import { Hasher, sha3_512 } from 'js-sha3';
 import { Transform, TransformCallback } from 'stream';
+import { ChecksumUint8Array } from '../types';
 
 export class ChecksumTransform extends Transform {
   private sha3: Hasher;

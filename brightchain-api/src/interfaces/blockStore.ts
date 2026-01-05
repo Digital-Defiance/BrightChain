@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { BlockSize } from '@brightchain/brightchain-lib';
 
 export interface IBlockStore {

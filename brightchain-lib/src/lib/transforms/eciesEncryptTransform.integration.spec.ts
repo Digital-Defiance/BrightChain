@@ -1,7 +1,7 @@
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { createECDH, randomBytes } from 'crypto';
 import { ECIES } from '../constants';
 import { BlockSize } from '../enumerations/blockSize';
-import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { EciesDecryptionTransform } from './eciesDecryptTransform';
 import { EciesEncryptTransform } from './eciesEncryptTransform';
 

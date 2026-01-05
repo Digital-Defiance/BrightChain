@@ -1,5 +1,5 @@
-import { ChecksumService } from './checksum.service';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
+import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
 import { TupleService } from './tuple.service';
 

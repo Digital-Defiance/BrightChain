@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { existsSync } from 'fs';
 import { readFile, readdir, stat, unlink, writeFile } from 'fs/promises';
 import { join } from 'path';
@@ -14,9 +15,8 @@ import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata'
 import MemoryWritableStream from '../memoryWriteableStream';
 import { ChecksumTransform } from '../transforms/checksumTransform';
 import XorMultipleTransformStream from '../transforms/xorMultipleTransform';
+import { ChecksumUint8Array, uint8ArrayToHex } from '../types';
 import { DiskBlockStore } from './diskBlockStore';
-import { ChecksumUint8Array } from '../types';
-import { uint8ArrayToHex } from '../types';
 
 /**
  * DiskBlockAsyncStore provides asynchronous operations for storing and retrieving blocks from disk.
@@ -65,7 +65,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
     let data: Buffer;
     try {
       data = await readFile(blockPath);
-    } catch (error) {
+    } catch {
       throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
         KEY: uint8ArrayToHex(key),
       });
@@ -124,7 +124,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
 
     try {
       block.validate();
-    } catch (error) {
+    } catch {
       throw new StoreError(StoreErrorType.BlockValidationFailed);
     }
 
@@ -321,7 +321,9 @@ export class DiskBlockAsyncStore extends DiskBlockStore {
       // Pick a random block
       const randomBlockIndex = Math.floor(Math.random() * blockFiles.length);
       const blockFile = blockFiles[randomBlockIndex];
-      blocks.push(Buffer.from(blockFile, 'hex') as unknown as ChecksumUint8Array);
+      blocks.push(
+        Buffer.from(blockFile, 'hex') as unknown as ChecksumUint8Array,
+      );
 
       // Remove used directory if we still need more blocks
       if (blocks.length < count) {

@@ -1,23 +1,25 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import MDEditor from "@uiw/react-md-editor";
-import { Octokit } from "octokit";
-import "./BlogEditor.css";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import MDEditor from '@uiw/react-md-editor';
+
+import { Octokit } from 'octokit';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import './BlogEditor.css';
 
 function BlogEditor() {
   const navigate = useNavigate();
-  const [token, setToken] = useState("");
+  const [token, setToken] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [title, setTitle] = useState("");
-  const [author, setAuthor] = useState("BrightChain");
-  const [excerpt, setExcerpt] = useState("");
-  const [content, setContent] = useState("");
+  const [title, setTitle] = useState('');
+  const [author, setAuthor] = useState('BrightChain');
+  const [excerpt, setExcerpt] = useState('');
+  const [content, setContent] = useState('');
   const [publishing, setPublishing] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   useEffect(() => {
     // Check if token exists in sessionStorage
-    const savedToken = sessionStorage.getItem("github_token");
+    const savedToken = sessionStorage.getItem('github_token');
     if (savedToken) {
       setToken(savedToken);
       setIsAuthenticated(true);
@@ -26,33 +28,33 @@ function BlogEditor() {
 
   const handleLogin = () => {
     if (token.trim()) {
-      sessionStorage.setItem("github_token", token);
+      sessionStorage.setItem('github_token', token);
       setIsAuthenticated(true);
-      setError("");
+      setError('');
     } else {
-      setError("Please enter a valid GitHub token");
+      setError('Please enter a valid GitHub token');
     }
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem("github_token");
-    setToken("");
+    sessionStorage.removeItem('github_token');
+    setToken('');
     setIsAuthenticated(false);
   };
 
   const generateSlug = () => {
-    const date = new Date().toISOString().split("T")[0];
+    const date = new Date().toISOString().split('T')[0];
     const slug = title
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
     return `${date}-${slug}`;
   };
 
   const createMarkdownContent = () => {
     const frontmatter = `---
 title: ${title}
-date: ${new Date().toISOString().split("T")[0]}
+date: ${new Date().toISOString().split('T')[0]}
 author: ${author}
 excerpt: ${excerpt}
 ---
@@ -63,12 +65,12 @@ excerpt: ${excerpt}
 
   const handlePublish = async () => {
     if (!title || !content) {
-      setError("Title and content are required");
+      setError('Title and content are required');
       return;
     }
 
     setPublishing(true);
-    setError("");
+    setError('');
 
     try {
       const octokit = new Octokit({ auth: token });
@@ -77,8 +79,8 @@ excerpt: ${excerpt}
       const markdownContent = createMarkdownContent();
 
       // Repository configuration
-      const owner = "Digital-Defiance";
-      const repo = "BrightChain";
+      const owner = 'Digital-Defiance';
+      const repo = 'BrightChain';
 
       // Create or update the file
       await octokit.rest.repos.createOrUpdateFileContents({
@@ -87,7 +89,7 @@ excerpt: ${excerpt}
         path: `showcase/public/blog/${filename}`,
         message: `Add blog post: ${title}`,
         content: btoa(unescape(encodeURIComponent(markdownContent))),
-        branch: "main",
+        branch: 'main',
       });
 
       // Try to trigger deployment workflow (if it exists)
@@ -95,11 +97,11 @@ excerpt: ${excerpt}
         await octokit.rest.actions.createWorkflowDispatch({
           owner,
           repo,
-          workflow_id: "deploy.yml", // Adjust if your workflow has a different name
-          ref: "main",
+          workflow_id: 'deploy.yml', // Adjust if your workflow has a different name
+          ref: 'main',
         });
       } catch (workflowErr) {
-        console.log("No workflow to trigger (this is optional):", workflowErr);
+        console.log('No workflow to trigger (this is optional):', workflowErr);
       }
 
       // Store the post data temporarily for immediate display
@@ -108,26 +110,26 @@ excerpt: ${excerpt}
         title,
         author,
         excerpt,
-        date: new Date().toISOString().split("T")[0],
+        date: new Date().toISOString().split('T')[0],
         content,
         isNew: true,
       };
       sessionStorage.setItem(`blog_post_${slug}`, JSON.stringify(postData));
 
       // Add to pending posts array for blog list
-      const pendingPostsJson = sessionStorage.getItem("blog_pending_posts");
+      const pendingPostsJson = sessionStorage.getItem('blog_pending_posts');
       const pendingPosts = pendingPostsJson ? JSON.parse(pendingPostsJson) : [];
       pendingPosts.push(postData);
       sessionStorage.setItem(
-        "blog_pending_posts",
-        JSON.stringify(pendingPosts)
+        'blog_pending_posts',
+        JSON.stringify(pendingPosts),
       );
 
       // Success - navigate directly to the new post
       navigate(`/blog/${slug}`);
     } catch (err: any) {
-      console.error("Error publishing:", err);
-      setError(err.message || "Failed to publish blog post");
+      console.error('Error publishing:', err);
+      setError(err.message || 'Failed to publish blog post');
     } finally {
       setPublishing(false);
     }
@@ -240,7 +242,7 @@ excerpt: ${excerpt}
             <div data-color-mode="dark">
               <MDEditor
                 value={content}
-                onChange={(val) => setContent(val || "")}
+                onChange={(val) => setContent(val || '')}
                 height={500}
                 preview="live"
               />
@@ -251,7 +253,7 @@ excerpt: ${excerpt}
 
           <div className="editor-actions">
             <button
-              onClick={() => navigate("/blog")}
+              onClick={() => navigate('/blog')}
               className="cancel-button"
               disabled={publishing}
             >
@@ -262,7 +264,7 @@ excerpt: ${excerpt}
               className="publish-button"
               disabled={publishing}
             >
-              {publishing ? "Publishing..." : "Publish"}
+              {publishing ? 'Publishing...' : 'Publish'}
             </button>
           </div>
         </div>

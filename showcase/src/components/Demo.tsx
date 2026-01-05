@@ -1,19 +1,14 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
 import {
   ECIESService,
   ISimpleKeyPair,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import {
-  FaLock,
-  FaUnlock,
-  FaKey,
-  FaExchangeAlt,
-} from 'react-icons/fa';
-import { VotingDemo } from './voting/VotingDemo';
+import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { FaExchangeAlt, FaKey, FaLock, FaUnlock } from 'react-icons/fa';
+import { useInView } from 'react-intersection-observer';
 import './Demo.css';
+import { VotingDemo } from './voting/VotingDemo';
 
 const Demo = () => {
   const [ref, inView] = useInView({

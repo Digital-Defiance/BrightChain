@@ -20,7 +20,7 @@ export class IsolatedKeyError extends TypedError<IsolatedKeyErrorType> {
         StringNames.Error_IsolatedKeyErrorKeyIsolationViolation,
     };
   }
-  constructor(type: IsolatedKeyErrorType, language?: StringLanguages) {
+  constructor(type: IsolatedKeyErrorType, _language?: StringLanguages) {
     super(type, undefined);
     this.name = 'IsolatedKeyError';
   }

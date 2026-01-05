@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { SecureString } from '@brightchain/brightchain-lib';
 import { KeyWrappingService } from './keyWrapping';
 

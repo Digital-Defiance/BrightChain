@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Role } from '@digitaldefiance/suite-core-lib';
-import { ModelName } from '../enumerations/model-name';
 import { CallbackWithoutResultAndOptionalError, Schema } from 'mongoose';
 import { IRoleDocument } from '../documents/role';
+import { ModelName } from '../enumerations/model-name';
 
 /**
  * Schema for roles

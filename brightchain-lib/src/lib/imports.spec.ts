@@ -1,9 +1,9 @@
 /**
  * @fileoverview Property-based tests for import statements
- * 
+ *
  * **Feature: constants-refactoring, Property 4: Import Statements Updated**
  * **Validates: Requirements 5.3, 10.4**
- * 
+ *
  * This test suite verifies that all import statements in the BrightChain codebase
  * reference the correct sources after the constants refactoring:
  * - Base constants should be imported from @digitaldefiance libraries
@@ -12,8 +12,8 @@
  */
 
 import * as fs from 'fs';
-import * as path from 'path';
 import { glob } from 'glob';
+import * as path from 'path';
 
 describe('Import Statements Property Tests', () => {
   describe('Property 4: Import Statements Updated', () => {
@@ -25,7 +25,12 @@ describe('Import Statements Property Tests', () => {
       allTsFiles = await glob('**/*.ts', {
         cwd: path.dirname(srcDir),
         absolute: true,
-        ignore: ['**/node_modules/**', '**/dist/**', '**/*.spec.ts', '**/*.test.ts'],
+        ignore: [
+          '**/node_modules/**',
+          '**/dist/**',
+          '**/*.spec.ts',
+          '**/*.test.ts',
+        ],
       });
     });
 
@@ -37,7 +42,11 @@ describe('Import Statements Property Tests', () => {
         'keyringConsts',
       ];
 
-      const violations: Array<{ file: string; line: string; interface: string }> = [];
+      const violations: Array<{
+        file: string;
+        line: string;
+        interface: string;
+      }> = [];
 
       for (const file of allTsFiles) {
         const content = fs.readFileSync(file, 'utf-8');
@@ -62,9 +71,14 @@ describe('Import Statements Property Tests', () => {
 
       if (violations.length > 0) {
         const message = violations
-          .map((v) => `${v.file}\n  ${v.line}\n  Deleted interface: ${v.interface}`)
+          .map(
+            (v) =>
+              `${v.file}\n  ${v.line}\n  Deleted interface: ${v.interface}`,
+          )
           .join('\n\n');
-        throw new Error(`Found imports from deleted interface files:\n\n${message}`);
+        throw new Error(
+          `Found imports from deleted interface files:\n\n${message}`,
+        );
       }
 
       expect(violations).toHaveLength(0);
@@ -73,7 +87,7 @@ describe('Import Statements Property Tests', () => {
     it('should import base constants from local constants module (which re-exports from upstream)', () => {
       // This test verifies that the refactoring maintains backward compatibility
       // by allowing files to import constants from the local constants module.
-      // 
+      //
       // The key requirement (5.1, 5.2) is that:
       // 1. Base constants CAN be imported from @digitaldefiance libraries directly
       // 2. Base constants CAN be imported from local constants module (which re-exports them)
@@ -81,7 +95,7 @@ describe('Import Statements Property Tests', () => {
       //
       // This test verifies that constants.ts properly re-exports base constants,
       // which is the core requirement. Individual files can import from either location.
-      
+
       const constantsFile = path.join(__dirname, 'constants.ts');
       const content = fs.readFileSync(constantsFile, 'utf-8');
 
@@ -104,9 +118,20 @@ describe('Import Statements Property Tests', () => {
     });
 
     it('should import BrightChain-specific constants from local constants module', () => {
-      const brightchainConstants = ['CBL', 'FEC', 'TUPLE', 'SEALING', 'JWT', 'SITE'];
+      const brightchainConstants = [
+        'CBL',
+        'FEC',
+        'TUPLE',
+        'SEALING',
+        'JWT',
+        'SITE',
+      ];
 
-      const violations: Array<{ file: string; line: string; constant: string }> = [];
+      const violations: Array<{
+        file: string;
+        line: string;
+        constant: string;
+      }> = [];
 
       for (const file of allTsFiles) {
         const content = fs.readFileSync(file, 'utf-8');
@@ -138,7 +163,10 @@ describe('Import Statements Property Tests', () => {
 
       if (violations.length > 0) {
         const message = violations
-          .map((v) => `${v.file}\n  ${v.line}\n  BrightChain constant: ${v.constant}`)
+          .map(
+            (v) =>
+              `${v.file}\n  ${v.line}\n  BrightChain constant: ${v.constant}`,
+          )
           .join('\n\n');
         throw new Error(
           `Found BrightChain-specific constants imported from upstream libraries:\n\n${message}`,
@@ -151,7 +179,7 @@ describe('Import Statements Property Tests', () => {
     it('should not have circular dependencies in constants-related imports', () => {
       // This test verifies that the constants refactoring did not introduce
       // circular dependencies. We focus on files that import constants.
-      
+
       const constantsRelatedFiles = new Set<string>();
       const dependencyGraph = new Map<string, Set<string>>();
 
@@ -159,7 +187,7 @@ describe('Import Statements Property Tests', () => {
       for (const file of allTsFiles) {
         const content = fs.readFileSync(file, 'utf-8');
         const relativePath = path.relative(path.join(__dirname, '..'), file);
-        
+
         if (
           content.includes("from './constants'") ||
           content.includes("from '../constants'") ||
@@ -184,8 +212,14 @@ describe('Import Statements Property Tests', () => {
           if (importMatch) {
             const importPath = importMatch[1];
             if (importPath.startsWith('./') || importPath.startsWith('../')) {
-              const resolvedPath = path.resolve(path.dirname(fullPath), importPath);
-              const relativeImport = path.relative(path.join(__dirname, '..'), resolvedPath);
+              const resolvedPath = path.resolve(
+                path.dirname(fullPath),
+                importPath,
+              );
+              const relativeImport = path.relative(
+                path.join(__dirname, '..'),
+                resolvedPath,
+              );
               // Only track dependencies to other constants-related files
               if (constantsRelatedFiles.has(relativeImport)) {
                 dependencies.add(relativeImport);
@@ -210,7 +244,7 @@ describe('Import Statements Property Tests', () => {
         const dependencies = dependencyGraph.get(node) || new Set();
         for (const dep of dependencies) {
           const normalizedDep = dep.replace(/\.ts$/, '');
-          
+
           let matchingKey: string | undefined;
           for (const key of dependencyGraph.keys()) {
             if (key.replace(/\.ts$/, '') === normalizedDep) {
@@ -250,7 +284,7 @@ describe('Import Statements Property Tests', () => {
           .join('\n\n');
         throw new Error(
           `Found circular dependencies in constants-related files:\n\n${message}\n\n` +
-          `(Showing first 5 of ${cycles.length} cycles)`,
+            `(Showing first 5 of ${cycles.length} cycles)`,
         );
       }
 
@@ -279,7 +313,14 @@ describe('Import Statements Property Tests', () => {
       }
 
       // Verify that it exports BrightChain-specific constants
-      const brightchainExports = ['CBL', 'FEC', 'TUPLE', 'SEALING', 'JWT', 'SITE'];
+      const brightchainExports = [
+        'CBL',
+        'FEC',
+        'TUPLE',
+        'SEALING',
+        'JWT',
+        'SITE',
+      ];
 
       for (const exportName of brightchainExports) {
         expect(content).toContain(`export const ${exportName}`);
@@ -293,8 +334,8 @@ describe('Import Statements Property Tests', () => {
       const indexFile = path.join(__dirname, '../index.ts');
       const content = fs.readFileSync(indexFile, 'utf-8');
 
-      // Verify that index.ts exports CONSTANTS as default
-      expect(content).toContain("export { default as CONSTANTS");
+      // Verify that index.ts exports CONSTANTS as default (handle multiline formatting)
+      expect(content).toContain('default as CONSTANTS');
 
       // Verify that it exports individual constant groups
       const constantGroups = ['CBL', 'FEC', 'TUPLE', 'SEALING', 'JWT', 'SITE'];
@@ -304,7 +345,9 @@ describe('Import Statements Property Tests', () => {
       }
 
       // Verify that it exports EciesConfig
-      expect(content).toContain("export { EciesConfig } from './lib/ecies-config'");
+      expect(content).toContain(
+        "export { EciesConfig } from './lib/ecies-config'",
+      );
     });
   });
 });

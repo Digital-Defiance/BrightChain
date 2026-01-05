@@ -1,34 +1,35 @@
+/* eslint-disable @nx/enforce-module-boundaries */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { constants } from '@brightchain/brightchain-lib';
+import { IECIESConfig } from '@digitaldefiance/ecies-lib';
+import {
+  ApiAccess,
+  AuthProvider,
+  BackupCodeLoginWrapper,
+  BackupCodesWrapper,
+  ChangePasswordFormWrapper,
+  LoginFormWrapper,
+  LogoutPageWrapper,
+  MenuProvider,
+  PrivateRoute,
+  RegisterFormWrapper,
+  SuiteConfigProvider,
+  TopMenu,
+  TranslatedTitle,
+  UnAuthRoute,
+  UserSettingsFormWrapper,
+  VerifyEmailPageWrapper,
+} from '@digitaldefiance/express-suite-react-components';
+import { LanguageRegistry } from '@digitaldefiance/i18n-lib';
+import { IConstants } from '@digitaldefiance/suite-core-lib';
 import { Box, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { FC, useCallback } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
+import { environment } from '../environments/environment';
 import '../styles.scss';
 import { SplashPage } from './components/splashPage';
-import { createAppTheme } from '../theme';
-import {
-  MenuProvider,
-  AuthProvider,
-  SuiteConfigProvider,
-  PrivateRoute,
-  UnAuthRoute,
-  TopMenu,
-  TranslatedTitle,
-  LoginFormWrapper,
-  RegisterFormWrapper,
-  LogoutPageWrapper,
-  VerifyEmailPageWrapper,
-  ChangePasswordFormWrapper,
-  UserSettingsFormWrapper,
-  BackupCodeLoginWrapper,
-  BackupCodesWrapper,
-  ApiAccess,
-} from '@digitaldefiance/express-suite-react-components';
-import { environment } from '../environments/environment';
-import { getI18n, constants } from '@brightchain/brightchain-lib';
-import { LanguageRegistry } from '@digitaldefiance/i18n-lib';
-import { IConstants } from '@digitaldefiance/suite-core-lib';
-import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 
 const getApiBaseUrl = () => {
   if (

@@ -1,6 +1,6 @@
-import { randomBytes } from 'crypto';
 import { EmailString } from '@digitaldefiance/ecies-lib';
 import { ChecksumBuffer } from '@digitaldefiance/node-ecies-lib';
+import { randomBytes } from 'crypto';
 import { ConstituentBlockListBlock } from './blocks/cbl';
 import { WhitenedBlock } from './blocks/whitened';
 import { BrightChainMember } from './brightChainMember';
@@ -54,7 +54,9 @@ describe('CblStream', () => {
     // Create test addresses
     const addresses: ChecksumBuffer[] = [];
     for (let i = 0; i < TUPLE.SIZE; i++) {
-      const checksum = checksumService.calculateChecksum(randomBytes(blockSize));
+      const checksum = checksumService.calculateChecksum(
+        randomBytes(blockSize),
+      );
       addresses.push(Buffer.from(checksum) as ChecksumBuffer);
     }
 
@@ -110,7 +112,8 @@ describe('CblStream', () => {
       );
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const getWhitenedBlock = (blockId: ChecksumUint8Array) => whitenedBlocks[0];
+      const getWhitenedBlock = (blockId: ChecksumUint8Array) =>
+        whitenedBlocks[0];
 
       const stream = new CblStream(cbl, getWhitenedBlock);
       expect(stream).toBeInstanceOf(CblStream);
@@ -124,7 +127,8 @@ describe('CblStream', () => {
       );
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const getWhitenedBlock = (blockId: ChecksumUint8Array) => whitenedBlocks[0];
+      const getWhitenedBlock = (blockId: ChecksumUint8Array) =>
+        whitenedBlocks[0];
 
       expect(
         () =>

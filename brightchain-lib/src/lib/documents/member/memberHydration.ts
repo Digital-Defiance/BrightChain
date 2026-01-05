@@ -1,8 +1,8 @@
 import { EmailString, GuidV4 } from '@digitaldefiance/ecies-lib';
+import { PublicKey } from 'paillier-bigint';
 import { IHydrationSchema } from '../../interfaces/document/base';
 import { IMemberHydratedData } from '../../interfaces/member/hydrated';
 import { IMemberStorageData } from '../../interfaces/member/storage';
-import { ServiceProvider } from '../../services/service.provider';
 
 /**
  * Hydration schema for converting between storage and hydrated member formats
@@ -17,9 +17,8 @@ export const memberHydrationSchema: IHydrationSchema<
     const email = new EmailString(storage.email);
     const creatorId = new GuidV4(storage.creatorId);
     const publicKey = Buffer.from(storage.publicKey, 'base64');
-    
+
     // Parse voting public key from hex string
-    const { PublicKey } = require('paillier-bigint');
     const votingPublicKey = new PublicKey(
       BigInt('0x' + storage.votingPublicKey),
       BigInt('0x' + storage.votingPublicKey) + 1n, // g = n + 1 for Paillier

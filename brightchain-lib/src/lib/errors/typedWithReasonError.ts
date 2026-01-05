@@ -1,7 +1,6 @@
-import { StringLanguages } from '../enumerations/stringLanguages';
+import { HandleableError } from '@digitaldefiance/i18n-lib';
 import StringNames from '../enumerations/stringNames';
 import { translate } from '../i18n';
-import { HandleableError } from '@digitaldefiance/i18n-lib';
 
 export abstract class TypedWithReasonError<
   T extends string | number,
@@ -21,7 +20,7 @@ export abstract class TypedWithReasonError<
         translate(reasonTemplate, {
           ...otherVars,
           ...{ REASON: translate(reasonMap[type]) },
-        })
+        }),
       ),
     );
     this.type = type;

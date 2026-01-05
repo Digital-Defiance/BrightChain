@@ -1,3 +1,5 @@
+import { EmailString } from '@digitaldefiance/ecies-lib';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { faker } from '@faker-js/faker';
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
@@ -6,13 +8,11 @@ import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import MemberType from '../enumerations/memberType';
 import { CblError } from '../errors/cblError';
+import { ChecksumUint8Array } from '../types';
 import { BlockCapacityCalculator } from './blockCapacity.service';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
-import { ECIESService } from '@digitaldefiance/node-ecies-lib';
-import { EmailString } from '@digitaldefiance/ecies-lib';
 import { ServiceProvider } from './service.provider';
-import { ChecksumUint8Array } from '../types';
 
 describe('CBLService', () => {
   let creator: BrightChainMember;

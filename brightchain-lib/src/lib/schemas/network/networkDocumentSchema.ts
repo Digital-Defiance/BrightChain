@@ -1,10 +1,10 @@
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { BrightChainMember } from '../../brightChainMember';
 import { NetworkDocument } from '../../documents/network/networkDocument';
 import StringNames from '../../enumerations/stringNames';
 import { FailedToHydrateError } from '../../errors/failedToHydrate';
 import { FailedToSerializeError } from '../../errors/failedToSerialize';
 import { InvalidIDFormatError } from '../../errors/invalidIDFormat';
-import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { translate } from '../../i18n';
 import { SchemaDefinition, SerializedValue } from '../../sharedTypes';
 import { ChecksumUint8Array, SignatureUint8Array } from '../../types';
@@ -49,7 +49,7 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
       try {
         const json = value.toJson();
         return JSON.parse(json);
-      } catch (error) {
+      } catch {
         throw new FailedToSerializeError(
           translate(StringNames.Error_InvalidCreator),
         );
@@ -68,7 +68,8 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
   signature: {
     type: Object,
     required: true,
-    serialize: (value: SignatureUint8Array): string => Buffer.from(value).toString('base64'),
+    serialize: (value: SignatureUint8Array): string =>
+      Buffer.from(value).toString('base64'),
     hydrate: (value: unknown): SignatureUint8Array => {
       if (!isString(value))
         throw new FailedToHydrateError(
@@ -80,7 +81,8 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
   checksum: {
     type: Object,
     required: true,
-    serialize: (value: ChecksumUint8Array): string => Buffer.from(value).toString('base64'),
+    serialize: (value: ChecksumUint8Array): string =>
+      Buffer.from(value).toString('base64'),
     hydrate: (value: unknown): ChecksumUint8Array => {
       if (!isString(value))
         throw new FailedToHydrateError(

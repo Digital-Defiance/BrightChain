@@ -12,7 +12,7 @@ export class Pbkdf2Error extends TypedError<Pbkdf2ErrorType> {
         StringNames.Error_Pbkdf2InvalidHashLength,
     };
   }
-  constructor(type: Pbkdf2ErrorType, language?: StringLanguages) {
+  constructor(type: Pbkdf2ErrorType, _language?: StringLanguages) {
     super(type, undefined);
     this.name = 'Pbkdf2Error';
   }

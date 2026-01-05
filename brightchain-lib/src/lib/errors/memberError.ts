@@ -57,7 +57,7 @@ export class MemberError extends TypedError<MemberErrorType> {
         StringNames.Error_MemberErrorInvalidEncryptionData,
     };
   }
-  constructor(type: MemberErrorType, language?: StringLanguages) {
+  constructor(type: MemberErrorType, _language?: StringLanguages) {
     super(type, undefined);
     this.name = 'MemberError';
   }

@@ -1,6 +1,5 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { BrightChainMember } from '../brightChainMember';
 import { MemberData, MemberDocument } from '../documents/memberDocument';
 import { MemberType } from '../enumerations/memberType';
 import { TestMembers } from './testMembers';
@@ -43,7 +42,9 @@ describe('Document System Tests', () => {
     // Verify restored document matches original
     expect(restoredDocument.get('id').toString()).toBe(member.id.toString());
     expect(restoredDocument.get('name')).toBe(member.name);
-    expect(restoredDocument.get('email').toString()).toBe(member.email.toString());
+    expect(restoredDocument.get('email').toString()).toBe(
+      member.email.toString(),
+    );
     expect(restoredDocument.get('type')).toBe(member.type);
 
     // Clean up test file

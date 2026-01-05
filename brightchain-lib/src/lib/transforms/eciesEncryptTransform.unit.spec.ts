@@ -1,10 +1,8 @@
+import { SecureString } from '@digitaldefiance/ecies-lib';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { randomBytes } from 'crypto';
 import { BlockSize } from '../enumerations/blockSize';
-import { EciesErrorType } from '../enumerations/eciesErrorType';
-import { EciesError } from '../errors/eciesError';
-import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { EciesEncryptTransform } from './eciesEncryptTransform';
-import { SecureString } from '@digitaldefiance/ecies-lib';
 
 describe('EciesEncryptTransform Unit Tests', () => {
   const mockLogger = {
@@ -133,13 +131,9 @@ describe('EciesEncryptTransform Unit Tests', () => {
   it('should throw error with invalid public key', () => {
     // The transform should throw an error in the constructor when given an invalid public key
     const invalidPublicKey = randomBytes(32); // Wrong size for public key (should be 65 bytes)
-    
+
     expect(() => {
-      new EciesEncryptTransform(
-        blockSize,
-        invalidPublicKey,
-        mockLogger,
-      );
+      new EciesEncryptTransform(blockSize, invalidPublicKey, mockLogger);
     }).toThrow('Invalid public key length');
   });
 });

@@ -1,5 +1,5 @@
-import { BrightChainMember } from '../../brightChainMember';
 import { EmailString, GuidV4, SecureString } from '@digitaldefiance/ecies-lib';
+import { BrightChainMember } from '../../brightChainMember';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
 import { MemberType } from '../../enumerations/memberType';
 import { ChecksumUint8Array } from '../../types';

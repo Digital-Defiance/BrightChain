@@ -3,6 +3,7 @@ import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
 import { MemoryTupleError } from '../errors/memoryTupleError';
 import { ChecksumUint8Array } from '../types';
@@ -165,7 +166,7 @@ export class InMemoryBlockTuple {
 
     const handles = await Promise.all(
       blockIDs.map((id: ChecksumUint8Array) => {
-        // @ts-ignore - BlockHandle constructor workaround
+        // @ts-expect-error - BlockHandle constructor workaround
         return new (BlockHandle as any)(
           getBlockPath(id),
           blockSize,

@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { FecError, FecErrorType } from '@brightchain/brightchain-lib';
 import { ReedSolomonErasure } from '@subspace/reed-solomon-erasure.wasm';
 import { Constants } from '../constants';

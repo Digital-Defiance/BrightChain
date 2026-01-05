@@ -15,7 +15,7 @@ import { UsedDirectLoginTokenSchema } from './used-direct-login-token';
 import { UserSchema } from './user';
 import { UserRoleSchema } from './user-role';
 
-export function getSchemaMap(connection: Connection): SchemaMap {
+export function getSchemaMap(_connection: Connection): SchemaMap {
   return {
     /**
      * Model/Collection for email tokens sent to users

@@ -24,7 +24,7 @@ export class BlockAccessError extends TypedWithReasonError<BlockAccessErrorType>
   constructor(
     type: BlockAccessErrorType,
     file?: string,
-    language?: StringLanguages,
+    _language?: StringLanguages,
   ) {
     super(
       StringNames.Error_BlockAccessTemplate,

@@ -1,3 +1,5 @@
+import { GuidBrandType, GuidV4 } from '@digitaldefiance/ecies-lib';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { Buffer } from 'buffer';
 import { BrightChainMember } from '../brightChainMember';
 import CONSTANTS, { CBL, CHECKSUM, ECIES, TUPLE } from '../constants';
@@ -6,21 +8,18 @@ import { BlockSize, lengthToBlockSize } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
 import { CblErrorType } from '../enumerations/cblErrorType';
 import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
-import { GuidBrandType } from '@digitaldefiance/ecies-lib';
 import { CblError } from '../errors/cblError';
 import { ExtendedCblError } from '../errors/extendedCblError';
-import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { IConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/cblHeader';
 import { IExtendedConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/ecblHeader';
 import {
   ChecksumUint8Array,
   RawGuidUint8Array,
-  SignatureUint8Array,
   SignatureBuffer,
+  SignatureUint8Array,
 } from '../types';
 import { BlockCapacityCalculator } from './blockCapacity.service';
 import { ChecksumService } from './checksum.service';
-import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 
 /**
  * Service for creating and verifying CBL blocks
@@ -874,7 +873,9 @@ export class CBLService {
       blockType,
       encryptionType: encryptedBlockType,
       recipientCount:
-        encryptedBlockType === BlockEncryptionType.MultiRecipient ? 1 : undefined,
+        encryptedBlockType === BlockEncryptionType.MultiRecipient
+          ? 1
+          : undefined,
       ...(cbl
         ? {
             cbl,

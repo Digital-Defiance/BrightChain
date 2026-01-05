@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import {
   ApiErrorResponse,
   ApiRequestHandler,
@@ -6,7 +7,6 @@ import {
   TypedHandlers,
 } from '@brightchain/brightchain-api-lib';
 import { BrightChainMember } from '@brightchain/brightchain-lib';
-import { Request } from 'express';
 import { IApplication } from '../../interfaces/application';
 import { BaseController } from '../base';
 
@@ -39,7 +39,9 @@ export class SessionsController extends BaseController<
 
   private handleGetSessions: ApiRequestHandler<
     IApiMessageResponse | ApiErrorResponse
-  > = async (req): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  > = async (
+    req,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
     return {
       statusCode: 200,
       response: {

@@ -1,17 +1,21 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { StringLanguage } from '@brightchain/brightchain-lib';
+import {
+  HandleableError,
+  LanguageContextSpace,
+} from '@digitaldefiance/i18n-lib';
 import {
   getSuiteCoreTranslation,
   SuiteCoreStringKey,
 } from '@digitaldefiance/suite-core-lib';
-import { HandleableError, LanguageContextSpace } from '@digitaldefiance/i18n-lib';
 
 export class MissingValidatedDataError extends HandleableError {
   public readonly field?: string;
   public readonly fields?: string[];
   constructor(
     data?: string | string[],
-    language?: StringLanguage,
-    context?: LanguageContextSpace,
+    _language?: StringLanguage,
+    _context?: LanguageContextSpace,
   ) {
     let message: string;
     let fields: string[] | undefined;

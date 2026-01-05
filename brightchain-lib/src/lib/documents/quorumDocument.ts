@@ -1,8 +1,8 @@
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { BrightChainMember } from '../brightChainMember';
 import { QuorumErrorType } from '../enumerations/quorumErrorType';
 import { QuorumError } from '../errors/quorumError';
-import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { QuorumDataRecord } from '../quorumDataRecord';
 import { QuorumDocumentSchema } from '../schemas/quorumDocument';
 import { BlockService } from '../services/blockService';
@@ -72,7 +72,9 @@ export class QuorumDocument<
       creator,
       creator,
     );
-    const checksum = Buffer.from(cbl.idChecksum) as unknown as ChecksumUint8Array;
+    const checksum = Buffer.from(
+      cbl.idChecksum,
+    ) as unknown as ChecksumUint8Array;
 
     // Store creator's CBL ID
     this.set('creatorId', checksum);

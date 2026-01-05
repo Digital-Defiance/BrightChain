@@ -1,25 +1,27 @@
-import { useState, useEffect } from 'react';
 import { VotingMethod } from '@digitaldefiance/ecies-lib';
-import { VotingSelector } from './VotingSelector';
-import { PluralityDemo } from './PluralityDemo';
+import { useEffect, useState } from 'react';
 import { ApprovalDemo } from './ApprovalDemo';
-import { WeightedDemo } from './WeightedDemo';
-import { RankedChoiceDemo } from './RankedChoiceDemo';
 import { BordaDemo } from './BordaDemo';
-import { ScoreDemo } from './ScoreDemo';
-import { YesNoDemo } from './YesNoDemo';
-import { YesNoAbstainDemo } from './YesNoAbstainDemo';
-import { SupermajorityDemo } from './SupermajorityDemo';
-import { TwoRoundDemo } from './TwoRoundDemo';
-import { STARDemo } from './STARDemo';
-import { STVDemo } from './STVDemo';
-import { QuadraticDemo } from './QuadraticDemo';
 import { ConsensusDemo } from './ConsensusDemo';
 import { ConsentBasedDemo } from './ConsentBasedDemo';
+import { PluralityDemo } from './PluralityDemo';
+import { QuadraticDemo } from './QuadraticDemo';
+import { RankedChoiceDemo } from './RankedChoiceDemo';
+import { ScoreDemo } from './ScoreDemo';
+import { STARDemo } from './STARDemo';
+import { STVDemo } from './STVDemo';
+import { SupermajorityDemo } from './SupermajorityDemo';
+import { TwoRoundDemo } from './TwoRoundDemo';
 import './VotingDemo.css';
+import { VotingSelector } from './VotingSelector';
+import { WeightedDemo } from './WeightedDemo';
+import { YesNoAbstainDemo } from './YesNoAbstainDemo';
+import { YesNoDemo } from './YesNoDemo';
 
 export const VotingDemo = () => {
-  const [selectedMethod, setSelectedMethod] = useState<VotingMethod>(VotingMethod.Plurality);
+  const [selectedMethod, setSelectedMethod] = useState<VotingMethod>(
+    VotingMethod.Plurality,
+  );
   const [isLoading, setIsLoading] = useState(true);
 
   const handleMethodChange = (method: VotingMethod) => {
@@ -81,8 +83,9 @@ export const VotingDemo = () => {
       <div className="voting-intro">
         <h2>🗳️ Government-Grade Voting System</h2>
         <p>
-          Explore our comprehensive cryptographic voting library with 15 different voting methods.
-          Each demo shows real-world use cases with homomorphic encryption ensuring vote privacy.
+          Explore our comprehensive cryptographic voting library with 15
+          different voting methods. Each demo shows real-world use cases with
+          homomorphic encryption ensuring vote privacy.
         </p>
         <div className="security-badges">
           <span className="badge secure">✅ Homomorphic Encryption</span>
@@ -92,8 +95,11 @@ export const VotingDemo = () => {
         </div>
       </div>
 
-      <VotingSelector selectedMethod={selectedMethod} onMethodChange={handleMethodChange} />
-      
+      <VotingSelector
+        selectedMethod={selectedMethod}
+        onMethodChange={handleMethodChange}
+      />
+
       {isLoading ? (
         <div className="loading-container">
           <div className="loading-spinner"></div>

@@ -1,9 +1,9 @@
-import { ChecksumUint8Array } from '../types';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { BlockSize, blockSizeToSizeString } from '../enumerations/blockSize';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
+import { ChecksumUint8Array } from '../types';
 
 /**
  * DiskBlockStore provides base functionality for storing blocks on disk.

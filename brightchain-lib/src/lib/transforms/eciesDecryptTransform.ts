@@ -1,10 +1,12 @@
+import {
+  ECIESService,
+  getNodeRuntimeConfiguration,
+} from '@digitaldefiance/node-ecies-lib';
 import { Transform, TransformCallback, TransformOptions } from 'stream';
 import { ECIES } from '../constants';
 import { BlockSize } from '../enumerations/blockSize';
 import { StreamErrorType } from '../enumerations/streamErrorType';
 import { StreamError } from '../errors/streamError';
-import { ECIESService, getNodeRuntimeConfiguration } from '@digitaldefiance/node-ecies-lib';
-import { EciesEncryptionTypeEnum, GuidV4Provider } from '@digitaldefiance/ecies-lib';
 
 export class EciesDecryptionTransform extends Transform {
   private readonly blockSize: number;
@@ -25,7 +27,7 @@ export class EciesDecryptionTransform extends Transform {
     this.privateKey = privateKey;
     this.blockSize = blockSize as number;
     this.buffer = Buffer.alloc(0);
-    
+
     // Use provided service or create one with GuidV4Provider config
     if (eciesService) {
       this.eciesService = eciesService;
@@ -55,11 +57,12 @@ export class EciesDecryptionTransform extends Transform {
         this.buffer = this.buffer.subarray(this.blockSize);
 
         try {
-          const decryptedBlock = this.eciesService.decryptSimpleOrSingleWithHeader(
-            true, // decryptSimple = true
-            this.privateKey,
-            encryptedBlock,
-          );
+          const decryptedBlock =
+            this.eciesService.decryptSimpleOrSingleWithHeader(
+              true, // decryptSimple = true
+              this.privateKey,
+              encryptedBlock,
+            );
           this.push(decryptedBlock);
         } catch (decryptError) {
           console.error('Block decryption error:', {
@@ -96,11 +99,12 @@ export class EciesDecryptionTransform extends Transform {
           throw new StreamError(StreamErrorType.IncompleteEncryptedBlock);
         }
 
-        const decryptedBlock = this.eciesService.decryptSimpleOrSingleWithHeader(
-          true, // decryptSimple = true
-          this.privateKey,
-          this.buffer,
-        );
+        const decryptedBlock =
+          this.eciesService.decryptSimpleOrSingleWithHeader(
+            true, // decryptSimple = true
+            this.privateKey,
+            this.buffer,
+          );
         this.push(decryptedBlock);
       }
       callback();

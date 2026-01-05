@@ -1,5 +1,5 @@
-import { BrightChainMember } from '../brightChainMember';
 import { GuidV4 } from '@digitaldefiance/ecies-lib';
+import { BrightChainMember } from '../brightChainMember';
 
 export interface ISimpleStoreAsync<K, V> {
   /**

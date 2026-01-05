@@ -1,5 +1,6 @@
 // src/i18n.ts
-import { LanguageCodes, StringLanguages } from '@brightchain/brightchain-lib';
+/* eslint-disable @nx/enforce-module-boundaries */
+import { StringLanguages } from '@brightchain/brightchain-lib';
 import i18n from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Backend from 'i18next-http-backend';

@@ -1,22 +1,20 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
 import {
   ApiErrorResponse,
   ApiRequestHandler,
-  ApiResponse,
-  RouteConfig,
   TypedHandlers,
   routeConfig,
 } from '@brightchain/brightchain-api-lib';
-import { StringLanguage } from '@brightchain/brightchain-lib';
 import { IApplication } from '../../interfaces/application';
 import {
   GetBlockRequest,
   StoreBlockRequest,
 } from '../../interfaces/blockRequest';
-import { IBlockService } from '../../interfaces/blockService';
 import {
   IGetBlockResponse,
   IStoreBlockResponse,
 } from '../../interfaces/blockResponses';
+import { IBlockService } from '../../interfaces/blockService';
 import { BlockServiceFactory } from '../../services/blockServiceFactory';
 import { BaseController } from '../base';
 import { SessionsController } from './sessions';
@@ -104,7 +102,7 @@ export class BlocksController extends BaseController<
         blockId,
         data: block.data,
         canRead: true, // TODO: Get from block metadata
-        canPersist: true, // TODO: Get from block metadata  
+        canPersist: true, // TODO: Get from block metadata
       },
     };
   };

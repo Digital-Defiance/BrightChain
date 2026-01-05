@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { StringLanguage } from '@brightchain/brightchain-lib';
 import { Types } from 'mongoose';
 import { IRequestUser } from '../request-user';

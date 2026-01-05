@@ -1,5 +1,10 @@
+import {
+  IConstants as IConstantsBase,
+  IPBkdf2Consts,
+  IVotingConsts,
+  Pbkdf2Profiles,
+} from '@digitaldefiance/ecies-lib';
 import { CipherGCMTypes } from 'crypto';
-import { IConstants as IConstantsBase, Pbkdf2Profiles, IVotingConsts, IPBkdf2Consts } from '@digitaldefiance/ecies-lib';
 import { IBackupCodeConstants } from './backupCodeConsts';
 import { ICBLConsts } from './cblConsts';
 import { IChecksumConsts } from './checksumConsts';
@@ -13,10 +18,10 @@ import { ITupleConsts } from './tupleConsts';
 
 /**
  * BrightChain Constants Interface
- * 
+ *
  * This interface extends base constants from @digitaldefiance/ecies-lib
  * and adds BrightChain-specific constants for blockchain operations.
- * 
+ *
  * Base constants (from @digitaldefiance/ecies-lib):
  * - PBKDF2: Password-based key derivation configuration
  * - ECIES: Elliptic Curve Integrated Encryption Scheme settings
@@ -24,7 +29,7 @@ import { ITupleConsts } from './tupleConsts';
  * - ENCRYPTION: Base encryption settings
  * - KEYRING: Keyring algorithm configuration
  * - VOTING: Paillier homomorphic encryption for voting
- * 
+ *
  * BrightChain-specific constants:
  * - CBL: Constituent Block List operations
  * - FEC: Forward Error Correction
@@ -32,7 +37,7 @@ import { ITupleConsts } from './tupleConsts';
  * - SEALING: Sealing operations
  * - SITE: Site-specific configuration
  * - JWT: JWT configuration
- * 
+ *
  * @see {@link https://github.com/Digital-Defiance/ecies-lib} for base constants
  * @interface IConstants
  * @extends {IConstantsBase}

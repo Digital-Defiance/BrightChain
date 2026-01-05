@@ -51,7 +51,9 @@ describe('BlockHandle', () => {
       expect(handle.blockSize).toBe(defaultBlockSize);
       expect(handle.blockType).toBe(BlockType.Handle);
       expect(handle.blockDataType).toBe(BlockDataType.RawData);
-      expect(Buffer.from(handle.idChecksum).equals(Buffer.from(checksum))).toBe(true);
+      expect(Buffer.from(handle.idChecksum).equals(Buffer.from(checksum))).toBe(
+        true,
+      );
       expect(handle.path).toBe(path);
       expect(handle.canRead).toBe(true);
       expect(handle.canPersist).toBe(true);
@@ -59,7 +61,11 @@ describe('BlockHandle', () => {
 
     it('should reject non-existent path', async () => {
       await expect(
-        createBlockHandleFromPath(RawDataBlock, 'nonexistent', defaultBlockSize),
+        createBlockHandleFromPath(
+          RawDataBlock,
+          'nonexistent',
+          defaultBlockSize,
+        ),
       ).rejects.toThrow(BlockAccessError);
     });
 
@@ -168,7 +174,7 @@ describe('BlockHandle', () => {
       );
 
       // Access data to cache it
-      handle.data;
+      void handle.data;
 
       // Delete the file to verify we're using cached data
       rmSync(path);
@@ -201,7 +207,9 @@ describe('BlockHandle', () => {
       expect(rawBlock.blockType).toBe(handle.blockType);
       expect(rawBlock.blockDataType).toBe(handle.blockDataType);
       expect(rawBlock.data).toEqual(handle.data);
-      expect(Buffer.from(rawBlock.idChecksum).equals(Buffer.from(handle.idChecksum))).toBe(true);
+      expect(
+        Buffer.from(rawBlock.idChecksum).equals(Buffer.from(handle.idChecksum)),
+      ).toBe(true);
     });
   });
 });

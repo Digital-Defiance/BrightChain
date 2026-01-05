@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
 import {
   AccountLockedError,
   AccountStatus,
@@ -7,6 +8,7 @@ import {
   SecureBuffer,
   SecureString,
 } from '@brightchain/brightchain-lib';
+import { Member } from '@digitaldefiance/ecies-lib';
 import { createApplicationMock } from '../__tests__/helpers/application.mock';
 import {
   makeRoleModel,
@@ -20,7 +22,6 @@ import { KeyWrappingService } from './keyWrapping';
 import { RoleService } from './role';
 import { SystemUserService } from './system-user';
 import { UserService } from './user';
-import { Member } from '@digitaldefiance/ecies-lib';
 
 function makeService(
   userDoc: unknown | null,
@@ -123,7 +124,7 @@ describe('UserService.loginWithPassword', () => {
     };
     const svc = makeService(user);
     const unwrapSpy = jest
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       .spyOn((svc as any).keyWrappingService, 'unwrapSecretAsync')
       .mockRejectedValueOnce(new Error('bad password'));
     await expect(svc.loginWithPassword(email, pwd)).rejects.toBeInstanceOf(
@@ -155,11 +156,11 @@ describe('UserService.loginWithPassword', () => {
         // do nothing, prevent mnemonic validation
       });
     const recoverMnemonicSpy = jest
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       .spyOn(svc as any, 'recoverMnemonic')
       .mockReturnValue(new SecureString('mock mnemonic'));
     const unwrap = jest
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       .spyOn((svc as any).keyWrappingService, 'unwrapSecretAsync')
       .mockResolvedValueOnce(new SecureBuffer(Buffer.alloc(32, 1)));
     const enc = jest
@@ -169,7 +170,7 @@ describe('UserService.loginWithPassword', () => {
       .spyOn(Member.prototype as any, 'decryptData')
       .mockImplementation((...args: unknown[]) => args[0] as Buffer);
     const sys = jest
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       .spyOn(SystemUserService as any, 'getSystemUser')
       .mockReturnValue({ sign: () => Buffer.alloc(64, 0), verify: () => true });
 
@@ -223,7 +224,7 @@ describe('UserService.loginWithMnemonic', () => {
     };
     const svc = makeService(user);
     const challenge = jest
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       .spyOn(svc as any, 'challengeUserWithMnemonic')
       .mockResolvedValueOnce({
         userMember: { id: 'u' },

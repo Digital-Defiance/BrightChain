@@ -1,4 +1,4 @@
-import { EmailString, ECIESService } from '@digitaldefiance/ecies-lib';
+import { EmailString } from '@digitaldefiance/ecies-lib';
 import { faker } from '@faker-js/faker';
 import { BrightChainMember } from '../brightChainMember';
 import MemberType from '../enumerations/memberType';

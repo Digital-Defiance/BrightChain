@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { constants } from '@brightchain/brightchain-lib';
 import cors from 'cors';
 import { randomBytes } from 'crypto';

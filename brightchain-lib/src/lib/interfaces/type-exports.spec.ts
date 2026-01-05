@@ -1,4 +1,5 @@
-import { describe, it, expect } from '@jest/globals';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { describe, expect, it } from '@jest/globals';
 import * as BrightChainLib from '../../index';
 
 describe('Interface Export Tests', () => {
@@ -6,7 +7,8 @@ describe('Interface Export Tests', () => {
     it('should re-export IKeyPairBufferWithUnEncryptedPrivateKey interface from node-ecies-lib', () => {
       // This test verifies that the interface is available through re-export
       // TypeScript compilation will fail if the interface doesn't exist
-      type TestInterface = BrightChainLib.IKeyPairBufferWithUnEncryptedPrivateKey;
+      type TestInterface =
+        BrightChainLib.IKeyPairBufferWithUnEncryptedPrivateKey;
       expect(true).toBe(true);
     });
 
@@ -72,7 +74,8 @@ describe('Interface Export Tests', () => {
     it('should not have local IKeyPairBufferWithUnEncryptedPrivateKey interface file', () => {
       // This test verifies that we're using the upstream interface
       // by checking that the interface is available through re-export
-      type TestInterface = BrightChainLib.IKeyPairBufferWithUnEncryptedPrivateKey;
+      type TestInterface =
+        BrightChainLib.IKeyPairBufferWithUnEncryptedPrivateKey;
       // If this compiles, the interface is available
       expect(true).toBe(true);
     });
@@ -107,8 +110,9 @@ describe('Interface Export Tests', () => {
     it('should import types from correct upstream sources', () => {
       // Verify that the types are coming from node-ecies-lib
       // by checking that they're available
-      type BrightChainType = BrightChainLib.IKeyPairBufferWithUnEncryptedPrivateKey;
-      
+      type BrightChainType =
+        BrightChainLib.IKeyPairBufferWithUnEncryptedPrivateKey;
+
       // If this compiles, the types are compatible
       expect(true).toBe(true);
     });

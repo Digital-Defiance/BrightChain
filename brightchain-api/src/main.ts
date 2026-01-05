@@ -7,7 +7,7 @@ async function bootstrap() {
     // Initialize environment
     const envPath = resolve(__dirname, '.env');
     new Environment(envPath);
-    
+
     // Create and start application
     const app = App.getInstance();
     await app.start();

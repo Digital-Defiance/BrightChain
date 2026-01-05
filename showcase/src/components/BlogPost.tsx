@@ -1,12 +1,13 @@
-import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import "./BlogPost.css";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { Link, useParams } from 'react-router-dom';
+import remarkGfm from 'remark-gfm';
+import './BlogPost.css';
 
 function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState('');
   const [metadata, setMetadata] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -44,7 +45,7 @@ function BlogPost() {
         return;
       }
     } catch (err) {
-      console.log("Error loading post:", err);
+      console.log('Error loading post:', err);
     }
 
     // If all else fails, show error
@@ -63,13 +64,13 @@ function BlogPost() {
 
       const meta: any = {};
       frontmatter.split(/\r?\n/).forEach((line) => {
-        const colonIndex = line.indexOf(":");
+        const colonIndex = line.indexOf(':');
         if (colonIndex > -1) {
           const key = line.substring(0, colonIndex).trim();
           const value = line
             .substring(colonIndex + 1)
             .trim()
-            .replace(/^["']|["']$/g, "");
+            .replace(/^["']|["']$/g, '');
           if (key && value) {
             meta[key] = value;
           }
@@ -87,11 +88,11 @@ function BlogPost() {
       // Use slug-based title if not in frontmatter
       if (!meta.title) {
         meta.title = slug
-          .replace(/^\d{4}-\d{2}-\d{2}-/, "")
-          .replace(/-/g, " ")
-          .split(" ")
+          .replace(/^\d{4}-\d{2}-\d{2}-/, '')
+          .replace(/-/g, ' ')
+          .split(' ')
           .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ");
+          .join(' ');
       }
 
       setMetadata(meta);
@@ -107,11 +108,11 @@ function BlogPost() {
         meta.date = dateMatch[1];
       }
       meta.title = slug
-        .replace(/^\d{4}-\d{2}-\d{2}-/, "")
-        .replace(/-/g, " ")
-        .split(" ")
+        .replace(/^\d{4}-\d{2}-\d{2}-/, '')
+        .replace(/-/g, ' ')
+        .split(' ')
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
+        .join(' ');
       setMetadata(meta);
     }
   };
@@ -155,10 +156,10 @@ function BlogPost() {
           <header className="blog-post-header">
             {metadata.date && (
               <div className="blog-post-date">
-                {new Date(metadata.date).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
+                {new Date(metadata.date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
                 })}
               </div>
             )}

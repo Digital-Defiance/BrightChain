@@ -1,8 +1,8 @@
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import * as uuid from 'uuid';
 import { BrightChainMember } from './brightChainMember';
 import { QuorumErrorType } from './enumerations/quorumErrorType';
 import { QuorumError } from './errors/quorumError';
-import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { QuorumDataRecord } from './quorumDataRecord';
 import { SealingService } from './services/sealing.service';
 import { BufferStore } from './stores/bufferStore';

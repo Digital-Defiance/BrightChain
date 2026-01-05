@@ -79,7 +79,9 @@ export function createBlockHandle<T extends BaseBlock>(
   // Create a basic instance of T
   // This uses a temporary empty buffer since we'll load data on demand
   // Use a date slightly in the past to avoid timing issues with validation
-  const creationDate = new Date(Math.min(stats.birthtime.getTime(), Date.now() - 1000));
+  const creationDate = new Date(
+    Math.min(stats.birthtime.getTime(), Date.now() - 1000),
+  );
   const instance = new blockConstructor(
     blockSize,
     Buffer.alloc(0),

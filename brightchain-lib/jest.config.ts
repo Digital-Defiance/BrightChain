@@ -1,4 +1,3 @@
-/* eslint-disable */
 export default {
   displayName: 'brightchain-lib',
   preset: '../jest.preset.js',

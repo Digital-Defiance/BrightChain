@@ -25,7 +25,9 @@ class TestDiskBlockAsyncStore extends DiskBlockAsyncStore {
     return this.blockPath(blockId);
   }
 
-  public async getTestHandle(block: RawDataBlock): Promise<BlockHandle<RawDataBlock>> {
+  public async getTestHandle(
+    block: RawDataBlock,
+  ): Promise<BlockHandle<RawDataBlock>> {
     await this.setData(block);
     return this.get(block.idChecksum) as BlockHandle<RawDataBlock>;
   }
@@ -113,7 +115,7 @@ describe('BlockHandleTuple', () => {
       const handles = await Promise.all(
         Array(TUPLE.SIZE)
           .fill(null)
-          .map(() => createTestHandle())
+          .map(() => createTestHandle()),
       );
       const tuple = new BlockHandleTuple(handles);
       expect(tuple.handles).toHaveLength(TUPLE.SIZE);
@@ -124,7 +126,7 @@ describe('BlockHandleTuple', () => {
       const handles = await Promise.all(
         Array(TUPLE.SIZE - 1)
           .fill(null)
-          .map(() => createTestHandle())
+          .map(() => createTestHandle()),
       );
       expect(() => new BlockHandleTuple(handles)).toThrow(HandleTupleError);
     });
@@ -189,7 +191,7 @@ describe('BlockHandleTuple', () => {
         await Promise.all(
           Array(TUPLE.SIZE)
             .fill(null)
-            .map(() => createTestHandle())
+            .map(() => createTestHandle()),
         ),
       );
 
@@ -226,7 +228,7 @@ describe('BlockHandleTuple', () => {
       const handles = await Promise.all(
         Array(TUPLE.SIZE)
           .fill(null)
-          .map(() => createTestHandle())
+          .map(() => createTestHandle()),
       );
 
       // Create tuple with valid blocks
@@ -241,7 +243,7 @@ describe('BlockHandleTuple', () => {
       const handles = await Promise.all(
         Array(TUPLE.SIZE)
           .fill(null)
-          .map(() => createTestHandle())
+          .map(() => createTestHandle()),
       );
 
       // Create a corrupted block

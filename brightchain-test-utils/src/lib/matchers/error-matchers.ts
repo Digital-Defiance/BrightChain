@@ -52,6 +52,7 @@ function extractTestInfo(stackTrace: string) {
     };
   }
 }
+/* eslint-disable no-undef */
 
 export const toThrowType = async function <E extends Error>(
   this: MatcherContext,
@@ -167,20 +168,30 @@ export const toThrowType = async function <E extends Error>(
             errorType.name,
           )}`
         : this.promise
-        ? this.utils.matcherErrorMessage(
-            this.utils.matcherHint(matcherName, undefined, undefined, options),
-            'Expected promise to reject',
-            'Promise resolved successfully',
-          )
-        : this.utils.matcherErrorMessage(
-            this.utils.matcherHint(matcherName, undefined, undefined, options),
-            `Expected function to throw ${this.utils.printExpected(
-              errorType.name,
-            )}`,
-            `Received: ${this.utils.printReceived(
-              error instanceof Error ? error.constructor.name : typeof error,
-            )}`,
-          )),
+          ? this.utils.matcherErrorMessage(
+              this.utils.matcherHint(
+                matcherName,
+                undefined,
+                undefined,
+                options,
+              ),
+              'Expected promise to reject',
+              'Promise resolved successfully',
+            )
+          : this.utils.matcherErrorMessage(
+              this.utils.matcherHint(
+                matcherName,
+                undefined,
+                undefined,
+                options,
+              ),
+              `Expected function to throw ${this.utils.printExpected(
+                errorType.name,
+              )}`,
+              `Received: ${this.utils.printReceived(
+                error instanceof Error ? error.constructor.name : typeof error,
+              )}`,
+            )),
   };
 };
 

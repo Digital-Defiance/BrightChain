@@ -13,7 +13,7 @@ export class SymmetricError extends TypedError<SymmetricErrorType> {
         StringNames.Error_SymmetricInvalidKeyLengthTemplate,
     };
   }
-  constructor(type: SymmetricErrorType, language?: StringLanguages) {
+  constructor(type: SymmetricErrorType, _language?: StringLanguages) {
     super(type, undefined, {
       KEY_BITS: SymmetricService.symmetricKeyBits,
       KEY_BYTES: SymmetricService.symmetricKeyBytes,

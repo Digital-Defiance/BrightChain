@@ -1,7 +1,7 @@
+import * as fs from 'fs';
 import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { DiskBlockAsyncStore } from './stores/diskBlockAsyncStore';
-import * as fs from 'fs';
 
 // Mock the filesystem module
 jest.mock('fs');

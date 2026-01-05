@@ -1,3 +1,4 @@
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { CBL, CONSTANTS, ECIES, ENCRYPTION } from '../constants';
 import { BlockCapacityErrorType } from '../enumerations/blockCapacityErrorType';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
@@ -10,7 +11,6 @@ import {
   IOverheadBreakdown,
 } from '../interfaces/blockCapacity';
 import { CBLService } from '../services/cblService';
-import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 
 /**
  * Service for calculating block capacities based on block type and parameters
@@ -95,12 +95,16 @@ export class BlockCapacityCalculator {
           BlockCapacityErrorType.InvalidRecipientCount,
         );
       }
-      
-      if (params.encryptionType === BlockEncryptionType.MultiRecipient && params.recipientCount) {
-        details.encryptionOverhead = this.eciesService.calculateECIESMultipleRecipientOverhead(
-          params.recipientCount,
-          true,
-        );
+
+      if (
+        params.encryptionType === BlockEncryptionType.MultiRecipient &&
+        params.recipientCount
+      ) {
+        details.encryptionOverhead =
+          this.eciesService.calculateECIESMultipleRecipientOverhead(
+            params.recipientCount,
+            true,
+          );
       }
     }
 

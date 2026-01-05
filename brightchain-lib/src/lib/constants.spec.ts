@@ -1,14 +1,23 @@
 /**
  * Tests for the constants implementation.
  * Validates Requirements 1.2, 1.3, 1.4, 1.5, 2.5, 6.1, 6.2, 6.3
- * 
+ *
  * Property 1: Backward Compatibility of Constant Names
  * Property 2: Constant Values Unchanged
  * Property 3: Nested Property Access Preserved
  */
 
 import { Constants as BaseConstants } from '@digitaldefiance/ecies-lib';
-import { CONSTANTS, CBL, FEC, TUPLE, SEALING, JWT, SITE, OFFS_CACHE_PERCENTAGE } from './constants';
+import {
+  CBL,
+  CONSTANTS,
+  FEC,
+  JWT,
+  OFFS_CACHE_PERCENTAGE,
+  SEALING,
+  SITE,
+  TUPLE,
+} from './constants';
 
 describe('Constants Implementation', () => {
   describe('Property 1: Backward Compatibility of Constant Names (Requirements 1.5, 2.5, 6.1)', () => {
@@ -93,7 +102,9 @@ describe('Constants Implementation', () => {
       });
 
       it('should have correct PBKDF2_PROFILES', () => {
-        expect(CONSTANTS.PBKDF2_PROFILES).toEqual(BaseConstants.PBKDF2_PROFILES);
+        expect(CONSTANTS.PBKDF2_PROFILES).toEqual(
+          BaseConstants.PBKDF2_PROFILES,
+        );
       });
 
       it('should have correct VOTING values', () => {
@@ -106,19 +117,27 @@ describe('Constants Implementation', () => {
 
       it('should have correct password and mnemonic settings', () => {
         expect(CONSTANTS.BcryptRounds).toBe(BaseConstants.BcryptRounds);
-        expect(CONSTANTS.PasswordMinLength).toBe(BaseConstants.PasswordMinLength);
+        expect(CONSTANTS.PasswordMinLength).toBe(
+          BaseConstants.PasswordMinLength,
+        );
         expect(CONSTANTS.PasswordRegex).toEqual(BaseConstants.PasswordRegex);
         expect(CONSTANTS.MnemonicRegex).toEqual(BaseConstants.MnemonicRegex);
-        expect(CONSTANTS.MnemonicHmacRegex).toEqual(BaseConstants.MnemonicHmacRegex);
+        expect(CONSTANTS.MnemonicHmacRegex).toEqual(
+          BaseConstants.MnemonicHmacRegex,
+        );
       });
     });
 
     describe('BrightChain-specific constants should have expected values', () => {
       it('should have correct CBL values', () => {
         expect(CONSTANTS.CBL.BASE_OVERHEAD).toBe(170);
-        expect(CONSTANTS.CBL.MIME_TYPE_PATTERN).toEqual(/^[a-z0-9-]+\/[a-z0-9-]+$/);
+        expect(CONSTANTS.CBL.MIME_TYPE_PATTERN).toEqual(
+          /^[a-z0-9-]+\/[a-z0-9-]+$/,
+        );
         expect(CONSTANTS.CBL.FILE_NAME_PATTERN).toEqual(/^[^<>:"/\\|?*]+$/);
-        expect(CONSTANTS.CBL.FILE_NAME_TRAVERSAL_PATTERN).toEqual(/(^|[\\/])\.\.($|[\\/])/);
+        expect(CONSTANTS.CBL.FILE_NAME_TRAVERSAL_PATTERN).toEqual(
+          /(^|[\\/])\.\.($|[\\/])/,
+        );
         expect(CONSTANTS.CBL.MAX_FILE_NAME_LENGTH).toBe(255);
         expect(CONSTANTS.CBL.MAX_MIME_TYPE_LENGTH).toBe(127);
         expect(CONSTANTS.CBL.MAX_INPUT_FILE_SIZE).toBe(9007199254740991);
@@ -221,9 +240,9 @@ describe('Constants Implementation', () => {
       // Verify that spreading worked correctly by checking a sample of properties
       const baseKeys = Object.keys(BaseConstants);
       const constantsKeys = Object.keys(CONSTANTS);
-      
+
       // All base keys should be present in CONSTANTS
-      baseKeys.forEach(key => {
+      baseKeys.forEach((key) => {
         expect(constantsKeys).toContain(key);
       });
     });

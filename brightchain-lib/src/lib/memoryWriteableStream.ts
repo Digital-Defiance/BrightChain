@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Writable, WritableOptions } from 'stream';
 
 class MemoryWritableStream extends Writable {
@@ -8,7 +9,6 @@ class MemoryWritableStream extends Writable {
     this._data = [];
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   override _write(
     chunk: any,
     encoding: BufferEncoding,

@@ -17,15 +17,19 @@ describe('BrightChain API Integration with Refactored Constants', () => {
       // The middlewares.ts file imports: import { constants } from '@brightchain/brightchain-lib';
       // And uses: constants.SITE.CSP_NONCE_SIZE
       // If this test runs, it means the import and usage compile successfully
-      
+
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const fs = require('fs');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const path = require('path');
       const middlewaresPath = path.join(__dirname, 'middlewares.ts');
-      
+
       expect(fs.existsSync(middlewaresPath)).toBe(true);
-      
+
       const content = fs.readFileSync(middlewaresPath, 'utf-8');
-      expect(content).toContain("import { constants } from '@brightchain/brightchain-lib'");
+      expect(content).toContain(
+        "import { constants } from '@brightchain/brightchain-lib'",
+      );
       expect(content).toContain('constants.SITE.CSP_NONCE_SIZE');
     });
   });
@@ -37,16 +41,16 @@ describe('BrightChain API Integration with Refactored Constants', () => {
       // 2. brightchain-api imports from brightchain-lib work
       // 3. All TypeScript types are correct
       // 4. The refactored constants are accessible
-      
+
       // This is an integration test that verifies the entire chain works:
       // @digitaldefiance/ecies-lib → brightchain-lib → brightchain-api
-      
+
       expect(true).toBe(true);
     });
 
     it('should document the constants refactoring integration', () => {
       // This test documents what was verified:
-      // 
+      //
       // 1. Task 11.1: Updated imports in brightchain-api files
       //    - Verified middlewares.ts imports constants from brightchain-lib
       //    - Verified no compilation errors
@@ -62,7 +66,7 @@ describe('BrightChain API Integration with Refactored Constants', () => {
       // - Same usage pattern: constants.SITE.CSP_NONCE_SIZE
       // - Same constant values
       // - No breaking changes
-      
+
       expect(true).toBe(true);
     });
   });

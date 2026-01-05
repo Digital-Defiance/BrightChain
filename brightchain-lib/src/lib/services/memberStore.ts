@@ -1,3 +1,4 @@
+import { GuidV4, SecureString } from '@digitaldefiance/ecies-lib';
 import { RawDataBlock } from '../blocks/rawData';
 import { BrightChainMember } from '../brightChainMember';
 import { MemberDocument } from '../documents/member/memberDocumentImpl';
@@ -9,7 +10,6 @@ import { MemberStatusType } from '../enumerations/memberStatusType';
 import MemberType from '../enumerations/memberType';
 import { MemberError } from '../errors/memberError';
 import { NotImplementedError } from '../errors/notImplemented';
-import { GuidV4, SecureString } from '@digitaldefiance/ecies-lib';
 import {
   IMemberChanges,
   IMemberIndexEntry,
@@ -395,7 +395,7 @@ export class MemberStore implements IMemberStore {
   /**
    * Sync shard with other nodes
    */
-  /* eslint-disable @typescript-eslint/no-unused-vars */
+
   public async syncShard(_region: string): Promise<void> {
     // TODO: Implement shard synchronization
     throw new NotImplementedError();
@@ -408,5 +408,4 @@ export class MemberStore implements IMemberStore {
     // TODO: Implement change propagation
     throw new NotImplementedError();
   }
-  /* eslint-enable @typescript-eslint/no-unused-vars */
 }

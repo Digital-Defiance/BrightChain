@@ -1,14 +1,14 @@
+import {
+  IBaseDocument,
+  IConstants,
+  PluginManager,
+  ServiceContainer,
+} from '@digitaldefiance/node-express-suite';
+import mongoose, { Model } from 'mongoose';
 import { join } from 'path';
+import { AppConstants } from './appConstants';
 import { Environment } from './environment';
 import { IApplication } from './interfaces/application';
-import mongoose, { Model } from 'mongoose';
-import {
-  ServiceContainer,
-  PluginManager,
-  IConstants,
-  IBaseDocument,
-} from '@digitaldefiance/node-express-suite';
-import { AppConstants } from './appConstants';
 
 /**
  * Base Application class with core functionality
@@ -43,7 +43,10 @@ export class BaseApplication implements IApplication {
     return this._plugins;
   }
 
-  public getModel<U extends IBaseDocument<any, any>>(modelName: string): Model<U> {
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  public getModel<U extends IBaseDocument<any, any>>(
+    modelName: string,
+  ): Model<U> {
     return mongoose.model<U>(modelName);
   }
 

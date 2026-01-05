@@ -1,17 +1,17 @@
 /**
  * BrightChain Constants Module
- * 
+ *
  * This module extends base cryptographic constants from @digitaldefiance/ecies-lib
  * and adds BrightChain-specific constants for blockchain operations.
- * 
+ *
  * @see {@link https://github.com/Digital-Defiance/ecies-lib} for base constants
  * @module constants
  */
 
 import { Constants as BaseConstants } from '@digitaldefiance/ecies-lib';
 import { BRIGHTCHAIN_ECIES } from './brightChainConsts';
-import { IConstants } from './interfaces/constants';
 import { ICBLConsts } from './interfaces/cblConsts';
+import { IConstants } from './interfaces/constants';
 import { IFECConsts } from './interfaces/fecConsts';
 import { IJwtConsts } from './interfaces/jwtConsts';
 import { ISealingConsts } from './interfaces/sealingConsts';
@@ -54,7 +54,8 @@ export const SYMMETRIC_ALGORITHM_CONFIGURATION = 'aes-256-gcm' as const;
  * Keyring algorithm configuration string (same as symmetric)
  * Re-exported for backward compatibility
  */
-export const KEYRING_ALGORITHM_CONFIGURATION = SYMMETRIC_ALGORITHM_CONFIGURATION;
+export const KEYRING_ALGORITHM_CONFIGURATION =
+  SYMMETRIC_ALGORITHM_CONFIGURATION;
 
 /**
  * GUID size in bytes (GuidV4 uses 16 bytes)

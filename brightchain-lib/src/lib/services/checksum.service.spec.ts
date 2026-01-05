@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Readable } from 'stream';
-import { ChecksumBuffer } from '../types';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
 
@@ -61,7 +61,9 @@ describe('ChecksumService', () => {
         bufferToStream(testData),
       );
 
-      expect(Buffer.from(syncChecksum).equals(Buffer.from(asyncChecksum))).toBe(true);
+      expect(Buffer.from(syncChecksum).equals(Buffer.from(asyncChecksum))).toBe(
+        true,
+      );
     });
 
     describe('checksum string conversion', () => {
@@ -72,7 +74,9 @@ describe('ChecksumService', () => {
         const backToBuffer =
           checksumService.hexStringToChecksum(checksumString);
 
-        expect(Buffer.from(originalChecksum).equals(Buffer.from(backToBuffer))).toBe(true);
+        expect(
+          Buffer.from(originalChecksum).equals(Buffer.from(backToBuffer)),
+        ).toBe(true);
       });
 
       it('should maintain correct length after conversion', () => {
@@ -170,7 +174,9 @@ describe('ChecksumService', () => {
       const streamChecksum = await checksumService.calculateChecksumForStream(
         bufferToStream(testData),
       );
-      expect(Buffer.from(bufferChecksum).equals(Buffer.from(streamChecksum))).toBe(true);
+      expect(
+        Buffer.from(bufferChecksum).equals(Buffer.from(streamChecksum)),
+      ).toBe(true);
     });
 
     it('should handle empty input correctly', async () => {
@@ -180,11 +186,14 @@ describe('ChecksumService', () => {
       const bufferChecksum = await checksumService.calculateChecksumForStream(
         bufferToStream(emptyBuffer),
       );
-      const streamChecksum =
-        await checksumService.calculateChecksumForStream(emptyStream as any);
+      const streamChecksum = await checksumService.calculateChecksumForStream(
+        emptyStream as any,
+      );
 
       expect(bufferChecksum.length).toBe(checksumService.checksumBufferLength);
-      expect(Buffer.from(bufferChecksum).equals(Buffer.from(streamChecksum))).toBe(true);
+      expect(
+        Buffer.from(bufferChecksum).equals(Buffer.from(streamChecksum)),
+      ).toBe(true);
     });
 
     it('should handle large data in chunks', async () => {
@@ -199,7 +208,9 @@ describe('ChecksumService', () => {
         bufferToStream(largeBuffer),
       );
 
-      expect(Buffer.from(bufferChecksum).equals(Buffer.from(streamChecksum))).toBe(true);
+      expect(
+        Buffer.from(bufferChecksum).equals(Buffer.from(streamChecksum)),
+      ).toBe(true);
     });
 
     it('should reject on stream error', async () => {
@@ -210,7 +221,9 @@ describe('ChecksumService', () => {
       });
 
       await expect(
-        checksumService.calculateChecksumForStream(Readable.toWeb(errorStream) as ReadableStream<Uint8Array>),
+        checksumService.calculateChecksumForStream(
+          Readable.toWeb(errorStream) as ReadableStream<Uint8Array>,
+        ),
       ).rejects.toThrow('Test error');
     });
   });

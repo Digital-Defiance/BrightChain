@@ -1,4 +1,8 @@
-import { EmailString, GuidV4, SecureString as EciesSecureString } from '@digitaldefiance/ecies-lib';
+import {
+  SecureString as EciesSecureString,
+  EmailString,
+  GuidV4,
+} from '@digitaldefiance/ecies-lib';
 import { BrightChainMember } from '../brightChainMember';
 import { MemberType } from '../enumerations/memberType';
 import { ServiceProvider } from '../services/service.provider';
@@ -46,7 +50,9 @@ export class MemberDocument extends Document<MemberData> {
         email: member.email.toString(),
         mnemonic: mnemonic.value || '',
         publicKey: member.publicKey.toString('base64'),
-        privateKey: member.privateKey?.idUint8Array ? Buffer.from(member.privateKey.idUint8Array).toString('base64') : '',
+        privateKey: member.privateKey?.idUint8Array
+          ? Buffer.from(member.privateKey.idUint8Array).toString('base64')
+          : '',
         votingPublicKey: votingPublicKeyBuffer.toString('base64'),
       },
       memberSchema,
@@ -74,8 +80,8 @@ export class MemberDocument extends Document<MemberData> {
     const email = new EmailString(this.get('email'));
     const publicKey = Buffer.from(this.get('publicKey'), 'base64');
     const privateKey = Buffer.from(this.get('privateKey'), 'base64');
-    const votingPublicKey = await
-      ServiceProvider.getInstance().votingService.bufferToVotingPublicKey(
+    const votingPublicKey =
+      await ServiceProvider.getInstance().votingService.bufferToVotingPublicKey(
         Buffer.from(this.get('votingPublicKey'), 'base64'),
       );
 

@@ -1,6 +1,7 @@
-import { ModelName } from '../enumerations/model-name';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Schema } from 'mongoose';
 import { IUserRoleDocument } from '../documents/user-role';
+import { ModelName } from '../enumerations/model-name';
 
 /**
  * Schema for user-role relationships

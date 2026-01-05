@@ -8,7 +8,7 @@ describe('IApiConstants Interface Structure', () => {
       // by checking that a mock object satisfying IApiConstants also satisfies IBaseConstants
       const mockApiConstants: IApiConstants = {} as IApiConstants;
       const mockBaseConstants: IBaseConstants = mockApiConstants;
-      
+
       // If this compiles, it means IApiConstants extends IBaseConstants
       expect(mockBaseConstants).toBeDefined();
     });
@@ -19,6 +19,7 @@ describe('IApiConstants Interface Structure', () => {
       // Verify that the duplicate interface file has been removed
       expect(() => {
         // This will throw if the file doesn't exist
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         require('./checksum-consts');
       }).toThrow();
     });
@@ -26,6 +27,7 @@ describe('IApiConstants Interface Structure', () => {
     it('should not have local encryption-consts.ts file', () => {
       // Verify that the duplicate interface file has been removed
       expect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         require('./encryption-consts');
       }).toThrow();
     });
@@ -33,6 +35,7 @@ describe('IApiConstants Interface Structure', () => {
     it('should not have local fec-consts.ts file', () => {
       // Verify that the duplicate interface file has been removed
       expect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         require('./fec-consts');
       }).toThrow();
     });
@@ -40,6 +43,7 @@ describe('IApiConstants Interface Structure', () => {
     it('should not have local keyring-consts.ts file', () => {
       // Verify that the duplicate interface file has been removed
       expect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         require('./keyring-consts');
       }).toThrow();
     });
@@ -47,6 +51,7 @@ describe('IApiConstants Interface Structure', () => {
     it('should not have local wrapped-key-consts.ts file', () => {
       // Verify that the duplicate interface file has been removed
       expect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         require('./wrapped-key-consts');
       }).toThrow();
     });
@@ -62,7 +67,7 @@ describe('IApiConstants Interface Structure', () => {
           ITERATIONS_PER_SECOND: 100000,
         },
       };
-      
+
       expect(mockConstants.PBKDF2).toBeDefined();
       expect(mockConstants.PBKDF2?.ALGORITHM).toBe('pbkdf2');
     });
@@ -76,7 +81,7 @@ describe('IApiConstants Interface Structure', () => {
           ENCODING: 'hex',
         },
       };
-      
+
       expect(mockConstants.CHECKSUM).toBeDefined();
     });
 
@@ -86,7 +91,7 @@ describe('IApiConstants Interface Structure', () => {
           MAX_SHARD_SIZE: 1048576,
         },
       };
-      
+
       expect(mockConstants.FEC).toBeDefined();
     });
 
@@ -98,7 +103,7 @@ describe('IApiConstants Interface Structure', () => {
           MODE: 'gcm',
         },
       };
-      
+
       expect(mockConstants.KEYRING).toBeDefined();
     });
 
@@ -109,7 +114,7 @@ describe('IApiConstants Interface Structure', () => {
           RECIPIENT_ID_SIZE: 32,
         },
       };
-      
+
       expect(mockConstants.ENCRYPTION).toBeDefined();
     });
 
@@ -122,7 +127,7 @@ describe('IApiConstants Interface Structure', () => {
           MIN_ITERATIONS: 100000,
         },
       };
-      
+
       expect(mockConstants.WRAPPED_KEY).toBeDefined();
     });
 
@@ -130,7 +135,7 @@ describe('IApiConstants Interface Structure', () => {
       const mockConstants: Partial<IApiConstants> = {
         OBJECT_ID_LENGTH: 12,
       };
-      
+
       expect(mockConstants.OBJECT_ID_LENGTH).toBeDefined();
     });
 
@@ -138,7 +143,7 @@ describe('IApiConstants Interface Structure', () => {
       const mockConstants: Partial<IApiConstants> = {
         KEYRING_ALGORITHM_CONFIGURATION: 'aes-256-gcm',
       };
-      
+
       expect(mockConstants.KEYRING_ALGORITHM_CONFIGURATION).toBeDefined();
     });
   });

@@ -30,13 +30,14 @@ export class BlockECIES {
     authTag: Buffer,
     encrypted: Buffer,
   ): Buffer {
-    const result = ServiceProvider.getInstance().eciesService.decryptSingleWithComponents(
-      privateKey,
-      ephemeralPublicKey,
-      iv,
-      authTag,
-      encrypted,
-    );
+    const result =
+      ServiceProvider.getInstance().eciesService.decryptSingleWithComponents(
+        privateKey,
+        ephemeralPublicKey,
+        iv,
+        authTag,
+        encrypted,
+      );
     return result.decrypted;
   }
 }

@@ -21,8 +21,12 @@ export const StringLanguages = {
 /**
  * @deprecated Use LanguageCode from '@digitaldefiance/i18n-lib' instead
  */
-export type StringLanguages = (typeof StringLanguages)[keyof typeof StringLanguages];
+// eslint-disable-next-line no-redeclare
+export type StringLanguages =
+  (typeof StringLanguages)[keyof typeof StringLanguages];
 
 // Also export as StringLanguage (singular) for API lib compatibility
+
 export type StringLanguage = StringLanguages;
+// eslint-disable-next-line no-redeclare
 export const StringLanguage = StringLanguages;

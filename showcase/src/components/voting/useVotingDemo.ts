@@ -5,7 +5,7 @@ export const useVotingDemo = () => {
   const [isTallying, setIsTallying] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const withTallying = async <T,>(fn: () => T | Promise<T>): Promise<T> => {
+  const withTallying = async <T>(fn: () => T | Promise<T>): Promise<T> => {
     setIsTallying(true);
     try {
       return await fn();
@@ -14,7 +14,7 @@ export const useVotingDemo = () => {
     }
   };
 
-  const withSubmitting = async <T,>(fn: () => T | Promise<T>): Promise<T> => {
+  const withSubmitting = async <T>(fn: () => T | Promise<T>): Promise<T> => {
     setIsSubmitting(true);
     try {
       return await fn();

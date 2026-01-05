@@ -1,8 +1,9 @@
+import {
+  ECIESService,
+  getNodeRuntimeConfiguration,
+} from '@digitaldefiance/node-ecies-lib';
 import { Transform, TransformCallback } from 'stream';
 import { BlockSize } from '../enumerations/blockSize';
-import { ECIESService, getNodeRuntimeConfiguration } from '@digitaldefiance/node-ecies-lib';
-import { GuidV4Provider } from '@digitaldefiance/ecies-lib';
-import { EciesEncryptionTypeEnum } from '@digitaldefiance/ecies-lib';
 
 /**
  * Transform stream that encrypts data using ECIES encryption
@@ -24,15 +25,17 @@ export class EciesEncryptTransform extends Transform {
     super();
     this.logger = logger;
     this.blockSize = blockSize as number;
-    
+
     // Validate public key size (should be 33 bytes for compressed or 65 bytes for uncompressed secp256k1 public key)
     if (receiverPublicKey.length !== 33 && receiverPublicKey.length !== 65) {
-      throw new Error(`Invalid public key length: expected 33 or 65 bytes, got ${receiverPublicKey.length}`);
+      throw new Error(
+        `Invalid public key length: expected 33 or 65 bytes, got ${receiverPublicKey.length}`,
+      );
     }
-    
+
     this.receiverPublicKey = receiverPublicKey;
     this.buffer = Buffer.alloc(0);
-    
+
     // Use provided service or create one with GuidV4Provider config
     if (eciesService) {
       this.eciesService = eciesService;
@@ -42,10 +45,11 @@ export class EciesEncryptTransform extends Transform {
     }
 
     // Calculate how much data we can encrypt per block
-    const encryptedLength = this.eciesService.computeEncryptedLengthFromDataLength(
-      this.blockSize,
-      'simple',
-    );
+    const encryptedLength =
+      this.eciesService.computeEncryptedLengthFromDataLength(
+        this.blockSize,
+        'simple',
+      );
     // For Simple encryption, capacity = blockSize - overhead
     this.capacityPerBlock = this.blockSize - (encryptedLength - this.blockSize);
   }

@@ -1,10 +1,11 @@
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { BrightChainMember } from '../brightChainMember';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
 import { ExtendedCblError } from '../errors/extendedCblError';
-import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IExtendedConstituentBlockListBlock } from '../interfaces/blocks/extendedCbl';
 import { ServiceLocator } from '../services/serviceLocator';
@@ -25,6 +26,7 @@ export class ExtendedCBL implements IExtendedConstituentBlockListBlock {
 
   constructor(...args: any[]) {
     // Dynamically load CBLBase to avoid circular dependency
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { CBLBase } = require('./cblBase');
     // Create a new instance of CBLBase with the provided arguments
     this._delegate = new CBLBase(...args);

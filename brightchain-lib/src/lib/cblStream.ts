@@ -131,7 +131,7 @@ export class CblStream extends Readable {
             throw new CblError(CblErrorType.FailedToLoadBlock);
           }
           blocks.push(whitenedBlock);
-        } catch (error) {
+        } catch {
           throw new CblError(CblErrorType.FailedToLoadBlock);
         }
       }

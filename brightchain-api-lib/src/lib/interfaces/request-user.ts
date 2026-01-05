@@ -1,7 +1,4 @@
-import {
-  IRoleDTO,
-  IRoleFrontendObject,
-} from '@digitaldefiance/suite-core-lib';
+import { IRoleDTO, IRoleFrontendObject } from '@digitaldefiance/suite-core-lib';
 import { Types } from 'mongoose';
 import { IRoleBackendObject } from './backend-objects/role';
 

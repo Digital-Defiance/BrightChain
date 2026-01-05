@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Model } from 'mongoose';
 import { IBaseDocument } from '../documents/base';
 

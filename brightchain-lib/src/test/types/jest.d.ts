@@ -12,6 +12,7 @@ declare global {
   }
 }
 
+/* eslint-disable no-undef */
 declare module '@jest/expect' {
   interface ExpectExtendMap {
     toThrowType: {

@@ -10,6 +10,7 @@ import { BlockHandle } from '../blocks/handle';
 import { InMemoryBlockTuple } from '../blocks/memoryTuple';
 import { RandomBlock } from '../blocks/random';
 import { WhitenedBlock } from '../blocks/whitened';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BrightChainMember } from '../brightChainMember';
 import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -20,7 +21,6 @@ import { TupleErrorType } from '../enumerations/tupleErrorType';
 import { TupleError } from '../errors/tupleError';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { PrimeTupleGeneratorStream } from '../primeTupleGeneratorStream';
-import { BlockService } from './blockService';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
 import { ServiceLocator } from './serviceLocator';
@@ -41,7 +41,9 @@ export class TupleService {
   /**
    * Convert data to Buffer regardless of whether it's a Readable or Buffer
    */
-  private async toBuffer(data: Buffer | Uint8Array | Readable): Promise<Buffer> {
+  private async toBuffer(
+    data: Buffer | Uint8Array | Readable,
+  ): Promise<Buffer> {
     if (Buffer.isBuffer(data)) {
       return data;
     }
@@ -302,12 +304,22 @@ export class TupleService {
       whiteners,
     );
 
-    const encryptedBlock = await ServiceLocator.getServiceProvider().blockService.encrypt(BlockType.EncryptedOwnedDataBlock, ownedBlock, creator);
+    const encryptedBlock =
+      await ServiceLocator.getServiceProvider().blockService.encrypt(
+        BlockType.EncryptedOwnedDataBlock,
+        ownedBlock,
+        creator,
+      );
     if (!(encryptedBlock instanceof EncryptedBlock)) {
       throw new TupleError(TupleErrorType.InvalidBlockType);
     }
 
-    const decryptedBlock = await ServiceLocator.getServiceProvider().blockService.decrypt(creator, encryptedBlock, BlockType.EphemeralOwnedDataBlock);
+    const decryptedBlock =
+      await ServiceLocator.getServiceProvider().blockService.decrypt(
+        creator,
+        encryptedBlock,
+        BlockType.EphemeralOwnedDataBlock,
+      );
     return new ConstituentBlockListBlock(decryptedBlock.data, creator);
   }
 
@@ -529,7 +541,12 @@ export class TupleService {
         cbl.data.length,
       );
 
-      const encryptedCbl = await ServiceLocator.getServiceProvider().blockService.encrypt(BlockType.EncryptedConstituentBlockListBlock, ownedBlock, creator);
+      const encryptedCbl =
+        await ServiceLocator.getServiceProvider().blockService.encrypt(
+          BlockType.EncryptedConstituentBlockListBlock,
+          ownedBlock,
+          creator,
+        );
 
       // Create tuple for encrypted CBL
       const randomBlocks: RandomBlock[] = [];

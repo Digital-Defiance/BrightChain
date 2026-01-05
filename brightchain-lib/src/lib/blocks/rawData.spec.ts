@@ -1,5 +1,4 @@
 import { randomBytes } from 'crypto';
-import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -60,7 +59,9 @@ describe('RawDataBlock', () => {
       expect(block.blockType).toBe(BlockType.RawData);
       expect(block.blockDataType).toBe(BlockDataType.RawData);
       expect(block.data).toEqual(data);
-      expect(Buffer.from(block.idChecksum).equals(Buffer.from(checksum))).toBe(true);
+      expect(Buffer.from(block.idChecksum).equals(Buffer.from(checksum))).toBe(
+        true,
+      );
       expect(block.canRead).toBe(true);
       expect(block.canPersist).toBe(true);
     });

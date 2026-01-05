@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BrightChainMember } from '../brightChainMember';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockType } from '../enumerations/blockType';

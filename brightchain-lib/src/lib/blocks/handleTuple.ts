@@ -1,6 +1,7 @@
 import { TUPLE } from '../constants';
 import BlockDataType from '../enumerations/blockDataType';
 import BlockType from '../enumerations/blockType';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
 import { HandleTupleError } from '../errors/handleTupleError';
 import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';

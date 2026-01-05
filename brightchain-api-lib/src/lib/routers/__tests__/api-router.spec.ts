@@ -23,7 +23,7 @@ describe('ApiRouter', () => {
         getModel: () =>
           ({
             /* minimal mock */
-          } as unknown),
+          }) as unknown,
       },
       {
         // Provide required HMAC secret expected by services

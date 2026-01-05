@@ -1,4 +1,3 @@
-import { AppConstants } from './appConstants';
 import cors from 'cors';
 import { randomBytes } from 'crypto';
 import {

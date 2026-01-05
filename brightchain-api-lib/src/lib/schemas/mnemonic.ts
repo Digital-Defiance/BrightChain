@@ -1,9 +1,9 @@
-import { AppConstants } from '../appConstants';
 import {
   SuiteCoreStringKey,
   getSuiteCoreTranslation as translate,
 } from '@digitaldefiance/suite-core-lib';
 import { Schema } from 'mongoose';
+import { AppConstants } from '../appConstants';
 import { IMnemonicDocument } from '../documents/mnemonic';
 
 /**

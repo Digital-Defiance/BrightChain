@@ -1,5 +1,4 @@
-import { JsonResponse } from '@digitaldefiance/node-express-suite';
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface IGetBlockResponse {
   blockId: string;
   data: Buffer;

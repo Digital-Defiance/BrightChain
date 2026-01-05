@@ -52,6 +52,7 @@ function extractTestInfo(stackTrace: string) {
     };
   }
 }
+/* eslint-disable no-undef */
 
 export const toThrowType = async function <E extends Error>(
   this: MatcherContext,

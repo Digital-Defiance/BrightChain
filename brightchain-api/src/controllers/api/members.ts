@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import {
   ApiErrorResponse,
   ApiRequestHandler,
@@ -5,7 +6,6 @@ import {
   IStatusCodeResponse,
   TypedHandlers,
 } from '@brightchain/brightchain-api-lib';
-import { Request } from 'express';
 import { IApplication } from '../../interfaces/application';
 import { BaseController } from '../base';
 
@@ -32,7 +32,9 @@ export class MembersController extends BaseController<
 
   private handleGetMembers: ApiRequestHandler<
     IApiMessageResponse | ApiErrorResponse
-  > = async (req): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  > = async (
+    _req,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
     return {
       statusCode: 200,
       response: {

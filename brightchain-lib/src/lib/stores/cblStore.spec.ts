@@ -65,7 +65,9 @@ describe('CBLStore', () => {
       // Create some test addresses
       const addresses: ChecksumBuffer[] = [];
       for (let i = 0; i < numAddresses; i++) {
-        const checksum = checksumService.calculateChecksum(Buffer.from(`test-block-${i}`));
+        const checksum = checksumService.calculateChecksum(
+          Buffer.from(`test-block-${i}`),
+        );
         addresses.push(Buffer.from(checksum) as ChecksumBuffer);
       }
 
@@ -147,7 +149,9 @@ describe('CBLStore', () => {
       // Create some test addresses
       const addresses: ChecksumBuffer[] = [];
       for (let i = 0; i < numAddresses; i++) {
-        const checksum = checksumService.calculateChecksum(Buffer.from(`test-block-${i}`));
+        const checksum = checksumService.calculateChecksum(
+          Buffer.from(`test-block-${i}`),
+        );
         addresses.push(Buffer.from(checksum) as ChecksumBuffer);
       }
 
@@ -230,7 +234,9 @@ describe('CBLStore', () => {
       // Create some test addresses
       const addresses: ChecksumBuffer[] = [];
       for (let i = 0; i < numAddresses; i++) {
-        const checksum = checksumService.calculateChecksum(Buffer.from(`test-block-${i}`));
+        const checksum = checksumService.calculateChecksum(
+          Buffer.from(`test-block-${i}`),
+        );
         addresses.push(Buffer.from(checksum) as ChecksumBuffer);
       }
 
@@ -290,7 +296,9 @@ describe('CBLStore', () => {
       // Create some test addresses
       const addresses: ChecksumBuffer[] = [];
       for (let i = 0; i < numAddresses; i++) {
-        const checksum = checksumService.calculateChecksum(Buffer.from(`test-block-${i}`));
+        const checksum = checksumService.calculateChecksum(
+          Buffer.from(`test-block-${i}`),
+        );
         addresses.push(Buffer.from(checksum) as ChecksumBuffer);
       }
 

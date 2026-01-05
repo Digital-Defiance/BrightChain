@@ -7,11 +7,12 @@ jest.mock('./handle', () => {
   };
 });
 
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { createECDH, randomBytes } from 'crypto';
+import { generateRandomKeysSync } from 'paillier-bigint';
 import { BrightChainMember } from '../brightChainMember';
 import { CHECKSUM, ECIES, TUPLE } from '../constants';
 import { EmailString } from '../emailString';
-import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -19,7 +20,6 @@ import { BlockValidationErrorType } from '../enumerations/blockValidationErrorTy
 import MemberType from '../enumerations/memberType';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumService } from '../services/checksum.service';
-import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { ServiceProvider } from '../services/service.provider';
 import { ChecksumBuffer, SignatureBuffer } from '../types';
 import { ConstituentBlockListBlock } from './cbl';
@@ -47,7 +47,7 @@ const ensureTupleSize = (count: number): number => {
 };
 
 const cblService = ServiceProvider.getInstance().cblService;
-const votingService = ServiceProvider.getInstance().votingService;
+const _votingService = ServiceProvider.getInstance().votingService;
 
 // Test class that properly implements abstract methods
 class TestCblBlock extends ConstituentBlockListBlock {
@@ -270,7 +270,9 @@ describe('ConstituentBlockListBlock', () => {
         data.writeUInt32BE(startIndex + index, 0);
         // Add some random data to ensure uniqueness
         data.writeUInt32BE(Math.floor(Math.random() * 0xffffffff), 4);
-        return Buffer.from(checksumService.calculateChecksum(data)) as ChecksumBuffer;
+        return Buffer.from(
+          checksumService.calculateChecksum(data),
+        ) as ChecksumBuffer;
       });
 
     // Verify all addresses are unique
@@ -303,7 +305,7 @@ describe('ConstituentBlockListBlock', () => {
     );
 
   // Helper to create invalid test data
-  const createInvalidTestData = (
+  const _createInvalidTestData = (
     block: TestCblBlock,
     modifyFn: (data: Buffer) => void,
   ): Buffer => {
@@ -331,7 +333,6 @@ describe('ConstituentBlockListBlock', () => {
     ecdh.setPrivateKey(privateKey);
 
     // Derive voting keys using paillier-bigint
-    const { generateRandomKeysSync } = require('paillier-bigint');
     const votingKeypair = generateRandomKeysSync(2048);
 
     creator = await BrightChainMember.create(
@@ -348,7 +349,7 @@ describe('ConstituentBlockListBlock', () => {
   beforeEach(() => {
     checksumService = ServiceProvider.getInstance().checksumService;
     dataAddresses = createTestAddresses(ensureTupleSize(TUPLE.SIZE));
-    
+
     // Reset the mock before each test
     (createBlockHandleFromPath as jest.Mock).mockClear();
   });
@@ -360,22 +361,26 @@ describe('ConstituentBlockListBlock', () => {
   describe('basic functionality', () => {
     it('should construct and validate correctly', async () => {
       const block = createTestBlock();
-      
+
       // Verify block was constructed
       expect(block).toBeDefined();
       expect(block.blockSize).toBe(defaultBlockSize);
       expect(block.creator).toBe(creator);
-      
+
       // Verify signature validation works (mocked to return true)
       expect(block.validateSignature()).toBe(true);
-      
+
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
     it('should handle creators correctly', () => {
       const memberBlock = createTestBlock();
       expect(memberBlock.creator).toBe(creator);
-      expect(Buffer.from(memberBlock.creatorId.asRawGuidBuffer).equals(Buffer.from(creator.guidId.asRawGuidBuffer))).toBe(true);
+      expect(
+        Buffer.from(memberBlock.creatorId.asRawGuidBuffer).equals(
+          Buffer.from(creator.guidId.asRawGuidBuffer),
+        ),
+      ).toBe(true);
 
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
@@ -466,28 +471,28 @@ describe('ConstituentBlockListBlock', () => {
   describe('data access', () => {
     it('should provide correct block IDs', () => {
       const block = createTestBlock();
-      
+
       // Verify the block has an ID (checksum)
       expect(block.idChecksum).toBeDefined();
       expect(block.idChecksum.length).toBeGreaterThan(0);
-      
+
       // Verify the ID is a valid checksum
       expect(Buffer.isBuffer(Buffer.from(block.idChecksum))).toBe(true);
-      
+
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
     it('should store and retrieve addresses', () => {
       const block = createTestBlock();
-      
+
       // Verify the block was created with addresses
       expect(block.addresses).toBeDefined();
       expect(block.addresses.length).toBe(dataAddresses.length);
-      
+
       // Note: Full tuple access testing requires file system mocking
       // which is complex due to how CBLBase imports createBlockHandleFromPath
       // The addresses are stored correctly in the block data buffer
-      
+
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
   });
@@ -495,63 +500,67 @@ describe('ConstituentBlockListBlock', () => {
   describe('parseHeader', () => {
     it('should parse valid header data', () => {
       const block = createTestBlock();
-      
+
       // Verify header data is accessible
       expect(block.dateCreated).toBeDefined();
       expect(block.dateCreated).toBeInstanceOf(Date);
       expect(block.creator).toBe(creator);
       expect(block.addresses).toBeDefined();
       expect(block.addresses.length).toBe(dataAddresses.length);
-      
+
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
     it('should validate creator ID match', () => {
       const block = createTestBlock();
-      
+
       // Verify creator ID matches
-      expect(Buffer.from(block.creatorId.asRawGuidBuffer).equals(
-        Buffer.from(creator.guidId.asRawGuidBuffer)
-      )).toBe(true);
-      
+      expect(
+        Buffer.from(block.creatorId.asRawGuidBuffer).equals(
+          Buffer.from(creator.guidId.asRawGuidBuffer),
+        ),
+      ).toBe(true);
+
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
     it('should validate date fields', () => {
       const now = new Date();
       const block = createTestBlock();
-      
+
       // Verify date is valid and not in the future
       expect(block.dateCreated).toBeDefined();
       expect(block.dateCreated).toBeInstanceOf(Date);
-      expect(block.dateCreated.getTime()).toBeLessThanOrEqual(now.getTime() + 1000); // Allow 1 second tolerance
-      
+      expect(block.dateCreated.getTime()).toBeLessThanOrEqual(
+        now.getTime() + 1000,
+      ); // Allow 1 second tolerance
+
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
     it('should validate address count', () => {
       const block = createTestBlock();
-      
+
       // Verify address count matches what we provided
       expect(block.addresses.length).toBe(dataAddresses.length);
-      
+
       // Verify address count is a multiple of tuple size
       expect(block.addresses.length % TUPLE.SIZE).toBe(0);
-      
+
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
     it('should validate original data length', () => {
       const block = createTestBlock();
-      
+
       // Verify the block has data
       expect(block.data).toBeDefined();
       expect(block.data.length).toBe(defaultBlockSize);
-      
+
       // Verify lengthBeforeEncryption is set
       expect(block.lengthBeforeEncryption).toBeDefined();
       expect(block.lengthBeforeEncryption).toBeGreaterThan(0);
-      
+
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
@@ -572,40 +581,40 @@ describe('ConstituentBlockListBlock', () => {
   describe('fromBaseBlockBuffer', () => {
     it('should convert BaseBlock to CBL block', () => {
       const block = createTestBlock();
-      
+
       // Verify the block is a CBL block
       expect(block).toBeInstanceOf(ConstituentBlockListBlock);
       expect(block.blockType).toBe(BlockType.ConstituentBlockList);
-      
+
       // Verify it has CBL-specific properties
       expect(block.addresses).toBeDefined();
       expect(block.addresses.length).toBeGreaterThan(0);
-      
+
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
     it('should validate data is Buffer', () => {
       const block = createTestBlock();
-      
+
       // Verify data is a Buffer
       expect(Buffer.isBuffer(block.data)).toBe(true);
       expect(block.data.length).toBe(defaultBlockSize);
-      
+
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
 
     it('should preserve metadata and addresses', () => {
       const block = createTestBlock();
-      
+
       // Verify metadata is preserved
       expect(block.metadata).toBeDefined();
       expect(block.metadata.size).toBe(defaultBlockSize);
       expect(block.metadata.dateCreated).toBeInstanceOf(Date);
-      
+
       // Verify addresses are preserved
       expect(block.addresses).toBeDefined();
       expect(block.addresses.length).toBe(dataAddresses.length);
-      
+
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
   });

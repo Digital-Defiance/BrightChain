@@ -2,7 +2,6 @@ import { SecureString } from '@digitaldefiance/ecies-lib';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { randomBytes } from 'crypto';
 import { BlockSize } from '../enumerations/blockSize';
-import { EciesErrorType } from '../enumerations/eciesErrorType';
 import { EciesError } from '../errors/eciesError';
 import { EciesDecryptionTransform } from './eciesDecryptTransform';
 

@@ -1,15 +1,17 @@
 import { Environment as BaseEnvironment } from '@digitaldefiance/node-express-suite';
 import { Environment } from './environment';
-import { Constants } from './constants';
 import { IEnvironment } from './interfaces/environment';
 
 describe('Environment Class', () => {
   // Set up required environment variables before all tests
   beforeAll(() => {
     // All secrets must be 64-character hexadecimal strings
-    process.env['JWT_SECRET'] = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
-    process.env['MNEMONIC_HMAC_SECRET'] = 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210';
-    process.env['MNEMONIC_ENCRYPTION_KEY'] = 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789';
+    process.env['JWT_SECRET'] =
+      '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+    process.env['MNEMONIC_HMAC_SECRET'] =
+      'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210';
+    process.env['MNEMONIC_ENCRYPTION_KEY'] =
+      'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789';
     // Use actual directories that exist
     process.env['API_DIST_DIR'] = process.cwd();
     process.env['REACT_DIST_DIR'] = process.cwd();
@@ -66,14 +68,14 @@ describe('Environment Class', () => {
       process.env['AWS_ACCESS_KEY_ID'] = 'test-access-key';
       process.env['AWS_SECRET_ACCESS_KEY'] = 'test-secret-key';
       process.env['AWS_REGION'] = 'us-west-2';
-      
+
       const env = new Environment(undefined, true);
-      
+
       expect(env.aws).toBeDefined();
       expect(env.aws.accessKeyId.value).toBe('test-access-key');
       expect(env.aws.secretAccessKey.value).toBe('test-secret-key');
       expect(env.aws.region).toBe('us-west-2');
-      
+
       delete process.env['AWS_ACCESS_KEY_ID'];
       delete process.env['AWS_SECRET_ACCESS_KEY'];
       delete process.env['AWS_REGION'];
@@ -88,7 +90,9 @@ describe('Environment Class', () => {
   describe('Environment Variable Overrides', () => {
     it('should use provided JWT secret', () => {
       const env = new Environment(undefined, true);
-      expect(env.jwtSecret).toBe('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
+      expect(env.jwtSecret).toBe(
+        '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+      );
     });
 
     it('should set default email sender when not provided', () => {
@@ -141,7 +145,7 @@ describe('Environment Class', () => {
       delete process.env['FONTAWESOME_KIT_ID'];
       delete process.env['AWS_ACCESS_KEY_ID'];
       delete process.env['AWS_SECRET_ACCESS_KEY'];
-      
+
       expect(() => {
         const env = new Environment(undefined, true);
         expect(env.fontAwesomeKitId).toBe('');

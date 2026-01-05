@@ -1,9 +1,9 @@
+import { ECIESService, VotingService } from '@digitaldefiance/node-ecies-lib';
 import { BlockCapacityCalculator } from '../services/blockCapacity.service';
 import { BlockService } from '../services/blockService';
 import { CBLService } from '../services/cblService';
 import { ChecksumService } from '../services/checksum.service';
 import { CrcService } from '../services/crc.service';
-import { ECIESService, VotingService } from '@digitaldefiance/node-ecies-lib';
 import { FecService } from '../services/fec.service';
 import { TupleService } from '../services/tuple.service';
 

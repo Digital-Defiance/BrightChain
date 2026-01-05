@@ -1,3 +1,4 @@
+/* eslint-disable no-undef, @typescript-eslint/no-namespace */
 /// <reference types="jest" />
 
 declare global {

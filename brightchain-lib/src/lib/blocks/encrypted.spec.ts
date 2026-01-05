@@ -1,3 +1,4 @@
+import { EmailString } from '@digitaldefiance/ecies-lib';
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import { ECIES, ENCRYPTION } from '../constants';
@@ -11,11 +12,10 @@ import MemberType from '../enumerations/memberType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
-import { ServiceProvider } from '../services/service.provider';
 import { ChecksumService } from '../services/checksum.service';
+import { ServiceProvider } from '../services/service.provider';
 import { ChecksumUint8Array } from '../types';
 import { EncryptedBlock } from './encrypted';
-import { EmailString } from '@digitaldefiance/ecies-lib';
 
 class TestEncryptedBlock extends EncryptedBlock {
   public static override async from(
@@ -95,40 +95,46 @@ describe('EncryptedBlock', () => {
     // Create actual encrypted data with proper structure
     const eciesService = ServiceProvider.getInstance().eciesService;
     const publicKey = Buffer.from(creator.publicKey);
-    
+
     // Calculate how much space we have for the actual encrypted payload
     // Size = 1 byte (encryption type) + 16 bytes (recipient ID) + ECIES encrypted data + padding
-    const headerSize = ENCRYPTION.ENCRYPTION_TYPE_SIZE + ENCRYPTION.RECIPIENT_ID_SIZE;
+    const headerSize =
+      ENCRYPTION.ENCRYPTION_TYPE_SIZE + ENCRYPTION.RECIPIENT_ID_SIZE;
     const availableSpace = size - headerSize;
-    
+
     // Create plaintext that will fit after encryption
     // ECIES overhead is about 64 bytes, so we need to account for that
     const plaintextSize = Math.max(1, availableSpace - ECIES.OVERHEAD_SIZE);
     const plainData = randomBytes(plaintextSize);
-    
+
     // Encrypt the data
     const encrypted = await eciesService.encryptSimpleOrSingle(
       true,
       publicKey,
       plainData,
     );
-    
+
     // Create the final buffer with proper structure
     const finalBuffer = randomBytes(size); // Start with random data for padding
-    
+
     // Write the encryption type as first byte
     finalBuffer.writeUInt8(BlockEncryptionType.SingleRecipient, 0);
-    
+
     // Write the recipient ID (creator's GUID)
     const creatorGuidBuffer = Buffer.from(creator.guidId.asRawGuidBuffer);
-    console.log('Creator GUID size:', creatorGuidBuffer.length, 'Expected:', ENCRYPTION.RECIPIENT_ID_SIZE);
+    console.log(
+      'Creator GUID size:',
+      creatorGuidBuffer.length,
+      'Expected:',
+      ENCRYPTION.RECIPIENT_ID_SIZE,
+    );
     creatorGuidBuffer.copy(
       finalBuffer,
       ENCRYPTION.ENCRYPTION_TYPE_SIZE,
       0,
       Math.min(creatorGuidBuffer.length, ENCRYPTION.RECIPIENT_ID_SIZE),
     );
-    
+
     // Copy the encrypted data after the header
     encrypted.copy(
       finalBuffer,
@@ -136,7 +142,7 @@ describe('EncryptedBlock', () => {
       0,
       Math.min(encrypted.length, availableSpace),
     );
-    
+
     return finalBuffer;
   };
 

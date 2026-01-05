@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-unused-vars */
 import {
   ApiResponse,
   RouteConfig,

@@ -1,6 +1,5 @@
-import {
-  SecureKeyStorage,
-} from '@brightchain/brightchain-lib';
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+import { SecureKeyStorage } from '@brightchain/brightchain-lib';
 import { HandleableError } from '@digitaldefiance/i18n-lib';
 import { debugLog } from '@digitaldefiance/node-express-suite';
 import express, { Application, NextFunction, Request, Response } from 'express';
@@ -23,7 +22,9 @@ function locatePEMRoot(): string {
       file.match(/localhost\+\d+\.pem$/),
   );
   if (pemFiles.length < 2) {
-    throw new HandleableError(new Error('PEM files not found in root directory'));
+    throw new HandleableError(
+      new Error('PEM files not found in root directory'),
+    );
   }
   const roots = pemFiles.map((file: string) => {
     const result = /(.*)\/(localhost\+\d+)(.*)\.pem/.exec(

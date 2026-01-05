@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { randomBytes } from 'crypto';
 import { Readable } from 'stream';
 import { InMemoryBlockTuple } from './blocks/memoryTuple';

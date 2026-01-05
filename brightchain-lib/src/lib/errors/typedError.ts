@@ -1,8 +1,8 @@
+import { HandleableError } from '@digitaldefiance/i18n-lib';
 import { StringLanguages } from '../enumerations/stringLanguages';
 import { StringNames } from '../enumerations/stringNames';
 import { translate } from '../i18n';
 import { HandleableErrorOptions } from '../interfaces/handleableErrorOptions';
-import { HandleableError } from '@digitaldefiance/i18n-lib';
 
 export abstract class TypedError<
   T extends string | number,

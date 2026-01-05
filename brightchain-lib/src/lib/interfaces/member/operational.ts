@@ -1,8 +1,13 @@
+import {
+  EmailString,
+  GuidV4,
+  SecureBuffer,
+  SecureString,
+} from '@digitaldefiance/ecies-lib';
+import { SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
 import { PrivateKey, PublicKey } from 'paillier-bigint';
-import { EmailString, GuidV4, SecureString, SecureBuffer } from '@digitaldefiance/ecies-lib';
 import { MemberType } from '../../enumerations/memberType';
-import { SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
 
 /**
  * Operational interface for member - defines getters and methods
@@ -48,8 +53,7 @@ export interface IBrightChainMemberOperational {
 /**
  * Extended operational interface for test members
  */
-export interface ITestBrightChainMemberOperational
-  extends IBrightChainMemberOperational {
+export interface ITestBrightChainMemberOperational extends IBrightChainMemberOperational {
   get mnemonic(): SecureString | undefined;
   get votingKeyPair(): { publicKey: PublicKey; privateKey: PrivateKey };
 }

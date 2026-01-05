@@ -1,3 +1,4 @@
+import { EmailString } from '@digitaldefiance/ecies-lib';
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import { ECIES } from '../constants';
@@ -12,10 +13,9 @@ import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { IMemberWithMnemonic } from '../interfaces/member/memberWithMnemonic';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
-import { ChecksumUint8Array } from '../types';
 import { initializeTestServices } from '../test/service.initializer.helper';
+import { ChecksumUint8Array } from '../types';
 import { EphemeralBlock } from './ephemeral';
-import { EmailString } from '@digitaldefiance/ecies-lib';
 
 // Test class that properly implements abstract methods
 class TestEphemeralBlock extends EphemeralBlock {
@@ -144,7 +144,9 @@ describe('EphemeralBlock', () => {
       expect(block.blockType).toBe(BlockType.Random);
       expect(block.blockDataType).toBe(BlockDataType.RawData);
       expect(block.data).toEqual(data);
-      expect(Buffer.from(block.idChecksum).equals(Buffer.from(checksum))).toBe(true);
+      expect(Buffer.from(block.idChecksum).equals(Buffer.from(checksum))).toBe(
+        true,
+      );
       expect(block.canRead).toBe(true);
     });
 
@@ -253,7 +255,11 @@ describe('EphemeralBlock', () => {
       const checksumError = error as ChecksumMismatchError;
       expect(checksumError.checksum).toBeDefined();
       expect(checksumError.expected).toBeDefined();
-      expect(Buffer.from(checksumError.checksum).equals(Buffer.from(checksumError.expected))).toBe(false);
+      expect(
+        Buffer.from(checksumError.checksum).equals(
+          Buffer.from(checksumError.expected),
+        ),
+      ).toBe(false);
     });
 
     it('should reject future dates', async () => {

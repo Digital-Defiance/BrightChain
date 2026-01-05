@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-unused-vars */
 import { BrightChainMember } from '@brightchain/brightchain-lib';
 import { IApplication } from '../interfaces/application';
 import { IBlockService } from '../interfaces/blockService';

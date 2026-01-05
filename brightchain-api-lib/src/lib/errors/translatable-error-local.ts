@@ -1,9 +1,13 @@
 // Local TranslatableError to avoid circular dependencies with main lib
 import {
+  HandleableError,
+  HandleableErrorOptions,
+  LanguageContextSpace,
+} from '@digitaldefiance/i18n-lib';
+import {
   SuiteCoreStringKey,
   getSuiteCoreTranslation as translate,
 } from '@digitaldefiance/suite-core-lib';
-import { HandleableError, LanguageContextSpace, HandleableErrorOptions } from '@digitaldefiance/i18n-lib';
 import { StringLanguage } from '../interfaces/request-user';
 
 export class TranslatableError extends HandleableError {

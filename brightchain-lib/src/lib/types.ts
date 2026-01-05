@@ -8,10 +8,10 @@ export type {
   ChecksumUint8Array,
   FullHexGuid,
   HexString,
+  RawGuidBuffer as RawGuidUint8Array,
   ShortHexGuid,
   SignatureString,
   SignatureUint8Array,
-  RawGuidBuffer as RawGuidUint8Array,
 } from '@digitaldefiance/ecies-lib';
 
 // Re-export node-specific types from node-ecies-lib
@@ -38,7 +38,10 @@ export function uint8ArrayToHex(arr: Uint8Array): string {
  * Enum language translation type (stub for backward compatibility)
  * @deprecated This type is deprecated
  */
-export type EnumLanguageTranslation<T> = Record<string, Record<string | number, string>>;
+export type EnumLanguageTranslation<_T> = Record<
+  string,
+  Record<string | number, string>
+>;
 
 /**
  * Create translations helper (stub for backward compatibility)

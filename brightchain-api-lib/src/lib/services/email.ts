@@ -1,7 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 import { IApplication } from '../interfaces/application';
 // import { debugLog } from '../utils';
-const debugLog = (debug: boolean, type: string, message: string, ...args: any[]) => {
+const debugLog = (
+  debug: boolean,
+  type: string,
+  message: string,
+  ...args: any[]
+) => {
   if (debug) {
     console.log(`[${type}] ${message}`, ...args);
   }

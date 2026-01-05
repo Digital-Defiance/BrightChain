@@ -1,7 +1,7 @@
-import { ChecksumString } from './types';
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { Document } from './documents/document';
 import MemberType from './enumerations/memberType';
+import { ChecksumString } from './types';
 
 export type DefaultIdType = ChecksumString;
 

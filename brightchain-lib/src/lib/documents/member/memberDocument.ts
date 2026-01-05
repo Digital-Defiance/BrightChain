@@ -86,8 +86,8 @@ export abstract class BaseMemberDocument {
    * Create from CBLs
    */
   public static async createFromCBLs(
-    publicCBL: Buffer,
-    privateCBL: Buffer,
+    _publicCBL: Buffer,
+    _privateCBL: Buffer,
   ): Promise<BaseMemberDocument> {
     throw new NotImplementedError();
   }

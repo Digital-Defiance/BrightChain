@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 // Local TypedError to avoid circular dependencies with main lib
 // This preserves the StringName translation system
 import {

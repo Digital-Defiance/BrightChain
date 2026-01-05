@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import BlockDataType from './enumerations/blockDataType';
 import { BlockMetadataErrorType } from './enumerations/blockMetadataErrorType';
 import { BlockSize } from './enumerations/blockSize';
@@ -53,7 +54,9 @@ export class BlockMetadata implements IBaseBlockMetadata {
     }
   }
 
-  public static fromJsonAdditionalData<T extends Record<string, any>>(data: any): T {
+  public static fromJsonAdditionalData<T extends Record<string, any>>(
+    data: any,
+  ): T {
     return {} as T;
   }
 

@@ -1,20 +1,14 @@
-import {
-  SecureBuffer,
-} from '@digitaldefiance/node-ecies-lib';
-import {
-  SecureString,
-} from '@digitaldefiance/ecies-lib';
-import {
-  SuiteCoreStringKey,
-} from '@digitaldefiance/suite-core-lib';
+import { SecureString } from '@digitaldefiance/ecies-lib';
 import { HandleableError } from '@digitaldefiance/i18n-lib';
-import { AppConstants } from '../appConstants';
+import { SecureBuffer } from '@digitaldefiance/node-ecies-lib';
+import { SuiteCoreStringKey } from '@digitaldefiance/suite-core-lib';
 import {
   createCipheriv,
   createDecipheriv,
   createHash,
   randomBytes,
 } from 'crypto';
+import { AppConstants } from '../appConstants';
 import { Constants } from '../constants';
 import { Pbkdf2Service } from './pbkdf2';
 
@@ -62,14 +56,16 @@ export class KeyWrappingService {
     password: SecureString,
   ): WrappedKey {
     if (AppConstants.PasswordRegex.test(password.value ?? '') === false) {
-      throw new HandleableError(new Error(SuiteCoreStringKey.Validation_InvalidCredentials));
+      throw new HandleableError(
+        new Error(SuiteCoreStringKey.Validation_InvalidCredentials),
+      );
     }
     const salt = randomBytes(Constants.WRAPPED_KEY.SALT_SIZE);
     const iterations = Constants.WRAPPED_KEY.MIN_ITERATIONS;
 
     // Derive key from password using centralized PBKDF2 service
     const derivedKey = Pbkdf2Service.deriveKeyFromPassword(
-      Buffer.from(password.value ?? ""),
+      Buffer.from(password.value ?? ''),
       salt,
       iterations,
       Constants.WRAPPED_KEY.SALT_SIZE,
@@ -114,7 +110,7 @@ export class KeyWrappingService {
 
     // Derive the same key from password using centralized PBKDF2 service
     const derivedKey = Pbkdf2Service.deriveKeyFromPassword(
-      Buffer.from(password.value ?? ""),
+      Buffer.from(password.value ?? ''),
       salt,
       wrappedKey.iterations,
       salt.length, // Use actual salt size
@@ -138,7 +134,9 @@ export class KeyWrappingService {
 
       return new SecureBuffer(decrypted);
     } catch {
-      throw new HandleableError(new Error(SuiteCoreStringKey.Validation_InvalidCredentials));
+      throw new HandleableError(
+        new Error(SuiteCoreStringKey.Validation_InvalidCredentials),
+      );
     } finally {
       passwordKeySecure.dispose();
     }
@@ -164,7 +162,7 @@ export class KeyWrappingService {
     const pwdBuffer =
       typeof password === 'string'
         ? Buffer.from(password, 'utf8')
-        : Buffer.from(password.value ?? "");
+        : Buffer.from(password.value ?? '');
 
     // Use centralized PBKDF2 service for async key derivation
     const derivedKey = await Pbkdf2Service.deriveKeyFromPasswordAsync(
@@ -200,7 +198,9 @@ export class KeyWrappingService {
 
       return new SecureBuffer(decrypted);
     } catch {
-      throw new HandleableError(new Error(SuiteCoreStringKey.Validation_InvalidCredentials));
+      throw new HandleableError(
+        new Error(SuiteCoreStringKey.Validation_InvalidCredentials),
+      );
     } finally {
       // Best-effort zero the temporary password buffer
       try {
@@ -268,8 +268,6 @@ export class KeyWrappingService {
     try {
       // Re-wrap with new password
       return this.wrapMasterKey(masterKey, newPassword);
-    } catch (error: unknown) {
-      throw error;
     } finally {
       masterKey.dispose();
     }
@@ -283,14 +281,16 @@ export class KeyWrappingService {
     password: SecureString,
   ): PasswordWrappedSecret {
     if (AppConstants.PasswordRegex.test(password.value ?? '') === false) {
-      throw new HandleableError(new Error(SuiteCoreStringKey.Validation_InvalidCredentials));
+      throw new HandleableError(
+        new Error(SuiteCoreStringKey.Validation_InvalidCredentials),
+      );
     }
     const salt = randomBytes(Constants.WRAPPED_KEY.SALT_SIZE);
     const iterations = Constants.WRAPPED_KEY.MIN_ITERATIONS;
 
     // Derive key from password using centralized PBKDF2 service
     const derivedKey = Pbkdf2Service.deriveKeyFromPassword(
-      Buffer.from(password.value ?? ""),
+      Buffer.from(password.value ?? ''),
       salt,
       iterations,
       Constants.WRAPPED_KEY.SALT_SIZE,
@@ -333,7 +333,7 @@ export class KeyWrappingService {
 
     // Derive key from password using centralized PBKDF2 service
     const derivedKey = Pbkdf2Service.deriveKeyFromPassword(
-      Buffer.from(password.value ?? ""),
+      Buffer.from(password.value ?? ''),
       salt,
       wrapped.iterations,
       salt.length, // Use actual salt size
@@ -354,7 +354,9 @@ export class KeyWrappingService {
       ]);
       return new SecureBuffer(decrypted);
     } catch {
-      throw new HandleableError(new Error(SuiteCoreStringKey.Validation_InvalidCredentials));
+      throw new HandleableError(
+        new Error(SuiteCoreStringKey.Validation_InvalidCredentials),
+      );
     } finally {
       passwordKeySecure.dispose();
     }
@@ -416,7 +418,9 @@ export class KeyWrappingService {
       ]);
       return new SecureBuffer(decrypted);
     } catch {
-      throw new HandleableError(new Error(SuiteCoreStringKey.Validation_InvalidCredentials));
+      throw new HandleableError(
+        new Error(SuiteCoreStringKey.Validation_InvalidCredentials),
+      );
     } finally {
       try {
         pwdBuffer.fill(0);

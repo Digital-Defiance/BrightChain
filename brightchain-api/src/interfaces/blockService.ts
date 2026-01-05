@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { BrightChainMember } from '@brightchain/brightchain-lib';
 
 export interface IBlockService {

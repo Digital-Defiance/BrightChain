@@ -19,7 +19,7 @@ export class DocumentError extends TypedError<DocumentErrorType> {
   constructor(
     type: DocumentErrorType,
     otherVars?: Record<string, string | number>,
-    language?: StringLanguages,
+    _language?: StringLanguages,
   ) {
     super(type, undefined, otherVars);
     this.name = 'DocumentError';

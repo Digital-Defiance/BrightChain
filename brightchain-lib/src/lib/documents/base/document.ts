@@ -108,7 +108,7 @@ export class ConvertibleDocument<TStorage, THydrated, TOperational> {
    * Save document to storage
    * To be implemented by subclasses
    */
-  public async save(operational: TOperational): Promise<void> {
+  public async save(_operational?: TOperational): Promise<void> {
     throw new NotImplementedError();
   }
 
@@ -124,7 +124,7 @@ export class ConvertibleDocument<TStorage, THydrated, TOperational> {
    * Delete document from storage
    * To be implemented by subclasses
    */
-  public async delete(operational: TOperational): Promise<void> {
+  public async delete(_operational: TOperational): Promise<void> {
     throw new NotImplementedError();
   }
 }

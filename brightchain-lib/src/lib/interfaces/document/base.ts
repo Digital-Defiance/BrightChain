@@ -41,7 +41,7 @@ export interface IPrivateDataProvider<T> {
 /**
  * Base document interface
  */
-export interface IDocument<TStorage, THydrated, TOperational> {
+export interface IDocument<TStorage, _THydrated, TOperational> {
   /**
    * Convert from storage format to operational object
    */
@@ -71,8 +71,11 @@ export interface IDocument<TStorage, THydrated, TOperational> {
 /**
  * Document with private data support
  */
-export interface IPrivateDocument<TStorage, THydrated, TOperational>
-  extends IDocument<TStorage, THydrated, TOperational> {
+export interface IPrivateDocument<
+  TStorage,
+  THydrated,
+  TOperational,
+> extends IDocument<TStorage, THydrated, TOperational> {
   /**
    * Set private data provider
    */

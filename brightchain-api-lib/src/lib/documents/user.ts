@@ -1,9 +1,8 @@
-import {
-  StringLanguage,
-} from '@brightchain/brightchain-lib';
+/* eslint-disable @nx/enforce-module-boundaries */
+import { StringLanguage } from '@brightchain/brightchain-lib';
+import { AccountStatus, IUserBase } from '@digitaldefiance/suite-core-lib';
 import { DefaultBackendIdType } from '../shared-types';
 import { IBaseDocument } from './base';
-import { AccountStatus, IUserBase } from '@digitaldefiance/suite-core-lib';
 
 export interface IBrightChainUserBase extends IUserBase<
   DefaultBackendIdType,

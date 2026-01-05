@@ -1,13 +1,16 @@
-import {
-  StringName,
-  translate,
-} from '@brightchain/brightchain-lib';
+/* eslint-disable @nx/enforce-module-boundaries */
+import { StringName, translate } from '@brightchain/brightchain-lib';
 import { HandleableError } from '@digitaldefiance/i18n-lib';
-import { 
+import {
+  debugLog,
+  handleError,
+  sendApiMessageResponse,
+} from '@digitaldefiance/node-express-suite';
+import {
   getSuiteCoreTranslation,
   SuiteCoreStringKey,
 } from '@digitaldefiance/suite-core-lib';
-import { debugLog } from '@digitaldefiance/node-express-suite';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import express, { Application, NextFunction, Request, Response } from 'express';
 import { readFileSync } from 'fs';
 import { Server } from 'http';
@@ -18,7 +21,6 @@ import { Environment } from './environment';
 import { Middlewares } from './middlewares';
 import { ApiRouter } from './routers/api';
 import { AppRouter } from './routers/app';
-import { handleError, sendApiMessageResponse } from '@digitaldefiance/node-express-suite';
 
 /**
  * Application class
@@ -52,10 +54,17 @@ export class App extends BaseApplication {
             err instanceof HandleableError
               ? err
               : new HandleableError(
-                  new Error(err.message || translate(StringName.Error_UnexpectedError)),
+                  new Error(
+                    err.message || translate(StringName.Error_UnexpectedError),
+                  ),
                   { cause: err },
                 );
-          handleError(handleableError, res as any, sendApiMessageResponse, next);
+          handleError(
+            handleableError,
+            res as any,
+            sendApiMessageResponse,
+            next,
+          );
         },
       );
 

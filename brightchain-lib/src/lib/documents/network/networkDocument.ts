@@ -1,6 +1,6 @@
-import { BrightChainMember } from '../../brightChainMember';
 import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
+import { BrightChainMember } from '../../brightChainMember';
 import { ChecksumUint8Array, SignatureUint8Array } from '../../types';
 
 /**
@@ -96,7 +96,9 @@ export abstract class BaseNetworkDocument implements NetworkDocument {
 
     // Sign with creator's key - convert to Uint8Array for interface compatibility
     const signatureBuffer = this.creator.sign(dataToSign);
-    this.signature = new Uint8Array(signatureBuffer) as unknown as SignatureUint8Array;
+    this.signature = new Uint8Array(
+      signatureBuffer,
+    ) as unknown as SignatureUint8Array;
   }
 
   /**
@@ -115,8 +117,10 @@ export abstract class BaseNetworkDocument implements NetworkDocument {
     ]);
 
     // Convert signature back to Buffer for verification
-    const signatureBuffer = Buffer.from(this.signature) as unknown as SignatureBuffer;
-    
+    const signatureBuffer = Buffer.from(
+      this.signature,
+    ) as unknown as SignatureBuffer;
+
     // Verify with creator's public key
     return this.creator.verify(signatureBuffer, dataToVerify);
   }

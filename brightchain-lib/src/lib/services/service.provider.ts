@@ -1,9 +1,12 @@
-import { 
+import {
+  createRuntimeConfiguration,
+  GuidV4Provider,
+} from '@digitaldefiance/ecies-lib';
+import {
   ECIESService,
   getNodeEciesI18nEngine,
   VotingService,
 } from '@digitaldefiance/node-ecies-lib';
-import { GuidV4Provider, createRuntimeConfiguration } from '@digitaldefiance/ecies-lib';
 import { IServiceProvider } from '../interfaces/serviceProvider.interface';
 import { BlockCapacityCalculator } from './blockCapacity.service';
 import { BlockService } from './blockService';
@@ -34,15 +37,15 @@ export class ServiceProvider implements IServiceProvider {
       throw new Error('Use ServiceProvider.getInstance() instead of new.');
     }
     ServiceProvider.instance = this;
-    
+
     // Initialize ECIES i18n
     getNodeEciesI18nEngine();
-    
+
     // Configure to use 16-byte GUIDs following ecies-lib setup instructions
     const eciesConfig = createRuntimeConfiguration({
-      idProvider: new GuidV4Provider()
+      idProvider: new GuidV4Provider(),
     });
-    
+
     this.checksumService = new ChecksumService();
     this.crcService = new CrcService();
     this.eciesService = new ECIESService(eciesConfig);

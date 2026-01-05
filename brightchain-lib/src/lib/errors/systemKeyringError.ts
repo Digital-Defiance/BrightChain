@@ -1,4 +1,4 @@
-import { StringLanguages } from '../enumerations/stringLanguages';
+import { StringLanguage } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { SystemKeyringErrorType } from '../enumerations/systemKeyringErrorType';
 import { TypedError } from './typedError';
@@ -15,7 +15,7 @@ export class SystemKeyringError extends TypedError<SystemKeyringErrorType> {
   constructor(
     type: SystemKeyringErrorType,
     keyId?: string,
-    language?: StringLanguages,
+    _language?: StringLanguage,
   ) {
     super(type, undefined, {
       ...(keyId ? { KEY: keyId } : {}),

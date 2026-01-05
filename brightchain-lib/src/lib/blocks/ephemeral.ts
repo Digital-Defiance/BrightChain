@@ -247,7 +247,9 @@ export class EphemeralBlock extends BaseBlock implements IEphemeralBlock {
       ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
         this._data,
       );
-    const validated = Buffer.from(computedChecksum).equals(Buffer.from(this.idChecksum));
+    const validated = Buffer.from(computedChecksum).equals(
+      Buffer.from(this.idChecksum),
+    );
     if (!validated) {
       throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
     }
@@ -269,7 +271,9 @@ export class EphemeralBlock extends BaseBlock implements IEphemeralBlock {
       await ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
         this._data,
       );
-    const validated = Buffer.from(computedChecksum).equals(Buffer.from(this.idChecksum));
+    const validated = Buffer.from(computedChecksum).equals(
+      Buffer.from(this.idChecksum),
+    );
     if (!validated) {
       throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
     }

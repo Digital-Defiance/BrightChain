@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HandleableError } from '@digitaldefiance/i18n-lib';
 import { NextFunction, Response } from 'express';
 
@@ -18,8 +19,8 @@ export function findAuthToken(headers: any): string | null {
 export function handleError(
   error: HandleableError | Error,
   res: Response,
-  sendResponse: Function,
-  next: NextFunction,
+  sendResponse: (res: Response, statusCode: number, body: unknown) => void,
+  _next: NextFunction,
 ): void {
   if (error instanceof HandleableError) {
     sendResponse(res, error.statusCode || 500, { message: error.message });

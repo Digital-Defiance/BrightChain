@@ -2,10 +2,11 @@
  * BrightChain i18n using @digitaldefiance/i18n-lib
  * This provides a backward-compatible interface while using the new library under the hood
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
-  PluginI18nEngine,
   LanguageCodes as I18nLanguageCodes,
+  PluginI18nEngine,
 } from '@digitaldefiance/i18n-lib';
 import { StringNames } from '../enumerations/stringNames';
 import { AmericanEnglishStrings } from '../strings/englishUs';
@@ -101,9 +102,9 @@ export const t = translate;
  * Translate enum value (placeholder for enum translation support)
  */
 export function translateEnumValue<T extends string | number>(
-  enumObj: Record<string, string | number>,
+  _enumObj: Record<string, string | number>,
   value: T,
-  language?: string,
+  _language?: string,
 ): string {
   // Simple implementation - can be enhanced later
   return String(value);
@@ -113,10 +114,7 @@ export function translateEnumValue<T extends string | number>(
  * Register translation (stub for backward compatibility)
  * @deprecated This function is deprecated and will be removed in a future version
  */
-export function registerTranslation<T>(
-  enumObj: T,
-  translations: any,
-): any {
+export function registerTranslation<T>(enumObj: T, translations: any): any {
   return translations;
 }
 

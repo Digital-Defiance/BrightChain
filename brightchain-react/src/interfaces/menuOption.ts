@@ -1,8 +1,7 @@
 import { ReactNode } from 'react';
 import { To } from 'react-router-dom';
 import { IncludeOnMenu } from '../enumerations/includeOnMenu';
-
-export interface IMenuOption {
+/* eslint-disable @typescript-eslint/no-explicit-any */ export interface IMenuOption {
   /**
    * Unique identifier for the menu option
    */

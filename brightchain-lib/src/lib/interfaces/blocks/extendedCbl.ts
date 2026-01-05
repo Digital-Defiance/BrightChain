@@ -10,8 +10,7 @@ import { IConstituentBlockListBlock } from './cbl';
  * [Block References]
  * [Padding]
  */
-export interface IExtendedConstituentBlockListBlock
-  extends IConstituentBlockListBlock {
+export interface IExtendedConstituentBlockListBlock extends IConstituentBlockListBlock {
   /**
    * Length of the file name
    */

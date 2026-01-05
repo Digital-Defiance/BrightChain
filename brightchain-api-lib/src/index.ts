@@ -1,7 +1,7 @@
 // API lib exports
+export * from './lib/appConstants';
 export * from './lib/application';
 export * from './lib/application-base';
-export * from './lib/appConstants';
 export * from './lib/constants';
 export * from './lib/controllers/base';
 export * from './lib/controllers/user';
@@ -52,6 +52,7 @@ export type {
   ISimplePublicKeyOnly,
   ISimplePublicKeyOnlyBuffer,
 } from '@digitaldefiance/node-ecies-lib';
+export * from './lib/enumerations/model-name';
 export * from './lib/interfaces/member/member-with-mnemonic';
 export * from './lib/interfaces/member/operational';
 export * from './lib/interfaces/multi-encrypted-message';
@@ -73,7 +74,6 @@ export * from './lib/interfaces/symmetric-encryption-results';
 export * from './lib/interfaces/token-user';
 export * from './lib/interfaces/wallet-seed';
 export * from './lib/middlewares';
-export * from './lib/enumerations/model-name';
 // export * from './lib/middlewares/set-global-context-language';
 export * from './lib/documents/email-token';
 export * from './lib/documents/mnemonic';
@@ -100,6 +100,7 @@ export * from './lib/services/pbkdf2';
 export * from './lib/services/user';
 export * from './lib/utils/type-converters';
 // Explicitly export types from shared-types
+export { routeConfig } from './lib/shared-types';
 export type {
   ApiErrorResponse,
   ApiRequestHandler,
@@ -118,7 +119,6 @@ export type {
   TypedHandlers,
   ValidatedBody,
 } from './lib/shared-types';
-export { routeConfig } from './lib/shared-types';
 // Re-export interfaces from node-express-suite
 export type {
   IApiErrorResponse,

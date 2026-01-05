@@ -1,14 +1,14 @@
-import { motion } from "framer-motion";
-import { useInView } from "react-intersection-observer";
+import { motion } from 'framer-motion';
 import {
+  FaCode,
   FaGithub,
   FaHeart,
-  FaCode,
-  FaUsers,
-  FaRocket,
   FaLightbulb,
-} from "react-icons/fa";
-import "./About.css";
+  FaRocket,
+  FaUsers,
+} from 'react-icons/fa';
+import { useInView } from 'react-intersection-observer';
+import './About.css';
 
 const About = () => {
   const [ref, inView] = useInView({
@@ -44,29 +44,30 @@ const About = () => {
             </h3>
             <p>
               At <strong>Digital Defiance</strong>, we believe in empowering
-              individuals and organizations with truly decentralized infrastructure
-              that respects privacy, promotes sustainability, and enables democratic
-              participation.
+              individuals and organizations with truly decentralized
+              infrastructure that respects privacy, promotes sustainability, and
+              enables democratic participation.
             </p>
             <p>
               <strong>BrightChain</strong> embodies this vision by reimagining
-              blockchain technology from the ground up. By eliminating mining waste,
-              monetizing unused storage, and implementing revolutionary features like
-              homomorphic voting and brokered anonymity, we've created a platform
-              that works for everyone—from individual users to global organizations.
+              blockchain technology from the ground up. By eliminating mining
+              waste, monetizing unused storage, and implementing revolutionary
+              features like homomorphic voting and brokered anonymity, we've
+              created a platform that works for everyone—from individual users
+              to global organizations.
             </p>
             <p>
               Built on <strong>Ethereum's keyspace</strong> but departing from
-              traditional proof-of-work systems, BrightChain combines the{" "}
+              traditional proof-of-work systems, BrightChain combines the{' '}
               <strong>Owner-Free File System</strong> for legal protection with
               advanced cryptography (ECIES, AES-256-GCM, Paillier homomorphic
               encryption) to deliver unprecedented capabilities.
             </p>
             <p className="highlight-text">
-              <FaCode /> <strong>100% Open Source.</strong> BrightChain is freely
-              available under the MIT License. Every line of code is open for
-              inspection, improvement, and contribution. Join us in building the
-              future of decentralized infrastructure.
+              <FaCode /> <strong>100% Open Source.</strong> BrightChain is
+              freely available under the MIT License. Every line of code is open
+              for inspection, improvement, and contribution. Join us in building
+              the future of decentralized infrastructure.
             </p>
           </motion.div>
 
@@ -129,9 +130,9 @@ const About = () => {
         >
           <h3>Join the Revolution</h3>
           <p>
-            Help us build the future of decentralized infrastructure.
-            Contribute to BrightChain, report issues, or star us on GitHub
-            to show your support for sustainable blockchain technology.
+            Help us build the future of decentralized infrastructure. Contribute
+            to BrightChain, report issues, or star us on GitHub to show your
+            support for sustainable blockchain technology.
           </p>
           <div className="cta-buttons">
             <a
@@ -166,7 +167,7 @@ const About = () => {
 
         <div className="about-footer">
           <p>
-            © {new Date().getFullYear()} Digital Defiance. Made with{" "}
+            © {new Date().getFullYear()} Digital Defiance. Made with{' '}
             <span className="heart">❤️</span> for the development community.
           </p>
           <p className="footer-links">
@@ -177,7 +178,7 @@ const About = () => {
             >
               MIT License
             </a>
-            {" • "}
+            {' • '}
             <a
               href="https://github.com/Digital-Defiance/BrightChain"
               target="_blank"
@@ -185,7 +186,7 @@ const About = () => {
             >
               GitHub
             </a>
-            {" • "}
+            {' • '}
             <a
               href="https://www.npmjs.com/org/digitaldefiance"
               target="_blank"

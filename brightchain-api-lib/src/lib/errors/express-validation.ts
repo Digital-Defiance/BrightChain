@@ -1,6 +1,6 @@
-import { Result, ValidationError } from 'express-validator';
 import { HandleableError } from '@digitaldefiance/i18n-lib';
 import { SuiteCoreStringKey } from '@digitaldefiance/suite-core-lib';
+import { Result, ValidationError } from 'express-validator';
 
 export class ExpressValidationError extends HandleableError {
   public readonly errors: Result<ValidationError>;

@@ -1,7 +1,6 @@
 import { IConstituentBlockListBlockHeader } from './cblHeader';
 
-export interface IExtendedConstituentBlockListBlockHeader
-  extends IConstituentBlockListBlockHeader {
+export interface IExtendedConstituentBlockListBlockHeader extends IConstituentBlockListBlockHeader {
   /**
    * Length of the file name
    */

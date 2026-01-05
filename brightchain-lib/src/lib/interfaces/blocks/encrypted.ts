@@ -1,6 +1,6 @@
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { BrightChainMember } from '../../brightChainMember';
 import { BlockEncryptionType } from '../../enumerations/blockEncryptionType';
-import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { IMultiEncryptedParsedHeader } from '../multiEncryptedParsedHeader';
 import { ISingleEncryptedParsedHeader } from '../singleEncryptedParsedHeader';
 import { IEphemeralBlock } from './ephemeral';

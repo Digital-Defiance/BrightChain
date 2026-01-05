@@ -1,17 +1,14 @@
 import { Types } from '@digitaldefiance/mongoose-types';
 import {
-  UserService as BaseUserService,
-  RoleService,
   BackupCodeService,
-  KeyWrappingService,
+  UserService as BaseUserService,
   IBaseDocument,
   IConstants,
   IEmailService,
+  KeyWrappingService,
+  RoleService,
 } from '@digitaldefiance/node-express-suite';
-import {
-  ITokenRole,
-  IUserBase,
-} from '@digitaldefiance/suite-core-lib';
+import { ITokenRole, IUserBase } from '@digitaldefiance/suite-core-lib';
 import { Environment } from '../environment';
 import { IApplication } from '../interfaces/application';
 

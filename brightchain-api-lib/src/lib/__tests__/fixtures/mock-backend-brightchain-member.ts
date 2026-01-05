@@ -1,5 +1,11 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
 import { MemberType } from '@brightchain/brightchain-lib';
-import { EmailString, GuidV4, SecureBuffer, SecureString } from '@digitaldefiance/ecies-lib';
+import {
+  EmailString,
+  GuidV4,
+  SecureBuffer,
+  SecureString,
+} from '@digitaldefiance/ecies-lib';
 import { SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
 import { faker } from '@faker-js/faker';
@@ -18,9 +24,7 @@ const createMockWallet = (): Wallet =>
     sign: () => Buffer.from(faker.string.hexadecimal({ length: 128 }), 'hex'),
   }) as any;
 
-export class MockBackendBrightchainMember
-  implements IBrightchainMemberOperational<DefaultBackendIdType>
-{
+export class MockBackendBrightchainMember implements IBrightchainMemberOperational<DefaultBackendIdType> {
   private _id: DefaultBackendIdType;
   private _type: MemberType;
   private _name: string;
@@ -107,26 +111,26 @@ export class MockBackendBrightchainMember
 
   unloadWalletAndPrivateKey(): void {}
 
-  loadWallet(mnemonic: SecureString): void {}
+  loadWallet(_mnemonic: SecureString): void {}
 
-  loadPrivateKey(privateKey: SecureBuffer): void {}
+  loadPrivateKey(_privateKey: SecureBuffer): void {}
 
-  sign(data: Buffer): SignatureBuffer {
+  sign(_data: Buffer): SignatureBuffer {
     return Buffer.from(
       faker.string.hexadecimal({ length: 128 }),
       'hex',
     ) as SignatureBuffer;
   }
 
-  verify(signature: SignatureBuffer, data: Buffer): boolean {
+  verify(_signature: SignatureBuffer, _data: Buffer): boolean {
     return true;
   }
 
-  encryptData(data: string | Buffer): Uint8Array {
+  encryptData(_data: string | Buffer): Uint8Array {
     return Buffer.from(faker.string.hexadecimal({ length: 256 }), 'hex');
   }
 
-  decryptData(encryptedData: Buffer): Uint8Array {
+  decryptData(_encryptedData: Buffer): Uint8Array {
     return Buffer.from(faker.lorem.paragraph());
   }
 

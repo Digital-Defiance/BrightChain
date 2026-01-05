@@ -39,7 +39,7 @@ export class Document<T> {
 
   public static initialize(
     blockService: BlockService,
-    memberService?: MemberCblService,
+    _memberService?: MemberCblService,
   ): void {
     if (Document.blockService) {
       throw new DocumentError(DocumentErrorType.AlreadyInitialized);
@@ -255,7 +255,10 @@ export class Document<T> {
     // to be overridden by subclasses
     this._dirty = false;
     const json = Buffer.from(this.toJson());
-    const blockSize = ServiceLocator.getServiceProvider().blockService.getBlockSizeForData(json.length);
+    const blockSize =
+      ServiceLocator.getServiceProvider().blockService.getBlockSizeForData(
+        json.length,
+      );
     const xorResult = Buffer.alloc(blockSize as number);
     let firstBlock = true;
     await ServiceLocator.getServiceProvider().blockService.processFileInChunks(

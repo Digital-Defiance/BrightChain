@@ -1,6 +1,6 @@
 import CONSTANTS, { ECIES } from '../constants';
-import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockCapacityErrorType } from '../enumerations/blockCapacityErrorType';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';

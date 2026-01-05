@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect } from '@jest/globals';
 import type { MatcherContext } from 'expect';
 import { readFileSync } from 'fs';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ErrorClass<E extends Error> = new (...args: any[]) => E;
 
 interface MatcherError extends Error {
@@ -169,29 +169,39 @@ export const toThrowType = async function <E extends Error>(
             errorType.name,
           )}`
         : this.promise
-        ? this.utils.matcherErrorMessage(
-            this.utils.matcherHint(matcherName, undefined, undefined, options),
-            'Expected promise to reject',
-            'Promise resolved successfully',
-          )
-        : this.utils.matcherErrorMessage(
-            this.utils.matcherHint(matcherName, undefined, undefined, options),
-            `Expected function to throw ${this.utils.printExpected(
-              errorType.name,
-            )}`,
-            `Received: ${this.utils.printReceived(
-              error instanceof Error ? error.constructor.name : typeof error,
-            )}`,
-          )),
+          ? this.utils.matcherErrorMessage(
+              this.utils.matcherHint(
+                matcherName,
+                undefined,
+                undefined,
+                options,
+              ),
+              'Expected promise to reject',
+              'Promise resolved successfully',
+            )
+          : this.utils.matcherErrorMessage(
+              this.utils.matcherHint(
+                matcherName,
+                undefined,
+                undefined,
+                options,
+              ),
+              `Expected function to throw ${this.utils.printExpected(
+                errorType.name,
+              )}`,
+              `Received: ${this.utils.printReceived(
+                error instanceof Error ? error.constructor.name : typeof error,
+              )}`,
+            )),
   };
 };
 
 expect.extend({ toThrowType });
 
 declare global {
+  /* eslint-disable-next-line @typescript-eslint/no-namespace */
   namespace jest {
     interface Matchers<R> {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       toThrowType<E extends Error, T extends new (...args: any[]) => E>(
         errorType: T,
         validator?: (error: E) => void,

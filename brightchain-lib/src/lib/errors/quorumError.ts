@@ -18,7 +18,7 @@ export class QuorumError extends TypedError<QuorumErrorType> {
         StringNames.Error_QuorumErrorUninitialized,
     };
   }
-  constructor(type: QuorumErrorType, language?: StringLanguages) {
+  constructor(type: QuorumErrorType, _language?: StringLanguages) {
     super(type, undefined);
     this.name = 'QuorumError';
   }

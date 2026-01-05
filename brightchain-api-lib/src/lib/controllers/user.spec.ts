@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
 import {
   AppConstants,
   IApiChallengeResponse,
@@ -8,23 +9,24 @@ import {
   MemberType,
   StringLanguage,
 } from '@brightchain/brightchain-lib';
-import { Request, Response } from 'express';
+import { Member } from '@digitaldefiance/ecies-lib';
 import { ObjectId as MongoDbObjectId } from 'bson';
-import { DefaultBackendIdType } from '../shared-types';
-import { IMongoEnvironment } from '../interfaces/environment-mongo';
+import { Request, Response } from 'express';
 import { MockBackendBrightchainMember } from '../__tests__/fixtures/mock-backend-brightchain-member';
 import { makeMockDocument } from '../__tests__/fixtures/mocked-model';
 import { IUserDocument } from '../documents/user';
 import { IApplication } from '../interfaces/application';
 import { IEnvironment } from '../interfaces/environment';
+import { IMongoEnvironment } from '../interfaces/environment-mongo';
 import { IJwtSignResponse } from '../interfaces/jwt-sign-response';
 import { BackupCodeService } from '../services/backupCode';
 import { ECIESService } from '../services/ecies/service';
 import { JwtService } from '../services/jwt';
 import { RoleService } from '../services/role';
+import { SystemUserService } from '../services/system-user';
 import { UserService } from '../services/user';
+import { DefaultBackendIdType } from '../shared-types';
 import { UserController } from './user';
-import { Member } from '@digitaldefiance/ecies-lib';
 
 // This is now the ONLY source for InvalidCredentialsError
 const { InvalidCredentialsError, InvalidPasswordError } = jest.requireActual(
@@ -66,7 +68,6 @@ describe('UserController', () => {
     MockedJwtService.mockClear();
 
     // Reset SystemUserService mock
-    const { SystemUserService } = require('../services/system-user');
     SystemUserService.getSystemUser.mockClear();
     SystemUserService.getSystemUser.mockReturnValue(
       new MockBackendBrightchainMember({

@@ -1,8 +1,7 @@
+/* eslint-disable @nx/enforce-module-boundaries */
+import { MemberType } from '@brightchain/brightchain-lib';
 import {
-   MemberType,
-} from '@brightchain/brightchain-lib';
-import {
-   EmailString,
+  EmailString,
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
@@ -49,7 +48,6 @@ export interface IBrightchainMemberOperational<
 /**
  * Extended operational interface for test members
  */
-export interface ITestBrightChainMemberOperational
-  extends IBrightchainMemberOperational<DefaultBackendIdType> {
+export interface ITestBrightChainMemberOperational extends IBrightchainMemberOperational<DefaultBackendIdType> {
   get mnemonic(): SecureString | undefined;
 }

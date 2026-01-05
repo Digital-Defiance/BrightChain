@@ -9,7 +9,16 @@ export * from './lib/brightChainMember';
 export * from './lib/cblStream';
 export * as constants from './lib/constants';
 // Export CONSTANTS as default and individual constant groups as named exports
-export { default as CONSTANTS, CBL, FEC, TUPLE, SEALING, JWT, SITE, OFFS_CACHE_PERCENTAGE } from './lib/constants';
+export {
+  CBL,
+  default as CONSTANTS,
+  FEC,
+  JWT,
+  OFFS_CACHE_PERCENTAGE,
+  SEALING,
+  SITE,
+  TUPLE,
+} from './lib/constants';
 // Export ECIES configuration
 export { EciesConfig } from './lib/ecies-config';
 // Export BRIGHTCHAIN_ECIES for backward compatibility
@@ -44,7 +53,7 @@ export * from './lib/enumerations/fecErrorType';
 export * from './lib/enumerations/handleTupleErrorType';
 // Removed - now re-exported from ecies-lib at top of file
 // export * from './lib/enumerations/invalidEmailErrorType';
-// Removed - IsolatedKeyError is never thrown/used in codebase  
+// Removed - IsolatedKeyError is never thrown/used in codebase
 // export * from './lib/enumerations/isolatedKeyErrorType';
 export * from './lib/enumerations/keyFragmentType';
 export * from './lib/enumerations/keyRole';
@@ -78,8 +87,8 @@ export * from './lib/errors/cblError';
 export * from './lib/errors/checksumMismatch';
 export * from './lib/errors/document';
 export * from './lib/errors/extendedCblError';
-export * from './lib/errors/fecError';
 export * from './lib/errors/failedToHydrate';
+export * from './lib/errors/fecError';
 export * from './lib/errors/handleTupleError';
 export * from './lib/errors/invalidBlockSize';
 export * from './lib/errors/invalidBlockSizeLength';
@@ -139,11 +148,11 @@ export type {
 } from '@digitaldefiance/node-ecies-lib';
 export * from './lib/interfaces/keyringConsts';
 export * from './lib/interfaces/keyringEntry';
+export * from './lib/interfaces/member/hydrated';
 export * from './lib/interfaces/member/memberDto';
 export * from './lib/interfaces/member/memberWithMnemonic';
-export * from './lib/interfaces/member/storage';
-export * from './lib/interfaces/member/hydrated';
 export * from './lib/interfaces/member/operational';
+export * from './lib/interfaces/member/storage';
 export * from './lib/interfaces/membersHandlers';
 export * from './lib/interfaces/multiEncryptedMessage';
 export * from './lib/interfaces/multiEncryptedParsedHeader';

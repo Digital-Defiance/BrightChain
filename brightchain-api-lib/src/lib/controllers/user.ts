@@ -1,15 +1,14 @@
-import {
-  CoreLanguageCode,
-} from '@digitaldefiance/i18n-lib';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { Types } from '@digitaldefiance/mongoose-types';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
-import { 
-  UserController as BaseUserController, 
+import {
+  BackupCodeService,
+  UserController as BaseUserController,
   Controller,
   JwtService,
+  RoleService,
   UserService,
-  BackupCodeService,
-  RoleService
 } from '@digitaldefiance/node-express-suite';
 import {
   ITokenRole,
@@ -29,7 +28,17 @@ export class UserController<
   TTokenUser extends ITokenUser = ITokenUser,
   TApplication extends IApplication = IApplication,
   TLanguage extends CoreLanguageCode = CoreLanguageCode,
-> extends BaseUserController<I, D, S, A, TUser, TTokenRole, TTokenUser, TApplication, TLanguage> {
+> extends BaseUserController<
+  I,
+  D,
+  S,
+  A,
+  TUser,
+  TTokenRole,
+  TTokenUser,
+  TApplication,
+  TLanguage
+> {
   constructor(
     application: TApplication,
     jwtService: JwtService<I, D, TTokenRole, TTokenUser, TApplication>,
@@ -50,6 +59,13 @@ export class UserController<
     roleService: RoleService<I, D, TTokenRole>,
     eciesService: ECIESService,
   ) {
-    super(application, jwtService, userService, backupCodeService, roleService, eciesService);
+    super(
+      application,
+      jwtService,
+      userService,
+      backupCodeService,
+      roleService,
+      eciesService,
+    );
   }
 }

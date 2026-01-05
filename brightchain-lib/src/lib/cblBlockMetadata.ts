@@ -22,14 +22,7 @@ export class CblBlockMetadata
     creator: BrightChainMember,
     dateCreated?: Date,
   ) {
-    super(
-      size,
-      type,
-      dataType,
-      originalDataLength,
-      creator,
-      dateCreated,
-    );
+    super(size, type, dataType, originalDataLength, creator, dateCreated);
     this._fileDataLength = fileDataLength;
   }
 }

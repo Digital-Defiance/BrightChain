@@ -1,4 +1,5 @@
-import { describe, it, expect } from '@jest/globals';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { describe, expect, it } from '@jest/globals';
 import * as BrightChainTypes from './types';
 
 describe('Type Structure Tests', () => {

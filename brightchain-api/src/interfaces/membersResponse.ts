@@ -1,5 +1,3 @@
-import { JsonResponse } from '@brightchain/brightchain-api-lib';
-
 export interface MembersResponse {
   success: boolean;
   message?: string;

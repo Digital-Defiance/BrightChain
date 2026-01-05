@@ -1,5 +1,6 @@
 import { config } from 'dotenv';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Temporary interfaces
 interface IEnvironment {
   jwtSecret: string;

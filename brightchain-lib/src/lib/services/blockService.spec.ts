@@ -1,4 +1,4 @@
-import { ChecksumUint8Array } from '../types';
+import { EmailString } from '@digitaldefiance/ecies-lib';
 import { BaseBlock } from '../blocks/base';
 import { EphemeralBlock } from '../blocks/ephemeral';
 import { BrightChainMember } from '../brightChainMember';
@@ -7,9 +7,9 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { MemberType } from '../enumerations/memberType';
+import { ChecksumUint8Array } from '../types';
 import { BlockService } from './blockService';
 import { ServiceProvider } from './service.provider';
-import { EmailString } from '@digitaldefiance/ecies-lib';
 
 // Mock the CBLBase class to avoid signature validation issues
 jest.mock('../blocks/cblBase', () => {
@@ -40,15 +40,15 @@ describe('BlockService', () => {
     // Create test member with valid email
     // Use a safe ID that doesn't start with ECIES magic byte to avoid false positive in isEncrypted
     const safeId = Buffer.alloc(16);
-    safeId[0] = 0x00; 
-    
+    safeId[0] = 0x00;
+
     const result = BrightChainMember.newMember(
       ServiceProvider.getInstance().eciesService,
       MemberType.User,
       'Test',
       new EmailString('test@example.com'),
       undefined,
-      safeId
+      safeId,
     );
     member = result.member;
   });

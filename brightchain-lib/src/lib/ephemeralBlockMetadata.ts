@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { BlockMetadata } from './blockMetadata';
 import { BrightChainMember } from './brightChainMember';
 import { BlockDataType } from './enumerations/blockDataType';
@@ -5,7 +7,6 @@ import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { BlockValidationErrorType } from './enumerations/blockValidationErrorType';
 import { BlockValidationError } from './errors/block';
-import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { IEphemeralBlockMetadata } from './interfaces/blocks/metadata/ephemeralBlockMetadata';
 
 export class EphemeralBlockMetadata

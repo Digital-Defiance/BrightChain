@@ -8,7 +8,7 @@ export class Pbkdf2Service {
     iterations: number,
     saltSize: number,
     keyLength: number,
-    digest: string
+    digest: string,
   ): IPbkdf2Result {
     const hash = pbkdf2Sync(password, salt, iterations, keyLength, digest);
     return {
@@ -25,7 +25,7 @@ export class Pbkdf2Service {
     iterations: number,
     saltSize: number,
     keyLength: number,
-    digest: string
+    digest: string,
   ): Promise<IPbkdf2Result> {
     return new Promise((resolve, reject) => {
       pbkdf2(password, salt, iterations, keyLength, digest, (err, hash) => {

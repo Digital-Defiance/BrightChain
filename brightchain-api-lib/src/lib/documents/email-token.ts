@@ -1,4 +1,7 @@
-import { EmailTokenType, IEmailTokenBase } from '@digitaldefiance/suite-core-lib';
+import {
+  EmailTokenType,
+  IEmailTokenBase,
+} from '@digitaldefiance/suite-core-lib';
 import { DefaultBackendIdType } from '../shared-types';
 import { IBaseDocument } from './base';
 

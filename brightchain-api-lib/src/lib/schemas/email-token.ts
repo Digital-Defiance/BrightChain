@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { EmailTokenType } from '@digitaldefiance/suite-core-lib';
 import { ModelName } from '../enumerations/model-name';
 // import { EmailTokenType, ModelName } from '@brightchain/brightchain-lib';

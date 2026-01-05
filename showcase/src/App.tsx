@@ -1,17 +1,17 @@
-import { useState, useEffect } from "react";
-import Hero from "./components/Hero";
-import Components from "./components/Components";
-import Demo from "./components/Demo";
-import About from "./components/About";
-import "./App.css";
+import { useEffect, useState } from 'react';
+import './App.css';
+import About from './components/About';
+import Components from './components/Components';
+import Demo from './components/Demo';
+import Hero from './components/Hero';
 
 function App() {
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (

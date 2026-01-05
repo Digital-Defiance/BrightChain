@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { DefaultIdType } from '@brightchain/brightchain-lib';
 import { IApplication } from '../interfaces/application';
 import { BaseService } from './base';

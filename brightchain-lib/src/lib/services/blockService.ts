@@ -1,9 +1,10 @@
+import { IMember } from '@digitaldefiance/node-ecies-lib';
 import { randomBytes } from 'crypto';
 import { fileTypeFromBuffer, fileTypeStream } from 'file-type';
 import { stat } from 'fs/promises';
 import { basename } from 'path';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Readable } from 'stream';
-import { IMember } from '@digitaldefiance/node-ecies-lib';
 import { BaseBlock } from '../blocks/base';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { EncryptedBlock } from '../blocks/encrypted';
@@ -91,7 +92,7 @@ export class BlockService {
     try {
       const blockType = this.determineBlockEncryptionType(data);
       return blockType === BlockEncryptionType.SingleRecipient;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -105,7 +106,7 @@ export class BlockService {
     try {
       const blockType = this.determineBlockEncryptionType(data);
       return blockType === BlockEncryptionType.MultiRecipient;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -352,10 +353,8 @@ export class BlockService {
     // Check if the stream has a "path" property or a provided filePath
     const pathToStat = filePath
       ? filePath
-      : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (fileData as any).path && typeof (fileData as any).path === 'string'
-        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (fileData as any).path
+      : (fileData as any).path && typeof (fileData as any).path === 'string'
+        ? (fileData as any).path
         : null;
 
     if (pathToStat) {
@@ -415,11 +414,8 @@ export class BlockService {
     // For Readable streams, use provided filePath or check for a stream 'path' property.
     const pathToUse =
       filePath ||
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ((fileData as any).path &&
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         typeof (fileData as any).path === 'string' &&
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (fileData as any).path);
 
     if (pathToUse) {
@@ -597,7 +593,9 @@ export class BlockService {
     const xorBlock = Buffer.from(block);
     // XOR with all whiteners
     for (const whitener of whiteners) {
-      const data: Buffer = Buffer.isBuffer(whitener) ? whitener : Buffer.from(whitener.data);
+      const data: Buffer = Buffer.isBuffer(whitener)
+        ? whitener
+        : Buffer.from(whitener.data);
       for (let j = 0; j < data.length; j++) {
         xorBlock[j] = xorBlock[j] ^ data[j];
       }

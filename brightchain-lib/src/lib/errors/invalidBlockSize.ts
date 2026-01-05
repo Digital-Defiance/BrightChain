@@ -5,7 +5,7 @@ import { translate } from '../i18n';
 
 export class InvalidBlockSizeError extends Error {
   public readonly blockSize: BlockSize;
-  constructor(blockSize: BlockSize, language?: StringLanguages) {
+  constructor(blockSize: BlockSize, _language?: StringLanguages) {
     super(
       translate(StringNames.Error_InvalidBlockSizeTemplate, {
         BLOCK_SIZE: blockSize as number,

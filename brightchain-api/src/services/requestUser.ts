@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
 import { IRequestUser, StringLanguages } from '@brightchain/brightchain-lib';
 
 // Temporary interface

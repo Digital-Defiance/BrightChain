@@ -1,6 +1,9 @@
-import { ChecksumService } from '../services/checksum.service';
+import {
+  createRuntimeConfiguration,
+  GuidV4Provider,
+} from '@digitaldefiance/ecies-lib';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
-import { createRuntimeConfiguration, GuidV4Provider } from '@digitaldefiance/ecies-lib';
+import { ChecksumService } from '../services/checksum.service';
 
 /**
  * Creates fresh instances of test services to avoid shared state
@@ -8,9 +11,9 @@ import { createRuntimeConfiguration, GuidV4Provider } from '@digitaldefiance/eci
 export function initializeTestServices() {
   // Configure to use 16-byte GUIDs following ecies-lib setup instructions
   const config = createRuntimeConfiguration({
-    idProvider: new GuidV4Provider()
+    idProvider: new GuidV4Provider(),
   });
-  
+
   return {
     checksumService: new ChecksumService(),
     eciesService: new ECIESService(config),
@@ -30,7 +33,7 @@ export function getChecksumService(): ChecksumService {
 export function getEciesService(): ECIESService {
   // Configure to use 16-byte GUIDs following ecies-lib setup instructions
   const config = createRuntimeConfiguration({
-    idProvider: new GuidV4Provider()
+    idProvider: new GuidV4Provider(),
   });
   return new ECIESService(config);
 }

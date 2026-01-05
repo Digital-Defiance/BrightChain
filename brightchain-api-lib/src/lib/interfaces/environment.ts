@@ -1,7 +1,11 @@
-import { IEnvironmentAws } from './environment-aws';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IEnvironment as IEnvironmentBase } from '@digitaldefiance/node-express-suite';
+import { IEnvironmentAws } from './environment-aws';
 
-export interface IEnvironment extends Omit<IEnvironmentBase, 'adminId' | 'idAdapter'> {
+export interface IEnvironment extends Omit<
+  IEnvironmentBase,
+  'adminId' | 'idAdapter'
+> {
   adminId: any;
   idAdapter(bytes: Uint8Array): any;
   /**

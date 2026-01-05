@@ -2,8 +2,6 @@ import BlockType from '../../enumerations/blockType';
 import { BlockValidationErrorType } from '../../enumerations/blockValidationErrorType';
 import { StringLanguages } from '../../enumerations/stringLanguages';
 import { StringNames } from '../../enumerations/stringNames';
-import { TranslatableEnumType } from '../../enumerations/translatableEnum';
-import { translate } from '../../i18n';
 import { TypedWithReasonError } from '../typedWithReasonError';
 
 export class BlockValidationError extends TypedWithReasonError<BlockValidationErrorType> {
@@ -89,21 +87,21 @@ export class BlockValidationError extends TypedWithReasonError<BlockValidationEr
     type: BlockValidationErrorType,
     blockType?: BlockType,
     addressLength?: { index: number; length: number; expectedLength: number },
-    language?: StringLanguages,
+    _language?: StringLanguages,
   ) {
     super(StringNames.Error_BlockValidationErrorTemplate, type, {
       ...(blockType
         ? {
-            TYPE: 'BlockType'
+            TYPE: 'BlockType',
           }
         : {}),
       ...(addressLength
         ? {
             INDEX: addressLength.index,
             LENGTH: addressLength.length,
-            EXPECTED_LENGTH: addressLength.expectedLength
+            EXPECTED_LENGTH: addressLength.expectedLength,
           }
-        : {})
+        : {}),
     });
     this.name = 'BlockValidationError';
     this.blockType = blockType;

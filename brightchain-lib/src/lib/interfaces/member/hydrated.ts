@@ -1,5 +1,5 @@
-import { PublicKey } from 'paillier-bigint';
 import { EmailString, GuidV4, SecureString } from '@digitaldefiance/ecies-lib';
+import { PublicKey } from 'paillier-bigint';
 import { MemberType } from '../../enumerations/memberType';
 
 /**

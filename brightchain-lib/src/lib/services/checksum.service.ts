@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { hexToUint8Array, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import { sha3_512 } from 'js-sha3';
 import { CHECKSUM } from '../constants';
 import { ChecksumString, ChecksumUint8Array } from '../types';
-import { hexToUint8Array, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 
 export class ChecksumService {
   constructor() {}

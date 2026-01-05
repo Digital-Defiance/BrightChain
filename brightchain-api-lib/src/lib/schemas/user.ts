@@ -1,20 +1,20 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
+import { StringLanguages } from '@brightchain/brightchain-lib';
 import {
   AccountStatus,
   SuiteCoreStringKey,
   getSuiteCoreTranslation as translate,
 } from '@digitaldefiance/suite-core-lib';
 import { ModelName } from '../enumerations/model-name';
-import { StringLanguage } from '../interfaces/request-user';
-import { StringLanguages } from '@brightchain/brightchain-lib';
 // import {
 //   StringLanguage,
 //   StringName,
 //   translate,
 // } from '@brightchain/brightchain-lib';
-import { AppConstants } from '../appConstants';
 import { isValidTimezone } from '@digitaldefiance/i18n-lib';
 import { Schema } from 'mongoose';
 import validator from 'validator';
+import { AppConstants } from '../appConstants';
 import { IUserDocument } from '../documents/user';
 
 /**

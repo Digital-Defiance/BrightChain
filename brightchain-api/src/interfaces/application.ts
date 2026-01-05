@@ -1,7 +1,5 @@
-import {
-  ApiResponse,
-  TypedHandlers,
-} from '@brightchain/brightchain-api-lib';
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+import { ApiResponse, TypedHandlers } from '@brightchain/brightchain-api-lib';
 import { BrightChainMember } from '@brightchain/brightchain-lib';
 import { BlocksController } from '../controllers/api/blocks';
 import { MembersController } from '../controllers/api/members';

@@ -1,7 +1,7 @@
 import alias from '@rollup/plugin-alias';
 import react from '@vitejs/plugin-react';
-import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
 const __filename = fileURLToPath(import.meta.url);

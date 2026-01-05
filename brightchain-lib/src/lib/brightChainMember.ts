@@ -1,22 +1,17 @@
-import { createECDH } from 'crypto';
-import { 
-  Member, 
-  ECIESService 
-} from '@digitaldefiance/node-ecies-lib';
 import {
-  EmailString as EciesEmailString, 
-  MemberType as EciesMemberType, 
-  SecureString as EciesSecureString,
+  EmailString as EciesEmailString,
+  MemberType as EciesMemberType,
   SecureBuffer as EciesSecureBuffer,
+  SecureString as EciesSecureString,
   EmailString,
-  SecureString,
   GuidV4,
 } from '@digitaldefiance/ecies-lib';
+import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
 import {
   KeyPair as PaillierKeyPair,
-  PrivateKey,
   PublicKey,
+  generateRandomKeysSync,
 } from 'paillier-bigint';
 import { ECIES } from './constants';
 import { MemberErrorType } from './enumerations/memberErrorType';
@@ -25,7 +20,6 @@ import { MemberError } from './errors/memberError';
 import { IBrightChainMemberOperational } from './interfaces/member/operational';
 import { IMemberStorageData } from './interfaces/member/storage';
 import { ServiceProvider } from './services/service.provider';
-import { SignatureUint8Array } from './types';
 
 /**
  * A member of Brightchain.
@@ -34,11 +28,14 @@ import { SignatureUint8Array } from './types';
  * 2. Encrypt and decrypt data
  * 3. Participate in voting
  * 4. Establish ownership of blocks
- * 
+ *
  * Extends the ECIES-lib Member class and adds BrightChain-specific voting functionality.
  * Uses Buffer as the ID type (compatible with GuidV4's internal representation).
  */
-export class BrightChainMember extends Member<Buffer> implements IBrightChainMemberOperational {
+export class BrightChainMember
+  extends Member<Buffer>
+  implements IBrightChainMemberOperational
+{
   private _votingPublicKeyLoaded: PublicKey;
   private _guidId: GuidV4;
   private _guidCreatorId: GuidV4;
@@ -57,11 +54,11 @@ export class BrightChainMember extends Member<Buffer> implements IBrightChainMem
     creatorId?: GuidV4,
   ) {
     const eciesService = ServiceProvider.getInstance().eciesService;
-    
+
     // Store GuidV4 instances
     const guidId = id || GuidV4.new();
     const guidCreatorId = creatorId || guidId;
-    
+
     // Call parent constructor with Buffer IDs (GuidV4's internal representation)
     super(
       eciesService,
@@ -69,7 +66,9 @@ export class BrightChainMember extends Member<Buffer> implements IBrightChainMem
       name,
       email as unknown as EciesEmailString,
       publicKey,
-      privateKey ? new EciesSecureBuffer(new Uint8Array(privateKey)) : undefined,
+      privateKey
+        ? new EciesSecureBuffer(new Uint8Array(privateKey))
+        : undefined,
       wallet,
       Buffer.from(guidId.asRawGuidBuffer),
       dateCreated,
@@ -81,7 +80,7 @@ export class BrightChainMember extends Member<Buffer> implements IBrightChainMem
     this._guidId = guidId;
     this._guidCreatorId = guidCreatorId;
     this._votingPublicKeyLoaded = votingPublicKey;
-    
+
     // Load the voting public key
     this.loadVotingKeys(votingPublicKey);
   }
@@ -149,7 +148,7 @@ export class BrightChainMember extends Member<Buffer> implements IBrightChainMem
   public override loadWallet(mnemonic: EciesSecureString): void {
     // Call parent's loadWallet which validates and loads the wallet
     super.loadWallet(mnemonic);
-    
+
     // Note: Caller should await deriveVotingKeys() after this if needed
   }
 
@@ -210,7 +209,9 @@ export class BrightChainMember extends Member<Buffer> implements IBrightChainMem
       email: this.email.toString(),
       publicKey: Buffer.from(publicKeyUint8).toString('base64'),
       // Serialize voting public key (n value as hex string)
-      votingPublicKey: this.votingPublicKey ? this.votingPublicKey.n.toString(16) : '',
+      votingPublicKey: this.votingPublicKey
+        ? this.votingPublicKey.n.toString(16)
+        : '',
       creatorId: this.guidCreatorId.toString(),
       dateCreated: this.dateCreated.toISOString(),
       dateUpdated: this.dateUpdated.toISOString(),
@@ -223,7 +224,6 @@ export class BrightChainMember extends Member<Buffer> implements IBrightChainMem
     const email = new EmailString(storage.email);
 
     // Import PublicKey from paillier-bigint to reconstruct voting key
-    const { PublicKey } = require('paillier-bigint');
     const votingPublicKey = new PublicKey(
       BigInt('0x' + storage.votingPublicKey),
       BigInt('0x' + storage.votingPublicKey) + 1n, // g = n + 1 for Paillier
@@ -267,7 +267,7 @@ export class BrightChainMember extends Member<Buffer> implements IBrightChainMem
       throw new MemberError(MemberErrorType.InvalidEmailWhitespace);
     }
 
-    const votingService = ServiceProvider.getInstance().votingService;
+    const _votingService = ServiceProvider.getInstance().votingService;
     const mnemonic = forceMnemonic || eciesService.generateNewMnemonic();
     const { wallet } = eciesService.walletAndSeedFromMnemonic(mnemonic);
 
@@ -281,7 +281,6 @@ export class BrightChainMember extends Member<Buffer> implements IBrightChainMem
 
     // Derive voting keys synchronously using a simple approach
     // Note: For production, you may want to use the async deriveVotingKeys method after creation
-    const { generateRandomKeysSync } = require('paillier-bigint');
     const votingKeypair = generateRandomKeysSync(2048);
 
     const newId = createdBy ? new GuidV4(createdBy) : GuidV4.new();
@@ -297,7 +296,7 @@ export class BrightChainMember extends Member<Buffer> implements IBrightChainMem
       undefined,
       undefined,
     );
-    
+
     return {
       member,
       mnemonic,

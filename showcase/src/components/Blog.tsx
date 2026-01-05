@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import "./Blog.css";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import './Blog.css';
 
 interface BlogPostMeta {
   slug: string;
@@ -12,8 +13,8 @@ interface BlogPostMeta {
 }
 
 // Automatically discover all markdown files in public/blog
-const blogPosts = import.meta.glob("/public/blog/*.md", {
-  as: "raw",
+const blogPosts = import.meta.glob('/public/blog/*.md', {
+  as: 'raw',
   eager: true,
 });
 
@@ -25,7 +26,7 @@ function Blog() {
   useEffect(() => {
     loadBlogPosts();
     // Check if user is authenticated
-    const token = sessionStorage.getItem("github_token");
+    const token = sessionStorage.getItem('github_token');
     setIsAuthenticated(!!token);
   }, []);
 
@@ -37,13 +38,13 @@ function Blog() {
     if (frontmatterMatch) {
       const frontmatter = frontmatterMatch[1];
       frontmatter.split(/\r?\n/).forEach((line) => {
-        const colonIndex = line.indexOf(":");
+        const colonIndex = line.indexOf(':');
         if (colonIndex > -1) {
           const key = line.substring(0, colonIndex).trim();
           const value = line
             .substring(colonIndex + 1)
             .trim()
-            .replace(/^["']|["']$/g, "");
+            .replace(/^["']|["']$/g, '');
           if (key && value) {
             metadata[key] = value;
           }
@@ -59,34 +60,34 @@ function Blog() {
       const postsWithMeta = Object.entries(blogPosts)
         .filter(([path]) => {
           // Filter out README and other non-post files
-          const filename = path.split("/").pop() || "";
-          return !filename.toUpperCase().startsWith("README");
+          const filename = path.split('/').pop() || '';
+          return !filename.toUpperCase().startsWith('README');
         })
         .map(([path, content]) => {
           // Extract filename from path: /public/blog/2025-12-22-title.md
-          const filename = path.split("/").pop() || "";
-          const slug = filename.replace(/\.md$/, "");
+          const filename = path.split('/').pop() || '';
+          const slug = filename.replace(/\.md$/, '');
 
           // Parse frontmatter
           const metadata = parseFrontmatter(content as string);
 
           // Extract date from filename (YYYY-MM-DD-title.md)
           const dateMatch = filename.match(/^(\d{4}-\d{2}-\d{2})/);
-          const date = dateMatch ? dateMatch[1] : metadata.date || "";
+          const date = dateMatch ? dateMatch[1] : metadata.date || '';
 
           return {
             slug,
             title:
               metadata.title ||
-              slug.replace(/^\d{4}-\d{2}-\d{2}-/, "").replace(/-/g, " "),
+              slug.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/-/g, ' '),
             date,
-            excerpt: metadata.excerpt || "",
-            author: metadata.author || "",
+            excerpt: metadata.excerpt || '',
+            author: metadata.author || '',
           };
         });
 
       // Check sessionStorage for newly published posts not yet in build
-      const pendingPostsJson = sessionStorage.getItem("blog_pending_posts");
+      const pendingPostsJson = sessionStorage.getItem('blog_pending_posts');
       const cachedPosts = pendingPostsJson ? JSON.parse(pendingPostsJson) : [];
 
       const validCachedPosts = cachedPosts
@@ -94,14 +95,14 @@ function Blog() {
           slug: postData.slug,
           title: postData.title,
           date: postData.date,
-          excerpt: postData.excerpt || "",
-          author: postData.author || "",
+          excerpt: postData.excerpt || '',
+          author: postData.author || '',
           isNew: true,
         }))
         .filter(
           (post: BlogPostMeta) =>
             // Only include if not already in build
-            !postsWithMeta.some((p) => p.slug === post.slug)
+            !postsWithMeta.some((p) => p.slug === post.slug),
         );
 
       // Merge cached and built posts
@@ -111,7 +112,7 @@ function Blog() {
       allPosts.sort((a, b) => b.date.localeCompare(a.date));
       setPosts(allPosts);
     } catch (error) {
-      console.error("Error loading blog posts:", error);
+      console.error('Error loading blog posts:', error);
     } finally {
       setLoading(false);
     }
@@ -153,10 +154,10 @@ function Blog() {
                 <Link to={`/blog/${post.slug}`} className="blog-post-link">
                   {post.isNew && <span className="new-badge">✨ New</span>}
                   <div className="blog-post-date">
-                    {new Date(post.date).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
+                    {new Date(post.date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
                     })}
                   </div>
                   <h2>{post.title}</h2>

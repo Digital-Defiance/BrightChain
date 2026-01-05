@@ -9,12 +9,12 @@ export interface IApiLoginResponse extends IApiMessageResponse {
    * The authenticated user information
    */
   user: IRequestUserDTO;
-  
+
   /**
    * JWT authentication token
    */
   token: string;
-  
+
   /**
    * Server's public key for encryption
    */

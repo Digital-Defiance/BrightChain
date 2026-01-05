@@ -9,6 +9,7 @@ import { join } from 'path';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { EncryptedBlock } from '../blocks/encrypted';
 // import { MultiEncryptedBlock } from '../blocks/multiEncrypted'; // Removed
+import { ChecksumUint8Array, GuidV4 } from '@digitaldefiance/ecies-lib';
 import { BrightChainMember } from '../brightChainMember';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -24,7 +25,6 @@ import { BlockService } from '../services/blockService';
 import { CBLService } from '../services/cblService';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceLocator } from '../services/serviceLocator';
-import { ChecksumUint8Array, GuidV4 } from '@digitaldefiance/ecies-lib';
 import { uint8ArrayToHex } from '../types';
 
 /**
@@ -32,9 +32,10 @@ import { uint8ArrayToHex } from '../types';
  * It maintains an index of CBL addresses and their associated block tuples.
  * Supports both encrypted and plain CBLs.
  */
-export class CBLStore
-  implements ISimpleStoreAsync<ChecksumUint8Array, ConstituentBlockListBlock>
-{
+export class CBLStore implements ISimpleStoreAsync<
+  ChecksumUint8Array,
+  ConstituentBlockListBlock
+> {
   private readonly _storePath: string;
   private readonly _cblPath: string;
   private readonly _indexPath: string;
@@ -108,8 +109,6 @@ export class CBLStore
     if (userForvalidation === undefined) {
       throw new CblError(CblErrorType.CreatorRequiredForSignature);
     }
-
-
 
     if (!Buffer.from(key).equals(Buffer.from(value.idChecksum))) {
       throw new StoreError(StoreErrorType.BlockIdMismatch);

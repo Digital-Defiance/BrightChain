@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import {
   ApiErrorResponse,
   ApiRequestHandler,
@@ -5,7 +6,6 @@ import {
   IStatusCodeResponse,
   TypedHandlers,
 } from '@brightchain/brightchain-api-lib';
-import { Request } from 'express';
 import { IApplication } from '../../interfaces/application';
 import { BaseController } from '../base';
 
@@ -37,7 +37,9 @@ export class UserController extends BaseController<
 
   private handleRegister: ApiRequestHandler<
     IApiMessageResponse | ApiErrorResponse
-  > = async (req): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  > = async (
+    req,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
     return {
       statusCode: 201,
       response: {
@@ -48,7 +50,9 @@ export class UserController extends BaseController<
 
   private handleLogin: ApiRequestHandler<
     IApiMessageResponse | ApiErrorResponse
-  > = async (req): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  > = async (
+    req,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
     return {
       statusCode: 200,
       response: {

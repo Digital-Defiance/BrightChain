@@ -1,3 +1,4 @@
+import { EmailString } from '@digitaldefiance/ecies-lib';
 import { randomBytes } from 'crypto';
 import { EphemeralBlock } from '../blocks/ephemeral';
 import { RandomBlock } from '../blocks/random';
@@ -13,7 +14,6 @@ import { TupleError } from '../errors/tupleError';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
 import { TupleService } from './tuple.service';
-import { EmailString } from '@digitaldefiance/ecies-lib';
 
 describe('TupleService', () => {
   let creator: BrightChainMember;
@@ -241,9 +241,7 @@ describe('TupleService', () => {
         originalData,
       );
       // Verify the original data length is preserved
-      expect(recoveredBlock.lengthBeforeEncryption).toBe(
-        originalData.length,
-      );
+      expect(recoveredBlock.lengthBeforeEncryption).toBe(originalData.length);
       expect(recoveredBlock.creator).toBe(creator);
       expect(recoveredBlock.blockSize).toBe(blockSize);
     });

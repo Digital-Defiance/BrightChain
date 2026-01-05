@@ -10025,6 +10025,7 @@ __metadata:
     express: "npm:4.21.2"
     express-validator: "npm:^7.2.1"
     file-type: "npm:^20.1.0"
+    globals: "npm:^17.0.0"
     helmet: "npm:^8.0.0"
     helmet-csp: "npm:^4.0.0"
     i18next: "npm:^24.2.1"
@@ -14161,6 +14162,13 @@ __metadata:
   version: 15.15.0
   resolution: "globals@npm:15.15.0"
   checksum: 10c0/f9ae80996392ca71316495a39bec88ac43ae3525a438b5626cd9d5ce9d5500d0a98a266409605f8cd7241c7acf57c354a48111ea02a767ba4f374b806d6861fe
+  languageName: node
+  linkType: hard
+
+"globals@npm:^17.0.0":
+  version: 17.0.0
+  resolution: "globals@npm:17.0.0"
+  checksum: 10c0/e3c169fdcb0fc6755707b697afb367bea483eb29992cfc0de1637382eb893146e17f8f96db6d7453e3696b478a7863ae2000e6c71cd2f4061410285106d3847a
   languageName: node
   linkType: hard
 

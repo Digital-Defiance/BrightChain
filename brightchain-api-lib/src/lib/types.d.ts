@@ -1,7 +1,7 @@
+import { Member } from '@digitaldefiance/ecies-lib';
 import { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
 import { ValidationChain } from 'express-validator';
 import { ValidatedBody } from './shared-types';
-import { Member } from '@digitaldefiance/ecies-lib';
 
 declare module 'express-serve-static-core' {
   interface Request {

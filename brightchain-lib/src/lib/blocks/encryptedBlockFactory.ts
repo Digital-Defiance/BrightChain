@@ -1,3 +1,4 @@
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { randomBytes } from 'crypto';
 import { BrightChainMember } from '../brightChainMember';
 import { ECIES } from '../constants';
@@ -11,7 +12,6 @@ import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumService } from '../services/checksum.service';
-import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { ChecksumUint8Array } from '../types';
 import { EncryptedBlock } from './encrypted';
 
