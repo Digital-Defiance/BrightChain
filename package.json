@@ -43,7 +43,7 @@
     "@digitaldefiance/ecies-lib": "^4.7.14",
     "@digitaldefiance/express-suite-react-components": "^2.9.24",
     "@digitaldefiance/i18n-lib": "^3.8.16",
-    "@digitaldefiance/node-ecies-lib": "^4.7.15",
+    "@digitaldefiance/node-ecies-lib": "^4.8.2",
     "@digitaldefiance/node-express-suite": "^3.6.41",
     "@digitaldefiance/suite-core-lib": "^3.6.31",
     "@emotion/react": "11.14.0",

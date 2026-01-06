@@ -2124,6 +2124,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@digitaldefiance/ecies-lib@npm:4.8.2":
+  version: 4.8.2
+  resolution: "@digitaldefiance/ecies-lib@npm:4.8.2"
+  dependencies:
+    "@digitaldefiance/i18n-lib": "npm:3.8.16"
+    "@ethereumjs/wallet": "npm:^10.0.0"
+    "@noble/curves": "npm:1.9.0"
+    "@noble/hashes": "npm:1.8.0"
+    "@scure/bip32": "npm:1.7.0"
+    bson: "npm:^7.0.0"
+    paillier-bigint: "npm:^3.4.1"
+    ts-brand: "npm:^0.2.0"
+  checksum: 10c0/6c47f6f53895a707c0e6f77005e825958d134bedd50b719ae871150ea6ad081efe9333ceac8c7939bf5b276c33c339a6548bc7802525812688b077d846ec9220
+  languageName: node
+  linkType: hard
+
 "@digitaldefiance/express-suite-react-components@npm:^2.9.24":
   version: 2.9.24
   resolution: "@digitaldefiance/express-suite-react-components@npm:2.9.24"
@@ -2185,7 +2201,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/node-ecies-lib@npm:4.7.15, @digitaldefiance/node-ecies-lib@npm:^4.7.15":
+"@digitaldefiance/node-ecies-lib@npm:4.7.15":
   version: 4.7.15
   resolution: "@digitaldefiance/node-ecies-lib@npm:4.7.15"
   dependencies:
@@ -2201,6 +2217,25 @@ __metadata:
     paillier-bigint: "npm:^3.4.1"
     ts-brand: "npm:^0.2.0"
   checksum: 10c0/75951b515729086090a5b68248da77ae71d13e9971aef0f174dccfc78f0d81f676c004bc89c5c6e52a4dd37094061c6e5530d01c24aa795d9d14399a1ad6b262
+  languageName: node
+  linkType: hard
+
+"@digitaldefiance/node-ecies-lib@npm:^4.8.2":
+  version: 4.8.2
+  resolution: "@digitaldefiance/node-ecies-lib@npm:4.8.2"
+  dependencies:
+    "@digitaldefiance/ecies-lib": "npm:4.8.2"
+    "@digitaldefiance/express-suite-test-utils": "npm:1.0.14"
+    "@digitaldefiance/i18n-lib": "npm:3.8.16"
+    "@ethereumjs/wallet": "npm:^10.0.0"
+    "@noble/curves": "npm:1.9.0"
+    "@noble/hashes": "npm:1.8.0"
+    "@scure/bip32": "npm:1.7.0"
+    bson: "npm:^7.0.0"
+    ethereum-cryptography: "npm:^3.2.0"
+    paillier-bigint: "npm:^3.4.1"
+    ts-brand: "npm:^0.2.0"
+  checksum: 10c0/9f683688a3b2f5b47dab8fa546db63fb81fea8f36688cd517117e1db90626da8bd6e52f4295ad4a1ca3c5999b739518c7e8fd708c1f1c8395da4f8b366c1d9a5
   languageName: node
   linkType: hard
 
@@ -9947,7 +9982,7 @@ __metadata:
     "@digitaldefiance/express-suite-react-components": "npm:^2.9.24"
     "@digitaldefiance/express-suite-test-utils": "npm:^1.0.14"
     "@digitaldefiance/i18n-lib": "npm:^3.8.16"
-    "@digitaldefiance/node-ecies-lib": "npm:^4.7.15"
+    "@digitaldefiance/node-ecies-lib": "npm:^4.8.2"
     "@digitaldefiance/node-express-suite": "npm:^3.6.41"
     "@digitaldefiance/suite-core-lib": "npm:^3.6.31"
     "@emotion/react": "npm:11.14.0"
