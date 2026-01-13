@@ -5,6 +5,7 @@ import {
   PlatformID,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
+import { uint8ArrayToBase64 } from '../bufferUtils';
 import { RawDataBlock } from '../blocks/rawData';
 import { MemberDocument } from '../documents/member/memberDocument';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -73,7 +74,7 @@ export class MemberStore<
       name: data.name,
       dateCreated: new Date().toISOString(), // Convert to ISO string for JSON
       dateUpdated: new Date().toISOString(), // Convert to ISO string for JSON
-      publicKey: Buffer.from(member.publicKey).toString('base64'), // Convert to base64 string as expected by Member.fromJson
+      publicKey: uint8ArrayToBase64(member.publicKey), // Convert to base64 string as expected by Member.fromJson
       votingPublicKey:
         member.votingPublicKey &&
         ServiceProvider.getInstance<TID>().votingService.votingPublicKeyToBuffer(
@@ -96,7 +97,7 @@ export class MemberStore<
       name: data.name,
       dateCreated: new Date().toISOString(), // Convert to ISO string for JSON
       dateUpdated: new Date().toISOString(), // Convert to ISO string for JSON
-      publicKey: Buffer.from(member.publicKey).toString('base64'), // Convert to base64 string as expected by Member.fromJson
+      publicKey: uint8ArrayToBase64(member.publicKey), // Convert to base64 string as expected by Member.fromJson
       email: data.contactEmail ? data.contactEmail.toString() : '', // Use 'email' field name as expected by Member.fromJson
       trustedPeers: [],
       blockedPeers: [],

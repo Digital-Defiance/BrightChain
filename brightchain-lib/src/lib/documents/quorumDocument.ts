@@ -76,7 +76,7 @@ export class QuorumDocument<
       creator as Member<Uint8Array>,
       creator as Member<Uint8Array>,
     );
-    const checksum = Buffer.from(
+    const checksum = new Uint8Array(
       cbl.idChecksum,
     ) as unknown as ChecksumUint8Array;
 

@@ -223,14 +223,14 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     }
     const encryptionType = this.encryptionType;
     if (encryptionType === BlockEncryptionType.SingleRecipient) {
-      const headerData = Buffer.from(
-        this.layerHeaderData.buffer,
-        this.layerHeaderData.byteOffset +
-          ENCRYPTION.ENCRYPTION_TYPE_SIZE +
-          ENCRYPTION.RECIPIENT_ID_SIZE,
-        this.layerHeaderData.byteLength -
-          ENCRYPTION.ENCRYPTION_TYPE_SIZE -
-          ENCRYPTION.RECIPIENT_ID_SIZE,
+      const headerData = new Uint8Array(
+        this.layerHeaderData.buffer.slice(
+          this.layerHeaderData.byteOffset +
+            ENCRYPTION.ENCRYPTION_TYPE_SIZE +
+            ENCRYPTION.RECIPIENT_ID_SIZE,
+          this.layerHeaderData.byteOffset +
+            this.layerHeaderData.byteLength
+        )
       );
       this._cachedEncryptionDetails =
         ServiceLocator.getServiceProvider<TID>().eciesService.parseSingleEncryptedHeader(
@@ -238,10 +238,11 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           headerData,
         );
     } else if (encryptionType === BlockEncryptionType.MultiRecipient) {
-      const headerData = Buffer.from(
-        this.layerHeaderData.buffer,
-        this.layerHeaderData.byteOffset + ENCRYPTION.ENCRYPTION_TYPE_SIZE,
-        this.layerHeaderData.byteLength - ENCRYPTION.ENCRYPTION_TYPE_SIZE,
+      const headerData = new Uint8Array(
+        this.layerHeaderData.buffer.slice(
+          this.layerHeaderData.byteOffset + ENCRYPTION.ENCRYPTION_TYPE_SIZE,
+          this.layerHeaderData.byteOffset + this.layerHeaderData.byteLength
+        )
       );
       this._cachedEncryptionDetails =
         ServiceLocator.getServiceProvider<TID>().eciesService.parseMultiEncryptedHeader(

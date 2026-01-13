@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -103,7 +104,26 @@ const nobleAliases = [
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [alias({ entries: nobleAliases }), react()],
+  plugins: [
+    alias({ entries: nobleAliases }),
+    react(),
+    nodePolyfills({
+      // Whether to polyfill `node:` protocol imports.
+      protocolImports: true,
+      // Whether to polyfill these globals.
+      globals: {
+        Buffer: true,
+        global: true,
+        process: true,
+      },
+      // Whether to polyfill these modules.
+      include: [
+        'buffer',
+        'process',
+        'util',
+      ],
+    }),
+  ],
   base: '/',
   build: {
     outDir: 'dist',
@@ -113,6 +133,8 @@ export default defineConfig({
       transformMixedEsModules: true,
       // Ensure named exports are properly detected
       requireReturnsDefault: 'auto',
+      // Ignore dynamic requires that can't be resolved
+      ignoreDynamicRequires: true,
     },
     rollupOptions: {
       plugins: [
@@ -221,5 +243,8 @@ export default defineConfig({
   define: {
     // Required for some packages that check for Node.js environment
     global: 'globalThis',
+    // Polyfill process for Node.js compatibility
+    'process.env': '{}',
+    'process.env.NODE_ENV': '"production"',
   },
 });

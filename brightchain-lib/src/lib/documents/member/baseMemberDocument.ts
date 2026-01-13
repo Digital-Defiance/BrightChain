@@ -1,4 +1,5 @@
 import { ChecksumUint8Array, EmailString } from '@digitaldefiance/ecies-lib';
+import { base64ToUint8Array } from '../../bufferUtils';
 import { NotImplementedError } from '../../errors/notImplemented';
 import { IMemberStorageData } from '../../interfaces/member/storage';
 import { ServiceProvider } from '../../services/service.provider';
@@ -130,7 +131,7 @@ export abstract class BaseMemberDocument {
   }
 
   public get publicKey() {
-    return Buffer.from(this.publicData.publicKey, 'base64');
+    return base64ToUint8Array(this.publicData.publicKey);
   }
 
   public get privateKey() {
@@ -138,7 +139,7 @@ export abstract class BaseMemberDocument {
   }
 
   public get votingPublicKey() {
-    return Buffer.from(this.publicData.votingPublicKey, 'base64');
+    return base64ToUint8Array(this.publicData.votingPublicKey);
   }
 
   public get votingPrivateKey() {

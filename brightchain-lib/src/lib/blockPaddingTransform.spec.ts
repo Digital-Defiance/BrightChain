@@ -1,14 +1,15 @@
 import { Readable } from './browserStream';
 import BlockPaddingTransform from './blockPaddingTransform';
+import { uint8ArrayToString } from './bufferUtils';
 import { BlockSize } from './enumerations/blockSize';
 
 describe('BlockPaddingTransform', () => {
   it('should transform data into blocks of specified size', (done) => {
     const transform = new BlockPaddingTransform(BlockSize.Message);
-    const input = Buffer.from('HelloWorld'); // 10 bytes
-    const blocks: Buffer[] = [];
+    const input = new TextEncoder().encode('HelloWorld'); // 10 bytes
+    const blocks: Uint8Array[] = [];
 
-    transform.on('data', (block: Buffer) => {
+    transform.on('data', (block: Uint8Array) => {
       blocks.push(block);
     });
 
@@ -16,7 +17,7 @@ describe('BlockPaddingTransform', () => {
       expect(blocks.length).toBe(1);
       expect(blocks[0].length).toBe(BlockSize.Message);
       // First 10 bytes should be our input
-      expect(blocks[0].subarray(0, 10).toString()).toBe('HelloWorld');
+      expect(uint8ArrayToString(blocks[0].subarray(0, 10))).toBe('HelloWorld');
       // Rest should be random padding
       expect(blocks[0].length - 10).toBe(BlockSize.Message - 10);
       done();
@@ -28,10 +29,10 @@ describe('BlockPaddingTransform', () => {
 
   it('should handle data larger than block size', (done) => {
     const transform = new BlockPaddingTransform(BlockSize.Message);
-    const input = Buffer.alloc(BlockSize.Message + 10, 'x'); // One full block plus 10 bytes
-    const blocks: Buffer[] = [];
+    const input = new Uint8Array(BlockSize.Message + 10).fill(120); // 'x' character code
+    const blocks: Uint8Array[] = [];
 
-    transform.on('data', (block: Buffer) => {
+    transform.on('data', (block: Uint8Array) => {
       blocks.push(block);
     });
 
@@ -39,10 +40,10 @@ describe('BlockPaddingTransform', () => {
       expect(blocks.length).toBe(2);
       // First block should be exactly block size
       expect(blocks[0].length).toBe(BlockSize.Message);
-      expect(blocks[0].toString()).toBe('x'.repeat(BlockSize.Message));
+      expect(uint8ArrayToString(blocks[0])).toBe('x'.repeat(BlockSize.Message));
       // Second block should be padded to block size
       expect(blocks[1].length).toBe(BlockSize.Message);
-      expect(blocks[1].subarray(0, 10).toString()).toBe('x'.repeat(10));
+      expect(uint8ArrayToString(blocks[1].subarray(0, 10))).toBe('x'.repeat(10));
       done();
     });
 
@@ -52,9 +53,9 @@ describe('BlockPaddingTransform', () => {
 
   it('should handle empty input', (done) => {
     const transform = new BlockPaddingTransform(BlockSize.Message);
-    const blocks: Buffer[] = [];
+    const blocks: Uint8Array[] = [];
 
-    transform.on('data', (block: Buffer) => {
+    transform.on('data', (block: Uint8Array) => {
       blocks.push(block);
     });
 
@@ -68,40 +69,40 @@ describe('BlockPaddingTransform', () => {
 
   it('should handle chunked input', (done) => {
     const transform = new BlockPaddingTransform(BlockSize.Message);
-    const blocks: Buffer[] = [];
+    const blocks: Uint8Array[] = [];
 
-    transform.on('data', (block: Buffer) => {
+    transform.on('data', (block: Uint8Array) => {
       blocks.push(block);
     });
 
     transform.on('end', () => {
       expect(blocks.length).toBe(1);
       expect(blocks[0].length).toBe(BlockSize.Message);
-      expect(blocks[0].subarray(0, 15).toString()).toBe('Hello,World!123');
+      expect(uint8ArrayToString(blocks[0].subarray(0, 15))).toBe('Hello,World!123');
       done();
     });
 
     // Write data in chunks
-    transform.write(Buffer.from('Hello,'));
-    transform.write(Buffer.from('World!'));
-    transform.write(Buffer.from('123'));
+    transform.write(new TextEncoder().encode('Hello,'));
+    transform.write(new TextEncoder().encode('World!'));
+    transform.write(new TextEncoder().encode('123'));
     transform.end();
   });
 
   it('should work with readable streams', (done) => {
     const transform = new BlockPaddingTransform(BlockSize.Message);
-    const input = Buffer.from('StreamingData');
+    const input = new TextEncoder().encode('StreamingData');
     const readable = Readable.from(input);
-    const blocks: Buffer[] = [];
+    const blocks: Uint8Array[] = [];
 
-    transform.on('data', (block: Buffer) => {
+    transform.on('data', (block: Uint8Array) => {
       blocks.push(block);
     });
 
     transform.on('end', () => {
       expect(blocks.length).toBe(1);
       expect(blocks[0].length).toBe(BlockSize.Message);
-      expect(blocks[0].subarray(0, input.length).toString()).toBe(
+      expect(uint8ArrayToString(blocks[0].subarray(0, input.length))).toBe(
         'StreamingData',
       );
       done();
@@ -125,7 +126,7 @@ describe('BlockPaddingTransform', () => {
       expect(transform).toBeDefined();
       const testData = new Uint8Array(size - 1);
       testData.fill(65); // 'A' character code
-      expect(() => transform.write(Buffer.from(testData))).not.toThrow();
+      expect(() => transform.write(testData)).not.toThrow();
     });
   });
 });

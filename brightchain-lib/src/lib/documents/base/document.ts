@@ -266,7 +266,7 @@ export class Document<T> {
     }
 
     this._dirty = false;
-    const json = new Uint8Array(Buffer.from(this.toJson()));
+    const json = new TextEncoder().encode(this.toJson());
     const blockSize =
       ServiceLocator.getServiceProvider().blockService.getBlockSizeForData(
         json.length,

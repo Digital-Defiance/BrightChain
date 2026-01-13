@@ -7,6 +7,7 @@ import {
   SignatureUint8Array,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
+import { uint8ArrayToBase64 } from '../bufferUtils';
 import { generateRandomKeysSync } from 'paillier-bigint';
 import { IQuorumDocument } from '../documents/quorumDocument';
 import { MemberType } from '../enumerations/memberType';
@@ -37,7 +38,7 @@ export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
       type: MemberType.User,
       name: 'Placeholder',
       email: 'placeholder@example.com',
-      publicKey: Buffer.alloc(0).toString('base64'),
+      publicKey: uint8ArrayToBase64(new Uint8Array(0)),
       votingPublicKey: publicKey.n.toString(16),
       creatorId: memberId,
       dateCreated: new Date().toISOString(),
@@ -52,7 +53,7 @@ export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
       type: Object,
       required: true,
       serialize: (value: ChecksumUint8Array): string =>
-        Buffer.from(value).toString('hex'),
+        uint8ArrayToHex(value),
       hydrate: (value: string): ChecksumUint8Array => {
         if (!this.isString(value)) throw new Error('Invalid checksum format');
         return hexToUint8Array(
