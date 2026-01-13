@@ -38,7 +38,7 @@
     "test:ci": "NODE_ENV=test npx nx test brightchain-lib --parallel=16 --skip-nx-cache --configuration=ci",
     "coverage:md:generate": "node tools/scripts/coverage-to-markdown.mjs",
     "commands": "./list-scripts.sh",
-    "publish:brightchain-lib": "NODE_OPTIONS='--max-old-space-size=16384' npx nx build brightchain-lib --skip-nx-cache && npm publish --registry https://registry.npmjs.org/ dist/packages/brightchain-lib --access public"
+    "publish:brightchain-lib": "NODE_OPTIONS='--max-old-space-size=16384' npx nx build brightchain-lib --skip-nx-cache && cd dist/brightchain-lib && npm publish --registry https://registry.npmjs.org/ . --access public"
   },
   "private": true,
   "dependencies": {
