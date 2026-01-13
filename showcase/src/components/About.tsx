@@ -7,7 +7,9 @@ import {
   FaRocket,
   FaUsers,
 } from 'react-icons/fa';
+import { GiCookingPot } from 'react-icons/gi';
 import { useInView } from 'react-intersection-observer';
+import { Link } from 'react-router-dom';
 import './About.css';
 
 const About = () => {
@@ -135,6 +137,13 @@ const About = () => {
             support for sustainable blockchain technology.
           </p>
           <div className="cta-buttons">
+            <Link
+              to="/demo"
+              className="btn btn-primary"
+            >
+              <GiCookingPot />
+              🥫 Interactive Demo
+            </Link>
             <a
               href="https://digitaldefiance.org"
               target="_blank"
@@ -148,7 +157,7 @@ const About = () => {
               href="https://github.com/Digital-Defiance/BrightChain"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-primary"
+              className="btn btn-secondary"
             >
               <FaGithub />
               Visit BrightChain on GitHub
@@ -193,6 +202,13 @@ const About = () => {
               rel="noopener noreferrer"
             >
               NPM
+            </a>
+            {' • '}
+            <a
+              href="/demo"
+              rel="noopener noreferrer"
+            >
+              Interactive Demo
             </a>
           </p>
         </div>

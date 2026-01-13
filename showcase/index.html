@@ -8,6 +8,68 @@
     <meta name="keywords" content="Blockchain, Decentralized Storage, Homomorphic Voting, Cryptography, ECIES, AES-256-GCM, Paillier Encryption, Owner-Free File System, OFFS, Brokered Anonymity, Quorum, P2P, IPFS, Ethereum, Sustainable Blockchain" />
     <title>BrightChain - Next-Generation Decentralized Infrastructure</title>
     <script>
+      // Set up require FIRST before any other scripts
+      if (typeof require === 'undefined') {
+        window.require = function(id) {
+          console.log('require called for:', id);
+          // Return empty objects for common Node.js modules
+          if (id === 'fs' || id === 'path' || id === 'os' || id === 'util' || id === 'events' || id === 'stream') {
+            return {};
+          }
+          // Handle emotion modules
+          if (id === '@emotion/is-prop-valid') {
+            return function() { return true; };
+          }
+          // Return comprehensive crypto polyfill
+          if (id === 'crypto') {
+            console.log('Returning pre-cached crypto module:', window._cryptoModule);
+            return window._cryptoModule;
+          }
+          // Return process polyfill
+          if (id === 'process') {
+            return {
+              env: {},
+              version: 'v16.0.0',
+              platform: 'browser',
+              nextTick: function(fn) { setTimeout(fn, 0); }
+            };
+          }
+          console.warn('Module', id, 'not found, returning empty object');
+          return {};
+        };
+      }
+      
+      // Make require available globally
+      if (typeof global === 'undefined') {
+        window.global = window;
+      }
+      if (typeof globalThis !== 'undefined') {
+        globalThis.require = window.require;
+      }
+      
+      // Pre-cache the crypto module to avoid timing issues
+      window._cryptoModule = {
+        crypto: window.crypto || {
+          getRandomValues: function(arr) {
+            for (let i = 0; i < arr.length; i++) {
+              arr[i] = Math.floor(Math.random() * 256);
+            }
+            return arr;
+          }
+        },
+        randomBytes: function(size) {
+          const arr = new Uint8Array(size);
+          if (window.crypto && window.crypto.getRandomValues) {
+            window.crypto.getRandomValues(arr);
+          } else {
+            for (let i = 0; i < size; i++) {
+              arr[i] = Math.floor(Math.random() * 256);
+            }
+          }
+          return Array.from(arr);
+        }
+      };
+      
       // GitHub Pages SPA redirect recovery
       // Check if we were redirected from a 404 page
       (function() {
@@ -211,70 +273,21 @@
         console.log('React root elements found:', reactErrors.length);
       }, 3000);
       
-      // Polyfill require for browser compatibility
-      if (typeof require === 'undefined') {
-        window.require = function(id) {
-          // Return empty objects for common Node.js modules
-          if (id === 'fs' || id === 'path' || id === 'os' || id === 'util' || id === 'events' || id === 'stream') {
-            return {};
+      // Ensure global crypto is available
+      if (!window.crypto) {
+        window.crypto = {
+          getRandomValues: function(arr) {
+            for (let i = 0; i < arr.length; i++) {
+              arr[i] = Math.floor(Math.random() * 256);
+            }
+            return arr;
           }
-          // Handle emotion modules
-          if (id === '@emotion/is-prop-valid') {
-            return function() { return true; };
-          }
-          // Return comprehensive crypto polyfill
-          if (id === 'crypto') {
-            return {
-              randomBytes: function(size) {
-                const arr = new Uint8Array(size);
-                window.crypto.getRandomValues(arr);
-                return Array.from(arr);
-              },
-              createHash: function(algorithm) {
-                return {
-                  update: function(data) { 
-                    this._data = (this._data || '') + data;
-                    return this; 
-                  },
-                  digest: function(encoding) { 
-                    // Simple hash simulation - not cryptographically secure
-                    let hash = 0;
-                    const str = this._data || '';
-                    for (let i = 0; i < str.length; i++) {
-                      const char = str.charCodeAt(i);
-                      hash = ((hash << 5) - hash) + char;
-                      hash = hash & hash; // Convert to 32-bit integer
-                    }
-                    const result = Math.abs(hash).toString(16).padStart(8, '0');
-                    return encoding === 'hex' ? result : Array.from(new Uint8Array(new TextEncoder().encode(result)));
-                  },
-                  _data: ''
-                };
-              },
-              pbkdf2Sync: function(password, salt, iterations, keylen, digest) {
-                // Simple PBKDF2 simulation - not cryptographically secure
-                const result = new Uint8Array(keylen);
-                window.crypto.getRandomValues(result);
-                return Array.from(result);
-              },
-              constants: {
-                RSA_PKCS1_PADDING: 1
-              }
-            };
-          }
-          // Return process polyfill
-          if (id === 'process') {
-            return {
-              env: {},
-              version: 'v16.0.0',
-              platform: 'browser',
-              nextTick: function(fn) { setTimeout(fn, 0); }
-            };
-          }
-          // For other modules, return empty object instead of throwing
-          console.warn('Module', id, 'not found, returning empty object');
-          return {};
         };
+      }
+      
+      // Ensure globalThis.crypto is also available
+      if (typeof globalThis !== 'undefined' && !globalThis.crypto) {
+        globalThis.crypto = window.crypto;
       }
       
       // Ensure Buffer is available globally if not already polyfilled
@@ -295,36 +308,7 @@
     </script>
   </head>
   <body>
-    <div id="root">
-      <!-- Fallback content that shows immediately -->
-      <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif; background: white; min-height: 100vh;">
-        <h1 style="color: #333 !important;">🌟 BrightChain Showcase</h1>
-        <p style="color: #333 !important;">Next-Generation Decentralized Infrastructure</p>
-        <div style="margin: 20px 0; padding: 15px; background: #f0f8ff; border-radius: 8px;">
-          <h3 style="color: #333 !important;">✅ Core Systems Status</h3>
-          <p style="color: #333 !important;">✅ Browser Compatibility: Active</p>
-          <p style="color: #333 !important;">✅ Cryptographic Polyfills: Loaded</p>
-          <p style="color: #333 !important;">✅ Secrets.js Fallback: Available</p>
-          <p style="color: #333 !important;">✅ BrightChain Library: Ready</p>
-        </div>
-        <p style="color: #333 !important; font-size: 14px;">The showcase is running successfully with fallback systems.</p>
-        <p style="color: #333 !important; font-size: 14px;">All core BrightChain functionality is available.</p>
-        <div style="margin-top: 30px;">
-          <button onclick="window.location.href='/demo.html'" style="display: inline-block; margin: 10px; padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">🧪 BrightChain Demo</button>
-          <button onclick="window.location.href='/minimal.html'" style="display: inline-block; margin: 10px; padding: 12px 24px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">⚡ Minimal Demo</button>
-          <button onclick="window.location.href='/soup.html'" style="display: inline-block; margin: 10px; padding: 12px 24px; background: #ffc107; color: black; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">🍲 Block Soup Demo</button>
-        </div>
-      </div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      // If React loads successfully, it will replace the fallback content
-      setTimeout(() => {
-        const root = document.getElementById('root');
-        if (root && root.innerHTML.includes('BrightChain Showcase')) {
-          console.log('✅ Fallback UI is displayed - app is functional');
-        }
-      }, 1000);
-    </script>
   </body>
 </html>

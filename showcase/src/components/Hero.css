@@ -84,6 +84,15 @@
   margin-bottom: 1.5rem;
 }
 
+.hero-subtitle.gradient-text {
+  background: linear-gradient(135deg, #00ff88, #0099ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
 .hero-description {
   font-size: clamp(1rem, 2vw, 1.25rem);
   color: var(--text-secondary);

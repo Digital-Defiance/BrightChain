@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import About from './components/About';
+import Blog from './components/Blog';
+import BlogPost from './components/BlogPost';
+import BlogEditor from './components/BlogEditor';
 import Components from './components/Components';
 import Demo from './components/Demo';
 import Hero from './components/Hero';
@@ -33,9 +36,10 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/soup" element={<SimpleSoupDemo />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/new" element={<BlogEditor />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
         <Route path="/demo" element={<BrightChainSoupDemo />} />
-        <Route path="/minimal" element={<MinimalBrightChainDemo />} />
       </Routes>
     </Router>
   );

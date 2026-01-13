@@ -170,6 +170,8 @@ export default defineConfig({
     dedupe: ['tslib', '@noble/hashes', '@noble/curves'],
     extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
     alias: {
+      // Stub out secrets.js for browser compatibility
+      'secrets.js-34r7h': resolve(__dirname, 'src/polyfills/secrets-stub.ts'),
       // Local workspace alias - use browser-specific entry point
       '@brightchain/brightchain-lib': resolve(__dirname, '../brightchain-lib/src/browser.ts'),
       // Replace js-sha3 with @noble/hashes for browser compatibility
