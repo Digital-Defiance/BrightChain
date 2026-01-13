@@ -3,7 +3,7 @@ import {
   Member,
   type PlatformID,
 } from '@digitaldefiance/ecies-lib';
-import { Readable } from 'stream';
+import { Readable } from './browserStream';
 import { ConstituentBlockListBlock } from './blocks/cbl';
 import { EncryptedBlock } from './blocks/encrypted';
 import { EphemeralBlock } from './blocks/ephemeral';
@@ -61,66 +61,23 @@ export class CblStream<TID extends PlatformID = Uint8Array> extends Readable {
 
     this.cbl = cbl;
     this.getWhitenedBlock = getWhitenedBlock;
-    this.maxTuple = cbl.cblAddressCount / cbl.tupleSize;
+    // Ensure we have at least 1 tuple to process if we have addresses
+    this.maxTuple = Math.max(1, Math.ceil(cbl.cblAddressCount / cbl.tupleSize));
     this.overallReadOffset = 0;
     this.currentDataOffset = -1;
     this.creatorForDecryption = creatorForDecryption;
   }
 
-  override async _read(size: number): Promise<void> {
-    // If there's no data to read, end the stream immediately
-    if (this.cbl.originalDataLength === 0) {
-      this.push(null);
-      return;
-    }
-
-    // Convert originalDataLength to number if it's a BigInt
-    const originalDataLength = this.cbl.originalDataLength;
-    const bytesRemaining = originalDataLength - this.overallReadOffset;
-    let stillToRead = bytesRemaining > size ? size : bytesRemaining;
-
-    while (stillToRead > 0) {
-      // If we have no data or have read all current data, read next tuple
-      if (
-        !this.currentData ||
-        this.currentDataOffset >= this.currentData.data.length
-      ) {
-        await this.readData();
-        if (!this.currentData) {
-          // No more data available
-          break;
-        }
-      }
-
-      // Read up to size bytes from the current data
-      const bytesToRead = Math.min(
-        stillToRead,
-        this.currentData.data.length - this.currentDataOffset,
-      );
-
-      const chunk = this.currentData.data.subarray(
-        this.currentDataOffset,
-        this.currentDataOffset + bytesToRead,
-      );
-      this.push(chunk);
-
-      this.overallReadOffset += bytesToRead;
-      this.currentDataOffset += bytesToRead;
-      stillToRead -= bytesToRead;
-
-      // Check if we have reached or exceeded the originalDataLength
-      if (this.overallReadOffset >= this.cbl.originalDataLength) {
-        this.push(null); // End the stream
-        break;
-      }
-    }
+  _read(size: number): void {
+    // Trigger async reading immediately
+    setTimeout(() => {
+      this.readData().catch(error => this.emit('error', error));
+    }, 0);
   }
 
   private async readData(): Promise<void> {
     if (this.currentTupleIndex >= this.maxTuple) {
-      this.push(null);
-      this.currentData = null;
-      this.currentDataOffset = -1;
+      this.push(null); // Signal end of stream
       return;
     }
 
@@ -144,7 +101,6 @@ export class CblStream<TID extends PlatformID = Uint8Array> extends Readable {
       const xoredData = await tuple.xor();
 
       // Convert RawDataBlock to OwnedDataBlock
-      // Handle the case where creator might be undefined
       if (!this.cbl.creator) {
         throw new CblError(CblErrorType.CreatorUndefined);
       }
@@ -153,7 +109,7 @@ export class CblStream<TID extends PlatformID = Uint8Array> extends Readable {
         BlockType.EphemeralOwnedDataBlock,
         BlockDataType.RawData,
         xoredData.blockSize,
-        Buffer.from(xoredData.data),
+        new Uint8Array(xoredData.data),
         xoredData.idChecksum,
         this.cbl.creator,
         xoredData.metadata.dateCreated,
@@ -172,10 +128,18 @@ export class CblStream<TID extends PlatformID = Uint8Array> extends Readable {
         );
       }
 
+      // Push the data to the stream
+      this.push(new Uint8Array(this.currentData.data));
       this.currentTupleIndex++;
-      this.currentDataOffset = 0;
+      
+      // Continue reading if there's more data
+      if (this.currentTupleIndex < this.maxTuple) {
+        setTimeout(() => this.readData(), 0);
+      } else {
+        this.push(null); // End stream
+      }
     } catch (error) {
-      this.destroy(
+      this.emit('error', 
         error instanceof Error
           ? error
           : new Error('Unknown error reading data'),

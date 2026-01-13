@@ -1,6 +1,6 @@
 import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
-import { randomBytes } from 'crypto';
-import { Readable } from 'stream';
+import { randomBytes } from '../browserCrypto';
+import { Readable } from '../browserStream';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -16,7 +16,7 @@ import { RawDataBlock } from './rawData';
 export class RandomBlock extends RawDataBlock {
   public constructor(
     blockSize: BlockSize,
-    data: Buffer,
+    data: Uint8Array,
     dateCreated?: Date,
     checksum?: ChecksumUint8Array,
   ) {
@@ -41,7 +41,7 @@ export class RandomBlock extends RawDataBlock {
    */
   public static new(blockSize: BlockSize, dateCreated?: Date): RandomBlock {
     const data = randomBytes(blockSize as number);
-    return new RandomBlock(blockSize, data, dateCreated);
+    return new RandomBlock(blockSize, Buffer.from(data), dateCreated);
   }
 
   /**
@@ -49,7 +49,7 @@ export class RandomBlock extends RawDataBlock {
    */
   public static reconstitute(
     blockSize: BlockSize,
-    data: Buffer,
+    data: Uint8Array,
     dateCreated?: Date,
     checksum?: ChecksumUint8Array,
   ): RandomBlock {
@@ -87,41 +87,41 @@ export class RandomBlock extends RawDataBlock {
   /**
    * Get this layer's header data
    */
-  public override get layerHeaderData(): Buffer {
+  public override get layerHeaderData(): Uint8Array {
     // Random blocks don't have any layer-specific header data
-    return Buffer.alloc(0);
+    return new Uint8Array(0);
   }
 
   /**
-   * Get the complete header data from all layers
-   */
-  public override get fullHeaderData(): Buffer {
-    return Buffer.concat([super.fullHeaderData, this.layerHeaderData]);
-  }
-
-  /**
-   * Convert a Readable stream to a Buffer
+   * Convert a Readable stream to a Uint8Array
    * @param readable - The readable stream to convert
-   * @returns Promise that resolves to a Buffer
+   * @returns Promise that resolves to a Uint8Array
    */
-  private static async streamToBuffer(readable: Readable): Promise<Buffer> {
-    const chunks: Buffer[] = [];
+  private static async streamToUint8Array(readable: Readable): Promise<Uint8Array> {
+    const chunks: Uint8Array[] = [];
     for await (const chunk of readable) {
-      chunks.push(Buffer.from(chunk));
+      chunks.push(new Uint8Array(chunk));
     }
-    return Buffer.concat(chunks);
+    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return result;
   }
 
   /**
-   * Convert data to Buffer regardless of whether it's a Readable or Buffer
+   * Convert data to Uint8Array regardless of whether it's a Readable or Uint8Array
    * @param data - The data to convert
-   * @returns Promise that resolves to a Buffer
+   * @returns Promise that resolves to a Uint8Array
    */
-  private static async toBuffer(data: Readable | Uint8Array): Promise<Buffer> {
-    if (Buffer.isBuffer(data) || data instanceof Uint8Array) {
-      return Buffer.from(data);
+  private static async toUint8Array(data: Readable | Uint8Array): Promise<Uint8Array> {
+    if (data instanceof Uint8Array) {
+      return data;
     }
-    return RandomBlock.streamToBuffer(data);
+    return RandomBlock.streamToUint8Array(data);
   }
 
   /**
@@ -132,10 +132,10 @@ export class RandomBlock extends RawDataBlock {
       throw new Error('Block sizes must match');
     }
 
-    const thisData = await RandomBlock.toBuffer(this.data);
-    const otherData = await RandomBlock.toBuffer(other.data);
+    const thisData = await RandomBlock.toUint8Array(this.data);
+    const otherData = await RandomBlock.toUint8Array(other.data);
 
-    const result = Buffer.alloc(thisData.length);
+    const result = new Uint8Array(thisData.length);
     for (let i = 0; i < thisData.length; i++) {
       result[i] = thisData[i] ^ otherData[i];
     }
@@ -143,7 +143,7 @@ export class RandomBlock extends RawDataBlock {
     // Create a new instance of the same type as the input block
     const Constructor = other.constructor as new (
       blockSize: BlockSize,
-      data: Buffer,
+      data: Uint8Array,
       dateCreated: Date,
       checksum: ChecksumUint8Array,
       canRead: boolean,

@@ -134,8 +134,15 @@ export class RawDataBlock extends BaseBlock {
         this._data,
       );
 
-    if (!Buffer.from(calculatedChecksum).equals(Buffer.from(this.idChecksum))) {
+    // Compare checksums using array comparison
+    if (calculatedChecksum.length !== this.idChecksum.length) {
       throw new ChecksumMismatchError(this.idChecksum, calculatedChecksum);
+    }
+    
+    for (let i = 0; i < calculatedChecksum.length; i++) {
+      if (calculatedChecksum[i] !== this.idChecksum[i]) {
+        throw new ChecksumMismatchError(this.idChecksum, calculatedChecksum);
+      }
     }
   }
 
@@ -166,15 +173,8 @@ export class RawDataBlock extends BaseBlock {
   /**
    * Get this layer's header data
    */
-  public override get layerHeaderData(): Buffer {
+  public override get layerHeaderData(): Uint8Array {
     // Raw data blocks don't have any layer-specific header data
-    return Buffer.alloc(0);
-  }
-
-  /**
-   * Get the complete header data from all layers
-   */
-  public override get fullHeaderData(): Buffer {
-    return Buffer.concat([super.fullHeaderData, this.layerHeaderData]);
+    return new Uint8Array(0);
   }
 }

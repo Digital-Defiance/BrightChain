@@ -1,5 +1,5 @@
 import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
-import { Readable } from 'stream';
+import { Readable } from '../browserStream';
 import { BlockMetadata } from '../blockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
@@ -20,7 +20,7 @@ import { RawDataBlock } from './rawData';
 export class WhitenedBlock extends RawDataBlock {
   constructor(
     blockSize: BlockSize,
-    data: Buffer,
+    data: Uint8Array,
     checksum?: ChecksumUint8Array,
     dateCreated?: Date,
     canRead = true,
@@ -55,12 +55,12 @@ export class WhitenedBlock extends RawDataBlock {
   /**
    * The data in the block, excluding any metadata or other overhead
    */
-  public override get layerPayload(): Buffer {
+  public override get layerPayload(): Uint8Array {
     if (!this.canRead) {
       throw new WhitenedError(WhitenedErrorType.BlockNotReadable);
     }
     // For whitened blocks, like raw data blocks, the payload is the entire data
-    return Buffer.from(this.data);
+    return new Uint8Array(this.data);
   }
 
   /**
@@ -80,33 +80,45 @@ export class WhitenedBlock extends RawDataBlock {
   /**
    * Get the complete header data from all layers
    */
-  public override get fullHeaderData(): Buffer {
-    return Buffer.concat([super.fullHeaderData, this.layerHeaderData]);
+  public override get fullHeaderData(): Uint8Array {
+    const superHeader = super.fullHeaderData;
+    const layerHeader = this.layerHeaderData;
+    const result = new Uint8Array(superHeader.length + layerHeader.length);
+    result.set(superHeader);
+    result.set(layerHeader, superHeader.length);
+    return result;
   }
 
   /**
-   * Convert a Readable stream to a Buffer
+   * Convert a Readable stream to a Uint8Array
    * @param readable - The readable stream to convert
-   * @returns Promise that resolves to a Buffer
+   * @returns Promise that resolves to a Uint8Array
    */
-  private static async streamToBuffer(readable: Readable): Promise<Buffer> {
-    const chunks: Buffer[] = [];
+  private static async streamToUint8Array(readable: Readable): Promise<Uint8Array> {
+    const chunks: Uint8Array[] = [];
     for await (const chunk of readable) {
-      chunks.push(Buffer.from(chunk));
+      chunks.push(new Uint8Array(chunk));
     }
-    return Buffer.concat(chunks);
+    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return result;
   }
 
   /**
-   * Convert data to Buffer regardless of whether it's a Readable or Buffer
+   * Convert data to Uint8Array regardless of whether it's a Readable or Uint8Array
    * @param data - The data to convert
-   * @returns Promise that resolves to a Buffer
+   * @returns Promise that resolves to a Uint8Array
    */
-  private static async toBuffer(data: Readable | Uint8Array): Promise<Buffer> {
-    if (Buffer.isBuffer(data) || data instanceof Uint8Array) {
-      return Buffer.from(data);
+  private static async toUint8Array(data: Readable | Uint8Array): Promise<Uint8Array> {
+    if (data instanceof Uint8Array) {
+      return data;
     }
-    return WhitenedBlock.streamToBuffer(data);
+    return WhitenedBlock.streamToUint8Array(data);
   }
 
   /**
@@ -117,10 +129,10 @@ export class WhitenedBlock extends RawDataBlock {
       throw new WhitenedError(WhitenedErrorType.BlockSizeMismatch);
     }
 
-    const thisData = await WhitenedBlock.toBuffer(this.data);
-    const otherData = await WhitenedBlock.toBuffer(other.data);
+    const thisData = await WhitenedBlock.toUint8Array(this.data);
+    const otherData = await WhitenedBlock.toUint8Array(other.data);
 
-    const result = Buffer.alloc(thisData.length);
+    const result = new Uint8Array(thisData.length);
     for (let i = 0; i < thisData.length; i++) {
       result[i] = thisData[i] ^ otherData[i];
     }
@@ -128,7 +140,7 @@ export class WhitenedBlock extends RawDataBlock {
     // Create a new instance of the same type as the input block
     const Constructor = other.constructor as new (
       blockSize: BlockSize,
-      data: Buffer,
+      data: Uint8Array,
       dateCreated: Date,
       checksum: ChecksumUint8Array,
       canRead: boolean,
@@ -150,9 +162,9 @@ export class WhitenedBlock extends RawDataBlock {
   /**
    * Get this layer's header data
    */
-  public override get layerHeaderData(): Buffer {
+  public override get layerHeaderData(): Uint8Array {
     // Whitened blocks don't have any layer-specific header data
-    return Buffer.alloc(0);
+    return new Uint8Array(0);
   }
 
   /**
@@ -160,8 +172,8 @@ export class WhitenedBlock extends RawDataBlock {
    */
   public static fromData(
     blockSize: BlockSize,
-    data: Buffer,
-    randomData: Buffer,
+    data: Uint8Array,
+    randomData: Uint8Array,
   ): WhitenedBlock {
     if (data.length !== randomData.length) {
       throw new WhitenedError(WhitenedErrorType.DataLengthMismatch);
@@ -170,7 +182,7 @@ export class WhitenedBlock extends RawDataBlock {
       throw new WhitenedError(WhitenedErrorType.InvalidBlockSize);
     }
 
-    const result = Buffer.alloc(data.length);
+    const result = new Uint8Array(data.length);
     for (let i = 0; i < data.length; i++) {
       result[i] = data[i] ^ randomData[i];
     }
@@ -186,7 +198,7 @@ export class WhitenedBlock extends RawDataBlock {
    */
   public static async from(
     blockSize: BlockSize,
-    data: Buffer,
+    data: Uint8Array,
     checksum?: ChecksumUint8Array,
     dateCreated?: Date,
     lengthWithoutPadding?: number,
@@ -194,8 +206,8 @@ export class WhitenedBlock extends RawDataBlock {
     canPersist = true,
   ): Promise<WhitenedBlock> {
     // Ensure data is padded to block size
-    const paddedData = Buffer.alloc(blockSize);
-    data.copy(paddedData);
+    const paddedData = new Uint8Array(blockSize);
+    paddedData.set(data);
 
     // Create metadata with original length
     const metadata = new BlockMetadata(
