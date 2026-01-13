@@ -10,6 +10,8 @@ export class SystemKeyringError extends TypedError<SystemKeyringErrorType> {
         StringNames.Error_SystemKeyringErrorKeyNotFoundTemplate,
       [SystemKeyringErrorType.RateLimitExceeded]:
         StringNames.Error_SystemKeyringErrorRateLimitExceeded,
+      [SystemKeyringErrorType.DecryptionFailed]:
+        StringNames.Error_SystemKeyringErrorRateLimitExceeded, // Reuse existing error message
     };
   }
   constructor(

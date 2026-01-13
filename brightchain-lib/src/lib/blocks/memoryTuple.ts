@@ -1,4 +1,4 @@
-import { Readable } from 'stream';
+import { Readable } from '../browserStream';
 import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
@@ -7,7 +7,7 @@ import { BlockType } from '../enumerations/blockType';
 import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
 import { MemoryTupleError } from '../errors/memoryTupleError';
-import { BaseBlock } from './base';
+import { IBaseBlock } from '../interfaces/blocks/base';
 import { BlockHandle } from './handle';
 import { RawDataBlock } from './rawData';
 
@@ -18,16 +18,16 @@ import { RawDataBlock } from './rawData';
  * 2. Parity blocks XORed for error correction
  *
  * This class supports both:
- * 1. In-memory blocks (BaseBlock derivatives) for immediate operations
+ * 1. In-memory blocks (IBaseBlock derivatives) for immediate operations
  * 2. Disk-based blocks (BlockHandle) for persistent storage
  */
 export class InMemoryBlockTuple {
   public static readonly TupleSize = TUPLE.SIZE;
 
-  private readonly _blocks: (BaseBlock | BlockHandle<any>)[];
+  private readonly _blocks: (IBaseBlock | BlockHandle<any>)[];
   private readonly _blockSize: BlockSize;
 
-  constructor(blocks: (BaseBlock | BlockHandle<any>)[]) {
+  constructor(blocks: (IBaseBlock | BlockHandle<any>)[]) {
     if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.InvalidTupleSize,
@@ -54,14 +54,21 @@ export class InMemoryBlockTuple {
   /**
    * Get the block IDs as a concatenated buffer
    */
-  public get blockIdsBuffer(): Buffer {
-    return Buffer.concat(this.blockIds);
+  public get blockIdsBuffer(): Uint8Array {
+    const totalLength = this.blockIds.reduce((sum, id) => sum + id.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const id of this.blockIds) {
+      result.set(id, offset);
+      offset += id.length;
+    }
+    return result;
   }
 
   /**
    * Get the blocks in this tuple
    */
-  public get blocks(): (BaseBlock | BlockHandle<any>)[] {
+  public get blocks(): (IBaseBlock | BlockHandle<any>)[] {
     return this._blocks;
   }
 
@@ -73,28 +80,35 @@ export class InMemoryBlockTuple {
   }
 
   /**
-   * Convert a Readable stream to a Buffer
+   * Convert a Readable stream to a Uint8Array
    * @param readable - The readable stream to convert
-   * @returns Promise that resolves to a Buffer
+   * @returns Promise that resolves to a Uint8Array
    */
-  private static async streamToBuffer(readable: Readable): Promise<Buffer> {
-    const chunks: Buffer[] = [];
+  private static async streamToUint8Array(readable: Readable): Promise<Uint8Array> {
+    const chunks: Uint8Array[] = [];
     for await (const chunk of readable) {
-      chunks.push(Buffer.from(chunk));
+      chunks.push(new Uint8Array(chunk));
     }
-    return Buffer.concat(chunks);
+    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return result;
   }
 
   /**
-   * Convert data to Buffer regardless of whether it's a Readable or Buffer
+   * Convert data to Uint8Array regardless of whether it's a Readable or Uint8Array
    * @param data - The data to convert
-   * @returns Promise that resolves to a Buffer
+   * @returns Promise that resolves to a Uint8Array
    */
-  private static async toBuffer(data: Readable | Buffer): Promise<Buffer> {
-    if (Buffer.isBuffer(data)) {
+  private static async toUint8Array(data: Readable | Uint8Array): Promise<Uint8Array> {
+    if (data instanceof Uint8Array) {
       return data;
     }
-    return InMemoryBlockTuple.streamToBuffer(data);
+    return InMemoryBlockTuple.streamToUint8Array(data);
   }
 
   /**
@@ -108,14 +122,12 @@ export class InMemoryBlockTuple {
 
     try {
       // Load and copy first block's data
-      const result = Buffer.alloc(
-        (await InMemoryBlockTuple.toBuffer(this._blocks[0].data)).length,
-      );
-      (await InMemoryBlockTuple.toBuffer(this._blocks[0].data)).copy(result);
+      const firstBlockData = await InMemoryBlockTuple.toUint8Array(this._blocks[0].data);
+      const result = new Uint8Array(firstBlockData);
 
       // XOR with remaining blocks
       for (let i = 1; i < this._blocks.length; i++) {
-        const currentData = await InMemoryBlockTuple.toBuffer(
+        const currentData = await InMemoryBlockTuple.toUint8Array(
           this._blocks[i].data,
         );
 
@@ -185,7 +197,7 @@ export class InMemoryBlockTuple {
    * This creates in-memory blocks
    */
   public static fromBlocks(
-    blocks: (BaseBlock | BlockHandle<any>)[],
+    blocks: (IBaseBlock | BlockHandle<any>)[],
   ): InMemoryBlockTuple {
     if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(

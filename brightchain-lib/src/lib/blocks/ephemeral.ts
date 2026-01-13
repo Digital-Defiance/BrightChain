@@ -4,8 +4,8 @@ import {
   Member,
   type PlatformID,
 } from '@digitaldefiance/ecies-lib';
-import { randomBytes } from 'crypto';
-import { Readable } from 'stream';
+import { randomBytes } from '../browserCrypto';
+import { Readable } from '../browserStream';
 import { ECIES } from '../constants';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -142,7 +142,10 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
     if (paddedData.length < maxDataSize) {
       // Pad with random data to reach the full block size
       const padding = randomBytes(maxDataSize - paddedData.length);
-      paddedData = Buffer.concat([paddedData, padding]);
+      const result = new Uint8Array(paddedData.length + padding.length);
+      result.set(paddedData);
+      result.set(padding, paddedData.length);
+      paddedData = result;
     }
 
     if (!metadata) {

@@ -1,26 +1,17 @@
-import { createCipheriv, createDecipheriv, randomBytes, scrypt } from 'crypto';
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { promisify } from 'util';
+import { randomBytes } from './browserCrypto';
 import { KEYRING_ALGORITHM_CONFIGURATION } from './constants';
 import { SystemKeyringErrorType } from './enumerations/systemKeyringErrorType';
 import { SystemKeyringError } from './errors/systemKeyringError';
 import { IKeyringEntry } from './interfaces/keyringEntry';
+import { BrowserKeyring } from './browserKeyring';
 
-const scryptAsync = promisify(scrypt);
-
+// Browser-compatible SystemKeyring that delegates to BrowserKeyring
 export class SystemKeyring {
   private static instance: SystemKeyring;
-  private readonly storagePath: string;
-  private readonly keys: Map<string, IKeyringEntry>;
-  private readonly accessLog: Map<string, number>;
-  private readonly maxAccessRate = 10; // per minute
+  private browserKeyring: BrowserKeyring;
 
   private constructor() {
-    this.storagePath =
-      process.env['KEYRING_PATH'] || join(process.cwd(), '.keyring');
-    this.keys = new Map();
-    this.accessLog = new Map();
+    this.browserKeyring = BrowserKeyring.getInstance();
   }
 
   public static getInstance(): SystemKeyring {
@@ -30,116 +21,20 @@ export class SystemKeyring {
     return SystemKeyring.instance;
   }
 
-  private async deriveKey(password: string, salt: Buffer): Promise<Buffer> {
-    return scryptAsync(password, salt, 32) as Promise<Buffer>;
-  }
-
   public async storeKey(
     id: string,
-    data: Buffer,
+    data: Uint8Array,
     password: string,
   ): Promise<void> {
-    const salt = randomBytes(32);
-    const iv = randomBytes(16);
-    const key = await this.deriveKey(password, salt);
-
-    const cipher = createCipheriv(KEYRING_ALGORITHM_CONFIGURATION, key, iv);
-    const encryptedData = Buffer.concat([
-      cipher.update(data),
-      cipher.final(),
-      cipher.getAuthTag(),
-    ]);
-
-    const entry: IKeyringEntry = {
-      id,
-      version: 1,
-      encryptedData,
-      iv,
-      salt,
-      created: new Date(),
-    };
-
-    this.keys.set(id, entry);
-    await this.persistToDisk();
+    return this.browserKeyring.storeKey(id, data, password);
   }
 
-  public async retrieveKey(id: string, password: string): Promise<Buffer> {
-    this.checkRateLimit(id);
-
-    const entry = this.keys.get(id);
-    if (!entry) {
-      throw new SystemKeyringError(SystemKeyringErrorType.KeyNotFound, id);
-    }
-
-    const key = await this.deriveKey(password, entry.salt);
-    const decipher = createDecipheriv(
-      KEYRING_ALGORITHM_CONFIGURATION,
-      key,
-      entry.iv,
-    );
-
-    const authTagPos = entry.encryptedData.length - 16;
-    const authTag = entry.encryptedData.subarray(authTagPos);
-    const encryptedData = entry.encryptedData.subarray(0, authTagPos);
-
-    decipher.setAuthTag(authTag);
-
-    const decrypted = Buffer.concat([
-      decipher.update(encryptedData),
-      decipher.final(),
-    ]);
-
-    entry.lastAccessed = new Date();
-    this.logAccess(id);
-
-    return decrypted;
-  }
-
-  private checkRateLimit(id: string): void {
-    const accessCount = this.accessLog.get(id) || 0;
-    if (accessCount >= this.maxAccessRate) {
-      throw new SystemKeyringError(SystemKeyringErrorType.RateLimitExceeded);
-    }
-  }
-
-  private logAccess(id: string): void {
-    const count = (this.accessLog.get(id) || 0) + 1;
-    this.accessLog.set(id, count);
-
-    // Reset count after 1 minute
-    setTimeout(() => {
-      this.accessLog.set(id, 0);
-    }, 60000);
-  }
-
-  private async persistToDisk(): Promise<void> {
-    const data = JSON.stringify(Array.from(this.keys.entries()));
-    await fs.writeFile(this.storagePath, data, { mode: 0o600 });
-  }
-
-  private async loadFromDisk(): Promise<void> {
-    try {
-      const data = await fs.readFile(this.storagePath, 'utf8');
-      const entries = JSON.parse(data);
-      this.keys.clear();
-      for (const [id, entry] of entries) {
-        this.keys.set(id, {
-          ...entry,
-          created: new Date(entry.created),
-          lastAccessed: entry.lastAccessed
-            ? new Date(entry.lastAccessed)
-            : undefined,
-        });
-      }
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-        throw error;
-      }
-    }
+  public async retrieveKey(id: string, password: string): Promise<Uint8Array> {
+    return this.browserKeyring.retrieveKey(id, password);
   }
 
   public async initialize(): Promise<void> {
-    await this.loadFromDisk();
+    return this.browserKeyring.initialize();
   }
 
   public async rotateKey(
@@ -147,7 +42,6 @@ export class SystemKeyring {
     oldPassword: string,
     newPassword: string,
   ): Promise<void> {
-    const data = await this.retrieveKey(id, oldPassword);
-    await this.storeKey(id, data, newPassword);
+    return this.browserKeyring.rotateKey(id, oldPassword, newPassword);
   }
 }

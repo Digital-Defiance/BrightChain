@@ -1,5 +1,5 @@
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
-import { Transform, TransformCallback, TransformOptions } from 'stream';
+import { Transform, TransformCallback, TransformOptions } from './browserStream';
 import { EphemeralBlock } from './blocks/ephemeral';
 import { InMemoryBlockTuple } from './blocks/memoryTuple';
 import { RandomBlock } from './blocks/random';
@@ -34,7 +34,7 @@ export class PrimeTupleGeneratorStream<
 > extends Transform {
   private readonly blockSize: BlockSize;
   private readonly creator: Member<TID>;
-  private buffer: Buffer;
+  private buffer: Uint8Array;
   private readonly randomBlockSource: () => RandomBlock;
   private readonly whitenedBlockSource: () => WhitenedBlock | undefined;
 
@@ -62,24 +62,32 @@ export class PrimeTupleGeneratorStream<
 
     this.blockSize = blockSize;
     this.creator = creator;
-    this.buffer = Buffer.alloc(0);
+    this.buffer = new Uint8Array(0);
     this.randomBlockSource = randomBlockSource;
     this.whitenedBlockSource = whitenedBlockSource;
   }
 
   public override async _transform(
-    chunk: Buffer,
-    encoding: BufferEncoding,
+    chunk: any,
+    encoding: string,
     callback: TransformCallback,
   ): Promise<void> {
     try {
-      // Validate chunk
-      if (!Buffer.isBuffer(chunk)) {
+      // Convert Buffer to Uint8Array if needed
+      let data: Uint8Array;
+      if (chunk instanceof Uint8Array) {
+        data = chunk;
+      } else if (Buffer.isBuffer(chunk)) {
+        data = new Uint8Array(chunk);
+      } else {
         throw new StreamError(StreamErrorType.InputMustBeBuffer);
       }
 
       // Add chunk to buffer
-      this.buffer = Buffer.concat([this.buffer, chunk]);
+      const newBuffer = new Uint8Array(this.buffer.length + data.length);
+      newBuffer.set(this.buffer);
+      newBuffer.set(data, this.buffer.length);
+      this.buffer = newBuffer;
 
       // Process complete blocks
       while (this.buffer.length >= this.blockSize) {
@@ -146,7 +154,7 @@ export class PrimeTupleGeneratorStream<
       }
 
       // XOR blocks together
-      const xoredData = Buffer.from(sourceBlock.data);
+      const xoredData = new Uint8Array(sourceBlock.data);
       for (const block of [...randomBlocks, ...whiteners]) {
         const blockData = block.data;
         for (let i = 0; i < xoredData.length; i++) {
@@ -156,7 +164,7 @@ export class PrimeTupleGeneratorStream<
 
       // Create tuple
       const tuple = new InMemoryBlockTuple([
-        sourceBlock as EphemeralBlock,
+        sourceBlock,
         ...randomBlocks,
         ...whiteners,
       ]);
@@ -181,8 +189,8 @@ export class PrimeTupleGeneratorStream<
       // Handle any remaining data
       if (this.buffer.length > 0) {
         // Pad the last block with zeros
-        const paddedData = Buffer.alloc(this.blockSize);
-        this.buffer.copy(paddedData);
+        const paddedData = new Uint8Array(this.blockSize);
+        paddedData.set(this.buffer);
         this.buffer = paddedData;
         await this.makeTuple();
       }
