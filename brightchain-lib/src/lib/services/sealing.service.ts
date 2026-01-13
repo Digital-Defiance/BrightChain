@@ -183,7 +183,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       const decryptedKeyShare =
         await this.eciesService.decryptSimpleOrSingleWithHeader(
           false,
-          Buffer.from(member.privateKey.value),
+          member.privateKey.value,
           encryptedKeyShareHex,
         );
       decryptedShares[i] = uint8ArrayToHex(decryptedKeyShare);
@@ -262,7 +262,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       const encryptedKeyShare = await this.eciesService.encryptSimpleOrSingle(
         false, // encryptSimple = false for single encryption
         member.publicKey,
-        Buffer.from(shareForMember, 'hex'),
+        hexToUint8Array(shareForMember),
       );
       encryptedSharesByMemberId.set(
         uint8ArrayToHex(
@@ -282,7 +282,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    * @returns Decrypted shares
    */
   public async decryptSharesForMembers(
-    encryptedSharesByMemberId: Map<TID, Buffer>,
+    encryptedSharesByMemberId: Map<TID, Uint8Array>,
     members: Member<TID>[],
   ): Promise<secrets.Shares> {
     // for each encrypted share, find the member from the members array and decrypt it
@@ -306,7 +306,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       const decryptedKeyShare =
         await this.eciesService.decryptSimpleOrSingleWithHeader(
           false,
-          Buffer.from(member.privateKey.value),
+          member.privateKey.value,
           encryptedKeyShareHex,
         );
       decryptedShares[i] = uint8ArrayToHex(decryptedKeyShare);

@@ -21,7 +21,7 @@ class BlockPaddingTransform extends Transform {
     let data: Uint8Array;
     if (chunk instanceof Uint8Array) {
       data = chunk;
-    } else if (Buffer.isBuffer(chunk)) {
+    } else if (chunk instanceof Uint8Array) {
       data = new Uint8Array(chunk);
     } else {
       callback(new Error('Input must be Buffer or Uint8Array'));
@@ -36,7 +36,7 @@ class BlockPaddingTransform extends Transform {
     while (this.buffer.length >= this.blockSize) {
       const block = this.buffer.subarray(0, this.blockSize);
       this.buffer = this.buffer.subarray(this.blockSize);
-      this.push(Buffer.from(block));
+      this.push(new Uint8Array(block));
     }
 
     callback();
@@ -50,7 +50,7 @@ class BlockPaddingTransform extends Transform {
       const paddedBlock = new Uint8Array(this.buffer.length + padding.length);
       paddedBlock.set(this.buffer);
       paddedBlock.set(padding, this.buffer.length);
-      this.push(Buffer.from(paddedBlock));
+      this.push(new Uint8Array(paddedBlock));
     }
     callback();
   }

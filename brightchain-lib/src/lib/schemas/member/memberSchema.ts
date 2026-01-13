@@ -2,6 +2,8 @@ import {
   base64ToUint8Array,
   EmailString,
   uint8ArrayToBase64,
+  uint8ArrayToHex,
+  hexToUint8Array,
 } from '@digitaldefiance/ecies-lib';
 import {
   IPrivateMemberData,
@@ -36,10 +38,10 @@ export const PublicMemberSchema: SchemaDefinition<IPublicMemberData> = {
     type: Object,
     required: true,
     serialize: (value: Uint8Array): string =>
-      Buffer.from(value).toString('hex'),
+      uint8ArrayToHex(value),
     hydrate: (value: string): Uint8Array => {
       if (!isString(value)) throw new Error('Invalid ID format');
-      return new Uint8Array(Buffer.from(value, 'hex'));
+      return hexToUint8Array(value);
     },
   },
   type: {
@@ -114,10 +116,10 @@ export const PrivateMemberSchema: SchemaDefinition<IPrivateMemberData> = {
     type: Object,
     required: true,
     serialize: (value: Uint8Array): string =>
-      Buffer.from(value).toString('hex'),
+      uint8ArrayToHex(value),
     hydrate: (value: string): Uint8Array => {
       if (!isString(value)) throw new Error('Invalid ID format');
-      return new Uint8Array(Buffer.from(value, 'hex'));
+      return hexToUint8Array(value);
     },
   },
   contactEmail: {
@@ -144,22 +146,22 @@ export const PrivateMemberSchema: SchemaDefinition<IPrivateMemberData> = {
     type: Array,
     required: true,
     serialize: (value: Uint8Array[]): string[] =>
-      value.map((v) => Buffer.from(v).toString('hex')),
+      value.map((v) => uint8ArrayToHex(v)),
     hydrate: (value: string): Uint8Array[] => {
       if (!isStringArray(value))
         throw new Error('Invalid trusted peers format');
-      return value.map((v) => new Uint8Array(Buffer.from(v, 'hex')));
+      return value.map((v) => hexToUint8Array(v));
     },
   },
   blockedPeers: {
     type: Array,
     required: true,
     serialize: (value: Uint8Array[]): string[] =>
-      value.map((v) => Buffer.from(v).toString('hex')),
+      value.map((v) => uint8ArrayToHex(v)),
     hydrate: (value: string): Uint8Array[] => {
       if (!isStringArray(value))
         throw new Error('Invalid blocked peers format');
-      return value.map((v) => new Uint8Array(Buffer.from(v, 'hex')));
+      return value.map((v) => hexToUint8Array(v));
     },
   },
   settings: {

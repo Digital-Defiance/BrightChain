@@ -17,6 +17,7 @@ import {
   PlatformID,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
+import { uint8ArraysEqual } from '../bufferUtils';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
@@ -119,7 +120,7 @@ export class CBLStore<
       throw new CblError(CblErrorType.CreatorRequiredForSignature);
     }
 
-    if (!Buffer.from(key).equals(Buffer.from(value.idChecksum))) {
+    if (!uint8ArraysEqual(key, value.idChecksum)) {
       throw new StoreError(StoreErrorType.BlockIdMismatch);
     }
 

@@ -13,6 +13,14 @@ export class Readable {
   }
 
   read(size?: number): Uint8Array | null {
+    // Trigger _read if it exists (for subclasses like CblStream)
+    if (typeof (this as any)._read === 'function') {
+      setTimeout(() => {
+        (this as any)._read(size || 0);
+      }, 0);
+      return null; // Return null initially, data will come via events
+    }
+    
     if (this._position >= this._data.length) {
       return null;
     }
@@ -58,14 +66,25 @@ export class Readable {
   pipe<T extends Transform>(destination: T): T {
     // Simple pipe implementation - read all data and write to destination
     const processData = () => {
-      let chunk: Uint8Array | null;
-      while ((chunk = this.read()) !== null) {
-        destination.write(chunk);
-      }
-      destination.end();
+      // Emit data events to trigger the destination's processing
+      this.emit('data', this._data);
+      this.emit('end');
     };
     
-    // Process immediately or on next tick
+    // Set up event listeners
+    this.on('data', (chunk) => {
+      destination.write(chunk);
+    });
+    
+    this.on('end', () => {
+      destination.end();
+    });
+    
+    this.on('error', (error) => {
+      destination.destroy(error);
+    });
+    
+    // Process immediately
     setTimeout(processData, 0);
     return destination;
   }
@@ -128,8 +147,23 @@ export class Transform extends Readable {
 
   // Add write method for compatibility
   write(chunk: any, encoding?: string, callback?: TransformCallback): boolean {
-    const cb = callback || (() => {});
-    this._transform(chunk, encoding || 'buffer', cb);
+    const cb = (error?: Error | null) => {
+      if (error) {
+        setTimeout(() => {
+          this.emit('error', error);
+        }, 0);
+      }
+      if (callback) callback(error);
+    };
+    
+    try {
+      this._transform(chunk, encoding || 'buffer', cb);
+    } catch (error) {
+      // Emit error immediately if _transform throws synchronously
+      setTimeout(() => {
+        this.emit('error', error);
+      }, 0);
+    }
     return true;
   }
 

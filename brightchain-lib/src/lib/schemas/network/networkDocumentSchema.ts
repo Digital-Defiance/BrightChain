@@ -3,7 +3,10 @@ import {
   Guid,
   Member,
   SignatureUint8Array,
+  uint8ArrayToHex,
+  hexToUint8Array,
 } from '@digitaldefiance/ecies-lib';
+import { uint8ArrayToBase64, base64ToUint8Array } from '../../bufferUtils';
 import { NetworkDocument } from '../../documents/network/networkDocument';
 import StringNames from '../../enumerations/stringNames';
 import { FailedToHydrateError } from '../../errors/failedToHydrate';
@@ -24,10 +27,10 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
     type: Object,
     required: true,
     serialize: (value: Uint8Array): string =>
-      Buffer.from(value).toString('hex'),
+      uint8ArrayToHex(value),
     hydrate: (value: string): Uint8Array => {
       if (!isString(value)) throw new InvalidIDFormatError();
-      return new Uint8Array(Buffer.from(value, 'hex'));
+      return hexToUint8Array(value);
     },
   },
   type: {
@@ -73,26 +76,26 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
     type: Object,
     required: true,
     serialize: (value: SignatureUint8Array): string =>
-      Buffer.from(value).toString('base64'),
+      uint8ArrayToBase64(value),
     hydrate: (value: string): SignatureUint8Array => {
       if (!isString(value))
         throw new FailedToHydrateError(
           translate(StringNames.Error_InvalidSignature),
         );
-      return Buffer.from(value, 'base64') as unknown as SignatureUint8Array;
+      return base64ToUint8Array(value) as unknown as SignatureUint8Array;
     },
   },
   checksum: {
     type: Object,
     required: true,
     serialize: (value: ChecksumUint8Array): string =>
-      Buffer.from(value).toString('base64'),
+      uint8ArrayToBase64(value),
     hydrate: (value: string): ChecksumUint8Array => {
       if (!isString(value))
         throw new FailedToHydrateError(
           translate(StringNames.Error_InvalidChecksum),
         );
-      return Buffer.from(value, 'base64') as unknown as ChecksumUint8Array;
+      return base64ToUint8Array(value) as unknown as ChecksumUint8Array;
     },
   },
   ttl: {

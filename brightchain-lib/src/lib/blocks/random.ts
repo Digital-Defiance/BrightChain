@@ -41,7 +41,7 @@ export class RandomBlock extends RawDataBlock {
    */
   public static new(blockSize: BlockSize, dateCreated?: Date): RandomBlock {
     const data = randomBytes(blockSize as number);
-    return new RandomBlock(blockSize, Buffer.from(data), dateCreated);
+    return new RandomBlock(blockSize, new Uint8Array(data), dateCreated);
   }
 
   /**

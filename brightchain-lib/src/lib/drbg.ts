@@ -3,12 +3,12 @@ import { Blake2bCTX, blake2bFinal, blake2bInit, blake2bUpdate } from 'blakejs';
 export class SecureDeterministicDRBG {
   private state: Blake2bCTX;
   private counter: bigint;
-  private lastOutput: Buffer;
+  private lastOutput: Uint8Array;
 
   constructor(seed: Uint8Array) {
     this.state = blake2bInit(64); // Initialize with output length of 64 bytes
     this.counter = 0n;
-    this.lastOutput = Buffer.alloc(0);
+    this.lastOutput = new Uint8Array(0);
     this.reseed(seed);
   }
 
@@ -22,7 +22,7 @@ export class SecureDeterministicDRBG {
     this.counter = 0n;
     // Generate initial state
     const initialState = blake2bFinal(this.state);
-    this.lastOutput = Buffer.from(initialState);
+    this.lastOutput = new Uint8Array(initialState);
     this.state = blake2bInit(64);
     blake2bUpdate(this.state, this.lastOutput);
   }
@@ -51,7 +51,7 @@ export class SecureDeterministicDRBG {
       offset += bytesToCopy;
 
       // Update state for next iteration
-      this.lastOutput = Buffer.from(block);
+      this.lastOutput = new Uint8Array(block);
       this.counter++;
     }
 

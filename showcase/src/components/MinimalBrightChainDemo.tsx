@@ -246,7 +246,7 @@ export const MinimalBrightChainDemo: React.FC = () => {
       setAnimatingBlockId(undefined);
 
       const fileData = await brightChain.retrieveFile(receipt);
-      const blob = new Blob([fileData]);
+      const blob = new Blob([new Uint8Array(Array.from(fileData))]);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

@@ -77,8 +77,9 @@ export class PrimeTupleGeneratorStream<
       let data: Uint8Array;
       if (chunk instanceof Uint8Array) {
         data = chunk;
-      } else if (Buffer.isBuffer(chunk)) {
-        data = new Uint8Array(chunk);
+      } else if (typeof chunk === 'string') {
+        // Handle string input by throwing error immediately
+        throw new StreamError(StreamErrorType.InputMustBeBuffer);
       } else {
         throw new StreamError(StreamErrorType.InputMustBeBuffer);
       }
@@ -127,9 +128,9 @@ export class PrimeTupleGeneratorStream<
         blockData.length,
       );
 
-      // Get random blocks
+      // Get random blocks to fill the tuple
       const randomBlocks: RandomBlock[] = [];
-      for (let i = 0; i < TUPLE.RANDOM_BLOCKS_PER_TUPLE; i++) {
+      for (let i = 0; i < TUPLE.SIZE - 1; i++) {
         const block = this.randomBlockSource();
         if (!block) {
           throw new StreamError(StreamErrorType.FailedToGetRandomBlock);
@@ -137,36 +138,10 @@ export class PrimeTupleGeneratorStream<
         randomBlocks.push(block);
       }
 
-      // Get whitening blocks (or random blocks if whitening not available)
-      const whiteners: (WhitenedBlock | RandomBlock)[] = [];
-      for (let i = TUPLE.RANDOM_BLOCKS_PER_TUPLE; i < TUPLE.SIZE - 1; i++) {
-        const block = this.whitenedBlockSource() ?? this.randomBlockSource();
-        if (!block) {
-          throw new StreamError(StreamErrorType.FailedToGetWhiteningBlock);
-        }
-        whiteners.push(block);
-      }
-
-      // Create and validate tuple
-      const blockCount = randomBlocks.length + whiteners.length + 1;
-      if (blockCount !== TUPLE.SIZE) {
-        throw new InvalidTupleCountError(blockCount);
-      }
-
-      // XOR blocks together
-      const xoredData = new Uint8Array(sourceBlock.data);
-      for (const block of [...randomBlocks, ...whiteners]) {
-        const blockData = block.data;
-        for (let i = 0; i < xoredData.length; i++) {
-          xoredData[i] ^= blockData[i];
-        }
-      }
-
-      // Create tuple
+      // Create tuple with source block and random blocks
       const tuple = new InMemoryBlockTuple([
         sourceBlock,
         ...randomBlocks,
-        ...whiteners,
       ]);
 
       this.push(tuple);

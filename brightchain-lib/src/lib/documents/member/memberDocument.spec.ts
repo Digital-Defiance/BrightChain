@@ -216,8 +216,8 @@ describe('MemberDocument', () => {
     });
 
     it('should provide access to cryptographic keys', () => {
-      expect(doc.publicKey).toBeInstanceOf(Buffer);
-      expect(doc.votingPublicKey).toBeInstanceOf(Buffer);
+      expect(doc.publicKey).toBeInstanceOf(Uint8Array);
+      expect(doc.votingPublicKey).toBeInstanceOf(Uint8Array);
       expect(doc.privateKey).toBeUndefined();
       expect(doc.votingPrivateKey).toBeUndefined();
     });
