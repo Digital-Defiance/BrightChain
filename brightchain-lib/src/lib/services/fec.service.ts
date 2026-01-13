@@ -1,5 +1,5 @@
 import { ReedSolomonErasure } from '@subspace/reed-solomon-erasure.wasm';
-import { Readable } from 'stream';
+import { Readable } from '../browserStream';
 import { BaseBlock } from '../blocks/base';
 import { ParityBlock } from '../blocks/parity';
 import { RawDataBlock } from '../blocks/rawData';

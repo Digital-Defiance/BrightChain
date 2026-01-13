@@ -1,5 +1,5 @@
 import { ChecksumString, ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
-import { Readable } from 'stream';
+import { Readable } from '../browserStream';
 import { BlockMetadata } from '../blockMetadata';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';

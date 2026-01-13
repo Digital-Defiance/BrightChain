@@ -6,6 +6,8 @@ import Components from './components/Components';
 import Demo from './components/Demo';
 import Hero from './components/Hero';
 import { SimpleSoupDemo } from './components/SimpleSoupDemo';
+import { BrightChainSoupDemo } from './components/BrightChainSoupDemo';
+import { MinimalBrightChainDemo } from './components/MinimalBrightChainDemo';
 
 function HomePage() {
   const [scrollY, setScrollY] = useState(0);
@@ -32,6 +34,8 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/soup" element={<SimpleSoupDemo />} />
+        <Route path="/demo" element={<BrightChainSoupDemo />} />
+        <Route path="/minimal" element={<MinimalBrightChainDemo />} />
       </Routes>
     </Router>
   );

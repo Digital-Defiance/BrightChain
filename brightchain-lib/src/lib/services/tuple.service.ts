@@ -1,7 +1,6 @@
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
-import { randomBytes } from 'crypto';
-import { ReadStream } from 'fs';
-import { Readable } from 'stream';
+import { randomBytes } from '../browserCrypto';
+import { Readable } from '../browserStream';
 import BlockPaddingTransform from '../blockPaddingTransform';
 import { BaseBlock } from '../blocks/base';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
@@ -39,22 +38,26 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
   ) {}
 
   /**
-   * Convert data to Buffer regardless of whether it's a Readable or Buffer
+   * Convert data to Uint8Array regardless of whether it's a Readable or Uint8Array
    */
-  private async toBuffer(
-    data: Buffer | Uint8Array | Readable,
-  ): Promise<Buffer> {
-    if (Buffer.isBuffer(data)) {
+  private async toUint8Array(
+    data: Uint8Array | Readable,
+  ): Promise<Uint8Array> {
+    if (data instanceof Uint8Array) {
       return data;
     }
-    if (data instanceof Uint8Array) {
-      return Buffer.from(data);
-    }
-    const chunks: Buffer[] = [];
+    const chunks: Uint8Array[] = [];
     for await (const chunk of data) {
-      chunks.push(Buffer.from(chunk));
+      chunks.push(new Uint8Array(chunk));
     }
-    return Buffer.concat(chunks);
+    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return result;
   }
 
   /**
@@ -75,22 +78,22 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     }
 
     try {
-      // Convert source data to Buffer
-      const sourceData = await this.toBuffer(sourceBlock.data);
+      // Convert source data to Uint8Array
+      const sourceData = await this.toUint8Array(sourceBlock.data);
 
       // Create a padded buffer initialized to zeros
-      const paddedData = Buffer.alloc(sourceBlock.blockSize);
-      sourceData.copy(paddedData);
+      const paddedData = new Uint8Array(sourceBlock.blockSize);
+      paddedData.set(sourceData);
 
       // XOR operations will be performed on the padded data
-      const xoredData = Buffer.from(paddedData);
+      const xoredData = new Uint8Array(paddedData);
 
       // XOR with whitening blocks
       for (const whitener of whiteners) {
         if (whitener.blockSize !== sourceBlock.blockSize) {
           throw new TupleError(TupleErrorType.BlockSizeMismatch);
         }
-        const whitenerData = await this.toBuffer(whitener.data);
+        const whitenerData = await this.toUint8Array(whitener.data);
         for (let i = 0; i < sourceBlock.blockSize; i++) {
           xoredData[i] ^= whitenerData[i];
         }
@@ -101,7 +104,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         if (random.blockSize !== sourceBlock.blockSize) {
           throw new TupleError(TupleErrorType.BlockSizeMismatch);
         }
-        const randomData = await this.toBuffer(random.data);
+        const randomData = await this.toUint8Array(random.data);
         for (let i = 0; i < sourceBlock.blockSize; i++) {
           xoredData[i] ^= randomData[i];
         }
@@ -168,30 +171,20 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       const result = randomBytes(primeWhitenedBlock.blockSize);
 
       // Get all block data upfront and ensure they're padded
-      const primeData = await this.toBuffer(primeWhitenedBlock.data);
+      const primeData = await this.toUint8Array(primeWhitenedBlock.data);
       const whitenerData = await Promise.all(
         whiteners.map(async (w) => {
-          const data = await this.toBuffer(w.data);
+          const data = await this.toUint8Array(w.data);
           const padded = randomBytes(primeWhitenedBlock.blockSize);
-          data.copy(
-            padded,
-            0,
-            0,
-            Math.min(data.length, primeWhitenedBlock.blockSize),
-          );
+          padded.set(data.subarray(0, Math.min(data.length, primeWhitenedBlock.blockSize)));
           return padded;
         }),
       );
       const randomData = await Promise.all(
         randomBlocks.map(async (r) => {
-          const data = await this.toBuffer(r.data);
+          const data = await this.toUint8Array(r.data);
           const padded = randomBytes(primeWhitenedBlock.blockSize);
-          data.copy(
-            padded,
-            0,
-            0,
-            Math.min(data.length, primeWhitenedBlock.blockSize),
-          );
+          padded.set(data.subarray(0, Math.min(data.length, primeWhitenedBlock.blockSize)));
           return padded;
         }),
       );
@@ -204,12 +197,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       });
 
       // Copy prime data to result buffer, preserving random padding
-      primeData.copy(
-        result,
-        0,
-        0,
-        Math.min(primeData.length, primeWhitenedBlock.blockSize),
-      );
+      result.set(primeData.subarray(0, Math.min(primeData.length, primeWhitenedBlock.blockSize)));
 
       // XOR with whitening blocks
       for (const data of whitenerData) {
@@ -268,7 +256,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     );
 
     return new InMemoryBlockTuple([
-      ownedDataBlock as EphemeralBlock,
+      ownedDataBlock,
       ...whiteners,
     ]);
   }
@@ -332,7 +320,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
   public async dataStreamToPlaintextTuplesAndCBL(
     creator: Member<TID>,
     blockSize: BlockSize,
-    source: ReadStream,
+    source: Readable,
     sourceLength: number,
     whitenedBlockSource: () => WhitenedBlock | undefined,
     randomBlockSource: () => RandomBlock,
@@ -367,14 +355,17 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       source.pipe(blockPaddingTransform).pipe(tupleGeneratorStream);
 
       // Process tuples
-      let blockIDs: Buffer = Buffer.alloc(0);
+      let blockIDs: Uint8Array = new Uint8Array(0);
       let blockIDCount = 0;
 
       await new Promise<void>((resolve, reject) => {
         tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
           try {
             await persistTuple(tuple);
-            blockIDs = Buffer.concat([blockIDs, tuple.blockIdsBuffer]);
+            const newBlockIDs = new Uint8Array(blockIDs.length + tuple.blockIdsBuffer.length);
+            newBlockIDs.set(blockIDs);
+            newBlockIDs.set(tuple.blockIdsBuffer, blockIDs.length);
+            blockIDs = newBlockIDs;
             blockIDCount += tuple.blocks.length;
           } catch (error) {
             reject(error);
@@ -385,18 +376,19 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         tupleGeneratorStream.on('error', reject);
       });
 
-      const data = Buffer.concat([
-        this.cblService.makeCblHeader(
-          creator,
-          now,
-          blockIDCount,
-          sourceLength,
-          blockIDs,
-          blockSize,
-          BlockEncryptionType.None,
-        ).headerData,
+      const headerData = this.cblService.makeCblHeader(
+        creator,
+        now,
+        blockIDCount,
+        sourceLength,
         blockIDs,
-      ]);
+        blockSize,
+        BlockEncryptionType.None,
+      ).headerData;
+      
+      const data = new Uint8Array(headerData.length + blockIDs.length);
+      data.set(headerData);
+      data.set(blockIDs, headerData.length);
       const checksum = this.checksumService.calculateChecksum(data);
       // Create CBL
       const cbl = new ConstituentBlockListBlock(data, creator);
@@ -433,7 +425,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       }
 
       const primeBlock = await this.xorSourceToPrimeWhitened(
-        ownedBlock as EphemeralBlock,
+        ownedBlock,
         whiteners,
         randomBlocks,
       );
@@ -466,7 +458,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
   public async dataStreamToEncryptedTuplesAndCBL(
     creator: Member<TID>,
     blockSize: BlockSize,
-    source: ReadStream,
+    source: Readable,
     sourceLength: number,
     whitenedBlockSource: () => WhitenedBlock | undefined,
     randomBlockSource: () => RandomBlock,
@@ -500,13 +492,16 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       source.pipe(tupleGeneratorStream);
 
       // Process tuples
-      let blockIDs: Buffer = Buffer.alloc(0);
+      let blockIDs: Uint8Array = new Uint8Array(0);
 
       await new Promise<void>((resolve, reject) => {
         tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
           try {
             await persistTuple(tuple);
-            blockIDs = Buffer.concat([blockIDs, tuple.blockIdsBuffer]);
+            const newBlockIDs = new Uint8Array(blockIDs.length + tuple.blockIdsBuffer.length);
+            newBlockIDs.set(blockIDs);
+            newBlockIDs.set(tuple.blockIdsBuffer, blockIDs.length);
+            blockIDs = newBlockIDs;
           } catch (error) {
             reject(error);
           }
@@ -520,14 +515,13 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         dateCreated,
         blockIDs.length,
         sourceLength,
-        Buffer.concat([blockIDs]),
+        blockIDs,
         blockSize,
         BlockEncryptionType.None,
       );
-      const data = Buffer.concat([
-        cblHeader.headerData,
-        Buffer.concat([blockIDs]),
-      ]);
+      const data = new Uint8Array(cblHeader.headerData.length + blockIDs.length);
+      data.set(cblHeader.headerData);
+      data.set(blockIDs, cblHeader.headerData.length);
       const checksum = this.checksumService.calculateChecksum(data);
 
       // Create and encrypt CBL

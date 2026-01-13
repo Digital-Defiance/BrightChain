@@ -3,7 +3,7 @@ import {
   Member,
   PlatformID,
 } from '@digitaldefiance/ecies-lib';
-import { randomBytes } from 'crypto';
+import { randomBytes } from '../browserCrypto';
 import { ECIES } from '../constants';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -27,7 +27,7 @@ export class EncryptedBlockFactory {
     [key: string]: new <TID extends PlatformID = Uint8Array>(
       type: BlockType,
       dataType: BlockDataType,
-      data: Buffer,
+      data: Uint8Array,
       checksum: ChecksumUint8Array,
       metadata: EncryptedBlockMetadata<TID>,
       recipientWithKey: Member<TID>,
@@ -41,7 +41,7 @@ export class EncryptedBlockFactory {
     constructor: new <TID extends PlatformID = Uint8Array>(
       type: BlockType,
       dataType: BlockDataType,
-      data: Buffer,
+      data: Uint8Array,
       checksum: ChecksumUint8Array,
       metadata: EncryptedBlockMetadata<TID>,
       recipientWithKey: Member<TID>,
@@ -56,7 +56,7 @@ export class EncryptedBlockFactory {
     type: BlockType,
     dataType: BlockDataType,
     blockSize: BlockSize,
-    data: Buffer,
+    data: Uint8Array,
     checksum: ChecksumUint8Array,
     creator: Member<TID>,
     dateCreated?: Date,
@@ -104,8 +104,15 @@ export class EncryptedBlockFactory {
     // Calculate checksum on the original data
     const computedChecksum = this.checksumService.calculateChecksum(data);
 
-    if (!Buffer.from(computedChecksum).equals(Buffer.from(checksum))) {
+    // Compare checksums using array comparison
+    if (computedChecksum.length !== checksum.length) {
       throw new ChecksumMismatchError(checksum, computedChecksum);
+    }
+    
+    for (let i = 0; i < computedChecksum.length; i++) {
+      if (computedChecksum[i] !== checksum[i]) {
+        throw new ChecksumMismatchError(checksum, computedChecksum);
+      }
     }
     const finalChecksum = checksum ?? computedChecksum;
 
@@ -122,8 +129,8 @@ export class EncryptedBlockFactory {
     // If data is already encrypted (starts with 0x04), use it directly
     if (data[0] === ECIES.PUBLIC_KEY_MAGIC) {
       // Create a properly sized buffer
-      const finalData = Buffer.alloc(blockSize as number);
-      data.copy(finalData);
+      const finalData = new Uint8Array(blockSize as number);
+      finalData.set(data);
 
       return new Constructor<TID>(
         type,
@@ -142,32 +149,32 @@ export class EncryptedBlockFactory {
     }
 
     // Create final data buffer with proper size
-    const finalData = Buffer.alloc(blockSize as number);
+    const finalData = new Uint8Array(blockSize as number);
 
     // Generate encryption headers
-    const ephemeralPublicKey = Buffer.alloc(ECIES.PUBLIC_KEY_LENGTH);
+    const ephemeralPublicKey = new Uint8Array(ECIES.PUBLIC_KEY_LENGTH);
     const keyData = randomBytes(ECIES.PUBLIC_KEY_LENGTH - 1);
     ephemeralPublicKey[0] = ECIES.PUBLIC_KEY_MAGIC; // Set ECIES public key prefix
-    keyData.copy(ephemeralPublicKey, 1); // Copy after prefix
+    ephemeralPublicKey.set(keyData, 1); // Copy after prefix
 
     const iv = randomBytes(ECIES.IV_LENGTH);
     const authTag = randomBytes(ECIES.AUTH_TAG_LENGTH);
 
     // Copy headers to final buffer
     let offset = 0;
-    ephemeralPublicKey.copy(finalData, offset);
+    finalData.set(ephemeralPublicKey, offset);
     offset += ECIES.PUBLIC_KEY_LENGTH;
-    iv.copy(finalData, offset);
+    finalData.set(iv, offset);
     offset += ECIES.IV_LENGTH;
-    authTag.copy(finalData, offset);
+    finalData.set(authTag, offset);
     offset += ECIES.AUTH_TAG_LENGTH;
 
     // Copy data to payload area
-    data.copy(finalData, offset);
+    finalData.set(data, offset);
 
     // Create a copy of the data for validation
-    const finalDataCopy = Buffer.alloc(blockSize as number);
-    finalData.copy(finalDataCopy);
+    const finalDataCopy = new Uint8Array(blockSize as number);
+    finalDataCopy.set(finalData);
 
     // Verify the data length matches the block size
     if (finalDataCopy.length !== (blockSize as number)) {

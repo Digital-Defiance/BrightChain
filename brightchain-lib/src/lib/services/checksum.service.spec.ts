@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { arraysEqual } from '@digitaldefiance/ecies-lib';
-import { Readable } from 'stream';
+import { Readable } from '../browserStream';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
 
@@ -9,9 +9,12 @@ describe('ChecksumService', () => {
 
   // Helper function to create a web readable stream from a Uint8Array
   function uint8ArrayToStream(data: Uint8Array): ReadableStream<Uint8Array> {
-    return Readable.toWeb(
-      Readable.from(Buffer.from(data)),
-    ) as ReadableStream<Uint8Array>;
+    return new ReadableStream({
+      start(controller) {
+        controller.enqueue(data);
+        controller.close();
+      }
+    });
   }
 
   beforeEach(() => {
@@ -248,16 +251,14 @@ describe('ChecksumService', () => {
     });
 
     it('should reject on stream error', async () => {
-      const errorStream = new Readable({
-        read() {
-          this.emit('error', new Error('Test error'));
-        },
+      const errorStream = new ReadableStream({
+        start(controller) {
+          controller.error(new Error('Test error'));
+        }
       });
 
       await expect(
-        checksumService.calculateChecksumForStream(
-          Readable.toWeb(errorStream) as ReadableStream<Uint8Array>,
-        ),
+        checksumService.calculateChecksumForStream(errorStream),
       ).rejects.toThrow('Test error');
     });
   });

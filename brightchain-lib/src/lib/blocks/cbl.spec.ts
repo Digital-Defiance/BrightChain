@@ -18,7 +18,7 @@ import {
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
-import { createECDH } from 'crypto';
+import { randomBytes } from '../browserCrypto';
 import { generateRandomKeysSync } from 'paillier-bigint';
 import { CHECKSUM, ECIES, TUPLE } from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
@@ -264,8 +264,7 @@ class TestCblBlock<
     // Fill remaining space with random padding
     const paddingLength = blockSizeNumber - dataOffset;
     if (paddingLength > 0) {
-      const padding = Buffer.alloc(paddingLength);
-      crypto.getRandomValues(padding);
+      const padding = randomBytes(paddingLength);
       data.set(padding, dataOffset);
     }
 
@@ -383,10 +382,6 @@ describe('ConstituentBlockListBlock', () => {
     const publicKey = new Uint8Array(1 + publicKeyData.length);
     publicKey[0] = ECIES.PUBLIC_KEY_MAGIC;
     publicKey.set(publicKeyData, 1);
-
-    // Create ECDH instance for key derivation
-    const ecdh = createECDH(ECIES.CURVE_NAME);
-    ecdh.setPrivateKey(Buffer.from(privateKey));
 
     creator = Member.newMember(
       ServiceProvider.getInstance().eciesService,

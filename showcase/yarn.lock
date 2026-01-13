@@ -218,12 +218,12 @@ __metadata:
 
 "@brightchain/brightchain-lib@file:../brightchain-lib::locator=brightchain-showcase%40workspace%3A.":
   version: 0.1.0
-  resolution: "@brightchain/brightchain-lib@file:../brightchain-lib#../brightchain-lib::hash=33c1d3&locator=brightchain-showcase%40workspace%3A."
+  resolution: "@brightchain/brightchain-lib@file:../brightchain-lib#../brightchain-lib::hash=1b311f&locator=brightchain-showcase%40workspace%3A."
   dependencies:
     "@digitaldefiance/ecies-lib": "npm:^4.12.8"
     "@digitaldefiance/i18n-lib": "npm:^3.8.16"
     tslib: "npm:^2.3.0"
-  checksum: 10c0/ae7891e950005af9333e3dd2d792eb21cc2b9ffa0c91fd49f6b6bf477117e98ed95176d7f1e21aecffe83f96ad969b883e6e3d381e65a4a54a2abe77bd80d6df
+  checksum: 10c0/ea7ae59cf79dc9cc3aa5230015ab78ffac5426c16cf8bc4ce96734800387299e219c19a65c2adabb986307438b52689bad8da3e05da0a1bfafbafbd74bacc4a3
   languageName: node
   linkType: hard
 

@@ -79,11 +79,25 @@ const Hero = ({ scrollY }: HeroProps) => {
           transition={{ delay: 0.9, duration: 0.8 }}
         >
           <Link
-            to="/soup"
+            to="/minimal"
             className="btn btn-primary"
           >
             <GiCookingPot />
-            🥫 Block Soup Demo
+            🥫 Working Demo
+          </Link>
+          <Link
+            to="/demo"
+            className="btn btn-secondary"
+          >
+            <GiCookingPot />
+            Full Demo
+          </Link>
+          <Link
+            to="/soup"
+            className="btn btn-secondary"
+          >
+            <GiCookingPot />
+            Simple Demo
           </Link>
           <a
             href="https://github.com/Digital-Defiance/BrightChain"
