@@ -3,6 +3,7 @@ import {
   Member,
   PlatformID,
 } from '@digitaldefiance/ecies-lib';
+import { uint8ArrayToBase64 } from '../../bufferUtils';
 import { IOperationalFactory } from '../../interfaces/document/base';
 import {
   IMemberHydratedData,
@@ -24,7 +25,7 @@ export const memberOperationalFactory = <
       type: hydrated.type,
       name: hydrated.name,
       email: hydrated.email.toString(),
-      publicKey: Buffer.from(hydrated.publicKey).toString('base64'),
+      publicKey: uint8ArrayToBase64(hydrated.publicKey),
       votingPublicKey:
         hydrated.votingPublicKey && hydrated.votingPublicKey.n.toString(16),
       creatorId: provider.idToString(hydrated.creatorId),

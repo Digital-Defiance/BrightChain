@@ -7,7 +7,7 @@ export class AsymmetricKeyFragment {
   public readonly keyRole: KeyRole;
   public readonly keyFragmentType: KeyFragmentType;
   public readonly KeyStorageFormat: KeyStorageFormat;
-  public readonly keyFragment: Buffer;
+  public readonly keyFragment: Uint8Array;
 
   constructor(
     keyType: KeyType,
@@ -21,9 +21,9 @@ export class AsymmetricKeyFragment {
     this.keyFragmentType = keyFragmentType;
     this.KeyStorageFormat = keyStorageFormat;
     if (typeof keyFragment === 'string') {
-      this.keyFragment = Buffer.from(keyFragment, 'utf8');
+      this.keyFragment = new TextEncoder().encode(keyFragment);
     } else {
-      this.keyFragment = Buffer.from(keyFragment);
+      this.keyFragment = new Uint8Array(keyFragment);
     }
   }
 }

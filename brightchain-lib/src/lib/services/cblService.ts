@@ -9,7 +9,7 @@ import {
   SignatureUint8Array,
   TypedIdProviderWrapper,
 } from '@digitaldefiance/ecies-lib';
-import { Buffer } from 'buffer';
+import { concatenateUint8Arrays, writeUInt32BE, uint8ArrayToBase64 } from '../bufferUtils';
 import CONSTANTS, { CBL, CHECKSUM, ECIES, TUPLE } from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize, lengthToBlockSize } from '../enumerations/blockSize';
@@ -570,8 +570,8 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     );
 
     // Get the block size from the parameter or calculate it from the data length
-    const blockSizeBuffer = Buffer.alloc(CONSTANTS['UINT32_SIZE']);
-    blockSizeBuffer.writeUInt32BE(blockSize ?? lengthToBlockSize(data.length));
+    const blockSizeBuffer = new Uint8Array(CONSTANTS['UINT32_SIZE']);
+    writeUInt32BE(blockSize ?? lengthToBlockSize(data.length), blockSizeBuffer);
 
     // Get address list
     const addressList = data.subarray(
@@ -580,21 +580,12 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
         this.getCblAddressCount(data) * CHECKSUM.SHA3_BUFFER_LENGTH,
     );
 
-    // Allocate and combine buffers for signing
-    const toSignSize =
-      headerWithoutSignature.length +
-      blockSizeBuffer.length +
-      addressList.length;
-    const toSign = Buffer.alloc(toSignSize);
-
-    let offset = 0;
-    toSign.set(headerWithoutSignature, offset);
-    offset += headerWithoutSignature.length;
-
-    toSign.set(blockSizeBuffer, offset);
-    offset += blockSizeBuffer.length;
-
-    toSign.set(addressList, offset);
+    // Combine arrays for signing
+    const toSign = concatenateUint8Arrays([
+      headerWithoutSignature,
+      blockSizeBuffer,
+      addressList,
+    ]);
 
     const checksum = this.checksumService.calculateChecksum(toSign);
     const signature = this.getSignature(data);
@@ -696,23 +687,26 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
   /**
    * Create an extended header for CBL
    */
-  public makeExtendedHeader(fileName: string, mimeType: string): Buffer {
+  public makeExtendedHeader(fileName: string, mimeType: string): Uint8Array {
     this.validateFileNameFormat(fileName);
     this.validateMimeTypeFormat(mimeType);
     const totalLength = this.calculateExtendedHeaderSize(fileName, mimeType);
-    const result = Buffer.alloc(totalLength);
+    const result = new Uint8Array(totalLength);
     let offset = 0;
 
     // Write file name length and content
-    result.writeUInt16BE(fileName.length, offset);
+    const view = new DataView(result.buffer);
+    view.setUint16(offset, fileName.length, false);
     offset += CONSTANTS['UINT16_SIZE'];
-    Buffer.from(fileName).copy(result, offset);
-    offset += fileName.length;
+    const fileNameBytes = new TextEncoder().encode(fileName);
+    result.set(fileNameBytes, offset);
+    offset += fileNameBytes.length;
 
     // Write mime type length and content
-    result.writeUInt8(mimeType.length, offset);
+    result[offset] = mimeType.length;
     offset += CONSTANTS['UINT8_SIZE'];
-    Buffer.from(mimeType).copy(result, offset);
+    const mimeTypeBytes = new TextEncoder().encode(mimeType);
+    result.set(mimeTypeBytes, offset);
 
     return result;
   }
@@ -844,8 +838,8 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       creator instanceof Member && creator.privateKey
         ? new Uint8Array(
             this.eciesService.signMessage(
-              Buffer.from(creator.privateKey.value),
-              Buffer.from(checksum),
+              creator.privateKey.value,
+              checksum,
             ),
           )
         : new Uint8Array(ECIES.SIGNATURE_LENGTH);

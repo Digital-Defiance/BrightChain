@@ -7,6 +7,7 @@ import {
   SignatureUint8Array,
   stringToUint8Array,
 } from '@digitaldefiance/ecies-lib';
+import { concatenateUint8Arrays } from '../../bufferUtils';
 
 /**
  * Base interface for all network-related documents
@@ -91,7 +92,7 @@ export abstract class BaseNetworkDocument<
    */
   async sign(): Promise<void> {
     // Create a buffer of all fields except signature and checksum
-    const dataToSign = Buffer.concat([
+    const dataToSign = concatenateUint8Arrays([
       getEnhancedIdProvider<TID>().toBytes(this.id),
       stringToUint8Array(this.type),
       stringToUint8Array(this.version.toString()),
@@ -113,7 +114,7 @@ export abstract class BaseNetworkDocument<
    */
   async verify(): Promise<boolean> {
     // Recreate the signed data buffer
-    const dataToVerify = Buffer.concat([
+    const dataToVerify = concatenateUint8Arrays([
       getEnhancedIdProvider<TID>().toBytes(this.id),
       stringToUint8Array(this.type),
       stringToUint8Array(this.version.toString()),

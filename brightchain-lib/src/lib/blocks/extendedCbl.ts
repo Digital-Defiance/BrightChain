@@ -35,7 +35,7 @@ export class ExtendedCBL<
   }
 
   // Forward all properties and methods to the delegate
-  protected get _data(): Buffer {
+  protected get _data(): Uint8Array {
     return this._delegate._data;
   }
 
@@ -183,13 +183,13 @@ export class ExtendedCBL<
     return this._delegate.fullHeaderData;
   }
 
-  public get data(): Buffer {
-    // Ensure we return a Buffer, not a Readable
+  public get data(): Uint8Array {
+    // Ensure we return a Uint8Array, not a Readable
     const delegateData = this._delegate.data;
-    if (Buffer.isBuffer(delegateData)) {
+    if (delegateData instanceof Uint8Array) {
       return delegateData;
     }
-    // If it's a Readable, convert it to a Buffer
+    // If it's a Readable, convert it to a Uint8Array
     // This is a simplification - in a real implementation, you'd need to handle this properly
     return this._data;
   }

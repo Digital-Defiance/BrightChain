@@ -40,7 +40,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
     try {
       // Convert member to JSON string
       const memberJson = member.toJson();
-      const memberData = new Uint8Array(Buffer.from(memberJson));
+      const memberData = new TextEncoder().encode(memberJson);
 
       // Create initial blocks with consistent chunk size
       const blocks: RawDataBlock[] = [];

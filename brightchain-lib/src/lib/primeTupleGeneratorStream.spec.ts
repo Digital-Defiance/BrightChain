@@ -213,7 +213,7 @@ describe('PrimeTupleGeneratorStream', () => {
       });
     }, 10000);
 
-    it.skip('should handle non-buffer input', async () => {
+    it('should handle non-buffer input', async () => {
       const stream = new PrimeTupleGeneratorStream(
         blockSize,
         mockMember as any,
@@ -235,7 +235,9 @@ describe('PrimeTupleGeneratorStream', () => {
           resolve();
         });
 
+        // Write non-buffer input and end the stream
         stream.write('not a buffer');
+        stream.end();
       });
     }, 10000);
   });

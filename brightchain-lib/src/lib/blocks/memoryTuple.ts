@@ -8,7 +8,7 @@ import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
 import { MemoryTupleError } from '../errors/memoryTupleError';
 import { IBaseBlock } from '../interfaces/blocks/base';
-import { BlockHandle } from './handle';
+import { type BlockHandle } from './handle';
 import { RawDataBlock } from './rawData';
 
 /**

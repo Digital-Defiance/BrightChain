@@ -4,6 +4,7 @@ import {
   PlatformID,
   uint8ArrayToBase64,
 } from '@digitaldefiance/ecies-lib';
+import { base64ToUint8Array } from '../../bufferUtils';
 import { PublicKey } from 'paillier-bigint';
 import { IHydrationSchema } from '../../interfaces/document/base';
 import { IMemberHydratedData } from '../../interfaces/member/hydrated';
@@ -22,7 +23,7 @@ export const memberHydrationSchema = <
     const id = provider.idFromString(storage.id);
     const email = new EmailString(storage.email);
     const creatorId = provider.idFromString(storage.creatorId);
-    const publicKey = Buffer.from(storage.publicKey, 'base64');
+    const publicKey = base64ToUint8Array(storage.publicKey);
 
     // Parse voting public key from hex string (if present)
     const votingPublicKey =
