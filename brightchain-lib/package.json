@@ -2,9 +2,20 @@
   "name": "@brightchain/brightchain-lib",
   "version": "0.1.0",
   "description": "BrightChain core library - browser-compatible blockchain storage",
-  "main": "src/browser.ts",
-  "types": "src/browser.ts",
-  "private": true,
+  "main": "src/browser.js",
+  "types": "src/browser.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital-Defiance/BrightChain.git",
+    "directory": "brightchain-lib"
+  },
+  "homepage": "https://github.com/Digital-Defiance/BrightChain#readme",
+  "bugs": {
+    "url": "https://github.com/Digital-Defiance/BrightChain/issues"
+  },
+  "keywords": ["blockchain", "encryption", "storage", "decentralized", "brightchain"],
+  "author": "Digital Defiance",
+  "license": "MIT",
   "dependencies": {
     "@digitaldefiance/ecies-lib": "^4.12.8",
     "@digitaldefiance/i18n-lib": "^3.8.16",
