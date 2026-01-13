@@ -72,6 +72,13 @@ a:hover {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: transparent;
+  /* Fallback for browsers that don't support background-clip: text */
+  background-size: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  /* Ensure the gradient is applied properly */
+  display: inline-block;
 }
 
 .btn {
