@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
+import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -107,22 +108,6 @@ export default defineConfig({
   plugins: [
     alias({ entries: nobleAliases }),
     react(),
-    nodePolyfills({
-      // Whether to polyfill `node:` protocol imports.
-      protocolImports: true,
-      // Whether to polyfill these globals.
-      globals: {
-        Buffer: true,
-        global: true,
-        process: true,
-      },
-      // Whether to polyfill these modules.
-      include: [
-        'buffer',
-        'process',
-        'util',
-      ],
-    }),
   ],
   base: '/',
   build: {
@@ -166,8 +151,18 @@ export default defineConfig({
       'bson',
       'uuid',
     ],
+    exclude: [
+      'secrets.js-34r7h'
+    ],
     esbuildOptions: {
       mainFields: ['module', 'main'],
+      plugins: [
+        NodeModulesPolyfillPlugin(),
+        NodeGlobalsPolyfillPlugin({
+          buffer: true,
+          process: true,
+        }),
+      ],
     },
     force: true,
   },
@@ -177,6 +172,8 @@ export default defineConfig({
     alias: {
       // Local workspace alias - use browser-specific entry point
       '@brightchain/brightchain-lib': resolve(__dirname, '../brightchain-lib/src/browser.ts'),
+      // Replace js-sha3 with @noble/hashes for browser compatibility
+      'js-sha3': resolve(__dirname, 'node_modules/@noble/hashes/esm/sha3.js'),
       // Map to ESM versions of @noble packages for proper browser bundling
       '@noble/hashes/sha2': resolve(
         __dirname,
