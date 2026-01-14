@@ -38,6 +38,11 @@ jobs:
       - name: Build brightchain-lib
         run: yarn brightchain-lib:build
 
+      - name: Install showcase dependencies
+        run: |
+          cd showcase
+          yarn install --immutable
+
       - name: Build showcase
         run: |
           cd showcase
