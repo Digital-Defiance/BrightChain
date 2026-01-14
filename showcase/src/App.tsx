@@ -8,9 +8,13 @@ import BlogEditor from './components/BlogEditor';
 import Components from './components/Components';
 import Demo from './components/Demo';
 import Hero from './components/Hero';
-import { SimpleSoupDemo } from './components/SimpleSoupDemo';
 import { BrightChainSoupDemo } from './components/BrightChainSoupDemo';
-import { MinimalBrightChainDemo } from './components/MinimalBrightChainDemo';
+import { CompatibilityWarning } from './components/CompatibilityWarning';
+import { DemoNavigation } from './components/DemoNavigation';
+import { ScrollIndicator } from './components/ScrollIndicator';
+import { AccessibilityProvider } from './components/AccessibilityProvider';
+import { EducationalModeProvider } from './components/EducationalModeProvider';
+import { SkipLink } from './components/SkipLink';
 
 function HomePage() {
   const [scrollY, setScrollY] = useState(0);
@@ -22,11 +26,12 @@ function HomePage() {
   }, []);
 
   return (
-    <div className="app">
+    <div className="app" id="main-content">
       <Hero scrollY={scrollY} />
       <Components />
       <Demo />
       <About />
+      <ScrollIndicator targetId="home" showProgress={true} />
     </div>
   );
 }
@@ -34,13 +39,20 @@ function HomePage() {
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/blog/new" element={<BlogEditor />} />
-        <Route path="/blog/:slug" element={<BlogPost />} />
-        <Route path="/demo" element={<BrightChainSoupDemo />} />
-      </Routes>
+      <AccessibilityProvider>
+        <EducationalModeProvider>
+          <SkipLink />
+          <CompatibilityWarning />
+          <DemoNavigation />
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/new" element={<BlogEditor />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/demo" element={<BrightChainSoupDemo />} />
+          </Routes>
+        </EducationalModeProvider>
+      </AccessibilityProvider>
     </Router>
   );
 }

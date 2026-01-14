@@ -1,0 +1,672 @@
+/* Reconstruction Animation Styles */
+.reconstruction-animation {
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 1rem 0;
+  backdrop-filter: blur(10px);
+}
+
+.animation-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.animation-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.animation-header p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Animation Steps */
+.animation-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.animation-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.animation-step.pending {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.animation-step.active {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+.animation-step.complete {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.animation-step.current {
+  transform: scale(1.02);
+}
+
+.step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 60px;
+}
+
+.step-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.animation-step.active .step-number {
+  background: rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
+}
+
+.animation-step.complete .step-number {
+  background: rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+.step-status-icon {
+  font-size: 1.2rem;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+}
+
+.step-description {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+
+.step-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* File Visualization */
+.file-visualization {
+  margin-top: 2rem;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.file-icon {
+  font-size: 2.5rem;
+}
+
+.file-details {
+  flex: 1;
+}
+
+.file-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.file-size {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.file-blocks {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* CBL Container */
+.cbl-container {
+  background: rgba(139, 92, 246, 0.1);
+  border: 2px dashed rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.cbl-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.cbl-header h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.cbl-header p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.cbl-data {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.cbl-entry {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+}
+
+.cbl-index {
+  color: var(--accent-primary);
+  font-weight: 600;
+  min-width: 40px;
+}
+
+.cbl-id {
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+/* Blocks Container */
+.blocks-container {
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px dashed rgba(0, 255, 136, 0.3);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.blocks-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.blocks-header h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.blocks-header p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.blocks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+  justify-items: center;
+}
+
+.reconstruction-block {
+  width: 100px;
+  height: 120px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.reconstruction-block::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.reconstruction-block:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.reconstruction-block.selecting {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+  animation: selecting-pulse 1s ease-in-out infinite;
+}
+
+.reconstruction-block.selected {
+  border-color: rgba(59, 130, 246, 0.7);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+.reconstruction-block.retrieving {
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+  animation: retrieving-pulse 1s ease-in-out infinite;
+}
+
+.reconstruction-block.retrieved {
+  border-color: rgba(168, 85, 247, 0.7);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+}
+
+.reconstruction-block.validating {
+  border-color: rgba(255, 193, 7, 0.5);
+  box-shadow: 0 0 15px rgba(255, 193, 7, 0.3);
+  animation: validating-pulse 1s ease-in-out infinite;
+}
+
+.reconstruction-block.validated {
+  border-color: rgba(34, 197, 94, 0.7);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+}
+
+.block-index {
+  font-weight: bold;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.block-status-indicator {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.block-size {
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+/* Reassembly Container */
+.reassembly-container {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.reassembly-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.reassembly-header h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.reassembly-header p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.reassembly-progress-bar {
+  width: 100%;
+  height: 30px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.reassembly-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e, #10b981);
+  border-radius: 15px;
+  transition: width 0.3s ease;
+}
+
+.reassembly-progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Download Ready Container */
+.download-ready-container {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2));
+  border: 2px solid rgba(34, 197, 94, 0.5);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(34, 197, 94, 0.3);
+}
+
+.download-ready-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: success-bounce 0.6s ease-in-out;
+}
+
+.download-ready-container h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.download-ready-container p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 0 0 1.5rem 0;
+}
+
+.download-ready-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Educational Information */
+.educational-info {
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.educational-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.educational-header span {
+  font-size: 1.5rem;
+}
+
+.educational-header h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.educational-content p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+}
+
+.educational-content p:last-child {
+  margin-bottom: 0;
+}
+
+.educational-content strong {
+  color: var(--text-primary);
+}
+
+.technical-details {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.technical-details p {
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+  color: var(--accent-primary);
+}
+
+.technical-details ul {
+  margin: 0.5rem 0 0 0;
+  padding-left: 1.5rem;
+}
+
+.technical-details li {
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+}
+
+/* Animation keyframes */
+@keyframes selecting-pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+  }
+}
+
+@keyframes retrieving-pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.6);
+  }
+}
+
+@keyframes validating-pulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(255, 193, 7, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 193, 7, 0.6);
+  }
+}
+
+@keyframes success-bounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .reconstruction-animation {
+    padding: 1rem;
+  }
+  
+  .animation-step {
+    padding: 0.75rem;
+  }
+  
+  .step-indicator {
+    min-width: 50px;
+  }
+  
+  .step-number {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+  
+  .blocks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .reconstruction-block {
+    width: 80px;
+    height: 100px;
+  }
+  
+  .file-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+  
+  .educational-info {
+    padding: 1rem;
+  }
+  
+  .download-ready-container {
+    padding: 1.5rem;
+  }
+  
+  .download-ready-icon {
+    font-size: 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .animation-steps {
+    gap: 0.5rem;
+  }
+  
+  .animation-step {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .step-indicator {
+    flex-direction: row;
+    min-width: auto;
+  }
+  
+  .blocks-grid {
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  }
+  
+  .reconstruction-block {
+    width: 70px;
+    height: 90px;
+    font-size: 0.8rem;
+  }
+  
+  .cbl-data {
+    max-height: 150px;
+  }
+  
+  .cbl-entry {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.75rem;
+  }
+}
