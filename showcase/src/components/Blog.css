@@ -9,6 +9,7 @@
   width: 90%;
   margin: 0 auto;
   padding: 4rem 0;
+  padding-top: 6rem; /* Add space for fixed navigation */
 }
 
 .blog-header {
@@ -51,10 +52,11 @@
   font-weight: 800;
   margin-bottom: 1rem;
   letter-spacing: -0.02em;
+  color: transparent !important;
   background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
 }
 
 .blog-header p {

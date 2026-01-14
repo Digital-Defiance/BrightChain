@@ -365,3 +365,13 @@
     width: 100%;
   }
 }
+
+/* Fix gradient text in section titles */
+.section-title .gradient-text {
+  color: transparent !important;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  display: inline-block !important;
+}
