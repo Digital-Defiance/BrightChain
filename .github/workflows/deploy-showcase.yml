@@ -32,15 +32,13 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Create stub parent tsconfig
-        run: echo '{"compilerOptions":{}}' > ../tsconfig.json
-        working-directory: ./showcase
-
       - name: Install dependencies
-        working-directory: ./showcase
         run: yarn install --immutable
 
-      - name: Build
+      - name: Build brightchain-lib
+        run: yarn brightchain-lib:build
+
+      - name: Build showcase
         working-directory: ./showcase
         run: yarn build
 
