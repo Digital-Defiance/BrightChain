@@ -3,8 +3,6 @@ import react from '@vitejs/plugin-react';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
-import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
-import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -133,6 +131,7 @@ export default defineConfig({
       'tslib',
       '@digitaldefiance/ecies-lib',
       '@digitaldefiance/i18n-lib',
+      '@digitaldefiance/secrets',
       '@ethereumjs/wallet',
       '@scure/bip32',
       '@scure/bip39',
@@ -151,18 +150,8 @@ export default defineConfig({
       'bson',
       'uuid',
     ],
-    exclude: [
-      'secrets.js-34r7h'
-    ],
     esbuildOptions: {
       mainFields: ['module', 'main'],
-      plugins: [
-        NodeModulesPolyfillPlugin(),
-        NodeGlobalsPolyfillPlugin({
-          buffer: true,
-          process: true,
-        }),
-      ],
     },
     force: true,
   },
@@ -170,8 +159,6 @@ export default defineConfig({
     dedupe: ['tslib', '@noble/hashes', '@noble/curves'],
     extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
     alias: {
-      // Stub out secrets.js for browser compatibility
-      'secrets.js-34r7h': resolve(__dirname, 'src/polyfills/secrets-stub.ts'),
       // Local workspace alias - use main index for full exports
       '@brightchain/brightchain-lib': resolve(__dirname, '../brightchain-lib/src/index.ts'),
       // Replace js-sha3 with @noble/hashes for browser compatibility
@@ -242,8 +229,5 @@ export default defineConfig({
   define: {
     // Required for some packages that check for Node.js environment
     global: 'globalThis',
-    // Polyfill process for Node.js compatibility
-    'process.env': '{}',
-    'process.env.NODE_ENV': '"production"',
   },
 });
