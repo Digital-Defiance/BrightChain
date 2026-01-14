@@ -43,7 +43,11 @@ export const BrightChainSoupDemo: React.FC = () => {
   const [selectedBlock, setSelectedBlock] = useState<BlockInfo | null>(null);
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [magnetUrlInput, setMagnetUrlInput] = useState('');
+  const [showMagnetInput, setShowMagnetInput] = useState(false);
+  const [showCblUpload, setShowCblUpload] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cblInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Initialize SessionIsolatedBrightChain when component mounts
@@ -204,6 +208,53 @@ export const BrightChainSoupDemo: React.FC = () => {
     setSelectedFileId(fileId);
   }, []);
 
+  const handleCblUpload = useCallback(async (files: FileList) => {
+    if (!brightChain || files.length === 0) return;
+
+    const file = files[0];
+    if (!file.name.endsWith('.cbl')) {
+      alert('Please upload a .cbl file');
+      return;
+    }
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const cblData = new Uint8Array(arrayBuffer);
+      const receipt = brightChain.parseCBL(cblData);
+      
+      console.log('CBL parsed successfully:', receipt);
+      
+      // Add to receipts so user can retrieve the file
+      setReceipts(prev => [...prev, receipt]);
+      setShowCblUpload(false);
+      
+      alert(`CBL loaded! File: ${receipt.fileName} (${receipt.blockCount} blocks)\nYou can now retrieve the file if all blocks are in the soup.`);
+    } catch (error) {
+      console.error('Failed to parse CBL:', error);
+      alert(`Failed to parse CBL: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }, [brightChain]);
+
+  const handleMagnetUrlSubmit = useCallback(() => {
+    if (!brightChain || !magnetUrlInput.trim()) return;
+
+    try {
+      const receipt = brightChain.parseMagnetUrl(magnetUrlInput);
+      
+      console.log('Magnet URL parsed successfully:', receipt);
+      
+      // Add to receipts so user can retrieve the file
+      setReceipts(prev => [...prev, receipt]);
+      setMagnetUrlInput('');
+      setShowMagnetInput(false);
+      
+      alert(`Magnet URL loaded!\n\nFile: ${receipt.fileName}\nSize: ${receipt.originalSize} bytes\nBlocks: ${receipt.blockCount}\n\nYou can now retrieve the file if all blocks are in the soup.`);
+    } catch (error) {
+      console.error('Failed to parse magnet URL:', error);
+      alert(`Failed to parse magnet URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }, [brightChain, magnetUrlInput]);
+
   return (
     <div className="brightchain-demo">
       <div className="demo-header">
@@ -250,6 +301,80 @@ export const BrightChainSoupDemo: React.FC = () => {
               >
                 Choose Files
               </button>
+            </div>
+
+            {/* Reconstruction Options */}
+            <div className="reconstruction-options">
+              <h3 className="reconstruction-header">
+                <span>🔄</span>
+                Reconstruct from Soup
+              </h3>
+              <div className="reconstruction-buttons">
+                <button 
+                  onClick={() => setShowCblUpload(!showCblUpload)}
+                  className="reconstruction-btn"
+                >
+                  <span>📄</span>
+                  Upload CBL File
+                </button>
+                <button 
+                  onClick={() => setShowMagnetInput(!showMagnetInput)}
+                  className="reconstruction-btn"
+                >
+                  <span>🧲</span>
+                  Use Magnet URL
+                </button>
+              </div>
+
+              {/* CBL Upload Section */}
+              {showCblUpload && (
+                <div className="cbl-upload-section">
+                  <p className="cbl-info">
+                    Upload a .cbl file to reconstruct the original file from the block soup.
+                    The blocks must already be in the soup for reconstruction to work.
+                  </p>
+                  <input
+                    ref={cblInputRef}
+                    type="file"
+                    accept=".cbl"
+                    onChange={(e) => e.target.files && handleCblUpload(e.target.files)}
+                    style={{ display: 'none' }}
+                  />
+                  <button 
+                    onClick={() => cblInputRef.current?.click()}
+                    className="cbl-upload-btn"
+                  >
+                    <span>📂</span>
+                    Choose CBL File
+                  </button>
+                </div>
+              )}
+
+              {/* Magnet URL Input Section */}
+              {showMagnetInput && (
+                <div className="magnet-input-section">
+                  <p className="magnet-info">
+                    Paste a magnet URL to reconstruct the file. 
+                    The magnet URL contains all block information needed for reconstruction.
+                  </p>
+                  <div className="magnet-input-group">
+                    <input
+                      type="text"
+                      value={magnetUrlInput}
+                      onChange={(e) => setMagnetUrlInput(e.target.value)}
+                      placeholder="magnet:?xt=urn:brightchain:..."
+                      className="magnet-text-input"
+                    />
+                    <button 
+                      onClick={handleMagnetUrlSubmit}
+                      className="magnet-submit-btn"
+                      disabled={!magnetUrlInput.trim()}
+                    >
+                      Load
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Enhanced Soup Visualization */}

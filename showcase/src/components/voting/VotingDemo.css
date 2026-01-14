@@ -13,10 +13,13 @@
 .demo-header h3 {
   font-size: 1.8rem;
   margin-bottom: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .demo-header p {
-  opacity: 0.8;
+  opacity: 1;
+  color: var(--text-secondary);
   max-width: 800px;
   margin: 0 auto;
   line-height: 1.6;
@@ -510,10 +513,11 @@
 .voting-intro h2 {
   font-size: 2.5rem;
   margin-bottom: 1rem;
+  color: transparent !important;
   background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
 }
 
 .voting-intro p {
@@ -603,10 +607,8 @@
 .intro-header h3 {
   font-size: 2rem;
   margin: 0;
-  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary) !important;
+  font-weight: 700;
 }
 
 .intro-story {

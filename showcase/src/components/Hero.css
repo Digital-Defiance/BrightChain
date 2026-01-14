@@ -60,11 +60,11 @@
 }
 
 .hero-subtitle.gradient-text {
+  color: transparent !important;
   background: linear-gradient(135deg, #00ff88, #0099ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
   display: inline-block;
 }
 
