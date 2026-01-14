@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { FaGithub, FaNewspaper } from 'react-icons/fa';
 import { GiCookingPot } from 'react-icons/gi';
 import { Link } from 'react-router-dom';
+import { AnimatedParticles } from './AnimatedParticles';
+import { ScrollIndicator } from './ScrollIndicator';
 import './Hero.css';
 
 interface HeroProps {
@@ -17,7 +19,7 @@ const Hero = ({ scrollY }: HeroProps) => {
         className="hero-background"
         style={{ transform: `translateY(${parallaxOffset}px)` }}
       >
-        <div className="particles" />
+        <AnimatedParticles particleCount={60} speed={0.3} />
       </div>
 
       <motion.div
@@ -113,15 +115,7 @@ const Hero = ({ scrollY }: HeroProps) => {
         </motion.div>
       </motion.div>
 
-      <motion.div
-        className="scroll-indicator"
-        animate={{ y: [0, 10, 0] }}
-        transition={{ repeat: Infinity, duration: 1.5 }}
-      >
-        <div className="mouse">
-          <div className="wheel" />
-        </div>
-      </motion.div>
+      <ScrollIndicator targetId="demo" showProgress={false} />
     </section>
   );
 };

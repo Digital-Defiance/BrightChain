@@ -3,6 +3,7 @@ import {
   createRuntimeConfiguration,
   GuidV4Provider,
 } from '@digitaldefiance/ecies-lib';
+import { ServiceProvider } from './services/service.provider';
 
 let isInitialized = false;
 const BRIGHTCHAIN_CONFIG_KEY = Symbol.for('brightchain.config');
@@ -25,6 +26,9 @@ export function initializeBrightChain(): void {
   ConstantsRegistry.register(BRIGHTCHAIN_CONFIG_KEY, config, {
     description: 'BrightChain browser-compatible configuration with GuidV4Provider'
   });
+
+  // Initialize ServiceProvider (this will register itself with ServiceLocator)
+  ServiceProvider.getInstance();
 
   isInitialized = true;
 }

@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-// Use main import - the library should handle browser compatibility
-import { BrightChain, FileReceipt, BlockInfo, BlockSize } from '@brightchain/brightchain-lib';
+// Use session-isolated BrightChain implementation
+import { BlockSize, FileReceipt, BlockInfo } from '@brightchain/brightchain-lib';
+import { SessionIsolatedBrightChain } from './SessionIsolatedBrightChain';
+import { EnhancedSoupVisualization } from './EnhancedSoupVisualization';
 import './BrightChainSoupDemo.css';
 
 interface ProcessStep {
@@ -9,25 +11,6 @@ interface ProcessStep {
   status: 'pending' | 'processing' | 'complete' | 'error';
   details?: string;
 }
-
-const SoupCan: React.FC<{ 
-  block: BlockInfo; 
-  isAnimating?: boolean;
-  onClick?: () => void;
-}> = ({ block, isAnimating = false, onClick }) => (
-  <div 
-    className={`soup-can ${isAnimating ? 'animating' : ''}`}
-    style={{
-      backgroundColor: `hsl(${block.index * 137.5 % 360}, 70%, 60%)`,
-    }}
-    title={`Block ${block.index}: ${block.size} bytes\nID: ${block.id.substring(0, 8)}...`}
-    onClick={onClick}
-  >
-    <div className="can-emoji">🥫</div>
-    <div className="can-index">#{block.index}</div>
-    <div className="can-size">{block.size}b</div>
-  </div>
-);
 
 const ProcessStepIndicator: React.FC<{ step: ProcessStep }> = ({ step }) => {
   const getIcon = () => {
@@ -50,80 +33,28 @@ const ProcessStepIndicator: React.FC<{ step: ProcessStep }> = ({ step }) => {
   );
 };
 
-const FileCard: React.FC<{ 
-  receipt: FileReceipt; 
-  onRetrieve: () => void; 
-  onDownload: () => void;
-  onBlockClick: (block: BlockInfo) => void;
-  animatingBlockId?: string;
-}> = ({ receipt, onRetrieve, onDownload, onBlockClick, animatingBlockId }) => (
-  <div className="file-card">
-    <div className="file-header">
-      <span>📄</span>
-      <h3 className="file-title">{receipt.fileName}</h3>
-    </div>
-    <div className="file-info">
-      Size: {receipt.originalSize} bytes | Blocks: {receipt.blockCount}
-    </div>
-    
-    <div className="soup-container">
-      <div className="soup-header">
-        <span>🥫</span>
-        Block Soup Cans:
-      </div>
-      <div className="soup-grid">
-        {receipt.blocks.map(block => (
-          <SoupCan 
-            key={block.id} 
-            block={block} 
-            isAnimating={animatingBlockId === block.id}
-            onClick={() => onBlockClick(block)}
-          />
-        ))}
-      </div>
-    </div>
-    
-    <div className="file-actions">
-      <button onClick={onRetrieve} className="action-btn primary">
-        <span>📥</span>
-        Retrieve File
-      </button>
-      <button onClick={onDownload} className="action-btn secondary">
-        <span>📄</span>
-        Download CBL
-      </button>
-    </div>
-    
-    <details className="magnet-details">
-      <summary className="magnet-summary">🧲 Magnet URL</summary>
-      <input 
-        type="text" 
-        value={receipt.magnetUrl} 
-        readOnly 
-        className="magnet-input"
-        onClick={(e) => e.currentTarget.select()}
-      />
-    </details>
-  </div>
-);
-
 export const BrightChainSoupDemo: React.FC = () => {
-  const [brightChain, setBrightChain] = useState<BrightChain | null>(null);
+  const [brightChain, setBrightChain] = useState<SessionIsolatedBrightChain | null>(null);
   const [receipts, setReceipts] = useState<FileReceipt[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [processSteps, setProcessSteps] = useState<ProcessStep[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [animatingBlockId, setAnimatingBlockId] = useState<string>();
+  const [animatingBlockIds, setAnimatingBlockIds] = useState<string[]>([]);
   const [selectedBlock, setSelectedBlock] = useState<BlockInfo | null>(null);
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Initialize BrightChain when component mounts
+    // Initialize SessionIsolatedBrightChain when component mounts
     try {
-      // Browser version doesn't need complex initialization
-      setBrightChain(new BrightChain(BlockSize.Small));
+      const newBrightChain = new SessionIsolatedBrightChain(BlockSize.Small);
+      setBrightChain(newBrightChain);
+      setDebugInfo(newBrightChain.getDebugInfo());
+      
+      console.log('SessionIsolatedBrightChain initialized successfully');
     } catch (error) {
-      console.error('Failed to initialize BrightChain:', error);
+      console.error('Failed to initialize SessionIsolatedBrightChain:', error);
     }
   }, []);
 
@@ -135,7 +66,7 @@ export const BrightChainSoupDemo: React.FC = () => {
 
   const handleFileUpload = useCallback(async (files: FileList) => {
     if (!brightChain) {
-      console.error('BrightChain not initialized');
+      console.error('SessionIsolatedBrightChain not initialized');
       return;
     }
     
@@ -196,10 +127,13 @@ export const BrightChainSoupDemo: React.FC = () => {
 
         setReceipts(prev => [...prev, receipt]);
         
+        // Update debug info
+        setDebugInfo(brightChain.getDebugInfo());
+        
       } catch (error) {
         console.error('Failed to store file:', error);
         setProcessSteps(prev => prev.map(step => 
-          step.status === 'processing' ? { ...step, status: 'error' } : step
+          step.status === 'processing' ? { ...step, status: 'error', details: error instanceof Error ? error.message : 'Unknown error' } : step
         ));
       }
     }
@@ -218,17 +152,19 @@ export const BrightChainSoupDemo: React.FC = () => {
 
   const handleRetrieve = useCallback(async (receipt: FileReceipt) => {
     if (!brightChain) {
-      console.error('BrightChain not initialized');
+      console.error('SessionIsolatedBrightChain not initialized');
       return;
     }
     
     try {
       // Animate blocks during retrieval
+      const blockIds = receipt.blocks.map(b => b.id);
+      setAnimatingBlockIds(blockIds);
+      
+      // Animate each block sequentially
       for (const block of receipt.blocks) {
-        setAnimatingBlockId(block.id);
         await new Promise(resolve => setTimeout(resolve, 200));
       }
-      setAnimatingBlockId(undefined);
 
       const fileData = await brightChain.retrieveFile(receipt);
       const blob = new Blob([new Uint8Array(fileData)]);
@@ -238,8 +174,13 @@ export const BrightChainSoupDemo: React.FC = () => {
       a.download = receipt.fileName;
       a.click();
       URL.revokeObjectURL(url);
+      
+      console.log(`File "${receipt.fileName}" retrieved and downloaded successfully`);
     } catch (error) {
       console.error('Failed to retrieve file:', error);
+      alert(`Failed to retrieve file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setAnimatingBlockIds([]);
     }
   }, [brightChain]);
 
@@ -255,8 +196,12 @@ export const BrightChainSoupDemo: React.FC = () => {
 
   const handleBlockClick = useCallback((block: BlockInfo) => {
     setSelectedBlock(block);
-    setAnimatingBlockId(block.id);
-    setTimeout(() => setAnimatingBlockId(undefined), 1000);
+    setAnimatingBlockIds([block.id]);
+    setTimeout(() => setAnimatingBlockIds([]), 1000);
+  }, []);
+
+  const handleFileSelect = useCallback((fileId: string) => {
+    setSelectedFileId(fileId);
   }, []);
 
   return (
@@ -266,12 +211,16 @@ export const BrightChainSoupDemo: React.FC = () => {
         <p className="demo-subtitle">
           Upload files to see them transformed into colorful soup cans (blocks) with full process visualization!
         </p>
+        <p className="session-info">
+          <strong>Session:</strong> {debugInfo?.sessionId?.substring(0, 20)}... 
+          <span className="session-note">(Data clears on page refresh)</span>
+        </p>
       </div>
       
       {!brightChain ? (
         <div className="loading-container">
           <div className="upload-icon">⚙️</div>
-          <p className="loading-text">Initializing BrightChain...</p>
+          <p className="loading-text">Initializing SessionIsolatedBrightChain...</p>
         </div>
       ) : (
         <div className="demo-grid">
@@ -303,29 +252,62 @@ export const BrightChainSoupDemo: React.FC = () => {
               </button>
             </div>
 
-            {/* Stored Files */}
-            <div className="storage-section">
-              <h2 className="storage-header">
-                <span>🗃️</span>
-                Block Soup Storage ({receipts.length} files)
-              </h2>
-              {receipts.length === 0 ? (
-                <div className="storage-empty">
-                  No files stored yet. Upload some files to see the magic! ✨
+            {/* Enhanced Soup Visualization */}
+            <EnhancedSoupVisualization
+              files={receipts}
+              selectedFileId={selectedFileId}
+              onFileSelect={handleFileSelect}
+              onBlockClick={handleBlockClick}
+              animatingBlockIds={animatingBlockIds}
+              showConnections={true}
+            />
+
+            {/* File Actions */}
+            {receipts.length > 0 && (
+              <div className="file-actions-section">
+                <h3 className="actions-header">
+                  <span>⚡</span>
+                  File Actions
+                </h3>
+                <div className="actions-grid">
+                  {receipts.map(receipt => (
+                    <div key={receipt.id} className="action-card">
+                      <div className="action-card-header">
+                        <span>📄</span>
+                        <h4>{receipt.fileName}</h4>
+                      </div>
+                      <div className="action-buttons">
+                        <button 
+                          onClick={() => handleRetrieve(receipt)} 
+                          className="action-btn primary"
+                          disabled={isProcessing}
+                        >
+                          <span>📥</span>
+                          Retrieve File
+                        </button>
+                        <button 
+                          onClick={() => handleDownloadCBL(receipt)} 
+                          className="action-btn secondary"
+                        >
+                          <span>📄</span>
+                          Download CBL
+                        </button>
+                      </div>
+                      <details className="magnet-details">
+                        <summary className="magnet-summary">🧲 Magnet URL</summary>
+                        <input 
+                          type="text" 
+                          value={receipt.magnetUrl} 
+                          readOnly 
+                          className="magnet-input"
+                          onClick={(e) => e.currentTarget.select()}
+                        />
+                      </details>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                receipts.map(receipt => (
-                  <FileCard
-                    key={receipt.id}
-                    receipt={receipt}
-                    onRetrieve={() => handleRetrieve(receipt)}
-                    onDownload={() => handleDownloadCBL(receipt)}
-                    onBlockClick={handleBlockClick}
-                    animatingBlockId={animatingBlockId}
-                  />
-                ))
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -389,6 +371,45 @@ export const BrightChainSoupDemo: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* Debug Panel */}
+            {debugInfo && (
+              <div className="debug-panel">
+                <h3 className="debug-header">
+                  <span>🔧</span>
+                  Session Debug
+                </h3>
+                <div className="debug-info">
+                  <p><strong>Session ID:</strong></p>
+                  <div className="session-id">{debugInfo.sessionId}</div>
+                  <p><strong>Blocks in Memory:</strong> {debugInfo.blockCount}</p>
+                  <p><strong>Block Size:</strong> {debugInfo.blockSize} bytes</p>
+                  {debugInfo.blockIds.length > 0 && (
+                    <>
+                      <p><strong>Block IDs:</strong></p>
+                      <div className="block-ids">
+                        {debugInfo.blockIds.map((id: string, index: number) => (
+                          <div key={index} className="block-id-item">{id}</div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  <button 
+                    onClick={() => {
+                      if (brightChain) {
+                        brightChain.clearSession();
+                        setReceipts([]);
+                        setDebugInfo(brightChain.getDebugInfo());
+                        console.log('Session cleared manually');
+                      }
+                    }}
+                    className="clear-session-btn"
+                  >
+                    Clear Session
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

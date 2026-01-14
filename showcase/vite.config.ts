@@ -172,8 +172,8 @@ export default defineConfig({
     alias: {
       // Stub out secrets.js for browser compatibility
       'secrets.js-34r7h': resolve(__dirname, 'src/polyfills/secrets-stub.ts'),
-      // Local workspace alias - use browser-specific entry point
-      '@brightchain/brightchain-lib': resolve(__dirname, '../brightchain-lib/src/browser.ts'),
+      // Local workspace alias - use main index for full exports
+      '@brightchain/brightchain-lib': resolve(__dirname, '../brightchain-lib/src/index.ts'),
       // Replace js-sha3 with @noble/hashes for browser compatibility
       'js-sha3': resolve(__dirname, 'node_modules/@noble/hashes/esm/sha3.js'),
       // Map to ESM versions of @noble packages for proper browser bundling

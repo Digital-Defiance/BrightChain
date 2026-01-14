@@ -5,7 +5,7 @@ import {
   hexToUint8Array,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import { sha3_512 } from 'js-sha3';
+import { sha3_512 } from '@noble/hashes/sha3';
 import { CHECKSUM } from '../constants';
 
 export class ChecksumService {
@@ -24,9 +24,9 @@ export class ChecksumService {
    * @returns The checksum as a Buffer with equals method
    */
   public calculateChecksum(data: Uint8Array): ChecksumUint8Array {
-    const hash = sha3_512.create();
-    hash.update(data);
-    const result = hexToUint8Array(hash.hex()) as ChecksumUint8Array;
+    // @noble/hashes returns Uint8Array directly
+    const hashBytes = sha3_512(data);
+    const result = hashBytes as ChecksumUint8Array;
     // Add equals method to the checksum
     (result as any).equals = function (other: ChecksumUint8Array): boolean {
       if (this.length !== other.length) return false;
@@ -45,11 +45,15 @@ export class ChecksumService {
   public calculateChecksumForBuffers(
     buffers: Uint8Array[],
   ): ChecksumUint8Array {
-    const hash = sha3_512.create();
+    // Concatenate all buffers into one
+    const totalLength = buffers.reduce((sum, buf) => sum + buf.length, 0);
+    const combined = new Uint8Array(totalLength);
+    let offset = 0;
     for (const buffer of buffers) {
-      hash.update(buffer);
+      combined.set(buffer, offset);
+      offset += buffer.length;
     }
-    return hexToUint8Array(hash.hex()) as ChecksumUint8Array;
+    return sha3_512(combined) as ChecksumUint8Array;
   }
 
   /**
@@ -58,9 +62,10 @@ export class ChecksumService {
    * @returns The checksum as a Buffer
    */
   public calculateChecksumForString(str: string): ChecksumUint8Array {
-    const hash = sha3_512.create();
-    hash.update(str);
-    return hexToUint8Array(hash.hex()) as ChecksumUint8Array;
+    // Convert string to Uint8Array
+    const encoder = new TextEncoder();
+    const data = encoder.encode(str);
+    return sha3_512(data) as ChecksumUint8Array;
   }
 
   /**
@@ -84,16 +89,27 @@ export class ChecksumService {
   public async calculateChecksumForStream(
     stream: ReadableStream<Uint8Array>,
   ): Promise<ChecksumUint8Array> {
-    const hash = sha3_512.create();
+    // Collect all chunks into an array
+    const chunks: Uint8Array[] = [];
     const reader = stream.getReader();
     let result: ReadableStreamReadResult<Uint8Array>;
     do {
       result = await reader.read();
       if (result.value) {
-        hash.update(result.value);
+        chunks.push(result.value);
       }
     } while (!result.done);
-    return hexToUint8Array(hash.hex()) as ChecksumUint8Array;
+    
+    // Concatenate all chunks
+    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const combined = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      combined.set(chunk, offset);
+      offset += chunk.length;
+    }
+    
+    return sha3_512(combined) as ChecksumUint8Array;
   }
 
   /**
