@@ -2278,6 +2278,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@digitaldefiance/secrets@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "@digitaldefiance/secrets@npm:2.0.4"
+  peerDependencies:
+    typescript: ">=4.0.0"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10c0/723a2ebdb684b690a8c9b40a1afd33120e163040aa18bf77450e0ca58f197a1cb3d89d5ddfa050713569bd719b1c93b2b90e4332a1ef8c0609b360970f3d5609
+  languageName: node
+  linkType: hard
+
 "@digitaldefiance/suite-core-lib@npm:3.6.47, @digitaldefiance/suite-core-lib@npm:^3.6.47":
   version: 3.6.47
   resolution: "@digitaldefiance/suite-core-lib@npm:3.6.47"
@@ -11381,6 +11393,7 @@ __metadata:
     "@digitaldefiance/i18n-lib": "npm:^3.8.16"
     "@digitaldefiance/node-ecies-lib": "npm:^4.12.8"
     "@digitaldefiance/node-express-suite": "npm:^3.7.4"
+    "@digitaldefiance/secrets": "npm:^2.0.4"
     "@digitaldefiance/suite-core-lib": "npm:^3.6.47"
     "@emotion/react": "npm:11.14.0"
     "@emotion/styled": "npm:11.14.1"
@@ -11493,7 +11506,6 @@ __metadata:
     reflect-metadata: "npm:^0.2.2"
     sass: "npm:^1.83.1"
     secp256k1: "npm:5.0.1"
-    secrets.js-34r7h: "npm:^2.0.2"
     send: "npm:0.19.1"
     sequelize: "npm:^6.35.2"
     sqlite3: "npm:^5.1.6"
@@ -24624,13 +24636,6 @@ __metadata:
     node-gyp: "npm:latest"
     node-gyp-build: "npm:^4.2.0"
   checksum: 10c0/cf7a74343566d4774c64332c07fc2caf983c80507f63be5c653ff2205242143d6320c50ee4d793e2b714a56540a79e65a8f0056e343b25b0cdfed878bc473fd8
-  languageName: node
-  linkType: hard
-
-"secrets.js-34r7h@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "secrets.js-34r7h@npm:2.0.2"
-  checksum: 10c0/61ef5ba33ae1e6428a53e62dd2953e001164153b338eca9680d1185e14267573a81d442af96560fe33f4cdc1e0496004206d995761b4b5480ba9a4b92c9a6d5f
   languageName: node
   linkType: hard
 
