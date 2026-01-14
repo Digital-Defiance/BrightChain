@@ -8,7 +8,7 @@
 import { BlockSize, FileReceipt, BlockInfo, initializeBrightChain } from '@brightchain/brightchain-lib';
 import { SessionIsolatedMemoryBlockStore } from './SessionIsolatedMemoryBlockStore';
 import { RawDataBlock } from '@brightchain/brightchain-lib';
-import { uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
+import { uint8ArrayToHex, ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 
 /**
  * BrightChain implementation with session isolation
@@ -77,7 +77,7 @@ export class SessionIsolatedBrightChain {
       blockCount: blocks.length,
       blocks,
       cblData: Array.from(cblData),
-      magnetUrl: this.createMagnetUrl(receiptId, fileName, fileData.length),
+      magnetUrl: this.createMagnetUrl(receiptId, fileName, fileData.length, blocks),
     };
 
     console.log(`File "${fileName}" stored successfully with ${blocks.length} blocks in session ${this.blockStore.getSessionId()}`);
@@ -135,14 +135,22 @@ export class SessionIsolatedBrightChain {
 
   /**
    * Create magnet URL for sharing
+   * The magnet URL contains all block information needed for reconstruction
    */
-  private createMagnetUrl(id: string, fileName: string, size: number): string {
+  private createMagnetUrl(id: string, fileName: string, size: number, blocks?: BlockInfo[]): string {
     const params = new URLSearchParams({
       xt: `urn:brightchain:${id}`,
       dn: fileName,
       xl: size.toString(),
-      session: this.blockStore.getSessionId(), // Include session ID for debugging
     });
+    
+    // Add block information to the magnet URL
+    if (blocks) {
+      // Encode blocks as a compact format: blockId:size,blockId:size,...
+      const blocksStr = blocks.map(b => `${b.id}:${b.size}`).join(',');
+      params.set('blocks', blocksStr);
+    }
+    
     return `magnet:?${params.toString()}`;
   }
 
@@ -170,5 +178,113 @@ export class SessionIsolatedBrightChain {
    */
   public getSessionId(): string {
     return this.blockStore.getSessionId();
+  }
+
+  /**
+   * Parse a CBL file and create a FileReceipt
+   */
+  public parseCBL(cblData: Uint8Array): FileReceipt {
+    try {
+      const cblText = new TextDecoder().decode(cblData);
+      const cblJson = JSON.parse(cblText);
+
+      const blocks: BlockInfo[] = cblJson.blocks.map((b: any, index: number) => {
+        // Convert hex string to Uint8Array
+        const hexStr = b.id;
+        const bytes = new Uint8Array(hexStr.length / 2);
+        for (let i = 0; i < hexStr.length; i += 2) {
+          bytes[i / 2] = parseInt(hexStr.substr(i, 2), 16);
+        }
+        
+        return {
+          id: b.id,
+          checksum: bytes as ChecksumUint8Array,
+          size: b.size,
+          index,
+        };
+      });
+
+      const receiptId = uint8ArrayToHex(
+        new Uint8Array(32).map(() => Math.floor(Math.random() * 256)),
+      );
+
+      return {
+        id: receiptId,
+        fileName: cblJson.fileName,
+        originalSize: cblJson.originalSize,
+        blockCount: cblJson.blockCount,
+        blocks,
+        cblData: Array.from(cblData),
+        magnetUrl: this.createMagnetUrl(receiptId, cblJson.fileName, cblJson.originalSize),
+      };
+    } catch (error) {
+      throw new Error(`Failed to parse CBL: ${error instanceof Error ? error.message : 'Invalid format'}`);
+    }
+  }
+
+  /**
+   * Parse a magnet URL and create a FileReceipt
+   * The magnet URL contains all information needed to reconstruct the file
+   */
+  public parseMagnetUrl(magnetUrl: string): FileReceipt {
+    try {
+      const url = new URL(magnetUrl);
+      const params = new URLSearchParams(url.search);
+      
+      const xt = params.get('xt');
+      const dn = params.get('dn');
+      const xl = params.get('xl');
+      const blocksParam = params.get('blocks');
+
+      if (!xt || !dn || !xl || !blocksParam) {
+        throw new Error('Invalid magnet URL: missing required parameters (xt, dn, xl, blocks)');
+      }
+
+      const id = xt.replace('urn:brightchain:', '');
+      const fileName = dn;
+      const originalSize = parseInt(xl, 10);
+
+      // Parse blocks from the compact format: blockId:size,blockId:size,...
+      const blockPairs = blocksParam.split(',');
+      const blocks: BlockInfo[] = blockPairs.map((pair, index) => {
+        const [blockId, sizeStr] = pair.split(':');
+        const size = parseInt(sizeStr, 10);
+        
+        // Convert hex string to Uint8Array for checksum
+        const bytes = new Uint8Array(blockId.length / 2);
+        for (let i = 0; i < blockId.length; i += 2) {
+          bytes[i / 2] = parseInt(blockId.substr(i, 2), 16);
+        }
+        
+        return {
+          id: blockId,
+          checksum: bytes as ChecksumUint8Array,
+          size,
+          index,
+        };
+      });
+
+      // Create CBL data from the parsed information
+      const cblJson = {
+        version: 1,
+        fileName,
+        originalSize,
+        blockCount: blocks.length,
+        blocks: blocks.map(b => ({ id: b.id, size: b.size })),
+      };
+      const cblData = new TextEncoder().encode(JSON.stringify(cblJson));
+
+      return {
+        id,
+        fileName,
+        originalSize,
+        blockCount: blocks.length,
+        blocks,
+        cblData: Array.from(cblData),
+        magnetUrl,
+      };
+    } catch (error) {
+      throw new Error(`Failed to parse magnet URL: ${error instanceof Error ? error.message : 'Invalid format'}`);
+    }
   }
 }
