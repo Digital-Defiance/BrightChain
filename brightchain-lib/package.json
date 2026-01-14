@@ -27,7 +27,13 @@
   "bugs": {
     "url": "https://github.com/Digital-Defiance/BrightChain/issues"
   },
-  "keywords": ["blockchain", "encryption", "storage", "decentralized", "brightchain"],
+  "keywords": [
+    "blockchain",
+    "encryption",
+    "storage",
+    "decentralized",
+    "brightchain"
+  ],
   "author": "Digital Defiance",
   "license": "MIT",
   "dependencies": {
