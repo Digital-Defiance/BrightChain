@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { SiNpm } from 'react-icons/si';
 import { useInView } from 'react-intersection-observer';
 import './Components.css';
+import { FaExternalLinkAlt } from 'react-icons/fa';
 
 interface Feature {
   title: string;
@@ -11,6 +12,7 @@ interface Feature {
   highlights: string[];
   category: 'Storage' | 'Cryptography' | 'Governance' | 'Network' | 'Identity';
   npm?: string;
+  projectUrl?: string;
 }
 
 const features: Feature[] = [
@@ -233,6 +235,7 @@ const features: Feature[] = [
       'Configurable Galois field (3-20 bits) supporting up to 1,048,575 shares',
     ],
     npm: 'https://www.npmjs.com/package/@digitaldefiance/secrets',
+    projectUrl: 'https://digital-defiance.github.io/secrets-ts/',
   },
 ];
 
@@ -408,6 +411,17 @@ const Components = () => {
                 >
                   <SiNpm />
                   NPM
+                </a>
+              )}
+              {feature.projectUrl && (
+                <a
+                  href={feature.projectUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="component-link"
+                >
+                  <FaExternalLinkAlt />
+                  Project Page
                 </a>
               )}
             </motion.div>
