@@ -9,7 +9,8 @@ import {
   TypedIdProviderWrapper,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import * as secrets from 'secrets.js-34r7h';
+import type { Shares } from '@digitaldefiance/secrets';
+import secrets from '@digitaldefiance/secrets';
 import { SEALING } from '../constants';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { SealingError } from '../errors/sealingError';
@@ -157,14 +158,14 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
   public async decryptShares(
     document: QuorumDataRecord<TID>,
     membersWithPrivateKey: Member<TID>[],
-  ): Promise<secrets.Shares> {
+  ): Promise<Shares> {
     if (membersWithPrivateKey.length < document.sharesRequired) {
       throw new SealingError(SealingErrorType.NotEnoughMembersToUnlock);
     }
     if (!SealingService.allMembersHavePrivateKey(membersWithPrivateKey)) {
       throw new SealingError(SealingErrorType.MissingPrivateKeys);
     }
-    const decryptedShares: secrets.Shares = new Array<string>(
+    const decryptedShares: string[] = new Array<string>(
       membersWithPrivateKey.length,
     );
     for (let i = 0; i < membersWithPrivateKey.length; i++) {
@@ -218,7 +219,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    */
   public async quorumUnsealWithShares<T>(
     document: QuorumDataRecord<TID>,
-    recoveredShares: secrets.Shares,
+    recoveredShares: Shares,
   ): Promise<T> {
     try {
       // reconstitute the document key from the shares
@@ -243,7 +244,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    * @returns Map of encrypted shares by member ID
    */
   public async encryptSharesForMembers(
-    shares: secrets.Shares,
+    shares: Shares,
     members: Member<TID>[],
   ): Promise<Map<ShortHexGuid, Uint8Array>> {
     if (shares.length != members.length) {
@@ -284,10 +285,10 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
   public async decryptSharesForMembers(
     encryptedSharesByMemberId: Map<TID, Uint8Array>,
     members: Member<TID>[],
-  ): Promise<secrets.Shares> {
+  ): Promise<Shares> {
     // for each encrypted share, find the member from the members array and decrypt it
     const memberIds = Array.from(encryptedSharesByMemberId.keys());
-    const decryptedShares: secrets.Shares = new Array<string>(memberIds.length);
+    const decryptedShares: string[] = new Array<string>(memberIds.length);
     for (let i = 0; i < memberIds.length; i++) {
       const memberId = memberIds[i];
       const member = members.find((v) =>
