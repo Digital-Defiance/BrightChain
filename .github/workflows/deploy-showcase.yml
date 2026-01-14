@@ -39,7 +39,9 @@ jobs:
         run: yarn brightchain-lib:build
 
       - name: Build showcase
-        run: yarn workspace brightchain-showcase build
+        run: |
+          cd showcase
+          yarn build
 
       - name: Add .nojekyll file
         run: touch ./showcase/dist/.nojekyll
