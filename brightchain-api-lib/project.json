@@ -19,6 +19,14 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "brightchain-api-lib/jest.config.ts",
+        "passWithNoTests": true
+      }
     }
   }
 }

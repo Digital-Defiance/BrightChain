@@ -26,7 +26,7 @@ export class Environment
     this._adminId = value;
   }
 
-  public override get idAdapter(): (bytes: Uint8Array) => any {
+  public get idAdapter(): (bytes: Uint8Array) => any {
     return (bytes: Uint8Array) => {
       // Convert bytes to hex-based ID string; datastore layer owns actual ID type
       const hex = Buffer.from(bytes).toString('hex');

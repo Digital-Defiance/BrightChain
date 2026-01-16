@@ -1,19 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IBlockStore } from '@brightchain/brightchain-lib/lib/interfaces/storage/blockStore';
-import { existsSync } from 'fs';
+import {
+  IBlockStore,
+  BaseBlock,
+  BlockHandle,
+  createBlockHandle,
+  RawDataBlock,
+  BlockDataType,
+  BlockSize,
+  blockSizeToSizeString,
+  BlockType,
+  StoreErrorType,
+  StoreError,
+  IBaseBlockMetadata,
+} from '@brightchain/brightchain-lib';
+import { ChecksumUint8Array, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
+import { existsSync, readFileSync } from 'fs';
 import { readFile, readdir, stat, unlink, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { Readable, Transform } from 'stream';
-import { BaseBlock } from '@brightchain/brightchain-lib/lib/blocks/base';
-import { BlockHandle, createBlockHandle } from '@brightchain/brightchain-lib/lib/blocks/handle';
-import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
-import { BlockDataType } from '@brightchain/brightchain-lib/lib/enumerations/blockDataType';
-import { BlockSize, blockSizeToSizeString } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
-import { BlockType } from '@brightchain/brightchain-lib/lib/enumerations/blockType';
-import { StoreErrorType } from '@brightchain/brightchain-lib/lib/enumerations/storeErrorType';
-import { StoreError } from '@brightchain/brightchain-lib/lib/errors/storeError';
-import { IBaseBlockMetadata } from '@brightchain/brightchain-lib/lib/interfaces/blocks/metadata/blockMetadata';
-import { ChecksumUint8Array, uint8ArrayToHex } from '@brightchain/brightchain-lib/lib/types';
 import { DiskBlockStore } from './diskBlockStore';
 import { MemoryWritableStream } from '../transforms/memoryWritableStream';
 import { ChecksumTransform } from '../transforms/checksumTransform';
@@ -32,21 +36,38 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
   /**
    * Check if a block exists
    */
-  public async has(key: ChecksumUint8Array): Promise<boolean> {
-    const blockPath = this.blockPath(key);
+  public async has(key: ChecksumUint8Array | string): Promise<boolean> {
+    const keyBuffer = typeof key === 'string'
+      ? Buffer.from(key, 'hex') as unknown as ChecksumUint8Array
+      : key;
+    const blockPath = this.blockPath(keyBuffer);
     return existsSync(blockPath);
   }
 
   /**
    * Get a handle to a block
    */
-  public get<T extends BaseBlock>(key: ChecksumUint8Array): BlockHandle<T> {
-    const blockPath = this.blockPath(key);
+  public get<T extends BaseBlock>(key: ChecksumUint8Array | string): BlockHandle<T> {
+    const keyBuffer = typeof key === 'string'
+      ? Buffer.from(key, 'hex') as unknown as ChecksumUint8Array
+      : key;
+    const blockPath = this.blockPath(keyBuffer);
+    
+    // Read the block data synchronously to create the handle
+    // This matches the synchronous signature expected by IBlockStore.get
+    if (!existsSync(blockPath)) {
+      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+        KEY: uint8ArrayToHex(keyBuffer),
+      });
+    }
+    
+    const data = readFileSync(blockPath);
+    
     return createBlockHandle<T>(
       RawDataBlock as any,
-      blockPath,
       this._blockSize,
-      key,
+      data,
+      keyBuffer,
       true, // canRead
       true, // canPersist
     );
@@ -324,5 +345,27 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     }
 
     return blocks;
+  }
+
+  /**
+   * Store raw data with a key (convenience method)
+   * Creates a RawDataBlock and stores it
+   */
+  public async put(key: ChecksumUint8Array | string, data: Uint8Array): Promise<void> {
+    const keyBuffer = typeof key === 'string' 
+      ? Buffer.from(key, 'hex') as unknown as ChecksumUint8Array
+      : key;
+    const block = new RawDataBlock(this._blockSize, data, new Date(), keyBuffer);
+    await this.setData(block);
+  }
+
+  /**
+   * Delete a block (convenience method, alias for deleteData)
+   */
+  public async delete(key: ChecksumUint8Array | string): Promise<void> {
+    const keyBuffer = typeof key === 'string'
+      ? Buffer.from(key, 'hex') as unknown as ChecksumUint8Array
+      : key;
+    await this.deleteData(keyBuffer);
   }
 }

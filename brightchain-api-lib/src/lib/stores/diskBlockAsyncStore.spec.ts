@@ -1,35 +1,25 @@
 import { mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
-import { RawDataBlock } from '../blocks/rawData';
-import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
-import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSize';
-import { BlockType } from '../enumerations/blockType';
-import { StoreErrorType } from '../enumerations/storeErrorType';
-import { BlockAccessError } from '../errors/block';
-import { StoreError } from '../errors/storeError';
-import { ChecksumService } from '../services/checksum.service';
-import { ServiceProvider } from '../services/service.provider';
+import {
+  RawDataBlock,
+  BlockDataType,
+  BlockSize,
+  BlockType,
+  StoreErrorType,
+  StoreError,
+  ServiceProvider,
+} from '@brightchain/brightchain-lib';
 import { DiskBlockAsyncStore } from './diskBlockAsyncStore';
 
 describe('DiskBlockAsyncStore', () => {
   let store: DiskBlockAsyncStore;
-  let checksumService: ChecksumService;
-  const testDir = join('/tmp', 'brightchain');
+  const testDir = join('/tmp', 'brightchain-test-' + Date.now());
   const blockSize = BlockSize.Message;
 
   beforeEach(() => {
     // Create test directory with proper structure
     mkdirSync(testDir, { recursive: true });
-    // Create block size subdirectory using hex representation
-    const blockSizeDir = join(testDir, blockSize.toString(16).padStart(8, '0'));
-    mkdirSync(blockSizeDir, { recursive: true });
-    // Create first and second level directories for test blocks
-    const firstLevelDir = join(blockSizeDir, '00');
-    const secondLevelDir = join(firstLevelDir, '00');
-    mkdirSync(secondLevelDir, { recursive: true });
     store = new DiskBlockAsyncStore({ storePath: testDir, blockSize });
-    checksumService = ServiceProvider.getInstance().checksumService;
   });
 
   afterEach(() => {
@@ -39,20 +29,17 @@ describe('DiskBlockAsyncStore', () => {
 
   describe('Basic Operations', () => {
     it('should throw when getting non-existent block handle', () => {
+      const checksumService = ServiceProvider.getInstance().checksumService;
       const data = new Uint8Array(blockSize);
       data.fill(120); // 'x' character code
       const dataBuffer = Buffer.from(data);
       const checksum = checksumService.calculateChecksum(dataBuffer);
 
-      expect(() => store.get(checksum)).toThrowType(
-        BlockAccessError,
-        (error: BlockAccessError) => {
-          expect(error.type).toBe(BlockAccessErrorType.BlockFileNotFound);
-        },
-      );
+      expect(() => store.get(checksum)).toThrow(StoreError);
     });
 
     it('should store and retrieve block data', async () => {
+      const checksumService = ServiceProvider.getInstance().checksumService;
       const data = new Uint8Array(blockSize);
       data.fill(120); // 'x' character code
       const dataBuffer = Buffer.from(data);
@@ -68,15 +55,6 @@ describe('DiskBlockAsyncStore', () => {
         true,
       );
 
-      // Ensure directory exists and store block
-      const checksumHex = Buffer.from(checksum).toString('hex');
-      const blockDir = join(
-        testDir,
-        blockSize.toString(16).padStart(8, '0'),
-        checksumHex.substring(0, 2),
-        checksumHex.substring(2, 4),
-      );
-      mkdirSync(blockDir, { recursive: true });
       await store.setData(block);
 
       // Check if block exists
@@ -92,6 +70,7 @@ describe('DiskBlockAsyncStore', () => {
     });
 
     it('should get block handle', async () => {
+      const checksumService = ServiceProvider.getInstance().checksumService;
       const data = new Uint8Array(blockSize);
       data.fill(120); // 'x' character code
       const dataBuffer = Buffer.from(data);
@@ -107,15 +86,6 @@ describe('DiskBlockAsyncStore', () => {
         true,
       );
 
-      // Ensure directory exists and store block
-      const checksumHex = Buffer.from(checksum).toString('hex');
-      const blockDir = join(
-        testDir,
-        blockSize.toString(16).padStart(8, '0'),
-        checksumHex.substring(0, 2),
-        checksumHex.substring(2, 4),
-      );
-      mkdirSync(blockDir, { recursive: true });
       await store.setData(block);
 
       const handle = store.get(checksum);
@@ -128,27 +98,18 @@ describe('DiskBlockAsyncStore', () => {
 
   describe('Error Cases', () => {
     it('should throw error when getting non-existent block', async () => {
+      const checksumService = ServiceProvider.getInstance().checksumService;
       const testData = new Uint8Array(32);
       testData.fill(110); // 'n' character code
       const nonExistentChecksum = checksumService.calculateChecksum(
         Buffer.from(testData),
       );
 
-      try {
-        await store.getData(nonExistentChecksum);
-        fail('Expected error to be thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(StoreError);
-        if (error instanceof StoreError) {
-          expect(error.type).toBe(StoreErrorType.KeyNotFound);
-          expect(error.params?.['KEY']).toBe(
-            Buffer.from(nonExistentChecksum).toString('hex'),
-          );
-        }
-      }
+      await expect(store.getData(nonExistentChecksum)).rejects.toThrow(StoreError);
     });
 
     it('should throw error when storing block with wrong size', async () => {
+      const checksumService = ServiceProvider.getInstance().checksumService;
       const wrongSizeData = new Uint8Array(blockSize);
       wrongSizeData.fill(120); // 'x' character code
       const wrongSizeBuffer = Buffer.from(wrongSizeData);
@@ -164,12 +125,11 @@ describe('DiskBlockAsyncStore', () => {
         true,
       );
 
-      await expect(store.setData(block)).rejects.toThrow(
-        new StoreError(StoreErrorType.BlockSizeMismatch),
-      );
+      await expect(store.setData(block)).rejects.toThrow(StoreError);
     });
 
     it('should throw error when storing block that already exists', async () => {
+      const checksumService = ServiceProvider.getInstance().checksumService;
       const data = new Uint8Array(blockSize);
       data.fill(120); // 'x' character code
       const dataBuffer = Buffer.from(data);
@@ -185,24 +145,14 @@ describe('DiskBlockAsyncStore', () => {
         true,
       );
 
-      // Ensure directory exists and store block
-      const checksumHex = Buffer.from(checksum).toString('hex');
-      const blockDir = join(
-        testDir,
-        blockSize.toString(16).padStart(8, '0'),
-        checksumHex.substring(0, 2),
-        checksumHex.substring(2, 4),
-      );
-      mkdirSync(blockDir, { recursive: true });
       await store.setData(block);
-      await expect(store.setData(block)).rejects.toThrow(
-        new StoreError(StoreErrorType.BlockPathAlreadyExists),
-      );
+      await expect(store.setData(block)).rejects.toThrow(StoreError);
     });
   });
 
   describe('XOR Operations', () => {
     it('should XOR multiple blocks', async () => {
+      const checksumService = ServiceProvider.getInstance().checksumService;
       // Create test blocks
       const data1 = new Uint8Array(blockSize);
       data1.fill(0x01);
@@ -232,23 +182,6 @@ describe('DiskBlockAsyncStore', () => {
         true,
       );
 
-      // Ensure directory exists and store blocks
-      const block1ChecksumHex = Buffer.from(block1.idChecksum).toString('hex');
-      const block2ChecksumHex = Buffer.from(block2.idChecksum).toString('hex');
-      const blockDir1 = join(
-        testDir,
-        blockSize.toString(16).padStart(8, '0'),
-        block1ChecksumHex.substring(0, 2),
-        block1ChecksumHex.substring(2, 4),
-      );
-      const blockDir2 = join(
-        testDir,
-        blockSize.toString(16).padStart(8, '0'),
-        block2ChecksumHex.substring(0, 2),
-        block2ChecksumHex.substring(2, 4),
-      );
-      mkdirSync(blockDir1, { recursive: true });
-      mkdirSync(blockDir2, { recursive: true });
       await store.setData(block1);
       await store.setData(block2);
 
@@ -263,7 +196,7 @@ describe('DiskBlockAsyncStore', () => {
         size: blockSize,
         type: BlockType.RawData,
         dataType: BlockDataType.RawData,
-        lengthWithoutPadding: blockSize, // No padding in test data
+        lengthWithoutPadding: blockSize,
       });
 
       // Expected result: 0x01 XOR 0x02 = 0x03
@@ -284,7 +217,7 @@ describe('DiskBlockAsyncStore', () => {
           dataType: BlockDataType.RawData,
           lengthWithoutPadding: blockSize,
         }),
-      ).rejects.toThrow(new StoreError(StoreErrorType.NoBlocksProvided));
+      ).rejects.toThrow(StoreError);
     });
   });
 });

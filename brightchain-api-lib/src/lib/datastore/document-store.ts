@@ -4,15 +4,18 @@ export type DocumentId = DefaultBackendIdType;
 
 export type DocumentRecord = Record<string, unknown> & { _id?: DocumentId };
 
-export interface QueryResult<T extends DocumentRecord> {
-  exec(): Promise<T | T[] | null>;
-  then<TResult1 = T | T[] | null, TResult2 = never>(
-    onfulfilled?: ((value: T | T[] | null) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+// Allow QueryBuilder to work with both single documents and arrays
+export type QueryResultType = DocumentRecord | DocumentRecord[] | unknown[];
+
+export interface QueryResult<T extends QueryResultType> {
+  exec(): Promise<T | null>;
+  then<TResult1 = T | null, TResult2 = never>(
+    onfulfilled?: ((value: T | null) => TResult1 | PromiseLike<TResult1>) | undefined | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | undefined | null,
   ): Promise<TResult1 | TResult2>;
 }
 
-export interface QueryBuilder<T extends DocumentRecord> extends QueryResult<T> {
+export interface QueryBuilder<T extends QueryResultType> extends QueryResult<T> {
   select(_: unknown): QueryBuilder<T>;
   populate(_: unknown): QueryBuilder<T>;
   sort(_: unknown): QueryBuilder<T>;

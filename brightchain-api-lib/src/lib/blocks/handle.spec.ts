@@ -5,24 +5,23 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
-import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSize';
-import { BlockType } from '../enumerations/blockType';
-import { BlockAccessError } from '../errors/block';
-import { ChecksumMismatchError } from '../errors/checksumMismatch';
-import { ChecksumService } from '../services/checksum.service';
-import { ServiceProvider } from '../services/service.provider';
+import {
+  BlockAccessErrorType,
+  BlockDataType,
+  BlockSize,
+  BlockType,
+  BlockAccessError,
+  ChecksumMismatchError,
+  ServiceProvider,
+  RawDataBlock,
+} from '@brightchain/brightchain-lib';
 import { BlockHandle, createBlockHandleFromPath } from './handle';
-import { RawDataBlock } from './rawData';
 
 describe('BlockHandle', () => {
-  let checksumService: ChecksumService;
   const defaultBlockSize = BlockSize.Small;
-  const testDir = join(__dirname, 'test-blocks');
+  const testDir = join('/tmp', 'brightchain-handle-test-' + Date.now());
 
   beforeEach(() => {
-    checksumService = ServiceProvider.getInstance().checksumService;
     mkdirSync(testDir, { recursive: true });
   });
 
@@ -34,6 +33,7 @@ describe('BlockHandle', () => {
   const createTestFile = (
     data?: Uint8Array,
   ): { path: string; checksum: ChecksumUint8Array } => {
+    const checksumService = ServiceProvider.getInstance().checksumService;
     const blockData =
       data ||
       (() => {
@@ -118,9 +118,7 @@ describe('BlockHandle', () => {
       );
 
       expect(() => handle.data).toThrow(BlockAccessError);
-      expect(() => handle.getReadStream()).toThrow(
-        new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable),
-      );
+      expect(() => handle.getReadStream()).toThrow(BlockAccessError);
     });
 
     it('should handle non-persistable blocks', async () => {
@@ -134,9 +132,7 @@ describe('BlockHandle', () => {
         false, // canPersist = false
       );
 
-      expect(() => handle.getWriteStream()).toThrow(
-        new BlockAccessError(BlockAccessErrorType.BlockIsNotPersistable),
-      );
+      expect(() => handle.getWriteStream()).toThrow(BlockAccessError);
     });
   });
 

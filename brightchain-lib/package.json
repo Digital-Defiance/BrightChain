@@ -2,15 +2,15 @@
   "name": "@brightchain/brightchain-lib",
   "version": "0.1.5",
   "description": "BrightChain core library - browser-compatible blockchain storage",
-  "main": "src/browser.js",
-  "types": "src/browser.d.ts",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
   "browser": "src/browser.js",
   "exports": {
     ".": {
       "browser": "./src/browser.js",
       "import": "./src/index.js",
       "require": "./src/index.js",
-      "types": "./src/browser.d.ts"
+      "types": "./src/index.d.ts"
     },
     "./browser": {
       "import": "./src/browser.js",

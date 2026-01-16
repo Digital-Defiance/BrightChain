@@ -3,13 +3,13 @@
 // This preserves the StringName translation system
 import {
   StringLanguage,
-  StringName,
+  StringNames,
   translate,
 } from '@brightchain/brightchain-lib';
 
 export abstract class TypedError<
   T extends string | number,
-  K extends string = StringName,
+  K extends string = StringNames,
 > extends Error {
   protected abstract get reasonMap(): Record<T, K>;
 

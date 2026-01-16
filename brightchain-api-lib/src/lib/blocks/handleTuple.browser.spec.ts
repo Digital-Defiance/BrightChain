@@ -1,30 +1,26 @@
 import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
-import { TUPLE } from '../constants';
-import BlockDataType from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSize';
-import BlockType from '../enumerations/blockType';
-import { HandleTupleError } from '../errors/handleTupleError';
-import { ChecksumService } from '../services/checksum.service';
-import { ServiceProvider } from '../services/service.provider';
-import { BlockHandleTuple } from './handleTuple';
-import { RawDataBlock } from './rawData';
+import {
+  TUPLE,
+  BlockSize,
+  HandleTupleError,
+  ServiceProvider,
+  BlockHandleTuple,
+  BlockHandle,
+  RawDataBlock,
+} from '@brightchain/brightchain-lib';
 
 // Simple in-memory block handle for testing
 interface TestBlockHandle {
   blockId: ChecksumUint8Array;
+  idChecksum: ChecksumUint8Array;
   blockSize: BlockSize;
   data: Uint8Array;
   canRead: boolean;
   canPersist: boolean;
 }
 
-describe('BlockHandleTuple', () => {
-  let checksumService: ChecksumService;
+describe('BlockHandleTuple (browser)', () => {
   const defaultBlockSize = BlockSize.Message;
-
-  beforeEach(() => {
-    checksumService = ServiceProvider.getInstance().checksumService;
-  });
 
   afterEach(() => {
     ServiceProvider.resetInstance();
@@ -34,11 +30,13 @@ describe('BlockHandleTuple', () => {
     data?: Uint8Array,
     blockSize: BlockSize = defaultBlockSize,
   ): TestBlockHandle => {
+    const checksumService = ServiceProvider.getInstance().checksumService;
     const blockData = data || new Uint8Array(blockSize).fill(Math.random() * 255);
     const checksum = checksumService.calculateChecksum(blockData);
     
     return {
       blockId: checksum,
+      idChecksum: checksum,
       blockSize,
       data: blockData,
       canRead: true,
@@ -52,7 +50,7 @@ describe('BlockHandleTuple', () => {
         .fill(null)
         .map(() => createTestHandle());
       
-      const tuple = new BlockHandleTuple(handles as any);
+      const tuple = new BlockHandleTuple(handles as unknown as BlockHandle<RawDataBlock>[]);
       expect(tuple.handles).toHaveLength(TUPLE.SIZE);
     });
 
@@ -61,7 +59,7 @@ describe('BlockHandleTuple', () => {
         .fill(null)
         .map(() => createTestHandle());
       
-      expect(() => new BlockHandleTuple(handles as any)).toThrow(HandleTupleError);
+      expect(() => new BlockHandleTuple(handles as unknown as BlockHandle<RawDataBlock>[])).toThrow(HandleTupleError);
     });
 
     it('should reject mismatched block sizes', () => {
@@ -71,7 +69,7 @@ describe('BlockHandleTuple', () => {
         createTestHandle(new Uint8Array(BlockSize.Tiny), BlockSize.Tiny), // Different size
       ];
       
-      expect(() => new BlockHandleTuple(handles as any)).toThrow(HandleTupleError);
+      expect(() => new BlockHandleTuple(handles as unknown as BlockHandle<RawDataBlock>[])).toThrow(HandleTupleError);
     });
   });
 
@@ -81,7 +79,7 @@ describe('BlockHandleTuple', () => {
         .fill(null)
         .map(() => createTestHandle());
       
-      const tuple = new BlockHandleTuple(handles as any);
+      const tuple = new BlockHandleTuple(handles as unknown as BlockHandle<RawDataBlock>[]);
       
       expect(tuple.handles).toHaveLength(TUPLE.SIZE);
       expect(tuple.blockIds).toHaveLength(TUPLE.SIZE);

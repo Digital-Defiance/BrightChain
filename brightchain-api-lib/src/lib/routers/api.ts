@@ -23,7 +23,7 @@ import { BaseRouter } from './base';
  */
 export class ApiRouter extends BaseRouter {
   private readonly userController: UserController;
-  private readonly jwtService: JwtService;
+  private readonly jwtService: JwtService<DefaultBackendIdType>;
   private readonly emailService: EmailService;
   private readonly userService: UserService<
     IBrightChainUserBase,
@@ -32,14 +32,14 @@ export class ApiRouter extends BaseRouter {
     AccountStatus,
     DefaultBackendIdType
   >;
-  private readonly roleService: RoleService;
+  private readonly roleService: RoleService<DefaultBackendIdType>;
   private readonly keyWrappingService: KeyWrappingService;
-  private readonly eciesService: ECIESService;
-  private readonly backupCodeService: BackupCodeService;
+  private readonly eciesService: ECIESService<DefaultBackendIdType>;
+  private readonly backupCodeService: BackupCodeService<DefaultBackendIdType>;
   /**
    * Constructor for the API router
    */
-  constructor(application: IApplication) {
+  constructor(application: IApplication<DefaultBackendIdType>) {
     super(application);
     this.jwtService = new JwtService(application);
     this.roleService = new RoleService(application);

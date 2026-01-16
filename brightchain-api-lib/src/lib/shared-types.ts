@@ -14,7 +14,6 @@ import {
   SimplePublicKeyOnlyBuffer as NodeEciesSimplePublicKeyOnlyBuffer,
 } from '@digitaldefiance/node-ecies-lib';
 import {
-  ISchema,
   ApiErrorResponse as NodeExpressSuiteApiErrorResponse,
   ApiRequestHandler as NodeExpressSuiteApiRequestHandler,
   ApiResponse as NodeExpressSuiteApiResponse,
@@ -34,6 +33,8 @@ import type { IRoleDocument } from './documents/role';
 import { IUsedDirectLoginTokenDocument } from './documents/used-direct-login-token';
 import type { IUserDocument } from './documents/user';
 import type { IUserRoleDocument } from './documents/user-role';
+import { ModelName } from './enumerations/model-name';
+import { SchemaCollection } from './enumerations/schema-collection';
 // import { ObjectIdString } from '@digitaldefiance/ecies-lib';
 export type ObjectIdString = any;
 
@@ -45,6 +46,34 @@ export type ClientSession = any;
 // Use ObjectIdString as the default backend ID type
 // This bridges BSON ObjectIds with the branded type system
 export type DefaultBackendIdType = ObjectIdString;
+
+/**
+ * Block storage schema definition (replaces Mongoose Schema)
+ */
+export interface IBlockStorageSchema<T> {
+  name: ModelName;
+  fields: Record<string, unknown>;
+  indexes?: Array<{ fields: Record<string, number | undefined>; options?: Record<string, unknown> }>;
+  validate?: (doc: Partial<T>) => void;
+}
+
+/**
+ * Block storage model definition (replaces Mongoose Model)
+ */
+export interface IBlockStorageModel<T> {
+  readonly modelName: ModelName;
+  readonly schema: IBlockStorageSchema<T>;
+}
+
+/**
+ * Block storage schema entry (replaces ISchema from node-express-suite)
+ */
+export interface IBlockStorageSchemaEntry<T> {
+  collection: SchemaCollection;
+  model: IBlockStorageModel<T>;
+  modelName: ModelName;
+  schema: IBlockStorageSchema<T>;
+}
 
 /**
  * Schema map interface
@@ -62,7 +91,7 @@ export type SchemaMap = {
   /**
    * For each model name, contains the corresponding schema and model
    */
-  [K in keyof ModelDocMap]: ISchema<ModelDocMap[K]>;
+  [K in keyof ModelDocMap]: IBlockStorageSchemaEntry<ModelDocMap[K]>;
 };
 
 export type HexString = EciesHexString;

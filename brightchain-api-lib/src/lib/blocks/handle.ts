@@ -1,5 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  BaseBlock,
+  BlockAccessError,
+  BlockAccessErrorType,
+  BlockDataType,
+  BlockMetadata,
+  BlockSize,
+  BlockType,
+  ChecksumMismatchError,
+  RawDataBlock,
+  ServiceProvider,
+} from '@brightchain/brightchain-lib';
 import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
+import { ChecksumTransform } from '@digitaldefiance/node-ecies-lib';
 import {
   ReadStream,
   WriteStream,
@@ -10,17 +23,6 @@ import {
   statSync,
 } from 'fs';
 import { Readable } from 'stream';
-import { BlockMetadata } from '../blockMetadata';
-import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
-import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSize';
-import { BlockType } from '../enumerations/blockType';
-import { BlockAccessError } from '../errors/block';
-import { ChecksumMismatchError } from '../errors/checksumMismatch';
-import { ServiceProvider } from '../services/service.provider';
-import { BaseBlock } from './base';
-import { RawDataBlock } from './rawData';
-import { ChecksumTransform } from '@digitaldefiance/node-ecies-lib';
 
 /**
  * Type definition for a BlockHandle - it's the same as T but with additional properties

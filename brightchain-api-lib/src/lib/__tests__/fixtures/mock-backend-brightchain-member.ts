@@ -1,8 +1,7 @@
 /* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
-import { MemberType } from '@brightchain/brightchain-lib';
+import { MemberType, ServiceProvider } from '@brightchain/brightchain-lib';
 import {
   EmailString,
-  GuidV4,
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
@@ -52,7 +51,7 @@ export class MockBackendMember implements IMemberOperational<DefaultBackendIdTyp
       hasPrivateKey: boolean;
     }> = {},
   ) {
-    this._id = data.id || GuidV4.new();
+    this._id = data.id || ServiceProvider.getInstance<DefaultBackendIdType>().idProvider.generateTyped();
     this._type = data.type || faker.helpers.enumValue(MemberType);
     this._name = data.name || faker.person.fullName();
     this._email = data.email || new EmailString(faker.internet.email());

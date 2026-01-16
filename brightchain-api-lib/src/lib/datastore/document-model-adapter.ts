@@ -4,6 +4,7 @@ import {
   DocumentId,
   DocumentRecord,
   QueryBuilder,
+  QueryResultType,
 } from './document-store';
 
 export type HydratedDocument<T> = T & {
@@ -20,7 +21,7 @@ function wrapDocument<T extends DocumentRecord>(doc: T | null): HydratedDocument
   });
 }
 
-class QueryWrapper<TIn, TOut> implements QueryBuilder<TOut> {
+class QueryWrapper<TIn extends QueryResultType, TOut extends QueryResultType> implements QueryBuilder<TOut> {
   constructor(
     private readonly inner: QueryBuilder<TIn>,
     private readonly mapper: (value: TIn | null) => TOut | null,
@@ -80,7 +81,7 @@ class QueryWrapper<TIn, TOut> implements QueryBuilder<TOut> {
   }
 }
 
-class QueryArrayWrapper<TIn, TOut> implements QueryBuilder<TOut[]> {
+class QueryArrayWrapper<TIn extends DocumentRecord, TOut extends DocumentRecord> implements QueryBuilder<TOut[]> {
   constructor(
     private readonly inner: QueryBuilder<TIn[]>,
     private readonly mapper: (value: TIn) => TOut,
@@ -141,7 +142,7 @@ class QueryArrayWrapper<TIn, TOut> implements QueryBuilder<TOut[]> {
   }
 }
 
-export interface ModelLike<TStorage extends DocumentRecord, THydrated, TOperational> {
+export interface ModelLike<TStorage extends DocumentRecord, THydrated extends DocumentRecord, TOperational> {
   create(doc: Partial<TStorage>): Promise<HydratedDocument<THydrated>>;
   insertMany(docs: Partial<TStorage>[]): Promise<HydratedDocument<THydrated>[]>;
   find(filter?: Partial<TStorage>): QueryBuilder<HydratedDocument<THydrated>[]>;
@@ -159,16 +160,16 @@ export interface ModelLike<TStorage extends DocumentRecord, THydrated, TOperatio
   countDocuments(filter?: Partial<TStorage>): Promise<number>;
   estimatedDocumentCount(): Promise<number>;
   aggregate<U = unknown>(pipeline: unknown[]): QueryBuilder<U[]>;
-  distinct(field: keyof THydrated): QueryBuilder<THydrated[keyof THydrated][]>;
+  distinct(field: keyof THydrated): QueryBuilder<unknown[]>;
   exists(filter: Partial<TStorage>): Promise<{ _id: DocumentId } | null>;
   watch?(): void;
   startSession?(): unknown;
   // Convenience to convert operational objects back to storage
   toStorage(operational: TOperational): TStorage;
-  fromStorage(storage: TStorage): THydrated;
+  fromStorage(storage: TStorage): TOperational;
 }
 
-export function createModelAdapter<TStorage extends DocumentRecord, THydrated, TOperational>(
+export function createModelAdapter<TStorage extends DocumentRecord, THydrated extends DocumentRecord, TOperational>(
   collection: DocumentCollection<TStorage>,
   converter: ConvertibleDocument<TStorage, THydrated, TOperational>,
 ): ModelLike<TStorage, THydrated, TOperational> {
@@ -220,7 +221,7 @@ export function createModelAdapter<TStorage extends DocumentRecord, THydrated, T
     countDocuments: (filter) => collection.countDocuments(filter),
     estimatedDocumentCount: () => collection.estimatedDocumentCount(),
     aggregate: (pipeline) => collection.aggregate(pipeline),
-    distinct: (field: keyof THydrated) => collection.distinct(field as unknown as keyof TStorage),
+    distinct: (field: keyof THydrated) => collection.distinct(field as unknown as keyof TStorage) as QueryBuilder<unknown[]>,
     exists: (filter) => collection.exists(filter),
     watch: () => collection.watch && collection.watch(),
     startSession: () => (collection.startSession ? collection.startSession() : undefined),

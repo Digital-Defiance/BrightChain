@@ -1,5 +1,5 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-import { SecureString } from '@brightchain/brightchain-lib';
+import { SecureString } from '@digitaldefiance/ecies-lib';
 import { KeyWrappingService } from './keyWrapping';
 
 describe('Authentication Unit Tests', () => {

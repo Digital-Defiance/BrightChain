@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
-import { DefaultBackendIdType } from '@brightchain/brightchain-lib';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import {
   BackupCodeService,
@@ -9,13 +8,14 @@ import {
   JwtService,
   RoleService,
   UserService,
+  IApplication as BaseIApplication,
 } from '@digitaldefiance/node-express-suite';
 import {
   ITokenRole,
   ITokenUser,
   IUserBase,
 } from '@digitaldefiance/suite-core-lib';
-import type { IApplication } from '../interfaces/application';
+import type { DefaultBackendIdType } from '../shared-types';
 
 @Controller()
 export class UserController<
@@ -26,7 +26,7 @@ export class UserController<
   TUser extends IUserBase<I, D, S, A> = IUserBase<I, D, S, A>,
   TTokenRole extends ITokenRole<I, D> = ITokenRole<I, D>,
   TTokenUser extends ITokenUser = ITokenUser,
-  TApplication extends IApplication = IApplication,
+  TApplication extends BaseIApplication<I> = BaseIApplication<I>,
   TLanguage extends CoreLanguageCode = CoreLanguageCode,
 > extends BaseUserController<
   I,

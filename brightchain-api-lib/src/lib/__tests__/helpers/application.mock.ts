@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MemoryDocumentStore } from '../datastore/memory-document-store';
+import { MemoryDocumentStore } from '../../datastore/memory-document-store';
+import { Constants } from '../../constants';
 
 /**
  * Create a minimal IApplication mock suitable for router/middleware tests.
@@ -32,6 +33,9 @@ export function createApplicationMock(
   const application: any = {
     get environment() {
       return { ...(env as any), ...(envOverrides as any) } as any;
+    },
+    get constants() {
+      return Constants;
     },
     db: store,
     get ready() {

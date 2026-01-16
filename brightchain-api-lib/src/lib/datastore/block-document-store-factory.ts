@@ -1,9 +1,10 @@
-import { BlockStore, DiskBlockStoreAdapter, MemoryBlockStore, BlockSize } from '@brightchain/brightchain-lib';
+import { BlockSize, IBlockStore, MemoryBlockStore } from '@brightchain/brightchain-lib';
 import { BlockDocumentStore } from './block-document-store';
 import { DocumentStore } from './document-store';
+import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 
 export type BlockDocumentStoreOptions = {
-  blockStore?: BlockStore;
+  blockStore?: IBlockStore;
   storePath?: string;
   blockSize?: BlockSize;
   useMemory?: boolean;
@@ -25,7 +26,7 @@ export function createBlockDocumentStore(options: BlockDocumentStoreOptions): Do
   }
 
   if (options.storePath) {
-    const diskStore = new DiskBlockStoreAdapter({ storePath: options.storePath, blockSize });
+    const diskStore = new DiskBlockAsyncStore({ storePath: options.storePath, blockSize });
     return new BlockDocumentStore(diskStore);
   }
 
