@@ -1,5 +1,5 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-import { StringName, translate } from '@brightchain/brightchain-lib';
+import { StringNames, translate } from '@brightchain/brightchain-lib';
 import { HandleableError } from '@digitaldefiance/i18n-lib';
 import {
   debugLog,
@@ -63,7 +63,7 @@ export class App extends BaseApplication {
               ? err
               : new HandleableError(
                   new Error(
-                    err.message || translate(StringName.Error_UnexpectedError),
+                    err.message || translate(StringNames.Error_UnexpectedError),
                   ),
                   { cause: err },
                 );
