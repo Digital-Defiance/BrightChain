@@ -1,8 +1,11 @@
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import { BlockSize, blockSizeToSizeString } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
-import { StoreErrorType } from '@brightchain/brightchain-lib/lib/enumerations/storeErrorType';
-import { StoreError } from '@brightchain/brightchain-lib/lib/errors/storeError';
+import {
+  BlockSize,
+  blockSizeToSizeString,
+  StoreErrorType,
+  StoreError,
+} from '@brightchain/brightchain-lib';
 import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 
 /**

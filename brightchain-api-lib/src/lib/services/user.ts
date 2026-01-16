@@ -1,4 +1,3 @@
-import { DefaultBackendIdType } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   BackupCodeService,
@@ -12,6 +11,7 @@ import {
 import { ITokenRole, IUserBase } from '@digitaldefiance/suite-core-lib';
 import { Environment } from '../environment';
 import { IApplication } from '../interfaces/application';
+import { DefaultBackendIdType } from '../shared-types';
 
 export class UserService<
   T,
@@ -19,21 +19,21 @@ export class UserService<
   S extends string,
   A extends string,
   I extends PlatformID = DefaultBackendIdType,
-  _TEnvironment extends Environment = Environment,
-  _TConstants extends IConstants = IConstants,
-  _TBaseDocument extends IBaseDocument<T, I> = IBaseDocument<T, I>,
+  TEnvironment extends Environment = Environment,
+  TConstants extends IConstants = IConstants,
+  TBaseDocument extends IBaseDocument<T, I> = IBaseDocument<T, I>,
   TUser extends IUserBase<I, D, S, A> = IUserBase<I, D, S, A>,
   TTokenRole extends ITokenRole<I, D> = ITokenRole<I, D>,
-  TApplication extends IApplication = IApplication,
+  TApplication extends IApplication<I> = IApplication<I>,
 > extends BaseUserService<
   T,
   I,
   D,
   S,
   A,
-  _TEnvironment,
-  _TConstants,
-  _TBaseDocument,
+  TEnvironment,
+  TConstants,
+  TBaseDocument,
   TUser,
   TTokenRole,
   TApplication
@@ -44,8 +44,6 @@ export class UserService<
     emailService: IEmailService,
     keyWrappingService: KeyWrappingService,
     backupCodeService: BackupCodeService<I, D, TTokenRole, TApplication>,
-    idConverter?: (id: string) => I,
-    idGenerator?: () => I,
   ) {
     super(
       application,
@@ -53,8 +51,6 @@ export class UserService<
       emailService,
       keyWrappingService,
       backupCodeService,
-      idConverter,
-      idGenerator,
     );
   }
 }

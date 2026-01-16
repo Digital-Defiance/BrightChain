@@ -1,15 +1,16 @@
 import { createHash, randomUUID } from 'crypto';
-import { BlockStore } from '@brightchain/brightchain-lib';
+import { IBlockStore } from '@brightchain/brightchain-lib';
 import {
   DocumentCollection,
   DocumentId,
   DocumentRecord,
   DocumentStore,
   QueryBuilder,
+  QueryResultType,
 } from './document-store';
 
-class BlockQuery<T extends DocumentRecord> implements QueryBuilder<T> {
-  constructor(private readonly resolveValue: () => Promise<T | T[] | null>) {}
+class BlockQuery<T extends QueryResultType> implements QueryBuilder<T> {
+  constructor(private readonly resolveValue: () => Promise<T | null>) {}
 
   private self(): this {
     return this;
@@ -46,12 +47,12 @@ class BlockQuery<T extends DocumentRecord> implements QueryBuilder<T> {
     return this.self();
   }
 
-  async exec(): Promise<T | T[] | null> {
+  async exec(): Promise<T | null> {
     return this.resolveValue();
   }
 
-  then<TResult1 = T | T[] | null, TResult2 = never>(
-    onfulfilled?: ((value: T | T[] | null) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+  then<TResult1 = T | null, TResult2 = never>(
+    onfulfilled?: ((value: T | null) => TResult1 | PromiseLike<TResult1>) | undefined | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | undefined | null,
   ): Promise<TResult1 | TResult2> {
     return this.exec().then(onfulfilled, onrejected);
@@ -87,7 +88,7 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
   private indexLoaded = false;
   private indexLoading: Promise<void> | undefined;
 
-  constructor(private readonly store: BlockStore, private readonly collectionName: string) {
+  constructor(private readonly store: IBlockStore, private readonly collectionName: string) {
     // Head anchor is deterministic from the collection name so we can discover the latest index pointer.
     this.headBlockId = createHash('sha256').update(`index-head:${collectionName}`).digest('hex');
   }
@@ -99,12 +100,14 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
         const headExists = await this.store.has(this.headBlockId);
         if (headExists) {
           const head = await this.store.get(this.headBlockId);
-          const headPayload = JSON.parse(Buffer.from(head.data).toString('utf8')) as {
+          const headData = head.data as Uint8Array;
+          const headPayload = JSON.parse(Buffer.from(headData).toString('utf8')) as {
             indexId?: string;
           };
           if (headPayload?.indexId) {
             const indexBlock = await this.store.get(headPayload.indexId);
-            const parsed = JSON.parse(Buffer.from(indexBlock.data).toString('utf8')) as {
+            const indexData = indexBlock.data as Uint8Array;
+            const parsed = JSON.parse(Buffer.from(indexData).toString('utf8')) as {
               ids?: string[];
             };
             if (parsed?.ids) {
@@ -169,15 +172,16 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
     await this.ensureIndexLoaded();
     if (!this.index.has(blockId)) return null;
     const block = await this.store.get(blockId);
-    return decodeDoc<T>(Buffer.from(block.data));
+    const blockData = block.data as Uint8Array;
+    return decodeDoc<T>(Buffer.from(blockData));
   }
 
   private toSingleQuery(resolver: () => Promise<T | null>): QueryBuilder<T> {
-    return new BlockQuery<T>(resolver);
+    return new BlockQuery<T>(resolver) as QueryBuilder<T>;
   }
 
   private toManyQuery(resolver: () => Promise<T[]>): QueryBuilder<T[]> {
-    return new BlockQuery<T[]>(resolver);
+    return new BlockQuery<T[]>(resolver as () => Promise<T[] | null>) as QueryBuilder<T[]>;
   }
 
   find(filter?: Partial<T>): QueryBuilder<T[]> {
@@ -318,18 +322,18 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
   }
 
   aggregate<U = unknown>(_pipeline: unknown[]): QueryBuilder<U[]> {
-    return this.toManyQuery(async () => []);
+    return new BlockQuery<U[]>(async () => []) as QueryBuilder<U[]>;
   }
 
   distinct(field: keyof T): QueryBuilder<T[keyof T][]> {
-    return this.toManyQuery(async () => {
+    return new BlockQuery<T[keyof T][]>(async () => {
       const values = new Set<T[keyof T]>();
       for (const id of this.index.keys()) {
         const doc = await this.readDoc(id);
         if (doc && field in doc) values.add(doc[field]);
       }
       return Array.from(values);
-    });
+    }) as QueryBuilder<T[keyof T][]>;
   }
 
   async exists(filter: Partial<T>) {
@@ -350,7 +354,7 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
 export class BlockDocumentStore implements DocumentStore {
   private readonly collections = new Map<string, BlockCollection<DocumentRecord>>();
 
-  constructor(private readonly blockStore: BlockStore) {}
+  constructor(private readonly blockStore: IBlockStore) {}
 
   collection<T extends DocumentRecord>(name: string): DocumentCollection<T> {
     if (!this.collections.has(name)) {

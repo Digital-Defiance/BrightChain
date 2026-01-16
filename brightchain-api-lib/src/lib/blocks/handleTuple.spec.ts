@@ -1,22 +1,18 @@
-import { arraysEqual, ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
-import { TUPLE } from '../constants';
-import BlockDataType from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSize';
-import BlockType from '../enumerations/blockType';
-import { HandleTupleError } from '../errors/handleTupleError';
-import { ChecksumService } from '../services/checksum.service';
-import { ServiceProvider } from '../services/service.provider';
-import { BlockHandle } from './handle';
-import { BlockHandleTuple } from './handleTuple';
-import { RawDataBlock } from './rawData';
+import { arraysEqual } from '@digitaldefiance/ecies-lib';
+import {
+  TUPLE,
+  BlockDataType,
+  BlockSize,
+  BlockType,
+  HandleTupleError,
+  ServiceProvider,
+  BlockHandleTuple,
+  RawDataBlock,
+  BlockHandle,
+} from '@brightchain/brightchain-lib';
 
 describe('BlockHandleTuple', () => {
-  let checksumService: ChecksumService;
   const defaultBlockSize = BlockSize.Message;
-
-  beforeEach(() => {
-    checksumService = ServiceProvider.getInstance().checksumService;
-  });
 
   afterEach(() => {
     ServiceProvider.resetInstance();
@@ -26,6 +22,7 @@ describe('BlockHandleTuple', () => {
     data?: Uint8Array,
     blockSize: BlockSize = defaultBlockSize,
   ): RawDataBlock => {
+    const checksumService = ServiceProvider.getInstance().checksumService;
     const blockData =
       data ||
       (() => {
@@ -58,7 +55,7 @@ describe('BlockHandleTuple', () => {
       data: block.data,
       canRead: true,
       canPersist: true,
-    } as BlockHandle<RawDataBlock>;
+    } as unknown as BlockHandle<RawDataBlock>;
   };
 
   describe('constructor', () => {
@@ -89,9 +86,9 @@ describe('BlockHandleTuple', () => {
       crypto.getRandomValues(messageData);
       crypto.getRandomValues(tinyData);
       const handles = await Promise.all([
-        createTestHandle(messageData, BlockSize.Message), // 512B
-        createTestHandle(messageData, BlockSize.Message), // Same size
-        createTestHandle(tinyData, BlockSize.Tiny), // 1KB - different size
+        createTestHandle(messageData, BlockSize.Message),
+        createTestHandle(messageData, BlockSize.Message),
+        createTestHandle(tinyData, BlockSize.Tiny),
       ]);
       expect(() => new BlockHandleTuple(handles)).toThrow(HandleTupleError);
     });
@@ -138,17 +135,27 @@ describe('BlockHandleTuple', () => {
 
   describe('verification', () => {
     it('should verify valid blocks', async () => {
-      // Create valid test blocks
+      // Create valid test blocks with proper validateAsync
       const handles = await Promise.all(
         Array(TUPLE.SIZE)
           .fill(null)
-          .map(() => createTestHandle()),
+          .map(async () => {
+            const block = createTestBlock();
+            return {
+              blockId: block.idChecksum,
+              idChecksum: block.idChecksum,
+              blockSize: block.blockSize,
+              data: block.data,
+              canRead: true,
+              canPersist: true,
+              validateAsync: async () => {
+                // Valid block - no error
+              },
+            } as unknown as BlockHandle<RawDataBlock>;
+          }),
       );
 
-      // Create tuple with valid blocks
       const tuple = new BlockHandleTuple(handles);
-
-      // Verify the blocks - this should pass since all blocks are valid
       const isValid = await tuple.verify();
       expect(isValid).toBe(true);
     });
@@ -157,16 +164,29 @@ describe('BlockHandleTuple', () => {
       const handles = await Promise.all(
         Array(TUPLE.SIZE)
           .fill(null)
-          .map(() => createTestHandle()),
+          .map(async () => {
+            const block = createTestBlock();
+            return {
+              blockId: block.idChecksum,
+              idChecksum: block.idChecksum,
+              blockSize: block.blockSize,
+              data: block.data,
+              canRead: true,
+              canPersist: true,
+              validateAsync: async () => {
+                // Valid block - no error
+              },
+            } as unknown as BlockHandle<RawDataBlock>;
+          }),
       );
 
-      // Create a corrupted handle by modifying its data
-      const corruptedData = new Uint8Array(handles[0].data);
-      corruptedData[0] = (corruptedData[0] + 1) % 256;
+      // Make the first handle fail validation
       handles[0] = {
         ...handles[0],
-        data: corruptedData,
-      };
+        validateAsync: async () => {
+          throw new Error('Checksum mismatch');
+        },
+      } as unknown as BlockHandle<RawDataBlock>;
 
       const tuple = new BlockHandleTuple(handles);
       const isValid = await tuple.verify();

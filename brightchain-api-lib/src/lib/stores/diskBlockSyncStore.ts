@@ -1,13 +1,15 @@
+import {
+  ISimpleStore,
+  IBaseBlockMetadata,
+  BaseBlock,
+  RawDataBlock,
+  BlockDataType,
+  BlockSize,
+  StoreErrorType,
+  StoreError,
+} from '@brightchain/brightchain-lib';
 import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { BaseBlock } from '../blocks/base';
-import { RawDataBlock } from '../blocks/rawData';
-import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSize';
-import { StoreErrorType } from '../enumerations/storeErrorType';
-import { StoreError } from '../errors/storeError';
-import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
-import { ISimpleStore } from '../interfaces/simpleStore';
 import { DiskBlockStore } from './diskBlockStore';
 
 export class DiskBlockSyncStore

@@ -15,7 +15,6 @@ export default {
   transformIgnorePatterns: ['node_modules/(?!(@noble|@scure)/)'],
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../coverage/brightchain-api-lib',
-  passWithNoTests: true,
   testTimeout: 180000,
   maxWorkers: 1,
   moduleNameMapper: {

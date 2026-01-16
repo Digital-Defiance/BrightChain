@@ -6,13 +6,14 @@ import {
   DocumentRecord,
   DocumentStore,
   QueryBuilder,
+  QueryResultType,
 } from './document-store';
 
 // In-memory implementation of QueryBuilder for document queries
-class MemoryQuery<T extends DocumentRecord> implements QueryBuilder<T> {
-  private readonly resolveValue: () => Promise<T | T[] | null>;
+class MemoryQuery<T extends QueryResultType> implements QueryBuilder<T> {
+  private readonly resolveValue: () => Promise<T | null>;
 
-  constructor(resolveValue: () => Promise<T | T[] | null>) {
+  constructor(resolveValue: () => Promise<T | null>) {
     this.resolveValue = resolveValue;
   }
 
@@ -51,12 +52,12 @@ class MemoryQuery<T extends DocumentRecord> implements QueryBuilder<T> {
     return this.self();
   }
 
-  async exec(): Promise<T | T[] | null> {
+  async exec(): Promise<T | null> {
     return this.resolveValue();
   }
 
-  then<TResult1 = T | T[] | null, TResult2 = never>(
-    onfulfilled?: ((value: T | T[] | null) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+  then<TResult1 = T | null, TResult2 = never>(
+    onfulfilled?: ((value: T | null) => TResult1 | PromiseLike<TResult1>) | undefined | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | undefined | null,
   ): Promise<TResult1 | TResult2> {
     return this.exec().then(onfulfilled, onrejected);
@@ -84,11 +85,11 @@ class MemoryCollection<T extends DocumentRecord> implements DocumentCollection<T
     return new MemoryQuery<T>(async () => {
       const found = this.data.find((doc) => matchFilter(doc, filter));
       return found ?? null;
-    });
+    }) as QueryBuilder<T>;
   }
 
   private queryMany(filter?: Partial<T>): QueryBuilder<T[]> {
-    return new MemoryQuery<T[]>(async () => this.data.filter((doc) => matchFilter(doc, filter)));
+    return new MemoryQuery<T[]>(async () => this.data.filter((doc) => matchFilter(doc, filter))) as QueryBuilder<T[]>;
   }
 
   find(filter?: Partial<T>): QueryBuilder<T[]> {
@@ -109,7 +110,7 @@ class MemoryCollection<T extends DocumentRecord> implements DocumentCollection<T
       if (!doc) return null;
       Object.assign(doc, update);
       return doc;
-    });
+    }) as QueryBuilder<T>;
   }
 
   findOneAndDelete(filter: Partial<T>): QueryBuilder<T> {
@@ -118,7 +119,7 @@ class MemoryCollection<T extends DocumentRecord> implements DocumentCollection<T
       if (idx === -1) return null;
       const [removed] = this.data.splice(idx, 1);
       return removed ?? null;
-    });
+    }) as QueryBuilder<T>;
   }
 
   findByIdAndUpdate(id: DocumentId, update: Partial<T>): QueryBuilder<T> {
@@ -186,7 +187,7 @@ class MemoryCollection<T extends DocumentRecord> implements DocumentCollection<T
   }
 
   aggregate<U = unknown>(_pipeline: unknown[]): QueryBuilder<U[]> {
-    return new MemoryQuery<U[]>(async () => []);
+    return new MemoryQuery<U[]>(async () => []) as QueryBuilder<U[]>;
   }
 
   distinct(field: keyof T): QueryBuilder<T[keyof T][]> {
@@ -197,7 +198,7 @@ class MemoryCollection<T extends DocumentRecord> implements DocumentCollection<T
         if (value !== undefined) values.add(value as T[keyof T]);
       }
       return Array.from(values);
-    });
+    }) as QueryBuilder<T[keyof T][]>;
   }
 
   async exists(filter: Partial<T>) {
