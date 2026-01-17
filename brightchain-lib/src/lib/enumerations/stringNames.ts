@@ -229,6 +229,8 @@ export enum StringNames {
   Error_StoreErrorBlockSizeMismatch = 'Error_StoreErrorBlockSizeMismatch',
   Error_StoreErrorBlockDirectoryCreationFailedTemplate = 'Error_StoreErrorBlockDirectoryCreationFailedTemplate',
   Error_StoreErrorBlockDeletionFailedTemplate = 'Error_StoreErrorBlockDeletionFailedTemplate',
+  Error_StoreErrorNotImplemented = 'Error_StoreErrorNotImplemented',
+  Error_StoreErrorInsufficientRandomBlocksTemplate = 'Error_StoreErrorInsufficientRandomBlocksTemplate',
 
   // Secure Storage Errors
   Error_SecureStorageDecryptedValueLengthMismatch = 'Error_SecureStorageDecryptedValueLengthMismatch',
@@ -442,6 +444,8 @@ export enum StringNames {
   Error_QuorumErrorUnableToRestoreDocument = 'Error_QuorumErrorUnableToRestoreDocument',
   Error_QuorumErrorNotImplemented = 'Error_QuorumErrorNotImplemented',
   Error_QuorumErrorUninitialized = 'Error_QuorumErrorUninitialized',
+  Error_QuorumErrorMemberNotFound = 'Error_QuorumErrorMemberNotFound',
+  Error_QuorumErrorNotEnoughMembers = 'Error_QuorumErrorNotEnoughMembers',
 
   // System Keyring Errors
   Error_SystemKeyringErrorKeyNotFoundTemplate = 'Error_SystemKeyringErrorKeyNotFoundTemplate',

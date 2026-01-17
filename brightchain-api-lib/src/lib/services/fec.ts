@@ -1,34 +1,81 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-import { FecError, FecErrorType } from '@brightchain/brightchain-lib';
+import {
+  FecError,
+  FecErrorType,
+  FecRecoveryResult,
+  IFecService,
+  ParityData as IParityData,
+} from '@brightchain/brightchain-lib';
 import { ReedSolomonErasure } from '@subspace/reed-solomon-erasure.wasm';
 import { Constants } from '../constants';
 
 /**
- * FecService provides Forward Error Correction (FEC) functionality for filesystem/S3 objects.
+ * WasmFecService provides Forward Error Correction (FEC) functionality using WASM.
  * This service is used to:
  * 1. Create parity data for file recovery
  * 2. Recover corrupted files using parity data
  * 3. Ensure data integrity across distributed storage
  *
- * This implementation uses Reed-Solomon erasure coding to:
+ * This implementation uses Reed-Solomon erasure coding via @subspace/reed-solomon-erasure.wasm to:
  * 1. Split file data into shards
  * 2. Create parity shards
  * 3. Recover lost shards using parity
+ *
+ * @requirements 1.8, 4.5, 4.6
  */
 
+/**
+ * @deprecated Use ParityData from @brightchain/brightchain-lib instead
+ */
 export interface ParityData {
   data: Buffer;
   index: number;
 }
 
+/**
+ * @deprecated Use FecRecoveryResult from @brightchain/brightchain-lib instead
+ */
 export interface RecoveryResult {
   data: Buffer;
   recovered: boolean;
 }
-export class FecService {
+
+/**
+ * WASM-based FEC Service implementing IFecService.
+ *
+ * This service provides cross-platform FEC operations using WebAssembly.
+ * It is the default fallback when native implementations are not available.
+ */
+export class WasmFecService implements IFecService {
+  private wasmAvailable: boolean | null = null;
+
+  /**
+   * Check if the WASM FEC service is available.
+   *
+   * This checks if the @subspace/reed-solomon-erasure.wasm module can be loaded.
+   *
+   * @returns Promise resolving to true if WASM FEC is available
+   */
+  async isAvailable(): Promise<boolean> {
+    if (this.wasmAvailable !== null) {
+      return this.wasmAvailable;
+    }
+
+    try {
+      // Try to load the WASM module
+      await ReedSolomonErasure.fromCurrentDirectory();
+      this.wasmAvailable = true;
+    } catch {
+      this.wasmAvailable = false;
+    }
+
+    return this.wasmAvailable;
+  }
+
   /**
    * Given a data buffer, encode it using Reed-Solomon erasure coding.
-   * This will produce a buffer of size (shardSize * (dataShards + parityShards)) or (shardSize * parityShards) if fecOnly is true.
+   * This will produce a buffer of size (shardSize * (dataShards + parityShards))
+   * or (shardSize * parityShards) if fecOnly is true.
    */
   public async encode(
     data: Buffer,
@@ -135,12 +182,20 @@ export class FecService {
   }
 
   /**
-   * Create parity data for a file buffer.
+   * Create parity data for a block using Reed-Solomon encoding.
+   *
+   * @param blockData - The original block data to create parity for
+   * @param parityCount - Number of parity shards to generate
+   * @returns Promise resolving to array of parity data objects
    */
   public async createParityData(
-    fileData: Buffer,
+    blockData: Buffer | Uint8Array,
     parityCount: number,
-  ): Promise<ParityData[]> {
+  ): Promise<IParityData[]> {
+    const fileData = Buffer.isBuffer(blockData)
+      ? blockData
+      : Buffer.from(blockData);
+
     if (!fileData || fileData.length === 0) {
       throw new FecError(FecErrorType.DataRequired);
     }
@@ -195,6 +250,9 @@ export class FecService {
         index,
       }));
     } catch (error) {
+      if (error instanceof FecError) {
+        throw error;
+      }
       throw new FecError(FecErrorType.FecEncodingFailed, undefined, {
         ERROR: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -202,13 +260,18 @@ export class FecService {
   }
 
   /**
-   * Recover file data using parity data. Pass null for corrupted data.
+   * Recover block data using parity data.
+   *
+   * @param corruptedData - The corrupted block data, or null if completely missing
+   * @param parityData - Array of available parity data objects
+   * @param originalSize - The original size of the block data in bytes
+   * @returns Promise resolving to recovery result with recovered data
    */
   public async recoverFileData(
-    corruptedData: Buffer | null,
-    parityData: ParityData[],
+    _corruptedData: Buffer | Uint8Array | null,
+    parityData: IParityData[],
     originalSize: number,
-  ): Promise<RecoveryResult> {
+  ): Promise<FecRecoveryResult> {
     if (!parityData || parityData.length === 0) {
       throw new FecError(FecErrorType.DataRequired);
     }
@@ -239,7 +302,9 @@ export class FecService {
         const shardData = Buffer.concat([
           corruptedShard,
           ...parityData.map((parity) =>
-            parity.data.subarray(i * shardSize, (i + 1) * shardSize),
+            Buffer.from(
+              parity.data.subarray(i * shardSize, (i + 1) * shardSize),
+            ),
           ),
         ]);
 
@@ -266,6 +331,9 @@ export class FecService {
         recovered: true,
       };
     } catch (error) {
+      if (error instanceof FecError) {
+        throw error;
+      }
       throw new FecError(FecErrorType.FecDecodingFailed, undefined, {
         ERROR: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -273,23 +341,38 @@ export class FecService {
   }
 
   /**
-   * Verify file integrity using parity data.
+   * Verify block integrity against its parity data.
+   *
+   * @param blockData - The block data to verify
+   * @param parityData - The stored parity data to verify against
+   * @returns Promise resolving to true if the block is intact
    */
   public async verifyFileIntegrity(
-    fileData: Buffer,
-    parityData: ParityData[],
+    blockData: Buffer | Uint8Array,
+    parityData: IParityData[],
   ): Promise<boolean> {
     try {
+      const fileData = Buffer.isBuffer(blockData)
+        ? blockData
+        : Buffer.from(blockData);
+
       const regeneratedParity = await this.createParityData(
         fileData,
         parityData.length,
       );
 
-      return parityData.every((original, index) =>
-        original.data.equals(regeneratedParity[index].data),
-      );
+      return parityData.every((original, index) => {
+        const originalBuf = Buffer.from(original.data);
+        const regeneratedBuf = Buffer.from(regeneratedParity[index].data);
+        return originalBuf.equals(regeneratedBuf);
+      });
     } catch {
       return false;
     }
   }
 }
+
+/**
+ * @deprecated Use WasmFecService instead. FecService is kept for backward compatibility.
+ */
+export const FecService = WasmFecService;

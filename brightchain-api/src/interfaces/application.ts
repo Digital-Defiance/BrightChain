@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import { ApiResponse, TypedHandlers } from '@brightchain/brightchain-api-lib';
-import { Member } from '@brightchain/brightchain-lib';
+import { Member } from '@digitaldefiance/ecies-lib';
 import { BlocksController } from '../controllers/api/blocks';
 import { MembersController } from '../controllers/api/members';
 import { SessionsController } from '../controllers/api/sessions';
