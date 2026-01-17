@@ -5,6 +5,29 @@ import { MemoryRouter } from 'react-router-dom';
 // Mock brightchain-lib to prevent i18n initialization
 jest.mock('@brightchain/brightchain-lib', () => ({
   constants: { CONSTANTS: {} },
+  ChecksumService: jest.fn().mockImplementation(() => ({
+    calculateChecksum: jest.fn(),
+    checksumBufferLength: 64,
+  })),
+  ServiceLocator: {
+    setServiceProvider: jest.fn(),
+  },
+  MemoryBlockStore: jest.fn().mockImplementation(() => ({
+    put: jest.fn(),
+    getData: jest.fn(),
+    getRandomBlocks: jest.fn(),
+  })),
+  BlockService: jest.fn().mockImplementation(() => ({
+    ingestFile: jest.fn(),
+  })),
+  Member: jest.fn().mockImplementation(() => ({})),
+  RawDataBlock: jest.fn().mockImplementation(() => ({
+    idChecksum: new Uint8Array(64),
+  })),
+  BlockSize: {
+    Small: 1024,
+  },
+  uint8ArrayToHex: jest.fn((arr) => Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('')),
 }));
 
 // Must come after mocking brightchain-lib
@@ -71,7 +94,7 @@ describe('App', () => {
         <App />
       </MemoryRouter>,
     );
-    const element = screen.getByText(/Welcome brightchain-react/i);
+    const element = screen.getByText(/Welcome to BrightChain/i);
     expect(element).toBeTruthy();
   });
 });
