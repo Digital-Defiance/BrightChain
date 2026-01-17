@@ -1,10 +1,11 @@
-import { FecService } from './fec';
+import { ParityData } from '@brightchain/brightchain-lib';
+import { WasmFecService } from './fec';
 
 /**
  * Example usage of the adapted FEC service for filesystem/S3 objects
  */
 export class FecUsageExample {
-  private fecService = new FecService();
+  private fecService = new WasmFecService();
 
   /**
    * Example: Create parity data for a file and store it separately
@@ -31,10 +32,7 @@ export class FecUsageExample {
   /**
    * Example: Recover a corrupted file using parity data
    */
-  async recoverCorruptedFile(
-    parityData: Array<{ data: Buffer; index: number }>,
-    originalSize: number,
-  ) {
+  async recoverCorruptedFile(parityData: ParityData[], originalSize: number) {
     // Attempt recovery (pass null for corrupted data)
     const result = await this.fecService.recoverFileData(
       null, // corrupted data
@@ -55,7 +53,7 @@ export class FecUsageExample {
    */
   async verifyFile(
     fileData: Buffer,
-    parityData: Array<{ data: Buffer; index: number }>,
+    parityData: ParityData[],
   ): Promise<boolean> {
     return await this.fecService.verifyFileIntegrity(fileData, parityData);
   }
@@ -89,7 +87,11 @@ export class FecUsageExample {
     );
 
     // Step 4: Verify recovery
-    const recoverySuccessful = originalFile.equals(recoveredFile);
+    const recoverySuccessful = originalFile.equals(
+      Buffer.isBuffer(recoveredFile)
+        ? recoveredFile
+        : Buffer.from(recoveredFile),
+    );
     console.log('Recovery successful:', recoverySuccessful ? 'YES' : 'NO');
 
     return {

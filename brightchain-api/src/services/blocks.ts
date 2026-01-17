@@ -1,5 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-import { Member } from '@brightchain/brightchain-lib';
+import { Member } from '@digitaldefiance/ecies-lib';
+import { IBlockMetadata, BlockStoreOptions, BrightenResult } from '@brightchain/brightchain-lib';
 import { IApplication } from '../interfaces/application';
 import { IBlockService } from '../interfaces/blockService';
 import { BlockStoreService } from './blockStore';
@@ -21,12 +22,28 @@ export class BlocksService extends BaseService implements IBlockService {
     _member: Member,
     _canRead: boolean = true,
     _canPersist: boolean = true,
-  ): Promise<string> {
-    return this.blockStore.storeBlock(dataBuffer);
+    options?: BlockStoreOptions,
+  ): Promise<{ blockId: string; metadata?: IBlockMetadata }> {
+    const blockId = await this.blockStore.storeBlock(dataBuffer, options);
+    const metadata = await this.blockStore.getBlockMetadata(blockId);
+    return { blockId, metadata: metadata ?? undefined };
   }
 
-  async getBlock(blockId: string): Promise<{ data: Buffer }> {
+  async getBlock(blockId: string): Promise<{ data: Buffer; metadata?: IBlockMetadata }> {
     const data = await this.blockStore.getBlock(blockId);
-    return { data };
+    const metadata = await this.blockStore.getBlockMetadata(blockId);
+    return { data, metadata: metadata ?? undefined };
+  }
+
+  async getBlockMetadata(blockId: string): Promise<IBlockMetadata | null> {
+    return this.blockStore.getBlockMetadata(blockId);
+  }
+
+  async deleteBlock(blockId: string): Promise<void> {
+    return this.blockStore.deleteBlock(blockId);
+  }
+
+  async brightenBlock(blockId: string, randomBlockCount: number): Promise<BrightenResult> {
+    return this.blockStore.brightenBlock(blockId, randomBlockCount);
   }
 }

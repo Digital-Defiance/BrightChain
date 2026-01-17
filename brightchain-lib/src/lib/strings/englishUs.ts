@@ -211,6 +211,9 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
   [StringNames.Error_QuorumErrorNotImplemented]: 'Not implemented',
   [StringNames.Error_QuorumErrorUninitialized]:
     'Quorum subsystem not intialized',
+  [StringNames.Error_QuorumErrorMemberNotFound]: 'Member not found',
+  [StringNames.Error_QuorumErrorNotEnoughMembers]:
+    'Not enough members for quorum operation',
 
   // System Keyring Error
   [StringNames.Error_SystemKeyringErrorKeyNotFoundTemplate]:
@@ -390,6 +393,10 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Failed to create block directory: {ERROR}',
   [StringNames.Error_StoreErrorBlockDeletionFailedTemplate]:
     'Failed to delete block: {ERROR}',
+  [StringNames.Error_StoreErrorNotImplemented]:
+    'Operation not implemented',
+  [StringNames.Error_StoreErrorInsufficientRandomBlocksTemplate]:
+    'Insufficient random blocks available: requested {REQUESTED}, available {AVAILABLE}',
 
   // Secure storage error
   [StringNames.Error_SecureStorageDecryptedValueLengthMismatch]:

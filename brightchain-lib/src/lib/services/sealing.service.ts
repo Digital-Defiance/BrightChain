@@ -9,8 +9,11 @@ import {
   TypedIdProviderWrapper,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import type { Shares } from '@digitaldefiance/secrets';
-import secrets from '@digitaldefiance/secrets';
+import type { CSPRNGType, Shares } from '@digitaldefiance/secrets';
+import * as secretsModule from '@digitaldefiance/secrets';
+
+// Handle both ESM default export and CommonJS module.exports patterns
+const secrets = (secretsModule as any).default || secretsModule;
 import { SEALING } from '../constants';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { SealingError } from '../errors/sealingError';
@@ -52,9 +55,18 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       throw new SealingError(SealingErrorType.InvalidBitRange);
     }
 
-    // secrets.init requires a CSPRNG type, get the current one
-    const config = secrets.getConfig();
-    secrets.init(bits, config.typeCSPRNG);
+    // secrets.init requires a CSPRNG type, get the current one if available
+    // If secrets hasn't been initialized yet, use 'nodeCryptoRandomBytes' as default
+    let csprngType: CSPRNGType = 'nodeCryptoRandomBytes';
+    try {
+      const config = secrets.getConfig();
+      if (config?.typeCSPRNG) {
+        csprngType = config.typeCSPRNG;
+      }
+    } catch {
+      // secrets not initialized yet, use default
+    }
+    secrets.init(bits, csprngType);
   }
 
   /**
@@ -130,6 +142,13 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       sharesRequired,
       encryptedData,
       encryptedSharesByMemberId,
+      undefined, // checksum - will be calculated
+      undefined, // signature - will be calculated
+      undefined, // id - will be generated
+      undefined, // dateCreated
+      undefined, // dateUpdated
+      this.enhancedProvider,
+      this.eciesService,
     );
   }
 

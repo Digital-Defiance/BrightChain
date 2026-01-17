@@ -13,7 +13,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { randomBytes } from 'crypto';
 import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
-import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib/lib/stores/diskBlockAsyncStore';
+import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib';
 import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
 import { ChecksumService } from '@brightchain/brightchain-lib/lib/services/checksum.service';
 import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
@@ -268,18 +268,10 @@ describe('Storage Integration Tests', () => {
       }).toThrow();
     });
   });
-});, null as any);
-      }).toThrow();
-
-      expect(() => {
-        new RawDataBlock(blockSize, undefined as any);
-      }).toThrow();
-    });
-  });
 
   describe('Round-Trip Integrity', () => {
     it('should verify complete round-trip for multiple blocks', async () => {
-      const blocks = [];
+      const blocks: RawDataBlock[] = [];
       const expectedData: Map<string, Buffer> = new Map();
 
       // Write phase

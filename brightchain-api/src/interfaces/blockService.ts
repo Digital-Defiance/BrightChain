@@ -1,5 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-import { Member } from '@brightchain/brightchain-lib';
+import { Member } from '@digitaldefiance/ecies-lib';
+import { IBlockMetadata, BlockStoreOptions, BrightenResult } from '@brightchain/brightchain-lib';
 
 export interface IBlockService {
   storeBlock(
@@ -7,7 +8,14 @@ export interface IBlockService {
     member: Member,
     canRead?: boolean,
     canPersist?: boolean,
-  ): Promise<string>;
+    options?: BlockStoreOptions,
+  ): Promise<{ blockId: string; metadata?: IBlockMetadata }>;
 
-  getBlock(blockId: string): Promise<{ data: Buffer }>;
+  getBlock(blockId: string): Promise<{ data: Buffer; metadata?: IBlockMetadata }>;
+
+  getBlockMetadata(blockId: string): Promise<IBlockMetadata | null>;
+
+  deleteBlock(blockId: string): Promise<void>;
+
+  brightenBlock(blockId: string, randomBlockCount: number): Promise<BrightenResult>;
 }

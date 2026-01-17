@@ -14,8 +14,8 @@ describe('BrightChain API Integration with Refactored Constants', () => {
 
   describe('Middleware Constants Usage', () => {
     it('should verify that middlewares.ts file exists and uses constants', () => {
-      // The middlewares.ts file imports: import { constants } from '@brightchain/brightchain-lib';
-      // And uses: constants.SITE.CSP_NONCE_SIZE
+      // The middlewares.ts file imports: import { CONSTANTS } from '@brightchain/brightchain-lib';
+      // And uses: CONSTANTS.SITE.CSP_NONCE_SIZE
       // If this test runs, it means the import and usage compile successfully
 
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -28,9 +28,9 @@ describe('BrightChain API Integration with Refactored Constants', () => {
 
       const content = fs.readFileSync(middlewaresPath, 'utf-8');
       expect(content).toContain(
-        "import { constants } from '@brightchain/brightchain-lib'",
+        "import { CONSTANTS } from '@brightchain/brightchain-lib'",
       );
-      expect(content).toContain('constants.SITE.CSP_NONCE_SIZE');
+      expect(content).toContain('CONSTANTS.SITE.CSP_NONCE_SIZE');
     });
   });
 
@@ -52,18 +52,18 @@ describe('BrightChain API Integration with Refactored Constants', () => {
       // This test documents what was verified:
       //
       // 1. Task 11.1: Updated imports in brightchain-api files
-      //    - Verified middlewares.ts imports constants from brightchain-lib
+      //    - Verified middlewares.ts imports CONSTANTS from brightchain-lib
       //    - Verified no compilation errors
       //    - Build succeeds: npx nx build brightchain-api
       //
       // 2. Task 11.2: Integration tests
       //    - Verified brightchain-api compiles with refactored constants
-      //    - Verified middlewares.ts uses constants.SITE.CSP_NONCE_SIZE
+      //    - Verified middlewares.ts uses CONSTANTS.SITE.CSP_NONCE_SIZE
       //    - Verified end-to-end functionality through successful build
       //
       // The refactoring maintains backward compatibility:
-      // - Same import pattern: import { constants } from '@brightchain/brightchain-lib'
-      // - Same usage pattern: constants.SITE.CSP_NONCE_SIZE
+      // - Same import pattern: import { CONSTANTS } from '@brightchain/brightchain-lib'
+      // - Same usage pattern: CONSTANTS.SITE.CSP_NONCE_SIZE
       // - Same constant values
       // - No breaking changes
 

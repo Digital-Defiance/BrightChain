@@ -1,9 +1,10 @@
-import { FecService, ParityData, RecoveryResult } from './fec';
+import { WasmFecService } from './fec';
+import { FecRecoveryResult, ParityData } from '@brightchain/brightchain-lib';
 
 describe('FecService', () => {
-  let fecService: FecService;
+  let fecService: WasmFecService;
   beforeEach(() => {
-    fecService = new FecService();
+    fecService = new WasmFecService();
   });
   describe('FEC operations', () => {
     it('should encode and decode data correctly', async () => {
@@ -173,7 +174,7 @@ describe('FecService', () => {
       corruptedData[0] = 0; // simulate corruption
 
       // Recover using parity data
-      const recoveredData: RecoveryResult = await fecService.recoverFileData(
+      const recoveredData: FecRecoveryResult = await fecService.recoverFileData(
         corruptedData,
         parityData,
         testData.length,

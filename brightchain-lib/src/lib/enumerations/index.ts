@@ -18,6 +18,8 @@ export * from './cpuInstructions';
 export * from './cpuRegisters';
 export * from './dataTemperature';
 export * from './documentErrorType';
+export * from './durabilityLevel';
+
 export * from './eciesErrorType';
 export * from './extendedCblErrorType';
 export * from './fecErrorType';
@@ -39,6 +41,7 @@ export * from './operationType';
 export * from './pbkdf2ErrorType';
 export * from './peerStatusType';
 export * from './quorumErrorType';
+export * from './replicationStatus';
 export * from './sealingErrorType';
 export * from './secureStorageErrorType';
 export * from './storeErrorType';

@@ -6,7 +6,7 @@ import {
   IStatusCodeResponse,
   TypedHandlers,
 } from '@brightchain/brightchain-api-lib';
-import { Member } from '@brightchain/brightchain-lib';
+import { Member } from '@digitaldefiance/ecies-lib';
 import { IApplication } from '../../interfaces/application';
 import { BaseController } from '../base';
 

@@ -16,4 +16,6 @@ export enum StoreErrorType {
   BlockIdMismatch = 'BlockIdMismatch',
   BlockDirectoryCreationFailed = 'BlockDirectoryCreationFailed',
   BlockDeletionFailed = 'BlockDeletionFailed',
+  NotImplemented = 'NotImplemented',
+  InsufficientRandomBlocks = 'InsufficientRandomBlocks',
 }
