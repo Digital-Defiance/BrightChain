@@ -40,6 +40,10 @@ export class StoreError extends TypedError<StoreErrorType> {
         StringNames.Error_StoreErrorBlockDirectoryCreationFailedTemplate,
       [StoreErrorType.BlockDeletionFailed]:
         StringNames.Error_StoreErrorBlockDeletionFailedTemplate,
+      [StoreErrorType.NotImplemented]:
+        StringNames.Error_StoreErrorNotImplemented,
+      [StoreErrorType.InsufficientRandomBlocks]:
+        StringNames.Error_StoreErrorInsufficientRandomBlocksTemplate,
     };
   }
   public readonly params?: { [key: string]: string | number };

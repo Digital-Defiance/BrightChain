@@ -14,5 +14,7 @@ export default {
     ...(nxPreset as any).moduleNameMapper,
     '^@brightchain/brightchain-lib$': '<rootDir>/../dist/brightchain-lib/src',
     '^@brightchain/brightchain-lib/(.*)$': '<rootDir>/../dist/brightchain-lib/src/$1',
+    '^@brightchain/brightchain-api-lib$': '<rootDir>/../dist/brightchain-api-lib/src',
+    '^@brightchain/brightchain-api-lib/(.*)$': '<rootDir>/../dist/brightchain-api-lib/src/$1',
   },
 };

@@ -24,7 +24,7 @@ import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
 import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
 import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
 import { ServiceProvider } from '@brightchain/brightchain-lib/lib/services/service.provider';
-import { uint8ArrayToHex } from '@brightchain/brightchain-lib/lib/types';
+import { uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 
 // Mock file-type module
 jest.mock('file-type', () => ({
@@ -125,10 +125,10 @@ describe('Owner Free Filesystem (OFF) Integration Tests', () => {
       const retrievedRandom2 = await memoryStore.get(randomBlock2.idChecksum);
       const retrievedRandom3 = await memoryStore.get(randomBlock3.idChecksum);
       
-      let reconstructed = Buffer.from(retrievedWhitened.data);
+      let reconstructed = Buffer.from(retrievedWhitened.fullData);
       
       for (const retrieved of [retrievedRandom1, retrievedRandom2, retrievedRandom3]) {
-        const randomData = Buffer.from(retrieved.data);
+        const randomData = Buffer.from(retrieved.fullData);
         for (let i = 0; i < blockSize; i++) {
           reconstructed[i] ^= randomData[i];
         }
@@ -221,9 +221,9 @@ describe('Owner Free Filesystem (OFF) Integration Tests', () => {
         const whitenedBlock = await memoryStore.get(whitenedId);
         
         // XOR to reconstruct
-        let reconstructed = Buffer.from(whitenedBlock.data);
+        let reconstructed = Buffer.from(whitenedBlock.fullData);
         for (const randomBlock of randomBlocks) {
-          const randomData = Buffer.from(randomBlock.data);
+          const randomData = Buffer.from(randomBlock.fullData);
           for (let j = 0; j < blockSize; j++) {
             reconstructed[j] ^= randomData[j];
           }
@@ -352,9 +352,9 @@ describe('Owner Free Filesystem (OFF) Integration Tests', () => {
       const retrievedC = await memoryStore.get(recipe[2]);
       const retrievedZ = await memoryStore.get(recipe[3]);
       
-      let reconstructedM = Buffer.from(retrievedZ.data);
+      let reconstructedM = Buffer.from(retrievedZ.fullData);
       for (const retrieved of [retrievedA, retrievedB, retrievedC]) {
-        const data = Buffer.from(retrieved.data);
+        const data = Buffer.from(retrieved.fullData);
         for (let i = 0; i < blockSize; i++) {
           reconstructedM[i] ^= data[i];
         }
@@ -430,8 +430,8 @@ describe('Owner Free Filesystem (OFF) Integration Tests', () => {
       );
       
       // Last block is whitened, rest are randoms
-      const whitenedData = retrievedBlocks[retrievedBlocks.length - 1].data;
-      const randomDatas = retrievedBlocks.slice(0, -1).map(b => b.data);
+      const whitenedData = retrievedBlocks[retrievedBlocks.length - 1].fullData;
+      const randomDatas = retrievedBlocks.slice(0, -1).map(b => b.fullData);
       
       let reconstructed = Buffer.from(whitenedData);
       for (const randomData of randomDatas) {

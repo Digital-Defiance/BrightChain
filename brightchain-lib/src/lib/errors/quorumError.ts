@@ -16,6 +16,10 @@ export class QuorumError extends TypedError<QuorumErrorType> {
         StringNames.Error_QuorumErrorNotImplemented,
       [QuorumErrorType.Uninitialized]:
         StringNames.Error_QuorumErrorUninitialized,
+      [QuorumErrorType.MemberNotFound]:
+        StringNames.Error_QuorumErrorMemberNotFound,
+      [QuorumErrorType.NotEnoughMembers]:
+        StringNames.Error_QuorumErrorNotEnoughMembers,
     };
   }
   constructor(type: QuorumErrorType, _language?: StringLanguages) {

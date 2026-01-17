@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { DurabilityLevel } from '@brightchain/brightchain-lib';
 
 export interface BlockRequest extends Request {
   headers: {
@@ -11,11 +12,34 @@ export interface StoreBlockRequest extends BlockRequest {
     data: string;
     canRead?: boolean;
     canPersist?: boolean;
+    options?: {
+      expiresAt?: string; // ISO date string
+      durabilityLevel?: DurabilityLevel;
+    };
   };
 }
 
 export interface GetBlockRequest extends BlockRequest {
   params: {
     blockId: string;
+  };
+}
+
+export interface GetBlockMetadataRequest extends BlockRequest {
+  params: {
+    blockId: string;
+  };
+}
+
+export interface DeleteBlockRequest extends BlockRequest {
+  params: {
+    blockId: string;
+  };
+}
+
+export interface BrightenBlockRequest extends BlockRequest {
+  body: {
+    blockId: string;
+    randomBlockCount: number;
   };
 }

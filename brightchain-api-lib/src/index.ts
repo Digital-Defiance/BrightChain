@@ -3,6 +3,7 @@ export * from '@brightchain/brightchain-lib';
 
 // Export Node.js specific components
 export * from './lib/stores/diskBlockAsyncStore';
+export * from './lib/stores/diskBlockMetadataStore';
 export * from './lib/stores/diskBlockStore';
 export * from './lib/transforms/checksumTransform';
 export * from './lib/transforms/memoryWritableStream';
@@ -82,12 +83,19 @@ export * from './lib/datastore/document-store';
 export * from './lib/datastore/memory-document-store';
 export * from './lib/datastore/document-model-adapter';
 export * from './lib/datastore/block-document-store';
+export type { CreateDocumentOptions, RetrieveDocumentOptions } from './lib/datastore/block-document-store';
+export { CollectionHeadRegistry } from './lib/datastore/block-document-store';
 export * from './lib/datastore/block-document-store-factory';
 export * from './lib/services/email';
-// Duplicate with brightchain-lib: export * from './lib/services/fec';
+// Note: FEC types (ParityData, FecRecoveryResult, IFecService) are re-exported from brightchain-lib
+// Only export the WASM implementation class with a unique name to avoid conflicts
+export { WasmFecService } from './lib/services/fec';
+export * from './lib/services/fecServiceFactory';
+export * from './lib/services/nativeRsFecService';
 export * from './lib/services/keyWrapping';
 export * from './lib/services/pbkdf2';
 export * from './lib/services/user';
+export * from './lib/services/diskQuorumService';
 export * from './lib/utils/type-converters';
 // Explicitly export types from shared-types
 export { routeConfig } from './lib/shared-types';

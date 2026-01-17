@@ -4,4 +4,6 @@ export enum QuorumErrorType {
   UnableToRestoreDocument = 'UnableToRestoreDocument',
   NotImplemented = 'NotImplemented',
   Uninitialized = 'Uninitialized',
+  MemberNotFound = 'MemberNotFound',
+  NotEnoughMembers = 'NotEnoughMembers',
 }

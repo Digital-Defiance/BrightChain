@@ -11530,6 +11530,7 @@ __metadata:
     ethereumjs-wallet: "npm:^1.0.2"
     express: "npm:4.21.2"
     express-validator: "npm:^7.2.1"
+    fast-check: "npm:^4.5.3"
     file-type: "npm:^20.1.0"
     globals: "npm:^17.0.0"
     helmet: "npm:^8.0.0"

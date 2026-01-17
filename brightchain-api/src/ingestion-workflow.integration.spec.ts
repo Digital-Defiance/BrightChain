@@ -27,7 +27,7 @@ import { randomBytes } from 'crypto';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { mkdtemp, rm } from 'fs/promises';
-import { DiskBlockAsyncStore } from '@brightchain/brightchain-lib/lib/stores/diskBlockAsyncStore';
+import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib';
 import { MemoryBlockStore } from '@brightchain/brightchain-lib/lib/stores/memoryBlockStore';
 import { RandomBlock } from '@brightchain/brightchain-lib/lib/blocks/random';
 import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
@@ -37,10 +37,10 @@ import { BlockType } from '@brightchain/brightchain-lib/lib/enumerations/blockTy
 import { BlockDataType } from '@brightchain/brightchain-lib/lib/enumerations/blockDataType';
 import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
 import { ServiceProvider } from '@brightchain/brightchain-lib/lib/services/service.provider';
-import { Member } from '@brightchain/brightchain-lib/lib/Member';
+import { Member } from '@digitaldefiance/ecies-lib';
 import { MemberType } from '@brightchain/brightchain-lib/lib/enumerations/memberType';
 import { EmailString } from '@brightchain/brightchain-lib/lib/emailString';
-import { uint8ArrayToHex, ChecksumUint8Array } from '@brightchain/brightchain-lib/lib/types';
+import { uint8ArrayToHex, ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { TUPLE } from '@brightchain/brightchain-lib/lib/constants';
 
 // Mock file-type module
@@ -181,16 +181,16 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
       
       // Step 3: Retrieve blocks from storage
       // Convention: first (n-1) are whiteners, last is prime whitened
-      const retrievedWhiteners: RawDataBlock[] = [];
+      const retrievedWhiteners = [];
       for (let i = 0; i < numWhiteners; i++) {
         retrievedWhiteners.push(await memoryStore.get(blockIds[i]));
       }
       const retrievedPrime = await memoryStore.get(blockIds[numWhiteners]);
       
       // Step 4: XOR back to recover source
-      let reconstructedSource = Buffer.from(retrievedPrime.data);
+      let reconstructedSource = Buffer.from(retrievedPrime.fullData);
       for (const whitener of retrievedWhiteners) {
-        const whitenerData = Buffer.from(whitener.data);
+        const whitenerData = Buffer.from(whitener.fullData);
         for (let i = 0; i < blockSize; i++) {
           reconstructedSource[i] ^= whitenerData[i];
         }
@@ -328,7 +328,7 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
         const tupleIds = retrievedCbl.blockTuples[blockIndex];
         
         // Retrieve whiteners (first n-1)
-        const whiteners: RawDataBlock[] = [];
+        const whiteners = [];
         for (let i = 0; i < TUPLE.SIZE - 1; i++) {
           whiteners.push(await memoryStore.get(tupleIds[i]));
         }
@@ -337,9 +337,9 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
         const primeWhitened = await memoryStore.get(tupleIds[TUPLE.SIZE - 1]);
         
         // XOR to recover source
-        let reconstructed = Buffer.from(primeWhitened.data);
+        let reconstructed = Buffer.from(primeWhitened.fullData);
         for (const whitener of whiteners) {
-          const whitenerData = Buffer.from(whitener.data);
+          const whitenerData = Buffer.from(whitener.fullData);
           for (let i = 0; i < blockSize; i++) {
             reconstructed[i] ^= whitenerData[i];
           }
@@ -480,14 +480,14 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
       const storedBlock2 = await memoryStore.get(whiteners[1].idChecksum);
       const storedBlock3 = await memoryStore.get(primeWhitened.idChecksum);
       
-      expect(storedBlock1.data.toString()).not.toContain('TOP SECRET');
-      expect(storedBlock2.data.toString()).not.toContain('TOP SECRET');
-      expect(storedBlock3.data.toString()).not.toContain('TOP SECRET');
+      expect(storedBlock1.fullData.toString()).not.toContain('TOP SECRET');
+      expect(storedBlock2.fullData.toString()).not.toContain('TOP SECRET');
+      expect(storedBlock3.fullData.toString()).not.toContain('TOP SECRET');
       
       // But we can still reconstruct the secret
-      let reconstructed = Buffer.from(storedBlock3.data);
+      let reconstructed = Buffer.from(storedBlock3.fullData);
       for (const storedBlock of [storedBlock1, storedBlock2]) {
-        const data = Buffer.from(storedBlock.data);
+        const data = Buffer.from(storedBlock.fullData);
         for (let i = 0; i < blockSize; i++) {
           reconstructed[i] ^= data[i];
         }
@@ -535,9 +535,9 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
       // Full reconstruction
       const retrieved = await Promise.all(cblIds.map(id => memoryStore.get(id)));
       
-      let reconstructed = Buffer.from(retrieved[retrieved.length - 1].data);
+      let reconstructed = Buffer.from(retrieved[retrieved.length - 1].fullData);
       for (let i = 0; i < retrieved.length - 1; i++) {
-        const d = Buffer.from(retrieved[i].data);
+        const d = Buffer.from(retrieved[i].fullData);
         for (let j = 0; j < blockSize; j++) {
           reconstructed[j] ^= d[j];
         }
