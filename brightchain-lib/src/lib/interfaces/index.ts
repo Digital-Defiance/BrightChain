@@ -1,4 +1,6 @@
 export type * from './active-context';
+export * from './availability';
+export type * from './availability';
 export type * from './backupCodeConsts';
 export type * from './basicDataObjectDto';
 export type * from './basicObjectDto';

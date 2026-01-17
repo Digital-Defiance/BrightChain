@@ -5,6 +5,7 @@ export * from '@brightchain/brightchain-lib';
 export * from './lib/stores/diskBlockAsyncStore';
 export * from './lib/stores/diskBlockMetadataStore';
 export * from './lib/stores/diskBlockStore';
+export * from './lib/stores/availabilityAwareBlockStore';
 export * from './lib/transforms/checksumTransform';
 export * from './lib/transforms/memoryWritableStream';
 export * from './lib/transforms/xorMultipleTransform';
@@ -97,6 +98,7 @@ export * from './lib/services/pbkdf2';
 export * from './lib/services/user';
 export * from './lib/services/diskQuorumService';
 export * from './lib/utils/type-converters';
+export * from './lib/availability';
 // Explicitly export types from shared-types
 export { routeConfig } from './lib/shared-types';
 export type {
