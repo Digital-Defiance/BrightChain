@@ -1,6 +1,7 @@
 // Export both types and values for enumerations
 export * from './actionEvent';
 export * from './actionType';
+export * from './availabilityState';
 export * from './blockAccessErrorType';
 export * from './blockCapacityErrorType';
 export * from './blockDataType';
