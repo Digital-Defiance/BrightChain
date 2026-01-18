@@ -13,10 +13,13 @@ import { BlockSize, lengthToBlockSize } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
 import { CblErrorType } from '../enumerations/cblErrorType';
 import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
+import { MessageEncryptionScheme } from '../enumerations/messaging/messageEncryptionScheme';
+import { MessagePriority } from '../enumerations/messaging/messagePriority';
 import { CblError } from '../errors/cblError';
 import { ExtendedCblError } from '../errors/extendedCblError';
 import { IConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/cblHeader';
 import { IExtendedConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/ecblHeader';
+import { IMessageConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/messageCblHeader';
 import { Checksum } from '../types/checksum';
 import { Validator } from '../utils/validator';
 import { BlockCapacityCalculator } from './blockCapacity.service';
@@ -320,6 +323,87 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
   }
 
   /**
+   * Check if the header is a message CBL
+   */
+  public isMessageHeader(header: Uint8Array): boolean {
+    if (this.isEncrypted(header)) {
+      throw new CblError(CblErrorType.CblEncrypted);
+    }
+    const offset = this.baseHeaderCreatorSignatureOffset;
+    return header.length > offset && header[offset] === 2;
+  }
+
+  /**
+   * Get message header offsets
+   */
+  private getMessageHeaderOffsets(header: Uint8Array): {
+    messageTypeLength: number;
+    messageTypeOffset: number;
+    senderIdLength: number;
+    senderIdOffset: number;
+    recipientCount: number;
+    recipientsOffset: number;
+    priorityOffset: number;
+    encryptionSchemeLength: number;
+    encryptionSchemeOffset: number;
+    signatureOffset: number;
+  } {
+    if (this.isEncrypted(header)) {
+      throw new CblError(CblErrorType.CblEncrypted);
+    }
+    if (!this.isMessageHeader(header)) {
+      throw new CblError(CblErrorType.InvalidStructure, 'Not a message CBL');
+    }
+
+    let offset =
+      this.baseHeaderCreatorSignatureOffset + CONSTANTS['UINT8_SIZE'];
+    const view = new DataView(
+      header.buffer,
+      header.byteOffset,
+      header.byteLength,
+    );
+
+    const messageTypeLength = view.getUint16(offset, false);
+    const messageTypeOffset = offset + CONSTANTS['UINT16_SIZE'];
+    offset = messageTypeOffset + messageTypeLength;
+
+    const senderIdLength = view.getUint16(offset, false);
+    const senderIdOffset = offset + CONSTANTS['UINT16_SIZE'];
+    offset = senderIdOffset + senderIdLength;
+
+    const recipientCount = view.getUint16(offset, false);
+    const recipientsOffset = offset + CONSTANTS['UINT16_SIZE'];
+    offset = recipientsOffset + recipientCount * CONSTANTS['UINT16_SIZE'];
+    for (let i = 0; i < recipientCount; i++) {
+      const recipientLength = view.getUint16(
+        recipientsOffset + i * CONSTANTS['UINT16_SIZE'],
+        false,
+      );
+      offset += recipientLength;
+    }
+
+    const priorityOffset = offset;
+    offset += CONSTANTS['UINT8_SIZE'];
+
+    const encryptionSchemeLength = header[offset];
+    const encryptionSchemeOffset = offset + CONSTANTS['UINT8_SIZE'];
+    offset = encryptionSchemeOffset + encryptionSchemeLength;
+
+    return {
+      messageTypeLength,
+      messageTypeOffset,
+      senderIdLength,
+      senderIdOffset,
+      recipientCount,
+      recipientsOffset,
+      priorityOffset,
+      encryptionSchemeLength,
+      encryptionSchemeOffset,
+      signatureOffset: offset,
+    };
+  }
+
+  /**
    * Helper function to check if a string contains control characters
    * @param str The string to check
    * @returns True if the string contains control characters, false otherwise
@@ -430,8 +514,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     }
     const checksumData = header.subarray(
       this.headerOffsets.OriginalDataChecksum,
-      this.headerOffsets.OriginalDataChecksum +
-        CBLService.DataChecksumSize,
+      this.headerOffsets.OriginalDataChecksum + CBLService.DataChecksumSize,
     );
     return Checksum.fromUint8Array(checksumData);
   }
@@ -781,6 +864,73 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
   }
 
   /**
+   * Create message CBL header extension
+   */
+  public makeMessageHeader(
+    messageType: string,
+    senderId: string,
+    recipients: string[],
+    priority: MessagePriority,
+    encryptionScheme: MessageEncryptionScheme,
+  ): Uint8Array {
+    const encoder = new TextEncoder();
+    const messageTypeBytes = encoder.encode(messageType);
+    const senderIdBytes = encoder.encode(senderId);
+    const recipientBytes = recipients.map((r) => encoder.encode(r));
+    const encryptionSchemeBytes = encoder.encode(encryptionScheme);
+
+    const totalLength =
+      CONSTANTS['UINT8_SIZE'] + // isMessage flag
+      CONSTANTS['UINT16_SIZE'] +
+      messageTypeBytes.length +
+      CONSTANTS['UINT16_SIZE'] +
+      senderIdBytes.length +
+      CONSTANTS['UINT16_SIZE'] +
+      recipientBytes.reduce(
+        (sum, r) => sum + CONSTANTS['UINT16_SIZE'] + r.length,
+        0,
+      ) +
+      CONSTANTS['UINT8_SIZE'] + // priority
+      CONSTANTS['UINT8_SIZE'] +
+      encryptionSchemeBytes.length;
+
+    const result = new Uint8Array(totalLength);
+    const view = new DataView(result.buffer);
+    let offset = 0;
+
+    result[offset] = 2; // isMessage flag
+    offset += CONSTANTS['UINT8_SIZE'];
+
+    view.setUint16(offset, messageTypeBytes.length, false);
+    offset += CONSTANTS['UINT16_SIZE'];
+    result.set(messageTypeBytes, offset);
+    offset += messageTypeBytes.length;
+
+    view.setUint16(offset, senderIdBytes.length, false);
+    offset += CONSTANTS['UINT16_SIZE'];
+    result.set(senderIdBytes, offset);
+    offset += senderIdBytes.length;
+
+    view.setUint16(offset, recipients.length, false);
+    offset += CONSTANTS['UINT16_SIZE'];
+    for (const recipientByte of recipientBytes) {
+      view.setUint16(offset, recipientByte.length, false);
+      offset += CONSTANTS['UINT16_SIZE'];
+      result.set(recipientByte, offset);
+      offset += recipientByte.length;
+    }
+
+    result[offset] = priority;
+    offset += CONSTANTS['UINT8_SIZE'];
+
+    result[offset] = encryptionSchemeBytes.length;
+    offset += CONSTANTS['UINT8_SIZE'];
+    result.set(encryptionSchemeBytes, offset);
+
+    return result;
+  }
+
+  /**
    * Create an extended header for CBL
    */
   public makeExtendedHeader(fileName: string, mimeType: string): Uint8Array {
@@ -805,6 +955,65 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     result.set(mimeTypeBytes, offset);
 
     return result;
+  }
+
+  /**
+   * Parse message CBL header
+   */
+  public parseMessageHeader(
+    data: Uint8Array,
+    creatorForValidation?: Member<TID>,
+  ): IMessageConstituentBlockListBlockHeader<TID> {
+    const cblData = this.parseBaseHeader(data, creatorForValidation);
+    const offsets = this.getMessageHeaderOffsets(data);
+    const decoder = new TextDecoder('utf-8');
+    const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+
+    const messageType = decoder.decode(
+      data.subarray(
+        offsets.messageTypeOffset,
+        offsets.messageTypeOffset + offsets.messageTypeLength,
+      ),
+    );
+
+    const senderId = decoder.decode(
+      data.subarray(
+        offsets.senderIdOffset,
+        offsets.senderIdOffset + offsets.senderIdLength,
+      ),
+    );
+
+    const recipients: string[] = [];
+    let recipientOffset = offsets.recipientsOffset;
+    for (let i = 0; i < offsets.recipientCount; i++) {
+      const recipientLength = view.getUint16(recipientOffset, false);
+      recipientOffset += CONSTANTS['UINT16_SIZE'];
+      recipients.push(
+        decoder.decode(
+          data.subarray(recipientOffset, recipientOffset + recipientLength),
+        ),
+      );
+      recipientOffset += recipientLength;
+    }
+
+    const priority = data[offsets.priorityOffset] as MessagePriority;
+
+    const encryptionScheme = decoder.decode(
+      data.subarray(
+        offsets.encryptionSchemeOffset,
+        offsets.encryptionSchemeOffset + offsets.encryptionSchemeLength,
+      ),
+    ) as MessageEncryptionScheme;
+
+    return {
+      ...cblData,
+      isMessage: true,
+      messageType,
+      senderId,
+      recipients,
+      priority,
+      encryptionScheme,
+    };
   }
 
   /**
@@ -962,7 +1171,9 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
             checksum.toUint8Array(),
           ),
         )
-      : new Uint8Array(ECIES.SIGNATURE_LENGTH)) as unknown as SignatureUint8Array;
+      : new Uint8Array(
+          ECIES.SIGNATURE_LENGTH,
+        )) as unknown as SignatureUint8Array;
 
     // Validate signature length
     if (signatureBytes.length !== ECIES.SIGNATURE_LENGTH) {

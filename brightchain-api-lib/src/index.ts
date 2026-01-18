@@ -6,6 +6,7 @@ export * from './lib/stores/availabilityAwareBlockStore';
 export * from './lib/stores/diskBlockAsyncStore';
 export * from './lib/stores/diskBlockMetadataStore';
 export * from './lib/stores/diskBlockStore';
+export * from './lib/stores/diskMessageMetadataStore';
 export * from './lib/transforms/checksumTransform';
 export * from './lib/transforms/memoryWritableStream';
 export * from './lib/transforms/xorMultipleTransform';

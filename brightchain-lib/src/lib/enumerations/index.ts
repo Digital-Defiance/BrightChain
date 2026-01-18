@@ -57,3 +57,6 @@ export * from './validationErrorType';
 export * from './votingDerivationErrorType';
 export * from './votingErrorType';
 export * from './whitenedErrorType';
+
+// Message passing enumerations
+export * from './messaging';

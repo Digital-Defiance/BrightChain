@@ -6,6 +6,7 @@ import {
   DiscoveryMessageType,
   GossipMessageType,
   HeartbeatMessageType,
+  MessagePassingType,
 } from '../enumerations/websocketMessageType';
 
 /**
@@ -175,6 +176,77 @@ export interface IPongMessage {
   requestId: string;
 }
 
+// ===== Message Passing Messages =====
+
+/**
+ * Message send message
+ */
+export interface IMessageSendMessage {
+  type: MessagePassingType.MESSAGE_SEND;
+  payload: {
+    messageId: string;
+    senderId: string;
+    recipients: string[];
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Message received message
+ */
+export interface IMessageReceivedMessage {
+  type: MessagePassingType.MESSAGE_RECEIVED;
+  payload: {
+    messageId: string;
+    recipientId: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Message acknowledgment message
+ */
+export interface IMessageAckMessage {
+  type: MessagePassingType.MESSAGE_ACK;
+  payload: {
+    messageId: string;
+    recipientId: string;
+    status: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Message query message
+ */
+export interface IMessageQueryMessage {
+  type: MessagePassingType.MESSAGE_QUERY;
+  payload: {
+    recipientId?: string;
+    senderId?: string;
+    messageType?: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Event subscribe message
+ */
+export interface IEventSubscribeMessage {
+  type: MessagePassingType.EVENT_SUBSCRIBE;
+  payload: {
+    types?: string[];
+    senderId?: string;
+    recipientId?: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
 /**
  * Union type of all WebSocket messages
  */
@@ -189,4 +261,9 @@ export type WebSocketMessage =
   | IBlockRemovalMessage
   | IAnnouncementBatchMessage
   | IPingMessage
-  | IPongMessage;
+  | IPongMessage
+  | IMessageSendMessage
+  | IMessageReceivedMessage
+  | IMessageAckMessage
+  | IMessageQueryMessage
+  | IEventSubscribeMessage;
