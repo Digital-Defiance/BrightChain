@@ -2,17 +2,17 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 import {
   IRequestUser,
-  StringLanguages,
   StringNames,
   translate,
 } from '@brightchain/brightchain-lib';
+import { LanguageCode } from '@digitaldefiance/i18n-lib';
 import { isAxiosError } from 'axios';
 import api from './api';
 import authenticatedApi from './authenticatedApi';
 
 interface AuthContextFunctions {
   setUser: (user: IRequestUser | null) => void;
-  setLanguage: (lang: StringLanguages) => void;
+  setLanguage: (lang: LanguageCode) => void;
 }
 
 let authContextFunctions: AuthContextFunctions | null = null;

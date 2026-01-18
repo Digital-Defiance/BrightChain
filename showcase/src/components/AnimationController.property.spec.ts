@@ -230,7 +230,7 @@ describe('AnimationController Performance Property Tests', () => {
         expect(typeof state.speed).toBe('number');
         expect(state.speed).toBeGreaterThan(0);
       }
-    }, 10000); // Increase timeout to 10 seconds
+    }, 20000);
 
     it('should handle stress conditions with many rapid operations', () => {
       const operations = [

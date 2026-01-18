@@ -13,5 +13,8 @@ export { ServiceProvider } from './lib/services/service.provider';
 // Export the proper initialization function
 export { initializeBrightChain } from './lib/init';
 
+// Export Checksum type for working with block IDs
+export { Checksum } from './lib/types/checksum';
+
 // Re-export types for convenience
 export type { BlockInfo, FileReceipt } from './lib/brightChain';

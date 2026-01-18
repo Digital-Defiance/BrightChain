@@ -40,5 +40,13 @@
     "@types/node": "^24.1.0",
     "@types/uuid": "^10.0.0",
     "@types/validator": "^13.15.2"
+  },
+  "scripts": {
+    "build:dev": "npx nx build brightchain-api-lib --configuration=development",
+    "build:prod": "npx nx build brightchain-api-lib --configuration=production",
+    "lint": "npx eslint '**/*.{ts,tsx}'",
+    "lint:fix": "npx eslint '**/*.{ts,tsx}' --fix",
+    "test:dev:16": "NODE_ENV=development npx nx test brightchain-api-lib --maxWorkers=16 --parallel=16 --configuration=development --outputStyle=stream 2>&1",
+    "test:dev:16:logged": "NODE_ENV=development npx nx test brightchain-api-lib --maxWorkers=16 --parallel=16 --configuration=development --outputStyle=stream 2>&1 | ansifilter -o test.log"
   }
 }

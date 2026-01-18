@@ -18,6 +18,7 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib';
 import {
+  Checksum,
   BlockSize,
   DurabilityLevel,
   initializeBrightChain,
@@ -123,7 +124,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
   describe('Block Storage E2E', () => {
     it('should store multiple blocks and retrieve them all', async () => {
       const blockCount = 10;
-      const storedBlocks: { checksum: ChecksumUint8Array; data: Buffer }[] = [];
+      const storedBlocks: { checksum: string; data: Buffer }[] = [];
 
       // Store multiple blocks
       for (let i = 0; i < blockCount; i++) {
@@ -132,11 +133,12 @@ describe('E2E: Block Storage and Quorum Integration', () => {
         await blockStore.setData(block, {
           durabilityLevel: DurabilityLevel.Standard,
         });
-        storedBlocks.push({ checksum: block.idChecksum, data });
+        storedBlocks.push({ checksum: uint8ArrayToHex(block.idChecksum.toUint8Array()), data });
       }
 
       // Verify all blocks can be retrieved
-      for (const { checksum, data } of storedBlocks) {
+      for (const { checksum: checksumStr, data } of storedBlocks) {
+        const checksum = Checksum.fromHex(checksumStr);
         const exists = await blockStore.has(checksum);
         expect(exists).toBe(true);
 
@@ -161,7 +163,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
         const block = new RawDataBlock(blockSize, data);
         await blockStore.setData(block, { durabilityLevel });
 
-        const blockIdHex = Buffer.from(block.idChecksum).toString('hex');
+        const blockIdHex = Buffer.from(block.idChecksum.toBuffer()).toString('hex');
         const metadata = await blockStore.getMetadata(blockIdHex);
 
         expect(metadata).not.toBeNull();
@@ -193,7 +195,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
         durabilityLevel: DurabilityLevel.Standard,
       });
 
-      const blockIdHex = Buffer.from(block.idChecksum).toString('hex');
+      const blockIdHex = Buffer.from(block.idChecksum.toBuffer()).toString('hex');
 
       // Access the block multiple times
       for (let i = 0; i < 5; i++) {
@@ -218,29 +220,28 @@ describe('E2E: Block Storage and Quorum Integration', () => {
     it('should store blocks and recover them using their checksums', async () => {
       // Store multiple blocks
       const blockCount = 5;
-      const storedData: { checksum: ChecksumUint8Array; data: Buffer }[] = [];
+      const storedData: { checksum: string; data: Buffer }[] = [];
 
       for (let i = 0; i < blockCount; i++) {
         const data = randomBytes(100 + i * 20);
         const block = new RawDataBlock(blockSize, data);
         await blockStore.setData(block);
-        storedData.push({ checksum: block.idChecksum, data });
+        storedData.push({ checksum: uint8ArrayToHex(block.idChecksum.toUint8Array()), data });
       }
 
       // Simulate a "file manifest" that tracks block addresses (like a CBL would)
       const fileManifest = {
         fileName: 'test-file.bin',
-        blockAddresses: storedData.map((b) => uint8ArrayToHex(b.checksum)),
+        blockAddresses: storedData.map((b) => b.checksum),
         totalSize: storedData.reduce((acc, b) => acc + b.data.length, 0),
       };
 
       // Recover all blocks using the manifest
       const recoveredBlocks: Buffer[] = [];
       for (const addressHex of fileManifest.blockAddresses) {
-        const checksum = Buffer.from(
+        const checksum = Checksum.fromHex(
           addressHex,
-          'hex',
-        ) as unknown as ChecksumUint8Array;
+        );
         const block = await blockStore.getData(checksum);
         recoveredBlocks.push(Buffer.from(block.data));
       }
@@ -275,7 +276,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       for (const chunk of chunks) {
         const block = new RawDataBlock(blockSize, chunk);
         await blockStore.setData(block);
-        blockAddresses.push(uint8ArrayToHex(block.idChecksum));
+        blockAddresses.push(uint8ArrayToHex(block.idChecksum.toUint8Array()));
       }
 
       // Create a manifest (simulating what a CBL would store)
@@ -290,10 +291,9 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       // Reassemble the file from blocks
       const reassembledChunks: Buffer[] = [];
       for (const addressHex of manifest.blockAddresses) {
-        const checksum = Buffer.from(
+        const checksum = Checksum.fromHex(
           addressHex,
-          'hex',
-        ) as unknown as ChecksumUint8Array;
+        );
         const block = await blockStore.getData(checksum);
         reassembledChunks.push(Buffer.from(block.data));
       }
@@ -667,7 +667,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
         await blockStore.setData(block, {
           durabilityLevel: DurabilityLevel.Standard,
         });
-        blockChecksums.push(uint8ArrayToHex(block.idChecksum));
+        blockChecksums.push(uint8ArrayToHex(block.idChecksum.toUint8Array()));
       }
 
       // Step 2: Create a document that references the CBL/blocks
@@ -697,10 +697,9 @@ describe('E2E: Block Storage and Quorum Integration', () => {
 
       const recoveredChunks: Buffer[] = [];
       for (const addressHex of unsealedReference.blockAddresses) {
-        const checksum = Buffer.from(
+        const checksum = Checksum.fromHex(
           addressHex,
-          'hex',
-        ) as unknown as ChecksumUint8Array;
+        );
         const block = await blockStore.getData(checksum);
         recoveredChunks.push(Buffer.from(block.data));
       }
@@ -868,7 +867,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
         await blockStore.setData(block, {
           durabilityLevel: DurabilityLevel.HighDurability,
         });
-        blockAddresses.push(uint8ArrayToHex(block.idChecksum));
+        blockAddresses.push(uint8ArrayToHex(block.idChecksum.toUint8Array()));
       }
 
       // Create a file manifest that references all blocks
@@ -935,10 +934,9 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       // Recover the original file from blocks
       let recoveredContent = '';
       for (const addressHex of unsealedManifest.blockAddresses) {
-        const checksum = Buffer.from(
+        const checksum = Checksum.fromHex(
           addressHex,
-          'hex',
-        ) as unknown as ChecksumUint8Array;
+        );
         const block = await blockStore.getData(checksum);
         // Find the actual content length for this chunk
         const chunkIndex = unsealedManifest.blockAddresses.indexOf(addressHex);

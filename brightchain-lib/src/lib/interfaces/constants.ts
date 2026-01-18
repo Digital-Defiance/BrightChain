@@ -295,6 +295,8 @@ export interface IJwtConsts {
   readonly ISSUER: string;
 }
 
+import type { IConstants as IEciesConstants } from '@digitaldefiance/ecies-lib';
+
 /**
  * Main constants interface that combines all BrightChain-specific constants
  * and extends the base constants from ecies-lib
@@ -313,7 +315,7 @@ export interface IJwtConsts {
  * console.log(constants.TUPLE.SIZE);
  * ```
  */
-export interface IConstants extends import('@digitaldefiance/ecies-lib').IConstants {
+export interface IConstants extends IEciesConstants {
   /** Constituent Block List constants */
   readonly CBL: ICBLConsts;
 

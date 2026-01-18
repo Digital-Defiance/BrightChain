@@ -66,8 +66,8 @@ describe('Storage Integration Tests', () => {
       // Retrieve the block
       const handle = blockStore.get(block.idChecksum);
       expect(handle).toBeDefined();
-      expect(Buffer.from(handle.idChecksum).toString('hex')).toBe(
-        Buffer.from(block.idChecksum).toString('hex'),
+      expect(Buffer.from(handle.idChecksum.toBuffer()).toString('hex')).toBe(
+        Buffer.from(block.idChecksum.toBuffer()).toString('hex'),
       );
 
       // Verify data integrity
@@ -83,8 +83,8 @@ describe('Storage Integration Tests', () => {
       const block1 = new RawDataBlock(blockSize, data);
       const block2 = new RawDataBlock(blockSize, data);
 
-      expect(Buffer.from(block1.idChecksum).toString('hex')).toBe(
-        Buffer.from(block2.idChecksum).toString('hex'),
+      expect(Buffer.from(block1.idChecksum.toBuffer()).toString('hex')).toBe(
+        Buffer.from(block2.idChecksum.toBuffer()).toString('hex'),
       );
     });
 
@@ -94,8 +94,8 @@ describe('Storage Integration Tests', () => {
       const block1 = new RawDataBlock(blockSize, data1);
       const block2 = new RawDataBlock(blockSize, data2);
 
-      expect(Buffer.from(block1.idChecksum).toString('hex')).not.toBe(
-        Buffer.from(block2.idChecksum).toString('hex'),
+      expect(Buffer.from(block1.idChecksum.toBuffer()).toString('hex')).not.toBe(
+        Buffer.from(block2.idChecksum.toBuffer()).toString('hex'),
       );
     });
 
@@ -280,14 +280,14 @@ describe('Storage Integration Tests', () => {
         const block = new RawDataBlock(blockSize, data);
         await blockStore.setData(block);
         blocks.push(block);
-        expectedData.set(Buffer.from(block.idChecksum).toString('hex'), data);
+        expectedData.set(Buffer.from(block.idChecksum.toBuffer()).toString('hex'), data);
       }
 
       // Read phase - verify all blocks
       for (const block of blocks) {
         const retrieved = await blockStore.getData(block.idChecksum);
         expect(retrieved).toBeDefined();
-        const expectedVal = expectedData.get(Buffer.from(block.idChecksum).toString('hex'));
+        const expectedVal = expectedData.get(Buffer.from(block.idChecksum.toBuffer()).toString('hex'));
         expect(retrieved?.data).toEqual(expectedVal);
       }
 

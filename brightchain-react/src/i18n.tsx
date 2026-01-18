@@ -1,6 +1,6 @@
 // src/i18n.ts
 /* eslint-disable @nx/enforce-module-boundaries */
-import { StringLanguages } from '@brightchain/brightchain-lib';
+import { LanguageCodes, getCoreLanguageCodes } from '@digitaldefiance/i18n-lib';
 import i18n from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import Backend from 'i18next-http-backend';
@@ -13,12 +13,12 @@ import { environment } from './environments/environment';
     .use(LanguageDetector)
     .use(initReactI18next)
     .init({
-      fallbackLng: StringLanguages.EnglishUS,
+      fallbackLng: LanguageCodes.EN_US,
       debug: environment.debugI18n,
       interpolation: {
         escapeValue: false, // not needed for React
       },
-      supportedLngs: Object.values(StringLanguages),
+      supportedLngs: getCoreLanguageCodes(),
       backend: {
         loadPath: '/api/i18n/{{lng}}',
       },
