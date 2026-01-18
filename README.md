@@ -16,6 +16,7 @@ BrightChain integrates several groundbreaking technologies:
 
 - **Advanced Blockchain Architecture**: Built on Ethereum's keyspace and foundation but engineered without proof-of-work constraints, offering improved efficiency and sustainability
 - **Decentralized Storage**: A peer-to-peer distributed file system enabling secure, resilient data storage across the network
+- **Messaging System**: Secure, decentralized message passing with encryption, routing, and delivery tracking built on the block store
 - **Identity Management**: A sophisticated decentralized identity provider ensuring user privacy and control
 - **Owner-Free File System**: Implementation of OFF System principles for secure resource sharing with legal compliance
 - **Homomorphic Voting System**: Revolutionary cryptographic voting infrastructure utilizing Paillier homomorphic encryption with ECDH-derived keys, enabling secure vote tallying without revealing individual votes
@@ -49,6 +50,7 @@ BrightChain is currently implemented as an NX monorepo, with the core functional
 - **Authentication**: Robust implementation using BIP39/32 and SECP256k1
 - **Encryption**: Advanced ECIES encryption utilizing user-specific keys
 - **Data Integrity**: Verified block-level integrity with XOR functionality
+- **Message Passing**: Complete messaging system with encryption, routing, delivery tracking, and WebSocket events
 - **Homomorphic Voting**: Integrated Paillier homomorphic encryption system with ECDH-to-Paillier key bridge for privacy-preserving vote aggregation
 - **Cross-Platform Cryptography**: Unified cryptographic operations across Node.js and browser environments with deterministic key generation
 - **Modular Architecture**: Extends base cryptographic constants from [@digitaldefiance](https://github.com/Digital-Defiance) libraries, ensuring consistency and reducing duplication
@@ -72,6 +74,7 @@ This architecture ensures:
 BrightChain is currently in pre-alpha stage, with several key components under active development:
 
 - **Core Library**: Near completion with verified data integrity at block level
+- **Messaging System**: Complete implementation with encryption, routing, delivery tracking, and persistence
 - **Block Generation**: Ongoing development of complex generation and reconstruction processes
 - **API Development**: Initial framework established, pending completion of core library features
 - **Quorum Implementation**: Advanced stages of development for document management features
@@ -99,6 +102,7 @@ For comprehensive understanding:
 
 - [BrightChain Summary](./docs/BrightChain%20Summary.md): High-level system overview
 - [Brightchain Writeup](./docs/Brightchain%20Writeup.md): Detailed technical documentation
+- [Messaging System Architecture](./docs/Messaging%20System%20Architecture.md): Message passing and event system design
 
 ## Development Tools
 

@@ -47,3 +47,6 @@ export type * from './tokenUser';
 export type * from './tuple';
 export type * from './tupleConfig';
 export type * from './walletSeed';
+
+// Message passing interfaces
+export type * from './messaging';

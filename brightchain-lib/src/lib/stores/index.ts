@@ -5,3 +5,4 @@ export * from './jsonStore';
 export * from './memoryBlockMetadataStore';
 export * from './memoryBlockStore';
 export * from './simpleStore';
+export * from './messaging';

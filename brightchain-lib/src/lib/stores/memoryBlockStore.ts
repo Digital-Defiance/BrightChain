@@ -379,8 +379,8 @@ export class MemoryBlockStore implements IBlockStore {
 
     // Calculate actual checksums for parity blocks
     const checksumService = ServiceLocator.getServiceProvider().checksumService;
-    const parityBlockIds = parityData.map((parity) => 
-      checksumService.calculateChecksum(new Uint8Array(parity.data)).toHex()
+    const parityBlockIds = parityData.map((parity) =>
+      checksumService.calculateChecksum(new Uint8Array(parity.data)).toHex(),
     );
     if (this.metadataStore.has(keyHex)) {
       await this.metadataStore.update(keyHex, { parityBlockIds });

@@ -296,3 +296,11 @@ export * from './missingValidatedData';
  * Not implemented errors.
  */
 export * from './notImplemented';
+
+// ============================================================================
+// Message Passing Errors
+// ============================================================================
+/**
+ * Message passing system errors.
+ */
+export * from './messaging';

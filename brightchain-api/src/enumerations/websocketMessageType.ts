@@ -32,9 +32,21 @@ export enum HeartbeatMessageType {
 }
 
 /**
+ * Message passing protocol message types
+ */
+export enum MessagePassingType {
+  MESSAGE_SEND = 'message:send',
+  MESSAGE_RECEIVED = 'message:received',
+  MESSAGE_ACK = 'message:ack',
+  MESSAGE_QUERY = 'message:query',
+  EVENT_SUBSCRIBE = 'message:event_subscribe',
+}
+
+/**
  * All WebSocket message types
  */
 export type WebSocketMessageType =
   | DiscoveryMessageType
   | GossipMessageType
-  | HeartbeatMessageType;
+  | HeartbeatMessageType
+  | MessagePassingType;
