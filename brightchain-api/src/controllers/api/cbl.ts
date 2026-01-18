@@ -5,12 +5,13 @@ import {
   IApiMessageResponse,
   routeConfig,
   TypedHandlers,
+  DiskCBLStore,
 } from '@brightchain/brightchain-api-lib';
 import {
   BlockSize,
-  CBLStore,
   ConstituentBlockListBlock,
   StoreError,
+  Checksum,
 } from '@brightchain/brightchain-lib';
 import { ServiceProvider } from '@brightchain/brightchain-lib/lib/services/service.provider';
 import {
@@ -160,7 +161,7 @@ interface CBLHandlers extends TypedHandlers {
  */
 export class CBLController extends BaseController<CBLApiResponse, CBLHandlers> {
   public router: any; // Temporary router property
-  private cblStore: CBLStore<GuidV4>;
+  private cblStore: DiskCBLStore<GuidV4>;
 
   constructor(application: IApplication) {
     super(application);
@@ -175,7 +176,7 @@ export class CBLController extends BaseController<CBLApiResponse, CBLHandlers> {
         : BlockSize.Medium
     ) as BlockSize;
 
-    this.cblStore = new CBLStore<GuidV4>({ storePath, blockSize });
+    this.cblStore = new DiskCBLStore<GuidV4>({ storePath, blockSize });
   }
 
   protected initRouteDefinitions(): void {
@@ -352,7 +353,7 @@ export class CBLController extends BaseController<CBLApiResponse, CBLHandlers> {
       // Store the CBL
       await this.cblStore.set(cblChecksum, cbl);
 
-      const cblId = uint8ArrayToHex(cblChecksum);
+      const cblId = cblChecksum.toHex();
 
       return {
         statusCode: 201,
@@ -414,10 +415,7 @@ export class CBLController extends BaseController<CBLApiResponse, CBLHandlers> {
         this.cblStore.setActiveUser(member);
 
         // Convert hex ID to checksum
-        const checksum = Buffer.from(
-          cblId,
-          'hex',
-        ) as unknown as ChecksumUint8Array;
+        const checksum = Checksum.fromHex(cblId);
 
         // Check if CBL exists
         if (!this.cblStore.has(checksum)) {
@@ -431,8 +429,8 @@ export class CBLController extends BaseController<CBLApiResponse, CBLHandlers> {
         );
 
         // Get addresses as hex strings
-        const blockAddresses = cbl.addresses.map((addr) =>
-          uint8ArrayToHex(addr),
+        const blockAddresses = cbl.addresses.map((addr: Checksum) =>
+          addr.toHex(),
         );
 
         // Get creator ID
@@ -506,10 +504,7 @@ export class CBLController extends BaseController<CBLApiResponse, CBLHandlers> {
       this.cblStore.setActiveUser(member);
 
       // Convert hex ID to checksum
-      const checksum = Buffer.from(
-        cblId,
-        'hex',
-      ) as unknown as ChecksumUint8Array;
+      const checksum = Checksum.fromHex(cblId);
 
       // Check if CBL exists
       if (!this.cblStore.has(checksum)) {
@@ -529,7 +524,7 @@ export class CBLController extends BaseController<CBLApiResponse, CBLHandlers> {
       const blocks: Array<{ address: string; data: string }> = [];
 
       for (const addr of cbl.addresses) {
-        const addressHex = uint8ArrayToHex(addr);
+        const addressHex = addr.toHex();
         // TODO: Fetch actual block data from block store
         // For now, we indicate that block data retrieval is not yet implemented
         blocks.push({
@@ -596,10 +591,7 @@ export class CBLController extends BaseController<CBLApiResponse, CBLHandlers> {
       }
 
       // Convert hex ID to checksum
-      const checksum = Buffer.from(
-        cblId,
-        'hex',
-      ) as unknown as ChecksumUint8Array;
+      const checksum = Checksum.fromHex(cblId);
 
       // Check if CBL exists
       if (!this.cblStore.has(checksum)) {

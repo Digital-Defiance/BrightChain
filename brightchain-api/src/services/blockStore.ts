@@ -1,6 +1,7 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
 import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
+import { Checksum } from '@brightchain/brightchain-lib/lib/types/checksum';
 import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib/lib/stores/diskBlockAsyncStore';
 import { FecServiceFactory } from '@brightchain/brightchain-api-lib/lib/services/fecServiceFactory';
 import { IBlockMetadata, BlockStoreOptions, BrightenResult, IFecService } from '@brightchain/brightchain-lib';
@@ -95,15 +96,13 @@ export class BlockStoreService extends BaseService implements IBlockStore {
 
   async storeBlock(data: Buffer, options?: BlockStoreOptions): Promise<string> {
     const block = new RawDataBlock(this.store.blockSize, data);
-    const blockId = Buffer.from(block.idChecksum).toString('hex');
+    const blockId = block.idChecksum.toHex();
     await this.store.setData(block, options);
     return blockId;
   }
 
   async getBlock(blockId: string): Promise<Buffer> {
-    const block = await this.store.getData(
-      Buffer.from(blockId, 'hex') as unknown as import('@digitaldefiance/ecies-lib').ChecksumUint8Array
-    );
+    const block = await this.store.getData(Checksum.fromHex(blockId));
     return Buffer.from(block.data);
   }
 

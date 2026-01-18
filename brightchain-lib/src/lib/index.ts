@@ -88,6 +88,7 @@ export * from './interfaces';
  * Block-related classes and utilities.
  */
 export * from './blocks';
+export * from './encryptedBlockMetadata';
 
 /**
  * Service implementations for BrightChain operations.
@@ -126,13 +127,8 @@ export * from './access';
 export * from './keys';
 
 // ============================================================================
-// Models and Schemas
+// Schemas
 // ============================================================================
-/**
- * Data models.
- */
-export * from './models';
-
 /**
  * Validation schemas.
  */

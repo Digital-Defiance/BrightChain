@@ -1,5 +1,5 @@
 /* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
-import { IRequestUser, StringLanguages } from '@brightchain/brightchain-lib';
+import { IRequestUser } from '@brightchain/brightchain-lib';
 
 // Temporary interface
 interface IUserDocument {
@@ -24,8 +24,7 @@ export class RequestUserService {
       timezone: userDoc.timezone || 'UTC',
       lastLogin: userDoc.lastLogin,
       emailVerified: userDoc.emailVerified || false,
-      siteLanguage:
-        (userDoc.siteLanguage as StringLanguages) || StringLanguages.EnglishUS,
+      siteLanguage: userDoc.siteLanguage || 'en-US',
       roles: [], // Placeholder
     };
   }

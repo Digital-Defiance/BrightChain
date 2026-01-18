@@ -120,6 +120,7 @@ export default defineConfig({
       ignoreDynamicRequires: true,
     },
     rollupOptions: {
+      external: ['fs', 'path', 'crypto'],
       plugins: [
         // Apply aliases during rollup build phase too
         alias({ entries: nobleAliases }),

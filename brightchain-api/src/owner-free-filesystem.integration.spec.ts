@@ -198,12 +198,12 @@ describe('Owner Free Filesystem (OFF) Integration Tests', () => {
         // Store random blocks
         for (const randomBlock of randomBlockSets[i]) {
           await memoryStore.put(randomBlock.idChecksum, randomBlock.data);
-          recipe.push(uint8ArrayToHex(randomBlock.idChecksum));
+          recipe.push(uint8ArrayToHex(randomBlock.idChecksum.toUint8Array()));
         }
         
         // Store whitened block
         await memoryStore.put(whitenedBlocks[i].idChecksum, whitenedBlocks[i].data);
-        recipe.push(uint8ArrayToHex(whitenedBlocks[i].idChecksum));
+        recipe.push(uint8ArrayToHex(whitenedBlocks[i].idChecksum.toUint8Array()));
       }
       
       // Now reconstruct the document using only the recipe
@@ -337,10 +337,10 @@ describe('Owner Free Filesystem (OFF) Integration Tests', () => {
       
       // The recipe is just the list of can types: A, B, C, Z
       const recipe = [
-        uint8ArrayToHex(A.idChecksum),
-        uint8ArrayToHex(B.idChecksum),
-        uint8ArrayToHex(C.idChecksum),
-        uint8ArrayToHex(zBlock.idChecksum),
+        uint8ArrayToHex(A.idChecksum.toUint8Array()),
+        uint8ArrayToHex(B.idChecksum.toUint8Array()),
+        uint8ArrayToHex(C.idChecksum.toUint8Array()),
+        uint8ArrayToHex(zBlock.idChecksum.toUint8Array()),
       ];
       
       // Anyone can ask for these cans from the market
@@ -418,8 +418,8 @@ describe('Owner Free Filesystem (OFF) Integration Tests', () => {
       
       // Create CBL-like recipe (magnet link format)
       const recipe = [
-        ...randoms.map(r => uint8ArrayToHex(r.idChecksum)),
-        uint8ArrayToHex(whitenedBlock.idChecksum),
+        ...randoms.map(r => uint8ArrayToHex(r.idChecksum.toUint8Array())),
+        uint8ArrayToHex(whitenedBlock.idChecksum.toUint8Array()),
       ];
       const magnetLink = `brightchain://block?recipe=${recipe.join('+')}`;
       

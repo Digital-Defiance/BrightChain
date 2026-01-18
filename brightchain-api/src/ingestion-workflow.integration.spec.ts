@@ -137,23 +137,23 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
       const primeWhitenedBlock = new WhitenedBlock(blockSize, whitenedData, whitenedChecksum);
       
       // Step 4: Store all blocks to memory store
-      const storedBlockIds: ChecksumUint8Array[] = [];
+      const storedBlockIds: string[] = [];
       
       // Store whiteners
       for (const whitener of whiteners) {
         await memoryStore.put(whitener.idChecksum, whitener.data);
-        storedBlockIds.push(whitener.idChecksum);
+        storedBlockIds.push(uint8ArrayToHex(whitener.idChecksum.toUint8Array()));
       }
       
       // Store prime whitened block
       await memoryStore.put(primeWhitenedBlock.idChecksum, primeWhitenedBlock.data);
-      storedBlockIds.push(primeWhitenedBlock.idChecksum);
+      storedBlockIds.push(uint8ArrayToHex(primeWhitenedBlock.idChecksum.toUint8Array()));
       
       // Step 5: Create CBL (Constituent Block List) - the recipe
       const cbl = {
-        blockIds: storedBlockIds.map(id => uint8ArrayToHex(id)),
+        blockIds: storedBlockIds,
         originalLength: sourceData.length,
-        originalChecksum: uint8ArrayToHex(sourceChecksum),
+        originalChecksum: uint8ArrayToHex(sourceChecksum.toUint8Array()),
         blockSize,
         tupleSize: TUPLE.SIZE,
         createdAt: new Date().toISOString(),
@@ -198,7 +198,7 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
       
       // Step 5: Verify integrity
       const reconstructedChecksum = ServiceLocator.getServiceProvider().checksumService.calculateChecksum(reconstructedSource);
-      expect(uint8ArrayToHex(reconstructedChecksum)).toBe(retrievedCbl.originalChecksum);
+      expect(uint8ArrayToHex(reconstructedChecksum.toUint8Array())).toBe(retrievedCbl.originalChecksum);
       
       // Step 6: Extract original document
       const reconstructedDocument = JSON.parse(
@@ -285,11 +285,11 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
         
         for (const whitener of whiteners) {
           await memoryStore.put(whitener.idChecksum, whitener.data);
-          tupleBlockIds.push(uint8ArrayToHex(whitener.idChecksum));
+          tupleBlockIds.push(uint8ArrayToHex(whitener.idChecksum.toUint8Array()));
         }
         
         await memoryStore.put(primeWhitened.idChecksum, primeWhitened.data);
-        tupleBlockIds.push(uint8ArrayToHex(primeWhitened.idChecksum));
+        tupleBlockIds.push(uint8ArrayToHex(primeWhitened.idChecksum.toUint8Array()));
         
         allBlockIds.push(tupleBlockIds);
       }
@@ -300,7 +300,7 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
         blockTuples: allBlockIds,
         originalLength: fullDocumentData.length,
         originalChecksum: uint8ArrayToHex(
-          ServiceLocator.getServiceProvider().checksumService.calculateChecksum(fullDocumentData)
+          ServiceLocator.getServiceProvider().checksumService.calculateChecksum(fullDocumentData).toUint8Array()
         ),
         numBlocks,
         blockSize,
@@ -356,7 +356,7 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
       const reconstructedChecksum = ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
         reconstructedDocument
       );
-      expect(uint8ArrayToHex(reconstructedChecksum)).toBe(retrievedCbl.originalChecksum);
+      expect(uint8ArrayToHex(reconstructedChecksum.toUint8Array())).toBe(retrievedCbl.originalChecksum);
       
       // Parse and verify
       const parsedDoc = JSON.parse(reconstructedDocument.toString());
@@ -401,35 +401,35 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
       const primeWhitened = new WhitenedBlock(blockSize, whitenedData, whitenedChecksum);
       
       // Store to disk using DiskBlockAsyncStore
-      const storedBlockIds: ChecksumUint8Array[] = [];
+      const storedBlockChecksums: import('@brightchain/brightchain-lib').Checksum[] = [];
       
       for (const whitener of whiteners) {
         await diskStore.setData(whitener);
-        storedBlockIds.push(whitener.idChecksum);
+        storedBlockChecksums.push(whitener.idChecksum);
       }
       
       await diskStore.setData(primeWhitened);
-      storedBlockIds.push(primeWhitened.idChecksum);
+      storedBlockChecksums.push(primeWhitened.idChecksum);
       
       // Create CBL
       const cbl = {
-        blockIds: storedBlockIds.map(id => uint8ArrayToHex(id)),
+        blockIds: storedBlockChecksums.map(c => uint8ArrayToHex(c.toUint8Array())),
         originalLength: sourceData.length,
         storage: 'disk',
         storePath: tempDir,
       };
       
       // Verify blocks exist on disk
-      for (const id of storedBlockIds) {
-        expect(await diskStore.has(id)).toBe(true);
+      for (const checksum of storedBlockChecksums) {
+        expect(await diskStore.has(checksum)).toBe(true);
       }
       
       // Reconstruct
       const retrievedWhiteners: RawDataBlock[] = [];
       for (let i = 0; i < TUPLE.SIZE - 1; i++) {
-        retrievedWhiteners.push(await diskStore.getData(storedBlockIds[i]));
+        retrievedWhiteners.push(await diskStore.getData(storedBlockChecksums[i]));
       }
-      const retrievedPrime = await diskStore.getData(storedBlockIds[TUPLE.SIZE - 1]);
+      const retrievedPrime = await diskStore.getData(storedBlockChecksums[TUPLE.SIZE - 1]);
       
       let reconstructed = Buffer.from(retrievedPrime.data);
       for (const whitener of retrievedWhiteners) {
@@ -530,7 +530,7 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
       for (const w of whiteners) await memoryStore.put(w.idChecksum, w.data);
       await memoryStore.put(prime.idChecksum, prime.data);
       
-      const cblIds = [...whiteners.map(w => uint8ArrayToHex(w.idChecksum)), uint8ArrayToHex(prime.idChecksum)];
+      const cblIds = [...whiteners.map(w => uint8ArrayToHex(w.idChecksum.toUint8Array())), uint8ArrayToHex(prime.idChecksum.toUint8Array())];
       
       // Full reconstruction
       const retrieved = await Promise.all(cblIds.map(id => memoryStore.get(id)));

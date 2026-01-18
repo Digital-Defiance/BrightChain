@@ -2,7 +2,7 @@ import {
   MessageCBLService,
   IMessageMetadataStore,
   MessageDeliveryStatus,
-  ICreateMessageOptions,
+  IMessageCBLOptions as ICreateMessageOptions,
 } from '@brightchain/brightchain-lib';
 import { EventNotificationSystem, MessageEventType } from './eventNotificationSystem';
 import { WebSocketMessageServer } from './webSocketMessageServer';
@@ -28,8 +28,12 @@ export class MessagePassingService {
     senderId: string,
     options: ICreateMessageOptions
   ): Promise<string> {
-    const messageId = await this.messageCBL.createMessage(content, senderId, options);
-    const metadata = await this.metadataStore.getMetadata(messageId);
+    const { messageId } = await this.messageCBL.createMessage(
+      new Uint8Array(content),
+      senderId as any,
+      options
+    );
+    const metadata = await this.messageCBL.getMessageMetadata(messageId);
     
     if (metadata) {
       this.eventSystem.emit(MessageEventType.MESSAGE_STORED, metadata);
@@ -57,7 +61,8 @@ export class MessagePassingService {
    * Get message content
    */
   async getMessage(messageId: string): Promise<Buffer | null> {
-    return this.messageCBL.getMessageContent(messageId);
+    const content = await this.messageCBL.getMessageContent(messageId);
+    return content ? Buffer.from(content) : null;
   }
 
   /**
@@ -71,18 +76,17 @@ export class MessagePassingService {
    * Delete message
    */
   async deleteMessage(messageId: string): Promise<void> {
-    const metadata = await this.metadataStore.getMetadata(messageId);
+    const metadata = await this.messageCBL.getMessageMetadata(messageId);
     if (metadata && metadata.cblBlockIds) {
       for (const blockId of metadata.cblBlockIds) {
         await this.messageCBL['blockStore'].deleteBlock(blockId);
       }
     }
-    await this.metadataStore.deleteMetadata(messageId);
   }
 
   private setupHandlers(): void {
     this.wsServer.onMessage(async (nodeId, messageId) => {
-      const metadata = await this.metadataStore.getMetadata(messageId);
+      const metadata = await this.messageCBL.getMessageMetadata(messageId);
       if (metadata) {
         this.eventSystem.emit(MessageEventType.MESSAGE_RECEIVED, metadata);
         await this.wsServer.sendToNode(nodeId, messageId);
@@ -97,10 +101,10 @@ export class MessagePassingService {
         status as MessageDeliveryStatus
       );
       
-      const metadata = await this.metadataStore.getMetadata(messageId);
+      const metadata = await this.messageCBL.getMessageMetadata(messageId);
       if (metadata) {
         const allDelivered = metadata.recipients?.every(
-          r => metadata.deliveryStatus?.get(r) === MessageDeliveryStatus.DELIVERED
+          (r: string) => metadata.deliveryStatus?.get(r) === MessageDeliveryStatus.DELIVERED
         );
         
         if (allDelivered) {

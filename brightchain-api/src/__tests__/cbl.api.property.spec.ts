@@ -99,7 +99,7 @@ describe('CBL API Round-Trip Property Tests', () => {
                 const checksum = checksumService.calculateChecksum(
                   Buffer.from(`test-block-${Date.now()}-${i}`),
                 );
-                blockAddresses.push(Buffer.from(checksum));
+                blockAddresses.push(Buffer.from(checksum.toBuffer()));
               }
 
               // Create CBL header and data using Buffer.concat like the existing tests
@@ -149,7 +149,7 @@ describe('CBL API Round-Trip Property Tests', () => {
               for (let i = 0; i < blockAddresses.length; i++) {
                 expect(
                   arraysEqual(
-                    new Uint8Array(retrievedAddresses[i]),
+                    new Uint8Array(retrievedAddresses[i].toUint8Array()),
                     new Uint8Array(blockAddresses[i]),
                   ),
                 ).toBe(true);
@@ -208,7 +208,7 @@ describe('CBL API Round-Trip Property Tests', () => {
                 const checksum = checksumService.calculateChecksum(
                   Buffer.from(`test-block-${Date.now()}-${i}`),
                 );
-                blockAddresses.push(Buffer.from(checksum));
+                blockAddresses.push(Buffer.from(checksum.toBuffer()));
               }
 
               // Create CBL

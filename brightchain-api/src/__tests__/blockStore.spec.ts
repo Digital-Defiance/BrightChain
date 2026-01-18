@@ -59,7 +59,7 @@ describe('BlockStoreService', () => {
     expect(stored.equals(payload)).toBe(true);
 
     // Verify the ID matches the checksum that the block class derives
-    const expectedId = Buffer.from(new RawDataBlock(blockSize, payload).idChecksum).toString('hex');
+    const expectedId = Buffer.from(new RawDataBlock(blockSize, payload).idChecksum.toBuffer()).toString('hex');
     expect(blockId).toBe(expectedId);
 
     await fs.rm(tmpDir, { recursive: true, force: true });

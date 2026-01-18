@@ -1,6 +1,5 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-import { StringLanguage } from '@brightchain/brightchain-lib';
-import { GlobalActiveContext, IActiveContext } from '@digitaldefiance/i18n-lib';
+import { CoreLanguageCode, GlobalActiveContext, IActiveContext } from '@digitaldefiance/i18n-lib';
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -13,8 +12,8 @@ const root = ReactDOM.createRoot(
 );
 
 const context = GlobalActiveContext.getInstance<
-  StringLanguage,
-  IActiveContext<StringLanguage>
+  CoreLanguageCode,
+  IActiveContext<CoreLanguageCode>
 >();
 context.languageContextSpace = 'user';
 
