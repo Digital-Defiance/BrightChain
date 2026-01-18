@@ -10,7 +10,7 @@ export function createMessageRouter(service: MessagePassingService): Router {
    */
   router.post('/messages', async (req: Request, res: Response): Promise<void> => {
     try {
-      const { content, senderId, recipients, messageType, priority, expiration } = req.body;
+      const { content, senderId, recipients, messageType, priority, encryptionScheme } = req.body;
 
       if (!content || !senderId || !messageType) {
         res.status(400).json({ error: 'Missing required fields' });
@@ -19,10 +19,11 @@ export function createMessageRouter(service: MessagePassingService): Router {
 
       const contentBuffer = Buffer.from(content, 'base64');
       const messageId = await service.sendMessage(contentBuffer, senderId, {
-        recipients,
+        recipients: recipients || [],
         messageType,
         priority: priority || MessagePriority.NORMAL,
-        expiration: expiration ? new Date(expiration) : undefined,
+        senderId,
+        encryptionScheme: encryptionScheme || 0,
       });
 
       res.status(201).json({ messageId });

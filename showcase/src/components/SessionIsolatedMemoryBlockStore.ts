@@ -8,11 +8,6 @@
  * 4. Isolating data between different sessions
  */
 
-import {
-  ChecksumUint8Array,
-  uint8ArrayToHex,
-} from '@digitaldefiance/ecies-lib';
-
 // Import from the main brightchain-lib package
 import { 
   BaseBlock,
@@ -20,24 +15,35 @@ import {
   createBlockHandle,
   BlockHandle,
   BlockSize,
-  IBlockStore
+  IBlockStore,
+  Checksum,
 } from '@brightchain/brightchain-lib';
 
 /**
  * Custom error for store operations
  */
 class SessionStoreError extends Error {
-  constructor(message: string, public readonly context?: Record<string, any>) {
+  constructor(message: string, public readonly context?: Record<string, unknown>) {
     super(message);
     this.name = 'SessionStoreError';
   }
 }
 
 /**
+ * Convert a Checksum or string to hex string key
+ */
+function toHexKey(key: Checksum | string): string {
+  if (typeof key === 'string') {
+    return key;
+  }
+  return key.toHex();
+}
+
+/**
  * Session-isolated memory block store that properly handles page refreshes
  * and prevents cross-session data access
  */
-export class SessionIsolatedMemoryBlockStore implements IBlockStore {
+export class SessionIsolatedMemoryBlockStore implements Partial<IBlockStore> {
   private readonly blocks = new Map<string, RawDataBlock>();
   private readonly _blockSize: BlockSize;
   private readonly _sessionId: string;
@@ -85,8 +91,8 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
   /**
    * Check if a block exists
    */
-  public async has(key: ChecksumUint8Array): Promise<boolean> {
-    const keyHex = uint8ArrayToHex(key);
+  public async has(key: Checksum | string): Promise<boolean> {
+    const keyHex = toHexKey(key);
     const exists = this.blocks.has(keyHex);
     
     if (!exists) {
@@ -99,8 +105,8 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
   /**
    * Get a block's data
    */
-  public async getData(key: ChecksumUint8Array): Promise<RawDataBlock> {
-    const keyHex = uint8ArrayToHex(key);
+  public async getData(key: Checksum): Promise<RawDataBlock> {
+    const keyHex = toHexKey(key);
     const block = this.blocks.get(keyHex);
     
     if (!block) {
@@ -128,7 +134,7 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
         `Block size ${block.blockSize} does not match store size ${this._blockSize}`);
     }
 
-    const keyHex = uint8ArrayToHex(block.idChecksum);
+    const keyHex = toHexKey(block.idChecksum);
     
     if (this.blocks.has(keyHex)) {
       throw new SessionStoreError(
@@ -149,8 +155,8 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
   /**
    * Delete a block's data
    */
-  public async deleteData(key: ChecksumUint8Array): Promise<void> {
-    const keyHex = uint8ArrayToHex(key);
+  public async deleteData(key: Checksum): Promise<void> {
+    const keyHex = toHexKey(key);
     
     if (!this.blocks.has(keyHex)) {
       throw new SessionStoreError(
@@ -164,20 +170,16 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
   /**
    * Get random block checksums from the store
    */
-  public async getRandomBlocks(count: number): Promise<ChecksumUint8Array[]> {
+  public async getRandomBlocks(count: number): Promise<Checksum[]> {
     const allKeys = Array.from(this.blocks.keys());
-    const result: ChecksumUint8Array[] = [];
+    const result: Checksum[] = [];
 
     const actualCount = Math.min(count, allKeys.length);
     const shuffled = [...allKeys].sort(() => Math.random() - 0.5);
 
     for (let i = 0; i < actualCount; i++) {
       const keyHex = shuffled[i];
-      const keyBytes = new Uint8Array(keyHex.length / 2);
-      for (let j = 0; j < keyBytes.length; j++) {
-        keyBytes[j] = parseInt(keyHex.substr(j * 2, 2), 16);
-      }
-      result.push(keyBytes as ChecksumUint8Array);
+      result.push(Checksum.fromHex(keyHex));
     }
 
     return result;
@@ -186,7 +188,7 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
   /**
    * Store a block's data (alias for setData)
    */
-  public async put(key: ChecksumUint8Array, data: Uint8Array): Promise<void> {
+  public async put(key: Checksum | string, data: Uint8Array): Promise<void> {
     const block = new RawDataBlock(this._blockSize, data);
     await this.setData(block);
   }
@@ -194,8 +196,9 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
   /**
    * Delete a block (alias for deleteData)
    */
-  public async delete(key: ChecksumUint8Array): Promise<void> {
-    await this.deleteData(key);
+  public async delete(key: Checksum | string): Promise<void> {
+    const checksum = typeof key === 'string' ? Checksum.fromHex(key) : key;
+    await this.deleteData(checksum);
   }
 
   /**
@@ -224,8 +227,8 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
   /**
    * Get a handle to a block
    */
-  public get<T extends BaseBlock>(key: ChecksumUint8Array): BlockHandle<T> {
-    const keyHex = uint8ArrayToHex(key);
+  public get<T extends BaseBlock>(key: Checksum | string): BlockHandle<T> {
+    const keyHex = toHexKey(key);
     const block = this.blocks.get(keyHex);
     
     if (!block) {
@@ -237,13 +240,13 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
     }
     
     return createBlockHandle(
-      RawDataBlock as any,
+      RawDataBlock as unknown as new (...args: unknown[]) => T,
       block.blockSize,
       block.data,
-      key,
+      block.idChecksum,
       block.canRead,
       block.canPersist,
-    ) as BlockHandle<T>;
+    );
   }
 
   /**

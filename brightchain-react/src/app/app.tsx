@@ -1,6 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { constants } from '@brightchain/brightchain-lib';
+import { CONSTANTS } from '@brightchain/brightchain-lib';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import {
   ApiAccess,
@@ -78,7 +78,7 @@ const AuthProviderWithNavigation: FC<{ children: React.ReactNode }> = ({
     >
       <AuthProvider
         baseUrl={API_BASE_URL}
-        constants={constants.CONSTANTS as unknown as IConstants}
+        constants={CONSTANTS as unknown as IConstants}
         eciesConfig={eciesConfig}
         onLogout={handleLogout}
       >

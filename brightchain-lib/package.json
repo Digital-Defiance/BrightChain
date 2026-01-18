@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightchain-lib",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "BrightChain core library - browser-compatible blockchain storage",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -43,6 +43,7 @@
   },
   "scripts": {
     "build:dev": "npx nx build brightchain-lib --configuration=development",
+    "build:prod": "npx nx build brightchain-lib --configuration=production",
     "lint": "npx eslint '**/*.{ts,tsx}'",
     "lint:fix": "npx eslint '**/*.{ts,tsx}' --fix",
     "test:dev:16": "NODE_ENV=development npx nx test brightchain-lib --maxWorkers=16 --parallel=16 --configuration=development --outputStyle=stream 2>&1",

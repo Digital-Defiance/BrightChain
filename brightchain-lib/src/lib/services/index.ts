@@ -5,6 +5,7 @@ export * from './checksum.service';
 export * from './fec.service';
 export * from './member';
 export * from './memberStore';
+export * from './messaging';
 export * from './quorumService';
 export * from './sealing.service';
 export * from './service.provider';

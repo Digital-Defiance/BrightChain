@@ -6,16 +6,22 @@ import {
   ChecksumService,
   ServiceLocator,
   uint8ArrayToHex,
-  BlockService,
-  Member
+  BlockService
 } from '@brightchain/brightchain-lib';
+import { MemberType } from '@brightchain/brightchain-lib';
+import { Member, EmailString } from '@digitaldefiance/ecies-lib';
 
 // Initialize services
 const checksumService = new ChecksumService();
 ServiceLocator.setServiceProvider({ checksumService } as any);
 
 // Create a simple member for demo
-const demoMember = new Member('demo-user', 'demo@example.com');
+const demoMember = Member.newMember(
+  ServiceLocator.getServiceProvider().eciesService,
+  MemberType.User,
+  'demo-user',
+  new EmailString('demo@example.com')
+).member;
 
 interface SoupCan {
   id: string;

@@ -5,10 +5,16 @@
  * a session-isolated memory block store that properly clears on page refresh.
  */
 
-import { BlockSize, FileReceipt, BlockInfo, initializeBrightChain } from '@brightchain/brightchain-lib';
+import { BlockSize, FileReceipt, BlockInfo, initializeBrightChain, Checksum } from '@brightchain/brightchain-lib';
 import { SessionIsolatedMemoryBlockStore } from './SessionIsolatedMemoryBlockStore';
 import { RawDataBlock } from '@brightchain/brightchain-lib';
-import { uint8ArrayToHex, ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
+
+/**
+ * Convert a Uint8Array to hex string
+ */
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes, (byte: number) => byte.toString(16).padStart(2, '0')).join('');
+}
 
 /**
  * BrightChain implementation with session isolation
@@ -58,7 +64,7 @@ export class SessionIsolatedBrightChain {
       await this.blockStore.setData(block);
 
       blocks.push({
-        id: uint8ArrayToHex(block.idChecksum),
+        id: block.idChecksum.toHex(),
         checksum: block.idChecksum,
         size: chunk.length,
         index: blocks.length,
@@ -66,7 +72,7 @@ export class SessionIsolatedBrightChain {
     }
 
     const cblData = this.createCBL(blocks, fileData.length, fileName);
-    const receiptId = uint8ArrayToHex(
+    const receiptId = bytesToHex(
       new Uint8Array(32).map(() => Math.floor(Math.random() * 256)),
     );
 
@@ -188,23 +194,16 @@ export class SessionIsolatedBrightChain {
       const cblText = new TextDecoder().decode(cblData);
       const cblJson = JSON.parse(cblText);
 
-      const blocks: BlockInfo[] = cblJson.blocks.map((b: any, index: number) => {
-        // Convert hex string to Uint8Array
-        const hexStr = b.id;
-        const bytes = new Uint8Array(hexStr.length / 2);
-        for (let i = 0; i < hexStr.length; i += 2) {
-          bytes[i / 2] = parseInt(hexStr.substr(i, 2), 16);
-        }
-        
+      const blocks: BlockInfo[] = cblJson.blocks.map((b: { id: string; size: number }, index: number) => {
         return {
           id: b.id,
-          checksum: bytes as ChecksumUint8Array,
+          checksum: Checksum.fromHex(b.id),
           size: b.size,
           index,
         };
       });
 
-      const receiptId = uint8ArrayToHex(
+      const receiptId = bytesToHex(
         new Uint8Array(32).map(() => Math.floor(Math.random() * 256)),
       );
 
@@ -250,15 +249,9 @@ export class SessionIsolatedBrightChain {
         const [blockId, sizeStr] = pair.split(':');
         const size = parseInt(sizeStr, 10);
         
-        // Convert hex string to Uint8Array for checksum
-        const bytes = new Uint8Array(blockId.length / 2);
-        for (let i = 0; i < blockId.length; i += 2) {
-          bytes[i / 2] = parseInt(blockId.substr(i, 2), 16);
-        }
-        
         return {
           id: blockId,
-          checksum: bytes as ChecksumUint8Array,
+          checksum: Checksum.fromHex(blockId),
           size,
           index,
         };

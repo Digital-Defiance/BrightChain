@@ -22,7 +22,7 @@ interface SoupCan {
 }
 
 export const SimpleSoupDemo: React.FC = () => {
-  const [blockStore] = useState(() => new MemoryBlockStore({ blockSize: BlockSize.Small }));
+  const [blockStore] = useState(() => new MemoryBlockStore(BlockSize.Small));
   const [message, setMessage] = useState('Hello BrightChain!');
   const [soupCans, setSoupCans] = useState<SoupCan[]>([]);
   const [recipe, setRecipe] = useState<string[]>([]);
@@ -78,7 +78,7 @@ export const SimpleSoupDemo: React.FC = () => {
       }
 
       // 3. XOR original with all whiteners to create whitened block
-      let whitenedData = new Uint8Array(messageData);
+      let whitenedData: Uint8Array = new Uint8Array(messageData);
       for (const whitener of whiteners) {
         whitenedData = xorArrays(whitenedData, whitener.data);
       }

@@ -71,7 +71,7 @@ describe('CBL Serialization Round-Trip Property Tests', () => {
               const checksum = checksumService.calculateChecksum(
                 Buffer.from(`test-block-${Date.now()}-${Math.random()}-${i}`),
               );
-              blockAddresses.push(Buffer.from(checksum));
+              blockAddresses.push(Buffer.from(checksum.toBuffer()));
             }
 
             // Create CBL header and data
@@ -118,8 +118,8 @@ describe('CBL Serialization Round-Trip Property Tests', () => {
             for (let i = 0; i < originalAddresses.length; i++) {
               expect(
                 arraysEqual(
-                  new Uint8Array(deserializedAddresses[i]),
-                  new Uint8Array(originalAddresses[i]),
+                  new Uint8Array(deserializedAddresses[i].toUint8Array()),
+                  new Uint8Array(originalAddresses[i].toUint8Array()),
                 ),
               ).toBe(true);
             }
@@ -151,8 +151,8 @@ describe('CBL Serialization Round-Trip Property Tests', () => {
             expect(deserializedCbl.blockSize).toBe(originalCbl.blockSize);
 
             // Verify checksum is preserved
-            expect(uint8ArrayToHex(deserializedCbl.idChecksum)).toBe(
-              uint8ArrayToHex(originalCbl.idChecksum),
+            expect(uint8ArrayToHex(deserializedCbl.idChecksum.toUint8Array())).toBe(
+              uint8ArrayToHex(originalCbl.idChecksum.toUint8Array()),
             );
           },
         ),
@@ -182,7 +182,7 @@ describe('CBL Serialization Round-Trip Property Tests', () => {
               const checksum = checksumService.calculateChecksum(
                 Buffer.from(`test-block-${Date.now()}-${Math.random()}-${i}`),
               );
-              blockAddresses.push(Buffer.from(checksum));
+              blockAddresses.push(Buffer.from(checksum.toBuffer()));
             }
 
             // Create CBL
@@ -249,7 +249,7 @@ describe('CBL Serialization Round-Trip Property Tests', () => {
               const checksum = checksumService.calculateChecksum(
                 Buffer.from(`test-block-${Date.now()}-${Math.random()}-${i}`),
               );
-              blockAddresses.push(Buffer.from(checksum));
+              blockAddresses.push(Buffer.from(checksum.toBuffer()));
             }
 
             // Create CBL
@@ -287,7 +287,7 @@ describe('CBL Serialization Round-Trip Property Tests', () => {
             for (let i = 0; i < blockAddresses.length; i++) {
               expect(
                 arraysEqual(
-                  new Uint8Array(extractedAddresses[i]),
+                  new Uint8Array(extractedAddresses[i].toUint8Array()),
                   new Uint8Array(blockAddresses[i]),
                 ),
               ).toBe(true);

@@ -2,6 +2,20 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
+// Mock ecies-lib to prevent i18n-lib initialization issues
+jest.mock('@digitaldefiance/ecies-lib', () => ({
+  IECIESConfig: {},
+  Member: {
+    newMember: jest.fn(),
+  },
+  EmailString: jest.fn(),
+}));
+
+// Mock BrightChainSoupDemo to avoid module-level code execution
+jest.mock('./components/BrightChainSoupDemo', () => ({
+  BrightChainSoupDemo: () => <div data-testid="soup-demo">BrightChainSoupDemo Mock</div>,
+}));
+
 // Mock brightchain-lib to prevent i18n initialization
 jest.mock('@brightchain/brightchain-lib', () => ({
   constants: { CONSTANTS: {} },

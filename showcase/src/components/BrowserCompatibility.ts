@@ -446,8 +446,13 @@ export class BrowserCompatibility {
     const report = this.generateReport();
     
     console.group('Browser Compatibility Report');
-    console.log('Browser:', report.browser);
-    console.log('Features:', report.features);
+    console.table({
+      Browser: report.browser.name,
+      Version: report.browser.version,
+      Engine: report.browser.engine,
+      Platform: report.browser.platform,
+      Mobile: report.browser.isMobile
+    });
     
     if (report.warnings.length > 0) {
       console.warn('Warnings:', report.warnings);
@@ -462,8 +467,8 @@ export class BrowserCompatibility {
     }
     
     console.log('Applied Polyfills:', this.getAppliedPolyfills());
-    console.log('Recommended Animation Strategy:', this.getRecommendedAnimationStrategy());
-    console.log('Recommended Graphics Strategy:', this.getRecommendedGraphicsStrategy());
+    console.log('Animation Strategy:', this.getRecommendedAnimationStrategy());
+    console.log('Graphics Strategy:', this.getRecommendedGraphicsStrategy());
     console.groupEnd();
   }
 }
