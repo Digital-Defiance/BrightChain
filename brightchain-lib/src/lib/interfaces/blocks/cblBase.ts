@@ -1,8 +1,8 @@
 import {
-  ChecksumUint8Array,
   SignatureUint8Array,
   type PlatformID,
 } from '@digitaldefiance/ecies-lib';
+import { Checksum } from '../../types/checksum';
 import { IEphemeralBlock } from './ephemeral';
 
 /**
@@ -47,7 +47,7 @@ export interface ICBLCore<
    * 2. Data retrieval
    * 3. Integrity verification
    */
-  get addresses(): Array<ChecksumUint8Array>;
+  get addresses(): Array<Checksum>;
 
   /**
    * Cryptographic signature of the creator.

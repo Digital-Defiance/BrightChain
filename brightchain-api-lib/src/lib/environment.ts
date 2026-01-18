@@ -1,12 +1,12 @@
 import { SecureString } from '@digitaldefiance/ecies-lib';
 import { Environment as BaseEnvironment } from '@digitaldefiance/node-express-suite';
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { BlockSize } from '@brightchain/brightchain-lib';
 import { join } from 'path';
 import { Constants } from './constants';
 import { IEnvironment } from './interfaces/environment';
 import { IEnvironmentAws } from './interfaces/environment-aws';
 import { DefaultBackendIdType } from './shared-types';
-import { BlockSize } from '@brightchain/brightchain-lib';
 
 export class Environment
   extends BaseEnvironment<DefaultBackendIdType>

@@ -12,7 +12,9 @@ export type HydratedDocument<T> = T & {
   toJSON(): T;
 };
 
-function wrapDocument<T extends DocumentRecord>(doc: T | null): HydratedDocument<T> | null {
+function wrapDocument<T extends DocumentRecord>(
+  doc: T | null,
+): HydratedDocument<T> | null {
   if (!doc) return null;
   const base = { ...doc } as T;
   return Object.assign(base, {
@@ -21,7 +23,10 @@ function wrapDocument<T extends DocumentRecord>(doc: T | null): HydratedDocument
   });
 }
 
-class QueryWrapper<TIn extends QueryResultType, TOut extends QueryResultType> implements QueryBuilder<TOut> {
+class QueryWrapper<
+  TIn extends QueryResultType,
+  TOut extends QueryResultType,
+> implements QueryBuilder<TOut> {
   constructor(
     private readonly inner: QueryBuilder<TIn>,
     private readonly mapper: (value: TIn | null) => TOut | null,
@@ -74,14 +79,23 @@ class QueryWrapper<TIn extends QueryResultType, TOut extends QueryResultType> im
   }
 
   then<TResult1 = TOut | null, TResult2 = never>(
-    onfulfilled?: ((value: TOut | null) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+    onfulfilled?:
+      | ((value: TOut | null) => TResult1 | PromiseLike<TResult1>)
+      | undefined
+      | null,
+    onrejected?:
+      | ((reason: unknown) => TResult2 | PromiseLike<TResult2>)
+      | undefined
+      | null,
   ): Promise<TResult1 | TResult2> {
     return this.exec().then(onfulfilled, onrejected);
   }
 }
 
-class QueryArrayWrapper<TIn extends DocumentRecord, TOut extends DocumentRecord> implements QueryBuilder<TOut[]> {
+class QueryArrayWrapper<
+  TIn extends DocumentRecord,
+  TOut extends DocumentRecord,
+> implements QueryBuilder<TOut[]> {
   constructor(
     private readonly inner: QueryBuilder<TIn[]>,
     private readonly mapper: (value: TIn) => TOut,
@@ -135,26 +149,55 @@ class QueryArrayWrapper<TIn extends DocumentRecord, TOut extends DocumentRecord>
   }
 
   then<TResult1 = TOut[] | null, TResult2 = never>(
-    onfulfilled?: ((value: TOut[] | null) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+    onfulfilled?:
+      | ((value: TOut[] | null) => TResult1 | PromiseLike<TResult1>)
+      | undefined
+      | null,
+    onrejected?:
+      | ((reason: unknown) => TResult2 | PromiseLike<TResult2>)
+      | undefined
+      | null,
   ): Promise<TResult1 | TResult2> {
     return this.exec().then(onfulfilled, onrejected);
   }
 }
 
-export interface ModelLike<TStorage extends DocumentRecord, THydrated extends DocumentRecord, TOperational> {
+export interface ModelLike<
+  TStorage extends DocumentRecord,
+  THydrated extends DocumentRecord,
+  TOperational,
+> {
   create(doc: Partial<TStorage>): Promise<HydratedDocument<THydrated>>;
   insertMany(docs: Partial<TStorage>[]): Promise<HydratedDocument<THydrated>[]>;
   find(filter?: Partial<TStorage>): QueryBuilder<HydratedDocument<THydrated>[]>;
-  findOne(filter?: Partial<TStorage>): QueryBuilder<HydratedDocument<THydrated>>;
+  findOne(
+    filter?: Partial<TStorage>,
+  ): QueryBuilder<HydratedDocument<THydrated>>;
   findById(id: DocumentId): QueryBuilder<HydratedDocument<THydrated>>;
-  findOneAndUpdate(filter: Partial<TStorage>, update: Partial<TStorage>): QueryBuilder<HydratedDocument<THydrated>>;
-  findOneAndDelete(filter: Partial<TStorage>): QueryBuilder<HydratedDocument<THydrated>>;
-  findByIdAndUpdate(id: DocumentId, update: Partial<TStorage>): QueryBuilder<HydratedDocument<THydrated>>;
+  findOneAndUpdate(
+    filter: Partial<TStorage>,
+    update: Partial<TStorage>,
+  ): QueryBuilder<HydratedDocument<THydrated>>;
+  findOneAndDelete(
+    filter: Partial<TStorage>,
+  ): QueryBuilder<HydratedDocument<THydrated>>;
+  findByIdAndUpdate(
+    id: DocumentId,
+    update: Partial<TStorage>,
+  ): QueryBuilder<HydratedDocument<THydrated>>;
   findByIdAndDelete(id: DocumentId): QueryBuilder<HydratedDocument<THydrated>>;
-  updateOne(filter: Partial<TStorage>, update: Partial<TStorage>): Promise<{ modifiedCount: number; matchedCount: number }>;
-  updateMany(filter: Partial<TStorage>, update: Partial<TStorage>): Promise<{ modifiedCount: number; matchedCount: number }>;
-  replaceOne(filter: Partial<TStorage>, doc: Partial<TStorage>): Promise<{ modifiedCount: number; matchedCount: number }>;
+  updateOne(
+    filter: Partial<TStorage>,
+    update: Partial<TStorage>,
+  ): Promise<{ modifiedCount: number; matchedCount: number }>;
+  updateMany(
+    filter: Partial<TStorage>,
+    update: Partial<TStorage>,
+  ): Promise<{ modifiedCount: number; matchedCount: number }>;
+  replaceOne(
+    filter: Partial<TStorage>,
+    doc: Partial<TStorage>,
+  ): Promise<{ modifiedCount: number; matchedCount: number }>;
   deleteOne(filter: Partial<TStorage>): Promise<{ deletedCount: number }>;
   deleteMany(filter: Partial<TStorage>): Promise<{ deletedCount: number }>;
   countDocuments(filter?: Partial<TStorage>): Promise<number>;
@@ -169,7 +212,11 @@ export interface ModelLike<TStorage extends DocumentRecord, THydrated extends Do
   fromStorage(storage: TStorage): TOperational;
 }
 
-export function createModelAdapter<TStorage extends DocumentRecord, THydrated extends DocumentRecord, TOperational>(
+export function createModelAdapter<
+  TStorage extends DocumentRecord,
+  THydrated extends DocumentRecord,
+  TOperational,
+>(
   collection: DocumentCollection<TStorage>,
   converter: ConvertibleDocument<TStorage, THydrated, TOperational>,
 ): ModelLike<TStorage, THydrated, TOperational> {
@@ -181,7 +228,9 @@ export function createModelAdapter<TStorage extends DocumentRecord, THydrated ex
   };
 
   const wrapHydratedMany = (storages: TStorage[] | null) =>
-    storages ? (storages.map((s) => wrapHydrated(s) as HydratedDocument<THydrated>)) : null;
+    storages
+      ? storages.map((s) => wrapHydrated(s) as HydratedDocument<THydrated>)
+      : null;
 
   return {
     async create(doc: Partial<TStorage>) {
@@ -193,25 +242,41 @@ export function createModelAdapter<TStorage extends DocumentRecord, THydrated ex
       return wrapHydratedMany(created) ?? [];
     },
     find(filter?: Partial<TStorage>) {
-      return new QueryArrayWrapper(collection.find(filter), (s: TStorage) => wrapHydrated(s) as HydratedDocument<THydrated>);
+      return new QueryArrayWrapper(
+        collection.find(filter),
+        (s: TStorage) => wrapHydrated(s) as HydratedDocument<THydrated>,
+      );
     },
     findOne(filter?: Partial<TStorage>) {
-      return new QueryWrapper(collection.findOne(filter), (s) => wrapHydrated(s as TStorage));
+      return new QueryWrapper(collection.findOne(filter), (s) =>
+        wrapHydrated(s as TStorage),
+      );
     },
     findById(id: DocumentId) {
-      return new QueryWrapper(collection.findById(id), (s) => wrapHydrated(s as TStorage));
+      return new QueryWrapper(collection.findById(id), (s) =>
+        wrapHydrated(s as TStorage),
+      );
     },
     findOneAndUpdate(filter: Partial<TStorage>, update: Partial<TStorage>) {
-      return new QueryWrapper(collection.findOneAndUpdate(filter, update), (s) => wrapHydrated(s as TStorage));
+      return new QueryWrapper(
+        collection.findOneAndUpdate(filter, update),
+        (s) => wrapHydrated(s as TStorage),
+      );
     },
     findOneAndDelete(filter: Partial<TStorage>) {
-      return new QueryWrapper(collection.findOneAndDelete(filter), (s) => wrapHydrated(s as TStorage));
+      return new QueryWrapper(collection.findOneAndDelete(filter), (s) =>
+        wrapHydrated(s as TStorage),
+      );
     },
     findByIdAndUpdate(id: DocumentId, update: Partial<TStorage>) {
-      return new QueryWrapper(collection.findByIdAndUpdate(id, update), (s) => wrapHydrated(s as TStorage));
+      return new QueryWrapper(collection.findByIdAndUpdate(id, update), (s) =>
+        wrapHydrated(s as TStorage),
+      );
     },
     findByIdAndDelete(id: DocumentId) {
-      return new QueryWrapper(collection.findByIdAndDelete(id), (s) => wrapHydrated(s as TStorage));
+      return new QueryWrapper(collection.findByIdAndDelete(id), (s) =>
+        wrapHydrated(s as TStorage),
+      );
     },
     updateOne: (filter, update) => collection.updateOne(filter, update),
     updateMany: (filter, update) => collection.updateMany(filter, update),
@@ -221,10 +286,14 @@ export function createModelAdapter<TStorage extends DocumentRecord, THydrated ex
     countDocuments: (filter) => collection.countDocuments(filter),
     estimatedDocumentCount: () => collection.estimatedDocumentCount(),
     aggregate: (pipeline) => collection.aggregate(pipeline),
-    distinct: (field: keyof THydrated) => collection.distinct(field as unknown as keyof TStorage) as QueryBuilder<unknown[]>,
+    distinct: (field: keyof THydrated) =>
+      collection.distinct(field as unknown as keyof TStorage) as QueryBuilder<
+        unknown[]
+      >,
     exists: (filter) => collection.exists(filter),
     watch: () => collection.watch && collection.watch(),
-    startSession: () => (collection.startSession ? collection.startSession() : undefined),
+    startSession: () =>
+      collection.startSession ? collection.startSession() : undefined,
     toStorage: (operational: TOperational) => converter.toStorage(operational),
     fromStorage: (storage: TStorage) => converter.fromStorage(storage),
   };

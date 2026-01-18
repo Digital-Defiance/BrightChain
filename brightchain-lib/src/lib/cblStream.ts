@@ -1,21 +1,13 @@
-import {
-  ChecksumUint8Array,
-  Member,
-  type PlatformID,
-} from '@digitaldefiance/ecies-lib';
-import { Readable } from './browserStream';
+import { Member, type PlatformID } from '@digitaldefiance/ecies-lib';
 import { ConstituentBlockListBlock } from './blocks/cbl';
-import { EncryptedBlock } from './blocks/encrypted';
-import { EphemeralBlock } from './blocks/ephemeral';
-import { InMemoryBlockTuple } from './blocks/memoryTuple';
 import { WhitenedBlock } from './blocks/whitened';
-import { BlockDataType } from './enumerations/blockDataType';
-import { BlockType } from './enumerations/blockType';
+import { Readable } from './browserStream';
 import { CblErrorType } from './enumerations/cblErrorType';
 import { CblError } from './errors/cblError';
 import { IEphemeralBlock } from './interfaces/blocks/ephemeral';
 import { BlockService } from './services/blockService';
 import { ServiceLocator } from './services/serviceLocator';
+import { Checksum } from './types';
 
 /**
  * CblStream provides streaming access to data stored in a ConstituentBlockListBlock.
@@ -32,9 +24,7 @@ import { ServiceLocator } from './services/serviceLocator';
  */
 export class CblStream<TID extends PlatformID = Uint8Array> extends Readable {
   private readonly cbl: ConstituentBlockListBlock;
-  private readonly getWhitenedBlock: (
-    blockId: ChecksumUint8Array,
-  ) => WhitenedBlock;
+  private readonly getWhitenedBlock: (blockId: Checksum) => WhitenedBlock;
   private currentTupleIndex = 0;
   private currentData: IEphemeralBlock | null = null;
   private overallReadOffset = 0;
@@ -45,7 +35,7 @@ export class CblStream<TID extends PlatformID = Uint8Array> extends Readable {
 
   constructor(
     cbl: ConstituentBlockListBlock,
-    getWhitenedBlock: (blockId: ChecksumUint8Array) => WhitenedBlock,
+    getWhitenedBlock: (blockId: Checksum) => WhitenedBlock,
     creatorForDecryption?: Member<TID>,
   ) {
     super();
@@ -68,10 +58,10 @@ export class CblStream<TID extends PlatformID = Uint8Array> extends Readable {
     this.creatorForDecryption = creatorForDecryption;
   }
 
-  _read(size: number): void {
+  _read(_size: number): void {
     // Use setTimeout since setImmediate might not be available in all environments
     setTimeout(() => {
-      this.readData().catch(error => this.emit('error', error));
+      this.readData().catch((error) => this.emit('error', error));
     }, 0);
   }
 
@@ -87,18 +77,19 @@ export class CblStream<TID extends PlatformID = Uint8Array> extends Readable {
       if (testAddress) {
         this.getWhitenedBlock(testAddress); // This will throw if block not found
       }
-      
+
       // For simplicity, just push some test data and end
       const testData = new Uint8Array(this.cbl.blockSize);
       testData.fill(42); // Fill with test data
-      
+
       this.push(testData);
       this.currentTupleIndex++;
-      
+
       // End the stream after one chunk for now
       this.push(null);
     } catch (error) {
-      this.emit('error', 
+      this.emit(
+        'error',
         error instanceof Error
           ? new CblError(CblErrorType.FailedToLoadBlock)
           : new Error('Unknown error reading data'),

@@ -1,15 +1,12 @@
 import {
-  ChecksumUint8Array,
   ECIESService,
   getEnhancedIdProvider,
-  Guid,
-  GuidBrandType,
   Member,
   PlatformID,
   SignatureUint8Array,
   TypedIdProviderWrapper,
 } from '@digitaldefiance/ecies-lib';
-import { concatenateUint8Arrays, writeUInt32BE, uint8ArrayToBase64 } from '../bufferUtils';
+import { concatenateUint8Arrays, writeUInt32BE } from '../bufferUtils';
 import CONSTANTS, { CBL, CHECKSUM, ECIES, TUPLE } from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize, lengthToBlockSize } from '../enumerations/blockSize';
@@ -20,17 +17,32 @@ import { CblError } from '../errors/cblError';
 import { ExtendedCblError } from '../errors/extendedCblError';
 import { IConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/cblHeader';
 import { IExtendedConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/ecblHeader';
+import { Checksum } from '../types/checksum';
+import { Validator } from '../utils/validator';
 import { BlockCapacityCalculator } from './blockCapacity.service';
 import { ChecksumService } from './checksum.service';
 
 /**
- * Service for creating and verifying CBL blocks
+ * Service for creating and verifying CBL blocks.
+ *
+ * This service provides functionality for:
+ * - Creating CBL headers with proper validation
+ * - Parsing CBL headers from data
+ * - Validating file names and MIME types
+ * - Calculating CBL address capacity
+ *
+ * @remarks
+ * - All methods validate inputs before processing
+ * - Errors are wrapped in CblError or ExtendedCblError with appropriate context
+ * - The service supports both standard and extended CBL blocks
+ *
+ * @see Requirements 5.1, 5.2, 5.3, 12.1, 12.2, 12.7
  */
 export class CBLService<TID extends PlatformID = Uint8Array> {
   private readonly checksumService: ChecksumService;
   private readonly eciesService: ECIESService<TID>;
   private readonly enhancedProvider: TypedIdProviderWrapper<TID>;
-  
+
   /**
    * Get the enhanced ID provider for this service
    */
@@ -67,15 +79,6 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
    */
   public get creatorLength(): number {
     return this.enhancedProvider.byteLength;
-  }
-
-  /**
-   * Static creator length for backward compatibility
-   * @deprecated Use instance method creatorLength instead
-   */
-  public static get CreatorLength(): number {
-    // Use default provider for backward compatibility
-    return getEnhancedIdProvider().byteLength;
   }
 
   /**
@@ -116,60 +119,147 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
   public static readonly CreatorSignatureSize: number = ECIES.SIGNATURE_LENGTH;
 
   /**
-   * Offset of the date field in the header
+   * Length of the creator ID field (GUID size) - static default for backward compatibility
+   * @deprecated Use instance method creatorLength instead for dynamic provider support
    */
-  public static get DateCreatedOffset(): number {
-    return CBLService.CreatorLength;
+  public static readonly CreatorIdLength: number =
+    CONSTANTS['ENCRYPTION'].RECIPIENT_ID_SIZE;
+
+  /**
+   * Offset of the date field in the header (instance method for dynamic provider support)
+   */
+  public get dateCreatedOffset(): number {
+    return this.creatorLength;
   }
 
   /**
-   * Offset of the address count field in the header
+   * Offset of the date field in the header (static for backward compatibility)
+   * @deprecated Use instance method dateCreatedOffset instead
+   */
+  public static get DateCreatedOffset(): number {
+    return CBLService.CreatorIdLength;
+  }
+
+  /**
+   * Offset of the address count field in the header (instance method)
+   */
+  public get cblAddressCountOffset(): number {
+    return this.dateCreatedOffset + CBLService.DateSize;
+  }
+
+  /**
+   * Offset of the address count field in the header (static for backward compatibility)
+   * @deprecated Use instance method cblAddressCountOffset instead
    */
   public static get CblAddressCountOffset(): number {
     return CBLService.DateCreatedOffset + CBLService.DateSize;
   }
 
   /**
-   * Offset of the tuple size field in the header
+   * Offset of the tuple size field in the header (instance method)
+   */
+  public get tupleSizeOffset(): number {
+    return this.cblAddressCountOffset + CBLService.AddressCountSize;
+  }
+
+  /**
+   * Offset of the tuple size field in the header (static for backward compatibility)
+   * @deprecated Use instance method tupleSizeOffset instead
    */
   public static get TupleSizeOffset(): number {
     return CBLService.CblAddressCountOffset + CBLService.AddressCountSize;
   }
 
   /**
-   * Offset of the original data length field in the header
+   * Offset of the original data length field in the header (instance method)
+   */
+  public get originalDataLengthOffset(): number {
+    return this.tupleSizeOffset + CBLService.TupleSizeSize;
+  }
+
+  /**
+   * Offset of the original data length field in the header (static for backward compatibility)
+   * @deprecated Use instance method originalDataLengthOffset instead
    */
   public static get OriginalDataLengthOffset(): number {
     return CBLService.TupleSizeOffset + CBLService.TupleSizeSize;
   }
 
+  /**
+   * Offset of the original checksum field in the header (instance method)
+   */
+  public get originalChecksumOffset(): number {
+    return this.originalDataLengthOffset + CBLService.DataLengthSize;
+  }
+
+  /**
+   * Static offset for backward compatibility
+   * @deprecated Use instance method originalChecksumOffset instead
+   */
   public static get OriginalChecksumOffset(): number {
     return CBLService.OriginalDataLengthOffset + CBLService.DataLengthSize;
   }
 
   /**
-   * Offset of the is extended header field in the header
+   * Offset of the is extended header field in the header (instance method)
+   */
+  public get isExtendedHeaderOffset(): number {
+    return this.originalChecksumOffset + CBLService.DataChecksumSize;
+  }
+
+  /**
+   * Offset of the is extended header field in the header (static for backward compatibility)
+   * @deprecated Use instance method isExtendedHeaderOffset instead
    */
   public static get IsExtendedHeaderOffset(): number {
     return CBLService.OriginalChecksumOffset + CBLService.DataChecksumSize;
   }
 
   /**
-   * Offset of the creator signature field in the header
+   * Offset of the creator signature field in the header (instance method)
+   */
+  public get baseHeaderCreatorSignatureOffset(): number {
+    return this.isExtendedHeaderOffset + CBLService.IsExtendedHeaderSize;
+  }
+
+  /**
+   * Offset of the creator signature field in the header (static for backward compatibility)
+   * @deprecated Use instance method baseHeaderCreatorSignatureOffset instead
    */
   public static get BaseHeaderCreatorSignatureOffset(): number {
     return CBLService.IsExtendedHeaderOffset + CBLService.IsExtendedHeaderSize;
   }
 
   /**
-   * Length of the base header with signature
+   * Length of the base header with signature (instance method)
    */
-  public static get BaseHeaderSize(): number {
-    return CBLService.BaseHeaderCreatorSignatureOffset + CBLService.CreatorSignatureSize;
+  public get baseHeaderSize(): number {
+    return (
+      this.baseHeaderCreatorSignatureOffset + CBLService.CreatorSignatureSize
+    );
   }
 
   /**
-   * Offset of the file name length field in the header
+   * Length of the base header with signature (static for backward compatibility)
+   * @deprecated Use instance method baseHeaderSize instead
+   */
+  public static get BaseHeaderSize(): number {
+    return (
+      CBLService.BaseHeaderCreatorSignatureOffset +
+      CBLService.CreatorSignatureSize
+    );
+  }
+
+  /**
+   * Offset of the file name length field in the header (instance method)
+   */
+  public get fileNameLengthOffset(): number {
+    return this.baseHeaderCreatorSignatureOffset;
+  }
+
+  /**
+   * Offset of the file name length field in the header (static for backward compatibility)
+   * @deprecated Use instance method fileNameLengthOffset instead
    */
   public static get FileNameLengthOffset(): number {
     return CBLService.BaseHeaderCreatorSignatureOffset;
@@ -186,7 +276,25 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
   public static readonly MimeTypeLengthSize: number = CONSTANTS['UINT8_SIZE'];
 
   /**
+   * Instance offsets for dynamic provider support
+   */
+  public get headerOffsets() {
+    return {
+      CreatorId: 0,
+      DateCreated: this.dateCreatedOffset,
+      CblAddressCount: this.cblAddressCountOffset,
+      TupleSize: this.tupleSizeOffset,
+      OriginalDataLength: this.originalDataLengthOffset,
+      OriginalDataChecksum: this.originalChecksumOffset,
+      CreatorSignature: this.baseHeaderCreatorSignatureOffset,
+      IsExtendedHeader: this.isExtendedHeaderOffset,
+      FileNameLength: this.fileNameLengthOffset,
+    };
+  }
+
+  /**
    * Static offsets for backward compatibility
+   * @deprecated Use instance method headerOffsets instead
    */
   public static get HeaderOffsets() {
     return {
@@ -231,35 +339,20 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
    * Get the creator ID from the header
    */
   public getCreatorId(header: Uint8Array): TID {
-    try {
-      const idBytes = header.subarray(
-        CBLService.HeaderOffsets.CreatorId,
-        CBLService.HeaderOffsets.CreatorId + this.creatorLength,
+    const idBytes = header.subarray(
+      this.headerOffsets.CreatorId,
+      this.headerOffsets.CreatorId + this.creatorLength,
+    );
+
+    // Validate the byte length matches expected
+    if (idBytes.length !== this.creatorLength) {
+      throw new CblError(
+        CblErrorType.InvalidStructure,
+        `Creator ID byte length mismatch: got ${idBytes.length}, expected ${this.creatorLength}`,
       );
-      
-      // Validate the byte length before attempting to parse
-      if (idBytes.length !== this.creatorLength) {
-        console.warn(`Creator ID byte length mismatch: got ${idBytes.length}, expected ${this.creatorLength}`);
-        // Return a default ID or throw a more specific error
-        // For now, we'll create a padded version
-        const paddedBytes = new Uint8Array(this.creatorLength);
-        paddedBytes.set(idBytes.subarray(0, Math.min(idBytes.length, this.creatorLength)));
-        return this.enhancedProvider.fromBytes(paddedBytes);
-      }
-      
-      return this.enhancedProvider.fromBytes(idBytes);
-    } catch (error) {
-      // Return a default ID to allow tests to continue
-      // Create a valid GUID with all zeros
-      const defaultBytes = new Uint8Array(this.creatorLength);
-      try {
-        return this.enhancedProvider.fromBytes(defaultBytes);
-      } catch (fallbackError) {
-        // If even the default fails, create a minimal valid ID
-        // For Uint8Array, just return the bytes directly
-        return defaultBytes as TID;
-      }
     }
+
+    return this.enhancedProvider.fromBytes(idBytes);
   }
 
   /**
@@ -274,9 +367,9 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       header.byteOffset,
       header.byteLength,
     );
-    const high = view.getUint32(CBLService.HeaderOffsets.DateCreated, false);
+    const high = view.getUint32(this.headerOffsets.DateCreated, false);
     const low = view.getUint32(
-      CBLService.HeaderOffsets.DateCreated + CONSTANTS['UINT32_SIZE'],
+      this.headerOffsets.DateCreated + CONSTANTS['UINT32_SIZE'],
       false,
     );
     return new Date(high * 0x100000000 + low);
@@ -294,7 +387,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       header.byteOffset,
       header.byteLength,
     );
-    return view.getUint32(CBLService.HeaderOffsets.CblAddressCount, false);
+    return view.getUint32(this.headerOffsets.CblAddressCount, false);
   }
 
   /**
@@ -304,7 +397,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     if (this.isEncrypted(header)) {
       throw new CblError(CblErrorType.CblEncrypted);
     }
-    return header[CBLService.HeaderOffsets.TupleSize];
+    return header[this.headerOffsets.TupleSize];
   }
 
   /**
@@ -320,7 +413,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       header.byteLength,
     );
     const bigIntValue = view.getBigUint64(
-      CBLService.HeaderOffsets.OriginalDataLength,
+      this.headerOffsets.OriginalDataLength,
       false,
     );
     return Number(bigIntValue);
@@ -331,14 +424,16 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
    * @param header - The header to get the checksum from
    * @returns The original data checksum
    */
-  public getOriginalDataChecksum(header: Uint8Array): ChecksumUint8Array {
+  public getOriginalDataChecksum(header: Uint8Array): Checksum {
     if (this.isEncrypted(header)) {
       throw new CblError(CblErrorType.CblEncrypted);
     }
-    return header.subarray(
-      CBLService.HeaderOffsets.OriginalDataChecksum,
-      CBLService.HeaderOffsets.OriginalDataChecksum + CBLService.DataChecksumSize,
-    ) as unknown as ChecksumUint8Array;
+    const checksumData = header.subarray(
+      this.headerOffsets.OriginalDataChecksum,
+      this.headerOffsets.OriginalDataChecksum +
+        CBLService.DataChecksumSize,
+    );
+    return Checksum.fromUint8Array(checksumData);
   }
 
   /**
@@ -348,7 +443,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     if (this.isEncrypted(header)) {
       throw new CblError(CblErrorType.CblEncrypted);
     }
-    return header[CBLService.HeaderOffsets.IsExtendedHeader] === 1;
+    return header[this.headerOffsets.IsExtendedHeader] === 1;
   }
 
   /**
@@ -368,7 +463,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       throw new CblError(CblErrorType.NotExtendedCbl);
     }
 
-    let offset = CBLService.BaseHeaderCreatorSignatureOffset;
+    let offset = this.baseHeaderCreatorSignatureOffset;
 
     const view = new DataView(
       header.buffer,
@@ -467,7 +562,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       throw new CblError(CblErrorType.CblEncrypted);
     }
     const signatureOffset = !this.isExtendedHeader(header)
-      ? CBLService.HeaderOffsets.CreatorSignature
+      ? this.headerOffsets.CreatorSignature
       : this.getExtendedHeaderOffsets(header).signatureOffset;
 
     return header.subarray(
@@ -484,7 +579,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       throw new CblError(CblErrorType.CblEncrypted);
     }
     if (!this.isExtendedHeader(data)) {
-      return CBLService.BaseHeaderSize;
+      return this.baseHeaderSize;
     }
     const { signatureOffset } = this.getExtendedHeaderOffsets(data);
     return signatureOffset + CBLService.CreatorSignatureSize;
@@ -521,17 +616,18 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
   /**
    * Get the addresses from the CBL
    */
-  public addressDataToAddresses(data: Uint8Array): ChecksumUint8Array[] {
+  public addressDataToAddresses(data: Uint8Array): Checksum[] {
     const addressData = this.getAddressData(data);
     const addressCount = this.getCblAddressCount(data);
-    const addresses: ChecksumUint8Array[] = new Array(addressCount);
+    const addresses: Checksum[] = new Array(addressCount);
 
     for (let i = 0; i < addressCount; i++) {
       const addressOffset = i * CHECKSUM.SHA3_BUFFER_LENGTH;
-      addresses[i] = addressData.subarray(
+      const checksumData = addressData.subarray(
         addressOffset,
         addressOffset + CHECKSUM.SHA3_BUFFER_LENGTH,
-      ) as unknown as ChecksumUint8Array;
+      );
+      addresses[i] = Checksum.fromUint8Array(checksumData);
     }
 
     return addresses;
@@ -592,7 +688,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
 
     return this.eciesService.verifyMessage(
       creator.publicKey,
-      checksum,
+      checksum.toUint8Array(),
       signature,
     );
   }
@@ -712,7 +808,22 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
   }
 
   /**
-   * Create a CBL header
+   * Create a CBL header.
+   *
+   * @param creator - The member creating the CBL
+   * @param dateCreated - The creation date
+   * @param cblAddressCount - Number of addresses in the CBL
+   * @param fileDataLength - Length of the original file data
+   * @param addressList - The list of block addresses
+   * @param blockSize - The block size
+   * @param encryptionType - The encryption type
+   * @param extendedCBL - Optional extended CBL data (fileName, mimeType)
+   * @param tupleSize - The tuple size (defaults to TUPLE.SIZE)
+   * @returns Object containing headerData and signature
+   * @throws {EnhancedValidationError} If block size or encryption type is invalid
+   * @throws {CblError} If CBL-specific validation fails
+   *
+   * @see Requirements 5.1, 5.2, 5.3, 12.1, 12.2, 12.7
    */
   public makeCblHeader(
     creator: Member<TID>,
@@ -725,6 +836,13 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     extendedCBL?: { fileName: string; mimeType: string },
     tupleSize: number = TUPLE.SIZE,
   ): { headerData: Uint8Array; signature: SignatureUint8Array } {
+    // Validate inputs using Validator
+    Validator.validateRequired(creator, 'creator', 'makeCblHeader');
+    Validator.validateRequired(dateCreated, 'dateCreated', 'makeCblHeader');
+    Validator.validateRequired(addressList, 'addressList', 'makeCblHeader');
+    Validator.validateBlockSize(blockSize, 'makeCblHeader');
+    Validator.validateEncryptionType(encryptionType, 'makeCblHeader');
+
     if (fileDataLength > CBL.MAX_INPUT_FILE_SIZE) {
       throw new CblError(CblErrorType.FileSizeTooLarge);
     }
@@ -750,7 +868,11 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     // Write timestamp using DataView
     const dateView = new DataView(buffers.dateCreated.buffer);
     dateView.setUint32(0, Math.floor(timestamp / 0x100000000), false);
-    dateView.setUint32(CONSTANTS['UINT32_SIZE'], timestamp % 0x100000000, false);
+    dateView.setUint32(
+      CONSTANTS['UINT32_SIZE'],
+      timestamp % 0x100000000,
+      false,
+    );
 
     const addressView = new DataView(buffers.addressCount.buffer);
     addressView.setUint32(0, cblAddressCount, false);
@@ -764,24 +886,23 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     blockSizeView.setUint32(0, blockSize, false);
 
     // Calculate a checksum for the original data (empty for now, will be filled in later)
-    const dataChecksum = new Uint8Array(CONSTANTS['CHECKSUM'].SHA3_BUFFER_LENGTH);
+    const dataChecksum = new Uint8Array(
+      CONSTANTS['CHECKSUM'].SHA3_BUFFER_LENGTH,
+    );
     buffers.dataChecksum.set(dataChecksum);
 
     // Use the provider to convert creator ID to bytes
     const creatorIdBytes = this.enhancedProvider.toBytes(creator.id);
-    
-    // Use the actual provider's ID length
-    const expectedLength = this.creatorLength;
-    const creatorId = new Uint8Array(expectedLength);
-    if (creatorIdBytes.length === expectedLength) {
-      creatorId.set(creatorIdBytes);
-    } else if (creatorIdBytes.length < expectedLength) {
-      // Right-align shorter IDs (pad with zeros on the left)
-      creatorId.set(creatorIdBytes, expectedLength - creatorIdBytes.length);
-    } else {
-      // Truncate longer IDs from the right
-      creatorId.set(creatorIdBytes.subarray(0, expectedLength));
+
+    // Validate that the provider returns the expected length
+    if (creatorIdBytes.length !== this.creatorLength) {
+      throw new CblError(
+        CblErrorType.InvalidStructure,
+        `Creator ID provider returned ${creatorIdBytes.length} bytes, expected ${this.creatorLength}`,
+      );
     }
+
+    const creatorId = creatorIdBytes;
 
     // Create base header
     const baseHeaderSize =
@@ -834,39 +955,35 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
 
     const checksum = this.checksumService.calculateChecksum(toSign);
 
-    let signatureBytes =
-      creator instanceof Member && creator.privateKey
-        ? new Uint8Array(
-            this.eciesService.signMessage(
-              creator.privateKey.value,
-              checksum,
-            ),
-          )
-        : new Uint8Array(ECIES.SIGNATURE_LENGTH);
+    const signatureBytes = (creator instanceof Member && creator.privateKey
+      ? new Uint8Array(
+          this.eciesService.signMessage(
+            creator.privateKey.value,
+            checksum.toUint8Array(),
+          ),
+        )
+      : new Uint8Array(ECIES.SIGNATURE_LENGTH)) as unknown as SignatureUint8Array;
 
+    // Validate signature length
     if (signatureBytes.length !== ECIES.SIGNATURE_LENGTH) {
-      const padded = new Uint8Array(ECIES.SIGNATURE_LENGTH);
-      padded.set(
-        signatureBytes,
-        ECIES.SIGNATURE_LENGTH - signatureBytes.length,
+      throw new CblError(
+        CblErrorType.InvalidSignature,
+        `Signature length mismatch: got ${signatureBytes.length}, expected ${ECIES.SIGNATURE_LENGTH}`,
       );
-      signatureBytes = padded;
     }
-
-    const finalSignature = signatureBytes as unknown as SignatureUint8Array;
 
     // Construct final header
     const headerData = new Uint8Array(
-      baseHeader.length + extendedHeaderData.length + finalSignature.length,
+      baseHeader.length + extendedHeaderData.length + signatureBytes.length,
     );
     let headerOffset = 0;
     headerData.set(baseHeader, headerOffset);
     headerOffset += baseHeader.length;
     headerData.set(extendedHeaderData, headerOffset);
     headerOffset += extendedHeaderData.length;
-    headerData.set(finalSignature, headerOffset);
+    headerData.set(signatureBytes, headerOffset);
 
-    return { headerData, signature: finalSignature };
+    return { headerData, signature: signatureBytes };
   }
 
   /**

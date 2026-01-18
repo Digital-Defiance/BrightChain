@@ -1,14 +1,13 @@
-import { mkdirSync, rmSync } from 'fs';
-import { join } from 'path';
 import {
-  RawDataBlock,
   BlockDataType,
   BlockSize,
   BlockType,
-  StoreErrorType,
-  StoreError,
+  RawDataBlock,
   ServiceProvider,
+  StoreError,
 } from '@brightchain/brightchain-lib';
+import { mkdirSync, rmSync } from 'fs';
+import { join } from 'path';
 import { DiskBlockAsyncStore } from './diskBlockAsyncStore';
 
 describe('DiskBlockAsyncStore', () => {
@@ -105,7 +104,9 @@ describe('DiskBlockAsyncStore', () => {
         Buffer.from(testData),
       );
 
-      await expect(store.getData(nonExistentChecksum)).rejects.toThrow(StoreError);
+      await expect(store.getData(nonExistentChecksum)).rejects.toThrow(
+        StoreError,
+      );
     });
 
     it('should throw error when storing block with wrong size', async () => {

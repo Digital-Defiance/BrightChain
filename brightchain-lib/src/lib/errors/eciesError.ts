@@ -1,5 +1,4 @@
 import { EciesErrorType } from '../enumerations/eciesErrorType';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { TypedError } from './typedError';
 
@@ -49,7 +48,7 @@ export class EciesError extends TypedError<EciesErrorType> {
 
   constructor(
     type: EciesErrorType,
-    language?: StringLanguages,
+    language?: string,
     templateParams?: Record<string, string>,
   ) {
     super(type, undefined, templateParams);

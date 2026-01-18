@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 /**
  * Integration tests for Block Availability and Discovery Protocol
  *
@@ -9,11 +10,6 @@
  * @see Requirements: All
  */
 
-/* eslint-disable @nx/enforce-module-boundaries */
-import { randomBytes } from 'crypto';
-import { EventEmitter } from 'events';
-import * as fs from 'fs';
-import * as path from 'path';
 import {
   AvailabilityState,
   BlockAnnouncement,
@@ -21,12 +17,19 @@ import {
   BloomFilter,
   ILocationRecord,
 } from '@brightchain/brightchain-lib';
-import { BlockRegistry } from './blockRegistry';
-import { GossipService, IPeerProvider } from './gossipService';
-import { DiscoveryProtocol, IPeerNetworkProvider } from './discoveryProtocol';
-import { HeartbeatMonitor, IHeartbeatTransport } from './heartbeatMonitor';
-import { ReconciliationService, IManifestProvider } from './reconciliationService';
+import { randomBytes } from 'crypto';
+import { EventEmitter } from 'events';
+import * as fs from 'fs';
+import * as path from 'path';
 import { AvailabilityService } from './availabilityService';
+import { BlockRegistry } from './blockRegistry';
+import { DiscoveryProtocol, IPeerNetworkProvider } from './discoveryProtocol';
+import { GossipService, IPeerProvider } from './gossipService';
+import { HeartbeatMonitor, IHeartbeatTransport } from './heartbeatMonitor';
+import {
+  IManifestProvider,
+  ReconciliationService,
+} from './reconciliationService';
 
 /**
  * Mock peer provider for gossip testing
@@ -36,7 +39,8 @@ class MockPeerProvider extends EventEmitter implements IPeerProvider {
     super();
   }
 
-  private peers: Map<string, { connected: boolean; latency: number }> = new Map();
+  private peers: Map<string, { connected: boolean; latency: number }> =
+    new Map();
   private messageHandlers: Map<string, (msg: any) => void> = new Map();
 
   addPeer(peerId: string, latency = 50): void {
@@ -71,7 +75,7 @@ class MockPeerProvider extends EventEmitter implements IPeerProvider {
 
   async sendAnnouncementBatch(
     peerId: string,
-    announcements: BlockAnnouncement[]
+    announcements: BlockAnnouncement[],
   ): Promise<void> {
     const peer = this.peers.get(peerId);
     if (!peer || !peer.connected) {
@@ -79,7 +83,7 @@ class MockPeerProvider extends EventEmitter implements IPeerProvider {
     }
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, peer.latency));
-    
+
     // Notify handler if registered
     const handler = this.messageHandlers.get(peerId);
     if (handler) {
@@ -96,7 +100,10 @@ class MockPeerProvider extends EventEmitter implements IPeerProvider {
  * Mock network provider for discovery testing
  */
 class MockNetworkProvider implements IPeerNetworkProvider {
-  private peers: Map<string, { bloomFilter: BloomFilter; blocks: Set<string> }> = new Map();
+  private peers: Map<
+    string,
+    { bloomFilter: BloomFilter; blocks: Set<string> }
+  > = new Map();
 
   addPeer(peerId: string, blocks: string[]): void {
     this.peers.set(peerId, {
@@ -130,7 +137,7 @@ class MockNetworkProvider implements IPeerNetworkProvider {
   async queryPeerForBlock(
     peerId: string,
     blockId: string,
-    timeoutMs: number
+    timeoutMs: number,
   ): Promise<boolean> {
     const peer = this.peers.get(peerId);
     if (!peer) {
@@ -173,7 +180,10 @@ class MockManifestProvider implements IManifestProvider {
   constructor(private nodeId: string) {}
 
   private manifests: Map<string, BlockManifest> = new Map();
-  private blockStates: Map<string, 'local' | 'remote' | 'cached' | 'orphaned' | 'unknown'> = new Map();
+  private blockStates: Map<
+    string,
+    'local' | 'remote' | 'cached' | 'orphaned' | 'unknown'
+  > = new Map();
   private blockTimestamps: Map<string, Date> = new Map();
 
   setManifest(peerId: string, manifest: BlockManifest): void {
@@ -185,18 +195,20 @@ class MockManifestProvider implements IManifestProvider {
   }
 
   getLocalManifest(): BlockManifest {
-    return this.manifests.get(this.nodeId) || {
-      nodeId: this.nodeId,
-      blockIds: [],
-      generatedAt: new Date(),
-      checksum: '',
-    };
+    return (
+      this.manifests.get(this.nodeId) || {
+        nodeId: this.nodeId,
+        blockIds: [],
+        generatedAt: new Date(),
+        checksum: '',
+      }
+    );
   }
 
   async getPeerManifest(
     peerId: string,
     sinceTimestamp?: Date,
-    timeoutMs?: number
+    timeoutMs?: number,
   ): Promise<BlockManifest> {
     const manifest = this.manifests.get(peerId);
     if (!manifest) {
@@ -208,20 +220,20 @@ class MockManifestProvider implements IManifestProvider {
   async updateBlockLocation(
     blockId: string,
     nodeId: string,
-    timestamp: Date
+    timestamp: Date,
   ): Promise<void> {
     this.blockTimestamps.set(`${blockId}:${nodeId}`, timestamp);
   }
 
   async getBlockAvailabilityState(
-    blockId: string
+    blockId: string,
   ): Promise<'local' | 'remote' | 'cached' | 'orphaned' | 'unknown'> {
     return this.blockStates.get(blockId) || 'unknown';
   }
 
   async updateBlockAvailabilityState(
     blockId: string,
-    state: 'local' | 'remote' | 'cached' | 'orphaned' | 'unknown'
+    state: 'local' | 'remote' | 'cached' | 'orphaned' | 'unknown',
   ): Promise<void> {
     this.blockStates.set(blockId, state);
   }
@@ -244,7 +256,10 @@ class MockManifestProvider implements IManifestProvider {
     return Array.from(this.manifests.keys()).filter((id) => id !== this.nodeId);
   }
 
-  async getBlockTimestamp(blockId: string, nodeId: string): Promise<Date | null> {
+  async getBlockTimestamp(
+    blockId: string,
+    nodeId: string,
+  ): Promise<Date | null> {
     return this.blockTimestamps.get(`${blockId}:${nodeId}`) || null;
   }
 }
@@ -293,7 +308,7 @@ function createTestNode(nodeId: string) {
       syncVectorPath: path.join(tempDir, 'sync-vectors.json'),
       pendingSyncQueuePath: path.join(tempDir, 'pending-sync-queue.json'),
       maxPendingSyncQueueSize: 1000,
-    }
+    },
   );
 
   const availabilityService = new AvailabilityService(
@@ -306,7 +321,7 @@ function createTestNode(nodeId: string) {
       localNodeId: nodeId,
       stalenessThresholdMs: 10000,
       queryTimeoutMs: 5000,
-    }
+    },
   );
 
   return {
@@ -349,7 +364,7 @@ describe('Availability Integration Tests', () => {
       // Node2 has some blocks
       const block1Id = randomBytes(32).toString('hex');
       const block2Id = randomBytes(32).toString('hex');
-      
+
       node2.registry.addLocal(block1Id);
       node2.registry.addLocal(block2Id);
 
@@ -379,7 +394,8 @@ describe('Availability Integration Tests', () => {
       await node1.availabilityService.updateLocation(blockId, location);
 
       // Query locations
-      const locations = await node1.availabilityService.getBlockLocations(blockId);
+      const locations =
+        await node1.availabilityService.getBlockLocations(blockId);
 
       expect(locations.length).toBe(1);
       expect(locations[0].nodeId).toBe('node2');
@@ -492,7 +508,7 @@ describe('Availability Integration Tests', () => {
 
       // Announce multiple blocks quickly
       const blockIds = Array.from({ length: 5 }, () =>
-        randomBytes(32).toString('hex')
+        randomBytes(32).toString('hex'),
       );
 
       for (const blockId of blockIds) {
@@ -544,7 +560,7 @@ describe('Availability Integration Tests', () => {
 
       // List local blocks
       const localBlocks = await node.availabilityService.listBlocksByState(
-        AvailabilityState.Local
+        AvailabilityState.Local,
       );
 
       expect(localBlocks).toContain(block1);

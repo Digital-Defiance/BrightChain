@@ -10,7 +10,7 @@
  * for any equality comparison.
  */
 
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
+import { Checksum } from '../types/checksum';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
 
@@ -124,16 +124,14 @@ describe('Checksum Equality Property Tests', () => {
       const checksum = checksumService.calculateChecksum(testData);
 
       // Convert to Buffer and back
-      const asBuffer = Buffer.from(checksum);
-      const converted = new Uint8Array(asBuffer) as ChecksumUint8Array;
+      const asBuffer = checksum.toBuffer();
+      const converted = Checksum.fromBuffer(asBuffer);
 
       // Reflexive property should still hold after conversion
-      expect(checksumService.compareChecksums(converted, converted)).toBe(true);
+      expect(converted.equals(converted)).toBe(true);
 
       // Symmetric property: original and converted should be equal
-      expect(checksumService.compareChecksums(checksum, converted)).toBe(
-        checksumService.compareChecksums(converted, checksum),
-      );
+      expect(checksum.equals(converted)).toBe(converted.equals(checksum));
     });
 
     it('should maintain equality properties across multiple checksums', () => {

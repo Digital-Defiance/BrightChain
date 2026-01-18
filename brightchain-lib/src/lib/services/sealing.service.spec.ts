@@ -1,16 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   EmailString,
   GuidV4,
   IMemberWithMnemonic,
   Member,
-  ShortHexGuid,
-  uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { SEALING } from '../constants';
 import { MemberType } from '../enumerations/memberType';
-import { initializeBrightChain } from '../init';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { SealingError } from '../errors/sealingError';
+import { initializeBrightChain } from '../init';
 import { QuorumDataRecord } from '../quorumDataRecord';
 import { SealingService } from './sealing.service';
 import { ServiceProvider } from './service.provider';
@@ -27,12 +26,12 @@ describe('SealingService', () => {
   let members: Member<GuidV4>[];
   const testDocument = { hello: 'world' };
   let sealingService: SealingService<GuidV4>;
-  let idProvider = ServiceProvider.getInstance<GuidV4>().idProvider;
+  let _idProvider = ServiceProvider.getInstance<GuidV4>().idProvider;
 
   beforeAll(() => {
     // Initialize BrightChain with browser-compatible configuration
     initializeBrightChain();
-    
+
     const eciesService = ServiceProvider.getInstance<GuidV4>().eciesService;
     sealingService = ServiceProvider.getInstance<GuidV4>().sealingService;
 
@@ -101,7 +100,7 @@ describe('SealingService', () => {
       const sealedJson = sealedDocument.toJson();
       const rebuiltDocument = QuorumDataRecord.fromJson<GuidV4>(
         sealedJson,
-        (memberId: any) => {
+        (_memberId: any) => {
           return members[0]; // Simplified for test
         },
       );

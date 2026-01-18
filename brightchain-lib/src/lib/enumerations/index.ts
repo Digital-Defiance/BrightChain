@@ -47,7 +47,7 @@ export * from './sealingErrorType';
 export * from './secureStorageErrorType';
 export * from './storeErrorType';
 export * from './streamErrorType';
-export * from './stringLanguages';
+// LanguageCodes has been removed - use LanguageCodes from '@digitaldefiance/i18n-lib' instead
 export * from './stringNames';
 export * from './symmetricErrorType';
 export * from './systemKeyringErrorType';

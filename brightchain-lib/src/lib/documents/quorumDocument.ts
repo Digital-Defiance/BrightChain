@@ -1,5 +1,4 @@
 import {
-  ChecksumUint8Array,
   Member,
   PlatformID,
   SignatureUint8Array,
@@ -13,11 +12,12 @@ import { BlockService } from '../services/blockService';
 import { MemberCblService } from '../services/member/memberCblService';
 import { SealingService } from '../services/sealing.service';
 import { SchemaDefinition } from '../sharedTypes';
+import { Checksum } from '../types';
 import { Document } from './base/document';
 
 export interface IQuorumDocument<TID extends PlatformID = Uint8Array> {
-  checksum: ChecksumUint8Array;
-  creatorId: ChecksumUint8Array;
+  checksum: Checksum;
+  creatorId: Checksum;
   creator: Member<TID>;
   signature: SignatureUint8Array;
   memberIDs: TID[];
@@ -76,12 +76,9 @@ export class QuorumDocument<
       creator as Member<Uint8Array>,
       creator as Member<Uint8Array>,
     );
-    const checksum = new Uint8Array(
-      cbl.idChecksum,
-    ) as unknown as ChecksumUint8Array;
 
     // Store creator's CBL ID
-    this.set('creatorId', checksum);
+    this.set('creatorId', cbl.idChecksum);
 
     // Clear creator reference since we'll store just the ID
     this.set('creator', undefined);

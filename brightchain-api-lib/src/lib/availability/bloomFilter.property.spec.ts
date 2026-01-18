@@ -52,7 +52,10 @@ const arbDisjointBlockIdSets = fc
     const uniqueSet2 = [...new Set(set2)].filter((id) => !set1Set.has(id));
     return { inFilter: uniqueSet1, notInFilter: uniqueSet2 };
   })
-  .filter(({ inFilter, notInFilter }) => inFilter.length > 0 && notInFilter.length > 0);
+  .filter(
+    ({ inFilter, notInFilter }) =>
+      inFilter.length > 0 && notInFilter.length > 0,
+  );
 
 describe('Bloom Filter Property Tests', () => {
   const nodeId = 'test-node-001';
@@ -124,63 +127,67 @@ describe('Bloom Filter Property Tests', () => {
      */
     it('should have false positive rate of 1% or less', async () => {
       await fc.assert(
-        fc.asyncProperty(arbDisjointBlockIdSets, async ({ inFilter, notInFilter }) => {
-          const iterTestDir = join(
-            '/tmp',
-            'brightchain-bloom-fpr-' +
-              Date.now() +
-              '-' +
-              Math.random().toString(36).slice(2),
-          );
-          mkdirSync(iterTestDir, { recursive: true });
-
-          try {
-            const registry = new BlockRegistry(
-              nodeId,
-              iterTestDir,
-              blockSizeString,
-              {
-                falsePositiveRate: DEFAULT_BLOOM_FILTER_CONFIG.falsePositiveRate,
-                expectedItems: Math.max(inFilter.length, 1000),
-              },
+        fc.asyncProperty(
+          arbDisjointBlockIdSets,
+          async ({ inFilter, notInFilter }) => {
+            const iterTestDir = join(
+              '/tmp',
+              'brightchain-bloom-fpr-' +
+                Date.now() +
+                '-' +
+                Math.random().toString(36).slice(2),
             );
+            mkdirSync(iterTestDir, { recursive: true });
 
-            // Add blocks that should be in the filter
-            for (const blockId of inFilter) {
-              registry.addLocal(blockId);
-            }
-
-            // Export Bloom filter
-            const bloomFilter = registry.exportBloomFilter();
-
-            // Count false positives for blocks NOT in the filter
-            let falsePositives = 0;
-            for (const blockId of notInFilter) {
-              if (bloomFilter.mightContain(blockId)) {
-                falsePositives++;
-              }
-            }
-
-            // Calculate false positive rate
-            const falsePositiveRate = falsePositives / notInFilter.length;
-
-            // Allow some margin for statistical variation
-            // Target is 1%, but we allow up to 5% to account for random variation
-            // in small sample sizes
-            const maxAllowedRate = 0.05;
-
-            if (falsePositiveRate > maxAllowedRate) {
-              throw new Error(
-                `False positive rate too high: ${(falsePositiveRate * 100).toFixed(2)}% ` +
-                  `(${falsePositives}/${notInFilter.length}), expected <= ${maxAllowedRate * 100}%`,
+            try {
+              const registry = new BlockRegistry(
+                nodeId,
+                iterTestDir,
+                blockSizeString,
+                {
+                  falsePositiveRate:
+                    DEFAULT_BLOOM_FILTER_CONFIG.falsePositiveRate,
+                  expectedItems: Math.max(inFilter.length, 1000),
+                },
               );
-            }
 
-            return true;
-          } finally {
-            rmSync(iterTestDir, { recursive: true, force: true });
-          }
-        }),
+              // Add blocks that should be in the filter
+              for (const blockId of inFilter) {
+                registry.addLocal(blockId);
+              }
+
+              // Export Bloom filter
+              const bloomFilter = registry.exportBloomFilter();
+
+              // Count false positives for blocks NOT in the filter
+              let falsePositives = 0;
+              for (const blockId of notInFilter) {
+                if (bloomFilter.mightContain(blockId)) {
+                  falsePositives++;
+                }
+              }
+
+              // Calculate false positive rate
+              const falsePositiveRate = falsePositives / notInFilter.length;
+
+              // Allow some margin for statistical variation
+              // Target is 1%, but we allow up to 5% to account for random variation
+              // in small sample sizes
+              const maxAllowedRate = 0.05;
+
+              if (falsePositiveRate > maxAllowedRate) {
+                throw new Error(
+                  `False positive rate too high: ${(falsePositiveRate * 100).toFixed(2)}% ` +
+                    `(${falsePositives}/${notInFilter.length}), expected <= ${maxAllowedRate * 100}%`,
+                );
+              }
+
+              return true;
+            } finally {
+              rmSync(iterTestDir, { recursive: true, force: true });
+            }
+          },
+        ),
         { numRuns: 50 },
       );
     });
@@ -275,7 +282,7 @@ describe('Bloom Filter Property Tests', () => {
               }
 
               // Get initial Bloom filter
-              const initialFilter = registry.exportBloomFilter();
+              const _initialFilter = registry.exportBloomFilter();
 
               // New block should not be in initial filter (with high probability)
               // Note: This might occasionally fail due to false positives

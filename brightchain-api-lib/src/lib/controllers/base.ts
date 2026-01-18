@@ -1,8 +1,8 @@
-/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
-import { StringLanguages } from '@brightchain/brightchain-lib';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   GlobalActiveContext,
   HandleableError,
+  LanguageCodes,
 } from '@digitaldefiance/i18n-lib';
 import {
   ApiResponse,
@@ -281,7 +281,7 @@ export abstract class BaseController<T extends ApiResponse, H extends object> {
     });
 
     const language = (GlobalActiveContext.instance.userLanguage ??
-      StringLanguages.EnglishUS) as StringLanguage;
+      LanguageCodes.EN_US) as StringLanguage;
 
     // If validationArray is a function, call it with the language
     const valArray =

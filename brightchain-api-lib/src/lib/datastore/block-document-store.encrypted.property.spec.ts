@@ -9,7 +9,16 @@
  * - Encrypted documents require proper member shares for decryption
  */
 
-import fc from 'fast-check';
+import {
+  BlockSize,
+  initializeBrightChain,
+  MemberType,
+  MemoryBlockStore,
+  QuorumMemberMetadata,
+  QuorumService,
+  ServiceLocator,
+  ServiceProvider,
+} from '@brightchain/brightchain-lib';
 import {
   EmailString,
   GuidV4,
@@ -17,17 +26,11 @@ import {
   Member,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
+import fc from 'fast-check';
 import {
-  BlockSize,
-  initializeBrightChain,
-  MemoryBlockStore,
-  MemberType,
-  QuorumMemberMetadata,
-  QuorumService,
-  ServiceProvider,
-  ServiceLocator,
-} from '@brightchain/brightchain-lib';
-import { BlockDocumentStore, CollectionHeadRegistry } from './block-document-store';
+  BlockDocumentStore,
+  CollectionHeadRegistry,
+} from './block-document-store';
 import { DocumentRecord } from './document-store';
 
 // Set a longer timeout for all tests in this file
@@ -57,7 +60,10 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
   /**
    * Helper to create a test member with random data
    */
-  function createTestMember(name: string, email: string): IMemberWithMnemonic<GuidV4> {
+  function createTestMember(
+    name: string,
+    email: string,
+  ): IMemberWithMnemonic<GuidV4> {
     const eciesService = ServiceProvider.getInstance<GuidV4>().eciesService;
     return Member.newMember<GuidV4>(
       eciesService,
@@ -91,11 +97,19 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
             content: fc.stringMatching(/^[A-Za-z0-9 ]{0,200}$/),
             value: fc.integer({ min: 0, max: 1000000 }),
           }),
-          async (document: { title: string; content: string; value: number }) => {
+          async (document: {
+            title: string;
+            content: string;
+            value: number;
+          }) => {
             const quorumService = createQuorumService();
             const blockStore = new MemoryBlockStore(BlockSize.Small);
-            const documentStore = new BlockDocumentStore(blockStore, quorumService);
-            const collection = documentStore.encryptedCollection<TestDocument>('test-docs');
+            const documentStore = new BlockDocumentStore(
+              blockStore,
+              quorumService,
+            );
+            const collection =
+              documentStore.encryptedCollection<TestDocument>('test-docs');
 
             const timestamp = Date.now();
             const random = Math.floor(Math.random() * 1000000);
@@ -139,14 +153,19 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
             });
 
             // Verify the document was created with encryption metadata
-            const encryptionMetadata = await collection.getEncryptionMetadata(createdDoc._id!);
+            const encryptionMetadata = await collection.getEncryptionMetadata(
+              createdDoc._id!,
+            );
             expect(encryptionMetadata).not.toBeNull();
             expect(encryptionMetadata!.isEncrypted).toBe(true);
 
             // Retrieve the document with decryption
-            const retrievedDoc = await collection.findByIdDecrypted(createdDoc._id!, {
-              membersWithPrivateKey: memberData.map((m) => m.member),
-            });
+            const retrievedDoc = await collection.findByIdDecrypted(
+              createdDoc._id!,
+              {
+                membersWithPrivateKey: memberData.map((m) => m.member),
+              },
+            );
 
             // Verify the document matches (excluding _id and encryption metadata)
             expect(retrievedDoc).not.toBeNull();
@@ -172,11 +191,19 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
             content: fc.stringMatching(/^[A-Za-z0-9]{0,50}$/),
             value: fc.integer({ min: 0, max: 100 }),
           }),
-          async (document: { title: string; content: string; value: number }) => {
+          async (document: {
+            title: string;
+            content: string;
+            value: number;
+          }) => {
             const quorumService = createQuorumService();
             const blockStore = new MemoryBlockStore(BlockSize.Small);
-            const documentStore = new BlockDocumentStore(blockStore, quorumService);
-            const collection = documentStore.encryptedCollection<TestDocument>('test-docs-fail');
+            const documentStore = new BlockDocumentStore(
+              blockStore,
+              quorumService,
+            );
+            const collection =
+              documentStore.encryptedCollection<TestDocument>('test-docs-fail');
 
             const timestamp = Date.now();
             const random = Math.floor(Math.random() * 1000000);
@@ -250,10 +277,16 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
             content: fc.stringMatching(/^[A-Za-z0-9]{0,50}$/),
             value: fc.integer({ min: 0, max: 100 }),
           }),
-          async (document: { title: string; content: string; value: number }) => {
+          async (document: {
+            title: string;
+            content: string;
+            value: number;
+          }) => {
             const blockStore = new MemoryBlockStore(BlockSize.Small);
             const documentStore = new BlockDocumentStore(blockStore);
-            const collection = documentStore.collection<TestDocument>('test-docs-unencrypted');
+            const collection = documentStore.collection<TestDocument>(
+              'test-docs-unencrypted',
+            );
 
             // Create the document without encryption
             const testDoc: TestDocument = {
@@ -265,7 +298,9 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
             const createdDoc = await collection.create(testDoc);
 
             // Retrieve the document
-            const retrievedDoc = await collection.findById(createdDoc._id!).exec();
+            const retrievedDoc = await collection
+              .findById(createdDoc._id!)
+              .exec();
 
             // Verify the document matches
             expect(retrievedDoc).not.toBeNull();

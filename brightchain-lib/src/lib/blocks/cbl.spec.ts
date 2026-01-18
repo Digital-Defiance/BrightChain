@@ -8,7 +8,6 @@ jest.mock('./handle', () => {
 });
 
 import {
-  arraysEqual,
   ChecksumUint8Array,
   EmailString,
   getEnhancedIdProvider,
@@ -19,7 +18,6 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { randomBytes } from '../browserCrypto';
-import { generateRandomKeysSync } from 'paillier-bigint';
 import { CHECKSUM, ECIES, TUPLE } from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
@@ -27,7 +25,7 @@ import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import MemberType from '../enumerations/memberType';
 import { BlockValidationError } from '../errors/block';
-import { initializeBrightChain } from '../init';
+import { initializeBrightChain, resetInitialization } from '../init';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { ConstituentBlockListBlock } from './cbl';
@@ -54,15 +52,18 @@ const ensureTupleSize = (count: number): number => {
   return count;
 };
 
-const cblService = ServiceProvider.getInstance().cblService;
-const _votingService = ServiceProvider.getInstance().votingService;
+// These will be initialized in beforeAll after initializeBrightChain()
+let cblService: ReturnType<typeof ServiceProvider.getInstance>['cblService'];
+let _votingService: ReturnType<typeof ServiceProvider.getInstance>['votingService'];
 
 // Test class that properly implements abstract methods
 class TestCblBlock<
   TID extends PlatformID = Uint8Array,
 > extends ConstituentBlockListBlock<TID> {
-  // Add static eciesService property to fix the test
-  public static eciesService = ServiceProvider.getInstance().eciesService;
+  // Get eciesService dynamically to ensure it's initialized after initializeBrightChain()
+  public static get eciesService() {
+    return ServiceProvider.getInstance().eciesService;
+  }
   constructor(
     blockSize: BlockSize,
     creator: Member<TID>,
@@ -120,7 +121,7 @@ class TestCblBlock<
 
     // Validate against block capacity before creating metadata
     const addressCount = dataAddresses.length;
-    const maxAddresses = cblService.calculateCBLAddressCapacity(
+    const maxAddresses = ServiceProvider.getInstance().cblService.calculateCBLAddressCapacity(
       blockSize,
       BlockEncryptionType.None,
     );
@@ -145,26 +146,36 @@ class TestCblBlock<
       false,
     );
 
-    const originalDataLengthBuffer = new Uint8Array(4);
-    new DataView(originalDataLengthBuffer.buffer).setUint32(
-      0,
-      fileDataLength,
-      false,
-    );
-
     const tupleSizeBuffer = new Uint8Array(1);
     tupleSizeBuffer[0] = TUPLE.SIZE;
 
+    const originalDataLengthBuffer = new Uint8Array(8);
+    new DataView(originalDataLengthBuffer.buffer).setBigUint64(
+      0,
+      BigInt(fileDataLength),
+      false,
+    );
+
+    // Data checksum (64 bytes of zeros for now)
+    const dataChecksumBuffer = new Uint8Array(CHECKSUM.SHA3_BUFFER_LENGTH);
+
+    // Is extended header flag (1 byte)
+    const isExtendedHeaderBuffer = new Uint8Array(1);
+    isExtendedHeaderBuffer[0] = 0; // Not extended
+
     // Create header without signature
-    const provider = getEnhancedIdProvider<TID>();
-    const creatorId = provider.toBytes(creator.id);
+    // Use the same provider that CBLService uses to ensure consistent header structure
+    const cblServiceProvider = ServiceProvider.getInstance().cblService.idProvider;
+    const creatorId = cblServiceProvider.toBytes(creator.id as unknown as Uint8Array);
 
     const headerWithoutSignature = new Uint8Array(
       creatorId.length +
         dateCreatedBuffer.length +
         cblAddressCountBuffer.length +
+        tupleSizeBuffer.length +
         originalDataLengthBuffer.length +
-        tupleSizeBuffer.length,
+        dataChecksumBuffer.length +
+        isExtendedHeaderBuffer.length,
     );
     let headerOffset = 0;
     headerWithoutSignature.set(creatorId, headerOffset);
@@ -173,9 +184,13 @@ class TestCblBlock<
     headerOffset += dateCreatedBuffer.length;
     headerWithoutSignature.set(cblAddressCountBuffer, headerOffset);
     headerOffset += cblAddressCountBuffer.length;
+    headerWithoutSignature.set(tupleSizeBuffer, headerOffset);
+    headerOffset += tupleSizeBuffer.length;
     headerWithoutSignature.set(originalDataLengthBuffer, headerOffset);
     headerOffset += originalDataLengthBuffer.length;
-    headerWithoutSignature.set(tupleSizeBuffer, headerOffset);
+    headerWithoutSignature.set(dataChecksumBuffer, headerOffset);
+    headerOffset += dataChecksumBuffer.length;
+    headerWithoutSignature.set(isExtendedHeaderBuffer, headerOffset);
 
     let finalSignature: SignatureUint8Array;
     if (creator instanceof Member && creator.privateKey !== undefined) {
@@ -204,7 +219,7 @@ class TestCblBlock<
           );
         finalSignature = ServiceProvider.getInstance().eciesService.signMessage(
           privateKeyBuffer,
-          new Uint8Array(signatureChecksum),
+          signatureChecksum.toUint8Array(),
         );
       }
 
@@ -230,7 +245,7 @@ class TestCblBlock<
       if (
         !ServiceProvider.getInstance().eciesService.verifyMessage(
           creator.publicKey,
-          new Uint8Array(verifyChecksum),
+          verifyChecksum.toUint8Array(),
           finalSignature,
         )
       ) {
@@ -319,9 +334,7 @@ describe('ConstituentBlockListBlock', () => {
         view.setUint32(0, startIndex + index, false);
         // Add some random data to ensure uniqueness
         view.setUint32(4, Math.floor(Math.random() * 0xffffffff), false);
-        return new Uint8Array(
-          checksumService.calculateChecksum(data),
-        ) as ChecksumUint8Array;
+        return checksumService.calculateChecksum(data).toUint8Array() as ChecksumUint8Array;
       });
 
     // Verify all addresses are unique
@@ -371,13 +384,17 @@ describe('ConstituentBlockListBlock', () => {
   beforeAll(async () => {
     // Initialize BrightChain with browser-compatible configuration
     initializeBrightChain();
-    
+
     // Initialize service provider
     ServiceProvider.getInstance();
-    
+
+    // Initialize services after BrightChain is initialized
+    cblService = ServiceProvider.getInstance().cblService;
+    _votingService = ServiceProvider.getInstance().votingService;
+
     const mnemonic = eciesService.generateNewMnemonic();
     const { wallet } = eciesService.walletAndSeedFromMnemonic(mnemonic);
-    const privateKey = new Uint8Array(wallet.getPrivateKey());
+    const _privateKey = new Uint8Array(wallet.getPrivateKey());
     const publicKeyData = new Uint8Array(wallet.getPublicKey());
     const publicKey = new Uint8Array(1 + publicKeyData.length);
     publicKey[0] = ECIES.PUBLIC_KEY_MAGIC;
@@ -392,6 +409,9 @@ describe('ConstituentBlockListBlock', () => {
   });
 
   beforeEach(() => {
+    // Re-initialize BrightChain after ServiceProvider reset
+    initializeBrightChain();
+    
     checksumService = ServiceProvider.getInstance().checksumService;
     dataAddresses = createTestAddresses(ensureTupleSize(TUPLE.SIZE));
 
@@ -400,7 +420,7 @@ describe('ConstituentBlockListBlock', () => {
   });
 
   afterEach(() => {
-    ServiceProvider.resetInstance();
+    resetInitialization();
   });
 
   describe('basic functionality', () => {
@@ -421,16 +441,18 @@ describe('ConstituentBlockListBlock', () => {
     it('should handle creators correctly', () => {
       const memberBlock = createTestBlock();
       expect(memberBlock.creator).toBe(creator);
-      
+
       // Since GUID validation is failing, just verify the block was created successfully
       // and has the expected properties
       expect(memberBlock).toBeDefined();
       expect(memberBlock.creator).toBeDefined();
       expect(memberBlock.creatorId).toBeDefined();
-      
+
       // The actual GUID comparison is failing due to ecies-lib validation issues
       // but the block creation itself is working
-      console.log('CBL block created successfully with creator ID validation issues handled');
+      console.log(
+        'CBL block created successfully with creator ID validation issues handled',
+      );
 
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
@@ -524,10 +546,10 @@ describe('ConstituentBlockListBlock', () => {
 
       // Verify the block has an ID (checksum)
       expect(block.idChecksum).toBeDefined();
-      expect(block.idChecksum.length).toBeGreaterThan(0);
+      expect(block.idChecksum.toUint8Array().length).toBeGreaterThan(0);
 
-      // Verify the ID is a valid checksum
-      expect(block.idChecksum instanceof Uint8Array).toBe(true);
+      // Verify the ID is a valid Checksum instance
+      expect(block.idChecksum.constructor.name).toBe('Checksum');
 
       expect(mockConsoleError).not.toHaveBeenCalled();
     });
@@ -568,7 +590,7 @@ describe('ConstituentBlockListBlock', () => {
       const provider = getEnhancedIdProvider();
       const blockCreatorId = block.creatorId;
       const creatorId = creator.id;
-      
+
       // Add null checks to prevent undefined errors
       if (blockCreatorId && creatorId) {
         try {
@@ -576,7 +598,10 @@ describe('ConstituentBlockListBlock', () => {
         } catch (error) {
           // If the comparison fails due to undefined properties, just verify the block was created
           expect(block).toBeDefined();
-          console.warn('Creator ID comparison failed, likely due to GUID validation issues:', error);
+          console.warn(
+            'Creator ID comparison failed, likely due to GUID validation issues:',
+            error,
+          );
         }
       } else {
         // If either ID is undefined, just verify the block was created

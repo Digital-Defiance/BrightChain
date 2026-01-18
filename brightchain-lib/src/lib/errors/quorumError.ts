@@ -1,5 +1,4 @@
 import { QuorumErrorType } from '../enumerations/quorumErrorType';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { TypedError } from './typedError';
 
@@ -22,7 +21,7 @@ export class QuorumError extends TypedError<QuorumErrorType> {
         StringNames.Error_QuorumErrorNotEnoughMembers,
     };
   }
-  constructor(type: QuorumErrorType, _language?: StringLanguages) {
+  constructor(type: QuorumErrorType, _language?: string) {
     super(type, undefined);
     this.name = 'QuorumError';
   }

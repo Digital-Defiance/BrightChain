@@ -1,12 +1,12 @@
 import {
   ChecksumUint8Array,
   Guid,
+  hexToUint8Array,
   Member,
   SignatureUint8Array,
   uint8ArrayToHex,
-  hexToUint8Array,
 } from '@digitaldefiance/ecies-lib';
-import { uint8ArrayToBase64, base64ToUint8Array } from '../../bufferUtils';
+import { base64ToUint8Array, uint8ArrayToBase64 } from '../../bufferUtils';
 import { NetworkDocument } from '../../documents/network/networkDocument';
 import StringNames from '../../enumerations/stringNames';
 import { FailedToHydrateError } from '../../errors/failedToHydrate';
@@ -26,8 +26,7 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
   id: {
     type: Object,
     required: true,
-    serialize: (value: Uint8Array): string =>
-      uint8ArrayToHex(value),
+    serialize: (value: Uint8Array): string => uint8ArrayToHex(value),
     hydrate: (value: string): Uint8Array => {
       if (!isString(value)) throw new InvalidIDFormatError();
       return hexToUint8Array(value);
@@ -88,8 +87,7 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
   checksum: {
     type: Object,
     required: true,
-    serialize: (value: ChecksumUint8Array): string =>
-      uint8ArrayToBase64(value),
+    serialize: (value: ChecksumUint8Array): string => uint8ArrayToBase64(value),
     hydrate: (value: string): ChecksumUint8Array => {
       if (!isString(value))
         throw new FailedToHydrateError(

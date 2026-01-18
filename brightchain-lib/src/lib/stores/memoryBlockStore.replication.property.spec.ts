@@ -54,16 +54,20 @@ describe('MemoryBlockStore Replication Property Tests', () => {
           fc.integer({ min: 1, max: 10 }),
           async (data, targetReplicationFactor) => {
             const testStore = new MemoryBlockStore(blockSize);
-            
+
             try {
               const block = new RawDataBlock(blockSize, data);
-              
+
               await testStore.setData(block, { targetReplicationFactor });
-              
+
               const metadata = await testStore.getMetadata(block.idChecksum);
               expect(metadata).not.toBeNull();
-              expect(metadata!.replicationStatus).toBe(ReplicationStatus.Pending);
-              expect(metadata!.targetReplicationFactor).toBe(targetReplicationFactor);
+              expect(metadata!.replicationStatus).toBe(
+                ReplicationStatus.Pending,
+              );
+              expect(metadata!.targetReplicationFactor).toBe(
+                targetReplicationFactor,
+              );
               expect(metadata!.replicaNodeIds.length).toBe(0);
             } finally {
               testStore.clear();
@@ -87,21 +91,28 @@ describe('MemoryBlockStore Replication Property Tests', () => {
           fc.integer({ min: 1, max: 5 }),
           async (data, targetReplicationFactor) => {
             const testStore = new MemoryBlockStore(blockSize);
-            
+
             try {
               const block = new RawDataBlock(blockSize, data);
-              
+
               await testStore.setData(block, { targetReplicationFactor });
-              
+
               // Record replications to meet target
               for (let i = 0; i < targetReplicationFactor; i++) {
-                await testStore.recordReplication(block.idChecksum, `node-${i}`);
+                await testStore.recordReplication(
+                  block.idChecksum,
+                  `node-${i}`,
+                );
               }
-              
+
               const metadata = await testStore.getMetadata(block.idChecksum);
               expect(metadata).not.toBeNull();
-              expect(metadata!.replicationStatus).toBe(ReplicationStatus.Replicated);
-              expect(metadata!.replicaNodeIds.length).toBe(targetReplicationFactor);
+              expect(metadata!.replicationStatus).toBe(
+                ReplicationStatus.Replicated,
+              );
+              expect(metadata!.replicaNodeIds.length).toBe(
+                targetReplicationFactor,
+              );
             } finally {
               testStore.clear();
             }
@@ -124,28 +135,37 @@ describe('MemoryBlockStore Replication Property Tests', () => {
           fc.integer({ min: 2, max: 5 }),
           async (data, targetReplicationFactor) => {
             const testStore = new MemoryBlockStore(blockSize);
-            
+
             try {
               const block = new RawDataBlock(blockSize, data);
-              
+
               await testStore.setData(block, { targetReplicationFactor });
-              
+
               // Record replications to meet target
               for (let i = 0; i < targetReplicationFactor; i++) {
-                await testStore.recordReplication(block.idChecksum, `node-${i}`);
+                await testStore.recordReplication(
+                  block.idChecksum,
+                  `node-${i}`,
+                );
               }
-              
+
               // Verify replicated status
               let metadata = await testStore.getMetadata(block.idChecksum);
-              expect(metadata!.replicationStatus).toBe(ReplicationStatus.Replicated);
-              
+              expect(metadata!.replicationStatus).toBe(
+                ReplicationStatus.Replicated,
+              );
+
               // Lose one replica
               await testStore.recordReplicaLoss(block.idChecksum, 'node-0');
-              
+
               metadata = await testStore.getMetadata(block.idChecksum);
               expect(metadata).not.toBeNull();
-              expect(metadata!.replicationStatus).toBe(ReplicationStatus.UnderReplicated);
-              expect(metadata!.replicaNodeIds.length).toBe(targetReplicationFactor - 1);
+              expect(metadata!.replicationStatus).toBe(
+                ReplicationStatus.UnderReplicated,
+              );
+              expect(metadata!.replicaNodeIds.length).toBe(
+                targetReplicationFactor - 1,
+              );
             } finally {
               testStore.clear();
             }
@@ -173,23 +193,30 @@ describe('MemoryBlockStore Replication Property Tests', () => {
           ),
           async (blockSpecs) => {
             const testStore = new MemoryBlockStore(blockSize);
-            
+
             try {
-              const storedBlocks: { block: RawDataBlock; target: number }[] = [];
-              
+              const storedBlocks: { block: RawDataBlock; target: number }[] =
+                [];
+
               for (const spec of blockSpecs) {
                 const block = new RawDataBlock(blockSize, spec.data);
-                await testStore.setData(block, { 
-                  targetReplicationFactor: spec.targetReplicationFactor 
+                await testStore.setData(block, {
+                  targetReplicationFactor: spec.targetReplicationFactor,
                 });
-                storedBlocks.push({ block, target: spec.targetReplicationFactor });
+                storedBlocks.push({
+                  block,
+                  target: spec.targetReplicationFactor,
+                });
               }
-              
-              const pendingBlocks = await testStore.getBlocksPendingReplication();
-              
+
+              const pendingBlocks =
+                await testStore.getBlocksPendingReplication();
+
               // Count expected pending blocks (those with target > 0)
-              const expectedPendingCount = storedBlocks.filter(b => b.target > 0).length;
-              
+              const expectedPendingCount = storedBlocks.filter(
+                (b) => b.target > 0,
+              ).length;
+
               expect(pendingBlocks.length).toBe(expectedPendingCount);
             } finally {
               testStore.clear();
@@ -213,28 +240,31 @@ describe('MemoryBlockStore Replication Property Tests', () => {
           fc.integer({ min: 2, max: 5 }),
           async (data, targetReplicationFactor) => {
             const testStore = new MemoryBlockStore(blockSize);
-            
+
             try {
               const block = new RawDataBlock(blockSize, data);
-              
+
               await testStore.setData(block, { targetReplicationFactor });
-              
+
               // Initially should not be in under-replicated list
               let underReplicated = await testStore.getUnderReplicatedBlocks();
               expect(underReplicated.length).toBe(0);
-              
+
               // Meet target
               for (let i = 0; i < targetReplicationFactor; i++) {
-                await testStore.recordReplication(block.idChecksum, `node-${i}`);
+                await testStore.recordReplication(
+                  block.idChecksum,
+                  `node-${i}`,
+                );
               }
-              
+
               // Still should not be under-replicated
               underReplicated = await testStore.getUnderReplicatedBlocks();
               expect(underReplicated.length).toBe(0);
-              
+
               // Lose a replica
               await testStore.recordReplicaLoss(block.idChecksum, 'node-0');
-              
+
               // Now should be under-replicated
               underReplicated = await testStore.getUnderReplicatedBlocks();
               expect(underReplicated.length).toBe(1);
@@ -257,17 +287,20 @@ describe('MemoryBlockStore Replication Property Tests', () => {
           fc.integer({ min: 1, max: 5 }),
           async (data, recordCount) => {
             const testStore = new MemoryBlockStore(blockSize);
-            
+
             try {
               const block = new RawDataBlock(blockSize, data);
-              
+
               await testStore.setData(block, { targetReplicationFactor: 3 });
-              
+
               // Record same node multiple times
               for (let i = 0; i < recordCount; i++) {
-                await testStore.recordReplication(block.idChecksum, 'same-node');
+                await testStore.recordReplication(
+                  block.idChecksum,
+                  'same-node',
+                );
               }
-              
+
               const metadata = await testStore.getMetadata(block.idChecksum);
               expect(metadata).not.toBeNull();
               expect(metadata!.replicaNodeIds.length).toBe(1);
@@ -291,25 +324,33 @@ describe('MemoryBlockStore Replication Property Tests', () => {
           fc.integer({ min: 1, max: 3 }),
           async (data, targetReplicationFactor) => {
             const testStore = new MemoryBlockStore(blockSize);
-            
+
             try {
               const block = new RawDataBlock(blockSize, data);
-              
+
               await testStore.setData(block, { targetReplicationFactor });
-              
+
               // Meet target
               for (let i = 0; i < targetReplicationFactor; i++) {
-                await testStore.recordReplication(block.idChecksum, `node-${i}`);
+                await testStore.recordReplication(
+                  block.idChecksum,
+                  `node-${i}`,
+                );
               }
-              
+
               // Lose all replicas
               for (let i = 0; i < targetReplicationFactor; i++) {
-                await testStore.recordReplicaLoss(block.idChecksum, `node-${i}`);
+                await testStore.recordReplicaLoss(
+                  block.idChecksum,
+                  `node-${i}`,
+                );
               }
-              
+
               const metadata = await testStore.getMetadata(block.idChecksum);
               expect(metadata).not.toBeNull();
-              expect(metadata!.replicationStatus).toBe(ReplicationStatus.Pending);
+              expect(metadata!.replicationStatus).toBe(
+                ReplicationStatus.Pending,
+              );
               expect(metadata!.replicaNodeIds.length).toBe(0);
             } finally {
               testStore.clear();
@@ -330,14 +371,15 @@ describe('MemoryBlockStore Replication Property Tests', () => {
           fc.uint8Array({ minLength: 1, maxLength: 100 }),
           async (data) => {
             const testStore = new MemoryBlockStore(blockSize);
-            
+
             try {
               const block = new RawDataBlock(blockSize, data);
-              
+
               // Store with no replication target
               await testStore.setData(block, { targetReplicationFactor: 0 });
-              
-              const pendingBlocks = await testStore.getBlocksPendingReplication();
+
+              const pendingBlocks =
+                await testStore.getBlocksPendingReplication();
               expect(pendingBlocks.length).toBe(0);
             } finally {
               testStore.clear();

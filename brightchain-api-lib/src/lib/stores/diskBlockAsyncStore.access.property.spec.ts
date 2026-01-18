@@ -12,10 +12,10 @@
 import {
   BlockSize,
   DurabilityLevel,
-  RawDataBlock,
   initializeBrightChain,
-  ServiceProvider,
+  RawDataBlock,
   ServiceLocator,
+  ServiceProvider,
 } from '@brightchain/brightchain-lib';
 import { uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
@@ -57,7 +57,7 @@ describe('DiskBlockAsyncStore Access Tracking Property Tests', () => {
             // Re-initialize for each property test iteration
             initializeBrightChain();
             ServiceLocator.setServiceProvider(ServiceProvider.getInstance());
-            
+
             const iterTestDir = join(
               '/tmp',
               'brightchain-access-track-test-' +
@@ -86,7 +86,9 @@ describe('DiskBlockAsyncStore Access Tracking Property Tests', () => {
                 const exists = await store.has(block.idChecksum);
                 expect(exists).toBe(true);
                 // Access via getMetadata which triggers recordAccess internally
-                await store.getMetadataStore().recordAccess(uint8ArrayToHex(block.idChecksum));
+                await store
+                  .getMetadataStore()
+                  .recordAccess(block.idChecksum.toHex());
               }
 
               // Verify access tracking
@@ -117,7 +119,7 @@ describe('DiskBlockAsyncStore Access Tracking Property Tests', () => {
             // Re-initialize for each property test iteration
             initializeBrightChain();
             ServiceLocator.setServiceProvider(ServiceProvider.getInstance());
-            
+
             const iterTestDir = join(
               '/tmp',
               'brightchain-access-incr-test-' +
@@ -133,7 +135,7 @@ describe('DiskBlockAsyncStore Access Tracking Property Tests', () => {
 
             try {
               const block = new RawDataBlock(blockSize, data);
-              const keyHex = uint8ArrayToHex(block.idChecksum);
+              const keyHex = block.idChecksum.toHex();
 
               await store.setData(block, {
                 durabilityLevel: DurabilityLevel.Ephemeral,
@@ -169,7 +171,7 @@ describe('DiskBlockAsyncStore Access Tracking Property Tests', () => {
             // Re-initialize for each property test iteration
             initializeBrightChain();
             ServiceLocator.setServiceProvider(ServiceProvider.getInstance());
-            
+
             const iterTestDir = join(
               '/tmp',
               'brightchain-access-time-test-' +
@@ -185,7 +187,7 @@ describe('DiskBlockAsyncStore Access Tracking Property Tests', () => {
 
             try {
               const block = new RawDataBlock(blockSize, data);
-              const keyHex = uint8ArrayToHex(block.idChecksum);
+              const keyHex = block.idChecksum.toHex();
 
               await store.setData(block, {
                 durabilityLevel: DurabilityLevel.Ephemeral,

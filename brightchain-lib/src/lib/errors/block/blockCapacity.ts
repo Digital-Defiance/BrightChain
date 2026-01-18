@@ -1,5 +1,4 @@
 import { BlockCapacityErrorType } from '../../enumerations/blockCapacityErrorType';
-import { StringLanguages } from '../../enumerations/stringLanguages';
 import StringNames from '../../enumerations/stringNames';
 import { TypedError } from '../typedError';
 
@@ -25,7 +24,7 @@ export class BlockCapacityError extends TypedError<BlockCapacityErrorType> {
 
   constructor(
     type: BlockCapacityErrorType,
-    language?: StringLanguages,
+    language?: string,
     otherVars?: Record<string, string | number>,
   ) {
     super(type, undefined, otherVars);

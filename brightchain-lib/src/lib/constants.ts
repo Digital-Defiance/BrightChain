@@ -12,7 +12,6 @@ import { Constants as BaseConstants } from '@digitaldefiance/ecies-lib';
 import { BRIGHTCHAIN_ECIES } from './brightChainConsts';
 import {
   ICBLConsts,
-  IConstants,
   IFECConsts,
   IJwtConsts,
   ISealingConsts,
@@ -245,7 +244,7 @@ export const SEALING: ISealingConsts = {
  * BrightChain constants object extending base constants from @digitaldefiance/ecies-lib.
  * Only includes BrightChain-specific constants not provided by upstream.
  */
-export const CONSTANTS: IConstants = {
+export const CONSTANTS = {
   ...BaseConstants,
   // BrightChain-specific constants
   CBL,

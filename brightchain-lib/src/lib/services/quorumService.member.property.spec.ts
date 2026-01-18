@@ -10,14 +10,13 @@
  * - Removed members are marked inactive but still retrievable
  */
 
-import fc from 'fast-check';
 import {
   EmailString,
   GuidV4,
   Member,
   ShortHexGuid,
-  uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
+import fc from 'fast-check';
 import { MemberType } from '../enumerations/memberType';
 import { initializeBrightChain } from '../init';
 import { QuorumMemberMetadata } from '../interfaces/services/quorumService';
@@ -26,7 +25,7 @@ import { ServiceProvider } from './service.provider';
 import { ServiceLocator } from './serviceLocator';
 
 describe('QuorumService Member Management Property Tests', () => {
-  let quorumService: QuorumService<GuidV4>;
+  let _quorumService: QuorumService<GuidV4>;
 
   beforeAll(() => {
     initializeBrightChain();
@@ -36,7 +35,7 @@ describe('QuorumService Member Management Property Tests', () => {
   beforeEach(() => {
     initializeBrightChain();
     ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4>());
-    quorumService = new QuorumService<GuidV4>();
+    _quorumService = new QuorumService<GuidV4>();
   });
 
   afterEach(() => {

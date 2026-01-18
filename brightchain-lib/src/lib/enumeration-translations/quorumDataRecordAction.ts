@@ -1,5 +1,5 @@
+import { LanguageCodes } from '@digitaldefiance/i18n-lib';
 import QuorumDataRecordActionType from '../enumerations/actionType';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import { registerTranslation } from '../i18n';
 import { createTranslations, EnumLanguageTranslation } from '../types';
 
@@ -10,7 +10,7 @@ export const QuorumDataRecordActionTypeTranslations: QuorumDataRecordActionTypeT
   registerTranslation(
     QuorumDataRecordActionType,
     createTranslations({
-      [StringLanguages.EnglishUS]: {
+      [LanguageCodes.EN_US]: {
         [QuorumDataRecordActionType.Seal]: 'Seal',
         [QuorumDataRecordActionType.Unseal]: 'Unseal',
         [QuorumDataRecordActionType.Reseal]: 'Reseal',

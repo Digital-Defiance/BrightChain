@@ -1,14 +1,10 @@
-import {
-  ECIESService,
-  EmailString,
-  Member,
-} from '@digitaldefiance/ecies-lib';
+import { EmailString, Member } from '@digitaldefiance/ecies-lib';
 import MemberType from '../../enumerations/memberType';
 import { ServiceProvider } from '../../services/service.provider';
 import { MemberDocument } from './memberDocument';
 
 describe('MemberDocument Simple Test', () => {
-  it('should create a basic member document', async () => {
+  it('should create a basic member document using factory method', async () => {
     // Initialize service provider
     ServiceProvider.getInstance();
     const eciesService = ServiceProvider.getInstance().eciesService;
@@ -28,9 +24,9 @@ describe('MemberDocument Simple Test', () => {
       new EmailString('private@example.com'),
     );
 
-    // Create document
-    const doc = new MemberDocument(publicMember, privateMember);
-    
+    // Create document using factory method
+    const doc = MemberDocument.create(publicMember, privateMember);
+
     expect(doc).toBeInstanceOf(MemberDocument);
     expect(doc.id).toBe(idProvider.idToString(publicMember.id));
     expect(doc.name).toBe(publicMember.name);

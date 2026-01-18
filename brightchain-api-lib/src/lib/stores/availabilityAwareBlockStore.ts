@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 /**
  * @fileoverview Availability-Aware Block Store Wrapper
  *
@@ -15,6 +14,7 @@ import {
   BlockHandle,
   BlockStoreOptions,
   BrightenResult,
+  Checksum,
   IAvailabilityService,
   IBlockMetadata,
   IBlockRegistry,
@@ -26,10 +26,6 @@ import {
   RawDataBlock,
   RecoveryResult,
 } from '@brightchain/brightchain-lib';
-import {
-  ChecksumUint8Array,
-  uint8ArrayToHex,
-} from '@digitaldefiance/ecies-lib';
 
 /**
  * Error thrown when an operation is attempted during partition mode
@@ -164,7 +160,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param key - The block's checksum or ID
    * @returns Promise resolving to true if the block exists
    */
-  async has(key: ChecksumUint8Array | string): Promise<boolean> {
+  async has(key: Checksum | string): Promise<boolean> {
     return this.innerStore.has(key);
   }
 
@@ -177,7 +173,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @throws StoreError if block not found
    * @see Requirements 12.4
    */
-  async getData(key: ChecksumUint8Array): Promise<RawDataBlock> {
+  async getData(key: Checksum): Promise<RawDataBlock> {
     const blockId = this.keyToHex(key);
 
     // Check availability state for remote blocks during partition mode
@@ -258,7 +254,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param key - The block's checksum
    * @see Requirements 12.3, 8.3, 8.5
    */
-  async deleteData(key: ChecksumUint8Array): Promise<void> {
+  async deleteData(key: Checksum): Promise<void> {
     const blockId = this.keyToHex(key);
 
     // Delete from inner store first
@@ -293,7 +289,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param count - Maximum number of blocks to return
    * @returns Array of random block checksums
    */
-  async getRandomBlocks(count: number): Promise<ChecksumUint8Array[]> {
+  async getRandomBlocks(count: number): Promise<Checksum[]> {
     return this.innerStore.getRandomBlocks(count);
   }
 
@@ -303,9 +299,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param checksum - The block's checksum or ID
    * @returns Block handle
    */
-  get<T extends BaseBlock>(
-    checksum: ChecksumUint8Array | string,
-  ): BlockHandle<T> {
+  get<T extends BaseBlock>(checksum: Checksum | string): BlockHandle<T> {
     return this.innerStore.get<T>(checksum);
   }
 
@@ -317,15 +311,12 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param options - Optional storage options
    */
   async put(
-    key: ChecksumUint8Array | string,
+    key: Checksum | string,
     data: Uint8Array,
     options?: BlockStoreOptions,
   ): Promise<void> {
-    const keyBuffer =
-      typeof key === 'string'
-        ? (Buffer.from(key, 'hex') as unknown as ChecksumUint8Array)
-        : key;
-    const blockId = this.keyToHex(keyBuffer);
+    const keyChecksum = typeof key === 'string' ? Checksum.fromHex(key) : key;
+    const blockId = this.keyToHex(keyChecksum);
 
     // Delegate to inner store
     await this.innerStore.put(key, data, options);
@@ -366,12 +357,9 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    *
    * @param key - The block's checksum or ID
    */
-  async delete(key: ChecksumUint8Array | string): Promise<void> {
-    const keyBuffer =
-      typeof key === 'string'
-        ? (Buffer.from(key, 'hex') as unknown as ChecksumUint8Array)
-        : key;
-    await this.deleteData(keyBuffer);
+  async delete(key: Checksum | string): Promise<void> {
+    const keyChecksum = typeof key === 'string' ? Checksum.fromHex(key) : key;
+    await this.deleteData(keyChecksum);
   }
 
   // === Metadata Operations ===
@@ -382,9 +370,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param key - The block's checksum or ID
    * @returns The block's metadata, or null if not found
    */
-  async getMetadata(
-    key: ChecksumUint8Array | string,
-  ): Promise<IBlockMetadata | null> {
+  async getMetadata(key: Checksum | string): Promise<IBlockMetadata | null> {
     return this.innerStore.getMetadata(key);
   }
 
@@ -395,7 +381,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param updates - Partial metadata updates to apply
    */
   async updateMetadata(
-    key: ChecksumUint8Array | string,
+    key: Checksum | string,
     updates: Partial<IBlockMetadata>,
   ): Promise<void> {
     return this.innerStore.updateMetadata(key, updates);
@@ -411,9 +397,9 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @returns Array of parity block checksums
    */
   async generateParityBlocks(
-    key: ChecksumUint8Array | string,
+    key: Checksum | string,
     parityCount: number,
-  ): Promise<ChecksumUint8Array[]> {
+  ): Promise<Checksum[]> {
     return this.innerStore.generateParityBlocks(key, parityCount);
   }
 
@@ -423,9 +409,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param key - The data block's checksum or ID
    * @returns Array of parity block checksums
    */
-  async getParityBlocks(
-    key: ChecksumUint8Array | string,
-  ): Promise<ChecksumUint8Array[]> {
+  async getParityBlocks(key: Checksum | string): Promise<Checksum[]> {
     return this.innerStore.getParityBlocks(key);
   }
 
@@ -435,9 +419,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param key - The block's checksum or ID
    * @returns Recovery result
    */
-  async recoverBlock(
-    key: ChecksumUint8Array | string,
-  ): Promise<RecoveryResult> {
+  async recoverBlock(key: Checksum | string): Promise<RecoveryResult> {
     return this.innerStore.recoverBlock(key);
   }
 
@@ -447,9 +429,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param key - The block's checksum or ID
    * @returns True if the block data matches its parity data
    */
-  async verifyBlockIntegrity(
-    key: ChecksumUint8Array | string,
-  ): Promise<boolean> {
+  async verifyBlockIntegrity(key: Checksum | string): Promise<boolean> {
     return this.innerStore.verifyBlockIntegrity(key);
   }
 
@@ -460,7 +440,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    *
    * @returns Array of block checksums pending replication
    */
-  async getBlocksPendingReplication(): Promise<ChecksumUint8Array[]> {
+  async getBlocksPendingReplication(): Promise<Checksum[]> {
     return this.innerStore.getBlocksPendingReplication();
   }
 
@@ -469,7 +449,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    *
    * @returns Array of block checksums that need additional replicas
    */
-  async getUnderReplicatedBlocks(): Promise<ChecksumUint8Array[]> {
+  async getUnderReplicatedBlocks(): Promise<Checksum[]> {
     return this.innerStore.getUnderReplicatedBlocks();
   }
 
@@ -480,7 +460,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param nodeId - The ID of the node that now holds a replica
    */
   async recordReplication(
-    key: ChecksumUint8Array | string,
+    key: Checksum | string,
     nodeId: string,
   ): Promise<void> {
     const blockId = this.keyToHex(key);
@@ -504,7 +484,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param nodeId - The ID of the node that lost the replica
    */
   async recordReplicaLoss(
-    key: ChecksumUint8Array | string,
+    key: Checksum | string,
     nodeId: string,
   ): Promise<void> {
     const blockId = this.keyToHex(key);
@@ -526,7 +506,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @returns Result containing the brightened block ID and random block IDs
    */
   async brightenBlock(
-    key: ChecksumUint8Array | string,
+    key: Checksum | string,
     randomBlockCount: number,
   ): Promise<BrightenResult> {
     const result = await this.innerStore.brightenBlock(key, randomBlockCount);
@@ -565,8 +545,8 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
   /**
    * Convert a key to hex string format.
    */
-  private keyToHex(key: ChecksumUint8Array | string): string {
-    return typeof key === 'string' ? key : uint8ArrayToHex(key);
+  private keyToHex(key: Checksum | string): string {
+    return typeof key === 'string' ? key : key.toHex();
   }
 
   /**

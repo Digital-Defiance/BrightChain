@@ -53,7 +53,10 @@ export type DefaultBackendIdType = ObjectIdString;
 export interface IBlockStorageSchema<T> {
   name: ModelName;
   fields: Record<string, unknown>;
-  indexes?: Array<{ fields: Record<string, number | undefined>; options?: Record<string, unknown> }>;
+  indexes?: Array<{
+    fields: Record<string, number | undefined>;
+    options?: Record<string, unknown>;
+  }>;
   validate?: (doc: Partial<T>) => void;
 }
 

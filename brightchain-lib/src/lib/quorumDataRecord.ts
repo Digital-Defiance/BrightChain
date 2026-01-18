@@ -1,6 +1,5 @@
 import {
-  arraysEqual,
-  ChecksumUint8Array,
+  ChecksumString,
   ECIESService,
   getEnhancedIdProvider,
   HexString,
@@ -15,6 +14,7 @@ import {
 import { createECIESService } from './browserConfig';
 import { QuorumDataRecordDto } from './quorumDataRecordDto';
 import { ChecksumService } from './services/checksum.service';
+import { Checksum } from './types/checksum';
 
 export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
   public readonly checksumService: ChecksumService = new ChecksumService();
@@ -27,7 +27,7 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
   /**
    * sha-3 hash of the encrypted data
    */
-  public readonly checksum: ChecksumUint8Array;
+  public readonly checksum: Checksum;
   public readonly creator: Member<TID>;
   public readonly signature: SignatureUint8Array;
   public readonly memberIDs: TID[];
@@ -41,7 +41,7 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
     sharesRequired: number,
     encryptedData: Uint8Array,
     encryptedSharesByMemberId: Map<ShortHexGuid, Uint8Array>,
-    checksum?: ChecksumUint8Array,
+    checksum?: Checksum,
     signature?: SignatureUint8Array,
     id?: TID,
     dateCreated?: Date,
@@ -73,17 +73,18 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
     this.encryptedSharesByMemberId = encryptedSharesByMemberId;
     const calculatedChecksum =
       this.checksumService.calculateChecksum(encryptedData);
-    if (checksum && !arraysEqual(checksum, calculatedChecksum)) {
+    if (checksum && !checksum.equals(calculatedChecksum)) {
       throw new Error('Invalid checksum');
     }
     this.checksum = calculatedChecksum;
     this.creator = creator;
     this.signature =
-      signature ?? (creator.sign(this.checksum) as SignatureUint8Array);
+      signature ??
+      (creator.sign(this.checksum.toUint8Array()) as SignatureUint8Array);
     if (
       !this.eciesService.verifyMessage(
         creator.publicKey,
-        this.checksum,
+        this.checksum.toUint8Array(),
         this.signature,
       )
     ) {
@@ -115,7 +116,7 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
       ) as ShortHexGuid,
       encryptedData: uint8ArrayToHex(this.encryptedData) as HexString,
       encryptedSharesByMemberId,
-      checksum: this.checksumService.checksumToHexString(this.checksum),
+      checksum: this.checksum.toHex() as ChecksumString,
       signature: this.eciesService.signatureBufferToSignatureString(
         this.signature,
       ),
@@ -156,7 +157,7 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
       dto.sharesRequired,
       hexToUint8Array(dto.encryptedData),
       encryptedSharesByMemberId,
-      checksumService.hexStringToChecksum(dto.checksum),
+      checksumService.hexStringToChecksum(dto.checksum) as Checksum,
       eciesServiceToUse.signatureStringToSignatureBuffer(dto.signature),
       enhancedProviderToUse.fromBytes(hexToUint8Array(dto.id)),
       dto.dateCreated,

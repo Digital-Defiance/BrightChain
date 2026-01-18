@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AESGCMService,
   ECIESService,
@@ -11,13 +12,14 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import type { CSPRNGType, Shares } from '@digitaldefiance/secrets';
 import * as secretsModule from '@digitaldefiance/secrets';
-
-// Handle both ESM default export and CommonJS module.exports patterns
-const secrets = (secretsModule as any).default || secretsModule;
 import { SEALING } from '../constants';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { SealingError } from '../errors/sealingError';
 import { QuorumDataRecord } from '../quorumDataRecord';
+import { Validator } from '../utils/validator';
+
+// Handle both ESM default export and CommonJS module.exports patterns
+const secrets = (secretsModule as any).default || secretsModule;
 
 /**
  * Service for handling sealing operations using Shamir's Secret Sharing.
@@ -98,6 +100,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    * @param amongstMembers The members to distribute shares to
    * @param sharesRequired Optional number of shares required to unseal (defaults to all members)
    * @returns QuorumDataRecord containing the sealed data and encrypted shares
+   * @throws {SealingError} If validation fails or sealing operation fails
    */
   public async quorumSeal<T>(
     agent: Member<TID>,
@@ -105,6 +108,10 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
     amongstMembers: Member<TID>[],
     sharesRequired?: number,
   ): Promise<QuorumDataRecord<TID>> {
+    // Validate required inputs
+    Validator.validateRequired(agent, 'agent', 'quorumSeal');
+    Validator.validateRequired(data, 'data', 'quorumSeal');
+
     if (!amongstMembers || !Array.isArray(amongstMembers)) {
       throw new SealingError(SealingErrorType.InvalidMemberArray);
     }
@@ -173,11 +180,20 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    * @param document The sealed document
    * @param membersWithPrivateKey Members with loaded private keys
    * @returns Decrypted shares
+   * @throws {SealingError} If validation fails or decryption fails
    */
   public async decryptShares(
     document: QuorumDataRecord<TID>,
     membersWithPrivateKey: Member<TID>[],
   ): Promise<Shares> {
+    // Validate required inputs
+    Validator.validateRequired(document, 'document', 'decryptShares');
+    Validator.validateRequired(
+      membersWithPrivateKey,
+      'membersWithPrivateKey',
+      'decryptShares',
+    );
+
     if (membersWithPrivateKey.length < document.sharesRequired) {
       throw new SealingError(SealingErrorType.NotEnoughMembersToUnlock);
     }
@@ -216,11 +232,20 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    * @param document The document to unseal
    * @param membersWithPrivateKey Members with loaded private keys
    * @returns The unsealed data
+   * @throws {SealingError} If validation fails or unsealing fails
    */
   public async quorumUnseal<T>(
     document: QuorumDataRecord<TID>,
     membersWithPrivateKey: Member<TID>[],
   ): Promise<T> {
+    // Validate required inputs
+    Validator.validateRequired(document, 'document', 'quorumUnseal');
+    Validator.validateRequired(
+      membersWithPrivateKey,
+      'membersWithPrivateKey',
+      'quorumUnseal',
+    );
+
     if (membersWithPrivateKey.length < document.sharesRequired) {
       throw new SealingError(SealingErrorType.NotEnoughMembersToUnlock);
     }
@@ -235,11 +260,20 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    * @param document The document to unseal
    * @param recoveredShares The shares to use for unsealing
    * @returns The unsealed data
+   * @throws {SealingError} If validation fails or unsealing fails
    */
   public async quorumUnsealWithShares<T>(
     document: QuorumDataRecord<TID>,
     recoveredShares: Shares,
   ): Promise<T> {
+    // Validate required inputs
+    Validator.validateRequired(document, 'document', 'quorumUnsealWithShares');
+    Validator.validateRequired(
+      recoveredShares,
+      'recoveredShares',
+      'quorumUnsealWithShares',
+    );
+
     try {
       // reconstitute the document key from the shares
       this.reinitSecrets(document.encryptedSharesByMemberId.size);
@@ -250,6 +284,9 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       );
       return await aesGcmService.decryptJson<T>(document.encryptedData, key);
     } catch (error) {
+      if (error instanceof SealingError) {
+        throw error;
+      }
       throw new SealingError(SealingErrorType.FailedToSeal, undefined, {
         ERROR: error instanceof Error ? error.message : String(error),
       });
@@ -261,11 +298,16 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    * @param shares The shares to encrypt
    * @param members The members to encrypt shares for
    * @returns Map of encrypted shares by member ID
+   * @throws {SealingError} If validation fails or encryption fails
    */
   public async encryptSharesForMembers(
     shares: Shares,
     members: Member<TID>[],
   ): Promise<Map<ShortHexGuid, Uint8Array>> {
+    // Validate required inputs
+    Validator.validateRequired(shares, 'shares', 'encryptSharesForMembers');
+    Validator.validateRequired(members, 'members', 'encryptSharesForMembers');
+
     if (shares.length != members.length) {
       throw new SealingError(SealingErrorType.NotEnoughMembersToUnlock);
     }
@@ -300,11 +342,20 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    * @param encryptedSharesByMemberId Map of encrypted shares by member ID
    * @param members Members with loaded private keys
    * @returns Decrypted shares
+   * @throws {SealingError} If validation fails or decryption fails
    */
   public async decryptSharesForMembers(
     encryptedSharesByMemberId: Map<TID, Uint8Array>,
     members: Member<TID>[],
   ): Promise<Shares> {
+    // Validate required inputs
+    Validator.validateRequired(
+      encryptedSharesByMemberId,
+      'encryptedSharesByMemberId',
+      'decryptSharesForMembers',
+    );
+    Validator.validateRequired(members, 'members', 'decryptSharesForMembers');
+
     // for each encrypted share, find the member from the members array and decrypt it
     const memberIds = Array.from(encryptedSharesByMemberId.keys());
     const decryptedShares: string[] = new Array<string>(memberIds.length);

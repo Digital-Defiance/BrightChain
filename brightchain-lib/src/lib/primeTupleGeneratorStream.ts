@@ -1,15 +1,19 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
-import { Transform, TransformCallback, TransformOptions } from './browserStream';
 import { EphemeralBlock } from './blocks/ephemeral';
 import { InMemoryBlockTuple } from './blocks/memoryTuple';
 import { RandomBlock } from './blocks/random';
 import { WhitenedBlock } from './blocks/whitened';
+import {
+  Transform,
+  TransformCallback,
+  TransformOptions,
+} from './browserStream';
 import { TUPLE } from './constants';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { StreamErrorType } from './enumerations/streamErrorType';
-import { InvalidTupleCountError } from './errors/invalidTupleCount';
 import { StreamError } from './errors/streamError';
 import { ServiceProvider } from './services/service.provider';
 
@@ -139,10 +143,7 @@ export class PrimeTupleGeneratorStream<
       }
 
       // Create tuple with source block and random blocks
-      const tuple = new InMemoryBlockTuple([
-        sourceBlock,
-        ...randomBlocks,
-      ]);
+      const tuple = new InMemoryBlockTuple([sourceBlock, ...randomBlocks]);
 
       this.push(tuple);
     } catch (error) {

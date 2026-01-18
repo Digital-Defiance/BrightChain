@@ -3,9 +3,8 @@ import { BlockCapacityErrorType } from '../enumerations/blockCapacityErrorType';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
-import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
 import { BlockCapacityError } from '../errors/block/blockCapacity';
-import { ExtendedCblError } from '../errors/extendedCblError';
+import { EnhancedValidationError } from '../errors/enhancedValidationError';
 import { ServiceProvider } from './service.provider';
 
 describe('BlockCapacityCalculator', () => {
@@ -117,9 +116,13 @@ describe('BlockCapacityCalculator', () => {
           blockType: BlockType.RawData,
           encryptionType: BlockEncryptionType.None,
         }),
-      ).toThrowType(BlockCapacityError, (error: BlockCapacityError) => {
-        expect(error.type).toBe(BlockCapacityErrorType.InvalidBlockSize);
-      });
+      ).toThrowType(
+        EnhancedValidationError,
+        (error: EnhancedValidationError) => {
+          expect(error.field).toBe('blockSize');
+          expect(error.type).toBe('Validation');
+        },
+      );
     });
 
     it('should throw error for invalid block type', () => {
@@ -129,9 +132,13 @@ describe('BlockCapacityCalculator', () => {
           blockType: 999 as BlockType,
           encryptionType: BlockEncryptionType.None,
         }),
-      ).toThrowType(BlockCapacityError, (error: BlockCapacityError) => {
-        expect(error.type).toBe(BlockCapacityErrorType.InvalidBlockType);
-      });
+      ).toThrowType(
+        EnhancedValidationError,
+        (error: EnhancedValidationError) => {
+          expect(error.field).toBe('blockType');
+          expect(error.type).toBe('Validation');
+        },
+      );
     });
 
     it('should throw error for extended CBL without filename', () => {
@@ -145,8 +152,8 @@ describe('BlockCapacityCalculator', () => {
           },
           encryptionType: BlockEncryptionType.None,
         }),
-      ).toThrowType(ExtendedCblError, (error: ExtendedCblError) => {
-        expect(error.type).toBe(ExtendedCblErrorType.FileNameRequired);
+      ).toThrowType(BlockCapacityError, (error: BlockCapacityError) => {
+        expect(error.type).toBe(BlockCapacityErrorType.InvalidExtendedCblData);
       });
     });
 
@@ -161,8 +168,8 @@ describe('BlockCapacityCalculator', () => {
           },
           encryptionType: BlockEncryptionType.None,
         }),
-      ).toThrowType(ExtendedCblError, (error: ExtendedCblError) => {
-        expect(error.type).toBe(ExtendedCblErrorType.MimeTypeRequired);
+      ).toThrowType(BlockCapacityError, (error: BlockCapacityError) => {
+        expect(error.type).toBe(BlockCapacityErrorType.InvalidExtendedCblData);
       });
     });
 
@@ -173,9 +180,13 @@ describe('BlockCapacityCalculator', () => {
           blockType: BlockType.MultiEncryptedBlock,
           encryptionType: BlockEncryptionType.MultiRecipient,
         }),
-      ).toThrowType(BlockCapacityError, (error: BlockCapacityError) => {
-        expect(error.type).toBe(BlockCapacityErrorType.InvalidRecipientCount);
-      });
+      ).toThrowType(
+        EnhancedValidationError,
+        (error: EnhancedValidationError) => {
+          expect(error.field).toBe('recipientCount');
+          expect(error.type).toBe('Validation');
+        },
+      );
     });
 
     it('should throw error for multi-encrypted block with too many recipients', () => {
@@ -186,9 +197,13 @@ describe('BlockCapacityCalculator', () => {
           recipientCount: ECIES.MULTIPLE.MAX_RECIPIENTS + 1,
           encryptionType: BlockEncryptionType.MultiRecipient,
         }),
-      ).toThrowType(BlockCapacityError, (error: BlockCapacityError) => {
-        expect(error.type).toBe(BlockCapacityErrorType.InvalidRecipientCount);
-      });
+      ).toThrowType(
+        EnhancedValidationError,
+        (error: EnhancedValidationError) => {
+          expect(error.field).toBe('recipientCount');
+          expect(error.type).toBe('Validation');
+        },
+      );
     });
 
     it('should throw error when overhead exceeds block size', () => {

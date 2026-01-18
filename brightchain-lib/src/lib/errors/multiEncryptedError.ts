@@ -1,5 +1,4 @@
 import { MultiEncryptedErrorType } from '../enumerations/multiEncryptedErrorType';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { TypedError } from './typedError';
 
@@ -28,7 +27,7 @@ export class MultiEncryptedError extends TypedError<MultiEncryptedErrorType> {
         StringNames.Error_MultiEncryptedErrorRecipientsAlreadyLoaded,
     };
   }
-  constructor(type: MultiEncryptedErrorType, _language?: StringLanguages) {
+  constructor(type: MultiEncryptedErrorType, _language?: string) {
     super(type, undefined);
     this.name = 'MultiEncryptedError';
   }

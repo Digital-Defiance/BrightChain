@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ModelName } from '../enumerations/model-name';
 
 // Datastore-agnostic schema metadata for used direct login tokens

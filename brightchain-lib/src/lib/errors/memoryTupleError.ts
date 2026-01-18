@@ -1,5 +1,5 @@
+import { LanguageCode } from '@digitaldefiance/i18n-lib';
 import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
-import { StringLanguage } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { TypedError } from './typedError';
 
@@ -23,7 +23,7 @@ export class MemoryTupleError extends TypedError<MemoryTupleErrorType> {
   constructor(
     type: MemoryTupleErrorType,
     tupleSize?: number,
-    _language?: StringLanguage,
+    _language?: LanguageCode,
   ) {
     super(type, undefined, {
       ...(tupleSize ? { TUPLE_SIZE: tupleSize.toString() } : {}),

@@ -1,6 +1,5 @@
 import { BlockSize } from '../enumerations/blockSize';
 import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { TypedError } from './typedError';
 
@@ -65,7 +64,7 @@ export class ExtendedCblError extends TypedError<ExtendedCblErrorType> {
     blockSize?: BlockSize,
     dataSize?: number,
     error?: string,
-    _language?: StringLanguages,
+    _language?: string,
   ) {
     super(type, undefined, {
       ...(blockSize ? { BLOCK_SIZE: blockSize as number } : {}),

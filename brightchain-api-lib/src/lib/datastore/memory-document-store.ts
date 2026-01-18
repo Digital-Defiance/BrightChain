@@ -57,14 +57,23 @@ class MemoryQuery<T extends QueryResultType> implements QueryBuilder<T> {
   }
 
   then<TResult1 = T | null, TResult2 = never>(
-    onfulfilled?: ((value: T | null) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+    onfulfilled?:
+      | ((value: T | null) => TResult1 | PromiseLike<TResult1>)
+      | undefined
+      | null,
+    onrejected?:
+      | ((reason: unknown) => TResult2 | PromiseLike<TResult2>)
+      | undefined
+      | null,
   ): Promise<TResult1 | TResult2> {
     return this.exec().then(onfulfilled, onrejected);
   }
 }
 
-function matchFilter<T extends DocumentRecord>(doc: T, filter: Partial<T> = {}): boolean {
+function matchFilter<T extends DocumentRecord>(
+  doc: T,
+  filter: Partial<T> = {},
+): boolean {
   return Object.entries(filter).every(([key, value]) => {
     if (value === undefined) return true;
     return (doc as Record<string, unknown>)[key] === value;
@@ -78,7 +87,9 @@ function ensureId(doc: DocumentRecord): DocumentRecord {
   return doc;
 }
 
-class MemoryCollection<T extends DocumentRecord> implements DocumentCollection<T> {
+class MemoryCollection<
+  T extends DocumentRecord,
+> implements DocumentCollection<T> {
   private readonly data: T[] = [];
 
   private querySingle(filter?: Partial<T>): QueryBuilder<T> {
@@ -89,7 +100,9 @@ class MemoryCollection<T extends DocumentRecord> implements DocumentCollection<T
   }
 
   private queryMany(filter?: Partial<T>): QueryBuilder<T[]> {
-    return new MemoryQuery<T[]>(async () => this.data.filter((doc) => matchFilter(doc, filter))) as QueryBuilder<T[]>;
+    return new MemoryQuery<T[]>(async () =>
+      this.data.filter((doc) => matchFilter(doc, filter)),
+    ) as QueryBuilder<T[]>;
   }
 
   find(filter?: Partial<T>): QueryBuilder<T[]> {
@@ -137,7 +150,9 @@ class MemoryCollection<T extends DocumentRecord> implements DocumentCollection<T
   }
 
   async insertMany(docs: T[]): Promise<T[]> {
-    const inserted = docs.map((d) => ensureId({ ...(d as DocumentRecord) }) as T);
+    const inserted = docs.map(
+      (d) => ensureId({ ...(d as DocumentRecord) }) as T,
+    );
     this.data.push(...inserted);
     return inserted;
   }
@@ -203,7 +218,7 @@ class MemoryCollection<T extends DocumentRecord> implements DocumentCollection<T
 
   async exists(filter: Partial<T>) {
     const doc = this.data.find((d) => matchFilter(d, filter));
-    return doc? { _id: (doc as DocumentRecord)._id as DocumentId } : null;
+    return doc ? { _id: (doc as DocumentRecord)._id as DocumentId } : null;
   }
 
   watch(): void {
@@ -216,7 +231,10 @@ class MemoryCollection<T extends DocumentRecord> implements DocumentCollection<T
 }
 
 export class MemoryDocumentStore implements DocumentStore {
-  private readonly collections = new Map<string, MemoryCollection<DocumentRecord>>();
+  private readonly collections = new Map<
+    string,
+    MemoryCollection<DocumentRecord>
+  >();
 
   collection<T extends DocumentRecord>(name: string): DocumentCollection<T> {
     if (!this.collections.has(name)) {

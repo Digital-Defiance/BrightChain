@@ -1,11 +1,8 @@
-import {
-  ChecksumUint8Array,
-  Member,
-  PlatformID,
-} from '@digitaldefiance/ecies-lib';
+import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import BlockDataType from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
+import { Checksum } from '../types/checksum';
 import { IEncryptedBlock } from './blocks/encrypted';
 
 /**
@@ -17,7 +14,7 @@ export interface IEncryptedBlockCreator<TID extends PlatformID = Uint8Array> {
     dataType: BlockDataType,
     blockSize: BlockSize,
     data: Buffer,
-    checksum: ChecksumUint8Array,
+    checksum: Checksum,
     creator: Member<TID>,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,

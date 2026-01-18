@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   arraysEqual,
-  ChecksumUint8Array,
   EciesEncryptionTypeEnum,
   Guid,
   IMultiEncryptedParsedHeader,
@@ -32,6 +32,7 @@ import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { ServiceProvider } from '../services/service.provider';
 import { ServiceLocator } from '../services/serviceLocator';
+import { Checksum } from '../types/checksum';
 import { EphemeralBlock } from './ephemeral';
 
 /**
@@ -72,7 +73,7 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     type: BlockType,
     dataType: BlockDataType,
     data: Uint8Array,
-    checksum: ChecksumUint8Array,
+    checksum: Checksum,
     metadata: EncryptedBlockMetadata<TID>,
     recipientWithKey: Member<TID>,
     canRead = true,
@@ -125,7 +126,9 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           rBytes = r;
         } else {
           // For Guid objects, get the bytes using the idProvider
-          const result = ServiceProvider.getInstance().idProvider.toBytes(r as any);
+          const result = ServiceProvider.getInstance().idProvider.toBytes(
+            r as any,
+          );
           rBytes = result;
         }
         return arraysEqual(rBytes, recipientWithKey.idBytes);
@@ -146,7 +149,7 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     dataType: BlockDataType,
     blockSize: BlockSize,
     data: Uint8Array,
-    checksum: ChecksumUint8Array,
+    checksum: Checksum,
     creator: Member<TID>,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,
@@ -228,9 +231,8 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.layerHeaderData.byteOffset +
             ENCRYPTION.ENCRYPTION_TYPE_SIZE +
             ENCRYPTION.RECIPIENT_ID_SIZE,
-          this.layerHeaderData.byteOffset +
-            this.layerHeaderData.byteLength
-        )
+          this.layerHeaderData.byteOffset + this.layerHeaderData.byteLength,
+        ),
       );
       this._cachedEncryptionDetails =
         ServiceLocator.getServiceProvider<TID>().eciesService.parseSingleEncryptedHeader(
@@ -241,8 +243,8 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
       const headerData = new Uint8Array(
         this.layerHeaderData.buffer.slice(
           this.layerHeaderData.byteOffset + ENCRYPTION.ENCRYPTION_TYPE_SIZE,
-          this.layerHeaderData.byteOffset + this.layerHeaderData.byteLength
-        )
+          this.layerHeaderData.byteOffset + this.layerHeaderData.byteLength,
+        ),
       );
       this._cachedEncryptionDetails =
         ServiceLocator.getServiceProvider<TID>().eciesService.parseMultiEncryptedHeader(

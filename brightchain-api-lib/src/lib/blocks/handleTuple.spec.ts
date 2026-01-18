@@ -1,14 +1,13 @@
-import { arraysEqual } from '@digitaldefiance/ecies-lib';
 import {
-  TUPLE,
   BlockDataType,
+  BlockHandle,
+  BlockHandleTuple,
   BlockSize,
   BlockType,
   HandleTupleError,
-  ServiceProvider,
-  BlockHandleTuple,
   RawDataBlock,
-  BlockHandle,
+  ServiceProvider,
+  TUPLE,
 } from '@brightchain/brightchain-lib';
 
 describe('BlockHandleTuple', () => {
@@ -110,7 +109,7 @@ describe('BlockHandleTuple', () => {
       ]);
 
       const tuple = new BlockHandleTuple(handles);
-      
+
       // Verify XOR result by computing expected data
       const expectedData = new Uint8Array(defaultBlockSize);
       for (let i = 0; i < defaultBlockSize; i++) {

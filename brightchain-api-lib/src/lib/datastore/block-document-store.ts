@@ -1,6 +1,10 @@
-import { createHash, randomUUID } from 'crypto';
-import { IBlockStore, IQuorumService, ServiceLocator } from '@brightchain/brightchain-lib';
-import { Member, PlatformID, ShortHexGuid, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
+import {
+  IBlockStore,
+  IQuorumService,
+  ServiceLocator,
+} from '@brightchain/brightchain-lib';
+import { Member, PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { randomUUID } from 'crypto';
 import {
   DocumentCollection,
   DocumentId,
@@ -63,7 +67,7 @@ interface InternalDocumentRecord extends DocumentRecord {
 /**
  * Simple in-memory registry for collection head pointers.
  * This maps collection names to their latest index block IDs.
- * 
+ *
  * In a production system, this would be persisted to a separate
  * key-value store or database. For now, we use a static map
  * that's shared across all BlockDocumentStore instances.
@@ -147,14 +151,23 @@ class BlockQuery<T extends QueryResultType> implements QueryBuilder<T> {
   }
 
   then<TResult1 = T | null, TResult2 = never>(
-    onfulfilled?: ((value: T | null) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+    onfulfilled?:
+      | ((value: T | null) => TResult1 | PromiseLike<TResult1>)
+      | undefined
+      | null,
+    onrejected?:
+      | ((reason: unknown) => TResult2 | PromiseLike<TResult2>)
+      | undefined
+      | null,
   ): Promise<TResult1 | TResult2> {
     return this.exec().then(onfulfilled, onrejected);
   }
 }
 
-function matchFilter<T extends DocumentRecord>(doc: T, filter: Partial<T> = {}): boolean {
+function matchFilter<T extends DocumentRecord>(
+  doc: T,
+  filter: Partial<T> = {},
+): boolean {
   return Object.entries(filter).every(([key, value]) => {
     if (value === undefined) return true;
     return (doc as Record<string, unknown>)[key] === value;
@@ -171,8 +184,10 @@ function toBlockId(id: DocumentId): string {
  */
 function calculateBlockId(data: Buffer | Uint8Array): string {
   const checksumService = ServiceLocator.getServiceProvider().checksumService;
-  const checksum = checksumService.calculateChecksum(data instanceof Buffer ? new Uint8Array(data) : data);
-  return uint8ArrayToHex(checksum);
+  const checksum = checksumService.calculateChecksum(
+    data instanceof Buffer ? new Uint8Array(data) : data,
+  );
+  return checksum.toHex();
 }
 
 async function encodeDoc(doc: DocumentRecord): Promise<Buffer> {
@@ -183,7 +198,9 @@ function decodeDoc<T extends DocumentRecord>(buf: Buffer): T {
   return JSON.parse(buf.toString('utf8')) as T;
 }
 
-class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T> {
+class BlockCollection<
+  T extends DocumentRecord,
+> implements DocumentCollection<T> {
   private readonly index = new Map<string, string>(); // _id -> blockId
   private readonly registryKey: string; // key for looking up index block ID in registry
   private indexLoaded = false;
@@ -205,18 +222,22 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
       this.indexLoading = (async () => {
         const registry = CollectionHeadRegistry.getInstance();
         const indexBlockId = registry.getHead(this.registryKey);
-        
+
         if (indexBlockId) {
           try {
             const indexBlock = await this.store.get(indexBlockId);
             const indexData = indexBlock.data as Uint8Array;
-            const parsed = JSON.parse(Buffer.from(indexData).toString('utf8')) as {
+            const parsed = JSON.parse(
+              Buffer.from(indexData).toString('utf8'),
+            ) as {
               ids?: string[];
               mappings?: Record<string, string>;
             };
             // Support both old format (ids array) and new format (mappings object)
             if (parsed?.mappings) {
-              for (const [logicalId, blockId] of Object.entries(parsed.mappings)) {
+              for (const [logicalId, blockId] of Object.entries(
+                parsed.mappings,
+              )) {
                 this.index.set(logicalId, blockId);
               }
             } else if (parsed?.ids) {
@@ -243,7 +264,10 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
     for (const [logicalId, blockId] of this.index.entries()) {
       indexData[logicalId] = blockId;
     }
-    const payload = Buffer.from(JSON.stringify({ mappings: indexData }), 'utf8');
+    const payload = Buffer.from(
+      JSON.stringify({ mappings: indexData }),
+      'utf8',
+    );
     if (payload.length > this.store.blockSize) {
       throw new Error(
         `Index too large for block size (${payload.length} > ${this.store.blockSize}) in ${this.collectionName}`,
@@ -265,10 +289,11 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
 
   private async writeDoc(doc: T, existingId?: string): Promise<T> {
     await this.ensureIndexLoaded();
-    
+
     // Use a logical ID for the document (either existing or generated)
-    const logicalId = existingId ?? this.resolveBlockId((doc as DocumentRecord)._id);
-    
+    const logicalId =
+      existingId ?? this.resolveBlockId((doc as DocumentRecord)._id);
+
     // Encode the document with the logical ID
     const docWithId = { ...doc, _id: logicalId };
     const data = await encodeDoc(docWithId);
@@ -277,16 +302,16 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
         `Document too large for block size (${data.length} > ${this.store.blockSize}) in ${this.collectionName}`,
       );
     }
-    
+
     // Use content hash as the block ID for content-addressable storage
     const blockId = calculateBlockId(data);
-    
+
     // Check if block already exists (content-addressable deduplication)
     const exists = await this.store.has(blockId);
     if (!exists) {
       await this.store.put(blockId, data);
     }
-    
+
     // Map logical ID to content hash in the index
     this.index.set(logicalId, blockId);
     (doc as DocumentRecord)._id = logicalId;
@@ -299,7 +324,7 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
     // Get the content hash from the index
     const blockId = this.index.get(logicalId);
     if (!blockId) return null;
-    
+
     try {
       const block = await this.store.get(blockId);
       const blockData = block.data as Uint8Array;
@@ -315,7 +340,9 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
   }
 
   private toManyQuery(resolver: () => Promise<T[]>): QueryBuilder<T[]> {
-    return new BlockQuery<T[]>(resolver as () => Promise<T[] | null>) as QueryBuilder<T[]>;
+    return new BlockQuery<T[]>(
+      resolver as () => Promise<T[] | null>,
+    ) as QueryBuilder<T[]>;
   }
 
   find(filter?: Partial<T>): QueryBuilder<T[]> {
@@ -366,10 +393,17 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
     const internalDoc = doc as InternalDocumentRecord;
     if (internalDoc.__encryptionMetadata?.isEncrypted) {
       if (!this.quorumService) {
-        throw new Error('QuorumService is required to decrypt encrypted documents');
+        throw new Error(
+          'QuorumService is required to decrypt encrypted documents',
+        );
       }
-      if (!options?.membersWithPrivateKey || options.membersWithPrivateKey.length === 0) {
-        throw new Error('Members with private keys are required to decrypt encrypted documents');
+      if (
+        !options?.membersWithPrivateKey ||
+        options.membersWithPrivateKey.length === 0
+      ) {
+        throw new Error(
+          'Members with private keys are required to decrypt encrypted documents',
+        );
       }
 
       const sealedDocId = internalDoc.__encryptionMetadata.sealedDocumentId;
@@ -413,7 +447,9 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
    * @param id - The document ID
    * @returns The encryption metadata, or null if not encrypted
    */
-  async getEncryptionMetadata(id: DocumentId): Promise<EncryptedDocumentMetadata | null> {
+  async getEncryptionMetadata(
+    id: DocumentId,
+  ): Promise<EncryptedDocumentMetadata | null> {
     const logicalId = toBlockId(id);
     const doc = await this.readDoc(logicalId);
     if (!doc) {
@@ -453,7 +489,10 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
    * @param filter - Optional additional filter criteria
    * @returns Array of documents the member has access to
    */
-  async findAccessibleBy(memberId: ShortHexGuid, filter?: Partial<T>): Promise<T[]> {
+  async findAccessibleBy(
+    memberId: ShortHexGuid,
+    filter?: Partial<T>,
+  ): Promise<T[]> {
     await this.ensureIndexLoaded();
     const docs: T[] = [];
     for (const id of this.index.keys()) {
@@ -483,7 +522,10 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
    * @param filter - Optional additional filter criteria
    * @returns The first document the member has access to, or null
    */
-  async findOneAccessibleBy(memberId: ShortHexGuid, filter?: Partial<T>): Promise<T | null> {
+  async findOneAccessibleBy(
+    memberId: ShortHexGuid,
+    filter?: Partial<T>,
+  ): Promise<T | null> {
     await this.ensureIndexLoaded();
     for (const id of this.index.keys()) {
       const doc = await this.readDoc(id);
@@ -511,7 +553,10 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
    * @param filter - Optional additional filter criteria
    * @returns The count of documents the member has access to
    */
-  async countAccessibleBy(memberId: ShortHexGuid, filter?: Partial<T>): Promise<number> {
+  async countAccessibleBy(
+    memberId: ShortHexGuid,
+    filter?: Partial<T>,
+  ): Promise<number> {
     const docs = await this.findAccessibleBy(memberId, filter);
     return docs.length;
   }
@@ -563,7 +608,9 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
         throw new Error('Agent member is required for encrypted documents');
       }
       if (!options.memberIds || options.memberIds.length < 2) {
-        throw new Error('At least 2 member IDs are required for encrypted documents');
+        throw new Error(
+          'At least 2 member IDs are required for encrypted documents',
+        );
       }
 
       // Seal the document using QuorumService
@@ -708,7 +755,10 @@ class BlockCollection<T extends DocumentRecord> implements DocumentCollection<T>
 }
 
 export class BlockDocumentStore implements DocumentStore {
-  private readonly collections = new Map<string, BlockCollection<DocumentRecord>>();
+  private readonly collections = new Map<
+    string,
+    BlockCollection<DocumentRecord>
+  >();
   private readonly storeId: string;
 
   constructor(
@@ -723,7 +773,12 @@ export class BlockDocumentStore implements DocumentStore {
     if (!this.collections.has(name)) {
       this.collections.set(
         name,
-        new BlockCollection<DocumentRecord>(this.blockStore, name, this.quorumService, this.storeId),
+        new BlockCollection<DocumentRecord>(
+          this.blockStore,
+          name,
+          this.quorumService,
+          this.storeId,
+        ),
       );
     }
     return this.collections.get(name) as BlockCollection<T>;
@@ -734,14 +789,21 @@ export class BlockDocumentStore implements DocumentStore {
    * @param name - The collection name
    * @returns The collection with encryption methods available
    */
-  encryptedCollection<T extends DocumentRecord>(name: string): BlockCollection<T> {
+  encryptedCollection<T extends DocumentRecord>(
+    name: string,
+  ): BlockCollection<T> {
     if (!this.quorumService) {
       throw new Error('QuorumService is required for encrypted collections');
     }
     if (!this.collections.has(name)) {
       this.collections.set(
         name,
-        new BlockCollection<DocumentRecord>(this.blockStore, name, this.quorumService, this.storeId),
+        new BlockCollection<DocumentRecord>(
+          this.blockStore,
+          name,
+          this.quorumService,
+          this.storeId,
+        ),
       );
     }
     return this.collections.get(name) as BlockCollection<T>;

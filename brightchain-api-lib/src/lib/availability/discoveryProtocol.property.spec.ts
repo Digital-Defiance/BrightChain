@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 /**
  * @fileoverview Property-based tests for DiscoveryProtocol
  *

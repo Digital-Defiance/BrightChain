@@ -1,5 +1,4 @@
 import { StoreErrorType } from '../enumerations/storeErrorType';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { TypedError } from './typedError';
 
@@ -49,7 +48,7 @@ export class StoreError extends TypedError<StoreErrorType> {
   public readonly params?: { [key: string]: string | number };
   constructor(
     type: StoreErrorType,
-    language?: StringLanguages,
+    language?: string,
     params?: { [key: string]: string | number },
   ) {
     super(type, language, params);

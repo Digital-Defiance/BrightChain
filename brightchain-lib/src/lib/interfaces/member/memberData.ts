@@ -1,5 +1,4 @@
 import {
-  ChecksumUint8Array,
   EmailString,
   Member,
   PlatformID,
@@ -7,6 +6,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
 import { MemberType } from '../../enumerations/memberType';
+import { Checksum } from '../../types/checksum';
 
 /**
  * Public member data stored in CBL
@@ -74,7 +74,7 @@ export interface IMemberReference<TID extends PlatformID = Uint8Array> {
   id: TID;
   type: MemberType;
   dateVerified: Date;
-  publicCBL?: ChecksumUint8Array;
+  publicCBL?: Checksum;
 }
 
 /**
@@ -82,8 +82,8 @@ export interface IMemberReference<TID extends PlatformID = Uint8Array> {
  */
 export interface IMemberIndexEntry<TID extends PlatformID = Uint8Array> {
   id: TID;
-  publicCBL: ChecksumUint8Array;
-  privateCBL: ChecksumUint8Array;
+  publicCBL: Checksum;
+  privateCBL: Checksum;
   type: MemberType;
   status: MemberStatusType;
   lastUpdate: Date;

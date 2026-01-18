@@ -1,4 +1,4 @@
-import { arraysEqual, EmailString } from '@digitaldefiance/ecies-lib';
+import { arraysEqual, EmailString, Member } from '@digitaldefiance/ecies-lib';
 import { EphemeralBlock } from '../blocks/ephemeral';
 import { RandomBlock } from '../blocks/random';
 import { WhitenedBlock } from '../blocks/whitened';
@@ -9,7 +9,6 @@ import { BlockType } from '../enumerations/blockType';
 import MemberType from '../enumerations/memberType';
 import { TupleErrorType } from '../enumerations/tupleErrorType';
 import { TupleError } from '../errors/tupleError';
-import { Member } from '@digitaldefiance/ecies-lib';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
 import { TupleService } from './tuple.service';

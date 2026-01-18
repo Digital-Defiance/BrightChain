@@ -1,9 +1,9 @@
 import {
-  ChecksumUint8Array,
   EmailString,
   Member,
   MemberType,
 } from '@digitaldefiance/ecies-lib';
+import { Checksum } from './types/checksum';
 import { ConstituentBlockListBlock } from './blocks/cbl';
 import { WhitenedBlock } from './blocks/whitened';
 import { CblStream } from './cblStream';
@@ -57,17 +57,19 @@ describe('CblStream', () => {
       const testData = new Uint8Array(blockSize);
       crypto.getRandomValues(testData);
       const checksum = checksumService.calculateChecksum(testData);
-      addresses.push(new Uint8Array(checksum));
+      addresses.push(checksum.toUint8Array());
     }
 
     // Create CBL header and data
-    const addressList = new Uint8Array(addresses.reduce((acc, addr) => acc + addr.length, 0));
+    const addressList = new Uint8Array(
+      addresses.reduce((acc, addr) => acc + addr.length, 0),
+    );
     let offset = 0;
     for (const addr of addresses) {
       addressList.set(addr, offset);
       offset += addr.length;
     }
-    
+
     const { headerData } = cblService.makeCblHeader(
       creator,
       new Date(),
@@ -88,9 +90,11 @@ describe('CblStream', () => {
 
     // Create CBL with proper padding to match block size
     const paddedData = new Uint8Array(blockSize);
-    cblData.subarray(0, Math.min(cblData.length, blockSize)).forEach((byte, i) => {
-      paddedData[i] = byte;
-    });
+    cblData
+      .subarray(0, Math.min(cblData.length, blockSize))
+      .forEach((byte, i) => {
+        paddedData[i] = byte;
+      });
 
     const cbl = new ConstituentBlockListBlock(paddedData, creator);
 
@@ -122,12 +126,15 @@ describe('CblStream', () => {
       const whitenedBlocks = await Promise.all(
         Array(TUPLE.SIZE)
           .fill(null)
-          .map(() => createTestWhitenedBlock(new Uint8Array(blockSize).fill(Math.random() * 255))),
+          .map(() =>
+            createTestWhitenedBlock(
+              new Uint8Array(blockSize).fill(Math.random() * 255),
+            ),
+          ),
       );
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const getWhitenedBlock = (blockId: ChecksumUint8Array) =>
-        whitenedBlocks[0];
+      const getWhitenedBlock = (blockId: Checksum) => whitenedBlocks[0];
 
       const stream = new CblStream(cbl, getWhitenedBlock);
       expect(stream).toBeInstanceOf(CblStream);
@@ -145,8 +152,7 @@ describe('CblStream', () => {
       );
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const getWhitenedBlock = (blockId: ChecksumUint8Array) =>
-        whitenedBlocks[0];
+      const getWhitenedBlock = (blockId: Checksum) => whitenedBlocks[0];
 
       expect(
         () =>
@@ -164,7 +170,7 @@ describe('CblStream', () => {
         () =>
           new CblStream(
             cbl,
-            undefined as unknown as (id: ChecksumUint8Array) => WhitenedBlock,
+            undefined as unknown as (id: Checksum) => WhitenedBlock,
           ),
       ).toThrow(new CblError(CblErrorType.WhitenedBlockFunctionRequired));
     });
@@ -178,10 +184,10 @@ describe('CblStream', () => {
 
       // Create a simple whitened block that returns the original data when XORed
       const testWhitenedBlock = await createTestWhitenedBlock(originalData);
-      
+
       const getWhitenedBlock = (
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        blockId: ChecksumUint8Array,
+        blockId: Checksum,
       ) => {
         return testWhitenedBlock;
       };
@@ -217,10 +223,12 @@ describe('CblStream', () => {
 
     it('should handle empty data', async () => {
       const cbl = createTestCbl(new Uint8Array(0));
-      const testWhitenedBlock = await createTestWhitenedBlock(new Uint8Array(blockSize));
-      
+      const testWhitenedBlock = await createTestWhitenedBlock(
+        new Uint8Array(blockSize),
+      );
+
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const getWhitenedBlock = (blockId: ChecksumUint8Array) => {
+      const getWhitenedBlock = (blockId: Checksum) => {
         return testWhitenedBlock;
       };
 
@@ -257,7 +265,7 @@ describe('CblStream', () => {
       crypto.getRandomValues(originalData);
       const cbl = createTestCbl(originalData);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const getWhitenedBlock = (blockId: ChecksumUint8Array): WhitenedBlock => {
+      const getWhitenedBlock = (blockId: Checksum): WhitenedBlock => {
         throw new Error('Block not found');
       };
 

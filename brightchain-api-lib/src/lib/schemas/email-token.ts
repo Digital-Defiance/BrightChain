@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { EmailTokenType } from '@digitaldefiance/suite-core-lib';
 import validator from 'validator';
 import { ModelName } from '../enumerations/model-name';

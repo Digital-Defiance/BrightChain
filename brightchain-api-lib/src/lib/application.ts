@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import { StringNames, translate } from '@brightchain/brightchain-lib';
 import { HandleableError } from '@digitaldefiance/i18n-lib';
 import {

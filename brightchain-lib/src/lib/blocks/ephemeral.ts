@@ -1,9 +1,4 @@
-import {
-  arraysEqual,
-  ChecksumUint8Array,
-  Member,
-  type PlatformID,
-} from '@digitaldefiance/ecies-lib';
+import { Member, type PlatformID } from '@digitaldefiance/ecies-lib';
 import { randomBytes } from '../browserCrypto';
 import { Readable } from '../browserStream';
 import { ECIES } from '../constants';
@@ -28,6 +23,7 @@ import {
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { ServiceLocator } from '../services/serviceLocator';
+import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
 // Remove circular import
 // import { EncryptedBlock } from './encrypted';
@@ -50,7 +46,7 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
     dataType: BlockDataType,
     blockSize: BlockSize,
     data: Uint8Array,
-    checksum: ChecksumUint8Array,
+    checksum: Checksum,
     creator: Member<TID>,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,
@@ -63,7 +59,7 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
         data,
       );
 
-    if (!arraysEqual(calculatedChecksum, checksum)) {
+    if (!calculatedChecksum.equals(checksum)) {
       throw new ChecksumMismatchError(checksum, calculatedChecksum);
     }
 
@@ -115,7 +111,7 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
     type: BlockType,
     dataType: BlockDataType,
     data: Uint8Array | Readable,
-    checksum: ChecksumUint8Array,
+    checksum: Checksum,
     metadata: EphemeralBlockMetadata<TID>,
     canRead = true,
     canPersist = false,
@@ -258,7 +254,7 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
       ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
         this._data,
       );
-    const validated = arraysEqual(computedChecksum, this.idChecksum);
+    const validated = computedChecksum.equals(this.idChecksum);
     if (!validated) {
       throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
     }
@@ -280,7 +276,7 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
       await ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
         this._data,
       );
-    const validated = arraysEqual(computedChecksum, this.idChecksum);
+    const validated = computedChecksum.equals(this.idChecksum);
     if (!validated) {
       throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
     }
