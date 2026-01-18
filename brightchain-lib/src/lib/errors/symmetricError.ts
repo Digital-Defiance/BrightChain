@@ -1,4 +1,3 @@
-import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { SymmetricErrorType } from '../enumerations/symmetricErrorType';
 import { SymmetricService } from '../services/symmetric.service';
@@ -13,7 +12,7 @@ export class SymmetricError extends TypedError<SymmetricErrorType> {
         StringNames.Error_SymmetricInvalidKeyLengthTemplate,
     };
   }
-  constructor(type: SymmetricErrorType, _language?: StringLanguages) {
+  constructor(type: SymmetricErrorType, _language?: string) {
     super(type, undefined, {
       KEY_BITS: SymmetricService.symmetricKeyBits,
       KEY_BYTES: SymmetricService.symmetricKeyBytes,

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BrightChain } from './brightChain';
 import { BlockSize } from './enumerations/blockSize';
 import { ServiceProvider } from './services/service.provider';
@@ -57,11 +58,11 @@ describe('BrightChain', () => {
     ServiceProvider.resetInstance();
     ServiceProvider.getInstance();
     const freshBrightChain = new BrightChain(BlockSize.Small);
-    
+
     // Use a simple but unique data pattern that's guaranteed to be different each time
     const uniqueId = `${Date.now()}-${Math.random()}-${process.pid || 0}`;
     const largeData = new Uint8Array(10000);
-    
+
     // Fill with a pattern that includes the unique ID to ensure uniqueness
     const idBytes = new TextEncoder().encode(uniqueId);
     for (let i = 0; i < largeData.length; i++) {
@@ -69,9 +70,12 @@ describe('BrightChain', () => {
     }
 
     const uniqueFileName = `large-${uniqueId}.bin`;
-    
+
     try {
-      const receipt = await freshBrightChain.storeFile(largeData, uniqueFileName);
+      const receipt = await freshBrightChain.storeFile(
+        largeData,
+        uniqueFileName,
+      );
       const retrievedData = await freshBrightChain.retrieveFile(receipt);
 
       expect(retrievedData).toEqual(largeData);
@@ -80,9 +84,15 @@ describe('BrightChain', () => {
       // If we still get a block already exists error, it means there's a deeper issue
       // with the block generation logic, but the test should still pass if the core
       // functionality works. For now, let's skip this specific error.
-      if (error instanceof Error && error.message.includes('BlockAlreadyExists')) {
-        console.warn('Block already exists error encountered - this indicates a potential issue with block uniqueness generation');
+      if (
+        error instanceof Error &&
+        error.message.includes('BlockAlreadyExists')
+      ) {
+        console.warn(
+          'Block already exists error encountered - this indicates a potential issue with block uniqueness generation',
+        );
         // Mark test as pending rather than failing
+        // eslint-disable-next-line no-undef
         pending('Block uniqueness issue needs investigation');
       } else {
         throw error;

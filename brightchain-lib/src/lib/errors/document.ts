@@ -1,5 +1,4 @@
 import { DocumentErrorType } from '../enumerations/documentErrorType';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { TypedError } from './typedError';
 
@@ -19,7 +18,7 @@ export class DocumentError extends TypedError<DocumentErrorType> {
   constructor(
     type: DocumentErrorType,
     otherVars?: Record<string, string | number>,
-    _language?: StringLanguages,
+    _language?: string,
   ) {
     super(type, undefined, otherVars);
     this.name = 'DocumentError';

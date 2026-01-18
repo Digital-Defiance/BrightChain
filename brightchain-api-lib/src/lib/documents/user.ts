@@ -1,6 +1,5 @@
-/* eslint-disable @nx/enforce-module-boundaries */
-import { StringLanguage } from '@brightchain/brightchain-lib';
 import { AccountStatus, IUserBase } from '@digitaldefiance/suite-core-lib';
+import { StringLanguage } from '../interfaces/request-user';
 import { DefaultBackendIdType } from '../shared-types';
 import { IBaseDocument } from './base';
 

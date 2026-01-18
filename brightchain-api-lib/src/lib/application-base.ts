@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { BlockSize, MemoryBlockStore } from '@brightchain/brightchain-lib';
 import {
   IBaseDocument,
   IConstants,
   PluginManager,
   ServiceContainer,
 } from '@digitaldefiance/node-express-suite';
-import { BlockSize, MemoryBlockStore } from '@brightchain/brightchain-lib';
 import { join } from 'path';
 import { AppConstants } from './appConstants';
 import { BlockDocumentStore } from './datastore/block-document-store';
@@ -45,10 +46,7 @@ export class BaseApplication implements IApplication {
     return this._plugins;
   }
 
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  public getModel<U extends IBaseDocument<any, any>>(
-    modelName: string,
-  ): U {
+  public getModel<U extends IBaseDocument<any, any>>(modelName: string): U {
     // Get a collection from the in-memory document store
     const collection = this.documentStore.collection(modelName);
     return collection as unknown as U;

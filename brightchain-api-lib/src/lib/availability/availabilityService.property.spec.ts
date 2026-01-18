@@ -11,8 +11,6 @@
  * **Validates: Requirements 1.2, 1.3, 1.4, 1.5, 1.6, 7.3, 11.3**
  */
 
-/* eslint-disable @nx/enforce-module-boundaries */
-
 import {
   AnnouncementHandler,
   AvailabilityState,
@@ -1519,7 +1517,8 @@ describe('AvailabilityService Property Tests - Staleness', () => {
           fc.integer({ min: 1000, max: 10000 }), // staleness threshold in ms
           fc.integer({ min: 0, max: 5000 }), // age within threshold
           async (blockId, nodeId, thresholdMs, ageWithinThreshold) => {
-            const { service, registry } = createTestService('local-node');
+            const { service: _service, registry } =
+              createTestService('local-node');
 
             // Override config with custom staleness threshold
             const customService = new AvailabilityService(
@@ -1638,96 +1637,88 @@ describe('AvailabilityService Property Tests - Staleness', () => {
 
     it('should update staleness when location is refreshed', async () => {
       await fc.assert(
-        fc.asyncProperty(
-          arbBlockId,
-          arbNodeId,
-          async (blockId, nodeId) => {
-            const { registry } = createTestService('local-node');
+        fc.asyncProperty(arbBlockId, arbNodeId, async (blockId, nodeId) => {
+          const { registry } = createTestService('local-node');
 
-            // Create service with short staleness threshold
-            const customService = new AvailabilityService(
-              registry,
-              new MockDiscoveryProtocol(),
-              new MockGossipService(),
-              new MockReconciliationService(),
-              new MockHeartbeatMonitor(),
+          // Create service with short staleness threshold
+          const customService = new AvailabilityService(
+            registry,
+            new MockDiscoveryProtocol(),
+            new MockGossipService(),
+            new MockReconciliationService(),
+            new MockHeartbeatMonitor(),
+            {
+              localNodeId: 'local-node',
+              stalenessThresholdMs: 1000, // 1 second
+              queryTimeoutMs: 10000,
+            },
+          );
+
+          // Add location with old timestamp
+          const oldTimestamp = new Date(Date.now() - 5000); // 5 seconds ago
+          customService.setBlockData(blockId, {
+            state: AvailabilityState.Remote,
+            locations: [
               {
-                localNodeId: 'local-node',
-                stalenessThresholdMs: 1000, // 1 second
-                queryTimeoutMs: 10000,
+                nodeId,
+                lastSeen: oldTimestamp,
+                isAuthoritative: false,
               },
-            );
+            ],
+            lastUpdated: oldTimestamp,
+          });
 
-            // Add location with old timestamp
-            const oldTimestamp = new Date(Date.now() - 5000); // 5 seconds ago
-            customService.setBlockData(blockId, {
-              state: AvailabilityState.Remote,
-              locations: [
-                {
-                  nodeId,
-                  lastSeen: oldTimestamp,
-                  isAuthoritative: false,
-                },
-              ],
-              lastUpdated: oldTimestamp,
-            });
+          // Query - should be stale
+          let result = await customService.queryBlockLocation(blockId);
+          expect(result.isStale).toBe(true);
 
-            // Query - should be stale
-            let result = await customService.queryBlockLocation(blockId);
-            expect(result.isStale).toBe(true);
+          // Update location (refresh)
+          await customService.updateLocation(blockId, {
+            nodeId,
+            lastSeen: new Date(),
+            isAuthoritative: false,
+          });
 
-            // Update location (refresh)
-            await customService.updateLocation(blockId, {
-              nodeId,
-              lastSeen: new Date(),
-              isAuthoritative: false,
-            });
+          // Query again - should no longer be stale
+          result = await customService.queryBlockLocation(blockId);
+          expect(result.isStale).toBe(false);
 
-            // Query again - should no longer be stale
-            result = await customService.queryBlockLocation(blockId);
-            expect(result.isStale).toBe(false);
-
-            return true;
-          },
-        ),
+          return true;
+        }),
         { numRuns: 50 },
       );
     });
 
     it('should include lastUpdated timestamp in query result', async () => {
       await fc.assert(
-        fc.asyncProperty(
-          arbBlockId,
-          arbNodeId,
-          async (blockId, nodeId) => {
-            const { service } = createTestService('local-node');
+        fc.asyncProperty(arbBlockId, arbNodeId, async (blockId, nodeId) => {
+          const { service } = createTestService('local-node');
 
-            const beforeUpdate = new Date();
+          const beforeUpdate = new Date();
 
-            // Add location
-            await service.updateLocation(blockId, {
-              nodeId,
-              lastSeen: new Date(),
-              isAuthoritative: false,
-            });
+          // Add location
+          await service.updateLocation(blockId, {
+            nodeId,
+            lastSeen: new Date(),
+            isAuthoritative: false,
+          });
 
-            const afterUpdate = new Date();
+          const afterUpdate = new Date();
 
-            // Query location
-            const result = await service.queryBlockLocation(blockId);
+          // Query location
+          const result = await service.queryBlockLocation(blockId);
 
-            // Verify lastUpdated is within expected range
-            expect(result.lastUpdated).toBeDefined();
-            expect(result.lastUpdated.getTime()).toBeGreaterThanOrEqual(
-              beforeUpdate.getTime(),
-            );
-            expect(result.lastUpdated.getTime()).toBeLessThanOrEqual(
-              afterUpdate.getTime(),
-            );
+          // Verify lastUpdated is within expected range
+          expect(result.lastUpdated).toBeDefined();
+          expect(result.lastUpdated.getTime()).toBeGreaterThanOrEqual(
+            beforeUpdate.getTime(),
+          );
+          expect(result.lastUpdated.getTime()).toBeLessThanOrEqual(
+            afterUpdate.getTime(),
+          );
 
-            return true;
-          },
-        ),
+          return true;
+        }),
         { numRuns: 100 },
       );
     });

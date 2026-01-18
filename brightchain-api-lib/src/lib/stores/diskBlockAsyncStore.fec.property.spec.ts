@@ -13,16 +13,15 @@
 import {
   BlockSize,
   DurabilityLevel,
-  getParityCountForDurability,
-  RawDataBlock,
-  initializeBrightChain,
-  ServiceProvider,
-  ServiceLocator,
-  IFecService,
-  ParityData,
   FecRecoveryResult,
+  getParityCountForDurability,
+  IFecService,
+  initializeBrightChain,
+  ParityData,
+  RawDataBlock,
+  ServiceLocator,
+  ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
 import { mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
@@ -74,7 +73,7 @@ class MockFecService implements IFecService {
     // Recover using first parity block (reverse the XOR)
     const parity = Buffer.from(parityData[0].data);
     const recovered = Buffer.alloc(originalSize);
-    
+
     for (let j = 0; j < originalSize; j++) {
       recovered[j] = parity[j] ^ ((parityData[0].index + 1) * 17);
     }
@@ -91,8 +90,11 @@ class MockFecService implements IFecService {
     }
 
     // Regenerate parity and compare
-    const regenerated = await this.createParityData(blockData, parityData.length);
-    
+    const regenerated = await this.createParityData(
+      blockData,
+      parityData.length,
+    );
+
     for (let i = 0; i < parityData.length; i++) {
       const original = Buffer.from(parityData[i].data);
       const regen = Buffer.from(regenerated[i].data);
@@ -167,7 +169,8 @@ describe('DiskBlockAsyncStore FEC Property Tests', () => {
               const metadata = await store.getMetadata(block.idChecksum);
               expect(metadata).not.toBeNull();
 
-              const expectedParityCount = getParityCountForDurability(durabilityLevel);
+              const expectedParityCount =
+                getParityCountForDurability(durabilityLevel);
               expect(metadata!.parityBlockIds.length).toBe(expectedParityCount);
               expect(metadata!.durabilityLevel).toBe(durabilityLevel);
             } finally {
@@ -217,7 +220,9 @@ describe('DiskBlockAsyncStore FEC Property Tests', () => {
               });
 
               // Verify parity was generated
-              const parityBlocks = await store.getParityBlocks(block.idChecksum);
+              const parityBlocks = await store.getParityBlocks(
+                block.idChecksum,
+              );
               expect(parityBlocks.length).toBe(1);
 
               // Attempt recovery
@@ -276,7 +281,9 @@ describe('DiskBlockAsyncStore FEC Property Tests', () => {
                 durabilityLevel: DurabilityLevel.Standard,
               });
 
-              const isValid = await store.verifyBlockIntegrity(block.idChecksum);
+              const isValid = await store.verifyBlockIntegrity(
+                block.idChecksum,
+              );
               expect(isValid).toBe(true);
             } finally {
               rmSync(iterTestDir, { recursive: true, force: true });
@@ -324,7 +331,9 @@ describe('DiskBlockAsyncStore FEC Property Tests', () => {
               expect(metadata).not.toBeNull();
               expect(metadata!.parityBlockIds.length).toBe(0);
 
-              const parityBlocks = await store.getParityBlocks(block.idChecksum);
+              const parityBlocks = await store.getParityBlocks(
+                block.idChecksum,
+              );
               expect(parityBlocks.length).toBe(0);
             } finally {
               rmSync(iterTestDir, { recursive: true, force: true });

@@ -1,13 +1,14 @@
 import { ReedSolomonErasure } from '@subspace/reed-solomon-erasure.wasm';
-import { Readable } from '../browserStream';
 import { BaseBlock } from '../blocks/base';
 import { ParityBlock } from '../blocks/parity';
 import { RawDataBlock } from '../blocks/rawData';
+import { Readable } from '../browserStream';
 import { FEC } from '../constants';
 import BlockDataType from '../enumerations/blockDataType';
 import BlockType from '../enumerations/blockType';
 import { FecErrorType } from '../enumerations/fecErrorType';
 import { FecError } from '../errors/fecError';
+import { Validator } from '../utils/validator';
 
 /**
  * FecService provides Forward Error Correction (FEC) functionality.
@@ -20,11 +21,29 @@ import { FecError } from '../errors/fecError';
  * 1. Split data into shards
  * 2. Create parity shards
  * 3. Recover lost shards using parity
+ *
+ * @remarks
+ * - All methods validate inputs before processing
+ * - Errors are wrapped in FecError with appropriate context
+ * - The service uses the Reed-Solomon erasure coding library
+ *
+ * @see Requirements 5.1, 5.2, 5.3, 12.1, 12.2
  */
 export class FecService {
   /**
    * Given a data buffer, encode it using Reed-Solomon erasure coding.
-   * This will produce a buffer of size (shardSize * (dataShards + parityShards)) or (shardSize * parityShards) if fecOnly is true.
+   * This will produce a buffer of size (shardSize * (dataShards + parityShards))
+   * or (shardSize * parityShards) if fecOnly is true.
+   *
+   * @param data - The data to encode
+   * @param shardSize - The size of each shard
+   * @param dataShards - The number of data shards
+   * @param parityShards - The number of parity shards
+   * @param fecOnly - If true, only return parity data
+   * @returns The encoded data
+   * @throws {FecError} If validation fails or encoding fails
+   *
+   * @see Requirements 5.1, 5.2, 5.3
    */
   public async encode(
     data: Uint8Array,
@@ -33,6 +52,9 @@ export class FecService {
     parityShards: number,
     fecOnly: boolean,
   ): Promise<Uint8Array> {
+    // Validate required parameters
+    Validator.validateRequired(data, 'data', 'encode');
+
     // Validate parameters
     if (!data || data.length === 0) {
       throw new FecError(FecErrorType.DataRequired);
@@ -67,6 +89,10 @@ export class FecService {
 
       return fecOnly ? shards.subarray(shardSize * dataShards) : shards;
     } catch (error) {
+      // Wrap errors with context
+      if (error instanceof FecError) {
+        throw error;
+      }
       throw new FecError(FecErrorType.FecEncodingFailed, undefined, {
         ERROR: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -76,6 +102,16 @@ export class FecService {
   /**
    * Given a data buffer, reconstruct/repair it using Reed-Solomon erasure coding.
    * This will produce a buffer of size (shardSize * dataShards).
+   *
+   * @param data - The data to decode (including parity)
+   * @param shardSize - The size of each shard
+   * @param dataShards - The number of data shards
+   * @param parityShards - The number of parity shards
+   * @param shardsAvailable - Boolean array indicating which shards are available
+   * @returns The decoded data
+   * @throws {FecError} If validation fails or decoding fails
+   *
+   * @see Requirements 5.1, 5.2, 5.3
    */
   public async decode(
     data: Uint8Array,
@@ -84,6 +120,10 @@ export class FecService {
     parityShards: number,
     shardsAvailable: boolean[],
   ): Promise<Uint8Array> {
+    // Validate required parameters
+    Validator.validateRequired(data, 'data', 'decode');
+    Validator.validateRequired(shardsAvailable, 'shardsAvailable', 'decode');
+
     // Validate parameters
     if (!data || data.length === 0) {
       throw new FecError(FecErrorType.DataRequired);
@@ -122,6 +162,10 @@ export class FecService {
       );
       return data.subarray(0, shardSize * dataShards);
     } catch (error) {
+      // Wrap errors with context
+      if (error instanceof FecError) {
+        throw error;
+      }
       throw new FecError(FecErrorType.FecDecodingFailed, undefined, {
         ERROR: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -130,11 +174,21 @@ export class FecService {
 
   /**
    * Given an input block, produce a set of parity blocks for error recovery.
+   *
+   * @param input - The input block to create parity for
+   * @param parityBlocks - The number of parity blocks to create
+   * @returns Array of parity blocks
+   * @throws {FecError} If validation fails or parity creation fails
+   *
+   * @see Requirements 5.1, 5.2, 5.3
    */
   public async createParityBlocks(
     input: BaseBlock,
     parityBlocks: number,
   ): Promise<ParityBlock[]> {
+    // Validate required parameters
+    Validator.validateRequired(input, 'input', 'createParityBlocks');
+
     // Validate parameters
     if (!input) {
       throw new FecError(FecErrorType.InputBlockRequired);
@@ -198,6 +252,10 @@ export class FecService {
         return new ParityBlock(input.blockSize, parityData);
       });
     } catch (error) {
+      // Wrap errors with context
+      if (error instanceof FecError) {
+        throw error;
+      }
       throw new FecError(FecErrorType.FecEncodingFailed, undefined, {
         ERROR: error instanceof Error ? error.message : 'Unknown error',
       });
@@ -206,11 +264,30 @@ export class FecService {
 
   /**
    * Recover a damaged block using its parity blocks.
+   *
+   * @param damagedBlock - The damaged block to recover
+   * @param parityBlocks - Array of parity blocks for recovery
+   * @returns The recovered raw data block
+   * @throws {FecError} If validation fails or recovery fails
+   *
+   * @see Requirements 5.1, 5.2, 5.3
    */
   public async recoverDataBlocks(
     damagedBlock: BaseBlock,
     parityBlocks: ParityBlock[],
   ): Promise<RawDataBlock> {
+    // Validate required parameters
+    Validator.validateRequired(
+      damagedBlock,
+      'damagedBlock',
+      'recoverDataBlocks',
+    );
+    Validator.validateRequired(
+      parityBlocks,
+      'parityBlocks',
+      'recoverDataBlocks',
+    );
+
     // Validate parameters
     if (!damagedBlock) {
       throw new FecError(FecErrorType.DamagedBlockRequired);
@@ -303,6 +380,10 @@ export class FecService {
         true, // canPersist
       );
     } catch (error) {
+      // Wrap errors with context
+      if (error instanceof FecError) {
+        throw error;
+      }
       throw new FecError(FecErrorType.FecDecodingFailed, undefined, {
         ERROR: error instanceof Error ? error.message : 'Unknown error',
       });

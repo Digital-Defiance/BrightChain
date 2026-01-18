@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { BlockSize } from '@brightchain/brightchain-lib';
 import { IEnvironment as IEnvironmentBase } from '@digitaldefiance/node-express-suite';
 import { IEnvironmentAws } from './environment-aws';
-import { BlockSize } from '@brightchain/brightchain-lib';
 
 export interface IEnvironment extends Omit<
   IEnvironmentBase,

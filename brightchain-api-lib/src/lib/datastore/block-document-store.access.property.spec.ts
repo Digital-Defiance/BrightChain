@@ -10,7 +10,16 @@
  * - Encrypted documents are only accessible to members in the encryption list
  */
 
-import fc from 'fast-check';
+import {
+  BlockSize,
+  initializeBrightChain,
+  MemberType,
+  MemoryBlockStore,
+  QuorumMemberMetadata,
+  QuorumService,
+  ServiceLocator,
+  ServiceProvider,
+} from '@brightchain/brightchain-lib';
 import {
   EmailString,
   GuidV4,
@@ -18,17 +27,11 @@ import {
   Member,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
+import fc from 'fast-check';
 import {
-  BlockSize,
-  initializeBrightChain,
-  MemoryBlockStore,
-  MemberType,
-  QuorumMemberMetadata,
-  QuorumService,
-  ServiceProvider,
-  ServiceLocator,
-} from '@brightchain/brightchain-lib';
-import { BlockDocumentStore, CollectionHeadRegistry } from './block-document-store';
+  BlockDocumentStore,
+  CollectionHeadRegistry,
+} from './block-document-store';
 import { DocumentRecord } from './document-store';
 
 // Set a longer timeout for all tests in this file
@@ -58,7 +61,10 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
   /**
    * Helper to create a test member with random data
    */
-  function createTestMember(name: string, email: string): IMemberWithMnemonic<GuidV4> {
+  function createTestMember(
+    name: string,
+    email: string,
+  ): IMemberWithMnemonic<GuidV4> {
     const eciesService = ServiceProvider.getInstance<GuidV4>().eciesService;
     return Member.newMember<GuidV4>(
       eciesService,
@@ -86,15 +92,19 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           // Generate document titles
-          fc.array(
-            fc.stringMatching(/^[A-Za-z][A-Za-z0-9]{0,19}$/),
-            { minLength: 2, maxLength: 5 },
-          ),
+          fc.array(fc.stringMatching(/^[A-Za-z][A-Za-z0-9]{0,19}$/), {
+            minLength: 2,
+            maxLength: 5,
+          }),
           async (titles: string[]) => {
             const quorumService = createQuorumService();
             const blockStore = new MemoryBlockStore(BlockSize.Small);
-            const documentStore = new BlockDocumentStore(blockStore, quorumService);
-            const collection = documentStore.encryptedCollection<TestDocument>('test-access');
+            const documentStore = new BlockDocumentStore(
+              blockStore,
+              quorumService,
+            );
+            const collection =
+              documentStore.encryptedCollection<TestDocument>('test-access');
 
             const timestamp = Date.now();
             const random = Math.floor(Math.random() * 1000000);
@@ -129,10 +139,7 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
             // etc.
             const createdDocs: TestDocument[] = [];
             for (let i = 0; i < titles.length; i++) {
-              const docMemberIds = [
-                memberIds[i % 3],
-                memberIds[(i + 1) % 3],
-              ];
+              const docMemberIds = [memberIds[i % 3], memberIds[(i + 1) % 3]];
 
               const doc = await collection.create(
                 { title: titles[i], content: `Content ${i}` },
@@ -148,7 +155,8 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
 
             // Check access for member 0
             const member0Id = memberIds[0];
-            const accessibleToMember0 = await collection.findAccessibleBy(member0Id);
+            const accessibleToMember0 =
+              await collection.findAccessibleBy(member0Id);
 
             // Member 0 should have access to documents where they are in the member list
             for (const doc of createdDocs) {
@@ -179,8 +187,14 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
           async (title: string) => {
             const quorumService = createQuorumService();
             const blockStore = new MemoryBlockStore(BlockSize.Small);
-            const documentStore = new BlockDocumentStore(blockStore, quorumService);
-            const collection = documentStore.encryptedCollection<TestDocument>('test-unencrypted');
+            const documentStore = new BlockDocumentStore(
+              blockStore,
+              quorumService,
+            );
+            const collection =
+              documentStore.encryptedCollection<TestDocument>(
+                'test-unencrypted',
+              );
 
             const timestamp = Date.now();
             const random = Math.floor(Math.random() * 1000000);
@@ -207,7 +221,10 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
             }
 
             // Create an unencrypted document
-            const doc = await collection.create({ title, content: 'Unencrypted content' });
+            const doc = await collection.create({
+              title,
+              content: 'Unencrypted content',
+            });
 
             // Both members should have access
             for (const memberId of memberIds) {
@@ -217,7 +234,10 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
 
             // A random member ID should also have access (unencrypted = public)
             const randomMemberId = 'random-member-id' as ShortHexGuid;
-            const randomHasAccess = await collection.hasAccess(doc._id!, randomMemberId);
+            const randomHasAccess = await collection.hasAccess(
+              doc._id!,
+              randomMemberId,
+            );
             expect(randomHasAccess).toBe(true);
           },
         ),

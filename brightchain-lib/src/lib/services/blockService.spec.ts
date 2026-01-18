@@ -1,4 +1,4 @@
-import { ChecksumUint8Array, EmailString, arraysEqual } from '@digitaldefiance/ecies-lib';
+import { EmailString, Member, arraysEqual } from '@digitaldefiance/ecies-lib';
 import { BaseBlock } from '../blocks/base';
 import { EphemeralBlock } from '../blocks/ephemeral';
 import { CHECKSUM, TUPLE } from '../constants';
@@ -6,7 +6,7 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { MemberType } from '../enumerations/memberType';
-import { Member } from '@digitaldefiance/ecies-lib';
+import { Checksum } from '../types/checksum';
 import { BlockService } from './blockService';
 import { ServiceProvider } from './service.provider';
 
@@ -26,7 +26,7 @@ jest.mock('../blocks/cblBase', () => {
 describe('BlockService', () => {
   let member: Member;
   let tinyData: Uint8Array;
-  let checksum: ChecksumUint8Array;
+  let checksum: Checksum;
   let blockService: BlockService;
 
   beforeEach(async () => {
@@ -213,8 +213,15 @@ describe('BlockService', () => {
     // So we'll just verify the CBLs were created with the correct members
     expect(cbl.creator).toBe(member);
     expect(otherCbl.creator).toBe(otherMember);
-    expect(arraysEqual(cbl.creatorId as Uint8Array, member.id as Uint8Array)).toBe(true);
-    expect(arraysEqual(otherCbl.creatorId as Uint8Array, otherMember.id as Uint8Array)).toBe(true);
+    expect(
+      arraysEqual(cbl.creatorId as Uint8Array, member.id as Uint8Array),
+    ).toBe(true);
+    expect(
+      arraysEqual(
+        otherCbl.creatorId as Uint8Array,
+        otherMember.id as Uint8Array,
+      ),
+    ).toBe(true);
   });
 
   it('should validate CBL metadata correctly', async () => {
@@ -236,13 +243,16 @@ describe('BlockService', () => {
     // Verify metadata
     expect(cbl.blockType).toBe(BlockType.ConstituentBlockList);
     expect(cbl.blockDataType).toBe(BlockDataType.EphemeralStructuredData);
-    expect(arraysEqual(cbl.creatorId as Uint8Array, member.id as Uint8Array)).toBe(true);
+    expect(
+      arraysEqual(cbl.creatorId as Uint8Array, member.id as Uint8Array),
+    ).toBe(true);
     expect(cbl.originalDataLength).toBe(blocks.length);
     expect(cbl.tupleSize).toBe(TUPLE.SIZE);
     expect(cbl.addresses.length).toBe(blocks.length);
     expect(
       cbl.addresses.every(
-        (addr: Uint8Array) => addr.length === CHECKSUM.SHA3_BUFFER_LENGTH,
+        (addr: Checksum) =>
+          addr.toUint8Array().length === CHECKSUM.SHA3_BUFFER_LENGTH,
       ),
     ).toBe(true);
   });

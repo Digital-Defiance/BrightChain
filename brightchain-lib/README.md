@@ -89,6 +89,172 @@ BlockEncryptionType.MultiRecipient    // Multiple recipient ECIES
 
 ## 🔧 Advanced Usage
 
+### Error Handling
+
+BrightChain v2.0 introduces a unified error handling system with rich context and type safety:
+
+```typescript
+import {
+  BrightChainError,
+  ValidationError,
+  ChecksumError,
+  FactoryPatternViolationError,
+  isValidationError,
+  isChecksumError,
+  isBrightChainError
+} from '@brightchain/brightchain-lib';
+
+try {
+  // Perform operations
+  const block = await blockService.createBlock(params);
+} catch (error) {
+  // Type-safe error handling with type guards
+  if (isValidationError(error)) {
+    console.error(`Validation failed for field: ${error.field}`);
+    console.error(`Message: ${error.message}`);
+    console.error(`Context:`, error.context);
+  } else if (isChecksumError(error)) {
+    console.error(`Checksum error type: ${error.checksumErrorType}`);
+    console.error(`Message: ${error.message}`);
+  } else if (isBrightChainError(error)) {
+    // Generic BrightChain error
+    console.error(`Error type: ${error.type}`);
+    console.error(`Message: ${error.message}`);
+    console.error(`Context:`, error.context);
+    
+    // Check for underlying cause
+    if (error.cause) {
+      console.error(`Caused by:`, error.cause);
+    }
+  } else {
+    // Non-BrightChain error
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+**Error Types:**
+- `BrightChainError`: Base class for all BrightChain errors
+- `ValidationError`: Input validation failures
+- `ChecksumError`: Checksum calculation or validation errors
+- `FactoryPatternViolationError`: Attempted direct instantiation of factory-only classes
+- `BlockCapacityError`: Block capacity calculation errors
+- `ExtendedCblError`: Extended CBL validation errors
+
+**Error Context:**
+All BrightChain errors include:
+- `type`: Error type identifier
+- `message`: Human-readable error message
+- `context`: Additional context (parameters, state, etc.)
+- `cause`: Original error if this error wraps another
+
+### Type System
+
+BrightChain v2.0 introduces improved type safety with the `Checksum` class and typed `BlockHandle`:
+
+#### Checksum Class
+
+The unified `Checksum` class replaces separate `ChecksumBuffer` and `ChecksumUint8Array` types:
+
+```typescript
+import { Checksum } from '@brightchain/brightchain-lib';
+
+// Create from different sources
+const checksumFromBuffer = Checksum.fromBuffer(buffer);
+const checksumFromArray = Checksum.fromUint8Array(uint8Array);
+const checksumFromHex = Checksum.fromHex('abc123...');
+
+// Compare checksums
+if (checksum1.equals(checksum2)) {
+  console.log('Checksums match!');
+}
+
+// Convert to different formats
+const buffer = checksum.toBuffer();
+const array = checksum.toUint8Array();
+const hex = checksum.toHex();
+const str = checksum.toString(); // Same as toHex()
+
+// Use with services
+const checksumService = ServiceProvider.getInstance().checksumService;
+const checksum = checksumService.calculateChecksumAsClass(data);
+console.log(`Checksum: ${checksum.toHex()}`);
+```
+
+#### Typed BlockHandle
+
+`BlockHandle<T>` now requires a type parameter for full type safety:
+
+```typescript
+import { BlockHandle, BaseBlock, RawDataBlock } from '@brightchain/brightchain-lib';
+
+// Type-safe block handles
+const baseHandle: BlockHandle<BaseBlock> = ...;
+const rawDataHandle: BlockHandle<RawDataBlock> = ...;
+
+// TypeScript enforces type safety
+function processBlock(handle: BlockHandle<RawDataBlock>) {
+  // TypeScript knows this is a RawDataBlock handle
+}
+
+// Compile-time error if type parameter is missing
+// const handle: BlockHandle = ...; // ❌ Error: Type parameter required
+```
+
+### Factory Patterns
+
+BrightChain enforces factory patterns at runtime to ensure proper object initialization:
+
+```typescript
+import { MemberDocument, FactoryPatternViolationError } from '@brightchain/brightchain-lib';
+
+// ✅ Correct: Use factory method
+const member = MemberDocument.create(
+  publicMember,
+  privateMember,
+  data
+);
+
+// ❌ Incorrect: Direct instantiation throws error
+try {
+  const member = new MemberDocument(...); // Throws FactoryPatternViolationError
+} catch (error) {
+  if (error instanceof FactoryPatternViolationError) {
+    console.error('Use factory method instead:', error.message);
+  }
+}
+```
+
+**Classes with Factory Patterns:**
+- `MemberDocument`: Use `MemberDocument.create()`
+- `BaseBlock` subclasses: Use `BlockType.from()` or specific factory methods
+- `Checksum`: Use `Checksum.fromBuffer()`, `Checksum.fromUint8Array()`, or `Checksum.fromHex()`
+
+**Why Factory Patterns?**
+- Ensures proper validation during object creation
+- Prevents invalid object states
+- Provides clear, documented creation APIs
+- Enables future enhancements without breaking changes
+
+### Migration from v1.x to v2.0
+
+If you're upgrading from BrightChain v1.x, see our comprehensive [Migration Guide](./MIGRATION.md) for:
+
+- Step-by-step migration instructions
+- Before/after code examples
+- Automated migration scripts
+- Deprecation timeline
+- Breaking changes documentation
+
+**Quick Migration Checklist:**
+- [ ] Replace `ChecksumBuffer`/`ChecksumUint8Array` with `Checksum` class
+- [ ] Update direct constructor calls to use factory methods
+- [ ] Add type parameters to `BlockHandle` declarations
+- [ ] Update property names (`typeSpecificHeader` → `typeSpecificOverhead`, `payload` → `data`)
+- [ ] Update error handling to use new error types and type guards
+
+See [MIGRATION.md](./MIGRATION.md) for complete details.
+
 ### Working with Encrypted Blocks
 
 ```typescript
@@ -313,6 +479,8 @@ import { BrightChain } from '@brightchain/brightchain-lib';
 ```
 
 ## 📖 API Reference
+
+For detailed naming conventions and terminology, see [NAMING_CONVENTIONS.md](./NAMING_CONVENTIONS.md).
 
 ### Core Classes
 

@@ -1,5 +1,5 @@
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { RawDataBlock } from '../../blocks/rawData';
+import { Checksum } from '../../types/checksum';
 
 /**
  * Universal block store interface that works in both browser and Node.js
@@ -13,20 +13,20 @@ export interface IUniversalBlockStore {
   /**
    * Retrieve a block by checksum
    */
-  getData(checksum: ChecksumUint8Array): Promise<RawDataBlock>;
+  getData(checksum: Checksum): Promise<RawDataBlock>;
 
   /**
    * Check if a block exists
    */
-  has(checksum: ChecksumUint8Array): Promise<boolean>;
+  has(checksum: Checksum): Promise<boolean>;
 
   /**
    * Delete a block
    */
-  deleteData(checksum: ChecksumUint8Array): Promise<void>;
+  deleteData(checksum: Checksum): Promise<void>;
 
   /**
    * Get random blocks for whitening (optional, for OFFS)
    */
-  getRandomBlocks?(count: number): Promise<ChecksumUint8Array[]>;
+  getRandomBlocks?(count: number): Promise<Checksum[]>;
 }

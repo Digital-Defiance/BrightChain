@@ -1,6 +1,6 @@
-import { ChecksumString, ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
-import { Readable } from '../browserStream';
+import { ChecksumString } from '@digitaldefiance/ecies-lib';
 import { BlockMetadata } from '../blockMetadata';
+import { Readable } from '../browserStream';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize, validateBlockSize } from '../enumerations/blockSize';
@@ -8,7 +8,7 @@ import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { IBaseBlock } from '../interfaces/blocks/base';
-import { ServiceLocator } from '../services/serviceLocator';
+import { Checksum } from '../types/checksum';
 
 /**
  * BaseBlock provides core block functionality.
@@ -29,7 +29,7 @@ export abstract class BaseBlock implements IBaseBlock {
 
   protected readonly _blockType: BlockType;
   protected readonly _blockDataType: BlockDataType;
-  protected readonly _checksum: ChecksumUint8Array;
+  protected readonly _checksum: Checksum;
   protected readonly _dateCreated: Date;
   protected readonly _metadata: BlockMetadata;
   protected readonly _canRead: boolean;
@@ -50,7 +50,7 @@ export abstract class BaseBlock implements IBaseBlock {
   protected constructor(
     type: BlockType,
     dataType: BlockDataType,
-    checksum: ChecksumUint8Array,
+    checksum: Checksum,
     metadata: BlockMetadata,
     canRead = true,
     canPersist = true,
@@ -108,7 +108,7 @@ export abstract class BaseBlock implements IBaseBlock {
   /**
    * The block's unique identifier/checksum
    */
-  public get idChecksum(): ChecksumUint8Array {
+  public get idChecksum(): Checksum {
     return this._checksum;
   }
 
@@ -116,9 +116,7 @@ export abstract class BaseBlock implements IBaseBlock {
    * The block's checksum as a string
    */
   public get checksumString(): ChecksumString {
-    return ServiceLocator.getServiceProvider().checksumService.checksumToHexString(
-      this.idChecksum,
-    ) as ChecksumString;
+    return this.idChecksum.toHex() as ChecksumString;
   }
 
   /**

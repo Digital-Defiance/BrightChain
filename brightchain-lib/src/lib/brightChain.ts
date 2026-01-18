@@ -1,15 +1,13 @@
-import {
-  ChecksumUint8Array,
-  uint8ArrayToHex,
-} from '@digitaldefiance/ecies-lib';
 import { RawDataBlock } from './blocks/rawData';
+import { CHECKSUM } from './constants';
 import { BlockSize } from './enumerations/blockSize';
 import { BlockStoreFactory } from './factories/blockStoreFactory';
 import { IBlockStore } from './interfaces/storage/blockStore';
+import { Checksum } from './types';
 
 export interface BlockInfo {
   id: string;
-  checksum: ChecksumUint8Array;
+  checksum: Checksum;
   size: number;
   index: number;
 }
@@ -53,7 +51,7 @@ export class BrightChain {
       await this.blockStore.setData(block);
 
       blocks.push({
-        id: uint8ArrayToHex(block.idChecksum),
+        id: block.idChecksum.toHex(),
         checksum: block.idChecksum,
         size: chunk.length,
         index: blocks.length,
@@ -61,9 +59,9 @@ export class BrightChain {
     }
 
     const cblData = this.createCBL(blocks, fileData.length, fileName);
-    const receiptId = uint8ArrayToHex(
-      new Uint8Array(32).map(() => Math.floor(Math.random() * 256)),
-    );
+    const randomBytes = new Uint8Array(CHECKSUM.SHA3_BUFFER_LENGTH);
+    crypto.getRandomValues(randomBytes);
+    const receiptId = Checksum.fromUint8Array(randomBytes).toHex();
 
     return {
       id: receiptId,

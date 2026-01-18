@@ -1,6 +1,7 @@
 /**
  * Minimal browser-compatible stream implementation
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class Readable {
   protected _data: Uint8Array;
@@ -20,12 +21,14 @@ export class Readable {
       }, 0);
       return null; // Return null initially, data will come via events
     }
-    
+
     if (this._position >= this._data.length) {
       return null;
     }
-    
-    const end = size ? Math.min(this._position + size, this._data.length) : this._data.length;
+
+    const end = size
+      ? Math.min(this._position + size, this._data.length)
+      : this._data.length;
     const chunk = this._data.slice(this._position, end);
     this._position = end;
     return chunk;
@@ -56,7 +59,7 @@ export class Readable {
   emit(event: string, ...args: any[]): boolean {
     const listeners = this._listeners[event];
     if (listeners) {
-      listeners.forEach(listener => listener(...args));
+      listeners.forEach((listener) => listener(...args));
       return true;
     }
     return false;
@@ -70,20 +73,20 @@ export class Readable {
       this.emit('data', this._data);
       this.emit('end');
     };
-    
+
     // Set up event listeners
     this.on('data', (chunk) => {
       destination.write(chunk);
     });
-    
+
     this.on('end', () => {
       destination.end();
     });
-    
+
     this.on('error', (error) => {
       destination.destroy(error);
     });
-    
+
     // Process immediately
     setTimeout(processData, 0);
     return destination;
@@ -116,14 +119,12 @@ export class Transform extends Readable {
     this._objectMode = options?.objectMode || false;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _transform(chunk: any, encoding: string, callback: TransformCallback): void {
+  _transform(chunk: any, _encoding: string, callback: TransformCallback): void {
     // Override in subclasses
     this.push(chunk);
     callback();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _flush(callback: TransformCallback): void {
     // Override in subclasses
     callback();
@@ -155,7 +156,7 @@ export class Transform extends Readable {
       }
       if (callback) callback(error);
     };
-    
+
     try {
       this._transform(chunk, encoding || 'buffer', cb);
     } catch (error) {
@@ -189,24 +190,24 @@ export class Transform extends Readable {
     this.on('data', (chunk) => {
       destination.write(chunk);
     });
-    
+
     this.on('end', () => {
       destination.end();
     });
-    
+
     this.on('error', (error) => {
       destination.destroy(error);
     });
-    
+
     return destination;
   }
 
   // Override read to return buffered data
-  override read(size?: number): Uint8Array | null {
+  override read(_size?: number): Uint8Array | null {
     if (this._transformBuffer.length === 0) {
       return null;
     }
-    
+
     const chunk = this._transformBuffer.shift();
     return chunk || null;
   }

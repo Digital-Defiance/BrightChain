@@ -8,12 +8,12 @@
  */
 
 import {
-  DiscoveryConfig,
   DEFAULT_DISCOVERY_CONFIG,
-  GossipConfig,
   DEFAULT_GOSSIP_CONFIG,
-  HeartbeatConfig,
   DEFAULT_HEARTBEAT_CONFIG,
+  DiscoveryConfig,
+  GossipConfig,
+  HeartbeatConfig,
 } from '@brightchain/brightchain-lib';
 
 /**
@@ -36,14 +36,12 @@ export class ConfigValidationError extends Error {
  * @see Requirements 13.1, 13.2, 13.3, 13.6
  */
 export function validateDiscoveryConfig(
-  config: Partial<DiscoveryConfig>
+  config: Partial<DiscoveryConfig>,
 ): void {
   // Validate queryTimeoutMs
   if (config.queryTimeoutMs !== undefined) {
     if (!Number.isFinite(config.queryTimeoutMs)) {
-      throw new ConfigValidationError(
-        'queryTimeoutMs must be a finite number'
-      );
+      throw new ConfigValidationError('queryTimeoutMs must be a finite number');
     }
     if (config.queryTimeoutMs <= 0) {
       throw new ConfigValidationError('queryTimeoutMs must be positive');
@@ -51,7 +49,7 @@ export function validateDiscoveryConfig(
     if (config.queryTimeoutMs > 300000) {
       // 5 minutes max
       throw new ConfigValidationError(
-        'queryTimeoutMs must not exceed 300000ms (5 minutes)'
+        'queryTimeoutMs must not exceed 300000ms (5 minutes)',
       );
     }
   }
@@ -60,17 +58,17 @@ export function validateDiscoveryConfig(
   if (config.maxConcurrentQueries !== undefined) {
     if (!Number.isInteger(config.maxConcurrentQueries)) {
       throw new ConfigValidationError(
-        'maxConcurrentQueries must be an integer'
+        'maxConcurrentQueries must be an integer',
       );
     }
     if (config.maxConcurrentQueries < 1) {
       throw new ConfigValidationError(
-        'maxConcurrentQueries must be at least 1'
+        'maxConcurrentQueries must be at least 1',
       );
     }
     if (config.maxConcurrentQueries > 1000) {
       throw new ConfigValidationError(
-        'maxConcurrentQueries must not exceed 1000'
+        'maxConcurrentQueries must not exceed 1000',
       );
     }
   }
@@ -86,7 +84,7 @@ export function validateDiscoveryConfig(
     if (config.cacheTtlMs > 86400000) {
       // 24 hours max
       throw new ConfigValidationError(
-        'cacheTtlMs must not exceed 86400000ms (24 hours)'
+        'cacheTtlMs must not exceed 86400000ms (24 hours)',
       );
     }
   }
@@ -95,7 +93,7 @@ export function validateDiscoveryConfig(
   if (config.bloomFilterFalsePositiveRate !== undefined) {
     if (!Number.isFinite(config.bloomFilterFalsePositiveRate)) {
       throw new ConfigValidationError(
-        'bloomFilterFalsePositiveRate must be a finite number'
+        'bloomFilterFalsePositiveRate must be a finite number',
       );
     }
     if (
@@ -103,7 +101,7 @@ export function validateDiscoveryConfig(
       config.bloomFilterFalsePositiveRate >= 1
     ) {
       throw new ConfigValidationError(
-        'bloomFilterFalsePositiveRate must be between 0 and 1 (exclusive)'
+        'bloomFilterFalsePositiveRate must be between 0 and 1 (exclusive)',
       );
     }
   }
@@ -112,15 +110,17 @@ export function validateDiscoveryConfig(
   if (config.bloomFilterHashCount !== undefined) {
     if (!Number.isInteger(config.bloomFilterHashCount)) {
       throw new ConfigValidationError(
-        'bloomFilterHashCount must be an integer'
+        'bloomFilterHashCount must be an integer',
       );
     }
     if (config.bloomFilterHashCount < 1) {
-      throw new ConfigValidationError('bloomFilterHashCount must be at least 1');
+      throw new ConfigValidationError(
+        'bloomFilterHashCount must be at least 1',
+      );
     }
     if (config.bloomFilterHashCount > 20) {
       throw new ConfigValidationError(
-        'bloomFilterHashCount must not exceed 20'
+        'bloomFilterHashCount must not exceed 20',
       );
     }
   }
@@ -164,7 +164,9 @@ export function validateGossipConfig(config: Partial<GossipConfig>): void {
   // Validate batchIntervalMs
   if (config.batchIntervalMs !== undefined) {
     if (!Number.isFinite(config.batchIntervalMs)) {
-      throw new ConfigValidationError('batchIntervalMs must be a finite number');
+      throw new ConfigValidationError(
+        'batchIntervalMs must be a finite number',
+      );
     }
     if (config.batchIntervalMs < 0) {
       throw new ConfigValidationError('batchIntervalMs must be non-negative');
@@ -172,7 +174,7 @@ export function validateGossipConfig(config: Partial<GossipConfig>): void {
     if (config.batchIntervalMs > 60000) {
       // 1 minute max
       throw new ConfigValidationError(
-        'batchIntervalMs must not exceed 60000ms (1 minute)'
+        'batchIntervalMs must not exceed 60000ms (1 minute)',
       );
     }
   }
@@ -200,7 +202,9 @@ export function validateGossipConfig(config: Partial<GossipConfig>): void {
  * @throws {ConfigValidationError} If configuration is invalid
  * @see Requirements 13.5, 13.6
  */
-export function validateHeartbeatConfig(config: Partial<HeartbeatConfig>): void {
+export function validateHeartbeatConfig(
+  config: Partial<HeartbeatConfig>,
+): void {
   // Validate intervalMs
   if (config.intervalMs !== undefined) {
     if (!Number.isFinite(config.intervalMs)) {
@@ -212,7 +216,7 @@ export function validateHeartbeatConfig(config: Partial<HeartbeatConfig>): void 
     if (config.intervalMs > 300000) {
       // 5 minutes max
       throw new ConfigValidationError(
-        'intervalMs must not exceed 300000ms (5 minutes)'
+        'intervalMs must not exceed 300000ms (5 minutes)',
       );
     }
   }
@@ -228,7 +232,7 @@ export function validateHeartbeatConfig(config: Partial<HeartbeatConfig>): void 
     if (config.timeoutMs > 60000) {
       // 1 minute max
       throw new ConfigValidationError(
-        'timeoutMs must not exceed 60000ms (1 minute)'
+        'timeoutMs must not exceed 60000ms (1 minute)',
       );
     }
   }
@@ -253,7 +257,7 @@ export function validateHeartbeatConfig(config: Partial<HeartbeatConfig>): void 
     config.timeoutMs >= config.intervalMs
   ) {
     throw new ConfigValidationError(
-      'timeoutMs must be less than intervalMs for proper heartbeat operation'
+      'timeoutMs must be less than intervalMs for proper heartbeat operation',
     );
   }
 }
@@ -267,7 +271,7 @@ export function validateHeartbeatConfig(config: Partial<HeartbeatConfig>): void 
  * @throws {ConfigValidationError} If configuration is invalid
  */
 export function createValidatedDiscoveryConfig(
-  config: Partial<DiscoveryConfig> = {}
+  config: Partial<DiscoveryConfig> = {},
 ): DiscoveryConfig {
   validateDiscoveryConfig(config);
   return {
@@ -285,7 +289,7 @@ export function createValidatedDiscoveryConfig(
  * @throws {ConfigValidationError} If configuration is invalid
  */
 export function createValidatedGossipConfig(
-  config: Partial<GossipConfig> = {}
+  config: Partial<GossipConfig> = {},
 ): GossipConfig {
   validateGossipConfig(config);
   return {
@@ -303,7 +307,7 @@ export function createValidatedGossipConfig(
  * @throws {ConfigValidationError} If configuration is invalid
  */
 export function createValidatedHeartbeatConfig(
-  config: Partial<HeartbeatConfig> = {}
+  config: Partial<HeartbeatConfig> = {},
 ): HeartbeatConfig {
   const merged = {
     ...DEFAULT_HEARTBEAT_CONFIG,

@@ -1,5 +1,4 @@
 import { Member, PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
-import { QuorumDataRecord } from '../../quorumDataRecord';
 
 /**
  * Metadata for a quorum member
@@ -12,6 +11,7 @@ export interface QuorumMemberMetadata {
 
 /**
  * A quorum member with their public key and metadata
+ * @template TID - Platform ID type (currently unused but reserved for future use)
  */
 export interface IQuorumMember<TID extends PlatformID = Uint8Array> {
   id: ShortHexGuid;
@@ -20,6 +20,8 @@ export interface IQuorumMember<TID extends PlatformID = Uint8Array> {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  // Reserved for future use with TID
+  _platformId?: TID;
 }
 
 /**
@@ -32,6 +34,7 @@ export interface MemberShare {
 
 /**
  * Result of a document sealing operation
+ * @template TID - Platform ID type (currently unused but reserved for future use)
  */
 export interface SealedDocumentResult<TID extends PlatformID = Uint8Array> {
   documentId: ShortHexGuid;
@@ -39,6 +42,8 @@ export interface SealedDocumentResult<TID extends PlatformID = Uint8Array> {
   memberIds: ShortHexGuid[];
   sharesRequired: number;
   createdAt: Date;
+  // Reserved for future use with TID
+  _platformId?: TID;
 }
 
 /**
@@ -76,7 +81,10 @@ export interface IQuorumService<TID extends PlatformID = Uint8Array> {
    * @param metadata - Metadata for the member
    * @returns The created quorum member record
    */
-  addMember(member: Member<TID>, metadata: QuorumMemberMetadata): Promise<IQuorumMember<TID>>;
+  addMember(
+    member: Member<TID>,
+    metadata: QuorumMemberMetadata,
+  ): Promise<IQuorumMember<TID>>;
 
   /**
    * Remove a member from the quorum.
@@ -157,5 +165,8 @@ export interface IQuorumService<TID extends PlatformID = Uint8Array> {
    * @param memberIds - IDs of members who would provide shares
    * @returns Result indicating if unlock is possible
    */
-  canUnlock(documentId: ShortHexGuid, memberIds: ShortHexGuid[]): Promise<CanUnlockResult>;
+  canUnlock(
+    documentId: ShortHexGuid,
+    memberIds: ShortHexGuid[],
+  ): Promise<CanUnlockResult>;
 }

@@ -1,8 +1,4 @@
-import {
-  getEnhancedIdProvider,
-  Member,
-  PlatformID,
-} from '@digitaldefiance/ecies-lib';
+import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { uint8ArrayToBase64 } from '../../bufferUtils';
 import { IOperationalFactory } from '../../interfaces/document/base';
 import {

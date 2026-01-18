@@ -1,11 +1,10 @@
 import {
   EmailString,
-  getEnhancedIdProvider,
   PlatformID,
   uint8ArrayToBase64,
 } from '@digitaldefiance/ecies-lib';
-import { base64ToUint8Array } from '../../bufferUtils';
 import { PublicKey } from 'paillier-bigint';
+import { base64ToUint8Array } from '../../bufferUtils';
 import { IHydrationSchema } from '../../interfaces/document/base';
 import { IMemberHydratedData } from '../../interfaces/member/hydrated';
 import { IMemberStorageData } from '../../interfaces/member/storage';
@@ -68,7 +67,7 @@ export const memberHydrationSchema = <
         idString = uint8ArrayToBase64(hydrated.id as unknown as Uint8Array);
       }
     }
-    
+
     let creatorIdString: string;
     if (!hydrated.creatorId) {
       creatorIdString = idString;
@@ -82,7 +81,9 @@ export const memberHydrationSchema = <
         creatorIdString = provider.idToString(hydrated.creatorId);
       } catch {
         // Fallback to base64 if provider method fails
-        creatorIdString = uint8ArrayToBase64(hydrated.creatorId as unknown as Uint8Array);
+        creatorIdString = uint8ArrayToBase64(
+          hydrated.creatorId as unknown as Uint8Array,
+        );
       }
     }
 

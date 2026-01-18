@@ -1,15 +1,15 @@
-import { existsSync, mkdirSync } from 'fs';
-import { readFile, writeFile, unlink, readdir, stat } from 'fs/promises';
-import { join, dirname } from 'path';
 import {
+  BlockSize,
+  blockSizeToSizeString,
   IBlockMetadata,
   IBlockMetadataStore,
   ReplicationStatus,
-  BlockSize,
-  blockSizeToSizeString,
-  StoreErrorType,
   StoreError,
+  StoreErrorType,
 } from '@brightchain/brightchain-lib';
+import { existsSync, mkdirSync } from 'fs';
+import { readdir, readFile, stat, unlink, writeFile } from 'fs/promises';
+import { join } from 'path';
 
 /**
  * Version number for the metadata file format.
@@ -82,7 +82,6 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
     }
   }
 
-
   /**
    * Get the directory path for a block's metadata.
    * Directory structure: storePath/blockSize/checksumChar1/checksumChar2/
@@ -95,12 +94,7 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
     }
 
     const blockSizeString = blockSizeToSizeString(this.blockSize);
-    return join(
-      this.storePath,
-      blockSizeString,
-      blockId[0],
-      blockId[1],
-    );
+    return join(this.storePath, blockSizeString, blockId[0], blockId[1]);
   }
 
   /**
@@ -162,7 +156,8 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
       blockId: file.blockId,
       createdAt: new Date(file.createdAt),
       expiresAt: file.expiresAt ? new Date(file.expiresAt) : null,
-      durabilityLevel: file.durabilityLevel as IBlockMetadata['durabilityLevel'],
+      durabilityLevel:
+        file.durabilityLevel as IBlockMetadata['durabilityLevel'],
       parityBlockIds: [...file.parityBlockIds],
       accessCount: file.accessCount,
       lastAccessedAt: new Date(file.lastAccessedAt),
@@ -222,13 +217,13 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
       const json = await readFile(filePath, 'utf-8');
       const file = JSON.parse(json) as BlockMetadataFile;
       return this.deserializeMetadata(file);
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       // If the file is corrupted or unreadable, return null
       // The caller can decide how to handle this
       return null;
     }
   }
-
 
   /**
    * Update metadata for an existing block.
@@ -373,7 +368,7 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
       for (const firstDir of firstLevelDirs) {
         const firstLevelPath = join(basePath, firstDir);
         const firstStats = await stat(firstLevelPath);
-        
+
         if (!firstStats.isDirectory()) {
           continue;
         }
@@ -384,7 +379,7 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
         for (const secondDir of secondLevelDirs) {
           const secondLevelPath = join(firstLevelPath, secondDir);
           const secondStats = await stat(secondLevelPath);
-          
+
           if (!secondStats.isDirectory()) {
             continue;
           }
@@ -401,7 +396,7 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
               -METADATA_FILE_EXTENSION.length,
             );
             const metadata = await this.get(blockId);
-            
+
             if (metadata) {
               await callback(metadata);
             }

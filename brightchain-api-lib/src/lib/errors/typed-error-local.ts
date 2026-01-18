@@ -1,11 +1,7 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 // Local TypedError to avoid circular dependencies with main lib
 // This preserves the StringName translation system
-import {
-  StringLanguage,
-  StringNames,
-  translate,
-} from '@brightchain/brightchain-lib';
+import { StringNames, translate } from '@brightchain/brightchain-lib';
+import { StringLanguage } from '../interfaces/request-user';
 
 export abstract class TypedError<
   T extends string | number,

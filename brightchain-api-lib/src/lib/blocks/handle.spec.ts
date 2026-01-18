@@ -1,20 +1,19 @@
 import {
-  arraysEqual,
-  ChecksumUint8Array,
-  uint8ArrayToHex,
-} from '@digitaldefiance/ecies-lib';
-import { mkdirSync, rmSync, writeFileSync } from 'fs';
-import { join } from 'path';
-import {
-  BlockAccessErrorType,
+  BlockAccessError,
   BlockDataType,
   BlockSize,
   BlockType,
-  BlockAccessError,
+  Checksum,
   ChecksumMismatchError,
-  ServiceProvider,
   RawDataBlock,
+  ServiceProvider,
+  uint8ArrayToHex,
 } from '@brightchain/brightchain-lib';
+import {
+  arraysEqual,
+} from '@digitaldefiance/ecies-lib';
+import { mkdirSync, rmSync, writeFileSync } from 'fs';
+import { join } from 'path';
 import { BlockHandle, createBlockHandleFromPath } from './handle';
 
 describe('BlockHandle', () => {
@@ -32,7 +31,7 @@ describe('BlockHandle', () => {
 
   const createTestFile = (
     data?: Uint8Array,
-  ): { path: string; checksum: ChecksumUint8Array } => {
+  ): { path: string; checksum: Checksum } => {
     const checksumService = ServiceProvider.getInstance().checksumService;
     const blockData =
       data ||
@@ -42,7 +41,7 @@ describe('BlockHandle', () => {
         return randomData;
       })();
     const checksum = checksumService.calculateChecksum(blockData);
-    const path = join(testDir, uint8ArrayToHex(new Uint8Array(checksum)));
+    const path = join(testDir, checksum.toHex());
     writeFileSync(path, Buffer.from(blockData));
     return { path, checksum };
   };
@@ -62,8 +61,8 @@ describe('BlockHandle', () => {
       expect(handle.blockDataType).toBe(BlockDataType.RawData);
       expect(
         arraysEqual(
-          new Uint8Array(handle.idChecksum),
-          new Uint8Array(checksum),
+          handle.idChecksum.toUint8Array(),
+          checksum.toUint8Array(),
         ),
       ).toBe(true);
       expect(handle.path).toBe(path);
@@ -220,8 +219,8 @@ describe('BlockHandle', () => {
       expect(arraysEqual(rawBlock.data, handle.data)).toBe(true);
       expect(
         arraysEqual(
-          new Uint8Array(rawBlock.idChecksum),
-          new Uint8Array(handle.idChecksum),
+          rawBlock.idChecksum.toUint8Array(),
+          handle.idChecksum.toUint8Array(),
         ),
       ).toBe(true);
     });

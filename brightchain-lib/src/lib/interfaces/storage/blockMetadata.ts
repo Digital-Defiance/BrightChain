@@ -1,6 +1,6 @@
+import { RawDataBlock } from '../../blocks/rawData';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
-import { RawDataBlock } from '../../blocks/rawData';
 
 /**
  * Block metadata including durability, parity, and replication information.

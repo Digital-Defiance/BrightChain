@@ -57,10 +57,10 @@ describe('Checksum Hex String Property Tests', () => {
 
         // Also verify byte-by-byte equality
         expect(originalChecksum.length).toBe(convertedChecksum.length);
+        const originalArray = originalChecksum.toUint8Array();
+        const convertedArray = convertedChecksum.toUint8Array();
         expect(
-          originalChecksum.every(
-            (byte, index) => byte === convertedChecksum[index],
-          ),
+          originalArray.every((byte, index) => byte === convertedArray[index]),
         ).toBe(true);
       }
     });
@@ -139,8 +139,10 @@ describe('Checksum Hex String Property Tests', () => {
         const converted = checksumService.hexStringToChecksum(hexString);
 
         // Verify each byte is preserved
-        for (let i = 0; i < checksum.length; i++) {
-          expect(converted[i]).toBe(checksum[i]);
+        const checksumArray = checksum.toUint8Array();
+        const convertedArray = converted.toUint8Array();
+        for (let i = 0; i < checksumArray.length; i++) {
+          expect(convertedArray[i]).toBe(checksumArray[i]);
         }
       }
     });

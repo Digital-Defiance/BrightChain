@@ -393,8 +393,7 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Failed to create block directory: {ERROR}',
   [StringNames.Error_StoreErrorBlockDeletionFailedTemplate]:
     'Failed to delete block: {ERROR}',
-  [StringNames.Error_StoreErrorNotImplemented]:
-    'Operation not implemented',
+  [StringNames.Error_StoreErrorNotImplemented]: 'Operation not implemented',
   [StringNames.Error_StoreErrorInsufficientRandomBlocksTemplate]:
     'Insufficient random blocks available: requested {REQUESTED}, available {AVAILABLE}',
 

@@ -177,9 +177,7 @@ export const DEFAULT_RECONCILIATION_CONFIG: ReconciliationConfig = {
 /**
  * Handler function type for reconciliation events.
  */
-export type ReconciliationEventHandler = (
-  event: ReconciliationEvent,
-) => void;
+export type ReconciliationEventHandler = (event: ReconciliationEvent) => void;
 
 /**
  * Events emitted during reconciliation.
@@ -187,11 +185,35 @@ export type ReconciliationEventHandler = (
 export type ReconciliationEvent =
   | { type: 'reconciliation_started'; timestamp: Date; peerIds: string[] }
   | { type: 'peer_reconciliation_started'; timestamp: Date; peerId: string }
-  | { type: 'peer_reconciliation_completed'; timestamp: Date; peerId: string; blocksDiscovered: number }
-  | { type: 'peer_reconciliation_failed'; timestamp: Date; peerId: string; error: string }
-  | { type: 'orphan_resolved'; timestamp: Date; blockId: string; sourceNodeId: string }
-  | { type: 'conflict_resolved'; timestamp: Date; blockId: string; winningNodeId: string }
-  | { type: 'reconciliation_completed'; timestamp: Date; result: ReconciliationResult };
+  | {
+      type: 'peer_reconciliation_completed';
+      timestamp: Date;
+      peerId: string;
+      blocksDiscovered: number;
+    }
+  | {
+      type: 'peer_reconciliation_failed';
+      timestamp: Date;
+      peerId: string;
+      error: string;
+    }
+  | {
+      type: 'orphan_resolved';
+      timestamp: Date;
+      blockId: string;
+      sourceNodeId: string;
+    }
+  | {
+      type: 'conflict_resolved';
+      timestamp: Date;
+      blockId: string;
+      winningNodeId: string;
+    }
+  | {
+      type: 'reconciliation_completed';
+      timestamp: Date;
+      result: ReconciliationResult;
+    };
 
 /**
  * Reconciliation Service Interface

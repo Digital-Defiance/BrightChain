@@ -24,14 +24,18 @@ describe('WhitenedBlock', () => {
       const data = new Uint8Array(defaultBlockSize);
       crypto.getRandomValues(data);
       const checksum = checksumService.calculateChecksum(data);
-      const block = new WhitenedBlock(defaultBlockSize, Buffer.from(data), checksum);
+      const block = new WhitenedBlock(
+        defaultBlockSize,
+        Buffer.from(data),
+        checksum,
+      );
 
       expect(block.blockSize).toBe(defaultBlockSize);
       expect(block.blockType).toBe(BlockType.OwnerFreeWhitenedBlock);
       expect(block.blockDataType).toBe(BlockDataType.RawData);
       expect(arraysEqual(block.data, data)).toBe(true);
       expect(
-        arraysEqual(new Uint8Array(block.idChecksum), new Uint8Array(checksum)),
+        arraysEqual(block.idChecksum.toUint8Array(), checksum.toUint8Array()),
       ).toBe(true);
       expect(block.canRead).toBe(true);
       expect(block.canPersist).toBe(true);
@@ -79,12 +83,15 @@ describe('WhitenedBlock', () => {
       // Use BlockSize.Message and BlockSize.Tiny to test different sizes within test environment limits
       // These are 512 bytes and 1KB respectively - well within the 64KB test limit
       const smallData = new Uint8Array(BlockSize.Message); // 512 bytes
-      const mediumData = new Uint8Array(BlockSize.Tiny);   // 1KB
-      
+      const mediumData = new Uint8Array(BlockSize.Tiny); // 1KB
+
       crypto.getRandomValues(smallData);
       crypto.getRandomValues(mediumData);
-      
-      const block1 = new WhitenedBlock(BlockSize.Message, Buffer.from(smallData));
+
+      const block1 = new WhitenedBlock(
+        BlockSize.Message,
+        Buffer.from(smallData),
+      );
       const block2 = new WhitenedBlock(BlockSize.Tiny, Buffer.from(mediumData));
 
       await expect(block1.xor(block2)).rejects.toThrow(WhitenedError);
@@ -97,7 +104,11 @@ describe('WhitenedBlock', () => {
       const randomData = new Uint8Array(defaultBlockSize);
       crypto.getRandomValues(data);
       crypto.getRandomValues(randomData);
-      const block = WhitenedBlock.fromData(defaultBlockSize, Buffer.from(data), Buffer.from(randomData));
+      const block = WhitenedBlock.fromData(
+        defaultBlockSize,
+        Buffer.from(data),
+        Buffer.from(randomData),
+      );
 
       // Verify XOR result
       const expectedData = new Uint8Array(defaultBlockSize);
@@ -114,7 +125,11 @@ describe('WhitenedBlock', () => {
       crypto.getRandomValues(randomData);
 
       expect(() =>
-        WhitenedBlock.fromData(defaultBlockSize, Buffer.from(data), Buffer.from(randomData)),
+        WhitenedBlock.fromData(
+          defaultBlockSize,
+          Buffer.from(data),
+          Buffer.from(randomData),
+        ),
       ).toThrow(WhitenedError);
     });
 
@@ -125,7 +140,11 @@ describe('WhitenedBlock', () => {
       crypto.getRandomValues(randomData);
 
       expect(() =>
-        WhitenedBlock.fromData(defaultBlockSize, Buffer.from(data), Buffer.from(randomData)),
+        WhitenedBlock.fromData(
+          defaultBlockSize,
+          Buffer.from(data),
+          Buffer.from(randomData),
+        ),
       ).toThrow(WhitenedError);
     });
   });
@@ -148,7 +167,7 @@ describe('WhitenedBlock', () => {
       expect(block.blockDataType).toBe(BlockDataType.RawData);
       expect(arraysEqual(block.data, data)).toBe(true);
       expect(
-        arraysEqual(new Uint8Array(block.idChecksum), new Uint8Array(checksum)),
+        arraysEqual(block.idChecksum.toUint8Array(), checksum.toUint8Array()),
       ).toBe(true);
       expect(block.dateCreated).toEqual(dateCreated);
     });

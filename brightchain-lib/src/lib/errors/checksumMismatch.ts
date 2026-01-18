@@ -1,23 +1,15 @@
-import {
-  ChecksumUint8Array,
-  uint8ArrayToHex,
-} from '@digitaldefiance/ecies-lib';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import { StringNames } from '../enumerations/stringNames';
 import { translate } from '../i18n';
+import { Checksum } from '../types/checksum';
 
 export class ChecksumMismatchError extends Error {
-  public readonly checksum: ChecksumUint8Array;
-  public readonly expected: ChecksumUint8Array;
-  constructor(
-    checksum: ChecksumUint8Array,
-    expected: ChecksumUint8Array,
-    _language?: StringLanguages,
-  ) {
+  public readonly checksum: Checksum;
+  public readonly expected: Checksum;
+  constructor(checksum: Checksum, expected: Checksum, _language?: string) {
     super(
       translate(StringNames.Error_ChecksumMismatchTemplate, {
-        EXPECTED: uint8ArrayToHex(expected),
-        CHECKSUM: uint8ArrayToHex(checksum),
+        EXPECTED: expected.toHex(),
+        CHECKSUM: checksum.toHex(),
       }),
     );
     this.name = 'ChecksumMismatchError';

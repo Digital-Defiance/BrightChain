@@ -1,5 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
-import { StringLanguage } from '@brightchain/brightchain-lib';
 import {
   HandleableError,
   LanguageContextSpace,
@@ -8,6 +6,7 @@ import {
   getSuiteCoreTranslation,
   SuiteCoreStringKey,
 } from '@digitaldefiance/suite-core-lib';
+import { StringLanguage } from '../interfaces/request-user';
 
 export class MissingValidatedDataError extends HandleableError {
   public readonly field?: string;

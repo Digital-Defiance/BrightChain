@@ -1,11 +1,10 @@
 import { HandleableError } from '@digitaldefiance/i18n-lib';
 import { MemberErrorType } from '../enumerations/memberErrorType';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 
 export class MemberError extends HandleableError {
   public readonly type: MemberErrorType;
-  
+
   public get reasonMap(): Record<MemberErrorType, StringNames> {
     return {
       [MemberErrorType.IncorrectOrInvalidPrivateKey]:
@@ -59,11 +58,12 @@ export class MemberError extends HandleableError {
         StringNames.Error_MemberErrorInvalidEncryptionData,
     };
   }
-  constructor(type: MemberErrorType, language?: StringLanguages) {
+  constructor(type: MemberErrorType, _language?: string) {
     // Temporarily bypass translation to avoid i18n initialization issues
-    const message = type === MemberErrorType.FailedToCreateMemberBlocks 
-      ? 'Failed to create member blocks.'
-      : `Member error: ${type}`;
+    const message =
+      type === MemberErrorType.FailedToCreateMemberBlocks
+        ? 'Failed to create member blocks.'
+        : `Member error: ${type}`;
     super(new Error(message));
     this.type = type;
     this.name = 'MemberError';

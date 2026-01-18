@@ -7,11 +7,11 @@ import {
   BlockMetadata,
   BlockSize,
   BlockType,
+  Checksum,
   ChecksumMismatchError,
   RawDataBlock,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { ChecksumTransform } from '@digitaldefiance/node-ecies-lib';
 import {
   ReadStream,
@@ -37,8 +37,8 @@ export type BlockHandle<T extends BaseBlock> = T & {
   layerPayloadSize: number;
   getReadStream(): ReadStream;
   getWriteStream(overwrite?: boolean): WriteStream;
-  calculateChecksum(): Promise<ChecksumUint8Array>;
-  calculateChecksumSync(): ChecksumUint8Array;
+  calculateChecksum(): Promise<Checksum>;
+  calculateChecksumSync(): Checksum;
   clearCache(): void;
   block: RawDataBlock;
 };
@@ -66,7 +66,7 @@ export function createBlockHandle<T extends BaseBlock>(
   blockConstructor: new (...args: any[]) => T,
   path: string,
   blockSize: BlockSize,
-  checksum: ChecksumUint8Array,
+  checksum: Checksum,
   canRead = true,
   canPersist = true,
   ...constructorArgs: any[]
@@ -221,7 +221,7 @@ export function createBlockHandle<T extends BaseBlock>(
   };
 
   // Add calculateChecksum method
-  instance.calculateChecksum = async function (): Promise<ChecksumUint8Array> {
+  instance.calculateChecksum = async function (): Promise<Checksum> {
     return new Promise((resolve, reject) => {
       const readStream = this.getReadStream();
       const checksumTransform = new ChecksumTransform();
@@ -230,7 +230,7 @@ export function createBlockHandle<T extends BaseBlock>(
 
       checksumTransform.on('checksum', (checksum) => {
         readStream.destroy();
-        resolve(checksum);
+        resolve(Checksum.fromUint8Array(checksum));
       });
 
       readStream.on('error', (error: Error) => {
@@ -251,7 +251,7 @@ export function createBlockHandle<T extends BaseBlock>(
   };
 
   // Add calculateChecksumSync method
-  instance.calculateChecksumSync = function (): ChecksumUint8Array {
+  instance.calculateChecksumSync = function (): Checksum {
     if (!existsSync(this._path)) {
       throw new BlockAccessError(
         BlockAccessErrorType.BlockFileNotFound,
@@ -267,7 +267,7 @@ export function createBlockHandle<T extends BaseBlock>(
   // Override validateAsync method
   instance.validateAsync = async function (): Promise<void> {
     const checksum = await this.calculateChecksum();
-    if (!Buffer.from(checksum).equals(Buffer.from(this.idChecksum))) {
+    if (!checksum.equals(this.idChecksum)) {
       throw new ChecksumMismatchError(this.idChecksum, checksum);
     }
   };
@@ -275,7 +275,7 @@ export function createBlockHandle<T extends BaseBlock>(
   // Override validateSync method
   instance.validateSync = function (): void {
     const checksum = this.calculateChecksumSync();
-    if (!Buffer.from(checksum).equals(Buffer.from(this.idChecksum))) {
+    if (!checksum.equals(this.idChecksum)) {
       throw new ChecksumMismatchError(this.idChecksum, checksum);
     }
   };
@@ -321,7 +321,7 @@ export async function createBlockHandleFromPath<T extends BaseBlock>(
   blockConstructor: new (...args: any[]) => T,
   path: string,
   blockSize: BlockSize,
-  checksum?: ChecksumUint8Array,
+  checksum?: Checksum,
   canRead = true,
   canPersist = true,
   ...constructorArgs: any[]

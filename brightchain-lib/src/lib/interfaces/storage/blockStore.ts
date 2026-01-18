@@ -1,13 +1,13 @@
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { BaseBlock } from '../../blocks/base';
 import { BlockHandle } from '../../blocks/handle';
 import { RawDataBlock } from '../../blocks/rawData';
 import { BlockSize } from '../../enumerations/blockSize';
+import { Checksum } from '../../types/checksum';
 import {
-  IBlockMetadata,
   BlockStoreOptions,
-  RecoveryResult,
   BrightenResult,
+  IBlockMetadata,
+  RecoveryResult,
 } from './blockMetadata';
 
 /**
@@ -30,12 +30,12 @@ export interface IBlockStore {
   /**
    * Check if a block exists
    */
-  has(key: ChecksumUint8Array | string): Promise<boolean>;
+  has(key: Checksum | string): Promise<boolean>;
 
   /**
    * Get a block's data
    */
-  getData(key: ChecksumUint8Array): Promise<RawDataBlock>;
+  getData(key: Checksum): Promise<RawDataBlock>;
 
   /**
    * Store a block's data with optional durability settings
@@ -47,17 +47,17 @@ export interface IBlockStore {
   /**
    * Delete a block's data (and associated parity blocks and metadata)
    */
-  deleteData(key: ChecksumUint8Array): Promise<void>;
+  deleteData(key: Checksum): Promise<void>;
 
   /**
    * Get random block checksums from the store
    */
-  getRandomBlocks(count: number): Promise<ChecksumUint8Array[]>;
+  getRandomBlocks(count: number): Promise<Checksum[]>;
 
   /**
    * Get a handle to a block (for compatibility with existing code)
    */
-  get<T extends BaseBlock>(checksum: ChecksumUint8Array | string): BlockHandle<T>;
+  get<T extends BaseBlock>(checksum: Checksum | string): BlockHandle<T>;
 
   /**
    * Store raw data with a key (convenience method)
@@ -66,7 +66,7 @@ export interface IBlockStore {
    * @param options - Optional storage options including durability level and expiration
    */
   put(
-    key: ChecksumUint8Array | string,
+    key: Checksum | string,
     data: Uint8Array,
     options?: BlockStoreOptions,
   ): Promise<void>;
@@ -74,7 +74,7 @@ export interface IBlockStore {
   /**
    * Delete a block (convenience method, alias for deleteData)
    */
-  delete(key: ChecksumUint8Array | string): Promise<void>;
+  delete(key: Checksum | string): Promise<void>;
 
   // === Metadata Operations ===
 
@@ -83,7 +83,7 @@ export interface IBlockStore {
    * @param key - The block's checksum or ID
    * @returns The block's metadata, or null if not found
    */
-  getMetadata(key: ChecksumUint8Array | string): Promise<IBlockMetadata | null>;
+  getMetadata(key: Checksum | string): Promise<IBlockMetadata | null>;
 
   /**
    * Update metadata for a block
@@ -91,7 +91,7 @@ export interface IBlockStore {
    * @param updates - Partial metadata updates to apply
    */
   updateMetadata(
-    key: ChecksumUint8Array | string,
+    key: Checksum | string,
     updates: Partial<IBlockMetadata>,
   ): Promise<void>;
 
@@ -104,30 +104,30 @@ export interface IBlockStore {
    * @returns Array of parity block checksums
    */
   generateParityBlocks(
-    key: ChecksumUint8Array | string,
+    key: Checksum | string,
     parityCount: number,
-  ): Promise<ChecksumUint8Array[]>;
+  ): Promise<Checksum[]>;
 
   /**
    * Get parity block checksums for a data block
    * @param key - The data block's checksum or ID
    * @returns Array of parity block checksums
    */
-  getParityBlocks(key: ChecksumUint8Array | string): Promise<ChecksumUint8Array[]>;
+  getParityBlocks(key: Checksum | string): Promise<Checksum[]>;
 
   /**
    * Attempt to recover a corrupted or missing block using parity data
    * @param key - The block's checksum or ID
    * @returns Recovery result with the recovered block or error
    */
-  recoverBlock(key: ChecksumUint8Array | string): Promise<RecoveryResult>;
+  recoverBlock(key: Checksum | string): Promise<RecoveryResult>;
 
   /**
    * Verify block integrity against its parity data
    * @param key - The block's checksum or ID
    * @returns True if the block data matches its parity data
    */
-  verifyBlockIntegrity(key: ChecksumUint8Array | string): Promise<boolean>;
+  verifyBlockIntegrity(key: Checksum | string): Promise<boolean>;
 
   // === Replication Operations ===
 
@@ -135,27 +135,27 @@ export interface IBlockStore {
    * Get blocks that are pending replication (status = Pending)
    * @returns Array of block checksums pending replication
    */
-  getBlocksPendingReplication(): Promise<ChecksumUint8Array[]>;
+  getBlocksPendingReplication(): Promise<Checksum[]>;
 
   /**
    * Get blocks that are under-replicated (status = UnderReplicated)
    * @returns Array of block checksums that need additional replicas
    */
-  getUnderReplicatedBlocks(): Promise<ChecksumUint8Array[]>;
+  getUnderReplicatedBlocks(): Promise<Checksum[]>;
 
   /**
    * Record that a block has been replicated to a node
    * @param key - The block's checksum or ID
    * @param nodeId - The ID of the node that now holds a replica
    */
-  recordReplication(key: ChecksumUint8Array | string, nodeId: string): Promise<void>;
+  recordReplication(key: Checksum | string, nodeId: string): Promise<void>;
 
   /**
    * Record that a replica node is no longer available
    * @param key - The block's checksum or ID
    * @param nodeId - The ID of the node that lost the replica
    */
-  recordReplicaLoss(key: ChecksumUint8Array | string, nodeId: string): Promise<void>;
+  recordReplicaLoss(key: Checksum | string, nodeId: string): Promise<void>;
 
   // === XOR Brightening Operations ===
 
@@ -163,14 +163,14 @@ export interface IBlockStore {
    * Brighten a block by XORing it with random blocks from the store.
    * This is used to implement Owner-Free storage patterns where the
    * original data cannot be reconstructed without all the random blocks.
-   * 
+   *
    * @param key - The source block's checksum or ID
    * @param randomBlockCount - Number of random blocks to XOR with
    * @returns Result containing the brightened block ID and the random block IDs used
    * @throws StoreError if insufficient random blocks are available
    */
   brightenBlock(
-    key: ChecksumUint8Array | string,
+    key: Checksum | string,
     randomBlockCount: number,
   ): Promise<BrightenResult>;
 }

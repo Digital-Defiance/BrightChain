@@ -1,5 +1,5 @@
+import { LanguageCodes } from '@digitaldefiance/i18n-lib';
 import { BlockSize } from '../enumerations/blockSize';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import { registerTranslation } from '../i18n';
 import { createTranslations, EnumLanguageTranslation } from '../types';
 
@@ -9,7 +9,7 @@ export const BlockSizeTranslations: BlockSizeLanguageTranslation =
   registerTranslation(
     BlockSize,
     createTranslations({
-      [StringLanguages.EnglishUS]: {
+      [LanguageCodes.EN_US]: {
         0: 'Unknown',
         512: 'Message',
         1024: 'Tiny',

@@ -1,9 +1,9 @@
 import {
   base64ToUint8Array,
   EmailString,
+  hexToUint8Array,
   uint8ArrayToBase64,
   uint8ArrayToHex,
-  hexToUint8Array,
 } from '@digitaldefiance/ecies-lib';
 import {
   IPrivateMemberData,
@@ -37,8 +37,7 @@ export const PublicMemberSchema: SchemaDefinition<IPublicMemberData> = {
   id: {
     type: Object,
     required: true,
-    serialize: (value: Uint8Array): string =>
-      uint8ArrayToHex(value),
+    serialize: (value: Uint8Array): string => uint8ArrayToHex(value),
     hydrate: (value: string): Uint8Array => {
       if (!isString(value)) throw new Error('Invalid ID format');
       return hexToUint8Array(value);
@@ -115,8 +114,7 @@ export const PrivateMemberSchema: SchemaDefinition<IPrivateMemberData> = {
   id: {
     type: Object,
     required: true,
-    serialize: (value: Uint8Array): string =>
-      uint8ArrayToHex(value),
+    serialize: (value: Uint8Array): string => uint8ArrayToHex(value),
     hydrate: (value: string): Uint8Array => {
       if (!isString(value)) throw new Error('Invalid ID format');
       return hexToUint8Array(value);

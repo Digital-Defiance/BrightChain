@@ -1,14 +1,12 @@
-import { EmailString } from '@digitaldefiance/ecies-lib';
-import { ECIESService } from '@digitaldefiance/node-ecies-lib';
+import { EmailString, Member } from '@digitaldefiance/ecies-lib';
 import { faker } from '@faker-js/faker';
 import { randomBytes } from 'crypto';
-import { Member } from '@digitaldefiance/ecies-lib';
 import { CHECKSUM, TUPLE } from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import MemberType from '../enumerations/memberType';
 import { CblError } from '../errors/cblError';
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
+import { Checksum } from '../types/checksum';
 import { BlockCapacityCalculator } from './blockCapacity.service';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
@@ -346,8 +344,8 @@ describe('CBLService', () => {
       expect(extractedAddresses.length).toBe(addressCount);
 
       // Verify each extracted address matches original
-      extractedAddresses.forEach((addr: ChecksumUint8Array, i: number) => {
-        expect(Buffer.compare(addr, addresses[i])).toBe(0);
+      extractedAddresses.forEach((addr: Checksum, i: number) => {
+        expect(Buffer.compare(addr.toBuffer(), addresses[i])).toBe(0);
       });
     });
   });

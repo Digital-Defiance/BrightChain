@@ -1,12 +1,8 @@
-import {
-  getEnhancedIdProvider,
-} from '@digitaldefiance/ecies-lib';
 import * as fs from 'fs';
 import * as path from 'path';
-import { initializeBrightChain, resetInitialization } from '../init';
-import { MemberDocument } from '../documents/member/memberDocument';
-import { IMemberStorageData } from '../interfaces/member/storage';
 import MemberType from '../enumerations/memberType';
+import { initializeBrightChain, resetInitialization } from '../init';
+import { IMemberStorageData } from '../interfaces/member/storage';
 import { ServiceProvider } from '../services/service.provider';
 import { TestMembers } from './testMembers';
 
@@ -24,7 +20,7 @@ describe('Document System Tests', () => {
     // Reset and initialize BrightChain with browser configuration for each test
     resetInitialization();
     initializeBrightChain();
-    
+
     // Ensure cache directory exists before each test
     if (!fs.existsSync(cacheDir)) {
       fs.mkdirSync(cacheDir, { recursive: true });
@@ -44,7 +40,7 @@ describe('Document System Tests', () => {
     const idHex = idProvider.idToString(member.id);
     const filePath = path.join(cacheDir, `${idHex}.json`);
     const documentJson = document.toPublicJson();
-    
+
     // Write the JSON string directly (don't double-stringify)
     fs.writeFileSync(filePath, documentJson);
 

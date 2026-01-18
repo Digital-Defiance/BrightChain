@@ -1,4 +1,4 @@
-import { ChecksumUint8Array, arraysEqual } from '@digitaldefiance/ecies-lib';
+import { arraysEqual } from '@digitaldefiance/ecies-lib';
 import { BlockMetadata } from '../blockMetadata';
 import { ECIES } from '../constants';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
@@ -10,6 +10,7 @@ import { BlockAccessError, BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
+import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
 
 // Test class that properly implements abstract methods
@@ -47,7 +48,7 @@ class TestBaseBlock extends BaseBlock {
     type: BlockType,
     blockDataType: BlockDataType,
     data: Uint8Array,
-    checksum?: ChecksumUint8Array,
+    checksum?: Checksum,
     dateCreated?: Date,
     canRead = true,
     canPersist = true,
@@ -70,7 +71,7 @@ class TestBaseBlock extends BaseBlock {
       ServiceProvider.getInstance().checksumService.calculateChecksum(data);
     if (checksum) {
       if (
-        !arraysEqual(new Uint8Array(checksum), new Uint8Array(expectedChecksum))
+        !arraysEqual(checksum.toUint8Array(), expectedChecksum.toUint8Array())
       ) {
         throw new ChecksumMismatchError(checksum, expectedChecksum);
       }
@@ -106,8 +107,8 @@ class TestBaseBlock extends BaseBlock {
         this.internalData,
       );
     const result = arraysEqual(
-      new Uint8Array(this.idChecksum),
-      new Uint8Array(expectedChecksum),
+      this.idChecksum.toUint8Array(),
+      expectedChecksum.toUint8Array(),
     );
     if (!result) {
       throw new ChecksumMismatchError(this.idChecksum, expectedChecksum);
@@ -126,8 +127,8 @@ class TestBaseBlock extends BaseBlock {
       );
     if (
       !arraysEqual(
-        new Uint8Array(this.idChecksum),
-        new Uint8Array(expectedChecksum),
+        this.idChecksum.toUint8Array(),
+        expectedChecksum.toUint8Array(),
       )
     ) {
       throw new ChecksumMismatchError(this.idChecksum, expectedChecksum);
@@ -173,7 +174,7 @@ describe('BaseBlock', () => {
       type: BlockType;
       dataType: BlockDataType;
       data: Uint8Array;
-      checksum: ChecksumUint8Array;
+      checksum: Checksum;
       dateCreated: Date;
       canRead: boolean;
       filename?: string;
@@ -216,7 +217,7 @@ describe('BaseBlock', () => {
       expect(block.blockDataType).toBe(BlockDataType.RawData);
       expect(arraysEqual(block.data, data)).toBe(true);
       expect(
-        arraysEqual(new Uint8Array(block.idChecksum), new Uint8Array(checksum)),
+        arraysEqual(block.idChecksum.toUint8Array(), checksum.toUint8Array()),
       ).toBe(true);
       expect(block.canRead).toBe(true);
     });
@@ -266,7 +267,7 @@ describe('BaseBlock', () => {
           type: BlockType;
           dataType: BlockDataType;
           data: Uint8Array;
-          checksum: ChecksumUint8Array;
+          checksum: Checksum;
           dateCreated: Date;
           canRead: boolean;
           filename?: string;
@@ -387,14 +388,14 @@ describe('BaseBlock', () => {
         const checksumError = error as ChecksumMismatchError;
         expect(
           arraysEqual(
-            new Uint8Array(checksumError.checksum),
-            new Uint8Array(block.idChecksum),
+            checksumError.checksum.toUint8Array(),
+            block.idChecksum.toUint8Array(),
           ),
         ).toBe(true);
         expect(
           arraysEqual(
-            new Uint8Array(checksumError.expected),
-            new Uint8Array(newChecksum),
+            checksumError.expected.toUint8Array(),
+            newChecksum.toUint8Array(),
           ),
         ).toBe(true);
       }

@@ -1,7 +1,5 @@
-/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
-import { StringLanguages } from '@brightchain/brightchain-lib';
+import { isValidTimezone, LanguageCodes } from '@digitaldefiance/i18n-lib';
 import { AccountStatus } from '@digitaldefiance/suite-core-lib';
-import { isValidTimezone } from '@digitaldefiance/i18n-lib';
 import validator from 'validator';
 import { AppConstants } from '../appConstants';
 import { ModelName } from '../enumerations/model-name';
@@ -41,7 +39,7 @@ export const UserSchema = {
     },
     siteLanguage: {
       type: 'string',
-      enum: Object.values(StringLanguages),
+      enum: Object.values(LanguageCodes),
       default: 'en-US',
       required: true,
     },

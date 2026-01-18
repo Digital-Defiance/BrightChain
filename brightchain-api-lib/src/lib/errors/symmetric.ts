@@ -1,7 +1,7 @@
-/* eslint-disable @nx/enforce-module-boundaries */
-import { StringLanguage, SymmetricService } from '@brightchain/brightchain-lib';
+import { SymmetricService } from '@brightchain/brightchain-lib';
 import { SuiteCoreStringKey } from '@digitaldefiance/suite-core-lib';
 import { SymmetricErrorType } from '../enumerations/symmetric-error-type';
+import { StringLanguage } from '../interfaces/request-user';
 import { TypedError } from './typed-error-local';
 
 export class SymmetricError extends TypedError<

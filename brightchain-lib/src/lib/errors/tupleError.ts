@@ -1,4 +1,3 @@
-import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { TupleErrorType } from '../enumerations/tupleErrorType';
 import { TypedError } from './typedError';
@@ -33,7 +32,7 @@ export class TupleError extends TypedError<TupleErrorType> {
   }
   constructor(
     type: TupleErrorType,
-    language?: StringLanguages,
+    language?: string,
     params?: { [key: string]: string | number },
   ) {
     super(type, undefined, params);

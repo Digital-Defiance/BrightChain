@@ -9,24 +9,24 @@
  * **Validates: Requirements 13.6**
  */
 
+import {
+  DEFAULT_DISCOVERY_CONFIG,
+  DEFAULT_GOSSIP_CONFIG,
+  DEFAULT_HEARTBEAT_CONFIG,
+  DiscoveryConfig,
+  GossipConfig,
+  HeartbeatConfig,
+} from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
 import {
-  validateDiscoveryConfig,
-  validateGossipConfig,
-  validateHeartbeatConfig,
+  ConfigValidationError,
   createValidatedDiscoveryConfig,
   createValidatedGossipConfig,
   createValidatedHeartbeatConfig,
-  ConfigValidationError,
+  validateDiscoveryConfig,
+  validateGossipConfig,
+  validateHeartbeatConfig,
 } from './configValidation';
-import {
-  DiscoveryConfig,
-  DEFAULT_DISCOVERY_CONFIG,
-  GossipConfig,
-  DEFAULT_GOSSIP_CONFIG,
-  HeartbeatConfig,
-  DEFAULT_HEARTBEAT_CONFIG,
-} from '@brightchain/brightchain-lib';
 
 /**
  * Arbitrary for valid DiscoveryConfig
@@ -35,7 +35,11 @@ const arbValidDiscoveryConfig = fc.record({
   queryTimeoutMs: fc.integer({ min: 1, max: 300000 }),
   maxConcurrentQueries: fc.integer({ min: 1, max: 1000 }),
   cacheTtlMs: fc.integer({ min: 0, max: 86400000 }),
-  bloomFilterFalsePositiveRate: fc.double({ min: 0.0001, max: 0.9999, noNaN: true }),
+  bloomFilterFalsePositiveRate: fc.double({
+    min: 0.0001,
+    max: 0.9999,
+    noNaN: true,
+  }),
   bloomFilterHashCount: fc.integer({ min: 1, max: 20 }),
 });
 
@@ -119,7 +123,12 @@ const arbInvalidDiscoveryConfig = fc.oneof(
 const arbInvalidGossipConfig = fc.oneof(
   // Invalid fanout
   fc.record({
-    fanout: fc.oneof(fc.constant(0), fc.constant(-1), fc.constant(101), fc.constant(1.5)),
+    fanout: fc.oneof(
+      fc.constant(0),
+      fc.constant(-1),
+      fc.constant(101),
+      fc.constant(1.5),
+    ),
   }),
   // Invalid defaultTtl
   fc.record({
@@ -136,7 +145,12 @@ const arbInvalidGossipConfig = fc.oneof(
   }),
   // Invalid maxBatchSize
   fc.record({
-    maxBatchSize: fc.oneof(fc.constant(0), fc.constant(-1), fc.constant(10001), fc.constant(1.5)),
+    maxBatchSize: fc.oneof(
+      fc.constant(0),
+      fc.constant(-1),
+      fc.constant(10001),
+      fc.constant(1.5),
+    ),
   }),
 );
 
@@ -166,7 +180,12 @@ const arbInvalidHeartbeatConfig = fc.oneof(
   }),
   // Invalid missedThreshold
   fc.record({
-    missedThreshold: fc.oneof(fc.constant(0), fc.constant(-1), fc.constant(101), fc.constant(1.5)),
+    missedThreshold: fc.oneof(
+      fc.constant(0),
+      fc.constant(-1),
+      fc.constant(101),
+      fc.constant(1.5),
+    ),
   }),
   // Cross-field violation: timeoutMs >= intervalMs
   fc
@@ -203,7 +222,9 @@ describe('Configuration Validation Property Tests', () => {
         fc.assert(
           fc.property(arbInvalidDiscoveryConfig, (config) => {
             // Should throw ConfigValidationError
-            expect(() => validateDiscoveryConfig(config)).toThrow(ConfigValidationError);
+            expect(() => validateDiscoveryConfig(config)).toThrow(
+              ConfigValidationError,
+            );
 
             // Error message should be descriptive (not empty)
             try {
@@ -212,7 +233,9 @@ describe('Configuration Validation Property Tests', () => {
             } catch (error) {
               expect(error).toBeInstanceOf(ConfigValidationError);
               expect((error as ConfigValidationError).message).toBeTruthy();
-              expect((error as ConfigValidationError).message.length).toBeGreaterThan(10);
+              expect(
+                (error as ConfigValidationError).message.length,
+              ).toBeGreaterThan(10);
             }
           }),
           { numRuns: 100 },
@@ -223,22 +246,36 @@ describe('Configuration Validation Property Tests', () => {
         fc.assert(
           fc.property(
             fc.record({
-              queryTimeoutMs: fc.option(fc.integer({ min: 1, max: 300000 }), { nil: undefined }),
-              maxConcurrentQueries: fc.option(fc.integer({ min: 1, max: 1000 }), {
+              queryTimeoutMs: fc.option(fc.integer({ min: 1, max: 300000 }), {
                 nil: undefined,
               }),
-              cacheTtlMs: fc.option(fc.integer({ min: 0, max: 86400000 }), { nil: undefined }),
-              bloomFilterFalsePositiveRate: fc.option(fc.double({ min: 0.0001, max: 0.9999, noNaN: true }), {
+              maxConcurrentQueries: fc.option(
+                fc.integer({ min: 1, max: 1000 }),
+                {
+                  nil: undefined,
+                },
+              ),
+              cacheTtlMs: fc.option(fc.integer({ min: 0, max: 86400000 }), {
                 nil: undefined,
               }),
-              bloomFilterHashCount: fc.option(fc.integer({ min: 1, max: 20 }), { nil: undefined }),
+              bloomFilterFalsePositiveRate: fc.option(
+                fc.double({ min: 0.0001, max: 0.9999, noNaN: true }),
+                {
+                  nil: undefined,
+                },
+              ),
+              bloomFilterHashCount: fc.option(fc.integer({ min: 1, max: 20 }), {
+                nil: undefined,
+              }),
             }),
             (partialConfig) => {
               // Remove undefined values to avoid overriding defaults
               const cleanConfig = Object.fromEntries(
-                Object.entries(partialConfig).filter(([_, v]) => v !== undefined)
+                Object.entries(partialConfig).filter(
+                  ([_, v]) => v !== undefined,
+                ),
               ) as Partial<DiscoveryConfig>;
-              
+
               const config = createValidatedDiscoveryConfig(cleanConfig);
 
               // All fields should be defined
@@ -253,7 +290,9 @@ describe('Configuration Validation Property Tests', () => {
                 expect(config.queryTimeoutMs).toBe(cleanConfig.queryTimeoutMs);
               }
               if (cleanConfig.maxConcurrentQueries !== undefined) {
-                expect(config.maxConcurrentQueries).toBe(cleanConfig.maxConcurrentQueries);
+                expect(config.maxConcurrentQueries).toBe(
+                  cleanConfig.maxConcurrentQueries,
+                );
               }
               if (cleanConfig.cacheTtlMs !== undefined) {
                 expect(config.cacheTtlMs).toBe(cleanConfig.cacheTtlMs);
@@ -264,7 +303,9 @@ describe('Configuration Validation Property Tests', () => {
                 );
               }
               if (cleanConfig.bloomFilterHashCount !== undefined) {
-                expect(config.bloomFilterHashCount).toBe(cleanConfig.bloomFilterHashCount);
+                expect(config.bloomFilterHashCount).toBe(
+                  cleanConfig.bloomFilterHashCount,
+                );
               }
             },
           ),
@@ -288,7 +329,9 @@ describe('Configuration Validation Property Tests', () => {
         fc.assert(
           fc.property(arbInvalidGossipConfig, (config) => {
             // Should throw ConfigValidationError
-            expect(() => validateGossipConfig(config)).toThrow(ConfigValidationError);
+            expect(() => validateGossipConfig(config)).toThrow(
+              ConfigValidationError,
+            );
 
             // Error message should be descriptive (not empty)
             try {
@@ -297,7 +340,9 @@ describe('Configuration Validation Property Tests', () => {
             } catch (error) {
               expect(error).toBeInstanceOf(ConfigValidationError);
               expect((error as ConfigValidationError).message).toBeTruthy();
-              expect((error as ConfigValidationError).message.length).toBeGreaterThan(10);
+              expect(
+                (error as ConfigValidationError).message.length,
+              ).toBeGreaterThan(10);
             }
           }),
           { numRuns: 100 },
@@ -308,17 +353,27 @@ describe('Configuration Validation Property Tests', () => {
         fc.assert(
           fc.property(
             fc.record({
-              fanout: fc.option(fc.integer({ min: 1, max: 100 }), { nil: undefined }),
-              defaultTtl: fc.option(fc.integer({ min: 0, max: 10 }), { nil: undefined }),
-              batchIntervalMs: fc.option(fc.integer({ min: 0, max: 60000 }), { nil: undefined }),
-              maxBatchSize: fc.option(fc.integer({ min: 1, max: 10000 }), { nil: undefined }),
+              fanout: fc.option(fc.integer({ min: 1, max: 100 }), {
+                nil: undefined,
+              }),
+              defaultTtl: fc.option(fc.integer({ min: 0, max: 10 }), {
+                nil: undefined,
+              }),
+              batchIntervalMs: fc.option(fc.integer({ min: 0, max: 60000 }), {
+                nil: undefined,
+              }),
+              maxBatchSize: fc.option(fc.integer({ min: 1, max: 10000 }), {
+                nil: undefined,
+              }),
             }),
             (partialConfig) => {
               // Remove undefined values to avoid overriding defaults
               const cleanConfig = Object.fromEntries(
-                Object.entries(partialConfig).filter(([_, v]) => v !== undefined)
+                Object.entries(partialConfig).filter(
+                  ([_, v]) => v !== undefined,
+                ),
               ) as Partial<GossipConfig>;
-              
+
               const config = createValidatedGossipConfig(cleanConfig);
 
               // All fields should be defined
@@ -335,7 +390,9 @@ describe('Configuration Validation Property Tests', () => {
                 expect(config.defaultTtl).toBe(cleanConfig.defaultTtl);
               }
               if (cleanConfig.batchIntervalMs !== undefined) {
-                expect(config.batchIntervalMs).toBe(cleanConfig.batchIntervalMs);
+                expect(config.batchIntervalMs).toBe(
+                  cleanConfig.batchIntervalMs,
+                );
               }
               if (cleanConfig.maxBatchSize !== undefined) {
                 expect(config.maxBatchSize).toBe(cleanConfig.maxBatchSize);
@@ -362,7 +419,9 @@ describe('Configuration Validation Property Tests', () => {
         fc.assert(
           fc.property(arbInvalidHeartbeatConfig, (config) => {
             // Should throw ConfigValidationError
-            expect(() => validateHeartbeatConfig(config)).toThrow(ConfigValidationError);
+            expect(() => validateHeartbeatConfig(config)).toThrow(
+              ConfigValidationError,
+            );
 
             // Error message should be descriptive (not empty)
             try {
@@ -371,7 +430,9 @@ describe('Configuration Validation Property Tests', () => {
             } catch (error) {
               expect(error).toBeInstanceOf(ConfigValidationError);
               expect((error as ConfigValidationError).message).toBeTruthy();
-              expect((error as ConfigValidationError).message.length).toBeGreaterThan(10);
+              expect(
+                (error as ConfigValidationError).message.length,
+              ).toBeGreaterThan(10);
             }
           }),
           { numRuns: 100 },
@@ -383,20 +444,35 @@ describe('Configuration Validation Property Tests', () => {
           fc.property(
             fc
               .record({
-                intervalMs: fc.option(fc.integer({ min: 100, max: 300000 }), { nil: undefined }),
-                timeoutMs: fc.option(fc.integer({ min: 1, max: 60000 }), { nil: undefined }),
-                missedThreshold: fc.option(fc.integer({ min: 1, max: 100 }), { nil: undefined }),
+                intervalMs: fc.option(fc.integer({ min: 100, max: 300000 }), {
+                  nil: undefined,
+                }),
+                timeoutMs: fc.option(fc.integer({ min: 1, max: 60000 }), {
+                  nil: undefined,
+                }),
+                missedThreshold: fc.option(fc.integer({ min: 1, max: 100 }), {
+                  nil: undefined,
+                }),
               })
               .filter((config) => {
                 // Ensure cross-field validation passes
-                if (config.intervalMs !== undefined && config.timeoutMs !== undefined) {
+                if (
+                  config.intervalMs !== undefined &&
+                  config.timeoutMs !== undefined
+                ) {
                   return config.timeoutMs < config.intervalMs;
                 }
                 // If only one is defined, check against defaults
-                if (config.intervalMs !== undefined && config.timeoutMs === undefined) {
+                if (
+                  config.intervalMs !== undefined &&
+                  config.timeoutMs === undefined
+                ) {
                   return DEFAULT_HEARTBEAT_CONFIG.timeoutMs < config.intervalMs;
                 }
-                if (config.timeoutMs !== undefined && config.intervalMs === undefined) {
+                if (
+                  config.timeoutMs !== undefined &&
+                  config.intervalMs === undefined
+                ) {
                   return config.timeoutMs < DEFAULT_HEARTBEAT_CONFIG.intervalMs;
                 }
                 return true;
@@ -404,9 +480,11 @@ describe('Configuration Validation Property Tests', () => {
             (partialConfig) => {
               // Remove undefined values to avoid overriding defaults
               const cleanConfig = Object.fromEntries(
-                Object.entries(partialConfig).filter(([_, v]) => v !== undefined)
+                Object.entries(partialConfig).filter(
+                  ([_, v]) => v !== undefined,
+                ),
               ) as Partial<HeartbeatConfig>;
-              
+
               const config = createValidatedHeartbeatConfig(cleanConfig);
 
               // All fields should be defined
@@ -425,7 +503,9 @@ describe('Configuration Validation Property Tests', () => {
                 expect(config.timeoutMs).toBe(cleanConfig.timeoutMs);
               }
               if (cleanConfig.missedThreshold !== undefined) {
-                expect(config.missedThreshold).toBe(cleanConfig.missedThreshold);
+                expect(config.missedThreshold).toBe(
+                  cleanConfig.missedThreshold,
+                );
               }
             },
           ),
@@ -443,8 +523,12 @@ describe('Configuration Validation Property Tests', () => {
               })
               .filter((config) => config.timeoutMs >= config.intervalMs),
             (config) => {
-              expect(() => validateHeartbeatConfig(config)).toThrow(ConfigValidationError);
-              expect(() => validateHeartbeatConfig(config)).toThrow(/timeoutMs must be less than intervalMs/);
+              expect(() => validateHeartbeatConfig(config)).toThrow(
+                ConfigValidationError,
+              );
+              expect(() => validateHeartbeatConfig(config)).toThrow(
+                /timeoutMs must be less than intervalMs/,
+              );
             },
           ),
           { numRuns: 100 },
@@ -529,10 +613,16 @@ describe('Configuration Validation Property Tests', () => {
       it('should reject values just outside valid ranges', () => {
         // Just below minimum
         expect(() => validateDiscoveryConfig({ queryTimeoutMs: 0 })).toThrow();
-        expect(() => validateDiscoveryConfig({ maxConcurrentQueries: 0 })).toThrow();
+        expect(() =>
+          validateDiscoveryConfig({ maxConcurrentQueries: 0 }),
+        ).toThrow();
         expect(() => validateDiscoveryConfig({ cacheTtlMs: -1 })).toThrow();
-        expect(() => validateDiscoveryConfig({ bloomFilterFalsePositiveRate: 0 })).toThrow();
-        expect(() => validateDiscoveryConfig({ bloomFilterHashCount: 0 })).toThrow();
+        expect(() =>
+          validateDiscoveryConfig({ bloomFilterFalsePositiveRate: 0 }),
+        ).toThrow();
+        expect(() =>
+          validateDiscoveryConfig({ bloomFilterHashCount: 0 }),
+        ).toThrow();
 
         expect(() => validateGossipConfig({ fanout: 0 })).toThrow();
         expect(() => validateGossipConfig({ defaultTtl: -1 })).toThrow();
@@ -544,20 +634,34 @@ describe('Configuration Validation Property Tests', () => {
         expect(() => validateHeartbeatConfig({ missedThreshold: 0 })).toThrow();
 
         // Just above maximum
-        expect(() => validateDiscoveryConfig({ queryTimeoutMs: 300001 })).toThrow();
-        expect(() => validateDiscoveryConfig({ maxConcurrentQueries: 1001 })).toThrow();
-        expect(() => validateDiscoveryConfig({ cacheTtlMs: 86400001 })).toThrow();
-        expect(() => validateDiscoveryConfig({ bloomFilterFalsePositiveRate: 1 })).toThrow();
-        expect(() => validateDiscoveryConfig({ bloomFilterHashCount: 21 })).toThrow();
+        expect(() =>
+          validateDiscoveryConfig({ queryTimeoutMs: 300001 }),
+        ).toThrow();
+        expect(() =>
+          validateDiscoveryConfig({ maxConcurrentQueries: 1001 }),
+        ).toThrow();
+        expect(() =>
+          validateDiscoveryConfig({ cacheTtlMs: 86400001 }),
+        ).toThrow();
+        expect(() =>
+          validateDiscoveryConfig({ bloomFilterFalsePositiveRate: 1 }),
+        ).toThrow();
+        expect(() =>
+          validateDiscoveryConfig({ bloomFilterHashCount: 21 }),
+        ).toThrow();
 
         expect(() => validateGossipConfig({ fanout: 101 })).toThrow();
         expect(() => validateGossipConfig({ defaultTtl: 11 })).toThrow();
-        expect(() => validateGossipConfig({ batchIntervalMs: 60001 })).toThrow();
+        expect(() =>
+          validateGossipConfig({ batchIntervalMs: 60001 }),
+        ).toThrow();
         expect(() => validateGossipConfig({ maxBatchSize: 10001 })).toThrow();
 
         expect(() => validateHeartbeatConfig({ intervalMs: 300001 })).toThrow();
         expect(() => validateHeartbeatConfig({ timeoutMs: 60001 })).toThrow();
-        expect(() => validateHeartbeatConfig({ missedThreshold: 101 })).toThrow();
+        expect(() =>
+          validateHeartbeatConfig({ missedThreshold: 101 }),
+        ).toThrow();
       });
     });
   });

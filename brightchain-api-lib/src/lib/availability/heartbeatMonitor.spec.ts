@@ -11,14 +11,18 @@
  * **Validates: Requirements 7.1, 7.2, 7.5**
  */
 
-import { ConnectivityEvent, HeartbeatConfig } from '@brightchain/brightchain-lib';
+import {
+  ConnectivityEvent,
+  HeartbeatConfig,
+} from '@brightchain/brightchain-lib';
 import { HeartbeatMonitor, IHeartbeatTransport } from './heartbeatMonitor';
 
 /**
  * Mock transport for testing heartbeat functionality.
  */
 class MockHeartbeatTransport implements IHeartbeatTransport {
-  private responses: Map<string, { latency: number } | { error: Error }> = new Map();
+  private responses: Map<string, { latency: number } | { error: Error }> =
+    new Map();
   public pingCount: Map<string, number> = new Map();
 
   /**
@@ -213,7 +217,7 @@ describe('HeartbeatMonitor Unit Tests', () => {
 
       // Wait for enough intervals to exceed threshold
       await new Promise((resolve) =>
-        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1))
+        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1)),
       );
 
       expect(monitor.isPeerReachable('peer-1')).toBe(false);
@@ -289,7 +293,7 @@ describe('HeartbeatMonitor Unit Tests', () => {
 
           // Should have emitted peer_disconnected and then peer_connected
           const connectedEvents = testEvents.filter(
-            (e) => e.type === 'peer_connected'
+            (e) => e.type === 'peer_connected',
           );
           expect(connectedEvents.length).toBeGreaterThanOrEqual(1);
 
@@ -309,13 +313,13 @@ describe('HeartbeatMonitor Unit Tests', () => {
 
       // Wait for enough failures
       await new Promise((resolve) =>
-        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1))
+        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1)),
       );
 
       monitor.stop();
 
       const disconnectedEvents = events.filter(
-        (e) => e.type === 'peer_disconnected'
+        (e) => e.type === 'peer_disconnected',
       );
       expect(disconnectedEvents.length).toBe(1);
       expect(disconnectedEvents[0].peerId).toBe('peer-1');
@@ -334,13 +338,13 @@ describe('HeartbeatMonitor Unit Tests', () => {
 
       // Wait for enough failures
       await new Promise((resolve) =>
-        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1))
+        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1)),
       );
 
       monitor.stop();
 
       const allDisconnectedEvents = events.filter(
-        (e) => e.type === 'all_disconnected'
+        (e) => e.type === 'all_disconnected',
       );
       expect(allDisconnectedEvents.length).toBe(1);
     });
@@ -357,7 +361,7 @@ describe('HeartbeatMonitor Unit Tests', () => {
 
       // Wait for partition
       await new Promise((resolve) =>
-        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1))
+        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1)),
       );
 
       // Verify we're in partition
@@ -370,7 +374,7 @@ describe('HeartbeatMonitor Unit Tests', () => {
       expect(monitor.isInPartition()).toBe(false);
 
       const reconnectedEvents = events.filter(
-        (e) => e.type === 'some_reconnected'
+        (e) => e.type === 'some_reconnected',
       );
       expect(reconnectedEvents.length).toBe(1);
 
@@ -428,7 +432,7 @@ describe('HeartbeatMonitor Unit Tests', () => {
 
       // Wait for heartbeats
       await new Promise((resolve) =>
-        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1))
+        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1)),
       );
 
       monitor.stop();
@@ -449,7 +453,7 @@ describe('HeartbeatMonitor Unit Tests', () => {
 
       // Wait for partition
       await new Promise((resolve) =>
-        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1))
+        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1)),
       );
 
       expect(monitor.isInPartition()).toBe(true);
@@ -465,7 +469,7 @@ describe('HeartbeatMonitor Unit Tests', () => {
 
       // Wait for partition
       await new Promise((resolve) =>
-        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1))
+        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1)),
       );
 
       expect(monitor.isInPartition()).toBe(true);
@@ -516,7 +520,7 @@ describe('HeartbeatMonitor Unit Tests', () => {
 
       // Wait for events
       await new Promise((resolve) =>
-        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1))
+        setTimeout(resolve, config.intervalMs * (config.missedThreshold + 1)),
       );
 
       monitor.stop();

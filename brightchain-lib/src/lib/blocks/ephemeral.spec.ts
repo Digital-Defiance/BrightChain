@@ -1,10 +1,9 @@
 import {
   arraysEqual,
-  ChecksumUint8Array,
   EmailString,
   IMemberWithMnemonic,
+  Member,
 } from '@digitaldefiance/ecies-lib';
-import { Member } from '@digitaldefiance/ecies-lib';
 import { ECIES } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
@@ -14,6 +13,7 @@ import MemberType from '../enumerations/memberType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
+import { Checksum } from '../types/checksum';
 
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
@@ -27,7 +27,7 @@ class TestEphemeralBlock extends EphemeralBlock {
     blockDataType: BlockDataType,
     data: Uint8Array,
     creator: Member,
-    checksum?: ChecksumUint8Array,
+    checksum?: Checksum,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,
     canRead = true,
@@ -58,7 +58,7 @@ class TestEphemeralBlock extends EphemeralBlock {
       const expectedChecksum =
         ServiceProvider.getInstance().checksumService.calculateChecksum(data);
       if (
-        !arraysEqual(new Uint8Array(checksum), new Uint8Array(expectedChecksum))
+        !arraysEqual(checksum.toUint8Array(), expectedChecksum.toUint8Array())
       ) {
         throw new ChecksumMismatchError(checksum, expectedChecksum);
       }
@@ -97,7 +97,7 @@ describe('EphemeralBlock', () => {
       type: BlockType;
       dataType: BlockDataType;
       data: Uint8Array;
-      checksum: ChecksumUint8Array;
+      checksum: Checksum;
       creator: Member;
       dateCreated: Date;
       lengthBeforeEncryption: number;
@@ -157,7 +157,7 @@ describe('EphemeralBlock', () => {
       expect(block.blockDataType).toBe(BlockDataType.RawData);
       expect(arraysEqual(block.data, data)).toBe(true);
       expect(
-        arraysEqual(new Uint8Array(block.idChecksum), new Uint8Array(checksum)),
+        arraysEqual(block.idChecksum.toUint8Array(), checksum.toUint8Array()),
       ).toBe(true);
       expect(block.canRead).toBe(true);
     });
@@ -279,8 +279,8 @@ describe('EphemeralBlock', () => {
       expect(checksumError.expected).toBeDefined();
       expect(
         arraysEqual(
-          new Uint8Array(checksumError.checksum),
-          new Uint8Array(checksumError.expected),
+          checksumError.checksum.toUint8Array(),
+          checksumError.expected.toUint8Array(),
         ),
       ).toBe(false);
     });

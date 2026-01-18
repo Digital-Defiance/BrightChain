@@ -10,7 +10,7 @@ export function base64ToUint8Array(base64: string): Uint8Array {
   if (!base64 || base64 === '0' || base64.length === 0) {
     return new Uint8Array(0);
   }
-  
+
   try {
     const binaryString = atob(base64);
     const bytes = new Uint8Array(binaryString.length);
@@ -53,7 +53,11 @@ export function concatenateUint8Arrays(arrays: Uint8Array[]): Uint8Array {
 /**
  * Write a 32-bit big-endian unsigned integer to a Uint8Array
  */
-export function writeUInt32BE(value: number, buffer: Uint8Array, offset = 0): void {
+export function writeUInt32BE(
+  value: number,
+  buffer: Uint8Array,
+  offset = 0,
+): void {
   buffer[offset] = (value >>> 24) & 0xff;
   buffer[offset + 1] = (value >>> 16) & 0xff;
   buffer[offset + 2] = (value >>> 8) & 0xff;
@@ -65,11 +69,12 @@ export function writeUInt32BE(value: number, buffer: Uint8Array, offset = 0): vo
  */
 export function readUInt32BE(buffer: Uint8Array, offset = 0): number {
   return (
-    (buffer[offset] << 24) |
-    (buffer[offset + 1] << 16) |
-    (buffer[offset + 2] << 8) |
-    buffer[offset + 3]
-  ) >>> 0;
+    ((buffer[offset] << 24) |
+      (buffer[offset + 1] << 16) |
+      (buffer[offset + 2] << 8) |
+      buffer[offset + 3]) >>>
+    0
+  );
 }
 
 /**
@@ -86,7 +91,11 @@ export function uint8ArraysEqual(a: Uint8Array, b: Uint8Array): boolean {
 /**
  * Copy data from one Uint8Array to another
  */
-export function copyUint8Array(source: Uint8Array, target: Uint8Array, targetOffset = 0): void {
+export function copyUint8Array(
+  source: Uint8Array,
+  target: Uint8Array,
+  targetOffset = 0,
+): void {
   target.set(source, targetOffset);
 }
 

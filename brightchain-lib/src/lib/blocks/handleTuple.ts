@@ -1,12 +1,11 @@
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { TUPLE } from '../constants';
 import BlockDataType from '../enumerations/blockDataType';
 import BlockType from '../enumerations/blockType';
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
 import { HandleTupleError } from '../errors/handleTupleError';
 import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
 import { ServiceProvider } from '../services/service.provider';
+import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
 import { BlockHandle } from './handle';
 import { RawDataBlock } from './rawData';
@@ -16,17 +15,46 @@ import { RawDataBlock } from './rawData';
  */
 interface IBlockStore {
   setData(block: RawDataBlock): Promise<void>;
-  get<T extends BaseBlock>(checksum: ChecksumUint8Array): BlockHandle<T>;
+  get<T extends BaseBlock>(checksum: Checksum): BlockHandle<T>;
 }
 
 /**
  * A tuple of block handles that can be XORed together.
  * Used for whitening and reconstruction operations.
+ *
+ * @typeParam T - The block type for handles in this tuple. Defaults to BaseBlock.
+ *
+ * @remarks
+ * - All handles in a tuple must have the same block size
+ * - The tuple size is fixed at TUPLE.SIZE (typically 3)
+ * - XOR operations produce a new RawDataBlock
+ *
+ * @example
+ * ```typescript
+ * // Create a tuple of RawDataBlock handles
+ * const tuple = new BlockHandleTuple<RawDataBlock>(handles);
+ *
+ * // XOR all blocks and store the result
+ * const result = await tuple.xor(blockStore, metadata);
+ *
+ * // Verify all blocks in the tuple
+ * const isValid = await tuple.verify();
+ * ```
+ *
+ * @see {@link BlockHandle} - The handle type used in tuples
+ * @see Requirements 3.1, 3.2
  */
-export class BlockHandleTuple {
-  private readonly _handles: BlockHandle<any>[];
+export class BlockHandleTuple<T extends BaseBlock = BaseBlock> {
+  private readonly _handles: BlockHandle<T>[];
 
-  constructor(handles: BlockHandle<any>[]) {
+  /**
+   * Create a new BlockHandleTuple.
+   *
+   * @param handles - Array of block handles. Must have exactly TUPLE.SIZE elements.
+   * @throws {HandleTupleError} If the number of handles is not TUPLE.SIZE
+   * @throws {HandleTupleError} If handles have different block sizes
+   */
+  constructor(handles: BlockHandle<T>[]) {
     if (handles.length !== TUPLE.SIZE) {
       throw new HandleTupleError(HandleTupleErrorType.InvalidTupleSize);
     }
@@ -43,7 +71,7 @@ export class BlockHandleTuple {
   /**
    * The handles in this tuple
    */
-  public get handles(): BlockHandle<any>[] {
+  public get handles(): BlockHandle<T>[] {
     return this._handles;
   }
 
@@ -51,10 +79,13 @@ export class BlockHandleTuple {
    * The block IDs as a concatenated buffer
    */
   public get blockIdsBuffer(): Uint8Array {
-    const totalLength = this.blockIds.reduce((sum, id) => sum + id.length, 0);
+    const blockIdArrays = this.blockIds.map((checksum) =>
+      checksum.toUint8Array(),
+    );
+    const totalLength = blockIdArrays.reduce((sum, id) => sum + id.length, 0);
     const result = new Uint8Array(totalLength);
     let offset = 0;
-    for (const id of this.blockIds) {
+    for (const id of blockIdArrays) {
       result.set(id, offset);
       offset += id.length;
     }
@@ -64,7 +95,7 @@ export class BlockHandleTuple {
   /**
    * The block IDs in this tuple
    */
-  public get blockIds(): ChecksumUint8Array[] {
+  public get blockIds(): Checksum[] {
     return this.handles.map((handle) => handle.idChecksum);
   }
 
@@ -77,7 +108,7 @@ export class BlockHandleTuple {
   public async xor(
     blockStore: IBlockStore,
     destBlockMetadata: IBaseBlockMetadata,
-  ): Promise<BlockHandle<any>> {
+  ): Promise<BlockHandle<RawDataBlock>> {
     if (!this.handles.length) {
       throw new HandleTupleError(HandleTupleErrorType.NoBlocksToXor);
     }
@@ -98,9 +129,9 @@ export class BlockHandleTuple {
     );
 
     // XOR all blocks together
-    let result = new Uint8Array(blockData[0]);
+    let result = new Uint8Array(blockData[0] as Uint8Array);
     for (let i = 1; i < blockData.length; i++) {
-      const current = blockData[i];
+      const current = blockData[i] as Uint8Array;
       if (current.length !== result.length) {
         throw new HandleTupleError(HandleTupleErrorType.BlockSizesMustMatch);
       }
@@ -133,13 +164,15 @@ export class BlockHandleTuple {
     // Store the result
     try {
       await blockStore.setData(block);
-      return blockStore.get(checksum);
+      return blockStore.get<RawDataBlock>(checksum);
     } catch (error) {
       // If block already exists, that's okay - just return a handle to it
-      if (error instanceof Error && 
-          (error.message.includes('already exists') || 
-           error.message.includes('Error_StoreErrorBlockAlreadyExists'))) {
-        return blockStore.get(checksum);
+      if (
+        error instanceof Error &&
+        (error.message.includes('already exists') ||
+          error.message.includes('Error_StoreErrorBlockAlreadyExists'))
+      ) {
+        return blockStore.get<RawDataBlock>(checksum);
       }
       throw new Error(
         `Failed to store XOR result: ${

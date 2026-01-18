@@ -1,5 +1,5 @@
-import { Readable } from './browserStream';
 import BlockPaddingTransform from './blockPaddingTransform';
+import { Readable } from './browserStream';
 import { uint8ArrayToString } from './bufferUtils';
 import { BlockSize } from './enumerations/blockSize';
 
@@ -43,7 +43,9 @@ describe('BlockPaddingTransform', () => {
       expect(uint8ArrayToString(blocks[0])).toBe('x'.repeat(BlockSize.Message));
       // Second block should be padded to block size
       expect(blocks[1].length).toBe(BlockSize.Message);
-      expect(uint8ArrayToString(blocks[1].subarray(0, 10))).toBe('x'.repeat(10));
+      expect(uint8ArrayToString(blocks[1].subarray(0, 10))).toBe(
+        'x'.repeat(10),
+      );
       done();
     });
 
@@ -78,7 +80,9 @@ describe('BlockPaddingTransform', () => {
     transform.on('end', () => {
       expect(blocks.length).toBe(1);
       expect(blocks[0].length).toBe(BlockSize.Message);
-      expect(uint8ArrayToString(blocks[0].subarray(0, 15))).toBe('Hello,World!123');
+      expect(uint8ArrayToString(blocks[0].subarray(0, 15))).toBe(
+        'Hello,World!123',
+      );
       done();
     });
 

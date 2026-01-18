@@ -1,31 +1,31 @@
 import {
-  ISimpleStore,
-  IBaseBlockMetadata,
   BaseBlock,
-  RawDataBlock,
   BlockDataType,
   BlockSize,
-  StoreErrorType,
+  Checksum,
+  IBaseBlockMetadata,
+  ISimpleStore,
+  RawDataBlock,
   StoreError,
+  StoreErrorType,
 } from '@brightchain/brightchain-lib';
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { DiskBlockStore } from './diskBlockStore';
 
 export class DiskBlockSyncStore
   extends DiskBlockStore
-  implements ISimpleStore<ChecksumUint8Array, BaseBlock>
+  implements ISimpleStore<Checksum, BaseBlock>
 {
   constructor(config: { storePath: string; blockSize: BlockSize }) {
     super(config);
   }
 
-  has(key: ChecksumUint8Array): boolean {
+  has(key: Checksum): boolean {
     const blockPath = this.blockPath(key);
     return existsSync(blockPath);
   }
 
-  get(key: ChecksumUint8Array): BaseBlock {
+  get(key: Checksum): BaseBlock {
     const blockPath = this.blockPath(key);
     const blockData = readFileSync(blockPath);
     if (blockData.length !== this._blockSize) {
@@ -45,14 +45,14 @@ export class DiskBlockSyncStore
     return block;
   }
 
-  set(key: ChecksumUint8Array, value: BaseBlock): void {
+  set(key: Checksum, value: BaseBlock): void {
     if (value.blockDataType == BlockDataType.EphemeralStructuredData) {
       throw new StoreError(StoreErrorType.CannotStoreEphemeralData);
     }
-    if (Buffer.compare(key, value.idChecksum) !== 0) {
+    if (!key.equals(value.idChecksum)) {
       throw new StoreError(StoreErrorType.BlockIdMismatch, undefined, {
-        KEY: Buffer.from(key).toString('hex'),
-        BLOCK_ID: Buffer.from(value.idChecksum).toString('hex'),
+        KEY: key.toHex(),
+        BLOCK_ID: value.idChecksum.toHex(),
       });
     }
     if (value.blockSize !== this._blockSize) {

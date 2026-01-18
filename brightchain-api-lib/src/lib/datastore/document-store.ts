@@ -10,12 +10,20 @@ export type QueryResultType = DocumentRecord | DocumentRecord[] | unknown[];
 export interface QueryResult<T extends QueryResultType> {
   exec(): Promise<T | null>;
   then<TResult1 = T | null, TResult2 = never>(
-    onfulfilled?: ((value: T | null) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+    onfulfilled?:
+      | ((value: T | null) => TResult1 | PromiseLike<TResult1>)
+      | undefined
+      | null,
+    onrejected?:
+      | ((reason: unknown) => TResult2 | PromiseLike<TResult2>)
+      | undefined
+      | null,
   ): Promise<TResult1 | TResult2>;
 }
 
-export interface QueryBuilder<T extends QueryResultType> extends QueryResult<T> {
+export interface QueryBuilder<
+  T extends QueryResultType,
+> extends QueryResult<T> {
   select(_: unknown): QueryBuilder<T>;
   populate(_: unknown): QueryBuilder<T>;
   sort(_: unknown): QueryBuilder<T>;
@@ -38,9 +46,18 @@ export interface DocumentCollection<T extends DocumentRecord> {
   findByIdAndDelete(id: DocumentId): QueryBuilder<T>;
   create(doc: T): Promise<T>;
   insertMany(docs: T[]): Promise<T[]>;
-  updateOne(filter: Partial<T>, update: Partial<T>): Promise<{ modifiedCount: number; matchedCount: number }>;
-  updateMany(filter: Partial<T>, update: Partial<T>): Promise<{ modifiedCount: number; matchedCount: number }>;
-  replaceOne(filter: Partial<T>, doc: T): Promise<{ modifiedCount: number; matchedCount: number }>;
+  updateOne(
+    filter: Partial<T>,
+    update: Partial<T>,
+  ): Promise<{ modifiedCount: number; matchedCount: number }>;
+  updateMany(
+    filter: Partial<T>,
+    update: Partial<T>,
+  ): Promise<{ modifiedCount: number; matchedCount: number }>;
+  replaceOne(
+    filter: Partial<T>,
+    doc: T,
+  ): Promise<{ modifiedCount: number; matchedCount: number }>;
   deleteOne(filter: Partial<T>): Promise<{ deletedCount: number }>;
   deleteMany(filter: Partial<T>): Promise<{ deletedCount: number }>;
   countDocuments(filter?: Partial<T>): Promise<number>;

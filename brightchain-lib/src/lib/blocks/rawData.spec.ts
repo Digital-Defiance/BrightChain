@@ -1,4 +1,5 @@
-import { arraysEqual, ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
+import { arraysEqual } from '@digitaldefiance/ecies-lib';
+import { Checksum } from '../types/checksum';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -24,7 +25,7 @@ describe('RawDataBlock', () => {
     options: Partial<{
       blockSize: BlockSize;
       data: Uint8Array;
-      checksum: ChecksumUint8Array;
+      checksum: Checksum;
       dateCreated: Date;
       blockType: BlockType;
       blockDataType: BlockDataType;
@@ -66,7 +67,7 @@ describe('RawDataBlock', () => {
       expect(block.blockDataType).toBe(BlockDataType.RawData);
       expect(arraysEqual(block.data, data)).toBe(true);
       expect(
-        arraysEqual(new Uint8Array(block.idChecksum), new Uint8Array(checksum)),
+        arraysEqual(block.idChecksum.toUint8Array(), checksum.toUint8Array()),
       ).toBe(true);
       expect(block.canRead).toBe(true);
       expect(block.canPersist).toBe(true);

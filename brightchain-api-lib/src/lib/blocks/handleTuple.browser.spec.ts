@@ -1,18 +1,18 @@
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import {
-  TUPLE,
-  BlockSize,
-  HandleTupleError,
-  ServiceProvider,
-  BlockHandleTuple,
   BlockHandle,
+  BlockHandleTuple,
+  BlockSize,
+  Checksum,
+  HandleTupleError,
   RawDataBlock,
+  ServiceProvider,
+  TUPLE,
 } from '@brightchain/brightchain-lib';
 
 // Simple in-memory block handle for testing
 interface TestBlockHandle {
-  blockId: ChecksumUint8Array;
-  idChecksum: ChecksumUint8Array;
+  blockId: Checksum;
+  idChecksum: Checksum;
   blockSize: BlockSize;
   data: Uint8Array;
   canRead: boolean;
@@ -31,9 +31,10 @@ describe('BlockHandleTuple (browser)', () => {
     blockSize: BlockSize = defaultBlockSize,
   ): TestBlockHandle => {
     const checksumService = ServiceProvider.getInstance().checksumService;
-    const blockData = data || new Uint8Array(blockSize).fill(Math.random() * 255);
+    const blockData =
+      data || new Uint8Array(blockSize).fill(Math.random() * 255);
     const checksum = checksumService.calculateChecksum(blockData);
-    
+
     return {
       blockId: checksum,
       idChecksum: checksum,
@@ -49,8 +50,10 @@ describe('BlockHandleTuple (browser)', () => {
       const handles = Array(TUPLE.SIZE)
         .fill(null)
         .map(() => createTestHandle());
-      
-      const tuple = new BlockHandleTuple(handles as unknown as BlockHandle<RawDataBlock>[]);
+
+      const tuple = new BlockHandleTuple(
+        handles as unknown as BlockHandle<RawDataBlock>[],
+      );
       expect(tuple.handles).toHaveLength(TUPLE.SIZE);
     });
 
@@ -58,8 +61,13 @@ describe('BlockHandleTuple (browser)', () => {
       const handles = Array(TUPLE.SIZE - 1)
         .fill(null)
         .map(() => createTestHandle());
-      
-      expect(() => new BlockHandleTuple(handles as unknown as BlockHandle<RawDataBlock>[])).toThrow(HandleTupleError);
+
+      expect(
+        () =>
+          new BlockHandleTuple(
+            handles as unknown as BlockHandle<RawDataBlock>[],
+          ),
+      ).toThrow(HandleTupleError);
     });
 
     it('should reject mismatched block sizes', () => {
@@ -68,8 +76,13 @@ describe('BlockHandleTuple (browser)', () => {
         createTestHandle(new Uint8Array(BlockSize.Message), BlockSize.Message),
         createTestHandle(new Uint8Array(BlockSize.Tiny), BlockSize.Tiny), // Different size
       ];
-      
-      expect(() => new BlockHandleTuple(handles as unknown as BlockHandle<RawDataBlock>[])).toThrow(HandleTupleError);
+
+      expect(
+        () =>
+          new BlockHandleTuple(
+            handles as unknown as BlockHandle<RawDataBlock>[],
+          ),
+      ).toThrow(HandleTupleError);
     });
   });
 
@@ -78,12 +91,14 @@ describe('BlockHandleTuple (browser)', () => {
       const handles = Array(TUPLE.SIZE)
         .fill(null)
         .map(() => createTestHandle());
-      
-      const tuple = new BlockHandleTuple(handles as unknown as BlockHandle<RawDataBlock>[]);
-      
+
+      const tuple = new BlockHandleTuple(
+        handles as unknown as BlockHandle<RawDataBlock>[],
+      );
+
       expect(tuple.handles).toHaveLength(TUPLE.SIZE);
       expect(tuple.blockIds).toHaveLength(TUPLE.SIZE);
-      
+
       // Verify block IDs match handle IDs
       tuple.handles.forEach((handle, index) => {
         expect(tuple.blockIds[index]).toBe(handles[index].blockId);

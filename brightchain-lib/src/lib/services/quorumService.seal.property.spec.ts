@@ -10,7 +10,6 @@
  * - Unsealing fails with insufficient members
  */
 
-import fc from 'fast-check';
 import {
   EmailString,
   GuidV4,
@@ -18,14 +17,15 @@ import {
   Member,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
+import fc from 'fast-check';
 import { MemberType } from '../enumerations/memberType';
+import { SealingErrorType } from '../enumerations/sealingErrorType';
+import { SealingError } from '../errors/sealingError';
 import { initializeBrightChain } from '../init';
 import { QuorumMemberMetadata } from '../interfaces/services/quorumService';
 import { QuorumService } from './quorumService';
 import { ServiceProvider } from './service.provider';
 import { ServiceLocator } from './serviceLocator';
-import { SealingError } from '../errors/sealingError';
-import { SealingErrorType } from '../enumerations/sealingErrorType';
 
 // Set a longer timeout for all tests in this file
 jest.setTimeout(60000);
@@ -43,7 +43,10 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
   /**
    * Helper to create a test member with random data
    */
-  function createTestMember(name: string, email: string): IMemberWithMnemonic<GuidV4> {
+  function createTestMember(
+    name: string,
+    email: string,
+  ): IMemberWithMnemonic<GuidV4> {
     const eciesService = ServiceProvider.getInstance<GuidV4>().eciesService;
     return Member.newMember<GuidV4>(
       eciesService,
@@ -116,7 +119,9 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
             );
 
             // Unseal with all 3 members
-            const unsealedDocument = await testService.unsealDocument<typeof document>(
+            const unsealedDocument = await testService.unsealDocument<
+              typeof document
+            >(
               sealResult.documentId,
               memberData.map((m) => m.member),
             );
@@ -179,24 +184,30 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
             );
 
             // Unseal with first 2 members only
-            const unsealedWithFirst2 = await testService.unsealDocument<typeof document>(
-              sealResult.documentId,
-              [memberData[0].member, memberData[1].member],
-            );
+            const unsealedWithFirst2 = await testService.unsealDocument<
+              typeof document
+            >(sealResult.documentId, [
+              memberData[0].member,
+              memberData[1].member,
+            ]);
             expect(unsealedWithFirst2).toEqual(document);
 
             // Unseal with last 2 members only
-            const unsealedWithLast2 = await testService.unsealDocument<typeof document>(
-              sealResult.documentId,
-              [memberData[2].member, memberData[3].member],
-            );
+            const unsealedWithLast2 = await testService.unsealDocument<
+              typeof document
+            >(sealResult.documentId, [
+              memberData[2].member,
+              memberData[3].member,
+            ]);
             expect(unsealedWithLast2).toEqual(document);
 
             // Unseal with middle 2 members
-            const unsealedWithMiddle2 = await testService.unsealDocument<typeof document>(
-              sealResult.documentId,
-              [memberData[1].member, memberData[2].member],
-            );
+            const unsealedWithMiddle2 = await testService.unsealDocument<
+              typeof document
+            >(sealResult.documentId, [
+              memberData[1].member,
+              memberData[2].member,
+            ]);
             expect(unsealedWithMiddle2).toEqual(document);
           },
         ),
@@ -322,7 +333,9 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
             );
 
             // Retrieve document info
-            const docInfo = await testService.getDocument(sealResult.documentId);
+            const docInfo = await testService.getDocument(
+              sealResult.documentId,
+            );
 
             expect(docInfo).not.toBeNull();
             expect(docInfo!.id).toBe(sealResult.documentId);

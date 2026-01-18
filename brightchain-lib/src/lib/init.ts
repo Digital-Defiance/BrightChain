@@ -21,10 +21,11 @@ export function initializeBrightChain(): void {
   const config = createRuntimeConfiguration({
     idProvider: new GuidV4Provider(),
   });
-  
+
   // Register this configuration with a specific key
   ConstantsRegistry.register(BRIGHTCHAIN_CONFIG_KEY, config, {
-    description: 'BrightChain browser-compatible configuration with GuidV4Provider'
+    description:
+      'BrightChain browser-compatible configuration with GuidV4Provider',
   });
 
   // Initialize ServiceProvider (this will register itself with ServiceLocator)
@@ -56,6 +57,7 @@ export function resetInitialization(): void {
   ConstantsRegistry.unregister(BRIGHTCHAIN_CONFIG_KEY);
   // Also reset any existing ServiceProvider instances
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { ServiceProvider } = require('./services/service.provider');
     ServiceProvider.resetInstance();
   } catch {

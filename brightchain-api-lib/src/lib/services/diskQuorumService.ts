@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import {
   BlockSize,
   IFecService,
@@ -61,7 +60,7 @@ interface QuorumDocumentDocument extends DocumentRecord {
  *
  * This implementation is specific to Node.js environments and uses
  * the ServiceProvider for cryptographic operations.
- * 
+ *
  * The service can optionally be configured with an FEC service for
  * parity generation and recovery on the underlying block store.
  */
@@ -79,13 +78,16 @@ export class DiskQuorumService extends QuorumService<GuidV4> {
     super();
 
     // Initialize disk-based block store and document store
-    this.blockStore = new DiskBlockAsyncStore({ storePath: storagePath, blockSize });
-    
+    this.blockStore = new DiskBlockAsyncStore({
+      storePath: storagePath,
+      blockSize,
+    });
+
     // Set FEC service if provided
     if (fecService) {
       this.blockStore.setFecService(fecService);
     }
-    
+
     const documentStore = new BlockDocumentStore(this.blockStore);
 
     // Get collections for members and documents
@@ -208,7 +210,7 @@ export class DiskQuorumService extends QuorumService<GuidV4> {
       creatorId: uint8ArrayToHex(agent.idBytes) as ShortHexGuid,
       encryptedData: uint8ArrayToHex(sealedDoc.encryptedData),
       encryptedSharesByMemberId: this.serializeShares(sealedDoc),
-      checksum: uint8ArrayToHex(sealedDoc.checksum),
+      checksum: sealedDoc.checksum.toHex(),
       signature: uint8ArrayToHex(sealedDoc.signature),
       memberIds: result.memberIds,
       sharesRequired: result.sharesRequired,

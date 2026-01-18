@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import { MemberType } from '@brightchain/brightchain-lib';
 import {
   EmailString,
@@ -11,9 +10,7 @@ import { DefaultBackendIdType, SignatureBuffer } from '../../shared-types';
 /**
  * Operational interface for member - defines getters and methods
  */
-export interface IMemberOperational<
-  I extends string | DefaultBackendIdType,
-> {
+export interface IMemberOperational<I extends string | DefaultBackendIdType> {
   // Required getters
   get id(): I;
   get type(): MemberType;

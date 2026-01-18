@@ -76,8 +76,8 @@ export class TestMembers {
         new EmailString(config.email),
       );
 
-      // Create document to store member data
-      const document = new MemberDocument(newMember, newMember);
+      // Create document to store member data using factory method
+      const document = MemberDocument.create(newMember, newMember);
 
       // Store member info
       this.members.set(config.key, {
@@ -152,7 +152,7 @@ export class TestMembers {
   }> {
     // Initialize BrightChain with browser configuration
     initializeBrightChain();
-    
+
     const eciesService = ServiceProvider.getInstance().eciesService;
     const mnemonic = eciesService.generateNewMnemonic();
     const { member } = Member.newMember(
@@ -161,7 +161,7 @@ export class TestMembers {
       name,
       new EmailString(email),
     );
-    const document = new MemberDocument(member, member);
+    const document = MemberDocument.create(member, member);
     return { member, mnemonic, document };
   }
 }

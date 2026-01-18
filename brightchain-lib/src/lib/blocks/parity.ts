@@ -1,7 +1,7 @@
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
+import { Checksum } from '../types/checksum';
 import { RawDataBlock } from './rawData';
 
 /**
@@ -14,7 +14,7 @@ export class ParityBlock extends RawDataBlock {
     blockSize: BlockSize,
     data: Uint8Array,
     dateCreated?: Date,
-    checksum?: ChecksumUint8Array,
+    checksum?: Checksum,
     canRead = true,
     canPersist = true,
   ) {

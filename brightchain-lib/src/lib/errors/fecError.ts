@@ -1,5 +1,4 @@
 import { FecErrorType } from '../enumerations/fecErrorType';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { TypedError } from './typedError';
 
@@ -46,7 +45,7 @@ export class FecError extends TypedError<FecErrorType> {
 
   constructor(
     type: FecErrorType,
-    language?: StringLanguages,
+    language?: string,
     templateParams?: Record<string, string>,
   ) {
     super(type, undefined, templateParams);

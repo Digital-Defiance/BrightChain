@@ -1,4 +1,8 @@
-import { BlockStoreFactory as BaseBlockStoreFactory, IBlockStore, BlockSize } from '@brightchain/brightchain-lib';
+import {
+  BlockStoreFactory as BaseBlockStoreFactory,
+  BlockSize,
+  IBlockStore,
+} from '@brightchain/brightchain-lib';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 
 /**
@@ -8,7 +12,10 @@ export class BlockStoreFactory extends BaseBlockStoreFactory {
   /**
    * Create a disk-based block store (Node.js implementation)
    */
-  public static override createDiskStore(config: { storePath: string; blockSize: BlockSize }): IBlockStore {
+  public static override createDiskStore(config: {
+    storePath: string;
+    blockSize: BlockSize;
+  }): IBlockStore {
     return new DiskBlockAsyncStore(config);
   }
 }

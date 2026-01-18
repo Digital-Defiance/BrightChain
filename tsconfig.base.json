@@ -20,16 +20,16 @@
     "baseUrl": ".",
     "paths": {
       "@brightchain/brightchain-lib": [
-        "dist/brightchain-lib"
+        "brightchain-lib/src/index.ts"
       ],
       "@brightchain/brightchain-lib/*": [
-        "dist/brightchain-lib/src/*"
+        "brightchain-lib/src/*"
       ],
       "@brightchain/brightchain-api-lib": [
-        "dist/brightchain-api-lib"
+        "brightchain-api-lib/src/index.ts"
       ],
       "@brightchain/brightchain-api-lib/*": [
-        "dist/brightchain-api-lib/src/*"
+        "brightchain-api-lib/src/*"
       ]
     }
   },

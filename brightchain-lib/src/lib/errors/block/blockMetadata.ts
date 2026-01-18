@@ -1,5 +1,4 @@
 import { BlockMetadataErrorType } from '../../enumerations/blockMetadataErrorType';
-import { StringLanguages } from '../../enumerations/stringLanguages';
 import { StringNames } from '../../enumerations/stringNames';
 import { TypedWithReasonError } from '../typedWithReasonError';
 
@@ -20,7 +19,7 @@ export class BlockMetadataError extends TypedWithReasonError<BlockMetadataErrorT
         StringNames.Error_BlockMetadataErrorCreatorIdMismatch,
     };
   }
-  constructor(type: BlockMetadataErrorType, _language?: StringLanguages) {
+  constructor(type: BlockMetadataErrorType, _language?: string) {
     super(StringNames.Error_BlockMetadataTemplate, type, undefined);
     this.name = 'BlockMetadataError';
   }

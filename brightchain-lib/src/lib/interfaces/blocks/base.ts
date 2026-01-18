@@ -1,8 +1,9 @@
-import { ChecksumString, ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
+import { ChecksumString } from '@digitaldefiance/ecies-lib';
 import { Readable } from '../../browserStream';
 import { BlockDataType } from '../../enumerations/blockDataType';
 import { BlockSize } from '../../enumerations/blockSize';
 import { BlockType } from '../../enumerations/blockType';
+import { Checksum } from '../../types/checksum';
 
 /**
  * IBlock defines the contract for all blocks in the Owner Free Filesystem (OFF).
@@ -55,7 +56,7 @@ export interface IBaseBlock {
    * 2. Verify data integrity
    * 3. Reference blocks in CBLs
    */
-  get idChecksum(): ChecksumUint8Array;
+  get idChecksum(): Checksum;
 
   /**
    * The type of the block.

@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 /**
  * @fileoverview Property-based tests for Sync Vector
  *
@@ -43,7 +42,10 @@ const arbChecksum = fc
  * Using integer timestamps to avoid fc.date() generating invalid dates
  */
 const arbValidDate = fc
-  .integer({ min: new Date('2020-01-01').getTime(), max: new Date('2025-12-31').getTime() })
+  .integer({
+    min: new Date('2020-01-01').getTime(),
+    max: new Date('2025-12-31').getTime(),
+  })
   .map((timestamp) => new Date(timestamp));
 
 /**

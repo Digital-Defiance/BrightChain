@@ -3,7 +3,7 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "brightchain-api-lib/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["type:lib", "scope:api"],
   "implicitDependencies": ["brightchain-lib", "brightchain-test-utils"],
   "targets": {
     "build": {

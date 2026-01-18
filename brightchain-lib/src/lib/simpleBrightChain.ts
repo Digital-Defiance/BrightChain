@@ -2,6 +2,7 @@ import {
   ChecksumUint8Array,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
+import { CHECKSUM } from './constants';
 import { BlockSize } from './enumerations/blockSize';
 
 // Simple checksum calculation using Web Crypto API
@@ -107,7 +108,7 @@ export class BrightChain {
 
     const cblData = this.createCBL(blocks, fileData.length, fileName);
     const receiptId = uint8ArrayToHex(
-      new Uint8Array(32).map(() => Math.floor(Math.random() * 256)),
+      new Uint8Array(CHECKSUM.SHA3_BUFFER_LENGTH).map(() => Math.floor(Math.random() * 256)),
     );
 
     return {

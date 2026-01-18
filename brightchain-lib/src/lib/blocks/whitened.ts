@@ -1,12 +1,12 @@
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
-import { Readable } from '../browserStream';
 import { BlockMetadata } from '../blockMetadata';
+import { Readable } from '../browserStream';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
 import { WhitenedError } from '../errors/whitenedError';
 import { ServiceProvider } from '../services/service.provider';
+import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
 
@@ -21,7 +21,7 @@ export class WhitenedBlock extends RawDataBlock {
   constructor(
     blockSize: BlockSize,
     data: Uint8Array,
-    checksum?: ChecksumUint8Array,
+    checksum?: Checksum,
     dateCreated?: Date,
     canRead = true,
     canPersist = true,
@@ -94,7 +94,9 @@ export class WhitenedBlock extends RawDataBlock {
    * @param readable - The readable stream to convert
    * @returns Promise that resolves to a Uint8Array
    */
-  private static async streamToUint8Array(readable: Readable): Promise<Uint8Array> {
+  private static async streamToUint8Array(
+    readable: Readable,
+  ): Promise<Uint8Array> {
     const chunks: Uint8Array[] = [];
     for await (const chunk of readable) {
       chunks.push(new Uint8Array(chunk));
@@ -114,7 +116,9 @@ export class WhitenedBlock extends RawDataBlock {
    * @param data - The data to convert
    * @returns Promise that resolves to a Uint8Array
    */
-  private static async toUint8Array(data: Readable | Uint8Array): Promise<Uint8Array> {
+  private static async toUint8Array(
+    data: Readable | Uint8Array,
+  ): Promise<Uint8Array> {
     if (data instanceof Uint8Array) {
       return data;
     }
@@ -142,7 +146,7 @@ export class WhitenedBlock extends RawDataBlock {
       blockSize: BlockSize,
       data: Uint8Array,
       dateCreated: Date,
-      checksum: ChecksumUint8Array,
+      checksum: Checksum,
       canRead: boolean,
       canPersist: boolean,
     ) => T;
@@ -199,7 +203,7 @@ export class WhitenedBlock extends RawDataBlock {
   public static async from(
     blockSize: BlockSize,
     data: Uint8Array,
-    checksum?: ChecksumUint8Array,
+    checksum?: Checksum,
     dateCreated?: Date,
     lengthWithoutPadding?: number,
     canRead = true,

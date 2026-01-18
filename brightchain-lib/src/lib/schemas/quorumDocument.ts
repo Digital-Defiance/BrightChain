@@ -1,5 +1,4 @@
 import {
-  ChecksumUint8Array,
   getEnhancedIdProvider,
   hexToUint8Array,
   Member,
@@ -7,13 +6,14 @@ import {
   SignatureUint8Array,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import { uint8ArrayToBase64 } from '../bufferUtils';
 import { generateRandomKeysSync } from 'paillier-bigint';
+import { uint8ArrayToBase64 } from '../bufferUtils';
 import { IQuorumDocument } from '../documents/quorumDocument';
 import { MemberType } from '../enumerations/memberType';
 import { NotImplementedError } from '../errors/notImplemented';
 import { QuorumDataRecord } from '../quorumDataRecord';
 import { SchemaDefinition, SerializedValue } from '../sharedTypes';
+import { Checksum } from '../types';
 
 export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
   public isString(value: unknown): boolean {
@@ -52,23 +52,19 @@ export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
     checksum: {
       type: Object,
       required: true,
-      serialize: (value: ChecksumUint8Array): string =>
-        uint8ArrayToHex(value),
-      hydrate: (value: string): ChecksumUint8Array => {
+      serialize: (value: Checksum): string => value.toHex(),
+      hydrate: (value: string): Checksum => {
         if (!this.isString(value)) throw new Error('Invalid checksum format');
-        return hexToUint8Array(
-          value as string,
-        ) as unknown as ChecksumUint8Array;
+        return Checksum.fromHex(value as string);
       },
     },
     creatorId: {
       type: Object,
       required: true,
-      serialize: (value: ChecksumUint8Array): string => uint8ArrayToHex(value),
-      hydrate: (value: string): ChecksumUint8Array => {
+      serialize: (value: Checksum): string => value.toHex(),
+      hydrate: (value: string): Checksum => {
         if (!this.isString(value)) throw new Error('Invalid creator ID format');
-        const valueBytes = hexToUint8Array(value as string);
-        return valueBytes as ChecksumUint8Array;
+        return Checksum.fromHex(value as string);
       },
     },
     creator: {

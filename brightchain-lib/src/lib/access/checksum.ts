@@ -1,5 +1,5 @@
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { ServiceProvider } from '../services/service.provider';
+import { Checksum } from '../types';
 
 /**
  * Checksum service access for blocks to avoid circular dependencies
@@ -9,15 +9,15 @@ export class BlockChecksum {
     return ServiceProvider.getInstance().checksumService.checksumBufferLength;
   }
 
-  public static calculateChecksum(data: Buffer): ChecksumUint8Array {
+  public static calculateChecksum(data: Buffer): Checksum {
     return ServiceProvider.getInstance().checksumService.calculateChecksum(
       new Uint8Array(data),
     );
   }
 
   public static compareChecksums(
-    checksum1: ChecksumUint8Array,
-    checksum2: ChecksumUint8Array,
+    checksum1: Checksum,
+    checksum2: Checksum,
   ): boolean {
     return ServiceProvider.getInstance().checksumService.compareChecksums(
       checksum1,
@@ -25,7 +25,7 @@ export class BlockChecksum {
     );
   }
 
-  public static validateChecksum(checksum: ChecksumUint8Array): boolean {
+  public static validateChecksum(checksum: Checksum): boolean {
     return ServiceProvider.getInstance().checksumService.validateChecksum(
       checksum,
     );
@@ -33,7 +33,7 @@ export class BlockChecksum {
 
   public static validateDataChecksum(
     data: Buffer,
-    checksum: ChecksumUint8Array,
+    checksum: Checksum,
   ): boolean {
     const calculatedChecksum = this.calculateChecksum(data);
     return this.compareChecksums(calculatedChecksum, checksum);

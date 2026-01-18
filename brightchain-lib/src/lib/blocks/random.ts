@@ -1,10 +1,10 @@
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { randomBytes } from '../browserCrypto';
 import { Readable } from '../browserStream';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { ServiceProvider } from '../services/service.provider';
+import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
 
@@ -18,7 +18,7 @@ export class RandomBlock extends RawDataBlock {
     blockSize: BlockSize,
     data: Uint8Array,
     dateCreated?: Date,
-    checksum?: ChecksumUint8Array,
+    checksum?: Checksum,
   ) {
     if (data.length !== blockSize) {
       throw new Error('Data length must match block size');
@@ -51,7 +51,7 @@ export class RandomBlock extends RawDataBlock {
     blockSize: BlockSize,
     data: Uint8Array,
     dateCreated?: Date,
-    checksum?: ChecksumUint8Array,
+    checksum?: Checksum,
   ): RandomBlock {
     return new RandomBlock(blockSize, data, dateCreated, checksum);
   }
@@ -97,7 +97,9 @@ export class RandomBlock extends RawDataBlock {
    * @param readable - The readable stream to convert
    * @returns Promise that resolves to a Uint8Array
    */
-  private static async streamToUint8Array(readable: Readable): Promise<Uint8Array> {
+  private static async streamToUint8Array(
+    readable: Readable,
+  ): Promise<Uint8Array> {
     const chunks: Uint8Array[] = [];
     for await (const chunk of readable) {
       chunks.push(new Uint8Array(chunk));
@@ -117,7 +119,9 @@ export class RandomBlock extends RawDataBlock {
    * @param data - The data to convert
    * @returns Promise that resolves to a Uint8Array
    */
-  private static async toUint8Array(data: Readable | Uint8Array): Promise<Uint8Array> {
+  private static async toUint8Array(
+    data: Readable | Uint8Array,
+  ): Promise<Uint8Array> {
     if (data instanceof Uint8Array) {
       return data;
     }
@@ -145,7 +149,7 @@ export class RandomBlock extends RawDataBlock {
       blockSize: BlockSize,
       data: Uint8Array,
       dateCreated: Date,
-      checksum: ChecksumUint8Array,
+      checksum: Checksum,
       canRead: boolean,
       canPersist: boolean,
     ) => T;

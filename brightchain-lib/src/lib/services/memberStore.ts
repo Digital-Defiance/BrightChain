@@ -5,8 +5,8 @@ import {
   PlatformID,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
-import { uint8ArrayToBase64 } from '../bufferUtils';
 import { RawDataBlock } from '../blocks/rawData';
+import { uint8ArrayToBase64 } from '../bufferUtils';
 import { MemberDocument } from '../documents/member/memberDocument';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
@@ -138,8 +138,8 @@ export class MemberStore<
     let privateBlock: RawDataBlock | undefined;
 
     try {
-      // Step 1: Create member document
-      doc = new MemberDocument<TID>(publicMember, privateMember);
+      // Step 1: Create member document using factory method
+      doc = MemberDocument.create<TID>(publicMember, privateMember);
       rollbackOperations.push(async () => {
         // No cleanup needed for document creation
       });
@@ -196,10 +196,10 @@ export class MemberStore<
         reputation: 0,
       };
       await this.updateIndex(indexEntry);
-      
+
       // Add to name index
       this.nameIndex.set(data.name, doc!.id);
-      
+
       rollbackOperations.push(async () => {
         if (doc) {
           this.memberIndex.delete(doc.id);
@@ -249,8 +249,8 @@ export class MemberStore<
     }
 
     // Get CBLs
-    const publicBlock = await this.blockStore.getData(indexEntry.publicCBL);
-    const privateBlock = await this.blockStore.getData(indexEntry.privateCBL);
+    const _publicBlock = await this.blockStore.getData(indexEntry.publicCBL);
+    const _privateBlock = await this.blockStore.getData(indexEntry.privateCBL);
 
     // For now, create a simple member from the stored data
     // In a full implementation, we would reconstruct from CBL data
@@ -364,7 +364,10 @@ export class MemberStore<
       results = results.filter(
         (entry) =>
           criteria.id &&
-          ServiceProvider.getInstance<TID>().idProvider.equals(entry.id, criteria.id),
+          ServiceProvider.getInstance<TID>().idProvider.equals(
+            entry.id,
+            criteria.id,
+          ),
       );
     }
     if (criteria.type) {

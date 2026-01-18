@@ -11,13 +11,10 @@ import { EncryptedBlock } from '../blocks/encrypted';
 // import { MultiEncryptedBlock } from '../blocks/multiEncrypted'; // Removed
 import {
   arraysEqual,
-  ChecksumUint8Array,
   GuidV4,
   Member,
   PlatformID,
-  uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import { uint8ArraysEqual } from '../bufferUtils';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
@@ -32,6 +29,7 @@ import { BlockService } from '../services/blockService';
 import { CBLService } from '../services/cblService';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceLocator } from '../services/serviceLocator';
+import { Checksum } from '../types';
 
 /**
  * CBLStore provides storage for Constituent Block Lists (CBLs).
@@ -40,11 +38,7 @@ import { ServiceLocator } from '../services/serviceLocator';
  */
 export class CBLStore<
   TID extends PlatformID = Uint8Array,
-> implements ISimpleStoreAsync<
-  ChecksumUint8Array,
-  ConstituentBlockListBlock<TID>,
-  TID
-> {
+> implements ISimpleStoreAsync<Checksum, ConstituentBlockListBlock<TID>, TID> {
   private readonly _storePath: string;
   private readonly _cblPath: string;
   private readonly _indexPath: string;
@@ -112,7 +106,7 @@ export class CBLStore<
    * Store a CBL block
    */
   public async set(
-    key: ChecksumUint8Array,
+    key: Checksum,
     value: ConstituentBlockListBlock<TID> | EncryptedBlock<TID>,
   ): Promise<void> {
     const userForvalidation = value.creator ?? this._activeUser;
@@ -120,7 +114,7 @@ export class CBLStore<
       throw new CblError(CblErrorType.CreatorRequiredForSignature);
     }
 
-    if (!uint8ArraysEqual(key, value.idChecksum)) {
+    if (!key.equals(value.idChecksum)) {
       throw new StoreError(StoreErrorType.BlockIdMismatch);
     }
 
@@ -150,7 +144,7 @@ export class CBLStore<
    * Get a CBL by its checksum
    */
   public async get(
-    checksum: ChecksumUint8Array,
+    checksum: Checksum,
     hydrateGuid: (id: TID) => Promise<Member<TID>>,
   ): Promise<ConstituentBlockListBlock<TID>> {
     const blockPath = this.getBlockPath(checksum);
@@ -279,7 +273,7 @@ export class CBLStore<
   /**
    * Check if a CBL exists
    */
-  public has(checksum: ChecksumUint8Array): boolean {
+  public has(checksum: Checksum): boolean {
     const blockPath = this.getBlockPath(checksum);
     return existsSync(blockPath);
   }
@@ -288,9 +282,9 @@ export class CBLStore<
    * Get the addresses for a CBL
    */
   public async getCBLAddresses(
-    checksum: ChecksumUint8Array,
+    checksum: Checksum,
     hydrateFunction: (guid: GuidV4) => Promise<Member>,
-  ): Promise<ChecksumUint8Array[]> {
+  ): Promise<Checksum[]> {
     const blockPath = this.getBlockPath(checksum);
     if (!existsSync(blockPath)) {
       throw new StoreError(StoreErrorType.KeyNotFound);
@@ -309,8 +303,8 @@ export class CBLStore<
   /**
    * Get path for CBL data file
    */
-  private getBlockPath(checksum: ChecksumUint8Array): string {
-    const checksumHex = uint8ArrayToHex(checksum);
+  private getBlockPath(checksum: Checksum): string {
+    const checksumHex = checksum.toHex();
     const firstDir = checksumHex.substring(0, 2);
     const secondDir = checksumHex.substring(2, 4);
     return join(
@@ -325,8 +319,8 @@ export class CBLStore<
   /**
    * Ensure the block path exists
    */
-  private ensureBlockPath(checksum: ChecksumUint8Array): void {
-    const checksumHex = uint8ArrayToHex(checksum);
+  private ensureBlockPath(checksum: Checksum): void {
+    const checksumHex = checksum.toHex();
     const firstDir = checksumHex.substring(0, 2);
     const secondDir = checksumHex.substring(2, 4);
     const blockDir = join(

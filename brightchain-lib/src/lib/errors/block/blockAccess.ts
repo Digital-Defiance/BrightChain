@@ -1,5 +1,4 @@
 import { BlockAccessErrorType } from '../../enumerations/blockAccessErrorType';
-import { StringLanguages } from '../../enumerations/stringLanguages';
 import { StringNames } from '../../enumerations/stringNames';
 import { TypedWithReasonError } from '../typedWithReasonError';
 
@@ -21,11 +20,7 @@ export class BlockAccessError extends TypedWithReasonError<BlockAccessErrorType>
         StringNames.Error_BlockAccessErrorCreatorMustBeProvided,
     };
   }
-  constructor(
-    type: BlockAccessErrorType,
-    file?: string,
-    _language?: StringLanguages,
-  ) {
+  constructor(type: BlockAccessErrorType, file?: string, _language?: string) {
     super(
       StringNames.Error_BlockAccessTemplate,
       type,

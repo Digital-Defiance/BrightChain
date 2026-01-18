@@ -1,12 +1,12 @@
-import { existsSync, mkdirSync } from 'fs';
-import { join } from 'path';
 import {
   BlockSize,
   blockSizeToSizeString,
-  StoreErrorType,
+  Checksum,
   StoreError,
+  StoreErrorType,
 } from '@brightchain/brightchain-lib';
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
+import { existsSync, mkdirSync } from 'fs';
+import { join } from 'path';
 
 /**
  * DiskBlockStore provides base functionality for storing blocks on disk.
@@ -38,12 +38,8 @@ export abstract class DiskBlockStore {
    * Get the directory path for a block
    * Directory structure: storePath/blockSize/checksumChar1/checksumChar2/
    */
-  protected blockDir(blockId: ChecksumUint8Array): string {
-    if (!blockId || blockId.length === 0) {
-      throw new StoreError(StoreErrorType.BlockIdRequired);
-    }
-
-    const checksumString = Buffer.from(blockId).toString('hex');
+  protected blockDir(blockId: Checksum): string {
+    const checksumString = blockId.toHex();
     if (checksumString.length < 2) {
       throw new StoreError(StoreErrorType.InvalidBlockIdTooShort);
     }
@@ -61,12 +57,8 @@ export abstract class DiskBlockStore {
    * Get the file path for a block
    * File structure: storePath/blockSize/checksumChar1/checksumChar2/fullChecksum
    */
-  protected blockPath(blockId: ChecksumUint8Array): string {
-    if (!blockId || blockId.length === 0) {
-      throw new StoreError(StoreErrorType.BlockIdRequired);
-    }
-
-    const checksumString = Buffer.from(blockId).toString('hex');
+  protected blockPath(blockId: Checksum): string {
+    const checksumString = blockId.toHex();
     if (checksumString.length < 2) {
       throw new StoreError(StoreErrorType.InvalidBlockIdTooShort);
     }
@@ -85,22 +77,14 @@ export abstract class DiskBlockStore {
    * Get the metadata file path for a block
    * Metadata files are stored alongside block files with a .m.json extension
    */
-  protected metadataPath(blockId: ChecksumUint8Array): string {
-    if (!blockId || blockId.length === 0) {
-      throw new StoreError(StoreErrorType.BlockIdRequired);
-    }
-
+  protected metadataPath(blockId: Checksum): string {
     return this.blockPath(blockId) + '.m.json';
   }
 
   /**
    * Ensure the directory structure exists for a block
    */
-  protected ensureBlockPath(blockId: ChecksumUint8Array): void {
-    if (!blockId || blockId.length === 0) {
-      throw new StoreError(StoreErrorType.BlockIdRequired);
-    }
-
+  protected ensureBlockPath(blockId: Checksum): void {
     const blockDir = this.blockDir(blockId);
     if (!existsSync(blockDir)) {
       try {

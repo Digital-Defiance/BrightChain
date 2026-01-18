@@ -1,8 +1,8 @@
-import { ChecksumUint8Array, EmailString } from '@digitaldefiance/ecies-lib';
+import { EmailString } from '@digitaldefiance/ecies-lib';
 import { base64ToUint8Array } from '../../bufferUtils';
 import { NotImplementedError } from '../../errors/notImplemented';
 import { IMemberStorageData } from '../../interfaces/member/storage';
-import { ServiceProvider } from '../../services/service.provider';
+import { Checksum } from '../../types/checksum';
 import { Document } from '../base/document';
 
 /**
@@ -11,14 +11,14 @@ import { Document } from '../base/document';
 export abstract class BaseMemberDocument {
   protected publicDocument: Document<IMemberStorageData>;
   protected privateDocument: Document<IMemberStorageData>;
-  protected publicCBLId?: ChecksumUint8Array;
-  protected privateCBLId?: ChecksumUint8Array;
+  protected publicCBLId?: Checksum;
+  protected privateCBLId?: Checksum;
 
   constructor(
     publicData: IMemberStorageData,
     privateData: IMemberStorageData,
-    publicCBLId?: ChecksumUint8Array,
-    privateCBLId?: ChecksumUint8Array,
+    publicCBLId?: Checksum,
+    privateCBLId?: Checksum,
   ) {
     this.publicDocument = new Document<IMemberStorageData>(publicData);
     this.privateDocument = new Document<IMemberStorageData>(privateData);
@@ -64,7 +64,7 @@ export abstract class BaseMemberDocument {
   /**
    * Get public CBL ID
    */
-  public getPublicCBL(): ChecksumUint8Array {
+  public getPublicCBL(): Checksum {
     if (!this.publicCBLId) {
       throw new Error('Public CBL ID not set');
     }
@@ -74,7 +74,7 @@ export abstract class BaseMemberDocument {
   /**
    * Get private CBL ID
    */
-  public getPrivateCBL(): ChecksumUint8Array {
+  public getPrivateCBL(): Checksum {
     if (!this.privateCBLId) {
       throw new Error('Private CBL ID not set');
     }

@@ -3,11 +3,11 @@ import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
 import { MemoryTupleError } from '../errors/memoryTupleError';
 import { IBaseBlock } from '../interfaces/blocks/base';
+import { Checksum } from '../types/checksum';
+import { BaseBlock } from './base';
 import { type BlockHandle } from './handle';
 import { RawDataBlock } from './rawData';
 
@@ -20,14 +20,36 @@ import { RawDataBlock } from './rawData';
  * This class supports both:
  * 1. In-memory blocks (IBaseBlock derivatives) for immediate operations
  * 2. Disk-based blocks (BlockHandle) for persistent storage
+ *
+ * @typeParam T - The block type for blocks in this tuple. Defaults to BaseBlock.
+ *
+ * @example
+ * ```typescript
+ * // Create a tuple from RawDataBlocks
+ * const tuple = InMemoryBlockTuple.fromBlocks<RawDataBlock>(blocks);
+ *
+ * // XOR all blocks together
+ * const result = await tuple.xor();
+ * ```
+ *
+ * @see {@link BlockHandle} - Handle type for disk-based blocks
+ * @see {@link BlockHandleTuple} - Tuple specifically for BlockHandle instances
+ * @see Requirements 3.1, 3.2
  */
-export class InMemoryBlockTuple {
+export class InMemoryBlockTuple<T extends BaseBlock = BaseBlock> {
   public static readonly TupleSize = TUPLE.SIZE;
 
-  private readonly _blocks: (IBaseBlock | BlockHandle<any>)[];
+  private readonly _blocks: (IBaseBlock | BlockHandle<T>)[];
   private readonly _blockSize: BlockSize;
 
-  constructor(blocks: (IBaseBlock | BlockHandle<any>)[]) {
+  /**
+   * Create a new InMemoryBlockTuple.
+   *
+   * @param blocks - Array of blocks or block handles. Must have exactly TUPLE.SIZE elements.
+   * @throws {MemoryTupleError} If the number of blocks is not TUPLE.SIZE
+   * @throws {MemoryTupleError} If blocks have different block sizes
+   */
+  constructor(blocks: (IBaseBlock | BlockHandle<T>)[]) {
     if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.InvalidTupleSize,
@@ -47,7 +69,7 @@ export class InMemoryBlockTuple {
   /**
    * Get the block IDs in this tuple
    */
-  public get blockIds(): ChecksumUint8Array[] {
+  public get blockIds(): Checksum[] {
     return this._blocks.map((block) => block.idChecksum);
   }
 
@@ -55,12 +77,15 @@ export class InMemoryBlockTuple {
    * Get the block IDs as a concatenated buffer
    */
   public get blockIdsBuffer(): Uint8Array {
-    const totalLength = this.blockIds.reduce((sum, id) => sum + id.length, 0);
+    const totalLength = this.blockIds.reduce(
+      (sum, id) => sum + id.toUint8Array().length,
+      0,
+    );
     const result = new Uint8Array(totalLength);
     let offset = 0;
     for (const id of this.blockIds) {
-      result.set(id, offset);
-      offset += id.length;
+      result.set(id.toUint8Array(), offset);
+      offset += id.toUint8Array().length;
     }
     return result;
   }
@@ -68,7 +93,7 @@ export class InMemoryBlockTuple {
   /**
    * Get the blocks in this tuple
    */
-  public get blocks(): (IBaseBlock | BlockHandle<any>)[] {
+  public get blocks(): (IBaseBlock | BlockHandle<T>)[] {
     return this._blocks;
   }
 
@@ -84,7 +109,9 @@ export class InMemoryBlockTuple {
    * @param readable - The readable stream to convert
    * @returns Promise that resolves to a Uint8Array
    */
-  private static async streamToUint8Array(readable: Readable): Promise<Uint8Array> {
+  private static async streamToUint8Array(
+    readable: Readable,
+  ): Promise<Uint8Array> {
     const chunks: Uint8Array[] = [];
     for await (const chunk of readable) {
       chunks.push(new Uint8Array(chunk));
@@ -104,7 +131,9 @@ export class InMemoryBlockTuple {
    * @param data - The data to convert
    * @returns Promise that resolves to a Uint8Array
    */
-  private static async toUint8Array(data: Readable | Uint8Array): Promise<Uint8Array> {
+  private static async toUint8Array(
+    data: Readable | Uint8Array,
+  ): Promise<Uint8Array> {
     if (data instanceof Uint8Array) {
       return data;
     }
@@ -122,7 +151,9 @@ export class InMemoryBlockTuple {
 
     try {
       // Load and copy first block's data
-      const firstBlockData = await InMemoryBlockTuple.toUint8Array(this._blocks[0].data);
+      const firstBlockData = await InMemoryBlockTuple.toUint8Array(
+        this._blocks[0].data,
+      );
       const result = new Uint8Array(firstBlockData);
 
       // XOR with remaining blocks
@@ -165,10 +196,10 @@ export class InMemoryBlockTuple {
    * This creates disk-based blocks using BlockHandle
    */
   public static async fromIds(
-    blockIDs: ChecksumUint8Array[],
+    blockIDs: Checksum[],
     blockSize: BlockSize,
-    getBlockPath: (id: ChecksumUint8Array) => string,
-  ): Promise<InMemoryBlockTuple> {
+    getBlockPath: (id: Checksum) => string,
+  ): Promise<InMemoryBlockTuple<BaseBlock>> {
     if (blockIDs.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.ExpectedBlockIds,
@@ -177,9 +208,9 @@ export class InMemoryBlockTuple {
     }
 
     const handles = await Promise.all(
-      blockIDs.map((id: ChecksumUint8Array) => {
+      blockIDs.map((id: Checksum) => {
         // @ts-expect-error - BlockHandle constructor workaround
-        return new (BlockHandle as any)(
+        return new (BlockHandle as unknown)(
           getBlockPath(id),
           blockSize,
           id,
@@ -195,10 +226,14 @@ export class InMemoryBlockTuple {
   /**
    * Create a tuple from blocks
    * This creates in-memory blocks
+   *
+   * @typeParam U - The block type for blocks in the tuple
+   * @param blocks - Array of blocks or block handles
+   * @returns A new InMemoryBlockTuple instance
    */
-  public static fromBlocks(
-    blocks: (IBaseBlock | BlockHandle<any>)[],
-  ): InMemoryBlockTuple {
+  public static fromBlocks<U extends BaseBlock = BaseBlock>(
+    blocks: (IBaseBlock | BlockHandle<U>)[],
+  ): InMemoryBlockTuple<U> {
     if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.ExpectedBlocks,
@@ -206,6 +241,6 @@ export class InMemoryBlockTuple {
       );
     }
 
-    return new InMemoryBlockTuple(blocks);
+    return new InMemoryBlockTuple<U>(blocks);
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { randomBytes } from './browserCrypto';
 import { Transform, TransformCallback } from './browserStream';
 import { BlockSize } from './enumerations/blockSize';
@@ -21,7 +22,7 @@ class BlockPaddingTransform extends Transform {
     let data: Uint8Array;
     if (chunk instanceof Uint8Array) {
       data = chunk;
-    } else if (chunk instanceof Uint8Array) {
+    } else if (Buffer.isBuffer(chunk)) {
       data = new Uint8Array(chunk);
     } else {
       callback(new Error('Input must be Buffer or Uint8Array'));

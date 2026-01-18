@@ -1,6 +1,5 @@
 import BlockType from '../../enumerations/blockType';
 import { BlockValidationErrorType } from '../../enumerations/blockValidationErrorType';
-import { StringLanguages } from '../../enumerations/stringLanguages';
 import { StringNames } from '../../enumerations/stringNames';
 import { TypedWithReasonError } from '../typedWithReasonError';
 
@@ -87,7 +86,7 @@ export class BlockValidationError extends TypedWithReasonError<BlockValidationEr
     type: BlockValidationErrorType,
     blockType?: BlockType,
     addressLength?: { index: number; length: number; expectedLength: number },
-    _language?: StringLanguages,
+    _language?: string,
   ) {
     super(StringNames.Error_BlockValidationErrorTemplate, type, {
       ...(blockType
