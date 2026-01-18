@@ -9,10 +9,12 @@ import {
   IGossipService,
   IHeartbeatMonitor,
 } from '@brightchain/brightchain-api-lib';
+import { IMessageRouter } from '@brightchain/brightchain-lib';
 import {
   DiscoveryMessageType,
   GossipMessageType,
   HeartbeatMessageType,
+  MessagePassingType,
 } from '../enumerations/websocketMessageType';
 import {
   IAnnouncementBatchMessage,
@@ -26,6 +28,11 @@ import {
   IManifestResponse,
   IPingMessage,
   IPongMessage,
+  IMessageSendMessage,
+  IMessageReceivedMessage,
+  IMessageAckMessage,
+  IMessageQueryMessage,
+  IEventSubscribeMessage,
   WebSocketMessage,
 } from '../interfaces/websocketMessages';
 
@@ -50,6 +57,7 @@ export interface IWebSocketHandlerConfig {
   gossipService: IGossipService;
   heartbeatMonitor: IHeartbeatMonitor;
   availabilityService: IAvailabilityService;
+  messageRouter?: IMessageRouter;
 }
 
 /**
@@ -62,6 +70,7 @@ export class WebSocketHandler {
   private readonly gossipService: IGossipService;
   private readonly heartbeatMonitor: IHeartbeatMonitor;
   private readonly availabilityService: IAvailabilityService;
+  private readonly messageRouter?: IMessageRouter;
   private readonly connections: Map<string, IWebSocketConnection> = new Map();
 
   constructor(config: IWebSocketHandlerConfig) {
@@ -71,6 +80,7 @@ export class WebSocketHandler {
     this.gossipService = config.gossipService;
     this.heartbeatMonitor = config.heartbeatMonitor;
     this.availabilityService = config.availabilityService;
+    this.messageRouter = config.messageRouter;
   }
 
   /**
@@ -150,6 +160,23 @@ export class WebSocketHandler {
         // Heartbeat messages
         case HeartbeatMessageType.PING:
           await this.handlePing(connection, message as IPingMessage);
+          break;
+
+        // Message passing messages
+        case MessagePassingType.MESSAGE_SEND:
+          await this.handleMessageSend(connection, message as IMessageSendMessage);
+          break;
+        case MessagePassingType.MESSAGE_RECEIVED:
+          await this.handleMessageReceived(message as IMessageReceivedMessage);
+          break;
+        case MessagePassingType.MESSAGE_ACK:
+          await this.handleMessageAck(message as IMessageAckMessage);
+          break;
+        case MessagePassingType.MESSAGE_QUERY:
+          await this.handleMessageQuery(connection, message as IMessageQueryMessage);
+          break;
+        case MessagePassingType.EVENT_SUBSCRIBE:
+          await this.handleEventSubscribe(connection, message as IEventSubscribeMessage);
           break;
 
         default:
@@ -332,5 +359,38 @@ export class WebSocketHandler {
     };
 
     connection.send(response);
+  }
+
+  // ===== Message Passing Handlers =====
+
+  private async handleMessageSend(
+    connection: IWebSocketConnection,
+    message: IMessageSendMessage
+  ): Promise<void> {
+    if (!this.messageRouter) return;
+    await this.messageRouter.routeMessage(message.payload.messageId, message.payload.recipients);
+  }
+
+  private async handleMessageReceived(message: IMessageReceivedMessage): Promise<void> {
+    if (!this.messageRouter) return;
+    await this.messageRouter.handleIncomingMessage(message.payload.messageId, message.payload.recipientId);
+  }
+
+  private async handleMessageAck(message: IMessageAckMessage): Promise<void> {
+    // ACK handled by MessagePassingService
+  }
+
+  private async handleMessageQuery(
+    connection: IWebSocketConnection,
+    message: IMessageQueryMessage
+  ): Promise<void> {
+    // Query handled by MessagePassingService
+  }
+
+  private async handleEventSubscribe(
+    connection: IWebSocketConnection,
+    message: IEventSubscribeMessage
+  ): Promise<void> {
+    // Subscription handled by MessageEventsWebSocketHandler
   }
 }
