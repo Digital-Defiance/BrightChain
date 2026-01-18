@@ -400,6 +400,20 @@ export const BrightChainSoupDemo: React.FC = () => {
                       <div className="action-card-header">
                         <span>📄</span>
                         <h4>{receipt.fileName}</h4>
+                        <button
+                          className="delete-file-btn"
+                          onClick={() => {
+                            if (confirm(`Remove "${receipt.fileName}" from the list? (Blocks will remain in the soup)`)) {
+                              setReceipts(prev => prev.filter(r => r.id !== receipt.id));
+                              if (selectedFileId === receipt.id) {
+                                setSelectedFileId(null);
+                              }
+                            }
+                          }}
+                          title="Remove from list"
+                        >
+                          ✕
+                        </button>
                       </div>
                       <div className="action-buttons">
                         <button 
@@ -420,13 +434,38 @@ export const BrightChainSoupDemo: React.FC = () => {
                       </div>
                       <details className="magnet-details">
                         <summary className="magnet-summary">🧲 Magnet URL</summary>
-                        <input 
-                          type="text" 
-                          value={receipt.magnetUrl} 
-                          readOnly 
-                          className="magnet-input"
-                          onClick={(e) => e.currentTarget.select()}
-                        />
+                        <div className="magnet-url-container">
+                          <input 
+                            type="text" 
+                            value={receipt.magnetUrl} 
+                            readOnly 
+                            className="magnet-input"
+                            onClick={(e) => e.currentTarget.select()}
+                          />
+                          <button
+                            className="copy-magnet-btn"
+                            onClick={() => {
+                              navigator.clipboard.writeText(receipt.magnetUrl).then(() => {
+                                alert('Magnet URL copied to clipboard!');
+                              }).catch(() => {
+                                // Fallback for older browsers
+                                const input = document.createElement('input');
+                                input.value = receipt.magnetUrl;
+                                document.body.appendChild(input);
+                                input.select();
+                                document.execCommand('copy');
+                                document.body.removeChild(input);
+                                alert('Magnet URL copied to clipboard!');
+                              });
+                            }}
+                            title="Copy to clipboard"
+                          >
+                            📋 Copy
+                          </button>
+                        </div>
+                        <div className="magnet-url-info">
+                          <small>URL length: {receipt.magnetUrl.length} chars | Blocks: {receipt.blockCount}</small>
+                        </div>
                       </details>
                     </div>
                   ))}
