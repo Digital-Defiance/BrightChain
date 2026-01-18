@@ -48,7 +48,7 @@ describe('RandomBlock', () => {
       expect(block.blockDataType).toBe(BlockDataType.RawData);
       expect(arraysEqual(block.data, data)).toBe(true);
       expect(
-        arraysEqual(new Uint8Array(block.idChecksum), new Uint8Array(checksum)),
+        arraysEqual(block.idChecksum.toUint8Array(), checksum.toUint8Array()),
       ).toBe(true);
       expect(block.dateCreated).toEqual(dateCreated);
     });
@@ -89,8 +89,8 @@ describe('RandomBlock', () => {
       const expectedChecksum = checksumService.calculateChecksum(expectedData);
       expect(
         arraysEqual(
-          new Uint8Array(xoredBlock.idChecksum),
-          new Uint8Array(expectedChecksum),
+          xoredBlock.idChecksum.toUint8Array(),
+          expectedChecksum.toUint8Array(),
         ),
       ).toBe(true);
     });

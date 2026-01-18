@@ -10,21 +10,21 @@
  * - All fields are preserved through serialization round-trips
  */
 
-import fc from 'fast-check';
 import {
   EmailString,
   GuidV4,
   IMemberWithMnemonic,
   Member,
   ShortHexGuid,
-  uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
+import fc from 'fast-check';
 import { MemberType } from './enumerations/memberType';
 import { initializeBrightChain } from './init';
 import { QuorumDataRecord } from './quorumDataRecord';
 import { SealingService } from './services/sealing.service';
-import { ServiceLocator } from './services/serviceLocator';
 import { ServiceProvider } from './services/service.provider';
+import { ServiceLocator } from './services/serviceLocator';
+import { uint8ArrayToHex } from './utils/checksumUtils';
 
 // Set a longer timeout for all tests in this file
 jest.setTimeout(60000);

@@ -1,8 +1,5 @@
-import {
-  ChecksumUint8Array,
-  Member,
-  PlatformID,
-} from '@digitaldefiance/ecies-lib';
+import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
+import { LanguageCodes } from '@digitaldefiance/i18n-lib';
 import { BlockMetadata } from '../../blocks/blockMetadata';
 import { ConstituentBlockListBlock } from '../../blocks/cbl';
 import { BlockHandleTuple } from '../../blocks/handleTuple';
@@ -10,14 +7,14 @@ import { RawDataBlock } from '../../blocks/rawData';
 import { TUPLE } from '../../constants';
 import { BlockDataType } from '../../enumerations/blockDataType';
 import { BlockEncryptionType } from '../../enumerations/blockEncryptionType';
-import { BlockSize, lengthToClosestBlockSize } from '../../enumerations/blockSize';
+import { BlockSize } from '../../enumerations/blockSize';
 import { BlockType } from '../../enumerations/blockType';
 import { MemberErrorType } from '../../enumerations/memberErrorType';
 import { StoreErrorType } from '../../enumerations/storeErrorType';
-import { StringLanguages } from '../../enumerations/stringLanguages';
 import { MemberError } from '../../errors/memberError';
 import { StoreError } from '../../errors/storeError';
 import { IBlockStore } from '../../interfaces/storage/blockStore';
+import { Checksum } from '../../types/checksum';
 import { ServiceProvider } from '../service.provider';
 
 /**
@@ -49,15 +46,18 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
       while (offset < memberData.length) {
         const remainingBytes = memberData.length - offset;
         const actualChunkSize = Math.min(chunkSize, remainingBytes);
-        
+
         // Create a padded chunk of consistent size
         const paddedChunk = new Uint8Array(chunkSize);
         paddedChunk.set(memberData.subarray(offset, offset + actualChunkSize));
         // The rest of the chunk is already zero-padded by default
-        
+
         // Calculate proper checksum for the padded block
-        const checksum = ServiceProvider.getInstance().checksumService.calculateChecksum(paddedChunk);
-        
+        const checksum =
+          ServiceProvider.getInstance().checksumService.calculateChecksum(
+            paddedChunk,
+          );
+
         const block = new RawDataBlock(
           BlockSize.Small,
           paddedChunk,
@@ -80,8 +80,11 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
           await this.blockStore.setData(block);
         } catch (error) {
           // If block already exists, that's okay for this test scenario
-          if ((error instanceof StoreError && error.type === StoreErrorType.BlockAlreadyExists) ||
-              (error instanceof Error && error.message.includes('already exists'))) {
+          if (
+            (error instanceof StoreError &&
+              error.type === StoreErrorType.BlockAlreadyExists) ||
+            (error instanceof Error && error.message.includes('already exists'))
+          ) {
             // Skip storing, but continue with the process
           } else {
             throw error;
@@ -93,21 +96,24 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
         const randomBlocks = await this.blockStore.getRandomBlocks(
           TUPLE.SIZE - 1,
         );
-        
+
         // If we don't have enough random blocks, create dummy blocks
         const neededRandomBlocks = TUPLE.SIZE - 1;
         const actualRandomBlocks = randomBlocks.length;
         const missingBlocks = neededRandomBlocks - actualRandomBlocks;
-        
+
         if (missingBlocks > 0) {
           // Create dummy blocks to fill the gap with the same size as the original blocks
           for (let i = 0; i < missingBlocks; i++) {
             const dummyData = new Uint8Array(chunkSize); // Use consistent chunk size
             crypto.getRandomValues(dummyData);
-            
+
             // Calculate proper checksum for the dummy block
-            const dummyChecksum = ServiceProvider.getInstance().checksumService.calculateChecksum(dummyData);
-            
+            const dummyChecksum =
+              ServiceProvider.getInstance().checksumService.calculateChecksum(
+                dummyData,
+              );
+
             const dummyBlock = new RawDataBlock(
               BlockSize.Small,
               dummyData,
@@ -123,8 +129,12 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
               randomBlocks.push(dummyBlock.idChecksum);
             } catch (error) {
               // If block already exists, that's okay
-              if ((error instanceof StoreError && error.type === StoreErrorType.BlockAlreadyExists) ||
-                  (error instanceof Error && error.message.includes('already exists'))) {
+              if (
+                (error instanceof StoreError &&
+                  error.type === StoreErrorType.BlockAlreadyExists) ||
+                (error instanceof Error &&
+                  error.message.includes('already exists'))
+              ) {
                 randomBlocks.push(dummyBlock.idChecksum);
               } else {
                 throw error;
@@ -134,7 +144,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
         }
 
         // Create handles for random blocks
-        const randomHandles = randomBlocks.map((checksum: ChecksumUint8Array) =>
+        const randomHandles = randomBlocks.map((checksum: Checksum) =>
           this.blockStore.get(checksum),
         );
 
@@ -156,19 +166,19 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
       }
 
       // Get all block addresses
-      const addresses: ChecksumUint8Array[] = [];
+      const addresses: Checksum[] = [];
       for (const tuple of tuples) {
         addresses.push(...tuple.blockIds);
       }
 
       // Create CBL header
       const addressesArray = new Uint8Array(
-        addresses.reduce((acc, addr) => acc + addr.length, 0),
+        addresses.reduce((acc, addr) => acc + addr.toUint8Array().length, 0),
       );
       let addressOffset = 0;
       for (const addr of addresses) {
-        addressesArray.set(addr, addressOffset);
-        addressOffset += addr.length;
+        addressesArray.set(addr.toUint8Array(), addressOffset);
+        addressOffset += addr.toUint8Array().length;
       }
       const { headerData } =
         ServiceProvider.getInstance<TID>().cblService.makeCblHeader(
@@ -197,7 +207,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
       }
       throw new MemberError(
         MemberErrorType.FailedToCreateMemberBlocks,
-        StringLanguages.EnglishUS,
+        LanguageCodes.EN_US,
       );
     }
   }
@@ -239,7 +249,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
         combined.set(block, combineOffset);
         combineOffset += block.length;
       }
-      
+
       // Find the actual end of the JSON data (look for null bytes)
       let actualLength = combined.length;
       for (let i = combined.length - 1; i >= 0; i--) {
@@ -248,10 +258,10 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
           break;
         }
       }
-      
+
       const trimmedData = combined.subarray(0, actualLength);
       const memberJson = new TextDecoder().decode(trimmedData);
-      
+
       try {
         const member = await Member.fromJson<TID>(memberJson);
 
@@ -259,7 +269,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
         if (!member.id || !member.type) {
           throw new MemberError(
             MemberErrorType.InvalidMemberData,
-            StringLanguages.EnglishUS,
+            LanguageCodes.EN_US,
           );
         }
 
@@ -270,7 +280,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
         }
         throw new MemberError(
           MemberErrorType.FailedToConvertMemberData,
-          StringLanguages.EnglishUS,
+          LanguageCodes.EN_US,
         );
       }
     } catch (error) {
@@ -279,7 +289,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
       }
       throw new MemberError(
         MemberErrorType.FailedToHydrateMember,
-        StringLanguages.EnglishUS,
+        LanguageCodes.EN_US,
       );
     }
   }

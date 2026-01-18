@@ -1,5 +1,4 @@
 import { IsolatedKeyErrorType } from '../enumerations/isolatedKeyErrorType';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { TypedError } from './typedError';
 
@@ -20,7 +19,7 @@ export class IsolatedKeyError extends TypedError<IsolatedKeyErrorType> {
         StringNames.Error_IsolatedKeyErrorKeyIsolationViolation,
     };
   }
-  constructor(type: IsolatedKeyErrorType, _language?: StringLanguages) {
+  constructor(type: IsolatedKeyErrorType, _language?: string) {
     super(type, undefined);
     this.name = 'IsolatedKeyError';
   }

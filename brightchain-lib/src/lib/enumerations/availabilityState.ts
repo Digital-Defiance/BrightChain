@@ -37,7 +37,9 @@ export enum AvailabilityState {
  * @returns true if the block can be accessed without network requests
  */
 export function isLocallyAccessible(state: AvailabilityState): boolean {
-  return state === AvailabilityState.Local || state === AvailabilityState.Cached;
+  return (
+    state === AvailabilityState.Local || state === AvailabilityState.Cached
+  );
 }
 
 /**

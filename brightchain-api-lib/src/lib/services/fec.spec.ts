@@ -1,5 +1,5 @@
-import { WasmFecService } from './fec';
 import { FecRecoveryResult, ParityData } from '@brightchain/brightchain-lib';
+import { WasmFecService } from './fec';
 
 describe('FecService', () => {
   let fecService: WasmFecService;

@@ -17,9 +17,9 @@ import {
   SealedDocumentResult,
 } from '../interfaces/services/quorumService';
 import { QuorumDataRecord } from '../quorumDataRecord';
+import { SimpleStore } from '../stores/simpleStore';
 import { SealingService } from './sealing.service';
 import { ServiceProvider } from './service.provider';
-import { SimpleStore } from '../stores/simpleStore';
 
 /**
  * QuorumService provides member management and document sealing/unsealing
@@ -28,9 +28,9 @@ import { SimpleStore } from '../stores/simpleStore';
  * This service wraps the existing BrightChainQuorum and SealingService to provide
  * a clean API for quorum operations.
  */
-export class QuorumService<TID extends PlatformID = Uint8Array>
-  implements IQuorumService<TID>
-{
+export class QuorumService<
+  TID extends PlatformID = Uint8Array,
+> implements IQuorumService<TID> {
   protected readonly sealingService: SealingService<TID>;
   protected readonly enhancedProvider: TypedIdProviderWrapper<TID>;
   protected readonly eciesService: ECIESService<TID>;
@@ -39,7 +39,10 @@ export class QuorumService<TID extends PlatformID = Uint8Array>
   // Subclasses can override with persistent storage
   protected readonly members: SimpleStore<ShortHexGuid, IQuorumMember<TID>>;
   protected readonly membersByMember: SimpleStore<ShortHexGuid, Member<TID>>;
-  protected readonly documents: SimpleStore<ShortHexGuid, QuorumDataRecord<TID>>;
+  protected readonly documents: SimpleStore<
+    ShortHexGuid,
+    QuorumDataRecord<TID>
+  >;
 
   // Track IDs for iteration (SimpleStore doesn't support iteration)
   protected readonly memberIds: Set<ShortHexGuid> = new Set();
@@ -191,7 +194,10 @@ export class QuorumService<TID extends PlatformID = Uint8Array>
     const doc = this.documents.get(documentId);
 
     // Unseal using the sealing service
-    return await this.sealingService.quorumUnseal<T>(doc, membersWithPrivateKey);
+    return await this.sealingService.quorumUnseal<T>(
+      doc,
+      membersWithPrivateKey,
+    );
   }
 
   // === Document Management ===

@@ -1,7 +1,6 @@
-/* eslint-disable @nx/enforce-module-boundaries */
-import { StringLanguage } from '@brightchain/brightchain-lib';
 import { LanguageContextSpace } from '@digitaldefiance/i18n-lib';
 import { SuiteCoreStringKey } from '@digitaldefiance/suite-core-lib';
+import { StringLanguage } from '../interfaces/request-user';
 import { TranslatableError } from './translatable-error-local';
 
 export class MemberRoleNotFoundError extends TranslatableError {

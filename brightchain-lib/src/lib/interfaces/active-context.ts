@@ -1,21 +1,25 @@
-import { Timezone } from '@digitaldefiance/i18n-lib';
+import { LanguageCodes, Timezone } from '@digitaldefiance/i18n-lib';
 import { CurrencyCode } from '../currencyCode';
-import { StringLanguages } from '../enumerations/stringLanguages';
 // Temporary interface until LanguageContext is available
 interface LanguageContext {
   language: string;
   region?: string;
 }
 
+/**
+ * Type representing the language code values from the i18n-lib
+ */
+type LanguageCodeValue = (typeof LanguageCodes)[keyof typeof LanguageCodes];
+
 export interface IActiveContext {
   /**
    * The default language for the user facing application
    */
-  language: StringLanguages;
+  language: LanguageCodeValue;
   /**
    * The default language for the admin interface
    */
-  adminLanguage: StringLanguages;
+  adminLanguage: LanguageCodeValue;
   /**
    * The default currency code for the user facing application
    */

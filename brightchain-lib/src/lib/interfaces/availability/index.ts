@@ -1,14 +1,7 @@
 export * from './availabilityService';
-export type * from './availabilityService';
 export * from './blockRegistry';
-export type * from './blockRegistry';
 export * from './discoveryProtocol';
-export type * from './discoveryProtocol';
 export * from './gossipService';
-export type * from './gossipService';
 export * from './heartbeatMonitor';
-export type * from './heartbeatMonitor';
 export * from './locationRecord';
-export type * from './locationRecord';
 export * from './reconciliationService';
-export type * from './reconciliationService';

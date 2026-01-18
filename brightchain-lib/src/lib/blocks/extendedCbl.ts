@@ -1,6 +1,5 @@
 import {
   ChecksumString,
-  ChecksumUint8Array,
   Member,
   PlatformID,
   SignatureUint8Array,
@@ -14,6 +13,7 @@ import { ExtendedCblError } from '../errors/extendedCblError';
 import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IExtendedConstituentBlockListBlock } from '../interfaces/blocks/extendedCbl';
 import { ServiceLocator } from '../services/serviceLocator';
+import { Checksum } from '../types/checksum';
 
 /**
  * Extended CBL class, which extends the CBL class with additional properties
@@ -135,7 +135,7 @@ export class ExtendedCBL<
     return this._delegate.addressData;
   }
 
-  public get addresses(): ChecksumUint8Array[] {
+  public get addresses(): Checksum[] {
     return this._delegate.addresses;
   }
 
@@ -194,7 +194,7 @@ export class ExtendedCBL<
     return this._data;
   }
 
-  public get idChecksum(): ChecksumUint8Array {
+  public get idChecksum(): Checksum {
     return this._delegate.idChecksum;
   }
 

@@ -6,7 +6,6 @@
  * @requirements 1.8, 4.5, 4.6
  */
 
-/* eslint-disable @nx/enforce-module-boundaries */
 import {
   FecError,
   FecErrorType,

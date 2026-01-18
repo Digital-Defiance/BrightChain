@@ -111,14 +111,6 @@ export function translateEnumValue<T extends string | number>(
 }
 
 /**
- * Register translation (stub for backward compatibility)
- * @deprecated This function is deprecated and will be removed in a future version
- */
-export function registerTranslation<T>(enumObj: T, translations: any): any {
-  return translations;
-}
-
-/**
  * Build nested i18n structure (compatibility function)
  */
 export const buildNestedI18n = (
@@ -172,6 +164,41 @@ export const buildNestedI18nForLanguage = (language: string) => {
 
   return buildNestedI18n(filteredStrings);
 };
+
+/**
+ * Register a translation for an enum type.
+ *
+ * This is a pass-through function that stores enum translations
+ * and returns them for use in the application.
+ *
+ * @template T - The enum type being translated
+ * @param _enumObj - The enum object (used for type inference)
+ * @param translations - The translation object mapping language codes to enum translations
+ * @returns The same translation object
+ *
+ * @example
+ * ```typescript
+ * const translations = registerTranslation(
+ *   MyEnum,
+ *   createTranslations({
+ *     [LanguageCodes.EN_US]: {
+ *       [MyEnum.Value1]: 'Value One',
+ *     },
+ *   }),
+ * );
+ * ```
+ */
+export function registerTranslation<
+  E extends Record<string, string | number>,
+  T extends E[keyof E],
+>(
+  _enumObj: E,
+  translations: { [languageCode: string]: Record<T, string> },
+): { [languageCode: string]: Record<T, string> } {
+  // In the future, this could register translations with the i18n engine
+  // For now, it's a pass-through that enables type-safe translation definitions
+  return translations;
+}
 
 // Initialize on module load
 initEngine();

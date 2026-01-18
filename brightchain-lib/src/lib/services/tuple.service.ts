@@ -1,6 +1,4 @@
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
-import { randomBytes } from '../browserCrypto';
-import { Readable } from '../browserStream';
 import BlockPaddingTransform from '../blockPaddingTransform';
 import { BaseBlock } from '../blocks/base';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
@@ -10,7 +8,8 @@ import { BlockHandle } from '../blocks/handle';
 import { InMemoryBlockTuple } from '../blocks/memoryTuple';
 import { RandomBlock } from '../blocks/random';
 import { WhitenedBlock } from '../blocks/whitened';
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { randomBytes } from '../browserCrypto';
+import { Readable } from '../browserStream';
 import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
@@ -18,8 +17,10 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { TupleErrorType } from '../enumerations/tupleErrorType';
 import { TupleError } from '../errors/tupleError';
+import { IBaseBlock } from '../interfaces/blocks/base';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { PrimeTupleGeneratorStream } from '../primeTupleGeneratorStream';
+import { Validator } from '../utils/validator';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
 import { ServiceLocator } from './serviceLocator';
@@ -30,6 +31,12 @@ import { ServiceLocator } from './serviceLocator';
  * 1. Store data blocks with random blocks for privacy
  * 2. Store parity blocks for error correction
  * 3. Store CBL blocks with their metadata
+ *
+ * @typeParam TID - The platform ID type, defaults to Uint8Array
+ *
+ * @see {@link BlockHandle} - Handle type for disk-based blocks
+ * @see {@link InMemoryBlockTuple} - Tuple type for in-memory blocks
+ * @see Requirements 3.1, 3.2
  */
 export class TupleService<TID extends PlatformID = Uint8Array> {
   constructor(
@@ -40,9 +47,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
   /**
    * Convert data to Uint8Array regardless of whether it's a Readable or Uint8Array
    */
-  private async toUint8Array(
-    data: Uint8Array | Readable,
-  ): Promise<Uint8Array> {
+  private async toUint8Array(data: Uint8Array | Readable): Promise<Uint8Array> {
     if (data instanceof Uint8Array) {
       return data;
     }
@@ -62,16 +67,34 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
 
   /**
    * XOR a source block with whitening and random blocks
+   *
+   * @param sourceBlock The source block to XOR (any block type or block handle)
+   * @param whiteners The whitening blocks to XOR with
+   * @param randomBlocks The random blocks to XOR with
+   * @returns A whitened block containing the XOR result
+   * @throws {TupleError} If validation fails or XOR operation fails
    */
   public async xorSourceToPrimeWhitened(
-    sourceBlock: BaseBlock | BlockHandle<any>,
+    sourceBlock: IBaseBlock | BlockHandle<BaseBlock>,
     whiteners: (WhitenedBlock | RandomBlock)[],
     randomBlocks: RandomBlock[],
   ): Promise<WhitenedBlock> {
-    // Validate parameters
-    if (!sourceBlock || !whiteners || !randomBlocks) {
-      throw new TupleError(TupleErrorType.MissingParameters);
-    }
+    // Validate required parameters
+    Validator.validateRequired(
+      sourceBlock,
+      'sourceBlock',
+      'xorSourceToPrimeWhitened',
+    );
+    Validator.validateRequired(
+      whiteners,
+      'whiteners',
+      'xorSourceToPrimeWhitened',
+    );
+    Validator.validateRequired(
+      randomBlocks,
+      'randomBlocks',
+      'xorSourceToPrimeWhitened',
+    );
 
     if (whiteners.length + randomBlocks.length + 1 !== TUPLE.SIZE) {
       throw new TupleError(TupleErrorType.InvalidBlockCount);
@@ -112,12 +135,18 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
 
       // Create whitened block with preserved length metadata
       const now = new Date();
+      // Access metadata safely - it may not exist on all block types
+      const lengthWithoutPadding =
+        'metadata' in sourceBlock
+          ? (sourceBlock as { metadata?: { lengthWithoutPadding?: number } })
+              .metadata?.lengthWithoutPadding
+          : undefined;
       return await WhitenedBlock.from(
         sourceBlock.blockSize,
         xoredData,
         undefined, // Let constructor calculate checksum
         now,
-        sourceBlock.metadata?.lengthWithoutPadding, // Pass through original length if available
+        lengthWithoutPadding, // Pass through original length if available
         true, // canRead
         true, // canPersist
       );
@@ -135,10 +164,10 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
    * Create a tuple from a source block and its whitening/random blocks
    */
   public async makeTupleFromSourceXor(
-    sourceBlock: BaseBlock | BlockHandle<any>,
+    sourceBlock: IBaseBlock | BlockHandle<BaseBlock>,
     whiteners: (WhitenedBlock | RandomBlock)[],
     randomBlocks: RandomBlock[],
-  ): Promise<InMemoryBlockTuple> {
+  ): Promise<InMemoryBlockTuple<BaseBlock>> {
     const primeWhitenedBlock = await this.xorSourceToPrimeWhitened(
       sourceBlock,
       whiteners,
@@ -154,6 +183,12 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
 
   /**
    * XOR a whitened block with its whitening blocks to recover the original data
+   * @param creator The member who created the block
+   * @param primeWhitenedBlock The whitened block to recover
+   * @param whiteners The whitening blocks used in the original XOR
+   * @param randomBlocks Optional random blocks used in the original XOR
+   * @returns An ephemeral block containing the recovered data
+   * @throws {TupleError} If validation fails or XOR operation fails
    */
   public async xorDestPrimeWhitenedToOwned(
     creator: Member<TID>,
@@ -161,10 +196,22 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     whiteners: WhitenedBlock[],
     randomBlocks: RandomBlock[] = [],
   ): Promise<IEphemeralBlock<TID>> {
-    // Validate parameters
-    if (!primeWhitenedBlock || !whiteners) {
-      throw new TupleError(TupleErrorType.MissingParameters);
-    }
+    // Validate required parameters
+    Validator.validateRequired(
+      creator,
+      'creator',
+      'xorDestPrimeWhitenedToOwned',
+    );
+    Validator.validateRequired(
+      primeWhitenedBlock,
+      'primeWhitenedBlock',
+      'xorDestPrimeWhitenedToOwned',
+    );
+    Validator.validateRequired(
+      whiteners,
+      'whiteners',
+      'xorDestPrimeWhitenedToOwned',
+    );
 
     try {
       // Start with a padded buffer filled with cryptographically secure random data
@@ -176,7 +223,12 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         whiteners.map(async (w) => {
           const data = await this.toUint8Array(w.data);
           const padded = randomBytes(primeWhitenedBlock.blockSize);
-          padded.set(data.subarray(0, Math.min(data.length, primeWhitenedBlock.blockSize)));
+          padded.set(
+            data.subarray(
+              0,
+              Math.min(data.length, primeWhitenedBlock.blockSize),
+            ),
+          );
           return padded;
         }),
       );
@@ -184,7 +236,12 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         randomBlocks.map(async (r) => {
           const data = await this.toUint8Array(r.data);
           const padded = randomBytes(primeWhitenedBlock.blockSize);
-          padded.set(data.subarray(0, Math.min(data.length, primeWhitenedBlock.blockSize)));
+          padded.set(
+            data.subarray(
+              0,
+              Math.min(data.length, primeWhitenedBlock.blockSize),
+            ),
+          );
           return padded;
         }),
       );
@@ -197,7 +254,12 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       });
 
       // Copy prime data to result buffer, preserving random padding
-      result.set(primeData.subarray(0, Math.min(primeData.length, primeWhitenedBlock.blockSize)));
+      result.set(
+        primeData.subarray(
+          0,
+          Math.min(primeData.length, primeWhitenedBlock.blockSize),
+        ),
+      );
 
       // XOR with whitening blocks
       for (const data of whitenerData) {
@@ -255,10 +317,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       whiteners,
     );
 
-    return new InMemoryBlockTuple([
-      ownedDataBlock,
-      ...whiteners,
-    ]);
+    return new InMemoryBlockTuple([ownedDataBlock, ...whiteners]);
   }
 
   /**
@@ -316,6 +375,15 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
 
   /**
    * Process a data stream into tuples and create a CBL
+   * @param creator The member creating the CBL
+   * @param blockSize The block size to use
+   * @param source The source data stream
+   * @param sourceLength The length of the source data
+   * @param whitenedBlockSource Function to get whitened blocks
+   * @param randomBlockSource Function to get random blocks
+   * @param persistTuple Function to persist each tuple
+   * @returns A tuple containing the CBL
+   * @throws {TupleError} If validation fails or processing fails
    */
   public async dataStreamToPlaintextTuplesAndCBL(
     creator: Member<TID>,
@@ -327,18 +395,35 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
   ): Promise<InMemoryBlockTuple> {
     const now = new Date();
-    // Validate parameters
-    if (
-      !creator ||
-      !source ||
-      !whitenedBlockSource ||
-      !randomBlockSource ||
-      !persistTuple
-    ) {
-      throw new TupleError(TupleErrorType.MissingParameters);
-    }
+    // Validate required parameters
+    Validator.validateRequired(
+      creator,
+      'creator',
+      'dataStreamToPlaintextTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      source,
+      'source',
+      'dataStreamToPlaintextTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      whitenedBlockSource,
+      'whitenedBlockSource',
+      'dataStreamToPlaintextTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      randomBlockSource,
+      'randomBlockSource',
+      'dataStreamToPlaintextTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      persistTuple,
+      'persistTuple',
+      'dataStreamToPlaintextTuplesAndCBL',
+    );
+    Validator.validateBlockSize(blockSize, 'dataStreamToPlaintextTuplesAndCBL');
 
-    if (sourceLength <= 0n) {
+    if (sourceLength <= 0) {
       throw new TupleError(TupleErrorType.InvalidSourceLength);
     }
 
@@ -362,7 +447,9 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
           try {
             await persistTuple(tuple);
-            const newBlockIDs = new Uint8Array(blockIDs.length + tuple.blockIdsBuffer.length);
+            const newBlockIDs = new Uint8Array(
+              blockIDs.length + tuple.blockIdsBuffer.length,
+            );
             newBlockIDs.set(blockIDs);
             newBlockIDs.set(tuple.blockIdsBuffer, blockIDs.length);
             blockIDs = newBlockIDs;
@@ -385,7 +472,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         blockSize,
         BlockEncryptionType.None,
       ).headerData;
-      
+
       const data = new Uint8Array(headerData.length + blockIDs.length);
       data.set(headerData);
       data.set(blockIDs, headerData.length);
@@ -454,6 +541,15 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
 
   /**
    * Process a data stream into encrypted tuples and create an encrypted CBL
+   * @param creator The member creating the CBL
+   * @param blockSize The block size to use
+   * @param source The source data stream
+   * @param sourceLength The length of the source data
+   * @param whitenedBlockSource Function to get whitened blocks
+   * @param randomBlockSource Function to get random blocks
+   * @param persistTuple Function to persist each tuple
+   * @returns A tuple containing the encrypted CBL
+   * @throws {TupleError} If validation fails or processing fails
    */
   public async dataStreamToEncryptedTuplesAndCBL(
     creator: Member<TID>,
@@ -465,18 +561,35 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
   ): Promise<InMemoryBlockTuple> {
     const dateCreated = new Date();
-    // Validate parameters
-    if (
-      !creator ||
-      !source ||
-      !whitenedBlockSource ||
-      !randomBlockSource ||
-      !persistTuple
-    ) {
-      throw new TupleError(TupleErrorType.MissingParameters);
-    }
+    // Validate required parameters
+    Validator.validateRequired(
+      creator,
+      'creator',
+      'dataStreamToEncryptedTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      source,
+      'source',
+      'dataStreamToEncryptedTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      whitenedBlockSource,
+      'whitenedBlockSource',
+      'dataStreamToEncryptedTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      randomBlockSource,
+      'randomBlockSource',
+      'dataStreamToEncryptedTuplesAndCBL',
+    );
+    Validator.validateRequired(
+      persistTuple,
+      'persistTuple',
+      'dataStreamToEncryptedTuplesAndCBL',
+    );
+    Validator.validateBlockSize(blockSize, 'dataStreamToEncryptedTuplesAndCBL');
 
-    if (sourceLength <= 0n) {
+    if (sourceLength <= 0) {
       throw new TupleError(TupleErrorType.InvalidSourceLength);
     }
 
@@ -498,7 +611,9 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
           try {
             await persistTuple(tuple);
-            const newBlockIDs = new Uint8Array(blockIDs.length + tuple.blockIdsBuffer.length);
+            const newBlockIDs = new Uint8Array(
+              blockIDs.length + tuple.blockIdsBuffer.length,
+            );
             newBlockIDs.set(blockIDs);
             newBlockIDs.set(tuple.blockIdsBuffer, blockIDs.length);
             blockIDs = newBlockIDs;
@@ -519,7 +634,9 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         blockSize,
         BlockEncryptionType.None,
       );
-      const data = new Uint8Array(cblHeader.headerData.length + blockIDs.length);
+      const data = new Uint8Array(
+        cblHeader.headerData.length + blockIDs.length,
+      );
       data.set(cblHeader.headerData);
       data.set(blockIDs, cblHeader.headerData.length);
       const checksum = this.checksumService.calculateChecksum(data);

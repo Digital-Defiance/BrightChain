@@ -1,5 +1,4 @@
 import { SecureStorageErrorType } from '../enumerations/secureStorageErrorType';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import { StringNames } from '../enumerations/stringNames';
 import { TypedError } from './typedError';
 
@@ -14,7 +13,7 @@ export class SecureStorageError extends TypedError<SecureStorageErrorType> {
         StringNames.Error_SecureStorageValueIsNull,
     };
   }
-  constructor(type: SecureStorageErrorType, language?: StringLanguages) {
+  constructor(type: SecureStorageErrorType, _language?: string) {
     super(type, undefined);
     this.name = 'SecureStorageError';
   }

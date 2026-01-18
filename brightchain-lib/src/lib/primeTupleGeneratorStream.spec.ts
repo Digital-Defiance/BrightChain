@@ -1,12 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Readable } from './browserStream';
 import { InMemoryBlockTuple } from './blocks/memoryTuple';
 import { RandomBlock } from './blocks/random';
 import { WhitenedBlock } from './blocks/whitened';
-import { TUPLE } from './constants';
-import { BlockDataType } from './enumerations/blockDataType';
+import { Readable } from './browserStream';
 import { BlockSize } from './enumerations/blockSize';
-import { BlockType } from './enumerations/blockType';
 import { StreamErrorType } from './enumerations/streamErrorType';
 import { StreamError } from './errors/streamError';
 import { PrimeTupleGeneratorStream } from './primeTupleGeneratorStream';

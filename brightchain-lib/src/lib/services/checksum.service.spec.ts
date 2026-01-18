@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { arraysEqual } from '@digitaldefiance/ecies-lib';
-import { Readable } from '../browserStream';
+import { Checksum } from '../types/checksum';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
 
@@ -13,7 +13,7 @@ describe('ChecksumService', () => {
       start(controller) {
         controller.enqueue(data);
         controller.close();
-      }
+      },
     });
   }
 
@@ -35,7 +35,7 @@ describe('ChecksumService', () => {
 
       expect(checksum1.length).toBe(checksumService.checksumBufferLength);
       expect(
-        arraysEqual(new Uint8Array(checksum1), new Uint8Array(checksum2)),
+        arraysEqual(checksum1.toUint8Array(), checksum2.toUint8Array()),
       ).toBe(true);
       expect(checksumService.compareChecksums(checksum1, checksum2)).toBe(true);
     });
@@ -45,7 +45,7 @@ describe('ChecksumService', () => {
       const checksum2 = checksumService.calculateChecksum(differentData);
 
       expect(
-        arraysEqual(new Uint8Array(checksum1), new Uint8Array(checksum2)),
+        arraysEqual(checksum1.toUint8Array(), checksum2.toUint8Array()),
       ).toBe(false);
       expect(checksumService.compareChecksums(checksum1, checksum2)).toBe(
         false,
@@ -76,10 +76,7 @@ describe('ChecksumService', () => {
       );
 
       expect(
-        arraysEqual(
-          new Uint8Array(syncChecksum),
-          new Uint8Array(asyncChecksum),
-        ),
+        arraysEqual(syncChecksum.toUint8Array(), asyncChecksum.toUint8Array()),
       ).toBe(true);
     });
 
@@ -93,8 +90,8 @@ describe('ChecksumService', () => {
 
         expect(
           arraysEqual(
-            new Uint8Array(originalChecksum),
-            new Uint8Array(backToBuffer),
+            originalChecksum.toUint8Array(),
+            backToBuffer.toUint8Array(),
           ),
         ).toBe(true);
       });
@@ -127,9 +124,9 @@ describe('ChecksumService', () => {
       it('should detect tampered checksums', () => {
         const originalChecksum = checksumService.calculateChecksum(testData);
         // Create a copy of the checksum array and modify it
-        const tamperedArray = new Uint8Array(originalChecksum);
+        const tamperedArray = originalChecksum.toUint8Array();
         tamperedArray[0] = tamperedArray[0] + 1;
-        const tamperedChecksum = tamperedArray as any;
+        const tamperedChecksum = Checksum.fromUint8Array(tamperedArray);
 
         expect(
           checksumService.compareChecksums(
@@ -168,7 +165,7 @@ describe('ChecksumService', () => {
         uint8ArrayToStream(differentData),
       );
       expect(
-        arraysEqual(new Uint8Array(checksum1), new Uint8Array(checksum2)),
+        arraysEqual(checksum1.toUint8Array(), checksum2.toUint8Array()),
       ).toBe(false);
     });
 
@@ -191,7 +188,7 @@ describe('ChecksumService', () => {
       const checksum2 =
         await checksumService.calculateChecksumForStream(stream2);
       expect(
-        arraysEqual(new Uint8Array(checksum1), new Uint8Array(checksum2)),
+        arraysEqual(checksum1.toUint8Array(), checksum2.toUint8Array()),
       ).toBe(false);
     });
 
@@ -204,8 +201,8 @@ describe('ChecksumService', () => {
       );
       expect(
         arraysEqual(
-          new Uint8Array(arrayChecksum),
-          new Uint8Array(streamChecksum),
+          arrayChecksum.toUint8Array(),
+          streamChecksum.toUint8Array(),
         ),
       ).toBe(true);
     });
@@ -224,8 +221,8 @@ describe('ChecksumService', () => {
       expect(arrayChecksum.length).toBe(checksumService.checksumBufferLength);
       expect(
         arraysEqual(
-          new Uint8Array(arrayChecksum),
-          new Uint8Array(streamChecksum),
+          arrayChecksum.toUint8Array(),
+          streamChecksum.toUint8Array(),
         ),
       ).toBe(true);
     });
@@ -244,8 +241,8 @@ describe('ChecksumService', () => {
 
       expect(
         arraysEqual(
-          new Uint8Array(arrayChecksum),
-          new Uint8Array(streamChecksum),
+          arrayChecksum.toUint8Array(),
+          streamChecksum.toUint8Array(),
         ),
       ).toBe(true);
     });
@@ -254,7 +251,7 @@ describe('ChecksumService', () => {
       const errorStream = new ReadableStream({
         start(controller) {
           controller.error(new Error('Test error'));
-        }
+        },
       });
 
       await expect(

@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import {
   createRuntimeConfiguration,
   ECIESService,
@@ -19,7 +18,9 @@ export function getBrowserRuntimeConfiguration() {
 /**
  * Create ECIESService with GuidV4Provider configuration for browser compatibility
  */
-export function createECIESService<TID extends PlatformID = Uint8Array>(): ECIESService<TID> {
+export function createECIESService<
+  TID extends PlatformID = Uint8Array,
+>(): ECIESService<TID> {
   const config = getBrowserRuntimeConfiguration();
   return new ECIESService<TID>(config);
 }

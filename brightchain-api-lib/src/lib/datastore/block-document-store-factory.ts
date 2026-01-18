@@ -1,8 +1,13 @@
-import { BlockSize, IBlockStore, IQuorumService, MemoryBlockStore } from '@brightchain/brightchain-lib';
+import {
+  BlockSize,
+  IBlockStore,
+  IQuorumService,
+  MemoryBlockStore,
+} from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/ecies-lib';
+import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 import { BlockDocumentStore } from './block-document-store';
 import { DocumentStore } from './document-store';
-import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 
 export type BlockDocumentStoreOptions = {
   blockStore?: IBlockStore;
@@ -19,7 +24,9 @@ export type BlockDocumentStoreOptions = {
  * Create a BlockDocumentStore backed by either a provided BlockStore, a disk store, or an in-memory store.
  * Optionally supports encryption via QuorumService.
  */
-export function createBlockDocumentStore(options: BlockDocumentStoreOptions): DocumentStore {
+export function createBlockDocumentStore(
+  options: BlockDocumentStoreOptions,
+): DocumentStore {
   const blockSize = options.blockSize ?? BlockSize.Small;
 
   if (options.blockStore) {
@@ -32,9 +39,14 @@ export function createBlockDocumentStore(options: BlockDocumentStoreOptions): Do
   }
 
   if (options.storePath) {
-    const diskStore = new DiskBlockAsyncStore({ storePath: options.storePath, blockSize });
+    const diskStore = new DiskBlockAsyncStore({
+      storePath: options.storePath,
+      blockSize,
+    });
     return new BlockDocumentStore(diskStore, options.quorumService);
   }
 
-  throw new Error('createBlockDocumentStore requires a blockStore, storePath, or useMemory=true');
+  throw new Error(
+    'createBlockDocumentStore requires a blockStore, storePath, or useMemory=true',
+  );
 }

@@ -1,4 +1,3 @@
-import { StringLanguages } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
 import { TypedError } from './typedError';
@@ -16,7 +15,7 @@ export class WhitenedError extends TypedError<WhitenedErrorType> {
         StringNames.Error_WhitenedErrorInvalidBlockSize,
     };
   }
-  constructor(type: WhitenedErrorType, _language?: StringLanguages) {
+  constructor(type: WhitenedErrorType, _language?: string) {
     super(type, undefined);
     this.name = 'WhitenedError';
   }

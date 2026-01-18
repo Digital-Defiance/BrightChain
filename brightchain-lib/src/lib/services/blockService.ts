@@ -1,10 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  ChecksumUint8Array,
   EciesEncryptionTypeEnum,
   Member,
   PlatformID,
-  uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { EncryptedBlock } from '../blocks/encrypted';
@@ -26,9 +24,11 @@ import { BlockServiceError } from '../errors/blockServiceError';
 import { EciesError } from '../errors/eciesError';
 import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
+import { Checksum } from '../types/checksum';
 
 import { IUniversalBlockStore } from '../interfaces/storage/universalBlockStore';
 import { ServiceLocator } from '../services/serviceLocator';
+import { Validator } from '../utils/validator';
 
 /**
  * Browser-compatible BlockService with core functionality
@@ -121,12 +121,25 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
 
   /**
    * Encrypt a block using ECIES
+   *
+   * @param newBlockType - The block type for the encrypted block
+   * @param block - The ephemeral block to encrypt
+   * @param recipient - Optional recipient member (defaults to block creator)
+   * @returns The encrypted block
+   * @throws {EnhancedValidationError} If block type is invalid
+   * @throws {BlockError} If block cannot be encrypted or creator is missing
+   * @throws {EciesError} If ECIES encryption fails
+   *
+   * @see Requirements 5.1, 5.2, 5.3, 7.2, 7.3
    */
   public async encrypt(
     newBlockType: BlockType,
     block: IEphemeralBlock<TID>,
     recipient?: Member<TID>,
   ): Promise<EncryptedBlock<TID>> {
+    // Validate block type
+    Validator.validateBlockType(newBlockType, 'encrypt');
+
     if (!EncryptedBlockTypes.includes(newBlockType)) {
       throw new BlockError(BlockErrorType.UnexpectedEncryptedBlockType);
     } else if (!block.canEncrypt()) {
@@ -135,75 +148,116 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       throw new BlockError(BlockErrorType.CreatorRequired);
     }
 
-    const encryptedArray =
-      await ServiceLocator.getServiceProvider<TID>().eciesService.encrypt(
-        EciesEncryptionTypeEnum.Single,
-        (recipient ?? block.creator) as any,
-        block.data,
-      );
+    try {
+      const encryptedArray =
+        await ServiceLocator.getServiceProvider<TID>().eciesService.encrypt(
+          EciesEncryptionTypeEnum.Single,
+          (recipient ?? block.creator) as any,
+          block.data,
+        );
 
-    // Create padded buffer filled with random data
-    const finalBuffer = this.generateRandomData(block.blockSize);
+      // Create padded buffer filled with random data
+      const finalBuffer = this.generateRandomData(block.blockSize);
 
-    // Write the block type to the first byte
-    finalBuffer[0] = BlockEncryptionType.SingleRecipient;
+      // Write the block type to the first byte
+      finalBuffer[0] = BlockEncryptionType.SingleRecipient;
 
-    // Copy ECIES data after the block type byte
-    finalBuffer.set(encryptedArray, ENCRYPTION.ENCRYPTION_TYPE_SIZE);
+      // Copy ECIES data after the block type byte
+      finalBuffer.set(encryptedArray, ENCRYPTION.ENCRYPTION_TYPE_SIZE);
 
-    const checksum =
-      ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+      const checksum =
+        ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+          finalBuffer,
+        );
+
+      const result = await EncryptedBlockCreator.create(
+        newBlockType,
+        BlockDataType.EncryptedData,
+        block.blockSize,
         finalBuffer,
+        checksum,
+        recipient ?? block.creator,
+        block.dateCreated,
+        block.data.length,
       );
-
-    const result = await EncryptedBlockCreator.create(
-      newBlockType,
-      BlockDataType.EncryptedData,
-      block.blockSize,
-      finalBuffer,
-      checksum,
-      recipient ?? block.creator,
-      block.dateCreated,
-      block.data.length,
-    );
-    return result as EncryptedBlock<TID>;
+      return result as EncryptedBlock<TID>;
+    } catch (error) {
+      // Wrap ECIES errors with context
+      if (error instanceof EciesError) {
+        throw error;
+      }
+      // Wrap unknown errors from ECIES library
+      if (error instanceof Error && error.message.includes('ECIES')) {
+        throw new EciesError(EciesErrorType.InvalidDataLength, undefined, {
+          ERROR: error.message,
+        });
+      }
+      throw error;
+    }
   }
 
   /**
    * Decrypt a block using ECIES
+   *
+   * @param creator - The member with private key to decrypt
+   * @param block - The encrypted block to decrypt
+   * @param newBlockType - The block type for the decrypted block
+   * @returns The decrypted ephemeral block
+   * @throws {EnhancedValidationError} If block type is invalid
+   * @throws {BlockError} If creator private key is missing
+   * @throws {EciesError} If ECIES decryption fails
+   *
+   * @see Requirements 5.1, 5.2, 5.3, 7.2, 7.3
    */
   public async decrypt(
     creator: Member<TID>,
     block: EncryptedBlock<TID>,
     newBlockType: BlockType,
   ): Promise<IEphemeralBlock<TID>> {
+    // Validate block type
+    Validator.validateBlockType(newBlockType, 'decrypt');
+
     if (!creator.privateKey) {
       throw new BlockError(BlockErrorType.CreatorPrivateKeyRequired);
     }
 
-    const decryptedArray =
-      await ServiceLocator.getServiceProvider().eciesService.decryptSimpleOrSingleWithHeader(
-        false,
-        creator.privateKey.idUint8Array as Uint8Array,
-        block.layerPayload,
-      );
+    try {
+      const decryptedArray =
+        await ServiceLocator.getServiceProvider().eciesService.decryptSimpleOrSingleWithHeader(
+          false,
+          creator.privateKey.idUint8Array as Uint8Array,
+          block.layerPayload,
+        );
 
-    const checksum =
-      ServiceLocator.getServiceProvider<TID>().checksumService.calculateChecksum(
+      const checksum =
+        ServiceLocator.getServiceProvider<TID>().checksumService.calculateChecksum(
+          decryptedArray,
+        );
+
+      const result = await EncryptedBlockCreator.create<TID>(
+        newBlockType,
+        BlockDataType.EphemeralStructuredData,
+        block.blockSize,
         decryptedArray,
+        checksum,
+        creator,
+        block.dateCreated,
+        block.layerPayloadSize,
       );
-
-    const result = await EncryptedBlockCreator.create<TID>(
-      newBlockType,
-      BlockDataType.EphemeralStructuredData,
-      block.blockSize,
-      decryptedArray,
-      checksum,
-      creator,
-      block.dateCreated,
-      block.layerPayloadSize,
-    );
-    return result;
+      return result;
+    } catch (error) {
+      // Wrap ECIES errors with context
+      if (error instanceof EciesError) {
+        throw error;
+      }
+      // Wrap unknown errors from ECIES library
+      if (error instanceof Error && error.message.includes('ECIES')) {
+        throw new EciesError(EciesErrorType.InvalidDataLength, undefined, {
+          ERROR: error.message,
+        });
+      }
+      throw error;
+    }
   }
 
   /**
@@ -249,11 +303,34 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
     );
   }
 
+  /**
+   * Encrypt a block for multiple recipients using ECIES
+   *
+   * @param newBlockType - The block type for the encrypted block
+   * @param block - The ephemeral block to encrypt
+   * @param recipients - Array of recipient members
+   * @returns The encrypted block
+   * @throws {EnhancedValidationError} If block type or recipient count is invalid
+   * @throws {BlockError} If block cannot be encrypted or creator is missing
+   * @throws {EciesError} If ECIES encryption fails
+   *
+   * @see Requirements 5.1, 5.2, 5.3, 7.2, 7.3
+   */
   public async encryptMultiple(
     newBlockType: BlockType,
     block: EphemeralBlock<TID>,
     recipients: Member<TID>[],
   ): Promise<IEncryptedBlock<TID>> {
+    // Validate block type
+    Validator.validateBlockType(newBlockType, 'encryptMultiple');
+
+    // Validate recipient count
+    Validator.validateRecipientCount(
+      recipients.length,
+      BlockEncryptionType.MultiRecipient,
+      'encryptMultiple',
+    );
+
     if (!EncryptedBlockTypes.includes(newBlockType)) {
       throw new BlockError(BlockErrorType.UnexpectedEncryptedBlockType);
     } else if (!block.canMultiEncrypt(recipients.length)) {
@@ -261,43 +338,58 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
     } else if (!block.creator) {
       throw new BlockError(BlockErrorType.CreatorRequired);
     }
-    const encryptedMessageDetails =
-      await ServiceLocator.getServiceProvider<TID>().eciesService.encryptMultiple(
-        recipients,
-        block.data,
-      );
-    const header =
-      ServiceLocator.getServiceProvider<TID>().eciesService.buildECIESMultipleRecipientHeader(
-        encryptedMessageDetails,
-      );
-    const paddingSize =
-      block.blockSize -
-      header.length -
-      encryptedMessageDetails.encryptedMessage.length;
-    const padding = this.generateRandomData(paddingSize);
-    const data = new Uint8Array([
-      ...header,
-      ...encryptedMessageDetails.encryptedMessage,
-      ...padding,
-    ]);
-    const checksum =
-      ServiceLocator.getServiceProvider<TID>().checksumService.calculateChecksum(
-        data,
-      );
-    return Promise.resolve(
-      await EncryptedBlock.from<TID>(
-        newBlockType,
-        BlockDataType.EncryptedData,
-        block.blockSize,
-        data,
-        checksum,
-        block.creator,
-        block.dateCreated,
-        block.lengthBeforeEncryption,
-        true,
-        false,
-      ),
-    ) as Promise<IEncryptedBlock<TID>>;
+
+    try {
+      const encryptedMessageDetails =
+        await ServiceLocator.getServiceProvider<TID>().eciesService.encryptMultiple(
+          recipients,
+          block.data,
+        );
+      const header =
+        ServiceLocator.getServiceProvider<TID>().eciesService.buildECIESMultipleRecipientHeader(
+          encryptedMessageDetails,
+        );
+      const paddingSize =
+        block.blockSize -
+        header.length -
+        encryptedMessageDetails.encryptedMessage.length;
+      const padding = this.generateRandomData(paddingSize);
+      const data = new Uint8Array([
+        ...header,
+        ...encryptedMessageDetails.encryptedMessage,
+        ...padding,
+      ]);
+      const checksum =
+        ServiceLocator.getServiceProvider<TID>().checksumService.calculateChecksum(
+          data,
+        );
+      return Promise.resolve(
+        await EncryptedBlock.from<TID>(
+          newBlockType,
+          BlockDataType.EncryptedData,
+          block.blockSize,
+          data,
+          checksum,
+          block.creator,
+          block.dateCreated,
+          block.lengthBeforeEncryption,
+          true,
+          false,
+        ),
+      ) as Promise<IEncryptedBlock<TID>>;
+    } catch (error) {
+      // Wrap ECIES errors with context
+      if (error instanceof EciesError) {
+        throw error;
+      }
+      // Wrap unknown errors from ECIES library
+      if (error instanceof Error && error.message.includes('ECIES')) {
+        throw new EciesError(EciesErrorType.InvalidDataLength, undefined, {
+          ERROR: error.message,
+        });
+      }
+      throw error;
+    }
   }
 
   /**
@@ -356,7 +448,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       throw new BlockServiceError(
         BlockServiceErrorType.BlockAlreadyExists,
         undefined,
-        { ID: uint8ArrayToHex(block.idChecksum) },
+        { ID: block.idChecksum.toHex() },
       );
     }
     await BlockService.blockStore.setData(block);
@@ -380,7 +472,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
 
     const blockSize = this.getBlockSizeForData(fileData.length);
     const payloadPerBlock = blockSize as number;
-    const blockIDs: ChecksumUint8Array[] = [];
+    const blockIDs: Checksum[] = [];
 
     // Break file into blocks
     const totalBlocks = Math.ceil(fileData.length / payloadPerBlock);
@@ -434,12 +526,12 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
 
     // Create CBL header
     const blockIdsArray = new Uint8Array(
-      blockIDs.reduce((acc, id) => acc + id.length, 0),
+      blockIDs.reduce((acc, id) => acc + id.toUint8Array().length, 0),
     );
     let offset = 0;
     for (const id of blockIDs) {
-      blockIdsArray.set(id, offset);
-      offset += id.length;
+      blockIdsArray.set(id.toUint8Array(), offset);
+      offset += id.toUint8Array().length;
     }
     const header =
       ServiceLocator.getServiceProvider<TID>().cblService.makeCblHeader(
@@ -481,20 +573,20 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
 
     // Validate all blocks have same size
     const firstBlockSize = blocks[0].blockSize;
-    if (!blocks.every(block => block.blockSize === firstBlockSize)) {
+    if (!blocks.every((block) => block.blockSize === firstBlockSize)) {
       throw new Error('All blocks must have the same block size');
     }
 
     // Create block IDs array
-    const blockIDs: ChecksumUint8Array[] = blocks.map(block => block.idChecksum);
-    
+    const blockIDs: Checksum[] = blocks.map((block) => block.idChecksum);
+
     const blockIdsArray = new Uint8Array(
-      blockIDs.reduce((acc, id) => acc + id.length, 0),
+      blockIDs.reduce((acc, id) => acc + id.toUint8Array().length, 0),
     );
     let offset = 0;
     for (const id of blockIDs) {
-      blockIdsArray.set(id, offset);
-      offset += id.length;
+      blockIdsArray.set(id.toUint8Array(), offset);
+      offset += id.toUint8Array().length;
     }
 
     // Create CBL header
@@ -509,11 +601,12 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
         BlockEncryptionType.None,
       );
 
-    const data = new Uint8Array(
-      header.headerData.length + blockIdsArray.length,
-    );
+    // Pad data to block size
+    const blockSizeBytes = BlockSize.Message as number;
+    const data = new Uint8Array(blockSizeBytes);
     data.set(header.headerData, 0);
     data.set(blockIdsArray, header.headerData.length);
+    // Remaining bytes are already zero-filled
 
     return new ConstituentBlockListBlock<TID>(data, creator);
   }

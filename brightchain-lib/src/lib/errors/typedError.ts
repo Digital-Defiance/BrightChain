@@ -1,5 +1,4 @@
 import { HandleableError } from '@digitaldefiance/i18n-lib';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import { StringNames } from '../enumerations/stringNames';
 import { translate } from '../i18n';
 import { HandleableErrorOptions } from '../interfaces/handleableErrorOptions';
@@ -12,7 +11,7 @@ export abstract class TypedError<
 
   constructor(
     public readonly type: T,
-    public readonly language?: StringLanguages,
+    public readonly language?: string,
     public readonly otherVars?: Record<string, string | number>,
     public readonly options?: HandleableErrorOptions,
   ) {

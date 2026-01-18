@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MemoryDocumentStore } from '../../datastore/memory-document-store';
 import { Constants } from '../../constants';
+import { MemoryDocumentStore } from '../../datastore/memory-document-store';
 
 /**
  * Create a minimal IApplication mock suitable for router/middleware tests.

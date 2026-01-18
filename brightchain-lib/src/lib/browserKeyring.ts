@@ -3,7 +3,6 @@
  */
 
 import { randomBytes } from './browserCrypto';
-import { KEYRING_ALGORITHM_CONFIGURATION } from './constants';
 import { SystemKeyringErrorType } from './enumerations/systemKeyringErrorType';
 import { SystemKeyringError } from './errors/systemKeyringError';
 import { IKeyringEntry } from './interfaces/keyringEntry';
@@ -26,16 +25,19 @@ export class BrowserKeyring {
     return BrowserKeyring.instance;
   }
 
-  private async deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
+  private async deriveKey(
+    password: string,
+    salt: Uint8Array,
+  ): Promise<CryptoKey> {
     const encoder = new TextEncoder();
     const passwordBuffer = encoder.encode(password);
-    
+
     const keyMaterial = await crypto.subtle.importKey(
       'raw',
       passwordBuffer,
       'PBKDF2',
       false,
-      ['deriveKey']
+      ['deriveKey'],
     );
 
     // Ensure salt has proper ArrayBuffer backing
@@ -46,12 +48,12 @@ export class BrowserKeyring {
         name: 'PBKDF2',
         salt: saltBuffer,
         iterations: 100000,
-        hash: 'SHA-256'
+        hash: 'SHA-256',
       },
       keyMaterial,
       { name: 'AES-GCM', length: 256 },
       false,
-      ['encrypt', 'decrypt']
+      ['encrypt', 'decrypt'],
     );
   }
 
@@ -72,7 +74,7 @@ export class BrowserKeyring {
     const encryptedData = await crypto.subtle.encrypt(
       { name: 'AES-GCM', iv: ivBuffer },
       key,
-      dataBuffer
+      dataBuffer,
     );
 
     const entry: IKeyringEntry = {
@@ -103,18 +105,18 @@ export class BrowserKeyring {
       const ivBuffer = new Uint8Array(entry.iv);
       // Ensure encryptedData has proper ArrayBuffer backing
       const encryptedDataBuffer = new Uint8Array(entry.encryptedData);
-      
+
       const decryptedData = await crypto.subtle.decrypt(
         { name: 'AES-GCM', iv: ivBuffer },
         key,
-        encryptedDataBuffer
+        encryptedDataBuffer,
       );
 
       entry.lastAccessed = new Date();
       this.logAccess(id);
 
       return new Uint8Array(decryptedData);
-    } catch (error) {
+    } catch {
       throw new SystemKeyringError(SystemKeyringErrorType.DecryptionFailed);
     }
   }
@@ -144,9 +146,9 @@ export class BrowserKeyring {
         encryptedData: Array.from(entry.encryptedData),
         iv: Array.from(entry.iv),
         salt: Array.from(entry.salt),
-      }
+      },
     ]);
-    
+
     localStorage.setItem('brightchain-keyring', JSON.stringify(entries));
   }
 
@@ -157,7 +159,7 @@ export class BrowserKeyring {
 
       const entries = JSON.parse(data);
       this.keys.clear();
-      
+
       for (const [id, entry] of entries) {
         this.keys.set(id, {
           ...entry,
@@ -165,7 +167,9 @@ export class BrowserKeyring {
           iv: new Uint8Array(entry.iv),
           salt: new Uint8Array(entry.salt),
           created: new Date(entry.created),
-          lastAccessed: entry.lastAccessed ? new Date(entry.lastAccessed) : undefined,
+          lastAccessed: entry.lastAccessed
+            ? new Date(entry.lastAccessed)
+            : undefined,
         });
       }
     } catch (error) {

@@ -41,12 +41,18 @@ const arbBlockIdSet = fc
 /**
  * Generate a sequence of add/remove operations
  */
-type Operation = { type: 'add'; blockId: string } | { type: 'remove'; blockId: string };
+type Operation =
+  | { type: 'add'; blockId: string }
+  | { type: 'remove'; blockId: string };
 
 const arbOperation = (blockIds: string[]): fc.Arbitrary<Operation> =>
   fc.oneof(
-    fc.constantFrom(...blockIds).map((blockId) => ({ type: 'add' as const, blockId })),
-    fc.constantFrom(...blockIds).map((blockId) => ({ type: 'remove' as const, blockId })),
+    fc
+      .constantFrom(...blockIds)
+      .map((blockId) => ({ type: 'add' as const, blockId })),
+    fc
+      .constantFrom(...blockIds)
+      .map((blockId) => ({ type: 'remove' as const, blockId })),
   );
 
 const arbOperationSequence = (blockIds: string[]): fc.Arbitrary<Operation[]> =>

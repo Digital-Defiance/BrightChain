@@ -9,7 +9,6 @@
  * **Validates: Requirements 15.1**
  */
 
-/* eslint-disable @nx/enforce-module-boundaries */
 import { AvailabilityState } from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
 import { AvailabilityMetricsTracker } from './availabilityMetrics';

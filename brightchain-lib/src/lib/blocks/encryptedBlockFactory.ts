@@ -1,8 +1,4 @@
-import {
-  ChecksumUint8Array,
-  Member,
-  PlatformID,
-} from '@digitaldefiance/ecies-lib';
+import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { randomBytes } from '../browserCrypto';
 import { ECIES } from '../constants';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
@@ -15,6 +11,7 @@ import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumService } from '../services/checksum.service';
+import { Checksum } from '../types/checksum';
 import { EncryptedBlock } from './encrypted';
 
 import { createECIESService } from '../browserConfig';
@@ -28,7 +25,7 @@ export class EncryptedBlockFactory {
       type: BlockType,
       dataType: BlockDataType,
       data: Uint8Array,
-      checksum: ChecksumUint8Array,
+      checksum: Checksum,
       metadata: EncryptedBlockMetadata<TID>,
       recipientWithKey: Member<TID>,
       canRead: boolean,
@@ -42,7 +39,7 @@ export class EncryptedBlockFactory {
       type: BlockType,
       dataType: BlockDataType,
       data: Uint8Array,
-      checksum: ChecksumUint8Array,
+      checksum: Checksum,
       metadata: EncryptedBlockMetadata<TID>,
       recipientWithKey: Member<TID>,
       canRead: boolean,
@@ -57,7 +54,7 @@ export class EncryptedBlockFactory {
     dataType: BlockDataType,
     blockSize: BlockSize,
     data: Uint8Array,
-    checksum: ChecksumUint8Array,
+    checksum: Checksum,
     creator: Member<TID>,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,
@@ -104,15 +101,9 @@ export class EncryptedBlockFactory {
     // Calculate checksum on the original data
     const computedChecksum = this.checksumService.calculateChecksum(data);
 
-    // Compare checksums using array comparison
-    if (computedChecksum.length !== checksum.length) {
+    // Compare checksums using Checksum.equals()
+    if (!computedChecksum.equals(checksum)) {
       throw new ChecksumMismatchError(checksum, computedChecksum);
-    }
-    
-    for (let i = 0; i < computedChecksum.length; i++) {
-      if (computedChecksum[i] !== checksum[i]) {
-        throw new ChecksumMismatchError(checksum, computedChecksum);
-      }
     }
     const finalChecksum = checksum ?? computedChecksum;
 

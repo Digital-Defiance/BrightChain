@@ -1,4 +1,9 @@
-import { EmailString, arraysEqual, getEnhancedIdProvider } from '@digitaldefiance/ecies-lib';
+import {
+  EmailString,
+  Member,
+  arraysEqual,
+  getEnhancedIdProvider,
+} from '@digitaldefiance/ecies-lib';
 import { ChecksumBuffer } from '@digitaldefiance/node-ecies-lib';
 import { faker } from '@faker-js/faker';
 import { mkdirSync, rmSync } from 'fs';
@@ -12,7 +17,6 @@ import MemberType from '../enumerations/memberType';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { CblError } from '../errors/cblError';
 import { StoreError } from '../errors/storeError';
-import { Member } from '@digitaldefiance/ecies-lib';
 import { CBLService } from '../services/cblService';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
@@ -68,7 +72,7 @@ describe('CBLStore', () => {
         const checksum = checksumService.calculateChecksum(
           Buffer.from(`test-block-${i}`),
         );
-        addresses.push(Buffer.from(checksum) as ChecksumBuffer);
+        addresses.push(checksum.toBuffer() as ChecksumBuffer);
       }
 
       // Create CBL header and data
@@ -153,7 +157,7 @@ describe('CBLStore', () => {
         const checksum = checksumService.calculateChecksum(
           Buffer.from(`test-block-${i}`),
         );
-        addresses.push(Buffer.from(checksum) as ChecksumBuffer);
+        addresses.push(checksum.toBuffer() as ChecksumBuffer);
       }
 
       // Create CBL header and data
@@ -198,7 +202,7 @@ describe('CBLStore', () => {
       for (let i = 0; i < numAddresses; i++) {
         expect(
           arraysEqual(
-            new Uint8Array(retrievedAddresses[i]),
+            retrievedAddresses[i].toUint8Array(),
             new Uint8Array(addresses[i]),
           ),
         ).toBe(true);
@@ -247,7 +251,7 @@ describe('CBLStore', () => {
         const checksum = checksumService.calculateChecksum(
           Buffer.from(`test-block-${i}`),
         );
-        addresses.push(Buffer.from(checksum) as ChecksumBuffer);
+        addresses.push(checksum.toBuffer() as ChecksumBuffer);
       }
 
       // Create CBL header and data
@@ -311,7 +315,7 @@ describe('CBLStore', () => {
         const checksum = checksumService.calculateChecksum(
           Buffer.from(`test-block-${i}`),
         );
-        addresses.push(Buffer.from(checksum) as ChecksumBuffer);
+        addresses.push(checksum.toBuffer() as ChecksumBuffer);
       }
 
       // Create CBL header and data

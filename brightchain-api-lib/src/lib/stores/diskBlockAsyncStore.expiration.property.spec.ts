@@ -13,10 +13,10 @@
 import {
   BlockSize,
   DurabilityLevel,
-  RawDataBlock,
   initializeBrightChain,
-  ServiceProvider,
+  RawDataBlock,
   ServiceLocator,
+  ServiceProvider,
 } from '@brightchain/brightchain-lib';
 import { uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
@@ -79,12 +79,15 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
             });
 
             try {
-              const storedBlocks: { blockId: string; shouldBeExpired: boolean }[] = [];
+              const storedBlocks: {
+                blockId: string;
+                shouldBeExpired: boolean;
+              }[] = [];
               const now = Date.now();
 
               for (const spec of blockSpecs) {
                 const block = new RawDataBlock(blockSize, spec.data);
-                const blockId = uint8ArrayToHex(block.idChecksum);
+                const blockId = block.idChecksum.toHex();
 
                 let expiresAt: Date | undefined;
                 let shouldBeExpired = false;
@@ -110,7 +113,9 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
 
               // Find expired blocks
               const expiredBlocks = await store.findExpired();
-              const expiredBlockIds = new Set(expiredBlocks.map(m => m.blockId));
+              const expiredBlockIds = new Set(
+                expiredBlocks.map((m) => m.blockId),
+              );
 
               // Verify only blocks with past expiration are returned
               for (const { blockId, shouldBeExpired } of storedBlocks) {
@@ -128,7 +133,6 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
         { numRuns: 30 },
       );
     });
-
 
     /**
      * Property: Blocks with no expiration time should never be identified as expired.
@@ -157,7 +161,7 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
 
             try {
               const block = new RawDataBlock(blockSize, data);
-              const blockId = uint8ArrayToHex(block.idChecksum);
+              const blockId = block.idChecksum.toHex();
 
               // Store without expiration
               await store.setData(block, {
@@ -171,7 +175,7 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
 
               // Find expired blocks - should not include this block
               const expiredBlocks = await store.findExpired();
-              const expiredBlockIds = expiredBlocks.map(m => m.blockId);
+              const expiredBlockIds = expiredBlocks.map((m) => m.blockId);
               expect(expiredBlockIds).not.toContain(blockId);
             } finally {
               rmSync(iterTestDir, { recursive: true, force: true });
@@ -210,8 +214,10 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
 
             try {
               const block = new RawDataBlock(blockSize, data);
-              const blockId = uint8ArrayToHex(block.idChecksum);
-              const expiresAt = new Date(Date.now() + hoursInFuture * 60 * 60 * 1000);
+              const blockId = block.idChecksum.toHex();
+              const expiresAt = new Date(
+                Date.now() + hoursInFuture * 60 * 60 * 1000,
+              );
 
               await store.setData(block, {
                 durabilityLevel: DurabilityLevel.Ephemeral,
@@ -220,7 +226,7 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
 
               // Find expired blocks - should not include this block
               const expiredBlocks = await store.findExpired();
-              const expiredBlockIds = expiredBlocks.map(m => m.blockId);
+              const expiredBlockIds = expiredBlocks.map((m) => m.blockId);
               expect(expiredBlockIds).not.toContain(blockId);
             } finally {
               rmSync(iterTestDir, { recursive: true, force: true });
@@ -259,8 +265,10 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
 
             try {
               const block = new RawDataBlock(blockSize, data);
-              const blockId = uint8ArrayToHex(block.idChecksum);
-              const expiresAt = new Date(Date.now() - hoursInPast * 60 * 60 * 1000);
+              const blockId = block.idChecksum.toHex();
+              const expiresAt = new Date(
+                Date.now() - hoursInPast * 60 * 60 * 1000,
+              );
 
               await store.setData(block, {
                 durabilityLevel: DurabilityLevel.Ephemeral,
@@ -269,7 +277,7 @@ describe('DiskBlockAsyncStore Expiration Property Tests', () => {
 
               // Find expired blocks - should include this block
               const expiredBlocks = await store.findExpired();
-              const expiredBlockIds = expiredBlocks.map(m => m.blockId);
+              const expiredBlockIds = expiredBlocks.map((m) => m.blockId);
               expect(expiredBlockIds).toContain(blockId);
             } finally {
               rmSync(iterTestDir, { recursive: true, force: true });

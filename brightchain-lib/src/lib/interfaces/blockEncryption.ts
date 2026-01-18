@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChecksumUint8Array, Member } from '@digitaldefiance/ecies-lib';
+import { Member } from '@digitaldefiance/ecies-lib';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockType } from '../enumerations/blockType';
+import { Checksum } from '../types/checksum';
 
 /**
  * Interface for encrypted block creation to avoid circular dependencies
@@ -12,7 +13,7 @@ export interface IEncryptedBlockCreator {
     dataType: BlockDataType,
     blockSize: number,
     data: Buffer,
-    checksum: ChecksumUint8Array,
+    checksum: Checksum,
     creator: Member,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,

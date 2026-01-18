@@ -4,11 +4,11 @@
  * **Feature: test-failure-fixes, Property 1: Checksum Conversion Round Trip**
  * **Validates: Requirements 1.2, 7.1**
  *
- * This test suite verifies that checksum conversions between ChecksumUint8Array
- * and Buffer preserve data integrity through round-trip conversions.
+ * This test suite verifies that checksum conversions between different formats
+ * (Checksum class, Buffer, Uint8Array, hex string) preserve data integrity through round-trip conversions.
  */
 
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
+import { Checksum } from '../types/checksum';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
 
@@ -21,12 +21,12 @@ describe('Checksum Conversion Property Tests', () => {
 
   describe('Property 1: Checksum Conversion Round Trip', () => {
     /**
-     * Property: For any valid checksum value, converting from ChecksumUint8Array
-     * to Buffer and back should produce an equivalent value.
+     * Property: For any valid checksum value, converting from Checksum
+     * to Buffer/Uint8Array and back should produce an equivalent value.
      *
      * This property ensures that the conversion utilities preserve data integrity.
      */
-    it('should preserve checksum data when converting ChecksumUint8Array to Buffer and back', () => {
+    it('should preserve checksum data when converting Checksum to Buffer and back', () => {
       // Generate multiple test cases with different data patterns
       const testCases = [
         Buffer.from('hello world'),
@@ -40,25 +40,18 @@ describe('Checksum Conversion Property Tests', () => {
       ];
 
       for (const testData of testCases) {
-        // Calculate checksum (returns ChecksumUint8Array)
-        const originalChecksum: ChecksumUint8Array =
-          checksumService.calculateChecksum(testData);
+        // Calculate checksum (returns Checksum class)
+        const originalChecksum = checksumService.calculateChecksum(testData);
 
         // Convert to Buffer
-        const checksumAsBuffer = Buffer.from(originalChecksum);
+        const checksumAsBuffer = originalChecksum.toBuffer();
 
-        // Convert back to ChecksumUint8Array
-        const convertedChecksum = new Uint8Array(
-          checksumAsBuffer,
-        ) as ChecksumUint8Array;
+        // Convert back to Checksum
+        const convertedChecksum = Checksum.fromBuffer(checksumAsBuffer);
 
         // Verify the round-trip preserves the data
         expect(originalChecksum.length).toBe(convertedChecksum.length);
-        expect(
-          originalChecksum.every(
-            (byte, index) => byte === convertedChecksum[index],
-          ),
-        ).toBe(true);
+        expect(originalChecksum.equals(convertedChecksum)).toBe(true);
 
         // Also verify using the service's comparison method
         expect(
@@ -75,8 +68,8 @@ describe('Checksum Conversion Property Tests', () => {
 
       // Perform multiple round-trip conversions
       for (let i = 0; i < 10; i++) {
-        const asBuffer = Buffer.from(currentChecksum);
-        currentChecksum = new Uint8Array(asBuffer) as ChecksumUint8Array;
+        const asBuffer = currentChecksum.toBuffer();
+        currentChecksum = Checksum.fromBuffer(asBuffer);
       }
 
       // After multiple conversions, data should still be identical
@@ -89,10 +82,10 @@ describe('Checksum Conversion Property Tests', () => {
       const emptyData = Buffer.from('');
       const checksum = checksumService.calculateChecksum(emptyData);
 
-      const asBuffer = Buffer.from(checksum);
-      const backToUint8Array = new Uint8Array(asBuffer) as ChecksumUint8Array;
+      const asBuffer = checksum.toBuffer();
+      const backToChecksum = Checksum.fromBuffer(asBuffer);
 
-      expect(checksumService.compareChecksums(checksum, backToUint8Array)).toBe(
+      expect(checksumService.compareChecksums(checksum, backToChecksum)).toBe(
         true,
       );
     });
@@ -102,10 +95,10 @@ describe('Checksum Conversion Property Tests', () => {
       const largeData = Buffer.alloc(1024 * 1024, 'X');
       const checksum = checksumService.calculateChecksum(largeData);
 
-      const asBuffer = Buffer.from(checksum);
-      const backToUint8Array = new Uint8Array(asBuffer) as ChecksumUint8Array;
+      const asBuffer = checksum.toBuffer();
+      const backToChecksum = Checksum.fromBuffer(asBuffer);
 
-      expect(checksumService.compareChecksums(checksum, backToUint8Array)).toBe(
+      expect(checksumService.compareChecksums(checksum, backToChecksum)).toBe(
         true,
       );
     });
@@ -120,12 +113,14 @@ describe('Checksum Conversion Property Tests', () => {
 
       for (const testData of testCases) {
         const checksum = checksumService.calculateChecksum(testData);
-        const asBuffer = Buffer.from(checksum);
-        const backToUint8Array = new Uint8Array(asBuffer) as ChecksumUint8Array;
+        const asBuffer = checksum.toBuffer();
+        const backToChecksum = Checksum.fromBuffer(asBuffer);
 
         // Verify each byte is preserved
-        for (let i = 0; i < checksum.length; i++) {
-          expect(backToUint8Array[i]).toBe(checksum[i]);
+        const checksumArray = checksum.toUint8Array();
+        const backArray = backToChecksum.toUint8Array();
+        for (let i = 0; i < checksumArray.length; i++) {
+          expect(backArray[i]).toBe(checksumArray[i]);
         }
       }
     });

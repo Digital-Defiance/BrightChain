@@ -1,6 +1,5 @@
 import {
   arraysEqual,
-  ChecksumUint8Array,
   EmailString,
   Member,
   PlatformID,
@@ -13,6 +12,7 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import MemberType from '../enumerations/memberType';
+import { Checksum } from '../types/checksum';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
@@ -26,7 +26,7 @@ class TestEncryptedBlock extends EncryptedBlock<Uint8Array> {
     dataType: BlockDataType,
     blockSize: BlockSize,
     data: Uint8Array,
-    checksum: ChecksumUint8Array,
+    checksum: Checksum,
     creator: Member<TID>,
     dateCreated?: Date,
     lengthBeforeEncryption?: number,
@@ -44,7 +44,7 @@ class TestEncryptedBlock extends EncryptedBlock<Uint8Array> {
     const computedChecksum =
       ServiceProvider.getInstance().checksumService.calculateChecksum(data);
     if (
-      !arraysEqual(new Uint8Array(computedChecksum), new Uint8Array(checksum))
+      !arraysEqual(computedChecksum.toUint8Array(), checksum.toUint8Array())
     ) {
       throw new ChecksumMismatchError(computedChecksum, checksum);
     }

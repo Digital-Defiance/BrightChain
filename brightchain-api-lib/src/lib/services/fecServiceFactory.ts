@@ -6,10 +6,9 @@
  * @requirements 1.8
  */
 
-/* eslint-disable @nx/enforce-module-boundaries */
 import { IFecService } from '@brightchain/brightchain-lib';
-import { NativeRsFecService } from './nativeRsFecService';
 import { WasmFecService } from './fec';
+import { NativeRsFecService } from './nativeRsFecService';
 
 /**
  * Factory for creating FEC service instances.

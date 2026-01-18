@@ -1,4 +1,3 @@
-import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
 import { BlockMetadata } from '../blockMetadata';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -7,6 +6,7 @@ import { BlockType } from '../enumerations/blockType';
 import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ServiceLocator } from '../services/serviceLocator';
+import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
 
 /**
@@ -20,7 +20,7 @@ export class RawDataBlock extends BaseBlock {
     blockSize: BlockSize,
     data: Uint8Array,
     dateCreated?: Date,
-    checksum?: ChecksumUint8Array,
+    checksum?: Checksum,
     blockType: BlockType = BlockType.RawData,
     blockDataType: BlockDataType = BlockDataType.RawData,
     canRead = true,
@@ -134,15 +134,9 @@ export class RawDataBlock extends BaseBlock {
         this._data,
       );
 
-    // Compare checksums using array comparison
-    if (calculatedChecksum.length !== this.idChecksum.length) {
+    // Compare checksums using the Checksum.equals() method
+    if (!calculatedChecksum.equals(this.idChecksum)) {
       throw new ChecksumMismatchError(this.idChecksum, calculatedChecksum);
-    }
-    
-    for (let i = 0; i < calculatedChecksum.length; i++) {
-      if (calculatedChecksum[i] !== this.idChecksum[i]) {
-        throw new ChecksumMismatchError(this.idChecksum, calculatedChecksum);
-      }
     }
   }
 

@@ -1,5 +1,5 @@
+import { LanguageCodes } from '@digitaldefiance/i18n-lib';
 import BlockType from '../enumerations/blockType';
-import { StringLanguages } from '../enumerations/stringLanguages';
 import { registerTranslation } from '../i18n';
 import { createTranslations, EnumLanguageTranslation } from '../types';
 
@@ -9,7 +9,7 @@ export const BlockTypeTranslations: BlockTypeLanguageTranslation =
   registerTranslation(
     BlockType,
     createTranslations({
-      [StringLanguages.EnglishUS]: {
+      [LanguageCodes.EN_US]: {
         [BlockType.Unknown]: 'Unknown',
         [BlockType.ConstituentBlockList]: 'Constituent Block List',
         [BlockType.EncryptedOwnedDataBlock]: 'Encrypted Owned Data',
@@ -25,6 +25,7 @@ export const BlockTypeTranslations: BlockTypeLanguageTranslation =
         [BlockType.OwnerFreeWhitenedBlock]: 'Owner Free Whitened',
         [BlockType.Random]: 'Random',
         [BlockType.RawData]: 'Raw Data',
+        [BlockType.MultiEncryptedBlock]: 'Multi-Encrypted Block',
       },
     }),
   );

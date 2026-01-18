@@ -89,8 +89,12 @@ describe('Constants Implementation', () => {
       });
 
       it('should have correct ID lengths', () => {
-        expect(CONSTANTS['MEMBER_ID_LENGTH']).toBe(BaseConstants.MEMBER_ID_LENGTH);
-        expect(CONSTANTS['OBJECT_ID_LENGTH']).toBe(BaseConstants.OBJECT_ID_LENGTH);
+        expect(CONSTANTS['MEMBER_ID_LENGTH']).toBe(
+          BaseConstants.MEMBER_ID_LENGTH,
+        );
+        expect(CONSTANTS['OBJECT_ID_LENGTH']).toBe(
+          BaseConstants.OBJECT_ID_LENGTH,
+        );
       });
 
       it('should have correct CHECKSUM values', () => {

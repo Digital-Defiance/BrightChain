@@ -1,15 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import type { ISimpleKeyPair } from '@digitaldefiance/ecies-lib';
 import { describe, expect, it } from '@jest/globals';
-import type {
-  ISimpleKeyPair,
-} from '@digitaldefiance/ecies-lib';
 import type {
   ICBLConsts,
   IFECConsts,
-  ITupleConsts,
+  IJwtConsts,
   ISealingConsts,
   ISiteConsts,
-  IJwtConsts,
+  ITupleConsts,
 } from '../interfaces/constants';
 
 describe('Interface Export Tests', () => {

@@ -3,5 +3,13 @@
 export * from './lib';
 
 // Export constants with named exports for backward compatibility
-export { default as CONSTANTS, CBL, FEC, TUPLE, SEALING, JWT, SITE } from './lib/constants';
+export {
+  CBL,
+  default as CONSTANTS,
+  FEC,
+  JWT,
+  SEALING,
+  SITE,
+  TUPLE,
+} from './lib/constants';
 export { EciesConfig } from './lib/ecies-config';

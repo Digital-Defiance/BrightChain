@@ -21,13 +21,15 @@ describe('MemberDocument Integration Tests', () => {
   beforeEach(() => {
     // Initialize BrightChain with browser-compatible configuration
     initializeBrightChain();
-    
+
     // Initialize service provider
     ServiceProvider.getInstance();
     eciesService = ServiceProvider.getInstance().eciesService;
-    
+
     // Create member store with memory block store
-    const blockStore = BlockStoreFactory.createMemoryStore({ blockSize: BlockSize.Small });
+    const blockStore = BlockStoreFactory.createMemoryStore({
+      blockSize: BlockSize.Small,
+    });
     memberStore = new MemberStore(blockStore);
   });
 
@@ -47,8 +49,9 @@ describe('MemberDocument Integration Tests', () => {
       };
 
       // Create member through store
-      const { reference, mnemonic } = await memberStore.createMember(memberData);
-      
+      const { reference, mnemonic } =
+        await memberStore.createMember(memberData);
+
       expect(reference).toBeDefined();
       expect(reference.id).toBeDefined();
       expect(reference.type).toBe(MemberType.User);
@@ -56,7 +59,7 @@ describe('MemberDocument Integration Tests', () => {
 
       // Retrieve member
       const retrievedMember = await memberStore.getMember(reference.id);
-      
+
       expect(retrievedMember).toBeInstanceOf(Member);
       // Note: The current implementation returns a placeholder member
       // In a full implementation, this would return the original member data
@@ -113,8 +116,8 @@ describe('MemberDocument Integration Tests', () => {
     });
 
     it('should create document and generate CBLs in sequence', async () => {
-      // Step 1: Create document
-      const doc = new MemberDocument(publicMember, privateMember);
+      // Step 1: Create document using factory method
+      const doc = MemberDocument.create(publicMember, privateMember);
       expect(doc.id).toEqual(publicMember.id.toString());
 
       // Step 2: Generate CBLs
@@ -130,22 +133,22 @@ describe('MemberDocument Integration Tests', () => {
     });
 
     it('should recreate document from CBL data', async () => {
-      // Create and generate CBLs
-      const originalDoc = new MemberDocument(publicMember, privateMember);
+      // Create and generate CBLs using factory method
+      const originalDoc = MemberDocument.create(publicMember, privateMember);
       await originalDoc.generateCBLs();
-      
+
       const publicCBL = await originalDoc.toPublicCBL();
       const privateCBL = await originalDoc.toPrivateCBL();
 
-      // Recreate from CBLs
-      const recreatedDoc = new MemberDocument(publicMember, privateMember);
+      // Recreate from CBLs using factory method
+      const recreatedDoc = MemberDocument.create(publicMember, privateMember);
       await recreatedDoc.createFromCBLs(publicCBL, privateCBL);
 
       // Verify data integrity
       expect(recreatedDoc.id).toBe(originalDoc.id);
       expect(recreatedDoc.name).toBe(originalDoc.name);
       expect(recreatedDoc.type).toBe(originalDoc.type);
-      
+
       const originalMember = await originalDoc.toMember();
       const recreatedMember = await recreatedDoc.toMember();
       expect(recreatedMember.id).toEqual(originalMember.id);
@@ -172,9 +175,8 @@ describe('MemberDocument Integration Tests', () => {
         contactEmail: new EmailString('error2@example.com'),
         region: 'us-east-1',
       };
-      
-      await expect(memberStore.createMember(duplicateData))
-        .rejects.toThrow();
+
+      await expect(memberStore.createMember(duplicateData)).rejects.toThrow();
     });
   });
 
@@ -188,9 +190,9 @@ describe('MemberDocument Integration Tests', () => {
           new EmailString(`user${i}@example.com`),
         );
 
-        const doc = new MemberDocument(member, member);
+        const doc = MemberDocument.create(member, member);
         await doc.generateCBLs();
-        
+
         return {
           doc,
           publicCBL: await doc.toPublicCBL(),
@@ -199,7 +201,7 @@ describe('MemberDocument Integration Tests', () => {
       });
 
       const results = await Promise.all(operations);
-      
+
       expect(results).toHaveLength(10);
       results.forEach((result, i) => {
         expect(result.doc.name).toBe(`concurrent-user-${i}`);
@@ -218,13 +220,13 @@ describe('MemberDocument Integration Tests', () => {
       );
 
       const startTime = Date.now();
-      
-      const doc = new MemberDocument(member, member);
+
+      const doc = MemberDocument.create(member, member);
       await doc.generateCBLs();
-      
+
       const publicCBL = await doc.toPublicCBL();
       const privateCBL = await doc.toPrivateCBL();
-      
+
       const endTime = Date.now();
       const duration = endTime - startTime;
 
@@ -243,27 +245,27 @@ describe('MemberDocument Integration Tests', () => {
         new EmailString('consistency@example.com'),
       );
 
-      // Create document and generate CBLs
-      const doc1 = new MemberDocument(member, member);
+      // Create document and generate CBLs using factory method
+      const doc1 = MemberDocument.create(member, member);
       await doc1.generateCBLs();
-      
+
       // Serialize to CBLs
       const publicCBL = await doc1.toPublicCBL();
       const privateCBL = await doc1.toPrivateCBL();
-      
-      // Create new document from CBLs
-      const doc2 = new MemberDocument(member, member);
+
+      // Create new document from CBLs using factory method
+      const doc2 = MemberDocument.create(member, member);
       await doc2.createFromCBLs(publicCBL, privateCBL);
-      
+
       // Generate CBLs again
       await doc2.generateCBLs();
       const publicCBL2 = await doc2.toPublicCBL();
       const privateCBL2 = await doc2.toPrivateCBL();
-      
-      // Create third document from second set of CBLs
-      const doc3 = new MemberDocument(member, member);
+
+      // Create third document from second set of CBLs using factory method
+      const doc3 = MemberDocument.create(member, member);
       await doc3.createFromCBLs(publicCBL2, privateCBL2);
-      
+
       // All documents should have consistent data
       expect(doc1.id).toBe(doc2.id);
       expect(doc2.id).toBe(doc3.id);
@@ -279,15 +281,15 @@ describe('MemberDocument Integration Tests', () => {
         new EmailString('property@example.com'),
       );
 
-      const originalDoc = new MemberDocument(member, member);
+      const originalDoc = MemberDocument.create(member, member);
       await originalDoc.generateCBLs();
-      
+
       const publicCBL = await originalDoc.toPublicCBL();
       const privateCBL = await originalDoc.toPrivateCBL();
-      
-      const restoredDoc = new MemberDocument(member, member);
+
+      const restoredDoc = MemberDocument.create(member, member);
       await restoredDoc.createFromCBLs(publicCBL, privateCBL);
-      
+
       // Check all accessible properties
       expect(restoredDoc.id).toBe(originalDoc.id);
       expect(restoredDoc.name).toBe(originalDoc.name);

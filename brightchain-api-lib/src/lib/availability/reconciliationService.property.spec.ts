@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 /**
  * @fileoverview Property-based tests for ReconciliationService
  *
@@ -357,7 +356,10 @@ describe('ReconciliationService Property Tests', () => {
      * Generate a valid date (not NaN) within a reasonable range
      */
     const arbValidDate = fc
-      .integer({ min: new Date('2020-01-01').getTime(), max: new Date('2025-01-01').getTime() })
+      .integer({
+        min: new Date('2020-01-01').getTime(),
+        max: new Date('2025-01-01').getTime(),
+      })
       .map((timestamp) => new Date(timestamp));
 
     /**

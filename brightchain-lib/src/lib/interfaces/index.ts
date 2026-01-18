@@ -1,6 +1,5 @@
 export type * from './active-context';
 export * from './availability';
-export type * from './availability';
 export type * from './backupCodeConsts';
 export type * from './basicDataObjectDto';
 export type * from './basicObjectDto';
@@ -35,9 +34,8 @@ export type * from './requestUser';
 export type * from './responses';
 export type * from './role';
 export type * from './sealResults';
-export type * from './services';
-export * from './services';
 export type * from './serviceProvider.interface';
+export type * from './services';
 export type * from './signedToken';
 export type * from './simpleStore';
 export type * from './simpleStoreAsync';

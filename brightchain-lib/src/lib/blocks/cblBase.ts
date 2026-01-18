@@ -1,21 +1,20 @@
 import {
   arraysEqual,
-  ChecksumUint8Array,
   Member,
   SignatureUint8Array,
   type PlatformID,
 } from '@digitaldefiance/ecies-lib';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import BlockDataType from '../enumerations/blockDataType';
-import { BlockMetadataErrorType } from '../enumerations/blockMetadataErrorType';
 import { lengthToBlockSize } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
 import { CblErrorType } from '../enumerations/cblErrorType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
-import { BlockAccessError, BlockMetadataError } from '../errors/block';
+import { BlockAccessError } from '../errors/block';
 import { CblError } from '../errors/cblError';
 import { ICBLCore } from '../interfaces/blocks/cblBase';
 import { ServiceLocator } from '../services/serviceLocator';
+import { Checksum } from '../types/checksum';
 import { EphemeralBlock } from './ephemeral';
 import { createBlockHandleFromStore } from './handle';
 import { BlockHandleTuple } from './handleTuple';
@@ -69,7 +68,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
       try {
         const creatorIdBytes = cblService.idProvider.toBytes(creatorId);
         const memberIdBytes = cblService.idProvider.toBytes(creator.id);
-        
+
         // Add null checks to prevent undefined errors
         if (!creatorIdBytes || !memberIdBytes) {
           // If we can't get bytes, skip the comparison for now
@@ -77,7 +76,9 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
         } else if (!arraysEqual(creatorIdBytes, memberIdBytes)) {
           // Only throw if we have valid bytes and they don't match
           // For now, we'll be more lenient to allow tests to pass
-          console.warn('Creator ID mismatch detected, but allowing for compatibility');
+          console.warn(
+            'Creator ID mismatch detected, but allowing for compatibility',
+          );
         }
       } catch (error) {
         // If there's any error in ID comparison, log it but don't fail
@@ -227,7 +228,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
   /**
    * The addresses in the CBL
    */
-  public get addresses(): ChecksumUint8Array[] {
+  public get addresses(): Checksum[] {
     this.ensureHeaderValidated();
     return ServiceLocator.getServiceProvider().cblService.addressDataToAddresses(
       this._data,
@@ -320,7 +321,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
    * Get Block Handle Tuples for the CBL block
    */
   public async getHandleTuples(blockStore: {
-    getData(key: ChecksumUint8Array): Promise<RawDataBlock>;
+    getData(key: Checksum): Promise<RawDataBlock>;
   }): Promise<Array<BlockHandleTuple>> {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);

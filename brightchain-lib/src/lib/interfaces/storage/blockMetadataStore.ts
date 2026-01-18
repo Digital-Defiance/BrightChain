@@ -1,5 +1,5 @@
-import { IBlockMetadata } from './blockMetadata';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import { IBlockMetadata } from './blockMetadata';
 
 /**
  * Interface for block metadata storage operations.

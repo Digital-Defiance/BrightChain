@@ -1,16 +1,17 @@
 import { ECIESService, PlatformID } from '@digitaldefiance/ecies-lib';
-import { CBL, CONSTANTS, ECIES, ENCRYPTION } from '../constants';
+import { CONSTANTS, ECIES, ENCRYPTION } from '../constants';
 import { BlockCapacityErrorType } from '../enumerations/blockCapacityErrorType';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
-import { validateBlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockCapacityError } from '../errors/block/blockCapacity';
+import { ExtendedCblError } from '../errors/extendedCblError';
 import {
   IBlockCapacityParams,
   IBlockCapacityResult,
   IOverheadBreakdown,
 } from '../interfaces/blockCapacity';
 import { CBLService } from '../services/cblService';
+import { Validator } from '../utils/validator';
 
 /**
  * Service for calculating block capacities based on block type and parameters
@@ -23,17 +24,22 @@ export class BlockCapacityCalculator<TID extends PlatformID = Uint8Array> {
 
   /**
    * Calculate the capacity for a block with the given parameters
+   *
+   * @param params - The block capacity parameters
+   * @returns The calculated block capacity result
+   * @throws {EnhancedValidationError} If block size, block type, or encryption type is invalid
+   * @throws {BlockCapacityError} If capacity calculation fails or CBL data is invalid
+   *
+   * @see Requirements 5.1, 5.2, 5.3, 5.5, 6.1, 6.2, 6.5, 7.2, 7.3, 12.3, 12.4, 12.5, 12.6
    */
   public calculateCapacity(params: IBlockCapacityParams): IBlockCapacityResult {
-    // Validate block size
-    if (!validateBlockSize(params.blockSize)) {
-      throw new BlockCapacityError(BlockCapacityErrorType.InvalidBlockSize);
-    }
-
-    // Validate block type
-    if (!this.isValidBlockType(params.blockType)) {
-      throw new BlockCapacityError(BlockCapacityErrorType.InvalidBlockType);
-    }
+    // Validate all inputs using Validator class
+    Validator.validateBlockSize(params.blockSize, 'calculateCapacity');
+    Validator.validateBlockType(params.blockType, 'calculateCapacity');
+    Validator.validateEncryptionType(
+      params.encryptionType,
+      'calculateCapacity',
+    );
 
     // Initialize overhead breakdown
     const details: IOverheadBreakdown = {
@@ -45,102 +51,16 @@ export class BlockCapacityCalculator<TID extends PlatformID = Uint8Array> {
 
     let alignCapacityToTuple = false;
 
-    if (
-      [
-        BlockType.ConstituentBlockList,
-        BlockType.EncryptedConstituentBlockListBlock,
-      ].includes(params.blockType)
-    ) {
-      // Use dynamic base header size instead of static constant
-      const baseHeaderSize = this.calculateCBLBaseHeaderSize();
-      details.typeSpecificOverhead += baseHeaderSize + ECIES.SIGNATURE_LENGTH;
-      alignCapacityToTuple = true;
-    } else if (
-      [
-        BlockType.ExtendedConstituentBlockListBlock,
-        BlockType.EncryptedExtendedConstituentBlockListBlock,
-      ].includes(params.blockType)
-    ) {
-      if (!params.cbl) {
-        throw new BlockCapacityError(
-          BlockCapacityErrorType.InvalidExtendedCblData,
-        );
-      }
-      // Validate filename and mimetype
-      this.cblService.validateFileNameFormat(params.cbl.fileName);
-      this.cblService.validateMimeTypeFormat(params.cbl.mimeType);
+    // Use exhaustive switch for block type handling
+    const blockTypeOverhead = this.calculateBlockTypeOverhead(
+      params.blockType,
+      params,
+      details,
+    );
+    alignCapacityToTuple = blockTypeOverhead.alignCapacityToTuple;
 
-      // Use dynamic base header size instead of static constant
-      const baseHeaderSize = this.calculateCBLBaseHeaderSize();
-      details.typeSpecificOverhead += baseHeaderSize + ECIES.SIGNATURE_LENGTH;
-      details.variableOverhead += this.calculateExtendedCBLOverhead(
-        params.cbl.fileName,
-        params.cbl.mimeType,
-      );
-      alignCapacityToTuple = true;
-    } else if (params.blockType === BlockType.MultiEncryptedBlock) {
-      // Handle multi-encrypted blocks
-      if (
-        params.encryptionType === BlockEncryptionType.MultiRecipient &&
-        (!params.recipientCount || params.recipientCount < 1)
-      ) {
-        throw new BlockCapacityError(
-          BlockCapacityErrorType.InvalidRecipientCount,
-        );
-      } else if (
-        params.encryptionType === BlockEncryptionType.MultiRecipient &&
-        params.recipientCount &&
-        params.recipientCount > ECIES.MULTIPLE.MAX_RECIPIENTS
-      ) {
-        throw new BlockCapacityError(
-          BlockCapacityErrorType.InvalidRecipientCount,
-        );
-      }
-
-      if (
-        params.encryptionType === BlockEncryptionType.MultiRecipient &&
-        params.recipientCount
-      ) {
-        details.encryptionOverhead =
-          this.eciesService.calculateECIESMultipleRecipientOverhead(
-            params.recipientCount,
-            true,
-          );
-      }
-    }
-
-    if (
-      [
-        BlockType.EncryptedConstituentBlockListBlock,
-        BlockType.EncryptedExtendedConstituentBlockListBlock,
-        BlockType.EncryptedOwnedDataBlock,
-      ].includes(params.blockType)
-    ) {
-      if (
-        params.encryptionType === BlockEncryptionType.MultiRecipient &&
-        (!params.recipientCount || params.recipientCount < 1)
-      ) {
-        throw new BlockCapacityError(
-          BlockCapacityErrorType.InvalidRecipientCount,
-        );
-      } else if (
-        params.encryptionType === BlockEncryptionType.MultiRecipient &&
-        params.recipientCount &&
-        params.recipientCount > ECIES.MULTIPLE.MAX_RECIPIENTS
-      ) {
-        throw new BlockCapacityError(
-          BlockCapacityErrorType.InvalidRecipientCount,
-        );
-      }
-      details.typeSpecificOverhead += ENCRYPTION.ENCRYPTION_TYPE_SIZE;
-      details.encryptionOverhead =
-        params.encryptionType === BlockEncryptionType.MultiRecipient
-          ? this.eciesService.calculateECIESMultipleRecipientOverhead(
-              params.recipientCount ?? 0,
-              true,
-            ) - ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE
-          : ECIES.OVERHEAD_SIZE + ENCRYPTION.RECIPIENT_ID_SIZE;
-    }
+    // Handle encryption overhead for encrypted block types
+    this.calculateEncryptionOverhead(params, details);
 
     // Calculate total overhead and available capacity
     const totalOverhead =
@@ -155,8 +75,9 @@ export class BlockCapacityCalculator<TID extends PlatformID = Uint8Array> {
     if (alignCapacityToTuple) {
       // Ensure capacity is aligned to tuple size
       availableCapacity =
-        Math.floor(availableCapacity / CONSTANTS['CHECKSUM'].SHA3_BUFFER_LENGTH) *
-        CONSTANTS['CHECKSUM'].SHA3_BUFFER_LENGTH;
+        Math.floor(
+          availableCapacity / CONSTANTS['CHECKSUM'].SHA3_BUFFER_LENGTH,
+        ) * CONSTANTS['CHECKSUM'].SHA3_BUFFER_LENGTH;
     }
 
     if (availableCapacity < 0) {
@@ -172,10 +93,174 @@ export class BlockCapacityCalculator<TID extends PlatformID = Uint8Array> {
   }
 
   /**
-   * Validate that the block type is a valid enum value
+   * Calculate overhead for a specific block type using exhaustive switch.
+   *
+   * @param blockType - The block type to calculate overhead for
+   * @param params - The block capacity parameters
+   * @param details - The overhead breakdown to update
+   * @returns Object indicating whether capacity should be aligned to tuple size
+   * @throws {BlockCapacityError} If block type requires CBL data but none provided
+   *
+   * @see Requirements 6.1, 6.2, 6.5
    */
-  private isValidBlockType(blockType: BlockType): boolean {
-    return Object.values(BlockType).includes(blockType);
+  private calculateBlockTypeOverhead(
+    blockType: BlockType,
+    params: IBlockCapacityParams,
+    details: IOverheadBreakdown,
+  ): { alignCapacityToTuple: boolean } {
+    switch (blockType) {
+      case BlockType.RawData:
+      case BlockType.Random:
+      case BlockType.FECData:
+      case BlockType.EphemeralOwnedDataBlock:
+      case BlockType.Handle:
+      case BlockType.Unknown:
+        // These block types have no type-specific overhead
+        return { alignCapacityToTuple: false };
+
+      case BlockType.OwnerFreeWhitenedBlock:
+        // Whitened blocks have no additional overhead
+        return { alignCapacityToTuple: false };
+
+      case BlockType.ConstituentBlockList:
+      case BlockType.EncryptedConstituentBlockListBlock: {
+        // Use dynamic base header size instead of static constant
+        const baseHeaderSize = this.calculateCBLBaseHeaderSize();
+        details.typeSpecificOverhead += baseHeaderSize + ECIES.SIGNATURE_LENGTH;
+        return { alignCapacityToTuple: true };
+      }
+
+      case BlockType.ExtendedConstituentBlockListBlock:
+      case BlockType.EncryptedExtendedConstituentBlockListBlock: {
+        if (!params.cbl) {
+          throw new BlockCapacityError(
+            BlockCapacityErrorType.InvalidExtendedCblData,
+          );
+        }
+        // Validate filename and mimetype, wrapping CBL service errors
+        this.validateCBLData(params.cbl);
+
+        // Use dynamic base header size instead of static constant
+        const baseHeaderSize = this.calculateCBLBaseHeaderSize();
+        details.typeSpecificOverhead += baseHeaderSize + ECIES.SIGNATURE_LENGTH;
+        details.variableOverhead += this.calculateExtendedCBLOverhead(
+          params.cbl.fileName,
+          params.cbl.mimeType,
+        );
+        return { alignCapacityToTuple: true };
+      }
+
+      case BlockType.EncryptedOwnedDataBlock:
+        details.typeSpecificOverhead += ENCRYPTION.ENCRYPTION_TYPE_SIZE;
+        return { alignCapacityToTuple: false };
+
+      case BlockType.MultiEncryptedBlock:
+        // Overhead calculated separately for encryption
+        return { alignCapacityToTuple: false };
+
+      default: {
+        // TypeScript exhaustive check - this should never be reached
+        // if all BlockType enum values are handled above
+        const exhaustiveCheck: never = blockType;
+        throw new BlockCapacityError(
+          BlockCapacityErrorType.InvalidBlockType,
+          undefined,
+          { blockType: exhaustiveCheck },
+        );
+      }
+    }
+  }
+
+  /**
+   * Calculate encryption overhead based on encryption type and block type.
+   *
+   * @param params - The block capacity parameters
+   * @param details - The overhead breakdown to update
+   * @throws {BlockCapacityError} If recipient count is invalid for multi-recipient encryption
+   *
+   * @see Requirements 5.3, 12.5, 12.6
+   */
+  private calculateEncryptionOverhead(
+    params: IBlockCapacityParams,
+    details: IOverheadBreakdown,
+  ): void {
+    // Handle multi-encrypted blocks
+    if (params.blockType === BlockType.MultiEncryptedBlock) {
+      if (params.encryptionType === BlockEncryptionType.MultiRecipient) {
+        // Validate recipient count using Validator
+        Validator.validateRecipientCount(
+          params.recipientCount,
+          params.encryptionType,
+          'calculateCapacity',
+        );
+
+        if (params.recipientCount) {
+          details.encryptionOverhead =
+            this.eciesService.calculateECIESMultipleRecipientOverhead(
+              params.recipientCount,
+              true,
+            );
+        }
+      }
+      return;
+    }
+
+    // Handle encrypted block types
+    const encryptedBlockTypes = [
+      BlockType.EncryptedConstituentBlockListBlock,
+      BlockType.EncryptedExtendedConstituentBlockListBlock,
+      BlockType.EncryptedOwnedDataBlock,
+    ];
+
+    if (encryptedBlockTypes.includes(params.blockType)) {
+      // Validate recipient count for multi-recipient encryption
+      if (params.encryptionType === BlockEncryptionType.MultiRecipient) {
+        Validator.validateRecipientCount(
+          params.recipientCount,
+          params.encryptionType,
+          'calculateCapacity',
+        );
+      }
+
+      details.typeSpecificOverhead += ENCRYPTION.ENCRYPTION_TYPE_SIZE;
+      details.encryptionOverhead =
+        params.encryptionType === BlockEncryptionType.MultiRecipient
+          ? this.eciesService.calculateECIESMultipleRecipientOverhead(
+              params.recipientCount ?? 0,
+              true,
+            ) - ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE
+          : ECIES.OVERHEAD_SIZE + ENCRYPTION.RECIPIENT_ID_SIZE;
+    }
+  }
+
+  /**
+   * Validate CBL data (wraps cblService calls with error context).
+   *
+   * @param cbl - The CBL data containing fileName and mimeType
+   * @throws {BlockCapacityError} If CBL validation fails
+   *
+   * @see Requirements 7.2, 7.3, 12.7
+   */
+  private validateCBLData(cbl: { fileName: string; mimeType: string }): void {
+    try {
+      this.cblService.validateFileNameFormat(cbl.fileName);
+      this.cblService.validateMimeTypeFormat(cbl.mimeType);
+    } catch (error) {
+      // Wrap ExtendedCblError in BlockCapacityError with context
+      if (error instanceof ExtendedCblError) {
+        throw new BlockCapacityError(
+          BlockCapacityErrorType.InvalidExtendedCblData,
+          undefined,
+          {
+            originalErrorType: error.type.toString(),
+            fileName: cbl.fileName,
+            mimeType: cbl.mimeType,
+          },
+        );
+      }
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   /**
@@ -210,7 +295,7 @@ export class BlockCapacityCalculator<TID extends PlatformID = Uint8Array> {
     mimetype: string,
   ): number {
     // Extended CBL overhead includes:
-    // 1. Base CBL overhead (already accounted for in typeSpecificHeader)
+    // 1. Base CBL overhead (already accounted for in typeSpecificOverhead)
     // 2. Extended header overhead:
     //    - 2 bytes for filename length
     //    - Actual filename bytes

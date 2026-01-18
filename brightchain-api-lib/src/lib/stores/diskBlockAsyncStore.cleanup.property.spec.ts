@@ -13,10 +13,10 @@
 import {
   BlockSize,
   DurabilityLevel,
-  RawDataBlock,
   initializeBrightChain,
-  ServiceProvider,
+  RawDataBlock,
   ServiceLocator,
+  ServiceProvider,
 } from '@brightchain/brightchain-lib';
 import { uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
@@ -72,8 +72,8 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
 
             try {
               const block = new RawDataBlock(blockSize, data);
-              const blockId = uint8ArrayToHex(block.idChecksum);
-              
+              const blockId = block.idChecksum.toHex();
+
               // Store with past expiration
               const expiresAt = new Date(Date.now() - 1000 * 60); // 1 minute ago
               await store.setData(block, {
@@ -83,7 +83,7 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
 
               // Verify block is expired
               const expiredBlocks = await store.findExpired();
-              expect(expiredBlocks.map(m => m.blockId)).toContain(blockId);
+              expect(expiredBlocks.map((m) => m.blockId)).toContain(blockId);
 
               // Create a CBL checker that says this block is referenced
               const cblChecker = async (id: string) => id === blockId;
@@ -133,8 +133,8 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
 
             try {
               const block = new RawDataBlock(blockSize, data);
-              const blockId = uint8ArrayToHex(block.idChecksum);
-              
+              const blockId = block.idChecksum.toHex();
+
               // Store with past expiration
               const expiresAt = new Date(Date.now() - 1000 * 60); // 1 minute ago
               await store.setData(block, {
@@ -163,7 +163,6 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
         { numRuns: 30 },
       );
     });
-
 
     /**
      * Property: Cleanup without CBL checker should delete all expired blocks.
@@ -197,12 +196,13 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
             });
 
             try {
-              const storedBlocks: { blockId: string; isExpired: boolean }[] = [];
+              const storedBlocks: { blockId: string; isExpired: boolean }[] =
+                [];
               const now = Date.now();
 
               for (const spec of blockSpecs) {
                 const block = new RawDataBlock(blockSize, spec.data);
-                const blockId = uint8ArrayToHex(block.idChecksum);
+                const blockId = block.idChecksum.toHex();
 
                 const expiresAt = spec.isExpired
                   ? new Date(now - 1000 * 60) // 1 minute ago
@@ -269,13 +269,14 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
             });
 
             try {
-              const storedBlocks: { blockId: string; isProtected: boolean }[] = [];
+              const storedBlocks: { blockId: string; isProtected: boolean }[] =
+                [];
               const protectedBlockIds = new Set<string>();
               const now = Date.now();
 
               for (const spec of blockSpecs) {
                 const block = new RawDataBlock(blockSize, spec.data);
-                const blockId = uint8ArrayToHex(block.idChecksum);
+                const blockId = block.idChecksum.toHex();
 
                 // All blocks are expired
                 const expiresAt = new Date(now - 1000 * 60);
@@ -292,7 +293,8 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
               }
 
               // CBL checker that protects some blocks
-              const cblChecker = async (id: string) => protectedBlockIds.has(id);
+              const cblChecker = async (id: string) =>
+                protectedBlockIds.has(id);
 
               // Run cleanup
               const result = await store.cleanupExpiredBlocks(cblChecker);

@@ -3,12 +3,12 @@ import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import {
   BackupCodeService,
+  IApplication as BaseIApplication,
   UserController as BaseUserController,
   Controller,
   JwtService,
   RoleService,
   UserService,
-  IApplication as BaseIApplication,
 } from '@digitaldefiance/node-express-suite';
 import {
   ITokenRole,

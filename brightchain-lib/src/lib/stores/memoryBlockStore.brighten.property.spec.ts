@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @fileoverview Property-based tests for MemoryBlockStore XOR Brightening operations
  *
@@ -20,6 +21,7 @@ import { StoreError } from '../errors/storeError';
 import { initializeBrightChain } from '../init';
 import { ServiceProvider } from '../services/service.provider';
 import { ServiceLocator } from '../services/serviceLocator';
+import { Checksum } from '../types/checksum';
 import { MemoryBlockStore } from './memoryBlockStore';
 
 describe('MemoryBlockStore XOR Brightening Property Tests', () => {
@@ -65,15 +67,46 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
                 durabilityLevel: DurabilityLevel.Ephemeral,
               });
 
-              // Create and store random blocks
+              // Create and store random blocks with unique data
               const randomBlocks: RawDataBlock[] = [];
+              const usedChecksums = new Set<string>();
+              usedChecksums.add(
+                sourceBlock.idChecksum.toHex(),
+              );
+
               for (let i = 0; i < randomBlockCount; i++) {
-                // Generate random data for each random block
-                const randomData = new Uint8Array(sourceData.length);
-                for (let j = 0; j < randomData.length; j++) {
-                  randomData[j] = Math.floor(Math.random() * 256);
+                let randomBlock: RawDataBlock;
+                let attempts = 0;
+                const maxAttempts = 10;
+
+                // Keep generating until we get a unique block or hit max attempts
+                do {
+                  // Generate random data for each random block with a unique seed
+                  const randomData = new Uint8Array(sourceData.length);
+                  for (let j = 0; j < randomData.length; j++) {
+                    randomData[j] = Math.floor(Math.random() * 256);
+                  }
+                  // Add attempt number to ensure uniqueness
+                  if (randomData.length > 0) {
+                    randomData[0] = (randomData[0] + attempts) % 256;
+                  }
+                  randomBlock = new RawDataBlock(blockSize, randomData);
+                  attempts++;
+                } while (
+                  usedChecksums.has(
+                    randomBlock.idChecksum.toHex(),
+                  ) &&
+                  attempts < maxAttempts
+                );
+
+                if (attempts >= maxAttempts) {
+                  // Skip this test run if we can't generate unique blocks
+                  return;
                 }
-                const randomBlock = new RawDataBlock(blockSize, randomData);
+
+                usedChecksums.add(
+                  randomBlock.idChecksum.toHex(),
+                );
                 await testStore.setData(randomBlock, {
                   durabilityLevel: DurabilityLevel.Ephemeral,
                 });
@@ -93,12 +126,14 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
               expect(result.originalBlockId).toBeDefined();
 
               // Verify the brightened block was stored
-              const brightenedBlockExists = await testStore.has(result.brightenedBlockId);
+              const brightenedBlockExists = await testStore.has(
+                result.brightenedBlockId,
+              );
               expect(brightenedBlockExists).toBe(true);
 
               // Get the brightened block data
               const brightenedBlock = await testStore.getData(
-                Buffer.from(result.brightenedBlockId, 'hex') as any,
+                Checksum.fromHex(result.brightenedBlockId),
               );
 
               // Manually compute expected XOR result
@@ -110,10 +145,11 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
               // XOR with each random block that was used
               for (const randomBlockId of result.randomBlockIds) {
                 const randomBlock = await testStore.getData(
-                  Buffer.from(randomBlockId, 'hex') as any,
+                  Checksum.fromHex(randomBlockId),
                 );
                 for (let i = 0; i < expectedXor.length; i++) {
-                  expectedXor[i] ^= randomBlock.data[i % randomBlock.data.length];
+                  expectedXor[i] ^=
+                    randomBlock.data[i % randomBlock.data.length];
                 }
               }
 
@@ -151,21 +187,47 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
                 durabilityLevel: DurabilityLevel.Ephemeral,
               });
 
-              // Create and store random blocks
+              // Create and store random blocks with unique data
               const storedRandomBlockIds: string[] = [];
+              const usedChecksums = new Set<string>();
+              usedChecksums.add(
+                sourceBlock.idChecksum.toHex(),
+              );
+
               for (let i = 0; i < randomBlockCount; i++) {
-                const randomData = new Uint8Array(sourceData.length);
-                for (let j = 0; j < randomData.length; j++) {
-                  randomData[j] = Math.floor(Math.random() * 256);
+                let randomBlock: RawDataBlock;
+                let attempts = 0;
+                const maxAttempts = 10;
+
+                // Keep generating until we get a unique block or hit max attempts
+                do {
+                  const randomData = new Uint8Array(sourceData.length);
+                  for (let j = 0; j < randomData.length; j++) {
+                    randomData[j] = Math.floor(Math.random() * 256);
+                  }
+                  // Add attempt number and index to ensure uniqueness
+                  if (randomData.length > 0) {
+                    randomData[0] = (randomData[0] + attempts + i) % 256;
+                  }
+                  randomBlock = new RawDataBlock(blockSize, randomData);
+                  attempts++;
+                } while (
+                  usedChecksums.has(
+                    randomBlock.idChecksum.toHex(),
+                  ) &&
+                  attempts < maxAttempts
+                );
+
+                if (attempts >= maxAttempts) {
+                  // Skip this test run if we can't generate unique blocks
+                  return;
                 }
-                const randomBlock = new RawDataBlock(blockSize, randomData);
+
+                const hexId = randomBlock.idChecksum.toHex();
+                usedChecksums.add(hexId);
                 await testStore.setData(randomBlock, {
                   durabilityLevel: DurabilityLevel.Ephemeral,
                 });
-                // Convert checksum to hex for comparison
-                const hexId = Array.from(randomBlock.idChecksum)
-                  .map((b) => b.toString(16).padStart(2, '0'))
-                  .join('');
                 storedRandomBlockIds.push(hexId);
               }
 
@@ -216,11 +278,17 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
               // Attempt brightening with more random blocks than available
               // The store only has 1 block (the source), so requesting more should fail
               await expect(
-                testStore.brightenBlock(sourceBlock.idChecksum, requestedRandomBlocks),
+                testStore.brightenBlock(
+                  sourceBlock.idChecksum,
+                  requestedRandomBlocks,
+                ),
               ).rejects.toThrow(StoreError);
 
               try {
-                await testStore.brightenBlock(sourceBlock.idChecksum, requestedRandomBlocks);
+                await testStore.brightenBlock(
+                  sourceBlock.idChecksum,
+                  requestedRandomBlocks,
+                );
               } catch (error) {
                 expect(error).toBeInstanceOf(StoreError);
                 expect((error as StoreError).type).toBe(
@@ -254,13 +322,17 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
 
             try {
               // Attempt brightening with non-existent source block
-              await expect(testStore.brightenBlock(fakeBlockId, 1)).rejects.toThrow(StoreError);
+              await expect(
+                testStore.brightenBlock(fakeBlockId, 1),
+              ).rejects.toThrow(StoreError);
 
               try {
                 await testStore.brightenBlock(fakeBlockId, 1);
               } catch (error) {
                 expect(error).toBeInstanceOf(StoreError);
-                expect((error as StoreError).type).toBe(StoreErrorType.KeyNotFound);
+                expect((error as StoreError).type).toBe(
+                  StoreErrorType.KeyNotFound,
+                );
               }
             } finally {
               testStore.clear();
@@ -292,13 +364,44 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
                 durabilityLevel: DurabilityLevel.Ephemeral,
               });
 
-              // Create and store random blocks
+              // Create and store random blocks with unique data
+              const usedChecksums = new Set<string>();
+              usedChecksums.add(
+                sourceBlock.idChecksum.toHex(),
+              );
+
               for (let i = 0; i < randomBlockCount; i++) {
-                const randomData = new Uint8Array(sourceData.length);
-                for (let j = 0; j < randomData.length; j++) {
-                  randomData[j] = Math.floor(Math.random() * 256);
+                let randomBlock: RawDataBlock;
+                let attempts = 0;
+                const maxAttempts = 10;
+
+                // Keep generating until we get a unique block or hit max attempts
+                do {
+                  const randomData = new Uint8Array(sourceData.length);
+                  for (let j = 0; j < randomData.length; j++) {
+                    randomData[j] = Math.floor(Math.random() * 256);
+                  }
+                  // Add attempt number and index to ensure uniqueness
+                  if (randomData.length > 0) {
+                    randomData[0] = (randomData[0] + attempts + i * 10) % 256;
+                  }
+                  randomBlock = new RawDataBlock(blockSize, randomData);
+                  attempts++;
+                } while (
+                  usedChecksums.has(
+                    randomBlock.idChecksum.toHex(),
+                  ) &&
+                  attempts < maxAttempts
+                );
+
+                if (attempts >= maxAttempts) {
+                  // Skip this test run if we can't generate unique blocks
+                  return;
                 }
-                const randomBlock = new RawDataBlock(blockSize, randomData);
+
+                usedChecksums.add(
+                  randomBlock.idChecksum.toHex(),
+                );
                 await testStore.setData(randomBlock, {
                   durabilityLevel: DurabilityLevel.Ephemeral,
                 });
@@ -312,7 +415,7 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
 
               // Get the brightened block
               const brightenedBlock = await testStore.getData(
-                Buffer.from(result.brightenedBlockId, 'hex') as any,
+                Checksum.fromHex(result.brightenedBlockId),
               );
 
               // Reverse the XOR operation manually
@@ -324,7 +427,7 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
               // XOR with each random block to recover original
               for (const randomBlockId of result.randomBlockIds) {
                 const randomBlock = await testStore.getData(
-                  Buffer.from(randomBlockId, 'hex') as any,
+                  Checksum.fromHex(randomBlockId),
                 );
                 for (let i = 0; i < recovered.length; i++) {
                   recovered[i] ^= randomBlock.data[i % randomBlock.data.length];

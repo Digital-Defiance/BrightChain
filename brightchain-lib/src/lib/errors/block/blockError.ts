@@ -1,5 +1,4 @@
 import { BlockErrorType } from '../../enumerations/blockErrorType';
-import { StringLanguages } from '../../enumerations/stringLanguages';
 import StringNames from '../../enumerations/stringNames';
 import { TypedError } from '../typedError';
 
@@ -38,7 +37,7 @@ export class BlockError extends TypedError<BlockErrorType> {
 
   constructor(
     type: BlockErrorType,
-    language?: StringLanguages,
+    language?: string,
     otherVars?: Record<string, string | number>,
   ) {
     super(type, undefined, otherVars);

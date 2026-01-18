@@ -1,6 +1,7 @@
-import { ChecksumUint8Array, GuidV4 } from '@digitaldefiance/ecies-lib';
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import { BlockMetadata } from '../../blockMetadata';
 import { DataTemperature } from '../../enumerations/dataTemperature';
+import { Checksum } from '../../types/checksum';
 
 /**
  * Node capabilities in the BrightChain network
@@ -96,10 +97,10 @@ export interface INode {
   updateStatus(status: NodeStatus): Promise<void>;
 
   // Block operations
-  hasBlock(id: ChecksumUint8Array): Promise<boolean>;
-  getBlockMetadata(id: ChecksumUint8Array): Promise<BlockMetadata>;
+  hasBlock(id: Checksum): Promise<boolean>;
+  getBlockMetadata(id: Checksum): Promise<BlockMetadata>;
   updateBlockTemperature(
-    id: ChecksumUint8Array,
+    id: Checksum,
     temperature: DataTemperature,
   ): Promise<void>;
 

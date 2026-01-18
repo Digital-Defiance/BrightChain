@@ -1,5 +1,5 @@
+import { LanguageCode } from '@digitaldefiance/i18n-lib';
 import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
-import { StringLanguage } from '../enumerations/stringLanguages';
 import StringNames from '../enumerations/stringNames';
 import { TypedError } from './typedError';
 
@@ -20,7 +20,7 @@ export class HandleTupleError extends TypedError<HandleTupleErrorType> {
   constructor(
     type: HandleTupleErrorType,
     tupleSize?: number,
-    _language?: StringLanguage,
+    _language?: LanguageCode,
   ) {
     super(type, undefined, {
       ...(tupleSize ? { TUPLE_SIZE: tupleSize.toString() } : {}),
