@@ -20,7 +20,7 @@ interface AnimatedParticlesProps {
 export const AnimatedParticles: React.FC<AnimatedParticlesProps> = ({
   particleCount = 50,
   colors = ['#00ff88', '#0099ff', '#ff6b9d'],
-  speed = 0.5
+  speed = 0.5,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
@@ -52,7 +52,7 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = ({
           vy: (Math.random() - 0.5) * speed,
           size: Math.random() * 3 + 1,
           color: colors[Math.floor(Math.random() * colors.length)],
-          opacity: Math.random() * 0.5 + 0.2
+          opacity: Math.random() * 0.5 + 0.2,
         });
       }
     };
@@ -81,7 +81,7 @@ export const AnimatedParticles: React.FC<AnimatedParticlesProps> = ({
         ctx.fill();
 
         // Draw connections
-        particlesRef.current.slice(index + 1).forEach(otherParticle => {
+        particlesRef.current.slice(index + 1).forEach((otherParticle) => {
           const dx = particle.x - otherParticle.x;
           const dy = particle.y - otherParticle.y;
           const distance = Math.sqrt(dx * dx + dy * dy);

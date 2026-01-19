@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 interface AccessibilityContextType {
   announceMessage: (message: string) => void;
@@ -6,12 +12,16 @@ interface AccessibilityContextType {
   highContrast: boolean;
 }
 
-const AccessibilityContext = createContext<AccessibilityContextType | null>(null);
+const AccessibilityContext = createContext<AccessibilityContextType | null>(
+  null,
+);
 
 export const useAccessibility = () => {
   const context = useContext(AccessibilityContext);
   if (!context) {
-    throw new Error('useAccessibility must be used within AccessibilityProvider');
+    throw new Error(
+      'useAccessibility must be used within AccessibilityProvider',
+    );
   }
   return context;
 };
@@ -20,7 +30,9 @@ interface AccessibilityProviderProps {
   children: ReactNode;
 }
 
-export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ children }) => {
+export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({
+  children,
+}) => {
   const [announcement, setAnnouncement] = useState('');
   const [reducedMotion, setReducedMotion] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
@@ -32,8 +44,10 @@ export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ ch
     setReducedMotion(motionQuery.matches);
     setHighContrast(contrastQuery.matches);
 
-    const handleMotionChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
-    const handleContrastChange = (e: MediaQueryListEvent) => setHighContrast(e.matches);
+    const handleMotionChange = (e: MediaQueryListEvent) =>
+      setReducedMotion(e.matches);
+    const handleContrastChange = (e: MediaQueryListEvent) =>
+      setHighContrast(e.matches);
 
     motionQuery.addEventListener('change', handleMotionChange);
     contrastQuery.addEventListener('change', handleContrastChange);
@@ -50,7 +64,9 @@ export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ ch
   };
 
   return (
-    <AccessibilityContext.Provider value={{ announceMessage, reducedMotion, highContrast }}>
+    <AccessibilityContext.Provider
+      value={{ announceMessage, reducedMotion, highContrast }}
+    >
       {children}
       <div
         role="status"

@@ -9,7 +9,7 @@
  * magnet URL generation) in the correct sequence with appropriate visual indicators.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('EncodingAnimation Property Tests', () => {
   beforeEach(() => {
@@ -48,14 +48,18 @@ describe('EncodingAnimation Property Tests', () => {
      * correct BrightChain process regardless of file characteristics.
      */
 
-    const generateTestFile = (size: number, name: string, type: string = 'text/plain'): File => {
+    const generateTestFile = (
+      size: number,
+      name: string,
+      type: string = 'text/plain',
+    ): File => {
       const content = 'A'.repeat(size);
       return new File([content], name, { type });
     };
 
     const expectedSteps = [
       'Reading File',
-      'Breaking into Chunks', 
+      'Breaking into Chunks',
       'Adding Padding',
       'Calculating Checksums',
       'Storing Blocks',
@@ -101,7 +105,7 @@ describe('EncodingAnimation Property Tests', () => {
 
       for (const { size, name, type } of testCases) {
         const testFile = generateTestFile(size, name, type);
-        
+
         expect(testFile.name).toBe(name);
         expect(testFile.size).toBe(size);
         expect(testFile.type).toBe(type);
@@ -110,7 +114,7 @@ describe('EncodingAnimation Property Tests', () => {
 
     it('should validate animation speed parameters', () => {
       const validSpeeds = [0.5, 1.0, 2.0, 5.0, 10.0];
-      
+
       for (const speed of validSpeeds) {
         expect(speed).toBeGreaterThan(0);
         expect(typeof speed).toBe('number');
@@ -119,7 +123,7 @@ describe('EncodingAnimation Property Tests', () => {
 
     it('should validate block size parameters', () => {
       const validBlockSizes = [512, 1024, 2048, 4096];
-      
+
       for (const blockSize of validBlockSizes) {
         expect(blockSize).toBeGreaterThan(0);
         expect(blockSize % 512).toBe(0); // Should be multiple of 512
@@ -129,7 +133,7 @@ describe('EncodingAnimation Property Tests', () => {
 
     it('should validate educational mode behavior parameters', () => {
       const educationalModeValues = [true, false];
-      
+
       for (const isEducational of educationalModeValues) {
         expect(typeof isEducational).toBe('boolean');
       }
@@ -145,7 +149,7 @@ describe('EncodingAnimation Property Tests', () => {
       };
 
       // Verify all callbacks are functions
-      Object.values(mockCallbacks).forEach(callback => {
+      Object.values(mockCallbacks).forEach((callback) => {
         expect(typeof callback).toBe('function');
       });
 
@@ -153,17 +157,33 @@ describe('EncodingAnimation Property Tests', () => {
       mockCallbacks.onChunkCreated(new Uint8Array([1, 2, 3]), 0);
       mockCallbacks.onPaddingAdded(new Uint8Array([1, 2, 3, 0, 0]), 0);
       mockCallbacks.onChecksumCalculated('abc123', 0);
-      mockCallbacks.onBlockStored({ id: 'test', checksum: new Uint8Array(32), size: 100, index: 0 });
+      mockCallbacks.onBlockStored({
+        id: 'test',
+        checksum: new Uint8Array(32),
+        size: 100,
+        index: 0,
+      });
       mockCallbacks.onAnimationComplete();
 
-      expect(mockCallbacks.onChunkCreated).toHaveBeenCalledWith(expect.any(Uint8Array), 0);
-      expect(mockCallbacks.onPaddingAdded).toHaveBeenCalledWith(expect.any(Uint8Array), 0);
-      expect(mockCallbacks.onChecksumCalculated).toHaveBeenCalledWith('abc123', 0);
-      expect(mockCallbacks.onBlockStored).toHaveBeenCalledWith(expect.objectContaining({
-        id: 'test',
-        size: 100,
-        index: 0
-      }));
+      expect(mockCallbacks.onChunkCreated).toHaveBeenCalledWith(
+        expect.any(Uint8Array),
+        0,
+      );
+      expect(mockCallbacks.onPaddingAdded).toHaveBeenCalledWith(
+        expect.any(Uint8Array),
+        0,
+      );
+      expect(mockCallbacks.onChecksumCalculated).toHaveBeenCalledWith(
+        'abc123',
+        0,
+      );
+      expect(mockCallbacks.onBlockStored).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'test',
+          size: 100,
+          index: 0,
+        }),
+      );
       expect(mockCallbacks.onAnimationComplete).toHaveBeenCalled();
     });
 
@@ -201,10 +221,10 @@ describe('EncodingAnimation Property Tests', () => {
 
       for (const { size, name } of edgeCases) {
         const testFile = generateTestFile(size, name);
-        
+
         expect(testFile.size).toBe(size);
         expect(testFile.name).toBe(name);
-        
+
         // Calculate expected chunks
         const expectedChunks = size === 0 ? 0 : Math.ceil(size / 512);
         expect(expectedChunks).toBeGreaterThanOrEqual(0);

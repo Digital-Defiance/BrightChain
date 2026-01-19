@@ -124,8 +124,11 @@ describe('DiskMessageMetadataStore - Concurrent Access Property Tests', () => {
         fc.array(arbHexString(40, 40), { minLength: 2, maxLength: 5 }),
         async (blockId, senderId, recipients) => {
           const iterTempDir = mkdtempSync(join(tmpdir(), 'disk-msg-conc-'));
-          const iterStore = new DiskMessageMetadataStore(iterTempDir, BlockSize.Small);
-          
+          const iterStore = new DiskMessageMetadataStore(
+            iterTempDir,
+            BlockSize.Small,
+          );
+
           try {
             const uniqueRecipients = [...new Set(recipients)];
             const metadata = createMessageMetadata(
@@ -170,8 +173,11 @@ describe('DiskMessageMetadataStore - Concurrent Access Property Tests', () => {
         fc.array(arbHexString(40, 40), { minLength: 2, maxLength: 5 }),
         async (blockId, senderId, recipients) => {
           const iterTempDir = mkdtempSync(join(tmpdir(), 'disk-msg-ack-conc-'));
-          const iterStore = new DiskMessageMetadataStore(iterTempDir, BlockSize.Small);
-          
+          const iterStore = new DiskMessageMetadataStore(
+            iterTempDir,
+            BlockSize.Small,
+          );
+
           try {
             const uniqueRecipients = [...new Set(recipients)];
             const metadata = createMessageMetadata(
@@ -184,7 +190,11 @@ describe('DiskMessageMetadataStore - Concurrent Access Property Tests', () => {
             const ackTime = new Date();
             // Update sequentially to avoid race conditions
             for (const recipientId of uniqueRecipients) {
-              await iterStore.recordAcknowledgment(blockId, recipientId, ackTime);
+              await iterStore.recordAcknowledgment(
+                blockId,
+                recipientId,
+                ackTime,
+              );
             }
 
             const results = await iterStore.getMessagesBySender(senderId);

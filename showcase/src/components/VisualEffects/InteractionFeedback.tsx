@@ -1,5 +1,5 @@
+import { AnimatePresence, motion } from 'framer-motion';
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface InteractionFeedbackProps {
   children: React.ReactNode;
@@ -87,8 +87,12 @@ export const InteractionFeedback: React.FC<InteractionFeedbackProps> = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
-      whileHover={type === 'hover' ? feedbackVariants.hover[intensity] : undefined}
-      whileTap={type === 'click' ? feedbackVariants.click[intensity] : undefined}
+      whileHover={
+        type === 'hover' ? feedbackVariants.hover[intensity] : undefined
+      }
+      whileTap={
+        type === 'click' ? feedbackVariants.click[intensity] : undefined
+      }
       transition={{ duration: 0.2, ease: 'easeOut' }}
       style={{
         position: 'relative',
@@ -96,7 +100,7 @@ export const InteractionFeedback: React.FC<InteractionFeedbackProps> = ({
       }}
     >
       {children}
-      
+
       {/* Ripple effect on click */}
       <AnimatePresence>
         {isClicked && (
@@ -120,7 +124,7 @@ export const InteractionFeedback: React.FC<InteractionFeedbackProps> = ({
           />
         )}
       </AnimatePresence>
-      
+
       {/* Hover glow */}
       <AnimatePresence>
         {isHovered && type === 'hover' && (
@@ -194,7 +198,10 @@ export const PulseIndicator: React.FC<PulseIndicatorProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`pulse-indicator ${className}`} style={{ position: 'relative', width: size, height: size }}>
+    <div
+      className={`pulse-indicator ${className}`}
+      style={{ position: 'relative', width: size, height: size }}
+    >
       <motion.div
         style={{
           width: size,

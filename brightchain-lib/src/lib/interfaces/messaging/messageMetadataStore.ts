@@ -1,11 +1,11 @@
-import { IBlockMetadataStore } from '../storage/blockMetadataStore';
-import { IMessageMetadata } from './messageMetadata';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
+import { IBlockMetadataStore } from '../storage/blockMetadataStore';
+import { IMessageMetadata } from './messageMetadata';
 
 /**
  * Query options for message metadata queries.
- * 
+ *
  * @see Requirements 9.1, 9.2, 9.3, 9.4, 9.5
  */
 export interface MessageQueryOptions {
@@ -19,7 +19,7 @@ export interface MessageQueryOptions {
 
 /**
  * Message query parameters for filtering messages.
- * 
+ *
  * @see Requirements 9.1, 9.2, 9.3, 9.4
  */
 export interface MessageQuery {
@@ -35,11 +35,11 @@ export interface MessageQuery {
 
 /**
  * Interface for message metadata storage operations.
- * 
+ *
  * @remarks
  * Extends IBlockMetadataStore with message-specific operations for
  * storing, querying, and tracking message delivery status.
- * 
+ *
  * @see Requirements 1.3, 9.1, 9.2, 9.3, 9.4, 10.2
  */
 export interface IMessageMetadataStore extends IBlockMetadataStore {
@@ -65,7 +65,7 @@ export interface IMessageMetadataStore extends IBlockMetadataStore {
   updateDeliveryStatus(
     messageId: string,
     recipientId: string,
-    status: MessageDeliveryStatus
+    status: MessageDeliveryStatus,
   ): Promise<void>;
 
   /**
@@ -77,7 +77,7 @@ export interface IMessageMetadataStore extends IBlockMetadataStore {
   recordAcknowledgment(
     messageId: string,
     recipientId: string,
-    timestamp: Date
+    timestamp: Date,
   ): Promise<void>;
 
   /**
@@ -88,7 +88,7 @@ export interface IMessageMetadataStore extends IBlockMetadataStore {
    */
   getMessagesByRecipient(
     recipientId: string,
-    options?: MessageQueryOptions
+    options?: MessageQueryOptions,
   ): Promise<IMessageMetadata[]>;
 
   /**
@@ -99,6 +99,6 @@ export interface IMessageMetadataStore extends IBlockMetadataStore {
    */
   getMessagesBySender(
     senderId: string,
-    options?: MessageQueryOptions
+    options?: MessageQueryOptions,
   ): Promise<IMessageMetadata[]>;
 }

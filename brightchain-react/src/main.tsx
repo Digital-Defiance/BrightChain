@@ -1,5 +1,8 @@
-/* eslint-disable @nx/enforce-module-boundaries */
-import { CoreLanguageCode, GlobalActiveContext, IActiveContext } from '@digitaldefiance/i18n-lib';
+import {
+  CoreLanguageCode,
+  GlobalActiveContext,
+  IActiveContext,
+} from '@digitaldefiance/i18n-lib';
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';

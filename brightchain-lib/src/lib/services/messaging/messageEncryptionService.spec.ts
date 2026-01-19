@@ -1,5 +1,5 @@
-import { MessageEncryptionService } from './messageEncryptionService';
 import { MessageError } from '../../errors/messaging/messageError';
+import { MessageEncryptionService } from './messageEncryptionService';
 
 describe('MessageEncryptionService', () => {
   let service: MessageEncryptionService;
@@ -13,8 +13,12 @@ describe('MessageEncryptionService', () => {
       const content = new Uint8Array([1, 2, 3]);
       const recipientKeys = new Map<string, Uint8Array>();
 
-      await expect(service.encryptDirect(content, recipientKeys)).rejects.toThrow(MessageError);
-      await expect(service.encryptDirect(content, recipientKeys)).rejects.toThrow('No recipient public keys provided');
+      await expect(
+        service.encryptDirect(content, recipientKeys),
+      ).rejects.toThrow(MessageError);
+      await expect(
+        service.encryptDirect(content, recipientKeys),
+      ).rejects.toThrow('No recipient public keys provided');
     });
   });
 

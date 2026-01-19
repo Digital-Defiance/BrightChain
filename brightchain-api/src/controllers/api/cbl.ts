@@ -2,16 +2,16 @@
 import {
   ApiErrorResponse,
   ApiRequestHandler,
+  DiskCBLStore,
   IApiMessageResponse,
   routeConfig,
   TypedHandlers,
-  DiskCBLStore,
 } from '@brightchain/brightchain-api-lib';
 import {
   BlockSize,
+  Checksum,
   ConstituentBlockListBlock,
   StoreError,
-  Checksum,
 } from '@brightchain/brightchain-lib';
 import { ServiceProvider } from '@brightchain/brightchain-lib/lib/services/service.provider';
 import {

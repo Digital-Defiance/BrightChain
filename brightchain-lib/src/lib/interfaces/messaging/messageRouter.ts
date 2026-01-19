@@ -27,7 +27,11 @@ export interface IMessageRouter {
    * @param forwardingPath - Path of nodes that have already forwarded this message
    * @returns Promise resolving to forwarding results
    */
-  forwardMessage(messageId: string, recipients: string[], forwardingPath: string[]): Promise<RoutingResult>;
+  forwardMessage(
+    messageId: string,
+    recipients: string[],
+    forwardingPath: string[],
+  ): Promise<RoutingResult>;
 
   /**
    * Determine routing strategy based on recipients

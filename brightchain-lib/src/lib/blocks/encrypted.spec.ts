@@ -12,12 +12,12 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import MemberType from '../enumerations/memberType';
-import { Checksum } from '../types/checksum';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
+import { Checksum } from '../types/checksum';
 import { EncryptedBlock } from './encrypted';
 
 class TestEncryptedBlock extends EncryptedBlock<Uint8Array> {

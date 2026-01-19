@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
 import About from './components/About';
+import { AccessibilityProvider } from './components/AccessibilityProvider';
 import Blog from './components/Blog';
-import BlogPost from './components/BlogPost';
 import BlogEditor from './components/BlogEditor';
-import Components from './components/Components';
-import Demo from './components/Demo';
-import Hero from './components/Hero';
+import BlogPost from './components/BlogPost';
 import { BrightChainSoupDemo } from './components/BrightChainSoupDemo';
 import { CompatibilityWarning } from './components/CompatibilityWarning';
+import Components from './components/Components';
+import Demo from './components/Demo';
 import { DemoNavigation } from './components/DemoNavigation';
-import { ScrollIndicator } from './components/ScrollIndicator';
-import { AccessibilityProvider } from './components/AccessibilityProvider';
 import { EducationalModeProvider } from './components/EducationalModeProvider';
+import Hero from './components/Hero';
+import { ScrollIndicator } from './components/ScrollIndicator';
 import { SkipLink } from './components/SkipLink';
 
 function HomePage() {

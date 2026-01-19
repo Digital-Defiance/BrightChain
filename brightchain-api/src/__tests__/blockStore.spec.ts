@@ -1,11 +1,12 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-import { promises as fs } from 'fs';
-import os from 'os';
-import path from 'path';
 import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
 import type { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
 import { ChecksumService } from '@brightchain/brightchain-lib/lib/services/checksum.service';
 import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
+import { promises as fs } from 'fs';
+import os from 'os';
+import path from 'path';
+import { IApplication } from '../interfaces/application';
 import { BlockStoreService } from '../services/blockStore';
 
 jest.mock('file-type', () => ({
@@ -16,14 +17,22 @@ jest.mock('file-type', () => ({
 beforeAll(() => {
   ServiceLocator.setServiceProvider({
     checksumService: new ChecksumService(),
-  } as any);
+  } as unknown as ReturnType<typeof ServiceLocator.getServiceProvider>);
 });
 
 afterAll(() => {
   ServiceLocator.reset();
 });
 
-const dummyApp = {
+interface DummyApp {
+  id: string;
+  getController: () => never;
+  getModel: () => never;
+  nodeAgent: Record<string, unknown>;
+  clusterAgentPublicKeys: Buffer[];
+}
+
+const dummyApp: DummyApp = {
   id: 'test-app',
   getController: () => {
     throw new Error('not implemented');
@@ -31,8 +40,8 @@ const dummyApp = {
   getModel: () => {
     throw new Error('not implemented');
   },
-  nodeAgent: {} as any,
-  clusterAgentPublicKeys: [] as Buffer[],
+  nodeAgent: {},
+  clusterAgentPublicKeys: [],
 };
 
 describe('BlockStoreService', () => {
@@ -50,7 +59,9 @@ describe('BlockStoreService', () => {
     const blockSize = 4096 as BlockSize;
     process.env.BRIGHTCHAIN_BLOCKSIZE_BYTES = `${blockSize}`;
 
-    const service = new BlockStoreService(dummyApp as any);
+    const service = new BlockStoreService(
+      dummyApp as unknown as IApplication,
+    );
     const payload = Buffer.from('hello-world');
 
     const blockId = await service.storeBlock(payload);
@@ -59,7 +70,9 @@ describe('BlockStoreService', () => {
     expect(stored.equals(payload)).toBe(true);
 
     // Verify the ID matches the checksum that the block class derives
-    const expectedId = Buffer.from(new RawDataBlock(blockSize, payload).idChecksum.toBuffer()).toString('hex');
+    const expectedId = Buffer.from(
+      new RawDataBlock(blockSize, payload).idChecksum.toBuffer(),
+    ).toString('hex');
     expect(blockId).toBe(expectedId);
 
     await fs.rm(tmpDir, { recursive: true, force: true });

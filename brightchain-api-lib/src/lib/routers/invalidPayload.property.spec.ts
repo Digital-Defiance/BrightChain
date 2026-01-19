@@ -1,6 +1,6 @@
+import express, { Express } from 'express';
 import fc from 'fast-check';
 import request from 'supertest';
-import express, { Express } from 'express';
 import { createMessageRouter } from '../routers/messageRouter';
 import { MessagePassingService } from '../services/messagePassingService';
 
@@ -35,21 +35,21 @@ describe('Feature: message-passing-and-events, Property: Invalid Message Payload
         fc.record({
           content: fc.option(fc.string(), { nil: undefined }),
           senderId: fc.option(fc.string({ minLength: 1 }), { nil: undefined }),
-          messageType: fc.option(fc.string({ minLength: 1 }), { nil: undefined }),
+          messageType: fc.option(fc.string({ minLength: 1 }), {
+            nil: undefined,
+          }),
         }),
         async (payload) => {
           // Only test when at least one required field is missing
           if (!payload.content || !payload.senderId || !payload.messageType) {
-            const response = await request(app)
-              .post('/messages')
-              .send(payload);
+            const response = await request(app).post('/messages').send(payload);
 
             expect(response.status).toBe(400);
             expect(response.body.error).toBe('Missing required fields');
           }
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -62,21 +62,19 @@ describe('Feature: message-passing-and-events, Property: Invalid Message Payload
       fc.asyncProperty(
         fc.constantFrom('content', 'senderId', 'messageType'),
         async (emptyField) => {
-          const payload: any = {
+          const payload: Record<string, string> = {
             content: Buffer.from('test').toString('base64'),
             senderId: 'sender-1',
             messageType: 'test',
           };
           payload[emptyField] = '';
 
-          const response = await request(app)
-            .post('/messages')
-            .send(payload);
+          const response = await request(app).post('/messages').send(payload);
 
           expect(response.status).toBe(400);
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -89,19 +87,17 @@ describe('Feature: message-passing-and-events, Property: Invalid Message Payload
       fc.asyncProperty(
         fc.string({ minLength: 1, maxLength: 32 }),
         async (senderId) => {
-          const response = await request(app)
-            .post('/messages')
-            .send({
-              content: 123, // Invalid type
-              senderId,
-              messageType: 'test',
-            });
+          const response = await request(app).post('/messages').send({
+            content: 123, // Invalid type
+            senderId,
+            messageType: 'test',
+          });
 
           // Express may return 400 or 500 depending on how it handles the type error
           expect([400, 500]).toContain(response.status);
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -126,9 +122,9 @@ describe('Feature: message-passing-and-events, Property: Invalid Message Payload
 
           expect(response.status).toBe(500);
           expect(response.body.error).toBe(errorMessage);
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -155,9 +151,9 @@ describe('Feature: message-passing-and-events, Property: Invalid Message Payload
 
           expect(response.status).toBe(201);
           expect(response.body.messageId).toBe('msg-123');
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });

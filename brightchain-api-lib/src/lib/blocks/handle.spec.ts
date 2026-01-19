@@ -7,11 +7,8 @@ import {
   ChecksumMismatchError,
   RawDataBlock,
   ServiceProvider,
-  uint8ArrayToHex,
 } from '@brightchain/brightchain-lib';
-import {
-  arraysEqual,
-} from '@digitaldefiance/ecies-lib';
+import { arraysEqual } from '@digitaldefiance/ecies-lib';
 import { mkdirSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { BlockHandle, createBlockHandleFromPath } from './handle';
@@ -60,10 +57,7 @@ describe('BlockHandle', () => {
       expect(handle.blockType).toBe(BlockType.Handle);
       expect(handle.blockDataType).toBe(BlockDataType.RawData);
       expect(
-        arraysEqual(
-          handle.idChecksum.toUint8Array(),
-          checksum.toUint8Array(),
-        ),
+        arraysEqual(handle.idChecksum.toUint8Array(), checksum.toUint8Array()),
       ).toBe(true);
       expect(handle.path).toBe(path);
       expect(handle.canRead).toBe(true);

@@ -3,8 +3,8 @@ import { FaGithub, FaNewspaper } from 'react-icons/fa';
 import { GiCookingPot } from 'react-icons/gi';
 import { Link } from 'react-router-dom';
 import { AnimatedParticles } from './AnimatedParticles';
-import { ScrollIndicator } from './ScrollIndicator';
 import './Hero.css';
+import { ScrollIndicator } from './ScrollIndicator';
 
 interface HeroProps {
   scrollY: number;
@@ -80,17 +80,11 @@ const Hero = ({ scrollY }: HeroProps) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9, duration: 0.8 }}
         >
-          <a
-            href="#demo"
-            className="btn btn-primary"
-          >
+          <a href="#demo" className="btn btn-primary">
             <GiCookingPot />
             🧪 Interactive Demo
           </a>
-          <Link
-            to="/demo"
-            className="btn btn-secondary"
-          >
+          <Link to="/demo" className="btn btn-secondary">
             <GiCookingPot />
             🥫 BrightChain Soup Demo
           </Link>

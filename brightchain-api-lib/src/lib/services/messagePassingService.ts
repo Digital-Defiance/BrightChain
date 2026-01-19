@@ -1,10 +1,14 @@
 import {
-  MessageCBLService,
-  IMessageMetadataStore,
-  MessageDeliveryStatus,
   IMessageCBLOptions as ICreateMessageOptions,
+  IMessageMetadata,
+  IMessageMetadataStore,
+  MessageCBLService,
+  MessageDeliveryStatus,
 } from '@brightchain/brightchain-lib';
-import { EventNotificationSystem, MessageEventType } from './eventNotificationSystem';
+import {
+  EventNotificationSystem,
+  MessageEventType,
+} from './eventNotificationSystem';
 import { WebSocketMessageServer } from './webSocketMessageServer';
 
 /**
@@ -15,7 +19,7 @@ export class MessagePassingService {
     private messageCBL: MessageCBLService,
     private metadataStore: IMessageMetadataStore,
     private eventSystem: EventNotificationSystem,
-    private wsServer: WebSocketMessageServer
+    private wsServer: WebSocketMessageServer,
   ) {
     this.setupHandlers();
   }
@@ -26,18 +30,18 @@ export class MessagePassingService {
   async sendMessage(
     content: Buffer,
     senderId: string,
-    options: ICreateMessageOptions
+    options: ICreateMessageOptions,
   ): Promise<string> {
     const { messageId } = await this.messageCBL.createMessage(
       new Uint8Array(content),
-      senderId as any,
-      options
+      senderId as unknown as Parameters<MessageCBLService['createMessage']>[1],
+      options,
     );
     const metadata = await this.messageCBL.getMessageMetadata(messageId);
-    
+
     if (metadata) {
       this.eventSystem.emit(MessageEventType.MESSAGE_STORED, metadata);
-      
+
       // Route to recipients
       if (options.recipients && options.recipients.length > 0) {
         for (const recipientId of options.recipients) {
@@ -45,7 +49,7 @@ export class MessagePassingService {
           await this.metadataStore.updateDeliveryStatus(
             messageId,
             recipientId,
-            MessageDeliveryStatus.IN_TRANSIT
+            MessageDeliveryStatus.IN_TRANSIT,
           );
         }
       } else {
@@ -68,7 +72,9 @@ export class MessagePassingService {
   /**
    * Query messages
    */
-  async queryMessages(query: any): Promise<any> {
+  async queryMessages(
+    query: Record<string, unknown>,
+  ): Promise<IMessageMetadata[]> {
     return this.metadataStore.queryMessages(query);
   }
 
@@ -94,19 +100,24 @@ export class MessagePassingService {
     });
 
     this.wsServer.onAck(async (nodeId, messageId, status) => {
-      await this.metadataStore.recordAcknowledgment(messageId, nodeId, new Date());
+      await this.metadataStore.recordAcknowledgment(
+        messageId,
+        nodeId,
+        new Date(),
+      );
       await this.metadataStore.updateDeliveryStatus(
         messageId,
         nodeId,
-        status as MessageDeliveryStatus
+        status as MessageDeliveryStatus,
       );
-      
+
       const metadata = await this.messageCBL.getMessageMetadata(messageId);
       if (metadata) {
         const allDelivered = metadata.recipients?.every(
-          (r: string) => metadata.deliveryStatus?.get(r) === MessageDeliveryStatus.DELIVERED
+          (r: string) =>
+            metadata.deliveryStatus?.get(r) === MessageDeliveryStatus.DELIVERED,
         );
-        
+
         if (allDelivered) {
           this.eventSystem.emit(MessageEventType.MESSAGE_DELIVERED, metadata);
         } else if (status === MessageDeliveryStatus.FAILED) {

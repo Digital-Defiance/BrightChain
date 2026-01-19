@@ -1,5 +1,5 @@
 // services/authService.js
-/* eslint-disable @nx/enforce-module-boundaries */
+
 import {
   IRequestUser,
   StringNames,

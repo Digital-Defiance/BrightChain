@@ -1,14 +1,30 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { BlockSize, FileReceipt, BlockInfo } from '@brightchain/brightchain-lib';
+import {
+  BlockInfo,
+  BlockSize,
+  FileReceipt,
+} from '@brightchain/brightchain-lib';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ProcessStep } from './AnimationController';
+import './BrightChainSoupDemo.css';
+import {
+  EducationalModeProvider,
+  useEducationalModeContext,
+} from './EducationalModeProvider';
+import {
+  ConceptGlossaryModal,
+  ContextualHelpButton,
+  EducationalTooltip,
+  StepExplanationPanel,
+} from './EducationalTooltips';
+import { EncodingAnimation } from './EncodingAnimation';
+import {
+  EducationalModeControls,
+  EducationalProgressIndicator,
+  ProcessCompletionSummary,
+} from './ProcessCompletionSummary';
+import { ReconstructionAnimation } from './ReconstructionAnimation';
 import { SessionIsolatedBrightChain } from './SessionIsolatedBrightChain';
 import { useAnimationController } from './useAnimationController';
-import { ProcessStep } from './AnimationController';
-import { EncodingAnimation } from './EncodingAnimation';
-import { ReconstructionAnimation } from './ReconstructionAnimation';
-import { EducationalModeProvider, useEducationalModeContext } from './EducationalModeProvider';
-import { EducationalTooltip, StepExplanationPanel, ConceptGlossaryModal, ContextualHelpButton } from './EducationalTooltips';
-import { ProcessCompletionSummary, EducationalModeControls, EducationalProgressIndicator } from './ProcessCompletionSummary';
-import './BrightChainSoupDemo.css';
 
 interface AnimatedProcessStepProps {
   step: ProcessStep;
@@ -16,17 +32,21 @@ interface AnimatedProcessStepProps {
   onStepClick?: () => void;
 }
 
-const AnimatedProcessStep: React.FC<AnimatedProcessStepProps> = ({ 
-  step, 
-  isEducationalMode, 
-  onStepClick 
+const AnimatedProcessStep: React.FC<AnimatedProcessStepProps> = ({
+  step,
+  isEducationalMode,
+  onStepClick,
 }) => {
   const getIcon = () => {
     switch (step.status) {
-      case 'complete': return '✅';
-      case 'active': return '⏳';
-      case 'error': return '❌';
-      default: return '⭕';
+      case 'complete':
+        return '✅';
+      case 'active':
+        return '⏳';
+      case 'error':
+        return '❌';
+      default:
+        return '⭕';
     }
   };
 
@@ -44,7 +64,7 @@ const AnimatedProcessStep: React.FC<AnimatedProcessStepProps> = ({
   };
 
   return (
-    <div 
+    <div
       className={`animated-process-step ${step.status} ${isEducationalMode ? 'educational' : ''}`}
       onClick={onStepClick}
     >
@@ -58,8 +78,12 @@ const AnimatedProcessStep: React.FC<AnimatedProcessStepProps> = ({
         {getProgressBar()}
         {isEducationalMode && step.status === 'active' && (
           <div className="educational-tooltip">
-            <p>🎓 <strong>What's happening:</strong> {step.description}</p>
-            <p>⏱️ <strong>Duration:</strong> {step.duration}ms</p>
+            <p>
+              🎓 <strong>What's happening:</strong> {step.description}
+            </p>
+            <p>
+              ⏱️ <strong>Duration:</strong> {step.duration}ms
+            </p>
           </div>
         )}
       </div>
@@ -82,19 +106,19 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
   onPlay,
   onPause,
   onReset,
-  onSpeedChange
+  onSpeedChange,
 }) => {
   return (
     <div className="animation-controls">
       <div className="playback-controls">
-        <button 
+        <button
           onClick={isPlaying ? onPause : onPlay}
           className={`control-btn ${isPlaying ? 'pause' : 'play'}`}
           title={isPlaying ? 'Pause Animation' : 'Play Animation'}
         >
           {isPlaying ? '⏸️' : '▶️'}
         </button>
-        <button 
+        <button
           onClick={onReset}
           className="control-btn reset"
           title="Reset Animation"
@@ -102,7 +126,7 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
           🔄
         </button>
       </div>
-      
+
       <div className="speed-control">
         <label htmlFor="speed-slider">Speed: {speed}x</label>
         <input
@@ -135,7 +159,7 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   droppedFrames,
   memoryUsage,
   sequenceCount,
-  errorCount
+  errorCount,
 }) => {
   const getPerformanceStatus = () => {
     if (frameRate >= 30) return 'good';
@@ -181,15 +205,26 @@ const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 };
 
 const AnimatedBrightChainDemoContent: React.FC = () => {
-  const [brightChain, setBrightChain] = useState<SessionIsolatedBrightChain | null>(null);
+  const [brightChain, setBrightChain] =
+    useState<SessionIsolatedBrightChain | null>(null);
   const [receipts, setReceipts] = useState<FileReceipt[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<BlockInfo | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [currentEncodingFile, setCurrentEncodingFile] = useState<File | null>(null);
-  const [currentReconstructionReceipt, setCurrentReconstructionReceipt] = useState<FileReceipt | null>(null);
+  const [debugInfo, setDebugInfo] = useState<{
+    sessionId: string;
+    blockCount: number;
+    blockSize: number;
+    blockIds: string[];
+  } | null>(null);
+  const [currentEncodingFile, setCurrentEncodingFile] = useState<File | null>(
+    null,
+  );
+  const [currentReconstructionReceipt, setCurrentReconstructionReceipt] =
+    useState<FileReceipt | null>(null);
   const [showCompletionSummary, setShowCompletionSummary] = useState(false);
-  const [completionProcessType, setCompletionProcessType] = useState<'encoding' | 'reconstruction'>('encoding');
+  const [completionProcessType, setCompletionProcessType] = useState<
+    'encoding' | 'reconstruction'
+  >('encoding');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Animation controller hook
@@ -205,7 +240,6 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
     pause,
     resume,
     reset,
-    controller
   } = useAnimationController();
 
   // Educational mode context
@@ -217,101 +251,125 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
       const newBrightChain = new SessionIsolatedBrightChain(BlockSize.Small);
       setBrightChain(newBrightChain);
       setDebugInfo(newBrightChain.getDebugInfo());
-      
+
       console.log('SessionIsolatedBrightChain initialized successfully');
     } catch (error) {
       console.error('Failed to initialize SessionIsolatedBrightChain:', error);
     }
   }, []);
 
-  const handleFileUpload = useCallback(async (files: FileList) => {
-    if (!brightChain || !isInitialized) {
-      console.error('BrightChain or AnimationController not initialized');
-      return;
-    }
-    
-    for (const file of Array.from(files)) {
+  const handleFileUpload = useCallback(
+    async (files: FileList) => {
+      if (!brightChain || !isInitialized) {
+        console.error('BrightChain or AnimationController not initialized');
+        return;
+      }
+
+      for (const file of Array.from(files)) {
+        try {
+          // Set current encoding file for animation
+          setCurrentEncodingFile(file);
+
+          // Start animation sequence
+          await playEncodingAnimation(file);
+
+          // Perform actual BrightChain operations
+          const arrayBuffer = await file.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+          const receipt = await brightChain.storeFile(uint8Array, file.name);
+
+          setReceipts((prev) => [...prev, receipt]);
+          setDebugInfo(brightChain.getDebugInfo());
+
+          // Clear current encoding file
+          setCurrentEncodingFile(null);
+
+          // Show completion summary if in educational mode
+          if (educationalConfig.enabled) {
+            setCompletionProcessType('encoding');
+            setShowCompletionSummary(true);
+          }
+        } catch (error) {
+          console.error('Failed to store file:', error);
+          setCurrentEncodingFile(null);
+        }
+      }
+    },
+    [
+      brightChain,
+      isInitialized,
+      playEncodingAnimation,
+      educationalConfig.enabled,
+    ],
+  );
+
+  const handleRetrieve = useCallback(
+    async (receipt: FileReceipt) => {
+      if (!brightChain || !isInitialized) {
+        console.error('BrightChain or AnimationController not initialized');
+        return;
+      }
+
       try {
-        // Set current encoding file for animation
-        setCurrentEncodingFile(file);
-        
-        // Start animation sequence
-        await playEncodingAnimation(file);
-        
-        // Perform actual BrightChain operations
-        const arrayBuffer = await file.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        const receipt = await brightChain.storeFile(uint8Array, file.name);
-        
-        setReceipts(prev => [...prev, receipt]);
-        setDebugInfo(brightChain.getDebugInfo());
-        
-        // Clear current encoding file
-        setCurrentEncodingFile(null);
-        
+        // Set current reconstruction receipt for animation
+        setCurrentReconstructionReceipt(receipt);
+
+        // Start reconstruction animation
+        await playReconstructionAnimation(receipt);
+
+        // Perform actual BrightChain retrieval
+        const fileData = await brightChain.retrieveFile(receipt);
+        const blob = new Blob([new Uint8Array(fileData)]);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = receipt.fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        console.log(
+          `File "${receipt.fileName}" retrieved and downloaded successfully`,
+        );
+
+        // Clear current reconstruction receipt
+        setCurrentReconstructionReceipt(null);
+
         // Show completion summary if in educational mode
         if (educationalConfig.enabled) {
-          setCompletionProcessType('encoding');
+          setCompletionProcessType('reconstruction');
           setShowCompletionSummary(true);
         }
-        
       } catch (error) {
-        console.error('Failed to store file:', error);
-        setCurrentEncodingFile(null);
+        console.error('Failed to retrieve file:', error);
+        setCurrentReconstructionReceipt(null);
+        alert(
+          `Failed to retrieve file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
       }
-    }
-  }, [brightChain, isInitialized, playEncodingAnimation, educationalConfig.enabled]);
+    },
+    [
+      brightChain,
+      isInitialized,
+      playReconstructionAnimation,
+      educationalConfig.enabled,
+    ],
+  );
 
-  const handleRetrieve = useCallback(async (receipt: FileReceipt) => {
-    if (!brightChain || !isInitialized) {
-      console.error('BrightChain or AnimationController not initialized');
-      return;
-    }
-    
-    try {
-      // Set current reconstruction receipt for animation
-      setCurrentReconstructionReceipt(receipt);
-      
-      // Start reconstruction animation
-      await playReconstructionAnimation(receipt);
-      
-      // Perform actual BrightChain retrieval
-      const fileData = await brightChain.retrieveFile(receipt);
-      const blob = new Blob([new Uint8Array(fileData)]);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = receipt.fileName;
-      a.click();
-      URL.revokeObjectURL(url);
-      
-      console.log(`File "${receipt.fileName}" retrieved and downloaded successfully`);
-      
-      // Clear current reconstruction receipt
-      setCurrentReconstructionReceipt(null);
-      
-      // Show completion summary if in educational mode
-      if (educationalConfig.enabled) {
-        setCompletionProcessType('reconstruction');
-        setShowCompletionSummary(true);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOver(false);
+      if (e.dataTransfer.files) {
+        handleFileUpload(e.dataTransfer.files);
       }
-    } catch (error) {
-      console.error('Failed to retrieve file:', error);
-      setCurrentReconstructionReceipt(null);
-      alert(`Failed to retrieve file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }, [brightChain, isInitialized, playReconstructionAnimation, educationalConfig.enabled]);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    if (e.dataTransfer.files) {
-      handleFileUpload(e.dataTransfer.files);
-    }
-  }, [handleFileUpload]);
+    },
+    [handleFileUpload],
+  );
 
   const handleDownloadCBL = useCallback((receipt: FileReceipt) => {
-    const cblBlob = new Blob([new Uint8Array(receipt.cblData)], { type: 'application/octet-stream' });
+    const cblBlob = new Blob([new Uint8Array(receipt.cblData)], {
+      type: 'application/octet-stream',
+    });
     const url = URL.createObjectURL(cblBlob);
     const a = document.createElement('a');
     a.href = url;
@@ -320,15 +378,17 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
     URL.revokeObjectURL(url);
   }, []);
 
-  const handleBlockClick = useCallback((block: BlockInfo) => {
-    setSelectedBlock(block);
+  const handleBlockClick = useCallback((_block: BlockInfo) => {
+    // Block click handler - currently unused but kept for future functionality
   }, []);
 
   if (!isInitialized || !brightChain) {
     return (
       <div className="loading-container">
         <div className="upload-icon">⚙️</div>
-        <p className="loading-text">Initializing Animated BrightChain Demo...</p>
+        <p className="loading-text">
+          Initializing Animated BrightChain Demo...
+        </p>
       </div>
     );
   }
@@ -338,10 +398,11 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
       <div className="demo-header">
         <h1 className="demo-title">Animated BrightChain Block Soup Demo</h1>
         <p className="demo-subtitle">
-          Experience the BrightChain process with step-by-step animations and educational content!
+          Experience the BrightChain process with step-by-step animations and
+          educational content!
         </p>
         <p className="session-info">
-          <strong>Session:</strong> {debugInfo?.sessionId?.substring(0, 20)}... 
+          <strong>Session:</strong> {debugInfo?.sessionId?.substring(0, 20)}...
           <span className="session-note">(Data clears on page refresh)</span>
         </p>
       </div>
@@ -396,7 +457,10 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
           {/* Upload Area */}
           <div
             onDrop={handleDrop}
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
             onDragLeave={() => setDragOver(false)}
             className={`upload-area ${dragOver ? 'drag-over' : ''}`}
           >
@@ -406,12 +470,14 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
               ref={fileInputRef}
               type="file"
               multiple
-              onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
+              onChange={(e) =>
+                e.target.files && handleFileUpload(e.target.files)
+              }
               className="upload-input"
               disabled={animationState.isPlaying}
               style={{ display: 'none' }}
             />
-            <button 
+            <button
               onClick={() => fileInputRef.current?.click()}
               className="upload-input"
               disabled={animationState.isPlaying}
@@ -428,30 +494,32 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
             </h2>
             {receipts.length === 0 ? (
               <div className="storage-empty">
-                No files stored yet. Upload some files to see the animated magic! ✨
+                No files stored yet. Upload some files to see the animated
+                magic! ✨
               </div>
             ) : (
-              receipts.map(receipt => (
+              receipts.map((receipt) => (
                 <div key={receipt.id} className="file-card">
                   <div className="file-header">
                     <span>📄</span>
                     <h3 className="file-title">{receipt.fileName}</h3>
                   </div>
                   <div className="file-info">
-                    Size: {receipt.originalSize} bytes | Blocks: {receipt.blockCount}
+                    Size: {receipt.originalSize} bytes | Blocks:{' '}
+                    {receipt.blockCount}
                   </div>
-                  
+
                   <div className="file-actions">
-                    <button 
-                      onClick={() => handleRetrieve(receipt)} 
+                    <button
+                      onClick={() => handleRetrieve(receipt)}
                       className="action-btn primary"
                       disabled={animationState.isPlaying}
                     >
                       <span>📥</span>
                       Retrieve File
                     </button>
-                    <button 
-                      onClick={() => handleDownloadCBL(receipt)} 
+                    <button
+                      onClick={() => handleDownloadCBL(receipt)}
                       className="action-btn secondary"
                     >
                       <span>📄</span>
@@ -471,9 +539,11 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
             <div className="animation-sequence">
               <h3 className="sequence-header">
                 <span>🎬</span>
-                {currentSequence.type === 'encoding' ? 'Encoding Animation' : 'Reconstruction Animation'}
+                {currentSequence.type === 'encoding'
+                  ? 'Encoding Animation'
+                  : 'Reconstruction Animation'}
               </h3>
-              {currentSequence.steps.map(step => (
+              {currentSequence.steps.map((step) => (
                 <AnimatedProcessStep
                   key={step.id}
                   step={step}
@@ -511,9 +581,15 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
                 Block Details
               </h3>
               <div className="block-info">
-                <p><strong>Index:</strong> #{selectedBlock.index}</p>
-                <p><strong>Size:</strong> {selectedBlock.size} bytes</p>
-                <p><strong>ID:</strong></p>
+                <p>
+                  <strong>Index:</strong> #{selectedBlock.index}
+                </p>
+                <p>
+                  <strong>Size:</strong> {selectedBlock.size} bytes
+                </p>
+                <p>
+                  <strong>ID:</strong>
+                </p>
                 <div className="block-id">{selectedBlock.id}</div>
               </div>
             </div>
@@ -532,7 +608,9 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
               </div>
               <div className="stat-item">
                 <span>Total Blocks:</span>
-                <span className="stat-value">{receipts.reduce((sum, r) => sum + r.blockCount, 0)}</span>
+                <span className="stat-value">
+                  {receipts.reduce((sum, r) => sum + r.blockCount, 0)}
+                </span>
               </div>
               <div className="stat-item">
                 <span>Animation Speed:</span>
@@ -540,7 +618,9 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
               </div>
               <div className="stat-item">
                 <span>Frame Rate:</span>
-                <span className="stat-value">{performanceMetrics.frameRate} fps</span>
+                <span className="stat-value">
+                  {performanceMetrics.frameRate} fps
+                </span>
               </div>
             </div>
           </div>
@@ -564,9 +644,7 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
 };
 
 export const AnimatedBrightChainDemo: React.FC = () => {
-  const {
-    controller
-  } = useAnimationController();
+  const { controller } = useAnimationController();
 
   return (
     <EducationalModeProvider animationController={controller}>

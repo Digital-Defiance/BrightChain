@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @fileoverview Property-based tests for MemoryBlockStore XOR Brightening operations
  *
@@ -70,9 +69,7 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
               // Create and store random blocks with unique data
               const randomBlocks: RawDataBlock[] = [];
               const usedChecksums = new Set<string>();
-              usedChecksums.add(
-                sourceBlock.idChecksum.toHex(),
-              );
+              usedChecksums.add(sourceBlock.idChecksum.toHex());
 
               for (let i = 0; i < randomBlockCount; i++) {
                 let randomBlock: RawDataBlock;
@@ -93,9 +90,7 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
                   randomBlock = new RawDataBlock(blockSize, randomData);
                   attempts++;
                 } while (
-                  usedChecksums.has(
-                    randomBlock.idChecksum.toHex(),
-                  ) &&
+                  usedChecksums.has(randomBlock.idChecksum.toHex()) &&
                   attempts < maxAttempts
                 );
 
@@ -104,9 +99,7 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
                   return;
                 }
 
-                usedChecksums.add(
-                  randomBlock.idChecksum.toHex(),
-                );
+                usedChecksums.add(randomBlock.idChecksum.toHex());
                 await testStore.setData(randomBlock, {
                   durabilityLevel: DurabilityLevel.Ephemeral,
                 });
@@ -190,9 +183,7 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
               // Create and store random blocks with unique data
               const storedRandomBlockIds: string[] = [];
               const usedChecksums = new Set<string>();
-              usedChecksums.add(
-                sourceBlock.idChecksum.toHex(),
-              );
+              usedChecksums.add(sourceBlock.idChecksum.toHex());
 
               for (let i = 0; i < randomBlockCount; i++) {
                 let randomBlock: RawDataBlock;
@@ -212,9 +203,7 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
                   randomBlock = new RawDataBlock(blockSize, randomData);
                   attempts++;
                 } while (
-                  usedChecksums.has(
-                    randomBlock.idChecksum.toHex(),
-                  ) &&
+                  usedChecksums.has(randomBlock.idChecksum.toHex()) &&
                   attempts < maxAttempts
                 );
 
@@ -366,9 +355,7 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
 
               // Create and store random blocks with unique data
               const usedChecksums = new Set<string>();
-              usedChecksums.add(
-                sourceBlock.idChecksum.toHex(),
-              );
+              usedChecksums.add(sourceBlock.idChecksum.toHex());
 
               for (let i = 0; i < randomBlockCount; i++) {
                 let randomBlock: RawDataBlock;
@@ -388,9 +375,7 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
                   randomBlock = new RawDataBlock(blockSize, randomData);
                   attempts++;
                 } while (
-                  usedChecksums.has(
-                    randomBlock.idChecksum.toHex(),
-                  ) &&
+                  usedChecksums.has(randomBlock.idChecksum.toHex()) &&
                   attempts < maxAttempts
                 );
 
@@ -399,9 +384,7 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
                   return;
                 }
 
-                usedChecksums.add(
-                  randomBlock.idChecksum.toHex(),
-                );
+                usedChecksums.add(randomBlock.idChecksum.toHex());
                 await testStore.setData(randomBlock, {
                   durabilityLevel: DurabilityLevel.Ephemeral,
                 });

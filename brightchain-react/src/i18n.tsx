@@ -1,5 +1,5 @@
 // src/i18n.ts
-/* eslint-disable @nx/enforce-module-boundaries */
+
 import { LanguageCodes, getCoreLanguageCodes } from '@digitaldefiance/i18n-lib';
 import i18n from 'i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';

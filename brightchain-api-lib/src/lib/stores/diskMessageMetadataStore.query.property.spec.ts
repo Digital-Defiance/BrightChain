@@ -2,7 +2,6 @@ import {
   BlockSize,
   DurabilityLevel,
   IMessageMetadata,
-  MessageDeliveryStatus,
   MessageEncryptionScheme,
   MessagePriority,
   ReplicationStatus,
@@ -67,8 +66,11 @@ describe('DiskMessageMetadataStore - Query Performance Property Tests', () => {
         arbHexString(40, 40),
         async (messageCount, targetRecipient) => {
           const iterTempDir = mkdtempSync(join(tmpdir(), 'disk-msg-query-'));
-          const iterStore = new DiskMessageMetadataStore(iterTempDir, BlockSize.Small);
-          
+          const iterStore = new DiskMessageMetadataStore(
+            iterTempDir,
+            BlockSize.Small,
+          );
+
           try {
             const startStore = Date.now();
             for (let i = 0; i < messageCount; i++) {
@@ -84,7 +86,8 @@ describe('DiskMessageMetadataStore - Query Performance Property Tests', () => {
             const storeTime = Date.now() - startStore;
 
             const startQuery = Date.now();
-            const results = await iterStore.getMessagesByRecipient(targetRecipient);
+            const results =
+              await iterStore.getMessagesByRecipient(targetRecipient);
             const queryTime = Date.now() - startQuery;
 
             expect(results.length).toBe(messageCount);
@@ -105,8 +108,11 @@ describe('DiskMessageMetadataStore - Query Performance Property Tests', () => {
         arbHexString(40, 40),
         async (messageCount, targetSender) => {
           const iterTempDir = mkdtempSync(join(tmpdir(), 'disk-msg-sender-q-'));
-          const iterStore = new DiskMessageMetadataStore(iterTempDir, BlockSize.Small);
-          
+          const iterStore = new DiskMessageMetadataStore(
+            iterTempDir,
+            BlockSize.Small,
+          );
+
           try {
             const startStore = Date.now();
             for (let i = 0; i < messageCount; i++) {
@@ -144,8 +150,11 @@ describe('DiskMessageMetadataStore - Query Performance Property Tests', () => {
         fc.constantFrom('type1', 'type2', 'type3'),
         async (messageCount, targetRecipient, filterType) => {
           const iterTempDir = mkdtempSync(join(tmpdir(), 'disk-msg-filter-'));
-          const iterStore = new DiskMessageMetadataStore(iterTempDir, BlockSize.Small);
-          
+          const iterStore = new DiskMessageMetadataStore(
+            iterTempDir,
+            BlockSize.Small,
+          );
+
           try {
             for (let i = 0; i < messageCount; i++) {
               const metadata = createMessageMetadata(
@@ -158,16 +167,17 @@ describe('DiskMessageMetadataStore - Query Performance Property Tests', () => {
               await iterStore.storeMessageMetadata(metadata);
             }
 
-            const allResults = await iterStore.getMessagesByRecipient(
-              targetRecipient,
-            );
+            const allResults =
+              await iterStore.getMessagesByRecipient(targetRecipient);
             const filteredResults = await iterStore.getMessagesByRecipient(
               targetRecipient,
               { messageType: filterType },
             );
 
             expect(allResults.length).toBe(messageCount);
-            expect(filteredResults.length).toBeLessThanOrEqual(allResults.length);
+            expect(filteredResults.length).toBeLessThanOrEqual(
+              allResults.length,
+            );
             filteredResults.forEach((msg) => {
               expect(msg.messageType).toBe(filterType);
             });
@@ -213,9 +223,7 @@ describe('DiskMessageMetadataStore - Query Performance Property Tests', () => {
           if (page0.length > 0 && page1.length > 0) {
             const page0Ids = new Set(page0.map((m) => m.blockId));
             const page1Ids = new Set(page1.map((m) => m.blockId));
-            const intersection = [...page0Ids].filter((id) =>
-              page1Ids.has(id),
-            );
+            const intersection = [...page0Ids].filter((id) => page1Ids.has(id));
             expect(intersection.length).toBe(0);
           }
         },

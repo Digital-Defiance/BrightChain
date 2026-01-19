@@ -3,8 +3,8 @@
  */
 
 import { useState } from 'react';
-import { useBrowserCompatibility } from './useBrowserCompatibility';
 import './CompatibilityWarning.css';
+import { useBrowserCompatibility } from './useBrowserCompatibility';
 
 export function CompatibilityWarning() {
   const { report, isFullyCompatible, browserInfo } = useBrowserCompatibility();
@@ -36,8 +36,8 @@ export function CompatibilityWarning() {
 
         <div className="compatibility-warning-body">
           <p>
-            Your browser ({browserInfo.name} {browserInfo.version}) may not support all features
-            of this demo.
+            Your browser ({browserInfo.name} {browserInfo.version}) may not
+            support all features of this demo.
           </p>
 
           {report.errors.length > 0 && (
@@ -74,8 +74,8 @@ export function CompatibilityWarning() {
           )}
 
           <p className="compatibility-recommendation">
-            For the best experience, please use the latest version of Chrome, Firefox, Safari, or
-            Edge.
+            For the best experience, please use the latest version of Chrome,
+            Firefox, Safari, or Edge.
           </p>
         </div>
       </div>

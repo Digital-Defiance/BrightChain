@@ -1,5 +1,8 @@
 import * as fc from 'fast-check';
-import { IMessageSystemConfig, DEFAULT_MESSAGE_SYSTEM_CONFIG } from '../../interfaces/messaging/messageSystemConfig';
+import {
+  DEFAULT_MESSAGE_SYSTEM_CONFIG,
+  IMessageSystemConfig,
+} from '../../interfaces/messaging/messageSystemConfig';
 
 describe('MessageSystemConfig Property Tests', () => {
   describe('Property 30: Configurable Message-Sized Thresholds', () => {
@@ -14,26 +17,25 @@ describe('MessageSystemConfig Property Tests', () => {
               minMessageSizeThreshold: Math.min(min, max),
               maxMessageSizeThreshold: Math.max(min, max),
             };
-            return config.minMessageSizeThreshold <= config.maxMessageSizeThreshold;
-          }
+            return (
+              config.minMessageSizeThreshold <= config.maxMessageSizeThreshold
+            );
+          },
         ),
-        { numRuns: 100 }
+        { numRuns: 100 },
       );
     });
 
     it('Property 30b: Retry attempts must be non-negative', () => {
       fc.assert(
-        fc.property(
-          fc.integer({ min: 0, max: 10 }),
-          (retries) => {
-            const config: IMessageSystemConfig = {
-              ...DEFAULT_MESSAGE_SYSTEM_CONFIG,
-              storageRetryAttempts: retries,
-            };
-            return config.storageRetryAttempts >= 0;
-          }
-        ),
-        { numRuns: 100 }
+        fc.property(fc.integer({ min: 0, max: 10 }), (retries) => {
+          const config: IMessageSystemConfig = {
+            ...DEFAULT_MESSAGE_SYSTEM_CONFIG,
+            storageRetryAttempts: retries,
+          };
+          return config.storageRetryAttempts >= 0;
+        }),
+        { numRuns: 100 },
       );
     });
 
@@ -49,25 +51,22 @@ describe('MessageSystemConfig Property Tests', () => {
               queryTimeoutMs: query,
             };
             return config.routingTimeoutMs > 0 && config.queryTimeoutMs > 0;
-          }
+          },
         ),
-        { numRuns: 100 }
+        { numRuns: 100 },
       );
     });
 
     it('Property 30d: Max recipients must be positive', () => {
       fc.assert(
-        fc.property(
-          fc.integer({ min: 1, max: 10000 }),
-          (maxRecipients) => {
-            const config: IMessageSystemConfig = {
-              ...DEFAULT_MESSAGE_SYSTEM_CONFIG,
-              maxRecipientsPerMessage: maxRecipients,
-            };
-            return config.maxRecipientsPerMessage > 0;
-          }
-        ),
-        { numRuns: 100 }
+        fc.property(fc.integer({ min: 1, max: 10000 }), (maxRecipients) => {
+          const config: IMessageSystemConfig = {
+            ...DEFAULT_MESSAGE_SYSTEM_CONFIG,
+            maxRecipientsPerMessage: maxRecipients,
+          };
+          return config.maxRecipientsPerMessage > 0;
+        }),
+        { numRuns: 100 },
       );
     });
 
@@ -80,10 +79,13 @@ describe('MessageSystemConfig Property Tests', () => {
               ...DEFAULT_MESSAGE_SYSTEM_CONFIG,
               paddingStrategy: strategy,
             };
-            return config.paddingStrategy === 'zero' || config.paddingStrategy === 'random';
-          }
+            return (
+              config.paddingStrategy === 'zero' ||
+              config.paddingStrategy === 'random'
+            );
+          },
         ),
-        { numRuns: 100 }
+        { numRuns: 100 },
       );
     });
   });

@@ -2,12 +2,12 @@
  * @fileoverview React hook for accessing browser compatibility information
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   BrowserCompatibility,
   BrowserInfo,
-  FeatureSupport,
   CompatibilityReport,
+  FeatureSupport,
 } from './BrowserCompatibility';
 
 /**
@@ -16,7 +16,9 @@ import {
 export function useBrowserCompatibility() {
   const [compat] = useState(() => BrowserCompatibility.getInstance());
   const [browserInfo] = useState<BrowserInfo>(() => compat.getBrowserInfo());
-  const [featureSupport] = useState<FeatureSupport>(() => compat.getFeatureSupport());
+  const [featureSupport] = useState<FeatureSupport>(() =>
+    compat.getFeatureSupport(),
+  );
   const [report] = useState<CompatibilityReport>(() => compat.generateReport());
 
   return {
@@ -49,7 +51,10 @@ export function useSafeAnimationFrame() {
     if (hasRAF) {
       return window.requestAnimationFrame(callback);
     }
-    return window.setTimeout(() => callback(Date.now()), 16) as unknown as number;
+    return window.setTimeout(
+      () => callback(Date.now()),
+      16,
+    ) as unknown as number;
   };
 
   const cancelFrame = (handle: number): void => {

@@ -1,4 +1,4 @@
-/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { DefaultLanguageCode } from '@digitaldefiance/i18n-lib';
 import { NextFunction, Request, Response } from 'express';
 
@@ -9,8 +9,7 @@ export function setGlobalContextLanguageFromRequest(
 ) {
   // default to req.user.siteLanguage or fall back to default language
   let language: string =
-    (req.user?.siteLanguage as string) ||
-    (DefaultLanguageCode as string);
+    (req.user?.siteLanguage as string) || (DefaultLanguageCode as string);
   // check for accept-language header and override if present
   if (req.headers['accept-language']) {
     try {

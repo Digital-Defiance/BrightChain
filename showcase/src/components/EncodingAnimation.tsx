@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { BlockInfo } from '@brightchain/brightchain-lib';
+import { AnimatePresence, motion } from 'framer-motion';
+import React, { useCallback, useEffect, useState } from 'react';
 import './EncodingAnimation.css';
 
 export interface EncodingAnimationProps {
@@ -106,15 +106,18 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
   }, []);
 
   // Calculate chunk positions in a grid layout
-  const calculateChunkPosition = useCallback((index: number, total: number): { x: number; y: number } => {
-    const cols = Math.ceil(Math.sqrt(total));
-    const row = Math.floor(index / cols);
-    const col = index % cols;
-    return {
-      x: col * 80 + 40,
-      y: row * 100 + 50,
-    };
-  }, []);
+  const calculateChunkPosition = useCallback(
+    (index: number, total: number): { x: number; y: number } => {
+      const cols = Math.ceil(Math.sqrt(total));
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      return {
+        x: col * 80 + 40,
+        y: row * 100 + 50,
+      };
+    },
+    [],
+  );
 
   // Step 1: Read file data
   const readFileData = useCallback(async () => {
@@ -141,162 +144,186 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
   }, [file, animationSpeed]);
 
   // Step 2: Break file into chunks
-  const createChunks = useCallback(async (data: Uint8Array) => {
-    setCurrentStep(1);
-    updateStepStatus(1, 'active', 0);
+  const createChunks = useCallback(
+    async (data: Uint8Array) => {
+      setCurrentStep(1);
+      updateStepStatus(1, 'active', 0);
 
-    const newChunks: FileChunk[] = [];
-    const totalChunks = Math.ceil(data.length / blockSize);
+      const newChunks: FileChunk[] = [];
+      const totalChunks = Math.ceil(data.length / blockSize);
 
-    for (let i = 0; i < data.length; i += blockSize) {
-      const chunkData = data.slice(i, Math.min(i + blockSize, data.length));
-      const chunkIndex = Math.floor(i / blockSize);
-      
-      const chunk: FileChunk = {
-        id: `chunk-${chunkIndex}`,
-        data: chunkData,
-        originalSize: chunkData.length,
-        paddedSize: blockSize,
-        color: generateChunkColor(chunkIndex),
-        position: calculateChunkPosition(chunkIndex, totalChunks),
-      };
+      for (let i = 0; i < data.length; i += blockSize) {
+        const chunkData = data.slice(i, Math.min(i + blockSize, data.length));
+        const chunkIndex = Math.floor(i / blockSize);
 
-      newChunks.push(chunk);
-      setChunks(prev => [...prev, chunk]);
+        const chunk: FileChunk = {
+          id: `chunk-${chunkIndex}`,
+          data: chunkData,
+          originalSize: chunkData.length,
+          paddedSize: blockSize,
+          color: generateChunkColor(chunkIndex),
+          position: calculateChunkPosition(chunkIndex, totalChunks),
+        };
 
-      // Call callback if provided
-      if (onChunkCreated) {
-        onChunkCreated(chunkData, chunkIndex);
-      }
-
-      // Update progress
-      const progress = ((chunkIndex + 1) / totalChunks) * 100;
-      updateStepStatus(1, 'active', progress);
-
-      // Educational mode: slower animation
-      const chunkDelay = isEducationalMode ? 300 : 100;
-      await delay(chunkDelay / animationSpeed);
-    }
-
-    updateStepStatus(1, 'complete', 100);
-    return newChunks;
-  }, [blockSize, generateChunkColor, calculateChunkPosition, onChunkCreated, isEducationalMode, animationSpeed]);
-
-  // Step 3: Add padding to chunks
-  const addPadding = useCallback(async (chunksToProcess: FileChunk[]) => {
-    setCurrentStep(2);
-    updateStepStatus(2, 'active', 0);
-
-    const paddedChunks = [...chunksToProcess];
-
-    for (let i = 0; i < paddedChunks.length; i++) {
-      const chunk = paddedChunks[i];
-      
-      if (chunk.originalSize < blockSize) {
-        // Create padded data
-        const paddedData = new Uint8Array(blockSize);
-        paddedData.set(chunk.data);
-        
-        // Add random padding
-        const paddingStart = chunk.originalSize;
-        const paddingData = new Uint8Array(blockSize - paddingStart);
-        crypto.getRandomValues(paddingData);
-        paddedData.set(paddingData, paddingStart);
-
-        // Update chunk
-        chunk.data = paddedData;
+        newChunks.push(chunk);
+        setChunks((prev) => [...prev, chunk]);
 
         // Call callback if provided
-        if (onPaddingAdded) {
-          onPaddingAdded(paddedData, i);
+        if (onChunkCreated) {
+          onChunkCreated(chunkData, chunkIndex);
+        }
+
+        // Update progress
+        const progress = ((chunkIndex + 1) / totalChunks) * 100;
+        updateStepStatus(1, 'active', progress);
+
+        // Educational mode: slower animation
+        const chunkDelay = isEducationalMode ? 300 : 100;
+        await delay(chunkDelay / animationSpeed);
+      }
+
+      updateStepStatus(1, 'complete', 100);
+      return newChunks;
+    },
+    [
+      blockSize,
+      generateChunkColor,
+      calculateChunkPosition,
+      onChunkCreated,
+      isEducationalMode,
+      animationSpeed,
+    ],
+  );
+
+  // Step 3: Add padding to chunks
+  const addPadding = useCallback(
+    async (chunksToProcess: FileChunk[]) => {
+      setCurrentStep(2);
+      updateStepStatus(2, 'active', 0);
+
+      const paddedChunks = [...chunksToProcess];
+
+      for (let i = 0; i < paddedChunks.length; i++) {
+        const chunk = paddedChunks[i];
+
+        if (chunk.originalSize < blockSize) {
+          // Create padded data
+          const paddedData = new Uint8Array(blockSize);
+          paddedData.set(chunk.data);
+
+          // Add random padding
+          const paddingStart = chunk.originalSize;
+          const paddingData = new Uint8Array(blockSize - paddingStart);
+          crypto.getRandomValues(paddingData);
+          paddedData.set(paddingData, paddingStart);
+
+          // Update chunk
+          chunk.data = paddedData;
+
+          // Call callback if provided
+          if (onPaddingAdded) {
+            onPaddingAdded(paddedData, i);
+          }
+        }
+
+        // Update progress
+        const progress = ((i + 1) / paddedChunks.length) * 100;
+        updateStepStatus(2, 'active', progress);
+
+        // Educational mode: show padding animation
+        if (isEducationalMode && chunk.originalSize < blockSize) {
+          await delay(400 / animationSpeed);
+        } else {
+          await delay(50 / animationSpeed);
         }
       }
 
-      // Update progress
-      const progress = ((i + 1) / paddedChunks.length) * 100;
-      updateStepStatus(2, 'active', progress);
-
-      // Educational mode: show padding animation
-      if (isEducationalMode && chunk.originalSize < blockSize) {
-        await delay(400 / animationSpeed);
-      } else {
-        await delay(50 / animationSpeed);
-      }
-    }
-
-    setChunks(paddedChunks);
-    updateStepStatus(2, 'complete', 100);
-    return paddedChunks;
-  }, [blockSize, onPaddingAdded, isEducationalMode, animationSpeed]);
+      setChunks(paddedChunks);
+      updateStepStatus(2, 'complete', 100);
+      return paddedChunks;
+    },
+    [blockSize, onPaddingAdded, isEducationalMode, animationSpeed],
+  );
 
   // Step 4: Calculate checksums
-  const calculateChecksums = useCallback(async (chunksToProcess: FileChunk[]) => {
-    setCurrentStep(3);
-    updateStepStatus(3, 'active', 0);
+  const calculateChecksums = useCallback(
+    async (chunksToProcess: FileChunk[]) => {
+      setCurrentStep(3);
+      updateStepStatus(3, 'active', 0);
 
-    const chunksWithChecksums = [...chunksToProcess];
+      const chunksWithChecksums = [...chunksToProcess];
 
-    for (let i = 0; i < chunksWithChecksums.length; i++) {
-      const chunk = chunksWithChecksums[i];
-      
-      // Calculate SHA-256 checksum (simplified for demo)
-      const hashBuffer = await crypto.subtle.digest('SHA-256', chunk.data.slice());
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const checksum = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      
-      chunk.checksum = checksum;
+      for (let i = 0; i < chunksWithChecksums.length; i++) {
+        const chunk = chunksWithChecksums[i];
 
-      // Call callback if provided
-      if (onChecksumCalculated) {
-        onChecksumCalculated(checksum, i);
+        // Calculate SHA-256 checksum (simplified for demo)
+        const hashBuffer = await crypto.subtle.digest(
+          'SHA-256',
+          chunk.data.slice(),
+        );
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const checksum = hashArray
+          .map((b) => b.toString(16).padStart(2, '0'))
+          .join('');
+
+        chunk.checksum = checksum;
+
+        // Call callback if provided
+        if (onChecksumCalculated) {
+          onChecksumCalculated(checksum, i);
+        }
+
+        // Update progress
+        const progress = ((i + 1) / chunksWithChecksums.length) * 100;
+        updateStepStatus(3, 'active', progress);
+
+        // Educational mode: show checksum calculation
+        const checksumDelay = isEducationalMode ? 500 : 100;
+        await delay(checksumDelay / animationSpeed);
       }
 
-      // Update progress
-      const progress = ((i + 1) / chunksWithChecksums.length) * 100;
-      updateStepStatus(3, 'active', progress);
-
-      // Educational mode: show checksum calculation
-      const checksumDelay = isEducationalMode ? 500 : 100;
-      await delay(checksumDelay / animationSpeed);
-    }
-
-    setChunks(chunksWithChecksums);
-    updateStepStatus(3, 'complete', 100);
-    return chunksWithChecksums;
-  }, [onChecksumCalculated, isEducationalMode, animationSpeed]);
+      setChunks(chunksWithChecksums);
+      updateStepStatus(3, 'complete', 100);
+      return chunksWithChecksums;
+    },
+    [onChecksumCalculated, isEducationalMode, animationSpeed],
+  );
 
   // Step 5: Store blocks in soup
-  const storeBlocks = useCallback(async (chunksToProcess: FileChunk[]) => {
-    setCurrentStep(4);
-    updateStepStatus(4, 'active', 0);
+  const storeBlocks = useCallback(
+    async (chunksToProcess: FileChunk[]) => {
+      setCurrentStep(4);
+      updateStepStatus(4, 'active', 0);
 
-    for (let i = 0; i < chunksToProcess.length; i++) {
-      const chunk = chunksToProcess[i];
-      
-      // Create block info
-      const blockInfo: BlockInfo = {
-        id: chunk.checksum || `block-${i}`,
-        checksum: new Uint8Array(32) as any, // Simplified for demo - cast to avoid type issues
-        size: chunk.originalSize,
-        index: i,
-      };
+      for (let i = 0; i < chunksToProcess.length; i++) {
+        const chunk = chunksToProcess[i];
 
-      // Call callback if provided
-      if (onBlockStored) {
-        onBlockStored(blockInfo);
+        // Create block info
+        const blockInfo: BlockInfo = {
+          id: chunk.checksum || `block-${i}`,
+          checksum: new Uint8Array(32) as any, // Simplified for demo - cast to avoid type issues
+          size: chunk.originalSize,
+          index: i,
+        };
+
+        // Call callback if provided
+        if (onBlockStored) {
+          onBlockStored(blockInfo);
+        }
+
+        // Update progress
+        const progress = ((i + 1) / chunksToProcess.length) * 100;
+        updateStepStatus(4, 'active', progress);
+
+        // Educational mode: show block storage animation
+        const storageDelay = isEducationalMode ? 300 : 80;
+        await delay(storageDelay / animationSpeed);
       }
 
-      // Update progress
-      const progress = ((i + 1) / chunksToProcess.length) * 100;
-      updateStepStatus(4, 'active', progress);
-
-      // Educational mode: show block storage animation
-      const storageDelay = isEducationalMode ? 300 : 80;
-      await delay(storageDelay / animationSpeed);
-    }
-
-    updateStepStatus(4, 'complete', 100);
-  }, [onBlockStored, isEducationalMode, animationSpeed]);
+      updateStepStatus(4, 'complete', 100);
+    },
+    [onBlockStored, isEducationalMode, animationSpeed],
+  );
 
   // Step 6: Create CBL
   const createCBL = useCallback(async () => {
@@ -327,15 +354,24 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
   }, [animationSpeed]);
 
   // Helper function to update step status
-  const updateStepStatus = useCallback((stepIndex: number, status: 'pending' | 'active' | 'complete', progress: number) => {
-    setAnimationSteps(prev => prev.map((step, index) => 
-      index === stepIndex ? { ...step, status, progress } : step
-    ));
-  }, []);
+  const updateStepStatus = useCallback(
+    (
+      stepIndex: number,
+      status: 'pending' | 'active' | 'complete',
+      progress: number,
+    ) => {
+      setAnimationSteps((prev) =>
+        prev.map((step, index) =>
+          index === stepIndex ? { ...step, status, progress } : step,
+        ),
+      );
+    },
+    [],
+  );
 
   // Helper function for delays
   const delay = (ms: number): Promise<void> => {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   };
 
   // Start the animation sequence
@@ -448,11 +484,11 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
                     style={{ backgroundColor: chunk.color }}
                     initial={{ opacity: 0, scale: 0, rotate: -180 }}
                     animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                    transition={{ 
+                    transition={{
                       delay: index * 0.1,
                       duration: 0.5,
                       type: 'spring',
-                      stiffness: 100 
+                      stiffness: 100,
                     }}
                     whileHover={{ scale: 1.1, rotate: 5 }}
                   >
@@ -460,7 +496,9 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
                     <div className="chunk-size">
                       {chunk.originalSize}
                       {chunk.originalSize < blockSize && currentStep >= 2 && (
-                        <span className="padding-indicator">+{blockSize - chunk.originalSize}</span>
+                        <span className="padding-indicator">
+                          +{blockSize - chunk.originalSize}
+                        </span>
                       )}
                     </div>
                     {chunk.checksum && currentStep >= 3 && (
@@ -488,11 +526,15 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
               <h4>What's Happening Now</h4>
             </div>
             <div className="educational-content">
-              <p><strong>{animationSteps[currentStep]?.name}</strong></p>
+              <p>
+                <strong>{animationSteps[currentStep]?.name}</strong>
+              </p>
               <p>{animationSteps[currentStep]?.description}</p>
               {currentStep === 1 && (
                 <div className="technical-details">
-                  <p><strong>Technical Details:</strong></p>
+                  <p>
+                    <strong>Technical Details:</strong>
+                  </p>
                   <ul>
                     <li>Block size: {blockSize} bytes</li>
                     <li>Expected chunks: {Math.ceil(file.size / blockSize)}</li>
@@ -502,7 +544,9 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
               )}
               {currentStep === 2 && (
                 <div className="technical-details">
-                  <p><strong>Why Padding?</strong></p>
+                  <p>
+                    <strong>Why Padding?</strong>
+                  </p>
                   <ul>
                     <li>All blocks must be the same size</li>
                     <li>Random padding prevents data analysis</li>
@@ -512,7 +556,9 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
               )}
               {currentStep === 3 && (
                 <div className="technical-details">
-                  <p><strong>Checksum Purpose:</strong></p>
+                  <p>
+                    <strong>Checksum Purpose:</strong>
+                  </p>
                   <ul>
                     <li>Ensures data integrity</li>
                     <li>Used as unique block identifier</li>

@@ -1,6 +1,6 @@
-import { Router, Request, Response } from 'express';
-import { MessagePassingService } from '../services/messagePassingService';
 import { MessagePriority } from '@brightchain/brightchain-lib';
+import { Request, Response, Router } from 'express';
+import { MessagePassingService } from '../services/messagePassingService';
 
 export function createMessageRouter(service: MessagePassingService): Router {
   const router = Router();
@@ -8,47 +8,60 @@ export function createMessageRouter(service: MessagePassingService): Router {
   /**
    * POST /messages - Send a message
    */
-  router.post('/messages', async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { content, senderId, recipients, messageType, priority, encryptionScheme } = req.body;
+  router.post(
+    '/messages',
+    async (req: Request, res: Response): Promise<void> => {
+      try {
+        const {
+          content,
+          senderId,
+          recipients,
+          messageType,
+          priority,
+          encryptionScheme,
+        } = req.body;
 
-      if (!content || !senderId || !messageType) {
-        res.status(400).json({ error: 'Missing required fields' });
-        return;
+        if (!content || !senderId || !messageType) {
+          res.status(400).json({ error: 'Missing required fields' });
+          return;
+        }
+
+        const contentBuffer = Buffer.from(content, 'base64');
+        const messageId = await service.sendMessage(contentBuffer, senderId, {
+          recipients: recipients || [],
+          messageType,
+          priority: priority || MessagePriority.NORMAL,
+          senderId,
+          encryptionScheme: encryptionScheme || 0,
+        });
+
+        res.status(201).json({ messageId });
+      } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
       }
-
-      const contentBuffer = Buffer.from(content, 'base64');
-      const messageId = await service.sendMessage(contentBuffer, senderId, {
-        recipients: recipients || [],
-        messageType,
-        priority: priority || MessagePriority.NORMAL,
-        senderId,
-        encryptionScheme: encryptionScheme || 0,
-      });
-
-      res.status(201).json({ messageId });
-    } catch (error) {
-      res.status(500).json({ error: (error as Error).message });
-    }
-  });
+    },
+  );
 
   /**
    * GET /messages/:id - Get a message
    */
-  router.get('/messages/:id', async (req: Request, res: Response): Promise<void> => {
-    try {
-      const content = await service.getMessage(req.params['id'] as string);
-      
-      if (!content) {
-        res.status(404).json({ error: 'Message not found' });
-        return;
-      }
+  router.get(
+    '/messages/:id',
+    async (req: Request, res: Response): Promise<void> => {
+      try {
+        const content = await service.getMessage(req.params['id'] as string);
 
-      res.json({ content: content.toString('base64') });
-    } catch (error) {
-      res.status(500).json({ error: (error as Error).message });
-    }
-  });
+        if (!content) {
+          res.status(404).json({ error: 'Message not found' });
+          return;
+        }
+
+        res.json({ content: content.toString('base64') });
+      } catch (err) {
+        res.status(500).json({ error: (err as Error).message });
+      }
+    },
+  );
 
   /**
    * GET /messages - Query messages
@@ -65,8 +78,8 @@ export function createMessageRouter(service: MessagePassingService): Router {
 
       const results = await service.queryMessages(query);
       res.json(results);
-    } catch (error) {
-      res.status(500).json({ error: (error as Error).message });
+    } catch (_err) {
+      res.status(500).json({ error: 'Query failed' });
     }
   });
 
@@ -77,7 +90,7 @@ export function createMessageRouter(service: MessagePassingService): Router {
     try {
       await service.deleteMessage(req.params['id'] as string);
       res.status(204).send();
-    } catch (error) {
+    } catch (_err) {
       res.status(404).json({ error: 'Message not found' });
     }
   });

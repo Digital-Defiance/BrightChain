@@ -18,8 +18,8 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib';
 import {
-  Checksum,
   BlockSize,
+  Checksum,
   DurabilityLevel,
   initializeBrightChain,
   QuorumMemberMetadata,
@@ -28,8 +28,8 @@ import {
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
+import { MemberType } from '@brightchain/brightchain-lib/lib/enumerations/memberType';
 import {
-  ChecksumUint8Array,
   EmailString,
   GuidV4,
   IMemberWithMnemonic,
@@ -41,7 +41,6 @@ import secrets from '@digitaldefiance/secrets';
 import { randomBytes } from 'crypto';
 import { mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
-import { MemberType } from '@brightchain/brightchain-lib/lib/enumerations/memberType';
 
 // Mock file-type module
 jest.mock('file-type', () => ({
@@ -51,7 +50,6 @@ jest.mock('file-type', () => ({
 
 // Set a longer timeout for E2E tests
 jest.setTimeout(120000);
-
 
 describe('E2E: Block Storage and Quorum Integration', () => {
   const blockSize = BlockSize.Small;
@@ -116,7 +114,6 @@ describe('E2E: Block Storage and Quorum Integration', () => {
     return new QuorumService<GuidV4>();
   }
 
-
   // ============================================================================
   // SECTION 1: Block Storage E2E Tests
   // ============================================================================
@@ -133,7 +130,10 @@ describe('E2E: Block Storage and Quorum Integration', () => {
         await blockStore.setData(block, {
           durabilityLevel: DurabilityLevel.Standard,
         });
-        storedBlocks.push({ checksum: uint8ArrayToHex(block.idChecksum.toUint8Array()), data });
+        storedBlocks.push({
+          checksum: uint8ArrayToHex(block.idChecksum.toUint8Array()),
+          data,
+        });
       }
 
       // Verify all blocks can be retrieved
@@ -146,7 +146,10 @@ describe('E2E: Block Storage and Quorum Integration', () => {
         expect(retrieved).toBeDefined();
 
         // Compare the original data (retrieved may be padded)
-        const retrievedSlice = Buffer.from(retrieved.data).slice(0, data.length);
+        const retrievedSlice = Buffer.from(retrieved.data).slice(
+          0,
+          data.length,
+        );
         expect(retrievedSlice.equals(data)).toBe(true);
       }
     });
@@ -163,7 +166,9 @@ describe('E2E: Block Storage and Quorum Integration', () => {
         const block = new RawDataBlock(blockSize, data);
         await blockStore.setData(block, { durabilityLevel });
 
-        const blockIdHex = Buffer.from(block.idChecksum.toBuffer()).toString('hex');
+        const blockIdHex = Buffer.from(block.idChecksum.toBuffer()).toString(
+          'hex',
+        );
         const metadata = await blockStore.getMetadata(blockIdHex);
 
         expect(metadata).not.toBeNull();
@@ -195,7 +200,9 @@ describe('E2E: Block Storage and Quorum Integration', () => {
         durabilityLevel: DurabilityLevel.Standard,
       });
 
-      const blockIdHex = Buffer.from(block.idChecksum.toBuffer()).toString('hex');
+      const blockIdHex = Buffer.from(block.idChecksum.toBuffer()).toString(
+        'hex',
+      );
 
       // Access the block multiple times
       for (let i = 0; i < 5; i++) {
@@ -207,7 +214,6 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       expect(metadata!.accessCount).toBeGreaterThanOrEqual(5);
     });
   });
-
 
   // ============================================================================
   // SECTION 2: CBL (Constituent Block List) E2E Tests
@@ -226,7 +232,10 @@ describe('E2E: Block Storage and Quorum Integration', () => {
         const data = randomBytes(100 + i * 20);
         const block = new RawDataBlock(blockSize, data);
         await blockStore.setData(block);
-        storedData.push({ checksum: uint8ArrayToHex(block.idChecksum.toUint8Array()), data });
+        storedData.push({
+          checksum: uint8ArrayToHex(block.idChecksum.toUint8Array()),
+          data,
+        });
       }
 
       // Simulate a "file manifest" that tracks block addresses (like a CBL would)
@@ -239,9 +248,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       // Recover all blocks using the manifest
       const recoveredBlocks: Buffer[] = [];
       for (const addressHex of fileManifest.blockAddresses) {
-        const checksum = Checksum.fromHex(
-          addressHex,
-        );
+        const checksum = Checksum.fromHex(addressHex);
         const block = await blockStore.getData(checksum);
         recoveredBlocks.push(Buffer.from(block.data));
       }
@@ -291,9 +298,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       // Reassemble the file from blocks
       const reassembledChunks: Buffer[] = [];
       for (const addressHex of manifest.blockAddresses) {
-        const checksum = Checksum.fromHex(
-          addressHex,
-        );
+        const checksum = Checksum.fromHex(addressHex);
         const block = await blockStore.getData(checksum);
         reassembledChunks.push(Buffer.from(block.data));
       }
@@ -313,7 +318,6 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       expect(reassembledFile.equals(originalFile)).toBe(true);
     });
   });
-
 
   // ============================================================================
   // SECTION 3: Quorum Document Sealing/Unsealing E2E Tests
@@ -393,7 +397,6 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       // Verify the unsealed document matches the original
       expect(unsealedDocument).toEqual(secretDocument);
     });
-
 
     it('should fail to unseal with insufficient shareholders', async () => {
       const quorumService = createQuorumService();
@@ -501,7 +504,6 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       expect(canUnlockWithAll.canUnlock).toBe(true);
       expect(canUnlockWithAll.sharesProvided).toBe(memberCount);
     });
-
 
     it('should handle member removal while preserving document access', async () => {
       const quorumService = createQuorumService();
@@ -622,7 +624,6 @@ describe('E2E: Block Storage and Quorum Integration', () => {
     });
   });
 
-
   // ============================================================================
   // SECTION 4: Integrated Block + CBL + Quorum E2E Tests
   // ============================================================================
@@ -697,9 +698,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
 
       const recoveredChunks: Buffer[] = [];
       for (const addressHex of unsealedReference.blockAddresses) {
-        const checksum = Checksum.fromHex(
-          addressHex,
-        );
+        const checksum = Checksum.fromHex(addressHex);
         const block = await blockStore.getData(checksum);
         recoveredChunks.push(Buffer.from(block.data));
       }
@@ -714,7 +713,6 @@ describe('E2E: Block Storage and Quorum Integration', () => {
         expect(recoveredSlice.equals(fileChunks[i])).toBe(true);
       }
     });
-
 
     it('should handle multiple sealed documents with different shareholder groups', async () => {
       const quorumService = createQuorumService();
@@ -800,7 +798,6 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       expect(canUnlockDoc2WithMember1.canUnlock).toBe(false);
     });
 
-
     it('should demonstrate full workflow: store file, create CBL, seal access, distribute shares', async () => {
       const quorumService = createQuorumService();
       const timestamp = Date.now();
@@ -856,9 +853,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       const chunkSize = 100;
       const chunks: Buffer[] = [];
       for (let i = 0; i < sensitiveFileContent.length; i += chunkSize) {
-        chunks.push(
-          Buffer.from(sensitiveFileContent.slice(i, i + chunkSize)),
-        );
+        chunks.push(Buffer.from(sensitiveFileContent.slice(i, i + chunkSize)));
       }
 
       const blockAddresses: string[] = [];
@@ -934,9 +929,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       // Recover the original file from blocks
       let recoveredContent = '';
       for (const addressHex of unsealedManifest.blockAddresses) {
-        const checksum = Checksum.fromHex(
-          addressHex,
-        );
+        const checksum = Checksum.fromHex(addressHex);
         const block = await blockStore.getData(checksum);
         // Find the actual content length for this chunk
         const chunkIndex = unsealedManifest.blockAddresses.indexOf(addressHex);

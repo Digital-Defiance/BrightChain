@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 import { ValidatedBody } from '@brightchain/brightchain-api-lib';
 import { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
 import { ValidationChain } from 'express-validator';

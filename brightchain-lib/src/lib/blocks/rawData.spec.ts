@@ -1,5 +1,4 @@
 import { arraysEqual } from '@digitaldefiance/ecies-lib';
-import { Checksum } from '../types/checksum';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -7,6 +6,7 @@ import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
+import { Checksum } from '../types/checksum';
 import { RawDataBlock } from './rawData';
 
 describe('RawDataBlock', () => {

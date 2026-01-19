@@ -25,6 +25,7 @@ import {
   BlockStoreOptions,
   BloomFilter,
   BrightenResult,
+  Checksum,
   EventFilter,
   GossipConfig,
   IAvailabilityService,
@@ -46,11 +47,8 @@ import {
   StoreError,
   StoreErrorType,
   SyncVectorEntry,
-  Checksum,
 } from '@brightchain/brightchain-lib';
-import {
-  hexToUint8Array,
-} from '@digitaldefiance/ecies-lib';
+import { hexToUint8Array } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
 import {
   AvailabilityAwareBlockStore,
@@ -166,8 +164,7 @@ class MockBlockStore implements IBlockStore {
   }
 
   async has(key: Checksum | string): Promise<boolean> {
-    const keyHex =
-      typeof key === 'string' ? key : key.toHex();
+    const keyHex = typeof key === 'string' ? key : key.toHex();
     return this.blocks.has(keyHex);
   }
 
@@ -208,9 +205,7 @@ class MockBlockStore implements IBlockStore {
     return [];
   }
 
-  get<T extends BaseBlock>(
-    _checksum: Checksum | string,
-  ): BlockHandle<T> {
+  get<T extends BaseBlock>(_checksum: Checksum | string): BlockHandle<T> {
     throw new Error('Not implemented in mock');
   }
 
@@ -224,8 +219,7 @@ class MockBlockStore implements IBlockStore {
         this.storeError || new StoreError(StoreErrorType.BlockPathAlreadyExists)
       );
     }
-    const keyHex =
-      typeof key === 'string' ? key : key.toHex();
+    const keyHex = typeof key === 'string' ? key : key.toHex();
     this.blocks.set(keyHex, data);
   }
 
@@ -233,14 +227,11 @@ class MockBlockStore implements IBlockStore {
     if (this.shouldThrowOnDelete) {
       throw this.deleteError || new StoreError(StoreErrorType.KeyNotFound);
     }
-    const keyHex =
-      typeof key === 'string' ? key : key.toHex();
+    const keyHex = typeof key === 'string' ? key : key.toHex();
     this.blocks.delete(keyHex);
   }
 
-  async getMetadata(
-    _key: Checksum | string,
-  ): Promise<IBlockMetadata | null> {
+  async getMetadata(_key: Checksum | string): Promise<IBlockMetadata | null> {
     return null;
   }
 
@@ -256,21 +247,15 @@ class MockBlockStore implements IBlockStore {
     return [];
   }
 
-  async getParityBlocks(
-    _key: Checksum | string,
-  ): Promise<Checksum[]> {
+  async getParityBlocks(_key: Checksum | string): Promise<Checksum[]> {
     return [];
   }
 
-  async recoverBlock(
-    _key: Checksum | string,
-  ): Promise<RecoveryResult> {
+  async recoverBlock(_key: Checksum | string): Promise<RecoveryResult> {
     return { success: false, error: 'Not implemented' };
   }
 
-  async verifyBlockIntegrity(
-    _key: Checksum | string,
-  ): Promise<boolean> {
+  async verifyBlockIntegrity(_key: Checksum | string): Promise<boolean> {
     return true;
   }
 
@@ -747,7 +732,9 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
         fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
           const { store, registry, innerStore } = createTestStore();
           const fullBlockId = blockId.padEnd(128, '0');
-          const checksum = Checksum.fromUint8Array(hexToUint8Array(fullBlockId));
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
 
           // First store the block
           innerStore.addBlock(fullBlockId, data);
@@ -775,7 +762,9 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
             const { store, availabilityService, registry, innerStore } =
               createTestStore(localNodeId);
             const fullBlockId = blockId.padEnd(128, '0');
-            const checksum = Checksum.fromUint8Array(hexToUint8Array(fullBlockId));
+            const checksum = Checksum.fromUint8Array(
+              hexToUint8Array(fullBlockId),
+            );
 
             // First store the block
             innerStore.addBlock(fullBlockId, data);
@@ -806,7 +795,9 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           const { store, gossipService, registry, innerStore } =
             createTestStore();
           const fullBlockId = blockId.padEnd(128, '0');
-          const checksum = Checksum.fromUint8Array(hexToUint8Array(fullBlockId));
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
 
           // First store the block
           innerStore.addBlock(fullBlockId, data);
@@ -863,7 +854,9 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           const { store, availabilityService, innerStore, registry } =
             createTestStore();
           const fullBlockId = blockId.padEnd(128, '0');
-          const checksum = Checksum.fromUint8Array(hexToUint8Array(fullBlockId));
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
 
           // Store block first
           innerStore.addBlock(fullBlockId, data);
@@ -891,7 +884,9 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
         fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
           const { store, availabilityService, innerStore } = createTestStore();
           const fullBlockId = blockId.padEnd(128, '0');
-          const checksum = Checksum.fromUint8Array(hexToUint8Array(fullBlockId));
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
 
           // Store block and mark as cached
           innerStore.addBlock(fullBlockId, data);
@@ -918,7 +913,9 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
         fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
           const { store, availabilityService, innerStore } = createTestStore();
           const fullBlockId = blockId.padEnd(128, '0');
-          const checksum = Checksum.fromUint8Array(hexToUint8Array(fullBlockId));
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
 
           // Store block and mark as remote
           innerStore.addBlock(fullBlockId, data);
@@ -992,7 +989,9 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
             registry,
           } = createTestStore();
           const fullBlockId = blockId.padEnd(128, '0');
-          const checksum = Checksum.fromUint8Array(hexToUint8Array(fullBlockId));
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
 
           // First store the block
           innerStore.addBlock(fullBlockId, data);
@@ -1099,7 +1098,9 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
         fc.asyncProperty(arbBlockId, async (blockId) => {
           const { store, innerStore } = createTestStore();
           const fullBlockId = blockId.padEnd(128, '0');
-          const checksum = Checksum.fromUint8Array(hexToUint8Array(fullBlockId));
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
 
           // Configure inner store to throw
           innerStore.shouldThrowOnDelete = true;
@@ -1145,7 +1146,9 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
         fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
           const { store, innerStore, registry } = createTestStore();
           const fullBlockId = blockId.padEnd(128, '0');
-          const checksum = Checksum.fromUint8Array(hexToUint8Array(fullBlockId));
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
 
           // First add to registry
           innerStore.addBlock(fullBlockId, data);

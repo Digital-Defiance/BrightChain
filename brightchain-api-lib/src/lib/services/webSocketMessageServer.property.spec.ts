@@ -1,7 +1,7 @@
-import { WebSocketMessageServer } from './webSocketMessageServer';
+import * as fc from 'fast-check';
 import { createServer, Server } from 'http';
 import { WebSocket } from 'ws';
-import * as fc from 'fast-check';
+import { WebSocketMessageServer } from './webSocketMessageServer';
 
 /**
  * Property-based tests for WebSocketMessageServer
@@ -35,11 +35,13 @@ describe('WebSocketMessageServer - Property Tests', () => {
   it('Property 14a: should connect and send messages for any valid node/message IDs', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.string({ minLength: 1, maxLength: 32 }).filter(s => /^[a-z0-9_-]+$/i.test(s)),
+        fc
+          .string({ minLength: 1, maxLength: 32 })
+          .filter((s) => /^[a-z0-9_-]+$/i.test(s)),
         fc.uuid(),
         async (nodeId: string, messageId: string) => {
           const client = new WebSocket(`ws://localhost:${port}/${nodeId}`);
-          
+
           const messagePromise = new Promise<string>((resolve) => {
             client.on('message', (data) => {
               const msg = JSON.parse(data.toString());
@@ -58,9 +60,9 @@ describe('WebSocketMessageServer - Property Tests', () => {
           expect(receivedMessageId).toBe(messageId);
 
           client.close();
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -71,14 +73,16 @@ describe('WebSocketMessageServer - Property Tests', () => {
   it('Property 14b: should fail to send messages to unconnected nodes', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.string({ minLength: 1, maxLength: 32 }).filter(s => /^[a-z0-9_-]+$/i.test(s)),
+        fc
+          .string({ minLength: 1, maxLength: 32 })
+          .filter((s) => /^[a-z0-9_-]+$/i.test(s)),
         fc.uuid(),
         async (nodeId: string, messageId: string) => {
           const sent = await wsServer.sendToNode(nodeId, messageId);
           expect(sent).toBe(false);
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -90,8 +94,10 @@ describe('WebSocketMessageServer - Property Tests', () => {
     await fc.assert(
       fc.asyncProperty(
         fc.array(
-          fc.string({ minLength: 1, maxLength: 32 }).filter(s => /^[a-z0-9_-]+$/i.test(s)),
-          { minLength: 1, maxLength: 10 }
+          fc
+            .string({ minLength: 1, maxLength: 32 })
+            .filter((s) => /^[a-z0-9_-]+$/i.test(s)),
+          { minLength: 1, maxLength: 10 },
         ),
         async (nodeIds: string[]) => {
           const uniqueNodeIds = [...new Set(nodeIds)];
@@ -114,9 +120,9 @@ describe('WebSocketMessageServer - Property Tests', () => {
           for (const client of clients) {
             client.close();
           }
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -127,10 +133,12 @@ describe('WebSocketMessageServer - Property Tests', () => {
   it('Property 14d: should handle connection lifecycle correctly', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.string({ minLength: 1, maxLength: 32 }).filter(s => /^[a-z0-9_-]+$/i.test(s)),
+        fc
+          .string({ minLength: 1, maxLength: 32 })
+          .filter((s) => /^[a-z0-9_-]+$/i.test(s)),
         async (nodeId: string) => {
           const client = new WebSocket(`ws://localhost:${port}/${nodeId}`);
-          
+
           await new Promise<void>((resolve) => {
             client.on('open', () => resolve());
           });
@@ -147,9 +155,9 @@ describe('WebSocketMessageServer - Property Tests', () => {
           });
 
           expect(wsServer.getConnectedNodes()).not.toContain(nodeId);
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -161,8 +169,10 @@ describe('WebSocketMessageServer - Property Tests', () => {
     await fc.assert(
       fc.asyncProperty(
         fc.array(
-          fc.string({ minLength: 1, maxLength: 32 }).filter(s => /^[a-z0-9_-]+$/i.test(s)),
-          { minLength: 2, maxLength: 5 }
+          fc
+            .string({ minLength: 1, maxLength: 32 })
+            .filter((s) => /^[a-z0-9_-]+$/i.test(s)),
+          { minLength: 2, maxLength: 5 },
         ),
         fc.uuid(),
         async (nodeIds: string[], messageId: string) => {
@@ -175,7 +185,7 @@ describe('WebSocketMessageServer - Property Tests', () => {
           // Connect all clients
           for (const nodeId of uniqueNodeIds) {
             const client = new WebSocket(`ws://localhost:${port}/${nodeId}`);
-            
+
             client.on('message', (data) => {
               const msg = JSON.parse(data.toString());
               receivedMessages.push(msg.messageId);
@@ -184,7 +194,7 @@ describe('WebSocketMessageServer - Property Tests', () => {
             await new Promise<void>((resolve) => {
               client.on('open', () => resolve());
             });
-            
+
             clients.push(client);
           }
 
@@ -198,15 +208,15 @@ describe('WebSocketMessageServer - Property Tests', () => {
 
           // Verify all nodes received the message
           expect(receivedMessages.length).toBe(uniqueNodeIds.length);
-          expect(receivedMessages.every(id => id === messageId)).toBe(true);
+          expect(receivedMessages.every((id) => id === messageId)).toBe(true);
 
           // Clean up
           for (const client of clients) {
             client.close();
           }
-        }
+        },
       ),
-      { numRuns: 30 }
+      { numRuns: 30 },
     );
   });
 
@@ -217,17 +227,20 @@ describe('WebSocketMessageServer - Property Tests', () => {
   it('Property 14f: should invoke message handler for all incoming messages', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.string({ minLength: 1, maxLength: 32 }).filter(s => /^[a-z0-9_-]+$/i.test(s)),
+        fc
+          .string({ minLength: 1, maxLength: 32 })
+          .filter((s) => /^[a-z0-9_-]+$/i.test(s)),
         fc.array(fc.uuid(), { minLength: 1, maxLength: 5 }),
         async (nodeId: string, messageIds: string[]) => {
-          const receivedMessages: Array<{ nodeId: string; messageId: string }> = [];
+          const receivedMessages: Array<{ nodeId: string; messageId: string }> =
+            [];
 
           wsServer.onMessage(async (nId, mId) => {
             receivedMessages.push({ nodeId: nId, messageId: mId });
           });
 
           const client = new WebSocket(`ws://localhost:${port}/${nodeId}`);
-          
+
           await new Promise<void>((resolve) => {
             client.on('open', () => resolve());
           });
@@ -250,9 +263,9 @@ describe('WebSocketMessageServer - Property Tests', () => {
           }
 
           client.close();
-        }
+        },
       ),
-      { numRuns: 30 }
+      { numRuns: 30 },
     );
   });
 
@@ -266,7 +279,7 @@ describe('WebSocketMessageServer - Property Tests', () => {
         fc.constantFrom('/', '', '//'),
         async (invalidPath: string) => {
           const client = new WebSocket(`ws://localhost:${port}${invalidPath}`);
-          
+
           const closePromise = new Promise<void>((resolve) => {
             client.on('close', () => resolve());
           });
@@ -274,9 +287,9 @@ describe('WebSocketMessageServer - Property Tests', () => {
           await closePromise;
 
           expect(wsServer.getConnectedNodes()).toHaveLength(0);
-        }
+        },
       ),
-      { numRuns: 20 }
+      { numRuns: 20 },
     );
   });
 
@@ -289,29 +302,42 @@ describe('WebSocketMessageServer - Property Tests', () => {
       fc.asyncProperty(
         fc.array(
           fc.tuple(
-            fc.string({ minLength: 1, maxLength: 32 }).filter(s => /^[a-z0-9_-]+$/i.test(s)),
-            fc.uuid()
+            fc
+              .string({ minLength: 1, maxLength: 32 })
+              .filter((s) => /^[a-z0-9_-]+$/i.test(s)),
+            fc.uuid(),
           ),
-          { minLength: 3, maxLength: 8 }
+          { minLength: 3, maxLength: 8 },
         ),
         async (nodeMessagePairs: Array<[string, string]>) => {
           const uniquePairs = Array.from(
-            new Map(nodeMessagePairs.map(([nodeId, messageId]) => [nodeId, messageId])).entries()
+            new Map(
+              nodeMessagePairs.map(([nodeId, messageId]) => [
+                nodeId,
+                messageId,
+              ]),
+            ).entries(),
           );
 
-          const clients: Array<{ client: WebSocket; nodeId: string; messageId: string }> = [];
+          const clients: Array<{
+            client: WebSocket;
+            nodeId: string;
+            messageId: string;
+          }> = [];
 
           // Connect all clients concurrently
           await Promise.all(
             uniquePairs.map(([nodeId, messageId]) => {
               return new Promise<void>((resolve) => {
-                const client = new WebSocket(`ws://localhost:${port}/${nodeId}`);
+                const client = new WebSocket(
+                  `ws://localhost:${port}/${nodeId}`,
+                );
                 client.on('open', () => {
                   clients.push({ client, nodeId, messageId });
                   resolve();
                 });
               });
-            })
+            }),
           );
 
           // Verify all nodes are connected
@@ -320,19 +346,21 @@ describe('WebSocketMessageServer - Property Tests', () => {
 
           // Send messages to all nodes concurrently
           const sendResults = await Promise.all(
-            uniquePairs.map(([nodeId, messageId]) => wsServer.sendToNode(nodeId, messageId))
+            uniquePairs.map(([nodeId, messageId]) =>
+              wsServer.sendToNode(nodeId, messageId),
+            ),
           );
 
           // All sends should succeed
-          expect(sendResults.every(result => result === true)).toBe(true);
+          expect(sendResults.every((result) => result === true)).toBe(true);
 
           // Clean up
           for (const { client } of clients) {
             client.close();
           }
-        }
+        },
       ),
-      { numRuns: 20 }
+      { numRuns: 20 },
     );
   });
 });

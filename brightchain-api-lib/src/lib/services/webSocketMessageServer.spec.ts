@@ -1,6 +1,6 @@
-import { WebSocketMessageServer } from './webSocketMessageServer';
 import { createServer, Server } from 'http';
 import { WebSocket } from 'ws';
+import { WebSocketMessageServer } from './webSocketMessageServer';
 
 describe('WebSocketMessageServer', () => {
   let httpServer: Server;
@@ -97,7 +97,9 @@ describe('WebSocketMessageServer', () => {
     });
 
     client.on('open', () => {
-      client.send(JSON.stringify({ type: 'message', messageId: 'incoming-msg' }));
+      client.send(
+        JSON.stringify({ type: 'message', messageId: 'incoming-msg' }),
+      );
     });
   });
 

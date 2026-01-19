@@ -1,8 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter } from 'react-router-dom';
+import { describe, expect, it } from 'vitest';
 
 describe('Hero Section and Navigation - Task 15.1', () => {
   describe('Navigation Component Tests', () => {

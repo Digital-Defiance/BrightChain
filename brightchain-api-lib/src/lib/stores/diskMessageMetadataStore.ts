@@ -104,11 +104,13 @@ export class DiskMessageMetadataStore
       blockId: file.blockId,
       createdAt: new Date(file.createdAt),
       expiresAt: file.expiresAt ? new Date(file.expiresAt) : null,
-      durabilityLevel: file.durabilityLevel as IMessageMetadata['durabilityLevel'],
+      durabilityLevel:
+        file.durabilityLevel as IMessageMetadata['durabilityLevel'],
       parityBlockIds: [...file.parityBlockIds],
       accessCount: file.accessCount,
       lastAccessedAt: new Date(file.lastAccessedAt),
-      replicationStatus: file.replicationStatus as IMessageMetadata['replicationStatus'],
+      replicationStatus:
+        file.replicationStatus as IMessageMetadata['replicationStatus'],
       targetReplicationFactor: file.targetReplicationFactor,
       replicaNodeIds: [...file.replicaNodeIds],
       size: file.size,
@@ -131,14 +133,14 @@ export class DiskMessageMetadataStore
 
   async storeMessageMetadata(metadata: IMessageMetadata): Promise<void> {
     const filePath = this.messageMetadataPath(metadata.blockId);
-    
+
     // Check if block metadata already exists
     if (!this.has(metadata.blockId)) {
       await this.create(metadata);
     } else {
       await this.update(metadata.blockId, metadata);
     }
-    
+
     // Write message-specific metadata
     const serialized = this.serializeMessageMetadata(metadata);
     const json = JSON.stringify(serialized, null, 2);

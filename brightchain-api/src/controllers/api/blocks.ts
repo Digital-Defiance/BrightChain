@@ -72,15 +72,15 @@ interface BlocksHandlers extends TypedHandlers {
 
 /**
  * Controller for block storage operations.
- * 
+ *
  * Provides REST API endpoints for storing, retrieving, and managing blocks
  * in the BrightChain distributed storage system.
- * 
+ *
  * ## Endpoints
- * 
+ *
  * ### POST /api/blocks
  * Store a new block with optional durability settings.
- * 
+ *
  * **Request Body:**
  * - `data` (string, required): Base64-encoded block data
  * - `canRead` (boolean, optional): Whether the block can be read (default: true)
@@ -88,42 +88,42 @@ interface BlocksHandlers extends TypedHandlers {
  * - `options` (object, optional): Block storage options
  *   - `expiresAt` (string): ISO date when the block expires
  *   - `durabilityLevel` (string): 'ephemeral' | 'standard' | 'high_durability'
- * 
+ *
  * **Response:** Block ID and metadata
- * 
+ *
  * ### GET /api/blocks/:blockId
  * Retrieve a block by its ID.
- * 
+ *
  * **Parameters:**
  * - `blockId` (string, required): Hex-encoded block checksum
- * 
+ *
  * **Response:** Block data (base64) and metadata
- * 
+ *
  * ### GET /api/blocks/:blockId/metadata
  * Get metadata for a block without retrieving the data.
- * 
+ *
  * **Parameters:**
  * - `blockId` (string, required): Hex-encoded block checksum
- * 
+ *
  * **Response:** Block metadata including durability level, access count, etc.
- * 
+ *
  * ### DELETE /api/blocks/:blockId
  * Delete a block and its associated parity blocks.
- * 
+ *
  * **Parameters:**
  * - `blockId` (string, required): Hex-encoded block checksum
- * 
+ *
  * **Response:** Success confirmation
- * 
+ *
  * ### POST /api/blocks/brighten
  * Brighten a block by XORing it with random blocks for Owner-Free storage.
- * 
+ *
  * **Request Body:**
  * - `blockId` (string, required): Hex-encoded block checksum to brighten
  * - `randomBlockCount` (number, required): Number of random blocks to XOR with
- * 
+ *
  * **Response:** Brightened block ID and list of random block IDs used
- * 
+ *
  * @requirements 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7
  */
 export class BlocksController extends BaseController<
@@ -181,16 +181,16 @@ export class BlocksController extends BaseController<
   /**
    * POST /api/blocks
    * Store a new block with optional durability settings.
-   * 
+   *
    * The block data is stored with the configured durability level, which determines
    * how many parity blocks are generated for FEC recovery:
    * - 'ephemeral': No parity blocks
    * - 'standard': 1 parity block
    * - 'high_durability': 2+ parity blocks
-   * 
+   *
    * @param req - Request containing base64-encoded block data and options
    * @returns Block ID and metadata on success, or error response
-   * 
+   *
    * @example
    * ```json
    * // Request
@@ -202,7 +202,7 @@ export class BlocksController extends BaseController<
    *     "expiresAt": "2025-12-31T23:59:59Z"
    *   }
    * }
-   * 
+   *
    * // Response
    * {
    *   "blockId": "abc123...",
@@ -285,18 +285,18 @@ export class BlocksController extends BaseController<
   /**
    * GET /api/blocks/:blockId
    * Retrieve a block by its ID.
-   * 
+   *
    * Returns the block data and metadata. The access count and last access
    * timestamp in the metadata are updated on each retrieval.
-   * 
+   *
    * @param req - Request containing the block ID parameter
    * @returns Block data (base64) and metadata on success, or 404 if not found
-   * 
+   *
    * @example
    * ```json
    * // Request
    * GET /api/blocks/abc123...
-   * 
+   *
    * // Response
    * {
    *   "blockId": "abc123...",
@@ -340,18 +340,18 @@ export class BlocksController extends BaseController<
   /**
    * GET /api/blocks/:blockId/metadata
    * Get metadata for a block without retrieving the data.
-   * 
+   *
    * Useful for checking block status, durability level, replication status,
    * and access patterns without the overhead of retrieving the full block data.
-   * 
+   *
    * @param req - Request containing the block ID parameter
    * @returns Block metadata on success, or 404 if not found
-   * 
+   *
    * @example
    * ```json
    * // Request
    * GET /api/blocks/abc123.../metadata
-   * 
+   *
    * // Response
    * {
    *   "blockId": "abc123...",
@@ -403,20 +403,20 @@ export class BlocksController extends BaseController<
   /**
    * DELETE /api/blocks/:blockId
    * Delete a block and its associated parity blocks.
-   * 
+   *
    * This operation removes:
    * - The block data file
    * - All associated parity block files
    * - The block metadata
-   * 
+   *
    * @param req - Request containing the block ID parameter
    * @returns Success confirmation on success, or 404 if not found
-   * 
+   *
    * @example
    * ```json
    * // Request
    * DELETE /api/blocks/abc123...
-   * 
+   *
    * // Response
    * {
    *   "blockId": "abc123...",
@@ -454,16 +454,16 @@ export class BlocksController extends BaseController<
   /**
    * POST /api/blocks/brighten
    * Brighten a block by XORing it with random blocks for Owner-Free storage.
-   * 
+   *
    * This operation implements the Owner-Free storage pattern where the original
    * data cannot be reconstructed without all the random blocks used in the
    * XOR operation. The brightened block is stored and its ID is returned along
    * with the IDs of all random blocks used.
-   * 
+   *
    * @param req - Request containing block ID and random block count
    * @returns Brightened block ID and list of random block IDs used
    * @throws INSUFFICIENT_RANDOM_BLOCKS if not enough random blocks are available
-   * 
+   *
    * @example
    * ```json
    * // Request
@@ -472,7 +472,7 @@ export class BlocksController extends BaseController<
    *   "blockId": "abc123...",
    *   "randomBlockCount": 3
    * }
-   * 
+   *
    * // Response
    * {
    *   "brightenedBlockId": "def456...",

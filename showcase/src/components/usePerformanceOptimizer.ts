@@ -3,14 +3,14 @@
  * Provides state management and event handling for performance optimization features
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  PerformanceOptimizer,
   FileQueueItem,
-  QualityLevel,
   LayoutDimensions,
   MemoryStats,
   PerformanceConfig,
+  PerformanceOptimizer,
+  QualityLevel,
 } from './PerformanceOptimizer';
 
 export interface QueueStatus {
@@ -34,8 +34,11 @@ export function usePerformanceOptimizer(config?: Partial<PerformanceConfig>) {
     complete: 0,
     error: 0,
   });
-  const [currentQuality, setCurrentQuality] = useState<QualityLevel | null>(null);
-  const [layoutDimensions, setLayoutDimensions] = useState<LayoutDimensions | null>(null);
+  const [currentQuality, setCurrentQuality] = useState<QualityLevel | null>(
+    null,
+  );
+  const [layoutDimensions, setLayoutDimensions] =
+    useState<LayoutDimensions | null>(null);
   const [memoryStats, setMemoryStats] = useState<MemoryStats>({
     usedMemory: 0,
     totalMemory: 0,
@@ -81,16 +84,22 @@ export function usePerformanceOptimizer(config?: Partial<PerformanceConfig>) {
       });
 
       optimizer.on('quality-reduced', ({ from, to, reason, fps }) => {
-        console.log(`Quality reduced from ${from} to ${to} due to ${reason} (FPS: ${fps})`);
+        console.log(
+          `Quality reduced from ${from} to ${to} due to ${reason} (FPS: ${fps})`,
+        );
       });
 
       optimizer.on('quality-increased', ({ from, to, reason, fps }) => {
-        console.log(`Quality increased from ${from} to ${to} due to ${reason} (FPS: ${fps})`);
+        console.log(
+          `Quality increased from ${from} to ${to} due to ${reason} (FPS: ${fps})`,
+        );
       });
 
       optimizer.on('layout-changed', ({ from, to }) => {
         setLayoutDimensions(to);
-        console.log(`Layout changed from ${from.breakpoint} to ${to.breakpoint}`);
+        console.log(
+          `Layout changed from ${from.breakpoint} to ${to.breakpoint}`,
+        );
       });
 
       optimizer.on('resource-registered', () => {
@@ -114,7 +123,9 @@ export function usePerformanceOptimizer(config?: Partial<PerformanceConfig>) {
       });
 
       optimizer.on('large-file-detected', ({ item, size }) => {
-        console.log(`Large file detected: ${item.file.name} (${(size / 1024 / 1024).toFixed(2)} MB)`);
+        console.log(
+          `Large file detected: ${item.file.name} (${(size / 1024 / 1024).toFixed(2)} MB)`,
+        );
       });
     }
 
@@ -162,11 +173,14 @@ export function usePerformanceOptimizer(config?: Partial<PerformanceConfig>) {
     return optimizerRef.current.addToQueue(files);
   }, []);
 
-  const updateFileProgress = useCallback((fileId: string, progress: number) => {
-    if (!optimizerRef.current) return;
-    optimizerRef.current.updateFileProgress(fileId, progress);
-    updateQueueState();
-  }, [updateQueueState]);
+  const updateFileProgress = useCallback(
+    (fileId: string, progress: number) => {
+      if (!optimizerRef.current) return;
+      optimizerRef.current.updateFileProgress(fileId, progress);
+      updateQueueState();
+    },
+    [updateQueueState],
+  );
 
   const clearCompleted = useCallback(() => {
     if (!optimizerRef.current) return;

@@ -1,6 +1,6 @@
-import { INetworkTransport } from '../../interfaces/network/networkTransport';
-import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
+import { INetworkTransport } from '../../interfaces/network/networkTransport';
 
 /**
  * Message forwarding service with loop detection
@@ -12,7 +12,7 @@ export class MessageForwardingService {
   constructor(
     private readonly transport: INetworkTransport,
     private readonly metadataStore: IMessageMetadataStore,
-    private readonly nodeId: string
+    private readonly nodeId: string,
   ) {}
 
   /**
@@ -25,7 +25,7 @@ export class MessageForwardingService {
   async forwardMessage(
     messageId: string,
     recipientId: string,
-    intermediateNodeId: string
+    intermediateNodeId: string,
   ): Promise<boolean> {
     if (this.detectLoop(messageId, intermediateNodeId)) {
       return false;
@@ -37,25 +37,28 @@ export class MessageForwardingService {
       await this.metadataStore.updateDeliveryStatus(
         messageId,
         recipientId,
-        MessageDeliveryStatus.IN_TRANSIT
+        MessageDeliveryStatus.IN_TRANSIT,
       );
 
-      const success = await this.transport.sendToNode(intermediateNodeId, messageId);
+      const success = await this.transport.sendToNode(
+        intermediateNodeId,
+        messageId,
+      );
 
       if (!success) {
         await this.metadataStore.updateDeliveryStatus(
           messageId,
           recipientId,
-          MessageDeliveryStatus.FAILED
+          MessageDeliveryStatus.FAILED,
         );
       }
 
       return success;
-    } catch (error) {
+    } catch (_error) {
       await this.metadataStore.updateDeliveryStatus(
         messageId,
         recipientId,
-        MessageDeliveryStatus.FAILED
+        MessageDeliveryStatus.FAILED,
       );
       return false;
     }

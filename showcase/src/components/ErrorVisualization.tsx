@@ -1,6 +1,6 @@
 /**
  * @fileoverview Error Visualization Component
- * 
+ *
  * Provides comprehensive error visualization with modern card styling
  * and glass-morphism design for displaying animation and BrightChain errors.
  */
@@ -32,7 +32,7 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({
   onDismiss,
   onRetry,
   onClearAll,
-  maxVisible = 5
+  maxVisible = 5,
 }) => {
   if (errors.length === 0) {
     return null;
@@ -43,19 +43,27 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({
 
   const getErrorIcon = (type: ErrorInfo['type']) => {
     switch (type) {
-      case 'animation': return '🎬';
-      case 'brightchain': return '⛓️';
-      case 'network': return '🌐';
-      case 'validation': return '✅';
-      default: return '⚠️';
+      case 'animation':
+        return '🎬';
+      case 'brightchain':
+        return '⛓️';
+      case 'network':
+        return '🌐';
+      case 'validation':
+        return '✅';
+      default:
+        return '⚠️';
     }
   };
 
   const getSeverityIcon = (severity: ErrorInfo['severity']) => {
     switch (severity) {
-      case 'error': return '❌';
-      case 'warning': return '⚠️';
-      case 'info': return 'ℹ️';
+      case 'error':
+        return '❌';
+      case 'warning':
+        return '⚠️';
+      case 'info':
+        return 'ℹ️';
     }
   };
 
@@ -74,7 +82,7 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({
           </h3>
         </div>
         {onClearAll && errors.length > 0 && (
-          <button 
+          <button
             className="error-clear-all-btn"
             onClick={onClearAll}
             title="Clear all errors"
@@ -86,18 +94,21 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({
 
       <div className="error-list">
         {visibleErrors.map((error) => (
-          <div 
-            key={error.id}
-            className={`error-card ${error.severity}`}
-          >
+          <div key={error.id} className={`error-card ${error.severity}`}>
             <div className="error-card-header">
               <div className="error-icons">
-                <span className="error-type-icon">{getErrorIcon(error.type)}</span>
-                <span className="error-severity-icon">{getSeverityIcon(error.severity)}</span>
+                <span className="error-type-icon">
+                  {getErrorIcon(error.type)}
+                </span>
+                <span className="error-severity-icon">
+                  {getSeverityIcon(error.severity)}
+                </span>
               </div>
               <div className="error-meta">
                 <span className="error-type-label">{error.type}</span>
-                <span className="error-timestamp">{formatTimestamp(error.timestamp)}</span>
+                <span className="error-timestamp">
+                  {formatTimestamp(error.timestamp)}
+                </span>
               </div>
               {onDismiss && (
                 <button
@@ -112,7 +123,7 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({
 
             <div className="error-card-body">
               <p className="error-message">{error.message}</p>
-              
+
               {error.details && (
                 <details className="error-details">
                   <summary className="error-details-summary">
@@ -130,8 +141,8 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({
                       <div key={key} className="error-context-item">
                         <span className="context-key">{key}:</span>
                         <span className="context-value">
-                          {typeof value === 'object' 
-                            ? JSON.stringify(value, null, 2) 
+                          {typeof value === 'object'
+                            ? JSON.stringify(value, null, 2)
                             : String(value)}
                         </span>
                       </div>
@@ -172,42 +183,48 @@ export const ErrorVisualization: React.FC<ErrorVisualizationProps> = ({
 export const useErrorManager = () => {
   const [errors, setErrors] = React.useState<ErrorInfo[]>([]);
 
-  const addError = React.useCallback((
-    type: ErrorInfo['type'],
-    severity: ErrorInfo['severity'],
-    message: string,
-    options?: {
-      details?: string;
-      recoverable?: boolean;
-      context?: Record<string, any>;
-    }
-  ) => {
-    const error: ErrorInfo = {
-      id: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      type,
-      severity,
-      message,
-      details: options?.details,
-      timestamp: Date.now(),
-      recoverable: options?.recoverable ?? false,
-      context: options?.context
-    };
+  const addError = React.useCallback(
+    (
+      type: ErrorInfo['type'],
+      severity: ErrorInfo['severity'],
+      message: string,
+      options?: {
+        details?: string;
+        recoverable?: boolean;
+        context?: Record<string, any>;
+      },
+    ) => {
+      const error: ErrorInfo = {
+        id: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type,
+        severity,
+        message,
+        details: options?.details,
+        timestamp: Date.now(),
+        recoverable: options?.recoverable ?? false,
+        context: options?.context,
+      };
 
-    setErrors(prev => [error, ...prev]);
-    return error.id;
-  }, []);
+      setErrors((prev) => [error, ...prev]);
+      return error.id;
+    },
+    [],
+  );
 
   const dismissError = React.useCallback((errorId: string) => {
-    setErrors(prev => prev.filter(e => e.id !== errorId));
+    setErrors((prev) => prev.filter((e) => e.id !== errorId));
   }, []);
 
   const clearAllErrors = React.useCallback(() => {
     setErrors([]);
   }, []);
 
-  const getError = React.useCallback((errorId: string) => {
-    return errors.find(e => e.id === errorId);
-  }, [errors]);
+  const getError = React.useCallback(
+    (errorId: string) => {
+      return errors.find((e) => e.id === errorId);
+    },
+    [errors],
+  );
 
   return {
     errors,
@@ -216,6 +233,6 @@ export const useErrorManager = () => {
     clearAllErrors,
     getError,
     hasErrors: errors.length > 0,
-    errorCount: errors.length
+    errorCount: errors.length,
   };
 };

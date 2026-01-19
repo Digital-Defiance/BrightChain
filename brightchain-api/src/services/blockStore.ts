@@ -1,21 +1,26 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
-import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
-import { Checksum } from '@brightchain/brightchain-lib/lib/types/checksum';
-import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib/lib/stores/diskBlockAsyncStore';
 import { FecServiceFactory } from '@brightchain/brightchain-api-lib/lib/services/fecServiceFactory';
-import { IBlockMetadata, BlockStoreOptions, BrightenResult, IFecService } from '@brightchain/brightchain-lib';
+import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib/lib/stores/diskBlockAsyncStore';
+import {
+  BlockStoreOptions,
+  BrightenResult,
+  IBlockMetadata,
+  IFecService,
+} from '@brightchain/brightchain-lib';
+import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
+import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
+import { Checksum } from '@brightchain/brightchain-lib/lib/types/checksum';
 import { IApplication } from '../interfaces/application';
 import { IBlockStore } from '../interfaces/blockStore';
 import { BaseService } from './base';
 
 /**
  * Service for block storage operations backed by the BrightChain disk blockstore.
- * 
+ *
  * This service initializes the DiskBlockAsyncStore with:
  * - DiskBlockMetadataStore for tracking block lifecycle and access patterns
  * - FEC service (via FecServiceFactory) for parity generation and recovery
- * 
+ *
  * The FEC service is initialized asynchronously on first use to avoid blocking
  * the constructor. Use ensureInitialized() to ensure the FEC service is ready.
  */
@@ -26,12 +31,15 @@ export class BlockStoreService extends BaseService implements IBlockStore {
 
   constructor(application: IApplication) {
     super(application);
-    const storePath = process.env.BRIGHTCHAIN_BLOCKSTORE_PATH ?? 'tmp/blockstore';
-    const blockSize = (process.env.BRIGHTCHAIN_BLOCKSIZE_BYTES
-      ? Number.parseInt(process.env.BRIGHTCHAIN_BLOCKSIZE_BYTES, 10)
-      : BlockSize.Medium) as BlockSize;
+    const storePath =
+      process.env.BRIGHTCHAIN_BLOCKSTORE_PATH ?? 'tmp/blockstore';
+    const blockSize = (
+      process.env.BRIGHTCHAIN_BLOCKSIZE_BYTES
+        ? Number.parseInt(process.env.BRIGHTCHAIN_BLOCKSIZE_BYTES, 10)
+        : BlockSize.Medium
+    ) as BlockSize;
     this.store = new DiskBlockAsyncStore({ storePath, blockSize });
-    
+
     // Start FEC service initialization in the background
     this.initializeFecService();
   }
@@ -58,8 +66,13 @@ export class BlockStoreService extends BaseService implements IBlockStore {
         console.log('[BlockStoreService] FEC service initialized successfully');
       } catch (error) {
         // FEC service is optional - log warning but don't fail
-        console.warn('[BlockStoreService] FEC service not available:', error instanceof Error ? error.message : String(error));
-        console.warn('[BlockStoreService] Block storage will work without FEC parity protection');
+        console.warn(
+          '[BlockStoreService] FEC service not available:',
+          error instanceof Error ? error.message : String(error),
+        );
+        console.warn(
+          '[BlockStoreService] Block storage will work without FEC parity protection',
+        );
       }
     })();
 
@@ -114,7 +127,10 @@ export class BlockStoreService extends BaseService implements IBlockStore {
     await this.store.delete(blockId);
   }
 
-  async brightenBlock(blockId: string, randomBlockCount: number): Promise<BrightenResult> {
+  async brightenBlock(
+    blockId: string,
+    randomBlockCount: number,
+  ): Promise<BrightenResult> {
     return this.store.brightenBlock(blockId, randomBlockCount);
   }
 }

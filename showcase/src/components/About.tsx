@@ -137,10 +137,7 @@ const About = () => {
             support for sustainable blockchain technology.
           </p>
           <div className="cta-buttons">
-            <Link
-              to="/demo"
-              className="btn btn-primary"
-            >
+            <Link to="/demo" className="btn btn-primary">
               <GiCookingPot />
               🥫 Interactive Demo
             </Link>
@@ -204,10 +201,7 @@ const About = () => {
               NPM
             </a>
             {' • '}
-            <a
-              href="/demo"
-              rel="noopener noreferrer"
-            >
+            <a href="/demo" rel="noopener noreferrer">
               Interactive Demo
             </a>
           </p>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './HelpSystem.css';
 
 /**
@@ -38,8 +38,18 @@ Key features:
 • Cryptographic checksums ensure data integrity
 • Decentralized storage with no central authority
 • Magnet URLs enable easy file sharing`,
-    relatedTopics: ['how-encoding-works', 'block-soup-concept', 'security-features'],
-    keywords: ['brightchain', 'distributed', 'storage', 'blockchain', 'decentralized']
+    relatedTopics: [
+      'how-encoding-works',
+      'block-soup-concept',
+      'security-features',
+    ],
+    keywords: [
+      'brightchain',
+      'distributed',
+      'storage',
+      'blockchain',
+      'decentralized',
+    ],
   },
   {
     id: 'how-encoding-works',
@@ -55,8 +65,12 @@ Key features:
 6. **Magnet URL**: A shareable link is created for file access
 
 This process ensures your file is secure, distributed, and easily retrievable.`,
-    relatedTopics: ['what-is-brightchain', 'cbl-explained', 'checksum-verification'],
-    keywords: ['encoding', 'chunking', 'padding', 'checksum', 'cbl']
+    relatedTopics: [
+      'what-is-brightchain',
+      'cbl-explained',
+      'checksum-verification',
+    ],
+    keywords: ['encoding', 'chunking', 'padding', 'checksum', 'cbl'],
   },
   {
     id: 'block-soup-concept',
@@ -71,8 +85,12 @@ Benefits:
 • **Anonymity**: File structure and relationships are hidden
 
 Think of it like a giant puzzle where pieces from thousands of different puzzles are mixed together. Only with the right "recipe" (CBL) can you find and assemble your specific pieces.`,
-    relatedTopics: ['what-is-brightchain', 'security-features', 'cbl-explained'],
-    keywords: ['soup', 'blocks', 'privacy', 'security', 'mixing']
+    relatedTopics: [
+      'what-is-brightchain',
+      'security-features',
+      'cbl-explained',
+    ],
+    keywords: ['soup', 'blocks', 'privacy', 'security', 'mixing'],
   },
   {
     id: 'cbl-explained',
@@ -88,7 +106,7 @@ The CBL includes:
 
 **Important**: The CBL is like a treasure map - keep it safe! Without the CBL, your file cannot be reconstructed from the soup. The magnet URL contains the CBL data in an encoded format.`,
     relatedTopics: ['how-encoding-works', 'magnet-urls', 'file-reconstruction'],
-    keywords: ['cbl', 'metadata', 'block list', 'reconstruction']
+    keywords: ['cbl', 'metadata', 'block list', 'reconstruction'],
   },
   {
     id: 'magnet-urls',
@@ -108,7 +126,7 @@ Magnet URLs are:
 
 **Tip**: Save your magnet URLs in a secure location. They are the only way to retrieve your files!`,
     relatedTopics: ['cbl-explained', 'file-reconstruction', 'sharing-files'],
-    keywords: ['magnet', 'url', 'sharing', 'link', 'retrieval']
+    keywords: ['magnet', 'url', 'sharing', 'link', 'retrieval'],
   },
   {
     id: 'file-reconstruction',
@@ -126,7 +144,7 @@ The reconstruction process:
 
 The result is a perfect copy of your original file, byte-for-byte identical.`,
     relatedTopics: ['cbl-explained', 'checksum-verification', 'magnet-urls'],
-    keywords: ['reconstruction', 'retrieval', 'reassembly', 'download']
+    keywords: ['reconstruction', 'retrieval', 'reassembly', 'download'],
   },
   {
     id: 'checksum-verification',
@@ -141,8 +159,12 @@ How checksums work:
 • During reconstruction, checksums are recalculated and compared
 
 **Security**: Checksums make it virtually impossible for corrupted or tampered data to go undetected. If a block's checksum doesn't match, the system knows the data has been compromised.`,
-    relatedTopics: ['security-features', 'how-encoding-works', 'file-reconstruction'],
-    keywords: ['checksum', 'hash', 'sha-512', 'integrity', 'verification']
+    relatedTopics: [
+      'security-features',
+      'how-encoding-works',
+      'file-reconstruction',
+    ],
+    keywords: ['checksum', 'hash', 'sha-512', 'integrity', 'verification'],
   },
   {
     id: 'security-features',
@@ -168,8 +190,18 @@ How checksums work:
 • Secure random padding prevents pattern analysis
 • Deterministic hashing ensures consistency
 • Future versions will support encryption`,
-    relatedTopics: ['block-soup-concept', 'checksum-verification', 'what-is-brightchain'],
-    keywords: ['security', 'privacy', 'encryption', 'integrity', 'decentralization']
+    relatedTopics: [
+      'block-soup-concept',
+      'checksum-verification',
+      'what-is-brightchain',
+    ],
+    keywords: [
+      'security',
+      'privacy',
+      'encryption',
+      'integrity',
+      'decentralization',
+    ],
   },
   {
     id: 'troubleshooting-missing-blocks',
@@ -189,8 +221,12 @@ How checksums work:
 • Check the debug panel to see available blocks
 
 **Note**: In a production BrightChain network, blocks would be persistently stored across multiple nodes, eliminating this issue.`,
-    relatedTopics: ['file-reconstruction', 'demo-limitations', 'block-soup-concept'],
-    keywords: ['error', 'missing', 'blocks', 'troubleshooting', 'refresh']
+    relatedTopics: [
+      'file-reconstruction',
+      'demo-limitations',
+      'block-soup-concept',
+    ],
+    keywords: ['error', 'missing', 'blocks', 'troubleshooting', 'refresh'],
   },
   {
     id: 'demo-limitations',
@@ -215,8 +251,8 @@ How checksums work:
 
 **Purpose**: This demo is designed for education and demonstration. A production BrightChain network would include persistent storage, distributed nodes, encryption, and many other features.`,
     relatedTopics: ['what-is-brightchain', 'troubleshooting-missing-blocks'],
-    keywords: ['limitations', 'demo', 'memory', 'storage', 'production']
-  }
+    keywords: ['limitations', 'demo', 'memory', 'storage', 'production'],
+  },
 ];
 
 /**
@@ -225,16 +261,17 @@ How checksums work:
 export const HelpSystem: React.FC<HelpSystemProps> = ({
   visible,
   onClose,
-  initialTopic
+  initialTopic,
 }) => {
   const [selectedTopic, setSelectedTopic] = useState<HelpTopic | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredTopics, setFilteredTopics] = useState<HelpTopic[]>(defaultHelpTopics);
+  const [filteredTopics, setFilteredTopics] =
+    useState<HelpTopic[]>(defaultHelpTopics);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   useEffect(() => {
     if (initialTopic) {
-      const topic = defaultHelpTopics.find(t => t.id === initialTopic);
+      const topic = defaultHelpTopics.find((t) => t.id === initialTopic);
       if (topic) {
         setSelectedTopic(topic);
       }
@@ -246,16 +283,17 @@ export const HelpSystem: React.FC<HelpSystemProps> = ({
 
     // Filter by category
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(t => t.category === selectedCategory);
+      filtered = filtered.filter((t) => t.category === selectedCategory);
     }
 
     // Filter by search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(t =>
-        t.title.toLowerCase().includes(term) ||
-        t.content.toLowerCase().includes(term) ||
-        t.keywords.some(k => k.toLowerCase().includes(term))
+      filtered = filtered.filter(
+        (t) =>
+          t.title.toLowerCase().includes(term) ||
+          t.content.toLowerCase().includes(term) ||
+          t.keywords.some((k) => k.toLowerCase().includes(term)),
       );
     }
 
@@ -267,7 +305,7 @@ export const HelpSystem: React.FC<HelpSystemProps> = ({
   };
 
   const handleRelatedTopicClick = (topicId: string) => {
-    const topic = defaultHelpTopics.find(t => t.id === topicId);
+    const topic = defaultHelpTopics.find((t) => t.id === topicId);
     if (topic) {
       setSelectedTopic(topic);
     }
@@ -296,30 +334,33 @@ export const HelpSystem: React.FC<HelpSystemProps> = ({
         <div className="help-system-content">
           {selectedTopic ? (
             <div className="help-topic-detail">
-              <button
-                className="help-back-button"
-                onClick={handleBackToList}
-              >
+              <button className="help-back-button" onClick={handleBackToList}>
                 ← Back to Topics
               </button>
 
               <div className="help-topic-card">
-                <div className={`help-category-badge ${selectedTopic.category}`}>
+                <div
+                  className={`help-category-badge ${selectedTopic.category}`}
+                >
                   {selectedTopic.category.replace('-', ' ')}
                 </div>
                 <h3>{selectedTopic.title}</h3>
                 <div className="help-topic-content">
-                  {selectedTopic.content.split('\n\n').map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))}
+                  {selectedTopic.content
+                    .split('\n\n')
+                    .map((paragraph, index) => (
+                      <p key={index}>{paragraph}</p>
+                    ))}
                 </div>
 
                 {selectedTopic.relatedTopics.length > 0 && (
                   <div className="help-related-topics">
                     <h4>Related Topics</h4>
                     <div className="help-related-links">
-                      {selectedTopic.relatedTopics.map(topicId => {
-                        const relatedTopic = defaultHelpTopics.find(t => t.id === topicId);
+                      {selectedTopic.relatedTopics.map((topicId) => {
+                        const relatedTopic = defaultHelpTopics.find(
+                          (t) => t.id === topicId,
+                        );
                         return relatedTopic ? (
                           <button
                             key={topicId}
@@ -381,7 +422,7 @@ export const HelpSystem: React.FC<HelpSystemProps> = ({
               </div>
 
               <div className="help-topics-grid">
-                {filteredTopics.map(topic => (
+                {filteredTopics.map((topic) => (
                   <div
                     key={topic.id}
                     className="help-topic-card clickable"
@@ -425,7 +466,10 @@ export interface HelpButtonProps {
   className?: string;
 }
 
-export const HelpButton: React.FC<HelpButtonProps> = ({ onClick, className = '' }) => {
+export const HelpButton: React.FC<HelpButtonProps> = ({
+  onClick,
+  className = '',
+}) => {
   return (
     <button
       className={`help-button ${className}`}

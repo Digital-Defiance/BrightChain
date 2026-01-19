@@ -45,7 +45,7 @@ export class MessageMetricsCollector implements IMessageMetricsCollector {
     this.metrics.messagesFailed++;
   }
 
-  recordEventEmitted(latencyMs: number): void {
+  recordEventEmitted(_latencyMs: number): void {
     this.metrics.eventsEmitted++;
   }
 

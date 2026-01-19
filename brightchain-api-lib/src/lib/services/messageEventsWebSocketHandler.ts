@@ -1,5 +1,9 @@
 import { WebSocket } from 'ws';
-import { EventNotificationSystem, IEventFilter, MessageEventType } from './eventNotificationSystem';
+import {
+  EventNotificationSystem,
+  IEventFilter,
+  MessageEventType,
+} from './eventNotificationSystem';
 
 /**
  * WebSocket handler for message event subscriptions
@@ -19,14 +23,14 @@ export class MessageEventsWebSocketHandler {
     ws.on('message', (data: Buffer) => {
       try {
         const message = JSON.parse(data.toString());
-        
+
         if (message.type === 'subscribe') {
           const filter: IEventFilter = {
             types: message.eventTypes as MessageEventType[],
             senderId: message.senderId,
             recipientId: message.recipientId,
           };
-          
+
           // Unsubscribe and resubscribe with new filter
           this.eventSystem.unsubscribe(ws);
           this.eventSystem.subscribe(ws, filter);
@@ -43,7 +47,9 @@ export class MessageEventsWebSocketHandler {
           ws.send(JSON.stringify({ type: 'history', events: history }));
         }
       } catch (error) {
-        ws.send(JSON.stringify({ type: 'error', message: (error as Error).message }));
+        ws.send(
+          JSON.stringify({ type: 'error', message: (error as Error).message }),
+        );
       }
     });
 
@@ -53,6 +59,11 @@ export class MessageEventsWebSocketHandler {
     });
 
     // Send confirmation
-    ws.send(JSON.stringify({ type: 'connected', message: 'Subscribed to message events' }));
+    ws.send(
+      JSON.stringify({
+        type: 'connected',
+        message: 'Subscribed to message events',
+      }),
+    );
   }
 }

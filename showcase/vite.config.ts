@@ -103,10 +103,7 @@ const nobleAliases = [
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [
-    alias({ entries: nobleAliases }),
-    react(),
-  ],
+  plugins: [alias({ entries: nobleAliases }), react()],
   base: '/',
   build: {
     outDir: 'dist',
@@ -160,8 +157,11 @@ export default defineConfig({
     dedupe: ['tslib', '@noble/hashes', '@noble/curves'],
     extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
     alias: {
-      // Local workspace alias - use main index for full exports
-      '@brightchain/brightchain-lib': resolve(__dirname, '../brightchain-lib/src/index.ts'),
+      // Local workspace alias - use browser entry point for browser compatibility
+      '@brightchain/brightchain-lib': resolve(
+        __dirname,
+        '../brightchain-lib/src/browser.ts',
+      ),
       // Replace js-sha3 with @noble/hashes for browser compatibility
       'js-sha3': resolve(__dirname, 'node_modules/@noble/hashes/esm/sha3.js'),
       // Map to ESM versions of @noble packages for proper browser bundling

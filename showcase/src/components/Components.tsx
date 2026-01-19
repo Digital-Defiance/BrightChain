@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
+import { FaExternalLinkAlt } from 'react-icons/fa';
 import { SiNpm } from 'react-icons/si';
 import { useInView } from 'react-intersection-observer';
 import './Components.css';
-import { FaExternalLinkAlt } from 'react-icons/fa';
 
 interface Feature {
   title: string;

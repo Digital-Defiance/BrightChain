@@ -1,5 +1,11 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { AnimationController, AnimationState, AnimationSequence, ProcessStep, PerformanceMetrics } from './AnimationController';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  AnimationController,
+  AnimationSequence,
+  AnimationState,
+  PerformanceMetrics,
+  ProcessStep,
+} from './AnimationController';
 
 /**
  * React hook for using AnimationController
@@ -12,18 +18,20 @@ export function useAnimationController() {
     currentFrame: 0,
     totalFrames: 0,
     speed: 1.0,
-    direction: 'forward'
+    direction: 'forward',
   });
-  const [currentSequence, setCurrentSequence] = useState<AnimationSequence | null>(null);
+  const [currentSequence, setCurrentSequence] =
+    useState<AnimationSequence | null>(null);
   const [currentStep, setCurrentStep] = useState<ProcessStep | null>(null);
-  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics>({
-    frameRate: 0,
-    averageFrameTime: 0,
-    droppedFrames: 0,
-    memoryUsage: 0,
-    sequenceCount: 0,
-    errorCount: 0
-  });
+  const [performanceMetrics, setPerformanceMetrics] =
+    useState<PerformanceMetrics>({
+      frameRate: 0,
+      averageFrameTime: 0,
+      droppedFrames: 0,
+      memoryUsage: 0,
+      sequenceCount: 0,
+      errorCount: 0,
+    });
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize controller
@@ -62,7 +70,7 @@ export function useAnimationController() {
       });
 
       controller.on('speed-changed', ({ speed }) => {
-        setAnimationState(prev => ({ ...prev, speed }));
+        setAnimationState((prev) => ({ ...prev, speed }));
       });
 
       controller.on('animation-paused', () => {
@@ -143,7 +151,7 @@ export function useAnimationController() {
     currentStep,
     performanceMetrics,
     isInitialized,
-    
+
     // Methods
     playEncodingAnimation,
     playReconstructionAnimation,
@@ -151,23 +159,25 @@ export function useAnimationController() {
     pause,
     resume,
     reset,
-    
+
     // Direct controller access for advanced usage
-    controller: controllerRef.current
+    controller: controllerRef.current,
   };
 }
 
 /**
  * Hook for monitoring animation performance
  */
-export function useAnimationPerformance(controller: AnimationController | null) {
+export function useAnimationPerformance(
+  controller: AnimationController | null,
+) {
   const [metrics, setMetrics] = useState<PerformanceMetrics>({
     frameRate: 0,
     averageFrameTime: 0,
     droppedFrames: 0,
     memoryUsage: 0,
     sequenceCount: 0,
-    errorCount: 0
+    errorCount: 0,
   });
 
   useEffect(() => {
@@ -179,7 +189,7 @@ export function useAnimationPerformance(controller: AnimationController | null) 
 
     // Update metrics every second
     const interval = setInterval(updateMetrics, 1000);
-    
+
     // Also update on animation events
     controller.on('step-completed', updateMetrics);
     controller.on('sequence-completed', updateMetrics);
@@ -199,7 +209,9 @@ export function useAnimationPerformance(controller: AnimationController | null) 
  */
 export function useEducationalMode(controller: AnimationController | null) {
   const [isEducationalMode, setIsEducationalMode] = useState(false);
-  const [stepExplanations, setStepExplanations] = useState<Map<string, string>>(new Map());
+  const [stepExplanations, setStepExplanations] = useState<Map<string, string>>(
+    new Map(),
+  );
 
   const enableEducationalMode = useCallback(() => {
     setIsEducationalMode(true);
@@ -217,19 +229,25 @@ export function useEducationalMode(controller: AnimationController | null) {
     }
   }, [controller]);
 
-  const addStepExplanation = useCallback((stepId: string, explanation: string) => {
-    setStepExplanations(prev => new Map(prev).set(stepId, explanation));
-  }, []);
+  const addStepExplanation = useCallback(
+    (stepId: string, explanation: string) => {
+      setStepExplanations((prev) => new Map(prev).set(stepId, explanation));
+    },
+    [],
+  );
 
-  const getStepExplanation = useCallback((stepId: string) => {
-    return stepExplanations.get(stepId);
-  }, [stepExplanations]);
+  const getStepExplanation = useCallback(
+    (stepId: string) => {
+      return stepExplanations.get(stepId);
+    },
+    [stepExplanations],
+  );
 
   return {
     isEducationalMode,
     enableEducationalMode,
     disableEducationalMode,
     addStepExplanation,
-    getStepExplanation
+    getStepExplanation,
   };
 }

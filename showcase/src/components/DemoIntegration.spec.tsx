@@ -1,6 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import React from 'react';
 import '@testing-library/jest-dom';
+import { describe, expect, it } from 'vitest';
 
 describe('Demo Integration Tests - Task 16.1', () => {
   describe('Mode Switching and State Preservation', () => {

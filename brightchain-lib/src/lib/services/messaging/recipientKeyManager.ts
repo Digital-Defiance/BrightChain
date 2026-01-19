@@ -1,5 +1,5 @@
-import { MessageError } from '../../errors/messaging/messageError';
 import { MessageErrorType } from '../../enumerations/messaging/messageErrorType';
+import { MessageError } from '../../errors/messaging/messageError';
 
 /**
  * Interface for recipient public key provider.
@@ -11,11 +11,11 @@ export interface IPublicKeyProvider {
 
 /**
  * Manager for recipient public key operations.
- * 
+ *
  * @remarks
  * Fetches and validates recipient public keys for message encryption.
  * Handles missing keys gracefully.
- * 
+ *
  * @see Requirements 3.1
  */
 export class RecipientKeyManager {
@@ -27,7 +27,9 @@ export class RecipientKeyManager {
    * @returns Map of recipient ID to public key
    * @throws MessageError if any required key is missing
    */
-  async fetchPublicKeys(recipientIds: string[]): Promise<Map<string, Uint8Array>> {
+  async fetchPublicKeys(
+    recipientIds: string[],
+  ): Promise<Map<string, Uint8Array>> {
     const keys = new Map<string, Uint8Array>();
     const missingKeys: string[] = [];
 
@@ -47,7 +49,7 @@ export class RecipientKeyManager {
     if (missingKeys.length > 0) {
       throw new MessageError(
         MessageErrorType.MISSING_PUBLIC_KEY,
-        `Missing or invalid public keys for recipients: ${missingKeys.join(', ')}`
+        `Missing or invalid public keys for recipients: ${missingKeys.join(', ')}`,
       );
     }
 
@@ -77,7 +79,9 @@ export class RecipientKeyManager {
    * @param recipientId - Recipient node ID
    * @returns Public key or null if not found
    */
-  async fetchPublicKeyOptional(recipientId: string): Promise<Uint8Array | null> {
+  async fetchPublicKeyOptional(
+    recipientId: string,
+  ): Promise<Uint8Array | null> {
     try {
       const publicKey = await this.keyProvider.getPublicKey(recipientId);
       if (publicKey && this.validatePublicKey(publicKey)) {

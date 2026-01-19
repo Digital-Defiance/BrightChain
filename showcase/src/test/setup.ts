@@ -2,9 +2,9 @@
  * Test setup for Vitest
  */
 
-import { vi, beforeAll, afterEach } from 'vitest';
 import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
+import { afterEach, vi } from 'vitest';
 
 // Cleanup after each test
 afterEach(() => {
@@ -14,7 +14,7 @@ afterEach(() => {
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -28,14 +28,22 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
+  constructor() {
+    // Mock constructor
+  }
+  disconnect() {
+    // Mock disconnect
+  }
+  observe() {
+    // Mock observe
+  }
   takeRecords() {
     return [];
   }
-  unobserve() {}
-} as any;
+  unobserve() {
+    // Mock unobserve
+  }
+} as unknown as typeof IntersectionObserver;
 
 // Ensure requestAnimationFrame and cancelAnimationFrame are available
 if (typeof window.requestAnimationFrame === 'undefined') {
@@ -45,7 +53,7 @@ if (typeof window.requestAnimationFrame === 'undefined') {
     setTimeout(() => callback(Date.now()), 16);
     return id;
   };
-  window.cancelAnimationFrame = (id: number) => {
+  window.cancelAnimationFrame = (_id: number) => {
     // No-op for tests
   };
 } else {
@@ -57,7 +65,7 @@ if (typeof window.requestAnimationFrame === 'undefined') {
       const result = originalRAF.call(window, callback);
       // If result is a number, return it; otherwise return our own ID
       return typeof result === 'number' ? result : ++frameId;
-    } catch (e) {
+    } catch {
       // Fallback
       const id = ++frameId;
       setTimeout(() => callback(Date.now()), 16);
@@ -67,49 +75,51 @@ if (typeof window.requestAnimationFrame === 'undefined') {
 }
 
 // Mock HTMLCanvasElement.getContext for cross-browser tests
-HTMLCanvasElement.prototype.getContext = vi.fn().mockImplementation((contextType: string) => {
-  if (contextType === '2d') {
-    return {
-      fillStyle: '',
-      strokeStyle: '',
-      lineWidth: 1,
-      globalAlpha: 1,
-      shadowBlur: 0,
-      shadowColor: '',
-      clearRect: vi.fn(),
-      fillRect: vi.fn(),
-      strokeRect: vi.fn(),
-      beginPath: vi.fn(),
-      closePath: vi.fn(),
-      moveTo: vi.fn(),
-      lineTo: vi.fn(),
-      arc: vi.fn(),
-      fill: vi.fn(),
-      stroke: vi.fn(),
-      save: vi.fn(),
-      restore: vi.fn(),
-      translate: vi.fn(),
-      rotate: vi.fn(),
-      scale: vi.fn(),
-      drawImage: vi.fn(),
-      getImageData: vi.fn(),
-      putImageData: vi.fn(),
-      createLinearGradient: vi.fn(),
-      createRadialGradient: vi.fn(),
-      createPattern: vi.fn(),
-      measureText: vi.fn(() => ({ width: 0 })),
-      canvas: {} as HTMLCanvasElement,
-    };
-  } else if (contextType === 'webgl' || contextType === 'webgl2') {
-    return {
-      getParameter: vi.fn(),
-      getExtension: vi.fn(),
-      getSupportedExtensions: vi.fn(() => []),
-      canvas: {} as HTMLCanvasElement,
-    };
-  }
-  return null;
-}) as any;
+HTMLCanvasElement.prototype.getContext = vi
+  .fn()
+  .mockImplementation((contextType: string) => {
+    if (contextType === '2d') {
+      return {
+        fillStyle: '',
+        strokeStyle: '',
+        lineWidth: 1,
+        globalAlpha: 1,
+        shadowBlur: 0,
+        shadowColor: '',
+        clearRect: vi.fn(),
+        fillRect: vi.fn(),
+        strokeRect: vi.fn(),
+        beginPath: vi.fn(),
+        closePath: vi.fn(),
+        moveTo: vi.fn(),
+        lineTo: vi.fn(),
+        arc: vi.fn(),
+        fill: vi.fn(),
+        stroke: vi.fn(),
+        save: vi.fn(),
+        restore: vi.fn(),
+        translate: vi.fn(),
+        rotate: vi.fn(),
+        scale: vi.fn(),
+        drawImage: vi.fn(),
+        getImageData: vi.fn(),
+        putImageData: vi.fn(),
+        createLinearGradient: vi.fn(),
+        createRadialGradient: vi.fn(),
+        createPattern: vi.fn(),
+        measureText: vi.fn(() => ({ width: 0 })),
+        canvas: {} as HTMLCanvasElement,
+      };
+    } else if (contextType === 'webgl' || contextType === 'webgl2') {
+      return {
+        getParameter: vi.fn(),
+        getExtension: vi.fn(),
+        getSupportedExtensions: vi.fn(() => []),
+        canvas: {} as HTMLCanvasElement,
+      };
+    }
+    return null;
+  }) as unknown as typeof HTMLCanvasElement.prototype.getContext;
 
 // Mock crypto.randomUUID for GUID generation
 Object.defineProperty(global.crypto, 'randomUUID', {
@@ -117,12 +127,14 @@ Object.defineProperty(global.crypto, 'randomUUID', {
     // Generate a valid UUID v4
     const bytes = new Uint8Array(16);
     crypto.getRandomValues(bytes);
-    
+
     // Set version (4) and variant bits
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
-    
-    const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join(
+      '',
+    );
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
   },
   writable: true,

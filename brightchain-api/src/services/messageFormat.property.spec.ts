@@ -1,11 +1,11 @@
 import * as fc from 'fast-check';
 import { MessagePassingType } from '../enumerations/websocketMessageType';
 import {
-  IMessageSendMessage,
-  IMessageReceivedMessage,
+  IEventSubscribeMessage,
   IMessageAckMessage,
   IMessageQueryMessage,
-  IEventSubscribeMessage,
+  IMessageReceivedMessage,
+  IMessageSendMessage,
 } from '../interfaces/websocketMessages';
 
 describe('Property 24: Message Format Consistency', () => {
@@ -30,9 +30,9 @@ describe('Property 24: Message Format Consistency', () => {
           expect(message.payload.recipients).toEqual(recipients);
           expect(message.requestId).toBe(requestId);
           expect(message.timestamp).toBeDefined();
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -54,9 +54,9 @@ describe('Property 24: Message Format Consistency', () => {
           expect(message.payload.messageId).toBe(messageId);
           expect(message.payload.recipientId).toBe(recipientId);
           expect(message.requestId).toBe(requestId);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -79,9 +79,9 @@ describe('Property 24: Message Format Consistency', () => {
           expect(message.payload.messageId).toBe(messageId);
           expect(message.payload.recipientId).toBe(recipientId);
           expect(message.payload.status).toBe(status);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -105,12 +105,14 @@ describe('Property 24: Message Format Consistency', () => {
           };
 
           expect(message.type).toBe(MessagePassingType.MESSAGE_QUERY);
-          if (recipientId) expect(message.payload.recipientId).toBe(recipientId);
+          if (recipientId)
+            expect(message.payload.recipientId).toBe(recipientId);
           if (senderId) expect(message.payload.senderId).toBe(senderId);
-          if (messageType) expect(message.payload.messageType).toBe(messageType);
-        }
+          if (messageType)
+            expect(message.payload.messageType).toBe(messageType);
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -136,19 +138,23 @@ describe('Property 24: Message Format Consistency', () => {
           expect(message.type).toBe(MessagePassingType.EVENT_SUBSCRIBE);
           if (types) expect(message.payload.types).toEqual(types);
           if (senderId) expect(message.payload.senderId).toBe(senderId);
-          if (recipientId) expect(message.payload.recipientId).toBe(recipientId);
-        }
+          if (recipientId)
+            expect(message.payload.recipientId).toBe(recipientId);
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
   it('Property 24f: All messages use message: prefix (50 iterations)', () => {
     fc.assert(
-      fc.property(fc.constantFrom(...Object.values(MessagePassingType)), (type) => {
-        expect(type).toMatch(/^message:/);
-      }),
-      { numRuns: 50 }
+      fc.property(
+        fc.constantFrom(...Object.values(MessagePassingType)),
+        (type) => {
+          expect(type).toMatch(/^message:/);
+        },
+      ),
+      { numRuns: 50 },
     );
   });
 });

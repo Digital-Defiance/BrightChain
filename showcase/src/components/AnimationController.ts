@@ -64,7 +64,7 @@ export class AnimationController {
       currentFrame: 0,
       totalFrames: 0,
       speed: 1.0,
-      direction: 'forward'
+      direction: 'forward',
     };
     this.performanceMonitor = new PerformanceMonitor();
   }
@@ -136,7 +136,9 @@ export class AnimationController {
   /**
    * Play reconstruction animation sequence
    */
-  async playReconstructionAnimation(_receipt: FileReceipt): Promise<Uint8Array> {
+  async playReconstructionAnimation(
+    _receipt: FileReceipt,
+  ): Promise<Uint8Array> {
     const sequence: AnimationSequence = {
       id: `reconstruction-${Date.now()}`,
       type: 'reconstruction',
@@ -190,10 +192,10 @@ export class AnimationController {
     if (multiplier <= 0) {
       throw new Error('Speed multiplier must be positive');
     }
-    
+
     this.animationState.speed = multiplier;
     this.emit('speed-changed', { speed: multiplier });
-    
+
     // Adjust current sequence timing if playing
     if (this.currentSequence && this.animationState.isPlaying) {
       this.adjustSequenceTiming(multiplier);
@@ -205,18 +207,18 @@ export class AnimationController {
    */
   pause(): void {
     if (!this.animationState.isPlaying) return;
-    
+
     this.animationState.isPlaying = false;
-    
+
     // Cancel animation frame
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
-    
+
     // Pause all step timeouts
-    this.stepTimeouts.forEach(timeout => clearTimeout(timeout));
-    
+    this.stepTimeouts.forEach((timeout) => clearTimeout(timeout));
+
     this.emit('animation-paused', { sequence: this.currentSequence });
   }
 
@@ -225,7 +227,7 @@ export class AnimationController {
    */
   resume(): void {
     if (this.animationState.isPlaying || !this.currentSequence) return;
-    
+
     this.animationState.isPlaying = true;
     this.continueSequence();
     this.emit('animation-resumed', { sequence: this.currentSequence });
@@ -236,16 +238,16 @@ export class AnimationController {
    */
   reset(): void {
     this.pause();
-    
+
     this.animationState.currentFrame = 0;
     this.stepTimeouts.clear();
-    
+
     if (this.currentSequence) {
-      this.currentSequence.steps.forEach(step => {
+      this.currentSequence.steps.forEach((step) => {
         step.status = 'pending';
       });
     }
-    
+
     this.emit('animation-reset', { sequence: this.currentSequence });
   }
 
@@ -461,18 +463,18 @@ class PerformanceMonitor {
     if (this.lastFrameTime > 0) {
       const frameTime = now - this.lastFrameTime;
       this.frameTimes.push(frameTime);
-      
+
       // Keep only last 60 frame times for rolling average
       if (this.frameTimes.length > 60) {
         this.frameTimes.shift();
       }
-      
+
       // Detect dropped frames (> 20ms = below 50fps)
       if (frameTime > 20) {
         this.droppedFrames++;
       }
     }
-    
+
     this.lastFrameTime = now;
     this.frameCount++;
   }

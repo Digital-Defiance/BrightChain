@@ -1,10 +1,14 @@
 /* eslint-disable @nx/enforce-module-boundaries */
+import {
+  BlockStoreOptions,
+  BrightenResult,
+  IBlockMetadata,
+} from '@brightchain/brightchain-lib';
 import { Member } from '@digitaldefiance/ecies-lib';
-import { IBlockMetadata, BlockStoreOptions, BrightenResult } from '@brightchain/brightchain-lib';
 import { IApplication } from '../interfaces/application';
 import { IBlockService } from '../interfaces/blockService';
-import { BlockStoreService } from './blockStore';
 import { BaseService } from './base';
+import { BlockStoreService } from './blockStore';
 
 /**
  * Service for handling block operations backed by the BlockStoreService.
@@ -29,7 +33,9 @@ export class BlocksService extends BaseService implements IBlockService {
     return { blockId, metadata: metadata ?? undefined };
   }
 
-  async getBlock(blockId: string): Promise<{ data: Buffer; metadata?: IBlockMetadata }> {
+  async getBlock(
+    blockId: string,
+  ): Promise<{ data: Buffer; metadata?: IBlockMetadata }> {
     const data = await this.blockStore.getBlock(blockId);
     const metadata = await this.blockStore.getBlockMetadata(blockId);
     return { data, metadata: metadata ?? undefined };
@@ -43,7 +49,10 @@ export class BlocksService extends BaseService implements IBlockService {
     return this.blockStore.deleteBlock(blockId);
   }
 
-  async brightenBlock(blockId: string, randomBlockCount: number): Promise<BrightenResult> {
+  async brightenBlock(
+    blockId: string,
+    randomBlockCount: number,
+  ): Promise<BrightenResult> {
     return this.blockStore.brightenBlock(blockId, randomBlockCount);
   }
 }

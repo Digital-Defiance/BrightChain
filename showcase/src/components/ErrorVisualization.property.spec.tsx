@@ -8,10 +8,13 @@
  * error messages and visual indicators for all error conditions.
  */
 
-import { describe, it, expect } from 'vitest';
-import { render, screen, renderHook, act } from '@testing-library/react';
-import { ErrorVisualization, ErrorInfo, useErrorManager } from './ErrorVisualization';
-import React from 'react';
+import { act, render, renderHook, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import {
+  ErrorInfo,
+  ErrorVisualization,
+  useErrorManager,
+} from './ErrorVisualization';
 
 describe('Error State Visualization Property Tests', () => {
   describe('Property 7: Error State Visualization', () => {
@@ -29,30 +32,32 @@ describe('Error State Visualization Property Tests', () => {
         'brightchain',
         'network',
         'validation',
-        'unknown'
+        'unknown',
       ];
 
       for (const errorType of errorTypes) {
-        const errors: ErrorInfo[] = [{
-          id: `test-${errorType}`,
-          type: errorType,
-          severity: 'error',
-          message: `Test ${errorType} error message`,
-          timestamp: Date.now(),
-          recoverable: false
-        }];
+        const errors: ErrorInfo[] = [
+          {
+            id: `test-${errorType}`,
+            type: errorType,
+            severity: 'error',
+            message: `Test ${errorType} error message`,
+            timestamp: Date.now(),
+            recoverable: false,
+          },
+        ];
 
-        const { container } = render(
-          <ErrorVisualization errors={errors} />
-        );
+        const { container } = render(<ErrorVisualization errors={errors} />);
 
         // Error should be displayed
-        expect(screen.getByText(`Test ${errorType} error message`)).toBeDefined();
-        
+        expect(
+          screen.getByText(`Test ${errorType} error message`),
+        ).toBeDefined();
+
         // Error card should exist
         const errorCard = container.querySelector('.error-card');
         expect(errorCard).toBeDefined();
-        
+
         // Error type should be displayed
         expect(screen.getByText(errorType)).toBeDefined();
       }
@@ -62,23 +67,23 @@ describe('Error State Visualization Property Tests', () => {
       const severities: ErrorInfo['severity'][] = ['error', 'warning', 'info'];
 
       for (const severity of severities) {
-        const errors: ErrorInfo[] = [{
-          id: `test-${severity}`,
-          type: 'animation',
-          severity,
-          message: `Test ${severity} message`,
-          timestamp: Date.now(),
-          recoverable: false
-        }];
+        const errors: ErrorInfo[] = [
+          {
+            id: `test-${severity}`,
+            type: 'animation',
+            severity,
+            message: `Test ${severity} message`,
+            timestamp: Date.now(),
+            recoverable: false,
+          },
+        ];
 
-        const { container } = render(
-          <ErrorVisualization errors={errors} />
-        );
+        const { container } = render(<ErrorVisualization errors={errors} />);
 
         // Error card should have severity class
         const errorCard = container.querySelector(`.error-card.${severity}`);
         expect(errorCard).toBeDefined();
-        
+
         // Message should be displayed
         expect(screen.getByText(`Test ${severity} message`)).toBeDefined();
       }
@@ -94,11 +99,11 @@ describe('Error State Visualization Property Tests', () => {
           severity: 'error',
           message: `Error message ${i}`,
           timestamp: Date.now() + i,
-          recoverable: false
+          recoverable: false,
         }));
 
         const { container } = render(
-          <ErrorVisualization errors={errors} maxVisible={5} />
+          <ErrorVisualization errors={errors} maxVisible={5} />,
         );
 
         // Header should show correct count
@@ -119,19 +124,19 @@ describe('Error State Visualization Property Tests', () => {
     });
 
     it('should display error details when provided', () => {
-      const errors: ErrorInfo[] = [{
-        id: 'test-with-details',
-        type: 'brightchain',
-        severity: 'error',
-        message: 'Block not found',
-        details: 'Block ID: abc123\nSession: xyz789\nStack trace: ...',
-        timestamp: Date.now(),
-        recoverable: false
-      }];
+      const errors: ErrorInfo[] = [
+        {
+          id: 'test-with-details',
+          type: 'brightchain',
+          severity: 'error',
+          message: 'Block not found',
+          details: 'Block ID: abc123\nSession: xyz789\nStack trace: ...',
+          timestamp: Date.now(),
+          recoverable: false,
+        },
+      ];
 
-      const { container } = render(
-        <ErrorVisualization errors={errors} />
-      );
+      const { container } = render(<ErrorVisualization errors={errors} />);
 
       // Main message should be displayed
       expect(screen.getByText('Block not found')).toBeDefined();
@@ -149,23 +154,23 @@ describe('Error State Visualization Property Tests', () => {
         { sessionId: 'session-123', blockId: 'block-456' },
         { fileName: 'test.txt', fileSize: 1024 },
         { operation: 'encode', step: 'chunking', progress: 0.5 },
-        { url: 'https://example.com', status: 404 }
+        { url: 'https://example.com', status: 404 },
       ];
 
       for (const context of contextVariations) {
-        const errors: ErrorInfo[] = [{
-          id: 'test-with-context',
-          type: 'animation',
-          severity: 'error',
-          message: 'Operation failed',
-          context,
-          timestamp: Date.now(),
-          recoverable: false
-        }];
+        const errors: ErrorInfo[] = [
+          {
+            id: 'test-with-context',
+            type: 'animation',
+            severity: 'error',
+            message: 'Operation failed',
+            context,
+            timestamp: Date.now(),
+            recoverable: false,
+          },
+        ];
 
-        const { container } = render(
-          <ErrorVisualization errors={errors} />
-        );
+        const { container } = render(<ErrorVisualization errors={errors} />);
 
         // Context section should exist
         const contextElement = container.querySelector('.error-context');
@@ -183,22 +188,22 @@ describe('Error State Visualization Property Tests', () => {
         Date.now(),
         Date.now() - 1000,
         Date.now() - 60000,
-        Date.now() - 3600000
+        Date.now() - 3600000,
       ];
 
       for (const timestamp of timestamps) {
-        const errors: ErrorInfo[] = [{
-          id: `test-${timestamp}`,
-          type: 'animation',
-          severity: 'error',
-          message: 'Test error',
-          timestamp,
-          recoverable: false
-        }];
+        const errors: ErrorInfo[] = [
+          {
+            id: `test-${timestamp}`,
+            type: 'animation',
+            severity: 'error',
+            message: 'Test error',
+            timestamp,
+            recoverable: false,
+          },
+        ];
 
-        const { container } = render(
-          <ErrorVisualization errors={errors} />
-        );
+        const { container } = render(<ErrorVisualization errors={errors} />);
 
         // Timestamp should be displayed
         const timestampElement = container.querySelector('.error-timestamp');
@@ -208,38 +213,38 @@ describe('Error State Visualization Property Tests', () => {
     });
 
     it('should show retry button for recoverable errors', () => {
-      const errors: ErrorInfo[] = [{
-        id: 'recoverable-error',
-        type: 'network',
-        severity: 'error',
-        message: 'Network request failed',
-        timestamp: Date.now(),
-        recoverable: true
-      }];
+      const errors: ErrorInfo[] = [
+        {
+          id: 'recoverable-error',
+          type: 'network',
+          severity: 'error',
+          message: 'Network request failed',
+          timestamp: Date.now(),
+          recoverable: true,
+        },
+      ];
 
       const onRetry = () => {};
 
-      render(
-        <ErrorVisualization errors={errors} onRetry={onRetry} />
-      );
+      render(<ErrorVisualization errors={errors} onRetry={onRetry} />);
 
       // Retry button should be displayed
       expect(screen.getByText('Retry')).toBeDefined();
     });
 
     it('should not show retry button for non-recoverable errors', () => {
-      const errors: ErrorInfo[] = [{
-        id: 'non-recoverable-error',
-        type: 'validation',
-        severity: 'error',
-        message: 'Invalid data format',
-        timestamp: Date.now(),
-        recoverable: false
-      }];
+      const errors: ErrorInfo[] = [
+        {
+          id: 'non-recoverable-error',
+          type: 'validation',
+          severity: 'error',
+          message: 'Invalid data format',
+          timestamp: Date.now(),
+          recoverable: false,
+        },
+      ];
 
-      const { container } = render(
-        <ErrorVisualization errors={errors} />
-      );
+      const { container } = render(<ErrorVisualization errors={errors} />);
 
       // Retry button should not exist
       const retryButton = container.querySelector('.error-retry-btn');
@@ -247,49 +252,49 @@ describe('Error State Visualization Property Tests', () => {
     });
 
     it('should display clear all button when errors exist', () => {
-      const errors: ErrorInfo[] = [{
-        id: 'test-error',
-        type: 'animation',
-        severity: 'error',
-        message: 'Test error',
-        timestamp: Date.now(),
-        recoverable: false
-      }];
+      const errors: ErrorInfo[] = [
+        {
+          id: 'test-error',
+          type: 'animation',
+          severity: 'error',
+          message: 'Test error',
+          timestamp: Date.now(),
+          recoverable: false,
+        },
+      ];
 
       const onClearAll = () => {};
 
-      render(
-        <ErrorVisualization errors={errors} onClearAll={onClearAll} />
-      );
+      render(<ErrorVisualization errors={errors} onClearAll={onClearAll} />);
 
       // Clear all button should be displayed
       expect(screen.getByText('Clear All')).toBeDefined();
     });
 
     it('should not render when no errors exist', () => {
-      const { container } = render(
-        <ErrorVisualization errors={[]} />
-      );
+      const { container } = render(<ErrorVisualization errors={[]} />);
 
       // Container should not exist
-      const errorContainer = container.querySelector('.error-visualization-container');
+      const errorContainer = container.querySelector(
+        '.error-visualization-container',
+      );
       expect(errorContainer).toBeNull();
     });
 
     it('should handle errors with missing optional fields', () => {
-      const errors: ErrorInfo[] = [{
-        id: 'minimal-error',
-        type: 'unknown',
-        severity: 'error',
-        message: 'Minimal error',
-        timestamp: Date.now(),
-        recoverable: false
-        // No details, no context
-      }];
+      const errors: ErrorInfo[] = [
+        {
+          id: 'minimal-error',
+          type: 'unknown',
+          severity: 'error',
+          message: 'Minimal error',
+          timestamp: Date.now(),
+          recoverable: false,
+          // No details, no context
+        },
+      ];
 
-      const { container } = render(
-        <ErrorVisualization errors={errors} />
-      );
+      const { container } = render(<ErrorVisualization errors={errors} />);
 
       // Error should still be displayed
       expect(screen.getByText('Minimal error')).toBeDefined();
@@ -331,7 +336,7 @@ describe('Error State Visualization Property Tests', () => {
         result.current.addError('animation', 'error', 'Error 3');
       });
 
-      const uniqueIds = new Set(result.current.errors.map(e => e.id));
+      const uniqueIds = new Set(result.current.errors.map((e) => e.id));
       expect(uniqueIds.size).toBe(3);
       expect(result.current.errors).toHaveLength(3);
     });

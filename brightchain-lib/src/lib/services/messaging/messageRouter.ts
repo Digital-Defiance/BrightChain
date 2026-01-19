@@ -1,12 +1,18 @@
-import { IMessageRouter, RoutingResult } from '../../interfaces/messaging/messageRouter';
-import { RoutingStrategy } from '../../enumerations/messaging/routingStrategy';
-import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
-import { IMessageSystemConfig, DEFAULT_MESSAGE_SYSTEM_CONFIG } from '../../interfaces/messaging/messageSystemConfig';
-import { MessageError } from '../../errors/messaging/messageError';
 import { MessageErrorType } from '../../enumerations/messaging/messageErrorType';
-import { IMessageMetricsCollector } from './messageMetrics';
+import { RoutingStrategy } from '../../enumerations/messaging/routingStrategy';
+import { MessageError } from '../../errors/messaging/messageError';
+import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
+import {
+  IMessageRouter,
+  RoutingResult,
+} from '../../interfaces/messaging/messageRouter';
+import {
+  DEFAULT_MESSAGE_SYSTEM_CONFIG,
+  IMessageSystemConfig,
+} from '../../interfaces/messaging/messageSystemConfig';
 import { IMessageLogger } from './messageLogger';
+import { IMessageMetricsCollector } from './messageMetrics';
 
 /**
  * @description Message router for routing messages to recipients
@@ -26,7 +32,10 @@ export class MessageRouter implements IMessageRouter {
     this.config = { ...DEFAULT_MESSAGE_SYSTEM_CONFIG, ...config };
   }
 
-  async routeMessage(messageId: string, recipients: string[]): Promise<RoutingResult> {
+  async routeMessage(
+    messageId: string,
+    recipients: string[],
+  ): Promise<RoutingResult> {
     const startTime = Date.now();
     const strategy = this.determineStrategy(recipients);
     this.logger?.logRoutingDecision(messageId, strategy, recipients.length);
@@ -40,24 +49,28 @@ export class MessageRouter implements IMessageRouter {
           this.metadataStore.updateDeliveryStatus(
             messageId,
             recipient,
-            MessageDeliveryStatus.IN_TRANSIT
+            MessageDeliveryStatus.IN_TRANSIT,
           ),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Routing timeout')), this.config.routingTimeoutMs)
-          )
+          new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error('Routing timeout')),
+              this.config.routingTimeoutMs,
+            ),
+          ),
         ]);
         successfulRecipients.push(recipient);
       } catch (error) {
         failedRecipients.push(recipient);
-        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        const errorMsg =
+          error instanceof Error ? error.message : 'Unknown error';
         errors.set(recipient, errorMsg);
         this.logger?.logDeliveryFailure(messageId, recipient, errorMsg);
-        
+
         try {
           await this.metadataStore.updateDeliveryStatus(
             messageId,
             recipient,
-            MessageDeliveryStatus.FAILED
+            MessageDeliveryStatus.FAILED,
           );
         } catch {
           // Ignore metadata update errors
@@ -65,12 +78,15 @@ export class MessageRouter implements IMessageRouter {
       }
     }
 
-    if (failedRecipients.length === recipients.length && recipients.length > 0) {
+    if (
+      failedRecipients.length === recipients.length &&
+      recipients.length > 0
+    ) {
       this.metrics?.recordMessageFailed();
       throw new MessageError(
         MessageErrorType.DELIVERY_FAILED,
         'Failed to route message to any recipient',
-        { messageId, failedRecipients, errors: Object.fromEntries(errors) }
+        { messageId, failedRecipients, errors: Object.fromEntries(errors) },
       );
     }
 
@@ -87,7 +103,10 @@ export class MessageRouter implements IMessageRouter {
     };
   }
 
-  async handleIncomingMessage(messageId: string, senderId: string): Promise<void> {
+  async handleIncomingMessage(
+    messageId: string,
+    _senderId: string,
+  ): Promise<void> {
     // Verify message exists in metadata store
     const metadata = await this.metadataStore.get(messageId);
     if (!metadata) {
@@ -101,7 +120,7 @@ export class MessageRouter implements IMessageRouter {
   async forwardMessage(
     messageId: string,
     recipients: string[],
-    forwardingPath: string[]
+    forwardingPath: string[],
   ): Promise<RoutingResult> {
     // Prevent forwarding loops
     if (forwardingPath.includes(this.localNodeId)) {
@@ -109,12 +128,12 @@ export class MessageRouter implements IMessageRouter {
         strategy: RoutingStrategy.DIRECT,
         successfulRecipients: [],
         failedRecipients: recipients,
-        errors: new Map(recipients.map(r => [r, 'Forwarding loop detected'])),
+        errors: new Map(recipients.map((r) => [r, 'Forwarding loop detected'])),
       };
     }
 
     // Add this node to forwarding path
-    const newPath = [...forwardingPath, this.localNodeId];
+    const _newPath = [...forwardingPath, this.localNodeId];
 
     // Forward using same logic as routeMessage
     // In a full implementation, this would pass the forwarding path to the transport layer

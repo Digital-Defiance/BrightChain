@@ -1,8 +1,8 @@
-import request from 'supertest';
-import express, { Express } from 'express';
-import { createMessageRouter } from './messageRouter';
-import { MessagePassingService } from '../services/messagePassingService';
 import { MessagePriority } from '@brightchain/brightchain-lib';
+import express, { Express } from 'express';
+import request from 'supertest';
+import { MessagePassingService } from '../services/messagePassingService';
+import { createMessageRouter } from './messageRouter';
 
 describe('Message Router API Endpoints', () => {
   let app: Express;
@@ -40,12 +40,10 @@ describe('Message Router API Endpoints', () => {
     });
 
     it('should return 400 for missing content', async () => {
-      const response = await request(app)
-        .post('/messages')
-        .send({
-          senderId: 'sender-1',
-          messageType: 'test',
-        });
+      const response = await request(app).post('/messages').send({
+        senderId: 'sender-1',
+        messageType: 'test',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toBe('Missing required fields');
@@ -91,7 +89,7 @@ describe('Message Router API Endpoints', () => {
         'sender-1',
         expect.objectContaining({
           priority: MessagePriority.NORMAL,
-        })
+        }),
       );
     });
 
@@ -144,21 +142,14 @@ describe('Message Router API Endpoints', () => {
 
   describe('Task 13.3: GET /messages - Query messages', () => {
     it('should query messages with filters', async () => {
-      const mockResults = {
-        messages: [{ id: 'msg-1' }, { id: 'msg-2' }],
-        total: 2,
-        page: 1,
-        pageSize: 50,
-      };
-      mockService.queryMessages.mockResolvedValue(mockResults);
+      const mockResults = [{ id: 'msg-1' }, { id: 'msg-2' }];
+      mockService.queryMessages.mockResolvedValue(mockResults as any);
 
-      const response = await request(app)
-        .get('/messages')
-        .query({
-          recipientId: 'recipient-1',
-          senderId: 'sender-1',
-          messageType: 'test',
-        });
+      const response = await request(app).get('/messages').query({
+        recipientId: 'recipient-1',
+        senderId: 'sender-1',
+        messageType: 'test',
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockResults);
@@ -171,13 +162,8 @@ describe('Message Router API Endpoints', () => {
       });
     });
 
-    it('should use default pagination values', async () => {
-      mockService.queryMessages.mockResolvedValue({
-        messages: [],
-        total: 0,
-        page: 1,
-        pageSize: 50,
-      });
+    it('should query all messages when no filters provided', async () => {
+      mockService.queryMessages.mockResolvedValue([]);
 
       await request(app).get('/messages');
 
@@ -191,21 +177,17 @@ describe('Message Router API Endpoints', () => {
     });
 
     it('should accept custom pagination', async () => {
-      mockService.queryMessages.mockResolvedValue({
-        messages: [],
-        total: 0,
-        page: 2,
-        pageSize: 10,
-      });
+      mockService.queryMessages.mockResolvedValue([]);
 
       await request(app).get('/messages').query({ page: '2', pageSize: '10' });
 
-      expect(mockService.queryMessages).toHaveBeenCalledWith(
-        expect.objectContaining({
-          page: 2,
-          pageSize: 10,
-        })
-      );
+      expect(mockService.queryMessages).toHaveBeenCalledWith({
+        recipientId: undefined,
+        senderId: undefined,
+        messageType: undefined,
+        page: 2,
+        pageSize: 10,
+      });
     });
 
     it('should handle service errors', async () => {
@@ -214,7 +196,7 @@ describe('Message Router API Endpoints', () => {
       const response = await request(app).get('/messages');
 
       expect(response.status).toBe(500);
-      expect(response.body.error).toBe('Service error');
+      expect(response.body.error).toBe('Query failed');
     });
   });
 

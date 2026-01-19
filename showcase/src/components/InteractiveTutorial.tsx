@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import './InteractiveTutorial.css';
 
 /**
@@ -32,77 +32,85 @@ const defaultTutorialSteps: TutorialStep[] = [
   {
     id: 'welcome',
     title: 'Welcome to BrightChain! 👋',
-    description: 'This interactive tutorial will guide you through the BrightChain demo. You\'ll learn how to encode files, explore the block soup, and reconstruct files from blocks.',
+    description:
+      "This interactive tutorial will guide you through the BrightChain demo. You'll learn how to encode files, explore the block soup, and reconstruct files from blocks.",
     position: 'center',
-    skippable: true
+    skippable: true,
   },
   {
     id: 'file-upload',
     title: 'Upload a File',
-    description: 'Start by uploading a file to encode. Click the file upload area or drag and drop a file. Try a small text file for your first time!',
+    description:
+      'Start by uploading a file to encode. Click the file upload area or drag and drop a file. Try a small text file for your first time!',
     targetElement: '.file-upload-zone',
     position: 'bottom',
     action: 'upload',
     actionDescription: 'Upload a file to continue',
-    skippable: false
+    skippable: false,
   },
   {
     id: 'encoding-process',
     title: 'Watch the Encoding',
-    description: 'Your file is being broken down into blocks! Watch as it goes through chunking, padding, checksum calculation, and storage. Each step is crucial for the BrightChain process.',
+    description:
+      'Your file is being broken down into blocks! Watch as it goes through chunking, padding, checksum calculation, and storage. Each step is crucial for the BrightChain process.',
     targetElement: '.encoding-animation',
     position: 'right',
     action: 'observe',
     actionDescription: 'Observe the encoding animation',
-    skippable: false
+    skippable: false,
   },
   {
     id: 'block-soup',
     title: 'Explore the Block Soup',
-    description: 'These colorful "soup cans" represent your file blocks mixed with others. Hover over them to see details, or click to inspect individual blocks.',
+    description:
+      'These colorful "soup cans" represent your file blocks mixed with others. Hover over them to see details, or click to inspect individual blocks.',
     targetElement: '.soup-visualization',
     position: 'top',
     action: 'click',
     actionDescription: 'Click on a soup can to inspect it',
-    skippable: true
+    skippable: true,
   },
   {
     id: 'cbl-magnet',
     title: 'Your Magnet URL',
-    description: 'This magnet URL contains the "recipe" (CBL) to reconstruct your file. Save it! You\'ll need it to retrieve your file from the soup.',
+    description:
+      'This magnet URL contains the "recipe" (CBL) to reconstruct your file. Save it! You\'ll need it to retrieve your file from the soup.',
     targetElement: '.magnet-url-display',
     position: 'bottom',
     action: 'observe',
     actionDescription: 'Review your magnet URL',
-    skippable: true
+    skippable: true,
   },
   {
     id: 'reconstruction',
     title: 'Reconstruct Your File',
-    description: 'Now let\'s get your file back! Paste the magnet URL or upload the CBL file to start reconstruction. Watch as blocks are collected and reassembled.',
+    description:
+      "Now let's get your file back! Paste the magnet URL or upload the CBL file to start reconstruction. Watch as blocks are collected and reassembled.",
     targetElement: '.reconstruction-zone',
     position: 'bottom',
     action: 'click',
     actionDescription: 'Start file reconstruction',
-    skippable: true
+    skippable: true,
   },
   {
     id: 'educational-mode',
     title: 'Try Educational Mode',
-    description: 'Want to learn more? Enable Educational Mode to slow down animations, see detailed explanations, and explore technical concepts at your own pace.',
+    description:
+      'Want to learn more? Enable Educational Mode to slow down animations, see detailed explanations, and explore technical concepts at your own pace.',
     targetElement: '.educational-mode-toggle',
     position: 'left',
     action: 'click',
     actionDescription: 'Toggle educational mode',
-    skippable: true
+    skippable: true,
   },
   {
     id: 'completion',
     title: 'Tutorial Complete! 🎉',
-    description: 'You\'ve learned the basics of BrightChain! Feel free to experiment with different files, explore the help system, or dive deeper into educational mode. Happy exploring!',
+    description:
+      "You've learned the basics of BrightChain! Feel free to experiment with different files, explore the help system, or dive deeper into educational mode. Happy exploring!",
     position: 'center',
-    skippable: true
-  }
+    skippable: true,
+  },
 ];
 
 /**
@@ -111,10 +119,11 @@ const defaultTutorialSteps: TutorialStep[] = [
 export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
   visible,
   onComplete,
-  onSkip
+  onSkip,
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [highlightedElement, setHighlightedElement] = useState<HTMLElement | null>(null);
+  const [highlightedElement, setHighlightedElement] =
+    useState<HTMLElement | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [completed, setCompleted] = useState(false);
 
@@ -128,10 +137,12 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
       return;
     }
 
-    const element = document.querySelector(currentStep.targetElement) as HTMLElement;
+    const element = document.querySelector(
+      currentStep.targetElement,
+    ) as HTMLElement;
     if (element) {
       setHighlightedElement(element);
-      
+
       // Calculate tooltip position
       const rect = element.getBoundingClientRect();
       let x = rect.left + rect.width / 2;
@@ -179,7 +190,7 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
 
   const handleNext = useCallback(() => {
     if (currentStepIndex < defaultTutorialSteps.length - 1) {
-      setCurrentStepIndex(prev => prev + 1);
+      setCurrentStepIndex((prev) => prev + 1);
     } else {
       setCompleted(true);
       setTimeout(() => {
@@ -190,7 +201,7 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
 
   const handlePrevious = useCallback(() => {
     if (currentStepIndex > 0) {
-      setCurrentStepIndex(prev => prev - 1);
+      setCurrentStepIndex((prev) => prev - 1);
     }
   }, [currentStepIndex]);
 
@@ -223,7 +234,10 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
         style={{
           left: currentStep.position === 'center' ? '50%' : tooltipPosition.x,
           top: currentStep.position === 'center' ? '50%' : tooltipPosition.y,
-          transform: currentStep.position === 'center' ? 'translate(-50%, -50%)' : 'none'
+          transform:
+            currentStep.position === 'center'
+              ? 'translate(-50%, -50%)'
+              : 'none',
         }}
       >
         <div className="tutorial-header">
@@ -245,7 +259,9 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           {currentStep.actionDescription && (
             <div className="tutorial-action">
               <span className="tutorial-action-icon">👉</span>
-              <span className="tutorial-action-text">{currentStep.actionDescription}</span>
+              <span className="tutorial-action-text">
+                {currentStep.actionDescription}
+              </span>
             </div>
           )}
         </div>
@@ -261,19 +277,15 @@ export const InteractiveTutorial: React.FC<InteractiveTutorialProps> = ({
           )}
 
           {currentStep.skippable && (
-            <button
-              className="tutorial-button tertiary"
-              onClick={handleSkip}
-            >
+            <button className="tutorial-button tertiary" onClick={handleSkip}>
               Skip Tutorial
             </button>
           )}
 
-          <button
-            className="tutorial-button primary"
-            onClick={handleNext}
-          >
-            {currentStepIndex === defaultTutorialSteps.length - 1 ? 'Finish' : 'Next →'}
+          <button className="tutorial-button primary" onClick={handleNext}>
+            {currentStepIndex === defaultTutorialSteps.length - 1
+              ? 'Finish'
+              : 'Next →'}
           </button>
         </div>
       </div>
@@ -304,7 +316,7 @@ export interface TutorialProgressProps {
 export const TutorialProgress: React.FC<TutorialProgressProps> = ({
   currentStep,
   totalSteps,
-  onStepClick
+  onStepClick,
 }) => {
   return (
     <div className="tutorial-progress-tracker">
@@ -330,7 +342,7 @@ export interface TutorialLauncherProps {
 
 export const TutorialLauncher: React.FC<TutorialLauncherProps> = ({
   onStart,
-  className = ''
+  className = '',
 }) => {
   return (
     <button

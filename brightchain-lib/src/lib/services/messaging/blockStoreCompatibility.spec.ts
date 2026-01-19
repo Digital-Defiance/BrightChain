@@ -1,13 +1,13 @@
+import { ECIESService, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { BlockSize } from '../../enumerations/blockSize';
-import { MemoryBlockStore } from '../../stores/memoryBlockStore';
-import { MessageCBLService } from './messageCBLService';
-import { MemoryMessageMetadataStore } from '../../stores/messaging/memoryMessageMetadataStore';
-import { Member, MemberType, ECIESService } from '@digitaldefiance/ecies-lib';
-import { ServiceProvider } from '../service.provider';
-import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
+import { MessagePriority } from '../../enumerations/messaging/messagePriority';
+import { MemoryBlockStore } from '../../stores/memoryBlockStore';
+import { MemoryMessageMetadataStore } from '../../stores/messaging/memoryMessageMetadataStore';
 import { CBLService } from '../cblService';
 import { ChecksumService } from '../checksum.service';
+import { ServiceProvider } from '../service.provider';
+import { MessageCBLService } from './messageCBLService';
 
 describe('BlockStore Interface Compatibility', () => {
   let blockStore: MemoryBlockStore;
@@ -21,14 +21,19 @@ describe('BlockStore Interface Compatibility', () => {
     const checksumService = new ChecksumService();
     const eciesService = new ECIESService();
     const cblService = new CBLService(checksumService, eciesService);
-    messageCBL = new MessageCBLService(cblService, checksumService, blockStore, metadataStore);
-    
+    messageCBL = new MessageCBLService(
+      cblService,
+      checksumService,
+      blockStore,
+      metadataStore,
+    );
+
     ServiceProvider.getInstance();
     const memberWithMnemonic = await Member.newMember(
       eciesService,
       MemberType.User,
       'test',
-      'test@example.com' as any,
+      'test@example.com' as unknown as Parameters<typeof Member.newMember>[3],
     );
     creator = memberWithMnemonic.member;
   });
@@ -39,17 +44,21 @@ describe('BlockStore Interface Compatibility', () => {
 
   it('should create message blocks in block store', async () => {
     const content = Buffer.from('test message');
-    const { messageId, contentBlockIds } = await messageCBL.createMessage(content, creator, {
-      senderId: creator.id.toString(),
-      recipients: ['recipient1'],
-      messageType: 'direct',
-      priority: MessagePriority.NORMAL,
-      encryptionScheme: MessageEncryptionScheme.NONE,
-    });
+    const { messageId, contentBlockIds } = await messageCBL.createMessage(
+      content,
+      creator,
+      {
+        senderId: creator.id.toString(),
+        recipients: ['recipient1'],
+        messageType: 'direct',
+        priority: MessagePriority.NORMAL,
+        encryptionScheme: MessageEncryptionScheme.NONE,
+      },
+    );
 
     expect(messageId).toBeDefined();
     expect(contentBlockIds.length).toBeGreaterThan(0);
-    
+
     for (const blockId of contentBlockIds) {
       const hasBlock = await blockStore.has(blockId);
       expect(hasBlock).toBe(true);

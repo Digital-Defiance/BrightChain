@@ -1,8 +1,8 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
 import { DiskQuorumService } from '@brightchain/brightchain-api-lib/lib/services/diskQuorumService';
 import { FecServiceFactory } from '@brightchain/brightchain-api-lib/lib/services/fecServiceFactory';
 import { IFecService } from '@brightchain/brightchain-lib';
+import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
 import { IApplication } from '../interfaces/application';
 import { BaseService } from './base';
 
@@ -12,7 +12,7 @@ import { BaseService } from './base';
  *
  * This service provides quorum-based document sealing/unsealing functionality
  * using Shamir's Secret Sharing for secure multi-party access control.
- * 
+ *
  * The service initializes the FEC service asynchronously for parity generation
  * and recovery on the underlying block store.
  */
@@ -35,7 +35,7 @@ export class QuorumServiceWrapper extends BaseService {
 
     // Initialize the DiskQuorumService with storage path and block size
     this.quorumService = new DiskQuorumService(storePath, blockSize);
-    
+
     // Start FEC service initialization in the background
     this.initializeFecService();
   }
@@ -59,11 +59,18 @@ export class QuorumServiceWrapper extends BaseService {
         const fecService = await FecServiceFactory.getBestAvailable();
         this.quorumService.setFecService(fecService);
         this.fecServiceInitialized = true;
-        console.log('[QuorumServiceWrapper] FEC service initialized successfully');
+        console.log(
+          '[QuorumServiceWrapper] FEC service initialized successfully',
+        );
       } catch (error) {
         // FEC service is optional - log warning but don't fail
-        console.warn('[QuorumServiceWrapper] FEC service not available:', error instanceof Error ? error.message : String(error));
-        console.warn('[QuorumServiceWrapper] Quorum service will work without FEC parity protection');
+        console.warn(
+          '[QuorumServiceWrapper] FEC service not available:',
+          error instanceof Error ? error.message : String(error),
+        );
+        console.warn(
+          '[QuorumServiceWrapper] Quorum service will work without FEC parity protection',
+        );
       }
     })();
 

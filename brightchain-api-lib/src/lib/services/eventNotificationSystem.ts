@@ -1,5 +1,5 @@
-import { WebSocket } from 'ws';
 import { IMessageMetadata } from '@brightchain/brightchain-lib';
+import { WebSocket } from 'ws';
 
 export enum MessageEventType {
   MESSAGE_STORED = 'message:stored',
@@ -34,7 +34,7 @@ export class EventNotificationSystem {
    */
   subscribe(ws: WebSocket, filter?: IEventFilter): void {
     this.subscriptions.set(ws, filter || {});
-    
+
     ws.on('close', () => {
       this.subscriptions.delete(ws);
     });
@@ -60,7 +60,10 @@ export class EventNotificationSystem {
     this.addToHistory(event);
 
     for (const [ws, filter] of this.subscriptions.entries()) {
-      if (this.matchesFilter(event, filter) && ws.readyState === WebSocket.OPEN) {
+      if (
+        this.matchesFilter(event, filter) &&
+        ws.readyState === WebSocket.OPEN
+      ) {
         ws.send(JSON.stringify(event));
       }
     }
@@ -72,8 +75,8 @@ export class EventNotificationSystem {
   getEventHistory(filter?: IEventFilter, limit = 100): IMessageEvent[] {
     const cutoff = Date.now() - this.retentionMs;
     return this.eventHistory
-      .filter(e => e.timestamp.getTime() > cutoff)
-      .filter(e => !filter || this.matchesFilter(e, filter))
+      .filter((e) => e.timestamp.getTime() > cutoff)
+      .filter((e) => !filter || this.matchesFilter(e, filter))
       .slice(-limit);
   }
 
@@ -91,7 +94,10 @@ export class EventNotificationSystem {
     if (filter.senderId && event.metadata.senderId !== filter.senderId) {
       return false;
     }
-    if (filter.recipientId && !event.metadata.recipients?.includes(filter.recipientId)) {
+    if (
+      filter.recipientId &&
+      !event.metadata.recipients?.includes(filter.recipientId)
+    ) {
       return false;
     }
     return true;

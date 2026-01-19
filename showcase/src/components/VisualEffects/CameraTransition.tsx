@@ -1,7 +1,12 @@
+import { motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
-export type CameraView = 'overview' | 'encoding' | 'soup' | 'reconstruction' | 'detail';
+export type CameraView =
+  | 'overview'
+  | 'encoding'
+  | 'soup'
+  | 'reconstruction'
+  | 'detail';
 
 interface CameraTransitionProps {
   currentView: CameraView;
@@ -63,7 +68,10 @@ export const CameraTransition: React.FC<CameraTransitionProps> = ({
   }, [currentView, duration]);
 
   return (
-    <div className={`camera-container ${className}`} style={{ perspective: '1000px' }}>
+    <div
+      className={`camera-container ${className}`}
+      style={{ perspective: '1000px' }}
+    >
       <motion.div
         className="camera-view"
         animate={viewTransitions[currentView]}
@@ -79,7 +87,7 @@ export const CameraTransition: React.FC<CameraTransitionProps> = ({
       >
         {children}
       </motion.div>
-      
+
       {isTransitioning && (
         <motion.div
           className="camera-transition-overlay"
@@ -93,7 +101,8 @@ export const CameraTransition: React.FC<CameraTransitionProps> = ({
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'radial-gradient(circle, rgba(0, 255, 136, 0.2) 0%, transparent 70%)',
+            background:
+              'radial-gradient(circle, rgba(0, 255, 136, 0.2) 0%, transparent 70%)',
             pointerEvents: 'none',
             zIndex: 5,
           }}

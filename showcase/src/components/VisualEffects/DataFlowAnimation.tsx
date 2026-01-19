@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface Point {
   x: number;
@@ -33,7 +33,7 @@ export const DataFlowAnimation: React.FC<DataFlowAnimationProps> = ({
     x: from.x + (to.x - from.x) * 0.25,
     y: from.y - Math.abs(to.y - from.y) * 0.5,
   };
-  
+
   const controlPoint2 = {
     x: from.x + (to.x - from.x) * 0.75,
     y: to.y - Math.abs(to.y - from.y) * 0.5,

@@ -53,8 +53,10 @@ const ensureTupleSize = (count: number): number => {
 };
 
 // These will be initialized in beforeAll after initializeBrightChain()
-let cblService: ReturnType<typeof ServiceProvider.getInstance>['cblService'];
-let _votingService: ReturnType<typeof ServiceProvider.getInstance>['votingService'];
+let _cblService: ReturnType<typeof ServiceProvider.getInstance>['cblService'];
+let _votingService: ReturnType<
+  typeof ServiceProvider.getInstance
+>['votingService'];
 
 // Test class that properly implements abstract methods
 class TestCblBlock<
@@ -121,10 +123,11 @@ class TestCblBlock<
 
     // Validate against block capacity before creating metadata
     const addressCount = dataAddresses.length;
-    const maxAddresses = ServiceProvider.getInstance().cblService.calculateCBLAddressCapacity(
-      blockSize,
-      BlockEncryptionType.None,
-    );
+    const maxAddresses =
+      ServiceProvider.getInstance().cblService.calculateCBLAddressCapacity(
+        blockSize,
+        BlockEncryptionType.None,
+      );
 
     if (addressCount > maxAddresses) {
       throw new BlockValidationError(
@@ -165,8 +168,11 @@ class TestCblBlock<
 
     // Create header without signature
     // Use the same provider that CBLService uses to ensure consistent header structure
-    const cblServiceProvider = ServiceProvider.getInstance().cblService.idProvider;
-    const creatorId = cblServiceProvider.toBytes(creator.id as unknown as Uint8Array);
+    const cblServiceProvider =
+      ServiceProvider.getInstance().cblService.idProvider;
+    const creatorId = cblServiceProvider.toBytes(
+      creator.id as unknown as Uint8Array,
+    );
 
     const headerWithoutSignature = new Uint8Array(
       creatorId.length +
@@ -334,7 +340,9 @@ describe('ConstituentBlockListBlock', () => {
         view.setUint32(0, startIndex + index, false);
         // Add some random data to ensure uniqueness
         view.setUint32(4, Math.floor(Math.random() * 0xffffffff), false);
-        return checksumService.calculateChecksum(data).toUint8Array() as ChecksumUint8Array;
+        return checksumService
+          .calculateChecksum(data)
+          .toUint8Array() as ChecksumUint8Array;
       });
 
     // Verify all addresses are unique
@@ -389,7 +397,7 @@ describe('ConstituentBlockListBlock', () => {
     ServiceProvider.getInstance();
 
     // Initialize services after BrightChain is initialized
-    cblService = ServiceProvider.getInstance().cblService;
+    _cblService = ServiceProvider.getInstance().cblService;
     _votingService = ServiceProvider.getInstance().votingService;
 
     const mnemonic = eciesService.generateNewMnemonic();
@@ -411,7 +419,7 @@ describe('ConstituentBlockListBlock', () => {
   beforeEach(() => {
     // Re-initialize BrightChain after ServiceProvider reset
     initializeBrightChain();
-    
+
     checksumService = ServiceProvider.getInstance().checksumService;
     dataAddresses = createTestAddresses(ensureTupleSize(TUPLE.SIZE));
 

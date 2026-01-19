@@ -1,6 +1,6 @@
-import { INetworkTransport } from '../../interfaces/network/networkTransport';
-import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
+import { INetworkTransport } from '../../interfaces/network/networkTransport';
 
 /**
  * Direct message routing service
@@ -9,7 +9,7 @@ import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliv
 export class DirectMessageRouter {
   constructor(
     private readonly transport: INetworkTransport,
-    private readonly metadataStore: IMessageMetadataStore
+    private readonly metadataStore: IMessageMetadataStore,
   ) {}
 
   /**
@@ -20,7 +20,7 @@ export class DirectMessageRouter {
    */
   async routeToRecipients(
     messageId: string,
-    recipients: string[]
+    recipients: string[],
   ): Promise<Map<string, boolean>> {
     const results = new Map<string, boolean>();
 
@@ -29,7 +29,7 @@ export class DirectMessageRouter {
         await this.metadataStore.updateDeliveryStatus(
           messageId,
           recipientId,
-          MessageDeliveryStatus.IN_TRANSIT
+          MessageDeliveryStatus.IN_TRANSIT,
         );
 
         const success = await this.transport.sendToNode(recipientId, messageId);
@@ -39,15 +39,15 @@ export class DirectMessageRouter {
           await this.metadataStore.updateDeliveryStatus(
             messageId,
             recipientId,
-            MessageDeliveryStatus.FAILED
+            MessageDeliveryStatus.FAILED,
           );
         }
-      } catch (error) {
+      } catch (_error) {
         results.set(recipientId, false);
         await this.metadataStore.updateDeliveryStatus(
           messageId,
           recipientId,
-          MessageDeliveryStatus.FAILED
+          MessageDeliveryStatus.FAILED,
         );
       }
     }

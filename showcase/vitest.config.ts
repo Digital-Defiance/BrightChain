@@ -1,6 +1,6 @@
-import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'node:path';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [react()],
@@ -12,7 +12,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@brightchain/brightchain-lib': resolve(__dirname, '../brightchain-lib/src/browser.ts'),
+      '@brightchain/brightchain-lib': resolve(
+        __dirname,
+        '../brightchain-lib/src/browser.ts',
+      ),
     },
   },
   define: {

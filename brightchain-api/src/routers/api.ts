@@ -8,7 +8,7 @@ import { BaseRouter } from './base';
 
 /**
  * Router for the API
- * 
+ *
  * This router wires up all API controllers:
  * - /api/blocks - Block storage operations (store, retrieve, delete, brighten)
  * - /api/quorum - Quorum member management and document sealing/unsealing
@@ -30,7 +30,7 @@ export class ApiRouter extends BaseRouter {
     this.i18nController = new I18nController(application);
     this.quorumController = new QuorumController(application);
     this.cblController = new CBLController(application);
-    
+
     // Wire up all routes
     this.router.use('/blocks', this.blocksController.router);
     this.router.use('/i18n', this.i18nController.router);

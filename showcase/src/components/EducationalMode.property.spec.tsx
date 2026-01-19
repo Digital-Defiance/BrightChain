@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { EducationalModeLogic } from './EducationalModeLogic';
+import { describe, expect, it } from 'vitest';
 import { AnimationController } from './AnimationController';
+import { EducationalModeLogic } from './EducationalModeLogic';
 
 /**
  * Property Test for Educational Mode Behavior
@@ -12,7 +12,6 @@ import { AnimationController } from './AnimationController';
  */
 
 describe('Educational Mode Behavior Property Tests', () => {
-
   /**
    * Property: Educational mode slows down animations
    * Requirement 3.1: WHEN educational mode is enabled, THE Animation_Engine SHALL slow down all processes
@@ -131,7 +130,10 @@ describe('Educational Mode Behavior Property Tests', () => {
    * Requirement 3.5: WHEN the process completes, THE Animation_Engine SHALL provide a summary
    */
   it('property: educational mode provides completion summaries for all process types', () => {
-    const processTypes: Array<'encoding' | 'reconstruction'> = ['encoding', 'reconstruction'];
+    const processTypes: Array<'encoding' | 'reconstruction'> = [
+      'encoding',
+      'reconstruction',
+    ];
 
     processTypes.forEach((processType) => {
       const controller = new AnimationController();
@@ -341,7 +343,11 @@ describe('Educational Mode Behavior Property Tests', () => {
     });
 
     // Verify summaries exist for both process types
-    expect(state.content.processCompletionSummaries.get('encoding')).toBeDefined();
-    expect(state.content.processCompletionSummaries.get('reconstruction')).toBeDefined();
+    expect(
+      state.content.processCompletionSummaries.get('encoding'),
+    ).toBeDefined();
+    expect(
+      state.content.processCompletionSummaries.get('reconstruction'),
+    ).toBeDefined();
   });
 });

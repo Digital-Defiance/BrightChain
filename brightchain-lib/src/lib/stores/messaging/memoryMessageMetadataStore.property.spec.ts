@@ -11,20 +11,18 @@
  */
 
 import fc from 'fast-check';
-import { MemoryMessageMetadataStore } from './memoryMessageMetadataStore';
-import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
-import { MessagePriority } from '../../enumerations/messaging/messagePriority';
-import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
-import { IBlockMetadata } from '../../interfaces/storage/blockMetadata';
-import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
+import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
+import { MessagePriority } from '../../enumerations/messaging/messagePriority';
+import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
+import { MemoryMessageMetadataStore } from './memoryMessageMetadataStore';
 
 describe('Message Metadata Round-Trip Property Tests', () => {
-  let store: MemoryMessageMetadataStore;
+  let _store: MemoryMessageMetadataStore;
 
   beforeEach(() => {
-    store = new MemoryMessageMetadataStore();
+    _store = new MemoryMessageMetadataStore();
   });
 
   /**
@@ -36,17 +34,47 @@ describe('Message Metadata Round-Trip Property Tests', () => {
   it('should preserve explicit optional field values through store/retrieve cycle', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.string({ minLength: 1, maxLength: 64 }).filter(s => s.trim().length > 0), // blockId
-        fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim().length > 0), // messageType
-        fc.string({ minLength: 1, maxLength: 64 }).filter(s => s.trim().length > 0), // senderId
-        fc.array(fc.string({ minLength: 1, maxLength: 64 }).filter(s => s.trim().length > 0), { maxLength: 10 }), // recipients
-        fc.constantFrom(MessagePriority.LOW, MessagePriority.NORMAL, MessagePriority.HIGH), // priority
-        fc.date({ min: new Date(), max: new Date(Date.now() + 86400000 * 365) }), // expiresAt
-        fc.constantFrom(MessageEncryptionScheme.NONE, MessageEncryptionScheme.SHARED_KEY, MessageEncryptionScheme.RECIPIENT_KEYS), // encryptionScheme
-        async (blockId, messageType, senderId, recipients, priority, expiresAt, encryptionScheme) => {
+        fc
+          .string({ minLength: 1, maxLength: 64 })
+          .filter((s) => s.trim().length > 0), // blockId
+        fc
+          .string({ minLength: 1, maxLength: 50 })
+          .filter((s) => s.trim().length > 0), // messageType
+        fc
+          .string({ minLength: 1, maxLength: 64 })
+          .filter((s) => s.trim().length > 0), // senderId
+        fc.array(
+          fc
+            .string({ minLength: 1, maxLength: 64 })
+            .filter((s) => s.trim().length > 0),
+          { maxLength: 10 },
+        ), // recipients
+        fc.constantFrom(
+          MessagePriority.LOW,
+          MessagePriority.NORMAL,
+          MessagePriority.HIGH,
+        ), // priority
+        fc.date({
+          min: new Date(),
+          max: new Date(Date.now() + 86400000 * 365),
+        }), // expiresAt
+        fc.constantFrom(
+          MessageEncryptionScheme.NONE,
+          MessageEncryptionScheme.SHARED_KEY,
+          MessageEncryptionScheme.RECIPIENT_KEYS,
+        ), // encryptionScheme
+        async (
+          blockId,
+          messageType,
+          senderId,
+          recipients,
+          priority,
+          expiresAt,
+          encryptionScheme,
+        ) => {
           // Create fresh store for each test to avoid duplicate blockId issues
           const testStore = new MemoryMessageMetadataStore();
-          
+
           const metadata: IMessageMetadata = {
             blockId,
             createdAt: new Date(),
@@ -71,7 +99,7 @@ describe('Message Metadata Round-Trip Property Tests', () => {
           };
 
           await testStore.storeMessageMetadata(metadata);
-          const retrieved = await testStore.get(blockId) as IMessageMetadata;
+          const retrieved = (await testStore.get(blockId)) as IMessageMetadata;
 
           expect(retrieved).toBeDefined();
           expect(retrieved!.messageType).toBe(messageType);
@@ -80,9 +108,9 @@ describe('Message Metadata Round-Trip Property Tests', () => {
           expect(retrieved!.priority).toBe(priority);
           expect(retrieved!.expiresAt?.getTime()).toBe(expiresAt.getTime());
           expect(retrieved!.encryptionScheme).toBe(encryptionScheme);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });

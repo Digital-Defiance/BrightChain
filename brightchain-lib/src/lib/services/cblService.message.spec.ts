@@ -1,15 +1,20 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import {
+  ECIESService,
+  EmailString,
+  Member,
+  MemberType,
+} from '@digitaldefiance/ecies-lib';
+import { beforeEach, describe, expect, it } from '@jest/globals';
+import { MessageEncryptionScheme } from '../enumerations/messaging/messageEncryptionScheme';
+import { MessagePriority } from '../enumerations/messaging/messagePriority';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
-import { ECIESService, EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
-import { MessagePriority } from '../enumerations/messaging/messagePriority';
-import { MessageEncryptionScheme } from '../enumerations/messaging/messageEncryptionScheme';
 
 describe('CBLService - MessageCBL', () => {
   let cblService: CBLService;
   let checksumService: ChecksumService;
   let eciesService: ECIESService;
-  let creator: Member;
+  let _creator: Member;
 
   beforeEach(async () => {
     checksumService = new ChecksumService();
@@ -19,9 +24,9 @@ describe('CBLService - MessageCBL', () => {
       eciesService,
       MemberType.User,
       'test',
-      new EmailString('test@example.com')
+      new EmailString('test@example.com'),
     );
-    creator = memberWithMnemonic.member;
+    _creator = memberWithMnemonic.member;
   });
 
   describe('makeMessageHeader', () => {
@@ -37,7 +42,7 @@ describe('CBLService - MessageCBL', () => {
         senderId,
         recipients,
         priority,
-        encryptionScheme
+        encryptionScheme,
       );
 
       expect(header).toBeInstanceOf(Uint8Array);
@@ -51,7 +56,7 @@ describe('CBLService - MessageCBL', () => {
         'sender123',
         [],
         MessagePriority.NORMAL,
-        MessageEncryptionScheme.NONE
+        MessageEncryptionScheme.NONE,
       );
 
       expect(header).toBeInstanceOf(Uint8Array);
@@ -66,11 +71,16 @@ describe('CBLService - MessageCBL', () => {
         'sender',
         ['recipient'],
         MessagePriority.NORMAL,
-        MessageEncryptionScheme.NONE
+        MessageEncryptionScheme.NONE,
       );
 
-      const fullHeader = new Uint8Array(cblService.baseHeaderSize + messageHeader.length);
-      fullHeader.set(messageHeader, cblService.baseHeaderCreatorSignatureOffset);
+      const fullHeader = new Uint8Array(
+        cblService.baseHeaderSize + messageHeader.length,
+      );
+      fullHeader.set(
+        messageHeader,
+        cblService.baseHeaderCreatorSignatureOffset,
+      );
 
       expect(cblService.isMessageHeader(fullHeader)).toBe(true);
     });

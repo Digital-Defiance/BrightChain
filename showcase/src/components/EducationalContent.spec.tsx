@@ -1,10 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { HelpSystem, HelpButton } from './HelpSystem';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { defaultTours, GuidedTour, Tour, TourSelector } from './GuidedTour';
+import { HelpButton, HelpSystem } from './HelpSystem';
 import { InteractiveTutorial, TutorialLauncher } from './InteractiveTutorial';
-import { GuidedTour, TourSelector, defaultTours, Tour } from './GuidedTour';
 
 /**
  * Test suite for Educational Content System
@@ -15,9 +14,11 @@ describe('HelpSystem', () => {
   describe('Help System Content Loading and Display', () => {
     it('should not render when visible is false', () => {
       const { container } = render(
-        <HelpSystem visible={false} onClose={vi.fn()} />
+        <HelpSystem visible={false} onClose={vi.fn()} />,
       );
-      expect(container.querySelector('.help-system-overlay')).not.toBeInTheDocument();
+      expect(
+        container.querySelector('.help-system-overlay'),
+      ).not.toBeInTheDocument();
     });
 
     it('should render when visible is true', () => {
@@ -27,7 +28,7 @@ describe('HelpSystem', () => {
 
     it('should display help topics', () => {
       render(<HelpSystem visible={true} onClose={vi.fn()} />);
-      
+
       // Check that topics are displayed
       const topicCards = document.querySelectorAll('.help-topic-card');
       expect(topicCards.length).toBeGreaterThan(0);
@@ -35,7 +36,7 @@ describe('HelpSystem', () => {
 
     it('should filter topics by search term', async () => {
       render(<HelpSystem visible={true} onClose={vi.fn()} />);
-      
+
       const searchInput = screen.getByPlaceholderText(/Search help topics/i);
       fireEvent.change(searchInput, { target: { value: 'encoding' } });
 
@@ -47,7 +48,7 @@ describe('HelpSystem', () => {
 
     it('should filter topics by category', async () => {
       render(<HelpSystem visible={true} onClose={vi.fn()} />);
-      
+
       const conceptsButton = screen.getByText('Concepts');
       fireEvent.click(conceptsButton);
 
@@ -59,8 +60,10 @@ describe('HelpSystem', () => {
 
     it('should display topic details when clicked', async () => {
       render(<HelpSystem visible={true} onClose={vi.fn()} />);
-      
-      const topicCards = document.querySelectorAll('.help-topic-card.clickable');
+
+      const topicCards = document.querySelectorAll(
+        '.help-topic-card.clickable',
+      );
       if (topicCards.length > 0) {
         fireEvent.click(topicCards[0]);
       }
@@ -72,8 +75,10 @@ describe('HelpSystem', () => {
 
     it('should show related topics in detail view', async () => {
       render(<HelpSystem visible={true} onClose={vi.fn()} />);
-      
-      const topicCards = document.querySelectorAll('.help-topic-card.clickable');
+
+      const topicCards = document.querySelectorAll(
+        '.help-topic-card.clickable',
+      );
       if (topicCards.length > 0) {
         fireEvent.click(topicCards[0]);
       }
@@ -85,9 +90,11 @@ describe('HelpSystem', () => {
 
     it('should navigate back to topic list', async () => {
       render(<HelpSystem visible={true} onClose={vi.fn()} />);
-      
+
       // Click a topic
-      const topicCards = document.querySelectorAll('.help-topic-card.clickable');
+      const topicCards = document.querySelectorAll(
+        '.help-topic-card.clickable',
+      );
       if (topicCards.length > 0) {
         fireEvent.click(topicCards[0]);
       }
@@ -101,14 +108,16 @@ describe('HelpSystem', () => {
       fireEvent.click(backButton);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText(/Search help topics/i)).toBeInTheDocument();
+        expect(
+          screen.getByPlaceholderText(/Search help topics/i),
+        ).toBeInTheDocument();
       });
     });
 
     it('should call onClose when close button is clicked', () => {
       const onClose = vi.fn();
       render(<HelpSystem visible={true} onClose={onClose} />);
-      
+
       const closeButton = screen.getByLabelText(/Close help/i);
       fireEvent.click(closeButton);
 
@@ -117,21 +126,23 @@ describe('HelpSystem', () => {
 
     it('should display initial topic when provided', () => {
       render(
-        <HelpSystem 
-          visible={true} 
-          onClose={vi.fn()} 
+        <HelpSystem
+          visible={true}
+          onClose={vi.fn()}
           initialTopic="what-is-brightchain"
-        />
+        />,
       );
-      
+
       expect(screen.getByText(/Back to Topics/i)).toBeInTheDocument();
     });
 
     it('should show no results message when search has no matches', async () => {
       render(<HelpSystem visible={true} onClose={vi.fn()} />);
-      
+
       const searchInput = screen.getByPlaceholderText(/Search help topics/i);
-      fireEvent.change(searchInput, { target: { value: 'nonexistent topic xyz' } });
+      fireEvent.change(searchInput, {
+        target: { value: 'nonexistent topic xyz' },
+      });
 
       await waitFor(() => {
         expect(screen.getByText(/No help topics found/i)).toBeInTheDocument();
@@ -148,7 +159,7 @@ describe('HelpSystem', () => {
     it('should call onClick when clicked', () => {
       const onClick = vi.fn();
       render(<HelpButton onClick={onClick} />);
-      
+
       const button = screen.getByText(/Help/i);
       fireEvent.click(button);
 
@@ -161,48 +172,50 @@ describe('InteractiveTutorial', () => {
   describe('Tutorial Progression and Completion Tracking', () => {
     it('should not render when visible is false', () => {
       const { container } = render(
-        <InteractiveTutorial 
-          visible={false} 
-          onComplete={vi.fn()} 
-          onSkip={vi.fn()} 
-        />
+        <InteractiveTutorial
+          visible={false}
+          onComplete={vi.fn()}
+          onSkip={vi.fn()}
+        />,
       );
-      expect(container.querySelector('.tutorial-overlay')).not.toBeInTheDocument();
+      expect(
+        container.querySelector('.tutorial-overlay'),
+      ).not.toBeInTheDocument();
     });
 
     it('should render when visible is true', () => {
       render(
-        <InteractiveTutorial 
-          visible={true} 
-          onComplete={vi.fn()} 
-          onSkip={vi.fn()} 
-        />
+        <InteractiveTutorial
+          visible={true}
+          onComplete={vi.fn()}
+          onSkip={vi.fn()}
+        />,
       );
       expect(screen.getByText(/Welcome to BrightChain/i)).toBeInTheDocument();
     });
 
     it('should display current step information', () => {
       render(
-        <InteractiveTutorial 
-          visible={true} 
-          onComplete={vi.fn()} 
-          onSkip={vi.fn()} 
-        />
+        <InteractiveTutorial
+          visible={true}
+          onComplete={vi.fn()}
+          onSkip={vi.fn()}
+        />,
       );
-      
+
       expect(screen.getByText(/Step 1 of/i)).toBeInTheDocument();
       expect(screen.getByText(/Welcome to BrightChain/i)).toBeInTheDocument();
     });
 
     it('should advance to next step when Next is clicked', async () => {
       render(
-        <InteractiveTutorial 
-          visible={true} 
-          onComplete={vi.fn()} 
-          onSkip={vi.fn()} 
-        />
+        <InteractiveTutorial
+          visible={true}
+          onComplete={vi.fn()}
+          onSkip={vi.fn()}
+        />,
       );
-      
+
       const nextButton = screen.getByText(/Next →/i);
       fireEvent.click(nextButton);
 
@@ -213,13 +226,13 @@ describe('InteractiveTutorial', () => {
 
     it('should go back to previous step when Previous is clicked', async () => {
       render(
-        <InteractiveTutorial 
-          visible={true} 
-          onComplete={vi.fn()} 
-          onSkip={vi.fn()} 
-        />
+        <InteractiveTutorial
+          visible={true}
+          onComplete={vi.fn()}
+          onSkip={vi.fn()}
+        />,
       );
-      
+
       // Go to step 2
       const nextButton = screen.getByText(/Next →/i);
       fireEvent.click(nextButton);
@@ -240,13 +253,13 @@ describe('InteractiveTutorial', () => {
     it('should call onSkip when Skip Tutorial is clicked', () => {
       const onSkip = vi.fn();
       render(
-        <InteractiveTutorial 
-          visible={true} 
-          onComplete={vi.fn()} 
-          onSkip={onSkip} 
-        />
+        <InteractiveTutorial
+          visible={true}
+          onComplete={vi.fn()}
+          onSkip={onSkip}
+        />,
       );
-      
+
       const skipButton = screen.getByText(/Skip Tutorial/i);
       fireEvent.click(skipButton);
 
@@ -256,21 +269,23 @@ describe('InteractiveTutorial', () => {
     it('should call onComplete when Finish is clicked on last step', async () => {
       const onComplete = vi.fn();
       render(
-        <InteractiveTutorial 
-          visible={true} 
-          onComplete={onComplete} 
-          onSkip={vi.fn()} 
-        />
+        <InteractiveTutorial
+          visible={true}
+          onComplete={onComplete}
+          onSkip={vi.fn()}
+        />,
       );
-      
+
       // Navigate to last step by clicking Next multiple times
       const nextButton = screen.getByText(/Next →/i);
-      
+
       // Click through all steps (there are 8 steps in the default tutorial)
       for (let i = 0; i < 7; i++) {
         fireEvent.click(nextButton);
         await waitFor(() => {
-          expect(screen.getByText(new RegExp(`Step ${i + 2} of`, 'i'))).toBeInTheDocument();
+          expect(
+            screen.getByText(new RegExp(`Step ${i + 2} of`, 'i')),
+          ).toBeInTheDocument();
         });
       }
 
@@ -279,23 +294,26 @@ describe('InteractiveTutorial', () => {
       fireEvent.click(finishButton);
 
       // Wait for completion callback
-      await waitFor(() => {
-        expect(onComplete).toHaveBeenCalled();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(onComplete).toHaveBeenCalled();
+        },
+        { timeout: 3000 },
+      );
     });
 
     it('should update progress bar as steps advance', async () => {
       const { container } = render(
-        <InteractiveTutorial 
-          visible={true} 
-          onComplete={vi.fn()} 
-          onSkip={vi.fn()} 
-        />
+        <InteractiveTutorial
+          visible={true}
+          onComplete={vi.fn()}
+          onSkip={vi.fn()}
+        />,
       );
-      
+
       const progressFill = container.querySelector('.tutorial-progress-fill');
       expect(progressFill).toBeInTheDocument();
-      
+
       // Initial progress should be > 0
       const initialWidth = progressFill?.getAttribute('style');
       expect(initialWidth).toContain('width');
@@ -320,7 +338,7 @@ describe('InteractiveTutorial', () => {
     it('should call onStart when clicked', () => {
       const onStart = vi.fn();
       render(<TutorialLauncher onStart={onStart} />);
-      
+
       const button = screen.getByText(/Start Tutorial/i);
       fireEvent.click(button);
 
@@ -341,37 +359,31 @@ describe('GuidedTour', () => {
         title: 'First Stop',
         description: 'This is the first stop',
         targetElement: '.test-element',
-        position: 'bottom'
+        position: 'bottom',
       },
       {
         id: 'stop2',
         title: 'Second Stop',
         description: 'This is the second stop',
         targetElement: '.test-element-2',
-        position: 'top'
-      }
-    ]
+        position: 'top',
+      },
+    ],
   };
 
   describe('Guided Tour Navigation', () => {
     it('should not render when tour is null', () => {
       const { container } = render(
-        <GuidedTour 
-          tour={null} 
-          onComplete={vi.fn()} 
-          onExit={vi.fn()} 
-        />
+        <GuidedTour tour={null} onComplete={vi.fn()} onExit={vi.fn()} />,
       );
-      expect(container.querySelector('.guided-tour-overlay')).not.toBeInTheDocument();
+      expect(
+        container.querySelector('.guided-tour-overlay'),
+      ).not.toBeInTheDocument();
     });
 
     it('should render when tour is provided', () => {
       render(
-        <GuidedTour 
-          tour={mockTour} 
-          onComplete={vi.fn()} 
-          onExit={vi.fn()} 
-        />
+        <GuidedTour tour={mockTour} onComplete={vi.fn()} onExit={vi.fn()} />,
       );
       expect(screen.getByText(/Test Tour/i)).toBeInTheDocument();
       expect(screen.getAllByText(/First Stop/i).length).toBeGreaterThan(0);
@@ -379,13 +391,9 @@ describe('GuidedTour', () => {
 
     it('should display current stop information', () => {
       render(
-        <GuidedTour 
-          tour={mockTour} 
-          onComplete={vi.fn()} 
-          onExit={vi.fn()} 
-        />
+        <GuidedTour tour={mockTour} onComplete={vi.fn()} onExit={vi.fn()} />,
       );
-      
+
       expect(screen.getByText(/Stop 1 of 2/i)).toBeInTheDocument();
       expect(screen.getAllByText(/First Stop/i).length).toBeGreaterThan(0);
       expect(screen.getByText(/This is the first stop/i)).toBeInTheDocument();
@@ -393,13 +401,9 @@ describe('GuidedTour', () => {
 
     it('should advance to next stop when Next is clicked', async () => {
       render(
-        <GuidedTour 
-          tour={mockTour} 
-          onComplete={vi.fn()} 
-          onExit={vi.fn()} 
-        />
+        <GuidedTour tour={mockTour} onComplete={vi.fn()} onExit={vi.fn()} />,
       );
-      
+
       const nextButton = screen.getByText(/Next →/i);
       fireEvent.click(nextButton);
 
@@ -411,13 +415,9 @@ describe('GuidedTour', () => {
 
     it('should go back to previous stop when Previous is clicked', async () => {
       render(
-        <GuidedTour 
-          tour={mockTour} 
-          onComplete={vi.fn()} 
-          onExit={vi.fn()} 
-        />
+        <GuidedTour tour={mockTour} onComplete={vi.fn()} onExit={vi.fn()} />,
       );
-      
+
       // Go to stop 2
       const nextButton = screen.getByText(/Next →/i);
       fireEvent.click(nextButton);
@@ -437,13 +437,9 @@ describe('GuidedTour', () => {
 
     it('should disable Previous button on first stop', () => {
       render(
-        <GuidedTour 
-          tour={mockTour} 
-          onComplete={vi.fn()} 
-          onExit={vi.fn()} 
-        />
+        <GuidedTour tour={mockTour} onComplete={vi.fn()} onExit={vi.fn()} />,
       );
-      
+
       const previousButton = screen.getByText(/← Previous/i);
       expect(previousButton).toBeDisabled();
     });
@@ -451,13 +447,9 @@ describe('GuidedTour', () => {
     it('should call onComplete when Finish is clicked on last stop', async () => {
       const onComplete = vi.fn();
       render(
-        <GuidedTour 
-          tour={mockTour} 
-          onComplete={onComplete} 
-          onExit={vi.fn()} 
-        />
+        <GuidedTour tour={mockTour} onComplete={onComplete} onExit={vi.fn()} />,
       );
-      
+
       // Go to last stop
       const nextButton = screen.getByText(/Next →/i);
       fireEvent.click(nextButton);
@@ -476,13 +468,9 @@ describe('GuidedTour', () => {
     it('should call onExit when exit button is clicked', () => {
       const onExit = vi.fn();
       render(
-        <GuidedTour 
-          tour={mockTour} 
-          onComplete={vi.fn()} 
-          onExit={onExit} 
-        />
+        <GuidedTour tour={mockTour} onComplete={vi.fn()} onExit={onExit} />,
       );
-      
+
       const exitButton = screen.getByLabelText(/Exit tour/i);
       fireEvent.click(exitButton);
 
@@ -491,16 +479,14 @@ describe('GuidedTour', () => {
 
     it('should update progress bar as stops advance', async () => {
       const { container } = render(
-        <GuidedTour 
-          tour={mockTour} 
-          onComplete={vi.fn()} 
-          onExit={vi.fn()} 
-        />
+        <GuidedTour tour={mockTour} onComplete={vi.fn()} onExit={vi.fn()} />,
       );
-      
-      const progressFill = container.querySelector('.guided-tour-progress-fill');
+
+      const progressFill = container.querySelector(
+        '.guided-tour-progress-fill',
+      );
       expect(progressFill).toBeInTheDocument();
-      
+
       // Initial progress
       const initialWidth = progressFill?.getAttribute('style');
       expect(initialWidth).toContain('50%'); // 1 of 2 stops
@@ -519,38 +505,40 @@ describe('GuidedTour', () => {
   describe('TourSelector', () => {
     it('should not render when visible is false', () => {
       const { container } = render(
-        <TourSelector 
-          tours={defaultTours} 
-          onSelectTour={vi.fn()} 
-          onClose={vi.fn()} 
+        <TourSelector
+          tours={defaultTours}
+          onSelectTour={vi.fn()}
+          onClose={vi.fn()}
           visible={false}
-        />
+        />,
       );
-      expect(container.querySelector('.tour-selector-overlay')).not.toBeInTheDocument();
+      expect(
+        container.querySelector('.tour-selector-overlay'),
+      ).not.toBeInTheDocument();
     });
 
     it('should render when visible is true', () => {
       render(
-        <TourSelector 
-          tours={defaultTours} 
-          onSelectTour={vi.fn()} 
-          onClose={vi.fn()} 
+        <TourSelector
+          tours={defaultTours}
+          onSelectTour={vi.fn()}
+          onClose={vi.fn()}
           visible={true}
-        />
+        />,
       );
       expect(screen.getByText(/Guided Tours/i)).toBeInTheDocument();
     });
 
     it('should display all tours by default', () => {
       render(
-        <TourSelector 
-          tours={defaultTours} 
-          onSelectTour={vi.fn()} 
-          onClose={vi.fn()} 
+        <TourSelector
+          tours={defaultTours}
+          onSelectTour={vi.fn()}
+          onClose={vi.fn()}
           visible={true}
-        />
+        />,
       );
-      
+
       // Check for some expected tours
       expect(screen.getByText(/Quick Start Tour/i)).toBeInTheDocument();
       expect(screen.getByText(/File Encoding Deep Dive/i)).toBeInTheDocument();
@@ -558,14 +546,14 @@ describe('GuidedTour', () => {
 
     it('should filter tours by category', async () => {
       render(
-        <TourSelector 
-          tours={defaultTours} 
-          onSelectTour={vi.fn()} 
-          onClose={vi.fn()} 
+        <TourSelector
+          tours={defaultTours}
+          onSelectTour={vi.fn()}
+          onClose={vi.fn()}
           visible={true}
-        />
+        />,
       );
-      
+
       const beginnerButton = screen.getByText('Beginner');
       fireEvent.click(beginnerButton);
 
@@ -578,36 +566,40 @@ describe('GuidedTour', () => {
     it('should call onSelectTour when a tour is clicked', () => {
       const onSelectTour = vi.fn();
       render(
-        <TourSelector 
-          tours={defaultTours} 
-          onSelectTour={onSelectTour} 
-          onClose={vi.fn()} 
+        <TourSelector
+          tours={defaultTours}
+          onSelectTour={onSelectTour}
+          onClose={vi.fn()}
           visible={true}
-        />
+        />,
       );
-      
-      const tourCard = screen.getByText(/Quick Start Tour/i).closest('.tour-card');
+
+      const tourCard = screen
+        .getByText(/Quick Start Tour/i)
+        .closest('.tour-card');
       if (tourCard) {
         fireEvent.click(tourCard);
       }
 
       expect(onSelectTour).toHaveBeenCalledTimes(1);
-      expect(onSelectTour).toHaveBeenCalledWith(expect.objectContaining({
-        id: 'quick-start'
-      }));
+      expect(onSelectTour).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'quick-start',
+        }),
+      );
     });
 
     it('should call onClose when close button is clicked', () => {
       const onClose = vi.fn();
       render(
-        <TourSelector 
-          tours={defaultTours} 
-          onSelectTour={vi.fn()} 
-          onClose={onClose} 
+        <TourSelector
+          tours={defaultTours}
+          onSelectTour={vi.fn()}
+          onClose={onClose}
           visible={true}
-        />
+        />,
       );
-      
+
       const closeButton = screen.getByLabelText(/Close tour selector/i);
       fireEvent.click(closeButton);
 

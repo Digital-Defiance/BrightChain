@@ -1,10 +1,10 @@
-import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import fc from 'fast-check';
-import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
-import { MessagePriority } from '../../enumerations/messaging/messagePriority';
-import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
+import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
+import { MessagePriority } from '../../enumerations/messaging/messagePriority';
+import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 
 /**
  * Helper to check if all recipients have acknowledged
@@ -52,38 +52,34 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
    */
   it('Property 26a: should not be fully delivered with no recipients', () => {
     fc.assert(
-      fc.property(
-        fc.string(),
-        fc.string(),
-        (messageId, senderId) => {
-          const metadata: IMessageMetadata = {
-            blockId: messageId,
-            messageType: 'test',
-            senderId,
-            recipients: [],
-            priority: MessagePriority.NORMAL,
-            deliveryStatus: new Map(),
-            acknowledgments: new Map(),
-            encryptionScheme: MessageEncryptionScheme.NONE,
-            isCBL: false,
-            createdAt: new Date(),
-            expiresAt: null,
-            size: 100,
-            durabilityLevel: DurabilityLevel.Ephemeral,
-            parityBlockIds: [],
-            accessCount: 0,
-            lastAccessedAt: new Date(),
-            replicationStatus: ReplicationStatus.Pending,
-            targetReplicationFactor: 1,
-            replicaNodeIds: [],
-            checksum: "test",
-          };
+      fc.property(fc.string(), fc.string(), (messageId, senderId) => {
+        const metadata: IMessageMetadata = {
+          blockId: messageId,
+          messageType: 'test',
+          senderId,
+          recipients: [],
+          priority: MessagePriority.NORMAL,
+          deliveryStatus: new Map(),
+          acknowledgments: new Map(),
+          encryptionScheme: MessageEncryptionScheme.NONE,
+          isCBL: false,
+          createdAt: new Date(),
+          expiresAt: null,
+          size: 100,
+          durabilityLevel: DurabilityLevel.Ephemeral,
+          parityBlockIds: [],
+          accessCount: 0,
+          lastAccessedAt: new Date(),
+          replicationStatus: ReplicationStatus.Pending,
+          targetReplicationFactor: 1,
+          replicaNodeIds: [],
+          checksum: 'test',
+        };
 
-          expect(allRecipientsAcknowledged(metadata)).toBe(false);
-          expect(allRecipientsDelivered(metadata)).toBe(false);
-        }
-      ),
-      { numRuns: 100 }
+        expect(allRecipientsAcknowledged(metadata)).toBe(false);
+        expect(allRecipientsDelivered(metadata)).toBe(false);
+      }),
+      { numRuns: 100 },
     );
   });
 
@@ -128,14 +124,14 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: 1,
             replicaNodeIds: [],
-            checksum: "test",
+            checksum: 'test',
           };
 
           expect(allRecipientsAcknowledged(metadata)).toBe(true);
           expect(allRecipientsDelivered(metadata)).toBe(true);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -161,60 +157,9 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
           const numToAck = Math.min(ackCount, uniqueRecipients.length - 1);
           for (let i = 0; i < numToAck; i++) {
             acknowledgments.set(uniqueRecipients[i], new Date());
-            deliveryStatus.set(uniqueRecipients[i], MessageDeliveryStatus.DELIVERED);
-          }
-
-          const metadata: IMessageMetadata = {
-            blockId: messageId,
-            messageType: 'test',
-            senderId,
-            recipients: uniqueRecipients,
-            priority: MessagePriority.NORMAL,
-            deliveryStatus,
-            acknowledgments,
-            encryptionScheme: MessageEncryptionScheme.NONE,
-            isCBL: false,
-            createdAt: new Date(),
-            expiresAt: null,
-            size: 100,
-            durabilityLevel: DurabilityLevel.Ephemeral,
-            parityBlockIds: [],
-            accessCount: 0,
-            lastAccessedAt: new Date(),
-            replicationStatus: ReplicationStatus.Pending,
-            targetReplicationFactor: 1,
-            replicaNodeIds: [],
-            checksum: "test",
-          };
-
-          expect(allRecipientsAcknowledged(metadata)).toBe(false);
-        }
-      ),
-      { numRuns: 50 }
-    );
-  });
-
-  /**
-   * Property 26d: Delivery status must be DELIVERED for all recipients
-   * Even with acknowledgments, status must be DELIVERED
-   */
-  it('Property 26d: should require DELIVERED status for all recipients', () => {
-    fc.assert(
-      fc.property(
-        fc.string(),
-        fc.string(),
-        fc.array(fc.string({ minLength: 1 }), { minLength: 1, maxLength: 5 }),
-        (messageId, senderId, recipients) => {
-          const uniqueRecipients = Array.from(new Set(recipients));
-          const acknowledgments = new Map<string, Date>();
-          const deliveryStatus = new Map<string, MessageDeliveryStatus>();
-
-          // All acknowledge but not all delivered
-          for (let i = 0; i < uniqueRecipients.length; i++) {
-            acknowledgments.set(uniqueRecipients[i], new Date());
             deliveryStatus.set(
               uniqueRecipients[i],
-              i === 0 ? MessageDeliveryStatus.IN_TRANSIT : MessageDeliveryStatus.DELIVERED
+              MessageDeliveryStatus.DELIVERED,
             );
           }
 
@@ -238,14 +183,70 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: 1,
             replicaNodeIds: [],
-            checksum: "test",
+            checksum: 'test',
+          };
+
+          expect(allRecipientsAcknowledged(metadata)).toBe(false);
+        },
+      ),
+      { numRuns: 50 },
+    );
+  });
+
+  /**
+   * Property 26d: Delivery status must be DELIVERED for all recipients
+   * Even with acknowledgments, status must be DELIVERED
+   */
+  it('Property 26d: should require DELIVERED status for all recipients', () => {
+    fc.assert(
+      fc.property(
+        fc.string(),
+        fc.string(),
+        fc.array(fc.string({ minLength: 1 }), { minLength: 1, maxLength: 5 }),
+        (messageId, senderId, recipients) => {
+          const uniqueRecipients = Array.from(new Set(recipients));
+          const acknowledgments = new Map<string, Date>();
+          const deliveryStatus = new Map<string, MessageDeliveryStatus>();
+
+          // All acknowledge but not all delivered
+          for (let i = 0; i < uniqueRecipients.length; i++) {
+            acknowledgments.set(uniqueRecipients[i], new Date());
+            deliveryStatus.set(
+              uniqueRecipients[i],
+              i === 0
+                ? MessageDeliveryStatus.IN_TRANSIT
+                : MessageDeliveryStatus.DELIVERED,
+            );
+          }
+
+          const metadata: IMessageMetadata = {
+            blockId: messageId,
+            messageType: 'test',
+            senderId,
+            recipients: uniqueRecipients,
+            priority: MessagePriority.NORMAL,
+            deliveryStatus,
+            acknowledgments,
+            encryptionScheme: MessageEncryptionScheme.NONE,
+            isCBL: false,
+            createdAt: new Date(),
+            expiresAt: null,
+            size: 100,
+            durabilityLevel: DurabilityLevel.Ephemeral,
+            parityBlockIds: [],
+            accessCount: 0,
+            lastAccessedAt: new Date(),
+            replicationStatus: ReplicationStatus.Pending,
+            targetReplicationFactor: 1,
+            replicaNodeIds: [],
+            checksum: 'test',
           };
 
           expect(allRecipientsAcknowledged(metadata)).toBe(true);
           expect(allRecipientsDelivered(metadata)).toBe(false);
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -286,14 +287,14 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
             replicationStatus: ReplicationStatus.Pending,
             targetReplicationFactor: 1,
             replicaNodeIds: [],
-            checksum: "test",
+            checksum: 'test',
           };
 
           expect(allRecipientsAcknowledged(metadata)).toBe(true);
           expect(allRecipientsDelivered(metadata)).toBe(true);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });

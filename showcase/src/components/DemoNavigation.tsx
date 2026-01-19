@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './DemoNavigation.css';
 
@@ -19,22 +19,22 @@ const navigationItems: NavigationItem[] = [
     label: 'Home',
     icon: '🏠',
     path: '/',
-    description: 'Main showcase page'
+    description: 'Main showcase page',
   },
   {
     id: 'soup',
     label: 'Soup Demo',
     icon: '🥫',
     path: '/demo',
-    description: 'Interactive block soup visualization'
+    description: 'Interactive block soup visualization',
   },
   {
     id: 'blog',
     label: 'Blog',
     icon: '📝',
     path: '/blog',
-    description: 'BrightChain blog and updates'
-  }
+    description: 'BrightChain blog and updates',
+  },
 ];
 
 interface DemoNavigationProps {
@@ -42,9 +42,9 @@ interface DemoNavigationProps {
   onModeChange?: (mode: DemoMode) => void;
 }
 
-export const DemoNavigation: React.FC<DemoNavigationProps> = ({ 
+export const DemoNavigation: React.FC<DemoNavigationProps> = ({
   currentMode = 'home',
-  onModeChange 
+  onModeChange,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CONSTANTS } from '@brightchain/brightchain-lib';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
@@ -29,8 +28,8 @@ import { FC, useCallback } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { environment } from '../environments/environment';
 import '../styles.scss';
-import { SplashPage } from './components/splashPage';
 import { BrightChainSoupDemo } from './components/BrightChainSoupDemo';
+import { SplashPage } from './components/splashPage';
 
 const getApiBaseUrl = () => {
   if (
