@@ -1,15 +1,15 @@
 /* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
 import {
-  ApiErrorResponse,
-  ApiRequestHandler,
-  TypedHandlers,
-  routeConfig,
-} from '@brightchain/brightchain-api-lib';
-import {
   BlockStoreOptions,
   DurabilityLevel,
   StoreError,
 } from '@brightchain/brightchain-lib';
+import {
+  ApiErrorResponse,
+  ApiRequestHandler,
+  TypedHandlers,
+  routeConfig,
+} from '@digitaldefiance/node-express-suite';
 import { IApplication } from '../../interfaces/application';
 import {
   BrightenBlockRequest,
@@ -274,11 +274,11 @@ export class BlocksController extends BaseController<
           metadata: result.metadata,
         },
       };
-    } catch (error) {
-      if (error instanceof StoreError) {
-        return mapStoreError(error);
+    } catch (_error) {
+      if (_error instanceof StoreError) {
+        return mapStoreError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 
@@ -329,11 +329,11 @@ export class BlocksController extends BaseController<
           metadata: block.metadata,
         },
       };
-    } catch (error) {
-      if (error instanceof StoreError) {
-        return mapStoreError(error);
+    } catch (_error) {
+      if (_error instanceof StoreError) {
+        return mapStoreError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 
@@ -392,11 +392,11 @@ export class BlocksController extends BaseController<
           metadata,
         },
       };
-    } catch (error) {
-      if (error instanceof StoreError) {
-        return mapStoreError(error);
+    } catch (_error) {
+      if (_error instanceof StoreError) {
+        return mapStoreError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 
@@ -443,11 +443,11 @@ export class BlocksController extends BaseController<
           success: true,
         },
       };
-    } catch (error) {
-      if (error instanceof StoreError) {
-        return mapStoreError(error);
+    } catch (_error) {
+      if (_error instanceof StoreError) {
+        return mapStoreError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 
@@ -511,11 +511,11 @@ export class BlocksController extends BaseController<
           originalBlockId: result.originalBlockId,
         },
       };
-    } catch (error) {
-      if (error instanceof StoreError) {
-        return mapStoreError(error);
+    } catch (_error) {
+      if (_error instanceof StoreError) {
+        return mapStoreError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 }

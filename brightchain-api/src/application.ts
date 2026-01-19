@@ -1,5 +1,5 @@
-/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
-import { SecureKeyStorage } from '@brightchain/brightchain-lib';
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+import { SecureKeyStorage } from '@brightchain/brightchain-api-lib';
 import { HandleableError } from '@digitaldefiance/i18n-lib';
 import { debugLog } from '@digitaldefiance/node-express-suite';
 import express, { Application, NextFunction, Request, Response } from 'express';

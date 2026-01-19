@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 // Use session-isolated BrightChain implementation
 import {

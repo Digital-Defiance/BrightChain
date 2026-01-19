@@ -1,9 +1,8 @@
-import { SecureHeapStorage } from './secureHeapStorage';
-import { SystemKeyring } from './systemKeyring';
+import { SecureHeapStorage, SystemKeyring } from '@brightchain/brightchain-lib';
 
 /**
- * Browser-compatible secure key storage
- * For Node.js environment variable initialization, use the version in brightchain-api-lib
+ * Node.js-specific secure key storage that can initialize from environment variables
+ * This is the Node.js version that uses process.env
  */
 export class SecureKeyStorage {
   private static instance: SecureKeyStorage;
@@ -22,11 +21,18 @@ export class SecureKeyStorage {
     return SecureKeyStorage.instance;
   }
 
-  /**
-   * Store a mnemonic directly (browser-compatible)
-   * @param mnemonic The mnemonic to store
-   */
-  public async storeMnemonic(mnemonic: string): Promise<void> {
+  public async initializeFromEnvironment(): Promise<void> {
+    const mnemonic = process.env['NODE_MNEMONIC'];
+    if (!mnemonic) {
+      throw new Error('NODE_MNEMONIC environment variable not set');
+    }
+
+    await this.storeMnemonic(mnemonic);
+    // Immediately clear from process.env
+    delete process.env['NODE_MNEMONIC'];
+  }
+
+  private async storeMnemonic(mnemonic: string): Promise<void> {
     // Store in secure heap with auto-wiping
     await this.secureHeap.store('node-mnemonic', mnemonic);
   }

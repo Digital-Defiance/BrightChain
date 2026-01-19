@@ -1,12 +1,5 @@
 /* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
 import {
-  ApiErrorResponse,
-  ApiRequestHandler,
-  IApiMessageResponse,
-  routeConfig,
-  TypedHandlers,
-} from '@brightchain/brightchain-api-lib';
-import {
   CanUnlockResult,
   IQuorumMember,
   QuorumDocumentInfo,
@@ -21,6 +14,13 @@ import {
   Member,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
+import {
+  ApiErrorResponse,
+  ApiRequestHandler,
+  IApiMessageResponse,
+  routeConfig,
+  TypedHandlers,
+} from '@digitaldefiance/node-express-suite';
 import { IApplication } from '../../interfaces/application';
 import { QuorumServiceWrapper } from '../../services/quorum';
 import {
@@ -412,11 +412,11 @@ export class QuorumController extends BaseController<
           mnemonic: memberWithMnemonic.mnemonic.value ?? '',
         },
       };
-    } catch (error) {
-      if (error instanceof QuorumError) {
-        return mapQuorumError(error);
+    } catch (_error) {
+      if (_error instanceof QuorumError) {
+        return mapQuorumError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 
@@ -465,11 +465,11 @@ export class QuorumController extends BaseController<
           members: members.map(serializeMember),
         },
       };
-    } catch (error) {
-      if (error instanceof QuorumError) {
-        return mapQuorumError(error);
+    } catch (_error) {
+      if (_error instanceof QuorumError) {
+        return mapQuorumError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 
@@ -517,11 +517,11 @@ export class QuorumController extends BaseController<
           memberId,
         },
       };
-    } catch (error) {
-      if (error instanceof QuorumError) {
-        return mapQuorumError(error);
+    } catch (_error) {
+      if (_error instanceof QuorumError) {
+        return mapQuorumError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 
@@ -634,11 +634,11 @@ export class QuorumController extends BaseController<
           createdAt: result.createdAt.toISOString(),
         },
       };
-    } catch (error) {
-      if (error instanceof QuorumError) {
-        return mapQuorumError(error);
+    } catch (_error) {
+      if (_error instanceof QuorumError) {
+        return mapQuorumError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 
@@ -698,11 +698,11 @@ export class QuorumController extends BaseController<
         'Unseal operation requires members with loaded private keys. ' +
           'This endpoint needs proper member authentication implementation.',
       );
-    } catch (error) {
-      if (error instanceof QuorumError) {
-        return mapQuorumError(error);
+    } catch (_error) {
+      if (_error instanceof QuorumError) {
+        return mapQuorumError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 
@@ -760,11 +760,11 @@ export class QuorumController extends BaseController<
           document,
         },
       };
-    } catch (error) {
-      if (error instanceof QuorumError) {
-        return mapQuorumError(error);
+    } catch (_error) {
+      if (_error instanceof QuorumError) {
+        return mapQuorumError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 
@@ -828,11 +828,11 @@ export class QuorumController extends BaseController<
           ...result,
         },
       };
-    } catch (error) {
-      if (error instanceof QuorumError) {
-        return mapQuorumError(error);
+    } catch (_error) {
+      if (_error instanceof QuorumError) {
+        return mapQuorumError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 }

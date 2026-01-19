@@ -1,24 +1,24 @@
 import {
+  BlockEncryptionType,
+  BlockSize,
+  BlockType,
+  CBLService,
+  CblError,
+  CblErrorType,
+  ChecksumService,
+  ConstituentBlockListBlock,
+  MemberType,
+  ServiceProvider,
+  StoreError,
+  StoreErrorType,
+} from '@brightchain/brightchain-lib';
+import {
   EmailString,
   Member,
   arraysEqual,
   getEnhancedIdProvider,
 } from '@digitaldefiance/ecies-lib';
 import { ChecksumBuffer } from '@digitaldefiance/node-ecies-lib';
-import {
-  BlockEncryptionType,
-  BlockSize,
-  BlockType,
-  CblErrorType,
-  MemberType,
-  StoreErrorType,
-  CblError,
-  StoreError,
-  CBLService,
-  ChecksumService,
-  ServiceProvider,
-  ConstituentBlockListBlock,
-} from '@brightchain/brightchain-lib';
 import { faker } from '@faker-js/faker';
 import { mkdirSync, rmSync } from 'fs';
 import { join } from 'path';

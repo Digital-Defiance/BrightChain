@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
 import { FileReceipt } from '@brightchain/brightchain-lib';
 
 /**

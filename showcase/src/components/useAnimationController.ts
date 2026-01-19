@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AnimationController,
@@ -48,24 +49,24 @@ export function useAnimationController() {
         setAnimationState(controller.getState());
       });
 
-      controller.on('sequence-completed', ({ sequence }) => {
+      controller.on('sequence-completed', ({ sequence: _sequence }) => {
         setCurrentSequence(null);
         setCurrentStep(null);
         setAnimationState(controller.getState());
       });
 
-      controller.on('sequence-error', ({ sequence, error }) => {
+      controller.on('sequence-error', ({ sequence: _sequence, error }) => {
         console.error('Animation sequence error:', error);
         setCurrentSequence(null);
         setCurrentStep(null);
         setAnimationState(controller.getState());
       });
 
-      controller.on('step-started', ({ step }) => {
-        setCurrentStep(step);
+      controller.on('step-started', ({ step: _step }) => {
+        setCurrentStep(_step);
       });
 
-      controller.on('step-completed', ({ step }) => {
+      controller.on('step-completed', ({ step: _step }) => {
         setCurrentStep(null);
       });
 

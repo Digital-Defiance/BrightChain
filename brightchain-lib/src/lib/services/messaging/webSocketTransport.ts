@@ -1,7 +1,7 @@
 import { ECIESService } from '@digitaldefiance/ecies-lib';
+import { EciesConfig } from '../../ecies-config';
 import { INetworkTransport } from '../../interfaces/network/networkTransport';
 import { SystemKeyring } from '../../systemKeyring';
-import { EciesConfig } from '../../ecies-config';
 
 /**
  * Browser-compatible WebSocket network transport for message transmission

@@ -42,7 +42,7 @@ export class DirectMessageRouter {
             MessageDeliveryStatus.FAILED,
           );
         }
-      } catch (_error) {
+      } catch {
         results.set(recipientId, false);
         await this.metadataStore.updateDeliveryStatus(
           messageId,

@@ -21,7 +21,7 @@
  * // Catching and handling checksum errors
  * try {
  *   const checksum = Checksum.fromHex(invalidHex);
- * } catch (error) {
+ * } catch {
  *   if (isChecksumError(error)) {
  *     console.error(`Checksum error (${error.checksumErrorType}): ${error.message}`);
  *   }
@@ -111,7 +111,7 @@ export class ChecksumError extends BrightChainError {
  * ```typescript
  * try {
  *   const checksum = Checksum.fromHex(hexString);
- * } catch (error) {
+ * } catch {
  *   if (isChecksumError(error)) {
  *     // error is narrowed to ChecksumError type
  *     switch (error.checksumErrorType) {

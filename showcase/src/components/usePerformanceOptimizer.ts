@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @fileoverview React hook for using PerformanceOptimizer
  * Provides state management and event handling for performance optimization features

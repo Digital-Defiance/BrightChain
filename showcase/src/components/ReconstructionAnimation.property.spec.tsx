@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
 /**
  * @fileoverview Property-based tests for Complete Reconstruction Animation Sequence
  *

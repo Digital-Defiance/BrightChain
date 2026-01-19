@@ -1,4 +1,7 @@
-import { MessagePriority } from '@brightchain/brightchain-lib';
+import {
+  IMessageMetadata,
+  MessagePriority,
+} from '@brightchain/brightchain-lib';
 import express, { Express } from 'express';
 import request from 'supertest';
 import { MessagePassingService } from '../services/messagePassingService';
@@ -142,8 +145,11 @@ describe('Message Router API Endpoints', () => {
 
   describe('Task 13.3: GET /messages - Query messages', () => {
     it('should query messages with filters', async () => {
-      const mockResults = [{ id: 'msg-1' }, { id: 'msg-2' }];
-      mockService.queryMessages.mockResolvedValue(mockResults as any);
+      const mockResults = [
+        { id: 'msg-1' },
+        { id: 'msg-2' },
+      ] as unknown as IMessageMetadata[];
+      mockService.queryMessages.mockResolvedValue(mockResults);
 
       const response = await request(app).get('/messages').query({
         recipientId: 'recipient-1',

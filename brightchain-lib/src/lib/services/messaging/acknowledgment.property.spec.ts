@@ -3,6 +3,7 @@ import { WebSocketTransport } from './webSocketTransport';
 
 // Helper to access private connections property for testing
 function getConnections(transport: WebSocketTransport): Map<string, unknown> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (transport as any).connections;
 }
 
@@ -93,6 +94,7 @@ describe('Feature: message-passing-and-events, Property: Message Acknowledgment'
             send: jest.fn(),
           };
 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (transport as any).connections.set(recipientId, mockWs);
 
           await transport.sendAck(recipientId, messageId, status);

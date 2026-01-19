@@ -59,9 +59,7 @@ describe('BlockStoreService', () => {
     const blockSize = 4096 as BlockSize;
     process.env.BRIGHTCHAIN_BLOCKSIZE_BYTES = `${blockSize}`;
 
-    const service = new BlockStoreService(
-      dummyApp as unknown as IApplication,
-    );
+    const service = new BlockStoreService(dummyApp as unknown as IApplication);
     const payload = Buffer.from('hello-world');
 
     const blockId = await service.storeBlock(payload);

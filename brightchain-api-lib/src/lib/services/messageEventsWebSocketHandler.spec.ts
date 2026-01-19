@@ -1,9 +1,10 @@
-import { EventEmitter } from 'events';
 import {
   DurabilityLevel,
+  IMessageMetadata,
   MessageEncryptionScheme,
   MessagePriority,
 } from '@brightchain/brightchain-lib';
+import { EventEmitter } from 'events';
 import {
   EventNotificationSystem,
   MessageEventType,
@@ -13,7 +14,7 @@ import { MessageEventsWebSocketHandler } from './messageEventsWebSocketHandler';
 describe('Task 13.5: WebSocket /messages/events endpoint', () => {
   let handler: MessageEventsWebSocketHandler;
   let eventSystem: EventNotificationSystem;
-  let mockWs: any;
+  let mockWs: unknown;
 
   beforeEach(() => {
     eventSystem = new EventNotificationSystem();
@@ -127,7 +128,10 @@ describe('Task 13.5: WebSocket /messages/events endpoint', () => {
       checksum: '',
     };
 
-    eventSystem.emit(MessageEventType.MESSAGE_STORED, metadata as any);
+    eventSystem.emit(
+      MessageEventType.MESSAGE_STORED,
+      metadata as IMessageMetadata,
+    );
 
     expect(mockWs.send).toHaveBeenCalledWith(
       expect.stringContaining('"type":"message:stored"'),
@@ -171,11 +175,17 @@ describe('Task 13.5: WebSocket /messages/events endpoint', () => {
     };
 
     // Emit non-matching event
-    eventSystem.emit(MessageEventType.MESSAGE_STORED, metadata as any);
+    eventSystem.emit(
+      MessageEventType.MESSAGE_STORED,
+      metadata as IMessageMetadata,
+    );
     expect(mockWs.send).not.toHaveBeenCalled();
 
     // Emit matching event
-    eventSystem.emit(MessageEventType.MESSAGE_DELIVERED, metadata as any);
+    eventSystem.emit(
+      MessageEventType.MESSAGE_DELIVERED,
+      metadata as IMessageMetadata,
+    );
     expect(mockWs.send).toHaveBeenCalledWith(
       expect.stringContaining('"type":"message:delivered"'),
     );

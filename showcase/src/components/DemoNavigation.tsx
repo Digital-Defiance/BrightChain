@@ -43,7 +43,7 @@ interface DemoNavigationProps {
 }
 
 export const DemoNavigation: React.FC<DemoNavigationProps> = ({
-  currentMode = 'home',
+  currentMode: _currentMode = 'home',
   onModeChange,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useCallback, useState } from 'react';
 
 // Simple mock implementation for demo purposes

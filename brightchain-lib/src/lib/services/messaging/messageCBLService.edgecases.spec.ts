@@ -91,15 +91,6 @@ describe('Feature: message-passing-and-events, MessageCBL Edge Cases', () => {
 
   describe('Edge Cases', () => {
     it('handles empty content (0 bytes)', async () => {
-      const blockStore = new MemoryBlockStore(BlockSize.Small);
-      const metadataStore = new MemoryMessageMetadataStore();
-      const service = new MessageCBLService(
-        _cblService,
-        checksumService,
-        blockStore,
-        metadataStore,
-      );
-
       const content = new Uint8Array(0);
       const options = {
         messageType: 'empty',
@@ -109,27 +100,18 @@ describe('Feature: message-passing-and-events, MessageCBL Edge Cases', () => {
         encryptionScheme: MessageEncryptionScheme.NONE,
       };
 
-      const { messageId } = await service.createMessage(
+      const { messageId } = await messageCBLService.createMessage(
         content,
         creator,
         options,
       );
-      const retrieved = await service.getMessageContent(messageId);
+      const retrieved = await messageCBLService.getMessageContent(messageId);
 
       expect(retrieved).toEqual(content);
       expect(retrieved.length).toBe(0);
     });
 
     it('handles content exactly at block boundary', async () => {
-      const blockStore = new MemoryBlockStore(BlockSize.Small);
-      const metadataStore = new MemoryMessageMetadataStore();
-      const service = new MessageCBLService(
-        _cblService,
-        checksumService,
-        blockStore,
-        metadataStore,
-      );
-
       const blockSizeNum = BlockSize.Small as number;
       const content = new Uint8Array(blockSizeNum).fill(42);
       const options = {
@@ -140,27 +122,15 @@ describe('Feature: message-passing-and-events, MessageCBL Edge Cases', () => {
         encryptionScheme: MessageEncryptionScheme.NONE,
       };
 
-      const { messageId, contentBlockIds } = await service.createMessage(
-        content,
-        creator,
-        options,
-      );
-      const retrieved = await service.getMessageContent(messageId);
+      const { messageId, contentBlockIds } =
+        await messageCBLService.createMessage(content, creator, options);
+      const retrieved = await messageCBLService.getMessageContent(messageId);
 
       expect(retrieved).toEqual(content);
       expect(contentBlockIds.length).toBe(1);
     });
 
     it('handles very large content (multiple blocks)', async () => {
-      const blockStore = new MemoryBlockStore(BlockSize.Small);
-      const metadataStore = new MemoryMessageMetadataStore();
-      const service = new MessageCBLService(
-        _cblService,
-        checksumService,
-        blockStore,
-        metadataStore,
-      );
-
       const blockSizeNum = BlockSize.Small as number;
       const content = new Uint8Array(blockSizeNum * 5);
       // Fill with unique data per block to avoid identical block IDs
@@ -175,27 +145,15 @@ describe('Feature: message-passing-and-events, MessageCBL Edge Cases', () => {
         encryptionScheme: MessageEncryptionScheme.NONE,
       };
 
-      const { messageId, contentBlockIds } = await service.createMessage(
-        content,
-        creator,
-        options,
-      );
-      const retrieved = await service.getMessageContent(messageId);
+      const { messageId, contentBlockIds } =
+        await messageCBLService.createMessage(content, creator, options);
+      const retrieved = await messageCBLService.getMessageContent(messageId);
 
       expect(retrieved).toEqual(content);
       expect(contentBlockIds.length).toBe(5);
     });
 
     it('handles empty recipients list (broadcast)', async () => {
-      const blockStore = new MemoryBlockStore(BlockSize.Small);
-      const metadataStore = new MemoryMessageMetadataStore();
-      const service = new MessageCBLService(
-        _cblService,
-        checksumService,
-        blockStore,
-        metadataStore,
-      );
-
       const content = new TextEncoder().encode('broadcast');
       const options = {
         messageType: 'broadcast',
@@ -205,27 +163,18 @@ describe('Feature: message-passing-and-events, MessageCBL Edge Cases', () => {
         encryptionScheme: MessageEncryptionScheme.NONE,
       };
 
-      const { messageId } = await service.createMessage(
+      const { messageId } = await messageCBLService.createMessage(
         content,
         creator,
         options,
       );
-      const metadata = await service.getMessageMetadata(messageId);
+      const metadata = await messageCBLService.getMessageMetadata(messageId);
 
       expect(metadata?.recipients).toEqual([]);
       expect(metadata?.deliveryStatus.size).toBe(0);
     });
 
     it('handles single recipient', async () => {
-      const blockStore = new MemoryBlockStore(BlockSize.Small);
-      const metadataStore = new MemoryMessageMetadataStore();
-      const service = new MessageCBLService(
-        _cblService,
-        checksumService,
-        blockStore,
-        metadataStore,
-      );
-
       const content = new TextEncoder().encode('direct');
       const options = {
         messageType: 'direct',
@@ -235,27 +184,18 @@ describe('Feature: message-passing-and-events, MessageCBL Edge Cases', () => {
         encryptionScheme: MessageEncryptionScheme.RECIPIENT_KEYS,
       };
 
-      const { messageId } = await service.createMessage(
+      const { messageId } = await messageCBLService.createMessage(
         content,
         creator,
         options,
       );
-      const metadata = await service.getMessageMetadata(messageId);
+      const metadata = await messageCBLService.getMessageMetadata(messageId);
 
       expect(metadata?.recipients).toEqual(['recipient1']);
       expect(metadata?.deliveryStatus.size).toBe(1);
     });
 
     it('handles many recipients (10+)', async () => {
-      const blockStore = new MemoryBlockStore(BlockSize.Small);
-      const metadataStore = new MemoryMessageMetadataStore();
-      const service = new MessageCBLService(
-        _cblService,
-        checksumService,
-        blockStore,
-        metadataStore,
-      );
-
       const content = new TextEncoder().encode('multicast');
       const recipients = Array.from({ length: 15 }, (_, i) => `recipient${i}`);
       const options = {
@@ -266,12 +206,12 @@ describe('Feature: message-passing-and-events, MessageCBL Edge Cases', () => {
         encryptionScheme: MessageEncryptionScheme.RECIPIENT_KEYS,
       };
 
-      const { messageId } = await service.createMessage(
+      const { messageId } = await messageCBLService.createMessage(
         content,
         creator,
         options,
       );
-      const metadata = await service.getMessageMetadata(messageId);
+      const metadata = await messageCBLService.getMessageMetadata(messageId);
 
       expect(metadata?.recipients).toEqual(recipients);
       expect(metadata?.deliveryStatus.size).toBe(15);
