@@ -15,8 +15,7 @@ import {
   IHeartbeatMonitor,
 } from '@brightchain/brightchain-lib';
 
-// Re-export DEFAULT_HEARTBEAT_CONFIG from brightchain-lib for convenience
-export { DEFAULT_HEARTBEAT_CONFIG } from '@brightchain/brightchain-lib';
+// Note: DEFAULT_HEARTBEAT_CONFIG should be imported directly from @brightchain/brightchain-lib by consumers
 
 /**
  * Default heartbeat configuration values (local copy for use in this module).

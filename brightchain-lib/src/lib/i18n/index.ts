@@ -11,8 +11,7 @@ import {
 import { StringNames } from '../enumerations/stringNames';
 import { AmericanEnglishStrings } from '../strings/englishUs';
 
-// Re-export language codes
-export { LanguageCodes } from '@digitaldefiance/i18n-lib';
+// Note: LanguageCodes should be imported directly from @digitaldefiance/i18n-lib by consumers
 
 /**
  * BrightChain i18n engine singleton

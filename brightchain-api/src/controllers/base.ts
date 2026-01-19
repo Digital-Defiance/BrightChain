@@ -3,7 +3,7 @@ import {
   ApiResponse,
   RouteConfig,
   TypedHandlers,
-} from '@brightchain/brightchain-api-lib';
+} from '@digitaldefiance/node-express-suite';
 import { IApplication } from '../interfaces/application';
 
 export abstract class BaseController<
@@ -12,7 +12,7 @@ export abstract class BaseController<
 > {
   protected application: IApplication;
   protected handlers!: THandlers;
-  protected routeDefinitions: RouteConfig<THandlers>[] = [];
+  protected routeDefinitions: RouteConfig<THandlers, string>[] = [];
 
   constructor(application: IApplication) {
     this.application = application;

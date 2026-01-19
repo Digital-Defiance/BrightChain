@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 /**
  * WebSocket message handler for Block Availability and Discovery Protocol
  */
@@ -8,8 +9,8 @@ import {
   IDiscoveryProtocol,
   IGossipService,
   IHeartbeatMonitor,
-} from '@brightchain/brightchain-api-lib';
-import { IMessageRouter } from '@brightchain/brightchain-lib';
+  IMessageRouter,
+} from '@brightchain/brightchain-lib';
 import {
   DiscoveryMessageType,
   GossipMessageType,

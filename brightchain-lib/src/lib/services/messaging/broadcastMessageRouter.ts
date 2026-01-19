@@ -27,7 +27,7 @@ export class BroadcastMessageRouter {
 
       await this.gossipService.announceBlock(messageId);
       return true;
-    } catch (error) {
+    } catch {
       await this.metadataStore.updateDeliveryStatus(
         messageId,
         'broadcast',

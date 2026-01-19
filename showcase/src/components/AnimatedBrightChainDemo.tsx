@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import {
   BlockInfo,
   BlockSize,
@@ -209,7 +210,7 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
     useState<SessionIsolatedBrightChain | null>(null);
   const [receipts, setReceipts] = useState<FileReceipt[]>([]);
   const [dragOver, setDragOver] = useState(false);
-  const [selectedBlock, setSelectedBlock] = useState<BlockInfo | null>(null);
+  const [selectedBlock, _setSelectedBlock] = useState<BlockInfo | null>(null);
   const [debugInfo, setDebugInfo] = useState<{
     sessionId: string;
     blockCount: number;
@@ -378,7 +379,7 @@ const AnimatedBrightChainDemoContent: React.FC = () => {
     URL.revokeObjectURL(url);
   }, []);
 
-  const handleBlockClick = useCallback((_block: BlockInfo) => {
+  const _handleBlockClick = useCallback((_block: BlockInfo) => {
     // Block click handler - currently unused but kept for future functionality
   }, []);
 

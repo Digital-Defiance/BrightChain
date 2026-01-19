@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import nxPreset from '../jest.preset.js';
 
 interface NxPreset {

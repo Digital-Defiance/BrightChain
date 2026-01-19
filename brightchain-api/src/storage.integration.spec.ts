@@ -14,6 +14,7 @@ import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
 import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
 import { ChecksumService } from '@brightchain/brightchain-lib/lib/services/checksum.service';
 import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
+import { Checksum } from '@brightchain/brightchain-lib/lib/types/checksum';
 import { randomBytes } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -123,8 +124,8 @@ describe('Storage Integration Tests', () => {
 
   describe('Read Path: retrieve and verify block integrity', () => {
     it('should detect missing blocks and throw error', async () => {
-      const randomChecksum = randomBytes(32);
-      await expect(blockStore.getData(randomChecksum as any)).rejects.toThrow();
+      const randomChecksum = Checksum.fromBuffer(randomBytes(64));
+      await expect(blockStore.getData(randomChecksum)).rejects.toThrow();
     });
 
     it('should maintain data integrity through write-read cycle', async () => {

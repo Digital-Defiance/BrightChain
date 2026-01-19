@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { BlockInfo } from '@brightchain/brightchain-lib';
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { useRef, useState } from 'react';
@@ -93,7 +94,7 @@ export const EnhancedSoupCan: React.FC<EnhancedSoupCanProps> = ({
   connectedBlocks = [],
   onClick,
   onHover,
-  position = { x: 0, y: 0 },
+  position: _position = { x: 0, y: 0 },
   fileId,
 }) => {
   const [showPanel, setShowPanel] = useState(false);

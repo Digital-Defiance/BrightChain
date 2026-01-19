@@ -219,7 +219,7 @@ describe('AnimationController Performance Property Tests', () => {
           } else {
             await controller.playReconstructionAnimation(mockReceipt);
           }
-        } catch (error) {
+        } catch {
           // Expected to fail without full BrightChain integration
         }
 
@@ -424,7 +424,7 @@ describe('AnimationController Performance Property Tests', () => {
           duration: baseDuration,
         };
 
-        const startTime = performance.now();
+        // const startTime = performance.now();
 
         // Simulate step execution timing
         const adjustedDuration = mockStep.duration / speed;

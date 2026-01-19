@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 /**
  * Session-isolated BrightChain implementation for the demo
  *
@@ -71,7 +72,7 @@ function checksumFromHex(hex: string): Checksum {
   try {
     // Try the native fromHex() first
     return Checksum.fromHex(hex);
-  } catch (error) {
+  } catch {
     // If that fails, manually convert hex to bytes and create from Uint8Array
     const bytes = hexToBytes(hex);
     return Checksum.fromUint8Array(bytes);

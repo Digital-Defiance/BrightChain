@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
 import { BlockInfo } from '@brightchain/brightchain-lib';
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { useEffect, useRef, useState } from 'react';
@@ -101,7 +102,7 @@ export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
     return null;
   }
 
-  const getConnectionColor = (connection: Connection) => {
+  const _getConnectionColor = (connection: Connection) => {
     switch (connection.type) {
       case 'sequential':
         return 'var(--accent-primary)';
@@ -129,8 +130,8 @@ export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
     // Create curved path for better visual appeal
     const curvature = Math.min(distance * 0.3, 50);
 
-    const midX = (from.x + to.x) / 2;
-    const midY = (from.y + to.y) / 2;
+    const _midX = (from.x + to.x) / 2;
+    const _midY = (from.y + to.y) / 2;
 
     // Perpendicular offset for curve
     const perpX = (-dy / distance) * curvature;

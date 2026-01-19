@@ -4,7 +4,7 @@ import {
   IApiMessageResponse,
   IStatusCodeResponse,
   TypedHandlers,
-} from '@brightchain/brightchain-api-lib';
+} from '@digitaldefiance/node-express-suite';
 import { IApplication } from '../../interfaces/application';
 import { BaseController } from '../base';
 

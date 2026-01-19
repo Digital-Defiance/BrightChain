@@ -1,6 +1,3 @@
-// Re-export everything from brightchain-lib
-export * from '@brightchain/brightchain-lib';
-
 // Export Node.js specific components
 export * from './lib/stores/availabilityAwareBlockStore';
 export * from './lib/stores/diskBlockAsyncStore';
@@ -12,6 +9,9 @@ export * from './lib/transforms/checksumTransform';
 export * from './lib/transforms/memoryWritableStream';
 export * from './lib/transforms/xorMultipleTransform';
 
+// Export Node.js specific services
+export * from './lib/services/secureKeyStorage';
+
 // API lib exports
 export * from './lib/appConstants';
 export * from './lib/application';
@@ -19,6 +19,7 @@ export * from './lib/application-base';
 export * from './lib/constants';
 export * from './lib/controllers/base';
 export * from './lib/controllers/user';
+export * from './lib/enumerations/model-name';
 export * from './lib/environment';
 export * from './lib/errors/admin-role-not-found';
 export * from './lib/errors/email-already-verified';
@@ -50,16 +51,6 @@ export * from './lib/interfaces/ecies-consts';
 export * from './lib/interfaces/environment';
 export * from './lib/interfaces/environment-aws';
 export * from './lib/interfaces/jwt-sign-response';
-// Re-export interfaces from node-ecies-lib for backward compatibility
-export type {
-  IKeyPairBufferWithUnEncryptedPrivateKey,
-  ISigningKeyPrivateKeyInfo,
-  ISimpleKeyPair,
-  ISimpleKeyPairBuffer,
-  ISimplePublicKeyOnly,
-  ISimplePublicKeyOnlyBuffer,
-} from '@digitaldefiance/node-ecies-lib';
-export * from './lib/enumerations/model-name';
 export * from './lib/interfaces/member/member-with-mnemonic';
 export * from './lib/interfaces/multi-encrypted-parsed-header';
 export * from './lib/interfaces/pbkdf2-result';
@@ -105,26 +96,8 @@ export * from './lib/services/pbkdf2';
 export * from './lib/services/user';
 export * from './lib/utils/type-converters';
 // Explicitly export types from shared-types
-export { routeConfig } from './lib/shared-types';
 export type {
-  ApiErrorResponse,
-  ApiRequestHandler,
-  ApiResponse,
   ClientSession,
   DefaultBackendIdType,
-  FlexibleValidationChain,
-  HttpMethod,
-  JsonPrimitive,
-  JsonResponse,
-  RouteConfig,
   SchemaMap,
-  SendFunction,
-  TypedHandlers,
-  ValidatedBody,
 } from './lib/shared-types';
-// Re-export interfaces from node-express-suite
-export type {
-  IApiErrorResponse,
-  IApiMessageResponse,
-  IStatusCodeResponse,
-} from '@digitaldefiance/node-express-suite';

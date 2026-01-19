@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+import { Member } from '@digitaldefiance/ecies-lib';
 import {
   ApiErrorResponse,
   ApiRequestHandler,
   IApiMessageResponse,
   IStatusCodeResponse,
   TypedHandlers,
-} from '@brightchain/brightchain-api-lib';
-import { Member } from '@digitaldefiance/ecies-lib';
+} from '@digitaldefiance/node-express-suite';
 import { IApplication } from '../../interfaces/application';
 import { BaseController } from '../base';
 

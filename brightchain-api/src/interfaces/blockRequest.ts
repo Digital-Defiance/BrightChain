@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import { DurabilityLevel } from '@brightchain/brightchain-lib';
 import { Request } from 'express';
 

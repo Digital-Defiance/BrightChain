@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
 import { BlockInfo } from '@brightchain/brightchain-lib';
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -46,7 +47,7 @@ export const EncodingAnimation: React.FC<EncodingAnimationProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [chunks, setChunks] = useState<FileChunk[]>([]);
-  const [fileData, setFileData] = useState<Uint8Array | null>(null);
+  const [_fileData, setFileData] = useState<Uint8Array | null>(null);
   const [animationSteps, setAnimationSteps] = useState<AnimationStep[]>([
     {
       id: 'file-read',

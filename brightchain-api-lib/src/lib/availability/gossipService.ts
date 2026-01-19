@@ -15,8 +15,7 @@ import {
   IGossipService,
 } from '@brightchain/brightchain-lib';
 
-// Re-export DEFAULT_GOSSIP_CONFIG from brightchain-lib for convenience
-export { DEFAULT_GOSSIP_CONFIG } from '@brightchain/brightchain-lib';
+// Note: DEFAULT_GOSSIP_CONFIG should be imported directly from @brightchain/brightchain-lib by consumers
 
 /**
  * Default gossip configuration values (local copy for use in this module).

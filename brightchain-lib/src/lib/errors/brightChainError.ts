@@ -56,7 +56,7 @@ export abstract class BrightChainError extends Error {
    * ```typescript
    * try {
    *   // ... operation that throws
-   * } catch (error) {
+   * } catch {
    *   if (isBrightChainError(error)) {
    *     console.log(JSON.stringify(error.toJSON(), null, 2));
    *   }
@@ -85,7 +85,7 @@ export abstract class BrightChainError extends Error {
  * ```typescript
  * try {
  *   // ... operation that might throw
- * } catch (error) {
+ * } catch {
  *   if (isBrightChainError(error)) {
  *     console.error(`${error.type}: ${error.message}`, error.context);
  *   }

@@ -54,7 +54,7 @@ export class MessageForwardingService {
       }
 
       return success;
-    } catch (_error) {
+    } catch {
       await this.metadataStore.updateDeliveryStatus(
         messageId,
         recipientId,

@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
 import { IBlockMetadata } from '@brightchain/brightchain-lib';
 
 export interface IGetBlockResponse {

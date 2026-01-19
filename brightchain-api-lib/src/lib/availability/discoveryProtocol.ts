@@ -16,8 +16,7 @@ import {
   PeerQueryResult,
 } from '@brightchain/brightchain-lib';
 
-// Re-export DEFAULT_DISCOVERY_CONFIG from brightchain-lib for convenience
-export { DEFAULT_DISCOVERY_CONFIG } from '@brightchain/brightchain-lib';
+// Note: DEFAULT_DISCOVERY_CONFIG should be imported directly from @brightchain/brightchain-lib by consumers
 
 /**
  * Default discovery configuration values (local copy for use in this module).

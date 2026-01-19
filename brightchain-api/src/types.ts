@@ -1,4 +1,4 @@
-import { ValidatedBody } from '@brightchain/brightchain-api-lib';
+import { ValidatedBody } from '@digitaldefiance/node-express-suite';
 import { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
 import { ValidationChain } from 'express-validator';
 declare module 'express-serve-static-core' {

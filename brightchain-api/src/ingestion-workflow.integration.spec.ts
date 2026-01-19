@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 /**
  * Complete Ingestion and Reconstruction Workflow Integration Test
  *
@@ -23,13 +24,11 @@
  * This is the complete production-ready workflow!
  */
 
+import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib';
 import {
   BlockDataType,
   BlockSize,
   BlockType,
-  DiskBlockAsyncStore,
-  EmailString,
-  MemberType,
   MemoryBlockStore,
   RandomBlock,
   RawDataBlock,
@@ -37,8 +36,13 @@ import {
   ServiceProvider,
   TUPLE,
   WhitenedBlock,
-} from '@brightchain/brightchain-api-lib';
-import { Member, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
+} from '@brightchain/brightchain-lib';
+import {
+  EmailString,
+  Member,
+  MemberType,
+  uint8ArrayToHex,
+} from '@digitaldefiance/ecies-lib';
 import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -479,7 +483,7 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
       );
 
       // Store to disk using DiskBlockAsyncStore
-      const storedBlockChecksums: import('@brightchain/brightchain-api-lib').Checksum[] =
+      const storedBlockChecksums: import('@brightchain/brightchain-lib').Checksum[] =
         [];
 
       for (const whitener of whiteners) {

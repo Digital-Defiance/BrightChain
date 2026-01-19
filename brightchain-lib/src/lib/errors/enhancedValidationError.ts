@@ -67,7 +67,7 @@ export class EnhancedValidationError extends BrightChainError {
  * ```typescript
  * try {
  *   validateInput(data);
- * } catch (error) {
+ * } catch {
  *   if (isEnhancedValidationError(error)) {
  *     console.error(`Validation failed for field '${error.field}': ${error.message}`);
  *   }

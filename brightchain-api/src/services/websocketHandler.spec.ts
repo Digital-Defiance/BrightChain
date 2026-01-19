@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 /**
  * Unit tests for WebSocket message handler
  */
@@ -8,7 +9,7 @@ import {
   IDiscoveryProtocol,
   IGossipService,
   IHeartbeatMonitor,
-} from '@brightchain/brightchain-api-lib';
+} from '@brightchain/brightchain-lib';
 import {
   DiscoveryMessageType,
   GossipMessageType,

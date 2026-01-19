@@ -21,7 +21,7 @@
  *
  * try {
  *   // ... operation that might throw
- * } catch (error) {
+ * } catch {
  *   if (isChecksumError(error)) {
  *     console.error(`Checksum error (${error.checksumErrorType}): ${error.message}`);
  *   } else if (isEnhancedValidationError(error)) {
@@ -69,7 +69,7 @@ import { ValidationError } from './validationError';
  * ```typescript
  * try {
  *   validateInput(data);
- * } catch (error) {
+ * } catch {
  *   if (isValidationError(error)) {
  *     console.error(`Validation error (${error.type}): ${error.message}`);
  *   }
@@ -92,7 +92,7 @@ export function isValidationError(error: unknown): error is ValidationError {
  * ```typescript
  * try {
  *   eciesService.encrypt(data);
- * } catch (error) {
+ * } catch {
  *   if (isEciesError(error)) {
  *     console.error(`ECIES error (${error.type}): ${error.message}`);
  *   }
@@ -115,7 +115,7 @@ export function isEciesError(error: unknown): error is EciesError {
  * ```typescript
  * try {
  *   cblService.createCbl(data);
- * } catch (error) {
+ * } catch {
  *   if (isCblError(error)) {
  *     console.error(`CBL error (${error.type}): ${error.message}`);
  *   }
@@ -138,7 +138,7 @@ export function isCblError(error: unknown): error is CblError {
  * ```typescript
  * try {
  *   fecService.encode(data);
- * } catch (error) {
+ * } catch {
  *   if (isFecError(error)) {
  *     console.error(`FEC error (${error.type}): ${error.message}`);
  *   }
@@ -165,7 +165,7 @@ export function isFecError(error: unknown): error is FecError {
  * ```typescript
  * try {
  *   someOperation();
- * } catch (error) {
+ * } catch {
  *   if (isTypedError(error)) {
  *     console.error(`Typed error (${error.type}): ${error.message}`);
  *   }
@@ -198,7 +198,7 @@ export function isTypedError<T extends string | number = string | number>(
  * ```typescript
  * try {
  *   someOperation();
- * } catch (error) {
+ * } catch {
  *   if (isAnyBrightChainError(error)) {
  *     // Handle any BrightChain error
  *     console.error('BrightChain operation failed:', error.message);

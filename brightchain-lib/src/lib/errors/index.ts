@@ -19,7 +19,7 @@
  *
  * try {
  *   // ... operation
- * } catch (error) {
+ * } catch {
  *   if (isChecksumError(error)) {
  *     console.error(`Checksum error (${error.checksumErrorType}): ${error.message}`);
  *   } else if (isEnhancedValidationError(error)) {
