@@ -18,14 +18,19 @@ class BlockPaddingTransform extends Transform {
     encoding: string,
     callback: TransformCallback,
   ): void {
-    // Convert Buffer to Uint8Array if needed
+    // Convert to Uint8Array if needed
     let data: Uint8Array;
     if (chunk instanceof Uint8Array) {
       data = chunk;
-    } else if (Buffer.isBuffer(chunk)) {
+    } else if (ArrayBuffer.isView(chunk)) {
+      // Handle any TypedArray or DataView
+      data = new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength);
+    } else if (chunk instanceof ArrayBuffer) {
       data = new Uint8Array(chunk);
     } else {
-      callback(new Error('Input must be Buffer or Uint8Array'));
+      callback(
+        new Error('Input must be Uint8Array, TypedArray, or ArrayBuffer'),
+      );
       return;
     }
 

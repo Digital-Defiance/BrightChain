@@ -1,11 +1,11 @@
 /* eslint-disable @nx/enforce-module-boundaries */
-import { ApiErrorResponse } from '@brightchain/brightchain-api-lib';
 import {
   QuorumError,
   QuorumErrorType,
   StoreError,
   StoreErrorType,
 } from '@brightchain/brightchain-lib';
+import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
 
 /**
  * Unified error codes for all API operations.

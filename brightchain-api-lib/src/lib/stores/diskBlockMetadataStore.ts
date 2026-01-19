@@ -217,8 +217,7 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
       const json = await readFile(filePath, 'utf-8');
       const file = JSON.parse(json) as BlockMetadataFile;
       return this.deserializeMetadata(file);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (_error) {
+    } catch {
       // If the file is corrupted or unreadable, return null
       // The caller can decide how to handle this
       return null;

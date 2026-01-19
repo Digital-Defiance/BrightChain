@@ -78,7 +78,7 @@ export function createMessageRouter(service: MessagePassingService): Router {
 
       const results = await service.queryMessages(query);
       res.json(results);
-    } catch (_err) {
+    } catch {
       res.status(500).json({ error: 'Query failed' });
     }
   });
@@ -90,7 +90,7 @@ export function createMessageRouter(service: MessagePassingService): Router {
     try {
       await service.deleteMessage(req.params['id'] as string);
       res.status(204).send();
-    } catch (_err) {
+    } catch {
       res.status(404).json({ error: 'Message not found' });
     }
   });

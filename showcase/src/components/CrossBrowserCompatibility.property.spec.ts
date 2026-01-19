@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @fileoverview Property-based tests for cross-browser compatibility
  * Feature: visual-brightchain-demo, Property 13: Cross-Browser Compatibility
@@ -203,9 +204,9 @@ describe('Property 13: Cross-Browser Compatibility', () => {
         expect(typeof cancelFrame).toBe('function');
 
         // requestAnimationFrame should return a handle
-        let callbackExecuted = false;
+        let _callbackExecuted = false;
         const handle = requestFrame(() => {
-          callbackExecuted = true;
+          _callbackExecuted = true;
         });
 
         expect(typeof handle).toBe('number');

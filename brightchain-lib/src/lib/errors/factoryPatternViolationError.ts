@@ -17,7 +17,7 @@
  * try {
  *   // Attempting to bypass factory method would throw:
  *   // throw new FactoryPatternViolationError('MemberDocument');
- * } catch (error) {
+ * } catch {
  *   if (isFactoryPatternViolationError(error)) {
  *     console.error(`Cannot instantiate ${error.className} directly`);
  *     console.error('Use the factory method instead');
@@ -88,7 +88,7 @@ export class FactoryPatternViolationError extends BrightChainError {
  * ```typescript
  * try {
  *   // Some operation that might violate factory pattern
- * } catch (error) {
+ * } catch {
  *   if (isFactoryPatternViolationError(error)) {
  *     // error is narrowed to FactoryPatternViolationError type
  *     console.error(`Use ${error.className}.create() instead of new ${error.className}()`);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useRef, useState } from 'react';
 import { useEducationalModeContext } from './EducationalModeProvider';
 import './EducationalTooltips.css';
@@ -31,7 +32,7 @@ export const EducationalTooltip: React.FC = () => {
       const tooltip = tooltipRef.current!;
       const rect = tooltip.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
+      const _viewportHeight = window.innerHeight;
 
       let { x, y } = currentTooltip.position;
       let placement: 'top' | 'bottom' | 'left' | 'right' = 'top';

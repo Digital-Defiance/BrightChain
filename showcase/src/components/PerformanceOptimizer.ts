@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * @fileoverview Performance optimization system for BrightChain demo
  * Handles multi-file processing queue, large file handling, responsive layout adaptation,
@@ -442,7 +443,7 @@ export class PerformanceOptimizer {
    */
   clearAnimationResources(): void {
     const count = this.animationResources.size;
-    this.animationResources.forEach((resource, id) => {
+    this.animationResources.forEach((resource, _id) => {
       if (typeof resource.cleanup === 'function') {
         resource.cleanup();
       }

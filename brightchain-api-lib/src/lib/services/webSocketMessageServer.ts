@@ -1,5 +1,5 @@
-import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
+import { ECIESService, SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
 import { Server } from 'http';
 import { WebSocket, WebSocketServer } from 'ws';
 
@@ -33,7 +33,7 @@ export class WebSocketMessageServer {
   constructor(server: Server, requireAuth = false) {
     this.wss = new WebSocketServer({ server });
     this.requireAuth = requireAuth;
-    
+
     // Create Node.js-compatible ECIES config with full algorithm name
     const config: IECIESConfig = {
       curveName: 'secp256k1',
@@ -43,7 +43,7 @@ export class WebSocketMessageServer {
       symmetricKeyBits: 256,
       symmetricKeyMode: 'gcm',
     };
-    
+
     this.eciesService = new ECIESService(config);
     this.setupConnectionHandler();
   }
@@ -199,7 +199,7 @@ export class WebSocketMessageServer {
   ): Promise<boolean> {
     try {
       const message = Buffer.from(`${nodeId}:${timestamp}`);
-      const signatureBuffer = Buffer.from(signature, 'hex') as any; // Cast to signature type
+      const signatureBuffer = Buffer.from(signature, 'hex') as SignatureBuffer;
       return this.eciesService.verifyMessage(
         publicKey,
         message,

@@ -140,7 +140,7 @@ export const ProcessCompletionSummary: React.FC<
 
         <div className="summary-footer">
           <div className="progress-indicator">
-            {sections.map((section, index) => (
+            {sections.map((section, _index) => (
               <div
                 key={section.id}
                 className={`progress-dot ${currentSection === section.id ? 'active' : ''}`}
@@ -334,7 +334,7 @@ export const EducationalProgressIndicator: React.FC = () => {
     'magnet-url',
   ];
 
-  const currentIndex = allSteps.indexOf(currentStep.id);
+  const _currentIndex = allSteps.indexOf(currentStep.id);
   const progress = (completedSteps.size / allSteps.length) * 100;
 
   return (

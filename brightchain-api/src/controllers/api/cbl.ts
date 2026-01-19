@@ -1,12 +1,5 @@
 /* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
-import {
-  ApiErrorResponse,
-  ApiRequestHandler,
-  DiskCBLStore,
-  IApiMessageResponse,
-  routeConfig,
-  TypedHandlers,
-} from '@brightchain/brightchain-api-lib';
+import { DiskCBLStore } from '@brightchain/brightchain-api-lib';
 import {
   BlockSize,
   Checksum,
@@ -20,6 +13,13 @@ import {
   Member,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
+import {
+  ApiErrorResponse,
+  ApiRequestHandler,
+  IApiMessageResponse,
+  routeConfig,
+  TypedHandlers,
+} from '@digitaldefiance/node-express-suite';
 import { IApplication } from '../../interfaces/application';
 import {
   createApiErrorResult,
@@ -363,11 +363,11 @@ export class CBLController extends BaseController<CBLApiResponse, CBLHandlers> {
           blockCount: checksumAddresses.length,
         },
       };
-    } catch (error) {
-      if (error instanceof StoreError) {
-        return mapStoreError(error);
+    } catch (_error) {
+      if (_error instanceof StoreError) {
+        return mapStoreError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 
@@ -449,11 +449,11 @@ export class CBLController extends BaseController<CBLApiResponse, CBLHandlers> {
             createdAt: cbl.dateCreated.toISOString(),
           },
         };
-      } catch (error) {
-        if (error instanceof StoreError) {
-          return mapStoreError(error);
+      } catch (_error) {
+        if (_error instanceof StoreError) {
+          return mapStoreError(_error);
         }
-        return handleError(error);
+        return handleError(_error);
       }
     };
 
@@ -541,11 +541,11 @@ export class CBLController extends BaseController<CBLApiResponse, CBLHandlers> {
           blocks,
         },
       };
-    } catch (error) {
-      if (error instanceof StoreError) {
-        return mapStoreError(error);
+    } catch (_error) {
+      if (_error instanceof StoreError) {
+        return mapStoreError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 
@@ -604,11 +604,11 @@ export class CBLController extends BaseController<CBLApiResponse, CBLHandlers> {
       return notImplementedError(
         'CBL deletion is not yet implemented in the underlying store',
       );
-    } catch (error) {
-      if (error instanceof StoreError) {
-        return mapStoreError(error);
+    } catch (_error) {
+      if (_error instanceof StoreError) {
+        return mapStoreError(_error);
       }
-      return handleError(error);
+      return handleError(_error);
     }
   };
 }

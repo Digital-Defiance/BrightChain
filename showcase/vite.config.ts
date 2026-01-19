@@ -117,7 +117,8 @@ export default defineConfig({
       ignoreDynamicRequires: true,
     },
     rollupOptions: {
-      external: ['fs', 'path', 'crypto'],
+      // Don't externalize these for browser builds - they should be excluded/polyfilled
+      // external: ['fs', 'path', 'crypto'],
       plugins: [
         // Apply aliases during rollup build phase too
         alias({ entries: nobleAliases }),
