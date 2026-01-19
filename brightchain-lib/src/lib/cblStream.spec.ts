@@ -1,9 +1,4 @@
-import {
-  EmailString,
-  Member,
-  MemberType,
-} from '@digitaldefiance/ecies-lib';
-import { Checksum } from './types/checksum';
+import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { ConstituentBlockListBlock } from './blocks/cbl';
 import { WhitenedBlock } from './blocks/whitened';
 import { CblStream } from './cblStream';
@@ -16,6 +11,7 @@ import { CBLService } from './services/cblService';
 import { ChecksumService } from './services/checksum.service';
 import { ServiceProvider } from './services/service.provider';
 import { initializeTestServices } from './test/service.initializer.helper';
+import { Checksum } from './types/checksum';
 
 // Mock the CBLBase class to avoid signature validation issues
 jest.mock('./blocks/cblBase', () => {

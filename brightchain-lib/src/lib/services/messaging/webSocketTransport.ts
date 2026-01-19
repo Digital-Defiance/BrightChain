@@ -1,6 +1,7 @@
+import { ECIESService } from '@digitaldefiance/ecies-lib';
 import { INetworkTransport } from '../../interfaces/network/networkTransport';
 import { SystemKeyring } from '../../systemKeyring';
-import { EciesSignature, EciesCryptoCore } from '@digitaldefiance/ecies-lib';
+import { EciesConfig } from '../../ecies-config';
 
 /**
  * Browser-compatible WebSocket network transport for message transmission
@@ -10,13 +11,11 @@ export class WebSocketTransport implements INetworkTransport {
   private connections = new Map<string, WebSocket>();
   private messageHandlers = new Map<string, (data: string) => void>();
   private keyring: SystemKeyring;
-  private eciesSignature: EciesSignature;
+  private eciesService: ECIESService;
 
   constructor() {
     this.keyring = SystemKeyring.getInstance();
-    const config = { enableCompression: false };
-    const cryptoCore = new EciesCryptoCore(config as any);
-    this.eciesSignature = new EciesSignature(cryptoCore);
+    this.eciesService = new ECIESService(EciesConfig);
   }
 
   /**
@@ -26,7 +25,7 @@ export class WebSocketTransport implements INetworkTransport {
    * @param password Password to unlock system key
    */
   async connect(nodeId: string, url: string, password?: string): Promise<void> {
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const ws = new WebSocket(url);
 
       ws.onopen = async () => {
@@ -34,27 +33,32 @@ export class WebSocketTransport implements INetworkTransport {
           if (password) {
             const keyData = await this.keyring.retrieveKey('system', password);
             const timestamp = Date.now().toString();
-            const message = new Uint8Array(Buffer.from(`${nodeId}:${timestamp}`));
-            const signature = this.eciesSignature.signMessage(keyData, message);
-            const sigHex = this.eciesSignature.signatureUint8ArrayToSignatureString(signature);
-            
-            ws.send(JSON.stringify({
-              type: 'auth',
-              nodeId,
-              timestamp,
-              signature: sigHex
-            }));
+            const message = new Uint8Array(
+              Buffer.from(`${nodeId}:${timestamp}`),
+            );
+            const signature = this.eciesService.signMessage(keyData, message);
+            const sigHex =
+              this.eciesService.signatureBufferToSignatureString(signature);
+
+            ws.send(
+              JSON.stringify({
+                type: 'auth',
+                nodeId,
+                timestamp,
+                signature: sigHex,
+              }),
+            );
           }
           this.connections.set(nodeId, ws);
           resolve();
-        } catch (error) {
+        } catch (err) {
           ws.close();
-          reject(error);
+          reject(err);
         }
       };
 
-      ws.onerror = (error) => {
-        reject(error);
+      ws.onerror = (err) => {
+        reject(err);
       };
 
       ws.onmessage = (event) => {
@@ -105,7 +109,11 @@ export class WebSocketTransport implements INetworkTransport {
   /**
    * Send acknowledgment for received message
    */
-  async sendAck(recipientId: string, messageId: string, status: string): Promise<boolean> {
+  async sendAck(
+    recipientId: string,
+    messageId: string,
+    status: string,
+  ): Promise<boolean> {
     const ws = this.connections.get(recipientId);
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       return false;

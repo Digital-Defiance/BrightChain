@@ -1,5 +1,5 @@
-import React from 'react';
 import { motion } from 'framer-motion';
+import React from 'react';
 
 interface AmbientAnimationsProps {
   type?: 'floating' | 'pulsing' | 'breathing' | 'shimmer';
@@ -162,7 +162,7 @@ export const IdleStateAnimation: React.FC<IdleStateAnimationProps> = ({
       >
         {children}
       </motion.div>
-      
+
       {/* Subtle glow effect */}
       <motion.div
         className="idle-glow"
@@ -173,7 +173,8 @@ export const IdleStateAnimation: React.FC<IdleStateAnimationProps> = ({
           transform: 'translate(-50%, -50%)',
           width: '120%',
           height: '120%',
-          background: 'radial-gradient(circle, rgba(0, 255, 136, 0.1) 0%, transparent 70%)',
+          background:
+            'radial-gradient(circle, rgba(0, 255, 136, 0.1) 0%, transparent 70%)',
           pointerEvents: 'none',
           zIndex: -1,
         }}

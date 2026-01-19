@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 interface KeyboardNavigationOptions {
@@ -6,7 +6,9 @@ interface KeyboardNavigationOptions {
   onEscape?: () => void;
 }
 
-export const useKeyboardNavigation = (options: KeyboardNavigationOptions = {}) => {
+export const useKeyboardNavigation = (
+  options: KeyboardNavigationOptions = {},
+) => {
   const { enableGlobalShortcuts = true, onEscape } = options;
   const navigate = useNavigate();
 

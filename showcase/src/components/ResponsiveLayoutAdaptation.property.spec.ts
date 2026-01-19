@@ -8,8 +8,8 @@
  * breaking or interrupting ongoing animations when the browser window is resized.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fc from 'fast-check';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PerformanceOptimizer } from './PerformanceOptimizer';
 
 // Mock ResizeObserver with callback support
@@ -35,14 +35,17 @@ class MockResizeObserver {
 
   // Helper method to trigger resize
   triggerResize() {
-    const entries: ResizeObserverEntry[] = Array.from(this.observedElements).map(
-      (element) => ({
-        target: element,
-        contentRect: element.getBoundingClientRect(),
-        borderBoxSize: [],
-        contentBoxSize: [],
-        devicePixelContentBoxSize: [],
-      } as ResizeObserverEntry),
+    const entries: ResizeObserverEntry[] = Array.from(
+      this.observedElements,
+    ).map(
+      (element) =>
+        ({
+          target: element,
+          contentRect: element.getBoundingClientRect(),
+          borderBoxSize: [],
+          contentBoxSize: [],
+          devicePixelContentBoxSize: [],
+        }) as ResizeObserverEntry,
     );
     this.callback(entries, this);
   }
@@ -275,10 +278,10 @@ describe('Responsive Layout Adaptation Property Tests', () => {
     it('should handle breakpoint transitions correctly', () => {
       fc.assert(
         fc.property(
-          fc.array(
-            fc.integer({ min: 320, max: 2560 }),
-            { minLength: 3, maxLength: 10 },
-          ),
+          fc.array(fc.integer({ min: 320, max: 2560 }), {
+            minLength: 3,
+            maxLength: 10,
+          }),
           (widths) => {
             const layoutChanges: any[] = [];
 
@@ -300,7 +303,10 @@ describe('Responsive Layout Adaptation Property Tests', () => {
               const currentBreakpoint = dimensions.breakpoint;
 
               // If breakpoint changed, should have emitted event
-              if (previousBreakpoint !== null && previousBreakpoint !== currentBreakpoint) {
+              if (
+                previousBreakpoint !== null &&
+                previousBreakpoint !== currentBreakpoint
+              ) {
                 // Should have at least one layout change event
                 expect(layoutChanges.length).toBeGreaterThan(0);
               }
@@ -334,7 +340,7 @@ describe('Responsive Layout Adaptation Property Tests', () => {
           ),
           async ([fileSpecs, dimensionPairs]) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
               const files = fileSpecs.map(
                 (spec) => new File([new Uint8Array(spec.size)], spec.name),
@@ -399,7 +405,9 @@ describe('Responsive Layout Adaptation Property Tests', () => {
               const dimensions = optimizer.getLayoutDimensions();
               expect(dimensions.width).toBe(width);
               expect(dimensions.height).toBe(height);
-              expect(dimensions.breakpoint).toMatch(/^(mobile|tablet|desktop)$/);
+              expect(dimensions.breakpoint).toMatch(
+                /^(mobile|tablet|desktop)$/,
+              );
               expect(dimensions.orientation).toMatch(/^(portrait|landscape)$/);
             }
           },
@@ -447,10 +455,10 @@ describe('Responsive Layout Adaptation Property Tests', () => {
     it('should handle orientation changes correctly', () => {
       fc.assert(
         fc.property(
-          fc.array(
-            fc.integer({ min: 320, max: 1920 }),
-            { minLength: 3, maxLength: 8 },
-          ),
+          fc.array(fc.integer({ min: 320, max: 1920 }), {
+            minLength: 3,
+            maxLength: 8,
+          }),
           (sizes) => {
             const orientationChanges: any[] = [];
 

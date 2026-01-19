@@ -8,8 +8,8 @@
  * and maintains UI responsiveness throughout the processing of large files.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fc from 'fast-check';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PerformanceOptimizer } from './PerformanceOptimizer';
 
 // Mock ResizeObserver
@@ -111,13 +111,16 @@ describe('Large File Handling Property Tests', () => {
           fc.array(
             fc.record({
               name: fc.string({ minLength: 1, maxLength: 30 }),
-              size: fc.integer({ min: 11 * 1024 * 1024, max: 20 * 1024 * 1024 }), // 11MB to 20MB (all large)
+              size: fc.integer({
+                min: 11 * 1024 * 1024,
+                max: 20 * 1024 * 1024,
+              }), // 11MB to 20MB (all large)
             }),
             { minLength: 1, maxLength: 3 }, // Reduced to 3 to match concurrency limit
           ),
           async (fileSpecs) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
               const largeFileEvents: any[] = [];
 
@@ -136,11 +139,13 @@ describe('Large File Handling Property Tests', () => {
               await new Promise((resolve) => setTimeout(resolve, 500));
 
               // Should have detected large files
-              const largeFiles = files.filter((f) => testOptimizer.isLargeFile(f));
-              
+              const largeFiles = files.filter((f) =>
+                testOptimizer.isLargeFile(f),
+              );
+
               // All files in this test should be large
               expect(largeFiles.length).toBe(files.length);
-              
+
               // Should have received events for all large files
               expect(largeFileEvents.length).toBe(largeFiles.length);
 
@@ -167,7 +172,7 @@ describe('Large File Handling Property Tests', () => {
           }),
           async (fileSpec) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
               const progressUpdates: number[] = [];
 
@@ -175,7 +180,10 @@ describe('Large File Handling Property Tests', () => {
                 progressUpdates.push(progress);
               });
 
-              const file = new File([new Uint8Array(fileSpec.size)], fileSpec.name);
+              const file = new File(
+                [new Uint8Array(fileSpec.size)],
+                fileSpec.name,
+              );
               testOptimizer.addToQueue([file]);
 
               // Wait for processing
@@ -186,7 +194,9 @@ describe('Large File Handling Property Tests', () => {
 
               // Progress should be monotonically increasing or stay at 100
               for (let i = 1; i < progressUpdates.length; i++) {
-                expect(progressUpdates[i]).toBeGreaterThanOrEqual(progressUpdates[i - 1]);
+                expect(progressUpdates[i]).toBeGreaterThanOrEqual(
+                  progressUpdates[i - 1],
+                );
               }
 
               // All progress values should be in valid range
@@ -209,13 +219,16 @@ describe('Large File Handling Property Tests', () => {
           fc.array(
             fc.record({
               name: fc.string({ minLength: 1, maxLength: 30 }),
-              size: fc.integer({ min: 10 * 1024 * 1024, max: 25 * 1024 * 1024 }),
+              size: fc.integer({
+                min: 10 * 1024 * 1024,
+                max: 25 * 1024 * 1024,
+              }),
             }),
             { minLength: 1, maxLength: 3 },
           ),
           async (fileSpecs) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
               const files = fileSpecs.map(
                 (spec) => new File([new Uint8Array(spec.size)], spec.name),
@@ -276,14 +289,17 @@ describe('Large File Handling Property Tests', () => {
             fc.array(
               fc.record({
                 name: fc.string({ minLength: 1, maxLength: 30 }),
-                size: fc.integer({ min: 10 * 1024 * 1024, max: 20 * 1024 * 1024 }), // Large files
+                size: fc.integer({
+                  min: 10 * 1024 * 1024,
+                  max: 20 * 1024 * 1024,
+                }), // Large files
               }),
               { minLength: 1, maxLength: 3 },
             ),
           ),
           async ([smallFileSpecs, largeFileSpecs]) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
               const smallFiles = smallFileSpecs.map(
                 (spec) => new File([new Uint8Array(spec.size)], spec.name),
@@ -293,7 +309,9 @@ describe('Large File Handling Property Tests', () => {
               );
 
               // Mix files together
-              const allFiles = [...smallFiles, ...largeFiles].sort(() => Math.random() - 0.5);
+              const allFiles = [...smallFiles, ...largeFiles].sort(
+                () => Math.random() - 0.5,
+              );
 
               testOptimizer.addToQueue(allFiles);
 
@@ -332,9 +350,12 @@ describe('Large File Handling Property Tests', () => {
           }),
           async (fileSpec) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
-              const file = new File([new Uint8Array(fileSpec.size)], fileSpec.name);
+              const file = new File(
+                [new Uint8Array(fileSpec.size)],
+                fileSpec.name,
+              );
 
               testOptimizer.addToQueue([file]);
 
@@ -375,9 +396,12 @@ describe('Large File Handling Property Tests', () => {
           }),
           async (fileSpec) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
-              const file = new File([new Uint8Array(fileSpec.size)], fileSpec.name);
+              const file = new File(
+                [new Uint8Array(fileSpec.size)],
+                fileSpec.name,
+              );
 
               // Should not throw when adding very large file
               expect(() => testOptimizer.addToQueue([file])).not.toThrow();
@@ -425,9 +449,14 @@ describe('Large File Handling Property Tests', () => {
             // For large files, chunk sizes should generally increase with file size
             // (or stay at maximum)
             for (let i = 1; i < sortedSizes.length; i++) {
-              if (sortedSizes[i] > 10 * 1024 * 1024 && sortedSizes[i - 1] > 10 * 1024 * 1024) {
+              if (
+                sortedSizes[i] > 10 * 1024 * 1024 &&
+                sortedSizes[i - 1] > 10 * 1024 * 1024
+              ) {
                 // Both are large files
-                expect(chunkSizes[i]).toBeGreaterThanOrEqual(chunkSizes[i - 1] * 0.9);
+                expect(chunkSizes[i]).toBeGreaterThanOrEqual(
+                  chunkSizes[i - 1] * 0.9,
+                );
               }
             }
 

@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { BlockInfo } from '@brightchain/brightchain-lib';
+import { AnimatePresence, motion } from 'framer-motion';
+import React, { useRef, useState } from 'react';
 
 interface EnhancedSoupCanProps {
   block: BlockInfo;
@@ -22,11 +22,11 @@ interface InformationPanelProps {
   fileId?: string;
 }
 
-const InformationPanel: React.FC<InformationPanelProps> = ({ 
-  block, 
-  visible, 
-  position, 
-  fileId 
+const InformationPanel: React.FC<InformationPanelProps> = ({
+  block,
+  visible,
+  position,
+  fileId,
 }) => {
   return (
     <AnimatePresence>
@@ -35,14 +35,14 @@ const InformationPanel: React.FC<InformationPanelProps> = ({
           initial={{ opacity: 0, scale: 0.8, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 10 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
           className="information-panel"
           style={{
             position: 'fixed',
             left: position.x + 10,
             top: position.y - 10,
             zIndex: 1000,
-            pointerEvents: 'none'
+            pointerEvents: 'none',
           }}
         >
           <div className="glass-morphism-panel">
@@ -53,7 +53,9 @@ const InformationPanel: React.FC<InformationPanelProps> = ({
             <div className="panel-content">
               <div className="info-row">
                 <span className="label">ID:</span>
-                <span className="value monospace">{block.id.substring(0, 12)}...</span>
+                <span className="value monospace">
+                  {block.id.substring(0, 12)}...
+                </span>
               </div>
               <div className="info-row">
                 <span className="label">Size:</span>
@@ -67,10 +69,10 @@ const InformationPanel: React.FC<InformationPanelProps> = ({
               )}
               <div className="info-row">
                 <span className="label">Color:</span>
-                <div 
+                <div
                   className="color-swatch"
-                  style={{ 
-                    backgroundColor: `hsl(${block.index * 137.5 % 360}, 70%, 60%)`
+                  style={{
+                    backgroundColor: `hsl(${(block.index * 137.5) % 360}, 70%, 60%)`,
                   }}
                 />
               </div>
@@ -92,15 +94,15 @@ export const EnhancedSoupCan: React.FC<EnhancedSoupCanProps> = ({
   onClick,
   onHover,
   position = { x: 0, y: 0 },
-  fileId
+  fileId,
 }) => {
   const [showPanel, setShowPanel] = useState(false);
   const [panelPosition, setPanelPosition] = useState({ x: 0, y: 0 });
   const canRef = useRef<HTMLDivElement>(null);
 
-  const baseColor = `hsl(${block.index * 137.5 % 360}, 70%, 60%)`;
-  const highlightedColor = `hsl(${block.index * 137.5 % 360}, 90%, 70%)`;
-  const selectedColor = `hsl(${block.index * 137.5 % 360}, 95%, 75%)`;
+  const baseColor = `hsl(${(block.index * 137.5) % 360}, 70%, 60%)`;
+  const highlightedColor = `hsl(${(block.index * 137.5) % 360}, 90%, 70%)`;
+  const selectedColor = `hsl(${(block.index * 137.5) % 360}, 95%, 75%)`;
 
   const getCanColor = () => {
     if (isSelected) return selectedColor;
@@ -117,7 +119,7 @@ export const EnhancedSoupCan: React.FC<EnhancedSoupCanProps> = ({
     const rect = e.currentTarget.getBoundingClientRect();
     setPanelPosition({
       x: rect.right,
-      y: rect.top
+      y: rect.top,
     });
     setShowPanel(true);
     onHover?.(block);
@@ -141,23 +143,23 @@ export const EnhancedSoupCan: React.FC<EnhancedSoupCanProps> = ({
         style={{
           backgroundColor: getCanColor(),
           position: 'relative',
-          cursor: 'pointer'
+          cursor: 'pointer',
         }}
       >
         {/* Glass morphism overlay */}
         <div className="glass-overlay" />
-        
+
         {/* Can content */}
         <div className="can-content">
-          <motion.div 
+          <motion.div
             className="can-emoji"
-            animate={{ 
-              rotate: isAnimating ? [0, 10, -10, 0] : 0 
+            animate={{
+              rotate: isAnimating ? [0, 10, -10, 0] : 0,
             }}
-            transition={{ 
-              duration: 0.5, 
+            transition={{
+              duration: 0.5,
               repeat: isAnimating ? Infinity : 0,
-              repeatType: "loop"
+              repeatType: 'loop',
             }}
           >
             🥫
@@ -210,7 +212,7 @@ export const EnhancedSoupCan: React.FC<EnhancedSoupCanProps> = ({
                   height: '8px',
                   borderRadius: '50%',
                   backgroundColor: 'var(--accent-primary)',
-                  boxShadow: '0 0 4px rgba(0, 255, 136, 0.6)'
+                  boxShadow: '0 0 4px rgba(0, 255, 136, 0.6)',
                 }}
               />
             ))}

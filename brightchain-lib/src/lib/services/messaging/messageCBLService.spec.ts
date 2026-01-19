@@ -1,15 +1,20 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import { MessageCBLService } from './messageCBLService';
-import { CBLService } from '../cblService';
-import { ChecksumService } from '../checksum.service';
-import { ECIESService, EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
+import {
+  ECIESService,
+  EmailString,
+  Member,
+  MemberType,
+} from '@digitaldefiance/ecies-lib';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
+import { BlockSize } from '../../enumerations/blockSize';
+import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
+import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { MemoryBlockStore } from '../../stores/memoryBlockStore';
 import { MemoryMessageMetadataStore } from '../../stores/messaging/memoryMessageMetadataStore';
-import { BlockSize } from '../../enumerations/blockSize';
-import { MessagePriority } from '../../enumerations/messaging/messagePriority';
-import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { CBLService } from '../cblService';
+import { ChecksumService } from '../checksum.service';
 import { ServiceProvider } from '../service.provider';
+import { MessageCBLService } from './messageCBLService';
 
 describe('MessageCBLService', () => {
   let messageCBLService: MessageCBLService;
@@ -26,10 +31,15 @@ describe('MessageCBLService', () => {
     cblService = new CBLService(checksumService, eciesService);
     blockStore = new MemoryBlockStore(BlockSize.Small);
     metadataStore = new MemoryMessageMetadataStore();
-    messageCBLService = new MessageCBLService(cblService, checksumService, blockStore, metadataStore);
-    
+    messageCBLService = new MessageCBLService(
+      cblService,
+      checksumService,
+      blockStore,
+      metadataStore,
+    );
+
     ServiceProvider.getInstance();
-    
+
     const memberWithMnemonic = await Member.newMember(
       eciesService,
       MemberType.User,
@@ -54,7 +64,11 @@ describe('MessageCBLService', () => {
         encryptionScheme: MessageEncryptionScheme.NONE,
       };
 
-      const result = await messageCBLService.createMessage(content, creator, options);
+      const result = await messageCBLService.createMessage(
+        content,
+        creator,
+        options,
+      );
 
       expect(result.messageId).toBeDefined();
       expect(result.contentBlockIds).toHaveLength(1);
@@ -71,7 +85,11 @@ describe('MessageCBLService', () => {
         encryptionScheme: MessageEncryptionScheme.NONE,
       };
 
-      const result = await messageCBLService.createMessage(content, creator, options);
+      const result = await messageCBLService.createMessage(
+        content,
+        creator,
+        options,
+      );
 
       expect(result.messageId).toBeDefined();
       expect(result.contentBlockIds.length).toBeGreaterThan(0);
@@ -89,8 +107,12 @@ describe('MessageCBLService', () => {
         encryptionScheme: MessageEncryptionScheme.NONE,
       };
 
-      const { messageId } = await messageCBLService.createMessage(originalContent, creator, options);
-      
+      const { messageId } = await messageCBLService.createMessage(
+        originalContent,
+        creator,
+        options,
+      );
+
       expect(messageId).toBeDefined();
       expect(await blockStore.has(messageId)).toBe(true);
     });
@@ -105,17 +127,27 @@ describe('MessageCBLService', () => {
         encryptionScheme: MessageEncryptionScheme.RECIPIENT_KEYS,
       };
 
-      const { messageId } = await messageCBLService.createMessage(originalContent, creator, options);
+      const { messageId } = await messageCBLService.createMessage(
+        originalContent,
+        creator,
+        options,
+      );
       const metadata = await messageCBLService.getMessageMetadata(messageId);
-      
+
       expect(metadata).toBeDefined();
       expect(metadata?.messageType).toBe('chat');
       expect(metadata?.senderId).toBe('sender123');
       expect(metadata?.recipients).toEqual(['recipient1', 'recipient2']);
       expect(metadata?.priority).toBe(MessagePriority.HIGH);
-      expect(metadata?.encryptionScheme).toBe(MessageEncryptionScheme.RECIPIENT_KEYS);
-      expect(metadata?.deliveryStatus.get('recipient1')).toBe(MessageDeliveryStatus.PENDING);
-      expect(metadata?.deliveryStatus.get('recipient2')).toBe(MessageDeliveryStatus.PENDING);
+      expect(metadata?.encryptionScheme).toBe(
+        MessageEncryptionScheme.RECIPIENT_KEYS,
+      );
+      expect(metadata?.deliveryStatus.get('recipient1')).toBe(
+        MessageDeliveryStatus.PENDING,
+      );
+      expect(metadata?.deliveryStatus.get('recipient2')).toBe(
+        MessageDeliveryStatus.PENDING,
+      );
     });
 
     it('should retrieve message content', async () => {
@@ -128,8 +160,13 @@ describe('MessageCBLService', () => {
         encryptionScheme: MessageEncryptionScheme.NONE,
       };
 
-      const { messageId } = await messageCBLService.createMessage(originalContent, creator, options);
-      const retrievedContent = await messageCBLService.getMessageContent(messageId);
+      const { messageId } = await messageCBLService.createMessage(
+        originalContent,
+        creator,
+        options,
+      );
+      const retrievedContent =
+        await messageCBLService.getMessageContent(messageId);
 
       expect(retrievedContent).toEqual(originalContent);
     });

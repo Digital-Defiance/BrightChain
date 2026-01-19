@@ -1,11 +1,10 @@
 import * as fc from 'fast-check';
-import { MessageRouter } from './messageRouter';
-import { MemoryMessageMetadataStore } from '../../stores/messaging/memoryMessageMetadataStore';
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
-import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import { MemoryMessageMetadataStore } from '../../stores/messaging/memoryMessageMetadataStore';
+import { MessageRouter } from './messageRouter';
 
 describe('Property 34: Graceful Degradation with Non-Supporting Nodes', () => {
   it('Property 34a: Routes messages even with failures (50 iterations)', () => {
@@ -39,17 +38,17 @@ describe('Property 34: Graceful Degradation with Non-Supporting Nodes', () => {
             targetReplicationFactor: 1,
             replicaNodeIds: [],
             size: 100,
-            checksum: "0".repeat(64),
+            checksum: '0'.repeat(64),
           });
 
           const result = await router.routeMessage(messageId, recipients);
-          
-          expect(result.successfulRecipients.length + result.failedRecipients.length).toBe(
-            recipients.length
-          );
-        }
+
+          expect(
+            result.successfulRecipients.length + result.failedRecipients.length,
+          ).toBe(recipients.length);
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -84,16 +83,20 @@ describe('Property 34: Graceful Degradation with Non-Supporting Nodes', () => {
             targetReplicationFactor: 1,
             replicaNodeIds: [],
             size: 100,
-            checksum: "0".repeat(64),
+            checksum: '0'.repeat(64),
           });
 
           const forwardingPath = [localNodeId];
-          const result = await router.forwardMessage(messageId, recipients, forwardingPath);
+          const result = await router.forwardMessage(
+            messageId,
+            recipients,
+            forwardingPath,
+          );
 
           expect(result.failedRecipients).toEqual(recipients);
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 });

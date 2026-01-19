@@ -1,23 +1,26 @@
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { RawDataBlock } from '../../blocks/rawData';
+import { CHECKSUM } from '../../constants';
 import { BlockEncryptionType } from '../../enumerations/blockEncryptionType';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
-import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
-import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { MessageErrorType } from '../../enumerations/messaging/messageErrorType';
-import { IBlockStore } from '../../interfaces/storage/blockStore';
+import { MessagePriority } from '../../enumerations/messaging/messagePriority';
+import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import { MessageError } from '../../errors/messaging/messageError';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
-import { IMessageSystemConfig, DEFAULT_MESSAGE_SYSTEM_CONFIG } from '../../interfaces/messaging/messageSystemConfig';
-import { MessageError } from '../../errors/messaging/messageError';
+import {
+  DEFAULT_MESSAGE_SYSTEM_CONFIG,
+  IMessageSystemConfig,
+} from '../../interfaces/messaging/messageSystemConfig';
+import { IBlockStore } from '../../interfaces/storage/blockStore';
 import { Checksum } from '../../types/checksum';
 import { CBLService } from '../cblService';
 import { ChecksumService } from '../checksum.service';
-import { CHECKSUM } from '../../constants';
-import { IMessageMetricsCollector } from './messageMetrics';
 import { IMessageLogger } from './messageLogger';
+import { IMessageMetricsCollector } from './messageMetrics';
 
 export interface IMessageCBLOptions {
   messageType: string;
@@ -48,12 +51,12 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
     options: IMessageCBLOptions,
   ): Promise<{ messageId: string; contentBlockIds: string[] }> {
     this.validateMessageOptions(options);
-    
+
     if (content.length > this.config.maxMessageSizeThreshold) {
       throw new MessageError(
         MessageErrorType.MESSAGE_TOO_LARGE,
         `Message size ${content.length} exceeds maximum ${this.config.maxMessageSizeThreshold}`,
-        { size: content.length, max: this.config.maxMessageSizeThreshold }
+        { size: content.length, max: this.config.maxMessageSizeThreshold },
       );
     }
 
@@ -94,7 +97,11 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
       messageCBLData.set(cblHeader.headerData, 0);
       messageCBLData.set(blockIdsArray, cblHeader.headerData.length);
 
-      const messageCBLBlock = new RawDataBlock(blockSize, messageCBLData, new Date());
+      const messageCBLBlock = new RawDataBlock(
+        blockSize,
+        messageCBLData,
+        new Date(),
+      );
       await this.retryOperation(() => this.blockStore.setData(messageCBLBlock));
       const messageId = messageCBLBlock.idChecksum.toHex();
 
@@ -116,45 +123,58 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
           senderId: options.senderId,
           recipients: options.recipients,
           priority: options.priority,
-          deliveryStatus: new Map(options.recipients.map(r => [r, MessageDeliveryStatus.PENDING])),
+          deliveryStatus: new Map(
+            options.recipients.map((r) => [r, MessageDeliveryStatus.PENDING]),
+          ),
           acknowledgments: new Map(),
           encryptionScheme: options.encryptionScheme,
           isCBL: true,
           cblBlockIds: contentBlockIds,
         };
-        await this.retryOperation(() => this.metadataStore!.storeMessageMetadata(metadata));
+        await this.retryOperation(() =>
+          this.metadataStore!.storeMessageMetadata(metadata),
+        );
       }
 
       this.metrics?.recordMessageSent();
-      this.logger?.logMessageCreated(messageId, options.senderId, options.recipients.length);
+      this.logger?.logMessageCreated(
+        messageId,
+        options.senderId,
+        options.recipients.length,
+      );
 
       return { messageId, contentBlockIds };
     } catch (error) {
       await this.cleanupPartialState(contentBlockIds);
       this.metrics?.recordMessageFailed();
-      
+
       // If it's already a MessageError, rethrow it
       if (error instanceof MessageError) {
         throw error;
       }
-      
+
       throw new MessageError(
         MessageErrorType.STORAGE_FAILED,
         'Failed to create message after retries',
-        { 
+        {
           error: error instanceof Error ? error.message : 'Unknown error',
           originalError: error instanceof Error ? error.stack : undefined,
-          stack: error instanceof Error ? error.stack : undefined
-        }
+          stack: error instanceof Error ? error.stack : undefined,
+        },
       );
     }
   }
 
   async getMessageContent(messageId: string): Promise<Uint8Array> {
     try {
-      const messageCBL = await this.blockStore.getData(Checksum.fromHex(messageId));
+      const messageCBL = await this.blockStore.getData(
+        Checksum.fromHex(messageId),
+      );
       const header = this.cblService.parseBaseHeader(messageCBL.data);
-      const contentBlockIds = this.extractBlockIds(messageCBL.data, header.cblAddressCount);
+      const contentBlockIds = this.extractBlockIds(
+        messageCBL.data,
+        header.cblAddressCount,
+      );
 
       const contentChunks: Uint8Array[] = [];
       for (const blockId of contentBlockIds) {
@@ -167,21 +187,31 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
       throw new MessageError(
         MessageErrorType.MESSAGE_NOT_FOUND,
         `Failed to retrieve message ${messageId}`,
-        { messageId, error: error instanceof Error ? error.message : 'Unknown error' }
+        {
+          messageId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
       );
     }
   }
 
-  async getMessageMetadata(messageId: string): Promise<IMessageMetadata | null> {
+  async getMessageMetadata(
+    messageId: string,
+  ): Promise<IMessageMetadata | null> {
     if (!this.metadataStore) return null;
     const metadata = await this.metadataStore.get(messageId);
     return metadata as IMessageMetadata | null;
   }
 
   private serializeBlockIds(blockIds: string[]): Uint8Array {
-    const result = new Uint8Array(blockIds.length * CHECKSUM.SHA3_BUFFER_LENGTH);
+    const result = new Uint8Array(
+      blockIds.length * CHECKSUM.SHA3_BUFFER_LENGTH,
+    );
     for (let i = 0; i < blockIds.length; i++) {
-      result.set(Checksum.fromHex(blockIds[i]).toUint8Array(), i * CHECKSUM.SHA3_BUFFER_LENGTH);
+      result.set(
+        Checksum.fromHex(blockIds[i]).toUint8Array(),
+        i * CHECKSUM.SHA3_BUFFER_LENGTH,
+      );
     }
     return result;
   }
@@ -191,12 +221,19 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
     const ids: string[] = [];
     for (let i = 0; i < count; i++) {
       const offset = headerLength + i * CHECKSUM.SHA3_BUFFER_LENGTH;
-      ids.push(Checksum.fromUint8Array(data.subarray(offset, offset + CHECKSUM.SHA3_BUFFER_LENGTH)).toHex());
+      ids.push(
+        Checksum.fromUint8Array(
+          data.subarray(offset, offset + CHECKSUM.SHA3_BUFFER_LENGTH),
+        ).toHex(),
+      );
     }
     return ids;
   }
 
-  private concatenateChunks(chunks: Uint8Array[], totalLength: number): Uint8Array {
+  private concatenateChunks(
+    chunks: Uint8Array[],
+    totalLength: number,
+  ): Uint8Array {
     const result = new Uint8Array(totalLength);
     let offset = 0;
     for (const chunk of chunks) {
@@ -213,34 +250,46 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
       throw new MessageError(
         MessageErrorType.INVALID_MESSAGE_TYPE,
         'Message type is required',
-        { messageType: options.messageType }
+        { messageType: options.messageType },
       );
     }
     if (!options.senderId || options.senderId.trim() === '') {
       throw new MessageError(
         MessageErrorType.INVALID_RECIPIENT,
         'Sender ID is required',
-        { senderId: options.senderId }
+        { senderId: options.senderId },
       );
     }
     if (options.recipients.length > this.config.maxRecipientsPerMessage) {
       throw new MessageError(
         MessageErrorType.INVALID_RECIPIENT,
         `Recipient count ${options.recipients.length} exceeds maximum ${this.config.maxRecipientsPerMessage}`,
-        { count: options.recipients.length, max: this.config.maxRecipientsPerMessage }
+        {
+          count: options.recipients.length,
+          max: this.config.maxRecipientsPerMessage,
+        },
       );
     }
   }
 
   private async retryOperation<T>(operation: () => Promise<T>): Promise<T> {
     let lastError: Error | undefined;
-    for (let attempt = 0; attempt < this.config.storageRetryAttempts; attempt++) {
+    for (
+      let attempt = 0;
+      attempt < this.config.storageRetryAttempts;
+      attempt++
+    ) {
       try {
         return await operation();
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error');
         if (attempt < this.config.storageRetryAttempts - 1) {
-          await new Promise(resolve => setTimeout(resolve, this.config.storageRetryDelayMs * Math.pow(2, attempt)));
+          await new Promise((resolve) =>
+            setTimeout(
+              resolve,
+              this.config.storageRetryDelayMs * Math.pow(2, attempt),
+            ),
+          );
         }
       }
     }

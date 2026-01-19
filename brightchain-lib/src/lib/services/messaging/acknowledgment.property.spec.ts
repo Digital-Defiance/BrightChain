@@ -1,6 +1,11 @@
 import fc from 'fast-check';
 import { WebSocketTransport } from './webSocketTransport';
 
+// Helper to access private connections property for testing
+function getConnections(transport: WebSocketTransport): Map<string, unknown> {
+  return (transport as any).connections;
+}
+
 /**
  * Property tests for message acknowledgment
  * Validates Requirements 10.1, 10.2
@@ -18,25 +23,29 @@ describe('Feature: message-passing-and-events, Property: Message Acknowledgment'
         fc.constantFrom('DELIVERED', 'RECEIVED', 'FAILED'),
         async (recipientId, messageId, status) => {
           const transport = new WebSocketTransport();
-          
+
           // Mock WebSocket connection
           const mockWs = {
             readyState: 1, // OPEN
             send: jest.fn(),
           };
-          
+
           // Inject mock connection
-          (transport as any).connections.set(recipientId, mockWs);
-          
-          const result = await transport.sendAck(recipientId, messageId, status);
-          
+          getConnections(transport).set(recipientId, mockWs);
+
+          const result = await transport.sendAck(
+            recipientId,
+            messageId,
+            status,
+          );
+
           expect(result).toBe(true);
           expect(mockWs.send).toHaveBeenCalledWith(
-            JSON.stringify({ type: 'ack', messageId, status })
+            JSON.stringify({ type: 'ack', messageId, status }),
           );
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -52,13 +61,17 @@ describe('Feature: message-passing-and-events, Property: Message Acknowledgment'
         fc.constantFrom('DELIVERED', 'RECEIVED', 'FAILED'),
         async (recipientId, messageId, status) => {
           const transport = new WebSocketTransport();
-          
-          const result = await transport.sendAck(recipientId, messageId, status);
-          
+
+          const result = await transport.sendAck(
+            recipientId,
+            messageId,
+            status,
+          );
+
           expect(result).toBe(false);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -74,25 +87,25 @@ describe('Feature: message-passing-and-events, Property: Message Acknowledgment'
         fc.constantFrom('DELIVERED', 'RECEIVED', 'FAILED'),
         async (recipientId, messageId, status) => {
           const transport = new WebSocketTransport();
-          
+
           const mockWs = {
             readyState: 1,
             send: jest.fn(),
           };
-          
+
           (transport as any).connections.set(recipientId, mockWs);
-          
+
           await transport.sendAck(recipientId, messageId, status);
-          
+
           const sentData = mockWs.send.mock.calls[0][0];
           const parsed = JSON.parse(sentData);
-          
+
           expect(parsed.type).toBe('ack');
           expect(parsed.messageId).toBe(messageId);
           expect(parsed.status).toBe(status);
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -109,21 +122,25 @@ describe('Feature: message-passing-and-events, Property: Message Acknowledgment'
         fc.constantFrom(0, 2, 3), // CONNECTING, CLOSING, CLOSED
         async (recipientId, messageId, status, readyState) => {
           const transport = new WebSocketTransport();
-          
+
           const mockWs = {
             readyState,
             send: jest.fn(),
           };
-          
-          (transport as any).connections.set(recipientId, mockWs);
-          
-          const result = await transport.sendAck(recipientId, messageId, status);
-          
+
+          getConnections(transport).set(recipientId, mockWs);
+
+          const result = await transport.sendAck(
+            recipientId,
+            messageId,
+            status,
+          );
+
           expect(result).toBe(false);
           expect(mockWs.send).not.toHaveBeenCalled();
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -138,14 +155,14 @@ describe('Feature: message-passing-and-events, Property: Message Acknowledgment'
           fc.tuple(
             fc.string({ minLength: 1, maxLength: 32 }),
             fc.string({ minLength: 1, maxLength: 32 }),
-            fc.constantFrom('DELIVERED', 'RECEIVED', 'FAILED')
+            fc.constantFrom('DELIVERED', 'RECEIVED', 'FAILED'),
           ),
-          { minLength: 2, maxLength: 5 }
+          { minLength: 2, maxLength: 5 },
         ),
         async (acks) => {
           const transport = new WebSocketTransport();
           const mockConnections = new Map();
-          
+
           // Setup mock connections
           for (const [recipientId] of acks) {
             if (!mockConnections.has(recipientId)) {
@@ -154,30 +171,30 @@ describe('Feature: message-passing-and-events, Property: Message Acknowledgment'
                 send: jest.fn(),
               };
               mockConnections.set(recipientId, mockWs);
-              (transport as any).connections.set(recipientId, mockWs);
+              getConnections(transport).set(recipientId, mockWs);
             }
           }
-          
+
           // Send all acknowledgments
           const results = await Promise.all(
             acks.map(([recipientId, messageId, status]) =>
-              transport.sendAck(recipientId, messageId, status)
-            )
+              transport.sendAck(recipientId, messageId, status),
+            ),
           );
-          
+
           // All should succeed
-          expect(results.every(r => r === true)).toBe(true);
-          
+          expect(results.every((r) => r === true)).toBe(true);
+
           // Verify each was sent
           for (const [recipientId, messageId, status] of acks) {
             const mockWs = mockConnections.get(recipientId);
             expect(mockWs.send).toHaveBeenCalledWith(
-              JSON.stringify({ type: 'ack', messageId, status })
+              JSON.stringify({ type: 'ack', messageId, status }),
             );
           }
-        }
+        },
       ),
-      { numRuns: 30 }
+      { numRuns: 30 },
     );
   });
 });

@@ -1,16 +1,15 @@
 import * as fc from 'fast-check';
-import { MessageEncryptionService } from './messageEncryptionService';
-import { RecipientKeyManager, IPublicKeyProvider } from './recipientKeyManager';
 import { MessageError } from '../../errors/messaging/messageError';
+import { MessageEncryptionService } from './messageEncryptionService';
 
 /**
  * Property 7: Direct Message Encryption
- * 
+ *
  * @remarks
  * Validates that direct messages require recipient public keys
  * and that the encryption service properly handles multiple recipients.
  * Note: Actual encryption validation requires valid secp256k1 keys.
- * 
+ *
  * @see Requirements 3.1, 3.5
  */
 describe('Feature: message-passing-and-events, Property 7: Direct Message Encryption', () => {
@@ -28,11 +27,15 @@ describe('Feature: message-passing-and-events, Property 7: Direct Message Encryp
           const emptyKeys = new Map<string, Uint8Array>();
 
           // Should throw error when no recipient keys provided
-          await expect(service.encryptDirect(content, emptyKeys)).rejects.toThrow(MessageError);
-          await expect(service.encryptDirect(content, emptyKeys)).rejects.toThrow('No recipient public keys provided');
-        }
+          await expect(
+            service.encryptDirect(content, emptyKeys),
+          ).rejects.toThrow(MessageError);
+          await expect(
+            service.encryptDirect(content, emptyKeys),
+          ).rejects.toThrow('No recipient public keys provided');
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -60,9 +63,9 @@ describe('Feature: message-passing-and-events, Property 7: Direct Message Encryp
           // Validates that multiple recipient IDs can be tracked
           expect(recipientIds.length).toBe(numRecipients);
           expect(new Set(recipientIds).size).toBe(numRecipients);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 

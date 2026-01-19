@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
 import './ScrollIndicator.css';
 
 interface ScrollIndicatorProps {
@@ -7,9 +7,9 @@ interface ScrollIndicatorProps {
   showProgress?: boolean;
 }
 
-export const ScrollIndicator: React.FC<ScrollIndicatorProps> = ({ 
+export const ScrollIndicator: React.FC<ScrollIndicatorProps> = ({
   targetId = 'demo',
-  showProgress = false 
+  showProgress = false,
 }) => {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
@@ -17,9 +17,10 @@ export const ScrollIndicator: React.FC<ScrollIndicatorProps> = ({
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const docHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
       const progress = (scrollTop / docHeight) * 100;
-      
+
       setScrollProgress(progress);
       setIsVisible(scrollTop < 100);
     };

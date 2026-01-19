@@ -1,5 +1,5 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
 // Mock ecies-lib to prevent i18n-lib initialization issues
@@ -13,7 +13,9 @@ jest.mock('@digitaldefiance/ecies-lib', () => ({
 
 // Mock BrightChainSoupDemo to avoid module-level code execution
 jest.mock('./components/BrightChainSoupDemo', () => ({
-  BrightChainSoupDemo: () => <div data-testid="soup-demo">BrightChainSoupDemo Mock</div>,
+  BrightChainSoupDemo: () => (
+    <div data-testid="soup-demo">BrightChainSoupDemo Mock</div>
+  ),
 }));
 
 // Mock brightchain-lib to prevent i18n initialization
@@ -41,7 +43,11 @@ jest.mock('@brightchain/brightchain-lib', () => ({
   BlockSize: {
     Small: 1024,
   },
-  uint8ArrayToHex: jest.fn((arr) => Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('')),
+  uint8ArrayToHex: jest.fn((arr) =>
+    Array.from(arr)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join(''),
+  ),
 }));
 
 // Must come after mocking brightchain-lib
@@ -75,9 +81,7 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
     <div data-testid="top-menu">{Logo}</div>
   ),
   TranslatedTitle: () => <title>BrightChain</title>,
-  UnAuthRoute: ({ children }: { children: React.ReactNode }) => (
-    <>{children}</>
-  ),
+  UnAuthRoute: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   UserSettingsFormWrapper: () => <div>UserSettingsFormWrapper</div>,
   VerifyEmailPageWrapper: () => <div>VerifyEmailPageWrapper</div>,
 }));

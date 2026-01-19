@@ -1,8 +1,8 @@
 import fc from 'fast-check';
-import { MessageForwardingService } from './messageForwardingService';
-import { INetworkTransport } from '../../interfaces/network/networkTransport';
-import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
+import { INetworkTransport } from '../../interfaces/network/networkTransport';
+import { MessageForwardingService } from './messageForwardingService';
 
 describe('Feature: message-passing-and-events, Property: Message Forwarding', () => {
   /**
@@ -32,28 +32,28 @@ describe('Feature: message-passing-and-events, Property: Message Forwarding', ()
           const service = new MessageForwardingService(
             mockTransport,
             mockMetadataStore,
-            currentNodeId
+            currentNodeId,
           );
 
           const result = await service.forwardMessage(
             messageId,
             recipientId,
-            intermediateNodeId
+            intermediateNodeId,
           );
 
           expect(result).toBe(true);
           expect(mockTransport.sendToNode).toHaveBeenCalledWith(
             intermediateNodeId,
-            messageId
+            messageId,
           );
           expect(mockMetadataStore.updateDeliveryStatus).toHaveBeenCalledWith(
             messageId,
             recipientId,
-            MessageDeliveryStatus.IN_TRANSIT
+            MessageDeliveryStatus.IN_TRANSIT,
           );
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -81,22 +81,30 @@ describe('Feature: message-passing-and-events, Property: Message Forwarding', ()
           const service = new MessageForwardingService(
             mockTransport,
             mockMetadataStore,
-            'current-node'
+            'current-node',
           );
 
           // First forward should succeed
-          const result1 = await service.forwardMessage(messageId, recipientId, nodeId);
+          const result1 = await service.forwardMessage(
+            messageId,
+            recipientId,
+            nodeId,
+          );
           expect(result1).toBe(true);
 
           // Second forward to same node should fail (loop detected)
-          const result2 = await service.forwardMessage(messageId, recipientId, nodeId);
+          const result2 = await service.forwardMessage(
+            messageId,
+            recipientId,
+            nodeId,
+          );
           expect(result2).toBe(false);
 
           // Transport should only be called once
           expect(mockTransport.sendToNode).toHaveBeenCalledTimes(1);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -124,20 +132,20 @@ describe('Feature: message-passing-and-events, Property: Message Forwarding', ()
           const service = new MessageForwardingService(
             mockTransport,
             mockMetadataStore,
-            currentNodeId
+            currentNodeId,
           );
 
           const result = await service.forwardMessage(
             messageId,
             recipientId,
-            currentNodeId
+            currentNodeId,
           );
 
           expect(result).toBe(false);
           expect(mockTransport.sendToNode).not.toHaveBeenCalled();
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -167,24 +175,24 @@ describe('Feature: message-passing-and-events, Property: Message Forwarding', ()
           const service = new MessageForwardingService(
             mockTransport,
             mockMetadataStore,
-            currentNodeId
+            currentNodeId,
           );
 
           const result = await service.forwardMessage(
             messageId,
             recipientId,
-            intermediateNodeId
+            intermediateNodeId,
           );
 
           expect(result).toBe(false);
           expect(mockMetadataStore.updateDeliveryStatus).toHaveBeenCalledWith(
             messageId,
             recipientId,
-            MessageDeliveryStatus.FAILED
+            MessageDeliveryStatus.FAILED,
           );
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -211,25 +219,33 @@ describe('Feature: message-passing-and-events, Property: Message Forwarding', ()
           const service = new MessageForwardingService(
             mockTransport,
             mockMetadataStore,
-            'current-node'
+            'current-node',
           );
 
           // First forward
-          const result1 = await service.forwardMessage(messageId, recipientId, nodeId);
+          const result1 = await service.forwardMessage(
+            messageId,
+            recipientId,
+            nodeId,
+          );
           expect(result1).toBe(true);
 
           // Clear path
           service.clearPath(messageId);
 
           // Second forward should succeed after clearing
-          const result2 = await service.forwardMessage(messageId, recipientId, nodeId);
+          const result2 = await service.forwardMessage(
+            messageId,
+            recipientId,
+            nodeId,
+          );
           expect(result2).toBe(true);
 
           // Transport should be called twice
           expect(mockTransport.sendToNode).toHaveBeenCalledTimes(2);
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 });

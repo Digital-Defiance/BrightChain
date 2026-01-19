@@ -1,4 +1,8 @@
-import { AlertMonitor, DEFAULT_ALERT_THRESHOLDS, IAlertHandler } from './alertMonitor';
+import {
+  AlertMonitor,
+  DEFAULT_ALERT_THRESHOLDS,
+  IAlertHandler,
+} from './alertMonitor';
 
 describe('AlertMonitor', () => {
   let monitor: AlertMonitor;
@@ -41,6 +45,8 @@ describe('AlertMonitor', () => {
 
   it('should alert on event emission failure', () => {
     monitor.checkEventEmission('Connection lost');
-    expect(handler.onEventEmissionFailure).toHaveBeenCalledWith('Connection lost');
+    expect(handler.onEventEmissionFailure).toHaveBeenCalledWith(
+      'Connection lost',
+    );
   });
 });

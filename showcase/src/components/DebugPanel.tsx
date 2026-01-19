@@ -1,6 +1,6 @@
 /**
  * @fileoverview Debug Panel Component
- * 
+ *
  * Provides comprehensive debug information with glass-morphism design
  * for displaying block store status, animation state, and system diagnostics.
  */
@@ -58,14 +58,14 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
   isVisible = false,
   onToggle,
   onClearSession,
-  position = 'bottom-right'
+  position = 'bottom-right',
 }) => {
   const [expandedSections, setExpandedSections] = React.useState<Set<string>>(
-    new Set(['blockStore'])
+    new Set(['blockStore']),
   );
 
   const toggleSection = (section: string) => {
-    setExpandedSections(prev => {
+    setExpandedSections((prev) => {
       const next = new Set(prev);
       if (next.has(section)) {
         next.delete(section);
@@ -89,7 +89,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
     return date.toLocaleTimeString();
   };
 
-  const getPerformanceStatus = (frameRate: number): 'good' | 'warning' | 'poor' => {
+  const getPerformanceStatus = (
+    frameRate: number,
+  ): 'good' | 'warning' | 'poor' => {
     if (frameRate >= 30) return 'good';
     if (frameRate >= 20) return 'warning';
     return 'poor';
@@ -97,7 +99,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
 
   if (!isVisible) {
     return (
-      <button 
+      <button
         className={`debug-toggle-btn ${position}`}
         onClick={onToggle}
         title="Open Debug Panel"
@@ -114,7 +116,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
           <span className="debug-icon">🔧</span>
           <h3>Debug Panel</h3>
         </div>
-        <button 
+        <button
           className="debug-close-btn"
           onClick={onToggle}
           title="Close Debug Panel"
@@ -150,12 +152,16 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
 
                   <div className="debug-info-item">
                     <span className="info-label">Block Count:</span>
-                    <span className="info-value">{blockStoreInfo.blockCount}</span>
+                    <span className="info-value">
+                      {blockStoreInfo.blockCount}
+                    </span>
                   </div>
 
                   <div className="debug-info-item">
                     <span className="info-label">Total Size:</span>
-                    <span className="info-value">{formatBytes(blockStoreInfo.totalSize)}</span>
+                    <span className="info-value">
+                      {formatBytes(blockStoreInfo.totalSize)}
+                    </span>
                   </div>
 
                   {blockStoreInfo.lastOperation && (
@@ -163,7 +169,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                       <span className="info-label">Last Operation:</span>
                       <span className="info-value">
                         {blockStoreInfo.lastOperation.type} at{' '}
-                        {formatTimestamp(blockStoreInfo.lastOperation.timestamp)}
+                        {formatTimestamp(
+                          blockStoreInfo.lastOperation.timestamp,
+                        )}
                       </span>
                     </div>
                   )}
@@ -186,7 +194,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                 )}
 
                 {onClearSession && (
-                  <button 
+                  <button
                     className="debug-action-btn danger"
                     onClick={onClearSession}
                   >
@@ -210,7 +218,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                 {expandedSections.has('animation') ? '▼' : '▶'}
               </span>
               <span className="section-title">Animation State</span>
-              <span className={`section-badge ${animationState.isPlaying ? 'active' : ''}`}>
+              <span
+                className={`section-badge ${animationState.isPlaying ? 'active' : ''}`}
+              >
                 {animationState.isPlaying ? 'Playing' : 'Paused'}
               </span>
             </button>
@@ -220,7 +230,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                 <div className="debug-info-grid">
                   <div className="debug-info-item">
                     <span className="info-label">Status:</span>
-                    <span className={`info-value ${animationState.isPlaying ? 'playing' : 'paused'}`}>
+                    <span
+                      className={`info-value ${animationState.isPlaying ? 'playing' : 'paused'}`}
+                    >
                       {animationState.isPlaying ? '▶️ Playing' : '⏸️ Paused'}
                     </span>
                   </div>
@@ -233,7 +245,8 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                   <div className="debug-info-item">
                     <span className="info-label">Frame:</span>
                     <span className="info-value">
-                      {animationState.currentFrame} / {animationState.totalFrames}
+                      {animationState.currentFrame} /{' '}
+                      {animationState.totalFrames}
                     </span>
                   </div>
 
@@ -241,18 +254,23 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                     <>
                       <div className="debug-info-item full-width">
                         <span className="info-label">Sequence:</span>
-                        <span className="info-value">{animationState.currentSequence.type}</span>
+                        <span className="info-value">
+                          {animationState.currentSequence.type}
+                        </span>
                       </div>
 
                       <div className="debug-info-item full-width">
                         <span className="info-label">Progress:</span>
                         <div className="progress-bar-container">
-                          <div 
+                          <div
                             className="progress-bar-fill"
-                            style={{ width: `${animationState.currentSequence.progress}%` }}
+                            style={{
+                              width: `${animationState.currentSequence.progress}%`,
+                            }}
                           />
                           <span className="progress-text">
-                            {animationState.currentSequence.progress.toFixed(1)}%
+                            {animationState.currentSequence.progress.toFixed(1)}
+                            %
                           </span>
                         </div>
                       </div>
@@ -275,7 +293,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                 {expandedSections.has('performance') ? '▼' : '▶'}
               </span>
               <span className="section-title">Performance</span>
-              <span className={`section-badge ${getPerformanceStatus(performanceInfo.frameRate)}`}>
+              <span
+                className={`section-badge ${getPerformanceStatus(performanceInfo.frameRate)}`}
+              >
                 {performanceInfo.frameRate} fps
               </span>
             </button>
@@ -285,37 +305,49 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                 <div className="debug-info-grid">
                   <div className="debug-info-item">
                     <span className="info-label">Frame Rate:</span>
-                    <span className={`info-value ${getPerformanceStatus(performanceInfo.frameRate)}`}>
+                    <span
+                      className={`info-value ${getPerformanceStatus(performanceInfo.frameRate)}`}
+                    >
                       {performanceInfo.frameRate} fps
                     </span>
                   </div>
 
                   <div className="debug-info-item">
                     <span className="info-label">Frame Time:</span>
-                    <span className="info-value">{performanceInfo.averageFrameTime}ms</span>
+                    <span className="info-value">
+                      {performanceInfo.averageFrameTime}ms
+                    </span>
                   </div>
 
                   <div className="debug-info-item">
                     <span className="info-label">Dropped Frames:</span>
-                    <span className="info-value">{performanceInfo.droppedFrames}</span>
+                    <span className="info-value">
+                      {performanceInfo.droppedFrames}
+                    </span>
                   </div>
 
                   {performanceInfo.memoryUsage > 0 && (
                     <div className="debug-info-item">
                       <span className="info-label">Memory:</span>
-                      <span className="info-value">{performanceInfo.memoryUsage}MB</span>
+                      <span className="info-value">
+                        {performanceInfo.memoryUsage}MB
+                      </span>
                     </div>
                   )}
 
                   <div className="debug-info-item">
                     <span className="info-label">Sequences:</span>
-                    <span className="info-value">{performanceInfo.sequenceCount}</span>
+                    <span className="info-value">
+                      {performanceInfo.sequenceCount}
+                    </span>
                   </div>
 
                   {performanceInfo.errorCount > 0 && (
                     <div className="debug-info-item">
                       <span className="info-label">Errors:</span>
-                      <span className="info-value error">{performanceInfo.errorCount}</span>
+                      <span className="info-value error">
+                        {performanceInfo.errorCount}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -336,7 +368,7 @@ export const useDebugPanel = () => {
   const [isVisible, setIsVisible] = React.useState(false);
 
   const toggle = React.useCallback(() => {
-    setIsVisible(prev => !prev);
+    setIsVisible((prev) => !prev);
   }, []);
 
   const show = React.useCallback(() => {
@@ -351,6 +383,6 @@ export const useDebugPanel = () => {
     isVisible,
     toggle,
     show,
-    hide
+    hide,
   };
 };

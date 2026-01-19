@@ -1,5 +1,5 @@
-import { RecipientKeyManager, IPublicKeyProvider } from './recipientKeyManager';
 import { MessageError } from '../../errors/messaging/messageError';
+import { IPublicKeyProvider, RecipientKeyManager } from './recipientKeyManager';
 
 class MockKeyProvider implements IPublicKeyProvider {
   private keys = new Map<string, Uint8Array>();
@@ -81,15 +81,21 @@ describe('RecipientKeyManager', () => {
       key1[0] = 0x02;
       provider.setKey('recipient1', key1);
 
-      await expect(manager.fetchPublicKeys(['recipient1', 'recipient2'])).rejects.toThrow(MessageError);
-      await expect(manager.fetchPublicKeys(['recipient1', 'recipient2'])).rejects.toThrow('Missing or invalid public keys');
+      await expect(
+        manager.fetchPublicKeys(['recipient1', 'recipient2']),
+      ).rejects.toThrow(MessageError);
+      await expect(
+        manager.fetchPublicKeys(['recipient1', 'recipient2']),
+      ).rejects.toThrow('Missing or invalid public keys');
     });
 
     it('should throw error when key is invalid', async () => {
       const invalidKey = new Uint8Array(32); // Wrong length
       provider.setKey('recipient1', invalidKey);
 
-      await expect(manager.fetchPublicKeys(['recipient1'])).rejects.toThrow(MessageError);
+      await expect(manager.fetchPublicKeys(['recipient1'])).rejects.toThrow(
+        MessageError,
+      );
     });
   });
 

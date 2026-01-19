@@ -1,13 +1,13 @@
-import { BrightChainError } from '../brightChainError';
 import { MessageErrorType } from '../../enumerations/messaging/messageErrorType';
+import { BrightChainError } from '../brightChainError';
 
 /**
  * Error class for message passing system errors.
- * 
+ *
  * @remarks
  * Extends BrightChainError to provide consistent error handling
  * across the message passing system.
- * 
+ *
  * @example
  * ```typescript
  * throw new MessageError(
@@ -16,7 +16,7 @@ import { MessageErrorType } from '../../enumerations/messaging/messageErrorType'
  *   { recipientId: 'invalid-id' }
  * );
  * ```
- * 
+ *
  * @see Design Document: Error Handling section
  */
 export class MessageError extends BrightChainError {

@@ -13,6 +13,7 @@
  */
 
 /* eslint-disable @nx/enforce-module-boundaries */
+import { DiskCBLStore } from '@brightchain/brightchain-api-lib/lib/stores/diskCBLStore';
 import { ConstituentBlockListBlock } from '@brightchain/brightchain-lib/lib/blocks/cbl';
 import { BlockEncryptionType } from '@brightchain/brightchain-lib/lib/enumerations/blockEncryptionType';
 import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
@@ -20,12 +21,12 @@ import { MemberType } from '@brightchain/brightchain-lib/lib/enumerations/member
 import { StoreErrorType } from '@brightchain/brightchain-lib/lib/enumerations/storeErrorType';
 import { StoreError } from '@brightchain/brightchain-lib/lib/errors/storeError';
 import { ServiceProvider } from '@brightchain/brightchain-lib/lib/services/service.provider';
-import { CBLStore } from '@brightchain/brightchain-lib/lib/stores/cblStore';
 import {
   arraysEqual,
   EmailString,
   getEnhancedIdProvider,
   Member,
+  PlatformID,
 } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
 import { mkdirSync, rmSync } from 'fs';
@@ -80,7 +81,7 @@ describe('CBL API Round-Trip Property Tests', () => {
             mkdirSync(iterTestDir, { recursive: true });
 
             try {
-              const store = new CBLStore({
+              const store = new DiskCBLStore({
                 storePath: iterTestDir,
                 blockSize,
               });
@@ -134,13 +135,16 @@ describe('CBL API Round-Trip Property Tests', () => {
               expect(exists).toBe(true);
 
               // Retrieve the CBL (simulates GET /api/cbl/:id)
-              const retrievedCbl = await store.get(cbl.idChecksum, (id) => {
-                const provider = getEnhancedIdProvider();
-                if (provider.equals(creator.id, id)) {
-                  return Promise.resolve(creator);
-                }
-                throw new StoreError(StoreErrorType.KeyNotFound);
-              });
+              const retrievedCbl = await store.get(
+                cbl.idChecksum,
+                (id: PlatformID) => {
+                  const provider = getEnhancedIdProvider();
+                  if (provider.equals(creator.id, id)) {
+                    return Promise.resolve(creator);
+                  }
+                  throw new StoreError(StoreErrorType.KeyNotFound);
+                },
+              );
 
               // Verify the addresses match
               const retrievedAddresses = retrievedCbl.addresses;
@@ -190,7 +194,7 @@ describe('CBL API Round-Trip Property Tests', () => {
             mkdirSync(iterTestDir, { recursive: true });
 
             try {
-              const store = new CBLStore({
+              const store = new DiskCBLStore({
                 storePath: iterTestDir,
                 blockSize,
               });
@@ -236,13 +240,16 @@ describe('CBL API Round-Trip Property Tests', () => {
               await store.set(cbl.idChecksum, cbl);
 
               // Retrieve and verify
-              const retrievedCbl = await store.get(cbl.idChecksum, (id) => {
-                const provider = getEnhancedIdProvider();
-                if (provider.equals(creator.id, id)) {
-                  return Promise.resolve(creator);
-                }
-                throw new StoreError(StoreErrorType.KeyNotFound);
-              });
+              const retrievedCbl = await store.get(
+                cbl.idChecksum,
+                (id: PlatformID) => {
+                  const provider = getEnhancedIdProvider();
+                  if (provider.equals(creator.id, id)) {
+                    return Promise.resolve(creator);
+                  }
+                  throw new StoreError(StoreErrorType.KeyNotFound);
+                },
+              );
 
               // Verify address count matches
               expect(retrievedCbl.cblAddressCount).toBe(addressCount);

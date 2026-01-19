@@ -9,14 +9,14 @@
  */
 
 /* eslint-disable @nx/enforce-module-boundaries */
-import * as fs from 'fs';
-import * as path from 'path';
-import { randomBytes } from 'crypto';
-import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
 import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib';
+import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
 import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
 import { ChecksumService } from '@brightchain/brightchain-lib/lib/services/checksum.service';
 import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
+import { randomBytes } from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 jest.mock('file-type', () => ({
   fileTypeFromBuffer: async () => null,
@@ -26,7 +26,7 @@ jest.mock('file-type', () => ({
 beforeAll(() => {
   ServiceLocator.setServiceProvider({
     checksumService: new ChecksumService(),
-  } as any);
+  } as unknown as ReturnType<typeof ServiceLocator.getServiceProvider>);
 });
 
 describe('Storage Integration Tests', () => {
@@ -37,7 +37,10 @@ describe('Storage Integration Tests', () => {
 
   beforeEach(async () => {
     // Create a temporary directory for test storage
-    tempDir = path.join(__dirname, `storage-test-${Date.now()}-${Math.random()}`);
+    tempDir = path.join(
+      __dirname,
+      `storage-test-${Date.now()}-${Math.random()}`,
+    );
     fs.mkdirSync(tempDir, { recursive: true });
 
     const config = {
@@ -94,9 +97,9 @@ describe('Storage Integration Tests', () => {
       const block1 = new RawDataBlock(blockSize, data1);
       const block2 = new RawDataBlock(blockSize, data2);
 
-      expect(Buffer.from(block1.idChecksum.toBuffer()).toString('hex')).not.toBe(
-        Buffer.from(block2.idChecksum.toBuffer()).toString('hex'),
-      );
+      expect(
+        Buffer.from(block1.idChecksum.toBuffer()).toString('hex'),
+      ).not.toBe(Buffer.from(block2.idChecksum.toBuffer()).toString('hex'));
     });
 
     it('should handle block size variations with correct data storage', async () => {
@@ -121,17 +124,11 @@ describe('Storage Integration Tests', () => {
   describe('Read Path: retrieve and verify block integrity', () => {
     it('should detect missing blocks and throw error', async () => {
       const randomChecksum = randomBytes(32);
-      await expect(
-        blockStore.getData(randomChecksum as any),
-      ).rejects.toThrow();
+      await expect(blockStore.getData(randomChecksum as any)).rejects.toThrow();
     });
 
     it('should maintain data integrity through write-read cycle', async () => {
-      const testData = [
-        randomBytes(64),
-        randomBytes(128),
-        randomBytes(256),
-      ];
+      const testData = [randomBytes(64), randomBytes(128), randomBytes(256)];
 
       for (const data of testData) {
         const block = new RawDataBlock(blockSize, data);
@@ -176,7 +173,11 @@ describe('Storage Integration Tests', () => {
     it('should throw error when deleting non-existent blocks', async () => {
       const randomChecksum = randomBytes(32);
       await expect(
-        blockStore.deleteData(randomChecksum as any),
+        blockStore.deleteData(
+          randomChecksum as unknown as ReturnType<
+            ChecksumService['calculateChecksum']
+          >,
+        ),
       ).rejects.toThrow();
     });
   });
@@ -184,7 +185,9 @@ describe('Storage Integration Tests', () => {
   describe('Random Blocks: retrieve random subset for XOR operations', () => {
     it('should retrieve random blocks from the store', async () => {
       const numBlocks = 10;
-      const storedChecksums: any[] = [];
+      const storedChecksums: ReturnType<
+        ChecksumService['calculateChecksum']
+      >[] = [];
 
       // Store multiple blocks
       for (let i = 0; i < numBlocks; i++) {
@@ -260,11 +263,11 @@ describe('Storage Integration Tests', () => {
 
     it('should reject null or undefined data', () => {
       expect(() => {
-        new RawDataBlock(blockSize, null as any);
+        new RawDataBlock(blockSize, null as unknown as Buffer);
       }).toThrow();
 
       expect(() => {
-        new RawDataBlock(blockSize, undefined as any);
+        new RawDataBlock(blockSize, undefined as unknown as Buffer);
       }).toThrow();
     });
   });
@@ -280,14 +283,19 @@ describe('Storage Integration Tests', () => {
         const block = new RawDataBlock(blockSize, data);
         await blockStore.setData(block);
         blocks.push(block);
-        expectedData.set(Buffer.from(block.idChecksum.toBuffer()).toString('hex'), data);
+        expectedData.set(
+          Buffer.from(block.idChecksum.toBuffer()).toString('hex'),
+          data,
+        );
       }
 
       // Read phase - verify all blocks
       for (const block of blocks) {
         const retrieved = await blockStore.getData(block.idChecksum);
         expect(retrieved).toBeDefined();
-        const expectedVal = expectedData.get(Buffer.from(block.idChecksum.toBuffer()).toString('hex'));
+        const expectedVal = expectedData.get(
+          Buffer.from(block.idChecksum.toBuffer()).toString('hex'),
+        );
         expect(retrieved?.data).toEqual(expectedVal);
       }
 

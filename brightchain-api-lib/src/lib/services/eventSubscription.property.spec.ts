@@ -1,14 +1,27 @@
+import {
+  DurabilityLevel,
+  IMessageMetadata,
+  MessageDeliveryStatus,
+  MessageEncryptionScheme,
+  MessagePriority,
+  ReplicationStatus,
+} from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
-import { EventNotificationSystem, MessageEventType, IEventFilter } from './eventNotificationSystem';
 import { WebSocket } from 'ws';
-import { IMessageMetadata, MessageDeliveryStatus, MessageEncryptionScheme, MessagePriority, ReplicationStatus, DurabilityLevel } from '@brightchain/brightchain-lib';
+import {
+  EventNotificationSystem,
+  IEventFilter,
+  MessageEventType,
+} from './eventNotificationSystem';
 
 /**
  * Property tests for WebSocket event subscription
  * Validates Requirement 5.5
  */
 describe('Feature: message-passing-and-events, Property: WebSocket Event Subscription', () => {
-  const createMetadata = (overrides?: Partial<IMessageMetadata>): IMessageMetadata => ({
+  const createMetadata = (
+    overrides?: Partial<IMessageMetadata>,
+  ): IMessageMetadata => ({
     blockId: 'block-1',
     messageType: 'test',
     senderId: 'sender-1',
@@ -45,9 +58,9 @@ describe('Feature: message-passing-and-events, Property: WebSocket Event Subscri
             MessageEventType.MESSAGE_STORED,
             MessageEventType.MESSAGE_RECEIVED,
             MessageEventType.MESSAGE_DELIVERED,
-            MessageEventType.MESSAGE_FAILED
+            MessageEventType.MESSAGE_FAILED,
           ),
-          { minLength: 1, maxLength: 10 }
+          { minLength: 1, maxLength: 10 },
         ),
         async (eventTypes) => {
           const system = new EventNotificationSystem();
@@ -64,9 +77,9 @@ describe('Feature: message-passing-and-events, Property: WebSocket Event Subscri
           }
 
           expect(mockWs.send).toHaveBeenCalledTimes(eventTypes.length);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -80,9 +93,9 @@ describe('Feature: message-passing-and-events, Property: WebSocket Event Subscri
         fc.array(
           fc.constantFrom(
             MessageEventType.MESSAGE_STORED,
-            MessageEventType.MESSAGE_RECEIVED
+            MessageEventType.MESSAGE_RECEIVED,
           ),
-          { minLength: 1, maxLength: 3 }
+          { minLength: 1, maxLength: 3 },
         ),
         async (allowedTypes) => {
           const system = new EventNotificationSystem();
@@ -105,9 +118,9 @@ describe('Feature: message-passing-and-events, Property: WebSocket Event Subscri
           system.emit(MessageEventType.MESSAGE_FAILED, createMetadata());
 
           expect(mockWs.send).toHaveBeenCalledTimes(allowedTypes.length);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -119,7 +132,10 @@ describe('Feature: message-passing-and-events, Property: WebSocket Event Subscri
     await fc.assert(
       fc.asyncProperty(
         fc.string({ minLength: 1, maxLength: 32 }),
-        fc.array(fc.string({ minLength: 1, maxLength: 32 }), { minLength: 1, maxLength: 5 }),
+        fc.array(fc.string({ minLength: 1, maxLength: 32 }), {
+          minLength: 1,
+          maxLength: 5,
+        }),
         async (targetSender, otherSenders) => {
           const system = new EventNotificationSystem();
           const mockWs = {
@@ -132,19 +148,25 @@ describe('Feature: message-passing-and-events, Property: WebSocket Event Subscri
           system.subscribe(mockWs, filter);
 
           // Emit from target sender
-          system.emit(MessageEventType.MESSAGE_STORED, createMetadata({ senderId: targetSender }));
+          system.emit(
+            MessageEventType.MESSAGE_STORED,
+            createMetadata({ senderId: targetSender }),
+          );
 
           // Emit from other senders
           for (const sender of otherSenders) {
             if (sender !== targetSender) {
-              system.emit(MessageEventType.MESSAGE_STORED, createMetadata({ senderId: sender }));
+              system.emit(
+                MessageEventType.MESSAGE_STORED,
+                createMetadata({ senderId: sender }),
+              );
             }
           }
 
           expect(mockWs.send).toHaveBeenCalledTimes(1);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -156,7 +178,10 @@ describe('Feature: message-passing-and-events, Property: WebSocket Event Subscri
     await fc.assert(
       fc.asyncProperty(
         fc.string({ minLength: 1, maxLength: 32 }),
-        fc.array(fc.string({ minLength: 1, maxLength: 32 }), { minLength: 1, maxLength: 5 }),
+        fc.array(fc.string({ minLength: 1, maxLength: 32 }), {
+          minLength: 1,
+          maxLength: 5,
+        }),
         async (targetRecipient, otherRecipients) => {
           const system = new EventNotificationSystem();
           const mockWs = {
@@ -169,19 +194,25 @@ describe('Feature: message-passing-and-events, Property: WebSocket Event Subscri
           system.subscribe(mockWs, filter);
 
           // Emit with target recipient
-          system.emit(MessageEventType.MESSAGE_STORED, createMetadata({ recipients: [targetRecipient] }));
+          system.emit(
+            MessageEventType.MESSAGE_STORED,
+            createMetadata({ recipients: [targetRecipient] }),
+          );
 
           // Emit with other recipients
           for (const recipient of otherRecipients) {
             if (recipient !== targetRecipient) {
-              system.emit(MessageEventType.MESSAGE_STORED, createMetadata({ recipients: [recipient] }));
+              system.emit(
+                MessageEventType.MESSAGE_STORED,
+                createMetadata({ recipients: [recipient] }),
+              );
             }
           }
 
           expect(mockWs.send).toHaveBeenCalledTimes(1);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -210,21 +241,33 @@ describe('Feature: message-passing-and-events, Property: WebSocket Event Subscri
           system.subscribe(mockWs, filter);
 
           // Matches all filters
-          system.emit(MessageEventType.MESSAGE_STORED, createMetadata({ senderId, recipients: [recipientId] }));
+          system.emit(
+            MessageEventType.MESSAGE_STORED,
+            createMetadata({ senderId, recipients: [recipientId] }),
+          );
 
           // Wrong type
-          system.emit(MessageEventType.MESSAGE_RECEIVED, createMetadata({ senderId, recipients: [recipientId] }));
+          system.emit(
+            MessageEventType.MESSAGE_RECEIVED,
+            createMetadata({ senderId, recipients: [recipientId] }),
+          );
 
           // Wrong sender
-          system.emit(MessageEventType.MESSAGE_STORED, createMetadata({ senderId: 'other', recipients: [recipientId] }));
+          system.emit(
+            MessageEventType.MESSAGE_STORED,
+            createMetadata({ senderId: 'other', recipients: [recipientId] }),
+          );
 
           // Wrong recipient
-          system.emit(MessageEventType.MESSAGE_STORED, createMetadata({ senderId, recipients: ['other'] }));
+          system.emit(
+            MessageEventType.MESSAGE_STORED,
+            createMetadata({ senderId, recipients: ['other'] }),
+          );
 
           expect(mockWs.send).toHaveBeenCalledTimes(1);
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -260,9 +303,9 @@ describe('Feature: message-passing-and-events, Property: WebSocket Event Subscri
           }
 
           expect(mockWs.send).toHaveBeenCalledTimes(beforeCount);
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 });

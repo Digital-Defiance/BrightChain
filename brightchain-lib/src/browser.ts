@@ -7,6 +7,15 @@ export * from './lib/factories/blockStoreFactory';
 export * from './lib/interfaces/storage/blockStore';
 export * from './lib/stores/memoryBlockStore';
 
+// Export block classes and utilities
+export { BaseBlock } from './lib/blocks/base';
+export {
+  createBlockHandle,
+  isBlockHandle,
+  type BlockHandle,
+} from './lib/blocks/handle';
+export { RawDataBlock } from './lib/blocks/rawData';
+
 // Export ServiceProvider for advanced usage
 export { ServiceProvider } from './lib/services/service.provider';
 

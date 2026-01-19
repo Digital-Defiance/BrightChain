@@ -1,7 +1,7 @@
 import fc from 'fast-check';
-import { WebSocketTransport } from './webSocketTransport';
-import { DirectMessageRouter } from './directMessageRouter';
 import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
+import { DirectMessageRouter } from './directMessageRouter';
+import { WebSocketTransport } from './webSocketTransport';
 
 // Mock WebSocket for testing
 class MockWebSocket {
@@ -9,7 +9,7 @@ class MockWebSocket {
   readyState = MockWebSocket.OPEN;
   onopen: (() => void) | null = null;
   onclose: (() => void) | null = null;
-  onerror: ((error: any) => void) | null = null;
+  onerror: ((error: Error) => void) | null = null;
   onmessage: ((event: { data: string }) => void) | null = null;
   sentMessages: string[] = [];
 
@@ -28,20 +28,27 @@ class MockWebSocket {
 }
 
 // Replace global WebSocket with mock
-(global as any).WebSocket = MockWebSocket;
+(global as unknown as { WebSocket: typeof MockWebSocket }).WebSocket =
+  MockWebSocket;
 
 describe('Feature: message-passing-and-events, Property: WebSocket Handler Integration', () => {
   it('Property 14: WebSocket transport connects and sends messages', async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.string(),
-        fc.array(fc.string().filter((s) => s.length > 0), { minLength: 1, maxLength: 3 }),
+        fc.array(
+          fc.string().filter((s) => s.length > 0),
+          { minLength: 1, maxLength: 3 },
+        ),
         async (messageId, recipients) => {
           const transport = new WebSocketTransport();
 
           // Connect to each recipient
           for (const recipient of recipients) {
-            await transport.connect(recipient, `ws://localhost:8080/${recipient}`);
+            await transport.connect(
+              recipient,
+              `ws://localhost:8080/${recipient}`,
+            );
           }
 
           const mockMetadataStore = {
@@ -61,9 +68,9 @@ describe('Feature: message-passing-and-events, Property: WebSocket Handler Integ
           for (const recipient of recipients) {
             transport.disconnect(recipient);
           }
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
@@ -78,22 +85,28 @@ describe('Feature: message-passing-and-events, Property: WebSocket Handler Integ
 
           const result = await transport.sendToNode(recipient, messageId);
           expect(result).toBe(false);
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
   it('Property 14: WebSocket transport checks node reachability', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.array(fc.string().filter((s) => s.length > 0), { minLength: 1, maxLength: 3 }),
+        fc.array(
+          fc.string().filter((s) => s.length > 0),
+          { minLength: 1, maxLength: 3 },
+        ),
         async (nodeIds) => {
           const transport = new WebSocketTransport();
           const uniqueNodes = Array.from(new Set(nodeIds));
 
           // Connect half the nodes
-          const connectedNodes = uniqueNodes.slice(0, Math.ceil(uniqueNodes.length / 2));
+          const connectedNodes = uniqueNodes.slice(
+            0,
+            Math.ceil(uniqueNodes.length / 2),
+          );
           for (const nodeId of connectedNodes) {
             await transport.connect(nodeId, `ws://localhost:8080/${nodeId}`);
           }
@@ -108,29 +121,32 @@ describe('Feature: message-passing-and-events, Property: WebSocket Handler Integ
           for (const nodeId of connectedNodes) {
             transport.disconnect(nodeId);
           }
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
   it('Property 14: WebSocket transport handles connection lifecycle', async () => {
     await fc.assert(
-      fc.asyncProperty(fc.string().filter((s) => s.length > 0), async (nodeId) => {
-        const transport = new WebSocketTransport();
+      fc.asyncProperty(
+        fc.string().filter((s) => s.length > 0),
+        async (nodeId) => {
+          const transport = new WebSocketTransport();
 
-        // Initially not reachable
-        expect(await transport.isNodeReachable(nodeId)).toBe(false);
+          // Initially not reachable
+          expect(await transport.isNodeReachable(nodeId)).toBe(false);
 
-        // Connect
-        await transport.connect(nodeId, `ws://localhost:8080/${nodeId}`);
-        expect(await transport.isNodeReachable(nodeId)).toBe(true);
+          // Connect
+          await transport.connect(nodeId, `ws://localhost:8080/${nodeId}`);
+          expect(await transport.isNodeReachable(nodeId)).toBe(true);
 
-        // Disconnect
-        transport.disconnect(nodeId);
-        expect(await transport.isNodeReachable(nodeId)).toBe(false);
-      }),
-      { numRuns: 50 }
+          // Disconnect
+          transport.disconnect(nodeId);
+          expect(await transport.isNodeReachable(nodeId)).toBe(false);
+        },
+      ),
+      { numRuns: 50 },
     );
   });
 });

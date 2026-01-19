@@ -18,19 +18,25 @@ describe('Property 35: Unique Message Type Identifiers', () => {
 
   it('Property 35a: No conflicts with existing types (50 iterations)', () => {
     fc.assert(
-      fc.property(fc.constantFrom(...Object.values(MessagePassingType)), (msgType) => {
-        expect(existingTypes).not.toContain(msgType);
-      }),
-      { numRuns: 50 }
+      fc.property(
+        fc.constantFrom(...Object.values(MessagePassingType)),
+        (msgType) => {
+          expect(existingTypes).not.toContain(msgType);
+        },
+      ),
+      { numRuns: 50 },
     );
   });
 
   it('Property 35b: Uses message: prefix (50 iterations)', () => {
     fc.assert(
-      fc.property(fc.constantFrom(...Object.values(MessagePassingType)), (msgType) => {
-        expect(msgType).toMatch(/^message:/);
-      }),
-      { numRuns: 50 }
+      fc.property(
+        fc.constantFrom(...Object.values(MessagePassingType)),
+        (msgType) => {
+          expect(msgType).toMatch(/^message:/);
+        },
+      ),
+      { numRuns: 50 },
     );
   });
 
@@ -45,18 +51,21 @@ describe('Property 35: Unique Message Type Identifiers', () => {
           } else {
             expect(type1).not.toBe(type2);
           }
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 
   it('Property 35d: Follows naming convention (50 iterations)', () => {
     fc.assert(
-      fc.property(fc.constantFrom(...Object.values(MessagePassingType)), (msgType) => {
-        expect(msgType).toMatch(/^message:[a-z_]+$/);
-      }),
-      { numRuns: 50 }
+      fc.property(
+        fc.constantFrom(...Object.values(MessagePassingType)),
+        (msgType) => {
+          expect(msgType).toMatch(/^message:[a-z_]+$/);
+        },
+      ),
+      { numRuns: 50 },
     );
   });
 });

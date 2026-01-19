@@ -1,10 +1,10 @@
 /**
  * WebSocket message types for message passing system.
- * 
+ *
  * @remarks
  * All message passing types use the 'message:' prefix to avoid
  * conflicts with existing WebSocket message types.
- * 
+ *
  * @see Requirements 8.1, 8.5, 13.4
  */
 export enum MessagePassingType {

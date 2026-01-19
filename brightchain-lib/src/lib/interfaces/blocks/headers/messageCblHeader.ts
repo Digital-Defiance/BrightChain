@@ -1,7 +1,7 @@
 import { PlatformID } from '@digitaldefiance/ecies-lib';
-import { IConstituentBlockListBlockHeader } from './cblHeader';
 import { MessageEncryptionScheme } from '../../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../../enumerations/messaging/messagePriority';
+import { IConstituentBlockListBlockHeader } from './cblHeader';
 
 export interface IMessageConstituentBlockListBlockHeader<
   TID extends PlatformID = Uint8Array,

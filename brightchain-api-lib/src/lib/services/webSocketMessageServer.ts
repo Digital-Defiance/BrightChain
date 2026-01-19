@@ -1,12 +1,20 @@
-import { WebSocketServer, WebSocket } from 'ws';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
+import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import { Server } from 'http';
-import { EciesSignature, EciesCryptoCore } from '@digitaldefiance/node-ecies-lib';
+import { WebSocket, WebSocketServer } from 'ws';
 
 /**
  * WebSocket message handler callback
  */
-export type MessageHandler = (nodeId: string, messageId: string) => Promise<void>;
-export type AckHandler = (nodeId: string, messageId: string, status: string) => Promise<void>;
+export type MessageHandler = (
+  nodeId: string,
+  messageId: string,
+) => Promise<void>;
+export type AckHandler = (
+  nodeId: string,
+  messageId: string,
+  status: string,
+) => Promise<void>;
 
 /**
  * Node.js WebSocket server for message passing with ECIES authentication
@@ -19,15 +27,24 @@ export class WebSocketMessageServer {
   private publicKeys = new Map<string, Buffer>(); // nodeId -> publicKey
   private messageHandler?: MessageHandler;
   private ackHandler?: AckHandler;
-  private eciesSignature: EciesSignature;
+  private eciesService: ECIESService;
   private requireAuth: boolean;
 
   constructor(server: Server, requireAuth = false) {
     this.wss = new WebSocketServer({ server });
     this.requireAuth = requireAuth;
-    const config = { enableCompression: false };
-    const cryptoCore = new EciesCryptoCore(config as any);
-    this.eciesSignature = new EciesSignature(cryptoCore);
+    
+    // Create Node.js-compatible ECIES config with full algorithm name
+    const config: IECIESConfig = {
+      curveName: 'secp256k1',
+      primaryKeyDerivationPath: "m/44'/0'/0'/0/0",
+      mnemonicStrength: 256,
+      symmetricAlgorithm: 'aes-256-gcm',
+      symmetricKeyBits: 256,
+      symmetricKeyMode: 'gcm',
+    };
+    
+    this.eciesService = new ECIESService(config);
     this.setupConnectionHandler();
   }
 
@@ -113,22 +130,33 @@ export class WebSocketMessageServer {
       }
 
       let authenticated = !this.requireAuth;
-      
+
       if (!this.requireAuth) {
         this.connections.set(nodeId, ws);
-        this.authenticatedNodes.set(ws as any, nodeId);
+        this.authenticatedNodes.set(ws as unknown as string, nodeId);
       }
 
       ws.on('message', async (data: Buffer) => {
         try {
           const message = JSON.parse(data.toString());
-          
+
           if (message.type === 'auth') {
             const publicKey = this.publicKeys.get(message.nodeId);
-            if (publicKey && await this.verifySignature(message.nodeId, message.timestamp, message.signature, publicKey)) {
+            if (
+              publicKey &&
+              (await this.verifySignature(
+                message.nodeId,
+                message.timestamp,
+                message.signature,
+                publicKey,
+              ))
+            ) {
               authenticated = true;
               this.connections.set(message.nodeId, ws);
-              this.authenticatedNodes.set(ws as any, message.nodeId);
+              this.authenticatedNodes.set(
+                ws as unknown as string,
+                message.nodeId,
+              );
               ws.send(JSON.stringify({ type: 'auth_success' }));
             } else {
               ws.close();
@@ -152,20 +180,31 @@ export class WebSocketMessageServer {
       });
 
       ws.on('close', () => {
-        const authenticatedNodeId = this.authenticatedNodes.get(ws as any);
+        const authenticatedNodeId = this.authenticatedNodes.get(
+          ws as unknown as string,
+        );
         if (authenticatedNodeId) {
           this.connections.delete(authenticatedNodeId);
-          this.authenticatedNodes.delete(ws as any);
+          this.authenticatedNodes.delete(ws as unknown as string);
         }
       });
     });
   }
 
-  private async verifySignature(nodeId: string, timestamp: string, signature: string, publicKey: Buffer): Promise<boolean> {
+  private async verifySignature(
+    nodeId: string,
+    timestamp: string,
+    signature: string,
+    publicKey: Buffer,
+  ): Promise<boolean> {
     try {
       const message = Buffer.from(`${nodeId}:${timestamp}`);
-      const signatureBuffer = Buffer.from(signature, 'hex');
-      return this.eciesSignature.verifyMessage(publicKey, message, signatureBuffer as any);
+      const signatureBuffer = Buffer.from(signature, 'hex') as any; // Cast to signature type
+      return this.eciesService.verifyMessage(
+        publicKey,
+        message,
+        signatureBuffer,
+      );
     } catch {
       return false;
     }

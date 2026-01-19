@@ -1,7 +1,7 @@
-import { BroadcastMessageRouter } from './broadcastMessageRouter';
+import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
 import { IGossipService } from '../../interfaces/availability/gossipService';
 import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { BroadcastMessageRouter } from './broadcastMessageRouter';
 
 describe('BroadcastMessageRouter', () => {
   let router: BroadcastMessageRouter;
@@ -30,13 +30,15 @@ describe('BroadcastMessageRouter', () => {
       expect(mockMetadataStore.updateDeliveryStatus).toHaveBeenCalledWith(
         'msg1',
         'broadcast',
-        MessageDeliveryStatus.IN_TRANSIT
+        MessageDeliveryStatus.IN_TRANSIT,
       );
       expect(mockGossipService.announceBlock).toHaveBeenCalledWith('msg1');
     });
 
     it('should mark delivery as FAILED when gossip fails', async () => {
-      mockGossipService.announceBlock.mockRejectedValue(new Error('Gossip error'));
+      mockGossipService.announceBlock.mockRejectedValue(
+        new Error('Gossip error'),
+      );
 
       const result = await router.broadcastMessage('msg1');
 
@@ -44,7 +46,7 @@ describe('BroadcastMessageRouter', () => {
       expect(mockMetadataStore.updateDeliveryStatus).toHaveBeenCalledWith(
         'msg1',
         'broadcast',
-        MessageDeliveryStatus.FAILED
+        MessageDeliveryStatus.FAILED,
       );
     });
 

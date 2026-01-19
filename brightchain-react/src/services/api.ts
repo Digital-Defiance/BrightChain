@@ -1,5 +1,5 @@
 // src/services/api.ts
-/* eslint-disable @nx/enforce-module-boundaries */
+
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
 import axios from 'axios';
 import { environment } from '../environments/environment';

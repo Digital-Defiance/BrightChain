@@ -9,9 +9,9 @@
  * completion) in the correct sequence with appropriate visual indicators.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { FileReceipt } from '@brightchain/brightchain-lib';
 import { ChecksumUint8Array } from '@digitaldefiance/ecies-lib';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('ReconstructionAnimation Property Tests', () => {
   beforeEach(() => {
@@ -54,7 +54,7 @@ describe('ReconstructionAnimation Property Tests', () => {
     const generateTestReceipt = (
       fileName: string,
       originalSize: number,
-      blockCount: number
+      blockCount: number,
     ): FileReceipt => {
       const cblData = new Uint8Array(blockCount * 64); // Mock CBL data
       const blocks = Array.from({ length: blockCount }, (_, i) => ({
@@ -63,7 +63,7 @@ describe('ReconstructionAnimation Property Tests', () => {
         size: Math.floor(originalSize / blockCount),
         index: i,
       }));
-      
+
       return {
         id: `receipt-${Date.now()}-${Math.random()}`,
         fileName,
@@ -106,7 +106,7 @@ describe('ReconstructionAnimation Property Tests', () => {
 
       for (const { fileName, originalSize, blockCount } of testCases) {
         const receipt = generateTestReceipt(fileName, originalSize, blockCount);
-        
+
         expect(receipt.fileName).toBe(fileName);
         expect(receipt.originalSize).toBe(originalSize);
         expect(receipt.blockCount).toBe(blockCount);
@@ -118,7 +118,7 @@ describe('ReconstructionAnimation Property Tests', () => {
 
     it('should validate animation speed parameters', () => {
       const validSpeeds = [0.5, 1.0, 2.0, 5.0, 10.0];
-      
+
       for (const speed of validSpeeds) {
         expect(speed).toBeGreaterThan(0);
         expect(typeof speed).toBe('number');
@@ -127,7 +127,7 @@ describe('ReconstructionAnimation Property Tests', () => {
 
     it('should validate block size parameters', () => {
       const validBlockSizes = [512, 1024, 2048, 4096];
-      
+
       for (const blockSize of validBlockSizes) {
         expect(blockSize).toBeGreaterThan(0);
         expect(blockSize % 512).toBe(0); // Should be multiple of 512
@@ -137,7 +137,7 @@ describe('ReconstructionAnimation Property Tests', () => {
 
     it('should validate educational mode behavior parameters', () => {
       const educationalModeValues = [true, false];
-      
+
       for (const isEducational of educationalModeValues) {
         expect(typeof isEducational).toBe('boolean');
       }
@@ -154,7 +154,7 @@ describe('ReconstructionAnimation Property Tests', () => {
       };
 
       // Verify all callbacks are functions
-      Object.values(mockCallbacks).forEach(callback => {
+      Object.values(mockCallbacks).forEach((callback) => {
         expect(typeof callback).toBe('function');
       });
 
@@ -166,11 +166,19 @@ describe('ReconstructionAnimation Property Tests', () => {
       mockCallbacks.onFileReassembled(new Uint8Array([1, 2, 3]));
       mockCallbacks.onAnimationComplete();
 
-      expect(mockCallbacks.onCBLProcessed).toHaveBeenCalledWith(['block-1', 'block-2']);
+      expect(mockCallbacks.onCBLProcessed).toHaveBeenCalledWith([
+        'block-1',
+        'block-2',
+      ]);
       expect(mockCallbacks.onBlockSelected).toHaveBeenCalledWith('block-1', 0);
       expect(mockCallbacks.onBlockRetrieved).toHaveBeenCalledWith('block-1', 0);
-      expect(mockCallbacks.onChecksumValidated).toHaveBeenCalledWith('block-1', true);
-      expect(mockCallbacks.onFileReassembled).toHaveBeenCalledWith(expect.any(Uint8Array));
+      expect(mockCallbacks.onChecksumValidated).toHaveBeenCalledWith(
+        'block-1',
+        true,
+      );
+      expect(mockCallbacks.onFileReassembled).toHaveBeenCalledWith(
+        expect.any(Uint8Array),
+      );
       expect(mockCallbacks.onAnimationComplete).toHaveBeenCalled();
     });
 
@@ -178,19 +186,23 @@ describe('ReconstructionAnimation Property Tests', () => {
       const testCases = [1, 5, 10, 50, 100, 500];
 
       for (const blockCount of testCases) {
-        const receipt = generateTestReceipt('test.txt', blockCount * 512, blockCount);
+        const receipt = generateTestReceipt(
+          'test.txt',
+          blockCount * 512,
+          blockCount,
+        );
         const blockIds: string[] = [];
-        
+
         for (let i = 0; i < blockCount; i++) {
           blockIds.push(`block-${i}-${receipt.id}`);
         }
 
         expect(blockIds).toHaveLength(blockCount);
-        
+
         // Verify all block IDs are unique
         const uniqueIds = new Set(blockIds);
         expect(uniqueIds.size).toBe(blockCount);
-        
+
         // Verify block ID format
         blockIds.forEach((id, index) => {
           expect(id).toContain(`block-${index}`);
@@ -209,10 +221,10 @@ describe('ReconstructionAnimation Property Tests', () => {
 
       for (const { fileName, originalSize, blockCount } of edgeCases) {
         const receipt = generateTestReceipt(fileName, originalSize, blockCount);
-        
+
         expect(receipt.blockCount).toBe(blockCount);
         expect(receipt.originalSize).toBe(originalSize);
-        
+
         // Validate CBL data size
         expect(receipt.cblData.length).toBe(blockCount * 64);
       }
@@ -251,7 +263,7 @@ describe('ReconstructionAnimation Property Tests', () => {
       ];
 
       // Verify all statuses are strings
-      validStatuses.forEach(status => {
+      validStatuses.forEach((status) => {
         expect(typeof status).toBe('string');
         expect(status.length).toBeGreaterThan(0);
       });
@@ -298,7 +310,7 @@ describe('ReconstructionAnimation Property Tests', () => {
 
       for (const size of testSizes) {
         const fileData = new Uint8Array(size);
-        
+
         expect(fileData).toBeInstanceOf(Uint8Array);
         expect(fileData.length).toBe(size);
         expect(fileData.byteLength).toBe(size);
@@ -315,14 +327,14 @@ describe('ReconstructionAnimation Property Tests', () => {
 
     it('should validate receipt ID uniqueness', () => {
       const receipts: FileReceipt[] = [];
-      
+
       for (let i = 0; i < 100; i++) {
         const receipt = generateTestReceipt(`file-${i}.txt`, 1000, 2);
         receipts.push(receipt);
       }
 
       // Verify all receipt IDs are unique
-      const uniqueIds = new Set(receipts.map(r => r.id));
+      const uniqueIds = new Set(receipts.map((r) => r.id));
       expect(uniqueIds.size).toBe(receipts.length);
     });
 
@@ -337,7 +349,7 @@ describe('ReconstructionAnimation Property Tests', () => {
       }
 
       // Verify all colors are valid HSL strings
-      colors.forEach(color => {
+      colors.forEach((color) => {
         expect(color).toMatch(/^hsl\(\d+(\.\d+)?, \d+%, \d+%\)$/);
       });
 

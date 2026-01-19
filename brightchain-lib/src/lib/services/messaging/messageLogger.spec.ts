@@ -1,4 +1,4 @@
-import { MessageLogger, LogLevel } from './messageLogger';
+import { LogLevel, MessageLogger } from './messageLogger';
 
 describe('MessageLogger', () => {
   let logger: MessageLogger;
@@ -11,11 +11,11 @@ describe('MessageLogger', () => {
 
   it('should log message creation', () => {
     logger.logMessageCreated('msg1', 'sender1', 3);
-    expect(logSpy).toHaveBeenCalledWith(
-      LogLevel.INFO,
-      'Message created',
-      { messageId: 'msg1', senderId: 'sender1', recipientCount: 3 }
-    );
+    expect(logSpy).toHaveBeenCalledWith(LogLevel.INFO, 'Message created', {
+      messageId: 'msg1',
+      senderId: 'sender1',
+      recipientCount: 3,
+    });
   });
 
   it('should log routing decisions', () => {
@@ -25,29 +25,26 @@ describe('MessageLogger', () => {
 
   it('should log delivery failures', () => {
     logger.logDeliveryFailure('msg1', 'recipient1', 'Network error');
-    expect(logSpy).toHaveBeenCalledWith(
-      LogLevel.ERROR,
-      'Delivery failure',
-      { messageId: 'msg1', recipientId: 'recipient1', error: 'Network error' }
-    );
+    expect(logSpy).toHaveBeenCalledWith(LogLevel.ERROR, 'Delivery failure', {
+      messageId: 'msg1',
+      recipientId: 'recipient1',
+      error: 'Network error',
+    });
   });
 
   it('should log encryption failures', () => {
     logger.logEncryptionFailure('Invalid key');
-    expect(logSpy).toHaveBeenCalledWith(
-      LogLevel.ERROR,
-      'Encryption failure',
-      { error: 'Invalid key' }
-    );
+    expect(logSpy).toHaveBeenCalledWith(LogLevel.ERROR, 'Encryption failure', {
+      error: 'Invalid key',
+    });
   });
 
   it('should log slow queries', () => {
     logger.logSlowQuery('getMessages', 5000);
-    expect(logSpy).toHaveBeenCalledWith(
-      LogLevel.WARN,
-      'Slow query detected',
-      { queryType: 'getMessages', durationMs: 5000 }
-    );
+    expect(logSpy).toHaveBeenCalledWith(LogLevel.WARN, 'Slow query detected', {
+      queryType: 'getMessages',
+      durationMs: 5000,
+    });
   });
 
   it('should respect log level filtering', () => {

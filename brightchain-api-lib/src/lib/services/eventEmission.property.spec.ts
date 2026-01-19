@@ -1,14 +1,26 @@
+import {
+  DurabilityLevel,
+  IMessageMetadata,
+  MessageDeliveryStatus,
+  MessageEncryptionScheme,
+  MessagePriority,
+  ReplicationStatus,
+} from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
-import { EventNotificationSystem, MessageEventType } from './eventNotificationSystem';
 import { WebSocket } from 'ws';
-import { IMessageMetadata, MessageDeliveryStatus, MessageEncryptionScheme, MessagePriority, ReplicationStatus, DurabilityLevel } from '@brightchain/brightchain-lib';
+import {
+  EventNotificationSystem,
+  MessageEventType,
+} from './eventNotificationSystem';
 
 /**
  * Property tests for event emission on message actions
  * Validates Requirements 5.1, 5.2, 5.3
  */
 describe('Feature: message-passing-and-events, Property: Event Emission on Message Actions', () => {
-  const createMetadata = (overrides?: Partial<IMessageMetadata>): IMessageMetadata => ({
+  const createMetadata = (
+    overrides?: Partial<IMessageMetadata>,
+  ): IMessageMetadata => ({
     blockId: 'block-1',
     messageType: 'test',
     senderId: 'sender-1',
@@ -42,7 +54,10 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
       fc.asyncProperty(
         fc.string({ minLength: 1, maxLength: 32 }),
         fc.string({ minLength: 1, maxLength: 32 }),
-        fc.array(fc.string({ minLength: 1, maxLength: 32 }), { minLength: 0, maxLength: 5 }),
+        fc.array(fc.string({ minLength: 1, maxLength: 32 }), {
+          minLength: 0,
+          maxLength: 5,
+        }),
         async (senderId, messageType, recipients) => {
           const system = new EventNotificationSystem();
           const mockWs = {
@@ -53,15 +68,19 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
 
           system.subscribe(mockWs);
 
-          const metadata = createMetadata({ senderId, messageType, recipients });
+          const metadata = createMetadata({
+            senderId,
+            messageType,
+            recipients,
+          });
           system.emit(MessageEventType.MESSAGE_STORED, metadata);
 
           expect(mockWs.send).toHaveBeenCalledWith(
-            expect.stringContaining('"type":"message:stored"')
+            expect.stringContaining('"type":"message:stored"'),
           );
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -88,11 +107,11 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
           system.emit(MessageEventType.MESSAGE_RECEIVED, metadata);
 
           expect(mockWs.send).toHaveBeenCalledWith(
-            expect.stringContaining('"type":"message:received"')
+            expect.stringContaining('"type":"message:received"'),
           );
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -104,7 +123,10 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
     await fc.assert(
       fc.asyncProperty(
         fc.string({ minLength: 1, maxLength: 32 }),
-        fc.array(fc.string({ minLength: 1, maxLength: 32 }), { minLength: 1, maxLength: 5 }),
+        fc.array(fc.string({ minLength: 1, maxLength: 32 }), {
+          minLength: 1,
+          maxLength: 5,
+        }),
         async (senderId, recipients) => {
           const system = new EventNotificationSystem();
           const mockWs = {
@@ -116,17 +138,21 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
           system.subscribe(mockWs);
 
           const deliveryStatus = new Map(
-            recipients.map(r => [r, MessageDeliveryStatus.DELIVERED])
+            recipients.map((r) => [r, MessageDeliveryStatus.DELIVERED]),
           );
-          const metadata = createMetadata({ senderId, recipients, deliveryStatus });
+          const metadata = createMetadata({
+            senderId,
+            recipients,
+            deliveryStatus,
+          });
           system.emit(MessageEventType.MESSAGE_DELIVERED, metadata);
 
           expect(mockWs.send).toHaveBeenCalledWith(
-            expect.stringContaining('"type":"message:delivered"')
+            expect.stringContaining('"type":"message:delivered"'),
           );
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -138,7 +164,10 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
     await fc.assert(
       fc.asyncProperty(
         fc.string({ minLength: 1, maxLength: 32 }),
-        fc.array(fc.string({ minLength: 1, maxLength: 32 }), { minLength: 1, maxLength: 5 }),
+        fc.array(fc.string({ minLength: 1, maxLength: 32 }), {
+          minLength: 1,
+          maxLength: 5,
+        }),
         async (senderId, recipients) => {
           const system = new EventNotificationSystem();
           const mockWs = {
@@ -150,17 +179,21 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
           system.subscribe(mockWs);
 
           const deliveryStatus = new Map(
-            recipients.map(r => [r, MessageDeliveryStatus.FAILED])
+            recipients.map((r) => [r, MessageDeliveryStatus.FAILED]),
           );
-          const metadata = createMetadata({ senderId, recipients, deliveryStatus });
+          const metadata = createMetadata({
+            senderId,
+            recipients,
+            deliveryStatus,
+          });
           system.emit(MessageEventType.MESSAGE_FAILED, metadata);
 
           expect(mockWs.send).toHaveBeenCalledWith(
-            expect.stringContaining('"type":"message:failed"')
+            expect.stringContaining('"type":"message:failed"'),
           );
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -176,7 +209,7 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
           MessageEventType.MESSAGE_STORED,
           MessageEventType.MESSAGE_RECEIVED,
           MessageEventType.MESSAGE_DELIVERED,
-          MessageEventType.MESSAGE_FAILED
+          MessageEventType.MESSAGE_FAILED,
         ),
         async (numSubscribers, eventType) => {
           const system = new EventNotificationSystem();
@@ -198,9 +231,9 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
           for (const ws of subscribers) {
             expect(ws.send).toHaveBeenCalled();
           }
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 });

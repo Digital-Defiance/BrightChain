@@ -14,7 +14,12 @@
  */
 
 /* eslint-disable @nx/enforce-module-boundaries */
-import fc from 'fast-check';
+import { MemberType } from '@brightchain/brightchain-lib/lib/enumerations/memberType';
+import { initializeBrightChain } from '@brightchain/brightchain-lib/lib/init';
+import { QuorumMemberMetadata } from '@brightchain/brightchain-lib/lib/interfaces/services/quorumService';
+import { QuorumService } from '@brightchain/brightchain-lib/lib/services/quorumService';
+import { ServiceProvider } from '@brightchain/brightchain-lib/lib/services/service.provider';
+import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
 import {
   EmailString,
   GuidV4,
@@ -23,12 +28,7 @@ import {
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import secrets from '@digitaldefiance/secrets';
-import { MemberType } from '@brightchain/brightchain-lib/lib/enumerations/memberType';
-import { initializeBrightChain } from '@brightchain/brightchain-lib/lib/init';
-import { QuorumMemberMetadata } from '@brightchain/brightchain-lib/lib/interfaces/services/quorumService';
-import { QuorumService } from '@brightchain/brightchain-lib/lib/services/quorumService';
-import { ServiceProvider } from '@brightchain/brightchain-lib/lib/services/service.provider';
-import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
+import fc from 'fast-check';
 
 // Mock file-type module
 jest.mock('file-type', () => ({
@@ -45,7 +45,7 @@ describe('Quorum API Round-Trip Property Tests', () => {
     // Initialize the secrets library with default settings
     // This must be done before any sealing operations
     secrets.init(8, 'nodeCryptoRandomBytes');
-    
+
     // Initialize BrightChain with browser-compatible configuration
     initializeBrightChain();
     ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4>());
@@ -147,7 +147,10 @@ describe('Quorum API Round-Trip Property Tests', () => {
             // Unseal with 2 members (simulates POST /api/quorum/documents/:id/unseal)
             const unsealedDocument = await testService.unsealDocument<
               typeof document
-            >(sealResult.documentId, [memberData[0].member, memberData[1].member]);
+            >(sealResult.documentId, [
+              memberData[0].member,
+              memberData[1].member,
+            ]);
 
             // Verify the unsealed document matches the original
             expect(unsealedDocument).toEqual(document);
@@ -156,7 +159,6 @@ describe('Quorum API Round-Trip Property Tests', () => {
         { numRuns: 10 }, // Reduced runs due to crypto operations
       );
     });
-
 
     /**
      * Property: For any sealed document, GET /api/quorum/documents/:id
@@ -208,7 +210,9 @@ describe('Quorum API Round-Trip Property Tests', () => {
             );
 
             // Get document metadata (simulates GET /api/quorum/documents/:id)
-            const docInfo = await testService.getDocument(sealResult.documentId);
+            const docInfo = await testService.getDocument(
+              sealResult.documentId,
+            );
 
             // Verify metadata
             expect(docInfo).not.toBeNull();

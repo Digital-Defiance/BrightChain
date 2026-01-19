@@ -1,7 +1,7 @@
-import { DirectMessageRouter } from './directMessageRouter';
-import { INetworkTransport } from '../../interfaces/network/networkTransport';
-import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
+import { INetworkTransport } from '../../interfaces/network/networkTransport';
+import { DirectMessageRouter } from './directMessageRouter';
 
 describe('DirectMessageRouter', () => {
   let router: DirectMessageRouter;
@@ -31,7 +31,7 @@ describe('DirectMessageRouter', () => {
       expect(mockMetadataStore.updateDeliveryStatus).toHaveBeenCalledWith(
         'msg1',
         'node1',
-        MessageDeliveryStatus.IN_TRANSIT
+        MessageDeliveryStatus.IN_TRANSIT,
       );
       expect(mockTransport.sendToNode).toHaveBeenCalledWith('node1', 'msg1');
     });
@@ -39,7 +39,11 @@ describe('DirectMessageRouter', () => {
     it('should route message to multiple recipients', async () => {
       mockTransport.sendToNode.mockResolvedValue(true);
 
-      const results = await router.routeToRecipients('msg1', ['node1', 'node2', 'node3']);
+      const results = await router.routeToRecipients('msg1', [
+        'node1',
+        'node2',
+        'node3',
+      ]);
 
       expect(results.size).toBe(3);
       expect(results.get('node1')).toBe(true);
@@ -57,7 +61,7 @@ describe('DirectMessageRouter', () => {
       expect(mockMetadataStore.updateDeliveryStatus).toHaveBeenCalledWith(
         'msg1',
         'node1',
-        MessageDeliveryStatus.FAILED
+        MessageDeliveryStatus.FAILED,
       );
     });
 
@@ -70,7 +74,7 @@ describe('DirectMessageRouter', () => {
       expect(mockMetadataStore.updateDeliveryStatus).toHaveBeenCalledWith(
         'msg1',
         'node1',
-        MessageDeliveryStatus.FAILED
+        MessageDeliveryStatus.FAILED,
       );
     });
 
@@ -80,7 +84,11 @@ describe('DirectMessageRouter', () => {
         .mockResolvedValueOnce(false)
         .mockResolvedValueOnce(true);
 
-      const results = await router.routeToRecipients('msg1', ['node1', 'node2', 'node3']);
+      const results = await router.routeToRecipients('msg1', [
+        'node1',
+        'node2',
+        'node3',
+      ]);
 
       expect(results.get('node1')).toBe(true);
       expect(results.get('node2')).toBe(false);
@@ -117,7 +125,9 @@ describe('DirectMessageRouter', () => {
     });
 
     it('should handle reachability check exceptions', async () => {
-      mockTransport.isNodeReachable.mockRejectedValue(new Error('Network error'));
+      mockTransport.isNodeReachable.mockRejectedValue(
+        new Error('Network error'),
+      );
 
       const results = await router.checkReachability(['node1']);
 

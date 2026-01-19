@@ -3,11 +3,11 @@ import { MessageEncryptionService } from './messageEncryptionService';
 
 /**
  * Property 8: Broadcast Message Encryption
- * 
+ *
  * @remarks
  * Validates that broadcast messages use shared key encryption
  * and that the encryption service properly handles broadcast scenarios.
- * 
+ *
  * @see Requirements 3.2, 3.5
  */
 describe('Feature: message-passing-and-events, Property 8: Broadcast Message Encryption', () => {
@@ -35,19 +35,19 @@ describe('Feature: message-passing-and-events, Property 8: Broadcast Message Enc
           // This is different from direct messages which use multiple recipient keys
           expect(content.length).toBeGreaterThan(0);
           expect(typeof service.encryptBroadcast).toBe('function');
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
   it('should differentiate broadcast from direct message encryption', () => {
     // Broadcast: uses encryptBroadcast with single shared key
     // Direct: uses encryptDirect with Map of recipient keys
-    
+
     expect(typeof service.encryptBroadcast).toBe('function');
     expect(typeof service.encryptDirect).toBe('function');
-    
+
     // Different signatures indicate different encryption schemes
     expect(service.encryptBroadcast.length).toBe(2); // (content, sharedKey)
     expect(service.encryptDirect.length).toBe(2); // (content, recipientKeys)
@@ -64,9 +64,9 @@ describe('Feature: message-passing-and-events, Property 8: Broadcast Message Enc
           } else {
             expect(typeof service.encryptDirect).toBe('function');
           }
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -76,13 +76,13 @@ describe('Feature: message-passing-and-events, Property 8: Broadcast Message Enc
         fc.integer({ min: 1, max: 10000 }), // content size
         async (size) => {
           const content = new Uint8Array(size);
-          
+
           // Validates that broadcast encryption can handle various sizes
           expect(content.length).toBe(size);
           expect(typeof service.encryptBroadcast).toBe('function');
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });

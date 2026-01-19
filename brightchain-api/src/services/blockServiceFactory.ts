@@ -4,7 +4,7 @@ import { BlocksService } from './blocks';
 
 /**
  * Factory for creating and managing BlockService instances.
- * 
+ *
  * This factory ensures that:
  * - Only one BlockService instance exists per application
  * - Services are properly initialized with FEC support

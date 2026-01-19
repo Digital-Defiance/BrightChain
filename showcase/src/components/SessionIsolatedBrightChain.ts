@@ -1,19 +1,27 @@
 /**
  * Session-isolated BrightChain implementation for the demo
- * 
+ *
  * This implementation addresses the memory persistence issue by using
  * a session-isolated memory block store that properly clears on page refresh.
  */
 
-import { BlockSize, FileReceipt, BlockInfo, initializeBrightChain, Checksum } from '@brightchain/brightchain-lib';
+import {
+  BlockInfo,
+  BlockSize,
+  Checksum,
+  FileReceipt,
+  initializeBrightChain,
+  RawDataBlock,
+} from '@brightchain/brightchain-lib';
 import { SessionIsolatedMemoryBlockStore } from './SessionIsolatedMemoryBlockStore';
-import { RawDataBlock } from '@brightchain/brightchain-lib';
 
 /**
  * Convert a Uint8Array to hex string
  */
 function bytesToHex(bytes: Uint8Array): string {
-  return Array.from(bytes, (byte: number) => byte.toString(16).padStart(2, '0')).join('');
+  return Array.from(bytes, (byte: number) =>
+    byte.toString(16).padStart(2, '0'),
+  ).join('');
 }
 
 /**
@@ -39,13 +47,17 @@ function checksumToHex(checksum: Checksum): string {
   try {
     const hex = checksum.toHex();
     // Verify it's actually a hex string and not a comma-separated byte list
-    if (typeof hex === 'string' && /^[0-9a-fA-F]+$/.test(hex) && hex.length === 128) {
+    if (
+      typeof hex === 'string' &&
+      /^[0-9a-fA-F]+$/.test(hex) &&
+      hex.length === 128
+    ) {
       return hex;
     }
   } catch {
     // Fall through to manual conversion
   }
-  
+
   // Fallback: manually convert Uint8Array to hex
   const uint8Array = checksum.toUint8Array();
   return bytesToHex(uint8Array);
@@ -75,17 +87,19 @@ export class SessionIsolatedBrightChain {
 
   constructor(blockSize: BlockSize = BlockSize.Small) {
     this.blockSize = blockSize;
-    
+
     // Initialize BrightChain library if not already initialized
     try {
       initializeBrightChain();
     } catch (error) {
       console.warn('BrightChain initialization:', error);
     }
-    
+
     this.blockStore = new SessionIsolatedMemoryBlockStore(blockSize);
-    
-    console.log(`SessionIsolatedBrightChain initialized with session: ${this.blockStore.getSessionId()}`);
+
+    console.log(
+      `SessionIsolatedBrightChain initialized with session: ${this.blockStore.getSessionId()}`,
+    );
   }
 
   /**
@@ -98,7 +112,9 @@ export class SessionIsolatedBrightChain {
     const blocks: BlockInfo[] = [];
     const chunkSize = this.blockSize as number;
 
-    console.log(`Storing file "${fileName}" (${fileData.length} bytes) in session ${this.blockStore.getSessionId()}`);
+    console.log(
+      `Storing file "${fileName}" (${fileData.length} bytes) in session ${this.blockStore.getSessionId()}`,
+    );
 
     for (let i = 0; i < fileData.length; i += chunkSize) {
       const chunk = fileData.slice(i, Math.min(i + chunkSize, fileData.length));
@@ -115,8 +131,10 @@ export class SessionIsolatedBrightChain {
 
       // Use browser-safe hex conversion
       const blockIdHex = checksumToHex(block.idChecksum);
-      console.log(`Block ${blocks.length} ID (first 40 chars): ${blockIdHex.substring(0, 40)}... (length: ${blockIdHex.length})`);
-      
+      console.log(
+        `Block ${blocks.length} ID (first 40 chars): ${blockIdHex.substring(0, 40)}... (length: ${blockIdHex.length})`,
+      );
+
       blocks.push({
         id: blockIdHex,
         checksum: block.idChecksum,
@@ -137,10 +155,17 @@ export class SessionIsolatedBrightChain {
       blockCount: blocks.length,
       blocks,
       cblData: Array.from(cblData),
-      magnetUrl: this.createMagnetUrl(receiptId, fileName, fileData.length, blocks),
+      magnetUrl: this.createMagnetUrl(
+        receiptId,
+        fileName,
+        fileData.length,
+        blocks,
+      ),
     };
 
-    console.log(`File "${fileName}" stored successfully with ${blocks.length} blocks in session ${this.blockStore.getSessionId()}`);
+    console.log(
+      `File "${fileName}" stored successfully with ${blocks.length} blocks in session ${this.blockStore.getSessionId()}`,
+    );
     return receipt;
   }
 
@@ -148,8 +173,10 @@ export class SessionIsolatedBrightChain {
    * Retrieve a file from its receipt
    */
   async retrieveFile(receipt: FileReceipt): Promise<Uint8Array> {
-    console.log(`Retrieving file "${receipt.fileName}" from session ${this.blockStore.getSessionId()}`);
-    
+    console.log(
+      `Retrieving file "${receipt.fileName}" from session ${this.blockStore.getSessionId()}`,
+    );
+
     const chunks: Uint8Array[] = [];
 
     try {
@@ -165,7 +192,9 @@ export class SessionIsolatedBrightChain {
         offset += chunk.length;
       }
 
-      console.log(`File "${receipt.fileName}" retrieved successfully from session ${this.blockStore.getSessionId()}`);
+      console.log(
+        `File "${receipt.fileName}" retrieved successfully from session ${this.blockStore.getSessionId()}`,
+      );
       return result;
     } catch (error) {
       const errorMessage = `Failed to retrieve file "${receipt.fileName}": ${error instanceof Error ? error.message : 'Unknown error'}`;
@@ -197,24 +226,33 @@ export class SessionIsolatedBrightChain {
    * Create magnet URL for sharing
    * The magnet URL contains all block information needed for reconstruction
    */
-  private createMagnetUrl(id: string, fileName: string, size: number, blocks?: BlockInfo[]): string {
+  private createMagnetUrl(
+    id: string,
+    fileName: string,
+    size: number,
+    blocks?: BlockInfo[],
+  ): string {
     const params = new URLSearchParams({
       xt: `urn:brightchain:${id}`,
       dn: fileName,
       xl: size.toString(),
     });
-    
+
     // Add block information to the magnet URL
     if (blocks && blocks.length > 0) {
       // Debug: log first block ID to verify format
-      console.log(`createMagnetUrl: First block ID type: ${typeof blocks[0].id}, value (first 40): ${String(blocks[0].id).substring(0, 40)}...`);
-      
+      console.log(
+        `createMagnetUrl: First block ID type: ${typeof blocks[0].id}, value (first 40): ${String(blocks[0].id).substring(0, 40)}...`,
+      );
+
       // Encode blocks as a compact format: blockId:size,blockId:size,...
-      const blocksStr = blocks.map(b => `${b.id}:${b.size}`).join(',');
-      console.log(`createMagnetUrl: blocksStr (first 100): ${blocksStr.substring(0, 100)}...`);
+      const blocksStr = blocks.map((b) => `${b.id}:${b.size}`).join(',');
+      console.log(
+        `createMagnetUrl: blocksStr (first 100): ${blocksStr.substring(0, 100)}...`,
+      );
       params.set('blocks', blocksStr);
     }
-    
+
     return `magnet:?${params.toString()}`;
   }
 
@@ -252,24 +290,24 @@ export class SessionIsolatedBrightChain {
    */
   private validateBlockIdHex(hex: string, context: string): void {
     const expectedLength = 128; // SHA3-512 = 64 bytes = 128 hex chars
-    
+
     if (!hex || typeof hex !== 'string') {
       throw new Error(`${context}: block ID is missing or not a string`);
     }
-    
+
     if (!/^[0-9a-fA-F]+$/.test(hex)) {
       const invalidChars = hex.match(/[^0-9a-fA-F]/g);
       const uniqueInvalid = [...new Set(invalidChars)].slice(0, 5).join(', ');
       throw new Error(
         `${context}: block ID contains invalid characters (${uniqueInvalid}). ` +
-        `Block IDs must be hexadecimal (0-9, a-f). Got: "${hex.substring(0, 20)}${hex.length > 20 ? '...' : ''}"`
+          `Block IDs must be hexadecimal (0-9, a-f). Got: "${hex.substring(0, 20)}${hex.length > 20 ? '...' : ''}"`,
       );
     }
-    
+
     if (hex.length !== expectedLength) {
       throw new Error(
         `${context}: block ID has wrong length. Expected ${expectedLength} hex characters, got ${hex.length}. ` +
-        `Block IDs are SHA3-512 hashes (64 bytes = 128 hex chars).`
+          `Block IDs are SHA3-512 hashes (64 bytes = 128 hex chars).`,
       );
     }
   }
@@ -280,12 +318,14 @@ export class SessionIsolatedBrightChain {
   public parseCBL(cblData: Uint8Array): FileReceipt {
     try {
       const cblText = new TextDecoder().decode(cblData);
-      
+
       let cblJson;
       try {
         cblJson = JSON.parse(cblText);
       } catch {
-        throw new Error('CBL file is not valid JSON. Make sure you uploaded a .cbl file generated by this demo.');
+        throw new Error(
+          'CBL file is not valid JSON. Make sure you uploaded a .cbl file generated by this demo.',
+        );
       }
 
       // Validate required fields
@@ -299,17 +339,19 @@ export class SessionIsolatedBrightChain {
         throw new Error('CBL file is missing or has invalid "originalSize"');
       }
 
-      const blocks: BlockInfo[] = cblJson.blocks.map((b: { id: string; size: number }, index: number) => {
-        // Validate block ID before parsing
-        this.validateBlockIdHex(b.id, `Block ${index}`);
-        
-        return {
-          id: b.id,
-          checksum: checksumFromHex(b.id),
-          size: b.size,
-          index,
-        };
-      });
+      const blocks: BlockInfo[] = cblJson.blocks.map(
+        (b: { id: string; size: number }, index: number) => {
+          // Validate block ID before parsing
+          this.validateBlockIdHex(b.id, `Block ${index}`);
+
+          return {
+            id: b.id,
+            checksum: checksumFromHex(b.id),
+            size: b.size,
+            index,
+          };
+        },
+      );
 
       const receiptId = bytesToHex(
         new Uint8Array(32).map(() => Math.floor(Math.random() * 256)),
@@ -323,10 +365,17 @@ export class SessionIsolatedBrightChain {
         blocks,
         cblData: Array.from(cblData),
         // Include blocks in the magnet URL so it can be used for reconstruction
-        magnetUrl: this.createMagnetUrl(receiptId, cblJson.fileName, cblJson.originalSize, blocks),
+        magnetUrl: this.createMagnetUrl(
+          receiptId,
+          cblJson.fileName,
+          cblJson.originalSize,
+          blocks,
+        ),
       };
     } catch (error) {
-      throw new Error(`Failed to parse CBL: ${error instanceof Error ? error.message : 'Invalid format'}`);
+      throw new Error(
+        `Failed to parse CBL: ${error instanceof Error ? error.message : 'Invalid format'}`,
+      );
     }
   }
 
@@ -340,19 +389,19 @@ export class SessionIsolatedBrightChain {
       if (!magnetUrl || typeof magnetUrl !== 'string') {
         throw new Error('Magnet URL is empty or invalid');
       }
-      
+
       const trimmedUrl = magnetUrl.trim();
-      
+
       if (!trimmedUrl.startsWith('magnet:?')) {
         throw new Error(
           'Invalid magnet URL format. URL must start with "magnet:?". ' +
-          `Got: "${trimmedUrl.substring(0, 30)}${trimmedUrl.length > 30 ? '...' : ''}"`
+            `Got: "${trimmedUrl.substring(0, 30)}${trimmedUrl.length > 30 ? '...' : ''}"`,
         );
       }
 
       const url = new URL(trimmedUrl);
       const params = new URLSearchParams(url.search);
-      
+
       const xt = params.get('xt');
       const dn = params.get('dn');
       const xl = params.get('xl');
@@ -364,32 +413,32 @@ export class SessionIsolatedBrightChain {
       if (!dn) missing.push('dn (file name)');
       if (!xl) missing.push('xl (file size)');
       if (!blocksParam) missing.push('blocks (block list)');
-      
+
       if (missing.length > 0) {
         throw new Error(
           `Invalid magnet URL: missing required parameters: ${missing.join(', ')}. ` +
-          'Make sure you copied the complete magnet URL from the demo.'
+            'Make sure you copied the complete magnet URL from the demo.',
         );
       }
 
       if (!xt!.startsWith('urn:brightchain:')) {
         throw new Error(
           'Invalid magnet URL: xt parameter must start with "urn:brightchain:". ' +
-          `Got: "${xt!.substring(0, 30)}"`
+            `Got: "${xt!.substring(0, 30)}"`,
         );
       }
 
       const id = xt!.replace('urn:brightchain:', '');
       const fileName = dn!;
       const originalSize = parseInt(xl!, 10);
-      
+
       if (isNaN(originalSize) || originalSize < 0) {
         throw new Error(`Invalid file size in magnet URL: "${xl}"`);
       }
 
       // Parse blocks from the compact format: blockId:size,blockId:size,...
-      const blockPairs = blocksParam!.split(',').filter(p => p.trim());
-      
+      const blockPairs = blocksParam!.split(',').filter((p) => p.trim());
+
       if (blockPairs.length === 0) {
         throw new Error('Invalid magnet URL: blocks parameter is empty');
       }
@@ -399,22 +448,24 @@ export class SessionIsolatedBrightChain {
         if (parts.length !== 2) {
           throw new Error(
             `Invalid block format at position ${index}: expected "blockId:size" format (e.g., "abc123def...:1024"), ` +
-            `but got "${pair.substring(0, 50)}${pair.length > 50 ? '...' : ''}". ` +
-            `This magnet URL may be from an older version or incomplete. Please use the CBL file instead, ` +
-            `or copy a fresh magnet URL from the demo after uploading your file.`
+              `but got "${pair.substring(0, 50)}${pair.length > 50 ? '...' : ''}". ` +
+              `This magnet URL may be from an older version or incomplete. Please use the CBL file instead, ` +
+              `or copy a fresh magnet URL from the demo after uploading your file.`,
           );
         }
-        
+
         const [blockId, sizeStr] = parts;
         const size = parseInt(sizeStr, 10);
-        
+
         if (isNaN(size) || size < 0) {
-          throw new Error(`Invalid block size at position ${index}: "${sizeStr}"`);
+          throw new Error(
+            `Invalid block size at position ${index}: "${sizeStr}"`,
+          );
         }
-        
+
         // Validate block ID format
         this.validateBlockIdHex(blockId, `Block ${index}`);
-        
+
         return {
           id: blockId,
           checksum: checksumFromHex(blockId),
@@ -429,7 +480,7 @@ export class SessionIsolatedBrightChain {
         fileName,
         originalSize,
         blockCount: blocks.length,
-        blocks: blocks.map(b => ({ id: b.id, size: b.size })),
+        blocks: blocks.map((b) => ({ id: b.id, size: b.size })),
       };
       const cblData = new TextEncoder().encode(JSON.stringify(cblJson));
 
@@ -443,7 +494,9 @@ export class SessionIsolatedBrightChain {
         magnetUrl: trimmedUrl,
       };
     } catch (error) {
-      throw new Error(`Failed to parse magnet URL: ${error instanceof Error ? error.message : 'Invalid format'}`);
+      throw new Error(
+        `Failed to parse magnet URL: ${error instanceof Error ? error.message : 'Invalid format'}`,
+      );
     }
   }
 }

@@ -9,7 +9,7 @@
  * and displays appropriate information or state changes.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 // Mock BlockInfo interface for testing
 interface MockBlockInfo {
@@ -48,12 +48,12 @@ class MockInteractionHandler implements InteractionHandler {
     const startTime = performance.now();
     this.selectedBlock = block;
     this.animatingBlocks.add(block.id);
-    
+
     // Simulate animation duration
     setTimeout(() => {
       this.animatingBlocks.delete(block.id);
     }, 300);
-    
+
     const endTime = performance.now();
     this.interactionTimes.push(endTime - startTime);
   };
@@ -69,13 +69,16 @@ class MockInteractionHandler implements InteractionHandler {
     return {
       isHighlighted: this.hoveredBlock?.id === blockId,
       isSelected: this.selectedBlock?.id === blockId,
-      isAnimating: this.animatingBlocks.has(blockId)
+      isAnimating: this.animatingBlocks.has(blockId),
     };
   };
 
   getAverageResponseTime = (): number => {
     if (this.interactionTimes.length === 0) return 0;
-    return this.interactionTimes.reduce((sum, time) => sum + time, 0) / this.interactionTimes.length;
+    return (
+      this.interactionTimes.reduce((sum, time) => sum + time, 0) /
+      this.interactionTimes.length
+    );
   };
 
   getMaxResponseTime = (): number => {
@@ -103,7 +106,7 @@ class MockInformationPanel {
     visible: false,
     block: null,
     position: { x: 0, y: 0 },
-    showTime: 0
+    showTime: 0,
   };
 
   show = (block: MockBlockInfo, position: { x: number; y: number }): void => {
@@ -112,7 +115,7 @@ class MockInformationPanel {
       visible: true,
       block,
       position,
-      showTime: startTime
+      showTime: startTime,
     };
   };
 
@@ -121,7 +124,7 @@ class MockInformationPanel {
       visible: false,
       block: null,
       position: { x: 0, y: 0 },
-      showTime: 0
+      showTime: 0,
     };
   };
 
@@ -164,36 +167,36 @@ describe('User Interaction Responsiveness Property Tests', () => {
       for (const block of mockBlocks) {
         // Record start time for responsiveness measurement
         const startTime = performance.now();
-        
+
         // Trigger hover
         interactionHandler.onHover(block);
-        
+
         // Verify immediate visual feedback (should be synchronous)
         const endTime = performance.now();
         const responseTime = endTime - startTime;
-        
+
         // Visual feedback should be immediate (< 16ms for 60fps)
         expect(responseTime).toBeLessThan(16);
-        
+
         // Verify visual state changes
         const visualState = interactionHandler.getVisualState(block.id);
         expect(visualState.isHighlighted).toBe(true);
-        
+
         // Show information panel
         informationPanel.show(block, { x: 100, y: 100 });
-        
+
         // Verify information panel appears immediately
         const panelState = informationPanel.getState();
         expect(panelState.visible).toBe(true);
         expect(panelState.block?.id).toBe(block.id);
-        
+
         // Test hover leave
         interactionHandler.onHover(null);
         informationPanel.hide();
-        
+
         const visualStateAfter = interactionHandler.getVisualState(block.id);
         expect(visualStateAfter.isHighlighted).toBe(false);
-        
+
         const panelStateAfter = informationPanel.getState();
         expect(panelStateAfter.visible).toBe(false);
       }
@@ -204,25 +207,25 @@ describe('User Interaction Responsiveness Property Tests', () => {
       for (const block of mockBlocks) {
         // Record start time for responsiveness measurement
         const startTime = performance.now();
-        
+
         // Trigger click
         interactionHandler.onClick(block);
-        
+
         // Verify immediate visual feedback
         const endTime = performance.now();
         const responseTime = endTime - startTime;
-        
+
         // Click feedback should be immediate (< 16ms for 60fps)
         expect(responseTime).toBeLessThan(16);
-        
+
         // Verify visual state changes
         const visualState = interactionHandler.getVisualState(block.id);
         expect(visualState.isSelected).toBe(true);
         expect(visualState.isAnimating).toBe(true);
-        
+
         // Wait for animation to complete
-        await new Promise(resolve => setTimeout(resolve, 350));
-        
+        await new Promise((resolve) => setTimeout(resolve, 350));
+
         const visualStateAfter = interactionHandler.getVisualState(block.id);
         expect(visualStateAfter.isAnimating).toBe(false);
         expect(visualStateAfter.isSelected).toBe(true); // Should remain selected
@@ -237,7 +240,7 @@ describe('User Interaction Responsiveness Property Tests', () => {
       for (let i = 0; i < rapidInteractionCount; i++) {
         const blockIndex = i % mockBlocks.length;
         const block = mockBlocks[blockIndex];
-        
+
         // Alternate between hover and click
         if (i % 2 === 0) {
           interactionHandler.onHover(block);
@@ -255,7 +258,7 @@ describe('User Interaction Responsiveness Property Tests', () => {
       // Average response time should remain fast even under load
       expect(averageResponseTime).toBeLessThan(5); // 5ms average
       expect(maxResponseTime).toBeLessThan(16); // No single interaction should exceed 16ms
-      
+
       // Total processing time should be reasonable
       expect(totalTime).toBeLessThan(100); // 100ms total for 50 interactions
     });
@@ -270,31 +273,31 @@ describe('User Interaction Responsiveness Property Tests', () => {
 
       for (const state of allStates) {
         const block = mockBlocks[0];
-        
+
         // Set up the state
         if (state.hover) {
           interactionHandler.onHover(block);
         } else {
           interactionHandler.onHover(null);
         }
-        
+
         if (state.select) {
           interactionHandler.onSelect(block);
         }
-        
+
         // Test interaction responsiveness in each state
         const startTime = performance.now();
         interactionHandler.onClick(block);
         const endTime = performance.now();
-        
+
         expect(endTime - startTime).toBeLessThan(16);
-        
+
         // Verify visual state is consistent
         const visualState = interactionHandler.getVisualState(block.id);
         expect(visualState.isHighlighted).toBe(state.hover);
         expect(visualState.isSelected).toBe(true); // Should be selected after click
         expect(visualState.isAnimating).toBe(true); // Should be animating after click
-        
+
         // Reset for next iteration
         interactionHandler.reset();
       }
@@ -305,26 +308,26 @@ describe('User Interaction Responsiveness Property Tests', () => {
       const startTime = performance.now();
       interactionHandler.onHover(null);
       const endTime = performance.now();
-      
+
       expect(endTime - startTime).toBeLessThan(16);
-      
+
       // Verify no block is highlighted
       for (const block of mockBlocks) {
         const visualState = interactionHandler.getVisualState(block.id);
         expect(visualState.isHighlighted).toBe(false);
       }
-      
+
       // Test rapid hover on/off
       const block = mockBlocks[0];
       for (let i = 0; i < 10; i++) {
         interactionHandler.onHover(block);
         interactionHandler.onHover(null);
       }
-      
+
       // Should handle rapid changes without issues
       const finalState = interactionHandler.getVisualState(block.id);
       expect(finalState.isHighlighted).toBe(false);
-      
+
       // Test information panel with invalid positions
       informationPanel.show(block, { x: -100, y: -100 });
       const panelState = informationPanel.getState();
@@ -339,7 +342,7 @@ describe('User Interaction Responsiveness Property Tests', () => {
         click: 16,
         select: 16,
         panelShow: 16,
-        panelHide: 16
+        panelHide: 16,
       };
 
       // Test hover performance
@@ -371,16 +374,20 @@ describe('User Interaction Responsiveness Property Tests', () => {
 
       // Test information panel performance
       const block = mockBlocks[0];
-      
+
       const showStartTime = performance.now();
       informationPanel.show(block, { x: 100, y: 100 });
       const showEndTime = performance.now();
-      expect(showEndTime - showStartTime).toBeLessThan(performanceThresholds.panelShow);
+      expect(showEndTime - showStartTime).toBeLessThan(
+        performanceThresholds.panelShow,
+      );
 
       const hideStartTime = performance.now();
       informationPanel.hide();
       const hideEndTime = performance.now();
-      expect(hideEndTime - hideStartTime).toBeLessThan(performanceThresholds.panelHide);
+      expect(hideEndTime - hideStartTime).toBeLessThan(
+        performanceThresholds.panelHide,
+      );
     });
   });
 });
