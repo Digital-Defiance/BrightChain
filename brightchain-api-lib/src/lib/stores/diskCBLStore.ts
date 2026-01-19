@@ -1,4 +1,24 @@
 import {
+  BlockDataType,
+  BlockEncryptionType,
+  BlockService,
+  BlockSize,
+  BlockType,
+  CblError,
+  CblErrorType,
+  CBLService,
+  Checksum,
+  ChecksumService,
+  ConstituentBlockListBlock,
+  EncryptedBlock,
+  EncryptedBlockMetadata,
+  ICBLStore,
+  ServiceLocator,
+  StoreError,
+  StoreErrorType,
+} from '@brightchain/brightchain-lib';
+import { arraysEqual, Member, PlatformID } from '@digitaldefiance/ecies-lib';
+import {
   existsSync,
   mkdirSync,
   readFileSync,
@@ -6,39 +26,16 @@ import {
   writeFileSync,
 } from 'fs';
 import { join } from 'path';
-import { ConstituentBlockListBlock } from '../blocks/cbl';
-import { EncryptedBlock } from '../blocks/encrypted';
-// import { MultiEncryptedBlock } from '../blocks/multiEncrypted'; // Removed
-import {
-  arraysEqual,
-  GuidV4,
-  Member,
-  PlatformID,
-} from '@digitaldefiance/ecies-lib';
-import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
-import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
-import { BlockSize } from '../enumerations/blockSize';
-import { BlockType } from '../enumerations/blockType';
-import { CblErrorType } from '../enumerations/cblErrorType';
-import { StoreErrorType } from '../enumerations/storeErrorType';
-import { CblError } from '../errors/cblError';
-import { StoreError } from '../errors/storeError';
-import { ISimpleStoreAsync } from '../interfaces/simpleStoreAsync';
-import { BlockService } from '../services/blockService';
-import { CBLService } from '../services/cblService';
-import { ChecksumService } from '../services/checksum.service';
-import { ServiceLocator } from '../services/serviceLocator';
-import { Checksum } from '../types';
 
 /**
- * CBLStore provides storage for Constituent Block Lists (CBLs).
- * It maintains an index of CBL addresses and their associated block tuples.
+ * Disk-based CBL store implementation.
+ * Stores Constituent Block Lists (CBLs) on the filesystem.
+ * Maintains an index of CBL addresses and their associated block tuples.
  * Supports both encrypted and plain CBLs.
  */
-export class CBLStore<
+export class DiskCBLStore<
   TID extends PlatformID = Uint8Array,
-> implements ISimpleStoreAsync<Checksum, ConstituentBlockListBlock<TID>, TID> {
+> implements ICBLStore<TID> {
   private readonly _storePath: string;
   private readonly _cblPath: string;
   private readonly _indexPath: string;
@@ -253,7 +250,7 @@ export class CBLStore<
     const idProvider =
       ServiceLocator.getServiceProvider<TID>().eciesService.constants
         .idProvider;
-    const creator =
+    const creator: Member<TID> =
       this._activeUser &&
       arraysEqual(
         idProvider.toBytes(this._activeUser.id),
@@ -283,7 +280,7 @@ export class CBLStore<
    */
   public async getCBLAddresses(
     checksum: Checksum,
-    hydrateFunction: (guid: GuidV4) => Promise<Member>,
+    hydrateFunction: (id: TID) => Promise<Member<TID>>,
   ): Promise<Checksum[]> {
     const blockPath = this.getBlockPath(checksum);
     if (!existsSync(blockPath)) {
@@ -292,10 +289,7 @@ export class CBLStore<
     if (!this.has(checksum)) {
       throw new StoreError(StoreErrorType.KeyNotFound);
     }
-    const cbl = await this.get(
-      checksum,
-      hydrateFunction as unknown as (id: TID) => Promise<Member<TID>>,
-    );
+    const cbl = await this.get(checksum, hydrateFunction);
 
     return cbl.addresses;
   }

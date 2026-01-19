@@ -1,9 +1,4 @@
-import {
-  arraysEqual,
-  GuidV4,
-  Member,
-  PlatformID,
-} from '@digitaldefiance/ecies-lib';
+import { arraysEqual, Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { EncryptedBlock } from '../blocks/encrypted';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
@@ -23,9 +18,9 @@ import { Checksum } from '../types';
  * Memory-based CBLStore for Constituent Block Lists (CBLs).
  * Supports both encrypted and plain CBLs.
  */
-export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
-  implements ICBLStore<TID>
-{
+export class MemoryCBLStore<
+  TID extends PlatformID = Uint8Array,
+> implements ICBLStore<TID> {
   private readonly _storage = new Map<string, Uint8Array>();
   private readonly _blockSize: BlockSize;
   private _activeUser?: Member<TID>;
@@ -73,7 +68,7 @@ export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
     if (!(value instanceof EncryptedBlock)) {
       ServiceLocator.getServiceProvider<TID>().cblService.validateSignature(
         value.data,
-        userForvalidation
+        userForvalidation,
       );
     }
 
@@ -86,7 +81,7 @@ export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
   ): Promise<ConstituentBlockListBlock<TID>> {
     const keyHex = checksum.toHex();
     const cblData = this._storage.get(keyHex);
-    
+
     if (!cblData) {
       throw new StoreError(StoreErrorType.KeyNotFound);
     }
@@ -98,7 +93,8 @@ export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
         throw new CblError(CblErrorType.UserRequiredForDecryption);
       }
 
-      const blockService = ServiceLocator.getServiceProvider<TID>().blockService;
+      const blockService =
+        ServiceLocator.getServiceProvider<TID>().blockService;
 
       if (blockService.isMultiRecipientEncrypted(cblData)) {
         const multiEncryptedCbl = new EncryptedBlock<TID>(
@@ -122,7 +118,12 @@ export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
         );
 
         const decryptedCbl = new ConstituentBlockListBlock(
-          (await blockService.decryptMultiple(this._activeUser, multiEncryptedCbl)).data,
+          (
+            await blockService.decryptMultiple(
+              this._activeUser,
+              multiEncryptedCbl,
+            )
+          ).data,
           this._activeUser,
         );
 
@@ -170,7 +171,9 @@ export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
     }
 
     const cblInfo = cblService.parseHeader(cblData);
-    const idProvider = ServiceLocator.getServiceProvider<TID>().eciesService.constants.idProvider;
+    const idProvider =
+      ServiceLocator.getServiceProvider<TID>().eciesService.constants
+        .idProvider;
     const creator =
       this._activeUser &&
       arraysEqual(
@@ -193,7 +196,7 @@ export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
 
   public async getCBLAddresses(
     checksum: Checksum,
-    hydrateFunction: (guid: GuidV4) => Promise<Member>,
+    hydrateFunction: (id: TID) => Promise<Member<TID>>,
   ): Promise<Checksum[]> {
     if (!this.has(checksum)) {
       throw new StoreError(StoreErrorType.KeyNotFound);

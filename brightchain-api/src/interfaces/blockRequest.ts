@@ -1,5 +1,5 @@
-import { Request } from 'express';
 import { DurabilityLevel } from '@brightchain/brightchain-lib';
+import { Request } from 'express';
 
 export interface BlockRequest extends Request {
   headers: {

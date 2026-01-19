@@ -22,7 +22,7 @@ export interface IAlertHandler {
 export class AlertMonitor {
   constructor(
     private readonly thresholds: IAlertThresholds = DEFAULT_ALERT_THRESHOLDS,
-    private readonly handler?: IAlertHandler
+    private readonly handler?: IAlertHandler,
   ) {}
 
   checkFailureRate(delivered: number, failed: number): void {

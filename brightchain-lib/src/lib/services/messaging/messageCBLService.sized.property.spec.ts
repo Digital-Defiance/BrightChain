@@ -1,16 +1,21 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {
+  ECIESService,
+  EmailString,
+  Member,
+  MemberType,
+} from '@digitaldefiance/ecies-lib';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import * as fc from 'fast-check';
-import { MessageCBLService } from './messageCBLService';
-import { CBLService } from '../cblService';
-import { ChecksumService } from '../checksum.service';
-import { ECIESService, EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
+import { BlockSize } from '../../enumerations/blockSize';
+import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
+import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { MemoryBlockStore } from '../../stores/memoryBlockStore';
 import { MemoryMessageMetadataStore } from '../../stores/messaging/memoryMessageMetadataStore';
-import { BlockSize } from '../../enumerations/blockSize';
-import { MessagePriority } from '../../enumerations/messaging/messagePriority';
-import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
-import { ServiceProvider } from '../service.provider';
 import { Checksum } from '../../types/checksum';
+import { CBLService } from '../cblService';
+import { ChecksumService } from '../checksum.service';
+import { ServiceProvider } from '../service.provider';
+import { MessageCBLService } from './messageCBLService';
 
 describe('Feature: message-passing-and-events, Property: Message-Sized Block Storage', () => {
   let cblService: CBLService;
@@ -21,9 +26,9 @@ describe('Feature: message-passing-and-events, Property: Message-Sized Block Sto
     checksumService = new ChecksumService();
     const eciesService = new ECIESService();
     cblService = new CBLService(checksumService, eciesService);
-    
+
     ServiceProvider.getInstance();
-    
+
     const memberWithMnemonic = await Member.newMember(
       eciesService,
       MemberType.User,
@@ -39,14 +44,19 @@ describe('Feature: message-passing-and-events, Property: Message-Sized Block Sto
 
   it('Property 28: Message-Sized Block Storage', async () => {
     const blockSizeNum = BlockSize.Small as number;
-    
+
     await fc.assert(
       fc.asyncProperty(
         fc.integer({ min: 1, max: blockSizeNum }),
         async (contentSize) => {
           const blockStore = new MemoryBlockStore(BlockSize.Small);
           const metadataStore = new MemoryMessageMetadataStore();
-          const service = new MessageCBLService(cblService, checksumService, blockStore, metadataStore);
+          const service = new MessageCBLService(
+            cblService,
+            checksumService,
+            blockStore,
+            metadataStore,
+          );
 
           // Create content with unique pattern
           const content = new Uint8Array(contentSize);
@@ -62,13 +72,19 @@ describe('Feature: message-passing-and-events, Property: Message-Sized Block Sto
             encryptionScheme: MessageEncryptionScheme.NONE,
           };
 
-          const { messageId, contentBlockIds } = await service.createMessage(content, creator, options);
-          
+          const { messageId, contentBlockIds } = await service.createMessage(
+            content,
+            creator,
+            options,
+          );
+
           // Requirement 11.1: Content <= block size stored in single block
           expect(contentBlockIds.length).toBe(1);
 
           // Requirement 11.2: Block padded to full block size
-          const contentBlock = await blockStore.getData(Checksum.fromHex(contentBlockIds[0]));
+          const contentBlock = await blockStore.getData(
+            Checksum.fromHex(contentBlockIds[0]),
+          );
           expect(contentBlock.data.length).toBe(blockSizeNum);
 
           // Requirement 11.3: Padding is zeros
@@ -80,9 +96,9 @@ describe('Feature: message-passing-and-events, Property: Message-Sized Block Sto
           const retrieved = await service.getMessageContent(messageId);
           expect(retrieved.length).toBe(contentSize);
           expect(retrieved).toEqual(content);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });

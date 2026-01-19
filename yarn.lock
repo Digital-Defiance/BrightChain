@@ -2029,7 +2029,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchain-lib@npm:*, @brightchain/brightchain-lib@npm:^0.1.7, @brightchain/brightchain-lib@workspace:brightchain-lib":
+"@brightchain/brightchain-lib@npm:*, @brightchain/brightchain-lib@npm:^0.2.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
   dependencies:
@@ -8851,7 +8851,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^25.0.3":
+"@types/node@npm:*, @types/node@npm:>=20.0.0, @types/node@npm:^25.0.3":
   version: 25.0.9
   resolution: "@types/node@npm:25.0.9"
   dependencies:
@@ -8873,15 +8873,6 @@ __metadata:
   version: 12.20.55
   resolution: "@types/node@npm:12.20.55"
   checksum: 10c0/3b190bb0410047d489c49bbaab592d2e6630de6a50f00ba3d7d513d59401d279972a8f5a598b5bb8ddc1702f8a2f4ec57a65d93852f9c329639738e7053637d1
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^20.0.0":
-  version: 20.19.30
-  resolution: "@types/node@npm:20.19.30"
-  dependencies:
-    undici-types: "npm:~6.21.0"
-  checksum: 10c0/23dbea652727d947ea35fc1c4e8acb7e1c535e85f6c139c3a4697864a5af164655ce305ab0877ea4cca537deee0405bf56aeac714f236ae1a3dd0fa6b87cc860
   languageName: node
   linkType: hard
 
@@ -11342,7 +11333,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "brightchain-showcase@workspace:showcase"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.1.7"
+    "@brightchain/brightchain-lib": "npm:^0.2.0"
     "@digitaldefiance/ecies-lib": "npm:^4.12.8"
     "@digitaldefiance/i18n-lib": "npm:^3.8.16"
     "@esbuild-plugins/node-globals-polyfill": "npm:^0.2.3"
@@ -13727,7 +13718,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"entities@npm:^4.2.0, entities@npm:^4.4.0":
+"entities@npm:^4.2.0, entities@npm:^4.4.0, entities@npm:^4.5.0":
   version: 4.5.0
   resolution: "entities@npm:4.5.0"
   checksum: 10c0/5b039739f7621f5d1ad996715e53d964035f75ad3b9a4d38c6b3804bb226e282ffeae2443624d8fdd9c47d8e926ae9ac009c54671243f0c3294c26af7cc85250
@@ -16107,15 +16098,16 @@ __metadata:
   linkType: hard
 
 "happy-dom@npm:^20.1.0":
-  version: 20.3.1
-  resolution: "happy-dom@npm:20.3.1"
+  version: 20.3.3
+  resolution: "happy-dom@npm:20.3.3"
   dependencies:
-    "@types/node": "npm:^20.0.0"
+    "@types/node": "npm:>=20.0.0"
     "@types/whatwg-mimetype": "npm:^3.0.2"
     "@types/ws": "npm:^8.18.1"
+    entities: "npm:^4.5.0"
     whatwg-mimetype: "npm:^3.0.0"
     ws: "npm:^8.18.3"
-  checksum: 10c0/bb2283e7b897bc55d10ca52033256bfde4a209d981ca50af022fc431252775292971531c0a527c7429af5965043f4fd144d0873ed0fd62ddf4c9dd4ce750908a
+  checksum: 10c0/8d2ca0337be44c4d9b0ecd18213ce4ba326fe08f3cee604d64395fac88b21f056668e6d247ba0f05f7e54805b6e76e1edfe7f9cb4dcd1f812cff35ac2b2a88e4
   languageName: node
   linkType: hard
 

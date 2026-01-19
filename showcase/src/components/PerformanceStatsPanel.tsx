@@ -4,7 +4,11 @@
  */
 
 import React from 'react';
-import { QualityLevel, LayoutDimensions, MemoryStats } from './PerformanceOptimizer';
+import {
+  LayoutDimensions,
+  MemoryStats,
+  QualityLevel,
+} from './PerformanceOptimizer';
 import './PerformanceStatsPanel.css';
 
 export interface PerformanceStatsPanelProps {
@@ -72,7 +76,10 @@ export const PerformanceStatsPanel: React.FC<PerformanceStatsPanelProps> = ({
           <div
             className="stat-value"
             style={{
-              color: getMemoryColor(memoryStats.usedMemory, memoryStats.totalMemory),
+              color: getMemoryColor(
+                memoryStats.usedMemory,
+                memoryStats.totalMemory,
+              ),
             }}
           >
             {memoryStats.usedMemory > 0
@@ -115,7 +122,8 @@ export const PerformanceStatsPanel: React.FC<PerformanceStatsPanelProps> = ({
               >
                 {availableQualities.map((quality) => (
                   <option key={quality.name} value={quality.name}>
-                    {quality.name.charAt(0).toUpperCase() + quality.name.slice(1)}
+                    {quality.name.charAt(0).toUpperCase() +
+                      quality.name.slice(1)}
                   </option>
                 ))}
               </select>
@@ -133,9 +141,7 @@ export const PerformanceStatsPanel: React.FC<PerformanceStatsPanelProps> = ({
             <div className="stat-detail">
               {layoutDimensions.width} × {layoutDimensions.height}
             </div>
-            <div className="stat-detail">
-              {layoutDimensions.orientation}
-            </div>
+            <div className="stat-detail">{layoutDimensions.orientation}</div>
           </div>
         )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useEducationalModeContext } from './EducationalModeProvider';
 import './ProcessCompletionSummary.css';
 
@@ -14,13 +14,13 @@ interface ProcessCompletionSummaryProps {
 /**
  * Process Completion Summary Modal Component
  */
-export const ProcessCompletionSummary: React.FC<ProcessCompletionSummaryProps> = ({
-  processType,
-  isVisible,
-  onClose
-}) => {
+export const ProcessCompletionSummary: React.FC<
+  ProcessCompletionSummaryProps
+> = ({ processType, isVisible, onClose }) => {
   const { content, config } = useEducationalModeContext();
-  const [currentSection, setCurrentSection] = useState<'overview' | 'achievements' | 'technical' | 'next'>('overview');
+  const [currentSection, setCurrentSection] = useState<
+    'overview' | 'achievements' | 'technical' | 'next'
+  >('overview');
 
   const summary = content.processCompletionSummaries.get(processType);
 
@@ -38,7 +38,7 @@ export const ProcessCompletionSummary: React.FC<ProcessCompletionSummaryProps> =
     { id: 'overview', label: 'Overview', icon: '📋' },
     { id: 'achievements', label: 'Achievements', icon: '🎯' },
     { id: 'technical', label: 'Technical', icon: '⚙️' },
-    { id: 'next', label: 'Next Steps', icon: '🚀' }
+    { id: 'next', label: 'Next Steps', icon: '🚀' },
   ] as const;
 
   const renderSectionContent = () => {
@@ -58,7 +58,7 @@ export const ProcessCompletionSummary: React.FC<ProcessCompletionSummaryProps> =
             </div>
           </div>
         );
-      
+
       case 'achievements':
         return (
           <div className="summary-section">
@@ -73,7 +73,7 @@ export const ProcessCompletionSummary: React.FC<ProcessCompletionSummaryProps> =
             </div>
           </div>
         );
-      
+
       case 'technical':
         return (
           <div className="summary-section">
@@ -88,7 +88,7 @@ export const ProcessCompletionSummary: React.FC<ProcessCompletionSummaryProps> =
             </div>
           </div>
         );
-      
+
       case 'next':
         return (
           <div className="summary-section">
@@ -103,7 +103,7 @@ export const ProcessCompletionSummary: React.FC<ProcessCompletionSummaryProps> =
             </div>
           </div>
         );
-      
+
       default:
         return null;
     }
@@ -114,7 +114,7 @@ export const ProcessCompletionSummary: React.FC<ProcessCompletionSummaryProps> =
       <div className="summary-modal" onClick={(e) => e.stopPropagation()}>
         <div className="summary-header">
           <h2 className="summary-title">{summary.title}</h2>
-          <button 
+          <button
             className="summary-close"
             onClick={onClose}
             aria-label="Close summary"
@@ -122,9 +122,9 @@ export const ProcessCompletionSummary: React.FC<ProcessCompletionSummaryProps> =
             ×
           </button>
         </div>
-        
+
         <div className="summary-navigation">
-          {sections.map(section => (
+          {sections.map((section) => (
             <button
               key={section.id}
               className={`nav-button ${currentSection === section.id ? 'active' : ''}`}
@@ -135,11 +135,9 @@ export const ProcessCompletionSummary: React.FC<ProcessCompletionSummaryProps> =
             </button>
           ))}
         </div>
-        
-        <div className="summary-content">
-          {renderSectionContent()}
-        </div>
-        
+
+        <div className="summary-content">{renderSectionContent()}</div>
+
         <div className="summary-footer">
           <div className="progress-indicator">
             {sections.map((section, index) => (
@@ -150,12 +148,14 @@ export const ProcessCompletionSummary: React.FC<ProcessCompletionSummaryProps> =
               />
             ))}
           </div>
-          
+
           <div className="summary-actions">
-            <button 
+            <button
               className="action-btn secondary"
               onClick={() => {
-                const currentIndex = sections.findIndex(s => s.id === currentSection);
+                const currentIndex = sections.findIndex(
+                  (s) => s.id === currentSection,
+                );
                 if (currentIndex > 0) {
                   setCurrentSection(sections[currentIndex - 1].id);
                 }
@@ -164,11 +164,13 @@ export const ProcessCompletionSummary: React.FC<ProcessCompletionSummaryProps> =
             >
               ← Previous
             </button>
-            
-            <button 
+
+            <button
               className="action-btn primary"
               onClick={() => {
-                const currentIndex = sections.findIndex(s => s.id === currentSection);
+                const currentIndex = sections.findIndex(
+                  (s) => s.id === currentSection,
+                );
                 if (currentIndex < sections.length - 1) {
                   setCurrentSection(sections[currentIndex + 1].id);
                 } else {
@@ -194,7 +196,7 @@ export const EducationalModeControls: React.FC = () => {
     enableEducationalMode,
     disableEducationalMode,
     updateConfig,
-    setSpeedMultiplier
+    setSpeedMultiplier,
   } = useEducationalModeContext();
 
   const speedOptions = [
@@ -203,7 +205,7 @@ export const EducationalModeControls: React.FC = () => {
     { value: 0.75, label: '0.75x (Moderate)' },
     { value: 1.0, label: '1x (Normal)' },
     { value: 1.5, label: '1.5x (Fast)' },
-    { value: 2.0, label: '2x (Very Fast)' }
+    { value: 2.0, label: '2x (Very Fast)' },
   ];
 
   return (
@@ -237,7 +239,7 @@ export const EducationalModeControls: React.FC = () => {
                 onChange={(e) => setSpeedMultiplier(parseFloat(e.target.value))}
                 className="control-select"
               >
-                {speedOptions.map(option => (
+                {speedOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -251,7 +253,9 @@ export const EducationalModeControls: React.FC = () => {
               <input
                 type="checkbox"
                 checked={config.stepByStepMode}
-                onChange={(e) => updateConfig({ stepByStepMode: e.target.checked })}
+                onChange={(e) =>
+                  updateConfig({ stepByStepMode: e.target.checked })
+                }
                 className="control-checkbox"
               />
               <span className="checkbox-custom"></span>
@@ -264,7 +268,9 @@ export const EducationalModeControls: React.FC = () => {
               <input
                 type="checkbox"
                 checked={config.showTooltips}
-                onChange={(e) => updateConfig({ showTooltips: e.target.checked })}
+                onChange={(e) =>
+                  updateConfig({ showTooltips: e.target.checked })
+                }
                 className="control-checkbox"
               />
               <span className="checkbox-custom"></span>
@@ -277,7 +283,9 @@ export const EducationalModeControls: React.FC = () => {
               <input
                 type="checkbox"
                 checked={config.showExplanations}
-                onChange={(e) => updateConfig({ showExplanations: e.target.checked })}
+                onChange={(e) =>
+                  updateConfig({ showExplanations: e.target.checked })
+                }
                 className="control-checkbox"
               />
               <span className="checkbox-custom"></span>
@@ -290,7 +298,9 @@ export const EducationalModeControls: React.FC = () => {
               <input
                 type="checkbox"
                 checked={config.autoAdvance}
-                onChange={(e) => updateConfig({ autoAdvance: e.target.checked })}
+                onChange={(e) =>
+                  updateConfig({ autoAdvance: e.target.checked })
+                }
                 className="control-checkbox"
               />
               <span className="checkbox-custom"></span>
@@ -315,36 +325,44 @@ export const EducationalProgressIndicator: React.FC = () => {
 
   // This would typically come from the animation controller
   const allSteps = [
-    'file-read', 'chunking', 'padding', 'checksum', 'storage', 'cbl-creation', 'magnet-url'
+    'file-read',
+    'chunking',
+    'padding',
+    'checksum',
+    'storage',
+    'cbl-creation',
+    'magnet-url',
   ];
 
   const currentIndex = allSteps.indexOf(currentStep.id);
-  const progress = ((completedSteps.size) / allSteps.length) * 100;
+  const progress = (completedSteps.size / allSteps.length) * 100;
 
   return (
     <div className="educational-progress">
       <div className="progress-header">
         <h4>Learning Progress</h4>
-        <span className="progress-text">{completedSteps.size} of {allSteps.length} steps completed</span>
+        <span className="progress-text">
+          {completedSteps.size} of {allSteps.length} steps completed
+        </span>
       </div>
-      
+
       <div className="progress-bar-container">
         <div className="progress-bar">
-          <div 
-            className="progress-fill"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="progress-fill" style={{ width: `${progress}%` }} />
         </div>
         <span className="progress-percentage">{Math.round(progress)}%</span>
       </div>
-      
+
       <div className="step-indicators">
         {allSteps.map((stepId, index) => (
           <div
             key={stepId}
             className={`step-indicator ${
-              completedSteps.has(stepId) ? 'completed' : 
-              stepId === currentStep.id ? 'active' : 'pending'
+              completedSteps.has(stepId)
+                ? 'completed'
+                : stepId === currentStep.id
+                  ? 'active'
+                  : 'pending'
             }`}
             title={stepId.replace('-', ' ')}
           >

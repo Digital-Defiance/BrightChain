@@ -47,7 +47,7 @@ describe('WebSocketHandler', () => {
     } as jest.Mocked<IBlockRegistry>;
 
     mockDiscoveryProtocol = {} as jest.Mocked<IDiscoveryProtocol>;
-    
+
     mockGossipService = {
       handleAnnouncement: jest.fn(),
     } as unknown as jest.Mocked<IGossipService>;
@@ -80,8 +80,14 @@ describe('WebSocketHandler', () => {
   describe('Connection Management', () => {
     it('should register a connection', () => {
       handler.registerConnection(mockConnection);
-      expect(mockConnection.on).toHaveBeenCalledWith('message', expect.any(Function));
-      expect(mockConnection.on).toHaveBeenCalledWith('disconnect', expect.any(Function));
+      expect(mockConnection.on).toHaveBeenCalledWith(
+        'message',
+        expect.any(Function),
+      );
+      expect(mockConnection.on).toHaveBeenCalledWith(
+        'disconnect',
+        expect.any(Function),
+      );
     });
 
     it('should unregister a connection', () => {
@@ -115,7 +121,7 @@ describe('WebSocketHandler', () => {
 
       // Simulate message reception
       const messageHandler = (mockConnection.on as jest.Mock).mock.calls.find(
-        (call) => call[0] === 'message'
+        (call) => call[0] === 'message',
       )?.[1];
       await messageHandler(request);
 
@@ -132,7 +138,7 @@ describe('WebSocketHandler', () => {
               itemCount: 10,
             }),
           }),
-        })
+        }),
       );
     });
 
@@ -150,7 +156,7 @@ describe('WebSocketHandler', () => {
       };
 
       const messageHandler = (mockConnection.on as jest.Mock).mock.calls.find(
-        (call) => call[0] === 'message'
+        (call) => call[0] === 'message',
       )?.[1];
       await messageHandler(query);
 
@@ -164,7 +170,7 @@ describe('WebSocketHandler', () => {
             hasBlock: true,
             nodeId: 'local-node-1',
           }),
-        })
+        }),
       );
     });
 
@@ -185,7 +191,7 @@ describe('WebSocketHandler', () => {
       };
 
       const messageHandler = (mockConnection.on as jest.Mock).mock.calls.find(
-        (call) => call[0] === 'message'
+        (call) => call[0] === 'message',
       )?.[1];
       await messageHandler(request);
 
@@ -199,7 +205,7 @@ describe('WebSocketHandler', () => {
             blockIds: ['block-1', 'block-2', 'block-3'],
             checksum: 'abc123',
           }),
-        })
+        }),
       );
     });
   });
@@ -221,7 +227,7 @@ describe('WebSocketHandler', () => {
       };
 
       const messageHandler = (mockConnection.on as jest.Mock).mock.calls.find(
-        (call) => call[0] === 'message'
+        (call) => call[0] === 'message',
       )?.[1];
       await messageHandler(announcement);
 
@@ -230,7 +236,7 @@ describe('WebSocketHandler', () => {
         expect.objectContaining({
           nodeId: 'remote-node-2',
           isAuthoritative: true,
-        })
+        }),
       );
       expect(mockGossipService.handleAnnouncement).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -238,7 +244,7 @@ describe('WebSocketHandler', () => {
           blockId: 'block-456',
           nodeId: 'remote-node-2',
           ttl: 3,
-        })
+        }),
       );
     });
 
@@ -254,13 +260,13 @@ describe('WebSocketHandler', () => {
       };
 
       const messageHandler = (mockConnection.on as jest.Mock).mock.calls.find(
-        (call) => call[0] === 'message'
+        (call) => call[0] === 'message',
       )?.[1];
       await messageHandler(removal);
 
       expect(mockAvailabilityService.removeLocation).toHaveBeenCalledWith(
         'block-789',
-        'remote-node-3'
+        'remote-node-3',
       );
       expect(mockGossipService.handleAnnouncement).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -268,7 +274,7 @@ describe('WebSocketHandler', () => {
           blockId: 'block-789',
           nodeId: 'remote-node-3',
           ttl: 2,
-        })
+        }),
       );
     });
   });
@@ -287,7 +293,7 @@ describe('WebSocketHandler', () => {
       };
 
       const messageHandler = (mockConnection.on as jest.Mock).mock.calls.find(
-        (call) => call[0] === 'message'
+        (call) => call[0] === 'message',
       )?.[1];
       await messageHandler(ping);
 
@@ -298,7 +304,7 @@ describe('WebSocketHandler', () => {
           payload: expect.objectContaining({
             nodeId: 'local-node-1',
           }),
-        })
+        }),
       );
     });
   });

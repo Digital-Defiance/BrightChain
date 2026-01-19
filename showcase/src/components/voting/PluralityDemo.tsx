@@ -16,7 +16,8 @@ import { useVotingDemo } from './useVotingDemo';
 export const PluralityDemo = () => {
   const [poll, setPoll] = useState<Poll<Uint8Array> | null>(null);
   const [authority, setAuthority] = useState<Member | null>(null);
-  const [auditLog, setAuditLog] = useState<ImmutableAuditLog<Uint8Array> | null>(null);
+  const [auditLog, setAuditLog] =
+    useState<ImmutableAuditLog<Uint8Array> | null>(null);
   const [voters] = useState(['Alice', 'Bob', 'Charlie', 'Diana', 'Eve']);
   const [votes, setVotes] = useState<Map<string, number>>(new Map());
   const [results, setResults] = useState<PollResults | null>(null);

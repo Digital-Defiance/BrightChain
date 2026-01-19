@@ -17,7 +17,6 @@ import {
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
 import { mkdirSync, rmSync } from 'fs';
 import { join } from 'path';

@@ -1,7 +1,17 @@
+import {
+  DurabilityLevel,
+  IMessageMetadata,
+  MessageDeliveryStatus,
+  MessageEncryptionScheme,
+  MessagePriority,
+  ReplicationStatus,
+} from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
-import { EventNotificationSystem, MessageEventType } from './eventNotificationSystem';
 import { WebSocket } from 'ws';
-import { IMessageMetadata, MessageDeliveryStatus, MessageEncryptionScheme, MessagePriority, ReplicationStatus, DurabilityLevel } from '@brightchain/brightchain-lib';
+import {
+  EventNotificationSystem,
+  MessageEventType,
+} from './eventNotificationSystem';
 
 /**
  * Property tests for event payload completeness
@@ -17,10 +27,27 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
       fc.asyncProperty(
         fc.string({ minLength: 1, maxLength: 32 }),
         fc.string({ minLength: 1, maxLength: 32 }),
-        fc.array(fc.string({ minLength: 1, maxLength: 32 }), { minLength: 0, maxLength: 5 }),
-        fc.constantFrom(MessagePriority.LOW, MessagePriority.NORMAL, MessagePriority.HIGH),
-        fc.constantFrom(MessageEncryptionScheme.NONE, MessageEncryptionScheme.SHARED_KEY, MessageEncryptionScheme.RECIPIENT_KEYS),
-        async (senderId, messageType, recipients, priority, encryptionScheme) => {
+        fc.array(fc.string({ minLength: 1, maxLength: 32 }), {
+          minLength: 0,
+          maxLength: 5,
+        }),
+        fc.constantFrom(
+          MessagePriority.LOW,
+          MessagePriority.NORMAL,
+          MessagePriority.HIGH,
+        ),
+        fc.constantFrom(
+          MessageEncryptionScheme.NONE,
+          MessageEncryptionScheme.SHARED_KEY,
+          MessageEncryptionScheme.RECIPIENT_KEYS,
+        ),
+        async (
+          senderId,
+          messageType,
+          recipients,
+          priority,
+          encryptionScheme,
+        ) => {
           const system = new EventNotificationSystem();
           const mockWs = {
             readyState: 1,
@@ -36,7 +63,9 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
             senderId,
             recipients,
             priority,
-            deliveryStatus: new Map(recipients.map(r => [r, MessageDeliveryStatus.PENDING])),
+            deliveryStatus: new Map(
+              recipients.map((r) => [r, MessageDeliveryStatus.PENDING]),
+            ),
             acknowledgments: new Map(),
             encryptionScheme,
             isCBL: false,
@@ -64,9 +93,9 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
           expect(event.metadata.recipients).toEqual(recipients);
           expect(event.metadata.priority).toBe(priority);
           expect(event.metadata.encryptionScheme).toBe(encryptionScheme);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -81,7 +110,7 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
           MessageEventType.MESSAGE_STORED,
           MessageEventType.MESSAGE_RECEIVED,
           MessageEventType.MESSAGE_DELIVERED,
-          MessageEventType.MESSAGE_FAILED
+          MessageEventType.MESSAGE_FAILED,
         ),
         async (eventType) => {
           const system = new EventNotificationSystem();
@@ -99,7 +128,9 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
             senderId: 'sender-1',
             recipients: ['recipient-1'],
             priority: MessagePriority.NORMAL,
-            deliveryStatus: new Map([['recipient-1', MessageDeliveryStatus.PENDING]]),
+            deliveryStatus: new Map([
+              ['recipient-1', MessageDeliveryStatus.PENDING],
+            ]),
             acknowledgments: new Map(),
             encryptionScheme: MessageEncryptionScheme.NONE,
             isCBL: false,
@@ -128,9 +159,9 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
           const eventTime = new Date(event.timestamp).getTime();
           expect(eventTime).toBeGreaterThanOrEqual(beforeEmit);
           expect(eventTime).toBeLessThanOrEqual(afterEmit);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -145,7 +176,7 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
           MessageEventType.MESSAGE_STORED,
           MessageEventType.MESSAGE_RECEIVED,
           MessageEventType.MESSAGE_DELIVERED,
-          MessageEventType.MESSAGE_FAILED
+          MessageEventType.MESSAGE_FAILED,
         ),
         async (eventType) => {
           const system = new EventNotificationSystem();
@@ -187,9 +218,9 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
           const event = JSON.parse(sentData);
 
           expect(event.type).toBe(eventType);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -200,7 +231,10 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
   it('Property 17d: should preserve recipient list in event payload', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.array(fc.string({ minLength: 1, maxLength: 32 }), { minLength: 0, maxLength: 10 }),
+        fc.array(fc.string({ minLength: 1, maxLength: 32 }), {
+          minLength: 0,
+          maxLength: 10,
+        }),
         async (recipients) => {
           const system = new EventNotificationSystem();
           const mockWs = {
@@ -217,7 +251,9 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
             senderId: 'sender-1',
             recipients,
             priority: MessagePriority.NORMAL,
-            deliveryStatus: new Map(recipients.map(r => [r, MessageDeliveryStatus.PENDING])),
+            deliveryStatus: new Map(
+              recipients.map((r) => [r, MessageDeliveryStatus.PENDING]),
+            ),
             acknowledgments: new Map(),
             encryptionScheme: MessageEncryptionScheme.NONE,
             isCBL: false,
@@ -241,9 +277,9 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
           const event = JSON.parse(sentData);
 
           expect(event.metadata.recipients).toEqual(recipients);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -293,15 +329,15 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
           system.emit(MessageEventType.MESSAGE_STORED, metadata);
 
           const sentData = (mockWs.send as jest.Mock).mock.calls[0][0];
-          
+
           expect(() => JSON.parse(sentData)).not.toThrow();
           const event = JSON.parse(sentData);
           expect(event).toHaveProperty('type');
           expect(event).toHaveProperty('timestamp');
           expect(event).toHaveProperty('metadata');
-        }
+        },
       ),
-      { numRuns: 50 }
+      { numRuns: 50 },
     );
   });
 });

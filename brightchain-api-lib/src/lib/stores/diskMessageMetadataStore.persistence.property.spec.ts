@@ -42,7 +42,10 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
     blockId: arbHexString(64, 64),
     createdAt: arbValidDate,
     expiresAt: fc.option(arbValidDate, { nil: null }),
-    durabilityLevel: fc.constantFrom(DurabilityLevel.Standard, DurabilityLevel.HighDurability),
+    durabilityLevel: fc.constantFrom(
+      DurabilityLevel.Standard,
+      DurabilityLevel.HighDurability,
+    ),
     parityBlockIds: fc.array(arbHexString(64, 64)),
     accessCount: fc.nat(),
     lastAccessedAt: arbValidDate,
@@ -69,7 +72,9 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
       MessageEncryptionScheme.RECIPIENT_KEYS,
     ),
     isCBL: fc.boolean(),
-  }) as fc.Arbitrary<Omit<IMessageMetadata, 'deliveryStatus' | 'acknowledgments' | 'cblBlockIds'>>;
+  }) as fc.Arbitrary<
+    Omit<IMessageMetadata, 'deliveryStatus' | 'acknowledgments' | 'cblBlockIds'>
+  >;
 
   it('Property 31a: Metadata persists across store instances (100 iterations)', async () => {
     await fc.assert(
@@ -105,8 +110,11 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
         fc.array(arbHexString(40, 40), { minLength: 1, maxLength: 5 }),
         async (baseMeta, recipientIds) => {
           const iterTempDir = mkdtempSync(join(tmpdir(), 'disk-msg-persist-'));
-          const iterStore = new DiskMessageMetadataStore(iterTempDir, BlockSize.Small);
-          
+          const iterStore = new DiskMessageMetadataStore(
+            iterTempDir,
+            BlockSize.Small,
+          );
+
           try {
             const metadata: IMessageMetadata = {
               ...baseMeta,
@@ -153,8 +161,11 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
         arbValidDate,
         async (baseMeta, recipientIds, ackTime) => {
           const iterTempDir = mkdtempSync(join(tmpdir(), 'disk-msg-ack-'));
-          const iterStore = new DiskMessageMetadataStore(iterTempDir, BlockSize.Small);
-          
+          const iterStore = new DiskMessageMetadataStore(
+            iterTempDir,
+            BlockSize.Small,
+          );
+
           try {
             const metadata: IMessageMetadata = {
               ...baseMeta,
@@ -214,9 +225,8 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
             tempDir,
             BlockSize.Small,
           );
-          const retrieved = await newStore.getMessagesByRecipient(
-            targetRecipient,
-          );
+          const retrieved =
+            await newStore.getMessagesByRecipient(targetRecipient);
 
           expect(retrieved.length).toBe(baseMetas.length);
           retrieved.forEach((msg) => {
@@ -235,8 +245,11 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
         arbHexString(40, 40),
         async (baseMetas, targetSender) => {
           const iterTempDir = mkdtempSync(join(tmpdir(), 'disk-msg-sender-'));
-          const iterStore = new DiskMessageMetadataStore(iterTempDir, BlockSize.Small);
-          
+          const iterStore = new DiskMessageMetadataStore(
+            iterTempDir,
+            BlockSize.Small,
+          );
+
           try {
             for (const baseMeta of baseMetas) {
               const metadata: IMessageMetadata = {

@@ -151,9 +151,9 @@ describe('CBL Serialization Round-Trip Property Tests', () => {
             expect(deserializedCbl.blockSize).toBe(originalCbl.blockSize);
 
             // Verify checksum is preserved
-            expect(uint8ArrayToHex(deserializedCbl.idChecksum.toUint8Array())).toBe(
-              uint8ArrayToHex(originalCbl.idChecksum.toUint8Array()),
-            );
+            expect(
+              uint8ArrayToHex(deserializedCbl.idChecksum.toUint8Array()),
+            ).toBe(uint8ArrayToHex(originalCbl.idChecksum.toUint8Array()));
           },
         ),
         { numRuns: 10 },

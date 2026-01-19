@@ -5,25 +5,27 @@ import {
   getEnhancedIdProvider,
 } from '@digitaldefiance/ecies-lib';
 import { ChecksumBuffer } from '@digitaldefiance/node-ecies-lib';
+import {
+  BlockEncryptionType,
+  BlockSize,
+  BlockType,
+  CblErrorType,
+  MemberType,
+  StoreErrorType,
+  CblError,
+  StoreError,
+  CBLService,
+  ChecksumService,
+  ServiceProvider,
+  ConstituentBlockListBlock,
+} from '@brightchain/brightchain-lib';
 import { faker } from '@faker-js/faker';
 import { mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
-import { ConstituentBlockListBlock } from '../blocks/cbl';
-import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
-import { BlockSize } from '../enumerations/blockSize';
-import { BlockType } from '../enumerations/blockType';
-import { CblErrorType } from '../enumerations/cblErrorType';
-import MemberType from '../enumerations/memberType';
-import { StoreErrorType } from '../enumerations/storeErrorType';
-import { CblError } from '../errors/cblError';
-import { StoreError } from '../errors/storeError';
-import { CBLService } from '../services/cblService';
-import { ChecksumService } from '../services/checksum.service';
-import { ServiceProvider } from '../services/service.provider';
-import { CBLStore } from './cblStore';
+import { DiskCBLStore } from './diskCBLStore';
 
-describe('CBLStore', () => {
-  let store: CBLStore;
+describe('DiskCBLStore', () => {
+  let store: DiskCBLStore;
   let checksumService: ChecksumService;
   let cblService: CBLService;
   const testDir = join(__dirname, 'test-cbl-store');
@@ -42,7 +44,7 @@ describe('CBLStore', () => {
   beforeEach(() => {
     // Create test directory
     mkdirSync(testDir, { recursive: true });
-    store = new CBLStore({ storePath: testDir, blockSize });
+    store = new DiskCBLStore({ storePath: testDir, blockSize });
     checksumService = ServiceProvider.getInstance().checksumService;
     cblService = ServiceProvider.getInstance().cblService;
   });
@@ -341,7 +343,7 @@ describe('CBLStore', () => {
       const cbl = new ConstituentBlockListBlock(paddedData, creator);
 
       // Create a new store without an active user
-      const newStore = new CBLStore({ storePath: testDir, blockSize });
+      const newStore = new DiskCBLStore({ storePath: testDir, blockSize });
 
       // We need to create a fake CBL without a creator
       // This is necessary because the CBL constructor validates the creator

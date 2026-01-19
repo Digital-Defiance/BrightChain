@@ -4,14 +4,14 @@
  * Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import fc from 'fast-check';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
   BrowserCompatibility,
-  initializeBrowserCompatibility,
-  getSafeRequestAnimationFrame,
   getSafeCancelAnimationFrame,
   getSafePerformanceNow,
+  getSafeRequestAnimationFrame,
+  initializeBrowserCompatibility,
 } from './BrowserCompatibility';
 
 describe('Property 13: Cross-Browser Compatibility', () => {
@@ -48,7 +48,7 @@ describe('Property 13: Cross-Browser Compatibility', () => {
         // Name should not be empty
         expect(browserInfo.name.length).toBeGreaterThan(0);
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -72,7 +72,7 @@ describe('Property 13: Cross-Browser Compatibility', () => {
         const features2 = compat.getFeatureSupport();
         expect(features).toEqual(features2);
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -115,7 +115,7 @@ describe('Property 13: Cross-Browser Compatibility', () => {
           expect(fallback.length).toBeGreaterThan(0);
         });
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -137,21 +137,19 @@ describe('Property 13: Cross-Browser Compatibility', () => {
         // Strategy should match capabilities
         if (strategy === 'full') {
           // Full strategy requires advanced features
-          expect(
-            features.webAnimations || features.requestAnimationFrame
-          ).toBe(true);
+          expect(features.webAnimations || features.requestAnimationFrame).toBe(
+            true,
+          );
         } else if (strategy === 'reduced') {
           // Reduced strategy requires CSS animations
-          expect(
-            features.cssAnimations || features.cssTransitions
-          ).toBe(true);
+          expect(features.cssAnimations || features.cssTransitions).toBe(true);
         } else if (strategy === 'minimal') {
           // Minimal strategy requires at least requestAnimationFrame
           expect(features.requestAnimationFrame).toBe(true);
         }
         // 'none' strategy has no requirements
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -185,7 +183,7 @@ describe('Property 13: Cross-Browser Compatibility', () => {
         }
         // 'css' strategy is the fallback when nothing else is available
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -215,7 +213,7 @@ describe('Property 13: Cross-Browser Compatibility', () => {
         // cancelAnimationFrame should accept the handle without throwing
         expect(() => cancelFrame(handle)).not.toThrow();
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -226,29 +224,26 @@ describe('Property 13: Cross-Browser Compatibility', () => {
    */
   it('should provide monotonically increasing timestamps', () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 2, max: 10 }),
-        (callCount) => {
-          const performanceNow = getSafePerformanceNow();
+      fc.property(fc.integer({ min: 2, max: 10 }), (callCount) => {
+        const performanceNow = getSafePerformanceNow();
 
-          const timestamps: number[] = [];
-          for (let i = 0; i < callCount; i++) {
-            timestamps.push(performanceNow());
-          }
-
-          // All timestamps should be numbers
-          timestamps.forEach((ts) => {
-            expect(typeof ts).toBe('number');
-            expect(ts).toBeGreaterThanOrEqual(0);
-          });
-
-          // Timestamps should be monotonically increasing or equal
-          for (let i = 1; i < timestamps.length; i++) {
-            expect(timestamps[i]).toBeGreaterThanOrEqual(timestamps[i - 1]);
-          }
+        const timestamps: number[] = [];
+        for (let i = 0; i < callCount; i++) {
+          timestamps.push(performanceNow());
         }
-      ),
-      { numRuns: 100 }
+
+        // All timestamps should be numbers
+        timestamps.forEach((ts) => {
+          expect(typeof ts).toBe('number');
+          expect(ts).toBeGreaterThanOrEqual(0);
+        });
+
+        // Timestamps should be monotonically increasing or equal
+        for (let i = 1; i < timestamps.length; i++) {
+          expect(timestamps[i]).toBeGreaterThanOrEqual(timestamps[i - 1]);
+        }
+      }),
+      { numRuns: 100 },
     );
   });
 
@@ -276,7 +271,7 @@ describe('Property 13: Cross-Browser Compatibility', () => {
         const uniquePolyfills = new Set(polyfills);
         expect(uniquePolyfills.size).toBe(polyfills.length);
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -299,7 +294,7 @@ describe('Property 13: Cross-Browser Compatibility', () => {
           expect(isCompatible).toBe(true);
         }
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -331,7 +326,7 @@ describe('Property 13: Cross-Browser Compatibility', () => {
           expect(features.canvas).toBe(true);
         }
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -342,29 +337,26 @@ describe('Property 13: Cross-Browser Compatibility', () => {
    */
   it('should maintain singleton pattern across multiple initializations', () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 1, max: 10 }),
-        (initCount) => {
-          const instances: BrowserCompatibility[] = [];
+      fc.property(fc.integer({ min: 1, max: 10 }), (initCount) => {
+        const instances: BrowserCompatibility[] = [];
 
-          for (let i = 0; i < initCount; i++) {
-            instances.push(initializeBrowserCompatibility());
-          }
-
-          // All instances should be the same object
-          for (let i = 1; i < instances.length; i++) {
-            expect(instances[i]).toBe(instances[0]);
-          }
-
-          // All instances should have the same state
-          const firstReport = instances[0].generateReport();
-          for (let i = 1; i < instances.length; i++) {
-            const report = instances[i].generateReport();
-            expect(report).toEqual(firstReport);
-          }
+        for (let i = 0; i < initCount; i++) {
+          instances.push(initializeBrowserCompatibility());
         }
-      ),
-      { numRuns: 100 }
+
+        // All instances should be the same object
+        for (let i = 1; i < instances.length; i++) {
+          expect(instances[i]).toBe(instances[0]);
+        }
+
+        // All instances should have the same state
+        const firstReport = instances[0].generateReport();
+        for (let i = 1; i < instances.length; i++) {
+          const report = instances[i].generateReport();
+          expect(report).toEqual(firstReport);
+        }
+      }),
+      { numRuns: 100 },
     );
   });
 
@@ -375,23 +367,20 @@ describe('Property 13: Cross-Browser Compatibility', () => {
    */
   it('should return stable browser information across multiple accesses', () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 2, max: 10 }),
-        (accessCount) => {
-          const compat = BrowserCompatibility.getInstance();
-          const browserInfos: any[] = [];
+      fc.property(fc.integer({ min: 2, max: 10 }), (accessCount) => {
+        const compat = BrowserCompatibility.getInstance();
+        const browserInfos: any[] = [];
 
-          for (let i = 0; i < accessCount; i++) {
-            browserInfos.push(compat.getBrowserInfo());
-          }
-
-          // All browser info objects should be equal
-          for (let i = 1; i < browserInfos.length; i++) {
-            expect(browserInfos[i]).toEqual(browserInfos[0]);
-          }
+        for (let i = 0; i < accessCount; i++) {
+          browserInfos.push(compat.getBrowserInfo());
         }
-      ),
-      { numRuns: 100 }
+
+        // All browser info objects should be equal
+        for (let i = 1; i < browserInfos.length; i++) {
+          expect(browserInfos[i]).toEqual(browserInfos[0]);
+        }
+      }),
+      { numRuns: 100 },
     );
   });
 
@@ -402,18 +391,15 @@ describe('Property 13: Cross-Browser Compatibility', () => {
    */
   it('should handle feature checks gracefully without throwing', () => {
     fc.assert(
-      fc.property(
-        fc.string(),
-        (featureName) => {
-          const compat = BrowserCompatibility.getInstance();
+      fc.property(fc.string(), (featureName) => {
+        const compat = BrowserCompatibility.getInstance();
 
-          // Should not throw for any string input
-          expect(() => {
-            compat.isFeatureSupported(featureName as any);
-          }).not.toThrow();
-        }
-      ),
-      { numRuns: 100 }
+        // Should not throw for any string input
+        expect(() => {
+          compat.isFeatureSupported(featureName as any);
+        }).not.toThrow();
+      }),
+      { numRuns: 100 },
     );
   });
 });

@@ -1,27 +1,25 @@
-import { GuidV4, Member, PlatformID } from '@digitaldefiance/ecies-lib';
+import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { ConstituentBlockListBlock } from '../../blocks/cbl';
 import { EncryptedBlock } from '../../blocks/encrypted';
 import { Checksum } from '../../types';
-import { ISimpleStoreAsync } from '../simpleStoreAsync';
 
 /**
- * Interface for CBL (Constituent Block List) storage operations.
- * Supports both encrypted and plain CBLs.
+ * Interface for CBL (Constituent Block List) storage.
+ * Implementations can use different storage backends (memory, disk, database, etc.)
  */
-export interface ICBLStore<TID extends PlatformID = Uint8Array>
-  extends ISimpleStoreAsync<Checksum, ConstituentBlockListBlock<TID>, TID> {
+export interface ICBLStore<TID extends PlatformID = Uint8Array> {
   /**
    * Set the active user for encryption/decryption operations
    */
   setActiveUser(user: Member<TID>): void;
 
   /**
-   * Check if the data is encrypted
+   * Check if data is encrypted
    */
   isEncrypted(data: Uint8Array): boolean;
 
   /**
-   * Store a CBL block (encrypted or unencrypted)
+   * Store a CBL block
    */
   set(
     key: Checksum,
@@ -46,6 +44,6 @@ export interface ICBLStore<TID extends PlatformID = Uint8Array>
    */
   getCBLAddresses(
     checksum: Checksum,
-    hydrateFunction: (guid: GuidV4) => Promise<Member>,
+    hydrateFunction: (id: TID) => Promise<Member<TID>>,
   ): Promise<Checksum[]>;
 }

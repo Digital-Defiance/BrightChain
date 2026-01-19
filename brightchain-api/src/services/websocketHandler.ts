@@ -24,15 +24,15 @@ import {
   IBlockRemovalMessage,
   IBloomFilterRequest,
   IBloomFilterResponse,
+  IEventSubscribeMessage,
   IManifestRequest,
   IManifestResponse,
-  IPingMessage,
-  IPongMessage,
-  IMessageSendMessage,
-  IMessageReceivedMessage,
   IMessageAckMessage,
   IMessageQueryMessage,
-  IEventSubscribeMessage,
+  IMessageReceivedMessage,
+  IMessageSendMessage,
+  IPingMessage,
+  IPongMessage,
   WebSocketMessage,
 } from '../interfaces/websocketMessages';
 
@@ -119,7 +119,10 @@ export class WebSocketHandler {
   /**
    * Send a message to a specific connection
    */
-  public sendToConnection(connectionId: string, message: WebSocketMessage): void {
+  public sendToConnection(
+    connectionId: string,
+    message: WebSocketMessage,
+  ): void {
     const connection = this.connections.get(connectionId);
     if (connection) {
       connection.send(message);
@@ -131,30 +134,43 @@ export class WebSocketHandler {
    */
   private async handleMessage(
     connection: IWebSocketConnection,
-    message: WebSocketMessage
+    message: WebSocketMessage,
   ): Promise<void> {
     try {
       switch (message.type) {
         // Discovery protocol messages
         case DiscoveryMessageType.BLOOM_FILTER_REQUEST:
-          await this.handleBloomFilterRequest(connection, message as IBloomFilterRequest);
+          await this.handleBloomFilterRequest(
+            connection,
+            message as IBloomFilterRequest,
+          );
           break;
         case DiscoveryMessageType.BLOCK_QUERY:
-          await this.handleBlockQuery(connection, message as IBlockQueryMessage);
+          await this.handleBlockQuery(
+            connection,
+            message as IBlockQueryMessage,
+          );
           break;
         case DiscoveryMessageType.MANIFEST_REQUEST:
-          await this.handleManifestRequest(connection, message as IManifestRequest);
+          await this.handleManifestRequest(
+            connection,
+            message as IManifestRequest,
+          );
           break;
 
         // Gossip protocol messages
         case GossipMessageType.BLOCK_ANNOUNCEMENT:
-          await this.handleBlockAnnouncement(message as IBlockAnnouncementMessage);
+          await this.handleBlockAnnouncement(
+            message as IBlockAnnouncementMessage,
+          );
           break;
         case GossipMessageType.BLOCK_REMOVAL:
           await this.handleBlockRemoval(message as IBlockRemovalMessage);
           break;
         case GossipMessageType.ANNOUNCEMENT_BATCH:
-          await this.handleAnnouncementBatch(message as IAnnouncementBatchMessage);
+          await this.handleAnnouncementBatch(
+            message as IAnnouncementBatchMessage,
+          );
           break;
 
         // Heartbeat messages
@@ -164,7 +180,10 @@ export class WebSocketHandler {
 
         // Message passing messages
         case MessagePassingType.MESSAGE_SEND:
-          await this.handleMessageSend(connection, message as IMessageSendMessage);
+          await this.handleMessageSend(
+            connection,
+            message as IMessageSendMessage,
+          );
           break;
         case MessagePassingType.MESSAGE_RECEIVED:
           await this.handleMessageReceived(message as IMessageReceivedMessage);
@@ -173,10 +192,16 @@ export class WebSocketHandler {
           await this.handleMessageAck(message as IMessageAckMessage);
           break;
         case MessagePassingType.MESSAGE_QUERY:
-          await this.handleMessageQuery(connection, message as IMessageQueryMessage);
+          await this.handleMessageQuery(
+            connection,
+            message as IMessageQueryMessage,
+          );
           break;
         case MessagePassingType.EVENT_SUBSCRIBE:
-          await this.handleEventSubscribe(connection, message as IEventSubscribeMessage);
+          await this.handleEventSubscribe(
+            connection,
+            message as IEventSubscribeMessage,
+          );
           break;
 
         default:
@@ -194,7 +219,7 @@ export class WebSocketHandler {
    */
   private async handleBloomFilterRequest(
     connection: IWebSocketConnection,
-    message: IBloomFilterRequest
+    message: IBloomFilterRequest,
   ): Promise<void> {
     const bloomFilter = this.blockRegistry.exportBloomFilter();
 
@@ -221,7 +246,7 @@ export class WebSocketHandler {
    */
   private async handleBlockQuery(
     connection: IWebSocketConnection,
-    message: IBlockQueryMessage
+    message: IBlockQueryMessage,
   ): Promise<void> {
     const hasBlock = this.blockRegistry.hasLocal(message.payload.blockId);
 
@@ -244,7 +269,7 @@ export class WebSocketHandler {
    */
   private async handleManifestRequest(
     connection: IWebSocketConnection,
-    message: IManifestRequest
+    message: IManifestRequest,
   ): Promise<void> {
     const manifest = this.blockRegistry.exportManifest();
 
@@ -269,9 +294,9 @@ export class WebSocketHandler {
    * Handle block announcement
    */
   private async handleBlockAnnouncement(
-    message: IBlockAnnouncementMessage
+    message: IBlockAnnouncementMessage,
   ): Promise<void> {
-    const { blockId, nodeId, ttl } = message.payload;
+    const { blockId, nodeId } = message.payload;
 
     // Update location metadata
     await this.availabilityService.updateLocation(blockId, {
@@ -286,15 +311,17 @@ export class WebSocketHandler {
       blockId,
       nodeId,
       timestamp: new Date(message.timestamp),
-      ttl,
+      ttl: message.payload.ttl,
     });
   }
 
   /**
    * Handle block removal
    */
-  private async handleBlockRemoval(message: IBlockRemovalMessage): Promise<void> {
-    const { blockId, nodeId, ttl } = message.payload;
+  private async handleBlockRemoval(
+    message: IBlockRemovalMessage,
+  ): Promise<void> {
+    const { blockId, nodeId } = message.payload;
 
     // Remove location
     await this.availabilityService.removeLocation(blockId, nodeId);
@@ -305,7 +332,7 @@ export class WebSocketHandler {
       blockId,
       nodeId,
       timestamp: new Date(message.timestamp),
-      ttl,
+      ttl: message.payload.ttl,
     });
   }
 
@@ -313,7 +340,7 @@ export class WebSocketHandler {
    * Handle announcement batch
    */
   private async handleAnnouncementBatch(
-    message: IAnnouncementBatchMessage
+    message: IAnnouncementBatchMessage,
   ): Promise<void> {
     for (const announcement of message.payload.announcements) {
       if (announcement.type === 'add') {
@@ -325,7 +352,7 @@ export class WebSocketHandler {
       } else {
         await this.availabilityService.removeLocation(
           announcement.blockId,
-          announcement.nodeId
+          announcement.nodeId,
         );
       }
 
@@ -347,7 +374,7 @@ export class WebSocketHandler {
    */
   private async handlePing(
     connection: IWebSocketConnection,
-    message: IPingMessage
+    message: IPingMessage,
   ): Promise<void> {
     const response: IPongMessage = {
       type: HeartbeatMessageType.PONG,
@@ -364,32 +391,40 @@ export class WebSocketHandler {
   // ===== Message Passing Handlers =====
 
   private async handleMessageSend(
-    connection: IWebSocketConnection,
-    message: IMessageSendMessage
+    _connection: IWebSocketConnection,
+    message: IMessageSendMessage,
   ): Promise<void> {
     if (!this.messageRouter) return;
-    await this.messageRouter.routeMessage(message.payload.messageId, message.payload.recipients);
+    await this.messageRouter.routeMessage(
+      message.payload.messageId,
+      message.payload.recipients,
+    );
   }
 
-  private async handleMessageReceived(message: IMessageReceivedMessage): Promise<void> {
+  private async handleMessageReceived(
+    message: IMessageReceivedMessage,
+  ): Promise<void> {
     if (!this.messageRouter) return;
-    await this.messageRouter.handleIncomingMessage(message.payload.messageId, message.payload.recipientId);
+    await this.messageRouter.handleIncomingMessage(
+      message.payload.messageId,
+      message.payload.recipientId,
+    );
   }
 
-  private async handleMessageAck(message: IMessageAckMessage): Promise<void> {
+  private async handleMessageAck(_message: IMessageAckMessage): Promise<void> {
     // ACK handled by MessagePassingService
   }
 
   private async handleMessageQuery(
-    connection: IWebSocketConnection,
-    message: IMessageQueryMessage
+    _connection: IWebSocketConnection,
+    _message: IMessageQueryMessage,
   ): Promise<void> {
     // Query handled by MessagePassingService
   }
 
   private async handleEventSubscribe(
-    connection: IWebSocketConnection,
-    message: IEventSubscribeMessage
+    _connection: IWebSocketConnection,
+    _message: IEventSubscribeMessage,
   ): Promise<void> {
     // Subscription handled by MessageEventsWebSocketHandler
   }

@@ -185,7 +185,9 @@ export class PerformanceOptimizer {
       this.emit('file-progress', { item, progress: item.progress });
 
       // Simulate processing time
-      await new Promise((resolve) => setTimeout(resolve, isLargeFile ? 100 : 50));
+      await new Promise((resolve) =>
+        setTimeout(resolve, isLargeFile ? 100 : 50),
+      );
 
       // Check if we need to adjust quality during processing
       this.checkPerformanceAndAdjustQuality();
@@ -216,7 +218,8 @@ export class PerformanceOptimizer {
     return {
       total: this.fileQueue.length,
       queued: this.fileQueue.filter((f) => f.status === 'queued').length,
-      processing: this.fileQueue.filter((f) => f.status === 'processing').length,
+      processing: this.fileQueue.filter((f) => f.status === 'processing')
+        .length,
       complete: this.fileQueue.filter((f) => f.status === 'complete').length,
       error: this.fileQueue.filter((f) => f.status === 'error').length,
     };
@@ -297,7 +300,10 @@ export class PerformanceOptimizer {
     );
 
     // If FPS is below minimum, reduce quality
-    if (avgFps < this.config.minFrameRate && currentQualityIndex < this.config.qualityLevels.length - 1) {
+    if (
+      avgFps < this.config.minFrameRate &&
+      currentQualityIndex < this.config.qualityLevels.length - 1
+    ) {
       const newQuality = this.config.qualityLevels[currentQualityIndex + 1];
       this.setQuality(newQuality);
       this.emit('quality-reduced', {
@@ -308,7 +314,10 @@ export class PerformanceOptimizer {
       });
     }
     // If FPS is consistently high, try increasing quality
-    else if (avgFps > this.config.targetFrameRate * 0.9 && currentQualityIndex > 0) {
+    else if (
+      avgFps > this.config.targetFrameRate * 0.9 &&
+      currentQualityIndex > 0
+    ) {
       const newQuality = this.config.qualityLevels[currentQualityIndex - 1];
       this.setQuality(newQuality);
       this.emit('quality-increased', {
@@ -364,7 +373,10 @@ export class PerformanceOptimizer {
    * Setup resize observer for responsive layout adaptation
    */
   private setupResizeObserver(): void {
-    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
+    if (
+      typeof window === 'undefined' ||
+      typeof ResizeObserver === 'undefined'
+    ) {
       return;
     }
 
@@ -400,7 +412,10 @@ export class PerformanceOptimizer {
    */
   registerAnimationResource(id: string, resource: any): void {
     this.animationResources.set(id, resource);
-    this.emit('resource-registered', { id, resourceCount: this.animationResources.size });
+    this.emit('resource-registered', {
+      id,
+      resourceCount: this.animationResources.size,
+    });
     this.checkMemoryUsage();
   }
 
@@ -415,7 +430,10 @@ export class PerformanceOptimizer {
         resource.cleanup();
       }
       this.animationResources.delete(id);
-      this.emit('resource-unregistered', { id, resourceCount: this.animationResources.size });
+      this.emit('resource-unregistered', {
+        id,
+        resourceCount: this.animationResources.size,
+      });
     }
   }
 
@@ -464,7 +482,9 @@ export class PerformanceOptimizer {
     if (stats.usedMemory > this.config.memoryThreshold) {
       this.emit('memory-threshold-exceeded', { stats });
       // Trigger cleanup of oldest resources
-      this.cleanupOldestResources(Math.floor(this.animationResources.size * 0.3));
+      this.cleanupOldestResources(
+        Math.floor(this.animationResources.size * 0.3),
+      );
     }
   }
 
@@ -514,7 +534,10 @@ export class PerformanceOptimizer {
         try {
           callback(data);
         } catch (error) {
-          console.error(`Error in performance optimizer event listener for ${event}:`, error);
+          console.error(
+            `Error in performance optimizer event listener for ${event}:`,
+            error,
+          );
         }
       });
     }

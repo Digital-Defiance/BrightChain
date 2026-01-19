@@ -4,8 +4,8 @@
  */
 
 import React from 'react';
-import { FileQueueItem } from './PerformanceOptimizer';
 import './FileQueueVisualization.css';
+import { FileQueueItem } from './PerformanceOptimizer';
 
 export interface FileQueueVisualizationProps {
   queueItems: FileQueueItem[];
@@ -97,7 +97,9 @@ export const FileQueueVisualization: React.FC<FileQueueVisualizationProps> = ({
                     backgroundColor: getStatusColor(item.status),
                   }}
                 />
-                <div className="progress-text">{Math.round(item.progress)}%</div>
+                <div className="progress-text">
+                  {Math.round(item.progress)}%
+                </div>
               </div>
             )}
 

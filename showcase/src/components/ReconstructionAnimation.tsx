@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FileReceipt, BlockInfo } from '@brightchain/brightchain-lib';
+import { FileReceipt } from '@brightchain/brightchain-lib';
+import { AnimatePresence, motion } from 'framer-motion';
+import React, { useCallback, useEffect, useState } from 'react';
 import './ReconstructionAnimation.css';
 
 export interface ReconstructionAnimationProps {
@@ -31,11 +31,21 @@ interface ReconstructionBlock {
   size: number;
   color: string;
   position: { x: number; y: number };
-  status: 'pending' | 'selecting' | 'selected' | 'retrieving' | 'retrieved' | 'validating' | 'validated' | 'error';
+  status:
+    | 'pending'
+    | 'selecting'
+    | 'selected'
+    | 'retrieving'
+    | 'retrieved'
+    | 'validating'
+    | 'validated'
+    | 'error';
   isValid?: boolean;
 }
 
-export const ReconstructionAnimation: React.FC<ReconstructionAnimationProps> = ({
+export const ReconstructionAnimation: React.FC<
+  ReconstructionAnimationProps
+> = ({
   receipt,
   blockSize,
   isEducationalMode = false,
@@ -104,15 +114,18 @@ export const ReconstructionAnimation: React.FC<ReconstructionAnimationProps> = (
   }, []);
 
   // Calculate block positions in a grid layout
-  const calculateBlockPosition = useCallback((index: number, total: number): { x: number; y: number } => {
-    const cols = Math.ceil(Math.sqrt(total));
-    const row = Math.floor(index / cols);
-    const col = index % cols;
-    return {
-      x: col * 80 + 40,
-      y: row * 100 + 50,
-    };
-  }, []);
+  const calculateBlockPosition = useCallback(
+    (index: number, total: number): { x: number; y: number } => {
+      const cols = Math.ceil(Math.sqrt(total));
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      return {
+        x: col * 80 + 40,
+        y: row * 100 + 50,
+      };
+    },
+    [],
+  );
 
   // Step 1: Process CBL
   const processCBL = useCallback(async () => {
@@ -125,7 +138,7 @@ export const ReconstructionAnimation: React.FC<ReconstructionAnimationProps> = (
       for (let i = 0; i < receipt.blockCount; i++) {
         blockIds.push(`block-${i}-${receipt.id}`);
       }
-      
+
       setCBLData(blockIds);
 
       // Simulate CBL processing progress
@@ -148,123 +161,149 @@ export const ReconstructionAnimation: React.FC<ReconstructionAnimationProps> = (
   }, [receipt, animationSpeed, onCBLProcessed]);
 
   // Step 2: Select blocks
-  const selectBlocks = useCallback(async (blockIds: string[]) => {
-    setCurrentStep(1);
-    updateStepStatus(1, 'active', 0);
+  const selectBlocks = useCallback(
+    async (blockIds: string[]) => {
+      setCurrentStep(1);
+      updateStepStatus(1, 'active', 0);
 
-    const newBlocks: ReconstructionBlock[] = [];
+      const newBlocks: ReconstructionBlock[] = [];
 
-    for (let i = 0; i < blockIds.length; i++) {
-      const blockId = blockIds[i];
-      
-      const block: ReconstructionBlock = {
-        id: blockId,
-        index: i,
-        checksum: `checksum-${i}`,
-        size: blockSize,
-        color: generateBlockColor(i),
-        position: calculateBlockPosition(i, blockIds.length),
-        status: 'selecting',
-      };
+      for (let i = 0; i < blockIds.length; i++) {
+        const blockId = blockIds[i];
 
-      newBlocks.push(block);
-      setBlocks(prev => [...prev, block]);
+        const block: ReconstructionBlock = {
+          id: blockId,
+          index: i,
+          checksum: `checksum-${i}`,
+          size: blockSize,
+          color: generateBlockColor(i),
+          position: calculateBlockPosition(i, blockIds.length),
+          status: 'selecting',
+        };
 
-      // Call callback if provided
-      if (onBlockSelected) {
-        onBlockSelected(blockId, i);
+        newBlocks.push(block);
+        setBlocks((prev) => [...prev, block]);
+
+        // Call callback if provided
+        if (onBlockSelected) {
+          onBlockSelected(blockId, i);
+        }
+
+        // Update progress
+        const progress = ((i + 1) / blockIds.length) * 100;
+        updateStepStatus(1, 'active', progress);
+
+        // Educational mode: slower animation
+        const selectionDelay = isEducationalMode ? 400 : 150;
+        await delay(selectionDelay / animationSpeed);
+
+        // Update block status to selected
+        setBlocks((prev) =>
+          prev.map((b) =>
+            b.id === blockId ? { ...b, status: 'selected' } : b,
+          ),
+        );
       }
 
-      // Update progress
-      const progress = ((i + 1) / blockIds.length) * 100;
-      updateStepStatus(1, 'active', progress);
-
-      // Educational mode: slower animation
-      const selectionDelay = isEducationalMode ? 400 : 150;
-      await delay(selectionDelay / animationSpeed);
-
-      // Update block status to selected
-      setBlocks(prev => prev.map(b => 
-        b.id === blockId ? { ...b, status: 'selected' } : b
-      ));
-    }
-
-    updateStepStatus(1, 'complete', 100);
-    return newBlocks;
-  }, [blockSize, generateBlockColor, calculateBlockPosition, onBlockSelected, isEducationalMode, animationSpeed]);
+      updateStepStatus(1, 'complete', 100);
+      return newBlocks;
+    },
+    [
+      blockSize,
+      generateBlockColor,
+      calculateBlockPosition,
+      onBlockSelected,
+      isEducationalMode,
+      animationSpeed,
+    ],
+  );
 
   // Step 3: Retrieve blocks
-  const retrieveBlocks = useCallback(async (blocksToRetrieve: ReconstructionBlock[]) => {
-    setCurrentStep(2);
-    updateStepStatus(2, 'active', 0);
+  const retrieveBlocks = useCallback(
+    async (blocksToRetrieve: ReconstructionBlock[]) => {
+      setCurrentStep(2);
+      updateStepStatus(2, 'active', 0);
 
-    for (let i = 0; i < blocksToRetrieve.length; i++) {
-      const block = blocksToRetrieve[i];
-      
-      // Update block status to retrieving
-      setBlocks(prev => prev.map(b => 
-        b.id === block.id ? { ...b, status: 'retrieving' } : b
-      ));
+      for (let i = 0; i < blocksToRetrieve.length; i++) {
+        const block = blocksToRetrieve[i];
 
-      // Simulate retrieval delay
-      const retrievalDelay = isEducationalMode ? 300 : 100;
-      await delay(retrievalDelay / animationSpeed);
+        // Update block status to retrieving
+        setBlocks((prev) =>
+          prev.map((b) =>
+            b.id === block.id ? { ...b, status: 'retrieving' } : b,
+          ),
+        );
 
-      // Update block status to retrieved
-      setBlocks(prev => prev.map(b => 
-        b.id === block.id ? { ...b, status: 'retrieved' } : b
-      ));
+        // Simulate retrieval delay
+        const retrievalDelay = isEducationalMode ? 300 : 100;
+        await delay(retrievalDelay / animationSpeed);
 
-      // Call callback if provided
-      if (onBlockRetrieved) {
-        onBlockRetrieved(block.id, i);
+        // Update block status to retrieved
+        setBlocks((prev) =>
+          prev.map((b) =>
+            b.id === block.id ? { ...b, status: 'retrieved' } : b,
+          ),
+        );
+
+        // Call callback if provided
+        if (onBlockRetrieved) {
+          onBlockRetrieved(block.id, i);
+        }
+
+        // Update progress
+        const progress = ((i + 1) / blocksToRetrieve.length) * 100;
+        updateStepStatus(2, 'active', progress);
       }
 
-      // Update progress
-      const progress = ((i + 1) / blocksToRetrieve.length) * 100;
-      updateStepStatus(2, 'active', progress);
-    }
-
-    updateStepStatus(2, 'complete', 100);
-  }, [onBlockRetrieved, isEducationalMode, animationSpeed]);
+      updateStepStatus(2, 'complete', 100);
+    },
+    [onBlockRetrieved, isEducationalMode, animationSpeed],
+  );
 
   // Step 4: Validate checksums
-  const validateChecksums = useCallback(async (blocksToValidate: ReconstructionBlock[]) => {
-    setCurrentStep(3);
-    updateStepStatus(3, 'active', 0);
+  const validateChecksums = useCallback(
+    async (blocksToValidate: ReconstructionBlock[]) => {
+      setCurrentStep(3);
+      updateStepStatus(3, 'active', 0);
 
-    for (let i = 0; i < blocksToValidate.length; i++) {
-      const block = blocksToValidate[i];
-      
-      // Update block status to validating
-      setBlocks(prev => prev.map(b => 
-        b.id === block.id ? { ...b, status: 'validating' } : b
-      ));
+      for (let i = 0; i < blocksToValidate.length; i++) {
+        const block = blocksToValidate[i];
 
-      // Simulate checksum validation
-      const validationDelay = isEducationalMode ? 500 : 120;
-      await delay(validationDelay / animationSpeed);
+        // Update block status to validating
+        setBlocks((prev) =>
+          prev.map((b) =>
+            b.id === block.id ? { ...b, status: 'validating' } : b,
+          ),
+        );
 
-      // All blocks are valid in this demo
-      const isValid = true;
+        // Simulate checksum validation
+        const validationDelay = isEducationalMode ? 500 : 120;
+        await delay(validationDelay / animationSpeed);
 
-      // Update block status to validated
-      setBlocks(prev => prev.map(b => 
-        b.id === block.id ? { ...b, status: 'validated', isValid } : b
-      ));
+        // All blocks are valid in this demo
+        const isValid = true;
 
-      // Call callback if provided
-      if (onChecksumValidated) {
-        onChecksumValidated(block.id, isValid);
+        // Update block status to validated
+        setBlocks((prev) =>
+          prev.map((b) =>
+            b.id === block.id ? { ...b, status: 'validated', isValid } : b,
+          ),
+        );
+
+        // Call callback if provided
+        if (onChecksumValidated) {
+          onChecksumValidated(block.id, isValid);
+        }
+
+        // Update progress
+        const progress = ((i + 1) / blocksToValidate.length) * 100;
+        updateStepStatus(3, 'active', progress);
       }
 
-      // Update progress
-      const progress = ((i + 1) / blocksToValidate.length) * 100;
-      updateStepStatus(3, 'active', progress);
-    }
-
-    updateStepStatus(3, 'complete', 100);
-  }, [onChecksumValidated, isEducationalMode, animationSpeed]);
+      updateStepStatus(3, 'complete', 100);
+    },
+    [onChecksumValidated, isEducationalMode, animationSpeed],
+  );
 
   // Step 5: Reassemble file
   const reassembleFile = useCallback(async () => {
@@ -306,15 +345,24 @@ export const ReconstructionAnimation: React.FC<ReconstructionAnimationProps> = (
   }, [animationSpeed]);
 
   // Helper function to update step status
-  const updateStepStatus = useCallback((stepIndex: number, status: 'pending' | 'active' | 'complete', progress: number) => {
-    setAnimationSteps(prev => prev.map((step, index) => 
-      index === stepIndex ? { ...step, status, progress } : step
-    ));
-  }, []);
+  const updateStepStatus = useCallback(
+    (
+      stepIndex: number,
+      status: 'pending' | 'active' | 'complete',
+      progress: number,
+    ) => {
+      setAnimationSteps((prev) =>
+        prev.map((step, index) =>
+          index === stepIndex ? { ...step, status, progress } : step,
+        ),
+      );
+    },
+    [],
+  );
 
   // Helper function for delays
   const delay = (ms: number): Promise<void> => {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   };
 
   // Start the animation sequence
@@ -454,11 +502,11 @@ export const ReconstructionAnimation: React.FC<ReconstructionAnimationProps> = (
                     style={{ backgroundColor: block.color }}
                     initial={{ opacity: 0, scale: 0, rotate: 180 }}
                     animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                    transition={{ 
+                    transition={{
                       delay: index * 0.1,
                       duration: 0.5,
                       type: 'spring',
-                      stiffness: 100 
+                      stiffness: 100,
                     }}
                     whileHover={{ scale: 1.1, rotate: -5 }}
                   >
@@ -470,7 +518,9 @@ export const ReconstructionAnimation: React.FC<ReconstructionAnimationProps> = (
                       {block.status === 'retrieving' && '📥'}
                       {block.status === 'retrieved' && '✓'}
                       {block.status === 'validating' && '🔐'}
-                      {block.status === 'validated' && block.isValid ? '✅' : '❌'}
+                      {block.status === 'validated' && block.isValid
+                        ? '✅'
+                        : '❌'}
                     </div>
                     <div className="block-size">{block.size}B</div>
                   </motion.div>
@@ -499,7 +549,9 @@ export const ReconstructionAnimation: React.FC<ReconstructionAnimationProps> = (
                 animate={{ width: `${reassemblyProgress}%` }}
                 transition={{ duration: 0.3 }}
               />
-              <span className="reassembly-progress-text">{reassemblyProgress}%</span>
+              <span className="reassembly-progress-text">
+                {reassemblyProgress}%
+              </span>
             </div>
           </motion.div>
         )}
@@ -522,7 +574,9 @@ export const ReconstructionAnimation: React.FC<ReconstructionAnimationProps> = (
               </div>
               <div className="detail-item">
                 <span className="detail-label">Size:</span>
-                <span className="detail-value">{receipt.originalSize} bytes</span>
+                <span className="detail-value">
+                  {receipt.originalSize} bytes
+                </span>
               </div>
               <div className="detail-item">
                 <span className="detail-label">Blocks:</span>
@@ -545,11 +599,15 @@ export const ReconstructionAnimation: React.FC<ReconstructionAnimationProps> = (
               <h4>What's Happening Now</h4>
             </div>
             <div className="educational-content">
-              <p><strong>{animationSteps[currentStep]?.name}</strong></p>
+              <p>
+                <strong>{animationSteps[currentStep]?.name}</strong>
+              </p>
               <p>{animationSteps[currentStep]?.description}</p>
               {currentStep === 0 && (
                 <div className="technical-details">
-                  <p><strong>Technical Details:</strong></p>
+                  <p>
+                    <strong>Technical Details:</strong>
+                  </p>
                   <ul>
                     <li>CBL contains references to all blocks</li>
                     <li>Block count: {receipt.blockCount}</li>
@@ -559,7 +617,9 @@ export const ReconstructionAnimation: React.FC<ReconstructionAnimationProps> = (
               )}
               {currentStep === 1 && (
                 <div className="technical-details">
-                  <p><strong>Block Selection:</strong></p>
+                  <p>
+                    <strong>Block Selection:</strong>
+                  </p>
                   <ul>
                     <li>Identifying blocks in the soup</li>
                     <li>Blocks are selected by their checksums</li>
@@ -569,7 +629,9 @@ export const ReconstructionAnimation: React.FC<ReconstructionAnimationProps> = (
               )}
               {currentStep === 3 && (
                 <div className="technical-details">
-                  <p><strong>Checksum Validation:</strong></p>
+                  <p>
+                    <strong>Checksum Validation:</strong>
+                  </p>
                   <ul>
                     <li>Ensures blocks haven't been corrupted</li>
                     <li>Compares stored checksum with calculated checksum</li>
@@ -579,7 +641,9 @@ export const ReconstructionAnimation: React.FC<ReconstructionAnimationProps> = (
               )}
               {currentStep === 4 && (
                 <div className="technical-details">
-                  <p><strong>File Reassembly:</strong></p>
+                  <p>
+                    <strong>File Reassembly:</strong>
+                  </p>
                   <ul>
                     <li>Blocks are combined in correct order</li>
                     <li>Random padding is removed</li>

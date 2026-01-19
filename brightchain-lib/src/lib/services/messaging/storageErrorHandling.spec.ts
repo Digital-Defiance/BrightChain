@@ -1,14 +1,14 @@
-import { MessageCBLService } from './messageCBLService';
-import { CBLService } from '../cblService';
-import { ChecksumService } from '../checksum.service';
+import { ECIESService, Member, MemberType } from '@digitaldefiance/ecies-lib';
+import { BlockSize } from '../../enumerations/blockSize';
+import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
+import { MessageErrorType } from '../../enumerations/messaging/messageErrorType';
+import { MessagePriority } from '../../enumerations/messaging/messagePriority';
+import { MessageError } from '../../errors/messaging/messageError';
 import { MemoryBlockStore } from '../../stores/memoryBlockStore';
 import { MemoryMessageMetadataStore } from '../../stores/messaging/memoryMessageMetadataStore';
-import { BlockSize } from '../../enumerations/blockSize';
-import { MessagePriority } from '../../enumerations/messaging/messagePriority';
-import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
-import { MessageError } from '../../errors/messaging/messageError';
-import { MessageErrorType } from '../../enumerations/messaging/messageErrorType';
-import { Member, MemberType, ECIESService } from '@digitaldefiance/ecies-lib';
+import { CBLService } from '../cblService';
+import { ChecksumService } from '../checksum.service';
+import { MessageCBLService } from './messageCBLService';
 
 describe('MessageCBLService Storage Error Handling', () => {
   let service: MessageCBLService;
@@ -27,13 +27,13 @@ describe('MessageCBLService Storage Error Handling', () => {
       checksumService,
       blockStore,
       metadataStore,
-      { storageRetryAttempts: 3, storageRetryDelayMs: 1 }
+      { storageRetryAttempts: 3, storageRetryDelayMs: 1 },
     );
     const memberWithMnemonic = await Member.newMember(
       eciesService,
       MemberType.User,
       'test',
-      'test@example.com' as any,
+      'test@example.com' as unknown as Parameters<typeof Member.newMember>[3],
     );
     creator = memberWithMnemonic.member;
   });
@@ -54,10 +54,16 @@ describe('MessageCBLService Storage Error Handling', () => {
       encryptionScheme: MessageEncryptionScheme.NONE,
     };
 
-    jest.spyOn(blockStore, 'setData').mockRejectedValue(new Error('Storage failure'));
+    jest
+      .spyOn(blockStore, 'setData')
+      .mockRejectedValue(new Error('Storage failure'));
 
-    await expect(service.createMessage(content, creator, options)).rejects.toThrow(MessageError);
-    await expect(service.createMessage(content, creator, options)).rejects.toMatchObject({
+    await expect(
+      service.createMessage(content, creator, options),
+    ).rejects.toThrow(MessageError);
+    await expect(
+      service.createMessage(content, creator, options),
+    ).rejects.toMatchObject({
       errorType: MessageErrorType.STORAGE_FAILED,
     });
   });

@@ -1,7 +1,7 @@
 import fc from 'fast-check';
-import { DeliveryTimeoutService } from './deliveryTimeoutService';
-import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
+import { DeliveryTimeoutService } from './deliveryTimeoutService';
 
 /**
  * Property tests for delivery timeout and failure handling
@@ -29,10 +29,12 @@ describe('Feature: message-passing-and-events, Property: Delivery Timeout and Fa
             service.trackDeliveryAttempt(messageId, recipientId);
           }
 
-          expect(service.getAttemptCount(messageId, recipientId)).toBe(numAttempts);
-        }
+          expect(service.getAttemptCount(messageId, recipientId)).toBe(
+            numAttempts,
+          );
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -42,34 +44,30 @@ describe('Feature: message-passing-and-events, Property: Delivery Timeout and Fa
    */
   it('Property 27b: should mark delivery as FAILED after timeout', async () => {
     await fc.assert(
-      fc.asyncProperty(
-        fc.uuid(),
-        fc.uuid(),
-        async (messageId, recipientId) => {
-          const mockStore = {
-            updateDeliveryStatus: jest.fn().mockResolvedValue(undefined),
-          } as unknown as jest.Mocked<IMessageMetadataStore>;
+      fc.asyncProperty(fc.uuid(), fc.uuid(), async (messageId, recipientId) => {
+        const mockStore = {
+          updateDeliveryStatus: jest.fn().mockResolvedValue(undefined),
+        } as unknown as jest.Mocked<IMessageMetadataStore>;
 
-          const service = new DeliveryTimeoutService(mockStore, {
-            timeoutMs: 50,
-            checkIntervalMs: 25,
-          });
+        const service = new DeliveryTimeoutService(mockStore, {
+          timeoutMs: 50,
+          checkIntervalMs: 25,
+        });
 
-          service.trackDeliveryAttempt(messageId, recipientId);
-          service.start();
+        service.trackDeliveryAttempt(messageId, recipientId);
+        service.start();
 
-          await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
-          service.stop();
+        service.stop();
 
-          expect(mockStore.updateDeliveryStatus).toHaveBeenCalledWith(
-            messageId,
-            recipientId,
-            MessageDeliveryStatus.FAILED
-          );
-        }
-      ),
-      { numRuns: 50 }
+        expect(mockStore.updateDeliveryStatus).toHaveBeenCalledWith(
+          messageId,
+          recipientId,
+          MessageDeliveryStatus.FAILED,
+        );
+      }),
+      { numRuns: 50 },
     );
   }, 10000);
 
@@ -79,32 +77,28 @@ describe('Feature: message-passing-and-events, Property: Delivery Timeout and Fa
    */
   it('Property 27c: should invoke failure callback on timeout', async () => {
     await fc.assert(
-      fc.asyncProperty(
-        fc.uuid(),
-        fc.uuid(),
-        async (messageId, recipientId) => {
-          const mockStore = {
-            updateDeliveryStatus: jest.fn().mockResolvedValue(undefined),
-          } as unknown as jest.Mocked<IMessageMetadataStore>;
+      fc.asyncProperty(fc.uuid(), fc.uuid(), async (messageId, recipientId) => {
+        const mockStore = {
+          updateDeliveryStatus: jest.fn().mockResolvedValue(undefined),
+        } as unknown as jest.Mocked<IMessageMetadataStore>;
 
-          const failureCallback = jest.fn();
-          const service = new DeliveryTimeoutService(mockStore, {
-            timeoutMs: 50,
-            checkIntervalMs: 25,
-          });
+        const failureCallback = jest.fn();
+        const service = new DeliveryTimeoutService(mockStore, {
+          timeoutMs: 50,
+          checkIntervalMs: 25,
+        });
 
-          service.onDeliveryFailure(failureCallback);
-          service.trackDeliveryAttempt(messageId, recipientId);
-          service.start();
+        service.onDeliveryFailure(failureCallback);
+        service.trackDeliveryAttempt(messageId, recipientId);
+        service.start();
 
-          await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
-          service.stop();
+        service.stop();
 
-          expect(failureCallback).toHaveBeenCalledWith(messageId, recipientId);
-        }
-      ),
-      { numRuns: 50 }
+        expect(failureCallback).toHaveBeenCalledWith(messageId, recipientId);
+      }),
+      { numRuns: 50 },
     );
   }, 10000);
 
@@ -114,33 +108,29 @@ describe('Feature: message-passing-and-events, Property: Delivery Timeout and Fa
    */
   it('Property 27d: should not timeout if attempt is cleared', async () => {
     await fc.assert(
-      fc.asyncProperty(
-        fc.uuid(),
-        fc.uuid(),
-        async (messageId, recipientId) => {
-          const mockStore = {
-            updateDeliveryStatus: jest.fn().mockResolvedValue(undefined),
-          } as unknown as jest.Mocked<IMessageMetadataStore>;
+      fc.asyncProperty(fc.uuid(), fc.uuid(), async (messageId, recipientId) => {
+        const mockStore = {
+          updateDeliveryStatus: jest.fn().mockResolvedValue(undefined),
+        } as unknown as jest.Mocked<IMessageMetadataStore>;
 
-          const service = new DeliveryTimeoutService(mockStore, {
-            timeoutMs: 100,
-            checkIntervalMs: 25,
-          });
+        const service = new DeliveryTimeoutService(mockStore, {
+          timeoutMs: 100,
+          checkIntervalMs: 25,
+        });
 
-          service.trackDeliveryAttempt(messageId, recipientId);
-          service.start();
+        service.trackDeliveryAttempt(messageId, recipientId);
+        service.start();
 
-          await new Promise(resolve => setTimeout(resolve, 30));
-          service.clearDeliveryAttempt(messageId, recipientId);
+        await new Promise((resolve) => setTimeout(resolve, 30));
+        service.clearDeliveryAttempt(messageId, recipientId);
 
-          await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
-          service.stop();
+        service.stop();
 
-          expect(mockStore.updateDeliveryStatus).not.toHaveBeenCalled();
-        }
-      ),
-      { numRuns: 50 }
+        expect(mockStore.updateDeliveryStatus).not.toHaveBeenCalled();
+      }),
+      { numRuns: 50 },
     );
   }, 10000);
 
@@ -151,10 +141,10 @@ describe('Feature: message-passing-and-events, Property: Delivery Timeout and Fa
   it('Property 27e: should handle multiple deliveries timing out independently', async () => {
     await fc.assert(
       fc.asyncProperty(
-        fc.array(
-          fc.tuple(fc.uuid(), fc.uuid()),
-          { minLength: 2, maxLength: 5 }
-        ),
+        fc.array(fc.tuple(fc.uuid(), fc.uuid()), {
+          minLength: 2,
+          maxLength: 5,
+        }),
         async (deliveries) => {
           const mockStore = {
             updateDeliveryStatus: jest.fn().mockResolvedValue(undefined),
@@ -172,23 +162,25 @@ describe('Feature: message-passing-and-events, Property: Delivery Timeout and Fa
 
           service.start();
 
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
 
           service.stop();
 
           // All should have timed out
-          expect(mockStore.updateDeliveryStatus).toHaveBeenCalledTimes(deliveries.length);
+          expect(mockStore.updateDeliveryStatus).toHaveBeenCalledTimes(
+            deliveries.length,
+          );
 
           for (const [messageId, recipientId] of deliveries) {
             expect(mockStore.updateDeliveryStatus).toHaveBeenCalledWith(
               messageId,
               recipientId,
-              MessageDeliveryStatus.FAILED
+              MessageDeliveryStatus.FAILED,
             );
           }
-        }
+        },
       ),
-      { numRuns: 30 }
+      { numRuns: 30 },
     );
   });
 });

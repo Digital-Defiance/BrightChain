@@ -1,7 +1,7 @@
 import fc from 'fast-check';
-import { MessageRouter } from './messageRouter';
-import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 import { RoutingStrategy } from '../../enumerations/messaging/routingStrategy';
+import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
+import { MessageRouter } from './messageRouter';
 
 describe('Feature: message-passing-and-events, Property: Routing Strategy Determination', () => {
   let mockMetadataStore: jest.Mocked<IMessageMetadataStore>;
@@ -18,21 +18,24 @@ describe('Feature: message-passing-and-events, Property: Routing Strategy Determ
         const strategy = router.determineStrategy([]);
         expect(strategy).toBe(RoutingStrategy.GOSSIP);
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
   it('Property 11: Routing Strategy Determination - non-empty recipients returns DIRECT', () => {
     fc.assert(
       fc.property(
-        fc.array(fc.string().filter((s) => s.length > 0), { minLength: 1 }),
+        fc.array(
+          fc.string().filter((s) => s.length > 0),
+          { minLength: 1 },
+        ),
         (recipients) => {
           const router = new MessageRouter(mockMetadataStore, localNodeId);
           const strategy = router.determineStrategy(recipients);
           expect(strategy).toBe(RoutingStrategy.DIRECT);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -43,7 +46,7 @@ describe('Feature: message-passing-and-events, Property: Routing Strategy Determ
         const strategy = router.determineStrategy([recipient]);
         expect(strategy).toBe(RoutingStrategy.DIRECT);
       }),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -55,9 +58,9 @@ describe('Feature: message-passing-and-events, Property: Routing Strategy Determ
           const router = new MessageRouter(mockMetadataStore, localNodeId);
           const strategy = router.determineStrategy(recipients);
           expect(strategy).toBe(RoutingStrategy.DIRECT);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });

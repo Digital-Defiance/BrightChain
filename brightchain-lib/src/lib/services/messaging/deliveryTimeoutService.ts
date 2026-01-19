@@ -1,6 +1,5 @@
-import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
-import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
+import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 
 /**
  * Delivery timeout configuration
@@ -34,7 +33,7 @@ export class DeliveryTimeoutService {
 
   constructor(
     private readonly metadataStore: IMessageMetadataStore,
-    config?: Partial<DeliveryTimeoutConfig>
+    config?: Partial<DeliveryTimeoutConfig>,
   ) {
     this.config = {
       timeoutMs: config?.timeoutMs ?? 30000,
@@ -73,7 +72,9 @@ export class DeliveryTimeoutService {
   /**
    * Register callback for delivery failures
    */
-  onDeliveryFailure(callback: (messageId: string, recipientId: string) => void): void {
+  onDeliveryFailure(
+    callback: (messageId: string, recipientId: string) => void,
+  ): void {
     this.failureCallback = callback;
   }
 
@@ -107,9 +108,9 @@ export class DeliveryTimeoutService {
     const now = new Date();
     const timedOut: Array<{ messageId: string; recipientId: string }> = [];
 
-    for (const [key, attempt] of this.deliveryAttempts.entries()) {
+    for (const [_key, attempt] of this.deliveryAttempts.entries()) {
       const elapsed = now.getTime() - attempt.timestamp.getTime();
-      
+
       if (elapsed > this.config.timeoutMs) {
         timedOut.push({
           messageId: attempt.messageId,
@@ -126,12 +127,15 @@ export class DeliveryTimeoutService {
   /**
    * Handle delivery timeout
    */
-  private async handleTimeout(messageId: string, recipientId: string): Promise<void> {
+  private async handleTimeout(
+    messageId: string,
+    recipientId: string,
+  ): Promise<void> {
     try {
       await this.metadataStore.updateDeliveryStatus(
         messageId,
         recipientId,
-        MessageDeliveryStatus.FAILED
+        MessageDeliveryStatus.FAILED,
       );
 
       this.clearDeliveryAttempt(messageId, recipientId);
@@ -141,7 +145,10 @@ export class DeliveryTimeoutService {
       }
     } catch (error) {
       // Log error but don't throw to avoid stopping the check loop
-      console.error(`Failed to handle timeout for ${messageId}:${recipientId}`, error);
+      console.error(
+        `Failed to handle timeout for ${messageId}:${recipientId}`,
+        error,
+      );
     }
   }
 
@@ -156,8 +163,13 @@ export class DeliveryTimeoutService {
   /**
    * Get all tracked delivery attempts
    */
-  getTrackedAttempts(): Array<{ messageId: string; recipientId: string; attempts: number; timestamp: Date }> {
-    return Array.from(this.deliveryAttempts.values()).map(attempt => ({
+  getTrackedAttempts(): Array<{
+    messageId: string;
+    recipientId: string;
+    attempts: number;
+    timestamp: Date;
+  }> {
+    return Array.from(this.deliveryAttempts.values()).map((attempt) => ({
       messageId: attempt.messageId,
       recipientId: attempt.recipientId,
       attempts: attempt.attempts,

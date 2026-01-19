@@ -132,8 +132,7 @@ export const EnhancedSoupVisualization: React.FC<
     if (blockIndex === -1) return [];
 
     const connected = [];
-    if (blockIndex > 0)
-      connected.push(selectedFile.blocks[blockIndex - 1].id);
+    if (blockIndex > 0) connected.push(selectedFile.blocks[blockIndex - 1].id);
     if (blockIndex < selectedFile.blocks.length - 1)
       connected.push(selectedFile.blocks[blockIndex + 1].id);
 

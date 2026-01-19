@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { MessageRouter } from './messageRouter';
-import { MemoryMessageMetadataStore } from '../../stores/messaging/memoryMessageMetadataStore';
-import { RoutingStrategy } from '../../enumerations/messaging/routingStrategy';
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
-import { MessagePriority } from '../../enumerations/messaging/messagePriority';
-import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
-import { DurabilityLevel } from '../../enumerations/durabilityLevel';
-import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 import { BlockSize } from '../../enumerations/blockSize';
+import { DurabilityLevel } from '../../enumerations/durabilityLevel';
+import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
+import { MessagePriority } from '../../enumerations/messaging/messagePriority';
+import { RoutingStrategy } from '../../enumerations/messaging/routingStrategy';
+import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import { MemoryMessageMetadataStore } from '../../stores/messaging/memoryMessageMetadataStore';
+import { MessageRouter } from './messageRouter';
 
 describe('MessageRouter', () => {
   let router: MessageRouter;
@@ -31,7 +31,11 @@ describe('MessageRouter', () => {
     });
 
     it('should return DIRECT for multiple recipients', () => {
-      const strategy = router.determineStrategy(['recipient1', 'recipient2', 'recipient3']);
+      const strategy = router.determineStrategy([
+        'recipient1',
+        'recipient2',
+        'recipient3',
+      ]);
       expect(strategy).toBe(RoutingStrategy.DIRECT);
     });
   });
@@ -59,7 +63,9 @@ describe('MessageRouter', () => {
         senderId: 'sender',
         recipients,
         priority: MessagePriority.NORMAL,
-        deliveryStatus: new Map(recipients.map(r => [r, MessageDeliveryStatus.PENDING])),
+        deliveryStatus: new Map(
+          recipients.map((r) => [r, MessageDeliveryStatus.PENDING]),
+        ),
         acknowledgments: new Map(),
         encryptionScheme: MessageEncryptionScheme.NONE,
         isCBL: true,
@@ -139,13 +145,15 @@ describe('MessageRouter', () => {
         cblBlockIds: [],
       });
 
-      await expect(router.handleIncomingMessage(messageId, senderId)).resolves.toBeUndefined();
+      await expect(
+        router.handleIncomingMessage(messageId, senderId),
+      ).resolves.toBeUndefined();
     });
 
     it('should throw error for non-existent message', async () => {
-      await expect(router.handleIncomingMessage('non-existent', 'sender')).rejects.toThrow(
-        'Message non-existent not found'
-      );
+      await expect(
+        router.handleIncomingMessage('non-existent', 'sender'),
+      ).rejects.toThrow('Message non-existent not found');
     });
   });
 
@@ -171,14 +179,19 @@ describe('MessageRouter', () => {
         senderId: 'sender',
         recipients,
         priority: MessagePriority.NORMAL,
-        deliveryStatus: new Map([[recipients[0], MessageDeliveryStatus.PENDING]]),
+        deliveryStatus: new Map([
+          [recipients[0], MessageDeliveryStatus.PENDING],
+        ]),
         acknowledgments: new Map(),
         encryptionScheme: MessageEncryptionScheme.NONE,
         isCBL: true,
         cblBlockIds: [],
       });
 
-      const result = await router.forwardMessage(messageId, recipients, ['node1', 'node2']);
+      const result = await router.forwardMessage(messageId, recipients, [
+        'node1',
+        'node2',
+      ]);
 
       expect(result.successfulRecipients).toEqual(recipients);
       expect(result.failedRecipients).toEqual([]);
@@ -188,7 +201,10 @@ describe('MessageRouter', () => {
       const messageId = 'msg-loop';
       const recipients = ['recipient1'];
 
-      const result = await router.forwardMessage(messageId, recipients, ['node1', localNodeId]);
+      const result = await router.forwardMessage(messageId, recipients, [
+        'node1',
+        localNodeId,
+      ]);
 
       expect(result.successfulRecipients).toEqual([]);
       expect(result.failedRecipients).toEqual(recipients);

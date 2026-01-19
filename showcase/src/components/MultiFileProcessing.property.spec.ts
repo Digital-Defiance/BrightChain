@@ -9,9 +9,9 @@
  * processed simultaneously.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fc from 'fast-check';
-import { PerformanceOptimizer, FileQueueItem } from './PerformanceOptimizer';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { PerformanceOptimizer } from './PerformanceOptimizer';
 
 // Mock ResizeObserver
 class MockResizeObserver {
@@ -78,7 +78,11 @@ describe('Multi-File Processing Management Property Tests', () => {
             fc.record({
               name: fc.string({ minLength: 1, maxLength: 50 }),
               size: fc.integer({ min: 100, max: 1024 * 1024 }), // 100B to 1MB
-              type: fc.constantFrom('text/plain', 'image/png', 'application/pdf'),
+              type: fc.constantFrom(
+                'text/plain',
+                'image/png',
+                'application/pdf',
+              ),
             }),
             { minLength: 1, maxLength: 20 },
           ),
@@ -111,9 +115,12 @@ describe('Multi-File Processing Management Property Tests', () => {
               expect(status.processing).toBeLessThanOrEqual(3);
 
               // All files should be accounted for
-              expect(status.queued + status.processing + status.complete + status.error).toBe(
-                files.length,
-              );
+              expect(
+                status.queued +
+                  status.processing +
+                  status.complete +
+                  status.error,
+              ).toBe(files.length);
 
               // Wait for processing to complete
               await new Promise((resolve) => setTimeout(resolve, 100));
@@ -142,7 +149,7 @@ describe('Multi-File Processing Management Property Tests', () => {
           ),
           async (fileSpecs) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
               const allQueueIds: string[] = [];
 
@@ -170,9 +177,12 @@ describe('Multi-File Processing Management Property Tests', () => {
               // Queue should still be consistent
               const midStatus = testOptimizer.getQueueStatus();
               expect(midStatus.total).toBe(fileSpecs.length);
-              expect(midStatus.queued + midStatus.processing + midStatus.complete + midStatus.error).toBe(
-                fileSpecs.length,
-              );
+              expect(
+                midStatus.queued +
+                  midStatus.processing +
+                  midStatus.complete +
+                  midStatus.error,
+              ).toBe(fileSpecs.length);
             } finally {
               testOptimizer.destroy();
             }
@@ -194,7 +204,7 @@ describe('Multi-File Processing Management Property Tests', () => {
           ),
           async (fileSpecs) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
               const files = fileSpecs.map(
                 (spec) => new File([new Uint8Array(spec.size)], spec.name),
@@ -211,7 +221,9 @@ describe('Multi-File Processing Management Property Tests', () => {
               expect(queueTime).toBeLessThan(100);
 
               // Check that large files are detected
-              const largeFiles = files.filter((f) => testOptimizer.isLargeFile(f));
+              const largeFiles = files.filter((f) =>
+                testOptimizer.isLargeFile(f),
+              );
               const expectedLargeFiles = files.filter(
                 (f) => f.size > 10 * 1024 * 1024,
               );
@@ -243,11 +255,14 @@ describe('Multi-File Processing Management Property Tests', () => {
               }),
               { minLength: 5, maxLength: 12 },
             ),
-            fc.array(fc.integer({ min: 30, max: 60 }), { minLength: 10, maxLength: 20 }),
+            fc.array(fc.integer({ min: 30, max: 60 }), {
+              minLength: 10,
+              maxLength: 20,
+            }),
           ),
           async ([fileSpecs, frameRates]) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
               const files = fileSpecs.map(
                 (spec) => new File([new Uint8Array(spec.size)], spec.name),
@@ -271,7 +286,8 @@ describe('Multi-File Processing Management Property Tests', () => {
               // If we have frame rate data, average should be reasonable
               if (frameRates.length > 0) {
                 const expectedAvg =
-                  frameRates.reduce((sum, fps) => sum + fps, 0) / frameRates.length;
+                  frameRates.reduce((sum, fps) => sum + fps, 0) /
+                  frameRates.length;
                 expect(Math.abs(avgFps - expectedAvg)).toBeLessThan(5);
               }
 
@@ -302,7 +318,7 @@ describe('Multi-File Processing Management Property Tests', () => {
           ),
           async (fileSpecs) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
               const files = fileSpecs.map(
                 (spec) => new File([new Uint8Array(spec.size)], spec.name),
@@ -330,7 +346,9 @@ describe('Multi-File Processing Management Property Tests', () => {
               expect(afterClear.queued).toBe(beforeClear.queued);
 
               // Total should be reduced by number of completed items cleared
-              expect(afterClear.total).toBe(beforeClear.total - completedBefore);
+              expect(afterClear.total).toBe(
+                beforeClear.total - completedBefore,
+              );
             } finally {
               testOptimizer.destroy();
             }
@@ -352,7 +370,7 @@ describe('Multi-File Processing Management Property Tests', () => {
           ),
           async (fileSpecs) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
               const files = fileSpecs.map(
                 (spec) => new File([new Uint8Array(spec.size)], spec.name),
@@ -404,7 +422,7 @@ describe('Multi-File Processing Management Property Tests', () => {
           ),
           async (fileSpecs) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
               const files = fileSpecs.map(
                 (spec) => new File([new Uint8Array(spec.size)], spec.name),
@@ -434,7 +452,8 @@ describe('Multi-File Processing Management Property Tests', () => {
 
               const countByStatus = {
                 queued: items.filter((i) => i.status === 'queued').length,
-                processing: items.filter((i) => i.status === 'processing').length,
+                processing: items.filter((i) => i.status === 'processing')
+                  .length,
                 complete: items.filter((i) => i.status === 'complete').length,
                 error: items.filter((i) => i.status === 'error').length,
               };
@@ -464,7 +483,7 @@ describe('Multi-File Processing Management Property Tests', () => {
           ),
           async (fileSpecs) => {
             const testOptimizer = createTestOptimizer();
-            
+
             try {
               const files = fileSpecs.map(
                 (spec) => new File([new Uint8Array(spec.size)], spec.name),
@@ -474,8 +493,12 @@ describe('Multi-File Processing Management Property Tests', () => {
 
               // Listen to events
               testOptimizer.on('file-queued', () => events.push('queued'));
-              testOptimizer.on('file-processing-started', () => events.push('started'));
-              testOptimizer.on('file-processing-complete', () => events.push('complete'));
+              testOptimizer.on('file-processing-started', () =>
+                events.push('started'),
+              );
+              testOptimizer.on('file-processing-complete', () =>
+                events.push('complete'),
+              );
               testOptimizer.on('file-progress', () => events.push('progress'));
 
               // Add files
@@ -489,8 +512,12 @@ describe('Multi-File Processing Management Property Tests', () => {
               expect(queuedCount).toBe(files.length);
 
               // Should have received some processing events
-              expect(events.filter((e) => e === 'started').length).toBeGreaterThan(0);
-              expect(events.filter((e) => e === 'progress').length).toBeGreaterThan(0);
+              expect(
+                events.filter((e) => e === 'started').length,
+              ).toBeGreaterThan(0);
+              expect(
+                events.filter((e) => e === 'progress').length,
+              ).toBeGreaterThan(0);
             } finally {
               testOptimizer.destroy();
             }

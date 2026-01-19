@@ -148,7 +148,9 @@ describe('Block API Round-Trip Property Tests', () => {
               });
 
               // Get metadata
-              const blockIdHex = Buffer.from(block.idChecksum.toBuffer()).toString('hex');
+              const blockIdHex = Buffer.from(
+                block.idChecksum.toBuffer(),
+              ).toString('hex');
               const metadata = await store.getMetadata(blockIdHex);
 
               // Verify metadata is valid
@@ -209,7 +211,9 @@ describe('Block API Round-Trip Property Tests', () => {
               await store.setData(block, { durabilityLevel });
 
               // Get metadata
-              const blockIdHex = Buffer.from(block.idChecksum.toBuffer()).toString('hex');
+              const blockIdHex = Buffer.from(
+                block.idChecksum.toBuffer(),
+              ).toString('hex');
               const metadata = await store.getMetadata(blockIdHex);
 
               // Verify durability level is set correctly
