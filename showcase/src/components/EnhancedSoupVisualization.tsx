@@ -15,6 +15,7 @@ interface EnhancedSoupVisualizationProps {
   animatingBlockIds?: string[];
   showConnections?: boolean;
   className?: string;
+  allBlockIds?: string[]; // All blocks in the store, not just from current files
 }
 
 interface FileButtonProps {
@@ -68,6 +69,7 @@ export const EnhancedSoupVisualization: React.FC<
   animatingBlockIds = [],
   showConnections = true,
   className = '',
+  allBlockIds = [],
 }) => {
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
   const [highlightedBlocks, setHighlightedBlocks] = useState<Set<string>>(
@@ -75,10 +77,25 @@ export const EnhancedSoupVisualization: React.FC<
   );
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Get all blocks with file association
-  const allBlocks = files.flatMap((file) =>
+  // Get blocks from files (with file association)
+  const fileBlocks = files.flatMap((file) =>
     file.blocks.map((block) => ({ ...block, fileId: file.id })),
   );
+
+  // Get orphaned blocks (blocks in store but not in any current file)
+  const fileBlockIds = new Set(fileBlocks.map((b) => b.id));
+  const orphanedBlocks = allBlockIds
+    .filter((id) => !fileBlockIds.has(id))
+    .map((id, index) => ({
+      id,
+      checksum: null as unknown as BlockInfo['checksum'], // We don't have the checksum for orphaned blocks
+      size: 0, // Unknown size
+      index,
+      fileId: undefined, // No file association
+    }));
+
+  // Combine file blocks and orphaned blocks
+  const allBlocks = [...fileBlocks, ...orphanedBlocks];
 
   // Update highlighted blocks when selection changes
   useEffect(() => {

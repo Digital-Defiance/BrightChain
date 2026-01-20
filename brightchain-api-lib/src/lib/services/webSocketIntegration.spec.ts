@@ -59,8 +59,8 @@ describe('WebSocket Client-Server Integration', () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(receivedMessage).not.toBeNull();
-    expect(receivedMessage.type).toBe('message');
-    expect(receivedMessage.messageId).toBe(messageId);
+    expect(receivedMessage!.type).toBe('message');
+    expect(receivedMessage!.messageId).toBe(messageId);
 
     wsClient.disconnect(nodeId);
   });

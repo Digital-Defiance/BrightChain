@@ -174,10 +174,6 @@ function matchFilter<T extends DocumentRecord>(
   });
 }
 
-function toBlockId(id: DocumentId): string {
-  return typeof id === 'string' ? id : Buffer.from(id).toString('hex');
-}
-
 /**
  * Calculate a content-addressable block ID using the same algorithm as the block store.
  * This uses SHA3-512 via the ChecksumService to match how RawDataBlock computes its idChecksum.
@@ -284,7 +280,7 @@ class BlockCollection<
   }
 
   private resolveBlockId(id?: DocumentId): string {
-    return id ? toBlockId(id) : randomUUID().replace(/-/g, '');
+    return id ?? randomUUID().replace(/-/g, '');
   }
 
   private async writeDoc(doc: T, existingId?: string): Promise<T> {
@@ -369,8 +365,7 @@ class BlockCollection<
   }
 
   findById(id: DocumentId): QueryBuilder<T> {
-    const logicalId = toBlockId(id);
-    return this.toSingleQuery(() => this.readDoc(logicalId));
+    return this.toSingleQuery(() => this.readDoc(id));
   }
 
   /**
@@ -383,8 +378,7 @@ class BlockCollection<
     id: DocumentId,
     options?: RetrieveDocumentOptions<TID>,
   ): Promise<T | null> {
-    const logicalId = toBlockId(id);
-    const doc = await this.readDoc(logicalId);
+    const doc = await this.readDoc(id);
 
     if (!doc) {
       return null;
@@ -433,8 +427,7 @@ class BlockCollection<
    * @returns True if the document is encrypted
    */
   async isEncrypted(id: DocumentId): Promise<boolean> {
-    const logicalId = toBlockId(id);
-    const doc = await this.readDoc(logicalId);
+    const doc = await this.readDoc(id);
     if (!doc) {
       return false;
     }
@@ -450,8 +443,7 @@ class BlockCollection<
   async getEncryptionMetadata(
     id: DocumentId,
   ): Promise<EncryptedDocumentMetadata | null> {
-    const logicalId = toBlockId(id);
-    const doc = await this.readDoc(logicalId);
+    const doc = await this.readDoc(id);
     if (!doc) {
       return null;
     }
@@ -466,8 +458,7 @@ class BlockCollection<
    * @returns True if the member has access (either unencrypted or member is in the encryption list)
    */
   async hasAccess(id: DocumentId, memberId: ShortHexGuid): Promise<boolean> {
-    const logicalId = toBlockId(id);
-    const doc = await this.readDoc(logicalId);
+    const doc = await this.readDoc(id);
     if (!doc) {
       return false;
     }
@@ -566,7 +557,10 @@ class BlockCollection<
       const doc = await this.findOne(filter).exec();
       if (!doc) return null;
       Object.assign(doc, update);
-      await this.writeDoc(doc as T, toBlockId((doc as DocumentRecord)._id));
+      const docId = (doc as DocumentRecord)._id;
+      if (docId) {
+        await this.writeDoc(doc as T, docId);
+      }
       return doc as T;
     });
   }
@@ -652,7 +646,10 @@ class BlockCollection<
     const doc = await this.findOne(filter).exec();
     if (!doc) return { modifiedCount: 0, matchedCount: 0 };
     Object.assign(doc, update);
-    await this.writeDoc(doc as T, toBlockId((doc as DocumentRecord)._id));
+    const docId = (doc as DocumentRecord)._id;
+    if (docId) {
+      await this.writeDoc(doc as T, docId);
+    }
     return { modifiedCount: 1, matchedCount: 1 };
   }
 
@@ -662,7 +659,10 @@ class BlockCollection<
     if (docs) {
       for (const doc of docs) {
         Object.assign(doc, update);
-        await this.writeDoc(doc as T, toBlockId((doc as DocumentRecord)._id));
+        const docId = (doc as DocumentRecord)._id;
+        if (docId) {
+          await this.writeDoc(doc as T, docId);
+        }
         count += 1;
       }
     }
@@ -672,7 +672,10 @@ class BlockCollection<
   async replaceOne(filter: Partial<T>, doc: T) {
     const existing = await this.findOne(filter).exec();
     if (!existing) return { modifiedCount: 0, matchedCount: 0 };
-    await this.writeDoc(doc, toBlockId((existing as DocumentRecord)._id));
+    const existingId = (existing as DocumentRecord)._id;
+    if (existingId) {
+      await this.writeDoc(doc, existingId);
+    }
     return { modifiedCount: 1, matchedCount: 1 };
   }
 

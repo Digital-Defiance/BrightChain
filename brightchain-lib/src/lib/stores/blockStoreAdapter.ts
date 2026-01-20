@@ -9,6 +9,11 @@ import {
   RecoveryResult,
 } from '../interfaces/storage/blockMetadata';
 import { IBlockStore } from '../interfaces/storage/blockStore';
+import {
+  CBLMagnetComponents,
+  CBLStorageResult,
+  CBLWhiteningOptions,
+} from '../interfaces/storage/cblWhitening';
 import { Checksum } from '../types/checksum';
 import { MemoryBlockStore } from './memoryBlockStore';
 
@@ -159,5 +164,50 @@ export class MemoryBlockStoreAdapter implements IBlockStore {
     randomBlockCount: number,
   ): Promise<BrightenResult> {
     return this.store.brightenBlock(key, randomBlockCount);
+  }
+
+  // === CBL Whitening Operations (delegated to underlying store) ===
+
+  public async storeCBLWithWhitening(
+    cblData: Uint8Array,
+    options?: CBLWhiteningOptions,
+  ): Promise<CBLStorageResult> {
+    return this.store.storeCBLWithWhitening(cblData, options);
+  }
+
+  public async retrieveCBL(
+    blockId1: Checksum | string,
+    blockId2: Checksum | string,
+    block1ParityIds?: string[],
+    block2ParityIds?: string[],
+  ): Promise<Uint8Array> {
+    return this.store.retrieveCBL(
+      blockId1,
+      blockId2,
+      block1ParityIds,
+      block2ParityIds,
+    );
+  }
+
+  public parseCBLMagnetUrl(magnetUrl: string): CBLMagnetComponents {
+    return this.store.parseCBLMagnetUrl(magnetUrl);
+  }
+
+  public generateCBLMagnetUrl(
+    blockId1: Checksum | string,
+    blockId2: Checksum | string,
+    blockSize: number,
+    block1ParityIds?: string[],
+    block2ParityIds?: string[],
+    isEncrypted?: boolean,
+  ): string {
+    return this.store.generateCBLMagnetUrl(
+      blockId1,
+      blockId2,
+      blockSize,
+      block1ParityIds,
+      block2ParityIds,
+      isEncrypted,
+    );
   }
 }

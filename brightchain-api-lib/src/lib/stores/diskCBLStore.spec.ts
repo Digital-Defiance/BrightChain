@@ -7,7 +7,6 @@ import {
   CblErrorType,
   ChecksumService,
   ConstituentBlockListBlock,
-  MemberType,
   ServiceProvider,
   StoreError,
   StoreErrorType,
@@ -15,6 +14,7 @@ import {
 import {
   EmailString,
   Member,
+  MemberType,
   arraysEqual,
   getEnhancedIdProvider,
 } from '@digitaldefiance/ecies-lib';

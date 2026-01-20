@@ -25,6 +25,9 @@ import {
   BlockStoreOptions,
   BloomFilter,
   BrightenResult,
+  CBLMagnetComponents,
+  CBLStorageResult,
+  CBLWhiteningOptions,
   Checksum,
   EventFilter,
   GossipConfig,
@@ -286,6 +289,49 @@ class MockBlockStore implements IBlockStore {
       randomBlockIds: [],
       originalBlockId: 'original-block-id',
     };
+  }
+
+  // CBL Whitening Operations (mock implementations)
+  async storeCBLWithWhitening(
+    _cblData: Uint8Array,
+    _options?: CBLWhiteningOptions,
+  ): Promise<CBLStorageResult> {
+    return {
+      blockId1: 'mock-block-id-1',
+      blockId2: 'mock-block-id-2',
+      blockSize: BlockSize.Small,
+      magnetUrl:
+        'magnet:?xt=urn:brightchain:cbl&bs=256&b1=mock-block-id-1&b2=mock-block-id-2',
+    };
+  }
+
+  async retrieveCBL(
+    _blockId1: Checksum | string,
+    _blockId2: Checksum | string,
+    _block1ParityIds?: string[],
+    _block2ParityIds?: string[],
+  ): Promise<Uint8Array> {
+    return new Uint8Array([1, 2, 3]);
+  }
+
+  parseCBLMagnetUrl(_magnetUrl: string): CBLMagnetComponents {
+    return {
+      blockId1: 'mock-block-id-1',
+      blockId2: 'mock-block-id-2',
+      blockSize: BlockSize.Small,
+      isEncrypted: false,
+    };
+  }
+
+  generateCBLMagnetUrl(
+    _blockId1: Checksum | string,
+    _blockId2: Checksum | string,
+    _blockSize: number,
+    _block1ParityIds?: string[],
+    _block2ParityIds?: string[],
+    _isEncrypted?: boolean,
+  ): string {
+    return 'magnet:?xt=urn:brightchain:cbl&bs=256&b1=mock-block-id-1&b2=mock-block-id-2';
   }
 
   // Test helpers

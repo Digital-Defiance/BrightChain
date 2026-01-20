@@ -9,6 +9,9 @@ import {
   BlockStoreOptions,
   BlockType,
   BrightenResult,
+  CBLMagnetComponents,
+  CBLStorageResult,
+  CBLWhiteningOptions,
   Checksum,
   createBlockHandle,
   createDefaultBlockMetadata,
@@ -20,12 +23,16 @@ import {
   IBlockMetadata,
   IBlockStore,
   IFecService,
+  padToBlockSize,
   ParityData,
   RawDataBlock,
   RecoveryResult,
   ReplicationStatus,
   StoreError,
   StoreErrorType,
+  unpadCblData,
+  xorArrays,
+  XorService,
 } from '@brightchain/brightchain-lib';
 import { existsSync, readFileSync } from 'fs';
 import { readdir, readFile, stat, unlink, writeFile } from 'fs/promises';
@@ -1048,5 +1055,360 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
       randomBlockIds,
       originalBlockId: keyHex,
     };
+  }
+
+  // === CBL Whitening Operations ===
+
+  /**
+   * Store a CBL with XOR whitening for Owner-Free storage.
+   *
+   * This method:
+   * 1. Pads the CBL to block size with length prefix
+   * 2. Generates a cryptographically random block (R) of the same size
+   * 3. XORs the CBL with R to produce the second block (CBL XOR R)
+   * 4. Stores both blocks separately with durability options
+   * 5. Generates parity blocks if durability options specify redundancy
+   * 6. Returns the IDs and a magnet URL for reconstruction
+   *
+   * Note: Due to XOR commutativity, the order of blocks doesn't matter for reconstruction.
+   *
+   * @param cblData - The original CBL data as Uint8Array
+   * @param options - Optional storage options (durability, expiration, encryption flag)
+   * @returns Result containing block IDs, parity IDs (if any), and magnet URL
+   * @throws StoreError if storage fails
+   */
+  public async storeCBLWithWhitening(
+    cblData: Uint8Array,
+    options?: CBLWhiteningOptions,
+  ): Promise<CBLStorageResult> {
+    // Validate input
+    if (!cblData || cblData.length === 0) {
+      throw new StoreError(StoreErrorType.BlockValidationFailed, undefined, {
+        ERROR: 'CBL data cannot be empty',
+      });
+    }
+
+    // 1. Pad CBL to block size (includes length prefix)
+    const paddedCbl = padToBlockSize(cblData, this._blockSize);
+
+    // Validate that padded CBL fits within block size
+    if (paddedCbl.length > this._blockSize) {
+      throw new StoreError(StoreErrorType.BlockValidationFailed, undefined, {
+        ERROR: `CBL data too large: padded size (${paddedCbl.length}) exceeds block size (${this._blockSize}). Use a larger block size or smaller CBL.`,
+      });
+    }
+
+    // 2. Select or generate randomizer block following OFFSystem principles
+    // In OFFSystem, we preferentially use existing blocks from the cache as randomizers
+    // This provides multi-use of blocks and better security through data reuse
+    const randomBlock = await this.selectOrGenerateRandomizer(paddedCbl.length);
+
+    // 3. XOR to create second block (CBL XOR R)
+    const xorResult = xorArrays(paddedCbl, randomBlock);
+
+    // Track stored blocks for rollback on failure
+    let block1Stored = false;
+    let block1Id = '';
+
+    try {
+      // 4. Store first block (R - the randomizer block)
+      // Note: If this was selected from existing blocks, it's already stored
+      // We still create a block handle for it to get the ID
+      const block1 = new RawDataBlock(this._blockSize, randomBlock);
+      const block1Checksum = block1.idChecksum;
+
+      // Only store if not already in the store
+      if (!(await this.has(block1Checksum))) {
+        await this.setData(block1, options);
+        block1Stored = true;
+      }
+      block1Id = block1Checksum.toHex();
+
+      // 5. Store second block (CBL XOR R)
+      const block2 = new RawDataBlock(this._blockSize, xorResult);
+      await this.setData(block2, options);
+      const block2Id = block2.idChecksum.toHex();
+
+      // 6. Get parity block IDs if FEC redundancy was applied
+      let block1ParityIds: string[] | undefined;
+      let block2ParityIds: string[] | undefined;
+
+      const block1Meta = await this.getMetadata(block1Id);
+      if (block1Meta?.parityBlockIds?.length) {
+        block1ParityIds = block1Meta.parityBlockIds;
+      }
+
+      const block2Meta = await this.getMetadata(block2Id);
+      if (block2Meta?.parityBlockIds?.length) {
+        block2ParityIds = block2Meta.parityBlockIds;
+      }
+
+      // 7. Generate magnet URL
+      const magnetUrl = this.generateCBLMagnetUrl(
+        block1Id,
+        block2Id,
+        this._blockSize,
+        block1ParityIds,
+        block2ParityIds,
+        options?.isEncrypted,
+      );
+
+      return {
+        blockId1: block1Id,
+        blockId2: block2Id,
+        blockSize: this._blockSize,
+        magnetUrl,
+        block1ParityIds,
+        block2ParityIds,
+        isEncrypted: options?.isEncrypted,
+      };
+    } catch (error) {
+      // Rollback: delete block1 if it was stored by us
+      if (block1Stored && block1Id) {
+        try {
+          await this.deleteData(this.hexToChecksum(block1Id));
+        } catch {
+          // Ignore rollback errors
+        }
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Select an existing block from the store as a randomizer, or generate a new one.
+   *
+   * Following OFFSystem principles:
+   * - Preferentially select existing blocks from the cache as randomizers
+   * - Only generate new random blocks if insufficient blocks exist
+   * - All blocks in the store look random and can be used as randomizers
+   *
+   * @param size - The required size of the randomizer block
+   * @returns A Uint8Array containing the randomizer data
+   */
+  private async selectOrGenerateRandomizer(size: number): Promise<Uint8Array> {
+    // Get all block IDs from the store by reading the directory
+    try {
+      const files = await readdir(this.storePath);
+      const blockFiles = files.filter((f) => f.endsWith('.block'));
+
+      // If we have existing blocks, try to use one as a randomizer
+      if (blockFiles.length > 0) {
+        // Select a random block from the existing blocks
+        const randomIndex = Math.floor(Math.random() * blockFiles.length);
+        const selectedFile = blockFiles[randomIndex];
+        const blockId = selectedFile.replace('.block', '');
+
+        try {
+          const block = await this.getData(this.hexToChecksum(blockId));
+          if (block && block.data.length >= size) {
+            // Use the first 'size' bytes of the existing block as the randomizer
+            return block.data.slice(0, size);
+          }
+        } catch {
+          // If we can't retrieve the block, fall through to generation
+        }
+      }
+    } catch {
+      // If we can't read the directory, fall through to generation
+    }
+
+    // Fall back to generating a new random block using CSPRNG
+    // This happens when:
+    // - The store is empty (early in block store lifecycle)
+    // - No suitable blocks were found
+    return XorService.generateKey(size);
+  }
+
+  /**
+   * Retrieve and reconstruct a CBL from its whitened components.
+   *
+   * This method:
+   * 1. Retrieves both blocks (using parity recovery if needed)
+   * 2. XORs the blocks to reconstruct the padded CBL
+   * 3. Unpads to get the original CBL data
+   *
+   * Note: Due to XOR commutativity, the order of block IDs doesn't matter.
+   *
+   * @param blockId1 - First block ID (Checksum or hex string)
+   * @param blockId2 - Second block ID (Checksum or hex string)
+   * @param block1ParityIds - Optional parity block IDs for block 1 recovery
+   * @param block2ParityIds - Optional parity block IDs for block 2 recovery
+   * @returns The original CBL data as Uint8Array
+   * @throws StoreError if either block is not found or reconstruction fails
+   */
+  public async retrieveCBL(
+    blockId1: Checksum | string,
+    blockId2: Checksum | string,
+    block1ParityIds?: string[],
+    block2ParityIds?: string[],
+  ): Promise<Uint8Array> {
+    // 1. Retrieve first block (with recovery if needed)
+    const b1Checksum =
+      typeof blockId1 === 'string' ? this.hexToChecksum(blockId1) : blockId1;
+    let block1Data: RawDataBlock;
+    try {
+      block1Data = await this.getData(b1Checksum);
+    } catch (error) {
+      // Attempt recovery using parity blocks if available
+      if (block1ParityIds?.length) {
+        const recovery = await this.recoverBlock(b1Checksum);
+        if (recovery.success && recovery.recoveredBlock) {
+          block1Data = recovery.recoveredBlock;
+        } else {
+          throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+            KEY: this.keyToHex(blockId1),
+            ERROR: 'Block 1 not found and recovery failed',
+          });
+        }
+      } else {
+        throw error;
+      }
+    }
+
+    // 2. Retrieve second block (with recovery if needed)
+    const b2Checksum =
+      typeof blockId2 === 'string' ? this.hexToChecksum(blockId2) : blockId2;
+    let block2Data: RawDataBlock;
+    try {
+      block2Data = await this.getData(b2Checksum);
+    } catch (error) {
+      // Attempt recovery using parity blocks if available
+      if (block2ParityIds?.length) {
+        const recovery = await this.recoverBlock(b2Checksum);
+        if (recovery.success && recovery.recoveredBlock) {
+          block2Data = recovery.recoveredBlock;
+        } else {
+          throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+            KEY: this.keyToHex(blockId2),
+            ERROR: 'Block 2 not found and recovery failed',
+          });
+        }
+      } else {
+        throw error;
+      }
+    }
+
+    // 3. XOR to reconstruct padded CBL (order doesn't matter due to commutativity)
+    const reconstructedPadded = xorArrays(block1Data.data, block2Data.data);
+
+    // 4. Remove padding to get original CBL
+    return unpadCblData(reconstructedPadded);
+  }
+
+  /**
+   * Parse a whitened CBL magnet URL and extract component IDs.
+   *
+   * Expected format: magnet:?xt=urn:brightchain:cbl&bs=<block_size>&b1=<id>&b2=<id>[&p1=<parity_ids>][&p2=<parity_ids>][&enc=1]
+   *
+   * @param magnetUrl - The magnet URL to parse
+   * @returns Object containing block IDs, block size, parity IDs (if any), and encryption flag
+   * @throws Error if the URL format is invalid
+   */
+  public parseCBLMagnetUrl(magnetUrl: string): CBLMagnetComponents {
+    // Validate basic URL format
+    if (!magnetUrl || !magnetUrl.startsWith('magnet:?')) {
+      throw new Error('Invalid magnet URL: must start with "magnet:?"');
+    }
+
+    // Parse URL parameters
+    const queryString = magnetUrl.substring('magnet:?'.length);
+    const params = new URLSearchParams(queryString);
+
+    // Validate xt parameter
+    const xt = params.get('xt');
+    if (xt !== 'urn:brightchain:cbl') {
+      throw new Error(
+        'Invalid magnet URL: xt parameter must be "urn:brightchain:cbl"',
+      );
+    }
+
+    // Extract required parameters
+    const blockId1 = params.get('b1');
+    const blockId2 = params.get('b2');
+    const blockSizeStr = params.get('bs');
+
+    if (!blockId1) {
+      throw new Error('Invalid magnet URL: missing b1 parameter');
+    }
+
+    if (!blockId2) {
+      throw new Error('Invalid magnet URL: missing b2 parameter');
+    }
+
+    if (!blockSizeStr) {
+      throw new Error('Invalid magnet URL: missing bs (block size) parameter');
+    }
+
+    const blockSize = parseInt(blockSizeStr, 10);
+    if (isNaN(blockSize) || blockSize <= 0) {
+      throw new Error('Invalid magnet URL: invalid block size');
+    }
+
+    // Parse optional parity block IDs
+    const p1Param = params.get('p1');
+    const p2Param = params.get('p2');
+    const block1ParityIds = p1Param
+      ? p1Param.split(',').filter((id) => id)
+      : undefined;
+    const block2ParityIds = p2Param
+      ? p2Param.split(',').filter((id) => id)
+      : undefined;
+
+    // Parse encryption flag
+    const isEncrypted = params.get('enc') === '1';
+
+    return {
+      blockId1,
+      blockId2,
+      blockSize,
+      block1ParityIds,
+      block2ParityIds,
+      isEncrypted,
+    };
+  }
+
+  /**
+   * Generate a magnet URL for a whitened CBL.
+   *
+   * @param blockId1 - First block ID (Checksum or hex string)
+   * @param blockId2 - Second block ID (Checksum or hex string)
+   * @param blockSize - Block size in bytes
+   * @param block1ParityIds - Optional parity block IDs for block 1
+   * @param block2ParityIds - Optional parity block IDs for block 2
+   * @param isEncrypted - Whether the CBL is encrypted
+   * @returns The magnet URL string
+   */
+  public generateCBLMagnetUrl(
+    blockId1: Checksum | string,
+    blockId2: Checksum | string,
+    blockSize: number,
+    block1ParityIds?: string[],
+    block2ParityIds?: string[],
+    isEncrypted?: boolean,
+  ): string {
+    const b1Id = typeof blockId1 === 'string' ? blockId1 : blockId1.toHex();
+    const b2Id = typeof blockId2 === 'string' ? blockId2 : blockId2.toHex();
+
+    const params = new URLSearchParams();
+    params.set('xt', 'urn:brightchain:cbl');
+    params.set('bs', blockSize.toString());
+    params.set('b1', b1Id);
+    params.set('b2', b2Id);
+
+    // Add parity block IDs if present
+    if (block1ParityIds?.length) {
+      params.set('p1', block1ParityIds.join(','));
+    }
+    if (block2ParityIds?.length) {
+      params.set('p2', block2ParityIds.join(','));
+    }
+
+    // Add encryption flag if encrypted
+    if (isEncrypted) {
+      params.set('enc', '1');
+    }
+
+    return `magnet:?${params.toString()}`;
   }
 }

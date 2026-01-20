@@ -1,4 +1,9 @@
-import { arraysEqual, EmailString, Member } from '@digitaldefiance/ecies-lib';
+import {
+  arraysEqual,
+  EmailString,
+  Member,
+  MemberType,
+} from '@digitaldefiance/ecies-lib';
 import { EphemeralBlock } from '../blocks/ephemeral';
 import { RandomBlock } from '../blocks/random';
 import { WhitenedBlock } from '../blocks/whitened';
@@ -6,7 +11,6 @@ import { ECIES } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
-import MemberType from '../enumerations/memberType';
 import { TupleErrorType } from '../enumerations/tupleErrorType';
 import { TupleError } from '../errors/tupleError';
 import { ChecksumService } from './checksum.service';

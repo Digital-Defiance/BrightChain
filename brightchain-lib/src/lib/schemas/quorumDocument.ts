@@ -2,6 +2,7 @@ import {
   getEnhancedIdProvider,
   hexToUint8Array,
   Member,
+  MemberType,
   PlatformID,
   SignatureUint8Array,
   uint8ArrayToHex,
@@ -9,7 +10,6 @@ import {
 import { generateRandomKeysSync } from 'paillier-bigint';
 import { uint8ArrayToBase64 } from '../bufferUtils';
 import { IQuorumDocument } from '../documents/quorumDocument';
-import { MemberType } from '../enumerations/memberType';
 import { NotImplementedError } from '../errors/notImplemented';
 import { QuorumDataRecord } from '../quorumDataRecord';
 import { SchemaDefinition, SerializedValue } from '../sharedTypes';

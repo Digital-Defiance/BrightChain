@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 /**
  * Complete Ingestion and Reconstruction Workflow Integration Test
  *
@@ -29,6 +28,7 @@ import {
   BlockDataType,
   BlockSize,
   BlockType,
+  Checksum,
   MemoryBlockStore,
   RandomBlock,
   RawDataBlock,
@@ -483,8 +483,7 @@ describe('Complete Ingestion & Reconstruction Workflow', () => {
       );
 
       // Store to disk using DiskBlockAsyncStore
-      const storedBlockChecksums: import('@brightchain/brightchain-lib').Checksum[] =
-        [];
+      const storedBlockChecksums: Checksum[] = [];
 
       for (const whitener of whiteners) {
         await diskStore.setData(whitener);

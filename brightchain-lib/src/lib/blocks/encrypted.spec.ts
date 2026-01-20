@@ -2,6 +2,7 @@ import {
   arraysEqual,
   EmailString,
   Member,
+  MemberType,
   PlatformID,
 } from '@digitaldefiance/ecies-lib';
 import { ECIES, ENCRYPTION } from '../constants';
@@ -11,7 +12,6 @@ import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
-import MemberType from '../enumerations/memberType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';

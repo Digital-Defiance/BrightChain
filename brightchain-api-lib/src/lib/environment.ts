@@ -1,16 +1,17 @@
-import { SecureString } from '@digitaldefiance/ecies-lib';
+import { HexString, SecureString } from '@digitaldefiance/ecies-lib';
 import { Environment as BaseEnvironment } from '@digitaldefiance/node-express-suite';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { BlockSize } from '@brightchain/brightchain-lib';
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { join } from 'path';
 import { Constants } from './constants';
 import { IEnvironment } from './interfaces/environment';
 import { IEnvironmentAws } from './interfaces/environment-aws';
 import { DefaultBackendIdType } from './shared-types';
 
-export class Environment
-  extends BaseEnvironment<DefaultBackendIdType>
-  implements IEnvironment
+export class Environment<TID extends PlatformID = DefaultBackendIdType>
+  extends BaseEnvironment<TID>
+  implements IEnvironment<TID>
 {
   private _fontAwesomeKitId: string;
   private _aws: IEnvironmentAws;
@@ -26,11 +27,11 @@ export class Environment
     this._adminId = value;
   }
 
-  public get idAdapter(): (bytes: Uint8Array) => any {
+  public get idAdapter(): (bytes: Uint8Array) => HexString {
     return (bytes: Uint8Array) => {
       // Convert bytes to hex-based ID string; datastore layer owns actual ID type
       const hex = Buffer.from(bytes).toString('hex');
-      return hex.slice(0, 24) as DefaultBackendIdType;
+      return hex.slice(0, 24) as HexString;
     };
   }
 

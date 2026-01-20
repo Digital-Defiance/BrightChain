@@ -12,7 +12,6 @@
 import {
   BlockSize,
   initializeBrightChain,
-  MemberType,
   MemoryBlockStore,
   QuorumMemberMetadata,
   QuorumService,
@@ -24,6 +23,7 @@ import {
   GuidV4,
   IMemberWithMnemonic,
   Member,
+  MemberType,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';

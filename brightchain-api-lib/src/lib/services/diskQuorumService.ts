@@ -28,7 +28,6 @@ import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
  * Storage format for quorum member documents
  */
 interface QuorumMemberDocument extends DocumentRecord {
-  _id?: string;
   memberId: ShortHexGuid;
   publicKey: string; // hex encoded
   metadata: QuorumMemberMetadata;
@@ -41,7 +40,6 @@ interface QuorumMemberDocument extends DocumentRecord {
  * Storage format for quorum document records
  */
 interface QuorumDocumentDocument extends DocumentRecord {
-  _id?: string;
   documentId: ShortHexGuid;
   creatorId: ShortHexGuid;
   encryptedData: string; // hex encoded

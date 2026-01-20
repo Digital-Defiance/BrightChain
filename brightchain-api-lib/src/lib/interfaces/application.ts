@@ -1,12 +1,25 @@
-import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
-import { IApplication as IApplicationBase } from '@digitaldefiance/node-express-suite';
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import { IApplication } from '@digitaldefiance/node-express-suite';
 import { Environment } from '../environment';
-import { DefaultBackendIdType } from '../shared-types';
 
-export interface IApplication<
-  TID extends PlatformID = DefaultBackendIdType,
-> extends IApplicationBase<TID> {
-  get environment(): Environment;
-  get ready(): boolean;
-  start(): Promise<void>;
+/**
+ * Extended application interface with BrightChain-specific methods
+ */
+export interface IBrightChainApplication<
+  TID extends PlatformID = Buffer,
+> extends IApplication<TID> {
+  get environment(): Environment<TID>;
+  /**
+   * Get a controller by name
+   * @param name - Controller name
+   * @returns Controller instance
+   */
+  getController<T = unknown>(name: string): T;
+
+  /**
+   * Set a controller
+   * @param name - Controller name
+   * @param controller - Controller instance
+   */
+  setController(name: string, controller: unknown): void;
 }

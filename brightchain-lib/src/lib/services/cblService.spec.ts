@@ -1,10 +1,9 @@
-import { EmailString, Member } from '@digitaldefiance/ecies-lib';
+import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { faker } from '@faker-js/faker';
 import { randomBytes } from 'crypto';
 import { CHECKSUM, TUPLE } from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
-import MemberType from '../enumerations/memberType';
 import { CblError } from '../errors/cblError';
 import { Checksum } from '../types/checksum';
 import { BlockCapacityCalculator } from './blockCapacity.service';

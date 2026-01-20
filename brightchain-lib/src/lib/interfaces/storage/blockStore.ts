@@ -9,6 +9,11 @@ import {
   IBlockMetadata,
   RecoveryResult,
 } from './blockMetadata';
+import {
+  CBLMagnetComponents,
+  CBLStorageResult,
+  CBLWhiteningOptions,
+} from './cblWhitening';
 
 /**
  * Base interface for block storage operations with FEC durability and replication support.
@@ -173,4 +178,83 @@ export interface IBlockStore {
     key: Checksum | string,
     randomBlockCount: number,
   ): Promise<BrightenResult>;
+
+  // === CBL Whitening Operations ===
+
+  /**
+   * Store a CBL with XOR whitening for Owner-Free storage.
+   *
+   * This method:
+   * 1. Generates a cryptographically random block (R) of the same size as the CBL
+   * 2. XORs the CBL with R to produce the second block (CBL XOR R)
+   * 3. Stores both blocks separately
+   * 4. Generates parity blocks if durability options specify redundancy
+   * 5. Returns the IDs and a magnet URL for reconstruction
+   *
+   * Note: Due to XOR commutativity, the order of blocks doesn't matter for reconstruction.
+   *
+   * @param cblData - The original CBL data as Uint8Array
+   * @param options - Optional storage options (durability, expiration, encryption flag)
+   * @returns Result containing block IDs, parity IDs (if any), and magnet URL
+   * @throws StoreError if storage fails
+   */
+  storeCBLWithWhitening(
+    cblData: Uint8Array,
+    options?: CBLWhiteningOptions,
+  ): Promise<CBLStorageResult>;
+
+  /**
+   * Retrieve and reconstruct a CBL from its whitened components.
+   *
+   * This method:
+   * 1. Retrieves both blocks (using parity recovery if needed)
+   * 2. XORs the blocks to reconstruct the original CBL
+   * 3. Validates the reconstructed CBL format (unless encrypted)
+   *
+   * Note: Due to XOR commutativity, the order of block IDs doesn't matter.
+   *
+   * @param blockId1 - First block ID (Checksum or hex string)
+   * @param blockId2 - Second block ID (Checksum or hex string)
+   * @param block1ParityIds - Optional parity block IDs for block 1 recovery
+   * @param block2ParityIds - Optional parity block IDs for block 2 recovery
+   * @returns The original CBL data as Uint8Array
+   * @throws StoreError if either block is not found or reconstruction fails
+   */
+  retrieveCBL(
+    blockId1: Checksum | string,
+    blockId2: Checksum | string,
+    block1ParityIds?: string[],
+    block2ParityIds?: string[],
+  ): Promise<Uint8Array>;
+
+  /**
+   * Parse a whitened CBL magnet URL and extract component IDs.
+   *
+   * Expected format: magnet:?xt=urn:brightchain:cbl&bs=<block_size>&b1=<id>&b2=<id>[&p1=<parity_ids>][&p2=<parity_ids>][&enc=1]
+   *
+   * @param magnetUrl - The magnet URL to parse
+   * @returns Object containing block IDs, block size, parity IDs (if any), and encryption flag
+   * @throws Error if the URL format is invalid
+   */
+  parseCBLMagnetUrl(magnetUrl: string): CBLMagnetComponents;
+
+  /**
+   * Generate a magnet URL for a whitened CBL.
+   *
+   * @param blockId1 - First block ID (Checksum or hex string)
+   * @param blockId2 - Second block ID (Checksum or hex string)
+   * @param blockSize - Block size in bytes
+   * @param block1ParityIds - Optional parity block IDs for block 1
+   * @param block2ParityIds - Optional parity block IDs for block 2
+   * @param isEncrypted - Whether the CBL is encrypted
+   * @returns The magnet URL string
+   */
+  generateCBLMagnetUrl(
+    blockId1: Checksum | string,
+    blockId2: Checksum | string,
+    blockSize: number,
+    block1ParityIds?: string[],
+    block2ParityIds?: string[],
+    isEncrypted?: boolean,
+  ): string;
 }

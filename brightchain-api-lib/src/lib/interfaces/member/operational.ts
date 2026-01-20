@@ -1,6 +1,6 @@
-import { MemberType } from '@brightchain/brightchain-lib';
 import {
   EmailString,
+  MemberType,
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';

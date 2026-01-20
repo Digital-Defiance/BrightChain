@@ -2,11 +2,11 @@ import {
   ECIESService,
   EmailString,
   Member,
+  MemberType,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { BlockSize } from '../../enumerations/blockSize';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
-import MemberType from '../../enumerations/memberType';
 import { BlockStoreFactory } from '../../factories/blockStoreFactory';
 import { initializeBrightChain } from '../../init';
 import { INewMemberData } from '../../interfaces/member/memberData';

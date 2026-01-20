@@ -12,12 +12,10 @@
  * verify the service layer integration rather than HTTP transport.
  */
 
-/* eslint-disable @nx/enforce-module-boundaries */
 import { DiskCBLStore } from '@brightchain/brightchain-api-lib/lib/stores/diskCBLStore';
 import { ConstituentBlockListBlock } from '@brightchain/brightchain-lib/lib/blocks/cbl';
 import { BlockEncryptionType } from '@brightchain/brightchain-lib/lib/enumerations/blockEncryptionType';
 import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
-import { MemberType } from '@brightchain/brightchain-lib/lib/enumerations/memberType';
 import { StoreErrorType } from '@brightchain/brightchain-lib/lib/enumerations/storeErrorType';
 import { StoreError } from '@brightchain/brightchain-lib/lib/errors/storeError';
 import { ServiceProvider } from '@brightchain/brightchain-lib/lib/services/service.provider';
@@ -26,6 +24,7 @@ import {
   EmailString,
   getEnhancedIdProvider,
   Member,
+  MemberType,
   PlatformID,
 } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
