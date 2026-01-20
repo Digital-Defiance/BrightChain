@@ -1,15 +1,14 @@
+import { App, Environment } from '@brightchain/brightchain-api-lib';
 import { resolve } from 'path';
-import { App } from './application';
-import { Environment } from './environment';
 
 async function bootstrap() {
   try {
     // Initialize environment
     const envPath = resolve(__dirname, '.env');
-    new Environment(envPath);
+    const env = new Environment(envPath);
 
     // Create and start application
-    const app = App.getInstance();
+    const app = new App(env);
     await app.start();
   } catch (error) {
     console.error('Failed to start application:', error);

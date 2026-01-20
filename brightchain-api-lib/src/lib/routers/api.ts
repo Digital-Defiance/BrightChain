@@ -1,49 +1,50 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
-import { ECIESService } from '@digitaldefiance/node-ecies-lib';
+import { ECIESService, PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   BackupCodeService,
   JwtService,
+  KeyWrappingService,
   RoleService,
 } from '@digitaldefiance/node-express-suite';
-import { AccountStatus } from '@digitaldefiance/suite-core-lib';
 import { AppConstants } from '../appConstants';
-import { UserController } from '../controllers/user';
-import { IBrightChainUserBase } from '../documents/user';
-import { IApplication } from '../interfaces/application';
-import { StringLanguage } from '../interfaces/request-user';
+import { BlocksController } from '../controllers/api/blocks';
+import { CBLController } from '../controllers/api/cbl';
+import { EnergyController } from '../controllers/api/energy';
+import { I18nController } from '../controllers/api/i18n';
+import { QuorumController } from '../controllers/api/quorum';
+import { UserController } from '../controllers/api/user';
+import { IBrightChainApplication } from '../interfaces';
 import { EmailService } from '../services/email';
-import { KeyWrappingService } from '../services/keyWrapping';
-import { UserService } from '../services/user';
 import { DefaultBackendIdType } from '../shared-types';
 import { BaseRouter } from './base';
 
 /**
  * Router for the API
  */
-export class ApiRouter extends BaseRouter {
-  private readonly userController: UserController;
-  private readonly jwtService: JwtService<DefaultBackendIdType>;
-  private readonly emailService: EmailService;
-  private readonly userService: UserService<
-    IBrightChainUserBase,
-    Date,
-    StringLanguage,
-    AccountStatus,
-    DefaultBackendIdType
-  >;
-  private readonly roleService: RoleService<DefaultBackendIdType>;
+export class ApiRouter<
+  TID extends PlatformID = DefaultBackendIdType,
+> extends BaseRouter<TID> {
+  private readonly blocksController: BlocksController<TID>;
+  private readonly energyController: EnergyController<TID>;
+  private readonly i18nController: I18nController<TID>;
+  private readonly quorumController: QuorumController<TID>;
+  private readonly cblController: CBLController<TID>;
+  private readonly userController: UserController<TID>;
+  private readonly jwtService: JwtService<TID>;
+  private readonly emailService: EmailService<TID>;
+  private readonly roleService: RoleService<TID>;
   private readonly keyWrappingService: KeyWrappingService;
-  private readonly eciesService: ECIESService<DefaultBackendIdType>;
-  private readonly backupCodeService: BackupCodeService<DefaultBackendIdType>;
+  private readonly eciesService: ECIESService<TID>;
+  private readonly backupCodeService: BackupCodeService<TID>;
   /**
    * Constructor for the API router
    */
-  constructor(application: IApplication<DefaultBackendIdType>) {
+  constructor(application: IBrightChainApplication<TID>) {
     super(application);
-    this.jwtService = new JwtService(application);
-    this.roleService = new RoleService(application);
-    this.emailService = new EmailService(application);
+    this.jwtService = new JwtService<TID>(application);
+    this.roleService = new RoleService<TID>(application);
+    this.emailService = new EmailService<TID>(application);
     this.keyWrappingService = new KeyWrappingService();
     const config: IECIESConfig = {
       curveName: AppConstants.ECIES.CURVE_NAME,
@@ -53,29 +54,26 @@ export class ApiRouter extends BaseRouter {
       symmetricKeyBits: AppConstants.ECIES.SYMMETRIC.KEY_BITS,
       symmetricKeyMode: AppConstants.ECIES.SYMMETRIC.MODE,
     };
-    this.eciesService = new ECIESService(config);
-    this.backupCodeService = new BackupCodeService(
+    this.eciesService = new ECIESService<TID>(config);
+    this.backupCodeService = new BackupCodeService<TID>(
       application,
       this.eciesService,
       this.keyWrappingService as any,
       this.roleService,
     );
 
-    this.userService = new UserService(
-      application,
-      this.roleService,
-      this.emailService,
-      this.keyWrappingService as any,
-      this.backupCodeService,
-    );
-    this.userController = new UserController(
-      application,
-      this.jwtService,
-      this.userService,
-      this.backupCodeService,
-      this.roleService,
-      this.eciesService,
-    );
-    this.router.use('/user', this.userController.router as any);
+    this.userController = new UserController<TID>(application);
+    this.blocksController = new BlocksController(application);
+    this.energyController = new EnergyController(application);
+    this.i18nController = new I18nController(application);
+    this.quorumController = new QuorumController(application);
+    this.cblController = new CBLController(application);
+
+    this.router.use('/user', this.userController.router);
+    this.router.use('/blocks', this.blocksController.router);
+    this.router.use('/i18n', this.i18nController.router);
+    this.router.use('/energy', this.energyController.router);
+    this.router.use('/quorum', this.quorumController.router);
+    this.router.use('/cbl', this.cblController.router);
   }
 }

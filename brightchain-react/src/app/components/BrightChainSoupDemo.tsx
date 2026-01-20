@@ -2,13 +2,12 @@ import {
   BlockService,
   BlockSize,
   ChecksumService,
-  MemberType,
   MemoryBlockStore,
   RawDataBlock,
   ServiceLocator,
   uint8ArrayToHex,
 } from '@brightchain/brightchain-lib';
-import { EmailString, Member } from '@digitaldefiance/ecies-lib';
+import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import React, { useCallback, useState } from 'react';
 
 // Initialize services

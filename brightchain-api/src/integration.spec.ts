@@ -12,28 +12,6 @@ describe('BrightChain API Integration with Refactored Constants', () => {
     });
   });
 
-  describe('Middleware Constants Usage', () => {
-    it('should verify that middlewares.ts file exists and uses constants', () => {
-      // The middlewares.ts file imports: import { CONSTANTS } from '@brightchain/brightchain-lib';
-      // And uses: CONSTANTS.SITE.CSP_NONCE_SIZE
-      // If this test runs, it means the import and usage compile successfully
-
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const fs = require('fs');
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const path = require('path');
-      const middlewaresPath = path.join(__dirname, 'middlewares.ts');
-
-      expect(fs.existsSync(middlewaresPath)).toBe(true);
-
-      const content = fs.readFileSync(middlewaresPath, 'utf-8');
-      expect(content).toContain(
-        "import { CONSTANTS } from '@brightchain/brightchain-lib'",
-      );
-      expect(content).toContain('CONSTANTS.SITE.CSP_NONCE_SIZE');
-    });
-  });
-
   describe('End-to-End Verification', () => {
     it('should verify brightchain-api builds successfully', () => {
       // The fact that this test suite runs means:

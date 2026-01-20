@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { BlockSize, MemoryBlockStore } from '@brightchain/brightchain-lib';
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
+  IApplication,
   IBaseDocument,
   IConstants,
   PluginManager,
@@ -11,14 +13,16 @@ import { AppConstants } from './appConstants';
 import { BlockDocumentStore } from './datastore/block-document-store';
 import { DocumentStore } from './datastore/document-store';
 import { Environment } from './environment';
-import { IApplication } from './interfaces/application';
+import { DefaultBackendIdType } from './shared-types';
 
 /**
  * Base Application class with core functionality
  */
-export class BaseApplication implements IApplication {
-  private _environment: Environment;
-  public get environment(): Environment {
+export class BaseApplication<
+  TID extends PlatformID = DefaultBackendIdType,
+> implements IApplication<TID> {
+  private _environment: Environment<TID>;
+  public get environment(): Environment<TID> {
     return this._environment;
   }
 
@@ -38,8 +42,8 @@ export class BaseApplication implements IApplication {
     return this._services;
   }
 
-  private _plugins: PluginManager | undefined;
-  public get plugins(): PluginManager {
+  private _plugins: PluginManager<TID> | undefined;
+  public get plugins(): PluginManager<TID> {
     if (!this._plugins) {
       this._plugins = new PluginManager();
     }
@@ -74,7 +78,7 @@ export class BaseApplication implements IApplication {
     return this._ready;
   }
 
-  constructor(environment: Environment, documentStore?: DocumentStore) {
+  constructor(environment: Environment<TID>, documentStore?: DocumentStore) {
     this._ready = false;
     this._environment = environment;
     this.documentStore =

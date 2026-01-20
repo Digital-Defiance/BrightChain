@@ -1,13 +1,13 @@
 import {
   EmailString,
   GuidV4,
+  MemberType,
   SecureBuffer,
   SecureString,
   SignatureUint8Array,
 } from '@digitaldefiance/ecies-lib';
 import { Wallet } from '@ethereumjs/wallet';
 import { PrivateKey, PublicKey } from 'paillier-bigint';
-import { MemberType } from '../../enumerations/memberType';
 
 /**
  * Operational interface for member - defines getters and methods

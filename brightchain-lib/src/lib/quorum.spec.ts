@@ -1,5 +1,4 @@
-import { EmailString, Member } from '@digitaldefiance/ecies-lib';
-import { MemberType } from './enumerations/memberType';
+import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { BrightChainQuorum } from './quorum';
 import { ServiceProvider } from './services/service.provider';
 

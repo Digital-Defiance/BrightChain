@@ -1,5 +1,5 @@
+import { MemberType } from '@digitaldefiance/ecies-lib';
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
-import MemberType from '../enumerations/memberType';
 import { registerTranslation } from '../i18n';
 import { createTranslations, EnumLanguageTranslation } from '../types';
 

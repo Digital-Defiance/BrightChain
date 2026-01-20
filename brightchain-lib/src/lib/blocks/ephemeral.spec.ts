@@ -3,13 +3,13 @@ import {
   EmailString,
   IMemberWithMnemonic,
   Member,
+  MemberType,
 } from '@digitaldefiance/ecies-lib';
 import { ECIES } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
-import MemberType from '../enumerations/memberType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';

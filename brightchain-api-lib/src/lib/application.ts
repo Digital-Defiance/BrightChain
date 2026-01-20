@@ -1,5 +1,13 @@
-import { StringNames, translate } from '@brightchain/brightchain-lib';
+import {
+  BlockSize,
+  EnergyAccountStore,
+  EnergyLedger,
+  MemberStore,
+  StringNames,
+  translate,
+} from '@brightchain/brightchain-lib';
 import { HandleableError } from '@digitaldefiance/i18n-lib';
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   debugLog,
   handleError,
@@ -18,18 +26,22 @@ import { resolve } from 'path';
 import { BaseApplication } from './application-base';
 import { createBlockDocumentStore } from './datastore/block-document-store-factory';
 import { Environment } from './environment';
+import { BlockStoreFactory } from './factories/blockStoreFactory';
 import { Middlewares } from './middlewares';
 import { ApiRouter } from './routers/api';
 import { AppRouter } from './routers/app';
+import { AuthService, EmailService, SecureKeyStorage } from './services';
 
 /**
  * Application class
  */
-export class App extends BaseApplication {
+export class App<TID extends PlatformID> extends BaseApplication<TID> {
   public readonly expressApp: Application;
   private server: Server | null = null;
+  private controllers: Map<string, unknown> = new Map();
+  private readonly keyStorage: SecureKeyStorage;
 
-  constructor(environment: Environment) {
+  constructor(environment: Environment<TID>) {
     super(
       environment,
       createBlockDocumentStore({
@@ -40,14 +52,47 @@ export class App extends BaseApplication {
     );
     this.expressApp = express();
     this.server = null;
+    this.keyStorage = SecureKeyStorage.getInstance();
   }
 
   public override async start(): Promise<void> {
     await super.start(true);
     try {
+      if (this._ready) {
+        console.error(
+          'Failed to start the application:',
+          'Application is already running',
+        );
+        process.exit(1);
+      }
+      await this.keyStorage.initializeFromEnvironment();
+
+      // Initialize services
+      const blockStore = BlockStoreFactory.createMemoryStore({
+        blockSize: BlockSize.Small,
+      });
+      const memberStore = new MemberStore(blockStore);
+      const energyStore = new EnergyAccountStore();
+      const energyLedger = new EnergyLedger();
+      const emailService = new EmailService<TID>(this);
+      const authService = new AuthService<TID>(
+        this,
+        memberStore,
+        energyStore,
+        emailService,
+        this.environment.jwtSecret,
+      );
+
+      // Register services
+      this.services.register('memberStore', () => memberStore);
+      this.services.register('energyStore', () => energyStore);
+      this.services.register('energyLedger', () => energyLedger);
+      this.services.register('emailService', () => emailService);
+      this.services.register('auth', () => authService);
+
       Middlewares.init(this.expressApp);
-      const apiRouter = new ApiRouter(this);
-      const appRouter = new AppRouter(apiRouter);
+      const apiRouter = new ApiRouter<TID>(this);
+      const appRouter = new AppRouter<TID>(apiRouter);
 
       appRouter.init(this.expressApp);
       this.expressApp.use(
@@ -164,5 +209,13 @@ export class App extends BaseApplication {
       'log',
       '[ stopped ] Application server and database connections',
     );
+  }
+
+  public getController<T = unknown>(name: string): T {
+    return this.controllers.get(name) as T;
+  }
+
+  public setController(name: string, controller: unknown): void {
+    this.controllers.set(name, controller);
   }
 }

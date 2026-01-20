@@ -1648,3 +1648,203 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Whitening Toggle */
+.whitening-toggle {
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.whitening-toggle label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.whitening-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #8a2be2;
+}
+
+.whitening-toggle span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.whitening-info {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0.75rem 0 0 2.25rem;
+}
+
+/* Whitening Result Display */
+.whitening-result {
+  background: rgba(138, 43, 226, 0.1);
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+}
+
+.whitening-result h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.whitening-ids {
+  margin-bottom: 1rem;
+}
+
+.id-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.id-row span {
+  color: var(--text-secondary);
+  font-weight: 600;
+  min-width: 100px;
+}
+
+.id-row code {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  color: #8a2be2;
+  font-size: 0.85rem;
+}
+
+.whitened-magnet {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.whitened-magnet input {
+  flex: 1;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-family: 'Courier New', monospace;
+}
+
+.whitened-magnet input:focus {
+  outline: none;
+  border-color: rgba(138, 43, 226, 0.6);
+  box-shadow: 0 0 0 2px rgba(138, 43, 226, 0.2);
+}
+
+.whitened-magnet button {
+  padding: 0.5rem 1rem;
+  background: #8a2be2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.whitened-magnet button:hover {
+  background: #9b4ef0;
+  transform: translateY(-1px);
+}
+
+/* Whitened Magnet URL Input Section */
+.whitened-magnet-input-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(138, 43, 226, 0.05);
+  border: 1px solid rgba(138, 43, 226, 0.2);
+  border-radius: 8px;
+}
+
+.whitened-magnet-info {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+/* Whitening Steps */
+.whitening-steps {
+  border-color: rgba(138, 43, 226, 0.3);
+}
+
+.whitening-steps .process-header {
+  color: #8a2be2;
+}
+
+/* Soup Can Styling for Whitened Blocks */
+.soup-can.whitener {
+  border: 2px dashed #9b59b6;
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+}
+
+.soup-can.cbl-prime {
+  border: 2px dashed #e74c3c;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.soup-can.whitener:hover,
+.soup-can.cbl-prime:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 16px rgba(138, 43, 226, 0.4);
+}
+
+/* Responsive Design for Whitening Components */
+@media (max-width: 768px) {
+  .whitening-toggle {
+    padding: 1rem;
+  }
+  
+  .whitening-result {
+    padding: 1rem;
+  }
+  
+  .id-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .id-row span {
+    min-width: auto;
+  }
+  
+  .whitened-magnet {
+    flex-direction: column;
+  }
+  
+  .reconstruction-buttons {
+    grid-template-columns: 1fr;
+  }
+}

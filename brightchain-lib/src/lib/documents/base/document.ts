@@ -10,6 +10,7 @@ import {
 import { BlockService } from '../../services/blockService';
 import { MemberCblService } from '../../services/member/memberCblService';
 import { ServiceLocator } from '../../services/serviceLocator';
+import { XorService } from '../../services/xor';
 import {
   InstanceMethods,
   SchemaDefinition,
@@ -281,13 +282,18 @@ export class Document<T> {
       async (chunkDatas: Uint8Array[]) => {
         if (firstBlock) {
           xorResult.set(chunkDatas[0].subarray(0, blockSize as number), 0);
-        }
-        for (let i = firstBlock ? 1 : 0; i < chunkDatas.length; i++) {
-          for (let j = 0; j < blockSize; j++) {
-            xorResult[j] ^= chunkDatas[i][j];
+          firstBlock = false;
+          // XOR remaining chunks if any
+          if (chunkDatas.length > 1) {
+            const remaining = chunkDatas.slice(1);
+            const xored = XorService.xorMultiple([xorResult, ...remaining]);
+            xorResult.set(xored);
           }
+        } else {
+          // XOR all chunks with current result
+          const xored = XorService.xorMultiple([xorResult, ...chunkDatas]);
+          xorResult.set(xored);
         }
-        firstBlock = false;
       },
     );
   }

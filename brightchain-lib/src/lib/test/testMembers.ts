@@ -2,9 +2,9 @@ import {
   SecureString as EciesSecureString,
   EmailString,
   Member,
+  MemberType,
 } from '@digitaldefiance/ecies-lib';
 import { MemberDocument } from '../documents/member/memberDocument';
-import MemberType from '../enumerations/memberType';
 import { initializeBrightChain } from '../init';
 import { ServiceProvider } from '../services/service.provider';
 

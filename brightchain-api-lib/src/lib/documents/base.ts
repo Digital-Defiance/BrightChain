@@ -1,6 +1,10 @@
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { DefaultBackendIdType } from '../shared-types';
 
 // Base document interface - no longer using Mongoose
-export type IBaseDocument<T, I extends string = DefaultBackendIdType> = T & {
-  _id: I;
+export type IBaseDocument<
+  T,
+  TID extends PlatformID = DefaultBackendIdType,
+> = T & {
+  _id: TID;
 };

@@ -1,5 +1,5 @@
 import { SecureString } from '@digitaldefiance/ecies-lib';
-import { KeyWrappingService } from './keyWrapping';
+import { KeyWrappingService } from '@digitaldefiance/node-express-suite';
 
 describe('Authentication Unit Tests', () => {
   let keyWrappingService: KeyWrappingService;

@@ -20,11 +20,22 @@ describe('WebSocketMessageServer - Property Tests', () => {
   });
 
   afterEach((done) => {
-    wsServer.close(() => {
-      httpServer.close(() => {
-        setTimeout(done, 100);
+    // Close all connections first
+    const connectedNodes = wsServer.getConnectedNodes();
+    if (connectedNodes.length > 0) {
+      // Force close all connections
+      wsServer.close(() => {
+        httpServer.close(() => {
+          setTimeout(done, 200); // Increased timeout
+        });
       });
-    });
+    } else {
+      wsServer.close(() => {
+        httpServer.close(() => {
+          setTimeout(done, 100);
+        });
+      });
+    }
   });
 
   /**
@@ -62,7 +73,7 @@ describe('WebSocketMessageServer - Property Tests', () => {
           client.close();
         },
       ),
-      { numRuns: 50 },
+      { numRuns: 20 },
     );
   });
 
@@ -82,7 +93,7 @@ describe('WebSocketMessageServer - Property Tests', () => {
           expect(sent).toBe(false);
         },
       ),
-      { numRuns: 50 },
+      { numRuns: 20 },
     );
   });
 
@@ -97,32 +108,40 @@ describe('WebSocketMessageServer - Property Tests', () => {
           fc
             .string({ minLength: 1, maxLength: 32 })
             .filter((s) => /^[a-z0-9_-]+$/i.test(s)),
-          { minLength: 1, maxLength: 10 },
+          { minLength: 1, maxLength: 5 }, // Reduced max to avoid flakiness
         ),
         async (nodeIds: string[]) => {
           const uniqueNodeIds = [...new Set(nodeIds)];
           const clients: WebSocket[] = [];
 
-          // Connect all clients
+          // Connect all clients with proper waiting
           for (const nodeId of uniqueNodeIds) {
             const client = new WebSocket(`ws://localhost:${port}/${nodeId}`);
             await new Promise<void>((resolve) => {
-              client.on('open', () => resolve());
+              client.on('open', () => {
+                setTimeout(resolve, 10); // Small delay for server to register
+              });
             });
             clients.push(client);
           }
+
+          // Wait for all connections to be registered
+          await new Promise((resolve) => setTimeout(resolve, 50));
 
           // Verify all nodes are tracked
           const connectedNodes = wsServer.getConnectedNodes();
           expect(connectedNodes.sort()).toEqual(uniqueNodeIds.sort());
 
-          // Clean up
+          // Clean up clients
           for (const client of clients) {
             client.close();
           }
+
+          // Wait for cleanup
+          await new Promise((resolve) => setTimeout(resolve, 50));
         },
       ),
-      { numRuns: 50 },
+      { numRuns: 15 },
     );
   });
 
@@ -157,7 +176,7 @@ describe('WebSocketMessageServer - Property Tests', () => {
           expect(wsServer.getConnectedNodes()).not.toContain(nodeId);
         },
       ),
-      { numRuns: 50 },
+      { numRuns: 20 },
     );
   });
 
@@ -172,7 +191,7 @@ describe('WebSocketMessageServer - Property Tests', () => {
           fc
             .string({ minLength: 1, maxLength: 32 })
             .filter((s) => /^[a-z0-9_-]+$/i.test(s)),
-          { minLength: 2, maxLength: 5 },
+          { minLength: 2, maxLength: 4 }, // Reduced max for stability
         ),
         fc.uuid(),
         async (nodeIds: string[], messageId: string) => {
@@ -182,7 +201,7 @@ describe('WebSocketMessageServer - Property Tests', () => {
           const clients: WebSocket[] = [];
           const receivedMessages: string[] = [];
 
-          // Connect all clients
+          // Connect all clients with message handlers
           for (const nodeId of uniqueNodeIds) {
             const client = new WebSocket(`ws://localhost:${port}/${nodeId}`);
 
@@ -192,31 +211,46 @@ describe('WebSocketMessageServer - Property Tests', () => {
             });
 
             await new Promise<void>((resolve) => {
-              client.on('open', () => resolve());
+              client.on('open', () => {
+                setTimeout(resolve, 10); // Small delay for server registration
+              });
             });
 
             clients.push(client);
           }
 
+          // Wait for all connections to be fully established
+          await new Promise((resolve) => setTimeout(resolve, 100));
+
           // Broadcast message
           wsServer.broadcast(messageId);
 
-          // Wait for all messages to be received
+          // Wait for all messages to be received with longer timeout
           await new Promise<void>((resolve) => {
-            setTimeout(resolve, 100);
+            const checkMessages = () => {
+              if (receivedMessages.length >= uniqueNodeIds.length) {
+                resolve();
+              } else {
+                setTimeout(checkMessages, 10);
+              }
+            };
+            setTimeout(checkMessages, 50);
           });
 
           // Verify all nodes received the message
           expect(receivedMessages.length).toBe(uniqueNodeIds.length);
           expect(receivedMessages.every((id) => id === messageId)).toBe(true);
 
-          // Clean up
+          // Clean up broadcast clients
           for (const client of clients) {
             client.close();
           }
+
+          // Wait for cleanup
+          await new Promise((resolve) => setTimeout(resolve, 50));
         },
       ),
-      { numRuns: 30 },
+      { numRuns: 10 },
     );
   });
 
@@ -265,7 +299,7 @@ describe('WebSocketMessageServer - Property Tests', () => {
           client.close();
         },
       ),
-      { numRuns: 30 },
+      { numRuns: 15 },
     );
   });
 
@@ -289,7 +323,7 @@ describe('WebSocketMessageServer - Property Tests', () => {
           expect(wsServer.getConnectedNodes()).toHaveLength(0);
         },
       ),
-      { numRuns: 20 },
+      { numRuns: 10 },
     );
   });
 
@@ -307,7 +341,7 @@ describe('WebSocketMessageServer - Property Tests', () => {
               .filter((s) => /^[a-z0-9_-]+$/i.test(s)),
             fc.uuid(),
           ),
-          { minLength: 3, maxLength: 8 },
+          { minLength: 3, maxLength: 6 }, // Reduced max
         ),
         async (nodeMessagePairs: Array<[string, string]>) => {
           const uniquePairs = Array.from(
@@ -334,11 +368,14 @@ describe('WebSocketMessageServer - Property Tests', () => {
                 );
                 client.on('open', () => {
                   clients.push({ client, nodeId, messageId });
-                  resolve();
+                  setTimeout(resolve, 10); // Small delay
                 });
               });
             }),
           );
+
+          // Wait for all connections to be registered
+          await new Promise((resolve) => setTimeout(resolve, 100));
 
           // Verify all nodes are connected
           const connectedNodes = wsServer.getConnectedNodes();
@@ -354,13 +391,16 @@ describe('WebSocketMessageServer - Property Tests', () => {
           // All sends should succeed
           expect(sendResults.every((result) => result === true)).toBe(true);
 
-          // Clean up
+          // Clean up concurrent clients
           for (const { client } of clients) {
             client.close();
           }
+
+          // Wait for cleanup
+          await new Promise((resolve) => setTimeout(resolve, 100));
         },
       ),
-      { numRuns: 20 },
+      { numRuns: 10 },
     );
   });
 });

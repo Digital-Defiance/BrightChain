@@ -271,11 +271,21 @@ describe('DiskBlockAsyncStore Cleanup Property Tests', () => {
               const storedBlocks: { blockId: string; isProtected: boolean }[] =
                 [];
               const protectedBlockIds = new Set<string>();
+              const seenBlockIds = new Set<string>();
               const now = Date.now();
 
-              for (const spec of blockSpecs) {
-                const block = new RawDataBlock(blockSize, spec.data);
+              for (let i = 0; i < blockSpecs.length; i++) {
+                const spec = blockSpecs[i];
+                // Make data unique by appending index to avoid duplicate block IDs
+                const uniqueData = new Uint8Array([...spec.data, i]);
+                const block = new RawDataBlock(blockSize, uniqueData);
                 const blockId = block.idChecksum.toHex();
+
+                // Skip if we've already stored a block with this ID (shouldn't happen with unique data)
+                if (seenBlockIds.has(blockId)) {
+                  continue;
+                }
+                seenBlockIds.add(blockId);
 
                 // All blocks are expired
                 const expiresAt = new Date(now - 1000 * 60);

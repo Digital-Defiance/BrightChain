@@ -13,8 +13,6 @@
  * verify the service layer integration rather than HTTP transport.
  */
 
-/* eslint-disable @nx/enforce-module-boundaries */
-import { MemberType } from '@brightchain/brightchain-lib/lib/enumerations/memberType';
 import { initializeBrightChain } from '@brightchain/brightchain-lib/lib/init';
 import { QuorumMemberMetadata } from '@brightchain/brightchain-lib/lib/interfaces/services/quorumService';
 import { QuorumService } from '@brightchain/brightchain-lib/lib/services/quorumService';
@@ -25,6 +23,7 @@ import {
   GuidV4,
   IMemberWithMnemonic,
   Member,
+  MemberType,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import secrets from '@digitaldefiance/secrets';

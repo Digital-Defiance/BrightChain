@@ -1,3 +1,4 @@
+import { GuidV4 } from '@digitaldefiance/ecies-lib';
 import type { IEmailTokenDocument } from './documents/email-token';
 import type { IMnemonicDocument } from './documents/mnemonic';
 import type { IRoleDocument } from './documents/role';
@@ -17,9 +18,8 @@ export type ClientSession = any;
 
 // Use ObjectIdString as the default backend ID type
 // This bridges BSON ObjectIds with the branded type system
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export type DefaultBackendIdType = any;
-/* eslint-enable @typescript-eslint/no-explicit-any */
+
+export type DefaultBackendIdType = GuidV4;
 
 /**
  * Block storage schema definition (replaces Mongoose Schema)

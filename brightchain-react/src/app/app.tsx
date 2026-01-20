@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CONSTANTS } from '@brightchain/brightchain-lib';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import {
@@ -29,22 +28,22 @@ import { Route, Routes, useNavigate } from 'react-router-dom';
 import { environment } from '../environments/environment';
 import '../styles.scss';
 import { BrightChainSoupDemo } from './components/BrightChainSoupDemo';
+import DashboardPage from './components/dashboardPage';
 import { SplashPage } from './components/splashPage';
 
-const getApiBaseUrl = () => {
-  if (
-    typeof window !== 'undefined' &&
-    (window as any).APP_CONFIG &&
-    (window as any).APP_CONFIG.apiUrl
-  ) {
-    return (window as any).APP_CONFIG.apiUrl;
+const getApiBaseUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const appConfig = (window as { APP_CONFIG?: { apiUrl?: string } })
+      .APP_CONFIG;
+    if (appConfig?.apiUrl) {
+      return appConfig.apiUrl;
+    }
   }
-  return environment.apiUrl;
+  return environment.apiUrl || 'http://localhost:3000';
 };
 
-const API_BASE_URL = getApiBaseUrl();
+const API_BASE_URL: string = getApiBaseUrl();
 
-// Create ECIES configuration required by AuthProvider
 const eciesConfig: IECIESConfig = {
   curveName: 'secp256k1',
   primaryKeyDerivationPath: "m/44'/0'/0'/0/0",
@@ -114,6 +113,14 @@ const InnerApp: FC = () => {
         <Routes>
           <Route path="/" element={<SplashPage />} />
           <Route path="/demo" element={<BrightChainSoupDemo />} />
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <DashboardPage />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/api-access"
             element={

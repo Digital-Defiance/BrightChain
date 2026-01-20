@@ -9,6 +9,8 @@
 import {
   BlockInfo,
   BlockSize,
+  CBLMagnetComponents,
+  CBLWhiteningOptions,
   Checksum,
   FileReceipt,
   initializeBrightChain,
@@ -284,6 +286,13 @@ export class SessionIsolatedBrightChain {
   }
 
   /**
+   * Get the block store instance
+   */
+  public getBlockStore(): SessionIsolatedMemoryBlockStore {
+    return this.blockStore;
+  }
+
+  /**
    * Validate a hex string for block ID format
    * @param hex - The hex string to validate
    * @param context - Context for error messages (e.g., "block 0", "CBL")
@@ -500,4 +509,107 @@ export class SessionIsolatedBrightChain {
       );
     }
   }
+
+  // === CBL Whitening Operations ===
+
+  /**
+   * Store a file with CBL whitening enabled.
+   * This provides Owner-Free storage by splitting the CBL into two XOR components.
+   *
+   * @param fileData - The file data to store
+   * @param fileName - The file name (default: 'untitled')
+   * @param options - Optional whitening options (encryption flag)
+   * @returns Extended receipt with whitening information
+   */
+  public async storeFileWithWhitening(
+    fileData: Uint8Array,
+    fileName = 'untitled',
+    options?: CBLWhiteningOptions,
+  ): Promise<FileReceiptWithWhitening> {
+    // 1. Store file normally to get receipt with CBL
+    const receipt = await this.storeFile(fileData, fileName);
+
+    // 2. Whiten the CBL
+    const cblData = new Uint8Array(receipt.cblData);
+    const whiteningResult = await this.blockStore.storeCBLWithWhitening(
+      cblData,
+      options,
+    );
+
+    console.log(
+      `File "${fileName}" stored with CBL whitening in session ${this.blockStore.getSessionId()}`,
+    );
+
+    // 3. Return extended receipt
+    return {
+      ...receipt,
+      whitening: {
+        blockId1: whiteningResult.blockId1,
+        blockId2: whiteningResult.blockId2,
+        blockSize: whiteningResult.blockSize,
+        magnetUrl: whiteningResult.magnetUrl,
+        block1ParityIds: whiteningResult.block1ParityIds,
+        block2ParityIds: whiteningResult.block2ParityIds,
+        isEncrypted: whiteningResult.isEncrypted,
+      },
+    };
+  }
+
+  /**
+   * Retrieve a file using a whitened CBL magnet URL.
+   * This reconstructs the CBL from its XOR components and then retrieves the file.
+   *
+   * @param magnetUrl - The whitened CBL magnet URL
+   * @returns The original file data
+   */
+  public async retrieveFileFromWhitenedCBL(
+    magnetUrl: string,
+  ): Promise<Uint8Array> {
+    // 1. Parse magnet URL
+    const components = this.blockStore.parseCBLMagnetUrl(magnetUrl);
+
+    console.log(
+      `Retrieving file from whitened CBL in session ${this.blockStore.getSessionId()}`,
+    );
+
+    // 2. Reconstruct CBL
+    const cblData = await this.blockStore.retrieveCBL(
+      components.blockId1,
+      components.blockId2,
+      components.block1ParityIds,
+      components.block2ParityIds,
+    );
+
+    // 3. Parse CBL and retrieve file
+    const receipt = this.parseCBL(cblData);
+    return this.retrieveFile(receipt);
+  }
+
+  /**
+   * Parse a whitened CBL magnet URL and extract component information.
+   *
+   * @param magnetUrl - The whitened CBL magnet URL
+   * @returns Object containing block IDs, block size, parity IDs, and encryption flag
+   */
+  public parseWhitenedCBLMagnetUrl(magnetUrl: string): CBLMagnetComponents {
+    return this.blockStore.parseCBLMagnetUrl(magnetUrl);
+  }
+}
+
+/**
+ * Extended FileReceipt with whitening information
+ */
+export interface FileReceiptWithWhitening extends FileReceipt {
+  /**
+   * Whitening information (if CBL was whitened)
+   */
+  whitening?: {
+    blockId1: string;
+    blockId2: string;
+    blockSize: number;
+    magnetUrl: string;
+    block1ParityIds?: string[];
+    block2ParityIds?: string[];
+    isEncrypted?: boolean;
+  };
 }

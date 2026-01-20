@@ -4,9 +4,9 @@ import {
   GuidV4,
   IMemberWithMnemonic,
   Member,
+  MemberType,
 } from '@digitaldefiance/ecies-lib';
 import { SEALING } from '../constants';
-import { MemberType } from '../enumerations/memberType';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { SealingError } from '../errors/sealingError';
 import { initializeBrightChain } from '../init';

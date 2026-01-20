@@ -15,10 +15,10 @@ import {
   GuidV4,
   IMemberWithMnemonic,
   Member,
+  MemberType,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
-import { MemberType } from '../enumerations/memberType';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { SealingError } from '../errors/sealingError';
 import { initializeBrightChain } from '../init';

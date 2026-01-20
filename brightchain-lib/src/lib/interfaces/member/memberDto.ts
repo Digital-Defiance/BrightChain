@@ -1,5 +1,4 @@
-import { ShortHexGuid } from '@digitaldefiance/ecies-lib';
-import { MemberType } from '../../enumerations/memberType';
+import { MemberType, ShortHexGuid } from '@digitaldefiance/ecies-lib';
 import { IBasicObjectDTO } from '../basicObjectDto';
 
 export interface IMemberDTO<

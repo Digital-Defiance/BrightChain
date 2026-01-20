@@ -12,11 +12,8 @@ interface BlogPostMeta {
   isNew?: boolean;
 }
 
-// Automatically discover all markdown files in public/blog
-const blogPosts = import.meta.glob('/public/blog/*.md', {
-  as: 'raw',
-  eager: true,
-});
+// Blog posts will be discovered by fetching from the public directory
+// This avoids Vite warnings about importing from public
 
 function Blog() {
   const [posts, setPosts] = useState<BlogPostMeta[]>([]);
@@ -57,34 +54,39 @@ function Blog() {
 
   const loadBlogPosts = async () => {
     try {
-      const postsWithMeta = Object.entries(blogPosts)
-        .filter(([path]) => {
-          // Filter out README and other non-post files
-          const filename = path.split('/').pop() || '';
-          return !filename.toUpperCase().startsWith('README');
-        })
-        .map(([path, content]) => {
-          // Extract filename from path: /public/blog/2025-12-22-title.md
-          const filename = path.split('/').pop() || '';
-          const slug = filename.replace(/\.md$/, '');
+      // Fetch the list of blog posts from a manifest or hardcoded list
+      // For now, we'll use a hardcoded list of known posts
+      const knownPosts = ['2025-01-04-welcome-to-brightchain-blog'];
 
-          // Parse frontmatter
-          const metadata = parseFrontmatter(content as string);
+      const postsWithMeta = await Promise.all(
+        knownPosts.map(async (slug) => {
+          try {
+            const response = await fetch(`/blog/${slug}.md`);
+            if (!response.ok) return null;
+            const content = await response.text();
 
-          // Extract date from filename (YYYY-MM-DD-title.md)
-          const dateMatch = filename.match(/^(\d{4}-\d{2}-\d{2})/);
-          const date = dateMatch ? dateMatch[1] : metadata.date || '';
+            // Parse frontmatter
+            const metadata = parseFrontmatter(content);
 
-          return {
-            slug,
-            title:
-              metadata.title ||
-              slug.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/-/g, ' '),
-            date,
-            excerpt: metadata.excerpt || '',
-            author: metadata.author || '',
-          };
-        });
+            // Extract date from filename (YYYY-MM-DD-title.md)
+            const dateMatch = slug.match(/^(\d{4}-\d{2}-\d{2})/);
+            const date = dateMatch ? dateMatch[1] : metadata.date || '';
+
+            return {
+              slug,
+              title:
+                metadata.title ||
+                slug.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/-/g, ' '),
+              date,
+              excerpt: metadata.excerpt || '',
+              author: metadata.author || '',
+            } as BlogPostMeta;
+          } catch (error) {
+            console.error(`Error loading post ${slug}:`, error);
+            return null;
+          }
+        }),
+      ).then((posts) => posts.filter((p): p is BlogPostMeta => p !== null));
 
       // Check sessionStorage for newly published posts not yet in build
       const pendingPostsJson = sessionStorage.getItem('blog_pending_posts');

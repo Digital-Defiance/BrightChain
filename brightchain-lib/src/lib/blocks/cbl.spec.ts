@@ -12,6 +12,7 @@ import {
   EmailString,
   getEnhancedIdProvider,
   Member,
+  MemberType,
   PlatformID,
   SignatureUint8Array,
   uint8ArrayToHex,
@@ -23,7 +24,6 @@ import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
-import MemberType from '../enumerations/memberType';
 import { BlockValidationError } from '../errors/block';
 import { initializeBrightChain, resetInitialization } from '../init';
 import { ChecksumService } from '../services/checksum.service';

@@ -10,14 +10,7 @@
  * - Error responses are consistent across all error utility functions
  */
 
-/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
-import {
-  QuorumError,
-  QuorumErrorType,
-  StoreError,
-  StoreErrorType,
-} from '@brightchain/brightchain-lib';
-import fc from 'fast-check';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   createApiErrorResult,
   createErrorResponse,
@@ -34,7 +27,14 @@ import {
   unauthorizedError,
   validateErrorResponse,
   validationError,
-} from '../utils/errorResponse';
+} from '@brightchain/brightchain-api-lib';
+import {
+  QuorumError,
+  QuorumErrorType,
+  StoreError,
+  StoreErrorType,
+} from '@brightchain/brightchain-lib';
+import fc from 'fast-check';
 
 describe('Error Response Format Consistency Property Tests', () => {
   describe('Property 27: Error Response Format Consistency', () => {

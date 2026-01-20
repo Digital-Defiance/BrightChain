@@ -1,3 +1,4 @@
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { Environment as BaseEnvironment } from '@digitaldefiance/node-express-suite';
 import { Environment } from './environment';
 import { IEnvironment } from './interfaces/environment';
@@ -35,7 +36,7 @@ describe('Environment Class', () => {
     it('should implement IEnvironment interface', () => {
       const env = new Environment(undefined, true);
       // Type check - if this compiles, Environment implements IEnvironment
-      const envInterface: IEnvironment = env;
+      const envInterface: IEnvironment<PlatformID> = env;
       expect(envInterface).toBeDefined();
     });
   });

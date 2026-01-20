@@ -15,7 +15,6 @@
  * Note: Full CBL tests with signature validation are in brightchain-lib/src/lib/stores/cblStore.spec.ts
  */
 
-/* eslint-disable @nx/enforce-module-boundaries */
 import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib';
 import {
   BlockSize,
@@ -28,12 +27,12 @@ import {
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { MemberType } from '@brightchain/brightchain-lib/lib/enumerations/memberType';
 import {
   EmailString,
   GuidV4,
   IMemberWithMnemonic,
   Member,
+  MemberType,
   ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';

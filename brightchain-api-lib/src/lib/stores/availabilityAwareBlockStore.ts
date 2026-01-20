@@ -14,6 +14,9 @@ import {
   BlockHandle,
   BlockStoreOptions,
   BrightenResult,
+  CBLMagnetComponents,
+  CBLStorageResult,
+  CBLWhiteningOptions,
   Checksum,
   IAvailabilityService,
   IBlockMetadata,
@@ -630,5 +633,174 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    */
   getConfig(): Required<AvailabilityAwareBlockStoreConfig> {
     return { ...this.config };
+  }
+
+  // === CBL Whitening Operations ===
+
+  /**
+   * Store a CBL with XOR whitening for Owner-Free storage.
+   * Delegates to the inner store and updates availability tracking for both blocks.
+   *
+   * @param cblData - The original CBL data as Uint8Array
+   * @param options - Optional storage options (durability, expiration, encryption flag)
+   * @returns Result containing block IDs, parity IDs (if any), and magnet URL
+   * @throws StoreError if storage fails
+   */
+  async storeCBLWithWhitening(
+    cblData: Uint8Array,
+    options?: CBLWhiteningOptions,
+  ): Promise<CBLStorageResult> {
+    // Delegate to inner store
+    const result = await this.innerStore.storeCBLWithWhitening(
+      cblData,
+      options,
+    );
+
+    // Update registry and availability for both blocks
+    this.registry.addLocal(result.blockId1);
+    this.registry.addLocal(result.blockId2);
+
+    await this.availabilityService.setAvailabilityState(
+      result.blockId1,
+      AvailabilityState.Local,
+    );
+    await this.availabilityService.setAvailabilityState(
+      result.blockId2,
+      AvailabilityState.Local,
+    );
+
+    // Update location metadata for both blocks
+    const locationRecord: ILocationRecord = {
+      nodeId: this.config.localNodeId,
+      lastSeen: new Date(),
+      isAuthoritative: true,
+    };
+    await this.availabilityService.updateLocation(
+      result.blockId1,
+      locationRecord,
+    );
+    await this.availabilityService.updateLocation(
+      result.blockId2,
+      locationRecord,
+    );
+
+    // Handle partition mode or announce
+    if (this.availabilityService.isInPartitionMode()) {
+      // Add both blocks to pending sync queue
+      const syncItem1: PendingSyncItem = {
+        type: 'store',
+        blockId: result.blockId1,
+        timestamp: new Date(),
+      };
+      const syncItem2: PendingSyncItem = {
+        type: 'store',
+        blockId: result.blockId2,
+        timestamp: new Date(),
+      };
+      this.reconciliationService.addToPendingSyncQueue(syncItem1);
+      this.reconciliationService.addToPendingSyncQueue(syncItem2);
+    } else if (this.config.autoAnnounce) {
+      // Announce both blocks to network via gossip
+      await this.gossipService.announceBlock(result.blockId1);
+      await this.gossipService.announceBlock(result.blockId2);
+    }
+
+    return result;
+  }
+
+  /**
+   * Retrieve and reconstruct a CBL from its whitened components.
+   * Delegates to the inner store.
+   *
+   * @param blockId1 - First block ID (Checksum or hex string)
+   * @param blockId2 - Second block ID (Checksum or hex string)
+   * @param block1ParityIds - Optional parity block IDs for block 1 recovery
+   * @param block2ParityIds - Optional parity block IDs for block 2 recovery
+   * @returns The original CBL data as Uint8Array
+   * @throws StoreError if either block is not found or reconstruction fails
+   */
+  async retrieveCBL(
+    blockId1: Checksum | string,
+    blockId2: Checksum | string,
+    block1ParityIds?: string[],
+    block2ParityIds?: string[],
+  ): Promise<Uint8Array> {
+    const b1Id = this.keyToHex(blockId1);
+    const b2Id = this.keyToHex(blockId2);
+
+    // Check availability state for remote blocks during partition mode
+    if (this.availabilityService.isInPartitionMode()) {
+      const state1 = await this.availabilityService.getAvailabilityState(b1Id);
+      const state2 = await this.availabilityService.getAvailabilityState(b2Id);
+
+      if (state1 === AvailabilityState.Remote) {
+        throw new PartitionModeError(
+          `Cannot access remote block ${b1Id} during partition mode`,
+        );
+      }
+      if (state2 === AvailabilityState.Remote) {
+        throw new PartitionModeError(
+          `Cannot access remote block ${b2Id} during partition mode`,
+        );
+      }
+    }
+
+    // Delegate to inner store
+    const cblData = await this.innerStore.retrieveCBL(
+      blockId1,
+      blockId2,
+      block1ParityIds,
+      block2ParityIds,
+    );
+
+    // Update access metadata if tracking is enabled
+    if (this.config.trackAccess) {
+      await this.updateAccessMetadata(b1Id);
+      await this.updateAccessMetadata(b2Id);
+    }
+
+    return cblData;
+  }
+
+  /**
+   * Parse a whitened CBL magnet URL and extract component IDs.
+   * Delegates to the inner store.
+   *
+   * @param magnetUrl - The magnet URL to parse
+   * @returns Object containing block IDs, block size, parity IDs (if any), and encryption flag
+   * @throws Error if the URL format is invalid
+   */
+  parseCBLMagnetUrl(magnetUrl: string): CBLMagnetComponents {
+    return this.innerStore.parseCBLMagnetUrl(magnetUrl);
+  }
+
+  /**
+   * Generate a magnet URL for a whitened CBL.
+   * Delegates to the inner store.
+   *
+   * @param blockId1 - First block ID (Checksum or hex string)
+   * @param blockId2 - Second block ID (Checksum or hex string)
+   * @param blockSize - Block size in bytes
+   * @param block1ParityIds - Optional parity block IDs for block 1
+   * @param block2ParityIds - Optional parity block IDs for block 2
+   * @param isEncrypted - Whether the CBL is encrypted
+   * @returns The magnet URL string
+   */
+  generateCBLMagnetUrl(
+    blockId1: Checksum | string,
+    blockId2: Checksum | string,
+    blockSize: number,
+    block1ParityIds?: string[],
+    block2ParityIds?: string[],
+    isEncrypted?: boolean,
+  ): string {
+    return this.innerStore.generateCBLMagnetUrl(
+      blockId1,
+      blockId2,
+      blockSize,
+      block1ParityIds,
+      block2ParityIds,
+      isEncrypted,
+    );
   }
 }

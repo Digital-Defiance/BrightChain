@@ -14,10 +14,10 @@ import {
   EmailString,
   GuidV4,
   Member,
+  MemberType,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
-import { MemberType } from '../enumerations/memberType';
 import { initializeBrightChain } from '../init';
 import { QuorumMemberMetadata } from '../interfaces/services/quorumService';
 import { QuorumService } from './quorumService';

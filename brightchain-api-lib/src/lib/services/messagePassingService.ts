@@ -1,4 +1,5 @@
 import {
+  Checksum,
   IMessageCBLOptions as ICreateMessageOptions,
   IMessageMetadata,
   IMessageMetadataStore,
@@ -85,7 +86,7 @@ export class MessagePassingService {
     const metadata = await this.messageCBL.getMessageMetadata(messageId);
     if (metadata && metadata.cblBlockIds) {
       for (const blockId of metadata.cblBlockIds) {
-        await this.messageCBL['blockStore'].deleteBlock(blockId);
+        await this.messageCBL['blockStore'].delete(Checksum.fromHex(blockId));
       }
     }
   }

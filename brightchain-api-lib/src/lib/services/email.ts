@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
-import { IApplication } from '../interfaces/application';
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import { IApplication } from '@digitaldefiance/node-express-suite';
+import { Environment } from '../environment';
 // import { debugLog } from '../utils';
 const debugLog = (
   debug: boolean,
@@ -16,30 +18,30 @@ const debugLog = (
 /**
  * A generic service for sending emails using Amazon SES.
  */
-export class EmailService {
+export class EmailService<TID extends PlatformID = Buffer> {
   private readonly sesClient: SESClient;
   private readonly emailSender: string;
   private readonly disableEmailSend: boolean;
   private readonly debug: boolean;
-  private readonly application: IApplication;
+  private readonly application: IApplication<TID>;
 
   /**
    * Constructs an instance of EmailService.
    * @param config Configuration object containing AWS credentials, region, sender email, and debug/disable flags.
    */
-  constructor(application: IApplication) {
+  constructor(application: IApplication<TID>) {
     this.application = application;
     this.emailSender = application.environment.emailSender;
     this.disableEmailSend = application.environment.disableEmailSend;
     this.debug = application.environment.debug;
 
     // Initialize the SES client with provided AWS credentials and region.
+    const environment: Environment = application.environment as Environment;
     this.sesClient = new SESClient({
-      region: application.environment.aws.region,
+      region: environment.aws.region,
       credentials: {
-        accessKeyId: application.environment.aws.accessKeyId.value ?? '',
-        secretAccessKey:
-          application.environment.aws.secretAccessKey.value ?? '',
+        accessKeyId: environment.aws.accessKeyId.value ?? '',
+        secretAccessKey: environment.aws.secretAccessKey.value ?? '',
       },
     });
   }

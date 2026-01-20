@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   debugLog,
   handleError,
+  IApplication,
   sendApiMessageResponse,
 } from '@digitaldefiance/node-express-suite';
 import {
@@ -17,7 +19,7 @@ import {
 } from 'express';
 import { existsSync, readdirSync } from 'fs';
 import { join } from 'path';
-import { IApplication } from '../interfaces/application';
+import { Environment } from '../environment';
 import { ApiRouter } from './api';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -29,15 +31,15 @@ function keepEJS() {
  * Application router
  * Sets up the API and static file serving
  */
-export class AppRouter {
+export class AppRouter<TID extends PlatformID> {
   private readonly viewsPath: string;
   private readonly indexPath: string;
   private readonly assetsDir: string;
 
-  private readonly apiRouter: ApiRouter;
-  private readonly application: IApplication;
+  private readonly apiRouter: ApiRouter<TID>;
+  private readonly application: IApplication<TID>;
 
-  constructor(apiRouter: ApiRouter) {
+  constructor(apiRouter: ApiRouter<TID>) {
     this.application = apiRouter.application;
     this.apiRouter = apiRouter;
     this.viewsPath = join(this.application.environment.apiDistDir, 'views');
@@ -157,7 +159,8 @@ export class AppRouter {
         (req.socket.localPort === 80 && req.protocol === 'http')
           ? `${req.protocol}://${hostname}`
           : `${req.protocol}://${hostname}:${req.socket.localPort}`;
-
+      const environment: Environment = this.apiRouter.application
+        .environment as Environment;
       res.render(
         'index',
         {
@@ -165,10 +168,9 @@ export class AppRouter {
           title: SiteName,
           tagline: 'The Future of Decentralized Storage', // translate(SuiteCoreStringKey.SiteTagline),
           server: server,
-          siteUrl: this.apiRouter.application.environment.serverUrl,
-          baseHref: this.apiRouter.application.environment.basePath,
-          fontawesomeKitId:
-            this.apiRouter.application.environment.fontAwesomeKitId,
+          siteUrl: environment.serverUrl,
+          baseHref: environment.basePath,
+          fontawesomeKitId: environment.fontAwesomeKitId,
           hostname: hostname,
           siteTitle: SiteName,
           jsFile: jsFile ? `assets/${jsFile}` : undefined,

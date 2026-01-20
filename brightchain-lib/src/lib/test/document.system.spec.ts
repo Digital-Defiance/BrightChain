@@ -1,6 +1,6 @@
+import { MemberType } from '@digitaldefiance/ecies-lib';
 import * as fs from 'fs';
 import * as path from 'path';
-import MemberType from '../enumerations/memberType';
 import { initializeBrightChain, resetInitialization } from '../init';
 import { IMemberStorageData } from '../interfaces/member/storage';
 import { ServiceProvider } from '../services/service.provider';

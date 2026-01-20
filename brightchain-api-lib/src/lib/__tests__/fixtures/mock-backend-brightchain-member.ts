@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MemberType, ServiceProvider } from '@brightchain/brightchain-lib';
+import { ServiceProvider } from '@brightchain/brightchain-lib';
 import {
   EmailString,
+  MemberType,
   SecureBuffer,
   SecureString,
 } from '@digitaldefiance/ecies-lib';

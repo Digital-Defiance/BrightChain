@@ -2,6 +2,7 @@ import {
   ECIESService,
   EmailString,
   Member,
+  MemberType,
   PlatformID,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
@@ -13,7 +14,6 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { MemberErrorType } from '../enumerations/memberErrorType';
 import { MemberStatusType } from '../enumerations/memberStatusType';
-import MemberType from '../enumerations/memberType';
 import { MemberError } from '../errors/memberError';
 import { NotImplementedError } from '../errors/notImplemented';
 import {
