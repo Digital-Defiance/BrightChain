@@ -9,16 +9,15 @@
  *   SHALL preserve all block addresses, creator information, and signature.
  */
 
-/* eslint-disable @nx/enforce-module-boundaries */
 import { ConstituentBlockListBlock } from '@brightchain/brightchain-lib/lib/blocks/cbl';
 import { BlockEncryptionType } from '@brightchain/brightchain-lib/lib/enumerations/blockEncryptionType';
 import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
-import { MemberType } from '@brightchain/brightchain-lib/lib/enumerations/memberType';
 import { ServiceProvider } from '@brightchain/brightchain-lib/lib/services/service.provider';
 import {
   arraysEqual,
   EmailString,
   Member,
+  MemberType,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';

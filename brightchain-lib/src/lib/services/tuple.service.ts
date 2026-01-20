@@ -8,7 +8,6 @@ import { BlockHandle } from '../blocks/handle';
 import { InMemoryBlockTuple } from '../blocks/memoryTuple';
 import { RandomBlock } from '../blocks/random';
 import { WhitenedBlock } from '../blocks/whitened';
-import { randomBytes } from '../browserCrypto';
 import { Readable } from '../browserStream';
 import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -24,6 +23,7 @@ import { Validator } from '../utils/validator';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
 import { ServiceLocator } from './serviceLocator';
+import { XorService } from './xor';
 
 /**
  * TupleService provides utility functions for working with block tuples.
@@ -108,30 +108,29 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       const paddedData = new Uint8Array(sourceBlock.blockSize);
       paddedData.set(sourceData);
 
-      // XOR operations will be performed on the padded data
-      const xoredData = new Uint8Array(paddedData);
+      // Collect all arrays to XOR together
+      const arraysToXor: Uint8Array[] = [paddedData];
 
-      // XOR with whitening blocks
+      // Add whitening blocks
       for (const whitener of whiteners) {
         if (whitener.blockSize !== sourceBlock.blockSize) {
           throw new TupleError(TupleErrorType.BlockSizeMismatch);
         }
         const whitenerData = await this.toUint8Array(whitener.data);
-        for (let i = 0; i < sourceBlock.blockSize; i++) {
-          xoredData[i] ^= whitenerData[i];
-        }
+        arraysToXor.push(whitenerData);
       }
 
-      // XOR with random blocks
+      // Add random blocks
       for (const random of randomBlocks) {
         if (random.blockSize !== sourceBlock.blockSize) {
           throw new TupleError(TupleErrorType.BlockSizeMismatch);
         }
         const randomData = await this.toUint8Array(random.data);
-        for (let i = 0; i < sourceBlock.blockSize; i++) {
-          xoredData[i] ^= randomData[i];
-        }
+        arraysToXor.push(randomData);
       }
+
+      // XOR all arrays together using XorService
+      const xoredData = XorService.xorMultiple(arraysToXor);
 
       // Create whitened block with preserved length metadata
       const now = new Date();
@@ -214,15 +213,20 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     );
 
     try {
-      // Start with a padded buffer filled with cryptographically secure random data
-      const result = randomBytes(primeWhitenedBlock.blockSize);
-
-      // Get all block data upfront and ensure they're padded
+      // Get all block data upfront and ensure they're padded to block size
       const primeData = await this.toUint8Array(primeWhitenedBlock.data);
+      const paddedPrimeData = new Uint8Array(primeWhitenedBlock.blockSize);
+      paddedPrimeData.set(
+        primeData.subarray(
+          0,
+          Math.min(primeData.length, primeWhitenedBlock.blockSize),
+        ),
+      );
+
       const whitenerData = await Promise.all(
         whiteners.map(async (w) => {
           const data = await this.toUint8Array(w.data);
-          const padded = randomBytes(primeWhitenedBlock.blockSize);
+          const padded = new Uint8Array(primeWhitenedBlock.blockSize);
           padded.set(
             data.subarray(
               0,
@@ -235,7 +239,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       const randomData = await Promise.all(
         randomBlocks.map(async (r) => {
           const data = await this.toUint8Array(r.data);
-          const padded = randomBytes(primeWhitenedBlock.blockSize);
+          const padded = new Uint8Array(primeWhitenedBlock.blockSize);
           padded.set(
             data.subarray(
               0,
@@ -253,27 +257,9 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         }
       });
 
-      // Copy prime data to result buffer, preserving random padding
-      result.set(
-        primeData.subarray(
-          0,
-          Math.min(primeData.length, primeWhitenedBlock.blockSize),
-        ),
-      );
-
-      // XOR with whitening blocks
-      for (const data of whitenerData) {
-        for (let i = 0; i < primeWhitenedBlock.blockSize; i++) {
-          result[i] ^= data[i];
-        }
-      }
-
-      // XOR with random blocks
-      for (const data of randomData) {
-        for (let i = 0; i < primeWhitenedBlock.blockSize; i++) {
-          result[i] ^= data[i];
-        }
-      }
+      // XOR all arrays together using XorService
+      const arraysToXor = [paddedPrimeData, ...whitenerData, ...randomData];
+      const result = XorService.xorMultiple(arraysToXor);
 
       // Create owned data block with preserved length metadata
       const checksum = this.checksumService.calculateChecksum(result);

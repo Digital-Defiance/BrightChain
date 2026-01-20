@@ -52,3 +52,18 @@ export * from './validator';
  * @see {@link checksumUtils}
  */
 export * from './checksumUtils';
+
+// ============================================================================
+// XOR Utilities
+// ============================================================================
+/**
+ * XOR utilities for CBL whitening operations.
+ *
+ * Provides functions for:
+ * - XORing equal-length arrays
+ * - Padding data to block size
+ * - Unpadding CBL data
+ *
+ * @see {@link xorUtils}
+ */
+export * from './xorUtils';

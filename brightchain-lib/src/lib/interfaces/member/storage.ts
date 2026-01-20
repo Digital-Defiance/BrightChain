@@ -1,4 +1,4 @@
-import { MemberType } from '../../enumerations/memberType';
+import { MemberType } from '@digitaldefiance/ecies-lib';
 
 /**
  * Storage format for member data - all serializable types

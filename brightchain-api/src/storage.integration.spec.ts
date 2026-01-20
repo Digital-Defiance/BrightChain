@@ -8,7 +8,6 @@
  * - Error cases: checksum failure, unauthorized access, partial corruption
  */
 
-/* eslint-disable @nx/enforce-module-boundaries */
 import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib';
 import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
 import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';

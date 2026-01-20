@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 /**
  * Owner Free Filesystem (OFF) Integration Test
  *

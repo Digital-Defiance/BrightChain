@@ -1,7 +1,6 @@
-import { ChecksumString } from '@digitaldefiance/ecies-lib';
+import { ChecksumString, MemberType } from '@digitaldefiance/ecies-lib';
 import { Request } from 'express';
 import { Document } from './documents/base/document';
-import MemberType from './enumerations/memberType';
 
 export type DefaultIdType = ChecksumString;
 

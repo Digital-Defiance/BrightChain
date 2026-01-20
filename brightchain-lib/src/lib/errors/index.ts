@@ -304,3 +304,13 @@ export * from './notImplemented';
  * Message passing system errors.
  */
 export * from './messaging';
+
+// ============================================================================
+// Super CBL Errors
+// ============================================================================
+/**
+ * Super CBL (Hierarchical Constituent Block List) errors.
+ * @see {@link SuperCBLError}
+ * @see {@link SuperCBLErrorType}
+ */
+export * from './superCbl';

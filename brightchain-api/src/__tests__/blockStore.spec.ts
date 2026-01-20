@@ -1,13 +1,15 @@
-/* eslint-disable @nx/enforce-module-boundaries */
+import {
+  BlockStoreService,
+  IBrightChainApplication,
+} from '@brightchain/brightchain-api-lib';
 import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
 import type { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
 import { ChecksumService } from '@brightchain/brightchain-lib/lib/services/checksum.service';
 import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { promises as fs } from 'fs';
 import os from 'os';
 import path from 'path';
-import { IApplication } from '../interfaces/application';
-import { BlockStoreService } from '../services/blockStore';
 
 jest.mock('file-type', () => ({
   fileTypeFromBuffer: async () => null,
@@ -24,26 +26,6 @@ afterAll(() => {
   ServiceLocator.reset();
 });
 
-interface DummyApp {
-  id: string;
-  getController: () => never;
-  getModel: () => never;
-  nodeAgent: Record<string, unknown>;
-  clusterAgentPublicKeys: Buffer[];
-}
-
-const dummyApp: DummyApp = {
-  id: 'test-app',
-  getController: () => {
-    throw new Error('not implemented');
-  },
-  getModel: () => {
-    throw new Error('not implemented');
-  },
-  nodeAgent: {},
-  clusterAgentPublicKeys: [],
-};
-
 describe('BlockStoreService', () => {
   const prevPath = process.env.BRIGHTCHAIN_BLOCKSTORE_PATH;
   const prevSize = process.env.BRIGHTCHAIN_BLOCKSIZE_BYTES;
@@ -55,11 +37,29 @@ describe('BlockStoreService', () => {
 
   it('stores and retrieves a block round-trip with checksum-derived id', async () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'blockstore-'));
-    process.env.BRIGHTCHAIN_BLOCKSTORE_PATH = tmpDir;
     const blockSize = 4096 as BlockSize;
-    process.env.BRIGHTCHAIN_BLOCKSIZE_BYTES = `${blockSize}`;
 
-    const service = new BlockStoreService(dummyApp as unknown as IApplication);
+    // Create a mock app with proper environment that returns the temp directory
+    const mockApp = {
+      id: 'test-app',
+      environment: {
+        blockStorePath: tmpDir,
+        blockStoreBlockSize: blockSize,
+      },
+      getController: () => {
+        throw new Error('not implemented');
+      },
+      setController: () => {},
+      getModel: () => {
+        throw new Error('not implemented');
+      },
+      nodeAgent: {},
+      clusterAgentPublicKeys: [],
+    };
+
+    const service = new BlockStoreService(
+      mockApp as unknown as IBrightChainApplication<PlatformID>,
+    );
     const payload = Buffer.from('hello-world');
 
     const blockId = await service.storeBlock(payload);

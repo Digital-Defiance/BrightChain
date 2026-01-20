@@ -15,10 +15,10 @@ import {
   GuidV4,
   IMemberWithMnemonic,
   Member,
+  MemberType,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
-import { MemberType } from './enumerations/memberType';
 import { initializeBrightChain } from './init';
 import { QuorumDataRecord } from './quorumDataRecord';
 import { SealingService } from './services/sealing.service';

@@ -1,7 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ECIESService, EmailString, Member } from '@digitaldefiance/ecies-lib';
+import {
+  ECIESService,
+  EmailString,
+  Member,
+  MemberType,
+} from '@digitaldefiance/ecies-lib';
 import { BlockSize } from '../../enumerations/blockSize';
-import MemberType from '../../enumerations/memberType';
 import { MemberError } from '../../errors/memberError';
 import { ServiceProvider } from '../../services/service.provider';
 import { Checksum } from '../../types/checksum';

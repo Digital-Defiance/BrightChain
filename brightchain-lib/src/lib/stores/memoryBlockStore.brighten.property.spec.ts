@@ -135,14 +135,16 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
                 expectedXor[i] = sourceData[i];
               }
 
-              // XOR with each random block that was used
+              // XOR with each random block that was used (all blocks should be same size)
               for (const randomBlockId of result.randomBlockIds) {
                 const randomBlock = await testStore.getData(
                   Checksum.fromHex(randomBlockId),
                 );
+                // Verify block sizes match
+                expect(randomBlock.data.length).toBe(expectedXor.length);
+
                 for (let i = 0; i < expectedXor.length; i++) {
-                  expectedXor[i] ^=
-                    randomBlock.data[i % randomBlock.data.length];
+                  expectedXor[i] ^= randomBlock.data[i];
                 }
               }
 
@@ -407,13 +409,16 @@ describe('MemoryBlockStore XOR Brightening Property Tests', () => {
                 recovered[i] = brightenedBlock.data[i];
               }
 
-              // XOR with each random block to recover original
+              // XOR with each random block to recover original (all blocks should be same size)
               for (const randomBlockId of result.randomBlockIds) {
                 const randomBlock = await testStore.getData(
                   Checksum.fromHex(randomBlockId),
                 );
+                // Verify block sizes match
+                expect(randomBlock.data.length).toBe(recovered.length);
+
                 for (let i = 0; i < recovered.length; i++) {
-                  recovered[i] ^= randomBlock.data[i % randomBlock.data.length];
+                  recovered[i] ^= randomBlock.data[i];
                 }
               }
 

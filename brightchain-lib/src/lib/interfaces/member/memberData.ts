@@ -1,11 +1,11 @@
 import {
   EmailString,
   Member,
+  MemberType,
   PlatformID,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
-import { MemberType } from '../../enumerations/memberType';
 import { Checksum } from '../../types/checksum';
 
 /**

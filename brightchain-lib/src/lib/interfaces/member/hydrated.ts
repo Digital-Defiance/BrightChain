@@ -1,10 +1,10 @@
 import {
   EmailString,
+  MemberType,
   PlatformID,
   SecureString,
 } from '@digitaldefiance/ecies-lib';
 import { PublicKey } from 'paillier-bigint';
-import { MemberType } from '../../enumerations/memberType';
 
 /**
  * Hydrated format for member data - after basic type conversion but before operational

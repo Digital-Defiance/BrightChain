@@ -1,23 +1,73 @@
 /**
- * A simple and fast XOR cipher for obfuscating data in memory for browser environments.
- * This is not a substitute for strong cryptography but provides a lightweight way
- * to prevent sensitive data from being stored in plaintext in memory.
+ * XOR operations for BrightChain.
+ *
+ * All XOR operations in BrightChain use equal-length arrays for whitening/brightening.
+ * This is NOT a repeating-key cipher - arrays must always be the same length.
  */
 export class XorService {
   /**
-   * Encrypts or decrypts data using a simple XOR cipher.
-   * The key is XORed with the data. The same function is used for
-   * both encryption and decryption.
+   * XOR two Uint8Arrays of equal length.
+   * For BrightChain whitening/brightening operations, we always XOR equal-length blocks.
    *
-   * @param data The data to process.
-   * @param key The key to use for the XOR operation.
+   * Properties:
+   * - Self-inverse: (A ⊕ B) ⊕ B = A
+   * - Commutative: A ⊕ B = B ⊕ A
+   * - Associative: (A ⊕ B) ⊕ C = A ⊕ (B ⊕ C)
+   *
+   * @param a The first array to XOR.
+   * @param b The second array to XOR (same length as a).
    * @returns A new Uint8Array containing the result of the XOR operation.
+   * @throws Error if arrays have different lengths.
    */
-  public static xor(data: Uint8Array, key: Uint8Array): Uint8Array {
-    const result = new Uint8Array(data.length);
-    for (let i = 0; i < data.length; i++) {
-      result[i] = data[i] ^ key[i % key.length];
+  public static xor(a: Uint8Array, b: Uint8Array): Uint8Array {
+    if (a.length !== b.length) {
+      throw new Error(
+        `XOR requires equal-length arrays: a.length=${a.length}, b.length=${b.length}`,
+      );
     }
+
+    const result = new Uint8Array(a.length);
+    for (let i = 0; i < a.length; i++) {
+      result[i] = a[i] ^ b[i];
+    }
+    return result;
+  }
+
+  /**
+   * XOR multiple equal-length arrays together.
+   * Used for brightening operations where a source block is XORed with multiple random blocks.
+   *
+   * @param arrays Array of Uint8Arrays to XOR together (all must be same length)
+   * @returns A new Uint8Array containing the XOR of all input arrays
+   * @throws Error if arrays have different lengths or if no arrays provided
+   */
+  public static xorMultiple(arrays: Uint8Array[]): Uint8Array {
+    if (arrays.length === 0) {
+      throw new Error('At least one array must be provided for XOR');
+    }
+
+    const length = arrays[0].length;
+
+    // Verify all arrays have the same length
+    for (let i = 1; i < arrays.length; i++) {
+      if (arrays[i].length !== length) {
+        throw new Error(
+          `All arrays must have the same length for XOR: expected ${length}, got ${arrays[i].length} at index ${i}`,
+        );
+      }
+    }
+
+    const result = new Uint8Array(length);
+
+    // XOR all arrays together
+    for (let i = 0; i < length; i++) {
+      let xorValue = 0;
+      for (const arr of arrays) {
+        xorValue ^= arr[i];
+      }
+      result[i] = xorValue;
+    }
+
     return result;
   }
 
@@ -30,12 +80,23 @@ export class XorService {
   public static generateKey(length: number): Uint8Array {
     const randomBytes = new Uint8Array(length);
 
+    // crypto.getRandomValues has a 65536 byte limit, so we need to chunk
+    const CHUNK_SIZE = 65536;
+
     // Check if running in a browser with crypto support
     if (typeof window !== 'undefined' && window.crypto) {
-      window.crypto.getRandomValues(randomBytes);
+      for (let offset = 0; offset < length; offset += CHUNK_SIZE) {
+        const chunkLength = Math.min(CHUNK_SIZE, length - offset);
+        const chunk = randomBytes.subarray(offset, offset + chunkLength);
+        window.crypto.getRandomValues(chunk);
+      }
     } else if (typeof crypto !== 'undefined') {
       // For environments where crypto is global (some newer JS runtimes)
-      crypto.getRandomValues(randomBytes);
+      for (let offset = 0; offset < length; offset += CHUNK_SIZE) {
+        const chunkLength = Math.min(CHUNK_SIZE, length - offset);
+        const chunk = randomBytes.subarray(offset, offset + chunkLength);
+        crypto.getRandomValues(chunk);
+      }
     } else {
       throw new Error('Crypto API not available in this environment');
     }

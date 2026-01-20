@@ -1,6 +1,4 @@
-import { DefaultBackendIdType } from '../shared-types';
-
-export type DocumentId = DefaultBackendIdType;
+export type DocumentId = string;
 
 export type DocumentRecord = Record<string, unknown> & { _id?: DocumentId };
 

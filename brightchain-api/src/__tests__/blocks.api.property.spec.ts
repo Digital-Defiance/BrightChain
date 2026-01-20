@@ -10,7 +10,6 @@
  * - Block storage and retrieval is consistent
  */
 
-/* eslint-disable @nx/enforce-module-boundaries */
 import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib';
 import {
   BlockSize,

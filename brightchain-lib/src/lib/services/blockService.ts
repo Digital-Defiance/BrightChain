@@ -29,6 +29,7 @@ import { Checksum } from '../types/checksum';
 import { IUniversalBlockStore } from '../interfaces/storage/universalBlockStore';
 import { ServiceLocator } from '../services/serviceLocator';
 import { Validator } from '../utils/validator';
+import { XorService } from './xor';
 
 /**
  * Browser-compatible BlockService with core functionality
@@ -393,7 +394,8 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
   }
 
   /**
-   * XOR a single block with all whiteners
+   * XOR a single block with all whiteners using XorService.
+   * All arrays must be equal length for proper whitening.
    */
   public xorBlockWithWhiteners(
     block: Uint8Array,
@@ -403,16 +405,13 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       throw new BlockServiceError(BlockServiceErrorType.NoWhitenersProvided);
     }
 
-    const xorBlock = new Uint8Array(block);
-    // XOR with all whiteners
-    for (const whitener of whiteners) {
-      const data: Uint8Array =
-        whitener instanceof Uint8Array ? whitener : whitener.data;
-      for (let j = 0; j < data.length; j++) {
-        xorBlock[j] = xorBlock[j] ^ data[j];
-      }
-    }
-    return xorBlock;
+    // Convert all whiteners to Uint8Array
+    const whitenerArrays = whiteners.map((whitener) =>
+      whitener instanceof Uint8Array ? whitener : whitener.data,
+    );
+
+    // Use XorService.xorMultiple for consolidated XOR operation
+    return XorService.xorMultiple([block, ...whitenerArrays]);
   }
 
   /**

@@ -35,7 +35,6 @@ export * from './lengthEncodingType';
 export * from './memberErrorType';
 export * from './memberKeyUse';
 export * from './memberStatusType';
-export * from './memberType';
 export * from './memoryTupleErrorType';
 export * from './multiEncryptedErrorType';
 export * from './operationType';

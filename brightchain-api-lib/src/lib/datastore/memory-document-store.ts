@@ -1,5 +1,4 @@
 import { randomUUID } from 'crypto';
-import { DefaultBackendIdType } from '../shared-types';
 import {
   DocumentCollection,
   DocumentId,
@@ -82,7 +81,7 @@ function matchFilter<T extends DocumentRecord>(
 
 function ensureId(doc: DocumentRecord): DocumentRecord {
   if (!doc._id) {
-    doc._id = randomUUID() as DefaultBackendIdType;
+    doc._id = randomUUID();
   }
   return doc;
 }
