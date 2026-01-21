@@ -27,7 +27,7 @@ export function createMessageRouter(service: MessagePassingService): Router {
         }
 
         const contentBuffer = Buffer.from(content, 'base64');
-        const messageId = await service.sendMessage(contentBuffer, senderId, {
+        const result = await service.sendMessage(contentBuffer, senderId, {
           recipients: recipients || [],
           messageType,
           priority: priority || MessagePriority.NORMAL,
@@ -35,7 +35,7 @@ export function createMessageRouter(service: MessagePassingService): Router {
           encryptionScheme: encryptionScheme || 0,
         });
 
-        res.status(201).json({ messageId });
+        res.status(201).json(result);
       } catch (error) {
         res.status(500).json({ error: (error as Error).message });
       }

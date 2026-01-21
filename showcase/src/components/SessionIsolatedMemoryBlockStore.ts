@@ -202,18 +202,11 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
    * Store a block's data
    */
   public async setData(block: RawDataBlock): Promise<void> {
-    if (block.blockSize !== this._blockSize) {
-      throw new SessionStoreError(
-        `Block size ${block.blockSize} does not match store size ${this._blockSize}`,
-      );
-    }
-
+    // Allow any valid BlockSize, not just the store's default
     const keyHex = toHexKey(block.idChecksum);
 
     if (this.blocks.has(keyHex)) {
-      throw new SessionStoreError(
-        `Block ${keyHex.substring(0, 8)}... already exists in session ${this._sessionId}`,
-      );
+      return;
     }
 
     try {
@@ -345,9 +338,7 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
       sessionId: this._sessionId,
       blockCount: this.blocks.size,
       blockSize: this._blockSize,
-      blockIds: Array.from(this.blocks.keys()).map(
-        (key) => key.substring(0, 8) + '...',
-      ),
+      blockIds: Array.from(this.blocks.keys()),
     };
   }
 
@@ -443,50 +434,67 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
     cblData: Uint8Array,
     options?: CBLWhiteningOptions,
   ): Promise<CBLStorageResult> {
-    // Validate input
     if (!cblData || cblData.length === 0) {
       throw new SessionStoreError('CBL data cannot be empty');
     }
 
-    // 1. Pad CBL to block size (includes length prefix)
-    const paddedCbl = this.padToBlockSize(cblData);
+    const LENGTH_PREFIX_SIZE = 4;
+    const totalDataSize = LENGTH_PREFIX_SIZE + cblData.length;
 
-    // 2. Determine the appropriate block size for storing the whitened CBL
-    // The padded CBL might be larger than the store's default block size
-    const cblBlockSize = Math.max(paddedCbl.length, this._blockSize);
+    // Find appropriate block size from BlockSize enum
+    const blockSizes: BlockSize[] = [
+      BlockSize.Message,
+      BlockSize.Tiny,
+      BlockSize.Small,
+      BlockSize.Medium,
+      BlockSize.Large,
+      BlockSize.Huge,
+    ];
+    let cblBlockSize = blockSizes[blockSizes.length - 1];
+    for (const size of blockSizes) {
+      if (totalDataSize <= size) {
+        cblBlockSize = size;
+        break;
+      }
+    }
 
-    // 3. Select or generate randomizer block following OFFSystem principles
-    // In OFFSystem, we preferentially use existing blocks from the cache as randomizers
-    // This provides multi-use of blocks and better security through data reuse
-    const randomBlock = await this.selectOrGenerateRandomizer(paddedCbl.length);
+    const paddedCbl = new Uint8Array(cblBlockSize);
+    const view = new DataView(paddedCbl.buffer);
+    view.setUint32(0, cblData.length, false);
+    paddedCbl.set(cblData, LENGTH_PREFIX_SIZE);
 
-    // 3. XOR to create second block (CBL XOR R)
+    // Fill remaining bytes with random data in chunks (crypto.getRandomValues has 65KB limit)
+    const remainingSize = cblBlockSize - totalDataSize;
+    if (remainingSize > 0) {
+      const maxChunkSize = 65536;
+      let offset = totalDataSize;
+      while (offset < cblBlockSize) {
+        const chunkSize = Math.min(maxChunkSize, cblBlockSize - offset);
+        crypto.getRandomValues(paddedCbl.subarray(offset, offset + chunkSize));
+        offset += chunkSize;
+      }
+    }
+
+    const randomBlock = await this.selectOrGenerateRandomizer(cblBlockSize);
     const xorResult = this.xorArrays(paddedCbl, randomBlock);
 
-    // Track stored blocks for rollback on failure
     let block1Stored = false;
     let block1Id = '';
 
     try {
-      // 4. Store first block (R - the randomizer block)
-      // Note: If this was selected from existing blocks, it's already stored
-      // We still create a block handle for it to get the ID
-      const block1 = new RawDataBlock(cblBlockSize as BlockSize, randomBlock);
+      const block1 = new RawDataBlock(cblBlockSize, randomBlock);
       const block1Checksum = block1.idChecksum;
 
-      // Only store if not already in the store
       if (!(await this.has(block1Checksum))) {
         await this.setData(block1);
         block1Stored = true;
       }
       block1Id = toHexKey(block1Checksum);
 
-      // 5. Store second block (CBL XOR R)
-      const block2 = new RawDataBlock(cblBlockSize as BlockSize, xorResult);
+      const block2 = new RawDataBlock(cblBlockSize, xorResult);
       await this.setData(block2);
       const block2Id = toHexKey(block2.idChecksum);
 
-      // 6. Generate magnet URL
       const magnetUrl = this.generateCBLMagnetUrl(
         block1Id,
         block2Id,
@@ -494,10 +502,6 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
         undefined,
         undefined,
         options?.isEncrypted,
-      );
-
-      console.log(
-        `CBL whitening complete in session ${this._sessionId}: b1=${block1Id.substring(0, 8)}..., b2=${block2Id.substring(0, 8)}...`,
       );
 
       return {
@@ -557,7 +561,15 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
     // - The store is empty (early in block store lifecycle)
     // - No suitable blocks were found
     const newRandomBlock = new Uint8Array(size);
-    crypto.getRandomValues(newRandomBlock);
+    const maxChunkSize = 65536;
+    let offset = 0;
+    while (offset < size) {
+      const chunkSize = Math.min(maxChunkSize, size - offset);
+      crypto.getRandomValues(
+        newRandomBlock.subarray(offset, offset + chunkSize),
+      );
+      offset += chunkSize;
+    }
     return newRandomBlock;
   }
 

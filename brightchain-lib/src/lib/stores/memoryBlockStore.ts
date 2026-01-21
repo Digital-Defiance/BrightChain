@@ -155,13 +155,9 @@ export class MemoryBlockStore implements IBlockStore {
     block: RawDataBlock,
     options?: BlockStoreOptions,
   ): Promise<void> {
-    if (block.blockSize !== this._blockSize) {
-      throw new StoreError(StoreErrorType.BlockSizeMismatch);
-    }
-
     const keyHex = block.idChecksum.toHex();
     if (this.blocks.has(keyHex)) {
-      throw new StoreError(StoreErrorType.BlockAlreadyExists);
+      return; // Idempotent - block already exists
     }
 
     try {

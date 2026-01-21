@@ -21,28 +21,40 @@ export class DiskBlockSyncStore
   }
 
   has(key: Checksum): boolean {
-    const blockPath = this.blockPath(key);
-    return existsSync(blockPath);
+    // Check all possible block sizes
+    for (const size of Object.values(BlockSize).filter(
+      (v) => typeof v === 'number',
+    )) {
+      const blockPath = this.blockPath(key, size as BlockSize);
+      if (existsSync(blockPath)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   get(key: Checksum): BaseBlock {
-    const blockPath = this.blockPath(key);
-    const blockData = readFileSync(blockPath);
-    if (blockData.length !== this._blockSize) {
-      throw new StoreError(StoreErrorType.BlockFileSizeMismatch);
+    // Search all possible block sizes
+    for (const size of Object.values(BlockSize).filter(
+      (v) => typeof v === 'number',
+    )) {
+      const blockPath = this.blockPath(key, size as BlockSize);
+      if (existsSync(blockPath)) {
+        const blockData = readFileSync(blockPath);
+        const metadata = JSON.parse(
+          readFileSync(this.metadataPath(key, size as BlockSize)).toString(),
+        ) as IBaseBlockMetadata;
+        const block = new RawDataBlock(
+          size as BlockSize,
+          blockData,
+          new Date(metadata.dateCreated),
+          key,
+        );
+        block.validateSync();
+        return block;
+      }
     }
-    const metadata = JSON.parse(
-      readFileSync(this.metadataPath(key)).toString(),
-    ) as IBaseBlockMetadata;
-    // Create a concrete block instance using RawDataBlock
-    const block = new RawDataBlock(
-      this._blockSize,
-      blockData,
-      new Date(metadata.dateCreated), // Convert string to Date
-      key,
-    );
-    block.validateSync();
-    return block;
+    throw new StoreError(StoreErrorType.KeyNotFound);
   }
 
   set(key: Checksum, value: BaseBlock): void {
@@ -55,20 +67,14 @@ export class DiskBlockSyncStore
         BLOCK_ID: value.idChecksum.toHex(),
       });
     }
-    if (value.blockSize !== this._blockSize) {
-      throw new StoreError(StoreErrorType.BlockSizeMismatch);
-    }
-    const blockPath = this.blockPath(value.idChecksum);
+    const blockPath = this.blockPath(value.idChecksum, value.blockSize);
     if (existsSync(blockPath)) {
-      throw new StoreError(StoreErrorType.BlockPathAlreadyExists, undefined, {
-        PATH: blockPath,
-      });
-    } else {
-      this.ensureBlockPath(value.idChecksum);
+      return; // Idempotent - block already exists
     }
+    this.ensureBlockPath(value.idChecksum, value.blockSize);
     writeFileSync(blockPath, value.data.toString());
     writeFileSync(
-      this.metadataPath(value.idChecksum),
+      this.metadataPath(value.idChecksum, value.blockSize),
       JSON.stringify(value.metadata),
     );
   }

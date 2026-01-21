@@ -9,7 +9,7 @@ import {
   IBlockMetadata,
   RecoveryResult,
 } from './blockMetadata';
-import {
+import type {
   CBLMagnetComponents,
   CBLStorageResult,
   CBLWhiteningOptions,

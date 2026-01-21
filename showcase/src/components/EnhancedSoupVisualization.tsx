@@ -15,7 +15,8 @@ interface EnhancedSoupVisualizationProps {
   animatingBlockIds?: string[];
   showConnections?: boolean;
   className?: string;
-  allBlockIds?: string[]; // All blocks in the store, not just from current files
+  allBlockIds?: string[];
+  memberBlockIds?: string[]; // Member document blocks
 }
 
 interface FileButtonProps {
@@ -70,6 +71,7 @@ export const EnhancedSoupVisualization: React.FC<
   showConnections = true,
   className = '',
   allBlockIds = [],
+  memberBlockIds = [],
 }) => {
   const [hoveredBlockId, setHoveredBlockId] = useState<string | null>(null);
   const [highlightedBlocks, setHighlightedBlocks] = useState<Set<string>>(
@@ -84,14 +86,16 @@ export const EnhancedSoupVisualization: React.FC<
 
   // Get orphaned blocks (blocks in store but not in any current file)
   const fileBlockIds = new Set(fileBlocks.map((b) => b.id));
+  const memberBlockIdSet = new Set(memberBlockIds);
   const orphanedBlocks = allBlockIds
     .filter((id) => !fileBlockIds.has(id))
     .map((id, index) => ({
       id,
-      checksum: null as unknown as BlockInfo['checksum'], // We don't have the checksum for orphaned blocks
-      size: 0, // Unknown size
+      checksum: null as unknown as BlockInfo['checksum'],
+      size: 0,
       index,
-      fileId: undefined, // No file association
+      fileId: undefined,
+      isMemberBlock: memberBlockIdSet.has(id),
     }));
 
   // Combine file blocks and orphaned blocks
@@ -245,6 +249,9 @@ export const EnhancedSoupVisualization: React.FC<
                   onClick={handleBlockClick}
                   onHover={handleBlockHover}
                   fileId={block.fileId}
+                  isMemberBlock={
+                    'isMemberBlock' in block ? block.isMemberBlock : false
+                  }
                 />
               </motion.div>
             ))}

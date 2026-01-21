@@ -75,6 +75,28 @@ describe('MessageCBLService', () => {
       expect(result.contentBlockIds[0]).toBeDefined();
     });
 
+    it('should create a message with whitened CBL when block store supports it', async () => {
+      const content = new TextEncoder().encode('Hello, World!');
+      const options = {
+        messageType: 'chat',
+        senderId: 'sender123',
+        recipients: ['recipient1'],
+        priority: MessagePriority.NORMAL,
+        encryptionScheme: MessageEncryptionScheme.NONE,
+      };
+
+      const result = await messageCBLService.createMessage(
+        content,
+        creator,
+        options,
+      );
+
+      expect(result.messageId).toBeDefined();
+      expect(result.magnetUrl).toBeDefined();
+      expect(result.magnetUrl).toContain('magnet:?');
+      expect(result.contentBlockIds).toHaveLength(1);
+    });
+
     it('should handle empty recipients', async () => {
       const content = new TextEncoder().encode('Broadcast message');
       const options = {
@@ -107,14 +129,41 @@ describe('MessageCBLService', () => {
         encryptionScheme: MessageEncryptionScheme.NONE,
       };
 
-      const { messageId } = await messageCBLService.createMessage(
+      const { messageId, magnetUrl } = await messageCBLService.createMessage(
         originalContent,
         creator,
         options,
       );
 
       expect(messageId).toBeDefined();
-      expect(await blockStore.has(messageId)).toBe(true);
+      expect(magnetUrl).toBeDefined();
+      expect(magnetUrl).toContain('magnet:?');
+      expect(messageId).toBe(magnetUrl);
+    });
+
+    it('should retrieve message content from whitened CBL', async () => {
+      const originalContent = new TextEncoder().encode('Test whitened message');
+      const options = {
+        messageType: 'test',
+        senderId: 'sender',
+        recipients: ['recipient'],
+        priority: MessagePriority.NORMAL,
+        encryptionScheme: MessageEncryptionScheme.NONE,
+      };
+
+      const { messageId, magnetUrl } = await messageCBLService.createMessage(
+        originalContent,
+        creator,
+        options,
+      );
+
+      expect(magnetUrl).toBeDefined();
+      expect(magnetUrl).toContain('magnet:?');
+
+      const retrievedContent =
+        await messageCBLService.getMessageContent(messageId);
+
+      expect(retrievedContent).toEqual(originalContent);
     });
 
     it('should store message metadata', async () => {

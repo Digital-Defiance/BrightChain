@@ -14,6 +14,7 @@ interface EnhancedSoupCanProps {
   onHover?: (block: BlockInfo | null) => void;
   position?: { x: number; y: number };
   fileId?: string;
+  isMemberBlock?: boolean;
 }
 
 interface InformationPanelProps {
@@ -96,6 +97,7 @@ export const EnhancedSoupCan: React.FC<EnhancedSoupCanProps> = ({
   onHover,
   position: _position = { x: 0, y: 0 },
   fileId,
+  isMemberBlock = false,
 }) => {
   const [showPanel, setShowPanel] = useState(false);
   const [panelPosition, setPanelPosition] = useState({ x: 0, y: 0 });
@@ -163,7 +165,7 @@ export const EnhancedSoupCan: React.FC<EnhancedSoupCanProps> = ({
               repeatType: 'loop',
             }}
           >
-            🥫
+            {isMemberBlock ? '👤' : '🥫'}
           </motion.div>
           <div className="can-index">#{block.index}</div>
           <div className="can-size">{block.size}b</div>

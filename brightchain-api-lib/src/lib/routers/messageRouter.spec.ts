@@ -26,7 +26,10 @@ describe('Message Router API Endpoints', () => {
 
   describe('Task 13.1: POST /messages - Send message', () => {
     it('should send message with valid payload', async () => {
-      mockService.sendMessage.mockResolvedValue('msg-123');
+      mockService.sendMessage.mockResolvedValue({
+        messageId: 'msg-123',
+        magnetUrl: 'magnet:?xt=urn:brightchain:cbl&bs=1024&b1=abc&b2=def',
+      });
 
       const response = await request(app)
         .post('/messages')
@@ -38,7 +41,8 @@ describe('Message Router API Endpoints', () => {
         });
 
       expect(response.status).toBe(201);
-      expect(response.body).toEqual({ messageId: 'msg-123' });
+      expect(response.body.messageId).toBe('msg-123');
+      expect(response.body.magnetUrl).toContain('magnet:?');
       expect(mockService.sendMessage).toHaveBeenCalled();
     });
 
@@ -77,7 +81,10 @@ describe('Message Router API Endpoints', () => {
     });
 
     it('should use default priority if not provided', async () => {
-      mockService.sendMessage.mockResolvedValue('msg-123');
+      mockService.sendMessage.mockResolvedValue({
+        messageId: 'msg-123',
+        magnetUrl: 'magnet:?xt=urn:brightchain:cbl&bs=1024&b1=abc&b2=def',
+      });
 
       await request(app)
         .post('/messages')

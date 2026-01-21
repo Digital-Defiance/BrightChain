@@ -109,20 +109,18 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     commonjsOptions: {
-      // Transform CommonJS modules to ES modules
       transformMixedEsModules: true,
-      // Ensure named exports are properly detected
       requireReturnsDefault: 'auto',
-      // Ignore dynamic requires that can't be resolved
       ignoreDynamicRequires: true,
     },
     rollupOptions: {
-      // Don't externalize these for browser builds - they should be excluded/polyfilled
-      // external: ['fs', 'path', 'crypto'],
-      plugins: [
-        // Apply aliases during rollup build phase too
-        alias({ entries: nobleAliases }),
-      ],
+      external: (id) => {
+        // Externalize Node.js built-ins to prevent bundling attempts
+        return ['fs', 'path', 'crypto', 'stream', 'util', 'os'].some(
+          (mod) => id === mod || id.startsWith(`node:${mod}`),
+        );
+      },
+      plugins: [alias({ entries: nobleAliases })],
     },
   },
   optimizeDeps: {

@@ -32,8 +32,8 @@ export class MessagePassingService {
     content: Buffer,
     senderId: string,
     options: ICreateMessageOptions,
-  ): Promise<string> {
-    const { messageId } = await this.messageCBL.createMessage(
+  ): Promise<{ messageId: string; magnetUrl: string }> {
+    const { messageId, magnetUrl } = await this.messageCBL.createMessage(
       new Uint8Array(content),
       senderId as unknown as Parameters<MessageCBLService['createMessage']>[1],
       options,
@@ -59,7 +59,7 @@ export class MessagePassingService {
       }
     }
 
-    return messageId;
+    return { messageId, magnetUrl };
   }
 
   /**

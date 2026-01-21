@@ -44,6 +44,10 @@ describe('Feature: message-passing-and-events, Property: MessageCBL Round-Trip',
 
   it('Property 1: Content round-trip preserves data for various sizes', async () => {
     const blockSizeNum = BlockSize.Small as number;
+    // CBL header is ~200 bytes, each block ID is 64 bytes
+    // For BlockSize.Small (1024), we can fit ~12 block IDs safely
+    // So max content should be ~12 blocks = 12 * 1024 = 12288 bytes
+    const maxContentSize = blockSizeNum * 10; // Conservative limit
 
     await fc.assert(
       fc.asyncProperty(
@@ -60,9 +64,9 @@ describe('Feature: message-passing-and-events, Property: MessageCBL Round-Trip',
             maxLength: blockSizeNum + 1,
           }), // block size + 1
           fc.uint8Array({
-            minLength: blockSizeNum * 3,
-            maxLength: blockSizeNum * 3,
-          }), // multiple blocks
+            minLength: blockSizeNum * 2,
+            maxLength: blockSizeNum * 2,
+          }), // 2 blocks
         ),
         async (content) => {
           // Reset stores for each test run

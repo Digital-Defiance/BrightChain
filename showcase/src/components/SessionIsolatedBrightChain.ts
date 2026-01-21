@@ -594,6 +594,36 @@ export class SessionIsolatedBrightChain {
   public parseWhitenedCBLMagnetUrl(magnetUrl: string): CBLMagnetComponents {
     return this.blockStore.parseCBLMagnetUrl(magnetUrl);
   }
+
+  /**
+   * Parse a whitened CBL magnet URL and create a FileReceipt.
+   * This allows the reconstructed file to be added to the receipts list.
+   *
+   * @param magnetUrl - The whitened CBL magnet URL
+   * @returns FileReceipt for the reconstructed file with whitening info
+   */
+  public async parseWhitenedCBLForReceipt(
+    magnetUrl: string,
+  ): Promise<FileReceiptWithWhitening> {
+    const components = this.blockStore.parseCBLMagnetUrl(magnetUrl);
+    const cblData = await this.blockStore.retrieveCBL(
+      components.blockId1,
+      components.blockId2,
+    );
+    const receipt = this.parseCBL(cblData);
+    return {
+      ...receipt,
+      whitening: {
+        blockId1: components.blockId1,
+        blockId2: components.blockId2,
+        blockSize: components.blockSize,
+        magnetUrl,
+        block1ParityIds: components.block1ParityIds,
+        block2ParityIds: components.block2ParityIds,
+        isEncrypted: components.isEncrypted,
+      },
+    };
+  }
 }
 
 /**

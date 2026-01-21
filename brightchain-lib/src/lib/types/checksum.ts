@@ -29,6 +29,7 @@
  * @see Requirements 1.1, 1.2, 1.3, 1.4, 1.5
  */
 
+import { uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import { CHECKSUM } from '../constants';
 import { ChecksumError, ChecksumErrorType } from '../errors/checksumError';
 
@@ -153,8 +154,12 @@ export class Checksum {
       );
     }
 
-    const buffer = Buffer.from(hex, 'hex');
-    return Checksum.fromBuffer(buffer);
+    // Browser-safe: convert hex to Uint8Array
+    const bytes = new Uint8Array(CHECKSUM.SHA3_BUFFER_LENGTH);
+    for (let i = 0; i < CHECKSUM.SHA3_BUFFER_LENGTH; i++) {
+      bytes[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+    }
+    return new Checksum(bytes);
   }
 
   /**
@@ -239,7 +244,7 @@ export class Checksum {
    * @see Requirement 1.4
    */
   toHex(): string {
-    return this.toBuffer().toString('hex');
+    return uint8ArrayToHex(this.toUint8Array());
   }
 
   /**

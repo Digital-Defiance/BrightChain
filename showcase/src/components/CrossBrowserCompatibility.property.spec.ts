@@ -6,7 +6,7 @@
  */
 
 import fc from 'fast-check';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BrowserCompatibility,
   getSafeCancelAnimationFrame,
@@ -19,6 +19,17 @@ describe('Property 13: Cross-Browser Compatibility', () => {
   beforeEach(() => {
     // Reset singleton instance for each test
     (BrowserCompatibility as any).instance = null;
+    // Suppress console output during tests
+    vi.spyOn(console, 'group').mockImplementation(() => {});
+    vi.spyOn(console, 'groupEnd').mockImplementation(() => {});
+    vi.spyOn(console, 'table').mockImplementation(() => {});
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   /**

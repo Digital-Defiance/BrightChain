@@ -68,13 +68,13 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
    * @param storePath - The base path for storing metadata files
    * @param blockSize - The block size for this store (determines directory structure)
    */
-  constructor(storePath: string, blockSize: BlockSize) {
+  constructor(storePath: string, blockSize?: BlockSize) {
     if (!storePath) {
       throw new StoreError(StoreErrorType.StorePathRequired);
     }
 
     this.storePath = storePath;
-    this.blockSize = blockSize;
+    this.blockSize = blockSize || BlockSize.Small;
 
     // Ensure store path exists
     if (!existsSync(storePath)) {
