@@ -4,6 +4,7 @@ import {
   BlockSize,
   CBLService,
   CBLStorageResult,
+  Checksum,
   ChecksumService,
   FileReceipt,
   MessageCBLService,
@@ -74,7 +75,8 @@ export const BrightChainSoupDemo: React.FC = () => {
   const [showCblUpload, setShowCblUpload] = useState(false);
 
   const [messageCBL, setMessageCBL] = useState<MessageCBLService | null>(null);
-  const [creator, setCreator] = useState<Member | null>(null);
+  const [members, setMembers] = useState<Map<string, Member>>(new Map());
+  const [creatorBlockIds, setCreatorBlockIds] = useState<string[]>([]);
   const [messages, setMessages] = useState<
     Array<{
       id: string;
@@ -124,15 +126,34 @@ export const BrightChainSoupDemo: React.FC = () => {
         );
         setMessageCBL(msgCBL);
 
+        // Create initial member for demo user
         const memberWithMnemonic = await Member.newMember(
           eciesService,
           MemberType.User,
-          'demo-user',
-          new EmailString('demo@example.com'),
+          'user1',
+          new EmailString('user1@example.com'),
         );
-        setCreator(memberWithMnemonic.member);
+        const initialMembers = new Map<string, Member>();
+        initialMembers.set('user1', memberWithMnemonic.member);
+        setMembers(initialMembers);
+
+        // Store initial member document in the soup
+        const memberData = JSON.stringify({
+          id: memberWithMnemonic.member.id.toString(),
+          name: memberWithMnemonic.member.name,
+          publicKey: Array.from(memberWithMnemonic.member.publicKey),
+        });
+        const memberBytes = new TextEncoder().encode(memberData);
+        const memberReceipt = await newBrightChain.storeFile(
+          memberBytes,
+          'member-user1.json',
+        );
+        setCreatorBlockIds(memberReceipt.blocks.map((b) => b.id));
 
         console.log('SessionIsolatedBrightChain initialized successfully');
+        console.log(
+          `Member stored in soup with ${memberReceipt.blocks.length} blocks`,
+        );
       } catch (error) {
         console.error(
           'Failed to initialize SessionIsolatedBrightChain:',
@@ -318,6 +339,9 @@ export const BrightChainSoupDemo: React.FC = () => {
             status: 'complete',
             details: `${receipt.blockCount} blocks stored`,
           });
+
+          // Update debug info after storing
+          setDebugInfo(brightChain.getDebugInfo());
 
           // Step 6: Create CBL
           updateStep('cbl', {
@@ -550,12 +574,20 @@ export const BrightChainSoupDemo: React.FC = () => {
       await new Promise((resolve) => setTimeout(resolve, 200));
       updateReconstructionStep('validate', { status: 'complete' });
 
+      // Parse the CBL to create a receipt
+      const receipt =
+        await brightChain.parseWhitenedCBLForReceipt(magnetUrlInput);
+      setReceipts((prev) => [...prev, receipt]);
+
+      // Update debug info
+      setDebugInfo(brightChain.getDebugInfo());
+
       // Download the reconstructed file
       const blob = new Blob([new Uint8Array(fileData)]);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'reconstructed-file';
+      a.download = receipt.fileName || 'reconstructed-file';
       a.click();
       URL.revokeObjectURL(url);
 
@@ -563,7 +595,7 @@ export const BrightChainSoupDemo: React.FC = () => {
       setShowMagnetInput(false);
 
       alert(
-        `File reconstructed successfully!\n\nSize: ${fileData.length} bytes\n\nThe file has been downloaded.`,
+        `File reconstructed successfully!\n\nSize: ${fileData.length} bytes\n\nThe file has been downloaded and added to receipts.`,
       );
 
       setTimeout(() => setWhiteningSteps([]), 3000);
@@ -590,18 +622,71 @@ export const BrightChainSoupDemo: React.FC = () => {
   }, [brightChain, magnetUrlInput]);
 
   const handleSendMessage = useCallback(async () => {
-    if (!messageContent.trim() || !messageCBL || !creator) return;
+    if (!messageContent.trim() || !messageCBL || !brightChain) return;
 
     try {
+      const eciesService = new ECIESService();
+
+      // Get or create sender member
+      let senderMember = members.get(senderId);
+      if (!senderMember) {
+        const memberWithMnemonic = await Member.newMember(
+          eciesService,
+          MemberType.User,
+          senderId,
+          new EmailString(`${senderId}@example.com`),
+        );
+        senderMember = memberWithMnemonic.member;
+        setMembers((prev) => new Map(prev).set(senderId, senderMember!));
+
+        // Store new member document with whitening
+        const memberData = JSON.stringify({
+          id: senderMember.id.toString(),
+          name: senderMember.name,
+          publicKey: Array.from(senderMember.publicKey),
+        });
+        const memberBytes = new TextEncoder().encode(memberData);
+        await brightChain.storeFileWithWhitening(
+          memberBytes,
+          `member-${senderId}.json`,
+        );
+      }
+
+      // Get or create recipient member
+      let recipientMember = members.get(recipientId);
+      if (!recipientMember) {
+        const memberWithMnemonic = await Member.newMember(
+          eciesService,
+          MemberType.User,
+          recipientId,
+          new EmailString(`${recipientId}@example.com`),
+        );
+        recipientMember = memberWithMnemonic.member;
+        setMembers((prev) => new Map(prev).set(recipientId, recipientMember!));
+
+        // Store new member document with whitening
+        const memberData = JSON.stringify({
+          id: recipientMember.id.toString(),
+          name: recipientMember.name,
+          publicKey: Array.from(recipientMember.publicKey),
+        });
+        const memberBytes = new TextEncoder().encode(memberData);
+        await brightChain.storeFileWithWhitening(
+          memberBytes,
+          `member-${recipientId}.json`,
+        );
+      }
+
       const content = new TextEncoder().encode(messageContent);
 
-      const { messageId } = await messageCBL.createMessage(content, creator, {
-        messageType: 'chat',
-        senderId,
-        recipients: [recipientId],
-        priority: MessagePriority.NORMAL,
-        encryptionScheme: MessageEncryptionScheme.NONE,
-      });
+      const { messageId, contentBlockIds, magnetUrl } =
+        await messageCBL.createMessage(content, senderMember, {
+          messageType: 'chat',
+          senderId,
+          recipients: [recipientId],
+          priority: MessagePriority.NORMAL,
+          encryptionScheme: MessageEncryptionScheme.NONE,
+        });
 
       const newMessage = {
         id: messageId,
@@ -612,7 +697,33 @@ export const BrightChainSoupDemo: React.FC = () => {
       };
 
       setMessages((prev) => [...prev, newMessage]);
+
+      // Create receipt for the message
+      const messageReceipt: FileReceipt = {
+        id: messageId,
+        fileName: `Message: ${messageContent.substring(0, 30)}${messageContent.length > 30 ? '...' : ''}`,
+        originalSize: content.length,
+        blockCount: contentBlockIds?.length || 0,
+        blocks: (contentBlockIds || []).map((id: string, index: number) => ({
+          id,
+          index,
+          size: brightChain.getDebugInfo().blockSize,
+          checksum: Checksum.fromHex(id),
+        })),
+        cblData: [],
+        magnetUrl: magnetUrl || '',
+        type: 'message',
+        messageMetadata: {
+          senderId,
+          recipients: [recipientId],
+          timestamp: new Date(),
+          content: messageContent,
+        },
+      };
+
+      setReceipts((prev) => [...prev, messageReceipt]);
       setMessageContent('');
+      setDebugInfo(brightChain.getDebugInfo());
       alert('Message sent and stored in soup!');
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -620,7 +731,7 @@ export const BrightChainSoupDemo: React.FC = () => {
         `Failed to send message: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
-  }, [messageContent, senderId, recipientId, messageCBL, creator]);
+  }, [messageContent, senderId, recipientId, messageCBL, members, brightChain]);
 
   const handleRetrieveMessage = useCallback(
     async (messageId: string) => {
@@ -1198,6 +1309,7 @@ export const BrightChainSoupDemo: React.FC = () => {
               animatingBlockIds={animatingBlockIds}
               showConnections={true}
               allBlockIds={debugInfo?.blockIds}
+              memberBlockIds={creatorBlockIds}
             />
 
             {/* File Actions */}
@@ -1205,13 +1317,13 @@ export const BrightChainSoupDemo: React.FC = () => {
               <div className="file-actions-section">
                 <h3 className="actions-header">
                   <span>⚡</span>
-                  Stored Files
+                  Stored Files & Messages
                 </h3>
                 <div className="actions-grid">
                   {receipts.map((receipt) => (
                     <div key={receipt.id} className="action-card">
                       <div className="action-card-header">
-                        <span>📄</span>
+                        <span>{receipt.type === 'message' ? '💬' : '📄'}</span>
                         <h4>{receipt.fileName}</h4>
                         <button
                           className="delete-file-btn"
@@ -1234,22 +1346,57 @@ export const BrightChainSoupDemo: React.FC = () => {
                           ✕
                         </button>
                       </div>
+                      {receipt.type === 'message' &&
+                        receipt.messageMetadata && (
+                          <div
+                            style={{
+                              fontSize: '12px',
+                              marginBottom: '8px',
+                              color: '#666',
+                            }}
+                          >
+                            <div>
+                              <strong>From:</strong>{' '}
+                              {receipt.messageMetadata.senderId}
+                            </div>
+                            <div>
+                              <strong>To:</strong>{' '}
+                              {receipt.messageMetadata.recipients.join(', ')}
+                            </div>
+                            <div>
+                              <strong>Time:</strong>{' '}
+                              {receipt.messageMetadata.timestamp.toLocaleString()}
+                            </div>
+                          </div>
+                        )}
                       <div className="action-buttons">
-                        <button
-                          onClick={() => handleRetrieve(receipt)}
-                          className="action-btn primary"
-                          disabled={isProcessing}
-                        >
-                          <span>📥</span>
-                          Retrieve File
-                        </button>
-                        <button
-                          onClick={() => handleDownloadCBL(receipt)}
-                          className="action-btn secondary"
-                        >
-                          <span>📄</span>
-                          Download CBL
-                        </button>
+                        {receipt.type === 'message' ? (
+                          <button
+                            onClick={() => handleRetrieveMessage(receipt.id)}
+                            className="action-btn primary"
+                          >
+                            <span>📥</span>
+                            Retrieve Message
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleRetrieve(receipt)}
+                              className="action-btn primary"
+                              disabled={isProcessing}
+                            >
+                              <span>📥</span>
+                              Retrieve File
+                            </button>
+                            <button
+                              onClick={() => handleDownloadCBL(receipt)}
+                              className="action-btn secondary"
+                            >
+                              <span>📄</span>
+                              Download CBL
+                            </button>
+                          </>
+                        )}
                       </div>
                       {/* Show magnet URL section if this receipt has whitening */}
                       {(receipt as { whitening?: { magnetUrl: string } })
@@ -1391,7 +1538,7 @@ export const BrightChainSoupDemo: React.FC = () => {
                 <div className="stat-item">
                   <span>Total Blocks:</span>
                   <span className="stat-value">
-                    {receipts.reduce((sum, r) => sum + r.blockCount, 0)}
+                    {debugInfo?.blockCount || 0}
                   </span>
                 </div>
                 <div className="stat-item">

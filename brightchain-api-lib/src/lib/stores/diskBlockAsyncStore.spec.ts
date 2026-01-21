@@ -109,14 +109,14 @@ describe('DiskBlockAsyncStore', () => {
       );
     });
 
-    it('should throw error when storing block with wrong size', async () => {
+    it('should allow storing blocks of any size', async () => {
       const checksumService = ServiceProvider.getInstance().checksumService;
-      const wrongSizeData = new Uint8Array(blockSize);
-      wrongSizeData.fill(120); // 'x' character code
+      const wrongSizeData = new Uint8Array(BlockSize.Tiny);
+      wrongSizeData.fill(120);
       const wrongSizeBuffer = Buffer.from(wrongSizeData);
       const checksum = checksumService.calculateChecksum(wrongSizeBuffer);
       const block = new RawDataBlock(
-        BlockSize.Tiny, // Different size than store's blockSize
+        BlockSize.Tiny,
         wrongSizeBuffer,
         new Date(),
         checksum,
@@ -126,13 +126,15 @@ describe('DiskBlockAsyncStore', () => {
         true,
       );
 
-      await expect(store.setData(block)).rejects.toThrow(StoreError);
+      await store.setData(block);
+      const exists = await store.has(checksum);
+      expect(exists).toBe(true);
     });
 
-    it('should throw error when storing block that already exists', async () => {
+    it('should be idempotent when storing block that already exists', async () => {
       const checksumService = ServiceProvider.getInstance().checksumService;
       const data = new Uint8Array(blockSize);
-      data.fill(120); // 'x' character code
+      data.fill(120);
       const dataBuffer = Buffer.from(data);
       const checksum = checksumService.calculateChecksum(dataBuffer);
       const block = new RawDataBlock(
@@ -147,7 +149,9 @@ describe('DiskBlockAsyncStore', () => {
       );
 
       await store.setData(block);
-      await expect(store.setData(block)).rejects.toThrow(StoreError);
+      await store.setData(block); // Should not throw
+      const exists = await store.has(checksum);
+      expect(exists).toBe(true);
     });
   });
 

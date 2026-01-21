@@ -11,6 +11,7 @@ import { join } from 'path';
 /**
  * DiskBlockStore provides base functionality for storing blocks on disk.
  * It handles block paths, metadata paths, and directory structure.
+ * Supports blocks of any size.
  */
 export abstract class DiskBlockStore {
   protected readonly _storePath: string;
@@ -38,13 +39,13 @@ export abstract class DiskBlockStore {
    * Get the directory path for a block
    * Directory structure: storePath/blockSize/checksumChar1/checksumChar2/
    */
-  protected blockDir(blockId: Checksum): string {
+  protected blockDir(blockId: Checksum, blockSize: BlockSize): string {
     const checksumString = blockId.toHex();
     if (checksumString.length < 2) {
       throw new StoreError(StoreErrorType.InvalidBlockIdTooShort);
     }
 
-    const blockSizeString = blockSizeToSizeString(this._blockSize);
+    const blockSizeString = blockSizeToSizeString(blockSize);
     return join(
       this._storePath,
       blockSizeString,
@@ -57,13 +58,13 @@ export abstract class DiskBlockStore {
    * Get the file path for a block
    * File structure: storePath/blockSize/checksumChar1/checksumChar2/fullChecksum
    */
-  protected blockPath(blockId: Checksum): string {
+  protected blockPath(blockId: Checksum, blockSize: BlockSize): string {
     const checksumString = blockId.toHex();
     if (checksumString.length < 2) {
       throw new StoreError(StoreErrorType.InvalidBlockIdTooShort);
     }
 
-    const blockSizeString = blockSizeToSizeString(this._blockSize);
+    const blockSizeString = blockSizeToSizeString(blockSize);
     return join(
       this._storePath,
       blockSizeString,
@@ -77,15 +78,15 @@ export abstract class DiskBlockStore {
    * Get the metadata file path for a block
    * Metadata files are stored alongside block files with a .m.json extension
    */
-  protected metadataPath(blockId: Checksum): string {
-    return this.blockPath(blockId) + '.m.json';
+  protected metadataPath(blockId: Checksum, blockSize: BlockSize): string {
+    return this.blockPath(blockId, blockSize) + '.m.json';
   }
 
   /**
    * Ensure the directory structure exists for a block
    */
-  protected ensureBlockPath(blockId: Checksum): void {
-    const blockDir = this.blockDir(blockId);
+  protected ensureBlockPath(blockId: Checksum, blockSize: BlockSize): void {
+    const blockDir = this.blockDir(blockId, blockSize);
     if (!existsSync(blockDir)) {
       try {
         mkdirSync(blockDir, { recursive: true });
