@@ -71,7 +71,7 @@ describe('Feature: message-passing-and-events, Property: Large Message CBL Split
           encryptionScheme: MessageEncryptionScheme.NONE,
         };
 
-        const { messageId, contentBlockIds } = await service.createMessage(
+        const { messageId, contentBlockIds, magnetUrl } = await service.createMessage(
           content,
           creator,
           options,
@@ -80,8 +80,14 @@ describe('Feature: message-passing-and-events, Property: Large Message CBL Split
         // Verify correct number of content blocks
         expect(contentBlockIds.length).toBe(numBlocks);
 
-        // Verify MessageCBL block exists
-        expect(await blockStore.has(messageId)).toBe(true);
+        // Verify messageId is a magnet URL
+        expect(messageId).toContain('magnet:?');
+        expect(magnetUrl).toBe(messageId);
+
+        // Parse magnet URL to get the whitened CBL block IDs
+        const components = blockStore.parseCBLMagnetUrl(messageId);
+        expect(await blockStore.has(components.blockId1)).toBe(true);
+        expect(await blockStore.has(components.blockId2)).toBe(true);
 
         // Verify all content blocks exist
         for (const blockId of contentBlockIds) {

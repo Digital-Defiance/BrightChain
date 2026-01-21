@@ -12,7 +12,11 @@ export default {
       },
     ],
   },
-  transformIgnorePatterns: ['node_modules/(?!(@noble|@scure)/)'],
+  transformIgnorePatterns: [
+    'node_modules/(?!(@noble|@scure)/)',
+    '/dist/',
+    '<rootDir>/../dist/',
+  ],
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../coverage/brightchain-api-lib',
   testTimeout: 180000,

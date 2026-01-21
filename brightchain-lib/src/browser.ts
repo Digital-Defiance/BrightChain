@@ -43,6 +43,11 @@ export type { IMessageCBLOptions } from './lib/services/messaging/messageCBLServ
 export type { BlockInfo, FileReceipt } from './lib/brightChain';
 export { SuperCBLError, SuperCBLErrorType } from './lib/errors/superCbl';
 export type {
+  CBLMagnetComponents,
+  CBLStorageResult,
+  CBLWhiteningOptions,
+} from './lib/interfaces/storage/cblWhitening';
+export type {
   CBLData,
   CBLType,
   CBLv1,

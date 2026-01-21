@@ -139,7 +139,10 @@ describe('Feature: message-passing-and-events, Property: Invalid Message Payload
         fc.string({ minLength: 1, maxLength: 32 }),
         fc.string({ minLength: 1, maxLength: 32 }),
         async (content, senderId, messageType) => {
-          mockService.sendMessage.mockResolvedValue('msg-123');
+          mockService.sendMessage.mockResolvedValue({
+            messageId: 'msg-123',
+            magnetUrl: 'magnet:?xt=urn:brightchain:cbl&bs=1024&b1=abc&b2=def',
+          });
 
           const response = await request(app)
             .post('/messages')
@@ -153,7 +156,7 @@ describe('Feature: message-passing-and-events, Property: Invalid Message Payload
           expect(response.body.messageId).toBe('msg-123');
         },
       ),
-      { numRuns: 100 },
+      { numRuns: 100, endOnFailure: true },
     );
   });
 });

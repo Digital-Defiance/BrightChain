@@ -49,7 +49,11 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
     content: Uint8Array,
     creator: Member<TID>,
     options: IMessageCBLOptions,
-  ): Promise<{ messageId: string; contentBlockIds: string[] }> {
+  ): Promise<{
+    messageId: string;
+    contentBlockIds: string[];
+    magnetUrl: string;
+  }> {
     this.validateMessageOptions(options);
 
     if (content.length > this.config.maxMessageSizeThreshold) {
@@ -93,17 +97,23 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
         BlockEncryptionType.None,
       );
 
-      const messageCBLData = new Uint8Array(blockSize as number);
+      const totalSize = cblHeader.headerData.length + blockIdsArray.length;
+
+      // Create CBL data with exact size needed (no pre-padding)
+      const messageCBLData = new Uint8Array(totalSize);
       messageCBLData.set(cblHeader.headerData, 0);
       messageCBLData.set(blockIdsArray, cblHeader.headerData.length);
 
-      const messageCBLBlock = new RawDataBlock(
-        blockSize,
+      // Store with whitening for Owner-Free storage
+      const whiteningResult = await this.blockStore.storeCBLWithWhitening(
         messageCBLData,
-        new Date(),
+        {
+          isEncrypted:
+            options.encryptionScheme !== MessageEncryptionScheme.NONE,
+        },
       );
-      await this.retryOperation(() => this.blockStore.setData(messageCBLBlock));
-      const messageId = messageCBLBlock.idChecksum.toHex();
+      const messageId = whiteningResult.magnetUrl;
+      const magnetUrl = whiteningResult.magnetUrl;
 
       if (this.metadataStore) {
         const metadata: IMessageMetadata = {
@@ -143,7 +153,7 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
         options.recipients.length,
       );
 
-      return { messageId, contentBlockIds };
+      return { messageId, contentBlockIds, magnetUrl };
     } catch (error) {
       await this.cleanupPartialState(contentBlockIds);
       this.metrics?.recordMessageFailed();
@@ -158,7 +168,7 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
         'Failed to create message after retries',
         {
           error: error instanceof Error ? error.message : 'Unknown error',
-          originalError: error instanceof Error ? error.stack : undefined,
+          originalError: error instanceof Error ? error.message : String(error),
           stack: error instanceof Error ? error.stack : undefined,
         },
       );
@@ -167,12 +177,18 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
 
   async getMessageContent(messageId: string): Promise<Uint8Array> {
     try {
-      const messageCBL = await this.blockStore.getData(
-        Checksum.fromHex(messageId),
+      // Retrieve whitened CBL using magnet URL
+      const components = this.blockStore.parseCBLMagnetUrl(messageId);
+      const messageCBLData = await this.blockStore.retrieveCBL(
+        components.blockId1,
+        components.blockId2,
+        components.block1ParityIds,
+        components.block2ParityIds,
       );
-      const header = this.cblService.parseBaseHeader(messageCBL.data);
+
+      const header = this.cblService.parseBaseHeader(messageCBLData);
       const contentBlockIds = this.extractBlockIds(
-        messageCBL.data,
+        messageCBLData,
         header.cblAddressCount,
       );
 

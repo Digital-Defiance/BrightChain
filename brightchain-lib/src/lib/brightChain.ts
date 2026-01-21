@@ -20,6 +20,13 @@ export interface FileReceipt {
   blocks: BlockInfo[];
   cblData: number[];
   magnetUrl: string;
+  type?: 'file' | 'message';
+  messageMetadata?: {
+    senderId: string;
+    recipients: string[];
+    timestamp: Date;
+    content?: string;
+  };
 }
 
 export class BrightChain {

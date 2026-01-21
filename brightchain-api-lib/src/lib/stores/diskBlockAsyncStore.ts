@@ -74,10 +74,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
 
   constructor(config: { storePath: string; blockSize: BlockSize }) {
     super(config);
-    this.metadataStore = new DiskBlockMetadataStore(
-      config.storePath,
-      config.blockSize,
-    );
+    this.metadataStore = new DiskBlockMetadataStore(config.storePath);
   }
 
   /**
@@ -123,95 +120,132 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
   }
 
   /**
+   * Find the block size for a given checksum by searching all sizes.
+   * @param key - The block's checksum
+   * @returns The block size if found, null otherwise
+   */
+  private async findBlockSize(key: Checksum): Promise<BlockSize | null> {
+    for (const size of Object.values(BlockSize).filter(
+      (v) => typeof v === 'number',
+    )) {
+      const blockPath = this.blockPath(key, size as BlockSize);
+      if (existsSync(blockPath)) {
+        return size as BlockSize;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Get the file path for a parity block.
    * Parity files are stored alongside block files with .p{index} extension.
    * @param blockId - The data block's checksum
+   * @param blockSize - The block size
    * @param parityIndex - The parity block index (0-based)
    * @returns The parity file path
    */
-  private parityPath(blockId: Checksum, parityIndex: number): string {
-    return this.blockPath(blockId) + PARITY_FILE_EXTENSION_PREFIX + parityIndex;
+  private parityPath(
+    blockId: Checksum,
+    blockSize: BlockSize,
+    parityIndex: number,
+  ): string {
+    return (
+      this.blockPath(blockId, blockSize) +
+      PARITY_FILE_EXTENSION_PREFIX +
+      parityIndex
+    );
   }
 
   /**
-   * Check if a block exists
+   * Check if a block exists (checks all block sizes)
    */
   public async has(key: Checksum | string): Promise<boolean> {
     const keyChecksum = typeof key === 'string' ? Checksum.fromHex(key) : key;
-    const blockPath = this.blockPath(keyChecksum);
-    return existsSync(blockPath);
+    // Check all possible block sizes
+    for (const size of Object.values(BlockSize).filter(
+      (v) => typeof v === 'number',
+    )) {
+      const blockPath = this.blockPath(keyChecksum, size as BlockSize);
+      if (existsSync(blockPath)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
-   * Get a handle to a block
+   * Get a handle to a block (searches all block sizes)
    */
   public get<T extends BaseBlock>(key: Checksum | string): BlockHandle<T> {
     const keyChecksum = typeof key === 'string' ? Checksum.fromHex(key) : key;
-    const blockPath = this.blockPath(keyChecksum);
 
-    // Read the block data synchronously to create the handle
-    // This matches the synchronous signature expected by IBlockStore.get
-    if (!existsSync(blockPath)) {
-      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
-        KEY: keyChecksum.toHex(),
-      });
+    // Search all possible block sizes
+    for (const size of Object.values(BlockSize).filter(
+      (v) => typeof v === 'number',
+    )) {
+      const blockPath = this.blockPath(keyChecksum, size as BlockSize);
+      if (existsSync(blockPath)) {
+        const data = readFileSync(blockPath);
+        return createBlockHandle<T>(
+          RawDataBlock as any,
+          size as BlockSize,
+          data,
+          keyChecksum,
+          true, // canRead
+          true, // canPersist
+        );
+      }
     }
 
-    const data = readFileSync(blockPath);
-
-    return createBlockHandle<T>(
-      RawDataBlock as any,
-      this._blockSize,
-      data,
-      keyChecksum,
-      true, // canRead
-      true, // canPersist
-    );
+    throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+      KEY: keyChecksum.toHex(),
+    });
   }
 
   /**
-   * Get a block's data
+   * Get a block's data (searches all block sizes)
    */
   public async getData(key: Checksum): Promise<RawDataBlock> {
     const keyHex = this.keyToHex(key);
-    const blockPath = this.blockPath(key);
-    if (!existsSync(blockPath)) {
-      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
-        KEY: keyHex,
-      });
+
+    // Search all possible block sizes
+    for (const size of Object.values(BlockSize).filter(
+      (v) => typeof v === 'number',
+    )) {
+      const blockPath = this.blockPath(key, size as BlockSize);
+      if (existsSync(blockPath)) {
+        let data: Buffer;
+        try {
+          data = await readFile(blockPath);
+        } catch {
+          continue;
+        }
+
+        // Use file creation time as block creation time
+        const stats = await stat(blockPath);
+        const dateCreated = stats.birthtime;
+
+        // Record access in metadata
+        if (this.metadataStore.has(keyHex)) {
+          await this.metadataStore.recordAccess(keyHex);
+        }
+
+        return new RawDataBlock(
+          size as BlockSize,
+          data,
+          dateCreated,
+          key,
+          BlockType.RawData,
+          BlockDataType.EphemeralStructuredData,
+          true,
+          true,
+        );
+      }
     }
 
-    let data: Buffer;
-    try {
-      data = await readFile(blockPath);
-    } catch {
-      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
-        KEY: keyHex,
-      });
-    }
-    if (data.length > this._blockSize) {
-      throw new StoreError(StoreErrorType.BlockFileSizeMismatch);
-    }
-
-    // Use file creation time as block creation time
-    const stats = await stat(blockPath);
-    const dateCreated = stats.birthtime;
-
-    // Record access in metadata
-    if (this.metadataStore.has(keyHex)) {
-      await this.metadataStore.recordAccess(keyHex);
-    }
-
-    return new RawDataBlock(
-      this._blockSize,
-      data,
-      dateCreated,
-      key,
-      BlockType.RawData,
-      BlockDataType.EphemeralStructuredData, // Use EphemeralStructuredData as default
-      true, // canRead
-      true, // canPersist
-    );
+    throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+      KEY: keyHex,
+    });
   }
 
   /**
@@ -220,8 +254,20 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    */
   public async deleteData(key: Checksum): Promise<void> {
     const keyHex = this.keyToHex(key);
-    const blockPath = this.blockPath(key);
-    if (!existsSync(blockPath)) {
+
+    // Find the block across all sizes
+    let foundSize: BlockSize | null = null;
+    for (const size of Object.values(BlockSize).filter(
+      (v) => typeof v === 'number',
+    )) {
+      const blockPath = this.blockPath(key, size as BlockSize);
+      if (existsSync(blockPath)) {
+        foundSize = size as BlockSize;
+        break;
+      }
+    }
+
+    if (!foundSize) {
       throw new StoreError(StoreErrorType.KeyNotFound);
     }
 
@@ -231,7 +277,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     // Delete parity blocks first
     if (metadata && metadata.parityBlockIds.length > 0) {
       for (let i = 0; i < metadata.parityBlockIds.length; i++) {
-        const parityFilePath = this.parityPath(key, i);
+        const parityFilePath = this.parityPath(key, foundSize, i);
         if (existsSync(parityFilePath)) {
           try {
             await unlink(parityFilePath);
@@ -244,7 +290,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
 
     // Delete the block data
     try {
-      await unlink(blockPath);
+      await unlink(this.blockPath(key, foundSize));
     } catch (error) {
       throw new StoreError(StoreErrorType.BlockDeletionFailed, undefined, {
         ERROR: error instanceof Error ? error.message : String(error),
@@ -268,14 +314,10 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     block: RawDataBlock,
     options?: BlockStoreOptions,
   ): Promise<void> {
-    if (block.blockSize !== this._blockSize) {
-      throw new StoreError(StoreErrorType.BlockSizeMismatch);
-    }
-
     const keyHex = this.keyToHex(block.idChecksum);
-    const blockPath = this.blockPath(block.idChecksum);
+    const blockPath = this.blockPath(block.idChecksum, block.blockSize);
     if (existsSync(blockPath)) {
-      throw new StoreError(StoreErrorType.BlockPathAlreadyExists);
+      return; // Idempotent - block already exists
     }
 
     try {
@@ -285,7 +327,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     }
 
     // Ensure block directory exists before writing
-    this.ensureBlockPath(block.idChecksum);
+    this.ensureBlockPath(block.idChecksum, block.blockSize);
 
     try {
       await writeFile(blockPath, Buffer.from(block.data));
@@ -588,12 +630,13 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     }
 
     // Check if block exists
-    const blockPath = this.blockPath(keyChecksum);
-    if (!existsSync(blockPath)) {
+    const blockSize = await this.findBlockSize(keyChecksum);
+    if (!blockSize) {
       throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
         KEY: keyHex,
       });
     }
+    const blockPath = this.blockPath(keyChecksum, blockSize);
 
     // Check if FEC service is available in the environment
     const isAvailable = await this.fecService.isAvailable();
@@ -615,7 +658,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     // Store parity blocks as separate files
     const parityBlockIds: string[] = [];
     for (let i = 0; i < parityData.length; i++) {
-      const parityFilePath = this.parityPath(keyChecksum, i);
+      const parityFilePath = this.parityPath(keyChecksum, blockSize, i);
       await writeFile(parityFilePath, Buffer.from(parityData[i].data));
       parityBlockIds.push(`${keyHex}.p${i}`);
     }
@@ -669,9 +712,14 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
       return [];
     }
 
+    const blockSize = await this.findBlockSize(key);
+    if (!blockSize) {
+      return [];
+    }
+
     const parityData: ParityData[] = [];
     for (let i = 0; i < metadata.parityBlockIds.length; i++) {
-      const parityFilePath = this.parityPath(key, i);
+      const parityFilePath = this.parityPath(key, blockSize, i);
       if (existsSync(parityFilePath)) {
         const data = await readFile(parityFilePath);
         parityData.push({ data, index: i });
@@ -727,7 +775,14 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
 
     try {
       // Get corrupted data if block still exists
-      const blockPath = this.blockPath(keyChecksum);
+      const blockSize = await this.findBlockSize(keyChecksum);
+      if (!blockSize) {
+        return {
+          success: false,
+          error: 'Block not found',
+        };
+      }
+      const blockPath = this.blockPath(keyChecksum, blockSize);
       let corruptedData: Buffer | null = null;
       if (existsSync(blockPath)) {
         corruptedData = await readFile(blockPath);
@@ -792,10 +847,11 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     }
 
     // Check if block exists
-    const blockPath = this.blockPath(keyChecksum);
-    if (!existsSync(blockPath)) {
+    const blockSize = await this.findBlockSize(keyChecksum);
+    if (!blockSize) {
       return false;
     }
+    const blockPath = this.blockPath(keyChecksum, blockSize);
 
     // Get parity data from disk
     const parityData = await this.loadParityData(keyChecksum);
@@ -997,12 +1053,13 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     const keyChecksum = typeof key === 'string' ? Checksum.fromHex(key) : key;
 
     // Verify source block exists
-    const blockPath = this.blockPath(keyChecksum);
-    if (!existsSync(blockPath)) {
+    const blockSize = await this.findBlockSize(keyChecksum);
+    if (!blockSize) {
       throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
         KEY: keyHex,
       });
     }
+    // const blockPath = this.blockPath(keyChecksum, blockSize);
 
     // Get random blocks for XOR operation
     const randomBlockChecksums = await this.getRandomBlocks(randomBlockCount);
@@ -1187,30 +1244,18 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @returns A Uint8Array containing the randomizer data
    */
   private async selectOrGenerateRandomizer(size: number): Promise<Uint8Array> {
-    // Get all block IDs from the store by reading the directory
+    // Try to get a random block from the store
     try {
-      const files = await readdir(this.storePath);
-      const blockFiles = files.filter((f) => f.endsWith('.block'));
-
-      // If we have existing blocks, try to use one as a randomizer
-      if (blockFiles.length > 0) {
-        // Select a random block from the existing blocks
-        const randomIndex = Math.floor(Math.random() * blockFiles.length);
-        const selectedFile = blockFiles[randomIndex];
-        const blockId = selectedFile.replace('.block', '');
-
-        try {
-          const block = await this.getData(this.hexToChecksum(blockId));
-          if (block && block.data.length >= size) {
-            // Use the first 'size' bytes of the existing block as the randomizer
-            return block.data.slice(0, size);
-          }
-        } catch {
-          // If we can't retrieve the block, fall through to generation
+      const randomBlocks = await this.getRandomBlocks(1);
+      if (randomBlocks.length > 0) {
+        const block = await this.getData(randomBlocks[0]);
+        if (block && block.data.length >= size) {
+          // Use the first 'size' bytes of the existing block as the randomizer
+          return block.data.slice(0, size);
         }
       }
     } catch {
-      // If we can't read the directory, fall through to generation
+      // If we can't retrieve a block, fall through to generation
     }
 
     // Fall back to generating a new random block using CSPRNG

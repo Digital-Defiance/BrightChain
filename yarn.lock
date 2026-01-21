@@ -1993,7 +1993,7 @@ __metadata:
   resolution: "@brightchain/brightchain-api-lib@workspace:brightchain-api-lib"
   dependencies:
     "@aws-sdk/client-ses": "npm:^3.859.0"
-    "@brightchain/brightchain-lib": "npm:0.5.0"
+    "@brightchain/brightchain-lib": "npm:0.7.0"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@types/bip39": "npm:^3.0.4"
     "@types/cors": "npm:^2.8.19"
@@ -2029,7 +2029,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchain-lib@npm:0.5.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
+"@brightchain/brightchain-lib@npm:0.7.0, @brightchain/brightchain-lib@npm:^0.7.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
   dependencies:
@@ -2038,17 +2038,6 @@ __metadata:
     tslib: "npm:^2.3.0"
   languageName: unknown
   linkType: soft
-
-"@brightchain/brightchain-lib@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "@brightchain/brightchain-lib@npm:0.3.0"
-  dependencies:
-    "@digitaldefiance/ecies-lib": "npm:^4.12.8"
-    "@digitaldefiance/i18n-lib": "npm:^3.8.16"
-    tslib: "npm:^2.3.0"
-  checksum: 10c0/05a26d6b5a32b73c2c608d68d5e7437cb8a1f7f87d82d6ba9ea346b65f1e1c81cc20b30a3161ac3d78315b39a55bfddc570438eee5a306efa4aa6968953211fe
-  languageName: node
-  linkType: hard
 
 "@brightchain/test-utils@workspace:brightchain-test-utils":
   version: 0.0.0-use.local
@@ -11312,7 +11301,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "brightchain-showcase@workspace:showcase"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.3.0"
+    "@brightchain/brightchain-lib": "npm:^0.7.0"
     "@digitaldefiance/ecies-lib": "npm:^4.12.8"
     "@digitaldefiance/i18n-lib": "npm:^3.8.16"
     "@esbuild-plugins/node-globals-polyfill": "npm:^0.2.3"
