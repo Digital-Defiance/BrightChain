@@ -17,7 +17,7 @@ BrightChain integrates several groundbreaking technologies:
 - **Decentralized Storage**: A peer-to-peer distributed file system enabling secure, resilient data storage across the network
 - **Messaging System**: Secure, decentralized message passing with encryption, routing, and delivery tracking built on the block store
 - **Identity Management**: A sophisticated decentralized identity provider ensuring user privacy and control
-- **Owner-Free File System**: Implementation of OFF System principles for secure resource sharing with legal compliance
+- **Owner-Free File System**: Complete TUPLE storage implementation (3-block storage: data + 2 randomizers) for true plausible deniability and legal protection
 - **Homomorphic Voting System**: Revolutionary cryptographic voting infrastructure utilizing Paillier homomorphic encryption with ECDH-derived keys, enabling secure vote tallying without revealing individual votes
 - **Enhanced File Security**: State-of-the-art encryption combining ECIES for key derivation with AES-256-GCM for file security
 - **Digital Governance Framework**: Revolutionary quorum-based system supporting configurable majority requirements for secret reconstruction
@@ -49,6 +49,7 @@ BrightChain is currently implemented as an NX monorepo, with the core functional
 - **Authentication**: Robust implementation using BIP39/32 and SECP256k1
 - **Identity Management**: Complete Member system with public/private key pairs and document storage
 - **Encryption**: Advanced ECIES encryption with AES-256-GCM and multi-recipient support
+- **TUPLE Storage**: All data stored as 3-block TUPLEs for complete Owner-Free Filesystem compliance
 - **Data Integrity**: Verified block-level integrity with SHA3-512 checksums and XOR functionality
 - **Super CBL Architecture**: Hierarchical Constituent Block Lists enabling unlimited file sizes through recursive sub-CBL structures with automatic threshold detection
 - **Message Passing**: Complete messaging system with encryption, routing, delivery tracking, and WebSocket events
@@ -77,7 +78,7 @@ This architecture ensures:
 BrightChain is currently in pre-alpha stage with **70-80% of core functionality complete**. Major achievements include:
 
 ### ✅ Completed Components
-- **Owner-Free Filesystem**: Complete implementation with "Brightening" (XOR whitening)
+- **Owner-Free Filesystem**: Complete TUPLE storage implementation (3 blocks per data item) for true plausible deniability
 - **Super CBL System**: Hierarchical storage supporting unlimited file sizes through recursive sub-CBLs
 - **Identity Management**: Full member system with BIP39/32 key derivation and SECP256k1 cryptography
 - **Quorum Governance**: Complete Shamir's Secret Sharing implementation with configurable thresholds
@@ -114,6 +115,7 @@ BrightChain is currently in pre-alpha stage with **70-80% of core functionality 
 
 For comprehensive understanding:
 
+- [TUPLE Storage Architecture](./docs/TUPLE_Storage_Architecture.md): Complete OFF compliance with 3-block storage
 - [OFF System Comparison Analysis](./docs/OFF_System_Comparison_Analysis.md): Detailed comparison with Owner-Free File System and "government in a box" assessment
 - [BrightChain Summary](./docs/BrightChain%20Summary.md): High-level system overview
 - [Brightchain Writeup](./docs/Brightchain%20Writeup.md): Detailed technical documentation

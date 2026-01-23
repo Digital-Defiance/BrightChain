@@ -10,8 +10,7 @@ export class BlockECIES {
     message: Uint8Array,
   ): Promise<Uint8Array> {
     // Use encryptSimpleOrSingle (encryptSimple = true) from new ECIES service
-    return ServiceProvider.getInstance().eciesService.encryptSimpleOrSingle(
-      true,
+    return ServiceProvider.getInstance().eciesService.encryptBasic(
       receiverPublicKey,
       message,
     );
@@ -22,8 +21,7 @@ export class BlockECIES {
     encryptedData: Uint8Array,
   ): Promise<Uint8Array> {
     // Use decryptSimpleOrSingleWithHeader (decryptSimple = false) from new ECIES service
-    return ServiceProvider.getInstance().eciesService.decryptSimpleOrSingleWithHeader(
-      false,
+    return ServiceProvider.getInstance().eciesService.decryptWithLengthAndHeader(
       privateKey,
       encryptedData,
     );
@@ -40,7 +38,7 @@ export class BlockECIES {
     ciphertextLength?: number;
   }> {
     const result =
-      ServiceProvider.getInstance().eciesService.decryptSingleWithComponents(
+      ServiceProvider.getInstance().eciesService.decryptWithComponents(
         privateKey,
         ephemeralPublicKey,
         iv,

@@ -1,4 +1,4 @@
-import { GuidV4 } from '@digitaldefiance/ecies-lib';
+import { GuidV4Uint8Array } from '@digitaldefiance/ecies-lib';
 import { BlockMetadata } from '../../blockMetadata';
 import { DataTemperature } from '../../enumerations/dataTemperature';
 import { Checksum } from '../../types/checksum';
@@ -80,7 +80,7 @@ export interface NodeConfig {
  */
 export interface INode {
   // Identity
-  id: GuidV4;
+  id: GuidV4Uint8Array;
   publicKey: Buffer;
   version: string;
 
@@ -106,7 +106,7 @@ export interface INode {
 
   // Node discovery
   findPeers(): Promise<INode[]>;
-  getPeerInfo(peerId: GuidV4): Promise<INode | null>;
+  getPeerInfo(peerId: GuidV4Uint8Array): Promise<INode | null>;
 
   // Health check
   getHealth(): Promise<{
@@ -125,7 +125,7 @@ export interface INode {
  * Node advertisement for discovery
  */
 export interface NodeAdvertisement {
-  id: GuidV4;
+  id: GuidV4Uint8Array;
   publicKey: Buffer;
   status: NodeStatus;
   capabilities: NodeCapability[];
@@ -159,7 +159,7 @@ export enum NodeEventType {
  */
 export interface NodeEvent<T = unknown> {
   type: NodeEventType;
-  nodeId: GuidV4;
+  nodeId: GuidV4Uint8Array;
   timestamp: Date;
   data: T;
 }

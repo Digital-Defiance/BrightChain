@@ -1,6 +1,5 @@
-import { ChecksumString } from '@digitaldefiance/ecies-lib';
+import { CHECKSUM, ChecksumString } from '@digitaldefiance/ecies-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
-import { CHECKSUM } from '../constants';
 import { Checksum } from '../types/checksum';
 
 /**

@@ -1,6 +1,6 @@
 import {
   EmailString,
-  GuidV4,
+  GuidV4Uint8Array,
   MemberType,
   SecureBuffer,
   SecureString,
@@ -15,14 +15,14 @@ import { PrivateKey, PublicKey } from 'paillier-bigint';
 export interface IMemberOperational {
   // Required getters - id is now GuidV4 (guidId is an alias for compatibility)
   get id(): Buffer;
-  get guidId(): GuidV4;
+  get guidId(): GuidV4Uint8Array;
   get type(): MemberType;
   get name(): string;
   get email(): EmailString;
   get publicKey(): Buffer;
   get votingPublicKey(): PublicKey;
   get creatorId(): Buffer;
-  get guidCreatorId(): GuidV4;
+  get guidCreatorId(): GuidV4Uint8Array;
   get dateCreated(): Date;
   get dateUpdated(): Date;
 

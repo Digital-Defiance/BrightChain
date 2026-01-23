@@ -179,10 +179,14 @@ export interface IBlockStore {
     randomBlockCount: number,
   ): Promise<BrightenResult>;
 
-  // === CBL Whitening Operations ===
+  // === CBL Whitening Operations (DEPRECATED - Use TupleStorageService) ===
 
   /**
+   * @deprecated Use TupleStorageService.storeTuple() instead for full OFF compliance
+   *
    * Store a CBL with XOR whitening for Owner-Free storage.
+   * This method only uses 2 blocks (data + 1 randomizer) which is not fully OFF-compliant.
+   * All new code should use TupleStorageService which stores data as 3 blocks (data + 2 randomizers).
    *
    * This method:
    * 1. Generates a cryptographically random block (R) of the same size as the CBL
@@ -204,6 +208,8 @@ export interface IBlockStore {
   ): Promise<CBLStorageResult>;
 
   /**
+   * @deprecated Use TupleStorageService.retrieveTuple() instead
+   *
    * Retrieve and reconstruct a CBL from its whitened components.
    *
    * This method:

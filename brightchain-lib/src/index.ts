@@ -4,10 +4,9 @@ export * from './lib';
 
 // Export constants with named exports for backward compatibility
 export {
+  BC_FEC,
   CBL,
   default as CONSTANTS,
-  FEC,
-  JWT,
   SEALING,
   SITE,
   TUPLE,

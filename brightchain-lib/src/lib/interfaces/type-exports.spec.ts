@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import type { ISimpleKeyPair } from '@digitaldefiance/ecies-lib';
+import { IJwtConsts } from '@digitaldefiance/node-express-suite';
 import { describe, expect, it } from '@jest/globals';
 import type {
+  IBCFECConsts,
   ICBLConsts,
-  IFECConsts,
-  IJwtConsts,
   ISealingConsts,
   ISiteConsts,
   ITupleConsts,
@@ -25,7 +25,7 @@ describe('Interface Export Tests', () => {
     });
 
     it('should preserve IFECConsts interface', () => {
-      type TestInterface = IFECConsts;
+      type TestInterface = IBCFECConsts;
       expect(true).toBe(true);
     });
 

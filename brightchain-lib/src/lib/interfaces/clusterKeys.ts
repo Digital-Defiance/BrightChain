@@ -1,4 +1,4 @@
-import { GuidV4 } from '@digitaldefiance/ecies-lib';
+import { GuidV4Uint8Array } from '@digitaldefiance/ecies-lib';
 
 /**
  * Cluster key configuration for distributed node management
@@ -18,7 +18,7 @@ import { GuidV4 } from '@digitaldefiance/ecies-lib';
  */
 export interface IClusterKeys {
   /** Array of unique identifiers for each node agent in the cluster */
-  nodeAgents: GuidV4[];
+  nodeAgents: GuidV4Uint8Array[];
 
   /** Array of public keys corresponding to each node agent (same order as nodeAgents) */
   agentPublicKeys: Buffer[];

@@ -217,8 +217,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
         throw new SealingError(SealingErrorType.EncryptedShareNotFound);
       }
       const decryptedKeyShare =
-        await this.eciesService.decryptSimpleOrSingleWithHeader(
-          false,
+        await this.eciesService.decryptWithLengthAndHeader(
           member.privateKey.value,
           encryptedKeyShareHex,
         );
@@ -321,8 +320,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       }
       const shareForMember = shares[i];
 
-      const encryptedKeyShare = await this.eciesService.encryptSimpleOrSingle(
-        false, // encryptSimple = false for single encryption
+      const encryptedKeyShare = await this.eciesService.encryptWithLength(
         member.publicKey,
         hexToUint8Array(shareForMember),
       );
@@ -375,8 +373,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
         throw new SealingError(SealingErrorType.EncryptedShareNotFound);
       }
       const decryptedKeyShare =
-        await this.eciesService.decryptSimpleOrSingleWithHeader(
-          false,
+        await this.eciesService.decryptWithLengthAndHeader(
           member.privateKey.value,
           encryptedKeyShareHex,
         );

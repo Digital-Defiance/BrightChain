@@ -8,7 +8,9 @@ jest.mock('./handle', () => {
 });
 
 import {
+  CHECKSUM,
   ChecksumUint8Array,
+  ECIES,
   EmailString,
   getEnhancedIdProvider,
   Member,
@@ -19,7 +21,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { randomBytes } from '../browserCrypto';
-import { CHECKSUM, ECIES, TUPLE } from '../constants';
+import { TUPLE } from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -262,7 +264,7 @@ class TestCblBlock<
     } else {
       finalSignature = signature
         ? (new Uint8Array(signature) as SignatureUint8Array)
-        : (new Uint8Array(ECIES.SIGNATURE_LENGTH) as SignatureUint8Array);
+        : (new Uint8Array(ECIES.SIGNATURE_SIZE) as SignatureUint8Array);
     }
 
     // Create final data array with padding

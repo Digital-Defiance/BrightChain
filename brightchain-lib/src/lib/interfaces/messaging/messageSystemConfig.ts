@@ -1,3 +1,5 @@
+import { DurabilityLevel } from '../../enumerations/durabilityLevel';
+
 export interface IMessageSystemConfig {
   enableMessageSizedBlocks: boolean;
   minMessageSizeThreshold: number;
@@ -10,6 +12,8 @@ export interface IMessageSystemConfig {
   eventEmissionRetries: number;
   defaultMessageTTLMs: number;
   maxRecipientsPerMessage: number;
+  /** Durability level for message storage. Defaults to Ephemeral (no FEC required). */
+  durabilityLevel: DurabilityLevel;
 }
 
 export const DEFAULT_MESSAGE_SYSTEM_CONFIG: IMessageSystemConfig = {
@@ -24,11 +28,24 @@ export const DEFAULT_MESSAGE_SYSTEM_CONFIG: IMessageSystemConfig = {
   eventEmissionRetries: 3,
   defaultMessageTTLMs: 86400000,
   maxRecipientsPerMessage: 1000,
+  durabilityLevel: DurabilityLevel.Ephemeral,
 };
 
 export function loadMessageSystemConfig(): IMessageSystemConfig {
   // Browser-compatible: use globalThis for environment variables if available
   const env = typeof process !== 'undefined' && process.env ? process.env : {};
+
+  // Parse durability level from environment
+  let durabilityLevel = DEFAULT_MESSAGE_SYSTEM_CONFIG.durabilityLevel;
+  const envDurability = env['MESSAGE_DURABILITY_LEVEL'];
+  if (envDurability) {
+    if (envDurability === 'ephemeral')
+      durabilityLevel = DurabilityLevel.Ephemeral;
+    else if (envDurability === 'standard')
+      durabilityLevel = DurabilityLevel.Standard;
+    else if (envDurability === 'high_durability')
+      durabilityLevel = DurabilityLevel.HighDurability;
+  }
 
   return {
     enableMessageSizedBlocks:
@@ -64,5 +81,6 @@ export function loadMessageSystemConfig(): IMessageSystemConfig {
     maxRecipientsPerMessage:
       parseInt(env['MESSAGE_MAX_RECIPIENTS'] || '') ||
       DEFAULT_MESSAGE_SYSTEM_CONFIG.maxRecipientsPerMessage,
+    durabilityLevel,
   };
 }

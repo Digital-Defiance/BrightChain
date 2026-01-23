@@ -1,6 +1,5 @@
-import { Member, type PlatformID } from '@digitaldefiance/ecies-lib';
+import { ECIES, Member, type PlatformID } from '@digitaldefiance/ecies-lib';
 import { createECIESService } from './browserConfig';
-import { ECIES } from './constants';
 import BlockDataType from './enumerations/blockDataType';
 import { BlockEncryptionType } from './enumerations/blockEncryptionType';
 import BlockType from './enumerations/blockType';

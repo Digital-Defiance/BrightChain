@@ -1,4 +1,5 @@
-import CONSTANTS, { ECIES } from '../constants';
+import { ECIES } from '@digitaldefiance/ecies-lib';
+import CONSTANTS from '../constants';
 import { BlockCapacityErrorType } from '../enumerations/blockCapacityErrorType';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';

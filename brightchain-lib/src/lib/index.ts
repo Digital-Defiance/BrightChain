@@ -164,7 +164,6 @@ export * from './strings';
  * Main BrightChain class and configuration.
  */
 export * from './brightChain';
-export * from './brightChainConsts';
 export * from './browserConfig';
 export * from './constants';
 export * from './init';
@@ -181,7 +180,6 @@ export * from './emailString';
 export * from './drbg';
 export * from './ecies-config';
 export * from './isolatedKeyModInverse';
-export * from './pbkdf2Profiles';
 
 /**
  * Quorum and data record handling.

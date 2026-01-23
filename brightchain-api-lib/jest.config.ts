@@ -4,7 +4,7 @@ export default {
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   transform: {
-    '^.+\\.[tj]s$': [
+    '^.+\\.ts$': [
       'ts-jest',
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
@@ -14,6 +14,11 @@ export default {
   },
   transformIgnorePatterns: [
     'node_modules/(?!(@noble|@scure)/)',
+    '/dist/',
+    '<rootDir>/../dist/',
+  ],
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '<rootDir>/../dist/'],
+  modulePathIgnorePatterns: [
     '/dist/',
     '<rootDir>/../dist/',
   ],
@@ -27,4 +32,11 @@ export default {
     '^@brightchain/api-lib$': '<rootDir>/src/index.ts',
   },
   extensionsToTreatAsEsm: ['.ts'],
+  // Only match actual test files, not mocks/fixtures/helpers
+  testMatch: [
+    '**/__tests__/**/*.spec.ts',
+    '**/__tests__/**/*.test.ts',
+    '**/*.spec.ts',
+    '**/*.test.ts',
+  ],
 };

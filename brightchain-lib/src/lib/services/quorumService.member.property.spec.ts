@@ -12,7 +12,7 @@
 
 import {
   EmailString,
-  GuidV4,
+  GuidV4Uint8Array,
   Member,
   MemberType,
   ShortHexGuid,
@@ -25,17 +25,18 @@ import { ServiceProvider } from './service.provider';
 import { ServiceLocator } from './serviceLocator';
 
 describe('QuorumService Member Management Property Tests', () => {
-  let _quorumService: QuorumService<GuidV4>;
-
   beforeAll(() => {
     initializeBrightChain();
-    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4>());
+    ServiceLocator.setServiceProvider(
+      ServiceProvider.getInstance<GuidV4Uint8Array>(),
+    );
   });
 
   beforeEach(() => {
     initializeBrightChain();
-    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4>());
-    _quorumService = new QuorumService<GuidV4>();
+    ServiceLocator.setServiceProvider(
+      ServiceProvider.getInstance<GuidV4Uint8Array>(),
+    );
   });
 
   afterEach(() => {
@@ -46,8 +47,9 @@ describe('QuorumService Member Management Property Tests', () => {
    * Helper to create a test member with random data
    */
   function createTestMember(name: string, email: string) {
-    const eciesService = ServiceProvider.getInstance<GuidV4>().eciesService;
-    return Member.newMember<GuidV4>(
+    const eciesService =
+      ServiceProvider.getInstance<GuidV4Uint8Array>().eciesService;
+    return Member.newMember<GuidV4Uint8Array>(
       eciesService,
       MemberType.User,
       name,
@@ -70,7 +72,7 @@ describe('QuorumService Member Management Property Tests', () => {
           fc.integer({ min: 1, max: 10000 }),
           fc.option(fc.stringMatching(/^[A-Za-z][A-Za-z0-9]{0,19}$/)),
           async (name, emailSuffix, role) => {
-            const testService = new QuorumService<GuidV4>();
+            const testService = new QuorumService<GuidV4Uint8Array>();
             const email = `test${emailSuffix}@example.com`;
 
             // Create a member
@@ -120,7 +122,7 @@ describe('QuorumService Member Management Property Tests', () => {
         fc.asyncProperty(
           fc.integer({ min: 1, max: 5 }),
           async (memberCount) => {
-            const testService = new QuorumService<GuidV4>();
+            const testService = new QuorumService<GuidV4Uint8Array>();
             const addedMemberIds: ShortHexGuid[] = [];
 
             // Add multiple members with unique emails using timestamp + index + random
@@ -173,7 +175,7 @@ describe('QuorumService Member Management Property Tests', () => {
           // Generate valid names: alphanumeric starting with letter
           fc.stringMatching(/^[A-Za-z][A-Za-z0-9]{0,49}$/),
           async (name) => {
-            const testService = new QuorumService<GuidV4>();
+            const testService = new QuorumService<GuidV4Uint8Array>();
             const timestamp = Date.now();
 
             // Create and add a member
@@ -219,7 +221,7 @@ describe('QuorumService Member Management Property Tests', () => {
         fc.asyncProperty(
           fc.string({ minLength: 32, maxLength: 64 }),
           async (randomId) => {
-            const testService = new QuorumService<GuidV4>();
+            const testService = new QuorumService<GuidV4Uint8Array>();
 
             const member = await testService.getMember(
               randomId as ShortHexGuid,

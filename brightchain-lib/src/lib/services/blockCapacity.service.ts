@@ -1,5 +1,5 @@
-import { ECIESService, PlatformID } from '@digitaldefiance/ecies-lib';
-import { CONSTANTS, ECIES, ENCRYPTION } from '../constants';
+import { ECIES, ECIESService, PlatformID } from '@digitaldefiance/ecies-lib';
+import CONSTANTS from '../constants';
 import { BlockCapacityErrorType } from '../enumerations/blockCapacityErrorType';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockType } from '../enumerations/blockType';
@@ -126,7 +126,7 @@ export class BlockCapacityCalculator<TID extends PlatformID = Uint8Array> {
       case BlockType.EncryptedConstituentBlockListBlock: {
         // Use dynamic base header size instead of static constant
         const baseHeaderSize = this.calculateCBLBaseHeaderSize();
-        details.typeSpecificOverhead += baseHeaderSize + ECIES.SIGNATURE_LENGTH;
+        details.typeSpecificOverhead += baseHeaderSize + ECIES.SIGNATURE_SIZE;
         return { alignCapacityToTuple: true };
       }
 
@@ -142,7 +142,7 @@ export class BlockCapacityCalculator<TID extends PlatformID = Uint8Array> {
 
         // Use dynamic base header size instead of static constant
         const baseHeaderSize = this.calculateCBLBaseHeaderSize();
-        details.typeSpecificOverhead += baseHeaderSize + ECIES.SIGNATURE_LENGTH;
+        details.typeSpecificOverhead += baseHeaderSize + ECIES.SIGNATURE_SIZE;
         details.variableOverhead += this.calculateExtendedCBLOverhead(
           params.cbl.fileName,
           params.cbl.mimeType,
@@ -151,7 +151,7 @@ export class BlockCapacityCalculator<TID extends PlatformID = Uint8Array> {
       }
 
       case BlockType.EncryptedOwnedDataBlock:
-        details.typeSpecificOverhead += ENCRYPTION.ENCRYPTION_TYPE_SIZE;
+        details.typeSpecificOverhead += ECIES.ENCRYPTION_TYPE_SIZE;
         return { alignCapacityToTuple: false };
 
       case BlockType.MultiEncryptedBlock:
@@ -222,14 +222,15 @@ export class BlockCapacityCalculator<TID extends PlatformID = Uint8Array> {
         );
       }
 
-      details.typeSpecificOverhead += ENCRYPTION.ENCRYPTION_TYPE_SIZE;
+      details.typeSpecificOverhead += ECIES.ENCRYPTION_TYPE_SIZE;
       details.encryptionOverhead =
         params.encryptionType === BlockEncryptionType.MultiRecipient
           ? this.eciesService.calculateECIESMultipleRecipientOverhead(
               params.recipientCount ?? 0,
               true,
             ) - ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE
-          : ECIES.OVERHEAD_SIZE + ENCRYPTION.RECIPIENT_ID_SIZE;
+          : ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE +
+            ECIES.MULTIPLE.RECIPIENT_ID_SIZE;
     }
   }
 

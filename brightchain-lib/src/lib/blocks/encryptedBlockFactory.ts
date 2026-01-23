@@ -1,6 +1,5 @@
-import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
+import { ECIES, Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { randomBytes } from '../browserCrypto';
-import { ECIES } from '../constants';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
@@ -11,6 +10,7 @@ import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumService } from '../services/checksum.service';
+import { ServiceProvider } from '../services/service.provider';
 import { Checksum } from '../types/checksum';
 import { EncryptedBlock } from './encrypted';
 
@@ -70,8 +70,14 @@ export class EncryptedBlockFactory {
       );
     }
 
-    // Calculate the actual data length and metadata
-    const payloadLength = (blockSize as number) - ECIES.OVERHEAD_SIZE;
+    // Get ID provider to calculate header size
+    const idProvider = ServiceProvider.getInstance<TID>().idProvider;
+
+    // Calculate the actual payload capacity
+    // Header = 1 byte (encryption type) + idSize + ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE
+    const headerSize =
+      1 + idProvider.byteLength + ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
+    const payloadLength = (blockSize as number) - headerSize;
 
     // Validate data length
     if (data.length < 1) {
@@ -80,7 +86,7 @@ export class EncryptedBlockFactory {
       );
     }
 
-    // Total data length must not exceed block size
+    // Total data length must not exceed available payload capacity
     if (data.length > payloadLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.DataLengthExceedsCapacity,
@@ -117,10 +123,14 @@ export class EncryptedBlockFactory {
       dateCreated,
     );
 
-    // If data is already encrypted (starts with 0x04), use it directly
-    if (data[0] === ECIES.PUBLIC_KEY_MAGIC) {
-      // Create a properly sized buffer
-      const finalData = new Uint8Array(blockSize as number);
+    // Create final data buffer with proper size
+    const finalData = new Uint8Array(blockSize as number);
+
+    // If data is already encrypted (starts with BlockEncryptionType), use it directly
+    if (
+      data[0] === BlockEncryptionType.SingleRecipient ||
+      data[0] === BlockEncryptionType.MultiRecipient
+    ) {
       finalData.set(data);
 
       return new Constructor<TID>(
@@ -130,7 +140,7 @@ export class EncryptedBlockFactory {
         finalChecksum,
         EncryptedBlockMetadata.fromEphemeralBlockMetadata<TID>(
           updatedMetadata,
-          BlockEncryptionType.SingleRecipient,
+          data[0] as BlockEncryptionType,
           1,
         ),
         creator,
@@ -139,26 +149,34 @@ export class EncryptedBlockFactory {
       );
     }
 
-    // Create final data buffer with proper size
-    const finalData = new Uint8Array(blockSize as number);
+    // Generate encryption headers for unencrypted data
+    let offset = 0;
 
-    // Generate encryption headers
+    // Set encryption type byte
+    finalData[offset] = BlockEncryptionType.SingleRecipient;
+    offset += 1;
+
+    // Set recipient ID
+    const recipientId = new Uint8Array(creator.idBytes);
+    finalData.set(recipientId.subarray(0, idProvider.byteLength), offset);
+    offset += idProvider.byteLength;
+
+    // Generate ECIES WITH_LENGTH header components
     const ephemeralPublicKey = new Uint8Array(ECIES.PUBLIC_KEY_LENGTH);
     const keyData = randomBytes(ECIES.PUBLIC_KEY_LENGTH - 1);
-    ephemeralPublicKey[0] = ECIES.PUBLIC_KEY_MAGIC; // Set ECIES public key prefix
-    ephemeralPublicKey.set(keyData, 1); // Copy after prefix
+    ephemeralPublicKey[0] = ECIES.PUBLIC_KEY_MAGIC;
+    ephemeralPublicKey.set(keyData, 1);
 
-    const iv = randomBytes(ECIES.IV_LENGTH);
-    const authTag = randomBytes(ECIES.AUTH_TAG_LENGTH);
+    const iv = randomBytes(ECIES.IV_SIZE);
+    const authTag = randomBytes(ECIES.AUTH_TAG_SIZE);
 
-    // Copy headers to final buffer
-    let offset = 0;
+    // Copy ECIES headers to final buffer
     finalData.set(ephemeralPublicKey, offset);
     offset += ECIES.PUBLIC_KEY_LENGTH;
     finalData.set(iv, offset);
-    offset += ECIES.IV_LENGTH;
+    offset += ECIES.IV_SIZE;
     finalData.set(authTag, offset);
-    offset += ECIES.AUTH_TAG_LENGTH;
+    offset += ECIES.AUTH_TAG_SIZE;
 
     // Copy data to payload area
     finalData.set(data, offset);
@@ -175,9 +193,10 @@ export class EncryptedBlockFactory {
     }
 
     // Verify the ephemeral public key is valid
+    const ephemeralKeyOffset = 1 + idProvider.byteLength;
     const ephemeralKeyCheck = finalDataCopy.subarray(
-      0,
-      ECIES.PUBLIC_KEY_LENGTH,
+      ephemeralKeyOffset,
+      ephemeralKeyOffset + ECIES.PUBLIC_KEY_LENGTH,
     );
     if (ephemeralKeyCheck[0] !== ECIES.PUBLIC_KEY_MAGIC) {
       throw new BlockValidationError(

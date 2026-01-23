@@ -61,8 +61,7 @@ const Demo = () => {
     setIsEncrypting(true);
     try {
       const messageBytes = new TextEncoder().encode(message);
-      const encrypted = await service.encryptSimpleOrSingle(
-        false,
+      const encrypted = await service.encryptWithLength(
         bobKeys.publicKey,
         messageBytes,
       );
@@ -79,8 +78,7 @@ const Demo = () => {
     if (!bobKeys || !encryptedData) return;
     setIsDecrypting(true);
     try {
-      const decrypted = await service.decryptSimpleOrSingleWithHeader(
-        false,
+      const decrypted = await service.decryptWithLengthAndHeader(
         bobKeys.privateKey,
         encryptedData,
       );

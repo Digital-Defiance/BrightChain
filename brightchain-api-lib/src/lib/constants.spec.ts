@@ -1,5 +1,8 @@
-import { Constants, WRAPPED_KEY } from './constants';
+import { Constants } from './constants';
 import { IApiConstants } from './interfaces/api-constants';
+
+// Get WRAPPED_KEY from Constants
+const WRAPPED_KEY = Constants.WRAPPED_KEY;
 
 describe('API Constants Implementation', () => {
   describe('Constants Object Structure', () => {
@@ -48,14 +51,14 @@ describe('API Constants Implementation', () => {
       expect(Constants.ENCRYPTION.RECIPIENT_ID_SIZE).toBeDefined();
     });
 
-    it('should include OBJECT_ID_LENGTH from upstream', () => {
-      expect(Constants.OBJECT_ID_LENGTH).toBeDefined();
-      expect(typeof Constants.OBJECT_ID_LENGTH).toBe('number');
-    });
-
     it('should include KEYRING_ALGORITHM_CONFIGURATION from upstream', () => {
       expect(Constants.KEYRING_ALGORITHM_CONFIGURATION).toBeDefined();
       expect(typeof Constants.KEYRING_ALGORITHM_CONFIGURATION).toBe('string');
+    });
+
+    it('should include MEMBER_ID_LENGTH from upstream', () => {
+      expect(Constants.MEMBER_ID_LENGTH).toBeDefined();
+      expect(typeof Constants.MEMBER_ID_LENGTH).toBe('number');
     });
   });
 
@@ -127,12 +130,12 @@ describe('API Constants Implementation', () => {
       expect(Constants.Site).toBe('BrightChain');
     });
 
-    it('should have site hostname set to brightchain.io', () => {
-      expect(Constants.SiteHostname).toBe('brightchain.io');
+    it('should have site hostname set to brightchain.org', () => {
+      expect(Constants.SiteHostname).toBe('brightchain.org');
     });
 
-    it('should have site email domain set to brightchain.io', () => {
-      expect(Constants.SiteEmailDomain).toBe('brightchain.io');
+    it('should have site email domain set to brightchain.org', () => {
+      expect(Constants.SiteEmailDomain).toBe('brightchain.org');
     });
   });
 });

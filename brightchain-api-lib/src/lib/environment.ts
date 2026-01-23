@@ -1,5 +1,8 @@
 import { HexString, SecureString } from '@digitaldefiance/ecies-lib';
-import { Environment as BaseEnvironment } from '@digitaldefiance/node-express-suite';
+import {
+  Environment as BaseEnvironment,
+  IConstants,
+} from '@digitaldefiance/node-express-suite';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { BlockSize } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -36,7 +39,8 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
   }
 
   constructor(path?: string, initialization = false, override = true) {
-    super(path, initialization, override, Constants);
+    // Cast Constants to IConstants - they share the same structure
+    super(path, initialization, override, Constants as unknown as IConstants);
 
     const envObj = this.getObject();
 

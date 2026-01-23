@@ -1,8 +1,8 @@
 import {
+  CHECKSUM,
   ChecksumUint8Array,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import { CHECKSUM } from './constants';
 import { BlockSize } from './enumerations/blockSize';
 
 // Simple checksum calculation using Web Crypto API

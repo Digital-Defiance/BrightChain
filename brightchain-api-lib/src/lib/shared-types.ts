@@ -1,4 +1,4 @@
-import { GuidV4 } from '@digitaldefiance/ecies-lib';
+import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 import type { IEmailTokenDocument } from './documents/email-token';
 import type { IMnemonicDocument } from './documents/mnemonic';
 import type { IRoleDocument } from './documents/role';
@@ -8,7 +8,8 @@ import type { IUserRoleDocument } from './documents/user-role';
 import { ModelName } from './enumerations/model-name';
 import { SchemaCollection } from './enumerations/schema-collection';
 
-// Re-export SignatureBuffer from node-ecies-lib for internal use
+// Re-export SignatureBuffer and GuidV4Buffer from node-ecies-lib for internal use
+export type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 export type { SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
 
 // Database-agnostic type aliases (mongo removed)
@@ -16,10 +17,9 @@ export type { SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
 export type ClientSession = any;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-// Use ObjectIdString as the default backend ID type
-// This bridges BSON ObjectIds with the branded type system
-
-export type DefaultBackendIdType = GuidV4;
+// Use Buffer as the default backend ID type for Node.js backend
+// Buffer is part of the PlatformID union and works with all Node.js operations
+export type DefaultBackendIdType = Buffer;
 
 /**
  * Block storage schema definition (replaces Mongoose Schema)

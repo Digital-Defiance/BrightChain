@@ -3,7 +3,7 @@ import { BaseBlock } from '../blocks/base';
 import { ParityBlock } from '../blocks/parity';
 import { RawDataBlock } from '../blocks/rawData';
 import { Readable } from '../browserStream';
-import { FEC } from '../constants';
+import { BC_FEC } from '../constants';
 import BlockDataType from '../enumerations/blockDataType';
 import BlockType from '../enumerations/blockType';
 import { FecErrorType } from '../enumerations/fecErrorType';
@@ -67,10 +67,10 @@ export class FecService {
       });
     }
 
-    if (shardSize > FEC.MAX_SHARD_SIZE) {
+    if (shardSize > BC_FEC.MAX_SHARD_SIZE) {
       throw new FecError(FecErrorType.ShardSizeExceedsMaximum, undefined, {
         SIZE: shardSize.toString(),
-        MAXIMUM: FEC.MAX_SHARD_SIZE.toString(),
+        MAXIMUM: BC_FEC.MAX_SHARD_SIZE.toString(),
       });
     }
 
@@ -199,8 +199,8 @@ export class FecService {
     }
 
     const shardSize =
-      input.blockSize > FEC.MAX_SHARD_SIZE
-        ? FEC.MAX_SHARD_SIZE
+      input.blockSize > BC_FEC.MAX_SHARD_SIZE
+        ? BC_FEC.MAX_SHARD_SIZE
         : input.blockSize;
     const requiredShards = Math.ceil(input.blockSize / shardSize);
 
@@ -305,8 +305,8 @@ export class FecService {
 
     try {
       const shardSize =
-        damagedBlock.blockSize > FEC.MAX_SHARD_SIZE
-          ? FEC.MAX_SHARD_SIZE
+        damagedBlock.blockSize > BC_FEC.MAX_SHARD_SIZE
+          ? BC_FEC.MAX_SHARD_SIZE
           : damagedBlock.blockSize;
       const requiredShards = Math.ceil(damagedBlock.blockSize / shardSize);
 

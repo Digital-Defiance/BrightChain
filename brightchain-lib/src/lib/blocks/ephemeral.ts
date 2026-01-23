@@ -1,7 +1,6 @@
-import { Member, type PlatformID } from '@digitaldefiance/ecies-lib';
+import { ECIES, Member, type PlatformID } from '@digitaldefiance/ecies-lib';
 import { randomBytes } from '../browserCrypto';
 import { Readable } from '../browserStream';
-import { ECIES } from '../constants';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockErrorType } from '../enumerations/blockErrorType';
@@ -200,7 +199,7 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
         },
       );
     return (
-      this._lengthBeforeEncryption + ECIES.OVERHEAD_SIZE <=
+      this._lengthBeforeEncryption + ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE <=
       capacity.availableCapacity
     );
   }

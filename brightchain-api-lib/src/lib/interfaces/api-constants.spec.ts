@@ -1,16 +1,37 @@
-import { IConstants as IBaseConstants } from '@digitaldefiance/node-express-suite';
+import { IConstants as IBrightChainConstants } from '@brightchain/brightchain-lib';
+import { IConstants as IExpressConstants } from '@digitaldefiance/node-express-suite';
 import { IApiConstants } from './api-constants';
 
-describe('IApiConstants Interface Structure', () => {
-  describe('Interface Extension', () => {
-    it('should extend IConstants from @digitaldefiance/node-express-suite', () => {
-      // This test verifies that IApiConstants extends IBaseConstants
-      // by checking that a mock object satisfying IApiConstants also satisfies IBaseConstants
+describe('IApiConstants Type Structure', () => {
+  describe('Type Composition', () => {
+    it('should include all properties from IExpressConstants', () => {
+      // This test verifies that IApiConstants includes IExpressConstants properties
       const mockApiConstants: IApiConstants = {} as IApiConstants;
-      const mockBaseConstants: IBaseConstants = mockApiConstants;
+      const mockExpressConstants: IExpressConstants = mockApiConstants;
 
-      // If this compiles, it means IApiConstants extends IBaseConstants
-      expect(mockBaseConstants).toBeDefined();
+      // If this compiles, it means IApiConstants includes IExpressConstants
+      expect(mockExpressConstants).toBeDefined();
+    });
+
+    it('should include BrightChain-specific properties (excluding PBKDF2_PROFILES)', () => {
+      // This test verifies that IApiConstants includes IBrightChainConstants properties
+      // Note: PBKDF2_PROFILES is omitted due to type conflict between the two interfaces
+      const mockApiConstants: IApiConstants = {} as IApiConstants;
+
+      // Check that BrightChain-specific properties are accessible
+      // These are from IBrightChainConstants (via Omit)
+      type HasCBL = IApiConstants extends { CBL: unknown } ? true : false;
+      type HasTuple = IApiConstants extends { TUPLE: unknown } ? true : false;
+      type HasSealing = IApiConstants extends { SEALING: unknown } ? true : false;
+
+      const hasCBL: HasCBL = true;
+      const hasTuple: HasTuple = true;
+      const hasSealing: HasSealing = true;
+
+      expect(hasCBL).toBe(true);
+      expect(hasTuple).toBe(true);
+      expect(hasSealing).toBe(true);
+      expect(mockApiConstants).toBeDefined();
     });
   });
 
@@ -129,14 +150,6 @@ describe('IApiConstants Interface Structure', () => {
       };
 
       expect(mockConstants.WRAPPED_KEY).toBeDefined();
-    });
-
-    it('should have access to OBJECT_ID_LENGTH from upstream', () => {
-      const mockConstants: Partial<IApiConstants> = {
-        OBJECT_ID_LENGTH: 12,
-      };
-
-      expect(mockConstants.OBJECT_ID_LENGTH).toBeDefined();
     });
 
     it('should have access to KEYRING_ALGORITHM_CONFIGURATION from upstream', () => {

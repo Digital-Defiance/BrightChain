@@ -12,7 +12,7 @@
 
 import {
   EmailString,
-  GuidV4,
+  GuidV4Uint8Array,
   IMemberWithMnemonic,
   Member,
   MemberType,
@@ -32,7 +32,9 @@ jest.setTimeout(60000);
 describe('QuorumDataRecord Serialization Property Tests', () => {
   beforeAll(() => {
     initializeBrightChain();
-    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4>());
+    ServiceLocator.setServiceProvider(
+      ServiceProvider.getInstance<GuidV4Uint8Array>(),
+    );
   });
 
   afterEach(() => {
@@ -45,9 +47,10 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
   function createTestMember(
     name: string,
     email: string,
-  ): IMemberWithMnemonic<GuidV4> {
-    const eciesService = ServiceProvider.getInstance<GuidV4>().eciesService;
-    return Member.newMember<GuidV4>(
+  ): IMemberWithMnemonic<GuidV4Uint8Array> {
+    const eciesService =
+      ServiceProvider.getInstance<GuidV4Uint8Array>().eciesService;
+    return Member.newMember<GuidV4Uint8Array>(
       eciesService,
       MemberType.User,
       name,
@@ -63,11 +66,11 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
     memberCount: number,
     sharesRequired: number,
   ): Promise<{
-    record: QuorumDataRecord<GuidV4>;
-    members: IMemberWithMnemonic<GuidV4>[];
+    record: QuorumDataRecord<GuidV4Uint8Array>;
+    members: IMemberWithMnemonic<GuidV4Uint8Array>[];
   }> {
-    const serviceProvider = ServiceProvider.getInstance<GuidV4>();
-    const sealingService = new SealingService<GuidV4>(
+    const serviceProvider = ServiceProvider.getInstance<GuidV4Uint8Array>();
+    const sealingService = new SealingService<GuidV4Uint8Array>(
       serviceProvider.eciesService,
       serviceProvider.idProvider,
     );
@@ -76,7 +79,7 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
     const random = Math.floor(Math.random() * 1000000);
 
     // Create members
-    const members: IMemberWithMnemonic<GuidV4>[] = [];
+    const members: IMemberWithMnemonic<GuidV4Uint8Array>[] = [];
     for (let i = 0; i < memberCount; i++) {
       const uniqueSuffix = `${timestamp}${random}${i}`;
       const memberWithMnemonic = createTestMember(
@@ -121,14 +124,17 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
             );
 
             // Create a member lookup function for deserialization
-            const memberMap = new Map<string, Member<GuidV4>>();
+            const memberMap = new Map<string, Member<GuidV4Uint8Array>>();
             for (const m of members) {
               const hexId = uint8ArrayToHex(m.member.idBytes) as ShortHexGuid;
               memberMap.set(hexId, m.member);
             }
 
-            const fetchMember = (memberId: GuidV4): Member<GuidV4> => {
-              const serviceProvider = ServiceProvider.getInstance<GuidV4>();
+            const fetchMember = (
+              memberId: GuidV4Uint8Array,
+            ): Member<GuidV4Uint8Array> => {
+              const serviceProvider =
+                ServiceProvider.getInstance<GuidV4Uint8Array>();
               const hexId = uint8ArrayToHex(
                 serviceProvider.idProvider.toBytes(memberId),
               ) as ShortHexGuid;
@@ -143,8 +149,9 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
             const dto = record.toDto();
 
             // Deserialize from DTO
-            const serviceProvider = ServiceProvider.getInstance<GuidV4>();
-            const restored = QuorumDataRecord.fromDto<GuidV4>(
+            const serviceProvider =
+              ServiceProvider.getInstance<GuidV4Uint8Array>();
+            const restored = QuorumDataRecord.fromDto<GuidV4Uint8Array>(
               dto,
               fetchMember,
               serviceProvider.idProvider,
@@ -206,14 +213,17 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
             );
 
             // Create a member lookup function for deserialization
-            const memberMap = new Map<string, Member<GuidV4>>();
+            const memberMap = new Map<string, Member<GuidV4Uint8Array>>();
             for (const m of members) {
               const hexId = uint8ArrayToHex(m.member.idBytes) as ShortHexGuid;
               memberMap.set(hexId, m.member);
             }
 
-            const fetchMember = (memberId: GuidV4): Member<GuidV4> => {
-              const serviceProvider = ServiceProvider.getInstance<GuidV4>();
+            const fetchMember = (
+              memberId: GuidV4Uint8Array,
+            ): Member<GuidV4Uint8Array> => {
+              const serviceProvider =
+                ServiceProvider.getInstance<GuidV4Uint8Array>();
               const hexId = uint8ArrayToHex(
                 serviceProvider.idProvider.toBytes(memberId),
               ) as ShortHexGuid;
@@ -231,8 +241,9 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
             expect(() => JSON.parse(json)).not.toThrow();
 
             // Deserialize from JSON
-            const serviceProvider = ServiceProvider.getInstance<GuidV4>();
-            const restored = QuorumDataRecord.fromJson<GuidV4>(
+            const serviceProvider =
+              ServiceProvider.getInstance<GuidV4Uint8Array>();
+            const restored = QuorumDataRecord.fromJson<GuidV4Uint8Array>(
               json,
               fetchMember,
               serviceProvider.idProvider,
@@ -319,14 +330,17 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
             );
 
             // Create a member lookup function for deserialization
-            const memberMap = new Map<string, Member<GuidV4>>();
+            const memberMap = new Map<string, Member<GuidV4Uint8Array>>();
             for (const m of members) {
               const hexId = uint8ArrayToHex(m.member.idBytes) as ShortHexGuid;
               memberMap.set(hexId, m.member);
             }
 
-            const fetchMember = (memberId: GuidV4): Member<GuidV4> => {
-              const serviceProvider = ServiceProvider.getInstance<GuidV4>();
+            const fetchMember = (
+              memberId: GuidV4Uint8Array,
+            ): Member<GuidV4Uint8Array> => {
+              const serviceProvider =
+                ServiceProvider.getInstance<GuidV4Uint8Array>();
               const hexId = uint8ArrayToHex(
                 serviceProvider.idProvider.toBytes(memberId),
               ) as ShortHexGuid;
@@ -339,8 +353,9 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
 
             // Serialize and deserialize
             const dto = record.toDto();
-            const serviceProvider = ServiceProvider.getInstance<GuidV4>();
-            const restored = QuorumDataRecord.fromDto<GuidV4>(
+            const serviceProvider =
+              ServiceProvider.getInstance<GuidV4Uint8Array>();
+            const restored = QuorumDataRecord.fromDto<GuidV4Uint8Array>(
               dto,
               fetchMember,
               serviceProvider.idProvider,

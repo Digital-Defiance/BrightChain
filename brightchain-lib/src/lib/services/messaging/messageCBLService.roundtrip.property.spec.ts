@@ -47,7 +47,7 @@ describe('Feature: message-passing-and-events, Property: MessageCBL Round-Trip',
     // CBL header is ~200 bytes, each block ID is 64 bytes
     // For BlockSize.Small (1024), we can fit ~12 block IDs safely
     // So max content should be ~12 blocks = 12 * 1024 = 12288 bytes
-    const maxContentSize = blockSizeNum * 10; // Conservative limit
+    const _maxContentSize = blockSizeNum * 10; // Conservative limit (unused, kept for documentation)
 
     await fc.assert(
       fc.asyncProperty(
