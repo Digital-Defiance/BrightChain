@@ -116,7 +116,8 @@ export default defineConfig({
     rollupOptions: {
       external: (id) => {
         // Externalize Node.js built-ins to prevent bundling attempts
-        return ['fs', 'path', 'crypto', 'stream', 'util', 'os'].some(
+        // Note: 'crypto' is NOT externalized - we use browser-compatible alternatives
+        return ['fs', 'path', 'stream', 'util', 'os'].some(
           (mod) => id === mod || id.startsWith(`node:${mod}`),
         );
       },
@@ -224,6 +225,8 @@ export default defineConfig({
         __dirname,
         'node_modules/@noble/curves/esm/ed25519.js',
       ),
+      // Force uuid to use browser-compatible version (uses Web Crypto API instead of Node crypto)
+      uuid: resolve(__dirname, 'node_modules/uuid/dist/esm-browser/index.js'),
     },
   },
   define: {
