@@ -1,4 +1,6 @@
 import {
+  CHECKSUM,
+  ECIES,
   ECIESService,
   getEnhancedIdProvider,
   Member,
@@ -7,7 +9,7 @@ import {
   TypedIdProviderWrapper,
 } from '@digitaldefiance/ecies-lib';
 import { concatenateUint8Arrays, writeUInt32BE } from '../bufferUtils';
-import CONSTANTS, { CBL, CHECKSUM, ECIES, TUPLE } from '../constants';
+import CONSTANTS, { CBL, TUPLE } from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize, lengthToBlockSize } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
@@ -119,14 +121,14 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
   /**
    * Length of the creator signature field in the header
    */
-  public static readonly CreatorSignatureSize: number = ECIES.SIGNATURE_LENGTH;
+  public static readonly CreatorSignatureSize: number = ECIES.SIGNATURE_SIZE;
 
   /**
    * Length of the creator ID field (GUID size) - static default for backward compatibility
    * @deprecated Use instance method creatorLength instead for dynamic provider support
    */
   public static readonly CreatorIdLength: number =
-    CONSTANTS['ENCRYPTION'].RECIPIENT_ID_SIZE;
+    ECIES.MULTIPLE.RECIPIENT_ID_SIZE;
 
   /**
    * Offset of the date field in the header (instance method for dynamic provider support)
@@ -1171,15 +1173,13 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
             checksum.toUint8Array(),
           ),
         )
-      : new Uint8Array(
-          ECIES.SIGNATURE_LENGTH,
-        )) as unknown as SignatureUint8Array;
+      : new Uint8Array(ECIES.SIGNATURE_SIZE)) as unknown as SignatureUint8Array;
 
     // Validate signature length
-    if (signatureBytes.length !== ECIES.SIGNATURE_LENGTH) {
+    if (signatureBytes.length !== ECIES.SIGNATURE_SIZE) {
       throw new CblError(
         CblErrorType.InvalidSignature,
-        `Signature length mismatch: got ${signatureBytes.length}, expected ${ECIES.SIGNATURE_LENGTH}`,
+        `Signature length mismatch: got ${signatureBytes.length}, expected ${ECIES.SIGNATURE_SIZE}`,
       );
     }
 

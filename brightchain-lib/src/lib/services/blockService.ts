@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
+  ECIES,
   EciesEncryptionTypeEnum,
   Member,
   PlatformID,
@@ -11,7 +12,7 @@ import { EphemeralBlock } from '../blocks/ephemeral';
 import { ExtendedCBL } from '../blocks/extendedCbl';
 import { RandomBlock } from '../blocks/random';
 import { RawDataBlock } from '../blocks/rawData';
-import { ECIES, ENCRYPTION, TUPLE } from '../constants';
+import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockErrorType } from '../enumerations/blockErrorType';
@@ -45,7 +46,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
    * Determine the block type from the first byte of the block data
    */
   public determineBlockEncryptionType(data: Uint8Array): BlockEncryptionType {
-    if (data.length < ENCRYPTION.ENCRYPTION_TYPE_SIZE) {
+    if (data.length < ECIES.ENCRYPTION_TYPE_SIZE) {
       throw new BlockServiceError(BlockServiceErrorType.InvalidBlockData);
     }
 
@@ -152,7 +153,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
     try {
       const encryptedArray =
         await ServiceLocator.getServiceProvider<TID>().eciesService.encrypt(
-          EciesEncryptionTypeEnum.Single,
+          EciesEncryptionTypeEnum.WithLength,
           (recipient ?? block.creator) as any,
           block.data,
         );
@@ -164,7 +165,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       finalBuffer[0] = BlockEncryptionType.SingleRecipient;
 
       // Copy ECIES data after the block type byte
-      finalBuffer.set(encryptedArray, ENCRYPTION.ENCRYPTION_TYPE_SIZE);
+      finalBuffer.set(encryptedArray, ECIES.ENCRYPTION_TYPE_SIZE);
 
       const checksum =
         ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
@@ -224,8 +225,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
 
     try {
       const decryptedArray =
-        await ServiceLocator.getServiceProvider().eciesService.decryptSimpleOrSingleWithHeader(
-          false,
+        await ServiceLocator.getServiceProvider().eciesService.decryptWithLengthAndHeader(
           creator.privateKey.idUint8Array as Uint8Array,
           block.layerPayload,
         );
@@ -275,6 +275,8 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       ServiceLocator.getServiceProvider<TID>().eciesService.parseMultiEncryptedHeader(
         block.data,
       );
+    // Encrypted message overhead is IV + AuthTag
+    const encryptedMessageOverhead = ECIES.IV_SIZE + ECIES.AUTH_TAG_SIZE;
     const decryptedData =
       await ServiceLocator.getServiceProvider<TID>().eciesService.decryptMultipleECIEForRecipient(
         {
@@ -283,7 +285,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
             multiEncryptionHeader.headerSize,
             multiEncryptionHeader.headerSize +
               multiEncryptionHeader.dataLength +
-              ECIES.MULTIPLE.ENCRYPTED_MESSAGE_OVERHEAD_SIZE,
+              encryptedMessageOverhead,
           ),
         },
         recipient as Member<Uint8Array>,
@@ -634,8 +636,9 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
     }
 
     const blockSizeNumber = blockSize as number;
+    // Use WITH_LENGTH format overhead for single-recipient encryption
     const payloadPerBlock = encrypt
-      ? blockSizeNumber - ECIES.OVERHEAD_SIZE
+      ? blockSizeNumber - ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE
       : blockSizeNumber;
 
     let totalLength = 0;
@@ -664,7 +667,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       if (encrypt && recipient) {
         const encryptedData =
           await ServiceLocator.getServiceProvider().eciesService.encrypt(
-            EciesEncryptionTypeEnum.Single,
+            EciesEncryptionTypeEnum.WithLength,
             recipient as any,
             dataSlice,
           );

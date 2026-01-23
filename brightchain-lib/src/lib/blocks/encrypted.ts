@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   arraysEqual,
+  ECIES,
   EciesEncryptionTypeEnum,
-  Guid,
   IMultiEncryptedParsedHeader,
   ISingleEncryptedParsedHeader,
   Member,
+  TypedIdProviderWrapper,
+  UINT8_SIZE,
   type PlatformID,
 } from '@digitaldefiance/ecies-lib';
 import { calculateECIESMultipleRecipientOverhead } from '../browserConfig';
-import CONSTANTS, { ECIES, ENCRYPTION } from '../constants';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -31,7 +32,6 @@ import {
 import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { ServiceProvider } from '../services/service.provider';
-import { ServiceLocator } from '../services/serviceLocator';
 import { Checksum } from '../types/checksum';
 import { EphemeralBlock } from './ephemeral';
 
@@ -39,14 +39,71 @@ import { EphemeralBlock } from './ephemeral';
  * Base class for encrypted blocks.
  * Adds encryption-specific header data and overhead calculations.
  *
+ * BrightChain adopts ecies-lib's versioned encryption format as the canonical standard.
+ *
  * Block Structure:
  * [Layer 0 Header][Layer 1 Header][...][Encryption Header][Encrypted Payload][Padding]
  *
- * Single Encryption Header:
- * [Encryption Type (1 byte)][Recipient GUID (16 bytes)][Ephemeral Public Key (65 bytes)][IV (16 bytes)][Auth Tag (16 bytes)][Data]
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ * SINGLE-RECIPIENT ENCRYPTION (WITH_LENGTH format, type 0x42)
+ * ═══════════════════════════════════════════════════════════════════════════════════════
  *
- * Multi Encryption Header:
- * [Encryption Type (1 byte)][Data Length (8 bytes)][Recipient count (2 bytes)][Recipient GUIDs (16 bytes * recipientCount)][Recipient keys (129 bytes)][Data]
+ * BrightChain uses WITH_LENGTH format for single-recipient encryption because:
+ * 1. The data length field enables streaming decryption
+ * 2. It's only 8 bytes more than BASIC
+ * 3. Block sizes are known, making length verification valuable
+ *
+ * Byte Layout:
+ * ┌─────────────────────────────────────────────────────────────────────────────────────┐
+ * │ [EncType][RecipientID][Version][CipherSuite][Type][PubKey][IV][AuthTag][Len][Data]  │
+ * │ [1     ][idSize     ][1      ][1          ][1   ][33    ][12][16     ][8  ][...]   │
+ * └─────────────────────────────────────────────────────────────────────────────────────┘
+ *
+ * | Offset      | Size   | Field            | Description                              |
+ * |-------------|--------|------------------|------------------------------------------|
+ * | 0           | 1      | EncryptionType   | BlockEncryptionType.SingleRecipient (1)  |
+ * | 1           | idSize | RecipientID      | BrightChain routing ID                   |
+ * | 1+idSize    | 1      | Version          | Protocol version (0x01)                  |
+ * | 2+idSize    | 1      | CipherSuite      | AES-256-GCM (0x01)                       |
+ * | 3+idSize    | 1      | EncryptionType   | WITH_LENGTH (0x42)                       |
+ * | 4+idSize    | 33     | EphemeralPubKey  | Compressed secp256k1 public key          |
+ * | 37+idSize   | 12     | IV               | Initialization vector (NIST SP 800-38D)  |
+ * | 49+idSize   | 16     | AuthTag          | GCM authentication tag                   |
+ * | 65+idSize   | 8      | DataLength       | Original data length (big-endian)        |
+ * | 73+idSize   | ...    | EncryptedData    | Ciphertext                               |
+ *
+ * Total overhead: 1 + idSize + ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE = 1 + idSize + 72
+ * Default (GUID, idSize=16): 1 + 16 + 72 = 89 bytes
+ * ObjectID (idSize=12):      1 + 12 + 72 = 85 bytes
+ *
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ * MULTI-RECIPIENT ENCRYPTION (MULTIPLE format, type 0x63)
+ * ═══════════════════════════════════════════════════════════════════════════════════════
+ *
+ * Byte Layout:
+ * ┌─────────────────────────────────────────────────────────────────────────────────────┐
+ * │ [EncType][Ver][CS][PubKey][IV][Tag][Len][Count][RecipientEntries...][EncryptedData] │
+ * │ [1     ][1  ][1 ][33    ][12][16 ][8  ][2    ][variable           ][...]           │
+ * └─────────────────────────────────────────────────────────────────────────────────────┘
+ *
+ * Recipient Entry Layout (per recipient):
+ * | Offset      | Size   | Field         | Description                               |
+ * |-------------|--------|---------------|-------------------------------------------|
+ * | 0           | idSize | RecipientID   | Recipient identifier                      |
+ * | idSize      | 12     | KeyIV         | IV for this recipient's key encryption    |
+ * | idSize+12   | 16     | KeyAuthTag    | Auth tag for key encryption               |
+ * | idSize+28   | 32     | EncryptedKey  | Encrypted symmetric key                   |
+ *
+ * Per-recipient overhead: idSize + ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE = idSize + 60
+ *
+ * Total overhead formula:
+ *   1 + ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE + DATA_LENGTH_SIZE + RECIPIENT_COUNT_SIZE
+ *     + (recipientCount * (idSize + ENCRYPTED_KEY_SIZE))
+ *   = 1 + 64 + 8 + 2 + (recipientCount * (idSize + 60))
+ *   = 75 + (recipientCount * (idSize + 60))
+ *
+ * @see design.md for complete format specification
+ * @see Requirements 2.2, 2.3, 3.3, 8.4
  */
 export class EncryptedBlock<TID extends PlatformID = Uint8Array>
   extends EphemeralBlock<TID>
@@ -55,6 +112,8 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
   protected readonly _encryptionType: BlockEncryptionType;
   protected readonly _recipients: Array<TID>;
   protected readonly _recipientWithKey: Member<TID>;
+  protected readonly _serviceProvider: ServiceProvider<TID>;
+  protected readonly _idProvider: TypedIdProviderWrapper<TID>;
   protected _cachedEncryptionDetails?:
     | ISingleEncryptedParsedHeader
     | IMultiEncryptedParsedHeader<TID> = undefined;
@@ -80,6 +139,8 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     canPersist = true,
   ) {
     super(type, dataType, data, checksum, metadata, canRead, canPersist);
+    this._serviceProvider = ServiceProvider.getInstance<TID>();
+    this._idProvider = this._serviceProvider.idProvider;
     // Read encryption type directly from data to avoid circular dependency
     const blockEncryptionType = data[0] as BlockEncryptionType;
     if (
@@ -93,20 +154,16 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     this._encryptionType = blockEncryptionType;
     if (blockEncryptionType === BlockEncryptionType.SingleRecipient) {
       const recipientIdBytes = data.subarray(
-        ENCRYPTION.ENCRYPTION_TYPE_SIZE,
-        ENCRYPTION.ENCRYPTION_TYPE_SIZE + ENCRYPTION.RECIPIENT_ID_SIZE,
+        UINT8_SIZE,
+        UINT8_SIZE + this._idProvider.byteLength,
       );
-      // Ensure we have exactly 16 bytes for the GUID
-      if (recipientIdBytes.length !== 16) {
+      // Ensure we have exactly the expected bytes for the recipient ID
+      if (recipientIdBytes.length !== this._idProvider.byteLength) {
         throw new BlockValidationError(
           BlockValidationErrorType.InvalidRecipientIds,
         );
       }
-      this._recipients = [
-        ServiceProvider.getInstance().idProvider.fromBytes(
-          recipientIdBytes,
-        ) as TID,
-      ];
+      this._recipients = [this._idProvider.fromBytes(recipientIdBytes) as TID];
     } else {
       const details = this
         .encryptionDetails as IMultiEncryptedParsedHeader<TID>;
@@ -126,9 +183,7 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           rBytes = r;
         } else {
           // For Guid objects, get the bytes using the idProvider
-          const result = ServiceProvider.getInstance().idProvider.toBytes(
-            r as any,
-          );
+          const result = this._idProvider.toBytes(r as any);
           rBytes = result;
         }
         return arraysEqual(rBytes, recipientWithKey.idBytes);
@@ -229,25 +284,25 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
       const headerData = new Uint8Array(
         this.layerHeaderData.buffer.slice(
           this.layerHeaderData.byteOffset +
-            ENCRYPTION.ENCRYPTION_TYPE_SIZE +
-            ENCRYPTION.RECIPIENT_ID_SIZE,
+            UINT8_SIZE +
+            this._idProvider.byteLength,
           this.layerHeaderData.byteOffset + this.layerHeaderData.byteLength,
         ),
       );
       this._cachedEncryptionDetails =
-        ServiceLocator.getServiceProvider<TID>().eciesService.parseSingleEncryptedHeader(
-          EciesEncryptionTypeEnum.Single,
+        this._serviceProvider.eciesService.parseSingleEncryptedHeader(
+          EciesEncryptionTypeEnum.WithLength,
           headerData,
         );
     } else if (encryptionType === BlockEncryptionType.MultiRecipient) {
       const headerData = new Uint8Array(
         this.layerHeaderData.buffer.slice(
-          this.layerHeaderData.byteOffset + ENCRYPTION.ENCRYPTION_TYPE_SIZE,
+          this.layerHeaderData.byteOffset + UINT8_SIZE,
           this.layerHeaderData.byteOffset + this.layerHeaderData.byteLength,
         ),
       );
       this._cachedEncryptionDetails =
-        ServiceLocator.getServiceProvider<TID>().eciesService.parseMultiEncryptedHeader(
+        this._serviceProvider.eciesService.parseMultiEncryptedHeader(
           headerData,
         );
     } else {
@@ -273,12 +328,12 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     }
 
     return (this.encryptionType === BlockEncryptionType.SingleRecipient
-      ? await ServiceLocator.getServiceProvider<TID>().blockService.decrypt(
+      ? await this._serviceProvider.blockService.decrypt(
           this.recipientWithKey,
           this,
           newBlockType,
         )
-      : await ServiceLocator.getServiceProvider<TID>().blockService.decryptMultiple(
+      : await this._serviceProvider.blockService.decryptMultiple(
           this.recipientWithKey,
           this,
         )) as unknown as D;
@@ -295,22 +350,40 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
   }
 
   /**
-   * The total overhead of the block, including encryption overhead
-   * For encrypted blocks, the overhead is just the ECIES overhead since the
-   * encryption header is part of the data buffer
+   * The total overhead of the block, including encryption overhead.
+   * For encrypted blocks, the overhead is the ECIES overhead since the
+   * encryption header is part of the data buffer.
+   *
+   * Single-recipient uses WITH_LENGTH format (72 bytes fixed overhead):
+   *   overhead = UINT8_SIZE (encryption type) + idSize + ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE
+   *            = 1 + idSize + 72
+   *
+   * Multi-recipient uses MULTIPLE format:
+   *   overhead = UINT8_SIZE (encryption type) + calculateECIESMultipleRecipientOverhead()
+   *            = 1 + 74 + (recipientCount * (idSize + 60))
+   *
+   * @see Requirements 2.3, 3.3, 5.4
    */
   public override get layerOverheadSize(): number {
-    return (
-      (this.encryptionType === BlockEncryptionType.SingleRecipient
-        ? ECIES.OVERHEAD_SIZE +
-          ENCRYPTION.ENCRYPTION_TYPE_SIZE +
-          ENCRYPTION.RECIPIENT_ID_SIZE
-        : calculateECIESMultipleRecipientOverhead(
-            (this.encryptionDetails as IMultiEncryptedParsedHeader)
-              .recipientCount,
-            false,
-          )) + ENCRYPTION.ENCRYPTION_TYPE_SIZE
-    );
+    if (this.encryptionType === BlockEncryptionType.SingleRecipient) {
+      // Single-recipient: [EncType(1)][RecipientID(idSize)][ecies-lib WITH_LENGTH header(72)]
+      return (
+        UINT8_SIZE +
+        this._idProvider.byteLength +
+        ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE
+      );
+    } else {
+      // Multi-recipient: [EncType(1)][ecies-lib MULTIPLE header]
+      return (
+        UINT8_SIZE +
+        calculateECIESMultipleRecipientOverhead(
+          (this.encryptionDetails as IMultiEncryptedParsedHeader<TID>)
+            .recipientCount,
+          true,
+          this._idProvider.byteLength,
+        )
+      );
+    }
   }
 
   /**
@@ -340,12 +413,21 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
   }
 
   /**
-   * Get the length of the payload including padding
+   * Get the length of the encrypted payload (excluding header and padding).
+   *
+   * For encrypted blocks, the payload is the actual encrypted data portion.
+   * This is calculated as: total data length - header overhead
+   *
+   * Note: This returns the encrypted data size, not the original plaintext size.
+   * Use lengthBeforeEncryption for the original data size.
+   *
+   * @see Requirements 2.2
    */
   public override get layerPayloadSize(): number {
-    return this.encryptionType === BlockEncryptionType.SingleRecipient
-      ? ECIES.OVERHEAD_SIZE
-      : ECIES.MULTIPLE.ENCRYPTED_MESSAGE_OVERHEAD_SIZE;
+    // The payload is everything after the header up to the end of encrypted data
+    // For encrypted blocks, we use lengthBeforeEncryption to determine the actual
+    // encrypted content size (the ciphertext is the same size as plaintext in GCM mode)
+    return this.lengthBeforeEncryption;
   }
 
   /**
@@ -363,8 +445,9 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     // Call parent validation first
     await super.validateAsync();
 
-    // Validate encryption header lengths
-    if (this.layerHeaderData.length !== ECIES.OVERHEAD_SIZE) {
+    // Validate encryption header length matches the calculated overhead
+    const expectedHeaderLength = this.layerOverheadSize;
+    if (this.layerHeaderData.length !== expectedHeaderLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidEncryptionHeaderLength,
       );
@@ -380,19 +463,19 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
         );
       }
-      if (details.iv.length !== ECIES.IV_LENGTH) {
+      if (details.iv.length !== ECIES.IV_SIZE) {
         throw new BlockValidationError(
           BlockValidationErrorType.InvalidIVLength,
         );
       }
-      if (details.authTag.length !== ECIES.AUTH_TAG_LENGTH) {
+      if (details.authTag.length !== ECIES.AUTH_TAG_SIZE) {
         throw new BlockValidationError(
           BlockValidationErrorType.InvalidAuthTagLength,
         );
       }
     } else if (this.encryptionType === BlockEncryptionType.MultiRecipient) {
-      const details: IMultiEncryptedParsedHeader = this
-        .encryptionDetails as IMultiEncryptedParsedHeader;
+      const details: IMultiEncryptedParsedHeader<TID> = this
+        .encryptionDetails as IMultiEncryptedParsedHeader<TID>;
 
       if (details.recipientCount < 2) {
         throw new BlockValidationError(
@@ -404,12 +487,8 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
         );
       } else if (
         details.recipientIds
-          .map((id) =>
-            id instanceof Guid
-              ? ServiceProvider.getInstance().idProvider.toBytes(id)
-              : id,
-          )
-          .some((id) => id.length !== CONSTANTS['GUID_SIZE'])
+          .map((id) => this._idProvider.toBytes(id))
+          .some((id) => id.length !== id.byteLength)
       ) {
         throw new BlockValidationError(
           BlockValidationErrorType.InvalidRecipientIds,
@@ -435,7 +514,7 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     // Validate actual data length
     if (
       this.lengthBeforeEncryption >
-      ServiceProvider.getInstance().blockCapacityCalculator.calculateCapacity({
+      this._serviceProvider.blockCapacityCalculator.calculateCapacity({
         blockSize: this.blockSize,
         blockType: this.blockType,
         encryptionType: this.encryptionType,
@@ -463,8 +542,9 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     // Call parent validation first
     super.validateSync();
 
-    // Validate encryption header lengths
-    if (this.layerHeaderData.length !== ECIES.OVERHEAD_SIZE) {
+    // Validate encryption header length matches the calculated overhead
+    const expectedHeaderLength = this.layerOverheadSize;
+    if (this.layerHeaderData.length !== expectedHeaderLength) {
       throw new BlockValidationError(
         BlockValidationErrorType.InvalidEncryptionHeaderLength,
       );
@@ -478,12 +558,12 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
         );
       }
-      if (details.iv.length !== ECIES.IV_LENGTH) {
+      if (details.iv.length !== ECIES.IV_SIZE) {
         throw new BlockValidationError(
           BlockValidationErrorType.InvalidIVLength,
         );
       }
-      if (details.authTag.length !== ECIES.AUTH_TAG_LENGTH) {
+      if (details.authTag.length !== ECIES.AUTH_TAG_SIZE) {
         throw new BlockValidationError(
           BlockValidationErrorType.InvalidAuthTagLength,
         );
@@ -517,7 +597,7 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     // Validate actual data length
     if (
       this.lengthBeforeEncryption >
-      ServiceProvider.getInstance().blockCapacityCalculator.calculateCapacity({
+      this._serviceProvider.blockCapacityCalculator.calculateCapacity({
         blockSize: this.blockSize,
         blockType: this.blockType,
         encryptionType: this.encryptionType,

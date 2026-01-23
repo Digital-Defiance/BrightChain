@@ -1,6 +1,5 @@
-import { arraysEqual } from '@digitaldefiance/ecies-lib';
+import { arraysEqual, ECIES } from '@digitaldefiance/ecies-lib';
 import { BlockMetadata } from '../blockMetadata';
-import { ECIES } from '../constants';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
@@ -167,7 +166,7 @@ describe('BaseBlock', () => {
   // Shared test data
   const defaultBlockSize = BlockSize.Small;
   const getEffectiveSize = (size: BlockSize, encrypted = false) =>
-    (size as number) - (encrypted ? ECIES.OVERHEAD_SIZE : 0);
+    (size as number) - (encrypted ? ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE : 0);
 
   const createTestBlock = (
     options: Partial<{

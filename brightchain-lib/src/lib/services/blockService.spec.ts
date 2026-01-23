@@ -1,4 +1,5 @@
 import {
+  CHECKSUM,
   EmailString,
   Member,
   MemberType,
@@ -6,7 +7,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { BaseBlock } from '../blocks/base';
 import { EphemeralBlock } from '../blocks/ephemeral';
-import { CHECKSUM, TUPLE } from '../constants';
+import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';

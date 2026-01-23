@@ -13,9 +13,11 @@
 - **Brokered Anonymity**: Forward Error Correction with quorum-based identity recovery
 
 ### 📦 Owner-Free File System (OFFS)
+- **TUPLE Storage**: All data stored as 3-block TUPLEs (data + 2 randomizers) for complete plausible deniability
 - **Block-based Storage**: Files broken into encrypted blocks with XOR randomization
 - **Deduplication**: SHA-512 based block identification prevents duplicate storage
 - **Distributed Architecture**: Decentralized storage with no single point of failure
+- **Legal Protection**: True owner-free storage ensures no single party can be compelled to produce meaningful data
 
 ### ⚡ Energy-Efficient Design
 - **Joule Currency**: All operations measured in actual energy consumption
@@ -255,7 +257,43 @@ If you're upgrading from BrightChain v1.x, see our comprehensive [Migration Guid
 
 See [MIGRATION.md](./MIGRATION.md) for complete details.
 
-### Working with Encrypted Blocks
+### TUPLE Storage
+
+BrightChain v2.1+ implements complete Owner-Free Filesystem compliance through TUPLE storage:
+
+```typescript
+import { TupleStorageService, BlockSize } from '@brightchain/brightchain-lib';
+
+// Initialize TUPLE storage service
+const blockStore = ...; // Your block store instance
+const tupleService = new TupleStorageService(blockStore);
+
+// Store data as a TUPLE (3 blocks: data ⊕ R1 ⊕ R2, R1, R2)
+const data = new TextEncoder().encode("Sensitive information");
+const result = await tupleService.storeTuple(data, {
+  durabilityLevel: DurabilityLevel.High,
+  expiresAt: new Date(Date.now() + 86400000), // 24 hours
+});
+
+console.log('TUPLE Magnet URL:', result.magnetUrl);
+// magnet:?xt=urn:brightchain:tuple&bs=1024&d=abc...&r1=def...&r2=ghi...
+
+// Retrieve original data from TUPLE
+const components = tupleService.parseTupleMagnetUrl(result.magnetUrl);
+const originalData = await tupleService.retrieveTuple(
+  components.dataBlockId,
+  components.randomizerBlockIds,
+  components.parityBlockIds,
+);
+```
+
+**Why TUPLEs?**
+- **Plausible Deniability**: No single block contains identifiable data
+- **Legal Protection**: Node operators cannot be compelled to produce meaningful data
+- **Complete OFF Compliance**: All data stored as 3 blocks (not just 2)
+- **Brokered Anonymity**: Supports quorum-based identity recovery
+
+See [TUPLE Storage Architecture](../../docs/TUPLE_Storage_Architecture.md) for complete details.
 
 ```typescript
 import { 

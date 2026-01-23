@@ -5,14 +5,17 @@
  * Property 1: Backward Compatibility of Constant Names
  * Property 2: Constant Values Unchanged
  * Property 3: Nested Property Access Preserved
+ *
+ * Note: Per the block-encryption-scheme design, ecies-lib constants (ECIES, CHECKSUM, etc.)
+ * should be imported directly from @digitaldefiance/ecies-lib, not re-exported from constants.ts.
+ * BrightChain-specific constants (CBL, TUPLE, SEALING, etc.) are defined locally.
  */
 
-import { Constants as BaseConstants } from '@digitaldefiance/ecies-lib';
+import { Constants as BaseConstants, ECIES } from '@digitaldefiance/ecies-lib';
 import {
+  BC_FEC,
   CBL,
   CONSTANTS,
-  FEC,
-  JWT,
   OFFS_CACHE_PERCENTAGE,
   SEALING,
   SITE,
@@ -28,16 +31,15 @@ describe('Constants Implementation', () => {
 
     it('should export individual constant groups as named exports', () => {
       expect(CBL).toBeDefined();
-      expect(FEC).toBeDefined();
+      expect(BC_FEC).toBeDefined();
       expect(TUPLE).toBeDefined();
       expect(SEALING).toBeDefined();
-      expect(JWT).toBeDefined();
       expect(SITE).toBeDefined();
       expect(OFFS_CACHE_PERCENTAGE).toBeDefined();
     });
 
     it('should include all base constants from @digitaldefiance/ecies-lib', () => {
-      // Verify that all base constant properties are accessible
+      // Verify that all base constant properties are accessible via spread
       expect(CONSTANTS['UINT8_SIZE']).toBeDefined();
       expect(CONSTANTS['UINT16_SIZE']).toBeDefined();
       expect(CONSTANTS['UINT16_MAX']).toBeDefined();
@@ -46,8 +48,6 @@ describe('Constants Implementation', () => {
       expect(CONSTANTS['UINT64_SIZE']).toBeDefined();
       expect(CONSTANTS['UINT64_MAX']).toBeDefined();
       expect(CONSTANTS['HEX_RADIX']).toBeDefined();
-      expect(CONSTANTS['MEMBER_ID_LENGTH']).toBeDefined();
-      expect(CONSTANTS['OBJECT_ID_LENGTH']).toBeDefined();
       expect(CONSTANTS['idProvider']).toBeDefined();
       expect(CONSTANTS['CHECKSUM']).toBeDefined();
       expect(CONSTANTS['ECIES']).toBeDefined();
@@ -64,10 +64,9 @@ describe('Constants Implementation', () => {
     it('should include all BrightChain-specific constants', () => {
       expect(CONSTANTS['CBL']).toBeDefined();
       expect(CONSTANTS['OFFS_CACHE_PERCENTAGE']).toBeDefined();
-      expect(CONSTANTS['FEC']).toBeDefined();
+      expect(CONSTANTS['BC_FEC']).toBeDefined();
       expect(CONSTANTS['TUPLE']).toBeDefined();
       expect(CONSTANTS['SEALING']).toBeDefined();
-      expect(CONSTANTS['JWT']).toBeDefined();
       expect(CONSTANTS['SITE']).toBeDefined();
     });
   });
@@ -86,15 +85,6 @@ describe('Constants Implementation', () => {
 
       it('should have correct HEX_RADIX', () => {
         expect(CONSTANTS['HEX_RADIX']).toBe(BaseConstants.HEX_RADIX);
-      });
-
-      it('should have correct ID lengths', () => {
-        expect(CONSTANTS['MEMBER_ID_LENGTH']).toBe(
-          BaseConstants.MEMBER_ID_LENGTH,
-        );
-        expect(CONSTANTS['OBJECT_ID_LENGTH']).toBe(
-          BaseConstants.OBJECT_ID_LENGTH,
-        );
       });
 
       it('should have correct CHECKSUM values', () => {
@@ -152,7 +142,7 @@ describe('Constants Implementation', () => {
       });
 
       it('should have correct FEC values', () => {
-        expect(CONSTANTS['FEC'].MAX_SHARD_SIZE).toBe(1048576);
+        expect(CONSTANTS['BC_FEC'].MAX_SHARD_SIZE).toBe(1048576);
       });
 
       it('should have correct TUPLE values', () => {
@@ -169,13 +159,8 @@ describe('Constants Implementation', () => {
         expect(CONSTANTS['SEALING'].MAX_SHARES).toBe(1048575);
       });
 
-      it('should have correct JWT values', () => {
-        expect(CONSTANTS['JWT'].ALGORITHM).toBe('HS256');
-        expect(CONSTANTS['JWT'].EXPIRATION_SEC).toBe(86400);
-      });
-
       it('should have correct SITE values', () => {
-        expect(CONSTANTS['SITE'].EMAIL_FROM).toBe('noreply@brightchain.io');
+        expect(CONSTANTS['SITE'].EMAIL_FROM).toBe('noreply@brightchain.org');
         expect(CONSTANTS['SITE'].DOMAIN).toBe('localhost:3000');
         expect(CONSTANTS['SITE'].CSP_NONCE_SIZE).toBe(32);
       });
@@ -191,7 +176,7 @@ describe('Constants Implementation', () => {
     });
 
     it('should allow nested access to FEC properties', () => {
-      expect(CONSTANTS['FEC'].MAX_SHARD_SIZE).toBe(1048576);
+      expect(CONSTANTS['BC_FEC'].MAX_SHARD_SIZE).toBe(1048576);
     });
 
     it('should allow nested access to TUPLE properties', () => {
@@ -205,13 +190,8 @@ describe('Constants Implementation', () => {
       expect(CONSTANTS['SEALING'].MAX_SHARES).toBe(1048575);
     });
 
-    it('should allow nested access to JWT properties', () => {
-      expect(CONSTANTS['JWT'].ALGORITHM).toBe('HS256');
-      expect(CONSTANTS['JWT'].EXPIRATION_SEC).toBe(86400);
-    });
-
     it('should allow nested access to SITE properties', () => {
-      expect(CONSTANTS['SITE'].EMAIL_FROM).toBe('noreply@brightchain.io');
+      expect(CONSTANTS['SITE'].EMAIL_FROM).toBe('noreply@brightchain.org');
       expect(CONSTANTS['SITE'].DOMAIN).toBe('localhost:3000');
       expect(CONSTANTS['SITE'].CSP_NONCE_SIZE).toBe(32);
     });
@@ -289,8 +269,8 @@ describe('Constants Implementation', () => {
     });
 
     it('should define FEC constants locally', () => {
-      expect(FEC).toBeDefined();
-      expect(CONSTANTS['FEC']).toBe(FEC);
+      expect(BC_FEC).toBeDefined();
+      expect(CONSTANTS['BC_FEC']).toBe(BC_FEC);
     });
 
     it('should define TUPLE constants locally', () => {
@@ -303,11 +283,6 @@ describe('Constants Implementation', () => {
       expect(CONSTANTS['SEALING']).toBe(SEALING);
     });
 
-    it('should define JWT constants locally', () => {
-      expect(JWT).toBeDefined();
-      expect(CONSTANTS['JWT']).toBe(JWT);
-    });
-
     it('should define SITE constants locally', () => {
       expect(SITE).toBeDefined();
       expect(CONSTANTS['SITE']).toBe(SITE);
@@ -316,6 +291,52 @@ describe('Constants Implementation', () => {
     it('should define OFFS_CACHE_PERCENTAGE locally', () => {
       expect(OFFS_CACHE_PERCENTAGE).toBeDefined();
       expect(CONSTANTS['OFFS_CACHE_PERCENTAGE']).toBe(OFFS_CACHE_PERCENTAGE);
+    });
+  });
+
+  describe('ecies-lib ECIES constants structure (Requirements 7.1, 7.2)', () => {
+    it('should have correct ECIES structure from ecies-lib', () => {
+      // Verify ECIES constants are imported correctly from ecies-lib
+      expect(ECIES.CURVE_NAME).toBe('secp256k1');
+      expect(ECIES.PUBLIC_KEY_LENGTH).toBe(33);
+      expect(ECIES.IV_SIZE).toBe(12);
+      expect(ECIES.AUTH_TAG_SIZE).toBe(16);
+      expect(ECIES.SIGNATURE_SIZE).toBe(64);
+    });
+
+    it('should have correct ECIES.SYMMETRIC structure', () => {
+      expect(ECIES.SYMMETRIC.ALGORITHM).toBe('aes');
+      expect(ECIES.SYMMETRIC.MODE).toBe('gcm');
+      expect(ECIES.SYMMETRIC.KEY_BITS).toBe(256);
+      expect(ECIES.SYMMETRIC.KEY_SIZE).toBe(32);
+    });
+
+    it('should have correct ECIES.BASIC structure', () => {
+      // BASIC: version(1) + cipher_suite(1) + type(1) + pubkey(33) + iv(12) + tag(16) = 64
+      expect(ECIES.BASIC.FIXED_OVERHEAD_SIZE).toBe(64);
+      expect(ECIES.BASIC.DATA_LENGTH_SIZE).toBe(0);
+    });
+
+    it('should have correct ECIES.WITH_LENGTH structure', () => {
+      // WITH_LENGTH: BASIC(64) + data_length(8) = 72
+      expect(ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE).toBe(72);
+      expect(ECIES.WITH_LENGTH.DATA_LENGTH_SIZE).toBe(8);
+    });
+
+    it('should have correct ECIES.MULTIPLE structure', () => {
+      // MULTIPLE header: version(1) + cipher_suite(1) + type(1) + pubkey(33) + iv(12) + tag(16) = 64
+      expect(ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE).toBe(64);
+      // Per-recipient encrypted key: iv(12) + tag(16) + key(32) = 60
+      expect(ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE).toBe(60);
+      expect(ECIES.MULTIPLE.RECIPIENT_COUNT_SIZE).toBe(2);
+      expect(ECIES.MULTIPLE.DATA_LENGTH_SIZE).toBe(8);
+      expect(ECIES.MULTIPLE.MAX_RECIPIENTS).toBe(65535);
+    });
+
+    it('should have correct ECIES.ENCRYPTION_TYPE values', () => {
+      expect(ECIES.ENCRYPTION_TYPE.BASIC).toBe(33); // 0x21
+      expect(ECIES.ENCRYPTION_TYPE.WITH_LENGTH).toBe(66); // 0x42
+      expect(ECIES.ENCRYPTION_TYPE.MULTIPLE).toBe(99); // 0x63
     });
   });
 });

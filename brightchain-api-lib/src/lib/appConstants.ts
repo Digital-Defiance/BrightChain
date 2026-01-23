@@ -13,7 +13,9 @@ import { LocalhostConstants } from '@digitaldefiance/node-express-suite';
  * - Cryptographic constants (ECIES, PBKDF2, BACKUP_CODES, etc.)
  * - Site configuration (Site, SiteHostname, SiteEmailDomain, etc.)
  */
-export const AppConstants = {
+export const AppConstants: typeof LocalhostConstants & {
+  HmacRegex: RegExp;
+} = {
   ...LocalhostConstants,
   HmacRegex: /^[a-fA-F0-9]+$/,
 };

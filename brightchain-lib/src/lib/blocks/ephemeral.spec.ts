@@ -1,11 +1,11 @@
 import {
   arraysEqual,
+  ECIES,
   EmailString,
   IMemberWithMnemonic,
   Member,
   MemberType,
 } from '@digitaldefiance/ecies-lib';
-import { ECIES } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -226,7 +226,7 @@ describe('EphemeralBlock', () => {
 
     it('should handle encryption capabilities', async () => {
       const data = new Uint8Array(
-        (defaultBlockSize as number) - ECIES.OVERHEAD_SIZE,
+        (defaultBlockSize as number) - ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE,
       );
       crypto.getRandomValues(data);
       const block = await createTestBlock({

@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   EmailString,
-  GuidV4,
+  GuidV4Uint8Array,
   IMemberWithMnemonic,
   Member,
   MemberType,
+  uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { SEALING } from '../constants';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
@@ -19,24 +19,25 @@ jest.setTimeout(30000);
 
 describe('SealingService', () => {
   // Shared test data
-  let alice: IMemberWithMnemonic<GuidV4>;
-  let bob: IMemberWithMnemonic<GuidV4>;
-  let charlie: IMemberWithMnemonic<GuidV4>;
-  let david: IMemberWithMnemonic<GuidV4>;
-  let members: Member<GuidV4>[];
+  let alice: IMemberWithMnemonic<GuidV4Uint8Array>;
+  let bob: IMemberWithMnemonic<GuidV4Uint8Array>;
+  let charlie: IMemberWithMnemonic<GuidV4Uint8Array>;
+  let david: IMemberWithMnemonic<GuidV4Uint8Array>;
+  let members: Member<GuidV4Uint8Array>[];
   const testDocument = { hello: 'world' };
-  let sealingService: SealingService<GuidV4>;
-  let _idProvider = ServiceProvider.getInstance<GuidV4>().idProvider;
+  let sealingService: SealingService<GuidV4Uint8Array>;
 
   beforeAll(() => {
     // Initialize BrightChain with browser-compatible configuration
     initializeBrightChain();
 
-    const eciesService = ServiceProvider.getInstance<GuidV4>().eciesService;
-    sealingService = ServiceProvider.getInstance<GuidV4>().sealingService;
+    const eciesService =
+      ServiceProvider.getInstance<GuidV4Uint8Array>().eciesService;
+    sealingService =
+      ServiceProvider.getInstance<GuidV4Uint8Array>().sealingService;
 
     // Create all members once
-    alice = Member.newMember<GuidV4>(
+    alice = Member.newMember<GuidV4Uint8Array>(
       eciesService,
       MemberType.System,
       'Alice',
@@ -78,7 +79,7 @@ describe('SealingService', () => {
   });
 
   describe('document sealing and unsealing', () => {
-    let sealedDocument: QuorumDataRecord<GuidV4>;
+    let sealedDocument: QuorumDataRecord<GuidV4Uint8Array>;
 
     beforeAll(async () => {
       // Create sealed document once for reuse
@@ -98,11 +99,31 @@ describe('SealingService', () => {
 
     it('should be able to convert to and from json', async () => {
       const sealedJson = sealedDocument.toJson();
-      const rebuiltDocument = QuorumDataRecord.fromJson<GuidV4>(
+      // Get the ID provider from the service to ensure consistent ID handling
+      const serviceProvider = ServiceProvider.getInstance<GuidV4Uint8Array>();
+      const idProvider = serviceProvider.idProvider;
+      const eciesService = serviceProvider.eciesService;
+
+      // Create a member lookup map for proper ID matching
+      const memberMap = new Map<string, Member<GuidV4Uint8Array>>();
+      members.forEach((m) => {
+        const idHex = uint8ArrayToHex(idProvider.toBytes(m.id));
+        memberMap.set(idHex, m);
+      });
+
+      const rebuiltDocument = QuorumDataRecord.fromJson<GuidV4Uint8Array>(
         sealedJson,
-        (_memberId: any) => {
-          return members[0]; // Simplified for test
+        (memberId: GuidV4Uint8Array) => {
+          const idHex = uint8ArrayToHex(idProvider.toBytes(memberId));
+          const member = memberMap.get(idHex);
+          if (!member) {
+            // Fallback to first member if not found (for creator lookup)
+            return members[0];
+          }
+          return member;
         },
+        idProvider,
+        eciesService,
       );
       const unlockedDocument = await sealingService.quorumUnseal<{
         hello: string;

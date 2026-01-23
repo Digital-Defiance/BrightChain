@@ -1,7 +1,12 @@
-import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
+import {
+  CHECKSUM,
+  EmailString,
+  Member,
+  MemberType,
+} from '@digitaldefiance/ecies-lib';
 import { faker } from '@faker-js/faker';
 import { randomBytes } from 'crypto';
-import { CHECKSUM, TUPLE } from '../constants';
+import { TUPLE } from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { CblError } from '../errors/cblError';

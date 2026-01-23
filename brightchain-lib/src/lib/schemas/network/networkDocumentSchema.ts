@@ -1,6 +1,6 @@
 import {
   ChecksumUint8Array,
-  Guid,
+  GuidUint8Array,
   hexToUint8Array,
   Member,
   SignatureUint8Array,
@@ -115,15 +115,15 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
   references: {
     type: Array,
     required: false,
-    serialize: (value: Guid[] | undefined): string[] | null =>
+    serialize: (value: GuidUint8Array[] | undefined): string[] | null =>
       value?.map((v) => v.serialize()) ?? null,
-    hydrate: (value: string): Guid[] | undefined => {
+    hydrate: (value: string): GuidUint8Array[] | undefined => {
       if (value === null || value === undefined) return undefined;
       if (!isStringArray(value))
         throw new FailedToHydrateError(
           translate(StringNames.Error_InvalidReferences),
         );
-      return value.map((v) => Guid.hydrate(v) as Guid);
+      return value.map((v) => GuidUint8Array.hydrate(v) as GuidUint8Array);
     },
   },
 };

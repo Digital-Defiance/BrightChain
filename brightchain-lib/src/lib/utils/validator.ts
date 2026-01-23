@@ -26,7 +26,7 @@
  * @module utils/validator
  */
 
-import { ECIES } from '../constants';
+import { ECIES } from '@digitaldefiance/ecies-lib';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize, validBlockSizes } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';

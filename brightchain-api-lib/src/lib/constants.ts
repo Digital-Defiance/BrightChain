@@ -21,19 +21,18 @@
  * @module constants
  */
 
+import { CONSTANTS as BaseConstants } from '@brightchain/brightchain-lib';
+import { WRAPPED_KEY } from '@digitaldefiance/node-ecies-lib';
 import { createExpressConstants } from '@digitaldefiance/node-express-suite';
 import { IApiConstants } from './interfaces/api-constants';
 
-/**
- * API-specific constants for wrapped key operations
- * These constants define the cryptographic parameters for wrapping and unwrapping keys
- */
-export const WRAPPED_KEY = {
-  SALT_SIZE: 32 as const,
-  IV_SIZE: 16 as const,
-  MASTER_KEY_SIZE: 32 as const,
-  MIN_ITERATIONS: 100000 as const,
-} as const;
+const expressConsts = createExpressConstants(
+  'brightchain.org',
+  'brightchain.org',
+  {
+    Site: 'BrightChain',
+  },
+);
 
 /**
  * API Constants extending from @digitaldefiance/node-express-suite
@@ -51,8 +50,8 @@ export const WRAPPED_KEY = {
  * @see {@link https://github.com/Digital-Defiance/node-express-suite} for base constants
  */
 export const Constants: IApiConstants = {
-  ...createExpressConstants('brightchain.io', 'brightchain.io', {
-    Site: 'BrightChain',
-  }),
+  ...expressConsts,
+  ...BaseConstants,
+  ...{ PBKDF2_PROFILES: expressConsts.PBKDF2_PROFILES },
   WRAPPED_KEY,
 };

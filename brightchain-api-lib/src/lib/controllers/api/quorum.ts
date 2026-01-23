@@ -9,12 +9,12 @@ import {
 } from '@brightchain/brightchain-lib';
 import {
   EmailString,
-  GuidV4,
   Member,
   MemberType,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
+import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   ApiErrorResponse,
@@ -157,7 +157,7 @@ interface SerializedQuorumMember {
  * Serialize a quorum member for API response
  */
 function serializeMember(
-  member: IQuorumMember<GuidV4>,
+  member: IQuorumMember<GuidV4Buffer>,
 ): SerializedQuorumMember {
   return {
     id: member.id,
@@ -384,13 +384,14 @@ export class QuorumController<
       }
 
       // Create a new member with generated keys
-      const eciesService = ServiceProvider.getInstance<GuidV4>().eciesService;
+      const eciesService =
+        ServiceProvider.getInstance<GuidV4Buffer>().eciesService;
       const emailString = email
         ? new EmailString(email)
         : new EmailString(
             `${name.toLowerCase().replace(/\s+/g, '.')}@placeholder.local`,
           );
-      const memberWithMnemonic = Member.newMember<GuidV4>(
+      const memberWithMnemonic = Member.newMember<GuidV4Buffer>(
         eciesService,
         MemberType.User,
         name,
@@ -605,13 +606,13 @@ export class QuorumController<
       // Get the agent (authenticated member) from session
       const sessionsController =
         this.application.getController<SessionsController>('sessions');
-      let agent: Member<GuidV4> | null;
+      let agent: Member<GuidV4Buffer> | null;
       try {
         const sessionMember = sessionsController.getMemberFromSession(
           (req.headers as any).authorization as string,
         );
         // Cast to GuidV4 member type - the session controller returns a generic Member
-        agent = sessionMember as unknown as Member<GuidV4>;
+        agent = sessionMember as unknown as Member<GuidV4Buffer>;
       } catch {
         return unauthorizedError();
       }

@@ -1,7 +1,7 @@
 import {
   ChecksumUint8Array,
   getEnhancedIdProvider,
-  Guid,
+  GuidUint8Array,
   Member,
   PlatformID,
   SignatureUint8Array,
@@ -34,7 +34,7 @@ export interface NetworkDocument<TID extends PlatformID = Uint8Array> {
 
   // Metadata
   tags?: string[];
-  references?: Guid[]; // Related document IDs
+  references?: GuidUint8Array[]; // Related document IDs
 }
 
 /**
@@ -55,7 +55,7 @@ export abstract class BaseNetworkDocument<
   replicationFactor?: number;
   priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'CRITICAL';
   tags?: string[];
-  references?: Guid[];
+  references?: GuidUint8Array[];
 
   constructor(
     type: 'NODE' | 'PEER' | 'BLOCK_INDEX' | 'METADATA',
@@ -67,7 +67,7 @@ export abstract class BaseNetworkDocument<
       replicationFactor?: number;
       priority?: 'LOW' | 'NORMAL' | 'HIGH' | 'CRITICAL';
       tags?: string[];
-      references?: Guid[];
+      references?: GuidUint8Array[];
     } = {},
   ) {
     this.type = type;
