@@ -20,6 +20,7 @@ import {
   Checksum,
   IBlockStore,
   RawDataBlock,
+  constantTimeXor,
   createBlockHandle,
 } from '@brightchain/brightchain-lib';
 
@@ -345,22 +346,6 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
   // === CBL Whitening Operations ===
 
   /**
-   * XOR two Uint8Arrays of equal length
-   */
-  private xorArrays(a: Uint8Array, b: Uint8Array): Uint8Array {
-    if (a.length !== b.length) {
-      throw new SessionStoreError(
-        `Arrays must have the same length for XOR: ${a.length} vs ${b.length}`,
-      );
-    }
-    const result = new Uint8Array(a.length);
-    for (let i = 0; i < a.length; i++) {
-      result[i] = a[i] ^ b[i];
-    }
-    return result;
-  }
-
-  /**
    * Pad data to block size with length prefix and random bytes
    */
   private padToBlockSize(data: Uint8Array): Uint8Array {
@@ -476,7 +461,7 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
     }
 
     const randomBlock = await this.selectOrGenerateRandomizer(cblBlockSize);
-    const xorResult = this.xorArrays(paddedCbl, randomBlock);
+    const xorResult = constantTimeXor(paddedCbl, randomBlock);
 
     let block1Stored = false;
     let block1Id = '';
@@ -605,7 +590,7 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
     const block2Data = await this.getData(b2Checksum);
 
     // 3. XOR to reconstruct padded CBL (order doesn't matter due to commutativity)
-    const reconstructedPadded = this.xorArrays(
+    const reconstructedPadded = constantTimeXor(
       block1Data.data,
       block2Data.data,
     );
