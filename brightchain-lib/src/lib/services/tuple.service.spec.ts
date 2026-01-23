@@ -1,5 +1,6 @@
 import {
   arraysEqual,
+  ECIES,
   EmailString,
   Member,
   MemberType,
@@ -7,7 +8,6 @@ import {
 import { EphemeralBlock } from '../blocks/ephemeral';
 import { RandomBlock } from '../blocks/random';
 import { WhitenedBlock } from '../blocks/whitened';
-import { ECIES } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -38,7 +38,7 @@ describe('TupleService', () => {
   describe('xorSourceToPrimeWhitened', () => {
     it('should XOR source block with whitening and random blocks', async () => {
       // Create test blocks
-      const maxDataSize = blockSize - ECIES.OVERHEAD_SIZE;
+      const maxDataSize = blockSize - ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
       // Create source data and pad to full block size
       const sourceData = new Uint8Array(maxDataSize);
       crypto.getRandomValues(sourceData);
@@ -93,7 +93,8 @@ describe('TupleService', () => {
     });
 
     it('should throw error if block sizes do not match', async () => {
-      const maxDataSize = BlockSize.Small - ECIES.OVERHEAD_SIZE;
+      const maxDataSize =
+        BlockSize.Small - ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
       const sourceData = new Uint8Array(maxDataSize);
       crypto.getRandomValues(sourceData);
       const sourceBlock = await EphemeralBlock.from(
@@ -121,7 +122,7 @@ describe('TupleService', () => {
     });
 
     it('should throw error if block count is invalid', async () => {
-      const maxDataSize = blockSize - ECIES.OVERHEAD_SIZE;
+      const maxDataSize = blockSize - ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
       // Create source data and pad to full block size
       const sourceData = new Uint8Array(maxDataSize);
       crypto.getRandomValues(sourceData);
@@ -153,7 +154,7 @@ describe('TupleService', () => {
 
   describe('makeTupleFromSourceXor', () => {
     it('should create tuple from source block and whitening/random blocks', async () => {
-      const maxDataSize = blockSize - ECIES.OVERHEAD_SIZE;
+      const maxDataSize = blockSize - ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
       const sourceData = new Uint8Array(maxDataSize);
       crypto.getRandomValues(sourceData);
       const paddedData = new Uint8Array(blockSize);
@@ -199,7 +200,7 @@ describe('TupleService', () => {
   describe('xorDestPrimeWhitenedToOwned', () => {
     it('should recover original data from whitened blocks', async () => {
       // Create original data block
-      const maxDataSize = blockSize - ECIES.OVERHEAD_SIZE;
+      const maxDataSize = blockSize - ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
       // Create original data
       const originalData = new Uint8Array(maxDataSize);
       crypto.getRandomValues(originalData);

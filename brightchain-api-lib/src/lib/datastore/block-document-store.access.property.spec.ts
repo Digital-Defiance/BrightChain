@@ -21,12 +21,12 @@ import {
 } from '@brightchain/brightchain-lib';
 import {
   EmailString,
-  GuidV4,
   IMemberWithMnemonic,
   Member,
   MemberType,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
+import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 import fc from 'fast-check';
 import {
   BlockDocumentStore,
@@ -46,7 +46,9 @@ interface TestDocument extends DocumentRecord {
 describe('BlockDocumentStore Access Control Property Tests', () => {
   beforeAll(() => {
     initializeBrightChain();
-    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4>());
+    ServiceLocator.setServiceProvider(
+      ServiceProvider.getInstance<GuidV4Buffer>(),
+    );
   });
 
   afterEach(() => {
@@ -55,7 +57,9 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
     ServiceProvider.resetInstance();
     // Re-initialize for next test
     initializeBrightChain();
-    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4>());
+    ServiceLocator.setServiceProvider(
+      ServiceProvider.getInstance<GuidV4Buffer>(),
+    );
   });
 
   /**
@@ -64,9 +68,10 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
   function createTestMember(
     name: string,
     email: string,
-  ): IMemberWithMnemonic<GuidV4> {
-    const eciesService = ServiceProvider.getInstance<GuidV4>().eciesService;
-    return Member.newMember<GuidV4>(
+  ): IMemberWithMnemonic<GuidV4Buffer> {
+    const eciesService =
+      ServiceProvider.getInstance<GuidV4Buffer>().eciesService;
+    return Member.newMember<GuidV4Buffer>(
       eciesService,
       MemberType.User,
       name,
@@ -77,8 +82,8 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
   /**
    * Helper to create a properly configured QuorumService
    */
-  function createQuorumService(): QuorumService<GuidV4> {
-    return new QuorumService<GuidV4>();
+  function createQuorumService(): QuorumService<GuidV4Buffer> {
+    return new QuorumService<GuidV4Buffer>();
   }
 
   describe('Property 23: Document Store Access Control', () => {
@@ -110,7 +115,7 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
             const random = Math.floor(Math.random() * 1000000);
 
             // Create 3 members
-            const memberData: IMemberWithMnemonic<GuidV4>[] = [];
+            const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
             const memberIds: ShortHexGuid[] = [];
 
             for (let i = 0; i < 3; i++) {

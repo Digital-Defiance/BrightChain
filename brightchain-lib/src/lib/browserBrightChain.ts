@@ -1,5 +1,5 @@
+import { CHECKSUM } from '@digitaldefiance/ecies-lib';
 import { RawDataBlock } from './blocks/rawData';
-import { CHECKSUM } from './constants';
 import { BlockSize } from './enumerations/blockSize';
 import { MemoryBlockStore } from './stores/memoryBlockStore';
 import { Checksum } from './types';

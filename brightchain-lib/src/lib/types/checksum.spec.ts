@@ -1,4 +1,4 @@
-import { CHECKSUM } from '../constants';
+import { CHECKSUM } from '@digitaldefiance/ecies-lib';
 import { Checksum, ChecksumErrorType, isChecksum } from './checksum';
 
 describe('Checksum', () => {

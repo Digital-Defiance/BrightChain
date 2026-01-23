@@ -20,12 +20,12 @@ import { ServiceProvider } from '@brightchain/brightchain-lib/lib/services/servi
 import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
 import {
   EmailString,
-  GuidV4,
   IMemberWithMnemonic,
   Member,
   MemberType,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
+import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 import secrets from '@digitaldefiance/secrets';
 import fc from 'fast-check';
 
@@ -47,7 +47,7 @@ describe('Quorum API Round-Trip Property Tests', () => {
 
     // Initialize BrightChain with browser-compatible configuration
     initializeBrightChain();
-    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4>());
+    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4Buffer>());
   });
 
   // Reset service provider after each test to avoid state leakage
@@ -55,7 +55,7 @@ describe('Quorum API Round-Trip Property Tests', () => {
     ServiceProvider.resetInstance();
     // Re-initialize for next test
     initializeBrightChain();
-    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4>());
+    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4Buffer>());
   });
 
   /**
@@ -64,9 +64,9 @@ describe('Quorum API Round-Trip Property Tests', () => {
   function createTestMember(
     name: string,
     email: string,
-  ): IMemberWithMnemonic<GuidV4> {
-    const eciesService = ServiceProvider.getInstance<GuidV4>().eciesService;
-    return Member.newMember<GuidV4>(
+  ): IMemberWithMnemonic<GuidV4Buffer> {
+    const eciesService = ServiceProvider.getInstance<GuidV4Buffer>().eciesService;
+    return Member.newMember<GuidV4Buffer>(
       eciesService,
       MemberType.User,
       name,
@@ -77,8 +77,8 @@ describe('Quorum API Round-Trip Property Tests', () => {
   /**
    * Helper to create a properly configured QuorumService
    */
-  function createQuorumService(): QuorumService<GuidV4> {
-    return new QuorumService<GuidV4>();
+  function createQuorumService(): QuorumService<GuidV4Buffer> {
+    return new QuorumService<GuidV4Buffer>();
   }
 
   describe('Property 18: Quorum Document API Round-Trip', () => {
@@ -106,7 +106,7 @@ describe('Quorum API Round-Trip Property Tests', () => {
             const random = Math.floor(Math.random() * 1000000);
 
             // Create 3 members (minimum for meaningful quorum)
-            const memberData: IMemberWithMnemonic<GuidV4>[] = [];
+            const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
             const memberIds: ShortHexGuid[] = [];
 
             for (let i = 0; i < 3; i++) {
@@ -177,7 +177,7 @@ describe('Quorum API Round-Trip Property Tests', () => {
             const random = Math.floor(Math.random() * 1000000);
 
             // Create 2 members (minimum for sealing)
-            const memberData: IMemberWithMnemonic<GuidV4>[] = [];
+            const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
             const memberIds: ShortHexGuid[] = [];
 
             for (let i = 0; i < 2; i++) {
@@ -243,7 +243,7 @@ describe('Quorum API Round-Trip Property Tests', () => {
             const random = Math.floor(Math.random() * 1000000);
 
             // Create 3 members
-            const memberData: IMemberWithMnemonic<GuidV4>[] = [];
+            const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
             const memberIds: ShortHexGuid[] = [];
 
             for (let i = 0; i < 3; i++) {

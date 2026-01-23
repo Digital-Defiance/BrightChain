@@ -12,7 +12,7 @@
 
 import {
   EmailString,
-  GuidV4,
+  GuidV4Uint8Array,
   IMemberWithMnemonic,
   Member,
   MemberType,
@@ -33,7 +33,9 @@ jest.setTimeout(60000);
 describe('QuorumService Seal/Unseal Property Tests', () => {
   beforeAll(() => {
     initializeBrightChain();
-    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4>());
+    ServiceLocator.setServiceProvider(
+      ServiceProvider.getInstance<GuidV4Uint8Array>(),
+    );
   });
 
   afterEach(() => {
@@ -46,9 +48,10 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
   function createTestMember(
     name: string,
     email: string,
-  ): IMemberWithMnemonic<GuidV4> {
-    const eciesService = ServiceProvider.getInstance<GuidV4>().eciesService;
-    return Member.newMember<GuidV4>(
+  ): IMemberWithMnemonic<GuidV4Uint8Array> {
+    const eciesService =
+      ServiceProvider.getInstance<GuidV4Uint8Array>().eciesService;
+    return Member.newMember<GuidV4Uint8Array>(
       eciesService,
       MemberType.User,
       name,
@@ -59,10 +62,10 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
   /**
    * Helper to create a properly configured QuorumService
    */
-  function createQuorumService(): QuorumService<GuidV4> {
+  function createQuorumService(): QuorumService<GuidV4Uint8Array> {
     // QuorumService now uses getBrightChainConfigKey() internally
     // so we don't need to pass providers explicitly
-    return new QuorumService<GuidV4>();
+    return new QuorumService<GuidV4Uint8Array>();
   }
 
   describe('Property 9: Seal/Unseal Round-Trip', () => {
@@ -87,7 +90,7 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
             const random = Math.floor(Math.random() * 1000000);
 
             // Create 3 members (minimum for meaningful quorum)
-            const memberData: IMemberWithMnemonic<GuidV4>[] = [];
+            const memberData: IMemberWithMnemonic<GuidV4Uint8Array>[] = [];
             const memberIds: ShortHexGuid[] = [];
 
             for (let i = 0; i < 3; i++) {
@@ -152,7 +155,7 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
             const random = Math.floor(Math.random() * 1000000);
 
             // Create 4 members
-            const memberData: IMemberWithMnemonic<GuidV4>[] = [];
+            const memberData: IMemberWithMnemonic<GuidV4Uint8Array>[] = [];
             const memberIds: ShortHexGuid[] = [];
 
             for (let i = 0; i < 4; i++) {
@@ -232,7 +235,7 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
             const random = Math.floor(Math.random() * 1000000);
 
             // Create 3 members
-            const memberData: IMemberWithMnemonic<GuidV4>[] = [];
+            const memberData: IMemberWithMnemonic<GuidV4Uint8Array>[] = [];
             const memberIds: ShortHexGuid[] = [];
 
             for (let i = 0; i < 3; i++) {
@@ -301,7 +304,7 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
             const random = Math.floor(Math.random() * 1000000);
 
             // Create 2 members (minimum)
-            const memberData: IMemberWithMnemonic<GuidV4>[] = [];
+            const memberData: IMemberWithMnemonic<GuidV4Uint8Array>[] = [];
             const memberIds: ShortHexGuid[] = [];
 
             for (let i = 0; i < 2; i++) {

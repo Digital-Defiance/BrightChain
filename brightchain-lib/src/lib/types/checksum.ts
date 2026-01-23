@@ -29,8 +29,7 @@
  * @see Requirements 1.1, 1.2, 1.3, 1.4, 1.5
  */
 
-import { uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
-import { CHECKSUM } from '../constants';
+import { CHECKSUM, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import { ChecksumError, ChecksumErrorType } from '../errors/checksumError';
 
 // Re-export ChecksumErrorType for backward compatibility

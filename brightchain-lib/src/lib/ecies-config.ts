@@ -3,14 +3,13 @@
  *
  * Provides a ready-to-use ECIES configuration object for BrightChain.
  * This configuration implements IECIESConfig from @digitaldefiance/ecies-lib
- * and uses BrightChain-specific ECIES constants.
+ * and uses the standard ECIES constants.
  *
  * @see {@link https://github.com/Digital-Defiance/ecies-lib} for IECIESConfig interface
  * @module ecies-config
  */
 
-import { IECIESConfig } from '@digitaldefiance/ecies-lib';
-import { BRIGHTCHAIN_ECIES } from './brightChainConsts';
+import { ECIES, IECIESConfig } from '@digitaldefiance/ecies-lib';
 
 /**
  * ECIES configuration for BrightChain.
@@ -37,10 +36,10 @@ import { BRIGHTCHAIN_ECIES } from './brightChainConsts';
  * @see {@link https://github.com/Digital-Defiance/ecies-lib} for IECIESConfig interface
  */
 export const EciesConfig: IECIESConfig = {
-  curveName: BRIGHTCHAIN_ECIES.CURVE_NAME,
-  primaryKeyDerivationPath: BRIGHTCHAIN_ECIES.PRIMARY_KEY_DERIVATION_PATH,
-  mnemonicStrength: BRIGHTCHAIN_ECIES.MNEMONIC_STRENGTH,
-  symmetricAlgorithm: BRIGHTCHAIN_ECIES.SYMMETRIC.ALGORITHM,
-  symmetricKeyBits: BRIGHTCHAIN_ECIES.SYMMETRIC.KEY_BITS,
-  symmetricKeyMode: BRIGHTCHAIN_ECIES.SYMMETRIC.MODE,
+  curveName: ECIES.CURVE_NAME,
+  primaryKeyDerivationPath: ECIES.PRIMARY_KEY_DERIVATION_PATH,
+  mnemonicStrength: ECIES.MNEMONIC_STRENGTH,
+  symmetricAlgorithm: ECIES.SYMMETRIC.ALGORITHM,
+  symmetricKeyBits: ECIES.SYMMETRIC.KEY_BITS,
+  symmetricKeyMode: ECIES.SYMMETRIC.MODE,
 };

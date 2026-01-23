@@ -13,8 +13,8 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@brightchain/brightchain-lib": "^0.7.0",
-    "@digitaldefiance/ecies-lib": "^4.12.8",
+    "@brightchain/brightchain-lib": "^0.8.1",
+    "@digitaldefiance/ecies-lib": "^4.13.7",
     "@digitaldefiance/i18n-lib": "^3.8.16",
     "@ethereumjs/wallet": "^10.0.0",
     "@noble/curves": "1.9.0",

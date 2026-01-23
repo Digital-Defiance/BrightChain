@@ -92,20 +92,15 @@ describe('Feature: message-passing-and-events, Property: Message Block Storage',
             priority,
             encryptionScheme,
           };
-          const { messageId, contentBlockIds, magnetUrl } = await service.createMessage(
-            content,
-            creator,
-            options,
-          );
+          const { messageId, contentBlockIds, magnetUrl } =
+            await service.createMessage(content, creator, options);
 
           // Verify messageId is a magnet URL
           expect(messageId).toContain('magnet:?');
           expect(magnetUrl).toBe(messageId);
 
-          // Parse magnet URL to get the whitened CBL block IDs
-          const components = blockStore.parseCBLMagnetUrl(messageId);
-          expect(await blockStore.has(components.blockId1)).toBe(true);
-          expect(await blockStore.has(components.blockId2)).toBe(true);
+          // Verify messageId is a TUPLE magnet URL (CBL is now stored as TUPLE)
+          expect(messageId).toContain('urn:brightchain:tuple');
 
           // Verify all content blocks exist in BlockStore
           for (const blockId of contentBlockIds) {

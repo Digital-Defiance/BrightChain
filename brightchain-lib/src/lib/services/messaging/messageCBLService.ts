@@ -1,6 +1,5 @@
-import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
+import { CHECKSUM, Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { RawDataBlock } from '../../blocks/rawData';
-import { CHECKSUM } from '../../constants';
 import { BlockEncryptionType } from '../../enumerations/blockEncryptionType';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
@@ -19,6 +18,7 @@ import { IBlockStore } from '../../interfaces/storage/blockStore';
 import { Checksum } from '../../types/checksum';
 import { CBLService } from '../cblService';
 import { ChecksumService } from '../checksum.service';
+import { TupleStorageService } from '../tupleStorageService';
 import { IMessageLogger } from './messageLogger';
 import { IMessageMetricsCollector } from './messageMetrics';
 
@@ -32,6 +32,7 @@ export interface IMessageCBLOptions {
 
 export class MessageCBLService<TID extends PlatformID = Uint8Array> {
   private readonly config: IMessageSystemConfig;
+  private readonly tupleService: TupleStorageService;
 
   constructor(
     private readonly cblService: CBLService<TID>,
@@ -43,6 +44,7 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
     private readonly logger?: IMessageLogger,
   ) {
     this.config = { ...DEFAULT_MESSAGE_SYSTEM_CONFIG, ...config };
+    this.tupleService = new TupleStorageService(blockStore);
   }
 
   async createMessage(
@@ -104,16 +106,12 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
       messageCBLData.set(cblHeader.headerData, 0);
       messageCBLData.set(blockIdsArray, cblHeader.headerData.length);
 
-      // Store with whitening for Owner-Free storage
-      const whiteningResult = await this.blockStore.storeCBLWithWhitening(
-        messageCBLData,
-        {
-          isEncrypted:
-            options.encryptionScheme !== MessageEncryptionScheme.NONE,
-        },
-      );
-      const messageId = whiteningResult.magnetUrl;
-      const magnetUrl = whiteningResult.magnetUrl;
+      // Store CBL as TUPLE for complete OFF compliance
+      const tupleResult = await this.tupleService.storeTuple(messageCBLData, {
+        durabilityLevel: this.config.durabilityLevel,
+      });
+      const messageId = tupleResult.magnetUrl;
+      const magnetUrl = tupleResult.magnetUrl;
 
       if (this.metadataStore) {
         const metadata: IMessageMetadata = {
@@ -177,13 +175,12 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
 
   async getMessageContent(messageId: string): Promise<Uint8Array> {
     try {
-      // Retrieve whitened CBL using magnet URL
-      const components = this.blockStore.parseCBLMagnetUrl(messageId);
-      const messageCBLData = await this.blockStore.retrieveCBL(
-        components.blockId1,
-        components.blockId2,
-        components.block1ParityIds,
-        components.block2ParityIds,
+      // Retrieve TUPLE using magnet URL
+      const components = this.tupleService.parseTupleMagnetUrl(messageId);
+      const messageCBLData = await this.tupleService.retrieveTuple(
+        components.dataBlockId,
+        components.randomizerBlockIds,
+        components.parityBlockIds,
       );
 
       const header = this.cblService.parseBaseHeader(messageCBLData);

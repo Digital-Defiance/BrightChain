@@ -85,7 +85,7 @@ export interface ICBLConsts {
  * };
  * ```
  */
-export interface IFECConsts {
+export interface IBCFECConsts {
   /**
    * Default redundancy factor for FEC encoding
    * @remarks A factor of 1.5 means 50% additional parity data
@@ -247,54 +247,6 @@ export interface ISiteConsts {
   readonly CSP_NONCE_SIZE: number;
 }
 
-/**
- * Constants for JSON Web Token (JWT) operations
- *
- * @remarks
- * These constants configure JWT token generation and validation,
- * including the signing algorithm and expiration time.
- *
- * @example
- * ```typescript
- * const jwtConsts: IJwtConsts = {
- *   ALGORITHM: 'HS256',
- *   EXPIRATION_SEC: 3600,
- *   ISSUER: 'brightchain.io'
- * };
- * ```
- */
-export interface IJwtConsts {
-  /**
-   * Algorithm to use for JWT signing and verification
-   * @remarks Choose based on security requirements and key type
-   */
-  readonly ALGORITHM:
-    | 'HS256'
-    | 'HS384'
-    | 'HS512'
-    | 'RS256'
-    | 'RS384'
-    | 'RS512'
-    | 'ES256'
-    | 'ES384'
-    | 'ES512'
-    | 'PS256'
-    | 'PS384'
-    | 'PS512';
-
-  /**
-   * The expiration time for a JWT token in seconds
-   * @remarks Tokens will be invalid after this duration
-   */
-  readonly EXPIRATION_SEC: number;
-
-  /**
-   * The issuer claim for JWT tokens
-   * @remarks Identifies the entity that issued the token
-   */
-  readonly ISSUER: string;
-}
-
 import type { IConstants as IEciesConstants } from '@digitaldefiance/ecies-lib';
 
 /**
@@ -320,7 +272,7 @@ export interface IConstants extends IEciesConstants {
   readonly CBL: ICBLConsts;
 
   /** Forward Error Correction constants */
-  readonly FEC: IFECConsts;
+  readonly BC_FEC: IBCFECConsts;
 
   /** Tuple operation constants */
   readonly TUPLE: ITupleConsts;
@@ -331,37 +283,6 @@ export interface IConstants extends IEciesConstants {
   /** Site configuration constants */
   readonly SITE: ISiteConsts;
 
-  /** JSON Web Token constants */
-  readonly JWT: IJwtConsts;
-
   /** OFFS cache percentage */
   readonly OFFS_CACHE_PERCENTAGE: number;
-
-  /** Encryption constants */
-  readonly ENCRYPTION: {
-    readonly ENCRYPTION_TYPE_SIZE: number;
-    readonly RECIPIENT_ID_SIZE: number;
-  };
-
-  /** Keyring constants */
-  readonly KEYRING: {
-    readonly ALGORITHM: string;
-    readonly KEY_BITS: number;
-    readonly KEY_SIZE: number;
-    readonly IV_SIZE: number;
-    readonly AUTH_TAG_SIZE: number;
-  };
-
-  /** ECIES overhead length */
-  readonly ECIES_OVERHEAD_LENGTH: number;
-
-  /** GUID size in bytes */
-  readonly GUID_SIZE: number;
-
-  /** Backup codes configuration */
-  readonly BACKUP_CODES: {
-    readonly Count: number;
-    readonly NormalizedHexRegex: RegExp;
-    readonly DisplayRegex: RegExp;
-  };
 }

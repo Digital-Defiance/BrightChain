@@ -14,4 +14,5 @@ export * from './serviceLocator';
 export * from './superCbl.service';
 export * from './symmetric.service';
 export * from './tuple.service';
+export * from './tupleStorageService';
 export * from './xor';
