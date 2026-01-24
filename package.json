@@ -127,7 +127,7 @@
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
     "@svgr/webpack": "^8.0.1",
     "@swc-node/register": "1.11.1",
-    "@swc/cli": "0.6.0",
+    "@swc/cli": "0.7.10",
     "@swc/core": "1.5.7",
     "@testing-library/react": "15.0.6",
     "@types/bcrypt": "^6.0.0",
