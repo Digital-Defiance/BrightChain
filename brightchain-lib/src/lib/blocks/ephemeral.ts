@@ -21,6 +21,7 @@ import {
 } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
+import { logValidationFailure } from '../logging/blockLogger';
 import { ServiceLocator } from '../services/serviceLocator';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
@@ -52,7 +53,7 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
     canRead = true,
     canPersist = true,
   ): Promise<IEphemeralBlock<TID>> {
-    // Skip validation in test environment
+    // Validate checksum matches the data
     const calculatedChecksum =
       await ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
         data,
@@ -245,7 +246,14 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
     // For both encrypted and unencrypted blocks,
     // validate against the provided checksum
     if (!this.idChecksum) {
-      throw new BlockValidationError(BlockValidationErrorType.NoChecksum);
+      const error = new BlockValidationError(BlockValidationErrorType.NoChecksum);
+      logValidationFailure(
+        undefined,
+        BlockType[this.blockType],
+        error,
+        { blockSize: this.blockSize },
+      );
+      throw error;
     }
 
     // Calculate checksum on actual data length, excluding padding
@@ -255,7 +263,14 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
       );
     const validated = computedChecksum.equals(this.idChecksum);
     if (!validated) {
-      throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
+      const error = new ChecksumMismatchError(this.idChecksum, computedChecksum);
+      logValidationFailure(
+        this.idChecksum.toHex(),
+        BlockType[this.blockType],
+        error,
+        { blockSize: this.blockSize },
+      );
+      throw error;
     }
   }
 
@@ -267,7 +282,14 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
     // For both encrypted and unencrypted blocks,
     // validate against the provided checksum
     if (!this.idChecksum) {
-      throw new BlockValidationError(BlockValidationErrorType.NoChecksum);
+      const error = new BlockValidationError(BlockValidationErrorType.NoChecksum);
+      logValidationFailure(
+        undefined,
+        BlockType[this.blockType],
+        error,
+        { blockSize: this.blockSize },
+      );
+      throw error;
     }
 
     // Calculate checksum on actual data length, excluding padding
@@ -277,7 +299,14 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
       );
     const validated = computedChecksum.equals(this.idChecksum);
     if (!validated) {
-      throw new ChecksumMismatchError(this.idChecksum, computedChecksum);
+      const error = new ChecksumMismatchError(this.idChecksum, computedChecksum);
+      logValidationFailure(
+        this.idChecksum.toHex(),
+        BlockType[this.blockType],
+        error,
+        { blockSize: this.blockSize },
+      );
+      throw error;
     }
   }
 
@@ -383,15 +412,13 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
           );
 
     // We can't use instanceof EncryptedBlock here due to circular dependency
-    // Instead, check if it implements IEncryptedBlock interface or IMultiEncryptedBlock
+    // Instead, check if it implements IEncryptedBlock interface
     if (
       !encryptedBlock ||
       typeof encryptedBlock !== 'object' ||
       !('decrypt' in encryptedBlock) ||
-      (encryptedBlockType === BlockEncryptionType.SingleRecipient &&
-        !('ephemeralPublicKey' in encryptedBlock)) ||
-      (encryptedBlockType === BlockEncryptionType.MultiRecipient &&
-        !('recipientKeys' in encryptedBlock))
+      !('encryptionDetails' in encryptedBlock) ||
+      !('encryptionType' in encryptedBlock)
     ) {
       throw new BlockError(BlockErrorType.UnexpectedEncryptedBlockType);
     }

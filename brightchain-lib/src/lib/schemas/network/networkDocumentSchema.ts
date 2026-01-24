@@ -8,11 +8,12 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { base64ToUint8Array, uint8ArrayToBase64 } from '../../bufferUtils';
 import { NetworkDocument } from '../../documents/network/networkDocument';
-import StringNames from '../../enumerations/stringNames';
+import BrightChainStrings from '../../enumerations/brightChainStrings';
 import { FailedToHydrateError } from '../../errors/failedToHydrate';
 import { FailedToSerializeError } from '../../errors/failedToSerialize';
 import { InvalidIDFormatError } from '../../errors/invalidIDFormat';
 import { translate } from '../../i18n';
+import { ServiceProvider } from '../../services/service.provider';
 import { SchemaDefinition, SerializedValue } from '../../sharedTypes';
 
 const isString = (value: unknown): value is string => typeof value === 'string';
@@ -57,17 +58,18 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
         return JSON.parse(json);
       } catch {
         throw new FailedToSerializeError(
-          translate(StringNames.Error_InvalidCreator),
+          translate(BrightChainStrings.Error_InvalidCreator),
         );
       }
     },
     hydrate: (value: string): Member => {
       if (!isString(value) && typeof value !== 'object')
         throw new FailedToHydrateError(
-          translate(StringNames.Error_InvalidCreator),
+          translate(BrightChainStrings.Error_InvalidCreator),
         );
       return Member.fromJson(
         typeof value === 'string' ? value : JSON.stringify(value),
+        ServiceProvider.getInstance().eciesService,
       );
     },
   },
@@ -79,7 +81,7 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
     hydrate: (value: string): SignatureUint8Array => {
       if (!isString(value))
         throw new FailedToHydrateError(
-          translate(StringNames.Error_InvalidSignature),
+          translate(BrightChainStrings.Error_InvalidSignature),
         );
       return base64ToUint8Array(value) as unknown as SignatureUint8Array;
     },
@@ -91,7 +93,7 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
     hydrate: (value: string): ChecksumUint8Array => {
       if (!isString(value))
         throw new FailedToHydrateError(
-          translate(StringNames.Error_InvalidChecksum),
+          translate(BrightChainStrings.Error_InvalidChecksum),
         );
       return base64ToUint8Array(value) as unknown as ChecksumUint8Array;
     },
@@ -116,12 +118,12 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
     type: Array,
     required: false,
     serialize: (value: GuidUint8Array[] | undefined): string[] | null =>
-      value?.map((v) => v.serialize()) ?? null,
+      value?.map((v) => v.asShortHexGuid) ?? null,
     hydrate: (value: string): GuidUint8Array[] | undefined => {
       if (value === null || value === undefined) return undefined;
       if (!isStringArray(value))
         throw new FailedToHydrateError(
-          translate(StringNames.Error_InvalidReferences),
+          translate(BrightChainStrings.Error_InvalidReferences),
         );
       return value.map((v) => GuidUint8Array.hydrate(v) as GuidUint8Array);
     },

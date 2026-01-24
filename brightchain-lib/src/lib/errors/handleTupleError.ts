@@ -1,19 +1,19 @@
 import { LanguageCode } from '@digitaldefiance/i18n-lib';
 import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { TypedError } from './typedError';
 
 export class HandleTupleError extends TypedError<HandleTupleErrorType> {
-  public get reasonMap(): Record<HandleTupleErrorType, StringNames> {
+  public get reasonMap(): Record<HandleTupleErrorType, BrightChainStrings> {
     return {
       [HandleTupleErrorType.InvalidTupleSize]:
-        StringNames.Error_HandleTupleErrorInvalidTupleSizeTemplate,
+        BrightChainStrings.Error_HandleTupleErrorInvalidTupleSizeTemplate,
       [HandleTupleErrorType.BlockSizeMismatch]:
-        StringNames.Error_HandleTupleErrorBlockSizeMismatch,
+        BrightChainStrings.Error_HandleTupleErrorBlockSizeMismatch,
       [HandleTupleErrorType.NoBlocksToXor]:
-        StringNames.Error_HandleTupleErrorNoBlocksToXor,
+        BrightChainStrings.Error_HandleTupleErrorNoBlocksToXor,
       [HandleTupleErrorType.BlockSizesMustMatch]:
-        StringNames.Error_HandleTupleErrorBlockSizesMustMatch,
+        BrightChainStrings.Error_HandleTupleErrorBlockSizesMustMatch,
     };
   }
   public readonly tupleSize?: number;

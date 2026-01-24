@@ -4,6 +4,8 @@ import {
   Member,
   MemberType,
   SecureString,
+  ShortHexGuid,
+  uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { BlockSize } from '../../enumerations/blockSize';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
@@ -118,7 +120,7 @@ describe('MemberDocument Integration Tests', () => {
     it('should create document and generate CBLs in sequence', async () => {
       // Step 1: Create document using factory method
       const doc = MemberDocument.create(publicMember, privateMember);
-      expect(doc.id).toEqual(publicMember.id.toString());
+      expect(doc.id).toEqual(uint8ArrayToHex(publicMember.idBytes) as ShortHexGuid);
 
       // Step 2: Generate CBLs
       await doc.generateCBLs();

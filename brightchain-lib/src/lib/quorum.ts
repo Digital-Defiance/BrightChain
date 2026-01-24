@@ -1,6 +1,6 @@
 import {
   ECIESService,
-  getEnhancedIdProvider,
+  hexToUint8Array,
   Member,
   PlatformID,
   ShortHexGuid,
@@ -9,6 +9,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { QuorumErrorType } from './enumerations/quorumErrorType';
 import { QuorumError } from './errors/quorumError';
+import { getBrightChainIdProvider } from './init';
 import { QuorumDataRecord } from './quorumDataRecord';
 import { SealingService } from './services/sealing.service';
 import { ArrayStore } from './stores/arrayStore';
@@ -57,11 +58,11 @@ export class BrightChainQuorum<TID extends PlatformID = Uint8Array> {
     nodeAgent: Member<TID>,
     name: string,
     id?: string,
-    idProvider: TypedIdProviderWrapper<TID> = getEnhancedIdProvider<TID>(),
+    idProvider: TypedIdProviderWrapper<TID> = getBrightChainIdProvider<TID>(),
     eciesService?: ECIESService<TID>,
   ) {
     if (id !== undefined) {
-      this.id = idProvider.fromBytes(idProvider.deserialize(id));
+      this.id = idProvider.fromBytes(hexToUint8Array(id));
     } else {
       this.id = idProvider.fromBytes(idProvider.generate());
     }
@@ -86,7 +87,7 @@ export class BrightChainQuorum<TID extends PlatformID = Uint8Array> {
    * @param member
    */
   protected storeMember(member: Member<TID>) {
-    const provider = getEnhancedIdProvider<TID>();
+    const provider = getBrightChainIdProvider<TID>();
     const hexMemberId = uint8ArrayToHex(
       provider.toBytes(member.id),
     ) as ShortHexGuid;
@@ -174,7 +175,7 @@ export class BrightChainQuorum<TID extends PlatformID = Uint8Array> {
     return (
       members.length >= doc.sharesRequired &&
       members.every((m) => {
-        const provider = getEnhancedIdProvider<TID>();
+        const provider = getBrightChainIdProvider<TID>();
         const memberGuidId = uint8ArrayToHex(
           provider.toBytes(m.id),
         ) as ShortHexGuid;

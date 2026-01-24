@@ -1,16 +1,16 @@
 import { SecureStorageErrorType } from '../enumerations/secureStorageErrorType';
-import { StringNames } from '../enumerations/stringNames';
+import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import { TypedError } from './typedError';
 
 export class SecureStorageError extends TypedError<SecureStorageErrorType> {
-  public get reasonMap(): Record<SecureStorageErrorType, StringNames> {
+  public get reasonMap(): Record<SecureStorageErrorType, BrightChainStrings> {
     return {
       [SecureStorageErrorType.DecryptedValueChecksumMismatch]:
-        StringNames.Error_SecureStorageDecryptedValueChecksumMismatch,
+        BrightChainStrings.Error_SecureStorageDecryptedValueChecksumMismatch,
       [SecureStorageErrorType.DecryptedValueLengthMismatch]:
-        StringNames.Error_SecureStorageDecryptedValueLengthMismatch,
+        BrightChainStrings.Error_SecureStorageDecryptedValueLengthMismatch,
       [SecureStorageErrorType.ValueIsNull]:
-        StringNames.Error_SecureStorageValueIsNull,
+        BrightChainStrings.Error_SecureStorageValueIsNull,
     };
   }
   constructor(type: SecureStorageErrorType, _language?: string) {

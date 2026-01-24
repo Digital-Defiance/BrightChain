@@ -1,5 +1,4 @@
-import { ECIES, Member, type PlatformID } from '@digitaldefiance/ecies-lib';
-import { createECIESService } from './browserConfig';
+import { ECIES, Member, uint8ArrayToHex, type PlatformID } from '@digitaldefiance/ecies-lib';
 import BlockDataType from './enumerations/blockDataType';
 import { BlockEncryptionType } from './enumerations/blockEncryptionType';
 import BlockType from './enumerations/blockType';
@@ -12,7 +11,6 @@ export class EncryptedBlockMetadata<TID extends PlatformID = Uint8Array>
   extends EphemeralBlockMetadata<TID>
   implements IEncryptedBlockMetadata<TID>
 {
-  private static readonly eciesService = createECIESService();
   private readonly _recipientCount: number;
   private readonly _encryptionType: BlockEncryptionType;
 
@@ -76,44 +74,52 @@ export class EncryptedBlockMetadata<TID extends PlatformID = Uint8Array>
       ephemeralBlockMetadata.dateCreated,
     );
   }
-  public static override fromJsonValidator(data: unknown): void {
-    // Call parent validator first
-    super.fromJsonValidator(data);
 
-    // Then add our validation
-    const typedData = data as Record<string, unknown>;
-    if (!typedData['encryptionType']) {
-      throw new BlockValidationError(
-        BlockValidationErrorType.InvalidEncryptionType,
-      );
-    }
-    if (!typedData['recipientCount']) {
-      throw new BlockValidationError(
-        BlockValidationErrorType.InvalidRecipientCount,
-      );
-    }
+  public override toJson(): string {
+    return JSON.stringify({
+      size: this.size,
+      type: this.type,
+      dataType: this.dataType,
+      lengthWithoutPadding: this.lengthWithoutPadding,
+      dateCreated: this.dateCreated.toISOString(),
+      creator: uint8ArrayToHex(this.creator.idBytes),
+      encryptionType: this.encryptionType,
+      recipientCount: this.recipientCount,
+    });
   }
 
-  public static override fromJsonAdditionalData<
-    T extends Record<string, unknown>,
-  >(data: unknown): T {
-    const typedData = data as Record<string, unknown>;
-    return {
-      ...super.fromJsonAdditionalData(data),
-      encryptionType: typedData['encryptionType'] as BlockEncryptionType,
-      recipientCount: typedData['recipientCount'],
-    } as T;
-  }
-
-  public static override fromJson<
-    B extends EncryptedBlockMetadata,
-    T extends Record<string, unknown> = Record<string, never>,
-    TID extends PlatformID = Uint8Array,
-  >(json: string): EncryptedBlockMetadata & T {
-    return super.fromJson<
-      B,
-      { encryptionType: BlockEncryptionType; recipientCount: number } & T,
-      TID
-    >(json) as B & T;
+  /**
+   * Parse encrypted metadata from JSON representation.
+   * Note: This is a simplified implementation that doesn't fully deserialize
+   * encrypted metadata. For full deserialization, additional fields would be needed.
+   *
+   * @param json - JSON string containing metadata
+   * @returns Parsed EncryptedBlockMetadata instance
+   * @throws JsonValidationError if JSON is invalid or required fields are missing/invalid
+   */
+  public static override fromJson<TID extends PlatformID = Uint8Array>(
+    json: string,
+  ): EncryptedBlockMetadata<TID> {
+    // Parse the JSON to get the data
+    const parsed = JSON.parse(json);
+    
+    // Parse using parent's fromJson to get the ephemeral metadata
+    const ephemeralData = super.fromJson<TID>(json);
+    
+    // Extract encrypted-specific fields
+    const encryptionType = parsed.encryptionType as BlockEncryptionType;
+    const recipientCount = parsed.recipientCount as number;
+    
+    // Create a proper EncryptedBlockMetadata instance
+    return new EncryptedBlockMetadata<TID>(
+      ephemeralData.size,
+      ephemeralData.type,
+      ephemeralData.dataType,
+      ephemeralData.lengthWithoutPadding,
+      ephemeralData.creator,
+      encryptionType,
+      recipientCount,
+      ephemeralData.dateCreated,
+    );
   }
 }

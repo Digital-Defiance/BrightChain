@@ -32,6 +32,49 @@ export const SITE: ISiteConsts = {
 } as const;
 
 /**
+ * Constants for structured block headers
+ */
+export const BLOCK_HEADER = {
+  /**
+   * Magic prefix for BrightChain structured blocks (0xBC = "BrightChain")
+   * This prefix identifies blocks with serialized headers (CBL variants)
+   * Raw data blocks do NOT have this prefix
+   */
+  MAGIC_PREFIX: 0xbc as const,
+
+  /**
+   * Current version of the block header format
+   */
+  VERSION: 0x01 as const,
+} as const;
+
+/**
+ * Structured block type identifiers (second byte after magic prefix)
+ * These apply only to blocks with the 0xBC magic prefix
+ */
+export enum StructuredBlockType {
+  /**
+   * Constituent Block List - references to other blocks
+   */
+  CBL = 0x02,
+
+  /**
+   * SuperCBL - hierarchical CBL referencing sub-CBLs
+   */
+  SuperCBL = 0x03,
+
+  /**
+   * Extended CBL - CBL with file name and MIME type
+   */
+  ExtendedCBL = 0x04,
+
+  /**
+   * Message CBL - CBL for messaging system
+   */
+  MessageCBL = 0x05,
+}
+
+/**
  * Constants for CBL (Constituent Block List)
  */
 export const CBL: ICBLConsts = {
@@ -124,6 +167,7 @@ export const SEALING: ISealingConsts = {
  */
 export const CONSTANTS: IConstants = {
   ...BaseConstants,
+  BLOCK_HEADER,
   CBL,
   OFFS_CACHE_PERCENTAGE,
   BC_FEC,

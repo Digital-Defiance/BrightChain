@@ -1,7 +1,6 @@
 import {
   ChecksumString,
   ECIESService,
-  getEnhancedIdProvider,
   HexString,
   hexToUint8Array,
   Member,
@@ -12,6 +11,7 @@ import {
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { createECIESService } from './browserConfig';
+import { getBrightChainIdProvider } from './init';
 import { QuorumDataRecordDto } from './quorumDataRecordDto';
 import { ChecksumService } from './services/checksum.service';
 import { Checksum } from './types/checksum';
@@ -49,7 +49,7 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
     enhancedProvider?: TypedIdProviderWrapper<TID>,
     eciesService?: ECIESService<TID>,
   ) {
-    this.enhancedProvider = enhancedProvider ?? getEnhancedIdProvider<TID>();
+    this.enhancedProvider = enhancedProvider ?? getBrightChainIdProvider<TID>();
     this.eciesService = eciesService ?? createECIESService<TID>();
     if (id !== undefined) {
       this.id = id;
@@ -136,7 +136,7 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
     eciesService?: ECIESService<TID>,
   ): QuorumDataRecord<TID> {
     const enhancedProviderToUse =
-      enhancedProvider ?? getEnhancedIdProvider<TID>();
+      enhancedProvider ?? getBrightChainIdProvider<TID>();
     const eciesServiceToUse = eciesService ?? createECIESService<TID>();
     const checksumService = new ChecksumService();
 

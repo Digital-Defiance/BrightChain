@@ -1,17 +1,17 @@
 import { LanguageCode } from '@digitaldefiance/i18n-lib';
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { SystemKeyringErrorType } from '../enumerations/systemKeyringErrorType';
 import { TypedError } from './typedError';
 
 export class SystemKeyringError extends TypedError<SystemKeyringErrorType> {
-  public get reasonMap(): Record<SystemKeyringErrorType, StringNames> {
+  public get reasonMap(): Record<SystemKeyringErrorType, BrightChainStrings> {
     return {
       [SystemKeyringErrorType.KeyNotFound]:
-        StringNames.Error_SystemKeyringErrorKeyNotFoundTemplate,
+        BrightChainStrings.Error_SystemKeyringErrorKeyNotFoundTemplate,
       [SystemKeyringErrorType.RateLimitExceeded]:
-        StringNames.Error_SystemKeyringErrorRateLimitExceeded,
+        BrightChainStrings.Error_SystemKeyringErrorRateLimitExceeded,
       [SystemKeyringErrorType.DecryptionFailed]:
-        StringNames.Error_SystemKeyringErrorRateLimitExceeded, // Reuse existing error message
+        BrightChainStrings.Error_SystemKeyringErrorRateLimitExceeded, // Reuse existing error message
     };
   }
   constructor(

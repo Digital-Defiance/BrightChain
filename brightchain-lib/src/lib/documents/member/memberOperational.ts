@@ -1,4 +1,4 @@
-import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
+import { Member, PlatformID, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import { uint8ArrayToBase64 } from '../../bufferUtils';
 import { IOperationalFactory } from '../../interfaces/document/base';
 import {
@@ -17,14 +17,14 @@ export const memberOperationalFactory = <
     // Use fromJson to create member synchronously
     const provider = ServiceProvider.getInstance<TID>().idProvider;
     const storage = {
-      id: provider.idToString(hydrated.id),
+      id: uint8ArrayToHex(provider.toBytes(hydrated.id)),
       type: hydrated.type,
       name: hydrated.name,
       email: hydrated.email.toString(),
       publicKey: uint8ArrayToBase64(hydrated.publicKey),
       votingPublicKey:
         hydrated.votingPublicKey && hydrated.votingPublicKey.n.toString(16),
-      creatorId: provider.idToString(hydrated.creatorId),
+      creatorId: uint8ArrayToHex(provider.toBytes(hydrated.creatorId)),
       dateCreated: hydrated.dateCreated.toISOString(),
       dateUpdated: hydrated.dateUpdated.toISOString(),
     };

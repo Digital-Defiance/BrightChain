@@ -47,7 +47,7 @@ export * from './secureStorageErrorType';
 export * from './storeErrorType';
 export * from './streamErrorType';
 // LanguageCodes has been removed - use LanguageCodes from '@digitaldefiance/i18n-lib' instead
-export * from './stringNames';
+export * from './brightChainStrings';
 export * from './symmetricErrorType';
 export * from './systemKeyringErrorType';
 export * from './translatableEnum';

@@ -1,18 +1,18 @@
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
 import { TypedError } from './typedError';
 
 export class WhitenedError extends TypedError<WhitenedErrorType> {
-  public get reasonMap(): Record<WhitenedErrorType, StringNames> {
+  public get reasonMap(): Record<WhitenedErrorType, BrightChainStrings> {
     return {
       [WhitenedErrorType.BlockNotReadable]:
-        StringNames.Error_WhitenedErrorBlockNotReadable,
+        BrightChainStrings.Error_WhitenedErrorBlockNotReadable,
       [WhitenedErrorType.BlockSizeMismatch]:
-        StringNames.Error_WhitenedErrorBlockSizeMismatch,
+        BrightChainStrings.Error_WhitenedErrorBlockSizeMismatch,
       [WhitenedErrorType.DataLengthMismatch]:
-        StringNames.Error_WhitenedErrorDataLengthMismatch,
+        BrightChainStrings.Error_WhitenedErrorDataLengthMismatch,
       [WhitenedErrorType.InvalidBlockSize]:
-        StringNames.Error_WhitenedErrorInvalidBlockSize,
+        BrightChainStrings.Error_WhitenedErrorInvalidBlockSize,
     };
   }
   constructor(type: WhitenedErrorType, _language?: string) {

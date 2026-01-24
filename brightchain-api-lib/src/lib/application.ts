@@ -1,9 +1,9 @@
 import {
   BlockSize,
+  BrightChainStrings,
   EnergyAccountStore,
   EnergyLedger,
   MemberStore,
-  StringNames,
   translate,
 } from '@brightchain/brightchain-lib';
 import { HandleableError } from '@digitaldefiance/i18n-lib';
@@ -107,7 +107,7 @@ export class App<TID extends PlatformID> extends BaseApplication<TID> {
               ? err
               : new HandleableError(
                   new Error(
-                    err.message || translate(StringNames.Error_UnexpectedError),
+                    err.message || translate(BrightChainStrings.Error_UnexpectedError),
                   ),
                   { cause: err },
                 );

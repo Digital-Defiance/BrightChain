@@ -1,30 +1,30 @@
 import { MultiEncryptedErrorType } from '../enumerations/multiEncryptedErrorType';
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { TypedError } from './typedError';
 
 export class MultiEncryptedError extends TypedError<MultiEncryptedErrorType> {
-  protected get reasonMap(): Record<MultiEncryptedErrorType, StringNames> {
+  protected get reasonMap(): Record<MultiEncryptedErrorType, BrightChainStrings> {
     return {
       [MultiEncryptedErrorType.DataTooShort]:
-        StringNames.Error_MultiEncryptedErrorDataTooShort,
+        BrightChainStrings.Error_MultiEncryptedErrorDataTooShort,
       [MultiEncryptedErrorType.DataLengthExceedsCapacity]:
-        StringNames.Error_MultiEncryptedErrorDataLengthExceedsCapacity,
+        BrightChainStrings.Error_MultiEncryptedErrorDataLengthExceedsCapacity,
       [MultiEncryptedErrorType.CreatorMustBeMember]:
-        StringNames.Error_MultiEncryptedErrorCreatorMustBeMember,
+        BrightChainStrings.Error_MultiEncryptedErrorCreatorMustBeMember,
       [MultiEncryptedErrorType.BlockNotReadable]:
-        StringNames.Error_MultiEncryptedErrorBlockNotReadable,
+        BrightChainStrings.Error_MultiEncryptedErrorBlockNotReadable,
       [MultiEncryptedErrorType.InvalidEphemeralPublicKeyLength]:
-        StringNames.Error_MultiEncryptedErrorInvalidEphemeralPublicKeyLength,
+        BrightChainStrings.Error_MultiEncryptedErrorInvalidEphemeralPublicKeyLength,
       [MultiEncryptedErrorType.InvalidIVLength]:
-        StringNames.Error_MultiEncryptedErrorInvalidIVLength,
+        BrightChainStrings.Error_MultiEncryptedErrorInvalidIVLength,
       [MultiEncryptedErrorType.InvalidAuthTagLength]:
-        StringNames.Error_MultiEncryptedErrorInvalidAuthTagLength,
+        BrightChainStrings.Error_MultiEncryptedErrorInvalidAuthTagLength,
       [MultiEncryptedErrorType.ChecksumMismatch]:
-        StringNames.Error_MultiEncryptedErrorChecksumMismatch,
+        BrightChainStrings.Error_MultiEncryptedErrorChecksumMismatch,
       [MultiEncryptedErrorType.RecipientMismatch]:
-        StringNames.Error_MultiEncryptedErrorRecipientMismatch,
+        BrightChainStrings.Error_MultiEncryptedErrorRecipientMismatch,
       [MultiEncryptedErrorType.RecipientsAlreadyLoaded]:
-        StringNames.Error_MultiEncryptedErrorRecipientsAlreadyLoaded,
+        BrightChainStrings.Error_MultiEncryptedErrorRecipientsAlreadyLoaded,
     };
   }
   constructor(type: MultiEncryptedErrorType, _language?: string) {

@@ -148,6 +148,11 @@ export * from './cpus';
 export * from './debug';
 
 /**
+ * Logging utilities for block operations.
+ */
+export * from './logging';
+
+/**
  * Internationalization support.
  */
 export * from './i18n';

@@ -2,8 +2,12 @@
 import {
   ECIESService,
   EmailString,
+  GuidV4Uint8Array,
   Member,
   MemberType,
+  ShortHexGuid,
+  TypedIdProviderWrapper,
+  uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { BlockSize } from '../../enumerations/blockSize';
 import { MemberError } from '../../errors/memberError';
@@ -12,16 +16,16 @@ import { Checksum } from '../../types/checksum';
 import { MemberDocument } from './memberDocument';
 
 describe('MemberDocument', () => {
-  let eciesService: ECIESService<Uint8Array>;
-  let publicMember: Member<Uint8Array>;
-  let privateMember: Member<Uint8Array>;
-  let idProvider: any;
+  let eciesService: ECIESService<GuidV4Uint8Array>;
+  let publicMember: Member<GuidV4Uint8Array>;
+  let privateMember: Member<GuidV4Uint8Array>;
+  let idProvider: TypedIdProviderWrapper<GuidV4Uint8Array>;
 
   beforeEach(async () => {
     // Initialize service provider
-    ServiceProvider.getInstance();
-    eciesService = ServiceProvider.getInstance().eciesService;
-    idProvider = ServiceProvider.getInstance().idProvider;
+    const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
+    idProvider = sp.idProvider;
+    eciesService = sp.eciesService;
 
     // Create test members
     const { member: pub } = Member.newMember(
@@ -46,7 +50,7 @@ describe('MemberDocument', () => {
       const doc = MemberDocument.create(publicMember, privateMember);
 
       expect(doc).toBeInstanceOf(MemberDocument);
-      expect(doc.id).toBe(idProvider.idToString(publicMember.id));
+      expect(doc.id).toBe(uint8ArrayToHex(publicMember.idBytes) as ShortHexGuid);
       expect(doc.name).toBe(publicMember.name);
       expect(doc.type).toBe(publicMember.type);
     });
@@ -73,7 +77,7 @@ describe('MemberDocument', () => {
   });
 
   describe('CBL Generation', () => {
-    let doc: MemberDocument<Uint8Array>;
+    let doc: MemberDocument<GuidV4Uint8Array>;
 
     beforeEach(() => {
       doc = MemberDocument.create(publicMember, privateMember);
@@ -105,7 +109,7 @@ describe('MemberDocument', () => {
   });
 
   describe('CBL Serialization/Deserialization', () => {
-    let doc: MemberDocument<Uint8Array>;
+    let doc: MemberDocument<GuidV4Uint8Array>;
     let publicCBL: Uint8Array;
     let privateCBL: Uint8Array;
 
@@ -132,8 +136,8 @@ describe('MemberDocument', () => {
       const originalPublic = await doc.toMember(false);
       const restoredPublic = await newDoc.toMember(false);
 
-      expect(idProvider.idToString(restoredPublic.id)).toBe(
-        idProvider.idToString(originalPublic.id),
+      expect(uint8ArrayToHex(idProvider.toBytes(restoredPublic.id))).toBe(
+        uint8ArrayToHex(idProvider.toBytes(originalPublic.id)),
       );
       expect(restoredPublic.name).toBe(originalPublic.name);
       expect(restoredPublic.type).toBe(originalPublic.type);
@@ -150,7 +154,7 @@ describe('MemberDocument', () => {
   });
 
   describe('Member Conversion', () => {
-    let doc: MemberDocument<Uint8Array>;
+    let doc: MemberDocument<GuidV4Uint8Array>;
 
     beforeEach(async () => {
       doc = MemberDocument.create(publicMember, privateMember);
@@ -161,8 +165,8 @@ describe('MemberDocument', () => {
       const member = await doc.toMember(false);
 
       expect(member).toBeInstanceOf(Member);
-      expect(idProvider.idToString(member.id)).toBe(
-        idProvider.idToString(publicMember.id),
+      expect(uint8ArrayToHex(idProvider.toBytes(member.id))).toBe(
+        uint8ArrayToHex(idProvider.toBytes(publicMember.id)),
       );
       expect(member.name).toBe(publicMember.name);
     });
@@ -171,14 +175,14 @@ describe('MemberDocument', () => {
       const member = await doc.toMember(true);
 
       expect(member).toBeInstanceOf(Member);
-      expect(idProvider.idToString(member.id)).toBe(
-        idProvider.idToString(privateMember.id),
+      expect(uint8ArrayToHex(idProvider.toBytes(member.id))).toBe(
+        uint8ArrayToHex(idProvider.toBytes(privateMember.id)),
       );
     });
   });
 
   describe('JSON Serialization', () => {
-    let doc: MemberDocument<Uint8Array>;
+    let doc: MemberDocument<GuidV4Uint8Array>;
 
     beforeEach(() => {
       doc = MemberDocument.create(publicMember, privateMember);
@@ -203,14 +207,14 @@ describe('MemberDocument', () => {
   });
 
   describe('Data Access', () => {
-    let doc: MemberDocument<Uint8Array>;
+    let doc: MemberDocument<GuidV4Uint8Array>;
 
     beforeEach(() => {
       doc = MemberDocument.create(publicMember, privateMember);
     });
 
     it('should provide access to public data properties', () => {
-      expect(doc.id).toBe(idProvider.idToString(publicMember.id));
+      expect(doc.id).toBe(uint8ArrayToHex(idProvider.toBytes(publicMember.id)));
       expect(doc.name).toBe(publicMember.name);
       expect(doc.type).toBe(publicMember.type);
       expect(doc.email).toEqual(publicMember.email);
@@ -263,12 +267,12 @@ describe('MemberDocument', () => {
       const doc = MemberDocument.create<string>(stringMember, stringMember);
       await doc.generateCBLs();
 
-      expect(doc.id).toEqual(stringMember.id.toString()); // Compare with string representation
+      expect(doc.id).toEqual(uint8ArrayToHex(stringMember.idBytes) as ShortHexGuid);
       expect(typeof doc.id).toBe('string');
     });
 
     it('should maintain type consistency through CBL operations', async () => {
-      const doc = MemberDocument.create<Uint8Array>(
+      const doc = MemberDocument.create<GuidV4Uint8Array>(
         publicMember,
         privateMember,
       );
@@ -277,7 +281,7 @@ describe('MemberDocument', () => {
       const publicCBL = await doc.toPublicCBL();
       const privateCBL = await doc.toPrivateCBL();
 
-      const newDoc = MemberDocument.create<Uint8Array>(
+      const newDoc = MemberDocument.create<GuidV4Uint8Array>(
         publicMember,
         privateMember,
       );
@@ -285,14 +289,14 @@ describe('MemberDocument', () => {
 
       const member = await newDoc.toMember();
       // The member ID should be consistent with the original type
-      expect(idProvider.idToString(member.id)).toBe(
-        idProvider.idToString(publicMember.id),
+      expect(uint8ArrayToHex(idProvider.toBytes(member.id))).toBe(
+        uint8ArrayToHex(idProvider.toBytes(publicMember.id)),
       );
     });
   });
 
   describe('Block Store Integration', () => {
-    let doc: MemberDocument<Uint8Array>;
+    let doc: MemberDocument<GuidV4Uint8Array>;
     let blockStore: any;
 
     beforeEach(() => {

@@ -14,7 +14,7 @@
 
 import { InvalidBlockSizeLengthError } from '../errors/invalidBlockSizeLength';
 import { translate } from '../i18n';
-import StringNames from './stringNames';
+import BrightChainStrings from './brightChainStrings';
 
 /**
  * Block size exponents (2^x) for calculating block sizes.
@@ -120,14 +120,14 @@ export const validBlockSizes: readonly BlockSize[] = [
  * Human-readable names for block sizes.
  * Used for display and logging purposes.
  */
-export const blockSizeStringNames: Record<BlockSize, StringNames> = {
-  [BlockSize.Unknown]: StringNames.BlockSize_Unknown,
-  [BlockSize.Message]: StringNames.BlockSize_Message,
-  [BlockSize.Tiny]: StringNames.BlockSize_Tiny,
-  [BlockSize.Small]: StringNames.BlockSize_Small,
-  [BlockSize.Medium]: StringNames.BlockSize_Medium,
-  [BlockSize.Large]: StringNames.BlockSize_Large,
-  [BlockSize.Huge]: StringNames.BlockSize_Huge,
+export const blockSizeStringNames: Record<BlockSize, BrightChainStrings> = {
+  [BlockSize.Unknown]: BrightChainStrings.BlockSize_Unknown,
+  [BlockSize.Message]: BrightChainStrings.BlockSize_Message,
+  [BlockSize.Tiny]: BrightChainStrings.BlockSize_Tiny,
+  [BlockSize.Small]: BrightChainStrings.BlockSize_Small,
+  [BlockSize.Medium]: BrightChainStrings.BlockSize_Medium,
+  [BlockSize.Large]: BrightChainStrings.BlockSize_Large,
+  [BlockSize.Huge]: BrightChainStrings.BlockSize_Huge,
 } as const;
 
 /**
@@ -140,37 +140,37 @@ export const BlockSizeInfo: {
   [BlockSize.Unknown]: {
     blockSize: BlockSize.Unknown,
     length: BlockSize.Unknown as number,
-    name: StringNames.BlockSize_Unknown,
+    name: BrightChainStrings.BlockSize_Unknown,
   },
   [BlockSize.Message]: {
     blockSize: BlockSize.Message,
     length: BlockSize.Message as number,
-    name: StringNames.BlockSize_Message,
+    name: BrightChainStrings.BlockSize_Message,
   },
   [BlockSize.Tiny]: {
     blockSize: BlockSize.Tiny,
     length: BlockSize.Tiny as number,
-    name: StringNames.BlockSize_Tiny,
+    name: BrightChainStrings.BlockSize_Tiny,
   },
   [BlockSize.Small]: {
     blockSize: BlockSize.Small,
     length: BlockSize.Small as number,
-    name: StringNames.BlockSize_Small,
+    name: BrightChainStrings.BlockSize_Small,
   },
   [BlockSize.Medium]: {
     blockSize: BlockSize.Medium,
     length: BlockSize.Medium as number,
-    name: StringNames.BlockSize_Medium,
+    name: BrightChainStrings.BlockSize_Medium,
   },
   [BlockSize.Large]: {
     blockSize: BlockSize.Large,
     length: BlockSize.Large as number,
-    name: StringNames.BlockSize_Large,
+    name: BrightChainStrings.BlockSize_Large,
   },
   [BlockSize.Huge]: {
     blockSize: BlockSize.Huge,
     length: BlockSize.Huge as number,
-    name: StringNames.BlockSize_Huge,
+    name: BrightChainStrings.BlockSize_Huge,
   },
 } as const;
 

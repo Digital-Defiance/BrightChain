@@ -1,7 +1,10 @@
 import {
   ConstantsRegistry,
   createRuntimeConfiguration,
+  getEnhancedIdProvider,
   GuidV4Provider,
+  PlatformID,
+  TypedIdProviderWrapper,
 } from '@digitaldefiance/ecies-lib';
 import { ServiceProvider } from './services/service.provider';
 
@@ -46,6 +49,29 @@ export function getBrightChainConfigKey() {
  */
 export function isLibraryInitialized(): boolean {
   return isInitialized;
+}
+
+/**
+ * Get the BrightChain ID provider with the correct configuration.
+ * This ensures all code uses the GuidV4Provider (16 bytes) instead of the default ObjectIdProvider (12 bytes).
+ *
+ * @param autoInit - If true, automatically initialize BrightChain if not already initialized (default: true)
+ * @returns The ID provider configured for BrightChain (GuidV4Provider with 16-byte IDs)
+ * @throws Error if the library has not been initialized and autoInit is false
+ */
+export function getBrightChainIdProvider<
+  TID extends PlatformID = Uint8Array,
+>(autoInit = true): TypedIdProviderWrapper<TID> {
+  if (!isInitialized) {
+    if (autoInit) {
+      initializeBrightChain();
+    } else {
+      throw new Error(
+        'BrightChain library not initialized. Call initializeBrightChain() first.',
+      );
+    }
+  }
+  return getEnhancedIdProvider<TID>(BRIGHTCHAIN_CONFIG_KEY);
 }
 
 /**

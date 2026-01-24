@@ -1,62 +1,62 @@
 import { BlockSize } from '../enumerations/blockSize';
 import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { TypedError } from './typedError';
 
 export class ExtendedCblError extends TypedError<ExtendedCblErrorType> {
   public readonly blockSize?: BlockSize;
   public readonly dataSize?: number;
   public readonly error?: string;
-  public get reasonMap(): Record<ExtendedCblErrorType, StringNames> {
+  public get reasonMap(): Record<ExtendedCblErrorType, BrightChainStrings> {
     return {
       [ExtendedCblErrorType.CreatorUndefined]:
-        StringNames.Error_CblErrorCreatorUndefined,
+        BrightChainStrings.Error_CblErrorCreatorUndefined,
       [ExtendedCblErrorType.BlockNotReadable]:
-        StringNames.Error_CblErrorBlockNotReadable,
+        BrightChainStrings.Error_CblErrorBlockNotReadable,
       [ExtendedCblErrorType.CreatorRequiredForSignature]:
-        StringNames.Error_CblErrorCreatorRequiredForSignature,
+        BrightChainStrings.Error_CblErrorCreatorRequiredForSignature,
       [ExtendedCblErrorType.FileNameRequired]:
-        StringNames.Error_CblErrorFileNameRequired,
+        BrightChainStrings.Error_CblErrorFileNameRequired,
       [ExtendedCblErrorType.FileNameEmpty]:
-        StringNames.Error_CblErrorFileNameEmpty,
+        BrightChainStrings.Error_CblErrorFileNameEmpty,
       [ExtendedCblErrorType.FileNameWhitespace]:
-        StringNames.Error_CblErrorFileNameWhitespace,
+        BrightChainStrings.Error_CblErrorFileNameWhitespace,
       [ExtendedCblErrorType.FileNameInvalidChar]:
-        StringNames.Error_CblErrorFileNameInvalidChar,
+        BrightChainStrings.Error_CblErrorFileNameInvalidChar,
       [ExtendedCblErrorType.FileNameControlChars]:
-        StringNames.Error_CblErrorFileNameControlChars,
+        BrightChainStrings.Error_CblErrorFileNameControlChars,
       [ExtendedCblErrorType.FileNamePathTraversal]:
-        StringNames.Error_CblErrorFileNamePathTraversal,
+        BrightChainStrings.Error_CblErrorFileNamePathTraversal,
       [ExtendedCblErrorType.MimeTypeRequired]:
-        StringNames.Error_CblErrorMimeTypeRequired,
+        BrightChainStrings.Error_CblErrorMimeTypeRequired,
       [ExtendedCblErrorType.MimeTypeEmpty]:
-        StringNames.Error_CblErrorMimeTypeEmpty,
+        BrightChainStrings.Error_CblErrorMimeTypeEmpty,
       [ExtendedCblErrorType.MimeTypeWhitespace]:
-        StringNames.Error_CblErrorMimeTypeWhitespace,
+        BrightChainStrings.Error_CblErrorMimeTypeWhitespace,
       [ExtendedCblErrorType.MimeTypeLowercase]:
-        StringNames.Error_CblErrorMimeTypeLowercase,
+        BrightChainStrings.Error_CblErrorMimeTypeLowercase,
       [ExtendedCblErrorType.MimeTypeInvalidFormat]:
-        StringNames.Error_CblErrorMimeTypeInvalidFormat,
+        BrightChainStrings.Error_CblErrorMimeTypeInvalidFormat,
       [ExtendedCblErrorType.InvalidBlockSize]:
-        StringNames.Error_CblErrorInvalidBlockSize,
+        BrightChainStrings.Error_CblErrorInvalidBlockSize,
       [ExtendedCblErrorType.MetadataSizeExceeded]:
-        StringNames.Error_CblErrorMetadataSizeExceeded,
+        BrightChainStrings.Error_CblErrorMetadataSizeExceeded,
       [ExtendedCblErrorType.MetadataSizeNegative]:
-        StringNames.Error_CblErrorMetadataSizeNegative,
+        BrightChainStrings.Error_CblErrorMetadataSizeNegative,
       [ExtendedCblErrorType.InvalidMetadataBuffer]:
-        StringNames.Error_CblErrorInvalidMetadataBuffer,
+        BrightChainStrings.Error_CblErrorInvalidMetadataBuffer,
       [ExtendedCblErrorType.InvalidStructure]:
-        StringNames.Error_CblErrorInvalidStructure,
+        BrightChainStrings.Error_CblErrorInvalidStructure,
       [ExtendedCblErrorType.CreationFailed]:
-        StringNames.Error_CblErrorCreationFailedTemplate,
+        BrightChainStrings.Error_CblErrorCreationFailedTemplate,
       [ExtendedCblErrorType.InsufficientCapacity]:
-        StringNames.Error_CblErrorInsufficientCapacityTemplate,
+        BrightChainStrings.Error_CblErrorInsufficientCapacityTemplate,
       [ExtendedCblErrorType.NotExtendedCbl]:
-        StringNames.Error_CblErrorNotExtendedCbl,
+        BrightChainStrings.Error_CblErrorNotExtendedCbl,
       [ExtendedCblErrorType.FileNameTooLong]:
-        StringNames.Error_CblErrorFileNameTooLong,
+        BrightChainStrings.Error_CblErrorFileNameTooLong,
       [ExtendedCblErrorType.MimeTypeTooLong]:
-        StringNames.Error_CblErrorMimeTypeTooLong,
+        BrightChainStrings.Error_CblErrorMimeTypeTooLong,
     };
   }
   constructor(

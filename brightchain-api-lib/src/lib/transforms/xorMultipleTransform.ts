@@ -1,4 +1,5 @@
 import { Readable, Transform, TransformCallback } from 'stream';
+import { constantTimeXorMultiple } from '@brightchain/brightchain-lib';
 
 export class XorMultipleTransformStream extends Transform {
   private sources: Readable[];
@@ -41,17 +42,21 @@ export class XorMultipleTransformStream extends Transform {
         return;
       }
 
-      const xorResult = Buffer.alloc(minLength);
+      // Extract active buffers (not ended streams) and slice to minLength
+      const activeBuffers = this.buffers
+        .map((buffer, index) =>
+          this.streamEnded[index] ? null : buffer.subarray(0, minLength),
+        )
+        .filter((buffer): buffer is Buffer => buffer !== null);
 
-      for (let i = 0; i < minLength; i++) {
-        xorResult[i] = this.buffers.reduce(
-          (acc, buffer, index) =>
-            this.streamEnded[index] ? acc : acc ^ buffer[i],
-          0,
-        );
-      }
+      // Convert Buffers to Uint8Arrays for constant-time XOR
+      const uint8Arrays = activeBuffers.map((buffer) => new Uint8Array(buffer));
 
-      this.push(xorResult);
+      // Use constant-time XOR operation to prevent timing attacks
+      const xorResult = constantTimeXorMultiple(uint8Arrays);
+
+      // Convert result back to Buffer for streaming
+      this.push(Buffer.from(xorResult));
 
       // Update buffers
       this.buffers = this.buffers.map((buffer, index) =>

@@ -1,48 +1,48 @@
 import { EciesErrorType } from '../enumerations/eciesErrorType';
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { TypedError } from './typedError';
 
 export class EciesError extends TypedError<EciesErrorType> {
-  public get reasonMap(): Record<EciesErrorType, StringNames> {
+  public get reasonMap(): Record<EciesErrorType, BrightChainStrings> {
     return {
       [EciesErrorType.InvalidHeaderLength]:
-        StringNames.Error_EciesErrorInvalidHeaderLength,
+        BrightChainStrings.Error_EciesErrorInvalidHeaderLength,
       [EciesErrorType.InvalidEncryptedDataLength]:
-        StringNames.Error_EciesErrorInvalidEncryptedDataLength,
+        BrightChainStrings.Error_EciesErrorInvalidEncryptedDataLength,
       [EciesErrorType.InvalidMnemonic]:
-        StringNames.Error_EciesErrorInvalidMnemonic,
+        BrightChainStrings.Error_EciesErrorInvalidMnemonic,
       [EciesErrorType.MessageLengthMismatch]:
-        StringNames.Error_EciesErrorMessageLengthMismatch,
+        BrightChainStrings.Error_EciesErrorMessageLengthMismatch,
       [EciesErrorType.InvalidEncryptedKeyLength]:
-        StringNames.Error_EciesErrorInvalidEncryptedKeyLength,
+        BrightChainStrings.Error_EciesErrorInvalidEncryptedKeyLength,
       [EciesErrorType.InvalidEphemeralPublicKey]:
-        StringNames.Error_EciesErrorInvalidEphemeralPublicKey,
+        BrightChainStrings.Error_EciesErrorInvalidEphemeralPublicKey,
       [EciesErrorType.RecipientNotFound]:
-        StringNames.Error_EciesErrorRecipientNotFound,
+        BrightChainStrings.Error_EciesErrorRecipientNotFound,
       [EciesErrorType.InvalidSignature]:
-        StringNames.Error_EciesErrorInvalidSignature,
+        BrightChainStrings.Error_EciesErrorInvalidSignature,
       [EciesErrorType.InvalidSenderPublicKey]:
-        StringNames.Error_EciesErrorInvalidSenderPublicKey,
+        BrightChainStrings.Error_EciesErrorInvalidSenderPublicKey,
       [EciesErrorType.TooManyRecipients]:
-        StringNames.Error_EciesErrorTooManyRecipients,
+        BrightChainStrings.Error_EciesErrorTooManyRecipients,
       [EciesErrorType.PrivateKeyNotLoaded]:
-        StringNames.Error_EciesErrorPrivateKeyNotLoaded,
+        BrightChainStrings.Error_EciesErrorPrivateKeyNotLoaded,
       [EciesErrorType.RecipientKeyCountMismatch]:
-        StringNames.Error_EciesErrorRecipientKeyCountMismatch,
+        BrightChainStrings.Error_EciesErrorRecipientKeyCountMismatch,
       [EciesErrorType.InvalidIVLength]:
-        StringNames.Error_EciesErrorInvalidIVLength,
+        BrightChainStrings.Error_EciesErrorInvalidIVLength,
       [EciesErrorType.InvalidAuthTagLength]:
-        StringNames.Error_EciesErrorInvalidAuthTagLength,
+        BrightChainStrings.Error_EciesErrorInvalidAuthTagLength,
       [EciesErrorType.FileSizeTooLarge]:
-        StringNames.Error_EciesErrorFileSizeTooLarge,
+        BrightChainStrings.Error_EciesErrorFileSizeTooLarge,
       [EciesErrorType.InvalidDataLength]:
-        StringNames.Error_EciesErrorInvalidDataLength,
+        BrightChainStrings.Error_EciesErrorInvalidDataLength,
       [EciesErrorType.InvalidRecipientCount]:
-        StringNames.Error_EciesErrorInvalidRecipientCount,
+        BrightChainStrings.Error_EciesErrorInvalidRecipientCount,
       [EciesErrorType.InvalidBlockType]:
-        StringNames.Error_EciesErrorInvalidBlockType,
+        BrightChainStrings.Error_EciesErrorInvalidBlockType,
       [EciesErrorType.InvalidMessageCrc]:
-        StringNames.Error_EciesErrorInvalidMessageCrc,
+        BrightChainStrings.Error_EciesErrorInvalidMessageCrc,
     };
   }
 

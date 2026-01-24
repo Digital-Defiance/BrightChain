@@ -1,5 +1,4 @@
 import {
-  ECIESService,
   EmailString,
   Member,
   MemberType,
@@ -17,26 +16,26 @@ import { MessageCBLService } from './messageCBLService';
 
 describe('Feature: message-passing-and-events, MessageCBL Edge Cases', () => {
   let messageCBLService: MessageCBLService;
-  let _cblService: CBLService;
+  let cblService: CBLService;
   let checksumService: ChecksumService;
   let creator: Member;
 
-  beforeEach(async () => {
-    checksumService = new ChecksumService();
-    const eciesService = new ECIESService();
-    _cblService = new CBLService(checksumService, eciesService);
+  beforeEach(() => {
+    // Use ServiceProvider to get properly configured services
+    const serviceProvider = ServiceProvider.getInstance();
+    const eciesService = serviceProvider.eciesService;
+    checksumService = serviceProvider.checksumService;
+    cblService = serviceProvider.cblService;
     const blockStore = new MemoryBlockStore(BlockSize.Small);
     const metadataStore = new MemoryMessageMetadataStore();
     messageCBLService = new MessageCBLService(
-      _cblService,
+      cblService,
       checksumService,
       blockStore,
       metadataStore,
     );
 
-    ServiceProvider.getInstance();
-
-    const memberWithMnemonic = await Member.newMember(
+    const memberWithMnemonic = Member.newMember(
       eciesService,
       MemberType.User,
       'test',
@@ -51,8 +50,6 @@ describe('Feature: message-passing-and-events, MessageCBL Edge Cases', () => {
 
   describe('MessageCBL Header Operations', () => {
     it('makeMessageHeader creates valid header', () => {
-      const eciesService = new ECIESService();
-      const cblService = new CBLService(checksumService, eciesService);
       const header = cblService.makeMessageHeader(
         'chat',
         'sender123',
@@ -67,8 +64,6 @@ describe('Feature: message-passing-and-events, MessageCBL Edge Cases', () => {
     });
 
     it('isMessageHeader correctly identifies message headers', () => {
-      const eciesService = new ECIESService();
-      const cblService = new CBLService(checksumService, eciesService);
       const messageHeader = cblService.makeMessageHeader(
         'test',
         'sender',
