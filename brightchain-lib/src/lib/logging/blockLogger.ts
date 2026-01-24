@@ -183,13 +183,16 @@ function looksLikePrivateKey(value: unknown, key?: string): boolean {
   if (typeof value !== 'string') {
     return false;
   }
-  
+
   // Known safe fields that may contain long hex strings (like checksums/block IDs)
   const safeHexFields = ['blockId', 'checksum', 'id', 'hash', 'signature'];
-  if (key && safeHexFields.some((safe) => key.toLowerCase().includes(safe.toLowerCase()))) {
+  if (
+    key &&
+    safeHexFields.some((safe) => key.toLowerCase().includes(safe.toLowerCase()))
+  ) {
     return false;
   }
-  
+
   // Private keys are typically 64+ hex characters
   return /^(0x)?[0-9a-fA-F]{64,}$/.test(value);
 }

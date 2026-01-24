@@ -59,7 +59,9 @@ describe('E2E: Block Storage and Quorum Integration', () => {
     // Initialize the secrets library with default settings
     secrets.init(8, 'nodeCryptoRandomBytes');
     initializeBrightChain();
-    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4Buffer>());
+    ServiceLocator.setServiceProvider(
+      ServiceProvider.getInstance<GuidV4Buffer>(),
+    );
   });
 
   beforeEach(() => {
@@ -87,7 +89,9 @@ describe('E2E: Block Storage and Quorum Integration', () => {
     }
     ServiceProvider.resetInstance();
     initializeBrightChain();
-    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4Buffer>());
+    ServiceLocator.setServiceProvider(
+      ServiceProvider.getInstance<GuidV4Buffer>(),
+    );
   });
 
   /**
@@ -97,7 +101,8 @@ describe('E2E: Block Storage and Quorum Integration', () => {
     name: string,
     email: string,
   ): IMemberWithMnemonic<GuidV4Buffer> {
-    const eciesService = ServiceProvider.getInstance<GuidV4Buffer>().eciesService;
+    const eciesService =
+      ServiceProvider.getInstance<GuidV4Buffer>().eciesService;
     return Member.newMember<GuidV4Buffer>(
       eciesService,
       MemberType.User,

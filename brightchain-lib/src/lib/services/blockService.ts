@@ -174,7 +174,10 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
 
       // Only encrypt the actual data, not the padding
       // This aligns with canEncrypt() which checks lengthBeforeEncryption + overhead <= capacity
-      const dataToEncrypt = block.data.subarray(0, block.lengthBeforeEncryption);
+      const dataToEncrypt = block.data.subarray(
+        0,
+        block.lengthBeforeEncryption,
+      );
 
       const encryptedArray =
         await ServiceLocator.getServiceProvider<TID>().eciesService.encrypt(
@@ -197,7 +200,8 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       finalBuffer.set(recipientIdBytes, ECIES.ENCRYPTION_TYPE_SIZE);
 
       // Copy ECIES data after the recipient ID
-      const eciesDataOffset = ECIES.ENCRYPTION_TYPE_SIZE + idProvider.byteLength;
+      const eciesDataOffset =
+        ECIES.ENCRYPTION_TYPE_SIZE + idProvider.byteLength;
       finalBuffer.set(encryptedArray, eciesDataOffset);
 
       const checksum =

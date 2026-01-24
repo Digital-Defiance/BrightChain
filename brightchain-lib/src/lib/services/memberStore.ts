@@ -3,14 +3,13 @@ import {
   EmailString,
   hexToUint8Array,
   Member,
-  MemberType,
   PlatformID,
   SecureString,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { RawDataBlock } from '../blocks/rawData';
-import { uint8ArrayToBase64 } from '../bufferUtils';
 import { MemberDocument } from '../documents/member/memberDocument';
+import { MemberProfileDocument } from '../documents/member/memberProfileDocument';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockType } from '../enumerations/blockType';
 import { MemberErrorType } from '../enumerations/memberErrorType';
@@ -25,6 +24,10 @@ import {
   IMemberStore,
   INewMemberData,
 } from '../interfaces/member/memberData';
+import {
+  IPrivateMemberProfileHydratedData,
+  IPublicMemberProfileHydratedData,
+} from '../interfaces/member/profileStorage';
 import { IBlockStore } from '../interfaces/storage/blockStore';
 import { ServiceProvider } from './service.provider';
 
@@ -66,60 +69,16 @@ export class MemberStore<
       data.contactEmail,
     );
 
-    // Create initial member data
-    const publicData = {
-      id: uint8ArrayToHex(member.idBytes), // Use hex for consistent ID format
-      creatorId: uint8ArrayToHex(member.idBytes), // Same as ID for self-created members
-      type: data.type,
-      name: data.name,
-      dateCreated: new Date().toISOString(), // Convert to ISO string for JSON
-      dateUpdated: new Date().toISOString(), // Convert to ISO string for JSON
-      publicKey: uint8ArrayToBase64(member.publicKey), // Convert to base64 string as expected by Member.fromJson
-      votingPublicKey:
-        member.votingPublicKey &&
-        ServiceProvider.getInstance<TID>().votingService.votingPublicKeyToBuffer(
-          member.votingPublicKey,
-        ),
-      status: MemberStatusType.Active,
-      lastSeen: new Date(),
-      reputation: 0,
-      storageContributed: 0,
-      storageUsed: 0,
-      region: data.region,
-      geographicSpread: 0,
-      email: data.contactEmail ? data.contactEmail.toString() : '', // Use 'email' field name as expected by Member.fromJson
-    };
-
-    const privateData = {
-      id: uint8ArrayToHex(member.idBytes), // Use hex for consistent ID format
-      creatorId: uint8ArrayToHex(member.idBytes), // Same as ID for self-created members
-      type: data.type,
-      name: data.name,
-      dateCreated: new Date().toISOString(), // Convert to ISO string for JSON
-      dateUpdated: new Date().toISOString(), // Convert to ISO string for JSON
-      publicKey: uint8ArrayToBase64(member.publicKey), // Convert to base64 string as expected by Member.fromJson
-      email: data.contactEmail ? data.contactEmail.toString() : '', // Use 'email' field name as expected by Member.fromJson
-      trustedPeers: [],
-      blockedPeers: [],
-      settings: {
-        autoReplication: data.settings?.autoReplication ?? true,
-        minRedundancy: data.settings?.minRedundancy ?? 3,
-        preferredRegions: data.settings?.preferredRegions ?? [],
-      },
-      activityLog: [
-        {
-          timestamp: new Date(),
-          action: 'MEMBER_CREATED',
-          details: {},
-        },
-      ],
-    };
-
     // Create a transaction-like operation
+    // Identity data is extracted from the Member object by MemberDocument.create()
+    // Profile data (status, reputation, settings, etc.) is stored in MemberProfileDocument
     const rollbackOperations: (() => Promise<void>)[] = [];
     let doc: MemberDocument<TID> | undefined;
+    let profileDoc: MemberProfileDocument<TID> | undefined;
     let publicBlock: RawDataBlock | undefined;
     let privateBlock: RawDataBlock | undefined;
+    let publicProfileBlock: RawDataBlock | undefined;
+    let privateProfileBlock: RawDataBlock | undefined;
 
     try {
       // Step 1: Create member document using factory method with block store's block size
@@ -131,15 +90,54 @@ export class MemberStore<
         // No cleanup needed for document creation
       });
 
-      // Step 2: Generate CBLs
-      await doc.generateCBLs();
-      const publicCBL = await doc!.toPublicCBL();
-      const privateCBL = await doc!.toPrivateCBL();
+      // Step 2: Create profile document with operational data
+      const publicProfileData: IPublicMemberProfileHydratedData<TID> = {
+        id: member.id,
+        status: MemberStatusType.Active,
+        reputation: 0,
+        storageQuota: BigInt(1024 * 1024 * 100), // 100MB default quota
+        storageUsed: BigInt(0),
+        lastActive: new Date(),
+        dateCreated: new Date(),
+        dateUpdated: new Date(),
+      };
 
-      // Step 3: Create blocks
+      const privateProfileData: IPrivateMemberProfileHydratedData<TID> = {
+        id: member.id,
+        trustedPeers: [],
+        blockedPeers: [],
+        settings: data.settings || {
+          autoReplication: true,
+          minRedundancy: 3,
+          preferredRegions: [],
+        },
+        activityLog: [],
+        dateCreated: new Date(),
+        dateUpdated: new Date(),
+      };
+
+      profileDoc = MemberProfileDocument.create<TID>(
+        member,
+        publicProfileData,
+        privateProfileData,
+        { blockSize: this.blockStore.blockSize },
+      );
+      rollbackOperations.push(async () => {
+        // No cleanup needed for document creation
+      });
+
+      // Step 3: Generate CBLs for both documents
+      await doc.generateCBLs();
+      await profileDoc.generateCBLs();
+      const publicCBL = doc!.getPublicCBL();
+      const privateCBL = doc!.getPrivateCBL();
+      const publicProfileCBL = profileDoc!.getPublicCBL();
+      const privateProfileCBL = profileDoc!.getPrivateCBL();
+
+      // Step 4: Create blocks for identity
       publicBlock = new RawDataBlock(
         this.blockStore.blockSize,
-        publicCBL,
+        publicCBL.toUint8Array(),
         doc!.dateCreated,
         undefined, // Let RawDataBlock calculate the checksum
         BlockType.RawData,
@@ -148,14 +146,33 @@ export class MemberStore<
 
       privateBlock = new RawDataBlock(
         this.blockStore.blockSize,
-        privateCBL,
+        privateCBL.toUint8Array(),
         doc!.dateCreated,
         undefined, // Let RawDataBlock calculate the checksum
         BlockType.RawData,
         BlockDataType.PrivateMemberData,
       );
 
-      // Step 4: Store blocks
+      // Step 5: Create blocks for profile
+      publicProfileBlock = new RawDataBlock(
+        this.blockStore.blockSize,
+        publicProfileCBL.toUint8Array(),
+        profileDoc!.dateCreated,
+        undefined, // Let RawDataBlock calculate the checksum
+        BlockType.RawData,
+        BlockDataType.PublicMemberData, // Profile uses same data type
+      );
+
+      privateProfileBlock = new RawDataBlock(
+        this.blockStore.blockSize,
+        privateProfileCBL.toUint8Array(),
+        profileDoc!.dateCreated,
+        undefined, // Let RawDataBlock calculate the checksum
+        BlockType.RawData,
+        BlockDataType.PrivateMemberData, // Profile uses same data type
+      );
+
+      // Step 6: Store identity blocks
       await this.blockStore.setData(publicBlock);
       rollbackOperations.push(async () => {
         if (publicBlock) {
@@ -170,13 +187,30 @@ export class MemberStore<
         }
       });
 
-      // Step 5: Update index
+      // Step 7: Store profile blocks
+      await this.blockStore.setData(publicProfileBlock);
+      rollbackOperations.push(async () => {
+        if (publicProfileBlock) {
+          await this.blockStore.deleteData(publicProfileBlock.idChecksum);
+        }
+      });
+
+      await this.blockStore.setData(privateProfileBlock);
+      rollbackOperations.push(async () => {
+        if (privateProfileBlock) {
+          await this.blockStore.deleteData(privateProfileBlock.idChecksum);
+        }
+      });
+
+      // Step 8: Update index
       const provider = ServiceProvider.getInstance<TID>().idProvider;
       const indexEntry: IMemberIndexEntry<TID> = {
         id: provider.fromBytes(hexToUint8Array(doc!.id)),
         publicCBL: publicBlock.idChecksum, // Use the actual block checksum
         privateCBL: privateBlock.idChecksum, // Use the actual block checksum
-        type: MemberType.User,
+        publicProfileCBL: publicProfileBlock.idChecksum, // Profile public data
+        privateProfileCBL: privateProfileBlock.idChecksum, // Profile private data
+        type: data.type,
         status: MemberStatusType.Active,
         lastUpdate: new Date(),
         region: data.region,
@@ -215,7 +249,9 @@ export class MemberStore<
     // Return reference
     return {
       reference: {
-        id: ServiceProvider.getInstance<TID>().idProvider.fromBytes(hexToUint8Array(doc!.id)),
+        id: ServiceProvider.getInstance<TID>().idProvider.fromBytes(
+          hexToUint8Array(doc!.id),
+        ),
         type: doc!.type,
         dateVerified: new Date(),
         publicCBL: publicBlock.idChecksum, // Use the actual block checksum
@@ -229,7 +265,9 @@ export class MemberStore<
    */
   public async getMember(id: TID): Promise<Member<TID>> {
     const indexEntry = this.memberIndex.get(
-      uint8ArrayToHex(ServiceProvider.getInstance<TID>().idProvider.toBytes(id)),
+      uint8ArrayToHex(
+        ServiceProvider.getInstance<TID>().idProvider.toBytes(id),
+      ),
     );
     if (!indexEntry) {
       throw new MemberError(MemberErrorType.MemberNotFound);
@@ -253,6 +291,47 @@ export class MemberStore<
   }
 
   /**
+   * Get member profile document by ID
+   */
+  public async getMemberProfile(id: TID): Promise<{
+    publicProfile: IPublicMemberProfileHydratedData<TID> | null;
+    privateProfile: IPrivateMemberProfileHydratedData<TID> | null;
+  }> {
+    const indexEntry = this.memberIndex.get(
+      uint8ArrayToHex(
+        ServiceProvider.getInstance<TID>().idProvider.toBytes(id),
+      ),
+    );
+    if (!indexEntry) {
+      throw new MemberError(MemberErrorType.MemberNotFound);
+    }
+
+    let publicProfile: IPublicMemberProfileHydratedData<TID> | null = null;
+    let privateProfile: IPrivateMemberProfileHydratedData<TID> | null = null;
+
+    // Get profile CBLs if they exist
+    if (indexEntry.publicProfileCBL) {
+      const _publicProfileBlock = await this.blockStore.getData(
+        indexEntry.publicProfileCBL,
+      );
+      // TODO: Deserialize CBL data to get the actual profile data
+      // For now, return null until full CBL deserialization is implemented
+      publicProfile = null;
+    }
+
+    if (indexEntry.privateProfileCBL) {
+      const _privateProfileBlock = await this.blockStore.getData(
+        indexEntry.privateProfileCBL,
+      );
+      // TODO: Deserialize CBL data to get the actual profile data
+      // For now, return null until full CBL deserialization is implemented
+      privateProfile = null;
+    }
+
+    return { publicProfile, privateProfile };
+  }
+
+  /**
    * Update a member
    */
   public async updateMember(
@@ -260,7 +339,9 @@ export class MemberStore<
     changes: IMemberChanges<TID>,
   ): Promise<void> {
     const indexEntry = this.memberIndex.get(
-      uint8ArrayToHex(ServiceProvider.getInstance<TID>().idProvider.toBytes(id)),
+      uint8ArrayToHex(
+        ServiceProvider.getInstance<TID>().idProvider.toBytes(id),
+      ),
     );
     if (!indexEntry) {
       throw new MemberError(MemberErrorType.MemberNotFound);
@@ -282,7 +363,9 @@ export class MemberStore<
    */
   public async deleteMember(id: TID): Promise<void> {
     const provider = ServiceProvider.getInstance<TID>().idProvider;
-    const indexEntry = this.memberIndex.get(uint8ArrayToHex(provider.toBytes(id)));
+    const indexEntry = this.memberIndex.get(
+      uint8ArrayToHex(provider.toBytes(id)),
+    );
     if (!indexEntry) {
       throw new MemberError(MemberErrorType.MemberNotFound);
     }

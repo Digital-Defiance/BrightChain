@@ -1,4 +1,3 @@
-import fc from 'fast-check';
 import {
   EmailString,
   GuidV4Uint8Array,
@@ -6,15 +5,16 @@ import {
   Member,
   MemberType,
 } from '@digitaldefiance/ecies-lib';
+import fc from 'fast-check';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
-import { EphemeralBlock } from './ephemeral';
-import { EncryptedBlock } from './encrypted';
-import { ServiceLocator } from '../services/serviceLocator';
-import { ServiceProvider } from '../services/service.provider';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { initializeBrightChain } from '../init';
+import { ServiceProvider } from '../services/service.provider';
+import { ServiceLocator } from '../services/serviceLocator';
+import { EncryptedBlock } from './encrypted';
+import { EphemeralBlock } from './ephemeral';
 
 /**
  * Property-based tests for block immutability
@@ -28,14 +28,15 @@ describe('Feature: block-security-hardening, Property 9: Block Immutability', ()
   beforeAll(() => {
     initializeBrightChain();
     ServiceLocator.setServiceProvider(ServiceProvider.getInstance());
-    const eciesService = ServiceProvider.getInstance<GuidV4Uint8Array>().eciesService;
+    const eciesService =
+      ServiceProvider.getInstance<GuidV4Uint8Array>().eciesService;
     testMember = Member.newMember<GuidV4Uint8Array>(
       eciesService,
       MemberType.User,
       'Test User',
       new EmailString('test@example.com'),
     );
-    
+
     // Verify the test member was created correctly
     expect(testMember.member).toBeDefined();
     expect(testMember.member.publicKey).toBeDefined();
@@ -56,7 +57,9 @@ describe('Feature: block-security-hardening, Property 9: Block Immutability', ()
           paddedData.set(data.slice(0, Math.min(data.length, blockSize)));
 
           const checksum =
-            ServiceLocator.getServiceProvider().checksumService.calculateChecksum(paddedData);
+            ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+              paddedData,
+            );
 
           const metadata = new EphemeralBlockMetadata<GuidV4Uint8Array>(
             blockSize,
@@ -99,10 +102,14 @@ describe('Feature: block-security-hardening, Property 9: Block Immutability', ()
           // to ensure the encrypted result fits within the block
           const blockSize = BlockSize.Message;
           const paddedData = new Uint8Array(blockSize);
-          paddedData.set(plaintext.slice(0, Math.min(plaintext.length, blockSize)));
+          paddedData.set(
+            plaintext.slice(0, Math.min(plaintext.length, blockSize)),
+          );
 
           const checksum =
-            ServiceLocator.getServiceProvider().checksumService.calculateChecksum(paddedData);
+            ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+              paddedData,
+            );
 
           const metadata = new EphemeralBlockMetadata<GuidV4Uint8Array>(
             blockSize,
@@ -133,10 +140,9 @@ describe('Feature: block-security-hardening, Property 9: Block Immutability', ()
           expect(ephemeralBlock.creator?.publicKey).toBeDefined();
           expect(ephemeralBlock.creator?.publicKey.length).toBe(33);
 
-          const encryptedBlock = await ephemeralBlock.encrypt<EncryptedBlock<GuidV4Uint8Array>>(
-            BlockType.EncryptedOwnedDataBlock,
-            [testMember.member],
-          );
+          const encryptedBlock = await ephemeralBlock.encrypt<
+            EncryptedBlock<GuidV4Uint8Array>
+          >(BlockType.EncryptedOwnedDataBlock, [testMember.member]);
 
           const details1 = encryptedBlock.encryptionDetails;
           const details2 = encryptedBlock.encryptionDetails;
@@ -161,7 +167,9 @@ describe('Feature: block-security-hardening, Property 9: Block Immutability', ()
           paddedData.set(data.slice(0, Math.min(data.length, blockSize)));
 
           const checksum =
-            ServiceLocator.getServiceProvider().checksumService.calculateChecksum(paddedData);
+            ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+              paddedData,
+            );
 
           const metadata = new EphemeralBlockMetadata<GuidV4Uint8Array>(
             blockSize,
@@ -207,7 +215,9 @@ describe('Feature: block-security-hardening, Property 9: Block Immutability', ()
           paddedData.set(data.slice(0, Math.min(data.length, blockSize)));
 
           const checksum =
-            ServiceLocator.getServiceProvider().checksumService.calculateChecksum(paddedData);
+            ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+              paddedData,
+            );
 
           const metadata = new EphemeralBlockMetadata<GuidV4Uint8Array>(
             blockSize,

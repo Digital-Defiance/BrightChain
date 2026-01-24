@@ -109,14 +109,11 @@ describe('Feature: block-security-hardening, Property 1: XOR Operation Correctne
    */
   it('Property 1d: XOR with self produces all zeros', () => {
     fc.assert(
-      fc.property(
-        fc.uint8Array({ minLength: 1, maxLength: 1024 }),
-        (array) => {
-          const result = constantTimeXor(array, array);
-          const allZeros = result.every((byte) => byte === 0);
-          expect(allZeros).toBe(true);
-        },
-      ),
+      fc.property(fc.uint8Array({ minLength: 1, maxLength: 1024 }), (array) => {
+        const result = constantTimeXor(array, array);
+        const allZeros = result.every((byte) => byte === 0);
+        expect(allZeros).toBe(true);
+      }),
       { numRuns: 100 },
     );
   });
@@ -130,14 +127,11 @@ describe('Feature: block-security-hardening, Property 1: XOR Operation Correctne
    */
   it('Property 1e: XOR with zeros returns original', () => {
     fc.assert(
-      fc.property(
-        fc.uint8Array({ minLength: 1, maxLength: 1024 }),
-        (array) => {
-          const zeros = new Uint8Array(array.length);
-          const result = constantTimeXor(array, zeros);
-          expect(result).toEqual(array);
-        },
-      ),
+      fc.property(fc.uint8Array({ minLength: 1, maxLength: 1024 }), (array) => {
+        const zeros = new Uint8Array(array.length);
+        const result = constantTimeXor(array, zeros);
+        expect(result).toEqual(array);
+      }),
       { numRuns: 100 },
     );
   });
@@ -159,9 +153,9 @@ describe('Feature: block-security-hardening, Property 1: XOR Operation Correctne
           if (newLength === array.length) {
             return; // Skip if lengths would be the same
           }
-          
+
           const shorterArray = array.slice(0, newLength);
-          
+
           expect(() => constantTimeXor(array, shorterArray)).toThrow(
             XorLengthMismatchError,
           );
@@ -223,7 +217,10 @@ describe('Feature: block-security-hardening, Property 1: XOR Operation Correctne
         }),
         (original, keys) => {
           // Ensure all arrays are same length
-          const length = Math.min(original.length, ...keys.map((k) => k.length));
+          const length = Math.min(
+            original.length,
+            ...keys.map((k) => k.length),
+          );
           const data = original.slice(0, length);
           const sameKeys = keys.map((k) => k.slice(0, length));
 

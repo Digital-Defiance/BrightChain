@@ -7,15 +7,18 @@ export class BlockError extends TypedError<BlockErrorType> {
     return {
       [BlockErrorType.CreatorRequiredForEncryption]:
         BrightChainStrings.Error_BlockErrorCreatorRequiredForEncryption,
-      [BlockErrorType.CannotEncrypt]: BrightChainStrings.Error_BlockErrorCannotEncrypt,
-      [BlockErrorType.CannotDecrypt]: BrightChainStrings.Error_BlockErrorCannotEncrypt,
+      [BlockErrorType.CannotEncrypt]:
+        BrightChainStrings.Error_BlockErrorCannotEncrypt,
+      [BlockErrorType.CannotDecrypt]:
+        BrightChainStrings.Error_BlockErrorCannotEncrypt,
       [BlockErrorType.ActualDataLengthExceedsDataLength]:
         BrightChainStrings.Error_BlockErrorActualDataLengthExceedsDataLength,
       [BlockErrorType.ActualDataLengthNegative]:
         BrightChainStrings.Error_BlockErrorActualDataLengthNegative,
       [BlockErrorType.CreatorRequired]:
         BrightChainStrings.Error_BlockErrorCreatorRequired,
-      [BlockErrorType.DataRequired]: BrightChainStrings.Error_BlockErrorDataRequired,
+      [BlockErrorType.DataRequired]:
+        BrightChainStrings.Error_BlockErrorDataRequired,
       [BlockErrorType.DataLengthExceedsCapacity]:
         BrightChainStrings.Error_BlockErrorDataLengthExceedsCapacity,
       [BlockErrorType.UnexpectedEncryptedBlockType]:

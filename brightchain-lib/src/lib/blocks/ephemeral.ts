@@ -246,13 +246,12 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
     // For both encrypted and unencrypted blocks,
     // validate against the provided checksum
     if (!this.idChecksum) {
-      const error = new BlockValidationError(BlockValidationErrorType.NoChecksum);
-      logValidationFailure(
-        undefined,
-        BlockType[this.blockType],
-        error,
-        { blockSize: this.blockSize },
+      const error = new BlockValidationError(
+        BlockValidationErrorType.NoChecksum,
       );
+      logValidationFailure(undefined, BlockType[this.blockType], error, {
+        blockSize: this.blockSize,
+      });
       throw error;
     }
 
@@ -263,7 +262,10 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
       );
     const validated = computedChecksum.equals(this.idChecksum);
     if (!validated) {
-      const error = new ChecksumMismatchError(this.idChecksum, computedChecksum);
+      const error = new ChecksumMismatchError(
+        this.idChecksum,
+        computedChecksum,
+      );
       logValidationFailure(
         this.idChecksum.toHex(),
         BlockType[this.blockType],
@@ -282,13 +284,12 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
     // For both encrypted and unencrypted blocks,
     // validate against the provided checksum
     if (!this.idChecksum) {
-      const error = new BlockValidationError(BlockValidationErrorType.NoChecksum);
-      logValidationFailure(
-        undefined,
-        BlockType[this.blockType],
-        error,
-        { blockSize: this.blockSize },
+      const error = new BlockValidationError(
+        BlockValidationErrorType.NoChecksum,
       );
+      logValidationFailure(undefined, BlockType[this.blockType], error, {
+        blockSize: this.blockSize,
+      });
       throw error;
     }
 
@@ -299,7 +300,10 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
       );
     const validated = computedChecksum.equals(this.idChecksum);
     if (!validated) {
-      const error = new ChecksumMismatchError(this.idChecksum, computedChecksum);
+      const error = new ChecksumMismatchError(
+        this.idChecksum,
+        computedChecksum,
+      );
       logValidationFailure(
         this.idChecksum.toHex(),
         BlockType[this.blockType],

@@ -1,4 +1,9 @@
-import { ECIES, Member, uint8ArrayToHex, type PlatformID } from '@digitaldefiance/ecies-lib';
+import {
+  ECIES,
+  Member,
+  uint8ArrayToHex,
+  type PlatformID,
+} from '@digitaldefiance/ecies-lib';
 import BlockDataType from './enumerations/blockDataType';
 import { BlockEncryptionType } from './enumerations/blockEncryptionType';
 import BlockType from './enumerations/blockType';
@@ -102,14 +107,14 @@ export class EncryptedBlockMetadata<TID extends PlatformID = Uint8Array>
   ): EncryptedBlockMetadata<TID> {
     // Parse the JSON to get the data
     const parsed = JSON.parse(json);
-    
+
     // Parse using parent's fromJson to get the ephemeral metadata
     const ephemeralData = super.fromJson<TID>(json);
-    
+
     // Extract encrypted-specific fields
     const encryptionType = parsed.encryptionType as BlockEncryptionType;
     const recipientCount = parsed.recipientCount as number;
-    
+
     // Create a proper EncryptedBlockMetadata instance
     return new EncryptedBlockMetadata<TID>(
       ephemeralData.size,

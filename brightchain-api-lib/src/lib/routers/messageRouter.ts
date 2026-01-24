@@ -26,6 +26,11 @@ export function createMessageRouter(service: MessagePassingService): Router {
           return;
         }
 
+        if (typeof content !== 'string' || typeof senderId !== 'string' || typeof messageType !== 'string') {
+          res.status(400).json({ error: 'Invalid field types' });
+          return;
+        }
+
         const contentBuffer = Buffer.from(content, 'base64');
         const result = await service.sendMessage(contentBuffer, senderId, {
           recipients: recipients || [],

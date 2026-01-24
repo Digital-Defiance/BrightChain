@@ -7,12 +7,12 @@ import {
   CblErrorType,
   ChecksumService,
   ConstituentBlockListBlock,
-  getBrightChainIdProvider,
-  initializeBrightChain,
   ServiceLocator,
   ServiceProvider,
   StoreError,
   StoreErrorType,
+  getBrightChainIdProvider,
+  initializeBrightChain,
 } from '@brightchain/brightchain-lib';
 import {
   EmailString,

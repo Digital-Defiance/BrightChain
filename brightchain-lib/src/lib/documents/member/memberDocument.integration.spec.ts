@@ -120,7 +120,9 @@ describe('MemberDocument Integration Tests', () => {
     it('should create document and generate CBLs in sequence', async () => {
       // Step 1: Create document using factory method
       const doc = MemberDocument.create(publicMember, privateMember);
-      expect(doc.id).toEqual(uint8ArrayToHex(publicMember.idBytes) as ShortHexGuid);
+      expect(doc.id).toEqual(
+        uint8ArrayToHex(publicMember.idBytes) as ShortHexGuid,
+      );
 
       // Step 2: Generate CBLs
       await doc.generateCBLs();

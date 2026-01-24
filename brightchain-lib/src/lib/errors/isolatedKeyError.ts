@@ -1,5 +1,5 @@
-import { IsolatedKeyErrorType } from '../enumerations/isolatedKeyErrorType';
 import BrightChainStrings from '../enumerations/brightChainStrings';
+import { IsolatedKeyErrorType } from '../enumerations/isolatedKeyErrorType';
 import { TypedError } from './typedError';
 
 export class IsolatedKeyError extends TypedError<IsolatedKeyErrorType> {

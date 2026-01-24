@@ -1,11 +1,12 @@
-import { FecErrorType } from '../enumerations/fecErrorType';
 import BrightChainStrings from '../enumerations/brightChainStrings';
+import { FecErrorType } from '../enumerations/fecErrorType';
 import { TypedError } from './typedError';
 
 export class FecError extends TypedError<FecErrorType> {
   public get reasonMap(): Record<FecErrorType, BrightChainStrings> {
     return {
-      [FecErrorType.DataRequired]: BrightChainStrings.Error_FecErrorDataRequired,
+      [FecErrorType.DataRequired]:
+        BrightChainStrings.Error_FecErrorDataRequired,
       [FecErrorType.InvalidShardCounts]:
         BrightChainStrings.Error_FecErrorInvalidShardCounts,
       [FecErrorType.InvalidShardsAvailableArray]:

@@ -14,10 +14,6 @@
  *   produce a CBL with identical `cblAddressCount`, `originalDataLength`, and `addresses`.
  */
 
-import { ConstituentBlockListBlock } from './cbl';
-import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
-import { BlockSize } from '../enumerations/blockSize';
-import { ServiceProvider } from '../services/service.provider';
 import {
   arraysEqual,
   EmailString,
@@ -26,6 +22,10 @@ import {
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
+import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
+import { BlockSize } from '../enumerations/blockSize';
+import { ServiceProvider } from '../services/service.provider';
+import { ConstituentBlockListBlock } from './cbl';
 
 // Set a longer timeout for all tests in this file
 jest.setTimeout(60000);
@@ -62,7 +62,8 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
           fc.integer({ min: 1, max: 3 }),
           async (addressCount) => {
             const cblService = ServiceProvider.getInstance().cblService;
-            const checksumService = ServiceProvider.getInstance().checksumService;
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
 
             // Generate random block addresses
             const blockAddresses: Buffer[] = [];
@@ -133,13 +134,16 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
           fc.integer({ min: 1, max: 3 }),
           async (addressCount) => {
             const cblService = ServiceProvider.getInstance().cblService;
-            const checksumService = ServiceProvider.getInstance().checksumService;
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
 
             // Generate random block addresses
             const blockAddresses: Buffer[] = [];
             for (let i = 0; i < addressCount; i++) {
               const checksum = checksumService.calculateChecksum(
-                Buffer.from(`consistency-test-${Date.now()}-${Math.random()}-${i}`),
+                Buffer.from(
+                  `consistency-test-${Date.now()}-${Math.random()}-${i}`,
+                ),
               );
               blockAddresses.push(Buffer.from(checksum.toBuffer()));
             }
@@ -196,13 +200,16 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
           fc.integer({ min: 512, max: 4096 }),
           async (addressCount, fileDataLength) => {
             const cblService = ServiceProvider.getInstance().cblService;
-            const checksumService = ServiceProvider.getInstance().checksumService;
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
 
             // Generate random block addresses
             const blockAddresses: Buffer[] = [];
             for (let i = 0; i < addressCount; i++) {
               const checksum = checksumService.calculateChecksum(
-                Buffer.from(`roundtrip-test-${Date.now()}-${Math.random()}-${i}`),
+                Buffer.from(
+                  `roundtrip-test-${Date.now()}-${Math.random()}-${i}`,
+                ),
               );
               blockAddresses.push(Buffer.from(checksum.toBuffer()));
             }
@@ -227,7 +234,10 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
             const paddedData = Buffer.concat([data, padding]);
 
             // Create original CBL block
-            const originalCbl = new ConstituentBlockListBlock(paddedData, creator);
+            const originalCbl = new ConstituentBlockListBlock(
+              paddedData,
+              creator,
+            );
 
             // Serialize: Get the raw data from the CBL
             const serializedData = originalCbl.data;
@@ -239,10 +249,14 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
             );
 
             // Verify cblAddressCount is preserved
-            expect(deserializedCbl.cblAddressCount).toBe(originalCbl.cblAddressCount);
+            expect(deserializedCbl.cblAddressCount).toBe(
+              originalCbl.cblAddressCount,
+            );
 
             // Verify originalDataLength is preserved
-            expect(deserializedCbl.originalDataLength).toBe(originalCbl.originalDataLength);
+            expect(deserializedCbl.originalDataLength).toBe(
+              originalCbl.originalDataLength,
+            );
 
             // Verify addresses are preserved
             const originalAddresses = originalCbl.addresses;
@@ -287,13 +301,16 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
           fc.integer({ min: 1, max: 3 }),
           async (addressCount) => {
             const cblService = ServiceProvider.getInstance().cblService;
-            const checksumService = ServiceProvider.getInstance().checksumService;
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
 
             // Generate random block addresses
             const blockAddresses: Buffer[] = [];
             for (let i = 0; i < addressCount; i++) {
               const checksum = checksumService.calculateChecksum(
-                Buffer.from(`signature-test-${Date.now()}-${Math.random()}-${i}`),
+                Buffer.from(
+                  `signature-test-${Date.now()}-${Math.random()}-${i}`,
+                ),
               );
               blockAddresses.push(Buffer.from(checksum.toBuffer()));
             }
@@ -317,7 +334,10 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
             const paddedData = Buffer.concat([data, padding]);
 
             // Create original CBL
-            const originalCbl = new ConstituentBlockListBlock(paddedData, creator);
+            const originalCbl = new ConstituentBlockListBlock(
+              paddedData,
+              creator,
+            );
 
             // Serialize and deserialize
             const serializedData = originalCbl.data;
@@ -356,7 +376,8 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
           fc.integer({ min: 1, max: 3 }),
           async (addressCount) => {
             const cblService = ServiceProvider.getInstance().cblService;
-            const checksumService = ServiceProvider.getInstance().checksumService;
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
 
             // Generate random block addresses
             const blockAddresses: Buffer[] = [];
@@ -386,7 +407,10 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
             const paddedData = Buffer.concat([data, padding]);
 
             // Create original CBL
-            const originalCbl = new ConstituentBlockListBlock(paddedData, creator);
+            const originalCbl = new ConstituentBlockListBlock(
+              paddedData,
+              creator,
+            );
 
             // Serialize and deserialize
             const serializedData = originalCbl.data;
@@ -398,8 +422,12 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
             // Verify creator ID is preserved
             expect(
               arraysEqual(
-                new Uint8Array(cblService.idProvider.toBytes(deserializedCbl.creatorId)),
-                new Uint8Array(cblService.idProvider.toBytes(originalCbl.creatorId)),
+                new Uint8Array(
+                  cblService.idProvider.toBytes(deserializedCbl.creatorId),
+                ),
+                new Uint8Array(
+                  cblService.idProvider.toBytes(originalCbl.creatorId),
+                ),
               ),
             ).toBe(true);
 
@@ -408,8 +436,12 @@ describe('Feature: block-security-hardening, CBL Consistency Property Tests', ()
             if (deserializedCbl.creator && originalCbl.creator) {
               expect(
                 arraysEqual(
-                  new Uint8Array(cblService.idProvider.toBytes(deserializedCbl.creator.id)),
-                  new Uint8Array(cblService.idProvider.toBytes(originalCbl.creator.id)),
+                  new Uint8Array(
+                    cblService.idProvider.toBytes(deserializedCbl.creator.id),
+                  ),
+                  new Uint8Array(
+                    cblService.idProvider.toBytes(originalCbl.creator.id),
+                  ),
                 ),
               ).toBe(true);
             }

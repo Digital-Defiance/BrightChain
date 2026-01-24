@@ -1,4 +1,10 @@
-import { EmailString, Member, MemberType, ShortHexGuid, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
+import {
+  EmailString,
+  Member,
+  MemberType,
+  ShortHexGuid,
+  uint8ArrayToHex,
+} from '@digitaldefiance/ecies-lib';
 import { ServiceProvider } from '../../services/service.provider';
 import { MemberDocument } from './memberDocument';
 

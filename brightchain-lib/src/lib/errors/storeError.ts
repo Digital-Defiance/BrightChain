@@ -1,5 +1,5 @@
-import { StoreErrorType } from '../enumerations/storeErrorType';
 import BrightChainStrings from '../enumerations/brightChainStrings';
+import { StoreErrorType } from '../enumerations/storeErrorType';
 import { TypedError } from './typedError';
 
 export class StoreError extends TypedError<StoreErrorType> {

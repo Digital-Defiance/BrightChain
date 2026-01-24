@@ -9,7 +9,8 @@ export class TupleError extends TypedError<TupleErrorType> {
         BrightChainStrings.Error_TupleErrorInvalidTupleSize,
       [TupleErrorType.BlockSizeMismatch]:
         BrightChainStrings.Error_TupleErrorBlockSizeMismatch,
-      [TupleErrorType.NoBlocksToXor]: BrightChainStrings.Error_TupleErrorNoBlocksToXor,
+      [TupleErrorType.NoBlocksToXor]:
+        BrightChainStrings.Error_TupleErrorNoBlocksToXor,
       [TupleErrorType.InvalidBlockCount]:
         BrightChainStrings.Error_TupleErrorInvalidBlockCount,
       [TupleErrorType.InvalidBlockType]:
