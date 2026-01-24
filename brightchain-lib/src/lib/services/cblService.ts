@@ -8,9 +8,13 @@ import {
   SignatureUint8Array,
   TypedIdProviderWrapper,
 } from '@digitaldefiance/ecies-lib';
-import { getBrightChainIdProvider } from '../init';
 import { concatenateUint8Arrays, writeUInt32BE } from '../bufferUtils';
-import CONSTANTS, { BLOCK_HEADER, CBL, StructuredBlockType, TUPLE } from '../constants';
+import CONSTANTS, {
+  BLOCK_HEADER,
+  CBL,
+  StructuredBlockType,
+  TUPLE,
+} from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize, lengthToBlockSize } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
@@ -20,6 +24,7 @@ import { MessageEncryptionScheme } from '../enumerations/messaging/messageEncryp
 import { MessagePriority } from '../enumerations/messaging/messagePriority';
 import { CblError } from '../errors/cblError';
 import { ExtendedCblError } from '../errors/extendedCblError';
+import { getBrightChainIdProvider } from '../init';
 import { IConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/cblHeader';
 import { IExtendedConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/ecblHeader';
 import { IMessageConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/messageCblHeader';
@@ -255,8 +260,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
    */
   public get baseHeaderSize(): number {
     return (
-      this.baseHeaderCreatorSignatureOffset +
-      CBLService.CreatorSignatureSize
+      this.baseHeaderCreatorSignatureOffset + CBLService.CreatorSignatureSize
     );
   }
 
@@ -303,12 +307,14 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
   /**
    * Length of the sub-CBL count field in SuperCBL header
    */
-  public static readonly SuperCblSubCblCountSize: number = CONSTANTS['UINT32_SIZE'];
+  public static readonly SuperCblSubCblCountSize: number =
+    CONSTANTS['UINT32_SIZE'];
 
   /**
    * Length of the total block count field in SuperCBL header
    */
-  public static readonly SuperCblTotalBlockCountSize: number = CONSTANTS['UINT32_SIZE'];
+  public static readonly SuperCblTotalBlockCountSize: number =
+    CONSTANTS['UINT32_SIZE'];
 
   /**
    * Length of the depth field in SuperCBL header
@@ -333,7 +339,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
    * Offset of the depth field in SuperCBL header
    */
   public get superCblDepthOffset(): number {
-    return this.superCblTotalBlockCountOffset + CBLService.SuperCblTotalBlockCountSize;
+    return (
+      this.superCblTotalBlockCountOffset +
+      CBLService.SuperCblTotalBlockCountSize
+    );
   }
 
   /**
@@ -361,7 +370,9 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
    * Length of the SuperCBL header (without address data)
    */
   public get superCblHeaderSize(): number {
-    return this.superCblCreatorSignatureOffset + CBLService.CreatorSignatureSize;
+    return (
+      this.superCblCreatorSignatureOffset + CBLService.CreatorSignatureSize
+    );
   }
 
   /**
@@ -1611,7 +1622,8 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     }
     const checksumData = header.subarray(
       this.superCblHeaderOffsets.OriginalDataChecksum,
-      this.superCblHeaderOffsets.OriginalDataChecksum + CBLService.DataChecksumSize,
+      this.superCblHeaderOffsets.OriginalDataChecksum +
+        CBLService.DataChecksumSize,
     );
     return Checksum.fromUint8Array(checksumData);
   }
@@ -1630,7 +1642,8 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     }
     return header.subarray(
       this.superCblHeaderOffsets.CreatorSignature,
-      this.superCblHeaderOffsets.CreatorSignature + CBLService.CreatorSignatureSize,
+      this.superCblHeaderOffsets.CreatorSignature +
+        CBLService.CreatorSignatureSize,
     ) as unknown as SignatureUint8Array;
   }
 
@@ -1693,9 +1706,21 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
   ): { headerData: Uint8Array; signature: SignatureUint8Array } {
     // Validate inputs
     Validator.validateRequired(creator, 'creator', 'makeSuperCblHeader');
-    Validator.validateRequired(dateCreated, 'dateCreated', 'makeSuperCblHeader');
-    Validator.validateRequired(originalDataChecksum, 'originalDataChecksum', 'makeSuperCblHeader');
-    Validator.validateRequired(subCblChecksums, 'subCblChecksums', 'makeSuperCblHeader');
+    Validator.validateRequired(
+      dateCreated,
+      'dateCreated',
+      'makeSuperCblHeader',
+    );
+    Validator.validateRequired(
+      originalDataChecksum,
+      'originalDataChecksum',
+      'makeSuperCblHeader',
+    );
+    Validator.validateRequired(
+      subCblChecksums,
+      'subCblChecksums',
+      'makeSuperCblHeader',
+    );
     Validator.validateBlockSize(blockSize, 'makeSuperCblHeader');
 
     if (subCblCount !== subCblChecksums.length) {
@@ -1714,8 +1739,12 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
 
     // Create buffers for header fields
     const dateBuffer = new Uint8Array(CBLService.DateSize);
-    const subCblCountBuffer = new Uint8Array(CBLService.SuperCblSubCblCountSize);
-    const totalBlockCountBuffer = new Uint8Array(CBLService.SuperCblTotalBlockCountSize);
+    const subCblCountBuffer = new Uint8Array(
+      CBLService.SuperCblSubCblCountSize,
+    );
+    const totalBlockCountBuffer = new Uint8Array(
+      CBLService.SuperCblTotalBlockCountSize,
+    );
     const depthBuffer = new Uint8Array(CBLService.SuperCblDepthSize);
     const dataLengthBuffer = new Uint8Array(CBLService.DataLengthSize);
     const blockSizeBuffer = new Uint8Array(CONSTANTS['UINT32_SIZE']);
@@ -1725,7 +1754,11 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     // Write timestamp using DataView
     const dateView = new DataView(dateBuffer.buffer);
     dateView.setUint32(0, Math.floor(timestamp / 0x100000000), false);
-    dateView.setUint32(CONSTANTS['UINT32_SIZE'], timestamp % 0x100000000, false);
+    dateView.setUint32(
+      CONSTANTS['UINT32_SIZE'],
+      timestamp % 0x100000000,
+      false,
+    );
 
     // Write sub-CBL count
     const subCblCountView = new DataView(subCblCountBuffer.buffer);
@@ -1756,9 +1789,14 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     }
 
     // Create address list from sub-CBL checksums
-    const addressList = new Uint8Array(subCblCount * CHECKSUM.SHA3_BUFFER_LENGTH);
+    const addressList = new Uint8Array(
+      subCblCount * CHECKSUM.SHA3_BUFFER_LENGTH,
+    );
     for (let i = 0; i < subCblCount; i++) {
-      addressList.set(subCblChecksums[i].toUint8Array(), i * CHECKSUM.SHA3_BUFFER_LENGTH);
+      addressList.set(
+        subCblChecksums[i].toUint8Array(),
+        i * CHECKSUM.SHA3_BUFFER_LENGTH,
+      );
     }
 
     // Create base header (without structured prefix)
@@ -1790,7 +1828,8 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     baseHeader.set(originalDataChecksum.toUint8Array(), offset);
 
     // Calculate checksum for signing
-    const toSignSize = baseHeader.length + blockSizeBuffer.length + addressList.length;
+    const toSignSize =
+      baseHeader.length + blockSizeBuffer.length + addressList.length;
     const toSign = new Uint8Array(toSignSize);
     let signOffset = 0;
     toSign.set(baseHeader, signOffset);
@@ -1832,9 +1871,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
 
     // Construct final header with structured prefix
     const headerData = new Uint8Array(
-      structuredPrefix.length +
-        baseHeader.length +
-        signatureBytes.length,
+      structuredPrefix.length + baseHeader.length + signatureBytes.length,
     );
     let headerOffset = 0;
     headerData.set(structuredPrefix, headerOffset);

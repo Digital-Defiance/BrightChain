@@ -95,7 +95,8 @@ const register = async (
     }
     return {
       success: true,
-      message: response.data.message ?? translate(BrightChainStrings.Register_Success),
+      message:
+        response.data.message ?? translate(BrightChainStrings.Register_Success),
     };
   } catch (error) {
     if (isAxiosError(error) && error.response) {

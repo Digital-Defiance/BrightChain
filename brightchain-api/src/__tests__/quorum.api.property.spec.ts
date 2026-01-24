@@ -47,7 +47,9 @@ describe('Quorum API Round-Trip Property Tests', () => {
 
     // Initialize BrightChain with browser-compatible configuration
     initializeBrightChain();
-    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4Buffer>());
+    ServiceLocator.setServiceProvider(
+      ServiceProvider.getInstance<GuidV4Buffer>(),
+    );
   });
 
   // Reset service provider after each test to avoid state leakage
@@ -55,7 +57,9 @@ describe('Quorum API Round-Trip Property Tests', () => {
     ServiceProvider.resetInstance();
     // Re-initialize for next test
     initializeBrightChain();
-    ServiceLocator.setServiceProvider(ServiceProvider.getInstance<GuidV4Buffer>());
+    ServiceLocator.setServiceProvider(
+      ServiceProvider.getInstance<GuidV4Buffer>(),
+    );
   });
 
   /**
@@ -65,7 +69,8 @@ describe('Quorum API Round-Trip Property Tests', () => {
     name: string,
     email: string,
   ): IMemberWithMnemonic<GuidV4Buffer> {
-    const eciesService = ServiceProvider.getInstance<GuidV4Buffer>().eciesService;
+    const eciesService =
+      ServiceProvider.getInstance<GuidV4Buffer>().eciesService;
     return Member.newMember<GuidV4Buffer>(
       eciesService,
       MemberType.User,

@@ -1,5 +1,5 @@
-import { CblErrorType } from '../enumerations/cblErrorType';
 import BrightChainStrings from '../enumerations/brightChainStrings';
+import { CblErrorType } from '../enumerations/cblErrorType';
 import { TypedError } from './typedError';
 
 export class CblError extends TypedError<CblErrorType> {
@@ -26,7 +26,8 @@ export class CblError extends TypedError<CblErrorType> {
         BrightChainStrings.Error_CblErrorInvalidCreatorId,
       [CblErrorType.FileNameRequired]:
         BrightChainStrings.Error_CblErrorFileNameRequired,
-      [CblErrorType.FileNameEmpty]: BrightChainStrings.Error_CblErrorFileNameEmpty,
+      [CblErrorType.FileNameEmpty]:
+        BrightChainStrings.Error_CblErrorFileNameEmpty,
       [CblErrorType.FileNameWhitespace]:
         BrightChainStrings.Error_CblErrorFileNameWhitespace,
       [CblErrorType.FileNameInvalidChar]:
@@ -37,7 +38,8 @@ export class CblError extends TypedError<CblErrorType> {
         BrightChainStrings.Error_CblErrorFileNamePathTraversal,
       [CblErrorType.MimeTypeRequired]:
         BrightChainStrings.Error_CblErrorMimeTypeRequired,
-      [CblErrorType.MimeTypeEmpty]: BrightChainStrings.Error_CblErrorMimeTypeEmpty,
+      [CblErrorType.MimeTypeEmpty]:
+        BrightChainStrings.Error_CblErrorMimeTypeEmpty,
       [CblErrorType.MimeTypeWhitespace]:
         BrightChainStrings.Error_CblErrorMimeTypeWhitespace,
       [CblErrorType.MimeTypeLowercase]:
@@ -52,22 +54,26 @@ export class CblError extends TypedError<CblErrorType> {
         BrightChainStrings.Error_CblErrorMetadataSizeNegative,
       [CblErrorType.InvalidMetadataBuffer]:
         BrightChainStrings.Error_CblErrorInvalidMetadataBuffer,
-      [CblErrorType.NotExtendedCbl]: BrightChainStrings.Error_CblErrorNotExtendedCbl,
+      [CblErrorType.NotExtendedCbl]:
+        BrightChainStrings.Error_CblErrorNotExtendedCbl,
       [CblErrorType.InvalidSignature]:
         BrightChainStrings.Error_CblErrorInvalidSignature,
       [CblErrorType.CreatorIdMismatch]:
         BrightChainStrings.Error_CblErrorCreatorIdMismatch,
       [CblErrorType.InvalidTupleSize]:
         BrightChainStrings.Error_CblErrorInvalidTupleSize,
-      [CblErrorType.FileNameTooLong]: BrightChainStrings.Error_CblErrorFileNameTooLong,
-      [CblErrorType.MimeTypeTooLong]: BrightChainStrings.Error_CblErrorMimeTypeTooLong,
+      [CblErrorType.FileNameTooLong]:
+        BrightChainStrings.Error_CblErrorFileNameTooLong,
+      [CblErrorType.MimeTypeTooLong]:
+        BrightChainStrings.Error_CblErrorMimeTypeTooLong,
       [CblErrorType.AddressCountExceedsCapacity]:
         BrightChainStrings.Error_CblErrorAddressCountExceedsCapacity,
       [CblErrorType.FileSizeTooLarge]:
         BrightChainStrings.Error_CblErrorFileSizeTooLarge,
       [CblErrorType.FileSizeTooLargeForNode]:
         BrightChainStrings.Error_CblErrorFileSizeTooLargeForNode,
-      [CblErrorType.CblEncrypted]: BrightChainStrings.Error_CblErrorCblEncrypted,
+      [CblErrorType.CblEncrypted]:
+        BrightChainStrings.Error_CblErrorCblEncrypted,
       [CblErrorType.UserRequiredForDecryption]:
         BrightChainStrings.Error_CblErrorUserRequiredForDecryption,
     };

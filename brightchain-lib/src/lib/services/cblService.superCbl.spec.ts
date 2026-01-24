@@ -7,17 +7,13 @@
  * @see Requirements 11.1-11.8
  */
 
-import {
-  EmailString,
-  Member,
-  MemberType,
-} from '@digitaldefiance/ecies-lib';
+import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { faker } from '@faker-js/faker';
-import { BlockSize } from '../enumerations/blockSize';
 import { BLOCK_HEADER, StructuredBlockType } from '../constants';
+import { BlockSize } from '../enumerations/blockSize';
+import { Checksum } from '../types/checksum';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
-import { Checksum } from '../types/checksum';
 import { ServiceProvider } from './service.provider';
 
 describe('Binary SuperCBL Format - Unit Tests', () => {
@@ -46,7 +42,9 @@ describe('Binary SuperCBL Format - Unit Tests', () => {
       const totalBlockCount = 1000;
       const depth = 1;
       const originalDataLength = 1000000;
-      const originalDataChecksum = Checksum.fromUint8Array(new Uint8Array(64).fill(0xAB));
+      const originalDataChecksum = Checksum.fromUint8Array(
+        new Uint8Array(64).fill(0xab),
+      );
 
       // Generate sub-CBL checksums
       const subCblChecksums: Checksum[] = [];
@@ -80,11 +78,15 @@ describe('Binary SuperCBL Format - Unit Tests', () => {
     it('should create a SuperCBL that can be recognized by isSuperCbl', () => {
       const dateCreated = new Date();
       const subCblCount = 3;
-      const originalDataChecksum = Checksum.fromUint8Array(new Uint8Array(64).fill(0xAB));
+      const originalDataChecksum = Checksum.fromUint8Array(
+        new Uint8Array(64).fill(0xab),
+      );
 
       const subCblChecksums: Checksum[] = [];
       for (let i = 0; i < subCblCount; i++) {
-        subCblChecksums.push(Checksum.fromUint8Array(new Uint8Array(64).fill(i)));
+        subCblChecksums.push(
+          Checksum.fromUint8Array(new Uint8Array(64).fill(i)),
+        );
       }
 
       const { headerData } = cblService.makeSuperCblHeader(
@@ -116,11 +118,15 @@ describe('Binary SuperCBL Format - Unit Tests', () => {
     it('should validate signature for a freshly created SuperCBL', () => {
       const dateCreated = new Date();
       const subCblCount = 3;
-      const originalDataChecksum = Checksum.fromUint8Array(new Uint8Array(64).fill(0xAB));
+      const originalDataChecksum = Checksum.fromUint8Array(
+        new Uint8Array(64).fill(0xab),
+      );
 
       const subCblChecksums: Checksum[] = [];
       for (let i = 0; i < subCblCount; i++) {
-        subCblChecksums.push(Checksum.fromUint8Array(new Uint8Array(64).fill(i)));
+        subCblChecksums.push(
+          Checksum.fromUint8Array(new Uint8Array(64).fill(i)),
+        );
       }
 
       const { headerData } = cblService.makeSuperCblHeader(
@@ -145,7 +151,11 @@ describe('Binary SuperCBL Format - Unit Tests', () => {
       fullData.set(addressData, headerData.length);
 
       // Validate signature
-      const isValid = cblService.validateSuperCblSignature(fullData, member, BlockSize.Medium);
+      const isValid = cblService.validateSuperCblSignature(
+        fullData,
+        member,
+        BlockSize.Medium,
+      );
       expect(isValid).toBe(true);
     });
   });
@@ -154,11 +164,15 @@ describe('Binary SuperCBL Format - Unit Tests', () => {
     it('should parse a SuperCBL header without signature validation', () => {
       const dateCreated = new Date();
       const subCblCount = 3;
-      const originalDataChecksum = Checksum.fromUint8Array(new Uint8Array(64).fill(0xAB));
+      const originalDataChecksum = Checksum.fromUint8Array(
+        new Uint8Array(64).fill(0xab),
+      );
 
       const subCblChecksums: Checksum[] = [];
       for (let i = 0; i < subCblCount; i++) {
-        subCblChecksums.push(Checksum.fromUint8Array(new Uint8Array(64).fill(i)));
+        subCblChecksums.push(
+          Checksum.fromUint8Array(new Uint8Array(64).fill(i)),
+        );
       }
 
       const { headerData } = cblService.makeSuperCblHeader(
@@ -194,11 +208,15 @@ describe('Binary SuperCBL Format - Unit Tests', () => {
     it('should parse a SuperCBL header with signature validation', () => {
       const dateCreated = new Date();
       const subCblCount = 3;
-      const originalDataChecksum = Checksum.fromUint8Array(new Uint8Array(64).fill(0xAB));
+      const originalDataChecksum = Checksum.fromUint8Array(
+        new Uint8Array(64).fill(0xab),
+      );
 
       const subCblChecksums: Checksum[] = [];
       for (let i = 0; i < subCblCount; i++) {
-        subCblChecksums.push(Checksum.fromUint8Array(new Uint8Array(64).fill(i)));
+        subCblChecksums.push(
+          Checksum.fromUint8Array(new Uint8Array(64).fill(i)),
+        );
       }
 
       const { headerData } = cblService.makeSuperCblHeader(
@@ -223,7 +241,11 @@ describe('Binary SuperCBL Format - Unit Tests', () => {
       fullData.set(addressData, headerData.length);
 
       // Parse with signature validation - must pass the same blockSize used during creation
-      const parsed = cblService.parseSuperCblHeader(fullData, member, BlockSize.Medium);
+      const parsed = cblService.parseSuperCblHeader(
+        fullData,
+        member,
+        BlockSize.Medium,
+      );
 
       expect(parsed.subCblCount).toBe(subCblCount);
     });

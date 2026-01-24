@@ -10,9 +10,9 @@ import {
  * Helper to generate hex strings using fast-check
  */
 const hexString = (minLength: number, maxLength: number) =>
-  fc.array(fc.integer({ min: 0, max: 15 }), { minLength, maxLength }).map(
-    (arr) => arr.map((n) => n.toString(16)).join(''),
-  );
+  fc
+    .array(fc.integer({ min: 0, max: 15 }), { minLength, maxLength })
+    .map((arr) => arr.map((n) => n.toString(16)).join(''));
 
 /**
  * Property-based tests for block logging operations
@@ -35,7 +35,12 @@ describe('Feature: block-security-hardening, Property 10: Log Entry Structure', 
   it('Property 10a: Log entries contain required fields', () => {
     fc.assert(
       fc.property(
-        fc.constantFrom(LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR),
+        fc.constantFrom(
+          LogLevel.DEBUG,
+          LogLevel.INFO,
+          LogLevel.WARN,
+          LogLevel.ERROR,
+        ),
         fc.string({ minLength: 1, maxLength: 50 }),
         (level, operation) => {
           const entries: BlockLogEntry[] = [];
@@ -77,26 +82,23 @@ describe('Feature: block-security-hardening, Property 10: Log Entry Structure', 
    */
   it('Property 10b: Timestamps are valid ISO 8601 format', () => {
     fc.assert(
-      fc.property(
-        fc.string({ minLength: 1, maxLength: 50 }),
-        (operation) => {
-          const entries: BlockLogEntry[] = [];
-          const logger = new BlockLogger((entry) => entries.push(entry));
-          logger.setLevel(LogLevel.DEBUG);
+      fc.property(fc.string({ minLength: 1, maxLength: 50 }), (operation) => {
+        const entries: BlockLogEntry[] = [];
+        const logger = new BlockLogger((entry) => entries.push(entry));
+        logger.setLevel(LogLevel.DEBUG);
 
-          logger.info(operation);
+        logger.info(operation);
 
-          expect(entries.length).toBe(1);
-          const timestamp = entries[0].timestamp;
+        expect(entries.length).toBe(1);
+        const timestamp = entries[0].timestamp;
 
-          // Should be parseable as a date
-          const date = new Date(timestamp);
-          expect(date.toString()).not.toBe('Invalid Date');
+        // Should be parseable as a date
+        const date = new Date(timestamp);
+        expect(date.toString()).not.toBe('Invalid Date');
 
-          // Should be in ISO 8601 format
-          expect(timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
-        },
-      ),
+        // Should be in ISO 8601 format
+        expect(timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+      }),
       { numRuns: 100 },
     );
   });
@@ -270,7 +272,10 @@ describe('Feature: block-security-hardening, Property 11: Log Level Filtering', 
     logger.error('error-op', new Error('test'));
 
     expect(entries.length).toBe(2);
-    expect(entries.map((e) => e.level)).toEqual([LogLevel.WARN, LogLevel.ERROR]);
+    expect(entries.map((e) => e.level)).toEqual([
+      LogLevel.WARN,
+      LogLevel.ERROR,
+    ]);
   });
 
   /**
@@ -298,10 +303,20 @@ describe('Feature: block-security-hardening, Property 11: Log Level Filtering', 
   it('Property 11e: Level filtering is consistent across random operations', () => {
     fc.assert(
       fc.property(
-        fc.constantFrom(LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR),
+        fc.constantFrom(
+          LogLevel.DEBUG,
+          LogLevel.INFO,
+          LogLevel.WARN,
+          LogLevel.ERROR,
+        ),
         fc.array(
           fc.record({
-            level: fc.constantFrom(LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR),
+            level: fc.constantFrom(
+              LogLevel.DEBUG,
+              LogLevel.INFO,
+              LogLevel.WARN,
+              LogLevel.ERROR,
+            ),
             operation: fc.string({ minLength: 1, maxLength: 20 }),
           }),
           { minLength: 1, maxLength: 20 },
@@ -346,7 +361,9 @@ describe('Feature: block-security-hardening, Property 11: Log Level Filtering', 
 
           // All entries should be at or above min level
           for (const entry of entries) {
-            expect(levelPriority[entry.level]).toBeGreaterThanOrEqual(minPriority);
+            expect(levelPriority[entry.level]).toBeGreaterThanOrEqual(
+              minPriority,
+            );
           }
         },
       ),
@@ -361,7 +378,12 @@ describe('Feature: block-security-hardening, Property 11: Log Level Filtering', 
   it('Property 11f: getLevel returns current level', () => {
     fc.assert(
       fc.property(
-        fc.constantFrom(LogLevel.DEBUG, LogLevel.INFO, LogLevel.WARN, LogLevel.ERROR),
+        fc.constantFrom(
+          LogLevel.DEBUG,
+          LogLevel.INFO,
+          LogLevel.WARN,
+          LogLevel.ERROR,
+        ),
         (level) => {
           const logger = new BlockLogger();
           logger.setLevel(level);
@@ -388,7 +410,12 @@ describe('Feature: block-security-hardening, Property 12: Sensitive Data Exclusi
   it('Property 12a: Private key fields are redacted', () => {
     fc.assert(
       fc.property(
-        fc.constantFrom('privateKey', 'secretKey', 'encryptionKey', 'decryptionKey'),
+        fc.constantFrom(
+          'privateKey',
+          'secretKey',
+          'encryptionKey',
+          'decryptionKey',
+        ),
         hexString(64, 128),
         (keyField, keyValue) => {
           const entries: BlockLogEntry[] = [];
@@ -423,23 +450,20 @@ describe('Feature: block-security-hardening, Property 12: Sensitive Data Exclusi
    */
   it('Property 12b: Long hex strings that look like keys are redacted (except safe fields)', () => {
     fc.assert(
-      fc.property(
-        hexString(64, 128),
-        (hexValue) => {
-          const entries: BlockLogEntry[] = [];
-          const logger = new BlockLogger((entry) => entries.push(entry));
-          logger.setLevel(LogLevel.DEBUG);
+      fc.property(hexString(64, 128), (hexValue) => {
+        const entries: BlockLogEntry[] = [];
+        const logger = new BlockLogger((entry) => entries.push(entry));
+        logger.setLevel(LogLevel.DEBUG);
 
-          // In a non-safe field name, long hex strings should be redacted
-          logger.info('operation', { someRandomValue: hexValue });
+        // In a non-safe field name, long hex strings should be redacted
+        logger.info('operation', { someRandomValue: hexValue });
 
-          expect(entries.length).toBe(1);
-          const entry = entries[0];
+        expect(entries.length).toBe(1);
+        const entry = entries[0];
 
-          // Long hex string in non-safe field should be redacted
-          expect(entry.metadata?.['someRandomValue']).toBe('[REDACTED]');
-        },
-      ),
+        // Long hex string in non-safe field should be redacted
+        expect(entry.metadata?.['someRandomValue']).toBe('[REDACTED]');
+      }),
       { numRuns: 100 },
     );
   });
@@ -521,31 +545,28 @@ describe('Feature: block-security-hardening, Property 12: Sensitive Data Exclusi
    */
   it('Property 12d: Nested sensitive data is redacted', () => {
     fc.assert(
-      fc.property(
-        hexString(64, 128),
-        (keyValue) => {
-          const entries: BlockLogEntry[] = [];
-          const logger = new BlockLogger((entry) => entries.push(entry));
-          logger.setLevel(LogLevel.DEBUG);
+      fc.property(hexString(64, 128), (keyValue) => {
+        const entries: BlockLogEntry[] = [];
+        const logger = new BlockLogger((entry) => entries.push(entry));
+        logger.setLevel(LogLevel.DEBUG);
 
-          const metadata = {
-            nested: {
-              privateKey: keyValue,
-              safeField: 'safe',
-            },
-          };
+        const metadata = {
+          nested: {
+            privateKey: keyValue,
+            safeField: 'safe',
+          },
+        };
 
-          logger.info('operation', metadata);
+        logger.info('operation', metadata);
 
-          expect(entries.length).toBe(1);
-          const entry = entries[0];
+        expect(entries.length).toBe(1);
+        const entry = entries[0];
 
-          // Nested sensitive field should be redacted
-          const nested = entry.metadata?.['nested'] as Record<string, unknown>;
-          expect(nested?.['privateKey']).toBe('[REDACTED]');
-          expect(nested?.['safeField']).toBe('safe');
-        },
-      ),
+        // Nested sensitive field should be redacted
+        const nested = entry.metadata?.['nested'] as Record<string, unknown>;
+        expect(nested?.['privateKey']).toBe('[REDACTED]');
+        expect(nested?.['safeField']).toBe('safe');
+      }),
       { numRuns: 100 },
     );
   });
@@ -623,22 +644,19 @@ describe('Feature: block-security-hardening, Property 12: Sensitive Data Exclusi
    */
   it('Property 12g: Short hex strings are not redacted', () => {
     fc.assert(
-      fc.property(
-        hexString(8, 63),
-        (shortHex) => {
-          const entries: BlockLogEntry[] = [];
-          const logger = new BlockLogger((entry) => entries.push(entry));
-          logger.setLevel(LogLevel.DEBUG);
+      fc.property(hexString(8, 63), (shortHex) => {
+        const entries: BlockLogEntry[] = [];
+        const logger = new BlockLogger((entry) => entries.push(entry));
+        logger.setLevel(LogLevel.DEBUG);
 
-          logger.info('operation', { checksum: shortHex });
+        logger.info('operation', { checksum: shortHex });
 
-          expect(entries.length).toBe(1);
-          const entry = entries[0];
+        expect(entries.length).toBe(1);
+        const entry = entries[0];
 
-          // Short hex strings should be preserved
-          expect(entry.metadata?.['checksum']).toBe(shortHex);
-        },
-      ),
+        // Short hex strings should be preserved
+        expect(entry.metadata?.['checksum']).toBe(shortHex);
+      }),
       { numRuns: 100 },
     );
   });
@@ -655,10 +673,10 @@ describe('Feature: block-security-hardening, Global Logger Instance', () => {
 
   it('Global blockLogger can be configured', () => {
     const originalLevel = blockLogger.getLevel();
-    
+
     blockLogger.setLevel(LogLevel.ERROR);
     expect(blockLogger.getLevel()).toBe(LogLevel.ERROR);
-    
+
     // Restore original level
     blockLogger.setLevel(originalLevel);
   });

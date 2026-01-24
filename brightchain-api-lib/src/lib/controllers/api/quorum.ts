@@ -14,8 +14,8 @@ import {
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
-import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 import {
   ApiErrorResponse,
   ApiRequestHandler,

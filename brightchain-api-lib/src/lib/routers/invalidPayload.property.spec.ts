@@ -87,11 +87,14 @@ describe('Feature: message-passing-and-events, Property: Invalid Message Payload
       fc.asyncProperty(
         fc.string({ minLength: 1, maxLength: 32 }),
         async (senderId) => {
-          const response = await request(app).post('/messages').send({
-            content: 123, // Invalid type
-            senderId,
-            messageType: 'test',
-          });
+          const response = await request(app)
+            .post('/messages')
+            .send({
+              content: 123, // Invalid type
+              senderId,
+              messageType: 'test',
+            })
+            .timeout(1000);
 
           // Express may return 400 or 500 depending on how it handles the type error
           expect([400, 500]).toContain(response.status);

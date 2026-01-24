@@ -1,4 +1,9 @@
-import { Member, PlatformID, ShortHexGuid, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
+import {
+  Member,
+  PlatformID,
+  ShortHexGuid,
+  uint8ArrayToHex,
+} from '@digitaldefiance/ecies-lib';
 import { BaseBlock } from '../../blocks/base';
 import { ConstituentBlockListBlock } from '../../blocks/cbl';
 import { RawDataBlock } from '../../blocks/rawData';
@@ -120,7 +125,9 @@ export class MemberDocument<
     );
     this._blockSize = config?.blockSize ?? BlockSize.Small;
     // Create a unique block store for each document instance to avoid conflicts
-    const blockStore = BlockStoreFactory.createMemoryStore({ blockSize: this._blockSize });
+    const blockStore = BlockStoreFactory.createMemoryStore({
+      blockSize: this._blockSize,
+    });
     this.cblService = new MemberCblService(blockStore);
 
     // Store original member instances

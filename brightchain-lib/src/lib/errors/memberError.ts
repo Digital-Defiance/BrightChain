@@ -1,6 +1,6 @@
 import { HandleableError } from '@digitaldefiance/i18n-lib';
-import { MemberErrorType } from '../enumerations/memberErrorType';
 import BrightChainStrings from '../enumerations/brightChainStrings';
+import { MemberErrorType } from '../enumerations/memberErrorType';
 
 export class MemberError extends HandleableError {
   public readonly type: MemberErrorType;
@@ -9,7 +9,8 @@ export class MemberError extends HandleableError {
     return {
       [MemberErrorType.IncorrectOrInvalidPrivateKey]:
         BrightChainStrings.Error_MemberErrorIncorrectOrInvalidPrivateKey,
-      [MemberErrorType.InvalidEmail]: BrightChainStrings.Error_MemberErrorInvalidEmail,
+      [MemberErrorType.InvalidEmail]:
+        BrightChainStrings.Error_MemberErrorInvalidEmail,
       [MemberErrorType.InvalidEmailWhitespace]:
         BrightChainStrings.Error_MemberErrorInvalidEmailWhitespace,
       [MemberErrorType.InvalidMemberName]:
@@ -20,7 +21,8 @@ export class MemberError extends HandleableError {
         BrightChainStrings.Error_MemberErrorInvalidMemberNameWhitespace,
       [MemberErrorType.InvalidMnemonic]:
         BrightChainStrings.Error_MemberErrorInvalidMnemonic,
-      [MemberErrorType.MissingEmail]: BrightChainStrings.Error_MemberErrorMissingEmail,
+      [MemberErrorType.MissingEmail]:
+        BrightChainStrings.Error_MemberErrorMissingEmail,
       [MemberErrorType.MemberAlreadyExists]:
         BrightChainStrings.Error_MemberErrorMemberAlreadyExists,
       [MemberErrorType.MissingMemberName]:

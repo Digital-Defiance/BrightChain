@@ -67,7 +67,10 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
    * @returns The CBL service
    */
   protected getCblService() {
-    return this._services?.cblService ?? ServiceLocator.getServiceProvider<TID>().cblService;
+    return (
+      this._services?.cblService ??
+      ServiceLocator.getServiceProvider<TID>().cblService
+    );
   }
 
   /**
@@ -75,7 +78,10 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
    * @returns The checksum service
    */
   protected getChecksumService() {
-    return this._services?.checksumService ?? ServiceLocator.getServiceProvider<TID>().checksumService;
+    return (
+      this._services?.checksumService ??
+      ServiceLocator.getServiceProvider<TID>().checksumService
+    );
   }
 
   /**
@@ -95,8 +101,12 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
   ) {
     // Store services reference for later use
     // Note: We need to access services before calling super(), so we use the parameter directly
-    const cblService = services?.cblService ?? ServiceLocator.getServiceProvider<TID>().cblService;
-    const checksumService = services?.checksumService ?? ServiceLocator.getServiceProvider<TID>().checksumService;
+    const cblService =
+      services?.cblService ??
+      ServiceLocator.getServiceProvider<TID>().cblService;
+    const checksumService =
+      services?.checksumService ??
+      ServiceLocator.getServiceProvider<TID>().checksumService;
 
     const isExtendedCbl = cblService.isExtendedHeader(data);
     const checksum = checksumService.calculateChecksum(new Uint8Array(data));
@@ -137,14 +147,14 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
 
       // Use constant-time comparison for security
       if (!arraysEqual(creatorIdBytes, memberIdBytes)) {
-        throw new CblError(
-          CblErrorType.CreatorIdMismatch,
-          undefined,
-          {
-            headerCreatorId: uint8ArrayToHex(cblService.idProvider.toBytes(creatorId)),
-            providedCreatorId: uint8ArrayToHex(cblService.idProvider.toBytes(creator.id)),
-          },
-        );
+        throw new CblError(CblErrorType.CreatorIdMismatch, undefined, {
+          headerCreatorId: uint8ArrayToHex(
+            cblService.idProvider.toBytes(creatorId),
+          ),
+          providedCreatorId: uint8ArrayToHex(
+            cblService.idProvider.toBytes(creator.id),
+          ),
+        });
       }
     }
     super(
@@ -220,7 +230,9 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
     }
 
     this.ensureHeaderValidated();
-    this._cachedAddressCount = this.getCblService().getCblAddressCount(this._data);
+    this._cachedAddressCount = this.getCblService().getCblAddressCount(
+      this._data,
+    );
     // Note: Primitive numbers are immutable by nature, but we ensure
     // the cache is only set once to maintain consistency
     return this._cachedAddressCount;
@@ -291,8 +303,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
 
   public override get totalOverhead(): number {
     return (
-      super.totalOverhead +
-      this.getCblService().getHeaderLength(this.data)
+      super.totalOverhead + this.getCblService().getHeaderLength(this.data)
     );
   }
 

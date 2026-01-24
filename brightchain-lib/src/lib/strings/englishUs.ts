@@ -23,7 +23,8 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
   [BrightChainStrings.Common_Logo]: 'Logo',
   [BrightChainStrings.Common_Site]: site,
   [BrightChainStrings.Common_Unauthorized]: 'Unauthorized',
-  [BrightChainStrings.Error_BlockAccessTemplate]: 'Block cannot be accessed: {REASON}',
+  [BrightChainStrings.Error_BlockAccessTemplate]:
+    'Block cannot be accessed: {REASON}',
   [BrightChainStrings.Error_BlockAccessErrorBlockAlreadyExists]:
     'Block file already exists',
   [BrightChainStrings.Error_BlockAccessErrorBlockIsNotPersistable]:
@@ -36,13 +37,16 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'CBL block cannot be encrypted',
   [BrightChainStrings.Error_BlockAccessErrorCreatorMustBeProvided]:
     'Creator must be provided for signature validation',
-  [BrightChainStrings.Error_BlockCannotBeDecrypted]: 'Block cannot be decrypted',
-  [BrightChainStrings.Error_BlockCannotBeEncrypted]: 'Block cannot be encrypted',
+  [BrightChainStrings.Error_BlockCannotBeDecrypted]:
+    'Block cannot be decrypted',
+  [BrightChainStrings.Error_BlockCannotBeEncrypted]:
+    'Block cannot be encrypted',
   [BrightChainStrings.Error_BlockCapacityTemplate]:
     'Block capacity exceeded. BlockSize: ({BLOCK_SIZE}), Data: ({DATA_SIZE})',
   [BrightChainStrings.Error_BlockMetadataErrorCreatorIdMismatch]:
     'Creator ID mismatch',
-  [BrightChainStrings.Error_BlockMetadataErrorCreatorRequired]: 'Creator is required',
+  [BrightChainStrings.Error_BlockMetadataErrorCreatorRequired]:
+    'Creator is required',
   [BrightChainStrings.Error_BlockMetadataErrorEncryptorRequired]:
     'Encryptor is required',
   [BrightChainStrings.Error_BlockMetadataErrorInvalidBlockMetadata]:
@@ -55,8 +59,10 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Missing required metadata fields',
 
   // Block Capacity Errors
-  [BrightChainStrings.Error_BlockCapacityInvalidBlockSize]: 'Invalid block size',
-  [BrightChainStrings.Error_BlockCapacityInvalidBlockType]: 'Invalid block type',
+  [BrightChainStrings.Error_BlockCapacityInvalidBlockSize]:
+    'Invalid block size',
+  [BrightChainStrings.Error_BlockCapacityInvalidBlockType]:
+    'Invalid block type',
   [BrightChainStrings.Error_BlockCapacityCapacityExceeded]: 'Capacity exceeded',
   [BrightChainStrings.Error_BlockCapacityInvalidFileName]: 'Invalid file name',
   [BrightChainStrings.Error_BlockCapacityInvalidMimetype]: 'Invalid mimetype',
@@ -110,7 +116,8 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Invalid encryption header length',
   [BrightChainStrings.Error_BlockValidationErrorInvalidEphemeralPublicKeyLength]:
     'Invalid ephemeral public key length',
-  [BrightChainStrings.Error_BlockValidationErrorInvalidIVLength]: 'Invalid IV length',
+  [BrightChainStrings.Error_BlockValidationErrorInvalidIVLength]:
+    'Invalid IV length',
   [BrightChainStrings.Error_BlockValidationErrorInvalidSignature]:
     'Invalid signature provided',
   [BrightChainStrings.Error_BlockValidationErrorInvalidRecipientIds]:
@@ -119,7 +126,8 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Tuple size must be between {TUPLE.MIN_SIZE} and {TUPLE.MAX_SIZE}',
   [BrightChainStrings.Error_BlockValidationErrorMethodMustBeImplementedByDerivedClass]:
     'Method must be implemented by derived class',
-  [BrightChainStrings.Error_BlockValidationErrorNoChecksum]: 'No checksum provided',
+  [BrightChainStrings.Error_BlockValidationErrorNoChecksum]:
+    'No checksum provided',
   [BrightChainStrings.Error_BlockValidationErrorOriginalDataLengthNegative]:
     'Original data length cannot be negative',
   [BrightChainStrings.Error_BlockValidationErrorInvalidEncryptionType]:
@@ -132,8 +140,10 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Encryption recipient not found in recipients',
   [BrightChainStrings.Error_BlockValidationErrorEncryptionRecipientHasNoPrivateKey]:
     'Encryption recipient has no private key',
-  [BrightChainStrings.Error_BlockValidationErrorInvalidCreator]: 'Invalid creator',
-  [BrightChainStrings.Error_BlockMetadataTemplate]: 'Block metadata error: {REASON}',
+  [BrightChainStrings.Error_BlockValidationErrorInvalidCreator]:
+    'Invalid creator',
+  [BrightChainStrings.Error_BlockMetadataTemplate]:
+    'Block metadata error: {REASON}',
   [BrightChainStrings.Error_BufferErrorInvalidBufferTypeTemplate]:
     'Invalid buffer type. Expected Buffer, got: {TYPE}',
   [BrightChainStrings.Error_ChecksumMismatchTemplate]:
@@ -159,8 +169,10 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Invalid public key: must be an isolated key',
   [BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyId]:
     'Key isolation violation: invalid key ID',
-  [BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyFormat]: 'Invalid key format',
-  [BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyLength]: 'Invalid key length',
+  [BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyFormat]:
+    'Invalid key format',
+  [BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyLength]:
+    'Invalid key length',
   [BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyType]: 'Invalid key type',
   [BrightChainStrings.Error_IsolatedKeyErrorKeyIsolationViolation]:
     'Key isolation violation: ciphertexts from different key instances',
@@ -200,8 +212,10 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'File path not provided',
   [BrightChainStrings.Error_BlockServiceErrorUnableToDetermineBlockSize]:
     'Unable to determine block size',
-  [BrightChainStrings.Error_BlockServiceErrorInvalidBlockData]: 'Invalid block data',
-  [BrightChainStrings.Error_BlockServiceErrorInvalidBlockType]: 'Invalid block type',
+  [BrightChainStrings.Error_BlockServiceErrorInvalidBlockData]:
+    'Invalid block data',
+  [BrightChainStrings.Error_BlockServiceErrorInvalidBlockType]:
+    'Invalid block type',
 
   // Quorum Error
   [BrightChainStrings.Error_QuorumErrorInvalidQuorumId]: 'Invalid quorum ID',
@@ -226,12 +240,14 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
   [BrightChainStrings.Error_FecErrorInvalidShardCounts]: 'Invalid shard counts',
   [BrightChainStrings.Error_FecErrorInvalidShardsAvailableArray]:
     'Invalid shards available array',
-  [BrightChainStrings.Error_FecErrorInputBlockRequired]: 'Input block is required',
+  [BrightChainStrings.Error_FecErrorInputBlockRequired]:
+    'Input block is required',
   [BrightChainStrings.Error_FecErrorParityBlockCountMustBePositive]:
     'Number of parity blocks must be positive',
   [BrightChainStrings.Error_FecErrorInputDataMustBeBuffer]:
     'Input data must be a Buffer',
-  [BrightChainStrings.Error_FecErrorDamagedBlockRequired]: 'Damaged block is required',
+  [BrightChainStrings.Error_FecErrorDamagedBlockRequired]:
+    'Damaged block is required',
   [BrightChainStrings.Error_FecErrorParityBlocksRequired]:
     'Parity blocks are required',
   [BrightChainStrings.Error_FecErrorBlockSizeMismatch]:
@@ -256,7 +272,8 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'FEC decoding failed: {ERROR}',
 
   // ECIES error
-  [BrightChainStrings.Error_EciesErrorInvalidHeaderLength]: 'Invalid header length',
+  [BrightChainStrings.Error_EciesErrorInvalidHeaderLength]:
+    'Invalid header length',
   [BrightChainStrings.Error_EciesErrorInvalidMnemonic]: 'Invalid mnemonic',
   [BrightChainStrings.Error_EciesErrorInvalidEncryptedDataLength]:
     'Invalid encrypted data length',
@@ -273,11 +290,13 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Invalid sender public key',
   [BrightChainStrings.Error_EciesErrorTooManyRecipients]:
     'Too many recipients: exceeds maximum allowed',
-  [BrightChainStrings.Error_EciesErrorPrivateKeyNotLoaded]: 'Private key not loaded',
+  [BrightChainStrings.Error_EciesErrorPrivateKeyNotLoaded]:
+    'Private key not loaded',
   [BrightChainStrings.Error_EciesErrorRecipientKeyCountMismatch]:
     'Recipient count does not match key count',
   [BrightChainStrings.Error_EciesErrorInvalidIVLength]: 'Invalid IV length',
-  [BrightChainStrings.Error_EciesErrorInvalidAuthTagLength]: 'Invalid auth tag length',
+  [BrightChainStrings.Error_EciesErrorInvalidAuthTagLength]:
+    'Invalid auth tag length',
   [BrightChainStrings.Error_EciesErrorInvalidRecipientCount]:
     'Invalid recipient count',
   [BrightChainStrings.Error_EciesErrorFileSizeTooLarge]: 'File size too large',
@@ -334,12 +353,14 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Public key must be a Buffer',
   [BrightChainStrings.Error_VotingErrorInvalidPublicKeyFormat]:
     'Invalid public key format',
-  [BrightChainStrings.Error_VotingErrorInvalidEcdhKeyPair]: 'Invalid ECDH key pair',
+  [BrightChainStrings.Error_VotingErrorInvalidEcdhKeyPair]:
+    'Invalid ECDH key pair',
   [BrightChainStrings.Error_VotingErrorFailedToDeriveVotingKeysTemplate]:
     'Failed to derive voting keys: {ERROR}',
   [BrightChainStrings.Error_VotingErrorFailedToGeneratePrime]:
     'Failed to generate prime number after maximum attempts',
-  [BrightChainStrings.Error_VotingErrorIdenticalPrimes]: 'Generated identical primes',
+  [BrightChainStrings.Error_VotingErrorIdenticalPrimes]:
+    'Generated identical primes',
   [BrightChainStrings.Error_VotingErrorKeyPairTooSmallTemplate]:
     'Generated key pair too small: {ACTUAL_BITS} bits < {REQUIRED_BITS} bits',
   [BrightChainStrings.Error_VotingErrorKeyPairValidationFailed]:
@@ -347,8 +368,10 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
   [BrightChainStrings.Error_VotingErrorInvalidVotingKey]: 'Invalid voting key',
   [BrightChainStrings.Error_VotingErrorInvalidKeyPair]: 'Invalid key pair',
   [BrightChainStrings.Error_VotingErrorInvalidPublicKey]: 'Invalid public key',
-  [BrightChainStrings.Error_VotingErrorInvalidPrivateKey]: 'Invalid private key',
-  [BrightChainStrings.Error_VotingErrorInvalidEncryptedKey]: 'Invalid encrypted key',
+  [BrightChainStrings.Error_VotingErrorInvalidPrivateKey]:
+    'Invalid private key',
+  [BrightChainStrings.Error_VotingErrorInvalidEncryptedKey]:
+    'Invalid encrypted key',
   [BrightChainStrings.Error_VotingErrorInvalidPrivateKeyBufferTooShort]:
     'Invalid private key buffer: too short',
   [BrightChainStrings.Error_VotingErrorInvalidPrivateKeyBufferWrongMagic]:
@@ -367,10 +390,14 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Invalid private key buffer: failed to create',
 
   // Store rror
-  [BrightChainStrings.Error_StoreErrorKeyNotFoundTemplate]: 'Key not found: {KEY}',
-  [BrightChainStrings.Error_StoreErrorStorePathRequired]: 'Store path is required',
-  [BrightChainStrings.Error_StoreErrorStorePathNotFound]: 'Store path not found',
-  [BrightChainStrings.Error_StoreErrorBlockSizeRequired]: 'Block size is required',
+  [BrightChainStrings.Error_StoreErrorKeyNotFoundTemplate]:
+    'Key not found: {KEY}',
+  [BrightChainStrings.Error_StoreErrorStorePathRequired]:
+    'Store path is required',
+  [BrightChainStrings.Error_StoreErrorStorePathNotFound]:
+    'Store path not found',
+  [BrightChainStrings.Error_StoreErrorBlockSizeRequired]:
+    'Block size is required',
   [BrightChainStrings.Error_StoreErrorBlockIdRequired]: 'Block ID is required',
   [BrightChainStrings.Error_StoreErrorInvalidBlockIdTooShort]:
     'Invalid block ID: too short',
@@ -393,7 +420,8 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Failed to create block directory: {ERROR}',
   [BrightChainStrings.Error_StoreErrorBlockDeletionFailedTemplate]:
     'Failed to delete block: {ERROR}',
-  [BrightChainStrings.Error_StoreErrorNotImplemented]: 'Operation not implemented',
+  [BrightChainStrings.Error_StoreErrorNotImplemented]:
+    'Operation not implemented',
   [BrightChainStrings.Error_StoreErrorInsufficientRandomBlocksTemplate]:
     'Insufficient random blocks available: requested {REQUESTED}, available {AVAILABLE}',
 
@@ -402,7 +430,8 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Decrypted value length does not match expected length',
   [BrightChainStrings.Error_SecureStorageDecryptedValueChecksumMismatch]:
     'Decrypted value checksum does not match',
-  [BrightChainStrings.Error_SecureStorageValueIsNull]: 'Secure storage value is null',
+  [BrightChainStrings.Error_SecureStorageValueIsNull]:
+    'Secure storage value is null',
 
   // Symmetric Error
   [BrightChainStrings.Error_SymmetricDataNullOrUndefined]:
@@ -460,7 +489,8 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
   [BrightChainStrings.Error_CblErrorExpectedOwnedDataBlock]:
     'Expected owned data block',
   [BrightChainStrings.Error_CblErrorInvalidStructure]: 'Invalid CBL structure',
-  [BrightChainStrings.Error_CblErrorCreatorUndefined]: 'Creator cannot be undefined',
+  [BrightChainStrings.Error_CblErrorCreatorUndefined]:
+    'Creator cannot be undefined',
   [BrightChainStrings.Error_CblErrorBlockNotReadable]: 'Block cannot be read',
   [BrightChainStrings.Error_CblErrorCreatorRequiredForSignature]:
     'Creator is required for signature validation',
@@ -478,14 +508,17 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
   [BrightChainStrings.Error_CblErrorMimeTypeEmpty]: 'MIME type cannot be empty',
   [BrightChainStrings.Error_CblErrorMimeTypeWhitespace]:
     'MIME type cannot start or end with spaces',
-  [BrightChainStrings.Error_CblErrorMimeTypeLowercase]: 'MIME type must be lowercase',
-  [BrightChainStrings.Error_CblErrorMimeTypeInvalidFormat]: 'Invalid MIME type format',
+  [BrightChainStrings.Error_CblErrorMimeTypeLowercase]:
+    'MIME type must be lowercase',
+  [BrightChainStrings.Error_CblErrorMimeTypeInvalidFormat]:
+    'Invalid MIME type format',
   [BrightChainStrings.Error_CblErrorInvalidBlockSize]: 'Invalid block size',
   [BrightChainStrings.Error_CblErrorMetadataSizeExceeded]:
     'Metadata size exceeds maximum allowed size',
   [BrightChainStrings.Error_CblErrorMetadataSizeNegative]:
     'Total metadata size cannot be negative',
-  [BrightChainStrings.Error_CblErrorInvalidMetadataBuffer]: 'Invalid metadata buffer',
+  [BrightChainStrings.Error_CblErrorInvalidMetadataBuffer]:
+    'Invalid metadata buffer',
   [BrightChainStrings.Error_CblErrorCreationFailedTemplate]:
     'Failed to create CBL block {ERROR}',
   [BrightChainStrings.Error_CblErrorInsufficientCapacityTemplate]:
@@ -506,12 +539,14 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'User is required for decryption',
 
   // Stream Error
-  [BrightChainStrings.Error_StreamErrorBlockSizeRequired]: 'Block size is required',
+  [BrightChainStrings.Error_StreamErrorBlockSizeRequired]:
+    'Block size is required',
   [BrightChainStrings.Error_StreamErrorWhitenedBlockSourceRequired]:
     'Whitened block source is required',
   [BrightChainStrings.Error_StreamErrorRandomBlockSourceRequired]:
     'Random block source is required',
-  [BrightChainStrings.Error_StreamErrorInputMustBeBuffer]: 'Input must be a buffer',
+  [BrightChainStrings.Error_StreamErrorInputMustBeBuffer]:
+    'Input must be a buffer',
   [BrightChainStrings.Error_StreamErrorFailedToGetRandomBlock]:
     'Failed to get random block',
   [BrightChainStrings.Error_StreamErrorFailedToGetWhiteningBlock]:
@@ -537,33 +572,42 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
   [BrightChainStrings.Error_MemberErrorInvalidEncryptionData]:
     'Invalid encryption data.',
   [BrightChainStrings.Error_MemberErrorMemberNotFound]: 'Member not found.',
-  [BrightChainStrings.Error_MemberErrorMemberAlreadyExists]: 'Member already exists.',
-  [BrightChainStrings.Error_MemberErrorInvalidMemberStatus]: 'Invalid member status.',
-  [BrightChainStrings.Error_MemberErrorInvalidMemberName]: 'Invalid member name.',
+  [BrightChainStrings.Error_MemberErrorMemberAlreadyExists]:
+    'Member already exists.',
+  [BrightChainStrings.Error_MemberErrorInvalidMemberStatus]:
+    'Invalid member status.',
+  [BrightChainStrings.Error_MemberErrorInvalidMemberName]:
+    'Invalid member name.',
   [BrightChainStrings.Error_MemberErrorInsufficientRandomBlocks]:
     'Insufficient random blocks.',
   [BrightChainStrings.Error_MemberErrorFailedToCreateMemberBlocks]:
     'Failed to create member blocks.',
   [BrightChainStrings.Error_MemberErrorFailedToHydrateMember]:
     'Failed to hydrate member.',
-  [BrightChainStrings.Error_MemberErrorInvalidMemberData]: 'Invalid member data.',
+  [BrightChainStrings.Error_MemberErrorInvalidMemberData]:
+    'Invalid member data.',
   [BrightChainStrings.Error_MemberErrorFailedToConvertMemberData]:
     'Failed to convert member data.',
   [BrightChainStrings.Error_MemberErrorInvalidMemberNameWhitespace]:
     'Member name contains trailing or leading whitespace.',
-  [BrightChainStrings.Error_MemberErrorInvalidMnemonic]: 'Invalid wallet mnemonic.',
+  [BrightChainStrings.Error_MemberErrorInvalidMnemonic]:
+    'Invalid wallet mnemonic.',
   [BrightChainStrings.Error_MemberErrorMissingEmail]: 'Missing email.',
-  [BrightChainStrings.Error_MemberErrorMissingMemberName]: 'Missing member name.',
+  [BrightChainStrings.Error_MemberErrorMissingMemberName]:
+    'Missing member name.',
   [BrightChainStrings.Error_MemberErrorMissingVotingPrivateKey]:
     'Missing voting private key.',
   [BrightChainStrings.Error_MemberErrorMissingVotingPublicKey]:
     'Missing voting public key.',
-  [BrightChainStrings.Error_MemberErrorMissingPrivateKey]: 'Missing private key.',
+  [BrightChainStrings.Error_MemberErrorMissingPrivateKey]:
+    'Missing private key.',
   [BrightChainStrings.Error_MemberErrorNoWallet]: 'No wallet loaded.',
   [BrightChainStrings.Error_MemberErrorPrivateKeyRequiredToDeriveVotingKeyPair]:
     'Private key required to derive voting key pair.',
-  [BrightChainStrings.Error_MemberErrorWalletAlreadyLoaded]: 'Wallet already loaded.',
-  [BrightChainStrings.Error_MemberErrorInvalidMemberBlocks]: 'Invalid member blocks.',
+  [BrightChainStrings.Error_MemberErrorWalletAlreadyLoaded]:
+    'Wallet already loaded.',
+  [BrightChainStrings.Error_MemberErrorInvalidMemberBlocks]:
+    'Invalid member blocks.',
   [BrightChainStrings.Error_MemoryTupleErrorInvalidTupleSizeTemplate]: `Tuple must have {TUPLE.SIZE} blocks`,
 
   // Multi Encrypted Error
@@ -577,21 +621,26 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Block cannot be read',
   [BrightChainStrings.Error_MultiEncryptedErrorInvalidEphemeralPublicKeyLength]:
     'Invalid ephemeral public key length',
-  [BrightChainStrings.Error_MultiEncryptedErrorInvalidIVLength]: 'Invalid IV length',
+  [BrightChainStrings.Error_MultiEncryptedErrorInvalidIVLength]:
+    'Invalid IV length',
   [BrightChainStrings.Error_MultiEncryptedErrorInvalidAuthTagLength]:
     'Invalid auth tag length',
-  [BrightChainStrings.Error_MultiEncryptedErrorChecksumMismatch]: 'Checksum mismatch',
+  [BrightChainStrings.Error_MultiEncryptedErrorChecksumMismatch]:
+    'Checksum mismatch',
   [BrightChainStrings.Error_MultiEncryptedErrorRecipientMismatch]:
     'Recipient list does not match header recipient count',
   [BrightChainStrings.Error_MultiEncryptedErrorRecipientsAlreadyLoaded]:
     'Recipients already loaded',
 
   // Whitened Error
-  [BrightChainStrings.Error_WhitenedErrorBlockNotReadable]: 'Block cannot be read',
-  [BrightChainStrings.Error_WhitenedErrorBlockSizeMismatch]: 'Block sizes must match',
+  [BrightChainStrings.Error_WhitenedErrorBlockNotReadable]:
+    'Block cannot be read',
+  [BrightChainStrings.Error_WhitenedErrorBlockSizeMismatch]:
+    'Block sizes must match',
   [BrightChainStrings.Error_WhitenedErrorDataLengthMismatch]:
     'Data and random data lengths must match',
-  [BrightChainStrings.Error_WhitenedErrorInvalidBlockSize]: 'Invalid block size',
+  [BrightChainStrings.Error_WhitenedErrorInvalidBlockSize]:
+    'Invalid block size',
 
   // Handle Tuple Error
   [BrightChainStrings.Error_HandleTupleErrorInvalidTupleSizeTemplate]:
@@ -615,13 +664,16 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
     'Creator is required for encryption',
   [BrightChainStrings.Error_BlockErrorUnexpectedEncryptedBlockType]:
     'Unexpected encrypted block type',
-  [BrightChainStrings.Error_BlockErrorCannotEncrypt]: 'Block cannot be encrypted',
-  [BrightChainStrings.Error_BlockErrorCannotDecrypt]: 'Block cannot be decrypted',
+  [BrightChainStrings.Error_BlockErrorCannotEncrypt]:
+    'Block cannot be encrypted',
+  [BrightChainStrings.Error_BlockErrorCannotDecrypt]:
+    'Block cannot be decrypted',
   [BrightChainStrings.Error_BlockErrorCreatorPrivateKeyRequired]:
     'Creator private key is required',
   [BrightChainStrings.Error_BlockErrorInvalidMultiEncryptionRecipientCount]:
     'Invalid multi-encryption recipient count',
-  [BrightChainStrings.Error_BlockErrorInvalidNewBlockType]: 'Invalid new block type',
+  [BrightChainStrings.Error_BlockErrorInvalidNewBlockType]:
+    'Invalid new block type',
   [BrightChainStrings.Error_BlockErrorUnexpectedEphemeralBlockType]:
     'Unexpected ephemeral block type',
   [BrightChainStrings.Error_BlockErrorRecipientRequired]: 'Recipient required',
@@ -637,8 +689,10 @@ export const AmericanEnglishStrings: StringsCollection<string> = {
   [BrightChainStrings.Error_MemoryTupleErrorExpectedBlockIdsTemplate]: `Expected {TUPLE.SIZE} block IDs`,
   [BrightChainStrings.Error_MemoryTupleErrorExpectedBlocksTemplate]: `Expected {TUPLE.SIZE} blocks`,
 
-  [BrightChainStrings.Error_FailedToHydrateTemplate]: 'Failed to hydrate: {ERROR}',
-  [BrightChainStrings.Error_FailedToSerializeTemplate]: 'Failed to serialize: {ERROR}',
+  [BrightChainStrings.Error_FailedToHydrateTemplate]:
+    'Failed to hydrate: {ERROR}',
+  [BrightChainStrings.Error_FailedToSerializeTemplate]:
+    'Failed to serialize: {ERROR}',
   [BrightChainStrings.Error_InvalidChecksum]: 'Invalid checksum.',
   [BrightChainStrings.Error_InvalidCreator]: 'Invalid creator.',
   [BrightChainStrings.Error_InvalidIDFormat]: 'Invalid ID format.',

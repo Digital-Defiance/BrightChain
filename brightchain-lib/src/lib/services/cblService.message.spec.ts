@@ -8,19 +8,16 @@ import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import { MessageEncryptionScheme } from '../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../enumerations/messaging/messagePriority';
 import { CBLService } from './cblService';
-import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
 
 describe('CBLService - MessageCBL', () => {
   let cblService: CBLService;
-  let checksumService: ChecksumService;
   let eciesService: ECIESService;
   let _creator: Member;
 
   beforeEach(() => {
     const serviceProvider = ServiceProvider.getInstance();
     eciesService = serviceProvider.eciesService;
-    checksumService = serviceProvider.checksumService;
     cblService = serviceProvider.cblService;
     const memberWithMnemonic = Member.newMember(
       eciesService,

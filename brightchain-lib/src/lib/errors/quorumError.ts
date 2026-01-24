@@ -1,5 +1,5 @@
-import { QuorumErrorType } from '../enumerations/quorumErrorType';
 import BrightChainStrings from '../enumerations/brightChainStrings';
+import { QuorumErrorType } from '../enumerations/quorumErrorType';
 import { TypedError } from './typedError';
 
 export class QuorumError extends TypedError<QuorumErrorType> {

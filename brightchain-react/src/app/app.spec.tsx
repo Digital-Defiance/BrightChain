@@ -90,12 +90,6 @@ jest.mock('@digitaldefiance/i18n-lib', () => ({
   LanguageRegistry: { getCodeLabelMap: () => ({ en: 'English' }) },
 }));
 
-jest.mock('../i18n', () => ({
-  default: {
-    changeLanguage: async () => undefined,
-  },
-}));
-
 describe('App', () => {
   it('renders without crashing', () => {
     const { baseElement } = render(

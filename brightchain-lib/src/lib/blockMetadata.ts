@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import BlockDataType from './enumerations/blockDataType';
-import { BlockMetadataErrorType } from './enumerations/blockMetadataErrorType';
 import { BlockSize } from './enumerations/blockSize';
 import BlockType from './enumerations/blockType';
-import { BlockMetadataError } from './errors/block';
 import { IBaseBlockMetadata } from './interfaces/blocks/metadata/blockMetadata';
-import { parseBlockMetadataJson } from './utils/typeGuards';
 import { parseDate } from './utils/dateUtils';
+import { parseBlockMetadataJson } from './utils/typeGuards';
 
 /**
  * BlockMetadata provides utility functions for working with block metadata.

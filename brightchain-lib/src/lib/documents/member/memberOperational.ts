@@ -1,4 +1,8 @@
-import { Member, PlatformID, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
+import {
+  Member,
+  PlatformID,
+  uint8ArrayToHex,
+} from '@digitaldefiance/ecies-lib';
 import { uint8ArrayToBase64 } from '../../bufferUtils';
 import { IOperationalFactory } from '../../interfaces/document/base';
 import {

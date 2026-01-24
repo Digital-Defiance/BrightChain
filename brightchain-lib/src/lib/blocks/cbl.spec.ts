@@ -27,8 +27,11 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import { BlockValidationError } from '../errors/block';
-import { getBrightChainIdProvider } from '../init';
-import { initializeBrightChain, resetInitialization } from '../init';
+import {
+  getBrightChainIdProvider,
+  initializeBrightChain,
+  resetInitialization,
+} from '../init';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { ConstituentBlockListBlock } from './cbl';

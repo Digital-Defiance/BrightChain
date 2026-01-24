@@ -1,5 +1,5 @@
-import { StreamErrorType } from '../enumerations/streamErrorType';
 import BrightChainStrings from '../enumerations/brightChainStrings';
+import { StreamErrorType } from '../enumerations/streamErrorType';
 import { TypedError } from './typedError';
 
 export class StreamError extends TypedError<StreamErrorType> {

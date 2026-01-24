@@ -59,9 +59,9 @@ export function isLibraryInitialized(): boolean {
  * @returns The ID provider configured for BrightChain (GuidV4Provider with 16-byte IDs)
  * @throws Error if the library has not been initialized and autoInit is false
  */
-export function getBrightChainIdProvider<
-  TID extends PlatformID = Uint8Array,
->(autoInit = true): TypedIdProviderWrapper<TID> {
+export function getBrightChainIdProvider<TID extends PlatformID = Uint8Array>(
+  autoInit = true,
+): TypedIdProviderWrapper<TID> {
   if (!isInitialized) {
     if (autoInit) {
       initializeBrightChain();
