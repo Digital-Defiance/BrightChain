@@ -170,7 +170,7 @@
     "jest": "30.0.5",
     "jest-environment-jsdom": "30.0.5",
     "jest-environment-node": "30.0.5",
-    "jest-util": "30.0.5",
+    "jest-util": "30.2.0",
     "lcov-parse": "^1.0.0",
     "nx": "22.3.3",
     "prettier": "^3.4.2",
