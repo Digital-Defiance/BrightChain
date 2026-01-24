@@ -1,15 +1,15 @@
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { SymmetricErrorType } from '../enumerations/symmetricErrorType';
 import { SymmetricService } from '../services/symmetric.service';
 import { TypedError } from './typedError';
 
 export class SymmetricError extends TypedError<SymmetricErrorType> {
-  protected get reasonMap(): Record<SymmetricErrorType, StringNames> {
+  protected get reasonMap(): Record<SymmetricErrorType, BrightChainStrings> {
     return {
       [SymmetricErrorType.DataNullOrUndefined]:
-        StringNames.Error_SymmetricDataNullOrUndefined,
+        BrightChainStrings.Error_SymmetricDataNullOrUndefined,
       [SymmetricErrorType.InvalidKeyLength]:
-        StringNames.Error_SymmetricInvalidKeyLengthTemplate,
+        BrightChainStrings.Error_SymmetricInvalidKeyLengthTemplate,
     };
   }
   constructor(type: SymmetricErrorType, _language?: string) {

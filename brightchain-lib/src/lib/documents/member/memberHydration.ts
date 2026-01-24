@@ -1,7 +1,9 @@
 import {
   EmailString,
+  hexToUint8Array,
   PlatformID,
   uint8ArrayToBase64,
+  uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { PublicKey } from 'paillier-bigint';
 import { base64ToUint8Array } from '../../bufferUtils';
@@ -19,9 +21,9 @@ export const memberHydrationSchema = <
   hydrate: (storage: IMemberStorageData): IMemberHydratedData<TID> => {
     // Convert string fields to their proper types using ID provider
     const provider = ServiceProvider.getInstance<TID>().idProvider;
-    const id = provider.idFromString(storage.id);
+    const id = provider.fromBytes(hexToUint8Array(storage.id));
     const email = new EmailString(storage.email);
-    const creatorId = provider.idFromString(storage.creatorId);
+    const creatorId = provider.fromBytes(hexToUint8Array(storage.creatorId));
     const publicKey = base64ToUint8Array(storage.publicKey);
 
     // Parse voting public key from hex string (if present)
@@ -52,19 +54,18 @@ export const memberHydrationSchema = <
     const votingPublicKeyHex = hydrated.votingPublicKey?.n?.toString(16) || '0';
     const provider = ServiceProvider.getInstance<TID>().idProvider;
 
-    // Handle ID conversion - if it's already a string, use it; if it's Uint8Array, convert to base64
+    // Handle ID conversion - if it's already a string, use it; if it's Uint8Array, convert to hex
     let idString: string;
     if (typeof hydrated.id === 'string') {
       idString = hydrated.id;
     } else if (hydrated.id instanceof Uint8Array) {
-      idString = uint8ArrayToBase64(hydrated.id);
+      idString = uint8ArrayToHex(hydrated.id);
     } else {
-      // Try using the provider's idToString method
       try {
-        idString = provider.idToString(hydrated.id);
+        idString = uint8ArrayToHex(provider.toBytes(hydrated.id));
       } catch {
-        // Fallback to base64 if provider method fails
-        idString = uint8ArrayToBase64(hydrated.id as unknown as Uint8Array);
+        // Fallback to hex if provider method fails
+        idString = uint8ArrayToHex(hydrated.id as unknown as Uint8Array);
       }
     }
 
@@ -74,14 +75,13 @@ export const memberHydrationSchema = <
     } else if (typeof hydrated.creatorId === 'string') {
       creatorIdString = hydrated.creatorId;
     } else if (hydrated.creatorId instanceof Uint8Array) {
-      creatorIdString = uint8ArrayToBase64(hydrated.creatorId);
+      creatorIdString = uint8ArrayToHex(hydrated.creatorId);
     } else {
-      // Try using the provider's idToString method
       try {
-        creatorIdString = provider.idToString(hydrated.creatorId);
+        creatorIdString = uint8ArrayToHex(provider.toBytes(hydrated.creatorId));
       } catch {
-        // Fallback to base64 if provider method fails
-        creatorIdString = uint8ArrayToBase64(
+        // Fallback to hex if provider method fails
+        creatorIdString = uint8ArrayToHex(
           hydrated.creatorId as unknown as Uint8Array,
         );
       }

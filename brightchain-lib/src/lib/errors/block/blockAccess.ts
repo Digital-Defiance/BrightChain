@@ -1,28 +1,28 @@
 import { BlockAccessErrorType } from '../../enumerations/blockAccessErrorType';
-import { StringNames } from '../../enumerations/stringNames';
+import { BrightChainStrings } from '../../enumerations/brightChainStrings';
 import { TypedWithReasonError } from '../typedWithReasonError';
 
 export class BlockAccessError extends TypedWithReasonError<BlockAccessErrorType> {
   public readonly file?: string;
-  public get reasonMap(): Record<BlockAccessErrorType, StringNames> {
+  public get reasonMap(): Record<BlockAccessErrorType, BrightChainStrings> {
     return {
       [BlockAccessErrorType.BlockAlreadyExists]:
-        StringNames.Error_BlockAccessErrorBlockAlreadyExists,
+        BrightChainStrings.Error_BlockAccessErrorBlockAlreadyExists,
       [BlockAccessErrorType.BlockFileNotFound]:
-        StringNames.Error_BlockAccessErrorBlockFileNotFoundTemplate,
+        BrightChainStrings.Error_BlockAccessErrorBlockFileNotFoundTemplate,
       [BlockAccessErrorType.BlockIsNotPersistable]:
-        StringNames.Error_BlockAccessErrorBlockIsNotPersistable,
+        BrightChainStrings.Error_BlockAccessErrorBlockIsNotPersistable,
       [BlockAccessErrorType.BlockIsNotReadable]:
-        StringNames.Error_BlockAccessErrorBlockIsNotReadable,
+        BrightChainStrings.Error_BlockAccessErrorBlockIsNotReadable,
       [BlockAccessErrorType.CBLCannotBeEncrypted]:
-        StringNames.Error_BlockAccessCBLCannotBeEncrypted,
+        BrightChainStrings.Error_BlockAccessCBLCannotBeEncrypted,
       [BlockAccessErrorType.CreatorMustBeProvided]:
-        StringNames.Error_BlockAccessErrorCreatorMustBeProvided,
+        BrightChainStrings.Error_BlockAccessErrorCreatorMustBeProvided,
     };
   }
   constructor(type: BlockAccessErrorType, file?: string, _language?: string) {
     super(
-      StringNames.Error_BlockAccessTemplate,
+      BrightChainStrings.Error_BlockAccessTemplate,
       type,
       file ? { FILE: file } : {},
     );

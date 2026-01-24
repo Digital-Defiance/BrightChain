@@ -4,11 +4,12 @@ import {
   Member,
   MemberType,
 } from '@digitaldefiance/ecies-lib';
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import { MessageEncryptionScheme } from '../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../enumerations/messaging/messagePriority';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
+import { ServiceProvider } from './service.provider';
 
 describe('CBLService - MessageCBL', () => {
   let cblService: CBLService;
@@ -16,17 +17,22 @@ describe('CBLService - MessageCBL', () => {
   let eciesService: ECIESService;
   let _creator: Member;
 
-  beforeEach(async () => {
-    checksumService = new ChecksumService();
-    eciesService = new ECIESService();
-    cblService = new CBLService(checksumService, eciesService);
-    const memberWithMnemonic = await Member.newMember(
+  beforeEach(() => {
+    const serviceProvider = ServiceProvider.getInstance();
+    eciesService = serviceProvider.eciesService;
+    checksumService = serviceProvider.checksumService;
+    cblService = serviceProvider.cblService;
+    const memberWithMnemonic = Member.newMember(
       eciesService,
       MemberType.User,
       'test',
       new EmailString('test@example.com'),
     );
     _creator = memberWithMnemonic.member;
+  });
+
+  afterEach(() => {
+    ServiceProvider.resetInstance();
   });
 
   describe('makeMessageHeader', () => {

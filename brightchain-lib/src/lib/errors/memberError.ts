@@ -1,61 +1,61 @@
 import { HandleableError } from '@digitaldefiance/i18n-lib';
 import { MemberErrorType } from '../enumerations/memberErrorType';
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 
 export class MemberError extends HandleableError {
   public readonly type: MemberErrorType;
 
-  public get reasonMap(): Record<MemberErrorType, StringNames> {
+  public get reasonMap(): Record<MemberErrorType, BrightChainStrings> {
     return {
       [MemberErrorType.IncorrectOrInvalidPrivateKey]:
-        StringNames.Error_MemberErrorIncorrectOrInvalidPrivateKey,
-      [MemberErrorType.InvalidEmail]: StringNames.Error_MemberErrorInvalidEmail,
+        BrightChainStrings.Error_MemberErrorIncorrectOrInvalidPrivateKey,
+      [MemberErrorType.InvalidEmail]: BrightChainStrings.Error_MemberErrorInvalidEmail,
       [MemberErrorType.InvalidEmailWhitespace]:
-        StringNames.Error_MemberErrorInvalidEmailWhitespace,
+        BrightChainStrings.Error_MemberErrorInvalidEmailWhitespace,
       [MemberErrorType.InvalidMemberName]:
-        StringNames.Error_MemberErrorInvalidMemberName,
+        BrightChainStrings.Error_MemberErrorInvalidMemberName,
       [MemberErrorType.InvalidMemberStatus]:
-        StringNames.Error_MemberErrorInvalidMemberStatus,
+        BrightChainStrings.Error_MemberErrorInvalidMemberStatus,
       [MemberErrorType.InvalidMemberNameWhitespace]:
-        StringNames.Error_MemberErrorInvalidMemberNameWhitespace,
+        BrightChainStrings.Error_MemberErrorInvalidMemberNameWhitespace,
       [MemberErrorType.InvalidMnemonic]:
-        StringNames.Error_MemberErrorInvalidMnemonic,
-      [MemberErrorType.MissingEmail]: StringNames.Error_MemberErrorMissingEmail,
+        BrightChainStrings.Error_MemberErrorInvalidMnemonic,
+      [MemberErrorType.MissingEmail]: BrightChainStrings.Error_MemberErrorMissingEmail,
       [MemberErrorType.MemberAlreadyExists]:
-        StringNames.Error_MemberErrorMemberAlreadyExists,
+        BrightChainStrings.Error_MemberErrorMemberAlreadyExists,
       [MemberErrorType.MissingMemberName]:
-        StringNames.Error_MemberErrorMissingMemberName,
+        BrightChainStrings.Error_MemberErrorMissingMemberName,
       [MemberErrorType.MemberNotFound]:
-        StringNames.Error_MemberErrorMemberNotFound,
+        BrightChainStrings.Error_MemberErrorMemberNotFound,
       [MemberErrorType.MissingVotingPrivateKey]:
-        StringNames.Error_MemberErrorMissingVotingPrivateKey,
+        BrightChainStrings.Error_MemberErrorMissingVotingPrivateKey,
       [MemberErrorType.MissingVotingPublicKey]:
-        StringNames.Error_MemberErrorMissingVotingPublicKey,
+        BrightChainStrings.Error_MemberErrorMissingVotingPublicKey,
       [MemberErrorType.MissingPrivateKey]:
-        StringNames.Error_MemberErrorMissingPrivateKey,
-      [MemberErrorType.NoWallet]: StringNames.Error_MemberErrorNoWallet,
+        BrightChainStrings.Error_MemberErrorMissingPrivateKey,
+      [MemberErrorType.NoWallet]: BrightChainStrings.Error_MemberErrorNoWallet,
       [MemberErrorType.PrivateKeyRequiredToDeriveVotingKeyPair]:
-        StringNames.Error_MemberErrorPrivateKeyRequiredToDeriveVotingKeyPair,
+        BrightChainStrings.Error_MemberErrorPrivateKeyRequiredToDeriveVotingKeyPair,
       [MemberErrorType.WalletAlreadyLoaded]:
-        StringNames.Error_MemberErrorWalletAlreadyLoaded,
+        BrightChainStrings.Error_MemberErrorWalletAlreadyLoaded,
       [MemberErrorType.InsufficientRandomBlocks]:
-        StringNames.Error_MemberErrorInsufficientRandomBlocks,
+        BrightChainStrings.Error_MemberErrorInsufficientRandomBlocks,
       [MemberErrorType.FailedToCreateMemberBlocks]:
-        StringNames.Error_MemberErrorFailedToCreateMemberBlocks,
+        BrightChainStrings.Error_MemberErrorFailedToCreateMemberBlocks,
       [MemberErrorType.FailedToHydrateMember]:
-        StringNames.Error_MemberErrorFailedToHydrateMember,
+        BrightChainStrings.Error_MemberErrorFailedToHydrateMember,
       [MemberErrorType.InvalidMemberData]:
-        StringNames.Error_MemberErrorInvalidMemberData,
+        BrightChainStrings.Error_MemberErrorInvalidMemberData,
       [MemberErrorType.FailedToConvertMemberData]:
-        StringNames.Error_MemberErrorFailedToConvertMemberData,
+        BrightChainStrings.Error_MemberErrorFailedToConvertMemberData,
       [MemberErrorType.InvalidMemberBlocks]:
-        StringNames.Error_MemberErrorInvalidMemberBlocks,
+        BrightChainStrings.Error_MemberErrorInvalidMemberBlocks,
       [MemberErrorType.MissingEncryptionData]:
-        StringNames.Error_MemberErrorMissingEncryptionData,
+        BrightChainStrings.Error_MemberErrorMissingEncryptionData,
       [MemberErrorType.EncryptionDataTooLarge]:
-        StringNames.Error_MemberErrorEncryptionDataTooLarge,
+        BrightChainStrings.Error_MemberErrorEncryptionDataTooLarge,
       [MemberErrorType.InvalidEncryptionData]:
-        StringNames.Error_MemberErrorInvalidEncryptionData,
+        BrightChainStrings.Error_MemberErrorInvalidEncryptionData,
     };
   }
   constructor(type: MemberErrorType, _language?: string) {

@@ -1,5 +1,5 @@
 import { HandleableError } from '@digitaldefiance/i18n-lib';
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { translate } from '../i18n';
 
 export class BufferError extends HandleableError {
@@ -10,7 +10,7 @@ export class BufferError extends HandleableError {
   ) {
     super(
       new Error(
-        translate(StringNames.Error_BufferErrorInvalidBufferTypeTemplate, {
+        translate(BrightChainStrings.Error_BufferErrorInvalidBufferTypeTemplate, {
           TYPE: type,
           ...details,
         }),

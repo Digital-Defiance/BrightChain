@@ -1,11 +1,9 @@
-import { ECIESService, Member, MemberType } from '@digitaldefiance/ecies-lib';
+import { Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { BlockSize } from '../../enumerations/blockSize';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { MemoryBlockStore } from '../../stores/memoryBlockStore';
 import { MemoryMessageMetadataStore } from '../../stores/messaging/memoryMessageMetadataStore';
-import { CBLService } from '../cblService';
-import { ChecksumService } from '../checksum.service';
 import { ServiceProvider } from '../service.provider';
 import { MessageCBLService } from './messageCBLService';
 
@@ -16,11 +14,13 @@ describe('BlockStore Interface Compatibility', () => {
   let creator: Member;
 
   beforeEach(async () => {
+    // Use ServiceProvider to get properly configured services
+    const serviceProvider = ServiceProvider.getInstance();
+    const eciesService = serviceProvider.eciesService;
+    const checksumService = serviceProvider.checksumService;
+    const cblService = serviceProvider.cblService;
     blockStore = new MemoryBlockStore(BlockSize.Small);
     metadataStore = new MemoryMessageMetadataStore();
-    const checksumService = new ChecksumService();
-    const eciesService = new ECIESService();
-    const cblService = new CBLService(checksumService, eciesService);
     messageCBL = new MessageCBLService(
       cblService,
       checksumService,
@@ -28,8 +28,7 @@ describe('BlockStore Interface Compatibility', () => {
       metadataStore,
     );
 
-    ServiceProvider.getInstance();
-    const memberWithMnemonic = await Member.newMember(
+    const memberWithMnemonic = Member.newMember(
       eciesService,
       MemberType.User,
       'test',

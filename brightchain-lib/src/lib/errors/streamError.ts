@@ -1,24 +1,24 @@
 import { StreamErrorType } from '../enumerations/streamErrorType';
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { TypedError } from './typedError';
 
 export class StreamError extends TypedError<StreamErrorType> {
-  protected get reasonMap(): Record<StreamErrorType, StringNames> {
+  protected get reasonMap(): Record<StreamErrorType, BrightChainStrings> {
     return {
       [StreamErrorType.BlockSizeRequired]:
-        StringNames.Error_StreamErrorBlockSizeRequired,
+        BrightChainStrings.Error_StreamErrorBlockSizeRequired,
       [StreamErrorType.WhitenedBlockSourceRequired]:
-        StringNames.Error_StreamErrorWhitenedBlockSourceRequired,
+        BrightChainStrings.Error_StreamErrorWhitenedBlockSourceRequired,
       [StreamErrorType.RandomBlockSourceRequired]:
-        StringNames.Error_StreamErrorRandomBlockSourceRequired,
+        BrightChainStrings.Error_StreamErrorRandomBlockSourceRequired,
       [StreamErrorType.InputMustBeBuffer]:
-        StringNames.Error_StreamErrorInputMustBeBuffer,
+        BrightChainStrings.Error_StreamErrorInputMustBeBuffer,
       [StreamErrorType.FailedToGetRandomBlock]:
-        StringNames.Error_StreamErrorFailedToGetRandomBlock,
+        BrightChainStrings.Error_StreamErrorFailedToGetRandomBlock,
       [StreamErrorType.FailedToGetWhiteningBlock]:
-        StringNames.Error_StreamErrorFailedToGetWhiteningBlock,
+        BrightChainStrings.Error_StreamErrorFailedToGetWhiteningBlock,
       [StreamErrorType.IncompleteEncryptedBlock]:
-        StringNames.Error_StreamErrorIncompleteEncryptedBlock,
+        BrightChainStrings.Error_StreamErrorIncompleteEncryptedBlock,
     };
   }
 

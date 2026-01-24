@@ -13,12 +13,15 @@
  */
 
 import { DiskCBLStore } from '@brightchain/brightchain-api-lib/lib/stores/diskCBLStore';
-import { ConstituentBlockListBlock } from '@brightchain/brightchain-lib/lib/blocks/cbl';
-import { BlockEncryptionType } from '@brightchain/brightchain-lib/lib/enumerations/blockEncryptionType';
-import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
-import { StoreErrorType } from '@brightchain/brightchain-lib/lib/enumerations/storeErrorType';
-import { StoreError } from '@brightchain/brightchain-lib/lib/errors/storeError';
-import { ServiceProvider } from '@brightchain/brightchain-lib/lib/services/service.provider';
+import {
+  BlockEncryptionType,
+  BlockSize,
+  ConstituentBlockListBlock,
+  initializeBrightChain,
+  ServiceProvider,
+  StoreError,
+  StoreErrorType,
+} from '@brightchain/brightchain-lib';
 import {
   arraysEqual,
   EmailString,
@@ -47,6 +50,9 @@ describe('CBL API Round-Trip Property Tests', () => {
 
   // Initialize once before all tests
   beforeAll(() => {
+    // Initialize BrightChain library before using ServiceProvider
+    initializeBrightChain();
+    
     creator = Member.newMember(
       ServiceProvider.getInstance().eciesService,
       MemberType.User,

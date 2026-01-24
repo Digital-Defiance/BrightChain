@@ -1,26 +1,26 @@
 import { BlockMetadataErrorType } from '../../enumerations/blockMetadataErrorType';
-import { StringNames } from '../../enumerations/stringNames';
+import { BrightChainStrings } from '../../enumerations/brightChainStrings';
 import { TypedWithReasonError } from '../typedWithReasonError';
 
 export class BlockMetadataError extends TypedWithReasonError<BlockMetadataErrorType> {
-  public get reasonMap(): Record<BlockMetadataErrorType, StringNames> {
+  public get reasonMap(): Record<BlockMetadataErrorType, BrightChainStrings> {
     return {
       [BlockMetadataErrorType.CreatorRequired]:
-        StringNames.Error_BlockMetadataErrorCreatorRequired,
+        BrightChainStrings.Error_BlockMetadataErrorCreatorRequired,
       [BlockMetadataErrorType.EncryptorRequired]:
-        StringNames.Error_BlockMetadataErrorEncryptorRequired,
+        BrightChainStrings.Error_BlockMetadataErrorEncryptorRequired,
       [BlockMetadataErrorType.InvalidBlockMetadata]:
-        StringNames.Error_BlockMetadataErrorInvalidBlockMetadata,
+        BrightChainStrings.Error_BlockMetadataErrorInvalidBlockMetadata,
       [BlockMetadataErrorType.MetadataRequired]:
-        StringNames.Error_BlockMetadataErrorMetadataRequired,
+        BrightChainStrings.Error_BlockMetadataErrorMetadataRequired,
       [BlockMetadataErrorType.MissingRequiredMetadata]:
-        StringNames.Error_BlockMetadataErrorMissingRequiredMetadata,
+        BrightChainStrings.Error_BlockMetadataErrorMissingRequiredMetadata,
       [BlockMetadataErrorType.CreatorIdMismatch]:
-        StringNames.Error_BlockMetadataErrorCreatorIdMismatch,
+        BrightChainStrings.Error_BlockMetadataErrorCreatorIdMismatch,
     };
   }
   constructor(type: BlockMetadataErrorType, _language?: string) {
-    super(StringNames.Error_BlockMetadataTemplate, type, undefined);
+    super(BrightChainStrings.Error_BlockMetadataTemplate, type, undefined);
     this.name = 'BlockMetadataError';
   }
 }

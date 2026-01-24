@@ -1,4 +1,4 @@
-import { StringNames } from './stringNames';
+import { BrightChainStrings } from './brightChainStrings';
 
 export enum VotingDerivationErrorType {
   FailedToGeneratePrime = 'FailedToGeneratePrime',
@@ -14,26 +14,26 @@ export enum VotingDerivationErrorType {
 }
 
 export const VotingDerivationErrorTypes: {
-  [key in VotingDerivationErrorType]: StringNames;
+  [key in VotingDerivationErrorType]: BrightChainStrings;
 } = {
   [VotingDerivationErrorType.FailedToGeneratePrime]:
-    StringNames.Error_VotingDerivationErrorFailedToGeneratePrime,
+    BrightChainStrings.Error_VotingDerivationErrorFailedToGeneratePrime,
   [VotingDerivationErrorType.IdenticalPrimes]:
-    StringNames.Error_VotingDerivationErrorIdenticalPrimes,
+    BrightChainStrings.Error_VotingDerivationErrorIdenticalPrimes,
   [VotingDerivationErrorType.KeyPairTooSmall]:
-    StringNames.Error_VotingDerivationErrorKeyPairTooSmallTemplate,
+    BrightChainStrings.Error_VotingDerivationErrorKeyPairTooSmallTemplate,
   [VotingDerivationErrorType.KeyPairValidationFailed]:
-    StringNames.Error_VotingDerivationErrorKeyPairValidationFailed,
+    BrightChainStrings.Error_VotingDerivationErrorKeyPairValidationFailed,
   [VotingDerivationErrorType.ModularInverseDoesNotExist]:
-    StringNames.Error_VotingDerivationErrorModularInverseDoesNotExist,
+    BrightChainStrings.Error_VotingDerivationErrorModularInverseDoesNotExist,
   [VotingDerivationErrorType.PrivateKeyMustBeBuffer]:
-    StringNames.Error_VotingDerivationErrorPrivateKeyMustBeBuffer,
+    BrightChainStrings.Error_VotingDerivationErrorPrivateKeyMustBeBuffer,
   [VotingDerivationErrorType.PublicKeyMustBeBuffer]:
-    StringNames.Error_VotingDerivationErrorPublicKeyMustBeBuffer,
+    BrightChainStrings.Error_VotingDerivationErrorPublicKeyMustBeBuffer,
   [VotingDerivationErrorType.InvalidPublicKeyFormat]:
-    StringNames.Error_VotingDerivationErrorInvalidPublicKeyFormat,
+    BrightChainStrings.Error_VotingDerivationErrorInvalidPublicKeyFormat,
   [VotingDerivationErrorType.InvalidEcdhKeyPair]:
-    StringNames.Error_VotingDerivationErrorInvalidEcdhKeyPair,
+    BrightChainStrings.Error_VotingDerivationErrorInvalidEcdhKeyPair,
   [VotingDerivationErrorType.FailedToDeriveVotingKeys]:
-    StringNames.Error_VotingDerivationErrorFailedToDeriveVotingKeysTemplate,
+    BrightChainStrings.Error_VotingDerivationErrorFailedToDeriveVotingKeysTemplate,
 };

@@ -1,5 +1,4 @@
 import {
-  ECIESService,
   EmailString,
   Member,
   MemberType,
@@ -20,15 +19,16 @@ describe('MessageCBLService', () => {
   let messageCBLService: MessageCBLService;
   let cblService: CBLService;
   let checksumService: ChecksumService;
-  let eciesService: ECIESService;
   let blockStore: MemoryBlockStore;
   let metadataStore: MemoryMessageMetadataStore;
   let creator: Member;
 
   beforeEach(async () => {
-    checksumService = new ChecksumService();
-    eciesService = new ECIESService();
-    cblService = new CBLService(checksumService, eciesService);
+    // Use ServiceProvider to get properly configured services
+    const serviceProvider = ServiceProvider.getInstance();
+    const eciesService = serviceProvider.eciesService;
+    checksumService = serviceProvider.checksumService;
+    cblService = serviceProvider.cblService;
     blockStore = new MemoryBlockStore(BlockSize.Small);
     metadataStore = new MemoryMessageMetadataStore();
     messageCBLService = new MessageCBLService(
@@ -38,9 +38,7 @@ describe('MessageCBLService', () => {
       metadataStore,
     );
 
-    ServiceProvider.getInstance();
-
-    const memberWithMnemonic = await Member.newMember(
+    const memberWithMnemonic = Member.newMember(
       eciesService,
       MemberType.User,
       'test',

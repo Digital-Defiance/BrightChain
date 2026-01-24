@@ -23,6 +23,26 @@ import { Checksum } from '../types/checksum';
  * - Data Type
  * - Checksum
  * - Date Created
+ *
+ * **Immutability Contract:**
+ * All blocks are immutable after construction. The underlying data buffer
+ * should not be modified after the block is created. This ensures:
+ * - Cache consistency: Cached values remain valid throughout the block's lifetime
+ * - Thread safety: Blocks can be safely shared across contexts
+ * - Data integrity: Block checksums remain valid
+ *
+ * While TypeScript/JavaScript cannot enforce true immutability on Uint8Array,
+ * the block system is designed with the expectation that:
+ * 1. Block data is never modified after construction
+ * 2. Cached values (encryption details, address counts) are computed once
+ * 3. All getters return consistent values across multiple calls
+ *
+ * Modifying block data after construction will result in:
+ * - Invalid checksums
+ * - Stale cached values
+ * - Undefined behavior in validation and encryption operations
+ *
+ * @see Requirements 6.3, 6.4
  */
 export abstract class BaseBlock implements IBaseBlock {
   protected readonly _blockSize: BlockSize;
@@ -199,36 +219,33 @@ export abstract class BaseBlock implements IBaseBlock {
 
   /**
    * Get all layers in the inheritance chain
+   * This represents the class hierarchy, not instance relationships.
+   * Used for calculating total overhead from all block types in the hierarchy.
    */
   public get layers(): IBaseBlock[] {
-    const collectLayers = (block: IBaseBlock): IBaseBlock[] => {
-      const parent = block.parent;
-      return parent ? [...collectLayers(parent), block] : [block];
-    };
-    return collectLayers(this);
+    // For a single block instance, the only "layer" is itself
+    // The concept of multiple layers would apply if we had composition
+    // (e.g., an encrypted block wrapping a data block), but in our
+    // current architecture, we use inheritance instead.
+    return [this];
   }
 
   /**
    * Get the total header size of all layers below this one
    */
   public get lowerLayerHeaderSize(): number {
-    const layers = this.layers;
-    const currentLayerIndex = layers.indexOf(this);
-    if (currentLayerIndex === -1) {
-      throw new Error('Current layer not found in layers');
-    }
-
-    return layers.slice(0, currentLayerIndex).reduce((sum, layer) => {
-      return sum + layer.layerOverheadSize;
-    }, 0);
+    // Since we simplified layers to just return [this], there are no lower layers
+    return 0;
   }
 
   /**
    * Get the parent layer in the inheritance chain
+   * Returns null as we don't track parent instances in the current architecture.
    */
   public get parent(): IBaseBlock | null {
-    const proto = Object.getPrototypeOf(this);
-    return proto === BaseBlock.prototype ? null : proto;
+    // In the current architecture, blocks don't have parent block instances
+    // They use class inheritance, but we don't track parent instances
+    return null;
   }
 
   /**
