@@ -10,41 +10,32 @@ jest.mock('./handle', () => {
 import {
   CHECKSUM,
   ChecksumUint8Array,
+  CrcService,
   ECIES,
+  ECIESService,
   EmailString,
-  getEnhancedIdProvider,
   Member,
   MemberType,
   PlatformID,
   SignatureUint8Array,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import { randomBytes } from '../browserCrypto';
-import { TUPLE } from '../constants';
+import { BLOCK_HEADER, StructuredBlockType, TUPLE } from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockValidationErrorType } from '../enumerations/blockValidationErrorType';
 import { BlockValidationError } from '../errors/block';
+import { getBrightChainIdProvider } from '../init';
 import { initializeBrightChain, resetInitialization } from '../init';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { ConstituentBlockListBlock } from './cbl';
+import { CBLBase } from './cblBase';
 import { createBlockHandleFromStore } from './handle';
 
-// Mock the CBLBase class to avoid signature validation issues
-jest.mock('./cblBase', () => {
-  const originalModule = jest.requireActual('./cblBase');
-
-  // Mock the validateSignature method at the prototype level
-  // This ensures it's mocked before the constructor calls it
-  originalModule.CBLBase.prototype.validateSignature = jest
-    .fn()
-    .mockReturnValue(true);
-
-  return originalModule;
-});
+// We'll use jest.spyOn in beforeEach to mock validateSignature
 
 // Helper to ensure tuple size is valid
 const ensureTupleSize = (count: number): number => {
@@ -267,10 +258,26 @@ class TestCblBlock<
         : (new Uint8Array(ECIES.SIGNATURE_SIZE) as SignatureUint8Array);
     }
 
+    // Compute CRC8 over header content (headerWithoutSignature)
+    const crcService = new CrcService();
+    const crc8Buffer = crcService.crc8(headerWithoutSignature);
+    const crc8 = crc8Buffer[0];
+
+    // Create structured prefix: [MagicPrefix(1)][BlockType(1)][Version(1)][CRC8(1)]
+    const structuredPrefix = new Uint8Array(4);
+    structuredPrefix[0] = BLOCK_HEADER.MAGIC_PREFIX;
+    structuredPrefix[1] = StructuredBlockType.CBL;
+    structuredPrefix[2] = BLOCK_HEADER.VERSION;
+    structuredPrefix[3] = crc8;
+
     // Create final data array with padding
     const blockSizeNumber = blockSize as number;
     const data = Buffer.alloc(blockSizeNumber); // Create Buffer of exact block size, initialized with zeros
     let dataOffset = 0;
+
+    // Copy structured prefix first
+    data.set(structuredPrefix, dataOffset);
+    dataOffset += structuredPrefix.length;
 
     // Copy header without signature
     data.set(headerWithoutSignature, dataOffset);
@@ -326,7 +333,7 @@ describe('ConstituentBlockListBlock', () => {
   let dataAddresses: Array<ChecksumUint8Array>;
   const defaultBlockSize = BlockSize.Small; // 4KB block size
   const defaultDataLength = 1024;
-  const eciesService = new ECIESService<Uint8Array>();
+  let eciesService: ECIESService<Uint8Array>;
   let checksumService: ChecksumService;
 
   // Helper functions
@@ -399,6 +406,7 @@ describe('ConstituentBlockListBlock', () => {
     ServiceProvider.getInstance();
 
     // Initialize services after BrightChain is initialized
+    eciesService = ServiceProvider.getInstance().eciesService;
     _cblService = ServiceProvider.getInstance().cblService;
     _votingService = ServiceProvider.getInstance().votingService;
 
@@ -411,7 +419,7 @@ describe('ConstituentBlockListBlock', () => {
     publicKey.set(publicKeyData, 1);
 
     creator = Member.newMember(
-      ServiceProvider.getInstance().eciesService,
+      eciesService,
       MemberType.User,
       'Test User',
       new EmailString('test@example.com'),
@@ -419,6 +427,10 @@ describe('ConstituentBlockListBlock', () => {
   });
 
   beforeEach(() => {
+    // Mock validateSignature on CBLBase prototype before creating any blocks
+    // This must be done before any CBL instances are created
+    jest.spyOn(CBLBase.prototype, 'validateSignature').mockReturnValue(true);
+
     // Re-initialize BrightChain after ServiceProvider reset
     initializeBrightChain();
 
@@ -431,6 +443,7 @@ describe('ConstituentBlockListBlock', () => {
 
   afterEach(() => {
     resetInitialization();
+    jest.restoreAllMocks();
   });
 
   describe('basic functionality', () => {
@@ -597,7 +610,7 @@ describe('ConstituentBlockListBlock', () => {
       const block = createTestBlock();
 
       // Verify creator ID matches
-      const provider = getEnhancedIdProvider();
+      const provider = getBrightChainIdProvider();
       const blockCreatorId = block.creatorId;
       const creatorId = creator.id;
 

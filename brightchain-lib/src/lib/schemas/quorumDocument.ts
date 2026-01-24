@@ -1,5 +1,4 @@
 import {
-  getEnhancedIdProvider,
   hexToUint8Array,
   Member,
   MemberType,
@@ -11,7 +10,9 @@ import { generateRandomKeysSync } from 'paillier-bigint';
 import { uint8ArrayToBase64 } from '../bufferUtils';
 import { IQuorumDocument } from '../documents/quorumDocument';
 import { NotImplementedError } from '../errors/notImplemented';
+import { getBrightChainIdProvider } from '../init';
 import { QuorumDataRecord } from '../quorumDataRecord';
+import { ServiceProvider } from '../services/service.provider';
 import { SchemaDefinition, SerializedValue } from '../sharedTypes';
 import { Checksum } from '../types';
 
@@ -45,7 +46,7 @@ export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
       dateUpdated: new Date().toISOString(),
     };
 
-    return Member.fromJson<TID>(JSON.stringify(storage));
+    return Member.fromJson<TID>(JSON.stringify(storage), ServiceProvider.getInstance<TID>().eciesService);
   }
 
   public schema: SchemaDefinition<IQuorumDocument<TID>> = {
@@ -88,11 +89,11 @@ export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
       type: Array,
       required: true,
       serialize: (value: TID[]): string[] =>
-        value.map((id) => getEnhancedIdProvider<TID>().idToString(id)),
+        value.map((id) => uint8ArrayToHex(getBrightChainIdProvider<TID>().toBytes(id))),
       hydrate: (value: string): TID[] => {
         if (!Array.isArray(value)) throw new Error('Invalid member IDs format');
-        const provider = getEnhancedIdProvider<TID>();
-        return value.map((id) => provider.idFromString(id));
+        const provider = getBrightChainIdProvider<TID>();
+        return value.map((id) => provider.fromBytes(hexToUint8Array(id)));
       },
     },
     sharesRequired: {

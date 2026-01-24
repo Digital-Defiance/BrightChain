@@ -1,24 +1,24 @@
 import { QuorumErrorType } from '../enumerations/quorumErrorType';
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { TypedError } from './typedError';
 
 export class QuorumError extends TypedError<QuorumErrorType> {
-  public get reasonMap(): Record<QuorumErrorType, StringNames> {
+  public get reasonMap(): Record<QuorumErrorType, BrightChainStrings> {
     return {
       [QuorumErrorType.InvalidQuorumId]:
-        StringNames.Error_QuorumErrorInvalidQuorumId,
+        BrightChainStrings.Error_QuorumErrorInvalidQuorumId,
       [QuorumErrorType.DocumentNotFound]:
-        StringNames.Error_QuorumErrorDocumentNotFound,
+        BrightChainStrings.Error_QuorumErrorDocumentNotFound,
       [QuorumErrorType.UnableToRestoreDocument]:
-        StringNames.Error_QuorumErrorUnableToRestoreDocument,
+        BrightChainStrings.Error_QuorumErrorUnableToRestoreDocument,
       [QuorumErrorType.NotImplemented]:
-        StringNames.Error_QuorumErrorNotImplemented,
+        BrightChainStrings.Error_QuorumErrorNotImplemented,
       [QuorumErrorType.Uninitialized]:
-        StringNames.Error_QuorumErrorUninitialized,
+        BrightChainStrings.Error_QuorumErrorUninitialized,
       [QuorumErrorType.MemberNotFound]:
-        StringNames.Error_QuorumErrorMemberNotFound,
+        BrightChainStrings.Error_QuorumErrorMemberNotFound,
       [QuorumErrorType.NotEnoughMembers]:
-        StringNames.Error_QuorumErrorNotEnoughMembers,
+        BrightChainStrings.Error_QuorumErrorNotEnoughMembers,
     };
   }
   constructor(type: QuorumErrorType, _language?: string) {

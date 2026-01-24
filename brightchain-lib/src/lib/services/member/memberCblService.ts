@@ -35,13 +35,16 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
     creator: Member<TID>,
   ): Promise<ConstituentBlockListBlock<TID>> {
     try {
+      // Use the block store's configured block size
+      const blockSize = this.blockStore.blockSize;
+      
       // Convert member to JSON string
       const memberJson = member.toJson();
       const memberData = new TextEncoder().encode(memberJson);
 
       // Create initial blocks with consistent chunk size
       const blocks: RawDataBlock[] = [];
-      const chunkSize = BlockSize.Small as number;
+      const chunkSize = blockSize as number;
       let offset = 0;
       while (offset < memberData.length) {
         const remainingBytes = memberData.length - offset;
@@ -59,7 +62,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
           );
 
         const block = new RawDataBlock(
-          BlockSize.Small,
+          blockSize,
           paddedChunk,
           new Date(),
           checksum,
@@ -115,7 +118,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
               );
 
             const dummyBlock = new RawDataBlock(
-              BlockSize.Small,
+              blockSize,
               dummyData,
               new Date(),
               dummyChecksum,
@@ -153,7 +156,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
 
         // Create metadata for XORed block
         const metadata = new BlockMetadata(
-          BlockSize.Small,
+          blockSize,
           BlockType.RawData,
           BlockDataType.PublicMemberData,
           memberData.length,
@@ -187,7 +190,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
           addresses.length,
           memberData.length,
           addressesArray,
-          BlockSize.Small,
+          blockSize,
           BlockEncryptionType.None,
         );
 
@@ -195,7 +198,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
       const cblData = new Uint8Array(headerData.length + addressesArray.length);
       cblData.set(headerData, 0);
       cblData.set(addressesArray, headerData.length);
-      const cbl = new ConstituentBlockListBlock(cblData, creator);
+      const cbl = new ConstituentBlockListBlock(cblData, creator, blockSize);
 
       // Don't store the CBL block itself in the block store - just return it
       // The CBL is the final result we want to return
@@ -219,6 +222,9 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
     cbl: ConstituentBlockListBlock<TID>,
   ): Promise<Member<TID>> {
     try {
+      // Use the block store's configured block size
+      const blockSize = this.blockStore.blockSize;
+      
       // Get tuples from CBL
       const tuples = await cbl.getHandleTuples(this.blockStore);
 
@@ -227,7 +233,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
       for (const tuple of tuples) {
         // Create metadata for XORed block
         const metadata = new BlockMetadata(
-          BlockSize.Small,
+          blockSize,
           BlockType.RawData,
           BlockDataType.PublicMemberData,
           Number(cbl.originalDataLength),

@@ -1,45 +1,45 @@
 import { FecErrorType } from '../enumerations/fecErrorType';
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { TypedError } from './typedError';
 
 export class FecError extends TypedError<FecErrorType> {
-  public get reasonMap(): Record<FecErrorType, StringNames> {
+  public get reasonMap(): Record<FecErrorType, BrightChainStrings> {
     return {
-      [FecErrorType.DataRequired]: StringNames.Error_FecErrorDataRequired,
+      [FecErrorType.DataRequired]: BrightChainStrings.Error_FecErrorDataRequired,
       [FecErrorType.InvalidShardCounts]:
-        StringNames.Error_FecErrorInvalidShardCounts,
+        BrightChainStrings.Error_FecErrorInvalidShardCounts,
       [FecErrorType.InvalidShardsAvailableArray]:
-        StringNames.Error_FecErrorInvalidShardsAvailableArray,
+        BrightChainStrings.Error_FecErrorInvalidShardsAvailableArray,
       [FecErrorType.InputBlockRequired]:
-        StringNames.Error_FecErrorInputBlockRequired,
+        BrightChainStrings.Error_FecErrorInputBlockRequired,
       [FecErrorType.ParityBlockCountMustBePositive]:
-        StringNames.Error_FecErrorParityBlockCountMustBePositive,
+        BrightChainStrings.Error_FecErrorParityBlockCountMustBePositive,
       [FecErrorType.InputDataMustBeBuffer]:
-        StringNames.Error_FecErrorInputDataMustBeBuffer,
+        BrightChainStrings.Error_FecErrorInputDataMustBeBuffer,
       [FecErrorType.DamagedBlockRequired]:
-        StringNames.Error_FecErrorDamagedBlockRequired,
+        BrightChainStrings.Error_FecErrorDamagedBlockRequired,
       [FecErrorType.ParityBlocksRequired]:
-        StringNames.Error_FecErrorParityBlocksRequired,
+        BrightChainStrings.Error_FecErrorParityBlocksRequired,
       [FecErrorType.BlockSizeMismatch]:
-        StringNames.Error_FecErrorBlockSizeMismatch,
+        BrightChainStrings.Error_FecErrorBlockSizeMismatch,
       [FecErrorType.DamagedBlockDataMustBeBuffer]:
-        StringNames.Error_FecErrorDamagedBlockDataMustBeBuffer,
+        BrightChainStrings.Error_FecErrorDamagedBlockDataMustBeBuffer,
       [FecErrorType.ParityBlockDataMustBeBuffer]:
-        StringNames.Error_FecErrorParityBlockDataMustBeBuffer,
+        BrightChainStrings.Error_FecErrorParityBlockDataMustBeBuffer,
       [FecErrorType.InvalidDataLength]:
-        StringNames.Error_FecErrorInvalidDataLengthTemplate,
+        BrightChainStrings.Error_FecErrorInvalidDataLengthTemplate,
       [FecErrorType.ShardSizeExceedsMaximum]:
-        StringNames.Error_FecErrorShardSizeExceedsMaximumTemplate,
+        BrightChainStrings.Error_FecErrorShardSizeExceedsMaximumTemplate,
       [FecErrorType.NotEnoughShardsAvailable]:
-        StringNames.Error_FecErrorNotEnoughShardsAvailableTemplate,
+        BrightChainStrings.Error_FecErrorNotEnoughShardsAvailableTemplate,
       [FecErrorType.InvalidParityBlockSize]:
-        StringNames.Error_FecErrorInvalidParityBlockSizeTemplate,
+        BrightChainStrings.Error_FecErrorInvalidParityBlockSizeTemplate,
       [FecErrorType.InvalidRecoveredBlockSize]:
-        StringNames.Error_FecErrorInvalidRecoveredBlockSizeTemplate,
+        BrightChainStrings.Error_FecErrorInvalidRecoveredBlockSizeTemplate,
       [FecErrorType.FecEncodingFailed]:
-        StringNames.Error_FecErrorFecEncodingFailedTemplate,
+        BrightChainStrings.Error_FecErrorFecEncodingFailedTemplate,
       [FecErrorType.FecDecodingFailed]:
-        StringNames.Error_FecErrorFecDecodingFailedTemplate,
+        BrightChainStrings.Error_FecErrorFecDecodingFailedTemplate,
     };
   }
 

@@ -7,6 +7,9 @@ import { BlockType } from './enumerations/blockType';
 import { BlockValidationErrorType } from './enumerations/blockValidationErrorType';
 import { BlockValidationError } from './errors/block';
 import { IEphemeralBlockMetadata } from './interfaces/blocks/metadata/ephemeralBlockMetadata';
+import { ServiceProvider } from './services/service.provider';
+import { parseEphemeralBlockMetadataJson } from './utils/typeGuards';
+import { parseDate } from './utils/dateUtils';
 
 export class EphemeralBlockMetadata<TID extends PlatformID = Uint8Array>
   extends BlockMetadata
@@ -34,35 +37,42 @@ export class EphemeralBlockMetadata<TID extends PlatformID = Uint8Array>
       type: this.type,
       dataType: this.dataType,
       lengthWithoutPadding: this.lengthWithoutPadding,
-      dateCreated: this.dateCreated,
-      creator: Constants.idProvider.serialize(this.creator.idBytes),
+      dateCreated: this.dateCreated.toISOString(),
+      creator: this.creator.toJson(),
     });
   }
 
-  public static override fromJsonValidator(data: any): void {
-    super.fromJsonValidator(data);
-    if (!data.creator) {
-      throw new BlockValidationError(BlockValidationErrorType.InvalidCreator);
-    }
-  }
+  /**
+   * Parse ephemeral metadata from JSON representation using type guards.
+   * Validates creator field with type guard.
+   * Uses robust date parsing with timezone support.
+   *
+   * @param json - JSON string containing metadata
+   * @returns Parsed EphemeralBlockMetadata instance
+   * @throws JsonValidationError if JSON is invalid or required fields are missing/invalid
+   */
+  public static override fromJson<TID extends PlatformID = Uint8Array>(
+    json: string,
+  ): EphemeralBlockMetadata<TID> {
+    // Use type guard to validate and parse
+    const data = parseEphemeralBlockMetadataJson(json);
 
-  public static override fromJsonAdditionalData<
-    T extends Record<string, any>,
-    TID extends PlatformID = Uint8Array,
-  >(data: any): { creator: Member<TID> } & T {
-    return {
-      ...super.fromJsonAdditionalData<T>(data),
-      creator: Constants.idProvider.fromBytes(
-        Constants.idProvider.deserialize(data.creator),
-      ) as Member<TID>,
-    } as { creator: Member<TID> } & T;
-  }
+    // Deserialize the Member from its JSON representation
+    // Pass eciesService to ensure correct ID provider is used
+    const eciesService = ServiceProvider.getInstance<TID>().eciesService;
+    const creator = Member.fromJson<TID>(data.creator, eciesService);
 
-  public static override fromJson<
-    B extends EphemeralBlockMetadata,
-    T extends Record<string, any> & { creator?: Member<TID> },
-    TID extends PlatformID = Uint8Array,
-  >(json: string): EphemeralBlockMetadata & T {
-    return super.fromJson<B, { creator: Member<TID> }>(json) as B & T;
+    // Parse date using robust date utilities
+    const dateCreated = parseDate(data.dateCreated);
+
+    // Create a proper EphemeralBlockMetadata instance
+    return new EphemeralBlockMetadata<TID>(
+      data.size as BlockSize,
+      data.type as BlockType,
+      data.dataType as BlockDataType,
+      data.lengthWithoutPadding,
+      creator,
+      dateCreated,
+    );
   }
 }

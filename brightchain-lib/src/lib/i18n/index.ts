@@ -8,7 +8,7 @@ import {
   LanguageCodes as I18nLanguageCodes,
   PluginI18nEngine,
 } from '@digitaldefiance/i18n-lib';
-import { StringNames } from '../enumerations/stringNames';
+import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import { AmericanEnglishStrings } from '../strings/englishUs';
 
 // Note: LanguageCodes should be imported directly from @digitaldefiance/i18n-lib by consumers
@@ -41,7 +41,7 @@ function initEngine(): PluginI18nEngine<string> {
   ]);
 
   // Convert StringNames enum values to an array of string keys
-  const stringKeys = Object.values(StringNames);
+  const stringKeys = Object.values(BrightChainStrings);
 
   // Convert AmericanEnglishStrings to a simple key-value object
   const translations: Record<string, string> = {};
@@ -78,7 +78,7 @@ export function getI18n(): PluginI18nEngine<string> {
  * Backward compatible with existing code
  */
 export function translate(
-  stringName: StringNames,
+  stringName: BrightChainStrings,
   vars?: Record<string, string | number>,
   language?: string,
 ): string {

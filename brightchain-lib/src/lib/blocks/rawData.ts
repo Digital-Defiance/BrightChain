@@ -5,6 +5,7 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
+import { logValidationFailure } from '../logging/blockLogger';
 import { ServiceLocator } from '../services/serviceLocator';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
@@ -136,7 +137,15 @@ export class RawDataBlock extends BaseBlock {
 
     // Compare checksums using the Checksum.equals() method
     if (!calculatedChecksum.equals(this.idChecksum)) {
-      throw new ChecksumMismatchError(this.idChecksum, calculatedChecksum);
+      const error = new ChecksumMismatchError(this.idChecksum, calculatedChecksum);
+      // Log validation failure with error type and metadata
+      logValidationFailure(
+        this.idChecksum.toHex(),
+        BlockType[this.blockType],
+        error,
+        { blockSize: this.blockSize },
+      );
+      throw error;
     }
   }
 

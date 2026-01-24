@@ -32,9 +32,9 @@ January 2025
   - `ExtendedCBL` for metadata (mime types, filenames)
   - **Super CBL System** - MAJOR ENHANCEMENT:
     - Hierarchical storage supporting unlimited file sizes
-    - Automatic threshold detection for sub-CBL creation
+    - Binary SuperCBL format with structured headers
     - Recursive structure for massive files
-    - `SuperCblService` with reconstruction capabilities
+    - Integrated into `CBLService` with full signature validation
   - Address capacity calculations accounting for encryption overhead
   - Full integration with block store
 
@@ -224,8 +224,7 @@ Each with:
 
 **BrightChain Services**:
 - `BlockService` - Block operations
-- `CBLService` - CBL management
-- `SuperCblService` - Hierarchical CBL
+- `CBLService` - CBL management (includes binary SuperCBL support)
 - `ChecksumService` - SHA3-512 checksums
 - `FecService` - Forward error correction
 - `SealingService` - Quorum sealing
@@ -233,7 +232,6 @@ Each with:
 - `TupleService` - Tuple operations
 - `SymmetricService` - AES-GCM encryption
 - `BlockCapacityService` - Capacity calculations
-- `JsonCblCapacityService` - JSON-specific capacity
 - `ServiceProvider` - Dependency injection
 - `ServiceLocator` - Service discovery
 

@@ -222,15 +222,24 @@ export class BlockCapacityCalculator<TID extends PlatformID = Uint8Array> {
         );
       }
 
+      // Add encryption type byte to type-specific overhead
       details.typeSpecificOverhead += ECIES.ENCRYPTION_TYPE_SIZE;
-      details.encryptionOverhead =
-        params.encryptionType === BlockEncryptionType.MultiRecipient
-          ? this.eciesService.calculateECIESMultipleRecipientOverhead(
-              params.recipientCount ?? 0,
-              true,
-            ) - ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE
-          : ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE +
-            ECIES.MULTIPLE.RECIPIENT_ID_SIZE;
+
+      if (params.encryptionType === BlockEncryptionType.MultiRecipient) {
+        // Multi-recipient encryption uses ECIES MULTIPLE format
+        // Overhead includes: header + per-recipient entries
+        details.encryptionOverhead =
+          this.eciesService.calculateECIESMultipleRecipientOverhead(
+            params.recipientCount ?? 0,
+            true,
+          ) - ECIES.MULTIPLE.FIXED_OVERHEAD_SIZE;
+      } else {
+        // Single-recipient encryption uses ECIES WITH_LENGTH format
+        // Overhead = recipient ID (idProvider.byteLength) + ECIES WITH_LENGTH overhead (72 bytes)
+        const idSize = this.eciesService.idProvider.byteLength;
+        details.encryptionOverhead =
+          idSize + ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
+      }
     }
   }
 

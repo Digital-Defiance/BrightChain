@@ -7,6 +7,9 @@ import {
   CblErrorType,
   ChecksumService,
   ConstituentBlockListBlock,
+  getBrightChainIdProvider,
+  initializeBrightChain,
+  ServiceLocator,
   ServiceProvider,
   StoreError,
   StoreErrorType,
@@ -16,7 +19,6 @@ import {
   Member,
   MemberType,
   arraysEqual,
-  getEnhancedIdProvider,
 } from '@digitaldefiance/ecies-lib';
 import { ChecksumBuffer } from '@digitaldefiance/node-ecies-lib';
 import { faker } from '@faker-js/faker';
@@ -33,6 +35,10 @@ describe('DiskCBLStore', () => {
   let creator: Member;
 
   beforeAll(() => {
+    // Initialize BrightChain library before running tests
+    initializeBrightChain();
+    ServiceLocator.setServiceProvider(ServiceProvider.getInstance());
+
     creator = Member.newMember(
       ServiceProvider.getInstance().eciesService,
       MemberType.User,
@@ -113,7 +119,7 @@ describe('DiskCBLStore', () => {
 
       // Retrieve CBL
       const retrieved = await store.get(cbl.idChecksum, (id) => {
-        const provider = getEnhancedIdProvider();
+        const provider = getBrightChainIdProvider();
         if (provider.equals(creator.id, id)) {
           return Promise.resolve(creator);
         }
@@ -190,7 +196,7 @@ describe('DiskCBLStore', () => {
       const retrievedAddresses = await store.getCBLAddresses(
         cbl.idChecksum,
         (id) => {
-          const provider = getEnhancedIdProvider();
+          const provider = getBrightChainIdProvider();
           if (provider.equals(creator.id, id)) {
             return Promise.resolve(creator);
           }
@@ -225,7 +231,7 @@ describe('DiskCBLStore', () => {
 
       await expect(
         store.get(nonExistentChecksum, (id) => {
-          const provider = getEnhancedIdProvider();
+          const provider = getBrightChainIdProvider();
           if (provider.equals(creator.id, id)) {
             return Promise.resolve(creator);
           }

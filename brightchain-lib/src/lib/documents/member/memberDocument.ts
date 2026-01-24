@@ -1,4 +1,4 @@
-import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
+import { Member, PlatformID, ShortHexGuid, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import { BaseBlock } from '../../blocks/base';
 import { ConstituentBlockListBlock } from '../../blocks/cbl';
 import { RawDataBlock } from '../../blocks/rawData';
@@ -58,13 +58,14 @@ export class MemberDocument<
   private cblService: MemberCblService<TID>;
   private originalPublicMember: Member<TID>;
   private originalPrivateMember: Member<TID>;
+  private readonly _blockSize: BlockSize;
 
   /**
-   * Get the document ID - use original member ID for consistency
+   * Get the document ID as ShortHexGuid
    */
-  public override get id() {
-    // Return the ID in the same format as member.id.toString()
-    return this.originalPublicMember.id.toString();
+  public override get id(): ShortHexGuid {
+    // Use uint8ArrayToHex for consistent ShortHexGuid format
+    return uint8ArrayToHex(this.originalPublicMember.idBytes) as ShortHexGuid;
   }
 
   /**
@@ -117,9 +118,9 @@ export class MemberDocument<
       publicCBLId,
       privateCBLId,
     );
-    const blockSize = config?.blockSize ?? BlockSize.Small;
+    this._blockSize = config?.blockSize ?? BlockSize.Small;
     // Create a unique block store for each document instance to avoid conflicts
-    const blockStore = BlockStoreFactory.createMemoryStore({ blockSize });
+    const blockStore = BlockStoreFactory.createMemoryStore({ blockSize: this._blockSize });
     this.cblService = new MemberCblService(blockStore);
 
     // Store original member instances
@@ -272,14 +273,16 @@ export class MemberDocument<
     privateCBL: Uint8Array,
   ): Promise<void> {
     try {
-      // Create CBL blocks directly from the data
+      // Create CBL blocks directly from the data, passing the block size for signature validation
       const publicBlock = new ConstituentBlockListBlock(
         publicCBL,
         this.originalPublicMember,
+        this._blockSize,
       );
       const privateBlock = new ConstituentBlockListBlock(
         privateCBL,
         this.originalPublicMember,
+        this._blockSize,
       );
 
       // The CBL blocks contain addresses to constituent blocks, but those blocks

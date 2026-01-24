@@ -1,22 +1,22 @@
 import { IsolatedKeyErrorType } from '../enumerations/isolatedKeyErrorType';
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { TypedError } from './typedError';
 
 export class IsolatedKeyError extends TypedError<IsolatedKeyErrorType> {
-  public get reasonMap(): Record<IsolatedKeyErrorType, StringNames> {
+  public get reasonMap(): Record<IsolatedKeyErrorType, BrightChainStrings> {
     return {
       [IsolatedKeyErrorType.InvalidPublicKey]:
-        StringNames.Error_IsolatedKeyErrorInvalidPublicKey,
+        BrightChainStrings.Error_IsolatedKeyErrorInvalidPublicKey,
       [IsolatedKeyErrorType.InvalidKeyId]:
-        StringNames.Error_IsolatedKeyErrorInvalidKeyId,
+        BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyId,
       [IsolatedKeyErrorType.InvalidKeyFormat]:
-        StringNames.Error_IsolatedKeyErrorInvalidKeyFormat,
+        BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyFormat,
       [IsolatedKeyErrorType.InvalidKeyLength]:
-        StringNames.Error_IsolatedKeyErrorInvalidKeyLength,
+        BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyLength,
       [IsolatedKeyErrorType.InvalidKeyType]:
-        StringNames.Error_IsolatedKeyErrorInvalidKeyType,
+        BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyType,
       [IsolatedKeyErrorType.KeyIsolationViolation]:
-        StringNames.Error_IsolatedKeyErrorKeyIsolationViolation,
+        BrightChainStrings.Error_IsolatedKeyErrorKeyIsolationViolation,
     };
   }
   constructor(type: IsolatedKeyErrorType, _language?: string) {

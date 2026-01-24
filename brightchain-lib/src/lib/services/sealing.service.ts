@@ -2,7 +2,6 @@
 import {
   AESGCMService,
   ECIESService,
-  getEnhancedIdProvider,
   hexToUint8Array,
   Member,
   PlatformID,
@@ -15,6 +14,7 @@ import * as secretsModule from '@digitaldefiance/secrets';
 import { SEALING } from '../constants';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { SealingError } from '../errors/sealingError';
+import { getBrightChainIdProvider } from '../init';
 import { QuorumDataRecord } from '../quorumDataRecord';
 import { Validator } from '../utils/validator';
 
@@ -39,7 +39,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
     enhancedProvider?: TypedIdProviderWrapper<TID>,
   ) {
     this.eciesService = eciesService ?? createECIESService<TID>();
-    this.enhancedProvider = enhancedProvider ?? getEnhancedIdProvider<TID>();
+    this.enhancedProvider = enhancedProvider ?? getBrightChainIdProvider<TID>();
   }
 
   /**

@@ -1,23 +1,23 @@
 import { LanguageCode } from '@digitaldefiance/i18n-lib';
 import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { TypedError } from './typedError';
 
 export class MemoryTupleError extends TypedError<MemoryTupleErrorType> {
-  public get reasonMap(): Record<MemoryTupleErrorType, StringNames> {
+  public get reasonMap(): Record<MemoryTupleErrorType, BrightChainStrings> {
     return {
       [MemoryTupleErrorType.InvalidTupleSize]:
-        StringNames.Error_MemoryTupleErrorInvalidTupleSizeTemplate,
+        BrightChainStrings.Error_MemoryTupleErrorInvalidTupleSizeTemplate,
       [MemoryTupleErrorType.BlockSizeMismatch]:
-        StringNames.Error_MemoryTupleErrorBlockSizeMismatch,
+        BrightChainStrings.Error_MemoryTupleErrorBlockSizeMismatch,
       [MemoryTupleErrorType.NoBlocksToXor]:
-        StringNames.Error_MemoryTupleErrorNoBlocksToXor,
+        BrightChainStrings.Error_MemoryTupleErrorNoBlocksToXor,
       [MemoryTupleErrorType.InvalidBlockCount]:
-        StringNames.Error_MemoryTupleErrorInvalidBlockCount,
+        BrightChainStrings.Error_MemoryTupleErrorInvalidBlockCount,
       [MemoryTupleErrorType.ExpectedBlockIds]:
-        StringNames.Error_MemoryTupleErrorExpectedBlockIdsTemplate,
+        BrightChainStrings.Error_MemoryTupleErrorExpectedBlockIdsTemplate,
       [MemoryTupleErrorType.ExpectedBlocks]:
-        StringNames.Error_MemoryTupleErrorExpectedBlocksTemplate,
+        BrightChainStrings.Error_MemoryTupleErrorExpectedBlocksTemplate,
     };
   }
   constructor(

@@ -1,6 +1,5 @@
 import {
   ChecksumUint8Array,
-  getEnhancedIdProvider,
   GuidUint8Array,
   Member,
   PlatformID,
@@ -8,6 +7,7 @@ import {
   stringToUint8Array,
 } from '@digitaldefiance/ecies-lib';
 import { concatenateUint8Arrays } from '../../bufferUtils';
+import { getBrightChainIdProvider } from '../../init';
 
 /**
  * Base interface for all network-related documents
@@ -72,7 +72,7 @@ export abstract class BaseNetworkDocument<
   ) {
     this.type = type;
     this.creator = creator;
-    this.id = options.id || getEnhancedIdProvider<TID>().generateTyped();
+    this.id = options.id || getBrightChainIdProvider<TID>().generateTyped();
     this.version = options.version || 1;
     this.created = new Date();
     this.updated = new Date();
@@ -93,7 +93,7 @@ export abstract class BaseNetworkDocument<
   async sign(): Promise<void> {
     // Create a buffer of all fields except signature and checksum
     const dataToSign = concatenateUint8Arrays([
-      getEnhancedIdProvider<TID>().toBytes(this.id),
+      getBrightChainIdProvider<TID>().toBytes(this.id),
       stringToUint8Array(this.type),
       stringToUint8Array(this.version.toString()),
       stringToUint8Array(this.created.toISOString()),
@@ -115,7 +115,7 @@ export abstract class BaseNetworkDocument<
   async verify(): Promise<boolean> {
     // Recreate the signed data buffer
     const dataToVerify = concatenateUint8Arrays([
-      getEnhancedIdProvider<TID>().toBytes(this.id),
+      getBrightChainIdProvider<TID>().toBytes(this.id),
       stringToUint8Array(this.type),
       stringToUint8Array(this.version.toString()),
       stringToUint8Array(this.created.toISOString()),

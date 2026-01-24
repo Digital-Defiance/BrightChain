@@ -6,13 +6,9 @@
  *
  * This test suite verifies that all import statements in the BrightChain codebase
  * reference the correct sources after the constants refactoring:
- * - Base constants (ECIES, CHECKSUM, etc.) should be imported from @digitaldefiance/ecies-lib
- * - BrightChain-specific constants (CBL, TUPLE, etc.) should be imported from local modules
+ * - Base constants should be imported from @digitaldefiance libraries
+ * - BrightChain-specific constants should be imported from local modules
  * - No circular dependencies should exist
- *
- * Per the block-encryption-scheme design:
- * - Do NOT re-export ecies-lib constants from constants.ts
- * - Import ECIES, CHECKSUM, etc. directly from @digitaldefiance/ecies-lib
  */
 
 import * as fs from 'fs';
@@ -88,10 +84,17 @@ describe('Import Statements Property Tests', () => {
       expect(violations).toHaveLength(0);
     });
 
-    it('should import ecies-lib constants from @digitaldefiance/ecies-lib', () => {
-      // Per the block-encryption-scheme design, ecies-lib constants should be
-      // imported directly from @digitaldefiance/ecies-lib, not re-exported.
-      // This test verifies that constants.ts imports from ecies-lib.
+    it('should import base constants from local constants module (which re-exports from upstream)', () => {
+      // This test verifies that the refactoring maintains backward compatibility
+      // by allowing files to import constants from the local constants module.
+      //
+      // The key requirement (5.1, 5.2) is that:
+      // 1. Base constants CAN be imported from @digitaldefiance libraries directly
+      // 2. Base constants CAN be imported from local constants module (which re-exports them)
+      // 3. BrightChain-specific constants MUST be imported from local modules
+      //
+      // This test verifies that constants.ts properly re-exports base constants,
+      // which is the core requirement. Individual files can import from either location.
 
       const constantsFile = path.join(__dirname, 'constants.ts');
       const content = fs.readFileSync(constantsFile, 'utf-8');
@@ -99,12 +102,19 @@ describe('Import Statements Property Tests', () => {
       // Verify that constants.ts imports from @digitaldefiance/ecies-lib
       expect(content).toContain("from '@digitaldefiance/ecies-lib'");
 
-      // Verify that it spreads BaseConstants into CONSTANTS
+      // Verify that it spreads base constants into CONSTANTS object
+      // (Individual base constants should be imported directly from @digitaldefiance/ecies-lib)
       expect(content).toContain('...BaseConstants');
     });
 
     it('should import BrightChain-specific constants from local constants module', () => {
-      const brightchainConstants = ['CBL', 'FEC', 'TUPLE', 'SEALING', 'SITE'];
+      const brightchainConstants = [
+        'CBL',
+        'BC_FEC',
+        'TUPLE',
+        'SEALING',
+        'SITE',
+      ];
 
       const violations: Array<{
         file: string;
@@ -270,15 +280,25 @@ describe('Import Statements Property Tests', () => {
       expect(cycles).toHaveLength(0);
     });
 
-    it('should verify constants.ts exports BrightChain-specific constants', () => {
+    it('should verify constants.ts properly re-exports base constants', () => {
       const constantsFile = path.join(__dirname, 'constants.ts');
       const content = fs.readFileSync(constantsFile, 'utf-8');
 
       // Verify that constants.ts imports from @digitaldefiance/ecies-lib
       expect(content).toContain("from '@digitaldefiance/ecies-lib'");
 
+      // Verify that it spreads base constants into CONSTANTS object
+      // (Individual base constants should be imported directly from @digitaldefiance/ecies-lib)
+      expect(content).toContain('...BaseConstants');
+
       // Verify that it exports BrightChain-specific constants
-      const brightchainExports = ['CBL', 'BC_FEC', 'TUPLE', 'SEALING', 'SITE'];
+      const brightchainExports = [
+        'CBL',
+        'BC_FEC',
+        'TUPLE',
+        'SEALING',
+        'SITE',
+      ];
 
       for (const exportName of brightchainExports) {
         expect(content).toContain(`export const ${exportName}`);
@@ -295,8 +315,8 @@ describe('Import Statements Property Tests', () => {
       // Verify that index.ts exports CONSTANTS as default (handle multiline formatting)
       expect(content).toContain('default as CONSTANTS');
 
-      // Verify that it exports individual BrightChain-specific constant groups
-      const constantGroups = ['CBL', 'TUPLE', 'SEALING', 'SITE'];
+      // Verify that it exports individual constant groups
+      const constantGroups = ['CBL', 'BC_FEC', 'TUPLE', 'SEALING', 'SITE'];
 
       for (const group of constantGroups) {
         expect(content).toContain(group);

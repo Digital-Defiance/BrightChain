@@ -67,3 +67,76 @@ export * from './checksumUtils';
  * @see {@link xorUtils}
  */
 export * from './xorUtils';
+
+// ============================================================================
+// Constant-Time Utilities
+// ============================================================================
+/**
+ * Constant-time comparison utilities for security-sensitive operations.
+ *
+ * Provides functions for:
+ * - Constant-time equality comparison (Uint8Array, hex strings, numbers)
+ * - Constant-time conditional selection
+ * - Constant-time zero checking
+ *
+ * These utilities prevent timing-based side-channel attacks by ensuring
+ * operations take the same amount of time regardless of input values.
+ *
+ * @see {@link constantTime}
+ */
+export * from './constantTime';
+
+// ============================================================================
+// Constant-Time XOR Utilities
+// ============================================================================
+/**
+ * Constant-time XOR operations for security-sensitive operations.
+ *
+ * Provides functions for:
+ * - Constant-time XOR of two arrays
+ * - Constant-time XOR of multiple arrays
+ *
+ * These utilities prevent timing-based side-channel attacks by ensuring
+ * XOR operations take the same amount of time regardless of input byte values.
+ * Critical for whitening/brightening operations in the Owner-Free Filesystem.
+ *
+ * @see {@link constantTimeXor}
+ */
+export * from './constantTimeXor';
+
+// ============================================================================
+// Type Guard Utilities
+// ============================================================================
+/**
+ * Type guard utilities for JSON deserialization.
+ *
+ * Provides functions for:
+ * - Runtime type checking of JSON data
+ * - Validating BlockMetadataJson structure
+ * - Validating EphemeralBlockMetadataJson structure
+ * - Parsing JSON with type safety
+ *
+ * These utilities ensure that JSON data conforms to expected TypeScript
+ * interfaces before constructing objects, maintaining type safety at runtime.
+ *
+ * @see {@link typeGuards}
+ */
+export * from './typeGuards';
+
+// ============================================================================
+// Date Utilities
+// ============================================================================
+/**
+ * Date handling utilities with timezone support.
+ *
+ * Provides functions for:
+ * - Parsing dates from ISO 8601 strings and Unix timestamps
+ * - Serializing dates to ISO 8601 format in UTC
+ * - Validating dates (including future date checks)
+ *
+ * All dates are stored internally in UTC to ensure consistency across timezones.
+ * These utilities provide robust date handling for block metadata timestamps.
+ *
+ * @see {@link dateUtils}
+ */
+export * from './dateUtils';
