@@ -2029,7 +2029,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchain-lib@npm:0.9.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
+"@brightchain/brightchain-lib@npm:0.9.0, @brightchain/brightchain-lib@npm:^0.9.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
   dependencies:
@@ -2038,17 +2038,6 @@ __metadata:
     tslib: "npm:^2.3.0"
   languageName: unknown
   linkType: soft
-
-"@brightchain/brightchain-lib@npm:^0.8.1":
-  version: 0.8.1
-  resolution: "@brightchain/brightchain-lib@npm:0.8.1"
-  dependencies:
-    "@digitaldefiance/ecies-lib": "npm:^4.13.1"
-    "@digitaldefiance/i18n-lib": "npm:^3.8.16"
-    tslib: "npm:^2.3.0"
-  checksum: 10c0/b0ac8ac1859c4b6d67c6209b9d58566d30ca9cf8c17d288e54b033702242dfd5363056bf2ce1004de40bb0afa130eca5119c6b2a9f8b55273a4fdfc7d256c685
-  languageName: node
-  linkType: hard
 
 "@brightchain/test-utils@workspace:brightchain-test-utils":
   version: 0.0.0-use.local
@@ -2159,7 +2148,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/ecies-lib@npm:4.13.8, @digitaldefiance/ecies-lib@npm:^4.13.1, @digitaldefiance/ecies-lib@npm:^4.13.8":
+"@digitaldefiance/ecies-lib@npm:4.13.8, @digitaldefiance/ecies-lib@npm:^4.13.8":
   version: 4.13.8
   resolution: "@digitaldefiance/ecies-lib@npm:4.13.8"
   dependencies:
@@ -11313,7 +11302,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "brightchain-showcase@workspace:showcase"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.8.1"
+    "@brightchain/brightchain-lib": "npm:^0.9.0"
     "@digitaldefiance/ecies-lib": "npm:^4.13.8"
     "@digitaldefiance/i18n-lib": "npm:^3.8.16"
     "@esbuild-plugins/node-globals-polyfill": "npm:^0.2.3"
@@ -19160,9 +19149,9 @@ __metadata:
   linkType: hard
 
 "lodash-es@npm:^4.17.21":
-  version: 4.17.22
-  resolution: "lodash-es@npm:4.17.22"
-  checksum: 10c0/5f28a262183cca43e08c580622557f393cb889386df2d8adf7c852bfdff7a84c5e629df5aa6c5c6274e83b38172f239d3e4e72e1ad27352d9ae9766627338089
+  version: 4.17.23
+  resolution: "lodash-es@npm:4.17.23"
+  checksum: 10c0/3150fb6660c14c7a6b5f23bd11597d884b140c0e862a17fdb415aaa5ef7741523182904a6b7929f04e5f60a11edb5a79499eb448734381c99ffb3c4734beeddd
   languageName: node
   linkType: hard
 
