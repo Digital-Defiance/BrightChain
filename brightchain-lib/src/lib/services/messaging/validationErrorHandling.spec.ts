@@ -1,4 +1,4 @@
-import { ECIESService, Member, MemberType } from '@digitaldefiance/ecies-lib';
+import { Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { BlockSize } from '../../enumerations/blockSize';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessageErrorType } from '../../enumerations/messaging/messageErrorType';
@@ -6,8 +6,7 @@ import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { MessageError } from '../../errors/messaging/messageError';
 import { MemoryBlockStore } from '../../stores/memoryBlockStore';
 import { MemoryMessageMetadataStore } from '../../stores/messaging/memoryMessageMetadataStore';
-import { CBLService } from '../cblService';
-import { ChecksumService } from '../checksum.service';
+import { ServiceProvider } from '../service.provider';
 import { MessageCBLService } from './messageCBLService';
 
 describe('MessageCBLService Validation Error Handling', () => {
@@ -16,10 +15,11 @@ describe('MessageCBLService Validation Error Handling', () => {
   let metadataStore: MemoryMessageMetadataStore;
   let creator: Member;
 
-  beforeEach(async () => {
-    const checksumService = new ChecksumService();
-    const eciesService = new ECIESService();
-    const cblService = new CBLService(checksumService, eciesService);
+  beforeEach(() => {
+    const serviceProvider = ServiceProvider.getInstance();
+    const eciesService = serviceProvider.eciesService;
+    const checksumService = serviceProvider.checksumService;
+    const cblService = serviceProvider.cblService;
     blockStore = new MemoryBlockStore(BlockSize.Small);
     metadataStore = new MemoryMessageMetadataStore();
     service = new MessageCBLService(
@@ -28,13 +28,17 @@ describe('MessageCBLService Validation Error Handling', () => {
       blockStore,
       metadataStore,
     );
-    const memberWithMnemonic = await Member.newMember(
+    const memberWithMnemonic = Member.newMember(
       eciesService,
       MemberType.User,
       'test',
       'test@example.com' as unknown as Parameters<typeof Member.newMember>[3],
     );
     creator = memberWithMnemonic.member;
+  });
+
+  afterEach(() => {
+    ServiceProvider.resetInstance();
   });
 
   it('should reject empty message type', async () => {

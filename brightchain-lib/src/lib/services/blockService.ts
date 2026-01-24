@@ -7,7 +7,6 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { EncryptedBlock } from '../blocks/encrypted';
-import { EncryptedBlockCreator } from '../blocks/encryptedBlockCreator';
 import { EphemeralBlock } from '../blocks/ephemeral';
 import { ExtendedCBL } from '../blocks/extendedCbl';
 import { RandomBlock } from '../blocks/random';
@@ -25,6 +24,7 @@ import { BlockServiceError } from '../errors/blockServiceError';
 import { EciesError } from '../errors/eciesError';
 import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
+import { blockLogger, LogLevel } from '../logging/blockLogger';
 import { Checksum } from '../types/checksum';
 
 import { IUniversalBlockStore } from '../interfaces/storage/universalBlockStore';
@@ -37,6 +37,14 @@ import { XorService } from './xor';
  */
 export class BlockService<TID extends PlatformID = Uint8Array> {
   private static blockStore: IUniversalBlockStore | undefined = undefined;
+
+  /**
+   * Configure the block logger level.
+   * @param level - The minimum log level to emit
+   */
+  public static setLogLevel(level: LogLevel): void {
+    blockLogger.setLevel(level);
+  }
 
   public static initialize(blockStore: IUniversalBlockStore) {
     BlockService.blockStore = blockStore;
@@ -150,13 +158,34 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       throw new BlockError(BlockErrorType.CreatorRequired);
     }
 
+    // Log encryption start (never log sensitive data like keys or plaintext)
+    blockLogger.debug('encrypt', {
+      blockType: BlockType[newBlockType],
+      blockSize: block.blockSize,
+      recipientCount: 1,
+    });
+
     try {
+      const recipientMember = recipient ?? block.creator;
+      const recipientPublicKey = recipientMember?.publicKey;
+      if (!recipientPublicKey || !recipientMember) {
+        throw new BlockError(BlockErrorType.RecipientKeyRequired);
+      }
+
+      // Only encrypt the actual data, not the padding
+      // This aligns with canEncrypt() which checks lengthBeforeEncryption + overhead <= capacity
+      const dataToEncrypt = block.data.subarray(0, block.lengthBeforeEncryption);
+
       const encryptedArray =
         await ServiceLocator.getServiceProvider<TID>().eciesService.encrypt(
           EciesEncryptionTypeEnum.WithLength,
-          (recipient ?? block.creator) as any,
-          block.data,
+          recipientPublicKey,
+          dataToEncrypt,
         );
+
+      // Get the recipient ID bytes for the header
+      const idProvider = ServiceLocator.getServiceProvider<TID>().idProvider;
+      const recipientIdBytes = recipientMember.idBytes;
 
       // Create padded buffer filled with random data
       const finalBuffer = this.generateRandomData(block.blockSize);
@@ -164,26 +193,50 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       // Write the block type to the first byte
       finalBuffer[0] = BlockEncryptionType.SingleRecipient;
 
-      // Copy ECIES data after the block type byte
-      finalBuffer.set(encryptedArray, ECIES.ENCRYPTION_TYPE_SIZE);
+      // Write the recipient ID after the encryption type byte
+      finalBuffer.set(recipientIdBytes, ECIES.ENCRYPTION_TYPE_SIZE);
+
+      // Copy ECIES data after the recipient ID
+      const eciesDataOffset = ECIES.ENCRYPTION_TYPE_SIZE + idProvider.byteLength;
+      finalBuffer.set(encryptedArray, eciesDataOffset);
 
       const checksum =
         ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
           finalBuffer,
         );
 
-      const result = await EncryptedBlockCreator.create(
+      const result = await EncryptedBlock.from<TID>(
         newBlockType,
         BlockDataType.EncryptedData,
         block.blockSize,
         finalBuffer,
         checksum,
-        recipient ?? block.creator,
+        recipientMember,
         block.dateCreated,
-        block.data.length,
+        block.lengthBeforeEncryption,
       );
+
+      // Log encryption success
+      blockLogger.info('encrypt', {
+        blockId: checksum.toHex(),
+        blockType: BlockType[newBlockType],
+        recipientCount: 1,
+        success: true,
+      });
+
       return result as EncryptedBlock<TID>;
     } catch (error) {
+      // Log encryption failure (never log sensitive data)
+      blockLogger.error(
+        'encrypt',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          blockType: BlockType[newBlockType],
+          recipientCount: 1,
+          success: false,
+        },
+      );
+
       // Wrap ECIES errors with context
       if (error instanceof EciesError) {
         throw error;
@@ -223,6 +276,13 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       throw new BlockError(BlockErrorType.CreatorPrivateKeyRequired);
     }
 
+    // Log decryption start (never log sensitive data like keys or plaintext)
+    blockLogger.debug('decrypt', {
+      blockId: block.idChecksum.toHex(),
+      blockType: BlockType[block.blockType],
+      blockSize: block.blockSize,
+    });
+
     try {
       const decryptedArray =
         await ServiceLocator.getServiceProvider().eciesService.decryptWithLengthAndHeader(
@@ -235,7 +295,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
           decryptedArray,
         );
 
-      const result = await EncryptedBlockCreator.create<TID>(
+      const result = await EphemeralBlock.from<TID>(
         newBlockType,
         BlockDataType.EphemeralStructuredData,
         block.blockSize,
@@ -245,8 +305,27 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
         block.dateCreated,
         block.layerPayloadSize,
       );
+
+      // Log decryption success
+      blockLogger.info('decrypt', {
+        blockId: block.idChecksum.toHex(),
+        blockType: BlockType[block.blockType],
+        success: true,
+      });
+
       return result;
     } catch (error) {
+      // Log decryption failure (never log sensitive data)
+      blockLogger.error(
+        'decrypt',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          blockId: block.idChecksum.toHex(),
+          blockType: BlockType[block.blockType],
+          success: false,
+        },
+      );
+
       // Wrap ECIES errors with context
       if (error instanceof EciesError) {
         throw error;
@@ -271,39 +350,72 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
     if (!recipient.privateKey) {
       throw new EciesError(EciesErrorType.PrivateKeyNotLoaded);
     }
-    const multiEncryptionHeader =
-      ServiceLocator.getServiceProvider<TID>().eciesService.parseMultiEncryptedHeader(
-        block.data,
-      );
-    // Encrypted message overhead is IV + AuthTag
-    const encryptedMessageOverhead = ECIES.IV_SIZE + ECIES.AUTH_TAG_SIZE;
-    const decryptedData =
-      await ServiceLocator.getServiceProvider<TID>().eciesService.decryptMultipleECIEForRecipient(
-        {
-          ...multiEncryptionHeader,
-          encryptedMessage: block.data.subarray(
-            multiEncryptionHeader.headerSize,
-            multiEncryptionHeader.headerSize +
-              multiEncryptionHeader.dataLength +
-              encryptedMessageOverhead,
-          ),
-        },
-        recipient as Member<Uint8Array>,
-      );
-    const checksum =
-      ServiceLocator.getServiceProvider<TID>().checksumService.calculateChecksum(
+
+    // Log multi-decryption start (never log sensitive data like keys or plaintext)
+    blockLogger.debug('decryptMultiple', {
+      blockId: block.idChecksum.toHex(),
+      blockType: BlockType[block.blockType],
+      blockSize: block.blockSize,
+    });
+
+    try {
+      const multiEncryptionHeader =
+        ServiceLocator.getServiceProvider<TID>().eciesService.parseMultiEncryptedHeader(
+          block.data,
+        );
+      // Encrypted message overhead is IV + AuthTag
+      const encryptedMessageOverhead = ECIES.IV_SIZE + ECIES.AUTH_TAG_SIZE;
+      const decryptedData =
+        await ServiceLocator.getServiceProvider<TID>().eciesService.decryptMultipleECIEForRecipient(
+          {
+            ...multiEncryptionHeader,
+            encryptedMessage: block.data.subarray(
+              multiEncryptionHeader.headerSize,
+              multiEncryptionHeader.headerSize +
+                multiEncryptionHeader.dataLength +
+                encryptedMessageOverhead,
+            ),
+          },
+          recipient as Member<Uint8Array>,
+        );
+      const checksum =
+        ServiceLocator.getServiceProvider<TID>().checksumService.calculateChecksum(
+          decryptedData,
+        );
+
+      const result = await EphemeralBlock.from<TID>(
+        BlockType.EphemeralOwnedDataBlock,
+        BlockDataType.EphemeralStructuredData,
+        block.blockSize,
         decryptedData,
+        checksum,
+        recipient,
+        block.dateCreated,
+        multiEncryptionHeader.dataLength,
       );
-    return EphemeralBlock.from<TID>(
-      BlockType.EphemeralOwnedDataBlock,
-      BlockDataType.EphemeralStructuredData,
-      block.blockSize,
-      decryptedData,
-      checksum,
-      recipient,
-      block.dateCreated,
-      multiEncryptionHeader.dataLength,
-    );
+
+      // Log multi-decryption success
+      blockLogger.info('decryptMultiple', {
+        blockId: block.idChecksum.toHex(),
+        blockType: BlockType[block.blockType],
+        success: true,
+      });
+
+      return result;
+    } catch (error) {
+      // Log multi-decryption failure (never log sensitive data)
+      blockLogger.error(
+        'decryptMultiple',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          blockId: block.idChecksum.toHex(),
+          blockType: BlockType[block.blockType],
+          success: false,
+        },
+      );
+
+      throw error;
+    }
   }
 
   /**
@@ -342,6 +454,13 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       throw new BlockError(BlockErrorType.CreatorRequired);
     }
 
+    // Log multi-encryption start (never log sensitive data like keys or plaintext)
+    blockLogger.debug('encryptMultiple', {
+      blockType: BlockType[newBlockType],
+      blockSize: block.blockSize,
+      recipientCount: recipients.length,
+    });
+
     try {
       const encryptedMessageDetails =
         await ServiceLocator.getServiceProvider<TID>().eciesService.encryptMultiple(
@@ -366,21 +485,41 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
         ServiceLocator.getServiceProvider<TID>().checksumService.calculateChecksum(
           data,
         );
-      return Promise.resolve(
-        await EncryptedBlock.from<TID>(
-          newBlockType,
-          BlockDataType.EncryptedData,
-          block.blockSize,
-          data,
-          checksum,
-          block.creator,
-          block.dateCreated,
-          block.lengthBeforeEncryption,
-          true,
-          false,
-        ),
-      ) as Promise<IEncryptedBlock<TID>>;
+
+      const result = await EncryptedBlock.from<TID>(
+        newBlockType,
+        BlockDataType.EncryptedData,
+        block.blockSize,
+        data,
+        checksum,
+        block.creator,
+        block.dateCreated,
+        block.lengthBeforeEncryption,
+        true,
+        false,
+      );
+
+      // Log multi-encryption success
+      blockLogger.info('encryptMultiple', {
+        blockId: checksum.toHex(),
+        blockType: BlockType[newBlockType],
+        recipientCount: recipients.length,
+        success: true,
+      });
+
+      return Promise.resolve(result) as Promise<IEncryptedBlock<TID>>;
     } catch (error) {
+      // Log multi-encryption failure (never log sensitive data)
+      blockLogger.error(
+        'encryptMultiple',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          blockType: BlockType[newBlockType],
+          recipientCount: recipients.length,
+          success: false,
+        },
+      );
+
       // Wrap ECIES errors with context
       if (error instanceof EciesError) {
         throw error;

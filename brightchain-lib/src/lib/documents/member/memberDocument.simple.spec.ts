@@ -1,4 +1,4 @@
-import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
+import { EmailString, Member, MemberType, ShortHexGuid, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import { ServiceProvider } from '../../services/service.provider';
 import { MemberDocument } from './memberDocument';
 
@@ -7,7 +7,6 @@ describe('MemberDocument Simple Test', () => {
     // Initialize service provider
     ServiceProvider.getInstance();
     const eciesService = ServiceProvider.getInstance().eciesService;
-    const idProvider = ServiceProvider.getInstance().idProvider;
 
     // Create test members
     const { member: publicMember } = Member.newMember(
@@ -27,7 +26,7 @@ describe('MemberDocument Simple Test', () => {
     const doc = MemberDocument.create(publicMember, privateMember);
 
     expect(doc).toBeInstanceOf(MemberDocument);
-    expect(doc.id).toBe(idProvider.idToString(publicMember.id));
+    expect(doc.id).toBe(uint8ArrayToHex(publicMember.idBytes) as ShortHexGuid);
     expect(doc.name).toBe(publicMember.name);
     expect(doc.type).toBe(publicMember.type);
   });

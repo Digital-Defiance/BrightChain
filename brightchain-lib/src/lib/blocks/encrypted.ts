@@ -31,6 +31,7 @@ import {
 } from '../errors/block';
 import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
+import { logValidationFailure } from '../logging/blockLogger';
 import { ServiceProvider } from '../services/service.provider';
 import { Checksum } from '../types/checksum';
 import { EphemeralBlock } from './ephemeral';
@@ -294,6 +295,8 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           EciesEncryptionTypeEnum.WithLength,
           headerData,
         );
+      // Freeze the cached value to prevent modification
+      Object.freeze(this._cachedEncryptionDetails);
     } else if (encryptionType === BlockEncryptionType.MultiRecipient) {
       const headerData = new Uint8Array(
         this.layerHeaderData.buffer.slice(
@@ -305,6 +308,8 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
         this._serviceProvider.eciesService.parseMultiEncryptedHeader(
           headerData,
         );
+      // Freeze the cached value to prevent modification
+      Object.freeze(this._cachedEncryptionDetails);
     } else {
       throw new BlockError(BlockErrorType.UnexpectedEncryptedBlockType);
     }
@@ -448,9 +453,16 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     // Validate encryption header length matches the calculated overhead
     const expectedHeaderLength = this.layerOverheadSize;
     if (this.layerHeaderData.length !== expectedHeaderLength) {
-      throw new BlockValidationError(
+      const error = new BlockValidationError(
         BlockValidationErrorType.InvalidEncryptionHeaderLength,
       );
+      logValidationFailure(
+        this.idChecksum.toHex(),
+        BlockType[this.blockType],
+        error,
+        { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+      );
+      throw error;
     }
 
     if (this.encryptionType === BlockEncryptionType.SingleRecipient) {
@@ -459,56 +471,112 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
 
       // Validate individual components
       if (details.ephemeralPublicKey.length !== ECIES.PUBLIC_KEY_LENGTH) {
-        throw new BlockValidationError(
+        const error = new BlockValidationError(
           BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
         );
+        logValidationFailure(
+          this.idChecksum.toHex(),
+          BlockType[this.blockType],
+          error,
+          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+        );
+        throw error;
       }
       if (details.iv.length !== ECIES.IV_SIZE) {
-        throw new BlockValidationError(
+        const error = new BlockValidationError(
           BlockValidationErrorType.InvalidIVLength,
         );
+        logValidationFailure(
+          this.idChecksum.toHex(),
+          BlockType[this.blockType],
+          error,
+          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+        );
+        throw error;
       }
       if (details.authTag.length !== ECIES.AUTH_TAG_SIZE) {
-        throw new BlockValidationError(
+        const error = new BlockValidationError(
           BlockValidationErrorType.InvalidAuthTagLength,
         );
+        logValidationFailure(
+          this.idChecksum.toHex(),
+          BlockType[this.blockType],
+          error,
+          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+        );
+        throw error;
       }
     } else if (this.encryptionType === BlockEncryptionType.MultiRecipient) {
       const details: IMultiEncryptedParsedHeader<TID> = this
         .encryptionDetails as IMultiEncryptedParsedHeader<TID>;
 
       if (details.recipientCount < 2) {
-        throw new BlockValidationError(
+        const error = new BlockValidationError(
           BlockValidationErrorType.InvalidRecipientCount,
         );
+        logValidationFailure(
+          this.idChecksum.toHex(),
+          BlockType[this.blockType],
+          error,
+          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType], recipientCount: details.recipientCount },
+        );
+        throw error;
       } else if (details.recipientIds.length !== details.recipientCount) {
-        throw new BlockValidationError(
+        const error = new BlockValidationError(
           BlockValidationErrorType.InvalidRecipientIds,
         );
+        logValidationFailure(
+          this.idChecksum.toHex(),
+          BlockType[this.blockType],
+          error,
+          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+        );
+        throw error;
       } else if (
         details.recipientIds
           .map((id) => this._idProvider.toBytes(id))
           .some((id) => id.length !== id.byteLength)
       ) {
-        throw new BlockValidationError(
+        const error = new BlockValidationError(
           BlockValidationErrorType.InvalidRecipientIds,
         );
+        logValidationFailure(
+          this.idChecksum.toHex(),
+          BlockType[this.blockType],
+          error,
+          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+        );
+        throw error;
       } else if (
         details.recipientKeys.some(
           (k) => k.length !== ECIES.MULTIPLE.ENCRYPTED_KEY_SIZE,
         )
       ) {
-        throw new BlockValidationError(
+        const error = new BlockValidationError(
           BlockValidationErrorType.InvalidRecipientKeys,
         );
+        logValidationFailure(
+          this.idChecksum.toHex(),
+          BlockType[this.blockType],
+          error,
+          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+        );
+        throw error;
       }
     }
 
     // Validate data length
     if (this.data.length !== this.blockSize) {
-      throw new BlockValidationError(
+      const error = new BlockValidationError(
         BlockValidationErrorType.DataBufferIsTruncated,
       );
+      logValidationFailure(
+        this.idChecksum.toHex(),
+        BlockType[this.blockType],
+        error,
+        { blockSize: this.blockSize, actualLength: this.data.length },
+      );
+      throw error;
     }
 
     // Validate actual data length
@@ -521,16 +589,30 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
         recipientCount: this.recipients.length,
       }).availableCapacity
     ) {
-      throw new BlockValidationError(
+      const error = new BlockValidationError(
         BlockValidationErrorType.DataLengthExceedsCapacity,
       );
+      logValidationFailure(
+        this.idChecksum.toHex(),
+        BlockType[this.blockType],
+        error,
+        { blockSize: this.blockSize, lengthBeforeEncryption: this.lengthBeforeEncryption },
+      );
+      throw error;
     }
 
     // Validate encrypted length
     if (this.encryptedLength > this.blockSize) {
-      throw new BlockValidationError(
+      const error = new BlockValidationError(
         BlockValidationErrorType.DataLengthExceedsCapacity,
       );
+      logValidationFailure(
+        this.idChecksum.toHex(),
+        BlockType[this.blockType],
+        error,
+        { blockSize: this.blockSize, encryptedLength: this.encryptedLength },
+      );
+      throw error;
     }
   }
 
@@ -545,53 +627,109 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     // Validate encryption header length matches the calculated overhead
     const expectedHeaderLength = this.layerOverheadSize;
     if (this.layerHeaderData.length !== expectedHeaderLength) {
-      throw new BlockValidationError(
+      const error = new BlockValidationError(
         BlockValidationErrorType.InvalidEncryptionHeaderLength,
       );
+      logValidationFailure(
+        this.idChecksum.toHex(),
+        BlockType[this.blockType],
+        error,
+        { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType] },
+      );
+      throw error;
     }
 
     if (this._encryptionType === BlockEncryptionType.SingleRecipient) {
       const details = this.encryptionDetails as ISingleEncryptedParsedHeader;
       // Validate individual components
       if (details.ephemeralPublicKey.length !== ECIES.PUBLIC_KEY_LENGTH) {
-        throw new BlockValidationError(
+        const error = new BlockValidationError(
           BlockValidationErrorType.InvalidEphemeralPublicKeyLength,
         );
+        logValidationFailure(
+          this.idChecksum.toHex(),
+          BlockType[this.blockType],
+          error,
+          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType] },
+        );
+        throw error;
       }
       if (details.iv.length !== ECIES.IV_SIZE) {
-        throw new BlockValidationError(
+        const error = new BlockValidationError(
           BlockValidationErrorType.InvalidIVLength,
         );
+        logValidationFailure(
+          this.idChecksum.toHex(),
+          BlockType[this.blockType],
+          error,
+          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType] },
+        );
+        throw error;
       }
       if (details.authTag.length !== ECIES.AUTH_TAG_SIZE) {
-        throw new BlockValidationError(
+        const error = new BlockValidationError(
           BlockValidationErrorType.InvalidAuthTagLength,
         );
+        logValidationFailure(
+          this.idChecksum.toHex(),
+          BlockType[this.blockType],
+          error,
+          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType] },
+        );
+        throw error;
       }
     } else if (this._encryptionType === BlockEncryptionType.MultiRecipient) {
       const details = this.encryptionDetails as IMultiEncryptedParsedHeader;
       if (details.recipientCount < 2) {
-        throw new BlockValidationError(
+        const error = new BlockValidationError(
           BlockValidationErrorType.InvalidRecipientCount,
         );
+        logValidationFailure(
+          this.idChecksum.toHex(),
+          BlockType[this.blockType],
+          error,
+          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType], recipientCount: details.recipientCount },
+        );
+        throw error;
       }
       if (details.recipientIds.length != details.recipientCount) {
-        throw new BlockValidationError(
+        const error = new BlockValidationError(
           BlockValidationErrorType.InvalidRecipientIds,
         );
+        logValidationFailure(
+          this.idChecksum.toHex(),
+          BlockType[this.blockType],
+          error,
+          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType] },
+        );
+        throw error;
       }
       if (details.recipientKeys.length != details.recipientCount) {
-        throw new BlockValidationError(
+        const error = new BlockValidationError(
           BlockValidationErrorType.InvalidRecipientKeys,
         );
+        logValidationFailure(
+          this.idChecksum.toHex(),
+          BlockType[this.blockType],
+          error,
+          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType] },
+        );
+        throw error;
       }
     }
 
     // Validate data length
     if (this.data.length !== this.blockSize) {
-      throw new BlockValidationError(
+      const error = new BlockValidationError(
         BlockValidationErrorType.DataBufferIsTruncated,
       );
+      logValidationFailure(
+        this.idChecksum.toHex(),
+        BlockType[this.blockType],
+        error,
+        { blockSize: this.blockSize, actualLength: this.data.length },
+      );
+      throw error;
     }
 
     // Validate actual data length
@@ -604,16 +742,30 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
         recipientCount: this.recipients.length,
       }).availableCapacity
     ) {
-      throw new BlockValidationError(
+      const error = new BlockValidationError(
         BlockValidationErrorType.DataLengthExceedsCapacity,
       );
+      logValidationFailure(
+        this.idChecksum.toHex(),
+        BlockType[this.blockType],
+        error,
+        { blockSize: this.blockSize, lengthBeforeEncryption: this.lengthBeforeEncryption },
+      );
+      throw error;
     }
 
     // Validate encrypted length
     if (this.encryptedLength > this.blockSize) {
-      throw new BlockValidationError(
+      const error = new BlockValidationError(
         BlockValidationErrorType.DataLengthExceedsCapacity,
       );
+      logValidationFailure(
+        this.idChecksum.toHex(),
+        BlockType[this.blockType],
+        error,
+        { blockSize: this.blockSize, encryptedLength: this.encryptedLength },
+      );
+      throw error;
     }
   }
 

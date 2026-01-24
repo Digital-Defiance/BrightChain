@@ -1,4 +1,4 @@
-import { MemberType } from '@digitaldefiance/ecies-lib';
+import { MemberType, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import * as fs from 'fs';
 import * as path from 'path';
 import { initializeBrightChain, resetInitialization } from '../init';
@@ -37,7 +37,7 @@ describe('Document System Tests', () => {
 
     // Store document to file - use hex string for filename to avoid invalid characters
     const idProvider = ServiceProvider.getInstance().idProvider;
-    const idHex = idProvider.idToString(member.id);
+    const idHex = uint8ArrayToHex(idProvider.toBytes(member.id));
     const filePath = path.join(cacheDir, `${idHex}.json`);
     const documentJson = document.toPublicJson();
 
@@ -49,7 +49,7 @@ describe('Document System Tests', () => {
     const restoredData: IMemberStorageData = storedJson;
 
     // Verify restored document matches original
-    expect(restoredData.id).toBe(idProvider.idToString(member.id));
+    expect(restoredData.id).toBe(uint8ArrayToHex(idProvider.toBytes(member.id)));
     expect(restoredData.name).toBe(member.name);
     expect(restoredData.email).toBe(member.email.toString());
     expect(restoredData.type).toBe(member.type);

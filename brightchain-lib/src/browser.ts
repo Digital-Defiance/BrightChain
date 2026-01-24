@@ -16,6 +16,13 @@ export {
 } from './lib/blocks/handle';
 export { RawDataBlock } from './lib/blocks/rawData';
 
+// Export constant-time XOR utilities (browser-compatible)
+export {
+  constantTimeXor,
+  constantTimeXorMultiple,
+  XorLengthMismatchError,
+} from './lib/utils/constantTimeXor';
+
 // Export ServiceProvider for advanced usage
 export { ServiceProvider } from './lib/services/service.provider';
 
@@ -28,9 +35,7 @@ export { Checksum } from './lib/types/checksum';
 // Export services
 export { CBLService } from './lib/services/cblService';
 export { ChecksumService } from './lib/services/checksum.service';
-export { JsonCBLCapacityCalculator } from './lib/services/jsonCblCapacity.service';
 export { MessageCBLService } from './lib/services/messaging/messageCBLService';
-export { SuperCBLService, parseCBLData } from './lib/services/superCbl.service';
 
 // Export messaging enums and interfaces
 export { MessageDeliveryStatus } from './lib/enumerations/messaging/messageDeliveryStatus';
@@ -41,19 +46,8 @@ export type { IMessageCBLOptions } from './lib/services/messaging/messageCBLServ
 
 // Re-export types for convenience
 export type { BlockInfo, FileReceipt } from './lib/brightChain';
-export { SuperCBLError, SuperCBLErrorType } from './lib/errors/superCbl';
 export type {
   CBLMagnetComponents,
   CBLStorageResult,
   CBLWhiteningOptions,
 } from './lib/interfaces/storage/cblWhitening';
-export type {
-  CBLData,
-  CBLType,
-  CBLv1,
-  RegularCBLv2,
-  SubCBL,
-  SuperCBL,
-  SuperCBLConfig,
-  SuperCBLCreationResult,
-} from './lib/interfaces/storage/superCbl';

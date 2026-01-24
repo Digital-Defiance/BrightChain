@@ -8,6 +8,7 @@ export enum CblErrorType {
   ExpectedOwnedDataBlock = 'ExpectedOwnedDataBlock',
   InvalidStructure = 'InvalidStructure',
   CreatorUndefined = 'CreatorUndefined',
+  CreatorIdMismatch = 'CreatorIdMismatch',
   BlockNotReadable = 'BlockNotReadable',
   CreatorRequiredForSignature = 'CreatorRequiredForSignature',
   InvalidCreatorId = 'InvalidCreatorId',

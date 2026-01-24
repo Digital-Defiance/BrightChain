@@ -1,24 +1,24 @@
 import { BlockCapacityErrorType } from '../../enumerations/blockCapacityErrorType';
-import StringNames from '../../enumerations/stringNames';
+import BrightChainStrings from '../../enumerations/brightChainStrings';
 import { TypedError } from '../typedError';
 
 export class BlockCapacityError extends TypedError<BlockCapacityErrorType> {
-  protected get reasonMap(): Record<BlockCapacityErrorType, StringNames> {
+  protected get reasonMap(): Record<BlockCapacityErrorType, BrightChainStrings> {
     return {
       [BlockCapacityErrorType.InvalidBlockSize]:
-        StringNames.Error_BlockCapacityInvalidBlockSize,
+        BrightChainStrings.Error_BlockCapacityInvalidBlockSize,
       [BlockCapacityErrorType.InvalidBlockType]:
-        StringNames.Error_BlockCapacityInvalidBlockType,
+        BrightChainStrings.Error_BlockCapacityInvalidBlockType,
       [BlockCapacityErrorType.CapacityExceeded]:
-        StringNames.Error_BlockCapacityCapacityExceeded,
+        BrightChainStrings.Error_BlockCapacityCapacityExceeded,
       [BlockCapacityErrorType.InvalidFileName]:
-        StringNames.Error_BlockCapacityInvalidFileName,
+        BrightChainStrings.Error_BlockCapacityInvalidFileName,
       [BlockCapacityErrorType.InvalidMimeType]:
-        StringNames.Error_BlockCapacityInvalidMimetype,
+        BrightChainStrings.Error_BlockCapacityInvalidMimetype,
       [BlockCapacityErrorType.InvalidRecipientCount]:
-        StringNames.Error_BlockCapacityInvalidRecipientCount,
+        BrightChainStrings.Error_BlockCapacityInvalidRecipientCount,
       [BlockCapacityErrorType.InvalidExtendedCblData]:
-        StringNames.Error_BlockCapacityInvalidExtendedCblData,
+        BrightChainStrings.Error_BlockCapacityInvalidExtendedCblData,
     };
   }
 

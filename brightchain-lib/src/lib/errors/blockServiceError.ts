@@ -1,38 +1,38 @@
 import { BlockServiceErrorType } from '../enumerations/blockServiceErrorType';
-import StringNames from '../enumerations/stringNames';
+import BrightChainStrings from '../enumerations/brightChainStrings';
 import { TypedError } from './typedError';
 
 export class BlockServiceError extends TypedError<BlockServiceErrorType> {
-  public get reasonMap(): Record<BlockServiceErrorType, StringNames> {
+  public get reasonMap(): Record<BlockServiceErrorType, BrightChainStrings> {
     return {
       [BlockServiceErrorType.EmptyBlocksArray]:
-        StringNames.Error_BlockServiceErrorEmptyBlocksArray,
+        BrightChainStrings.Error_BlockServiceErrorEmptyBlocksArray,
       [BlockServiceErrorType.BlockSizeMismatch]:
-        StringNames.Error_BlockServiceErrorBlockSizeMismatch,
+        BrightChainStrings.Error_BlockServiceErrorBlockSizeMismatch,
       [BlockServiceErrorType.NoWhitenersProvided]:
-        StringNames.Error_BlockServiceErrorNoWhitenersProvided,
+        BrightChainStrings.Error_BlockServiceErrorNoWhitenersProvided,
       [BlockServiceErrorType.AlreadyInitialized]:
-        StringNames.Error_BlockServiceErrorAlreadyInitialized,
+        BrightChainStrings.Error_BlockServiceErrorAlreadyInitialized,
       [BlockServiceErrorType.Uninitialized]:
-        StringNames.Error_BlockServiceErrorUninitialized,
+        BrightChainStrings.Error_BlockServiceErrorUninitialized,
       [BlockServiceErrorType.BlockAlreadyExists]:
-        StringNames.Error_BlockServiceErrorBlockAlreadyExistsTemplate,
+        BrightChainStrings.Error_BlockServiceErrorBlockAlreadyExistsTemplate,
       [BlockServiceErrorType.RecipientRequiredForEncryption]:
-        StringNames.Error_BlockServiceErrorRecipientRequiredForEncryption,
+        BrightChainStrings.Error_BlockServiceErrorRecipientRequiredForEncryption,
       [BlockServiceErrorType.CannotDetermineLength]:
-        StringNames.Error_BlockServiceErrorCannotDetermineFileLength,
+        BrightChainStrings.Error_BlockServiceErrorCannotDetermineFileLength,
       [BlockServiceErrorType.CannotDetermineBlockSize]:
-        StringNames.Error_BlockServiceErrorUnableToDetermineBlockSize,
+        BrightChainStrings.Error_BlockServiceErrorUnableToDetermineBlockSize,
       [BlockServiceErrorType.FilePathNotProvided]:
-        StringNames.Error_BlockServiceErrorFilePathNotProvided,
+        BrightChainStrings.Error_BlockServiceErrorFilePathNotProvided,
       [BlockServiceErrorType.CannotDetermineFileName]:
-        StringNames.Error_BlockServiceErrorCannotDetermineFileName,
+        BrightChainStrings.Error_BlockServiceErrorCannotDetermineFileName,
       [BlockServiceErrorType.CannotDetermineMimeType]:
-        StringNames.Error_BlockServiceErrorCannotDetermineMimeType,
+        BrightChainStrings.Error_BlockServiceErrorCannotDetermineMimeType,
       [BlockServiceErrorType.InvalidBlockData]:
-        StringNames.Error_BlockServiceErrorInvalidBlockData,
+        BrightChainStrings.Error_BlockServiceErrorInvalidBlockData,
       [BlockServiceErrorType.InvalidBlockType]:
-        StringNames.Error_BlockServiceErrorInvalidBlockType,
+        BrightChainStrings.Error_BlockServiceErrorInvalidBlockType,
     };
   }
 

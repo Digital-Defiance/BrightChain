@@ -1,4 +1,4 @@
-import { StringNames } from '../enumerations/stringNames';
+import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import { translate } from '../i18n';
 import { Checksum } from '../types/checksum';
 
@@ -7,7 +7,7 @@ export class ChecksumMismatchError extends Error {
   public readonly expected: Checksum;
   constructor(checksum: Checksum, expected: Checksum, _language?: string) {
     super(
-      translate(StringNames.Error_ChecksumMismatchTemplate, {
+      translate(BrightChainStrings.Error_ChecksumMismatchTemplate, {
         EXPECTED: expected.toHex(),
         CHECKSUM: checksum.toHex(),
       }),

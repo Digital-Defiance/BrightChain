@@ -1,4 +1,4 @@
-export enum StringNames {
+export enum BrightChainStrings {
   // admin
   Admin_StringNotFoundForLanguageTemplate = 'Admin_StringNotFoundForLanguageTemplate',
   // i18n errors
@@ -277,6 +277,7 @@ export enum StringNames {
   Error_CblErrorInsufficientCapacityTemplate = 'Error_CblErrorInsufficientCapacityTemplate',
   Error_CblErrorNotExtendedCbl = 'Error_CblErrorNotExtendedCbl',
   Error_CblErrorInvalidSignature = 'Error_CblErrorInvalidSignature',
+  Error_CblErrorCreatorIdMismatch = 'Error_CblErrorCreatorIdMismatch',
   Error_CblErrorFileSizeTooLarge = 'Error_CblErrorFileSizeTooLarge',
   Error_CblErrorFileSizeTooLargeForNode = 'Error_CblErrorFileSizeTooLargeForNode',
   Error_CblErrorInvalidTupleSize = 'Error_CblErrorInvalidTupleSize',
@@ -461,4 +462,4 @@ export enum StringNames {
   Error_MemberErrorInvalidEncryptionData = 'Error_MemberErrorInvalidEncryptionData',
 }
 
-export default StringNames;
+export default BrightChainStrings;

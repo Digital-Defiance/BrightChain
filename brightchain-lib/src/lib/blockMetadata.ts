@@ -5,6 +5,8 @@ import { BlockSize } from './enumerations/blockSize';
 import BlockType from './enumerations/blockType';
 import { BlockMetadataError } from './errors/block';
 import { IBaseBlockMetadata } from './interfaces/blocks/metadata/blockMetadata';
+import { parseBlockMetadataJson } from './utils/typeGuards';
+import { parseDate } from './utils/dateUtils';
 
 /**
  * BlockMetadata provides utility functions for working with block metadata.
@@ -41,17 +43,38 @@ export class BlockMetadata implements IBaseBlockMetadata {
       type: this.type,
       dataType: this.dataType,
       lengthWithoutPadding: this.lengthWithoutPadding,
-      dateCreated: this.dateCreated,
+      dateCreated: this.dateCreated.toISOString(),
     });
   }
 
-  public static fromJsonValidator(data: any): void {
-    // Validate required fields
-    if (!data.size || !data.type || !data.dataType || !data.dateCreated) {
-      throw new BlockMetadataError(
-        BlockMetadataErrorType.MissingRequiredMetadata,
-      );
-    }
+  /**
+   * Parse metadata from JSON representation using type guards.
+   * Handles:
+   * 1. Type validation with descriptive errors
+   * 2. Type conversion
+   * 3. Optional fields
+   * 4. Custom attributes
+   * 5. Robust date parsing with timezone support
+   *
+   * @param json - JSON string containing metadata
+   * @returns Parsed BlockMetadata instance
+   * @throws JsonValidationError if JSON is invalid or required fields are missing/invalid
+   */
+  public static fromJson(json: string): BlockMetadata {
+    // Use type guard to validate and parse
+    const data = parseBlockMetadataJson(json);
+
+    // Parse date using robust date utilities
+    const dateCreated = parseDate(data.dateCreated);
+
+    // Create a proper BlockMetadata instance
+    return new BlockMetadata(
+      data.size as BlockSize,
+      data.type as BlockType,
+      data.dataType as BlockDataType,
+      data.lengthWithoutPadding,
+      dateCreated,
+    );
   }
 
   public static fromJsonAdditionalData<T extends Record<string, any>>(
@@ -60,45 +83,6 @@ export class BlockMetadata implements IBaseBlockMetadata {
     return {} as T;
   }
 
-  /**
-   * Parse metadata from JSON representation.
-   * Handles:
-   * 1. Type conversion
-   * 2. Optional fields
-   * 3. Custom attributes
-   *
-   * @param json - JSON string containing metadata
-   * @returns Parsed metadata object
-   * @throws If JSON is invalid or required fields are missing
-   */
-  public static fromJson<
-    B extends BlockMetadata,
-    T extends Record<string, any>,
-  >(json: string): B & T {
-    try {
-      const data = JSON.parse(json);
-
-      // Validate required fields
-      this.fromJsonValidator(data);
-
-      // Convert types and maintain extensibility
-      return {
-        ...data,
-        ...this.fromJsonAdditionalData(data),
-        dateCreated: data.dateCreated, // Already a string
-        size: data.size as BlockSize,
-        type: data.type as BlockType,
-        dataType: data.dataType as BlockDataType,
-        lengthWithoutPadding: data.lengthWithoutPadding,
-      } as B & T;
-    } catch (error) {
-      throw new Error(
-        `Failed to parse metadata: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
-      );
-    }
-  }
   public get size(): BlockSize {
     return this._size;
   }

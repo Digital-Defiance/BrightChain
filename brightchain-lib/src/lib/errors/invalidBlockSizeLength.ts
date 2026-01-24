@@ -1,11 +1,11 @@
-import { StringNames } from '../enumerations/stringNames';
+import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import { translate } from '../i18n';
 
 export class InvalidBlockSizeLengthError extends Error {
   public readonly blockSize: number;
   constructor(blockSize: number, _language?: string) {
     super(
-      translate(StringNames.Error_InvalidBlockSizeTemplate, {
+      translate(BrightChainStrings.Error_InvalidBlockSizeTemplate, {
         BLOCK_SIZE: blockSize,
       }),
     );

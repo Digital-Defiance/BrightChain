@@ -3,6 +3,35 @@
  */
 
 /**
+ * Constants for structured block headers
+ *
+ * @remarks
+ * These constants define the magic prefix and version for structured blocks
+ * with serialized headers (CBL variants). Raw data blocks do NOT use these.
+ *
+ * @example
+ * ```typescript
+ * const headerConsts: IBlockHeaderConsts = {
+ *   MAGIC_PREFIX: 0xBC,
+ *   VERSION: 0x01
+ * };
+ * ```
+ */
+export interface IBlockHeaderConsts {
+  /**
+   * Magic prefix for BrightChain structured blocks (0xBC = "BrightChain")
+   * @remarks This prefix identifies blocks with serialized headers (CBL variants)
+   */
+  readonly MAGIC_PREFIX: number;
+
+  /**
+   * Current version of the block header format
+   * @remarks Used to support future format changes
+   */
+  readonly VERSION: number;
+}
+
+/**
  * Constants for Constituent Block List (CBL) operations
  *
  * @remarks
@@ -268,6 +297,9 @@ import type { IConstants as IEciesConstants } from '@digitaldefiance/ecies-lib';
  * ```
  */
 export interface IConstants extends IEciesConstants {
+  /** Structured block header constants */
+  readonly BLOCK_HEADER: IBlockHeaderConsts;
+
   /** Constituent Block List constants */
   readonly CBL: ICBLConsts;
 

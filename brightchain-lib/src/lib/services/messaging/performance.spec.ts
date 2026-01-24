@@ -16,21 +16,23 @@ describe('Message Passing Performance Tests', () => {
   let cblService: CBLService;
   let creator: Member;
 
-  beforeAll(async () => {
-    checksumService = new ChecksumService();
-    eciesService = new ECIESService();
-    cblService = new CBLService(checksumService, eciesService);
+  beforeAll(() => {
+    const serviceProvider = ServiceProvider.getInstance();
+    eciesService = serviceProvider.eciesService;
+    checksumService = serviceProvider.checksumService;
+    cblService = serviceProvider.cblService;
 
-    // Initialize ServiceProvider
-    ServiceProvider.getInstance();
-
-    const memberWithMnemonic = await Member.newMember(
+    const memberWithMnemonic = Member.newMember(
       eciesService,
       MemberType.User,
       'test',
       'test@example.com' as unknown as Parameters<typeof Member.newMember>[3],
     );
     creator = memberWithMnemonic.member;
+  });
+
+  afterAll(() => {
+    ServiceProvider.resetInstance();
   });
 
   it('should handle message throughput (10 messages)', async () => {

@@ -1,8 +1,8 @@
 // services/authService.js
 
 import {
+  BrightChainStrings,
   IRequestUser,
-  StringNames,
   translate,
 } from '@brightchain/brightchain-lib';
 import { LanguageCode } from '@digitaldefiance/i18n-lib';
@@ -44,7 +44,7 @@ const login = async (
     return {
       error: response.data.message
         ? response.data.message
-        : translate(StringNames.Error_TokenInvalid),
+        : translate(BrightChainStrings.Error_TokenInvalid),
       ...(response.data.errorType
         ? { errorType: response.data.errorType }
         : {}),
@@ -57,14 +57,14 @@ const login = async (
           error.response.data.error.message ??
           error.response.data.message ??
           error.message ??
-          translate(StringNames.Error_UnexpectedError),
+          translate(BrightChainStrings.Error_UnexpectedError),
         ...(error.response.data.errorType
           ? { errorType: error.response.data.errorType }
           : {}),
         status: error.response.status,
       };
     }
-    return { error: translate(StringNames.Error_UnexpectedError) };
+    return { error: translate(BrightChainStrings.Error_UnexpectedError) };
   }
 };
 
@@ -87,7 +87,7 @@ const register = async (
       return {
         error: response.data.message
           ? response.data.message
-          : translate(StringNames.Register_Error),
+          : translate(BrightChainStrings.Register_Error),
         ...(response.data.errorType
           ? { errorType: response.data.errorType }
           : {}),
@@ -95,7 +95,7 @@ const register = async (
     }
     return {
       success: true,
-      message: response.data.message ?? translate(StringNames.Register_Success),
+      message: response.data.message ?? translate(BrightChainStrings.Register_Success),
     };
   } catch (error) {
     if (isAxiosError(error) && error.response) {
@@ -104,14 +104,14 @@ const register = async (
           error.response.data.error.message ??
           error.response.data.message ??
           error.message ??
-          translate(StringNames.Error_UnexpectedError),
+          translate(BrightChainStrings.Error_UnexpectedError),
         ...(error.response.data.errorType
           ? { errorType: error.response.data.errorType }
           : {}),
       };
     } else {
       return {
-        error: translate(StringNames.Error_UnexpectedError),
+        error: translate(BrightChainStrings.Error_UnexpectedError),
       };
     }
   }
@@ -153,14 +153,14 @@ const verifyToken = async (
           ? error.response.data.message
           : error.message
             ? error.message
-            : translate(StringNames.Error_UnexpectedError),
+            : translate(BrightChainStrings.Error_UnexpectedError),
         ...(error.response.data.errorType
           ? { errorType: error.response.data.errorType }
           : {}),
       };
     } else {
       return {
-        error: translate(StringNames.Error_UnexpectedError),
+        error: translate(BrightChainStrings.Error_UnexpectedError),
       };
     }
   }

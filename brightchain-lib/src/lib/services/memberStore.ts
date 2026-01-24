@@ -1,16 +1,17 @@
 import {
   ECIESService,
   EmailString,
+  hexToUint8Array,
   Member,
   MemberType,
   PlatformID,
   SecureString,
+  uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { RawDataBlock } from '../blocks/rawData';
 import { uint8ArrayToBase64 } from '../bufferUtils';
 import { MemberDocument } from '../documents/member/memberDocument';
 import { BlockDataType } from '../enumerations/blockDataType';
-import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { MemberErrorType } from '../enumerations/memberErrorType';
 import { MemberStatusType } from '../enumerations/memberStatusType';
@@ -66,10 +67,9 @@ export class MemberStore<
     );
 
     // Create initial member data
-    const idProvider = ServiceProvider.getInstance<TID>().idProvider;
     const publicData = {
-      id: idProvider.serialize(idProvider.toBytes(member.id)), // Convert to bytes then serialize for JSON
-      creatorId: idProvider.serialize(idProvider.toBytes(member.id)), // Same as ID for self-created members
+      id: uint8ArrayToHex(member.idBytes), // Use hex for consistent ID format
+      creatorId: uint8ArrayToHex(member.idBytes), // Same as ID for self-created members
       type: data.type,
       name: data.name,
       dateCreated: new Date().toISOString(), // Convert to ISO string for JSON
@@ -91,8 +91,8 @@ export class MemberStore<
     };
 
     const privateData = {
-      id: idProvider.serialize(idProvider.toBytes(member.id)), // Convert to bytes then serialize for JSON
-      creatorId: idProvider.serialize(idProvider.toBytes(member.id)), // Same as ID for self-created members
+      id: uint8ArrayToHex(member.idBytes), // Use hex for consistent ID format
+      creatorId: uint8ArrayToHex(member.idBytes), // Same as ID for self-created members
       type: data.type,
       name: data.name,
       dateCreated: new Date().toISOString(), // Convert to ISO string for JSON
@@ -115,22 +115,6 @@ export class MemberStore<
       ],
     };
 
-    // Create Member instances
-    const publicMember = await Member.fromJson<TID>(
-      JSON.stringify({
-        ...publicData,
-        memberType: data.type,
-      }),
-      ServiceProvider.getInstance<TID>().eciesService,
-    );
-    const privateMember = await Member.fromJson<TID>(
-      JSON.stringify({
-        ...privateData,
-        memberType: data.type,
-      }),
-      ServiceProvider.getInstance<TID>().eciesService,
-    );
-
     // Create a transaction-like operation
     const rollbackOperations: (() => Promise<void>)[] = [];
     let doc: MemberDocument<TID> | undefined;
@@ -138,8 +122,11 @@ export class MemberStore<
     let privateBlock: RawDataBlock | undefined;
 
     try {
-      // Step 1: Create member document using factory method
-      doc = MemberDocument.create<TID>(publicMember, privateMember);
+      // Step 1: Create member document using factory method with block store's block size
+      // Use the original 'member' which has the private key for signing CBLs
+      doc = MemberDocument.create<TID>(member, member, undefined, undefined, {
+        blockSize: this.blockStore.blockSize,
+      });
       rollbackOperations.push(async () => {
         // No cleanup needed for document creation
       });
@@ -151,7 +138,7 @@ export class MemberStore<
 
       // Step 3: Create blocks
       publicBlock = new RawDataBlock(
-        BlockSize.Small,
+        this.blockStore.blockSize,
         publicCBL,
         doc!.dateCreated,
         undefined, // Let RawDataBlock calculate the checksum
@@ -160,7 +147,7 @@ export class MemberStore<
       );
 
       privateBlock = new RawDataBlock(
-        BlockSize.Small,
+        this.blockStore.blockSize,
         privateCBL,
         doc!.dateCreated,
         undefined, // Let RawDataBlock calculate the checksum
@@ -186,7 +173,7 @@ export class MemberStore<
       // Step 5: Update index
       const provider = ServiceProvider.getInstance<TID>().idProvider;
       const indexEntry: IMemberIndexEntry<TID> = {
-        id: provider.idFromString(doc!.id),
+        id: provider.fromBytes(hexToUint8Array(doc!.id)),
         publicCBL: publicBlock.idChecksum, // Use the actual block checksum
         privateCBL: privateBlock.idChecksum, // Use the actual block checksum
         type: MemberType.User,
@@ -228,7 +215,7 @@ export class MemberStore<
     // Return reference
     return {
       reference: {
-        id: ServiceProvider.getInstance<TID>().idProvider.idFromString(doc!.id),
+        id: ServiceProvider.getInstance<TID>().idProvider.fromBytes(hexToUint8Array(doc!.id)),
         type: doc!.type,
         dateVerified: new Date(),
         publicCBL: publicBlock.idChecksum, // Use the actual block checksum
@@ -242,7 +229,7 @@ export class MemberStore<
    */
   public async getMember(id: TID): Promise<Member<TID>> {
     const indexEntry = this.memberIndex.get(
-      ServiceProvider.getInstance<TID>().idProvider.idToString(id),
+      uint8ArrayToHex(ServiceProvider.getInstance<TID>().idProvider.toBytes(id)),
     );
     if (!indexEntry) {
       throw new MemberError(MemberErrorType.MemberNotFound);
@@ -273,7 +260,7 @@ export class MemberStore<
     changes: IMemberChanges<TID>,
   ): Promise<void> {
     const indexEntry = this.memberIndex.get(
-      ServiceProvider.getInstance<TID>().idProvider.idToString(id),
+      uint8ArrayToHex(ServiceProvider.getInstance<TID>().idProvider.toBytes(id)),
     );
     if (!indexEntry) {
       throw new MemberError(MemberErrorType.MemberNotFound);
@@ -295,25 +282,25 @@ export class MemberStore<
    */
   public async deleteMember(id: TID): Promise<void> {
     const provider = ServiceProvider.getInstance<TID>().idProvider;
-    const indexEntry = this.memberIndex.get(provider.idToString(id));
+    const indexEntry = this.memberIndex.get(uint8ArrayToHex(provider.toBytes(id)));
     if (!indexEntry) {
       throw new MemberError(MemberErrorType.MemberNotFound);
     }
 
     // Find and remove from name index
     for (const [name, memberId] of this.nameIndex.entries()) {
-      if (memberId === provider.idToString(id)) {
+      if (memberId === uint8ArrayToHex(provider.toBytes(id))) {
         this.nameIndex.delete(name);
         break;
       }
     }
 
     // Remove from indices
-    this.memberIndex.delete(provider.idToString(id));
+    this.memberIndex.delete(uint8ArrayToHex(provider.toBytes(id)));
     if (indexEntry.region) {
       const regionSet = this.regionIndex.get(indexEntry.region);
       if (regionSet) {
-        regionSet.delete(provider.idToString(id));
+        regionSet.delete(uint8ArrayToHex(provider.toBytes(id)));
       }
     }
 
@@ -326,7 +313,7 @@ export class MemberStore<
    */
   public async updateIndex(entry: IMemberIndexEntry<TID>): Promise<void> {
     const provider = ServiceProvider.getInstance<TID>().idProvider;
-    const id = provider.idToString(entry.id);
+    const id = uint8ArrayToHex(provider.toBytes(entry.id));
     const oldEntry = this.memberIndex.get(id);
 
     // Update region index if region changed

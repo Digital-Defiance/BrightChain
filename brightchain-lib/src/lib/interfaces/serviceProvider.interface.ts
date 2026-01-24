@@ -1,6 +1,7 @@
 import {
   ECIESService,
   PlatformID,
+  TypedIdProviderWrapper,
   VotingService,
 } from '@digitaldefiance/ecies-lib';
 import { SealingService } from '../services';
@@ -24,4 +25,5 @@ export interface IServiceProvider<TID extends PlatformID = Uint8Array> {
   readonly tupleService: TupleService<TID>;
   readonly votingService: VotingService;
   readonly fecService: FecService;
+  readonly idProvider: TypedIdProviderWrapper<TID>;
 }

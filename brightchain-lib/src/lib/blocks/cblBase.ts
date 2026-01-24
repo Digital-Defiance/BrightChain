@@ -2,17 +2,19 @@ import {
   arraysEqual,
   Member,
   SignatureUint8Array,
+  uint8ArrayToHex,
   type PlatformID,
 } from '@digitaldefiance/ecies-lib';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import BlockDataType from '../enumerations/blockDataType';
-import { lengthToBlockSize } from '../enumerations/blockSize';
+import { BlockSize, lengthToBlockSize } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
 import { CblErrorType } from '../enumerations/cblErrorType';
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockAccessError } from '../errors/block';
 import { CblError } from '../errors/cblError';
 import { ICBLCore } from '../interfaces/blocks/cblBase';
+import { ICBLServices } from '../interfaces/services/cblServices';
 import { ServiceLocator } from '../services/serviceLocator';
 import { Checksum } from '../types/checksum';
 import { EphemeralBlock } from './ephemeral';
@@ -22,6 +24,27 @@ import { RawDataBlock } from './rawData';
 
 /**
  * Shared core functionality between CBL/ECBL
+ *
+ * This class supports dependency injection for services to break circular
+ * dependencies. When services are not provided, it falls back to using
+ * ServiceLocator for backward compatibility.
+ *
+ * @typeParam TID - The platform ID type (defaults to Uint8Array)
+ *
+ * @example
+ * ```typescript
+ * // Using dependency injection (recommended)
+ * const services: ICBLServices<Uint8Array> = {
+ *   checksumService: checksumService,
+ *   cblService: cblService,
+ * };
+ * const cbl = new ConstituentBlockListBlock(data, creator, blockSize, services);
+ *
+ * // Using ServiceLocator (backward compatible)
+ * const cbl = new ConstituentBlockListBlock(data, creator, blockSize);
+ * ```
+ *
+ * @requirements 2.1, 2.2, 2.4
  */
 export abstract class CBLBase<TID extends PlatformID = Uint8Array>
   extends EphemeralBlock<TID>
@@ -34,55 +57,94 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
   private _cachedAddressCount: number | null = null;
 
   /**
+   * Injected services for CBL operations.
+   * When undefined, falls back to ServiceLocator for backward compatibility.
+   */
+  protected readonly _services?: ICBLServices<TID>;
+
+  /**
+   * Get the CBL service, either from injected services or ServiceLocator.
+   * @returns The CBL service
+   */
+  protected getCblService() {
+    return this._services?.cblService ?? ServiceLocator.getServiceProvider<TID>().cblService;
+  }
+
+  /**
+   * Get the checksum service, either from injected services or ServiceLocator.
+   * @returns The checksum service
+   */
+  protected getChecksumService() {
+    return this._services?.checksumService ?? ServiceLocator.getServiceProvider<TID>().checksumService;
+  }
+
+  /**
    * Create a new CBL core
    * @param data The data of the CBL
+   * @param creator The creator of the CBL
+   * @param blockSize Optional block size for signature validation (if data is unpadded)
+   * @param services Optional injected services for dependency injection (breaks circular dependencies)
+   *
+   * @requirements 2.1, 2.2, 2.4
    */
-  constructor(data: Uint8Array, creator: Member<TID>) {
-    const isExtendedCbl =
-      ServiceLocator.getServiceProvider<TID>().cblService.isExtendedHeader(
-        data,
-      );
-    const checksum =
-      ServiceLocator.getServiceProvider<TID>().checksumService.calculateChecksum(
-        new Uint8Array(data),
-      );
-    const blockSize = lengthToBlockSize(data.length);
+  constructor(
+    data: Uint8Array,
+    creator: Member<TID>,
+    blockSize?: BlockSize,
+    services?: ICBLServices<TID>,
+  ) {
+    // Store services reference for later use
+    // Note: We need to access services before calling super(), so we use the parameter directly
+    const cblService = services?.cblService ?? ServiceLocator.getServiceProvider<TID>().cblService;
+    const checksumService = services?.checksumService ?? ServiceLocator.getServiceProvider<TID>().checksumService;
+
+    const isExtendedCbl = cblService.isExtendedHeader(data);
+    const checksum = checksumService.calculateChecksum(new Uint8Array(data));
+    // Use provided block size or calculate from data length
+    const effectiveBlockSize = blockSize ?? lengthToBlockSize(data.length);
     const blockType = isExtendedCbl
       ? BlockType.ExtendedConstituentBlockListBlock
       : BlockType.ConstituentBlockList;
-    const dateCreated =
-      ServiceLocator.getServiceProvider<TID>().cblService.getDateCreated(data);
+    const dateCreated = cblService.getDateCreated(data);
 
     let creatorId: TID;
     try {
-      creatorId =
-        ServiceLocator.getServiceProvider<TID>().cblService.getCreatorId(data);
+      creatorId = cblService.getCreatorId(data);
     } catch {
       // If we can't get creator ID from header, use the provided creator's ID
       creatorId = creator.id;
     }
 
     // Use CBL service's enhanced provider for comparison to ensure consistency
-    const cblService = ServiceLocator.getServiceProvider<TID>().cblService;
     if (creator instanceof Member) {
-      try {
-        const creatorIdBytes = cblService.idProvider.toBytes(creatorId);
-        const memberIdBytes = cblService.idProvider.toBytes(creator.id);
+      const creatorIdBytes = cblService.idProvider.toBytes(creatorId);
+      const memberIdBytes = cblService.idProvider.toBytes(creator.id);
 
-        // Add null checks to prevent undefined errors
-        if (!creatorIdBytes || !memberIdBytes) {
-          // If we can't get bytes, skip the comparison for now
-          // This allows tests to pass while we work on the full implementation
-        } else if (!arraysEqual(creatorIdBytes, memberIdBytes)) {
-          // Only throw if we have valid bytes and they don't match
-          // For now, we'll be more lenient to allow tests to pass
-          console.warn(
-            'Creator ID mismatch detected, but allowing for compatibility',
-          );
-        }
-      } catch (error) {
-        // If there's any error in ID comparison, log it but don't fail
-        console.warn('Error comparing creator IDs:', error);
+      // Validate that we got valid byte arrays
+      if (!creatorIdBytes || creatorIdBytes.length === 0) {
+        throw new CblError(
+          CblErrorType.InvalidStructure,
+          'Failed to extract creator ID bytes from CBL header',
+        );
+      }
+
+      if (!memberIdBytes || memberIdBytes.length === 0) {
+        throw new CblError(
+          CblErrorType.InvalidStructure,
+          'Failed to extract member ID bytes from provided creator',
+        );
+      }
+
+      // Use constant-time comparison for security
+      if (!arraysEqual(creatorIdBytes, memberIdBytes)) {
+        throw new CblError(
+          CblErrorType.CreatorIdMismatch,
+          undefined,
+          {
+            headerCreatorId: uint8ArrayToHex(cblService.idProvider.toBytes(creatorId)),
+            providedCreatorId: uint8ArrayToHex(cblService.idProvider.toBytes(creator.id)),
+          },
+        );
       }
     }
     super(
@@ -91,28 +153,27 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
       data,
       checksum,
       new EphemeralBlockMetadata<TID>(
-        blockSize,
+        effectiveBlockSize,
         blockType,
         BlockDataType.EphemeralStructuredData,
-        ServiceLocator.getServiceProvider<TID>().cblService.getBlockDataLength(
-          data,
-        ),
+        cblService.getBlockDataLength(data),
         creator instanceof Member ? creator : (creator as Member<TID>),
         dateCreated,
       ),
     );
 
-    // Cache the address count to avoid circular dependency
-    this._cachedAddressCount =
-      ServiceLocator.getServiceProvider().cblService.getCblAddressCount(
-        this._data,
-      );
+    // Store services reference after super() call
+    this._services = services;
 
-    // Temporarily disable signature validation to get basic functionality working
-    // TODO: Fix signature validation in CBL creation
-    // if (creator && !this.validateSignature()) {
-    //   throw new CblError(CblErrorType.InvalidSignature);
-    // }
+    // Cache the address count to avoid circular dependency
+    // Use the already-resolved cblService to avoid re-resolving
+    this._cachedAddressCount = cblService.getCblAddressCount(this._data);
+
+    // Validate signature if creator has a public key
+    // Note: Signature validation requires the creator's public key
+    if (creator && creator.publicKey && !this.validateSignature()) {
+      throw new CblError(CblErrorType.InvalidSignature);
+    }
   }
 
   /**
@@ -150,6 +211,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
 
   /**
    * The number of addresses in the CBL
+   * This value is cached and frozen after first computation to ensure immutability.
    */
   public get cblAddressCount(): number {
     // Use cached value if available to avoid circular dependency
@@ -158,10 +220,9 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
     }
 
     this.ensureHeaderValidated();
-    this._cachedAddressCount =
-      ServiceLocator.getServiceProvider<TID>().cblService.getCblAddressCount(
-        this._data,
-      );
+    this._cachedAddressCount = this.getCblService().getCblAddressCount(this._data);
+    // Note: Primitive numbers are immutable by nature, but we ensure
+    // the cache is only set once to maintain consistency
     return this._cachedAddressCount;
   }
 
@@ -170,9 +231,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
    */
   public get originalDataLength(): number {
     this.ensureHeaderValidated();
-    return ServiceLocator.getServiceProvider<TID>().cblService.getOriginalDataLength(
-      this._data,
-    );
+    return this.getCblService().getOriginalDataLength(this._data);
   }
 
   /**
@@ -180,9 +239,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
    */
   public get tupleSize(): number {
     this.ensureHeaderValidated();
-    return ServiceLocator.getServiceProvider<TID>().cblService.getTupleSize(
-      this._data,
-    );
+    return this.getCblService().getTupleSize(this._data);
   }
 
   /**
@@ -190,9 +247,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
    */
   public get isExtendedCbl(): boolean {
     this.ensureHeaderValidated();
-    return ServiceLocator.getServiceProvider<TID>().cblService.isExtendedHeader(
-      this._data,
-    );
+    return this.getCblService().isExtendedHeader(this._data);
   }
 
   /**
@@ -200,9 +255,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
    */
   public get creatorSignature(): SignatureUint8Array {
     this.ensureHeaderValidated();
-    return ServiceLocator.getServiceProvider<TID>().cblService.getSignature(
-      this._data,
-    );
+    return this.getCblService().getSignature(this._data);
   }
 
   /**
@@ -210,9 +263,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
    */
   public get creatorId(): TID {
     this.ensureHeaderValidated();
-    return ServiceLocator.getServiceProvider<TID>().cblService.getCreatorId(
-      this._data,
-    );
+    return this.getCblService().getCreatorId(this._data);
   }
 
   /**
@@ -220,9 +271,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
    */
   public get addressData(): Uint8Array {
     this.ensureHeaderValidated();
-    return ServiceLocator.getServiceProvider<TID>().cblService.getAddressData(
-      this._data,
-    );
+    return this.getCblService().getAddressData(this._data);
   }
 
   /**
@@ -230,9 +279,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
    */
   public get addresses(): Checksum[] {
     this.ensureHeaderValidated();
-    return ServiceLocator.getServiceProvider().cblService.addressDataToAddresses(
-      this._data,
-    );
+    return this.getCblService().addressDataToAddresses(this._data);
   }
 
   /**
@@ -245,9 +292,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
   public override get totalOverhead(): number {
     return (
       super.totalOverhead +
-      ServiceLocator.getServiceProvider<TID>().cblService.getHeaderLength(
-        this.data,
-      )
+      this.getCblService().getHeaderLength(this.data)
     );
   }
 
@@ -298,7 +343,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
 
     // Use the CBLService's validateSignature method
     // This ensures we use the same logic for validation as we do for creation
-    return ServiceLocator.getServiceProvider<TID>().cblService.validateSignature(
+    return this.getCblService().validateSignature(
       this._data,
       this._creator,
       this.blockSize,
@@ -310,10 +355,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
    */
   public override get layerHeaderData(): Uint8Array {
     this.ensureHeaderValidated();
-    const headerLength =
-      ServiceLocator.getServiceProvider<TID>().cblService.getHeaderLength(
-        this.data,
-      );
+    const headerLength = this.getCblService().getHeaderLength(this.data);
     return this.data.subarray(0, headerLength);
   }
 
