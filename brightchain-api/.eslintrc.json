@@ -4,14 +4,23 @@
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "env": {
+        "node": true
+      },
       "rules": {}
     },
     {
       "files": ["*.ts", "*.tsx"],
+      "env": {
+        "node": true
+      },
       "rules": {}
     },
     {
       "files": ["*.js", "*.jsx"],
+      "env": {
+        "node": true
+      },
       "rules": {}
     }
   ]
