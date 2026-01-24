@@ -26,7 +26,6 @@ import {
 import CONSTANTS, { TUPLE } from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
-import { CblErrorType } from '../enumerations/cblErrorType';
 import { CblError } from '../errors/cblError';
 import { ServiceProvider } from './service.provider';
 
@@ -65,15 +64,21 @@ describe('CBL Header Verification', () => {
       expect(cblService.dateCreatedOffset).toBe(prefixSize + idSize);
       expect(cblService.cblAddressCountOffset).toBe(prefixSize + idSize + 8);
       expect(cblService.tupleSizeOffset).toBe(prefixSize + idSize + 8 + 4);
-      expect(cblService.originalDataLengthOffset).toBe(prefixSize + idSize + 8 + 4 + 1);
-      expect(cblService.originalChecksumOffset).toBe(prefixSize + idSize + 8 + 4 + 1 + 8);
+      expect(cblService.originalDataLengthOffset).toBe(
+        prefixSize + idSize + 8 + 4 + 1,
+      );
+      expect(cblService.originalChecksumOffset).toBe(
+        prefixSize + idSize + 8 + 4 + 1 + 8,
+      );
       expect(cblService.isExtendedHeaderOffset).toBe(
         prefixSize + idSize + 8 + 4 + 1 + 8 + 64,
       );
       expect(cblService.baseHeaderCreatorSignatureOffset).toBe(
         prefixSize + idSize + 8 + 4 + 1 + 8 + 64 + 1,
       );
-      expect(cblService.baseHeaderSize).toBe(prefixSize + idSize + 8 + 4 + 1 + 8 + 64 + 1 + 64);
+      expect(cblService.baseHeaderSize).toBe(
+        prefixSize + idSize + 8 + 4 + 1 + 8 + 64 + 1 + 64,
+      );
     });
 
     it('should create header with correct total size', () => {
@@ -112,9 +117,9 @@ describe('CBL Header Verification', () => {
       );
 
       const creatorIdFromHeader = cblService.getCreatorId(headerData);
-      expect(cblService.idProvider.equals(creatorIdFromHeader, creator.id)).toBe(
-        true,
-      );
+      expect(
+        cblService.idProvider.equals(creatorIdFromHeader, creator.id),
+      ).toBe(true);
     });
 
     it('should write date created at correct offset', () => {
@@ -362,9 +367,7 @@ describe('CBL Header Verification', () => {
       );
 
       // Combine header and address list for validation
-      const fullData = new Uint8Array(
-        headerData.length + addressList.length,
-      );
+      const fullData = new Uint8Array(headerData.length + addressList.length);
       fullData.set(headerData);
       fullData.set(addressList, headerData.length);
 
@@ -398,9 +401,7 @@ describe('CBL Header Verification', () => {
         new EmailString('wrong@example.com'),
       ).member;
 
-      const fullData = new Uint8Array(
-        headerData.length + addressList.length,
-      );
+      const fullData = new Uint8Array(headerData.length + addressList.length);
       fullData.set(headerData);
       fullData.set(addressList, headerData.length);
 
@@ -426,9 +427,7 @@ describe('CBL Header Verification', () => {
         BlockEncryptionType.None,
       );
 
-      const fullData = new Uint8Array(
-        headerData.length + addressList.length,
-      );
+      const fullData = new Uint8Array(headerData.length + addressList.length);
       fullData.set(headerData);
       fullData.set(addressList, headerData.length);
 
@@ -458,9 +457,7 @@ describe('CBL Header Verification', () => {
         BlockEncryptionType.None,
       );
 
-      const fullData = new Uint8Array(
-        headerData.length + addressList.length,
-      );
+      const fullData = new Uint8Array(headerData.length + addressList.length);
       fullData.set(headerData);
       fullData.set(addressList, headerData.length);
 

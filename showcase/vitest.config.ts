@@ -16,6 +16,7 @@ export default defineConfig({
         __dirname,
         '../brightchain-lib/src/browser.ts',
       ),
+      'framer-motion': resolve(__dirname, './src/test/mocks/framer-motion.ts'),
     },
   },
   define: {

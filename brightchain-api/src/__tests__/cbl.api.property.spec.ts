@@ -52,7 +52,7 @@ describe('CBL API Round-Trip Property Tests', () => {
   beforeAll(() => {
     // Initialize BrightChain library before using ServiceProvider
     initializeBrightChain();
-    
+
     creator = Member.newMember(
       ServiceProvider.getInstance().eciesService,
       MemberType.User,

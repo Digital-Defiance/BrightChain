@@ -18,10 +18,7 @@ export default {
     '<rootDir>/../dist/',
   ],
   testPathIgnorePatterns: ['/node_modules/', '/dist/', '<rootDir>/../dist/'],
-  modulePathIgnorePatterns: [
-    '/dist/',
-    '<rootDir>/../dist/',
-  ],
+  modulePathIgnorePatterns: ['/dist/', '<rootDir>/../dist/'],
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../coverage/brightchain-api-lib',
   testTimeout: 180000,

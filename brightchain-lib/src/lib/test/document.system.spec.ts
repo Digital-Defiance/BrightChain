@@ -49,7 +49,9 @@ describe('Document System Tests', () => {
     const restoredData: IMemberStorageData = storedJson;
 
     // Verify restored document matches original
-    expect(restoredData.id).toBe(uint8ArrayToHex(idProvider.toBytes(member.id)));
+    // Note: restoredData.id is stored as hex (no hyphens), so compare without hyphens
+    const expectedId = uint8ArrayToHex(idProvider.toBytes(member.id));
+    expect(restoredData.id).toBe(expectedId);
     expect(restoredData.name).toBe(member.name);
     expect(restoredData.email).toBe(member.email.toString());
     expect(restoredData.type).toBe(member.type);

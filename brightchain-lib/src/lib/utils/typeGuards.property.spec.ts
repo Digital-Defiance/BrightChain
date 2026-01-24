@@ -1,16 +1,14 @@
 import fc from 'fast-check';
+import BlockDataType from '../enumerations/blockDataType';
+import { BlockSize, validBlockSizes } from '../enumerations/blockSize';
+import BlockType from '../enumerations/blockType';
 import {
   isBlockMetadataJson,
   isEphemeralBlockMetadataJson,
+  JsonValidationError,
   parseBlockMetadataJson,
   parseEphemeralBlockMetadataJson,
-  JsonValidationError,
-  BlockMetadataJson,
-  EphemeralBlockMetadataJson,
 } from './typeGuards';
-import { BlockSize, validBlockSizes } from '../enumerations/blockSize';
-import BlockType from '../enumerations/blockType';
-import BlockDataType from '../enumerations/blockDataType';
 
 /**
  * Property-based tests for type guard utilities
@@ -28,7 +26,9 @@ const arbBlockSize = fc.constantFrom(...validBlockSizes);
  * BlockType.Unknown (-1) represents uninitialized/invalid blocks and should not be used in metadata
  */
 const arbBlockType = fc.constantFrom(
-  ...Object.values(BlockType).filter((v) => typeof v === 'number' && v !== BlockType.Unknown),
+  ...Object.values(BlockType).filter(
+    (v) => typeof v === 'number' && v !== BlockType.Unknown,
+  ),
 );
 
 /**
@@ -106,19 +106,29 @@ describe('Feature: block-security-hardening, Property 5: JSON Deserialization Ty
     fc.assert(
       fc.property(
         arbBlockMetadataJson,
-        fc.constantFrom('size', 'type', 'dataType', 'lengthWithoutPadding', 'dateCreated'),
+        fc.constantFrom(
+          'size',
+          'type',
+          'dataType',
+          'lengthWithoutPadding',
+          'dateCreated',
+        ),
         (data, fieldToRemove) => {
           const incomplete = { ...data };
           delete (incomplete as Record<string, unknown>)[fieldToRemove];
 
-          expect(() => isBlockMetadataJson(incomplete)).toThrow(JsonValidationError);
-          
+          expect(() => isBlockMetadataJson(incomplete)).toThrow(
+            JsonValidationError,
+          );
+
           try {
             isBlockMetadataJson(incomplete);
           } catch (error) {
             expect(error).toBeInstanceOf(JsonValidationError);
             expect((error as JsonValidationError).field).toBe(fieldToRemove);
-            expect((error as JsonValidationError).message).toContain(fieldToRemove);
+            expect((error as JsonValidationError).message).toContain(
+              fieldToRemove,
+            );
           }
         },
       ),
@@ -145,8 +155,10 @@ describe('Feature: block-security-hardening, Property 5: JSON Deserialization Ty
         (data, invalidSize) => {
           const invalid = { ...data, size: invalidSize };
 
-          expect(() => isBlockMetadataJson(invalid)).toThrow(JsonValidationError);
-          
+          expect(() => isBlockMetadataJson(invalid)).toThrow(
+            JsonValidationError,
+          );
+
           try {
             isBlockMetadataJson(invalid);
           } catch (error) {
@@ -173,14 +185,20 @@ describe('Feature: block-security-hardening, Property 5: JSON Deserialization Ty
         (data, negativeLength) => {
           const invalid = { ...data, lengthWithoutPadding: negativeLength };
 
-          expect(() => isBlockMetadataJson(invalid)).toThrow(JsonValidationError);
-          
+          expect(() => isBlockMetadataJson(invalid)).toThrow(
+            JsonValidationError,
+          );
+
           try {
             isBlockMetadataJson(invalid);
           } catch (error) {
             expect(error).toBeInstanceOf(JsonValidationError);
-            expect((error as JsonValidationError).field).toBe('lengthWithoutPadding');
-            expect((error as JsonValidationError).reason).toContain('non-negative');
+            expect((error as JsonValidationError).field).toBe(
+              'lengthWithoutPadding',
+            );
+            expect((error as JsonValidationError).reason).toContain(
+              'non-negative',
+            );
           }
         },
       ),
@@ -198,17 +216,23 @@ describe('Feature: block-security-hardening, Property 5: JSON Deserialization Ty
     fc.assert(
       fc.property(
         arbBlockMetadataJson,
-        fc.double({ min: 0.1, max: 1000.9, noNaN: true }).filter((n) => !Number.isInteger(n)),
+        fc
+          .double({ min: 0.1, max: 1000.9, noNaN: true })
+          .filter((n) => !Number.isInteger(n)),
         (data, floatLength) => {
           const invalid = { ...data, lengthWithoutPadding: floatLength };
 
-          expect(() => isBlockMetadataJson(invalid)).toThrow(JsonValidationError);
-          
+          expect(() => isBlockMetadataJson(invalid)).toThrow(
+            JsonValidationError,
+          );
+
           try {
             isBlockMetadataJson(invalid);
           } catch (error) {
             expect(error).toBeInstanceOf(JsonValidationError);
-            expect((error as JsonValidationError).field).toBe('lengthWithoutPadding');
+            expect((error as JsonValidationError).field).toBe(
+              'lengthWithoutPadding',
+            );
             expect((error as JsonValidationError).reason).toContain('integer');
           }
         },
@@ -237,8 +261,10 @@ describe('Feature: block-security-hardening, Property 5: JSON Deserialization Ty
         (data, invalidDate) => {
           const invalid = { ...data, dateCreated: invalidDate };
 
-          expect(() => isBlockMetadataJson(invalid)).toThrow(JsonValidationError);
-          
+          expect(() => isBlockMetadataJson(invalid)).toThrow(
+            JsonValidationError,
+          );
+
           try {
             isBlockMetadataJson(invalid);
           } catch (error) {
@@ -279,8 +305,10 @@ describe('Feature: block-security-hardening, Property 5: JSON Deserialization Ty
         const incomplete = { ...data };
         delete (incomplete as Record<string, unknown>)['creator'];
 
-        expect(() => isEphemeralBlockMetadataJson(incomplete)).toThrow(JsonValidationError);
-        
+        expect(() => isEphemeralBlockMetadataJson(incomplete)).toThrow(
+          JsonValidationError,
+        );
+
         try {
           isEphemeralBlockMetadataJson(incomplete);
         } catch (error) {
@@ -303,8 +331,10 @@ describe('Feature: block-security-hardening, Property 5: JSON Deserialization Ty
       fc.property(arbEphemeralBlockMetadataJson, (data) => {
         const invalid = { ...data, creator: '' };
 
-        expect(() => isEphemeralBlockMetadataJson(invalid)).toThrow(JsonValidationError);
-        
+        expect(() => isEphemeralBlockMetadataJson(invalid)).toThrow(
+          JsonValidationError,
+        );
+
         try {
           isEphemeralBlockMetadataJson(invalid);
         } catch (error) {
@@ -327,12 +357,19 @@ describe('Feature: block-security-hardening, Property 5: JSON Deserialization Ty
     fc.assert(
       fc.property(
         arbEphemeralBlockMetadataJson,
-        fc.oneof(fc.integer(), fc.constant(null), fc.constant(undefined), fc.constant({})),
+        fc.oneof(
+          fc.integer(),
+          fc.constant(null),
+          fc.constant(undefined),
+          fc.constant({}),
+        ),
         (data, invalidCreator) => {
           const invalid = { ...data, creator: invalidCreator };
 
-          expect(() => isEphemeralBlockMetadataJson(invalid)).toThrow(JsonValidationError);
-          
+          expect(() => isEphemeralBlockMetadataJson(invalid)).toThrow(
+            JsonValidationError,
+          );
+
           try {
             isEphemeralBlockMetadataJson(invalid);
           } catch (error) {
@@ -357,7 +394,7 @@ describe('Feature: block-security-hardening, Property 5: JSON Deserialization Ty
       fc.property(arbBlockMetadataJson, (data) => {
         const json = JSON.stringify(data);
         const parsed = parseBlockMetadataJson(json);
-        
+
         expect(parsed.size).toBe(data.size);
         expect(parsed.type).toBe(data.type);
         expect(parsed.dataType).toBe(data.dataType);
@@ -384,13 +421,17 @@ describe('Feature: block-security-hardening, Property 5: JSON Deserialization Ty
           fc.constant('{"unclosed": '),
         ),
         (invalidJson) => {
-          expect(() => parseBlockMetadataJson(invalidJson)).toThrow(JsonValidationError);
-          
+          expect(() => parseBlockMetadataJson(invalidJson)).toThrow(
+            JsonValidationError,
+          );
+
           try {
             parseBlockMetadataJson(invalidJson);
           } catch (error) {
             expect(error).toBeInstanceOf(JsonValidationError);
-            expect((error as JsonValidationError).message).toContain('JSON parsing failed');
+            expect((error as JsonValidationError).message).toContain(
+              'JSON parsing failed',
+            );
           }
         },
       ),
@@ -409,7 +450,7 @@ describe('Feature: block-security-hardening, Property 5: JSON Deserialization Ty
       fc.property(arbEphemeralBlockMetadataJson, (data) => {
         const json = JSON.stringify(data);
         const parsed = parseEphemeralBlockMetadataJson(json);
-        
+
         expect(parsed.size).toBe(data.size);
         expect(parsed.type).toBe(data.type);
         expect(parsed.dataType).toBe(data.dataType);
@@ -438,14 +479,18 @@ describe('Feature: block-security-hardening, Property 5: JSON Deserialization Ty
           fc.boolean(),
         ),
         (nonObject) => {
-          expect(() => isBlockMetadataJson(nonObject)).toThrow(JsonValidationError);
-          
+          expect(() => isBlockMetadataJson(nonObject)).toThrow(
+            JsonValidationError,
+          );
+
           try {
             isBlockMetadataJson(nonObject);
           } catch (error) {
             expect(error).toBeInstanceOf(JsonValidationError);
             expect((error as JsonValidationError).field).toBe('data');
-            expect((error as JsonValidationError).reason).toContain('non-null object');
+            expect((error as JsonValidationError).reason).toContain(
+              'non-null object',
+            );
           }
         },
       ),

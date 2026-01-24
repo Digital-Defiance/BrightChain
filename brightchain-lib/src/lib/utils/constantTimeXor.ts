@@ -54,10 +54,7 @@ export class XorLengthMismatchError extends Error {
  * const decrypted = constantTimeXor(encrypted, key); // Returns original data
  * ```
  */
-export function constantTimeXor(
-  a: Uint8Array,
-  b: Uint8Array,
-): Uint8Array {
+export function constantTimeXor(a: Uint8Array, b: Uint8Array): Uint8Array {
   // Length validation (not constant-time, but length is typically not secret)
   if (a.length !== b.length) {
     throw new XorLengthMismatchError(a.length, b.length, 'constantTimeXor');

@@ -292,13 +292,7 @@ describe('Import Statements Property Tests', () => {
       expect(content).toContain('...BaseConstants');
 
       // Verify that it exports BrightChain-specific constants
-      const brightchainExports = [
-        'CBL',
-        'BC_FEC',
-        'TUPLE',
-        'SEALING',
-        'SITE',
-      ];
+      const brightchainExports = ['CBL', 'BC_FEC', 'TUPLE', 'SEALING', 'SITE'];
 
       for (const exportName of brightchainExports) {
         expect(content).toContain(`export const ${exportName}`);

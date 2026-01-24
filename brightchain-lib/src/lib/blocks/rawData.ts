@@ -137,7 +137,10 @@ export class RawDataBlock extends BaseBlock {
 
     // Compare checksums using the Checksum.equals() method
     if (!calculatedChecksum.equals(this.idChecksum)) {
-      const error = new ChecksumMismatchError(this.idChecksum, calculatedChecksum);
+      const error = new ChecksumMismatchError(
+        this.idChecksum,
+        calculatedChecksum,
+      );
       // Log validation failure with error type and metadata
       logValidationFailure(
         this.idChecksum.toHex(),

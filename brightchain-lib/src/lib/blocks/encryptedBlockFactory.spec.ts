@@ -374,8 +374,14 @@ describe('EncryptedBlockFactory', () => {
       const headerSize =
         1 + idProvider.byteLength + ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE;
       const payloadLength = (blockSize as number) - headerSize;
+      // Prepare data with recipient ID as required by EncryptedBlock
       const data = new Uint8Array(payloadLength);
-      crypto.getRandomValues(data);
+      // Set the first bytes to the creator's idBytes so recipient check passes
+      data.set(creator.idBytes, 0);
+      if (creator.idBytes.length < payloadLength) {
+        // Fill the rest with random data
+        crypto.getRandomValues(data.subarray(creator.idBytes.length));
+      }
       const checksum = checksumService.calculateChecksum(data);
       const testDate = new Date('2024-01-01');
 

@@ -1,5 +1,5 @@
-import { SealingErrorType } from '../enumerations/sealingErrorType';
 import BrightChainStrings from '../enumerations/brightChainStrings';
+import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { TypedError } from './typedError';
 
 export class SealingError extends TypedError<SealingErrorType> {

@@ -10,10 +10,13 @@ export class BufferError extends HandleableError {
   ) {
     super(
       new Error(
-        translate(BrightChainStrings.Error_BufferErrorInvalidBufferTypeTemplate, {
-          TYPE: type,
-          ...details,
-        }),
+        translate(
+          BrightChainStrings.Error_BufferErrorInvalidBufferTypeTemplate,
+          {
+            TYPE: type,
+            ...details,
+          },
+        ),
       ),
     );
   }

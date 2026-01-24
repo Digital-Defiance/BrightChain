@@ -1,6 +1,6 @@
 import { BlockSize } from '../enumerations/blockSize';
-import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
 import BrightChainStrings from '../enumerations/brightChainStrings';
+import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
 import { TypedError } from './typedError';
 
 export class ExtendedCblError extends TypedError<ExtendedCblErrorType> {

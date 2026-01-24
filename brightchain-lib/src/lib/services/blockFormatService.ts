@@ -89,7 +89,8 @@ export function detectBlockFormat(
       isValid: false,
       blockType: BlockType.Unknown,
       version: 0,
-      error: 'Data too short for structured block header (minimum 4 bytes required)',
+      error:
+        'Data too short for structured block header (minimum 4 bytes required)',
     };
   }
 
@@ -118,7 +119,12 @@ export function detectBlockFormat(
     }
 
     // Get header end offset based on block type
-    const headerEnd = getHeaderEndOffset(data, structuredBlockType, version, idLength);
+    const headerEnd = getHeaderEndOffset(
+      data,
+      structuredBlockType,
+      version,
+      idLength,
+    );
     if (headerEnd < 0) {
       return {
         isValid: false,

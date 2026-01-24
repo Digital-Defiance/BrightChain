@@ -27,9 +27,9 @@
  * ```
  */
 
+import BlockDataType from '../enumerations/blockDataType';
 import { BlockSize, validBlockSizes } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
-import BlockDataType from '../enumerations/blockDataType';
 
 /**
  * JSON representation of BlockMetadata.
@@ -89,7 +89,7 @@ function isValidBlockSize(value: unknown): value is BlockSize {
  * Check if a value is a valid BlockType enum value.
  * BlockType.Unknown (-1) is explicitly rejected as it represents
  * uninitialized or invalid blocks and should not be used in metadata.
- * 
+ *
  * @param value - Value to check
  * @returns True if value is a valid BlockType (excluding Unknown)
  */
@@ -148,11 +148,7 @@ function isValidDateValue(value: unknown): value is string | number {
 export function isBlockMetadataJson(data: unknown): data is BlockMetadataJson {
   // Check if data is an object
   if (typeof data !== 'object' || data === null) {
-    throw new JsonValidationError(
-      'data',
-      'must be a non-null object',
-      data,
-    );
+    throw new JsonValidationError('data', 'must be a non-null object', data);
   }
 
   const obj = data as Record<string, unknown>;
@@ -285,7 +281,7 @@ export function isEphemeralBlockMetadataJson(
  */
 export function parseBlockMetadataJson(json: string): BlockMetadataJson {
   let data: unknown;
-  
+
   try {
     data = JSON.parse(json);
   } catch (error) {
@@ -317,7 +313,7 @@ export function parseEphemeralBlockMetadataJson(
   json: string,
 ): EphemeralBlockMetadataJson {
   let data: unknown;
-  
+
   try {
     data = JSON.parse(json);
   } catch (error) {

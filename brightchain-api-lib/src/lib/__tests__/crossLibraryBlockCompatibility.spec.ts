@@ -27,22 +27,18 @@ import {
   ChecksumService,
   CONSTANTS,
   initializeBrightChain,
-  RawDataBlock,
   RandomBlock,
+  RawDataBlock,
   ServiceLocator,
   ServiceProvider,
   XorService,
 } from '@brightchain/brightchain-lib';
-import {
-  EmailString,
-  Member,
-  MemberType,
-} from '@digitaldefiance/ecies-lib';
+import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { randomBytes } from 'crypto';
 import { existsSync, mkdirSync, rmSync } from 'fs';
-import { join } from 'path';
 import { tmpdir } from 'os';
+import { join } from 'path';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 
 describe('Cross-Library Block Compatibility', () => {
@@ -55,7 +51,7 @@ describe('Cross-Library Block Compatibility', () => {
   beforeAll(async () => {
     // Initialize BrightChain library before running tests
     initializeBrightChain();
-    
+
     // Initialize service provider - use the same pattern as brightchain-lib tests
     const serviceProvider = ServiceProvider.getInstance<PlatformID>();
     ServiceLocator.setServiceProvider(serviceProvider);
@@ -258,7 +254,9 @@ describe('Cross-Library Block Compatibility', () => {
         BlockEncryptionType.None,
       );
 
-      const parsedDate = cblService.getDateCreated(Buffer.from(result.headerData));
+      const parsedDate = cblService.getDateCreated(
+        Buffer.from(result.headerData),
+      );
       expect(parsedDate.getTime()).toBe(testDate.getTime());
     });
   });
@@ -342,7 +340,7 @@ describe('Cross-Library Block Compatibility', () => {
       await diskStore.setData(block);
 
       const retrieved = await diskStore.getData(block.idChecksum);
-      
+
       // Verify the retrieved block has the same checksum
       expect(retrieved.idChecksum.equals(block.idChecksum)).toBe(true);
       expect(retrieved.blockSize).toBe(block.blockSize);
@@ -443,14 +441,16 @@ describe('Cross-Library Block Compatibility', () => {
       );
 
       expect(result.headerData).toBeDefined();
-      expect(cblService.isExtendedHeader(Buffer.from(result.headerData))).toBe(true);
+      expect(cblService.isExtendedHeader(Buffer.from(result.headerData))).toBe(
+        true,
+      );
     });
 
     it('should parse extended header file name', () => {
       const fileName = 'test-file.txt';
       const mimeType = 'text/plain';
       const addressList = Buffer.alloc(0);
-      
+
       const result = cblService.makeCblHeader(
         testMember,
         new Date(),
@@ -462,7 +462,9 @@ describe('Cross-Library Block Compatibility', () => {
         { fileName, mimeType },
       );
 
-      const parsedFileName = cblService.getFileName(Buffer.from(result.headerData));
+      const parsedFileName = cblService.getFileName(
+        Buffer.from(result.headerData),
+      );
       expect(parsedFileName).toBe(fileName);
     });
 
@@ -470,7 +472,7 @@ describe('Cross-Library Block Compatibility', () => {
       const fileName = 'test-file.txt';
       const mimeType = 'application/json';
       const addressList = Buffer.alloc(0);
-      
+
       const result = cblService.makeCblHeader(
         testMember,
         new Date(),
@@ -482,7 +484,9 @@ describe('Cross-Library Block Compatibility', () => {
         { fileName, mimeType },
       );
 
-      const parsedMimeType = cblService.getMimeType(Buffer.from(result.headerData));
+      const parsedMimeType = cblService.getMimeType(
+        Buffer.from(result.headerData),
+      );
       expect(parsedMimeType).toBe(mimeType);
     });
   });
@@ -493,9 +497,13 @@ describe('Cross-Library Block Compatibility', () => {
       const subCblCount = 2;
       const subCblChecksums: Checksum[] = [];
       for (let i = 0; i < subCblCount; i++) {
-        subCblChecksums.push(Checksum.fromUint8Array(new Uint8Array(64).fill(i)));
+        subCblChecksums.push(
+          Checksum.fromUint8Array(new Uint8Array(64).fill(i)),
+        );
       }
-      const originalChecksum = Checksum.fromUint8Array(new Uint8Array(64).fill(0xAB));
+      const originalChecksum = Checksum.fromUint8Array(
+        new Uint8Array(64).fill(0xab),
+      );
 
       const result = cblService.makeSuperCblHeader(
         testMember,
@@ -520,10 +528,14 @@ describe('Cross-Library Block Compatibility', () => {
       const subCblCount = 3;
       const subCblChecksums: Checksum[] = [];
       for (let i = 0; i < subCblCount; i++) {
-        subCblChecksums.push(Checksum.fromUint8Array(new Uint8Array(64).fill(i)));
+        subCblChecksums.push(
+          Checksum.fromUint8Array(new Uint8Array(64).fill(i)),
+        );
       }
-      const originalChecksum = Checksum.fromUint8Array(new Uint8Array(64).fill(0xAB));
-      
+      const originalChecksum = Checksum.fromUint8Array(
+        new Uint8Array(64).fill(0xab),
+      );
+
       const totalBlockCount = 15;
       const originalDataLength = 5000;
       const depth = 2;
@@ -545,7 +557,9 @@ describe('Cross-Library Block Compatibility', () => {
       for (let i = 0; i < subCblCount; i++) {
         addressData.set(subCblChecksums[i].toUint8Array(), i * 64);
       }
-      const fullData = new Uint8Array(result.headerData.length + addressData.length);
+      const fullData = new Uint8Array(
+        result.headerData.length + addressData.length,
+      );
       fullData.set(result.headerData, 0);
       fullData.set(addressData, result.headerData.length);
 

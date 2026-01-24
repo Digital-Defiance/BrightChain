@@ -3,7 +3,10 @@ import BrightChainStrings from '../../enumerations/brightChainStrings';
 import { TypedError } from '../typedError';
 
 export class BlockCapacityError extends TypedError<BlockCapacityErrorType> {
-  protected get reasonMap(): Record<BlockCapacityErrorType, BrightChainStrings> {
+  protected get reasonMap(): Record<
+    BlockCapacityErrorType,
+    BrightChainStrings
+  > {
     return {
       [BlockCapacityErrorType.InvalidBlockSize]:
         BrightChainStrings.Error_BlockCapacityInvalidBlockSize,

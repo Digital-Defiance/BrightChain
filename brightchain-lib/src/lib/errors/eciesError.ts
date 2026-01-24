@@ -1,5 +1,5 @@
-import { EciesErrorType } from '../enumerations/eciesErrorType';
 import BrightChainStrings from '../enumerations/brightChainStrings';
+import { EciesErrorType } from '../enumerations/eciesErrorType';
 import { TypedError } from './typedError';
 
 export class EciesError extends TypedError<EciesErrorType> {

@@ -1,10 +1,16 @@
+import {
+  EmailString,
+  IMemberWithMnemonic,
+  Member,
+  MemberType,
+  uint8ArrayToHex,
+} from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
 import { BlockMetadata } from '../blockMetadata';
-import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
-import { BlockSize, validBlockSizes } from '../enumerations/blockSize';
-import BlockType from '../enumerations/blockType';
 import BlockDataType from '../enumerations/blockDataType';
-import { Member, MemberType, EmailString, IMemberWithMnemonic, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
+import { validBlockSizes } from '../enumerations/blockSize';
+import BlockType from '../enumerations/blockType';
+import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { ServiceProvider } from '../services/service.provider';
 import { initializeTestServices } from '../test/service.initializer.helper';
 
@@ -24,7 +30,9 @@ const arbBlockSize = fc.constantFrom(...validBlockSizes);
  * BlockType.Unknown (-1) represents uninitialized/invalid blocks and should not be used in metadata
  */
 const arbBlockType = fc.constantFrom(
-  ...Object.values(BlockType).filter((v) => typeof v === 'number' && v !== BlockType.Unknown),
+  ...Object.values(BlockType).filter(
+    (v) => typeof v === 'number' && v !== BlockType.Unknown,
+  ),
 );
 
 /**
@@ -96,8 +104,10 @@ describe('Feature: block-security-hardening, Property 6: Block Metadata Round-Tr
           expect(parsed.size).toBe(original.size);
           expect(parsed.type).toBe(original.type);
           expect(parsed.dataType).toBe(original.dataType);
-          expect(parsed.lengthWithoutPadding).toBe(original.lengthWithoutPadding);
-          
+          expect(parsed.lengthWithoutPadding).toBe(
+            original.lengthWithoutPadding,
+          );
+
           // Date comparison - allow for serialization precision loss
           const originalTime = new Date(original.dateCreated).getTime();
           const parsedTime = new Date(parsed.dateCreated).getTime();
@@ -144,8 +154,10 @@ describe('Feature: block-security-hardening, Property 6: Block Metadata Round-Tr
           expect(parsed2.size).toBe(parsed1.size);
           expect(parsed2.type).toBe(parsed1.type);
           expect(parsed2.dataType).toBe(parsed1.dataType);
-          expect(parsed2.lengthWithoutPadding).toBe(parsed1.lengthWithoutPadding);
-          
+          expect(parsed2.lengthWithoutPadding).toBe(
+            parsed1.lengthWithoutPadding,
+          );
+
           // Date comparison
           const parsed1Time = new Date(parsed1.dateCreated).getTime();
           const parsed2Time = new Date(parsed2.dateCreated).getTime();
@@ -195,13 +207,15 @@ describe('Feature: block-security-hardening, Property 6: Block Metadata Round-Tr
           expect(parsed.size).toBe(original.size);
           expect(parsed.type).toBe(original.type);
           expect(parsed.dataType).toBe(original.dataType);
-          expect(parsed.lengthWithoutPadding).toBe(original.lengthWithoutPadding);
-          
+          expect(parsed.lengthWithoutPadding).toBe(
+            original.lengthWithoutPadding,
+          );
+
           // Verify creator ID matches using hex comparison
           expect(uint8ArrayToHex(parsed.creator.idBytes)).toBe(
-            uint8ArrayToHex(original.creator.idBytes)
+            uint8ArrayToHex(original.creator.idBytes),
           );
-          
+
           // Date comparison
           const originalTime = new Date(original.dateCreated).getTime();
           const parsedTime = new Date(parsed.dateCreated).getTime();
@@ -252,13 +266,15 @@ describe('Feature: block-security-hardening, Property 6: Block Metadata Round-Tr
           expect(parsed2.size).toBe(parsed1.size);
           expect(parsed2.type).toBe(parsed1.type);
           expect(parsed2.dataType).toBe(parsed1.dataType);
-          expect(parsed2.lengthWithoutPadding).toBe(parsed1.lengthWithoutPadding);
-          
+          expect(parsed2.lengthWithoutPadding).toBe(
+            parsed1.lengthWithoutPadding,
+          );
+
           // Verify creator IDs match using hex comparison
           expect(uint8ArrayToHex(parsed2.creator.idBytes)).toBe(
-            uint8ArrayToHex(parsed1.creator.idBytes)
+            uint8ArrayToHex(parsed1.creator.idBytes),
           );
-          
+
           // Date comparison
           const parsed1Time = new Date(parsed1.dateCreated).getTime();
           const parsed2Time = new Date(parsed2.dateCreated).getTime();
@@ -306,7 +322,9 @@ describe('Feature: block-security-hardening, Property 6: Block Metadata Round-Tr
           expect(parsed2.size).toBe(parsed1.size);
           expect(parsed2.type).toBe(parsed1.type);
           expect(parsed2.dataType).toBe(parsed1.dataType);
-          expect(parsed2.lengthWithoutPadding).toBe(parsed1.lengthWithoutPadding);
+          expect(parsed2.lengthWithoutPadding).toBe(
+            parsed1.lengthWithoutPadding,
+          );
           expect(parsed2.dateCreated).toEqual(parsed1.dateCreated);
         },
       ),

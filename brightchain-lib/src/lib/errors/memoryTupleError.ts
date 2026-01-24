@@ -1,6 +1,6 @@
 import { LanguageCode } from '@digitaldefiance/i18n-lib';
-import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
 import BrightChainStrings from '../enumerations/brightChainStrings';
+import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
 import { TypedError } from './typedError';
 
 export class MemoryTupleError extends TypedError<MemoryTupleErrorType> {

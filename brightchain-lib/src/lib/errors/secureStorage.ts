@@ -1,5 +1,5 @@
-import { SecureStorageErrorType } from '../enumerations/secureStorageErrorType';
 import { BrightChainStrings } from '../enumerations/brightChainStrings';
+import { SecureStorageErrorType } from '../enumerations/secureStorageErrorType';
 import { TypedError } from './typedError';
 
 export class SecureStorageError extends TypedError<SecureStorageErrorType> {

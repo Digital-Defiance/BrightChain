@@ -1,6 +1,6 @@
 import { LanguageCode } from '@digitaldefiance/i18n-lib';
-import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
 import BrightChainStrings from '../enumerations/brightChainStrings';
+import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
 import { TypedError } from './typedError';
 
 export class HandleTupleError extends TypedError<HandleTupleErrorType> {

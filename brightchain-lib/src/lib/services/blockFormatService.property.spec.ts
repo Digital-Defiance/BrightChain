@@ -7,8 +7,8 @@
  * @module services/blockFormatService.property.spec
  */
 
-import * as fc from 'fast-check';
 import { CrcService, ECIES } from '@digitaldefiance/ecies-lib';
+import * as fc from 'fast-check';
 import { BLOCK_HEADER, StructuredBlockType } from '../constants';
 import { detectBlockFormat } from './blockFormatService';
 
@@ -19,13 +19,13 @@ const SIGNATURE_SIZE = 64;
 
 /**
  * Header content sizes for different block types (excluding 4-byte prefix and 64-byte signature)
- * 
+ *
  * CBL: CreatorId(16) + DateCreated(8) + AddressCount(4) + TupleSize(1) +
  *      OriginalDataLength(8) + OriginalChecksum(64) + IsExtendedHeader(1) = 102 bytes
- * 
+ *
  * SuperCBL: CreatorId(16) + DateCreated(8) + SubCblCount(4) + TotalBlockCount(4) +
  *           Depth(2) + OriginalDataLength(8) + OriginalChecksum(64) = 106 bytes
- * 
+ *
  * ExtendedCBL and MessageCBL have variable-length fields, so we create properly
  * structured headers with zero-length variable fields for testing.
  */
@@ -72,12 +72,12 @@ function getTotalHeaderSize(blockType: StructuredBlockType): number {
 
 /**
  * Helper to create a valid structured header with correct CRC8 for any block type
- * 
+ *
  * The header structure is:
  * [MagicPrefix(1)][BlockType(1)][Version(1)][CRC8(1)][Content(variable)][Signature(64)]
- * 
+ *
  * CRC8 is computed over the content (variable bytes), NOT including the signature.
- * 
+ *
  * For ExtendedCBL and MessageCBL, we create properly structured headers with
  * zero-length variable fields so the parser can correctly determine the header end.
  */
@@ -87,25 +87,27 @@ function createValidStructuredHeader(
   signatureBytes: Uint8Array,
 ): Uint8Array {
   const contentSize = getContentSize(blockType);
-  
+
   // Create content buffer
   const content = new Uint8Array(contentSize);
-  
+
   // Fill with random bytes for the base fields (first 101 bytes)
-  content.set(randomBytes.subarray(0, Math.min(randomBytes.length, BASE_CONTENT_SIZE)));
-  
+  content.set(
+    randomBytes.subarray(0, Math.min(randomBytes.length, BASE_CONTENT_SIZE)),
+  );
+
   // Set up type-specific fields
   switch (blockType) {
     case StructuredBlockType.CBL:
       // IsExtendedHeader = 0 (not extended)
       content[BASE_CONTENT_SIZE] = 0;
       break;
-      
+
     case StructuredBlockType.SuperCBL:
       // SuperCBL has different structure, just use random bytes
       // The content is already filled with random bytes
       break;
-      
+
     case StructuredBlockType.ExtendedCBL:
       // IsExtendedHeader = 1
       content[BASE_CONTENT_SIZE] = 1;
@@ -115,7 +117,7 @@ function createValidStructuredHeader(
       // MimeTypeLength = 0 (1 byte)
       content[BASE_CONTENT_SIZE + 3] = 0;
       break;
-      
+
     case StructuredBlockType.MessageCBL:
       // IsMessage = 2
       content[BASE_CONTENT_SIZE] = 2;
@@ -134,11 +136,13 @@ function createValidStructuredHeader(
       content[BASE_CONTENT_SIZE + 8] = 0;
       break;
   }
-  
+
   // Ensure signature is exactly 64 bytes
   const signature = new Uint8Array(SIGNATURE_SIZE);
-  signature.set(signatureBytes.subarray(0, Math.min(signatureBytes.length, SIGNATURE_SIZE)));
-  
+  signature.set(
+    signatureBytes.subarray(0, Math.min(signatureBytes.length, SIGNATURE_SIZE)),
+  );
+
   // Compute CRC8 over the content (NOT including signature)
   const crcService = new CrcService();
   const crc8Buffer = crcService.crc8(content);
@@ -165,19 +169,27 @@ function blockTypeWithContent(): fc.Arbitrary<{
   randomBytes: Uint8Array;
   signatureBytes: Uint8Array;
 }> {
-  return fc.constantFrom(
-    StructuredBlockType.CBL,
-    StructuredBlockType.SuperCBL,
-    StructuredBlockType.ExtendedCBL,
-    StructuredBlockType.MessageCBL,
-  ).chain((blockType) => {
-    return fc.record({
-      blockType: fc.constant(blockType),
-      // Generate enough random bytes for the base content
-      randomBytes: fc.uint8Array({ minLength: BASE_CONTENT_SIZE, maxLength: BASE_CONTENT_SIZE }),
-      signatureBytes: fc.uint8Array({ minLength: SIGNATURE_SIZE, maxLength: SIGNATURE_SIZE }),
+  return fc
+    .constantFrom(
+      StructuredBlockType.CBL,
+      StructuredBlockType.SuperCBL,
+      StructuredBlockType.ExtendedCBL,
+      StructuredBlockType.MessageCBL,
+    )
+    .chain((blockType) => {
+      return fc.record({
+        blockType: fc.constant(blockType),
+        // Generate enough random bytes for the base content
+        randomBytes: fc.uint8Array({
+          minLength: BASE_CONTENT_SIZE,
+          maxLength: BASE_CONTENT_SIZE,
+        }),
+        signatureBytes: fc.uint8Array({
+          minLength: SIGNATURE_SIZE,
+          maxLength: SIGNATURE_SIZE,
+        }),
+      });
     });
-  });
 }
 
 describe('Block Format Detection Service - Property Tests', () => {
@@ -224,19 +236,22 @@ describe('Block Format Detection Service - Property Tests', () => {
 
     it('should detect ECIES encrypted data by 0x04 magic byte', () => {
       fc.assert(
-        fc.property(fc.uint8Array({ minLength: 100, maxLength: 200 }), (randomData) => {
-          // Create data starting with ECIES magic byte
-          const data = new Uint8Array(randomData.length + 1);
-          data[0] = ECIES.PUBLIC_KEY_MAGIC; // 0x04
-          data.set(randomData, 1);
+        fc.property(
+          fc.uint8Array({ minLength: 100, maxLength: 200 }),
+          (randomData) => {
+            // Create data starting with ECIES magic byte
+            const data = new Uint8Array(randomData.length + 1);
+            data[0] = ECIES.PUBLIC_KEY_MAGIC; // 0x04
+            data.set(randomData, 1);
 
-          const result = detectBlockFormat(data);
+            const result = detectBlockFormat(data);
 
-          // Should recognize it as encrypted
-          expect(result.isEncrypted).toBe(true);
-          expect(result.isValid).toBe(false);
-          expect(result.error).toContain('encrypted');
-        }),
+            // Should recognize it as encrypted
+            expect(result.isEncrypted).toBe(true);
+            expect(result.isValid).toBe(false);
+            expect(result.error).toContain('encrypted');
+          },
+        ),
         { numRuns: 100 },
       );
     });
@@ -244,11 +259,13 @@ describe('Block Format Detection Service - Property Tests', () => {
     it('should reject data without recognized magic bytes', () => {
       fc.assert(
         fc.property(
-          fc.uint8Array({ minLength: 4, maxLength: 200 }).filter(
-            (arr) =>
-              arr[0] !== BLOCK_HEADER.MAGIC_PREFIX &&
-              arr[0] !== ECIES.PUBLIC_KEY_MAGIC,
-          ),
+          fc
+            .uint8Array({ minLength: 4, maxLength: 200 })
+            .filter(
+              (arr) =>
+                arr[0] !== BLOCK_HEADER.MAGIC_PREFIX &&
+                arr[0] !== ECIES.PUBLIC_KEY_MAGIC,
+            ),
           (data) => {
             const result = detectBlockFormat(data);
 
@@ -279,7 +296,11 @@ describe('Block Format Detection Service - Property Tests', () => {
         fc.property(
           blockTypeWithContent(),
           ({ blockType, randomBytes, signatureBytes }) => {
-            const data = createValidStructuredHeader(blockType, randomBytes, signatureBytes);
+            const data = createValidStructuredHeader(
+              blockType,
+              randomBytes,
+              signatureBytes,
+            );
             const result = detectBlockFormat(data);
 
             // Should validate successfully
@@ -296,8 +317,12 @@ describe('Block Format Detection Service - Property Tests', () => {
         fc.property(
           blockTypeWithContent(),
           ({ blockType, randomBytes, signatureBytes }) => {
-            const data = createValidStructuredHeader(blockType, randomBytes, signatureBytes);
-            
+            const data = createValidStructuredHeader(
+              blockType,
+              randomBytes,
+              signatureBytes,
+            );
+
             // Corrupt the CRC8 by incrementing it
             const correctCrc8 = data[3];
             data[3] = (correctCrc8 + 1) % 256;
@@ -319,7 +344,11 @@ describe('Block Format Detection Service - Property Tests', () => {
           blockTypeWithContent(),
           fc.integer({ min: 0, max: BASE_CONTENT_SIZE - 1 }), // Corrupt a byte in the base content region
           ({ blockType, randomBytes, signatureBytes }, corruptIndex) => {
-            const data = createValidStructuredHeader(blockType, randomBytes, signatureBytes);
+            const data = createValidStructuredHeader(
+              blockType,
+              randomBytes,
+              signatureBytes,
+            );
 
             // Corrupt a byte in the header content (after prefix, before signature)
             // The content starts at offset 4, so we corrupt at offset 4 + corruptIndex
@@ -354,7 +383,11 @@ describe('Block Format Detection Service - Property Tests', () => {
           blockTypeWithContent(),
           ({ blockType, randomBytes, signatureBytes }) => {
             // Create a valid structured header
-            const data = createValidStructuredHeader(blockType, randomBytes, signatureBytes);
+            const data = createValidStructuredHeader(
+              blockType,
+              randomBytes,
+              signatureBytes,
+            );
 
             // Parse the header
             const result = detectBlockFormat(data);
@@ -379,8 +412,12 @@ describe('Block Format Detection Service - Property Tests', () => {
           fc.integer({ min: 2, max: 255 }), // Unsupported version (current is 0x01)
           ({ blockType, randomBytes, signatureBytes }, unsupportedVersion) => {
             // Create a valid structured header first
-            const data = createValidStructuredHeader(blockType, randomBytes, signatureBytes);
-            
+            const data = createValidStructuredHeader(
+              blockType,
+              randomBytes,
+              signatureBytes,
+            );
+
             // Override the version with an unsupported one
             data[2] = unsupportedVersion;
 
@@ -398,24 +435,39 @@ describe('Block Format Detection Service - Property Tests', () => {
     it('should reject blocks with invalid block type values', () => {
       fc.assert(
         fc.property(
-          fc.integer({ min: 0, max: 255 }).filter(
-            (val) =>
-              val !== StructuredBlockType.CBL &&
-              val !== StructuredBlockType.SuperCBL &&
-              val !== StructuredBlockType.ExtendedCBL &&
-              val !== StructuredBlockType.MessageCBL,
-          ),
+          fc
+            .integer({ min: 0, max: 255 })
+            .filter(
+              (val) =>
+                val !== StructuredBlockType.CBL &&
+                val !== StructuredBlockType.SuperCBL &&
+                val !== StructuredBlockType.ExtendedCBL &&
+                val !== StructuredBlockType.MessageCBL,
+            ),
           fc.uint8Array({ minLength: 102, maxLength: 102 }), // Use CBL content size
-          fc.uint8Array({ minLength: SIGNATURE_SIZE, maxLength: SIGNATURE_SIZE }),
+          fc.uint8Array({
+            minLength: SIGNATURE_SIZE,
+            maxLength: SIGNATURE_SIZE,
+          }),
           (invalidBlockType, contentBytes, signatureBytes) => {
             // Create a header with invalid block type
             const contentSize = 102; // Use CBL content size
             const content = new Uint8Array(contentSize);
-            content.set(contentBytes.subarray(0, Math.min(contentBytes.length, contentSize)));
-            
+            content.set(
+              contentBytes.subarray(
+                0,
+                Math.min(contentBytes.length, contentSize),
+              ),
+            );
+
             const signature = new Uint8Array(SIGNATURE_SIZE);
-            signature.set(signatureBytes.subarray(0, Math.min(signatureBytes.length, SIGNATURE_SIZE)));
-            
+            signature.set(
+              signatureBytes.subarray(
+                0,
+                Math.min(signatureBytes.length, SIGNATURE_SIZE),
+              ),
+            );
+
             // Compute CRC8 over the content
             const crcService = new CrcService();
             const crc8Buffer = crcService.crc8(content);
@@ -460,11 +512,18 @@ describe('Block Format Detection Service - Property Tests', () => {
         fc.property(
           blockTypeWithContent(),
           fc.uint8Array({ minLength: 32, maxLength: 100 }), // Simulated encrypted payload
-          ({ blockType: _blockType, randomBytes: _randomBytes, signatureBytes: _signatureBytes }, encryptedPayload) => {
+          (
+            {
+              blockType: _blockType,
+              randomBytes: _randomBytes,
+              signatureBytes: _signatureBytes,
+            },
+            encryptedPayload,
+          ) => {
             // Note: We generate block type data to show that ANY block type, when encrypted,
             // would result in data starting with 0x04 (ECIES magic). The original block type
             // is irrelevant once encrypted - only the 0x04 prefix matters.
-            
+
             // Simulate encryption: prepend 0x04 magic byte (in real ECIES, the entire
             // block would be encrypted and the result would start with 0x04)
             const encryptedData = new Uint8Array(1 + encryptedPayload.length);
@@ -492,7 +551,9 @@ describe('Block Format Detection Service - Property Tests', () => {
           fc.uint8Array({ minLength: 65, maxLength: 1000 }),
           (payloadSize, randomData) => {
             // Create encrypted-looking data with 0x04 prefix
-            const data = new Uint8Array(Math.min(payloadSize, randomData.length));
+            const data = new Uint8Array(
+              Math.min(payloadSize, randomData.length),
+            );
             data[0] = ECIES.PUBLIC_KEY_MAGIC; // 0x04
             data.set(randomData.subarray(1, data.length), 1);
 

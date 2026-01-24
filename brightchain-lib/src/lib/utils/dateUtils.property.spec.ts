@@ -1,5 +1,5 @@
 import fc from 'fast-check';
-import { parseDate, serializeDate, isValidDate } from './dateUtils';
+import { isValidDate, parseDate, serializeDate } from './dateUtils';
 
 /**
  * Property-based tests for date handling utilities
@@ -19,8 +19,9 @@ describe('Feature: block-security-hardening, Property 7: Date Serialization Roun
     fc.assert(
       fc.property(
         // Generate dates from year 1970 to 2100
-        fc.date({ min: new Date('1970-01-01'), max: new Date('2100-12-31') })
-          .filter(date => !isNaN(date.getTime())), // Filter out invalid dates
+        fc
+          .date({ min: new Date('1970-01-01'), max: new Date('2100-12-31') })
+          .filter((date) => !isNaN(date.getTime())), // Filter out invalid dates
         (originalDate) => {
           // Serialize to ISO 8601
           const serialized = serializeDate(originalDate);
@@ -30,12 +31,12 @@ describe('Feature: block-security-hardening, Property 7: Date Serialization Roun
 
           // Timestamps should match (within 1ms for serialization precision)
           const timeDiff = Math.abs(
-            originalDate.getTime() - deserialized.getTime()
+            originalDate.getTime() - deserialized.getTime(),
           );
           expect(timeDiff).toBeLessThanOrEqual(1);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -64,9 +65,9 @@ describe('Feature: block-security-hardening, Property 7: Date Serialization Roun
           // Should match original timestamp (within 1ms)
           const timeDiff = Math.abs(timestamp - reparsed.getTime());
           expect(timeDiff).toBeLessThanOrEqual(1);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -96,9 +97,9 @@ describe('Feature: block-security-hardening, Property 7: Date Serialization Roun
           const expectedMs = timestampSeconds * 1000;
           const timeDiff = Math.abs(expectedMs - reparsed.getTime());
           expect(timeDiff).toBeLessThanOrEqual(1000);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -111,21 +112,22 @@ describe('Feature: block-security-hardening, Property 7: Date Serialization Roun
   it('Property 7d: Serialized dates are in UTC format', () => {
     fc.assert(
       fc.property(
-        fc.date({ min: new Date('1970-01-01'), max: new Date('2100-12-31') })
-          .filter(date => !isNaN(date.getTime())), // Filter out invalid dates
+        fc
+          .date({ min: new Date('1970-01-01'), max: new Date('2100-12-31') })
+          .filter((date) => !isNaN(date.getTime())), // Filter out invalid dates
         (date) => {
           const serialized = serializeDate(date);
 
           // Should be valid ISO 8601 format
           expect(serialized).toMatch(
-            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
           );
 
           // Should end with Z (UTC indicator)
           expect(serialized).toMatch(/Z$/);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -138,8 +140,9 @@ describe('Feature: block-security-hardening, Property 7: Date Serialization Roun
   it('Property 7e: ISO 8601 strings parse to valid dates', () => {
     fc.assert(
       fc.property(
-        fc.date({ min: new Date('1970-01-01'), max: new Date('2100-12-31') })
-          .filter(date => !isNaN(date.getTime())), // Filter out invalid dates
+        fc
+          .date({ min: new Date('1970-01-01'), max: new Date('2100-12-31') })
+          .filter((date) => !isNaN(date.getTime())), // Filter out invalid dates
         (date) => {
           // Create ISO 8601 string
           const isoString = date.toISOString();
@@ -154,9 +157,9 @@ describe('Feature: block-security-hardening, Property 7: Date Serialization Roun
           // Should match original (within 1ms)
           const timeDiff = Math.abs(date.getTime() - parsed.getTime());
           expect(timeDiff).toBeLessThanOrEqual(1);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -169,8 +172,9 @@ describe('Feature: block-security-hardening, Property 7: Date Serialization Roun
   it('Property 7f: isValidDate identifies valid dates', () => {
     fc.assert(
       fc.property(
-        fc.date({ min: new Date('1970-01-01'), max: new Date('2100-12-31') })
-          .filter(date => !isNaN(date.getTime())), // Filter out invalid dates
+        fc
+          .date({ min: new Date('1970-01-01'), max: new Date('2100-12-31') })
+          .filter((date) => !isNaN(date.getTime())), // Filter out invalid dates
         (date) => {
           // Valid dates in the past should be valid
           if (date.getTime() <= Date.now()) {
@@ -179,9 +183,9 @@ describe('Feature: block-security-hardening, Property 7: Date Serialization Roun
 
           // All dates should be valid when allowFuture is true
           expect(isValidDate(date, true)).toBe(true);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -196,16 +200,18 @@ describe('Feature: block-security-hardening, Property 7: Date Serialization Roun
       fc.property(
         fc.integer({ min: 1, max: 365 * 10 }), // Days in the future (up to 10 years)
         (daysInFuture) => {
-          const futureDate = new Date(Date.now() + daysInFuture * 24 * 60 * 60 * 1000);
+          const futureDate = new Date(
+            Date.now() + daysInFuture * 24 * 60 * 60 * 1000,
+          );
 
           // Should be invalid without allowFuture
           expect(isValidDate(futureDate, false)).toBe(false);
 
           // Should be valid with allowFuture
           expect(isValidDate(futureDate, true)).toBe(true);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });
@@ -222,9 +228,9 @@ describe('Feature: block-security-hardening, Property 8: Malformed Date Rejectio
     fc.assert(
       fc.property(
         fc.oneof(
-          fc.string({ minLength: 1, maxLength: 50 }).filter(
-            (s) => isNaN(Date.parse(s))
-          ),
+          fc
+            .string({ minLength: 1, maxLength: 50 })
+            .filter((s) => isNaN(Date.parse(s))),
           fc.constant('not-a-date'),
           fc.constant('2024-13-45'), // Invalid month/day
           fc.constant('invalid'),
@@ -237,9 +243,9 @@ describe('Feature: block-security-hardening, Property 8: Malformed Date Rejectio
           }
 
           expect(() => parseDate(invalidString)).toThrow(/Invalid date string/);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -290,9 +296,9 @@ describe('Feature: block-security-hardening, Property 8: Malformed Date Rejectio
         (nonDate) => {
           // @ts-expect-error - Testing runtime behavior with invalid types
           expect(isValidDate(nonDate)).toBe(false);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -306,7 +312,7 @@ describe('Feature: block-security-hardening, Property 8: Malformed Date Rejectio
     const invalidDate = new Date('invalid');
 
     expect(() => serializeDate(invalidDate)).toThrow(
-      /Invalid date: date object contains NaN timestamp/
+      /Invalid date: date object contains NaN timestamp/,
     );
   });
 
@@ -329,11 +335,11 @@ describe('Feature: block-security-hardening, Property 8: Malformed Date Rejectio
         (nonDate) => {
           // @ts-expect-error - Testing runtime behavior with invalid types
           expect(() => serializeDate(nonDate)).toThrow(
-            /Invalid date object: expected Date instance/
+            /Invalid date object: expected Date instance/,
           );
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -354,9 +360,9 @@ describe('Feature: block-security-hardening, Property 8: Malformed Date Rejectio
           expect(isNaN(date.getTime())).toBe(false);
           // Should be converted to milliseconds
           expect(date.getTime()).toBe(negativeTimestampSeconds * 1000);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 
@@ -376,9 +382,9 @@ describe('Feature: block-security-hardening, Property 8: Malformed Date Rejectio
           expect(date instanceof Date).toBe(true);
           expect(isNaN(date.getTime())).toBe(false);
           expect(date.getTime()).toBe(largeTimestamp);
-        }
+        },
       ),
-      { numRuns: 100 }
+      { numRuns: 100 },
     );
   });
 });

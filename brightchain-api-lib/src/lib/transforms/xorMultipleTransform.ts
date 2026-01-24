@@ -1,5 +1,5 @@
-import { Readable, Transform, TransformCallback } from 'stream';
 import { constantTimeXorMultiple } from '@brightchain/brightchain-lib';
+import { Readable, Transform, TransformCallback } from 'stream';
 
 export class XorMultipleTransformStream extends Transform {
   private sources: Readable[];

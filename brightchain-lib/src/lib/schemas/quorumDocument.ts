@@ -46,7 +46,10 @@ export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
       dateUpdated: new Date().toISOString(),
     };
 
-    return Member.fromJson<TID>(JSON.stringify(storage), ServiceProvider.getInstance<TID>().eciesService);
+    return Member.fromJson<TID>(
+      JSON.stringify(storage),
+      ServiceProvider.getInstance<TID>().eciesService,
+    );
   }
 
   public schema: SchemaDefinition<IQuorumDocument<TID>> = {
@@ -89,7 +92,9 @@ export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
       type: Array,
       required: true,
       serialize: (value: TID[]): string[] =>
-        value.map((id) => uint8ArrayToHex(getBrightChainIdProvider<TID>().toBytes(id))),
+        value.map((id) =>
+          uint8ArrayToHex(getBrightChainIdProvider<TID>().toBytes(id)),
+        ),
       hydrate: (value: string): TID[] => {
         if (!Array.isArray(value)) throw new Error('Invalid member IDs format');
         const provider = getBrightChainIdProvider<TID>();

@@ -6,7 +6,6 @@ import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { MessageError } from '../../errors/messaging/messageError';
 import { MemoryBlockStore } from '../../stores/memoryBlockStore';
 import { MemoryMessageMetadataStore } from '../../stores/messaging/memoryMessageMetadataStore';
-import { ChecksumService } from '../checksum.service';
 import { ServiceProvider } from '../service.provider';
 import { MessageCBLService } from './messageCBLService';
 

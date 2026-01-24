@@ -17,7 +17,8 @@ export default {
   coverageDirectory: '../coverage/brightchain-api',
   moduleNameMapper: {
     ...(nxPreset as NxPreset).moduleNameMapper,
-    '^@brightchain/brightchain-lib$': '<rootDir>/../brightchain-lib/src/index.ts',
+    '^@brightchain/brightchain-lib$':
+      '<rootDir>/../brightchain-lib/src/index.ts',
     '^@brightchain/brightchain-lib/(.*)$':
       '<rootDir>/../brightchain-lib/src/$1',
     '^@brightchain/brightchain-api-lib$':

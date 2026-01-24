@@ -1,15 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Constants, Member, type PlatformID } from '@digitaldefiance/ecies-lib';
+import { Member, type PlatformID } from '@digitaldefiance/ecies-lib';
 import { BlockMetadata } from './blockMetadata';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
-import { BlockValidationErrorType } from './enumerations/blockValidationErrorType';
-import { BlockValidationError } from './errors/block';
 import { IEphemeralBlockMetadata } from './interfaces/blocks/metadata/ephemeralBlockMetadata';
 import { ServiceProvider } from './services/service.provider';
-import { parseEphemeralBlockMetadataJson } from './utils/typeGuards';
 import { parseDate } from './utils/dateUtils';
+import { parseEphemeralBlockMetadataJson } from './utils/typeGuards';
 
 export class EphemeralBlockMetadata<TID extends PlatformID = Uint8Array>
   extends BlockMetadata

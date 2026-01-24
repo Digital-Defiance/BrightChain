@@ -460,7 +460,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
         this.idChecksum.toHex(),
         BlockType[this.blockType],
         error,
-        { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+        {
+          blockSize: this.blockSize,
+          encryptionType: BlockEncryptionType[this.encryptionType],
+        },
       );
       throw error;
     }
@@ -478,7 +481,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.idChecksum.toHex(),
           BlockType[this.blockType],
           error,
-          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+          {
+            blockSize: this.blockSize,
+            encryptionType: BlockEncryptionType[this.encryptionType],
+          },
         );
         throw error;
       }
@@ -490,7 +496,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.idChecksum.toHex(),
           BlockType[this.blockType],
           error,
-          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+          {
+            blockSize: this.blockSize,
+            encryptionType: BlockEncryptionType[this.encryptionType],
+          },
         );
         throw error;
       }
@@ -502,7 +511,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.idChecksum.toHex(),
           BlockType[this.blockType],
           error,
-          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+          {
+            blockSize: this.blockSize,
+            encryptionType: BlockEncryptionType[this.encryptionType],
+          },
         );
         throw error;
       }
@@ -518,7 +530,11 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.idChecksum.toHex(),
           BlockType[this.blockType],
           error,
-          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType], recipientCount: details.recipientCount },
+          {
+            blockSize: this.blockSize,
+            encryptionType: BlockEncryptionType[this.encryptionType],
+            recipientCount: details.recipientCount,
+          },
         );
         throw error;
       } else if (details.recipientIds.length !== details.recipientCount) {
@@ -529,7 +545,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.idChecksum.toHex(),
           BlockType[this.blockType],
           error,
-          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+          {
+            blockSize: this.blockSize,
+            encryptionType: BlockEncryptionType[this.encryptionType],
+          },
         );
         throw error;
       } else if (
@@ -544,7 +563,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.idChecksum.toHex(),
           BlockType[this.blockType],
           error,
-          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+          {
+            blockSize: this.blockSize,
+            encryptionType: BlockEncryptionType[this.encryptionType],
+          },
         );
         throw error;
       } else if (
@@ -559,7 +581,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.idChecksum.toHex(),
           BlockType[this.blockType],
           error,
-          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this.encryptionType] },
+          {
+            blockSize: this.blockSize,
+            encryptionType: BlockEncryptionType[this.encryptionType],
+          },
         );
         throw error;
       }
@@ -596,7 +621,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
         this.idChecksum.toHex(),
         BlockType[this.blockType],
         error,
-        { blockSize: this.blockSize, lengthBeforeEncryption: this.lengthBeforeEncryption },
+        {
+          blockSize: this.blockSize,
+          lengthBeforeEncryption: this.lengthBeforeEncryption,
+        },
       );
       throw error;
     }
@@ -634,7 +662,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
         this.idChecksum.toHex(),
         BlockType[this.blockType],
         error,
-        { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType] },
+        {
+          blockSize: this.blockSize,
+          encryptionType: BlockEncryptionType[this._encryptionType],
+        },
       );
       throw error;
     }
@@ -650,7 +681,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.idChecksum.toHex(),
           BlockType[this.blockType],
           error,
-          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType] },
+          {
+            blockSize: this.blockSize,
+            encryptionType: BlockEncryptionType[this._encryptionType],
+          },
         );
         throw error;
       }
@@ -662,7 +696,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.idChecksum.toHex(),
           BlockType[this.blockType],
           error,
-          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType] },
+          {
+            blockSize: this.blockSize,
+            encryptionType: BlockEncryptionType[this._encryptionType],
+          },
         );
         throw error;
       }
@@ -674,7 +711,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.idChecksum.toHex(),
           BlockType[this.blockType],
           error,
-          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType] },
+          {
+            blockSize: this.blockSize,
+            encryptionType: BlockEncryptionType[this._encryptionType],
+          },
         );
         throw error;
       }
@@ -688,7 +728,11 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.idChecksum.toHex(),
           BlockType[this.blockType],
           error,
-          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType], recipientCount: details.recipientCount },
+          {
+            blockSize: this.blockSize,
+            encryptionType: BlockEncryptionType[this._encryptionType],
+            recipientCount: details.recipientCount,
+          },
         );
         throw error;
       }
@@ -700,7 +744,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.idChecksum.toHex(),
           BlockType[this.blockType],
           error,
-          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType] },
+          {
+            blockSize: this.blockSize,
+            encryptionType: BlockEncryptionType[this._encryptionType],
+          },
         );
         throw error;
       }
@@ -712,7 +759,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           this.idChecksum.toHex(),
           BlockType[this.blockType],
           error,
-          { blockSize: this.blockSize, encryptionType: BlockEncryptionType[this._encryptionType] },
+          {
+            blockSize: this.blockSize,
+            encryptionType: BlockEncryptionType[this._encryptionType],
+          },
         );
         throw error;
       }
@@ -749,7 +799,10 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
         this.idChecksum.toHex(),
         BlockType[this.blockType],
         error,
-        { blockSize: this.blockSize, lengthBeforeEncryption: this.lengthBeforeEncryption },
+        {
+          blockSize: this.blockSize,
+          lengthBeforeEncryption: this.lengthBeforeEncryption,
+        },
       );
       throw error;
     }

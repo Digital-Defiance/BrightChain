@@ -37,10 +37,10 @@ export function parseDate(value: string | number): Date {
     // Strategy: Use the value as-is first, then check if it produces a reasonable date
     // If the date is before 1980 or after 2200 when interpreted as milliseconds,
     // and the value is small enough to be seconds, try interpreting as seconds
-    
+
     let timestamp = value;
     let date = new Date(timestamp);
-    
+
     // Check if we should try interpreting as seconds instead
     // This handles the case where small numbers (< 10 billion) might be seconds
     if (!isNaN(date.getTime())) {
@@ -72,7 +72,7 @@ export function parseDate(value: string | number): Date {
 
     if (isNaN(date.getTime())) {
       throw new Error(
-        `Invalid date string: "${value}". Expected ISO 8601 format (e.g., "2024-01-23T10:30:00Z") or Unix timestamp.`
+        `Invalid date string: "${value}". Expected ISO 8601 format (e.g., "2024-01-23T10:30:00Z") or Unix timestamp.`,
       );
     }
 
@@ -80,7 +80,7 @@ export function parseDate(value: string | number): Date {
   }
 
   throw new Error(
-    `Invalid date value type: ${typeof value}. Expected string or number.`
+    `Invalid date value type: ${typeof value}. Expected string or number.`,
   );
 }
 
@@ -104,7 +104,7 @@ export function parseDate(value: string | number): Date {
 export function serializeDate(date: Date): string {
   if (!(date instanceof Date)) {
     throw new Error(
-      `Invalid date object: expected Date instance, got ${typeof date}`
+      `Invalid date object: expected Date instance, got ${typeof date}`,
     );
   }
 

@@ -1,4 +1,3 @@
-import { IConstants as IBrightChainConstants } from '@brightchain/brightchain-lib';
 import { IConstants as IExpressConstants } from '@digitaldefiance/node-express-suite';
 import { IApiConstants } from './api-constants';
 
@@ -22,7 +21,9 @@ describe('IApiConstants Type Structure', () => {
       // These are from IBrightChainConstants (via Omit)
       type HasCBL = IApiConstants extends { CBL: unknown } ? true : false;
       type HasTuple = IApiConstants extends { TUPLE: unknown } ? true : false;
-      type HasSealing = IApiConstants extends { SEALING: unknown } ? true : false;
+      type HasSealing = IApiConstants extends { SEALING: unknown }
+        ? true
+        : false;
 
       const hasCBL: HasCBL = true;
       const hasTuple: HasTuple = true;

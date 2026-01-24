@@ -1,5 +1,5 @@
-import { DocumentErrorType } from '../enumerations/documentErrorType';
 import BrightChainStrings from '../enumerations/brightChainStrings';
+import { DocumentErrorType } from '../enumerations/documentErrorType';
 import { TypedError } from './typedError';
 
 export class DocumentError extends TypedError<DocumentErrorType> {

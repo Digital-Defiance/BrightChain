@@ -84,6 +84,8 @@ export interface IMemberIndexEntry<TID extends PlatformID = Uint8Array> {
   id: TID;
   publicCBL: Checksum;
   privateCBL: Checksum;
+  publicProfileCBL?: Checksum;
+  privateProfileCBL?: Checksum;
   type: MemberType;
   status: MemberStatusType;
   lastUpdate: Date;

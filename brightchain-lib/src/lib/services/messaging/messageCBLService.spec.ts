@@ -1,8 +1,4 @@
-import {
-  EmailString,
-  Member,
-  MemberType,
-} from '@digitaldefiance/ecies-lib';
+import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import { BlockSize } from '../../enumerations/blockSize';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';

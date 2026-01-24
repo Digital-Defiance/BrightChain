@@ -23,38 +23,35 @@ describe('Feature: block-security-hardening, Property 2: XOR Timing Consistency'
    */
   it('Property 2a: XOR processes all bytes for different bit patterns', () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 100, max: 1000 }),
-        (length) => {
-          // Create arrays with different bit patterns
-          const allZeros = new Uint8Array(length);
-          const allOnes = new Uint8Array(length).fill(0xff);
-          const alternating = new Uint8Array(length);
-          for (let i = 0; i < length; i++) {
-            alternating[i] = i % 2 === 0 ? 0xaa : 0x55;
-          }
-          const random = new Uint8Array(length);
-          crypto.getRandomValues(random);
+      fc.property(fc.integer({ min: 100, max: 1000 }), (length) => {
+        // Create arrays with different bit patterns
+        const allZeros = new Uint8Array(length);
+        const allOnes = new Uint8Array(length).fill(0xff);
+        const alternating = new Uint8Array(length);
+        for (let i = 0; i < length; i++) {
+          alternating[i] = i % 2 === 0 ? 0xaa : 0x55;
+        }
+        const random = new Uint8Array(length);
+        crypto.getRandomValues(random);
 
-          // XOR with a key
-          const key = new Uint8Array(length);
-          crypto.getRandomValues(key);
+        // XOR with a key
+        const key = new Uint8Array(length);
+        crypto.getRandomValues(key);
 
-          // All operations should complete successfully
-          const result1 = constantTimeXor(allZeros, key);
-          const result2 = constantTimeXor(allOnes, key);
-          const result3 = constantTimeXor(alternating, key);
-          const result4 = constantTimeXor(random, key);
+        // All operations should complete successfully
+        const result1 = constantTimeXor(allZeros, key);
+        const result2 = constantTimeXor(allOnes, key);
+        const result3 = constantTimeXor(alternating, key);
+        const result4 = constantTimeXor(random, key);
 
-          // Verify results are correct (not testing timing, but correctness)
-          expect(result1).toEqual(key); // 0 XOR key = key
-          expect(result2.length).toBe(length);
-          expect(result3.length).toBe(length);
-          expect(result4.length).toBe(length);
+        // Verify results are correct (not testing timing, but correctness)
+        expect(result1).toEqual(key); // 0 XOR key = key
+        expect(result2.length).toBe(length);
+        expect(result3.length).toBe(length);
+        expect(result4.length).toBe(length);
 
-          // All operations completed without error, demonstrating no early exit
-        },
-      ),
+        // All operations completed without error, demonstrating no early exit
+      }),
       { numRuns: 50 },
     );
   });
@@ -68,37 +65,36 @@ describe('Feature: block-security-hardening, Property 2: XOR Timing Consistency'
    */
   it('Property 2b: XOR behavior consistent regardless of difference location', () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 100, max: 1000 }),
-        (length) => {
-          const base = new Uint8Array(length).fill(0xaa);
-          const key = new Uint8Array(length).fill(0x55);
+      fc.property(fc.integer({ min: 100, max: 1000 }), (length) => {
+        const base = new Uint8Array(length).fill(0xaa);
+        const key = new Uint8Array(length).fill(0x55);
 
-          // Create variants with differences at different positions
-          const diffAtStart = new Uint8Array(base);
-          diffAtStart[0] = 0xff;
+        // Create variants with differences at different positions
+        const diffAtStart = new Uint8Array(base);
+        diffAtStart[0] = 0xff;
 
-          const diffAtMiddle = new Uint8Array(base);
-          diffAtMiddle[Math.floor(length / 2)] = 0xff;
+        const diffAtMiddle = new Uint8Array(base);
+        diffAtMiddle[Math.floor(length / 2)] = 0xff;
 
-          const diffAtEnd = new Uint8Array(base);
-          diffAtEnd[length - 1] = 0xff;
+        const diffAtEnd = new Uint8Array(base);
+        diffAtEnd[length - 1] = 0xff;
 
-          // All XOR operations should complete successfully
-          const result1 = constantTimeXor(diffAtStart, key);
-          const result2 = constantTimeXor(diffAtMiddle, key);
-          const result3 = constantTimeXor(diffAtEnd, key);
+        // All XOR operations should complete successfully
+        const result1 = constantTimeXor(diffAtStart, key);
+        const result2 = constantTimeXor(diffAtMiddle, key);
+        const result3 = constantTimeXor(diffAtEnd, key);
 
-          // Verify all results are valid
-          expect(result1.length).toBe(length);
-          expect(result2.length).toBe(length);
-          expect(result3.length).toBe(length);
+        // Verify all results are valid
+        expect(result1.length).toBe(length);
+        expect(result2.length).toBe(length);
+        expect(result3.length).toBe(length);
 
-          // Results should differ only at the modified positions
-          expect(result1[0]).not.toBe(result2[0]);
-          expect(result2[Math.floor(length / 2)]).not.toBe(result3[Math.floor(length / 2)]);
-        },
-      ),
+        // Results should differ only at the modified positions
+        expect(result1[0]).not.toBe(result2[0]);
+        expect(result2[Math.floor(length / 2)]).not.toBe(
+          result3[Math.floor(length / 2)],
+        );
+      }),
       { numRuns: 50 },
     );
   });
@@ -178,28 +174,25 @@ describe('Feature: block-security-hardening, Property 2: XOR Timing Consistency'
    */
   it('Property 2e: Large array XOR processes all bytes', () => {
     fc.assert(
-      fc.property(
-        fc.constantFrom(1024, 4096, 8192, 16384),
-        (length) => {
-          const a = new Uint8Array(length);
-          const b = new Uint8Array(length);
-          crypto.getRandomValues(a);
-          crypto.getRandomValues(b);
+      fc.property(fc.constantFrom(1024, 4096, 8192, 16384), (length) => {
+        const a = new Uint8Array(length);
+        const b = new Uint8Array(length);
+        crypto.getRandomValues(a);
+        crypto.getRandomValues(b);
 
-          // Operation should complete successfully
-          const result = constantTimeXor(a, b);
+        // Operation should complete successfully
+        const result = constantTimeXor(a, b);
 
-          // Verify result is valid
-          expect(result.length).toBe(length);
+        // Verify result is valid
+        expect(result.length).toBe(length);
 
-          // Verify XOR correctness for a few sample positions
-          expect(result[0]).toBe(a[0] ^ b[0]);
-          expect(result[length - 1]).toBe(a[length - 1] ^ b[length - 1]);
-          expect(result[Math.floor(length / 2)]).toBe(
-            a[Math.floor(length / 2)] ^ b[Math.floor(length / 2)],
-          );
-        },
-      ),
+        // Verify XOR correctness for a few sample positions
+        expect(result[0]).toBe(a[0] ^ b[0]);
+        expect(result[length - 1]).toBe(a[length - 1] ^ b[length - 1]);
+        expect(result[Math.floor(length / 2)]).toBe(
+          a[Math.floor(length / 2)] ^ b[Math.floor(length / 2)],
+        );
+      }),
       { numRuns: 20 },
     );
   });
@@ -255,36 +248,38 @@ describe('Feature: block-security-hardening, Property 2: XOR Timing Consistency'
    */
   it('Property 2g: Multiple XOR with varying patterns completes consistently', () => {
     fc.assert(
-      fc.property(
-        fc.integer({ min: 100, max: 500 }),
-        (length) => {
-          // Create arrays with varying degrees of similarity
-          const base = new Uint8Array(length);
-          crypto.getRandomValues(base);
+      fc.property(fc.integer({ min: 100, max: 500 }), (length) => {
+        // Create arrays with varying degrees of similarity
+        const base = new Uint8Array(length);
+        crypto.getRandomValues(base);
 
-          const identical = new Uint8Array(base);
-          const slightlyDifferent = new Uint8Array(base);
-          slightlyDifferent[0] ^= 1;
+        const identical = new Uint8Array(base);
+        const slightlyDifferent = new Uint8Array(base);
+        slightlyDifferent[0] ^= 1;
 
-          const veryDifferent = new Uint8Array(length);
-          crypto.getRandomValues(veryDifferent);
+        const veryDifferent = new Uint8Array(length);
+        crypto.getRandomValues(veryDifferent);
 
-          // All combinations should complete successfully
-          const result1 = constantTimeXorMultiple([base, identical]);
-          const result2 = constantTimeXorMultiple([base, slightlyDifferent]);
-          const result3 = constantTimeXorMultiple([base, veryDifferent]);
-          const result4 = constantTimeXorMultiple([base, identical, slightlyDifferent, veryDifferent]);
+        // All combinations should complete successfully
+        const result1 = constantTimeXorMultiple([base, identical]);
+        const result2 = constantTimeXorMultiple([base, slightlyDifferent]);
+        const result3 = constantTimeXorMultiple([base, veryDifferent]);
+        const result4 = constantTimeXorMultiple([
+          base,
+          identical,
+          slightlyDifferent,
+          veryDifferent,
+        ]);
 
-          // Verify all results are valid
-          expect(result1.length).toBe(length);
-          expect(result2.length).toBe(length);
-          expect(result3.length).toBe(length);
-          expect(result4.length).toBe(length);
+        // Verify all results are valid
+        expect(result1.length).toBe(length);
+        expect(result2.length).toBe(length);
+        expect(result3.length).toBe(length);
+        expect(result4.length).toBe(length);
 
-          // Result1 should be all zeros (base XOR identical)
-          expect(result1.every((byte) => byte === 0)).toBe(true);
-        },
-      ),
+        // Result1 should be all zeros (base XOR identical)
+        expect(result1.every((byte) => byte === 0)).toBe(true);
+      }),
       { numRuns: 30 },
     );
   });

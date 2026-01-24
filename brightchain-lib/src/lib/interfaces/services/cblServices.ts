@@ -8,10 +8,10 @@
  */
 
 import {
+  Member,
   PlatformID,
   SignatureUint8Array,
   TypedIdProviderWrapper,
-  Member,
 } from '@digitaldefiance/ecies-lib';
 import { BlockSize } from '../../enumerations/blockSize';
 import { Checksum } from '../../types/checksum';

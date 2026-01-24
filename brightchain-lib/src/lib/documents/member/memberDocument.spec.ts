@@ -50,7 +50,9 @@ describe('MemberDocument', () => {
       const doc = MemberDocument.create(publicMember, privateMember);
 
       expect(doc).toBeInstanceOf(MemberDocument);
-      expect(doc.id).toBe(uint8ArrayToHex(publicMember.idBytes) as ShortHexGuid);
+      expect(doc.id).toBe(
+        uint8ArrayToHex(publicMember.idBytes) as ShortHexGuid,
+      );
       expect(doc.name).toBe(publicMember.name);
       expect(doc.type).toBe(publicMember.type);
     });
@@ -267,7 +269,9 @@ describe('MemberDocument', () => {
       const doc = MemberDocument.create<string>(stringMember, stringMember);
       await doc.generateCBLs();
 
-      expect(doc.id).toEqual(uint8ArrayToHex(stringMember.idBytes) as ShortHexGuid);
+      expect(doc.id).toEqual(
+        uint8ArrayToHex(stringMember.idBytes) as ShortHexGuid,
+      );
       expect(typeof doc.id).toBe('string');
     });
 

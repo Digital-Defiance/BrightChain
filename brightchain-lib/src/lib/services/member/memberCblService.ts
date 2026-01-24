@@ -7,7 +7,6 @@ import { RawDataBlock } from '../../blocks/rawData';
 import { TUPLE } from '../../constants';
 import { BlockDataType } from '../../enumerations/blockDataType';
 import { BlockEncryptionType } from '../../enumerations/blockEncryptionType';
-import { BlockSize } from '../../enumerations/blockSize';
 import { BlockType } from '../../enumerations/blockType';
 import { MemberErrorType } from '../../enumerations/memberErrorType';
 import { StoreErrorType } from '../../enumerations/storeErrorType';
@@ -37,7 +36,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
     try {
       // Use the block store's configured block size
       const blockSize = this.blockStore.blockSize;
-      
+
       // Convert member to JSON string
       const memberJson = member.toJson();
       const memberData = new TextEncoder().encode(memberJson);
@@ -224,7 +223,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
     try {
       // Use the block store's configured block size
       const blockSize = this.blockStore.blockSize;
-      
+
       // Get tuples from CBL
       const tuples = await cbl.getHandleTuples(this.blockStore);
 

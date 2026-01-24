@@ -11,18 +11,14 @@
  * @see Requirements 11.1-11.8
  */
 
-import * as fc from 'fast-check';
-import {
-  EmailString,
-  Member,
-  MemberType,
-} from '@digitaldefiance/ecies-lib';
+import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { faker } from '@faker-js/faker';
-import { BlockSize } from '../enumerations/blockSize';
+import * as fc from 'fast-check';
 import { BLOCK_HEADER, StructuredBlockType } from '../constants';
+import { BlockSize } from '../enumerations/blockSize';
+import { Checksum } from '../types/checksum';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
-import { Checksum } from '../types/checksum';
 import { ServiceProvider } from './service.provider';
 
 describe('Binary SuperCBL Format - Property Tests', () => {
@@ -52,9 +48,9 @@ describe('Binary SuperCBL Format - Property Tests', () => {
    * Generate a random checksum
    */
   function generateChecksum(): fc.Arbitrary<Checksum> {
-    return fc.uint8Array({ minLength: 64, maxLength: 64 }).map((bytes) =>
-      Checksum.fromUint8Array(bytes),
-    );
+    return fc
+      .uint8Array({ minLength: 64, maxLength: 64 })
+      .map((bytes) => Checksum.fromUint8Array(bytes));
   }
 
   /**
@@ -82,7 +78,13 @@ describe('Binary SuperCBL Format - Property Tests', () => {
           fc.integer({ min: 1, max: 100 }), // depth
           fc.integer({ min: 0, max: Number.MAX_SAFE_INTEGER - 1 }), // originalDataLength
           generateChecksum(), // originalDataChecksum
-          (subCblCount, totalBlockCount, depth, originalDataLength, originalDataChecksum) => {
+          (
+            subCblCount,
+            totalBlockCount,
+            depth,
+            originalDataLength,
+            originalDataChecksum,
+          ) => {
             const member = generateMember();
             const dateCreated = new Date();
 
@@ -114,7 +116,9 @@ describe('Binary SuperCBL Format - Property Tests', () => {
             for (let i = 0; i < subCblCount; i++) {
               addressData.set(subCblChecksums[i].toUint8Array(), i * 64);
             }
-            const fullData = new Uint8Array(headerData.length + addressData.length);
+            const fullData = new Uint8Array(
+              headerData.length + addressData.length,
+            );
             fullData.set(headerData, 0);
             fullData.set(addressData, headerData.length);
 
@@ -127,20 +131,28 @@ describe('Binary SuperCBL Format - Property Tests', () => {
             expect(cblService.isSuperCbl(fullData)).toBe(true);
 
             // Parse the header - must pass the same blockSize used during creation
-            const parsed = cblService.parseSuperCblHeader(fullData, member, BlockSize.Medium);
+            const parsed = cblService.parseSuperCblHeader(
+              fullData,
+              member,
+              BlockSize.Medium,
+            );
 
             // Verify all fields are preserved
             expect(parsed.subCblCount).toBe(subCblCount);
             expect(parsed.totalBlockCount).toBe(totalBlockCount);
             expect(parsed.depth).toBe(depth);
             expect(parsed.originalDataLength).toBe(originalDataLength);
-            expect(parsed.originalDataChecksum.equals(originalDataChecksum)).toBe(true);
+            expect(
+              parsed.originalDataChecksum.equals(originalDataChecksum),
+            ).toBe(true);
 
             // Verify sub-CBL checksums are preserved
             expect(parsed.subCblChecksums).toBeDefined();
             expect(parsed.subCblChecksums!.length).toBe(subCblCount);
             for (let i = 0; i < subCblCount; i++) {
-              expect(parsed.subCblChecksums![i].equals(subCblChecksums[i])).toBe(true);
+              expect(
+                parsed.subCblChecksums![i].equals(subCblChecksums[i]),
+              ).toBe(true);
             }
           },
         ),
@@ -185,15 +197,23 @@ describe('Binary SuperCBL Format - Property Tests', () => {
             for (let i = 0; i < subCblCount; i++) {
               addressData.set(subCblChecksums[i].toUint8Array(), i * 64);
             }
-            const fullData = new Uint8Array(headerData.length + addressData.length);
+            const fullData = new Uint8Array(
+              headerData.length + addressData.length,
+            );
             fullData.set(headerData, 0);
             fullData.set(addressData, headerData.length);
 
             // Parse the header - must pass the same blockSize used during creation
-            const parsed = cblService.parseSuperCblHeader(fullData, member, BlockSize.Medium);
+            const parsed = cblService.parseSuperCblHeader(
+              fullData,
+              member,
+              BlockSize.Medium,
+            );
 
             // Verify creator ID is preserved
-            expect(getIdProvider().equals(parsed.creatorId, member.id)).toBe(true);
+            expect(getIdProvider().equals(parsed.creatorId, member.id)).toBe(
+              true,
+            );
           },
         ),
         { numRuns: 50 },
@@ -203,7 +223,9 @@ describe('Binary SuperCBL Format - Property Tests', () => {
     it('should preserve date created through round-trip (within 1 second tolerance)', () => {
       fc.assert(
         fc.property(
-          fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }).filter(d => !isNaN(d.getTime())),
+          fc
+            .date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') })
+            .filter((d) => !isNaN(d.getTime())),
           generateChecksum(),
           (dateCreated, originalDataChecksum) => {
             const member = generateMember();
@@ -237,12 +259,18 @@ describe('Binary SuperCBL Format - Property Tests', () => {
             for (let i = 0; i < subCblCount; i++) {
               addressData.set(subCblChecksums[i].toUint8Array(), i * 64);
             }
-            const fullData = new Uint8Array(headerData.length + addressData.length);
+            const fullData = new Uint8Array(
+              headerData.length + addressData.length,
+            );
             fullData.set(headerData, 0);
             fullData.set(addressData, headerData.length);
 
             // Parse the header - must pass the same blockSize used during creation
-            const parsed = cblService.parseSuperCblHeader(fullData, member, BlockSize.Medium);
+            const parsed = cblService.parseSuperCblHeader(
+              fullData,
+              member,
+              BlockSize.Medium,
+            );
 
             // Verify date is preserved (within 1 second tolerance due to millisecond truncation)
             const timeDiff = Math.abs(
@@ -305,7 +333,9 @@ describe('Binary SuperCBL Format - Property Tests', () => {
             for (let i = 0; i < subCblCount; i++) {
               addressData.set(subCblChecksums[i].toUint8Array(), i * 64);
             }
-            const fullData = new Uint8Array(headerData.length + addressData.length);
+            const fullData = new Uint8Array(
+              headerData.length + addressData.length,
+            );
             fullData.set(headerData, 0);
             fullData.set(addressData, headerData.length);
 
@@ -360,7 +390,9 @@ describe('Binary SuperCBL Format - Property Tests', () => {
             for (let i = 0; i < subCblCount; i++) {
               addressData.set(subCblChecksums[i].toUint8Array(), i * 64);
             }
-            const fullData = new Uint8Array(headerData.length + addressData.length);
+            const fullData = new Uint8Array(
+              headerData.length + addressData.length,
+            );
             fullData.set(headerData, 0);
             fullData.set(addressData, headerData.length);
 
@@ -369,8 +401,9 @@ describe('Binary SuperCBL Format - Property Tests', () => {
             const signatureOffset = cblService.superCblHeaderSize - 64;
             const maxCorruptIndex = Math.min(corruptIndex, signatureOffset - 1);
             const actualCorruptIndex = Math.max(4, maxCorruptIndex); // After prefix
-            
-            fullData[actualCorruptIndex] = (fullData[actualCorruptIndex] + 1) % 256;
+
+            fullData[actualCorruptIndex] =
+              (fullData[actualCorruptIndex] + 1) % 256;
 
             // Signature verification should fail
             const isValid = cblService.validateSuperCblSignature(
@@ -423,7 +456,9 @@ describe('Binary SuperCBL Format - Property Tests', () => {
             for (let i = 0; i < subCblCount; i++) {
               addressData.set(subCblChecksums[i].toUint8Array(), i * 64);
             }
-            const fullData = new Uint8Array(headerData.length + addressData.length);
+            const fullData = new Uint8Array(
+              headerData.length + addressData.length,
+            );
             fullData.set(headerData, 0);
             fullData.set(addressData, headerData.length);
 
@@ -478,7 +513,9 @@ describe('Binary SuperCBL Format - Property Tests', () => {
             for (let i = 0; i < subCblCount; i++) {
               addressData.set(subCblChecksums[i].toUint8Array(), i * 64);
             }
-            const fullData = new Uint8Array(headerData.length + addressData.length);
+            const fullData = new Uint8Array(
+              headerData.length + addressData.length,
+            );
             fullData.set(headerData, 0);
             fullData.set(addressData, headerData.length);
 

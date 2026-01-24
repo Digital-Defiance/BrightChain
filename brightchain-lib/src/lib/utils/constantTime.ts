@@ -163,7 +163,7 @@ export function constantTimeEqualNumber(a: number, b: number): boolean {
   // Check if diff is zero without branching
   // If diff is 0, all bits are 0, so (diff | -diff) >>> 31 is 0
   // If diff is non-zero, at least one bit is set, so (diff | -diff) >>> 31 is 1
-  return ((diff | -diff) >>> 31) === 0;
+  return (diff | -diff) >>> 31 === 0;
 }
 
 /**

@@ -1,4 +1,3 @@
-import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 import type { IEmailTokenDocument } from './documents/email-token';
 import type { IMnemonicDocument } from './documents/mnemonic';
 import type { IRoleDocument } from './documents/role';
@@ -9,8 +8,8 @@ import { ModelName } from './enumerations/model-name';
 import { SchemaCollection } from './enumerations/schema-collection';
 
 // Re-export SignatureBuffer and GuidV4Buffer from node-ecies-lib for internal use
-export type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 export type { SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
+export type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 
 // Database-agnostic type aliases (mongo removed)
 /* eslint-disable @typescript-eslint/no-explicit-any */
