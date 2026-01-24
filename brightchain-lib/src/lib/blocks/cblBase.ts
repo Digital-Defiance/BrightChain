@@ -193,13 +193,11 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
   protected ensureHeaderValidated(): void {
     if (!CBLBase.validatedHeaderCache.has(this._data)) {
       if (!this._creator) {
-        return;
+        throw new CblError(CblErrorType.CreatorUndefined);
       }
-      // Temporarily disable signature validation to get basic functionality working
-      // TODO: Fix signature validation in CBL creation
-      // if (!this.validateSignature()) {
-      //   throw new CblError(CblErrorType.InvalidSignature);
-      // }
+      if (!this.validateSignature()) {
+        throw new CblError(CblErrorType.InvalidSignature);
+      }
       CBLBase.validatedHeaderCache.set(this._data, true);
     }
   }
