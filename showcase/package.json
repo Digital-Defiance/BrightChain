@@ -24,7 +24,7 @@
     "@uiw/react-md-editor": "^4.0.11",
     "bson": "^6.10.4",
     "currency-codes": "^2.2.0",
-    "framer-motion": "^12.23.26",
+    "framer-motion": "^11.18.2",
     "lru-cache": "^5.1.1",
     "moment": "^2.30.1",
     "moment-timezone": "^0.6.0",

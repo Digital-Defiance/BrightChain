@@ -11,6 +11,7 @@ import {
 import {
   ECIESService,
   EmailString,
+  getEnhancedIdProvider,
   Member,
   MemberType,
 } from '@digitaldefiance/ecies-lib';
@@ -37,7 +38,8 @@ export const MessagePassingDemo: React.FC = () => {
       const blockStore = new MemoryBlockStore(BlockSize.Small);
       const checksumService = new ChecksumService();
       const eciesService = new ECIESService();
-      const cblService = new CBLService(checksumService, eciesService);
+      const enhancedProvider = getEnhancedIdProvider<Uint8Array>();
+      const cblService = new CBLService(checksumService, eciesService, enhancedProvider);
       const service = new MessageCBLService(
         cblService,
         checksumService,

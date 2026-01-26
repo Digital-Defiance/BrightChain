@@ -1,9 +1,9 @@
 import { StringsCollection } from '@digitaldefiance/i18n-lib';
-import { BrightChainStrings } from '../enumerations/brightChainStrings';
+import { BrightChainStrings } from '../../enumerations/brightChainStrings';
 
 const site = 'BrightChain';
 
-export const AmericanEnglishStrings: StringsCollection<string> = {
+export const AmericanEnglishStrings: StringsCollection<BrightChainStrings> = {
   [BrightChainStrings.Admin_StringNotFoundForLanguageTemplate]:
     'String {NAME} not found for language {LANG}',
   [BrightChainStrings.Error_NoTranslationsForEnumTemplate]:
