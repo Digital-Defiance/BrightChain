@@ -26,7 +26,11 @@ export function createMessageRouter(service: MessagePassingService): Router {
           return;
         }
 
-        if (typeof content !== 'string' || typeof senderId !== 'string' || typeof messageType !== 'string') {
+        if (
+          typeof content !== 'string' ||
+          typeof senderId !== 'string' ||
+          typeof messageType !== 'string'
+        ) {
           res.status(400).json({ error: 'Invalid field types' });
           return;
         }

@@ -24,7 +24,8 @@ describe('Binary SuperCBL Format - Unit Tests', () => {
   beforeAll(() => {
     checksumService = new ChecksumService();
     const eciesService = ServiceProvider.getInstance().eciesService;
-    cblService = new CBLService(checksumService, eciesService);
+    const idProvider = ServiceProvider.getInstance().idProvider;
+    cblService = new CBLService(checksumService, eciesService, idProvider);
 
     const { member: m } = Member.newMember(
       ServiceProvider.getInstance().eciesService,

@@ -8,9 +8,9 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { generateRandomKeysSync } from 'paillier-bigint';
 import { uint8ArrayToBase64 } from '../bufferUtils';
-import { IQuorumDocument } from '../documents/quorumDocument';
 import { NotImplementedError } from '../errors/notImplemented';
 import { getBrightChainIdProvider } from '../init';
+import type { IQuorumDocument } from '../interfaces/document/quorumDocument';
 import { QuorumDataRecord } from '../quorumDataRecord';
 import { ServiceProvider } from '../services/service.provider';
 import { SchemaDefinition, SerializedValue } from '../sharedTypes';

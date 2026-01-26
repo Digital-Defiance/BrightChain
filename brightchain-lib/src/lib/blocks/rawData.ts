@@ -6,7 +6,8 @@ import { BlockType } from '../enumerations/blockType';
 import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { logValidationFailure } from '../logging/blockLogger';
-import { ServiceLocator } from '../services/serviceLocator';
+import type { ChecksumService } from '../services/checksum.service';
+import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
 
@@ -16,6 +17,7 @@ import { BaseBlock } from './base';
  */
 export class RawDataBlock extends BaseBlock {
   private readonly _data: Uint8Array;
+  private readonly _checksumService?: ChecksumService;
 
   constructor(
     blockSize: BlockSize,
@@ -26,6 +28,7 @@ export class RawDataBlock extends BaseBlock {
     blockDataType: BlockDataType = BlockDataType.RawData,
     canRead = true,
     canPersist = true,
+    checksumService?: ChecksumService,
   ) {
     if (!data) {
       throw new Error('Data cannot be null or undefined');
@@ -37,10 +40,17 @@ export class RawDataBlock extends BaseBlock {
       );
     }
 
-    const calculatedChecksum =
-      ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
-        data,
-      );
+    // Calculate checksum if not provided
+    let calculatedChecksum: Checksum;
+    if (checksum) {
+      calculatedChecksum = checksum;
+    } else if (checksumService) {
+      calculatedChecksum = checksumService.calculateChecksum(data);
+    } else {
+      // Use global service provider for backward compatibility
+      calculatedChecksum =
+        getGlobalServiceProvider().checksumService.calculateChecksum(data);
+    }
     const metadata = new BlockMetadata(
       blockSize,
       blockType,
@@ -52,13 +62,14 @@ export class RawDataBlock extends BaseBlock {
     super(
       blockType,
       blockDataType,
-      checksum ?? calculatedChecksum,
+      calculatedChecksum,
       metadata,
       canRead,
       canPersist,
     );
 
     this._data = data;
+    this._checksumService = checksumService;
   }
 
   /**
@@ -130,10 +141,16 @@ export class RawDataBlock extends BaseBlock {
    * @throws {ChecksumMismatchError} If validation fails due to checksum mismatch
    */
   protected validateInternal(): void {
-    const calculatedChecksum =
-      ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
-        this._data,
-      );
+    let calculatedChecksum: Checksum;
+    if (this._checksumService) {
+      calculatedChecksum = this._checksumService.calculateChecksum(this._data);
+    } else {
+      // Use global service provider for backward compatibility
+      calculatedChecksum =
+        getGlobalServiceProvider().checksumService.calculateChecksum(
+          this._data,
+        );
+    }
 
     // Compare checksums using the Checksum.equals() method
     if (!calculatedChecksum.equals(this.idChecksum)) {

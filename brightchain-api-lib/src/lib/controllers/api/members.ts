@@ -14,8 +14,26 @@ import {
   IMemberProfileUpdateRequest,
   IMemberPublicProfileResponse,
 } from '../../interfaces/member';
+import { IRequestUser } from '../../interfaces/request-user';
 import { DefaultBackendIdType } from '../../shared-types';
 import { BaseController } from '../base';
+
+/**
+ * Type-safe ID provider interface
+ */
+interface IIdProvider<TID> {
+  fromString?(id: string): TID;
+  toBytes?(id: TID): Uint8Array;
+}
+
+/**
+ * Helper type for member request with typed properties
+ */
+interface IMemberRequestData {
+  params?: { memberId?: string };
+  user?: IRequestUser<string>;
+  body?: IMemberProfileUpdateRequest;
+}
 
 interface IMembersHandlers {
   [key: string]: ApiRequestHandler<ApiResponse>;
@@ -61,8 +79,10 @@ export class MembersController<
   }
 
   private async handleGetMemberProfile(
-    req: any,
+    req: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   ): Promise<IStatusCodeResponse<ApiResponse>> {
+    // Cast to typed interface for internal use
+    const request = req as IMemberRequestData;
     try {
       const memberStore =
         this.application.services.get<MemberStore<TID>>('memberStore');
@@ -77,7 +97,7 @@ export class MembersController<
       }
 
       // Get member ID from request params or authenticated user
-      const memberId = (req as any).params?.memberId || (req as any).user?.id;
+      const memberId = request.params?.memberId || request.user?.id;
       if (!memberId) {
         return {
           statusCode: 400,
@@ -89,7 +109,9 @@ export class MembersController<
       }
 
       // Convert string ID to TID type
-      const idProvider = this.application.services.get('idProvider') as any;
+      const idProvider = this.application.services.get('idProvider') as
+        | IIdProvider<TID>
+        | undefined;
       const memberIdBytes = idProvider?.fromString
         ? idProvider.fromString(memberId)
         : Buffer.from(memberId, 'hex');
@@ -119,7 +141,7 @@ export class MembersController<
       } as IMemberProfileResponse;
 
       // Include private profile only if requested by the member themselves
-      if (privateProfile && (req as any).user?.id === memberId) {
+      if (privateProfile && request.user?.id === memberId) {
         response.privateProfile = {
           id: uint8ArrayToHex(
             idProvider?.toBytes
@@ -165,15 +187,19 @@ export class MembersController<
               ? error.message
               : 'Failed to fetch member profile',
           error:
-            error instanceof Error ? error.message : 'Failed to fetch member profile',
+            error instanceof Error
+              ? error.message
+              : 'Failed to fetch member profile',
         },
       };
     }
   }
 
   private async handleUpdateMemberProfile(
-    req: any,
+    req: any, // eslint-disable-line @typescript-eslint/no-explicit-any
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    // Cast to typed interface for internal use
+    const request = req as IMemberRequestData;
     try {
       const memberStore =
         this.application.services.get<MemberStore<TID>>('memberStore');
@@ -188,7 +214,7 @@ export class MembersController<
       }
 
       // Only allow members to update their own profile
-      const memberId = (req as any).user?.id;
+      const memberId = request.user?.id;
       if (!memberId) {
         return {
           statusCode: 401,
@@ -199,7 +225,7 @@ export class MembersController<
         };
       }
 
-      const updateRequest = req.body as IMemberProfileUpdateRequest;
+      const updateRequest = request.body;
       if (!updateRequest) {
         return {
           statusCode: 400,
@@ -236,7 +262,9 @@ export class MembersController<
               ? error.message
               : 'Failed to update member profile',
           error:
-            error instanceof Error ? error.message : 'Failed to update member profile',
+            error instanceof Error
+              ? error.message
+              : 'Failed to update member profile',
         },
       };
     }

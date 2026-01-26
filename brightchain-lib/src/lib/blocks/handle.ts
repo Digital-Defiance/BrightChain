@@ -2,7 +2,7 @@ import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { EnhancedValidationError } from '../errors/enhancedValidationError';
-import { ServiceProvider } from '../services/service.provider';
+import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
@@ -243,7 +243,7 @@ export function createBlockHandle<T extends BaseBlock>(
   });
 
   instance.calculateChecksum = function (): Checksum {
-    return ServiceProvider.getInstance().checksumService.calculateChecksum(
+    return getGlobalServiceProvider().checksumService.calculateChecksum(
       this.fullData,
     );
   };

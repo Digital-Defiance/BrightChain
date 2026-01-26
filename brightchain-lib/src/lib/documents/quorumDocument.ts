@@ -1,31 +1,18 @@
-import {
-  Member,
-  PlatformID,
-  SignatureUint8Array,
-} from '@digitaldefiance/ecies-lib';
+import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
+import { createECIESService } from '../browserConfig';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { QuorumErrorType } from '../enumerations/quorumErrorType';
 import { QuorumError } from '../errors/quorumError';
-import { QuorumDataRecord } from '../quorumDataRecord';
+import { getBrightChainIdProvider } from '../init';
+import { IQuorumDocument } from '../interfaces/document/quorumDocument';
 import { QuorumDocumentSchema } from '../schemas/quorumDocument';
 import { BlockService } from '../services/blockService';
 import { MemberCblService } from '../services/member/memberCblService';
 import { SealingService } from '../services/sealing.service';
 import { SchemaDefinition } from '../sharedTypes';
-import { Checksum } from '../types';
 import { Document } from './base/document';
 
-export interface IQuorumDocument<TID extends PlatformID = Uint8Array> {
-  checksum: Checksum;
-  creatorId: Checksum;
-  creator: Member<TID>;
-  signature: SignatureUint8Array;
-  memberIDs: TID[];
-  sharesRequired: number;
-  dateCreated: Date;
-  dateUpdated: Date;
-  encryptedData?: QuorumDataRecord<TID>;
-}
+export type { IQuorumDocument };
 
 /**
  * A QuorumDocument has its data stored in the blockchain and is encrypted with a key that is shared among a trusted quorum
@@ -130,7 +117,10 @@ export class QuorumDocument<
       throw new Error('Creator must be set before encrypting');
     }
 
-    const sealingService = new SealingService<TID>();
+    const sealingService = new SealingService<TID>(
+      createECIESService<TID>(),
+      getBrightChainIdProvider<TID>(),
+    );
     const encryptedData = await sealingService.quorumSeal(
       creator,
       data,
@@ -155,7 +145,10 @@ export class QuorumDocument<
     if (!encryptedData) {
       throw new Error('Document has no encrypted data');
     }
-    const sealingService = new SealingService<TID>();
+    const sealingService = new SealingService<TID>(
+      createECIESService<TID>(),
+      getBrightChainIdProvider<TID>(),
+    );
     return await sealingService.quorumUnseal<T>(encryptedData, membersWithKeys);
   }
 }

@@ -15,7 +15,7 @@ import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { StreamErrorType } from './enumerations/streamErrorType';
 import { StreamError } from './errors/streamError';
-import { ServiceProvider } from './services/service.provider';
+import { getGlobalServiceProvider } from './services/globalServiceProvider';
 
 /**
  * PrimeTupleGeneratorStream transforms input data into tuples of blocks.
@@ -119,14 +119,16 @@ export class PrimeTupleGeneratorStream<
       const blockData = this.buffer.subarray(0, this.blockSize);
       this.buffer = this.buffer.subarray(this.blockSize);
 
+      // Use global service provider for checksum calculation
+      const checksum =
+        getGlobalServiceProvider().checksumService.calculateChecksum(blockData);
+
       const sourceBlock = await EphemeralBlock.from(
         BlockType.EphemeralOwnedDataBlock,
         BlockDataType.RawData,
         this.blockSize,
         blockData,
-        ServiceProvider.getInstance().checksumService.calculateChecksum(
-          blockData,
-        ),
+        checksum,
         this.creator,
         new Date(),
         blockData.length,

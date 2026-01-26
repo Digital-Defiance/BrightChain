@@ -1,13 +1,15 @@
 import {
   ECIESService,
   getEciesI18nEngine,
+  getEnhancedIdProvider,
   getRuntimeConfiguration,
   PlatformID,
   TypedIdProviderWrapper,
   VotingService,
 } from '@digitaldefiance/ecies-lib';
 
-import { getBrightChainConfigKey, getBrightChainIdProvider } from '../init';
+import { BRIGHTCHAIN_CONFIG_KEY } from '../config/constants';
+import { BlockFactory } from '../factories/blockFactory';
 import { IServiceProvider } from '../interfaces/serviceProvider.interface';
 import { BlockCapacityCalculator } from './blockCapacity.service';
 import { BlockService } from './blockService';
@@ -27,6 +29,7 @@ export class ServiceProvider<
   private static instance: ServiceProvider<PlatformID> | undefined;
   public readonly idProvider: TypedIdProviderWrapper<TID>;
   public readonly checksumService: ChecksumService;
+  public readonly blockFactory: BlockFactory<TID>;
   public readonly eciesService: ECIESService<TID>;
   public readonly cblService: CBLService<TID>;
   public readonly blockService: BlockService<TID>;
@@ -46,12 +49,14 @@ export class ServiceProvider<
     getEciesI18nEngine();
 
     // Use the BrightChain configuration (auto-initializes if needed)
-    const eciesConfig = getRuntimeConfiguration(getBrightChainConfigKey());
+    const eciesConfig = getRuntimeConfiguration(BRIGHTCHAIN_CONFIG_KEY);
 
     this.checksumService = new ChecksumService();
+    this.blockFactory = new BlockFactory<TID>(this.checksumService);
     this.eciesService = new ECIESService<TID>(eciesConfig);
     this.blockService = new BlockService<TID>();
-    this.idProvider = getBrightChainIdProvider<TID>();
+    // Use getEnhancedIdProvider to get a properly wrapped TypedIdProviderWrapper with generateTyped() support
+    this.idProvider = getEnhancedIdProvider<TID>(BRIGHTCHAIN_CONFIG_KEY);
     this.sealingService = new SealingService<TID>(
       this.eciesService,
       this.idProvider,

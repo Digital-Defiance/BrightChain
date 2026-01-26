@@ -1,11 +1,13 @@
 {
   "name": "@brightchain/brightchain-api-lib",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
     "@aws-sdk/client-ses": "^3.859.0",
-    "@brightchain/brightchain-lib": "0.9.0",
+    "@brightchain/brightchain-lib": "0.10.0",
+    "@digitaldefiance/enclave-bridge-client": "^1.1.0",
+    "@digitaldefiance/node-ecies-lib": "^4.13.8",
     "@ethereumjs/wallet": "^10.0.0",
     "bip39": "^3.1.0",
     "buffer": "^6.0.3",
@@ -47,6 +49,8 @@
     "lint": "npx eslint '**/*.{ts,tsx}'",
     "lint:fix": "npx eslint '**/*.{ts,tsx}' --fix",
     "test:dev:16": "NODE_ENV=development npx nx test brightchain-api-lib --maxWorkers=16 --parallel=16 --configuration=development --outputStyle=stream 2>&1",
-    "test:dev:16:logged": "NODE_ENV=development npx nx test brightchain-api-lib --maxWorkers=16 --parallel=16 --configuration=development --outputStyle=stream 2>&1 | ansifilter -o test.log"
+    "test:dev:16:logged": "NODE_ENV=development npx nx test brightchain-api-lib --maxWorkers=16 --parallel=16 --configuration=development --outputStyle=stream 2>&1 | ansifilter -o test.log",
+    "test:enclave:required": "REQUIRE_SECURE_ENCLAVE=true NODE_ENV=development npx nx test brightchain-api-lib --configuration=development",
+    "test:enclave:e2e": "REQUIRE_SECURE_ENCLAVE=true NODE_ENV=development npx jest --config=jest.config.ts -- src/lib/__tests__/secureEnclaveKeyring.e2e.spec.ts"
   }
 }

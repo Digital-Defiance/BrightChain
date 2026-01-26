@@ -28,7 +28,7 @@ import { blockLogger, LogLevel } from '../logging/blockLogger';
 import { Checksum } from '../types/checksum';
 
 import { IUniversalBlockStore } from '../interfaces/storage/universalBlockStore';
-import { ServiceLocator } from '../services/serviceLocator';
+import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Validator } from '../utils/validator';
 import { XorService } from './xor';
 
@@ -180,14 +180,14 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       );
 
       const encryptedArray =
-        await ServiceLocator.getServiceProvider<TID>().eciesService.encrypt(
+        await getGlobalServiceProvider<TID>().eciesService.encrypt(
           EciesEncryptionTypeEnum.WithLength,
           recipientPublicKey,
           dataToEncrypt,
         );
 
       // Get the recipient ID bytes for the header
-      const idProvider = ServiceLocator.getServiceProvider<TID>().idProvider;
+      const idProvider = getGlobalServiceProvider<TID>().idProvider;
       const recipientIdBytes = recipientMember.idBytes;
 
       // Create padded buffer filled with random data
@@ -205,7 +205,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       finalBuffer.set(encryptedArray, eciesDataOffset);
 
       const checksum =
-        ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+        getGlobalServiceProvider().checksumService.calculateChecksum(
           finalBuffer,
         );
 
@@ -289,13 +289,13 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
 
     try {
       const decryptedArray =
-        await ServiceLocator.getServiceProvider().eciesService.decryptWithLengthAndHeader(
+        await getGlobalServiceProvider().eciesService.decryptWithLengthAndHeader(
           creator.privateKey.idUint8Array as Uint8Array,
           block.layerPayload,
         );
 
       const checksum =
-        ServiceLocator.getServiceProvider<TID>().checksumService.calculateChecksum(
+        getGlobalServiceProvider<TID>().checksumService.calculateChecksum(
           decryptedArray,
         );
 
@@ -364,13 +364,13 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
 
     try {
       const multiEncryptionHeader =
-        ServiceLocator.getServiceProvider<TID>().eciesService.parseMultiEncryptedHeader(
+        getGlobalServiceProvider<TID>().eciesService.parseMultiEncryptedHeader(
           block.data,
         );
       // Encrypted message overhead is IV + AuthTag
       const encryptedMessageOverhead = ECIES.IV_SIZE + ECIES.AUTH_TAG_SIZE;
       const decryptedData =
-        await ServiceLocator.getServiceProvider<TID>().eciesService.decryptMultipleECIEForRecipient(
+        await getGlobalServiceProvider<TID>().eciesService.decryptMultipleECIEForRecipient(
           {
             ...multiEncryptionHeader,
             encryptedMessage: block.data.subarray(
@@ -383,7 +383,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
           recipient as Member<Uint8Array>,
         );
       const checksum =
-        ServiceLocator.getServiceProvider<TID>().checksumService.calculateChecksum(
+        getGlobalServiceProvider<TID>().checksumService.calculateChecksum(
           decryptedData,
         );
 
@@ -467,12 +467,12 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
 
     try {
       const encryptedMessageDetails =
-        await ServiceLocator.getServiceProvider<TID>().eciesService.encryptMultiple(
+        await getGlobalServiceProvider<TID>().eciesService.encryptMultiple(
           recipients,
           block.data,
         );
       const header =
-        ServiceLocator.getServiceProvider<TID>().eciesService.buildECIESMultipleRecipientHeader(
+        getGlobalServiceProvider<TID>().eciesService.buildECIESMultipleRecipientHeader(
           encryptedMessageDetails,
         );
       const paddingSize =
@@ -486,9 +486,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
         ...padding,
       ]);
       const checksum =
-        ServiceLocator.getServiceProvider<TID>().checksumService.calculateChecksum(
-          data,
-        );
+        getGlobalServiceProvider<TID>().checksumService.calculateChecksum(data);
 
       const result = await EncryptedBlock.from<TID>(
         newBlockType,
@@ -677,19 +675,18 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       blockIdsArray.set(id.toUint8Array(), offset);
       offset += id.toUint8Array().length;
     }
-    const header =
-      ServiceLocator.getServiceProvider<TID>().cblService.makeCblHeader(
-        creator,
-        dateCreated,
-        blockIDs.length,
-        fileData.length,
-        blockIdsArray,
-        blockSize,
-        BlockEncryptionType.None,
-        createECBL && fileName
-          ? { fileName, mimeType: 'application/octet-stream' }
-          : undefined,
-      );
+    const header = getGlobalServiceProvider<TID>().cblService.makeCblHeader(
+      creator,
+      dateCreated,
+      blockIDs.length,
+      fileData.length,
+      blockIdsArray,
+      blockSize,
+      BlockEncryptionType.None,
+      createECBL && fileName
+        ? { fileName, mimeType: 'application/octet-stream' }
+        : undefined,
+    );
 
     const data = new Uint8Array(
       header.headerData.length + blockIdsArray.length,
@@ -734,16 +731,15 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
     }
 
     // Create CBL header
-    const header =
-      ServiceLocator.getServiceProvider<TID>().cblService.makeCblHeader(
-        creator,
-        new Date(),
-        blockIDs.length,
-        originalDataLength,
-        blockIdsArray,
-        BlockSize.Message, // CBL uses Message size
-        BlockEncryptionType.None,
-      );
+    const header = getGlobalServiceProvider<TID>().cblService.makeCblHeader(
+      creator,
+      new Date(),
+      blockIDs.length,
+      originalDataLength,
+      blockIdsArray,
+      BlockSize.Message, // CBL uses Message size
+      BlockEncryptionType.None,
+    );
 
     // Pad data to block size
     const blockSizeBytes = BlockSize.Message as number;
@@ -809,7 +805,7 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
       }
       if (encrypt && recipient) {
         const encryptedData =
-          await ServiceLocator.getServiceProvider().eciesService.encrypt(
+          await getGlobalServiceProvider().eciesService.encrypt(
             EciesEncryptionTypeEnum.WithLength,
             recipient as any,
             dataSlice,

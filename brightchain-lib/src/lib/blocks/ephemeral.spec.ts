@@ -172,16 +172,17 @@ describe('EphemeralBlock', () => {
       expect(block.lengthBeforeEncryption).toBe(0);
     });
 
-    it('should handle padding correctly', async () => {
+    it('should NOT pad data (ephemeral blocks represent user data)', async () => {
       const dataSize = Math.floor(getEffectiveSize(defaultBlockSize) / 2);
       const data = new Uint8Array(dataSize);
       crypto.getRandomValues(data);
       const block = await createTestBlock({ data });
 
-      // layerPayload returns actual data without padding
+      // Ephemeral blocks are NOT padded - they represent user data
+      // layerPayload returns actual data
       expect(block.layerPayload.length).toBe(dataSize);
-      // But data() returns padded data to full block size
-      expect(block.data.length).toBe(defaultBlockSize);
+      // data() also returns the actual data (no padding for ephemeral)
+      expect(block.data.length).toBe(dataSize);
       expect(block.lengthBeforeEncryption).toBe(dataSize);
       expect(block.blockSize).toBe(defaultBlockSize);
     });
@@ -194,9 +195,9 @@ describe('EphemeralBlock', () => {
       const data = new Uint8Array(effectiveSize);
       crypto.getRandomValues(data);
       const block = await createTestBlock({ data });
-      // data() returns padded data to full block size
-      expect(block.data.length).toBe(testSize);
-      // layerPayload returns unpadded data
+      // Ephemeral blocks are NOT padded - data() returns actual data
+      expect(block.data.length).toBe(effectiveSize);
+      // layerPayload also returns actual data
       expect(block.layerPayload.length).toBe(effectiveSize);
     });
 

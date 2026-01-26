@@ -1,8 +1,4 @@
-import {
-  hexToUint8Array,
-  PlatformID,
-  uint8ArrayToHex,
-} from '@digitaldefiance/ecies-lib';
+import { hexToUint8Array, PlatformID } from '@digitaldefiance/ecies-lib';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
 import { IHydrationSchema } from '../../interfaces/document/base';
 import {
@@ -27,9 +23,7 @@ export const publicMemberProfileHydrationSchema = <
   ): IPublicMemberProfileHydratedData<TID> => {
     const provider = ServiceProvider.getInstance<TID>().idProvider;
     const idBytes =
-      typeof storage.id === 'string'
-        ? hexToUint8Array(storage.id)
-        : storage.id;
+      typeof storage.id === 'string' ? hexToUint8Array(storage.id) : storage.id;
     const id = provider.fromBytes(idBytes);
 
     return {
@@ -87,9 +81,7 @@ export const privateMemberProfileHydrationSchema = <
   ): IPrivateMemberProfileHydratedData<TID> => {
     const provider = ServiceProvider.getInstance<TID>().idProvider;
     const idBytes =
-      typeof storage.id === 'string'
-        ? hexToUint8Array(storage.id)
-        : storage.id;
+      typeof storage.id === 'string' ? hexToUint8Array(storage.id) : storage.id;
     const id = provider.fromBytes(idBytes);
 
     return {
@@ -108,7 +100,9 @@ export const privateMemberProfileHydrationSchema = <
         return {
           autoReplication,
           minRedundancy,
-          preferredRegions: preferredRegions ? [...preferredRegions] : undefined,
+          preferredRegions: preferredRegions
+            ? [...preferredRegions]
+            : undefined,
           ...rest,
         };
       })(),
@@ -160,8 +154,12 @@ export const privateMemberProfileHydrationSchema = <
       return provider.toBytes(peerId);
     });
 
-    const { autoReplication, minRedundancy, preferredRegions, ...extraSettings } =
-      hydrated.settings ?? {};
+    const {
+      autoReplication,
+      minRedundancy,
+      preferredRegions,
+      ...extraSettings
+    } = hydrated.settings ?? {};
 
     return {
       id: idBytes,

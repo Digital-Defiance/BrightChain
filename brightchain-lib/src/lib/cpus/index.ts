@@ -1,4 +1,3 @@
-export type * from './instructions';
+export { createInstructionFactory } from './instructionFactory';
 export type * from './instructionTables';
-export type * from './mach-o';
-export type * from './x86Cpu';
+export { RiscVCpu } from './riscvCpu';

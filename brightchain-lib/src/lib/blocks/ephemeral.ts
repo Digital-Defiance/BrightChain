@@ -1,5 +1,4 @@
 import { ECIES, Member, type PlatformID } from '@digitaldefiance/ecies-lib';
-import { randomBytes } from '../browserCrypto';
 import { Readable } from '../browserStream';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
@@ -22,7 +21,7 @@ import {
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { logValidationFailure } from '../logging/blockLogger';
-import { ServiceLocator } from '../services/serviceLocator';
+import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
 // Remove circular import
@@ -39,7 +38,22 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
   implements IEphemeralBlock<TID>
 {
   /**
-   * Creates a new ephemeral block
+   * Creates a new ephemeral block.
+   *
+   * Ephemeral blocks represent user data in memory - either input data being
+   * prepared for storage, or reconstituted data read back from the OFF system.
+   * They are NOT padded; padding happens during the whitening/storage process.
+   *
+   * @param type - The block type
+   * @param dataType - The data type
+   * @param blockSize - The block size category (data can be smaller)
+   * @param data - The user data
+   * @param checksum - The checksum of the data
+   * @param creator - The member who created this block
+   * @param dateCreated - When the block was created
+   * @param lengthBeforeEncryption - Original data length (if encrypted)
+   * @param canRead - Whether the block can be read
+   * @param canPersist - Whether the block can be persisted
    */
   public static async from<TID extends PlatformID = Uint8Array>(
     type: BlockType,
@@ -53,11 +67,9 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
     canRead = true,
     canPersist = true,
   ): Promise<IEphemeralBlock<TID>> {
-    // Validate checksum matches the data
+    // Validate the provided checksum matches the data
     const calculatedChecksum =
-      await ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
-        data,
-      );
+      await getGlobalServiceProvider().checksumService.calculateChecksum(data);
 
     if (!calculatedChecksum.equals(checksum)) {
       throw new ChecksumMismatchError(checksum, calculatedChecksum);
@@ -95,17 +107,19 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
   protected readonly _creator: Member<TID>;
 
   /**
-   * Create a new ephemeral block
+   * Create a new ephemeral block.
+   *
+   * Ephemeral blocks represent user data that has been read/reconstituted from
+   * the OFF system. They are NOT padded - padding happens during the whitening
+   * process when data is prepared for storage.
+   *
    * @param type - The type of the block
    * @param dataType - The type of data in the block
-   * @param blockSize - The size of the block
-   * @param data - The data in the block
-   * @param checksum - The id/checksum of the block
-   * @param dateCreated - The date the block was created
-   * @param metadata - Optional block metadata
+   * @param data - The user data (NOT padded)
+   * @param checksum - The checksum of the data
+   * @param metadata - Block metadata including the block size category
    * @param canRead - Whether the block can be read
    * @param canPersist - Whether the block can be persisted (defaults to false for ephemeral blocks)
-   * @param encrypted - Whether the block is encrypted
    */
   public constructor(
     type: BlockType,
@@ -122,10 +136,8 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
       );
     }
 
-    // Initialize base class
-    super(type, dataType, checksum, metadata, canRead, canPersist);
-
     // Validate data length against block size
+    // Data can be smaller than block size - padding happens during whitening, not here
     const maxDataSize = metadata.size;
     if (data.length > maxDataSize) {
       throw new BlockValidationError(
@@ -133,26 +145,30 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
       );
     }
 
-    // Handle padding
-    let paddedData = data;
-    if (paddedData.length < maxDataSize) {
-      // Pad with random data to reach the full block size
-      const padding = randomBytes(maxDataSize - paddedData.length);
-      const result = new Uint8Array(paddedData.length + padding.length);
-      result.set(paddedData);
-      result.set(padding, paddedData.length);
-      paddedData = result;
-    }
+    // Initialize base class
+    super(type, dataType, checksum, metadata, canRead, canPersist);
 
     if (!metadata) {
       throw new BlockMetadataError(BlockMetadataErrorType.MetadataRequired);
     }
 
-    // Store block properties
-    this._data = paddedData;
+    // Store the data as-is (no padding for ephemeral blocks)
+    this._data = data;
 
     // Handle creator from metadata
     this._creator = metadata.creator;
+  }
+
+  /**
+   * The block's checksum (hash of the user data).
+   *
+   * Note: For ephemeral blocks, this is the checksum of the actual user data,
+   * not a content-addressed block ID. Ephemeral blocks are transient in-memory
+   * representations and don't have persistent IDs in the OFF system sense.
+   * The block only gets a "real" ID after whitening and storage.
+   */
+  public override get idChecksum(): Checksum {
+    return this._checksum;
   }
 
   /**
@@ -192,13 +208,11 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
       encryptedBlockType = BlockType.EncryptedExtendedConstituentBlockListBlock;
     }
     const capacity =
-      ServiceLocator.getServiceProvider().blockCapacityCalculator.calculateCapacity(
-        {
-          blockSize: this.blockSize,
-          blockType: encryptedBlockType,
-          encryptionType: BlockEncryptionType.SingleRecipient,
-        },
-      );
+      getGlobalServiceProvider().blockCapacityCalculator.calculateCapacity({
+        blockSize: this.blockSize,
+        blockType: encryptedBlockType,
+        encryptionType: BlockEncryptionType.SingleRecipient,
+      });
     return (
       this._lengthBeforeEncryption + ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE <=
       capacity.availableCapacity
@@ -220,16 +234,14 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
       encryptedBlockType = BlockType.EncryptedExtendedConstituentBlockListBlock;
     }
     const capacity =
-      ServiceLocator.getServiceProvider().blockCapacityCalculator.calculateCapacity(
-        {
-          blockSize: this.blockSize,
-          blockType: encryptedBlockType,
-          recipientCount: recipientCount,
-          encryptionType: BlockEncryptionType.MultiRecipient,
-        },
-      );
+      getGlobalServiceProvider().blockCapacityCalculator.calculateCapacity({
+        blockSize: this.blockSize,
+        blockType: encryptedBlockType,
+        recipientCount: recipientCount,
+        encryptionType: BlockEncryptionType.MultiRecipient,
+      });
     const overhead =
-      ServiceLocator.getServiceProvider().eciesService.calculateECIESMultipleRecipientOverhead(
+      getGlobalServiceProvider().eciesService.calculateECIESMultipleRecipientOverhead(
         recipientCount,
         true,
       );
@@ -257,9 +269,7 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
 
     // Calculate checksum on actual data length, excluding padding
     const computedChecksum =
-      ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
-        this._data,
-      );
+      getGlobalServiceProvider().checksumService.calculateChecksum(this._data);
     const validated = computedChecksum.equals(this.idChecksum);
     if (!validated) {
       const error = new ChecksumMismatchError(
@@ -295,7 +305,7 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
 
     // Calculate checksum on actual data length, excluding padding
     const computedChecksum =
-      await ServiceLocator.getServiceProvider().checksumService.calculateChecksum(
+      await getGlobalServiceProvider().checksumService.calculateChecksum(
         this._data,
       );
     const validated = computedChecksum.equals(this.idChecksum);
@@ -362,10 +372,10 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
    * @param creator The member who will own the encrypted block
    * @returns A new EncryptedOwnedDataBlock
    */
-  public async encrypt<E extends IEncryptedBlock<TID>>(
+  public async encrypt(
     newBlockType: BlockType,
     recipients?: Member<TID>[],
-  ): Promise<E> {
+  ): Promise<IEncryptedBlock<TID>> {
     const encryptedBlockType: BlockEncryptionType =
       recipients && recipients.length >= 2
         ? BlockEncryptionType.MultiRecipient
@@ -404,12 +414,12 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
     // Encrypt using BlockService
     const encryptedBlock =
       encryptedBlockType === BlockEncryptionType.MultiRecipient && recipients
-        ? await ServiceLocator.getServiceProvider<TID>().blockService.encryptMultiple(
+        ? await getGlobalServiceProvider<TID>().blockService.encryptMultiple(
             newBlockType,
             this,
             recipients,
           )
-        : await ServiceLocator.getServiceProvider<TID>().blockService.encrypt(
+        : await getGlobalServiceProvider<TID>().blockService.encrypt(
             newBlockType,
             this,
             recipients ? recipients[0] : undefined,
@@ -427,7 +437,7 @@ export class EphemeralBlock<TID extends PlatformID = Uint8Array>
       throw new BlockError(BlockErrorType.UnexpectedEncryptedBlockType);
     }
 
-    return encryptedBlock as unknown as E;
+    return encryptedBlock;
   }
 
   /**

@@ -7,6 +7,7 @@ import {
   TypedIdProviderWrapper,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
+import { createECIESService } from './browserConfig';
 import { QuorumErrorType } from './enumerations/quorumErrorType';
 import { QuorumError } from './errors/quorumError';
 import { getBrightChainIdProvider } from './init';
@@ -67,7 +68,10 @@ export class BrightChainQuorum<TID extends PlatformID = Uint8Array> {
       this.id = idProvider.fromBytes(idProvider.generate());
     }
     this._enhancedProvider = idProvider;
-    this._sealingService = new SealingService<TID>(eciesService, idProvider);
+    this._sealingService = new SealingService<TID>(
+      eciesService ?? createECIESService<TID>(),
+      idProvider,
+    );
     this._members = new SimpleStore<ShortHexGuid, Member<TID>>();
     this._memberPublicKeysByMemberId = new ArrayStore<ShortHexGuid>();
     this._documentsById = new SimpleStore<

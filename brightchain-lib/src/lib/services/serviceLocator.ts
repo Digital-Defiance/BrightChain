@@ -1,5 +1,6 @@
 import { PlatformID } from '@digitaldefiance/ecies-lib';
 import { IServiceProvider } from '../interfaces/serviceProvider.interface';
+import { setGlobalServiceProvider } from './globalServiceProvider';
 
 /**
  * ServiceLocator provides a way to access services without direct imports
@@ -17,6 +18,7 @@ export class ServiceLocator {
     provider: IServiceProvider<TID>,
   ): void {
     ServiceLocator.serviceProvider = provider;
+    setGlobalServiceProvider(provider);
   }
 
   /**

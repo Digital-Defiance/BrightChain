@@ -31,6 +31,7 @@ describe('RawDataBlock', () => {
       blockDataType: BlockDataType;
       canRead: boolean;
       canPersist: boolean;
+      checksumService: ChecksumService;
     }> = {},
   ): RawDataBlock => {
     const data =
@@ -52,6 +53,7 @@ describe('RawDataBlock', () => {
       options.blockDataType,
       options.canRead ?? true,
       options.canPersist ?? true,
+      options.checksumService,
     );
   };
 
@@ -156,6 +158,26 @@ describe('RawDataBlock', () => {
       const expectedHeader = new Uint8Array(block.layerHeaderData.length);
       expectedHeader.set(block.layerHeaderData);
       expect(arraysEqual(block.fullHeaderData, expectedHeader)).toBe(true);
+    });
+  });
+
+  describe('dependency injection', () => {
+    it('should work with injected checksumService', () => {
+      const data = new Uint8Array(defaultBlockSize);
+      crypto.getRandomValues(data);
+      const block = createTestBlock({ data, checksumService });
+
+      expect(block.blockSize).toBe(defaultBlockSize);
+      expect(() => block.validateSync()).not.toThrow();
+    });
+
+    it('should work without injected checksumService (lazy load)', () => {
+      const data = new Uint8Array(defaultBlockSize);
+      crypto.getRandomValues(data);
+      const block = createTestBlock({ data, checksumService: undefined });
+
+      expect(block.blockSize).toBe(defaultBlockSize);
+      expect(() => block.validateSync()).not.toThrow();
     });
   });
 });

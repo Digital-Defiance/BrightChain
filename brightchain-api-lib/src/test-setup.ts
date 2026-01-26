@@ -1,3 +1,4 @@
+import { blockLogger, SecurityAuditLogger } from '@brightchain/brightchain-lib';
 import { webcrypto } from 'crypto';
 import './lib/testUtils';
 
@@ -9,3 +10,7 @@ if (!globalThis.crypto) {
     configurable: true,
   });
 }
+
+// Silence security audit logs and block logs during tests
+SecurityAuditLogger.getInstance().silent = true;
+blockLogger.silent = true;

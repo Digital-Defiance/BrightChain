@@ -5,7 +5,8 @@ import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
 import { WhitenedError } from '../errors/whitenedError';
-import { ServiceProvider } from '../services/service.provider';
+import type { ChecksumService } from '../services/checksum.service';
+import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
@@ -25,6 +26,7 @@ export class WhitenedBlock extends RawDataBlock {
     dateCreated?: Date,
     canRead = true,
     canPersist = true,
+    checksumService?: ChecksumService,
   ) {
     super(
       blockSize,
@@ -35,6 +37,7 @@ export class WhitenedBlock extends RawDataBlock {
       BlockDataType.RawData,
       canRead,
       canPersist,
+      checksumService,
     );
   }
 
@@ -141,6 +144,10 @@ export class WhitenedBlock extends RawDataBlock {
       result[i] = thisData[i] ^ otherData[i];
     }
 
+    // Use global service provider for checksum calculation
+    const checksum =
+      getGlobalServiceProvider().checksumService.calculateChecksum(result);
+
     // Create a new instance of the same type as the input block
     const Constructor = other.constructor as new (
       blockSize: BlockSize,
@@ -150,8 +157,6 @@ export class WhitenedBlock extends RawDataBlock {
       canRead: boolean,
       canPersist: boolean,
     ) => T;
-    const checksum =
-      ServiceProvider.getInstance().checksumService.calculateChecksum(result);
 
     return new Constructor(
       this.blockSize,
@@ -191,8 +196,9 @@ export class WhitenedBlock extends RawDataBlock {
       result[i] = data[i] ^ randomData[i];
     }
 
+    // Use global service provider for checksum calculation
     const checksum =
-      ServiceProvider.getInstance().checksumService.calculateChecksum(result);
+      getGlobalServiceProvider().checksumService.calculateChecksum(result);
 
     return new WhitenedBlock(blockSize, result, checksum, new Date());
   }

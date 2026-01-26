@@ -4,7 +4,7 @@ import BlockType from '../enumerations/blockType';
 import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
 import { HandleTupleError } from '../errors/handleTupleError';
 import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
-import { ServiceProvider } from '../services/service.provider';
+import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
 import { BlockHandle } from './handle';
@@ -145,7 +145,7 @@ export class BlockHandleTuple<T extends BaseBlock = BaseBlock> {
 
     // Calculate checksum for the result
     const checksum =
-      ServiceProvider.getInstance().checksumService.calculateChecksum(result);
+      getGlobalServiceProvider().checksumService.calculateChecksum(result);
 
     // Create a RawDataBlock for the result with the provided metadata
     const block = new RawDataBlock(

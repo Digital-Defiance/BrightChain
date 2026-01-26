@@ -1,5 +1,5 @@
 import { ITokenRole, ITokenRoleDTO } from '@digitaldefiance/suite-core-lib';
-import { DefaultBackendIdType } from '../shared-types';
+import type { DefaultBackendIdType } from '../types/backend-id';
 import { ITokenUser } from './token-user';
 
 export interface IJwtSignResponse {

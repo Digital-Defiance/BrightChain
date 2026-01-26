@@ -1,5 +1,5 @@
 import { IRoleDTO, IRoleFrontendObject } from '@digitaldefiance/suite-core-lib';
-import { DefaultBackendIdType } from '../shared-types';
+import type { DefaultBackendIdType } from '../types/backend-id';
 import { IRoleBackendObject } from './backend-objects/role';
 
 export type StringLanguage = string;

@@ -22,7 +22,7 @@ import { PrimeTupleGeneratorStream } from '../primeTupleGeneratorStream';
 import { Validator } from '../utils/validator';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
-import { ServiceLocator } from './serviceLocator';
+import { getGlobalServiceProvider } from './globalServiceProvider';
 import { XorService } from './xor';
 
 /**
@@ -341,7 +341,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     );
 
     const encryptedBlock =
-      await ServiceLocator.getServiceProvider<TID>().blockService.encrypt(
+      await getGlobalServiceProvider<TID>().blockService.encrypt(
         BlockType.EncryptedOwnedDataBlock,
         ownedBlock,
         creator,
@@ -351,7 +351,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     }
 
     const decryptedBlock =
-      await ServiceLocator.getServiceProvider<TID>().blockService.decrypt(
+      await getGlobalServiceProvider<TID>().blockService.decrypt(
         creator,
         encryptedBlock,
         BlockType.EphemeralOwnedDataBlock,
@@ -642,7 +642,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       );
 
       const encryptedCbl =
-        await ServiceLocator.getServiceProvider<TID>().blockService.encrypt(
+        await getGlobalServiceProvider<TID>().blockService.encrypt(
           BlockType.EncryptedConstituentBlockListBlock,
           ownedBlock,
           creator,

@@ -28,7 +28,8 @@ describe('Binary SuperCBL Format - Property Tests', () => {
   beforeAll(() => {
     checksumService = new ChecksumService();
     const eciesService = ServiceProvider.getInstance().eciesService;
-    cblService = new CBLService(checksumService, eciesService);
+    const idProvider = ServiceProvider.getInstance().idProvider;
+    cblService = new CBLService(checksumService, eciesService, idProvider);
   });
 
   /**

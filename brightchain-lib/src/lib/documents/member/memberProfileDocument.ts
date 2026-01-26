@@ -115,10 +115,10 @@ export class MemberProfileDocument<TID extends PlatformID = Uint8Array> {
 
   public static create<TID extends PlatformID = Uint8Array>(
     arg1: Member<TID> | TID,
-    arg2:
-      | Member<TID>
-      | IPublicMemberProfileHydratedData<TID>,
-    arg3?: IPublicMemberProfileHydratedData<TID> | IPrivateMemberProfileHydratedData<TID>,
+    arg2: Member<TID> | IPublicMemberProfileHydratedData<TID>,
+    arg3?:
+      | IPublicMemberProfileHydratedData<TID>
+      | IPrivateMemberProfileHydratedData<TID>,
     arg4?: IPrivateMemberProfileHydratedData<TID> | { blockSize?: BlockSize },
     arg5?: { blockSize?: BlockSize },
   ): MemberProfileDocument<TID> {

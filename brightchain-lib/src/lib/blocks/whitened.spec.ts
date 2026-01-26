@@ -197,4 +197,39 @@ describe('WhitenedBlock', () => {
       expect(block.canDecrypt).toBe(false);
     });
   });
+
+  describe('dependency injection', () => {
+    it('should work with injected checksumService', () => {
+      const data = new Uint8Array(defaultBlockSize);
+      crypto.getRandomValues(data);
+      const checksum = checksumService.calculateChecksum(data);
+      const block = new WhitenedBlock(
+        defaultBlockSize,
+        data,
+        checksum,
+        new Date(),
+        true,
+        true,
+        checksumService,
+      );
+
+      expect(block.blockSize).toBe(defaultBlockSize);
+      expect(() => block.validateSync()).not.toThrow();
+    });
+
+    it('should work without injected checksumService (lazy load)', () => {
+      const data = new Uint8Array(defaultBlockSize);
+      crypto.getRandomValues(data);
+      const checksum = checksumService.calculateChecksum(data);
+      const block = new WhitenedBlock(
+        defaultBlockSize,
+        data,
+        checksum,
+        new Date(),
+      );
+
+      expect(block.blockSize).toBe(defaultBlockSize);
+      expect(() => block.validateSync()).not.toThrow();
+    });
+  });
 });

@@ -6,10 +6,10 @@ import {
   PlatformID,
   TypedIdProviderWrapper,
 } from '@digitaldefiance/ecies-lib';
+import { BRIGHTCHAIN_CONFIG_KEY } from './config/constants';
 import { ServiceProvider } from './services/service.provider';
 
 let isInitialized = false;
-const BRIGHTCHAIN_CONFIG_KEY = Symbol.for('brightchain.config');
 
 /**
  * Initialize the BrightChain library with browser-compatible configuration

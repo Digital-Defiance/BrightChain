@@ -1,10 +1,14 @@
-import { Member, type PlatformID } from '@digitaldefiance/ecies-lib';
+import {
+  Member,
+  type ECIESService,
+  type PlatformID,
+} from '@digitaldefiance/ecies-lib';
 import { BlockMetadata } from './blockMetadata';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { IEphemeralBlockMetadata } from './interfaces/blocks/metadata/ephemeralBlockMetadata';
-import { ServiceProvider } from './services/service.provider';
+import { getGlobalServiceProvider } from './services/globalServiceProvider';
 import { parseDate } from './utils/dateUtils';
 import { parseEphemeralBlockMetadataJson } from './utils/typeGuards';
 
@@ -45,19 +49,24 @@ export class EphemeralBlockMetadata<TID extends PlatformID = Uint8Array>
    * Uses robust date parsing with timezone support.
    *
    * @param json - JSON string containing metadata
+   * @param eciesService - Optional ECIES service for Member deserialization. If not provided, uses global service provider.
    * @returns Parsed EphemeralBlockMetadata instance
    * @throws JsonValidationError if JSON is invalid or required fields are missing/invalid
+   * @throws Error if eciesService is not provided and service provider is not initialized
    */
   public static override fromJson<TID extends PlatformID = Uint8Array>(
     json: string,
+    eciesService?: ECIESService<TID>,
   ): EphemeralBlockMetadata<TID> {
     // Use type guard to validate and parse
     const data = parseEphemeralBlockMetadataJson(json);
 
-    // Deserialize the Member from its JSON representation
-    // Pass eciesService to ensure correct ID provider is used
-    const eciesService = ServiceProvider.getInstance<TID>().eciesService;
-    const creator = Member.fromJson<TID>(data.creator, eciesService);
+    // Get ECIES service from parameter or global provider
+    const service =
+      eciesService || getGlobalServiceProvider<TID>().eciesService;
+
+    // Deserialize the Member from its JSON representation using provided service
+    const creator = Member.fromJson<TID>(data.creator, service);
 
     // Parse date using robust date utilities
     const dateCreated = parseDate(data.dateCreated);

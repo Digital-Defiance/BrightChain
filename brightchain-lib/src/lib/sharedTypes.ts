@@ -1,6 +1,5 @@
 import { ChecksumString, MemberType } from '@digitaldefiance/ecies-lib';
 import { Request } from 'express';
-import { Document } from './documents/base/document';
 
 export type DefaultIdType = ChecksumString;
 
@@ -36,49 +35,16 @@ export type MemberApiRequest = Request<
   }
 >;
 
-export type ValidatorFunction = (value: unknown) => boolean;
-
-export type SchemaType =
-  | StringConstructor
-  | NumberConstructor
-  | BooleanConstructor
-  | ObjectConstructor
-  | ArrayConstructor
-  | DateConstructor
-  | ValidatorFunction;
-
-export type SerializedValue =
-  | string
-  | number
-  | boolean
-  | null
-  | SerializedValue[]
-  | { [key: string]: SerializedValue };
-
-export type SchemaTypeOptions<T> = {
-  type: SchemaType;
-  required?: boolean;
-  default?: T;
-  serialize?: (value: T) => SerializedValue;
-  hydrate?: (value: string) => T;
-};
-
-export type SchemaDefinition<T> = {
-  [K in keyof T]:
-    | SchemaTypeOptions<T[K]>
-    | SchemaTypeOptions<T[K]>[]
-    | SchemaDefinition<T[K]>;
-};
-
-export type InstanceMethods<T> = {
-  [key: string]: (this: Document<T>, ...args: unknown[]) => unknown;
-};
-
-export type StaticMethods<T> = {
-  [key: string]: (
-    this: typeof Document,
-    ...args: unknown[]
-  ) => Document<T> | Promise<Document<T>> | unknown;
-};
+// Re-export schema types from separate file to avoid circular dependencies
+export type {
+  DocumentType,
+  InstanceMethods,
+  SchemaDefinition,
+  SchemaType,
+  SchemaTypeOptions,
+  SerializedValue,
+  StaticMethods,
+  ValidatorFunction,
+} from './types/schema';
 
 export const DefaultCurrencyCode = 'USD';

@@ -12,8 +12,8 @@ import {
   ConstituentBlockListBlock,
   EncryptedBlock,
   EncryptedBlockMetadata,
+  getGlobalServiceProvider,
   ICBLStore,
-  ServiceLocator,
   StoreError,
   StoreErrorType,
 } from '@brightchain/brightchain-lib';
@@ -77,10 +77,10 @@ export class DiskCBLStore<
       mkdirSync(this._cblPath, { recursive: true });
     }
 
-    this._blockService = ServiceLocator.getServiceProvider<TID>().blockService;
-    this._cblService = ServiceLocator.getServiceProvider<TID>().cblService;
+    this._blockService = getGlobalServiceProvider<TID>().blockService;
+    this._cblService = getGlobalServiceProvider<TID>().cblService;
     this._checksumService =
-      ServiceLocator.getServiceProvider<TID>().checksumService;
+      getGlobalServiceProvider<TID>().checksumService;
   }
 
   /**
@@ -90,10 +90,10 @@ export class DiskCBLStore<
    */
   public isEncrypted(data: Uint8Array): boolean {
     return (
-      ServiceLocator.getServiceProvider<TID>().blockService.isSingleRecipientEncrypted(
+      getGlobalServiceProvider<TID>().blockService.isSingleRecipientEncrypted(
         data,
       ) ||
-      ServiceLocator.getServiceProvider<TID>().blockService.isMultiRecipientEncrypted(
+      getGlobalServiceProvider<TID>().blockService.isMultiRecipientEncrypted(
         data,
       )
     );
@@ -164,7 +164,7 @@ export class DiskCBLStore<
 
       // Check if it's multi-encrypted
       if (
-        ServiceLocator.getServiceProvider<TID>().blockService.isMultiRecipientEncrypted(
+        getGlobalServiceProvider<TID>().blockService.isMultiRecipientEncrypted(
           cblData,
         )
       ) {
@@ -191,7 +191,7 @@ export class DiskCBLStore<
 
         const decryptedCbl = new ConstituentBlockListBlock(
           (
-            await ServiceLocator.getServiceProvider<TID>().blockService.decryptMultiple(
+            await getGlobalServiceProvider<TID>().blockService.decryptMultiple(
               this._activeUser,
               multiEncryptedCbl,
             )
@@ -226,7 +226,7 @@ export class DiskCBLStore<
 
         const decryptedCbl = new ConstituentBlockListBlock<TID>(
           (
-            await ServiceLocator.getServiceProvider<TID>().blockService.decrypt(
+            await getGlobalServiceProvider<TID>().blockService.decrypt(
               this._activeUser,
               encryptedCbl,
               BlockType.ConstituentBlockList,
@@ -248,7 +248,7 @@ export class DiskCBLStore<
 
     // Hydrate the creator
     const idProvider =
-      ServiceLocator.getServiceProvider<TID>().eciesService.constants
+      getGlobalServiceProvider<TID>().eciesService.constants
         .idProvider;
     const creator: Member<TID> =
       this._activeUser &&

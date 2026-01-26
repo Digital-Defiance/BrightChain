@@ -278,6 +278,7 @@ function sanitizeMetadata(
 export class BlockLogger implements IBlockLogger {
   private level: LogLevel = LogLevel.INFO;
   private output: (entry: BlockLogEntry) => void;
+  private _silent = false;
 
   /**
    * Create a new BlockLogger.
@@ -285,6 +286,17 @@ export class BlockLogger implements IBlockLogger {
    */
   constructor(output?: (entry: BlockLogEntry) => void) {
     this.output = output ?? defaultOutput;
+  }
+
+  /**
+   * Enable or disable all output (useful for tests)
+   */
+  public set silent(value: boolean) {
+    this._silent = value;
+  }
+
+  public get silent(): boolean {
+    return this._silent;
   }
 
   /**
@@ -357,6 +369,9 @@ export class BlockLogger implements IBlockLogger {
    * @param entry - The log entry to emit
    */
   private emit(entry: BlockLogEntry): void {
+    // Skip output in silent mode (useful for tests)
+    if (this._silent) return;
+
     if (this.shouldLog(entry.level)) {
       try {
         this.output(entry);

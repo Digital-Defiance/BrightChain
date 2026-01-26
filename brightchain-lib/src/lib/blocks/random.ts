@@ -3,7 +3,8 @@ import { Readable } from '../browserStream';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
-import { ServiceProvider } from '../services/service.provider';
+import type { ChecksumService } from '../services/checksum.service';
+import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
 import { RawDataBlock } from './rawData';
@@ -19,6 +20,7 @@ export class RandomBlock extends RawDataBlock {
     data: Uint8Array,
     dateCreated?: Date,
     checksum?: Checksum,
+    checksumService?: ChecksumService,
   ) {
     if (data.length !== blockSize) {
       throw new Error('Data length must match block size');
@@ -33,6 +35,7 @@ export class RandomBlock extends RawDataBlock {
       BlockDataType.RawData,
       true, // canRead
       true, // canPersist
+      checksumService,
     );
   }
 
@@ -144,6 +147,10 @@ export class RandomBlock extends RawDataBlock {
       result[i] = thisData[i] ^ otherData[i];
     }
 
+    // Use global service provider for checksum calculation
+    const checksum =
+      getGlobalServiceProvider().checksumService.calculateChecksum(result);
+
     // Create a new instance of the same type as the input block
     const Constructor = other.constructor as new (
       blockSize: BlockSize,
@@ -158,7 +165,7 @@ export class RandomBlock extends RawDataBlock {
       this.blockSize,
       result,
       new Date(),
-      ServiceProvider.getInstance().checksumService.calculateChecksum(result),
+      checksum,
       this.canRead && other.canRead,
       this.canPersist && other.canPersist,
     );

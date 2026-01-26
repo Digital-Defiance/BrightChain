@@ -32,7 +32,12 @@ describe('CBLService', () => {
   function createTestServices() {
     const checksumService = new ChecksumService();
     const eciesService = ServiceProvider.getInstance().eciesService;
-    const cblService = new CBLService(checksumService, eciesService);
+    const idProvider = ServiceProvider.getInstance().idProvider;
+    const cblService = new CBLService(
+      checksumService,
+      eciesService,
+      idProvider,
+    );
     const capacityCalculator = new BlockCapacityCalculator(
       cblService,
       eciesService,
