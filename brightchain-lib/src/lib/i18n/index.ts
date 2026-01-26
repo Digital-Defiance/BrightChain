@@ -6,10 +6,23 @@
 
 import {
   LanguageCodes as I18nLanguageCodes,
+  MasterStringsCollection,
   PluginI18nEngine,
 } from '@digitaldefiance/i18n-lib';
 import { BrightChainStrings } from '../enumerations/brightChainStrings';
-import { AmericanEnglishStrings } from '../strings/englishUs';
+import { AmericanEnglishStrings } from './strings/englishUs';
+import { BritishEnglishStrings } from './strings/englishUK';
+import { SpanishStrings } from './strings/spanish';
+import { FrenchStrings } from './strings/french';
+import { JapaneseStrings } from './strings/japanese';
+import { GermanStrings } from './strings/german';
+import { UkrainianStrings } from './strings/ukrainian';
+import { MandarinStrings } from './strings/mandarin';
+
+/**
+ * String constants and utilities.
+ */
+export * from './strings';
 
 // Note: LanguageCodes should be imported directly from @digitaldefiance/i18n-lib by consumers
 
@@ -21,7 +34,18 @@ let engine: PluginI18nEngine<string> | null = null;
 /**
  * Component ID for all BrightChain strings
  */
-const BRIGHTCHAIN_STRINGS = 'brightchain.strings';
+export const BrightChainComponentId = 'brightchain.strings';
+
+export const Strings: MasterStringsCollection<string, string> = {
+  [I18nLanguageCodes.DE]: GermanStrings,
+  [I18nLanguageCodes.EN_US]: AmericanEnglishStrings,
+  [I18nLanguageCodes.EN_GB]: BritishEnglishStrings,
+  [I18nLanguageCodes.ES]: SpanishStrings,
+  [I18nLanguageCodes.FR]: FrenchStrings,
+  [I18nLanguageCodes.JA]: JapaneseStrings,
+  [I18nLanguageCodes.UK]: UkrainianStrings,
+  [I18nLanguageCodes.ZH_CN]: MandarinStrings,
+};
 
 /**
  * Initialize the BrightChain i18n engine
@@ -32,35 +56,60 @@ function initEngine(): PluginI18nEngine<string> {
   }
 
   engine = PluginI18nEngine.createInstance('brightchain', [
-    {
+{
       id: I18nLanguageCodes.EN_US,
       name: 'English (US)',
       code: 'en-US',
       isDefault: true,
+    },
+    {
+      id: I18nLanguageCodes.EN_GB,
+      name: 'English (UK)',
+      code: 'en-GB',
+    },
+    {
+      id: I18nLanguageCodes.FR,
+      name: 'Français',
+      code: 'fr',
+    },
+    {
+      id: I18nLanguageCodes.ES,
+      name: 'Español',
+      code: 'es',
+    },
+    {
+      id: I18nLanguageCodes.DE,
+      name: 'Deutsch',
+      code: 'de',
+    },
+    {
+      id: I18nLanguageCodes.ZH_CN,
+      name: '中文 (简体)',
+      code: 'zh-CN',
+    },
+    {
+      id: I18nLanguageCodes.JA,
+      name: '日本語',
+      code: 'ja',
+    },
+    {
+      id: I18nLanguageCodes.UK,
+      name: 'Українська',
+      code: 'uk',
     },
   ]);
 
   // Convert StringNames enum values to an array of string keys
   const stringKeys = Object.values(BrightChainStrings);
 
-  // Convert AmericanEnglishStrings to a simple key-value object
-  const translations: Record<string, string> = {};
-  for (const [key, value] of Object.entries(AmericanEnglishStrings)) {
-    if (value !== undefined) {
-      translations[key] = value;
-    }
-  }
-
   // Register all strings in a single component
   engine.registerComponent({
     component: {
-      id: BRIGHTCHAIN_STRINGS,
+      id: BrightChainComponentId,
       name: 'BrightChain Strings',
       stringKeys,
     },
-    strings: {
-      [I18nLanguageCodes.EN_US]: translations,
-    },
+    strings: Strings,
   });
 
   return engine;
@@ -84,7 +133,7 @@ export function translate(
 ): string {
   const eng = getI18n();
   try {
-    return eng.translate(BRIGHTCHAIN_STRINGS, stringName, vars, language);
+    return eng.translate(BrightChainComponentId, stringName, vars, language);
   } catch (error) {
     // Fallback to string name if translation fails
     console.warn(`Translation failed for ${stringName}:`, error);

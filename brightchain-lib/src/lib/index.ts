@@ -163,10 +163,6 @@ export * from './security';
  */
 export * from './i18n';
 
-/**
- * String constants and utilities.
- */
-export * from './strings';
 
 // ============================================================================
 // Direct Exports from Root Files
