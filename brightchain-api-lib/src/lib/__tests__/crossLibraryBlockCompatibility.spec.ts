@@ -59,7 +59,12 @@ describe('Cross-Library Block Compatibility', () => {
     // Create services using the same pattern as cblService.spec.ts
     checksumService = new ChecksumService();
     const eciesService = serviceProvider.eciesService;
-    cblService = new CBLService<PlatformID>(checksumService, eciesService);
+    const idProvider = serviceProvider.idProvider;
+    cblService = new CBLService<PlatformID>(
+      checksumService,
+      eciesService,
+      idProvider,
+    );
 
     // Create test member using the same pattern
     const { member } = Member.newMember<PlatformID>(

@@ -1,5 +1,5 @@
 import { IRoleBase } from '@digitaldefiance/suite-core-lib';
-import { DefaultBackendIdType } from '../shared-types';
+import type { DefaultBackendIdType } from '../types/backend-id';
 import { IBaseDocument } from './base';
 
 /**

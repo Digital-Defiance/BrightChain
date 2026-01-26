@@ -13,7 +13,6 @@ import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { initializeBrightChain } from '../init';
 import { ServiceProvider } from '../services/service.provider';
 import { ServiceLocator } from '../services/serviceLocator';
-import { EncryptedBlock } from './encrypted';
 import { EphemeralBlock } from './ephemeral';
 
 /**
@@ -140,9 +139,10 @@ describe('Feature: block-security-hardening, Property 9: Block Immutability', ()
           expect(ephemeralBlock.creator?.publicKey).toBeDefined();
           expect(ephemeralBlock.creator?.publicKey.length).toBe(33);
 
-          const encryptedBlock = await ephemeralBlock.encrypt<
-            EncryptedBlock<GuidV4Uint8Array>
-          >(BlockType.EncryptedOwnedDataBlock, [testMember.member]);
+          const encryptedBlock = await ephemeralBlock.encrypt(
+            BlockType.EncryptedOwnedDataBlock,
+            [testMember.member],
+          );
 
           const details1 = encryptedBlock.encryptionDetails;
           const details2 = encryptedBlock.encryptionDetails;

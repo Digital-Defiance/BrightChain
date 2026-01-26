@@ -698,7 +698,9 @@ describe('AvailabilityService Property Tests - State Management', () => {
 
             // Verify event
             expect(partitionEvent).not.toBeNull();
-            expect(partitionEvent!.disconnectedPeers).toEqual(peerIds);
+            expect(new Set(partitionEvent!.disconnectedPeers)).toEqual(
+              new Set(peerIds),
+            );
 
             return true;
           },

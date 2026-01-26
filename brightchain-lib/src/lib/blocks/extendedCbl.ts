@@ -12,7 +12,7 @@ import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
 import { ExtendedCblError } from '../errors/extendedCblError';
 import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IExtendedConstituentBlockListBlock } from '../interfaces/blocks/extendedCbl';
-import { ServiceLocator } from '../services/serviceLocator';
+import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 
 /**
@@ -51,12 +51,10 @@ export class ExtendedCBL<
    */
   public get fileName(): string {
     this.ensureHeaderValidated();
-    const filename = ServiceLocator.getServiceProvider().cblService.getFileName(
+    const filename = getGlobalServiceProvider().cblService.getFileName(
       this._data,
     );
-    ServiceLocator.getServiceProvider().cblService.validateFileNameFormat(
-      filename,
-    );
+    getGlobalServiceProvider().cblService.validateFileNameFormat(filename);
     return filename;
   }
 
@@ -65,9 +63,7 @@ export class ExtendedCBL<
    */
   public get fileNameLength(): number {
     this.ensureHeaderValidated();
-    return ServiceLocator.getServiceProvider().cblService.getFileNameLength(
-      this._data,
-    );
+    return getGlobalServiceProvider().cblService.getFileNameLength(this._data);
   }
 
   /**
@@ -75,12 +71,10 @@ export class ExtendedCBL<
    */
   public get mimeType(): string {
     this.ensureHeaderValidated();
-    const mimeType = ServiceLocator.getServiceProvider().cblService.getMimeType(
+    const mimeType = getGlobalServiceProvider().cblService.getMimeType(
       this._data,
     );
-    ServiceLocator.getServiceProvider().cblService.validateMimeTypeFormat(
-      mimeType,
-    );
+    getGlobalServiceProvider().cblService.validateMimeTypeFormat(mimeType);
     return mimeType;
   }
 
@@ -89,9 +83,7 @@ export class ExtendedCBL<
    */
   public get mimeTypeLength(): number {
     this.ensureHeaderValidated();
-    return ServiceLocator.getServiceProvider().cblService.getMimeTypeLength(
-      this._data,
-    );
+    return getGlobalServiceProvider().cblService.getMimeTypeLength(this._data);
   }
 
   /**
@@ -258,10 +250,10 @@ export class ExtendedCBL<
     this._delegate.validate();
   }
 
-  public async encrypt<E extends IEncryptedBlock<TID>>(
+  public async encrypt(
     newBlockType: BlockType,
     recipients?: Member<TID>[],
-  ): Promise<E> {
+  ): Promise<IEncryptedBlock<TID>> {
     return this._delegate.encrypt(newBlockType, recipients);
   }
 

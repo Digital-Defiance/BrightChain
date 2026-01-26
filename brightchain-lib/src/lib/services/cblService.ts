@@ -24,16 +24,18 @@ import { MessageEncryptionScheme } from '../enumerations/messaging/messageEncryp
 import { MessagePriority } from '../enumerations/messaging/messagePriority';
 import { CblError } from '../errors/cblError';
 import { ExtendedCblError } from '../errors/extendedCblError';
-import { getBrightChainIdProvider } from '../init';
+
+import { IBlockCapacityCalculator } from '../interfaces/blockCapacity';
 import { IConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/cblHeader';
 import { IExtendedConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/ecblHeader';
 import { IMessageConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/messageCblHeader';
 import { ISuperConstituentBlockListBlockHeader } from '../interfaces/blocks/headers/superCblHeader';
 import { Checksum } from '../types/checksum';
 import { Validator } from '../utils/validator';
-import { BlockCapacityCalculator } from './blockCapacity.service';
+
 import { detectBlockFormat } from './blockFormatService';
 import { ChecksumService } from './checksum.service';
+import { getGlobalServiceProvider } from './globalServiceProvider';
 
 /**
  * Service for creating and verifying CBL blocks.
@@ -65,12 +67,11 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
   constructor(
     checksumService: ChecksumService,
     eciesService: ECIESService<TID>,
-    enhancedProvider?: TypedIdProviderWrapper<TID>,
+    enhancedProvider: TypedIdProviderWrapper<TID>,
   ) {
     this.checksumService = checksumService;
     this.eciesService = eciesService;
-    // Use the enhanced provider which should now use the same global configuration
-    this.enhancedProvider = enhancedProvider ?? getBrightChainIdProvider<TID>();
+    this.enhancedProvider = enhancedProvider;
   }
 
   /** Create safe buffers for common operations */
@@ -1459,7 +1460,13 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       fileName: string;
       mimeType: string;
     },
+    blockCapacityCalculator?: IBlockCapacityCalculator,
   ): number {
+    // Use provided calculator or fall back to global service provider
+    const calculator =
+      blockCapacityCalculator ??
+      getGlobalServiceProvider<TID>().blockCapacityCalculator;
+
     let blockType: BlockType;
     if (cbl) {
       blockType =
@@ -1473,11 +1480,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
           : BlockType.ConstituentBlockList;
     }
 
-    const blockCapacityCalculator = new BlockCapacityCalculator(
-      this,
-      this.eciesService,
-    );
-    const result = blockCapacityCalculator.calculateCapacity({
+    const result = calculator.calculateCapacity({
       blockSize,
       blockType,
       encryptionType: encryptedBlockType,

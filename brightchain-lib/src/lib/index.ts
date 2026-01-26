@@ -94,6 +94,7 @@ export * from './encryptedBlockMetadata';
  * Service implementations for BrightChain operations.
  */
 export * from './services';
+export { getGlobalServiceProvider, setGlobalServiceProvider } from './services/globalServiceProvider';
 
 /**
  * Factory classes for object creation.
@@ -151,6 +152,11 @@ export * from './debug';
  * Logging utilities for block operations.
  */
 export * from './logging';
+
+/**
+ * Security utilities for audit logging and rate limiting.
+ */
+export * from './security';
 
 /**
  * Internationalization support.

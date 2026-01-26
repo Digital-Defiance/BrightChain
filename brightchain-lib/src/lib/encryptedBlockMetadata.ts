@@ -2,6 +2,7 @@ import {
   ECIES,
   Member,
   uint8ArrayToHex,
+  type ECIESService,
   type PlatformID,
 } from '@digitaldefiance/ecies-lib';
 import BlockDataType from './enumerations/blockDataType';
@@ -99,17 +100,19 @@ export class EncryptedBlockMetadata<TID extends PlatformID = Uint8Array>
    * encrypted metadata. For full deserialization, additional fields would be needed.
    *
    * @param json - JSON string containing metadata
+   * @param eciesService - Optional ECIES service for Member deserialization
    * @returns Parsed EncryptedBlockMetadata instance
    * @throws JsonValidationError if JSON is invalid or required fields are missing/invalid
    */
   public static override fromJson<TID extends PlatformID = Uint8Array>(
     json: string,
+    eciesService?: ECIESService<TID>,
   ): EncryptedBlockMetadata<TID> {
     // Parse the JSON to get the data
     const parsed = JSON.parse(json);
 
     // Parse using parent's fromJson to get the ephemeral metadata
-    const ephemeralData = super.fromJson<TID>(json);
+    const ephemeralData = super.fromJson<TID>(json, eciesService);
 
     // Extract encrypted-specific fields
     const encryptionType = parsed.encryptionType as BlockEncryptionType;

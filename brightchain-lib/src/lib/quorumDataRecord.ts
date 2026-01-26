@@ -41,15 +41,15 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
     sharesRequired: number,
     encryptedData: Uint8Array,
     encryptedSharesByMemberId: Map<ShortHexGuid, Uint8Array>,
+    enhancedProvider: TypedIdProviderWrapper<TID>,
     checksum?: Checksum,
     signature?: SignatureUint8Array,
     id?: TID,
     dateCreated?: Date,
     dateUpdated?: Date,
-    enhancedProvider?: TypedIdProviderWrapper<TID>,
     eciesService?: ECIESService<TID>,
   ) {
-    this.enhancedProvider = enhancedProvider ?? getBrightChainIdProvider<TID>();
+    this.enhancedProvider = enhancedProvider;
     this.eciesService = eciesService ?? createECIESService<TID>();
     if (id !== undefined) {
       this.id = id;
@@ -157,11 +157,13 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
       dto.sharesRequired,
       hexToUint8Array(dto.encryptedData),
       encryptedSharesByMemberId,
+      enhancedProviderToUse,
       checksumService.hexStringToChecksum(dto.checksum) as Checksum,
       eciesServiceToUse.signatureStringToSignatureBuffer(dto.signature),
       enhancedProviderToUse.fromBytes(hexToUint8Array(dto.id)),
       dto.dateCreated,
       dto.dateUpdated,
+      eciesServiceToUse,
     );
   }
   public toJson(): string {

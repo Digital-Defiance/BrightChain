@@ -44,11 +44,27 @@ describe('WebSocketMessageServer - Property Tests', () => {
    * and successfully deliver messages to connected nodes
    */
   it('Property 14a: should connect and send messages for any valid node/message IDs', async () => {
+    // Reserved names that could conflict with Object.prototype or cause issues
+    const reservedNames = new Set([
+      'valueOf',
+      'toString',
+      'constructor',
+      'hasOwnProperty',
+      'isPrototypeOf',
+      'propertyIsEnumerable',
+      'toLocaleString',
+      '__proto__',
+      '__defineGetter__',
+      '__defineSetter__',
+      '__lookupGetter__',
+      '__lookupSetter__',
+    ]);
+
     await fc.assert(
       fc.asyncProperty(
         fc
           .string({ minLength: 1, maxLength: 32 })
-          .filter((s) => /^[a-z0-9_-]+$/i.test(s)),
+          .filter((s) => /^[a-z0-9_-]+$/i.test(s) && !reservedNames.has(s)),
         fc.uuid(),
         async (nodeId: string, messageId: string) => {
           const client = new WebSocket(`ws://localhost:${port}/${nodeId}`);
@@ -82,11 +98,27 @@ describe('WebSocketMessageServer - Property Tests', () => {
    * Attempting to send to a node that is not connected should return false
    */
   it('Property 14b: should fail to send messages to unconnected nodes', async () => {
+    // Reserved names that could conflict with Object.prototype or cause issues
+    const reservedNames = new Set([
+      'valueOf',
+      'toString',
+      'constructor',
+      'hasOwnProperty',
+      'isPrototypeOf',
+      'propertyIsEnumerable',
+      'toLocaleString',
+      '__proto__',
+      '__defineGetter__',
+      '__defineSetter__',
+      '__lookupGetter__',
+      '__lookupSetter__',
+    ]);
+
     await fc.assert(
       fc.asyncProperty(
         fc
           .string({ minLength: 1, maxLength: 32 })
-          .filter((s) => /^[a-z0-9_-]+$/i.test(s)),
+          .filter((s) => /^[a-z0-9_-]+$/i.test(s) && !reservedNames.has(s)),
         fc.uuid(),
         async (nodeId: string, messageId: string) => {
           const sent = await wsServer.sendToNode(nodeId, messageId);
