@@ -116,3 +116,12 @@ export interface IBlockCapacityResult {
   /** Detailed breakdown of overhead by component type */
   details: IOverheadBreakdown;
 }
+
+/**
+ * Interface for block capacity calculator
+ * Used for dependency injection to avoid circular dependencies
+ */
+export interface IBlockCapacityCalculator {
+  /** Calculate the capacity for a block with the given parameters */
+  calculateCapacity(params: IBlockCapacityParams): IBlockCapacityResult;
+}

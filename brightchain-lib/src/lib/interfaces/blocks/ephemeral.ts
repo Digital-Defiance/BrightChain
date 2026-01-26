@@ -1,7 +1,12 @@
 import { Member, type PlatformID } from '@digitaldefiance/ecies-lib';
 import BlockType from '../../enumerations/blockType';
 import { IBaseBlock } from './base';
-import { IEncryptedBlock } from './encrypted';
+
+// Forward declaration to avoid circular dependency
+export interface IEncryptedBlockBase<TID extends PlatformID = Uint8Array>
+  extends IBaseBlock {
+  get recipientWithKey(): Member<TID>;
+}
 
 export interface IEphemeralBlock<
   TID extends PlatformID = Uint8Array,
@@ -43,13 +48,8 @@ export interface IEphemeralBlock<
   get creator(): Member<TID> | undefined;
   get data(): Uint8Array;
 
-  /**
-   * Encrypt the block for one or more recipients.
-   * @param newBlockType The type of the new encrypted block.
-   * @param recipients The recipients of the new encrypted block.
-   */
-  encrypt<E extends IEncryptedBlock<TID>>(
+  encrypt(
     newBlockType: BlockType,
     recipients?: Member<TID>[],
-  ): Promise<E>;
+  ): Promise<IEncryptedBlockBase<TID>>;
 }

@@ -27,5 +27,5 @@ export interface IEncryptedBlock<
    */
   get encryptionDetails():
     | ISingleEncryptedParsedHeader
-    | IMultiEncryptedParsedHeader<TID>;
+    | IMultiEncryptedParsedHeader<PlatformID>;
 }

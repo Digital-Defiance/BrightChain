@@ -1,6 +1,6 @@
 import { AccountStatus, IUserBase } from '@digitaldefiance/suite-core-lib';
 import { StringLanguage } from '../interfaces/request-user';
-import { DefaultBackendIdType } from '../shared-types';
+import type { DefaultBackendIdType } from '../types/backend-id';
 import { IBaseDocument } from './base';
 
 export interface IBrightChainUserBase extends IUserBase<

@@ -4,19 +4,21 @@ import {
   TypedIdProviderWrapper,
   VotingService,
 } from '@digitaldefiance/ecies-lib';
-import { SealingService } from '../services';
-import { BlockCapacityCalculator } from '../services/blockCapacity.service';
-import { BlockService } from '../services/blockService';
-import { CBLService } from '../services/cblService';
-import { ChecksumService } from '../services/checksum.service';
-import { FecService } from '../services/fec.service';
-import { TupleService } from '../services/tuple.service';
+import type { BlockFactory } from '../factories/blockFactory';
+import type { BlockCapacityCalculator } from '../services/blockCapacity.service';
+import type { BlockService } from '../services/blockService';
+import type { CBLService } from '../services/cblService';
+import type { ChecksumService } from '../services/checksum.service';
+import type { FecService } from '../services/fec.service';
+import type { SealingService } from '../services/sealing.service';
+import type { TupleService } from '../services/tuple.service';
 
 /**
  * Interface for the ServiceProvider to break circular dependencies
  */
 export interface IServiceProvider<TID extends PlatformID = Uint8Array> {
   readonly checksumService: ChecksumService;
+  readonly blockFactory: BlockFactory<TID>;
   readonly eciesService: ECIESService<TID>;
   readonly cblService: CBLService<TID>;
   readonly blockService: BlockService<TID>;

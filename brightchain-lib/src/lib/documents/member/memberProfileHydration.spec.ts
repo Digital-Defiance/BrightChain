@@ -1,4 +1,9 @@
-import { GuidV4Uint8Array } from '@digitaldefiance/ecies-lib';
+import {
+  EmailString,
+  GuidV4Uint8Array,
+  Member,
+  MemberType,
+} from '@digitaldefiance/ecies-lib';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
 import {
   IPrivateMemberProfileHydratedData,
@@ -17,13 +22,11 @@ describe('MemberProfileHydration', () => {
 
   beforeEach(() => {
     const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
-    const { member } = require('@digitaldefiance/ecies-lib').Member.newMember(
+    const { member } = Member.newMember(
       sp.eciesService,
-      require('@digitaldefiance/ecies-lib').MemberType.User,
+      MemberType.User,
       'test-user',
-      new (require('@digitaldefiance/ecies-lib').EmailString)(
-        'test@example.com',
-      ),
+      new EmailString('test@example.com'),
     );
     testId = member.id;
   });
@@ -126,26 +129,20 @@ describe('MemberProfileHydration', () => {
 
     beforeEach(() => {
       const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
-      const { member: peer1 } =
-        require('@digitaldefiance/ecies-lib').Member.newMember(
-          sp.eciesService,
-          require('@digitaldefiance/ecies-lib').MemberType.User,
-          'peer1',
-          new (require('@digitaldefiance/ecies-lib').EmailString)(
-            'peer1@example.com',
-          ),
-        );
+      const { member: peer1 } = Member.newMember(
+        sp.eciesService,
+        MemberType.User,
+        'peer1',
+        new EmailString('peer1@example.com'),
+      );
       peerId1 = peer1.id;
 
-      const { member: peer2 } =
-        require('@digitaldefiance/ecies-lib').Member.newMember(
-          sp.eciesService,
-          require('@digitaldefiance/ecies-lib').MemberType.User,
-          'peer2',
-          new (require('@digitaldefiance/ecies-lib').EmailString)(
-            'peer2@example.com',
-          ),
-        );
+      const { member: peer2 } = Member.newMember(
+        sp.eciesService,
+        MemberType.User,
+        'peer2',
+        new EmailString('peer2@example.com'),
+      );
       peerId2 = peer2.id;
     });
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   arraysEqual,
   ECIES,
@@ -32,9 +31,37 @@ import {
 import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { logValidationFailure } from '../logging/blockLogger';
-import { ServiceProvider } from '../services/service.provider';
+import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { EphemeralBlock } from './ephemeral';
+
+/**
+ * Minimal service provider interface to avoid circular dependencies.
+ * Only includes the services that EncryptedBlock actually uses.
+ */
+interface IEncryptedBlockServices<TID extends PlatformID> {
+  idProvider: TypedIdProviderWrapper<TID>;
+  eciesService: {
+    parseSingleEncryptedHeader(...args: unknown[]): ISingleEncryptedParsedHeader;
+    parseMultiEncryptedHeader(...args: unknown[]): IMultiEncryptedParsedHeader;
+  };
+  blockService: {
+    decrypt(
+      creator: Member<TID>,
+      block: unknown,
+      newBlockType: BlockType
+    ): Promise<unknown>;
+    decryptMultiple(creator: Member<TID>, block: unknown): Promise<unknown>;
+  };
+  blockCapacityCalculator: {
+    calculateCapacity(options: {
+      blockSize: BlockSize;
+      blockType: BlockType;
+      encryptionType: BlockEncryptionType;
+      recipientCount?: number;
+    }): { availableCapacity: number };
+  };
+}
 
 /**
  * Base class for encrypted blocks.
@@ -113,11 +140,18 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
   protected readonly _encryptionType: BlockEncryptionType;
   protected readonly _recipients: Array<TID>;
   protected readonly _recipientWithKey: Member<TID>;
-  protected readonly _serviceProvider: ServiceProvider<TID>;
+  protected readonly _serviceProvider: IEncryptedBlockServices<TID>;
+
+  /**
+   * Get the service provider for this block
+   */
+  protected get serviceProvider() {
+    return this._serviceProvider;
+  }
   protected readonly _idProvider: TypedIdProviderWrapper<TID>;
   protected _cachedEncryptionDetails?:
     | ISingleEncryptedParsedHeader
-    | IMultiEncryptedParsedHeader<TID> = undefined;
+    | IMultiEncryptedParsedHeader<PlatformID> = undefined;
 
   /**
    * Creates an instance of EncryptedBlock.
@@ -140,7 +174,7 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     canPersist = true,
   ) {
     super(type, dataType, data, checksum, metadata, canRead, canPersist);
-    this._serviceProvider = ServiceProvider.getInstance<TID>();
+    this._serviceProvider = getGlobalServiceProvider<TID>();
     this._idProvider = this._serviceProvider.idProvider;
     // Read encryption type directly from data to avoid circular dependency
     const blockEncryptionType = data[0] as BlockEncryptionType;
@@ -249,7 +283,7 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     return false;
   }
 
-  public override async encrypt<E>(): Promise<E> {
+  public override async encrypt(): Promise<IEncryptedBlock<TID>> {
     throw new CannotEncryptBlockError();
   }
 
@@ -276,9 +310,11 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
    */
   public get encryptionDetails():
     | ISingleEncryptedParsedHeader
-    | IMultiEncryptedParsedHeader<TID> {
+    | IMultiEncryptedParsedHeader<PlatformID> {
     if (this._cachedEncryptionDetails) {
-      return this._cachedEncryptionDetails;
+      return this._cachedEncryptionDetails as
+        | ISingleEncryptedParsedHeader
+        | IMultiEncryptedParsedHeader<PlatformID>;
     }
     const encryptionType = this.encryptionType;
     if (encryptionType === BlockEncryptionType.SingleRecipient) {
@@ -316,7 +352,9 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
     if (!this._cachedEncryptionDetails) {
       throw new BlockError(BlockErrorType.UnexpectedEncryptedBlockType);
     }
-    return this._cachedEncryptionDetails;
+    return this._cachedEncryptionDetails as
+      | ISingleEncryptedParsedHeader
+      | IMultiEncryptedParsedHeader<PlatformID>;
   }
 
   public async decrypt<D extends IEphemeralBlock<TID>>(

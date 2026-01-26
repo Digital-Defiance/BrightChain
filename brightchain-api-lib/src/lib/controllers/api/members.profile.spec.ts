@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { MembersController } from './members';
 
 // Mock the application and services
@@ -51,7 +52,7 @@ describe('MembersController - Profile Operations', () => {
   describe('handleGetMemberProfile', () => {
     it('should return 500 if memberStore service is not available', async () => {
       const mockApp = createMockApplication();
-      mockApp.services.get = jest.fn((serviceName: string) => null);
+      mockApp.services.get = jest.fn((_serviceName: string) => null);
 
       const controller = new MembersController(mockApp as any);
       const mockReq = {
@@ -211,7 +212,7 @@ describe('MembersController - Profile Operations', () => {
   describe('handleUpdateMemberProfile', () => {
     it('should return 500 if memberStore service is not available', async () => {
       const mockApp = createMockApplication();
-      mockApp.services.get = jest.fn((serviceName: string) => null);
+      mockApp.services.get = jest.fn((_serviceName: string) => null);
 
       const controller = new MembersController(mockApp as any);
       const mockReq = {
@@ -278,7 +279,7 @@ describe('MembersController - Profile Operations', () => {
 
     it('should handle errors gracefully', async () => {
       const mockApp = createMockApplication();
-      mockApp.services.get = jest.fn((serviceName: string) => {
+      mockApp.services.get = jest.fn((_serviceName: string) => {
         throw new Error('Service error');
       });
 

@@ -18,7 +18,8 @@ export type ClientSession = any;
 
 // Use Buffer as the default backend ID type for Node.js backend
 // Buffer is part of the PlatformID union and works with all Node.js operations
-export type DefaultBackendIdType = Buffer;
+import type { DefaultBackendIdType as DefaultBackendIdType_ } from './types/backend-id';
+export type DefaultBackendIdType = DefaultBackendIdType_;
 
 /**
  * Block storage schema definition (replaces Mongoose Schema)

@@ -14,7 +14,6 @@ import * as secretsModule from '@digitaldefiance/secrets';
 import { SEALING } from '../constants';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { SealingError } from '../errors/sealingError';
-import { getBrightChainIdProvider } from '../init';
 import { QuorumDataRecord } from '../quorumDataRecord';
 import { Validator } from '../utils/validator';
 
@@ -35,11 +34,11 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
   private readonly eciesService: ECIESService<TID>;
   private readonly enhancedProvider: TypedIdProviderWrapper<TID>;
   constructor(
-    eciesService?: ECIESService<TID>,
-    enhancedProvider?: TypedIdProviderWrapper<TID>,
+    eciesService: ECIESService<TID>,
+    enhancedProvider: TypedIdProviderWrapper<TID>,
   ) {
-    this.eciesService = eciesService ?? createECIESService<TID>();
-    this.enhancedProvider = enhancedProvider ?? getBrightChainIdProvider<TID>();
+    this.eciesService = eciesService;
+    this.enhancedProvider = enhancedProvider;
   }
 
   /**
@@ -149,12 +148,12 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       sharesRequired,
       encryptedData,
       encryptedSharesByMemberId,
+      this.enhancedProvider,
       undefined, // checksum - will be calculated
       undefined, // signature - will be calculated
       undefined, // id - will be generated
       undefined, // dateCreated
       undefined, // dateUpdated
-      this.enhancedProvider,
       this.eciesService,
     );
   }

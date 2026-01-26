@@ -10,7 +10,7 @@ import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
 import { ChecksumService } from '../services/checksum.service';
-import { ServiceProvider } from '../services/service.provider';
+import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { EncryptedBlock } from './encrypted';
 
@@ -71,7 +71,7 @@ export class EncryptedBlockFactory {
     }
 
     // Get ID provider to calculate header size
-    const idProvider = ServiceProvider.getInstance<TID>().idProvider;
+    const idProvider = getGlobalServiceProvider<TID>().idProvider;
 
     // Calculate the actual payload capacity
     // Header = 1 byte (encryption type) + idSize + ECIES.WITH_LENGTH.FIXED_OVERHEAD_SIZE

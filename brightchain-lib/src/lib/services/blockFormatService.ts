@@ -10,7 +10,6 @@
 import { CrcService, ECIES } from '@digitaldefiance/ecies-lib';
 import { BLOCK_HEADER, StructuredBlockType } from '../constants';
 import { BlockType } from '../enumerations/blockType';
-import { getBrightChainIdProvider, isLibraryInitialized } from '../init';
 
 /**
  * Result of block format detection
@@ -47,41 +46,11 @@ export interface BlockFormatResult {
   isEncrypted?: boolean;
 }
 
-/**
- * Get the creator ID length from the ID provider
- * This ensures we use the correct dynamic length instead of hardcoded values
- */
-function getCreatorIdLength(): number {
-  if (!isLibraryInitialized()) {
-    // Default to 16 bytes (GuidV4) if library not initialized
-    // This allows tests to work without full initialization
-    return 16;
-  }
-  const idProvider = getBrightChainIdProvider();
-  return idProvider.byteLength;
-}
-
-/**
- * Detect the format of block data and validate header integrity
- *
- * @param data - The block data to analyze
- * @param creatorIdLength - Optional override for creator ID length (for testing)
- * @returns BlockFormatResult with detection details
- *
- * @remarks
- * Detection logic:
- * - If starts with 0xBC: Structured BrightChain block (validate CRC8)
- * - If starts with 0x04: ECIES encrypted data
- * - Otherwise: Raw/unknown data
- *
- * @see Requirements 9.6, 9.7, 9.8, 9.9
- */
 export function detectBlockFormat(
   data: Uint8Array,
-  creatorIdLength?: number,
+  creatorIdLength: number = 16,
 ): BlockFormatResult {
-  // Get creator ID length from provider if not specified
-  const idLength = creatorIdLength ?? getCreatorIdLength();
+  const idLength = creatorIdLength;
 
   // Check minimum length for header prefix
   if (data.length < 4) {

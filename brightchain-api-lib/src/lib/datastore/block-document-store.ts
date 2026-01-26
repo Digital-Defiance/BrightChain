@@ -1,7 +1,7 @@
 import {
+  getGlobalServiceProvider,
   IBlockStore,
   IQuorumService,
-  ServiceLocator,
 } from '@brightchain/brightchain-lib';
 import { Member, PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
 import { randomUUID } from 'crypto';
@@ -179,7 +179,7 @@ function matchFilter<T extends DocumentRecord>(
  * This uses SHA3-512 via the ChecksumService to match how RawDataBlock computes its idChecksum.
  */
 function calculateBlockId(data: Buffer | Uint8Array): string {
-  const checksumService = ServiceLocator.getServiceProvider().checksumService;
+  const checksumService = getGlobalServiceProvider().checksumService;
   const checksum = checksumService.calculateChecksum(
     data instanceof Buffer ? new Uint8Array(data) : data,
   );

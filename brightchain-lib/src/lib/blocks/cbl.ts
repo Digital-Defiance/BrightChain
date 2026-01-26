@@ -3,7 +3,7 @@ import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { IConstituentBlockListBlock } from '../interfaces/blocks/cbl';
 import { ICBLServices } from '../interfaces/services/cblServices';
-import { ServiceLocator } from '../services/serviceLocator';
+import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { CBLBase } from './cblBase';
 
 /**
@@ -66,7 +66,7 @@ export class ConstituentBlockListBlock<TID extends PlatformID = Uint8Array>
    * @returns The maximum number of addresses
    */
   public get addressCapacity(): number {
-    return ServiceLocator.getServiceProvider().cblService.calculateCBLAddressCapacity(
+    return getGlobalServiceProvider().cblService.calculateCBLAddressCapacity(
       this.blockSize,
       BlockEncryptionType.None,
     );
@@ -78,7 +78,7 @@ export class ConstituentBlockListBlock<TID extends PlatformID = Uint8Array>
    * @returns The maximum number of addresses
    */
   public get encryptedAddressCapacity(): number {
-    return ServiceLocator.getServiceProvider().cblService.calculateCBLAddressCapacity(
+    return getGlobalServiceProvider().cblService.calculateCBLAddressCapacity(
       this.blockSize,
       BlockEncryptionType.SingleRecipient,
     );

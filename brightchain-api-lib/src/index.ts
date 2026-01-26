@@ -34,3 +34,9 @@ export type {
   DefaultBackendIdType,
   SchemaMap,
 } from './lib/shared-types';
+
+// Keyring exports
+export * from './lib/browserKeyring';
+export * from './lib/nodeKeyring';
+export * from './lib/secureEnclaveKeyring';
+export * from './lib/systemKeyring';

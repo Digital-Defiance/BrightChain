@@ -1,5 +1,4 @@
 import {
-  arraysEqual,
   Member,
   SignatureUint8Array,
   uint8ArrayToHex,
@@ -15,8 +14,10 @@ import { BlockAccessError } from '../errors/block';
 import { CblError } from '../errors/cblError';
 import { ICBLCore } from '../interfaces/blocks/cblBase';
 import { ICBLServices } from '../interfaces/services/cblServices';
-import { ServiceLocator } from '../services/serviceLocator';
+import { SecurityAuditLogger } from '../security/securityAuditLogger';
+import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
+import { constantTimeEqual } from '../utils/constantTime';
 import { EphemeralBlock } from './ephemeral';
 import { createBlockHandleFromStore } from './handle';
 import { BlockHandleTuple } from './handleTuple';
@@ -63,25 +64,25 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
   protected readonly _services?: ICBLServices<TID>;
 
   /**
-   * Get the CBL service, either from injected services or ServiceLocator.
+   * Get the CBL service, either from injected services or global service provider.
    * @returns The CBL service
    */
   protected getCblService() {
-    return (
-      this._services?.cblService ??
-      ServiceLocator.getServiceProvider<TID>().cblService
-    );
+    if (this._services?.cblService) {
+      return this._services.cblService;
+    }
+    return getGlobalServiceProvider<TID>().cblService;
   }
 
   /**
-   * Get the checksum service, either from injected services or ServiceLocator.
+   * Get the checksum service, either from injected services or global service provider.
    * @returns The checksum service
    */
   protected getChecksumService() {
-    return (
-      this._services?.checksumService ??
-      ServiceLocator.getServiceProvider<TID>().checksumService
-    );
+    if (this._services?.checksumService) {
+      return this._services.checksumService;
+    }
+    return getGlobalServiceProvider<TID>().checksumService;
   }
 
   /**
@@ -102,11 +103,10 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
     // Store services reference for later use
     // Note: We need to access services before calling super(), so we use the parameter directly
     const cblService =
-      services?.cblService ??
-      ServiceLocator.getServiceProvider<TID>().cblService;
+      services?.cblService ?? getGlobalServiceProvider<TID>().cblService;
     const checksumService =
       services?.checksumService ??
-      ServiceLocator.getServiceProvider<TID>().checksumService;
+      getGlobalServiceProvider<TID>().checksumService;
 
     const isExtendedCbl = cblService.isExtendedHeader(data);
     const checksum = checksumService.calculateChecksum(new Uint8Array(data));
@@ -145,8 +145,8 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
         );
       }
 
-      // Use constant-time comparison for security
-      if (!arraysEqual(creatorIdBytes, memberIdBytes)) {
+      // Use constant-time comparison for security (prevents timing attacks)
+      if (!constantTimeEqual(creatorIdBytes, memberIdBytes)) {
         throw new CblError(CblErrorType.CreatorIdMismatch, undefined, {
           headerCreatorId: uint8ArrayToHex(
             cblService.idProvider.toBytes(creatorId),
@@ -181,7 +181,17 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
 
     // Validate signature if creator has a public key
     // Note: Signature validation requires the creator's public key
-    if (creator && creator.publicKey && !this.validateSignature()) {
+    const signatureValid =
+      creator && creator.publicKey && this.validateSignature();
+
+    // Log signature validation
+    SecurityAuditLogger.getInstance().logSignatureValidation(
+      signatureValid || false,
+      checksum.toHex(),
+      creator?.id?.toString(),
+    );
+
+    if (creator && creator.publicKey && !signatureValid) {
       throw new CblError(CblErrorType.InvalidSignature);
     }
   }
@@ -233,7 +243,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
     );
     // Note: Primitive numbers are immutable by nature, but we ensure
     // the cache is only set once to maintain consistency
-    return this._cachedAddressCount;
+    return this._cachedAddressCount as number;
   }
 
   /**

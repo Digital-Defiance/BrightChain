@@ -18,7 +18,7 @@ import {
   SerializedValue,
   StaticMethods,
   ValidatorFunction,
-} from '../../sharedTypes';
+} from '../../types/schema';
 
 /**
  * Unified Document base class combining schema validation, serialization, and convertible patterns
