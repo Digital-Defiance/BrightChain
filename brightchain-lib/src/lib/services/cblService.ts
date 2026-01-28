@@ -33,6 +33,8 @@ import { ISuperConstituentBlockListBlockHeader } from '../interfaces/blocks/head
 import { Checksum } from '../types/checksum';
 import { Validator } from '../utils/validator';
 
+import { BrightChainStrings } from '../enumerations';
+import { translate } from '../i18n';
 import { detectBlockFormat } from './blockFormatService';
 import { ChecksumService } from './checksum.service';
 import { getGlobalServiceProvider } from './globalServiceProvider';
@@ -474,7 +476,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       throw new CblError(CblErrorType.CblEncrypted);
     }
     if (!this.isMessageHeader(header)) {
-      throw new CblError(CblErrorType.InvalidStructure, 'Not a message CBL');
+      throw new CblError(
+        CblErrorType.InvalidStructure,
+        translate(BrightChainStrings.CBLService_NotAMessageCBL),
+      );
     }
 
     let offset =
@@ -554,7 +559,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     if (idBytes.length !== this.creatorLength) {
       throw new CblError(
         CblErrorType.InvalidStructure,
-        `Creator ID byte length mismatch: got ${idBytes.length}, expected ${this.creatorLength}`,
+        translate(
+          BrightChainStrings.CBLService_CreatorIDByteLengthMismatchTemplate,
+          { LENGTH: idBytes.length, EXPECTED: this.creatorLength },
+        ),
       );
     }
 
@@ -1237,7 +1245,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     if (creatorIdBytes.length !== this.creatorLength) {
       throw new CblError(
         CblErrorType.InvalidStructure,
-        `Creator ID provider returned ${creatorIdBytes.length} bytes, expected ${this.creatorLength}`,
+        translate(
+          BrightChainStrings.CBLService_CreatorIDByteLengthMismatchTemplate,
+          { LENGTH: creatorIdBytes.length, EXPECTED: this.creatorLength },
+        ),
       );
     }
 
@@ -1307,7 +1318,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     if (signatureBytes.length !== ECIES.SIGNATURE_SIZE) {
       throw new CblError(
         CblErrorType.InvalidSignature,
-        `Signature length mismatch: got ${signatureBytes.length}, expected ${ECIES.SIGNATURE_SIZE}`,
+        translate(
+          BrightChainStrings.CBLService_SignatureLengthMismatchTemplate,
+          { LENGTH: signatureBytes.length, EXPECTED: ECIES.SIGNATURE_SIZE },
+        ),
       );
     }
 
@@ -1371,12 +1385,13 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       if (formatResult.error?.includes('raw data')) {
         throw new CblError(
           CblErrorType.InvalidStructure,
-          'Data appears to be raw data without structured header',
+          translate(BrightChainStrings.CBLService_DataAppearsRaw),
         );
       }
       throw new CblError(
         CblErrorType.InvalidStructure,
-        formatResult.error || 'Invalid block format',
+        formatResult.error ||
+          translate(BrightChainStrings.CBLService_InvalidBlockFormat),
       );
     }
 
@@ -1537,7 +1552,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       throw new CblError(CblErrorType.CblEncrypted);
     }
     if (!this.isSuperCbl(header)) {
-      throw new CblError(CblErrorType.InvalidStructure, 'Not a SuperCBL');
+      throw new CblError(
+        CblErrorType.InvalidStructure,
+        translate(BrightChainStrings.Error_CblError_NotASuperCbl),
+      );
     }
     const view = new DataView(
       header.buffer,
@@ -1557,7 +1575,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       throw new CblError(CblErrorType.CblEncrypted);
     }
     if (!this.isSuperCbl(header)) {
-      throw new CblError(CblErrorType.InvalidStructure, 'Not a SuperCBL');
+      throw new CblError(
+        CblErrorType.InvalidStructure,
+        translate(BrightChainStrings.Error_CblError_NotASuperCbl),
+      );
     }
     const view = new DataView(
       header.buffer,
@@ -1577,7 +1598,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       throw new CblError(CblErrorType.CblEncrypted);
     }
     if (!this.isSuperCbl(header)) {
-      throw new CblError(CblErrorType.InvalidStructure, 'Not a SuperCBL');
+      throw new CblError(
+        CblErrorType.InvalidStructure,
+        translate(BrightChainStrings.Error_CblError_NotASuperCbl),
+      );
     }
     const view = new DataView(
       header.buffer,
@@ -1597,7 +1621,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       throw new CblError(CblErrorType.CblEncrypted);
     }
     if (!this.isSuperCbl(header)) {
-      throw new CblError(CblErrorType.InvalidStructure, 'Not a SuperCBL');
+      throw new CblError(
+        CblErrorType.InvalidStructure,
+        translate(BrightChainStrings.Error_CblError_NotASuperCbl),
+      );
     }
     const view = new DataView(
       header.buffer,
@@ -1621,7 +1648,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       throw new CblError(CblErrorType.CblEncrypted);
     }
     if (!this.isSuperCbl(header)) {
-      throw new CblError(CblErrorType.InvalidStructure, 'Not a SuperCBL');
+      throw new CblError(
+        CblErrorType.InvalidStructure,
+        translate(BrightChainStrings.Error_CblError_NotASuperCbl),
+      );
     }
     const checksumData = header.subarray(
       this.superCblHeaderOffsets.OriginalDataChecksum,
@@ -1641,7 +1671,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       throw new CblError(CblErrorType.CblEncrypted);
     }
     if (!this.isSuperCbl(header)) {
-      throw new CblError(CblErrorType.InvalidStructure, 'Not a SuperCBL');
+      throw new CblError(
+        CblErrorType.InvalidStructure,
+        translate(BrightChainStrings.Error_CblError_NotASuperCbl),
+      );
     }
     return header.subarray(
       this.superCblHeaderOffsets.CreatorSignature,
@@ -1660,7 +1693,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       throw new CblError(CblErrorType.CblEncrypted);
     }
     if (!this.isSuperCbl(data)) {
-      throw new CblError(CblErrorType.InvalidStructure, 'Not a SuperCBL');
+      throw new CblError(
+        CblErrorType.InvalidStructure,
+        translate(BrightChainStrings.Error_CblError_NotASuperCbl),
+      );
     }
 
     const subCblCount = this.getSuperCblSubCblCount(data);
@@ -1729,14 +1765,22 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     if (subCblCount !== subCblChecksums.length) {
       throw new CblError(
         CblErrorType.InvalidStructure,
-        `SubCblCount (${subCblCount}) does not match subCblChecksums length (${subCblChecksums.length})`,
+        translate(
+          BrightChainStrings.CBLService_SubCBLCountChecksumMismatchTemplate,
+          {
+            COUNT: subCblCount,
+            EXPECTED: subCblChecksums.length,
+          },
+        ),
       );
     }
 
     if (depth < 1 || depth > 65535) {
       throw new CblError(
         CblErrorType.InvalidStructure,
-        `Depth must be between 1 and 65535, got ${depth}`,
+        translate(BrightChainStrings.CBLService_InvalidDepthTemplate, {
+          DEPTH: depth,
+        }),
       );
     }
 
@@ -1787,7 +1831,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     if (creatorIdBytes.length !== this.creatorLength) {
       throw new CblError(
         CblErrorType.InvalidStructure,
-        `Creator ID provider returned ${creatorIdBytes.length} bytes, expected ${this.creatorLength}`,
+        translate(
+          BrightChainStrings.CBLService_CreatorIDProviderReturnedBytesLengthMismatchTemplate,
+          { LENGTH: creatorIdBytes.length, EXPECTED: this.creatorLength },
+        ),
       );
     }
 
@@ -1856,7 +1903,13 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     if (signatureBytes.length !== ECIES.SIGNATURE_SIZE) {
       throw new CblError(
         CblErrorType.InvalidSignature,
-        `Signature length mismatch: got ${signatureBytes.length}, expected ${ECIES.SIGNATURE_SIZE}`,
+        translate(
+          BrightChainStrings.CBLService_SignatureLengthMismatchTemplate,
+          {
+            LENGTH: signatureBytes.length,
+            EXPECTED: ECIES.SIGNATURE_SIZE,
+          },
+        ),
       );
     }
 
@@ -1907,7 +1960,10 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     }
 
     if (!this.isSuperCbl(data)) {
-      throw new CblError(CblErrorType.InvalidStructure, 'Not a SuperCBL');
+      throw new CblError(
+        CblErrorType.InvalidStructure,
+        translate(BrightChainStrings.Error_CblError_NotASuperCbl),
+      );
     }
 
     if (!creator || !creator.publicKey) {
@@ -1984,12 +2040,13 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
       if (formatResult.error?.includes('raw data')) {
         throw new CblError(
           CblErrorType.InvalidStructure,
-          'Data appears to be raw data without structured header',
+          translate(BrightChainStrings.CBLService_DataAppearsRaw),
         );
       }
       throw new CblError(
         CblErrorType.InvalidStructure,
-        formatResult.error || 'Invalid block format',
+        formatResult.error ||
+          translate(BrightChainStrings.CBLService_InvalidBlockFormat),
       );
     }
 
@@ -1997,7 +2054,9 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     if (!this.isSuperCbl(data)) {
       throw new CblError(
         CblErrorType.InvalidStructure,
-        `Expected SuperCBL (block type 0x03), got block type 0x${data[1].toString(16).padStart(2, '0')}`,
+        translate(BrightChainStrings.CBLService_ExpectedSuperCBLTemplate, {
+          TYPE: data[1].toString(16).padStart(2, '0'),
+        }),
       );
     }
 

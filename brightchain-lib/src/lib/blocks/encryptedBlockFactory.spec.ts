@@ -385,6 +385,7 @@ describe('EncryptedBlockFactory', () => {
       const checksum = checksumService.calculateChecksum(data);
       const testDate = new Date('2024-01-01');
 
+      // Use EncryptedOwnedDataBlock which is a valid encrypted block type
       const block = await EncryptedBlockFactory.createBlock(
         BlockType.EncryptedOwnedDataBlock,
         BlockDataType.RawData,

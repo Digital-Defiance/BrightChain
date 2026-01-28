@@ -17,7 +17,6 @@ import {
   getEnhancedIdProvider,
   Member,
   MemberType,
-  PlatformID,
 } from '@digitaldefiance/ecies-lib';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './BrightChainSoupDemo.css';
@@ -119,7 +118,11 @@ export const BrightChainSoupDemo: React.FC = () => {
         const checksumService = new ChecksumService();
         const eciesService = new ECIESService();
         const enhancedProvider = getEnhancedIdProvider<Uint8Array>();
-        const cblService = new CBLService(checksumService, eciesService, enhancedProvider);
+        const cblService = new CBLService(
+          checksumService,
+          eciesService,
+          enhancedProvider,
+        );
         const blockStore = newBrightChain.getBlockStore();
         const msgCBL = new MessageCBLService(
           cblService,

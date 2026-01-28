@@ -35,4 +35,6 @@ export enum CblErrorType {
   NotExtendedCbl = 'NotExtendedCbl',
   InvalidTupleSize = 'InvalidTupleSize',
   AddressCountExceedsCapacity = 'AddressCountExceedsCapacity',
+  FailedToExtractCreatorId = 'FailedToExtractCreatorId',
+  FailedToExtractProvidedCreatorId = 'FailedToExtractProvidedCreatorId',
 }

@@ -5,7 +5,7 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "@aws-sdk/client-ses": "^3.859.0",
-    "@brightchain/brightchain-lib": "0.10.0",
+    "@brightchain/brightchain-lib": "0.11.0",
     "@digitaldefiance/enclave-bridge-client": "^1.1.0",
     "@digitaldefiance/node-ecies-lib": "^4.13.8",
     "@ethereumjs/wallet": "^10.0.0",

@@ -10,7 +10,9 @@
  *
  * This implementation uses a subset of RV32I (32-bit RISC-V)
  */
+import { BrightChainStrings } from '../enumerations';
 import { CpuRegisters } from '../enumerations/cpuRegisters';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 
 export interface RiscVInstruction {
   readonly opcode: number;
@@ -104,7 +106,10 @@ export class RiscVCpu {
         value = (this.Program[this.PC] << 24) >> 24;
         break;
       default:
-        throw new Error(`Invalid read size: ${size}`);
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_CPU_InvalidReadSizeTemplate,
+          { SIZE: size.toString() },
+        );
     }
 
     this.PC += Math.abs(size);
@@ -117,7 +122,9 @@ export class RiscVCpu {
   public push(value: number): void {
     const sp = this.Registers[CpuRegisters.ESP];
     if (sp >= RiscVCpu.StackSize) {
-      throw new Error('Stack overflow');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_CPU_StackOverflow,
+      );
     }
     this.Stack[sp] = value;
     this.Registers[CpuRegisters.ESP] = sp + 1;
@@ -129,7 +136,9 @@ export class RiscVCpu {
   public pop(): number {
     const sp = this.Registers[CpuRegisters.ESP];
     if (sp === 0) {
-      throw new Error('Stack underflow');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_CPU_StackUnderflow,
+      );
     }
     const value = this.Stack[sp - 1];
     this.Registers[CpuRegisters.ESP] = sp - 1;
@@ -162,7 +171,10 @@ export class RiscVCpu {
 
       // Execute instruction (would be fetched from instruction set)
       // For now, this is a placeholder
-      throw new Error(`Unimplemented instruction: 0x${opcode.toString(16)}`);
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_CPU_NotImplementedTemplate,
+        { INSTRUCTION: `0x${opcode.toString(16)}` },
+      );
     }
   }
 }

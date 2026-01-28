@@ -4,7 +4,7 @@ import { translate } from '../i18n';
 export class InvalidTupleCountError extends Error {
   constructor(tupleCount: number, _language?: string) {
     super(
-      translate(BrightChainStrings.Error_InvalidTupleCountTemplate, {
+      translate(BrightChainStrings.Error_TupleCount_InvalidTemplate, {
         TUPLE_COUNT: tupleCount,
       }),
     );

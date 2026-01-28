@@ -6,43 +6,43 @@ export class StoreError extends TypedError<StoreErrorType> {
   public get reasonMap(): Record<StoreErrorType, BrightChainStrings> {
     return {
       [StoreErrorType.StorePathRequired]:
-        BrightChainStrings.Error_StoreErrorStorePathRequired,
+        BrightChainStrings.Error_StoreError_StorePathRequired,
       [StoreErrorType.StorePathNotFound]:
-        BrightChainStrings.Error_StoreErrorStorePathNotFound,
+        BrightChainStrings.Error_StoreError_StorePathNotFound,
       [StoreErrorType.KeyNotFound]:
-        BrightChainStrings.Error_StoreErrorKeyNotFoundTemplate,
+        BrightChainStrings.Error_StoreError_KeyNotFoundTemplate,
       [StoreErrorType.BlockSizeMismatch]:
-        BrightChainStrings.Error_StoreErrorBlockSizeMismatch,
+        BrightChainStrings.Error_StoreError_BlockSizeMismatch,
       [StoreErrorType.BlockPathAlreadyExists]:
-        BrightChainStrings.Error_StoreErrorBlockPathAlreadyExistsTemplate,
+        BrightChainStrings.Error_StoreError_BlockPathAlreadyExistsTemplate,
       [StoreErrorType.BlockAlreadyExists]:
-        BrightChainStrings.Error_StoreErrorBlockAlreadyExists,
+        BrightChainStrings.Error_StoreError_BlockAlreadyExists,
       [StoreErrorType.BlockFileSizeMismatch]:
-        BrightChainStrings.Error_StoreErrorBlockFileSizeMismatch,
+        BrightChainStrings.Error_StoreError_BlockFileSizeMismatch,
       [StoreErrorType.BlockValidationFailed]:
-        BrightChainStrings.Error_StoreErrorBlockValidationFailed,
+        BrightChainStrings.Error_StoreError_BlockValidationFailed,
       [StoreErrorType.NoBlocksProvided]:
-        BrightChainStrings.Error_StoreErrorNoBlocksProvided,
+        BrightChainStrings.Error_StoreError_NoBlocksProvided,
       [StoreErrorType.InvalidBlockMetadata]:
-        BrightChainStrings.Error_StoreErrorInvalidBlockMetadataTemplate,
+        BrightChainStrings.Error_StoreError_InvalidBlockMetadataTemplate,
       [StoreErrorType.BlockSizeRequired]:
-        BrightChainStrings.Error_StoreErrorBlockSizeRequired,
+        BrightChainStrings.Error_StoreError_BlockSizeRequired,
       [StoreErrorType.BlockIdRequired]:
-        BrightChainStrings.Error_StoreErrorBlockIdRequired,
+        BrightChainStrings.Error_StoreError_BlockIdRequired,
       [StoreErrorType.InvalidBlockIdTooShort]:
-        BrightChainStrings.Error_StoreErrorInvalidBlockIdTooShort,
+        BrightChainStrings.Error_StoreError_InvalidBlockIdTooShort,
       [StoreErrorType.CannotStoreEphemeralData]:
-        BrightChainStrings.Error_StoreErrorCannotStoreEphemeralData,
+        BrightChainStrings.Error_StoreError_CannotStoreEphemeralData,
       [StoreErrorType.BlockIdMismatch]:
-        BrightChainStrings.Error_StoreErrorBlockIdMismatchTemplate,
+        BrightChainStrings.Error_StoreError_BlockIdMismatchTemplate,
       [StoreErrorType.BlockDirectoryCreationFailed]:
-        BrightChainStrings.Error_StoreErrorBlockDirectoryCreationFailedTemplate,
+        BrightChainStrings.Error_StoreError_BlockDirectoryCreationFailedTemplate,
       [StoreErrorType.BlockDeletionFailed]:
-        BrightChainStrings.Error_StoreErrorBlockDeletionFailedTemplate,
+        BrightChainStrings.Error_StoreError_BlockDeletionFailedTemplate,
       [StoreErrorType.NotImplemented]:
-        BrightChainStrings.Error_StoreErrorNotImplemented,
+        BrightChainStrings.Error_StoreError_NotImplemented,
       [StoreErrorType.InsufficientRandomBlocks]:
-        BrightChainStrings.Error_StoreErrorInsufficientRandomBlocksTemplate,
+        BrightChainStrings.Error_StoreError_InsufficientRandomBlocksTemplate,
     };
   }
   public readonly params?: { [key: string]: string | number };

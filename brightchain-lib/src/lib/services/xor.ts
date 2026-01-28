@@ -1,3 +1,6 @@
+import { BrightChainStrings } from '../enumerations';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
+
 /**
  * XOR operations for BrightChain.
  *
@@ -21,8 +24,9 @@ export class XorService {
    */
   public static xor(a: Uint8Array, b: Uint8Array): Uint8Array {
     if (a.length !== b.length) {
-      throw new Error(
-        `XOR requires equal-length arrays: a.length=${a.length}, b.length=${b.length}`,
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_Xor_LengthMismatchTemplate,
+        { A_LENGTH: a.length, B_LENGTH: b.length },
       );
     }
 
@@ -43,7 +47,9 @@ export class XorService {
    */
   public static xorMultiple(arrays: Uint8Array[]): Uint8Array {
     if (arrays.length === 0) {
-      throw new Error('At least one array must be provided for XOR');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_Xor_NoArraysProvided,
+      );
     }
 
     const length = arrays[0].length;
@@ -51,8 +57,13 @@ export class XorService {
     // Verify all arrays have the same length
     for (let i = 1; i < arrays.length; i++) {
       if (arrays[i].length !== length) {
-        throw new Error(
-          `All arrays must have the same length for XOR: expected ${length}, got ${arrays[i].length} at index ${i}`,
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_Xor_ArrayLengthMismatchTemplate,
+          {
+            EXPECTED_LENGTH: length,
+            ACTUAL_LENGTH: arrays[i].length,
+            INDEX: i,
+          },
         );
       }
     }
@@ -98,7 +109,9 @@ export class XorService {
         crypto.getRandomValues(chunk);
       }
     } else {
-      throw new Error('Crypto API not available in this environment');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_Xor_CryptoApiNotAvailable,
+      );
     }
 
     return randomBytes;

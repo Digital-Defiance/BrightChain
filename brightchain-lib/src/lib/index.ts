@@ -94,7 +94,10 @@ export * from './encryptedBlockMetadata';
  * Service implementations for BrightChain operations.
  */
 export * from './services';
-export { getGlobalServiceProvider, setGlobalServiceProvider } from './services/globalServiceProvider';
+export {
+  getGlobalServiceProvider,
+  setGlobalServiceProvider,
+} from './services/globalServiceProvider';
 
 /**
  * Factory classes for object creation.
@@ -162,7 +165,6 @@ export * from './security';
  * Internationalization support.
  */
 export * from './i18n';
-
 
 // ============================================================================
 // Direct Exports from Root Files

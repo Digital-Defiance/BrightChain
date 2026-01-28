@@ -10,6 +10,9 @@
  * hard-coded in the CPU or instruction table files.
  */
 
+import { BrightChainStrings } from '../enumerations';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
+
 /**
  * CPU execution context interface
  * Generic enough to work with any CPU implementation
@@ -44,8 +47,12 @@ export function createInstructionFactory(
 
   for (const instruction of instructionSet.instructions) {
     if (instructionMap.has(instruction.opcode)) {
-      throw new Error(
-        `Duplicate opcode 0x${instruction.opcode.toString(16)} in instruction set ${instructionSet.name}`,
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_CPU_DuplicateOpcodeErrorTemplate,
+        {
+          OPCODE: instruction.opcode.toString(16),
+          INSTRUCTION_SET: instructionSet.name,
+        },
       );
     }
     instructionMap.set(instruction.opcode, instruction.handler);
@@ -97,7 +104,10 @@ export const RISCV_RV32I_INSTRUCTIONS: InstructionSet = {
       mnemonic: 'LW',
       handler: (_cpu: ICpuContext) => {
         // Load Word
-        throw new Error('LW not implemented');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_CPU_NotImplementedTemplate,
+          { INSTRUCTION: 'LW' },
+        );
       },
     },
     {
@@ -105,7 +115,10 @@ export const RISCV_RV32I_INSTRUCTIONS: InstructionSet = {
       mnemonic: 'SW',
       handler: (_cpu: ICpuContext) => {
         // Store Word
-        throw new Error('SW not implemented');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_CPU_NotImplementedTemplate,
+          { INSTRUCTION: 'SW' },
+        );
       },
     },
 
@@ -115,7 +128,10 @@ export const RISCV_RV32I_INSTRUCTIONS: InstructionSet = {
       mnemonic: 'ADDI',
       handler: (_cpu: ICpuContext) => {
         // Add Immediate
-        throw new Error('ADDI not implemented');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_CPU_NotImplementedTemplate,
+          { INSTRUCTION: 'ADDI' },
+        );
       },
     },
     {
@@ -123,7 +139,10 @@ export const RISCV_RV32I_INSTRUCTIONS: InstructionSet = {
       mnemonic: 'ADD',
       handler: (_cpu: ICpuContext) => {
         // Add
-        throw new Error('ADD not implemented');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_CPU_NotImplementedTemplate,
+          { INSTRUCTION: 'ADD' },
+        );
       },
     },
     {
@@ -131,7 +150,10 @@ export const RISCV_RV32I_INSTRUCTIONS: InstructionSet = {
       mnemonic: 'SUB',
       handler: (_cpu: ICpuContext) => {
         // Subtract (same opcode as ADD, differs in funct7)
-        throw new Error('SUB not implemented');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_CPU_NotImplementedTemplate,
+          { INSTRUCTION: 'SUB' },
+        );
       },
     },
 
@@ -141,7 +163,10 @@ export const RISCV_RV32I_INSTRUCTIONS: InstructionSet = {
       mnemonic: 'BEQ',
       handler: (_cpu: ICpuContext) => {
         // Branch if Equal
-        throw new Error('BEQ not implemented');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_CPU_NotImplementedTemplate,
+          { INSTRUCTION: 'BEQ' },
+        );
       },
     },
     {
@@ -149,7 +174,10 @@ export const RISCV_RV32I_INSTRUCTIONS: InstructionSet = {
       mnemonic: 'BNE',
       handler: (_cpu: ICpuContext) => {
         // Branch if Not Equal
-        throw new Error('BNE not implemented');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_CPU_NotImplementedTemplate,
+          { INSTRUCTION: 'BNE' },
+        );
       },
     },
 
@@ -159,7 +187,10 @@ export const RISCV_RV32I_INSTRUCTIONS: InstructionSet = {
       mnemonic: 'JAL',
       handler: (_cpu: ICpuContext) => {
         // Jump and Link
-        throw new Error('JAL not implemented');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_CPU_NotImplementedTemplate,
+          { INSTRUCTION: 'JAL' },
+        );
       },
     },
     {
@@ -167,7 +198,10 @@ export const RISCV_RV32I_INSTRUCTIONS: InstructionSet = {
       mnemonic: 'JALR',
       handler: (_cpu: ICpuContext) => {
         // Jump and Link Register
-        throw new Error('JALR not implemented');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_CPU_NotImplementedTemplate,
+          { INSTRUCTION: 'JALR' },
+        );
       },
     },
 
@@ -177,7 +211,10 @@ export const RISCV_RV32I_INSTRUCTIONS: InstructionSet = {
       mnemonic: 'SYSTEM',
       handler: (_cpu: ICpuContext) => {
         // System call
-        throw new Error('SYSTEM not implemented');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_CPU_NotImplementedTemplate,
+          { INSTRUCTION: 'SYSTEM' },
+        );
       },
     },
 
@@ -221,7 +258,10 @@ export const X86_LEGACY_INSTRUCTIONS: InstructionSet = {
       mnemonic: 'JMP',
       handler: (_cpu: ICpuContext) => {
         // Jump
-        throw new Error('JMP not implemented');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_CPU_NotImplementedTemplate,
+          { INSTRUCTION: 'JMP' },
+        );
       },
     },
   ],

@@ -1,8 +1,10 @@
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
-import { createECIESService } from '../browserConfig';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
+import { createECIESService } from '../browserConfig';
+import { BrightChainStrings } from '../enumerations';
 import { QuorumErrorType } from '../enumerations/quorumErrorType';
 import { QuorumError } from '../errors/quorumError';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { getBrightChainIdProvider } from '../init';
 import { IQuorumDocument } from '../interfaces/document/quorumDocument';
 import { QuorumDocumentSchema } from '../schemas/quorumDocument';
@@ -55,7 +57,9 @@ export class QuorumDocument<
     await super.save();
     const creator = this.get('creator');
     if (!creator) {
-      throw new Error('Creator must be set before saving');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_QuorumDocument_CreatorMustBeSetBeforeSaving,
+      );
     }
 
     // Create CBL for creator
@@ -114,7 +118,9 @@ export class QuorumDocument<
   ): Promise<void> {
     const creator = this.get('creator');
     if (!creator) {
-      throw new Error('Creator must be set before encrypting');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_QuorumDocument_CreatorMustBeSetBeforeEncrypting,
+      );
     }
 
     const sealingService = new SealingService<TID>(
@@ -143,7 +149,9 @@ export class QuorumDocument<
   async decrypt<T>(membersWithKeys: Member<TID>[]): Promise<T> {
     const encryptedData = this.get('encryptedData');
     if (!encryptedData) {
-      throw new Error('Document has no encrypted data');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_QuorumDocument_DocumentHasNoEncryptedData,
+      );
     }
     const sealingService = new SealingService<TID>(
       createECIESService<TID>(),

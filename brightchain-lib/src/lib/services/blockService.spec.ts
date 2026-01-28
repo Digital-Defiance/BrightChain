@@ -11,6 +11,7 @@ import { TUPLE } from '../constants';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { Checksum } from '../types/checksum';
 import { BlockService } from './blockService';
 import { ServiceProvider } from './service.provider';
@@ -113,7 +114,7 @@ describe('BlockService', () => {
 
   it('should reject empty blocks array', async () => {
     await expect(blockService.createCBL([], member, 0)).rejects.toThrow(
-      'Blocks array must not be empty',
+      TranslatableBrightChainError,
     );
   });
 
@@ -143,7 +144,7 @@ describe('BlockService', () => {
 
     await expect(
       blockService.createCBL([block1, block2], member, 2),
-    ).rejects.toThrow('All blocks must have the same block size');
+    ).rejects.toThrow(TranslatableBrightChainError);
   });
 
   it('should create CBL with different block sizes', async () => {

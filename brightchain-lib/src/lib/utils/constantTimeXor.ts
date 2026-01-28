@@ -9,6 +9,10 @@
  * @see Requirements 1.1, 1.2, 1.3, 1.4, 1.5 (Security - Constant-Time XOR)
  */
 
+import { BrightChainStrings } from '../enumerations';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
+import { translate } from '../i18n';
+
 /**
  * Custom error for XOR length mismatches.
  * Provides descriptive error messages for debugging.
@@ -17,7 +21,11 @@ export class XorLengthMismatchError extends Error {
   constructor(lengthA: number, lengthB: number, context?: string) {
     const contextStr = context ? ` in ${context}` : '';
     super(
-      `XOR requires equal-length arrays${contextStr}: a.length=${lengthA}, b.length=${lengthB}`,
+      translate(BrightChainStrings.Error_XorLengthMismatchTemplate, {
+        CONTEXT: contextStr,
+        A_LENGTH: lengthA,
+        B_LENGTH: lengthB,
+      }),
     );
     this.name = 'XorLengthMismatchError';
   }
@@ -98,7 +106,9 @@ export function constantTimeXor(a: Uint8Array, b: Uint8Array): Uint8Array {
  */
 export function constantTimeXorMultiple(arrays: Uint8Array[]): Uint8Array {
   if (arrays.length === 0) {
-    throw new Error('At least one array must be provided for XOR');
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_XorAtLeastOneArrayRequired,
+    );
   }
 
   const length = arrays[0].length;
@@ -110,7 +120,10 @@ export function constantTimeXorMultiple(arrays: Uint8Array[]): Uint8Array {
       throw new XorLengthMismatchError(
         length,
         arrays[i].length,
-        `constantTimeXorMultiple at index ${i}`,
+        translate(BrightChainStrings.Common_AtIndexTemplate, {
+          OPERATION: 'constantTimeXorMultiple',
+          INDEX: i,
+        }),
       );
     }
   }

@@ -1,63 +1,68 @@
+import { EciesStringKey } from '@digitaldefiance/ecies-lib';
 import { HandleableError } from '@digitaldefiance/i18n-lib';
+import { SuiteCoreStringKey } from '@digitaldefiance/suite-core-lib';
 import BrightChainStrings from '../enumerations/brightChainStrings';
 import { MemberErrorType } from '../enumerations/memberErrorType';
 
 export class MemberError extends HandleableError {
   public readonly type: MemberErrorType;
 
-  public get reasonMap(): Record<MemberErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<
+    MemberErrorType,
+    BrightChainStrings | EciesStringKey | SuiteCoreStringKey
+  > {
     return {
       [MemberErrorType.IncorrectOrInvalidPrivateKey]:
-        BrightChainStrings.Error_MemberErrorIncorrectOrInvalidPrivateKey,
+        EciesStringKey.Error_MemberError_IncorrectOrInvalidPrivateKey,
       [MemberErrorType.InvalidEmail]:
-        BrightChainStrings.Error_MemberErrorInvalidEmail,
+        EciesStringKey.Error_MemberError_InvalidEmail,
       [MemberErrorType.InvalidEmailWhitespace]:
-        BrightChainStrings.Error_MemberErrorInvalidEmailWhitespace,
+        EciesStringKey.Error_MemberError_InvalidEmailWhitespace,
       [MemberErrorType.InvalidMemberName]:
-        BrightChainStrings.Error_MemberErrorInvalidMemberName,
+        EciesStringKey.Error_MemberError_InvalidMemberName,
       [MemberErrorType.InvalidMemberStatus]:
-        BrightChainStrings.Error_MemberErrorInvalidMemberStatus,
+        EciesStringKey.Error_MemberError_InvalidMemberStatus,
       [MemberErrorType.InvalidMemberNameWhitespace]:
-        BrightChainStrings.Error_MemberErrorInvalidMemberNameWhitespace,
+        EciesStringKey.Error_MemberError_InvalidMemberNameWhitespace,
       [MemberErrorType.InvalidMnemonic]:
-        BrightChainStrings.Error_MemberErrorInvalidMnemonic,
+        EciesStringKey.Error_MemberError_InvalidMnemonic,
       [MemberErrorType.MissingEmail]:
-        BrightChainStrings.Error_MemberErrorMissingEmail,
+        EciesStringKey.Error_MemberError_MissingEmail,
       [MemberErrorType.MemberAlreadyExists]:
-        BrightChainStrings.Error_MemberErrorMemberAlreadyExists,
+        EciesStringKey.Error_MemberError_MemberAlreadyExists,
       [MemberErrorType.MissingMemberName]:
-        BrightChainStrings.Error_MemberErrorMissingMemberName,
+        EciesStringKey.Error_MemberError_MissingMemberName,
       [MemberErrorType.MemberNotFound]:
-        BrightChainStrings.Error_MemberErrorMemberNotFound,
+        EciesStringKey.Error_MemberError_MemberNotFound,
       [MemberErrorType.MissingVotingPrivateKey]:
-        BrightChainStrings.Error_MemberErrorMissingVotingPrivateKey,
+        SuiteCoreStringKey.Error_MemberErrorMissingVotingPrivateKey,
       [MemberErrorType.MissingVotingPublicKey]:
-        BrightChainStrings.Error_MemberErrorMissingVotingPublicKey,
+        SuiteCoreStringKey.Error_MemberErrorMissingVotingPublicKey,
       [MemberErrorType.MissingPrivateKey]:
-        BrightChainStrings.Error_MemberErrorMissingPrivateKey,
-      [MemberErrorType.NoWallet]: BrightChainStrings.Error_MemberErrorNoWallet,
+        EciesStringKey.Error_MemberError_MissingPrivateKey,
+      [MemberErrorType.NoWallet]: EciesStringKey.Error_MemberError_NoWallet,
       [MemberErrorType.PrivateKeyRequiredToDeriveVotingKeyPair]:
-        BrightChainStrings.Error_MemberErrorPrivateKeyRequiredToDeriveVotingKeyPair,
+        BrightChainStrings.Error_MemberError_PrivateKeyRequiredToDeriveVotingKeyPair,
       [MemberErrorType.WalletAlreadyLoaded]:
-        BrightChainStrings.Error_MemberErrorWalletAlreadyLoaded,
+        EciesStringKey.Error_MemberError_WalletAlreadyLoaded,
       [MemberErrorType.InsufficientRandomBlocks]:
-        BrightChainStrings.Error_MemberErrorInsufficientRandomBlocks,
+        BrightChainStrings.Error_MemberError_InsufficientRandomBlocks,
       [MemberErrorType.FailedToCreateMemberBlocks]:
-        BrightChainStrings.Error_MemberErrorFailedToCreateMemberBlocks,
+        BrightChainStrings.Error_MemberError_FailedToCreateMemberBlocks,
       [MemberErrorType.FailedToHydrateMember]:
-        BrightChainStrings.Error_MemberErrorFailedToHydrateMember,
+        EciesStringKey.Error_MemberError_FailedToHydrateMember,
       [MemberErrorType.InvalidMemberData]:
-        BrightChainStrings.Error_MemberErrorInvalidMemberData,
+        EciesStringKey.Error_MemberError_InvalidMemberData,
       [MemberErrorType.FailedToConvertMemberData]:
-        BrightChainStrings.Error_MemberErrorFailedToConvertMemberData,
+        EciesStringKey.Error_MemberError_FailedToConvertMemberData,
       [MemberErrorType.InvalidMemberBlocks]:
-        BrightChainStrings.Error_MemberErrorInvalidMemberBlocks,
+        BrightChainStrings.Error_MemberError_InvalidMemberBlocks,
       [MemberErrorType.MissingEncryptionData]:
-        BrightChainStrings.Error_MemberErrorMissingEncryptionData,
+        EciesStringKey.Error_MemberError_MissingEncryptionData,
       [MemberErrorType.EncryptionDataTooLarge]:
-        BrightChainStrings.Error_MemberErrorEncryptionDataTooLarge,
+        EciesStringKey.Error_MemberError_EncryptionDataTooLarge,
       [MemberErrorType.InvalidEncryptionData]:
-        BrightChainStrings.Error_MemberErrorInvalidEncryptionData,
+        EciesStringKey.Error_MemberError_InvalidEncryptionData,
     };
   }
   constructor(type: MemberErrorType, _language?: string) {

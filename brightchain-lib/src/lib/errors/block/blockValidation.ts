@@ -13,73 +13,73 @@ export class BlockValidationError extends TypedWithReasonError<BlockValidationEr
   public get reasonMap(): Record<BlockValidationErrorType, BrightChainStrings> {
     return {
       [BlockValidationErrorType.ActualDataLengthUnknown]:
-        BrightChainStrings.Error_BlockValidationErrorActualDataLengthUnknown,
+        BrightChainStrings.Error_BlockValidationError_ActualDataLengthUnknown,
       [BlockValidationErrorType.AddressCountExceedsCapacity]:
-        BrightChainStrings.Error_BlockValidationErrorAddressCountExceedsCapacity,
+        BrightChainStrings.Error_BlockValidationError_AddressCountExceedsCapacity,
       [BlockValidationErrorType.BlockDataNotBuffer]:
-        BrightChainStrings.Error_BlockValidationErrorBlockDataNotBuffer,
+        BrightChainStrings.Error_BlockValidationError_BlockDataNotBuffer,
       [BlockValidationErrorType.BlockSizeNegative]:
-        BrightChainStrings.Error_BlockValidationErrorBlockSizeNegative,
+        BrightChainStrings.Error_BlockValidationError_BlockSizeNegative,
       [BlockValidationErrorType.DataBufferIsTruncated]:
-        BrightChainStrings.Error_BlockValidationErrorDataBufferIsTruncated,
+        BrightChainStrings.Error_BlockValidationError_DataBufferIsTruncated,
       [BlockValidationErrorType.DataCannotBeEmpty]:
-        BrightChainStrings.Error_BlockValidationErrorDataCannotBeEmpty,
+        BrightChainStrings.Error_BlockValidationError_DataCannotBeEmpty,
       [BlockValidationErrorType.CreatorIDMismatch]:
-        BrightChainStrings.Error_BlockValidationErrorCreatorIDMismatch,
+        BrightChainStrings.Error_BlockValidationError_CreatorIDMismatch,
       [BlockValidationErrorType.DataLengthExceedsCapacity]:
-        BrightChainStrings.Error_BlockValidationErrorDataLengthExceedsCapacity,
+        BrightChainStrings.Error_BlockValidationError_DataLengthExceedsCapacity,
       [BlockValidationErrorType.DataLengthTooShort]:
-        BrightChainStrings.Error_BlockValidationErrorDataLengthTooShort,
+        BrightChainStrings.Error_BlockValidationError_DataLengthTooShort,
       [BlockValidationErrorType.DataLengthTooShortForCBLHeader]:
-        BrightChainStrings.Error_BlockValidationErrorDataLengthTooShortForCBLHeader,
+        BrightChainStrings.Error_BlockValidationError_DataLengthTooShortForCBLHeader,
       [BlockValidationErrorType.DataLengthTooShortForEncryptedCBL]:
-        BrightChainStrings.Error_BlockValidationErrorDataLengthTooShortForEncryptedCBL,
+        BrightChainStrings.Error_BlockValidationError_DataLengthTooShortForEncryptedCBL,
       [BlockValidationErrorType.EphemeralBlockOnlySupportsBufferData]:
-        BrightChainStrings.Error_BlockValidationErrorEphemeralBlockOnlySupportsBufferData,
+        BrightChainStrings.Error_BlockValidationError_EphemeralBlockOnlySupportsBufferData,
       [BlockValidationErrorType.FutureCreationDate]:
-        BrightChainStrings.Error_BlockValidationErrorFutureCreationDate,
+        BrightChainStrings.Error_BlockValidationError_FutureCreationDate,
       [BlockValidationErrorType.InvalidAddressLength]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidAddressLengthTemplate,
+        BrightChainStrings.Error_BlockValidationError_InvalidAddressLengthTemplate,
       [BlockValidationErrorType.InvalidAuthTagLength]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidAuthTagLength,
+        BrightChainStrings.Error_BlockValidationError_InvalidAuthTagLength,
       [BlockValidationErrorType.InvalidBlockType]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidBlockTypeTemplate,
+        BrightChainStrings.Error_BlockValidationError_InvalidBlockTypeTemplate,
       [BlockValidationErrorType.InvalidCBLAddressCount]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidCBLAddressCount,
+        BrightChainStrings.Error_BlockValidationError_InvalidCBLAddressCount,
       [BlockValidationErrorType.InvalidCBLDataLength]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidCBLDataLength,
+        BrightChainStrings.Error_BlockValidationError_InvalidCBLDataLength,
       [BlockValidationErrorType.InvalidDateCreated]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidDateCreated,
+        BrightChainStrings.Error_BlockValidationError_InvalidDateCreated,
       [BlockValidationErrorType.InvalidEncryptionHeaderLength]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidEncryptionHeaderLength,
+        BrightChainStrings.Error_BlockValidationError_InvalidEncryptionHeaderLength,
       [BlockValidationErrorType.InvalidEphemeralPublicKeyLength]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidEphemeralPublicKeyLength,
+        BrightChainStrings.Error_BlockValidationError_InvalidEphemeralPublicKeyLength,
       [BlockValidationErrorType.InvalidIVLength]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidIVLength,
+        BrightChainStrings.Error_BlockValidationError_InvalidIVLength,
       [BlockValidationErrorType.InvalidSignature]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidSignature,
+        BrightChainStrings.Error_BlockValidationError_InvalidSignature,
       [BlockValidationErrorType.InvalidTupleSize]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidTupleSizeTemplate,
+        BrightChainStrings.Error_BlockValidationError_InvalidTupleSizeTemplate,
       [BlockValidationErrorType.MethodMustBeImplementedByDerivedClass]:
-        BrightChainStrings.Error_BlockValidationErrorMethodMustBeImplementedByDerivedClass,
+        BrightChainStrings.Error_BlockValidationError_MethodMustBeImplementedByDerivedClass,
       [BlockValidationErrorType.NoChecksum]:
-        BrightChainStrings.Error_BlockValidationErrorNoChecksum,
+        BrightChainStrings.Error_BlockValidationError_NoChecksum,
       [BlockValidationErrorType.OriginalDataLengthNegative]:
-        BrightChainStrings.Error_BlockValidationErrorOriginalDataLengthNegative,
+        BrightChainStrings.Error_BlockValidationError_OriginalDataLengthNegative,
       [BlockValidationErrorType.InvalidRecipientCount]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidRecipientCount,
+        BrightChainStrings.Error_BlockValidationError_InvalidRecipientCount,
       [BlockValidationErrorType.InvalidRecipientIds]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidRecipientIds,
+        BrightChainStrings.Error_BlockValidationError_InvalidRecipientIds,
       [BlockValidationErrorType.InvalidEncryptionType]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidEncryptionType,
+        BrightChainStrings.Error_BlockValidationError_InvalidEncryptionType,
       [BlockValidationErrorType.InvalidCreator]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidCreator,
+        BrightChainStrings.Error_BlockValidationError_InvalidCreator,
       [BlockValidationErrorType.EncryptionRecipientNotFoundInRecipients]:
-        BrightChainStrings.Error_BlockValidationErrorEncryptionRecipientNotFoundInRecipients,
+        BrightChainStrings.Error_BlockValidationError_EncryptionRecipientNotFoundInRecipients,
       [BlockValidationErrorType.EncryptionRecipientHasNoPrivateKey]:
-        BrightChainStrings.Error_BlockValidationErrorEncryptionRecipientHasNoPrivateKey,
+        BrightChainStrings.Error_BlockValidationError_EncryptionRecipientHasNoPrivateKey,
       [BlockValidationErrorType.InvalidRecipientKeys]:
-        BrightChainStrings.Error_BlockValidationErrorInvalidRecipientKeys,
+        BrightChainStrings.Error_BlockValidationError_InvalidRecipientKeys,
     };
   }
   constructor(
@@ -88,20 +88,21 @@ export class BlockValidationError extends TypedWithReasonError<BlockValidationEr
     addressLength?: { index: number; length: number; expectedLength: number },
     _language?: string,
   ) {
-    super(BrightChainStrings.Error_BlockValidationErrorTemplate, type, {
-      ...(blockType
+    const vars = {
+      ...(blockType !== undefined
         ? {
-            TYPE: 'BlockType',
+            TYPE: BlockType[blockType],
           }
         : {}),
       ...(addressLength
         ? {
-            INDEX: addressLength.index,
-            LENGTH: addressLength.length,
-            EXPECTED_LENGTH: addressLength.expectedLength,
+            INDEX: addressLength.index.toString(),
+            LENGTH: addressLength.length.toString(),
+            EXPECTED_LENGTH: addressLength.expectedLength.toString(),
           }
         : {}),
-    });
+    };
+    super(BrightChainStrings.Error_BlockValidationError_Template, type, vars);
     this.name = 'BlockValidationError';
     this.blockType = blockType;
     this.addressLength = addressLength;

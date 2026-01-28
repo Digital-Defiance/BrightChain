@@ -58,7 +58,7 @@ describe('RandomBlock', () => {
       crypto.getRandomValues(wrongSizeData);
       expect(() =>
         RandomBlock.reconstitute(defaultBlockSize, Buffer.from(wrongSizeData)),
-      ).toThrow('Data length must match block size');
+      ).toThrow(/Error_BlockError_DataLengthMustMatchBlockSize/);
     });
   });
 
@@ -100,7 +100,7 @@ describe('RandomBlock', () => {
       const block2 = RandomBlock.new(BlockSize.Medium);
 
       await expect(block1.xor(block2)).rejects.toThrow(
-        'Block sizes must match',
+        /Error_BlockError_BlockSizesMustMatch/,
       );
     });
   });

@@ -1,8 +1,10 @@
 import { randomBytes } from '../browserCrypto';
 import { Readable } from '../browserStream';
+import { BrightChainStrings } from '../enumerations';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import type { ChecksumService } from '../services/checksum.service';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
@@ -23,7 +25,9 @@ export class RandomBlock extends RawDataBlock {
     checksumService?: ChecksumService,
   ) {
     if (data.length !== blockSize) {
-      throw new Error('Data length must match block size');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_BlockError_DataLengthMustMatchBlockSize,
+      );
     }
 
     super(
@@ -136,7 +140,9 @@ export class RandomBlock extends RawDataBlock {
    */
   public async xor<T extends BaseBlock>(other: T): Promise<T> {
     if (this.blockSize !== other.blockSize) {
-      throw new Error('Block sizes must match');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_BlockError_BlockSizesMustMatch,
+      );
     }
 
     const thisData = await RandomBlock.toUint8Array(this.data);

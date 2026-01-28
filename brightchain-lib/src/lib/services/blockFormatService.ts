@@ -9,7 +9,9 @@
 
 import { CrcService, ECIES } from '@digitaldefiance/ecies-lib';
 import { BLOCK_HEADER, StructuredBlockType } from '../constants';
+import { BrightChainStrings } from '../enumerations';
 import { BlockType } from '../enumerations/blockType';
+import { translate } from '../i18n';
 
 /**
  * Result of block format detection
@@ -58,8 +60,7 @@ export function detectBlockFormat(
       isValid: false,
       blockType: BlockType.Unknown,
       version: 0,
-      error:
-        'Data too short for structured block header (minimum 4 bytes required)',
+      error: translate(BrightChainStrings.BlockFormatService_DataTooShort),
     };
   }
 
@@ -82,7 +83,10 @@ export function detectBlockFormat(
         isValid: false,
         blockType: BlockType.Unknown,
         version,
-        error: `Invalid structured block type: 0x${structuredBlockType.toString(16).padStart(2, '0')}`,
+        error: translate(
+          BrightChainStrings.BlockFormatService_InvalidStructuredBlockFormatTemplate,
+          { TYPE: structuredBlockType.toString(16).padStart(2, '0') },
+        ),
         isStructured: true,
       };
     }
@@ -99,7 +103,9 @@ export function detectBlockFormat(
         isValid: false,
         blockType: mapStructuredToBlockType(structuredBlockType),
         version,
-        error: 'Cannot determine header size - data may be truncated',
+        error: translate(
+          BrightChainStrings.BlockFormatService_CannotDetermineHeaderSize,
+        ),
         isStructured: true,
       };
     }
@@ -117,7 +123,13 @@ export function detectBlockFormat(
         isValid: false,
         blockType: mapStructuredToBlockType(structuredBlockType),
         version,
-        error: `CRC8 mismatch - header may be corrupted (expected 0x${computedCrc8.toString(16).padStart(2, '0')}, got 0x${storedCrc8.toString(16).padStart(2, '0')})`,
+        error: translate(
+          BrightChainStrings.BlockFormatService_Crc8MismatchTemplate,
+          {
+            EXPECTED: computedCrc8.toString(16).padStart(2, '0'),
+            CHECKSUM: storedCrc8.toString(16).padStart(2, '0'),
+          },
+        ),
         isStructured: true,
       };
     }
@@ -137,7 +149,9 @@ export function detectBlockFormat(
       isValid: false,
       blockType: BlockType.Unknown,
       version: 0,
-      error: 'Data appears to be ECIES encrypted - decrypt before parsing',
+      error: translate(
+        BrightChainStrings.BlockFormatService_DataAppearsEncrypted,
+      ),
       isEncrypted: true,
     };
   }
@@ -147,7 +161,7 @@ export function detectBlockFormat(
     isValid: false,
     blockType: BlockType.Unknown,
     version: 0,
-    error: 'Unknown block format - missing 0xBC magic prefix (may be raw data)',
+    error: translate(BrightChainStrings.BlockFormatService_UnknownBlockFormat),
   };
 }
 

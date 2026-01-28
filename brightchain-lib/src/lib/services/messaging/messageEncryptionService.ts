@@ -1,6 +1,8 @@
 import { BlockECIES } from '../../access/ecies';
+import { BrightChainStrings } from '../../enumerations';
 import { MessageErrorType } from '../../enumerations/messaging/messageErrorType';
 import { MessageError } from '../../errors/messaging/messageError';
+import { translate } from '../../i18n';
 
 /**
  * Service for encrypting and decrypting message content.
@@ -28,7 +30,9 @@ export class MessageEncryptionService {
     if (recipientPublicKeys.size === 0) {
       throw new MessageError(
         MessageErrorType.MISSING_RECIPIENT_KEYS,
-        'No recipient public keys provided',
+        translate(
+          BrightChainStrings.MessageEncryptionService_NoRecipientPublicKeysProvided,
+        ),
       );
     }
 
@@ -47,7 +51,13 @@ export class MessageEncryptionService {
       } catch (error) {
         throw new MessageError(
           MessageErrorType.ENCRYPTION_FAILED,
-          `Failed to encrypt for recipient ${recipientId}: ${error}`,
+          translate(
+            BrightChainStrings.MessageEncryptionService_FailedToEncryptTemplate,
+            {
+              RECIPIENT_ID: recipientId,
+              ERROR: error instanceof Error ? error.message : String(error),
+            },
+          ),
         );
       }
     }
@@ -70,7 +80,12 @@ export class MessageEncryptionService {
     } catch (error) {
       throw new MessageError(
         MessageErrorType.ENCRYPTION_FAILED,
-        `Broadcast encryption failed: ${error}`,
+        translate(
+          BrightChainStrings.MessageEncryptionService_BroadcastEncryptionFailedTemplate,
+          {
+            ERROR: error instanceof Error ? error.message : String(error),
+          },
+        ),
       );
     }
   }
@@ -90,7 +105,12 @@ export class MessageEncryptionService {
     } catch (error) {
       throw new MessageError(
         MessageErrorType.ENCRYPTION_FAILED,
-        `Decryption failed: ${error}`,
+        translate(
+          BrightChainStrings.MessageEncryptionService_DecryptionFailedTemplate,
+          {
+            ERROR: error instanceof Error ? error.message : String(error),
+          },
+        ),
       );
     }
   }
@@ -110,7 +130,12 @@ export class MessageEncryptionService {
     } catch (error) {
       throw new MessageError(
         MessageErrorType.INVALID_ENCRYPTION_KEY,
-        `Key decryption failed: ${error}`,
+        translate(
+          BrightChainStrings.MessageEncryptionService_KeyDecryptionFailedTemplate,
+          {
+            ERROR: error instanceof Error ? error.message : String(error),
+          },
+        ),
       );
     }
   }

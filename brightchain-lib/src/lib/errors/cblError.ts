@@ -5,77 +5,81 @@ import { TypedError } from './typedError';
 export class CblError extends TypedError<CblErrorType> {
   protected get reasonMap(): Record<CblErrorType, BrightChainStrings> {
     return {
-      [CblErrorType.CblRequired]: BrightChainStrings.Error_CblErrorCblRequired,
+      [CblErrorType.CblRequired]: BrightChainStrings.Error_CblError_CblRequired,
       [CblErrorType.WhitenedBlockFunctionRequired]:
-        BrightChainStrings.Error_CblErrorWhitenedBlockFunctionRequired,
+        BrightChainStrings.Error_CblError_WhitenedBlockFunctionRequired,
       [CblErrorType.FailedToLoadBlock]:
-        BrightChainStrings.Error_CblErrorFailedToLoadBlock,
+        BrightChainStrings.Error_CblError_FailedToLoadBlock,
       [CblErrorType.ExpectedEncryptedDataBlock]:
-        BrightChainStrings.Error_CblErrorExpectedEncryptedDataBlock,
+        BrightChainStrings.Error_CblError_ExpectedEncryptedDataBlock,
       [CblErrorType.ExpectedOwnedDataBlock]:
-        BrightChainStrings.Error_CblErrorExpectedOwnedDataBlock,
+        BrightChainStrings.Error_CblError_ExpectedOwnedDataBlock,
       [CblErrorType.InvalidStructure]:
-        BrightChainStrings.Error_CblErrorInvalidStructure,
+        BrightChainStrings.Error_CblError_InvalidStructure,
       [CblErrorType.CreatorUndefined]:
-        BrightChainStrings.Error_CblErrorCreatorUndefined,
+        BrightChainStrings.Error_CblError_CreatorUndefined,
       [CblErrorType.BlockNotReadable]:
-        BrightChainStrings.Error_CblErrorBlockNotReadable,
+        BrightChainStrings.Error_CblError_BlockNotReadable,
       [CblErrorType.CreatorRequiredForSignature]:
-        BrightChainStrings.Error_CblErrorCreatorRequiredForSignature,
+        BrightChainStrings.Error_CblError_CreatorRequiredForSignature,
       [CblErrorType.InvalidCreatorId]:
-        BrightChainStrings.Error_CblErrorInvalidCreatorId,
+        BrightChainStrings.Error_CblError_InvalidCreatorId,
       [CblErrorType.FileNameRequired]:
-        BrightChainStrings.Error_CblErrorFileNameRequired,
+        BrightChainStrings.Error_CblError_FileNameRequired,
       [CblErrorType.FileNameEmpty]:
-        BrightChainStrings.Error_CblErrorFileNameEmpty,
+        BrightChainStrings.Error_CblError_FileNameEmpty,
       [CblErrorType.FileNameWhitespace]:
-        BrightChainStrings.Error_CblErrorFileNameWhitespace,
+        BrightChainStrings.Error_CblError_FileNameWhitespace,
       [CblErrorType.FileNameInvalidChar]:
-        BrightChainStrings.Error_CblErrorFileNameInvalidChar,
+        BrightChainStrings.Error_CblError_FileNameInvalidChar,
       [CblErrorType.FileNameControlChars]:
-        BrightChainStrings.Error_CblErrorFileNameControlChars,
+        BrightChainStrings.Error_CblError_FileNameControlChars,
       [CblErrorType.FileNamePathTraversal]:
-        BrightChainStrings.Error_CblErrorFileNamePathTraversal,
+        BrightChainStrings.Error_CblError_FileNamePathTraversal,
       [CblErrorType.MimeTypeRequired]:
-        BrightChainStrings.Error_CblErrorMimeTypeRequired,
+        BrightChainStrings.Error_CblError_MimeTypeRequired,
       [CblErrorType.MimeTypeEmpty]:
-        BrightChainStrings.Error_CblErrorMimeTypeEmpty,
+        BrightChainStrings.Error_CblError_MimeTypeEmpty,
       [CblErrorType.MimeTypeWhitespace]:
-        BrightChainStrings.Error_CblErrorMimeTypeWhitespace,
+        BrightChainStrings.Error_CblError_MimeTypeWhitespace,
       [CblErrorType.MimeTypeLowercase]:
-        BrightChainStrings.Error_CblErrorMimeTypeLowercase,
+        BrightChainStrings.Error_CblError_MimeTypeLowercase,
       [CblErrorType.MimeTypeInvalidFormat]:
-        BrightChainStrings.Error_CblErrorMimeTypeInvalidFormat,
+        BrightChainStrings.Error_CblError_MimeTypeInvalidFormat,
       [CblErrorType.InvalidBlockSize]:
-        BrightChainStrings.Error_CblErrorInvalidBlockSize,
+        BrightChainStrings.Error_CblError_InvalidBlockSize,
       [CblErrorType.MetadataSizeExceeded]:
-        BrightChainStrings.Error_CblErrorMetadataSizeExceeded,
+        BrightChainStrings.Error_CblError_MetadataSizeExceeded,
       [CblErrorType.MetadataSizeNegative]:
-        BrightChainStrings.Error_CblErrorMetadataSizeNegative,
+        BrightChainStrings.Error_CblError_MetadataSizeNegative,
       [CblErrorType.InvalidMetadataBuffer]:
-        BrightChainStrings.Error_CblErrorInvalidMetadataBuffer,
+        BrightChainStrings.Error_CblError_InvalidMetadataBuffer,
       [CblErrorType.NotExtendedCbl]:
-        BrightChainStrings.Error_CblErrorNotExtendedCbl,
+        BrightChainStrings.Error_CblError_NotExtendedCbl,
       [CblErrorType.InvalidSignature]:
-        BrightChainStrings.Error_CblErrorInvalidSignature,
+        BrightChainStrings.Error_CblError_InvalidSignature,
       [CblErrorType.CreatorIdMismatch]:
-        BrightChainStrings.Error_CblErrorCreatorIdMismatch,
+        BrightChainStrings.Error_CblError_CreatorIdMismatch,
       [CblErrorType.InvalidTupleSize]:
-        BrightChainStrings.Error_CblErrorInvalidTupleSize,
+        BrightChainStrings.Error_CblError_InvalidTupleSize,
       [CblErrorType.FileNameTooLong]:
-        BrightChainStrings.Error_CblErrorFileNameTooLong,
+        BrightChainStrings.Error_CblError_FileNameTooLong,
       [CblErrorType.MimeTypeTooLong]:
-        BrightChainStrings.Error_CblErrorMimeTypeTooLong,
+        BrightChainStrings.Error_CblError_MimeTypeTooLong,
       [CblErrorType.AddressCountExceedsCapacity]:
-        BrightChainStrings.Error_CblErrorAddressCountExceedsCapacity,
+        BrightChainStrings.Error_CblError_AddressCountExceedsCapacity,
       [CblErrorType.FileSizeTooLarge]:
-        BrightChainStrings.Error_CblErrorFileSizeTooLarge,
+        BrightChainStrings.Error_CblError_FileSizeTooLarge,
       [CblErrorType.FileSizeTooLargeForNode]:
-        BrightChainStrings.Error_CblErrorFileSizeTooLargeForNode,
+        BrightChainStrings.Error_CblError_FileSizeTooLargeForNode,
       [CblErrorType.CblEncrypted]:
-        BrightChainStrings.Error_CblErrorCblEncrypted,
+        BrightChainStrings.Error_CblError_CblEncrypted,
       [CblErrorType.UserRequiredForDecryption]:
-        BrightChainStrings.Error_CblErrorUserRequiredForDecryption,
+        BrightChainStrings.Error_CblError_UserRequiredForDecryption,
+      [CblErrorType.FailedToExtractCreatorId]:
+        BrightChainStrings.Error_CblError_FailedToExtractCreatorId,
+      [CblErrorType.FailedToExtractProvidedCreatorId]:
+        BrightChainStrings.Error_CblError_FailedToExtractProvidedCreatorId,
     };
   }
   constructor(

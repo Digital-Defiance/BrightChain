@@ -1,3 +1,4 @@
+import { BrightChainStrings } from '../enumerations';
 import { BrightChainError, isBrightChainError } from './brightChainError';
 import {
   EnhancedValidationError,
@@ -9,11 +10,11 @@ describe('EnhancedValidationError', () => {
     it('should create an error with field and message', () => {
       const error = new EnhancedValidationError(
         'blockSize',
-        'Invalid block size',
+        BrightChainStrings.Error_BlockCapacity_InvalidBlockSize,
       );
 
       expect(error.field).toBe('blockSize');
-      expect(error.message).toBe('Invalid block size');
+      expect(error.message).toBeDefined();
       expect(error.type).toBe('Validation');
       expect(error.name).toBe('EnhancedValidationError');
     });
@@ -21,7 +22,7 @@ describe('EnhancedValidationError', () => {
     it('should include field in context', () => {
       const error = new EnhancedValidationError(
         'recipientCount',
-        'Must be at least 1',
+        BrightChainStrings.Error_Validator_RecipientCountMustBeAtLeastOne,
       );
 
       expect(error.context).toEqual({ field: 'recipientCount' });
@@ -30,7 +31,7 @@ describe('EnhancedValidationError', () => {
     it('should merge additional context with field', () => {
       const error = new EnhancedValidationError(
         'blockSize',
-        'Invalid block size: 999',
+        BrightChainStrings.Error_Validator_InvalidBlockSizeTemplate,
         { validSizes: [256, 512, 1024], providedValue: 999 },
       );
 
@@ -42,14 +43,20 @@ describe('EnhancedValidationError', () => {
     });
 
     it('should extend BrightChainError', () => {
-      const error = new EnhancedValidationError('test', 'Test message');
+      const error = new EnhancedValidationError(
+        'test',
+        BrightChainStrings.Error_Validation_Error,
+      );
 
       expect(error).toBeInstanceOf(BrightChainError);
       expect(error).toBeInstanceOf(Error);
     });
 
     it('should have proper stack trace', () => {
-      const error = new EnhancedValidationError('field', 'message');
+      const error = new EnhancedValidationError(
+        'field',
+        BrightChainStrings.Error_Validation_Error,
+      );
 
       expect(error.stack).toBeDefined();
       expect(error.stack).toContain('EnhancedValidationError');
@@ -60,7 +67,7 @@ describe('EnhancedValidationError', () => {
     it('should serialize error to JSON', () => {
       const error = new EnhancedValidationError(
         'encryptionType',
-        'Invalid encryption type',
+        BrightChainStrings.Error_Validator_InvalidEncryptionTypeTemplate,
         { providedType: 'Unknown' },
       );
 
@@ -69,18 +76,21 @@ describe('EnhancedValidationError', () => {
       expect(json).toMatchObject({
         name: 'EnhancedValidationError',
         type: 'Validation',
-        message: 'Invalid encryption type',
         context: {
           field: 'encryptionType',
           providedType: 'Unknown',
         },
       });
+      expect((json as { message: string }).message).toBeDefined();
     });
   });
 
   describe('isEnhancedValidationError', () => {
     it('should return true for EnhancedValidationError instances', () => {
-      const error = new EnhancedValidationError('field', 'message');
+      const error = new EnhancedValidationError(
+        'field',
+        BrightChainStrings.Error_Validation_Error,
+      );
 
       expect(isEnhancedValidationError(error)).toBe(true);
     });
@@ -120,7 +130,10 @@ describe('EnhancedValidationError', () => {
 
   describe('isBrightChainError compatibility', () => {
     it('should be recognized by isBrightChainError type guard', () => {
-      const error = new EnhancedValidationError('field', 'message');
+      const error = new EnhancedValidationError(
+        'field',
+        BrightChainStrings.Error_Validation_Error,
+      );
 
       expect(isBrightChainError(error)).toBe(true);
     });
@@ -131,7 +144,7 @@ describe('EnhancedValidationError', () => {
       const throwError = () => {
         throw new EnhancedValidationError(
           'testField',
-          'Test validation failed',
+          BrightChainStrings.Error_Validation_Error,
         );
       };
 
@@ -142,7 +155,7 @@ describe('EnhancedValidationError', () => {
       const throwError = () => {
         throw new EnhancedValidationError(
           'testField',
-          'Test validation failed',
+          BrightChainStrings.Error_Validation_Error,
         );
       };
 
@@ -158,7 +171,7 @@ describe('EnhancedValidationError', () => {
       const throwError = () => {
         throw new EnhancedValidationError(
           'testField',
-          'Test validation failed',
+          BrightChainStrings.Error_Validation_Error,
         );
       };
 
@@ -169,7 +182,7 @@ describe('EnhancedValidationError', () => {
       try {
         throw new EnhancedValidationError(
           'blockType',
-          'Unsupported block type',
+          BrightChainStrings.Error_Validator_InvalidBlockTypeTemplate,
           { blockType: 'Unknown' },
         );
       } catch (error) {
@@ -190,7 +203,7 @@ describe('EnhancedValidationError', () => {
         if (!validSizes.includes(size)) {
           throw new EnhancedValidationError(
             'blockSize',
-            `Invalid block size: ${size}. Must be one of: ${validSizes.join(', ')}`,
+            BrightChainStrings.Error_Validator_InvalidBlockSizeTemplate,
             { providedSize: size, validSizes },
           );
         }
@@ -213,7 +226,7 @@ describe('EnhancedValidationError', () => {
         if (count === undefined || count < 1) {
           throw new EnhancedValidationError(
             'recipientCount',
-            'Recipient count must be at least 1 for multi-recipient encryption',
+            BrightChainStrings.Error_Validator_RecipientCountMustBeAtLeastOne,
             { recipientCount: count, encryptionType: 'MultiRecipient' },
           );
         }
@@ -233,7 +246,7 @@ describe('EnhancedValidationError', () => {
         if (value === undefined || value === null) {
           throw new EnhancedValidationError(
             fieldName,
-            `${fieldName} is required`,
+            BrightChainStrings.Error_Validator_FieldRequiredTemplate,
           );
         }
         return value;

@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { BreadCrumbTraceLevel } from '../enumerations/breadCrumbTraceLevel';
+import { BrightChainStrings } from '../enumerations/brightChainStrings';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { IBreadCrumbContext } from '../interfaces/breadCrumbContext';
 import { IBreadCrumbTrace } from '../interfaces/breadCrumbTrace';
 
@@ -158,7 +160,9 @@ export class HanselGretelBreadCrumbTrail implements IBreadCrumbTrace {
       case 'csv':
         return this.formatAsCSV();
       default:
-        throw new Error('Unsupported format');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_Debug_UnsupportedFormat,
+        );
     }
   }
   private formatAsCSV(): string {

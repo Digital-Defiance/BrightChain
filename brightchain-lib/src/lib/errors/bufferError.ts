@@ -11,7 +11,7 @@ export class BufferError extends HandleableError {
     super(
       new Error(
         translate(
-          BrightChainStrings.Error_BufferErrorInvalidBufferTypeTemplate,
+          BrightChainStrings.Error_BufferError_InvalidBufferTypeTemplate,
           {
             TYPE: type,
             ...details,

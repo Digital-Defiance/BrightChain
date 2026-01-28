@@ -6,6 +6,7 @@ import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEnc
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { RoutingStrategy } from '../../enumerations/messaging/routingStrategy';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
 import { MemoryMessageMetadataStore } from '../../stores/messaging/memoryMessageMetadataStore';
 import { MessageRouter } from './messageRouter';
 
@@ -153,7 +154,7 @@ describe('MessageRouter', () => {
     it('should throw error for non-existent message', async () => {
       await expect(
         router.handleIncomingMessage('non-existent', 'sender'),
-      ).rejects.toThrow('Message non-existent not found');
+      ).rejects.toThrow(TranslatableBrightChainError);
     });
   });
 

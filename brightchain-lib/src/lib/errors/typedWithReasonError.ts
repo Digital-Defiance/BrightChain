@@ -15,14 +15,14 @@ export abstract class TypedWithReasonError<
   ) {
     const reasonMap = (new.target as typeof TypedWithReasonError).prototype
       .reasonMap;
-    super(
-      new Error(
-        translate(reasonTemplate, {
-          ...otherVars,
-          ...{ REASON: translate(reasonMap[type]) },
-        }),
-      ),
-    );
+    // Translate the reason with the provided variables
+    const translatedReason = translate(reasonMap[type], otherVars);
+    // Then translate the template with both the reason and the other variables
+    const finalMessage = translate(reasonTemplate, {
+      ...otherVars,
+      REASON: translatedReason,
+    });
+    super(new Error(finalMessage));
     this.type = type;
   }
 }

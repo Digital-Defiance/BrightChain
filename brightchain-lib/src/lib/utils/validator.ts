@@ -27,6 +27,7 @@
  */
 
 import { ECIES } from '@digitaldefiance/ecies-lib';
+import { BrightChainStrings } from '../enumerations';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize, validBlockSizes } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -92,8 +93,13 @@ export class Validator {
     if (!validBlockSizes.includes(blockSize)) {
       throw new EnhancedValidationError(
         'blockSize',
-        `Invalid block size: ${blockSize}. Valid sizes are: ${validBlockSizes.join(', ')}`,
-        { blockSize, validSizes: [...validBlockSizes], context },
+        BrightChainStrings.Error_Validator_InvalidBlockSizeTemplate,
+        { context },
+        undefined,
+        {
+          BLOCK_SIZE: blockSize,
+          BLOCK_SIZES: validBlockSizes.map((s) => s.toString()).join(', '),
+        },
       );
     }
   }
@@ -129,8 +135,13 @@ export class Validator {
     if (!validBlockTypes.includes(blockType)) {
       throw new EnhancedValidationError(
         'blockType',
-        `Invalid block type: ${blockType}`,
-        { blockType, validTypes: validBlockTypes, context },
+        BrightChainStrings.Error_Validator_InvalidBlockTypeTemplate,
+        { context },
+        undefined,
+        {
+          BLOCK_TYPE: blockType,
+          BLOCK_TYPES: validBlockTypes.map((t) => t.toString()).join(', '),
+        },
       );
     }
   }
@@ -164,8 +175,15 @@ export class Validator {
     if (!validEncryptionTypes.includes(encryptionType)) {
       throw new EnhancedValidationError(
         'encryptionType',
-        `Invalid encryption type: ${encryptionType}`,
-        { encryptionType, validTypes: validEncryptionTypes, context },
+        BrightChainStrings.Error_Validator_InvalidEncryptionTypeTemplate,
+        { context },
+        undefined,
+        {
+          ENCRYPTION_TYPE: encryptionType,
+          ENCRYPTION_TYPES: validEncryptionTypes
+            .map((t) => t.toString())
+            .join(', '),
+        },
       );
     }
   }
@@ -206,7 +224,7 @@ export class Validator {
       if (recipientCount === undefined || recipientCount < 1) {
         throw new EnhancedValidationError(
           'recipientCount',
-          'Recipient count must be at least 1 for multi-recipient encryption',
+          BrightChainStrings.Error_Validator_RecipientCountMustBeAtLeastOne,
           { recipientCount, encryptionType, context },
         );
       }
@@ -215,8 +233,12 @@ export class Validator {
       if (recipientCount > maxRecipients) {
         throw new EnhancedValidationError(
           'recipientCount',
-          `Recipient count cannot exceed ${maxRecipients}`,
+          BrightChainStrings.Error_Validator_RecipientCountMaximumTemplate,
           { recipientCount, maxRecipients, encryptionType, context },
+          undefined,
+          {
+            MAXIMUM: maxRecipients,
+          },
         );
       }
     }
@@ -256,9 +278,15 @@ export class Validator {
     context?: string,
   ): asserts value is T {
     if (value === undefined || value === null) {
-      throw new EnhancedValidationError(fieldName, `${fieldName} is required`, {
-        context,
-      });
+      throw new EnhancedValidationError(
+        fieldName,
+        BrightChainStrings.Error_Validator_FieldRequiredTemplate,
+        {
+          context,
+        },
+        undefined,
+        { FIELD: fieldName },
+      );
     }
   }
 
@@ -296,8 +324,10 @@ export class Validator {
     if (!value || value.trim().length === 0) {
       throw new EnhancedValidationError(
         fieldName,
-        `${fieldName} cannot be empty`,
+        BrightChainStrings.Error_Validator_FieldCannotBeEmptyTemplate,
         { context },
+        undefined,
+        { FIELD: fieldName },
       );
     }
   }

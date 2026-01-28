@@ -12,6 +12,8 @@
 
 import { describe, expect, it } from '@jest/globals';
 import fc from 'fast-check';
+import { BrightChainStrings } from '../enumerations';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { XorService } from '../services/xor';
 import { padToBlockSize, unpadCblData, xorArrays } from './xorUtils';
 
@@ -152,7 +154,15 @@ describe('XOR Utility Functions - Property Tests', () => {
             const a = new Uint8Array(len1);
             const b = new Uint8Array(len2);
 
-            expect(() => xorArrays(a, b)).toThrow(/equal-length/);
+            expect(() => xorArrays(a, b)).toThrow(TranslatableBrightChainError);
+            try {
+              xorArrays(a, b);
+            } catch (error) {
+              expect(error).toBeInstanceOf(TranslatableBrightChainError);
+              expect((error as TranslatableBrightChainError).stringKey).toBe(
+                BrightChainStrings.Error_Xor_LengthMismatchTemplate,
+              );
+            }
             return true;
           },
         ),
@@ -233,8 +243,16 @@ describe('XOR Utility Functions - Property Tests', () => {
             const b = new Uint8Array(len2);
 
             expect(() => XorService.xorMultiple([a, b])).toThrow(
-              /same length|equal-length/,
+              TranslatableBrightChainError,
             );
+            try {
+              XorService.xorMultiple([a, b]);
+            } catch (error) {
+              expect(error).toBeInstanceOf(TranslatableBrightChainError);
+              expect((error as TranslatableBrightChainError).stringKey).toBe(
+                BrightChainStrings.Error_Xor_ArrayLengthMismatchTemplate,
+              );
+            }
             return true;
           },
         ),
@@ -248,7 +266,17 @@ describe('XOR Utility Functions - Property Tests', () => {
      * Empty array should throw an error
      */
     it('should throw error for empty array', () => {
-      expect(() => XorService.xorMultiple([])).toThrow(/At least one array/);
+      expect(() => XorService.xorMultiple([])).toThrow(
+        TranslatableBrightChainError,
+      );
+      try {
+        XorService.xorMultiple([]);
+      } catch (error) {
+        expect(error).toBeInstanceOf(TranslatableBrightChainError);
+        expect((error as TranslatableBrightChainError).stringKey).toBe(
+          BrightChainStrings.Error_Xor_NoArraysProvided,
+        );
+      }
     });
   });
 
@@ -330,7 +358,7 @@ describe('XOR Utility Functions - Property Tests', () => {
           fc.integer({ min: -100, max: 0 }),
           (data, invalidBlockSize) => {
             expect(() => padToBlockSize(data, invalidBlockSize)).toThrow(
-              /positive/,
+              /XorUtils_BlockSizeMustBePositiveTemplate/,
             );
             return true;
           },
@@ -378,7 +406,7 @@ describe('XOR Utility Functions - Property Tests', () => {
         fc.property(fc.integer({ min: 0, max: 3 }), (length) => {
           const data = new Uint8Array(length);
 
-          expect(() => unpadCblData(data)).toThrow(/too short/);
+          expect(() => unpadCblData(data)).toThrow(/XorUtils_InvalidPaddedDataTemplate/);
 
           return true;
         }),

@@ -39,7 +39,11 @@ export const MessagePassingDemo: React.FC = () => {
       const checksumService = new ChecksumService();
       const eciesService = new ECIESService();
       const enhancedProvider = getEnhancedIdProvider<Uint8Array>();
-      const cblService = new CBLService(checksumService, eciesService, enhancedProvider);
+      const cblService = new CBLService(
+        checksumService,
+        eciesService,
+        enhancedProvider,
+      );
       const service = new MessageCBLService(
         cblService,
         checksumService,

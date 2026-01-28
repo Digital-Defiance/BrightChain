@@ -9,19 +9,19 @@ export class BlockCapacityError extends TypedError<BlockCapacityErrorType> {
   > {
     return {
       [BlockCapacityErrorType.InvalidBlockSize]:
-        BrightChainStrings.Error_BlockCapacityInvalidBlockSize,
+        BrightChainStrings.Error_BlockCapacity_InvalidBlockSize,
       [BlockCapacityErrorType.InvalidBlockType]:
-        BrightChainStrings.Error_BlockCapacityInvalidBlockType,
+        BrightChainStrings.Error_BlockCapacity_InvalidBlockType,
       [BlockCapacityErrorType.CapacityExceeded]:
-        BrightChainStrings.Error_BlockCapacityCapacityExceeded,
+        BrightChainStrings.Error_BlockCapacity_CapacityExceeded,
       [BlockCapacityErrorType.InvalidFileName]:
-        BrightChainStrings.Error_BlockCapacityInvalidFileName,
+        BrightChainStrings.Error_BlockCapacity_InvalidFileName,
       [BlockCapacityErrorType.InvalidMimeType]:
-        BrightChainStrings.Error_BlockCapacityInvalidMimetype,
+        BrightChainStrings.Error_BlockCapacity_InvalidMimetype,
       [BlockCapacityErrorType.InvalidRecipientCount]:
-        BrightChainStrings.Error_BlockCapacityInvalidRecipientCount,
+        BrightChainStrings.Error_BlockCapacity_InvalidRecipientCount,
       [BlockCapacityErrorType.InvalidExtendedCblData]:
-        BrightChainStrings.Error_BlockCapacityInvalidExtendedCblData,
+        BrightChainStrings.Error_BlockCapacity_InvalidExtendedCblData,
     };
   }
 

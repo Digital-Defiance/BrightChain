@@ -108,7 +108,7 @@ export class App<TID extends PlatformID> extends BaseApplication<TID> {
               : new HandleableError(
                   new Error(
                     err.message ||
-                      translate(BrightChainStrings.Error_UnexpectedError),
+                      translate(BrightChainStrings.Error_Unexpected_Error),
                   ),
                   { cause: err },
                 );

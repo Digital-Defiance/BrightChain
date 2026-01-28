@@ -44,7 +44,7 @@ const login = async (
     return {
       error: response.data.message
         ? response.data.message
-        : translate(BrightChainStrings.Error_TokenInvalid),
+        : translate(BrightChainStrings.Error_Token_Invalid),
       ...(response.data.errorType
         ? { errorType: response.data.errorType }
         : {}),
@@ -57,14 +57,14 @@ const login = async (
           error.response.data.error.message ??
           error.response.data.message ??
           error.message ??
-          translate(BrightChainStrings.Error_UnexpectedError),
+          translate(BrightChainStrings.Error_Unexpected_Error),
         ...(error.response.data.errorType
           ? { errorType: error.response.data.errorType }
           : {}),
         status: error.response.status,
       };
     }
-    return { error: translate(BrightChainStrings.Error_UnexpectedError) };
+    return { error: translate(BrightChainStrings.Error_Unexpected_Error) };
   }
 };
 
@@ -105,14 +105,14 @@ const register = async (
           error.response.data.error.message ??
           error.response.data.message ??
           error.message ??
-          translate(BrightChainStrings.Error_UnexpectedError),
+          translate(BrightChainStrings.Error_Unexpected_Error),
         ...(error.response.data.errorType
           ? { errorType: error.response.data.errorType }
           : {}),
       };
     } else {
       return {
-        error: translate(BrightChainStrings.Error_UnexpectedError),
+        error: translate(BrightChainStrings.Error_Unexpected_Error),
       };
     }
   }
@@ -154,14 +154,14 @@ const verifyToken = async (
           ? error.response.data.message
           : error.message
             ? error.message
-            : translate(BrightChainStrings.Error_UnexpectedError),
+            : translate(BrightChainStrings.Error_Unexpected_Error),
         ...(error.response.data.errorType
           ? { errorType: error.response.data.errorType }
           : {}),
       };
     } else {
       return {
-        error: translate(BrightChainStrings.Error_UnexpectedError),
+        error: translate(BrightChainStrings.Error_Unexpected_Error),
       };
     }
   }

@@ -3,7 +3,9 @@ import {
   ChecksumUint8Array,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
+import { BrightChainStrings } from './enumerations';
 import { BlockSize } from './enumerations/blockSize';
+import { TranslatableBrightChainError } from './errors/translatableBrightChainError';
 
 // Simple checksum calculation using Web Crypto API
 async function calculateChecksum(
@@ -47,7 +49,10 @@ class SimpleBrowserStore {
     const id = uint8ArrayToHex(checksum);
     const block = this.blocks.get(id);
     if (!block) {
-      throw new Error(`Block not found: ${id}`);
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.SimpleBrowserStore_BlockNotFoundTemplate,
+        { ID: id },
+      );
     }
     return block;
   }

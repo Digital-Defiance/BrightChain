@@ -28,7 +28,6 @@ const secrets = (secretsModule as any).default || secretsModule;
  * - Recombining shares to recover secrets
  * - Managing quorum-based data access
  */
-import { createECIESService } from '../browserConfig';
 
 export class SealingService<TID extends PlatformID = Uint8Array> {
   private readonly eciesService: ECIESService<TID>;

@@ -8,7 +8,9 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { generateRandomKeysSync } from 'paillier-bigint';
 import { uint8ArrayToBase64 } from '../bufferUtils';
+import { BrightChainStrings } from '../enumerations';
 import { NotImplementedError } from '../errors/notImplemented';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { getBrightChainIdProvider } from '../init';
 import type { IQuorumDocument } from '../interfaces/document/quorumDocument';
 import { QuorumDataRecord } from '../quorumDataRecord';
@@ -58,7 +60,10 @@ export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
       required: true,
       serialize: (value: Checksum): string => value.toHex(),
       hydrate: (value: string): Checksum => {
-        if (!this.isString(value)) throw new Error('Invalid checksum format');
+        if (!this.isString(value))
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_QuorumDocument_InvalidChecksumFormat,
+          );
         return Checksum.fromHex(value as string);
       },
     },
@@ -67,7 +72,10 @@ export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
       required: true,
       serialize: (value: Checksum): string => value.toHex(),
       hydrate: (value: string): Checksum => {
-        if (!this.isString(value)) throw new Error('Invalid creator ID format');
+        if (!this.isString(value))
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_QuorumDocument_InvalidCreatorIdFormat,
+          );
         return Checksum.fromHex(value as string);
       },
     },
@@ -84,7 +92,10 @@ export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
       required: true,
       serialize: (value: SignatureUint8Array): string => uint8ArrayToHex(value),
       hydrate: (value: string): SignatureUint8Array => {
-        if (!this.isString(value)) throw new Error('Invalid signature format');
+        if (!this.isString(value))
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_QuorumDocument_InvalidSignatureFormat,
+          );
         return hexToUint8Array(value as string) as SignatureUint8Array;
       },
     },
@@ -96,7 +107,10 @@ export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
           uint8ArrayToHex(getBrightChainIdProvider<TID>().toBytes(id)),
         ),
       hydrate: (value: string): TID[] => {
-        if (!Array.isArray(value)) throw new Error('Invalid member IDs format');
+        if (!Array.isArray(value))
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_QuorumDocument_InvalidMemberIdsFormat,
+          );
         const provider = getBrightChainIdProvider<TID>();
         return value.map((id) => provider.fromBytes(hexToUint8Array(id)));
       },
@@ -126,7 +140,9 @@ export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
       hydrate: (value: string): QuorumDataRecord<TID> | undefined => {
         if (value === null || value === undefined) return undefined;
         if (!this.isString(value) && typeof value !== 'object')
-          throw new Error('Invalid encrypted data format');
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_QuorumDocument_InvalidEncryptedDataFormat,
+          );
         return QuorumDataRecord.fromJson<TID>(
           typeof value === 'string' ? value : JSON.stringify(value),
           this.fetchMember,

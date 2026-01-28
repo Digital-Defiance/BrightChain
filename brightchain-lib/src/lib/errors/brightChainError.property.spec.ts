@@ -10,6 +10,7 @@
  */
 
 import fc from 'fast-check';
+import { BrightChainStrings } from '../enumerations';
 import { BrightChainError, isBrightChainError } from './brightChainError';
 import { ChecksumError, ChecksumErrorType } from './checksumError';
 import {
@@ -314,12 +315,11 @@ describe('Error Context Preservation Property Tests', () => {
       fc.assert(
         fc.property(
           arbFieldName,
-          arbErrorMessage,
           arbContext,
-          (field, message, additionalContext) => {
+          (field, additionalContext) => {
             const error = new EnhancedValidationError(
               field,
-              message,
+              BrightChainStrings.Error_Validation_Error,
               additionalContext,
             );
 
