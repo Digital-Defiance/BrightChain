@@ -6,13 +6,13 @@ export class DocumentError extends TypedError<DocumentErrorType> {
   public get reasonMap(): Record<DocumentErrorType, BrightChainStrings> {
     return {
       [DocumentErrorType.FieldRequired]:
-        BrightChainStrings.Error_DocumentErrorFieldRequiredTemplate,
+        BrightChainStrings.Error_DocumentError_FieldRequiredTemplate,
       [DocumentErrorType.InvalidValue]:
-        BrightChainStrings.Error_DocumentErrorInvalidValueTemplate,
+        BrightChainStrings.Error_DocumentError_InvalidValueTemplate,
       [DocumentErrorType.AlreadyInitialized]:
-        BrightChainStrings.Error_DocumentErrorAlreadyInitialized,
+        BrightChainStrings.Error_DocumentError_AlreadyInitialized,
       [DocumentErrorType.Uninitialized]:
-        BrightChainStrings.Error_DocumentErrorUninitialized,
+        BrightChainStrings.Error_DocumentError_Uninitialized,
     };
   }
   constructor(

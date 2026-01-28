@@ -1,10 +1,12 @@
 import { BlockMetadata } from '../blockMetadata';
+import { BrightChainStrings } from '../enumerations';
 import { BlockAccessErrorType } from '../enumerations/blockAccessErrorType';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { BlockAccessError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { logValidationFailure } from '../logging/blockLogger';
 import type { ChecksumService } from '../services/checksum.service';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
@@ -31,12 +33,15 @@ export class RawDataBlock extends BaseBlock {
     checksumService?: ChecksumService,
   ) {
     if (!data) {
-      throw new Error('Data cannot be null or undefined');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_BlockError_DataCannotBeNullOrUndefined,
+      );
     }
     const now = new Date();
     if (data.length > blockSize) {
-      throw new Error(
-        `Data length (${data.length}) exceeds block size (${blockSize})`,
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_BlockError_DataLengthExceedsBlockSizeTemplate,
+        { LENGTH: data.length, BLOCK_SIZE: blockSize },
       );
     }
 

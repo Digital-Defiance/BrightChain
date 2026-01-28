@@ -8,10 +8,12 @@ import { TUPLE } from '../../constants';
 import { BlockDataType } from '../../enumerations/blockDataType';
 import { BlockEncryptionType } from '../../enumerations/blockEncryptionType';
 import { BlockType } from '../../enumerations/blockType';
+import { BrightChainStrings } from '../../enumerations/brightChainStrings';
 import { MemberErrorType } from '../../enumerations/memberErrorType';
 import { StoreErrorType } from '../../enumerations/storeErrorType';
 import { MemberError } from '../../errors/memberError';
 import { StoreError } from '../../errors/storeError';
+import { translate } from '../../i18n';
 import { IBlockStore } from '../../interfaces/storage/blockStore';
 import { Checksum } from '../../types/checksum';
 import { ServiceProvider } from '../service.provider';
@@ -203,7 +205,12 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
       // The CBL is the final result we want to return
       return cbl;
     } catch (error) {
-      console.error('MemberCblService.createMemberCbl error:', error);
+      console.error(
+        translate(
+          BrightChainStrings.Error_MemberCblService_CreateMemberCblFailed,
+        ),
+        error,
+      );
       if (error instanceof MemberError) {
         throw error;
       }

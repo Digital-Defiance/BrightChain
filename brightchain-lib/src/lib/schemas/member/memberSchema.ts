@@ -5,6 +5,8 @@ import {
   uint8ArrayToBase64,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
+import { BrightChainStrings } from '../../enumerations';
+import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
 import {
   IPrivateMemberData,
   IPublicMemberData,
@@ -39,7 +41,10 @@ export const PublicMemberSchema: SchemaDefinition<IPublicMemberData> = {
     required: true,
     serialize: (value: Uint8Array): string => uint8ArrayToHex(value),
     hydrate: (value: string): Uint8Array => {
-      if (!isString(value)) throw new Error('Invalid ID format');
+      if (!isString(value))
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MemberSchema_InvalidIdFormat,
+        );
       return hexToUint8Array(value);
     },
   },
@@ -64,7 +69,10 @@ export const PublicMemberSchema: SchemaDefinition<IPublicMemberData> = {
     required: true,
     serialize: (value: Uint8Array): string => uint8ArrayToBase64(value),
     hydrate: (value: string): Uint8Array => {
-      if (!isString(value)) throw new Error('Invalid public key format');
+      if (!isString(value))
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MemberSchema_InvalidPublicKeyFormat,
+        );
       return base64ToUint8Array(value);
     },
   },
@@ -73,7 +81,10 @@ export const PublicMemberSchema: SchemaDefinition<IPublicMemberData> = {
     required: true,
     serialize: (value: Uint8Array): string => uint8ArrayToBase64(value),
     hydrate: (value: string): Uint8Array => {
-      if (!isString(value)) throw new Error('Invalid voting public key format');
+      if (!isString(value))
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MemberSchema_InvalidVotingPublicKeyFormat,
+        );
       return base64ToUint8Array(value);
     },
   },
@@ -116,7 +127,10 @@ export const PrivateMemberSchema: SchemaDefinition<IPrivateMemberData> = {
     required: true,
     serialize: (value: Uint8Array): string => uint8ArrayToHex(value),
     hydrate: (value: string): Uint8Array => {
-      if (!isString(value)) throw new Error('Invalid ID format');
+      if (!isString(value))
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MemberSchema_InvalidIdFormat,
+        );
       return hexToUint8Array(value);
     },
   },
@@ -125,7 +139,10 @@ export const PrivateMemberSchema: SchemaDefinition<IPrivateMemberData> = {
     required: true,
     serialize: (value: EmailString): string => value.toString(),
     hydrate: (value: string): EmailString => {
-      if (!isString(value)) throw new Error('Invalid email format');
+      if (!isString(value))
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MemberSchema_InvalidEmailFormat,
+        );
       return new EmailString(value);
     },
   },
@@ -136,7 +153,10 @@ export const PrivateMemberSchema: SchemaDefinition<IPrivateMemberData> = {
       value ? uint8ArrayToBase64(value) : null,
     hydrate: (value: string): Uint8Array | undefined => {
       if (value === null || value === undefined) return undefined;
-      if (!isString(value)) throw new Error('Invalid recovery data format');
+      if (!isString(value))
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MemberSchema_InvalidRecoveryDataFormat,
+        );
       return base64ToUint8Array(value);
     },
   },
@@ -147,7 +167,9 @@ export const PrivateMemberSchema: SchemaDefinition<IPrivateMemberData> = {
       value.map((v) => uint8ArrayToHex(v)),
     hydrate: (value: string): Uint8Array[] => {
       if (!isStringArray(value))
-        throw new Error('Invalid trusted peers format');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MemberSchema_InvalidTrustedPeersFormat,
+        );
       return value.map((v) => hexToUint8Array(v));
     },
   },
@@ -158,7 +180,9 @@ export const PrivateMemberSchema: SchemaDefinition<IPrivateMemberData> = {
       value.map((v) => uint8ArrayToHex(v)),
     hydrate: (value: string): Uint8Array[] => {
       if (!isStringArray(value))
-        throw new Error('Invalid blocked peers format');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MemberSchema_InvalidBlockedPeersFormat,
+        );
       return value.map((v) => hexToUint8Array(v));
     },
   },
@@ -194,7 +218,9 @@ export const PrivateMemberSchema: SchemaDefinition<IPrivateMemberData> = {
       details: Record<string, unknown>;
     }> => {
       if (!Array.isArray(value) || !value.every(isActivityLogEntry)) {
-        throw new Error('Invalid activity log format');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MemberSchema_InvalidActivityLogFormat,
+        );
       }
       return value.map((entry) => ({
         timestamp: new Date(entry.timestamp),

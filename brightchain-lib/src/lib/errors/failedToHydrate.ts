@@ -6,7 +6,7 @@ export class FailedToHydrateError extends HandleableError {
   constructor(message: string, _language?: string) {
     super(
       new Error(
-        translate(BrightChainStrings.Error_FailedToHydrateTemplate, {
+        translate(BrightChainStrings.Error_Hydration_FailedToHydrateTemplate, {
           ERROR: message,
         }),
       ),

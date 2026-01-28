@@ -5,19 +5,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
+  EciesComponentId,
+  EciesStringKey,
+  getEciesI18nEngine,
+} from '@digitaldefiance/ecies-lib';
+import {
   LanguageCodes as I18nLanguageCodes,
   MasterStringsCollection,
   PluginI18nEngine,
 } from '@digitaldefiance/i18n-lib';
+import {
+  SuiteCoreComponentId,
+  SuiteCoreComponentStrings,
+  SuiteCoreStringKey,
+} from '@digitaldefiance/suite-core-lib';
 import { BrightChainStrings } from '../enumerations/brightChainStrings';
-import { AmericanEnglishStrings } from './strings/englishUs';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { BritishEnglishStrings } from './strings/englishUK';
-import { SpanishStrings } from './strings/spanish';
+import { AmericanEnglishStrings } from './strings/englishUs';
 import { FrenchStrings } from './strings/french';
-import { JapaneseStrings } from './strings/japanese';
 import { GermanStrings } from './strings/german';
-import { UkrainianStrings } from './strings/ukrainian';
+import { JapaneseStrings } from './strings/japanese';
 import { MandarinStrings } from './strings/mandarin';
+import { SpanishStrings } from './strings/spanish';
+import { UkrainianStrings } from './strings/ukrainian';
 
 /**
  * String constants and utilities.
@@ -56,7 +67,7 @@ function initEngine(): PluginI18nEngine<string> {
   }
 
   engine = PluginI18nEngine.createInstance('brightchain', [
-{
+    {
       id: I18nLanguageCodes.EN_US,
       name: 'English (US)',
       code: 'en-US',
@@ -112,6 +123,17 @@ function initEngine(): PluginI18nEngine<string> {
     strings: Strings,
   });
 
+  // Register SuiteCoreStringKey translations from the external library
+  const suiteCoreStringKeys = Object.values(SuiteCoreStringKey);
+  engine.registerComponent({
+    component: {
+      id: SuiteCoreComponentId,
+      name: 'Suite Core Strings',
+      stringKeys: suiteCoreStringKeys,
+    },
+    strings: SuiteCoreComponentStrings,
+  });
+
   return engine;
 }
 
@@ -125,19 +147,45 @@ export function getI18n(): PluginI18nEngine<string> {
 /**
  * Translate a string by StringNames key
  * Backward compatible with existing code
+ * Now supports external string keys from @digitaldefiance packages
  */
 export function translate(
-  stringName: BrightChainStrings,
+  stringName: BrightChainStrings | SuiteCoreStringKey | EciesStringKey | string,
   vars?: Record<string, string | number>,
   language?: string,
 ): string {
+  // Check if it's an ECIES string key
+  if (
+    typeof stringName === 'string' &&
+    stringName.startsWith('Error_ECIESError_')
+  ) {
+    try {
+      const eciesEngine = getEciesI18nEngine();
+      return eciesEngine.translate(
+        EciesComponentId,
+        stringName as EciesStringKey,
+        vars,
+        language,
+      );
+    } catch (error) {
+      console.warn(`ECIES translation failed for ${stringName}:`, error);
+      return stringName;
+    }
+  }
+
   const eng = getI18n();
   try {
+    // Try BrightChain component first
     return eng.translate(BrightChainComponentId, stringName, vars, language);
   } catch (error) {
-    // Fallback to string name if translation fails
-    console.warn(`Translation failed for ${stringName}:`, error);
-    return stringName;
+    // If not found in BrightChain, try SuiteCore component
+    try {
+      return eng.translate(SuiteCoreComponentId, stringName, vars, language);
+    } catch {
+      // Fallback to string name if translation fails in both components
+      console.warn(`Translation failed for ${stringName}:`, error);
+      return stringName;
+    }
   }
 }
 
@@ -173,8 +221,9 @@ export const buildNestedI18n = (
     keys.forEach((k, index) => {
       if (index === keys.length - 1) {
         if (typeof current[k] === 'object' && current[k] !== null) {
-          throw new Error(
-            `Key conflict detected: Cannot assign string to key '${k}' because it's already used as an object.`,
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_I18n_KeyConflictObjectTemplate,
+            { KEY: k },
           );
         }
         current[k] = value;
@@ -182,8 +231,9 @@ export const buildNestedI18n = (
         if (!(k in current)) {
           current[k] = {};
         } else if (typeof current[k] !== 'object' || current[k] === null) {
-          throw new Error(
-            `Key conflict detected: Key '${k}' is assigned both a value and an object.`,
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_I18n_KeyConflictValueTemplate,
+            { KEY: k },
           );
         }
         current = current[k];
@@ -199,7 +249,10 @@ export const buildNestedI18n = (
  */
 export const buildNestedI18nForLanguage = (language: string) => {
   if (language !== 'en-US' && language !== I18nLanguageCodes.EN_US) {
-    throw new Error(`Strings not found for language: ${language}`);
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_I18n_StringsNotFoundTemplate,
+      { LANGUAGE: language },
+    );
   }
 
   // Filter out undefined values before building nested structure

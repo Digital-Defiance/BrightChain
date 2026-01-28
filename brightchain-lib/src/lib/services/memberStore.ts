@@ -12,10 +12,12 @@ import { MemberDocument } from '../documents/member/memberDocument';
 import { MemberProfileDocument } from '../documents/member/memberProfileDocument';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockType } from '../enumerations/blockType';
+import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import { MemberErrorType } from '../enumerations/memberErrorType';
 import { MemberStatusType } from '../enumerations/memberStatusType';
 import { MemberError } from '../errors/memberError';
 import { NotImplementedError } from '../errors/notImplemented';
+import { translate } from '../i18n';
 import {
   IMemberChanges,
   IMemberIndexEntry,
@@ -240,7 +242,10 @@ export class MemberStore<
           await rollback();
         } catch (rollbackError) {
           // Log rollback errors but continue with remaining rollbacks
-          console.error('Rollback operation failed:', rollbackError);
+          console.error(
+            translate(BrightChainStrings.Error_MemberStore_RollbackFailed),
+            rollbackError,
+          );
         }
       }
       throw error; // Re-throw the original error

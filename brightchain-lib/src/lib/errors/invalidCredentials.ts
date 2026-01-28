@@ -4,7 +4,7 @@ import { translate } from '../i18n';
 
 export class InvalidCredentialsError extends HandleableError {
   constructor(language?: string, statusCode = 401) {
-    super(new Error(translate(BrightChainStrings.Error_InvalidCredentials)), {
+    super(new Error(translate(BrightChainStrings.Error_Credentials_Invalid)), {
       statusCode,
     });
   }

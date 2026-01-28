@@ -7,22 +7,22 @@ export class BlockAccessError extends TypedWithReasonError<BlockAccessErrorType>
   public get reasonMap(): Record<BlockAccessErrorType, BrightChainStrings> {
     return {
       [BlockAccessErrorType.BlockAlreadyExists]:
-        BrightChainStrings.Error_BlockAccessErrorBlockAlreadyExists,
+        BrightChainStrings.Error_BlockAccessError_BlockAlreadyExists,
       [BlockAccessErrorType.BlockFileNotFound]:
-        BrightChainStrings.Error_BlockAccessErrorBlockFileNotFoundTemplate,
+        BrightChainStrings.Error_BlockAccessError_BlockFileNotFoundTemplate,
       [BlockAccessErrorType.BlockIsNotPersistable]:
-        BrightChainStrings.Error_BlockAccessErrorBlockIsNotPersistable,
+        BrightChainStrings.Error_BlockAccessError_BlockIsNotPersistable,
       [BlockAccessErrorType.BlockIsNotReadable]:
-        BrightChainStrings.Error_BlockAccessErrorBlockIsNotReadable,
+        BrightChainStrings.Error_BlockAccessError_BlockIsNotReadable,
       [BlockAccessErrorType.CBLCannotBeEncrypted]:
-        BrightChainStrings.Error_BlockAccessCBLCannotBeEncrypted,
+        BrightChainStrings.Error_BlockAccess_CBLCannotBeEncrypted,
       [BlockAccessErrorType.CreatorMustBeProvided]:
-        BrightChainStrings.Error_BlockAccessErrorCreatorMustBeProvided,
+        BrightChainStrings.Error_BlockAccessError_CreatorMustBeProvided,
     };
   }
   constructor(type: BlockAccessErrorType, file?: string, _language?: string) {
     super(
-      BrightChainStrings.Error_BlockAccessTemplate,
+      BrightChainStrings.Error_BlockAccess_Template,
       type,
       file ? { FILE: file } : {},
     );

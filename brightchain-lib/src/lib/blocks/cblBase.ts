@@ -132,17 +132,11 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
 
       // Validate that we got valid byte arrays
       if (!creatorIdBytes || creatorIdBytes.length === 0) {
-        throw new CblError(
-          CblErrorType.InvalidStructure,
-          'Failed to extract creator ID bytes from CBL header',
-        );
+        throw new CblError(CblErrorType.FailedToExtractCreatorId);
       }
 
       if (!memberIdBytes || memberIdBytes.length === 0) {
-        throw new CblError(
-          CblErrorType.InvalidStructure,
-          'Failed to extract member ID bytes from provided creator',
-        );
+        throw new CblError(CblErrorType.FailedToExtractProvidedCreatorId);
       }
 
       // Use constant-time comparison for security (prevents timing attacks)

@@ -1,4 +1,6 @@
 import { randomBytes } from './browserCrypto';
+import { BrightChainStrings } from './enumerations/brightChainStrings';
+import { TranslatableBrightChainError } from './errors/translatableBrightChainError';
 
 export class SecureHeapStorage {
   private readonly storage: Map<string, Uint8Array>;
@@ -17,7 +19,9 @@ export class SecureHeapStorage {
   public async retrieve(key: string): Promise<string> {
     const buf = this.storage.get(key);
     if (!buf) {
-      throw new Error('Key not found');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_SecureHeap_KeyNotFound,
+      );
     }
     const decoder = new TextDecoder();
     return decoder.decode(buf);

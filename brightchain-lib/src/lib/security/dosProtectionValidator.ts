@@ -1,3 +1,6 @@
+import { BrightChainStrings } from '../enumerations';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
+import { translate } from '../i18n';
 import { DEFAULT_DOS_LIMITS, DosLimits } from './dosProtection';
 import { SecurityAuditLogger } from './securityAuditLogger';
 import { SecurityEventSeverity, SecurityEventType } from './securityEvent';
@@ -37,11 +40,19 @@ export class DosProtectionValidator {
       SecurityAuditLogger.getInstance().log(
         SecurityEventType.InvalidInput,
         SecurityEventSeverity.Warning,
-        `Input size ${size} exceeds limit ${limits.maxInputSize} for ${operation}`,
+        translate(
+          BrightChainStrings.Security_DOS_InputSizeExceedsLimitErrorTemplate,
+          {
+            SIZE: size,
+            MAX_SIZE: limits.maxInputSize,
+            OPERATION: operation,
+          },
+        ),
         { operation, identifier, size, limit: limits.maxInputSize },
       );
-      throw new Error(
-        `Input size ${size} exceeds maximum allowed ${limits.maxInputSize} bytes`,
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Security_DOS_InputSizeExceedsLimitErrorTemplate,
+        { SIZE: size, MAX_SIZE: limits.maxInputSize, OPERATION: operation },
       );
     }
   }
@@ -64,11 +75,23 @@ export class DosProtectionValidator {
           SecurityAuditLogger.getInstance().log(
             SecurityEventType.SuspiciousActivity,
             SecurityEventSeverity.Warning,
-            `Operation ${operation} exceeded timeout ${limits.maxOperationTime}ms`,
+            translate(
+              BrightChainStrings.Security_DOS_OperationExceededTimeLimitErrorTemplate,
+              {
+                OPERATION: operation,
+                MAX_TIME: limits.maxOperationTime,
+              },
+            ),
             { operation, identifier, timeout: limits.maxOperationTime },
           );
           reject(
-            new Error(`Operation timeout after ${limits.maxOperationTime}ms`),
+            new TranslatableBrightChainError(
+              BrightChainStrings.Security_DOS_OperationExceededTimeLimitErrorTemplate,
+              {
+                OPERATION: operation,
+                MAX_TIME: limits.maxOperationTime,
+              },
+            ),
           );
         }, limits.maxOperationTime),
       ),

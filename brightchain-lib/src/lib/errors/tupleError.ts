@@ -6,29 +6,29 @@ export class TupleError extends TypedError<TupleErrorType> {
   public get reasonMap(): Record<TupleErrorType, BrightChainStrings> {
     return {
       [TupleErrorType.InvalidTupleSize]:
-        BrightChainStrings.Error_TupleErrorInvalidTupleSize,
+        BrightChainStrings.Error_TupleError_InvalidTupleSize,
       [TupleErrorType.BlockSizeMismatch]:
-        BrightChainStrings.Error_TupleErrorBlockSizeMismatch,
+        BrightChainStrings.Error_TupleError_BlockSizeMismatch,
       [TupleErrorType.NoBlocksToXor]:
-        BrightChainStrings.Error_TupleErrorNoBlocksToXor,
+        BrightChainStrings.Error_TupleError_NoBlocksToXor,
       [TupleErrorType.InvalidBlockCount]:
-        BrightChainStrings.Error_TupleErrorInvalidBlockCount,
+        BrightChainStrings.Error_TupleError_InvalidBlockCount,
       [TupleErrorType.InvalidBlockType]:
-        BrightChainStrings.Error_TupleErrorInvalidBlockType,
+        BrightChainStrings.Error_TupleError_InvalidBlockType,
       [TupleErrorType.InvalidSourceLength]:
-        BrightChainStrings.Error_TupleErrorInvalidSourceLength,
+        BrightChainStrings.Error_TupleError_InvalidSourceLength,
       [TupleErrorType.RandomBlockGenerationFailed]:
-        BrightChainStrings.Error_TupleErrorRandomBlockGenerationFailed,
+        BrightChainStrings.Error_TupleError_RandomBlockGenerationFailed,
       [TupleErrorType.WhiteningBlockGenerationFailed]:
-        BrightChainStrings.Error_TupleErrorWhiteningBlockGenerationFailed,
+        BrightChainStrings.Error_TupleError_WhiteningBlockGenerationFailed,
       [TupleErrorType.MissingParameters]:
-        BrightChainStrings.Error_TupleErrorMissingParameters,
+        BrightChainStrings.Error_TupleError_MissingParameters,
       [TupleErrorType.XorOperationFailed]:
-        BrightChainStrings.Error_TupleErrorXorOperationFailedTemplate,
+        BrightChainStrings.Error_TupleError_XorOperationFailedTemplate,
       [TupleErrorType.DataStreamProcessingFailed]:
-        BrightChainStrings.Error_TupleErrorDataStreamProcessingFailedTemplate,
+        BrightChainStrings.Error_TupleError_DataStreamProcessingFailedTemplate,
       [TupleErrorType.EncryptedDataStreamProcessingFailed]:
-        BrightChainStrings.Error_TupleErrorEncryptedDataStreamProcessingFailedTemplate,
+        BrightChainStrings.Error_TupleError_EncryptedDataStreamProcessingFailedTemplate,
     };
   }
   constructor(

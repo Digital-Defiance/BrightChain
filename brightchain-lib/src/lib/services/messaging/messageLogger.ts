@@ -1,3 +1,6 @@
+import { BrightChainStrings } from '../../enumerations';
+import { translate } from '../../i18n';
+
 export enum LogLevel {
   DEBUG = 'debug',
   INFO = 'info',
@@ -40,11 +43,15 @@ export class MessageLogger implements IMessageLogger {
     senderId: string,
     recipientCount: number,
   ): void {
-    this.log(LogLevel.INFO, 'Message created', {
-      messageId,
-      senderId,
-      recipientCount,
-    });
+    this.log(
+      LogLevel.INFO,
+      translate(BrightChainStrings.MessageLogger_MessageCreated),
+      {
+        messageId,
+        senderId,
+        recipientCount,
+      },
+    );
   }
 
   logRoutingDecision(
@@ -52,11 +59,15 @@ export class MessageLogger implements IMessageLogger {
     strategy: string,
     recipientCount: number,
   ): void {
-    this.log(LogLevel.DEBUG, 'Routing decision', {
-      messageId,
-      strategy,
-      recipientCount,
-    });
+    this.log(
+      LogLevel.DEBUG,
+      translate(BrightChainStrings.MessageLogger_RoutingDecision),
+      {
+        messageId,
+        strategy,
+        recipientCount,
+      },
+    );
   }
 
   logDeliveryFailure(
@@ -64,19 +75,31 @@ export class MessageLogger implements IMessageLogger {
     recipientId: string,
     error: string,
   ): void {
-    this.log(LogLevel.ERROR, 'Delivery failure', {
-      messageId,
-      recipientId,
-      error,
-    });
+    this.log(
+      LogLevel.ERROR,
+      translate(BrightChainStrings.MessageLogger_DeliveryFailure),
+      {
+        messageId,
+        recipientId,
+        error,
+      },
+    );
   }
 
   logEncryptionFailure(error: string): void {
-    this.log(LogLevel.ERROR, 'Encryption failure', { error });
+    this.log(
+      LogLevel.ERROR,
+      translate(BrightChainStrings.MessageLogger_EncryptionFailure),
+      { error },
+    );
   }
 
   logSlowQuery(queryType: string, durationMs: number): void {
-    this.log(LogLevel.WARN, 'Slow query detected', { queryType, durationMs });
+    this.log(
+      LogLevel.WARN,
+      translate(BrightChainStrings.MessageLogger_SlowQueryDetected),
+      { queryType, durationMs },
+    );
   }
 
   private log(

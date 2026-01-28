@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { randomBytes } from './browserCrypto';
 import { Transform, TransformCallback } from './browserStream';
+import { BrightChainStrings } from './enumerations';
 import { BlockSize } from './enumerations/blockSize';
+import { TranslatableBrightChainError } from './errors/translatableBrightChainError';
 
 class BlockPaddingTransform extends Transform {
   private readonly blockSize: number;
@@ -29,7 +31,9 @@ class BlockPaddingTransform extends Transform {
       data = new Uint8Array(chunk);
     } else {
       callback(
-        new Error('Input must be Uint8Array, TypedArray, or ArrayBuffer'),
+        new TranslatableBrightChainError(
+          BrightChainStrings.BlockPaddingTransform_MustBeArray,
+        ),
       );
       return;
     }

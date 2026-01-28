@@ -1,3 +1,4 @@
+import { BrightChainStrings } from '../enumerations';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
@@ -170,28 +171,36 @@ export function createBlockHandle<T extends BaseBlock>(
   if (typeof blockConstructor !== 'function') {
     throw new EnhancedValidationError(
       'blockConstructor',
-      'blockConstructor must be a valid constructor function',
+      BrightChainStrings.Error_BlockHandle_BlockConstructorMustBeValid,
       { context: 'createBlockHandle' },
     );
   }
 
   if (blockSize === undefined || blockSize === null) {
-    throw new EnhancedValidationError('blockSize', 'blockSize is required', {
-      context: 'createBlockHandle',
-    });
+    throw new EnhancedValidationError(
+      'blockSize',
+      BrightChainStrings.Error_BlockHandle_BlockSizeRequired,
+      {
+        context: 'createBlockHandle',
+      },
+    );
   }
 
   if (!(data instanceof Uint8Array)) {
-    throw new EnhancedValidationError('data', 'data must be a Uint8Array', {
-      context: 'createBlockHandle',
-      receivedType: typeof data,
-    });
+    throw new EnhancedValidationError(
+      'data',
+      BrightChainStrings.Error_BlockHandle_DataMustBeUint8Array,
+      {
+        context: 'createBlockHandle',
+        receivedType: typeof data,
+      },
+    );
   }
 
   if (!(checksum instanceof Checksum)) {
     throw new EnhancedValidationError(
       'checksum',
-      'checksum must be a Checksum',
+      BrightChainStrings.Error_BlockHandle_ChecksumMustBeChecksum,
       { context: 'createBlockHandle', receivedType: typeof checksum },
     );
   }

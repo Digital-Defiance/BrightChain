@@ -1,4 +1,6 @@
 import { PlatformID } from '@digitaldefiance/ecies-lib';
+import { BrightChainStrings } from '../enumerations';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { IServiceProvider } from '../interfaces/serviceProvider.interface';
 import { setGlobalServiceProvider } from './globalServiceProvider';
 
@@ -24,14 +26,14 @@ export class ServiceLocator {
   /**
    * Get the service provider
    * @returns The service provider
-   * @throws Error if the service provider is not set
+   * @throws TranslatableBrightChainError if the service provider is not set
    */
   public static getServiceProvider<
     TID extends PlatformID = Uint8Array,
   >(): IServiceProvider<TID> {
     if (!ServiceLocator.serviceProvider) {
-      throw new Error(
-        'ServiceProvider not set. Call setServiceProvider first.',
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_ServiceLocator_NotSet,
       );
     }
     return ServiceLocator.serviceProvider as IServiceProvider<TID>;

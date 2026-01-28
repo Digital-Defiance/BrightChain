@@ -4,6 +4,6 @@ import { translate } from '../i18n';
 
 export class InvalidIDFormatError extends HandleableError {
   constructor(_language?: string) {
-    super(new Error(translate(BrightChainStrings.Error_InvalidIDFormat)));
+    super(new Error(translate(BrightChainStrings.Error_ID_InvalidFormat)));
   }
 }

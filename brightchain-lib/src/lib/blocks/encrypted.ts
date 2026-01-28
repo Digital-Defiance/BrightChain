@@ -42,14 +42,16 @@ import { EphemeralBlock } from './ephemeral';
 interface IEncryptedBlockServices<TID extends PlatformID> {
   idProvider: TypedIdProviderWrapper<TID>;
   eciesService: {
-    parseSingleEncryptedHeader(...args: unknown[]): ISingleEncryptedParsedHeader;
+    parseSingleEncryptedHeader(
+      ...args: unknown[]
+    ): ISingleEncryptedParsedHeader;
     parseMultiEncryptedHeader(...args: unknown[]): IMultiEncryptedParsedHeader;
   };
   blockService: {
     decrypt(
       creator: Member<TID>,
       block: unknown,
-      newBlockType: BlockType
+      newBlockType: BlockType,
     ): Promise<unknown>;
     decryptMultiple(creator: Member<TID>, block: unknown): Promise<unknown>;
   };
@@ -218,7 +220,7 @@ export class EncryptedBlock<TID extends PlatformID = Uint8Array>
           rBytes = r;
         } else {
           // For Guid objects, get the bytes using the idProvider
-          const result = this._idProvider.toBytes(r as any);
+          const result = this._idProvider.toBytes(r);
           rBytes = result;
         }
         return arraysEqual(rBytes, recipientWithKey.idBytes);

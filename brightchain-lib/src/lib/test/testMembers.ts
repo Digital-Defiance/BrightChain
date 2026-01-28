@@ -5,6 +5,8 @@ import {
   MemberType,
 } from '@digitaldefiance/ecies-lib';
 import { MemberDocument } from '../documents/member/memberDocument';
+import { BrightChainStrings } from '../enumerations';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { initializeBrightChain } from '../init';
 import { ServiceProvider } from '../services/service.provider';
 
@@ -97,7 +99,10 @@ export class TestMembers {
     await this.initialize();
     const memberInfo = this.members.get(key);
     if (!memberInfo) {
-      throw new Error(`Member ${key} not found`);
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.TestMember_MemberNotFoundTemplate,
+        { KEY: key },
+      );
     }
     return memberInfo.member;
   }
@@ -111,7 +116,10 @@ export class TestMembers {
     await this.initialize();
     const memberInfo = this.members.get(key);
     if (!memberInfo) {
-      throw new Error(`Member ${key} not found`);
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.TestMember_MemberNotFoundTemplate,
+        { KEY: key },
+      );
     }
     return memberInfo.document;
   }
@@ -125,7 +133,10 @@ export class TestMembers {
     await this.initialize();
     const memberInfo = this.members.get(key);
     if (!memberInfo) {
-      throw new Error(`Member ${key} not found`);
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.TestMember_MemberNotFoundTemplate,
+        { KEY: key },
+      );
     }
     return memberInfo.mnemonic;
   }

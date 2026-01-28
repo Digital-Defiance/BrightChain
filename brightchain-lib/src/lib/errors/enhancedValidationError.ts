@@ -1,3 +1,6 @@
+import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
+import { BrightChainStrings } from '../enumerations';
+import { translate } from '../i18n';
 import { BrightChainError } from './brightChainError';
 
 /**
@@ -50,10 +53,15 @@ export class EnhancedValidationError extends BrightChainError {
    */
   constructor(
     public readonly field: string,
-    message: string,
+    message: BrightChainStrings,
     context?: Record<string, unknown>,
+    language?: CoreLanguageCode,
+    otherVars?: Record<string, string | number>,
   ) {
-    super('Validation', message, { field, ...context });
+    super('Validation', translate(message, otherVars, language), {
+      field,
+      ...context,
+    });
   }
 }
 

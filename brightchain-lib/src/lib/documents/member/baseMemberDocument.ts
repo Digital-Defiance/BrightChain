@@ -1,6 +1,8 @@
 import { EmailString } from '@digitaldefiance/ecies-lib';
 import { base64ToUint8Array } from '../../bufferUtils';
+import { BrightChainStrings } from '../../enumerations';
 import { NotImplementedError } from '../../errors/notImplemented';
+import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
 import { IMemberStorageData } from '../../interfaces/member/storage';
 import { Checksum } from '../../types/checksum';
 import { Document } from '../base/document';
@@ -66,7 +68,9 @@ export abstract class BaseMemberDocument {
    */
   public getPublicCBL(): Checksum {
     if (!this.publicCBLId) {
-      throw new Error('Public CBL ID not set');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_MemberCBL_PublicCBLIdNotSet,
+      );
     }
     return this.publicCBLId;
   }
@@ -76,7 +80,9 @@ export abstract class BaseMemberDocument {
    */
   public getPrivateCBL(): Checksum {
     if (!this.privateCBLId) {
-      throw new Error('Private CBL ID not set');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_MemberCBL_PrivateCBLIdNotSet,
+      );
     }
     return this.privateCBLId;
   }

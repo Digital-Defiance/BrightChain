@@ -1,4 +1,6 @@
 import { ECIESService } from '@digitaldefiance/ecies-lib';
+import { BrightChainStrings } from '../enumerations';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { ChecksumService } from './checksum.service';
 import { ServiceProvider } from './service.provider';
 import { TupleService } from './tuple.service';
@@ -79,6 +81,64 @@ describe('ServiceProvider', () => {
       expect(blockCount).toBeLessThanOrEqual(
         service.getRandomBlockCount(1024 * 1024),
       );
+    });
+  });
+
+  describe('Error Internationalization', () => {
+    it('should throw TranslatableBrightChainError when using new instead of getInstance', () => {
+      // First, get an instance to set up the singleton
+      ServiceProvider.getInstance();
+
+      // Now try to create a new instance directly
+      expect(() => new ServiceProvider()).toThrow(TranslatableBrightChainError);
+
+      try {
+        new ServiceProvider();
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(TranslatableBrightChainError);
+        const translatableError = error as TranslatableBrightChainError;
+
+        // Verify the string key is correct
+        expect(translatableError.stringKey).toBe(
+          BrightChainStrings.Error_ServiceProvider_UseSingletonInstance,
+        );
+
+        // Verify the error message exists and is not empty
+        expect(translatableError.message).toBeDefined();
+        expect(translatableError.message.length).toBeGreaterThan(0);
+
+        // Verify the message contains either:
+        // 1. The actual translated text (production)
+        // 2. The string key format (test environment where i18n may not be fully initialized)
+        const message = translatableError.message;
+        const hasTranslatedContent =
+          message.includes('ServiceProvider.getInstance()') ||
+          message.includes('singleton') ||
+          message.includes('instance');
+
+        const hasStringKeyFormat =
+          message.includes('Error_ServiceProvider_UseSingletonInstance') ||
+          message.includes('brightchain.strings');
+
+        // At least one of these should be true
+        expect(hasTranslatedContent || hasStringKeyFormat).toBe(true);
+      }
+    });
+
+    it('should have correct string key for singleton error', () => {
+      ServiceProvider.getInstance();
+
+      try {
+        new ServiceProvider();
+      } catch (error) {
+        const translatableError = error as TranslatableBrightChainError;
+
+        // Verify the string key is correct
+        expect(translatableError.stringKey).toBe(
+          BrightChainStrings.Error_ServiceProvider_UseSingletonInstance,
+        );
+      }
     });
   });
 });

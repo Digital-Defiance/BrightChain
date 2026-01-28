@@ -1,3 +1,5 @@
+import { BrightChainStrings } from '../enumerations';
+import { translate } from '../i18n';
 import {
   DEFAULT_RATE_LIMITS,
   RateLimitConfig,
@@ -95,7 +97,10 @@ export class RateLimiter {
       SecurityAuditLogger.getInstance().log(
         SecurityEventType.RateLimitExceeded,
         SecurityEventSeverity.Warning,
-        `Rate limit exceeded for ${operation}`,
+        translate(
+          BrightChainStrings.Security_RateLimiter_RateLimitExceededErrorTemplate,
+          { OPERATION: operation },
+        ),
         { operation, identifier },
       );
     }

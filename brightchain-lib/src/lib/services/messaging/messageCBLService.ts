@@ -1,5 +1,6 @@
 import { CHECKSUM, Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { RawDataBlock } from '../../blocks/rawData';
+import { BrightChainStrings } from '../../enumerations';
 import { BlockEncryptionType } from '../../enumerations/blockEncryptionType';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
@@ -8,6 +9,8 @@ import { MessageErrorType } from '../../enumerations/messaging/messageErrorType'
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import { MessageError } from '../../errors/messaging/messageError';
+import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
+import { translate } from '../../i18n';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 import {
@@ -61,7 +64,13 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
     if (content.length > this.config.maxMessageSizeThreshold) {
       throw new MessageError(
         MessageErrorType.MESSAGE_TOO_LARGE,
-        `Message size ${content.length} exceeds maximum ${this.config.maxMessageSizeThreshold}`,
+        translate(
+          BrightChainStrings.MessageCBLService_MessageSizeExceedsMaximumTemplate,
+          {
+            SIZE: content.length,
+            MAX_SIZE: this.config.maxMessageSizeThreshold,
+          },
+        ),
         { size: content.length, max: this.config.maxMessageSizeThreshold },
       );
     }
@@ -163,7 +172,9 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
 
       throw new MessageError(
         MessageErrorType.STORAGE_FAILED,
-        'Failed to create message after retries',
+        translate(
+          BrightChainStrings.MessageCBLService_FailedToCreateMessageAfterRetries,
+        ),
         {
           error: error instanceof Error ? error.message : 'Unknown error',
           originalError: error instanceof Error ? error.message : String(error),
@@ -199,7 +210,10 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
     } catch (error) {
       throw new MessageError(
         MessageErrorType.MESSAGE_NOT_FOUND,
-        `Failed to retrieve message ${messageId}`,
+        translate(
+          BrightChainStrings.MessageCBLService_FailedToRetrieveMessageTemplate,
+          { MESSAGE_ID: messageId },
+        ),
         {
           messageId,
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -262,21 +276,27 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
     if (!options.messageType || options.messageType.trim() === '') {
       throw new MessageError(
         MessageErrorType.INVALID_MESSAGE_TYPE,
-        'Message type is required',
+        translate(BrightChainStrings.MessageCBLService_MessageTypeIsRequired),
         { messageType: options.messageType },
       );
     }
     if (!options.senderId || options.senderId.trim() === '') {
       throw new MessageError(
         MessageErrorType.INVALID_RECIPIENT,
-        'Sender ID is required',
+        translate(BrightChainStrings.MessageCBLService_SenderIDIsRequired),
         { senderId: options.senderId },
       );
     }
     if (options.recipients.length > this.config.maxRecipientsPerMessage) {
       throw new MessageError(
         MessageErrorType.INVALID_RECIPIENT,
-        `Recipient count ${options.recipients.length} exceeds maximum ${this.config.maxRecipientsPerMessage}`,
+        translate(
+          BrightChainStrings.MessageCBLService_RecipientCountExceedsMaximumTemplate,
+          {
+            COUNT: options.recipients.length,
+            MAXIMUM: this.config.maxRecipientsPerMessage,
+          },
+        ),
         {
           count: options.recipients.length,
           max: this.config.maxRecipientsPerMessage,
@@ -295,7 +315,12 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
       try {
         return await operation();
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error('Unknown error');
+        lastError =
+          error instanceof Error
+            ? error
+            : new TranslatableBrightChainError(
+                BrightChainStrings.Error_Unexpected_Error,
+              );
         if (attempt < this.config.storageRetryAttempts - 1) {
           await new Promise((resolve) =>
             setTimeout(

@@ -6,21 +6,21 @@ export class SealingError extends TypedError<SealingErrorType> {
   public get reasonMap(): Record<SealingErrorType, BrightChainStrings> {
     return {
       [SealingErrorType.InvalidBitRange]:
-        BrightChainStrings.Error_SealingErrorInvalidBitRange,
+        BrightChainStrings.Error_SealingError_InvalidBitRange,
       [SealingErrorType.InvalidMemberArray]:
-        BrightChainStrings.Error_SealingErrorInvalidMemberArray,
+        BrightChainStrings.Error_SealingError_InvalidMemberArray,
       [SealingErrorType.NotEnoughMembersToUnlock]:
-        BrightChainStrings.Error_SealingErrorNotEnoughMembersToUnlock,
+        BrightChainStrings.Error_SealingError_NotEnoughMembersToUnlock,
       [SealingErrorType.TooManyMembersToUnlock]:
-        BrightChainStrings.Error_SealingErrorTooManyMembersToUnlock,
+        BrightChainStrings.Error_SealingError_TooManyMembersToUnlock,
       [SealingErrorType.MissingPrivateKeys]:
-        BrightChainStrings.Error_SealingErrorMissingPrivateKeys,
+        BrightChainStrings.Error_SealingError_MissingPrivateKeys,
       [SealingErrorType.EncryptedShareNotFound]:
-        BrightChainStrings.Error_SealingErrorEncryptedShareNotFound,
+        BrightChainStrings.Error_SealingError_EncryptedShareNotFound,
       [SealingErrorType.MemberNotFound]:
-        BrightChainStrings.Error_SealingErrorMemberNotFound,
+        BrightChainStrings.Error_SealingError_MemberNotFound,
       [SealingErrorType.FailedToSeal]:
-        BrightChainStrings.Error_SealingErrorFailedToSealTemplate,
+        BrightChainStrings.Error_SealingError_FailedToSealTemplate,
     };
   }
   constructor(

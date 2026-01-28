@@ -17,23 +17,23 @@ export const VotingDerivationErrorTypes: {
   [key in VotingDerivationErrorType]: BrightChainStrings;
 } = {
   [VotingDerivationErrorType.FailedToGeneratePrime]:
-    BrightChainStrings.Error_VotingDerivationErrorFailedToGeneratePrime,
+    BrightChainStrings.Error_VotingDerivationError_FailedToGeneratePrime,
   [VotingDerivationErrorType.IdenticalPrimes]:
-    BrightChainStrings.Error_VotingDerivationErrorIdenticalPrimes,
+    BrightChainStrings.Error_VotingDerivationError_IdenticalPrimes,
   [VotingDerivationErrorType.KeyPairTooSmall]:
-    BrightChainStrings.Error_VotingDerivationErrorKeyPairTooSmallTemplate,
+    BrightChainStrings.Error_VotingDerivationError_KeyPairTooSmallTemplate,
   [VotingDerivationErrorType.KeyPairValidationFailed]:
-    BrightChainStrings.Error_VotingDerivationErrorKeyPairValidationFailed,
+    BrightChainStrings.Error_VotingDerivationError_KeyPairValidationFailed,
   [VotingDerivationErrorType.ModularInverseDoesNotExist]:
-    BrightChainStrings.Error_VotingDerivationErrorModularInverseDoesNotExist,
+    BrightChainStrings.Error_VotingDerivationError_ModularInverseDoesNotExist,
   [VotingDerivationErrorType.PrivateKeyMustBeBuffer]:
-    BrightChainStrings.Error_VotingDerivationErrorPrivateKeyMustBeBuffer,
+    BrightChainStrings.Error_VotingDerivationError_PrivateKeyMustBeBuffer,
   [VotingDerivationErrorType.PublicKeyMustBeBuffer]:
-    BrightChainStrings.Error_VotingDerivationErrorPublicKeyMustBeBuffer,
+    BrightChainStrings.Error_VotingDerivationError_PublicKeyMustBeBuffer,
   [VotingDerivationErrorType.InvalidPublicKeyFormat]:
-    BrightChainStrings.Error_VotingDerivationErrorInvalidPublicKeyFormat,
+    BrightChainStrings.Error_VotingDerivationError_InvalidPublicKeyFormat,
   [VotingDerivationErrorType.InvalidEcdhKeyPair]:
-    BrightChainStrings.Error_VotingDerivationErrorInvalidEcdhKeyPair,
+    BrightChainStrings.Error_VotingDerivationError_InvalidEcdhKeyPair,
   [VotingDerivationErrorType.FailedToDeriveVotingKeys]:
-    BrightChainStrings.Error_VotingDerivationErrorFailedToDeriveVotingKeysTemplate,
+    BrightChainStrings.Error_VotingDerivationError_FailedToDeriveVotingKeysTemplate,
 };

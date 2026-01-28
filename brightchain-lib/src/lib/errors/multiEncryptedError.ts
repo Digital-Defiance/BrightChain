@@ -9,25 +9,25 @@ export class MultiEncryptedError extends TypedError<MultiEncryptedErrorType> {
   > {
     return {
       [MultiEncryptedErrorType.DataTooShort]:
-        BrightChainStrings.Error_MultiEncryptedErrorDataTooShort,
+        BrightChainStrings.Error_MultiEncryptedError_DataTooShort,
       [MultiEncryptedErrorType.DataLengthExceedsCapacity]:
-        BrightChainStrings.Error_MultiEncryptedErrorDataLengthExceedsCapacity,
+        BrightChainStrings.Error_MultiEncryptedError_DataLengthExceedsCapacity,
       [MultiEncryptedErrorType.CreatorMustBeMember]:
-        BrightChainStrings.Error_MultiEncryptedErrorCreatorMustBeMember,
+        BrightChainStrings.Error_MultiEncryptedError_CreatorMustBeMember,
       [MultiEncryptedErrorType.BlockNotReadable]:
-        BrightChainStrings.Error_MultiEncryptedErrorBlockNotReadable,
+        BrightChainStrings.Error_MultiEncryptedError_BlockNotReadable,
       [MultiEncryptedErrorType.InvalidEphemeralPublicKeyLength]:
-        BrightChainStrings.Error_MultiEncryptedErrorInvalidEphemeralPublicKeyLength,
+        BrightChainStrings.Error_MultiEncryptedError_InvalidEphemeralPublicKeyLength,
       [MultiEncryptedErrorType.InvalidIVLength]:
-        BrightChainStrings.Error_MultiEncryptedErrorInvalidIVLength,
+        BrightChainStrings.Error_MultiEncryptedError_InvalidIVLength,
       [MultiEncryptedErrorType.InvalidAuthTagLength]:
-        BrightChainStrings.Error_MultiEncryptedErrorInvalidAuthTagLength,
+        BrightChainStrings.Error_MultiEncryptedError_InvalidAuthTagLength,
       [MultiEncryptedErrorType.ChecksumMismatch]:
-        BrightChainStrings.Error_MultiEncryptedErrorChecksumMismatch,
+        BrightChainStrings.Error_MultiEncryptedError_ChecksumMismatch,
       [MultiEncryptedErrorType.RecipientMismatch]:
-        BrightChainStrings.Error_MultiEncryptedErrorRecipientMismatch,
+        BrightChainStrings.Error_MultiEncryptedError_RecipientMismatch,
       [MultiEncryptedErrorType.RecipientsAlreadyLoaded]:
-        BrightChainStrings.Error_MultiEncryptedErrorRecipientsAlreadyLoaded,
+        BrightChainStrings.Error_MultiEncryptedError_RecipientsAlreadyLoaded,
     };
   }
   constructor(type: MultiEncryptedErrorType, _language?: string) {
