@@ -7,11 +7,11 @@ export class SystemKeyringError extends TypedError<SystemKeyringErrorType> {
   public get reasonMap(): Record<SystemKeyringErrorType, BrightChainStrings> {
     return {
       [SystemKeyringErrorType.KeyNotFound]:
-        BrightChainStrings.Error_SystemKeyringErrorKeyNotFoundTemplate,
+        BrightChainStrings.Error_SystemKeyringError_KeyNotFoundTemplate,
       [SystemKeyringErrorType.RateLimitExceeded]:
-        BrightChainStrings.Error_SystemKeyringErrorRateLimitExceeded,
+        BrightChainStrings.Error_SystemKeyringError_RateLimitExceeded,
       [SystemKeyringErrorType.DecryptionFailed]:
-        BrightChainStrings.Error_SystemKeyringErrorRateLimitExceeded, // Reuse existing error message
+        BrightChainStrings.Error_SystemKeyringError_RateLimitExceeded, // Reuse existing error message
     };
   }
   constructor(

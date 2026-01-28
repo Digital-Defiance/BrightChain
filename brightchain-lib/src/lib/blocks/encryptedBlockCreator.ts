@@ -1,7 +1,9 @@
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
+import { BrightChainStrings } from '../enumerations';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { Checksum } from '../types/checksum';
 import { EncryptedBlock } from './encrypted';
 
@@ -50,7 +52,10 @@ export class EncryptedBlockCreator {
   ): Promise<EncryptedBlock<TID>> {
     const blockCreator = EncryptedBlockCreator.creators.get(type);
     if (!blockCreator) {
-      throw new Error(`No creator registered for block type ${type}`);
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.EncryptedBlockCreator_NoCreatorRegisteredTemplate,
+        { TYPE: type },
+      );
     }
     return blockCreator(
       type,

@@ -1,15 +1,22 @@
+import { SuiteCoreStringKey } from '@digitaldefiance/suite-core-lib';
 import BrightChainStrings from '../enumerations/brightChainStrings';
 import { SymmetricErrorType } from '../enumerations/symmetricErrorType';
 import { SymmetricService } from '../services/symmetric.service';
 import { TypedError } from './typedError';
 
-export class SymmetricError extends TypedError<SymmetricErrorType> {
-  protected get reasonMap(): Record<SymmetricErrorType, BrightChainStrings> {
+export class SymmetricError extends TypedError<
+  SymmetricErrorType,
+  BrightChainStrings | SuiteCoreStringKey
+> {
+  protected get reasonMap(): Record<
+    SymmetricErrorType,
+    BrightChainStrings | SuiteCoreStringKey
+  > {
     return {
       [SymmetricErrorType.DataNullOrUndefined]:
-        BrightChainStrings.Error_SymmetricDataNullOrUndefined,
+        SuiteCoreStringKey.Error_SymmetricDataNullOrUndefined,
       [SymmetricErrorType.InvalidKeyLength]:
-        BrightChainStrings.Error_SymmetricInvalidKeyLengthTemplate,
+        SuiteCoreStringKey.Error_SymmetricInvalidKeyLengthTemplate,
     };
   }
   constructor(type: SymmetricErrorType, _language?: string) {

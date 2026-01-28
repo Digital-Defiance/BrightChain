@@ -4,10 +4,12 @@ import { ParityBlock } from '../blocks/parity';
 import { RawDataBlock } from '../blocks/rawData';
 import { Readable } from '../browserStream';
 import { BC_FEC } from '../constants';
+import { BrightChainStrings } from '../enumerations';
 import BlockDataType from '../enumerations/blockDataType';
 import BlockType from '../enumerations/blockType';
 import { FecErrorType } from '../enumerations/fecErrorType';
 import { FecError } from '../errors/fecError';
+import { translate } from '../i18n';
 import { Validator } from '../utils/validator';
 
 /**
@@ -94,7 +96,10 @@ export class FecService {
         throw error;
       }
       throw new FecError(FecErrorType.FecEncodingFailed, undefined, {
-        ERROR: error instanceof Error ? error.message : 'Unknown error',
+        ERROR:
+          error instanceof Error
+            ? error.message
+            : translate(BrightChainStrings.Error_Unexpected_Error),
       });
     }
   }
@@ -167,7 +172,10 @@ export class FecService {
         throw error;
       }
       throw new FecError(FecErrorType.FecDecodingFailed, undefined, {
-        ERROR: error instanceof Error ? error.message : 'Unknown error',
+        ERROR:
+          error instanceof Error
+            ? error.message
+            : translate(BrightChainStrings.Error_Unexpected_Error),
       });
     }
   }
@@ -257,7 +265,10 @@ export class FecService {
         throw error;
       }
       throw new FecError(FecErrorType.FecEncodingFailed, undefined, {
-        ERROR: error instanceof Error ? error.message : 'Unknown error',
+        ERROR:
+          error instanceof Error
+            ? error.message
+            : translate(BrightChainStrings.Error_Unexpected_Error),
       });
     }
   }
@@ -385,7 +396,10 @@ export class FecService {
         throw error;
       }
       throw new FecError(FecErrorType.FecDecodingFailed, undefined, {
-        ERROR: error instanceof Error ? error.message : 'Unknown error',
+        ERROR:
+          error instanceof Error
+            ? error.message
+            : translate(BrightChainStrings.Error_Unexpected_Error),
       });
     }
   }

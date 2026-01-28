@@ -6,13 +6,13 @@ export class WhitenedError extends TypedError<WhitenedErrorType> {
   public get reasonMap(): Record<WhitenedErrorType, BrightChainStrings> {
     return {
       [WhitenedErrorType.BlockNotReadable]:
-        BrightChainStrings.Error_WhitenedErrorBlockNotReadable,
+        BrightChainStrings.Error_WhitenedError_BlockNotReadable,
       [WhitenedErrorType.BlockSizeMismatch]:
-        BrightChainStrings.Error_WhitenedErrorBlockSizeMismatch,
+        BrightChainStrings.Error_WhitenedError_BlockSizeMismatch,
       [WhitenedErrorType.DataLengthMismatch]:
-        BrightChainStrings.Error_WhitenedErrorDataLengthMismatch,
+        BrightChainStrings.Error_WhitenedError_DataLengthMismatch,
       [WhitenedErrorType.InvalidBlockSize]:
-        BrightChainStrings.Error_WhitenedErrorInvalidBlockSize,
+        BrightChainStrings.Error_WhitenedError_InvalidBlockSize,
     };
   }
   constructor(type: WhitenedErrorType, _language?: string) {

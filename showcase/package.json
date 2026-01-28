@@ -13,7 +13,7 @@
     "test:ui": "vitest --ui"
   },
   "dependencies": {
-    "@brightchain/brightchain-lib": "^0.10.0",
+    "@brightchain/brightchain-lib": "^0.11.0",
     "@digitaldefiance/ecies-lib": "^4.13.8",
     "@digitaldefiance/i18n-lib": "^3.8.16",
     "@ethereumjs/wallet": "^10.0.0",
@@ -30,8 +30,8 @@
     "moment-timezone": "^0.6.0",
     "octokit": "^5.0.5",
     "paillier-bigint": "^3.4.1",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "react-icons": "^5.5.0",
     "react-intersection-observer": "^10.0.0",
     "react-markdown": "^10.1.0",

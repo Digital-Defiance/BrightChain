@@ -6,9 +6,12 @@ export class FailedToSerializeError extends HandleableError {
   constructor(message: string, _language?: string) {
     super(
       new Error(
-        translate(BrightChainStrings.Error_FailedToSerializeTemplate, {
-          ERROR: message,
-        }),
+        translate(
+          BrightChainStrings.Error_Serialization_FailedToSerializeTemplate,
+          {
+            ERROR: message,
+          },
+        ),
       ),
     );
     this.name = 'FailedToSerializeError';

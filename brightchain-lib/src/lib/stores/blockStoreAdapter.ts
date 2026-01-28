@@ -1,7 +1,9 @@
 import { BaseBlock } from '../blocks/base';
 import { BlockHandle } from '../blocks/handle';
 import { RawDataBlock } from '../blocks/rawData';
+import { BrightChainStrings } from '../enumerations';
 import { BlockSize } from '../enumerations/blockSize';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import {
   BlockStoreOptions,
   BrightenResult,
@@ -28,8 +30,9 @@ function normalizeId(blockId: BlockId): Checksum {
 
 function validateSize(data: Uint8Array, blockSize: BlockSize): Uint8Array {
   if (data.length > blockSize) {
-    throw new Error(
-      `Data length (${data.length}) exceeds block size (${blockSize})`,
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.BlockStoreAdapter_DataLengthExceedsBlockSizeTemplate,
+      { LENGTH: data.length, BLOCK_SIZE: blockSize },
     );
   }
   return data;

@@ -7,11 +7,14 @@ import {
 import { BaseBlock } from '../../blocks/base';
 import { ConstituentBlockListBlock } from '../../blocks/cbl';
 import { RawDataBlock } from '../../blocks/rawData';
+import { BrightChainStrings } from '../../enumerations';
 import { BlockSize } from '../../enumerations/blockSize';
 import { MemberErrorType } from '../../enumerations/memberErrorType';
 import { FactoryPatternViolationError } from '../../errors/factoryPatternViolationError';
 import { MemberError } from '../../errors/memberError';
+import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
 import { BlockStoreFactory } from '../../factories/blockStoreFactory';
+import { translate } from '../../i18n';
 import { IMemberStorageData } from '../../interfaces/member/storage';
 import { MemberCblService } from '../../services/member/memberCblService';
 import { Checksum } from '../../types/checksum';
@@ -113,7 +116,7 @@ export class MemberDocument<
     // Verify this was called from factory method
     if (factoryToken !== FACTORY_TOKEN) {
       throw new FactoryPatternViolationError('MemberDocument', {
-        hint: 'Use MemberDocument.create() instead of new MemberDocument()',
+        hint: translate(BrightChainStrings.Error_MemberDocument_Hint),
       });
     }
 
@@ -199,7 +202,9 @@ export class MemberDocument<
    */
   public override getPublicCBL(): Checksum {
     if (!this.publicCBLId) {
-      throw new Error('Public CBL ID not set');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_BaseMemberDocument_PublicCblIdNotSet,
+      );
     }
     return this.publicCBLId;
   }
@@ -209,7 +214,9 @@ export class MemberDocument<
    */
   public override getPrivateCBL(): Checksum {
     if (!this.privateCBLId) {
-      throw new Error('Private CBL ID not set');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_BaseMemberDocument_PrivateCblIdNotSet,
+      );
     }
     return this.privateCBLId;
   }

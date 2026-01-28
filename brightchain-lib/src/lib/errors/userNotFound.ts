@@ -4,7 +4,7 @@ import { translate } from '../i18n';
 
 export class UserNotFoundError extends HandleableError {
   constructor(statusCode = 404, _language?: string) {
-    super(new Error(translate(BrightChainStrings.Error_UserNotFound)), {
+    super(new Error(translate(BrightChainStrings.Error_User_NotFound)), {
       statusCode,
     });
   }

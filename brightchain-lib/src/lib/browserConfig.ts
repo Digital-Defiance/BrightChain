@@ -5,6 +5,8 @@ import {
   GuidV4Provider,
   PlatformID,
 } from '@digitaldefiance/ecies-lib';
+import { BrightChainStrings } from './enumerations/brightChainStrings';
+import { TranslatableBrightChainError } from './errors/translatableBrightChainError';
 
 /**
  * Get browser-compatible runtime configuration with GuidV4Provider
@@ -88,8 +90,9 @@ export function calculateECIESMultipleRecipientOverhead(
  */
 export function parseMultiEncryptedHeader(_data: Uint8Array): unknown {
   // Simplified implementation - would need full backport for production
-  throw new Error(
-    'parseMultiEncryptedHeader not yet implemented in browser version',
+  throw new TranslatableBrightChainError(
+    BrightChainStrings.Error_BrowserConfig_NotImplementedTemplate,
+    { FUNCTION_NAME: 'parseMultiEncryptedHeader' },
   );
 }
 
@@ -98,8 +101,9 @@ export function parseMultiEncryptedHeader(_data: Uint8Array): unknown {
  */
 export function buildECIESMultipleRecipientHeader(_data: unknown): Uint8Array {
   // Simplified implementation - would need full backport for production
-  throw new Error(
-    'buildECIESMultipleRecipientHeader not yet implemented in browser version',
+  throw new TranslatableBrightChainError(
+    BrightChainStrings.Error_BrowserConfig_NotImplementedTemplate,
+    { FUNCTION_NAME: 'buildECIESMultipleRecipientHeader' },
   );
 }
 
@@ -111,7 +115,8 @@ export function decryptMultipleECIEForRecipient(
   _recipient: unknown,
 ): Uint8Array {
   // Simplified implementation - would need full backport for production
-  throw new Error(
-    'decryptMultipleECIEForRecipient not yet implemented in browser version',
+  throw new TranslatableBrightChainError(
+    BrightChainStrings.Error_BrowserConfig_NotImplementedTemplate,
+    { FUNCTION_NAME: 'decryptMultipleECIEForRecipient' },
   );
 }

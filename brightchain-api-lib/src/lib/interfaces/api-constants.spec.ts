@@ -36,49 +36,6 @@ describe('IApiConstants Type Structure', () => {
     });
   });
 
-  describe('Duplicate Interfaces Removed', () => {
-    it('should not have local checksum-consts.ts file', () => {
-      // Verify that the duplicate interface file has been removed
-      expect(() => {
-        // This will throw if the file doesn't exist
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('./checksum-consts');
-      }).toThrow();
-    });
-
-    it('should not have local encryption-consts.ts file', () => {
-      // Verify that the duplicate interface file has been removed
-      expect(() => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('./encryption-consts');
-      }).toThrow();
-    });
-
-    it('should not have local fec-consts.ts file', () => {
-      // Verify that the duplicate interface file has been removed
-      expect(() => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('./fec-consts');
-      }).toThrow();
-    });
-
-    it('should not have local keyring-consts.ts file', () => {
-      // Verify that the duplicate interface file has been removed
-      expect(() => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('./keyring-consts');
-      }).toThrow();
-    });
-
-    it('should not have local wrapped-key-consts.ts file', () => {
-      // Verify that the duplicate interface file has been removed
-      expect(() => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        require('./wrapped-key-consts');
-      }).toThrow();
-    });
-  });
-
   describe('Upstream Properties Available', () => {
     it('should have access to PBKDF2 from upstream', () => {
       // Verify that properties from upstream are accessible

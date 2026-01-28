@@ -14,6 +14,7 @@ import fc from 'fast-check';
 import { AvailabilityState } from '../../enumerations/availabilityState';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
 import {
   blockMetadataWithLocationFromJSON,
   blockMetadataWithLocationToJSON,
@@ -282,7 +283,7 @@ describe('Location Metadata Serialization Property Tests', () => {
           lastSeen: '2024-01-01T00:00:00.000Z',
           // Missing isAuthoritative
         } as unknown as any);
-      }).toThrow('isAuthoritative is required');
+      }).toThrow(TranslatableBrightChainError);
 
       // Invalid date format
       expect(() => {
@@ -291,7 +292,7 @@ describe('Location Metadata Serialization Property Tests', () => {
           lastSeen: 'not-a-date',
           isAuthoritative: true,
         });
-      }).toThrow('not a valid ISO date string');
+      }).toThrow(TranslatableBrightChainError);
 
       // Negative latency
       expect(() => {
@@ -301,7 +302,7 @@ describe('Location Metadata Serialization Property Tests', () => {
           isAuthoritative: true,
           latencyMs: -100,
         });
-      }).toThrow('must be a non-negative number');
+      }).toThrow(TranslatableBrightChainError);
 
       // Invalid availability state
       expect(() => {
@@ -322,7 +323,7 @@ describe('Location Metadata Serialization Property Tests', () => {
           locationRecords: [],
           locationUpdatedAt: '2024-01-01T00:00:00.000Z',
         });
-      }).toThrow('availabilityState must be one of');
+      }).toThrow(TranslatableBrightChainError);
     });
   });
 });

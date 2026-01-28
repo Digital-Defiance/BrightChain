@@ -30,7 +30,9 @@
  */
 
 import { CHECKSUM, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
+import { BrightChainStrings } from '../enumerations';
 import { ChecksumError, ChecksumErrorType } from '../errors/checksumError';
+import { translate } from '../i18n';
 
 // Re-export ChecksumErrorType for backward compatibility
 export { ChecksumErrorType } from '../errors/checksumError';
@@ -68,7 +70,10 @@ export class Checksum {
     if (data.length !== CHECKSUM.SHA3_BUFFER_LENGTH) {
       throw new ChecksumError(
         ChecksumErrorType.InvalidLength,
-        `Checksum must be ${CHECKSUM.SHA3_BUFFER_LENGTH} bytes, got ${data.length} bytes`,
+        translate(BrightChainStrings.Checksum_InvalidTemplate, {
+          EXPECTED: CHECKSUM.SHA3_BUFFER_LENGTH,
+          LENGTH: data.length,
+        }),
         {
           actualLength: data.length,
           expectedLength: CHECKSUM.SHA3_BUFFER_LENGTH,
@@ -138,7 +143,7 @@ export class Checksum {
     if (!/^[0-9a-fA-F]*$/.test(hex)) {
       throw new ChecksumError(
         ChecksumErrorType.InvalidHex,
-        'Invalid hex string: contains non-hexadecimal characters',
+        translate(BrightChainStrings.Checksum_InvalidHexString),
         { input: hex.substring(0, 20) + (hex.length > 20 ? '...' : '') },
       );
     }
@@ -148,7 +153,10 @@ export class Checksum {
     if (hex.length !== expectedHexLength) {
       throw new ChecksumError(
         ChecksumErrorType.InvalidLength,
-        `Invalid hex string length: expected ${expectedHexLength} characters, got ${hex.length}`,
+        translate(BrightChainStrings.Checksum_InvalidHexStringTemplate, {
+          EXPECTED: expectedHexLength,
+          LENGTH: hex.length,
+        }),
         { actualLength: hex.length, expectedLength: expectedHexLength },
       );
     }

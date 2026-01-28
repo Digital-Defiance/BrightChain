@@ -1,6 +1,8 @@
+import { BrightChainStrings } from '../enumerations';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { Checksum } from '../types/checksum';
 import { RawDataBlock } from './rawData';
 
@@ -19,7 +21,9 @@ export class ParityBlock extends RawDataBlock {
     canPersist = true,
   ) {
     if (data.length !== blockSize) {
-      throw new Error('Data length must match block size');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_BlockError_DataLengthMustMatchBlockSize,
+      );
     }
 
     super(

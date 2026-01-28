@@ -1,3 +1,5 @@
+import { BrightChainStrings } from '../enumerations';
+import { translate, translateEnumValue } from '../i18n';
 import {
   SecurityEvent,
   SecurityEventSeverity,
@@ -82,7 +84,16 @@ export class SecurityAuditLogger {
         ? SecurityEventType.SignatureValidationSuccess
         : SecurityEventType.SignatureValidationFailure,
       success ? SecurityEventSeverity.Info : SecurityEventSeverity.Warning,
-      `Signature validation ${success ? 'succeeded' : 'failed'}`,
+      translate(
+        BrightChainStrings.Security_AuditLogger_SignatureValidationResultTemplate,
+        {
+          RESULT: translate(
+            success
+              ? BrightChainStrings.Security_AuditLogger_Success
+              : BrightChainStrings.Security_AuditLogger_Failure,
+          ),
+        },
+      ),
       { blockId, userId },
     );
   }
@@ -94,7 +105,7 @@ export class SecurityAuditLogger {
     this.log(
       SecurityEventType.BlockCreated,
       SecurityEventSeverity.Info,
-      'Block created',
+      translate(BrightChainStrings.Security_AuditLogger_BlockCreated),
       { blockId, userId },
     );
   }
@@ -106,7 +117,7 @@ export class SecurityAuditLogger {
     this.log(
       SecurityEventType.EncryptionPerformed,
       SecurityEventSeverity.Info,
-      'Encryption performed',
+      translate(BrightChainStrings.Security_AuditLogger_EncryptionPerformed),
       { blockId, recipientCount },
     );
   }
@@ -124,7 +135,16 @@ export class SecurityAuditLogger {
         ? SecurityEventType.DecryptionPerformed
         : SecurityEventType.DecryptionFailed,
       success ? SecurityEventSeverity.Info : SecurityEventSeverity.Warning,
-      `Decryption ${success ? 'succeeded' : 'failed'}`,
+      translate(
+        BrightChainStrings.Security_AuditLogger_DecryptionResultTemplate,
+        {
+          RESULT: translate(
+            success
+              ? BrightChainStrings.Security_AuditLogger_Success
+              : BrightChainStrings.Security_AuditLogger_Failure,
+          ),
+        },
+      ),
       { blockId, userId },
     );
   }
@@ -136,7 +156,9 @@ export class SecurityAuditLogger {
     this.log(
       SecurityEventType.AccessDenied,
       SecurityEventSeverity.Warning,
-      `Access denied to ${resource}`,
+      translate(BrightChainStrings.Security_AuditLogger_AccessDeniedTemplate, {
+        RESOURCE: resource,
+      }),
       { userId, resource },
     );
   }
@@ -162,7 +184,7 @@ export class SecurityAuditLogger {
     // Skip console output in silent mode (useful for tests)
     if (this._silent) return;
 
-    const prefix = `[SECURITY][${event.severity}][${event.type}]`;
+    const prefix = `[${translate(BrightChainStrings.Security_AuditLogger_Security)}][${translateEnumValue(SecurityEventSeverity, event.severity)}][${translateEnumValue(SecurityEventType, event.type)}]`;
     const msg = `${prefix} ${event.message}`;
 
     switch (event.severity) {

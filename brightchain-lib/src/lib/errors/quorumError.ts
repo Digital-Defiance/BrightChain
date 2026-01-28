@@ -6,19 +6,19 @@ export class QuorumError extends TypedError<QuorumErrorType> {
   public get reasonMap(): Record<QuorumErrorType, BrightChainStrings> {
     return {
       [QuorumErrorType.InvalidQuorumId]:
-        BrightChainStrings.Error_QuorumErrorInvalidQuorumId,
+        BrightChainStrings.Error_QuorumError_InvalidQuorumId,
       [QuorumErrorType.DocumentNotFound]:
-        BrightChainStrings.Error_QuorumErrorDocumentNotFound,
+        BrightChainStrings.Error_QuorumError_DocumentNotFound,
       [QuorumErrorType.UnableToRestoreDocument]:
-        BrightChainStrings.Error_QuorumErrorUnableToRestoreDocument,
+        BrightChainStrings.Error_QuorumError_UnableToRestoreDocument,
       [QuorumErrorType.NotImplemented]:
-        BrightChainStrings.Error_QuorumErrorNotImplemented,
+        BrightChainStrings.Error_QuorumError_NotImplemented,
       [QuorumErrorType.Uninitialized]:
-        BrightChainStrings.Error_QuorumErrorUninitialized,
+        BrightChainStrings.Error_QuorumError_Uninitialized,
       [QuorumErrorType.MemberNotFound]:
-        BrightChainStrings.Error_QuorumErrorMemberNotFound,
+        BrightChainStrings.Error_QuorumError_MemberNotFound,
       [QuorumErrorType.NotEnoughMembers]:
-        BrightChainStrings.Error_QuorumErrorNotEnoughMembers,
+        BrightChainStrings.Error_QuorumError_NotEnoughMembers,
     };
   }
   constructor(type: QuorumErrorType, _language?: string) {

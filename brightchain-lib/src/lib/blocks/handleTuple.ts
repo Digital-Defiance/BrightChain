@@ -1,8 +1,11 @@
 import { TUPLE } from '../constants';
+import { BrightChainStrings } from '../enumerations';
 import BlockDataType from '../enumerations/blockDataType';
 import BlockType from '../enumerations/blockType';
 import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
 import { HandleTupleError } from '../errors/handleTupleError';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
+import { translate } from '../i18n';
 import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
@@ -119,10 +122,15 @@ export class BlockHandleTuple<T extends BaseBlock = BaseBlock> {
         try {
           return handle.data;
         } catch (error) {
-          throw new Error(
-            `Failed to load block ${handle.idChecksum}: ${
-              error instanceof Error ? error.message : 'Unknown error'
-            }`,
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_BlockHandleTuple_FailedToLoadBlockTemplate,
+            {
+              CHECKSUM: handle.idChecksum.toHex(),
+              ERROR:
+                error instanceof Error
+                  ? error.message
+                  : translate(BrightChainStrings.Error_Unexpected_Error),
+            },
           );
         }
       }),
@@ -174,10 +182,14 @@ export class BlockHandleTuple<T extends BaseBlock = BaseBlock> {
       ) {
         return blockStore.get<RawDataBlock>(checksum);
       }
-      throw new Error(
-        `Failed to store XOR result: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`,
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_BlockHandleTuple_FailedToStoreXorResultTemplate,
+        {
+          ERROR:
+            error instanceof Error
+              ? error.message
+              : translate(BrightChainStrings.Error_Unexpected_Error),
+        },
       );
     }
   }

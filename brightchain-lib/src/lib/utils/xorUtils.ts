@@ -1,3 +1,5 @@
+import { BrightChainStrings } from '../enumerations';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { XorService } from '../services/xor';
 
 /**
@@ -51,7 +53,12 @@ export function padToBlockSize(
   blockSize: number,
 ): Uint8Array {
   if (blockSize <= 0) {
-    throw new Error(`Block size must be positive: ${blockSize}`);
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.XorUtils_BlockSizeMustBePositiveTemplate,
+      {
+        BLOCK_SIZE: blockSize,
+      },
+    );
   }
 
   // Total size needed: length prefix + data
@@ -93,8 +100,12 @@ export function padToBlockSize(
  */
 export function unpadCblData(data: Uint8Array): Uint8Array {
   if (data.length < LENGTH_PREFIX_SIZE) {
-    throw new Error(
-      `Invalid padded data: too short (${data.length} bytes, need at least ${LENGTH_PREFIX_SIZE})`,
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.XorUtils_InvalidPaddedDataTemplate,
+      {
+        LENGTH: data.length,
+        REQUIRED: LENGTH_PREFIX_SIZE,
+      },
     );
   }
 
@@ -104,8 +115,12 @@ export function unpadCblData(data: Uint8Array): Uint8Array {
 
   // Validate length
   if (originalLength > data.length - LENGTH_PREFIX_SIZE) {
-    throw new Error(
-      `Invalid length prefix: claims ${originalLength} bytes but only ${data.length - LENGTH_PREFIX_SIZE} available`,
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.XorUtils_InvalidLengthPrefixTemplate,
+      {
+        LENGTH: originalLength,
+        AVAILABLE: data.length - LENGTH_PREFIX_SIZE,
+      },
     );
   }
 

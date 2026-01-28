@@ -1,3 +1,4 @@
+import { BrightChainStrings } from '../enumerations';
 import { CblErrorType } from '../enumerations/cblErrorType';
 import { EciesErrorType } from '../enumerations/eciesErrorType';
 import { FecErrorType } from '../enumerations/fecErrorType';
@@ -48,7 +49,10 @@ describe('Error Type Guards', () => {
     });
 
     it('should return true for EnhancedValidationError (subclass of BrightChainError)', () => {
-      const error = new EnhancedValidationError('field', 'Invalid field');
+      const error = new EnhancedValidationError(
+        'field',
+        BrightChainStrings.Error_Validation_Error,
+      );
       expect(isBrightChainError(error)).toBe(true);
     });
 
@@ -85,7 +89,10 @@ describe('Error Type Guards', () => {
     });
 
     it('should return false for other BrightChainError subclasses', () => {
-      const error = new EnhancedValidationError('field', 'Invalid field');
+      const error = new EnhancedValidationError(
+        'field',
+        BrightChainStrings.Error_Validation_Error,
+      );
       expect(isChecksumError(error)).toBe(false);
     });
 
@@ -114,7 +121,10 @@ describe('Error Type Guards', () => {
 
   describe('isEnhancedValidationError', () => {
     it('should return true for EnhancedValidationError instances', () => {
-      const error = new EnhancedValidationError('field', 'Invalid field');
+      const error = new EnhancedValidationError(
+        'field',
+        BrightChainStrings.Error_Validation_Error,
+      );
       expect(isEnhancedValidationError(error)).toBe(true);
     });
 
@@ -142,7 +152,7 @@ describe('Error Type Guards', () => {
     it('should enable TypeScript type narrowing', () => {
       const error: unknown = new EnhancedValidationError(
         'testField',
-        'Test message',
+        BrightChainStrings.Error_Validation_Error,
       );
       if (isEnhancedValidationError(error)) {
         // TypeScript should recognize field exists
@@ -161,7 +171,10 @@ describe('Error Type Guards', () => {
     });
 
     it('should return false for EnhancedValidationError', () => {
-      const error = new EnhancedValidationError('field', 'Invalid field');
+      const error = new EnhancedValidationError(
+        'field',
+        BrightChainStrings.Error_Validation_Error,
+      );
       expect(isValidationError(error)).toBe(false);
     });
 
@@ -317,7 +330,10 @@ describe('Error Type Guards', () => {
     });
 
     it('should return true for EnhancedValidationError', () => {
-      const error = new EnhancedValidationError('field', 'Invalid');
+      const error = new EnhancedValidationError(
+        'field',
+        BrightChainStrings.Error_Validation_Error,
+      );
       expect(isAnyBrightChainError(error)).toBe(true);
     });
 
@@ -357,7 +373,10 @@ describe('Error Type Guards', () => {
     it('should allow proper error handling with type narrowing', () => {
       const errors: unknown[] = [
         new ChecksumError(ChecksumErrorType.InvalidLength, 'Invalid length'),
-        new EnhancedValidationError('field', 'Invalid field'),
+        new EnhancedValidationError(
+          'field',
+          BrightChainStrings.Error_Validation_Error,
+        ),
         new EciesError(EciesErrorType.InvalidSignature),
         new CblError(CblErrorType.FileNameRequired),
         new FecError(FecErrorType.DataRequired),

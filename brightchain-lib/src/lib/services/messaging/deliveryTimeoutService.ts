@@ -1,4 +1,6 @@
+import { BrightChainStrings } from '../../enumerations';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { translate } from '../../i18n';
 import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 
 /**
@@ -146,7 +148,13 @@ export class DeliveryTimeoutService {
     } catch (error) {
       // Log error but don't throw to avoid stopping the check loop
       console.error(
-        `Failed to handle timeout for ${messageId}:${recipientId}`,
+        translate(
+          BrightChainStrings.DeliveryTimeout_FailedToHandleTimeoutTemplate,
+          {
+            MESSAGE_ID: messageId,
+            RECIPIENT_ID: recipientId,
+          },
+        ),
         error,
       );
     }

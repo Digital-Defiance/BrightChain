@@ -20,6 +20,9 @@
  * @see Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6
  */
 
+import { BrightChainStrings } from '../enumerations';
+import { translate } from '../i18n';
+
 /**
  * Log levels for block operations.
  * Ordered from most verbose (DEBUG) to least verbose (ERROR).
@@ -41,6 +44,10 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
   [LogLevel.WARN]: 2,
   [LogLevel.ERROR]: 3,
 };
+
+function redacted(): string {
+  return `[${translate(BrightChainStrings.BlockLogger_Redacted)}]`;
+}
 
 /**
  * Structured log entry for block operations.
@@ -214,13 +221,13 @@ function sanitizeMetadata(
   for (const [key, value] of Object.entries(metadata)) {
     // Skip sensitive keys entirely
     if (isSensitiveKey(key)) {
-      sanitized[key] = '[REDACTED]';
+      sanitized[key] = redacted();
       continue;
     }
 
     // Check for values that look like private keys (pass key for context)
     if (looksLikePrivateKey(value, key)) {
-      sanitized[key] = '[REDACTED]';
+      sanitized[key] = redacted();
       continue;
     }
 
@@ -231,7 +238,7 @@ function sanitizeMetadata(
       // Sanitize array elements
       sanitized[key] = value.map((item) => {
         if (looksLikePrivateKey(item)) {
-          return '[REDACTED]';
+          return redacted();
         }
         if (item !== null && typeof item === 'object') {
           return sanitizeMetadata(item as Record<string, unknown>);

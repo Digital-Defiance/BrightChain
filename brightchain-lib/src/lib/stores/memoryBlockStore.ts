@@ -2,6 +2,7 @@
 import { BaseBlock } from '../blocks/base';
 import { BlockHandle, createBlockHandle } from '../blocks/handle';
 import { RawDataBlock } from '../blocks/rawData';
+import { BrightChainStrings } from '../enumerations';
 import { BlockSize } from '../enumerations/blockSize';
 import {
   DurabilityLevel,
@@ -12,6 +13,8 @@ import { ReplicationStatus } from '../enumerations/replicationStatus';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { FecError } from '../errors/fecError';
 import { StoreError } from '../errors/storeError';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
+import { translate } from '../i18n';
 import { IFecService, ParityData } from '../interfaces/services/fecService';
 import {
   BlockStoreOptions,
@@ -351,7 +354,9 @@ export class MemoryBlockStore implements IBlockStore {
     // Check if FEC service is available
     if (!this.fecService) {
       throw new FecError(FecErrorType.FecEncodingFailed, undefined, {
-        ERROR: 'FEC service is not available',
+        ERROR: translate(
+          BrightChainStrings.MemoryBlockStore_FECServiceUnavailable,
+        ),
       });
     }
 
@@ -367,7 +372,9 @@ export class MemoryBlockStore implements IBlockStore {
     const isAvailable = await this.fecService.isAvailable();
     if (!isAvailable) {
       throw new FecError(FecErrorType.FecEncodingFailed, undefined, {
-        ERROR: 'FEC service is not available in this environment',
+        ERROR: translate(
+          BrightChainStrings.MemoryBlockStore_FECServiceUnavailableInThisEnvironment,
+        ),
       });
     }
 
@@ -423,7 +430,9 @@ export class MemoryBlockStore implements IBlockStore {
     if (!this.fecService) {
       return {
         success: false,
-        error: 'FEC service is not available',
+        error: translate(
+          BrightChainStrings.MemoryBlockStore_FECServiceUnavailable,
+        ),
       };
     }
 
@@ -432,7 +441,9 @@ export class MemoryBlockStore implements IBlockStore {
     if (!isAvailable) {
       return {
         success: false,
-        error: 'FEC service is not available in this environment',
+        error: translate(
+          BrightChainStrings.MemoryBlockStore_FECServiceUnavailableInThisEnvironment,
+        ),
       };
     }
 
@@ -441,7 +452,9 @@ export class MemoryBlockStore implements IBlockStore {
     if (!parityData || parityData.length === 0) {
       return {
         success: false,
-        error: 'No parity data available for recovery',
+        error: translate(
+          BrightChainStrings.MemoryBlockStore_NoParityDataAvailable,
+        ),
       };
     }
 
@@ -450,7 +463,9 @@ export class MemoryBlockStore implements IBlockStore {
     if (!metadata) {
       return {
         success: false,
-        error: 'Block metadata not found',
+        error: translate(
+          BrightChainStrings.MemoryBlockStore_BlockMetadataNotFound,
+        ),
       };
     }
 
@@ -484,13 +499,19 @@ export class MemoryBlockStore implements IBlockStore {
 
       return {
         success: false,
-        error: 'Recovery failed - insufficient parity data',
+        error: translate(
+          BrightChainStrings.MemoryBlockStore_RecoveryFailedInsufficientParityData,
+        ),
       };
     } catch (error) {
       return {
         success: false,
         error:
-          error instanceof Error ? error.message : 'Unknown recovery error',
+          error instanceof Error
+            ? error.message
+            : translate(
+                BrightChainStrings.MemoryBlockStore_UnknownRecoveryError,
+              ),
       };
     }
   }
@@ -745,7 +766,9 @@ export class MemoryBlockStore implements IBlockStore {
     // Validate input
     if (!cblData || cblData.length === 0) {
       throw new StoreError(StoreErrorType.BlockValidationFailed, undefined, {
-        ERROR: 'CBL data cannot be empty',
+        ERROR: translate(
+          BrightChainStrings.MemoryBlockStore_CBLDataCannotBeEmpty,
+        ),
       });
     }
 
@@ -755,7 +778,13 @@ export class MemoryBlockStore implements IBlockStore {
     // Validate that padded CBL fits within block size
     if (paddedCbl.length > this._blockSize) {
       throw new StoreError(StoreErrorType.BlockValidationFailed, undefined, {
-        ERROR: `CBL data too large: padded size (${paddedCbl.length}) exceeds block size (${this._blockSize}). Use a larger block size or smaller CBL.`,
+        ERROR: translate(
+          BrightChainStrings.MemoryBlockStore_CBLDataTooLargeTemplate,
+          {
+            LENGTH: paddedCbl.length,
+            BLOCK_SIZE: this._blockSize,
+          },
+        ),
       });
     }
 
@@ -911,7 +940,9 @@ export class MemoryBlockStore implements IBlockStore {
         } else {
           throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
             KEY: this.keyToHex(blockId1),
-            ERROR: 'Block 1 not found and recovery failed',
+            ERROR: translate(
+              BrightChainStrings.MemoryBlockStore_Block1NotFound,
+            ),
           });
         }
       } else {
@@ -934,7 +965,9 @@ export class MemoryBlockStore implements IBlockStore {
         } else {
           throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
             KEY: this.keyToHex(blockId2),
-            ERROR: 'Block 2 not found and recovery failed',
+            ERROR: translate(
+              BrightChainStrings.MemoryBlockStore_Block2NotFound,
+            ),
           });
         }
       } else {
@@ -961,7 +994,9 @@ export class MemoryBlockStore implements IBlockStore {
   public parseCBLMagnetUrl(magnetUrl: string): CBLMagnetComponents {
     // Validate basic URL format
     if (!magnetUrl || !magnetUrl.startsWith('magnet:?')) {
-      throw new Error('Invalid magnet URL: must start with "magnet:?"');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.MemoryBlockStore_InvalidMagnetURL,
+      );
     }
 
     // Parse URL parameters
@@ -971,8 +1006,8 @@ export class MemoryBlockStore implements IBlockStore {
     // Validate xt parameter
     const xt = params.get('xt');
     if (xt !== 'urn:brightchain:cbl') {
-      throw new Error(
-        'Invalid magnet URL: xt parameter must be "urn:brightchain:cbl"',
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.MemoryBlockStore_InvalidMagnetURLXT,
       );
     }
 
@@ -982,20 +1017,31 @@ export class MemoryBlockStore implements IBlockStore {
     const blockSizeStr = params.get('bs');
 
     if (!blockId1) {
-      throw new Error('Invalid magnet URL: missing b1 parameter');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.MemoryBlockStore_InvalidMagnetURLMissingTemplate,
+        { PARAMETER: 'b1' },
+      );
     }
 
     if (!blockId2) {
-      throw new Error('Invalid magnet URL: missing b2 parameter');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.MemoryBlockStore_InvalidMagnetURLMissingTemplate,
+        { PARAMETER: 'b2' },
+      );
     }
 
     if (!blockSizeStr) {
-      throw new Error('Invalid magnet URL: missing bs (block size) parameter');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.MemoryBlockStore_InvalidMagnetURLMissingTemplate,
+        { PARAMETER: `bs (${translate(BrightChainStrings.Common_BlockSize)})` },
+      );
     }
 
     const blockSize = parseInt(blockSizeStr, 10);
     if (isNaN(blockSize) || blockSize <= 0) {
-      throw new Error('Invalid magnet URL: invalid block size');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.MemoryBlockStore_InvalidMagnetURL_InvalidBlockSize,
+      );
     }
 
     // Parse optional parity block IDs

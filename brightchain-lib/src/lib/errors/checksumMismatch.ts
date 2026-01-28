@@ -7,7 +7,7 @@ export class ChecksumMismatchError extends Error {
   public readonly expected: Checksum;
   constructor(checksum: Checksum, expected: Checksum, _language?: string) {
     super(
-      translate(BrightChainStrings.Error_ChecksumMismatchTemplate, {
+      translate(BrightChainStrings.Error_Checksum_MismatchTemplate, {
         EXPECTED: expected.toHex(),
         CHECKSUM: checksum.toHex(),
       }),

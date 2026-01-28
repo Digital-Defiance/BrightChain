@@ -6,19 +6,19 @@ export class StreamError extends TypedError<StreamErrorType> {
   protected get reasonMap(): Record<StreamErrorType, BrightChainStrings> {
     return {
       [StreamErrorType.BlockSizeRequired]:
-        BrightChainStrings.Error_StreamErrorBlockSizeRequired,
+        BrightChainStrings.Error_StreamError_BlockSizeRequired,
       [StreamErrorType.WhitenedBlockSourceRequired]:
-        BrightChainStrings.Error_StreamErrorWhitenedBlockSourceRequired,
+        BrightChainStrings.Error_StreamError_WhitenedBlockSourceRequired,
       [StreamErrorType.RandomBlockSourceRequired]:
-        BrightChainStrings.Error_StreamErrorRandomBlockSourceRequired,
+        BrightChainStrings.Error_StreamError_RandomBlockSourceRequired,
       [StreamErrorType.InputMustBeBuffer]:
-        BrightChainStrings.Error_StreamErrorInputMustBeBuffer,
+        BrightChainStrings.Error_StreamError_InputMustBeBuffer,
       [StreamErrorType.FailedToGetRandomBlock]:
-        BrightChainStrings.Error_StreamErrorFailedToGetRandomBlock,
+        BrightChainStrings.Error_StreamError_FailedToGetRandomBlock,
       [StreamErrorType.FailedToGetWhiteningBlock]:
-        BrightChainStrings.Error_StreamErrorFailedToGetWhiteningBlock,
+        BrightChainStrings.Error_StreamError_FailedToGetWhiteningBlock,
       [StreamErrorType.IncompleteEncryptedBlock]:
-        BrightChainStrings.Error_StreamErrorIncompleteEncryptedBlock,
+        BrightChainStrings.Error_StreamError_IncompleteEncryptedBlock,
     };
   }
 

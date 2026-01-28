@@ -2,8 +2,10 @@ import { Member, type PlatformID } from '@digitaldefiance/ecies-lib';
 import { ConstituentBlockListBlock } from './blocks/cbl';
 import { WhitenedBlock } from './blocks/whitened';
 import { Readable } from './browserStream';
+import { BrightChainStrings } from './enumerations';
 import { CblErrorType } from './enumerations/cblErrorType';
 import { CblError } from './errors/cblError';
+import { TranslatableBrightChainError } from './errors/translatableBrightChainError';
 import { IEphemeralBlock } from './interfaces/blocks/ephemeral';
 import { BlockService } from './services/blockService';
 import { ServiceLocator } from './services/serviceLocator';
@@ -92,7 +94,9 @@ export class CblStream<TID extends PlatformID = Uint8Array> extends Readable {
         'error',
         error instanceof Error
           ? new CblError(CblErrorType.FailedToLoadBlock)
-          : new Error('Unknown error reading data'),
+          : new TranslatableBrightChainError(
+              BrightChainStrings.CblStream_UnknownErrorReadingData,
+            ),
       );
     }
   }
