@@ -2041,7 +2041,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchain-lib@npm:0.11.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
+"@brightchain/brightchain-lib@npm:0.11.0, @brightchain/brightchain-lib@npm:^0.11.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
   dependencies:
@@ -2050,17 +2050,6 @@ __metadata:
     tslib: "npm:^2.3.0"
   languageName: unknown
   linkType: soft
-
-"@brightchain/brightchain-lib@npm:^0.10.0":
-  version: 0.10.0
-  resolution: "@brightchain/brightchain-lib@npm:0.10.0"
-  dependencies:
-    "@digitaldefiance/ecies-lib": "npm:^4.13.8"
-    "@digitaldefiance/i18n-lib": "npm:^3.8.16"
-    tslib: "npm:^2.3.0"
-  checksum: 10c0/43b2bfe9ad4efe7951e110fd2df2957ce0a2d2de5569821bf1e678e6077d9fc7d5ca8d713a86429088a2391535ca1eb5ad77d030bded41a18d67fb7abde7fde6
-  languageName: node
-  linkType: hard
 
 "@brightchain/test-utils@workspace:brightchain-test-utils":
   version: 0.0.0-use.local
@@ -11091,7 +11080,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"axios@npm:^1.12.0, axios@npm:^1.6.0, axios@npm:^1.7.4, axios@npm:^1.9.0":
+"axios@npm:^1.12.0, axios@npm:^1.7.4, axios@npm:^1.9.0":
   version: 1.13.2
   resolution: "axios@npm:1.13.2"
   dependencies:
@@ -11099,6 +11088,17 @@ __metadata:
     form-data: "npm:^4.0.4"
     proxy-from-env: "npm:^1.1.0"
   checksum: 10c0/e8a42e37e5568ae9c7a28c348db0e8cf3e43d06fcbef73f0048669edfe4f71219664da7b6cc991b0c0f01c28a48f037c515263cb79be1f1ae8ff034cd813867b
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.13.4":
+  version: 1.13.4
+  resolution: "axios@npm:1.13.4"
+  dependencies:
+    follow-redirects: "npm:^1.15.6"
+    form-data: "npm:^4.0.4"
+    proxy-from-env: "npm:^1.1.0"
+  checksum: 10c0/474c00b7d71f4de4ad562589dae6b615149df7c2583bbc5ebba96229f3f85bfb0775d23705338df072f12e48d3e85685c065a3cf6855d58968a672d19214c728
   languageName: node
   linkType: hard
 
@@ -11650,7 +11650,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "brightchain-showcase@workspace:showcase"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.10.0"
+    "@brightchain/brightchain-lib": "npm:^0.11.0"
     "@digitaldefiance/ecies-lib": "npm:^4.13.8"
     "@digitaldefiance/i18n-lib": "npm:^3.8.16"
     "@esbuild-plugins/node-globals-polyfill": "npm:^0.2.3"
@@ -11776,7 +11776,7 @@ __metadata:
     "@types/validator": "npm:^13.11.7"
     "@typescript-eslint/eslint-plugin": "npm:8.50.1"
     "@typescript-eslint/parser": "npm:8.50.1"
-    axios: "npm:^1.6.0"
+    axios: "npm:^1.13.4"
     babel-jest: "npm:30.0.5"
     bcrypt: "npm:^5.1.1"
     bip39: "npm:^3.1.0"
