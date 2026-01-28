@@ -1,7 +1,10 @@
+import { BrightChainStrings } from '../../enumerations/brightChainStrings';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
 import { MessageErrorType } from '../../enumerations/messaging/messageErrorType';
 import { RoutingStrategy } from '../../enumerations/messaging/routingStrategy';
 import { MessageError } from '../../errors/messaging/messageError';
+import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
+import { translate } from '../../i18n';
 import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 import {
   IMessageRouter,
@@ -53,7 +56,12 @@ export class MessageRouter implements IMessageRouter {
           ),
           new Promise((_, reject) =>
             setTimeout(
-              () => reject(new Error('Routing timeout')),
+              () =>
+                reject(
+                  new TranslatableBrightChainError(
+                    BrightChainStrings.MessageRouter_RoutingTimeout,
+                  ),
+                ),
               this.config.routingTimeoutMs,
             ),
           ),
@@ -62,7 +70,11 @@ export class MessageRouter implements IMessageRouter {
       } catch (error) {
         failedRecipients.push(recipient);
         const errorMsg =
-          error instanceof Error ? error.message : 'Unknown error';
+          error instanceof Error
+            ? error.message
+            : new TranslatableBrightChainError(
+                BrightChainStrings.Error_Unexpected_Error,
+              ).message;
         errors.set(recipient, errorMsg);
         this.logger?.logDeliveryFailure(messageId, recipient, errorMsg);
 
@@ -85,7 +97,7 @@ export class MessageRouter implements IMessageRouter {
       this.metrics?.recordMessageFailed();
       throw new MessageError(
         MessageErrorType.DELIVERY_FAILED,
-        'Failed to route message to any recipient',
+        translate(BrightChainStrings.MessageRouter_FailedToRouteToAnyRecipient),
         { messageId, failedRecipients, errors: Object.fromEntries(errors) },
       );
     }
@@ -110,7 +122,10 @@ export class MessageRouter implements IMessageRouter {
     // Verify message exists in metadata store
     const metadata = await this.metadataStore.get(messageId);
     if (!metadata) {
-      throw new Error(`Message ${messageId} not found`);
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_MessageRouter_MessageNotFoundTemplate,
+        { MESSAGE_ID: messageId },
+      );
     }
 
     // Message received successfully - actual storage is handled by MessageCBLService
@@ -128,7 +143,12 @@ export class MessageRouter implements IMessageRouter {
         strategy: RoutingStrategy.DIRECT,
         successfulRecipients: [],
         failedRecipients: recipients,
-        errors: new Map(recipients.map((r) => [r, 'Forwarding loop detected'])),
+        errors: new Map(
+          recipients.map((r) => [
+            r,
+            translate(BrightChainStrings.MessageRouter_ForwardingLoopDetected),
+          ]),
+        ),
       };
     }
 

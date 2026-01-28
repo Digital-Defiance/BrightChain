@@ -2,6 +2,9 @@
  * Utility functions to replace Node.js Buffer operations with browser-compatible Uint8Array operations
  */
 
+import { BrightChainStrings } from './enumerations/brightChainStrings';
+import { translate } from './i18n';
+
 /**
  * Convert base64 string to Uint8Array
  */
@@ -20,7 +23,11 @@ export function base64ToUint8Array(base64: string): Uint8Array {
     return bytes;
   } catch (error) {
     // If base64 decoding fails, return empty array
-    console.warn('Invalid base64 string:', base64, error);
+    console.warn(
+      translate(BrightChainStrings.Warning_BufferUtils_InvalidBase64String),
+      base64,
+      error,
+    );
     return new Uint8Array(0);
   }
 }

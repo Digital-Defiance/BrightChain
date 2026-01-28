@@ -1,4 +1,6 @@
 import { codes } from 'currency-codes';
+import { BrightChainStrings } from './enumerations';
+import { TranslatableBrightChainError } from './errors/translatableBrightChainError';
 import { DefaultCurrencyCode } from './sharedTypes';
 
 export class CurrencyCode {
@@ -8,7 +10,9 @@ export class CurrencyCode {
   }
   public set value(value: string) {
     if (!CurrencyCode.values.includes(value)) {
-      throw new Error('Invalid currency code');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.CurrencyCode_InvalidCurrencyCode,
+      );
     }
     this._value = value;
   }

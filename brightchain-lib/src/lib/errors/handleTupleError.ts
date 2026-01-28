@@ -7,13 +7,13 @@ export class HandleTupleError extends TypedError<HandleTupleErrorType> {
   public get reasonMap(): Record<HandleTupleErrorType, BrightChainStrings> {
     return {
       [HandleTupleErrorType.InvalidTupleSize]:
-        BrightChainStrings.Error_HandleTupleErrorInvalidTupleSizeTemplate,
+        BrightChainStrings.Error_HandleTupleError_InvalidTupleSizeTemplate,
       [HandleTupleErrorType.BlockSizeMismatch]:
-        BrightChainStrings.Error_HandleTupleErrorBlockSizeMismatch,
+        BrightChainStrings.Error_HandleTupleError_BlockSizeMismatch,
       [HandleTupleErrorType.NoBlocksToXor]:
-        BrightChainStrings.Error_HandleTupleErrorNoBlocksToXor,
+        BrightChainStrings.Error_HandleTupleError_NoBlocksToXor,
       [HandleTupleErrorType.BlockSizesMustMatch]:
-        BrightChainStrings.Error_HandleTupleErrorBlockSizesMustMatch,
+        BrightChainStrings.Error_HandleTupleError_BlockSizesMustMatch,
     };
   }
   public readonly tupleSize?: number;

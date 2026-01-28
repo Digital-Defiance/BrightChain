@@ -6,17 +6,17 @@ export class IsolatedKeyError extends TypedError<IsolatedKeyErrorType> {
   public get reasonMap(): Record<IsolatedKeyErrorType, BrightChainStrings> {
     return {
       [IsolatedKeyErrorType.InvalidPublicKey]:
-        BrightChainStrings.Error_IsolatedKeyErrorInvalidPublicKey,
+        BrightChainStrings.Error_IsolatedKeyError_InvalidPublicKey,
       [IsolatedKeyErrorType.InvalidKeyId]:
-        BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyId,
+        BrightChainStrings.Error_IsolatedKeyError_InvalidKeyId,
       [IsolatedKeyErrorType.InvalidKeyFormat]:
-        BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyFormat,
+        BrightChainStrings.Error_IsolatedKeyError_InvalidKeyFormat,
       [IsolatedKeyErrorType.InvalidKeyLength]:
-        BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyLength,
+        BrightChainStrings.Error_IsolatedKeyError_InvalidKeyLength,
       [IsolatedKeyErrorType.InvalidKeyType]:
-        BrightChainStrings.Error_IsolatedKeyErrorInvalidKeyType,
+        BrightChainStrings.Error_IsolatedKeyError_InvalidKeyType,
       [IsolatedKeyErrorType.KeyIsolationViolation]:
-        BrightChainStrings.Error_IsolatedKeyErrorKeyIsolationViolation,
+        BrightChainStrings.Error_IsolatedKeyError_KeyIsolationViolation,
     };
   }
   constructor(type: IsolatedKeyErrorType, _language?: string) {

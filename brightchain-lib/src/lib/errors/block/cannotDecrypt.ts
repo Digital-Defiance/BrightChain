@@ -5,7 +5,7 @@ import { translate } from '../../i18n';
 export class CannotDecryptBlockError extends HandleableError {
   constructor(_language?: string) {
     super(
-      new Error(translate(BrightChainStrings.Error_BlockCannotBeDecrypted)),
+      new Error(translate(BrightChainStrings.Error_Block_CannotBeDecrypted)),
     );
   }
 }

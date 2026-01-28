@@ -9,6 +9,8 @@ import {
 } from '@digitaldefiance/ecies-lib';
 
 import { BRIGHTCHAIN_CONFIG_KEY } from '../config/constants';
+import { BrightChainStrings } from '../enumerations';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { BlockFactory } from '../factories/blockFactory';
 import { IServiceProvider } from '../interfaces/serviceProvider.interface';
 import { BlockCapacityCalculator } from './blockCapacity.service';
@@ -41,7 +43,9 @@ export class ServiceProvider<
 
   constructor() {
     if (ServiceProvider.instance) {
-      throw new Error('Use ServiceProvider.getInstance() instead of new.');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_ServiceProvider_UseSingletonInstance,
+      );
     }
     ServiceProvider.instance = this;
 

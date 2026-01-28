@@ -1,6 +1,8 @@
+import { BrightChainStrings } from '../../enumerations';
 import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
+import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 import { SchemaDefinition } from '../../sharedTypes';
 
@@ -29,7 +31,10 @@ export const MessageMetadataSchema: Partial<
     required: true,
     serialize: (value: string[]): string[] => value,
     hydrate: (value: unknown): string[] => {
-      if (!Array.isArray(value)) throw new Error('Invalid recipients format');
+      if (!Array.isArray(value))
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MessageMetadataSchema_InvalidRecipientsFormat,
+        );
       return value;
     },
   },
@@ -38,7 +43,10 @@ export const MessageMetadataSchema: Partial<
     required: true,
     serialize: (value: MessagePriority): number => value,
     hydrate: (value: unknown): MessagePriority => {
-      if (typeof value !== 'number') throw new Error('Invalid priority format');
+      if (typeof value !== 'number')
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MessageMetadataSchema_InvalidPriorityFormat,
+        );
       return value as MessagePriority;
     },
   },
@@ -50,7 +58,9 @@ export const MessageMetadataSchema: Partial<
     ): Record<string, string> => Object.fromEntries(value),
     hydrate: (value: unknown): Map<string, MessageDeliveryStatus> => {
       if (typeof value !== 'object' || value === null)
-        throw new Error('Invalid delivery status format');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MessageMetadataSchema_InvalidDeliveryStatusFormat,
+        );
       return new Map(
         Object.entries(value as Record<string, MessageDeliveryStatus>),
       );
@@ -65,7 +75,9 @@ export const MessageMetadataSchema: Partial<
       ),
     hydrate: (value: unknown): Map<string, Date> => {
       if (typeof value !== 'object' || value === null)
-        throw new Error('Invalid acknowledgments format');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MessageMetadataSchema_InvalidAcknowledgementsFormat,
+        );
       return new Map(
         Object.entries(value as Record<string, string>).map(([k, v]) => [
           k,
@@ -80,7 +92,9 @@ export const MessageMetadataSchema: Partial<
     serialize: (value: MessageEncryptionScheme): string => value,
     hydrate: (value: unknown): MessageEncryptionScheme => {
       if (typeof value !== 'string')
-        throw new Error('Invalid encryption scheme format');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MessageMetadataSchema_InvalidEncryptionSchemeFormat,
+        );
       return value as MessageEncryptionScheme;
     },
   },
@@ -95,7 +109,9 @@ export const MessageMetadataSchema: Partial<
     hydrate: (value: unknown): string[] | undefined => {
       if (value === undefined || value === null) return undefined;
       if (!Array.isArray(value))
-        throw new Error('Invalid CBL block IDs format');
+        throw new TranslatableBrightChainError(
+          BrightChainStrings.Error_MessageMetadataSchema_InvalidCBLBlockIDsFormat,
+        );
       return value;
     },
   },

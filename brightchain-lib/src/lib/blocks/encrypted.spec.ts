@@ -19,6 +19,7 @@ import { BlockValidationErrorType } from '../enumerations/blockValidationErrorTy
 import { EphemeralBlockMetadata } from '../ephemeralBlockMetadata';
 import { BlockValidationError } from '../errors/block';
 import { ChecksumMismatchError } from '../errors/checksumMismatch';
+import { initializeBrightChain } from '../init';
 import { ChecksumService } from '../services/checksum.service';
 import { ServiceProvider } from '../services/service.provider';
 import { Checksum } from '../types/checksum';
@@ -89,8 +90,6 @@ describe('EncryptedBlock', () => {
 
   beforeAll(() => {
     // Initialize BrightChain with browser-compatible configuration first
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { initializeBrightChain } = require('../init');
     initializeBrightChain();
 
     // Reset service provider to ensure we use the correct configuration

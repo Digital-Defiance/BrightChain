@@ -3,11 +3,13 @@ import {
   PlatformID,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
+import { BrightChainStrings } from '../../enumerations';
 import { BlockSize } from '../../enumerations/blockSize';
 import { MemberErrorType } from '../../enumerations/memberErrorType';
 import { FactoryPatternViolationError } from '../../errors/factoryPatternViolationError';
 import { MemberError } from '../../errors/memberError';
 import { BlockStoreFactory } from '../../factories/blockStoreFactory';
+import { translate } from '../../i18n';
 import {
   IPrivateMemberProfileHydratedData,
   IPrivateMemberProfileStorageData,
@@ -77,7 +79,7 @@ export class MemberProfileDocument<TID extends PlatformID = Uint8Array> {
   ) {
     if (factoryToken !== FACTORY_TOKEN) {
       throw new FactoryPatternViolationError('MemberProfileDocument', {
-        hint: 'Use MemberProfileDocument.create() instead of new MemberProfileDocument()',
+        hint: translate(BrightChainStrings.Error_MemberProfileDocument_Hint),
       });
     }
 

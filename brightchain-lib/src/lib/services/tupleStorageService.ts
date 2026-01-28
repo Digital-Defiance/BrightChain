@@ -16,10 +16,12 @@
  */
 
 import { RawDataBlock } from '../blocks/rawData';
+import { BrightChainStrings } from '../enumerations';
 import {
   DurabilityLevel,
   getParityCountForDurability,
 } from '../enumerations/durabilityLevel';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { BlockStoreOptions } from '../interfaces/storage/blockMetadata';
 import { IBlockStore } from '../interfaces/storage/blockStore';
 import { Checksum } from '../types/checksum';
@@ -59,8 +61,9 @@ export class TupleStorageService {
 
     // Ensure data fits in a block
     if (data.length > blockSize) {
-      throw new Error(
-        `Data size ${data.length} exceeds block size ${blockSize}`,
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_TupleStorage_DataExceedsBlockSizeTemplate,
+        { DATA_SIZE: data.length, BLOCK_SIZE: blockSize },
       );
     }
 
@@ -194,14 +197,18 @@ export class TupleStorageService {
     const url = new URL(magnetUrl);
 
     if (url.protocol !== 'magnet:') {
-      throw new Error('Invalid magnet URL protocol');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_TupleStorage_InvalidMagnetProtocol,
+      );
     }
 
     const params = new URLSearchParams(url.search);
     const xt = params.get('xt');
 
     if (xt !== 'urn:brightchain:tuple') {
-      throw new Error('Invalid magnet URL type, expected tuple');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_TupleStorage_InvalidMagnetType,
+      );
     }
 
     const blockSize = parseInt(params.get('bs') || '0', 10);
@@ -210,7 +217,9 @@ export class TupleStorageService {
     const rand2BlockId = params.get('r2');
 
     if (!dataBlockId || !rand1BlockId || !rand2BlockId || !blockSize) {
-      throw new Error('Missing required TUPLE magnet URL parameters');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_TupleStorage_MissingMagnetParameters,
+      );
     }
 
     // Parse optional parity IDs

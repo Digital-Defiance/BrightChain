@@ -18,10 +18,12 @@ import { BlockErrorType } from '../enumerations/blockErrorType';
 import { BlockServiceErrorType } from '../enumerations/blockServiceErrorType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType, EncryptedBlockTypes } from '../enumerations/blockType';
+import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import { EciesErrorType } from '../enumerations/eciesErrorType';
 import { BlockError, CannotEncryptBlockError } from '../errors/block';
 import { BlockServiceError } from '../errors/blockServiceError';
 import { EciesError } from '../errors/eciesError';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { IEncryptedBlock } from '../interfaces/blocks/encrypted';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
 import { blockLogger, LogLevel } from '../logging/blockLogger';
@@ -153,7 +155,9 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
     if (!EncryptedBlockTypes.includes(newBlockType)) {
       throw new BlockError(BlockErrorType.UnexpectedEncryptedBlockType);
     } else if (!block.canEncrypt()) {
-      throw new Error('Block cannot be encrypted');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_BlockService_CannotEncrypt,
+      );
     } else if (!block.creator) {
       throw new BlockError(BlockErrorType.CreatorRequired);
     }
@@ -709,13 +713,17 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
     originalDataLength: number,
   ): Promise<ConstituentBlockListBlock<TID>> {
     if (blocks.length === 0) {
-      throw new Error('Blocks array must not be empty');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_BlockService_BlocksArrayEmpty,
+      );
     }
 
     // Validate all blocks have same size
     const firstBlockSize = blocks[0].blockSize;
     if (!blocks.every((block) => block.blockSize === firstBlockSize)) {
-      throw new Error('All blocks must have the same block size');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_BlockService_BlockSizesMustMatch,
+      );
     }
 
     // Create block IDs array

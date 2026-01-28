@@ -6,35 +6,35 @@ export class BlockError extends TypedError<BlockErrorType> {
   public get reasonMap(): Record<BlockErrorType, BrightChainStrings> {
     return {
       [BlockErrorType.CreatorRequiredForEncryption]:
-        BrightChainStrings.Error_BlockErrorCreatorRequiredForEncryption,
+        BrightChainStrings.Error_BlockError_CreatorRequiredForEncryption,
       [BlockErrorType.CannotEncrypt]:
-        BrightChainStrings.Error_BlockErrorCannotEncrypt,
+        BrightChainStrings.Error_BlockError_CannotEncrypt,
       [BlockErrorType.CannotDecrypt]:
-        BrightChainStrings.Error_BlockErrorCannotEncrypt,
+        BrightChainStrings.Error_BlockError_CannotEncrypt,
       [BlockErrorType.ActualDataLengthExceedsDataLength]:
-        BrightChainStrings.Error_BlockErrorActualDataLengthExceedsDataLength,
+        BrightChainStrings.Error_BlockError_ActualDataLengthExceedsDataLength,
       [BlockErrorType.ActualDataLengthNegative]:
-        BrightChainStrings.Error_BlockErrorActualDataLengthNegative,
+        BrightChainStrings.Error_BlockError_ActualDataLengthNegative,
       [BlockErrorType.CreatorRequired]:
-        BrightChainStrings.Error_BlockErrorCreatorRequired,
+        BrightChainStrings.Error_BlockError_CreatorRequired,
       [BlockErrorType.DataRequired]:
-        BrightChainStrings.Error_BlockErrorDataRequired,
+        BrightChainStrings.Error_BlockError_DataRequired,
       [BlockErrorType.DataLengthExceedsCapacity]:
-        BrightChainStrings.Error_BlockErrorDataLengthExceedsCapacity,
+        BrightChainStrings.Error_BlockError_DataLengthExceedsCapacity,
       [BlockErrorType.UnexpectedEncryptedBlockType]:
-        BrightChainStrings.Error_BlockErrorUnexpectedEncryptedBlockType,
+        BrightChainStrings.Error_BlockError_UnexpectedEncryptedBlockType,
       [BlockErrorType.CreatorPrivateKeyRequired]:
-        BrightChainStrings.Error_BlockErrorCreatorPrivateKeyRequired,
+        BrightChainStrings.Error_BlockError_CreatorPrivateKeyRequired,
       [BlockErrorType.InvalidMultiEncryptionRecipientCount]:
-        BrightChainStrings.Error_BlockErrorInvalidMultiEncryptionRecipientCount,
+        BrightChainStrings.Error_BlockError_InvalidMultiEncryptionRecipientCount,
       [BlockErrorType.InvalidNewBlockType]:
-        BrightChainStrings.Error_BlockErrorInvalidNewBlockType,
+        BrightChainStrings.Error_BlockError_InvalidNewBlockType,
       [BlockErrorType.UnexpectedEphemeralBlockType]:
-        BrightChainStrings.Error_BlockErrorUnexpectedEphemeralBlockType,
+        BrightChainStrings.Error_BlockError_UnexpectedEphemeralBlockType,
       [BlockErrorType.RecipientRequired]:
-        BrightChainStrings.Error_BlockErrorRecipientRequired,
+        BrightChainStrings.Error_BlockError_RecipientRequired,
       [BlockErrorType.RecipientKeyRequired]:
-        BrightChainStrings.Error_BlockErrorRecipientKeyRequired,
+        BrightChainStrings.Error_BlockError_RecipientKeyRequired,
     };
   }
 

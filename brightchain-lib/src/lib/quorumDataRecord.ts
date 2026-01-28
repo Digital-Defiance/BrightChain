@@ -11,6 +11,8 @@ import {
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { createECIESService } from './browserConfig';
+import { BrightChainStrings } from './enumerations';
+import { TranslatableBrightChainError } from './errors/translatableBrightChainError';
 import { getBrightChainIdProvider } from './init';
 import { QuorumDataRecordDto } from './quorumDataRecordDto';
 import { ChecksumService } from './services/checksum.service';
@@ -58,14 +60,20 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
     }
 
     if (memberIDs.length != 0 && memberIDs.length < 2) {
-      throw new Error('Must share with at least 2 members');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.QuorumDataRecord_MustShareWithAtLeastTwoMembers,
+      );
     }
     this.memberIDs = memberIDs;
     if (sharesRequired != -1 && sharesRequired > memberIDs.length) {
-      throw new Error('Shares required exceeds number of members');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.QuorumDataRecord_SharesRequiredExceedsMembers,
+      );
     }
     if (sharesRequired != -1 && sharesRequired < 2) {
-      throw new Error('Shares required must be at least 2');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.QuorumDataRecord_SharesRequiredMustBeAtLeastTwo,
+      );
     }
     this.checksumService = new ChecksumService();
     this.sharesRequired = sharesRequired;
@@ -74,7 +82,9 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
     const calculatedChecksum =
       this.checksumService.calculateChecksum(encryptedData);
     if (checksum && !checksum.equals(calculatedChecksum)) {
-      throw new Error('Invalid checksum');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.QuorumDataRecord_InvalidChecksum,
+      );
     }
     this.checksum = calculatedChecksum;
     this.creator = creator;
@@ -88,7 +98,9 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
         this.signature,
       )
     ) {
-      throw new Error('Invalid signature');
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.QuorumDataRecord_InvalidSignature,
+      );
     }
 
     // don't create a new date object with nearly identical values to the existing one

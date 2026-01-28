@@ -1,16 +1,23 @@
+import { EciesStringKey } from '@digitaldefiance/ecies-lib';
 import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import { SecureStorageErrorType } from '../enumerations/secureStorageErrorType';
 import { TypedError } from './typedError';
 
-export class SecureStorageError extends TypedError<SecureStorageErrorType> {
-  public get reasonMap(): Record<SecureStorageErrorType, BrightChainStrings> {
+export class SecureStorageError extends TypedError<
+  SecureStorageErrorType,
+  BrightChainStrings | EciesStringKey
+> {
+  public get reasonMap(): Record<
+    SecureStorageErrorType,
+    BrightChainStrings | EciesStringKey
+  > {
     return {
       [SecureStorageErrorType.DecryptedValueChecksumMismatch]:
-        BrightChainStrings.Error_SecureStorageDecryptedValueChecksumMismatch,
+        EciesStringKey.Error_SecureStorageError_DecryptedValueChecksumMismatch,
       [SecureStorageErrorType.DecryptedValueLengthMismatch]:
-        BrightChainStrings.Error_SecureStorageDecryptedValueLengthMismatch,
+        EciesStringKey.Error_SecureStorageError_DecryptedValueLengthMismatch,
       [SecureStorageErrorType.ValueIsNull]:
-        BrightChainStrings.Error_SecureStorageValueIsNull,
+        EciesStringKey.Error_SecureStorageError_ValueIsNull,
     };
   }
   constructor(type: SecureStorageErrorType, _language?: string) {

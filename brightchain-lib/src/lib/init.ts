@@ -7,6 +7,9 @@ import {
   TypedIdProviderWrapper,
 } from '@digitaldefiance/ecies-lib';
 import { BRIGHTCHAIN_CONFIG_KEY } from './config/constants';
+import { BrightChainStrings } from './enumerations';
+import { TranslatableBrightChainError } from './errors/translatableBrightChainError';
+import { translate } from './i18n';
 import { ServiceProvider } from './services/service.provider';
 
 let isInitialized = false;
@@ -27,8 +30,9 @@ export function initializeBrightChain(): void {
 
   // Register this configuration with a specific key
   ConstantsRegistry.register(BRIGHTCHAIN_CONFIG_KEY, config, {
-    description:
-      'BrightChain browser-compatible configuration with GuidV4Provider',
+    description: translate(
+      BrightChainStrings.Init_BrowserCompatibleConfiguration,
+    ),
   });
 
   // Initialize ServiceProvider (this will register itself with ServiceLocator)
@@ -66,8 +70,8 @@ export function getBrightChainIdProvider<TID extends PlatformID = Uint8Array>(
     if (autoInit) {
       initializeBrightChain();
     } else {
-      throw new Error(
-        'BrightChain library not initialized. Call initializeBrightChain() first.',
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Init_NotInitialized,
       );
     }
   }
@@ -83,8 +87,6 @@ export function resetInitialization(): void {
   ConstantsRegistry.unregister(BRIGHTCHAIN_CONFIG_KEY);
   // Also reset any existing ServiceProvider instances
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { ServiceProvider } = require('./services/service.provider');
     ServiceProvider.resetInstance();
   } catch {
     // ServiceProvider might not be loaded yet, which is fine

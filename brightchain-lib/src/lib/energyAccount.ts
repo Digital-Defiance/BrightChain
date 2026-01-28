@@ -1,4 +1,6 @@
 import { ENERGY } from './energyConsts';
+import { BrightChainStrings } from './enumerations';
+import { TranslatableBrightChainError } from './errors/translatableBrightChainError';
 import { IEnergyAccount, IEnergyAccountDto } from './interfaces/energyAccount';
 import { Checksum } from './types/checksum';
 
@@ -65,8 +67,12 @@ export class EnergyAccount implements IEnergyAccount {
    */
   reserve(amount: number): void {
     if (!this.canAfford(amount)) {
-      throw new Error(
-        `Insufficient balance: need ${amount}J, have ${this.availableBalance}J`,
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.EnergyAccount_InsufficientBalanceTemplate,
+        {
+          AMOUNT: amount,
+          AVAILABLE: this.availableBalance,
+        },
       );
     }
     this.reserved += amount;
@@ -86,8 +92,12 @@ export class EnergyAccount implements IEnergyAccount {
    */
   charge(amount: number): void {
     if (amount > this.balance) {
-      throw new Error(
-        `Insufficient balance: need ${amount}J, have ${this.balance}J`,
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.EnergyAccount_InsufficientBalanceTemplate,
+        {
+          AMOUNT: amount,
+          AVAILABLE: this.balance,
+        },
       );
     }
     this.balance -= amount;

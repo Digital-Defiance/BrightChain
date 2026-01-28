@@ -5,7 +5,7 @@ export class InvalidBlockSizeLengthError extends Error {
   public readonly blockSize: number;
   constructor(blockSize: number, _language?: string) {
     super(
-      translate(BrightChainStrings.Error_InvalidBlockSizeTemplate, {
+      translate(BrightChainStrings.Error_BlockSize_InvalidTemplate, {
         BLOCK_SIZE: blockSize,
       }),
     );

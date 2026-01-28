@@ -27,9 +27,11 @@
  * ```
  */
 
+import { BrightChainStrings } from '../enumerations';
 import BlockDataType from '../enumerations/blockDataType';
 import { BlockSize, validBlockSizes } from '../enumerations/blockSize';
 import BlockType from '../enumerations/blockType';
+import { translate } from '../i18n';
 
 /**
  * JSON representation of BlockMetadata.
@@ -68,7 +70,12 @@ export class JsonValidationError extends Error {
     public readonly reason: string,
     public readonly value?: unknown,
   ) {
-    super(`JSON validation failed for field '${field}': ${reason}`);
+    super(
+      translate(BrightChainStrings.Error_JsonValidationErrorTemplate, {
+        FIELD: field,
+        REASON: reason,
+      }),
+    );
     this.name = 'JsonValidationError';
   }
 }
@@ -148,81 +155,108 @@ function isValidDateValue(value: unknown): value is string | number {
 export function isBlockMetadataJson(data: unknown): data is BlockMetadataJson {
   // Check if data is an object
   if (typeof data !== 'object' || data === null) {
-    throw new JsonValidationError('data', 'must be a non-null object', data);
+    throw new JsonValidationError(
+      'data',
+      translate(BrightChainStrings.Error_JsonValidationError_MustBeNonNull),
+      data,
+    );
   }
 
   const obj = data as Record<string, unknown>;
 
   // Validate size field
   if (!('size' in obj)) {
-    throw new JsonValidationError('size', 'field is required');
+    throw new JsonValidationError(
+      'size',
+      translate(BrightChainStrings.Error_JsonValidationError_FieldRequired),
+    );
   }
   if (!isValidBlockSize(obj['size'])) {
     throw new JsonValidationError(
       'size',
-      'must be a valid BlockSize enum value',
+      translate(
+        BrightChainStrings.Error_JsonValidationError_MustBeValidBlockSize,
+      ),
       obj['size'],
     );
   }
 
   // Validate type field
   if (!('type' in obj)) {
-    throw new JsonValidationError('type', 'field is required');
+    throw new JsonValidationError(
+      'type',
+      translate(BrightChainStrings.Error_JsonValidationError_FieldRequired),
+    );
   }
   if (!isValidBlockType(obj['type'])) {
     throw new JsonValidationError(
       'type',
-      'must be a valid BlockType enum value',
+      translate(
+        BrightChainStrings.Error_JsonValidationError_MustBeValidBlockType,
+      ),
       obj['type'],
     );
   }
 
   // Validate dataType field
   if (!('dataType' in obj)) {
-    throw new JsonValidationError('dataType', 'field is required');
+    throw new JsonValidationError(
+      'dataType',
+      translate(BrightChainStrings.Error_JsonValidationError_FieldRequired),
+    );
   }
   if (!isValidBlockDataType(obj['dataType'])) {
     throw new JsonValidationError(
       'dataType',
-      'must be a valid BlockDataType enum value',
+      translate(
+        BrightChainStrings.Error_JsonValidationError_MustBeValidBlockDataType,
+      ),
       obj['dataType'],
     );
   }
 
   // Validate lengthWithoutPadding field
   if (!('lengthWithoutPadding' in obj)) {
-    throw new JsonValidationError('lengthWithoutPadding', 'field is required');
+    throw new JsonValidationError(
+      'lengthWithoutPadding',
+      translate(BrightChainStrings.Error_JsonValidationError_FieldRequired),
+    );
   }
   if (typeof obj['lengthWithoutPadding'] !== 'number') {
     throw new JsonValidationError(
       'lengthWithoutPadding',
-      'must be a number',
+      translate(BrightChainStrings.Error_JsonValidationError_MustBeNumber),
       obj['lengthWithoutPadding'],
     );
   }
   if (obj['lengthWithoutPadding'] < 0) {
     throw new JsonValidationError(
       'lengthWithoutPadding',
-      'must be non-negative',
+      translate(BrightChainStrings.Error_JsonValidationError_MustBeNonNegative),
       obj['lengthWithoutPadding'],
     );
   }
   if (!Number.isInteger(obj['lengthWithoutPadding'])) {
     throw new JsonValidationError(
       'lengthWithoutPadding',
-      'must be an integer',
+      translate(BrightChainStrings.Error_JsonValidationError_MustBeInteger),
       obj['lengthWithoutPadding'],
     );
   }
 
   // Validate dateCreated field
   if (!('dateCreated' in obj)) {
-    throw new JsonValidationError('dateCreated', 'field is required');
+    throw new JsonValidationError(
+      'dateCreated',
+      translate(BrightChainStrings.Error_JsonValidationError_FieldRequired),
+    );
   }
   if (!isValidDateValue(obj['dateCreated'])) {
     throw new JsonValidationError(
       'dateCreated',
-      'must be a valid ISO 8601 string or Unix timestamp',
+      translate(
+        BrightChainStrings.Error_JsonValidationError_MustBeISO8601DateStringOrUnixTimestamp,
+      ),
       obj['dateCreated'],
     );
   }
@@ -250,19 +284,22 @@ export function isEphemeralBlockMetadataJson(
 
   // Validate creator field
   if (!('creator' in obj)) {
-    throw new JsonValidationError('creator', 'field is required');
+    throw new JsonValidationError(
+      'creator',
+      translate(BrightChainStrings.Error_JsonValidationError_FieldRequired),
+    );
   }
   if (typeof obj['creator'] !== 'string') {
     throw new JsonValidationError(
       'creator',
-      'must be a string',
+      translate(BrightChainStrings.Error_JsonValidationError_MustBeString),
       obj['creator'],
     );
   }
   if (obj['creator'].length === 0) {
     throw new JsonValidationError(
       'creator',
-      'must not be empty',
+      translate(BrightChainStrings.Error_JsonValidationError_MustNotBeEmpty),
       obj['creator'],
     );
   }
@@ -287,7 +324,7 @@ export function parseBlockMetadataJson(json: string): BlockMetadataJson {
   } catch (error) {
     throw new JsonValidationError(
       'json',
-      `JSON parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `${translate(BrightChainStrings.Error_JsonValidationError_JSONParsingFailed)}: ${error instanceof Error ? error.message : translate(BrightChainStrings.Error_Unexpected_Error)}`,
     );
   }
 
@@ -297,7 +334,10 @@ export function parseBlockMetadataJson(json: string): BlockMetadataJson {
   }
 
   // This should never be reached since isBlockMetadataJson throws on failure
-  throw new JsonValidationError('json', 'validation failed');
+  throw new JsonValidationError(
+    'json',
+    translate(BrightChainStrings.Error_JsonValidationError_ValidationFailed),
+  );
 }
 
 /**
@@ -319,7 +359,7 @@ export function parseEphemeralBlockMetadataJson(
   } catch (error) {
     throw new JsonValidationError(
       'json',
-      `JSON parsing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `${translate(BrightChainStrings.Error_JsonValidationError_JSONParsingFailed)}: ${error instanceof Error ? error.message : translate(BrightChainStrings.Error_Unexpected_Error)}`,
     );
   }
 
@@ -329,5 +369,8 @@ export function parseEphemeralBlockMetadataJson(
   }
 
   // This should never be reached since isEphemeralBlockMetadataJson throws on failure
-  throw new JsonValidationError('json', 'validation failed');
+  throw new JsonValidationError(
+    'json',
+    translate(BrightChainStrings.Error_JsonValidationError_ValidationFailed),
+  );
 }

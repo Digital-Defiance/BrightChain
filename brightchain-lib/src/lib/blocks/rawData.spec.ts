@@ -86,7 +86,7 @@ describe('RawDataBlock', () => {
       const data = new Uint8Array(defaultBlockSize + 1);
       crypto.getRandomValues(data);
       expect(() => createTestBlock({ data })).toThrow(
-        `Data length (${defaultBlockSize + 1}) exceeds block size (${defaultBlockSize})`,
+        /Error_BlockError_DataLengthExceedsBlockSizeTemplate/,
       );
     });
   });

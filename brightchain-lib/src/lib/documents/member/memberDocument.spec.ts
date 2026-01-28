@@ -105,8 +105,8 @@ describe('MemberDocument', () => {
     });
 
     it('should throw error when accessing CBL IDs before generation', () => {
-      expect(() => doc.getPublicCBL()).toThrow('Public CBL ID not set');
-      expect(() => doc.getPrivateCBL()).toThrow('Private CBL ID not set');
+      expect(() => doc.getPublicCBL()).toThrow(/Error_BaseMemberDocument_PublicCblIdNotSet/);
+      expect(() => doc.getPrivateCBL()).toThrow(/Error_BaseMemberDocument_PrivateCblIdNotSet/);
     });
   });
 

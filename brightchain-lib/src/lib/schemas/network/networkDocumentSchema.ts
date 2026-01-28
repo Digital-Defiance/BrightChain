@@ -58,14 +58,14 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
         return JSON.parse(json);
       } catch {
         throw new FailedToSerializeError(
-          translate(BrightChainStrings.Error_InvalidCreator),
+          translate(BrightChainStrings.Error_Creator_Invalid),
         );
       }
     },
     hydrate: (value: string): Member => {
       if (!isString(value) && typeof value !== 'object')
         throw new FailedToHydrateError(
-          translate(BrightChainStrings.Error_InvalidCreator),
+          translate(BrightChainStrings.Error_Creator_Invalid),
         );
       return Member.fromJson(
         typeof value === 'string' ? value : JSON.stringify(value),
@@ -81,7 +81,7 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
     hydrate: (value: string): SignatureUint8Array => {
       if (!isString(value))
         throw new FailedToHydrateError(
-          translate(BrightChainStrings.Error_InvalidSignature),
+          translate(BrightChainStrings.Error_Signature_Invalid),
         );
       return base64ToUint8Array(value) as unknown as SignatureUint8Array;
     },
@@ -93,7 +93,7 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
     hydrate: (value: string): ChecksumUint8Array => {
       if (!isString(value))
         throw new FailedToHydrateError(
-          translate(BrightChainStrings.Error_InvalidChecksum),
+          translate(BrightChainStrings.Error_Checksum_Invalid),
         );
       return base64ToUint8Array(value) as unknown as ChecksumUint8Array;
     },
@@ -123,7 +123,7 @@ export const NetworkDocumentSchema: SchemaDefinition<NetworkDocument> = {
       if (value === null || value === undefined) return undefined;
       if (!isStringArray(value))
         throw new FailedToHydrateError(
-          translate(BrightChainStrings.Error_InvalidReferences),
+          translate(BrightChainStrings.Error_References_Invalid),
         );
       return value.map((v) => GuidUint8Array.hydrate(v) as GuidUint8Array);
     },

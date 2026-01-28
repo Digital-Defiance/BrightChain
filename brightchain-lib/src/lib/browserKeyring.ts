@@ -3,8 +3,10 @@
  */
 
 import { randomBytes } from './browserCrypto';
+import { BrightChainStrings } from './enumerations/brightChainStrings';
 import { SystemKeyringErrorType } from './enumerations/systemKeyringErrorType';
 import { SystemKeyringError } from './errors/systemKeyringError';
+import { translate } from './i18n';
 import { IKeyringEntry } from './interfaces/keyringEntry';
 
 export class BrowserKeyring {
@@ -173,7 +175,10 @@ export class BrowserKeyring {
         });
       }
     } catch (error) {
-      console.warn('Failed to load keyring from storage:', error);
+      console.warn(
+        translate(BrightChainStrings.Warning_Keyring_FailedToLoad),
+        error,
+      );
     }
   }
 

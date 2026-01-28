@@ -1,6 +1,8 @@
 import { AvailabilityState } from '../../enumerations/availabilityState';
+import { BrightChainStrings } from '../../enumerations/brightChainStrings';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
 import { IBlockMetadata } from '../storage/blockMetadata';
 
 /**
@@ -138,34 +140,34 @@ export function locationRecordFromJSON(
 ): ILocationRecord {
   // Validate required fields
   if (!serialized.nodeId || typeof serialized.nodeId !== 'string') {
-    throw new Error(
-      'Invalid location record: nodeId is required and must be a string',
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_LocationRecord_NodeIdRequired,
     );
   }
   if (!serialized.lastSeen || typeof serialized.lastSeen !== 'string') {
-    throw new Error(
-      'Invalid location record: lastSeen is required and must be a string',
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_LocationRecord_LastSeenRequired,
     );
   }
   if (typeof serialized.isAuthoritative !== 'boolean') {
-    throw new Error(
-      'Invalid location record: isAuthoritative is required and must be a boolean',
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_LocationRecord_IsAuthoritativeRequired,
     );
   }
 
   // Validate and parse date
   const lastSeen = new Date(serialized.lastSeen);
   if (isNaN(lastSeen.getTime())) {
-    throw new Error(
-      'Invalid location record: lastSeen is not a valid ISO date string',
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_LocationRecord_InvalidLastSeenDate,
     );
   }
 
   // Validate optional latencyMs
   if (serialized.latencyMs !== undefined) {
     if (typeof serialized.latencyMs !== 'number' || serialized.latencyMs < 0) {
-      throw new Error(
-        'Invalid location record: latencyMs must be a non-negative number',
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_LocationRecord_InvalidLatencyMs,
       );
     }
   }
@@ -218,51 +220,51 @@ export function blockMetadataWithLocationFromJSON(
 ): IBlockMetadataWithLocation {
   // Validate required fields from base IBlockMetadata
   if (!serialized.blockId || typeof serialized.blockId !== 'string') {
-    throw new Error(
-      'Invalid metadata: blockId is required and must be a string',
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_BlockIdRequired,
     );
   }
   if (!serialized.createdAt || typeof serialized.createdAt !== 'string') {
-    throw new Error(
-      'Invalid metadata: createdAt is required and must be a string',
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_CreatedAtRequired,
     );
   }
   if (
     !serialized.lastAccessedAt ||
     typeof serialized.lastAccessedAt !== 'string'
   ) {
-    throw new Error(
-      'Invalid metadata: lastAccessedAt is required and must be a string',
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_LastAccessedAtRequired,
     );
   }
   if (
     !serialized.locationUpdatedAt ||
     typeof serialized.locationUpdatedAt !== 'string'
   ) {
-    throw new Error(
-      'Invalid metadata: locationUpdatedAt is required and must be a string',
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_LocationUpdatedAtRequired,
     );
   }
 
   // Validate and parse dates
   const createdAt = new Date(serialized.createdAt);
   if (isNaN(createdAt.getTime())) {
-    throw new Error(
-      'Invalid metadata: createdAt is not a valid ISO date string',
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_InvalidCreatedAtDate,
     );
   }
 
   const lastAccessedAt = new Date(serialized.lastAccessedAt);
   if (isNaN(lastAccessedAt.getTime())) {
-    throw new Error(
-      'Invalid metadata: lastAccessedAt is not a valid ISO date string',
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_InvalidLastAccessedAtDate,
     );
   }
 
   const locationUpdatedAt = new Date(serialized.locationUpdatedAt);
   if (isNaN(locationUpdatedAt.getTime())) {
-    throw new Error(
-      'Invalid metadata: locationUpdatedAt is not a valid ISO date string',
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_InvalidLocationUpdatedAtDate,
     );
   }
 
@@ -270,8 +272,8 @@ export function blockMetadataWithLocationFromJSON(
   if (serialized.expiresAt !== null) {
     expiresAt = new Date(serialized.expiresAt);
     if (isNaN(expiresAt.getTime())) {
-      throw new Error(
-        'Invalid metadata: expiresAt is not a valid ISO date string',
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_Metadata_InvalidExpiresAtDate,
       );
     }
   }
@@ -279,22 +281,29 @@ export function blockMetadataWithLocationFromJSON(
   // Validate availability state
   const validStates = Object.values(AvailabilityState);
   if (!validStates.includes(serialized.availabilityState)) {
-    throw new Error(
-      `Invalid metadata: availabilityState must be one of ${validStates.join(', ')}`,
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_InvalidAvailabilityStateTemplate,
+      { VALID_STATES: validStates.join(', ') },
     );
   }
 
   // Validate and deserialize location records
   if (!Array.isArray(serialized.locationRecords)) {
-    throw new Error('Invalid metadata: locationRecords must be an array');
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_LocationRecordsMustBeArray,
+    );
   }
 
   const locationRecords = serialized.locationRecords.map((record, index) => {
     try {
       return locationRecordFromJSON(record);
     } catch (error) {
-      throw new Error(
-        `Invalid metadata: locationRecords[${index}] - ${error instanceof Error ? error.message : String(error)}`,
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_Metadata_InvalidLocationRecordTemplate,
+        {
+          INDEX: index,
+          ERROR_MESSAGE: error instanceof Error ? error.message : String(error),
+        },
       );
     }
   });
@@ -304,28 +313,34 @@ export function blockMetadataWithLocationFromJSON(
     typeof serialized.accessCount !== 'number' ||
     serialized.accessCount < 0
   ) {
-    throw new Error(
-      'Invalid metadata: accessCount must be a non-negative number',
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_InvalidAccessCount,
     );
   }
   if (
     typeof serialized.targetReplicationFactor !== 'number' ||
     serialized.targetReplicationFactor < 0
   ) {
-    throw new Error(
-      'Invalid metadata: targetReplicationFactor must be a non-negative number',
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_InvalidTargetReplicationFactor,
     );
   }
   if (typeof serialized.size !== 'number' || serialized.size < 0) {
-    throw new Error('Invalid metadata: size must be a non-negative number');
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_InvalidSize,
+    );
   }
 
   // Validate arrays
   if (!Array.isArray(serialized.parityBlockIds)) {
-    throw new Error('Invalid metadata: parityBlockIds must be an array');
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_ParityBlockIdsMustBeArray,
+    );
   }
   if (!Array.isArray(serialized.replicaNodeIds)) {
-    throw new Error('Invalid metadata: replicaNodeIds must be an array');
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_Metadata_ReplicaNodeIdsMustBeArray,
+    );
   }
 
   return {

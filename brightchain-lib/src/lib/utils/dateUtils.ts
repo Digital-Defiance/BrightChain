@@ -7,6 +7,9 @@
  * @module dateUtils
  */
 
+import { BrightChainStrings } from '../enumerations';
+import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
+
 /**
  * Parse a date from various formats (ISO 8601, Unix timestamp).
  *
@@ -60,7 +63,12 @@ export function parseDate(value: string | number): Date {
     }
 
     if (isNaN(date.getTime())) {
-      throw new Error(`Invalid Unix timestamp: ${value}`);
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_InvalidUnixTimestampTemplate,
+        {
+          TIMESTAMP: value,
+        },
+      );
     }
 
     return date;
@@ -71,16 +79,22 @@ export function parseDate(value: string | number): Date {
     const date = new Date(value);
 
     if (isNaN(date.getTime())) {
-      throw new Error(
-        `Invalid date string: "${value}". Expected ISO 8601 format (e.g., "2024-01-23T10:30:00Z") or Unix timestamp.`,
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_InvalidDateStringTemplate,
+        {
+          VALUE: value,
+        },
       );
     }
 
     return date;
   }
 
-  throw new Error(
-    `Invalid date value type: ${typeof value}. Expected string or number.`,
+  throw new TranslatableBrightChainError(
+    BrightChainStrings.Error_InvalidDateValueTypeTemplate,
+    {
+      TYPE: typeof value,
+    },
   );
 }
 
@@ -103,13 +117,18 @@ export function parseDate(value: string | number): Date {
  */
 export function serializeDate(date: Date): string {
   if (!(date instanceof Date)) {
-    throw new Error(
-      `Invalid date object: expected Date instance, got ${typeof date}`,
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_InvalidDateObjectTemplate,
+      {
+        OBJECT_STRING: typeof date,
+      },
     );
   }
 
   if (isNaN(date.getTime())) {
-    throw new Error('Invalid date: date object contains NaN timestamp');
+    throw new TranslatableBrightChainError(
+      BrightChainStrings.Error_InvalidDateNaN,
+    );
   }
 
   return date.toISOString();

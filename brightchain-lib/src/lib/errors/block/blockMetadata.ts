@@ -6,21 +6,21 @@ export class BlockMetadataError extends TypedWithReasonError<BlockMetadataErrorT
   public get reasonMap(): Record<BlockMetadataErrorType, BrightChainStrings> {
     return {
       [BlockMetadataErrorType.CreatorRequired]:
-        BrightChainStrings.Error_BlockMetadataErrorCreatorRequired,
+        BrightChainStrings.Error_BlockMetadataError_CreatorRequired,
       [BlockMetadataErrorType.EncryptorRequired]:
-        BrightChainStrings.Error_BlockMetadataErrorEncryptorRequired,
+        BrightChainStrings.Error_BlockMetadataError_EncryptorRequired,
       [BlockMetadataErrorType.InvalidBlockMetadata]:
-        BrightChainStrings.Error_BlockMetadataErrorInvalidBlockMetadata,
+        BrightChainStrings.Error_BlockMetadataError_InvalidBlockMetadata,
       [BlockMetadataErrorType.MetadataRequired]:
-        BrightChainStrings.Error_BlockMetadataErrorMetadataRequired,
+        BrightChainStrings.Error_BlockMetadataError_MetadataRequired,
       [BlockMetadataErrorType.MissingRequiredMetadata]:
-        BrightChainStrings.Error_BlockMetadataErrorMissingRequiredMetadata,
+        BrightChainStrings.Error_BlockMetadataError_MissingRequiredMetadata,
       [BlockMetadataErrorType.CreatorIdMismatch]:
-        BrightChainStrings.Error_BlockMetadataErrorCreatorIdMismatch,
+        BrightChainStrings.Error_BlockMetadataError_CreatorIdMismatch,
     };
   }
   constructor(type: BlockMetadataErrorType, _language?: string) {
-    super(BrightChainStrings.Error_BlockMetadataTemplate, type, undefined);
+    super(BrightChainStrings.Error_BlockMetadata_Template, type, undefined);
     this.name = 'BlockMetadataError';
   }
 }

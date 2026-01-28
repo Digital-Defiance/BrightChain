@@ -1,7 +1,9 @@
 import { TUPLE } from '../../constants';
+import { BrightChainStrings } from '../../enumerations';
 import { DocumentErrorType } from '../../enumerations/documentErrorType';
 import { DocumentError } from '../../errors/document';
 import { NotImplementedError } from '../../errors/notImplemented';
+import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
 import {
   IHydrationSchema,
   IOperationalFactory,
@@ -98,19 +100,31 @@ export class Document<T> {
       const value = data[key];
       if (Array.isArray(schemaDef)) {
         if (!Array.isArray(value)) {
-          throw new Error(`Field ${key} should be an array.`);
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_Document_FieldShouldBeArrayTemplate,
+            { FIELD: key },
+          );
         }
         for (const item of value) {
           if (!this.validateType(item, schemaDef[0].type)) {
-            throw new Error(`Invalid value in array for ${key}`);
+            throw new TranslatableBrightChainError(
+              BrightChainStrings.Error_Document_InvalidValueInArrayTemplate,
+              { KEY: key },
+            );
           }
         }
       } else if (typeof schemaDef === 'object' && 'type' in schemaDef) {
         if (schemaDef.required && value === undefined) {
-          throw new Error(`Field ${key} is required.`);
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_Document_FieldIsRequiredTemplate,
+            { FIELD: key },
+          );
         }
         if (value !== undefined && !this.validateType(value, schemaDef.type)) {
-          throw new Error(`Field ${key} is invalid.`);
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_Document_FieldIsInvalidTemplate,
+            { FIELD: key },
+          );
         }
       } else if (typeof schemaDef === 'object' && value !== undefined) {
         this.validateSchema(value as Partial<T>);
@@ -132,14 +146,23 @@ export class Document<T> {
           (!Array.isArray(value) ||
             !value.every((item) => this.validateType(item, schemaDef[0].type)))
         ) {
-          throw new Error(`Invalid value for ${String(key)}`);
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_Document_InvalidValueTemplate,
+            { FIELD: String(key) },
+          );
         }
       } else if (typeof schemaDef === 'object' && 'type' in schemaDef) {
         if (value !== undefined && !this.validateType(value, schemaDef.type)) {
-          throw new Error(`Invalid value for ${String(key)}`);
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_Document_InvalidValueTemplate,
+            { FIELD: String(key) },
+          );
         }
         if (schemaDef.required && value === undefined) {
-          throw new Error(`Field ${String(key)} is required.`);
+          throw new TranslatableBrightChainError(
+            BrightChainStrings.Error_Document_FieldIsRequiredTemplate,
+            { FIELD: String(key) },
+          );
         }
       } else if (typeof schemaDef === 'object' && value !== undefined) {
         this.validateSchema(value as Partial<T>);

@@ -79,8 +79,7 @@ export class DiskCBLStore<
 
     this._blockService = getGlobalServiceProvider<TID>().blockService;
     this._cblService = getGlobalServiceProvider<TID>().cblService;
-    this._checksumService =
-      getGlobalServiceProvider<TID>().checksumService;
+    this._checksumService = getGlobalServiceProvider<TID>().checksumService;
   }
 
   /**
@@ -248,8 +247,7 @@ export class DiskCBLStore<
 
     // Hydrate the creator
     const idProvider =
-      getGlobalServiceProvider<TID>().eciesService.constants
-        .idProvider;
+      getGlobalServiceProvider<TID>().eciesService.constants.idProvider;
     const creator: Member<TID> =
       this._activeUser &&
       arraysEqual(

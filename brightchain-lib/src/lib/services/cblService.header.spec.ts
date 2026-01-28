@@ -27,6 +27,7 @@ import CONSTANTS, { TUPLE } from '../constants';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
 import { BlockSize } from '../enumerations/blockSize';
 import { CblError } from '../errors/cblError';
+import { initializeBrightChain } from '../init';
 import { ServiceProvider } from './service.provider';
 
 describe('CBL Header Verification', () => {
@@ -35,8 +36,6 @@ describe('CBL Header Verification', () => {
   const testDate = new Date('2024-01-15T12:00:00.000Z');
 
   beforeAll(() => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { initializeBrightChain } = require('../init');
     initializeBrightChain();
     ServiceProvider.resetInstance();
     serviceProvider = ServiceProvider.getInstance();

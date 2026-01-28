@@ -7,17 +7,17 @@ export class MemoryTupleError extends TypedError<MemoryTupleErrorType> {
   public get reasonMap(): Record<MemoryTupleErrorType, BrightChainStrings> {
     return {
       [MemoryTupleErrorType.InvalidTupleSize]:
-        BrightChainStrings.Error_MemoryTupleErrorInvalidTupleSizeTemplate,
+        BrightChainStrings.Error_MemoryTupleError_InvalidTupleSizeTemplate,
       [MemoryTupleErrorType.BlockSizeMismatch]:
-        BrightChainStrings.Error_MemoryTupleErrorBlockSizeMismatch,
+        BrightChainStrings.Error_MemoryTupleError_BlockSizeMismatch,
       [MemoryTupleErrorType.NoBlocksToXor]:
-        BrightChainStrings.Error_MemoryTupleErrorNoBlocksToXor,
+        BrightChainStrings.Error_MemoryTupleError_NoBlocksToXor,
       [MemoryTupleErrorType.InvalidBlockCount]:
-        BrightChainStrings.Error_MemoryTupleErrorInvalidBlockCount,
+        BrightChainStrings.Error_MemoryTupleError_InvalidBlockCount,
       [MemoryTupleErrorType.ExpectedBlockIds]:
-        BrightChainStrings.Error_MemoryTupleErrorExpectedBlockIdsTemplate,
+        BrightChainStrings.Error_MemoryTupleError_ExpectedBlockIdsTemplate,
       [MemoryTupleErrorType.ExpectedBlocks]:
-        BrightChainStrings.Error_MemoryTupleErrorExpectedBlocksTemplate,
+        BrightChainStrings.Error_MemoryTupleError_ExpectedBlocksTemplate,
     };
   }
   constructor(

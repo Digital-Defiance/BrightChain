@@ -10,11 +10,13 @@ import {
   TransformOptions,
 } from './browserStream';
 import { TUPLE } from './constants';
+import { BrightChainStrings } from './enumerations';
 import { BlockDataType } from './enumerations/blockDataType';
 import { BlockSize } from './enumerations/blockSize';
 import { BlockType } from './enumerations/blockType';
 import { StreamErrorType } from './enumerations/streamErrorType';
 import { StreamError } from './errors/streamError';
+import { TranslatableBrightChainError } from './errors/translatableBrightChainError';
 import { getGlobalServiceProvider } from './services/globalServiceProvider';
 
 /**
@@ -104,7 +106,9 @@ export class PrimeTupleGeneratorStream<
       callback(
         error instanceof Error
           ? error
-          : new Error('Unknown error in transform'),
+          : new TranslatableBrightChainError(
+              BrightChainStrings.PrimeTupleGeneratorStream_UnknownErrorInTransform,
+            ),
       );
     }
   }
@@ -152,7 +156,9 @@ export class PrimeTupleGeneratorStream<
       this.destroy(
         error instanceof Error
           ? error
-          : new Error('Unknown error in makeTuple'),
+          : new TranslatableBrightChainError(
+              BrightChainStrings.PrimeTupleGeneratorStream_UnknownErrorInMakeTuple,
+            ),
       );
     }
   }
@@ -176,7 +182,11 @@ export class PrimeTupleGeneratorStream<
       callback();
     } catch (error) {
       callback(
-        error instanceof Error ? error : new Error('Unknown error in flush'),
+        error instanceof Error
+          ? error
+          : new TranslatableBrightChainError(
+              BrightChainStrings.PrimeTupleGeneratorStream_UnknownErrorInFlush,
+            ),
       );
     }
   }
