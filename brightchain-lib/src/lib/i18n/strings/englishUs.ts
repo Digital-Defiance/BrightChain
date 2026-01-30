@@ -1,9 +1,9 @@
 import { StringsCollection } from '@digitaldefiance/i18n-lib';
-import { BrightChainStrings } from '../../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
 
 const site = 'BrightChain';
 
-export const AmericanEnglishStrings: StringsCollection<BrightChainStrings> = {
+export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
   // NOTE: Admin, i18n, common UI, and many error strings have been moved to external libraries
   // Use SuiteCoreStringKey from @digitaldefiance/suite-core-lib for common errors
   // Use EciesStringKey from @digitaldefiance/ecies-lib for ECIES/Member errors

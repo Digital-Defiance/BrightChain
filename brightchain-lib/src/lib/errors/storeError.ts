@@ -1,9 +1,9 @@
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { TypedError } from './typedError';
 
 export class StoreError extends TypedError<StoreErrorType> {
-  public get reasonMap(): Record<StoreErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<StoreErrorType, BrightChainStringKey> {
     return {
       [StoreErrorType.StorePathRequired]:
         BrightChainStrings.Error_StoreError_StorePathRequired,

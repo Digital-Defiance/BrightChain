@@ -1,9 +1,9 @@
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { TupleErrorType } from '../enumerations/tupleErrorType';
 import { TypedError } from './typedError';
 
 export class TupleError extends TypedError<TupleErrorType> {
-  public get reasonMap(): Record<TupleErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<TupleErrorType, BrightChainStringKey> {
     return {
       [TupleErrorType.InvalidTupleSize]:
         BrightChainStrings.Error_TupleError_InvalidTupleSize,
