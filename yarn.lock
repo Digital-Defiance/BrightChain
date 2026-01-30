@@ -2003,7 +2003,7 @@ __metadata:
   resolution: "@brightchain/brightchain-api-lib@workspace:brightchain-api-lib"
   dependencies:
     "@aws-sdk/client-ses": "npm:^3.859.0"
-    "@brightchain/brightchain-lib": "npm:0.11.0"
+    "@brightchain/brightchain-lib": "npm:0.12.0"
     "@digitaldefiance/branded-enum": "npm:^0.0.6"
     "@digitaldefiance/enclave-bridge-client": "npm:^1.1.0"
     "@digitaldefiance/i18n-lib": "npm:^4.0.5"
@@ -2041,7 +2041,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchain-lib@npm:0.11.0, @brightchain/brightchain-lib@npm:^0.11.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
+"@brightchain/brightchain-lib@npm:0.12.0, @brightchain/brightchain-lib@npm:^0.12.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
   dependencies:
@@ -11718,19 +11718,19 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "brightchain-showcase@workspace:showcase"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.11.0"
+    "@brightchain/brightchain-lib": "npm:^0.12.0"
     "@digitaldefiance/ecies-lib": "npm:^4.15.6"
     "@digitaldefiance/i18n-lib": "npm:^4.0.5"
     "@esbuild-plugins/node-globals-polyfill": "npm:^0.2.3"
     "@esbuild-plugins/node-modules-polyfill": "npm:^0.2.2"
     "@eslint/js": "npm:^9.39.1"
     "@ethereumjs/wallet": "npm:^10.0.0"
-    "@noble/curves": "npm:^1.9.0"
-    "@noble/hashes": "npm:^1.8.0"
+    "@noble/curves": "npm:^1.4.2"
+    "@noble/hashes": "npm:^1.4.0"
     "@rollup/plugin-alias": "npm:^6.0.0"
     "@rollup/plugin-commonjs": "npm:^29.0.0"
     "@rollup/plugin-node-resolve": "npm:^16.0.3"
-    "@scure/bip32": "npm:1.7.0"
+    "@scure/bip32": "npm:^1.4.0"
     "@scure/bip39": "npm:^1.5.0"
     "@testing-library/dom": "npm:^10.4.1"
     "@testing-library/jest-dom": "npm:^6.9.1"
