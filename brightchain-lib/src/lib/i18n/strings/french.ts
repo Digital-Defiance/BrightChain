@@ -1,7 +1,7 @@
 import { StringsCollection } from '@digitaldefiance/i18n-lib';
-import { BrightChainStrings } from '../../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
 
-export const FrenchStrings: StringsCollection<BrightChainStrings> = {
+export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
   // UI Strings
   [BrightChainStrings.Common_BlockSize]: 'Taille de bloc',
   [BrightChainStrings.Common_AtIndexTemplate]: "{OPERATION} à l'index {INDEX}",

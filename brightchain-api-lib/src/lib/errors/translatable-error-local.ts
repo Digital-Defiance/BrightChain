@@ -5,14 +5,14 @@ import {
   LanguageContextSpace,
 } from '@digitaldefiance/i18n-lib';
 import {
-  SuiteCoreStringKey,
+  SuiteCoreStringKeyValue,
   getSuiteCoreTranslation as translate,
 } from '@digitaldefiance/suite-core-lib';
 import { StringLanguage } from '../interfaces/request-user';
 
 export class TranslatableError extends HandleableError {
   constructor(
-    string: SuiteCoreStringKey,
+    string: SuiteCoreStringKeyValue,
     otherVars?: Record<string, string | number>,
     language?: StringLanguage,
     context?: LanguageContextSpace,

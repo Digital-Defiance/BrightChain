@@ -1,7 +1,7 @@
 import { StringsCollection } from '@digitaldefiance/i18n-lib';
-import { BrightChainStrings } from '../../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
 
-export const MandarinStrings: StringsCollection<BrightChainStrings> = {
+export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   // UI Strings
   [BrightChainStrings.Common_BlockSize]: '区块大小',
   [BrightChainStrings.Common_AtIndexTemplate]: '在索引{INDEX}处{OPERATION}',

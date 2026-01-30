@@ -1,9 +1,9 @@
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
 import { TypedError } from './typedError';
 
 export class SealingError extends TypedError<SealingErrorType> {
-  public get reasonMap(): Record<SealingErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<SealingErrorType, BrightChainStringKey> {
     return {
       [SealingErrorType.InvalidBitRange]:
         BrightChainStrings.Error_SealingError_InvalidBitRange,

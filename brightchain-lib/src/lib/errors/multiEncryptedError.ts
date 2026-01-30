@@ -1,11 +1,11 @@
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { MultiEncryptedErrorType } from '../enumerations/multiEncryptedErrorType';
 import { TypedError } from './typedError';
 
 export class MultiEncryptedError extends TypedError<MultiEncryptedErrorType> {
   protected get reasonMap(): Record<
     MultiEncryptedErrorType,
-    BrightChainStrings
+    BrightChainStringKey
   > {
     return {
       [MultiEncryptedErrorType.DataTooShort]:

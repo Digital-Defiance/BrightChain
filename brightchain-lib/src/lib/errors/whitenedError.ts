@@ -1,9 +1,9 @@
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
 import { TypedError } from './typedError';
 
 export class WhitenedError extends TypedError<WhitenedErrorType> {
-  public get reasonMap(): Record<WhitenedErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<WhitenedErrorType, BrightChainStringKey> {
     return {
       [WhitenedErrorType.BlockNotReadable]:
         BrightChainStrings.Error_WhitenedError_BlockNotReadable,

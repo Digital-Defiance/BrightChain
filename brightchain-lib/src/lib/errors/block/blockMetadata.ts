@@ -1,9 +1,9 @@
 import { BlockMetadataErrorType } from '../../enumerations/blockMetadataErrorType';
-import { BrightChainStrings } from '../../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
 import { TypedWithReasonError } from '../typedWithReasonError';
 
 export class BlockMetadataError extends TypedWithReasonError<BlockMetadataErrorType> {
-  public get reasonMap(): Record<BlockMetadataErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<BlockMetadataErrorType, BrightChainStringKey> {
     return {
       [BlockMetadataErrorType.CreatorRequired]:
         BrightChainStrings.Error_BlockMetadataError_CreatorRequired,

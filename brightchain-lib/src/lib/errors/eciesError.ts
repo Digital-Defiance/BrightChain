@@ -1,15 +1,18 @@
-import { EciesStringKey } from '@digitaldefiance/ecies-lib';
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import {
+  EciesStringKey,
+  EciesStringKeyValue,
+} from '@digitaldefiance/ecies-lib';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { EciesErrorType } from '../enumerations/eciesErrorType';
 import { TypedError } from './typedError';
 
 export class EciesError extends TypedError<
   EciesErrorType,
-  BrightChainStrings | EciesStringKey
+  BrightChainStringKey | EciesStringKeyValue
 > {
   public get reasonMap(): Record<
     EciesErrorType,
-    BrightChainStrings | EciesStringKey
+    BrightChainStringKey | EciesStringKeyValue
   > {
     return {
       [EciesErrorType.InvalidHeaderLength]:

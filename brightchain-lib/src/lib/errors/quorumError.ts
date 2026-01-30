@@ -1,9 +1,9 @@
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { QuorumErrorType } from '../enumerations/quorumErrorType';
 import { TypedError } from './typedError';
 
 export class QuorumError extends TypedError<QuorumErrorType> {
-  public get reasonMap(): Record<QuorumErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<QuorumErrorType, BrightChainStringKey> {
     return {
       [QuorumErrorType.InvalidQuorumId]:
         BrightChainStrings.Error_QuorumError_InvalidQuorumId,

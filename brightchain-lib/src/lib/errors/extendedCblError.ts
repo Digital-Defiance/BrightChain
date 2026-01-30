@@ -1,5 +1,5 @@
 import { BlockSize } from '../enumerations/blockSize';
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
 import { TypedError } from './typedError';
 
@@ -7,7 +7,7 @@ export class ExtendedCblError extends TypedError<ExtendedCblErrorType> {
   public readonly blockSize?: BlockSize;
   public readonly dataSize?: number;
   public readonly error?: string;
-  public get reasonMap(): Record<ExtendedCblErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<ExtendedCblErrorType, BrightChainStringKey> {
     return {
       [ExtendedCblErrorType.CreatorUndefined]:
         BrightChainStrings.Error_CblError_CreatorUndefined,

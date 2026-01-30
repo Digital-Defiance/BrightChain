@@ -1,10 +1,10 @@
 import { LanguageCode } from '@digitaldefiance/i18n-lib';
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { HandleTupleErrorType } from '../enumerations/handleTupleErrorType';
 import { TypedError } from './typedError';
 
 export class HandleTupleError extends TypedError<HandleTupleErrorType> {
-  public get reasonMap(): Record<HandleTupleErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<HandleTupleErrorType, BrightChainStringKey> {
     return {
       [HandleTupleErrorType.InvalidTupleSize]:
         BrightChainStrings.Error_HandleTupleError_InvalidTupleSizeTemplate,

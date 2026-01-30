@@ -37,8 +37,8 @@
   "author": "Digital Defiance",
   "license": "MIT",
   "dependencies": {
-    "@digitaldefiance/ecies-lib": "^4.13.8",
-    "@digitaldefiance/i18n-lib": "^3.8.16",
+    "@digitaldefiance/ecies-lib": "^4.15.6",
+    "@digitaldefiance/i18n-lib": "^4.0.5",
     "tslib": "^2.3.0"
   },
   "scripts": {
