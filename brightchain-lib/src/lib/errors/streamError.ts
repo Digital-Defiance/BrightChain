@@ -1,9 +1,9 @@
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { StreamErrorType } from '../enumerations/streamErrorType';
 import { TypedError } from './typedError';
 
 export class StreamError extends TypedError<StreamErrorType> {
-  protected get reasonMap(): Record<StreamErrorType, BrightChainStrings> {
+  protected get reasonMap(): Record<StreamErrorType, BrightChainStringKey> {
     return {
       [StreamErrorType.BlockSizeRequired]:
         BrightChainStrings.Error_StreamError_BlockSizeRequired,

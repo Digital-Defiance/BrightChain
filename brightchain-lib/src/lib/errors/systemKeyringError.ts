@@ -1,10 +1,10 @@
 import { LanguageCode } from '@digitaldefiance/i18n-lib';
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { SystemKeyringErrorType } from '../enumerations/systemKeyringErrorType';
 import { TypedError } from './typedError';
 
 export class SystemKeyringError extends TypedError<SystemKeyringErrorType> {
-  public get reasonMap(): Record<SystemKeyringErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<SystemKeyringErrorType, BrightChainStringKey> {
     return {
       [SystemKeyringErrorType.KeyNotFound]:
         BrightChainStrings.Error_SystemKeyringError_KeyNotFoundTemplate,

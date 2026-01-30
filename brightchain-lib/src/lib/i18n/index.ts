@@ -7,6 +7,7 @@
 import {
   EciesComponentId,
   EciesStringKey,
+  EciesStringKeyValue,
   getEciesI18nEngine,
 } from '@digitaldefiance/ecies-lib';
 import {
@@ -18,8 +19,38 @@ import {
   SuiteCoreComponentId,
   SuiteCoreComponentStrings,
   SuiteCoreStringKey,
+  SuiteCoreStringKeyValue,
 } from '@digitaldefiance/suite-core-lib';
-import { BrightChainStrings } from '../enumerations/brightChainStrings';
+
+/**
+ * Set of all ECIES string keys for O(1) lookup
+ * This is more reliable than prefix matching since EciesStringKey
+ * contains multiple prefixes (Error_ECIESError_*, Error_MemberError_*, Error_SecureStorageError_*)
+ */
+const eciesStringKeySet: Set<string> = new Set(Object.values(EciesStringKey));
+
+/**
+ * Set of all SuiteCore string keys for O(1) lookup
+ */
+const suiteCoreStringKeySet: Set<string> = new Set(
+  Object.values(SuiteCoreStringKey),
+);
+
+/**
+ * Set of all BrightChain string keys for O(1) lookup
+ */
+let brightChainStringKeySet: Set<string> | null = null;
+
+/**
+ * Get the BrightChain string key set (lazy initialization)
+ */
+function getBrightChainStringKeySet(): Set<string> {
+  if (!brightChainStringKeySet) {
+    brightChainStringKeySet = new Set(Object.values(BrightChainStrings));
+  }
+  return brightChainStringKeySet;
+}
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { BritishEnglishStrings } from './strings/englishUK';
 import { AmericanEnglishStrings } from './strings/englishUs';
@@ -40,14 +71,14 @@ export * from './strings';
 /**
  * BrightChain i18n engine singleton
  */
-let engine: PluginI18nEngine<string> | null = null;
+let engine: PluginI18nEngine<BrightChainStringKey> | null = null;
 
 /**
  * Component ID for all BrightChain strings
  */
 export const BrightChainComponentId = 'brightchain.strings';
 
-export const Strings: MasterStringsCollection<string, string> = {
+export const Strings: MasterStringsCollection<BrightChainStringKey, string> = {
   [I18nLanguageCodes.DE]: GermanStrings,
   [I18nLanguageCodes.EN_US]: AmericanEnglishStrings,
   [I18nLanguageCodes.EN_GB]: BritishEnglishStrings,
@@ -61,7 +92,7 @@ export const Strings: MasterStringsCollection<string, string> = {
 /**
  * Initialize the BrightChain i18n engine
  */
-function initEngine(): PluginI18nEngine<string> {
+function initEngine(): PluginI18nEngine<BrightChainStringKey> {
   if (engine) {
     return engine;
   }
@@ -110,26 +141,22 @@ function initEngine(): PluginI18nEngine<string> {
     },
   ]);
 
-  // Convert StringNames enum values to an array of string keys
-  const stringKeys = Object.values(BrightChainStrings);
-
-  // Register all strings in a single component
-  engine.registerComponent({
+  // Register all strings in a single component using branded enum
+  engine.registerBrandedComponent({
     component: {
       id: BrightChainComponentId,
       name: 'BrightChain Strings',
-      stringKeys,
+      stringKeys: BrightChainStrings,
     },
     strings: Strings,
   });
 
-  // Register SuiteCoreStringKey translations from the external library
-  const suiteCoreStringKeys = Object.values(SuiteCoreStringKey);
-  engine.registerComponent({
+  // Register SuiteCoreStringKey translations from the external library (assume branded)
+  engine.registerBrandedComponent({
     component: {
       id: SuiteCoreComponentId,
       name: 'Suite Core Strings',
-      stringKeys: suiteCoreStringKeys,
+      stringKeys: SuiteCoreStringKey,
     },
     strings: SuiteCoreComponentStrings,
   });
@@ -140,7 +167,7 @@ function initEngine(): PluginI18nEngine<string> {
 /**
  * Get the BrightChain i18n engine
  */
-export function getI18n(): PluginI18nEngine<string> {
+export function getI18n(): PluginI18nEngine<BrightChainStringKey> {
   return engine || initEngine();
 }
 
@@ -148,44 +175,53 @@ export function getI18n(): PluginI18nEngine<string> {
  * Translate a string by StringNames key
  * Backward compatible with existing code
  * Now supports external string keys from @digitaldefiance packages
+ *
+ * Uses Set-based lookup for reliable enum detection instead of prefix matching,
+ * since EciesStringKey contains multiple prefixes (Error_ECIESError_*,
+ * Error_MemberError_*, Error_SecureStorageError_*)
  */
 export function translate(
-  stringName: BrightChainStrings | SuiteCoreStringKey | EciesStringKey | string,
+  stringName: BrightChainStringKey | SuiteCoreStringKeyValue | EciesStringKeyValue | string,
   vars?: Record<string, string | number>,
   language?: string,
 ): string {
-  // Check if it's an ECIES string key
-  if (
-    typeof stringName === 'string' &&
-    stringName.startsWith('Error_ECIESError_')
-  ) {
+  const key = String(stringName);
+
+  // Check if it's an ECIES string key (O(1) Set lookup)
+  if (eciesStringKeySet.has(key)) {
     try {
       const eciesEngine = getEciesI18nEngine();
       return eciesEngine.translate(
         EciesComponentId,
-        stringName as EciesStringKey,
+        key as EciesStringKeyValue,
         vars,
         language,
       );
     } catch (error) {
-      console.warn(`ECIES translation failed for ${stringName}:`, error);
-      return stringName;
+      console.warn(`ECIES translation failed for ${key}:`, error);
+      return key;
     }
   }
 
+  // Check if it's a SuiteCore string key (O(1) Set lookup)
+  if (suiteCoreStringKeySet.has(key)) {
+    const eng = getI18n();
+    try {
+      // SuiteCoreStringKey assumed branded
+      return eng.translate(SuiteCoreComponentId, key as any, vars, language as any);
+    } catch (error) {
+      console.warn(`SuiteCore translation failed for ${key}:`, error);
+      return key;
+    }
+  }
+
+  // Default to BrightChain component
   const eng = getI18n();
   try {
-    // Try BrightChain component first
-    return eng.translate(BrightChainComponentId, stringName, vars, language);
+    return eng.translate(BrightChainComponentId, key as BrightChainStringKey, vars, language as any);
   } catch (error) {
-    // If not found in BrightChain, try SuiteCore component
-    try {
-      return eng.translate(SuiteCoreComponentId, stringName, vars, language);
-    } catch {
-      // Fallback to string name if translation fails in both components
-      console.warn(`Translation failed for ${stringName}:`, error);
-      return stringName;
-    }
+    console.warn(`Translation failed for ${key}:`, error);
+    return key;
   }
 }
 
@@ -276,28 +312,11 @@ export const buildNestedI18nForLanguage = (language: string) => {
  * @param _enumObj - The enum object (used for type inference)
  * @param translations - The translation object mapping language codes to enum translations
  * @returns The same translation object
- *
- * @example
- * ```typescript
- * const translations = registerTranslation(
- *   MyEnum,
- *   createTranslations({
- *     [LanguageCodes.EN_US]: {
- *       [MyEnum.Value1]: 'Value One',
- *     },
- *   }),
- * );
- * ```
  */
-export function registerTranslation<
-  E extends Record<string, string | number>,
-  T extends E[keyof E],
->(
-  _enumObj: E,
-  translations: { [languageCode: string]: Record<T, string> },
-): { [languageCode: string]: Record<T, string> } {
-  // In the future, this could register translations with the i18n engine
-  // For now, it's a pass-through that enables type-safe translation definitions
+export function registerTranslation<T extends Record<string, string | number>>(
+  _enumObj: T,
+  translations: Record<string, Record<T[keyof T], string>>,
+): Record<string, Record<T[keyof T], string>> {
   return translations;
 }
 

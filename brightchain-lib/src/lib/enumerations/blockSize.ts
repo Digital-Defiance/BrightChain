@@ -14,7 +14,7 @@
 
 import { InvalidBlockSizeLengthError } from '../errors/invalidBlockSizeLength';
 import { translate } from '../i18n';
-import BrightChainStrings from './brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from './brightChainStrings';
 
 /**
  * Block size exponents (2^x) for calculating block sizes.
@@ -120,7 +120,7 @@ export const validBlockSizes: readonly BlockSize[] = [
  * Human-readable names for block sizes.
  * Used for display and logging purposes.
  */
-export const blockSizeStringNames: Record<BlockSize, BrightChainStrings> = {
+export const blockSizeStringNames: Record<BlockSize, BrightChainStringKey> = {
   [BlockSize.Unknown]: BrightChainStrings.BlockSize_Unknown,
   [BlockSize.Message]: BrightChainStrings.BlockSize_Message,
   [BlockSize.Tiny]: BrightChainStrings.BlockSize_Tiny,

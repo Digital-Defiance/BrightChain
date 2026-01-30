@@ -1,9 +1,9 @@
 import { BlockErrorType } from '../../enumerations/blockErrorType';
-import BrightChainStrings from '../../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
 import { TypedError } from '../typedError';
 
 export class BlockError extends TypedError<BlockErrorType> {
-  public get reasonMap(): Record<BlockErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<BlockErrorType, BrightChainStringKey> {
     return {
       [BlockErrorType.CreatorRequiredForEncryption]:
         BrightChainStrings.Error_BlockError_CreatorRequiredForEncryption,

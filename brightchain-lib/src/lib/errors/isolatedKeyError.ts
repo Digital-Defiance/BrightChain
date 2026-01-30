@@ -1,9 +1,9 @@
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { IsolatedKeyErrorType } from '../enumerations/isolatedKeyErrorType';
 import { TypedError } from './typedError';
 
 export class IsolatedKeyError extends TypedError<IsolatedKeyErrorType> {
-  public get reasonMap(): Record<IsolatedKeyErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<IsolatedKeyErrorType, BrightChainStringKey> {
     return {
       [IsolatedKeyErrorType.InvalidPublicKey]:
         BrightChainStrings.Error_IsolatedKeyError_InvalidPublicKey,

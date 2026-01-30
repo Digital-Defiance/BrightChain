@@ -1,9 +1,9 @@
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { DocumentErrorType } from '../enumerations/documentErrorType';
 import { TypedError } from './typedError';
 
 export class DocumentError extends TypedError<DocumentErrorType> {
-  public get reasonMap(): Record<DocumentErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<DocumentErrorType, BrightChainStringKey> {
     return {
       [DocumentErrorType.FieldRequired]:
         BrightChainStrings.Error_DocumentError_FieldRequiredTemplate,

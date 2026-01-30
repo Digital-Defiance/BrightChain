@@ -1,9 +1,9 @@
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { CblErrorType } from '../enumerations/cblErrorType';
 import { TypedError } from './typedError';
 
 export class CblError extends TypedError<CblErrorType> {
-  protected get reasonMap(): Record<CblErrorType, BrightChainStrings> {
+  protected get reasonMap(): Record<CblErrorType, BrightChainStringKey> {
     return {
       [CblErrorType.CblRequired]: BrightChainStrings.Error_CblError_CblRequired,
       [CblErrorType.WhitenedBlockFunctionRequired]:

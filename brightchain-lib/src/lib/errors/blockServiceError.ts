@@ -1,9 +1,9 @@
 import { BlockServiceErrorType } from '../enumerations/blockServiceErrorType';
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { TypedError } from './typedError';
 
 export class BlockServiceError extends TypedError<BlockServiceErrorType> {
-  public get reasonMap(): Record<BlockServiceErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<BlockServiceErrorType, BrightChainStringKey> {
     return {
       [BlockServiceErrorType.EmptyBlocksArray]:
         BrightChainStrings.Error_BlockServiceError_EmptyBlocksArray,

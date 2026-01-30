@@ -1,8 +1,8 @@
 import { StringsCollection } from '@digitaldefiance/i18n-lib';
-import { BrightChainStrings } from '../../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
 import { AmericanEnglishStrings } from './englishUs';
 
-export const BritishEnglishStrings: StringsCollection<BrightChainStrings> = {
+export const BritishEnglishStrings: StringsCollection<BrightChainStringKey> = {
   ...AmericanEnglishStrings,
   // Override spelling differences between British and American English
 

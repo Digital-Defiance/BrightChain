@@ -1,7 +1,7 @@
 import { StringsCollection } from '@digitaldefiance/i18n-lib';
-import { BrightChainStrings } from '../../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
 
-export const UkrainianStrings: StringsCollection<BrightChainStrings> = {
+export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
   // UI Strings
   [BrightChainStrings.Common_BlockSize]: 'Розмір блоку',
   [BrightChainStrings.Common_AtIndexTemplate]:

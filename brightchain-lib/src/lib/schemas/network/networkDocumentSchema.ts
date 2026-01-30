@@ -8,7 +8,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { base64ToUint8Array, uint8ArrayToBase64 } from '../../bufferUtils';
 import { NetworkDocument } from '../../documents/network/networkDocument';
-import BrightChainStrings from '../../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
 import { FailedToHydrateError } from '../../errors/failedToHydrate';
 import { FailedToSerializeError } from '../../errors/failedToSerialize';
 import { InvalidIDFormatError } from '../../errors/invalidIDFormat';

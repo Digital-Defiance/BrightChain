@@ -1,15 +1,15 @@
 import { HandleableError } from '@digitaldefiance/i18n-lib';
-import BrightChainStrings from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { translate } from '../i18n';
 
 export abstract class TypedWithReasonError<
   T extends string | number,
 > extends HandleableError {
   public readonly type: T;
-  protected abstract get reasonMap(): Record<T, BrightChainStrings>;
+  protected abstract get reasonMap(): Record<T, BrightChainStringKey>;
 
   constructor(
-    reasonTemplate: BrightChainStrings,
+    reasonTemplate: BrightChainStringKey,
     type: T,
     otherVars?: Record<string, string | number>,
   ) {

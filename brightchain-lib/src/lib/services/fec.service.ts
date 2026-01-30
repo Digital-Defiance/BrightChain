@@ -4,7 +4,7 @@ import { ParityBlock } from '../blocks/parity';
 import { RawDataBlock } from '../blocks/rawData';
 import { Readable } from '../browserStream';
 import { BC_FEC } from '../constants';
-import { BrightChainStrings } from '../enumerations';
+import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import BlockDataType from '../enumerations/blockDataType';
 import BlockType from '../enumerations/blockType';
 import { FecErrorType } from '../enumerations/fecErrorType';

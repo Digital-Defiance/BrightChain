@@ -1,10 +1,10 @@
 import { BlockAccessErrorType } from '../../enumerations/blockAccessErrorType';
-import { BrightChainStrings } from '../../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
 import { TypedWithReasonError } from '../typedWithReasonError';
 
 export class BlockAccessError extends TypedWithReasonError<BlockAccessErrorType> {
   public readonly file?: string;
-  public get reasonMap(): Record<BlockAccessErrorType, BrightChainStrings> {
+  public get reasonMap(): Record<BlockAccessErrorType, BrightChainStringKey> {
     return {
       [BlockAccessErrorType.BlockAlreadyExists]:
         BrightChainStrings.Error_BlockAccessError_BlockAlreadyExists,

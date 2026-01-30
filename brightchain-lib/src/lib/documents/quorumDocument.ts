@@ -1,7 +1,7 @@
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { createECIESService } from '../browserConfig';
-import { BrightChainStrings } from '../enumerations';
+import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import { QuorumErrorType } from '../enumerations/quorumErrorType';
 import { QuorumError } from '../errors/quorumError';
 import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';

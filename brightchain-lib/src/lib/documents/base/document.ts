@@ -1,5 +1,5 @@
 import { TUPLE } from '../../constants';
-import { BrightChainStrings } from '../../enumerations';
+import { BrightChainStrings } from '../../enumerations/brightChainStrings';
 import { DocumentErrorType } from '../../enumerations/documentErrorType';
 import { DocumentError } from '../../errors/document';
 import { NotImplementedError } from '../../errors/notImplemented';

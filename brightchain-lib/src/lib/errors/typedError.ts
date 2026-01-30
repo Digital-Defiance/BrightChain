@@ -1,11 +1,11 @@
 import { HandleableError } from '@digitaldefiance/i18n-lib';
-import { BrightChainStrings } from '../enumerations/brightChainStrings';
+import { BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { translate } from '../i18n';
 import { HandleableErrorOptions } from '../interfaces/handleableErrorOptions';
 
 export abstract class TypedError<
   T extends string | number,
-  K extends string = BrightChainStrings,
+  K extends string = BrightChainStringKey
 > extends HandleableError {
   protected abstract get reasonMap(): Record<T, K>;
 

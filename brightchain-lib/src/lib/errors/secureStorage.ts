@@ -1,15 +1,18 @@
-import { EciesStringKey } from '@digitaldefiance/ecies-lib';
-import { BrightChainStrings } from '../enumerations/brightChainStrings';
+import {
+  EciesStringKey,
+  EciesStringKeyValue,
+} from '@digitaldefiance/ecies-lib';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { SecureStorageErrorType } from '../enumerations/secureStorageErrorType';
 import { TypedError } from './typedError';
 
 export class SecureStorageError extends TypedError<
   SecureStorageErrorType,
-  BrightChainStrings | EciesStringKey
+  BrightChainStringKey | EciesStringKeyValue
 > {
   public get reasonMap(): Record<
     SecureStorageErrorType,
-    BrightChainStrings | EciesStringKey
+    BrightChainStringKey | EciesStringKeyValue
   > {
     return {
       [SecureStorageErrorType.DecryptedValueChecksumMismatch]:
