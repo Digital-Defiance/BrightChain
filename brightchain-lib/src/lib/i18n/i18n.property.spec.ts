@@ -5,7 +5,7 @@
 
 import { SuiteCoreStringKey } from '@digitaldefiance/suite-core-lib';
 import fc from 'fast-check';
-import { BrightChainStrings } from '../enumerations/brightChainStrings';
+import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { BritishEnglishStrings } from './strings/englishUK';
 import { AmericanEnglishStrings } from './strings/englishUs';
@@ -67,9 +67,8 @@ describe('Feature: error-message-internationalization, Property Tests', () => {
     fc.assert(
       fc.property(
         fc.constantFrom(...Object.values(BrightChainStrings)),
-        (key) => {
-          // Get the English translation for this key
-          const translation = AmericanEnglishStrings[key as BrightChainStrings];
+        (key: keyof typeof AmericanEnglishStrings) => {
+          const translation = AmericanEnglishStrings[key];
 
           if (!translation) {
             // If no translation exists, we can't check this property
@@ -112,7 +111,7 @@ describe('Feature: error-message-internationalization, Property Tests', () => {
         (key) => {
           // Check if this key exists in SuiteCoreStringKey
           const existsInSuiteCore = Object.values(SuiteCoreStringKey).includes(
-            key as unknown as SuiteCoreStringKey,
+            key as string,
           );
 
           if (existsInSuiteCore) {
@@ -143,7 +142,7 @@ describe('Feature: error-message-internationalization, Property Tests', () => {
     // Get keys that exist in English (US) - the source of truth
     const englishKeys = Object.keys(
       AmericanEnglishStrings,
-    ) as BrightChainStrings[];
+    ) as BrightChainStringKey[];
 
     // For non-English languages, we check that they have translations for
     // keys that are part of the i18n feature scope (newly added error strings).
@@ -208,7 +207,7 @@ describe('Feature: error-message-internationalization, Property Tests', () => {
           const missingLanguages: string[] = [];
 
           for (const lang of allLanguages) {
-            const translation = lang.translations[key as BrightChainStrings];
+            const translation = lang.translations[key];
             if (!translation || translation === '') {
               missingLanguages.push(lang.name);
             }
@@ -250,11 +249,11 @@ describe('Feature: error-message-internationalization, Property Tests', () => {
     fc.assert(
       fc.property(
         fc.constantFrom(...Object.values(BrightChainStrings)),
-        (key) => {
+        (key: BrightChainStringKey) => {
           let allValid = true;
 
           for (const lang of allLanguages) {
-            const translation = lang.translations[key as BrightChainStrings];
+            const translation = lang.translations[key];
             if (!translation) continue;
 
             // Find all template variables in the translation
@@ -304,7 +303,7 @@ describe('Feature: error-message-internationalization, Property Tests', () => {
           try {
             // Create a TranslatableBrightChainError instance
             const error = new TranslatableBrightChainError(
-              key as BrightChainStrings,
+              key,
             );
 
             // TranslatableBrightChainError extends TranslatableError (from i18n-lib),
@@ -359,7 +358,7 @@ describe('Feature: error-message-internationalization, Property Tests', () => {
           try {
             // Create a TranslatableBrightChainError instance
             const error = new TranslatableBrightChainError(
-              key as BrightChainStrings,
+              key,
             );
 
             // Check that error has required properties
