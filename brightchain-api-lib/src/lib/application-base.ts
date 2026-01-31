@@ -13,7 +13,7 @@ import { AppConstants } from './appConstants';
 import { BlockDocumentStore } from './datastore/block-document-store';
 import { DocumentStore } from './datastore/document-store';
 import { Environment } from './environment';
-import { DefaultBackendIdType } from './shared-types';
+import type { DefaultBackendIdType } from './shared-types';
 
 /**
  * Base Application class with core functionality

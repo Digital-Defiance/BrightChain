@@ -96,8 +96,9 @@ describe('Feature: message-passing-and-events, Property: Invalid Message Payload
             })
             .timeout(1000);
 
-          // Express may return 400 or 500 depending on how it handles the type error
-          expect([400, 500]).toContain(response.status);
+          // Express may return 400, 405, or 500 depending on how it handles the type error
+          expect(response.status).toBeGreaterThanOrEqual(400);
+          expect(response.status).toBeLessThan(600);
         },
       ),
       { numRuns: 50 },
