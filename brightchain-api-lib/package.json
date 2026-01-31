@@ -9,7 +9,7 @@
     "@digitaldefiance/branded-enum": "^0.0.6",
     "@digitaldefiance/enclave-bridge-client": "^1.1.0",
     "@digitaldefiance/i18n-lib": "^4.0.5",
-    "@digitaldefiance/node-ecies-lib": "^4.15.6",
+    "@digitaldefiance/node-ecies-lib": "^4.16.1",
     "@ethereumjs/wallet": "^10.0.0",
     "bip39": "^3.1.0",
     "buffer": "^6.0.3",

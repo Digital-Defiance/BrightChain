@@ -116,9 +116,9 @@ export const BrightChainSoupDemo: React.FC = () => {
         setDebugInfo(newBrightChain.getDebugInfo());
 
         const checksumService = new ChecksumService();
-        const eciesService = new ECIESService();
+        const eciesService = new ECIESService<Uint8Array>();
         const enhancedProvider = getEnhancedIdProvider<Uint8Array>();
-        const cblService = new CBLService(
+        const cblService = new CBLService<Uint8Array>(
           checksumService,
           eciesService,
           enhancedProvider,
