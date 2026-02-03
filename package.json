@@ -156,7 +156,7 @@
     "@typescript-eslint/parser": "8.50.1",
     "babel-jest": "30.0.5",
     "cypress": "15.8.1",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.26.0",
     "eslint": "^9.24.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-cypress": "^2.13.4",
