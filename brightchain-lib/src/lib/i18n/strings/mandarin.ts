@@ -727,6 +727,12 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_MemberStore_RollbackFailed]: '回滚成员存储事务失败',
   [BrightChainStrings.Error_MemberCblService_CreateMemberCblFailed]:
     '创建成员CBL失败',
+  [BrightChainStrings.Error_MemberCblService_ChecksumMismatch]:
+    '完整性验证期间区块校验和不匹配',
+  [BrightChainStrings.Error_MemberCblService_BlockRetrievalFailed]:
+    '完整性验证期间检索区块失败',
+  [BrightChainStrings.Error_MemberCblService_MissingRequiredFields]:
+    '成员数据缺少必需字段',
   [BrightChainStrings.Error_DeliveryTimeout_HandleTimeoutFailedTemplate]:
     '处理交付超时失败：{ERROR}',
 
@@ -769,6 +775,8 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   // Member Document Errors
   [BrightChainStrings.Error_MemberDocument_Hint]:
     '请使用 MemberDocument.create() 而不是 new MemberDocument()',
+  [BrightChainStrings.Error_MemberDocument_CBLNotGenerated]:
+    'CBL尚未生成。请在调用toMember()之前调用generateCBLs()',
 
   // Member Profile Document Errors
   [BrightChainStrings.Error_MemberProfileDocument_Hint]:

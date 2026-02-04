@@ -96,53 +96,68 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
         }
         const blockHandle = this.blockStore.get(block.idChecksum);
 
-        // Get random blocks
-        const randomBlocks = await this.blockStore.getRandomBlocks(
+        // Get random blocks, excluding the original block
+        let randomBlocks = await this.blockStore.getRandomBlocks(
           TUPLE.SIZE - 1,
+        );
+        
+        // Filter out the original block from random blocks
+        randomBlocks = randomBlocks.filter(
+          (checksum) => !checksum.equals(block.idChecksum)
         );
 
         // If we don't have enough random blocks, create dummy blocks
         const neededRandomBlocks = TUPLE.SIZE - 1;
         const actualRandomBlocks = randomBlocks.length;
-        const missingBlocks = neededRandomBlocks - actualRandomBlocks;
+        let missingBlocks = neededRandomBlocks - actualRandomBlocks;
 
-        if (missingBlocks > 0) {
+        while (missingBlocks > 0) {
           // Create dummy blocks to fill the gap with the same size as the original blocks
-          for (let i = 0; i < missingBlocks; i++) {
-            const dummyData = new Uint8Array(chunkSize); // Use consistent chunk size
-            crypto.getRandomValues(dummyData);
+          const dummyData = new Uint8Array(chunkSize); // Use consistent chunk size
+          crypto.getRandomValues(dummyData);
 
-            // Calculate proper checksum for the dummy block
-            const dummyChecksum =
-              ServiceProvider.getInstance().checksumService.calculateChecksum(
-                dummyData,
-              );
-
-            const dummyBlock = new RawDataBlock(
-              blockSize,
+          // Calculate proper checksum for the dummy block
+          const dummyChecksum =
+            ServiceProvider.getInstance().checksumService.calculateChecksum(
               dummyData,
-              new Date(),
-              dummyChecksum,
-              BlockType.RawData,
-              BlockDataType.PublicMemberData,
-              true,
-              true,
             );
-            try {
-              await this.blockStore.setData(dummyBlock);
+
+          // Skip if this dummy block has the same checksum as the original block
+          if (dummyChecksum.equals(block.idChecksum)) {
+            continue;
+          }
+
+          // Skip if this dummy block already exists in randomBlocks
+          if (randomBlocks.some((c) => c.equals(dummyChecksum))) {
+            continue;
+          }
+
+          const dummyBlock = new RawDataBlock(
+            blockSize,
+            dummyData,
+            new Date(),
+            dummyChecksum,
+            BlockType.RawData,
+            BlockDataType.PublicMemberData,
+            true,
+            true,
+          );
+          try {
+            await this.blockStore.setData(dummyBlock);
+            randomBlocks.push(dummyBlock.idChecksum);
+            missingBlocks--;
+          } catch (error) {
+            // If block already exists, that's okay
+            if (
+              (error instanceof StoreError &&
+                error.type === StoreErrorType.BlockAlreadyExists) ||
+              (error instanceof Error &&
+                error.message.includes('already exists'))
+            ) {
               randomBlocks.push(dummyBlock.idChecksum);
-            } catch (error) {
-              // If block already exists, that's okay
-              if (
-                (error instanceof StoreError &&
-                  error.type === StoreErrorType.BlockAlreadyExists) ||
-                (error instanceof Error &&
-                  error.message.includes('already exists'))
-              ) {
-                randomBlocks.push(dummyBlock.idChecksum);
-              } else {
-                throw error;
-              }
+              missingBlocks--;
+            } else {
+              throw error;
             }
           }
         }
@@ -164,9 +179,15 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
           new Date(),
         );
 
-        // XOR the tuple and store result
-        await tuple.xor(this.blockStore, metadata);
-        tuples.push(tuple);
+        // XOR the tuple and store result - this creates the whitened block
+        // The whitened block = originalBlock ^ randomBlock1 ^ randomBlock2
+        const xoredHandle = await tuple.xor(this.blockStore, metadata);
+        
+        // Create a new tuple with [whitenedBlock, randomBlock1, randomBlock2]
+        // This is the correct OFF system pattern: store the XORed result with the random blocks
+        // During hydration: whitenedBlock ^ randomBlock1 ^ randomBlock2 = originalBlock
+        const whitenedTuple = new BlockHandleTuple([xoredHandle, ...randomHandles]);
+        tuples.push(whitenedTuple);
       }
 
       // Get all block addresses
@@ -222,7 +243,13 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
   }
 
   /**
-   * Hydrate member from CBL
+   * Hydrate member from CBL with integrity verification.
+   * 
+   * @param cbl - The ConstituentBlockListBlock containing member data
+   * @returns The reconstructed Member object
+   * @throws MemberError with InvalidMemberData if integrity verification fails
+   * @throws MemberError with FailedToHydrateMember if hydration fails
+   * @requirements 5.1, 5.2, 5.3, 5.5
    */
   public async hydrateMember(
     cbl: ConstituentBlockListBlock<TID>,
@@ -230,9 +257,51 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
     try {
       // Use the block store's configured block size
       const blockSize = this.blockStore.blockSize;
+      const checksumService = ServiceProvider.getInstance().checksumService;
 
       // Get tuples from CBL
       const tuples = await cbl.getHandleTuples(this.blockStore);
+
+      // Verify each constituent block's checksum (Requirement 5.2)
+      for (const tuple of tuples) {
+        for (const blockId of tuple.blockIds) {
+          try {
+            const block = await this.blockStore.getData(blockId);
+            const calculatedChecksum = checksumService.calculateChecksum(block.data);
+            
+            if (!calculatedChecksum.equals(blockId)) {
+              // Log integrity failure with debugging details (Requirement 5.5)
+              console.error(
+                translate(BrightChainStrings.Error_MemberCblService_ChecksumMismatch),
+                {
+                  expectedChecksum: blockId.toHex(),
+                  calculatedChecksum: calculatedChecksum.toHex(),
+                },
+              );
+              throw new MemberError(
+                MemberErrorType.InvalidMemberData,
+                LanguageCodes.EN_US,
+              );
+            }
+          } catch (error) {
+            if (error instanceof MemberError) {
+              throw error;
+            }
+            // Log block retrieval failure (Requirement 5.5)
+            console.error(
+              translate(BrightChainStrings.Error_MemberCblService_BlockRetrievalFailed),
+              {
+                blockId: blockId.toHex(),
+                error: error instanceof Error ? error.message : String(error),
+              },
+            );
+            throw new MemberError(
+              MemberErrorType.InvalidMemberData,
+              LanguageCodes.EN_US,
+            );
+          }
+        }
+      }
 
       // XOR each tuple to get original blocks
       const blocks: Uint8Array[] = [];
@@ -275,10 +344,18 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
       const memberJson = new TextDecoder().decode(trimmedData);
 
       try {
-        const member = await Member.fromJson<TID>(memberJson);
+        const eciesService = ServiceProvider.getInstance<TID>().eciesService;
+        const member = await Member.fromJson<TID>(memberJson, eciesService);
 
-        // Verify member data
+        // Verify required member fields (Requirement 5.3)
         if (!member.id || !member.type) {
+          console.error(
+            translate(BrightChainStrings.Error_MemberCblService_MissingRequiredFields),
+            {
+              hasId: !!member.id,
+              hasType: !!member.type,
+            },
+          );
           throw new MemberError(
             MemberErrorType.InvalidMemberData,
             LanguageCodes.EN_US,

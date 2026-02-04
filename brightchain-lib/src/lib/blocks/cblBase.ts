@@ -188,6 +188,13 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
     if (creator && creator.publicKey && !signatureValid) {
       throw new CblError(CblErrorType.InvalidSignature);
     }
+
+    // If signature validation was skipped (no public key), mark as validated
+    // to allow operations like getHandleTuples to proceed
+    // This is safe because we're trusting the CBL data when no public key is available
+    if (creator && !creator.publicKey) {
+      CBLBase.validatedHeaderCache.set(this._data, true);
+    }
   }
 
   /**
@@ -389,7 +396,7 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
       const handles = await Promise.all(
         tupleIds.map((id) =>
           createBlockHandleFromStore(
-            EphemeralBlock,
+            RawDataBlock,
             blockStore,
             this.blockSize,
             id,

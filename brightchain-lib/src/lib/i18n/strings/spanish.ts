@@ -825,6 +825,12 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     'Error al revertir la transacción del almacén de miembros',
   [BrightChainStrings.Error_MemberCblService_CreateMemberCblFailed]:
     'Error al crear el CBL de miembro',
+  [BrightChainStrings.Error_MemberCblService_ChecksumMismatch]:
+    'Discrepancia de suma de verificación del bloque durante la verificación de integridad',
+  [BrightChainStrings.Error_MemberCblService_BlockRetrievalFailed]:
+    'Error al recuperar el bloque durante la verificación de integridad',
+  [BrightChainStrings.Error_MemberCblService_MissingRequiredFields]:
+    'Faltan campos requeridos en los datos del miembro',
   [BrightChainStrings.Error_DeliveryTimeout_HandleTimeoutFailedTemplate]:
     'Error al manejar el tiempo de espera de entrega: {ERROR}',
 
@@ -871,6 +877,8 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
   // Member Document Errors
   [BrightChainStrings.Error_MemberDocument_Hint]:
     'Use MemberDocument.create() en lugar de new MemberDocument()',
+  [BrightChainStrings.Error_MemberDocument_CBLNotGenerated]:
+    'Los CBLs no han sido generados. Llame a generateCBLs() antes de llamar a toMember()',
 
   // Member Profile Document Errors
   [BrightChainStrings.Error_MemberProfileDocument_Hint]:

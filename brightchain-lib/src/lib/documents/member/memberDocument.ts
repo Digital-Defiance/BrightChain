@@ -341,11 +341,38 @@ export class MemberDocument<
   }
 
   /**
-   * Convert back to Member object
+   * Convert back to Member object by reconstructing from CBL data.
+   * 
+   * This method verifies that CBLs have been generated and then uses
+   * MemberCblService.hydrateMember() to reconstruct the member from
+   * the stored CBL data, ensuring a true round-trip verification.
+   * 
+   * @param usePrivate - If true, reconstruct from private CBL; otherwise use public CBL
+   * @returns The reconstructed Member object
+   * @throws {MemberError} with CBLNotGenerated if CBLs have not been generated
+   * @throws {MemberError} with FailedToHydrateMember if hydration fails
+   * 
+   * @requirements 4.1, 4.3
    */
   public async toMember(usePrivate = false): Promise<Member<TID>> {
-    // For now, return the original member since we're not doing full CBL round-trip
-    // In a full implementation, this would reconstruct the member from CBL data
-    return usePrivate ? this.originalPrivateMember : this.originalPublicMember;
+    // Verify CBLs have been generated (Requirement 4.3)
+    if (!this.publicCBLId && !this.privateCBLId) {
+      throw new MemberError(MemberErrorType.CBLNotGenerated);
+    }
+
+    // Get CBL data from toPublicCBL() or toPrivateCBL()
+    const cblData = usePrivate
+      ? await this.toPrivateCBL()
+      : await this.toPublicCBL();
+
+    // Create ConstituentBlockListBlock from data
+    const cbl = new ConstituentBlockListBlock<TID>(
+      cblData,
+      this.originalPublicMember,
+      this._blockSize,
+    );
+
+    // Use MemberCblService.hydrateMember() for reconstruction (Requirement 4.1)
+    return await this.cblService.hydrateMember(cbl);
   }
 }

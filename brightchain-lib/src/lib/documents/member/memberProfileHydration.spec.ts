@@ -51,7 +51,7 @@ describe('MemberProfileHydration', () => {
       const schema = publicMemberProfileHydrationSchema<GuidV4Uint8Array>();
       const storageData = schema.dehydrate(hydratedData);
 
-      expect(storageData.id).toBeInstanceOf(Uint8Array);
+      expect(typeof storageData.id).toBe('string'); // ID is now a hex string for JSON serialization
       expect(storageData.status).toBe(MemberStatusType.Active);
       expect(storageData.reputation).toBe(100);
       expect(storageData.storageQuota).toBe('107374182400'); // BigInt as string
@@ -167,9 +167,9 @@ describe('MemberProfileHydration', () => {
       const schema = privateMemberProfileHydrationSchema<GuidV4Uint8Array>();
       const storageData = schema.dehydrate(hydratedData);
 
-      expect(storageData.id).toBeInstanceOf(Uint8Array);
+      expect(typeof storageData.id).toBe('string'); // ID is now a hex string for JSON serialization
       expect(storageData.trustedPeers).toHaveLength(2);
-      expect(storageData.trustedPeers[0]).toBeInstanceOf(Uint8Array);
+      expect(typeof storageData.trustedPeers[0]).toBe('string'); // Peer IDs are now hex strings
       expect(storageData.blockedPeers).toHaveLength(0);
       expect(storageData.settings).toEqual({
         theme: 'dark',

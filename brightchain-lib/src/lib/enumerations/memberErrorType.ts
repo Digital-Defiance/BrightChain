@@ -131,6 +131,11 @@ export enum MemberErrorType {
    * Data to encrypt contains invalid characters
    */
   InvalidEncryptionData = 'InvalidEncryptionData',
+
+  /**
+   * CBL has not been generated yet
+   */
+  CBLNotGenerated = 'CBLNotGenerated',
 }
 
 export default MemberErrorType;
