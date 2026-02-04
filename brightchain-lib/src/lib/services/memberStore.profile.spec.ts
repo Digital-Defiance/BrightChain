@@ -131,21 +131,30 @@ describe('MemberStore - Profile Operations', () => {
       testMemberId = reference.id;
     });
 
-    it('should retrieve member profile by ID', async () => {
+    it('should retrieve profile data successfully', async () => {
+      // The implementation now correctly stores and retrieves profile data
       const profile = await memberStore.getMemberProfile(testMemberId);
 
-      expect(profile).toBeDefined();
       expect(profile.publicProfile).toBeDefined();
-      expect(profile.privateProfile).toBeDefined();
+      expect(profile.publicProfile?.id).toEqual(testMemberId);
+      expect(profile.publicProfile?.status).toBe(MemberStatusType.Active);
+      expect(profile.publicProfile?.reputation).toBeDefined();
+      expect(profile.publicProfile?.storageQuota).toBeDefined();
+      expect(profile.publicProfile?.storageUsed).toBeDefined();
+      expect(profile.publicProfile?.dateCreated).toBeInstanceOf(Date);
+      expect(profile.publicProfile?.dateUpdated).toBeInstanceOf(Date);
     });
 
-    it('should return null profiles when CBL deserialization is not implemented', async () => {
-      // Currently returns null because CBL deserialization is TODO
+    it('should retrieve private profile data successfully', async () => {
+      // The implementation now correctly stores and retrieves profile data
       const profile = await memberStore.getMemberProfile(testMemberId);
 
-      // This reflects current implementation - will change when CBL deserialization is added
-      expect(profile.publicProfile).toBeNull();
-      expect(profile.privateProfile).toBeNull();
+      expect(profile.privateProfile).toBeDefined();
+      expect(profile.privateProfile?.id).toEqual(testMemberId);
+      expect(profile.privateProfile?.trustedPeers).toBeDefined();
+      expect(profile.privateProfile?.blockedPeers).toBeDefined();
+      expect(profile.privateProfile?.settings).toBeDefined();
+      expect(profile.privateProfile?.activityLog).toBeDefined();
     });
 
     it('should throw error for non-existent member', async () => {
@@ -162,7 +171,7 @@ describe('MemberStore - Profile Operations', () => {
       );
     });
 
-    it('should fetch profile for multiple members independently', async () => {
+    it('should retrieve profiles for multiple members', async () => {
       const member2Data: INewMemberData = {
         type: MemberType.User,
         name: 'profile-test-user-2',
@@ -171,12 +180,14 @@ describe('MemberStore - Profile Operations', () => {
 
       const { reference: ref2 } = await memberStore.createMember(member2Data);
 
+      // Both should successfully retrieve profile data
       const profile1 = await memberStore.getMemberProfile(testMemberId);
       const profile2 = await memberStore.getMemberProfile(ref2.id);
 
-      expect(profile1).toBeDefined();
-      expect(profile2).toBeDefined();
-      // Both should be independent
+      expect(profile1.publicProfile).toBeDefined();
+      expect(profile2.publicProfile).toBeDefined();
+      expect(profile1.publicProfile?.id).toEqual(testMemberId);
+      expect(profile2.publicProfile?.id).toEqual(ref2.id);
     });
   });
 
@@ -214,8 +225,11 @@ describe('MemberStore - Profile Operations', () => {
 
       expect(reference.type).toBe(MemberType.System);
 
+      // getMemberProfile should successfully retrieve profile data
       const profile = await memberStore.getMemberProfile(reference.id);
-      expect(profile).toBeDefined();
+      expect(profile.publicProfile).toBeDefined();
+      expect(profile.publicProfile?.id).toEqual(reference.id);
+      expect(profile.publicProfile?.status).toBe(MemberStatusType.Active);
     });
   });
 
@@ -231,8 +245,10 @@ describe('MemberStore - Profile Operations', () => {
       const { reference } = await memberStore.createMember(memberData);
       expect(reference.id).toBeDefined();
 
+      // getMemberProfile should successfully retrieve profile data
       const profile = await memberStore.getMemberProfile(reference.id);
-      expect(profile).toBeDefined();
+      expect(profile.publicProfile).toBeDefined();
+      expect(profile.publicProfile?.id).toEqual(reference.id);
     });
 
     it('should handle rapid sequential member creation', async () => {

@@ -801,6 +801,12 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
     'Failed to rollback member store transaction',
   [BrightChainStrings.Error_MemberCblService_CreateMemberCblFailed]:
     'Failed to create member CBL',
+  [BrightChainStrings.Error_MemberCblService_ChecksumMismatch]:
+    'Block checksum mismatch during integrity verification',
+  [BrightChainStrings.Error_MemberCblService_BlockRetrievalFailed]:
+    'Failed to retrieve block during integrity verification',
+  [BrightChainStrings.Error_MemberCblService_MissingRequiredFields]:
+    'Member data missing required fields',
   [BrightChainStrings.Error_DeliveryTimeout_HandleTimeoutFailedTemplate]:
     'Failed to handle delivery timeout: {ERROR}',
 
@@ -847,6 +853,8 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
   // Member Document Errors
   [BrightChainStrings.Error_MemberDocument_Hint]:
     'Use MemberDocument.create() instead of new MemberDocument()',
+  [BrightChainStrings.Error_MemberDocument_CBLNotGenerated]:
+    'CBLs have not been generated. Call generateCBLs() before calling toMember()',
 
   // Member Profile Document Errors
   [BrightChainStrings.Error_MemberProfileDocument_Hint]:

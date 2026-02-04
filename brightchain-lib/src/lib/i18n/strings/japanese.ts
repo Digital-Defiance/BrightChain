@@ -683,6 +683,12 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     'メンバーストアトランザクションのロールバックに失敗しました',
   [BrightChainStrings.Error_MemberCblService_CreateMemberCblFailed]:
     'メンバーCBLの作成に失敗しました',
+  [BrightChainStrings.Error_MemberCblService_ChecksumMismatch]:
+    '整合性検証中にブロックチェックサムの不一致が発生しました',
+  [BrightChainStrings.Error_MemberCblService_BlockRetrievalFailed]:
+    '整合性検証中にブロックの取得に失敗しました',
+  [BrightChainStrings.Error_MemberCblService_MissingRequiredFields]:
+    'メンバーデータに必須フィールドがありません',
   [BrightChainStrings.Error_DeliveryTimeout_HandleTimeoutFailedTemplate]:
     '配信タイムアウトの処理に失敗しました: {ERROR}',
   [BrightChainStrings.Error_BaseMemberDocument_PrivateCblIdNotSet]:
@@ -768,6 +774,8 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
   // Member Document Errors
   [BrightChainStrings.Error_MemberDocument_Hint]:
     'new MemberDocument() の代わりに MemberDocument.create() を使用してください',
+  [BrightChainStrings.Error_MemberDocument_CBLNotGenerated]:
+    'CBLが生成されていません。toMember()を呼び出す前にgenerateCBLs()を呼び出してください',
 
   // Member Profile Document Errors
   [BrightChainStrings.Error_MemberProfileDocument_Hint]:

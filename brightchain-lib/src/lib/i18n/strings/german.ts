@@ -820,6 +820,12 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
     'Fehler beim Zurücksetzen der Member-Store-Transaktion',
   [BrightChainStrings.Error_MemberCblService_CreateMemberCblFailed]:
     'Fehler beim Erstellen des Member-CBL',
+  [BrightChainStrings.Error_MemberCblService_ChecksumMismatch]:
+    'Block-Prüfsummen-Fehler bei der Integritätsprüfung',
+  [BrightChainStrings.Error_MemberCblService_BlockRetrievalFailed]:
+    'Fehler beim Abrufen des Blocks während der Integritätsprüfung',
+  [BrightChainStrings.Error_MemberCblService_MissingRequiredFields]:
+    'Mitgliedsdaten fehlen erforderliche Felder',
   [BrightChainStrings.Error_DeliveryTimeout_HandleTimeoutFailedTemplate]:
     'Fehler beim Behandeln des Zustellungs-Timeouts: {ERROR}',
 
@@ -866,6 +872,8 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
   // Member Document Errors
   [BrightChainStrings.Error_MemberDocument_Hint]:
     'Verwenden Sie MemberDocument.create() anstelle von new MemberDocument()',
+  [BrightChainStrings.Error_MemberDocument_CBLNotGenerated]:
+    'CBLs wurden nicht generiert. Rufen Sie generateCBLs() auf, bevor Sie toMember() aufrufen',
 
   // Member Profile Document Errors
   [BrightChainStrings.Error_MemberProfileDocument_Hint]:

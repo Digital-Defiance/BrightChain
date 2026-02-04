@@ -817,6 +817,12 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
     'Не вдалося відкотити транзакцію сховища учасників',
   [BrightChainStrings.Error_MemberCblService_CreateMemberCblFailed]:
     'Не вдалося створити CBL учасника',
+  [BrightChainStrings.Error_MemberCblService_ChecksumMismatch]:
+    'Невідповідність контрольної суми блоку під час перевірки цілісності',
+  [BrightChainStrings.Error_MemberCblService_BlockRetrievalFailed]:
+    'Не вдалося отримати блок під час перевірки цілісності',
+  [BrightChainStrings.Error_MemberCblService_MissingRequiredFields]:
+    'У даних учасника відсутні обов\'язкові поля',
   [BrightChainStrings.Error_DeliveryTimeout_HandleTimeoutFailedTemplate]:
     'Не вдалося обробити тайм-аут доставки: {ERROR}',
 
@@ -863,6 +869,8 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
   // Member Document Errors
   [BrightChainStrings.Error_MemberDocument_Hint]:
     'Використовуйте MemberDocument.create() замість new MemberDocument()',
+  [BrightChainStrings.Error_MemberDocument_CBLNotGenerated]:
+    'CBL не були згенеровані. Викличте generateCBLs() перед викликом toMember()',
 
   // Member Profile Document Errors
   [BrightChainStrings.Error_MemberProfileDocument_Hint]:

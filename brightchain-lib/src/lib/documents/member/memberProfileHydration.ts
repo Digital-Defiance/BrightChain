@@ -1,4 +1,4 @@
-import { hexToUint8Array, PlatformID } from '@digitaldefiance/ecies-lib';
+import { hexToUint8Array, PlatformID, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
 import { IHydrationSchema } from '../../interfaces/document/base';
 import {
@@ -43,19 +43,19 @@ export const publicMemberProfileHydrationSchema = <
   ): IPublicMemberProfileStorageData => {
     const provider = ServiceProvider.getInstance<TID>().idProvider;
 
-    // Handle ID conversion
-    const idBytes = (() => {
+    // Handle ID conversion - convert to hex string for JSON serialization
+    const idHex = (() => {
       if (typeof hydrated.id === 'string') {
-        return hexToUint8Array(hydrated.id);
-      }
-      if (hydrated.id instanceof Uint8Array) {
         return hydrated.id;
       }
-      return provider.toBytes(hydrated.id);
+      if (hydrated.id instanceof Uint8Array) {
+        return uint8ArrayToHex(hydrated.id);
+      }
+      return uint8ArrayToHex(provider.toBytes(hydrated.id));
     })();
 
     return {
-      id: idBytes,
+      id: idHex,
       status: hydrated.status,
       lastActive: hydrated.lastActive.toISOString(),
       reputation: hydrated.reputation,
@@ -122,36 +122,36 @@ export const privateMemberProfileHydrationSchema = <
   ): IPrivateMemberProfileStorageData => {
     const provider = ServiceProvider.getInstance<TID>().idProvider;
 
-    // Handle ID conversion
-    const idBytes = (() => {
+    // Handle ID conversion - convert to hex string for JSON serialization
+    const idHex = (() => {
       if (typeof hydrated.id === 'string') {
-        return hexToUint8Array(hydrated.id);
-      }
-      if (hydrated.id instanceof Uint8Array) {
         return hydrated.id;
       }
-      return provider.toBytes(hydrated.id);
+      if (hydrated.id instanceof Uint8Array) {
+        return uint8ArrayToHex(hydrated.id);
+      }
+      return uint8ArrayToHex(provider.toBytes(hydrated.id));
     })();
 
-    // Convert peer IDs to hex strings
-    const trustedPeersBytes = hydrated.trustedPeers.map((peerId) => {
+    // Convert peer IDs to hex strings for JSON serialization
+    const trustedPeersHex = hydrated.trustedPeers.map((peerId) => {
       if (typeof peerId === 'string') {
-        return hexToUint8Array(peerId);
-      }
-      if (peerId instanceof Uint8Array) {
         return peerId;
       }
-      return provider.toBytes(peerId);
+      if (peerId instanceof Uint8Array) {
+        return uint8ArrayToHex(peerId);
+      }
+      return uint8ArrayToHex(provider.toBytes(peerId));
     });
 
-    const blockedPeersBytes = hydrated.blockedPeers.map((peerId) => {
+    const blockedPeersHex = hydrated.blockedPeers.map((peerId) => {
       if (typeof peerId === 'string') {
-        return hexToUint8Array(peerId);
-      }
-      if (peerId instanceof Uint8Array) {
         return peerId;
       }
-      return provider.toBytes(peerId);
+      if (peerId instanceof Uint8Array) {
+        return uint8ArrayToHex(peerId);
+      }
+      return uint8ArrayToHex(provider.toBytes(peerId));
     });
 
     const {
@@ -162,9 +162,9 @@ export const privateMemberProfileHydrationSchema = <
     } = hydrated.settings ?? {};
 
     return {
-      id: idBytes,
-      trustedPeers: trustedPeersBytes,
-      blockedPeers: blockedPeersBytes,
+      id: idHex,
+      trustedPeers: trustedPeersHex,
+      blockedPeers: blockedPeersHex,
       settings: {
         autoReplication,
         minRedundancy,
