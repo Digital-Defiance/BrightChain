@@ -63,9 +63,8 @@ describe('MemberDocument Integration Tests', () => {
       const retrievedMember = await memberStore.getMember(reference.id);
 
       expect(retrievedMember).toBeInstanceOf(Member);
-      // Note: The current implementation returns a placeholder member
-      // In a full implementation, this would return the original member data
-      expect(retrievedMember.name).toBe('retrieved-member'); // Placeholder name
+      // The member is now correctly reconstructed from CBL data
+      expect(retrievedMember.name).toBe(memberData.name);
       expect(retrievedMember.type).toBe(memberData.type);
     });
 

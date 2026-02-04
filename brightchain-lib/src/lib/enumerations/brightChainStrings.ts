@@ -744,6 +744,12 @@ export const BrightChainStrings = createBrandedEnum('brightchain.strings', {
   Error_MemberStore_RollbackFailed: 'Error_MemberStore_RollbackFailed',
   Error_MemberCblService_CreateMemberCblFailed:
     'Error_MemberCblService_CreateMemberCblFailed',
+  Error_MemberCblService_ChecksumMismatch:
+    'Error_MemberCblService_ChecksumMismatch',
+  Error_MemberCblService_BlockRetrievalFailed:
+    'Error_MemberCblService_BlockRetrievalFailed',
+  Error_MemberCblService_MissingRequiredFields:
+    'Error_MemberCblService_MissingRequiredFields',
   Error_DeliveryTimeout_HandleTimeoutFailedTemplate:
     'Error_DeliveryTimeout_HandleTimeoutFailedTemplate',
 
@@ -792,6 +798,7 @@ export const BrightChainStrings = createBrandedEnum('brightchain.strings', {
 
   // Member Document Errors
   Error_MemberDocument_Hint: 'Error_MemberDocument_Hint',
+  Error_MemberDocument_CBLNotGenerated: 'Error_MemberDocument_CBLNotGenerated',
 
   // Member Profile Document Errors
   Error_MemberProfileDocument_Hint: 'Error_MemberProfileDocument_Hint',

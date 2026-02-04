@@ -66,6 +66,8 @@ export class MemberError extends HandleableError {
         EciesStringKey.Error_MemberError_EncryptionDataTooLarge,
       [MemberErrorType.InvalidEncryptionData]:
         EciesStringKey.Error_MemberError_InvalidEncryptionData,
+      [MemberErrorType.CBLNotGenerated]:
+        BrightChainStrings.Error_MemberDocument_CBLNotGenerated,
     };
   }
   constructor(type: MemberErrorType, _language?: string) {
