@@ -18,6 +18,8 @@ export * from './environment-mongo';
 export * from './jwt-sign-response';
 export * from './member';
 export * from './membersResponse';
+export * from './messageRequest';
+export * from './messageResponses';
 export * from './multi-encrypted-message';
 export * from './multi-encrypted-parsed-header';
 export * from './request-user';

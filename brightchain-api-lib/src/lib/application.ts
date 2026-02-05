@@ -3,6 +3,9 @@ import {
   BrightChainStrings,
   EnergyAccountStore,
   EnergyLedger,
+  IAvailabilityService,
+  IDiscoveryProtocol,
+  IReconciliationService,
   MemberStore,
   translate,
 } from '@brightchain/brightchain-lib';
@@ -31,6 +34,9 @@ import { Middlewares } from './middlewares';
 import { ApiRouter } from './routers/api';
 import { AppRouter } from './routers/app';
 import { AuthService, EmailService, SecureKeyStorage } from './services';
+import { EventNotificationSystem } from './services/eventNotificationSystem';
+import { MessagePassingService } from './services/messagePassingService';
+import { WebSocketMessageServer } from './services/webSocketMessageServer';
 
 /**
  * Application class
@@ -40,6 +46,10 @@ export class App<TID extends PlatformID> extends BaseApplication<TID> {
   private server: Server | null = null;
   private controllers: Map<string, unknown> = new Map();
   private readonly keyStorage: SecureKeyStorage;
+  private apiRouter: ApiRouter<TID> | null = null;
+  private eventSystem: EventNotificationSystem | null = null;
+  private wsServer: WebSocketMessageServer | null = null;
+  private messagePassingService: MessagePassingService | null = null;
 
   constructor(environment: Environment<TID>) {
     super(
@@ -90,9 +100,19 @@ export class App<TID extends PlatformID> extends BaseApplication<TID> {
       this.services.register('emailService', () => emailService);
       this.services.register('auth', () => authService);
 
+      // Initialize EventNotificationSystem for WebSocket events
+      // @requirements 5.1, 5.2, 5.4
+      this.eventSystem = new EventNotificationSystem();
+      this.services.register('eventSystem', () => this.eventSystem);
+
       Middlewares.init(this.expressApp);
       const apiRouter = new ApiRouter<TID>(this);
+      this.apiRouter = apiRouter;
       const appRouter = new AppRouter<TID>(apiRouter);
+
+      // Wire EventNotificationSystem to SyncController for replication events
+      // @requirements 4.5
+      apiRouter.setSyncEventSystem(this.eventSystem);
 
       appRouter.init(this.expressApp);
       this.expressApp.use(
@@ -133,6 +153,19 @@ export class App<TID extends PlatformID> extends BaseApplication<TID> {
                 'log',
                 `[ ready ] http://${this.environment.host}:${this.environment.port}`,
               );
+
+              // Initialize WebSocket server after HTTP server is ready
+              // @requirements 5.1
+              if (this.server) {
+                this.wsServer = new WebSocketMessageServer(this.server, false);
+                this.services.register('wsServer', () => this.wsServer);
+                debugLog(
+                  this.environment.debug,
+                  'log',
+                  '[ ready ] WebSocket server initialized',
+                );
+              }
+
               resolve();
             },
           );
@@ -184,6 +217,19 @@ export class App<TID extends PlatformID> extends BaseApplication<TID> {
   }
 
   public override async stop(): Promise<void> {
+    // Close WebSocket server first
+    if (this.wsServer) {
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ stopping ] WebSocket server',
+      );
+      await new Promise<void>((resolve) => {
+        this.wsServer!.close(() => resolve());
+      });
+      this.wsServer = null;
+    }
+
     if (this.server) {
       debugLog(
         this.environment.debug,
@@ -203,6 +249,11 @@ export class App<TID extends PlatformID> extends BaseApplication<TID> {
       this.server = null;
     }
 
+    // Clean up other services
+    this.eventSystem = null;
+    this.messagePassingService = null;
+    this.apiRouter = null;
+
     await super.stop();
     this._ready = false;
     debugLog(
@@ -218,5 +269,83 @@ export class App<TID extends PlatformID> extends BaseApplication<TID> {
 
   public setController(name: string, controller: unknown): void {
     this.controllers.set(name, controller);
+  }
+
+  /**
+   * Get the API router instance.
+   * Useful for setting up services after initialization.
+   */
+  public getApiRouter(): ApiRouter<TID> | null {
+    return this.apiRouter;
+  }
+
+  /**
+   * Get the EventNotificationSystem instance.
+   * Useful for subscribing to events.
+   */
+  public getEventSystem(): EventNotificationSystem | null {
+    return this.eventSystem;
+  }
+
+  /**
+   * Get the WebSocketMessageServer instance.
+   * Useful for sending messages to connected nodes.
+   */
+  public getWebSocketServer(): WebSocketMessageServer | null {
+    return this.wsServer;
+  }
+
+  /**
+   * Set the MessagePassingService for the application.
+   * This should be called after the application is started and
+   * all required dependencies (MessageCBLService, IMessageMetadataStore) are available.
+   * @requirements 1.6
+   */
+  public setMessagePassingService(service: MessagePassingService): void {
+    this.messagePassingService = service;
+    this.services.register('messagePassingService', () => service);
+    if (this.apiRouter) {
+      this.apiRouter.setMessagePassingService(service);
+    }
+  }
+
+  /**
+   * Set the DiscoveryProtocol for the application.
+   * This should be called after the application is started and
+   * the discovery protocol is initialized.
+   * @requirements 3.3
+   */
+  public setDiscoveryProtocol(protocol: IDiscoveryProtocol): void {
+    this.services.register('discoveryProtocol', () => protocol);
+    if (this.apiRouter) {
+      this.apiRouter.setDiscoveryProtocol(protocol);
+    }
+  }
+
+  /**
+   * Set the AvailabilityService for the application.
+   * This should be called after the application is started and
+   * the availability service is initialized.
+   * @requirements 3.1, 3.2, 4.1, 4.2, 4.3
+   */
+  public setAvailabilityService(service: IAvailabilityService): void {
+    this.services.register('availabilityService', () => service);
+    if (this.apiRouter) {
+      this.apiRouter.setAvailabilityService(service);
+      this.apiRouter.setSyncAvailabilityService(service);
+    }
+  }
+
+  /**
+   * Set the ReconciliationService for the application.
+   * This should be called after the application is started and
+   * the reconciliation service is initialized.
+   * @requirements 4.4
+   */
+  public setReconciliationService(service: IReconciliationService): void {
+    this.services.register('reconciliationService', () => service);
+    if (this.apiRouter) {
+      this.apiRouter.setReconciliationService(service);
+    }
   }
 }

@@ -33,23 +33,38 @@ export enum ErrorCode {
   INVALID_BLOCK_ADDRESSES = 'INVALID_BLOCK_ADDRESSES',
   MISSING_BLOCKS = 'MISSING_BLOCKS',
 
+  // Message errors
+  MESSAGE_NOT_FOUND = 'MESSAGE_NOT_FOUND',
+
+  // Node errors
+  NODE_NOT_FOUND = 'NODE_NOT_FOUND',
+
   // General errors
   VALIDATION_ERROR = 'VALIDATION_ERROR',
   UNAUTHORIZED = 'UNAUTHORIZED',
+  TOKEN_EXPIRED = 'TOKEN_EXPIRED',
+  INVALID_TOKEN = 'INVALID_TOKEN',
   FORBIDDEN = 'FORBIDDEN',
+  INSUFFICIENT_PERMISSIONS = 'INSUFFICIENT_PERMISSIONS',
+  NOT_FOUND = 'NOT_FOUND',
+  ALREADY_EXISTS = 'ALREADY_EXISTS',
   INTERNAL_ERROR = 'INTERNAL_ERROR',
+  SERVICE_UNAVAILABLE = 'SERVICE_UNAVAILABLE',
   NOT_IMPLEMENTED = 'NOT_IMPLEMENTED',
 }
 
 /**
  * Standard error response structure for all API endpoints.
  * Follows the format specified in the design document.
+ * @requirements 9.1, 9.2, 9.3, 9.4, 9.5
  */
 export interface StandardErrorResponse {
   error: {
     code: ErrorCode | string;
     message: string;
     details?: Record<string, unknown>;
+    requestId: string;
+    timestamp: string;
   };
 }
 
@@ -64,7 +79,42 @@ export interface ErrorMappingResult {
 }
 
 /**
- * Create a standardized error response object.
+ * Create a standardized API error response with requestId and timestamp.
+ * This is the primary function for creating error responses that conform
+ * to the API specification.
+ *
+ * @param code - The error code identifying the type of error
+ * @param message - Human-readable error message
+ * @param requestId - The unique request ID for tracing
+ * @param details - Optional additional context about the error
+ * @returns A properly formatted StandardErrorResponse
+ * @requirements 9.1, 9.5
+ */
+export function createApiErrorResponse(
+  code: ErrorCode | string,
+  message: string,
+  requestId: string,
+  details?: Record<string, unknown>,
+): StandardErrorResponse {
+  const response: StandardErrorResponse = {
+    error: {
+      code,
+      message,
+      requestId,
+      timestamp: new Date().toISOString(),
+    },
+  };
+
+  if (details) {
+    response.error.details = details;
+  }
+
+  return response;
+}
+
+/**
+ * Create a standardized error response object (legacy format without requestId).
+ * @deprecated Use createApiErrorResponse instead for new code
  *
  * @param code - The error code identifying the type of error
  * @param message - Human-readable error message
@@ -76,7 +126,7 @@ export function createErrorResponse(
   message: string,
   details?: Record<string, unknown>,
 ): ApiErrorResponse {
-  const response: StandardErrorResponse = {
+  const response: { error: { code: string; message: string; details?: Record<string, unknown> } } = {
     error: {
       code,
       message,
@@ -91,7 +141,8 @@ export function createErrorResponse(
 }
 
 /**
- * Create a standardized API response with status code.
+ * Create a standardized API response with status code (legacy format).
+ * @deprecated Use the factory functions with requestId parameter instead
  *
  * @param statusCode - HTTP status code
  * @param code - The error code identifying the type of error
@@ -112,7 +163,260 @@ export function createApiErrorResult(
 }
 
 /**
+ * Create a standardized API error result with requestId and timestamp.
+ *
+ * @param statusCode - HTTP status code
+ * @param code - The error code identifying the type of error
+ * @param message - Human-readable error message
+ * @param requestId - The unique request ID for tracing
+ * @param details - Optional additional context about the error
+ * @returns Object with statusCode and response
+ * @requirements 9.1, 9.5
+ */
+export function createApiErrorResultWithRequestId(
+  statusCode: number,
+  code: ErrorCode | string,
+  message: string,
+  requestId: string,
+  details?: Record<string, unknown>,
+): { statusCode: number; response: StandardErrorResponse } {
+  return {
+    statusCode,
+    response: createApiErrorResponse(code, message, requestId, details),
+  };
+}
+
+// ============================================================================
+// Error Factory Functions with RequestId Support
+// ============================================================================
+
+/**
  * Create a validation error response (400).
+ * @requirements 9.2
+ *
+ * @param message - Description of the validation failure
+ * @param requestId - The unique request ID for tracing
+ * @param details - Optional details about invalid fields
+ * @returns Formatted validation error response with status code
+ */
+export function createValidationError(
+  message: string,
+  requestId: string,
+  details?: Record<string, unknown>,
+): { statusCode: number; response: StandardErrorResponse } {
+  return createApiErrorResultWithRequestId(
+    400,
+    ErrorCode.VALIDATION_ERROR,
+    message,
+    requestId,
+    details,
+  );
+}
+
+/**
+ * Create an unauthorized error response (401).
+ * @requirements 9.1
+ *
+ * @param requestId - The unique request ID for tracing
+ * @param message - Description of the authentication failure
+ * @returns Formatted unauthorized error response with status code
+ */
+export function createUnauthorizedError(
+  requestId: string,
+  message: string = 'Invalid or missing authentication token',
+): { statusCode: number; response: StandardErrorResponse } {
+  return createApiErrorResultWithRequestId(
+    401,
+    ErrorCode.UNAUTHORIZED,
+    message,
+    requestId,
+  );
+}
+
+/**
+ * Create a token expired error response (401).
+ * @requirements 9.1
+ *
+ * @param requestId - The unique request ID for tracing
+ * @param message - Description of the token expiration
+ * @returns Formatted token expired error response with status code
+ */
+export function createTokenExpiredError(
+  requestId: string,
+  message: string = 'Authentication token has expired',
+): { statusCode: number; response: StandardErrorResponse } {
+  return createApiErrorResultWithRequestId(
+    401,
+    ErrorCode.TOKEN_EXPIRED,
+    message,
+    requestId,
+  );
+}
+
+/**
+ * Create a forbidden error response (403).
+ * @requirements 9.1
+ *
+ * @param requestId - The unique request ID for tracing
+ * @param message - Description of the authorization failure
+ * @returns Formatted forbidden error response with status code
+ */
+export function createForbiddenError(
+  requestId: string,
+  message: string = 'You do not have permission to perform this action',
+): { statusCode: number; response: StandardErrorResponse } {
+  return createApiErrorResultWithRequestId(
+    403,
+    ErrorCode.FORBIDDEN,
+    message,
+    requestId,
+  );
+}
+
+/**
+ * Create an insufficient permissions error response (403).
+ * @requirements 9.1
+ *
+ * @param requestId - The unique request ID for tracing
+ * @param requiredRole - The role that was required
+ * @returns Formatted insufficient permissions error response with status code
+ */
+export function createInsufficientPermissionsError(
+  requestId: string,
+  requiredRole?: string,
+): { statusCode: number; response: StandardErrorResponse } {
+  const message = requiredRole
+    ? `Insufficient permissions. Required role: ${requiredRole}`
+    : 'Insufficient permissions to perform this action';
+  return createApiErrorResultWithRequestId(
+    403,
+    ErrorCode.INSUFFICIENT_PERMISSIONS,
+    message,
+    requestId,
+    requiredRole ? { requiredRole } : undefined,
+  );
+}
+
+/**
+ * Create a not found error response (404).
+ * @requirements 9.4
+ *
+ * @param resourceType - Type of resource that was not found
+ * @param resourceId - ID of the resource that was not found
+ * @param requestId - The unique request ID for tracing
+ * @returns Formatted not found error response with status code
+ */
+export function createNotFoundError(
+  resourceType: string,
+  resourceId: string,
+  requestId: string,
+): { statusCode: number; response: StandardErrorResponse } {
+  const code = getNotFoundErrorCode(resourceType);
+  return createApiErrorResultWithRequestId(
+    404,
+    code,
+    `${resourceType} with ID ${resourceId} not found`,
+    requestId,
+    { resourceType, resourceId },
+  );
+}
+
+/**
+ * Create an already exists error response (409).
+ * @requirements 9.1
+ *
+ * @param resourceType - Type of resource that already exists
+ * @param resourceId - ID of the resource that already exists
+ * @param requestId - The unique request ID for tracing
+ * @returns Formatted already exists error response with status code
+ */
+export function createAlreadyExistsError(
+  resourceType: string,
+  resourceId: string,
+  requestId: string,
+): { statusCode: number; response: StandardErrorResponse } {
+  return createApiErrorResultWithRequestId(
+    409,
+    ErrorCode.ALREADY_EXISTS,
+    `${resourceType} with ID ${resourceId} already exists`,
+    requestId,
+    { resourceType, resourceId },
+  );
+}
+
+/**
+ * Create an internal error response (500).
+ * Does not expose internal error details to the client.
+ * @requirements 9.3
+ *
+ * @param requestId - The unique request ID for tracing
+ * @param _error - The original error (logged but not exposed)
+ * @returns Formatted internal error response with status code
+ */
+export function createInternalError(
+  requestId: string,
+  _error?: Error | string,
+): { statusCode: number; response: StandardErrorResponse } {
+  // Log the actual error server-side but don't expose details to client
+  if (_error) {
+    const errorMessage = _error instanceof Error ? _error.message : _error;
+    console.error(`[${requestId}] Internal error:`, errorMessage);
+  }
+  return createApiErrorResultWithRequestId(
+    500,
+    ErrorCode.INTERNAL_ERROR,
+    'An internal error occurred',
+    requestId,
+  );
+}
+
+/**
+ * Create a service unavailable error response (503).
+ * @requirements 9.1
+ *
+ * @param requestId - The unique request ID for tracing
+ * @param message - Description of the service unavailability
+ * @returns Formatted service unavailable error response with status code
+ */
+export function createServiceUnavailableError(
+  requestId: string,
+  message: string = 'Service temporarily unavailable',
+): { statusCode: number; response: StandardErrorResponse } {
+  return createApiErrorResultWithRequestId(
+    503,
+    ErrorCode.SERVICE_UNAVAILABLE,
+    message,
+    requestId,
+  );
+}
+
+/**
+ * Create a not implemented error response (501).
+ * @requirements 9.1
+ *
+ * @param requestId - The unique request ID for tracing
+ * @param message - Description of what is not implemented
+ * @returns Formatted not implemented error response with status code
+ */
+export function createNotImplementedError(
+  requestId: string,
+  message: string = 'This feature is not yet implemented',
+): { statusCode: number; response: StandardErrorResponse } {
+  return createApiErrorResultWithRequestId(
+    501,
+    ErrorCode.NOT_IMPLEMENTED,
+    message,
+    requestId,
+  );
+}
+
+// ============================================================================
+// Legacy Error Factory Functions (without requestId)
+// ============================================================================
+
+/**
+ * Create a validation error response (400).
+ * @deprecated Use createValidationError with requestId instead
  *
  * @param message - Description of the validation failure
  * @param details - Optional details about invalid fields
@@ -132,6 +436,7 @@ export function validationError(
 
 /**
  * Create an unauthorized error response (401).
+ * @deprecated Use createUnauthorizedError with requestId instead
  *
  * @param message - Description of the authentication failure
  * @returns Formatted unauthorized error response
@@ -144,6 +449,7 @@ export function unauthorizedError(
 
 /**
  * Create a forbidden error response (403).
+ * @deprecated Use createForbiddenError with requestId instead
  *
  * @param message - Description of the authorization failure
  * @returns Formatted forbidden error response
@@ -156,6 +462,7 @@ export function forbiddenError(
 
 /**
  * Create a not found error response (404).
+ * @deprecated Use createNotFoundError with requestId instead
  *
  * @param resourceType - Type of resource that was not found
  * @param resourceId - ID of the resource that was not found
@@ -176,6 +483,7 @@ export function notFoundError(
 
 /**
  * Create an internal error response (500).
+ * @deprecated Use createInternalError with requestId instead
  *
  * @param error - The original error (message will be extracted)
  * @returns Formatted internal error response
@@ -190,6 +498,7 @@ export function internalError(error: Error | string): {
 
 /**
  * Create a not implemented error response (501).
+ * @deprecated Use createNotImplementedError with requestId instead
  *
  * @param message - Description of what is not implemented
  * @returns Formatted not implemented error response
@@ -218,11 +527,18 @@ function getNotFoundErrorCode(resourceType: string): ErrorCode {
   if (resourceTypeLower === 'cbl') {
     return ErrorCode.CBL_NOT_FOUND;
   }
-  return ErrorCode.INTERNAL_ERROR;
+  if (resourceTypeLower === 'message') {
+    return ErrorCode.MESSAGE_NOT_FOUND;
+  }
+  if (resourceTypeLower === 'node') {
+    return ErrorCode.NODE_NOT_FOUND;
+  }
+  return ErrorCode.NOT_FOUND;
 }
 
 /**
  * Map a StoreError to an appropriate API error response.
+ * @deprecated Use mapStoreErrorWithRequestId instead
  *
  * @param error - The StoreError to map
  * @returns Object with statusCode and response
@@ -236,6 +552,27 @@ export function mapStoreError(error: StoreError): {
     mapping.statusCode,
     mapping.code,
     mapping.message,
+    mapping.details,
+  );
+}
+
+/**
+ * Map a StoreError to an appropriate API error response with requestId.
+ *
+ * @param error - The StoreError to map
+ * @param requestId - The unique request ID for tracing
+ * @returns Object with statusCode and response
+ */
+export function mapStoreErrorWithRequestId(
+  error: StoreError,
+  requestId: string,
+): { statusCode: number; response: StandardErrorResponse } {
+  const mapping = mapStoreErrorToResult(error);
+  return createApiErrorResultWithRequestId(
+    mapping.statusCode,
+    mapping.code,
+    mapping.message,
+    requestId,
     mapping.details,
   );
 }
@@ -294,6 +631,7 @@ function mapStoreErrorToResult(error: StoreError): ErrorMappingResult {
 
 /**
  * Map a QuorumError to an appropriate API error response.
+ * @deprecated Use mapQuorumErrorWithRequestId instead
  *
  * @param error - The QuorumError to map
  * @returns Object with statusCode and response
@@ -307,6 +645,27 @@ export function mapQuorumError(error: QuorumError): {
     mapping.statusCode,
     mapping.code,
     mapping.message,
+    mapping.details,
+  );
+}
+
+/**
+ * Map a QuorumError to an appropriate API error response with requestId.
+ *
+ * @param error - The QuorumError to map
+ * @param requestId - The unique request ID for tracing
+ * @returns Object with statusCode and response
+ */
+export function mapQuorumErrorWithRequestId(
+  error: QuorumError,
+  requestId: string,
+): { statusCode: number; response: StandardErrorResponse } {
+  const mapping = mapQuorumErrorToResult(error);
+  return createApiErrorResultWithRequestId(
+    mapping.statusCode,
+    mapping.code,
+    mapping.message,
+    requestId,
     mapping.details,
   );
 }
@@ -346,6 +705,7 @@ function mapQuorumErrorToResult(error: QuorumError): ErrorMappingResult {
 /**
  * Handle any error and return an appropriate API error response.
  * This is a catch-all handler that can be used in catch blocks.
+ * @deprecated Use handleErrorWithRequestId instead
  *
  * @param error - Any error that was thrown
  * @returns Object with statusCode and response
@@ -367,7 +727,54 @@ export function handleError(error: unknown): {
 }
 
 /**
+ * Handle any error and return an appropriate API error response with requestId.
+ * This is a catch-all handler that can be used in catch blocks.
+ *
+ * @param error - Any error that was thrown
+ * @param requestId - The unique request ID for tracing
+ * @returns Object with statusCode and response
+ */
+export function handleErrorWithRequestId(
+  error: unknown,
+  requestId: string,
+): { statusCode: number; response: StandardErrorResponse } {
+  if (error instanceof StoreError) {
+    return mapStoreErrorWithRequestId(error, requestId);
+  }
+  if (error instanceof QuorumError) {
+    return mapQuorumErrorWithRequestId(error, requestId);
+  }
+  return createInternalError(requestId, error instanceof Error ? error : undefined);
+}
+
+/**
+ * Type guard to check if an error response has the standard format with requestId.
+ *
+ * @param response - The response to check
+ * @returns True if the response has the standard error format with requestId and timestamp
+ */
+export function isStandardErrorResponseWithRequestId(
+  response: unknown,
+): response is StandardErrorResponse {
+  if (typeof response !== 'object' || response === null) {
+    return false;
+  }
+  const obj = response as Record<string, unknown>;
+  if (typeof obj['error'] !== 'object' || obj['error'] === null) {
+    return false;
+  }
+  const errorObj = obj['error'] as Record<string, unknown>;
+  return (
+    typeof errorObj['code'] === 'string' &&
+    typeof errorObj['message'] === 'string' &&
+    typeof errorObj['requestId'] === 'string' &&
+    typeof errorObj['timestamp'] === 'string'
+  );
+}
+
+/**
  * Type guard to check if an error response has the standard format.
+ * @deprecated Use isStandardErrorResponseWithRequestId for new code
  *
  * @param response - The response to check
  * @returns True if the response has the standard error format
@@ -390,8 +797,22 @@ export function isStandardErrorResponse(
 }
 
 /**
+ * Validate that an error response conforms to the standard format with requestId.
+ * Throws if the response is invalid.
+ *
+ * @param response - The response to validate
+ * @throws Error if the response doesn't conform to the standard format
+ */
+export function validateErrorResponseWithRequestId(response: unknown): void {
+  if (!isStandardErrorResponseWithRequestId(response)) {
+    throw new Error('Response does not conform to standard error format with requestId');
+  }
+}
+
+/**
  * Validate that an error response conforms to the standard format.
  * Throws if the response is invalid.
+ * @deprecated Use validateErrorResponseWithRequestId for new code
  *
  * @param response - The response to validate
  * @throws Error if the response doesn't conform to the standard format
