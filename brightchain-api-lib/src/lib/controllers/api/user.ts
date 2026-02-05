@@ -1,3 +1,8 @@
+import {
+  Checksum,
+  EnergyAccountStore,
+  MemberStore,
+} from '@brightchain/brightchain-lib';
 import { SecureString } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -18,6 +23,7 @@ interface IUserHandlers extends TypedHandlers {
   register: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   login: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   profile: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  updateProfile: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
 }
 
 interface IRegisterRequest {
@@ -29,6 +35,15 @@ interface IRegisterRequest {
 interface ILoginRequest {
   username: string;
   password: string;
+}
+
+interface IUpdateProfileRequest {
+  displayName?: string;
+  settings?: {
+    autoReplication?: boolean;
+    minRedundancy?: number;
+    preferredRegions?: string[];
+  };
 }
 
 export class UserController<
@@ -60,12 +75,18 @@ export class UserController<
         useAuthentication: true,
         useCryptoAuthentication: false,
       }),
+      routeConfig('put', '/profile', {
+        handlerKey: 'updateProfile',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+      }),
     ];
 
     this.handlers = {
       register: this.handleRegister.bind(this),
       login: this.handleLogin.bind(this),
       profile: this.handleProfile.bind(this),
+      updateProfile: this.handleUpdateProfile.bind(this),
     };
   }
 
@@ -145,7 +166,7 @@ export class UserController<
   > = async (
     req,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
-    const user = (req as { user?: unknown }).user;
+    const user = (req as { user?: { memberId: string } }).user;
 
     if (!user) {
       return {
@@ -157,12 +178,134 @@ export class UserController<
       };
     }
 
-    return {
-      statusCode: 200,
-      response: {
-        message: 'Profile retrieved',
-        user,
-      } as IApiMessageResponse,
-    };
+    try {
+      // Get energy account for balance and reputation
+      const energyStore =
+        this.application.services.get<EnergyAccountStore>('energyStore');
+      const memberChecksum = Checksum.fromHex(user.memberId);
+      const energyAccount = await energyStore.getOrCreate(memberChecksum);
+
+      // Try to get member profile from MemberStore if available
+      let memberProfile = null;
+      try {
+        const memberStore =
+          this.application.services.get<MemberStore>('memberStore');
+        if (memberStore) {
+          const profile = await memberStore.getMemberProfile(
+            memberChecksum.toUint8Array(),
+          );
+          if (profile.publicProfile) {
+            memberProfile = {
+              status: profile.publicProfile.status,
+              storageQuota: profile.publicProfile.storageQuota?.toString(),
+              storageUsed: profile.publicProfile.storageUsed?.toString(),
+              lastActive: profile.publicProfile.lastActive?.toISOString(),
+              dateCreated: profile.publicProfile.dateCreated?.toISOString(),
+            };
+          }
+        }
+      } catch {
+        // MemberStore profile not available, continue with basic profile
+      }
+
+      return {
+        statusCode: 200,
+        response: {
+          message: 'Profile retrieved',
+          memberId: user.memberId,
+          energyBalance: energyAccount.balance,
+          availableBalance: energyAccount.availableBalance,
+          earned: energyAccount.earned,
+          spent: energyAccount.spent,
+          reserved: energyAccount.reserved,
+          reputation: energyAccount.reputation,
+          createdAt: energyAccount.createdAt.toISOString(),
+          lastUpdated: energyAccount.lastUpdated.toISOString(),
+          ...(memberProfile && { profile: memberProfile }),
+        } as IApiMessageResponse,
+      };
+    } catch {
+      return {
+        statusCode: 500,
+        response: {
+          message: 'Failed to retrieve profile',
+          error: 'Failed to retrieve profile',
+        },
+      };
+    }
+  };
+
+  private handleUpdateProfile: ApiRequestHandler<
+    IApiMessageResponse | ApiErrorResponse
+  > = async (
+    req,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+    const user = (req as { user?: { memberId: string } }).user;
+
+    if (!user) {
+      return {
+        statusCode: 401,
+        response: {
+          message: 'Not authenticated',
+          error: 'Not authenticated',
+        },
+      };
+    }
+
+    try {
+      const updateData = req.body as unknown as IUpdateProfileRequest;
+      const memberChecksum = Checksum.fromHex(user.memberId);
+      const memberIdBytes = memberChecksum.toUint8Array();
+
+      // Try to update member profile in MemberStore if available
+      let profileUpdated = false;
+      try {
+        const memberStore =
+          this.application.services.get<MemberStore>('memberStore');
+        if (memberStore && updateData.settings) {
+          // Build complete settings object with defaults for missing values
+          const completeSettings = {
+            autoReplication: updateData.settings.autoReplication ?? true,
+            minRedundancy: updateData.settings.minRedundancy ?? 3,
+            preferredRegions: updateData.settings.preferredRegions ?? [],
+          };
+          await memberStore.updateMember(memberIdBytes, {
+            id: memberIdBytes,
+            privateChanges: {
+              settings: completeSettings,
+            },
+          });
+          profileUpdated = true;
+        }
+      } catch {
+        // MemberStore update not available, continue
+      }
+
+      // Get updated energy account for response
+      const energyStore =
+        this.application.services.get<EnergyAccountStore>('energyStore');
+      const energyAccount = await energyStore.getOrCreate(memberChecksum);
+
+      return {
+        statusCode: 200,
+        response: {
+          message: profileUpdated
+            ? 'Profile updated successfully'
+            : 'Profile update partially completed',
+          memberId: user.memberId,
+          energyBalance: energyAccount.balance,
+          reputation: energyAccount.reputation,
+          updated: profileUpdated,
+        } as IApiMessageResponse,
+      };
+    } catch {
+      return {
+        statusCode: 500,
+        response: {
+          message: 'Failed to update profile',
+          error: 'Failed to update profile',
+        },
+      };
+    }
   };
 }

@@ -11,7 +11,9 @@ import {
   EmailString,
   Member,
   MemberType,
+  SecureString,
   ShortHexGuid,
+  uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -108,7 +110,10 @@ interface UnsealDocumentRequest {
     documentId: string;
   };
   body: {
-    memberIds: string[];
+    memberCredentials: Array<{
+      memberId: string;
+      mnemonic: string;
+    }>;
   };
 }
 
@@ -649,15 +654,16 @@ export class QuorumController<
 
   /**
    * POST /api/quorum/documents/:documentId/unseal
-   * Unseal a document using member shares.
+   * Unseal a document using member credentials (mnemonics).
    *
-   * Combines the provided member shares to reconstruct the symmetric key,
-   * then decrypts and returns the original document.
+   * Recovers member private keys from provided mnemonics, then uses them
+   * to decrypt shares and reconstruct the original document.
    *
-   * Note: This endpoint requires members to have their private keys loaded,
-   * which is not yet fully implemented. Currently returns 501 Not Implemented.
+   * Note: This endpoint requires the QuorumService to have the document
+   * loaded in memory. For disk-persisted documents, the full reconstruction
+   * is not yet implemented.
    *
-   * @param req - Request containing document ID and member IDs
+   * @param req - Request containing document ID and member credentials
    * @returns Original document on success
    *
    * @example
@@ -665,10 +671,13 @@ export class QuorumController<
    * // Request
    * POST /api/quorum/documents/doc123.../unseal
    * {
-   *   "memberIds": ["member1...", "member2..."]
+   *   "memberCredentials": [
+   *     { "memberId": "member1...", "mnemonic": "word1 word2 word3..." },
+   *     { "memberId": "member2...", "mnemonic": "word4 word5 word6..." }
+   *   ]
    * }
    *
-   * // Response (when implemented)
+   * // Response
    * {
    *   "message": "Document unsealed successfully",
    *   "document": { "secret": "data", "value": 42 }
@@ -680,29 +689,134 @@ export class QuorumController<
   > = async (req) => {
     try {
       const { documentId } = (req as unknown as UnsealDocumentRequest).params;
-      const { memberIds } = (req as unknown as UnsealDocumentRequest).body;
+      const { memberCredentials } = (req as unknown as UnsealDocumentRequest)
+        .body;
 
       if (!documentId) {
         return validationError('Missing required parameter: documentId');
       }
 
-      if (!memberIds || !Array.isArray(memberIds) || memberIds.length === 0) {
+      if (
+        !memberCredentials ||
+        !Array.isArray(memberCredentials) ||
+        memberCredentials.length === 0
+      ) {
         return validationError(
-          'Missing required field: memberIds (array of member IDs)',
+          'Missing required field: memberCredentials (array of {memberId, mnemonic})',
         );
       }
 
-      // Note: In a real implementation, the members would need to provide their
-      // private keys or pre-decrypted shares. For now, we return a 501 status
-      // indicating this needs proper implementation with member authentication.
-      void this.quorumServiceWrapper.getService();
+      // Validate each credential has required fields
+      for (const cred of memberCredentials) {
+        if (!cred.memberId || !cred.mnemonic) {
+          return validationError(
+            'Each memberCredential must have memberId and mnemonic',
+          );
+        }
+      }
 
-      return createApiErrorResult(
-        501,
-        ErrorCode.NOT_IMPLEMENTED,
-        'Unseal operation requires members with loaded private keys. ' +
-          'This endpoint needs proper member authentication implementation.',
+      const quorumService = this.quorumServiceWrapper.getService();
+
+      // Check if document exists and if we have enough shares
+      const docInfo = await quorumService.getDocument(
+        documentId as ShortHexGuid,
       );
+      if (!docInfo) {
+        return notFoundError('Document', documentId);
+      }
+
+      // Check if provided members can unlock the document
+      const memberIds = memberCredentials.map(
+        (c) => c.memberId as ShortHexGuid,
+      );
+      const canUnlockResult = await quorumService.canUnlock(
+        documentId as ShortHexGuid,
+        memberIds,
+      );
+
+      if (!canUnlockResult.canUnlock) {
+        return createApiErrorResult(
+          400,
+          ErrorCode.INSUFFICIENT_SHARES,
+          `Insufficient shares: provided ${canUnlockResult.sharesProvided}, required ${canUnlockResult.sharesRequired}`,
+        );
+      }
+
+      // Recover members with private keys from mnemonics
+      const eciesService =
+        ServiceProvider.getInstance<GuidV4Buffer>().eciesService;
+      const membersWithPrivateKey: Member<GuidV4Buffer>[] = [];
+
+      for (const cred of memberCredentials) {
+        // Get the stored member info to get their metadata
+        const storedMember = await quorumService.getMember(
+          cred.memberId as ShortHexGuid,
+        );
+        if (!storedMember) {
+          return notFoundError('Member', cred.memberId);
+        }
+
+        // Recover wallet from mnemonic - need to wrap string in SecureString
+        const secureString = new SecureString(cred.mnemonic);
+        const { wallet } = eciesService.walletAndSeedFromMnemonic(secureString);
+        const recoveredPublicKey = new Uint8Array(wallet.getPublicKey());
+
+        // Verify the recovered public key matches the stored one
+        if (
+          uint8ArrayToHex(recoveredPublicKey) !==
+          uint8ArrayToHex(storedMember.publicKey)
+        ) {
+          return createApiErrorResult(
+            400,
+            ErrorCode.SHARE_DECRYPTION_FAILED,
+            `Mnemonic does not match member ${cred.memberId}`,
+          );
+        }
+
+        // Create a member with the recovered private key
+        const email = storedMember.metadata.email
+          ? new EmailString(storedMember.metadata.email)
+          : new EmailString(
+              `${storedMember.metadata.name?.toLowerCase().replace(/\s+/g, '.') ?? 'unknown'}@placeholder.local`,
+            );
+
+        // Use Member.newMember and then replace the wallet
+        // This is a workaround since Member constructor may not accept wallet directly
+        const { member: tempMember } = Member.newMember<GuidV4Buffer>(
+          eciesService,
+          MemberType.User,
+          storedMember.metadata.name ?? 'Unknown',
+          email,
+        );
+
+        // Create a member-like object with the recovered wallet's private key
+        // The unsealDocument method needs members with privateKey access
+        const recoveredMember = Object.create(tempMember);
+        Object.defineProperty(recoveredMember, 'privateKey', {
+          get: () => new Uint8Array(wallet.getPrivateKey()),
+          configurable: true,
+        });
+        Object.defineProperty(recoveredMember, 'publicKey', {
+          get: () => recoveredPublicKey,
+          configurable: true,
+        });
+
+        membersWithPrivateKey.push(recoveredMember);
+      }
+
+      // Unseal the document
+      const unsealedDocument = await quorumService.unsealDocument(
+        documentId as ShortHexGuid,
+        membersWithPrivateKey,
+      );
+
+      return {
+        statusCode: 200,
+        response: {
+          message: 'Document unsealed successfully',
+          document: unsealedDocument,
+        },
+      };
     } catch (_error) {
       if (_error instanceof QuorumError) {
         return mapQuorumError(_error);
