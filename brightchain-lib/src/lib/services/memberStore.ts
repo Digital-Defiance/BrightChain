@@ -11,11 +11,11 @@ import { BlockMetadata } from '../blocks/blockMetadata';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { RawDataBlock } from '../blocks/rawData';
 import { MemberDocument } from '../documents/member/memberDocument';
+import { MemberProfileDocument } from '../documents/member/memberProfileDocument';
 import {
   privateMemberProfileHydrationSchema,
   publicMemberProfileHydrationSchema,
 } from '../documents/member/memberProfileHydration';
-import { MemberProfileDocument } from '../documents/member/memberProfileDocument';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockType } from '../enumerations/blockType';
 import { BrightChainStrings } from '../enumerations/brightChainStrings';
@@ -219,8 +219,12 @@ export class MemberStore<
 
       // Step 5: Copy constituent blocks from MemberDocument's internal block store
       // to the MemberStore's block store so they can be retrieved during hydration
-      const docBlockStore = (doc as unknown as { cblService: MemberCblService<TID> }).cblService.getBlockStore();
-      const profileDocBlockStore = (profileDoc as unknown as { cblService: MemberCblService<TID> }).cblService.getBlockStore();
+      const docBlockStore = (
+        doc as unknown as { cblService: MemberCblService<TID> }
+      ).cblService.getBlockStore();
+      const profileDocBlockStore = (
+        profileDoc as unknown as { cblService: MemberCblService<TID> }
+      ).cblService.getBlockStore();
 
       // Use CBLService to get addresses from CBL data without creating ConstituentBlockListBlock
       // This avoids signature validation issues during the copy process
@@ -228,7 +232,8 @@ export class MemberStore<
 
       // Copy constituent blocks for identity CBLs
       try {
-        const publicAddresses = cblService.addressDataToAddresses(publicCBLData);
+        const publicAddresses =
+          cblService.addressDataToAddresses(publicCBLData);
         for (const address of publicAddresses) {
           try {
             const block = await docBlockStore.getData(address);
@@ -246,7 +251,8 @@ export class MemberStore<
       }
 
       try {
-        const privateAddresses = cblService.addressDataToAddresses(privateCBLData);
+        const privateAddresses =
+          cblService.addressDataToAddresses(privateCBLData);
         for (const address of privateAddresses) {
           try {
             const block = await docBlockStore.getData(address);
@@ -264,7 +270,8 @@ export class MemberStore<
 
       // Copy constituent blocks for profile CBLs
       try {
-        const publicProfileAddresses = cblService.addressDataToAddresses(publicProfileCBLData);
+        const publicProfileAddresses =
+          cblService.addressDataToAddresses(publicProfileCBLData);
         for (const address of publicProfileAddresses) {
           try {
             const block = await profileDocBlockStore.getData(address);
@@ -281,7 +288,9 @@ export class MemberStore<
       }
 
       try {
-        const privateProfileAddresses = cblService.addressDataToAddresses(privateProfileCBLData);
+        const privateProfileAddresses = cblService.addressDataToAddresses(
+          privateProfileCBLData,
+        );
         for (const address of privateProfileAddresses) {
           try {
             const block = await profileDocBlockStore.getData(address);
@@ -473,7 +482,8 @@ export class MemberStore<
         configurable: true,
       });
       Object.defineProperty(memberWithCorrectId, 'idBytes', {
-        get: () => ServiceProvider.getInstance<TID>().idProvider.toBytes(creatorId),
+        get: () =>
+          ServiceProvider.getInstance<TID>().idProvider.toBytes(creatorId),
         configurable: true,
       });
       // Remove public key to skip signature validation
@@ -573,7 +583,7 @@ export class MemberStore<
           // Hydrate the storage data
           const schema = publicMemberProfileHydrationSchema<TID>();
           publicProfile = schema.hydrate(storageData);
-        } catch (jsonError) {
+        } catch {
           // If JSON parsing fails, try to interpret as CBL block data
           try {
             // Get the member to use as creator for CBL validation
@@ -655,7 +665,7 @@ export class MemberStore<
           // Hydrate the storage data
           const schema = privateMemberProfileHydrationSchema<TID>();
           privateProfile = schema.hydrate(storageData);
-        } catch (jsonError) {
+        } catch {
           // If JSON parsing fails, try to interpret as CBL block data
           try {
             // Get the member to use as creator for CBL validation
@@ -748,15 +758,14 @@ export class MemberStore<
             currentProfile.publicProfile?.reputation ??
             0,
           storageQuota:
-            currentProfile.publicProfile?.storageQuota ?? BigInt(1024 * 1024 * 100),
-          storageUsed:
-            currentProfile.publicProfile?.storageUsed ?? BigInt(0),
+            currentProfile.publicProfile?.storageQuota ??
+            BigInt(1024 * 1024 * 100),
+          storageUsed: currentProfile.publicProfile?.storageUsed ?? BigInt(0),
           lastActive:
             changes.publicChanges?.lastSeen ??
             currentProfile.publicProfile?.lastActive ??
             new Date(),
-          dateCreated:
-            currentProfile.publicProfile?.dateCreated ?? new Date(),
+          dateCreated: currentProfile.publicProfile?.dateCreated ?? new Date(),
           dateUpdated: new Date(),
         };
 
@@ -771,17 +780,14 @@ export class MemberStore<
             changes.privateChanges?.blockedPeers ??
             currentProfile.privateProfile?.blockedPeers ??
             [],
-          settings:
-            changes.privateChanges?.settings ??
+          settings: changes.privateChanges?.settings ??
             currentProfile.privateProfile?.settings ?? {
               autoReplication: true,
               minRedundancy: 3,
               preferredRegions: [],
             },
-          activityLog:
-            currentProfile.privateProfile?.activityLog ?? [],
-          dateCreated:
-            currentProfile.privateProfile?.dateCreated ?? new Date(),
+          activityLog: currentProfile.privateProfile?.activityLog ?? [],
+          dateCreated: currentProfile.privateProfile?.dateCreated ?? new Date(),
           dateUpdated: new Date(),
         };
 
@@ -790,14 +796,18 @@ export class MemberStore<
         const privateSchema = privateMemberProfileHydrationSchema<TID>();
 
         const publicStorageData = publicSchema.dehydrate(updatedPublicProfile);
-        const privateStorageData = privateSchema.dehydrate(updatedPrivateProfile);
+        const privateStorageData = privateSchema.dehydrate(
+          updatedPrivateProfile,
+        );
 
         const publicProfileJson = JSON.stringify(publicStorageData);
         const privateProfileJson = JSON.stringify(privateStorageData);
 
         // Encode JSON to bytes
         const publicProfileBytes = new TextEncoder().encode(publicProfileJson);
-        const privateProfileBytes = new TextEncoder().encode(privateProfileJson);
+        const privateProfileBytes = new TextEncoder().encode(
+          privateProfileJson,
+        );
 
         // Create new blocks for profile data
         const newPublicProfileBlock = new RawDataBlock(

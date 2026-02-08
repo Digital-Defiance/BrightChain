@@ -1,5 +1,8 @@
 import { BlockMetadataErrorType } from '../../enumerations/blockMetadataErrorType';
-import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../../enumerations/brightChainStrings';
 import { TypedWithReasonError } from '../typedWithReasonError';
 
 export class BlockMetadataError extends TypedWithReasonError<BlockMetadataErrorType> {

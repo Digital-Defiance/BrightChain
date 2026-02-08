@@ -19,7 +19,7 @@ describe('DosProtectionValidator', () => {
       const limits = DEFAULT_DOS_LIMITS['blockCreation'];
       expect(() => {
         validator.validateInputSize('blockCreation', limits.maxInputSize + 1);
-      }).toThrow(/Security_DOS_InputSizeExceedsLimitErrorTemplate/);
+      }).toThrow(/Input size.*exceeds.*limit/);
     });
 
     it('should use default limits for unknown operation', () => {
@@ -49,7 +49,7 @@ describe('DosProtectionValidator', () => {
 
       await expect(
         validator.withTimeout('testOp', slowPromise),
-      ).rejects.toThrow(/Security_DOS_OperationExceededTimeLimitErrorTemplate/);
+      ).rejects.toThrow(/exceeded timeout/);
     });
 
     it('should handle promise rejection', async () => {

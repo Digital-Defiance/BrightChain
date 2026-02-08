@@ -1,4 +1,9 @@
-import { Member, PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import {
+  GuidV4Uint8Array,
+  Member,
+  PlatformID,
+  ShortHexGuid,
+} from '@digitaldefiance/ecies-lib';
 
 /**
  * Metadata for a quorum member
@@ -11,9 +16,9 @@ export interface QuorumMemberMetadata {
 
 /**
  * A quorum member with their public key and metadata
- * @template TID - Platform ID type (currently unused but reserved for future use)
+ * @template TID - Platform ID type (string, Uint8Array, or Buffer-based types)
  */
-export interface IQuorumMember<TID extends PlatformID = Uint8Array> {
+export interface IQuorumMember<TID extends PlatformID = GuidV4Uint8Array> {
   id: ShortHexGuid;
   publicKey: Uint8Array;
   metadata: QuorumMemberMetadata;
@@ -34,9 +39,11 @@ export interface MemberShare {
 
 /**
  * Result of a document sealing operation
- * @template TID - Platform ID type (currently unused but reserved for future use)
+ * @template TID - Platform ID type (string, Uint8Array, or Buffer-based types)
  */
-export interface SealedDocumentResult<TID extends PlatformID = Uint8Array> {
+export interface SealedDocumentResult<
+  TID extends PlatformID = GuidV4Uint8Array,
+> {
   documentId: ShortHexGuid;
   encryptedData: Uint8Array;
   memberIds: ShortHexGuid[];
@@ -72,7 +79,7 @@ export interface CanUnlockResult {
  * Provides member management and document sealing/unsealing functionality
  * using Shamir's Secret Sharing for secure multi-party access control.
  */
-export interface IQuorumService<TID extends PlatformID = Uint8Array> {
+export interface IQuorumService<TID extends PlatformID = GuidV4Uint8Array> {
   // === Member Management ===
 
   /**

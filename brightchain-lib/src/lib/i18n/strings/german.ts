@@ -1,5 +1,8 @@
 import { StringsCollection } from '@digitaldefiance/i18n-lib';
-import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../../enumerations/brightChainStrings';
 
 export const GermanStrings: StringsCollection<BrightChainStringKey> = {
   // UI Strings

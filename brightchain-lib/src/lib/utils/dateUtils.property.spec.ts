@@ -242,7 +242,9 @@ describe('Feature: block-security-hardening, Property 8: Malformed Date Rejectio
             return;
           }
 
-          expect(() => parseDate(invalidString)).toThrow(/Error_InvalidDateStringTemplate/);
+          expect(() => parseDate(invalidString)).toThrow(
+            /Invalid date string/i,
+          );
         },
       ),
       { numRuns: 100 },
@@ -259,7 +261,7 @@ describe('Feature: block-security-hardening, Property 8: Malformed Date Rejectio
     const invalidNumbers = [NaN, Infinity, -Infinity];
 
     invalidNumbers.forEach((invalid) => {
-      expect(() => parseDate(invalid)).toThrow(/Error_InvalidUnixTimestampTemplate/);
+      expect(() => parseDate(invalid)).toThrow(/Invalid Unix timestamp/i);
     });
   });
 
@@ -311,9 +313,7 @@ describe('Feature: block-security-hardening, Property 8: Malformed Date Rejectio
   it('Property 8e: serializeDate throws on invalid Date', () => {
     const invalidDate = new Date('invalid');
 
-    expect(() => serializeDate(invalidDate)).toThrow(
-      /Error_InvalidDateNaN/,
-    );
+    expect(() => serializeDate(invalidDate)).toThrow(/Invalid date.*NaN/);
   });
 
   /**
@@ -334,9 +334,7 @@ describe('Feature: block-security-hardening, Property 8: Malformed Date Rejectio
         ),
         (nonDate) => {
           // @ts-expect-error - Testing runtime behavior with invalid types
-          expect(() => serializeDate(nonDate)).toThrow(
-            /Error_InvalidDateObjectTemplate/,
-          );
+          expect(() => serializeDate(nonDate)).toThrow(/Invalid date object/i);
         },
       ),
       { numRuns: 100 },

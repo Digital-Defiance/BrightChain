@@ -1,4 +1,4 @@
-export * from './email-token';
-export * from './request-user';
-export * from './role';
-export * from './user';
+export type * from './email-token';
+export type * from './request-user';
+export type * from './role';
+export type * from './user';

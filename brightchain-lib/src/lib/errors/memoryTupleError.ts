@@ -1,5 +1,8 @@
 import { LanguageCode } from '@digitaldefiance/i18n-lib';
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../enumerations/brightChainStrings';
 import { MemoryTupleErrorType } from '../enumerations/memoryTupleErrorType';
 import { TypedError } from './typedError';
 

@@ -1,4 +1,16 @@
 {
   "nxConsole.generateAiAgentRules": true,
-  "kiroAgent.configureMCP": "Enabled"
+  "kiroAgent.configureMCP": "Enabled",
+  "eslint.useFlatConfig": true,
+  "eslint.options": {
+    "overrideConfigFile": "./eslint.config.mjs"
+  },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ]
 }

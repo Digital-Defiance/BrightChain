@@ -52,7 +52,7 @@ export default [
     languageOptions: {
       parser: typescriptParser,
       parserOptions: {
-        project: './tsconfig.base.json',
+        project: './tsconfig.json',
       },
       globals: {
         ...globals.node,
@@ -101,14 +101,12 @@ export default [
   },
   {
     name: 'test-files',
-    files: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.js', '**/*.spec.jsx', '**/*.test.ts', '**/*.test.tsx', '**/jest.setup.ts'],
+    files: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.js', '**/*.spec.jsx', '**/*.test.ts', '**/*.test.tsx', '**/jest.setup.ts', '**/__tests__/**/*.ts'],
     languageOptions: {
       globals: {
         ...globals.node,
         ...globals.jest,
         ...globals.es2021,
-        jest: 'readonly',
-        expect: 'readonly',
         fail: 'readonly',
         BufferEncoding: 'readonly',
       },

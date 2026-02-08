@@ -1,5 +1,8 @@
 import { LanguageCode } from '@digitaldefiance/i18n-lib';
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../enumerations/brightChainStrings';
 import { SystemKeyringErrorType } from '../enumerations/systemKeyringErrorType';
 import { TypedError } from './typedError';
 

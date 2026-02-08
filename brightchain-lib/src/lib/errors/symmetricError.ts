@@ -1,5 +1,8 @@
-import { SuiteCoreStringKey, SuiteCoreStringKeyValue } from '@digitaldefiance/suite-core-lib';
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
+import {
+  SuiteCoreStringKey,
+  SuiteCoreStringKeyValue,
+} from '@digitaldefiance/suite-core-lib';
+import { BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { SymmetricErrorType } from '../enumerations/symmetricErrorType';
 import { SymmetricService } from '../services/symmetric.service';
 import { TypedError } from './typedError';

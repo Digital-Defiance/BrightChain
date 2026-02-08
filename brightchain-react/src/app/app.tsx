@@ -1,4 +1,4 @@
-import { CONSTANTS } from '@brightchain/brightchain-lib';
+import { CONSTANTS, i18nEngine } from '@brightchain/brightchain-lib';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import {
   ApiAccess,
@@ -6,6 +6,7 @@ import {
   BackupCodeLoginWrapper,
   BackupCodesWrapper,
   ChangePasswordFormWrapper,
+  I18nProvider,
   LoginFormWrapper,
   LogoutPageWrapper,
   MenuProvider,
@@ -89,14 +90,16 @@ const AuthProviderWithNavigation: FC<{ children: React.ReactNode }> = ({
 const App: FC = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <TranslatedTitle
-        componentId="brightchain.strings"
-        stringKey="BrightChain"
-      />
-      <CssBaseline />
-      <AuthProviderWithNavigation>
-        <InnerApp />
-      </AuthProviderWithNavigation>
+      <I18nProvider i18nEngine={i18nEngine}>
+        <TranslatedTitle
+          componentId="brightchain.strings"
+          stringKey="BrightChain"
+        />
+        <CssBaseline />
+        <AuthProviderWithNavigation>
+          <InnerApp />
+        </AuthProviderWithNavigation>
+      </I18nProvider>
     </LocalizationProvider>
   );
 };

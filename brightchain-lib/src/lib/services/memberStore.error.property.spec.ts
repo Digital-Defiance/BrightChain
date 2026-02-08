@@ -26,7 +26,6 @@ import { RawDataBlock } from '../blocks/rawData';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
-import { MemberErrorType } from '../enumerations/memberErrorType';
 import { MemberStatusType } from '../enumerations/memberStatusType';
 import { MemberError } from '../errors/memberError';
 import { BlockStoreFactory } from '../factories/blockStoreFactory';
@@ -48,7 +47,6 @@ describe('MemberStore Error Handling Property Tests', () => {
   afterEach(() => {
     ServiceProvider.resetInstance();
   });
-
 
   /**
    * Helper to create a test member
@@ -171,7 +169,6 @@ describe('MemberStore Error Handling Property Tests', () => {
       );
     });
 
-
     /**
      * Property: Truncated profile data should be rejected.
      */
@@ -278,56 +275,58 @@ describe('MemberStore Error Handling Property Tests', () => {
      */
     it('should reject empty block data', async () => {
       await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1, max: 999999 }), async (suffix) => {
-          const { member } = createTestMember(
-            `empty${suffix}`,
-            `empty${suffix}@example.com`,
-          );
+        fc.asyncProperty(
+          fc.integer({ min: 1, max: 999999 }),
+          async (suffix) => {
+            const { member } = createTestMember(
+              `empty${suffix}`,
+              `empty${suffix}@example.com`,
+            );
 
-          // Create empty block data
-          const blockData = new Uint8Array(BlockSize.Small);
+            // Create empty block data
+            const blockData = new Uint8Array(BlockSize.Small);
 
-          // Calculate checksum and create block
-          const checksumService =
-            ServiceProvider.getInstance().checksumService;
-          const checksum = checksumService.calculateChecksum(blockData);
+            // Calculate checksum and create block
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
+            const checksum = checksumService.calculateChecksum(blockData);
 
-          const emptyBlock = new RawDataBlock(
-            BlockSize.Small,
-            blockData,
-            new Date(),
-            checksum,
-            BlockType.RawData,
-            BlockDataType.PublicMemberData,
-          );
+            const emptyBlock = new RawDataBlock(
+              BlockSize.Small,
+              blockData,
+              new Date(),
+              checksum,
+              BlockType.RawData,
+              BlockDataType.PublicMemberData,
+            );
 
-          await blockStore.setData(emptyBlock);
+            await blockStore.setData(emptyBlock);
 
-          // Update index with empty profile block
-          await memberStore.updateIndex({
-            id: member.id,
-            publicCBL: checksum,
-            privateCBL: checksum,
-            publicProfileCBL: checksum,
-            privateProfileCBL: checksum,
-            type: MemberType.User,
-            status: MemberStatusType.Active,
-            lastUpdate: new Date(),
-            reputation: 0,
-          });
+            // Update index with empty profile block
+            await memberStore.updateIndex({
+              id: member.id,
+              publicCBL: checksum,
+              privateCBL: checksum,
+              publicProfileCBL: checksum,
+              privateProfileCBL: checksum,
+              type: MemberType.User,
+              status: MemberStatusType.Active,
+              lastUpdate: new Date(),
+              reputation: 0,
+            });
 
-          // Attempt to retrieve profile - should throw MemberError
-          await expect(memberStore.getMemberProfile(member.id)).rejects.toThrow(
-            MemberError,
-          );
+            // Attempt to retrieve profile - should throw MemberError
+            await expect(
+              memberStore.getMemberProfile(member.id),
+            ).rejects.toThrow(MemberError);
 
-          return true;
-        }),
+            return true;
+          },
+        ),
         { numRuns: 50 },
       );
     });
   });
-
 
   /**
    * **Feature: member-storage-audit, Property 5: Required Field Validation**
@@ -345,575 +344,590 @@ describe('MemberStore Error Handling Property Tests', () => {
      */
     it('should reject public profile missing id field', async () => {
       await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1, max: 999999 }), async (suffix) => {
-          const { member } = createTestMember(
-            `missingId${suffix}`,
-            `missingId${suffix}@example.com`,
-          );
+        fc.asyncProperty(
+          fc.integer({ min: 1, max: 999999 }),
+          async (suffix) => {
+            const { member } = createTestMember(
+              `missingId${suffix}`,
+              `missingId${suffix}@example.com`,
+            );
 
-          // Create JSON without 'id' field
-          const invalidJson = JSON.stringify({
-            // id is missing
-            status: MemberStatusType.Active,
-            lastActive: new Date().toISOString(),
-            reputation: 100,
-            storageQuota: '104857600',
-            storageUsed: '0',
-            dateCreated: new Date().toISOString(),
-            dateUpdated: new Date().toISOString(),
-          });
+            // Create JSON without 'id' field
+            const invalidJson = JSON.stringify({
+              // id is missing
+              status: MemberStatusType.Active,
+              lastActive: new Date().toISOString(),
+              reputation: 100,
+              storageQuota: '104857600',
+              storageUsed: '0',
+              dateCreated: new Date().toISOString(),
+              dateUpdated: new Date().toISOString(),
+            });
 
-          const jsonBytes = new TextEncoder().encode(invalidJson);
-          const blockData = new Uint8Array(BlockSize.Small);
-          blockData.set(jsonBytes);
+            const jsonBytes = new TextEncoder().encode(invalidJson);
+            const blockData = new Uint8Array(BlockSize.Small);
+            blockData.set(jsonBytes);
 
-          const checksumService =
-            ServiceProvider.getInstance().checksumService;
-          const checksum = checksumService.calculateChecksum(blockData);
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
+            const checksum = checksumService.calculateChecksum(blockData);
 
-          const block = new RawDataBlock(
-            BlockSize.Small,
-            blockData,
-            new Date(),
-            checksum,
-            BlockType.RawData,
-            BlockDataType.PublicMemberData,
-          );
+            const block = new RawDataBlock(
+              BlockSize.Small,
+              blockData,
+              new Date(),
+              checksum,
+              BlockType.RawData,
+              BlockDataType.PublicMemberData,
+            );
 
-          await blockStore.setData(block);
+            await blockStore.setData(block);
 
-          // Create dummy identity block
-          const dummyData = new Uint8Array(BlockSize.Small);
-          const dummyChecksum = checksumService.calculateChecksum(dummyData);
-          const dummyBlock = new RawDataBlock(
-            BlockSize.Small,
-            dummyData,
-            new Date(),
-            dummyChecksum,
-            BlockType.RawData,
-            BlockDataType.PublicMemberData,
-          );
-          await blockStore.setData(dummyBlock);
+            // Create dummy identity block
+            const dummyData = new Uint8Array(BlockSize.Small);
+            const dummyChecksum = checksumService.calculateChecksum(dummyData);
+            const dummyBlock = new RawDataBlock(
+              BlockSize.Small,
+              dummyData,
+              new Date(),
+              dummyChecksum,
+              BlockType.RawData,
+              BlockDataType.PublicMemberData,
+            );
+            await blockStore.setData(dummyBlock);
 
-          await memberStore.updateIndex({
-            id: member.id,
-            publicCBL: dummyChecksum,
-            privateCBL: dummyChecksum,
-            publicProfileCBL: checksum,
-            privateProfileCBL: undefined,
-            type: MemberType.User,
-            status: MemberStatusType.Active,
-            lastUpdate: new Date(),
-            reputation: 0,
-          });
+            await memberStore.updateIndex({
+              id: member.id,
+              publicCBL: dummyChecksum,
+              privateCBL: dummyChecksum,
+              publicProfileCBL: checksum,
+              privateProfileCBL: undefined,
+              type: MemberType.User,
+              status: MemberStatusType.Active,
+              lastUpdate: new Date(),
+              reputation: 0,
+            });
 
-          await expect(memberStore.getMemberProfile(member.id)).rejects.toThrow(
-            MemberError,
-          );
+            await expect(
+              memberStore.getMemberProfile(member.id),
+            ).rejects.toThrow(MemberError);
 
-          return true;
-        }),
+            return true;
+          },
+        ),
         { numRuns: 50 },
       );
     });
-
 
     /**
      * Property: Public profile missing 'status' should be rejected.
      */
     it('should reject public profile missing status field', async () => {
       await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1, max: 999999 }), async (suffix) => {
-          const { member } = createTestMember(
-            `missingStatus${suffix}`,
-            `missingStatus${suffix}@example.com`,
-          );
+        fc.asyncProperty(
+          fc.integer({ min: 1, max: 999999 }),
+          async (suffix) => {
+            const { member } = createTestMember(
+              `missingStatus${suffix}`,
+              `missingStatus${suffix}@example.com`,
+            );
 
-          const idProvider =
-            ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider;
-          const idHex = Array.from(idProvider.toBytes(member.id))
-            .map((b) => b.toString(16).padStart(2, '0'))
-            .join('');
+            const idProvider =
+              ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider;
+            const idHex = Array.from(idProvider.toBytes(member.id))
+              .map((b) => b.toString(16).padStart(2, '0'))
+              .join('');
 
-          // Create JSON without 'status' field
-          const invalidJson = JSON.stringify({
-            id: idHex,
-            // status is missing
-            lastActive: new Date().toISOString(),
-            reputation: 100,
-            storageQuota: '104857600',
-            storageUsed: '0',
-            dateCreated: new Date().toISOString(),
-            dateUpdated: new Date().toISOString(),
-          });
+            // Create JSON without 'status' field
+            const invalidJson = JSON.stringify({
+              id: idHex,
+              // status is missing
+              lastActive: new Date().toISOString(),
+              reputation: 100,
+              storageQuota: '104857600',
+              storageUsed: '0',
+              dateCreated: new Date().toISOString(),
+              dateUpdated: new Date().toISOString(),
+            });
 
-          const jsonBytes = new TextEncoder().encode(invalidJson);
-          const blockData = new Uint8Array(BlockSize.Small);
-          blockData.set(jsonBytes);
+            const jsonBytes = new TextEncoder().encode(invalidJson);
+            const blockData = new Uint8Array(BlockSize.Small);
+            blockData.set(jsonBytes);
 
-          const checksumService =
-            ServiceProvider.getInstance().checksumService;
-          const checksum = checksumService.calculateChecksum(blockData);
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
+            const checksum = checksumService.calculateChecksum(blockData);
 
-          const block = new RawDataBlock(
-            BlockSize.Small,
-            blockData,
-            new Date(),
-            checksum,
-            BlockType.RawData,
-            BlockDataType.PublicMemberData,
-          );
+            const block = new RawDataBlock(
+              BlockSize.Small,
+              blockData,
+              new Date(),
+              checksum,
+              BlockType.RawData,
+              BlockDataType.PublicMemberData,
+            );
 
-          await blockStore.setData(block);
+            await blockStore.setData(block);
 
-          // Create dummy identity block
-          const dummyData = new Uint8Array(BlockSize.Small);
-          const dummyChecksum = checksumService.calculateChecksum(dummyData);
-          const dummyBlock = new RawDataBlock(
-            BlockSize.Small,
-            dummyData,
-            new Date(),
-            dummyChecksum,
-            BlockType.RawData,
-            BlockDataType.PublicMemberData,
-          );
-          await blockStore.setData(dummyBlock);
+            // Create dummy identity block
+            const dummyData = new Uint8Array(BlockSize.Small);
+            const dummyChecksum = checksumService.calculateChecksum(dummyData);
+            const dummyBlock = new RawDataBlock(
+              BlockSize.Small,
+              dummyData,
+              new Date(),
+              dummyChecksum,
+              BlockType.RawData,
+              BlockDataType.PublicMemberData,
+            );
+            await blockStore.setData(dummyBlock);
 
-          await memberStore.updateIndex({
-            id: member.id,
-            publicCBL: dummyChecksum,
-            privateCBL: dummyChecksum,
-            publicProfileCBL: checksum,
-            privateProfileCBL: undefined,
-            type: MemberType.User,
-            status: MemberStatusType.Active,
-            lastUpdate: new Date(),
-            reputation: 0,
-          });
+            await memberStore.updateIndex({
+              id: member.id,
+              publicCBL: dummyChecksum,
+              privateCBL: dummyChecksum,
+              publicProfileCBL: checksum,
+              privateProfileCBL: undefined,
+              type: MemberType.User,
+              status: MemberStatusType.Active,
+              lastUpdate: new Date(),
+              reputation: 0,
+            });
 
-          await expect(memberStore.getMemberProfile(member.id)).rejects.toThrow(
-            MemberError,
-          );
+            await expect(
+              memberStore.getMemberProfile(member.id),
+            ).rejects.toThrow(MemberError);
 
-          return true;
-        }),
+            return true;
+          },
+        ),
         { numRuns: 50 },
       );
     });
-
 
     /**
      * Property: Public profile missing 'dateCreated' should be rejected.
      */
     it('should reject public profile missing dateCreated field', async () => {
       await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1, max: 999999 }), async (suffix) => {
-          const { member } = createTestMember(
-            `missingDateCreated${suffix}`,
-            `missingDateCreated${suffix}@example.com`,
-          );
+        fc.asyncProperty(
+          fc.integer({ min: 1, max: 999999 }),
+          async (suffix) => {
+            const { member } = createTestMember(
+              `missingDateCreated${suffix}`,
+              `missingDateCreated${suffix}@example.com`,
+            );
 
-          const idProvider =
-            ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider;
-          const idHex = Array.from(idProvider.toBytes(member.id))
-            .map((b) => b.toString(16).padStart(2, '0'))
-            .join('');
+            const idProvider =
+              ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider;
+            const idHex = Array.from(idProvider.toBytes(member.id))
+              .map((b) => b.toString(16).padStart(2, '0'))
+              .join('');
 
-          // Create JSON without 'dateCreated' field
-          const invalidJson = JSON.stringify({
-            id: idHex,
-            status: MemberStatusType.Active,
-            lastActive: new Date().toISOString(),
-            reputation: 100,
-            storageQuota: '104857600',
-            storageUsed: '0',
-            // dateCreated is missing
-            dateUpdated: new Date().toISOString(),
-          });
+            // Create JSON without 'dateCreated' field
+            const invalidJson = JSON.stringify({
+              id: idHex,
+              status: MemberStatusType.Active,
+              lastActive: new Date().toISOString(),
+              reputation: 100,
+              storageQuota: '104857600',
+              storageUsed: '0',
+              // dateCreated is missing
+              dateUpdated: new Date().toISOString(),
+            });
 
-          const jsonBytes = new TextEncoder().encode(invalidJson);
-          const blockData = new Uint8Array(BlockSize.Small);
-          blockData.set(jsonBytes);
+            const jsonBytes = new TextEncoder().encode(invalidJson);
+            const blockData = new Uint8Array(BlockSize.Small);
+            blockData.set(jsonBytes);
 
-          const checksumService =
-            ServiceProvider.getInstance().checksumService;
-          const checksum = checksumService.calculateChecksum(blockData);
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
+            const checksum = checksumService.calculateChecksum(blockData);
 
-          const block = new RawDataBlock(
-            BlockSize.Small,
-            blockData,
-            new Date(),
-            checksum,
-            BlockType.RawData,
-            BlockDataType.PublicMemberData,
-          );
+            const block = new RawDataBlock(
+              BlockSize.Small,
+              blockData,
+              new Date(),
+              checksum,
+              BlockType.RawData,
+              BlockDataType.PublicMemberData,
+            );
 
-          await blockStore.setData(block);
+            await blockStore.setData(block);
 
-          // Create dummy identity block
-          const dummyData = new Uint8Array(BlockSize.Small);
-          const dummyChecksum = checksumService.calculateChecksum(dummyData);
-          const dummyBlock = new RawDataBlock(
-            BlockSize.Small,
-            dummyData,
-            new Date(),
-            dummyChecksum,
-            BlockType.RawData,
-            BlockDataType.PublicMemberData,
-          );
-          await blockStore.setData(dummyBlock);
+            // Create dummy identity block
+            const dummyData = new Uint8Array(BlockSize.Small);
+            const dummyChecksum = checksumService.calculateChecksum(dummyData);
+            const dummyBlock = new RawDataBlock(
+              BlockSize.Small,
+              dummyData,
+              new Date(),
+              dummyChecksum,
+              BlockType.RawData,
+              BlockDataType.PublicMemberData,
+            );
+            await blockStore.setData(dummyBlock);
 
-          await memberStore.updateIndex({
-            id: member.id,
-            publicCBL: dummyChecksum,
-            privateCBL: dummyChecksum,
-            publicProfileCBL: checksum,
-            privateProfileCBL: undefined,
-            type: MemberType.User,
-            status: MemberStatusType.Active,
-            lastUpdate: new Date(),
-            reputation: 0,
-          });
+            await memberStore.updateIndex({
+              id: member.id,
+              publicCBL: dummyChecksum,
+              privateCBL: dummyChecksum,
+              publicProfileCBL: checksum,
+              privateProfileCBL: undefined,
+              type: MemberType.User,
+              status: MemberStatusType.Active,
+              lastUpdate: new Date(),
+              reputation: 0,
+            });
 
-          await expect(memberStore.getMemberProfile(member.id)).rejects.toThrow(
-            MemberError,
-          );
+            await expect(
+              memberStore.getMemberProfile(member.id),
+            ).rejects.toThrow(MemberError);
 
-          return true;
-        }),
+            return true;
+          },
+        ),
         { numRuns: 50 },
       );
     });
-
 
     /**
      * Property: Public profile missing 'dateUpdated' should be rejected.
      */
     it('should reject public profile missing dateUpdated field', async () => {
       await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1, max: 999999 }), async (suffix) => {
-          const { member } = createTestMember(
-            `missingDateUpdated${suffix}`,
-            `missingDateUpdated${suffix}@example.com`,
-          );
+        fc.asyncProperty(
+          fc.integer({ min: 1, max: 999999 }),
+          async (suffix) => {
+            const { member } = createTestMember(
+              `missingDateUpdated${suffix}`,
+              `missingDateUpdated${suffix}@example.com`,
+            );
 
-          const idProvider =
-            ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider;
-          const idHex = Array.from(idProvider.toBytes(member.id))
-            .map((b) => b.toString(16).padStart(2, '0'))
-            .join('');
+            const idProvider =
+              ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider;
+            const idHex = Array.from(idProvider.toBytes(member.id))
+              .map((b) => b.toString(16).padStart(2, '0'))
+              .join('');
 
-          // Create JSON without 'dateUpdated' field
-          const invalidJson = JSON.stringify({
-            id: idHex,
-            status: MemberStatusType.Active,
-            lastActive: new Date().toISOString(),
-            reputation: 100,
-            storageQuota: '104857600',
-            storageUsed: '0',
-            dateCreated: new Date().toISOString(),
-            // dateUpdated is missing
-          });
+            // Create JSON without 'dateUpdated' field
+            const invalidJson = JSON.stringify({
+              id: idHex,
+              status: MemberStatusType.Active,
+              lastActive: new Date().toISOString(),
+              reputation: 100,
+              storageQuota: '104857600',
+              storageUsed: '0',
+              dateCreated: new Date().toISOString(),
+              // dateUpdated is missing
+            });
 
-          const jsonBytes = new TextEncoder().encode(invalidJson);
-          const blockData = new Uint8Array(BlockSize.Small);
-          blockData.set(jsonBytes);
+            const jsonBytes = new TextEncoder().encode(invalidJson);
+            const blockData = new Uint8Array(BlockSize.Small);
+            blockData.set(jsonBytes);
 
-          const checksumService =
-            ServiceProvider.getInstance().checksumService;
-          const checksum = checksumService.calculateChecksum(blockData);
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
+            const checksum = checksumService.calculateChecksum(blockData);
 
-          const block = new RawDataBlock(
-            BlockSize.Small,
-            blockData,
-            new Date(),
-            checksum,
-            BlockType.RawData,
-            BlockDataType.PublicMemberData,
-          );
+            const block = new RawDataBlock(
+              BlockSize.Small,
+              blockData,
+              new Date(),
+              checksum,
+              BlockType.RawData,
+              BlockDataType.PublicMemberData,
+            );
 
-          await blockStore.setData(block);
+            await blockStore.setData(block);
 
-          // Create dummy identity block
-          const dummyData = new Uint8Array(BlockSize.Small);
-          const dummyChecksum = checksumService.calculateChecksum(dummyData);
-          const dummyBlock = new RawDataBlock(
-            BlockSize.Small,
-            dummyData,
-            new Date(),
-            dummyChecksum,
-            BlockType.RawData,
-            BlockDataType.PublicMemberData,
-          );
-          await blockStore.setData(dummyBlock);
+            // Create dummy identity block
+            const dummyData = new Uint8Array(BlockSize.Small);
+            const dummyChecksum = checksumService.calculateChecksum(dummyData);
+            const dummyBlock = new RawDataBlock(
+              BlockSize.Small,
+              dummyData,
+              new Date(),
+              dummyChecksum,
+              BlockType.RawData,
+              BlockDataType.PublicMemberData,
+            );
+            await blockStore.setData(dummyBlock);
 
-          await memberStore.updateIndex({
-            id: member.id,
-            publicCBL: dummyChecksum,
-            privateCBL: dummyChecksum,
-            publicProfileCBL: checksum,
-            privateProfileCBL: undefined,
-            type: MemberType.User,
-            status: MemberStatusType.Active,
-            lastUpdate: new Date(),
-            reputation: 0,
-          });
+            await memberStore.updateIndex({
+              id: member.id,
+              publicCBL: dummyChecksum,
+              privateCBL: dummyChecksum,
+              publicProfileCBL: checksum,
+              privateProfileCBL: undefined,
+              type: MemberType.User,
+              status: MemberStatusType.Active,
+              lastUpdate: new Date(),
+              reputation: 0,
+            });
 
-          await expect(memberStore.getMemberProfile(member.id)).rejects.toThrow(
-            MemberError,
-          );
+            await expect(
+              memberStore.getMemberProfile(member.id),
+            ).rejects.toThrow(MemberError);
 
-          return true;
-        }),
+            return true;
+          },
+        ),
         { numRuns: 50 },
       );
     });
-
 
     /**
      * Property: Private profile missing 'trustedPeers' should be rejected.
      */
     it('should reject private profile missing trustedPeers field', async () => {
       await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1, max: 999999 }), async (suffix) => {
-          const { member } = createTestMember(
-            `missingTrusted${suffix}`,
-            `missingTrusted${suffix}@example.com`,
-          );
+        fc.asyncProperty(
+          fc.integer({ min: 1, max: 999999 }),
+          async (suffix) => {
+            const { member } = createTestMember(
+              `missingTrusted${suffix}`,
+              `missingTrusted${suffix}@example.com`,
+            );
 
-          const idProvider =
-            ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider;
-          const idHex = Array.from(idProvider.toBytes(member.id))
-            .map((b) => b.toString(16).padStart(2, '0'))
-            .join('');
+            const idProvider =
+              ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider;
+            const idHex = Array.from(idProvider.toBytes(member.id))
+              .map((b) => b.toString(16).padStart(2, '0'))
+              .join('');
 
-          // Create JSON without 'trustedPeers' field
-          const invalidJson = JSON.stringify({
-            id: idHex,
-            // trustedPeers is missing
-            blockedPeers: [],
-            settings: { autoReplication: true },
-            activityLog: [],
-            dateCreated: new Date().toISOString(),
-            dateUpdated: new Date().toISOString(),
-          });
+            // Create JSON without 'trustedPeers' field
+            const invalidJson = JSON.stringify({
+              id: idHex,
+              // trustedPeers is missing
+              blockedPeers: [],
+              settings: { autoReplication: true },
+              activityLog: [],
+              dateCreated: new Date().toISOString(),
+              dateUpdated: new Date().toISOString(),
+            });
 
-          const jsonBytes = new TextEncoder().encode(invalidJson);
-          const blockData = new Uint8Array(BlockSize.Small);
-          blockData.set(jsonBytes);
+            const jsonBytes = new TextEncoder().encode(invalidJson);
+            const blockData = new Uint8Array(BlockSize.Small);
+            blockData.set(jsonBytes);
 
-          const checksumService =
-            ServiceProvider.getInstance().checksumService;
-          const checksum = checksumService.calculateChecksum(blockData);
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
+            const checksum = checksumService.calculateChecksum(blockData);
 
-          const block = new RawDataBlock(
-            BlockSize.Small,
-            blockData,
-            new Date(),
-            checksum,
-            BlockType.RawData,
-            BlockDataType.PrivateMemberData,
-          );
+            const block = new RawDataBlock(
+              BlockSize.Small,
+              blockData,
+              new Date(),
+              checksum,
+              BlockType.RawData,
+              BlockDataType.PrivateMemberData,
+            );
 
-          await blockStore.setData(block);
+            await blockStore.setData(block);
 
-          // Create dummy identity block
-          const dummyData = new Uint8Array(BlockSize.Small);
-          const dummyChecksum = checksumService.calculateChecksum(dummyData);
-          const dummyBlock = new RawDataBlock(
-            BlockSize.Small,
-            dummyData,
-            new Date(),
-            dummyChecksum,
-            BlockType.RawData,
-            BlockDataType.PublicMemberData,
-          );
-          await blockStore.setData(dummyBlock);
+            // Create dummy identity block
+            const dummyData = new Uint8Array(BlockSize.Small);
+            const dummyChecksum = checksumService.calculateChecksum(dummyData);
+            const dummyBlock = new RawDataBlock(
+              BlockSize.Small,
+              dummyData,
+              new Date(),
+              dummyChecksum,
+              BlockType.RawData,
+              BlockDataType.PublicMemberData,
+            );
+            await blockStore.setData(dummyBlock);
 
-          await memberStore.updateIndex({
-            id: member.id,
-            publicCBL: dummyChecksum,
-            privateCBL: dummyChecksum,
-            publicProfileCBL: undefined,
-            privateProfileCBL: checksum,
-            type: MemberType.User,
-            status: MemberStatusType.Active,
-            lastUpdate: new Date(),
-            reputation: 0,
-          });
+            await memberStore.updateIndex({
+              id: member.id,
+              publicCBL: dummyChecksum,
+              privateCBL: dummyChecksum,
+              publicProfileCBL: undefined,
+              privateProfileCBL: checksum,
+              type: MemberType.User,
+              status: MemberStatusType.Active,
+              lastUpdate: new Date(),
+              reputation: 0,
+            });
 
-          await expect(memberStore.getMemberProfile(member.id)).rejects.toThrow(
-            MemberError,
-          );
+            await expect(
+              memberStore.getMemberProfile(member.id),
+            ).rejects.toThrow(MemberError);
 
-          return true;
-        }),
+            return true;
+          },
+        ),
         { numRuns: 50 },
       );
     });
-
 
     /**
      * Property: Private profile missing 'blockedPeers' should be rejected.
      */
     it('should reject private profile missing blockedPeers field', async () => {
       await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1, max: 999999 }), async (suffix) => {
-          const { member } = createTestMember(
-            `missingBlocked${suffix}`,
-            `missingBlocked${suffix}@example.com`,
-          );
+        fc.asyncProperty(
+          fc.integer({ min: 1, max: 999999 }),
+          async (suffix) => {
+            const { member } = createTestMember(
+              `missingBlocked${suffix}`,
+              `missingBlocked${suffix}@example.com`,
+            );
 
-          const idProvider =
-            ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider;
-          const idHex = Array.from(idProvider.toBytes(member.id))
-            .map((b) => b.toString(16).padStart(2, '0'))
-            .join('');
+            const idProvider =
+              ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider;
+            const idHex = Array.from(idProvider.toBytes(member.id))
+              .map((b) => b.toString(16).padStart(2, '0'))
+              .join('');
 
-          // Create JSON without 'blockedPeers' field
-          const invalidJson = JSON.stringify({
-            id: idHex,
-            trustedPeers: [],
-            // blockedPeers is missing
-            settings: { autoReplication: true },
-            activityLog: [],
-            dateCreated: new Date().toISOString(),
-            dateUpdated: new Date().toISOString(),
-          });
+            // Create JSON without 'blockedPeers' field
+            const invalidJson = JSON.stringify({
+              id: idHex,
+              trustedPeers: [],
+              // blockedPeers is missing
+              settings: { autoReplication: true },
+              activityLog: [],
+              dateCreated: new Date().toISOString(),
+              dateUpdated: new Date().toISOString(),
+            });
 
-          const jsonBytes = new TextEncoder().encode(invalidJson);
-          const blockData = new Uint8Array(BlockSize.Small);
-          blockData.set(jsonBytes);
+            const jsonBytes = new TextEncoder().encode(invalidJson);
+            const blockData = new Uint8Array(BlockSize.Small);
+            blockData.set(jsonBytes);
 
-          const checksumService =
-            ServiceProvider.getInstance().checksumService;
-          const checksum = checksumService.calculateChecksum(blockData);
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
+            const checksum = checksumService.calculateChecksum(blockData);
 
-          const block = new RawDataBlock(
-            BlockSize.Small,
-            blockData,
-            new Date(),
-            checksum,
-            BlockType.RawData,
-            BlockDataType.PrivateMemberData,
-          );
+            const block = new RawDataBlock(
+              BlockSize.Small,
+              blockData,
+              new Date(),
+              checksum,
+              BlockType.RawData,
+              BlockDataType.PrivateMemberData,
+            );
 
-          await blockStore.setData(block);
+            await blockStore.setData(block);
 
-          // Create dummy identity block
-          const dummyData = new Uint8Array(BlockSize.Small);
-          const dummyChecksum = checksumService.calculateChecksum(dummyData);
-          const dummyBlock = new RawDataBlock(
-            BlockSize.Small,
-            dummyData,
-            new Date(),
-            dummyChecksum,
-            BlockType.RawData,
-            BlockDataType.PublicMemberData,
-          );
-          await blockStore.setData(dummyBlock);
+            // Create dummy identity block
+            const dummyData = new Uint8Array(BlockSize.Small);
+            const dummyChecksum = checksumService.calculateChecksum(dummyData);
+            const dummyBlock = new RawDataBlock(
+              BlockSize.Small,
+              dummyData,
+              new Date(),
+              dummyChecksum,
+              BlockType.RawData,
+              BlockDataType.PublicMemberData,
+            );
+            await blockStore.setData(dummyBlock);
 
-          await memberStore.updateIndex({
-            id: member.id,
-            publicCBL: dummyChecksum,
-            privateCBL: dummyChecksum,
-            publicProfileCBL: undefined,
-            privateProfileCBL: checksum,
-            type: MemberType.User,
-            status: MemberStatusType.Active,
-            lastUpdate: new Date(),
-            reputation: 0,
-          });
+            await memberStore.updateIndex({
+              id: member.id,
+              publicCBL: dummyChecksum,
+              privateCBL: dummyChecksum,
+              publicProfileCBL: undefined,
+              privateProfileCBL: checksum,
+              type: MemberType.User,
+              status: MemberStatusType.Active,
+              lastUpdate: new Date(),
+              reputation: 0,
+            });
 
-          await expect(memberStore.getMemberProfile(member.id)).rejects.toThrow(
-            MemberError,
-          );
+            await expect(
+              memberStore.getMemberProfile(member.id),
+            ).rejects.toThrow(MemberError);
 
-          return true;
-        }),
+            return true;
+          },
+        ),
         { numRuns: 50 },
       );
     });
-
 
     /**
      * Property: Private profile missing 'settings' should be rejected.
      */
     it('should reject private profile missing settings field', async () => {
       await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1, max: 999999 }), async (suffix) => {
-          const { member } = createTestMember(
-            `missingSettings${suffix}`,
-            `missingSettings${suffix}@example.com`,
-          );
+        fc.asyncProperty(
+          fc.integer({ min: 1, max: 999999 }),
+          async (suffix) => {
+            const { member } = createTestMember(
+              `missingSettings${suffix}`,
+              `missingSettings${suffix}@example.com`,
+            );
 
-          const idProvider =
-            ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider;
-          const idHex = Array.from(idProvider.toBytes(member.id))
-            .map((b) => b.toString(16).padStart(2, '0'))
-            .join('');
+            const idProvider =
+              ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider;
+            const idHex = Array.from(idProvider.toBytes(member.id))
+              .map((b) => b.toString(16).padStart(2, '0'))
+              .join('');
 
-          // Create JSON without 'settings' field
-          const invalidJson = JSON.stringify({
-            id: idHex,
-            trustedPeers: [],
-            blockedPeers: [],
-            // settings is missing
-            activityLog: [],
-            dateCreated: new Date().toISOString(),
-            dateUpdated: new Date().toISOString(),
-          });
+            // Create JSON without 'settings' field
+            const invalidJson = JSON.stringify({
+              id: idHex,
+              trustedPeers: [],
+              blockedPeers: [],
+              // settings is missing
+              activityLog: [],
+              dateCreated: new Date().toISOString(),
+              dateUpdated: new Date().toISOString(),
+            });
 
-          const jsonBytes = new TextEncoder().encode(invalidJson);
-          const blockData = new Uint8Array(BlockSize.Small);
-          blockData.set(jsonBytes);
+            const jsonBytes = new TextEncoder().encode(invalidJson);
+            const blockData = new Uint8Array(BlockSize.Small);
+            blockData.set(jsonBytes);
 
-          const checksumService =
-            ServiceProvider.getInstance().checksumService;
-          const checksum = checksumService.calculateChecksum(blockData);
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
+            const checksum = checksumService.calculateChecksum(blockData);
 
-          const block = new RawDataBlock(
-            BlockSize.Small,
-            blockData,
-            new Date(),
-            checksum,
-            BlockType.RawData,
-            BlockDataType.PrivateMemberData,
-          );
+            const block = new RawDataBlock(
+              BlockSize.Small,
+              blockData,
+              new Date(),
+              checksum,
+              BlockType.RawData,
+              BlockDataType.PrivateMemberData,
+            );
 
-          await blockStore.setData(block);
+            await blockStore.setData(block);
 
-          // Create dummy identity block
-          const dummyData = new Uint8Array(BlockSize.Small);
-          const dummyChecksum = checksumService.calculateChecksum(dummyData);
-          const dummyBlock = new RawDataBlock(
-            BlockSize.Small,
-            dummyData,
-            new Date(),
-            dummyChecksum,
-            BlockType.RawData,
-            BlockDataType.PublicMemberData,
-          );
-          await blockStore.setData(dummyBlock);
+            // Create dummy identity block
+            const dummyData = new Uint8Array(BlockSize.Small);
+            const dummyChecksum = checksumService.calculateChecksum(dummyData);
+            const dummyBlock = new RawDataBlock(
+              BlockSize.Small,
+              dummyData,
+              new Date(),
+              dummyChecksum,
+              BlockType.RawData,
+              BlockDataType.PublicMemberData,
+            );
+            await blockStore.setData(dummyBlock);
 
-          await memberStore.updateIndex({
-            id: member.id,
-            publicCBL: dummyChecksum,
-            privateCBL: dummyChecksum,
-            publicProfileCBL: undefined,
-            privateProfileCBL: checksum,
-            type: MemberType.User,
-            status: MemberStatusType.Active,
-            lastUpdate: new Date(),
-            reputation: 0,
-          });
+            await memberStore.updateIndex({
+              id: member.id,
+              publicCBL: dummyChecksum,
+              privateCBL: dummyChecksum,
+              publicProfileCBL: undefined,
+              privateProfileCBL: checksum,
+              type: MemberType.User,
+              status: MemberStatusType.Active,
+              lastUpdate: new Date(),
+              reputation: 0,
+            });
 
-          await expect(memberStore.getMemberProfile(member.id)).rejects.toThrow(
-            MemberError,
-          );
+            await expect(
+              memberStore.getMemberProfile(member.id),
+            ).rejects.toThrow(MemberError);
 
-          return true;
-        }),
+            return true;
+          },
+        ),
         { numRuns: 50 },
       );
     });
@@ -923,73 +937,76 @@ describe('MemberStore Error Handling Property Tests', () => {
      */
     it('should reject private profile missing id field', async () => {
       await fc.assert(
-        fc.asyncProperty(fc.integer({ min: 1, max: 999999 }), async (suffix) => {
-          const { member } = createTestMember(
-            `missingPrivateId${suffix}`,
-            `missingPrivateId${suffix}@example.com`,
-          );
+        fc.asyncProperty(
+          fc.integer({ min: 1, max: 999999 }),
+          async (suffix) => {
+            const { member } = createTestMember(
+              `missingPrivateId${suffix}`,
+              `missingPrivateId${suffix}@example.com`,
+            );
 
-          // Create JSON without 'id' field
-          const invalidJson = JSON.stringify({
-            // id is missing
-            trustedPeers: [],
-            blockedPeers: [],
-            settings: { autoReplication: true },
-            activityLog: [],
-            dateCreated: new Date().toISOString(),
-            dateUpdated: new Date().toISOString(),
-          });
+            // Create JSON without 'id' field
+            const invalidJson = JSON.stringify({
+              // id is missing
+              trustedPeers: [],
+              blockedPeers: [],
+              settings: { autoReplication: true },
+              activityLog: [],
+              dateCreated: new Date().toISOString(),
+              dateUpdated: new Date().toISOString(),
+            });
 
-          const jsonBytes = new TextEncoder().encode(invalidJson);
-          const blockData = new Uint8Array(BlockSize.Small);
-          blockData.set(jsonBytes);
+            const jsonBytes = new TextEncoder().encode(invalidJson);
+            const blockData = new Uint8Array(BlockSize.Small);
+            blockData.set(jsonBytes);
 
-          const checksumService =
-            ServiceProvider.getInstance().checksumService;
-          const checksum = checksumService.calculateChecksum(blockData);
+            const checksumService =
+              ServiceProvider.getInstance().checksumService;
+            const checksum = checksumService.calculateChecksum(blockData);
 
-          const block = new RawDataBlock(
-            BlockSize.Small,
-            blockData,
-            new Date(),
-            checksum,
-            BlockType.RawData,
-            BlockDataType.PrivateMemberData,
-          );
+            const block = new RawDataBlock(
+              BlockSize.Small,
+              blockData,
+              new Date(),
+              checksum,
+              BlockType.RawData,
+              BlockDataType.PrivateMemberData,
+            );
 
-          await blockStore.setData(block);
+            await blockStore.setData(block);
 
-          // Create dummy identity block
-          const dummyData = new Uint8Array(BlockSize.Small);
-          const dummyChecksum = checksumService.calculateChecksum(dummyData);
-          const dummyBlock = new RawDataBlock(
-            BlockSize.Small,
-            dummyData,
-            new Date(),
-            dummyChecksum,
-            BlockType.RawData,
-            BlockDataType.PublicMemberData,
-          );
-          await blockStore.setData(dummyBlock);
+            // Create dummy identity block
+            const dummyData = new Uint8Array(BlockSize.Small);
+            const dummyChecksum = checksumService.calculateChecksum(dummyData);
+            const dummyBlock = new RawDataBlock(
+              BlockSize.Small,
+              dummyData,
+              new Date(),
+              dummyChecksum,
+              BlockType.RawData,
+              BlockDataType.PublicMemberData,
+            );
+            await blockStore.setData(dummyBlock);
 
-          await memberStore.updateIndex({
-            id: member.id,
-            publicCBL: dummyChecksum,
-            privateCBL: dummyChecksum,
-            publicProfileCBL: undefined,
-            privateProfileCBL: checksum,
-            type: MemberType.User,
-            status: MemberStatusType.Active,
-            lastUpdate: new Date(),
-            reputation: 0,
-          });
+            await memberStore.updateIndex({
+              id: member.id,
+              publicCBL: dummyChecksum,
+              privateCBL: dummyChecksum,
+              publicProfileCBL: undefined,
+              privateProfileCBL: checksum,
+              type: MemberType.User,
+              status: MemberStatusType.Active,
+              lastUpdate: new Date(),
+              reputation: 0,
+            });
 
-          await expect(memberStore.getMemberProfile(member.id)).rejects.toThrow(
-            MemberError,
-          );
+            await expect(
+              memberStore.getMemberProfile(member.id),
+            ).rejects.toThrow(MemberError);
 
-          return true;
-        }),
+            return true;
+          },
+        ),
         { numRuns: 50 },
       );
     });

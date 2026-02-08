@@ -126,7 +126,9 @@ export function createErrorResponse(
   message: string,
   details?: Record<string, unknown>,
 ): ApiErrorResponse {
-  const response: { error: { code: string; message: string; details?: Record<string, unknown> } } = {
+  const response: {
+    error: { code: string; message: string; details?: Record<string, unknown> };
+  } = {
     error: {
       code,
       message,
@@ -744,7 +746,10 @@ export function handleErrorWithRequestId(
   if (error instanceof QuorumError) {
     return mapQuorumErrorWithRequestId(error, requestId);
   }
-  return createInternalError(requestId, error instanceof Error ? error : undefined);
+  return createInternalError(
+    requestId,
+    error instanceof Error ? error : undefined,
+  );
 }
 
 /**
@@ -805,7 +810,9 @@ export function isStandardErrorResponse(
  */
 export function validateErrorResponseWithRequestId(response: unknown): void {
   if (!isStandardErrorResponseWithRequestId(response)) {
-    throw new Error('Response does not conform to standard error format with requestId');
+    throw new Error(
+      'Response does not conform to standard error format with requestId',
+    );
   }
 }
 

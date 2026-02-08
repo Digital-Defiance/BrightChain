@@ -13,7 +13,7 @@ export default {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@noble|@scure)/)',
+    'node_modules/(?!(@noble|@scure|uuid)/)',
     '/dist/',
     '<rootDir>/../dist/',
   ],
@@ -27,6 +27,8 @@ export default {
     '^@brightchain/brightchain-lib$':
       '<rootDir>/../brightchain-lib/src/index.ts',
     '^@brightchain/api-lib$': '<rootDir>/src/index.ts',
+    // Redirect uuid imports to the CJS version to avoid ESM issues
+    '^uuid$': '<rootDir>/../node_modules/uuid/dist/cjs/index.js',
   },
   extensionsToTreatAsEsm: ['.ts'],
   // Only match actual test files, not mocks/fixtures/helpers

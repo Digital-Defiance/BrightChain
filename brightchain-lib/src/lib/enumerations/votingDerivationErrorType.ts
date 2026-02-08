@@ -1,4 +1,4 @@
-import { BrightChainStrings, BrightChainStringKey } from './brightChainStrings';
+import { BrightChainStringKey, BrightChainStrings } from './brightChainStrings';
 
 export enum VotingDerivationErrorType {
   FailedToGeneratePrime = 'FailedToGeneratePrime',

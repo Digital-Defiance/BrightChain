@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node", "jest"]
+  },
+  "include": [
+    "*.ts",
+    "brightchain-lib/**/*.ts",
+    "brightchain-api-lib/**/*.ts",
+    "brightchain-api/**/*.ts",
+    "brightchain-api-e2e/**/*.ts",
+    "brightchain-react/**/*.ts",
+    "brightchain-react/**/*.tsx",
+    "brightchain-react-e2e/**/*.ts",
+    "brightchain-test-utils/**/*.ts",
+    "showcase/**/*.ts",
+    "showcase/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/dist/**",
+    "tmp"
+  ]
+}

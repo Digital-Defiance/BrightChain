@@ -1,5 +1,5 @@
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
-import { registerTranslation } from '../i18n';
+import { i18nEngine } from '../i18n';
 import { SecurityEventSeverity } from '../security';
 import { createTranslations, EnumLanguageTranslation } from '../types';
 
@@ -7,7 +7,7 @@ export type SecurityEventSeverityLanguageTranslation =
   EnumLanguageTranslation<SecurityEventSeverity>;
 
 export const SecurityEventSeverityTranslations: SecurityEventSeverityLanguageTranslation =
-  registerTranslation(
+  i18nEngine.registerEnum(
     SecurityEventSeverity,
     createTranslations({
       [LanguageCodes.DE]: {
@@ -59,4 +59,5 @@ export const SecurityEventSeverityTranslations: SecurityEventSeverityLanguageTra
         [SecurityEventSeverity.Info]: '信息',
       },
     }),
+    'SecurityEventSeverity',
   );
