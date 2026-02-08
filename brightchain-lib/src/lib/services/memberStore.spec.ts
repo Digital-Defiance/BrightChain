@@ -104,7 +104,9 @@ describe('MemberStore Unit Tests', () => {
         await memberStore.getMember(fakeMember.id);
       } catch (error) {
         expect(error).toBeInstanceOf(MemberError);
-        expect((error as MemberError).type).toBe(MemberErrorType.MemberNotFound);
+        expect((error as MemberError).type).toBe(
+          MemberErrorType.MemberNotFound,
+        );
       }
     });
 
@@ -207,15 +209,17 @@ describe('MemberStore Unit Tests', () => {
         new EmailString('fakeprofile@example.com'),
       );
 
-      await expect(
-        memberStore.getMemberProfile(fakeMember.id),
-      ).rejects.toThrow(MemberError);
+      await expect(memberStore.getMemberProfile(fakeMember.id)).rejects.toThrow(
+        MemberError,
+      );
 
       try {
         await memberStore.getMemberProfile(fakeMember.id);
       } catch (error) {
         expect(error).toBeInstanceOf(MemberError);
-        expect((error as MemberError).type).toBe(MemberErrorType.MemberNotFound);
+        expect((error as MemberError).type).toBe(
+          MemberErrorType.MemberNotFound,
+        );
       }
     });
 
@@ -349,7 +353,9 @@ describe('MemberStore Unit Tests', () => {
       expect(updatedProfile.publicProfile!.storageQuota).toBe(
         originalStorageQuota,
       );
-      expect(updatedProfile.publicProfile!.storageUsed).toBe(originalStorageUsed);
+      expect(updatedProfile.publicProfile!.storageUsed).toBe(
+        originalStorageUsed,
+      );
     });
 
     it('should preserve private profile when updating public profile only', async () => {
@@ -410,7 +416,9 @@ describe('MemberStore Unit Tests', () => {
         });
       } catch (error) {
         expect(error).toBeInstanceOf(MemberError);
-        expect((error as MemberError).type).toBe(MemberErrorType.MemberNotFound);
+        expect((error as MemberError).type).toBe(
+          MemberErrorType.MemberNotFound,
+        );
       }
     });
 

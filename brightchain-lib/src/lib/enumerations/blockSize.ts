@@ -14,7 +14,7 @@
 
 import { InvalidBlockSizeLengthError } from '../errors/invalidBlockSizeLength';
 import { translate } from '../i18n';
-import { BrightChainStrings, BrightChainStringKey } from './brightChainStrings';
+import { BrightChainStringKey, BrightChainStrings } from './brightChainStrings';
 
 /**
  * Block size exponents (2^x) for calculating block sizes.

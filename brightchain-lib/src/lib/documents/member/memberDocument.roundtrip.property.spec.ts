@@ -12,9 +12,9 @@
 import {
   EmailString,
   GuidV4Uint8Array,
+  IIdProvider,
   Member,
   MemberType,
-  IIdProvider,
 } from '@digitaldefiance/ecies-lib';
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import * as fc from 'fast-check';
@@ -94,11 +94,15 @@ describe('MemberDocument Round-Trip Property Tests', () => {
             const reconstructedMember = await doc.toMember(false);
 
             // Verify all essential fields match
-            expect(idProvider.equals(reconstructedMember.id, originalMember.id)).toBe(true);
+            expect(
+              idProvider.equals(reconstructedMember.id, originalMember.id),
+            ).toBe(true);
             expect(reconstructedMember.name).toBe(originalMember.name);
             expect(reconstructedMember.email).toEqual(originalMember.email);
             expect(reconstructedMember.type).toBe(originalMember.type);
-            expect(reconstructedMember.publicKey).toEqual(originalMember.publicKey);
+            expect(reconstructedMember.publicKey).toEqual(
+              originalMember.publicKey,
+            );
 
             return true;
           },
@@ -132,7 +136,9 @@ describe('MemberDocument Round-Trip Property Tests', () => {
         const reconstructedMember = await doc.toMember(false);
 
         expect(reconstructedMember.type).toBe(memberType);
-        expect(idProvider.equals(reconstructedMember.id, originalMember.id)).toBe(true);
+        expect(
+          idProvider.equals(reconstructedMember.id, originalMember.id),
+        ).toBe(true);
       }
     });
 
@@ -143,7 +149,9 @@ describe('MemberDocument Round-Trip Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           // Generate alphanumeric name with varying length (valid member names)
-          fc.string({ minLength: 3, maxLength: 50 }).map(s => s.replace(/[^a-zA-Z0-9]/g, 'x')),
+          fc
+            .string({ minLength: 3, maxLength: 50 })
+            .map((s) => s.replace(/[^a-zA-Z0-9]/g, 'x')),
           fc.integer({ min: 1, max: 999999 }),
           async (nameBase, suffix) => {
             const name = nameBase + suffix;
@@ -163,7 +171,9 @@ describe('MemberDocument Round-Trip Property Tests', () => {
             const reconstructedMember = await doc.toMember(false);
 
             expect(reconstructedMember.name).toBe(originalMember.name);
-            expect(idProvider.equals(reconstructedMember.id, originalMember.id)).toBe(true);
+            expect(
+              idProvider.equals(reconstructedMember.id, originalMember.id),
+            ).toBe(true);
 
             return true;
           },
@@ -224,12 +234,14 @@ describe('MemberDocument Round-Trip Property Tests', () => {
 
       // toMember() should throw because CBLs have not been generated
       await expect(doc.toMember(false)).rejects.toThrow(MemberError);
-      
+
       try {
         await doc.toMember(false);
       } catch (error) {
         expect(error).toBeInstanceOf(MemberError);
-        expect((error as MemberError).type).toBe(MemberErrorType.CBLNotGenerated);
+        expect((error as MemberError).type).toBe(
+          MemberErrorType.CBLNotGenerated,
+        );
       }
     });
 
@@ -247,8 +259,16 @@ describe('MemberDocument Round-Trip Property Tests', () => {
             const publicEmail = `docpublic${suffix}@example.com`;
             const privateEmail = `docprivate${suffix}@example.com`;
 
-            const publicMember = createTestMember(memberType, publicName, publicEmail);
-            const privateMember = createTestMember(memberType, privateName, privateEmail);
+            const publicMember = createTestMember(
+              memberType,
+              publicName,
+              publicEmail,
+            );
+            const privateMember = createTestMember(
+              memberType,
+              privateName,
+              privateEmail,
+            );
 
             const doc = MemberDocument.create<GuidV4Uint8Array>(
               publicMember,
@@ -259,7 +279,9 @@ describe('MemberDocument Round-Trip Property Tests', () => {
             // Test private member round-trip
             const reconstructedPrivate = await doc.toMember(true);
 
-            expect(idProvider.equals(reconstructedPrivate.id, privateMember.id)).toBe(true);
+            expect(
+              idProvider.equals(reconstructedPrivate.id, privateMember.id),
+            ).toBe(true);
             expect(reconstructedPrivate.name).toBe(privateMember.name);
             expect(reconstructedPrivate.email).toEqual(privateMember.email);
             expect(reconstructedPrivate.type).toBe(privateMember.type);

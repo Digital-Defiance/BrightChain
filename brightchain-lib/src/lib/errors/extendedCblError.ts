@@ -1,5 +1,8 @@
 import { BlockSize } from '../enumerations/blockSize';
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../enumerations/brightChainStrings';
 import { ExtendedCblErrorType } from '../enumerations/extendedCblErrorType';
 import { TypedError } from './typedError';
 

@@ -1,5 +1,6 @@
 import alias from '@rollup/plugin-alias';
 import react from '@vitejs/plugin-react';
+import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
@@ -57,13 +58,11 @@ const nobleAliases = [
     find: '@noble/hashes/crypto',
     replacement: resolve(__dirname, 'node_modules/@noble/hashes/esm/crypto.js'),
   },
-  {
-    find: '@noble/hashes/_assert',
-    replacement: resolve(
-      __dirname,
-      'node_modules/@noble/hashes/esm/_assert.js',
-    ),
-  },
+  // NOTE: @noble/hashes/_assert is intentionally NOT aliased here.
+  // ethereum-cryptography@2.x depends on @noble/hashes@1.4.0 whose _assert
+  // exports { bool, bytes, number }. The hoisted v1.8.0 removed those in
+  // favor of { abytes, anumber, aoutput }. Aliasing _assert would break
+  // ethereum-cryptography at runtime.
   {
     find: '@noble/curves/secp256k1',
     replacement: resolve(
@@ -154,7 +153,11 @@ export default defineConfig({
     force: true,
   },
   resolve: {
-    dedupe: ['tslib', '@noble/hashes', '@noble/curves'],
+    // NOTE: @noble/hashes is intentionally NOT deduped.
+      // ethereum-cryptography@2.x ships a nested @noble/hashes@1.4.0 with a
+      // different _assert API. Deduping would force it to use the hoisted
+      // v1.8.0, breaking the 'bool' import in ethereum-cryptography/utils.js.
+      dedupe: ['tslib', '@noble/curves'],
     extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
     alias: {
       // Local workspace alias - use browser entry point for browser compatibility
@@ -209,10 +212,9 @@ export default defineConfig({
         __dirname,
         'node_modules/@noble/hashes/esm/legacy.js',
       ),
-      '@noble/hashes/_assert': resolve(
-        __dirname,
-        'node_modules/@noble/hashes/esm/_assert.js',
-      ),
+      // NOTE: @noble/hashes/_assert is intentionally NOT aliased.
+      // ethereum-cryptography@2.x needs @noble/hashes@1.4.0's _assert API
+      // which exports { bool, bytes, number } — incompatible with v1.8.0.
       '@noble/hashes/crypto': resolve(
         __dirname,
         'node_modules/@noble/hashes/esm/crypto.js',
@@ -224,6 +226,11 @@ export default defineConfig({
       '@noble/curves/ed25519': resolve(
         __dirname,
         'node_modules/@noble/curves/esm/ed25519.js',
+      ),
+      // Use browser build of reed-solomon-erasure.wasm (no fs dependency)
+      '@digitaldefiance/reed-solomon-erasure.wasm': resolve(
+        dirname(createRequire(import.meta.url).resolve('@digitaldefiance/reed-solomon-erasure.wasm')),
+        'browser.js',
       ),
       // Force uuid to use browser-compatible version (uses Web Crypto API instead of Node crypto)
       uuid: resolve(__dirname, 'node_modules/uuid/dist/esm-browser/index.js'),

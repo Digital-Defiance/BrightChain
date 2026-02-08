@@ -1,4 +1,8 @@
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
+import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../enumerations/brightChainStrings';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { TypedError } from './typedError';
 
@@ -48,7 +52,7 @@ export class StoreError extends TypedError<StoreErrorType> {
   public readonly params?: { [key: string]: string | number };
   constructor(
     type: StoreErrorType,
-    language?: string,
+    language?: CoreLanguageCode,
     params?: { [key: string]: string | number },
   ) {
     super(type, language, params);

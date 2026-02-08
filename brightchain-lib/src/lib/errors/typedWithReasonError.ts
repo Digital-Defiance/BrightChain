@@ -1,5 +1,5 @@
 import { HandleableError } from '@digitaldefiance/i18n-lib';
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
+import { BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { translate } from '../i18n';
 
 export abstract class TypedWithReasonError<

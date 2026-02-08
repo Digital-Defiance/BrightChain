@@ -105,7 +105,7 @@ describe('Block Edge Cases', () => {
 
         expect(() => {
           new RawDataBlock(blockSize, oversizedData, new Date());
-        }).toThrow(/Error_BlockError_DataLengthExceedsBlockSizeTemplate/);
+        }).toThrow(/Data length.*exceeds block size/);
       });
     };
 

@@ -313,31 +313,27 @@ describe('Error Context Preservation Property Tests', () => {
      */
     it('should preserve field and context in EnhancedValidationError', () => {
       fc.assert(
-        fc.property(
-          arbFieldName,
-          arbContext,
-          (field, additionalContext) => {
-            const error = new EnhancedValidationError(
-              field,
-              BrightChainStrings.Error_Validation_Error,
-              additionalContext,
-            );
+        fc.property(arbFieldName, arbContext, (field, additionalContext) => {
+          const error = new EnhancedValidationError(
+            field,
+            BrightChainStrings.Error_Validation_Error,
+            additionalContext,
+          );
 
-            // Verify field is preserved
-            expect(error.field).toBe(field);
+          // Verify field is preserved
+          expect(error.field).toBe(field);
 
-            // Verify context includes field and additional context
-            expect(error.context?.['field']).toBe(field);
-            Object.keys(additionalContext).forEach((key) => {
-              expect(error.context?.[key]).toEqual(additionalContext[key]);
-            });
+          // Verify context includes field and additional context
+          expect(error.context?.['field']).toBe(field);
+          Object.keys(additionalContext).forEach((key) => {
+            expect(error.context?.[key]).toEqual(additionalContext[key]);
+          });
 
-            // Verify type guard works
-            expect(isEnhancedValidationError(error)).toBe(true);
+          // Verify type guard works
+          expect(isEnhancedValidationError(error)).toBe(true);
 
-            return true;
-          },
-        ),
+          return true;
+        }),
         { numRuns: 100 },
       );
     });

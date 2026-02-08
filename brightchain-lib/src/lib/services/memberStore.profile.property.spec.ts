@@ -23,19 +23,19 @@ import {
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import * as fc from 'fast-check';
 import { RawDataBlock } from '../blocks/rawData';
+import {
+  privateMemberProfileHydrationSchema,
+  publicMemberProfileHydrationSchema,
+} from '../documents/member/memberProfileHydration';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { MemberStatusType } from '../enumerations/memberStatusType';
 import { BlockStoreFactory } from '../factories/blockStoreFactory';
 import {
-  IPublicMemberProfileHydratedData,
   IPrivateMemberProfileHydratedData,
+  IPublicMemberProfileHydratedData,
 } from '../interfaces/member/profileStorage';
-import {
-  publicMemberProfileHydrationSchema,
-  privateMemberProfileHydrationSchema,
-} from '../documents/member/memberProfileHydration';
 import { MemberStore } from './memberStore';
 import { ServiceProvider } from './service.provider';
 
@@ -113,7 +113,8 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
                 dateUpdated: new Date(),
               };
 
-            const schema = publicMemberProfileHydrationSchema<GuidV4Uint8Array>();
+            const schema =
+              publicMemberProfileHydrationSchema<GuidV4Uint8Array>();
 
             // Dehydrate to storage format
             const storageData = schema.dehydrate(originalData);
@@ -183,12 +184,15 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
             }
 
             // Create activity log
-            const activityLog = Array.from({ length: activityCount }, (_, i) => ({
-              timestamp: new Date(Date.now() - i * 1000),
-              action: `action${i}`,
-              details: { index: i },
-              metadata: { source: 'test' },
-            }));
+            const activityLog = Array.from(
+              { length: activityCount },
+              (_, i) => ({
+                timestamp: new Date(Date.now() - i * 1000),
+                action: `action${i}`,
+                details: { index: i },
+                metadata: { source: 'test' },
+              }),
+            );
 
             const originalData: IPrivateMemberProfileHydratedData<GuidV4Uint8Array> =
               {
@@ -394,4 +398,3 @@ describe('MemberStore Profile CBL Round-Trip Property Tests', () => {
     });
   });
 });
-

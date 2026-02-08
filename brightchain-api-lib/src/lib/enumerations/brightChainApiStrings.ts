@@ -1,3 +1,1 @@
-export enum BrightChainApiStrings {
-    
-}
+export enum BrightChainApiStrings {}

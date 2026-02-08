@@ -1,12 +1,13 @@
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { IApplication } from '@digitaldefiance/node-express-suite';
 import { Environment } from '../environment';
+import { DefaultBackendIdType } from '../types/backend-id';
 
 /**
  * Extended application interface with BrightChain-specific methods
  */
 export interface IBrightChainApplication<
-  TID extends PlatformID = Buffer,
+  TID extends PlatformID = DefaultBackendIdType,
 > extends IApplication<TID> {
   get environment(): Environment<TID>;
   /**

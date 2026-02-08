@@ -1,3 +1,3 @@
-export * from './member-with-mnemonic';
-export * from './memberProfileResponse';
-export * from './operational';
+export type * from './member-with-mnemonic';
+export type * from './memberProfileResponse';
+export type * from './operational';

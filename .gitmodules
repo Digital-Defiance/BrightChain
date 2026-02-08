@@ -1,0 +1,3 @@
+[submodule "reed-solomon-erasure.wasm"]
+	path = reed-solomon-erasure.wasm
+	url = https://github.com/Digital-Defiance/reed-solomon-erasure.wasm.git

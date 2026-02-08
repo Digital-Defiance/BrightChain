@@ -1,5 +1,5 @@
 import { BrightChainStrings } from '../enumerations';
-import { translate, translateEnumValue } from '../i18n';
+import { i18nEngine, translate } from '../i18n';
 import {
   SecurityEvent,
   SecurityEventSeverity,
@@ -184,7 +184,7 @@ export class SecurityAuditLogger {
     // Skip console output in silent mode (useful for tests)
     if (this._silent) return;
 
-    const prefix = `[${translate(BrightChainStrings.Security_AuditLogger_Security)}][${translateEnumValue(SecurityEventSeverity, event.severity)}][${translateEnumValue(SecurityEventType, event.type)}]`;
+    const prefix = `[${translate(BrightChainStrings.Security_AuditLogger_Security)}][${i18nEngine.translateEnum(SecurityEventSeverity, event.severity)}][${i18nEngine.translateEnum(SecurityEventType, event.type)}]`;
     const msg = `${prefix} ${event.message}`;
 
     switch (event.severity) {

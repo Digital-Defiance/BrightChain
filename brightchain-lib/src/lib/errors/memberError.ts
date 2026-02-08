@@ -3,8 +3,14 @@ import {
   EciesStringKeyValue,
 } from '@digitaldefiance/ecies-lib';
 import { HandleableError } from '@digitaldefiance/i18n-lib';
-import { SuiteCoreStringKey, SuiteCoreStringKeyValue } from '@digitaldefiance/suite-core-lib';
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
+import {
+  SuiteCoreStringKey,
+  SuiteCoreStringKeyValue,
+} from '@digitaldefiance/suite-core-lib';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../enumerations/brightChainStrings';
 import { MemberErrorType } from '../enumerations/memberErrorType';
 
 export class MemberError extends HandleableError {

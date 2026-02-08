@@ -100,10 +100,10 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
         let randomBlocks = await this.blockStore.getRandomBlocks(
           TUPLE.SIZE - 1,
         );
-        
+
         // Filter out the original block from random blocks
         randomBlocks = randomBlocks.filter(
-          (checksum) => !checksum.equals(block.idChecksum)
+          (checksum) => !checksum.equals(block.idChecksum),
         );
 
         // If we don't have enough random blocks, create dummy blocks
@@ -182,11 +182,14 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
         // XOR the tuple and store result - this creates the whitened block
         // The whitened block = originalBlock ^ randomBlock1 ^ randomBlock2
         const xoredHandle = await tuple.xor(this.blockStore, metadata);
-        
+
         // Create a new tuple with [whitenedBlock, randomBlock1, randomBlock2]
         // This is the correct OFF system pattern: store the XORed result with the random blocks
         // During hydration: whitenedBlock ^ randomBlock1 ^ randomBlock2 = originalBlock
-        const whitenedTuple = new BlockHandleTuple([xoredHandle, ...randomHandles]);
+        const whitenedTuple = new BlockHandleTuple([
+          xoredHandle,
+          ...randomHandles,
+        ]);
         tuples.push(whitenedTuple);
       }
 
@@ -244,7 +247,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
 
   /**
    * Hydrate member from CBL with integrity verification.
-   * 
+   *
    * @param cbl - The ConstituentBlockListBlock containing member data
    * @returns The reconstructed Member object
    * @throws MemberError with InvalidMemberData if integrity verification fails
@@ -267,12 +270,16 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
         for (const blockId of tuple.blockIds) {
           try {
             const block = await this.blockStore.getData(blockId);
-            const calculatedChecksum = checksumService.calculateChecksum(block.data);
-            
+            const calculatedChecksum = checksumService.calculateChecksum(
+              block.data,
+            );
+
             if (!calculatedChecksum.equals(blockId)) {
               // Log integrity failure with debugging details (Requirement 5.5)
               console.error(
-                translate(BrightChainStrings.Error_MemberCblService_ChecksumMismatch),
+                translate(
+                  BrightChainStrings.Error_MemberCblService_ChecksumMismatch,
+                ),
                 {
                   expectedChecksum: blockId.toHex(),
                   calculatedChecksum: calculatedChecksum.toHex(),
@@ -289,7 +296,9 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
             }
             // Log block retrieval failure (Requirement 5.5)
             console.error(
-              translate(BrightChainStrings.Error_MemberCblService_BlockRetrievalFailed),
+              translate(
+                BrightChainStrings.Error_MemberCblService_BlockRetrievalFailed,
+              ),
               {
                 blockId: blockId.toHex(),
                 error: error instanceof Error ? error.message : String(error),
@@ -350,7 +359,9 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
         // Verify required member fields (Requirement 5.3)
         if (!member.id || !member.type) {
           console.error(
-            translate(BrightChainStrings.Error_MemberCblService_MissingRequiredFields),
+            translate(
+              BrightChainStrings.Error_MemberCblService_MissingRequiredFields,
+            ),
             {
               hasId: !!member.id,
               hasType: !!member.type,

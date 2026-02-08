@@ -161,8 +161,8 @@ interface SerializedQuorumMember {
 /**
  * Serialize a quorum member for API response
  */
-function serializeMember(
-  member: IQuorumMember<GuidV4Buffer>,
+function serializeMember<TID extends PlatformID>(
+  member: IQuorumMember<TID>,
 ): SerializedQuorumMember {
   return {
     id: member.id,

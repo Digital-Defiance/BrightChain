@@ -1,4 +1,4 @@
-export * from './mnemonic';
-export * from './role';
-export * from './user';
-export * from './user-role';
+export type * from './mnemonic';
+export type * from './role';
+export type * from './user';
+export type * from './user-role';

@@ -1,10 +1,7 @@
 // Local TypedError to avoid circular dependencies with main lib
 // This preserves the StringName translation system
-import {
-  BrightChainStringKey,
-  translate,
-} from '@brightchain/brightchain-lib';
-import { StringLanguage } from '../interfaces/request-user';
+import { BrightChainStringKey, translate } from '@brightchain/brightchain-lib';
+import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 
 export abstract class TypedError<
   T extends string | number,
@@ -14,7 +11,7 @@ export abstract class TypedError<
 
   constructor(
     public readonly type: T,
-    public readonly language?: StringLanguage,
+    public readonly language?: CoreLanguageCode,
     public readonly otherVars?: Record<string, string | number>,
   ) {
     // Get the reasonMap from the prototype

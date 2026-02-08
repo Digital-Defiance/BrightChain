@@ -23,7 +23,6 @@ import {
   mapStoreError,
   notFoundError,
   notImplementedError,
-  StandardErrorResponse,
   unauthorizedError,
   validateErrorResponse,
   validationError,
@@ -370,13 +369,14 @@ describe('Error Response Format Consistency Property Tests', () => {
      * **Validates: Requirements 15.6**
      */
     it('should correctly identify valid and invalid error responses', () => {
-      // Test valid responses
+      // Test valid responses - use legacy format without requestId/timestamp
+      // since isStandardErrorResponse checks for the minimal format
       fc.assert(
         fc.property(
           fc.string({ minLength: 1, maxLength: 50 }),
           fc.string({ minLength: 1, maxLength: 200 }),
           (code, message) => {
-            const validResponse: StandardErrorResponse = {
+            const validResponse = {
               error: { code, message },
             };
             expect(isStandardErrorResponse(validResponse)).toBe(true);
@@ -417,7 +417,9 @@ describe('Error Response Format Consistency Property Tests', () => {
           fc.string({ minLength: 1, maxLength: 50 }),
           fc.string({ minLength: 1, maxLength: 200 }),
           (code, message) => {
-            const validResponse: StandardErrorResponse = {
+            // Use legacy format without requestId/timestamp
+            // since validateErrorResponse checks for the minimal format
+            const validResponse = {
               error: { code, message },
             };
 

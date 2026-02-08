@@ -25,5 +25,7 @@ export default {
       '<rootDir>/../brightchain-api-lib/src/index.ts',
     '^@brightchain/brightchain-api-lib/(.*)$':
       '<rootDir>/../brightchain-api-lib/src/$1',
+    // Redirect uuid imports to the CJS version to avoid ESM issues
+    '^uuid$': '<rootDir>/../node_modules/uuid/dist/cjs/index.js',
   },
 };

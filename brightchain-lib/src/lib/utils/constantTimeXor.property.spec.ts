@@ -245,7 +245,7 @@ describe('Feature: block-security-hardening, Property 1: XOR Operation Correctne
    */
   it('Property 1i: Empty array input throws error', () => {
     expect(() => constantTimeXorMultiple([])).toThrow(
-      /Error_XorAtLeastOneArrayRequired/,
+      /At least one array must be provided/,
     );
   });
 

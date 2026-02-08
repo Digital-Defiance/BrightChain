@@ -1,4 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+  IAvailabilityService,
+  IDiscoveryProtocol,
+  IReconciliationService,
+} from '@brightchain/brightchain-lib';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import { ECIESService, PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -26,7 +31,6 @@ import { EventNotificationSystem } from '../services/eventNotificationSystem';
 import { MessagePassingService } from '../services/messagePassingService';
 import { DefaultBackendIdType } from '../shared-types';
 import { BaseRouter } from './base';
-import { IAvailabilityService, IDiscoveryProtocol, IReconciliationService } from '@brightchain/brightchain-lib';
 
 /**
  * Router for the API

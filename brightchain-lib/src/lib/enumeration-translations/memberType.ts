@@ -1,12 +1,12 @@
 import { MemberType } from '@digitaldefiance/ecies-lib';
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
-import { registerTranslation } from '../i18n';
+import { i18nEngine } from '../i18n';
 import { createTranslations, EnumLanguageTranslation } from '../types';
 
 export type MemberTypeLanguageTranslation = EnumLanguageTranslation<MemberType>;
 
 export const MemberTypeTranslations: MemberTypeLanguageTranslation =
-  registerTranslation(
+  i18nEngine.registerEnum(
     MemberType,
     createTranslations({
       [LanguageCodes.DE]: {
@@ -58,4 +58,5 @@ export const MemberTypeTranslations: MemberTypeLanguageTranslation =
         [MemberType.Anonymous]: '匿名',
       },
     }),
+    'MemberType',
   );

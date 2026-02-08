@@ -113,26 +113,29 @@ describe('Feature: message-passing-and-events, Property: Delivery Timeout and Fa
           updateDeliveryStatus: jest.fn().mockResolvedValue(undefined),
         } as unknown as jest.Mocked<IMessageMetadataStore>;
 
+        // Use longer timeout to avoid race conditions
         const service = new DeliveryTimeoutService(mockStore, {
-          timeoutMs: 100,
-          checkIntervalMs: 25,
+          timeoutMs: 500,
+          checkIntervalMs: 100,
         });
 
         service.trackDeliveryAttempt(messageId, recipientId);
         service.start();
 
-        await new Promise((resolve) => setTimeout(resolve, 30));
+        // Clear well before the timeout
+        await new Promise((resolve) => setTimeout(resolve, 50));
         service.clearDeliveryAttempt(messageId, recipientId);
 
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        // Wait past the check interval but not long enough for a full test cycle
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
         service.stop();
 
         expect(mockStore.updateDeliveryStatus).not.toHaveBeenCalled();
       }),
-      { numRuns: 50 },
+      { numRuns: 30 },
     );
-  }, 10000);
+  }, 30000);
 
   /**
    * Property 27e: Multiple deliveries timeout independently

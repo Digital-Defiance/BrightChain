@@ -2,7 +2,7 @@ import {
   EciesStringKey,
   EciesStringKeyValue,
 } from '@digitaldefiance/ecies-lib';
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
+import { BrightChainStringKey } from '../enumerations/brightChainStrings';
 import { SecureStorageErrorType } from '../enumerations/secureStorageErrorType';
 import { TypedError } from './typedError';
 

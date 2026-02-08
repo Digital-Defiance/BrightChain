@@ -342,16 +342,16 @@ export class MemberDocument<
 
   /**
    * Convert back to Member object by reconstructing from CBL data.
-   * 
+   *
    * This method verifies that CBLs have been generated and then uses
    * MemberCblService.hydrateMember() to reconstruct the member from
    * the stored CBL data, ensuring a true round-trip verification.
-   * 
+   *
    * @param usePrivate - If true, reconstruct from private CBL; otherwise use public CBL
    * @returns The reconstructed Member object
    * @throws {MemberError} with CBLNotGenerated if CBLs have not been generated
    * @throws {MemberError} with FailedToHydrateMember if hydration fails
-   * 
+   *
    * @requirements 4.1, 4.3
    */
   public async toMember(usePrivate = false): Promise<Member<TID>> {

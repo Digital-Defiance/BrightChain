@@ -1,4 +1,8 @@
-import { hexToUint8Array, PlatformID, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
+import {
+  hexToUint8Array,
+  PlatformID,
+  uint8ArrayToHex,
+} from '@digitaldefiance/ecies-lib';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
 import { IHydrationSchema } from '../../interfaces/document/base';
 import {

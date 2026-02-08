@@ -13,9 +13,9 @@
 import {
   EmailString,
   GuidV4Uint8Array,
+  IIdProvider,
   Member,
   MemberType,
-  IIdProvider,
 } from '@digitaldefiance/ecies-lib';
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import * as fc from 'fast-check';
@@ -101,7 +101,9 @@ describe('MemberCblService Member CBL Round-Trip Property Tests', () => {
             const hydratedMember = await memberCblService.hydrateMember(cbl);
 
             // Verify all essential fields match
-            expect(idProvider.equals(hydratedMember.id, originalMember.id)).toBe(true);
+            expect(
+              idProvider.equals(hydratedMember.id, originalMember.id),
+            ).toBe(true);
             expect(hydratedMember.name).toBe(originalMember.name);
             expect(hydratedMember.email).toEqual(originalMember.email);
             expect(hydratedMember.type).toBe(originalMember.type);
@@ -138,7 +140,9 @@ describe('MemberCblService Member CBL Round-Trip Property Tests', () => {
         const hydratedMember = await memberCblService.hydrateMember(cbl);
 
         expect(hydratedMember.type).toBe(memberType);
-        expect(idProvider.equals(hydratedMember.id, originalMember.id)).toBe(true);
+        expect(idProvider.equals(hydratedMember.id, originalMember.id)).toBe(
+          true,
+        );
       }
     });
 
@@ -149,7 +153,9 @@ describe('MemberCblService Member CBL Round-Trip Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           // Generate alphanumeric name with varying length (valid member names)
-          fc.string({ minLength: 3, maxLength: 50 }).map(s => s.replace(/[^a-zA-Z0-9]/g, 'x')),
+          fc
+            .string({ minLength: 3, maxLength: 50 })
+            .map((s) => s.replace(/[^a-zA-Z0-9]/g, 'x')),
           fc.integer({ min: 1, max: 999999 }),
           async (nameBase, suffix) => {
             const name = nameBase + suffix;
@@ -168,7 +174,9 @@ describe('MemberCblService Member CBL Round-Trip Property Tests', () => {
             const hydratedMember = await memberCblService.hydrateMember(cbl);
 
             expect(hydratedMember.name).toBe(originalMember.name);
-            expect(idProvider.equals(hydratedMember.id, originalMember.id)).toBe(true);
+            expect(
+              idProvider.equals(hydratedMember.id, originalMember.id),
+            ).toBe(true);
 
             return true;
           },

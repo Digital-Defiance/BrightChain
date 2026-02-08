@@ -2,6 +2,7 @@ import {
   BlockService,
   BlockSize,
   ChecksumService,
+  createECIESService,
   MemoryBlockStore,
   RawDataBlock,
   ServiceLocator,
@@ -10,15 +11,18 @@ import {
 import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import React, { useCallback, useState } from 'react';
 
-// Initialize services
+// Initialize services for browser
 const checksumService = new ChecksumService();
+const eciesService = createECIESService();
+
 ServiceLocator.setServiceProvider({
   checksumService,
+  eciesService,
 } as unknown as ReturnType<typeof ServiceLocator.getServiceProvider>);
 
 // Create a simple member for demo
 const demoMember = Member.newMember(
-  ServiceLocator.getServiceProvider().eciesService,
+  eciesService,
   MemberType.User,
   'demo-user',
   new EmailString('demo@example.com'),

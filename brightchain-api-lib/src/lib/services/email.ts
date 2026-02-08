@@ -3,6 +3,7 @@ import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { IApplication } from '@digitaldefiance/node-express-suite';
 import { Environment } from '../environment';
+import { DefaultBackendIdType } from '../types/backend-id';
 // import { debugLog } from '../utils';
 const debugLog = (
   debug: boolean,
@@ -18,7 +19,7 @@ const debugLog = (
 /**
  * A generic service for sending emails using Amazon SES.
  */
-export class EmailService<TID extends PlatformID = Buffer> {
+export class EmailService<TID extends PlatformID = DefaultBackendIdType> {
   private readonly sesClient: SESClient;
   private readonly emailSender: string;
   private readonly disableEmailSend: boolean;

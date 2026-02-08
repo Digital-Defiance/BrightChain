@@ -77,7 +77,7 @@ describe('MemberStore Update Property Tests', () => {
           async (newReputation) => {
             // Use unique counter for each test iteration
             const uniqueId = `${Date.now()}_${testCounter++}`;
-            
+
             // Create a member first
             const { reference } = await memberStore.createMember({
               type: MemberType.User,
@@ -86,11 +86,15 @@ describe('MemberStore Update Property Tests', () => {
             });
 
             // Get original profile to compare
-            const originalProfile = await memberStore.getMemberProfile(reference.id);
+            const originalProfile = await memberStore.getMemberProfile(
+              reference.id,
+            );
             expect(originalProfile.publicProfile).not.toBeNull();
-            
+
             // Access the member index through queryIndex
-            const originalResults = await memberStore.queryIndex({ id: reference.id });
+            const originalResults = await memberStore.queryIndex({
+              id: reference.id,
+            });
             expect(originalResults.length).toBe(1);
 
             // Update the member with new reputation
@@ -102,11 +106,15 @@ describe('MemberStore Update Property Tests', () => {
             });
 
             // Retrieve updated profile
-            const updatedProfile = await memberStore.getMemberProfile(reference.id);
+            const updatedProfile = await memberStore.getMemberProfile(
+              reference.id,
+            );
 
             // Verify the updated value is retrievable
             expect(updatedProfile.publicProfile).not.toBeNull();
-            expect(updatedProfile.publicProfile!.reputation).toBe(newReputation);
+            expect(updatedProfile.publicProfile!.reputation).toBe(
+              newReputation,
+            );
 
             return true;
           },
@@ -127,7 +135,7 @@ describe('MemberStore Update Property Tests', () => {
           async (newStatus) => {
             // Use unique counter for each test iteration
             const uniqueId = `${Date.now()}_${testCounter++}`;
-            
+
             // Create a member first
             const { reference } = await memberStore.createMember({
               type: MemberType.User,
@@ -144,7 +152,9 @@ describe('MemberStore Update Property Tests', () => {
             });
 
             // Retrieve updated profile
-            const updatedProfile = await memberStore.getMemberProfile(reference.id);
+            const updatedProfile = await memberStore.getMemberProfile(
+              reference.id,
+            );
 
             // Verify the updated value is retrievable
             expect(updatedProfile.publicProfile).not.toBeNull();
@@ -176,7 +186,7 @@ describe('MemberStore Update Property Tests', () => {
           async (newReputation) => {
             // Use unique counter for each test iteration
             const uniqueId = `${Date.now()}_${testCounter++}`;
-            
+
             // Create a member first
             const { reference } = await memberStore.createMember({
               type: MemberType.User,
@@ -185,11 +195,15 @@ describe('MemberStore Update Property Tests', () => {
             });
 
             // Get original profile
-            const originalProfile = await memberStore.getMemberProfile(reference.id);
+            const originalProfile = await memberStore.getMemberProfile(
+              reference.id,
+            );
             expect(originalProfile.publicProfile).not.toBeNull();
             const originalStatus = originalProfile.publicProfile!.status;
-            const originalStorageQuota = originalProfile.publicProfile!.storageQuota;
-            const originalStorageUsed = originalProfile.publicProfile!.storageUsed;
+            const originalStorageQuota =
+              originalProfile.publicProfile!.storageQuota;
+            const originalStorageUsed =
+              originalProfile.publicProfile!.storageUsed;
 
             // Update only reputation
             await memberStore.updateMember(reference.id, {
@@ -200,16 +214,24 @@ describe('MemberStore Update Property Tests', () => {
             });
 
             // Retrieve updated profile
-            const updatedProfile = await memberStore.getMemberProfile(reference.id);
+            const updatedProfile = await memberStore.getMemberProfile(
+              reference.id,
+            );
 
             // Verify unchanged fields are preserved
             expect(updatedProfile.publicProfile).not.toBeNull();
             expect(updatedProfile.publicProfile!.status).toBe(originalStatus);
-            expect(updatedProfile.publicProfile!.storageQuota).toBe(originalStorageQuota);
-            expect(updatedProfile.publicProfile!.storageUsed).toBe(originalStorageUsed);
+            expect(updatedProfile.publicProfile!.storageQuota).toBe(
+              originalStorageQuota,
+            );
+            expect(updatedProfile.publicProfile!.storageUsed).toBe(
+              originalStorageUsed,
+            );
 
             // Verify changed field is updated
-            expect(updatedProfile.publicProfile!.reputation).toBe(newReputation);
+            expect(updatedProfile.publicProfile!.reputation).toBe(
+              newReputation,
+            );
 
             return true;
           },
@@ -226,12 +248,14 @@ describe('MemberStore Update Property Tests', () => {
           async (newReputation) => {
             // Use unique counter for each test iteration
             const uniqueId = `${Date.now()}_${testCounter++}`;
-            
+
             // Create a member first
             const { reference } = await memberStore.createMember({
               type: MemberType.User,
               name: `PrivatePreserve_${uniqueId}`,
-              contactEmail: new EmailString(`privatepreserve_${uniqueId}@example.com`),
+              contactEmail: new EmailString(
+                `privatepreserve_${uniqueId}@example.com`,
+              ),
               settings: {
                 autoReplication: true,
                 minRedundancy: 5,
@@ -240,7 +264,9 @@ describe('MemberStore Update Property Tests', () => {
             });
 
             // Get original private profile
-            const originalProfile = await memberStore.getMemberProfile(reference.id);
+            const originalProfile = await memberStore.getMemberProfile(
+              reference.id,
+            );
             expect(originalProfile.privateProfile).not.toBeNull();
             const originalSettings = originalProfile.privateProfile!.settings;
 
@@ -253,13 +279,15 @@ describe('MemberStore Update Property Tests', () => {
             });
 
             // Retrieve updated profile
-            const updatedProfile = await memberStore.getMemberProfile(reference.id);
+            const updatedProfile = await memberStore.getMemberProfile(
+              reference.id,
+            );
 
             // Verify private profile is preserved
             expect(updatedProfile.privateProfile).not.toBeNull();
-            expect(updatedProfile.privateProfile!.settings.autoReplication).toBe(
-              originalSettings.autoReplication,
-            );
+            expect(
+              updatedProfile.privateProfile!.settings.autoReplication,
+            ).toBe(originalSettings.autoReplication);
             expect(updatedProfile.privateProfile!.settings.minRedundancy).toBe(
               originalSettings.minRedundancy,
             );
@@ -285,7 +313,8 @@ describe('MemberStore Update Property Tests', () => {
      * Helper to create a fake member ID that doesn't exist in the store
      */
     function createFakeMemberId(uniqueId: string): GuidV4Uint8Array {
-      const eciesService = ServiceProvider.getInstance<GuidV4Uint8Array>().eciesService;
+      const eciesService =
+        ServiceProvider.getInstance<GuidV4Uint8Array>().eciesService;
       const { member: fakeMember } = Member.newMember<GuidV4Uint8Array>(
         eciesService,
         MemberType.User,
@@ -303,7 +332,7 @@ describe('MemberStore Update Property Tests', () => {
           async () => {
             // Use unique counter for each test iteration
             const uniqueId = `${Date.now()}_${testCounter++}`;
-            
+
             // Create a member first
             const { reference } = await memberStore.createMember({
               type: MemberType.User,
@@ -312,9 +341,12 @@ describe('MemberStore Update Property Tests', () => {
             });
 
             // Get original profile
-            const originalProfile = await memberStore.getMemberProfile(reference.id);
+            const originalProfile = await memberStore.getMemberProfile(
+              reference.id,
+            );
             expect(originalProfile.publicProfile).not.toBeNull();
-            const originalReputation = originalProfile.publicProfile!.reputation;
+            const originalReputation =
+              originalProfile.publicProfile!.reputation;
 
             // Create a fake ID that doesn't exist in the store
             const fakeId = createFakeMemberId(`fake_${uniqueId}`);
@@ -335,9 +367,13 @@ describe('MemberStore Update Property Tests', () => {
             expect(updateFailed).toBe(true);
 
             // Verify original member data is unchanged
-            const unchangedProfile = await memberStore.getMemberProfile(reference.id);
+            const unchangedProfile = await memberStore.getMemberProfile(
+              reference.id,
+            );
             expect(unchangedProfile.publicProfile).not.toBeNull();
-            expect(unchangedProfile.publicProfile!.reputation).toBe(originalReputation);
+            expect(unchangedProfile.publicProfile!.reputation).toBe(
+              originalReputation,
+            );
 
             return true;
           },
@@ -354,16 +390,20 @@ describe('MemberStore Update Property Tests', () => {
           async () => {
             // Use unique counter for each test iteration
             const uniqueId = `${Date.now()}_${testCounter++}`;
-            
+
             // Create a member first
             const { reference } = await memberStore.createMember({
               type: MemberType.User,
               name: `IndexConsistency_${uniqueId}`,
-              contactEmail: new EmailString(`indexconsistency_${uniqueId}@example.com`),
+              contactEmail: new EmailString(
+                `indexconsistency_${uniqueId}@example.com`,
+              ),
             });
 
             // Get original index entry via queryIndex
-            const originalResults = await memberStore.queryIndex({ id: reference.id });
+            const originalResults = await memberStore.queryIndex({
+              id: reference.id,
+            });
             expect(originalResults.length).toBe(1);
             const originalPublicCBL = originalResults[0].publicCBL;
 
@@ -383,7 +423,9 @@ describe('MemberStore Update Property Tests', () => {
             }
 
             // Verify original member's index entry is unchanged
-            const unchangedResults = await memberStore.queryIndex({ id: reference.id });
+            const unchangedResults = await memberStore.queryIndex({
+              id: reference.id,
+            });
             expect(unchangedResults.length).toBe(1);
             expect(unchangedResults[0].publicCBL).toEqual(originalPublicCBL);
 

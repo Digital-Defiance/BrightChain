@@ -1,4 +1,4 @@
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
+import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import { translate } from '../i18n';
 
 export class NotImplementedError extends Error {

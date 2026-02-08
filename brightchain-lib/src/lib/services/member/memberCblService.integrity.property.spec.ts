@@ -18,8 +18,6 @@ import {
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import * as fc from 'fast-check';
 import { BlockSize } from '../../enumerations/blockSize';
-import { MemberErrorType } from '../../enumerations/memberErrorType';
-import { MemberError } from '../../errors/memberError';
 import { BlockStoreFactory } from '../../factories/blockStoreFactory';
 import { ServiceProvider } from '../service.provider';
 import { MemberCblService } from './memberCblService';
@@ -83,7 +81,7 @@ describe('MemberCblService Integrity Verification Property Tests', () => {
 
             // Get the block addresses from the CBL
             const tuples = await cbl.getHandleTuples(blockStore);
-            
+
             if (tuples.length === 0 || tuples[0].blockIds.length === 0) {
               // Skip if no blocks to corrupt
               return true;
@@ -92,11 +90,12 @@ describe('MemberCblService Integrity Verification Property Tests', () => {
             // Get the first block and corrupt it
             const firstBlockId = tuples[0].blockIds[0];
             const block = await blockStore.getData(firstBlockId);
-            
+
             // Corrupt the block data by modifying a byte
             const corruptedData = new Uint8Array(block.data);
             const corruptIndex = Math.floor(corruptedData.length / 2);
-            corruptedData[corruptIndex] = (corruptedData[corruptIndex] + 1 + corruptByte) % 256;
+            corruptedData[corruptIndex] =
+              (corruptedData[corruptIndex] + 1 + corruptByte) % 256;
 
             // Replace the block in the store with corrupted data
             // Note: This simulates data corruption in storage
@@ -109,7 +108,7 @@ describe('MemberCblService Integrity Verification Property Tests', () => {
             // For this test, we verify that a valid CBL can be hydrated
             // and that the integrity verification code path is exercised
             const hydratedMember = await memberCblService.hydrateMember(cbl);
-            
+
             // If we get here, the CBL was valid and hydration succeeded
             expect(hydratedMember).toBeDefined();
             expect(hydratedMember.id).toBeDefined();
@@ -196,22 +195,25 @@ describe('MemberCblService Integrity Verification Property Tests', () => {
 
             // Get the tuples to verify blocks exist
             const tuples = await cbl.getHandleTuples(blockStore);
-            
+
             // Verify we have tuples with blocks
             expect(tuples.length).toBeGreaterThan(0);
-            
+
             for (const tuple of tuples) {
               expect(tuple.blockIds.length).toBeGreaterThan(0);
-              
+
               // Verify each block can be retrieved and has valid checksum
               for (const blockId of tuple.blockIds) {
                 const block = await blockStore.getData(blockId);
                 expect(block).toBeDefined();
                 expect(block.data).toBeDefined();
-                
+
                 // Verify the checksum matches
-                const checksumService = ServiceProvider.getInstance().checksumService;
-                const calculatedChecksum = checksumService.calculateChecksum(block.data);
+                const checksumService =
+                  ServiceProvider.getInstance().checksumService;
+                const calculatedChecksum = checksumService.calculateChecksum(
+                  block.data,
+                );
                 expect(calculatedChecksum.equals(blockId)).toBe(true);
               }
             }

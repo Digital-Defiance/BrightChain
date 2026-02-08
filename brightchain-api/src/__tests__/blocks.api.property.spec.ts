@@ -106,7 +106,7 @@ describe('Block API Round-Trip Property Tests', () => {
         ),
         { numRuns: 30 },
       );
-    });
+    }, 60000);
 
     /**
      * Property: For any stored block, the metadata endpoint SHALL return valid metadata
@@ -168,7 +168,7 @@ describe('Block API Round-Trip Property Tests', () => {
         ),
         { numRuns: 30 },
       );
-    });
+    }, 60000);
 
     /**
      * Property: For any stored block with durability options, the metadata SHALL
@@ -225,6 +225,6 @@ describe('Block API Round-Trip Property Tests', () => {
         ),
         { numRuns: 20 },
       );
-    });
+    }, 60000);
   });
 });

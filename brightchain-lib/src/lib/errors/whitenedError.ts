@@ -1,4 +1,7 @@
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../enumerations/brightChainStrings';
 import { WhitenedErrorType } from '../enumerations/whitenedErrorType';
 import { TypedError } from './typedError';
 

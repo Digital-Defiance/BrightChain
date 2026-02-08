@@ -1,5 +1,8 @@
 import { BlockAccessErrorType } from '../../enumerations/blockAccessErrorType';
-import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../../enumerations/brightChainStrings';
 import { TypedWithReasonError } from '../typedWithReasonError';
 
 export class BlockAccessError extends TypedWithReasonError<BlockAccessErrorType> {

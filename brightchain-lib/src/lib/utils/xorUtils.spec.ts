@@ -358,7 +358,7 @@ describe('XOR Utility Functions - Property Tests', () => {
           fc.integer({ min: -100, max: 0 }),
           (data, invalidBlockSize) => {
             expect(() => padToBlockSize(data, invalidBlockSize)).toThrow(
-              /XorUtils_BlockSizeMustBePositiveTemplate/,
+              /Block size must be positive/,
             );
             return true;
           },
@@ -406,7 +406,9 @@ describe('XOR Utility Functions - Property Tests', () => {
         fc.property(fc.integer({ min: 0, max: 3 }), (length) => {
           const data = new Uint8Array(length);
 
-          expect(() => unpadCblData(data)).toThrow(/XorUtils_InvalidPaddedDataTemplate/);
+          expect(() => unpadCblData(data)).toThrow(
+            /Invalid padded data.*too short/,
+          );
 
           return true;
         }),

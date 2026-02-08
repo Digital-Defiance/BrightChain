@@ -65,7 +65,8 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
       };
 
       // Create and store member
-      const { reference, mnemonic } = await memberStore.createMember(memberData);
+      const { reference, mnemonic } =
+        await memberStore.createMember(memberData);
 
       // Verify mnemonic was returned (for key recovery)
       expect(mnemonic).toBeDefined();
@@ -106,7 +107,9 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
       expect(profile.publicProfile!.id).toEqual(reference.id);
       expect(profile.publicProfile!.status).toBe(MemberStatusType.Active);
       expect(profile.publicProfile!.reputation).toBe(0);
-      expect(profile.publicProfile!.storageQuota).toBe(BigInt(1024 * 1024 * 100));
+      expect(profile.publicProfile!.storageQuota).toBe(
+        BigInt(1024 * 1024 * 100),
+      );
       expect(profile.publicProfile!.storageUsed).toBe(BigInt(0));
       expect(profile.publicProfile!.dateCreated).toBeInstanceOf(Date);
       expect(profile.publicProfile!.dateUpdated).toBeInstanceOf(Date);
@@ -246,7 +249,9 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
 
       // Verify initial status
       const initialProfile = await memberStore.getMemberProfile(reference.id);
-      expect(initialProfile.publicProfile!.status).toBe(MemberStatusType.Active);
+      expect(initialProfile.publicProfile!.status).toBe(
+        MemberStatusType.Active,
+      );
 
       // Update status to Suspended
       await memberStore.updateMember(reference.id, {
@@ -258,7 +263,9 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
 
       // Retrieve and verify update
       const updatedProfile = await memberStore.getMemberProfile(reference.id);
-      expect(updatedProfile.publicProfile!.status).toBe(MemberStatusType.Suspended);
+      expect(updatedProfile.publicProfile!.status).toBe(
+        MemberStatusType.Suspended,
+      );
 
       // Update status to Inactive
       await memberStore.updateMember(reference.id, {
@@ -270,7 +277,9 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
 
       // Retrieve and verify second update
       const finalProfile = await memberStore.getMemberProfile(reference.id);
-      expect(finalProfile.publicProfile!.status).toBe(MemberStatusType.Inactive);
+      expect(finalProfile.publicProfile!.status).toBe(
+        MemberStatusType.Inactive,
+      );
     });
 
     it('should persist and retrieve private settings updates', async () => {
@@ -290,7 +299,9 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
 
       // Verify initial settings
       const initialProfile = await memberStore.getMemberProfile(reference.id);
-      expect(initialProfile.privateProfile!.settings.autoReplication).toBe(true);
+      expect(initialProfile.privateProfile!.settings.autoReplication).toBe(
+        true,
+      );
       expect(initialProfile.privateProfile!.settings.minRedundancy).toBe(3);
 
       // Update settings
@@ -309,7 +320,9 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
 
       // Retrieve and verify update
       const updatedProfile = await memberStore.getMemberProfile(reference.id);
-      expect(updatedProfile.privateProfile!.settings.autoReplication).toBe(false);
+      expect(updatedProfile.privateProfile!.settings.autoReplication).toBe(
+        false,
+      );
       expect(updatedProfile.privateProfile!.settings.minRedundancy).toBe(7);
     });
 
@@ -376,8 +389,12 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
       // Verify unchanged fields are preserved
       const updatedProfile = await memberStore.getMemberProfile(reference.id);
       expect(updatedProfile.publicProfile!.reputation).toBe(1000);
-      expect(updatedProfile.publicProfile!.storageQuota).toBe(originalStorageQuota);
-      expect(updatedProfile.publicProfile!.storageUsed).toBe(originalStorageUsed);
+      expect(updatedProfile.publicProfile!.storageQuota).toBe(
+        originalStorageQuota,
+      );
+      expect(updatedProfile.publicProfile!.storageUsed).toBe(
+        originalStorageUsed,
+      );
       expect(updatedProfile.privateProfile!.settings.autoReplication).toBe(
         originalSettings.autoReplication,
       );
@@ -416,7 +433,9 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
         await memberStore.getMember(reference.id);
       } catch (error) {
         expect(error).toBeInstanceOf(MemberError);
-        expect((error as MemberError).type).toBe(MemberErrorType.MemberNotFound);
+        expect((error as MemberError).type).toBe(
+          MemberErrorType.MemberNotFound,
+        );
       }
     });
 
@@ -442,7 +461,9 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
         await memberStore.getMemberProfile(reference.id);
       } catch (error) {
         expect(error).toBeInstanceOf(MemberError);
-        expect((error as MemberError).type).toBe(MemberErrorType.MemberNotFound);
+        expect((error as MemberError).type).toBe(
+          MemberErrorType.MemberNotFound,
+        );
       }
     });
 
@@ -507,7 +528,9 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
         });
       } catch (error) {
         expect(error).toBeInstanceOf(MemberError);
-        expect((error as MemberError).type).toBe(MemberErrorType.MemberNotFound);
+        expect((error as MemberError).type).toBe(
+          MemberErrorType.MemberNotFound,
+        );
       }
     });
 
@@ -571,7 +594,9 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
       });
 
       // Query by type
-      const userResults = await memberStore.queryIndex({ type: MemberType.User });
+      const userResults = await memberStore.queryIndex({
+        type: MemberType.User,
+      });
       const systemResults = await memberStore.queryIndex({
         type: MemberType.System,
       });
@@ -638,7 +663,10 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
       expect(offsetResults.length).toBe(3);
 
       // Query with both limit and offset
-      const pagedResults = await memberStore.queryIndex({ offset: 1, limit: 2 });
+      const pagedResults = await memberStore.queryIndex({
+        offset: 1,
+        limit: 2,
+      });
       expect(pagedResults.length).toBe(2);
     });
   });
