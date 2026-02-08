@@ -1,10 +1,12 @@
 import {
-  BrandedEnumValue,
-  createBrandedEnum,
-} from '@digitaldefiance/branded-enum';
+  BrandedStringKeyValue,
+  createI18nStringKeys,
+} from '@digitaldefiance/i18n-lib';
+
+export const BrightChainComponentId = 'BrightChain';
 
 // Branded enum for BrightChain string keys
-export const BrightChainStrings = createBrandedEnum('brightchain.strings', {
+export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   // NOTE: Admin and i18n error strings moved to @digitaldefiance/suite-core-lib SuiteCoreStringKey
   // Use SuiteCoreStringKey for: Admin_StringNotFoundForLanguageTemplate, Error_NoTranslationsForEnumTemplate,
   // Error_LanguageNotFoundForEnumTemplate, Error_NoTranslationsForEnumLanguageTemplate,
@@ -1057,4 +1059,9 @@ export const BrightChainStrings = createBrandedEnum('brightchain.strings', {
   TestMember_MemberNotFoundTemplate: 'TestMember_MemberNotFoundTemplate',
 } as const);
 
-export type BrightChainStringKey = BrandedEnumValue<typeof BrightChainStrings>;
+export type BrightChainStringKey = BrandedStringKeyValue<
+  typeof BrightChainStrings
+>;
+
+// Alias for consistency with other packages (e.g., NodeEciesStringKeyValue)
+export type BrightChainStringKeyValue = BrightChainStringKey;

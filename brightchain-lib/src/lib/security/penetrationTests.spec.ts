@@ -75,7 +75,7 @@ describe('Security Penetration Tests', () => {
 
       expect(() => {
         validator.validateInputSize('testOp', 2048);
-      }).toThrow(/Security_DOS_InputSizeExceedsLimitErrorTemplate/);
+      }).toThrow(/Input size.*exceeds.*limit/);
     });
 
     it('should timeout long-running operations', async () => {
@@ -91,7 +91,7 @@ describe('Security Penetration Tests', () => {
 
       await expect(
         validator.withTimeout('slowOp', slowOperation),
-      ).rejects.toThrow(/Security_DOS_OperationExceededTimeLimitErrorTemplate/);
+      ).rejects.toThrow(/exceeded timeout/);
     });
 
     it('should handle multiple concurrent DoS attempts', async () => {

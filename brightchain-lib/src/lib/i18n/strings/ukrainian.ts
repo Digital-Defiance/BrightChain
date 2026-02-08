@@ -1,5 +1,8 @@
 import { StringsCollection } from '@digitaldefiance/i18n-lib';
-import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../../enumerations/brightChainStrings';
 
 export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
   // UI Strings
@@ -822,7 +825,7 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_MemberCblService_BlockRetrievalFailed]:
     'Не вдалося отримати блок під час перевірки цілісності',
   [BrightChainStrings.Error_MemberCblService_MissingRequiredFields]:
-    'У даних учасника відсутні обов\'язкові поля',
+    "У даних учасника відсутні обов'язкові поля",
   [BrightChainStrings.Error_DeliveryTimeout_HandleTimeoutFailedTemplate]:
     'Не вдалося обробити тайм-аут доставки: {ERROR}',
 

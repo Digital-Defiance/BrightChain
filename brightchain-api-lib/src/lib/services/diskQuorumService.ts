@@ -16,13 +16,14 @@ import {
   ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { BlockDocumentStore } from '../datastore/block-document-store';
 import {
   DocumentCollection,
   DocumentRecord,
 } from '../datastore/document-store';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
+import { DefaultBackendIdType } from '../types/backend-id';
 
 /**
  * Storage format for quorum member documents
@@ -62,7 +63,9 @@ interface QuorumDocumentDocument extends DocumentRecord {
  * The service can optionally be configured with an FEC service for
  * parity generation and recovery on the underlying block store.
  */
-export class DiskQuorumService extends QuorumService<GuidV4Buffer> {
+export class DiskQuorumService<
+  TID extends PlatformID = DefaultBackendIdType,
+> extends QuorumService<TID> {
   private readonly memberCollection: DocumentCollection<QuorumMemberDocument>;
   private readonly documentCollection: DocumentCollection<QuorumDocumentDocument>;
   private readonly blockStore: DiskBlockAsyncStore;
@@ -98,9 +101,9 @@ export class DiskQuorumService extends QuorumService<GuidV4Buffer> {
   // === Member Management Overrides ===
 
   override async addMember(
-    member: Member<GuidV4Buffer>,
+    member: Member<TID>,
     metadata: QuorumMemberMetadata,
-  ): Promise<IQuorumMember<GuidV4Buffer>> {
+  ): Promise<IQuorumMember<TID>> {
     // Call parent to add to in-memory stores
     const quorumMember = await super.addMember(member, metadata);
 
@@ -140,7 +143,7 @@ export class DiskQuorumService extends QuorumService<GuidV4Buffer> {
 
   override async getMember(
     memberId: ShortHexGuid,
-  ): Promise<IQuorumMember<GuidV4Buffer> | null> {
+  ): Promise<IQuorumMember<TID> | null> {
     // First check in-memory cache
     const cached = await super.getMember(memberId);
     if (cached) {
@@ -163,7 +166,7 @@ export class DiskQuorumService extends QuorumService<GuidV4Buffer> {
     };
   }
 
-  override async listMembers(): Promise<IQuorumMember<GuidV4Buffer>[]> {
+  override async listMembers(): Promise<IQuorumMember<TID>[]> {
     // Load all active members from disk
     const memberDocs = await this.memberCollection
       .find({ isActive: true })
@@ -186,11 +189,11 @@ export class DiskQuorumService extends QuorumService<GuidV4Buffer> {
   // === Document Sealing Overrides ===
 
   override async sealDocument<T>(
-    agent: Member<GuidV4Buffer>,
+    agent: Member<TID>,
     document: T,
     memberIds: ShortHexGuid[],
     sharesRequired?: number,
-  ): Promise<SealedDocumentResult<GuidV4Buffer>> {
+  ): Promise<SealedDocumentResult<TID>> {
     // Call parent to seal and store in memory
     const result = await super.sealDocument(
       agent,
@@ -225,9 +228,7 @@ export class DiskQuorumService extends QuorumService<GuidV4Buffer> {
    * Serialize encrypted shares from QuorumDataRecord to storage format
    * Note: encryptedSharesByMemberId uses ShortHexGuid keys (already hex strings)
    */
-  private serializeShares(
-    doc: QuorumDataRecord<GuidV4Buffer>,
-  ): Record<string, string> {
+  private serializeShares(doc: QuorumDataRecord<TID>): Record<string, string> {
     const shares: Record<string, string> = {};
     for (const [
       memberIdHex,

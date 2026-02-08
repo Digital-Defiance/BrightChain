@@ -219,11 +219,7 @@ export class App<TID extends PlatformID> extends BaseApplication<TID> {
   public override async stop(): Promise<void> {
     // Close WebSocket server first
     if (this.wsServer) {
-      debugLog(
-        this.environment.debug,
-        'log',
-        '[ stopping ] WebSocket server',
-      );
+      debugLog(this.environment.debug, 'log', '[ stopping ] WebSocket server');
       await new Promise<void>((resolve) => {
         this.wsServer!.close(() => resolve());
       });

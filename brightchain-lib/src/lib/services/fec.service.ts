@@ -1,12 +1,12 @@
-import { ReedSolomonErasure } from '@subspace/reed-solomon-erasure.wasm';
+import { ReedSolomonErasure } from '@digitaldefiance/reed-solomon-erasure.wasm';
 import { BaseBlock } from '../blocks/base';
 import { ParityBlock } from '../blocks/parity';
 import { RawDataBlock } from '../blocks/rawData';
 import { Readable } from '../browserStream';
 import { BC_FEC } from '../constants';
-import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import BlockDataType from '../enumerations/blockDataType';
 import BlockType from '../enumerations/blockType';
+import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import { FecErrorType } from '../enumerations/fecErrorType';
 import { FecError } from '../errors/fecError';
 import { translate } from '../i18n';

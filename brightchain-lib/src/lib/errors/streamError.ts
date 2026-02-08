@@ -1,4 +1,7 @@
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../enumerations/brightChainStrings';
 import { StreamErrorType } from '../enumerations/streamErrorType';
 import { TypedError } from './typedError';
 

@@ -5,7 +5,7 @@ import {
   IFecService,
   ParityData as IParityData,
 } from '@brightchain/brightchain-lib';
-import { ReedSolomonErasure } from '@subspace/reed-solomon-erasure.wasm';
+import { ReedSolomonErasure } from '@digitaldefiance/reed-solomon-erasure.wasm';
 import { Constants } from '../constants';
 
 /**

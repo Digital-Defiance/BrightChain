@@ -4,13 +4,13 @@ export {
   findAuthToken,
 } from '@digitaldefiance/node-express-suite';
 export {
-  createJwtAuthMiddleware,
-  createRoleMiddleware,
-  extractToken,
   IAuthenticatedRequest,
   IJwtAuthConfig,
   IMemberContext,
   IRoleConfig,
+  createJwtAuthMiddleware,
+  createRoleMiddleware,
+  extractToken,
   optionalAuth,
   requireAllRoles,
   requireAuth,
@@ -20,4 +20,4 @@ export {
   requireRoles,
 } from './authentication';
 export { cleanupCrypto } from './cleanup-crypto';
-export { requestIdMiddleware, REQUEST_ID_HEADER } from './request-id';
+export { REQUEST_ID_HEADER, requestIdMiddleware } from './request-id';

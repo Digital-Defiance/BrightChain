@@ -174,7 +174,9 @@ describe('MemberCblService Unit Tests', () => {
       // Verify the hydrated member matches the original
       expect(hydratedMember).toBeDefined();
       expect(hydratedMember).toBeInstanceOf(Member);
-      expect(idProvider.equals(hydratedMember.id, originalMember.id)).toBe(true);
+      expect(idProvider.equals(hydratedMember.id, originalMember.id)).toBe(
+        true,
+      );
       expect(hydratedMember.name).toBe(originalMember.name);
       expect(hydratedMember.type).toBe(originalMember.type);
       expect(hydratedMember.publicKey).toEqual(originalMember.publicKey);

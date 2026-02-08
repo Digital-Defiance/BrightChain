@@ -1,7 +1,7 @@
 {
   "root": true,
   "ignorePatterns": [],
-  "plugins": ["@nx", "@typescript-eslint", "prettier"],
+  "plugins": ["@nx", "@typescript-eslint", "prettier", "jest"],
   "rules": {
     "prettier/prettier": "error"
   },
@@ -55,9 +55,11 @@
       }
     },
     {
-      "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx"],
+      "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx", "*.test.ts", "*.test.tsx", "**/__tests__/**/*.ts", "**/__tests__/**/*.tsx"],
+      "extends": ["plugin:jest/recommended"],
       "env": {
-        "jest": true
+        "jest": true,
+        "node": true
       },
       "rules": {}
     }

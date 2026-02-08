@@ -1,6 +1,9 @@
 import BlockType from '../../enumerations/blockType';
 import { BlockValidationErrorType } from '../../enumerations/blockValidationErrorType';
-import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../../enumerations/brightChainStrings';
 import { TypedWithReasonError } from '../typedWithReasonError';
 
 export class BlockValidationError extends TypedWithReasonError<BlockValidationErrorType> {
@@ -10,7 +13,10 @@ export class BlockValidationError extends TypedWithReasonError<BlockValidationEr
     length: number;
     expectedLength: number;
   };
-  public get reasonMap(): Record<BlockValidationErrorType, BrightChainStringKey> {
+  public get reasonMap(): Record<
+    BlockValidationErrorType,
+    BrightChainStringKey
+  > {
     return {
       [BlockValidationErrorType.ActualDataLengthUnknown]:
         BrightChainStrings.Error_BlockValidationError_ActualDataLengthUnknown,

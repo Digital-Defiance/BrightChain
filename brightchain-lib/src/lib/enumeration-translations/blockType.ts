@@ -1,12 +1,12 @@
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
 import BlockType from '../enumerations/blockType';
-import { registerTranslation } from '../i18n';
+import { i18nEngine } from '../i18n';
 import { createTranslations, EnumLanguageTranslation } from '../types';
 
 export type BlockTypeLanguageTranslation = EnumLanguageTranslation<BlockType>;
 
 export const BlockTypeTranslations: BlockTypeLanguageTranslation =
-  registerTranslation(
+  i18nEngine.registerEnum(
     BlockType,
     createTranslations({
       [LanguageCodes.DE]: {
@@ -153,4 +153,5 @@ export const BlockTypeTranslations: BlockTypeLanguageTranslation =
         [BlockType.MultiEncryptedBlock]: '多重加密块',
       },
     }),
+    'BlockType',
   );

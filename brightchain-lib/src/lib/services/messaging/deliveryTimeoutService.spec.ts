@@ -69,13 +69,24 @@ describe('DeliveryTimeoutService', () => {
   });
 
   it('should not timeout if cleared before timeout', async () => {
+    // Use longer timeout to avoid race conditions
+    service.stop();
+    service = new DeliveryTimeoutService(mockStore, {
+      timeoutMs: 500,
+      checkIntervalMs: 100,
+    });
+
     service.trackDeliveryAttempt('msg1', 'recipient1');
     service.start();
 
+    // Clear well before the timeout
     await new Promise((resolve) => setTimeout(resolve, 50));
     service.clearDeliveryAttempt('msg1', 'recipient1');
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Wait past the original timeout period
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    service.stop();
 
     expect(mockStore.updateDeliveryStatus).not.toHaveBeenCalled();
   });

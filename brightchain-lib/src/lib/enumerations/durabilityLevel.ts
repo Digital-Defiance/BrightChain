@@ -51,4 +51,14 @@ export function getParityCountForDurability(level: DurabilityLevel): number {
   }
 }
 
+/**
+ * Durability level mapping
+ */
+export const DurabilityMap: Record<string, DurabilityLevel> = Object.freeze({
+  ephemeral: DurabilityLevel.Ephemeral,
+  standard: DurabilityLevel.Standard,
+  enhanced: DurabilityLevel.HighDurability,
+  maximum: DurabilityLevel.HighDurability,
+});
+
 export default DurabilityLevel;

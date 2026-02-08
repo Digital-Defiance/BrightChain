@@ -9,6 +9,7 @@ import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   ApiErrorResponse,
   ApiRequestHandler,
+  ControllerRegistry,
   TypedHandlers,
   routeConfig,
 } from '@digitaldefiance/node-express-suite';
@@ -152,28 +153,95 @@ export class BlocksController<
         useAuthentication: true,
         useCryptoAuthentication: false,
         handlerKey: 'storeBlock',
+        openapi: {
+          summary: 'Store a block',
+          description: 'Store a new block with optional durability settings.',
+          tags: ['Blocks'],
+          requestBody: {
+            schema: 'StoreBlockRequest',
+            example: {
+              data: 'SGVsbG8gV29ybGQ=',
+              options: { durabilityLevel: 'standard' },
+            },
+          },
+          responses: {
+            200: { schema: 'StoreBlockResponse', description: 'Block stored' },
+          },
+        },
       }),
       routeConfig('get', '/:blockId', {
         handlerKey: 'getBlock',
         useAuthentication: true,
         useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Get block by ID',
+          description: 'Retrieve a block by its ID.',
+          tags: ['Blocks'],
+          responses: {
+            200: { schema: 'GetBlockResponse', description: 'Block retrieved' },
+            404: { schema: 'ErrorResponse', description: 'Block not found' },
+          },
+        },
       }),
       routeConfig('get', '/:blockId/metadata', {
         handlerKey: 'getBlockMetadata',
         useAuthentication: true,
         useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Get block metadata',
+          description: 'Get metadata for a block without retrieving the data.',
+          tags: ['Blocks'],
+          responses: {
+            200: {
+              schema: 'GetBlockMetadataResponse',
+              description: 'Metadata retrieved',
+            },
+            404: { schema: 'ErrorResponse', description: 'Block not found' },
+          },
+        },
       }),
       routeConfig('delete', '/:blockId', {
         handlerKey: 'deleteBlock',
         useAuthentication: true,
         useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Delete block',
+          description: 'Delete a block and its parity blocks.',
+          tags: ['Blocks'],
+          responses: {
+            200: { description: 'Block deleted' },
+            404: { schema: 'ErrorResponse', description: 'Block not found' },
+          },
+        },
       }),
       routeConfig('post', '/brighten', {
         handlerKey: 'brightenBlock',
         useAuthentication: true,
         useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Brighten a block',
+          description: 'XOR a block with random blocks for Owner-Free storage.',
+          tags: ['Blocks'],
+          requestBody: {
+            schema: 'BrightenBlockRequest',
+            example: { blockId: 'abc123...', randomBlockCount: 3 },
+          },
+          responses: {
+            200: {
+              schema: 'BrightenBlockResponse',
+              description: 'Block brightened',
+            },
+          },
+        },
       }),
     ];
+
+    // Register with OpenAPI registry
+    ControllerRegistry.register(
+      '/blocks',
+      'BlocksController',
+      this.routeDefinitions,
+    );
 
     this.handlers = {
       storeBlock: this.handleStoreBlock.bind(this),

@@ -1,4 +1,7 @@
-import { AvailabilityState, IMessageMetadata } from '@brightchain/brightchain-lib';
+import {
+  AvailabilityState,
+  IMessageMetadata,
+} from '@brightchain/brightchain-lib';
 import { WebSocket } from 'ws';
 
 export enum MessageEventType {
@@ -79,12 +82,12 @@ export interface IEventFilter {
 
 /**
  * Event Notification System for real-time message, block, and partition updates
- * 
+ *
  * Supports:
  * - Message events: stored, received, delivered, failed
  * - Block events: availability_changed, replicated
  * - Partition events: entered, exited
- * 
+ *
  * @requirements 4.5, 5.2, 5.4
  */
 export class EventNotificationSystem {
@@ -282,7 +285,9 @@ export class EventNotificationSystem {
   }
 
   private isMessageEvent(event: SystemEvent): event is IMessageEvent {
-    return Object.values(MessageEventType).includes(event.type as MessageEventType);
+    return Object.values(MessageEventType).includes(
+      event.type as MessageEventType,
+    );
   }
 
   private isBlockEvent(

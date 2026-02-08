@@ -1,5 +1,5 @@
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations';
+import { BrightChainStringKey } from '../enumerations';
 import { translate } from '../i18n';
 import { BrightChainError } from './brightChainError';
 

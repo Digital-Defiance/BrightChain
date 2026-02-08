@@ -1,5 +1,8 @@
 import { BlockErrorType } from '../../enumerations/blockErrorType';
-import { BrightChainStrings, BrightChainStringKey } from '../../enumerations/brightChainStrings';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../../enumerations/brightChainStrings';
 import { TypedError } from '../typedError';
 
 export class BlockError extends TypedError<BlockErrorType> {

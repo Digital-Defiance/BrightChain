@@ -1,13 +1,13 @@
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
 import QuorumDataRecordActionType from '../enumerations/actionType';
-import { registerTranslation } from '../i18n';
+import { i18nEngine } from '../i18n';
 import { createTranslations, EnumLanguageTranslation } from '../types';
 
 export type QuorumDataRecordActionTypeTranslation =
   EnumLanguageTranslation<QuorumDataRecordActionType>;
 
 export const QuorumDataRecordActionTypeTranslations: QuorumDataRecordActionTypeTranslation =
-  registerTranslation(
+  i18nEngine.registerEnum(
     QuorumDataRecordActionType,
     createTranslations({
       [LanguageCodes.DE]: {
@@ -78,4 +78,5 @@ export const QuorumDataRecordActionTypeTranslations: QuorumDataRecordActionTypeT
         [QuorumDataRecordActionType.ValidateRecordIntegrity]: '验证记录完整性',
       },
     }),
+    'QuorumDataRecordActionType',
   );

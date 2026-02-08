@@ -1,4 +1,7 @@
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../enumerations/brightChainStrings';
 import { QuorumErrorType } from '../enumerations/quorumErrorType';
 import { TypedError } from './typedError';
 

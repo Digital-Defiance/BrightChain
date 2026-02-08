@@ -21,6 +21,12 @@ jest.mock('./components/BrightChainSoupDemo', () => ({
 // Mock brightchain-lib to prevent i18n initialization
 jest.mock('@brightchain/brightchain-lib', () => ({
   constants: { CONSTANTS: {} },
+  CONSTANTS: {},
+  i18nEngine: {
+    translate: jest.fn((key: string) => key),
+    setLanguage: jest.fn(),
+    getLanguage: jest.fn(() => 'en'),
+  },
   ChecksumService: jest.fn().mockImplementation(() => ({
     calculateChecksum: jest.fn(),
     checksumBufferLength: 64,
@@ -66,6 +72,9 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   ),
   MenuProvider: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="menu-provider">{children}</div>
+  ),
+  I18nProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="i18n-provider">{children}</div>
   ),
   ApiAccess: () => <div>ApiAccess</div>,
   BackupCodeLoginWrapper: () => <div>BackupCodeLoginWrapper</div>,

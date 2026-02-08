@@ -15,6 +15,10 @@
       "es2020",
       "dom"
     ],
+    "types": [
+      "node",
+      "jest"
+    ],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",

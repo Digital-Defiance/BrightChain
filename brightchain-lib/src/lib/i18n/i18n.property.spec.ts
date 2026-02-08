@@ -5,7 +5,10 @@
 
 import { SuiteCoreStringKey } from '@digitaldefiance/suite-core-lib';
 import fc from 'fast-check';
-import { BrightChainStrings, BrightChainStringKey } from '../enumerations/brightChainStrings';
+import {
+  BrightChainStringKey,
+  BrightChainStrings,
+} from '../enumerations/brightChainStrings';
 import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { BritishEnglishStrings } from './strings/englishUK';
 import { AmericanEnglishStrings } from './strings/englishUs';
@@ -302,9 +305,7 @@ describe('Feature: error-message-internationalization, Property Tests', () => {
         (key) => {
           try {
             // Create a TranslatableBrightChainError instance
-            const error = new TranslatableBrightChainError(
-              key,
-            );
+            const error = new TranslatableBrightChainError(key);
 
             // TranslatableBrightChainError extends TranslatableError (from i18n-lib),
             // not BrightChainError. So we check that it's a proper Error instance
@@ -357,9 +358,7 @@ describe('Feature: error-message-internationalization, Property Tests', () => {
         (key) => {
           try {
             // Create a TranslatableBrightChainError instance
-            const error = new TranslatableBrightChainError(
-              key,
-            );
+            const error = new TranslatableBrightChainError(key);
 
             // Check that error has required properties
             const hasStringKey = 'stringKey' in error;
