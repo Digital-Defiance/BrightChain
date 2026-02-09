@@ -27,7 +27,13 @@
     /* Path mappings */
     "baseUrl": ".",
     "paths": {
-      "@brightchain/brightchain-lib": ["../brightchain-lib/src/index.ts"]
+      "@brightchain/brightchain-lib": ["../brightchain-lib/src/index.ts"],
+      "@digitaldefiance/ecies-lib": ["../node_modules/@digitaldefiance/ecies-lib/src/index.ts"],
+      "@digitaldefiance/ecies-lib/*": ["../node_modules/@digitaldefiance/ecies-lib/src/*"],
+      "@digitaldefiance/i18n-lib": ["../node_modules/@digitaldefiance/i18n-lib/src/index.ts"],
+      "@digitaldefiance/i18n-lib/*": ["../node_modules/@digitaldefiance/i18n-lib/src/*"],
+      "@digitaldefiance/suite-core-lib": ["../node_modules/@digitaldefiance/suite-core-lib/src/index.ts"],
+      "@digitaldefiance/suite-core-lib/*": ["../node_modules/@digitaldefiance/suite-core-lib/src/*"]
     }
   },
   "include": [
