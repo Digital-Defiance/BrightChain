@@ -2,7 +2,7 @@ import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import * as fc from 'fast-check';
 import { BlockSize } from '../../enumerations/blockSize';
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { MemoryBlockStore } from '../../stores/memoryBlockStore';
@@ -157,7 +157,7 @@ describe('Feature: message-passing-and-events, Property: MessageCBL Metadata Per
 
           for (const recipient of recipients) {
             expect(metadata?.deliveryStatus.get(recipient)).toBe(
-              MessageDeliveryStatus.PENDING,
+              DeliveryStatus.Pending,
             );
           }
         },

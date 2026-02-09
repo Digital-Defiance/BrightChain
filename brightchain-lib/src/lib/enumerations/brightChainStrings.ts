@@ -1018,7 +1018,7 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   Error_JsonValidationError_MustBeNumber:
     'Error_JsonValidationError_MustBeNumber',
   Error_JsonValidationError_MustBeNonNegative:
-    'Error_JsonValidationError_MustBeNonNegative ',
+    'Error_JsonValidationError_MustBeNonNegative',
   Error_JsonValidationError_MustBeInteger:
     'Error_JsonValidationError_MustBeInteger',
   Error_JsonValidationError_MustBeISO8601DateStringOrUnixTimestamp:

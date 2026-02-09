@@ -3,7 +3,7 @@ import { RawDataBlock } from '../../blocks/rawData';
 import { BrightChainStrings } from '../../enumerations';
 import { BlockEncryptionType } from '../../enumerations/blockEncryptionType';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessageErrorType } from '../../enumerations/messaging/messageErrorType';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
@@ -141,7 +141,7 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
           recipients: options.recipients,
           priority: options.priority,
           deliveryStatus: new Map(
-            options.recipients.map((r) => [r, MessageDeliveryStatus.PENDING]),
+            options.recipients.map((r) => [r, DeliveryStatus.Pending]),
           ),
           acknowledgments: new Map(),
           encryptionScheme: options.encryptionScheme,

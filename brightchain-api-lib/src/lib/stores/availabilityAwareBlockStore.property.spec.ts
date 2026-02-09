@@ -29,6 +29,7 @@ import {
   CBLStorageResult,
   CBLWhiteningOptions,
   Checksum,
+  DeliveryAckMetadata,
   EventFilter,
   GossipConfig,
   IAvailabilityService,
@@ -39,6 +40,7 @@ import {
   ILocationRecord,
   initializeBrightChain,
   IReconciliationService,
+  MessageDeliveryMetadata,
   PendingSyncItem,
   RawDataBlock,
   ReconciliationConfig,
@@ -536,8 +538,31 @@ class MockGossipService implements IGossipService {
       defaultTtl: 3,
       batchIntervalMs: 1000,
       maxBatchSize: 100,
+      messagePriority: {
+        normal: { fanout: 5, ttl: 5 },
+        high: { fanout: 7, ttl: 7 },
+      },
     };
   }
+
+  async announceMessage(
+    _blockIds: string[],
+    _metadata: MessageDeliveryMetadata,
+  ): Promise<void> {}
+
+  async sendDeliveryAck(_ack: DeliveryAckMetadata): Promise<void> {}
+
+  onMessageDelivery(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
+
+  offMessageDelivery(
+    _handler: (announcement: BlockAnnouncement) => void,
+  ): void {}
+
+  onDeliveryAck(_handler: (announcement: BlockAnnouncement) => void): void {}
+
+  offDeliveryAck(_handler: (announcement: BlockAnnouncement) => void): void {}
 
   // Test helpers
   clear(): void {

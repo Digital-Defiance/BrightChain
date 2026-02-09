@@ -1,4 +1,4 @@
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 import { DeliveryTimeoutService } from './deliveryTimeoutService';
 
@@ -52,7 +52,7 @@ describe('DeliveryTimeoutService', () => {
     expect(mockStore.updateDeliveryStatus).toHaveBeenCalledWith(
       'msg1',
       'recipient1',
-      MessageDeliveryStatus.FAILED,
+      DeliveryStatus.Failed,
     );
   });
 

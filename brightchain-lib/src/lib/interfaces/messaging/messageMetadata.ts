@@ -1,4 +1,4 @@
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { IBlockMetadata } from '../storage/blockMetadata';
@@ -33,7 +33,7 @@ export interface IMessageMetadata extends IBlockMetadata {
   priority: MessagePriority;
 
   /** Delivery status per recipient */
-  deliveryStatus: Map<string, MessageDeliveryStatus>;
+  deliveryStatus: Map<string, DeliveryStatus>;
 
   /** Acknowledgment timestamps per recipient */
   acknowledgments: Map<string, Date>;

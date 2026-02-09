@@ -60,6 +60,10 @@ export class EncryptedBlockFactory {
     lengthBeforeEncryption?: number,
     canRead = true,
     canPersist = true,
+    /** Required when dataType is EncryptedData. Defaults to SingleRecipient for raw data. */
+    encryptionType?: BlockEncryptionType,
+    /** Required when dataType is EncryptedData. Defaults to 1 for raw data. */
+    recipientCount?: number,
   ): Promise<EncryptedBlock> {
     // Get the constructor for this block type
     const Constructor = this.blockConstructors[type];
@@ -126,12 +130,16 @@ export class EncryptedBlockFactory {
     // Create final data buffer with proper size
     const finalData = new Uint8Array(blockSize as number);
 
-    // If data is already encrypted (starts with BlockEncryptionType), use it directly
-    if (
-      data[0] === BlockEncryptionType.SingleRecipient ||
-      data[0] === BlockEncryptionType.MultiRecipient
-    ) {
+    // If data is already encrypted, use it directly.
+    // We use the caller-provided dataType to distinguish pre-encrypted data
+    // from raw data — never sniff data[0], since encrypted blocks should
+    // appear random and any byte value is equally likely.
+    if (dataType === BlockDataType.EncryptedData) {
       finalData.set(data);
+
+      // Use caller-provided encryption type and recipient count
+      const encType = encryptionType ?? BlockEncryptionType.SingleRecipient;
+      const encRecipientCount = recipientCount ?? 1;
 
       return new Constructor<TID>(
         type,
@@ -140,8 +148,8 @@ export class EncryptedBlockFactory {
         finalChecksum,
         EncryptedBlockMetadata.fromEphemeralBlockMetadata<TID>(
           updatedMetadata,
-          data[0] as BlockEncryptionType,
-          1,
+          encType,
+          encRecipientCount,
         ),
         creator,
         canRead,
