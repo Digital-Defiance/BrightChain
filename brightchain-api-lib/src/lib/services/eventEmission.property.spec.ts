@@ -1,7 +1,7 @@
 import {
+  DeliveryStatus,
   DurabilityLevel,
   IMessageMetadata,
-  MessageDeliveryStatus,
   MessageEncryptionScheme,
   MessagePriority,
   ReplicationStatus,
@@ -26,7 +26,7 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
     senderId: 'sender-1',
     recipients: ['recipient-1'],
     priority: MessagePriority.NORMAL,
-    deliveryStatus: new Map([['recipient-1', MessageDeliveryStatus.PENDING]]),
+    deliveryStatus: new Map([['recipient-1', DeliveryStatus.Pending]]),
     acknowledgments: new Map(),
     encryptionScheme: MessageEncryptionScheme.NONE,
     isCBL: false,
@@ -138,7 +138,7 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
           system.subscribe(mockWs);
 
           const deliveryStatus = new Map(
-            recipients.map((r) => [r, MessageDeliveryStatus.DELIVERED]),
+            recipients.map((r) => [r, DeliveryStatus.Delivered]),
           );
           const metadata = createMetadata({
             senderId,
@@ -179,7 +179,7 @@ describe('Feature: message-passing-and-events, Property: Event Emission on Messa
           system.subscribe(mockWs);
 
           const deliveryStatus = new Map(
-            recipients.map((r) => [r, MessageDeliveryStatus.FAILED]),
+            recipients.map((r) => [r, DeliveryStatus.Failed]),
           );
           const metadata = createMetadata({
             senderId,

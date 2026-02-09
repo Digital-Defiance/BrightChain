@@ -1,5 +1,5 @@
 import fc from 'fast-check';
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 import { DeliveryTimeoutService } from './deliveryTimeoutService';
 
@@ -64,7 +64,7 @@ describe('Feature: message-passing-and-events, Property: Delivery Timeout and Fa
         expect(mockStore.updateDeliveryStatus).toHaveBeenCalledWith(
           messageId,
           recipientId,
-          MessageDeliveryStatus.FAILED,
+          DeliveryStatus.Failed,
         );
       }),
       { numRuns: 50 },
@@ -178,7 +178,7 @@ describe('Feature: message-passing-and-events, Property: Delivery Timeout and Fa
             expect(mockStore.updateDeliveryStatus).toHaveBeenCalledWith(
               messageId,
               recipientId,
-              MessageDeliveryStatus.FAILED,
+              DeliveryStatus.Failed,
             );
           }
         },

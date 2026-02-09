@@ -191,6 +191,39 @@ export function validateGossipConfig(config: Partial<GossipConfig>): void {
       throw new ConfigValidationError('maxBatchSize must not exceed 10000');
     }
   }
+
+  // Validate messagePriority (Req 10.3, 10.4)
+  if (config.messagePriority !== undefined) {
+    const { normal, high } = config.messagePriority;
+
+    // Validate normal priority fanout
+    if (!Number.isInteger(normal.fanout) || normal.fanout < 1) {
+      throw new ConfigValidationError(
+        'messagePriority.normal.fanout must be a positive integer',
+      );
+    }
+
+    // Validate normal priority TTL
+    if (!Number.isInteger(normal.ttl) || normal.ttl < 1) {
+      throw new ConfigValidationError(
+        'messagePriority.normal.ttl must be a positive integer',
+      );
+    }
+
+    // Validate high priority fanout
+    if (!Number.isInteger(high.fanout) || high.fanout < 1) {
+      throw new ConfigValidationError(
+        'messagePriority.high.fanout must be a positive integer',
+      );
+    }
+
+    // Validate high priority TTL
+    if (!Number.isInteger(high.ttl) || high.ttl < 1) {
+      throw new ConfigValidationError(
+        'messagePriority.high.ttl must be a positive integer',
+      );
+    }
+  }
 }
 
 /**

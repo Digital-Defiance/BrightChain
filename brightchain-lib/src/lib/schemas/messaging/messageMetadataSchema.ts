@@ -1,5 +1,5 @@
 import { BrightChainStrings } from '../../enumerations';
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
@@ -53,17 +53,14 @@ export const MessageMetadataSchema: Partial<
   deliveryStatus: {
     type: Object,
     required: true,
-    serialize: (
-      value: Map<string, MessageDeliveryStatus>,
-    ): Record<string, string> => Object.fromEntries(value),
-    hydrate: (value: unknown): Map<string, MessageDeliveryStatus> => {
+    serialize: (value: Map<string, DeliveryStatus>): Record<string, string> =>
+      Object.fromEntries(value),
+    hydrate: (value: unknown): Map<string, DeliveryStatus> => {
       if (typeof value !== 'object' || value === null)
         throw new TranslatableBrightChainError(
           BrightChainStrings.Error_MessageMetadataSchema_InvalidDeliveryStatusFormat,
         );
-      return new Map(
-        Object.entries(value as Record<string, MessageDeliveryStatus>),
-      );
+      return new Map(Object.entries(value as Record<string, DeliveryStatus>));
     },
   },
   acknowledgments: {

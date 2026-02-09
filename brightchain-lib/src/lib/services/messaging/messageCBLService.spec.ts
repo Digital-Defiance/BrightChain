@@ -1,7 +1,7 @@
 import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import { BlockSize } from '../../enumerations/blockSize';
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { MemoryBlockStore } from '../../stores/memoryBlockStore';
@@ -186,10 +186,10 @@ describe('MessageCBLService', () => {
         MessageEncryptionScheme.RECIPIENT_KEYS,
       );
       expect(metadata?.deliveryStatus.get('recipient1')).toBe(
-        MessageDeliveryStatus.PENDING,
+        DeliveryStatus.Pending,
       );
       expect(metadata?.deliveryStatus.get('recipient2')).toBe(
-        MessageDeliveryStatus.PENDING,
+        DeliveryStatus.Pending,
       );
     });
 

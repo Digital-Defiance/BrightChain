@@ -23,9 +23,9 @@
 
 import {
   AvailabilityState,
+  DeliveryStatus,
   DurabilityLevel,
   IMessageMetadata,
-  MessageDeliveryStatus,
   MessageEncryptionScheme,
   MessagePriority,
   ReplicationStatus,
@@ -51,7 +51,7 @@ const createMetadata = (
   senderId: 'sender-1',
   recipients: ['recipient-1'],
   priority: MessagePriority.NORMAL,
-  deliveryStatus: new Map([['recipient-1', MessageDeliveryStatus.PENDING]]),
+  deliveryStatus: new Map([['recipient-1', DeliveryStatus.Pending]]),
   acknowledgments: new Map(),
   encryptionScheme: MessageEncryptionScheme.NONE,
   isCBL: false,

@@ -1,8 +1,8 @@
 import {
   BlockSize,
+  DeliveryStatus,
   DurabilityLevel,
   IMessageMetadata,
-  MessageDeliveryStatus,
   MessageEncryptionScheme,
   MessagePriority,
   ReplicationStatus,
@@ -120,7 +120,7 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
               ...baseMeta,
               recipients: recipientIds,
               deliveryStatus: new Map(
-                recipientIds.map((id) => [id, MessageDeliveryStatus.PENDING]),
+                recipientIds.map((id) => [id, DeliveryStatus.Pending]),
               ),
               acknowledgments: new Map(),
             };
@@ -129,7 +129,7 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
             await iterStore.updateDeliveryStatus(
               metadata.blockId,
               recipientIds[0],
-              MessageDeliveryStatus.DELIVERED,
+              DeliveryStatus.Delivered,
             );
 
             const newStore = new DiskMessageMetadataStore(
@@ -142,7 +142,7 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
 
             const found = retrieved.find((m) => m.blockId === metadata.blockId);
             expect(found?.deliveryStatus.get(recipientIds[0])).toBe(
-              MessageDeliveryStatus.DELIVERED,
+              DeliveryStatus.Delivered,
             );
           } finally {
             rmSync(iterTempDir, { recursive: true, force: true });
@@ -171,7 +171,7 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
               ...baseMeta,
               recipients: recipientIds,
               deliveryStatus: new Map(
-                recipientIds.map((id) => [id, MessageDeliveryStatus.PENDING]),
+                recipientIds.map((id) => [id, DeliveryStatus.Pending]),
               ),
               acknowledgments: new Map(),
             };

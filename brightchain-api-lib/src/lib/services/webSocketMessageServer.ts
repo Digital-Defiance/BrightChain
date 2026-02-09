@@ -1,34 +1,33 @@
+import { BlockAnnouncement } from '@brightchain/brightchain-lib';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import { ECIESService, SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
 import { Server } from 'http';
 import { WebSocket, WebSocketServer } from 'ws';
+import type { EncryptedBatchPayload } from '../availability/gossipService';
 
 /**
- * WebSocket message handler callback
+ * Handler for incoming gossip announcement batches.
+ * Called when a peer sends a batch of BlockAnnouncements over WebSocket.
  */
-export type MessageHandler = (
-  nodeId: string,
-  messageId: string,
-) => Promise<void>;
-export type AckHandler = (
-  nodeId: string,
-  messageId: string,
-  status: string,
-) => Promise<void>;
+export type GossipBatchHandler = (
+  fromNodeId: string,
+  announcements: BlockAnnouncement[],
+  encrypted?: EncryptedBatchPayload,
+) => void;
 
 /**
- * Node.js WebSocket server for message passing with ECIES authentication
- * Manages WebSocket connections and routes messages between nodes
+ * Node.js WebSocket server for gossip transport with ECIES authentication
+ * Manages WebSocket connections between nodes.
+ * Gossip announcement batches are received and dispatched to registered handlers.
  */
 export class WebSocketMessageServer {
   private wss: WebSocketServer;
   private connections = new Map<string, WebSocket>();
   private authenticatedNodes = new Map<string, string>(); // ws -> nodeId
   private publicKeys = new Map<string, Buffer>(); // nodeId -> publicKey
-  private messageHandler?: MessageHandler;
-  private ackHandler?: AckHandler;
   private eciesService: ECIESService;
   private requireAuth: boolean;
+  private gossipBatchHandlers: Set<GossipBatchHandler> = new Set();
 
   constructor(server: Server, requireAuth = false) {
     this.wss = new WebSocketServer({ server });
@@ -56,49 +55,6 @@ export class WebSocketMessageServer {
   }
 
   /**
-   * Register message handler
-   */
-  onMessage(handler: MessageHandler): void {
-    this.messageHandler = handler;
-  }
-
-  /**
-   * Register acknowledgment handler
-   */
-  onAck(handler: AckHandler): void {
-    this.ackHandler = handler;
-  }
-
-  /**
-   * Send message to specific node
-   */
-  async sendToNode(nodeId: string, messageId: string): Promise<boolean> {
-    const ws = this.connections.get(nodeId);
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      return false;
-    }
-
-    try {
-      ws.send(JSON.stringify({ type: 'message', messageId }));
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  /**
-   * Broadcast message to all connected nodes
-   */
-  broadcast(messageId: string): void {
-    const message = JSON.stringify({ type: 'message', messageId });
-    for (const ws of this.connections.values()) {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(message);
-      }
-    }
-  }
-
-  /**
    * Get connected node IDs
    */
   getConnectedNodes(): string[] {
@@ -114,11 +70,27 @@ export class WebSocketMessageServer {
     }
     this.connections.clear();
     this.authenticatedNodes.clear();
+    this.gossipBatchHandlers.clear();
     if (callback) {
       this.wss.close(callback);
     } else {
       this.wss.close();
     }
+  }
+
+  /**
+   * Register a handler for incoming gossip announcement batches.
+   * The handler is called when a peer sends a 'gossip_batch' message.
+   */
+  onGossipBatch(handler: GossipBatchHandler): void {
+    this.gossipBatchHandlers.add(handler);
+  }
+
+  /**
+   * Remove a gossip batch handler.
+   */
+  offGossipBatch(handler: GossipBatchHandler): void {
+    this.gossipBatchHandlers.delete(handler);
   }
 
   private setupConnectionHandler(): void {
@@ -169,10 +141,22 @@ export class WebSocketMessageServer {
             return;
           }
 
-          if (message.type === 'message' && this.messageHandler) {
-            await this.messageHandler(nodeId, message.messageId);
-          } else if (message.type === 'ack' && this.ackHandler) {
-            await this.ackHandler(nodeId, message.messageId, message.status);
+          // Handle gossip announcement batches from peers
+          if (message.type === 'gossip_batch') {
+            const senderNodeId =
+              this.authenticatedNodes.get(ws as unknown as string) ?? nodeId;
+            for (const handler of this.gossipBatchHandlers) {
+              try {
+                handler(
+                  senderNodeId,
+                  message.announcements ?? [],
+                  message.encrypted,
+                );
+              } catch {
+                // Ignore handler errors
+              }
+            }
+            return;
           }
         } catch {
           // Invalid message format

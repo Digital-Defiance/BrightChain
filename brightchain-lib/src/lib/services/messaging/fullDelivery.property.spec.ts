@@ -1,6 +1,6 @@
 import fc from 'fast-check';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
@@ -33,7 +33,7 @@ function allRecipientsDelivered(metadata: IMessageMetadata): boolean {
 
   for (const recipient of metadata.recipients) {
     const status = metadata.deliveryStatus.get(recipient);
-    if (status !== MessageDeliveryStatus.DELIVERED) {
+    if (status !== DeliveryStatus.Delivered) {
       return false;
     }
   }
@@ -96,12 +96,12 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
         (messageId, senderId, recipients) => {
           const uniqueRecipients = Array.from(new Set(recipients));
           const acknowledgments = new Map<string, Date>();
-          const deliveryStatus = new Map<string, MessageDeliveryStatus>();
+          const deliveryStatus = new Map<string, DeliveryStatus>();
 
           // All recipients acknowledge
           for (const recipient of uniqueRecipients) {
             acknowledgments.set(recipient, new Date());
-            deliveryStatus.set(recipient, MessageDeliveryStatus.DELIVERED);
+            deliveryStatus.set(recipient, DeliveryStatus.Delivered);
           }
 
           const metadata: IMessageMetadata = {
@@ -151,16 +151,13 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
           if (uniqueRecipients.length < 2) return;
 
           const acknowledgments = new Map<string, Date>();
-          const deliveryStatus = new Map<string, MessageDeliveryStatus>();
+          const deliveryStatus = new Map<string, DeliveryStatus>();
 
           // Only some recipients acknowledge
           const numToAck = Math.min(ackCount, uniqueRecipients.length - 1);
           for (let i = 0; i < numToAck; i++) {
             acknowledgments.set(uniqueRecipients[i], new Date());
-            deliveryStatus.set(
-              uniqueRecipients[i],
-              MessageDeliveryStatus.DELIVERED,
-            );
+            deliveryStatus.set(uniqueRecipients[i], DeliveryStatus.Delivered);
           }
 
           const metadata: IMessageMetadata = {
@@ -206,16 +203,14 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
         (messageId, senderId, recipients) => {
           const uniqueRecipients = Array.from(new Set(recipients));
           const acknowledgments = new Map<string, Date>();
-          const deliveryStatus = new Map<string, MessageDeliveryStatus>();
+          const deliveryStatus = new Map<string, DeliveryStatus>();
 
           // All acknowledge but not all delivered
           for (let i = 0; i < uniqueRecipients.length; i++) {
             acknowledgments.set(uniqueRecipients[i], new Date());
             deliveryStatus.set(
               uniqueRecipients[i],
-              i === 0
-                ? MessageDeliveryStatus.IN_TRANSIT
-                : MessageDeliveryStatus.DELIVERED,
+              i === 0 ? DeliveryStatus.Announced : DeliveryStatus.Delivered,
             );
           }
 
@@ -262,10 +257,10 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
         fc.string({ minLength: 1 }),
         (messageId, senderId, recipient) => {
           const acknowledgments = new Map<string, Date>();
-          const deliveryStatus = new Map<string, MessageDeliveryStatus>();
+          const deliveryStatus = new Map<string, DeliveryStatus>();
 
           acknowledgments.set(recipient, new Date());
-          deliveryStatus.set(recipient, MessageDeliveryStatus.DELIVERED);
+          deliveryStatus.set(recipient, DeliveryStatus.Delivered);
 
           const metadata: IMessageMetadata = {
             blockId: messageId,
