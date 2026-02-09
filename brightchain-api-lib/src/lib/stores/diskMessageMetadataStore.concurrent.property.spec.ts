@@ -1,8 +1,8 @@
 import {
   BlockSize,
+  DeliveryStatus,
   DurabilityLevel,
   IMessageMetadata,
-  MessageDeliveryStatus,
   MessageEncryptionScheme,
   MessagePriority,
   ReplicationStatus,
@@ -52,9 +52,7 @@ describe('DiskMessageMetadataStore - Concurrent Access Property Tests', () => {
     senderId,
     recipients,
     priority: MessagePriority.NORMAL,
-    deliveryStatus: new Map(
-      recipients.map((r) => [r, MessageDeliveryStatus.PENDING]),
-    ),
+    deliveryStatus: new Map(recipients.map((r) => [r, DeliveryStatus.Pending])),
     acknowledgments: new Map(),
     encryptionScheme: MessageEncryptionScheme.NONE,
     isCBL: false,
@@ -143,7 +141,7 @@ describe('DiskMessageMetadataStore - Concurrent Access Property Tests', () => {
               await iterStore.updateDeliveryStatus(
                 blockId,
                 recipientId,
-                MessageDeliveryStatus.DELIVERED,
+                DeliveryStatus.Delivered,
               );
             }
 
@@ -153,7 +151,7 @@ describe('DiskMessageMetadataStore - Concurrent Access Property Tests', () => {
             expect(found).toBeDefined();
             uniqueRecipients.forEach((recipientId) => {
               expect(found?.deliveryStatus.get(recipientId)).toBe(
-                MessageDeliveryStatus.DELIVERED,
+                DeliveryStatus.Delivered,
               );
             });
           } finally {
@@ -204,7 +202,7 @@ describe('DiskMessageMetadataStore - Concurrent Access Property Tests', () => {
             uniqueRecipients.forEach((recipientId) => {
               expect(found?.acknowledgments.has(recipientId)).toBe(true);
               expect(found?.deliveryStatus.get(recipientId)).toBe(
-                MessageDeliveryStatus.DELIVERED,
+                DeliveryStatus.Delivered,
               );
             });
           } finally {

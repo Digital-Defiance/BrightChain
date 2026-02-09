@@ -1,7 +1,7 @@
 import {
+  DeliveryStatus,
   DurabilityLevel,
   IMessageMetadata,
-  MessageDeliveryStatus,
   MessageEncryptionScheme,
   MessagePriority,
   ReplicationStatus,
@@ -64,7 +64,7 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
             recipients,
             priority,
             deliveryStatus: new Map(
-              recipients.map((r) => [r, MessageDeliveryStatus.PENDING]),
+              recipients.map((r) => [r, DeliveryStatus.Pending]),
             ),
             acknowledgments: new Map(),
             encryptionScheme,
@@ -128,9 +128,7 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
             senderId: 'sender-1',
             recipients: ['recipient-1'],
             priority: MessagePriority.NORMAL,
-            deliveryStatus: new Map([
-              ['recipient-1', MessageDeliveryStatus.PENDING],
-            ]),
+            deliveryStatus: new Map([['recipient-1', DeliveryStatus.Pending]]),
             acknowledgments: new Map(),
             encryptionScheme: MessageEncryptionScheme.NONE,
             isCBL: false,
@@ -252,7 +250,7 @@ describe('Feature: message-passing-and-events, Property: Event Payload Completen
             recipients,
             priority: MessagePriority.NORMAL,
             deliveryStatus: new Map(
-              recipients.map((r) => [r, MessageDeliveryStatus.PENDING]),
+              recipients.map((r) => [r, DeliveryStatus.Pending]),
             ),
             acknowledgments: new Map(),
             encryptionScheme: MessageEncryptionScheme.NONE,

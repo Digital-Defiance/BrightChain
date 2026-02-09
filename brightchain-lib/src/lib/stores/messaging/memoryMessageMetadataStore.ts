@@ -1,4 +1,4 @@
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { StoreErrorType } from '../../enumerations/storeErrorType';
 import { StoreError } from '../../errors/storeError';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
@@ -63,7 +63,7 @@ export class MemoryMessageMetadataStore
   async updateDeliveryStatus(
     messageId: string,
     recipientId: string,
-    status: MessageDeliveryStatus,
+    status: DeliveryStatus,
   ): Promise<void> {
     const meta = this.messageMetadata.get(messageId);
     if (!meta)
@@ -88,7 +88,7 @@ export class MemoryMessageMetadataStore
       });
 
     meta.acknowledgments.set(recipientId, timestamp);
-    meta.deliveryStatus.set(recipientId, MessageDeliveryStatus.DELIVERED);
+    meta.deliveryStatus.set(recipientId, DeliveryStatus.Delivered);
     // Also update the base metadata store
     await this.update(messageId, meta);
   }

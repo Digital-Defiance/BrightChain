@@ -91,6 +91,10 @@ class MockPeerProvider extends EventEmitter implements IPeerProvider {
     }
   }
 
+  async getPeerPublicKey(_peerId: string): Promise<Buffer | null> {
+    return null;
+  }
+
   registerMessageHandler(peerId: string, handler: (msg: any) => void): void {
     this.messageHandlers.set(peerId, handler);
   }
@@ -283,6 +287,10 @@ function createTestNode(nodeId: string) {
     defaultTtl: 3,
     batchIntervalMs: 100,
     maxBatchSize: 50,
+    messagePriority: {
+      normal: { fanout: 5, ttl: 5 },
+      high: { fanout: 7, ttl: 7 },
+    },
   });
 
   const discoveryProtocol = new DiscoveryProtocol(networkProvider, {

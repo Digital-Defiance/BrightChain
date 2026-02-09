@@ -8,13 +8,12 @@ import {
   IDiscoveryProtocol,
   IGossipService,
   IHeartbeatMonitor,
-  IMessageRouter,
 } from '@brightchain/brightchain-lib';
+import { ECIESService } from '@digitaldefiance/node-ecies-lib';
 import {
   DiscoveryMessageType,
   GossipMessageType,
   HeartbeatMessageType,
-  MessagePassingType,
 } from '../enumerations/websocketMessageType';
 import {
   IAnnouncementBatchMessage,
@@ -24,13 +23,8 @@ import {
   IBlockRemovalMessage,
   IBloomFilterRequest,
   IBloomFilterResponse,
-  IEventSubscribeMessage,
   IManifestRequest,
   IManifestResponse,
-  IMessageAckMessage,
-  IMessageQueryMessage,
-  IMessageReceivedMessage,
-  IMessageSendMessage,
   IPingMessage,
   IPongMessage,
   WebSocketMessage,
@@ -57,7 +51,10 @@ export interface IWebSocketHandlerConfig {
   gossipService: IGossipService;
   heartbeatMonitor: IHeartbeatMonitor;
   availabilityService: IAvailabilityService;
-  messageRouter?: IMessageRouter;
+  /** Optional ECIES service for decrypting encrypted gossip payloads */
+  eciesService?: ECIESService;
+  /** Optional local node private key for ECIES decryption */
+  localPrivateKey?: Buffer;
 }
 
 /**
@@ -70,7 +67,8 @@ export class WebSocketHandler {
   private readonly gossipService: IGossipService;
   private readonly heartbeatMonitor: IHeartbeatMonitor;
   private readonly availabilityService: IAvailabilityService;
-  private readonly messageRouter?: IMessageRouter;
+  private readonly eciesService?: ECIESService;
+  private readonly localPrivateKey?: Buffer;
   private readonly connections: Map<string, IWebSocketConnection> = new Map();
 
   constructor(config: IWebSocketHandlerConfig) {
@@ -80,7 +78,8 @@ export class WebSocketHandler {
     this.gossipService = config.gossipService;
     this.heartbeatMonitor = config.heartbeatMonitor;
     this.availabilityService = config.availabilityService;
-    this.messageRouter = config.messageRouter;
+    this.eciesService = config.eciesService;
+    this.localPrivateKey = config.localPrivateKey;
   }
 
   /**
@@ -176,32 +175,6 @@ export class WebSocketHandler {
         // Heartbeat messages
         case HeartbeatMessageType.PING:
           await this.handlePing(connection, message as IPingMessage);
-          break;
-
-        // Message passing messages
-        case MessagePassingType.MESSAGE_SEND:
-          await this.handleMessageSend(
-            connection,
-            message as IMessageSendMessage,
-          );
-          break;
-        case MessagePassingType.MESSAGE_RECEIVED:
-          await this.handleMessageReceived(message as IMessageReceivedMessage);
-          break;
-        case MessagePassingType.MESSAGE_ACK:
-          await this.handleMessageAck(message as IMessageAckMessage);
-          break;
-        case MessagePassingType.MESSAGE_QUERY:
-          await this.handleMessageQuery(
-            connection,
-            message as IMessageQueryMessage,
-          );
-          break;
-        case MessagePassingType.EVENT_SUBSCRIBE:
-          await this.handleEventSubscribe(
-            connection,
-            message as IEventSubscribeMessage,
-          );
           break;
 
         default:
@@ -339,30 +312,71 @@ export class WebSocketHandler {
   /**
    * Handle announcement batch
    */
+  /**
+   * Handle announcement batch
+   */
   private async handleAnnouncementBatch(
     message: IAnnouncementBatchMessage,
   ): Promise<void> {
-    for (const announcement of message.payload.announcements) {
+    let announcements = message.payload.announcements;
+
+    // Detect encrypted payload and attempt decryption
+    if (message.payload.encryptedPayload) {
+      if (!this.eciesService || !this.localPrivateKey) {
+        console.error(
+          `Received encrypted gossip batch from ${message.payload.senderNodeId ?? 'unknown'} but no ECIES service or private key configured — discarding batch`,
+        );
+        return;
+      }
+
+      try {
+        const ciphertext = Buffer.from(
+          message.payload.encryptedPayload,
+          'base64',
+        );
+        const decrypted = await this.eciesService.decryptWithLengthAndHeader(
+          this.localPrivateKey,
+          ciphertext,
+        );
+        announcements = JSON.parse(Buffer.from(decrypted).toString('utf-8'));
+      } catch (error) {
+        console.error(
+          `Failed to decrypt gossip batch from sender ${message.payload.senderNodeId ?? 'unknown'}:`,
+          error,
+        );
+        return;
+      }
+    }
+
+    for (const announcement of announcements) {
       if (announcement.type === 'add') {
         await this.availabilityService.updateLocation(announcement.blockId, {
           nodeId: announcement.nodeId,
           lastSeen: new Date(message.timestamp),
           isAuthoritative: true,
         });
-      } else {
+      } else if (announcement.type === 'remove') {
         await this.availabilityService.removeLocation(
           announcement.blockId,
           announcement.nodeId,
         );
       }
+      // 'ack' type announcements are forwarded directly to gossip service
+      // without updating availability metadata
 
-      // Forward to gossip service
+      // Forward to gossip service for propagation
       await this.gossipService.handleAnnouncement({
         type: announcement.type,
         blockId: announcement.blockId,
         nodeId: announcement.nodeId,
         timestamp: new Date(message.timestamp),
         ttl: announcement.ttl,
+        ...(announcement.type === 'add' && announcement.messageDelivery
+          ? { messageDelivery: announcement.messageDelivery }
+          : {}),
+        ...(announcement.type === 'ack' && announcement.deliveryAck
+          ? { deliveryAck: announcement.deliveryAck }
+          : {}),
       });
     }
   }
@@ -386,46 +400,5 @@ export class WebSocketHandler {
     };
 
     connection.send(response);
-  }
-
-  // ===== Message Passing Handlers =====
-
-  private async handleMessageSend(
-    _connection: IWebSocketConnection,
-    message: IMessageSendMessage,
-  ): Promise<void> {
-    if (!this.messageRouter) return;
-    await this.messageRouter.routeMessage(
-      message.payload.messageId,
-      message.payload.recipients,
-    );
-  }
-
-  private async handleMessageReceived(
-    message: IMessageReceivedMessage,
-  ): Promise<void> {
-    if (!this.messageRouter) return;
-    await this.messageRouter.handleIncomingMessage(
-      message.payload.messageId,
-      message.payload.recipientId,
-    );
-  }
-
-  private async handleMessageAck(_message: IMessageAckMessage): Promise<void> {
-    // ACK handled by MessagePassingService
-  }
-
-  private async handleMessageQuery(
-    _connection: IWebSocketConnection,
-    _message: IMessageQueryMessage,
-  ): Promise<void> {
-    // Query handled by MessagePassingService
-  }
-
-  private async handleEventSubscribe(
-    _connection: IWebSocketConnection,
-    _message: IEventSubscribeMessage,
-  ): Promise<void> {
-    // Subscription handled by MessageEventsWebSocketHandler
   }
 }

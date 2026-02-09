@@ -223,6 +223,12 @@ describe('EncryptedBlockFactory', () => {
         data,
         checksum,
         creator,
+        undefined,
+        undefined,
+        true,
+        true,
+        BlockEncryptionType.SingleRecipient,
+        1,
       );
 
       expect(block.data[0]).toBe(BlockEncryptionType.SingleRecipient);
@@ -351,7 +357,6 @@ describe('EncryptedBlockFactory', () => {
           const chunk = data.subarray(offset, offset + currentChunkSize);
           crypto.getRandomValues(chunk);
         }
-
         const checksum = checksumService.calculateChecksum(data);
 
         const block = await EncryptedBlockFactory.createBlock(

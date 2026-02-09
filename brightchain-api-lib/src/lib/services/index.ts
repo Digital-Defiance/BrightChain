@@ -18,3 +18,4 @@ export * from './role';
 export * from './secureKeyStorage';
 export * from './websocketHandler';
 export * from './webSocketMessageServer';
+export * from './webSocketPeerProvider';

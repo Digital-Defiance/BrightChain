@@ -38,7 +38,7 @@ export { ChecksumService } from './lib/services/checksum.service';
 export { MessageCBLService } from './lib/services/messaging/messageCBLService';
 
 // Export messaging enums and interfaces
-export { MessageDeliveryStatus } from './lib/enumerations/messaging/messageDeliveryStatus';
+export { DeliveryStatus } from './lib/enumerations/messaging/deliveryStatus';
 export { MessageEncryptionScheme } from './lib/enumerations/messaging/messageEncryptionScheme';
 export { MessagePriority } from './lib/enumerations/messaging/messagePriority';
 export type { IMessageMetadata } from './lib/interfaces/messaging/messageMetadata';

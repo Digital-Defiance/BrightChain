@@ -154,10 +154,10 @@ export default defineConfig({
   },
   resolve: {
     // NOTE: @noble/hashes is intentionally NOT deduped.
-      // ethereum-cryptography@2.x ships a nested @noble/hashes@1.4.0 with a
-      // different _assert API. Deduping would force it to use the hoisted
-      // v1.8.0, breaking the 'bool' import in ethereum-cryptography/utils.js.
-      dedupe: ['tslib', '@noble/curves'],
+    // ethereum-cryptography@2.x ships a nested @noble/hashes@1.4.0 with a
+    // different _assert API. Deduping would force it to use the hoisted
+    // v1.8.0, breaking the 'bool' import in ethereum-cryptography/utils.js.
+    dedupe: ['tslib', '@noble/curves'],
     extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
     alias: {
       // Local workspace alias - use browser entry point for browser compatibility
@@ -229,7 +229,11 @@ export default defineConfig({
       ),
       // Use browser build of reed-solomon-erasure.wasm (no fs dependency)
       '@digitaldefiance/reed-solomon-erasure.wasm': resolve(
-        dirname(createRequire(import.meta.url).resolve('@digitaldefiance/reed-solomon-erasure.wasm')),
+        dirname(
+          createRequire(import.meta.url).resolve(
+            '@digitaldefiance/reed-solomon-erasure.wasm',
+          ),
+        ),
         'browser.js',
       ),
       // Force uuid to use browser-compatible version (uses Web Crypto API instead of Node crypto)

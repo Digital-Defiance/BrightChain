@@ -1,4 +1,5 @@
-export * from './messageDeliveryStatus';
+export * from './deliveryStatus';
+export * from './emailErrorType';
 export * from './messageEncryptionScheme';
 export * from './messageErrorType';
 export * from './messagePassingType';

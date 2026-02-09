@@ -1,4 +1,3 @@
-export type * from './networkTransport';
 export type * from './node';
 export type * from './nodeAdvertisement';
 export type * from './nodeConfig';

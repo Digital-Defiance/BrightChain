@@ -49,14 +49,14 @@ describe('WebSocketHandler', () => {
     mockDiscoveryProtocol = {} as jest.Mocked<IDiscoveryProtocol>;
 
     mockGossipService = {
-      handleAnnouncement: jest.fn(),
+      handleAnnouncement: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<IGossipService>;
 
     mockHeartbeatMonitor = {} as jest.Mocked<IHeartbeatMonitor>;
 
     mockAvailabilityService = {
-      updateLocation: jest.fn(),
-      removeLocation: jest.fn(),
+      updateLocation: jest.fn().mockResolvedValue(undefined),
+      removeLocation: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<IAvailabilityService>;
 
     mockConnection = {
@@ -303,6 +303,130 @@ describe('WebSocketHandler', () => {
           requestId: 'req-4',
           payload: expect.objectContaining({
             nodeId: 'local-node-1',
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('Ack Forwarding (Requirement 8.4)', () => {
+    beforeEach(() => {
+      handler.registerConnection(mockConnection);
+    });
+
+    it('should forward ack type announcements in batch to gossip service', async () => {
+      const batchMessage = {
+        type: GossipMessageType.ANNOUNCEMENT_BATCH,
+        payload: {
+          announcements: [
+            {
+              type: 'ack' as const,
+              blockId: 'block-ack-1',
+              nodeId: 'recipient-node-1',
+              ttl: 3,
+              deliveryAck: {
+                messageId: 'msg-123',
+                recipientId: 'user-456',
+                status: 'delivered' as const,
+                originalSenderNode: 'sender-node-1',
+              },
+            },
+          ],
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      const messageHandler = (mockConnection.on as jest.Mock).mock.calls.find(
+        (call) => call[0] === 'message',
+      )?.[1];
+      await messageHandler(batchMessage);
+
+      // Should forward to gossip service with ack type and deliveryAck metadata
+      expect(mockGossipService.handleAnnouncement).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'ack',
+          blockId: 'block-ack-1',
+          nodeId: 'recipient-node-1',
+          ttl: 3,
+          deliveryAck: {
+            messageId: 'msg-123',
+            recipientId: 'user-456',
+            status: 'delivered',
+            originalSenderNode: 'sender-node-1',
+          },
+        }),
+      );
+
+      // Should NOT update availability service for ack announcements
+      expect(mockAvailabilityService.updateLocation).not.toHaveBeenCalled();
+      expect(mockAvailabilityService.removeLocation).not.toHaveBeenCalled();
+    });
+
+    it('should handle mixed batch with add, remove, and ack announcements', async () => {
+      const batchMessage = {
+        type: GossipMessageType.ANNOUNCEMENT_BATCH,
+        payload: {
+          announcements: [
+            {
+              type: 'add' as const,
+              blockId: 'block-add-1',
+              nodeId: 'node-1',
+              ttl: 3,
+            },
+            {
+              type: 'ack' as const,
+              blockId: 'block-ack-1',
+              nodeId: 'recipient-node-1',
+              ttl: 3,
+              deliveryAck: {
+                messageId: 'msg-456',
+                recipientId: 'user-789',
+                status: 'failed' as const,
+                originalSenderNode: 'sender-node-2',
+              },
+            },
+            {
+              type: 'remove' as const,
+              blockId: 'block-remove-1',
+              nodeId: 'node-2',
+              ttl: 2,
+            },
+          ],
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      const messageHandler = (mockConnection.on as jest.Mock).mock.calls.find(
+        (call) => call[0] === 'message',
+      )?.[1];
+      messageHandler(batchMessage);
+
+      // Wait for all async operations to complete
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // All three should be forwarded to gossip service
+      expect(mockGossipService.handleAnnouncement).toHaveBeenCalledTimes(3);
+
+      // 'add' should update availability
+      expect(mockAvailabilityService.updateLocation).toHaveBeenCalledWith(
+        'block-add-1',
+        expect.objectContaining({ nodeId: 'node-1' }),
+      );
+
+      // 'remove' should remove location
+      expect(mockAvailabilityService.removeLocation).toHaveBeenCalledWith(
+        'block-remove-1',
+        'node-2',
+      );
+
+      // 'ack' should be forwarded with deliveryAck metadata
+      expect(mockGossipService.handleAnnouncement).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'ack',
+          blockId: 'block-ack-1',
+          deliveryAck: expect.objectContaining({
+            messageId: 'msg-456',
+            status: 'failed',
           }),
         }),
       );

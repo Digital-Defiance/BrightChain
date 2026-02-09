@@ -44,6 +44,14 @@ const arbValidDiscoveryConfig = fc.record({
 });
 
 /**
+ * Arbitrary for valid PriorityGossipConfig
+ */
+const arbValidPriorityGossipConfig = fc.record({
+  fanout: fc.integer({ min: 1, max: 100 }),
+  ttl: fc.integer({ min: 1, max: 10 }),
+});
+
+/**
  * Arbitrary for valid GossipConfig
  */
 const arbValidGossipConfig = fc.record({
@@ -51,6 +59,10 @@ const arbValidGossipConfig = fc.record({
   defaultTtl: fc.integer({ min: 0, max: 10 }),
   batchIntervalMs: fc.integer({ min: 0, max: 60000 }),
   maxBatchSize: fc.integer({ min: 1, max: 10000 }),
+  messagePriority: fc.record({
+    normal: arbValidPriorityGossipConfig,
+    high: arbValidPriorityGossipConfig,
+  }),
 });
 
 /**

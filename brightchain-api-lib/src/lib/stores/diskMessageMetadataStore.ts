@@ -1,9 +1,9 @@
 import {
   BlockSize,
   blockSizeToSizeString,
+  DeliveryStatus,
   IMessageMetadata,
   IMessageMetadataStore,
-  MessageDeliveryStatus,
   MessageEncryptionScheme,
   MessagePriority,
   MessageQuery,
@@ -120,7 +120,7 @@ export class DiskMessageMetadataStore
       recipients: [...file.recipients],
       priority: Number(file.priority) as MessagePriority,
       deliveryStatus: new Map(
-        file.deliveryStatus.map(([k, v]) => [k, v as MessageDeliveryStatus]),
+        file.deliveryStatus.map(([k, v]) => [k, v as DeliveryStatus]),
       ),
       acknowledgments: new Map(
         file.acknowledgments.map(([k, v]) => [k, new Date(v)]),
@@ -177,7 +177,7 @@ export class DiskMessageMetadataStore
   async updateDeliveryStatus(
     messageId: string,
     recipientId: string,
-    status: MessageDeliveryStatus,
+    status: DeliveryStatus,
   ): Promise<void> {
     const meta = await this.getMessageMetadata(messageId);
     if (!meta) {
@@ -201,7 +201,7 @@ export class DiskMessageMetadataStore
       });
     }
     meta.acknowledgments.set(recipientId, timestamp);
-    meta.deliveryStatus.set(recipientId, MessageDeliveryStatus.DELIVERED);
+    meta.deliveryStatus.set(recipientId, DeliveryStatus.Delivered);
     await this.storeMessageMetadata(meta);
   }
 

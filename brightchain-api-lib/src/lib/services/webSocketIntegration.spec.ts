@@ -1,22 +1,22 @@
 /**
- * Integration tests for WebSocket communication between
- * browser client (WebSocketTransport) and Node.js server (WebSocketMessageServer)
+ * Integration tests for WebSocket server infrastructure.
+ * Message-specific routing tests have been removed as part of the
+ * unified gossip delivery migration (Requirement 9.9).
+ * The WebSocketMessageServer now serves as gossip transport only.
  */
-import { WebSocketTransport } from '@brightchain/brightchain-lib/lib/services/messaging/webSocketTransport';
 import { createServer, Server as HttpServer } from 'http';
+import { WebSocket } from 'ws';
 import { WebSocketMessageServer } from './webSocketMessageServer';
 
-describe('WebSocket Client-Server Integration', () => {
+describe('WebSocket Server Integration', () => {
   let httpServer: HttpServer;
   let wsServer: WebSocketMessageServer;
-  let wsClient: WebSocketTransport;
-  const TEST_PORT = 8765;
+  const TEST_PORT = 8765 + Math.floor(Math.random() * 1000);
 
   beforeEach((done) => {
     httpServer = createServer();
     wsServer = new WebSocketMessageServer(httpServer, false);
     httpServer.listen(TEST_PORT, () => {
-      wsClient = new WebSocketTransport();
       done();
     });
   });
@@ -29,10 +29,13 @@ describe('WebSocket Client-Server Integration', () => {
     });
   });
 
-  it('should establish connection between client and server', async () => {
+  it('should establish connection and track node', async () => {
     const nodeId = 'test-node-1';
+    const client = new WebSocket(`ws://localhost:${TEST_PORT}/${nodeId}`);
 
-    await wsClient.connect(nodeId, `ws://localhost:${TEST_PORT}/${nodeId}`);
+    await new Promise<void>((resolve) => {
+      client.on('open', () => resolve());
+    });
 
     // Wait a bit for connection to be established
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -40,88 +43,20 @@ describe('WebSocket Client-Server Integration', () => {
     const connectedNodes = wsServer.getConnectedNodes();
     expect(connectedNodes).toContain(nodeId);
 
-    wsClient.disconnect(nodeId);
-  });
-
-  it('should send message from server to client', async () => {
-    const nodeId = 'test-node-2';
-    const messageId = 'msg-123';
-
-    let receivedMessage: { type: string; messageId: string } | null = null;
-    wsClient.onMessage(nodeId, (data) => {
-      receivedMessage = JSON.parse(data);
-    });
-
-    await wsClient.connect(nodeId, `ws://localhost:${TEST_PORT}/${nodeId}`);
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    await wsServer.sendToNode(nodeId, messageId);
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    expect(receivedMessage).not.toBeNull();
-    expect(receivedMessage!.type).toBe('message');
-    expect(receivedMessage!.messageId).toBe(messageId);
-
-    wsClient.disconnect(nodeId);
-  });
-
-  it('should send message from client to server', async () => {
-    const nodeId = 'test-node-3';
-    const messageId = 'msg-456';
-
-    let receivedNodeId: string | null = null;
-    let receivedMessageId: string | null = null;
-
-    wsServer.onMessage(async (nId, mId) => {
-      receivedNodeId = nId;
-      receivedMessageId = mId;
-    });
-
-    await wsClient.connect(nodeId, `ws://localhost:${TEST_PORT}/${nodeId}`);
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    await wsClient.sendToNode(nodeId, messageId);
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    expect(receivedNodeId).toBe(nodeId);
-    expect(receivedMessageId).toBe(messageId);
-
-    wsClient.disconnect(nodeId);
-  });
-
-  it('should handle acknowledgments between client and server', async () => {
-    const nodeId = 'test-node-4';
-    const messageId = 'msg-789';
-    const status = 'DELIVERED';
-
-    let _receivedAck: {
-      type: string;
-      messageId: string;
-      status: string;
-    } | null = null;
-    wsClient.onMessage(nodeId, (data) => {
-      const parsed = JSON.parse(data);
-      if (parsed.type === 'ack') {
-        _receivedAck = parsed;
-      }
-    });
-
-    await wsClient.connect(nodeId, `ws://localhost:${TEST_PORT}/${nodeId}`);
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // Client sends ack to server
-    await wsClient.sendAck(nodeId, messageId, status);
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    wsClient.disconnect(nodeId);
+    client.close();
   });
 
   it('should handle multiple concurrent connections', async () => {
     const nodeIds = ['node-1', 'node-2', 'node-3'];
+    const clients: WebSocket[] = [];
 
     // Connect all clients
     for (const nodeId of nodeIds) {
-      await wsClient.connect(nodeId, `ws://localhost:${TEST_PORT}/${nodeId}`);
+      const client = new WebSocket(`ws://localhost:${TEST_PORT}/${nodeId}`);
+      await new Promise<void>((resolve) => {
+        client.on('open', () => resolve());
+      });
+      clients.push(client);
     }
 
     await new Promise((resolve) => setTimeout(resolve, 200));
@@ -132,27 +67,28 @@ describe('WebSocket Client-Server Integration', () => {
     }
 
     // Disconnect all
-    for (const nodeId of nodeIds) {
-      wsClient.disconnect(nodeId);
+    for (const client of clients) {
+      client.close();
     }
   });
 
-  it('should detect when node is reachable', async () => {
-    const nodeId = 'test-node-5';
+  it('should remove node on disconnect', async () => {
+    const nodeId = 'test-node-disconnect';
+    const client = new WebSocket(`ws://localhost:${TEST_PORT}/${nodeId}`);
 
-    // Not connected yet
-    expect(await wsClient.isNodeReachable(nodeId)).toBe(false);
+    await new Promise<void>((resolve) => {
+      client.on('open', () => resolve());
+    });
 
-    await wsClient.connect(nodeId, `ws://localhost:${TEST_PORT}/${nodeId}`);
     await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(wsServer.getConnectedNodes()).toContain(nodeId);
 
-    // Now connected
-    expect(await wsClient.isNodeReachable(nodeId)).toBe(true);
+    await new Promise<void>((resolve) => {
+      client.on('close', () => resolve());
+      client.close();
+    });
 
-    wsClient.disconnect(nodeId);
     await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // Disconnected
-    expect(await wsClient.isNodeReachable(nodeId)).toBe(false);
+    expect(wsServer.getConnectedNodes()).not.toContain(nodeId);
   });
 });

@@ -1,4 +1,4 @@
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { IBlockMetadataStore } from '../storage/blockMetadataStore';
 import { IMessageMetadata } from './messageMetadata';
@@ -65,7 +65,7 @@ export interface IMessageMetadataStore extends IBlockMetadataStore {
   updateDeliveryStatus(
     messageId: string,
     recipientId: string,
-    status: MessageDeliveryStatus,
+    status: DeliveryStatus,
   ): Promise<void>;
 
   /**

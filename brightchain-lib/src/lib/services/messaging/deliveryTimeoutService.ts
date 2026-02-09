@@ -1,5 +1,5 @@
 import { BrightChainStrings } from '../../enumerations';
-import { MessageDeliveryStatus } from '../../enumerations/messaging/messageDeliveryStatus';
+import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { translate } from '../../i18n';
 import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 
@@ -137,7 +137,7 @@ export class DeliveryTimeoutService {
       await this.metadataStore.updateDeliveryStatus(
         messageId,
         recipientId,
-        MessageDeliveryStatus.FAILED,
+        DeliveryStatus.Failed,
       );
 
       this.clearDeliveryAttempt(messageId, recipientId);

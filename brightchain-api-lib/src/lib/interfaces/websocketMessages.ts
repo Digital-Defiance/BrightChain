@@ -141,13 +141,43 @@ export interface IAnnouncementBatchMessage {
   type: GossipMessageType.ANNOUNCEMENT_BATCH;
   payload: {
     announcements: Array<{
-      type: 'add' | 'remove';
+      type: 'add' | 'remove' | 'ack';
       blockId: string;
       nodeId: string;
       ttl: number;
+      messageDelivery?: {
+        messageId: string;
+        recipientIds: string[];
+        priority: 'normal' | 'high';
+        blockIds: string[];
+        cblBlockId: string;
+        ackRequired: boolean;
+      };
+      deliveryAck?: {
+        messageId: string;
+        recipientId: string;
+        status: 'delivered' | 'read' | 'failed' | 'bounced';
+        originalSenderNode: string;
+      };
     }>;
+    /** Present when the batch is encrypted; announcements array is empty */
+    encryptedPayload?: string;
+    /** Sender node ID, present when encryptedPayload is set */
+    senderNodeId?: string;
   };
   timestamp: string;
+}
+
+/**
+ * Encrypted gossip payload — an ECIES-encrypted announcement batch.
+ * Used as an alternative to the plaintext announcements array when
+ * the batch contains sensitive metadata (messageDelivery / deliveryAck).
+ */
+export interface IEncryptedGossipPayload {
+  /** Base64-encoded ECIES ciphertext in WithLength format */
+  encryptedPayload: string;
+  /** Node ID of the sender that encrypted this payload */
+  senderNodeId: string;
 }
 
 // ===== Heartbeat Messages =====

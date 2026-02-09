@@ -54,6 +54,14 @@ const arbBlockAnnouncement = fc.record({
 });
 
 /**
+ * Generate a valid priority gossip config
+ */
+const arbPriorityGossipConfig = fc.record({
+  fanout: fc.integer({ min: 1, max: 10 }),
+  ttl: fc.integer({ min: 1, max: 10 }),
+});
+
+/**
  * Generate a valid gossip config
  */
 const arbGossipConfig = fc.record({
@@ -61,6 +69,10 @@ const arbGossipConfig = fc.record({
   defaultTtl: fc.integer({ min: 1, max: 10 }),
   batchIntervalMs: fc.integer({ min: 100, max: 10000 }),
   maxBatchSize: fc.integer({ min: 1, max: 100 }),
+  messagePriority: fc.record({
+    normal: arbPriorityGossipConfig,
+    high: arbPriorityGossipConfig,
+  }),
 });
 
 /**
@@ -92,6 +104,10 @@ class MockPeerProvider implements IPeerProvider {
     announcements: BlockAnnouncement[],
   ): Promise<void> {
     this.sentBatches.push({ peerId, announcements: [...announcements] });
+  }
+
+  async getPeerPublicKey(_peerId: string): Promise<Buffer | null> {
+    return null;
   }
 
   clearSentBatches(): void {
@@ -218,9 +234,13 @@ describe('GossipService Property Tests', () => {
               defaultTtl: 3,
               batchIntervalMs: 1000,
               maxBatchSize: 100,
+              messagePriority: {
+                normal: { fanout: 5, ttl: 5 },
+                high: { fanout: 7, ttl: 7 },
+              },
             };
 
-            let currentAnnouncement = { ...announcement };
+            let currentAnnouncement: BlockAnnouncement = { ...announcement };
             let forwardCount = 0;
 
             // Simulate multiple hops
@@ -320,6 +340,10 @@ describe('GossipService Property Tests', () => {
               defaultTtl: 3,
               batchIntervalMs: 1000,
               maxBatchSize,
+              messagePriority: {
+                normal: { fanout: 5, ttl: 5 },
+                high: { fanout: 7, ttl: 7 },
+              },
             };
 
             const peerProvider = new MockPeerProvider('local-node', ['peer-1']);
@@ -378,6 +402,10 @@ describe('GossipService Property Tests', () => {
               defaultTtl: 3,
               batchIntervalMs: 1000,
               maxBatchSize: 100,
+              messagePriority: {
+                normal: { fanout: 5, ttl: 5 },
+                high: { fanout: 7, ttl: 7 },
+              },
             };
 
             const peerProvider = new MockPeerProvider('local-node', ['peer-1']);
@@ -424,6 +452,10 @@ describe('GossipService Property Tests', () => {
               defaultTtl: 3,
               batchIntervalMs: 1000,
               maxBatchSize: 100,
+              messagePriority: {
+                normal: { fanout: 5, ttl: 5 },
+                high: { fanout: 7, ttl: 7 },
+              },
             };
 
             const peerProvider = new MockPeerProvider('local-node', ['peer-1']);
@@ -490,6 +522,10 @@ describe('GossipService Property Tests', () => {
               defaultTtl: 3,
               batchIntervalMs: 1000,
               maxBatchSize: 100,
+              messagePriority: {
+                normal: { fanout: 5, ttl: 5 },
+                high: { fanout: 7, ttl: 7 },
+              },
             };
 
             const peers = Array.from(
@@ -541,6 +577,10 @@ describe('GossipService Property Tests', () => {
               defaultTtl: 3,
               batchIntervalMs: 1000,
               maxBatchSize: 100,
+              messagePriority: {
+                normal: { fanout: 5, ttl: 5 },
+                high: { fanout: 7, ttl: 7 },
+              },
             };
 
             const peerProvider = new MockPeerProvider('local-node', ['peer-1']);
