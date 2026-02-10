@@ -4,7 +4,9 @@
   <img src="./brightchain-react/src/assets/images/BrightChain-Square-white.png" />
 </div>
 
-# BrightChain: Next-Generation Decentralized Infrastructure
+# BrightChain: Privacy. Participation. Power.
+
+## Next-Generation Decentralized Infrastructure
 
 BrightChain represents a revolutionary approach to blockchain technology, combining advanced cryptography with innovative governance mechanisms. Built on Ethereum's foundation but departing from traditional proof-of-work systems, BrightChain delivers a comprehensive suite of decentralized services designed for security, privacy, and democratic participation.
 
