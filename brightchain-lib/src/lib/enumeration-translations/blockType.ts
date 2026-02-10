@@ -15,10 +15,13 @@ export const BlockTypeTranslations: BlockTypeLanguageTranslation =
         [BlockType.EncryptedOwnedDataBlock]: 'Verschlüsselte Eigentümerdaten',
         [BlockType.ExtendedConstituentBlockListBlock]:
           'Erweiterte Bestandteil Blockliste',
+        [BlockType.VaultConstituentBlockList]: 'Tresor Blockliste',
         [BlockType.EncryptedExtendedConstituentBlockListBlock]:
           'Verschlüsselte Erweiterte Bestandteil Blockliste',
         [BlockType.EncryptedConstituentBlockListBlock]:
           'Verschlüsselte Bestandteil Blockliste',
+        [BlockType.EncryptedVaultConstituentBlockListBlock]:
+          'Verschlüsselte Tresor Blockliste',
         [BlockType.FECData]: 'FEC Daten',
         [BlockType.Handle]: 'Handle',
         [BlockType.EphemeralOwnedDataBlock]: 'Eigentümerdaten',
@@ -33,10 +36,13 @@ export const BlockTypeTranslations: BlockTypeLanguageTranslation =
         [BlockType.EncryptedOwnedDataBlock]: 'Encrypted Owned Data',
         [BlockType.ExtendedConstituentBlockListBlock]:
           'Extended Constituent Block List',
+        [BlockType.VaultConstituentBlockList]: 'Vault Block List',
         [BlockType.EncryptedExtendedConstituentBlockListBlock]:
           'Encrypted Extended Constituent Block List',
         [BlockType.EncryptedConstituentBlockListBlock]:
           'Encrypted Constituent Block List',
+        [BlockType.EncryptedVaultConstituentBlockListBlock]:
+          'Encrypted Vault Block List',
         [BlockType.FECData]: 'FEC Data',
         [BlockType.Handle]: 'Handle',
         [BlockType.EphemeralOwnedDataBlock]: 'Owned Data',
@@ -51,10 +57,13 @@ export const BlockTypeTranslations: BlockTypeLanguageTranslation =
         [BlockType.EncryptedOwnedDataBlock]: 'Encrypted Owned Data',
         [BlockType.ExtendedConstituentBlockListBlock]:
           'Extended Constituent Block List',
+        [BlockType.VaultConstituentBlockList]: 'Vault Block List',
         [BlockType.EncryptedExtendedConstituentBlockListBlock]:
           'Encrypted Extended Constituent Block List',
         [BlockType.EncryptedConstituentBlockListBlock]:
           'Encrypted Constituent Block List',
+        [BlockType.EncryptedVaultConstituentBlockListBlock]:
+          'Encrypted Vault Block List',
         [BlockType.FECData]: 'FEC Data',
         [BlockType.Handle]: 'Handle',
         [BlockType.EphemeralOwnedDataBlock]: 'Owned Data',
@@ -69,10 +78,13 @@ export const BlockTypeTranslations: BlockTypeLanguageTranslation =
         [BlockType.EncryptedOwnedDataBlock]: 'Datos del propietario cifrados',
         [BlockType.ExtendedConstituentBlockListBlock]:
           'Lista de bloques constituyentes extendida',
+        [BlockType.VaultConstituentBlockList]: 'Lista de bloques de bóveda',
         [BlockType.EncryptedExtendedConstituentBlockListBlock]:
           'Lista de bloques constituyentes extendida cifrada',
         [BlockType.EncryptedConstituentBlockListBlock]:
           'Lista de bloques constituyentes cifrada',
+        [BlockType.EncryptedVaultConstituentBlockListBlock]:
+          'Lista de bloques de bóveda cifrada',
         [BlockType.FECData]: 'Datos FEC',
         [BlockType.Handle]: 'Manija',
         [BlockType.EphemeralOwnedDataBlock]: 'Datos del propietario',
@@ -88,10 +100,13 @@ export const BlockTypeTranslations: BlockTypeLanguageTranslation =
         [BlockType.EncryptedOwnedDataBlock]: 'Données possédées chiffrées',
         [BlockType.ExtendedConstituentBlockListBlock]:
           'Liste étendue des blocs constituants',
+        [BlockType.VaultConstituentBlockList]: 'Liste des blocs de coffre',
         [BlockType.EncryptedExtendedConstituentBlockListBlock]:
           'Liste étendue des blocs constituants chiffrée',
         [BlockType.EncryptedConstituentBlockListBlock]:
           'Liste des blocs constituants chiffrée',
+        [BlockType.EncryptedVaultConstituentBlockListBlock]:
+          'Liste des blocs de coffre chiffrée',
         [BlockType.FECData]: 'Données FEC',
         [BlockType.Handle]: 'Poignée',
         [BlockType.EphemeralOwnedDataBlock]: 'Données possédées',
@@ -106,10 +121,13 @@ export const BlockTypeTranslations: BlockTypeLanguageTranslation =
         [BlockType.ConstituentBlockList]: '構成ブロックリスト',
         [BlockType.EncryptedOwnedDataBlock]: '暗号化された所有データ',
         [BlockType.ExtendedConstituentBlockListBlock]: '拡張構成ブロックリスト',
+        [BlockType.VaultConstituentBlockList]: 'ボールトブロックリスト',
         [BlockType.EncryptedExtendedConstituentBlockListBlock]:
           '暗号化された拡張構成ブロックリスト',
         [BlockType.EncryptedConstituentBlockListBlock]:
           '暗号化された構成ブロックリスト',
+        [BlockType.EncryptedVaultConstituentBlockListBlock]:
+          '暗号化されたボールトブロックリスト',
         [BlockType.FECData]: 'FECデータ',
         [BlockType.Handle]: 'ハンドル',
         [BlockType.EphemeralOwnedDataBlock]: '所有データ',
@@ -124,10 +142,13 @@ export const BlockTypeTranslations: BlockTypeLanguageTranslation =
         [BlockType.EncryptedOwnedDataBlock]: 'Зашифровані власні дані',
         [BlockType.ExtendedConstituentBlockListBlock]:
           'Розширений список складових блоків',
+        [BlockType.VaultConstituentBlockList]: 'Список блоків сховища',
         [BlockType.EncryptedExtendedConstituentBlockListBlock]:
           'Зашифрований розширений список складових блоків',
         [BlockType.EncryptedConstituentBlockListBlock]:
           'Зашифрований список складових блоків',
+        [BlockType.EncryptedVaultConstituentBlockListBlock]:
+          'Зашифрований список блоків сховища',
         [BlockType.FECData]: 'Дані FEC',
         [BlockType.Handle]: 'Обробляти',
         [BlockType.EphemeralOwnedDataBlock]: 'Власні дані',
@@ -141,9 +162,12 @@ export const BlockTypeTranslations: BlockTypeLanguageTranslation =
         [BlockType.ConstituentBlockList]: '组成块列表',
         [BlockType.EncryptedOwnedDataBlock]: '加密的拥有数据',
         [BlockType.ExtendedConstituentBlockListBlock]: '扩展组成块列表',
+        [BlockType.VaultConstituentBlockList]: '保险库块列表',
         [BlockType.EncryptedExtendedConstituentBlockListBlock]:
           '加密的扩展组成块列表',
         [BlockType.EncryptedConstituentBlockListBlock]: '加密的组成块列表',
+        [BlockType.EncryptedVaultConstituentBlockListBlock]:
+          '加密的保险库块列表',
         [BlockType.FECData]: 'FEC数据',
         [BlockType.Handle]: '句柄',
         [BlockType.EphemeralOwnedDataBlock]: '拥有数据',

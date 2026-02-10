@@ -6,6 +6,7 @@ import {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { BlockSize } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import { IUpnpConfig, UpnpConfig } from '@digitaldefiance/node-express-suite';
 import { join } from 'path';
 import { Constants } from './constants';
 import { IEnvironment } from './interfaces/environment';
@@ -16,6 +17,7 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
   extends BaseEnvironment<TID>
   implements IEnvironment<TID>
 {
+  private _upnp: IUpnpConfig;
   private _fontAwesomeKitId: string;
   private _aws: IEnvironmentAws;
   private _blockStorePath?: string;
@@ -44,6 +46,7 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
 
     const envObj = this.getObject();
 
+    this._upnp = UpnpConfig.fromEnvironment(envObj);
     // BrightChain-specific environment variables
     this._fontAwesomeKitId = envObj['FONTAWESOME_KIT_ID'] ?? '';
 
@@ -88,6 +91,10 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
         join(process.cwd(), 'dist', 'brightchain-react'),
       );
     }
+  }
+
+  public get upnp(): IUpnpConfig {
+    return this._upnp;
   }
 
   public get fontAwesomeKitId(): string {

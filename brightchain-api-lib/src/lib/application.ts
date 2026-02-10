@@ -21,6 +21,7 @@ import {
   SuiteCoreStringKey,
 } from '@digitaldefiance/suite-core-lib';
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { UpnpManager } from '@digitaldefiance/node-express-suite';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import { readFileSync } from 'fs';
 import { Server } from 'http';
@@ -50,6 +51,7 @@ export class App<TID extends PlatformID> extends BaseApplication<TID> {
   private eventSystem: EventNotificationSystem | null = null;
   private wsServer: WebSocketMessageServer | null = null;
   private messagePassingService: MessagePassingService | null = null;
+  private upnpManager: UpnpManager | null = null;
 
   constructor(environment: Environment<TID>) {
     super(
@@ -206,6 +208,32 @@ export class App<TID extends PlatformID> extends BaseApplication<TID> {
       }
 
       await Promise.all(serversReady);
+
+      // Initialize UPnP port mapping if enabled (non-fatal on failure)
+      try {
+        if (this.environment.upnp.enabled) {
+          this.upnpManager = new UpnpManager(this.environment.upnp);
+          await this.upnpManager.initialize();
+          this.services.register('upnpManager', () => this.upnpManager);
+          debugLog(
+            this.environment.debug,
+            'log',
+            '[ ready ] UPnP port mapping initialized',
+          );
+        } else {
+          debugLog(
+            this.environment.debug,
+            'log',
+            '[ info ] UPnP port mapping disabled',
+          );
+        }
+      } catch (upnpErr) {
+        console.warn(
+          '[ warning ] UPnP initialization failed, continuing without port mapping:',
+          upnpErr,
+        );
+      }
+
       this._ready = true;
     } catch (err) {
       console.error('Failed to start the application:', err);
@@ -217,6 +245,13 @@ export class App<TID extends PlatformID> extends BaseApplication<TID> {
   }
 
   public override async stop(): Promise<void> {
+    // Shutdown UPnP port mappings first
+    if (this.upnpManager) {
+      debugLog(this.environment.debug, 'log', '[ stopping ] UPnP port mapping');
+      await this.upnpManager.shutdown();
+      this.upnpManager = null;
+    }
+
     // Close WebSocket server first
     if (this.wsServer) {
       debugLog(this.environment.debug, 'log', '[ stopping ] WebSocket server');

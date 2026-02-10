@@ -351,7 +351,8 @@ export class MessagesController<
       return {
         statusCode: 204,
         response: {
-          success: true,
+          status: 'success' as const,
+          data: { deleted: true },
         },
       };
     } catch (_error) {

@@ -9,6 +9,7 @@
     "brightchain-api-lib/**/*.ts",
     "brightchain-api/**/*.ts",
     "brightchain-api-e2e/**/*.ts",
+    "brightchain-db/**/*.ts",
     "brightchain-react/**/*.ts",
     "brightchain-react/**/*.tsx",
     "brightchain-react-e2e/**/*.ts",

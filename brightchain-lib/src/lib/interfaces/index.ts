@@ -26,7 +26,7 @@ export type * from './keyringEntry';
 export type * from './languageContext';
 export type * from './member';
 export type * from './membersHandlers';
-export type * from './network';
+export * from './network';
 export type * from './nodeInfo';
 export type * from './position';
 export type * from './privateVotingDerivation';
@@ -34,6 +34,7 @@ export type * from './quoromDataRecordActionLog';
 export type * from './readOnlyBasicObjectDto';
 export type * from './readOnlyDataObjectDto';
 export type * from './replicationNodeResult';
+export type * from './requests';
 export type * from './requestUser';
 export type * from './responses';
 export type * from './role';
@@ -52,5 +53,20 @@ export type * from './tuple';
 export type * from './tupleConfig';
 export type * from './walletSeed';
 
-// Message passing interfaces
-export type * from './messaging';
+// Message passing interfaces (uses `export *` because messaging contains runtime functions like createMailbox)
+export * from './messaging';
+
+// Identity interfaces (paper keys, identity proofs, devices)
+export type * from './identity';
+
+// Communication interfaces (direct messaging, groups, channels)
+export type * from './communication';
+
+// Communication event interfaces (real-time WebSocket events)
+export type * from './communicationEvents';
+
+// BrightPass password manager interfaces
+export * from './brightpass';
+
+// Communication event emitter abstraction (real-time event system)
+export * from './events';

@@ -6,3 +6,4 @@ export type * from './ephemeral';
 export type * from './extendedCbl';
 export type * from './headers';
 export type * from './metadata';
+export type * from './vcbl';

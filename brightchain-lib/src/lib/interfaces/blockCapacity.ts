@@ -45,6 +45,16 @@ export interface IBlockCapacityParams {
    * @remarks Required when encryptionType is MultiRecipient
    */
   recipientCount?: number;
+
+  /**
+   * VCBL-specific overhead data (required for VCBL block types)
+   */
+  vcbl?: {
+    /** Size of the vault header in bytes */
+    vaultHeaderSize: number;
+    /** Total size of all property records in bytes */
+    propertyRecordsSize: number;
+  };
 }
 
 /**

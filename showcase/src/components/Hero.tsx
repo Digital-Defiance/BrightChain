@@ -63,8 +63,8 @@ const Hero = ({ scrollY }: HeroProps) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.8 }}
         >
-          Revolutionary Blockchain Without the Waste: Decentralized storage, homomorphic voting, and brokered anonymity—all
-          powered by
+          Revolutionary Blockchain Without the Waste: Decentralized storage,
+          homomorphic voting, and brokered anonymity—all powered by
           <br />
           advanced cryptography and innovative governance mechanisms.
           <br />

@@ -1,6 +1,6 @@
 {
   "root": true,
-  "ignorePatterns": [],
+  "ignorePatterns": ["generate-vectors.ts", "jest.preset.js"],
   "plugins": ["@nx", "@typescript-eslint", "prettier", "jest"],
   "rules": {
     "prettier/prettier": "error"
@@ -12,9 +12,13 @@
         "@nx/enforce-module-boundaries": [
           "error",
           {
-            "enforceBuildableLibDependency": true,
+            "enforceBuildableLibDependency": false,
             "allow": [],
             "depConstraints": [
+              {
+                "sourceTag": "scope:tooling",
+                "onlyDependOnLibsWithTags": ["*"]
+              },
               {
                 "sourceTag": "type:lib",
                 "onlyDependOnLibsWithTags": ["type:lib"]

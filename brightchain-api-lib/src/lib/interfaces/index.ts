@@ -8,7 +8,6 @@ export type * from './blockRequest';
 export type * from './blockResponses';
 export type * from './blockService';
 export type * from './blocksHandlers';
-export type * from './blockStore';
 export type * from './cblHandlers';
 export type * from './checksum-config';
 export type * from './discriminator-collections';

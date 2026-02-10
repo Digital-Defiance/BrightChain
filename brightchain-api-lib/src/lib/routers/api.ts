@@ -4,6 +4,10 @@ import {
   IDiscoveryProtocol,
   IReconciliationService,
 } from '@brightchain/brightchain-lib';
+import { ChannelService } from '@brightchain/brightchain-lib/lib/services/communication/channelService';
+import { ConversationService } from '@brightchain/brightchain-lib/lib/services/communication/conversationService';
+import { GroupService } from '@brightchain/brightchain-lib/lib/services/communication/groupService';
+import { PermissionService } from '@brightchain/brightchain-lib/lib/services/communication/permissionService';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import { ECIESService, PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -15,8 +19,12 @@ import {
 import { AppConstants } from '../appConstants';
 import { BlocksController } from '../controllers/api/blocks';
 import { CBLController } from '../controllers/api/cbl';
+import { ChannelController } from '../controllers/api/channels';
+import { ConversationController } from '../controllers/api/conversations';
 import { DocsController } from '../controllers/api/docs';
+import { EmailController } from '../controllers/api/emails';
 import { EnergyController } from '../controllers/api/energy';
+import { GroupController } from '../controllers/api/groups';
 import { HealthController } from '../controllers/api/health';
 import { I18nController } from '../controllers/api/i18n';
 import { MessagesController } from '../controllers/api/messages';
@@ -39,8 +47,12 @@ export class ApiRouter<
   TID extends PlatformID = DefaultBackendIdType,
 > extends BaseRouter<TID> {
   private readonly blocksController: BlocksController<TID>;
+  private readonly channelController: ChannelController<TID>;
+  private readonly conversationController: ConversationController<TID>;
   private readonly docsController: DocsController<TID>;
+  private readonly emailController: EmailController<TID>;
   private readonly energyController: EnergyController<TID>;
+  private readonly groupController: GroupController<TID>;
   private readonly healthController: HealthController<TID>;
   private readonly i18nController: I18nController<TID>;
   private readonly messagesController: MessagesController<TID>;
@@ -83,8 +95,12 @@ export class ApiRouter<
 
     this.userController = new UserController<TID>(application);
     this.blocksController = new BlocksController(application);
+    this.channelController = new ChannelController(application);
+    this.conversationController = new ConversationController(application);
     this.docsController = new DocsController(application);
+    this.emailController = new EmailController(application);
     this.energyController = new EnergyController(application);
+    this.groupController = new GroupController(application);
     this.healthController = new HealthController(application);
     this.i18nController = new I18nController(application);
     this.messagesController = new MessagesController(application);
@@ -96,7 +112,11 @@ export class ApiRouter<
 
     this.router.use('/user', this.userController.router);
     this.router.use('/blocks', this.blocksController.router);
+    this.router.use('/channels', this.channelController.router);
+    this.router.use('/conversations', this.conversationController.router);
     this.router.use('/docs', this.docsController.router);
+    this.router.use('/emails', this.emailController.router);
+    this.router.use('/groups', this.groupController.router);
     this.router.use('/i18n', this.i18nController.router);
     this.router.use('/energy', this.energyController.router);
     this.router.use('/health', this.healthController.router);
@@ -181,5 +201,73 @@ export class ApiRouter<
    */
   public setSyncEventSystem(eventSystem: EventNotificationSystem): void {
     this.syncController.setEventSystem(eventSystem);
+  }
+
+  // ─── Communication service injection ────────────────────────────────
+
+  /**
+   * Set the ConversationService for the DirectMessageController.
+   * @requirements 1.1, 1.2, 1.3, 1.4, 1.5
+   */
+  public setConversationService(service: ConversationService): void {
+    this.conversationController.setConversationService(service);
+  }
+
+  /**
+   * Set the GroupService for the GroupController.
+   * @requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
+   */
+  public setGroupService(service: GroupService): void {
+    this.groupController.setGroupService(service);
+  }
+
+  /**
+   * Set the ChannelService for the ChannelController.
+   * @requirements 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4, 5.5
+   */
+  public setChannelService(service: ChannelService): void {
+    this.channelController.setChannelService(service);
+  }
+
+  /**
+   * Set the PermissionService for both GroupController and ChannelController.
+   * @requirements 6.1, 6.2, 6.3, 6.4
+   */
+  public setPermissionService(service: PermissionService): void {
+    this.groupController.setPermissionService(service);
+    this.channelController.setPermissionService(service);
+  }
+
+  /**
+   * Set the MessagePassingService for the EmailController.
+   * This should be called during application initialization after
+   * all required dependencies are available.
+   * @requirements 14.1, 14.2
+   */
+  public setMessagePassingServiceForEmail(
+    service: MessagePassingService,
+  ): void {
+    this.emailController.setMessagePassingService(service);
+  }
+
+  /**
+   * Get the DirectMessageController instance.
+   */
+  public getConversationController(): typeof this.conversationController {
+    return this.conversationController;
+  }
+
+  /**
+   * Get the GroupController instance.
+   */
+  public getGroupController(): typeof this.groupController {
+    return this.groupController;
+  }
+
+  /**
+   * Get the ChannelController instance.
+   */
+  public getChannelController(): typeof this.channelController {
+    return this.channelController;
   }
 }

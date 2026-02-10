@@ -1,9 +1,13 @@
 export type * from './apiError';
 export type * from './apiExpressValidationError';
 export type * from './blockLocationResponse';
-export type * from './deleteMessageResponse';
+export type * from './communicationResponses';
+// NOTE: deleteMessageResponse.ts is NOT re-exported here because
+// communicationResponses.ts already exports IDeleteMessageResponse.
+// Re-exporting both causes TS2308.
 export type * from './detailedHealthResponse';
 export type * from './discoverBlockResponse';
+export type * from './emailResponses';
 export type * from './getBlock';
 export type * from './getCbl';
 export type * from './getMessageResponse';

@@ -1,6 +1,6 @@
 {
   "extends": ["../.eslintrc.json"],
-  "ignorePatterns": ["!**/*"],
+  "ignorePatterns": ["!**/*", "**/generate-vectors.ts", "**/jest.preset.js"],
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],

@@ -130,6 +130,11 @@ export * from './access';
  */
 export * from './keys';
 
+/**
+ * Platform-agnostic crypto utilities (browser + Node.js).
+ */
+export * from './crypto';
+
 // ============================================================================
 // Schemas
 // ============================================================================

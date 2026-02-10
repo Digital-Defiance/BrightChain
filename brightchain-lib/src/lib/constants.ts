@@ -72,6 +72,11 @@ export enum StructuredBlockType {
    * Message CBL - CBL for messaging system
    */
   MessageCBL = 0x05,
+
+  /**
+   * Vault CBL - CBL with vault header and entry property records
+   */
+  VaultCBL = 0x06,
 }
 
 /**

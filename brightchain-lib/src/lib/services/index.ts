@@ -13,4 +13,14 @@ export * from './serviceLocator';
 export * from './symmetric.service';
 export * from './tuple.service';
 export * from './tupleStorageService';
+export * from './vcblService';
 export * from './xor';
+
+// BrightPass services (password management)
+export * from './brightpass';
+
+// Communication services (direct messaging, groups, channels)
+export * from './communication';
+
+// Identity services (paper keys, identity proofs, directory)
+export * from './identity';

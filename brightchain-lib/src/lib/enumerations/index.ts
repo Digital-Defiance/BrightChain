@@ -60,5 +60,18 @@ export * from './votingDerivationErrorType';
 export * from './votingErrorType';
 export * from './whitenedErrorType';
 
+// Paper key enumerations
+export * from './paperKeyPurpose';
+
+// Device enumerations
+export * from './deviceType';
+
+// Identity proof enumerations
+export * from './proofPlatform';
+export * from './verificationStatus';
+
+// Communication enumerations
+export * from './communication';
+
 // Message passing enumerations
 export * from './messaging';
