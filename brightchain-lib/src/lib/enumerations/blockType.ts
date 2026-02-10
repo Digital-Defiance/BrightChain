@@ -86,6 +86,15 @@ export enum BlockType {
   ExtendedConstituentBlockListBlock = 21,
 
   /**
+   * A Vault CBL with vault header and entry property records.
+   * Features:
+   * 1. Vault metadata (name, owner, shared members)
+   * 2. Entry property records for listing/searching
+   * 3. Index-aligned with block ID array
+   */
+  VaultConstituentBlockList = 22,
+
+  /**
    * An encrypted block with ownership information.
    * Features:
    * 1. Data encryption
@@ -110,6 +119,11 @@ export enum BlockType {
   MultiEncryptedBlock = 33,
 
   /**
+   * An encrypted Vault CBL.
+   */
+  EncryptedVaultConstituentBlockListBlock = 34,
+
+  /**
    * A reference to a block stored elsewhere.
    * Features:
    * 1. Lazy loading
@@ -126,6 +140,7 @@ export const EphemeralBlockTypes: readonly BlockType[] = [
   BlockType.ConstituentBlockList,
   BlockType.EphemeralOwnedDataBlock,
   BlockType.ExtendedConstituentBlockListBlock,
+  BlockType.VaultConstituentBlockList,
   BlockType.FECData,
   BlockType.OwnerFreeWhitenedBlock,
   BlockType.Random,
@@ -138,6 +153,7 @@ export const EphemeralBlockTypes: readonly BlockType[] = [
 export const EncryptedBlockTypes: readonly BlockType[] = [
   BlockType.EncryptedConstituentBlockListBlock,
   BlockType.EncryptedExtendedConstituentBlockListBlock,
+  BlockType.EncryptedVaultConstituentBlockListBlock,
   BlockType.EncryptedOwnedDataBlock,
 ] as const;
 

@@ -27,7 +27,7 @@ import {
   ServiceProvider,
   type IEmailInput,
 } from '@brightchain/brightchain-lib';
-import { createMailbox } from '@brightchain/brightchain-lib/src/lib/interfaces/messaging/emailAddress';
+import { createMailbox } from '@brightchain/brightchain-lib/lib/interfaces/messaging/emailAddress';
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { createServer, Server } from 'http';
 import { GossipService } from '../availability/gossipService';

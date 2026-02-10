@@ -26,7 +26,8 @@
       "options": {
         "jestConfig": "brightchain-api-lib/jest.config.ts",
         "passWithNoTests": true
-      }
+      },
+      "cache": true
     }
   }
 }

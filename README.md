@@ -38,6 +38,7 @@ BrightChain integrates several groundbreaking technologies:
 - **Homomorphic Voting System**: Revolutionary cryptographic voting infrastructure utilizing Paillier homomorphic encryption with ECDH-derived keys, enabling secure vote tallying without revealing individual votes. Supports 15+ voting methods from simple plurality to complex ranked choice, with government compliance features including immutable audit logs, public bulletin board, and verifiable receipts
 - **Enhanced File Security**: State-of-the-art encryption combining ECIES for key derivation with AES-256-GCM for file security
 - **Digital Governance Framework**: Revolutionary quorum-based system supporting configurable majority requirements for secret reconstruction
+- **UPnP / NAT Traversal**: Automatic port forwarding via UPnP and NAT-PMP so nodes behind consumer routers can accept inbound connections without manual configuration
 
 ## Innovative Security Features
 
@@ -89,6 +90,32 @@ This architecture ensures:
 - Reduced code duplication
 - Consistent security practices across the @digitaldefiance ecosystem
 - Easy maintenance and updates
+
+## BrightChain vs Keybase
+
+BrightChain implements Keybase-inspired identity and cryptographic features while advancing beyond Keybase's centralized model into a fully decentralized architecture.
+
+| Feature | Keybase | BrightChain |
+|---|---|---|
+| Identity Proofs | Centralized verification server | Decentralized ECDSA-signed proofs verified peer-to-peer |
+| Paper Keys | Single 64-char hex key | BIP39 24-word mnemonic with Shamir's Secret Sharing for split custody |
+| Device Provisioning | Server-mediated device chain | BIP32 HD key derivation (m/44'/60'/0'/1/\<index\>) per device |
+| Key Directory | Centralized Keybase server | Decentralized public key directory with privacy mode |
+| Cryptocurrency | Stellar wallet (custodial) | Non-custodial Ethereum wallet derived from member identity (BIP44) |
+| Git Signing | PGP-based via Keybase | ECDSA signing with GPG-compatible output from member keys |
+| Exploding Messages | Server-enforced deletion | Client-enforced with time-based and read-count expiration |
+| Encryption | NaCl (Curve25519) | ECIES (secp256k1) + AES-256-GCM with multi-recipient support |
+| Architecture | Centralized servers | Fully decentralized with Owner-Free Filesystem |
+| Anonymity | Pseudonymous | Brokered anonymity with quorum-based de-anonymization |
+| Governance | Company-controlled | Democratic quorum-based governance |
+| Open Source | Client only | Full stack open source |
+
+Key advantages of BrightChain's approach:
+- No single point of failure or trust — identity proofs are cryptographically self-verifying
+- Paper keys support split custody via Shamir's Secret Sharing for organizational recovery scenarios
+- Device keys are deterministically derived, enabling offline provisioning without server coordination
+- Ethereum wallet integration provides non-custodial access to DeFi and dApp ecosystems
+- Exploding messages support both time-based and read-count expiration with scheduled cleanup
 
 ## Development Status
 
@@ -150,8 +177,16 @@ For comprehensive understanding:
   - [BrightPass Password Manager](./docs/BrightPass_Password_Manager.md): Secure password keychain with VCBL architecture and emergency access
   - [Voting System Architecture](./docs/Voting_System_Architecture.md): Homomorphic voting with 15+ methods and government compliance
 
+- **Networking**:
+  - [UPnP Configuration](./docs/UPnP_Configuration.md): Enable automatic port forwarding, configuration options, and troubleshooting
+
 - **Development**:
   - [Implementation Roadmap](./docs/ImplementationRoadmap.md): Development roadmap and future plans
+
+- **Keybase-Inspired Features**:
+  - [User Guide](./docs/Keybase_Features_User_Guide.md): Paper keys, identity proofs, device provisioning, wallets, exploding messages
+  - [Developer Guide](./docs/Keybase_Features_Developer_Guide.md): API reference, service integration, testing
+  - [Architecture](./docs/Keybase_Features_Architecture.md): Data flows, security model, key derivation
 
 ## Development Tools
 
