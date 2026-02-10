@@ -9,7 +9,6 @@ import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSi
 import { Checksum } from '@brightchain/brightchain-lib/lib/types/checksum';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { IBrightChainApplication } from '../interfaces';
-import { IBlockStore } from '../interfaces/blockStore';
 import { DefaultBackendIdType } from '../shared-types';
 import { DiskBlockAsyncStore } from '../stores';
 import { BaseService } from './base';
@@ -24,11 +23,14 @@ import { FecServiceFactory } from './fecServiceFactory';
  *
  * The FEC service is initialized asynchronously on first use to avoid blocking
  * the constructor. Use ensureInitialized() to ensure the FEC service is ready.
+ *
+ * Note: This service provides convenience methods for block storage but does not
+ * implement the full IBlockStore interface. Use getStore() to access the underlying
+ * DiskBlockAsyncStore which implements IBlockStore.
  */
-export class BlockStoreService<TID extends PlatformID = DefaultBackendIdType>
-  extends BaseService<TID>
-  implements IBlockStore
-{
+export class BlockStoreService<
+  TID extends PlatformID = DefaultBackendIdType,
+> extends BaseService<TID> {
   private readonly store: DiskBlockAsyncStore;
   private fecServiceInitialized = false;
   private fecServicePromise: Promise<void> | null = null;

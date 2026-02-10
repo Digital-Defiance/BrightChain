@@ -1063,9 +1063,16 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
 
   /**
    * Create an extended header for CBL
+   * @param lax - If true, skip file name validation (for special cases like VCBL)
    */
-  public makeExtendedHeader(fileName: string, mimeType: string): Uint8Array {
-    this.validateFileNameFormat(fileName);
+  public makeExtendedHeader(
+    fileName: string,
+    mimeType: string,
+    lax = false,
+  ): Uint8Array {
+    if (!lax) {
+      this.validateFileNameFormat(fileName);
+    }
     this.validateMimeTypeFormat(mimeType);
     const totalLength = this.calculateExtendedHeaderSize(fileName, mimeType);
     const result = new Uint8Array(totalLength);
@@ -1159,6 +1166,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
    * @param encryptionType - The encryption type
    * @param extendedCBL - Optional extended CBL data (fileName, mimeType)
    * @param tupleSize - The tuple size (defaults to TUPLE.SIZE)
+   * @param lax - If true, skip file name validation (for special cases like VCBL)
    * @returns Object containing headerData and signature
    * @throws {EnhancedValidationError} If block size or encryption type is invalid
    * @throws {CblError} If CBL-specific validation fails
@@ -1175,6 +1183,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
     encryptionType: BlockEncryptionType,
     extendedCBL?: { fileName: string; mimeType: string },
     tupleSize: number = TUPLE.SIZE,
+    lax = false,
   ): { headerData: Uint8Array; signature: SignatureUint8Array } {
     // Validate inputs using Validator
     Validator.validateRequired(creator, 'creator', 'makeCblHeader');
@@ -1284,7 +1293,7 @@ export class CBLService<TID extends PlatformID = Uint8Array> {
 
     // Create extended header if needed
     const extendedHeaderData = extendedCBL
-      ? this.makeExtendedHeader(extendedCBL.fileName, extendedCBL.mimeType)
+      ? this.makeExtendedHeader(extendedCBL.fileName, extendedCBL.mimeType, lax)
       : new Uint8Array(0);
 
     // Calculate checksum for signing

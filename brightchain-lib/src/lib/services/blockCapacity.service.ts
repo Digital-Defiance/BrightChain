@@ -150,6 +150,31 @@ export class BlockCapacityCalculator<TID extends PlatformID = Uint8Array> {
         return { alignCapacityToTuple: true };
       }
 
+      case BlockType.VaultConstituentBlockList:
+      case BlockType.EncryptedVaultConstituentBlockListBlock: {
+        if (!params.cbl) {
+          throw new BlockCapacityError(
+            BlockCapacityErrorType.InvalidExtendedCblData,
+          );
+        }
+        this.validateCBLData(params.cbl);
+
+        const baseHeaderSize = this.calculateCBLBaseHeaderSize();
+        details.typeSpecificOverhead += baseHeaderSize + ECIES.SIGNATURE_SIZE;
+
+        details.variableOverhead += this.calculateExtendedCBLOverhead(
+          params.cbl.fileName,
+          params.cbl.mimeType,
+        );
+
+        if (params.vcbl) {
+          details.variableOverhead += params.vcbl.vaultHeaderSize;
+          details.variableOverhead += params.vcbl.propertyRecordsSize;
+        }
+
+        return { alignCapacityToTuple: true };
+      }
+
       case BlockType.EncryptedOwnedDataBlock:
         details.typeSpecificOverhead += ECIES.ENCRYPTION_TYPE_SIZE;
         return { alignCapacityToTuple: false };

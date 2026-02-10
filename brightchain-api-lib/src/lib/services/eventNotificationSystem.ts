@@ -1,6 +1,10 @@
 import {
   AvailabilityState,
+  CommunicationContextType,
+  CommunicationEvent,
+  CommunicationEventType,
   IMessageMetadata,
+  PresenceStatus,
 } from '@brightchain/brightchain-lib';
 import { WebSocket } from 'ws';
 
@@ -21,7 +25,11 @@ export enum PartitionEventType {
   PARTITION_EXITED = 'partition:exited',
 }
 
-export type EventType = MessageEventType | BlockEventType | PartitionEventType;
+export type EventType =
+  | MessageEventType
+  | BlockEventType
+  | PartitionEventType
+  | CommunicationEventType;
 
 export interface IMessageEvent {
   type: MessageEventType;
@@ -71,7 +79,8 @@ export type SystemEvent =
   | IBlockAvailabilityEvent
   | IBlockReplicatedEvent
   | IPartitionEnteredEvent
-  | IPartitionExitedEvent;
+  | IPartitionExitedEvent
+  | CommunicationEvent;
 
 export interface IEventFilter {
   types?: EventType[];
@@ -224,6 +233,289 @@ export class EventNotificationSystem {
     this.broadcastEvent(event);
   }
 
+  // ─── Communication event emitters ─────────────────────────────────────
+
+  /**
+   * Emit a message sent event.
+   * @requirements 7.1
+   */
+  emitMessageSent(
+    contextType: CommunicationContextType,
+    contextId: string,
+    messageId: string,
+    senderId: string,
+  ): void {
+    const event: CommunicationEvent = {
+      type: CommunicationEventType.MESSAGE_SENT,
+      timestamp: new Date(),
+      contextType,
+      contextId,
+      data: { messageId, senderId },
+    };
+    this.addToHistory(event);
+    this.broadcastEvent(event);
+  }
+
+  /**
+   * Emit a message deleted event.
+   * @requirements 7.1
+   */
+  emitMessageDeleted(
+    contextType: CommunicationContextType,
+    contextId: string,
+    messageId: string,
+    deletedBy: string,
+  ): void {
+    const event: CommunicationEvent = {
+      type: CommunicationEventType.MESSAGE_DELETED,
+      timestamp: new Date(),
+      contextType,
+      contextId,
+      data: { messageId, deletedBy },
+    };
+    this.addToHistory(event);
+    this.broadcastEvent(event);
+  }
+
+  /**
+   * Emit a typing indicator event (start or stop).
+   * @requirements 7.2
+   */
+  emitTypingEvent(
+    eventType:
+      | CommunicationEventType.TYPING_START
+      | CommunicationEventType.TYPING_STOP,
+    contextType: CommunicationContextType,
+    contextId: string,
+    memberId: string,
+  ): void {
+    const event: CommunicationEvent = {
+      type: eventType,
+      timestamp: new Date(),
+      contextType,
+      contextId,
+      data: { memberId },
+    };
+    this.addToHistory(event);
+    this.broadcastEvent(event);
+  }
+
+  /**
+   * Emit a presence changed event.
+   * @requirements 7.3
+   */
+  emitPresenceChanged(
+    contextType: CommunicationContextType,
+    contextId: string,
+    memberId: string,
+    status: PresenceStatus,
+  ): void {
+    const event: CommunicationEvent = {
+      type: CommunicationEventType.PRESENCE_CHANGED,
+      timestamp: new Date(),
+      contextType,
+      contextId,
+      data: { memberId, status },
+    };
+    this.addToHistory(event);
+    this.broadcastEvent(event);
+  }
+
+  /**
+   * Emit a reaction added or removed event.
+   * @requirements 7.5
+   */
+  emitReactionEvent(
+    eventType:
+      | CommunicationEventType.REACTION_ADDED
+      | CommunicationEventType.REACTION_REMOVED,
+    contextType: CommunicationContextType,
+    contextId: string,
+    messageId: string,
+    memberId: string,
+    emoji: string,
+    reactionId: string,
+  ): void {
+    const event: CommunicationEvent = {
+      type: eventType,
+      timestamp: new Date(),
+      contextType,
+      contextId,
+      data: { messageId, memberId, emoji, reactionId },
+    };
+    this.addToHistory(event);
+    this.broadcastEvent(event);
+  }
+
+  /**
+   * Emit a message edited event.
+   * @requirements 7.1
+   */
+  emitMessageEdited(
+    contextType: CommunicationContextType,
+    contextId: string,
+    messageId: string,
+    memberId: string,
+  ): void {
+    const event: CommunicationEvent = {
+      type: CommunicationEventType.MESSAGE_EDITED,
+      timestamp: new Date(),
+      contextType,
+      contextId,
+      data: { messageId, memberId },
+    };
+    this.addToHistory(event);
+    this.broadcastEvent(event);
+  }
+
+  /**
+   * Emit a message pinned or unpinned event.
+   * @requirements 7.1
+   */
+  emitMessagePinEvent(
+    eventType:
+      | CommunicationEventType.MESSAGE_PINNED
+      | CommunicationEventType.MESSAGE_UNPINNED,
+    contextType: CommunicationContextType,
+    contextId: string,
+    messageId: string,
+    memberId: string,
+  ): void {
+    const event: CommunicationEvent = {
+      type: eventType,
+      timestamp: new Date(),
+      contextType,
+      contextId,
+      data: { messageId, memberId },
+    };
+    this.addToHistory(event);
+    this.broadcastEvent(event);
+  }
+
+  /**
+   * Emit a member joined event.
+   * @requirements 7.1
+   */
+  emitMemberJoined(
+    contextType: CommunicationContextType,
+    contextId: string,
+    memberId: string,
+  ): void {
+    const event: CommunicationEvent = {
+      type: CommunicationEventType.MEMBER_JOINED,
+      timestamp: new Date(),
+      contextType,
+      contextId,
+      data: { memberId },
+    };
+    this.addToHistory(event);
+    this.broadcastEvent(event);
+  }
+
+  /**
+   * Emit a member left event.
+   * @requirements 7.1
+   */
+  emitMemberLeft(
+    contextType: CommunicationContextType,
+    contextId: string,
+    memberId: string,
+  ): void {
+    const event: CommunicationEvent = {
+      type: CommunicationEventType.MEMBER_LEFT,
+      timestamp: new Date(),
+      contextType,
+      contextId,
+      data: { memberId },
+    };
+    this.addToHistory(event);
+    this.broadcastEvent(event);
+  }
+
+  /**
+   * Emit a member kicked event.
+   * @requirements 7.1
+   */
+  emitMemberKicked(
+    contextType: CommunicationContextType,
+    contextId: string,
+    memberId: string,
+    kickedBy: string,
+  ): void {
+    const event: CommunicationEvent = {
+      type: CommunicationEventType.MEMBER_KICKED,
+      timestamp: new Date(),
+      contextType,
+      contextId,
+      data: { memberId, kickedBy },
+    };
+    this.addToHistory(event);
+    this.broadcastEvent(event);
+  }
+
+  /**
+   * Emit a member muted event.
+   * @requirements 7.1
+   */
+  emitMemberMuted(
+    contextType: CommunicationContextType,
+    contextId: string,
+    memberId: string,
+    mutedBy: string,
+    durationMs: number,
+  ): void {
+    const event: CommunicationEvent = {
+      type: CommunicationEventType.MEMBER_MUTED,
+      timestamp: new Date(),
+      contextType,
+      contextId,
+      data: { memberId, mutedBy, durationMs },
+    };
+    this.addToHistory(event);
+    this.broadcastEvent(event);
+  }
+
+  /**
+   * Emit a group created event.
+   * @requirements 7.1
+   */
+  emitGroupCreated(
+    contextId: string,
+    groupId: string,
+    creatorId: string,
+    memberIds: string[],
+  ): void {
+    const event: CommunicationEvent = {
+      type: CommunicationEventType.GROUP_CREATED,
+      timestamp: new Date(),
+      contextType: 'group',
+      contextId,
+      data: { groupId, creatorId, memberIds },
+    };
+    this.addToHistory(event);
+    this.broadcastEvent(event);
+  }
+
+  /**
+   * Emit a channel updated event.
+   * @requirements 7.1
+   */
+  emitChannelUpdated(
+    contextId: string,
+    channelId: string,
+    updatedBy: string,
+  ): void {
+    const event: CommunicationEvent = {
+      type: CommunicationEventType.CHANNEL_UPDATED,
+      timestamp: new Date(),
+      contextType: 'channel',
+      contextId,
+      data: { channelId, updatedBy },
+    };
+    this.addToHistory(event);
+    this.broadcastEvent(event);
+  }
+
   /**
    * Get event history
    */
@@ -294,5 +586,13 @@ export class EventNotificationSystem {
     event: SystemEvent,
   ): event is IBlockAvailabilityEvent | IBlockReplicatedEvent {
     return Object.values(BlockEventType).includes(event.type as BlockEventType);
+  }
+
+  private isCommunicationEvent(
+    event: SystemEvent,
+  ): event is CommunicationEvent {
+    return Object.values(CommunicationEventType).includes(
+      event.type as CommunicationEventType,
+    );
   }
 }

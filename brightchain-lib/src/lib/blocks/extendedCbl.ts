@@ -27,7 +27,8 @@ export class ExtendedCBL<TID extends PlatformID = Uint8Array>
 
   protected override ensureHeaderValidated(): void {
     super.ensureHeaderValidated();
-    if (!this.isExtendedCbl) {
+    // Check directly without using the getter to avoid circular dependency
+    if (!this.getCblService().isExtendedHeader(this._data)) {
       throw new ExtendedCblError(ExtendedCblErrorType.NotExtendedCbl);
     }
   }

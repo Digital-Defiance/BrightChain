@@ -2,7 +2,10 @@
 import { BlockSize } from '@brightchain/brightchain-lib';
 import { HexString } from '@digitaldefiance/ecies-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
-import { IEnvironment as IEnvironmentBase } from '@digitaldefiance/node-express-suite';
+import {
+  IEnvironment as IEnvironmentBase,
+  IUpnpConfig,
+} from '@digitaldefiance/node-express-suite';
 import { IEnvironmentAws } from './environment-aws';
 
 export interface IEnvironment<TID extends PlatformID> extends Omit<
@@ -11,6 +14,13 @@ export interface IEnvironment<TID extends PlatformID> extends Omit<
 > {
   adminId: any;
   idAdapter(bytes: Uint8Array): HexString;
+
+  /**
+   * UPnP Configuration
+   * If set, UPnP will be used to automatically configure port forwarding
+   * on compatible routers.
+   */
+  upnp?: IUpnpConfig;
   /**
    * The FontAwesome kit ID
    */

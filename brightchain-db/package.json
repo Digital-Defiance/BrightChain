@@ -1,0 +1,15 @@
+{
+  "name": "@brightchain/db",
+  "version": "0.1.0",
+  "description": "MongoDB-like document database driver backed by BrightChain block store",
+  "license": "MIT",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@noble/hashes": "^1.4.0"
+  },
+  "peerDependencies": {
+    "@brightchain/brightchain-lib": ">=0.13.0",
+    "express": ">=5.0.0"
+  }
+}

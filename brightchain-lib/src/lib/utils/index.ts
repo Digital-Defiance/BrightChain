@@ -140,3 +140,16 @@ export * from './typeGuards';
  * @see {@link dateUtils}
  */
 export * from './dateUtils';
+
+// ============================================================================
+// Pagination Utilities
+// ============================================================================
+/**
+ * Cursor-based pagination utility for communication API services.
+ *
+ * Provides a shared `paginateItems` function that applies cursor-based
+ * pagination to sorted arrays, returning `IPaginatedResult<T>`.
+ *
+ * @see {@link paginateItems}
+ */
+export * from './pagination';

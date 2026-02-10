@@ -1,0 +1,33 @@
+{
+  "name": "brightchain-db",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "brightchain-db/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:db"],
+  "implicitDependencies": ["brightchain-lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/brightchain-db",
+        "main": "brightchain-db/src/index.ts",
+        "tsConfig": "brightchain-db/tsconfig.lib.json",
+        "assets": ["brightchain-db/*.md"]
+      },
+      "dependsOn": ["^build"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "brightchain-db/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "cache": true
+    }
+  }
+}

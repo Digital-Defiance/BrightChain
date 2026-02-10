@@ -39,7 +39,18 @@
   "dependencies": {
     "@digitaldefiance/ecies-lib": "^4.17.2",
     "@digitaldefiance/i18n-lib": "^4.3.2",
-    "tslib": "^2.3.0"
+    "@noble/hashes": "^1.4.0",
+    "nat-pmp": "^1.0.0",
+    "nat-upnp": "^1.1.1",
+    "otpauth": "^9.5.0",
+    "qrcode": "^1.5.4",
+    "tslib": "^2.3.0",
+    "uuid": "11.0.5"
+  },
+  "devDependencies": {
+    "@types/nat-upnp": "^1.1.5",
+    "@types/qrcode": "^1.5.6",
+    "@types/uuid": "^9.0.7"
   },
   "scripts": {
     "build:dev": "npx nx build brightchain-lib --configuration=development",
