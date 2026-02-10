@@ -18,6 +18,8 @@ BrightChain addresses not one, but three central problems:
 
    In recent times, Blockchain has become a hot area for research and development, especially with the rise of Digital Contracts. However, most of those systems rely on a network that was designed around creating artificial scarcity for the sake of monetary and trade equivalence. There is a significant amount of energy waste in blockchain operations as a result.
 
+   **The Storage vs. Power Density Tradeoff**: Every blockchain has waste somewhere. BrightChain cuts down on waste in every way possible, but does have some overhead in the way of its storage mechanism. However, storage is one of the areas that has been the most cost-effective and where we've achieved massive density in recent years, whereas datacenters are struggling to achieve the needed power density for CPU requirements of blockchains and AI. The tradeoff of minimal storage overhead for anonymity and absolution of concern from copyright lawsuits and the like, or hosting inappropriate material, enables everyone to be all in and make the most out of our vast storage resources spread out across the globe.
+
 3. **Reputation, Anonymity Versus Accountability and the Parler Problem**
 
    January 6th, 2021 and the Parler network revealed a number of problems with the current state of Social Media, and the overall ability for both malevolent and misinformed people to go unchecked.

@@ -59,6 +59,9 @@ const About = () => {
               to global organizations.
             </p>
             <p>
+              <strong>The Storage vs. Power Density Advantage</strong>: Every blockchain has waste somewhere. BrightChain cuts down on waste in every way possible, but does have some overhead in the way of its storage mechanism. However, storage is one of the areas that has been the most cost-effective and where we've achieved massive density in recent years, whereas datacenters are struggling to achieve the needed power density for CPU requirements of blockchains and AI. The tradeoff of minimal storage overhead for anonymity and absolution of concern from copyright lawsuits and the like, or hosting inappropriate material, enables everyone to be all in and make the most out of our vast storage resources spread out across the globe.
+            </p>
+            <p>
               Built on <strong>Ethereum's keyspace</strong> but departing from
               traditional proof-of-work systems, BrightChain combines the{' '}
               <strong>Owner-Free File System</strong> for legal protection with

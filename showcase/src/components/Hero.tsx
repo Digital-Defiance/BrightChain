@@ -70,7 +70,7 @@ const Hero = ({ scrollY }: HeroProps) => {
           <br />
           <span className="hero-highlight">
             🔐 ECIES + AES-256-GCM • 🗳️ Homomorphic Voting • 🌐 P2P Storage • 🎭
-            Brokered Anonymity • ⚡ Zero Mining Waste
+            Brokered Anonymity • ⚡ Zero Mining Waste • 💾 Storage Over Power
           </span>
         </motion.p>
 
