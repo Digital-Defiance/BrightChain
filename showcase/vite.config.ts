@@ -157,7 +157,13 @@ export default defineConfig({
     // ethereum-cryptography@2.x ships a nested @noble/hashes@1.4.0 with a
     // different _assert API. Deduping would force it to use the hoisted
     // v1.8.0, breaking the 'bool' import in ethereum-cryptography/utils.js.
-    dedupe: ['tslib', '@noble/curves', '@digitaldefiance/ecies-lib', '@digitaldefiance/i18n-lib', '@digitaldefiance/suite-core-lib'],
+    dedupe: [
+      'tslib',
+      '@noble/curves',
+      '@digitaldefiance/ecies-lib',
+      '@digitaldefiance/i18n-lib',
+      '@digitaldefiance/suite-core-lib',
+    ],
     extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json'],
     alias: {
       // Local workspace alias - use browser entry point for browser compatibility
