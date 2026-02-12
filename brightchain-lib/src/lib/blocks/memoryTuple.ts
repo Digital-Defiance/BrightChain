@@ -41,15 +41,17 @@ export class InMemoryBlockTuple<T extends BaseBlock = BaseBlock> {
 
   private readonly _blocks: (IBaseBlock | BlockHandle<T>)[];
   private readonly _blockSize: BlockSize;
+  private readonly _poolId?: string;
 
   /**
    * Create a new InMemoryBlockTuple.
    *
    * @param blocks - Array of blocks or block handles. Must have exactly TUPLE.SIZE elements.
+   * @param poolId - Optional pool identifier. When set, indicates all blocks in this tuple belong to this pool.
    * @throws {MemoryTupleError} If the number of blocks is not TUPLE.SIZE
    * @throws {MemoryTupleError} If blocks have different block sizes
    */
-  constructor(blocks: (IBaseBlock | BlockHandle<T>)[]) {
+  constructor(blocks: (IBaseBlock | BlockHandle<T>)[], poolId?: string) {
     if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
         MemoryTupleErrorType.InvalidTupleSize,
@@ -64,6 +66,15 @@ export class InMemoryBlockTuple<T extends BaseBlock = BaseBlock> {
     }
 
     this._blocks = blocks;
+    this._poolId = poolId;
+  }
+
+  /**
+   * The pool this tuple belongs to, if any.
+   * When set, indicates all blocks were created in a pool-scoped context.
+   */
+  public get poolId(): string | undefined {
+    return this._poolId;
   }
 
   /**
@@ -233,6 +244,7 @@ export class InMemoryBlockTuple<T extends BaseBlock = BaseBlock> {
    */
   public static fromBlocks<U extends BaseBlock = BaseBlock>(
     blocks: (IBaseBlock | BlockHandle<U>)[],
+    poolId?: string,
   ): InMemoryBlockTuple<U> {
     if (blocks.length !== TUPLE.SIZE) {
       throw new MemoryTupleError(
@@ -241,6 +253,6 @@ export class InMemoryBlockTuple<T extends BaseBlock = BaseBlock> {
       );
     }
 
-    return new InMemoryBlockTuple<U>(blocks);
+    return new InMemoryBlockTuple<U>(blocks, poolId);
   }
 }

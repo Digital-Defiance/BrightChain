@@ -122,7 +122,8 @@ describe('Feature: message-passing-and-events, Property: Invalid Message Payload
               content: Buffer.from('test').toString('base64'),
               senderId: 'sender-1',
               messageType: 'test',
-            });
+            })
+            .timeout(2000);
 
           expect(response.status).toBe(500);
           expect(response.body.error).toBe(errorMessage);

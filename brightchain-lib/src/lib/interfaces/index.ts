@@ -70,3 +70,6 @@ export * from './brightpass';
 
 // Communication event emitter abstraction (real-time event system)
 export * from './events';
+
+// Block fetch interfaces (remote block retrieval)
+export * from './blockFetch';

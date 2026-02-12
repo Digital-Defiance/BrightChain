@@ -32,6 +32,8 @@ export class TupleError extends TypedError<TupleErrorType> {
         BrightChainStrings.Error_TupleError_DataStreamProcessingFailedTemplate,
       [TupleErrorType.EncryptedDataStreamProcessingFailed]:
         BrightChainStrings.Error_TupleError_EncryptedDataStreamProcessingFailedTemplate,
+      [TupleErrorType.PoolBoundaryViolation]:
+        BrightChainStrings.Error_TupleError_PoolBoundaryViolationTemplate,
     };
   }
   constructor(

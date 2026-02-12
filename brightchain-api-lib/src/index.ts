@@ -26,6 +26,7 @@ export * from './lib/routers';
 // Note: FEC types (ParityData, FecRecoveryResult, IFecService) are re-exported from brightchain-lib
 // Only export the WASM implementation class with a unique name to avoid conflicts
 export * from './lib/availability';
+export * from './lib/blockFetch';
 export * from './lib/utils/errorResponse';
 export * from './lib/utils/type-converters';
 // Explicitly export types from shared-types

@@ -481,6 +481,8 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
     'Не вдалося витягти байти ідентифікатора творця з заголовка CBL',
   [BrightChainStrings.Error_CblError_FailedToExtractProvidedCreatorId]:
     'Не вдалося витягти байти ідентифікатора учасника з наданого творця',
+  [BrightChainStrings.Error_CblError_PoolIntegrityError]:
+    'Помилка цілісності пулу CBL: один або кілька посилальних блоків відсутні в очікуваному пулі',
 
   // Multi-Encrypted Errors
   [BrightChainStrings.Error_MultiEncryptedError_InvalidEphemeralPublicKeyLength]:
@@ -570,6 +572,8 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
     'Не вдалося обробити потік даних: {ERROR}',
   [BrightChainStrings.Error_TupleError_EncryptedDataStreamProcessingFailedTemplate]:
     'Не вдалося обробити зашифрований потік даних: {ERROR}',
+  [BrightChainStrings.Error_TupleError_PoolBoundaryViolationTemplate]:
+    'Порушення межі пулу: {BLOCK_TYPE} належить до пулу "{ACTUAL_POOL}", але кортеж вимагає пул "{EXPECTED_POOL}"',
 
   // Memory Tuple Errors
   [BrightChainStrings.Error_MemoryTupleError_InvalidTupleSizeTemplate]:
@@ -594,6 +598,8 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
     'Немає блоків для XOR',
   [BrightChainStrings.Error_HandleTupleError_BlockSizesMustMatch]:
     'Розміри блоків повинні співпадати',
+  [BrightChainStrings.Error_HandleTupleError_PoolMismatchTemplate]:
+    'Невідповідність пулу: блок {BLOCK_ID} належить до пулу "{ACTUAL_POOL}", але кортеж вимагає пул "{EXPECTED_POOL}"',
 
   // Stream Errors
   [BrightChainStrings.Error_StreamError_BlockSizeRequired]:

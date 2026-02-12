@@ -11,6 +11,7 @@
 import {
   AvailabilityState,
   BaseBlock,
+  BlockFetcherConfig,
   BlockHandle,
   BlockStoreOptions,
   BrightenResult,
@@ -18,15 +19,20 @@ import {
   CBLStorageResult,
   CBLWhiteningOptions,
   Checksum,
+  FetchQueueConfig,
+  FetchTimeoutError,
   IAvailabilityService,
+  IBlockFetcher,
   IBlockMetadata,
   IBlockRegistry,
   IBlockStore,
   IGossipService,
   ILocationRecord,
   IReconciliationService,
+  PendingBlockError,
   PendingSyncItem,
   RawDataBlock,
+  ReadConcern,
   RecoveryResult,
 } from '@brightchain/brightchain-lib';
 
@@ -61,16 +67,51 @@ export interface AvailabilityAwareBlockStoreConfig {
    * Default: true
    */
   trackAccess?: boolean;
+
+  /**
+   * Default read concern for getData calls when none is specified.
+   * Default: ReadConcern.Local (preserves backward compatibility)
+   */
+  defaultReadConcern?: ReadConcern;
+
+  /**
+   * Configuration for the block fetcher service.
+   * Only relevant when an IBlockFetcher is provided.
+   */
+  blockFetcherConfig?: BlockFetcherConfig;
+
+  /**
+   * Configuration for the fetch queue.
+   * Only relevant when an IBlockFetcher is provided.
+   */
+  fetchQueueConfig?: FetchQueueConfig;
 }
+
+/**
+ * Resolved configuration type for AvailabilityAwareBlockStore.
+ * Core fields are required; fetch-related configs remain optional since
+ * they are only meaningful when an IBlockFetcher is provided.
+ */
+export type ResolvedAvailabilityAwareBlockStoreConfig = Omit<
+  Required<AvailabilityAwareBlockStoreConfig>,
+  'blockFetcherConfig' | 'fetchQueueConfig'
+> &
+  Pick<
+    AvailabilityAwareBlockStoreConfig,
+    'blockFetcherConfig' | 'fetchQueueConfig'
+  >;
 
 /**
  * Default configuration values.
  */
-export const DEFAULT_AVAILABILITY_AWARE_BLOCK_STORE_CONFIG: Required<AvailabilityAwareBlockStoreConfig> =
+export const DEFAULT_AVAILABILITY_AWARE_BLOCK_STORE_CONFIG: ResolvedAvailabilityAwareBlockStoreConfig =
   {
     localNodeId: '',
     autoAnnounce: true,
     trackAccess: true,
+    defaultReadConcern: ReadConcern.Local,
+    blockFetcherConfig: undefined,
+    fetchQueueConfig: undefined,
   };
 
 /**
@@ -117,7 +158,13 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
   /**
    * Configuration.
    */
-  private readonly config: Required<AvailabilityAwareBlockStoreConfig>;
+  private readonly config: ResolvedAvailabilityAwareBlockStoreConfig;
+
+  /**
+   * Optional block fetcher for remote block retrieval.
+   * When provided, enables Available and Consistent read concerns.
+   */
+  private readonly blockFetcher?: IBlockFetcher;
 
   /**
    * Create a new AvailabilityAwareBlockStore.
@@ -128,6 +175,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param gossipService - Service for block announcements
    * @param reconciliationService - Service for pending sync queue
    * @param config - Configuration options
+   * @param blockFetcher - Optional block fetcher for remote block retrieval
    */
   constructor(
     innerStore: IBlockStore,
@@ -136,6 +184,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
     gossipService: IGossipService,
     reconciliationService: IReconciliationService,
     config: AvailabilityAwareBlockStoreConfig,
+    blockFetcher?: IBlockFetcher,
   ) {
     this.innerStore = innerStore;
     this.registry = registry;
@@ -146,6 +195,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
       ...DEFAULT_AVAILABILITY_AWARE_BLOCK_STORE_CONFIG,
       ...config,
     };
+    this.blockFetcher = blockFetcher;
   }
 
   /**
@@ -168,18 +218,36 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
   }
 
   /**
-   * Get a block's data.
+   * Get a block's data with optional read concern.
    * Updates access metadata if tracking is enabled.
    *
+   * Read concern behavior:
+   * - Local (default): return only locally available blocks, error for remote/unknown
+   * - Consistent: await remote fetch, store result, return or timeout
+   * - Available: try fetch with initialWaitMs, return PendingBlockError if not resolved
+   *
+   * During partition mode, remote blocks always throw PartitionModeError
+   * regardless of read concern.
+   *
    * @param key - The block's checksum
+   * @param readConcern - Optional read concern level (defaults to config.defaultReadConcern)
    * @returns Promise resolving to the block data
-   * @throws StoreError if block not found
-   * @see Requirements 12.4
+   * @throws PartitionModeError if block is remote and system is in partition mode
+   * @throws PendingBlockError if Available concern and fetch not resolved in time
+   * @throws FetchTimeoutError if Consistent concern and fetch exceeds timeout
+   * @throws Error if block not found locally and concern is Local
+   * @see Requirements 2.2, 2.3, 2.4, 2.5, 7.3
    */
-  async getData(key: Checksum): Promise<RawDataBlock> {
+  async getData(
+    key: Checksum,
+    readConcern?: ReadConcern,
+  ): Promise<RawDataBlock> {
     const blockId = this.keyToHex(key);
+    const concern = readConcern ?? this.config.defaultReadConcern;
 
-    // Check availability state for remote blocks during partition mode
+    // Step 1: Check partition mode for remote blocks BEFORE trying inner store.
+    // This preserves the original contract: remote blocks are inaccessible during partition
+    // regardless of whether the data happens to be in the inner store.
     if (this.availabilityService.isInPartitionMode()) {
       const state =
         await this.availabilityService.getAvailabilityState(blockId);
@@ -190,15 +258,142 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
       }
     }
 
-    // Delegate to inner store
-    const block = await this.innerStore.getData(key);
+    // Step 2: Try inner store first
+    try {
+      const block = await this.innerStore.getData(key);
+
+      // Update access metadata if tracking is enabled
+      if (this.config.trackAccess) {
+        await this.updateAccessMetadata(blockId);
+      }
+
+      return block;
+    } catch {
+      // Block not found locally — fall through to read concern logic
+    }
+
+    // Step 3: Block not found locally — check availability state
+    const state = await this.availabilityService.getAvailabilityState(blockId);
+
+    // Step 4: Apply read concern logic
+    if (concern === ReadConcern.Local) {
+      // Local concern: only return locally available blocks
+      throw new Error(`Block ${blockId} not found locally (state: ${state})`);
+    }
+
+    // For Available and Consistent concerns, we need a block fetcher
+    if (!this.blockFetcher) {
+      throw new Error(
+        `Block ${blockId} not found locally and no block fetcher configured (state: ${state})`,
+      );
+    }
+
+    // Only attempt remote fetch for Remote state
+    if (state !== AvailabilityState.Remote) {
+      throw new Error(`Block ${blockId} not found (state: ${state})`);
+    }
+
+    if (concern === ReadConcern.Consistent) {
+      return this.fetchBlockConsistent(key, blockId);
+    }
+
+    // ReadConcern.Available
+    return this.fetchBlockAvailable(key, blockId);
+  }
+
+  /**
+   * Fetch a block with Consistent read concern.
+   * Awaits the full fetch result — returns the block or throws on timeout/failure.
+   *
+   * @see Requirements 2.4, 2.5
+   */
+  private async fetchBlockConsistent(
+    key: Checksum,
+    blockId: string,
+  ): Promise<RawDataBlock> {
+    const result = await this.blockFetcher!.fetchBlock(blockId);
+
+    if (!result.success) {
+      const fetcherConfig = this.blockFetcher!.getConfig();
+      throw new FetchTimeoutError(blockId, fetcherConfig.fetchTimeoutMs);
+    }
+
+    // Store the fetched block locally and update state to Cached
+    await this.innerStore.put(blockId, result.data!);
+    await this.availabilityService.setAvailabilityState(
+      blockId,
+      AvailabilityState.Cached,
+    );
 
     // Update access metadata if tracking is enabled
     if (this.config.trackAccess) {
       await this.updateAccessMetadata(blockId);
     }
 
-    return block;
+    // Return the block from the inner store (now stored locally)
+    return this.innerStore.getData(key);
+  }
+
+  /**
+   * Fetch a block with Available read concern.
+   * Tries to fetch within initialWaitMs; throws PendingBlockError if not resolved in time.
+   *
+   * @see Requirements 2.3
+   */
+  private async fetchBlockAvailable(
+    key: Checksum,
+    blockId: string,
+  ): Promise<RawDataBlock> {
+    const fetcherConfig = this.blockFetcher!.getConfig();
+    const initialWaitMs = fetcherConfig.initialWaitMs;
+
+    const fetchPromise = this.blockFetcher!.fetchBlock(blockId);
+
+    // Race the fetch against the initial wait timeout
+    const result = await Promise.race([
+      fetchPromise.then((r) => ({ kind: 'result' as const, value: r })),
+      new Promise<{ kind: 'timeout' }>((resolve) =>
+        setTimeout(() => resolve({ kind: 'timeout' }), initialWaitMs),
+      ),
+    ]);
+
+    if (result.kind === 'timeout') {
+      // Fetch didn't complete in time — throw PendingBlockError
+      const locations =
+        await this.availabilityService.getBlockLocations(blockId);
+      throw new PendingBlockError(
+        blockId,
+        AvailabilityState.Remote,
+        locations.map((loc) => loc.nodeId),
+      );
+    }
+
+    // Fetch completed within initialWaitMs
+    if (!result.value.success) {
+      // Fetch failed — still throw PendingBlockError since the block may become available later
+      const locations =
+        await this.availabilityService.getBlockLocations(blockId);
+      throw new PendingBlockError(
+        blockId,
+        AvailabilityState.Remote,
+        locations.map((loc) => loc.nodeId),
+      );
+    }
+
+    // Store the fetched block locally and update state to Cached
+    await this.innerStore.put(blockId, result.value.data!);
+    await this.availabilityService.setAvailabilityState(
+      blockId,
+      AvailabilityState.Cached,
+    );
+
+    // Update access metadata if tracking is enabled
+    if (this.config.trackAccess) {
+      await this.updateAccessMetadata(blockId);
+    }
+
+    // Return the block from the inner store
+    return this.innerStore.getData(key);
   }
 
   /**
@@ -631,7 +826,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    *
    * @returns The configuration
    */
-  getConfig(): Required<AvailabilityAwareBlockStoreConfig> {
+  getConfig(): ResolvedAvailabilityAwareBlockStoreConfig {
     return { ...this.config };
   }
 

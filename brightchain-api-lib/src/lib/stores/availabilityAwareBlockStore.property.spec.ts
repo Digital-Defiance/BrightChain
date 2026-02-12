@@ -9,8 +9,10 @@
  * - Property 16: Partition Mode Local Operations
  * - Property 17: Pending Sync Queue
  * - Property 26: Wrapper Error Propagation
+ * - Property 4: Local read concern returns only locally available blocks
+ * - Property 5: Available read concern returns local blocks and attempts fetch for remote
  *
- * **Validates: Requirements 1.2, 2.3, 3.2, 6.1, 12.2, 3.3, 6.5, 12.3, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 12.6**
+ * **Validates: Requirements 1.2, 2.2, 2.3, 3.2, 6.1, 12.2, 3.3, 6.5, 12.3, 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 12.6**
  */
 
 import {
@@ -19,6 +21,8 @@ import {
   AvailabilityState,
   BaseBlock,
   BlockAnnouncement,
+  BlockFetcherConfig,
+  BlockFetchResult,
   BlockHandle,
   BlockManifest,
   BlockSize,
@@ -29,10 +33,13 @@ import {
   CBLStorageResult,
   CBLWhiteningOptions,
   Checksum,
+  DEFAULT_BLOCK_FETCHER_CONFIG,
   DeliveryAckMetadata,
   EventFilter,
+  FetchTimeoutError,
   GossipConfig,
   IAvailabilityService,
+  IBlockFetcher,
   IBlockMetadata,
   IBlockRegistry,
   IBlockStore,
@@ -41,8 +48,10 @@ import {
   initializeBrightChain,
   IReconciliationService,
   MessageDeliveryMetadata,
+  PendingBlockError,
   PendingSyncItem,
   RawDataBlock,
+  ReadConcern,
   ReconciliationConfig,
   ReconciliationEventHandler,
   ReconciliationResult,
@@ -1241,6 +1250,827 @@ describe('AvailabilityAwareBlockStore Property Tests', () => {
           return true;
         }),
         { numRuns: 50 },
+      );
+    });
+  });
+
+  describe('Property 4: Local read concern returns only locally available blocks', () => {
+    /**
+     * **Feature: cross-node-eventual-consistency, Property 4: Local read concern returns only locally available blocks**
+     *
+     * *For any* block and any availability state, when Read_Concern is Local:
+     * if the state is Local or Cached, getData SHALL return the block data;
+     * if the state is Remote, Unknown, or Orphaned, getData SHALL return an error.
+     *
+     * **Validates: Requirements 2.2**
+     */
+
+    /**
+     * Arbitrary for locally-accessible availability states (Local, Cached).
+     * When a block is in one of these states AND present in the inner store,
+     * getData with ReadConcern.Local should succeed.
+     */
+    const arbLocallyAccessibleState = fc.constantFrom(
+      AvailabilityState.Local,
+      AvailabilityState.Cached,
+    );
+
+    /**
+     * Arbitrary for non-locally-accessible availability states (Remote, Unknown, Orphaned).
+     * When a block is in one of these states and NOT present in the inner store,
+     * getData with ReadConcern.Local should throw.
+     */
+    const arbNonLocalState = fc.constantFrom(
+      AvailabilityState.Remote,
+      AvailabilityState.Unknown,
+      AvailabilityState.Orphaned,
+    );
+
+    it('should return block data when state is Local or Cached and block is in inner store', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          arbBlockId,
+          arbBlockData,
+          arbLocallyAccessibleState,
+          async (blockId, data, state) => {
+            const { store, availabilityService, innerStore } =
+              createTestStore();
+            const fullBlockId = blockId.padEnd(128, '0');
+            const checksum = Checksum.fromUint8Array(
+              hexToUint8Array(fullBlockId),
+            );
+
+            // Put block in inner store and set availability state
+            innerStore.addBlock(fullBlockId, data);
+            await availabilityService.setAvailabilityState(fullBlockId, state);
+
+            // getData with Local read concern should succeed
+            const result = await store.getData(checksum, ReadConcern.Local);
+            expect(result).toBeDefined();
+            expect(result.data).toEqual(data);
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should throw error when state is Remote, Unknown, or Orphaned and block is not in inner store', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          arbBlockId,
+          arbNonLocalState,
+          async (blockId, state) => {
+            const { store, availabilityService } = createTestStore();
+            const fullBlockId = blockId.padEnd(128, '0');
+            const checksum = Checksum.fromUint8Array(
+              hexToUint8Array(fullBlockId),
+            );
+
+            // Do NOT put block in inner store; set availability state
+            await availabilityService.setAvailabilityState(fullBlockId, state);
+
+            // getData with Local read concern should throw
+            await expect(
+              store.getData(checksum, ReadConcern.Local),
+            ).rejects.toThrow();
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should also work with default read concern (which is Local)', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          arbBlockId,
+          arbNonLocalState,
+          async (blockId, state) => {
+            const { store, availabilityService } = createTestStore();
+            const fullBlockId = blockId.padEnd(128, '0');
+            const checksum = Checksum.fromUint8Array(
+              hexToUint8Array(fullBlockId),
+            );
+
+            // Do NOT put block in inner store; set availability state
+            await availabilityService.setAvailabilityState(fullBlockId, state);
+
+            // getData without explicit read concern should default to Local and throw
+            await expect(store.getData(checksum)).rejects.toThrow();
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+  });
+
+  describe('Property 5: Available read concern returns local blocks and attempts fetch for remote', () => {
+    /**
+     * **Feature: cross-node-eventual-consistency, Property 5: Available read concern returns local blocks and attempts fetch for remote**
+     *
+     * *For any* block with Local or Cached state, getData with Available read concern
+     * SHALL return the block immediately. *For any* block with Remote state, getData
+     * with Available read concern SHALL trigger a fetch attempt.
+     *
+     * **Validates: Requirements 2.3**
+     */
+
+    /**
+     * Arbitrary for locally-accessible availability states (Local, Cached).
+     */
+    const arbLocallyAccessibleState = fc.constantFrom(
+      AvailabilityState.Local,
+      AvailabilityState.Cached,
+    );
+
+    /**
+     * Mock IBlockFetcher for testing Available read concern behavior.
+     * Configurable delay and result to simulate fast/slow fetches.
+     */
+    class MockBlockFetcher implements IBlockFetcher {
+      public fetchCallCount = 0;
+      public lastFetchedBlockId: string | null = null;
+      private delayMs: number;
+      private resultData: Uint8Array | null;
+      private shouldSucceed: boolean;
+      private config: BlockFetcherConfig;
+
+      constructor(
+        options: {
+          delayMs?: number;
+          resultData?: Uint8Array | null;
+          shouldSucceed?: boolean;
+          config?: Partial<BlockFetcherConfig>;
+        } = {},
+      ) {
+        this.delayMs = options.delayMs ?? 0;
+        this.resultData = options.resultData ?? null;
+        this.shouldSucceed = options.shouldSucceed ?? true;
+        this.config = { ...DEFAULT_BLOCK_FETCHER_CONFIG, ...options.config };
+      }
+
+      async fetchBlock(blockId: string): Promise<BlockFetchResult> {
+        this.fetchCallCount++;
+        this.lastFetchedBlockId = blockId;
+
+        if (this.delayMs > 0) {
+          await new Promise((resolve) => setTimeout(resolve, this.delayMs));
+        }
+
+        if (this.shouldSucceed && this.resultData) {
+          return {
+            success: true,
+            data: this.resultData,
+            attemptedNodes: [{ nodeId: 'remote-node-1' }],
+          };
+        }
+
+        return {
+          success: false,
+          error: 'Fetch failed',
+          attemptedNodes: [{ nodeId: 'remote-node-1', error: 'Fetch failed' }],
+        };
+      }
+
+      isNodeAvailable(_nodeId: string): boolean {
+        return true;
+      }
+
+      markNodeUnavailable(_nodeId: string): void {
+        // no-op
+      }
+
+      getConfig(): BlockFetcherConfig {
+        return this.config;
+      }
+
+      start(): void {
+        // no-op
+      }
+
+      stop(): void {
+        // no-op
+      }
+    }
+
+    /**
+     * Create a test store with a mock block fetcher for Available/Consistent concern tests.
+     */
+    function createTestStoreWithFetcher(
+      fetcher: IBlockFetcher,
+      localNodeId = 'test-node-001',
+    ) {
+      const innerStore = new MockBlockStore();
+      const registry = new MockBlockRegistry();
+      const availabilityService = new MockAvailabilityService();
+      const gossipService = new MockGossipService();
+      const reconciliationService = new MockReconciliationService();
+
+      const store = new AvailabilityAwareBlockStore(
+        innerStore,
+        registry,
+        availabilityService,
+        gossipService,
+        reconciliationService,
+        { localNodeId },
+        fetcher,
+      );
+
+      return {
+        store,
+        innerStore,
+        registry,
+        availabilityService,
+        gossipService,
+        reconciliationService,
+      };
+    }
+
+    it('should return block data immediately when state is Local or Cached', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          arbBlockId,
+          arbBlockData,
+          arbLocallyAccessibleState,
+          async (blockId, data, state) => {
+            // Fetcher should not be called for local/cached blocks
+            const fetcher = new MockBlockFetcher({ resultData: data });
+            const { store, availabilityService, innerStore } =
+              createTestStoreWithFetcher(fetcher);
+            const fullBlockId = blockId.padEnd(128, '0');
+            const checksum = Checksum.fromUint8Array(
+              hexToUint8Array(fullBlockId),
+            );
+
+            // Put block in inner store and set availability state
+            innerStore.addBlock(fullBlockId, data);
+            await availabilityService.setAvailabilityState(fullBlockId, state);
+
+            // getData with Available read concern should return immediately
+            const result = await store.getData(checksum, ReadConcern.Available);
+            expect(result).toBeDefined();
+            expect(result.data).toEqual(data);
+
+            // Block fetcher should NOT have been called (block was local)
+            expect(fetcher.fetchCallCount).toBe(0);
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should return fetched data when Remote block fetch completes within initialWaitMs', async () => {
+      await fc.assert(
+        fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
+          // Fast fetcher: resolves immediately (0ms delay), well within initialWaitMs (200ms)
+          const fetcher = new MockBlockFetcher({
+            delayMs: 0,
+            resultData: data,
+            shouldSucceed: true,
+          });
+          const { store, availabilityService } =
+            createTestStoreWithFetcher(fetcher);
+          const fullBlockId = blockId.padEnd(128, '0');
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
+
+          // Do NOT put block in inner store; set state to Remote
+          await availabilityService.setAvailabilityState(
+            fullBlockId,
+            AvailabilityState.Remote,
+          );
+          // Add a location record so PendingBlockError has locations
+          await availabilityService.updateLocation(fullBlockId, {
+            nodeId: 'remote-node-1',
+            lastSeen: new Date(),
+            isAuthoritative: false,
+          });
+
+          // getData with Available concern should succeed (fast fetch)
+          const result = await store.getData(checksum, ReadConcern.Available);
+          expect(result).toBeDefined();
+          expect(result.data).toEqual(data);
+
+          // Fetcher should have been called exactly once
+          expect(fetcher.fetchCallCount).toBe(1);
+          expect(fetcher.lastFetchedBlockId).toBe(fullBlockId);
+        }),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should throw PendingBlockError when Remote block fetch exceeds initialWaitMs', async () => {
+      await fc.assert(
+        fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
+          // Slow fetcher: delay well beyond initialWaitMs
+          // Use a short initialWaitMs (50ms) and a longer delay (500ms) to keep tests fast
+          const fetcher = new MockBlockFetcher({
+            delayMs: 500,
+            resultData: data,
+            shouldSucceed: true,
+            config: { initialWaitMs: 50 },
+          });
+          const { store, availabilityService } =
+            createTestStoreWithFetcher(fetcher);
+          const fullBlockId = blockId.padEnd(128, '0');
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
+
+          // Set state to Remote
+          await availabilityService.setAvailabilityState(
+            fullBlockId,
+            AvailabilityState.Remote,
+          );
+          await availabilityService.updateLocation(fullBlockId, {
+            nodeId: 'remote-node-1',
+            lastSeen: new Date(),
+            isAuthoritative: false,
+          });
+
+          // getData with Available concern should throw PendingBlockError
+          try {
+            await store.getData(checksum, ReadConcern.Available);
+            // Should not reach here
+            expect(true).toBe(false);
+          } catch (err) {
+            expect(err).toBeInstanceOf(PendingBlockError);
+            const pendingErr = err as InstanceType<typeof PendingBlockError>;
+            expect(pendingErr.blockId).toBe(fullBlockId);
+            expect(pendingErr.state).toBe(AvailabilityState.Remote);
+          }
+
+          // Fetcher should still have been called (fetch was attempted)
+          expect(fetcher.fetchCallCount).toBe(1);
+        }),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should throw PendingBlockError when Remote block fetch fails within initialWaitMs', async () => {
+      await fc.assert(
+        fc.asyncProperty(arbBlockId, async (blockId) => {
+          // Fast but failing fetcher
+          const fetcher = new MockBlockFetcher({
+            delayMs: 0,
+            shouldSucceed: false,
+          });
+          const { store, availabilityService } =
+            createTestStoreWithFetcher(fetcher);
+          const fullBlockId = blockId.padEnd(128, '0');
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
+
+          // Set state to Remote
+          await availabilityService.setAvailabilityState(
+            fullBlockId,
+            AvailabilityState.Remote,
+          );
+          await availabilityService.updateLocation(fullBlockId, {
+            nodeId: 'remote-node-1',
+            lastSeen: new Date(),
+            isAuthoritative: false,
+          });
+
+          // getData with Available concern should throw PendingBlockError (fetch failed)
+          try {
+            await store.getData(checksum, ReadConcern.Available);
+            expect(true).toBe(false);
+          } catch (err) {
+            expect(err).toBeInstanceOf(PendingBlockError);
+          }
+
+          // Fetcher was called
+          expect(fetcher.fetchCallCount).toBe(1);
+        }),
+        { numRuns: 100 },
+      );
+    });
+  });
+
+  /**
+   * Feature: cross-node-eventual-consistency, Property 6: Consistent read concern blocks until fetch completes or times out
+   *
+   * Property 6: Consistent read concern blocks until fetch completes or times out
+   *
+   * For any block with Remote state, getData with Consistent read concern SHALL either
+   * return the block data (if fetch succeeds within timeout) or return a FetchTimeoutError
+   * (if fetch exceeds timeout). It SHALL never return incomplete data.
+   *
+   * **Validates: Requirements 2.4, 2.5**
+   */
+  describe('Property 6: Consistent read concern blocks until fetch completes or times out', () => {
+    /**
+     * Mock IBlockFetcher for testing Consistent read concern behavior.
+     * Configurable delay and result to simulate fast/slow fetches.
+     */
+    class MockBlockFetcherP6 implements IBlockFetcher {
+      public fetchCallCount = 0;
+      public lastFetchedBlockId: string | null = null;
+      private delayMs: number;
+      private resultData: Uint8Array | null;
+      private shouldSucceed: boolean;
+      private config: BlockFetcherConfig;
+
+      constructor(
+        options: {
+          delayMs?: number;
+          resultData?: Uint8Array | null;
+          shouldSucceed?: boolean;
+          config?: Partial<BlockFetcherConfig>;
+        } = {},
+      ) {
+        this.delayMs = options.delayMs ?? 0;
+        this.resultData = options.resultData ?? null;
+        this.shouldSucceed = options.shouldSucceed ?? true;
+        this.config = { ...DEFAULT_BLOCK_FETCHER_CONFIG, ...options.config };
+      }
+
+      async fetchBlock(blockId: string): Promise<BlockFetchResult> {
+        this.fetchCallCount++;
+        this.lastFetchedBlockId = blockId;
+
+        if (this.delayMs > 0) {
+          await new Promise((resolve) => setTimeout(resolve, this.delayMs));
+        }
+
+        if (this.shouldSucceed && this.resultData) {
+          return {
+            success: true,
+            data: this.resultData,
+            attemptedNodes: [{ nodeId: 'remote-node-1' }],
+          };
+        }
+
+        return {
+          success: false,
+          error: 'Fetch failed or timed out',
+          attemptedNodes: [{ nodeId: 'remote-node-1', error: 'Fetch failed' }],
+        };
+      }
+
+      isNodeAvailable(_nodeId: string): boolean {
+        return true;
+      }
+
+      markNodeUnavailable(_nodeId: string): void {
+        // no-op
+      }
+
+      getConfig(): BlockFetcherConfig {
+        return this.config;
+      }
+
+      start(): void {
+        // no-op
+      }
+
+      stop(): void {
+        // no-op
+      }
+    }
+
+    /**
+     * Create a test store with a mock block fetcher for Consistent concern tests.
+     */
+    function createTestStoreWithFetcherP6(
+      fetcher: IBlockFetcher,
+      localNodeId = 'test-node-001',
+    ) {
+      const innerStore = new MockBlockStore();
+      const registry = new MockBlockRegistry();
+      const availabilityService = new MockAvailabilityService();
+      const gossipService = new MockGossipService();
+      const reconciliationService = new MockReconciliationService();
+
+      const store = new AvailabilityAwareBlockStore(
+        innerStore,
+        registry,
+        availabilityService,
+        gossipService,
+        reconciliationService,
+        { localNodeId },
+        fetcher,
+      );
+
+      return {
+        store,
+        innerStore,
+        registry,
+        availabilityService,
+        gossipService,
+        reconciliationService,
+      };
+    }
+
+    it('should return block data when fetch succeeds for Remote block', async () => {
+      await fc.assert(
+        fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
+          // Fast successful fetcher
+          const fetcher = new MockBlockFetcherP6({
+            delayMs: 0,
+            resultData: data,
+            shouldSucceed: true,
+          });
+          const { store, availabilityService } =
+            createTestStoreWithFetcherP6(fetcher);
+          const fullBlockId = blockId.padEnd(128, '0');
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
+
+          // Set state to Remote (block not in local store)
+          await availabilityService.setAvailabilityState(
+            fullBlockId,
+            AvailabilityState.Remote,
+          );
+          await availabilityService.updateLocation(fullBlockId, {
+            nodeId: 'remote-node-1',
+            lastSeen: new Date(),
+            isAuthoritative: false,
+          });
+
+          // getData with Consistent concern should block and return the fetched data
+          const result = await store.getData(checksum, ReadConcern.Consistent);
+          expect(result).toBeDefined();
+          expect(result.data).toEqual(data);
+
+          // Fetcher should have been called exactly once
+          expect(fetcher.fetchCallCount).toBe(1);
+          expect(fetcher.lastFetchedBlockId).toBe(fullBlockId);
+        }),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should throw FetchTimeoutError when fetch fails for Remote block', async () => {
+      await fc.assert(
+        fc.asyncProperty(arbBlockId, async (blockId) => {
+          // Failing fetcher (simulates timeout/failure)
+          const fetcher = new MockBlockFetcherP6({
+            delayMs: 0,
+            shouldSucceed: false,
+          });
+          const { store, availabilityService } =
+            createTestStoreWithFetcherP6(fetcher);
+          const fullBlockId = blockId.padEnd(128, '0');
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
+
+          // Set state to Remote
+          await availabilityService.setAvailabilityState(
+            fullBlockId,
+            AvailabilityState.Remote,
+          );
+          await availabilityService.updateLocation(fullBlockId, {
+            nodeId: 'remote-node-1',
+            lastSeen: new Date(),
+            isAuthoritative: false,
+          });
+
+          // getData with Consistent concern should throw FetchTimeoutError
+          try {
+            await store.getData(checksum, ReadConcern.Consistent);
+            // Should not reach here
+            expect(true).toBe(false);
+          } catch (err) {
+            expect(err).toBeInstanceOf(FetchTimeoutError);
+            const timeoutErr = err as InstanceType<typeof FetchTimeoutError>;
+            expect(timeoutErr.blockId).toBe(fullBlockId);
+            expect(timeoutErr.timeoutMs).toBe(
+              fetcher.getConfig().fetchTimeoutMs,
+            );
+          }
+
+          // Fetcher should have been called exactly once
+          expect(fetcher.fetchCallCount).toBe(1);
+        }),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should never return incomplete data — result always matches original block data', async () => {
+      await fc.assert(
+        fc.asyncProperty(arbBlockId, arbBlockData, async (blockId, data) => {
+          // Successful fetcher with known data
+          const fetcher = new MockBlockFetcherP6({
+            delayMs: 0,
+            resultData: data,
+            shouldSucceed: true,
+          });
+          const { store, availabilityService } =
+            createTestStoreWithFetcherP6(fetcher);
+          const fullBlockId = blockId.padEnd(128, '0');
+          const checksum = Checksum.fromUint8Array(
+            hexToUint8Array(fullBlockId),
+          );
+
+          // Set state to Remote
+          await availabilityService.setAvailabilityState(
+            fullBlockId,
+            AvailabilityState.Remote,
+          );
+          await availabilityService.updateLocation(fullBlockId, {
+            nodeId: 'remote-node-1',
+            lastSeen: new Date(),
+            isAuthoritative: false,
+          });
+
+          // getData with Consistent concern should return complete data
+          const result = await store.getData(checksum, ReadConcern.Consistent);
+
+          // Verify data completeness: length must match and every byte must be identical
+          expect(result.data.length).toBe(data.length);
+          expect(result.data).toEqual(data);
+
+          // Verify the block was stored locally (state should be Cached now)
+          const newState =
+            await availabilityService.getAvailabilityState(fullBlockId);
+          expect(newState).toBe(AvailabilityState.Cached);
+        }),
+        { numRuns: 100 },
+      );
+    });
+  });
+
+  /**
+   * Feature: cross-node-eventual-consistency, Property 15: Partition mode suspends all remote fetches
+   *
+   * Property 15: Partition mode suspends all remote fetches
+   *
+   * For any fetch request issued while the system is in partition mode,
+   * the Block_Fetcher SHALL return a PartitionModeError immediately
+   * without invoking the transport.
+   *
+   * **Validates: Requirements 7.3**
+   */
+  describe('Property 15: Partition mode suspends all remote fetches', () => {
+    /**
+     * Mock IBlockFetcher for testing partition mode behavior.
+     * Tracks whether fetchBlock was ever called.
+     */
+    class MockBlockFetcherP15 implements IBlockFetcher {
+      public fetchCallCount = 0;
+      private config: BlockFetcherConfig;
+
+      constructor(config?: Partial<BlockFetcherConfig>) {
+        this.config = { ...DEFAULT_BLOCK_FETCHER_CONFIG, ...config };
+      }
+
+      async fetchBlock(_blockId: string): Promise<BlockFetchResult> {
+        this.fetchCallCount++;
+        return {
+          success: true,
+          data: new Uint8Array([1, 2, 3]),
+          attemptedNodes: [{ nodeId: 'remote-node-1' }],
+        };
+      }
+
+      isNodeAvailable(_nodeId: string): boolean {
+        return true;
+      }
+
+      markNodeUnavailable(_nodeId: string): void {
+        // no-op
+      }
+
+      getConfig(): BlockFetcherConfig {
+        return this.config;
+      }
+
+      start(): void {
+        // no-op
+      }
+
+      stop(): void {
+        // no-op
+      }
+    }
+
+    function createTestStoreWithFetcherP15(
+      fetcher: IBlockFetcher,
+      localNodeId = 'test-node-001',
+    ) {
+      const innerStore = new MockBlockStore();
+      const registry = new MockBlockRegistry();
+      const availabilityService = new MockAvailabilityService();
+      const gossipService = new MockGossipService();
+      const reconciliationService = new MockReconciliationService();
+
+      const store = new AvailabilityAwareBlockStore(
+        innerStore,
+        registry,
+        availabilityService,
+        gossipService,
+        reconciliationService,
+        { localNodeId },
+        fetcher,
+      );
+
+      return {
+        store,
+        innerStore,
+        registry,
+        availabilityService,
+        gossipService,
+        reconciliationService,
+      };
+    }
+
+    it('should throw PartitionModeError for Remote blocks during partition mode for all read concerns', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          arbBlockId,
+          fc.constantFrom(
+            ReadConcern.Local,
+            ReadConcern.Available,
+            ReadConcern.Consistent,
+          ),
+          async (blockId, readConcern) => {
+            const fetcher = new MockBlockFetcherP15();
+            const { store, availabilityService } =
+              createTestStoreWithFetcherP15(fetcher);
+            const fullBlockId = blockId.padEnd(128, '0');
+            const checksum = Checksum.fromUint8Array(
+              hexToUint8Array(fullBlockId),
+            );
+
+            // Set block as Remote and enter partition mode
+            await availabilityService.setAvailabilityState(
+              fullBlockId,
+              AvailabilityState.Remote,
+            );
+            await availabilityService.updateLocation(fullBlockId, {
+              nodeId: 'remote-node-1',
+              lastSeen: new Date(),
+              isAuthoritative: false,
+            });
+            availabilityService.setPartitionMode(true);
+
+            // getData should throw PartitionModeError regardless of read concern
+            try {
+              await store.getData(checksum, readConcern);
+              // Should not reach here
+              expect(true).toBe(false);
+            } catch (err) {
+              expect(err).toBeInstanceOf(PartitionModeError);
+            }
+
+            // Block fetcher should NEVER have been called
+            expect(fetcher.fetchCallCount).toBe(0);
+          },
+        ),
+        { numRuns: 100 },
+      );
+    });
+
+    it('should not invoke the block fetcher transport during partition mode', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          arbBlockId,
+          fc.constantFrom(
+            ReadConcern.Local,
+            ReadConcern.Available,
+            ReadConcern.Consistent,
+          ),
+          async (blockId, readConcern) => {
+            const fetcher = new MockBlockFetcherP15();
+            const { store, availabilityService } =
+              createTestStoreWithFetcherP15(fetcher);
+            const fullBlockId = blockId.padEnd(128, '0');
+            const checksum = Checksum.fromUint8Array(
+              hexToUint8Array(fullBlockId),
+            );
+
+            // Set block as Remote
+            await availabilityService.setAvailabilityState(
+              fullBlockId,
+              AvailabilityState.Remote,
+            );
+            await availabilityService.updateLocation(fullBlockId, {
+              nodeId: 'remote-node-1',
+              lastSeen: new Date(),
+              isAuthoritative: false,
+            });
+
+            // Enter partition mode
+            availabilityService.setPartitionMode(true);
+
+            // Attempt getData — should fail with PartitionModeError
+            const threw = await store
+              .getData(checksum, readConcern)
+              .then(() => false)
+              .catch((err) => err instanceof PartitionModeError);
+
+            expect(threw).toBe(true);
+
+            // Verify zero transport invocations
+            expect(fetcher.fetchCallCount).toBe(0);
+          },
+        ),
+        { numRuns: 100 },
       );
     });
   });
