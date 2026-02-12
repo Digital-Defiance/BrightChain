@@ -105,6 +105,12 @@ export type BlockHandle<T extends BaseBlock> = T & {
    * Creates a new RawDataBlock instance from the handle's data.
    */
   readonly block: RawDataBlock;
+
+  /**
+   * Optional pool identifier indicating which pool this handle's block belongs to.
+   * Set when the handle is created in a pool-scoped context.
+   */
+  poolId?: string;
 };
 
 /**

@@ -83,6 +83,8 @@ export class CblError extends TypedError<CblErrorType> {
         BrightChainStrings.Error_CblError_FailedToExtractCreatorId,
       [CblErrorType.FailedToExtractProvidedCreatorId]:
         BrightChainStrings.Error_CblError_FailedToExtractProvidedCreatorId,
+      [CblErrorType.PoolIntegrityError]:
+        BrightChainStrings.Error_CblError_PoolIntegrityError,
     };
   }
   constructor(

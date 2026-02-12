@@ -7,6 +7,7 @@ import { HandleTupleError } from '../errors/handleTupleError';
 import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { translate } from '../i18n';
 import { IBaseBlockMetadata } from '../interfaces/blocks/metadata/blockMetadata';
+import { PoolId } from '../interfaces/storage/pooledBlockStore';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
 import { BaseBlock } from './base';
@@ -49,15 +50,18 @@ interface IBlockStore {
  */
 export class BlockHandleTuple<T extends BaseBlock = BaseBlock> {
   private readonly _handles: BlockHandle<T>[];
+  private readonly _poolId?: PoolId;
 
   /**
    * Create a new BlockHandleTuple.
    *
    * @param handles - Array of block handles. Must have exactly TUPLE.SIZE elements.
+   * @param poolId - Optional pool identifier. When provided, validates all handles belong to this pool.
    * @throws {HandleTupleError} If the number of handles is not TUPLE.SIZE
    * @throws {HandleTupleError} If handles have different block sizes
+   * @throws {HandleTupleError} If poolId is provided and any handle belongs to a different pool
    */
-  constructor(handles: BlockHandle<T>[]) {
+  constructor(handles: BlockHandle<T>[], poolId?: PoolId) {
     if (handles.length !== TUPLE.SIZE) {
       throw new HandleTupleError(HandleTupleErrorType.InvalidTupleSize);
     }
@@ -68,7 +72,34 @@ export class BlockHandleTuple<T extends BaseBlock = BaseBlock> {
       throw new HandleTupleError(HandleTupleErrorType.BlockSizeMismatch);
     }
 
+    // Validate pool membership when poolId is specified
+    if (poolId) {
+      for (const handle of handles) {
+        const handlePool = handle.poolId;
+        if (handlePool && handlePool !== poolId) {
+          throw new HandleTupleError(
+            HandleTupleErrorType.PoolMismatch,
+            undefined,
+            undefined,
+            {
+              blockId: handle.idChecksum.toHex(),
+              actualPool: handlePool,
+              expectedPool: poolId,
+            },
+          );
+        }
+      }
+    }
+
     this._handles = handles;
+    this._poolId = poolId;
+  }
+
+  /**
+   * The pool this tuple is scoped to, if any.
+   */
+  public get poolId(): PoolId | undefined {
+    return this._poolId;
   }
 
   /**

@@ -484,6 +484,8 @@ export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
     "Échec de l'extraction des octets d'ID du créateur à partir de l'en-tête CBL",
   [BrightChainStrings.Error_CblError_FailedToExtractProvidedCreatorId]:
     "Échec de l'extraction des octets d'ID du membre à partir du créateur fourni",
+  [BrightChainStrings.Error_CblError_PoolIntegrityError]:
+    "Erreur d'intégrité du pool CBL : un ou plusieurs blocs référencés sont absents du pool attendu",
 
   // Multi-Encrypted Errors
   [BrightChainStrings.Error_MultiEncryptedError_InvalidEphemeralPublicKeyLength]:
@@ -575,6 +577,8 @@ export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
     'Échec du traitement du flux de données : {ERROR}',
   [BrightChainStrings.Error_TupleError_EncryptedDataStreamProcessingFailedTemplate]:
     'Échec du traitement du flux de données chiffré : {ERROR}',
+  [BrightChainStrings.Error_TupleError_PoolBoundaryViolationTemplate]:
+    'Violation de limite de pool : {BLOCK_TYPE} appartient au pool "{ACTUAL_POOL}" mais le tuple nécessite le pool "{EXPECTED_POOL}"',
 
   // Memory Tuple Errors
   [BrightChainStrings.Error_MemoryTupleError_InvalidTupleSizeTemplate]:
@@ -597,6 +601,8 @@ export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_HandleTupleError_NoBlocksToXor]: 'Aucun bloc à XOR',
   [BrightChainStrings.Error_HandleTupleError_BlockSizesMustMatch]:
     'Les tailles de bloc doivent correspondre',
+  [BrightChainStrings.Error_HandleTupleError_PoolMismatchTemplate]:
+    'Incompatibilité de pool : le bloc {BLOCK_ID} appartient au pool "{ACTUAL_POOL}" mais le tuple nécessite le pool "{EXPECTED_POOL}"',
 
   // Stream Errors
   [BrightChainStrings.Error_StreamError_BlockSizeRequired]:

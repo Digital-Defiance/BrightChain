@@ -2,6 +2,8 @@ import { RawDataBlock } from '../../blocks/rawData';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 
+import { PoolId } from './pooledBlockStore';
+
 /**
  * Block metadata including durability, parity, and replication information.
  * This metadata is stored alongside block data to track lifecycle, access patterns,
@@ -68,6 +70,12 @@ export interface IBlockMetadata {
    * Checksum of the block data (hex encoded)
    */
   checksum: string;
+
+  /**
+   * Optional pool identifier for pool-scoped blocks.
+   * When set, indicates which pool this block belongs to.
+   */
+  poolId?: PoolId;
 }
 
 /**
@@ -140,6 +148,7 @@ export interface BrightenResult {
  * @param size - The size of the block data in bytes
  * @param checksum - The checksum of the block data
  * @param options - Optional storage options
+ * @param poolId - Optional pool identifier for pool-scoped blocks
  * @returns Default metadata for the block
  */
 export function createDefaultBlockMetadata(
@@ -147,6 +156,7 @@ export function createDefaultBlockMetadata(
   size: number,
   checksum: string,
   options?: BlockStoreOptions,
+  poolId?: PoolId,
 ): IBlockMetadata {
   const now = new Date();
   return {
@@ -162,5 +172,6 @@ export function createDefaultBlockMetadata(
     replicaNodeIds: [],
     size,
     checksum,
+    ...(poolId !== undefined ? { poolId } : {}),
   };
 }

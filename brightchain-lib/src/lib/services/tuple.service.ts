@@ -18,12 +18,38 @@ import { TupleErrorType } from '../enumerations/tupleErrorType';
 import { TupleError } from '../errors/tupleError';
 import { IBaseBlock } from '../interfaces/blocks/base';
 import { IEphemeralBlock } from '../interfaces/blocks/ephemeral';
+import { PoolId } from '../interfaces/storage/pooledBlockStore';
 import { PrimeTupleGeneratorStream } from '../primeTupleGeneratorStream';
 import { Validator } from '../utils/validator';
 import { CBLService } from './cblService';
 import { ChecksumService } from './checksum.service';
 import { getGlobalServiceProvider } from './globalServiceProvider';
 import { XorService } from './xor';
+
+/**
+ * Options for pool-scoped tuple creation.
+ * When poolId is provided, all blocks used in the tuple are validated
+ * to belong to the specified pool, preventing cross-pool XOR dependencies.
+ *
+ * @see Requirements 3.3
+ */
+export interface TuplePoolOptions {
+  /** Pool that all blocks in the tuple must belong to */
+  poolId?: PoolId;
+}
+
+/**
+ * Type guard to check if a value has a poolId property (string).
+ * Used to safely access poolId on block metadata without unsafe casts.
+ */
+function hasPoolId(value: unknown): value is { poolId: string } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'poolId' in value &&
+    typeof (value as Record<string, unknown>)['poolId'] === 'string'
+  );
+}
 
 /**
  * TupleService provides utility functions for working with block tuples.
@@ -43,6 +69,53 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     private readonly checksumService: ChecksumService,
     private readonly cblService: CBLService<TID>,
   ) {}
+
+  /**
+   * Wrap a block source callback with pool membership validation.
+   * When a block is returned, checks that its metadata poolId matches the expected pool.
+   * If the block has no poolId metadata, it passes through (backward compatible).
+   *
+   * @param source - The original block source callback
+   * @param poolId - The expected pool for all blocks
+   * @param blockType - Human-readable block type name for error messages
+   * @returns A wrapped callback that validates pool membership
+   *
+   * @see Requirements 3.1, 3.2, 3.4, 3.5
+   */
+  private wrapWithPoolValidation<T extends BaseBlock>(
+    source: () => T,
+    poolId: PoolId,
+    blockType: string,
+  ): () => T;
+  private wrapWithPoolValidation<T extends BaseBlock>(
+    source: () => T | undefined,
+    poolId: PoolId,
+    blockType: string,
+  ): () => T | undefined;
+  private wrapWithPoolValidation<T extends BaseBlock>(
+    source: () => T | undefined,
+    poolId: PoolId,
+    blockType: string,
+  ): () => T | undefined {
+    return () => {
+      const block = source();
+      if (block) {
+        const metadata = block.metadata;
+        if (hasPoolId(metadata) && metadata.poolId !== poolId) {
+          throw new TupleError(
+            TupleErrorType.PoolBoundaryViolation,
+            undefined,
+            {
+              BLOCK_TYPE: blockType,
+              ACTUAL_POOL: metadata.poolId,
+              EXPECTED_POOL: poolId,
+            },
+          );
+        }
+      }
+      return block;
+    };
+  }
 
   /**
    * Convert data to Uint8Array regardless of whether it's a Readable or Uint8Array
@@ -379,6 +452,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     whitenedBlockSource: () => WhitenedBlock | undefined,
     randomBlockSource: () => RandomBlock,
     persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
+    poolOptions?: TuplePoolOptions,
   ): Promise<InMemoryBlockTuple> {
     const now = new Date();
     // Validate required parameters
@@ -414,13 +488,29 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     }
 
     try {
+      // Wrap source callbacks with pool validation when poolId is specified
+      const effectiveWhitenedSource = poolOptions?.poolId
+        ? this.wrapWithPoolValidation(
+            whitenedBlockSource,
+            poolOptions.poolId,
+            'WhitenedBlock',
+          )
+        : whitenedBlockSource;
+      const effectiveRandomSource = poolOptions?.poolId
+        ? this.wrapWithPoolValidation(
+            randomBlockSource,
+            poolOptions.poolId,
+            'RandomBlock',
+          )
+        : randomBlockSource;
+
       // Set up processing pipeline
       const blockPaddingTransform = new BlockPaddingTransform(blockSize);
       const tupleGeneratorStream = new PrimeTupleGeneratorStream(
         blockSize,
         creator,
-        whitenedBlockSource,
-        randomBlockSource,
+        effectiveWhitenedSource,
+        effectiveRandomSource,
       );
 
       source.pipe(blockPaddingTransform).pipe(tupleGeneratorStream);
@@ -432,7 +522,12 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       await new Promise<void>((resolve, reject) => {
         tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
           try {
-            await persistTuple(tuple);
+            // When pool-scoped, tag the tuple with the poolId so persistTuple
+            // callbacks can store blocks in the correct pool
+            const effectiveTuple = poolOptions?.poolId
+              ? new InMemoryBlockTuple(tuple.blocks, poolOptions.poolId)
+              : tuple;
+            await persistTuple(effectiveTuple);
             const newBlockIDs = new Uint8Array(
               blockIDs.length + tuple.blockIdsBuffer.length,
             );
@@ -481,7 +576,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       // Create tuple for CBL
       const randomBlocks: RandomBlock[] = [];
       for (let i = 0; i < TUPLE.RANDOM_BLOCKS_PER_TUPLE; i++) {
-        const block = randomBlockSource();
+        const block = effectiveRandomSource();
         if (!block) {
           throw new TupleError(TupleErrorType.RandomBlockGenerationFailed);
         }
@@ -490,7 +585,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
 
       const whiteners: (WhitenedBlock | RandomBlock)[] = [];
       for (let i = TUPLE.RANDOM_BLOCKS_PER_TUPLE; i < TUPLE.SIZE - 1; i++) {
-        const block = whitenedBlockSource() ?? randomBlockSource();
+        const block = effectiveWhitenedSource() ?? effectiveRandomSource();
         if (!block) {
           throw new TupleError(TupleErrorType.WhiteningBlockGenerationFailed);
         }
@@ -503,11 +598,10 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         randomBlocks,
       );
 
-      const tuple = new InMemoryBlockTuple([
-        primeBlock,
-        ...whiteners,
-        ...randomBlocks,
-      ]);
+      const tuple = new InMemoryBlockTuple(
+        [primeBlock, ...whiteners, ...randomBlocks],
+        poolOptions?.poolId,
+      );
 
       await persistTuple(tuple);
       return tuple;
@@ -545,6 +639,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     whitenedBlockSource: () => WhitenedBlock | undefined,
     randomBlockSource: () => RandomBlock,
     persistTuple: (tuple: InMemoryBlockTuple) => Promise<void>,
+    poolOptions?: TuplePoolOptions,
   ): Promise<InMemoryBlockTuple> {
     const dateCreated = new Date();
     // Validate required parameters
@@ -580,12 +675,28 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
     }
 
     try {
+      // Wrap source callbacks with pool validation when poolId is specified
+      const effectiveWhitenedSource = poolOptions?.poolId
+        ? this.wrapWithPoolValidation(
+            whitenedBlockSource,
+            poolOptions.poolId,
+            'WhitenedBlock',
+          )
+        : whitenedBlockSource;
+      const effectiveRandomSource = poolOptions?.poolId
+        ? this.wrapWithPoolValidation(
+            randomBlockSource,
+            poolOptions.poolId,
+            'RandomBlock',
+          )
+        : randomBlockSource;
+
       // Set up encryption pipeline
       const tupleGeneratorStream = new PrimeTupleGeneratorStream(
         blockSize,
         creator,
-        whitenedBlockSource,
-        randomBlockSource,
+        effectiveWhitenedSource,
+        effectiveRandomSource,
       );
 
       source.pipe(tupleGeneratorStream);
@@ -596,7 +707,12 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       await new Promise<void>((resolve, reject) => {
         tupleGeneratorStream.on('data', async (tuple: InMemoryBlockTuple) => {
           try {
-            await persistTuple(tuple);
+            // When pool-scoped, tag the tuple with the poolId so persistTuple
+            // callbacks can store blocks in the correct pool
+            const effectiveTuple = poolOptions?.poolId
+              ? new InMemoryBlockTuple(tuple.blocks, poolOptions.poolId)
+              : tuple;
+            await persistTuple(effectiveTuple);
             const newBlockIDs = new Uint8Array(
               blockIDs.length + tuple.blockIdsBuffer.length,
             );
@@ -651,7 +767,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
       // Create tuple for encrypted CBL
       const randomBlocks: RandomBlock[] = [];
       for (let i = 0; i < TUPLE.RANDOM_BLOCKS_PER_TUPLE; i++) {
-        const block = randomBlockSource();
+        const block = effectiveRandomSource();
         if (!block) {
           throw new TupleError(TupleErrorType.RandomBlockGenerationFailed);
         }
@@ -660,7 +776,7 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
 
       const whiteners: (WhitenedBlock | RandomBlock)[] = [];
       for (let i = TUPLE.RANDOM_BLOCKS_PER_TUPLE; i < TUPLE.SIZE - 1; i++) {
-        const block = whitenedBlockSource() ?? randomBlockSource();
+        const block = effectiveWhitenedSource() ?? effectiveRandomSource();
         if (!block) {
           throw new TupleError(TupleErrorType.WhiteningBlockGenerationFailed);
         }
@@ -673,11 +789,10 @@ export class TupleService<TID extends PlatformID = Uint8Array> {
         randomBlocks,
       );
 
-      const tuple = new InMemoryBlockTuple([
-        primeBlock,
-        ...whiteners,
-        ...randomBlocks,
-      ]);
+      const tuple = new InMemoryBlockTuple(
+        [primeBlock, ...whiteners, ...randomBlocks],
+        poolOptions?.poolId,
+      );
 
       await persistTuple(tuple);
       return tuple;

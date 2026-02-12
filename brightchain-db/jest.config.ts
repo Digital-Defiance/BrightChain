@@ -7,4 +7,10 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../coverage/brightchain-db',
+  moduleNameMapper: {
+    '^@brightchain/brightchain-lib$':
+      '<rootDir>/../brightchain-lib/src/index.ts',
+    '^@brightchain/brightchain-lib/(.*)$':
+      '<rootDir>/../brightchain-lib/src/$1',
+  },
 };

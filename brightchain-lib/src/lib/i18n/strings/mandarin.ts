@@ -428,6 +428,8 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
     '无法从CBL头提取创建者ID字节',
   [BrightChainStrings.Error_CblError_FailedToExtractProvidedCreatorId]:
     '无法从提供的创建者提取成员ID字节',
+  [BrightChainStrings.Error_CblError_PoolIntegrityError]:
+    'CBL池完整性错误：一个或多个引用的块在预期的池中不存在',
   // Multi-Encrypted Errors
   [BrightChainStrings.Error_MultiEncryptedError_InvalidEphemeralPublicKeyLength]:
     '无效的临时公钥长度',
@@ -502,6 +504,8 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
     '处理数据流失败：{ERROR}',
   [BrightChainStrings.Error_TupleError_EncryptedDataStreamProcessingFailedTemplate]:
     '处理加密数据流失败：{ERROR}',
+  [BrightChainStrings.Error_TupleError_PoolBoundaryViolationTemplate]:
+    '池边界违规：{BLOCK_TYPE} 属于池 "{ACTUAL_POOL}"，但元组需要池 "{EXPECTED_POOL}"',
 
   // Memory Tuple Errors
   [BrightChainStrings.Error_MemoryTupleError_InvalidTupleSizeTemplate]:
@@ -524,6 +528,8 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_HandleTupleError_NoBlocksToXor]: '没有块可进行XOR',
   [BrightChainStrings.Error_HandleTupleError_BlockSizesMustMatch]:
     '块大小必须匹配',
+  [BrightChainStrings.Error_HandleTupleError_PoolMismatchTemplate]:
+    '池不匹配：块 {BLOCK_ID} 属于池 "{ACTUAL_POOL}"，但元组需要池 "{EXPECTED_POOL}"',
 
   // Stream Errors
   [BrightChainStrings.Error_StreamError_BlockSizeRequired]: '块大小是必需的',

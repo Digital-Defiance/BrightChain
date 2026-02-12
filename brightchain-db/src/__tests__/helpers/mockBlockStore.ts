@@ -9,7 +9,21 @@
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IBlockStore } from '@brightchain/brightchain-lib';
+import {
+  BlockSize,
+  BlockStoreOptions,
+  Checksum,
+  IBlockStore,
+  IPooledBlockStore,
+  ListOptions,
+  makeStorageKey,
+  parseStorageKey,
+  PoolDeletionValidationResult,
+  PoolId,
+  PoolStats,
+  validatePoolId,
+} from '@brightchain/brightchain-lib';
+import { sha3_512 } from '@noble/hashes/sha3';
 
 export class MockBlockStore implements IBlockStore {
   readonly blocks = new Map<string, Uint8Array>();
@@ -137,5 +151,267 @@ export class MockBlockStore implements IBlockStore {
   }
   generateCBLMagnetUrl(): string {
     throw new Error('not implemented');
+  }
+}
+
+/**
+ * Mock pooled block store for testing pool-scoped operations.
+ *
+ * Extends MockBlockStore with IPooledBlockStore methods using simple
+ * in-memory maps. Computes SHA3-512 hashes for putInPool.
+ */
+export class MockPooledBlockStore
+  extends MockBlockStore
+  implements IPooledBlockStore
+{
+  /** Pool-scoped block storage: storageKey -> block data */
+  readonly poolBlocks = new Map<string, Uint8Array>();
+
+  /** Per-pool statistics */
+  readonly poolStatsMap = new Map<PoolId, PoolStats>();
+
+  /** Track pool method calls for assertions */
+  readonly poolCalls = {
+    hasInPool: [] as Array<{ pool: PoolId; hash: string }>,
+    getFromPool: [] as Array<{ pool: PoolId; hash: string }>,
+    putInPool: [] as Array<{ pool: PoolId; dataLength: number }>,
+    deleteFromPool: [] as Array<{ pool: PoolId; hash: string }>,
+    listPools: 0,
+    listBlocksInPool: [] as PoolId[],
+    getPoolStats: [] as PoolId[],
+    deletePool: [] as PoolId[],
+  };
+
+  // ── Helpers ──
+
+  private computeHash(data: Uint8Array): string {
+    const hashBytes = sha3_512(data);
+    return Buffer.from(hashBytes).toString('hex');
+  }
+
+  private recordPut(poolId: PoolId, dataLength: number): void {
+    const now = new Date();
+    const existing = this.poolStatsMap.get(poolId);
+    if (existing) {
+      existing.blockCount += 1;
+      existing.totalBytes += dataLength;
+      existing.lastAccessedAt = now;
+    } else {
+      this.poolStatsMap.set(poolId, {
+        poolId,
+        blockCount: 1,
+        totalBytes: dataLength,
+        createdAt: now,
+        lastAccessedAt: now,
+      });
+    }
+  }
+
+  private recordDelete(poolId: PoolId, dataLength: number): void {
+    const existing = this.poolStatsMap.get(poolId);
+    if (existing) {
+      existing.blockCount -= 1;
+      existing.totalBytes -= dataLength;
+      existing.lastAccessedAt = new Date();
+    }
+  }
+
+  private touchPool(poolId: PoolId): void {
+    const existing = this.poolStatsMap.get(poolId);
+    if (existing) {
+      existing.lastAccessedAt = new Date();
+    }
+  }
+
+  // ── Pool-Scoped Block Operations ──
+
+  async hasInPool(pool: PoolId, hash: string): Promise<boolean> {
+    validatePoolId(pool);
+    this.poolCalls.hasInPool.push({ pool, hash });
+    const key = makeStorageKey(pool, hash);
+    this.touchPool(pool);
+    return this.poolBlocks.has(key);
+  }
+
+  async getFromPool(pool: PoolId, hash: string): Promise<Uint8Array> {
+    validatePoolId(pool);
+    this.poolCalls.getFromPool.push({ pool, hash });
+    const key = makeStorageKey(pool, hash);
+    const data = this.poolBlocks.get(key);
+    if (!data) {
+      throw new Error(`Block not found in pool "${pool}": ${hash}`);
+    }
+    this.touchPool(pool);
+    return data;
+  }
+
+  async putInPool(
+    pool: PoolId,
+    data: Uint8Array,
+    _options?: BlockStoreOptions,
+  ): Promise<string> {
+    validatePoolId(pool);
+    const hash = this.computeHash(data);
+    this.poolCalls.putInPool.push({ pool, dataLength: data.length });
+    const key = makeStorageKey(pool, hash);
+
+    if (this.poolBlocks.has(key)) {
+      this.touchPool(pool);
+      return hash;
+    }
+
+    this.poolBlocks.set(key, new Uint8Array(data));
+    this.recordPut(pool, data.length);
+    return hash;
+  }
+
+  async deleteFromPool(pool: PoolId, hash: string): Promise<void> {
+    validatePoolId(pool);
+    this.poolCalls.deleteFromPool.push({ pool, hash });
+    const key = makeStorageKey(pool, hash);
+    const data = this.poolBlocks.get(key);
+    if (data) {
+      this.poolBlocks.delete(key);
+      this.recordDelete(pool, data.length);
+    }
+  }
+
+  // ── Pool Management ──
+
+  async listPools(): Promise<PoolId[]> {
+    this.poolCalls.listPools++;
+    const pools: PoolId[] = [];
+    for (const [poolId, stats] of this.poolStatsMap) {
+      if (stats.blockCount > 0) {
+        pools.push(poolId);
+      }
+    }
+    return pools;
+  }
+
+  async *listBlocksInPool(
+    pool: PoolId,
+    options?: ListOptions,
+  ): AsyncIterable<string> {
+    validatePoolId(pool);
+    this.poolCalls.listBlocksInPool.push(pool);
+    const prefix = pool + ':';
+    const limit = options?.limit;
+    const cursor = options?.cursor;
+
+    let pastCursor = cursor === undefined;
+    let yielded = 0;
+
+    for (const key of this.poolBlocks.keys()) {
+      if (!key.startsWith(prefix)) {
+        continue;
+      }
+      const { hash } = parseStorageKey(key);
+
+      if (!pastCursor) {
+        if (hash === cursor) {
+          pastCursor = true;
+        }
+        continue;
+      }
+
+      yield hash;
+      yielded++;
+
+      if (limit !== undefined && yielded >= limit) {
+        break;
+      }
+    }
+  }
+
+  async getPoolStats(pool: PoolId): Promise<PoolStats> {
+    validatePoolId(pool);
+    this.poolCalls.getPoolStats.push(pool);
+    const stats = this.poolStatsMap.get(pool);
+    if (!stats) {
+      throw new Error(
+        `Pool "${pool}" not found: no blocks have been stored in this pool`,
+      );
+    }
+    return { ...stats };
+  }
+
+  async deletePool(pool: PoolId): Promise<void> {
+    validatePoolId(pool);
+    this.poolCalls.deletePool.push(pool);
+    const prefix = pool + ':';
+    const keysToDelete: string[] = [];
+
+    for (const key of this.poolBlocks.keys()) {
+      if (key.startsWith(prefix)) {
+        keysToDelete.push(key);
+      }
+    }
+
+    for (const key of keysToDelete) {
+      this.poolBlocks.delete(key);
+    }
+
+    this.poolStatsMap.delete(pool);
+  }
+
+  // ── Pool-Scoped Whitening Operations ──
+
+  async getRandomBlocksFromPool(
+    pool: PoolId,
+    count: number,
+  ): Promise<Checksum[]> {
+    validatePoolId(pool);
+    const prefix = pool + ':';
+    const hashes: Checksum[] = [];
+    for (const key of this.poolBlocks.keys()) {
+      if (key.startsWith(prefix)) {
+        const { hash } = parseStorageKey(key);
+        hashes.push(Checksum.fromHex(hash));
+        if (hashes.length >= count) break;
+      }
+    }
+    return hashes;
+  }
+
+  async bootstrapPool(
+    pool: PoolId,
+    blockSize: BlockSize,
+    count: number,
+  ): Promise<void> {
+    validatePoolId(pool);
+    for (let i = 0; i < count; i++) {
+      const data = new Uint8Array(blockSize);
+      crypto.getRandomValues(data);
+      await this.putInPool(pool, data);
+    }
+  }
+
+  async validatePoolDeletion(
+    pool: PoolId,
+  ): Promise<PoolDeletionValidationResult> {
+    validatePoolId(pool);
+    return { safe: true, dependentPools: [], referencedBlocks: [] };
+  }
+
+  async forceDeletePool(pool: PoolId): Promise<void> {
+    await this.deletePool(pool);
+  }
+
+  // ── Convenience ──
+
+  /** Reset all stored data including pool data and call tracking */
+  override reset(): void {
+    super.reset();
+    this.poolBlocks.clear();
+    this.poolStatsMap.clear();
+    this.poolCalls.hasInPool.length = 0;
+    this.poolCalls.getFromPool.length = 0;
+    this.poolCalls.putInPool.length = 0;
+    this.poolCalls.deleteFromPool.length = 0;
+    this.poolCalls.listPools = 0;
+    this.poolCalls.listBlocksInPool.length = 0;
+    this.poolCalls.getPoolStats.length = 0;
+    this.poolCalls.deletePool.length = 0;
   }
 }

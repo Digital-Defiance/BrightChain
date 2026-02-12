@@ -3,4 +3,5 @@ export enum HandleTupleErrorType {
   BlockSizeMismatch = 'BlockSizeMismatch',
   NoBlocksToXor = 'NoBlocksToXor',
   BlockSizesMustMatch = 'BlockSizesMustMatch',
+  PoolMismatch = 'PoolMismatch',
 }

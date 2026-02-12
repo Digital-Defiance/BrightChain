@@ -14,6 +14,7 @@ import { BlockAccessError } from '../errors/block';
 import { CblError } from '../errors/cblError';
 import { ICBLCore } from '../interfaces/blocks/cblBase';
 import { ICBLServices } from '../interfaces/services/cblServices';
+import { PoolId } from '../interfaces/storage/pooledBlockStore';
 import { SecurityAuditLogger } from '../security/securityAuditLogger';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
 import { Checksum } from '../types/checksum';
@@ -380,16 +381,57 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
   }
 
   /**
-   * Get Block Handle Tuples for the CBL block
+   * Get Block Handle Tuples for the CBL block.
+   *
+   * When `poolVerification` is provided, verifies that all referenced block
+   * addresses exist in the specified pool via `hasInPool`. This ensures
+   * pool integrity during reconstruction — all constituent blocks must
+   * reside in the same pool as the CBL.
+   *
+   * @param blockStore - Store to retrieve block data from
+   * @param poolVerification - Optional pool verification config. When provided,
+   *   checks that every address exists in the given pool.
+   * @throws {CblError} CblErrorType.PoolIntegrityError if any address is missing from the pool
+   * @throws {BlockAccessError} If the block is not readable
    */
-  public async getHandleTuples(blockStore: {
-    getData(key: Checksum): Promise<RawDataBlock>;
-  }): Promise<Array<BlockHandleTuple>> {
+  public async getHandleTuples(
+    blockStore: {
+      getData(key: Checksum): Promise<RawDataBlock>;
+    },
+    poolVerification?: {
+      poolId: PoolId;
+      hasInPool: (pool: PoolId, hash: string) => Promise<boolean>;
+    },
+  ): Promise<Array<BlockHandleTuple>> {
     if (!this.canRead) {
       throw new BlockAccessError(BlockAccessErrorType.BlockIsNotReadable);
     }
-    const handleTuples: Array<BlockHandleTuple> = [];
+
     const blockIds = this.addresses;
+
+    // Optionally verify all addresses exist in the CBL's pool
+    if (poolVerification) {
+      const missingAddresses: string[] = [];
+      for (const id of blockIds) {
+        const exists = await poolVerification.hasInPool(
+          poolVerification.poolId,
+          id.toHex(),
+        );
+        if (!exists) {
+          missingAddresses.push(id.toHex());
+        }
+      }
+      if (missingAddresses.length > 0) {
+        throw new CblError(CblErrorType.PoolIntegrityError, undefined, {
+          POOL_ID: poolVerification.poolId,
+          MISSING_BLOCKS: missingAddresses.join(', '),
+          MISSING_COUNT: String(missingAddresses.length),
+          TOTAL_COUNT: String(blockIds.length),
+        });
+      }
+    }
+
+    const handleTuples: Array<BlockHandleTuple> = [];
     const tupleSize = this.tupleSize;
     for (let i = 0; i < blockIds.length; i += tupleSize) {
       const tupleIds = blockIds.slice(i, i + tupleSize);
@@ -405,7 +447,9 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
           ),
         ),
       );
-      handleTuples.push(new BlockHandleTuple(handles));
+      handleTuples.push(
+        new BlockHandleTuple(handles, poolVerification?.poolId),
+      );
     }
 
     return handleTuples;

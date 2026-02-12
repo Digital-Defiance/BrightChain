@@ -60,6 +60,9 @@ export * from './votingDerivationErrorType';
 export * from './votingErrorType';
 export * from './whitenedErrorType';
 
+// Read concern enumerations
+export * from './readConcern';
+
 // Paper key enumerations
 export * from './paperKeyPurpose';
 

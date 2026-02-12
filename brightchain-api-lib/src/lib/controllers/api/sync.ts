@@ -1,13 +1,17 @@
 import {
+  Checksum,
   IAvailabilityService,
+  IBlockDataResponse,
   IBlockLocationInfo,
   IBlockLocationsResponse,
+  IBlockStore,
   ILocationRecord,
   IReconcileResponse,
   IReconciliationService,
   IReplicateBlockResponse,
   IReplicationNodeResult,
   ISyncRequestResponse,
+  isPooledBlockStore,
 } from '@brightchain/brightchain-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -18,6 +22,7 @@ import {
   routeConfig,
 } from '@digitaldefiance/node-express-suite';
 import {
+  IGetBlockDataRequest,
   IGetBlockLocationsRequest,
   IReplicateBlockRequest,
   ISyncRequestBody,
@@ -35,6 +40,7 @@ import { BaseController } from '../base';
 type SyncApiResponse =
   | IReplicateBlockResponse
   | IBlockLocationsResponse
+  | IBlockDataResponse
   | ISyncRequestResponse
   | IReconcileResponse
   | ApiErrorResponse;
@@ -44,6 +50,7 @@ interface SyncHandlers extends TypedHandlers {
   getBlockLocations: ApiRequestHandler<
     IBlockLocationsResponse | ApiErrorResponse
   >;
+  getBlockData: ApiRequestHandler<IBlockDataResponse | ApiErrorResponse>;
   syncRequest: ApiRequestHandler<ISyncRequestResponse | ApiErrorResponse>;
   reconcile: ApiRequestHandler<IReconcileResponse | ApiErrorResponse>;
 }
@@ -80,6 +87,19 @@ interface SyncHandlers extends TypedHandlers {
  * - `blockId` (string): The block ID queried
  * - `locations` (array): Array of location records
  *
+ * ### GET /api/sync/blocks/:blockId
+ * Get raw block data from the local store.
+ *
+ * **Parameters:**
+ * - `blockId` (string, required): Block ID to retrieve
+ *
+ * **Query Parameters:**
+ * - `poolId` (string, optional): Pool ID for pool-scoped retrieval
+ *
+ * **Response:**
+ * - `blockId` (string): The block ID retrieved
+ * - `data` (string): Base64-encoded raw block data
+ *
  * ### POST /api/sync/request
  * Check which blocks are available locally and which need to be fetched.
  *
@@ -105,6 +125,7 @@ export class SyncController<
   private availabilityService: IAvailabilityService | null = null;
   private reconciliationService: IReconciliationService | null = null;
   private eventSystem: EventNotificationSystem | null = null;
+  private blockStore: IBlockStore | null = null;
 
   constructor(application: IBrightChainApplication<TID>) {
     super(application);
@@ -136,6 +157,15 @@ export class SyncController<
   }
 
   /**
+   * Set the block store for serving block data to remote nodes.
+   * This should be the local inner store (not AvailabilityAwareBlockStore).
+   * @requirements 1.1
+   */
+  public setBlockStore(store: IBlockStore): void {
+    this.blockStore = store;
+  }
+
+  /**
    * Get the AvailabilityService instance.
    * Throws if the service has not been set.
    */
@@ -157,6 +187,17 @@ export class SyncController<
     return this.reconciliationService;
   }
 
+  /**
+   * Get the block store instance.
+   * Throws if the store has not been set.
+   */
+  private getBlockStore(): IBlockStore {
+    if (!this.blockStore) {
+      throw new Error('BlockStore not initialized');
+    }
+    return this.blockStore;
+  }
+
   protected initRouteDefinitions(): void {
     this.routeDefinitions = [
       routeConfig('post', '/blocks/:blockId/replicate', {
@@ -166,6 +207,11 @@ export class SyncController<
       }),
       routeConfig('get', '/blocks/:blockId/locations', {
         handlerKey: 'getBlockLocations',
+        useAuthentication: false,
+        useCryptoAuthentication: false,
+      }),
+      routeConfig('get', '/blocks/:blockId', {
+        handlerKey: 'getBlockData',
         useAuthentication: false,
         useCryptoAuthentication: false,
       }),
@@ -184,6 +230,7 @@ export class SyncController<
     this.handlers = {
       replicateBlock: this.handleReplicateBlock.bind(this),
       getBlockLocations: this.handleGetBlockLocations.bind(this),
+      getBlockData: this.handleGetBlockData.bind(this),
       syncRequest: this.handleSyncRequest.bind(this),
       reconcile: this.handleReconcile.bind(this),
     };
@@ -334,6 +381,63 @@ export class SyncController<
           message: 'OK',
           blockId,
           locations: locations.map((loc) => this.locationToInfo(loc)),
+        },
+      };
+    } catch (_error) {
+      return handleError(_error);
+    }
+  }
+
+  /**
+   * GET /api/sync/blocks/:blockId
+   * Get raw block data from the local store.
+   * Supports optional poolId query parameter for pool-scoped retrieval.
+   *
+   * @param req - Request containing the block ID parameter and optional poolId query
+   * @returns Block data as base64-encoded string, or 404 if not found
+   * @requirements 1.1
+   */
+  private async handleGetBlockData(req: unknown): Promise<{
+    statusCode: number;
+    response: IBlockDataResponse | ApiErrorResponse;
+  }> {
+    try {
+      const typedReq = req as IGetBlockDataRequest;
+      const { blockId } = typedReq.params;
+
+      if (!blockId) {
+        return validationError('Missing required parameter: blockId');
+      }
+
+      const store = this.getBlockStore();
+      const poolId = typedReq.query?.poolId;
+
+      let data: Uint8Array;
+
+      if (poolId && isPooledBlockStore(store)) {
+        // Pool-scoped retrieval
+        const hasBlock = await store.hasInPool(poolId, blockId);
+        if (!hasBlock) {
+          return notFoundError('Block', blockId);
+        }
+        data = await store.getFromPool(poolId, blockId);
+      } else {
+        // Standard retrieval from the local store
+        const hasBlock = await store.has(blockId);
+        if (!hasBlock) {
+          return notFoundError('Block', blockId);
+        }
+        const checksum = Checksum.fromHex(blockId);
+        const block = await store.getData(checksum);
+        data = block.data;
+      }
+
+      return {
+        statusCode: 200,
+        response: {
+          message: 'OK',
+          blockId,
+          data: Buffer.from(data).toString('base64'),
         },
       };
     } catch (_error) {

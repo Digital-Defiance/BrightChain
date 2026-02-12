@@ -1,4 +1,5 @@
 export type * from './discoverBlockRequest';
+export type * from './getBlockDataRequest';
 export type * from './getBlockLocationRequest';
 export type * from './getMessageRequest';
 export type * from './getNodeRequest';

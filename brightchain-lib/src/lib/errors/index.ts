@@ -189,6 +189,15 @@ export * from './memoryTupleError';
 export * from './tupleError';
 
 // ============================================================================
+// Pool Errors
+// ============================================================================
+
+/**
+ * Pool deletion errors.
+ */
+export * from './poolDeletionError';
+
+// ============================================================================
 // Storage Errors
 // ============================================================================
 /**
@@ -296,6 +305,17 @@ export * from './missingValidatedData';
  * Not implemented errors.
  */
 export * from './notImplemented';
+
+// ============================================================================
+// Block Fetch Errors
+// ============================================================================
+/**
+ * Block fetch errors (remote block retrieval).
+ * @see {@link BlockFetchError}
+ * @see {@link PoolMismatchError}
+ * @see {@link FetchTimeoutError}
+ */
+export * from './blockFetchError';
 
 // ============================================================================
 // Message Passing Errors

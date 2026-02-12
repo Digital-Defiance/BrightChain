@@ -409,6 +409,7 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
     'Error_CblError_FailedToExtractCreatorId',
   Error_CblError_FailedToExtractProvidedCreatorId:
     'Error_CblError_FailedToExtractProvidedCreatorId',
+  Error_CblError_PoolIntegrityError: 'Error_CblError_PoolIntegrityError',
 
   // Multi-Encrypted Errors
   Error_MultiEncryptedError_InvalidEphemeralPublicKeyLength:
@@ -486,6 +487,8 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
     'Error_TupleError_DataStreamProcessingFailedTemplate',
   Error_TupleError_EncryptedDataStreamProcessingFailedTemplate:
     'Error_TupleError_EncryptedDataStreamProcessingFailedTemplate',
+  Error_TupleError_PoolBoundaryViolationTemplate:
+    'Error_TupleError_PoolBoundaryViolationTemplate',
 
   // Memory Tuple Errors
   Error_MemoryTupleError_InvalidTupleSizeTemplate:
@@ -508,6 +511,8 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   Error_HandleTupleError_NoBlocksToXor: 'Error_HandleTupleError_NoBlocksToXor',
   Error_HandleTupleError_BlockSizesMustMatch:
     'Error_HandleTupleError_BlockSizesMustMatch',
+  Error_HandleTupleError_PoolMismatchTemplate:
+    'Error_HandleTupleError_PoolMismatchTemplate',
 
   // Stream Errors
   Error_StreamError_BlockSizeRequired: 'Error_StreamError_BlockSizeRequired',
