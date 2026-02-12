@@ -407,6 +407,8 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
     'Failed to process data stream: {ERROR}',
   [BrightChainStrings.Error_TupleError_EncryptedDataStreamProcessingFailedTemplate]:
     'Failed to process encrypted data stream: {ERROR}',
+  [BrightChainStrings.Error_TupleError_PoolBoundaryViolationTemplate]:
+    'Pool boundary violation: {BLOCK_TYPE} belongs to pool "{ACTUAL_POOL}" but tuple requires pool "{EXPECTED_POOL}"',
 
   // Sealing Error
   [BrightChainStrings.Error_SealingError_InvalidBitRange]:
@@ -492,6 +494,8 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
     'Failed to extract creator ID bytes from CBL header',
   [BrightChainStrings.Error_CblError_FailedToExtractProvidedCreatorId]:
     'Failed to extract member ID bytes from provided creator',
+  [BrightChainStrings.Error_CblError_PoolIntegrityError]:
+    'CBL pool integrity error: one or more referenced blocks are missing from the expected pool',
 
   // Stream Error
   [BrightChainStrings.Error_StreamError_BlockSizeRequired]:
@@ -565,6 +569,8 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_HandleTupleError_NoBlocksToXor]: 'No blocks to XOR',
   [BrightChainStrings.Error_HandleTupleError_BlockSizesMustMatch]:
     'Block sizes must match',
+  [BrightChainStrings.Error_HandleTupleError_PoolMismatchTemplate]:
+    'Pool mismatch: block {BLOCK_ID} belongs to pool "{ACTUAL_POOL}" but tuple requires pool "{EXPECTED_POOL}"',
 
   // Owned Data Error
   [BrightChainStrings.Error_BlockError_CreatorRequired]: 'Creator is required',

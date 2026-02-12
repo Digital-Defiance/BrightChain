@@ -7,9 +7,11 @@
  *   await users.insertOne({ name: 'Alice' });
  */
 
-import { IBlockStore } from '@brightchain/brightchain-lib';
+import type { PoolId } from '@brightchain/brightchain-lib';
+import { IBlockStore, isPooledBlockStore } from '@brightchain/brightchain-lib';
 import { randomUUID } from 'crypto';
 import { Collection, HeadRegistry } from './collection';
+import { PooledStoreAdapter } from './pooledStoreAdapter';
 import { DbSession, JournalOp } from './transaction';
 import {
   BsonDocument,
@@ -29,6 +31,8 @@ export interface BrightChainDbOptions {
   headRegistry?: HeadRegistry;
   /** Cursor session timeout in ms (default: 300000 = 5 minutes) */
   cursorTimeoutMs?: number;
+  /** Optional pool ID for storage isolation */
+  poolId?: PoolId;
 }
 
 /**
@@ -37,6 +41,10 @@ export interface BrightChainDbOptions {
 export class BrightChainDb {
   public readonly name: string;
   private readonly store: IBlockStore;
+  /** Original (unwrapped) block store, kept for pool management (e.g. dropDatabase) */
+  private readonly originalStore: IBlockStore;
+  /** Pool ID this database is scoped to, if any */
+  private readonly poolId?: PoolId;
   private readonly collections = new Map<string, Collection>();
   private readonly headRegistry: HeadRegistry;
   /** Server-side cursor sessions for REST pagination */
@@ -45,7 +53,15 @@ export class BrightChainDb {
   private readonly cursorTimeoutMs: number;
 
   constructor(blockStore: IBlockStore, options?: BrightChainDbOptions) {
-    this.store = blockStore;
+    this.originalStore = blockStore;
+    this.poolId = options?.poolId;
+
+    if (options?.poolId && isPooledBlockStore(blockStore)) {
+      this.store = new PooledStoreAdapter(blockStore, options.poolId);
+    } else {
+      this.store = blockStore;
+    }
+
     this.name = options?.name ?? 'brightchain';
     this.headRegistry = options?.headRegistry ?? HeadRegistry.getInstance();
     this.cursorTimeoutMs = options?.cursorTimeoutMs ?? 300_000;
@@ -92,6 +108,18 @@ export class BrightChainDb {
     await coll.drop();
     this.collections.delete(name);
     return true;
+  }
+
+  /**
+   * Drop the entire database.
+   * If a poolId was configured and the underlying store supports pools,
+   * deletes the corresponding pool and all its blocks.
+   */
+  async dropDatabase(): Promise<void> {
+    if (this.poolId && isPooledBlockStore(this.originalStore)) {
+      await this.originalStore.deletePool(this.poolId);
+    }
+    this.collections.clear();
   }
 
   /**

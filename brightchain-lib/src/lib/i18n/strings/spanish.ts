@@ -486,6 +486,8 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     'No se pudieron extraer los bytes de ID del creador del encabezado CBL',
   [BrightChainStrings.Error_CblError_FailedToExtractProvidedCreatorId]:
     'No se pudieron extraer los bytes de ID del miembro del creador proporcionado',
+  [BrightChainStrings.Error_CblError_PoolIntegrityError]:
+    'Error de integridad del pool CBL: uno o más bloques referenciados no se encuentran en el pool esperado',
 
   // Multi-Encrypted Errors
   [BrightChainStrings.Error_MultiEncryptedError_InvalidEphemeralPublicKeyLength]:
@@ -577,6 +579,8 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     'No se pudo procesar el flujo de datos: {ERROR}',
   [BrightChainStrings.Error_TupleError_EncryptedDataStreamProcessingFailedTemplate]:
     'No se pudo procesar el flujo de datos cifrado: {ERROR}',
+  [BrightChainStrings.Error_TupleError_PoolBoundaryViolationTemplate]:
+    'Violación de límite de pool: {BLOCK_TYPE} pertenece al pool "{ACTUAL_POOL}" pero la tupla requiere el pool "{EXPECTED_POOL}"',
 
   // Memory Tuple Errors
   [BrightChainStrings.Error_MemoryTupleError_InvalidTupleSizeTemplate]:
@@ -601,6 +605,8 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     'No hay bloques para XOR',
   [BrightChainStrings.Error_HandleTupleError_BlockSizesMustMatch]:
     'Los tamaños de bloque deben coincidir',
+  [BrightChainStrings.Error_HandleTupleError_PoolMismatchTemplate]:
+    'Incompatibilidad de pool: el bloque {BLOCK_ID} pertenece al pool "{ACTUAL_POOL}" pero la tupla requiere el pool "{EXPECTED_POOL}"',
 
   // Stream Errors
   [BrightChainStrings.Error_StreamError_BlockSizeRequired]:

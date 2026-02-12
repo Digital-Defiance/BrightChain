@@ -1,5 +1,6 @@
 export type * from './apiError';
 export type * from './apiExpressValidationError';
+export type * from './blockDataResponse';
 export type * from './blockLocationResponse';
 export type * from './communicationResponses';
 // NOTE: deleteMessageResponse.ts is NOT re-exported here because

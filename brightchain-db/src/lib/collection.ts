@@ -7,7 +7,15 @@
  *   aggregate, createIndex, dropIndex, watch
  */
 
-import { IBlockStore } from '@brightchain/brightchain-lib';
+import {
+  Checksum,
+  IBlockStore,
+  IEnrichedQueryResult,
+  IPendingBlockInfo,
+  IReadConcernBlockStore,
+  PendingBlockError,
+  ReadConcern,
+} from '@brightchain/brightchain-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
 import { randomUUID } from 'crypto';
 import { runAggregation } from './aggregation';
@@ -201,6 +209,40 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     } catch {
       return null;
     }
+  }
+
+  /**
+   * Read a document from the store with read concern support.
+   *
+   * Unlike `readDocFromStore`, this method uses `getData()` (async) instead of
+   * `get()` (sync handle), and propagates the read concern to the store when
+   * the store supports it (i.e., is an IReadConcernBlockStore).
+   *
+   * Throws PendingBlockError if the block is pending remote fetch (Available concern).
+   * Other errors are re-thrown to the caller.
+   *
+   * @param blockId - The block checksum hex string
+   * @param readConcern - The read concern level to use
+   * @returns The parsed document, or null if the block data is invalid
+   * @throws PendingBlockError if the block is pending remote fetch
+   * @see Requirements 3.4
+   */
+  private async readDocFromStoreWithConcern(
+    blockId: string,
+    readConcern: ReadConcern,
+  ): Promise<T | null> {
+    const checksum = Checksum.fromHex(blockId);
+    // Availability-aware stores accept an optional readConcern on getData.
+    // We detect this at runtime via the 'isInPartitionMode' marker method
+    // and call getData with the extra argument. For plain IBlockStore
+    // implementations, we call getData without readConcern.
+    if ('isInPartitionMode' in this.store) {
+      const rcStore = this.store as IReadConcernBlockStore;
+      const block = await rcStore.getData(checksum, readConcern);
+      return JSON.parse(Buffer.from(block.data).toString('utf8')) as T;
+    }
+    const block = await this.store.getData(checksum);
+    return JSON.parse(Buffer.from(block.data).toString('utf8')) as T;
   }
 
   private async readDoc(logicalId: DocumentId): Promise<T | null> {
@@ -423,6 +465,92 @@ export class Collection<T extends BsonDocument = BsonDocument> {
   async findById(id: DocumentId): Promise<T | null> {
     await this.ensureLoaded();
     return this.readDoc(id);
+  }
+
+  /**
+   * Find documents matching the filter with availability metadata.
+   *
+   * Unlike `find`/`findOne`, this method returns an enriched result that
+   * includes information about blocks that could not be retrieved (pending
+   * remote fetch). The `readConcern` option is propagated to the underlying
+   * store's `getData` call when the store supports it.
+   *
+   * Existing `find`/`findOne` methods remain unchanged for backward compatibility.
+   *
+   * @param filter - Query filter to match documents
+   * @param options - Find options including optional readConcern
+   * @returns Enriched query result with documents, pending blocks, and completeness flag
+   * @see Requirements 3.1, 3.2, 3.3, 3.4
+   */
+  async findWithAvailability(
+    filter: FilterQuery<T> = {} as FilterQuery<T>,
+    options?: FindOptions<T> & { readConcern?: ReadConcern },
+  ): Promise<IEnrichedQueryResult<T>> {
+    await this.ensureLoaded();
+    this.configureTextSearch();
+
+    const concern = options?.readConcern ?? ReadConcern.Local;
+    const documents: T[] = [];
+    const pendingBlocks: IPendingBlockInfo[] = [];
+
+    // Determine which IDs to scan (index lookup or full scan)
+    const candidates = this.indexManager.findCandidates(
+      filter as Record<string, unknown>,
+    );
+    const idsToScan = candidates ?? new Set(this.docIndex.keys());
+
+    for (const logicalId of idsToScan) {
+      const blockId = this.docIndex.get(logicalId);
+      if (!blockId) continue;
+
+      // Check cache first
+      const cached = this.docCache.get(logicalId);
+      if (cached && matchesFilter(cached, filter)) {
+        const doc = options?.projection
+          ? (applyProjection(
+              cached,
+              options.projection as Record<string, 0 | 1>,
+            ) as T)
+          : cached;
+        documents.push(doc);
+        continue;
+      }
+
+      // Try reading from store with read concern
+      try {
+        const doc = await this.readDocFromStoreWithConcern(blockId, concern);
+        if (doc) {
+          this.docCache.set(logicalId, doc);
+          if (matchesFilter(doc, filter)) {
+            const projected = options?.projection
+              ? (applyProjection(
+                  doc,
+                  options.projection as Record<string, 0 | 1>,
+                ) as T)
+              : doc;
+            documents.push(projected);
+          }
+        }
+      } catch (err) {
+        if (err instanceof PendingBlockError) {
+          pendingBlocks.push({
+            blockId: err.blockId,
+            state: err.state,
+            knownLocations: err.knownLocations,
+          });
+        } else {
+          // Non-pending errors: block is genuinely unavailable, skip it
+          // (matches existing readDocFromStore behavior of returning null)
+        }
+      }
+    }
+
+    return {
+      documents,
+      isComplete: pendingBlocks.length === 0,
+      pendingBlocks,
+      readConcern: concern,
+    };
   }
 
   /**

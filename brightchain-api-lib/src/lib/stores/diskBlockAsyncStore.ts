@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   BaseBlock,
+  BLOCK_HEADER,
   BlockDataType,
   BlockHandle,
   BlockMetadata,
@@ -10,6 +11,7 @@ import {
   BlockType,
   BrightenResult,
   CBLMagnetComponents,
+  CBLService,
   CBLStorageResult,
   CBLWhiteningOptions,
   Checksum,
@@ -18,6 +20,7 @@ import {
   DurabilityLevel,
   FecError,
   FecErrorType,
+  getGlobalServiceProvider,
   getParityCountForDurability,
   IBaseBlockMetadata,
   IBlockMetadata,
@@ -25,16 +28,23 @@ import {
   IFecService,
   padToBlockSize,
   ParityData,
+  PoolDeletionError,
+  PoolDeletionValidationResult,
+  PoolId,
   RawDataBlock,
   RecoveryResult,
   ReplicationStatus,
   StoreError,
   StoreErrorType,
+  StructuredBlockType,
   unpadCblData,
+  validatePoolId,
   xorArrays,
   XorService,
 } from '@brightchain/brightchain-lib';
-import { existsSync, readFileSync } from 'fs';
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import { randomBytes } from 'crypto';
+import { existsSync, mkdirSync, readFileSync, rmSync } from 'fs';
 import { readdir, readFile, stat, unlink, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { Readable, Transform } from 'stream';
@@ -473,11 +483,24 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
   }
 
   /**
-   * Get random block checksums from the store
+   * Get random block checksums scoped to a specific pool.
+   * Reads only from the pool-prefixed directory structure: storePath/blockSize/pool/XX/YY/hash
+   * @param pool - The pool to source random blocks from
+   * @param count - Number of random blocks requested
+   * @returns Array of checksums (may be fewer than count if pool has insufficient blocks)
+   */
+  /**
+   * Get random block checksums from the store.
+   * Scans the non-pool directory structure (storePath/blockSize/char1/char2/hash)
+   * used by the legacy setData/getData methods.
    * @param count - Maximum number of blocks to return
    * @returns Array of random block checksums
    */
   public async getRandomBlocks(count: number): Promise<Checksum[]> {
+    if (count <= 0) {
+      return [];
+    }
+
     const blockSizeString = blockSizeToSizeString(this._blockSize);
     const basePath = join(this._storePath, blockSizeString);
     if (!existsSync(basePath)) {
@@ -485,11 +508,12 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     }
 
     const blocks: Checksum[] = [];
-    const firstLevelDirs = await readdir(basePath);
+    const firstLevelDirs = (await readdir(basePath)).filter(
+      (d) => d.length === 1,
+    );
 
     // Randomly select first level directories until we have enough blocks
     while (blocks.length < count && firstLevelDirs.length > 0) {
-      // Pick a random first level directory
       const randomFirstIndex = Math.floor(
         Math.random() * firstLevelDirs.length,
       );
@@ -497,20 +521,19 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
       const firstLevelPath = join(basePath, firstDir);
 
       if (!existsSync(firstLevelPath)) {
-        // Remove invalid directory and continue
         firstLevelDirs.splice(randomFirstIndex, 1);
         continue;
       }
 
-      // Get second level directories
-      const secondLevelDirs = await readdir(firstLevelPath);
+      // Get second level directories (single-char names only)
+      const secondLevelDirs = (await readdir(firstLevelPath)).filter(
+        (d) => d.length === 1,
+      );
       if (secondLevelDirs.length === 0) {
-        // Remove empty directory and continue
         firstLevelDirs.splice(randomFirstIndex, 1);
         continue;
       }
 
-      // Pick a random second level directory
       const randomSecondIndex = Math.floor(
         Math.random() * secondLevelDirs.length,
       );
@@ -532,18 +555,370 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
         continue;
       }
 
-      // Pick a random block
       const randomBlockIndex = Math.floor(Math.random() * blockFiles.length);
       const blockFile = blockFiles[randomBlockIndex];
       blocks.push(Checksum.fromHex(blockFile));
 
-      // Remove used directory if we still need more blocks
       if (blocks.length < count) {
         firstLevelDirs.splice(randomFirstIndex, 1);
       }
     }
 
     return blocks;
+  }
+
+  /**
+   * Get the directory path for a block within a pool.
+   * Directory structure: storePath/blockSize/pool/checksumChar1/checksumChar2/
+   */
+  private poolBlockDir(
+    pool: PoolId,
+    blockId: Checksum,
+    blockSize: BlockSize,
+  ): string {
+    const checksumString = blockId.toHex();
+    const blockSizeString = blockSizeToSizeString(blockSize);
+    return join(
+      this._storePath,
+      blockSizeString,
+      pool,
+      checksumString[0],
+      checksumString[1],
+    );
+  }
+
+  /**
+   * Get the file path for a block within a pool.
+   * File structure: storePath/blockSize/pool/checksumChar1/checksumChar2/fullChecksum
+   */
+  private poolBlockPath(
+    pool: PoolId,
+    blockId: Checksum,
+    blockSize: BlockSize,
+  ): string {
+    const checksumString = blockId.toHex();
+    return join(this.poolBlockDir(pool, blockId, blockSize), checksumString);
+  }
+
+  /**
+   * Ensure the directory structure exists for a block within a pool.
+   */
+  private ensurePoolBlockPath(
+    pool: PoolId,
+    blockId: Checksum,
+    blockSize: BlockSize,
+  ): void {
+    const dir = this.poolBlockDir(pool, blockId, blockSize);
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+  }
+
+  /**
+   * Seed a pool with cryptographically random blocks for whitening material.
+   * Generates the specified number of random blocks and stores them in the
+   * pool-scoped directory structure: storePath/blockSize/pool/XX/YY/hash
+   * @param pool - The pool to bootstrap
+   * @param blockSize - The block size for generated random blocks
+   * @param count - Number of random blocks to generate
+   */
+  public async bootstrapPool(
+    pool: PoolId,
+    blockSize: BlockSize,
+    count: number,
+  ): Promise<void> {
+    validatePoolId(pool);
+    if (count <= 0) return;
+
+    for (let i = 0; i < count; i++) {
+      const data = new Uint8Array(randomBytes(blockSize));
+      const block = new RawDataBlock(blockSize, data, new Date());
+      const keyHex = this.keyToHex(block.idChecksum);
+      const filePath = this.poolBlockPath(pool, block.idChecksum, blockSize);
+
+      if (existsSync(filePath)) {
+        continue; // Idempotent - block already exists
+      }
+
+      this.ensurePoolBlockPath(pool, block.idChecksum, blockSize);
+      await writeFile(filePath, Buffer.from(block.data));
+
+      // Create metadata with pool association
+      const metadata = createDefaultBlockMetadata(
+        keyHex,
+        block.data.length,
+        keyHex,
+        undefined,
+        pool,
+      );
+      await this.metadataStore.create(metadata);
+    }
+  }
+
+  /**
+   * Check if a block's raw data on disk looks like a CBL block.
+   * Checks for the BrightChain structured block magic prefix and CBL-type structured block types.
+   * @param data - The raw block data
+   * @returns true if the data appears to be a CBL block
+   */
+  private isCblBlock(data: Uint8Array): boolean {
+    if (data.length < 4) {
+      return false;
+    }
+    if (data[0] !== BLOCK_HEADER.MAGIC_PREFIX) {
+      return false;
+    }
+    const structuredType = data[1];
+    return (
+      structuredType === StructuredBlockType.CBL ||
+      structuredType === StructuredBlockType.ExtendedCBL ||
+      structuredType === StructuredBlockType.MessageCBL ||
+      structuredType === StructuredBlockType.SuperCBL ||
+      structuredType === StructuredBlockType.VaultCBL
+    );
+  }
+
+  /**
+   * Extract CBL addresses from raw block data using the CBLService.
+   * @param data - The raw CBL block data
+   * @param cblService - The CBLService instance to use for parsing
+   * @returns Array of checksums referenced by the CBL, or null if unparseable/encrypted
+   */
+  private extractCblAddresses(
+    data: Uint8Array,
+    cblService: CBLService<PlatformID>,
+  ): Checksum[] | null {
+    try {
+      // Skip encrypted CBLs — we can't parse their addresses
+      if (cblService.isEncrypted(data)) {
+        return null;
+      }
+
+      // SuperCBLs store sub-CBL checksums, not data block addresses
+      if (cblService.isSuperCbl(data)) {
+        return cblService.getSuperCblSubCblChecksums(data);
+      }
+
+      // Regular/Extended/Message/Vault CBLs use addressDataToAddresses
+      return cblService.addressDataToAddresses(data);
+    } catch {
+      // If parsing fails for any reason, skip this block
+      return null;
+    }
+  }
+
+  /**
+   * Collect all block hashes stored in a specific pool on disk.
+   * Walks the pool directory structure: storePath/blockSize/pool/XX/YY/hash
+   * @param poolPath - The root directory for the pool (storePath/blockSize/pool)
+   * @returns Set of block hash hex strings found in the pool
+   */
+  private async collectPoolBlockHashes(poolPath: string): Promise<Set<string>> {
+    const hashes = new Set<string>();
+    if (!existsSync(poolPath)) {
+      return hashes;
+    }
+
+    const firstLevelDirs = await readdir(poolPath);
+    for (const firstDir of firstLevelDirs) {
+      const firstLevelPath = join(poolPath, firstDir);
+      const firstStat = await stat(firstLevelPath);
+      if (!firstStat.isDirectory()) continue;
+
+      const secondLevelDirs = await readdir(firstLevelPath);
+      for (const secondDir of secondLevelDirs) {
+        const secondLevelPath = join(firstLevelPath, secondDir);
+        const secondStat = await stat(secondLevelPath);
+        if (!secondStat.isDirectory()) continue;
+
+        const files = await readdir(secondLevelPath);
+        for (const file of files) {
+          // Exclude metadata and parity files
+          if (
+            !file.endsWith('.m.json') &&
+            !file.includes(PARITY_FILE_EXTENSION_PREFIX)
+          ) {
+            hashes.add(file);
+          }
+        }
+      }
+    }
+    return hashes;
+  }
+
+  /**
+   * Check whether a pool can be safely deleted by scanning CBLs in other pools
+   * for cross-pool XOR dependencies.
+   *
+   * Walks the disk directory structure for all block sizes, finds CBL-type blocks
+   * in pools other than the target, parses their addresses, and checks if any
+   * reference blocks stored in the target pool.
+   *
+   * @param pool - The pool to validate for deletion
+   * @returns Validation result with dependency details if unsafe
+   */
+  public async validatePoolDeletion(
+    pool: PoolId,
+  ): Promise<PoolDeletionValidationResult> {
+    validatePoolId(pool);
+
+    // 1. Collect all block hashes in the target pool across all block sizes
+    const targetPoolHashes = new Set<string>();
+    const blockSizes = Object.values(BlockSize).filter(
+      (v) => typeof v === 'number',
+    ) as BlockSize[];
+
+    for (const size of blockSizes) {
+      const blockSizeString = blockSizeToSizeString(size);
+      const poolPath = join(this._storePath, blockSizeString, pool);
+      const hashes = await this.collectPoolBlockHashes(poolPath);
+      for (const hash of hashes) {
+        targetPoolHashes.add(hash);
+      }
+    }
+
+    // If the target pool is empty, it's trivially safe to delete
+    if (targetPoolHashes.size === 0) {
+      return { safe: true, dependentPools: [], referencedBlocks: [] };
+    }
+
+    // 2. Get a CBLService instance from the global service provider
+    let cblService: CBLService<PlatformID> | null = null;
+    try {
+      const provider = getGlobalServiceProvider();
+      cblService = provider.cblService as CBLService<PlatformID>;
+    } catch {
+      // Global service provider not initialized — cannot parse CBLs.
+      // Return safe=true since we can't determine dependencies without the service.
+      return { safe: true, dependentPools: [], referencedBlocks: [] };
+    }
+
+    // 3. Scan all blocks in OTHER pools for CBL-type blocks
+    const dependentPoolsSet = new Set<PoolId>();
+    const referencedBlocksSet = new Set<string>();
+
+    for (const size of blockSizes) {
+      const blockSizeString = blockSizeToSizeString(size);
+      const blockSizeDir = join(this._storePath, blockSizeString);
+      if (!existsSync(blockSizeDir)) continue;
+
+      // List all pool directories under this block size
+      const poolDirs = await readdir(blockSizeDir);
+      for (const otherPool of poolDirs) {
+        // Skip the target pool itself and non-directory entries
+        if (otherPool === pool) continue;
+        const otherPoolPath = join(blockSizeDir, otherPool);
+        const otherPoolStat = await stat(otherPoolPath);
+        if (!otherPoolStat.isDirectory()) continue;
+
+        // Walk the other pool's directory structure looking for CBL blocks
+        const firstLevelDirs = await readdir(otherPoolPath);
+        for (const firstDir of firstLevelDirs) {
+          const firstLevelPath = join(otherPoolPath, firstDir);
+          const firstStat = await stat(firstLevelPath);
+          if (!firstStat.isDirectory()) continue;
+
+          const secondLevelDirs = await readdir(firstLevelPath);
+          for (const secondDir of secondLevelDirs) {
+            const secondLevelPath = join(firstLevelPath, secondDir);
+            const secondStat = await stat(secondLevelPath);
+            if (!secondStat.isDirectory()) continue;
+
+            const files = await readdir(secondLevelPath);
+            for (const file of files) {
+              // Skip metadata and parity files
+              if (
+                file.endsWith('.m.json') ||
+                file.includes(PARITY_FILE_EXTENSION_PREFIX)
+              ) {
+                continue;
+              }
+
+              // Read the block data and check if it's a CBL
+              const filePath = join(secondLevelPath, file);
+              let data: Uint8Array;
+              try {
+                data = await readFile(filePath);
+              } catch {
+                continue; // Skip unreadable files
+              }
+
+              if (!this.isCblBlock(data)) {
+                continue;
+              }
+
+              // Try to parse addresses from this CBL
+              const addresses = this.extractCblAddresses(data, cblService);
+              if (addresses === null) {
+                continue; // Encrypted or unparseable — skip
+              }
+
+              // Check if any addresses reference blocks in the target pool
+              for (const address of addresses) {
+                const addressHex = address.toHex();
+                if (targetPoolHashes.has(addressHex)) {
+                  dependentPoolsSet.add(otherPool);
+                  referencedBlocksSet.add(addressHex);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const dependentPools = Array.from(dependentPoolsSet);
+    const referencedBlocks = Array.from(referencedBlocksSet);
+    const safe = dependentPools.length === 0;
+
+    return { safe, dependentPools, referencedBlocks };
+  }
+
+  /**
+   * Delete a pool without checking for cross-pool dependencies.
+   * Removes the pool's directory under each block size directory.
+   * For administrative use only.
+   * @param pool - The pool to force-delete
+   */
+  public async forceDeletePool(pool: PoolId): Promise<void> {
+    validatePoolId(pool);
+
+    const blockSizes = Object.values(BlockSize).filter(
+      (v) => typeof v === 'number',
+    ) as BlockSize[];
+
+    for (const size of blockSizes) {
+      const blockSizeString = blockSizeToSizeString(size);
+      const poolPath = join(this._storePath, blockSizeString, pool);
+      if (existsSync(poolPath)) {
+        rmSync(poolPath, { recursive: true, force: true });
+      }
+    }
+  }
+
+  /**
+   * Delete a pool after validating that no other pool depends on its blocks.
+   * Calls validatePoolDeletion first and throws PoolDeletionError if unsafe.
+   * @param pool - The pool to delete
+   * @throws PoolDeletionError if cross-pool dependencies exist
+   */
+  public async deletePool(pool: PoolId): Promise<void> {
+    validatePoolId(pool);
+
+    // Pre-deletion validation
+    const validation = await this.validatePoolDeletion(pool);
+    if (!validation.safe) {
+      throw new PoolDeletionError(
+        `Cannot delete pool "${pool}": ${validation.dependentPools.length} dependent pool(s) ` +
+          `reference ${validation.referencedBlocks.length} block(s). ` +
+          `Dependent pools: ${validation.dependentPools.join(', ')}. ` +
+          `Use forceDeletePool() to bypass this check.`,
+        validation,
+      );
+    }
+
+    // Proceed with deletion
+    await this.forceDeletePool(pool);
   }
 
   /**

@@ -37,4 +37,5 @@ export enum CblErrorType {
   AddressCountExceedsCapacity = 'AddressCountExceedsCapacity',
   FailedToExtractCreatorId = 'FailedToExtractCreatorId',
   FailedToExtractProvidedCreatorId = 'FailedToExtractProvidedCreatorId',
+  PoolIntegrityError = 'PoolIntegrityError',
 }

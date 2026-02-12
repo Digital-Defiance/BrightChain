@@ -369,6 +369,8 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     'データストリームの処理に失敗しました: {ERROR}',
   [BrightChainStrings.Error_TupleError_EncryptedDataStreamProcessingFailedTemplate]:
     '暗号化データストリームの処理に失敗しました: {ERROR}',
+  [BrightChainStrings.Error_TupleError_PoolBoundaryViolationTemplate]:
+    'プール境界違反: {BLOCK_TYPE} はプール "{ACTUAL_POOL}" に属していますが、タプルにはプール "{EXPECTED_POOL}" が必要です',
   [BrightChainStrings.Error_SealingError_InvalidBitRange]:
     'ビットは3から20の間である必要があります',
   [BrightChainStrings.Error_SealingError_InvalidMemberArray]:
@@ -455,6 +457,8 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     'CBLヘッダーから作成者IDのバイトを抽出できませんでした',
   [BrightChainStrings.Error_CblError_FailedToExtractProvidedCreatorId]:
     '提供された作成者からメンバーIDのバイトを抽出できませんでした',
+  [BrightChainStrings.Error_CblError_PoolIntegrityError]:
+    'CBLプール整合性エラー: 参照されたブロックの一部が期待されるプールに存在しません',
   [BrightChainStrings.Error_StreamError_BlockSizeRequired]:
     'ブロックサイズが必要です',
   [BrightChainStrings.Error_StreamError_WhitenedBlockSourceRequired]:
@@ -517,6 +521,8 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     'XORするブロックがありません',
   [BrightChainStrings.Error_HandleTupleError_BlockSizesMustMatch]:
     'ブロックサイズは一致する必要があります',
+  [BrightChainStrings.Error_HandleTupleError_PoolMismatchTemplate]:
+    'プール不一致: ブロック {BLOCK_ID} はプール "{ACTUAL_POOL}" に属していますが、タプルにはプール "{EXPECTED_POOL}" が必要です',
   [BrightChainStrings.Error_BlockError_CreatorRequired]: '作成者が必要です',
   [BrightChainStrings.Error_BlockError_DataRequired]: 'データが必要です',
   [BrightChainStrings.Error_BlockError_DataLengthExceedsCapacity]:

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   IAvailabilityService,
+  IBlockStore,
   IDiscoveryProtocol,
   IReconciliationService,
 } from '@brightchain/brightchain-lib';
@@ -201,6 +202,15 @@ export class ApiRouter<
    */
   public setSyncEventSystem(eventSystem: EventNotificationSystem): void {
     this.syncController.setEventSystem(eventSystem);
+  }
+
+  /**
+   * Set the block store for the sync controller.
+   * This should be the local inner store for serving block data to remote nodes.
+   * @requirements 1.1
+   */
+  public setSyncBlockStore(store: IBlockStore): void {
+    this.syncController.setBlockStore(store);
   }
 
   // ─── Communication service injection ────────────────────────────────

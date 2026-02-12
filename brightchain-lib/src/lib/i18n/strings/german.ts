@@ -406,6 +406,8 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
     'Datenstromverarbeitung fehlgeschlagen: {ERROR}',
   [BrightChainStrings.Error_TupleError_EncryptedDataStreamProcessingFailedTemplate]:
     'Verschlüsselte Datenstromverarbeitung fehlgeschlagen: {ERROR}',
+  [BrightChainStrings.Error_TupleError_PoolBoundaryViolationTemplate]:
+    'Pool-Grenzverletzung: {BLOCK_TYPE} gehört zu Pool "{ACTUAL_POOL}", aber Tupel erfordert Pool "{EXPECTED_POOL}"',
 
   // Sealing Errors
   [BrightChainStrings.Error_SealingError_InvalidBitRange]:
@@ -500,6 +502,8 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
     'Fehler beim Extrahieren der Ersteller-ID-Bytes aus dem CBL-Header',
   [BrightChainStrings.Error_CblError_FailedToExtractProvidedCreatorId]:
     'Fehler beim Extrahieren der Mitglieder-ID-Bytes aus dem bereitgestellten Ersteller',
+  [BrightChainStrings.Error_CblError_PoolIntegrityError]:
+    'CBL-Pool-Integritätsfehler: Ein oder mehrere referenzierte Blöcke fehlen im erwarteten Pool',
 
   // Stream Errors
   [BrightChainStrings.Error_StreamError_BlockSizeRequired]:
@@ -574,6 +578,8 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
     'Keine Blöcke zum XOR-Verknüpfen',
   [BrightChainStrings.Error_HandleTupleError_BlockSizesMustMatch]:
     'Blockgrößen müssen übereinstimmen',
+  [BrightChainStrings.Error_HandleTupleError_PoolMismatchTemplate]:
+    'Pool-Nichtübereinstimmung: Block {BLOCK_ID} gehört zu Pool "{ACTUAL_POOL}", aber Tupel erfordert Pool "{EXPECTED_POOL}"',
 
   // Block Errors
   [BrightChainStrings.Error_BlockError_CreatorRequired]:

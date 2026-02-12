@@ -11,4 +11,5 @@ export enum TupleErrorType {
   XorOperationFailed = 'XorOperationFailed',
   DataStreamProcessingFailed = 'DataStreamProcessingFailed',
   EncryptedDataStreamProcessingFailed = 'EncryptedDataStreamProcessingFailed',
+  PoolBoundaryViolation = 'PoolBoundaryViolation',
 }

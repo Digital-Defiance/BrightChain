@@ -5,4 +5,5 @@ export * from './memoryBlockMetadataStore';
 export * from './memoryBlockStore';
 export * from './memoryCblStore';
 export * from './messaging';
+export * from './pooledMemoryBlockStore';
 export * from './simpleStore';
