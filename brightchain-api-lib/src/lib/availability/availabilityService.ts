@@ -24,6 +24,7 @@ import {
   ILocationRecord,
   IReconciliationService,
   LocationQueryResult,
+  PoolId,
   ReconciliationResult,
 } from '@brightchain/brightchain-lib';
 
@@ -145,10 +146,17 @@ export class AvailabilityService implements IAvailabilityService {
    * @returns Promise resolving to array of location records
    * @see Requirements 11.2
    */
-  async getBlockLocations(blockId: string): Promise<ILocationRecord[]> {
+  async getBlockLocations(
+    blockId: string,
+    poolId?: PoolId,
+  ): Promise<ILocationRecord[]> {
     const data = this.blockData.get(blockId);
     if (data) {
-      return [...data.locations];
+      const locations = [...data.locations];
+      if (poolId !== undefined) {
+        return locations.filter((l) => l.poolId === poolId);
+      }
+      return locations;
     }
 
     // If local, return local node as location
@@ -287,8 +295,12 @@ export class AvailabilityService implements IAvailabilityService {
     location: ILocationRecord,
   ): Promise<void> {
     let data = this.blockData.get(blockId);
-    const isNewLocation =
-      !data || !data.locations.some((l) => l.nodeId === location.nodeId);
+    // Use (nodeId, poolId) as composite key for deduplication.
+    // When poolId is undefined, fall back to nodeId-only matching for backward compatibility.
+    const matchesCompositeKey = (l: ILocationRecord): boolean =>
+      l.nodeId === location.nodeId && l.poolId === location.poolId;
+
+    const isNewLocation = !data || !data.locations.some(matchesCompositeKey);
 
     if (!data) {
       // Determine initial state based on location
@@ -305,10 +317,8 @@ export class AvailabilityService implements IAvailabilityService {
       this.blockData.set(blockId, data);
     }
 
-    // Update or add location
-    const existingIndex = data.locations.findIndex(
-      (l) => l.nodeId === location.nodeId,
-    );
+    // Update or add location using composite key (nodeId, poolId)
+    const existingIndex = data.locations.findIndex(matchesCompositeKey);
     if (existingIndex >= 0) {
       data.locations[existingIndex] = { ...location };
     } else {

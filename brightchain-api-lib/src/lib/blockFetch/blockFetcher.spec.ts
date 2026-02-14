@@ -697,7 +697,12 @@ describe('BlockFetcher', () => {
 
       async announceBlock(): Promise<void> {}
       async announceRemoval(): Promise<void> {}
+      async announcePoolDeletion(): Promise<void> {}
       async handleAnnouncement(): Promise<void> {}
+      async announceCBLIndexUpdate(): Promise<void> {}
+      async announceCBLIndexDelete(): Promise<void> {}
+      async announceHeadUpdate(): Promise<void> {}
+      async announceACLUpdate(): Promise<void> {}
 
       onAnnouncement(handler: AnnouncementHandler): void {
         this.handlers.add(handler);

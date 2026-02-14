@@ -4,8 +4,10 @@
  * Defines the interface for maintaining a fast local index of blocks,
  * supporting O(1) lookups, Bloom filter export, and manifest generation.
  *
- * @see Requirements 3.1, 3.6, 3.7
+ * @see Requirements 3.1, 3.5, 3.6, 3.7, 4.5
  */
+
+import { PoolId } from '../storage/pooledBlockStore';
 
 /**
  * Bloom filter for efficient block existence queries.
@@ -76,6 +78,37 @@ export interface BlockManifest {
 }
 
 /**
+ * Pool-scoped Bloom filter container.
+ * Contains per-pool Bloom filters using keys in "poolId:blockId" format,
+ * plus a global filter for backward compatibility.
+ *
+ * @see Requirements 4.5
+ */
+export interface PoolScopedBloomFilter {
+  /** Per-pool Bloom filters using keys in format "poolId:blockId" */
+  filters: Map<PoolId, BloomFilter>;
+  /** Global filter for backward compatibility */
+  globalFilter: BloomFilter;
+}
+
+/**
+ * Pool-scoped manifest for synchronization.
+ * Groups block IDs by their pool, enabling per-pool reconciliation.
+ *
+ * @see Requirements 3.1, 3.5
+ */
+export interface PoolScopedManifest {
+  /** Unique identifier of the node that generated this manifest */
+  nodeId: string;
+  /** Block IDs grouped by pool */
+  pools: Map<PoolId, string[]>;
+  /** Timestamp when the manifest was generated */
+  generatedAt: Date;
+  /** Checksum of the manifest for integrity verification */
+  checksum: string;
+}
+
+/**
  * Block Registry Interface
  *
  * Maintains a fast local index of blocks stored on the node.
@@ -97,15 +130,17 @@ export interface IBlockRegistry {
    * Add a block to the local registry
    *
    * @param blockId - The block ID to add
+   * @param poolId - Optional pool the block belongs to
    */
-  addLocal(blockId: string): void;
+  addLocal(blockId: string, poolId?: PoolId): void;
 
   /**
    * Remove a block from the local registry
    *
    * @param blockId - The block ID to remove
+   * @param poolId - Optional pool the block belonged to
    */
-  removeLocal(blockId: string): void;
+  removeLocal(blockId: string, poolId?: PoolId): void;
 
   /**
    * Get count of local blocks
@@ -148,4 +183,23 @@ export interface IBlockRegistry {
    * @see Requirements 3.5
    */
   rebuild(): Promise<void>;
+
+  /**
+   * Export a pool-scoped Bloom filter.
+   * Each pool gets its own filter with keys in "poolId:blockId" format.
+   * Also includes a global filter for backward compatibility.
+   *
+   * @returns A pool-scoped Bloom filter container
+   * @see Requirements 4.5
+   */
+  exportPoolScopedBloomFilter(): PoolScopedBloomFilter;
+
+  /**
+   * Export a pool-scoped manifest grouping block IDs by pool.
+   * Used for pool-aware reconciliation with peers.
+   *
+   * @returns A manifest with block IDs grouped by pool
+   * @see Requirements 3.1, 3.5
+   */
+  exportPoolScopedManifest(): PoolScopedManifest;
 }

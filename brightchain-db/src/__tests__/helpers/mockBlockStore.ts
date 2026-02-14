@@ -12,6 +12,9 @@
 import {
   BlockSize,
   BlockStoreOptions,
+  CBLMagnetComponents,
+  CBLStorageResult,
+  CBLWhiteningOptions,
   Checksum,
   IBlockStore,
   IPooledBlockStore,
@@ -140,17 +143,56 @@ export class MockBlockStore implements IBlockStore {
   async brightenBlock(): Promise<any> {
     throw new Error('not implemented');
   }
-  async storeCBLWithWhitening(): Promise<any> {
-    throw new Error('not implemented');
+  async storeCBLWithWhitening(cblData: Uint8Array): Promise<CBLStorageResult> {
+    // Generate two deterministic block IDs from the data
+    const blockId1 = `cbl-block1-${this.blocks.size}-${Date.now()}`;
+    const blockId2 = `cbl-block2-${this.blocks.size}-${Date.now()}`;
+
+    // Store the original data under blockId1, and a random XOR component under blockId2
+    // For mock purposes, we store the raw data under blockId1 and a marker under blockId2
+    this.blocks.set(blockId1, new Uint8Array(cblData));
+    this.blocks.set(blockId2, new Uint8Array([0xfe, 0xed])); // marker
+
+    const magnetUrl = `magnet:?xt=urn:brightchain:cbl&bs=256&b1=${blockId1}&b2=${blockId2}`;
+    return {
+      blockId1,
+      blockId2,
+      blockSize: 256,
+      magnetUrl,
+    };
   }
-  async retrieveCBL(): Promise<any> {
-    throw new Error('not implemented');
+
+  async retrieveCBL(
+    blockId1: string | { toString(): string },
+    _blockId2?: string | { toString(): string },
+    _block1ParityIds?: string[],
+    _block2ParityIds?: string[],
+  ): Promise<Uint8Array> {
+    const k1 = String(blockId1);
+    const data = this.blocks.get(k1);
+    if (!data) {
+      throw new Error(`CBL block not found: ${k1}`);
+    }
+    return new Uint8Array(data);
   }
-  parseCBLMagnetUrl(): any {
-    throw new Error('not implemented');
+
+  parseCBLMagnetUrl(magnetUrl: string): CBLMagnetComponents {
+    const url = new URL(magnetUrl);
+    const params = url.searchParams;
+    return {
+      blockId1: params.get('b1') ?? '',
+      blockId2: params.get('b2') ?? '',
+      blockSize: parseInt(params.get('bs') ?? '0', 10),
+      isEncrypted: params.get('enc') === '1',
+    };
   }
-  generateCBLMagnetUrl(): string {
-    throw new Error('not implemented');
+
+  generateCBLMagnetUrl(
+    blockId1: string | { toString(): string },
+    blockId2: string | { toString(): string },
+    blockSize: number,
+  ): string {
+    return `magnet:?xt=urn:brightchain:cbl&bs=${blockSize}&b1=${String(blockId1)}&b2=${String(blockId2)}`;
   }
 }
 
@@ -396,6 +438,26 @@ export class MockPooledBlockStore
 
   async forceDeletePool(pool: PoolId): Promise<void> {
     await this.deletePool(pool);
+  }
+
+  // ── Pool-Scoped CBL Whitening Operations ──
+
+  async storeCBLWithWhiteningInPool(
+    _pool: PoolId,
+    _cblData: Uint8Array,
+    _options?: CBLWhiteningOptions,
+  ): Promise<CBLStorageResult> {
+    throw new Error('Not implemented in mock');
+  }
+
+  async retrieveCBLFromPool(
+    _pool: PoolId,
+    _blockId1: Checksum | string,
+    _blockId2: Checksum | string,
+    _block1ParityIds?: string[],
+    _block2ParityIds?: string[],
+  ): Promise<Uint8Array> {
+    throw new Error('Not implemented in mock');
   }
 
   // ── Convenience ──

@@ -35,6 +35,7 @@ describe('Feature: unified-gossip-delivery, Property 8: Ack updates delivery sta
     return {
       announceBlock: async () => {},
       announceRemoval: async () => {},
+      announcePoolDeletion: async () => {},
       handleAnnouncement: async () => {},
       onAnnouncement: () => {},
       offAnnouncement: () => {},
@@ -49,6 +50,10 @@ describe('Feature: unified-gossip-delivery, Property 8: Ack updates delivery sta
       offMessageDelivery: () => {},
       onDeliveryAck: () => {},
       offDeliveryAck: () => {},
+      announceCBLIndexUpdate: async () => {},
+      announceCBLIndexDelete: async () => {},
+      announceHeadUpdate: async () => {},
+      announceACLUpdate: async () => {},
     };
   }
 
@@ -738,6 +743,7 @@ describe('Feature: unified-gossip-delivery, Property 9: All-recipients-delivered
     return {
       announceBlock: async () => {},
       announceRemoval: async () => {},
+      announcePoolDeletion: async () => {},
       handleAnnouncement: async () => {},
       onAnnouncement: () => {},
       offAnnouncement: () => {},
@@ -752,6 +758,10 @@ describe('Feature: unified-gossip-delivery, Property 9: All-recipients-delivered
       offMessageDelivery: () => {},
       onDeliveryAck: () => {},
       offDeliveryAck: () => {},
+      announceCBLIndexUpdate: async () => {},
+      announceCBLIndexDelete: async () => {},
+      announceHeadUpdate: async () => {},
+      announceACLUpdate: async () => {},
     };
   }
 

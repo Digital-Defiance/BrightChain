@@ -2,11 +2,13 @@ import { GuidV4Uint8Array } from '@digitaldefiance/ecies-lib';
 import { NodeCapability, NodeStatus } from '../../enumerations';
 
 /**
- * Node advertisement for discovery
+ * Node advertisement for discovery.
+ *
+ * Uses Uint8Array for browser compatibility (Requirement 18.6).
  */
 export interface NodeAdvertisement {
   id: GuidV4Uint8Array;
-  publicKey: Buffer;
+  publicKey: Uint8Array;
   status: NodeStatus;
   capabilities: NodeCapability[];
   location: {

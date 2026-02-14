@@ -10,7 +10,9 @@
 import {
   Checksum,
   IBlockStore,
+  ICollection,
   IEnrichedQueryResult,
+  IHeadRegistry,
   IPendingBlockInfo,
   IReadConcernBlockStore,
   PendingBlockError,
@@ -31,11 +33,7 @@ import {
   matchesFilter,
   setTextSearchFields,
 } from './queryEngine';
-import {
-  applyDefaults,
-  CollectionSchema,
-  validateDocument,
-} from './schemaValidation';
+import { applyDefaults, validateDocument } from './schemaValidation';
 import { DbSession } from './transaction';
 import {
   AggregationStage,
@@ -46,6 +44,7 @@ import {
   ChangeEvent,
   ChangeListener,
   CollectionOptions,
+  CollectionSchema,
   DeleteResult,
   DocumentId,
   FilterQuery,
@@ -60,6 +59,7 @@ import {
   UpdateOptions,
   UpdateQuery,
   UpdateResult,
+  ValidationFieldError,
   WriteConcern,
   WriteOptions,
 } from './types';
@@ -84,7 +84,9 @@ export type CollectionResolver = (name: string) => Collection;
 /**
  * A single document collection backed by a BrightChain block store.
  */
-export class Collection<T extends BsonDocument = BsonDocument> {
+export class Collection<
+  T extends BsonDocument = BsonDocument,
+> implements ICollection<T> {
   /** In-memory document index: logical _id → block checksum */
   private readonly docIndex = new Map<DocumentId, string>();
   /** In-memory document cache for fast reads */
@@ -114,7 +116,7 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     public readonly name: string,
     private readonly store: IBlockStore,
     private readonly dbName: string,
-    private readonly headRegistry: HeadRegistry,
+    private readonly headRegistry: IHeadRegistry,
     options?: CollectionOptions,
   ) {
     if (options?.writeConcern) this.writeConcern = options.writeConcern;
@@ -194,7 +196,7 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     if (!exists) {
       await this.store.put(blockId, payload);
     }
-    this.headRegistry.setHead(this.dbName, this.name, blockId);
+    await this.headRegistry.setHead(this.dbName, this.name, blockId);
   }
 
   // ═══════════════════════════════════════════════════════
@@ -454,8 +456,10 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     });
 
     if (options?.sort) cursor.sort(options.sort);
-    if (options?.skip) cursor.skip(options.skip);
-    if (options?.limit) cursor.limit(options.limit);
+    if (options?.skip !== undefined && options.skip !== null)
+      cursor.skip(options.skip);
+    if (options?.limit !== undefined && options.limit !== null)
+      cursor.limit(options.limit);
     return cursor;
   }
 
@@ -851,7 +855,7 @@ export class Collection<T extends BsonDocument = BsonDocument> {
    * Validate a document without inserting it.
    * @returns array of validation errors (empty if valid)
    */
-  validateDoc(doc: T): import('./errors').ValidationFieldError[] {
+  validateDoc(doc: T): ValidationFieldError[] {
     if (!this.schema) return [];
     try {
       validateDocument(doc, this.schema, this.name);
@@ -1274,56 +1278,13 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     }
     this.docIndex.clear();
     this.docCache.clear();
-    this.headRegistry.removeHead(this.dbName, this.name);
+    await this.headRegistry.removeHead(this.dbName, this.name);
   }
 
   /** Configure the query engine's text search fields from our text index */
   private configureTextSearch(): void {
     const fields = Object.keys(this.textIndexFields);
     setTextSearchFields(fields);
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-// Head registry – tracks latest metadata block per collection
-// ═══════════════════════════════════════════════════════
-
-export class HeadRegistry {
-  private static instance: HeadRegistry;
-  private readonly heads = new Map<string, string>();
-
-  private constructor() {}
-
-  static getInstance(): HeadRegistry {
-    if (!HeadRegistry.instance) {
-      HeadRegistry.instance = new HeadRegistry();
-    }
-    return HeadRegistry.instance;
-  }
-
-  /** Create a new independent registry (for testing) */
-  static createIsolated(): HeadRegistry {
-    return new HeadRegistry();
-  }
-
-  private makeKey(dbName: string, collectionName: string): string {
-    return `${dbName}:${collectionName}`;
-  }
-
-  getHead(dbName: string, collectionName: string): string | undefined {
-    return this.heads.get(this.makeKey(dbName, collectionName));
-  }
-
-  setHead(dbName: string, collectionName: string, blockId: string): void {
-    this.heads.set(this.makeKey(dbName, collectionName), blockId);
-  }
-
-  removeHead(dbName: string, collectionName: string): void {
-    this.heads.delete(this.makeKey(dbName, collectionName));
-  }
-
-  clear(): void {
-    this.heads.clear();
   }
 }
 

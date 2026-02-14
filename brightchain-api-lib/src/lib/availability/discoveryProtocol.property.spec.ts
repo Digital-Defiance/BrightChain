@@ -11,7 +11,12 @@
  * **Validates: Requirements 4.3, 4.4, 4.5, 5.2, 5.3, 5.5, 5.8**
  */
 
-import { BloomFilter, DiscoveryConfig } from '@brightchain/brightchain-lib';
+import {
+  BloomFilter,
+  CBLMetadataSearchQuery,
+  DiscoveryConfig,
+  ICBLIndexEntry,
+} from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
 import { DiscoveryProtocol, IPeerNetworkProvider } from './discoveryProtocol';
 
@@ -102,6 +107,14 @@ class MockPeerNetworkProvider implements IPeerNetworkProvider {
 
     const blocks = this.peerBlocks.get(peerId);
     return blocks ? blocks.has(blockId) : false;
+  }
+
+  async queryPeerForCBLMetadata(
+    _peerId: string,
+    _query: CBLMetadataSearchQuery,
+    _timeoutMs: number,
+  ): Promise<ICBLIndexEntry[]> {
+    return [];
   }
 
   // Test helpers

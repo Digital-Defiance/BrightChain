@@ -17,6 +17,8 @@
 
 import {
   BloomFilter,
+  CBLMetadataSearchQuery,
+  CBLMetadataSearchResult,
   DiscoveryConfig,
   DiscoveryResult,
   IAvailabilityService,
@@ -28,6 +30,7 @@ import {
   IRegisterNodeResponse,
   NodeStatus,
   PeerQueryResult,
+  PoolScopedBloomFilter,
 } from '@brightchain/brightchain-lib';
 import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
@@ -117,6 +120,18 @@ const createMockDiscoveryProtocol = (
       cacheTtlMs: 60000,
       bloomFilterFalsePositiveRate: 0.01,
       bloomFilterHashCount: 7,
+    }),
+    getPeerPoolScopedBloomFilter: async (): Promise<PoolScopedBloomFilter> => ({
+      filters: new Map(),
+      globalFilter: createMockBloomFilter(),
+    }),
+    searchCBLMetadata: async (
+      query: CBLMetadataSearchQuery,
+    ): Promise<CBLMetadataSearchResult> => ({
+      query,
+      hits: [],
+      queriedPeers: 0,
+      duration: 0,
     }),
   };
 };

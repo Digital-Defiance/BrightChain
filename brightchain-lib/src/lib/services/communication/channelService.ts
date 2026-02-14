@@ -140,10 +140,7 @@ function defaultKeyEncryption(
   const binary = Array.from(symmetricKey)
     .map((b) => String.fromCharCode(b))
     .join('');
-  const base64 =
-    typeof btoa === 'function'
-      ? btoa(binary)
-      : Buffer.from(symmetricKey).toString('base64');
+  const base64 = btoa(binary);
   return `enc:${memberId}:${base64}`;
 }
 
@@ -154,15 +151,12 @@ function defaultKeyEncryption(
 export function extractChannelKeyFromDefault(encrypted: string): Uint8Array {
   const parts = encrypted.split(':');
   const base64 = parts[2];
-  if (typeof atob === 'function') {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes;
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
   }
-  return new Uint8Array(Buffer.from(base64, 'base64'));
+  return bytes;
 }
 
 export class ChannelService {

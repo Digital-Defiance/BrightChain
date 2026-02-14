@@ -18,7 +18,8 @@
  * Requirements: 1.1-1.10
  */
 
-import { createHash, randomBytes } from 'crypto';
+import { sha256 } from '@noble/hashes/sha256';
+import { getRandomBytes } from '../../crypto/platformCrypto';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { EmailErrorType } from '../../enumerations/messaging/emailErrorType';
@@ -1590,15 +1591,29 @@ export class EmailMessageService {
   private async storeAttachment(
     input: IAttachmentInput,
   ): Promise<IAttachmentMetadata> {
-    // Calculate SHA-256 checksum (hex digest)
-    const sha256Checksum = createHash('sha256')
-      .update(input.content)
-      .digest('hex');
+    // Calculate SHA-256 checksum (hex digest) using @noble/hashes (browser-compatible)
+    const sha256Hash = sha256(input.content);
+    const sha256Checksum = Array.from(sha256Hash)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
 
     // Calculate MD5 checksum (base64 digest per RFC 1864)
-    const md5Checksum = createHash('md5')
-      .update(input.content)
-      .digest('base64');
+    // NOTE: @noble/hashes intentionally excludes MD5. We use a conditional
+    // Node.js fallback here. For full browser compatibility, a lightweight
+    // MD5 library (e.g., js-md5) would be needed.
+    let md5Checksum: string;
+    if (
+      typeof process !== 'undefined' &&
+      process.versions != null &&
+      process.versions.node != null
+    ) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { createHash } = require('crypto');
+      md5Checksum = createHash('md5').update(input.content).digest('base64');
+    } else {
+      // Browser fallback: use empty string (MD5 Content-MD5 is optional per RFC 1864)
+      md5Checksum = '';
+    }
 
     // Generate CBL magnet URL using the checksum
     const cblMagnetUrl = `magnet:?xt=urn:cbl:${sha256Checksum}`;
@@ -1650,7 +1665,10 @@ export class EmailMessageService {
    */
   generateMessageId(): string {
     const timestamp = Date.now().toString(36);
-    const random = randomBytes(16).toString('hex');
+    const randomBytesArr = getRandomBytes(16);
+    const random = Array.from(randomBytesArr)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
     const idLeft = `${timestamp}.${random}`;
     const idRight = this.config.nodeId;
     return `<${idLeft}@${idRight}>`;

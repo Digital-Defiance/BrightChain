@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightchain-lib",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "BrightChain core library - browser-compatible blockchain storage",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -37,8 +37,9 @@
   "author": "Digital Defiance",
   "license": "MIT",
   "dependencies": {
-    "@digitaldefiance/ecies-lib": "^4.17.2",
-    "@digitaldefiance/i18n-lib": "^4.3.2",
+    "@digitaldefiance/ecies-lib": "^4.18.0",
+    "@digitaldefiance/i18n-lib": "^4.5.0",
+    "@digitaldefiance/node-express-suite": "^3.13.1",
     "@noble/hashes": "^1.4.0",
     "nat-pmp": "^1.0.0",
     "nat-upnp": "^1.1.1",

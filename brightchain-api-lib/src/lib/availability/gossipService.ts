@@ -13,8 +13,10 @@ import {
   BlockAnnouncement,
   DeliveryAckMetadata,
   GossipConfig,
+  ICBLIndexEntry,
   IGossipService,
   MessageDeliveryMetadata,
+  PoolId,
   validateGossipConfig,
 } from '@brightchain/brightchain-lib';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
@@ -180,15 +182,17 @@ export class GossipService implements IGossipService {
    * Announce a new block to the network.
    *
    * @param blockId - The block ID to announce
-   * @see Requirements 6.1
+   * @param poolId - Optional pool the block belongs to
+   * @see Requirements 6.1, 1.1, 6.3
    */
-  async announceBlock(blockId: string): Promise<void> {
+  async announceBlock(blockId: string, poolId?: PoolId): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'add',
       blockId,
       nodeId: this.peerProvider.getLocalNodeId(),
       timestamp: new Date(),
       ttl: this.config.defaultTtl,
+      ...(poolId && { poolId }),
     };
 
     this.queueAnnouncement(announcement);
@@ -198,12 +202,34 @@ export class GossipService implements IGossipService {
    * Announce block removal to the network.
    *
    * @param blockId - The block ID being removed
-   * @see Requirements 6.5
+   * @param poolId - Optional pool the block belonged to
+   * @see Requirements 6.5, 1.1
    */
-  async announceRemoval(blockId: string): Promise<void> {
+  async announceRemoval(blockId: string, poolId?: PoolId): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'remove',
       blockId,
+      nodeId: this.peerProvider.getLocalNodeId(),
+      timestamp: new Date(),
+      ttl: this.config.defaultTtl,
+      ...(poolId && { poolId }),
+    };
+
+    this.queueAnnouncement(announcement);
+  }
+
+  /**
+   * Announce that a pool has been deleted.
+   * Creates a pool_deleted announcement propagated as a tombstone.
+   *
+   * @param poolId - The pool that was deleted
+   * @see Requirements 2.2, 2.7
+   */
+  async announcePoolDeletion(poolId: PoolId): Promise<void> {
+    const announcement: BlockAnnouncement = {
+      type: 'pool_deleted',
+      blockId: '',
+      poolId,
       nodeId: this.peerProvider.getLocalNodeId(),
       timestamp: new Date(),
       ttl: this.config.defaultTtl,
@@ -213,9 +239,96 @@ export class GossipService implements IGossipService {
   }
 
   /**
+   * Announce a new or updated CBL index entry to peers in the same pool.
+   * Creates a cbl_index_update announcement scoped to the entry's pool.
+   *
+   * @param entry - The CBL index entry being announced
+   * @see Requirements 8.1
+   */
+  async announceCBLIndexUpdate(entry: ICBLIndexEntry): Promise<void> {
+    const announcement: BlockAnnouncement = {
+      type: 'cbl_index_update',
+      blockId: '',
+      poolId: entry.poolId ?? ('default' as PoolId),
+      cblIndexEntry: entry,
+      nodeId: this.peerProvider.getLocalNodeId(),
+      timestamp: new Date(),
+      ttl: this.config.defaultTtl,
+    };
+
+    this.queueAnnouncement(announcement);
+  }
+
+  /**
+   * Announce a soft-deleted CBL index entry to peers in the same pool.
+   * Creates a cbl_index_delete announcement so peers also mark the entry as deleted.
+   *
+   * @param entry - The CBL index entry that was soft-deleted (with deletedAt set)
+   * @see Requirements 8.6
+   */
+  async announceCBLIndexDelete(entry: ICBLIndexEntry): Promise<void> {
+    const announcement: BlockAnnouncement = {
+      type: 'cbl_index_delete',
+      blockId: '',
+      poolId: entry.poolId ?? ('default' as PoolId),
+      cblIndexEntry: entry,
+      nodeId: this.peerProvider.getLocalNodeId(),
+      timestamp: new Date(),
+      ttl: this.config.defaultTtl,
+    };
+
+    this.queueAnnouncement(announcement);
+  }
+
+  /**
+   * Announce a HeadRegistry head pointer update to peer nodes.
+   * Creates a head_update announcement with the database name, collection name,
+   * and new head block ID.
+   *
+   * @param dbName - The database name containing the collection
+   * @param collectionName - The collection whose head pointer was updated
+   * @param blockId - The new head block ID
+   * @see Requirements 2.1
+   */
+  async announceHeadUpdate(
+    dbName: string,
+    collectionName: string,
+    blockId: string,
+  ): Promise<void> {
+    const announcement: BlockAnnouncement = {
+      type: 'head_update',
+      blockId,
+      nodeId: this.peerProvider.getLocalNodeId(),
+      timestamp: new Date(),
+      ttl: this.config.defaultTtl,
+      headUpdate: {
+        dbName,
+        collectionName,
+      },
+    };
+
+    this.queueAnnouncement(announcement);
+  }
+
+  async announceACLUpdate(poolId: string, aclBlockId: string): Promise<void> {
+    const announcement: BlockAnnouncement = {
+      type: 'acl_update',
+      blockId: aclBlockId,
+      nodeId: this.peerProvider.getLocalNodeId(),
+      timestamp: new Date(),
+      ttl: this.config.defaultTtl,
+      poolId,
+      aclBlockId,
+    };
+
+    this.queueAnnouncement(announcement);
+  }
+
+  /**
    * Handle an incoming block announcement from a peer.
    *
    * Dispatches announcements based on their type and metadata:
+   * - 'pool_deleted' type: dispatches to general handlers and forwards with decremented TTL (Req 2.7)
    * - 'ack' type: dispatches to delivery ack handlers only (Req 4.4)
    * - 'add' with messageDelivery and matching local recipients: triggers message delivery
    *   handlers and auto-sends ack if ackRequired (Req 3.4, 3.5)
@@ -223,9 +336,88 @@ export class GossipService implements IGossipService {
    * - Plain 'add'/'remove' without messageDelivery: notifies general handlers and forwards (backward compat)
    *
    * @param announcement - The received announcement
-   * @see Requirements 3.4, 3.5, 3.6, 4.4
+   * @see Requirements 2.7, 3.4, 3.5, 3.6, 4.4
    */
   async handleAnnouncement(announcement: BlockAnnouncement): Promise<void> {
+    // Case 0: Pool deletion announcements — dispatch to handlers and forward
+    if (announcement.type === 'pool_deleted') {
+      if (!announcement.poolId) return; // Invalid pool_deleted without poolId, ignore
+
+      for (const handler of this.handlers) {
+        try {
+          handler(announcement);
+        } catch {
+          // Ignore handler errors to prevent one handler from affecting others
+        }
+      }
+
+      // Forward with decremented TTL (Req 2.7)
+      if (announcement.ttl > 0) {
+        this.queueAnnouncement({ ...announcement, ttl: announcement.ttl - 1 });
+      }
+      return;
+    }
+
+    // Case 0b: CBL index announcements — dispatch to handlers and forward (Req 8.1, 8.6)
+    if (
+      announcement.type === 'cbl_index_update' ||
+      announcement.type === 'cbl_index_delete'
+    ) {
+      if (!announcement.poolId || !announcement.cblIndexEntry) return;
+
+      for (const handler of this.handlers) {
+        try {
+          handler(announcement);
+        } catch {
+          // Ignore handler errors to prevent one handler from affecting others
+        }
+      }
+
+      // Forward with decremented TTL
+      if (announcement.ttl > 0) {
+        this.queueAnnouncement({ ...announcement, ttl: announcement.ttl - 1 });
+      }
+      return;
+    }
+
+    // Case 0c: Head update announcements — dispatch to handlers and forward (Req 2.1)
+    if (announcement.type === 'head_update') {
+      if (!announcement.blockId || !announcement.headUpdate) return;
+
+      for (const handler of this.handlers) {
+        try {
+          handler(announcement);
+        } catch {
+          // Ignore handler errors to prevent one handler from affecting others
+        }
+      }
+
+      // Forward with decremented TTL
+      if (announcement.ttl > 0) {
+        this.queueAnnouncement({ ...announcement, ttl: announcement.ttl - 1 });
+      }
+      return;
+    }
+
+    // Case 0d: ACL update announcements — dispatch to handlers and forward (Req 13.4)
+    if (announcement.type === 'acl_update') {
+      if (!announcement.poolId || !announcement.aclBlockId) return;
+
+      for (const handler of this.handlers) {
+        try {
+          handler(announcement);
+        } catch {
+          // Ignore handler errors to prevent one handler from affecting others
+        }
+      }
+
+      // Forward with decremented TTL
+      if (announcement.ttl > 0) {
+        this.queueAnnouncement({ ...announcement, ttl: announcement.ttl - 1 });
+      }
+      return;
+    }
+
     // Case 1: Ack announcements — dispatch to delivery ack handlers only
     if (announcement.type === 'ack') {
       for (const handler of this.deliveryAckHandlers) {
@@ -554,8 +746,10 @@ export class GossipService implements IGossipService {
         blockId: a.blockId,
         nodeId: a.nodeId,
         ttl: a.ttl,
+        ...(a.poolId ? { poolId: a.poolId } : {}),
         ...(a.messageDelivery ? { messageDelivery: a.messageDelivery } : {}),
         ...(a.deliveryAck ? { deliveryAck: a.deliveryAck } : {}),
+        ...(a.headUpdate ? { headUpdate: a.headUpdate } : {}),
       })),
     );
     const plaintext = Buffer.from(json, 'utf-8');

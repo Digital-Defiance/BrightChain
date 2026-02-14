@@ -29,6 +29,7 @@ import {
   ISyncRequestResponse,
   LocationQueryResult,
   PendingSyncItem,
+  PoolId,
   ReconciliationConfig,
   ReconciliationEventHandler,
   ReconciliationResult,
@@ -90,7 +91,10 @@ const createMockAvailabilityService = (
         return AvailabilityState.Local;
       return AvailabilityState.Remote;
     },
-    getBlockLocations: async (blockId: string): Promise<ILocationRecord[]> => {
+    getBlockLocations: async (
+      blockId: string,
+      _poolId?: PoolId,
+    ): Promise<ILocationRecord[]> => {
       return blockLocations.get(blockId) || [];
     },
     queryBlockLocation: async (

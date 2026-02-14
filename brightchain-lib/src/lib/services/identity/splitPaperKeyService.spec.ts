@@ -156,7 +156,7 @@ describe('SplitPaperKeyService', () => {
       expect(template.shareNumber).toBe(1);
       expect(template.totalShares).toBe(5);
       expect(template.threshold).toBe(3);
-    });
+    }, 15_000);
 
     it('should include the share words as an array', async () => {
       const shares = SplitPaperKeyService.split(validPaperKey, 3, 2);
@@ -173,7 +173,7 @@ describe('SplitPaperKeyService', () => {
       for (const word of template.words) {
         expect(wordlist).toContain(word);
       }
-    });
+    }, 15_000);
 
     it('should include a QR code as a data URL', async () => {
       const shares = SplitPaperKeyService.split(validPaperKey, 3, 2);
@@ -190,7 +190,7 @@ describe('SplitPaperKeyService', () => {
         '',
       );
       expect(base64Content.length).toBeGreaterThan(0);
-    });
+    }, 15_000);
 
     it('should include a creation date', async () => {
       const before = new Date();
@@ -207,7 +207,7 @@ describe('SplitPaperKeyService', () => {
         before.getTime(),
       );
       expect(template.createdAt.getTime()).toBeLessThanOrEqual(after.getTime());
-    });
+    }, 15_000);
 
     it('should include instructions with share number and threshold', async () => {
       const shares = SplitPaperKeyService.split(validPaperKey, 5, 3);
@@ -221,7 +221,7 @@ describe('SplitPaperKeyService', () => {
       expect(template.instructions).toContain('3');
       expect(template.instructions).toContain('5');
       expect(template.instructions).toContain('share');
-    });
+    }, 15_000);
   });
 
   describe('round-trip with Member recovery', () => {

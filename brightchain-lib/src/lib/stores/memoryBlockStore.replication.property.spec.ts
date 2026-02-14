@@ -195,27 +195,34 @@ describe('MemoryBlockStore Replication Property Tests', () => {
             const testStore = new MemoryBlockStore(blockSize);
 
             try {
-              const storedBlocks: { block: RawDataBlock; target: number }[] =
-                [];
+              // setData is idempotent: duplicate checksums are silently ignored.
+              // Track which block ID was actually stored (first-write-wins).
+              const storedByChecksum = new Map<
+                string,
+                { block: RawDataBlock; target: number }
+              >();
 
               for (const spec of blockSpecs) {
                 const block = new RawDataBlock(blockSize, spec.data);
+                const key = block.idChecksum.toHex();
                 await testStore.setData(block, {
                   targetReplicationFactor: spec.targetReplicationFactor,
                 });
-                storedBlocks.push({
-                  block,
-                  target: spec.targetReplicationFactor,
-                });
+                if (!storedByChecksum.has(key)) {
+                  storedByChecksum.set(key, {
+                    block,
+                    target: spec.targetReplicationFactor,
+                  });
+                }
               }
 
               const pendingBlocks =
                 await testStore.getBlocksPendingReplication();
 
-              // Count expected pending blocks (those with target > 0)
-              const expectedPendingCount = storedBlocks.filter(
-                (b) => b.target > 0,
-              ).length;
+              // Count expected pending blocks (those with target > 0, deduplicated by checksum)
+              const expectedPendingCount = Array.from(
+                storedByChecksum.values(),
+              ).filter((b) => b.target > 0).length;
 
               expect(pendingBlocks.length).toBe(expectedPendingCount);
             } finally {

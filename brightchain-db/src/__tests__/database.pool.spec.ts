@@ -14,8 +14,8 @@ import {
   DEFAULT_POOL,
   PooledMemoryBlockStore,
 } from '@brightchain/brightchain-lib';
-import { HeadRegistry } from '../lib/collection';
 import { BrightChainDb } from '../lib/database';
+import { InMemoryHeadRegistry } from '../lib/headRegistry';
 
 /**
  * Collect all hashes from an async iterable into an array.
@@ -39,7 +39,7 @@ describe('BrightChainDb pool integration', () => {
     it('should route inserted document blocks into the configured pool', async () => {
       const poolId = 'test-pool-alpha';
       const store = new PooledMemoryBlockStore(BlockSize.Small);
-      const registry = HeadRegistry.createIsolated();
+      const registry = InMemoryHeadRegistry.createIsolated();
 
       const db = new BrightChainDb(store, {
         name: 'pooled-db',
@@ -65,7 +65,7 @@ describe('BrightChainDb pool integration', () => {
     it('should not place blocks in the default pool when poolId is specified', async () => {
       const poolId = 'isolated-pool';
       const store = new PooledMemoryBlockStore(BlockSize.Small);
-      const registry = HeadRegistry.createIsolated();
+      const registry = InMemoryHeadRegistry.createIsolated();
 
       const db = new BrightChainDb(store, {
         name: 'pooled-db',
@@ -97,7 +97,7 @@ describe('BrightChainDb pool integration', () => {
   describe('constructor without poolId', () => {
     it('should place blocks in the default pool via legacy methods', async () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
-      const registry = HeadRegistry.createIsolated();
+      const registry = InMemoryHeadRegistry.createIsolated();
 
       const db = new BrightChainDb(store, {
         name: 'unpooled-db',
@@ -131,8 +131,8 @@ describe('BrightChainDb pool integration', () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
 
       // Each db gets its own isolated HeadRegistry to avoid collection name collisions
-      const registryA = HeadRegistry.createIsolated();
-      const registryB = HeadRegistry.createIsolated();
+      const registryA = InMemoryHeadRegistry.createIsolated();
+      const registryB = InMemoryHeadRegistry.createIsolated();
 
       const dbA = new BrightChainDb(store, {
         name: 'db-alpha',
@@ -179,8 +179,8 @@ describe('BrightChainDb pool integration', () => {
       const poolB = 'workspace-two';
       const store = new PooledMemoryBlockStore(BlockSize.Small);
 
-      const registryA = HeadRegistry.createIsolated();
-      const registryB = HeadRegistry.createIsolated();
+      const registryA = InMemoryHeadRegistry.createIsolated();
+      const registryB = InMemoryHeadRegistry.createIsolated();
 
       const dbA = new BrightChainDb(store, {
         name: 'ws-one',
