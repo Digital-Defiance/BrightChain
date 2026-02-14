@@ -22,6 +22,7 @@ export type {
   FilterOperator,
   FilterQuery,
   FindOptions,
+  IClientSession,
   IndexOptions,
   IndexSpec,
   InsertManyResult,
@@ -41,10 +42,20 @@ export type {
 } from './lib/types';
 
 // Database & Collection
-export { Collection, HeadRegistry } from './lib/collection';
+export { Collection } from './lib/collection';
 export type { CollectionResolver } from './lib/collection';
 export { BrightChainDb } from './lib/database';
+
+// CBL Index
+export { CBLIndex, type CBLIndexOptions } from './lib/cblIndex';
+
+// HeadRegistry implementations
 export type { BrightChainDbOptions } from './lib/database';
+export {
+  InMemoryHeadRegistry,
+  PersistentHeadRegistry,
+} from './lib/headRegistry';
+export type { HeadRegistryOptions } from './lib/headRegistry';
 
 // Cursor
 export { Cursor } from './lib/cursor';
@@ -96,16 +107,15 @@ export {
   ValidationError,
   WriteConcernError,
 } from './lib/errors';
-export type {
-  BulkWriteOperationError,
-  ValidationFieldError,
-  WriteConcernSpec,
-} from './lib/errors';
+export type { BulkWriteOperationError, WriteConcernSpec } from './lib/errors';
 
-// Schema validation
-export { applyDefaults, validateDocument } from './lib/schemaValidation';
+// Re-export promoted schema types from types.ts (sourced from brightchain-lib)
 export type {
   CollectionSchema,
   FieldSchema,
-  SchemaType,
-} from './lib/schemaValidation';
+  ValidationFieldError,
+} from './lib/types';
+
+// Schema validation functions and local SchemaType alias
+export { applyDefaults, validateDocument } from './lib/schemaValidation';
+export type { SchemaType } from './lib/schemaValidation';

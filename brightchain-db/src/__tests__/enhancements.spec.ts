@@ -5,9 +5,10 @@
  */
 
 import { runAggregation } from '../lib/aggregation';
-import { Collection, HeadRegistry } from '../lib/collection';
+import { Collection } from '../lib/collection';
 import { BrightChainDb } from '../lib/database';
 import { BulkWriteError, ValidationError } from '../lib/errors';
+import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import { tokenize } from '../lib/queryEngine';
 import { CollectionSchema } from '../lib/schemaValidation';
 import { BsonDocument, CollectionOptions } from '../lib/types';
@@ -18,11 +19,11 @@ import { MockBlockStore } from './helpers/mockBlockStore';
 function makeCollection(
   name = 'test',
   store?: MockBlockStore,
-  registry?: HeadRegistry,
+  registry?: InMemoryHeadRegistry,
   options?: CollectionOptions,
-): { coll: Collection; store: MockBlockStore; registry: HeadRegistry } {
+): { coll: Collection; store: MockBlockStore; registry: InMemoryHeadRegistry } {
   const s = store ?? new MockBlockStore();
-  const r = registry ?? HeadRegistry.createIsolated();
+  const r = registry ?? InMemoryHeadRegistry.createIsolated();
   const coll = new Collection(name, s as any, 'testdb', r, options);
   return { coll, store: s, registry: r };
 }

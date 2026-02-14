@@ -9,6 +9,9 @@
  * @see Requirements 1.1, 1.2, 1.3, 1.5, 1.6, 10.1 (Unified Gossip Delivery)
  */
 
+import type { ICBLIndexEntry } from '../storage/cblIndex';
+import { PoolId, isValidPoolId } from '../storage/pooledBlockStore';
+
 /**
  * Metadata for message delivery via gossip protocol.
  * Attached to 'add' type BlockAnnouncements to indicate the announcement
@@ -57,6 +60,21 @@ export interface DeliveryAckMetadata {
 }
 
 /**
+ * Metadata for HeadRegistry head pointer update announcements.
+ * Attached to 'head_update' type BlockAnnouncements to propagate
+ * head pointer changes across nodes.
+ *
+ * @see Requirements 2.1
+ */
+export interface HeadUpdateMetadata {
+  /** The database name containing the collection */
+  dbName: string;
+
+  /** The collection whose head pointer was updated */
+  collectionName: string;
+}
+
+/**
  * Block announcement message sent via gossip protocol.
  * Contains information about a block being added, removed, or acknowledged.
  *
@@ -69,10 +87,23 @@ export interface BlockAnnouncement {
    * - 'add' for new blocks (may include messageDelivery metadata)
    * - 'remove' for deleted blocks
    * - 'ack' for delivery acknowledgments (must include deliveryAck metadata)
+   * - 'pool_deleted' for pool deletion propagation (requires poolId)
+   * - 'cbl_index_update' for new/updated CBL index entries (requires cblIndexEntry and poolId)
+   * - 'cbl_index_delete' for soft-deleted CBL index entries (requires cblIndexEntry and poolId)
+   * - 'head_update' for HeadRegistry head pointer updates (requires headUpdate metadata)
+   * - 'acl_update' for approved ACL updates (requires poolId and aclBlockId)
    *
-   * @see Requirements 1.1
+   * @see Requirements 1.1, 2.1, 8.1, 8.6, 13.4
    */
-  type: 'add' | 'remove' | 'ack';
+  type:
+    | 'add'
+    | 'remove'
+    | 'ack'
+    | 'pool_deleted'
+    | 'cbl_index_update'
+    | 'cbl_index_delete'
+    | 'head_update'
+    | 'acl_update';
 
   /**
    * The block ID being announced (hex string)
@@ -110,6 +141,42 @@ export interface BlockAnnouncement {
    * @see Requirements 1.3, 1.6
    */
   deliveryAck?: DeliveryAckMetadata;
+
+  /**
+   * Optional pool ID for pool-scoped announcements.
+   * Required for 'pool_deleted', 'cbl_index_update', and 'cbl_index_delete' types.
+   * Optional for 'add' and 'remove' types.
+   *
+   * @see Requirements 1.5, 1.6, 2.1, 8.1, 8.6
+   */
+  poolId?: PoolId;
+
+  /**
+   * Optional CBL index entry data for CBL index synchronization.
+   * Required for 'cbl_index_update' and 'cbl_index_delete' types.
+   * Contains the entry being announced (update) or the entry being soft-deleted (delete).
+   *
+   * @see Requirements 8.1, 8.6
+   */
+  cblIndexEntry?: ICBLIndexEntry;
+
+  /**
+   * Optional HeadRegistry update metadata for head pointer synchronization.
+   * Required for 'head_update' type announcements.
+   * The blockId field carries the new head block ID.
+   *
+   * @see Requirements 2.1
+   */
+  headUpdate?: HeadUpdateMetadata;
+
+  /**
+   * Optional ACL block ID for ACL update propagation.
+   * Required for 'acl_update' type announcements.
+   * Contains the block ID of the approved ACL document in the block store.
+   *
+   * @see Requirements 13.4
+   */
+  aclBlockId?: string;
 }
 
 /**
@@ -214,20 +281,81 @@ export interface IGossipService {
    * The announcement will be batched and sent to a random subset of peers.
    *
    * @param blockId - The block ID to announce
+   * @param poolId - Optional pool the block belongs to
    * @returns Promise that resolves when the announcement is queued
-   * @see Requirements 6.1
+   * @see Requirements 6.1, 1.1, 6.3
    */
-  announceBlock(blockId: string): Promise<void>;
+  announceBlock(blockId: string, poolId?: PoolId): Promise<void>;
 
   /**
    * Announce block removal to the network.
    * The announcement will be batched and sent to a random subset of peers.
    *
    * @param blockId - The block ID being removed
+   * @param poolId - Optional pool the block belonged to
    * @returns Promise that resolves when the announcement is queued
-   * @see Requirements 6.5
+   * @see Requirements 6.5, 2.2
    */
-  announceRemoval(blockId: string): Promise<void>;
+  announceRemoval(blockId: string, poolId?: PoolId): Promise<void>;
+
+  /**
+   * Announce that a pool has been deleted.
+   * Creates a pool_deleted announcement propagated as a tombstone.
+   *
+   * @param poolId - The pool that was deleted
+   * @returns Promise that resolves when the announcement is queued
+   * @see Requirements 2.2, 6.3
+   */
+  announcePoolDeletion(poolId: PoolId): Promise<void>;
+
+  /**
+   * Announce a new or updated CBL index entry to peers in the same pool.
+   * Creates a cbl_index_update announcement scoped to the entry's pool.
+   *
+   * @param entry - The CBL index entry being announced
+   * @returns Promise that resolves when the announcement is queued
+   * @see Requirements 8.1
+   */
+  announceCBLIndexUpdate(entry: ICBLIndexEntry): Promise<void>;
+
+  /**
+   * Announce a soft-deleted CBL index entry to peers in the same pool.
+   * Creates a cbl_index_delete announcement so peers also mark the entry as deleted.
+   *
+   * @param entry - The CBL index entry that was soft-deleted (with deletedAt set)
+   * @returns Promise that resolves when the announcement is queued
+   * @see Requirements 8.6
+   */
+  announceCBLIndexDelete(entry: ICBLIndexEntry): Promise<void>;
+
+  /**
+   * Announce a HeadRegistry head pointer update to peer nodes.
+   * Creates a head_update announcement with the database name, collection name,
+   * and new head block ID.
+   *
+   * @param dbName - The database name containing the collection
+   * @param collectionName - The collection whose head pointer was updated
+   * @param blockId - The new head block ID
+   * @returns Promise that resolves when the announcement is queued
+   * @see Requirements 2.1
+   */
+  announceHeadUpdate(
+    dbName: string,
+    collectionName: string,
+    blockId: string,
+  ): Promise<void>;
+
+  /**
+   * Announce an approved ACL update to peers in the same pool.
+   * Creates an acl_update announcement with the pool ID and the block ID
+   * of the signed ACL document stored in the block store.
+   *
+   * @param poolId - The pool whose ACL was updated
+   * @param aclBlockId - The block ID of the approved ACL document
+   * @returns Promise that resolves when the announcement is queued
+   * @see Requirements 13.4
+   */
+  announceACLUpdate(poolId: string, aclBlockId: string): Promise<void>;
 
   /**
    * Handle an incoming block announcement from a peer.
@@ -356,7 +484,16 @@ export interface IGossipService {
 /**
  * Valid announcement types.
  */
-const VALID_ANNOUNCEMENT_TYPES = ['add', 'remove', 'ack'] as const;
+const VALID_ANNOUNCEMENT_TYPES = [
+  'add',
+  'remove',
+  'ack',
+  'pool_deleted',
+  'cbl_index_update',
+  'cbl_index_delete',
+  'head_update',
+  'acl_update',
+] as const;
 
 /**
  * Valid delivery ack statuses.
@@ -390,6 +527,114 @@ export function validateBlockAnnouncement(
     !VALID_ANNOUNCEMENT_TYPES.includes(
       announcement.type as (typeof VALID_ANNOUNCEMENT_TYPES)[number],
     )
+  ) {
+    return false;
+  }
+
+  // pool_deleted requires valid poolId, must not have messageDelivery or deliveryAck
+  if (announcement.type === 'pool_deleted') {
+    if (!announcement.poolId || !isValidPoolId(announcement.poolId)) {
+      return false;
+    }
+    if (announcement.messageDelivery || announcement.deliveryAck) {
+      return false;
+    }
+    return true;
+  }
+
+  // cbl_index_update and cbl_index_delete require valid poolId and cblIndexEntry,
+  // must not have messageDelivery or deliveryAck (Req 8.1, 8.6)
+  if (
+    announcement.type === 'cbl_index_update' ||
+    announcement.type === 'cbl_index_delete'
+  ) {
+    if (!announcement.poolId || !isValidPoolId(announcement.poolId)) {
+      return false;
+    }
+    if (!announcement.cblIndexEntry) {
+      return false;
+    }
+    if (
+      !announcement.cblIndexEntry.magnetUrl ||
+      typeof announcement.cblIndexEntry.magnetUrl !== 'string'
+    ) {
+      return false;
+    }
+    if (
+      !announcement.cblIndexEntry.blockId1 ||
+      typeof announcement.cblIndexEntry.blockId1 !== 'string'
+    ) {
+      return false;
+    }
+    if (
+      !announcement.cblIndexEntry.blockId2 ||
+      typeof announcement.cblIndexEntry.blockId2 !== 'string'
+    ) {
+      return false;
+    }
+    if (announcement.messageDelivery || announcement.deliveryAck) {
+      return false;
+    }
+    return true;
+  }
+
+  // head_update requires non-empty blockId and headUpdate with non-empty dbName and collectionName,
+  // must not have messageDelivery, deliveryAck, or cblIndexEntry (Req 2.1)
+  if (announcement.type === 'head_update') {
+    if (!announcement.blockId || typeof announcement.blockId !== 'string') {
+      return false;
+    }
+    if (!announcement.headUpdate) {
+      return false;
+    }
+    if (
+      !announcement.headUpdate.dbName ||
+      typeof announcement.headUpdate.dbName !== 'string'
+    ) {
+      return false;
+    }
+    if (
+      !announcement.headUpdate.collectionName ||
+      typeof announcement.headUpdate.collectionName !== 'string'
+    ) {
+      return false;
+    }
+    if (
+      announcement.messageDelivery ||
+      announcement.deliveryAck ||
+      announcement.cblIndexEntry
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  // acl_update requires valid poolId and non-empty aclBlockId,
+  // must not have messageDelivery, deliveryAck, or cblIndexEntry (Req 13.4)
+  if (announcement.type === 'acl_update') {
+    if (!announcement.poolId || !isValidPoolId(announcement.poolId)) {
+      return false;
+    }
+    if (
+      !announcement.aclBlockId ||
+      typeof announcement.aclBlockId !== 'string'
+    ) {
+      return false;
+    }
+    if (
+      announcement.messageDelivery ||
+      announcement.deliveryAck ||
+      announcement.cblIndexEntry
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  // Validate poolId format if present on any other type
+  if (
+    announcement.poolId !== undefined &&
+    !isValidPoolId(announcement.poolId)
   ) {
     return false;
   }

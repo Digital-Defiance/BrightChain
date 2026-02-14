@@ -4,8 +4,24 @@
  * This module provides cryptographic functions that work in both browser and Node.js
  * environments, abstracting away the differences between Web Crypto API and Node.js crypto.
  *
+ * **Platform Detection Boundary:**
+ * This file uses `isBrowserEnvironment()` and `isNodeEnvironment()` to detect the
+ * runtime platform and conditionally load the appropriate crypto implementation:
+ * - Browser: uses `window.crypto.getRandomValues()` (Web Crypto API)
+ * - Node.js: uses `require('crypto').randomBytes` (loaded lazily via `require()`)
+ *
+ * The Node.js `crypto` module is never imported at the top level; it is loaded
+ * dynamically inside `getRandomBytes()` only when `isBrowserEnvironment()` returns
+ * false. This ensures the module can be bundled for browsers without triggering
+ * missing-module errors.
+ *
+ * SHA-1 hashing uses `@noble/hashes/sha1`, which is a pure-JS implementation
+ * that works identically in both environments — no platform branching needed.
+ *
+ * @platform Node.js (conditional — `getRandomBytes` falls back to Node.js `crypto` when not in a browser)
  * @module platformCrypto
  * @see Requirements 11.1, 11.2, 11.3, 11.4, 11.5
+ * @see Requirement 18.4 — platform-specific code isolated behind detection boundary
  */
 
 import { sha1 } from '@noble/hashes/sha1';

@@ -6,8 +6,8 @@
  * and the withTransaction convenience helper.
  */
 
-import { HeadRegistry } from '../lib/collection';
 import { BrightChainDb } from '../lib/database';
+import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import { MockBlockStore } from './helpers/mockBlockStore';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -15,10 +15,10 @@ import { MockBlockStore } from './helpers/mockBlockStore';
 function makeDb(name = 'testdb'): {
   db: BrightChainDb;
   store: MockBlockStore;
-  registry: HeadRegistry;
+  registry: InMemoryHeadRegistry;
 } {
   const store = new MockBlockStore();
-  const registry = HeadRegistry.createIsolated();
+  const registry = InMemoryHeadRegistry.createIsolated();
   const db = new BrightChainDb(store as any, { name, headRegistry: registry });
   return { db, store, registry };
 }
@@ -31,7 +31,7 @@ describe('BrightChainDb – basics', () => {
   it('should create a database with default name', () => {
     const store = new MockBlockStore();
     const db = new BrightChainDb(store as any, {
-      headRegistry: HeadRegistry.createIsolated(),
+      headRegistry: InMemoryHeadRegistry.createIsolated(),
     });
     expect(db.name).toBe('brightchain');
   });
@@ -289,7 +289,7 @@ describe('BrightChainDb – withTransaction', () => {
 describe('BrightChainDb – edge cases', () => {
   it('should handle collections with same name across different databases', () => {
     const store = new MockBlockStore();
-    const registry = HeadRegistry.createIsolated();
+    const registry = InMemoryHeadRegistry.createIsolated();
     const db1 = new BrightChainDb(store as any, {
       name: 'db1',
       headRegistry: registry,

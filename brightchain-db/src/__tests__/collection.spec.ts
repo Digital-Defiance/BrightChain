@@ -6,7 +6,8 @@
  * change streams, persistence, and edge cases.
  */
 
-import { Collection, HeadRegistry } from '../lib/collection';
+import { Collection } from '../lib/collection';
+import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import { MockBlockStore } from './helpers/mockBlockStore';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -14,10 +15,10 @@ import { MockBlockStore } from './helpers/mockBlockStore';
 function makeCollection(
   name = 'test',
   store?: MockBlockStore,
-  registry?: HeadRegistry,
-): { coll: Collection; store: MockBlockStore; registry: HeadRegistry } {
+  registry?: InMemoryHeadRegistry,
+): { coll: Collection; store: MockBlockStore; registry: InMemoryHeadRegistry } {
   const s = store ?? new MockBlockStore();
-  const r = registry ?? HeadRegistry.createIsolated();
+  const r = registry ?? InMemoryHeadRegistry.createIsolated();
   const coll = new Collection(name, s as any, 'testdb', r);
   return { coll, store: s, registry: r };
 }
@@ -682,7 +683,7 @@ describe('Collection – change streams', () => {
 describe('Collection – persistence', () => {
   it('should persist and reload documents via head registry', async () => {
     const store = new MockBlockStore();
-    const registry = HeadRegistry.createIsolated();
+    const registry = InMemoryHeadRegistry.createIsolated();
 
     // Insert documents in first collection instance
     const coll1 = new Collection('persist', store as any, 'testdb', registry);
@@ -701,7 +702,7 @@ describe('Collection – persistence', () => {
 
   it('should start fresh without head in registry', async () => {
     const store = new MockBlockStore();
-    const registry = HeadRegistry.createIsolated();
+    const registry = InMemoryHeadRegistry.createIsolated();
     const coll = new Collection('empty', store as any, 'testdb', registry);
     const count = await coll.estimatedDocumentCount();
     expect(count).toBe(0);
@@ -729,45 +730,39 @@ describe('Collection.drop', () => {
 // HeadRegistry
 // ══════════════════════════════════════════════════════════════
 
-describe('HeadRegistry', () => {
-  it('should set and get heads', () => {
-    const reg = HeadRegistry.createIsolated();
-    reg.setHead('db1', 'coll1', 'block-abc');
+describe('InMemoryHeadRegistry', () => {
+  it('should set and get heads', async () => {
+    const reg = InMemoryHeadRegistry.createIsolated();
+    await reg.setHead('db1', 'coll1', 'block-abc');
     expect(reg.getHead('db1', 'coll1')).toBe('block-abc');
   });
 
   it('should return undefined for unknown heads', () => {
-    const reg = HeadRegistry.createIsolated();
+    const reg = InMemoryHeadRegistry.createIsolated();
     expect(reg.getHead('dbx', 'collx')).toBeUndefined();
   });
 
-  it('should remove a head', () => {
-    const reg = HeadRegistry.createIsolated();
-    reg.setHead('db1', 'coll1', 'block-abc');
-    reg.removeHead('db1', 'coll1');
+  it('should remove a head', async () => {
+    const reg = InMemoryHeadRegistry.createIsolated();
+    await reg.setHead('db1', 'coll1', 'block-abc');
+    await reg.removeHead('db1', 'coll1');
     expect(reg.getHead('db1', 'coll1')).toBeUndefined();
   });
 
-  it('should clear all heads', () => {
-    const reg = HeadRegistry.createIsolated();
-    reg.setHead('db1', 'c1', 'b1');
-    reg.setHead('db1', 'c2', 'b2');
-    reg.clear();
+  it('should clear all heads', async () => {
+    const reg = InMemoryHeadRegistry.createIsolated();
+    await reg.setHead('db1', 'c1', 'b1');
+    await reg.setHead('db1', 'c2', 'b2');
+    await reg.clear();
     expect(reg.getHead('db1', 'c1')).toBeUndefined();
     expect(reg.getHead('db1', 'c2')).toBeUndefined();
   });
 
-  it('should provide a singleton instance', () => {
-    const a = HeadRegistry.getInstance();
-    const b = HeadRegistry.getInstance();
-    expect(a).toBe(b);
-  });
-
-  it('should provide isolated instances for testing', () => {
-    const a = HeadRegistry.createIsolated();
-    const b = HeadRegistry.createIsolated();
+  it('should provide isolated instances for testing', async () => {
+    const a = InMemoryHeadRegistry.createIsolated();
+    const b = InMemoryHeadRegistry.createIsolated();
     expect(a).not.toBe(b);
-    a.setHead('db', 'c', 'x');
+    await a.setHead('db', 'c', 'x');
     expect(b.getHead('db', 'c')).toBeUndefined();
   });
 });

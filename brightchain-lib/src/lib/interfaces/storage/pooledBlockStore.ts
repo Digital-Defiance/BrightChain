@@ -10,6 +10,7 @@ import { BlockSize } from '../../enumerations/blockSize';
 import { Checksum } from '../../types/checksum';
 import { BlockStoreOptions } from './blockMetadata';
 import { IBlockStore } from './blockStore';
+import type { CBLStorageResult, CBLWhiteningOptions } from './cblWhitening';
 
 /**
  * Pool identifier type. Must match /^[a-zA-Z0-9_-]{1,64}$/.
@@ -181,6 +182,45 @@ export interface IPooledBlockStore extends IBlockStore {
    * @param pool - The pool to force-delete
    */
   forceDeletePool(pool: PoolId): Promise<void>;
+
+  // === Pool-Scoped CBL Whitening Operations ===
+
+  /**
+   * Store a CBL with XOR whitening, scoped to a specific pool.
+   * Both XOR component blocks are stored within the specified pool namespace,
+   * ensuring pool isolation for whitened CBL storage.
+   *
+   * @param pool - The pool to store the whitened CBL components in
+   * @param cblData - The original CBL data as Uint8Array
+   * @param options - Optional storage options (durability, expiration, encryption flag)
+   * @returns Result containing block IDs, parity IDs (if any), and magnet URL
+   * @throws StoreError if storage fails
+   */
+  storeCBLWithWhiteningInPool(
+    pool: PoolId,
+    cblData: Uint8Array,
+    options?: CBLWhiteningOptions,
+  ): Promise<CBLStorageResult>;
+
+  /**
+   * Retrieve and reconstruct a whitened CBL from a specific pool.
+   * Both XOR component blocks are retrieved from the specified pool namespace.
+   *
+   * @param pool - The pool to retrieve the whitened CBL components from
+   * @param blockId1 - First block ID (Checksum or hex string)
+   * @param blockId2 - Second block ID (Checksum or hex string)
+   * @param block1ParityIds - Optional parity block IDs for block 1 recovery
+   * @param block2ParityIds - Optional parity block IDs for block 2 recovery
+   * @returns The original CBL data as Uint8Array
+   * @throws StoreError if either block is not found in the pool or reconstruction fails
+   */
+  retrieveCBLFromPool(
+    pool: PoolId,
+    blockId1: Checksum | string,
+    blockId2: Checksum | string,
+    block1ParityIds?: string[],
+    block2ParityIds?: string[],
+  ): Promise<Uint8Array>;
 }
 
 /**

@@ -318,7 +318,17 @@ describe('Feature: unified-gossip-delivery, Property 2: Announcement metadata co
   it('Property 2b: announcements with invalid type are rejected', () => {
     const invalidTypeArb = fc
       .string({ minLength: 1, maxLength: 10 })
-      .filter((s) => !['add', 'remove', 'ack'].includes(s));
+      .filter(
+        (s) =>
+          ![
+            'add',
+            'remove',
+            'ack',
+            'pool_deleted',
+            'cbl_index_update',
+            'cbl_index_delete',
+          ].includes(s),
+      );
 
     fc.assert(
       fc.property(

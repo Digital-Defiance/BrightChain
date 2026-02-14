@@ -16,66 +16,23 @@
  *   - additionalProperties: whether extra fields are allowed (default: true)
  */
 
-import { ValidationError, ValidationFieldError } from './errors';
-import { BsonDocument } from './types';
+import { ValidationError } from './errors';
+import {
+  BsonDocument,
+  CollectionSchema,
+  CollectionSchemaFieldType,
+  FieldSchema,
+  ValidationFieldError,
+} from './types';
 
-// ── Schema types ──
+// Re-export promoted types for backward compatibility
+export type { CollectionSchema, FieldSchema };
 
-export type SchemaType =
-  | 'string'
-  | 'number'
-  | 'boolean'
-  | 'object'
-  | 'array'
-  | 'null'
-  | 'date'
-  | 'any';
-
-export interface FieldSchema {
-  /** Expected type */
-  type?: SchemaType | SchemaType[];
-  /** Whether this field is required (also settable at parent level via `required` array) */
-  required?: boolean;
-  /** Minimum value (number) or minimum length (string/array) */
-  minimum?: number;
-  /** Maximum value (number) or maximum length (string/array) */
-  maximum?: number;
-  /** Minimum string/array length */
-  minLength?: number;
-  /** Maximum string/array length */
-  maxLength?: number;
-  /** Regex pattern for string values */
-  pattern?: string;
-  /** Allowed values */
-  enum?: unknown[];
-  /** Schema for nested object properties */
-  properties?: Record<string, FieldSchema>;
-  /** Required fields in nested object */
-  requiredFields?: string[];
-  /** Schema for array items */
-  items?: FieldSchema;
-  /** Default value if field is missing */
-  default?: unknown;
-  /** Whether to allow extra properties (for objects) */
-  additionalProperties?: boolean;
-  /** Custom validation function */
-  validate?: (value: unknown) => boolean | string;
-}
-
-export interface CollectionSchema {
-  /** Name of the schema (for error messages) */
-  name?: string;
-  /** Per-field definitions */
-  properties: Record<string, FieldSchema>;
-  /** Which fields are required */
-  required?: string[];
-  /** Allow fields not defined in properties (default: true) */
-  additionalProperties?: boolean;
-  /** When to validate: 'strict' = inserts and updates, 'moderate' = inserts only */
-  validationLevel?: 'strict' | 'moderate' | 'off';
-  /** What to do on failure: 'error' = throw, 'warn' = log and continue */
-  validationAction?: 'error' | 'warn';
-}
+/**
+ * Local alias for backward compatibility.
+ * The canonical type is `CollectionSchemaFieldType` in brightchain-lib.
+ */
+export type SchemaType = CollectionSchemaFieldType;
 
 // ── Validator ──
 

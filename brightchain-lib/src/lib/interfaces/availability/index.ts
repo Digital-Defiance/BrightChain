@@ -4,4 +4,5 @@ export * from './discoveryProtocol';
 export * from './gossipService';
 export * from './heartbeatMonitor';
 export * from './locationRecord';
+export * from './poolDeletionTombstone';
 export * from './reconciliationService';

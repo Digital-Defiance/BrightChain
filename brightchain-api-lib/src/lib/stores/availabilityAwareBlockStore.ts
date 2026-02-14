@@ -19,6 +19,7 @@ import {
   CBLStorageResult,
   CBLWhiteningOptions,
   Checksum,
+  DEFAULT_TOMBSTONE_CONFIG,
   FetchQueueConfig,
   FetchTimeoutError,
   IAvailabilityService,
@@ -28,13 +29,21 @@ import {
   IBlockStore,
   IGossipService,
   ILocationRecord,
+  IPoolDeletionTombstone,
   IReconciliationService,
+  isPooledBlockStore,
   PendingBlockError,
   PendingSyncItem,
+  PoolDeletionTombstoneConfig,
+  PoolDeletionTombstoneError,
+  PoolId,
   RawDataBlock,
   ReadConcern,
   RecoveryResult,
 } from '@brightchain/brightchain-lib';
+
+// Re-export so existing consumers of this module continue to work
+export { PoolDeletionTombstoneError } from '@brightchain/brightchain-lib';
 
 /**
  * Error thrown when an operation is attempted during partition mode
@@ -85,6 +94,12 @@ export interface AvailabilityAwareBlockStoreConfig {
    * Only relevant when an IBlockFetcher is provided.
    */
   fetchQueueConfig?: FetchQueueConfig;
+
+  /**
+   * Tombstone configuration for pool deletion tracking.
+   * Default: DEFAULT_TOMBSTONE_CONFIG (7 days TTL)
+   */
+  tombstoneConfig?: PoolDeletionTombstoneConfig;
 }
 
 /**
@@ -94,12 +109,14 @@ export interface AvailabilityAwareBlockStoreConfig {
  */
 export type ResolvedAvailabilityAwareBlockStoreConfig = Omit<
   Required<AvailabilityAwareBlockStoreConfig>,
-  'blockFetcherConfig' | 'fetchQueueConfig'
+  'blockFetcherConfig' | 'fetchQueueConfig' | 'tombstoneConfig'
 > &
   Pick<
     AvailabilityAwareBlockStoreConfig,
     'blockFetcherConfig' | 'fetchQueueConfig'
-  >;
+  > & {
+    tombstoneConfig: PoolDeletionTombstoneConfig;
+  };
 
 /**
  * Default configuration values.
@@ -112,6 +129,7 @@ export const DEFAULT_AVAILABILITY_AWARE_BLOCK_STORE_CONFIG: ResolvedAvailability
     defaultReadConcern: ReadConcern.Local,
     blockFetcherConfig: undefined,
     fetchQueueConfig: undefined,
+    tombstoneConfig: DEFAULT_TOMBSTONE_CONFIG,
   };
 
 /**
@@ -165,6 +183,12 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * When provided, enables Available and Consistent read concerns.
    */
   private readonly blockFetcher?: IBlockFetcher;
+
+  /**
+   * Tombstones for deleted pools. Blocks cannot be stored in a pool
+   * with an active tombstone until it expires.
+   */
+  private readonly tombstones: Map<PoolId, IPoolDeletionTombstone> = new Map();
 
   /**
    * Create a new AvailabilityAwareBlockStore.
@@ -410,11 +434,30 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
   ): Promise<void> {
     const blockId = this.keyToHex(block.idChecksum);
 
+    // Look up pool context from the inner store's metadata
+    // (metadata may already exist if the block was previously stored)
+    const existingMetadata = await this.innerStore.getMetadata(blockId);
+    const poolId: PoolId | undefined = existingMetadata?.poolId;
+
+    // Check tombstone — reject if pool was deleted
+    if (poolId && this.hasTombstone(poolId)) {
+      throw new PoolDeletionTombstoneError(poolId);
+    }
+
     // Store in inner store first
     await this.innerStore.setData(block, options);
 
-    // Update registry
-    this.registry.addLocal(blockId);
+    // Re-read metadata after store in case it was created during setData
+    const storedMetadata = await this.innerStore.getMetadata(blockId);
+    const resolvedPoolId: PoolId | undefined = poolId ?? storedMetadata?.poolId;
+
+    // Check tombstone again with resolved poolId (in case metadata was created during store)
+    if (resolvedPoolId && !poolId && this.hasTombstone(resolvedPoolId)) {
+      throw new PoolDeletionTombstoneError(resolvedPoolId);
+    }
+
+    // Update registry with pool context
+    this.registry.addLocal(blockId, resolvedPoolId);
 
     // Update availability state to Local
     await this.availabilityService.setAvailabilityState(
@@ -422,11 +465,12 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
       AvailabilityState.Local,
     );
 
-    // Update location metadata
+    // Update location metadata with pool context
     const locationRecord: ILocationRecord = {
       nodeId: this.config.localNodeId,
       lastSeen: new Date(),
       isAuthoritative: true,
+      ...(resolvedPoolId ? { poolId: resolvedPoolId } : {}),
     };
     await this.availabilityService.updateLocation(blockId, locationRecord);
 
@@ -440,8 +484,8 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
       };
       this.reconciliationService.addToPendingSyncQueue(syncItem);
     } else if (this.config.autoAnnounce) {
-      // Announce to network via gossip
-      await this.gossipService.announceBlock(blockId);
+      // Announce to network via gossip with pool context
+      await this.gossipService.announceBlock(blockId, resolvedPoolId);
     }
   }
 
@@ -454,6 +498,10 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    */
   async deleteData(key: Checksum): Promise<void> {
     const blockId = this.keyToHex(key);
+
+    // Look up pool context before deletion
+    const metadata = await this.innerStore.getMetadata(blockId);
+    const poolId: PoolId | undefined = metadata?.poolId;
 
     // Delete from inner store first
     await this.innerStore.deleteData(key);
@@ -476,8 +524,8 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
       };
       this.reconciliationService.addToPendingSyncQueue(syncItem);
     } else if (this.config.autoAnnounce) {
-      // Announce removal to network via gossip
-      await this.gossipService.announceRemoval(blockId);
+      // Announce removal to network via gossip with pool context
+      await this.gossipService.announceRemoval(blockId, poolId);
     }
   }
 
@@ -634,28 +682,96 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
   // === Replication Operations ===
 
   /**
-   * Get blocks that are pending replication.
+   * Get blocks that are pending replication, scoped by pool.
+   *
+   * A block's replication count for pool P = number of distinct nodes
+   * with a location record for that block with poolId: P.
+   * Blocks without a poolId use the inner store's default pending check.
    *
    * @returns Array of block checksums pending replication
+   * @see Requirements 6.1, 6.2
    */
   async getBlocksPendingReplication(): Promise<Checksum[]> {
-    return this.innerStore.getBlocksPendingReplication();
+    const pendingFromInner =
+      await this.innerStore.getBlocksPendingReplication();
+    const result: Checksum[] = [];
+
+    for (const checksum of pendingFromInner) {
+      const blockId = this.keyToHex(checksum);
+      const metadata = await this.innerStore.getMetadata(blockId);
+
+      if (!metadata?.poolId) {
+        // No pool context — use inner store's determination
+        result.push(checksum);
+        continue;
+      }
+
+      // Pool-scoped: count distinct nodes with matching poolId
+      const locations =
+        await this.availabilityService.getBlockLocations(blockId);
+      const poolReplicaCount = this.countPoolScopedReplicas(
+        locations,
+        metadata.poolId,
+      );
+
+      // Still pending if no pool-scoped replicas exist (excluding local node)
+      if (poolReplicaCount <= 1) {
+        result.push(checksum);
+      }
+    }
+
+    return result;
   }
 
   /**
-   * Get blocks that are under-replicated.
+   * Get blocks that are under-replicated, scoped by pool.
+   *
+   * A block's replication count for pool P = number of distinct nodes
+   * with a location record for that block with poolId: P.
+   * Under-replicated when pool-scoped replica count < targetReplicationFactor.
    *
    * @returns Array of block checksums that need additional replicas
+   * @see Requirements 6.1, 6.2
    */
   async getUnderReplicatedBlocks(): Promise<Checksum[]> {
-    return this.innerStore.getUnderReplicatedBlocks();
+    const underReplicatedFromInner =
+      await this.innerStore.getUnderReplicatedBlocks();
+    const result: Checksum[] = [];
+
+    for (const checksum of underReplicatedFromInner) {
+      const blockId = this.keyToHex(checksum);
+      const metadata = await this.innerStore.getMetadata(blockId);
+
+      if (!metadata?.poolId) {
+        // No pool context — use inner store's determination
+        result.push(checksum);
+        continue;
+      }
+
+      // Pool-scoped: count distinct nodes with matching poolId
+      const locations =
+        await this.availabilityService.getBlockLocations(blockId);
+      const poolReplicaCount = this.countPoolScopedReplicas(
+        locations,
+        metadata.poolId,
+      );
+
+      // Under-replicated if pool-scoped replicas < target
+      if (poolReplicaCount < metadata.targetReplicationFactor) {
+        result.push(checksum);
+      }
+    }
+
+    return result;
   }
 
   /**
    * Record that a block has been replicated to a node.
+   * Includes poolId in the location record when the block belongs to a pool.
    *
    * @param key - The block's checksum or ID
    * @param nodeId - The ID of the node that now holds a replica
+   * @see Requirements 6.1, 6.2
    */
   async recordReplication(
     key: Checksum | string,
@@ -666,13 +782,39 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
     // Record in inner store
     await this.innerStore.recordReplication(key, nodeId);
 
-    // Update location metadata
+    // Look up pool context from block metadata
+    const metadata = await this.innerStore.getMetadata(blockId);
+    const poolId: PoolId | undefined = metadata?.poolId;
+
+    // Update location metadata with pool context
     const locationRecord: ILocationRecord = {
       nodeId,
       lastSeen: new Date(),
       isAuthoritative: false,
+      ...(poolId ? { poolId } : {}),
     };
     await this.availabilityService.updateLocation(blockId, locationRecord);
+  }
+
+  /**
+   * Count the number of distinct nodes with a location record
+   * for a block that matches the given poolId.
+   *
+   * @param locations - All location records for the block
+   * @param poolId - The pool to scope the count to
+   * @returns Number of distinct nodes with matching poolId
+   */
+  private countPoolScopedReplicas(
+    locations: ILocationRecord[],
+    poolId: PoolId,
+  ): number {
+    const nodeIds = new Set<string>();
+    for (const loc of locations) {
+      if (loc.poolId === poolId) {
+        nodeIds.add(loc.nodeId);
+      }
+    }
+    return nodeIds.size;
   }
 
   /**
@@ -738,7 +880,60 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
     return result;
   }
 
+  // === Pool Deletion ===
+
+  /**
+   * Handle a pool deletion event (triggered by a gossip `pool_deleted` announcement).
+   * Records a tombstone, removes all blocks in the pool from the local store,
+   * and removes pool entries from the registry.
+   *
+   * @param poolId - The pool that was deleted
+   * @param originNodeId - The node that originated the deletion
+   * @see Requirements 2.3, 2.4, 2.5
+   */
+  async handlePoolDeletion(
+    poolId: PoolId,
+    originNodeId: string,
+  ): Promise<void> {
+    // Record tombstone
+    this.tombstones.set(poolId, {
+      poolId,
+      deletedAt: new Date(),
+      expiresAt: new Date(
+        Date.now() + this.config.tombstoneConfig.tombstoneTtlMs,
+      ),
+      originNodeId,
+    });
+
+    // Remove all blocks in the pool from local store
+    if (isPooledBlockStore(this.innerStore)) {
+      await this.innerStore.forceDeletePool(poolId);
+    }
+
+    // Remove from registry (bulk removal by pool)
+    // The registry's removeLocal with poolId handles per-block removal;
+    // for bulk removal we rely on the pool-scoped manifest to identify blocks.
+    // Future task 11.1 will add pool-aware registry internals.
+  }
+
   // === Helper Methods ===
+
+  /**
+   * Check if a pool has an active deletion tombstone.
+   * Cleans up expired tombstones automatically.
+   *
+   * @param poolId - The pool ID to check
+   * @returns True if an active (non-expired) tombstone exists
+   */
+  private hasTombstone(poolId: PoolId): boolean {
+    const tombstone = this.tombstones.get(poolId);
+    if (!tombstone) return false;
+    if (new Date() > tombstone.expiresAt) {
+      this.tombstones.delete(poolId); // Clean up expired
+      return false;
+    }
+    return true;
+  }
 
   /**
    * Convert a key to hex string format.

@@ -151,6 +151,8 @@ function createMockGossipService(): IGossipService {
     start: jest.fn(),
     stop: jest.fn(),
     getConfig: jest.fn(),
+    announceHeadUpdate: jest.fn().mockResolvedValue(undefined),
+    announceACLUpdate: jest.fn().mockResolvedValue(undefined),
     announceMessage: jest.fn().mockResolvedValue(undefined),
     sendDeliveryAck: jest.fn(),
     onMessageDelivery: jest.fn(),

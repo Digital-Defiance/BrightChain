@@ -36,6 +36,12 @@ export type {
   SchemaMap,
 } from './lib/shared-types';
 
+// Auth exports
+export * from './lib/auth';
+
+// Encryption exports
+export * from './lib/encryption';
+
 // Keyring exports
 export * from './lib/browserKeyring';
 export * from './lib/nodeKeyring';

@@ -29,7 +29,7 @@ I think ultimately what is going to shake out is this:
 
 At its core, the Revolution Network is not an app or any one app. It is a protocol/network. It provides an incentive driven ecosystem that inherently is designed to bring out the best collaborators in the network. Users are incentivized by the algorithms of the network to be philanthropic, collaborative, and provide content and resources to the network. It also provides a unique and, prior to this, proprietary mechanism to provide true anonymity while still maintaining an ability to moderate the network. Aberrant behaviors in the network are disincentivized and penalized.
 
-How is this accomplished? Let's move on to Architecture. 
+How is this accomplished? Let's move on to Architecture.
 
 ### Part 1: The Soup Market ✅ COMPLETE
 
@@ -68,6 +68,7 @@ In order to identify the blocks, they will need an identifier. In BrightChain, t
 For more information on the math, please check the OFFSystem wikipedia entry linked above. It also has links which discuss the overall efficiencies as measured empirically on the network when it was active.
 
 **Implementation Status:**
+
 - ✅ WhitenedBlock class with XOR operations
 - ✅ RandomBlock generation with cryptographic security
 - ✅ Block store with SHA3-512 identification
@@ -91,6 +92,7 @@ The network has a handful of different agents that perform different actions and
 For each agent or user, we generate a BIP39/32 mnemonic and associated keypair. The public key is recorded on the chain associated with the User's account object. The BIP39/32 mnemonic is then used as a seed to derive the private key which is not stored in the network. Whenever an action like signing occurs, this will be done on the client which will have the key in memory and the result will be sent back to the network. Each Quorum node will have an Agent account which will have its mnemonic/private key stored in the memory of the Quorum node whom they are the primary agent for.
 
 **Implementation Status:**
+
 - ✅ Member class with BIP39/32 key derivation
 - ✅ SECP256k1 elliptic curve cryptography
 - ✅ Public/private key pair management
@@ -126,6 +128,7 @@ Lets say Mallory's virus or bad content goes in the network a while and is repor
 At some point the FEC data on the posts could even be expired and deleted. It might be stored separately so this can happen. Once the "statute of limitations expires" that data could be deleted and the original identity never recovered.
 
 **Implementation Status:**
+
 - ✅ BrightChainQuorum class
 - ✅ Shamir's Secret Sharing via SealingService
 - ✅ QuorumDataRecord for encrypted documents
@@ -159,6 +162,7 @@ Every entity in the network has a reputation. Every entity is as much as possibl
 People who contribute resources like storage and bandwidth may have a higher valuation which is a composite of their perceived value as well as the net result of their contributions and costs (reading/consuming) on the network.
 
 **Implementation Status:**
+
 - ⚠️ Proof of Work throttling - designed but not implemented
 - ⚠️ Reputation algorithms - designed but not implemented
 - ⚠️ Content valuation - designed but not implemented
@@ -177,6 +181,7 @@ URIs known to be associated with a given entity will get linked (TBD) and the co
 Good people's comments will matter more. If you're a jerk who just is mean to everyone, your ratings will have little impact on the system and you'll work harder to add them.
 
 **Implementation Status:**
+
 - ⚠️ Universal rating system - designed but not implemented
 - ⚠️ URI-based reputation - designed but not implemented
 
@@ -186,6 +191,7 @@ Good people's comments will matter more. If you're a jerk who just is mean to ev
 At this time, BrightChain is focusing on the basics of block access and data consistency. In the near future, CIL/CLR based digital contracts will need to be executed on a virtual state machine of some kind. TBD.
 
 **Implementation Status:**
+
 - ⚠️ CIL/CLR contract system - planned but not started
 - ⚠️ Virtual state machine - planned but not started
 - ⚠️ ChainLinq - planned but not started
@@ -195,6 +201,7 @@ At this time, BrightChain is focusing on the basics of block access and data con
 - Why scour the web. We have everything here, just pre-compute indices as part of the contract. Cryptographically guaranteed indices? Essentially taking advantage of the database filestore.
 
 **Implementation Status:**
+
 - ⚠️ Static indices - planned but not started
 
 ## Additional Implemented Systems Not in Original Writeup
@@ -227,7 +234,7 @@ RFC 5322/2045 compliant email built on the messaging infrastructure:
 - **Delivery Tracking**: Per-recipient delivery status via gossip acknowledgments
 - **Encryption**: ECIES per-recipient, shared key, and S/MIME support
 - **Signatures**: Digital signatures for sender authentication
-- **Forward/Reply**: RFC-compliant forwarding with Resent-* headers
+- **Forward/Reply**: RFC-compliant forwarding with Resent-\* headers
 
 ### Communication System ✅ COMPLETE
 
@@ -281,9 +288,22 @@ Reed-Solomon erasure coding for data recovery:
 - **Data Recovery**: Reconstruct damaged blocks
 - **Configurable Redundancy**: 1.5x to 5x redundancy factor
 
+### Pool-Based Storage Architecture ✅ COMPLETE
+
+BrightChain organizes block storage into logical pools — lightweight namespace prefixes on block IDs that provide isolation without requiring separate physical storage backends. Each pool acts as an independent storage domain with its own access control, encryption configuration, and replication policies. Pool IDs follow the pattern `/^[a-zA-Z0-9_-]{1,64}$/` and are prefixed to block keys, ensuring that blocks in one pool are invisible to operations scoped to another.
+
+Whitening (Brightening) operations are pool-scoped: when a CBL is stored with whitening through a `PooledStoreAdapter`, both XOR component blocks are placed within the same pool namespace. This guarantees that reconstructing a whitened CBL only requires access to blocks within a single pool, preserving the isolation boundary. The `IPooledBlockStore` interface exposes `storeCBLWithWhiteningInPool()` and `retrieveCBLFromPool()` for explicit pool-scoped whitening, while the adapter transparently delegates standard `IBlockStore` calls through the pool.
+
+Cross-node consistency is achieved through a gossip-based protocol where nodes announce new blocks, CBL index entries, head pointer updates, and ACL changes to peers participating in the same pool. After network partitions heal, a reconciliation service exchanges block manifests and CBL index manifests (magnet URLs with sequence numbers) to identify and fetch missing data. A discovery protocol enables nodes to locate blocks and search CBL metadata (file name, MIME type, tags) across pool peers. Read concerns — Local, Available, and Consistent — let applications choose their consistency-latency tradeoff.
+
+Pool coordination layers enforce security at every boundary. An ECDSA challenge-response protocol authenticates nodes before they can interact with pool resources. Pool ACLs — stored as signed, chained blocks in the block store itself — define granular permissions (Read, Write, Replicate, Admin) per member, with quorum-based updates requiring majority admin approval. Pools support three encryption modes: `none`, `node-specific` (ECIES with the storing node's key), and `pool-shared` (AES-256-GCM with a shared key distributed via ECIES to each member). Key rotation on member removal ensures forward secrecy for new blocks without re-encrypting existing data.
+
+For a comprehensive reference, see [Storage Pools Architecture](./Storage_Pools_Architecture.md).
+
 ## Summary of Implementation Status
 
 ### ✅ Complete (70-80% of core functionality)
+
 - Owner-Free Filesystem (Brightening/Whitening)
 - Super CBL hierarchical storage
 - Identity management (Member system)
@@ -296,16 +316,19 @@ Reed-Solomon erasure coding for data recovery:
 - Comprehensive testing
 
 ### ⚠️ Designed but Not Implemented
+
 - Reputation system algorithms
 - Proof of Work throttling
 - Economic model (storage market, energy tracking)
 - Universal rating system
 
 ### ⚠️ Partially Complete
+
 - Network layer (WebSocket transport done, P2P infrastructure partial)
 - Replication system (tracking exists, automation incomplete)
 
 ### ⚠️ Planned but Not Started
+
 - Smart contracts (CIL/CLR system)
 - ChainLinq
 - Static indices
@@ -324,6 +347,7 @@ BrightChain has evolved from a blockchain alternative into a comprehensive platf
 ### Foundation Layer: Storage & Identity
 
 At the base, BrightChain provides:
+
 - **Owner-Free Filesystem**: Plausibly deniable storage with legal protection for node operators
 - **Super CBL Architecture**: Unlimited file sizes through hierarchical block lists
 - **Identity Management**: BIP39/32 key derivation with SECP256k1 cryptography
@@ -332,6 +356,7 @@ At the base, BrightChain provides:
 ### Communication Layer: Messaging & Email
 
 Built on the storage foundation:
+
 - **Messaging Infrastructure**: Encrypted message passing with gossip protocol propagation
 - **Email System**: RFC-compliant email with threading, attachments, and delivery tracking
 - **Gossip Delivery**: Epidemic-style message propagation with priority-based routing
@@ -340,6 +365,7 @@ Built on the storage foundation:
 ### Application Layer: Communication & Security
 
 User-facing applications:
+
 - **Communication System**: Discord-competitive platform with Signal-grade encryption
   - Direct messaging for private conversations
   - Group chats with shared encryption and key rotation
@@ -357,6 +383,7 @@ User-facing applications:
 ### Governance Layer: Voting & Quorum
 
 Democratic decision-making infrastructure:
+
 - **Homomorphic Voting**: 15+ voting methods with privacy-preserving tallying
   - Fully secure methods: Plurality, Approval, Weighted, Borda, Score, Yes/No, Supermajority
   - Multi-round methods: Ranked Choice (IRV), Two-Round Runoff, STAR, STV
@@ -372,6 +399,7 @@ Democratic decision-making infrastructure:
 ### Integration: A Unified Platform
 
 All systems integrate seamlessly:
+
 - **Shared Block Store**: All data (messages, emails, votes, credentials) stored as encrypted blocks
 - **Unified Encryption**: ECIES + AES-256-GCM + Paillier across all systems
 - **Common Identity**: Single BIP39/32 identity for all applications
@@ -383,30 +411,35 @@ All systems integrate seamlessly:
 BrightChain enables:
 
 **1. Decentralized Organizations**
+
 - Secure communication via channels and groups
 - Democratic decision-making via homomorphic voting
 - Document management via encrypted block storage
 - Identity management via BIP39/32 keys
 
 **2. Privacy-Preserving Communities**
+
 - Anonymous posting with brokered anonymity
 - End-to-end encrypted messaging
 - Plausibly deniable file storage
 - Quorum-based moderation
 
 **3. Democratic Governance**
+
 - Privacy-preserving elections with verifiable results
 - Hierarchical vote aggregation (local → regional → national)
 - Immutable audit trails for transparency
 - Multiple voting methods for different decision types
 
 **4. Secure Collaboration**
+
 - Encrypted email with threading and attachments
 - Real-time messaging with presence indicators
 - Shared password vaults for teams
 - Role-based access control
 
 **5. Personal Security**
+
 - Password management with breach detection
 - TOTP/2FA for all accounts
 - Emergency access for credential recovery
@@ -417,24 +450,28 @@ BrightChain enables:
 Planned additions to complete the vision:
 
 **Economic Layer**
+
 - Reputation system with proof-of-work throttling
 - Storage market with energy tracking (Joules)
 - Content valuation and bandwidth costs
 - Universal rating system for URIs
 
 **Smart Contract Layer**
+
 - CIL/CLR-based digital contracts
 - Virtual state machine for contract execution
 - ChainLinq for LINQ-style contract queries
 - Static indices computed as contract by-products
 
 **Network Layer**
+
 - Complete P2P infrastructure with DHT
 - Node discovery and topology management
 - Automatic replication based on durability requirements
 - Geographic distribution for resilience
 
 **Application Enhancements**
+
 - Voice/video calls via WebRTC
 - File sharing with chunking and resumption
 - Message threading within channels
@@ -445,6 +482,7 @@ Planned additions to complete the vision:
 BrightChain is the technology behind The Revolution Network—a protocol and ecosystem designed to bring out the best in collaborators through incentive-driven participation. Users are rewarded for philanthropic behavior, quality content, and resource contributions while aberrant behaviors are disincentivized through proof-of-work throttling and reputation penalties.
 
 The platform provides:
+
 - **True Anonymity with Accountability**: Brokered anonymity via quorum consensus
 - **Democratic Moderation**: Community-driven governance with configurable thresholds
 - **Privacy by Design**: Owner-Free Filesystem with plausible deniability

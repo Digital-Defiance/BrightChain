@@ -707,6 +707,8 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     'Fecha de última vista inválida',
   [BrightChainStrings.Error_LocationRecord_InvalidLatencyMs]:
     'La latencia debe ser un número no negativo',
+  [BrightChainStrings.Error_LocationRecord_InvalidPoolId]:
+    'Formato de ID de pool inválido',
 
   // Metadata Errors
   [BrightChainStrings.Error_Metadata_BlockIdRequired]:

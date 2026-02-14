@@ -43,6 +43,8 @@ describe('WebSocketHandler', () => {
       getLocalBlockIds: jest.fn(),
       exportBloomFilter: jest.fn(),
       exportManifest: jest.fn(),
+      exportPoolScopedBloomFilter: jest.fn(),
+      exportPoolScopedManifest: jest.fn(),
       rebuild: jest.fn(),
     } as jest.Mocked<IBlockRegistry>;
 

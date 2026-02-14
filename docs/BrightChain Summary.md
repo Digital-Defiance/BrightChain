@@ -64,7 +64,7 @@ BrightChain has achieved **70-80% completion** of its core vision with significa
 
 - **Messaging Infrastructure**: Complete encrypted messaging system with direct and broadcast routing, gossip protocol with epidemic-style propagation, priority-based delivery, automatic retry with exponential backoff, delivery tracking, WebSocket transport, and persistence in the block store. Includes Bloom filter-based discovery protocol for efficient block location.
 
-- **Email System**: RFC 5322/2045 compliant email built on messaging infrastructure. Features include full email composition/sending/retrieval, threading support (In-Reply-To/References), BCC privacy with cryptographically separated copies, multiple attachments with Content-ID support, inbox operations (query/filter/sort/search with pagination), per-recipient delivery tracking via gossip, encryption (ECIES per-recipient, shared key, S/MIME), digital signatures, and RFC-compliant forward/reply with Resent-* headers.
+- **Email System**: RFC 5322/2045 compliant email built on messaging infrastructure. Features include full email composition/sending/retrieval, threading support (In-Reply-To/References), BCC privacy with cryptographically separated copies, multiple attachments with Content-ID support, inbox operations (query/filter/sort/search with pagination), per-recipient delivery tracking via gossip, encryption (ECIES per-recipient, shared key, S/MIME), digital signatures, and RFC-compliant forward/reply with Resent-\* headers.
 
 - **Communication System**: Discord-competitive communication with Signal-grade encryption. Includes direct messaging (person-to-person encrypted conversations), group chats (multi-member with shared encryption and key rotation), channels (topic-based with four visibility modes: public/private/secret/invisible), presence system (online/offline/idle/DND), role-based permissions (Owner/Admin/Moderator/Member), real-time events (typing indicators, reactions, edits via WebSocket), invite system (time-limited, usage-limited tokens), message search, and conversation promotion (DMs to groups).
 
@@ -75,6 +75,8 @@ BrightChain has achieved **70-80% completion** of its core vision with significa
 - **Forward Error Correction**: Reed-Solomon erasure coding for data recovery, parity block generation, and configurable redundancy (1.5x to 5x).
 
 - **Block Store**: Content-addressed storage using SHA3-512 checksums, automatic deduplication, block metadata tracking, and replication status management.
+
+- **Storage Pools**: Lightweight namespace-based pool isolation for block storage, with pool-scoped whitening ensuring XOR components stay within the same pool. Pools support ECDSA node authentication, signed ACLs with quorum-based updates, three encryption modes (none, node-specific, pool-shared), and cross-node coordination via gossip, reconciliation, and discovery protocols with configurable read concerns (Local, Available, Consistent).
 
 - **Comprehensive Testing**: Extensive unit tests, integration tests, property-based tests (3,700+ iterations across 37 test files), and error handling tests across all components.
 
@@ -121,7 +123,7 @@ BrightChain successfully achieves its "government in a box" vision with:
 ✅ **File Sharing** - Secure, decentralized storage  
 ✅ **Communication** - Encrypted messaging infrastructure  
 ✅ **Accountability with Privacy** - Brokered Anonymity via quorum  
-✅ **Legal Compliance** - Temporal identity recovery mechanism  
+✅ **Legal Compliance** - Temporal identity recovery mechanism
 
 See [OFF System Comparison Analysis](./OFF_System_Comparison_Analysis.md) for detailed comparison.
 
@@ -145,18 +147,25 @@ BrightChain has evolved into a comprehensive platform for building decentralized
 ### Layered Architecture
 
 **Foundation Layer** (Storage & Identity):
+
 - Owner-Free Filesystem with plausible deniability
 - Super CBL for unlimited file sizes
 - BIP39/32 identity with SECP256k1 cryptography
 - Brokered anonymity via quorum consensus
+- Storage pools for namespace-isolated block storage
+- Pool-scoped whitening (XOR components confined to the same pool)
+- Cross-node pool coordination via gossip, reconciliation, and discovery
+- Eventual consistency with configurable read concerns (Local, Available, Consistent)
 
 **Communication Layer** (Messaging & Email):
+
 - Encrypted message passing with gossip protocol
 - RFC 5322/2045 compliant email system
 - Epidemic-style propagation with priority routing
 - Bloom filter-based discovery protocol
 
 **Application Layer** (User-Facing Services):
+
 - **Communication System**: Discord-competitive with Signal-grade encryption
   - Direct messaging, group chats, channels
   - Four visibility modes (public/private/secret/invisible)
@@ -171,6 +180,7 @@ BrightChain has evolved into a comprehensive platform for building decentralized
   - Import from major password managers
 
 **Governance Layer** (Democratic Infrastructure):
+
 - **Homomorphic Voting**: 15+ methods with privacy-preserving tallying
   - Fully secure: Plurality, Approval, Weighted, Borda, Score, Yes/No, Supermajority
   - Multi-round: Ranked Choice (IRV), Two-Round, STAR, STV
@@ -186,6 +196,7 @@ BrightChain has evolved into a comprehensive platform for building decentralized
 ### Unified Integration
 
 All systems share:
+
 - **Common Block Store**: All data stored as encrypted blocks
 - **Unified Encryption**: ECIES + AES-256-GCM + Paillier
 - **Single Identity**: BIP39/32 keys across all applications
@@ -195,30 +206,35 @@ All systems share:
 ### Real-World Applications
 
 **Decentralized Organizations**:
+
 - Secure communication (channels/groups)
 - Democratic voting (homomorphic elections)
 - Document management (encrypted blocks)
 - Identity management (BIP39/32)
 
 **Privacy-Preserving Communities**:
+
 - Anonymous posting (brokered anonymity)
 - End-to-end encryption (all communications)
 - Plausibly deniable storage (Owner-Free FS)
 - Quorum-based moderation
 
 **Democratic Governance**:
+
 - Privacy-preserving elections (verifiable results)
 - Hierarchical aggregation (local → national)
 - Immutable audit trails (transparency)
 - Multiple voting methods (different decisions)
 
 **Secure Collaboration**:
+
 - Encrypted email (threading/attachments)
 - Real-time messaging (presence indicators)
 - Shared password vaults (teams)
 - Role-based access control
 
 **Personal Security**:
+
 - Password management (breach detection)
 - TOTP/2FA (all accounts)
 - Emergency access (credential recovery)

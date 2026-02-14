@@ -2045,11 +2045,11 @@ __metadata:
   resolution: "@brightchain/brightchain-api-lib@workspace:brightchain-api-lib"
   dependencies:
     "@aws-sdk/client-ses": "npm:^3.859.0"
-    "@brightchain/brightchain-lib": "npm:0.14.0"
-    "@digitaldefiance/branded-enum": "npm:^0.0.6"
+    "@brightchain/brightchain-lib": "npm:0.15.0"
+    "@digitaldefiance/branded-enum": "npm:^0.0.7"
     "@digitaldefiance/enclave-bridge-client": "npm:^1.1.0"
-    "@digitaldefiance/i18n-lib": "npm:^4.3.2"
-    "@digitaldefiance/node-ecies-lib": "npm:^4.17.2"
+    "@digitaldefiance/i18n-lib": "npm:^4.5.0"
+    "@digitaldefiance/node-ecies-lib": "npm:^4.18.0"
     "@ethereumjs/wallet": "npm:^10.0.0"
     "@types/bip39": "npm:^3.0.4"
     "@types/cors": "npm:^2.8.19"
@@ -2094,12 +2094,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@brightchain/brightchain-lib@npm:0.14.0, @brightchain/brightchain-lib@npm:^0.14.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
+"@brightchain/brightchain-lib@npm:0.15.0, @brightchain/brightchain-lib@npm:^0.15.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
   dependencies:
-    "@digitaldefiance/ecies-lib": "npm:^4.17.2"
-    "@digitaldefiance/i18n-lib": "npm:^4.3.2"
+    "@digitaldefiance/ecies-lib": "npm:^4.18.0"
+    "@digitaldefiance/i18n-lib": "npm:^4.5.0"
     "@noble/hashes": "npm:^1.4.0"
     "@types/nat-upnp": "npm:^1.1.5"
     "@types/qrcode": "npm:^1.5.6"
@@ -2233,17 +2233,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/branded-enum@npm:0.0.6, @digitaldefiance/branded-enum@npm:^0.0.6":
-  version: 0.0.6
-  resolution: "@digitaldefiance/branded-enum@npm:0.0.6"
-  checksum: 10c0/1b70a5a3089c1a4673df9ea4f51cb9d3818291c3170e56fb211372dd4ac7e95b941b0bd95f4982d1f927ae13fca7ad156d360eca1053adbe066af1b282877230
-  languageName: node
-  linkType: hard
-
-"@digitaldefiance/branded-enum@npm:0.0.7":
+"@digitaldefiance/branded-enum@npm:0.0.7, @digitaldefiance/branded-enum@npm:^0.0.7":
   version: 0.0.7
   resolution: "@digitaldefiance/branded-enum@npm:0.0.7"
   checksum: 10c0/a7a159037cc03cbb7cf494eee29c3f9b1cc5f3a72693e630ef893701d90e3586bb11ff4e7e814010e3b7722553c908e04f47a18053f5f7e3692a71853bbf76cb
+  languageName: node
+  linkType: hard
+
+"@digitaldefiance/branded-enum@npm:^0.0.6":
+  version: 0.0.6
+  resolution: "@digitaldefiance/branded-enum@npm:0.0.6"
+  checksum: 10c0/1b70a5a3089c1a4673df9ea4f51cb9d3818291c3170e56fb211372dd4ac7e95b941b0bd95f4982d1f927ae13fca7ad156d360eca1053adbe066af1b282877230
   languageName: node
   linkType: hard
 
@@ -2274,12 +2274,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/express-suite-react-components@npm:^2.13.1":
-  version: 2.13.11
-  resolution: "@digitaldefiance/express-suite-react-components@npm:2.13.11"
+"@digitaldefiance/express-suite-react-components@npm:^2.13.12":
+  version: 2.13.12
+  resolution: "@digitaldefiance/express-suite-react-components@npm:2.13.12"
   dependencies:
     "@digitaldefiance/i18n-lib": "npm:4.5.0"
-    "@digitaldefiance/suite-core-lib": "npm:3.12.11"
+    "@digitaldefiance/suite-core-lib": "npm:3.12.12"
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.0"
     "@mui/icons-material": "npm:^7.0.2"
@@ -2294,7 +2294,7 @@ __metadata:
     yup: "npm:^1.6.1"
   peerDependencies:
     react-router-dom: 6.29.0
-  checksum: 10c0/51d20b94cebb1cd2912860e48f7d0a11d27a949210a7b8aaea8f49ad74399fb2a4c647148b21d36d4c15757f5ea2ca05d6abdb7b4c328a58c8d8d90ff27185bc
+  checksum: 10c0/be1647ca46f483d02528932e4c09a11aec403c3ce01883af214ae962bf4f0ce54d2a1dd94a7a56174a907ca8f279866d438101f9fde7e5e9d89ced0c7b063c0f
   languageName: node
   linkType: hard
 
@@ -2344,7 +2344,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/node-ecies-lib@npm:4.18.0, @digitaldefiance/node-ecies-lib@npm:^4.17.2":
+"@digitaldefiance/node-ecies-lib@npm:4.18.0, @digitaldefiance/node-ecies-lib@npm:^4.17.2, @digitaldefiance/node-ecies-lib@npm:^4.18.0":
   version: 4.18.0
   resolution: "@digitaldefiance/node-ecies-lib@npm:4.18.0"
   dependencies:
@@ -2365,16 +2365,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/node-express-suite@npm:^3.12.13":
-  version: 3.12.13
-  resolution: "@digitaldefiance/node-express-suite@npm:3.12.13"
+"@digitaldefiance/node-express-suite@npm:^3.13.1":
+  version: 3.13.1
+  resolution: "@digitaldefiance/node-express-suite@npm:3.13.1"
   dependencies:
     "@digitaldefiance/ecies-lib": "npm:4.18.0"
     "@digitaldefiance/i18n-lib": "npm:4.5.0"
     "@digitaldefiance/mongoose-types": "npm:8.20.9"
     "@digitaldefiance/node-ecies-lib": "npm:4.18.0"
     "@digitaldefiance/reed-solomon-erasure.wasm": "npm:^1.0.2"
-    "@digitaldefiance/suite-core-lib": "npm:3.12.11"
+    "@digitaldefiance/suite-core-lib": "npm:3.12.12"
     "@noble/curves": "npm:^1.9.0"
     "@noble/hashes": "npm:^1.8.0"
     argon2: "npm:^0.40.1"
@@ -2383,6 +2383,7 @@ __metadata:
     ejs: "npm:^3.1.10"
     express: "npm:^5.1.0"
     express-validator: "npm:^7.2.1"
+    greenlock-express: "npm:^4.0.3"
     helmet: "npm:^8.1.0"
     http: "npm:^0.0.1-security"
     jsonwebtoken: "npm:^9.0.2"
@@ -2392,7 +2393,7 @@ __metadata:
     nat-upnp: "npm:^1.1.1"
     reflect-metadata: "npm:^0.2.2"
     zod: "npm:^3.24.0"
-  checksum: 10c0/b8045545e010b3f02e5f902287ffe081984eb2f79703c704cbd5e5d3c3aa6f8b00c67723bef6821fa0fe48397643684090afaa010175c6b1ad30e3ab3e49b250
+  checksum: 10c0/4e1ac3292307e527892961f5582cf7fdf45e236d577878f580f7105a101035112c7e7cbaf561ff907f39a05027f7c941fe21e788380574e56f1af04d47d4b272
   languageName: node
   linkType: hard
 
@@ -2403,7 +2404,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/secrets@npm:^2.0.4":
+"@digitaldefiance/secrets@npm:^2.0.7":
   version: 2.0.7
   resolution: "@digitaldefiance/secrets@npm:2.0.7"
   peerDependencies:
@@ -2415,13 +2416,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/suite-core-lib@npm:3.12.11, @digitaldefiance/suite-core-lib@npm:^3.12.1":
-  version: 3.12.11
-  resolution: "@digitaldefiance/suite-core-lib@npm:3.12.11"
+"@digitaldefiance/suite-core-lib@npm:3.12.12, @digitaldefiance/suite-core-lib@npm:^3.12.12":
+  version: 3.12.12
+  resolution: "@digitaldefiance/suite-core-lib@npm:3.12.12"
   dependencies:
     "@digitaldefiance/ecies-lib": "npm:4.18.0"
     "@digitaldefiance/i18n-lib": "npm:4.5.0"
-  checksum: 10c0/acbe562b968a8b6f15b7d0f3f4bdebe627304e07369fcc6e4c6e6a793262f874b6923babb8c48370aee8d8ad9399005d0e91144661641648828ee305bd8658f7
+  checksum: 10c0/744bb3c6dd9bd52951173516f62ce34ec1bc6e47f2c3cc62e732ca2296f24e31532b57897461daf9747e182cac8de1259d832bfd17356aa360669ea474b0749f
   languageName: node
   linkType: hard
 
@@ -3302,6 +3303,15 @@ __metadata:
   version: 8.4.1
   resolution: "@faker-js/faker@npm:8.4.1"
   checksum: 10c0/4f2aecddcfdc2cc8b50b2d15d1e37302a7c7a5bbd184ae910a9d271bc11248533ca74dcdd4a9ccbe20410553e7af0f6a4d334c5b955635e09a32ddf4a64942d4
+  languageName: node
+  linkType: hard
+
+"@greenlock/manager@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "@greenlock/manager@npm:3.1.0"
+  dependencies:
+    greenlock-manager-fs: "npm:^3.1.0"
+  checksum: 10c0/dbb0c7baf1e99ead51685fdec41654b398fc9d57af8f85cbc46f65ba3ab950673e4c820507829e6077fc210847a109550f780a43c0a8bd2cd3ab3952e8a81b55
   languageName: node
   linkType: hard
 
@@ -7589,6 +7599,120 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@root/acme@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "@root/acme@npm:3.1.0"
+  dependencies:
+    "@root/csr": "npm:^0.8.1"
+    "@root/encoding": "npm:^1.0.1"
+    "@root/keypairs": "npm:^0.10.0"
+    "@root/pem": "npm:^1.0.4"
+    "@root/request": "npm:^1.6.1"
+    "@root/x509": "npm:^0.7.2"
+  checksum: 10c0/b08cb74520afea5814a6b2de880a77f36689801af5123e5e6b138f9cbe69c137a4f011ecfdd0cbd7072eaaf3369166b259a2df0cd7236d4db70063e1b3971c0d
+  languageName: node
+  linkType: hard
+
+"@root/asn1@npm:^1.0.0":
+  version: 1.0.2
+  resolution: "@root/asn1@npm:1.0.2"
+  dependencies:
+    "@root/encoding": "npm:^1.0.1"
+    "@types/root__asn1": "npm:^1.0.0"
+  checksum: 10c0/fcf022ab97e6e48585fdf913582144a49a246b434fcedcd7243a402521a74ba0830fe39920845bb981ef897e1970fdaed9466b70bda74868538e3478a93a9667
+  languageName: node
+  linkType: hard
+
+"@root/csr@npm:^0.8.1":
+  version: 0.8.1
+  resolution: "@root/csr@npm:0.8.1"
+  dependencies:
+    "@root/asn1": "npm:^1.0.0"
+    "@root/pem": "npm:^1.0.4"
+    "@root/x509": "npm:^0.7.2"
+  checksum: 10c0/8f97876f7aa5404f4deb41bb18cdcdec87a806a9673fd9ea981fb299515afd96d6faa2d1dfb7b032fa370865f7ca879e645c6dae526034445ad06a02a4fc7c9a
+  languageName: node
+  linkType: hard
+
+"@root/encoding@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@root/encoding@npm:1.0.1"
+  checksum: 10c0/1db56070c6e6362fcfaa6503fe978e0a61d6871a405a3d4b038de55af76520438f899b7a3aca9d28ae2e9b88199e3968d4180328aee70883f565ad2c1832f279
+  languageName: node
+  linkType: hard
+
+"@root/greenlock-express@npm:^4.0.3":
+  version: 4.0.4
+  resolution: "@root/greenlock-express@npm:4.0.4"
+  dependencies:
+    "@root/greenlock": "npm:^4.0.5"
+    redirect-https: "npm:^1.3.1"
+  checksum: 10c0/dfe51938f56321962d24ff5bd4956e3fd8342403d491a18b6a2bb71827f060558b4ba1d4804fd396d6700775200ae6f3c91489cdd8b43295cefaf13a29381bac
+  languageName: node
+  linkType: hard
+
+"@root/greenlock@npm:^4.0.4, @root/greenlock@npm:^4.0.5":
+  version: 4.0.5
+  resolution: "@root/greenlock@npm:4.0.5"
+  dependencies:
+    "@greenlock/manager": "npm:^3.1.0"
+    "@root/acme": "npm:^3.1.0"
+    "@root/csr": "npm:^0.8.1"
+    "@root/keypairs": "npm:^0.10.0"
+    "@root/mkdirp": "npm:^1.0.0"
+    "@root/request": "npm:^1.6.1"
+    acme-http-01-standalone: "npm:^3.0.5"
+    cert-info: "npm:^1.5.1"
+    greenlock-store-fs: "npm:^3.2.2"
+    safe-replace: "npm:^1.1.0"
+  bin:
+    greenlock: bin/greenlock.js
+  checksum: 10c0/f3e47f485cb39b599fdf1c4e5097449d6d78196c5811c6f4caafae0a1f1807328771598927b421cd821136c69d7dff48a97232d55a83c561f084f3d31f76c50f
+  languageName: node
+  linkType: hard
+
+"@root/keypairs@npm:^0.10.0":
+  version: 0.10.3
+  resolution: "@root/keypairs@npm:0.10.3"
+  dependencies:
+    "@root/encoding": "npm:^1.0.1"
+    "@root/pem": "npm:^1.0.4"
+    "@root/x509": "npm:^0.7.2"
+  checksum: 10c0/316ca1cb29bdeea09020a727a42b021ab944f3b3ac0044c2550ef71a58d15df3ba05bd3fd7f7bf06a3977a81d5591bc57feafe026cd6543d5ff36fb3aa95acfc
+  languageName: node
+  linkType: hard
+
+"@root/mkdirp@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@root/mkdirp@npm:1.0.0"
+  checksum: 10c0/3d03633cbf40aab4c1b6b579a84d02d519088fa55f18f52d54e622c657bb1406a5e03b6f72cbd05221602fae0f0e7df35aa0fac38378cf986badbfe28c495e7c
+  languageName: node
+  linkType: hard
+
+"@root/pem@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "@root/pem@npm:1.0.4"
+  checksum: 10c0/e2cb09308fb6b9c389af418d760921fce581268430ebd7c643c4cb024a9a0704eb37292fa6fe573c0209e2c4517c40693ddc48204fb39f99c57c5b169137262b
+  languageName: node
+  linkType: hard
+
+"@root/request@npm:^1.6.1":
+  version: 1.9.2
+  resolution: "@root/request@npm:1.9.2"
+  checksum: 10c0/e2bcec514d38e50edd56e3de2dfe1899a735d483dc8f49bae42cd241f88bb5e1e6e7a1984af71951586a3698982ad48b2e1e3bb2f90cf982e13e2f97e7b6585a
+  languageName: node
+  linkType: hard
+
+"@root/x509@npm:^0.7.2":
+  version: 0.7.2
+  resolution: "@root/x509@npm:0.7.2"
+  dependencies:
+    "@root/asn1": "npm:^1.0.0"
+    "@root/encoding": "npm:^1.0.1"
+  checksum: 10c0/9a7ae72d3d7bcdd67efb4db10af041bb7a3ae8961c48d81a7ebc98855388d9d041fce0270f0ad45eb96bba42f3e079bbb21e5c413a7b3db818f855a681ec680b
+  languageName: node
+  linkType: hard
+
 "@rspack/binding-darwin-arm64@npm:1.7.5":
   version: 1.7.5
   resolution: "@rspack/binding-darwin-arm64@npm:1.7.5"
@@ -9527,6 +9651,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/root__asn1@npm:^1.0.0":
+  version: 1.0.5
+  resolution: "@types/root__asn1@npm:1.0.5"
+  checksum: 10c0/4c80796b2e18faac0eeb6aba143268ce126f7b579bb7e65d674526d3506ee09a552c741e35a612764b9ab7b90b29cfad6ab13483a64ce61f90f28c61293235c9
+  languageName: node
+  linkType: hard
+
 "@types/secp256k1@npm:^4":
   version: 4.0.7
   resolution: "@types/secp256k1@npm:4.0.7"
@@ -10683,6 +10814,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"acme-http-01-standalone@npm:^3.0.5":
+  version: 3.0.5
+  resolution: "acme-http-01-standalone@npm:3.0.5"
+  checksum: 10c0/0d5b632b550fa55ce6d7e3e6acbe0a3a5baa52174ee80fee2931c63a6f70223ab3c6450e7830066934b1361e3449b41598d1f8b53487329d12ab77889fc72dd0
+  languageName: node
+  linkType: hard
+
 "acorn-import-phases@npm:^1.0.3":
   version: 1.0.4
   resolution: "acorn-import-phases@npm:1.0.4"
@@ -11818,7 +11956,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "brightchain-showcase@workspace:showcase"
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.14.0"
+    "@brightchain/brightchain-lib": "npm:^0.15.0"
     "@digitaldefiance/ecies-lib": "npm:^4.18.0"
     "@digitaldefiance/i18n-lib": "npm:^4.5.0"
     "@esbuild-plugins/node-globals-polyfill": "npm:^0.2.3"
@@ -11885,16 +12023,16 @@ __metadata:
     "@babel/preset-react": "npm:^7.14.5"
     "@brightchain/brightchain-api-lib": "npm:^0.13.0"
     "@brightchain/brightchain-lib": "npm:^0.13.0"
-    "@digitaldefiance/branded-enum": "npm:0.0.6"
-    "@digitaldefiance/ecies-lib": "npm:^4.17.2"
-    "@digitaldefiance/express-suite-react-components": "npm:^2.13.1"
+    "@digitaldefiance/branded-enum": "npm:0.0.7"
+    "@digitaldefiance/ecies-lib": "npm:^4.18.0"
+    "@digitaldefiance/express-suite-react-components": "npm:^2.13.12"
     "@digitaldefiance/express-suite-test-utils": "npm:^1.1.0"
-    "@digitaldefiance/i18n-lib": "npm:^4.3.2"
-    "@digitaldefiance/node-ecies-lib": "npm:^4.17.2"
-    "@digitaldefiance/node-express-suite": "npm:^3.12.13"
+    "@digitaldefiance/i18n-lib": "npm:^4.5.0"
+    "@digitaldefiance/node-ecies-lib": "npm:^4.18.0"
+    "@digitaldefiance/node-express-suite": "npm:^3.13.1"
     "@digitaldefiance/reed-solomon-erasure.wasm": "npm:^1.0.2"
-    "@digitaldefiance/secrets": "npm:^2.0.4"
-    "@digitaldefiance/suite-core-lib": "npm:^3.12.1"
+    "@digitaldefiance/secrets": "npm:^2.0.7"
+    "@digitaldefiance/suite-core-lib": "npm:^3.12.12"
     "@emotion/react": "npm:11.14.0"
     "@emotion/styled": "npm:11.14.1"
     "@faker-js/faker": "npm:^8.3.1"
@@ -12304,6 +12442,15 @@ __metadata:
   version: 2.0.1
   resolution: "ccount@npm:2.0.1"
   checksum: 10c0/3939b1664390174484322bc3f45b798462e6c07ee6384cb3d645e0aa2f318502d174845198c1561930e1d431087f74cf1fe291ae9a4722821a9f4ba67e574350
+  languageName: node
+  linkType: hard
+
+"cert-info@npm:^1.5.1":
+  version: 1.5.1
+  resolution: "cert-info@npm:1.5.1"
+  bin:
+    cert-info: bin/cert-info.js
+  checksum: 10c0/4f77f25151ad4c345ea3d81e11d4f135cfa6a3b38f59676ae263716ef96e9b52c9dfdf4aa0359c5763be28a6f308471c930c020b113c723e03f879451a2b7781
   languageName: node
   linkType: hard
 
@@ -16464,6 +16611,37 @@ __metadata:
   version: 4.2.11
   resolution: "graceful-fs@npm:4.2.11"
   checksum: 10c0/386d011a553e02bc594ac2ca0bd6d9e4c22d7fa8cfbfc448a6d148c59ea881b092db9dbe3547ae4b88e55f1b01f7c4a2ecc53b310c042793e63aa44cf6c257f2
+  languageName: node
+  linkType: hard
+
+"greenlock-express@npm:^4.0.3":
+  version: 4.0.3
+  resolution: "greenlock-express@npm:4.0.3"
+  dependencies:
+    "@root/greenlock": "npm:^4.0.4"
+    "@root/greenlock-express": "npm:^4.0.3"
+    redirect-https: "npm:^1.1.5"
+  checksum: 10c0/f49864847804b91fefe59f3ebdcc84cb2158fe9509996ea0029aace7d715dfa9ff238e1d07ce9378b65119983229bc4dbc59b28bccb59b31fb73385e10d132be
+  languageName: node
+  linkType: hard
+
+"greenlock-manager-fs@npm:^3.1.0":
+  version: 3.1.1
+  resolution: "greenlock-manager-fs@npm:3.1.1"
+  dependencies:
+    "@root/mkdirp": "npm:^1.0.0"
+    safe-replace: "npm:^1.1.0"
+  checksum: 10c0/8a67a751375991739acebd4c042d8aaa92f193ce396fc14848bfec66b7d5acc7673f2b493efed50fbe0531e754dcb2095704b8076b22fa88438a3c313c6771c1
+  languageName: node
+  linkType: hard
+
+"greenlock-store-fs@npm:^3.2.2":
+  version: 3.2.2
+  resolution: "greenlock-store-fs@npm:3.2.2"
+  dependencies:
+    "@root/mkdirp": "npm:^1.0.0"
+    safe-replace: "npm:^1.1.0"
+  checksum: 10c0/1775b7cce21ee7a08d049b01ccb0b5a84e308b63259d7a70ef425f39410e458370baa31ce1b215f38a51956519d88ccfdf64890c8dd8bbc33125ae358a109401
   languageName: node
   linkType: hard
 
@@ -23844,6 +24022,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"redirect-https@npm:^1.1.5, redirect-https@npm:^1.3.1":
+  version: 1.3.1
+  resolution: "redirect-https@npm:1.3.1"
+  dependencies:
+    escape-html: "npm:^1.0.3"
+  checksum: 10c0/47fe74cc8ea2ef5277f97160278a01c3f040a58c2971be374807b8e0c834b74c78a607e0cf8c87e651a62c662a6b32e4cc6317f872837ee7b4fc423c64663031
+  languageName: node
+  linkType: hard
+
 "reflect-metadata@npm:*, reflect-metadata@npm:^0.2.2":
   version: 0.2.2
   resolution: "reflect-metadata@npm:0.2.2"
@@ -24668,6 +24855,13 @@ __metadata:
     es-errors: "npm:^1.3.0"
     is-regex: "npm:^1.2.1"
   checksum: 10c0/f2c25281bbe5d39cddbbce7f86fca5ea9b3ce3354ea6cd7c81c31b006a5a9fff4286acc5450a3b9122c56c33eba69c56b9131ad751457b2b4a585825e6a10665
+  languageName: node
+  linkType: hard
+
+"safe-replace@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "safe-replace@npm:1.1.0"
+  checksum: 10c0/b36788006259d570da8110a9aba0c692907c53f53902ab2a1ae1311621d6ae34349b76722856df2c504e00c3603d7c17b96a1e9425f5ed430f1c89b4e75ebf3e
   languageName: node
   linkType: hard
 
