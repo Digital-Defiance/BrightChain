@@ -625,6 +625,8 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     '無効な最終確認日時です',
   [BrightChainStrings.Error_LocationRecord_InvalidLatencyMs]:
     'レイテンシは非負の数値である必要があります',
+  [BrightChainStrings.Error_LocationRecord_InvalidPoolId]:
+    '無効なプールID形式です',
   [BrightChainStrings.Error_Metadata_BlockIdRequired]: 'ブロックIDが必要です',
   [BrightChainStrings.Error_Metadata_CreatedAtRequired]:
     '作成日時タイムスタンプが必要です',

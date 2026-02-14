@@ -6,9 +6,9 @@
  * and input validation.
  */
 
-import { HeadRegistry } from '../lib/collection';
 import { BrightChainDb } from '../lib/database';
 import { createDbRouter, DbRouterOptions } from '../lib/expressMiddleware';
+import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import { MockBlockStore } from './helpers/mockBlockStore';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -103,7 +103,7 @@ async function routerRequest(
 
 function setupRouter(routerOptions?: DbRouterOptions) {
   const store = new MockBlockStore();
-  const registry = HeadRegistry.createIsolated();
+  const registry = InMemoryHeadRegistry.createIsolated();
   const db = new BrightChainDb(store as any, {
     name: 'apitest',
     headRegistry: registry,

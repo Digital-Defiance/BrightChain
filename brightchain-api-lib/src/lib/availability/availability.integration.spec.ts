@@ -15,6 +15,8 @@ import {
   BlockAnnouncement,
   BlockManifest,
   BloomFilter,
+  CBLMetadataSearchQuery,
+  ICBLIndexEntry,
   ILocationRecord,
 } from '@brightchain/brightchain-lib';
 import { randomBytes } from 'crypto';
@@ -150,6 +152,14 @@ class MockNetworkProvider implements IPeerNetworkProvider {
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 10));
     return peer.blocks.has(blockId);
+  }
+
+  async queryPeerForCBLMetadata(
+    _peerId: string,
+    _query: CBLMetadataSearchQuery,
+    _timeoutMs: number,
+  ): Promise<ICBLIndexEntry[]> {
+    return [];
   }
 }
 

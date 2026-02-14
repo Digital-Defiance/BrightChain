@@ -10,6 +10,7 @@
  */
 
 import { AvailabilityState } from '../../enumerations/availabilityState';
+import { PoolId } from '../storage/pooledBlockStore';
 import { ILocationRecord } from './locationRecord';
 import { ReconciliationResult } from './reconciliationService';
 
@@ -218,13 +219,17 @@ export interface IAvailabilityService {
   getAvailabilityState(blockId: string): Promise<AvailabilityState>;
 
   /**
-   * Get all known locations for a block.
+   * Get all known locations for a block, optionally filtered by pool.
    *
    * @param blockId - The block ID to query
+   * @param poolId - Optional pool ID to filter location records by
    * @returns Promise resolving to array of location records
-   * @see Requirements 11.2
+   * @see Requirements 11.2, 5.3, 5.5
    */
-  getBlockLocations(blockId: string): Promise<ILocationRecord[]>;
+  getBlockLocations(
+    blockId: string,
+    poolId?: PoolId,
+  ): Promise<ILocationRecord[]>;
 
   /**
    * Get detailed location query result with staleness indication.

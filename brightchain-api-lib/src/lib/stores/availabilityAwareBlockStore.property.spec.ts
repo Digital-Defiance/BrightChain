@@ -43,6 +43,7 @@ import {
   IBlockMetadata,
   IBlockRegistry,
   IBlockStore,
+  ICBLIndexEntry,
   IGossipService,
   ILocationRecord,
   initializeBrightChain,
@@ -50,6 +51,9 @@ import {
   MessageDeliveryMetadata,
   PendingBlockError,
   PendingSyncItem,
+  PoolId,
+  PoolScopedBloomFilter,
+  PoolScopedManifest,
   RawDataBlock,
   ReadConcern,
   ReconciliationConfig,
@@ -148,6 +152,22 @@ class MockBlockRegistry implements IBlockRegistry {
     return {
       nodeId: 'test-node',
       blockIds: this.getLocalBlockIds(),
+      generatedAt: new Date(),
+      checksum: 'test-checksum',
+    };
+  }
+
+  exportPoolScopedBloomFilter(): PoolScopedBloomFilter {
+    return {
+      filters: new Map(),
+      globalFilter: this.exportBloomFilter(),
+    };
+  }
+
+  exportPoolScopedManifest(): PoolScopedManifest {
+    return {
+      nodeId: 'test-node',
+      pools: new Map(),
       generatedAt: new Date(),
       checksum: 'test-checksum',
     };
@@ -371,8 +391,15 @@ class MockAvailabilityService implements IAvailabilityService {
     return this.blockStates.get(blockId) ?? AvailabilityState.Unknown;
   }
 
-  async getBlockLocations(blockId: string): Promise<ILocationRecord[]> {
-    return this.blockLocations.get(blockId) ?? [];
+  async getBlockLocations(
+    blockId: string,
+    poolId?: PoolId,
+  ): Promise<ILocationRecord[]> {
+    const locations = this.blockLocations.get(blockId) ?? [];
+    if (poolId !== undefined) {
+      return locations.filter((l) => l.poolId === poolId);
+    }
+    return locations;
   }
 
   async queryBlockLocation(blockId: string) {
@@ -524,6 +551,25 @@ class MockGossipService implements IGossipService {
   async announceRemoval(blockId: string): Promise<void> {
     this.removedBlocks.push(blockId);
   }
+
+  async announcePoolDeletion(_poolId: PoolId): Promise<void> {
+    // No-op for mock
+  }
+
+  async announceCBLIndexUpdate(_entry: ICBLIndexEntry): Promise<void> {}
+
+  async announceCBLIndexDelete(_entry: ICBLIndexEntry): Promise<void> {}
+
+  async announceHeadUpdate(
+    _dbName: string,
+    _collectionName: string,
+    _blockId: string,
+  ): Promise<void> {}
+
+  async announceACLUpdate(
+    _poolId: string,
+    _aclBlockId: string,
+  ): Promise<void> {}
 
   async handleAnnouncement(_announcement: BlockAnnouncement): Promise<void> {}
 

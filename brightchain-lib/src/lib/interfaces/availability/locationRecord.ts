@@ -4,6 +4,7 @@ import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
 import { IBlockMetadata } from '../storage/blockMetadata';
+import { PoolId, isValidPoolId } from '../storage/pooledBlockStore';
 
 /**
  * Location record for a block, tracking which node holds a copy
@@ -31,6 +32,11 @@ export interface ILocationRecord {
    * Optional latency measurement to this node in milliseconds
    */
   latencyMs?: number;
+
+  /**
+   * Pool the block is stored in on this node
+   */
+  poolId?: PoolId;
 }
 
 /**
@@ -90,6 +96,7 @@ export interface SerializedLocationRecord {
   lastSeen: string;
   isAuthoritative: boolean;
   latencyMs?: number;
+  poolId?: string;
 }
 
 /**
@@ -126,6 +133,7 @@ export function locationRecordToJSON(
     lastSeen: record.lastSeen.toISOString(),
     isAuthoritative: record.isAuthoritative,
     ...(record.latencyMs !== undefined && { latencyMs: record.latencyMs }),
+    ...(record.poolId !== undefined && { poolId: record.poolId }),
   };
 }
 
@@ -172,12 +180,27 @@ export function locationRecordFromJSON(
     }
   }
 
+  // Validate optional poolId
+  if (serialized.poolId !== undefined) {
+    if (
+      typeof serialized.poolId !== 'string' ||
+      !isValidPoolId(serialized.poolId)
+    ) {
+      throw new TranslatableBrightChainError(
+        BrightChainStrings.Error_LocationRecord_InvalidPoolId,
+      );
+    }
+  }
+
   return {
     nodeId: serialized.nodeId,
     lastSeen,
     isAuthoritative: serialized.isAuthoritative,
     ...(serialized.latencyMs !== undefined && {
       latencyMs: serialized.latencyMs,
+    }),
+    ...(serialized.poolId !== undefined && {
+      poolId: serialized.poolId,
     }),
   };
 }

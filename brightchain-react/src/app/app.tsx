@@ -30,6 +30,10 @@ import { environment } from '../environments/environment';
 import '../styles.scss';
 import { BrightChainSoupDemo } from './components/BrightChainSoupDemo';
 import DashboardPage from './components/dashboardPage';
+import { BrightPassDemo } from './components/showcase/BrightPassDemo';
+import { DatabaseDemo } from './components/showcase/DatabaseDemo';
+import { MessagingDemo } from './components/showcase/MessagingDemo';
+import { StoragePoolsDemo } from './components/showcase/StoragePoolsDemo';
 import { SplashPage } from './components/splashPage';
 
 const getApiBaseUrl = (): string => {
@@ -116,6 +120,13 @@ const InnerApp: FC = () => {
         <Routes>
           <Route path="/" element={<SplashPage />} />
           <Route path="/demo" element={<BrightChainSoupDemo />} />
+          <Route
+            path="/showcase/storage-pools"
+            element={<StoragePoolsDemo />}
+          />
+          <Route path="/showcase/messaging" element={<MessagingDemo />} />
+          <Route path="/showcase/brightpass" element={<BrightPassDemo />} />
+          <Route path="/showcase/database" element={<DatabaseDemo />} />
           <Route
             path="/dashboard"
             element={

@@ -651,6 +651,7 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
     'Error_LocationRecord_InvalidLastSeenDate',
   Error_LocationRecord_InvalidLatencyMs:
     'Error_LocationRecord_InvalidLatencyMs',
+  Error_LocationRecord_InvalidPoolId: 'Error_LocationRecord_InvalidPoolId',
 
   // Metadata Errors
   Error_Metadata_BlockIdRequired: 'Error_Metadata_BlockIdRequired',

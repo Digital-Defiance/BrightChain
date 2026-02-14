@@ -8,6 +8,8 @@
  * @see Requirements 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 10.1, 10.2, 10.3, 10.4, 10.5
  */
 
+import { PoolId } from '../storage/pooledBlockStore';
+
 /**
  * Sync vector entry for tracking synchronization state with a peer.
  * Used for delta synchronization to request only changes since last sync.
@@ -129,6 +131,28 @@ export interface ReconciliationResult {
    * Total duration of reconciliation in milliseconds
    */
   duration: number;
+
+  /**
+   * Per-pool reconciliation statistics.
+   * Maps each pool to the number of blocks discovered and updated during reconciliation.
+   *
+   * @see Requirements 3.6
+   */
+  poolStats?: Map<PoolId, { blocksDiscovered: number; blocksUpdated: number }>;
+
+  /**
+   * Pools skipped during reconciliation due to active deletion tombstones.
+   *
+   * @see Requirements 3.6
+   */
+  skippedPools?: PoolId[];
+
+  /**
+   * Number of CBL index entries merged from peers during reconciliation.
+   *
+   * @see Requirements 8.4
+   */
+  cblIndexEntriesMerged?: number;
 }
 
 /**
@@ -214,6 +238,37 @@ export type ReconciliationEvent =
       timestamp: Date;
       result: ReconciliationResult;
     };
+
+/**
+ * A single entry in a CBL index manifest, used during pool-scoped reconciliation
+ * to compare CBL index state between nodes.
+ *
+ * @see Requirements 8.4
+ */
+export interface CBLIndexManifestEntry {
+  /** The magnet URL identifying this CBL */
+  magnetUrl: string;
+  /** The sequence number of this entry (for ordering / freshness comparison) */
+  sequenceNumber: number;
+}
+
+/**
+ * A CBL index manifest for a specific pool, exchanged during reconciliation.
+ * Contains the list of CBL index entries (magnet URL + sequence number) that
+ * a node has for a given pool.
+ *
+ * @see Requirements 8.4
+ */
+export interface CBLIndexManifest {
+  /** The pool this manifest covers */
+  poolId: PoolId;
+  /** The node that generated this manifest */
+  nodeId: string;
+  /** CBL index entries in this pool */
+  entries: CBLIndexManifestEntry[];
+  /** When this manifest was generated */
+  generatedAt: Date;
+}
 
 /**
  * Reconciliation Service Interface

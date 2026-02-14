@@ -91,6 +91,11 @@ export class Checksum {
    * @returns A new Checksum instance
    * @throws ChecksumError if buffer length is not equal to SHA3_BUFFER_LENGTH
    *
+   * @deprecated Use `Checksum.fromUint8Array()` instead for browser compatibility.
+   *   This method exists for backward compatibility with Node.js code that uses Buffer.
+   *   Buffer extends Uint8Array, so `fromUint8Array()` accepts Buffer values directly.
+   * @platform Node.js — accepts Node.js `Buffer` type
+   *
    * @example
    * ```typescript
    * const buffer = Buffer.from('a'.repeat(128), 'hex'); // 64 bytes
@@ -98,6 +103,7 @@ export class Checksum {
    * ```
    *
    * @see Requirement 1.2
+   * @see Requirement 18.4 — platform-specific convenience method
    */
   static fromBuffer(buffer: Buffer): Checksum {
     return new Checksum(new Uint8Array(buffer));
@@ -205,6 +211,10 @@ export class Checksum {
    *
    * @returns A new Buffer containing the checksum data
    *
+   * @deprecated Use `toUint8Array()` instead for browser compatibility.
+   *   This method exists for backward compatibility with Node.js code that expects Buffer.
+   * @platform Node.js — returns Node.js `Buffer` type
+   *
    * @example
    * ```typescript
    * const checksum = Checksum.fromHex(hexString);
@@ -212,6 +222,7 @@ export class Checksum {
    * ```
    *
    * @see Requirement 1.5
+   * @see Requirement 18.4 — platform-specific convenience method
    */
   toBuffer(): Buffer {
     return Buffer.from(this.data);

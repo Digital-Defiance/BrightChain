@@ -699,6 +699,8 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
     'Недійсна дата останнього перегляду',
   [BrightChainStrings.Error_LocationRecord_InvalidLatencyMs]:
     "Затримка повинна бути невід'ємним числом",
+  [BrightChainStrings.Error_LocationRecord_InvalidPoolId]:
+    'Недійсний формат ідентифікатора пулу',
 
   // Metadata Errors
   [BrightChainStrings.Error_Metadata_BlockIdRequired]:

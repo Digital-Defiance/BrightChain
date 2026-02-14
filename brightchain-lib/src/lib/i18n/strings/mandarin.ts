@@ -623,6 +623,7 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
     '无效的最后查看日期',
   [BrightChainStrings.Error_LocationRecord_InvalidLatencyMs]:
     '延迟必须是非负数',
+  [BrightChainStrings.Error_LocationRecord_InvalidPoolId]: '无效的池ID格式',
 
   // Metadata Errors
   [BrightChainStrings.Error_Metadata_BlockIdRequired]: '块ID是必需的',

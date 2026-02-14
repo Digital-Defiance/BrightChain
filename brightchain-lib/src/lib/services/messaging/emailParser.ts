@@ -7,9 +7,27 @@
  * Wraps the `postal-mime` library for full email parsing and the
  * `email-addresses` library for RFC 5322 address grammar parsing.
  *
+ * **Platform-specific code (Node.js `Buffer`):**
+ * This file uses `Buffer.from()` in `decodeEncodedWord()`, `decodeQuotedPrintable()`,
+ * and `decodeBase64()` for base64 decoding, quoted-printable decoding, and charset
+ * conversion (e.g. ISO-8859-1 → UTF-8). These usages cannot easily be replaced with
+ * pure `Uint8Array` operations because:
+ * - `Buffer.from(str, 'base64')` and `Buffer.from(str, 'latin1')` provide charset-aware
+ *   decoding that has no single-call equivalent in the Web Crypto API or `TextDecoder`
+ *   for all supported charsets.
+ * - The `postal-mime` library (used in `parse()`) already handles browser-compatible
+ *   parsing, so the Buffer-dependent methods are primarily used for the manual
+ *   header/body decoding path.
+ *
+ * If browser compatibility is needed for this parser, consider replacing the Buffer
+ * calls with `TextDecoder` (for charset conversion) and `atob()` (for base64), or
+ * moving this file to `brightchain-api-lib`.
+ *
+ * @platform Node.js — uses `Buffer` for base64/quoted-printable decoding and charset handling
  * @see RFC 5322 - Internet Message Format
  * @see RFC 2045 - MIME Part One: Format of Internet Message Bodies
  * @see RFC 2046 - MIME Part Two: Media Types
+ * @see Requirement 18.4 — platform-specific code documented
  *
  * @remarks
  * Requirements: 2.1, 2.2, 2.3, 2.4, 3.4, 3.5, 3.6, 14.4

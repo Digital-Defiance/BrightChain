@@ -25,6 +25,8 @@ describe('MessagePassingService', () => {
       start: jest.fn<any>(),
       stop: jest.fn<any>(),
       getConfig: jest.fn<any>(),
+      announceHeadUpdate: jest.fn<any>(),
+      announceACLUpdate: jest.fn<any>(),
       announceMessage: jest.fn<any>(),
       sendDeliveryAck: jest.fn<any>(),
       onMessageDelivery: jest.fn<any>(),

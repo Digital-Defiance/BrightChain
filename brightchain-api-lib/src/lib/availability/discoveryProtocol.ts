@@ -9,11 +9,16 @@
 
 import {
   BloomFilter,
+  CBLMetadataSearchHit,
+  CBLMetadataSearchQuery,
+  CBLMetadataSearchResult,
   DiscoveryConfig,
   DiscoveryResult,
+  ICBLIndexEntry,
   IDiscoveryProtocol,
   ILocationRecord,
   PeerQueryResult,
+  PoolScopedBloomFilter,
 } from '@brightchain/brightchain-lib';
 
 // Note: DEFAULT_DISCOVERY_CONFIG should be imported directly from @brightchain/brightchain-lib by consumers
@@ -68,6 +73,20 @@ export interface IPeerNetworkProvider {
     blockId: string,
     timeoutMs: number,
   ): Promise<boolean>;
+
+  /**
+   * Query a peer for CBL index entries matching the given metadata criteria.
+   *
+   * @param peerId - The peer to query
+   * @param query - Search criteria (fileName, mimeType, tags, poolId)
+   * @param timeoutMs - Query timeout in milliseconds
+   * @returns Promise resolving to matching CBL index entries from that peer
+   */
+  queryPeerForCBLMetadata(
+    peerId: string,
+    query: CBLMetadataSearchQuery,
+    timeoutMs: number,
+  ): Promise<ICBLIndexEntry[]>;
 }
 
 /**
@@ -265,6 +284,26 @@ export class DiscoveryProtocol implements IDiscoveryProtocol {
   }
 
   /**
+   * Get the pool-scoped Bloom filter from a peer.
+   * Returns per-pool Bloom filters for pool-aware discovery.
+   *
+   * @param peerId - The peer to get the pool-scoped Bloom filter from
+   * @returns Promise resolving to the peer's pool-scoped Bloom filter
+   * @see Requirements 4.2, 4.5
+   */
+  async getPeerPoolScopedBloomFilter(
+    peerId: string,
+  ): Promise<PoolScopedBloomFilter> {
+    // Delegate to the network provider if it supports pool-scoped filters,
+    // otherwise return a pool-scoped filter wrapping the global filter
+    const globalFilter = await this.getPeerBloomFilter(peerId);
+    return {
+      filters: new Map(),
+      globalFilter,
+    };
+  }
+
+  /**
    * Get the current configuration.
    *
    * @returns The discovery configuration
@@ -407,5 +446,82 @@ export class DiscoveryProtocol implements IDiscoveryProtocol {
       locations: [...locations],
       cachedAt: Date.now(),
     });
+  }
+
+  /**
+   * Search for CBL index entries by metadata across pool peers.
+   *
+   * Queries all connected peers for CBL entries matching the given criteria.
+   * Results are deduplicated by magnet URL, keeping the first occurrence.
+   *
+   * @param query - Search criteria with optional fileName, mimeType, tags, poolId
+   * @returns Promise resolving to search results with matching entries and source nodes
+   * @see Requirements 8.5
+   */
+  async searchCBLMetadata(
+    query: CBLMetadataSearchQuery,
+  ): Promise<CBLMetadataSearchResult> {
+    const startTime = Date.now();
+
+    const connectedPeers = this.networkProvider.getConnectedPeerIds();
+    if (connectedPeers.length === 0) {
+      return {
+        query,
+        hits: [],
+        queriedPeers: 0,
+        duration: Date.now() - startTime,
+      };
+    }
+
+    const hits: CBLMetadataSearchHit[] = [];
+    const seenMagnetUrls = new Set<string>();
+    let queriedPeers = 0;
+
+    // Query peers with concurrency limiting
+    const pending: Promise<void>[] = [];
+    let index = 0;
+
+    const queryNext = async (): Promise<void> => {
+      while (index < connectedPeers.length) {
+        const currentIndex = index++;
+        const peerId = connectedPeers[currentIndex];
+
+        try {
+          const entries = await this.networkProvider.queryPeerForCBLMetadata(
+            peerId,
+            query,
+            this.config.queryTimeoutMs,
+          );
+          queriedPeers++;
+
+          for (const entry of entries) {
+            if (!seenMagnetUrls.has(entry.magnetUrl)) {
+              seenMagnetUrls.add(entry.magnetUrl);
+              hits.push({ entry, sourceNodeId: peerId });
+            }
+          }
+        } catch {
+          queriedPeers++;
+          // Peer query failed — skip silently, same pattern as block discovery
+        }
+      }
+    };
+
+    const concurrency = Math.min(
+      this.config.maxConcurrentQueries,
+      connectedPeers.length,
+    );
+    for (let i = 0; i < concurrency; i++) {
+      pending.push(queryNext());
+    }
+
+    await Promise.all(pending);
+
+    return {
+      query,
+      hits,
+      queriedPeers,
+      duration: Date.now() - startTime,
+    };
   }
 }

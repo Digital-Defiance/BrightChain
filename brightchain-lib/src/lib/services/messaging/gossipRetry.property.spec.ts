@@ -45,6 +45,7 @@ describe('Feature: unified-gossip-delivery, Property 10: Retry with exponential 
       }>,
       announceBlock: async () => {},
       announceRemoval: async () => {},
+      announcePoolDeletion: async () => {},
       handleAnnouncement: async () => {},
       onAnnouncement: () => {},
       offAnnouncement: () => {},
@@ -64,6 +65,10 @@ describe('Feature: unified-gossip-delivery, Property 10: Retry with exponential 
       offMessageDelivery: () => {},
       onDeliveryAck: () => {},
       offDeliveryAck: () => {},
+      announceCBLIndexUpdate: async () => {},
+      announceCBLIndexDelete: async () => {},
+      announceHeadUpdate: async () => {},
+      announceACLUpdate: async () => {},
     };
     return stub;
   }
@@ -592,6 +597,7 @@ describe('Feature: unified-gossip-delivery, Property 11: Max retries exhausted m
       }>,
       announceBlock: async () => {},
       announceRemoval: async () => {},
+      announcePoolDeletion: async () => {},
       handleAnnouncement: async () => {},
       onAnnouncement: () => {},
       offAnnouncement: () => {},
@@ -611,6 +617,10 @@ describe('Feature: unified-gossip-delivery, Property 11: Max retries exhausted m
       offMessageDelivery: () => {},
       onDeliveryAck: () => {},
       offDeliveryAck: () => {},
+      announceCBLIndexUpdate: async () => {},
+      announceCBLIndexDelete: async () => {},
+      announceHeadUpdate: async () => {},
+      announceACLUpdate: async () => {},
     };
     return stub;
   }

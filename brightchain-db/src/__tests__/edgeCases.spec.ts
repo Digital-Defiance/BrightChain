@@ -11,9 +11,9 @@
  */
 
 import { runAggregation } from '../lib/aggregation';
-import { HeadRegistry } from '../lib/collection';
 import { Cursor } from '../lib/cursor';
 import { BrightChainDb } from '../lib/database';
+import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import {
   applyProjection,
   deepEquals,
@@ -28,7 +28,7 @@ import { MockBlockStore } from './helpers/mockBlockStore';
 
 function makeDb() {
   const store = new MockBlockStore();
-  const registry = HeadRegistry.createIsolated();
+  const registry = InMemoryHeadRegistry.createIsolated();
   const db = new BrightChainDb(store as any, {
     name: 'edgedb',
     headRegistry: registry,

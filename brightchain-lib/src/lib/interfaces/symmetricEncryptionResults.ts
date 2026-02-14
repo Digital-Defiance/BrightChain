@@ -6,18 +6,20 @@
  * used for the operation. The key must be securely stored or transmitted
  * to allow decryption.
  *
+ * Uses Uint8Array for browser compatibility (Requirement 18.6).
+ *
  * @example
  * ```typescript
  * const result: ISymmetricEncryptionResults = {
- *   encryptedData: Buffer.from('...'),
- *   key: Buffer.from('...')
+ *   encryptedData: new Uint8Array([...]),
+ *   key: new Uint8Array([...])
  * };
  * ```
  */
 export interface ISymmetricEncryptionResults {
-  /** The encrypted data as a Buffer */
-  encryptedData: Buffer;
+  /** The encrypted data */
+  encryptedData: Uint8Array;
 
   /** The symmetric encryption key used for this operation */
-  key: Buffer;
+  key: Uint8Array;
 }

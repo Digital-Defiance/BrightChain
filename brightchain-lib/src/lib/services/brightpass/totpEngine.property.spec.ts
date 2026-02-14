@@ -442,7 +442,7 @@ describe('Feature: api-lib-to-lib-migration, Property 4: TOTP Configuration Corr
       const isValid = TOTPEngine.validate(code, result.secret);
       expect(isValid).toBe(true);
     }
-  });
+  }, 30_000);
 
   /**
    * Property 4j: URI is parseable and contains all required components

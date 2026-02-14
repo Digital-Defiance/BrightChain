@@ -19,6 +19,7 @@ export type * from './dto';
 export type * from './encryptionConsts';
 export type * from './encryptionLength';
 export type * from './energyTransaction';
+export type { IFailableResult } from './failableResult';
 export type * from './handleableErrorOptions';
 export type * from './jsonStore';
 export type * from './keyringConsts';
@@ -73,3 +74,7 @@ export * from './events';
 
 // Block fetch interfaces (remote block retrieval)
 export * from './blockFetch';
+
+// Auth interfaces (node authentication, pool ACL)
+// Uses `export *` because auth contains runtime values (PoolPermission enum, hasPermission, hasQuorum)
+export * from './auth';

@@ -17,7 +17,8 @@ import {
   RawDataBlock,
   ReadConcern,
 } from '@brightchain/brightchain-lib';
-import { Collection, HeadRegistry } from './collection';
+import { Collection } from './collection';
+import { InMemoryHeadRegistry } from './headRegistry';
 import { BsonDocument } from './types';
 
 // --- Helpers ---
@@ -87,15 +88,15 @@ function createMockStore() {
  * Create a Collection with pre-populated docIndex entries by seeding
  * a meta block through the HeadRegistry + store.get path.
  */
-function createSeededCollection(
+async function createSeededCollection(
   store: ReturnType<typeof createMockStore>,
   docs: Array<{
     logicalId: string;
     blockId: string;
     doc: Record<string, unknown>;
   }>,
-): Collection<BsonDocument> {
-  const headRegistry = HeadRegistry.createIsolated();
+): Promise<Collection<BsonDocument>> {
+  const headRegistry = InMemoryHeadRegistry.createIsolated();
   const mappings: Record<string, string> = {};
   for (const entry of docs) {
     mappings[entry.logicalId] = entry.blockId;
@@ -104,7 +105,7 @@ function createSeededCollection(
   const metaData = encodeDoc(meta);
   const metaBlockId = fakeHex(0xff);
 
-  headRegistry.setHead('testdb', 'testcol', metaBlockId);
+  await headRegistry.setHead('testdb', 'testcol', metaBlockId);
 
   store.get.mockImplementation((checksumOrString: Checksum | string) => {
     const key =
@@ -136,7 +137,7 @@ describe('Collection.findWithAvailability', () => {
       const blockId1 = fakeHex(0x01);
       const blockId2 = fakeHex(0x02);
 
-      const collection = createSeededCollection(store, [
+      const collection = await createSeededCollection(store, [
         { logicalId: 'id1', blockId: blockId1, doc: doc1 },
         { logicalId: 'id2', blockId: blockId2, doc: doc2 },
       ]);
@@ -162,7 +163,7 @@ describe('Collection.findWithAvailability', () => {
 
     it('should return isComplete=true with empty documents when collection is empty', async () => {
       const store = createMockStore();
-      const collection = createSeededCollection(store, []);
+      const collection = await createSeededCollection(store, []);
 
       const result = await collection.findWithAvailability({});
 
@@ -180,7 +181,7 @@ describe('Collection.findWithAvailability', () => {
       const blockId2 = fakeHex(0x02);
       const blockId3 = fakeHex(0x03);
 
-      const collection = createSeededCollection(store, [
+      const collection = await createSeededCollection(store, [
         { logicalId: 'id1', blockId: blockId1, doc: doc1 },
         { logicalId: 'id2', blockId: blockId2, doc: {} },
         { logicalId: 'id3', blockId: blockId3, doc: {} },
@@ -241,7 +242,7 @@ describe('Collection.findWithAvailability', () => {
       const blockId1 = fakeHex(0x01);
       const blockId2 = fakeHex(0x02);
 
-      const collection = createSeededCollection(store, [
+      const collection = await createSeededCollection(store, [
         { logicalId: 'id1', blockId: blockId1, doc: doc1 },
         { logicalId: 'id2', blockId: blockId2, doc: {} },
       ]);
@@ -266,7 +267,7 @@ describe('Collection.findWithAvailability', () => {
       const blockId1 = fakeHex(0x01);
       const blockId2 = fakeHex(0x02);
 
-      const collection = createSeededCollection(store, [
+      const collection = await createSeededCollection(store, [
         { logicalId: 'id1', blockId: blockId1, doc: {} },
         { logicalId: 'id2', blockId: blockId2, doc: {} },
       ]);
@@ -295,7 +296,7 @@ describe('Collection.findWithAvailability', () => {
       const doc1 = { _id: 'id1', name: 'Alice' };
       const blockId1 = fakeHex(0x01);
 
-      const collection = createSeededCollection(store, [
+      const collection = await createSeededCollection(store, [
         { logicalId: 'id1', blockId: blockId1, doc: doc1 },
       ]);
 
@@ -312,7 +313,7 @@ describe('Collection.findWithAvailability', () => {
       const doc1 = { _id: 'id1', name: 'Alice' };
       const blockId1 = fakeHex(0x01);
 
-      const collection = createSeededCollection(store, [
+      const collection = await createSeededCollection(store, [
         { logicalId: 'id1', blockId: blockId1, doc: doc1 },
       ]);
 
@@ -333,7 +334,7 @@ describe('Collection.findWithAvailability', () => {
       const doc1 = { _id: 'id1', name: 'Alice' };
       const blockId1 = fakeHex(0x01);
 
-      const collection = createSeededCollection(store, [
+      const collection = await createSeededCollection(store, [
         { logicalId: 'id1', blockId: blockId1, doc: doc1 },
       ]);
 
@@ -355,7 +356,7 @@ describe('Collection.findWithAvailability', () => {
       const blockId1 = fakeHex(0x01);
       const blockId2 = fakeHex(0x02);
 
-      const collection = createSeededCollection(store, [
+      const collection = await createSeededCollection(store, [
         { logicalId: 'id1', blockId: blockId1, doc: doc1 },
         { logicalId: 'id2', blockId: blockId2, doc: doc2 },
       ]);
@@ -381,7 +382,7 @@ describe('Collection.findWithAvailability', () => {
 
     it('should include readConcern in the returned result', async () => {
       const store = createMockStore();
-      const collection = createSeededCollection(store, []);
+      const collection = await createSeededCollection(store, []);
 
       const result = await collection.findWithAvailability(
         {},

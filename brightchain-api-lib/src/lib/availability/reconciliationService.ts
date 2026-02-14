@@ -10,9 +10,13 @@
 
 import {
   BlockManifest,
+  CBLIndexManifest,
   DEFAULT_RECONCILIATION_CONFIG,
+  ICBLIndexEntry,
   IReconciliationService,
   PendingSyncItem,
+  PoolId,
+  PoolScopedManifest,
   ReconciliationConfig,
   ReconciliationError,
   ReconciliationEvent,
@@ -111,6 +115,111 @@ export interface IManifestProvider {
    * @param nodeId - The node to check
    */
   getBlockTimestamp(blockId: string, nodeId: string): Promise<Date | null>;
+
+  // === Pool-Scoped Manifest Operations ===
+
+  /**
+   * Get the local pool-scoped manifest.
+   * Returns undefined if the provider does not support pool-scoped manifests,
+   * in which case the flat manifest is used for backward compatibility.
+   */
+  getLocalPoolScopedManifest?(): PoolScopedManifest;
+
+  /**
+   * Get pool-scoped manifest from a peer.
+   * Returns undefined if the peer does not support pool-scoped manifests.
+   *
+   * @param peerId - The peer to get manifest from
+   * @param sinceTimestamp - Optional timestamp to get changes since
+   * @param timeoutMs - Timeout in milliseconds
+   */
+  getPeerPoolScopedManifest?(
+    peerId: string,
+    sinceTimestamp?: Date,
+    timeoutMs?: number,
+  ): Promise<PoolScopedManifest | undefined>;
+
+  /**
+   * Check if a pool has an active deletion tombstone locally.
+   *
+   * @param poolId - The pool ID to check
+   * @returns true if the pool has an active tombstone
+   */
+  hasTombstone?(poolId: PoolId): boolean;
+
+  /**
+   * Store a block in a specific pool.
+   * Used during pool-scoped reconciliation to place synchronized blocks
+   * in the correct pool namespace.
+   *
+   * @param poolId - The pool to store the block in
+   * @param blockId - The block ID to store
+   * @param peerId - The peer the block was fetched from
+   * @param data - The block data (if available from the peer)
+   */
+  storeBlockInPool?(
+    poolId: PoolId,
+    blockId: string,
+    peerId: string,
+    data?: Uint8Array,
+  ): Promise<void>;
+
+  /**
+   * Update location metadata for a block with pool context.
+   *
+   * @param blockId - The block ID to update
+   * @param nodeId - The node ID that has the block
+   * @param timestamp - When the block was seen
+   * @param poolId - The pool the block belongs to
+   */
+  updateBlockLocationWithPool?(
+    blockId: string,
+    nodeId: string,
+    timestamp: Date,
+    poolId: PoolId,
+  ): Promise<void>;
+
+  // === CBL Index Manifest Operations ===
+
+  /**
+   * Get the local CBL index manifest for a specific pool.
+   * Returns undefined if the provider does not support CBL index reconciliation.
+   *
+   * @param poolId - The pool to get the CBL index manifest for
+   * @returns The local CBL index manifest, or undefined if not supported
+   * @see Requirements 8.4
+   */
+  getLocalCBLIndexManifest?(
+    poolId: PoolId,
+  ): Promise<CBLIndexManifest | undefined>;
+
+  /**
+   * Get a peer's CBL index manifest for a specific pool.
+   * Returns undefined if the peer does not support CBL index reconciliation.
+   *
+   * @param peerId - The peer to get the manifest from
+   * @param poolId - The pool to get the CBL index manifest for
+   * @returns The peer's CBL index manifest, or undefined if not supported
+   * @see Requirements 8.4
+   */
+  getPeerCBLIndexManifest?(
+    peerId: string,
+    poolId: PoolId,
+  ): Promise<CBLIndexManifest | undefined>;
+
+  /**
+   * Fetch a full CBL index entry from a peer by magnet URL.
+   * Used during reconciliation to retrieve entries missing locally.
+   *
+   * @param peerId - The peer to fetch from
+   * @param magnetUrl - The magnet URL of the entry to fetch
+   * @returns The full CBL index entry, or null if not found
+   * @see Requirements 8.4
+   */
+  fetchCBLIndexEntry?(
+    peerId: string,
+    magnetUrl: string,
+  ): Promise<ICBLIndexEntry | null>;
 }
 
 /**
@@ -203,6 +312,14 @@ export class ReconciliationService implements IReconciliationService {
     let orphansResolved = 0;
     let conflictsResolved = 0;
     let peersReconciled = 0;
+    let totalCBLIndexEntriesMerged = 0;
+
+    // Aggregate pool stats and skipped pools across all peers
+    const aggregatedPoolStats = new Map<
+      PoolId,
+      { blocksDiscovered: number; blocksUpdated: number }
+    >();
+    const aggregatedSkippedPools = new Set<PoolId>();
 
     // Emit start event
     this.emitEvent({
@@ -228,6 +345,31 @@ export class ReconciliationService implements IReconciliationService {
           blocksDiscovered += result.blocksDiscovered;
           blocksUpdated += result.blocksUpdated;
           conflictsResolved += result.conflictsResolved;
+
+          // Merge per-peer pool stats
+          if (result.poolStats) {
+            for (const [poolId, stats] of result.poolStats) {
+              const existing = aggregatedPoolStats.get(poolId);
+              if (existing) {
+                existing.blocksDiscovered += stats.blocksDiscovered;
+                existing.blocksUpdated += stats.blocksUpdated;
+              } else {
+                aggregatedPoolStats.set(poolId, { ...stats });
+              }
+            }
+          }
+
+          // Merge per-peer skipped pools
+          if (result.skippedPools) {
+            for (const poolId of result.skippedPools) {
+              aggregatedSkippedPools.add(poolId);
+            }
+          }
+
+          // Merge CBL index entries merged count
+          if (result.cblIndexEntriesMerged) {
+            totalCBLIndexEntriesMerged += result.cblIndexEntriesMerged;
+          }
         } else if (result.error) {
           errors.push(result.error);
         }
@@ -257,6 +399,18 @@ export class ReconciliationService implements IReconciliationService {
       conflictsResolved,
       errors,
       duration: Date.now() - startTime,
+      // Include pool stats if any pool-scoped reconciliation occurred
+      ...(aggregatedPoolStats.size > 0
+        ? { poolStats: aggregatedPoolStats }
+        : {}),
+      // Include skipped pools if any were skipped
+      ...(aggregatedSkippedPools.size > 0
+        ? { skippedPools: Array.from(aggregatedSkippedPools) }
+        : {}),
+      // Include CBL index entries merged count if any were merged
+      ...(totalCBLIndexEntriesMerged > 0
+        ? { cblIndexEntriesMerged: totalCBLIndexEntriesMerged }
+        : {}),
     };
 
     // Emit completion event
@@ -271,12 +425,22 @@ export class ReconciliationService implements IReconciliationService {
 
   /**
    * Reconcile with a single peer.
+   * Uses pool-scoped manifests when the provider supports them,
+   * falling back to flat manifests for backward compatibility.
+   *
+   * @see Requirements 3.1, 3.2, 3.3, 3.4, 3.6
    */
   private async reconcileWithPeer(peerId: string): Promise<{
     success: boolean;
     blocksDiscovered: number;
     blocksUpdated: number;
     conflictsResolved: number;
+    poolStats?: Map<
+      PoolId,
+      { blocksDiscovered: number; blocksUpdated: number }
+    >;
+    skippedPools?: PoolId[];
+    cblIndexEntriesMerged?: number;
     error?: ReconciliationError;
   }> {
     this.emitEvent({
@@ -290,87 +454,25 @@ export class ReconciliationService implements IReconciliationService {
       const syncVector = this.getSyncVector(peerId);
       const sinceTimestamp = syncVector?.lastSyncTimestamp;
 
-      // Exchange manifests
-      const peerManifest = await this.manifestProvider.getPeerManifest(
+      // Try pool-scoped reconciliation first
+      const poolScopedResult = await this.tryPoolScopedReconciliation(
         peerId,
         sinceTimestamp,
-        this.config.manifestExchangeTimeoutMs,
       );
 
-      const localManifest = this.manifestProvider.getLocalManifest();
-
-      // Find new blocks on peer
-      const localBlockSet = new Set(localManifest.blockIds);
-      const newBlocks = peerManifest.blockIds.filter(
-        (id) => !localBlockSet.has(id),
-      );
-
-      let blocksDiscovered = 0;
-      let blocksUpdated = 0;
-      let conflictsResolved = 0;
-
-      // Update location metadata for discovered blocks
-      for (const blockId of newBlocks) {
-        await this.manifestProvider.updateBlockLocation(
-          blockId,
+      if (poolScopedResult) {
+        this.emitEvent({
+          type: 'peer_reconciliation_completed',
+          timestamp: new Date(),
           peerId,
-          peerManifest.generatedAt,
-        );
-        blocksDiscovered++;
+          blocksDiscovered: poolScopedResult.blocksDiscovered,
+        });
+
+        return poolScopedResult;
       }
 
-      // Update location metadata for blocks we both have
-      const sharedBlocks = peerManifest.blockIds.filter((id) =>
-        localBlockSet.has(id),
-      );
-      for (const blockId of sharedBlocks) {
-        // Check for conflicts using last-write-wins
-        const localTimestamp = await this.manifestProvider.getBlockTimestamp(
-          blockId,
-          this.manifestProvider.getLocalNodeId(),
-        );
-        const peerTimestamp = await this.manifestProvider.getBlockTimestamp(
-          blockId,
-          peerId,
-        );
-
-        if (localTimestamp && peerTimestamp) {
-          if (peerTimestamp > localTimestamp) {
-            // Peer has newer version - this is a conflict resolved by last-write-wins
-            this.emitEvent({
-              type: 'conflict_resolved',
-              timestamp: new Date(),
-              blockId,
-              winningNodeId: peerId,
-            });
-            conflictsResolved++;
-          }
-        }
-
-        await this.manifestProvider.updateBlockLocation(
-          blockId,
-          peerId,
-          peerManifest.generatedAt,
-        );
-        blocksUpdated++;
-      }
-
-      // Update sync vector
-      this.updateSyncVector(peerId, new Date(), peerManifest.checksum);
-
-      this.emitEvent({
-        type: 'peer_reconciliation_completed',
-        timestamp: new Date(),
-        peerId,
-        blocksDiscovered,
-      });
-
-      return {
-        success: true,
-        blocksDiscovered,
-        blocksUpdated,
-        conflictsResolved,
-      };
+      // Fall back to flat manifest reconciliation
+      return await this.reconcileWithFlatManifest(peerId, sinceTimestamp);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
@@ -393,6 +495,326 @@ export class ReconciliationService implements IReconciliationService {
         },
       };
     }
+  }
+
+  /**
+   * Attempt pool-scoped reconciliation with a peer.
+   * Returns null if the provider doesn't support pool-scoped manifests.
+   *
+   * @see Requirements 3.1, 3.2, 3.3, 3.4, 3.6
+   */
+  private async tryPoolScopedReconciliation(
+    peerId: string,
+    sinceTimestamp?: Date,
+  ): Promise<{
+    success: boolean;
+    blocksDiscovered: number;
+    blocksUpdated: number;
+    conflictsResolved: number;
+    poolStats: Map<PoolId, { blocksDiscovered: number; blocksUpdated: number }>;
+    skippedPools: PoolId[];
+    cblIndexEntriesMerged?: number;
+  } | null> {
+    // Check if provider supports pool-scoped manifests
+    if (
+      !this.manifestProvider.getLocalPoolScopedManifest ||
+      !this.manifestProvider.getPeerPoolScopedManifest
+    ) {
+      return null;
+    }
+
+    const peerManifest = await this.manifestProvider.getPeerPoolScopedManifest(
+      peerId,
+      sinceTimestamp,
+      this.config.manifestExchangeTimeoutMs,
+    );
+
+    // If peer doesn't support pool-scoped manifests, fall back
+    if (!peerManifest) {
+      return null;
+    }
+
+    const localManifest = this.manifestProvider.getLocalPoolScopedManifest();
+
+    const poolStats = new Map<
+      PoolId,
+      { blocksDiscovered: number; blocksUpdated: number }
+    >();
+    const skippedPools: PoolId[] = [];
+    let totalBlocksDiscovered = 0;
+    let totalBlocksUpdated = 0;
+    let totalConflictsResolved = 0;
+
+    // Build a set of all local blocks per pool for efficient lookup
+    const localBlocksByPool = new Map<PoolId, Set<string>>();
+    for (const [poolId, blockIds] of localManifest.pools) {
+      localBlocksByPool.set(poolId, new Set(blockIds));
+    }
+
+    // Compare manifests per-pool (Req 3.1, 3.2)
+    for (const [poolId, peerBlockIds] of peerManifest.pools) {
+      // Skip pools with active deletion tombstones (Req 3.4)
+      if (this.manifestProvider.hasTombstone?.(poolId)) {
+        skippedPools.push(poolId);
+        continue;
+      }
+
+      const localBlockSet = localBlocksByPool.get(poolId) ?? new Set<string>();
+      let poolDiscovered = 0;
+      let poolUpdated = 0;
+
+      // Find blocks the peer has that we don't in this pool
+      const missingBlocks = peerBlockIds.filter(
+        (blockId) => !localBlockSet.has(blockId),
+      );
+
+      // Store missing blocks in the correct pool (Req 3.2, 3.3)
+      for (const blockId of missingBlocks) {
+        if (this.manifestProvider.storeBlockInPool) {
+          await this.manifestProvider.storeBlockInPool(poolId, blockId, peerId);
+        }
+
+        // Update location metadata with pool context
+        if (this.manifestProvider.updateBlockLocationWithPool) {
+          await this.manifestProvider.updateBlockLocationWithPool(
+            blockId,
+            peerId,
+            peerManifest.generatedAt,
+            poolId,
+          );
+        } else {
+          await this.manifestProvider.updateBlockLocation(
+            blockId,
+            peerId,
+            peerManifest.generatedAt,
+          );
+        }
+
+        poolDiscovered++;
+      }
+
+      // Update location metadata for shared blocks in this pool
+      const sharedBlocks = peerBlockIds.filter((blockId) =>
+        localBlockSet.has(blockId),
+      );
+
+      for (const blockId of sharedBlocks) {
+        // Check for conflicts using last-write-wins
+        const localTimestamp = await this.manifestProvider.getBlockTimestamp(
+          blockId,
+          this.manifestProvider.getLocalNodeId(),
+        );
+        const peerTimestamp = await this.manifestProvider.getBlockTimestamp(
+          blockId,
+          peerId,
+        );
+
+        if (localTimestamp && peerTimestamp && peerTimestamp > localTimestamp) {
+          this.emitEvent({
+            type: 'conflict_resolved',
+            timestamp: new Date(),
+            blockId,
+            winningNodeId: peerId,
+          });
+          totalConflictsResolved++;
+        }
+
+        if (this.manifestProvider.updateBlockLocationWithPool) {
+          await this.manifestProvider.updateBlockLocationWithPool(
+            blockId,
+            peerId,
+            peerManifest.generatedAt,
+            poolId,
+          );
+        } else {
+          await this.manifestProvider.updateBlockLocation(
+            blockId,
+            peerId,
+            peerManifest.generatedAt,
+          );
+        }
+
+        poolUpdated++;
+      }
+
+      // Record per-pool stats (Req 3.6)
+      if (poolDiscovered > 0 || poolUpdated > 0) {
+        poolStats.set(poolId, {
+          blocksDiscovered: poolDiscovered,
+          blocksUpdated: poolUpdated,
+        });
+      }
+
+      totalBlocksDiscovered += poolDiscovered;
+      totalBlocksUpdated += poolUpdated;
+    }
+
+    // === CBL Index Manifest Reconciliation (Req 8.4) ===
+    let totalCBLIndexEntriesMerged = 0;
+
+    if (
+      this.manifestProvider.getLocalCBLIndexManifest &&
+      this.manifestProvider.getPeerCBLIndexManifest &&
+      this.manifestProvider.fetchCBLIndexEntry
+    ) {
+      // Exchange CBL index manifests for each pool in the peer's manifest
+      for (const [poolId] of peerManifest.pools) {
+        // Skip pools with active deletion tombstones
+        if (this.manifestProvider.hasTombstone?.(poolId)) {
+          continue;
+        }
+
+        try {
+          const peerCBLManifest =
+            await this.manifestProvider.getPeerCBLIndexManifest(peerId, poolId);
+
+          if (!peerCBLManifest || peerCBLManifest.entries.length === 0) {
+            continue;
+          }
+
+          const localCBLManifest =
+            await this.manifestProvider.getLocalCBLIndexManifest(poolId);
+
+          if (!localCBLManifest) {
+            continue;
+          }
+
+          // Find entries in the peer manifest that are missing locally
+          const localMagnetUrls = new Set(
+            localCBLManifest.entries.map((e) => e.magnetUrl),
+          );
+
+          const missingEntries = peerCBLManifest.entries.filter(
+            (re) => !localMagnetUrls.has(re.magnetUrl),
+          );
+
+          // Fetch and merge missing entries
+          for (const missing of missingEntries) {
+            const fullEntry = await this.manifestProvider.fetchCBLIndexEntry(
+              peerId,
+              missing.magnetUrl,
+            );
+
+            if (fullEntry) {
+              totalCBLIndexEntriesMerged++;
+            }
+          }
+        } catch {
+          // CBL index reconciliation is best-effort; log and continue
+        }
+      }
+    }
+
+    // Update sync vector
+    this.updateSyncVector(peerId, new Date(), peerManifest.checksum);
+
+    return {
+      success: true,
+      blocksDiscovered: totalBlocksDiscovered,
+      blocksUpdated: totalBlocksUpdated,
+      conflictsResolved: totalConflictsResolved,
+      poolStats,
+      skippedPools,
+      ...(totalCBLIndexEntriesMerged > 0
+        ? { cblIndexEntriesMerged: totalCBLIndexEntriesMerged }
+        : {}),
+    };
+  }
+
+  /**
+   * Reconcile with a peer using flat (non-pool-scoped) manifests.
+   * This is the original reconciliation logic, preserved for backward compatibility.
+   */
+  private async reconcileWithFlatManifest(
+    peerId: string,
+    sinceTimestamp?: Date,
+  ): Promise<{
+    success: boolean;
+    blocksDiscovered: number;
+    blocksUpdated: number;
+    conflictsResolved: number;
+    error?: ReconciliationError;
+  }> {
+    // Exchange manifests
+    const peerManifest = await this.manifestProvider.getPeerManifest(
+      peerId,
+      sinceTimestamp,
+      this.config.manifestExchangeTimeoutMs,
+    );
+
+    const localManifest = this.manifestProvider.getLocalManifest();
+
+    // Find new blocks on peer
+    const localBlockSet = new Set(localManifest.blockIds);
+    const newBlocks = peerManifest.blockIds.filter(
+      (id) => !localBlockSet.has(id),
+    );
+
+    let blocksDiscovered = 0;
+    let blocksUpdated = 0;
+    let conflictsResolved = 0;
+
+    // Update location metadata for discovered blocks
+    for (const blockId of newBlocks) {
+      await this.manifestProvider.updateBlockLocation(
+        blockId,
+        peerId,
+        peerManifest.generatedAt,
+      );
+      blocksDiscovered++;
+    }
+
+    // Update location metadata for blocks we both have
+    const sharedBlocks = peerManifest.blockIds.filter((id) =>
+      localBlockSet.has(id),
+    );
+    for (const blockId of sharedBlocks) {
+      // Check for conflicts using last-write-wins
+      const localTimestamp = await this.manifestProvider.getBlockTimestamp(
+        blockId,
+        this.manifestProvider.getLocalNodeId(),
+      );
+      const peerTimestamp = await this.manifestProvider.getBlockTimestamp(
+        blockId,
+        peerId,
+      );
+
+      if (localTimestamp && peerTimestamp) {
+        if (peerTimestamp > localTimestamp) {
+          this.emitEvent({
+            type: 'conflict_resolved',
+            timestamp: new Date(),
+            blockId,
+            winningNodeId: peerId,
+          });
+          conflictsResolved++;
+        }
+      }
+
+      await this.manifestProvider.updateBlockLocation(
+        blockId,
+        peerId,
+        peerManifest.generatedAt,
+      );
+      blocksUpdated++;
+    }
+
+    // Update sync vector
+    this.updateSyncVector(peerId, new Date(), peerManifest.checksum);
+
+    this.emitEvent({
+      type: 'peer_reconciliation_completed',
+      timestamp: new Date(),
+      peerId,
+      blocksDiscovered,
+    });
+
+    return {
+      success: true,
+      blocksDiscovered,
+      blocksUpdated,
+      conflictsResolved,
+    };
   }
 
   /**

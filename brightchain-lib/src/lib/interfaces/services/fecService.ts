@@ -7,6 +7,8 @@
  * - WasmFecService (brightchain-api-lib) - Cross-platform WASM implementation
  * - NativeRsFecService (brightchain-api-lib) - Apple Silicon hardware acceleration
  *
+ * Uses Uint8Array for browser compatibility (Requirement 18.6).
+ *
  * @requirements 1.8, 4.5, 4.6, 4.8
  */
 
@@ -15,7 +17,7 @@
  */
 export interface ParityData {
   /** The parity data bytes */
-  data: Buffer | Uint8Array;
+  data: Uint8Array;
   /** The index of this parity shard (0-based) */
   index: number;
 }
@@ -25,7 +27,7 @@ export interface ParityData {
  */
 export interface FecRecoveryResult {
   /** The recovered data */
-  data: Buffer | Uint8Array;
+  data: Uint8Array;
   /** Whether recovery was successful */
   recovered: boolean;
 }
@@ -74,7 +76,7 @@ export interface IFecService {
    * ```
    */
   createParityData(
-    blockData: Buffer | Uint8Array,
+    blockData: Uint8Array,
     parityCount: number,
   ): Promise<ParityData[]>;
 
@@ -101,7 +103,7 @@ export interface IFecService {
    * ```
    */
   recoverFileData(
-    corruptedData: Buffer | Uint8Array | null,
+    corruptedData: Uint8Array | null,
     parityData: ParityData[],
     originalSize: number,
   ): Promise<FecRecoveryResult>;
@@ -125,7 +127,7 @@ export interface IFecService {
    * ```
    */
   verifyFileIntegrity(
-    blockData: Buffer | Uint8Array,
+    blockData: Uint8Array,
     parityData: ParityData[],
   ): Promise<boolean>;
 }

@@ -197,6 +197,12 @@ export * from './tupleError';
  */
 export * from './poolDeletionError';
 
+/**
+ * Pool deletion tombstone errors.
+ * @see {@link PoolDeletionTombstoneError}
+ */
+export * from './poolDeletionTombstoneError';
+
 // ============================================================================
 // Storage Errors
 // ============================================================================

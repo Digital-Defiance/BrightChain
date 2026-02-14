@@ -4,16 +4,22 @@ import { BaseBlock } from '../blocks/base';
 import { BlockHandle, createBlockHandle } from '../blocks/handle';
 import { RawDataBlock } from '../blocks/rawData';
 import { BLOCK_HEADER, StructuredBlockType } from '../constants';
+import { BrightChainStrings } from '../enumerations';
 import { BlockSize } from '../enumerations/blockSize';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { PoolDeletionError } from '../errors/poolDeletionError';
 import { StoreError } from '../errors/storeError';
+import { translate } from '../i18n';
 import { IFecService } from '../interfaces/services/fecService';
 import {
   BlockStoreOptions,
   createDefaultBlockMetadata,
   IBlockMetadata,
 } from '../interfaces/storage/blockMetadata';
+import type {
+  CBLStorageResult,
+  CBLWhiteningOptions,
+} from '../interfaces/storage/cblWhitening';
 import {
   DEFAULT_POOL,
   IPooledBlockStore,
@@ -27,7 +33,9 @@ import {
 } from '../interfaces/storage/pooledBlockStore';
 import { CBLService } from '../services/cblService';
 import { getGlobalServiceProvider } from '../services/globalServiceProvider';
+import { XorService } from '../services/xor';
 import { Checksum } from '../types/checksum';
+import { padToBlockSize, unpadCblData, xorArrays } from '../utils/xorUtils';
 import { MemoryBlockMetadataStore } from './memoryBlockMetadataStore';
 import { MemoryBlockStore } from './memoryBlockStore';
 
@@ -479,6 +487,180 @@ export class PooledMemoryBlockStore
   public async forceDeletePool(pool: PoolId): Promise<void> {
     validatePoolId(pool);
     await this.performPoolDeletion(pool);
+  }
+
+  // =========================================================================
+  // Pool-Scoped CBL Whitening Operations
+  // =========================================================================
+
+  /**
+   * Store a CBL with XOR whitening, scoped to a specific pool.
+   * Both XOR component blocks are stored within the specified pool namespace.
+   *
+   * @param pool - The pool to store the whitened CBL components in
+   * @param cblData - The original CBL data as Uint8Array
+   * @param options - Optional storage options (durability, expiration, encryption flag)
+   * @returns Result containing block IDs, parity IDs (if any), and magnet URL
+   */
+  public async storeCBLWithWhiteningInPool(
+    pool: PoolId,
+    cblData: Uint8Array,
+    options?: CBLWhiteningOptions,
+  ): Promise<CBLStorageResult> {
+    validatePoolId(pool);
+
+    // Validate input
+    if (!cblData || cblData.length === 0) {
+      throw new StoreError(StoreErrorType.BlockValidationFailed, undefined, {
+        ERROR: translate(
+          BrightChainStrings.MemoryBlockStore_CBLDataCannotBeEmpty,
+        ),
+      });
+    }
+
+    // 1. Pad CBL to block size (includes length prefix)
+    const paddedCbl = padToBlockSize(cblData, this.blockSize);
+
+    // Validate that padded CBL fits within block size
+    if (paddedCbl.length > this.blockSize) {
+      throw new StoreError(StoreErrorType.BlockValidationFailed, undefined, {
+        ERROR: translate(
+          BrightChainStrings.MemoryBlockStore_CBLDataTooLargeTemplate,
+          {
+            LENGTH: paddedCbl.length,
+            BLOCK_SIZE: this.blockSize,
+          },
+        ),
+      });
+    }
+
+    // 2. Select or generate a random block from the pool for whitening
+    const poolRandomBlocks = await this.getRandomBlocksFromPool(pool, 1);
+    let randomBlock: Uint8Array;
+    if (poolRandomBlocks.length > 0) {
+      // Use an existing block from the pool as the randomizer
+      const existingData = await this.getFromPool(
+        pool,
+        poolRandomBlocks[0].toHex(),
+      );
+      if (existingData.length >= paddedCbl.length) {
+        randomBlock = existingData.slice(0, paddedCbl.length);
+      } else {
+        // Existing block too small, generate fresh random data
+        randomBlock = XorService.generateKey(paddedCbl.length);
+      }
+    } else {
+      // No blocks in pool yet, generate fresh random data
+      randomBlock = XorService.generateKey(paddedCbl.length);
+    }
+
+    // 3. XOR to create second block (CBL XOR R)
+    const xorResult = xorArrays(paddedCbl, randomBlock);
+
+    // Track stored blocks for rollback on failure
+    let block1Stored = false;
+    let block1Id = '';
+
+    try {
+      // 4. Store first block (R - the randomizer) in the pool
+      block1Id = await this.putInPool(pool, randomBlock, options);
+      block1Stored = true;
+
+      // 5. Store second block (CBL XOR R) in the pool
+      const block2Id = await this.putInPool(pool, xorResult, options);
+
+      // 6. Get parity block IDs if FEC redundancy was applied
+      let block1ParityIds: string[] | undefined;
+      let block2ParityIds: string[] | undefined;
+
+      const block1Meta = await this.getMetadata(block1Id);
+      if (block1Meta?.parityBlockIds?.length) {
+        block1ParityIds = block1Meta.parityBlockIds;
+      }
+
+      const block2Meta = await this.getMetadata(block2Id);
+      if (block2Meta?.parityBlockIds?.length) {
+        block2ParityIds = block2Meta.parityBlockIds;
+      }
+
+      // 7. Generate magnet URL
+      const magnetUrl = this.generateCBLMagnetUrl(
+        block1Id,
+        block2Id,
+        this.blockSize,
+        block1ParityIds,
+        block2ParityIds,
+        options?.isEncrypted,
+      );
+
+      return {
+        blockId1: block1Id,
+        blockId2: block2Id,
+        blockSize: this.blockSize,
+        magnetUrl,
+        block1ParityIds,
+        block2ParityIds,
+        isEncrypted: options?.isEncrypted,
+      };
+    } catch (error) {
+      // Rollback: delete block1 if it was stored by us
+      if (block1Stored && block1Id) {
+        try {
+          await this.deleteFromPool(pool, block1Id);
+        } catch {
+          // Ignore rollback errors
+        }
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Retrieve and reconstruct a whitened CBL from a specific pool.
+   * Both XOR component blocks are retrieved from the specified pool namespace.
+   *
+   * @param pool - The pool to retrieve the whitened CBL components from
+   * @param blockId1 - First block ID (Checksum or hex string)
+   * @param blockId2 - Second block ID (Checksum or hex string)
+   * @param block1ParityIds - Optional parity block IDs for block 1 recovery
+   * @param block2ParityIds - Optional parity block IDs for block 2 recovery
+   * @returns The original CBL data as Uint8Array
+   */
+  public async retrieveCBLFromPool(
+    pool: PoolId,
+    blockId1: Checksum | string,
+    blockId2: Checksum | string,
+    _block1ParityIds?: string[],
+    _block2ParityIds?: string[],
+  ): Promise<Uint8Array> {
+    validatePoolId(pool);
+
+    const b1Hex = typeof blockId1 === 'string' ? blockId1 : blockId1.toHex();
+    const b2Hex = typeof blockId2 === 'string' ? blockId2 : blockId2.toHex();
+
+    // 1. Retrieve first block from the pool
+    const hasBlock1 = await this.hasInPool(pool, b1Hex);
+    if (!hasBlock1) {
+      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+        KEY: `Block 1 (${b1Hex}) not found in pool "${pool}"`,
+      });
+    }
+    const block1Data = await this.getFromPool(pool, b1Hex);
+
+    // 2. Retrieve second block from the pool
+    const hasBlock2 = await this.hasInPool(pool, b2Hex);
+    if (!hasBlock2) {
+      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+        KEY: `Block 2 (${b2Hex}) not found in pool "${pool}"`,
+      });
+    }
+    const block2Data = await this.getFromPool(pool, b2Hex);
+
+    // 3. XOR to reconstruct padded CBL (order doesn't matter due to commutativity)
+    const reconstructedPadded = xorArrays(block1Data, block2Data);
+
+    // 4. Remove padding to get original CBL
+    return unpadCblData(reconstructedPadded);
   }
 
   // =========================================================================

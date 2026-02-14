@@ -17,6 +17,8 @@ import {
   BlockAnnouncement,
   BlockManifest,
   BloomFilter,
+  CBLMetadataSearchQuery,
+  CBLMetadataSearchResult,
   ConnectivityEventHandler,
   DeliveryAckMetadata,
   DiscoveryConfig,
@@ -24,6 +26,7 @@ import {
   GossipConfig,
   HeartbeatConfig,
   IBlockRegistry,
+  ICBLIndexEntry,
   IDiscoveryProtocol,
   IGossipService,
   IHeartbeatMonitor,
@@ -32,6 +35,9 @@ import {
   MessageDeliveryMetadata,
   PeerQueryResult,
   PendingSyncItem,
+  PoolId,
+  PoolScopedBloomFilter,
+  PoolScopedManifest,
   ReconciliationConfig,
   ReconciliationEventHandler,
   ReconciliationResult,
@@ -126,6 +132,22 @@ class MockBlockRegistry implements IBlockRegistry {
     };
   }
 
+  exportPoolScopedBloomFilter(): PoolScopedBloomFilter {
+    return {
+      filters: new Map(),
+      globalFilter: this.exportBloomFilter(),
+    };
+  }
+
+  exportPoolScopedManifest(): PoolScopedManifest {
+    return {
+      nodeId: 'test-node',
+      pools: new Map(),
+      generatedAt: new Date(),
+      checksum: 'test-checksum',
+    };
+  }
+
   async rebuild(): Promise<void> {
     // No-op for mock
   }
@@ -175,6 +197,21 @@ class MockDiscoveryProtocol implements IDiscoveryProtocol {
     };
   }
 
+  async getPeerPoolScopedBloomFilter(
+    _peerId: string,
+  ): Promise<PoolScopedBloomFilter> {
+    return {
+      filters: new Map(),
+      globalFilter: {
+        data: '',
+        hashCount: 7,
+        bitCount: 1000,
+        itemCount: 0,
+        mightContain: () => false,
+      },
+    };
+  }
+
   getConfig(): DiscoveryConfig {
     return {
       queryTimeoutMs: 5000,
@@ -184,15 +221,38 @@ class MockDiscoveryProtocol implements IDiscoveryProtocol {
       bloomFilterHashCount: 7,
     };
   }
+
+  async searchCBLMetadata(
+    query: CBLMetadataSearchQuery,
+  ): Promise<CBLMetadataSearchResult> {
+    return { query, hits: [], queriedPeers: 0, duration: 0 };
+  }
 }
 
 /**
  * Mock GossipService for testing
  */
 class MockGossipService implements IGossipService {
-  async announceBlock(_blockId: string): Promise<void> {}
+  async announceBlock(_blockId: string, _poolId?: PoolId): Promise<void> {}
 
-  async announceRemoval(_blockId: string): Promise<void> {}
+  async announceRemoval(_blockId: string, _poolId?: PoolId): Promise<void> {}
+
+  async announcePoolDeletion(_poolId: PoolId): Promise<void> {}
+
+  async announceCBLIndexUpdate(_entry: ICBLIndexEntry): Promise<void> {}
+
+  async announceCBLIndexDelete(_entry: ICBLIndexEntry): Promise<void> {}
+
+  async announceHeadUpdate(
+    _dbName: string,
+    _collectionName: string,
+    _blockId: string,
+  ): Promise<void> {}
+
+  async announceACLUpdate(
+    _poolId: string,
+    _aclBlockId: string,
+  ): Promise<void> {}
 
   async handleAnnouncement(_announcement: BlockAnnouncement): Promise<void> {}
 

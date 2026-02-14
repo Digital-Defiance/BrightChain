@@ -5,6 +5,9 @@
   "projectType": "library",
   "tags": ["type:lib", "scope:core"],
   "targets": {
+    "browser-verify": {
+      "command": "node brightchain-lib/scripts/verify-browser-build.mjs"
+    },
     "build": {
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],

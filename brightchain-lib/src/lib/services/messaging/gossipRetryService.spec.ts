@@ -42,6 +42,8 @@ function createMockGossipService(): jest.Mocked<
     start: jest.fn(),
     stop: jest.fn().mockResolvedValue(undefined),
     getConfig: jest.fn().mockReturnValue({}),
+    announceHeadUpdate: jest.fn().mockResolvedValue(undefined),
+    announceACLUpdate: jest.fn().mockResolvedValue(undefined),
     announceMessage: jest.fn().mockResolvedValue(undefined),
     sendDeliveryAck: jest.fn().mockResolvedValue(undefined),
     onMessageDelivery: jest.fn(),

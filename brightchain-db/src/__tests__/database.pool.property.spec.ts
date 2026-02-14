@@ -15,8 +15,8 @@ import {
   PooledMemoryBlockStore,
 } from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
-import { HeadRegistry } from '../lib/collection';
 import { BrightChainDb } from '../lib/database';
+import { InMemoryHeadRegistry } from '../lib/headRegistry';
 
 // Property tests can be slow due to async operations
 jest.setTimeout(60000);
@@ -74,7 +74,7 @@ describe('Database Pool Property Tests', () => {
             const store = new PooledMemoryBlockStore(BlockSize.Small);
 
             // 2. Create a BrightChainDb with that store and the random poolId
-            const registry = HeadRegistry.createIsolated();
+            const registry = InMemoryHeadRegistry.createIsolated();
             const db = new BrightChainDb(store, {
               name: 'test-pool-routing',
               headRegistry: registry,
@@ -129,7 +129,7 @@ describe('Database Pool Property Tests', () => {
             fc.pre(poolA !== poolB);
 
             const store = new PooledMemoryBlockStore(BlockSize.Small);
-            const registry = HeadRegistry.createIsolated();
+            const registry = InMemoryHeadRegistry.createIsolated();
 
             // Create db scoped to poolA
             const db = new BrightChainDb(store, {
@@ -179,7 +179,7 @@ describe('Database Pool Property Tests', () => {
             const store = new PooledMemoryBlockStore(BlockSize.Small);
 
             // 2. Create a BrightChainDb with the random poolId
-            const registry = HeadRegistry.createIsolated();
+            const registry = InMemoryHeadRegistry.createIsolated();
             const db = new BrightChainDb(store, {
               name: 'test-drop',
               headRegistry: registry,

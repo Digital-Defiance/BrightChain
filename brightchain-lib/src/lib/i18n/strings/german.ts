@@ -702,6 +702,8 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
     'Ungültiges Datum der letzten Sichtung',
   [BrightChainStrings.Error_LocationRecord_InvalidLatencyMs]:
     'Latenz muss eine nicht-negative Zahl sein',
+  [BrightChainStrings.Error_LocationRecord_InvalidPoolId]:
+    'Ungültiges Pool-ID-Format',
 
   // Metadata Errors
   [BrightChainStrings.Error_Metadata_BlockIdRequired]:

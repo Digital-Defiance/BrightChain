@@ -9,12 +9,14 @@ import { NodeLocation } from './nodeLocation';
 import { NodeResources } from './nodeResources';
 
 /**
- * Core node interface
+ * Core node interface.
+ *
+ * Uses Uint8Array for browser compatibility (Requirement 18.6).
  */
 export interface INode {
   // Identity
   id: GuidV4Uint8Array;
-  publicKey: Buffer;
+  publicKey: Uint8Array;
   version: string;
 
   // Status

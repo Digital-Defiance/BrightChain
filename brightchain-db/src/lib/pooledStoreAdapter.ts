@@ -160,13 +160,17 @@ export class PooledStoreAdapter implements IBlockStore {
     return this.inner.brightenBlock(key, randomBlockCount);
   }
 
-  // === CBL Whitening operations (delegated directly to inner store) ===
+  // === CBL Whitening operations (delegated through pool) ===
 
   public async storeCBLWithWhitening(
     cblData: Uint8Array,
     options?: CBLWhiteningOptions,
   ): Promise<CBLStorageResult> {
-    return this.inner.storeCBLWithWhitening(cblData, options);
+    return this.inner.storeCBLWithWhiteningInPool(
+      this.poolId,
+      cblData,
+      options,
+    );
   }
 
   public async retrieveCBL(
@@ -175,7 +179,8 @@ export class PooledStoreAdapter implements IBlockStore {
     block1ParityIds?: string[],
     block2ParityIds?: string[],
   ): Promise<Uint8Array> {
-    return this.inner.retrieveCBL(
+    return this.inner.retrieveCBLFromPool(
+      this.poolId,
       blockId1,
       blockId2,
       block1ParityIds,

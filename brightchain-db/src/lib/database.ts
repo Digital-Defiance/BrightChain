@@ -7,10 +7,15 @@
  *   await users.insertOne({ name: 'Alice' });
  */
 
-import type { PoolId } from '@brightchain/brightchain-lib';
-import { IBlockStore, isPooledBlockStore } from '@brightchain/brightchain-lib';
+import type { IHeadRegistry, PoolId } from '@brightchain/brightchain-lib';
+import {
+  IBlockStore,
+  IDatabase,
+  isPooledBlockStore,
+} from '@brightchain/brightchain-lib';
 import { randomUUID } from 'crypto';
-import { Collection, HeadRegistry } from './collection';
+import { Collection } from './collection';
+import { InMemoryHeadRegistry, PersistentHeadRegistry } from './headRegistry';
 import { PooledStoreAdapter } from './pooledStoreAdapter';
 import { DbSession, JournalOp } from './transaction';
 import {
@@ -27,8 +32,14 @@ import {
 export interface BrightChainDbOptions {
   /** Database name (default: 'brightchain') */
   name?: string;
-  /** Custom head registry (for testing isolation) */
-  headRegistry?: HeadRegistry;
+  /** Custom head registry for dependency injection (takes precedence over dataDir) */
+  headRegistry?: IHeadRegistry;
+  /**
+   * Data directory for persistent head registry.
+   * When provided (and no explicit headRegistry), a PersistentHeadRegistry
+   * is auto-created pointing at this directory.
+   */
+  dataDir?: string;
   /** Cursor session timeout in ms (default: 300000 = 5 minutes) */
   cursorTimeoutMs?: number;
   /** Optional pool ID for storage isolation */
@@ -38,7 +49,7 @@ export interface BrightChainDbOptions {
 /**
  * The main database driver – analogous to MongoDB's `Db` class.
  */
-export class BrightChainDb {
+export class BrightChainDb implements IDatabase {
   public readonly name: string;
   private readonly store: IBlockStore;
   /** Original (unwrapped) block store, kept for pool management (e.g. dropDatabase) */
@@ -46,11 +57,13 @@ export class BrightChainDb {
   /** Pool ID this database is scoped to, if any */
   private readonly poolId?: PoolId;
   private readonly collections = new Map<string, Collection>();
-  private readonly headRegistry: HeadRegistry;
+  private readonly headRegistry: IHeadRegistry;
   /** Server-side cursor sessions for REST pagination */
   private readonly cursorSessions = new Map<string, CursorSession>();
   /** Default timeout for cursor sessions (5 minutes) */
   private readonly cursorTimeoutMs: number;
+  /** Connection state for IDatabase conformance */
+  private _connected = false;
 
   constructor(blockStore: IBlockStore, options?: BrightChainDbOptions) {
     this.originalStore = blockStore;
@@ -63,8 +76,48 @@ export class BrightChainDb {
     }
 
     this.name = options?.name ?? 'brightchain';
-    this.headRegistry = options?.headRegistry ?? HeadRegistry.getInstance();
+
+    // Head registry resolution order:
+    // 1. Explicit headRegistry option (takes precedence)
+    // 2. dataDir option → auto-create PersistentHeadRegistry
+    // 3. Default → InMemoryHeadRegistry
+    if (options?.headRegistry) {
+      this.headRegistry = options.headRegistry;
+    } else if (options?.dataDir) {
+      this.headRegistry = new PersistentHeadRegistry({
+        dataDir: options.dataDir,
+      });
+    } else {
+      this.headRegistry = new InMemoryHeadRegistry();
+    }
+
     this.cursorTimeoutMs = options?.cursorTimeoutMs ?? 300_000;
+  }
+
+  /**
+   * Connect to the backing store.
+   * Block storage does not require a network connection, so the URI is
+   * accepted but ignored. Calling connect on an already-connected instance
+   * completes without error (idempotent).
+   */
+  async connect(_uri?: string): Promise<void> {
+    this._connected = true;
+  }
+
+  /**
+   * Disconnect from the backing store.
+   * Calling disconnect on an already-disconnected instance completes
+   * without error (idempotent).
+   */
+  async disconnect(): Promise<void> {
+    this._connected = false;
+  }
+
+  /**
+   * Whether the store is currently connected.
+   */
+  isConnected(): boolean {
+    return this._connected;
   }
 
   /**
@@ -90,6 +143,14 @@ export class BrightChainDb {
       this.collections.set(name, coll as unknown as Collection);
     }
     return this.collections.get(name) as unknown as Collection<T>;
+  }
+
+  /**
+   * Expose the head registry for components that need to read head block IDs
+   * (e.g. CBLIndex for FEC parity generation on metadata blocks).
+   */
+  getHeadRegistry(): IHeadRegistry {
+    return this.headRegistry;
   }
 
   /**
