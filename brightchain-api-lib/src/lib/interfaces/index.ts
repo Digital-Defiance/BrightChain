@@ -1,5 +1,6 @@
 export type * from './api-constants';
 export type * from './application';
+export type * from './brightchain-init-result';
 export type * from './auth-credentials';
 export type * from './auth-token';
 export type * from './backend-objects';

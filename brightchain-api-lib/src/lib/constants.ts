@@ -50,8 +50,8 @@ const expressConsts = createExpressConstants(
  * @see {@link https://github.com/Digital-Defiance/node-express-suite} for base constants
  */
 export const Constants: IApiConstants = {
-  ...expressConsts,
   ...BaseConstants,
-  ...{ PBKDF2_PROFILES: expressConsts.PBKDF2_PROFILES },
+  ...expressConsts,
+  PBKDF2_PROFILES: expressConsts.PBKDF2_PROFILES,
   WRAPPED_KEY,
 };

@@ -1,36 +1,31 @@
 import {
   BlockSize,
-  BrightChainStrings,
   EnergyAccountStore,
   EnergyLedger,
   IAvailabilityService,
   IDiscoveryProtocol,
   IReconciliationService,
   MemberStore,
-  translate,
 } from '@brightchain/brightchain-lib';
-import { HandleableError } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   debugLog,
-  handleError,
-  sendApiMessageResponse,
+  IApplication,
+  IConstants,
+  UpnpManager,
+  Application as UpstreamApplication,
 } from '@digitaldefiance/node-express-suite';
-import {
-  getSuiteCoreTranslation,
-  SuiteCoreStringKey,
-} from '@digitaldefiance/suite-core-lib';
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { UpnpManager } from '@digitaldefiance/node-express-suite';
-import express, { Application, NextFunction, Request, Response } from 'express';
-import { readFileSync } from 'fs';
 import { Server } from 'http';
-import { createServer } from 'https';
-import { resolve } from 'path';
-import { BaseApplication } from './application-base';
+import { AppConstants } from './appConstants';
 import { createBlockDocumentStore } from './datastore/block-document-store-factory';
+import {
+  DocumentCollection,
+  DocumentRecord,
+  DocumentStore,
+} from './datastore/document-store';
 import { Environment } from './environment';
 import { BlockStoreFactory } from './factories/blockStoreFactory';
+import { IBrightChainInitResult } from './interfaces/brightchain-init-result';
 import { Middlewares } from './middlewares';
 import { ApiRouter } from './routers/api';
 import { AppRouter } from './routers/app';
@@ -38,221 +33,203 @@ import { AuthService, EmailService, SecureKeyStorage } from './services';
 import { EventNotificationSystem } from './services/eventNotificationSystem';
 import { MessagePassingService } from './services/messagePassingService';
 import { WebSocketMessageServer } from './services/webSocketMessageServer';
+import {
+  noOpDatabaseInitFunction,
+  noOpInitResultHashFunction,
+  noOpSchemaMapFactory,
+} from './upstream-stubs';
 
 /**
- * Application class
+ * Application class for BrightChain.
+ *
+ * Extends the upstream Application from @digitaldefiance/node-express-suite,
+ * inheriting HTTP/HTTPS server lifecycle, greenlock/Let's Encrypt support,
+ * middleware initialization, and graceful shutdown.
+ *
+ * BrightChain-specific concerns (services, WebSocket, UPnP, EventNotificationSystem)
+ * are initialized after the upstream start() completes.
+ *
+ * Mongoose-related upstream parameters are satisfied with no-op stubs since
+ * BrightChain uses DocumentStore/BlockDocumentStore instead.
  */
-export class App<TID extends PlatformID> extends BaseApplication<TID> {
-  public readonly expressApp: Application;
-  private server: Server | null = null;
+export class App<TID extends PlatformID> extends UpstreamApplication<
+  IBrightChainInitResult<TID>,
+  Record<string, never>,
+  TID,
+  Environment<TID>,
+  IConstants,
+  AppRouter<TID>
+> {
   private controllers: Map<string, unknown> = new Map();
   private readonly keyStorage: SecureKeyStorage;
+  private readonly _brightchainDocumentStore: DocumentStore;
   private apiRouter: ApiRouter<TID> | null = null;
   private eventSystem: EventNotificationSystem | null = null;
   private wsServer: WebSocketMessageServer | null = null;
   private messagePassingService: MessagePassingService | null = null;
   private upnpManager: UpnpManager | null = null;
 
+  /**
+   * Captured HTTP server reference for WebSocket attachment.
+   * The upstream Application stores the server as a private field,
+   * so we intercept expressApp.listen() to capture it here.
+   */
+  private _httpServer: Server | null = null;
+
   constructor(environment: Environment<TID>) {
     super(
       environment,
-      createBlockDocumentStore({
-        storePath: environment.blockStorePath,
-        blockSize: environment.blockStoreBlockSize,
-        useMemory: environment.useMemoryDocumentStore,
-      }),
+      // apiRouterFactory — creates BrightChain's ApiRouter
+      // @ts-expect-error — App overrides db/getModel with DocumentStore types; runtime-compatible
+      (app: IApplication<TID>) => new ApiRouter<TID>(app as App<TID>),
+      // schemaMapFactory — no-op, returns empty object (no mongoose models)
+      noOpSchemaMapFactory,
+      // databaseInitFunction — no-op, returns { success: true }
+      noOpDatabaseInitFunction,
+      // initResultHashFunction — no-op, returns 'no-mongoose'
+      noOpInitResultHashFunction,
+      // cspConfig — undefined; BrightChain's Middlewares.init handles CSP
+      undefined,
+      // constants
+      AppConstants,
+      // appRouterFactory — creates BrightChain's AppRouter wrapping the ApiRouter
+      (apiRouter) => new AppRouter<TID>(apiRouter as ApiRouter<TID>),
+      // customInitMiddleware — wrap Middlewares.init to match upstream signature
+      (app: Parameters<typeof Middlewares.init>[0]) => Middlewares.init(app),
     );
-    this.expressApp = express();
-    this.server = null;
     this.keyStorage = SecureKeyStorage.getInstance();
+    this._brightchainDocumentStore = createBlockDocumentStore({
+      useMemory: true,
+    });
   }
 
-  public override async start(): Promise<void> {
-    await super.start(true);
+  /**
+   * Get the BrightChain document store.
+   * Overrides the upstream mongoose-based `db` getter since BrightChain
+   * uses its own BlockDocumentStore instead of mongoose.
+   */
+  // @ts-expect-error — intentional override: BrightChain uses DocumentStore, not mongoose
+  public override get db(): DocumentStore {
+    return this._brightchainDocumentStore;
+  }
+
+  /**
+   * Get a collection from the BrightChain document store by name.
+   * Overrides the upstream mongoose-based `getModel()` to delegate
+   * to the BlockDocumentStore's collection() method.
+   */
+  // @ts-expect-error — intentional override: returns DocumentCollection, not mongoose Model
+  public override getModel<U extends DocumentRecord>(
+    modelName: string,
+  ): DocumentCollection<U> {
+    return this._brightchainDocumentStore.collection<U>(modelName);
+  }
+
+  public override async start(mongoUri?: string): Promise<void> {
+    // Intercept expressApp.listen to capture the HTTP server reference.
+    // The upstream Application creates the server internally via expressApp.listen(),
+    // but stores it in a private field we cannot access from a subclass.
+    const originalListen = this.expressApp.listen.bind(this.expressApp);
+    this.expressApp.listen = ((...args: Parameters<typeof originalListen>) => {
+      const server = originalListen(...args);
+      this._httpServer = server;
+      return server;
+    }) as typeof this.expressApp.listen;
+
+    // Delegate to upstream — handles: middleware init, router setup, error handler,
+    // HTTP server on :port, greenlock/HTTPS on :443, dev-HTTPS, _ready = true
+    // Pass undefined to skip mongoose connection.
+    await super.start(mongoUri);
+
+    // Restore original listen to avoid side effects on subsequent calls
+    this.expressApp.listen = originalListen;
+
+    // ── BrightChain-specific initialization ──────────────────────────
+
+    await this.keyStorage.initializeFromEnvironment();
+
+    // Initialize core services
+    const blockStore = BlockStoreFactory.createMemoryStore({
+      blockSize: BlockSize.Small,
+    });
+    const memberStore = new MemberStore(blockStore);
+    const energyStore = new EnergyAccountStore();
+    const energyLedger = new EnergyLedger();
+    // @ts-expect-error — App overrides db/getModel with DocumentStore types; runtime-compatible
+    const emailService = new EmailService<TID>(this);
+    const authService = new AuthService<TID>(
+      // @ts-expect-error — App overrides db/getModel with DocumentStore types; runtime-compatible
+      this,
+      memberStore,
+      energyStore,
+      emailService,
+      this.environment.jwtSecret,
+    );
+
+    // Register services in the upstream ServiceContainer
+    this.services.register('memberStore', () => memberStore);
+    this.services.register('energyStore', () => energyStore);
+    this.services.register('energyLedger', () => energyLedger);
+    this.services.register('emailService', () => emailService);
+    this.services.register('auth', () => authService);
+
+    // EventNotificationSystem for WebSocket events
+    this.eventSystem = new EventNotificationSystem();
+    this.services.register('eventSystem', () => this.eventSystem);
+
+    // WebSocket — attach to the captured HTTP server
+    if (this._httpServer) {
+      this.wsServer = new WebSocketMessageServer(this._httpServer, false);
+      this.services.register('wsServer', () => this.wsServer);
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ ready ] WebSocket server initialized',
+      );
+    }
+
+    // Wire EventNotificationSystem to SyncController via the apiRouter
+    if (this.apiRouter) {
+      this.apiRouter.setSyncEventSystem(this.eventSystem);
+    }
+
+    // UPnP port mapping (non-fatal on failure)
     try {
-      if (this._ready) {
-        console.error(
-          'Failed to start the application:',
-          'Application is already running',
+      if (this.environment.upnp?.enabled) {
+        this.upnpManager = new UpnpManager(this.environment.upnp);
+        await this.upnpManager.initialize();
+        this.services.register('upnpManager', () => this.upnpManager);
+        debugLog(
+          this.environment.debug,
+          'log',
+          '[ ready ] UPnP port mapping initialized',
         );
-        process.exit(1);
-      }
-      await this.keyStorage.initializeFromEnvironment();
-
-      // Initialize services
-      const blockStore = BlockStoreFactory.createMemoryStore({
-        blockSize: BlockSize.Small,
-      });
-      const memberStore = new MemberStore(blockStore);
-      const energyStore = new EnergyAccountStore();
-      const energyLedger = new EnergyLedger();
-      const emailService = new EmailService<TID>(this);
-      const authService = new AuthService<TID>(
-        this,
-        memberStore,
-        energyStore,
-        emailService,
-        this.environment.jwtSecret,
-      );
-
-      // Register services
-      this.services.register('memberStore', () => memberStore);
-      this.services.register('energyStore', () => energyStore);
-      this.services.register('energyLedger', () => energyLedger);
-      this.services.register('emailService', () => emailService);
-      this.services.register('auth', () => authService);
-
-      // Initialize EventNotificationSystem for WebSocket events
-      // @requirements 5.1, 5.2, 5.4
-      this.eventSystem = new EventNotificationSystem();
-      this.services.register('eventSystem', () => this.eventSystem);
-
-      Middlewares.init(this.expressApp);
-      const apiRouter = new ApiRouter<TID>(this);
-      this.apiRouter = apiRouter;
-      const appRouter = new AppRouter<TID>(apiRouter);
-
-      // Wire EventNotificationSystem to SyncController for replication events
-      // @requirements 4.5
-      apiRouter.setSyncEventSystem(this.eventSystem);
-
-      appRouter.init(this.expressApp);
-      this.expressApp.use(
-        (
-          err: HandleableError | Error,
-          req: Request,
-          res: Response,
-          next: NextFunction,
-        ) => {
-          const handleableError =
-            err instanceof HandleableError
-              ? err
-              : new HandleableError(
-                  new Error(
-                    err.message ||
-                      translate(BrightChainStrings.Error_Unexpected_Error),
-                  ),
-                  { cause: err },
-                );
-          handleError(
-            handleableError,
-            res as any,
-            sendApiMessageResponse,
-            next,
-          );
-        },
-      );
-
-      const serversReady: Promise<void>[] = [];
-      serversReady.push(
-        new Promise<void>((resolve) => {
-          this.server = this.expressApp.listen(
-            this.environment.port,
-            this.environment.host,
-            () => {
-              debugLog(
-                this.environment.debug,
-                'log',
-                `[ ready ] http://${this.environment.host}:${this.environment.port}`,
-              );
-
-              // Initialize WebSocket server after HTTP server is ready
-              // @requirements 5.1
-              if (this.server) {
-                this.wsServer = new WebSocketMessageServer(this.server, false);
-                this.services.register('wsServer', () => this.wsServer);
-                debugLog(
-                  this.environment.debug,
-                  'log',
-                  '[ ready ] WebSocket server initialized',
-                );
-              }
-
-              resolve();
-            },
-          );
-        }),
-      );
-
-      if (this.environment.httpsDevCertRoot) {
-        try {
-          const certPath = resolve(this.environment.httpsDevCertRoot + '.pem');
-          const keyPath = resolve(
-            this.environment.httpsDevCertRoot + '-key.pem',
-          );
-          const options = {
-            key: readFileSync(keyPath),
-            cert: readFileSync(certPath),
-          };
-
-          serversReady.push(
-            new Promise<void>((resolve) => {
-              createServer(options, this.expressApp).listen(
-                this.environment.httpsDevPort,
-                () => {
-                  console.log(
-                    `[ ${getSuiteCoreTranslation(
-                      SuiteCoreStringKey.Common_Ready,
-                    )} ] https://${this.environment.host}:${
-                      this.environment.httpsDevPort
-                    }`,
-                  );
-                  resolve();
-                },
-              );
-            }),
-          );
-        } catch (err) {
-          console.error('Failed to start HTTPS server:', err);
-        }
-      }
-
-      await Promise.all(serversReady);
-
-      // Initialize UPnP port mapping if enabled (non-fatal on failure)
-      try {
-        if (this.environment.upnp.enabled) {
-          this.upnpManager = new UpnpManager(this.environment.upnp);
-          await this.upnpManager.initialize();
-          this.services.register('upnpManager', () => this.upnpManager);
-          debugLog(
-            this.environment.debug,
-            'log',
-            '[ ready ] UPnP port mapping initialized',
-          );
-        } else {
-          debugLog(
-            this.environment.debug,
-            'log',
-            '[ info ] UPnP port mapping disabled',
-          );
-        }
-      } catch (upnpErr) {
-        console.warn(
-          '[ warning ] UPnP initialization failed, continuing without port mapping:',
-          upnpErr,
+      } else {
+        debugLog(
+          this.environment.debug,
+          'log',
+          '[ info ] UPnP port mapping disabled',
         );
       }
-
-      this._ready = true;
-    } catch (err) {
-      console.error('Failed to start the application:', err);
-      if (process.env['NODE_ENV'] === 'test') {
-        throw err;
-      }
-      process.exit(1);
+    } catch (upnpErr) {
+      console.warn(
+        '[ warning ] UPnP initialization failed, continuing without port mapping:',
+        upnpErr,
+      );
     }
   }
 
   public override async stop(): Promise<void> {
-    // Shutdown UPnP port mappings first
+    // BrightChain-specific cleanup first, then delegate to upstream
+
+    // Shutdown UPnP port mappings
     if (this.upnpManager) {
       debugLog(this.environment.debug, 'log', '[ stopping ] UPnP port mapping');
       await this.upnpManager.shutdown();
       this.upnpManager = null;
     }
 
-    // Close WebSocket server first
+    // Close WebSocket server
     if (this.wsServer) {
       debugLog(this.environment.debug, 'log', '[ stopping ] WebSocket server');
       await new Promise<void>((resolve) => {
@@ -261,37 +238,14 @@ export class App<TID extends PlatformID> extends BaseApplication<TID> {
       this.wsServer = null;
     }
 
-    if (this.server) {
-      debugLog(
-        this.environment.debug,
-        'log',
-        '[ stopping ] Application server',
-      );
-      await new Promise<void>((resolve, reject) => {
-        this.server!.closeAllConnections?.();
-        this.server!.close((err) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      });
-      this.server = null;
-    }
-
-    // Clean up other services
+    // Clean up BrightChain services
     this.eventSystem = null;
     this.messagePassingService = null;
     this.apiRouter = null;
+    this._httpServer = null;
 
+    // Upstream handles: greenlockManager.stop(), server.close(), db disconnect, _ready = false
     await super.stop();
-    this._ready = false;
-    debugLog(
-      this.environment.debug,
-      'log',
-      '[ stopped ] Application server and database connections',
-    );
   }
 
   public getController<T = unknown>(name: string): T {

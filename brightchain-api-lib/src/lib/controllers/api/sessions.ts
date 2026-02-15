@@ -44,16 +44,14 @@ export class SessionsController<
     return null as any;
   }
 
-  private handleGetSessions: ApiRequestHandler<
-    IApiMessageResponse | ApiErrorResponse
-  > = async (
-    req,
-  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  private async handleGetSessions(
+    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     return {
       statusCode: 200,
       response: {
         message: 'Sessions not implemented yet',
       },
     };
-  };
+  }
 }

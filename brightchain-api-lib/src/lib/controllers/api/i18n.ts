@@ -37,16 +37,14 @@ export class I18nController<
     };
   }
 
-  private handleGetStrings: ApiRequestHandler<
-    IApiMessageResponse | ApiErrorResponse
-  > = async (
-    req,
-  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  private async handleGetStrings(
+    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     return {
       statusCode: 200,
       response: {
         message: 'I18n strings not implemented yet',
       },
     };
-  };
+  }
 }

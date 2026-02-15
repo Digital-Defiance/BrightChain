@@ -11,6 +11,10 @@
 
 import { Constants as BaseConstants } from '@digitaldefiance/ecies-lib';
 import {
+  IConstants as ISuiteCoreConstants,
+  createConstants,
+} from '@digitaldefiance/suite-core-lib';
+import {
   IBCFECConsts,
   ICBLConsts,
   IConstants,
@@ -29,6 +33,22 @@ export const SITE: ISiteConsts = {
   EMAIL_FROM: 'noreply@brightchain.org' as const,
   DOMAIN: 'localhost:3000' as const,
   CSP_NONCE_SIZE: 32 as const,
+} as const;
+
+/**
+ * BrightChain theme colors
+ */
+export const THEME_COLORS = {
+  CHAIN_BLUE: '#1976d2' as const,
+  CHAIN_BLUE_LIGHT: '#42a5f5' as const,
+  CHAIN_BLUE_DARK: '#1565c0' as const,
+  BRIGHT_CYAN: '#00bcd4' as const,
+  BRIGHT_CYAN_LIGHT: '#4dd0e1' as const,
+  BRIGHT_CYAN_DARK: '#0097a7' as const,
+  CRYPTO_PURPLE: '#9c27b0' as const,
+  SECURE_GREEN: '#4caf50' as const,
+  ALERT_ORANGE: '#ff9800' as const,
+  ERROR_RED: '#f44336' as const,
 } as const;
 
 /**
@@ -179,6 +199,22 @@ export const CONSTANTS: IConstants = {
   TUPLE,
   SEALING,
   SITE,
+  THEME_COLORS,
 };
+
+export const CoreOverrides = {
+  Site: 'BrightChain',
+  SiteTagline: 'Next-Generation Decentralized Infrastructure',
+  SiteDescription:
+    'The home of BrightChain, a Next-Generation Decentralized Infrastructure project.',
+};
+
+export const CoreConstants: ISuiteCoreConstants = createConstants(
+  'brightchain.org',
+  'brightchain.org',
+  CoreOverrides,
+);
+
+export type { ISuiteCoreConstants };
 
 export default CONSTANTS;

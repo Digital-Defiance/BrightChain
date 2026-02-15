@@ -1,7 +1,12 @@
-import { CONSTANTS, i18nEngine } from '@brightchain/brightchain-lib';
+import {
+  CoreConstants,
+  i18nEngine,
+  ISuiteCoreConstants,
+} from '@brightchain/brightchain-lib';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import {
   ApiAccess,
+  AppThemeProvider,
   AuthProvider,
   BackupCodeLoginWrapper,
   BackupCodesWrapper,
@@ -13,6 +18,7 @@ import {
   PrivateRoute,
   RegisterFormWrapper,
   SuiteConfigProvider,
+  TDivBranded,
   TopMenu,
   TranslatedTitle,
   UnAuthRoute,
@@ -20,7 +26,11 @@ import {
   VerifyEmailPageWrapper,
 } from '@digitaldefiance/express-suite-react-components';
 import { LanguageRegistry } from '@digitaldefiance/i18n-lib';
-import { IConstants } from '@digitaldefiance/suite-core-lib';
+import {
+  SuiteCoreComponentId,
+  SuiteCoreStringKey,
+  SuiteCoreStringKeyValue,
+} from '@digitaldefiance/suite-core-lib';
 import { Box, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -32,9 +42,11 @@ import { BrightChainSoupDemo } from './components/BrightChainSoupDemo';
 import DashboardPage from './components/dashboardPage';
 import { BrightPassDemo } from './components/showcase/BrightPassDemo';
 import { DatabaseDemo } from './components/showcase/DatabaseDemo';
+import { IdentityDemo } from './components/showcase/IdentityDemo';
 import { MessagingDemo } from './components/showcase/MessagingDemo';
 import { StoragePoolsDemo } from './components/showcase/StoragePoolsDemo';
 import { SplashPage } from './components/splashPage';
+import { createAppTheme } from './theme';
 
 const getApiBaseUrl = (): string => {
   if (typeof window !== 'undefined') {
@@ -81,7 +93,7 @@ const AuthProviderWithNavigation: FC<{ children: React.ReactNode }> = ({
     >
       <AuthProvider
         baseUrl={API_BASE_URL}
-        constants={CONSTANTS as unknown as IConstants}
+        constants={CoreConstants as ISuiteCoreConstants}
         eciesConfig={eciesConfig}
         onLogout={handleLogout}
       >
@@ -95,28 +107,35 @@ const App: FC = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <I18nProvider i18nEngine={i18nEngine}>
-        <TranslatedTitle
-          componentId="brightchain.strings"
-          stringKey="BrightChain"
+        <TranslatedTitle<SuiteCoreStringKeyValue>
+          componentId={SuiteCoreComponentId}
+          stringKey={SuiteCoreStringKey.Common_SiteTemplate}
+          vars={{ Site: CoreConstants.Site }}
         />
-        <CssBaseline />
-        <AuthProviderWithNavigation>
-          <InnerApp />
-        </AuthProviderWithNavigation>
+        <AppThemeProvider customTheme={createAppTheme}>
+          <CssBaseline />
+          <AuthProviderWithNavigation>
+            <InnerApp />
+          </AuthProviderWithNavigation>
+        </AppThemeProvider>
       </I18nProvider>
     </LocalizationProvider>
   );
 };
 
 const LogoComponent = () => (
-  <div style={{ fontWeight: 'bold', fontSize: '1.5rem' }}>BrightChain</div>
+  <TDivBranded
+    stringKey={SuiteCoreStringKey.Common_SiteTemplate}
+    vars={{ Site: CoreConstants.Site }}
+    divOptions={{ style: { fontWeight: 'bold', fontSize: '1.5rem' } }}
+  />
 );
 
 const InnerApp: FC = () => {
   return (
     <MenuProvider menuConfigs={[]}>
       <Box className="app-container" sx={{ paddingTop: '64px' }}>
-        <TopMenu Logo={<LogoComponent />} />
+        <TopMenu Logo={<LogoComponent />} constants={CoreConstants} />
         <Routes>
           <Route path="/" element={<SplashPage />} />
           <Route path="/demo" element={<BrightChainSoupDemo />} />
@@ -127,6 +146,7 @@ const InnerApp: FC = () => {
           <Route path="/showcase/messaging" element={<MessagingDemo />} />
           <Route path="/showcase/brightpass" element={<BrightPassDemo />} />
           <Route path="/showcase/database" element={<DatabaseDemo />} />
+          <Route path="/showcase/identity" element={<IdentityDemo />} />
           <Route
             path="/dashboard"
             element={

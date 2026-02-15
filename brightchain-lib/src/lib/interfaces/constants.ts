@@ -276,6 +276,22 @@ export interface ISiteConsts {
   readonly CSP_NONCE_SIZE: number;
 }
 
+/**
+ * BrightChain theme color constants
+ */
+export interface IThemeColors {
+  readonly CHAIN_BLUE: string;
+  readonly CHAIN_BLUE_LIGHT: string;
+  readonly CHAIN_BLUE_DARK: string;
+  readonly BRIGHT_CYAN: string;
+  readonly BRIGHT_CYAN_LIGHT: string;
+  readonly BRIGHT_CYAN_DARK: string;
+  readonly CRYPTO_PURPLE: string;
+  readonly SECURE_GREEN: string;
+  readonly ALERT_ORANGE: string;
+  readonly ERROR_RED: string;
+}
+
 import type { IConstants as IEciesConstants } from '@digitaldefiance/ecies-lib';
 
 /**
@@ -297,6 +313,13 @@ import type { IConstants as IEciesConstants } from '@digitaldefiance/ecies-lib';
  * ```
  */
 export interface IConstants extends IEciesConstants {
+  /**
+   * Index signature for II18nConstants compatibility.
+   * The i18n engine only uses string/number values for template replacement;
+   * nested objects (CBL, TUPLE, etc.) are silently ignored.
+   */
+  [key: string]: unknown;
+
   /** Structured block header constants */
   readonly BLOCK_HEADER: IBlockHeaderConsts;
 
@@ -314,6 +337,9 @@ export interface IConstants extends IEciesConstants {
 
   /** Site configuration constants */
   readonly SITE: ISiteConsts;
+
+  /** Theme color constants */
+  readonly THEME_COLORS: IThemeColors;
 
   /** OFFS cache percentage */
   readonly OFFS_CACHE_PERCENTAGE: number;

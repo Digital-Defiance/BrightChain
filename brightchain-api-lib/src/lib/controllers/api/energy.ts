@@ -54,11 +54,9 @@ export class EnergyController<
     };
   }
 
-  private handleGetBalance: ApiRequestHandler<
-    IApiMessageResponse | ApiErrorResponse
-  > = async (
-    req,
-  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  private async handleGetBalance(
+    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     const user = (req as { user?: { memberId: string } }).user;
 
     if (!user) {
@@ -107,13 +105,11 @@ export class EnergyController<
         },
       };
     }
-  };
+  }
 
-  private handleGetTransactions: ApiRequestHandler<
-    IApiMessageResponse | ApiErrorResponse
-  > = async (
-    req,
-  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  private async handleGetTransactions(
+    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     const user = (req as { user?: { memberId: string } }).user;
 
     if (!user) {
@@ -167,5 +163,5 @@ export class EnergyController<
         },
       };
     }
-  };
+  }
 }

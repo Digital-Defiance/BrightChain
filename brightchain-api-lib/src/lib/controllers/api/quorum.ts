@@ -377,9 +377,9 @@ export class QuorumController<
    * }
    * ```
    */
-  private handleAddMember: ApiRequestHandler<
-    AddMemberResponse | ApiErrorResponse
-  > = async (req) => {
+  private async handleAddMember(
+    req: Parameters<ApiRequestHandler<AddMemberResponse | ApiErrorResponse>>[0],
+  ) {
     try {
       const { name, email, role } = (req as unknown as AddMemberRequest).body;
 
@@ -429,7 +429,7 @@ export class QuorumController<
       }
       return handleError(_error);
     }
-  };
+  }
 
   /**
    * GET /api/quorum/members
@@ -462,9 +462,9 @@ export class QuorumController<
    * }
    * ```
    */
-  private handleListMembers: ApiRequestHandler<
-    ListMembersResponse | ApiErrorResponse
-  > = async (_req) => {
+  private async handleListMembers(
+    _req: Parameters<ApiRequestHandler<ListMembersResponse | ApiErrorResponse>>[0],
+  ) {
     try {
       const quorumService = this.quorumServiceWrapper.getService();
       const members = await quorumService.listMembers();
@@ -482,7 +482,7 @@ export class QuorumController<
       }
       return handleError(_error);
     }
-  };
+  }
 
   /**
    * DELETE /api/quorum/members/:memberId
@@ -507,9 +507,9 @@ export class QuorumController<
    * }
    * ```
    */
-  private handleRemoveMember: ApiRequestHandler<
-    RemoveMemberResponse | ApiErrorResponse
-  > = async (req) => {
+  private async handleRemoveMember(
+    req: Parameters<ApiRequestHandler<RemoveMemberResponse | ApiErrorResponse>>[0],
+  ) {
     try {
       const { memberId } = (req as unknown as RemoveMemberRequest).params;
 
@@ -534,7 +534,7 @@ export class QuorumController<
       }
       return handleError(_error);
     }
-  };
+  }
 
   // === Document Sealing/Unsealing Handlers ===
 
@@ -569,9 +569,9 @@ export class QuorumController<
    * }
    * ```
    */
-  private handleSealDocument: ApiRequestHandler<
-    SealDocumentResponse | ApiErrorResponse
-  > = async (req) => {
+  private async handleSealDocument(
+    req: Parameters<ApiRequestHandler<SealDocumentResponse | ApiErrorResponse>>[0],
+  ) {
     try {
       const { document, memberIds, sharesRequired } = (
         req as unknown as SealDocumentRequest
@@ -650,7 +650,7 @@ export class QuorumController<
       }
       return handleError(_error);
     }
-  };
+  }
 
   /**
    * POST /api/quorum/documents/:documentId/unseal
@@ -684,9 +684,9 @@ export class QuorumController<
    * }
    * ```
    */
-  private handleUnsealDocument: ApiRequestHandler<
-    UnsealDocumentResponse | ApiErrorResponse
-  > = async (req) => {
+  private async handleUnsealDocument(
+    req: Parameters<ApiRequestHandler<UnsealDocumentResponse | ApiErrorResponse>>[0],
+  ) {
     try {
       const { documentId } = (req as unknown as UnsealDocumentRequest).params;
       const { memberCredentials } = (req as unknown as UnsealDocumentRequest)
@@ -823,7 +823,7 @@ export class QuorumController<
       }
       return handleError(_error);
     }
-  };
+  }
 
   /**
    * GET /api/quorum/documents/:documentId
@@ -853,9 +853,9 @@ export class QuorumController<
    * }
    * ```
    */
-  private handleGetDocument: ApiRequestHandler<
-    GetDocumentResponse | ApiErrorResponse
-  > = async (req) => {
+  private async handleGetDocument(
+    req: Parameters<ApiRequestHandler<GetDocumentResponse | ApiErrorResponse>>[0],
+  ) {
     try {
       const { documentId } = (req as unknown as GetDocumentRequest).params;
 
@@ -885,7 +885,7 @@ export class QuorumController<
       }
       return handleError(_error);
     }
-  };
+  }
 
   /**
    * GET /api/quorum/documents/:documentId/can-unlock
@@ -912,9 +912,9 @@ export class QuorumController<
    * }
    * ```
    */
-  private handleCanUnlock: ApiRequestHandler<
-    CanUnlockResponse | ApiErrorResponse
-  > = async (req) => {
+  private async handleCanUnlock(
+    req: Parameters<ApiRequestHandler<CanUnlockResponse | ApiErrorResponse>>[0],
+  ) {
     try {
       const { documentId } = (req as unknown as CanUnlockRequest).params;
       const { memberIds: memberIdsStr } = (req as unknown as CanUnlockRequest)
@@ -953,5 +953,5 @@ export class QuorumController<
       }
       return handleError(_error);
     }
-  };
+  }
 }

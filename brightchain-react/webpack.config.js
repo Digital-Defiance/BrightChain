@@ -41,6 +41,13 @@ module.exports = composePlugins(
       os: false,
       assert: false,
       url: false,
+      https: false,
+      http: false,
+      net: false,
+      tls: false,
+      zlib: false,
+      child_process: false,
+      async_hooks: false,
     };
     
     // Stub out server-only modules
@@ -49,6 +56,48 @@ module.exports = composePlugins(
       'file-type': false,
       'pg-hstore': false,
     };
+    
+    // Exclude problematic Node.js-only dependencies
+    config.externals = {
+      ...config.externals,
+      'mock-aws-s3': 'commonjs mock-aws-s3',
+      'aws-sdk': 'commonjs aws-sdk',
+      'nock': 'commonjs nock',
+      'kerberos': 'commonjs kerberos',
+      '@mongodb-js/zstd': 'commonjs @mongodb-js/zstd',
+      '@aws-sdk/credential-providers': 'commonjs @aws-sdk/credential-providers',
+      'gcp-metadata': 'commonjs gcp-metadata',
+      'snappy': 'commonjs snappy',
+      'mongodb-client-encryption': 'commonjs mongodb-client-encryption',
+      'bcrypt': 'commonjs bcrypt',
+    };
+    
+    // Add module rules to ignore HTML files and problematic dependencies
+    config.module = config.module || {};
+    config.module.rules = config.module.rules || [];
+    config.module.rules.push(
+      {
+        test: /\.html$/,
+        include: /node_modules/,
+        type: 'asset/resource',
+      },
+      {
+        test: /node_modules\/@mapbox\/node-pre-gyp/,
+        use: 'null-loader',
+      },
+      {
+        test: /node_modules\/@digitaldefiance\/enclave-bridge-client/,
+        use: 'null-loader',
+      },
+      {
+        test: /node_modules\/@digitaldefiance\/node-express-suite/,
+        use: 'null-loader',
+      },
+      {
+        test: /node_modules\/@root\/greenlock/,
+        use: 'null-loader',
+      }
+    );
     
     return config;
   }
