@@ -55,6 +55,26 @@
         }
       }
     },
+    "serve-full": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": [
+        "build",
+        "brightchain-react:build"
+      ],
+      "options": {
+        "buildTarget": "brightchain-api:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "brightchain-api:build:development"
+        },
+        "production": {
+          "buildTarget": "brightchain-api:build:production"
+        }
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint"
     },
