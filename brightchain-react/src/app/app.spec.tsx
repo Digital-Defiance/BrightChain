@@ -2,13 +2,24 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 
-// Mock ecies-lib to prevent i18n-lib initialization issues
+// Mock ecies-lib to prevent heavy crypto/i18n initialization at module load time
 jest.mock('@digitaldefiance/ecies-lib', () => ({
   IECIESConfig: {},
-  Member: {
-    newMember: jest.fn(),
-  },
+  Member: { newMember: jest.fn() },
   EmailString: jest.fn(),
+}));
+
+// Mock suite-core-lib — its module-level code instantiates ObjectIdProvider
+// and calls createI18nStringKeysFromEnum, both of which fail without full
+// ecies-lib and i18n-lib runtimes. We only need the three named exports
+// that app.tsx actually uses.
+jest.mock('@digitaldefiance/suite-core-lib', () => ({
+  SuiteCoreComponentId: 'suite-core',
+  SuiteCoreStringKey: new Proxy(
+    {},
+    { get: (_target, prop) => `suite-core:${String(prop)}` },
+  ),
+  SuiteCoreStringKeyValue: {},
 }));
 
 // Mock BrightChainSoupDemo to avoid module-level code execution
@@ -21,7 +32,20 @@ jest.mock('./components/BrightChainSoupDemo', () => ({
 // Mock brightchain-lib to prevent i18n initialization
 jest.mock('@brightchain/brightchain-lib', () => ({
   constants: { CONSTANTS: {} },
-  CONSTANTS: {},
+  CoreConstants: { Site: 'BrightChain' },
+  CONSTANTS: {
+    THEME_COLORS: {
+      CHAIN_BLUE: '#1976d2',
+      CHAIN_BLUE_LIGHT: '#42a5f5',
+      CHAIN_BLUE_DARK: '#1565c0',
+      BRIGHT_CYAN: '#00bcd4',
+      BRIGHT_CYAN_LIGHT: '#4dd0e1',
+      BRIGHT_CYAN_DARK: '#0097a7',
+      ERROR_RED: '#d32f2f',
+      ALERT_ORANGE: '#ed6c02',
+      SECURE_GREEN: '#2e7d32',
+    },
+  },
   i18nEngine: {
     translate: jest.fn((key: string) => key),
     setLanguage: jest.fn(),
@@ -86,6 +110,9 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
     <>{children}</>
   ),
   RegisterFormWrapper: () => <div>RegisterFormWrapper</div>,
+  TDivBranded: (props: Record<string, unknown>) => (
+    <div data-testid="branded-div">BrightChain</div>
+  ),
   TopMenu: ({ Logo }: { Logo: React.ReactNode }) => (
     <div data-testid="top-menu">{Logo}</div>
   ),

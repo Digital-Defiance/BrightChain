@@ -411,9 +411,9 @@ export class BrightPassController<
 
   // ─── Vault CRUD Handlers ──────────────────────────────────────
 
-  private handleCreateVault: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleCreateVault(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const memberId = this.getAuthMemberId(req);
       const { name, masterPassword } = (
@@ -431,11 +431,11 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
-  private handleListVaults: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleListVaults(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const memberId = this.getAuthMemberId(req);
       const vaults = await this.brightPassService.listVaults(memberId);
@@ -443,11 +443,11 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
-  private handleOpenVault: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleOpenVault(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const memberId = this.getAuthMemberId(req);
       const { vaultId } = (req as unknown as { params: VaultIdParams }).params;
@@ -465,11 +465,11 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
-  private handleDeleteVault: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleDeleteVault(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const memberId = this.getAuthMemberId(req);
       const { vaultId } = (req as unknown as { params: VaultIdParams }).params;
@@ -487,13 +487,13 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
   // ─── Entry CRUD Handlers ──────────────────────────────────────
 
-  private handleCreateEntry: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleCreateEntry(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const { vaultId } = (req as unknown as { params: VaultIdParams }).params;
       const entry = (req as unknown as { body: any }).body;
@@ -505,11 +505,11 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
-  private handleGetEntry: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleGetEntry(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const { vaultId, entryId } = (req as unknown as { params: EntryIdParams })
         .params;
@@ -518,11 +518,11 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
-  private handleUpdateEntry: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleUpdateEntry(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const { vaultId, entryId } = (req as unknown as { params: EntryIdParams })
         .params;
@@ -536,11 +536,11 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
-  private handleDeleteEntry: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleDeleteEntry(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const { vaultId, entryId } = (req as unknown as { params: EntryIdParams })
         .params;
@@ -549,42 +549,44 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
-  private handleSearchEntries: ApiRequestHandler<BrightPassApiResponse> =
-    async (req) => {
-      try {
-        const { vaultId } = (req as unknown as { params: VaultIdParams })
-          .params;
-        const query = (req as unknown as { body: any }).body;
-        const results = await this.brightPassService.searchEntries(
-          vaultId,
-          query,
-        );
-        return ok({ results: results as any });
-      } catch (error) {
-        return mapBrightPassError(error);
-      }
-    };
+  private async handleSearchEntries(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
+    try {
+      const { vaultId } = (req as unknown as { params: VaultIdParams })
+        .params;
+      const query = (req as unknown as { body: any }).body;
+      const results = await this.brightPassService.searchEntries(
+        vaultId,
+        query,
+      );
+      return ok({ results: results as any });
+    } catch (error) {
+      return mapBrightPassError(error);
+    }
+  }
 
   // ─── Utility Handlers ─────────────────────────────────────────
 
-  private handleGeneratePassword: ApiRequestHandler<BrightPassApiResponse> =
-    async (req) => {
-      try {
-        const options = (req as unknown as { body: any }).body;
-        // validate throws on invalid options
-        PasswordGenerator.validate(options);
-        const password = PasswordGenerator.generate(options);
-        return ok({ password });
-      } catch (error) {
-        return mapBrightPassError(error);
-      }
-    };
+  private async handleGeneratePassword(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
+    try {
+      const options = (req as unknown as { body: any }).body;
+      // validate throws on invalid options
+      PasswordGenerator.validate(options);
+      const password = PasswordGenerator.generate(options);
+      return ok({ password });
+    } catch (error) {
+      return mapBrightPassError(error);
+    }
+  }
 
-  private handleGenerateTotp: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleGenerateTotp(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const { secret } = (req as unknown as { body: { secret: string } }).body;
       if (!secret) {
@@ -595,11 +597,11 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
-  private handleValidateTotp: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleValidateTotp(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const { code, secret, window } = (
         req as unknown as {
@@ -614,11 +616,11 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
-  private handleBreachCheck: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleBreachCheck(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const { password } = (req as unknown as { body: { password: string } })
         .body;
@@ -630,11 +632,11 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
-  private handleAutofill: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleAutofill(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const { vaultId } = (req as unknown as { params: VaultIdParams }).params;
       const { siteUrl } = (req as unknown as { body: { siteUrl: string } })
@@ -650,11 +652,11 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
-  private handleGetAuditLog: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleGetAuditLog(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const { vaultId } = (req as unknown as { params: VaultIdParams }).params;
       const entries = await this.brightPassService.getAuditLog(vaultId);
@@ -662,13 +664,13 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
   // ─── Sharing Handlers ─────────────────────────────────────────
 
-  private handleShareVault: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleShareVault(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const { vaultId } = (req as unknown as { params: VaultIdParams }).params;
       const { recipientMemberIds } = (
@@ -684,11 +686,11 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
-  private handleRevokeShare: ApiRequestHandler<BrightPassApiResponse> = async (
-    req,
-  ) => {
+  private async handleRevokeShare(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
     try {
       const { vaultId } = (req as unknown as { params: VaultIdParams }).params;
       const { memberId } = (req as unknown as { body: { memberId: string } })
@@ -701,81 +703,84 @@ export class BrightPassController<
     } catch (error) {
       return mapBrightPassError(error);
     }
-  };
+  }
 
   // ─── Emergency Access Handlers ────────────────────────────────
 
-  private handleConfigureEmergencyAccess: ApiRequestHandler<BrightPassApiResponse> =
-    async (req) => {
-      try {
-        const { vaultId } = (req as unknown as { params: VaultIdParams })
-          .params;
-        const { threshold, trustees } = (
-          req as unknown as {
-            body: { threshold: number; trustees: string[] };
-          }
-        ).body;
-        if (!threshold || !trustees || !Array.isArray(trustees)) {
-          return validationError(
-            'Missing required fields: threshold, trustees (array)',
-          );
+  private async handleConfigureEmergencyAccess(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
+    try {
+      const { vaultId } = (req as unknown as { params: VaultIdParams })
+        .params;
+      const { threshold, trustees } = (
+        req as unknown as {
+          body: { threshold: number; trustees: string[] };
         }
-        const config = await this.brightPassService.configureEmergencyAccess(
-          vaultId,
-          threshold,
-          trustees,
+      ).body;
+      if (!threshold || !trustees || !Array.isArray(trustees)) {
+        return validationError(
+          'Missing required fields: threshold, trustees (array)',
         );
-        return ok(config as any);
-      } catch (error) {
-        return mapBrightPassError(error);
       }
-    };
+      const config = await this.brightPassService.configureEmergencyAccess(
+        vaultId,
+        threshold,
+        trustees,
+      );
+      return ok(config as any);
+    } catch (error) {
+      return mapBrightPassError(error);
+    }
+  }
 
-  private handleRecoverWithShares: ApiRequestHandler<BrightPassApiResponse> =
-    async (req) => {
-      try {
-        const { vaultId } = (req as unknown as { params: VaultIdParams })
-          .params;
-        const { shares } = (
-          req as unknown as { body: { shares: EncryptedShare[] } }
-        ).body;
-        if (!shares || !Array.isArray(shares)) {
-          return validationError('Missing required field: shares (array)');
-        }
-        const vault = await this.brightPassService.recoverWithShares(
-          vaultId,
-          shares,
-        );
-        return ok({ vault: vault as any });
-      } catch (error) {
-        return mapBrightPassError(error);
+  private async handleRecoverWithShares(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
+    try {
+      const { vaultId } = (req as unknown as { params: VaultIdParams })
+        .params;
+      const { shares } = (
+        req as unknown as { body: { shares: EncryptedShare[] } }
+      ).body;
+      if (!shares || !Array.isArray(shares)) {
+        return validationError('Missing required field: shares (array)');
       }
-    };
+      const vault = await this.brightPassService.recoverWithShares(
+        vaultId,
+        shares,
+      );
+      return ok({ vault: vault as any });
+    } catch (error) {
+      return mapBrightPassError(error);
+    }
+  }
 
   // ─── Import Handler ───────────────────────────────────────────
 
-  private handleImportEntries: ApiRequestHandler<BrightPassApiResponse> =
-    async (req) => {
-      try {
-        const { vaultId } = (req as unknown as { params: VaultIdParams })
-          .params;
-        const { format, fileContent } = (
-          req as unknown as { body: { format: string; fileContent: string } }
-        ).body;
-        if (!format || !fileContent) {
-          return validationError(
-            'Missing required fields: format, fileContent',
-          );
-        }
-        const buf = Buffer.from(fileContent, 'base64');
-        const result = await this.brightPassService.importFromFile(
-          vaultId,
-          format as ImportFormat,
-          buf,
+  private async handleImportEntries(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
+    try {
+      const { vaultId } = (req as unknown as { params: VaultIdParams })
+        .params;
+      const { format, fileContent } = (
+        req as unknown as { body: { format: string; fileContent: string } }
+      ).body;
+      if (!format || !fileContent) {
+        return validationError(
+          'Missing required fields: format, fileContent',
         );
-        return ok(result as any);
-      } catch (error) {
-        return mapBrightPassError(error);
       }
-    };
+      const buf = Buffer.from(fileContent, 'base64');
+      const result = await this.brightPassService.importFromFile(
+        vaultId,
+        format as ImportFormat,
+        buf,
+      );
+      return ok(result as any);
+    } catch (error) {
+      return mapBrightPassError(error);
+    }
+  }
 }

@@ -90,11 +90,9 @@ export class UserController<
     };
   }
 
-  private handleRegister: ApiRequestHandler<
-    IApiMessageResponse | ApiErrorResponse
-  > = async (
-    req,
-  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  private async handleRegister(
+    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { username, email, password } =
         req.body as unknown as IRegisterRequest;
@@ -125,13 +123,11 @@ export class UserController<
         },
       };
     }
-  };
+  }
 
-  private handleLogin: ApiRequestHandler<
-    IApiMessageResponse | ApiErrorResponse
-  > = async (
-    req,
-  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  private async handleLogin(
+    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { username, password } = req.body as unknown as ILoginRequest;
 
@@ -159,13 +155,11 @@ export class UserController<
         },
       };
     }
-  };
+  }
 
-  private handleProfile: ApiRequestHandler<
-    IApiMessageResponse | ApiErrorResponse
-  > = async (
-    req,
-  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  private async handleProfile(
+    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     const user = (req as { user?: { memberId: string } }).user;
 
     if (!user) {
@@ -233,13 +227,11 @@ export class UserController<
         },
       };
     }
-  };
+  }
 
-  private handleUpdateProfile: ApiRequestHandler<
-    IApiMessageResponse | ApiErrorResponse
-  > = async (
-    req,
-  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> => {
+  private async handleUpdateProfile(
+    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     const user = (req as { user?: { memberId: string } }).user;
 
     if (!user) {
@@ -307,5 +299,5 @@ export class UserController<
         },
       };
     }
-  };
+  }
 }
