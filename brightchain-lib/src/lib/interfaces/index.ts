@@ -21,6 +21,7 @@ export type * from './encryptionLength';
 export type * from './energyTransaction';
 export type { IFailableResult } from './failableResult';
 export type * from './handleableErrorOptions';
+export type * from './i18nConstants';
 export type * from './jsonStore';
 export type * from './keyringConsts';
 export type * from './keyringEntry';

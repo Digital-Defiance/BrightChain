@@ -10,6 +10,7 @@ import {
   ApiErrorResponse,
   ApiRequestHandler,
   ControllerRegistry,
+  IStatusCodeResponse,
   TypedHandlers,
   routeConfig,
 } from '@digitaldefiance/node-express-suite';
@@ -290,9 +291,9 @@ export class BlocksController<
    * }
    * ```
    */
-  private handleStoreBlock: ApiRequestHandler<
-    IStoreBlockResponse | ApiErrorResponse
-  > = async (req) => {
+  private async handleStoreBlock(
+    req: Parameters<ApiRequestHandler<IStoreBlockResponse | ApiErrorResponse>>[0],
+  ): Promise<IStatusCodeResponse<IStoreBlockResponse | ApiErrorResponse>> {
     try {
       const {
         data,
@@ -353,7 +354,7 @@ export class BlocksController<
       }
       return handleError(_error);
     }
-  };
+  }
 
   /**
    * GET /api/blocks/:blockId
@@ -380,9 +381,9 @@ export class BlocksController<
    * }
    * ```
    */
-  private handleGetBlock: ApiRequestHandler<
-    IGetBlockResponse | ApiErrorResponse
-  > = async (req) => {
+  private async handleGetBlock(
+    req: Parameters<ApiRequestHandler<IGetBlockResponse | ApiErrorResponse>>[0],
+  ): Promise<IStatusCodeResponse<IGetBlockResponse | ApiErrorResponse>> {
     try {
       const { blockId } = (req as unknown as GetBlockRequest).params;
 
@@ -408,7 +409,7 @@ export class BlocksController<
       }
       return handleError(_error);
     }
-  };
+  }
 
   /**
    * GET /api/blocks/:blockId/metadata
@@ -442,9 +443,9 @@ export class BlocksController<
    * }
    * ```
    */
-  private handleGetBlockMetadata: ApiRequestHandler<
-    IGetBlockMetadataResponse | ApiErrorResponse
-  > = async (req) => {
+  private async handleGetBlockMetadata(
+    req: Parameters<ApiRequestHandler<IGetBlockMetadataResponse | ApiErrorResponse>>[0],
+  ): Promise<IStatusCodeResponse<IGetBlockMetadataResponse | ApiErrorResponse>> {
     try {
       const { blockId } = (req as unknown as GetBlockMetadataRequest).params;
 
@@ -471,7 +472,7 @@ export class BlocksController<
       }
       return handleError(_error);
     }
-  };
+  }
 
   /**
    * DELETE /api/blocks/:blockId
@@ -497,9 +498,9 @@ export class BlocksController<
    * }
    * ```
    */
-  private handleDeleteBlock: ApiRequestHandler<
-    IDeleteBlockResponse | ApiErrorResponse
-  > = async (req) => {
+  private async handleDeleteBlock(
+    req: Parameters<ApiRequestHandler<IDeleteBlockResponse | ApiErrorResponse>>[0],
+  ): Promise<IStatusCodeResponse<IDeleteBlockResponse | ApiErrorResponse>> {
     try {
       const { blockId } = (req as unknown as DeleteBlockRequest).params;
 
@@ -522,7 +523,7 @@ export class BlocksController<
       }
       return handleError(_error);
     }
-  };
+  }
 
   /**
    * POST /api/blocks/brighten
@@ -554,9 +555,9 @@ export class BlocksController<
    * }
    * ```
    */
-  private handleBrightenBlock: ApiRequestHandler<
-    IBrightenBlockResponse | ApiErrorResponse
-  > = async (req) => {
+  private async handleBrightenBlock(
+    req: Parameters<ApiRequestHandler<IBrightenBlockResponse | ApiErrorResponse>>[0],
+  ): Promise<IStatusCodeResponse<IBrightenBlockResponse | ApiErrorResponse>> {
     try {
       const { blockId, randomBlockCount } = (
         req as unknown as BrightenBlockRequest
@@ -590,5 +591,5 @@ export class BlocksController<
       }
       return handleError(_error);
     }
-  };
+  }
 }

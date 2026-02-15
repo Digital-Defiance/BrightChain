@@ -8,7 +8,7 @@ export * from './lib/services';
 // API lib exports
 export * from './lib/appConstants';
 export * from './lib/application';
-export * from './lib/application-base';
+export * from './lib/upstream-stubs';
 export * from './lib/constants';
 export * from './lib/controllers';
 // Note: UserController is exported from controllers/api, not controllers/user (which is the legacy location)

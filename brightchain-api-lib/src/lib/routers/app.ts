@@ -1,193 +1,66 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
-  debugLog,
-  handleError,
   IApplication,
-  sendApiMessageResponse,
+  AppRouter as UpstreamAppRouter,
 } from '@digitaldefiance/node-express-suite';
-import {
-  SuiteCoreStringKey,
-  getSuiteCoreTranslation as translate,
-} from '@digitaldefiance/suite-core-lib';
-import ejs from 'ejs';
-import {
-  Application,
-  static as expressStatic,
-  Request,
-  Response,
-} from 'express';
-import { existsSync, readdirSync } from 'fs';
-import { join } from 'path';
+import { NextFunction, Request, Response } from 'express';
 import { Environment } from '../environment';
+import { DefaultBackendIdType } from '../shared-types';
 import { ApiRouter } from './api';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function keepEJS() {
-  ejs.compile(''); // Compile an empty string, doesn't generate anything meaningful
-}
-
 /**
- * Application router
- * Sets up the API and static file serving
+ * Application router for BrightChain.
+ * Extends the upstream AppRouter to inherit standard routing behavior
+ * (API mounting, static file serving, EJS rendering, catch-all)
+ * while overriding renderIndex() for BrightChain-specific template locals.
  */
-export class AppRouter<TID extends PlatformID> {
-  private readonly viewsPath: string;
-  private readonly indexPath: string;
-  private readonly assetsDir: string;
-
-  private readonly apiRouter: ApiRouter<TID>;
-  private readonly application: IApplication<TID>;
+export class AppRouter<
+  TID extends PlatformID = DefaultBackendIdType,
+> extends UpstreamAppRouter<TID, IApplication<TID>> {
+  /**
+   * Typed reference to the BrightChain ApiRouter.
+   * The upstream stores apiRouter as BaseRouter; this provides
+   * access to BrightChain-specific methods (setSyncEventSystem, etc.).
+   */
+  private readonly brightchainApiRouter: ApiRouter<TID>;
 
   constructor(apiRouter: ApiRouter<TID>) {
-    this.application = apiRouter.application;
-    this.apiRouter = apiRouter;
-    this.viewsPath = join(this.application.environment.apiDistDir, 'views');
-    this.indexPath = join(
-      this.application.environment.reactDistDir,
-      'index.html',
-    );
-    this.assetsDir = join(this.application.environment.reactDistDir, 'assets');
-  }
-
-  public getAssetFilename(
-    assetDir: string,
-    pattern: RegExp,
-  ): string | undefined {
-    try {
-      const files = readdirSync(assetDir);
-      return files.find((f) => pattern.test(f));
-    } catch {
-      return undefined;
-    }
+    super(apiRouter);
+    this.brightchainApiRouter = apiRouter;
   }
 
   /**
-   * Initialize the application router
-   * @param app Express application
-   * @param debugRoutes Whether to log routes
+   * Returns the BrightChain-specific ApiRouter instance.
+   * Useful for wiring services (e.g. setSyncEventSystem) after construction.
    */
-  public init(app: Application) {
-    if (
-      !this.apiRouter.application.environment.reactDistDir.includes('/dist/')
-    ) {
-      throw new Error(
-        `App does not appear to be running within dist: ${this.apiRouter.application.environment.reactDistDir}`,
-      );
-    }
-    if (!existsSync(this.indexPath)) {
-      throw new Error(`Index file not found: ${this.indexPath}`);
-    }
+  public getBrightchainApiRouter(): ApiRouter<TID> {
+    return this.brightchainApiRouter;
+  }
 
-    if (this.apiRouter.application.environment.debug) {
-      app.use((req, res, next) => {
-        const port =
-          (req.socket.localPort === 443 && req.protocol === 'https') ||
-          (req.socket.localPort === 80 && req.protocol === 'http')
-            ? ''
-            : `:${req.socket.localPort}`;
-        console.log(
-          `${translate(
-            SuiteCoreStringKey.Admin_ServingRoute,
-          )}: ${req.method} ${req.protocol}://${req.hostname}${port}${req.url}`,
-        );
-        next();
-      });
+  /**
+   * Override the upstream's renderIndex to inject BrightChain-specific
+   * template locals (fontAwesomeKitId, custom tagline, etc.).
+   */
+  public override renderIndex(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): void {
+    if (req.url.endsWith('.js')) {
+      res.type('application/javascript');
     }
 
-    app.use('/api', this.apiRouter.router);
+    const jsFile = this.getAssetFilename(this.assetsDir, /^index-.*\.js$/);
+    const cssFile = this.getAssetFilename(this.assetsDir, /^index-.*\.css$/);
+    const environment = this.application.environment as Environment<TID>;
 
-    app.set('views', this.viewsPath);
-    app.set('view engine', 'ejs');
+    const locals = {
+      ...this.getBaseViewLocals(req, res),
+      fontawesomeKitId: environment.fontAwesomeKitId,
+      jsFile: jsFile ? `assets/${jsFile}` : undefined,
+      cssFile: cssFile ? `assets/${cssFile}` : undefined,
+    };
 
-    // Serve static files from the React app build directory
-    // app.use(express.static(path.join(__dirname, '..', '..', '..', 'brightchain-react')));
-    app.use('/assets', expressStatic(this.assetsDir));
-    const serveStaticWithLogging = expressStatic(
-      this.apiRouter.application.environment.reactDistDir,
-    );
-    app.use(
-      '/static/js',
-      expressStatic(this.apiRouter.application.environment.reactDistDir),
-    );
-    app.use((req, res, next) => {
-      if (req.url === '/') {
-        next();
-        return;
-      }
-      debugLog(
-        this.apiRouter.application.environment.debug,
-        'log',
-        `Trying to serve static for ${req.url}`,
-      );
-      if (req.url.endsWith('.js')) {
-        res.type('application/javascript');
-      }
-      serveStaticWithLogging(req, res, (err) => {
-        if (err) {
-          debugLog(
-            this.apiRouter.application.environment.debug,
-            'error',
-            'Error serving static file:',
-            err,
-          );
-          handleError(err, res as any, sendApiMessageResponse, next);
-          return;
-        }
-        next();
-      });
-    });
-
-    // The "catchall" handler: for any request that doesn't
-    // match one above, send back React's index.html file.
-    // app.get('*', (req, res) => {
-    //   res.sendFile(path.join(__dirname,'..', '..', '..', 'brightchain-react', 'index.html'));
-    // });
-    app.use((req: Request, res: Response) => {
-      const cspNonce = res.locals['cspNonce'];
-      if (req.url.endsWith('.js')) {
-        res.type('application/javascript');
-      }
-
-      const SiteName = 'BrightChain';
-      // translate(SuiteCoreStringKey.Common_Site)
-      const hostname = req.hostname;
-      const jsFile = this.getAssetFilename(this.assetsDir, /^index-.*\.js$/);
-      const cssFile = this.getAssetFilename(this.assetsDir, /^index-.*\.css$/);
-      const server =
-        (req.socket.localPort === 443 && req.protocol === 'https') ||
-        (req.socket.localPort === 80 && req.protocol === 'http')
-          ? `${req.protocol}://${hostname}`
-          : `${req.protocol}://${hostname}:${req.socket.localPort}`;
-      const environment: Environment = this.apiRouter.application
-        .environment as Environment;
-      res.render(
-        'index',
-        {
-          cspNonce,
-          title: SiteName,
-          tagline: 'The Future of Decentralized Storage', // translate(SuiteCoreStringKey.SiteTagline),
-          server: server,
-          siteUrl: environment.serverUrl,
-          baseHref: environment.basePath,
-          fontawesomeKitId: environment.fontAwesomeKitId,
-          hostname: hostname,
-          siteTitle: SiteName,
-          jsFile: jsFile ? `assets/${jsFile}` : undefined,
-          cssFile: cssFile ? `assets/${cssFile}` : undefined,
-        },
-        (err, html) => {
-          // Render 'index.ejs'
-          if (err) {
-            console.error('Error rendering:', err);
-            if (!res.headersSent) {
-              res.status(500).send('An error occurred'); // Send a generic error message or render a separate error view
-            }
-            return;
-          }
-          res.send(html);
-        },
-      );
-    });
+    this.renderTemplate(req, res, next, 'index', locals);
   }
 }

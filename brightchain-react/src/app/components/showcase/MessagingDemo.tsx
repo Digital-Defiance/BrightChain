@@ -34,6 +34,13 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useCallback, useState } from 'react';
+import {
+  ExplodingMessageBadge,
+} from '../communication/ExplodingMessageBadge';
+import {
+  ExpirationSettings,
+  ExplodingMessageComposer,
+} from '../communication/ExplodingMessageComposer';
 
 // ---------------------------------------------------------------------------
 // Simulated crypto helpers using the Web Crypto API
@@ -173,6 +180,24 @@ export const MessagingDemo: React.FC = () => {
   >([]);
   const [groupInput, setGroupInput] = useState('');
   const [groupKey, setGroupKey] = useState<CryptoKey | null>(null);
+
+  // Exploding messages state
+  const [explodingSettings, setExplodingSettings] = useState<ExpirationSettings>({
+    enabled: false,
+  });
+  const [explodingMessages, setExplodingMessages] = useState<
+    Array<{
+      id: number;
+      text: string;
+      sender: string;
+      expiresAt?: Date;
+      maxReads?: number;
+      readCount: number;
+      exploded: boolean;
+    }>
+  >([]);
+  const [explodingInput, setExplodingInput] = useState('');
+  const [nextExplodingId, setNextExplodingId] = useState(1);
 
   // Channel state
   const [channels, setChannels] = useState<SimulatedChannel[]>([]);
@@ -318,6 +343,55 @@ export const MessagingDemo: React.FC = () => {
     );
     setNewChannelName('');
   }, [newChannelName, newChannelVisibility, channels, addLog]);
+
+  /** Send an exploding message with the configured expiration settings. */
+  const handleSendExploding = useCallback(() => {
+    const text = explodingInput.trim();
+    if (!text || !explodingSettings.enabled) return;
+
+    const expiresAt = explodingSettings.expiresInMs
+      ? new Date(Date.now() + explodingSettings.expiresInMs)
+      : undefined;
+
+    const msg = {
+      id: nextExplodingId,
+      text,
+      sender: 'Alice',
+      expiresAt,
+      maxReads: explodingSettings.maxReads,
+      readCount: 0,
+      exploded: false,
+    };
+
+    setExplodingMessages((prev) => [...prev, msg]);
+    setNextExplodingId((n) => n + 1);
+    setExplodingInput('');
+    addLog(
+      `[Exploding] Alice sent: "${text}" (expires: ${expiresAt ? expiresAt.toLocaleTimeString() : 'read-count only'}, max reads: ${explodingSettings.maxReads ?? '∞'})`,
+      'success',
+    );
+  }, [explodingInput, explodingSettings, nextExplodingId, addLog]);
+
+  /** Simulate reading an exploding message (increments read count). */
+  const handleReadExploding = useCallback(
+    (msgId: number) => {
+      setExplodingMessages((prev) =>
+        prev.map((m) => {
+          if (m.id !== msgId || m.exploded) return m;
+          const newCount = m.readCount + 1;
+          const shouldExplode =
+            m.maxReads !== undefined && newCount >= m.maxReads;
+          if (shouldExplode) {
+            addLog(`[Exploding] Message #${msgId} reached max reads — exploded.`, 'warning');
+          } else {
+            addLog(`[Exploding] Message #${msgId} read (${newCount}/${m.maxReads ?? '∞'}).`, 'info');
+          }
+          return { ...m, readCount: newCount, exploded: shouldExplode };
+        }),
+      );
+    },
+    [addLog],
+  );
 
   /** Toggle a user's presence status. */
   const handleTogglePresence = useCallback(
@@ -660,9 +734,91 @@ export const MessagingDemo: React.FC = () => {
         </List>
       </Paper>
 
-      <Divider sx={{ my: 3 }} />
+      {/* ---- Section 5: Exploding Messages ---- */}
+      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          5. Exploding (Self-Destructing) Messages
+        </Typography>
+        <Typography variant="body2" color="text.secondary" paragraph>
+          BrightChain supports self-destructing messages with two expiration
+          modes: <strong>time-based</strong> (message expires after a duration)
+          and <strong>read-count-based</strong> (message expires after N reads).
+          Expired messages are purged from the block store. Configure the
+          expiration settings below, send a message, then click
+          &quot;Read&quot; to simulate reads.
+        </Typography>
 
-      {/* ---- Activity Log ---- */}
+        <ExplodingMessageComposer
+          value={explodingSettings}
+          onChange={setExplodingSettings}
+        />
+
+        {explodingSettings.enabled && (
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>
+            <TextField
+              size="small"
+              label="Exploding message (as Alice)"
+              value={explodingInput}
+              onChange={(e) => setExplodingInput(e.target.value)}
+              placeholder="This message will self-destruct..."
+              sx={{ flexGrow: 1 }}
+              inputProps={{ 'aria-label': 'Exploding message text' }}
+            />
+            <Button
+              variant="contained"
+              color="warning"
+              onClick={handleSendExploding}
+              disabled={!explodingInput.trim()}
+            >
+              💣 Send
+            </Button>
+          </Stack>
+        )}
+
+        {explodingMessages.length > 0 && (
+          <Stack spacing={1} sx={{ mt: 2 }}>
+            {explodingMessages.map((msg) => (
+              <Card
+                key={msg.id}
+                variant="outlined"
+                sx={{
+                  opacity: msg.exploded ? 0.5 : 1,
+                  transition: 'opacity 0.3s',
+                }}
+              >
+                <CardContent sx={{ py: 1, '&:last-child': { pb: 1 } }}>
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
+                    <Typography variant="subtitle2">
+                      {msg.sender}: {msg.exploded ? '💥 [exploded]' : msg.text}
+                    </Typography>
+                    <ExplodingMessageBadge
+                      expiresAt={msg.expiresAt}
+                      maxReads={msg.maxReads}
+                      readCount={msg.readCount}
+                      exploded={msg.exploded}
+                    />
+                  </Stack>
+                  {!msg.exploded && (
+                    <Button
+                      size="small"
+                      onClick={() => handleReadExploding(msg.id)}
+                      sx={{ mt: 0.5 }}
+                    >
+                      👁 Simulate Read
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </Stack>
+        )}
+      </Paper>
+
+      <Divider sx={{ my: 3 }} />
       <Typography variant="h6" gutterBottom>
         Activity Log
       </Typography>
