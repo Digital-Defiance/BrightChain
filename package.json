@@ -43,7 +43,8 @@
     "coverage:md:generate": "node tools/scripts/coverage-to-markdown.mjs",
     "commands": "./list-scripts.sh",
     "publish:brightchain-lib": "NODE_OPTIONS='--max-old-space-size=16384' npx nx build brightchain-lib --skip-nx-cache && cd dist/brightchain-lib && npm publish --registry https://registry.npmjs.org/ . --access public",
-    "serve:dev:stream": "NODE_ENV=development npx nx serve brightchain-react --configuration=development --host 0.0.0.0 --port 3000 --outputStyle=stream"
+    "serve:dev:stream": "NODE_ENV=development npx nx serve brightchain-react --configuration=development --host 0.0.0.0 --port 3000 --outputStyle=stream",
+    "serve:api:stream": "NX_TUI=false NODE_ENV=development npx nx serve-full brightchain-api --configuration=development --outputStyle=stream"
   },
   "private": true,
   "resolutions": {
