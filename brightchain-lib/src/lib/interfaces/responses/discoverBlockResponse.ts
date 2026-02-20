@@ -1,9 +1,7 @@
-import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
-
 /**
- * Discover block response
+ * Discover block response data
  */
-export interface IDiscoverBlockResponse extends IApiMessageResponse {
+export interface IDiscoverBlockResponseData {
   blockId: string;
   found: boolean;
   locations: Array<{
@@ -13,5 +11,4 @@ export interface IDiscoverBlockResponse extends IApiMessageResponse {
   }>;
   queriedPeers: number;
   duration: number;
-  [key: string]: unknown;
 }

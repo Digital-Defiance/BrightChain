@@ -5,8 +5,8 @@
  * Property 2: ILetsEncryptConfig JSON round-trip (7.5)
  */
 import {
-  parseHostnames,
   isValidHostname,
+  parseHostnames,
   type ILetsEncryptConfig,
 } from '@digitaldefiance/node-express-suite';
 import fc from 'fast-check';

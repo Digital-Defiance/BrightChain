@@ -6,10 +6,7 @@
  */
 import { LoginEntry } from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
-import {
-  BrightPassService,
-  VaultAuthenticationError,
-} from './brightpass';
+import { BrightPassService, VaultAuthenticationError } from './brightpass';
 import {
   arbitraryLoginEntry,
   masterPasswordArb,
@@ -36,7 +33,11 @@ describe('BrightPassService – Sharing & Password Change', () => {
             fc.pre(uniqueRecipients.length > 0);
 
             const service = new BrightPassService();
-            const metadata = await service.createVault(ownerId, vaultName, password);
+            const metadata = await service.createVault(
+              ownerId,
+              vaultName,
+              password,
+            );
 
             const entry: LoginEntry = {
               id: 'test-entry-1',
@@ -52,12 +53,22 @@ describe('BrightPassService – Sharing & Password Change', () => {
             await service.addEntry(metadata.id, entry);
             await service.shareVault(metadata.id, uniqueRecipients);
 
-            const ownerView = await service.openVault(ownerId, metadata.id, password);
+            const ownerView = await service.openVault(
+              ownerId,
+              metadata.id,
+              password,
+            );
             expect(ownerView.propertyRecords.length).toBe(1);
 
             for (const recipientId of uniqueRecipients) {
-              const recipientView = await service.openVault(recipientId, metadata.id, password);
-              expect(recipientView.propertyRecords.length).toBe(ownerView.propertyRecords.length);
+              const recipientView = await service.openVault(
+                recipientId,
+                metadata.id,
+                password,
+              );
+              expect(recipientView.propertyRecords.length).toBe(
+                ownerView.propertyRecords.length,
+              );
               expect(recipientView.metadata.sharedWith).toContain(recipientId);
             }
 
@@ -92,7 +103,11 @@ describe('BrightPassService – Sharing & Password Change', () => {
             );
 
             const service = new BrightPassService();
-            const metadata = await service.createVault(ownerId, vaultName, password);
+            const metadata = await service.createVault(
+              ownerId,
+              vaultName,
+              password,
+            );
 
             await service.shareVault(metadata.id, [recipientA, recipientB]);
 
@@ -108,7 +123,11 @@ describe('BrightPassService – Sharing & Password Change', () => {
             const listA = await service.listVaults(recipientA);
             expect(listA.some((v) => v.id === metadata.id)).toBe(false);
 
-            const viewB = await service.openVault(recipientB, metadata.id, password);
+            const viewB = await service.openVault(
+              recipientB,
+              metadata.id,
+              password,
+            );
             expect(viewB.metadata.sharedWith).not.toContain(recipientA);
             expect(viewB.metadata.sharedWith).toContain(recipientB);
 
@@ -138,7 +157,11 @@ describe('BrightPassService – Sharing & Password Change', () => {
             fc.pre(uniqueRecipients.length >= 2);
 
             const service = new BrightPassService();
-            const metadata = await service.createVault(ownerId, vaultName, password);
+            const metadata = await service.createVault(
+              ownerId,
+              vaultName,
+              password,
+            );
 
             await service.shareVault(metadata.id, uniqueRecipients);
 
@@ -155,7 +178,11 @@ describe('BrightPassService – Sharing & Password Change', () => {
             ).rejects.toThrow(VaultAuthenticationError);
 
             service.approveQuorumAccess(metadata.id, uniqueRecipients[0]);
-            const opened = await service.openVault(ownerId, metadata.id, password);
+            const opened = await service.openVault(
+              ownerId,
+              metadata.id,
+              password,
+            );
             expect(opened.metadata.id).toBe(metadata.id);
 
             service.resetQuorumApprovals(metadata.id);
@@ -179,7 +206,11 @@ describe('BrightPassService – Sharing & Password Change', () => {
             fc.pre(ownerId !== nonMemberId);
 
             const service = new BrightPassService();
-            const metadata = await service.createVault(ownerId, vaultName, password);
+            const metadata = await service.createVault(
+              ownerId,
+              vaultName,
+              password,
+            );
             await service.configureQuorumGovernance(metadata.id, 1);
 
             expect(() =>
@@ -199,9 +230,17 @@ describe('BrightPassService – Sharing & Password Change', () => {
           masterPasswordArb,
           async (memberId, vaultName, password) => {
             const service = new BrightPassService();
-            const metadata = await service.createVault(memberId, vaultName, password);
+            const metadata = await service.createVault(
+              memberId,
+              vaultName,
+              password,
+            );
 
-            const opened = await service.openVault(memberId, metadata.id, password);
+            const opened = await service.openVault(
+              memberId,
+              metadata.id,
+              password,
+            );
             expect(opened.metadata.id).toBe(metadata.id);
           },
         ),
@@ -226,17 +265,30 @@ describe('BrightPassService – Sharing & Password Change', () => {
             fc.pre(oldPassword !== newPassword);
 
             const service = new BrightPassService();
-            const metadata = await service.createVault(memberId, vaultName, oldPassword);
+            const metadata = await service.createVault(
+              memberId,
+              vaultName,
+              oldPassword,
+            );
 
             const added = await service.addEntry(metadata.id, entry);
 
-            await service.changeMasterPassword(memberId, metadata.id, oldPassword, newPassword);
+            await service.changeMasterPassword(
+              memberId,
+              metadata.id,
+              oldPassword,
+              newPassword,
+            );
 
             await expect(
               service.openVault(memberId, metadata.id, oldPassword),
             ).rejects.toThrow(VaultAuthenticationError);
 
-            const opened = await service.openVault(memberId, metadata.id, newPassword);
+            const opened = await service.openVault(
+              memberId,
+              metadata.id,
+              newPassword,
+            );
             expect(opened.metadata.entryCount).toBe(1);
             expect(opened.propertyRecords.length).toBe(1);
 

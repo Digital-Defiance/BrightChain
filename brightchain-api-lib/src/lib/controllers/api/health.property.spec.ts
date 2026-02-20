@@ -15,13 +15,13 @@
  * Property 14: For any request to GET /api/health, the response time SHALL be less than 100ms.
  */
 
-import {
-  HealthStatus,
-  IDetailedHealthResponse,
-  IHealthResponse,
-} from '@brightchain/brightchain-lib';
+import { HealthStatus } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { IBrightChainApplication } from '../../interfaces';
+import {
+  IDetailedHealthApiResponse,
+  IHealthApiResponse,
+} from '../../interfaces/responses';
 import { HealthController } from './health';
 
 // Mock application for testing
@@ -60,10 +60,13 @@ const createMockApplication = (services: Map<string, unknown> = new Map()) => {
 // Type for accessing private handlers
 interface HealthControllerHandlers {
   handlers: {
-    getHealth: () => Promise<{ statusCode: number; response: IHealthResponse }>;
+    getHealth: () => Promise<{
+      statusCode: number;
+      response: IHealthApiResponse;
+    }>;
     getDetailedHealth: () => Promise<{
       statusCode: number;
-      response: IDetailedHealthResponse;
+      response: IDetailedHealthApiResponse;
     }>;
   };
 }

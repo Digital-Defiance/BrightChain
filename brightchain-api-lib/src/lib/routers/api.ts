@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   IAvailabilityService,
   IBlockStore,
@@ -18,6 +17,7 @@ import {
   RoleService,
 } from '@digitaldefiance/node-express-suite';
 import { AppConstants } from '../appConstants';
+import { PoolDiscoveryService } from '../availability/poolDiscoveryService';
 import { BlocksController } from '../controllers/api/blocks';
 import { CBLController } from '../controllers/api/cbl';
 import { ChannelController } from '../controllers/api/channels';
@@ -28,6 +28,10 @@ import { EnergyController } from '../controllers/api/energy';
 import { GroupController } from '../controllers/api/groups';
 import { HealthController } from '../controllers/api/health';
 import { I18nController } from '../controllers/api/i18n';
+import {
+  IntrospectionController,
+  IntrospectionControllerConfig,
+} from '../controllers/api/introspection';
 import { MessagesController } from '../controllers/api/messages';
 import { NodesController } from '../controllers/api/nodes';
 import { QuorumController } from '../controllers/api/quorum';
@@ -63,6 +67,8 @@ export class ApiRouter<
   private readonly scblController: SCBLController<TID>;
   private readonly syncController: SyncController<TID>;
   private readonly userController: UserController<TID>;
+  private introspectionController: IntrospectionController<TID> | null = null;
+  private readonly brightchainApplication: IBrightChainApplication<TID>;
   private readonly jwtService: JwtService<TID>;
   private readonly emailService: EmailService<TID>;
   private readonly roleService: RoleService<TID>;
@@ -74,6 +80,7 @@ export class ApiRouter<
    */
   constructor(application: IBrightChainApplication<TID>) {
     super(application);
+    this.brightchainApplication = application;
     this.jwtService = new JwtService<TID>(application);
     this.roleService = new RoleService<TID>(application);
     this.emailService = new EmailService<TID>(application);
@@ -90,7 +97,7 @@ export class ApiRouter<
     this.backupCodeService = new BackupCodeService<TID>(
       application,
       this.eciesService,
-      this.keyWrappingService as any,
+      this.keyWrappingService,
       this.roleService,
     );
 
@@ -279,5 +286,58 @@ export class ApiRouter<
    */
   public getChannelController(): typeof this.channelController {
     return this.channelController;
+  }
+
+  // ─── Introspection controller wiring ────────────────────────────────
+
+  /**
+   * Initialize the IntrospectionController with its full config.
+   * Called once all dependencies are available.
+   * Mounts routes at `/introspection`.
+   * @requirements 1.1, 1.4, 1.5
+   */
+  public initIntrospectionController(
+    config: IntrospectionControllerConfig,
+  ): void {
+    this.introspectionController = new IntrospectionController(
+      this.brightchainApplication,
+      config,
+    );
+    this.router.use('/introspection', this.introspectionController.router);
+  }
+
+  /**
+   * Update the IntrospectionController config after initialization.
+   * Useful when individual dependencies become available incrementally.
+   * @requirements 1.4, 1.5
+   */
+  public setIntrospectionConfig(config: IntrospectionControllerConfig): void {
+    if (this.introspectionController) {
+      this.introspectionController.setConfig(config);
+    }
+  }
+
+  /**
+   * Set the PoolDiscoveryService on the IntrospectionController.
+   * Called by App.setPoolDiscoveryService after the service is wired.
+   * @requirements 7.1, 8.3
+   */
+  public setIntrospectionPoolDiscoveryService(
+    service: PoolDiscoveryService,
+  ): void {
+    if (this.introspectionController) {
+      const currentConfig = this.introspectionController.getConfig();
+      this.introspectionController.setConfig({
+        ...currentConfig,
+        poolDiscoveryService: service,
+      });
+    }
+  }
+
+  /**
+   * Get the IntrospectionController instance.
+   */
+  public getIntrospectionController(): IntrospectionController<TID> | null {
+    return this.introspectionController;
   }
 }

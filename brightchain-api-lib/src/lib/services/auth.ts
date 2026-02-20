@@ -1,12 +1,13 @@
 import {
-  Checksum,
   EmailString,
   EnergyAccount,
   EnergyAccountStore,
   MemberStore,
+  ServiceProvider,
 } from '@brightchain/brightchain-lib';
 import { MemberType, SecureString } from '@digitaldefiance/ecies-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import { IBrightChainApplication } from '../interfaces/application';
 import { IAuthCredentials } from '../interfaces/auth-credentials';
@@ -15,6 +16,8 @@ import { ITokenPayload } from '../interfaces/token-payload';
 import { DefaultBackendIdType } from '../shared-types';
 import { BaseService } from './base';
 import { EmailService } from './email';
+
+const BCRYPT_ROUNDS = 12;
 
 export class AuthService<
   TID extends PlatformID = DefaultBackendIdType,
@@ -41,8 +44,22 @@ export class AuthService<
   async register(
     username: string,
     email: string,
+    password: SecureString,
     _mnemonic?: SecureString,
   ): Promise<IAuthToken> {
+    // Check for duplicate email
+    const existing = await this.memberStore.queryIndex({ email });
+    if (existing.length > 0) {
+      throw new Error('Email already registered');
+    }
+
+    // Hash password before member creation
+    const passwordValue = password.value;
+    if (!passwordValue) {
+      throw new Error('Password value is empty');
+    }
+    const passwordHash = await bcrypt.hash(passwordValue, BCRYPT_ROUNDS);
+
     const { reference } = await this.memberStore.createMember({
       type: MemberType.User,
       name: username,
@@ -50,7 +67,12 @@ export class AuthService<
     });
 
     const memberId = reference.id.toString();
-    const memberChecksum = Checksum.fromUint8Array(reference.id as Uint8Array);
+    const idBytes = reference.id as Uint8Array;
+    const memberChecksum =
+      ServiceProvider.getInstance().checksumService.calculateChecksum(idBytes);
+
+    // Store password hash in member's private profile
+    await this.storePasswordHash(reference.id, passwordHash);
 
     const energyAccount = EnergyAccount.createWithTrialCredits(memberChecksum);
     await this.energyStore.set(memberChecksum, energyAccount);
@@ -67,15 +89,33 @@ export class AuthService<
   }
 
   async login(credentials: IAuthCredentials): Promise<IAuthToken> {
-    const results = await this.memberStore.queryIndex({ limit: 1 });
+    // Look up member by username
+    const results = await this.memberStore.queryIndex({
+      name: credentials.username,
+      limit: 1,
+    });
 
     if (results.length === 0) {
       throw new Error('Invalid credentials');
     }
 
     const reference = results[0];
+
+    // Retrieve stored password hash and verify
+    const storedHash = await this.getPasswordHash(reference.id);
+    const passwordValue = credentials.password.value;
+    if (!passwordValue) {
+      throw new Error('Password value is empty');
+    }
+    const isValid = await bcrypt.compare(passwordValue, storedHash);
+    if (!isValid) {
+      throw new Error('Invalid credentials');
+    }
+
     const memberId = reference.id.toString();
-    const memberChecksum = Checksum.fromUint8Array(reference.id as Uint8Array);
+    const idBytes = reference.id as Uint8Array;
+    const memberChecksum =
+      ServiceProvider.getInstance().checksumService.calculateChecksum(idBytes);
 
     const energyAccount = await this.energyStore.getOrCreate(memberChecksum);
 
@@ -111,6 +151,24 @@ export class AuthService<
     } catch {
       throw new Error('Invalid token');
     }
+  }
+
+  async storePasswordHash(memberId: Uint8Array, hash: string): Promise<void> {
+    await this.memberStore.updateMember(memberId, {
+      id: memberId,
+      privateChanges: {
+        passwordHash: hash,
+      },
+    });
+  }
+
+  async getPasswordHash(memberId: Uint8Array): Promise<string> {
+    const profile = await this.memberStore.getMemberProfile(memberId);
+    const passwordHash = profile.privateProfile?.passwordHash;
+    if (!passwordHash) {
+      throw new Error('No password hash found for member');
+    }
+    return passwordHash;
   }
 
   private async sendWelcomeEmail(

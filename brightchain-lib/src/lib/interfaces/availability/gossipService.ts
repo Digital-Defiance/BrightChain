@@ -75,6 +75,27 @@ export interface HeadUpdateMetadata {
 }
 
 /**
+ * Metadata for pool lifecycle announcements via gossip protocol.
+ * Attached to 'pool_announce' type BlockAnnouncements to propagate
+ * pool creation/update information across nodes for pool discovery.
+ *
+ * @see Requirements 8.1, 8.2, 8.4
+ */
+export interface PoolAnnouncementMetadata {
+  /** Number of blocks in the pool */
+  blockCount: number;
+
+  /** Total size of the pool in bytes */
+  totalSize: number;
+
+  /** Whether the pool has encryption enabled */
+  encrypted: boolean;
+
+  /** ECIES-encrypted pool details for authorized members (base64), present when encrypted is true */
+  encryptedMetadata?: string;
+}
+
+/**
  * Block announcement message sent via gossip protocol.
  * Contains information about a block being added, removed, or acknowledged.
  *
@@ -92,6 +113,8 @@ export interface BlockAnnouncement {
    * - 'cbl_index_delete' for soft-deleted CBL index entries (requires cblIndexEntry and poolId)
    * - 'head_update' for HeadRegistry head pointer updates (requires headUpdate metadata)
    * - 'acl_update' for approved ACL updates (requires poolId and aclBlockId)
+   * - 'pool_announce' for pool creation/update announcements (requires poolId and poolAnnouncement)
+   * - 'pool_remove' for pool removal announcements (requires poolId)
    *
    * @see Requirements 1.1, 2.1, 8.1, 8.6, 13.4
    */
@@ -103,7 +126,9 @@ export interface BlockAnnouncement {
     | 'cbl_index_update'
     | 'cbl_index_delete'
     | 'head_update'
-    | 'acl_update';
+    | 'acl_update'
+    | 'pool_announce'
+    | 'pool_remove';
 
   /**
    * The block ID being announced (hex string)
@@ -177,6 +202,15 @@ export interface BlockAnnouncement {
    * @see Requirements 13.4
    */
   aclBlockId?: string;
+
+  /**
+   * Optional pool announcement metadata for pool lifecycle gossip.
+   * Required for 'pool_announce' type announcements.
+   * Contains pool metadata (block count, size, encryption status) for discovery.
+   *
+   * @see Requirements 8.1, 8.2, 8.4
+   */
+  poolAnnouncement?: PoolAnnouncementMetadata;
 }
 
 /**
@@ -493,6 +527,8 @@ const VALID_ANNOUNCEMENT_TYPES = [
   'cbl_index_delete',
   'head_update',
   'acl_update',
+  'pool_announce',
+  'pool_remove',
 ] as const;
 
 /**
@@ -619,6 +655,50 @@ export function validateBlockAnnouncement(
       !announcement.aclBlockId ||
       typeof announcement.aclBlockId !== 'string'
     ) {
+      return false;
+    }
+    if (
+      announcement.messageDelivery ||
+      announcement.deliveryAck ||
+      announcement.cblIndexEntry
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  // pool_announce requires valid poolId and poolAnnouncement metadata,
+  // must not have messageDelivery, deliveryAck, or cblIndexEntry (Req 8.1, 8.2)
+  if (announcement.type === 'pool_announce') {
+    if (!announcement.poolId || !isValidPoolId(announcement.poolId)) {
+      return false;
+    }
+    if (!announcement.poolAnnouncement) {
+      return false;
+    }
+    if (typeof announcement.poolAnnouncement.blockCount !== 'number') {
+      return false;
+    }
+    if (typeof announcement.poolAnnouncement.totalSize !== 'number') {
+      return false;
+    }
+    if (typeof announcement.poolAnnouncement.encrypted !== 'boolean') {
+      return false;
+    }
+    if (
+      announcement.messageDelivery ||
+      announcement.deliveryAck ||
+      announcement.cblIndexEntry
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  // pool_remove requires valid poolId,
+  // must not have messageDelivery, deliveryAck, or cblIndexEntry (Req 8.4)
+  if (announcement.type === 'pool_remove') {
+    if (!announcement.poolId || !isValidPoolId(announcement.poolId)) {
       return false;
     }
     if (

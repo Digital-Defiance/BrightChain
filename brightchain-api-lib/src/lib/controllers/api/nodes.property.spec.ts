@@ -22,12 +22,8 @@ import {
   DiscoveryConfig,
   DiscoveryResult,
   IAvailabilityService,
-  IDiscoverBlockResponse,
   IDiscoveryProtocol,
-  IGetNodeResponse,
-  IListNodesResponse,
   ILocationRecord,
-  IRegisterNodeResponse,
   NodeStatus,
   PeerQueryResult,
   PoolScopedBloomFilter,
@@ -35,6 +31,12 @@ import {
 import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
 import { IBrightChainApplication } from '../../interfaces';
+import {
+  IDiscoverBlockApiResponse,
+  IGetNodeApiResponse,
+  IListNodesApiResponse,
+  IRegisterNodeApiResponse,
+} from '../../interfaces/responses';
 import { NodesController } from './nodes';
 
 // Mock application for testing
@@ -171,19 +173,19 @@ interface NodesControllerHandlers {
   handlers: {
     listNodes: () => Promise<{
       statusCode: number;
-      response: IListNodesResponse | ApiErrorResponse;
+      response: IListNodesApiResponse | ApiErrorResponse;
     }>;
     getNode: (req: unknown) => Promise<{
       statusCode: number;
-      response: IGetNodeResponse | ApiErrorResponse;
+      response: IGetNodeApiResponse | ApiErrorResponse;
     }>;
     discoverBlock: (req: unknown) => Promise<{
       statusCode: number;
-      response: IDiscoverBlockResponse | ApiErrorResponse;
+      response: IDiscoverBlockApiResponse | ApiErrorResponse;
     }>;
     registerNode: (req: unknown) => Promise<{
       statusCode: number;
-      response: IRegisterNodeResponse | ApiErrorResponse;
+      response: IRegisterNodeApiResponse | ApiErrorResponse;
     }>;
   };
 }
@@ -256,7 +258,7 @@ describe('Nodes Endpoint Property Tests', () => {
             expect(result.statusCode).toBe(200);
 
             // Response should indicate block was found
-            const response = result.response as IDiscoverBlockResponse;
+            const response = result.response as IDiscoverBlockApiResponse;
             expect(response.found).toBe(true);
 
             // Locations array should not be empty
@@ -299,7 +301,7 @@ describe('Nodes Endpoint Property Tests', () => {
           expect(result.statusCode).toBe(200);
 
           // Response should indicate block was not found
-          const response = result.response as IDiscoverBlockResponse;
+          const response = result.response as IDiscoverBlockApiResponse;
           expect(response.found).toBe(false);
 
           // Locations array should be empty
@@ -346,7 +348,7 @@ describe('Nodes Endpoint Property Tests', () => {
 
             expect(result.statusCode).toBe(200);
 
-            const response = result.response as IDiscoverBlockResponse;
+            const response = result.response as IDiscoverBlockApiResponse;
 
             // blockId should match the request
             expect(response.blockId).toBe(blockId);
@@ -424,7 +426,7 @@ describe('Nodes Endpoint Property Tests', () => {
           expect(result.statusCode).toBe(201);
 
           // Response should indicate success
-          const response = result.response as IRegisterNodeResponse;
+          const response = result.response as IRegisterNodeApiResponse;
           expect(response.success).toBe(true);
           expect(response.nodeId).toBe(nodeId);
 
@@ -476,7 +478,7 @@ describe('Nodes Endpoint Property Tests', () => {
             const listResult = await handlers.listNodes();
             expect(listResult.statusCode).toBe(200);
 
-            const listResponse = listResult.response as IListNodesResponse;
+            const listResponse = listResult.response as IListNodesApiResponse;
 
             // All registered nodes should appear in the list
             for (const [nodeId] of nodeCredentials) {
@@ -515,7 +517,7 @@ describe('Nodes Endpoint Property Tests', () => {
           const getResult = await handlers.getNode({ params: { nodeId } });
           expect(getResult.statusCode).toBe(200);
 
-          const getResponse = getResult.response as IGetNodeResponse;
+          const getResponse = getResult.response as IGetNodeApiResponse;
           expect(getResponse.node.nodeId).toBe(nodeId);
           expect(getResponse.node.publicKey).toBe(publicKey);
           expect(getResponse.node.status).toBe(NodeStatus.ONLINE);
@@ -661,7 +663,7 @@ describe('Nodes Endpoint Property Tests', () => {
           const listResult = await handlers.listNodes();
           expect(listResult.statusCode).toBe(200);
 
-          const listResponse = listResult.response as IListNodesResponse;
+          const listResponse = listResult.response as IListNodesApiResponse;
 
           // Local node should be in the list
           const localNode = listResponse.nodes.find(
@@ -715,7 +717,7 @@ describe('Nodes Endpoint Property Tests', () => {
             const listResult = await handlers.listNodes();
             expect(listResult.statusCode).toBe(200);
 
-            const listResponse = listResult.response as IListNodesResponse;
+            const listResponse = listResult.response as IListNodesApiResponse;
 
             // All disconnected peers should be in the list with UNREACHABLE status
             for (const peerId of filteredPeers) {
@@ -778,7 +780,7 @@ describe('Nodes Endpoint Property Tests', () => {
             });
             expect(getResult.statusCode).toBe(200);
 
-            const getResponse = getResult.response as IGetNodeResponse;
+            const getResponse = getResult.response as IGetNodeApiResponse;
             expect(getResponse.node.nodeId).toBe(targetNodeId);
             expect(getResponse.node.status).toBe(NodeStatus.UNREACHABLE);
 

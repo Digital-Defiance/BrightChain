@@ -1,0 +1,27 @@
+{
+  "extends": ["../.eslintrc.json"],
+  "ignorePatterns": ["node_modules", "!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "extends": ["plugin:prettier/recommended"],
+      "rules": {
+        "prettier/prettier": "error"
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "extends": ["plugin:prettier/recommended"],
+      "rules": {
+        "prettier/prettier": "error"
+      }
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "extends": ["plugin:prettier/recommended"],
+      "rules": {
+        "prettier/prettier": "error"
+      }
+    }
+  ]
+}

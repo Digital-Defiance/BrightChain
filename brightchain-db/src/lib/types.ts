@@ -1,45 +1,53 @@
 /**
  * Common types used throughout brightchain-db.
  *
- * All types are now defined in @brightchain/brightchain-lib and re-exported here
- * for backward compatibility. ClientSession is a type alias for IClientSession.
+ * Platform-agnostic types come from @brightchain/brightchain-lib.
+ * Node.js-specific storage types come from @digitaldefiance/node-express-suite.
+ * ClientSession is a type alias for IClientSession.
  */
-export {
-  type AggregationStage,
-  type BsonDocument,
-  type BulkWriteOperation,
-  type BulkWriteOptions,
-  type BulkWriteResult,
-  type ChangeEvent,
-  type ChangeEventType,
-  type ChangeListener,
-  type ClientSession,
-  type CollectionOptions,
-  type CollectionSchema,
-  type CollectionSchemaFieldType,
-  type CursorSession,
-  type DeleteResult,
-  type DocumentId,
-  type FieldSchema,
-  type FilterOperator,
-  type FilterQuery,
-  type FindOptions,
-  type IClientSession,
-  type IndexOptions,
-  type IndexSpec,
-  type InsertManyResult,
-  type InsertOneResult,
-  type LogicalOperators,
-  type ProjectionSpec,
-  type ReadPreference,
-  type ReplaceResult,
-  type SortSpec,
-  type TextIndexOptions,
-  type UpdateOperators,
-  type UpdateOptions,
-  type UpdateQuery,
-  type UpdateResult,
-  type ValidationFieldError,
-  type WriteConcern,
-  type WriteOptions,
+
+// Platform-agnostic types from brightchain-lib
+export type {
+  BsonDocument,
+  DocumentId,
+  FieldSchema,
+  ValidationFieldError,
 } from '@brightchain/brightchain-lib';
+
+// Node.js-specific storage types from node-express-suite (imported directly
+// to avoid a circular dependency: brightchain-api-lib ↔ brightchain-db)
+export type {
+  AggregationStage,
+  BulkWriteOperation,
+  BulkWriteOptions,
+  BulkWriteResult,
+  ChangeEvent,
+  ChangeEventType,
+  ChangeListener,
+  ClientSession,
+  CollectionOptions,
+  CollectionSchema,
+  CollectionSchemaFieldType,
+  CursorSession,
+  DeleteResult,
+  FilterOperator,
+  FilterQuery,
+  FindOptions,
+  IClientSession,
+  IndexOptions,
+  IndexSpec,
+  InsertManyResult,
+  InsertOneResult,
+  LogicalOperators,
+  ProjectionSpec,
+  ReadPreference,
+  ReplaceResult,
+  SortSpec,
+  TextIndexOptions,
+  UpdateOperators,
+  UpdateOptions,
+  UpdateQuery,
+  UpdateResult,
+  WriteConcern,
+  WriteOptions,
+} from '@digitaldefiance/node-express-suite';
