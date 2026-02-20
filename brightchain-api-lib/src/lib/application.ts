@@ -6,7 +6,11 @@ import {
   IReconciliationService,
   MemberStore,
 } from '@brightchain/brightchain-lib';
-import { GuidProvider, GuidV4Provider, PlatformID, registerNodeRuntimeConfiguration } from '@digitaldefiance/node-ecies-lib';
+import {
+  GuidV4Provider,
+  PlatformID,
+  registerNodeRuntimeConfiguration,
+} from '@digitaldefiance/node-ecies-lib';
 import {
   debugLog,
   IApplication,
@@ -80,7 +84,24 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   private _httpServer: Server | null = null;
 
   constructor(environment: Environment<TID>) {
-    AppConstants.idProvider = new GuidV4Provider();
+    // Switch to GUID-based IDs (16 bytes) and sync all derived constants
+    const guidProvider = new GuidV4Provider();
+    AppConstants.idProvider = guidProvider;
+    AppConstants.MEMBER_ID_LENGTH = guidProvider.byteLength;
+    AppConstants.ECIES = {
+      ...AppConstants.ECIES,
+      MULTIPLE: {
+        ...AppConstants.ECIES.MULTIPLE,
+        RECIPIENT_ID_SIZE: guidProvider.byteLength,
+      },
+    };
+    // Sync node-ecies-lib ENCRYPTION constants if present
+    if ('ENCRYPTION' in AppConstants && AppConstants.ENCRYPTION) {
+      AppConstants.ENCRYPTION = {
+        ...AppConstants.ENCRYPTION,
+        RECIPIENT_ID_SIZE: guidProvider.byteLength,
+      };
+    }
     super(
       environment,
       // apiRouterFactory — creates BrightChain's ApiRouter
