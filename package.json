@@ -122,7 +122,7 @@
     "tslib": "^2.3.0",
     "uuid": "11.0.5",
     "validator": "^13.11.0",
-    "webpack": "5.101.3"
+    "webpack": "5.105.2"
   },
   "devDependencies": {
     "@babel/core": "^7.14.5",
