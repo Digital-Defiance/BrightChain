@@ -14,7 +14,6 @@ export type * from './checksum-config';
 export type * from './discriminator-collections';
 export type * from './environment';
 export type * from './environment-aws';
-export type * from './environment-mongo';
 export type * from './introspectionApiResponses';
 export type * from './jwt-sign-response';
 export type * from './member';
