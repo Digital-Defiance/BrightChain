@@ -463,7 +463,9 @@ export class QuorumController<
    * ```
    */
   private async handleListMembers(
-    _req: Parameters<ApiRequestHandler<ListMembersResponse | ApiErrorResponse>>[0],
+    _req: Parameters<
+      ApiRequestHandler<ListMembersResponse | ApiErrorResponse>
+    >[0],
   ) {
     try {
       const quorumService = this.quorumServiceWrapper.getService();
@@ -508,7 +510,9 @@ export class QuorumController<
    * ```
    */
   private async handleRemoveMember(
-    req: Parameters<ApiRequestHandler<RemoveMemberResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<RemoveMemberResponse | ApiErrorResponse>
+    >[0],
   ) {
     try {
       const { memberId } = (req as unknown as RemoveMemberRequest).params;
@@ -570,7 +574,9 @@ export class QuorumController<
    * ```
    */
   private async handleSealDocument(
-    req: Parameters<ApiRequestHandler<SealDocumentResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<SealDocumentResponse | ApiErrorResponse>
+    >[0],
   ) {
     try {
       const { document, memberIds, sharesRequired } = (
@@ -685,7 +691,9 @@ export class QuorumController<
    * ```
    */
   private async handleUnsealDocument(
-    req: Parameters<ApiRequestHandler<UnsealDocumentResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<UnsealDocumentResponse | ApiErrorResponse>
+    >[0],
   ) {
     try {
       const { documentId } = (req as unknown as UnsealDocumentRequest).params;
@@ -854,7 +862,9 @@ export class QuorumController<
    * ```
    */
   private async handleGetDocument(
-    req: Parameters<ApiRequestHandler<GetDocumentResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<GetDocumentResponse | ApiErrorResponse>
+    >[0],
   ) {
     try {
       const { documentId } = (req as unknown as GetDocumentRequest).params;

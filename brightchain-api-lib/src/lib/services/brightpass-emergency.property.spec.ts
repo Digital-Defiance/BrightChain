@@ -6,10 +6,7 @@
  */
 import { LoginEntry } from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
-import {
-  BrightPassService,
-  EmergencyAccessError,
-} from './brightpass';
+import { BrightPassService, EmergencyAccessError } from './brightpass';
 import {
   masterPasswordArb,
   memberIdArb,
@@ -36,7 +33,11 @@ describe('BrightPassService – Emergency Access', () => {
 
             const threshold = Math.min(2, uniqueTrustees.length);
             const service = new BrightPassService();
-            const metadata = await service.createVault(ownerId, vaultName, password);
+            const metadata = await service.createVault(
+              ownerId,
+              vaultName,
+              password,
+            );
 
             const entry: LoginEntry = {
               id: 'emergency-test-entry',
@@ -65,7 +66,10 @@ describe('BrightPassService – Emergency Access', () => {
             expect(allShares.length).toBe(uniqueTrustees.length);
 
             const thresholdShares = allShares.slice(0, threshold);
-            const recovered = await service.recoverWithShares(metadata.id, thresholdShares);
+            const recovered = await service.recoverWithShares(
+              metadata.id,
+              thresholdShares,
+            );
 
             expect(recovered.metadata.id).toBe(metadata.id);
             expect(recovered.metadata.name).toBe(vaultName);
@@ -93,12 +97,20 @@ describe('BrightPassService – Emergency Access', () => {
           masterPasswordArb,
           async (ownerId, vaultName, password) => {
             const service = new BrightPassService();
-            const metadata = await service.createVault(ownerId, vaultName, password);
+            const metadata = await service.createVault(
+              ownerId,
+              vaultName,
+              password,
+            );
 
             const trustees = ['trustee-1', 'trustee-2', 'trustee-3'];
             const threshold = 2;
 
-            await service.configureEmergencyAccess(metadata.id, threshold, trustees);
+            await service.configureEmergencyAccess(
+              metadata.id,
+              threshold,
+              trustees,
+            );
 
             const allShares = service.getEmergencyShares(metadata.id);
 
@@ -134,15 +146,26 @@ describe('BrightPassService – Emergency Access', () => {
           masterPasswordArb,
           async (ownerId, vaultName, password) => {
             const service = new BrightPassService();
-            const metadata = await service.createVault(ownerId, vaultName, password);
+            const metadata = await service.createVault(
+              ownerId,
+              vaultName,
+              password,
+            );
 
             const trustees = ['trustee-a', 'trustee-b'];
             const threshold = 2;
-            await service.configureEmergencyAccess(metadata.id, threshold, trustees);
+            await service.configureEmergencyAccess(
+              metadata.id,
+              threshold,
+              trustees,
+            );
 
             const validShares = service.getEmergencyShares(metadata.id);
 
-            const beforeRevoke = await service.recoverWithShares(metadata.id, validShares);
+            const beforeRevoke = await service.recoverWithShares(
+              metadata.id,
+              validShares,
+            );
             expect(beforeRevoke.metadata.id).toBe(metadata.id);
 
             await service.revokeEmergencyAccess(metadata.id);

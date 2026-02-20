@@ -1,10 +1,8 @@
-import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
 import { ReconciliationResult } from '../availability';
 
 /**
- * Reconcile response
+ * Reconcile response data
  */
-export interface IReconcileResponse extends IApiMessageResponse {
+export interface IReconcileResponseData {
   result: ReconciliationResult;
-  [key: string]: unknown;
 }

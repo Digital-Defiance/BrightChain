@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import type { ISimpleKeyPair } from '@digitaldefiance/ecies-lib';
-import { IJwtConsts } from '@digitaldefiance/node-express-suite';
 import { describe, expect, it } from '@jest/globals';
 import type {
   IBCFECConsts,
@@ -41,11 +40,6 @@ describe('Interface Export Tests', () => {
 
     it('should preserve ISiteConsts interface', () => {
       type TestInterface = ISiteConsts;
-      expect(true).toBe(true);
-    });
-
-    it('should preserve IJwtConsts interface', () => {
-      type TestInterface = IJwtConsts;
       expect(true).toBe(true);
     });
   });

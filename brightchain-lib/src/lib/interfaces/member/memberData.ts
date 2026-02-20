@@ -48,6 +48,10 @@ export interface IPrivateMemberData<TID extends PlatformID = Uint8Array> {
   // Security
   recoveryData?: Uint8Array;
 
+  // Auth
+  /** bcrypt password hash — present only for members with password-based auth */
+  passwordHash?: string;
+
   // Network
   trustedPeers: TID[];
   blockedPeers: TID[];
@@ -98,6 +102,8 @@ export interface IMemberIndexEntry<TID extends PlatformID = Uint8Array> {
  */
 export interface IMemberQueryCriteria<TID extends PlatformID = Uint8Array> {
   id?: TID;
+  name?: string;
+  email?: string;
   type?: MemberType;
   status?: MemberStatusType;
   region?: string;

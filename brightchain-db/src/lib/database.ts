@@ -8,11 +8,8 @@
  */
 
 import type { IHeadRegistry, PoolId } from '@brightchain/brightchain-lib';
-import {
-  IBlockStore,
-  IDatabase,
-  isPooledBlockStore,
-} from '@brightchain/brightchain-lib';
+import { IBlockStore, isPooledBlockStore } from '@brightchain/brightchain-lib';
+import type { IDatabase } from '@digitaldefiance/node-express-suite';
 import { randomUUID } from 'crypto';
 import { Collection } from './collection';
 import { InMemoryHeadRegistry, PersistentHeadRegistry } from './headRegistry';
@@ -262,7 +259,12 @@ export class BrightChainDb implements IDatabase {
       await session.commitTransaction();
       return result;
     } catch (err) {
-      await session.abortTransaction();
+      // Only abort if the transaction is still active.
+      // commitTransaction() clears inTransaction in its finally block, so if
+      // the error came from commitTransaction itself the abort is already done.
+      if (session.inTransaction) {
+        await session.abortTransaction();
+      }
       throw err;
     } finally {
       session.endSession();

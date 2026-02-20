@@ -34,9 +34,7 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useCallback, useState } from 'react';
-import {
-  ExplodingMessageBadge,
-} from '../communication/ExplodingMessageBadge';
+import { ExplodingMessageBadge } from '../communication/ExplodingMessageBadge';
 import {
   ExpirationSettings,
   ExplodingMessageComposer,
@@ -182,9 +180,10 @@ export const MessagingDemo: React.FC = () => {
   const [groupKey, setGroupKey] = useState<CryptoKey | null>(null);
 
   // Exploding messages state
-  const [explodingSettings, setExplodingSettings] = useState<ExpirationSettings>({
-    enabled: false,
-  });
+  const [explodingSettings, setExplodingSettings] =
+    useState<ExpirationSettings>({
+      enabled: false,
+    });
   const [explodingMessages, setExplodingMessages] = useState<
     Array<{
       id: number;
@@ -382,9 +381,15 @@ export const MessagingDemo: React.FC = () => {
           const shouldExplode =
             m.maxReads !== undefined && newCount >= m.maxReads;
           if (shouldExplode) {
-            addLog(`[Exploding] Message #${msgId} reached max reads — exploded.`, 'warning');
+            addLog(
+              `[Exploding] Message #${msgId} reached max reads — exploded.`,
+              'warning',
+            );
           } else {
-            addLog(`[Exploding] Message #${msgId} read (${newCount}/${m.maxReads ?? '∞'}).`, 'info');
+            addLog(
+              `[Exploding] Message #${msgId} read (${newCount}/${m.maxReads ?? '∞'}).`,
+              'info',
+            );
           }
           return { ...m, readCount: newCount, exploded: shouldExplode };
         }),
@@ -744,8 +749,8 @@ export const MessagingDemo: React.FC = () => {
           modes: <strong>time-based</strong> (message expires after a duration)
           and <strong>read-count-based</strong> (message expires after N reads).
           Expired messages are purged from the block store. Configure the
-          expiration settings below, send a message, then click
-          &quot;Read&quot; to simulate reads.
+          expiration settings below, send a message, then click &quot;Read&quot;
+          to simulate reads.
         </Typography>
 
         <ExplodingMessageComposer

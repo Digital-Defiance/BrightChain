@@ -10,6 +10,7 @@ export * from './explodingMessages';
 export * from './groups';
 export * from './health';
 export * from './i18n';
+export * from './introspection';
 export * from './members';
 export * from './messages';
 export * from './nodes';

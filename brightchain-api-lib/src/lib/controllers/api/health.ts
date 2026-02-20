@@ -1,32 +1,31 @@
-import {
-  HealthStatus,
-  IDependencyStatus,
-  IDetailedHealthResponse,
-  IHealthResponse,
-} from '@brightchain/brightchain-lib';
+import { HealthStatus, IDependencyStatus } from '@brightchain/brightchain-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   ApiErrorResponse,
   ApiRequestHandler,
   ControllerRegistry,
-  IStatusCodeResponse,
   TypedHandlers,
   routeConfig,
 } from '@digitaldefiance/node-express-suite';
 import { IBrightChainApplication } from '../../interfaces/application';
+import {
+  IDetailedHealthApiResponse,
+  IHealthApiResponse,
+  IStatusCodeResponse,
+} from '../../interfaces/responses';
 import { DefaultBackendIdType } from '../../shared-types';
 import { BaseController } from '../base';
 
 type HealthApiResponse =
-  | IHealthResponse
-  | IDetailedHealthResponse
+  | IHealthApiResponse
+  | IDetailedHealthApiResponse
   | ApiErrorResponse;
 
 interface IHealthHandlers extends TypedHandlers {
-  getHealth: ApiRequestHandler<IHealthResponse | ApiErrorResponse>;
+  getHealth: ApiRequestHandler<IHealthApiResponse | ApiErrorResponse>;
   getDetailedHealth: ApiRequestHandler<
-    IDetailedHealthResponse | ApiErrorResponse
+    IDetailedHealthApiResponse | ApiErrorResponse
   >;
 }
 
@@ -193,7 +192,7 @@ export class HealthController<
    * @requirements 6.1, 6.4, 6.5
    */
   private async handleGetHealth(): Promise<
-    IStatusCodeResponse<IHealthResponse | ApiErrorResponse>
+    IStatusCodeResponse<IHealthApiResponse | ApiErrorResponse>
   > {
     // Check if server is still starting
     if (HealthController.isStarting) {
@@ -257,7 +256,7 @@ export class HealthController<
    * @requirements 6.2, 6.3, 6.5
    */
   private async handleGetDetailedHealth(): Promise<
-    IStatusCodeResponse<IDetailedHealthResponse | ApiErrorResponse>
+    IStatusCodeResponse<IDetailedHealthApiResponse | ApiErrorResponse>
   > {
     // Check if server is still starting
     if (HealthController.isStarting) {

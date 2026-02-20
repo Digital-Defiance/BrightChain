@@ -1,11 +1,10 @@
-export type * from './apiError';
-export type * from './apiExpressValidationError';
-export type * from './blockDataResponse';
-export type * from './blockLocationResponse';
 export type * from './communicationResponses';
 // NOTE: deleteMessageResponse.ts is NOT re-exported here because
 // communicationResponses.ts already exports IDeleteMessageResponse.
 // Re-exporting both causes TS2308.
+export type * from './backupCodesResponseData';
+export type * from './challengeResponseData';
+export type * from './codeCountResponseData';
 export type * from './detailedHealthResponse';
 export type * from './discoverBlockResponse';
 export type * from './emailResponses';
@@ -15,14 +14,17 @@ export type * from './getMessageResponse';
 export type * from './getNodeResponse';
 export type * from './healthResponse';
 export type * from './listNodesResponse';
-export type * from './members';
+export type * from './loginResponseData';
+export type * from './membersResponseData';
+export type * from './mnemonicResponseData';
 export type * from './queryMessageResponse';
 export type * from './reconcileResponse';
 export type * from './registerNodeResponse';
+export type * from './registrationResponseData';
 export type * from './replicateBlockResponse';
+export type * from './requestUserResponseData';
 export type * from './retrieveSCBLResponse';
 export type * from './sendMessageResponse';
-export type * from './statusCode';
 export type * from './storeBlock';
 export type * from './storeCbl';
 export type * from './storeSCBLResponse';
