@@ -1,10 +1,7 @@
-import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
-
 /**
- * Register node response
+ * Register node response data
  */
-export interface IRegisterNodeResponse extends IApiMessageResponse {
+export interface IRegisterNodeResponseData {
   success: boolean;
   nodeId: string;
-  [key: string]: unknown;
 }

@@ -32,6 +32,14 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
     this._adminId = value;
   }
 
+  private _memberPoolName: string;
+  /**
+   * Member pool name (e.g. 'BrightChain')
+   */
+  public get memberPoolName(): string {
+    return this._memberPoolName;
+  }
+
   public get idAdapter(): (bytes: Uint8Array) => HexString {
     return (bytes: Uint8Array) => {
       // Convert bytes to hex-based ID string; datastore layer owns actual ID type
@@ -49,6 +57,8 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
     this._upnp = UpnpConfig.fromEnvironment(envObj);
     // BrightChain-specific environment variables
     this._fontAwesomeKitId = envObj['FONTAWESOME_KIT_ID'] ?? '';
+
+    this._memberPoolName = envObj['MEMBER_POOL_NAME'] ?? 'BrightChain';
 
     this._blockStorePath =
       envObj['BRIGHTCHAIN_BLOCKSTORE_PATH'] ?? envObj['BLOCKSTORE_PATH'];

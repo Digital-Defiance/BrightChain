@@ -27,6 +27,8 @@ export interface IMemberContext {
  */
 export interface IAuthenticatedRequest extends Request {
   memberContext?: IMemberContext;
+  /** Request ID (UUID v4) set by requestIdMiddleware */
+  requestId?: string;
 }
 
 /**

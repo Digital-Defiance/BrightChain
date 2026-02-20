@@ -80,7 +80,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * Optional FEC service for parity generation and recovery.
    * If not provided, FEC operations will return errors or no-ops.
    */
-  private fecService: IFecService | null = null;
+  protected override fecService: IFecService | null = null;
 
   constructor(config: { storePath: string; blockSize: BlockSize }) {
     super(config);
@@ -91,7 +91,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * Set the FEC service for parity generation and recovery.
    * @param fecService - The FEC service to use
    */
-  public setFecService(fecService: IFecService | null): void {
+  public override setFecService(fecService: IFecService | null): void {
     this.fecService = fecService;
   }
 
@@ -99,7 +99,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * Get the FEC service if available.
    * @returns The FEC service or null if not available
    */
-  public getFecService(): IFecService | null {
+  public override getFecService(): IFecService | null {
     return this.fecService;
   }
 
@@ -116,7 +116,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param key - The key as Checksum or string
    * @returns The key as hex string
    */
-  private keyToHex(key: Checksum | string): string {
+  protected override keyToHex(key: Checksum | string): string {
     return typeof key === 'string' ? key : key.toHex();
   }
 
@@ -125,7 +125,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param hex - The hex string
    * @returns The Checksum
    */
-  private hexToChecksum(hex: string): Checksum {
+  protected override hexToChecksum(hex: string): Checksum {
     return Checksum.fromHex(hex);
   }
 
@@ -169,7 +169,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
   /**
    * Check if a block exists (checks all block sizes)
    */
-  public async has(key: Checksum | string): Promise<boolean> {
+  public override async has(key: Checksum | string): Promise<boolean> {
     const keyChecksum = typeof key === 'string' ? Checksum.fromHex(key) : key;
     // Check all possible block sizes
     for (const size of Object.values(BlockSize).filter(
@@ -186,7 +186,9 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
   /**
    * Get a handle to a block (searches all block sizes)
    */
-  public get<T extends BaseBlock>(key: Checksum | string): BlockHandle<T> {
+  public override get<T extends BaseBlock>(
+    key: Checksum | string,
+  ): BlockHandle<T> {
     const keyChecksum = typeof key === 'string' ? Checksum.fromHex(key) : key;
 
     // Search all possible block sizes
@@ -215,7 +217,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
   /**
    * Get a block's data (searches all block sizes)
    */
-  public async getData(key: Checksum): Promise<RawDataBlock> {
+  public override async getData(key: Checksum): Promise<RawDataBlock> {
     const keyHex = this.keyToHex(key);
 
     // Search all possible block sizes
@@ -262,7 +264,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * Delete a block's data (and associated parity blocks and metadata)
    * @param key - The block's checksum
    */
-  public async deleteData(key: Checksum): Promise<void> {
+  public override async deleteData(key: Checksum): Promise<void> {
     const keyHex = this.keyToHex(key);
 
     // Find the block across all sizes
@@ -320,7 +322,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
   /**
    * Store a block's data with optional durability settings
    */
-  public async setData(
+  public override async setData(
     block: RawDataBlock,
     options?: BlockStoreOptions,
   ): Promise<void> {
@@ -496,7 +498,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param count - Maximum number of blocks to return
    * @returns Array of random block checksums
    */
-  public async getRandomBlocks(count: number): Promise<Checksum[]> {
+  public override async getRandomBlocks(count: number): Promise<Checksum[]> {
     if (count <= 0) {
       return [];
     }
@@ -925,7 +927,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * Store raw data with a key (convenience method)
    * Creates a RawDataBlock and stores it
    */
-  public async put(
+  public override async put(
     key: Checksum | string,
     data: Uint8Array,
     options?: BlockStoreOptions,
@@ -943,7 +945,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
   /**
    * Delete a block (convenience method, alias for deleteData)
    */
-  public async delete(key: Checksum | string): Promise<void> {
+  public override async delete(key: Checksum | string): Promise<void> {
     const keyChecksum = typeof key === 'string' ? Checksum.fromHex(key) : key;
     await this.deleteData(keyChecksum);
   }
@@ -955,7 +957,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param key - The block's checksum or ID
    * @returns The block's metadata, or null if not found
    */
-  public async getMetadata(
+  public override async getMetadata(
     key: Checksum | string,
   ): Promise<IBlockMetadata | null> {
     const keyHex = this.keyToHex(key);
@@ -967,7 +969,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param key - The block's checksum or ID
    * @param updates - Partial metadata updates to apply
    */
-  public async updateMetadata(
+  public override async updateMetadata(
     key: Checksum | string,
     updates: Partial<IBlockMetadata>,
   ): Promise<void> {
@@ -990,7 +992,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @returns Array of parity block checksums (as synthetic IDs)
    * @throws FecError if FEC service is not available or encoding fails
    */
-  public async generateParityBlocks(
+  public override async generateParityBlocks(
     key: Checksum | string,
     parityCount: number,
   ): Promise<Checksum[]> {
@@ -1057,7 +1059,9 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param key - The data block's checksum or ID
    * @returns Array of parity block checksums
    */
-  public async getParityBlocks(key: Checksum | string): Promise<Checksum[]> {
+  public override async getParityBlocks(
+    key: Checksum | string,
+  ): Promise<Checksum[]> {
     const keyHex = this.keyToHex(key);
 
     // Get metadata to find parity block IDs
@@ -1109,7 +1113,9 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param key - The block's checksum or ID
    * @returns Recovery result with the recovered block or error
    */
-  public async recoverBlock(key: Checksum | string): Promise<RecoveryResult> {
+  public override async recoverBlock(
+    key: Checksum | string,
+  ): Promise<RecoveryResult> {
     const keyHex = this.keyToHex(key);
     const keyChecksum = typeof key === 'string' ? Checksum.fromHex(key) : key;
 
@@ -1204,7 +1210,9 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param key - The block's checksum or ID
    * @returns True if the block data matches its parity data
    */
-  public async verifyBlockIntegrity(key: Checksum | string): Promise<boolean> {
+  public override async verifyBlockIntegrity(
+    key: Checksum | string,
+  ): Promise<boolean> {
     const _keyHex = this.keyToHex(key);
     const keyChecksum = typeof key === 'string' ? Checksum.fromHex(key) : key;
 
@@ -1249,7 +1257,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * Get blocks that are pending replication (status = Pending).
    * @returns Array of block checksums pending replication
    */
-  public async getBlocksPendingReplication(): Promise<Checksum[]> {
+  public override async getBlocksPendingReplication(): Promise<Checksum[]> {
     const pendingBlocks = await this.metadataStore.findByReplicationStatus(
       ReplicationStatus.Pending,
     );
@@ -1263,7 +1271,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * Get blocks that are under-replicated (status = UnderReplicated).
    * @returns Array of block checksums that need additional replicas
    */
-  public async getUnderReplicatedBlocks(): Promise<Checksum[]> {
+  public override async getUnderReplicatedBlocks(): Promise<Checksum[]> {
     const underReplicatedBlocks =
       await this.metadataStore.findByReplicationStatus(
         ReplicationStatus.UnderReplicated,
@@ -1279,7 +1287,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param key - The block's checksum or ID
    * @param nodeId - The ID of the node that now holds a replica
    */
-  public async recordReplication(
+  public override async recordReplication(
     key: Checksum | string,
     nodeId: string,
   ): Promise<void> {
@@ -1317,7 +1325,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param key - The block's checksum or ID
    * @param nodeId - The ID of the node that lost the replica
    */
-  public async recordReplicaLoss(
+  public override async recordReplicaLoss(
     key: Checksum | string,
     nodeId: string,
   ): Promise<void> {
@@ -1420,7 +1428,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @returns Result containing the brightened block ID and the random block IDs used
    * @throws StoreError if the source block is not found or insufficient random blocks are available
    */
-  public async brightenBlock(
+  public override async brightenBlock(
     key: Checksum | string,
     randomBlockCount: number,
   ): Promise<BrightenResult> {
@@ -1509,7 +1517,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @returns Result containing block IDs, parity IDs (if any), and magnet URL
    * @throws StoreError if storage fails
    */
-  public async storeCBLWithWhitening(
+  public override async storeCBLWithWhitening(
     cblData: Uint8Array,
     options?: CBLWhiteningOptions,
   ): Promise<CBLStorageResult> {
@@ -1618,7 +1626,9 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param size - The required size of the randomizer block
    * @returns A Uint8Array containing the randomizer data
    */
-  private async selectOrGenerateRandomizer(size: number): Promise<Uint8Array> {
+  protected override async selectOrGenerateRandomizer(
+    size: number,
+  ): Promise<Uint8Array> {
     // Try to get a random block from the store
     try {
       const randomBlocks = await this.getRandomBlocks(1);
@@ -1657,7 +1667,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @returns The original CBL data as Uint8Array
    * @throws StoreError if either block is not found or reconstruction fails
    */
-  public async retrieveCBL(
+  public override async retrieveCBL(
     blockId1: Checksum | string,
     blockId2: Checksum | string,
     block1ParityIds?: string[],
@@ -1725,7 +1735,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @returns Object containing block IDs, block size, parity IDs (if any), and encryption flag
    * @throws Error if the URL format is invalid
    */
-  public parseCBLMagnetUrl(magnetUrl: string): CBLMagnetComponents {
+  public override parseCBLMagnetUrl(magnetUrl: string): CBLMagnetComponents {
     // Validate basic URL format
     if (!magnetUrl || !magnetUrl.startsWith('magnet:?')) {
       throw new Error('Invalid magnet URL: must start with "magnet:?"');
@@ -1799,7 +1809,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param isEncrypted - Whether the CBL is encrypted
    * @returns The magnet URL string
    */
-  public generateCBLMagnetUrl(
+  public override generateCBLMagnetUrl(
     blockId1: Checksum | string,
     blockId2: Checksum | string,
     blockSize: number,

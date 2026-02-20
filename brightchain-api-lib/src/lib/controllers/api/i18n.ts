@@ -38,7 +38,9 @@ export class I18nController<
   }
 
   private async handleGetStrings(
-    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
+    >[0],
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     return {
       statusCode: 200,

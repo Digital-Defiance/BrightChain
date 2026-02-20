@@ -10,6 +10,8 @@
   },
   "peerDependencies": {
     "@brightchain/brightchain-lib": ">=0.13.0",
+    "@digitaldefiance/branded-interface": ">=0.0.4",
+    "@digitaldefiance/node-express-suite": ">=0.0.1",
     "express": ">=5.0.0"
   }
 }

@@ -89,12 +89,7 @@ export const SplashPage: FC = () => {
           justifyContent="center"
           sx={{ mb: 4 }}
         >
-          <Button
-            component={Link}
-            to="/demo"
-            variant="contained"
-            size="large"
-          >
+          <Button component={Link} to="/demo" variant="contained" size="large">
             🥫 Try the Soup Can Demo
           </Button>
           <Button

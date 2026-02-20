@@ -1,5 +1,5 @@
+import { IBlockLocationInfo } from '@brightchain/brightchain-lib';
 import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
-import { IBlockLocationInfo } from '../blockLocationInfo';
 
 /**
  * Get block locations response

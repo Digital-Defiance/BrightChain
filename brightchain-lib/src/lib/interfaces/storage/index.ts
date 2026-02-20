@@ -6,11 +6,7 @@ export type * from './cblIndex';
 export { CBLVisibility } from './cblIndex';
 export type * from './cblStore';
 export type * from './cblWhitening';
-export type * from './clientSession';
-export type * from './collection';
-export type * from './database';
-export type * from './databaseLifecycleHooks';
-export type * from './documentTypes';
+export type * from './documentStore';
 export type * from './encryptedPool';
 export { EncryptionMode } from './encryptedPool';
 export type * from './headRegistry';
@@ -26,3 +22,6 @@ export {
 export type * from './readConcernBlockStore';
 export { isReadConcernBlockStore } from './readConcernBlockStore';
 export type * from './universalBlockStore';
+
+// Platform-agnostic document types (FieldSchema, BsonDocument, etc.)
+export type * from './documentTypes';

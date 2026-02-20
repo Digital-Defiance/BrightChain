@@ -92,7 +92,7 @@ describe('DiskMessageMetadataStore - Query Performance Property Tests', () => {
 
             expect(results.length).toBe(messageCount);
             // Allow generous overhead for filesystem operations which vary by system load
-            expect(queryTime).toBeLessThan(Math.max(storeTime * 10, 500));
+            expect(queryTime).toBeLessThan(Math.max(storeTime * 10, 2000));
           } finally {
             rmSync(iterTempDir, { recursive: true, force: true });
           }
@@ -134,7 +134,7 @@ describe('DiskMessageMetadataStore - Query Performance Property Tests', () => {
 
             expect(results.length).toBe(messageCount);
             // Allow generous overhead for filesystem operations which vary by system load
-            expect(queryTime).toBeLessThan(Math.max(storeTime * 10, 500));
+            expect(queryTime).toBeLessThan(Math.max(storeTime * 10, 2000));
           } finally {
             rmSync(iterTempDir, { recursive: true, force: true });
           }

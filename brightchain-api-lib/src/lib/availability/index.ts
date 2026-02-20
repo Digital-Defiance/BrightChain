@@ -12,4 +12,5 @@ export * from './configValidation';
 export * from './discoveryProtocol';
 export * from './gossipService';
 export * from './heartbeatMonitor';
+export * from './poolDiscoveryService';
 export * from './reconciliationService';
