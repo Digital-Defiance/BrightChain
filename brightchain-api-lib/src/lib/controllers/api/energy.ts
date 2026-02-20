@@ -55,7 +55,9 @@ export class EnergyController<
   }
 
   private async handleGetBalance(
-    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
+    >[0],
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     const user = (req as { user?: { memberId: string } }).user;
 
@@ -108,7 +110,9 @@ export class EnergyController<
   }
 
   private async handleGetTransactions(
-    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
+    >[0],
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     const user = (req as { user?: { memberId: string } }).user;
 

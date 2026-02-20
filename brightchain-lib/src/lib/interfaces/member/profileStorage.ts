@@ -37,6 +37,10 @@ export interface IPrivateMemberProfileStorageData {
   trustedPeers: HexLike[]; // hex array
   blockedPeers: HexLike[]; // hex array
 
+  // Auth
+  /** bcrypt password hash — present only for members with password-based auth */
+  passwordHash?: string;
+
   // Preferences
   settings: {
     autoReplication?: boolean;
@@ -79,6 +83,8 @@ export interface IPrivateMemberProfileHydratedData<TID = Uint8Array> {
   id: TID;
   trustedPeers: TID[];
   blockedPeers: TID[];
+  /** bcrypt password hash — present only for members with password-based auth */
+  passwordHash?: string;
   settings: {
     autoReplication?: boolean;
     minRedundancy?: number;

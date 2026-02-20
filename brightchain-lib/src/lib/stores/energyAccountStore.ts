@@ -1,16 +1,43 @@
 import { ShortHexGuid, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import { EnergyAccount } from '../energyAccount';
+import { IEnergyAccountDto } from '../interfaces/energyAccount';
+import { IDocumentStore } from '../interfaces/storage/documentStore';
 import { Checksum } from '../types/checksum';
 
 /**
- * In-memory store for energy accounts
- * Follows existing SimpleStore/ArrayStore patterns
+ * Store for energy accounts with optional document-store persistence.
+ *
+ * When constructed without an IDocumentStore the store is purely in-memory
+ * (backward-compatible with existing callers).  When a document store is
+ * provided, every write is mirrored to the `energy_accounts` collection and
+ * `loadFromStore()` can hydrate the in-memory map on startup.
  */
 export class EnergyAccountStore {
   private accounts: Map<ShortHexGuid, EnergyAccount>;
+  private readonly documentStore: IDocumentStore | null;
 
-  constructor() {
+  constructor(documentStore?: IDocumentStore) {
     this.accounts = new Map();
+    this.documentStore = documentStore ?? null;
+  }
+
+  /**
+   * Hydrate the in-memory map from the backing document store.
+   * No-op when no document store is configured.
+   */
+  async loadFromStore(): Promise<void> {
+    if (!this.documentStore) return;
+
+    const collection =
+      this.documentStore.collection<IEnergyAccountDto>('energy_accounts');
+    const cursor = await collection.find({});
+    const docs = await cursor.toArray();
+
+    for (const doc of docs) {
+      const account = EnergyAccount.fromDto(doc);
+      const key = doc.memberId as ShortHexGuid;
+      this.accounts.set(key, account);
+    }
   }
 
   /**
@@ -34,11 +61,22 @@ export class EnergyAccountStore {
   }
 
   /**
-   * Set account
+   * Set account — writes to in-memory map and persists to document store
+   * (if configured).
    */
   async set(memberId: Checksum, account: EnergyAccount): Promise<void> {
     const key = uint8ArrayToHex(memberId.toUint8Array()) as ShortHexGuid;
     this.accounts.set(key, account);
+
+    if (this.documentStore) {
+      const collection =
+        this.documentStore.collection<IEnergyAccountDto>('energy_accounts');
+      await collection.replaceOne(
+        { memberId: key } as Partial<IEnergyAccountDto>,
+        account.toDto(),
+        { upsert: true },
+      );
+    }
   }
 
   /**

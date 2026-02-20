@@ -1,21 +1,15 @@
-import {
-  BlockStoreFactory as BaseBlockStoreFactory,
-  BlockSize,
-  IBlockStore,
-} from '@brightchain/brightchain-lib';
+import { BlockSize, BlockStoreFactory } from '@brightchain/brightchain-lib';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 
 /**
- * Extended factory for creating block store implementations with Node.js disk support
+ * Register the Node.js-specific DiskBlockAsyncStore as the disk store factory.
+ * This runs at import time so that any code calling
+ * `BlockStoreFactory.createDiskStore(...)` gets a real disk-backed store.
  */
-export class BlockStoreFactory extends BaseBlockStoreFactory {
-  /**
-   * Create a disk-based block store (Node.js implementation)
-   */
-  public static override createDiskStore(config: {
-    storePath: string;
-    blockSize: BlockSize;
-  }): IBlockStore {
-    return new DiskBlockAsyncStore(config);
-  }
-}
+BlockStoreFactory.registerDiskStoreFactory(
+  (config: { storePath: string; blockSize: BlockSize }) =>
+    new DiskBlockAsyncStore(config),
+);
+
+// Re-export so existing consumers that import from this module still work.
+export { BlockStoreFactory };

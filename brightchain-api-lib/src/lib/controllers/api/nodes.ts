@@ -1,13 +1,9 @@
 import {
   DiscoveryResult,
   IAvailabilityService,
-  IDiscoverBlockResponse,
   IDiscoveryProtocol,
-  IGetNodeResponse,
-  IListNodesResponse,
   ILocationRecord,
   INodeInfo,
-  IRegisterNodeResponse,
   NodeStatus,
 } from '@brightchain/brightchain-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
@@ -24,6 +20,12 @@ import {
   IRegisterNodeRequest,
 } from '../../interfaces';
 import { IBrightChainApplication } from '../../interfaces/application';
+import {
+  IDiscoverBlockApiResponse,
+  IGetNodeApiResponse,
+  IListNodesApiResponse,
+  IRegisterNodeApiResponse,
+} from '../../interfaces/responses';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
   handleError,
@@ -33,17 +35,19 @@ import {
 import { BaseController } from '../base';
 
 type NodesApiResponse =
-  | IListNodesResponse
-  | IGetNodeResponse
-  | IDiscoverBlockResponse
-  | IRegisterNodeResponse
+  | IListNodesApiResponse
+  | IGetNodeApiResponse
+  | IDiscoverBlockApiResponse
+  | IRegisterNodeApiResponse
   | ApiErrorResponse;
 
 interface NodesHandlers extends TypedHandlers {
-  listNodes: ApiRequestHandler<IListNodesResponse | ApiErrorResponse>;
-  getNode: ApiRequestHandler<IGetNodeResponse | ApiErrorResponse>;
-  discoverBlock: ApiRequestHandler<IDiscoverBlockResponse | ApiErrorResponse>;
-  registerNode: ApiRequestHandler<IRegisterNodeResponse | ApiErrorResponse>;
+  listNodes: ApiRequestHandler<IListNodesApiResponse | ApiErrorResponse>;
+  getNode: ApiRequestHandler<IGetNodeApiResponse | ApiErrorResponse>;
+  discoverBlock: ApiRequestHandler<
+    IDiscoverBlockApiResponse | ApiErrorResponse
+  >;
+  registerNode: ApiRequestHandler<IRegisterNodeApiResponse | ApiErrorResponse>;
 }
 
 /**
@@ -234,7 +238,7 @@ export class NodesController<
    */
   private async handleListNodes(): Promise<{
     statusCode: number;
-    response: IListNodesResponse | ApiErrorResponse;
+    response: IListNodesApiResponse | ApiErrorResponse;
   }> {
     try {
       // Get nodes from availability service if available
@@ -305,7 +309,7 @@ export class NodesController<
    */
   private async handleGetNode(req: unknown): Promise<{
     statusCode: number;
-    response: IGetNodeResponse | ApiErrorResponse;
+    response: IGetNodeApiResponse | ApiErrorResponse;
   }> {
     try {
       const { nodeId } = (req as unknown as IGetNodeRequest).params;
@@ -383,7 +387,7 @@ export class NodesController<
    */
   private async handleDiscoverBlock(req: unknown): Promise<{
     statusCode: number;
-    response: IDiscoverBlockResponse | ApiErrorResponse;
+    response: IDiscoverBlockApiResponse | ApiErrorResponse;
   }> {
     try {
       const { blockId } = (req as unknown as IDiscoverBlockRequest).body;
@@ -433,7 +437,7 @@ export class NodesController<
    */
   private async handleRegisterNode(req: unknown): Promise<{
     statusCode: number;
-    response: IRegisterNodeResponse | ApiErrorResponse;
+    response: IRegisterNodeApiResponse | ApiErrorResponse;
   }> {
     try {
       const { nodeId, publicKey } = (req as unknown as IRegisterNodeRequest)

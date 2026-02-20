@@ -9,6 +9,7 @@ export * from './invalid-jwt-token';
 export * from './last-admin-error';
 export * from './login-challenge-expired';
 export * from './member-role-not-found';
+export * from './memberIndexSchemaValidationError';
 export * from './missing-validated-data';
 export * from './mnemonic-or-password-required';
 export * from './restricted';

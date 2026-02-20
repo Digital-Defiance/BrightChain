@@ -3,6 +3,8 @@ export * from './base';
 export * from './blocks';
 export * from './blockServiceFactory';
 export * from './blockStore';
+export * from './brightchain-member-init.service';
+export * from './clientWebSocketServer';
 export * from './diskQuorumService';
 export * from './email';
 export * from './eventNotificationSystem';

@@ -31,6 +31,11 @@ export interface IEnvironment<TID extends PlatformID> extends Omit<
   aws: IEnvironmentAws;
 
   /**
+   * The name for the BrightChain member pool database
+   */
+  memberPoolName: string;
+
+  /**
    * Path for block-backed document store (disk). If unset, memory store may be used.
    */
   blockStorePath?: string;
