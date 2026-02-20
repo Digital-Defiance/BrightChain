@@ -31,6 +31,11 @@ export interface IEnvironment<TID extends PlatformID> extends Omit<
   aws: IEnvironmentAws;
 
   /**
+   * Whether to use transactions for brightchain-db operations
+   */
+  useTransactions: boolean;
+
+  /**
    * The name for the BrightChain member pool database
    */
   memberPoolName: string;
