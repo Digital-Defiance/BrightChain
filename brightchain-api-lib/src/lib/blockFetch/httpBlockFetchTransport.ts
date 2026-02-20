@@ -12,10 +12,10 @@
 
 import {
   BlockFetchError,
-  IBlockDataResponse,
   IBlockFetchTransport,
   PoolId,
 } from '@brightchain/brightchain-lib';
+import { IBlockDataResponse } from '../interfaces/responses/block-data-response';
 
 /**
  * Resolves a node ID to its base URL (e.g., `http://node-address:port`).

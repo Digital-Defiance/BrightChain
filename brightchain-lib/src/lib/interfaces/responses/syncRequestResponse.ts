@@ -1,11 +1,8 @@
-import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
-
 /**
- * Sync request response
+ * Sync request response data
  */
-export interface ISyncRequestResponse extends IApiMessageResponse {
+export interface ISyncRequestResponseData {
   available: string[];
   missing: string[];
   unknown: string[];
-  [key: string]: unknown;
 }

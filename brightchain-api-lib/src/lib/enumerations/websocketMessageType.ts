@@ -21,6 +21,10 @@ export enum GossipMessageType {
   BLOCK_ANNOUNCEMENT = 'gossip:block_announcement',
   BLOCK_REMOVAL = 'gossip:block_removal',
   ANNOUNCEMENT_BATCH = 'gossip:announcement_batch',
+  POOL_ANNOUNCEMENT = 'gossip:pool_announcement',
+  POOL_REMOVAL = 'gossip:pool_removal',
+  POOL_LIST_REQUEST = 'gossip:pool_list_request',
+  POOL_LIST_RESPONSE = 'gossip:pool_list_response',
 }
 
 /**

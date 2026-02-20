@@ -31,7 +31,9 @@ jest.setTimeout(120000);
 const arbLeaf: fc.Arbitrary<string | number | boolean | null> = fc.oneof(
   fc.string(),
   fc.integer({ min: -1_000_000, max: 1_000_000 }),
-  fc.double({ min: -1e6, max: 1e6, noNaN: true, noDefaultInfinity: true }).map(n => n === 0 ? 0 : n),
+  fc
+    .double({ min: -1e6, max: 1e6, noNaN: true, noDefaultInfinity: true })
+    .map((n) => (n === 0 ? 0 : n)),
   fc.boolean(),
   fc.constant(null),
 );

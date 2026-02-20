@@ -1,16 +1,11 @@
 import {
   Checksum,
   IAvailabilityService,
-  IBlockDataResponse,
   IBlockLocationInfo,
-  IBlockLocationsResponse,
   IBlockStore,
   ILocationRecord,
-  IReconcileResponse,
   IReconciliationService,
-  IReplicateBlockResponse,
   IReplicationNodeResult,
-  ISyncRequestResponse,
   isPooledBlockStore,
 } from '@brightchain/brightchain-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
@@ -28,6 +23,13 @@ import {
   ISyncRequestBody,
 } from '../../interfaces';
 import { IBrightChainApplication } from '../../interfaces/application';
+import {
+  IBlockDataResponse,
+  IBlockLocationsResponse,
+  IReconcileApiResponse,
+  IReplicateBlockApiResponse,
+  ISyncRequestApiResponse,
+} from '../../interfaces/responses';
 import { EventNotificationSystem } from '../../services/eventNotificationSystem';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
@@ -38,21 +40,23 @@ import {
 import { BaseController } from '../base';
 
 type SyncApiResponse =
-  | IReplicateBlockResponse
+  | IReplicateBlockApiResponse
   | IBlockLocationsResponse
   | IBlockDataResponse
-  | ISyncRequestResponse
-  | IReconcileResponse
+  | ISyncRequestApiResponse
+  | IReconcileApiResponse
   | ApiErrorResponse;
 
 interface SyncHandlers extends TypedHandlers {
-  replicateBlock: ApiRequestHandler<IReplicateBlockResponse | ApiErrorResponse>;
+  replicateBlock: ApiRequestHandler<
+    IReplicateBlockApiResponse | ApiErrorResponse
+  >;
   getBlockLocations: ApiRequestHandler<
     IBlockLocationsResponse | ApiErrorResponse
   >;
   getBlockData: ApiRequestHandler<IBlockDataResponse | ApiErrorResponse>;
-  syncRequest: ApiRequestHandler<ISyncRequestResponse | ApiErrorResponse>;
-  reconcile: ApiRequestHandler<IReconcileResponse | ApiErrorResponse>;
+  syncRequest: ApiRequestHandler<ISyncRequestApiResponse | ApiErrorResponse>;
+  reconcile: ApiRequestHandler<IReconcileApiResponse | ApiErrorResponse>;
 }
 
 /**
@@ -258,7 +262,7 @@ export class SyncController<
    */
   private async handleReplicateBlock(req: unknown): Promise<{
     statusCode: number;
-    response: IReplicateBlockResponse | ApiErrorResponse;
+    response: IReplicateBlockApiResponse | ApiErrorResponse;
   }> {
     try {
       const typedReq = req as unknown as IReplicateBlockRequest;
@@ -455,7 +459,7 @@ export class SyncController<
    */
   private async handleSyncRequest(req: unknown): Promise<{
     statusCode: number;
-    response: ISyncRequestResponse | ApiErrorResponse;
+    response: ISyncRequestApiResponse | ApiErrorResponse;
   }> {
     try {
       const { blockIds } = (req as unknown as ISyncRequestBody).body;
@@ -524,7 +528,7 @@ export class SyncController<
    */
   private async handleReconcile(): Promise<{
     statusCode: number;
-    response: IReconcileResponse | ApiErrorResponse;
+    response: IReconcileApiResponse | ApiErrorResponse;
   }> {
     try {
       const reconciliationService = this.getReconciliationService();

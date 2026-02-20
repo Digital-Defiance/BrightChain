@@ -19,15 +19,14 @@ export type * from './dto';
 export type * from './encryptionConsts';
 export type * from './encryptionLength';
 export type * from './energyTransaction';
-export type { IFailableResult } from './failableResult';
 export type * from './handleableErrorOptions';
 export type * from './i18nConstants';
+export type * from './initResult';
 export type * from './jsonStore';
 export type * from './keyringConsts';
 export type * from './keyringEntry';
 export type * from './languageContext';
 export type * from './member';
-export type * from './membersHandlers';
 export * from './network';
 export type * from './nodeInfo';
 export type * from './position';
@@ -53,6 +52,7 @@ export type * from './symmetricEncryptionResults';
 export type * from './tokenUser';
 export type * from './tuple';
 export type * from './tupleConfig';
+export type * from './userDto';
 export type * from './walletSeed';
 
 // Message passing interfaces (uses `export *` because messaging contains runtime functions like createMailbox)
@@ -79,3 +79,11 @@ export * from './blockFetch';
 // Auth interfaces (node authentication, pool ACL)
 // Uses `export *` because auth contains runtime values (PoolPermission enum, hasPermission, hasQuorum)
 export * from './auth';
+
+// Client protocol interfaces (Lumen–BrightChain introspection DTOs)
+// Uses `export *` because clientProtocol contains runtime enums (ClientEventType, ClientEventAccessTier)
+export * from './clientProtocol';
+
+// Branded DTO definitions (runtime-identifiable types for API/WebSocket boundaries)
+// Uses `export *` because branded modules contain runtime values (primitives, opaque types, serializers)
+export * from './branded';

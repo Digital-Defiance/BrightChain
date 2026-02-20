@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 /**
  * Session-isolated memory block store for the BrightChain demo
  *

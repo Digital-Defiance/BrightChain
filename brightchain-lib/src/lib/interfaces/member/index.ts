@@ -1,5 +1,9 @@
+export type * from './brightchainInitResult';
+export type * from './brightchainMemberInitInput';
 export type * from './hydrated';
 export type * from './memberData';
 export type * from './memberDto';
+export type * from './memberIndexDocument';
 export type * from './operational';
+export type * from './profileStorage';
 export type * from './storage';

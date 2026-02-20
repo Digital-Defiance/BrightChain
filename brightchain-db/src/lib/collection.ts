@@ -10,7 +10,6 @@
 import {
   Checksum,
   IBlockStore,
-  ICollection,
   IEnrichedQueryResult,
   IHeadRegistry,
   IPendingBlockInfo,
@@ -18,6 +17,7 @@ import {
   PendingBlockError,
   ReadConcern,
 } from '@brightchain/brightchain-lib';
+import type { ICollection } from '@digitaldefiance/node-express-suite';
 import { sha3_512 } from '@noble/hashes/sha3';
 import { randomUUID } from 'crypto';
 import { runAggregation } from './aggregation';

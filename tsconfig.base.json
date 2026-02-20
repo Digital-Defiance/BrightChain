@@ -29,6 +29,9 @@
       "@brightchain/brightchain-lib/*": [
         "brightchain-lib/src/*"
       ],
+      "@brightchain/brightchain-inituserdb/*": [
+        "brightchain-inituserdb/src/*",
+      ],
       "@brightchain/brightchain-api-lib": [
         "brightchain-api-lib/src/index.ts"
       ],

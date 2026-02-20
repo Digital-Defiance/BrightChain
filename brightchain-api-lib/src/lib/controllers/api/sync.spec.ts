@@ -17,7 +17,6 @@ import {
   BlockSize,
   Checksum,
   IAvailabilityService,
-  IBlockDataResponse,
   IBlockStore,
   ILocationRecord,
   IPooledBlockStore,
@@ -32,6 +31,7 @@ import {
 } from '@brightchain/brightchain-lib';
 import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
 import { IBrightChainApplication } from '../../interfaces';
+import { IBlockDataResponse } from '../../interfaces/responses/block-data-response';
 import { SyncController } from './sync';
 
 // ─── Mock Factories ───────────────────────────────────────────────────────────

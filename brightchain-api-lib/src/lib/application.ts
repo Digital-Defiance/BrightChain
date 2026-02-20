@@ -1,5 +1,4 @@
 import {
-  BlockSize,
   EnergyAccountStore,
   EnergyLedger,
   IAvailabilityService,
@@ -17,6 +16,9 @@ import {
 } from '@digitaldefiance/node-express-suite';
 import { Server } from 'http';
 import { AppConstants } from './appConstants';
+import { GossipService } from './availability/gossipService';
+import { PoolDiscoveryService } from './availability/poolDiscoveryService';
+import { brightchainDatabaseInit } from './databaseInit';
 import { createBlockDocumentStore } from './datastore/block-document-store-factory';
 import {
   DocumentCollection,
@@ -24,12 +26,12 @@ import {
   DocumentStore,
 } from './datastore/document-store';
 import { Environment } from './environment';
-import { BlockStoreFactory } from './factories/blockStoreFactory';
 import { IBrightChainInitResult } from './interfaces/brightchain-init-result';
 import { Middlewares } from './middlewares';
 import { ApiRouter } from './routers/api';
 import { AppRouter } from './routers/app';
 import { AuthService, EmailService, SecureKeyStorage } from './services';
+import { ClientWebSocketServer } from './services/clientWebSocketServer';
 import { EventNotificationSystem } from './services/eventNotificationSystem';
 import { MessagePassingService } from './services/messagePassingService';
 import { WebSocketMessageServer } from './services/webSocketMessageServer';
@@ -66,6 +68,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   private apiRouter: ApiRouter<TID> | null = null;
   private eventSystem: EventNotificationSystem | null = null;
   private wsServer: WebSocketMessageServer | null = null;
+  private clientWsServer: ClientWebSocketServer | null = null;
   private messagePassingService: MessagePassingService | null = null;
   private upnpManager: UpnpManager | null = null;
 
@@ -80,7 +83,6 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     super(
       environment,
       // apiRouterFactory — creates BrightChain's ApiRouter
-      // @ts-expect-error — App overrides db/getModel with DocumentStore types; runtime-compatible
       (app: IApplication<TID>) => new ApiRouter<TID>(app as App<TID>),
       // schemaMapFactory — no-op, returns empty object (no mongoose models)
       noOpSchemaMapFactory,
@@ -148,25 +150,29 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
 
     await this.keyStorage.initializeFromEnvironment();
 
-    // Initialize core services
-    const blockStore = BlockStoreFactory.createMemoryStore({
-      blockSize: BlockSize.Small,
-    });
-    const memberStore = new MemberStore(blockStore);
-    const energyStore = new EnergyAccountStore();
+    // Initialize persistent (or ephemeral) database stack
+    const initResult = await brightchainDatabaseInit(this.environment);
+    if (!initResult.success || !initResult.backend) {
+      throw new Error(
+        `BrightChain database initialization failed: ${initResult.error ?? 'unknown error'}`,
+      );
+    }
+
+    const { blockStore, db, memberStore, energyStore } = initResult.backend;
+
     const energyLedger = new EnergyLedger();
-    // @ts-expect-error — App overrides db/getModel with DocumentStore types; runtime-compatible
     const emailService = new EmailService<TID>(this);
     const authService = new AuthService<TID>(
-      // @ts-expect-error — App overrides db/getModel with DocumentStore types; runtime-compatible
       this,
-      memberStore,
-      energyStore,
+      memberStore as MemberStore,
+      energyStore as EnergyAccountStore,
       emailService,
       this.environment.jwtSecret,
     );
 
-    // Register services in the upstream ServiceContainer
+    // Register services from init result and additional services
+    this.services.register('blockStore', () => blockStore);
+    this.services.register('db', () => db);
     this.services.register('memberStore', () => memberStore);
     this.services.register('energyStore', () => energyStore);
     this.services.register('energyLedger', () => energyLedger);
@@ -185,6 +191,20 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
         this.environment.debug,
         'log',
         '[ ready ] WebSocket server initialized',
+      );
+
+      // Client-facing WebSocket server for Lumen protocol
+      // @see Requirements 9.6, 11.3
+      this.clientWsServer = new ClientWebSocketServer(
+        this._httpServer,
+        this.environment.jwtSecret,
+        this.eventSystem,
+      );
+      this.services.register('clientWsServer', () => this.clientWsServer);
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ ready ] Client WebSocket server initialized',
       );
     }
 
@@ -238,6 +258,19 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
       this.wsServer = null;
     }
 
+    // Close client WebSocket server
+    if (this.clientWsServer) {
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ stopping ] Client WebSocket server',
+      );
+      await new Promise<void>((resolve) => {
+        this.clientWsServer!.close(() => resolve());
+      });
+      this.clientWsServer = null;
+    }
+
     // Clean up BrightChain services
     this.eventSystem = null;
     this.messagePassingService = null;
@@ -278,6 +311,15 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
    */
   public getWebSocketServer(): WebSocketMessageServer | null {
     return this.wsServer;
+  }
+
+  /**
+   * Get the ClientWebSocketServer instance.
+   * Used for Lumen client protocol connections.
+   * @see Requirements 9.6, 11.3
+   */
+  public getClientWebSocketServer(): ClientWebSocketServer | null {
+    return this.clientWsServer;
   }
 
   /**
@@ -331,6 +373,39 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     this.services.register('reconciliationService', () => service);
     if (this.apiRouter) {
       this.apiRouter.setReconciliationService(service);
+    }
+  }
+
+  /**
+   * Set the PoolDiscoveryService and wire gossip handlers.
+   * Registers the service, connects GossipService pool announcement/removal
+   * handlers, and passes the service to the IntrospectionController via ApiRouter.
+   *
+   * @param poolDiscoveryService - The pool discovery service instance
+   * @param gossipService - The gossip service to wire pool announcement handlers to
+   * @see Requirements 7.1, 8.3
+   */
+  public setPoolDiscoveryService(
+    poolDiscoveryService: PoolDiscoveryService,
+    gossipService: GossipService,
+  ): void {
+    this.services.register('poolDiscoveryService', () => poolDiscoveryService);
+
+    // Wire gossip pool announcement/removal handlers
+    gossipService.onAnnouncement((announcement) => {
+      if (announcement.type === 'pool_announce') {
+        poolDiscoveryService.handlePoolAnnouncement(announcement);
+      } else if (announcement.type === 'pool_remove' && announcement.poolId) {
+        poolDiscoveryService.handlePoolRemoval(
+          announcement.poolId,
+          announcement.nodeId,
+        );
+      }
+    });
+
+    // Pass to IntrospectionController via ApiRouter
+    if (this.apiRouter) {
+      this.apiRouter.setIntrospectionPoolDiscoveryService(poolDiscoveryService);
     }
   }
 }

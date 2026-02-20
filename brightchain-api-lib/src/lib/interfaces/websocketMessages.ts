@@ -135,6 +135,74 @@ export interface IBlockRemovalMessage {
 }
 
 /**
+ * Pool gossip announcement payload carried inside gossip batches.
+ * Used for pool creation/update and pool removal announcements.
+ *
+ * @see Requirements 8.1, 8.2, 8.4
+ */
+export interface IPoolGossipAnnouncement {
+  type: 'pool_announce' | 'pool_remove';
+  poolId: string;
+  nodeId: string;
+  blockCount: number;
+  totalSize: number;
+  encrypted: boolean;
+  encryptedMetadata?: string;
+  ttl: number;
+}
+
+/**
+ * Pool announcement message
+ *
+ * @see Requirements 8.1, 8.2
+ */
+export interface IPoolAnnouncementMessage {
+  type: GossipMessageType.POOL_ANNOUNCEMENT;
+  payload: IPoolGossipAnnouncement;
+  timestamp: string;
+}
+
+/**
+ * Pool removal message
+ *
+ * @see Requirements 8.4
+ */
+export interface IPoolRemovalMessage {
+  type: GossipMessageType.POOL_REMOVAL;
+  payload: IPoolGossipAnnouncement;
+  timestamp: string;
+}
+
+/**
+ * Pool list request message for discovery queries
+ *
+ * @see Requirements 7.1
+ */
+export interface IPoolListRequestMessage {
+  type: GossipMessageType.POOL_LIST_REQUEST;
+  payload: {
+    requestingNodeId: string;
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
+ * Pool list response message for discovery queries
+ *
+ * @see Requirements 7.1
+ */
+export interface IPoolListResponseMessage {
+  type: GossipMessageType.POOL_LIST_RESPONSE;
+  payload: {
+    nodeId: string;
+    pools: IPoolGossipAnnouncement[];
+  };
+  timestamp: string;
+  requestId: string;
+}
+
+/**
  * Announcement batch message
  */
 export interface IAnnouncementBatchMessage {
@@ -290,6 +358,10 @@ export type WebSocketMessage =
   | IBlockAnnouncementMessage
   | IBlockRemovalMessage
   | IAnnouncementBatchMessage
+  | IPoolAnnouncementMessage
+  | IPoolRemovalMessage
+  | IPoolListRequestMessage
+  | IPoolListResponseMessage
   | IPingMessage
   | IPongMessage
   | IMessageSendMessage

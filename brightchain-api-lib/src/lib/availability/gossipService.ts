@@ -16,6 +16,7 @@ import {
   ICBLIndexEntry,
   IGossipService,
   MessageDeliveryMetadata,
+  PoolAnnouncementMetadata,
   PoolId,
   validateGossipConfig,
 } from '@brightchain/brightchain-lib';
@@ -239,6 +240,53 @@ export class GossipService implements IGossipService {
   }
 
   /**
+   * Announce a new or updated pool to the network.
+   * Creates a pool_announce announcement with pool metadata for discovery.
+   * When the pool has encryption enabled, the caller should provide
+   * pre-encrypted metadata via the encryptedMetadata field.
+   *
+   * @param poolId - The pool being announced
+   * @param metadata - Pool announcement metadata (blockCount, totalSize, encrypted, encryptedMetadata)
+   * @see Requirements 8.1, 8.2
+   */
+  async announcePool(
+    poolId: PoolId,
+    metadata: PoolAnnouncementMetadata,
+  ): Promise<void> {
+    const announcement: BlockAnnouncement = {
+      type: 'pool_announce',
+      blockId: '',
+      poolId,
+      nodeId: this.peerProvider.getLocalNodeId(),
+      timestamp: new Date(),
+      ttl: this.config.defaultTtl,
+      poolAnnouncement: metadata,
+    };
+
+    this.queueAnnouncement(announcement);
+  }
+
+  /**
+   * Announce that a pool has been removed from this node.
+   * Creates a pool_remove announcement propagated to peers for discovery cache updates.
+   *
+   * @param poolId - The pool being removed
+   * @see Requirements 8.4
+   */
+  async announcePoolRemoval(poolId: PoolId): Promise<void> {
+    const announcement: BlockAnnouncement = {
+      type: 'pool_remove',
+      blockId: '',
+      poolId,
+      nodeId: this.peerProvider.getLocalNodeId(),
+      timestamp: new Date(),
+      ttl: this.config.defaultTtl,
+    };
+
+    this.queueAnnouncement(announcement);
+  }
+
+  /**
    * Announce a new or updated CBL index entry to peers in the same pool.
    * Creates a cbl_index_update announcement scoped to the entry's pool.
    *
@@ -352,6 +400,28 @@ export class GossipService implements IGossipService {
       }
 
       // Forward with decremented TTL (Req 2.7)
+      if (announcement.ttl > 0) {
+        this.queueAnnouncement({ ...announcement, ttl: announcement.ttl - 1 });
+      }
+      return;
+    }
+
+    // Case 0a: Pool announce/remove announcements — dispatch to handlers and forward (Req 8.1, 8.3, 8.4)
+    if (
+      announcement.type === 'pool_announce' ||
+      announcement.type === 'pool_remove'
+    ) {
+      if (!announcement.poolId) return; // Invalid without poolId, ignore
+
+      for (const handler of this.handlers) {
+        try {
+          handler(announcement);
+        } catch {
+          // Ignore handler errors to prevent one handler from affecting others
+        }
+      }
+
+      // Forward with decremented TTL
       if (announcement.ttl > 0) {
         this.queueAnnouncement({ ...announcement, ttl: announcement.ttl - 1 });
       }

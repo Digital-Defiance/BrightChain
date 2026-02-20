@@ -10,11 +10,14 @@ export abstract class BaseController<
   T extends ApiResponse,
   THandler extends object,
   TLanguage extends string,
-> extends UpstreamBaseController<T, THandler, TLanguage, TID> {
-  public override readonly application: IBrightChainApplication<TID>;
-
+> extends UpstreamBaseController<
+  T,
+  THandler,
+  TLanguage,
+  TID,
+  IBrightChainApplication<TID>
+> {
   public constructor(application: IBrightChainApplication<TID>) {
     super(application);
-    this.application = application;
   }
 }

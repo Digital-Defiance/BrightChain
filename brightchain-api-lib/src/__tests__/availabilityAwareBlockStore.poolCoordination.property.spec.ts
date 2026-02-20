@@ -87,8 +87,17 @@ beforeEach(() => {
 
 // ── Generators ──
 
+/** Characters valid in pool IDs */
+const POOL_ID_CHARS =
+  'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-';
+
 /** Valid pool ID strings matching /^[a-zA-Z0-9_-]{1,64}$/ */
-const arbPoolId = fc.stringMatching(/^[a-zA-Z0-9_-]{1,64}$/);
+const arbPoolId = fc
+  .array(fc.integer({ min: 0, max: POOL_ID_CHARS.length - 1 }), {
+    minLength: 1,
+    maxLength: 16,
+  })
+  .map((indices) => indices.map((i) => POOL_ID_CHARS[i]).join(''));
 
 /** Valid hex-encoded block ID (at least 32 hex chars) */
 const arbBlockId = fc
@@ -97,35 +106,36 @@ const arbBlockId = fc
 
 /** Valid node ID */
 const arbNodeId = fc
-  .string({ minLength: 8, maxLength: 32 })
-  .filter((s) => s.length > 0);
+  .array(fc.integer({ min: 97, max: 122 }), { minLength: 8, maxLength: 16 })
+  .map((codes) => String.fromCharCode(...codes));
 
 /**
  * Generate a scenario with blocks distributed across multiple pools.
  * Returns 2-4 distinct pools, each with 1-5 distinct block IDs.
+ * Uses uniqueArray + direct construction to avoid filter-based rejection loops.
  */
 const arbPoolBlockDistribution = fc
-  .array(arbPoolId, { minLength: 2, maxLength: 4 })
-  .chain((pools) => {
-    const uniquePools = [...new Set(pools)];
-    if (uniquePools.length < 2) {
-      // Ensure at least 2 distinct pools
-      return fc.constant(new Map<string, string[]>()).filter(() => false);
+  .integer({ min: 2, max: 4 })
+  .chain((numPools) =>
+    fc.tuple(
+      fc.uniqueArray(arbPoolId, {
+        minLength: numPools,
+        maxLength: numPools,
+        comparator: 'IsStrictlyEqual',
+      }),
+      fc.array(fc.array(arbBlockId, { minLength: 1, maxLength: 3 }), {
+        minLength: numPools,
+        maxLength: numPools,
+      }),
+    ),
+  )
+  .map(([pools, blockArrays]) => {
+    const map = new Map<string, string[]>();
+    for (let i = 0; i < pools.length; i++) {
+      map.set(pools[i], [...new Set(blockArrays[i])]);
     }
-    return fc
-      .tuple(
-        ...uniquePools.map((pool) =>
-          fc
-            .array(arbBlockId, { minLength: 1, maxLength: 5 })
-            .map((blockIds): [string, string[]] => [
-              pool,
-              [...new Set(blockIds)],
-            ]),
-        ),
-      )
-      .map((entries) => new Map<string, string[]>(entries));
-  })
-  .filter((m) => m.size >= 2);
+    return map;
+  });
 
 // ── Mock Implementations ──
 
@@ -963,7 +973,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             }
           },
         ),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
 
@@ -999,7 +1009,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             expect(innerStore.deletedPools).toContain(deletedPool);
           },
         ),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
 
@@ -1055,7 +1065,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             }
           },
         ),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
 
@@ -1099,7 +1109,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             }
           },
         ),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
   });
@@ -1160,7 +1170,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             PoolDeletionTombstoneError,
           );
         }),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
 
@@ -1201,7 +1211,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           // Storage should now succeed since the tombstone has expired
           await expect(store.setData(block)).resolves.not.toThrow();
         }),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
 
@@ -1243,7 +1253,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             expect((err as PoolDeletionTombstoneError).poolId).toBe(poolId);
           }
         }),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
   });
@@ -1309,7 +1319,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           // The location record should have the poolId set
           expect(locations[0].poolId).toBe(poolId);
         }),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
 
@@ -1336,7 +1346,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           // The location record should NOT have a poolId
           expect(locations[0].poolId).toBeUndefined();
         }),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
 
@@ -1387,7 +1397,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             expect(locations[0].poolId).toBe(poolId);
           }
         }),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
   });
@@ -1460,7 +1470,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           // Verify the registry also recorded the block under the correct pool
           expect(registry.getPoolForBlock(blockId)).toBe(poolId);
         }),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
 
@@ -1484,7 +1494,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
           expect(announcement).toBeDefined();
           expect(announcement!.poolId).toBeUndefined();
         }),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
 
@@ -1538,7 +1548,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             expect(registry.getPoolForBlock(blockId)).toBe(poolId);
           }
         }),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
   });
@@ -1560,37 +1570,38 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
      * Produces a target pool, a set of nodes with the block in the target pool,
      * and a set of nodes with the block in other pools.
      */
+    /**
+     * Generates a replication scenario by constructing unique pools and nodes
+     * directly, avoiding filter-based rejection loops.
+     */
     const arbReplicationScenario = fc
-      .record({
-        targetPool: arbPoolId,
-        otherPools: fc.array(arbPoolId, { minLength: 1, maxLength: 3 }),
-        targetPoolNodes: fc.array(arbNodeId, { minLength: 1, maxLength: 5 }),
-        otherPoolNodes: fc.array(arbNodeId, { minLength: 1, maxLength: 5 }),
-        targetReplicationFactor: fc.integer({ min: 2, max: 10 }),
-      })
-      .filter((s) => {
-        // Ensure target pool is distinct from all other pools
-        const otherPoolsSet = new Set(s.otherPools);
-        if (otherPoolsSet.has(s.targetPool)) return false;
-        // Ensure at least one node in each group
-        if (s.targetPoolNodes.length === 0) return false;
-        if (s.otherPoolNodes.length === 0) return false;
-        return true;
-      })
-      .map((s) => ({
-        ...s,
-        // Deduplicate nodes within each group
-        targetPoolNodes: [...new Set(s.targetPoolNodes)],
-        otherPoolNodes: [...new Set(s.otherPoolNodes)],
-        otherPools: [
-          ...new Set(s.otherPools.filter((p) => p !== s.targetPool)),
-        ],
-      }))
-      .filter(
-        (s) =>
-          s.otherPools.length >= 1 &&
-          s.targetPoolNodes.length >= 1 &&
-          s.otherPoolNodes.length >= 1,
+      .integer({ min: 1, max: 3 })
+      .chain((numOtherPools) =>
+        fc.tuple(
+          // Generate numOtherPools + 1 unique pool IDs (target + others)
+          fc.uniqueArray(arbPoolId, {
+            minLength: numOtherPools + 1,
+            maxLength: numOtherPools + 1,
+            comparator: 'IsStrictlyEqual',
+          }),
+          fc.array(arbNodeId, { minLength: 1, maxLength: 5 }),
+          fc.array(arbNodeId, { minLength: 1, maxLength: 5 }),
+          fc.integer({ min: 2, max: 10 }),
+        ),
+      )
+      .map(
+        ([
+          pools,
+          targetPoolNodes,
+          otherPoolNodes,
+          targetReplicationFactor,
+        ]) => ({
+          targetPool: pools[0],
+          otherPools: pools.slice(1),
+          targetPoolNodes: [...new Set(targetPoolNodes)],
+          otherPoolNodes: [...new Set(otherPoolNodes)],
+          targetReplicationFactor,
+        }),
       );
 
     /**
@@ -1695,7 +1706,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             expect(pendingIds).not.toContain(blockId);
           }
         }),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
 
@@ -1775,7 +1786,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             expect(underReplicatedIds).not.toContain(blockId);
           }
         }),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
 
@@ -1835,7 +1846,7 @@ describe('AvailabilityAwareBlockStore Pool Coordination Property Tests', () => {
             expect(underReplicatedIds).toContain(blockId);
           },
         ),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
   });

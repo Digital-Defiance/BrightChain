@@ -1,6 +1,11 @@
 import {
   Checksum,
   EnergyAccountStore,
+  IAuthResponse,
+  ILoginRequest,
+  IRegistrationRequest,
+  IUserProfile,
+  IUserProfileMetadata,
   MemberStore,
 } from '@brightchain/brightchain-lib';
 import { SecureString } from '@digitaldefiance/ecies-lib';
@@ -15,8 +20,16 @@ import {
   routeConfig,
 } from '@digitaldefiance/node-express-suite';
 import { IBrightChainApplication } from '../../interfaces/application';
+import {
+  IAuthApiResponse,
+  IUserProfileApiResponse,
+} from '../../interfaces/userApiResponse';
 import { AuthService } from '../../services';
 import { DefaultBackendIdType } from '../../shared-types';
+import {
+  validateLogin,
+  validateRegistration,
+} from '../../validation/userValidation';
 import { BaseController } from '../base';
 
 interface IUserHandlers extends TypedHandlers {
@@ -24,17 +37,6 @@ interface IUserHandlers extends TypedHandlers {
   login: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   profile: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   updateProfile: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
-}
-
-interface IRegisterRequest {
-  username: string;
-  email: string;
-  password: string;
-}
-
-interface ILoginRequest {
-  username: string;
-  password: string;
 }
 
 interface IUpdateProfileRequest {
@@ -91,11 +93,26 @@ export class UserController<
   }
 
   private async handleRegister(
-    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
+    >[0],
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    // Validate request body before processing
+    const validation = validateRegistration(req.body);
+    if (!validation.valid) {
+      return {
+        statusCode: 400,
+        response: {
+          message: 'Validation failed',
+          errors: validation.errors,
+        } as IApiMessageResponse,
+      };
+    }
+
     try {
+      // Validation already confirmed these fields exist and are valid strings
       const { username, email, password } =
-        req.body as unknown as IRegisterRequest;
+        req.body as unknown as IRegistrationRequest;
 
       const authService = this.application.services.get<AuthService>('auth');
       const result = await authService.register(
@@ -104,14 +121,18 @@ export class UserController<
         new SecureString(password),
       );
 
+      const authResponse: IAuthResponse<string> = {
+        token: result.token,
+        memberId: result.memberId,
+        energyBalance: result.energyBalance,
+      };
+
       return {
         statusCode: 201,
         response: {
           message: 'Registration successful',
-          token: result.token,
-          memberId: result.memberId,
-          energyBalance: result.energyBalance,
-        } as IApiMessageResponse,
+          data: authResponse,
+        } as IAuthApiResponse,
       };
     } catch (error) {
       return {
@@ -126,9 +147,24 @@ export class UserController<
   }
 
   private async handleLogin(
-    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
+    >[0],
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    // Validate request body before processing
+    const validation = validateLogin(req.body);
+    if (!validation.valid) {
+      return {
+        statusCode: 400,
+        response: {
+          message: 'Validation failed',
+          errors: validation.errors,
+        } as IApiMessageResponse,
+      };
+    }
+
     try {
+      // Validation already confirmed these fields exist and are valid strings
       const { username, password } = req.body as unknown as ILoginRequest;
 
       const authService = this.application.services.get<AuthService>('auth');
@@ -137,14 +173,18 @@ export class UserController<
         password: new SecureString(password),
       });
 
+      const authResponse: IAuthResponse<string> = {
+        token: result.token,
+        memberId: result.memberId,
+        energyBalance: result.energyBalance,
+      };
+
       return {
         statusCode: 200,
         response: {
           message: 'Login successful',
-          token: result.token,
-          memberId: result.memberId,
-          energyBalance: result.energyBalance,
-        } as IApiMessageResponse,
+          data: authResponse,
+        } as IAuthApiResponse,
       };
     } catch {
       return {
@@ -158,9 +198,12 @@ export class UserController<
   }
 
   private async handleProfile(
-    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
+    >[0],
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    const user = (req as { user?: { memberId: string } }).user;
+    const user = (req as { user?: { memberId: string; username: string } })
+      .user;
 
     if (!user) {
       return {
@@ -179,11 +222,24 @@ export class UserController<
       const memberChecksum = Checksum.fromHex(user.memberId);
       const energyAccount = await energyStore.getOrCreate(memberChecksum);
 
-      // Try to get member profile from MemberStore if available
-      let memberProfile = null;
+      // Try to get member email from MemberStore
+      let email = '';
+      const memberStore =
+        this.application.services.get<MemberStore>('memberStore');
       try {
-        const memberStore =
-          this.application.services.get<MemberStore>('memberStore');
+        if (memberStore) {
+          const member = await memberStore.getMember(
+            memberChecksum.toUint8Array(),
+          );
+          email = member.email.toString();
+        }
+      } catch {
+        // Member lookup failed, continue with empty email
+      }
+
+      // Try to get member profile metadata from MemberStore if available
+      let memberProfile: IUserProfileMetadata | undefined;
+      try {
         if (memberStore) {
           const profile = await memberStore.getMemberProfile(
             memberChecksum.toUint8Array(),
@@ -199,24 +255,30 @@ export class UserController<
           }
         }
       } catch {
-        // MemberStore profile not available, continue with basic profile
+        // MemberStore profile not available, continue without profile metadata
       }
+
+      const userProfile: IUserProfile<string> = {
+        memberId: user.memberId,
+        username: user.username,
+        email,
+        energyBalance: energyAccount.balance,
+        availableBalance: energyAccount.availableBalance,
+        earned: energyAccount.earned,
+        spent: energyAccount.spent,
+        reserved: energyAccount.reserved,
+        reputation: energyAccount.reputation,
+        createdAt: energyAccount.createdAt.toISOString(),
+        lastUpdated: energyAccount.lastUpdated.toISOString(),
+        ...(memberProfile && { profile: memberProfile }),
+      };
 
       return {
         statusCode: 200,
         response: {
           message: 'Profile retrieved',
-          memberId: user.memberId,
-          energyBalance: energyAccount.balance,
-          availableBalance: energyAccount.availableBalance,
-          earned: energyAccount.earned,
-          spent: energyAccount.spent,
-          reserved: energyAccount.reserved,
-          reputation: energyAccount.reputation,
-          createdAt: energyAccount.createdAt.toISOString(),
-          lastUpdated: energyAccount.lastUpdated.toISOString(),
-          ...(memberProfile && { profile: memberProfile }),
-        } as IApiMessageResponse,
+          data: userProfile,
+        } as IUserProfileApiResponse,
       };
     } catch {
       return {
@@ -230,9 +292,12 @@ export class UserController<
   }
 
   private async handleUpdateProfile(
-    req: Parameters<ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
+    >[0],
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    const user = (req as { user?: { memberId: string } }).user;
+    const user = (req as { user?: { memberId: string; username: string } })
+      .user;
 
     if (!user) {
       return {
@@ -249,28 +314,21 @@ export class UserController<
       const memberChecksum = Checksum.fromHex(user.memberId);
       const memberIdBytes = memberChecksum.toUint8Array();
 
-      // Try to update member profile in MemberStore if available
-      let profileUpdated = false;
-      try {
-        const memberStore =
-          this.application.services.get<MemberStore>('memberStore');
-        if (memberStore && updateData.settings) {
-          // Build complete settings object with defaults for missing values
-          const completeSettings = {
-            autoReplication: updateData.settings.autoReplication ?? true,
-            minRedundancy: updateData.settings.minRedundancy ?? 3,
-            preferredRegions: updateData.settings.preferredRegions ?? [],
-          };
-          await memberStore.updateMember(memberIdBytes, {
-            id: memberIdBytes,
-            privateChanges: {
-              settings: completeSettings,
-            },
-          });
-          profileUpdated = true;
-        }
-      } catch {
-        // MemberStore update not available, continue
+      // Persist settings via MemberStore — let errors propagate to return 500
+      const memberStore =
+        this.application.services.get<MemberStore>('memberStore');
+      if (memberStore && updateData.settings) {
+        const completeSettings = {
+          autoReplication: updateData.settings.autoReplication ?? true,
+          minRedundancy: updateData.settings.minRedundancy ?? 3,
+          preferredRegions: updateData.settings.preferredRegions ?? [],
+        };
+        await memberStore.updateMember(memberIdBytes, {
+          id: memberIdBytes,
+          privateChanges: {
+            settings: completeSettings,
+          },
+        });
       }
 
       // Get updated energy account for response
@@ -278,17 +336,57 @@ export class UserController<
         this.application.services.get<EnergyAccountStore>('energyStore');
       const energyAccount = await energyStore.getOrCreate(memberChecksum);
 
+      // Try to get member email from MemberStore
+      let email = '';
+      try {
+        if (memberStore) {
+          const member = await memberStore.getMember(memberIdBytes);
+          email = member.email.toString();
+        }
+      } catch {
+        // Member lookup failed, continue with empty email
+      }
+
+      // Try to get member profile metadata from MemberStore
+      let memberProfile: IUserProfileMetadata | undefined;
+      try {
+        if (memberStore) {
+          const profile = await memberStore.getMemberProfile(memberIdBytes);
+          if (profile.publicProfile) {
+            memberProfile = {
+              status: profile.publicProfile.status,
+              storageQuota: profile.publicProfile.storageQuota?.toString(),
+              storageUsed: profile.publicProfile.storageUsed?.toString(),
+              lastActive: profile.publicProfile.lastActive?.toISOString(),
+              dateCreated: profile.publicProfile.dateCreated?.toISOString(),
+            };
+          }
+        }
+      } catch {
+        // MemberStore profile not available, continue without profile metadata
+      }
+
+      const userProfile: IUserProfile<string> = {
+        memberId: user.memberId,
+        username: user.username,
+        email,
+        energyBalance: energyAccount.balance,
+        availableBalance: energyAccount.availableBalance,
+        earned: energyAccount.earned,
+        spent: energyAccount.spent,
+        reserved: energyAccount.reserved,
+        reputation: energyAccount.reputation,
+        createdAt: energyAccount.createdAt.toISOString(),
+        lastUpdated: energyAccount.lastUpdated.toISOString(),
+        ...(memberProfile && { profile: memberProfile }),
+      };
+
       return {
         statusCode: 200,
         response: {
-          message: profileUpdated
-            ? 'Profile updated successfully'
-            : 'Profile update partially completed',
-          memberId: user.memberId,
-          energyBalance: energyAccount.balance,
-          reputation: energyAccount.reputation,
-          updated: profileUpdated,
-        } as IApiMessageResponse,
+          message: 'Profile updated successfully',
+          data: userProfile,
+        } as IUserProfileApiResponse,
       };
     } catch {
       return {

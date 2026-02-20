@@ -21,12 +21,8 @@ import {
   AvailabilityState,
   AvailabilityStatistics,
   IAvailabilityService,
-  IBlockLocationsResponse,
   ILocationRecord,
-  IReconcileResponse,
   IReconciliationService,
-  IReplicateBlockResponse,
-  ISyncRequestResponse,
   LocationQueryResult,
   PendingSyncItem,
   PoolId,
@@ -38,6 +34,12 @@ import {
 import { ApiErrorResponse } from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
 import { IBrightChainApplication } from '../../interfaces';
+import {
+  IBlockLocationsResponse,
+  IReconcileApiResponse,
+  IReplicateBlockApiResponse,
+  ISyncRequestApiResponse,
+} from '../../interfaces/responses';
 import { SyncController } from './sync';
 
 // Mock application for testing
@@ -202,7 +204,7 @@ interface SyncControllerHandlers {
   handlers: {
     replicateBlock: (req: unknown) => Promise<{
       statusCode: number;
-      response: IReplicateBlockResponse | ApiErrorResponse;
+      response: IReplicateBlockApiResponse | ApiErrorResponse;
     }>;
     getBlockLocations: (req: unknown) => Promise<{
       statusCode: number;
@@ -210,11 +212,11 @@ interface SyncControllerHandlers {
     }>;
     syncRequest: (req: unknown) => Promise<{
       statusCode: number;
-      response: ISyncRequestResponse | ApiErrorResponse;
+      response: ISyncRequestApiResponse | ApiErrorResponse;
     }>;
     reconcile: () => Promise<{
       statusCode: number;
-      response: IReconcileResponse | ApiErrorResponse;
+      response: IReconcileApiResponse | ApiErrorResponse;
     }>;
   };
 }
@@ -296,7 +298,7 @@ describe('Sync Endpoint Property Tests', () => {
             expect(replicateResult.statusCode).toBe(200);
 
             const replicateResponse =
-              replicateResult.response as IReplicateBlockResponse;
+              replicateResult.response as IReplicateBlockApiResponse;
             expect(replicateResponse.blockId).toBe(blockId);
 
             // All replication results should be successful
@@ -564,7 +566,7 @@ describe('Sync Endpoint Property Tests', () => {
 
             expect(result.statusCode).toBe(200);
 
-            const response = result.response as ISyncRequestResponse;
+            const response = result.response as ISyncRequestApiResponse;
 
             // Union of all categories should equal input
             const allBlockIds = [
@@ -654,7 +656,7 @@ describe('Sync Endpoint Property Tests', () => {
 
             expect(result.statusCode).toBe(200);
 
-            const response = result.response as ISyncRequestResponse;
+            const response = result.response as ISyncRequestApiResponse;
 
             // All blocks should be available
             expect(response.available.length).toBe(uniqueBlockIds.length);
@@ -715,7 +717,7 @@ describe('Sync Endpoint Property Tests', () => {
 
             expect(result.statusCode).toBe(200);
 
-            const response = result.response as ISyncRequestResponse;
+            const response = result.response as ISyncRequestApiResponse;
 
             // All blocks should be missing
             expect(response.available.length).toBe(0);
@@ -764,7 +766,7 @@ describe('Sync Endpoint Property Tests', () => {
 
             expect(result.statusCode).toBe(200);
 
-            const response = result.response as ISyncRequestResponse;
+            const response = result.response as ISyncRequestApiResponse;
 
             // All blocks should be unknown
             expect(response.available.length).toBe(0);
@@ -842,7 +844,7 @@ describe('Sync Endpoint Property Tests', () => {
 
       expect(result.statusCode).toBe(200);
 
-      const response = result.response as ISyncRequestResponse;
+      const response = result.response as ISyncRequestApiResponse;
 
       expect(response.available).toEqual([]);
       expect(response.missing).toEqual([]);
@@ -871,7 +873,7 @@ describe('Sync Endpoint Property Tests', () => {
 
       expect(result.statusCode).toBe(200);
 
-      const response = result.response as IReconcileResponse;
+      const response = result.response as IReconcileApiResponse;
 
       // Result should have valid structure
       expect(typeof response.result.success).toBe('boolean');

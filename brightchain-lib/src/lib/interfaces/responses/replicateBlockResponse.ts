@@ -1,11 +1,9 @@
-import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
 import { IReplicationNodeResult } from '../replicationNodeResult';
 
 /**
- * Replicate block response
+ * Replicate block response data
  */
-export interface IReplicateBlockResponse extends IApiMessageResponse {
+export interface IReplicateBlockResponseData {
   blockId: string;
   replicationResults: IReplicationNodeResult[];
-  [key: string]: unknown;
 }

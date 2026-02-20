@@ -1,5 +1,5 @@
 import { ApiRequestHandler } from '@digitaldefiance/node-express-suite';
-import { MembersResponse } from './responses/members';
+import { MembersResponse } from './responses/api-members-response';
 
 // Temporary interface until TypedHandlers is available
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

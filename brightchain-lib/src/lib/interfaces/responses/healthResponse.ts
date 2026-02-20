@@ -1,13 +1,11 @@
-import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
 import { HealthStatus } from '../../enumerations';
 
 /**
- * Basic health response
+ * Basic health response data
  */
-export interface IHealthResponse extends IApiMessageResponse {
+export interface IHealthResponseData {
   status: HealthStatus;
   uptime: number;
   timestamp: string;
   version: string;
-  [key: string]: unknown;
 }

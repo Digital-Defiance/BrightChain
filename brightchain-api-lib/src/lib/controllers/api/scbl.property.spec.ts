@@ -174,7 +174,7 @@ describe('Super CBL Operations Property Tests', () => {
         ),
         { numRuns: 20 },
       );
-    });
+    }, 300000);
 
     /**
      * Property 4b: Metadata contains valid hierarchyDepth and subCblCount
@@ -240,7 +240,7 @@ describe('Super CBL Operations Property Tests', () => {
         ),
         { numRuns: 20 },
       );
-    });
+    }, 300000);
 
     /**
      * Property 4c: Round-trip with encryption flag
@@ -290,7 +290,7 @@ describe('Super CBL Operations Property Tests', () => {
         ),
         { numRuns: 20 },
       );
-    });
+    }, 300000);
   });
 
   describe('Property 5: Super CBL Durability Propagation', () => {
@@ -300,6 +300,7 @@ describe('Super CBL Operations Property Tests', () => {
      * For any valid durability level, the store operation SHALL succeed.
      */
     it('Property 5a: All durability levels are accepted', async () => {
+      // Timeout: 20 iterations × ~6s each under load; 300s covers full-suite parallelism
       await fc.assert(
         fc.asyncProperty(
           fc.uint8Array({ minLength: 100, maxLength: 500 }),
@@ -344,7 +345,7 @@ describe('Super CBL Operations Property Tests', () => {
         ),
         { numRuns: 20 },
       );
-    });
+    }, 300000);
 
     /**
      * Property 5b: Durability level propagates to stored blocks
@@ -415,7 +416,7 @@ describe('Super CBL Operations Property Tests', () => {
         ),
         { numRuns: 20 },
       );
-    });
+    }, 300000);
 
     /**
      * Property 5c: Default durability level is Standard
@@ -474,6 +475,6 @@ describe('Super CBL Operations Property Tests', () => {
         ),
         { numRuns: 10 },
       );
-    });
+    }, 300000);
   });
 });

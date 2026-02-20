@@ -555,8 +555,7 @@ export class BrightPassController<
     req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
   ) {
     try {
-      const { vaultId } = (req as unknown as { params: VaultIdParams })
-        .params;
+      const { vaultId } = (req as unknown as { params: VaultIdParams }).params;
       const query = (req as unknown as { body: any }).body;
       const results = await this.brightPassService.searchEntries(
         vaultId,
@@ -711,8 +710,7 @@ export class BrightPassController<
     req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
   ) {
     try {
-      const { vaultId } = (req as unknown as { params: VaultIdParams })
-        .params;
+      const { vaultId } = (req as unknown as { params: VaultIdParams }).params;
       const { threshold, trustees } = (
         req as unknown as {
           body: { threshold: number; trustees: string[] };
@@ -738,8 +736,7 @@ export class BrightPassController<
     req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
   ) {
     try {
-      const { vaultId } = (req as unknown as { params: VaultIdParams })
-        .params;
+      const { vaultId } = (req as unknown as { params: VaultIdParams }).params;
       const { shares } = (
         req as unknown as { body: { shares: EncryptedShare[] } }
       ).body;
@@ -762,15 +759,12 @@ export class BrightPassController<
     req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
   ) {
     try {
-      const { vaultId } = (req as unknown as { params: VaultIdParams })
-        .params;
+      const { vaultId } = (req as unknown as { params: VaultIdParams }).params;
       const { format, fileContent } = (
         req as unknown as { body: { format: string; fileContent: string } }
       ).body;
       if (!format || !fileContent) {
-        return validationError(
-          'Missing required fields: format, fileContent',
-        );
+        return validationError('Missing required fields: format, fileContent');
       }
       const buf = Buffer.from(fileContent, 'base64');
       const result = await this.brightPassService.importFromFile(
