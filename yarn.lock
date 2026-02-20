@@ -12036,7 +12036,7 @@ __metadata:
     "@esbuild-plugins/node-modules-polyfill": "npm:^0.2.2"
     "@eslint/js": "npm:^9.39.1"
     "@ethereumjs/wallet": "npm:^10.0.0"
-    "@noble/curves": "npm:^1.4.2"
+    "@noble/curves": "npm:^2.0.1"
     "@noble/hashes": "npm:^1.4.0"
     "@rollup/plugin-alias": "npm:^6.0.0"
     "@rollup/plugin-commonjs": "npm:^29.0.0"
