@@ -98,6 +98,9 @@ export const privateMemberProfileHydrationSchema = <
         const bytes = typeof hex === 'string' ? hexToUint8Array(hex) : hex;
         return provider.fromBytes(bytes);
       }),
+      ...(storage.passwordHash !== undefined
+        ? { passwordHash: storage.passwordHash }
+        : {}),
       settings: (() => {
         const { autoReplication, minRedundancy, preferredRegions, ...rest } =
           storage.settings ?? {};
@@ -169,6 +172,9 @@ export const privateMemberProfileHydrationSchema = <
       id: idHex,
       trustedPeers: trustedPeersHex,
       blockedPeers: blockedPeersHex,
+      ...(hydrated.passwordHash !== undefined
+        ? { passwordHash: hydrated.passwordHash }
+        : {}),
       settings: {
         autoReplication,
         minRedundancy,

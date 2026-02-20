@@ -110,7 +110,7 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
     <>{children}</>
   ),
   RegisterFormWrapper: () => <div>RegisterFormWrapper</div>,
-  TDivBranded: (props: Record<string, unknown>) => (
+  TDivBranded: (_props: Record<string, unknown>) => (
     <div data-testid="branded-div">BrightChain</div>
   ),
   TopMenu: ({ Logo }: { Logo: React.ReactNode }) => (

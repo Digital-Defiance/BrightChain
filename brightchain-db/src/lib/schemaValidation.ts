@@ -4,7 +4,8 @@
  * Provides a lightweight JSON-Schema-like validator that can enforce
  * document structure on insert and update operations.
  *
- * Supported types: 'string', 'number', 'boolean', 'object', 'array', 'null', 'date', 'any'
+ * Supported types: 'string', 'number', 'boolean', 'object', 'array', 'null', 'date', 'any',
+ *   'branded-primitive', 'branded-interface'
  * Supported constraints:
  *   - required: array of required field names
  *   - properties: per-field type + constraints
@@ -16,6 +17,7 @@
  *   - additionalProperties: whether extra fields are allowed (default: true)
  */
 
+import { getInterfaceById } from '@digitaldefiance/branded-interface';
 import { ValidationError } from './errors';
 import {
   BsonDocument,
@@ -110,6 +112,60 @@ function validateField(
   fieldPath: string,
 ): ValidationFieldError[] {
   const errors: ValidationFieldError[] = [];
+
+  // Branded type dispatch — runs before standard type check
+  if (
+    schema.type === 'branded-primitive' ||
+    schema.type === 'branded-interface'
+  ) {
+    if (!schema.ref) {
+      errors.push({
+        field: fieldPath,
+        message: `Field type "${schema.type}" requires a "ref" pointing to a registered definition`,
+        value,
+      });
+      return errors;
+    }
+
+    const entry = getInterfaceById(schema.ref);
+
+    if (!entry) {
+      errors.push({
+        field: fieldPath,
+        message: `Branded type ref "${schema.ref}" is not registered in the Interface_Registry`,
+        value,
+      });
+      return errors;
+    }
+
+    const expectedKind =
+      schema.type === 'branded-primitive' ? 'primitive' : 'interface';
+
+    if (entry.kind !== expectedKind) {
+      errors.push({
+        field: fieldPath,
+        message: `Ref "${schema.ref}" has kind "${entry.kind}" but field type is "${schema.type}"`,
+        value,
+      });
+      return errors;
+    }
+
+    // OpaqueTypeDefinition has no validate() — only primitive and interface kinds do
+    const def = entry.definition as
+      | import('@digitaldefiance/branded-interface').BrandedPrimitiveDefinition
+      | import('@digitaldefiance/branded-interface').BrandedInterfaceDefinition;
+
+    if (!def.validate(value)) {
+      errors.push({
+        field: fieldPath,
+        message: `Value does not satisfy branded type "${schema.ref}"`,
+        value,
+      });
+    }
+
+    // Skip all standard checks — branded definition owns validation entirely
+    return errors;
+  }
 
   // Type check
   if (schema.type) {

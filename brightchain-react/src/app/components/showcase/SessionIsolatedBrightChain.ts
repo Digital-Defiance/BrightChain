@@ -1,4 +1,3 @@
-/* eslint-disable @nx/enforce-module-boundaries */
 /**
  * Session-isolated BrightChain implementation for the demo
  *

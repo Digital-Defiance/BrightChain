@@ -128,10 +128,7 @@ describe('Import Statements Property Tests', () => {
 
         lines.forEach((line, index) => {
           // Check if line imports from @digitaldefiance libraries
-          if (
-            line.includes("from '@digitaldefiance/ecies-lib'") ||
-            line.includes("from '@digitaldefiance/node-express-suite'")
-          ) {
+          if (line.includes("from '@digitaldefiance/ecies-lib'")) {
             for (const constant of brightchainConstants) {
               // Check if this BrightChain-specific constant is being imported from upstream
               const importMatch = line.match(/import\s+{([^}]+)}/);
@@ -182,8 +179,7 @@ describe('Import Statements Property Tests', () => {
           content.includes("from '../constants'") ||
           content.includes("from './interfaces/constants'") ||
           content.includes("from '../interfaces/constants'") ||
-          content.includes("from '@digitaldefiance/ecies-lib'") ||
-          content.includes("from '@digitaldefiance/node-express-suite'")
+          content.includes("from '@digitaldefiance/ecies-lib'")
         ) {
           constantsRelatedFiles.add(relativePath);
         }

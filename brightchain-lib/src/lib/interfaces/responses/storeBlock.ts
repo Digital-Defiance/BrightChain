@@ -1,5 +1,3 @@
-import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
-
-export interface IStoreBlockResponse extends IApiMessageResponse {
+export interface IStoreBlockResponseData {
   blockId: string;
 }

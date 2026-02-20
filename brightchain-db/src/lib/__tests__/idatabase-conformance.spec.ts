@@ -9,7 +9,10 @@
  * _Requirements: 4.10, 5.1, 5.5_
  */
 
-import type { ICollection, IDatabase } from '@brightchain/brightchain-lib';
+import type {
+  ICollection,
+  IDatabase,
+} from '@digitaldefiance/node-express-suite';
 import { MockBlockStore } from '../../__tests__/helpers/mockBlockStore';
 import { Collection } from '../collection';
 import { BrightChainDb } from '../database';

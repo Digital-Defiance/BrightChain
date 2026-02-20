@@ -292,7 +292,9 @@ export class BlocksController<
    * ```
    */
   private async handleStoreBlock(
-    req: Parameters<ApiRequestHandler<IStoreBlockResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<IStoreBlockResponse | ApiErrorResponse>
+    >[0],
   ): Promise<IStatusCodeResponse<IStoreBlockResponse | ApiErrorResponse>> {
     try {
       const {
@@ -444,8 +446,12 @@ export class BlocksController<
    * ```
    */
   private async handleGetBlockMetadata(
-    req: Parameters<ApiRequestHandler<IGetBlockMetadataResponse | ApiErrorResponse>>[0],
-  ): Promise<IStatusCodeResponse<IGetBlockMetadataResponse | ApiErrorResponse>> {
+    req: Parameters<
+      ApiRequestHandler<IGetBlockMetadataResponse | ApiErrorResponse>
+    >[0],
+  ): Promise<
+    IStatusCodeResponse<IGetBlockMetadataResponse | ApiErrorResponse>
+  > {
     try {
       const { blockId } = (req as unknown as GetBlockMetadataRequest).params;
 
@@ -499,7 +505,9 @@ export class BlocksController<
    * ```
    */
   private async handleDeleteBlock(
-    req: Parameters<ApiRequestHandler<IDeleteBlockResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<IDeleteBlockResponse | ApiErrorResponse>
+    >[0],
   ): Promise<IStatusCodeResponse<IDeleteBlockResponse | ApiErrorResponse>> {
     try {
       const { blockId } = (req as unknown as DeleteBlockRequest).params;
@@ -556,7 +564,9 @@ export class BlocksController<
    * ```
    */
   private async handleBrightenBlock(
-    req: Parameters<ApiRequestHandler<IBrightenBlockResponse | ApiErrorResponse>>[0],
+    req: Parameters<
+      ApiRequestHandler<IBrightenBlockResponse | ApiErrorResponse>
+    >[0],
   ): Promise<IStatusCodeResponse<IBrightenBlockResponse | ApiErrorResponse>> {
     try {
       const { blockId, randomBlockCount } = (

@@ -52,12 +52,14 @@ export class MemberStore<
   private readonly memberIndex: Map<string, IMemberIndexEntry<TID>>;
   private readonly regionIndex: Map<string, Set<string>>;
   private readonly nameIndex: Map<string, string>; // name -> member ID mapping
+  private readonly emailIndex: Map<string, string>; // email -> member ID mapping
 
   constructor(blockStore: IBlockStore) {
     this.blockStore = blockStore;
     this.memberIndex = new Map<string, IMemberIndexEntry<TID>>();
     this.regionIndex = new Map<string, Set<string>>();
     this.nameIndex = new Map<string, string>();
+    this.emailIndex = new Map<string, string>();
   }
 
   /**
@@ -393,10 +395,14 @@ export class MemberStore<
       // Add to name index
       this.nameIndex.set(data.name, doc!.id);
 
+      // Add to email index
+      this.emailIndex.set(data.contactEmail.toString(), doc!.id);
+
       rollbackOperations.push(async () => {
         if (doc) {
           this.memberIndex.delete(doc.id);
           this.nameIndex.delete(data.name);
+          this.emailIndex.delete(data.contactEmail.toString());
         }
         if (data.region) {
           const regionSet = this.regionIndex.get(data.region);
@@ -780,6 +786,9 @@ export class MemberStore<
             changes.privateChanges?.blockedPeers ??
             currentProfile.privateProfile?.blockedPeers ??
             [],
+          passwordHash:
+            changes.privateChanges?.passwordHash ??
+            currentProfile.privateProfile?.passwordHash,
           settings: changes.privateChanges?.settings ??
             currentProfile.privateProfile?.settings ?? {
               autoReplication: true,
@@ -899,6 +908,14 @@ export class MemberStore<
       }
     }
 
+    // Find and remove from email index
+    for (const [email, memberId] of this.emailIndex.entries()) {
+      if (memberId === uint8ArrayToHex(provider.toBytes(id))) {
+        this.emailIndex.delete(email);
+        break;
+      }
+    }
+
     // Remove from indices
     this.memberIndex.delete(uint8ArrayToHex(provider.toBytes(id)));
     if (indexEntry.region) {
@@ -960,6 +977,32 @@ export class MemberStore<
             criteria.id,
           ),
       );
+    }
+    if (criteria.name) {
+      const memberId = this.nameIndex.get(criteria.name);
+      if (memberId) {
+        results = results.filter(
+          (entry) =>
+            uint8ArrayToHex(
+              ServiceProvider.getInstance<TID>().idProvider.toBytes(entry.id),
+            ) === memberId,
+        );
+      } else {
+        results = [];
+      }
+    }
+    if (criteria.email) {
+      const memberId = this.emailIndex.get(criteria.email);
+      if (memberId) {
+        results = results.filter(
+          (entry) =>
+            uint8ArrayToHex(
+              ServiceProvider.getInstance<TID>().idProvider.toBytes(entry.id),
+            ) === memberId,
+        );
+      } else {
+        results = [];
+      }
     }
     if (criteria.type) {
       results = results.filter((entry) => entry.type === criteria.type);

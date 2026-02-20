@@ -5,12 +5,16 @@ export * from './lib/transforms';
 // Export Node.js specific services
 export * from './lib/services';
 
+// Database initialization
+export * from './lib/adapters/brightChainDbDocumentStoreAdapter';
+export * from './lib/databaseInit';
+
 // API lib exports
 export * from './lib/appConstants';
 export * from './lib/application';
-export * from './lib/upstream-stubs';
 export * from './lib/constants';
 export * from './lib/controllers';
+export * from './lib/upstream-stubs';
 // Note: UserController is exported from controllers/api, not controllers/user (which is the legacy location)
 export * from './lib/enumerations';
 export * from './lib/environment';
@@ -21,6 +25,7 @@ export * from './lib/interfaces';
 // Duplicate with brightchain-lib: export * from './lib/interfaces/wallet-seed';
 
 export * from './lib/datastore';
+export * from './lib/middleware';
 export * from './lib/middlewares';
 export * from './lib/routers';
 // Note: FEC types (ParityData, FecRecoveryResult, IFecService) are re-exported from brightchain-lib
@@ -29,6 +34,9 @@ export * from './lib/availability';
 export * from './lib/blockFetch';
 export * from './lib/utils/errorResponse';
 export * from './lib/utils/type-converters';
+
+// Validation utilities
+export * from './lib/validation/userValidation';
 // Explicitly export types from shared-types
 export type {
   ClientSession,

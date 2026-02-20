@@ -1,10 +1,8 @@
-import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
 import { INodeInfo } from '../nodeInfo';
 
 /**
- * Get node response
+ * Get node response data
  */
-export interface IGetNodeResponse extends IApiMessageResponse {
+export interface IGetNodeResponseData {
   node: INodeInfo;
-  [key: string]: unknown;
 }
