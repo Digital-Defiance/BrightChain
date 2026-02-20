@@ -2094,24 +2094,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@brightchain/brightchain-lib@npm:0.17.0, @brightchain/brightchain-lib@workspace:brightchain-lib":
-  version: 0.0.0-use.local
-  resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
+"@brightchain/brightchain-lib@npm:0.17.0":
+  version: 0.17.0
+  resolution: "@brightchain/brightchain-lib@npm:0.17.0"
   dependencies:
     "@digitaldefiance/ecies-lib": "npm:^4.19.4"
     "@digitaldefiance/i18n-lib": "npm:^4.6.3"
     "@noble/hashes": "npm:^1.4.0"
-    "@types/nat-upnp": "npm:^1.1.5"
-    "@types/qrcode": "npm:^1.5.6"
-    "@types/uuid": "npm:^9.0.7"
     nat-pmp: "npm:^1.0.0"
     nat-upnp: "npm:^1.1.1"
     otpauth: "npm:^9.5.0"
     qrcode: "npm:^1.5.4"
     tslib: "npm:^2.3.0"
     uuid: "npm:11.0.5"
-  languageName: unknown
-  linkType: soft
+  checksum: 10c0/af0f84ebc07740727899bea7cdf88fe4523a2a82548d2d6fa5bada8ac7bf7effac85548fe5f5c653e57467a593b89f3606b5775020808dc50d338dd5d01ebffe
+  languageName: node
+  linkType: hard
 
 "@brightchain/brightchain-lib@npm:^0.16.0":
   version: 0.16.0
@@ -2130,6 +2128,25 @@ __metadata:
   checksum: 10c0/1271c56f91fbdef1ba1121acec0cd8aecaa4b701eb73b6baf9b6f67a7c73858dedb1f11cf6e0cfd3c2a1bd9eb8b0cab41b924141d4eb1e6337c9ff6181454133
   languageName: node
   linkType: hard
+
+"@brightchain/brightchain-lib@workspace:brightchain-lib":
+  version: 0.0.0-use.local
+  resolution: "@brightchain/brightchain-lib@workspace:brightchain-lib"
+  dependencies:
+    "@digitaldefiance/ecies-lib": "npm:^4.19.4"
+    "@digitaldefiance/i18n-lib": "npm:^4.6.3"
+    "@noble/hashes": "npm:^1.4.0"
+    "@types/nat-upnp": "npm:^1.1.5"
+    "@types/qrcode": "npm:^1.5.6"
+    "@types/uuid": "npm:^9.0.7"
+    nat-pmp: "npm:^1.0.0"
+    nat-upnp: "npm:^1.1.1"
+    otpauth: "npm:^9.5.0"
+    qrcode: "npm:^1.5.4"
+    tslib: "npm:^2.3.0"
+    uuid: "npm:11.0.5"
+  languageName: unknown
+  linkType: soft
 
 "@brightchain/db@workspace:brightchain-db":
   version: 0.0.0-use.local
