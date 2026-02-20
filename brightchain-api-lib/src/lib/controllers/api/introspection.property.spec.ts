@@ -1587,11 +1587,13 @@ describe('Feature: lumen-brightchain-client-protocol, Property 16: Introspection
     )
     .map(([totalCapacity, currentUsage, blockCountEntries]) => {
       const blockCounts: Record<string, number> = {};
-      let totalBlocks = 0;
       for (const [type, count] of blockCountEntries) {
         blockCounts[type] = count;
-        totalBlocks += count;
       }
+      const totalBlocks = Object.values(blockCounts).reduce(
+        (sum, c) => sum + c,
+        0,
+      );
       return {
         totalCapacity,
         currentUsage,
