@@ -3,6 +3,7 @@ import {
   BrightChainApiStrings,
   Environment as BrightChainEnvironment,
   BrightChainMemberInitService,
+  DefaultBackendIdType,
   type IBrightChainMemberInitConfig,
 } from '@brightchain/brightchain-api-lib';
 import type { IBrightChainMemberInitInput } from '@brightchain/brightchain-lib';
@@ -12,12 +13,17 @@ import {
   GlobalActiveContext,
   IActiveContext,
 } from '@digitaldefiance/i18n-lib';
-import { ECIESService } from '@digitaldefiance/node-ecies-lib';
+import {
+  ECIESService,
+  GuidV4Provider,
+  PlatformID,
+  registerNodeRuntimeConfiguration,
+} from '@digitaldefiance/node-ecies-lib';
 import {
   ApplicationConcrete,
   DatabaseInitializationService,
   debugLog,
-  Environment,
+  IConstants,
   IServerInitResult,
 } from '@digitaldefiance/node-express-suite';
 import {
@@ -28,6 +34,22 @@ import {
 } from '@digitaldefiance/suite-core-lib';
 import { randomBytes } from 'crypto';
 import { join } from 'path';
+
+class BrightChainInitUserDbApplication<
+  TID extends PlatformID = DefaultBackendIdType,
+> extends ApplicationConcrete<TID> {
+  public override get environment(): BrightChainEnvironment<TID> {
+    return super.environment as BrightChainEnvironment<TID>;
+  }
+  constructor(
+    environment: BrightChainEnvironment<TID>,
+    constants: IConstants = AppConstants,
+  ) {
+    constants.idProvider = new GuidV4Provider();
+    super(environment, constants);
+    registerNodeRuntimeConfiguration('guid-config', constants);
+  }
+}
 
 async function main() {
   const context = GlobalActiveContext.getInstance<
@@ -83,8 +105,8 @@ async function main() {
     'brightchain-inituserdb',
     '.env',
   );
-  const env: Environment = new Environment(envDir, true);
-  const app = new ApplicationConcrete(env, AppConstants);
+  const env: BrightChainEnvironment = new BrightChainEnvironment(envDir, true);
+  const app = new BrightChainInitUserDbApplication(env, AppConstants);
   context.languageContextSpace = 'admin';
   const shouldDropDatabase = process.argv.includes('--drop');
   debugLog(
@@ -94,7 +116,7 @@ async function main() {
       SuiteCoreStringKey.Admin_TransactionsEnabledDisabledTemplate,
       {
         STATE: getSuiteCoreTranslation(
-          app.environment.mongo.useTransactions
+          app.environment.useTransactions
             ? SuiteCoreStringKey.Common_Enabled
             : SuiteCoreStringKey.Common_Disabled,
         ),

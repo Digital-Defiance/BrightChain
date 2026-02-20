@@ -32,6 +32,15 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
     this._adminId = value;
   }
 
+  private _useTransactions: boolean;
+
+  /**
+   * Use transactions for database operations (default: true)
+   */
+  public get useTransactions(): boolean {
+    return this._useTransactions;
+  }
+
   private _memberPoolName: string;
   /**
    * Member pool name (e.g. 'BrightChain')
@@ -58,6 +67,7 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
     // BrightChain-specific environment variables
     this._fontAwesomeKitId = envObj['FONTAWESOME_KIT_ID'] ?? '';
 
+    this._useTransactions = envObj['USE_TRANSACTIONS'] === 'true';
     this._memberPoolName = envObj['MEMBER_POOL_NAME'] ?? 'BrightChain';
 
     this._blockStorePath =

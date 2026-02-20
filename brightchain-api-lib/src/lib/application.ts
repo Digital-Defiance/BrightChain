@@ -6,7 +6,7 @@ import {
   IReconciliationService,
   MemberStore,
 } from '@brightchain/brightchain-lib';
-import { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import { GuidProvider, GuidV4Provider, PlatformID, registerNodeRuntimeConfiguration } from '@digitaldefiance/node-ecies-lib';
 import {
   debugLog,
   IApplication,
@@ -80,6 +80,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   private _httpServer: Server | null = null;
 
   constructor(environment: Environment<TID>) {
+    AppConstants.idProvider = new GuidV4Provider();
     super(
       environment,
       // apiRouterFactory — creates BrightChain's ApiRouter
@@ -99,6 +100,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
       // customInitMiddleware — wrap Middlewares.init to match upstream signature
       (app: Parameters<typeof Middlewares.init>[0]) => Middlewares.init(app),
     );
+    registerNodeRuntimeConfiguration('guid-config', AppConstants);
     this.keyStorage = SecureKeyStorage.getInstance();
     this._brightchainDocumentStore = createBlockDocumentStore({
       useMemory: true,
