@@ -12219,7 +12219,7 @@ __metadata:
     prettier: "npm:^3.4.2"
     prettier-plugin-organize-imports: "npm:^4.1.0"
     qrcode: "npm:^1.5.4"
-    rand-seed: "npm:^1.0.2"
+    rand-seed: "npm:^3.0.0"
     react: "npm:19.2.4"
     react-dom: "npm:19.2.4"
     react-refresh: "npm:^0.10.0"
@@ -23766,10 +23766,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rand-seed@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "rand-seed@npm:1.0.2"
-  checksum: 10c0/f5a487645d2992ed42df6cbdf499b6df2a053f72b38fa116dddbbb1c6ea36f93009eecaab402cd3347ba3b1a7dd2f9827f394f3397122c5907e73205f6cbb326
+"rand-seed@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "rand-seed@npm:3.0.0"
+  checksum: 10c0/bab94205b204e5c2c455b0b31198ff513261321ef35767e167ffe55fada6962840e7396361770c5b6ab261d6725d30e9f6480da6dd3149ef73a786037a85aacb
   languageName: node
   linkType: hard
 
