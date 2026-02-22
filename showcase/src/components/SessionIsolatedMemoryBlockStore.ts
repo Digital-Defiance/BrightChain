@@ -22,6 +22,7 @@ import {
   RawDataBlock,
   constantTimeXor,
   createBlockHandle,
+  lengthToClosestBlockSize,
 } from '@brightchain/brightchain-lib';
 
 /**
@@ -264,7 +265,11 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
    * Store a block's data (alias for setData)
    */
   public async put(key: Checksum | string, data: Uint8Array): Promise<void> {
-    const block = new RawDataBlock(this._blockSize, data);
+    const effectiveSize =
+      data.length > (this._blockSize as number)
+        ? lengthToClosestBlockSize(data.length)
+        : this._blockSize;
+    const block = new RawDataBlock(effectiveSize, data);
     await this.setData(block);
   }
 

@@ -1,5 +1,4 @@
-import { IFecService } from '@brightchain/brightchain-lib';
-import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
+import { BlockSize, IFecService } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { IBrightChainApplication } from '../interfaces';
 import { DefaultBackendIdType } from '../shared-types';

@@ -243,6 +243,12 @@ export class MemoryBlockStore implements IBlockStore {
     data: Uint8Array,
     options?: BlockStoreOptions,
   ): Promise<void> {
+    if (
+      this._blockSize !== BlockSize.Unknown &&
+      data.length > (this._blockSize as number)
+    ) {
+      throw new StoreError(StoreErrorType.BlockValidationFailed);
+    }
     const block = new RawDataBlock(this._blockSize, data);
     await this.setData(block, options);
   }

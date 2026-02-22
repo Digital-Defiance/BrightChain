@@ -13,6 +13,7 @@ export * from './permissionService';
 // ── messageOperationsService (has MessageNotFoundError — conflicts with conversationService) ─
 export {
   MessageAuthorError,
+  MessageNotFoundError,
   MessageOperationsService,
   MessageNotFoundError as MessageOpsNotFoundError,
   MessagePermissionError,
@@ -43,6 +44,7 @@ export {
   MemberAlreadyInGroupError,
   MemberMutedError,
   NotGroupMemberError,
+  NotMessageAuthorError,
   ReactionNotFoundError,
   extractKeyFromDefault,
   type KeyEncryptionHandler,

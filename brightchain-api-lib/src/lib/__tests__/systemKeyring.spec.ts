@@ -14,6 +14,7 @@ import {
   it,
 } from '@jest/globals';
 import * as fs from 'fs/promises';
+import * as os from 'os';
 import * as path from 'path';
 import { KeyringType, SystemKeyring } from '../systemKeyring';
 
@@ -28,7 +29,7 @@ describe('SystemKeyring', () => {
 
   beforeAll(async () => {
     // Use a test directory
-    const testDir = path.join(__dirname, '.test-keys');
+    const testDir = path.join(os.tmpdir(), `.test-keys-${Date.now()}`);
     process.env['HOME'] = testDir;
     await fs.mkdir(testDir, { recursive: true });
   });
@@ -36,7 +37,7 @@ describe('SystemKeyring', () => {
   afterAll(async () => {
     // Clean up
     try {
-      const testDir = path.join(__dirname, '.test-keys');
+      const testDir = process.env['HOME'] || '';
       await fs.rm(testDir, { recursive: true, force: true });
     } catch {
       // Ignore

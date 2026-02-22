@@ -19,6 +19,8 @@
 
 import {
   createMailbox,
+  EmailError,
+  EmailErrorType,
   IDeleteEmailResponse,
   IForwardEmailResponse,
   IGetDeliveryStatusResponse,
@@ -30,13 +32,9 @@ import {
   IMarkAsReadResponse,
   IQueryInboxResponse,
   IReplyToEmailResponse,
+  isEmailError,
   ISendEmailResponse,
 } from '@brightchain/brightchain-lib';
-import { EmailErrorType } from '@brightchain/brightchain-lib/lib/enumerations/messaging/emailErrorType';
-import {
-  EmailError,
-  isEmailError,
-} from '@brightchain/brightchain-lib/lib/errors/messaging/emailError';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {

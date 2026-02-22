@@ -1,13 +1,23 @@
 /**
+ * @jest-environment node
+ */
+
+/**
  * Integration tests for BrightChain i18n from the React app perspective.
  *
  * Verifies that when brightchain-lib's i18n engine is initialized,
  * the SuiteCore template variables resolve to BrightChain values
  * (not the suite-core defaults like 'New Site').
  *
- * Uses direct sub-path imports to avoid triggering the full brightchain-lib
- * init chain (ECIES service, block factories, etc.) which requires Node.js
- * globals not available in jsdom.
+ * Uses node test environment because brightchain-lib's init chain creates
+ * an ECIESService at module load time, and the GuidV4Provider.serialize()
+ * method uses Buffer.from() internally. In jsdom, Node's Buffer fails
+ * `instanceof Uint8Array` due to cross-realm prototype differences,
+ * causing GUID validation to fail.
+ *
+ * Imports use sub-module paths rather than the barrel export because
+ * the barrel's circular init chain causes CoreConstants to be undefined
+ * in the i18n-setup module's closure on first evaluation.
  */
 import {
   CoreConstants,

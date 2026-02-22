@@ -15,11 +15,11 @@ import type {
   ISignCommitResponse,
   ISignTagResponse,
   IVerifyGitSignatureResponse,
-} from '@brightchain/brightchain-lib/lib/interfaces/responses/cryptoResponses';
+} from '@brightchain/brightchain-lib';
 import {
   GitSigningError,
   GitSigningService,
-} from '@brightchain/brightchain-lib/lib/services/crypto/gitSigningService';
+} from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import {

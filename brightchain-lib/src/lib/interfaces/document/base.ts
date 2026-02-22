@@ -1,4 +1,13 @@
 /**
+ * @fileoverview Base document interface for BrightChain models.
+ * Provides common document structure for all database models.
+ * @module documents/base
+ */
+
+import type { PlatformID } from '@digitaldefiance/ecies-lib';
+import { Document } from '../../documents';
+
+/**
  * Schema for converting between storage and hydrated formats
  */
 export interface IHydrationSchema<TStorage, THydrated> {
@@ -86,3 +95,14 @@ export interface IPrivateDocument<
    */
   clearPrivateDataProvider: () => void;
 }
+
+/**
+ * Base document interface combining Mongoose Document with custom type.
+ * @template T - Document data type
+ * @template TID - Platform ID type (defaults to Buffer)
+ * @typedef {Document<I> & T} BaseDocument
+ */
+export type BaseDocument<
+  T,
+  TID extends PlatformID = Uint8Array,
+> = Document<TID> & T;

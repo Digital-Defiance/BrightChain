@@ -10,20 +10,18 @@
  * Requirements: 3.1-3.8
  */
 
-import { DeviceType } from '@brightchain/brightchain-lib/lib/enumerations/deviceType';
-import { type IDeviceKeyStorage } from '@brightchain/brightchain-lib/lib/interfaces/identity/deviceKeyStorage';
-import type {
-  IListDevicesResponse,
-  IProvisionDeviceResponse,
-  IRenameDeviceResponse,
-  IRevokeDeviceResponse,
-} from '@brightchain/brightchain-lib/lib/interfaces/responses/deviceResponses';
 import {
   DeviceKeyGenerationError,
   DeviceKeyStorageError,
   DeviceProvisioningService,
+  DeviceType,
   InvalidPaperKeyError,
-} from '@brightchain/brightchain-lib/lib/services/identity';
+  type IDeviceKeyStorage,
+  type IListDevicesResponse,
+  type IProvisionDeviceResponse,
+  type IRenameDeviceResponse,
+  type IRevokeDeviceResponse,
+} from '@brightchain/brightchain-lib';
 import { ECIESService, PlatformID } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import {

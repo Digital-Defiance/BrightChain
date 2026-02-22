@@ -2,6 +2,7 @@ export * from './blockCapacity.service';
 export * from './blockService';
 export * from './cblService';
 export * from './checksum.service';
+export * from './crypto';
 export * from './fec.service';
 export * from './member';
 export * from './memberStore';

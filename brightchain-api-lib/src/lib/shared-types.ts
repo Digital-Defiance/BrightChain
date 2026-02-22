@@ -1,9 +1,3 @@
-import type { IEmailTokenDocument } from './documents/email-token';
-import type { IMnemonicDocument } from './documents/mnemonic';
-import type { IRoleDocument } from './documents/role';
-import { IUsedDirectLoginTokenDocument } from './documents/used-direct-login-token';
-import type { IUserDocument } from './documents/user';
-import type { IUserRoleDocument } from './documents/user-role';
 import { ModelName } from './enumerations/model-name';
 import { SchemaCollection } from './enumerations/schema-collection';
 
@@ -51,18 +45,6 @@ export interface IBlockStorageSchemaEntry<T> {
   modelName: ModelName;
   schema: IBlockStorageSchema<T>;
 }
-
-/**
- * Schema map interface
- */
-export type ModelDocMap = {
-  EmailToken: IEmailTokenDocument;
-  Mnemonic: IMnemonicDocument;
-  Role: IRoleDocument;
-  UsedDirectLoginToken: IUsedDirectLoginTokenDocument;
-  User: IUserDocument;
-  UserRole: IUserRoleDocument;
-};
 
 /**
  * Schema map type for validation schemas

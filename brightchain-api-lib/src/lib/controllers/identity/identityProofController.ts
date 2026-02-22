@@ -12,23 +12,21 @@
  * Requirements: 4.1-4.10
  */
 
-import { ProofPlatform } from '@brightchain/brightchain-lib/lib/enumerations/proofPlatform';
-import { VerificationStatus } from '@brightchain/brightchain-lib/lib/enumerations/verificationStatus';
-import type { IIdentityProof } from '@brightchain/brightchain-lib/lib/interfaces/identity/identityProof';
-import type {
-  ICheckProofUrlResponse,
-  ICreateProofResponse,
-  IGetInstructionsResponse,
-  IListProofsResponse,
-  IRevokeProofResponse,
-  IVerifyProofResponse,
-} from '@brightchain/brightchain-lib/lib/interfaces/responses/identityProofResponses';
 import {
   IdentityProofService,
   ProofCreationError,
+  ProofPlatform,
   ProofUrlError,
   UnsupportedPlatformError,
-} from '@brightchain/brightchain-lib/lib/services/identity';
+  VerificationStatus,
+  type ICheckProofUrlResponse,
+  type ICreateProofResponse,
+  type IGetInstructionsResponse,
+  type IIdentityProof,
+  type IListProofsResponse,
+  type IRevokeProofResponse,
+  type IVerifyProofResponse,
+} from '@brightchain/brightchain-lib';
 import { ECIESService, Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import {

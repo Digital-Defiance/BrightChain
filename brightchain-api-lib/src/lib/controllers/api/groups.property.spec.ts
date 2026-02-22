@@ -9,12 +9,12 @@
  * Property 11: Group metadata completeness
  */
 
-import { DefaultRole } from '@brightchain/brightchain-lib';
 import {
-  GroupService,
+  DefaultRole,
   extractKeyFromDefault,
-} from '@brightchain/brightchain-lib/lib/services/communication/groupService';
-import { PermissionService } from '@brightchain/brightchain-lib/lib/services/communication/permissionService';
+  GroupService,
+  PermissionService,
+} from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 
 /** Compare two Uint8Arrays for equality (Uint8Array has no .equals method). */

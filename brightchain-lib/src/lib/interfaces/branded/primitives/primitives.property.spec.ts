@@ -25,9 +25,9 @@ jest.setTimeout(30000);
 // Arbitraries for VALID inputs
 // ---------------------------------------------------------------------------
 
-/** Generates valid ShortHexGuid strings: exactly 8 lowercase hex chars */
+/** Generates valid ShortHexGuid strings: exactly 32 lowercase hex chars */
 const validShortHexGuidArb: fc.Arbitrary<string> =
-  fc.stringMatching(/^[0-9a-f]{8}$/);
+  fc.stringMatching(/^[0-9a-f]{32}$/);
 
 /** Generates valid EmailString values matching /^[^\s@]+@[^\s@]+\.[^\s@]+$/ */
 const validEmailArb: fc.Arbitrary<string> = fc
@@ -62,8 +62,8 @@ const validISO8601Arb: fc.Arbitrary<string> = fc
 
 /** Generates strings that are NOT valid ShortHexGuids (wrong length or wrong chars) */
 const invalidShortHexGuidArb: fc.Arbitrary<string> = fc
-  .string({ minLength: 0, maxLength: 20 })
-  .filter((s) => !/^[0-9a-f]{8}$/.test(s));
+  .string({ minLength: 0, maxLength: 40 })
+  .filter((s) => !/^[0-9a-f]{32}$/.test(s));
 
 /** Generates strings that are NOT valid emails (no @ or no dot after @) */
 const invalidEmailArb: fc.Arbitrary<string> = fc
@@ -98,7 +98,7 @@ describe('Property 1: Branded primitive validation correctness', () => {
   // ShortHexGuid — Requirement 1.1
   // -------------------------------------------------------------------------
   describe('ShortHexGuidPrimitive', () => {
-    it('validate() returns true for all valid 8-char lowercase hex strings', () => {
+    it('validate() returns true for all valid 32-char lowercase hex strings', () => {
       fc.assert(
         fc.property(validShortHexGuidArb, (value: string) => {
           expect(ShortHexGuidPrimitive.validate(value)).toBe(true);
@@ -107,7 +107,7 @@ describe('Property 1: Branded primitive validation correctness', () => {
       );
     });
 
-    it('validate() returns false for strings that do not match /^[0-9a-f]{8}$/', () => {
+    it('validate() returns false for strings that do not match /^[0-9a-f]{32}$/', () => {
       fc.assert(
         fc.property(invalidShortHexGuidArb, (value: string) => {
           expect(ShortHexGuidPrimitive.validate(value)).toBe(false);
@@ -303,11 +303,11 @@ describe('Property 1: Branded primitive validation correctness', () => {
   // Cross-primitive: validate() agrees with the expected predicate for any string
   // -------------------------------------------------------------------------
   describe('validate() iff format matches — biconditional property', () => {
-    it('ShortHexGuidPrimitive.validate(s) === /^[0-9a-f]{8}$/.test(s) for any string', () => {
+    it('ShortHexGuidPrimitive.validate(s) === /^[0-9a-f]{32}$/.test(s) for any string', () => {
       fc.assert(
         fc.property(fc.string(), (s: string) => {
           expect(ShortHexGuidPrimitive.validate(s)).toBe(
-            /^[0-9a-f]{8}$/.test(s),
+            /^[0-9a-f]{32}$/.test(s),
           );
         }),
         { numRuns: 200 },

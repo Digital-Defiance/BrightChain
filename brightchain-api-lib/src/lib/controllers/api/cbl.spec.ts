@@ -424,7 +424,11 @@ describe('CBL Controller API Integration Tests', () => {
               .send({ cblData: cblBase64 });
 
             // Should always return 200 for valid input
-            expect(response.status).toBe(200);
+            if (response.status !== 200) {
+              throw new Error(
+                `Store failed for seed=${seed}: status=${response.status} body=${JSON.stringify(response.body)}`,
+              );
+            }
 
             // Should always have correct structure
             expect(response.body.success).toBe(true);
@@ -437,7 +441,11 @@ describe('CBL Controller API Integration Tests', () => {
               .get('/api/cbl/retrieve')
               .query({ magnetUrl: response.body.data.magnetUrl });
 
-            expect(retrieveResponse.status).toBe(200);
+            if (retrieveResponse.status !== 200) {
+              throw new Error(
+                `Retrieve failed for seed=${seed}: status=${retrieveResponse.status} body=${JSON.stringify(retrieveResponse.body)}`,
+              );
+            }
             expect(retrieveResponse.body.data.cblData).toBe(cblBase64);
           },
         ),
@@ -459,7 +467,11 @@ describe('CBL Controller API Integration Tests', () => {
               durabilityLevel,
             });
 
-            expect(response.status).toBe(200);
+            if (response.status !== 200) {
+              throw new Error(
+                `Store failed for seed=${seed} durability=${durabilityLevel}: status=${response.status} body=${JSON.stringify(response.body)}`,
+              );
+            }
             expect(response.body.success).toBe(true);
           },
         ),

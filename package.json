@@ -1,6 +1,6 @@
 {
   "name": "brightchain",
-  "version": "0.14.0",
+  "version": "0.18.0",
   "license": "MIT",
   "workspaces": [
     "brightchain-lib",
@@ -19,6 +19,7 @@
   "scripts": {
     "build:all": "NODE_ENV=production npx nx run-many --target=build --all --configuration=production",
     "build:all:dev": "NODE_ENV=development npx nx run-many --target=build --all --configuration=development",
+    "build:all:dev:stream": "NODE_ENV=development npx nx run-many --target=build --all --configuration=development --outputStyle=stream",
     "build:all:prod": "NODE_ENV=production npx nx run-many --target=build --all --configuration=production",
     "build:all:dev:logged": "yarn build:all:dev --outputStyle=stream 2>&1 | ansifilter -o build.log",
     "brightchain-lib:build:dev": "npx nx run brightchain-lib:build:development --configuration=development",
@@ -45,27 +46,31 @@
     "commands": "./list-scripts.sh",
     "publish:brightchain-lib": "NODE_OPTIONS='--max-old-space-size=16384' npx nx build brightchain-lib --skip-nx-cache && cd dist/brightchain-lib && npm publish --registry https://registry.npmjs.org/ . --access public",
     "serve:dev:stream": "NODE_ENV=development npx nx serve brightchain-react --configuration=development --host 0.0.0.0 --port 3000 --outputStyle=stream",
-    "serve:api:stream": "NX_TUI=false NODE_ENV=development npx nx serve-full brightchain-api --configuration=development --outputStyle=stream"
+    "serve:api:stream": "NX_TUI=false NODE_ENV=development npx nx serve-full brightchain-api --configuration=development --outputStyle=stream",
+    "inituserdb": "yarn build:all:dev:stream && npx nx serve brightchain-inituserdb --output-style=stream",
+    "inituserdb:full": "yarn build:all:dev:stream && npx nx serve brightchain-inituserdb --output-style=stream --args=--gen-system-user-mnemonic --args=--gen-member-user-mnemonic --args=--gen-mnemonic-hmac-secret --args=--gen-mnemonic-encryption-key",
+    "inituserdb:drop": "yarn build:all:dev:stream && npx nx serve brightchain-inituserdb --output-style=stream --args=--drop",
+    "inituserdb:full:drop": "yarn build:all:dev:stream && npx nx serve brightchain-inituserdb --output-style=stream --args=--drop --args=--gen-system-user-mnemonic --args=--gen-member-user-mnemonic --args=--gen-mnemonic-hmac-secret --args=--gen-mnemonic-encryption-key"
   },
   "private": true,
   "resolutions": {
-    "@digitaldefiance/ecies-lib": "4.19.4",
-    "@digitaldefiance/node-ecies-lib": "4.19.4",
-    "@digitaldefiance/i18n-lib": "4.6.3"
+    "@digitaldefiance/ecies-lib": "4.19.5",
+    "@digitaldefiance/node-ecies-lib": "4.19.5",
+    "@digitaldefiance/i18n-lib": "4.6.4"
   },
   "dependencies": {
-    "@brightchain/brightchain-api-lib": "^0.13.0",
-    "@brightchain/brightchain-lib": "^0.13.0",
+    "@brightchain/brightchain-api-lib": "^0.17.1",
+    "@brightchain/brightchain-lib": "^0.17.1",
     "@digitaldefiance/branded-enum": "0.0.7",
-    "@digitaldefiance/branded-interface": "0.0.4",
-    "@digitaldefiance/ecies-lib": "^4.19.4",
-    "@digitaldefiance/express-suite-react-components": "^2.14.8",
-    "@digitaldefiance/i18n-lib": "^4.6.3",
-    "@digitaldefiance/node-ecies-lib": "^4.19.4",
-    "@digitaldefiance/node-express-suite": "^3.17.0",
+    "@digitaldefiance/branded-interface": "0.0.5",
+    "@digitaldefiance/ecies-lib": "^4.19.5",
+    "@digitaldefiance/express-suite-react-components": "^2.14.11",
+    "@digitaldefiance/i18n-lib": "^4.6.4",
+    "@digitaldefiance/node-ecies-lib": "^4.19.6",
+    "@digitaldefiance/node-express-suite": "^4.1.2",
     "@digitaldefiance/reed-solomon-erasure.wasm": "^1.0.2",
     "@digitaldefiance/secrets": "^2.0.7",
-    "@digitaldefiance/suite-core-lib": "^3.13.4",
+    "@digitaldefiance/suite-core-lib": "^3.13.5",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@mui/icons-material": "^7.3.7",

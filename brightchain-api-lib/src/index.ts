@@ -14,7 +14,6 @@ export * from './lib/appConstants';
 export * from './lib/application';
 export * from './lib/constants';
 export * from './lib/controllers';
-export * from './lib/upstream-stubs';
 // Note: UserController is exported from controllers/api, not controllers/user (which is the legacy location)
 export * from './lib/enumerations';
 export * from './lib/environment';
@@ -55,3 +54,7 @@ export * from './lib/browserKeyring';
 export * from './lib/nodeKeyring';
 export * from './lib/secureEnclaveKeyring';
 export * from './lib/systemKeyring';
+
+// Plugin architecture
+export * from './lib/plugins/brightchain-database-plugin';
+export * from './lib/plugins/configure-brightchain-app';
