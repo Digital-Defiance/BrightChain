@@ -72,13 +72,15 @@ const MEMBER_INDEX_COLLECTION = 'member_index';
 
 // ─── Block store helpers (not exported) ──────────────────────────────────────
 
-function buildMemoryBlockStore(): MemoryBlockStore {
-  return new MemoryBlockStore(BlockSize.Small);
+function buildMemoryBlockStore(
+  blockSize: BlockSize = BlockSize.Medium,
+): MemoryBlockStore {
+  return new MemoryBlockStore(blockSize);
 }
 
 function buildDiskBlockStore(
   storePath: string,
-  blockSize: BlockSize = BlockSize.Small,
+  blockSize: BlockSize = BlockSize.Medium,
 ): DiskBlockStore {
   return new DiskBlockStore({ storePath, blockSize });
 }
@@ -181,7 +183,7 @@ export class BrightChainMemberInitService {
     if (!this._db) {
       const blockStore = useDisk
         ? buildDiskBlockStore(config.blockStorePath!, config.blockSize)
-        : buildMemoryBlockStore();
+        : buildMemoryBlockStore(config.blockSize);
 
       const db = new BrightChainDb(blockStore, {
         name: config.memberPoolName,
