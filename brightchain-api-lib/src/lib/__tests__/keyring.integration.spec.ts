@@ -22,7 +22,10 @@ import { KeyringType, SystemKeyring } from '../systemKeyring';
 
 describe('Keyring Integration Tests', () => {
   const originalHome = process.env['HOME'];
-  const testDir = path.join(os.tmpdir(), `.integration-test-keys-${Date.now()}`);
+  const testDir = path.join(
+    os.tmpdir(),
+    `.integration-test-keys-${Date.now()}`,
+  );
   const testKeyIds: string[] = [];
 
   // Helper to generate unique key IDs

@@ -84,7 +84,7 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
     const parsedSize = envObj['BRIGHTCHAIN_BLOCKSIZE_BYTES']
       ? Number.parseInt(envObj['BRIGHTCHAIN_BLOCKSIZE_BYTES'], 10)
       : undefined;
-    this._blockStoreBlockSize = (parsedSize ?? BlockSize.Small) as BlockSize;
+    this._blockStoreBlockSize = (parsedSize ?? BlockSize.Medium) as BlockSize;
 
     this._useMemoryDocumentStore = Boolean(envObj['USE_MEMORY_DOCSTORE']);
 
