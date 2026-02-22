@@ -31,7 +31,10 @@ import {
   GuidV4Provider,
   Member,
 } from '@digitaldefiance/node-ecies-lib';
-import { KeyWrappingService } from '@digitaldefiance/node-express-suite';
+import {
+  BackupCode,
+  KeyWrappingService,
+} from '@digitaldefiance/node-express-suite';
 import type { IBackupCode } from '@digitaldefiance/suite-core-lib';
 import { createHmac } from 'crypto';
 import { MNEMONICS_COLLECTION } from '../interfaces/storage/mnemonicSchema';
@@ -79,6 +82,7 @@ function makeMemoryConfig(): IBrightChainMemberInitConfig {
 
 /**
  * Build a full IBrightChainUserInitEntry with real ECIES key pairs.
+ * Returns the Member so backup codes can be encrypted before disposal.
  */
 function buildEntry(
   shortId: string,
@@ -93,7 +97,11 @@ function buildEntry(
   roleAdmin: boolean,
   roleMember: boolean,
   roleSystem: boolean,
-): { entry: IBrightChainUserInitEntry<GuidV4Buffer>; mnemonic: SecureString } {
+): {
+  entry: IBrightChainUserInitEntry<GuidV4Buffer>;
+  mnemonic: SecureString;
+  member: Member<Buffer>;
+} {
   const { member, mnemonic } = Member.newMember(
     eciesService,
     memberType,
@@ -125,11 +133,6 @@ function buildEntry(
 
   const publicKeyHex = member.publicKey.toString('hex');
 
-  // Use empty backup codes for test simplicity — schema allows any array
-  const backupCodes: IBackupCode[] = [];
-
-  member.dispose();
-
   return {
     entry: {
       id: guidProvider.idFromString(shortId),
@@ -141,7 +144,7 @@ function buildEntry(
       passwordWrappedPrivateKey: wrappedKey,
       mnemonicRecovery,
       mnemonicHmac,
-      backupCodes,
+      backupCodes: [], // filled in after async encryption
       roleId: guidProvider.idFromString(roleId),
       userRoleId: guidProvider.idFromString(userRoleId),
       mnemonicDocId: guidProvider.idFromString(mnemonicDocId),
@@ -151,10 +154,17 @@ function buildEntry(
       roleSystem,
     },
     mnemonic,
+    member,
   };
 }
 
-function makeRbacInput(): IBrightChainRbacInitInput<GuidV4Buffer> {
+/**
+ * Build RBAC input with real encrypted backup codes — mirrors what
+ * brightchain-inituserdb/src/main.ts does in production.
+ */
+async function makeRbacInput(): Promise<
+  IBrightChainRbacInitInput<GuidV4Buffer>
+> {
   const system = buildEntry(
     SYSTEM_ID,
     SYSTEM_FULL_ID,
@@ -197,6 +207,36 @@ function makeRbacInput(): IBrightChainRbacInitInput<GuidV4Buffer> {
     true,
     false,
   );
+
+  // Generate and encrypt backup codes just like main.ts does
+  const generateCodes = (): BackupCode[] =>
+    Array.from(
+      { length: 10 },
+      () => new BackupCode(BackupCode.generateBackupCode()),
+    );
+
+  const [encSystemCodes, encAdminCodes, encMemberCodes] = await Promise.all([
+    BackupCode.encryptBackupCodes(
+      system.member,
+      system.member,
+      generateCodes(),
+    ),
+    BackupCode.encryptBackupCodes(admin.member, system.member, generateCodes()),
+    BackupCode.encryptBackupCodes(
+      member.member,
+      system.member,
+      generateCodes(),
+    ),
+  ]);
+
+  system.entry.backupCodes = encSystemCodes;
+  admin.entry.backupCodes = encAdminCodes;
+  member.entry.backupCodes = encMemberCodes;
+
+  system.member.dispose();
+  admin.member.dispose();
+  member.member.dispose();
+
   return {
     systemUser: system.entry,
     adminUser: admin.entry,
@@ -231,7 +271,7 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
     const service = new BrightChainMemberInitService();
     const result = await service.initializeWithRbac(
       makeMemoryConfig(),
-      makeRbacInput(),
+      await makeRbacInput(),
     );
 
     expect(result.alreadyInitialized).toBe(false);
@@ -247,7 +287,10 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
 
     beforeAll(async () => {
       service = new BrightChainMemberInitService();
-      await service.initializeWithRbac(makeMemoryConfig(), makeRbacInput());
+      await service.initializeWithRbac(
+        makeMemoryConfig(),
+        await makeRbacInput(),
+      );
     });
 
     it('contains exactly 3 role documents', async () => {
@@ -311,7 +354,10 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
 
     beforeAll(async () => {
       service = new BrightChainMemberInitService();
-      await service.initializeWithRbac(makeMemoryConfig(), makeRbacInput());
+      await service.initializeWithRbac(
+        makeMemoryConfig(),
+        await makeRbacInput(),
+      );
     });
 
     it('contains exactly 3 user documents', async () => {
@@ -382,6 +428,23 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
         expect(typeof wrapped['iterations']).toBe('number');
       }
     });
+
+    it('all users have 10 encrypted backup codes', async () => {
+      const users =
+        service.db.collection<Record<string, unknown>>(USERS_COLLECTION);
+      const docs = await users.find({}).toArray();
+      for (const doc of docs) {
+        const codes = doc['backupCodes'] as IBackupCode[];
+        expect(codes).toHaveLength(10);
+        for (const code of codes) {
+          expect(code.version).toBe('1.0.0');
+          expect(typeof code.checksumSalt).toBe('string');
+          expect(typeof code.checksum).toBe('string');
+          expect(typeof code.encrypted).toBe('string');
+          expect(code.encrypted.length).toBeGreaterThan(0);
+        }
+      }
+    });
   });
 
   // ── User-roles collection ─────────────────────────────────────────────
@@ -391,7 +454,10 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
 
     beforeAll(async () => {
       service = new BrightChainMemberInitService();
-      await service.initializeWithRbac(makeMemoryConfig(), makeRbacInput());
+      await service.initializeWithRbac(
+        makeMemoryConfig(),
+        await makeRbacInput(),
+      );
     });
 
     it('contains exactly 3 user-role junction documents', async () => {
@@ -440,7 +506,10 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
 
     beforeAll(async () => {
       service = new BrightChainMemberInitService();
-      await service.initializeWithRbac(makeMemoryConfig(), makeRbacInput());
+      await service.initializeWithRbac(
+        makeMemoryConfig(),
+        await makeRbacInput(),
+      );
     });
 
     it('contains exactly 3 mnemonic documents', async () => {
@@ -484,7 +553,7 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
     it('second call does not duplicate any documents', async () => {
       const service = new BrightChainMemberInitService();
       const config = makeMemoryConfig();
-      const input = makeRbacInput();
+      const input = await makeRbacInput();
 
       const first = await service.initializeWithRbac(config, input);
       expect(first.insertedCount).toBe(15);
@@ -518,7 +587,10 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
 
     beforeAll(async () => {
       service = new BrightChainMemberInitService();
-      await service.initializeWithRbac(makeMemoryConfig(), makeRbacInput());
+      await service.initializeWithRbac(
+        makeMemoryConfig(),
+        await makeRbacInput(),
+      );
     });
 
     it('can find a user by username and resolve their role', async () => {

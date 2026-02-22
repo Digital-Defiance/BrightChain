@@ -2394,9 +2394,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/node-express-suite@npm:^4.1.2":
-  version: 4.1.2
-  resolution: "@digitaldefiance/node-express-suite@npm:4.1.2"
+"@digitaldefiance/node-express-suite@npm:^4.1.3":
+  version: 4.1.3
+  resolution: "@digitaldefiance/node-express-suite@npm:4.1.3"
   dependencies:
     "@digitaldefiance/branded-interface": "npm:^0.0.5"
     "@digitaldefiance/ecies-lib": "npm:4.19.5"
@@ -2423,7 +2423,7 @@ __metadata:
     nat-upnp: "npm:^1.1.1"
     reflect-metadata: "npm:^0.2.2"
     zod: "npm:^3.24.0"
-  checksum: 10c0/3c37b361707934318d7be1549b8de0112c6609629f5adf5d39bdb707af29f997dad9a7168ba82b4e6f1250e23b5ea8e356a58290fd0efdfe4ba5486f850ef9e6
+  checksum: 10c0/e327c43f6104274e11ad259e983e1ceef18bb7ad6fe041dba215a55575805e7f2a53040787689c594bcda42de62a82bd5c37354f1cfaf7bf357cd520964fdd63
   languageName: node
   linkType: hard
 
@@ -12095,7 +12095,7 @@ __metadata:
     "@digitaldefiance/express-suite-test-utils": "npm:^1.1.0"
     "@digitaldefiance/i18n-lib": "npm:^4.6.4"
     "@digitaldefiance/node-ecies-lib": "npm:^4.19.6"
-    "@digitaldefiance/node-express-suite": "npm:^4.1.2"
+    "@digitaldefiance/node-express-suite": "npm:^4.1.3"
     "@digitaldefiance/reed-solomon-erasure.wasm": "npm:^1.0.2"
     "@digitaldefiance/secrets": "npm:^2.0.7"
     "@digitaldefiance/suite-core-lib": "npm:^3.13.5"

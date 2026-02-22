@@ -113,6 +113,17 @@ async function main() {
     );
   }
 
+  // Auto-generate MNEMONIC_HMAC_SECRET if not already in the environment.
+  // The Environment constructor validates this as a 64-char hex string,
+  // so it must exist before construction.
+  if (!process.env.MNEMONIC_HMAC_SECRET) {
+    process.env.MNEMONIC_HMAC_SECRET = randomBytes(32).toString('hex');
+  }
+  // Auto-generate MNEMONIC_ENCRYPTION_KEY if not already in the environment.
+  if (!process.env.MNEMONIC_ENCRYPTION_KEY) {
+    process.env.MNEMONIC_ENCRYPTION_KEY = randomBytes(32).toString('hex');
+  }
+
   const envFilePath = join(
     BaseApplication.distDir,
     'brightchain-inituserdb',
@@ -318,6 +329,11 @@ async function main() {
       bcEnv.get('MNEMONIC_HMAC_SECRET') ?? randomBytes(32).toString('hex');
     appendEnvVar(envFilePath, 'MNEMONIC_HMAC_SECRET', hmacSecretHex);
     const hmacSecretBuf = Buffer.from(hmacSecretHex, 'hex');
+
+    // Persist encryption key so subsequent runs reuse the same value
+    const encryptionKeyHex =
+      bcEnv.get('MNEMONIC_ENCRYPTION_KEY') ?? randomBytes(32).toString('hex');
+    appendEnvVar(envFilePath, 'MNEMONIC_ENCRYPTION_KEY', encryptionKeyHex);
 
     /**
      * Build a full IBrightChainUserInitEntry for a single user.
