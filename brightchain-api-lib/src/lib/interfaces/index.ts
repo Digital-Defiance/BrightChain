@@ -17,6 +17,7 @@ export type * from './environment-aws';
 export type * from './introspectionApiResponses';
 export type * from './jwt-sign-response';
 export type * from './member';
+export type * from './member-init-config';
 export type * from './members-handlers';
 export type * from './multi-encrypted-message';
 export type * from './multi-encrypted-parsed-header';

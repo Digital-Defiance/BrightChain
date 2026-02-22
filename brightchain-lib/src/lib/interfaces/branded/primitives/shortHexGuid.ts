@@ -2,7 +2,7 @@ import type { BrandedPrimitiveDefinition } from '@digitaldefiance/branded-interf
 import { createBrandedPrimitive } from '@digitaldefiance/branded-interface';
 
 function isShortHexGuid(value: string): boolean {
-  return /^[0-9a-f]{8}$/.test(value);
+  return /^[0-9a-f]{32}$/.test(value);
 }
 
 export const ShortHexGuidPrimitive: BrandedPrimitiveDefinition<string> =

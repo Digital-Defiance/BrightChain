@@ -1,16 +1,10 @@
 import {
-  EnergyAccountStore,
   EnergyLedger,
   IAvailabilityService,
   IDiscoveryProtocol,
   IReconciliationService,
-  MemberStore,
 } from '@brightchain/brightchain-lib';
-import {
-  GuidV4Provider,
-  PlatformID,
-  registerNodeRuntimeConfiguration,
-} from '@digitaldefiance/node-ecies-lib';
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   debugLog,
   IApplication,
@@ -22,7 +16,6 @@ import { Server } from 'http';
 import { AppConstants } from './appConstants';
 import { GossipService } from './availability/gossipService';
 import { PoolDiscoveryService } from './availability/poolDiscoveryService';
-import { brightchainDatabaseInit } from './databaseInit';
 import { createBlockDocumentStore } from './datastore/block-document-store-factory';
 import {
   DocumentCollection,
@@ -30,8 +23,9 @@ import {
   DocumentStore,
 } from './datastore/document-store';
 import { Environment } from './environment';
-import { IBrightChainInitResult } from './interfaces/brightchain-init-result';
 import { Middlewares } from './middlewares';
+import { BrightChainDatabasePlugin } from './plugins/brightchain-database-plugin';
+import { configureBrightChainApp } from './plugins/configure-brightchain-app';
 import { ApiRouter } from './routers/api';
 import { AppRouter } from './routers/app';
 import { AuthService, EmailService, SecureKeyStorage } from './services';
@@ -39,11 +33,6 @@ import { ClientWebSocketServer } from './services/clientWebSocketServer';
 import { EventNotificationSystem } from './services/eventNotificationSystem';
 import { MessagePassingService } from './services/messagePassingService';
 import { WebSocketMessageServer } from './services/webSocketMessageServer';
-import {
-  noOpDatabaseInitFunction,
-  noOpInitResultHashFunction,
-  noOpSchemaMapFactory,
-} from './upstream-stubs';
 
 /**
  * Application class for BrightChain.
@@ -55,12 +44,10 @@ import {
  * BrightChain-specific concerns (services, WebSocket, UPnP, EventNotificationSystem)
  * are initialized after the upstream start() completes.
  *
- * Mongoose-related upstream parameters are satisfied with no-op stubs since
- * BrightChain uses DocumentStore/BlockDocumentStore instead.
+ * Database integration is handled by the BrightChainDatabasePlugin, registered
+ * via configureBrightChainApp() during construction.
  */
 export class App<TID extends PlatformID> extends UpstreamApplication<
-  IBrightChainInitResult<TID>,
-  Record<string, never>,
   TID,
   Environment<TID>,
   IConstants,
@@ -69,6 +56,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   private controllers: Map<string, unknown> = new Map();
   private readonly keyStorage: SecureKeyStorage;
   private readonly _brightchainDocumentStore: DocumentStore;
+  private _plugin: BrightChainDatabasePlugin<TID>;
   private apiRouter: ApiRouter<TID> | null = null;
   private eventSystem: EventNotificationSystem | null = null;
   private wsServer: WebSocketMessageServer | null = null;
@@ -84,34 +72,10 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   private _httpServer: Server | null = null;
 
   constructor(environment: Environment<TID>) {
-    // Switch to GUID-based IDs (16 bytes) and sync all derived constants
-    const guidProvider = new GuidV4Provider();
-    AppConstants.idProvider = guidProvider;
-    AppConstants.MEMBER_ID_LENGTH = guidProvider.byteLength;
-    AppConstants.ECIES = {
-      ...AppConstants.ECIES,
-      MULTIPLE: {
-        ...AppConstants.ECIES.MULTIPLE,
-        RECIPIENT_ID_SIZE: guidProvider.byteLength,
-      },
-    };
-    // Sync node-ecies-lib ENCRYPTION constants if present
-    if ('ENCRYPTION' in AppConstants && AppConstants.ENCRYPTION) {
-      AppConstants.ENCRYPTION = {
-        ...AppConstants.ENCRYPTION,
-        RECIPIENT_ID_SIZE: guidProvider.byteLength,
-      };
-    }
     super(
       environment,
       // apiRouterFactory — creates BrightChain's ApiRouter
       (app: IApplication<TID>) => new ApiRouter<TID>(app as App<TID>),
-      // schemaMapFactory — no-op, returns empty object (no mongoose models)
-      noOpSchemaMapFactory,
-      // databaseInitFunction — no-op, returns { success: true }
-      noOpDatabaseInitFunction,
-      // initResultHashFunction — no-op, returns 'no-mongoose'
-      noOpInitResultHashFunction,
       // cspConfig — undefined; BrightChain's Middlewares.init handles CSP
       undefined,
       // constants
@@ -120,8 +84,13 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
       (apiRouter) => new AppRouter<TID>(apiRouter as ApiRouter<TID>),
       // customInitMiddleware — wrap Middlewares.init to match upstream signature
       (app: Parameters<typeof Middlewares.init>[0]) => Middlewares.init(app),
+      // No database param — BrightChainDatabasePlugin provides it
     );
-    registerNodeRuntimeConfiguration('guid-config', AppConstants);
+
+    // Configure GUID provider, constants, runtime registration, and register plugin
+    const { plugin } = configureBrightChainApp(this, environment);
+    this._plugin = plugin;
+
     this.keyStorage = SecureKeyStorage.getInstance();
     this._brightchainDocumentStore = createBlockDocumentStore({
       useMemory: true,
@@ -130,20 +99,20 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
 
   /**
    * Get the BrightChain document store.
-   * Overrides the upstream mongoose-based `db` getter since BrightChain
-   * uses its own BlockDocumentStore instead of mongoose.
+   * Overrides the upstream Mongoose-specific `db` getter since BrightChain
+   * uses its own BlockDocumentStore instead of Mongoose.
    */
-  // @ts-expect-error — intentional override: BrightChain uses DocumentStore, not mongoose
+  // @ts-expect-error — BrightChain returns DocumentStore, not typeof mongoose
   public override get db(): DocumentStore {
     return this._brightchainDocumentStore;
   }
 
   /**
    * Get a collection from the BrightChain document store by name.
-   * Overrides the upstream mongoose-based `getModel()` to delegate
+   * Overrides the upstream Mongoose-specific `getModel()` to delegate
    * to the BlockDocumentStore's collection() method.
    */
-  // @ts-expect-error — intentional override: returns DocumentCollection, not mongoose Model
+  // @ts-expect-error — BrightChain returns DocumentCollection, not mongoose Model
   public override getModel<U extends DocumentRecord>(
     modelName: string,
   ): DocumentCollection<U> {
@@ -170,32 +139,31 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     this.expressApp.listen = originalListen;
 
     // ── BrightChain-specific initialization ──────────────────────────
+    // After super.start(), the plugin lifecycle is complete:
+    //   plugin.connect() → brightchainDatabaseInit()
+    //   plugin.init(app) → BrightChainAuthenticationProvider created
+    // Retrieve stores from the plugin instead of calling brightchainDatabaseInit() directly.
 
     await this.keyStorage.initializeFromEnvironment();
 
-    // Initialize persistent (or ephemeral) database stack
-    const initResult = await brightchainDatabaseInit(this.environment);
-    if (!initResult.success || !initResult.backend) {
-      throw new Error(
-        `BrightChain database initialization failed: ${initResult.error ?? 'unknown error'}`,
-      );
-    }
-
-    const { blockStore, db, memberStore, energyStore } = initResult.backend;
+    const blockStore = this._plugin.blockStore;
+    const documentStore = this._plugin.documentStore;
+    const memberStore = this._plugin.memberStore;
+    const energyStore = this._plugin.energyStore;
 
     const energyLedger = new EnergyLedger();
     const emailService = new EmailService<TID>(this);
     const authService = new AuthService<TID>(
       this,
-      memberStore as MemberStore,
-      energyStore as EnergyAccountStore,
+      memberStore,
+      energyStore,
       emailService,
       this.environment.jwtSecret,
     );
 
-    // Register services from init result and additional services
+    // Register services from plugin stores and additional services
     this.services.register('blockStore', () => blockStore);
-    this.services.register('db', () => db);
+    this.services.register('db', () => documentStore);
     this.services.register('memberStore', () => memberStore);
     this.services.register('energyStore', () => energyStore);
     this.services.register('energyLedger', () => energyLedger);

@@ -15,13 +15,14 @@ import {
 } from '@jest/globals';
 import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
+import * as os from 'os';
 import * as path from 'path';
 import { NodeKeyring } from '../nodeKeyring';
 import { KeyringType, SystemKeyring } from '../systemKeyring';
 
 describe('Keyring Integration Tests', () => {
   const originalHome = process.env['HOME'];
-  const testDir = path.join(__dirname, '.integration-test-keys');
+  const testDir = path.join(os.tmpdir(), `.integration-test-keys-${Date.now()}`);
   const testKeyIds: string[] = [];
 
   // Helper to generate unique key IDs

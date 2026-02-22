@@ -9,9 +9,12 @@
  * Property 15: Invite token validity
  */
 
-import { ChannelVisibility, DefaultRole } from '@brightchain/brightchain-lib';
-import { ChannelService } from '@brightchain/brightchain-lib/lib/services/communication/channelService';
-import { PermissionService } from '@brightchain/brightchain-lib/lib/services/communication/permissionService';
+import {
+  ChannelService,
+  ChannelVisibility,
+  DefaultRole,
+  PermissionService,
+} from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 
 // --- arbitraries ---

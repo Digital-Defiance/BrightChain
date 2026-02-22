@@ -67,6 +67,15 @@
         "command": "cp brightchain-inituserdb/.env dist/brightchain-inituserdb/.env"
       }
     },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "brightchain-inituserdb/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "cache": true
+    },
     "post-build": {
       "executor": "nx:run-commands",
       "dependsOn": ["build"],
