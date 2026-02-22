@@ -27,6 +27,14 @@
  */
 
 import {
+  ChannelJoinDeniedError,
+  ChannelMemberMutedError,
+  ChannelMessageNotFoundError,
+  ChannelNameConflictError,
+  ChannelNotFoundError,
+  ChannelPermissionError,
+  ChannelReactionNotFoundError,
+  ChannelService,
   ChannelVisibility,
   DefaultRole,
   IAddReactionResponse,
@@ -49,23 +57,13 @@ import {
   ISendChannelMessageResponse,
   IUnpinMessageResponse,
   IUpdateChannelResponse,
-} from '@brightchain/brightchain-lib';
-import {
-  ChannelJoinDeniedError,
-  ChannelMemberMutedError,
-  ChannelMessageNotFoundError,
-  ChannelNameConflictError,
-  ChannelNotFoundError,
-  ChannelPermissionError,
-  ChannelReactionNotFoundError,
-  ChannelService,
   InviteTokenExpiredError,
   InviteTokenNotFoundError,
   MemberAlreadyInChannelError,
   NotChannelMemberError,
   NotMessageAuthorError,
-} from '@brightchain/brightchain-lib/lib/services/communication/channelService';
-import { PermissionService } from '@brightchain/brightchain-lib/lib/services/communication/permissionService';
+  PermissionService,
+} from '@brightchain/brightchain-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {

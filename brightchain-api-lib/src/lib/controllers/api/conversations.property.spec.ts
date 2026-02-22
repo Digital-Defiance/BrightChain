@@ -12,7 +12,7 @@
 import {
   ConversationService,
   RecipientNotReachableError,
-} from '@brightchain/brightchain-lib/lib/services/communication/conversationService';
+} from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 
 // --- arbitraries ---

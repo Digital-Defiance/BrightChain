@@ -10,19 +10,17 @@
  * Requirements: 5.1-5.10
  */
 
-import { ProofPlatform } from '@brightchain/brightchain-lib/lib/enumerations/proofPlatform';
-import type { IPublicProfile } from '@brightchain/brightchain-lib/lib/interfaces/identity/publicProfile';
-import type {
-  IGetProfileResponse,
-  ISearchDirectoryResponse,
-  ITogglePrivacyResponse,
-  IUpdateProfileResponse,
-} from '@brightchain/brightchain-lib/lib/interfaces/responses/directoryResponses';
 import {
   InvalidProfileError,
   ProfileNotFoundError,
+  ProofPlatform,
   PublicKeyDirectoryService,
-} from '@brightchain/brightchain-lib/lib/services/identity';
+  type IGetProfileResponse,
+  type IPublicProfile,
+  type ISearchDirectoryResponse,
+  type ITogglePrivacyResponse,
+  type IUpdateProfileResponse,
+} from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import {

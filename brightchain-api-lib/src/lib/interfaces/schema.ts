@@ -1,11 +1,12 @@
-import { IBaseDocument } from '../documents/base';
 import { IDiscriminatorCollections } from './discriminator-collections';
 
 /**
- * Interface for each schema in the schema map
+ * Interface for each schema in the schema map.
+ *
+ * NOTE: This interface is a legacy holdover from the Mongoose era.
+ * The `IBlockStorageSchemaEntry` in shared-types.ts is the current equivalent.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface ISchema<T extends IBaseDocument<any>> {
+export interface ISchema<T = unknown> {
   /**
    * The name of the collection, eg 'models'
    */

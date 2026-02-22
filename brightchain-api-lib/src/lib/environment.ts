@@ -3,7 +3,7 @@ import {
   Environment as BaseEnvironment,
   IConstants,
 } from '@digitaldefiance/node-express-suite';
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { BlockSize } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { IUpnpConfig, UpnpConfig } from '@digitaldefiance/node-express-suite';
@@ -24,11 +24,11 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
   private _blockStoreBlockSize: BlockSize;
   private _useMemoryDocumentStore: boolean;
 
-  private _adminId: any;
-  public override get adminId(): any {
+  private _adminId: TID | undefined;
+  public override get adminId(): TID | undefined {
     return this._adminId;
   }
-  public override set adminId(value: any) {
+  public override set adminId(value: TID | undefined) {
     this._adminId = value;
   }
 
@@ -57,9 +57,17 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
     };
   }
 
-  constructor(path?: string, initialization = false, override = true) {
-    // Cast Constants to IConstants - they share the same structure
-    super(path, initialization, override, Constants as unknown as IConstants);
+  constructor(
+    path?: string,
+    initialization = false,
+    override = true,
+    constants: IConstants = Constants as unknown as IConstants,
+  ) {
+    super(path, initialization, override, constants);
+
+    // Initialise _adminId from the value the parent constructor parsed/generated.
+    // The override exists so that adminId is mutable (BaseEnvironment is read-only).
+    this._adminId = super.adminId;
 
     const envObj = this.getObject();
 

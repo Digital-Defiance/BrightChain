@@ -1,13 +1,13 @@
 import {
+  ChannelService,
+  ConversationService,
+  GroupService,
   IAvailabilityService,
   IBlockStore,
   IDiscoveryProtocol,
   IReconciliationService,
+  PermissionService,
 } from '@brightchain/brightchain-lib';
-import { ChannelService } from '@brightchain/brightchain-lib/lib/services/communication/channelService';
-import { ConversationService } from '@brightchain/brightchain-lib/lib/services/communication/conversationService';
-import { GroupService } from '@brightchain/brightchain-lib/lib/services/communication/groupService';
-import { PermissionService } from '@brightchain/brightchain-lib/lib/services/communication/permissionService';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import { ECIESService, PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {

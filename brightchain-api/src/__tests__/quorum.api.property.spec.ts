@@ -13,11 +13,13 @@
  * verify the service layer integration rather than HTTP transport.
  */
 
-import { initializeBrightChain } from '@brightchain/brightchain-lib/lib/init';
-import { QuorumMemberMetadata } from '@brightchain/brightchain-lib/lib/interfaces/services/quorumService';
-import { QuorumService } from '@brightchain/brightchain-lib/lib/services/quorumService';
-import { ServiceProvider } from '@brightchain/brightchain-lib/lib/services/service.provider';
-import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
+import {
+  initializeBrightChain,
+  QuorumMemberMetadata,
+  QuorumService,
+  ServiceLocator,
+  ServiceProvider,
+} from '@brightchain/brightchain-lib';
 import {
   EmailString,
   IMemberWithMnemonic,

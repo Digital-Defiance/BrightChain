@@ -16,13 +16,15 @@
  * "To recover: A ^ B ^ C ^ Z = M"
  */
 
-import { RandomBlock } from '@brightchain/brightchain-lib/lib/blocks/random';
-import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
-import { WhitenedBlock } from '@brightchain/brightchain-lib/lib/blocks/whitened';
-import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
-import { ServiceProvider } from '@brightchain/brightchain-lib/lib/services/service.provider';
-import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
-import { MemoryBlockStore } from '@brightchain/brightchain-lib/lib/stores/memoryBlockStore';
+import {
+  BlockSize,
+  MemoryBlockStore,
+  RandomBlock,
+  RawDataBlock,
+  ServiceLocator,
+  ServiceProvider,
+  WhitenedBlock,
+} from '@brightchain/brightchain-lib';
 import { uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import { randomBytes } from 'crypto';
 

@@ -9,13 +9,16 @@
  */
 
 import { DiskBlockAsyncStore } from '@brightchain/brightchain-api-lib';
-import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
-import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
-import { ChecksumService } from '@brightchain/brightchain-lib/lib/services/checksum.service';
-import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
-import { Checksum } from '@brightchain/brightchain-lib/lib/types/checksum';
+import {
+  BlockSize,
+  Checksum,
+  ChecksumService,
+  RawDataBlock,
+  ServiceLocator,
+} from '@brightchain/brightchain-lib';
 import { randomBytes } from 'crypto';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 
 jest.mock('file-type', () => ({
@@ -38,7 +41,7 @@ describe('Storage Integration Tests', () => {
   beforeEach(async () => {
     // Create a temporary directory for test storage
     tempDir = path.join(
-      __dirname,
+      os.tmpdir(),
       `storage-test-${Date.now()}-${Math.random()}`,
     );
     fs.mkdirSync(tempDir, { recursive: true });

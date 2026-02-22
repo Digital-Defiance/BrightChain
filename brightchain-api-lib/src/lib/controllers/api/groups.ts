@@ -21,6 +21,11 @@
 
 import {
   DefaultRole,
+  GroupMessageNotFoundError,
+  GroupNotFoundError,
+  GroupNotMessageAuthorError,
+  GroupPermissionError,
+  GroupService,
   IAddGroupMembersResponse,
   IAddReactionResponse,
   IAssignRoleResponse,
@@ -34,19 +39,12 @@ import {
   IRemoveReactionResponse,
   ISendGroupMessageResponse,
   IUnpinMessageResponse,
-} from '@brightchain/brightchain-lib';
-import {
-  GroupMessageNotFoundError,
-  GroupNotFoundError,
-  GroupPermissionError,
-  GroupService,
   MemberAlreadyInGroupError,
   MemberMutedError,
   NotGroupMemberError,
-  NotMessageAuthorError,
+  PermissionService,
   ReactionNotFoundError,
-} from '@brightchain/brightchain-lib/lib/services/communication/groupService';
-import { PermissionService } from '@brightchain/brightchain-lib/lib/services/communication/permissionService';
+} from '@brightchain/brightchain-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -714,7 +712,7 @@ export class GroupController<
     if (error instanceof GroupMessageNotFoundError) {
       return notFoundError('Message', 'unknown');
     }
-    if (error instanceof NotMessageAuthorError) {
+    if (error instanceof GroupNotMessageAuthorError) {
       return forbiddenError(error.message);
     }
     if (error instanceof ReactionNotFoundError) {

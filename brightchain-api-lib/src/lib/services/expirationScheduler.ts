@@ -10,11 +10,11 @@
  * Requirements: 8.4, 8.6, 8.9
  */
 
-import { ICommunicationMessage } from '@brightchain/brightchain-lib/lib/interfaces/communication';
 import {
   ExplodingMessageService,
+  ICommunicationMessage,
   IExplodingMessageEvent,
-} from '@brightchain/brightchain-lib/lib/services/communication/explodingMessageService';
+} from '@brightchain/brightchain-lib';
 import { EventEmitter } from 'events';
 
 // ─── Types ──────────────────────────────────────────────────────────────────

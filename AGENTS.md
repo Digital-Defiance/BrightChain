@@ -47,3 +47,5 @@ IBaseData<TData> {
    Something: TData;
 }
 so that in the front end TData can be string and in the backend it can be say GuidV4Buffer.
+
+- Prefer creating .ts or .js files over executing node statements raw on the console.
