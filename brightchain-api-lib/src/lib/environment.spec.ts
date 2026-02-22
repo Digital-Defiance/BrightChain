@@ -157,16 +157,21 @@ describe('Environment Class', () => {
   });
 
   describe('adminId and idAdapter', () => {
-    it('should have adminId property', () => {
+    it('should have adminId property initialised from parent', () => {
       const env = new Environment(undefined, true);
-      expect(env.adminId).toBeUndefined();
+      // BaseEnvironment generates a fresh GUID when ADMIN_ID is not in env
+      expect(env.adminId).toBeDefined();
     });
 
     it('should allow setting adminId', () => {
       const env = new Environment(undefined, true);
-      const testId = 'test-admin-id';
-      env.adminId = testId;
-      expect(env.adminId).toBe(testId);
+      // Setting to undefined should work (the setter accepts TID | undefined)
+      env.adminId = undefined;
+      expect(env.adminId).toBeUndefined();
+      // Re-assign a value to confirm round-trip
+      const original = new Environment(undefined, true).adminId;
+      env.adminId = original;
+      expect(env.adminId).toBe(original);
     });
 
     it('should have idAdapter function', () => {

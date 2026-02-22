@@ -1,12 +1,12 @@
 import {
+  BlockSize,
   BlockStoreOptions,
   BrightenResult,
+  Checksum,
   IBlockMetadata,
   IFecService,
+  RawDataBlock,
 } from '@brightchain/brightchain-lib';
-import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
-import { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
-import { Checksum } from '@brightchain/brightchain-lib/lib/types/checksum';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { IBrightChainApplication } from '../interfaces';
 import { DefaultBackendIdType } from '../shared-types';

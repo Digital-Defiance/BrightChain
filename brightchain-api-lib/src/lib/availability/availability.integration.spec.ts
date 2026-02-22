@@ -22,6 +22,7 @@ import {
 import { randomBytes } from 'crypto';
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { AvailabilityService } from './availabilityService';
 import { BlockRegistry } from './blockRegistry';
@@ -282,7 +283,7 @@ class MockManifestProvider implements IManifestProvider {
  * Create a test node with all availability components
  */
 function createTestNode(nodeId: string) {
-  const tempDir = path.join(__dirname, `test-${nodeId}-${Date.now()}`);
+  const tempDir = path.join(os.tmpdir(), `test-${nodeId}-${Date.now()}`);
   fs.mkdirSync(tempDir, { recursive: true });
 
   const peerProvider = new MockPeerProvider(nodeId);

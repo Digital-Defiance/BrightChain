@@ -10,13 +10,13 @@
  */
 
 import {
+  ChannelService,
   ChannelVisibility,
   CommunicationEventType,
+  ConversationService,
+  GroupService,
+  PermissionService,
 } from '@brightchain/brightchain-lib';
-import { ChannelService } from '@brightchain/brightchain-lib/lib/services/communication/channelService';
-import { ConversationService } from '@brightchain/brightchain-lib/lib/services/communication/conversationService';
-import { GroupService } from '@brightchain/brightchain-lib/lib/services/communication/groupService';
-import { PermissionService } from '@brightchain/brightchain-lib/lib/services/communication/permissionService';
 import * as fc from 'fast-check';
 import { WebSocket } from 'ws';
 import { EventNotificationSystem } from './eventNotificationSystem';

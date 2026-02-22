@@ -12,12 +12,11 @@
  */
 import {
   InMemoryEmailMetadataStore,
+  createMailbox,
   type IEmailInput,
   type IGossipService,
   type MessageCBLService,
 } from '@brightchain/brightchain-lib';
-// Import value exports directly to avoid 'export type' re-export issue
-import { createMailbox } from '@brightchain/brightchain-lib/lib/interfaces/messaging/emailAddress';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { EventNotificationSystem } from './eventNotificationSystem';
 import { MessagePassingService } from './messagePassingService';

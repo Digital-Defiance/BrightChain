@@ -19,6 +19,7 @@ import {
   IBlockMetadata,
   IBlockStore,
   IFecService,
+  lengthToClosestBlockSize,
   padToBlockSize,
   ParityData,
   RawDataBlock,
@@ -398,7 +399,11 @@ export class DiskBlockStore implements IBlockStore {
     data: Uint8Array,
     options?: BlockStoreOptions,
   ): Promise<void> {
-    const block = new RawDataBlock(this._blockSize, data);
+    const effectiveSize =
+      data.length > (this._blockSize as number)
+        ? lengthToClosestBlockSize(data.length)
+        : this._blockSize;
+    const block = new RawDataBlock(effectiveSize, data);
     await this.setData(block, options);
   }
 

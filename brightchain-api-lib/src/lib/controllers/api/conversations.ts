@@ -12,21 +12,19 @@
  */
 
 import {
+  ConversationMessageNotFoundError,
+  ConversationNotFoundError,
+  ConversationNotMessageAuthorError,
+  ConversationService,
+  GroupPromotionNotConfiguredError,
   IDeleteMessageResponse,
   IGetMessagesResponse,
   IListConversationsResponse,
   IPromoteToGroupResponse,
   ISendDirectMessageResponse,
-} from '@brightchain/brightchain-lib';
-import {
-  ConversationNotFoundError,
-  ConversationService,
-  GroupPromotionNotConfiguredError,
-  MessageNotFoundError,
-  NotMessageAuthorError,
   NotParticipantError,
   RecipientNotReachableError,
-} from '@brightchain/brightchain-lib/lib/services/communication/conversationService';
+} from '@brightchain/brightchain-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -379,10 +377,10 @@ export class DirectMessageController<
     if (error instanceof NotParticipantError) {
       return forbiddenError(error.message);
     }
-    if (error instanceof MessageNotFoundError) {
+    if (error instanceof ConversationMessageNotFoundError) {
       return notFoundError('Message', 'unknown');
     }
-    if (error instanceof NotMessageAuthorError) {
+    if (error instanceof ConversationNotMessageAuthorError) {
       return forbiddenError(error.message);
     }
     if (error instanceof GroupPromotionNotConfiguredError) {

@@ -1,14 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type {
+  EmailTokenDocument,
+  RoleDocument,
+  UserDocument,
+  UserRoleDocument,
+} from '@digitaldefiance/node-express-suite';
 import {
   IEmailTokenFrontendObject,
   IRoleFrontendObject,
   IUserFrontendObject,
   IUserRoleFrontendObject,
 } from '@digitaldefiance/suite-core-lib';
-import { IEmailTokenDocument } from '../documents/email-token';
-import { IRoleDocument } from '../documents/role';
-import { IUserDocument } from '../documents/user';
-import { IUserRoleDocument } from '../documents/user-role';
 import { DefaultBackendIdType } from '../shared-types';
 
 // Convert ObjectId to string recursively
@@ -31,29 +33,25 @@ function objectIdToString(obj: any): any {
 }
 
 // Convert datastore documents to frontend-compatible objects
-export function userDocumentToFrontend(
-  doc: IUserDocument,
-): IUserFrontendObject {
+export function userDocumentToFrontend(doc: UserDocument): IUserFrontendObject {
   const obj = (doc as any).toObject();
   return objectIdToString(obj) as IUserFrontendObject;
 }
 
-export function roleDocumentToFrontend(
-  doc: IRoleDocument,
-): IRoleFrontendObject {
+export function roleDocumentToFrontend(doc: RoleDocument): IRoleFrontendObject {
   const obj = (doc as any).toObject();
   return objectIdToString(obj) as IRoleFrontendObject;
 }
 
 export function emailTokenDocumentToFrontend(
-  doc: IEmailTokenDocument,
+  doc: EmailTokenDocument,
 ): IEmailTokenFrontendObject {
   const obj = (doc as any).toObject();
   return objectIdToString(obj) as IEmailTokenFrontendObject;
 }
 
 export function userRoleDocumentToFrontend(
-  doc: IUserRoleDocument,
+  doc: UserRoleDocument,
 ): IUserRoleFrontendObject {
   const obj = (doc as any).toObject();
   return objectIdToString(obj) as IUserRoleFrontendObject;

@@ -8,8 +8,10 @@
  * Requirements: 2.1, 2.2, 2.3
  */
 
-import { ConversationService } from '@brightchain/brightchain-lib/lib/services/communication/conversationService';
-import { GroupService } from '@brightchain/brightchain-lib/lib/services/communication/groupService';
+import {
+  ConversationService,
+  GroupService,
+} from '@brightchain/brightchain-lib';
 
 /**
  * Connects the ConversationService's group promotion handler to the

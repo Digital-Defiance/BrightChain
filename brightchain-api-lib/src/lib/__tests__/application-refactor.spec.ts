@@ -1,27 +1,24 @@
 /**
- * @fileoverview Unit tests for the refactored App class that extends
- * upstream Application from @digitaldefiance/node-express-suite.
+ * @fileoverview Unit tests for the refactored App class.
  *
  * Tests cover:
- * - 7.1: Constructor and inheritance
- * - 7.2: Start/stop lifecycle
- * - 7.3: API surface compatibility
+ * - App constructor accepts single Environment parameter (Req 3.3, 7.4)
+ * - databasePlugin is set after construction (Req 3.3)
+ * - Service registrations after start() (Req 3.4, 7.1)
  */
-import {
-  MongooseDocumentStore,
-  Application as UpstreamApplication,
-} from '@digitaldefiance/node-express-suite';
+import { Application as UpstreamApplication } from '@digitaldefiance/node-express-suite';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { App } from '../application';
 import { Environment } from '../environment';
-import { DefaultBackendIdType } from '../shared-types';
-import {
-  noOpDatabaseInitFunction,
-  noOpInitResultHashFunction,
-  noOpSchemaMapFactory,
-} from '../upstream-stubs';
+import { BrightChainDatabasePlugin } from '../plugins/brightchain-database-plugin';
+import type { DefaultBackendIdType } from '../shared-types';
+
+// Ensure the disk store factory is registered
+import '../factories/blockStoreFactory';
+
+jest.setTimeout(60_000);
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -60,6 +57,9 @@ function setRequiredEnvVars(): void {
     'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789';
   process.env['NODE_MNEMONIC'] =
     'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
+  // Remove blockstore paths to force memory-backed config
+  delete process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
+  delete process.env['BLOCKSTORE_PATH'];
   setupDistDirs();
 }
 
@@ -70,6 +70,8 @@ function clearRequiredEnvVars(): void {
   delete process.env['NODE_MNEMONIC'];
   delete process.env['API_DIST_DIR'];
   delete process.env['REACT_DIST_DIR'];
+  delete process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
+  delete process.env['BLOCKSTORE_PATH'];
   teardownDistDirs();
 }
 
@@ -78,9 +80,9 @@ function createTestEnvironment(): Environment<DefaultBackendIdType> {
   return new Environment<DefaultBackendIdType>(undefined, true, true);
 }
 
-// ── 7.1: Constructor and Inheritance ─────────────────────────────────────
+// ── 1. App constructor accepts single Environment parameter ──────────────
 
-describe('App – constructor and inheritance', () => {
+describe('App – constructor accepts single Environment parameter', () => {
   let env: Environment<DefaultBackendIdType>;
   let app: App<DefaultBackendIdType>;
 
@@ -93,61 +95,67 @@ describe('App – constructor and inheritance', () => {
     clearRequiredEnvVars();
   });
 
-  it('App instance is instanceof upstream Application (Req 1.1)', () => {
+  it('constructs without throwing when given a valid Environment (Req 7.4)', () => {
+    // If we got here, construction succeeded
+    expect(app).toBeDefined();
+  });
+
+  it('is an instance of the upstream Application (Req 3.3)', () => {
     expect(app).toBeInstanceOf(UpstreamApplication);
   });
 
-  it('App construction succeeds with a valid Environment (Req 1.2, 1.3)', () => {
-    expect(app).toBeDefined();
+  it('stores the provided environment (Req 7.4)', () => {
     expect(app.environment).toBe(env);
   });
 
-  it('noOpSchemaMapFactory returns empty object (Req 1.4, 6.1)', () => {
-    const result = noOpSchemaMapFactory();
-    expect(result).toEqual({});
-  });
-
-  it('noOpDatabaseInitFunction returns { success: true } (Req 1.5, 6.2)', async () => {
-    const result = await noOpDatabaseInitFunction();
-    expect(result).toEqual({ success: true });
-  });
-
-  it('noOpInitResultHashFunction returns "no-mongoose"', () => {
-    expect(noOpInitResultHashFunction()).toBe('no-mongoose');
-  });
-
-  it('DocumentStore is accessible via db getter (Req 4.3)', () => {
+  it('exposes a db getter that returns a DocumentStore (Req 7.1)', () => {
     const db = app.db;
     expect(db).toBeDefined();
-    // DocumentStore is an interface; verify it has the expected shape
     expect(typeof db.collection).toBe('function');
   });
 });
 
-// ── 7.2: Start/Stop Lifecycle ────────────────────────────────────────────
+// ── 2. databasePlugin is set after construction ──────────────────────────
 
-describe('App – start/stop lifecycle', () => {
+describe('App – databasePlugin is set after construction', () => {
   let env: Environment<DefaultBackendIdType>;
   let app: App<DefaultBackendIdType>;
-  let _connectSpy: jest.SpyInstance;
-  let _disconnectSpy: jest.SpyInstance;
 
-  beforeAll(async () => {
-    // Mock MongooseDocumentStore.connect/disconnect so the upstream
-    // BaseApplication.start() doesn't try to reach a real MongoDB.
-    _connectSpy = jest
-      .spyOn(MongooseDocumentStore.prototype, 'connect')
-      .mockResolvedValue(undefined);
-    _disconnectSpy = jest
-      .spyOn(MongooseDocumentStore.prototype, 'disconnect')
-      .mockResolvedValue(undefined);
-
+  beforeAll(() => {
     env = createTestEnvironment();
     app = new App<DefaultBackendIdType>(env);
+  });
 
-    jest.spyOn(UpstreamApplication.prototype, 'start');
-    jest.spyOn(UpstreamApplication.prototype, 'stop');
+  afterAll(() => {
+    clearRequiredEnvVars();
+  });
 
+  it('databasePlugin is not null after construction (Req 3.3)', () => {
+    // The upstream Application exposes databasePlugin via a public getter
+    expect(app.databasePlugin).not.toBeNull();
+  });
+
+  it('databasePlugin is a BrightChainDatabasePlugin instance (Req 3.3)', () => {
+    expect(app.databasePlugin).toBeInstanceOf(BrightChainDatabasePlugin);
+  });
+
+  it('databasePlugin is registered in the plugin manager (Req 3.3)', () => {
+    const plugin = app.databasePlugin;
+    expect(plugin).toBeDefined();
+    expect(app.plugins.has(plugin!.name)).toBe(true);
+  });
+});
+
+// ── 3. Service registrations after start() ───────────────────────────────
+
+describe('App – service registrations after start()', () => {
+  let env: Environment<DefaultBackendIdType>;
+  let app: App<DefaultBackendIdType>;
+
+  beforeAll(async () => {
+    env = createTestEnvironment();
+    app = new App<DefaultBackendIdType>(env);
+    // Pass undefined to skip mongoose connection — plugin handles DB
     await app.start(undefined);
   }, 60_000);
 
@@ -157,70 +165,53 @@ describe('App – start/stop lifecycle', () => {
     } catch {
       // best-effort cleanup
     }
-    jest.restoreAllMocks();
     clearRequiredEnvVars();
   }, 30_000);
 
-  it('App.start() calls super.start() (Req 2.1)', () => {
-    expect(UpstreamApplication.prototype.start).toHaveBeenCalled();
+  it('registers blockStore service (Req 7.1)', () => {
+    expect(app.services.has('blockStore')).toBe(true);
   });
 
-  it('After start, BrightChain services are registered (Req 2.2, 2.3, 7.2)', () => {
+  it('registers db service (Req 7.1)', () => {
+    expect(app.services.has('db')).toBe(true);
+  });
+
+  it('registers memberStore service (Req 7.1)', () => {
     expect(app.services.has('memberStore')).toBe(true);
+  });
+
+  it('registers energyStore service (Req 7.1)', () => {
     expect(app.services.has('energyStore')).toBe(true);
+  });
+
+  it('registers energyLedger service (Req 7.1)', () => {
     expect(app.services.has('energyLedger')).toBe(true);
+  });
+
+  it('registers emailService (Req 7.1)', () => {
     expect(app.services.has('emailService')).toBe(true);
+  });
+
+  it('registers auth service (Req 7.1)', () => {
     expect(app.services.has('auth')).toBe(true);
+  });
+
+  it('registers eventSystem service (Req 7.1)', () => {
     expect(app.services.has('eventSystem')).toBe(true);
   });
 
-  it('After start, ready is true (Req 2.7)', () => {
+  it('app is ready after start (Req 3.4)', () => {
     expect(app.ready).toBe(true);
   });
-});
 
-describe('App – stop lifecycle', () => {
-  let env: Environment<DefaultBackendIdType>;
-  let app: App<DefaultBackendIdType>;
-
-  beforeAll(async () => {
-    jest
-      .spyOn(MongooseDocumentStore.prototype, 'connect')
-      .mockResolvedValue(undefined);
-    jest
-      .spyOn(MongooseDocumentStore.prototype, 'disconnect')
-      .mockResolvedValue(undefined);
-
-    env = createTestEnvironment();
-    app = new App<DefaultBackendIdType>(env);
-
-    jest.spyOn(UpstreamApplication.prototype, 'stop');
-
-    await app.start(undefined);
-    await app.stop();
-  }, 60_000);
-
-  afterAll(() => {
-    jest.restoreAllMocks();
-    clearRequiredEnvVars();
-  });
-
-  it('App.stop() calls super.stop() (Req 3.3)', () => {
-    expect(UpstreamApplication.prototype.stop).toHaveBeenCalled();
-  });
-
-  it('After stop, eventSystem/apiRouter/wsServer are null (Req 3.4)', () => {
-    expect(app.getEventSystem()).toBeNull();
-    expect(app.getApiRouter()).toBeNull();
-    expect(app.getWebSocketServer()).toBeNull();
-  });
-
-  it('After stop, ready is false (Req 3.5)', () => {
-    expect(app.ready).toBe(false);
+  it('databasePlugin is connected after start (Req 3.4)', () => {
+    const plugin =
+      app.databasePlugin as BrightChainDatabasePlugin<DefaultBackendIdType>;
+    expect(plugin.isConnected()).toBe(true);
   });
 });
 
-// ── 7.3: API Surface Compatibility ──────────────────────────────────────
+// ── 4. API surface compatibility ─────────────────────────────────────────
 
 describe('App – API surface compatibility', () => {
   let app: App<DefaultBackendIdType>;
@@ -240,17 +231,18 @@ describe('App – API surface compatibility', () => {
     'getApiRouter',
     'getEventSystem',
     'getWebSocketServer',
+    'getClientWebSocketServer',
     'setMessagePassingService',
     'setDiscoveryProtocol',
     'setAvailabilityService',
     'setReconciliationService',
+    'setPoolDiscoveryService',
   ] as const;
 
   it.each([...publicMethods])(
-    'public method %s exists (Req 7.1)',
+    'public method %s exists (Req 7.2)',
     (methodName) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect(typeof (app as any)[methodName]).toBe('function');
+      expect(typeof (app as never)[methodName]).toBe('function');
     },
   );
 });

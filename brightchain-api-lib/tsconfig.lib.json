@@ -26,6 +26,9 @@
   "references": [
     {
       "path": "../brightchain-lib/tsconfig.lib.json"
+    },
+    {
+      "path": "../brightchain-db/tsconfig.lib.json"
     }
   ]
 }

@@ -22,6 +22,7 @@ import {
 } from '@brightchain/brightchain-lib';
 import { BrightChainDb } from '@brightchain/db';
 import { MemberType } from '@digitaldefiance/ecies-lib';
+import { GuidV4Buffer, GuidV4Provider } from '@digitaldefiance/node-ecies-lib';
 import fc from 'fast-check';
 import { mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
@@ -36,9 +37,10 @@ import {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const VALID_POOL = 'TestPool';
-const SYSTEM_ID = 'a0b1c2d3';
-const ADMIN_ID = 'e4f5a6b7';
-const MEMBER_ID = 'c8d9e0f1';
+/** Valid v4 GUID short hex IDs (version nibble = 4) */
+const SYSTEM_ID = '15e070c81ab3446e8caa787d30d1d1d6';
+const ADMIN_ID = '6aba638bb9b6432b9c79a339e3776d69';
+const MEMBER_ID = '586fab6e1d9b4710be7b95dda1e051a1';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -52,24 +54,46 @@ function makeConfig(
   return { memberPoolName: VALID_POOL, useMemoryStore: true, ...overrides };
 }
 
+const guidProvider = new GuidV4Provider();
+
+/**
+ * Convert a short hex string to a GuidV4Buffer.
+ * For empty strings, returns a zero-length buffer cast to GuidV4Buffer
+ * so that toString('hex') produces '' and triggers schema validation failure.
+ */
+function hexToGuidBuffer(hex: string): GuidV4Buffer {
+  if (hex === '') {
+    return Buffer.alloc(0) as unknown as GuidV4Buffer;
+  }
+  return guidProvider.idFromString(hex);
+}
+
 function makeInput(
   systemId = SYSTEM_ID,
   adminId = ADMIN_ID,
   memberId = MEMBER_ID,
-): IBrightChainMemberInitInput {
+): IBrightChainMemberInitInput<GuidV4Buffer> {
   return {
-    systemUser: { id: systemId, type: MemberType.System },
-    adminUser: { id: adminId, type: MemberType.User },
-    memberUser: { id: memberId, type: MemberType.User },
+    systemUser: { id: hexToGuidBuffer(systemId), type: MemberType.System },
+    adminUser: { id: hexToGuidBuffer(adminId), type: MemberType.User },
+    memberUser: { id: hexToGuidBuffer(memberId), type: MemberType.User },
   };
 }
 
 /**
- * fast-check arbitrary for a valid ShortHexGuid (exactly 8 lowercase hex chars).
+ * fast-check arbitrary for a valid v4 ShortHexGuid (exactly 32 lowercase hex chars).
+ * Ensures the version nibble (position 12) is '4' and the variant nibble
+ * (position 16) is one of '8','9','a','b' per RFC 4122.
  */
 const shortHexGuidArb: fc.Arbitrary<string> = fc
-  .array(fc.integer({ min: 0, max: 15 }), { minLength: 8, maxLength: 8 })
-  .map((arr) => arr.map((n) => n.toString(16)).join(''));
+  .array(fc.integer({ min: 0, max: 15 }), { minLength: 32, maxLength: 32 })
+  .map((arr) => {
+    // Force version nibble (position 12) to 4
+    arr[12] = 4;
+    // Force variant nibble (position 16) to 8-11 (0b10xx)
+    arr[16] = 8 + (arr[16] % 4);
+    return arr.map((n) => n.toString(16)).join('');
+  });
 
 /**
  * fast-check arbitrary for a set of 3 unique ShortHexGuid IDs.
