@@ -10,7 +10,7 @@
  */
 
 import {
-  IBrightChainInitResult,
+  IBrightChainBaseInitResult,
   IBrightChainMemberInitInput,
   IMemberIndexDocument,
   initializeBrightChain,
@@ -19,6 +19,7 @@ import {
 } from '@brightchain/brightchain-lib';
 import { BrightChainDb } from '@brightchain/db';
 import { MemberType } from '@digitaldefiance/ecies-lib';
+import { GuidV4Buffer, GuidV4Provider } from '@digitaldefiance/node-ecies-lib';
 import { mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -30,22 +31,36 @@ import {
 
 // ─── Test fixtures ────────────────────────────────────────────────────────────
 
-/** Three fixed ShortHexGuid IDs (8 lowercase hex chars each) */
-const SYSTEM_ID = 'a0b1c2d3';
-const ADMIN_ID = 'e4f5a6b7';
-const MEMBER_ID = 'c8d9e0f1';
+/** Valid v4 GUID short hex IDs (version nibble = 4) */
+const SYSTEM_ID = '15e070c81ab3446e8caa787d30d1d1d6';
+const ADMIN_ID = '6aba638bb9b6432b9c79a339e3776d69';
+const MEMBER_ID = '586fab6e1d9b4710be7b95dda1e051a1';
 
 const VALID_POOL = 'IntegrationPool';
+
+const guidProvider = new GuidV4Provider();
+
+/**
+ * Convert a short hex string to a GuidV4Buffer.
+ * For empty strings, returns a zero-length buffer cast to GuidV4Buffer
+ * so that toString('hex') produces '' and triggers schema validation failure.
+ */
+function hexToGuidBuffer(hex: string): GuidV4Buffer {
+  if (hex === '') {
+    return Buffer.alloc(0) as unknown as GuidV4Buffer;
+  }
+  return guidProvider.idFromString(hex);
+}
 
 function makeInput(
   systemId = SYSTEM_ID,
   adminId = ADMIN_ID,
   memberId = MEMBER_ID,
-): IBrightChainMemberInitInput {
+): IBrightChainMemberInitInput<GuidV4Buffer> {
   return {
-    systemUser: { id: systemId, type: MemberType.System },
-    adminUser: { id: adminId, type: MemberType.User },
-    memberUser: { id: memberId, type: MemberType.User },
+    systemUser: { id: hexToGuidBuffer(systemId), type: MemberType.System },
+    adminUser: { id: hexToGuidBuffer(adminId), type: MemberType.User },
+    memberUser: { id: hexToGuidBuffer(memberId), type: MemberType.User },
   };
 }
 
@@ -90,7 +105,7 @@ describe('BrightChainMemberInitService — integration', () => {
       const config = makeMemoryConfig();
       const input = makeInput();
 
-      const result: IBrightChainInitResult<BrightChainDb> =
+      const result: IBrightChainBaseInitResult<BrightChainDb> =
         await service.initialize(config, input);
 
       expect(result.alreadyInitialized).toBe(false);

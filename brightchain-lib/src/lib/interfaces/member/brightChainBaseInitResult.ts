@@ -1,16 +1,16 @@
 /**
- * Result returned by BrightChainMemberInitService.initialize().
+ * Base result returned by BrightChainMemberInitService.initialize().
  *
- * NOTE: The `db` field is typed as a generic `TDb` (defaulting to `unknown`)
+ * Contains only the common fields shared by both the base member-index
+ * initialization and the full RBAC initialization. The full RBAC result
+ * (IBrightChainInitResult) extends this with all flat credential fields.
+ *
+ * The `db` field is typed as a generic `TDb` (defaulting to `unknown`)
  * rather than importing `BrightChainDb` directly. This avoids a circular
  * dependency: brightchain-db depends on brightchain-lib, so brightchain-lib
- * must NOT import from brightchain-db. Callers in brightchain-api-lib (which
- * does depend on brightchain-db) can narrow the type by supplying the
- * concrete `BrightChainDb` type argument:
- *
- *   IBrightChainInitResult<BrightChainDb>
+ * must NOT import from brightchain-db.
  */
-export interface IBrightChainInitResult<TDb = unknown> {
+export interface IBrightChainBaseInitResult<TDb = unknown> {
   /** True when all candidate members were already present — no writes performed. */
   alreadyInitialized: boolean;
   /** Number of member index entries inserted in this call. */

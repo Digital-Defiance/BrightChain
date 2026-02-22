@@ -8,12 +8,12 @@
  * Property 7: Promotion re-encrypts keys for all members
  */
 
-import { ConversationService } from '@brightchain/brightchain-lib/lib/services/communication/conversationService';
 import {
-  GroupService,
+  ConversationService,
   extractKeyFromDefault,
-} from '@brightchain/brightchain-lib/lib/services/communication/groupService';
-import { PermissionService } from '@brightchain/brightchain-lib/lib/services/communication/permissionService';
+  GroupService,
+  PermissionService,
+} from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { wireConversationPromotion } from '../../services/wireConversationPromotion';
 

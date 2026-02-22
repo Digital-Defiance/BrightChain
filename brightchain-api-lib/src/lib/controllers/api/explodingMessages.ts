@@ -11,19 +11,17 @@
  * Requirements: 8.1-8.9
  */
 
-import { ICommunicationMessage } from '@brightchain/brightchain-lib/lib/interfaces/communication';
-import type {
-  IExplodeMessageResponse,
-  IGetExpirationInfoResponse,
-  IGetExpiredResponse,
-  IMarkReadResponse,
-  ISetExpirationResponse,
-} from '@brightchain/brightchain-lib/lib/interfaces/responses/explodingMessageResponses';
 import {
   ExplodingMessageService,
+  ICommunicationMessage,
   InvalidExpirationError,
   MessageAlreadyExplodedError,
-} from '@brightchain/brightchain-lib/lib/services/communication/explodingMessageService';
+  type IExplodeMessageResponse,
+  type IGetExpirationInfoResponse,
+  type IGetExpiredResponse,
+  type IMarkReadResponse,
+  type ISetExpirationResponse,
+} from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import {

@@ -1,11 +1,11 @@
 import {
+  AuditAction,
   BlockSize,
   initializeBrightChain,
   MemoryBlockStore,
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { AuditAction } from '@brightchain/brightchain-lib/lib/interfaces/brightpass/auditLog';
 import { EmailString, Member, MemberType } from '@digitaldefiance/ecies-lib';
 import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 import fc from 'fast-check';

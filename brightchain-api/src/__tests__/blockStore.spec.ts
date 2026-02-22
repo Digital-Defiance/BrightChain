@@ -2,10 +2,12 @@ import {
   BlockStoreService,
   IBrightChainApplication,
 } from '@brightchain/brightchain-api-lib';
-import { RawDataBlock } from '@brightchain/brightchain-lib/lib/blocks/rawData';
-import type { BlockSize } from '@brightchain/brightchain-lib/lib/enumerations/blockSize';
-import { ChecksumService } from '@brightchain/brightchain-lib/lib/services/checksum.service';
-import { ServiceLocator } from '@brightchain/brightchain-lib/lib/services/serviceLocator';
+import type { BlockSize } from '@brightchain/brightchain-lib';
+import {
+  ChecksumService,
+  RawDataBlock,
+  ServiceLocator,
+} from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { promises as fs } from 'fs';
 import os from 'os';

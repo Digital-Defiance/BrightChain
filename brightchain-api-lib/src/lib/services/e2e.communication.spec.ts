@@ -12,17 +12,17 @@
  */
 
 import {
+  ChannelService,
   ChannelVisibility,
   CommunicationEventType,
+  ConversationService,
   DefaultRole,
+  GroupService,
+  MessageOperationsService,
+  PermissionService,
   PresenceStatus,
+  SearchService,
 } from '@brightchain/brightchain-lib';
-import { ChannelService } from '@brightchain/brightchain-lib/lib/services/communication/channelService';
-import { ConversationService } from '@brightchain/brightchain-lib/lib/services/communication/conversationService';
-import { GroupService } from '@brightchain/brightchain-lib/lib/services/communication/groupService';
-import { MessageOperationsService } from '@brightchain/brightchain-lib/lib/services/communication/messageOperationsService';
-import { PermissionService } from '@brightchain/brightchain-lib/lib/services/communication/permissionService';
-import { SearchService } from '@brightchain/brightchain-lib/lib/services/communication/searchService';
 import express, { Express } from 'express';
 import { Server } from 'http';
 import request from 'supertest';

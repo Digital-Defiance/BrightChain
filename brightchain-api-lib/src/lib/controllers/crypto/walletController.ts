@@ -15,8 +15,8 @@ import type {
   IGetWalletResponse,
   ISignMessageResponse,
   IVerifySignatureResponse,
-} from '@brightchain/brightchain-lib/lib/interfaces/responses/cryptoResponses';
-import { EthereumWalletService } from '@brightchain/brightchain-lib/lib/services/crypto/ethereumWalletService';
+} from '@brightchain/brightchain-lib';
+import { EthereumWalletService } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import {
