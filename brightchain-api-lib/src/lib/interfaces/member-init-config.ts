@@ -15,6 +15,6 @@ export interface IBrightChainMemberInitConfig {
   blockStorePath?: string;
   /** Force in-memory store even when blockStorePath is set */
   useMemoryStore?: boolean;
-  /** Block size for the store (defaults to BlockSize.Small) */
+  /** Block size for the store (defaults to BlockSize.Medium) */
   blockSize?: BlockSize;
 }

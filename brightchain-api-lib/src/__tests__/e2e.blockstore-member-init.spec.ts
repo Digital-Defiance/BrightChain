@@ -39,8 +39,10 @@ import {
   GuidV4Provider,
   Member,
 } from '@digitaldefiance/node-ecies-lib';
-import { KeyWrappingService } from '@digitaldefiance/node-express-suite';
-import type { IBackupCode } from '@digitaldefiance/suite-core-lib';
+import {
+  BackupCode,
+  KeyWrappingService,
+} from '@digitaldefiance/node-express-suite';
 import { createHash, createHmac } from 'crypto';
 import { mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
@@ -123,6 +125,7 @@ const RBAC_MEMBER_MNEMONIC_DOC_ID = 'a01197d6-82fa-4053-a030-1ab1b6f7b1fc';
 
 /**
  * Build a full IBrightChainUserInitEntry with real ECIES key pairs.
+ * Returns the Member so backup codes can be encrypted before disposal.
  */
 function buildRbacEntry(
   shortId: string,
@@ -137,7 +140,11 @@ function buildRbacEntry(
   roleAdmin: boolean,
   roleMember: boolean,
   roleSystem: boolean,
-): { entry: IBrightChainUserInitEntry<GuidV4Buffer>; mnemonic: SecureString } {
+): {
+  entry: IBrightChainUserInitEntry<GuidV4Buffer>;
+  mnemonic: SecureString;
+  member: Member<Buffer>;
+} {
   const { member, mnemonic } = Member.newMember(
     eciesService,
     memberType,
@@ -168,9 +175,6 @@ function buildRbacEntry(
     .digest('hex');
 
   const publicKeyHex = member.publicKey.toString('hex');
-  const backupCodes: IBackupCode[] = [];
-
-  member.dispose();
 
   return {
     entry: {
@@ -183,7 +187,7 @@ function buildRbacEntry(
       passwordWrappedPrivateKey: wrappedKey,
       mnemonicRecovery,
       mnemonicHmac,
-      backupCodes,
+      backupCodes: [], // filled in after async encryption
       roleId: guidProvider.idFromString(roleId),
       userRoleId: guidProvider.idFromString(userRoleId),
       mnemonicDocId: guidProvider.idFromString(mnemonicDocId),
@@ -193,10 +197,17 @@ function buildRbacEntry(
       roleSystem,
     },
     mnemonic,
+    member,
   };
 }
 
-function makeRbacInput(): IBrightChainRbacInitInput<GuidV4Buffer> {
+/**
+ * Build RBAC input with real encrypted backup codes — mirrors what
+ * brightchain-inituserdb/src/main.ts does in production.
+ */
+async function makeRbacInput(): Promise<
+  IBrightChainRbacInitInput<GuidV4Buffer>
+> {
   const system = buildRbacEntry(
     RBAC_SYSTEM_ID,
     RBAC_SYSTEM_FULL_ID,
@@ -239,6 +250,36 @@ function makeRbacInput(): IBrightChainRbacInitInput<GuidV4Buffer> {
     true,
     false,
   );
+
+  // Generate and encrypt backup codes just like main.ts does
+  const generateCodes = (): BackupCode[] =>
+    Array.from(
+      { length: 10 },
+      () => new BackupCode(BackupCode.generateBackupCode()),
+    );
+
+  const [encSystemCodes, encAdminCodes, encMemberCodes] = await Promise.all([
+    BackupCode.encryptBackupCodes(
+      system.member,
+      system.member,
+      generateCodes(),
+    ),
+    BackupCode.encryptBackupCodes(admin.member, system.member, generateCodes()),
+    BackupCode.encryptBackupCodes(
+      member.member,
+      system.member,
+      generateCodes(),
+    ),
+  ]);
+
+  system.entry.backupCodes = encSystemCodes;
+  admin.entry.backupCodes = encAdminCodes;
+  member.entry.backupCodes = encMemberCodes;
+
+  system.member.dispose();
+  admin.member.dispose();
+  member.member.dispose();
+
   return {
     systemUser: system.entry,
     adminUser: admin.entry,
@@ -254,7 +295,7 @@ async function runRbacInitAndVerify(
   config: IBrightChainMemberInitConfig,
 ): Promise<{ service: BrightChainMemberInitService }> {
   const service = new BrightChainMemberInitService();
-  const input = makeRbacInput();
+  const input = await makeRbacInput();
   const result = await service.initializeWithRbac(config, input);
 
   expect(result.alreadyInitialized).toBe(false);
@@ -542,7 +583,7 @@ describe('E2E: BrightChainMemberInitService – memory and disk block stores', (
         useMemoryStore: true,
       };
       const service = new BrightChainMemberInitService();
-      const input = makeRbacInput();
+      const input = await makeRbacInput();
 
       const first = await service.initializeWithRbac(config, input);
       expect(first.insertedCount).toBe(15);
@@ -592,7 +633,7 @@ describe('E2E: BrightChainMemberInitService – memory and disk block stores', (
         blockSize: BlockSize.Small,
       };
       const service = new BrightChainMemberInitService();
-      const input = makeRbacInput();
+      const input = await makeRbacInput();
 
       const first = await service.initializeWithRbac(config, input);
       expect(first.insertedCount).toBe(15);
