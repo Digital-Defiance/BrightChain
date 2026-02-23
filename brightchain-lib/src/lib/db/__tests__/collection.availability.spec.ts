@@ -9,17 +9,15 @@
  * **Validates: Requirements 3.1, 3.2, 3.3, 3.4**
  */
 
-import {
-  AvailabilityState,
-  BlockSize,
-  Checksum,
-  PendingBlockError,
-  RawDataBlock,
-  ReadConcern,
-} from '@brightchain/brightchain-lib';
-import { Collection } from './collection';
-import { InMemoryHeadRegistry } from './headRegistry';
-import { BsonDocument } from './types';
+import { RawDataBlock } from '../../blocks/rawData';
+import { AvailabilityState } from '../../enumerations/availabilityState';
+import { BlockSize } from '../../enumerations/blockSize';
+import { ReadConcern } from '../../enumerations/readConcern';
+import { PendingBlockError } from '../../errors/blockFetchError';
+import { Checksum } from '../../types/checksum';
+import { Collection } from '../collection';
+import { InMemoryHeadRegistry } from '../inMemoryHeadRegistry';
+import type { BsonDocument } from '../types';
 
 // --- Helpers ---
 
