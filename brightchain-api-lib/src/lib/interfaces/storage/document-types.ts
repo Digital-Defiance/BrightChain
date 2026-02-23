@@ -40,4 +40,4 @@ export type {
   UpdateResult,
   WriteConcern,
   WriteOptions,
-} from '@digitaldefiance/node-express-suite';
+} from '@digitaldefiance/suite-core-lib';
