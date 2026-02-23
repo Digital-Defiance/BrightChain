@@ -19,9 +19,9 @@ import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import type {
   IApplication,
   IAuthenticationProvider,
-  IDatabase,
   IDatabasePlugin,
 } from '@digitaldefiance/node-express-suite';
+import type { IDatabase } from '@digitaldefiance/suite-core-lib';
 import { BrightChainDbDocumentStoreAdapter } from '../adapters/brightChainDbDocumentStoreAdapter';
 import { brightchainDatabaseInit } from '../databaseInit';
 import type { Environment } from '../environment';

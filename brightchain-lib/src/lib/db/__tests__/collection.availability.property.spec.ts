@@ -10,13 +10,13 @@
  * **Validates: Requirements 3.1, 3.2, 3.3**
  */
 
-import {
-  AvailabilityState,
+import fc from 'fast-check';
+import { AvailabilityState } from '../../enumerations/availabilityState';
+import { ReadConcern } from '../../enumerations/readConcern';
+import type {
   IEnrichedQueryResult,
   IPendingBlockInfo,
-  ReadConcern,
-} from '@brightchain/brightchain-lib';
-import fc from 'fast-check';
+} from '../../interfaces/blockFetch/enrichedQueryResult';
 
 /**
  * Arbitrary: hex-encoded block ID strings (8-64 hex chars)
