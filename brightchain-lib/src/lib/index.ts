@@ -231,3 +231,109 @@ export * from './energyAccount';
 export * from './energyConsts';
 export * from './stores/energyAccountStore';
 export * from './stores/energyLedger';
+
+// ============================================================================
+// Database Engine (platform-agnostic core)
+// ============================================================================
+/**
+ * Core database engine modules: query engine, update engine, cursor, indexing,
+ * aggregation, schema validation, transactions, Collection, and InMemoryDatabase.
+ *
+ * Uses named re-exports to avoid collisions with existing top-level exports:
+ * - ValidationError (./errors) vs db ValidationError → re-exported as DbValidationError
+ * - SchemaType (./types) vs db SchemaType → re-exported as DbSchemaType
+ * - ValidationFieldError, FieldSchema, BsonDocument, DocumentId already exported
+ *   via ./interfaces — skipped here to avoid ambiguous re-export errors
+ */
+export {
+  // db errors (ValidationError renamed to avoid collision with top-level ValidationError)
+  BrightChainDbError,
+  BulkWriteError,
+  // collection
+  Collection,
+  // indexing
+  CollectionIndex,
+  // cursor
+  Cursor,
+  // transaction
+  DbSession,
+  ValidationError as DbValidationError,
+  DocumentNotFoundError,
+  DuplicateKeyError,
+  // inMemoryDatabase
+  InMemoryDatabase,
+  // inMemoryHeadRegistry
+  InMemoryHeadRegistry,
+  IndexError,
+  IndexManager,
+  TransactionError,
+  WriteConcernError,
+  applyDefaults,
+  applyProjection,
+  // updateEngine
+  applyUpdate,
+  calculateBlockId,
+  compareValues,
+  createDefaultUuidGenerator,
+  deepEquals,
+  getTextSearchFields,
+  isOperatorUpdate,
+  matchesFilter,
+  // aggregation
+  runAggregation,
+  // queryEngine
+  setTextSearchFields,
+  sortDocuments,
+  tokenize,
+  validateDocument,
+  type BulkWriteOperationError,
+  type CollectionResolver,
+  type CollectionSchema,
+  type CommitCallback,
+  // schemaValidation (SchemaType renamed to avoid collision with top-level SchemaType)
+  type SchemaType as DbSchemaType,
+  type InMemoryDatabaseOptions,
+  type JournalOp,
+  type RollbackCallback,
+  // uuidGenerator
+  type UuidGenerator,
+  type WriteConcernSpec,
+} from './db';
+
+// Re-export suite-core-lib storage/query types that the db engine uses,
+// so consumers get them from @brightchain/brightchain-lib without a direct
+// suite-core-lib dependency.
+export type {
+  AggregationStage,
+  BulkWriteOperation,
+  BulkWriteOptions,
+  BulkWriteResult,
+  ChangeEvent,
+  ChangeEventType,
+  ChangeListener,
+  ClientSession,
+  CollectionOptions,
+  CollectionSchemaFieldType,
+  CursorSession,
+  DeleteResult,
+  FilterOperator,
+  FilterQuery,
+  FindOptions,
+  IClientSession,
+  IndexOptions,
+  IndexSpec,
+  InsertManyResult,
+  InsertOneResult,
+  LogicalOperators,
+  ProjectionSpec,
+  ReadPreference,
+  ReplaceResult,
+  SortSpec,
+  TextIndexOptions,
+  UpdateOperators,
+  UpdateOptions,
+  UpdateQuery,
+  UpdateResult,
+  WriteConcern,
+  WriteOptions,
+} from '@digitaldefiance/suite-core-lib';

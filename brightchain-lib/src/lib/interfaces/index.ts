@@ -27,6 +27,7 @@ export type * from './keyringConsts';
 export type * from './keyringEntry';
 export type * from './languageContext';
 export type * from './member';
+export type * from './member-init-config';
 export * from './network';
 export type * from './nodeInfo';
 export type * from './position';

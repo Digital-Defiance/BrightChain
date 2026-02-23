@@ -5,4 +5,4 @@
  * This type is now defined in @digitaldefiance/node-express-suite and
  * re-exported here for backward compatibility.
  */
-export type { IDatabase } from '@digitaldefiance/node-express-suite';
+export type { IDatabase } from '@digitaldefiance/suite-core-lib';
