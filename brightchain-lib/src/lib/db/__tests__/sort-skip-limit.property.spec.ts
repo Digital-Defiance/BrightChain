@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based test for sort-skip-limit model equivalence.
  *
- * **Feature: mongo-compatible-document-store, Property 2: Sort-skip-limit model equivalence**
+ * **Feature: db-core-to-lib, Property: Sort-skip-limit model equivalence**
  *
  * For any array of documents, any sort specification (mapping field names to 1 or -1),
  * any non-negative skip value, and any non-negative limit value, the result of applying
@@ -10,13 +10,16 @@
  * (2) dropping the first s elements,
  * (3) taking the first l elements.
  *
- * **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5**
+ * **Validates: Requirements 8.1, 8.4**
  */
 
+import type { SortSpec } from '@digitaldefiance/suite-core-lib';
 import fc from 'fast-check';
-import { MockBlockStore } from '../../__tests__/helpers/mockBlockStore';
-import { BrightChainDb } from '../database';
-import { BsonDocument, SortSpec } from '../types';
+import { BlockSize } from '../../enumerations/blockSize';
+import type { BsonDocument } from '../../interfaces/storage/documentTypes';
+import { MemoryBlockStore } from '../../stores/memoryBlockStore';
+import { Collection } from '../collection';
+import { InMemoryDatabase } from '../inMemoryDatabase';
 
 jest.setTimeout(120000);
 
@@ -117,11 +120,9 @@ const arbLimit: fc.Arbitrary<number> = fc.integer({ min: 0, max: 50 });
 // Helpers
 // ---------------------------------------------------------------------------
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-function createDb(): BrightChainDb {
-  const store = new MockBlockStore();
-  return new BrightChainDb(store as any, { name: 'test-sort-skip-limit' });
+function createDb(): InMemoryDatabase {
+  const store = new MemoryBlockStore(BlockSize.Small);
+  return new InMemoryDatabase(store, { name: 'test-sort-skip-limit' });
 }
 
 /**
@@ -135,12 +136,12 @@ function stripIds(docs: BsonDocument[]): Record<string, unknown>[] {
 }
 
 // ---------------------------------------------------------------------------
-// Property 2: Sort-skip-limit model equivalence
+// Property: Sort-skip-limit model equivalence
 // ---------------------------------------------------------------------------
 
-describe('Feature: mongo-compatible-document-store, Property 2: Sort-skip-limit model equivalence', () => {
+describe('Feature: db-core-to-lib, Property: Sort-skip-limit model equivalence', () => {
   /**
-   * **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5**
+   * **Validates: Requirements 8.1, 8.4**
    *
    * For any array of documents, sort spec, skip, and limit values,
    * Collection.find() with those options produces the same result as
@@ -157,7 +158,9 @@ describe('Feature: mongo-compatible-document-store, Property 2: Sort-skip-limit 
           const db = createDb();
           await db.connect();
 
-          const collection = db.collection<BsonDocument>('items');
+          const collection = db.collection<BsonDocument>(
+            'items',
+          ) as Collection<BsonDocument>;
 
           // Insert all documents
           for (const doc of docs) {
@@ -176,8 +179,7 @@ describe('Feature: mongo-compatible-document-store, Property 2: Sort-skip-limit 
           findOptions.skip = skip;
           findOptions.limit = limit;
 
-          const cursor = collection.find({}, findOptions);
-          const actual = await cursor.toArray();
+          const actual = await collection.find({}, findOptions).toArray();
 
           // Compute expected via reference implementation
           // We need the docs as stored (with _id), so retrieve all first

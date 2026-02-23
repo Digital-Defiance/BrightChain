@@ -1,20 +1,21 @@
 /**
  * @fileoverview Property-based test for JSON serialization round-trip.
  *
- * **Feature: mongo-compatible-document-store, Property 4: JSON serialization round-trip**
+ * **Feature: db-core-to-lib, Property: JSON serialization round-trip**
  *
  * For any valid document object stored via insertOne and retrieved via findById,
  * serializing the retrieved document to JSON via JSON.stringify and deserializing
  * via JSON.parse SHALL produce an object with field values equivalent to the
  * original document (excluding _id).
  *
- * **Validates: Requirements 9.3**
+ * **Validates: Requirements 8.1**
  */
 
 import fc from 'fast-check';
-import { MockBlockStore } from '../../__tests__/helpers/mockBlockStore';
-import { BrightChainDb } from '../database';
-import { BsonDocument } from '../types';
+import { BlockSize } from '../../enumerations/blockSize';
+import type { BsonDocument } from '../../interfaces/storage/documentTypes';
+import { MemoryBlockStore } from '../../stores/memoryBlockStore';
+import { InMemoryDatabase } from '../inMemoryDatabase';
 
 // Property tests can be slow due to async operations
 jest.setTimeout(120000);
@@ -78,13 +79,9 @@ const arbDocument: fc.Arbitrary<BsonDocument> = fc
 // Helpers
 // ---------------------------------------------------------------------------
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-function createDb(): BrightChainDb {
-  const store = new MockBlockStore();
-  return new BrightChainDb(store as any, {
-    name: 'test-json-roundtrip',
-  });
+function createDb(): InMemoryDatabase {
+  const store = new MemoryBlockStore(BlockSize.Small);
+  return new InMemoryDatabase(store, { name: 'test-json-roundtrip' });
 }
 
 /**
@@ -96,12 +93,12 @@ function stripId(doc: Record<string, unknown>): Record<string, unknown> {
 }
 
 // ---------------------------------------------------------------------------
-// Property 4: JSON serialization round-trip
+// Property: JSON serialization round-trip
 // ---------------------------------------------------------------------------
 
-describe('Feature: mongo-compatible-document-store, Property 4: JSON serialization round-trip', () => {
+describe('Feature: db-core-to-lib, Property: JSON serialization round-trip', () => {
   /**
-   * **Validates: Requirements 9.3**
+   * **Validates: Requirements 8.1**
    *
    * For any valid document, inserting via insertOne, retrieving via findById,
    * then serializing to JSON via JSON.stringify and deserializing via
