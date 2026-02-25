@@ -454,7 +454,7 @@ export function createDbRouter(
       if (err instanceof Error && err.name === 'BulkWriteError') {
         res.status(400).json({
           error: String(err),
-          details: (err as Error & { writeErrors?: unknown }).writeErrors,
+          details: (err as unknown as Record<string, unknown>)['writeErrors'],
         });
         return;
       }
@@ -473,9 +473,7 @@ export function createDbRouter(
       const docs = await coll
         .find(filter ?? {}, { sort, projection })
         .toArray();
-      const docIds = docs
-        .map((d: { _id?: string }) => d._id)
-        .filter((id): id is string => Boolean(id));
+      const docIds = docs.map((d) => d['_id'] as string).filter(Boolean);
 
       const cursor = db.createCursorSession({
         collection,

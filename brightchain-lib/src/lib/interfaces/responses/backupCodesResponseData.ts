@@ -1,10 +1,8 @@
 /**
- * Platform-agnostic base data interface for backup code generation/reset responses.
+ * Platform-agnostic base data interface for backup codes responses.
  * Used by both frontend and backend consumers.
+ * Matches express-suite IApiBackupCodesResponse shape (minus IApiMessageResponse).
  */
 export interface IBackupCodesResponseData {
-  /**
-   * Array of newly generated backup codes
-   */
-  backupCodes: string[];
+  backupCodes: Array<string>;
 }

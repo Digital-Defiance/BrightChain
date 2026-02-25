@@ -24,6 +24,10 @@ export class SealingError extends TypedError<SealingErrorType> {
         BrightChainStrings.Error_SealingError_MemberNotFound,
       [SealingErrorType.FailedToSeal]:
         BrightChainStrings.Error_SealingError_FailedToSealTemplate,
+      [SealingErrorType.InsufficientSharesForReconstruction]:
+        BrightChainStrings.Error_SealingError_InsufficientSharesForReconstruction,
+      [SealingErrorType.KeyReconstructionFailed]:
+        BrightChainStrings.Error_SealingError_KeyReconstructionFailed,
     };
   }
   constructor(

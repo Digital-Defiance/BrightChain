@@ -11,12 +11,14 @@ import {
   BackupCodeLoginWrapper,
   BackupCodesWrapper,
   ChangePasswordFormWrapper,
+  ForgotPasswordFormWrapper,
   I18nProvider,
   LoginFormWrapper,
   LogoutPageWrapper,
   MenuProvider,
   PrivateRoute,
   RegisterFormWrapper,
+  ResetPasswordFormWrapper,
   SuiteConfigProvider,
   TDivBranded,
   TopMenu,
@@ -193,6 +195,22 @@ const InnerApp: FC = () => {
             element={
               <UnAuthRoute>
                 <RegisterFormWrapper />
+              </UnAuthRoute>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <UnAuthRoute>
+                <ForgotPasswordFormWrapper />
+              </UnAuthRoute>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              <UnAuthRoute>
+                <ResetPasswordFormWrapper />
               </UnAuthRoute>
             }
           />

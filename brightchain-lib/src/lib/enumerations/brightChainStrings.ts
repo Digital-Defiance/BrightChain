@@ -355,6 +355,10 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
     'Error_SealingError_InvalidMemberArray',
   Error_SealingError_FailedToSealTemplate:
     'Error_SealingError_FailedToSealTemplate',
+  Error_SealingError_InsufficientSharesForReconstruction:
+    'Error_SealingError_InsufficientSharesForReconstruction',
+  Error_SealingError_KeyReconstructionFailed:
+    'Error_SealingError_KeyReconstructionFailed',
 
   // CBL Errors
   Error_CblError_BlockNotReadable: 'Error_CblError_BlockNotReadable',
@@ -611,6 +615,76 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   Error_QuorumError_Uninitialized: 'Error_QuorumError_Uninitialized',
   Error_QuorumError_MemberNotFound: 'Error_QuorumError_MemberNotFound',
   Error_QuorumError_NotEnoughMembers: 'Error_QuorumError_NotEnoughMembers',
+  // Quorum Mode Errors
+  Error_QuorumError_TransitionInProgress:
+    'Error_QuorumError_TransitionInProgress',
+  Error_QuorumError_InvalidModeTransition:
+    'Error_QuorumError_InvalidModeTransition',
+  Error_QuorumError_InsufficientMembersForTransition:
+    'Error_QuorumError_InsufficientMembersForTransition',
+  // Quorum Member Management Errors
+  Error_QuorumError_MemberAlreadyExists:
+    'Error_QuorumError_MemberAlreadyExists',
+  Error_QuorumError_InsufficientRemainingMembers:
+    'Error_QuorumError_InsufficientRemainingMembers',
+  Error_QuorumError_MemberBanned: 'Error_QuorumError_MemberBanned',
+  Error_QuorumError_MemberSuspended: 'Error_QuorumError_MemberSuspended',
+  // Quorum Proposal/Voting Errors
+  Error_QuorumError_DuplicateProposal: 'Error_QuorumError_DuplicateProposal',
+  Error_QuorumError_ProposalExpired: 'Error_QuorumError_ProposalExpired',
+  Error_QuorumError_DuplicateVote: 'Error_QuorumError_DuplicateVote',
+  Error_QuorumError_VoterNotOnProposal: 'Error_QuorumError_VoterNotOnProposal',
+  Error_QuorumError_AuthenticationFailed:
+    'Error_QuorumError_AuthenticationFailed',
+  Error_QuorumError_VotingLocked: 'Error_QuorumError_VotingLocked',
+  Error_QuorumError_MissingAttachment: 'Error_QuorumError_MissingAttachment',
+  Error_QuorumError_AttachmentNotRetrievable:
+    'Error_QuorumError_AttachmentNotRetrievable',
+  // Quorum Share Redistribution Errors
+  Error_QuorumError_RedistributionFailed:
+    'Error_QuorumError_RedistributionFailed',
+  Error_QuorumError_InsufficientSharesForReconstruction:
+    'Error_QuorumError_InsufficientSharesForReconstruction',
+  Error_QuorumError_KeyReconstructionValidationFailed:
+    'Error_QuorumError_KeyReconstructionValidationFailed',
+  // Quorum Identity Errors
+  Error_QuorumError_IdentityPermanentlyUnrecoverable:
+    'Error_QuorumError_IdentityPermanentlyUnrecoverable',
+  Error_QuorumError_InvalidMembershipProof:
+    'Error_QuorumError_InvalidMembershipProof',
+  Error_QuorumError_MissingMembershipProof:
+    'Error_QuorumError_MissingMembershipProof',
+  Error_QuorumError_AliasAlreadyTaken: 'Error_QuorumError_AliasAlreadyTaken',
+  Error_QuorumError_AliasNotFound: 'Error_QuorumError_AliasNotFound',
+  Error_QuorumError_AliasInactive: 'Error_QuorumError_AliasInactive',
+  Error_QuorumError_IdentitySealingFailed:
+    'Error_QuorumError_IdentitySealingFailed',
+  Error_QuorumError_ShardVerificationFailed:
+    'Error_QuorumError_ShardVerificationFailed',
+  // Quorum Database Errors
+  Error_QuorumError_QuorumDatabaseUnavailable:
+    'Error_QuorumError_QuorumDatabaseUnavailable',
+  Error_QuorumError_TransactionFailed: 'Error_QuorumError_TransactionFailed',
+  // Quorum Audit Errors
+  Error_QuorumError_AuditChainCorrupted:
+    'Error_QuorumError_AuditChainCorrupted',
+  // Identity Validation Errors
+  Error_IdentityValidationError_InvalidSignature:
+    'Error_IdentityValidationError_InvalidSignature',
+  Error_IdentityValidationError_UnregisteredAlias:
+    'Error_IdentityValidationError_UnregisteredAlias',
+  Error_IdentityValidationError_InactiveAlias:
+    'Error_IdentityValidationError_InactiveAlias',
+  Error_IdentityValidationError_InvalidMembershipProof:
+    'Error_IdentityValidationError_InvalidMembershipProof',
+  Error_IdentityValidationError_MissingMembershipProof:
+    'Error_IdentityValidationError_MissingMembershipProof',
+  Error_IdentityValidationError_BannedUser:
+    'Error_IdentityValidationError_BannedUser',
+  Error_IdentityValidationError_SuspendedUser:
+    'Error_IdentityValidationError_SuspendedUser',
+  Error_IdentityValidationError_ShardVerificationFailed:
+    'Error_IdentityValidationError_ShardVerificationFailed',
 
   // System Keyring Errors
   Error_SystemKeyringError_KeyNotFoundTemplate:

@@ -209,6 +209,70 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_QuorumError_MemberNotFound]: '未找到成员',
   [BrightChainStrings.Error_QuorumError_NotEnoughMembers]:
     '法定人数操作没有足够的成员',
+  [BrightChainStrings.Error_QuorumError_TransitionInProgress]:
+    '操作被阻止：过渡仪式正在进行中',
+  [BrightChainStrings.Error_QuorumError_InvalidModeTransition]:
+    '无效的操作模式转换',
+  [BrightChainStrings.Error_QuorumError_InsufficientMembersForTransition]:
+    '成员不足，无法启动过渡仪式',
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyExists]:
+    '成员已存在于法定人数中',
+  [BrightChainStrings.Error_QuorumError_InsufficientRemainingMembers]:
+    '无法移除成员：剩余成员将低于阈值',
+  [BrightChainStrings.Error_QuorumError_MemberBanned]: '成员已被禁止',
+  [BrightChainStrings.Error_QuorumError_MemberSuspended]: '成员已被暂停',
+  [BrightChainStrings.Error_QuorumError_DuplicateProposal]: '重复的提案ID',
+  [BrightChainStrings.Error_QuorumError_ProposalExpired]: '提案已过期',
+  [BrightChainStrings.Error_QuorumError_DuplicateVote]: '该成员的重复投票',
+  [BrightChainStrings.Error_QuorumError_VoterNotOnProposal]:
+    '投票者不是该提案的活跃成员',
+  [BrightChainStrings.Error_QuorumError_AuthenticationFailed]: '认证失败',
+  [BrightChainStrings.Error_QuorumError_VotingLocked]:
+    '由于多次认证失败，投票已被锁定',
+  [BrightChainStrings.Error_QuorumError_MissingAttachment]:
+    '提案需要附件但未提供',
+  [BrightChainStrings.Error_QuorumError_AttachmentNotRetrievable]:
+    '引用的附件CBL无法检索',
+  [BrightChainStrings.Error_QuorumError_RedistributionFailed]:
+    '份额重新分配失败',
+  [BrightChainStrings.Error_QuorumError_InsufficientSharesForReconstruction]:
+    '提供的份额不足以重建密钥',
+  [BrightChainStrings.Error_QuorumError_KeyReconstructionValidationFailed]:
+    '重建的密钥验证失败',
+  [BrightChainStrings.Error_QuorumError_IdentityPermanentlyUnrecoverable]:
+    '由于诉讼时效已过，身份永久不可恢复',
+  [BrightChainStrings.Error_QuorumError_InvalidMembershipProof]:
+    '无效的成员资格证明',
+  [BrightChainStrings.Error_QuorumError_MissingMembershipProof]:
+    '匿名内容缺少成员资格证明',
+  [BrightChainStrings.Error_QuorumError_AliasAlreadyTaken]: '别名已被注册',
+  [BrightChainStrings.Error_QuorumError_AliasNotFound]: '未找到别名',
+  [BrightChainStrings.Error_QuorumError_AliasInactive]: '别名已被停用',
+  [BrightChainStrings.Error_QuorumError_IdentitySealingFailed]:
+    '身份封存管道失败',
+  [BrightChainStrings.Error_QuorumError_ShardVerificationFailed]:
+    '身份分片验证失败',
+  [BrightChainStrings.Error_QuorumError_QuorumDatabaseUnavailable]:
+    '法定人数数据库不可用',
+  [BrightChainStrings.Error_QuorumError_TransactionFailed]: '数据库事务失败',
+  [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
+    '审计链完整性受损',
+  [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
+    '内容签名与声明的身份不匹配',
+  [BrightChainStrings.Error_IdentityValidationError_UnregisteredAlias]:
+    '别名未注册',
+  [BrightChainStrings.Error_IdentityValidationError_InactiveAlias]:
+    '别名已停用',
+  [BrightChainStrings.Error_IdentityValidationError_InvalidMembershipProof]:
+    '无效的成员资格证明',
+  [BrightChainStrings.Error_IdentityValidationError_MissingMembershipProof]:
+    '匿名内容缺少成员资格证明',
+  [BrightChainStrings.Error_IdentityValidationError_BannedUser]:
+    '内容创建者已被禁止',
+  [BrightChainStrings.Error_IdentityValidationError_SuspendedUser]:
+    '内容创建者已被暂停',
+  [BrightChainStrings.Error_IdentityValidationError_ShardVerificationFailed]:
+    '身份分片验证失败',
 
   // System Keyring Errors
   [BrightChainStrings.Error_SystemKeyringError_KeyNotFoundTemplate]:

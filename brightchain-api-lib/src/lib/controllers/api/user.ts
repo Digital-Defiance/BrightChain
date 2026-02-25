@@ -1,43 +1,56 @@
 import {
-  Checksum,
   EnergyAccountStore,
   IAuthResponse,
   ILoginRequest,
+  IPasswordChangeRequest,
+  IRecoveryRequest,
   IRegistrationRequest,
   IUserProfile,
   IUserProfileMetadata,
   MemberStore,
+  ServiceProvider,
 } from '@brightchain/brightchain-lib';
 import { SecureString } from '@digitaldefiance/ecies-lib';
-import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
+import { CoreLanguageCode, HandleableError } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   ApiErrorResponse,
-  ApiRequestHandler,
+  Controller,
+  DecoratorBaseController,
+  Get,
   IApiMessageResponse,
   IStatusCodeResponse,
-  TypedHandlers,
-  routeConfig,
+  Post,
+  Put,
 } from '@digitaldefiance/node-express-suite';
+import {
+  getSuiteCoreTranslation,
+  SuiteCoreStringKey,
+} from '@digitaldefiance/suite-core-lib';
+import type { NextFunction, Request, Response } from 'express';
 import { IBrightChainApplication } from '../../interfaces/application';
+import {
+  IApiBackupCodesResponse,
+  IApiCodeCountResponse,
+  IApiPasswordChangeResponse,
+  IApiRecoveryResponse,
+} from '../../interfaces/responses';
 import {
   IAuthApiResponse,
   IUserProfileApiResponse,
 } from '../../interfaces/userApiResponse';
-import { AuthService } from '../../services';
+import {
+  AuthService,
+  BackupCodeService,
+  BrightChainSessionAdapter,
+} from '../../services';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
   validateLogin,
+  validatePasswordChange,
+  validateRecovery,
   validateRegistration,
 } from '../../validation/userValidation';
-import { BaseController } from '../base';
-
-interface IUserHandlers extends TypedHandlers {
-  register: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
-  login: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
-  profile: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
-  updateProfile: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
-}
 
 interface IUpdateProfileRequest {
   displayName?: string;
@@ -48,69 +61,38 @@ interface IUpdateProfileRequest {
   };
 }
 
+@Controller()
 export class UserController<
   TID extends PlatformID = DefaultBackendIdType,
-> extends BaseController<
+> extends DecoratorBaseController<
+  CoreLanguageCode,
   TID,
-  IApiMessageResponse | ApiErrorResponse,
-  IUserHandlers,
-  CoreLanguageCode
+  IBrightChainApplication<TID>
 > {
   constructor(application: IBrightChainApplication<TID>) {
     super(application);
   }
 
-  protected initRouteDefinitions(): void {
-    this.routeDefinitions = [
-      routeConfig('post', '/register', {
-        handlerKey: 'register',
-        useAuthentication: false,
-        useCryptoAuthentication: false,
-      }),
-      routeConfig('post', '/login', {
-        handlerKey: 'login',
-        useAuthentication: false,
-        useCryptoAuthentication: false,
-      }),
-      routeConfig('get', '/profile', {
-        handlerKey: 'profile',
-        useAuthentication: true,
-        useCryptoAuthentication: false,
-      }),
-      routeConfig('put', '/profile', {
-        handlerKey: 'updateProfile',
-        useAuthentication: true,
-        useCryptoAuthentication: false,
-      }),
-    ];
-
-    this.handlers = {
-      register: this.handleRegister.bind(this),
-      login: this.handleLogin.bind(this),
-      profile: this.handleProfile.bind(this),
-      updateProfile: this.handleUpdateProfile.bind(this),
-    };
-  }
-
-  private async handleRegister(
-    req: Parameters<
-      ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
-    >[0],
+  @Post('/register')
+  async register(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    // Validate request body before processing
     const validation = validateRegistration(req.body);
     if (!validation.valid) {
       return {
         statusCode: 400,
         response: {
-          message: 'Validation failed',
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Validation_MissingValidatedData,
+          ),
           errors: validation.errors,
         } as IApiMessageResponse,
       };
     }
 
     try {
-      // Validation already confirmed these fields exist and are valid strings
       const { username, email, password } =
         req.body as unknown as IRegistrationRequest;
 
@@ -130,41 +112,47 @@ export class UserController<
       return {
         statusCode: 201,
         response: {
-          message: 'Registration successful',
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Registration_Success,
+          ),
           data: authResponse,
         } as IAuthApiResponse,
       };
     } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : getSuiteCoreTranslation(SuiteCoreStringKey.Common_UnexpectedError);
       return {
         statusCode: 400,
         response: {
-          message:
-            error instanceof Error ? error.message : 'Registration failed',
-          error: error instanceof Error ? error.message : 'Registration failed',
+          message: errorMessage,
+          error: errorMessage,
         },
       };
     }
   }
 
-  private async handleLogin(
-    req: Parameters<
-      ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
-    >[0],
+  @Post('/login')
+  async login(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    // Validate request body before processing
     const validation = validateLogin(req.body);
     if (!validation.valid) {
       return {
         statusCode: 400,
         response: {
-          message: 'Validation failed',
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Validation_MissingValidatedData,
+          ),
           errors: validation.errors,
         } as IApiMessageResponse,
       };
     }
 
     try {
-      // Validation already confirmed these fields exist and are valid strings
       const { username, password } = req.body as unknown as ILoginRequest;
 
       const authService = this.application.services.get<AuthService>('auth');
@@ -182,7 +170,7 @@ export class UserController<
       return {
         statusCode: 200,
         response: {
-          message: 'Login successful',
+          message: getSuiteCoreTranslation(SuiteCoreStringKey.LoggedIn_Success),
           data: authResponse,
         } as IAuthApiResponse,
       };
@@ -190,60 +178,61 @@ export class UserController<
       return {
         statusCode: 401,
         response: {
-          message: 'Invalid credentials',
-          error: 'Invalid credentials',
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Validation_InvalidCredentials,
+          ),
+          error: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Validation_InvalidCredentials,
+          ),
         },
       };
     }
   }
 
-  private async handleProfile(
-    req: Parameters<
-      ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
-    >[0],
+  @Get('/profile', { auth: true })
+  async getProfile(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    const user = (req as { user?: { memberId: string; username: string } })
-      .user;
+    const user = (req as { user?: { id: string; username: string } }).user;
 
     if (!user) {
-      return {
-        statusCode: 401,
-        response: {
-          message: 'Not authenticated',
-          error: 'Not authenticated',
-        },
-      };
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
+        ),
+        { statusCode: 401 },
+      );
     }
 
     try {
-      // Get energy account for balance and reputation
+      // Deserialize the GUID string back to typed ID (round-trips with idToString)
+      const sp = ServiceProvider.getInstance();
+      const typedId = sp.idProvider.idFromString(user.id);
+      const idRawBytes = sp.idProvider.toBytes(typedId);
+      const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
+
       const energyStore =
         this.application.services.get<EnergyAccountStore>('energyStore');
-      const memberChecksum = Checksum.fromHex(user.memberId);
       const energyAccount = await energyStore.getOrCreate(memberChecksum);
 
-      // Try to get member email from MemberStore
       let email = '';
       const memberStore =
         this.application.services.get<MemberStore>('memberStore');
       try {
         if (memberStore) {
-          const member = await memberStore.getMember(
-            memberChecksum.toUint8Array(),
-          );
+          const member = await memberStore.getMember(typedId);
           email = member.email.toString();
         }
       } catch {
         // Member lookup failed, continue with empty email
       }
 
-      // Try to get member profile metadata from MemberStore if available
       let memberProfile: IUserProfileMetadata | undefined;
       try {
         if (memberStore) {
-          const profile = await memberStore.getMemberProfile(
-            memberChecksum.toUint8Array(),
-          );
+          const profile = await memberStore.getMemberProfile(typedId);
           if (profile.publicProfile) {
             memberProfile = {
               status: profile.publicProfile.status,
@@ -255,11 +244,11 @@ export class UserController<
           }
         }
       } catch {
-        // MemberStore profile not available, continue without profile metadata
+        // MemberStore profile not available
       }
 
       const userProfile: IUserProfile<string> = {
-        memberId: user.memberId,
+        memberId: user.id,
         username: user.username,
         email,
         energyBalance: energyAccount.balance,
@@ -276,7 +265,9 @@ export class UserController<
       return {
         statusCode: 200,
         response: {
-          message: 'Profile retrieved',
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Settings_RetrievedSuccess,
+          ),
           data: userProfile,
         } as IUserProfileApiResponse,
       };
@@ -284,37 +275,42 @@ export class UserController<
       return {
         statusCode: 500,
         response: {
-          message: 'Failed to retrieve profile',
-          error: 'Failed to retrieve profile',
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_UnexpectedError,
+          ),
+          error: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_UnexpectedError,
+          ),
         },
       };
     }
   }
 
-  private async handleUpdateProfile(
-    req: Parameters<
-      ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
-    >[0],
+  @Put('/profile', { auth: true })
+  async updateProfile(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    const user = (req as { user?: { memberId: string; username: string } })
-      .user;
+    const user = (req as { user?: { id: string; username: string } }).user;
 
     if (!user) {
-      return {
-        statusCode: 401,
-        response: {
-          message: 'Not authenticated',
-          error: 'Not authenticated',
-        },
-      };
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
+        ),
+        { statusCode: 401 },
+      );
     }
 
     try {
       const updateData = req.body as unknown as IUpdateProfileRequest;
-      const memberChecksum = Checksum.fromHex(user.memberId);
-      const memberIdBytes = memberChecksum.toUint8Array();
+      // Deserialize the GUID string back to typed ID (round-trips with idToString)
+      const sp = ServiceProvider.getInstance();
+      const typedId = sp.idProvider.idFromString(user.id);
+      const idRawBytes = sp.idProvider.toBytes(typedId);
+      const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
 
-      // Persist settings via MemberStore — let errors propagate to return 500
       const memberStore =
         this.application.services.get<MemberStore>('memberStore');
       if (memberStore && updateData.settings) {
@@ -323,35 +319,32 @@ export class UserController<
           minRedundancy: updateData.settings.minRedundancy ?? 3,
           preferredRegions: updateData.settings.preferredRegions ?? [],
         };
-        await memberStore.updateMember(memberIdBytes, {
-          id: memberIdBytes,
+        await memberStore.updateMember(typedId, {
+          id: typedId,
           privateChanges: {
             settings: completeSettings,
           },
         });
       }
 
-      // Get updated energy account for response
       const energyStore =
         this.application.services.get<EnergyAccountStore>('energyStore');
       const energyAccount = await energyStore.getOrCreate(memberChecksum);
 
-      // Try to get member email from MemberStore
       let email = '';
       try {
         if (memberStore) {
-          const member = await memberStore.getMember(memberIdBytes);
+          const member = await memberStore.getMember(typedId);
           email = member.email.toString();
         }
       } catch {
-        // Member lookup failed, continue with empty email
+        // Member lookup failed
       }
 
-      // Try to get member profile metadata from MemberStore
       let memberProfile: IUserProfileMetadata | undefined;
       try {
         if (memberStore) {
-          const profile = await memberStore.getMemberProfile(memberIdBytes);
+          const profile = await memberStore.getMemberProfile(typedId);
           if (profile.publicProfile) {
             memberProfile = {
               status: profile.publicProfile.status,
@@ -363,11 +356,11 @@ export class UserController<
           }
         }
       } catch {
-        // MemberStore profile not available, continue without profile metadata
+        // MemberStore profile not available
       }
 
       const userProfile: IUserProfile<string> = {
-        memberId: user.memberId,
+        memberId: user.id,
         username: user.username,
         email,
         energyBalance: energyAccount.balance,
@@ -384,7 +377,9 @@ export class UserController<
       return {
         statusCode: 200,
         response: {
-          message: 'Profile updated successfully',
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Settings_SaveSuccess,
+          ),
           data: userProfile,
         } as IUserProfileApiResponse,
       };
@@ -392,8 +387,346 @@ export class UserController<
       return {
         statusCode: 500,
         response: {
-          message: 'Failed to update profile',
-          error: 'Failed to update profile',
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_UnexpectedError,
+          ),
+          error: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_UnexpectedError,
+          ),
+        },
+      };
+    }
+  }
+
+  @Post('/change-password', { auth: true })
+  async changePassword(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    const validation = validatePasswordChange(req.body);
+    if (!validation.valid) {
+      return {
+        statusCode: 400,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Validation_MissingValidatedData,
+          ),
+          errors: validation.errors,
+        } as IApiMessageResponse,
+      };
+    }
+
+    const user = (req as { user?: { id: string; username: string } }).user;
+
+    if (!user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    try {
+      const { currentPassword, newPassword } =
+        req.body as unknown as IPasswordChangeRequest;
+
+      // Deserialize the GUID string back to typed ID (round-trips with idToString)
+      const sp = ServiceProvider.getInstance();
+      const typedId = sp.idProvider.idFromString(user.id);
+
+      const authService = this.application.services.get<AuthService>('auth');
+      await authService.changePassword(typedId, currentPassword, newPassword);
+
+      return {
+        statusCode: 200,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.PasswordChange_Success,
+          ),
+          data: {
+            memberId: user.id,
+            success: true,
+          },
+        } as IApiPasswordChangeResponse,
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : getSuiteCoreTranslation(SuiteCoreStringKey.Error_PasswordChange);
+
+      if (errorMessage === 'Invalid credentials') {
+        return {
+          statusCode: 401,
+          response: {
+            message: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_InvalidCredentials,
+            ),
+            error: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_InvalidCredentials,
+            ),
+          },
+        };
+      }
+
+      return {
+        statusCode: 500,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Error_PasswordChange,
+          ),
+          error: errorMessage,
+        },
+      };
+    }
+  }
+
+  @Post('/backup-codes', { auth: true })
+  async generateBackupCodes(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    const user = (req as { user?: { id: string; username: string } }).user;
+
+    if (!user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    try {
+      // Deserialize the GUID string back to typed ID (round-trips with idToString)
+      const sp = ServiceProvider.getInstance();
+      const typedId = sp.idProvider.idFromString(user.id);
+
+      const backupCodeService =
+        this.application.services.get<BackupCodeService>('backupCodeService');
+      const codes = await backupCodeService.generateCodes(typedId);
+
+      return {
+        statusCode: 200,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.BackupCodeRecovery_YourNewCodes,
+          ),
+          backupCodes: codes,
+        } as IApiBackupCodesResponse,
+      };
+    } catch (error) {
+      return {
+        statusCode: 500,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.BackupCodes_FailedToGenerate,
+          ),
+          error:
+            error instanceof Error
+              ? error.message
+              : getSuiteCoreTranslation(
+                  SuiteCoreStringKey.BackupCodes_FailedToGenerate,
+                ),
+        },
+      };
+    }
+  }
+
+  @Get('/backup-codes', { auth: true })
+  async getBackupCodeCount(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    const user = (req as { user?: { id: string; username: string } }).user;
+
+    if (!user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    try {
+      // Deserialize the GUID string back to typed ID (round-trips with idToString)
+      const sp = ServiceProvider.getInstance();
+      const typedId = sp.idProvider.idFromString(user.id);
+
+      const backupCodeService =
+        this.application.services.get<BackupCodeService>('backupCodeService');
+      const count = await backupCodeService.getCodeCount(typedId);
+
+      return {
+        statusCode: 200,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.BackupCodes_RetrievedSuccess,
+          ),
+          codeCount: count,
+        } as IApiCodeCountResponse,
+      };
+    } catch (error) {
+      return {
+        statusCode: 500,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.BackupCodes_FailedToFetch,
+          ),
+          error:
+            error instanceof Error
+              ? error.message
+              : getSuiteCoreTranslation(
+                  SuiteCoreStringKey.BackupCodes_FailedToFetch,
+                ),
+        },
+      };
+    }
+  }
+
+  @Post('/recover')
+  async recover(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    const validation = validateRecovery(req.body);
+    if (!validation.valid) {
+      return {
+        statusCode: 400,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Validation_MissingValidatedData,
+          ),
+          errors: validation.errors,
+        } as IApiMessageResponse,
+      };
+    }
+
+    try {
+      const { email, mnemonic, newPassword } =
+        req.body as unknown as IRecoveryRequest;
+
+      const authService = this.application.services.get<AuthService>('auth');
+      const result = await authService.recoverWithMnemonic(
+        email,
+        new SecureString(mnemonic),
+        newPassword,
+      );
+
+      return {
+        statusCode: 200,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.MnemonicRecovery_Success,
+          ),
+          data: result,
+        } as IApiRecoveryResponse,
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : getSuiteCoreTranslation(SuiteCoreStringKey.Common_UnexpectedError);
+
+      if (
+        errorMessage === 'Invalid credentials' ||
+        errorMessage === 'Invalid mnemonic'
+      ) {
+        return {
+          statusCode: 401,
+          response: {
+            message: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_InvalidCredentials,
+            ),
+            error: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_InvalidCredentials,
+            ),
+          },
+        };
+      }
+
+      return {
+        statusCode: 500,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_UnexpectedError,
+          ),
+          error: errorMessage,
+        },
+      };
+    }
+  }
+
+  @Post('/logout', { auth: true })
+  async logout(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    const user = (req as { user?: { id: string; username: string } }).user;
+
+    if (!user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    try {
+      const authHeader = String(
+        (req as { headers: { authorization?: string } }).headers
+          ?.authorization ?? '',
+      );
+      if (!authHeader.startsWith('Bearer ')) {
+        return {
+          statusCode: 401,
+          response: {
+            message: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_TokenMissing,
+            ),
+            error: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_TokenMissing,
+            ),
+          },
+        };
+      }
+
+      const token = authHeader.slice('Bearer '.length);
+
+      const sessionAdapter =
+        this.application.services.get<BrightChainSessionAdapter>(
+          'sessionAdapter',
+        );
+
+      const session = await sessionAdapter.validateToken(token);
+      if (session) {
+        await sessionAdapter.deleteSession(session.sessionId);
+      }
+
+      return {
+        statusCode: 200,
+        response: {
+          message: getSuiteCoreTranslation(SuiteCoreStringKey.Common_Success),
+        },
+      };
+    } catch {
+      return {
+        statusCode: 500,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_UnexpectedError,
+          ),
+          error: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_UnexpectedError,
+          ),
         },
       };
     }

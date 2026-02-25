@@ -7,6 +7,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
 import { Checksum } from '../../types/checksum';
+import { IStoredBackupCode } from '../userManagement';
 
 /**
  * Public member data stored in CBL
@@ -51,6 +52,9 @@ export interface IPrivateMemberData<TID extends PlatformID = Uint8Array> {
   // Auth
   /** bcrypt password hash — present only for members with password-based auth */
   passwordHash?: string;
+
+  /** Stored backup codes — bcrypt-hashed, one-time-use recovery codes */
+  backupCodes?: IStoredBackupCode[];
 
   // Network
   trustedPeers: TID[];

@@ -225,6 +225,87 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_QuorumError_MemberNotFound]: 'Member not found',
   [BrightChainStrings.Error_QuorumError_NotEnoughMembers]:
     'Not enough members for quorum operation',
+  // Quorum Mode Errors
+  [BrightChainStrings.Error_QuorumError_TransitionInProgress]:
+    'Operation blocked: transition ceremony in progress',
+  [BrightChainStrings.Error_QuorumError_InvalidModeTransition]:
+    'Invalid operational mode transition',
+  [BrightChainStrings.Error_QuorumError_InsufficientMembersForTransition]:
+    'Insufficient members to initiate transition ceremony',
+  // Quorum Member Management Errors
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyExists]:
+    'Member already exists in the quorum',
+  [BrightChainStrings.Error_QuorumError_InsufficientRemainingMembers]:
+    'Cannot remove member: remaining members would be below threshold',
+  [BrightChainStrings.Error_QuorumError_MemberBanned]:
+    'Member is banned from the network',
+  [BrightChainStrings.Error_QuorumError_MemberSuspended]:
+    'Member is suspended from the network',
+  // Quorum Proposal/Voting Errors
+  [BrightChainStrings.Error_QuorumError_DuplicateProposal]:
+    'Duplicate proposal ID',
+  [BrightChainStrings.Error_QuorumError_ProposalExpired]:
+    'Proposal has expired',
+  [BrightChainStrings.Error_QuorumError_DuplicateVote]:
+    'Duplicate vote from this member',
+  [BrightChainStrings.Error_QuorumError_VoterNotOnProposal]:
+    'Voter is not an active member on this proposal',
+  [BrightChainStrings.Error_QuorumError_AuthenticationFailed]:
+    'Authentication failed',
+  [BrightChainStrings.Error_QuorumError_VotingLocked]:
+    'Voting is locked due to repeated authentication failures',
+  [BrightChainStrings.Error_QuorumError_MissingAttachment]:
+    'Proposal requires an attachment but none was provided',
+  [BrightChainStrings.Error_QuorumError_AttachmentNotRetrievable]:
+    'Referenced attachment CBL is not retrievable',
+  // Quorum Share Redistribution Errors
+  [BrightChainStrings.Error_QuorumError_RedistributionFailed]:
+    'Share redistribution failed',
+  [BrightChainStrings.Error_QuorumError_InsufficientSharesForReconstruction]:
+    'Insufficient shares provided for key reconstruction',
+  [BrightChainStrings.Error_QuorumError_KeyReconstructionValidationFailed]:
+    'Reconstructed key failed validation',
+  // Quorum Identity Errors
+  [BrightChainStrings.Error_QuorumError_IdentityPermanentlyUnrecoverable]:
+    'Identity is permanently unrecoverable due to expired statute of limitations',
+  [BrightChainStrings.Error_QuorumError_InvalidMembershipProof]:
+    'Invalid membership proof',
+  [BrightChainStrings.Error_QuorumError_MissingMembershipProof]:
+    'Missing membership proof for anonymous content',
+  [BrightChainStrings.Error_QuorumError_AliasAlreadyTaken]:
+    'Alias is already registered',
+  [BrightChainStrings.Error_QuorumError_AliasNotFound]: 'Alias not found',
+  [BrightChainStrings.Error_QuorumError_AliasInactive]:
+    'Alias has been deactivated',
+  [BrightChainStrings.Error_QuorumError_IdentitySealingFailed]:
+    'Identity sealing pipeline failed',
+  [BrightChainStrings.Error_QuorumError_ShardVerificationFailed]:
+    'Identity shard verification failed',
+  // Quorum Database Errors
+  [BrightChainStrings.Error_QuorumError_QuorumDatabaseUnavailable]:
+    'Quorum database is unavailable',
+  [BrightChainStrings.Error_QuorumError_TransactionFailed]:
+    'Database transaction failed',
+  // Quorum Audit Errors
+  [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
+    'Audit chain integrity compromised',
+  // Identity Validation Errors
+  [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
+    'Content signature does not match claimed identity',
+  [BrightChainStrings.Error_IdentityValidationError_UnregisteredAlias]:
+    'Alias is not registered',
+  [BrightChainStrings.Error_IdentityValidationError_InactiveAlias]:
+    'Alias is inactive',
+  [BrightChainStrings.Error_IdentityValidationError_InvalidMembershipProof]:
+    'Invalid membership proof',
+  [BrightChainStrings.Error_IdentityValidationError_MissingMembershipProof]:
+    'Missing membership proof for anonymous content',
+  [BrightChainStrings.Error_IdentityValidationError_BannedUser]:
+    'Content creator is banned',
+  [BrightChainStrings.Error_IdentityValidationError_SuspendedUser]:
+    'Content creator is suspended',
+  [BrightChainStrings.Error_IdentityValidationError_ShardVerificationFailed]:
+    'Identity shard verification failed',
 
   // System Keyring Error
   [BrightChainStrings.Error_SystemKeyringError_KeyNotFoundTemplate]:

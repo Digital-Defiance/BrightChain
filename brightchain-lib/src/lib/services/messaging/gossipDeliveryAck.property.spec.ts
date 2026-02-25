@@ -54,6 +54,12 @@ describe('Feature: unified-gossip-delivery, Property 8: Ack updates delivery sta
       announceCBLIndexDelete: async () => {},
       announceHeadUpdate: async () => {},
       announceACLUpdate: async () => {},
+      announceQuorumProposal: async () => {},
+      announceQuorumVote: async () => {},
+      onQuorumProposal: () => {},
+      offQuorumProposal: () => {},
+      onQuorumVote: () => {},
+      offQuorumVote: () => {},
     };
   }
 
@@ -762,6 +768,12 @@ describe('Feature: unified-gossip-delivery, Property 9: All-recipients-delivered
       announceCBLIndexDelete: async () => {},
       announceHeadUpdate: async () => {},
       announceACLUpdate: async () => {},
+      announceQuorumProposal: async () => {},
+      announceQuorumVote: async () => {},
+      onQuorumProposal: () => {},
+      offQuorumProposal: () => {},
+      onQuorumVote: () => {},
+      offQuorumVote: () => {},
     };
   }
 
