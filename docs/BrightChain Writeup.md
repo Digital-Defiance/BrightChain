@@ -137,6 +137,19 @@ At some point the FEC data on the posts could even be expired and deleted. It mi
 - ✅ Encrypted share distribution per member
 - ✅ Signature verification for all operations
 - ✅ Temporal expiration support (statute of limitations)
+- ✅ Bootstrap mode (single-node or few-node operation with reduced thresholds)
+- ✅ Transition ceremony (atomic migration from bootstrap to full quorum mode)
+- ✅ Share redistribution on member add/remove (new Shamir polynomial, old shares invalidated)
+- ✅ Gossip-based proposal/voting with physical operator prompts
+- ✅ Brokered anonymity pipeline (identity sealing, alias registry, anonymous membership proofs)
+- ✅ Immutable chained audit log (SHA-3 hash chain, ECIES-signed, stored via CBL whitening)
+- ✅ Hierarchical quorum support (inner quorum for routine ops when members > 20)
+- ✅ Epoch-based state machine (versioned membership snapshots, monotonically increasing)
+- ✅ Pool-isolated quorum database via BrightChainDb
+- ✅ Expiration scheduler for statute of limitations (configurable per-content-type durations)
+- ✅ Ring signature membership proofs for anonymous content
+- ✅ Identity validator for content ingestion (real, alias, and anonymous modes)
+- ✅ 18 property-based correctness tests (P1-P18)
 - ⚠️ Quorum governance bylaws - to be defined
 - ⚠️ Quorum member selection - to be established
 
@@ -392,9 +405,17 @@ Democratic decision-making infrastructure:
   - Hierarchical aggregation for large-scale elections
 
 - **Quorum Governance**: Shamir's Secret Sharing for collective decision-making
+  - Bootstrap mode for single-node startup, with transition ceremony to full quorum
+  - Gossip-based proposal/voting with physical operator authentication
+  - Share redistribution on membership changes (old shares cryptographically invalidated)
   - Configurable thresholds (2 to 1,048,575 members)
   - Document sealing/unsealing with majority consensus
   - Temporal expiration for statute of limitations
+  - Brokered anonymity pipeline with identity sealing, alias registry, and ring signature membership proofs
+  - Immutable chained audit log with tamper detection
+  - Hierarchical quorum for scalability (inner quorum for routine ops)
+  - Epoch-based state machine with versioned membership snapshots
+  - Pool-isolated quorum database via BrightChainDb
 
 ### Integration: A Unified Platform
 
@@ -483,8 +504,8 @@ BrightChain is the technology behind The Revolution Network—a protocol and eco
 
 The platform provides:
 
-- **True Anonymity with Accountability**: Brokered anonymity via quorum consensus
-- **Democratic Moderation**: Community-driven governance with configurable thresholds
+- **True Anonymity with Accountability**: Brokered anonymity via quorum consensus with identity sealing pipeline, alias registry, and ring signature membership proofs
+- **Democratic Moderation**: Community-driven governance with gossip-based proposal/voting and physical operator authentication
 - **Privacy by Design**: Owner-Free Filesystem with plausible deniability
 - **Secure Communication**: Signal-grade encryption across all channels
 - **Democratic Decision-Making**: Privacy-preserving voting with verifiable results
