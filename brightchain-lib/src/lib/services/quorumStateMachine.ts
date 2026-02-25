@@ -1773,20 +1773,26 @@ export class QuorumStateMachine<
       ? Math.max(memberIds.length, 1)
       : (sharesRequired ?? this.currentEpochData.threshold);
 
+    // Resolve full Member objects for the requested member IDs
+    const sealMembers = memberIds
+      .map((mid) => memberMap.get(mid))
+      .filter((m): m is IQuorumMember<TID> => m !== undefined);
+    const resolvedMembers = this.resolveMembersFromRecords(sealMembers);
+
     // Delegate to SealingService
     let sealedDoc;
     if (isBootstrap) {
       sealedDoc = await this.sealingService.quorumSealBootstrap<T>(
         agent,
         document,
-        [agent],
+        resolvedMembers,
         effectiveThreshold,
       );
     } else {
       sealedDoc = await this.sealingService.quorumSeal<T>(
         agent,
         document,
-        [agent],
+        resolvedMembers,
         effectiveThreshold,
       );
     }
