@@ -7,7 +7,7 @@
  * of brightchainDatabaseInit across randomly generated environment configs.
  */
 
-import type { IBlockStore, IDocumentStore } from '@brightchain/brightchain-lib';
+import type { IBlockStore } from '@brightchain/brightchain-lib';
 import {
   BlockSize,
   EmailString,
@@ -71,12 +71,15 @@ function setupEnv(blockStorePath?: string): () => void {
   saved['BRIGHTCHAIN_BLOCKSTORE_PATH'] =
     process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
   saved['BLOCKSTORE_PATH'] = process.env['BLOCKSTORE_PATH'];
+  saved['DEV_DATABASE'] = process.env['DEV_DATABASE'];
 
   if (blockStorePath !== undefined) {
     process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'] = blockStorePath;
+    delete process.env['DEV_DATABASE'];
   } else {
     delete process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
     delete process.env['BLOCKSTORE_PATH'];
+    process.env['DEV_DATABASE'] = 'ephemeral-pbt';
   }
 
   return () => {
@@ -153,10 +156,17 @@ describe('Database Init Property-Based Tests', () => {
             expect(typeof blockStore.getData).toBe('function');
             expect(typeof blockStore.setData).toBe('function');
 
-            // Verify types: db implements IDocumentStore
-            const db: IDocumentStore = backend.db;
-            expect(typeof db.collection).toBe('function');
-            expect(typeof db.isConnected).toBe('function');
+            // Verify types: db is a BrightChainDb instance (typed as unknown in IBrightChainInitData)
+            const db = backend.db;
+            expect(db).toBeDefined();
+            expect(db).not.toBeNull();
+            // BrightChainDb has collection() and withTransaction()
+            expect(typeof (db as Record<string, unknown>).collection).toBe(
+              'function',
+            );
+            expect(typeof (db as Record<string, unknown>).withTransaction).toBe(
+              'function',
+            );
 
             // Verify types: memberStore is a MemberStore
             expect(backend.memberStore).toBeInstanceOf(MemberStore);

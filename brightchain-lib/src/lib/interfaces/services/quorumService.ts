@@ -4,6 +4,7 @@ import {
   PlatformID,
   ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
+import { MemberStatusType } from '../../enumerations/memberStatusType';
 
 /**
  * Metadata for a quorum member
@@ -23,6 +24,8 @@ export interface IQuorumMember<TID extends PlatformID = GuidV4Uint8Array> {
   publicKey: Uint8Array;
   metadata: QuorumMemberMetadata;
   isActive: boolean;
+  /** Member status for access control (banned/suspended checks). Defaults to Active. */
+  status?: MemberStatusType;
   createdAt: Date;
   updatedAt: Date;
   // Reserved for future use with TID

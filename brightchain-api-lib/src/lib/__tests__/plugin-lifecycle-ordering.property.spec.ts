@@ -70,7 +70,7 @@ function setRequiredEnvVars(): void {
       'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210',
     MNEMONIC_ENCRYPTION_KEY:
       'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
-    NODE_MNEMONIC:
+    SYSTEM_MNEMONIC:
       'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
   };
 
@@ -83,8 +83,10 @@ function setRequiredEnvVars(): void {
   savedEnv['BRIGHTCHAIN_BLOCKSTORE_PATH'] =
     process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
   savedEnv['BLOCKSTORE_PATH'] = process.env['BLOCKSTORE_PATH'];
+  savedEnv['DEV_DATABASE'] = process.env['DEV_DATABASE'];
   delete process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
   delete process.env['BLOCKSTORE_PATH'];
+  process.env['DEV_DATABASE'] = 'ephemeral-lifecycle-test';
 
   setupDistDirs();
 }
@@ -113,7 +115,6 @@ function checkAccessorsAvailable(
       plugin.memberStore != null &&
       plugin.energyStore != null &&
       plugin.brightChainDb != null &&
-      plugin.documentStore != null &&
       plugin.database != null
     );
   } catch {

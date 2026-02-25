@@ -13,4 +13,5 @@ export * from './discoveryProtocol';
 export * from './gossipService';
 export * from './heartbeatMonitor';
 export * from './poolDiscoveryService';
+export * from './quorumGossipHandler';
 export * from './reconciliationService';

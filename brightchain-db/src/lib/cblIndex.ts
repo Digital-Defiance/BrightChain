@@ -16,10 +16,9 @@ import {
   type ICBLIndexEntry,
   type ICBLIndexQueryOptions,
   type IGossipService,
-  type IHeadRegistry,
 } from '@brightchain/brightchain-lib';
 import { randomUUID } from 'crypto';
-import type { Collection } from './collection';
+import { type Collection, type ICollectionHeadRegistry } from './collection';
 import type { BrightChainDb } from './database';
 import type { BsonDocument, FilterQuery, SortSpec } from './types';
 
@@ -90,7 +89,7 @@ export class CBLIndex {
   private readonly parityCount: number;
   private readonly snapshotInterval: number;
   private mutationsSinceSnapshot = 0;
-  private readonly headRegistry: IHeadRegistry;
+  private readonly headRegistry: ICollectionHeadRegistry;
   private readonly dbName: string;
   private readonly enableRecovery: boolean;
   private readonly gossipService?: IGossipService;

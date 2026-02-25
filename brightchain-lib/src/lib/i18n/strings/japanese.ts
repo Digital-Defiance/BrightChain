@@ -207,6 +207,79 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     'メンバーが見つかりません',
   [BrightChainStrings.Error_QuorumError_NotEnoughMembers]:
     'クォーラム操作に十分なメンバーがいません',
+  [BrightChainStrings.Error_QuorumError_TransitionInProgress]:
+    '操作がブロックされています：移行式が進行中です',
+  [BrightChainStrings.Error_QuorumError_InvalidModeTransition]:
+    '無効な動作モード遷移',
+  [BrightChainStrings.Error_QuorumError_InsufficientMembersForTransition]:
+    '移行式を開始するにはメンバーが不足しています',
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyExists]:
+    'メンバーはすでにクォーラムに存在します',
+  [BrightChainStrings.Error_QuorumError_InsufficientRemainingMembers]:
+    'メンバーを削除できません：残りのメンバーがしきい値を下回ります',
+  [BrightChainStrings.Error_QuorumError_MemberBanned]:
+    'メンバーはネットワークから禁止されています',
+  [BrightChainStrings.Error_QuorumError_MemberSuspended]:
+    'メンバーはネットワークで一時停止されています',
+  [BrightChainStrings.Error_QuorumError_DuplicateProposal]: '重複した提案ID',
+  [BrightChainStrings.Error_QuorumError_ProposalExpired]:
+    '提案の有効期限が切れました',
+  [BrightChainStrings.Error_QuorumError_DuplicateVote]:
+    'このメンバーからの重複投票',
+  [BrightChainStrings.Error_QuorumError_VoterNotOnProposal]:
+    '投票者はこの提案のアクティブメンバーではありません',
+  [BrightChainStrings.Error_QuorumError_AuthenticationFailed]:
+    '認証に失敗しました',
+  [BrightChainStrings.Error_QuorumError_VotingLocked]:
+    '認証の繰り返し失敗により投票がロックされています',
+  [BrightChainStrings.Error_QuorumError_MissingAttachment]:
+    '提案には添付ファイルが必要ですが、提供されていません',
+  [BrightChainStrings.Error_QuorumError_AttachmentNotRetrievable]:
+    '参照された添付ファイルCBLは取得できません',
+  [BrightChainStrings.Error_QuorumError_RedistributionFailed]:
+    'シェアの再配布に失敗しました',
+  [BrightChainStrings.Error_QuorumError_InsufficientSharesForReconstruction]:
+    '鍵の再構築に十分なシェアがありません',
+  [BrightChainStrings.Error_QuorumError_KeyReconstructionValidationFailed]:
+    '再構築された鍵の検証に失敗しました',
+  [BrightChainStrings.Error_QuorumError_IdentityPermanentlyUnrecoverable]:
+    '時効の満了により、アイデンティティは永久に回復不能です',
+  [BrightChainStrings.Error_QuorumError_InvalidMembershipProof]:
+    '無効なメンバーシップ証明',
+  [BrightChainStrings.Error_QuorumError_MissingMembershipProof]:
+    '匿名コンテンツのメンバーシップ証明がありません',
+  [BrightChainStrings.Error_QuorumError_AliasAlreadyTaken]:
+    'エイリアスはすでに登録されています',
+  [BrightChainStrings.Error_QuorumError_AliasNotFound]:
+    'エイリアスが見つかりません',
+  [BrightChainStrings.Error_QuorumError_AliasInactive]:
+    'エイリアスは無効化されています',
+  [BrightChainStrings.Error_QuorumError_IdentitySealingFailed]:
+    'アイデンティティシーリングパイプラインが失敗しました',
+  [BrightChainStrings.Error_QuorumError_ShardVerificationFailed]:
+    'アイデンティティシャードの検証に失敗しました',
+  [BrightChainStrings.Error_QuorumError_QuorumDatabaseUnavailable]:
+    'クォーラムデータベースが利用できません',
+  [BrightChainStrings.Error_QuorumError_TransactionFailed]:
+    'データベーストランザクションが失敗しました',
+  [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
+    '監査チェーンの整合性が損なわれています',
+  [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
+    'コンテンツの署名が主張されたアイデンティティと一致しません',
+  [BrightChainStrings.Error_IdentityValidationError_UnregisteredAlias]:
+    'エイリアスは登録されていません',
+  [BrightChainStrings.Error_IdentityValidationError_InactiveAlias]:
+    'エイリアスは非アクティブです',
+  [BrightChainStrings.Error_IdentityValidationError_InvalidMembershipProof]:
+    '無効なメンバーシップ証明',
+  [BrightChainStrings.Error_IdentityValidationError_MissingMembershipProof]:
+    '匿名コンテンツのメンバーシップ証明がありません',
+  [BrightChainStrings.Error_IdentityValidationError_BannedUser]:
+    'コンテンツ作成者は禁止されています',
+  [BrightChainStrings.Error_IdentityValidationError_SuspendedUser]:
+    'コンテンツ作成者は一時停止されています',
+  [BrightChainStrings.Error_IdentityValidationError_ShardVerificationFailed]:
+    'アイデンティティシャードの検証に失敗しました',
   [BrightChainStrings.Error_SystemKeyringError_KeyNotFoundTemplate]:
     'キー {KEY} が見つかりません',
   [BrightChainStrings.Error_SystemKeyringError_RateLimitExceeded]:

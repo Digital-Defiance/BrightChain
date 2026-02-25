@@ -23,6 +23,7 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
   private _blockStorePath?: string;
   private _blockStoreBlockSize: BlockSize;
   private _useMemoryDocumentStore: boolean;
+  private _devDatabasePoolName: string | undefined;
 
   private _adminId: TID | undefined;
   public override get adminId(): TID | undefined {
@@ -88,6 +89,14 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
 
     this._useMemoryDocumentStore = Boolean(envObj['USE_MEMORY_DOCSTORE']);
 
+    // DEV_DATABASE: non-empty trimmed string → pool name; derives useMemoryDocumentStore
+    const devDatabase = envObj['DEV_DATABASE'];
+    this._devDatabasePoolName =
+      devDatabase && devDatabase.trim() !== '' ? devDatabase.trim() : undefined;
+    if (this._devDatabasePoolName !== undefined) {
+      this._useMemoryDocumentStore = true;
+    }
+
     this._aws = {
       accessKeyId: new SecureString(envObj['AWS_ACCESS_KEY_ID'] ?? null),
       secretAccessKey: new SecureString(
@@ -143,5 +152,13 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
 
   public get useMemoryDocumentStore(): boolean {
     return this._useMemoryDocumentStore || !this._blockStorePath;
+  }
+
+  /**
+   * Pool name for the in-memory dev database.
+   * Set when `DEV_DATABASE` env var is a non-empty string; `undefined` otherwise.
+   */
+  public get devDatabasePoolName(): string | undefined {
+    return this._devDatabasePoolName;
   }
 }

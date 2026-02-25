@@ -22,14 +22,14 @@ export class SecureKeyStorage {
   }
 
   public async initializeFromEnvironment(): Promise<void> {
-    const mnemonic = process.env['NODE_MNEMONIC'];
+    const mnemonic = process.env['SYSTEM_MNEMONIC'];
     if (!mnemonic) {
-      throw new Error('NODE_MNEMONIC environment variable not set');
+      throw new Error('SYSTEM_MNEMONIC environment variable not set');
     }
 
     await this.storeMnemonic(mnemonic);
     // Immediately clear from process.env
-    delete process.env['NODE_MNEMONIC'];
+    delete process.env['SYSTEM_MNEMONIC'];
   }
 
   private async storeMnemonic(mnemonic: string): Promise<void> {

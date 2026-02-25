@@ -1,10 +1,10 @@
+export type * from './backupCodesResponseData';
+export type * from './codeCountResponseData';
 export type * from './communicationResponses';
 // NOTE: deleteMessageResponse.ts is NOT re-exported here because
 // communicationResponses.ts already exports IDeleteMessageResponse.
 // Re-exporting both causes TS2308.
-export type * from './backupCodesResponseData';
 export type * from './challengeResponseData';
-export type * from './codeCountResponseData';
 export type * from './cryptoResponses';
 export type * from './detailedHealthResponse';
 export type * from './deviceResponses';
@@ -22,8 +22,10 @@ export type * from './listNodesResponse';
 export type * from './loginResponseData';
 export type * from './membersResponseData';
 export type * from './mnemonicResponseData';
+export type * from './passwordChangeResponse';
 export type * from './queryMessageResponse';
 export type * from './reconcileResponse';
+export type * from './recoveryResponse';
 export type * from './registerNodeResponse';
 export type * from './registrationResponseData';
 export type * from './replicateBlockResponse';

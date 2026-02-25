@@ -9,6 +9,8 @@
  * @see Requirements 1.1, 1.2, 1.3, 1.5, 1.6, 10.1 (Unified Gossip Delivery)
  */
 
+import type { ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { ProposalActionType } from '../../enumerations/proposalActionType';
 import type { ICBLIndexEntry } from '../storage/cblIndex';
 import { PoolId, isValidPoolId } from '../storage/pooledBlockStore';
 
@@ -96,6 +98,63 @@ export interface PoolAnnouncementMetadata {
 }
 
 /**
+ * Metadata for quorum proposal announcements via gossip protocol.
+ * Attached to 'quorum_proposal' type BlockAnnouncements to propagate
+ * proposal submissions across quorum nodes.
+ *
+ * @see Requirements 5.2, 5.3
+ */
+export interface QuorumProposalMetadata {
+  /** Unique identifier for the proposal */
+  proposalId: ShortHexGuid;
+
+  /** Human-readable description of the proposal (max 4096 chars) */
+  description: string;
+
+  /** The type of action this proposal requests */
+  actionType: ProposalActionType;
+
+  /** JSON-serialized action payload */
+  actionPayload: string;
+
+  /** Member ID of the proposer */
+  proposerMemberId: ShortHexGuid;
+
+  /** Timestamp after which the proposal expires */
+  expiresAt: Date;
+
+  /** Number of approve votes required for the proposal to pass */
+  requiredThreshold: number;
+
+  /** Optional CBL reference for supporting documentation (e.g., legal orders) */
+  attachmentCblId?: string;
+}
+
+/**
+ * Metadata for quorum vote announcements via gossip protocol.
+ * Attached to 'quorum_vote' type BlockAnnouncements to propagate
+ * vote submissions across quorum nodes.
+ *
+ * @see Requirements 7.1, 7.2
+ */
+export interface QuorumVoteMetadata {
+  /** The proposal ID this vote is for */
+  proposalId: ShortHexGuid;
+
+  /** Member ID of the voter */
+  voterMemberId: ShortHexGuid;
+
+  /** The vote decision */
+  decision: 'approve' | 'reject';
+
+  /** Optional comment from the voter (max 1024 chars) */
+  comment?: string;
+
+  /** ECIES-encrypted share, encrypted to the proposer's public key. Present only on approve votes. */
+  encryptedShare?: Uint8Array;
+}
+
+/**
  * Block announcement message sent via gossip protocol.
  * Contains information about a block being added, removed, or acknowledged.
  *
@@ -115,8 +174,10 @@ export interface BlockAnnouncement {
    * - 'acl_update' for approved ACL updates (requires poolId and aclBlockId)
    * - 'pool_announce' for pool creation/update announcements (requires poolId and poolAnnouncement)
    * - 'pool_remove' for pool removal announcements (requires poolId)
+   * - 'quorum_proposal' for quorum proposal announcements (requires quorumProposal metadata)
+   * - 'quorum_vote' for quorum vote announcements (requires quorumVote metadata)
    *
-   * @see Requirements 1.1, 2.1, 8.1, 8.6, 13.4
+   * @see Requirements 1.1, 2.1, 5.2, 7.1, 8.1, 8.6, 13.4
    */
   type:
     | 'add'
@@ -128,7 +189,9 @@ export interface BlockAnnouncement {
     | 'head_update'
     | 'acl_update'
     | 'pool_announce'
-    | 'pool_remove';
+    | 'pool_remove'
+    | 'quorum_proposal'
+    | 'quorum_vote';
 
   /**
    * The block ID being announced (hex string)
@@ -211,6 +274,24 @@ export interface BlockAnnouncement {
    * @see Requirements 8.1, 8.2, 8.4
    */
   poolAnnouncement?: PoolAnnouncementMetadata;
+
+  /**
+   * Optional quorum proposal metadata for quorum proposal gossip.
+   * Required for 'quorum_proposal' type announcements.
+   * Contains the full proposal details for quorum voting.
+   *
+   * @see Requirements 5.2, 5.3
+   */
+  quorumProposal?: QuorumProposalMetadata;
+
+  /**
+   * Optional quorum vote metadata for quorum vote gossip.
+   * Required for 'quorum_vote' type announcements.
+   * Contains the vote decision and optional encrypted share.
+   *
+   * @see Requirements 7.1, 7.2
+   */
+  quorumVote?: QuorumVoteMetadata;
 }
 
 /**
@@ -513,6 +594,62 @@ export interface IGossipService {
    * @see Requirements 4.1 (delivery acknowledgment via gossip)
    */
   offDeliveryAck(handler: (announcement: BlockAnnouncement) => void): void;
+
+  /**
+   * Announce a quorum proposal to the network via priority gossip.
+   * Creates a BlockAnnouncement of type 'quorum_proposal' with the proposal metadata
+   * and queues it for propagation using high-priority fanout/TTL.
+   *
+   * @param metadata - The quorum proposal metadata to announce
+   * @returns Promise that resolves when the announcement is queued
+   * @see Requirements 5.2, 5.3
+   */
+  announceQuorumProposal(metadata: QuorumProposalMetadata): Promise<void>;
+
+  /**
+   * Announce a quorum vote to the network via priority gossip.
+   * Creates a BlockAnnouncement of type 'quorum_vote' with the vote metadata
+   * and queues it for propagation using high-priority fanout/TTL.
+   *
+   * @param metadata - The quorum vote metadata to announce
+   * @returns Promise that resolves when the announcement is queued
+   * @see Requirements 7.1, 7.2
+   */
+  announceQuorumVote(metadata: QuorumVoteMetadata): Promise<void>;
+
+  /**
+   * Register a handler for quorum proposal events.
+   * The handler is called when a BlockAnnouncement of type 'quorum_proposal'
+   * with quorumProposal metadata is received.
+   *
+   * @param handler - Function to call when a quorum proposal announcement is received
+   * @see Requirements 5.5
+   */
+  onQuorumProposal(handler: (announcement: BlockAnnouncement) => void): void;
+
+  /**
+   * Remove a quorum proposal event handler.
+   *
+   * @param handler - The handler to remove
+   */
+  offQuorumProposal(handler: (announcement: BlockAnnouncement) => void): void;
+
+  /**
+   * Register a handler for quorum vote events.
+   * The handler is called when a BlockAnnouncement of type 'quorum_vote'
+   * with quorumVote metadata is received.
+   *
+   * @param handler - Function to call when a quorum vote announcement is received
+   * @see Requirements 7.3
+   */
+  onQuorumVote(handler: (announcement: BlockAnnouncement) => void): void;
+
+  /**
+   * Remove a quorum vote event handler.
+   *
+   * @param handler - The handler to remove
+   */
+  offQuorumVote(handler: (announcement: BlockAnnouncement) => void): void;
 }
 
 /**
@@ -529,6 +666,8 @@ const VALID_ANNOUNCEMENT_TYPES = [
   'acl_update',
   'pool_announce',
   'pool_remove',
+  'quorum_proposal',
+  'quorum_vote',
 ] as const;
 
 /**
@@ -699,6 +838,88 @@ export function validateBlockAnnouncement(
   // must not have messageDelivery, deliveryAck, or cblIndexEntry (Req 8.4)
   if (announcement.type === 'pool_remove') {
     if (!announcement.poolId || !isValidPoolId(announcement.poolId)) {
+      return false;
+    }
+    if (
+      announcement.messageDelivery ||
+      announcement.deliveryAck ||
+      announcement.cblIndexEntry
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  // quorum_proposal requires quorumProposal metadata,
+  // must not have messageDelivery, deliveryAck, or cblIndexEntry (Req 5.2, 5.3)
+  if (announcement.type === 'quorum_proposal') {
+    if (!announcement.quorumProposal) {
+      return false;
+    }
+    if (
+      !announcement.quorumProposal.proposalId ||
+      typeof announcement.quorumProposal.proposalId !== 'string'
+    ) {
+      return false;
+    }
+    if (
+      !announcement.quorumProposal.description ||
+      typeof announcement.quorumProposal.description !== 'string' ||
+      announcement.quorumProposal.description.length > 4096
+    ) {
+      return false;
+    }
+    if (
+      !announcement.quorumProposal.proposerMemberId ||
+      typeof announcement.quorumProposal.proposerMemberId !== 'string'
+    ) {
+      return false;
+    }
+    if (
+      typeof announcement.quorumProposal.requiredThreshold !== 'number' ||
+      announcement.quorumProposal.requiredThreshold < 1
+    ) {
+      return false;
+    }
+    if (
+      announcement.messageDelivery ||
+      announcement.deliveryAck ||
+      announcement.cblIndexEntry
+    ) {
+      return false;
+    }
+    return true;
+  }
+
+  // quorum_vote requires quorumVote metadata,
+  // must not have messageDelivery, deliveryAck, or cblIndexEntry (Req 7.1, 7.2)
+  if (announcement.type === 'quorum_vote') {
+    if (!announcement.quorumVote) {
+      return false;
+    }
+    if (
+      !announcement.quorumVote.proposalId ||
+      typeof announcement.quorumVote.proposalId !== 'string'
+    ) {
+      return false;
+    }
+    if (
+      !announcement.quorumVote.voterMemberId ||
+      typeof announcement.quorumVote.voterMemberId !== 'string'
+    ) {
+      return false;
+    }
+    if (
+      announcement.quorumVote.decision !== 'approve' &&
+      announcement.quorumVote.decision !== 'reject'
+    ) {
+      return false;
+    }
+    if (
+      announcement.quorumVote.comment !== undefined &&
+      (typeof announcement.quorumVote.comment !== 'string' ||
+        announcement.quorumVote.comment.length > 1024)
+    ) {
       return false;
     }
     if (

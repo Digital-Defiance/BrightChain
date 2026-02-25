@@ -32,7 +32,7 @@ import { IBrightChainBaseInitResult } from './brightChainBaseInitResult';
 export interface IBrightChainInitResult<
   TID extends PlatformID,
   TDb = unknown,
-> extends IBrightChainBaseInitResult<TDb> {
+> extends IBrightChainBaseInitResult<TDb, TID> {
   adminRole: IRoleBase<TID, Date, string>;
   adminUser: IUserBase<TID, Date, string, AccountStatus>;
   adminUsername: string;

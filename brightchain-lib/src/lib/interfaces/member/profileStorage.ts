@@ -1,4 +1,5 @@
 import { MemberStatusType } from '../../enumerations/memberStatusType';
+import { IStoredBackupCode } from '../userManagement';
 
 /**
  * Storage format for public member profile data - all serializable types
@@ -40,6 +41,9 @@ export interface IPrivateMemberProfileStorageData {
   // Auth
   /** bcrypt password hash — present only for members with password-based auth */
   passwordHash?: string;
+
+  /** Stored backup codes — bcrypt-hashed, one-time-use recovery codes */
+  backupCodes?: IStoredBackupCode[];
 
   // Preferences
   settings: {
@@ -85,6 +89,8 @@ export interface IPrivateMemberProfileHydratedData<TID = Uint8Array> {
   blockedPeers: TID[];
   /** bcrypt password hash — present only for members with password-based auth */
   passwordHash?: string;
+  /** Stored backup codes — bcrypt-hashed, one-time-use recovery codes */
+  backupCodes?: IStoredBackupCode[];
   settings: {
     autoReplication?: boolean;
     minRedundancy?: number;

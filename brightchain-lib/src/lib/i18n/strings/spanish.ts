@@ -230,6 +230,79 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     'Miembro no encontrado',
   [BrightChainStrings.Error_QuorumError_NotEnoughMembers]:
     'No hay suficientes miembros para la operación de quórum',
+  [BrightChainStrings.Error_QuorumError_TransitionInProgress]:
+    'Operación bloqueada: ceremonia de transición en curso',
+  [BrightChainStrings.Error_QuorumError_InvalidModeTransition]:
+    'Transición de modo operativo inválida',
+  [BrightChainStrings.Error_QuorumError_InsufficientMembersForTransition]:
+    'Miembros insuficientes para iniciar la ceremonia de transición',
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyExists]:
+    'El miembro ya existe en el quórum',
+  [BrightChainStrings.Error_QuorumError_InsufficientRemainingMembers]:
+    'No se puede eliminar miembro: los miembros restantes estarían por debajo del umbral',
+  [BrightChainStrings.Error_QuorumError_MemberBanned]:
+    'El miembro está prohibido en la red',
+  [BrightChainStrings.Error_QuorumError_MemberSuspended]:
+    'El miembro está suspendido en la red',
+  [BrightChainStrings.Error_QuorumError_DuplicateProposal]:
+    'ID de propuesta duplicado',
+  [BrightChainStrings.Error_QuorumError_ProposalExpired]:
+    'La propuesta ha expirado',
+  [BrightChainStrings.Error_QuorumError_DuplicateVote]:
+    'Voto duplicado de este miembro',
+  [BrightChainStrings.Error_QuorumError_VoterNotOnProposal]:
+    'El votante no es un miembro activo en esta propuesta',
+  [BrightChainStrings.Error_QuorumError_AuthenticationFailed]:
+    'Autenticación fallida',
+  [BrightChainStrings.Error_QuorumError_VotingLocked]:
+    'La votación está bloqueada debido a fallos de autenticación repetidos',
+  [BrightChainStrings.Error_QuorumError_MissingAttachment]:
+    'La propuesta requiere un adjunto pero no se proporcionó ninguno',
+  [BrightChainStrings.Error_QuorumError_AttachmentNotRetrievable]:
+    'El CBL del adjunto referenciado no es recuperable',
+  [BrightChainStrings.Error_QuorumError_RedistributionFailed]:
+    'La redistribución de participaciones falló',
+  [BrightChainStrings.Error_QuorumError_InsufficientSharesForReconstruction]:
+    'Participaciones insuficientes para la reconstrucción de la clave',
+  [BrightChainStrings.Error_QuorumError_KeyReconstructionValidationFailed]:
+    'La clave reconstruida falló la validación',
+  [BrightChainStrings.Error_QuorumError_IdentityPermanentlyUnrecoverable]:
+    'La identidad es permanentemente irrecuperable debido al vencimiento del plazo de prescripción',
+  [BrightChainStrings.Error_QuorumError_InvalidMembershipProof]:
+    'Prueba de membresía inválida',
+  [BrightChainStrings.Error_QuorumError_MissingMembershipProof]:
+    'Falta prueba de membresía para contenido anónimo',
+  [BrightChainStrings.Error_QuorumError_AliasAlreadyTaken]:
+    'El alias ya está registrado',
+  [BrightChainStrings.Error_QuorumError_AliasNotFound]: 'Alias no encontrado',
+  [BrightChainStrings.Error_QuorumError_AliasInactive]:
+    'El alias ha sido desactivado',
+  [BrightChainStrings.Error_QuorumError_IdentitySealingFailed]:
+    'El proceso de sellado de identidad falló',
+  [BrightChainStrings.Error_QuorumError_ShardVerificationFailed]:
+    'La verificación de fragmentos de identidad falló',
+  [BrightChainStrings.Error_QuorumError_QuorumDatabaseUnavailable]:
+    'La base de datos del quórum no está disponible',
+  [BrightChainStrings.Error_QuorumError_TransactionFailed]:
+    'La transacción de base de datos falló',
+  [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
+    'La integridad de la cadena de auditoría está comprometida',
+  [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
+    'La firma del contenido no coincide con la identidad declarada',
+  [BrightChainStrings.Error_IdentityValidationError_UnregisteredAlias]:
+    'El alias no está registrado',
+  [BrightChainStrings.Error_IdentityValidationError_InactiveAlias]:
+    'El alias está inactivo',
+  [BrightChainStrings.Error_IdentityValidationError_InvalidMembershipProof]:
+    'Prueba de membresía inválida',
+  [BrightChainStrings.Error_IdentityValidationError_MissingMembershipProof]:
+    'Falta prueba de membresía para contenido anónimo',
+  [BrightChainStrings.Error_IdentityValidationError_BannedUser]:
+    'El creador del contenido está prohibido',
+  [BrightChainStrings.Error_IdentityValidationError_SuspendedUser]:
+    'El creador del contenido está suspendido',
+  [BrightChainStrings.Error_IdentityValidationError_ShardVerificationFailed]:
+    'La verificación de fragmentos de identidad falló',
 
   // System Keyring Errors
   [BrightChainStrings.Error_SystemKeyringError_KeyNotFoundTemplate]:

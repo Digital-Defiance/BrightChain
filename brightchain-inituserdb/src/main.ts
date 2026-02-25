@@ -569,7 +569,8 @@ async function main() {
       memberUser: memberResult.entry,
     };
 
-    const brightChainMemberInitService = new BrightChainMemberInitService();
+    const brightChainMemberInitService =
+      new BrightChainMemberInitService<GuidV4Buffer>();
     const brightChainInitResult =
       await brightChainMemberInitService.initializeWithRbac(
         initConfig,
@@ -597,17 +598,18 @@ async function main() {
     }
 
     // Build the full server init result
-    const serverInitResult = BrightChainMemberInitService.buildServerInitResult(
-      brightChainInitResult,
-      {
-        system: systemResult.creds,
-        admin: adminResult.creds,
-        member: memberResult.creds,
-      },
-    );
+    const serverInitResult =
+      BrightChainMemberInitService.buildServerInitResult<GuidV4Buffer>(
+        brightChainInitResult,
+        {
+          system: systemResult.creds,
+          admin: adminResult.creds,
+          member: memberResult.creds,
+        },
+      );
 
     // Print formatted credential results
-    BrightChainMemberInitService.printServerInitResults(
+    BrightChainMemberInitService.printServerInitResults<GuidV4Buffer>(
       serverInitResult,
       initConfig,
     );
@@ -617,7 +619,7 @@ async function main() {
     debugLog(
       bcEnv.debug,
       'log',
-      BrightChainMemberInitService.formatDotEnv({
+      BrightChainMemberInitService.formatDotEnv<GuidV4Buffer>({
         system: systemResult.creds,
         admin: adminResult.creds,
         member: memberResult.creds,

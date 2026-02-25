@@ -55,11 +55,12 @@ function setRequiredEnvVars(): void {
     'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210';
   process.env['MNEMONIC_ENCRYPTION_KEY'] =
     'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789';
-  process.env['NODE_MNEMONIC'] =
+  process.env['SYSTEM_MNEMONIC'] =
     'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
   // Remove blockstore paths to force memory-backed config
   delete process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
   delete process.env['BLOCKSTORE_PATH'];
+  process.env['DEV_DATABASE'] = 'ephemeral-test';
   setupDistDirs();
 }
 
@@ -67,11 +68,12 @@ function clearRequiredEnvVars(): void {
   delete process.env['JWT_SECRET'];
   delete process.env['MNEMONIC_HMAC_SECRET'];
   delete process.env['MNEMONIC_ENCRYPTION_KEY'];
-  delete process.env['NODE_MNEMONIC'];
+  delete process.env['SYSTEM_MNEMONIC'];
   delete process.env['API_DIST_DIR'];
   delete process.env['REACT_DIST_DIR'];
   delete process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
   delete process.env['BLOCKSTORE_PATH'];
+  delete process.env['DEV_DATABASE'];
   teardownDistDirs();
 }
 

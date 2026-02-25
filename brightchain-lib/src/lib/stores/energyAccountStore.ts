@@ -1,41 +1,44 @@
 import { ShortHexGuid, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import { EnergyAccount } from '../energyAccount';
 import { IEnergyAccountDto } from '../interfaces/energyAccount';
-import { IDocumentStore } from '../interfaces/storage/documentStore';
+import { ITypedCollection } from '../interfaces/storage/documentStore';
 import { Checksum } from '../types/checksum';
 
 /**
- * Store for energy accounts with optional document-store persistence.
+ * Store for energy accounts with optional typed-collection persistence.
  *
- * When constructed without an IDocumentStore the store is purely in-memory
- * (backward-compatible with existing callers).  When a document store is
- * provided, every write is mirrored to the `energy_accounts` collection and
- * `loadFromStore()` can hydrate the in-memory map on startup.
+ * When constructed without an ITypedCollection the store is purely in-memory
+ * (backward-compatible with existing callers).  When a typed collection is
+ * provided (e.g. a Model<IEnergyAccountDto, EnergyAccount> from brightchain-db),
+ * every write is mirrored to the backing store and `loadFromStore()` can
+ * hydrate the in-memory map on startup.
  */
 export class EnergyAccountStore {
   private accounts: Map<ShortHexGuid, EnergyAccount>;
-  private readonly documentStore: IDocumentStore | null;
+  private readonly typedCollection: ITypedCollection<
+    IEnergyAccountDto,
+    EnergyAccount
+  > | null;
 
-  constructor(documentStore?: IDocumentStore) {
+  constructor(
+    typedCollection?: ITypedCollection<IEnergyAccountDto, EnergyAccount>,
+  ) {
     this.accounts = new Map();
-    this.documentStore = documentStore ?? null;
+    this.typedCollection = typedCollection ?? null;
   }
 
   /**
-   * Hydrate the in-memory map from the backing document store.
-   * No-op when no document store is configured.
+   * Hydrate the in-memory map from the backing typed collection.
+   * No-op when no collection is configured.
    */
   async loadFromStore(): Promise<void> {
-    if (!this.documentStore) return;
+    if (!this.typedCollection) return;
 
-    const collection =
-      this.documentStore.collection<IEnergyAccountDto>('energy_accounts');
-    const cursor = await collection.find({});
-    const docs = await cursor.toArray();
+    const docs = await this.typedCollection.find({}).toArray();
 
-    for (const doc of docs) {
-      const account = EnergyAccount.fromDto(doc);
-      const key = doc.memberId as ShortHexGuid;
+    for (const account of docs) {
+      // The collection already hydrates — account is an EnergyAccount
+      const key = account.memberId.toHex() as ShortHexGuid;
       this.accounts.set(key, account);
     }
   }
@@ -61,19 +64,17 @@ export class EnergyAccountStore {
   }
 
   /**
-   * Set account — writes to in-memory map and persists to document store
+   * Set account — writes to in-memory map and persists to typed collection
    * (if configured).
    */
   async set(memberId: Checksum, account: EnergyAccount): Promise<void> {
     const key = uint8ArrayToHex(memberId.toUint8Array()) as ShortHexGuid;
     this.accounts.set(key, account);
 
-    if (this.documentStore) {
-      const collection =
-        this.documentStore.collection<IEnergyAccountDto>('energy_accounts');
-      await collection.replaceOne(
+    if (this.typedCollection) {
+      await this.typedCollection.replaceOne(
         { memberId: key } as Partial<IEnergyAccountDto>,
-        account.toDto(),
+        account,
         { upsert: true },
       );
     }

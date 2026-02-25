@@ -268,7 +268,7 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
   });
 
   it('creates all four RBAC collections plus member_index', async () => {
-    const service = new BrightChainMemberInitService();
+    const service = new BrightChainMemberInitService<GuidV4Buffer>();
     const result = await service.initializeWithRbac(
       makeMemoryConfig(),
       await makeRbacInput(),
@@ -283,10 +283,10 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
   // ── Roles collection ──────────────────────────────────────────────────
 
   describe('roles collection', () => {
-    let service: BrightChainMemberInitService;
+    let service: BrightChainMemberInitService<GuidV4Buffer>;
 
     beforeAll(async () => {
-      service = new BrightChainMemberInitService();
+      service = new BrightChainMemberInitService<GuidV4Buffer>();
       await service.initializeWithRbac(
         makeMemoryConfig(),
         await makeRbacInput(),
@@ -350,10 +350,10 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
   // ── Users collection ──────────────────────────────────────────────────
 
   describe('users collection', () => {
-    let service: BrightChainMemberInitService;
+    let service: BrightChainMemberInitService<GuidV4Buffer>;
 
     beforeAll(async () => {
-      service = new BrightChainMemberInitService();
+      service = new BrightChainMemberInitService<GuidV4Buffer>();
       await service.initializeWithRbac(
         makeMemoryConfig(),
         await makeRbacInput(),
@@ -450,10 +450,10 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
   // ── User-roles collection ─────────────────────────────────────────────
 
   describe('user-roles collection', () => {
-    let service: BrightChainMemberInitService;
+    let service: BrightChainMemberInitService<GuidV4Buffer>;
 
     beforeAll(async () => {
-      service = new BrightChainMemberInitService();
+      service = new BrightChainMemberInitService<GuidV4Buffer>();
       await service.initializeWithRbac(
         makeMemoryConfig(),
         await makeRbacInput(),
@@ -502,10 +502,10 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
   // ── Mnemonics collection ──────────────────────────────────────────────
 
   describe('mnemonics collection', () => {
-    let service: BrightChainMemberInitService;
+    let service: BrightChainMemberInitService<GuidV4Buffer>;
 
     beforeAll(async () => {
-      service = new BrightChainMemberInitService();
+      service = new BrightChainMemberInitService<GuidV4Buffer>();
       await service.initializeWithRbac(
         makeMemoryConfig(),
         await makeRbacInput(),
@@ -551,7 +551,7 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
 
   describe('idempotency', () => {
     it('second call does not duplicate any documents', async () => {
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
       const config = makeMemoryConfig();
       const input = await makeRbacInput();
 
@@ -583,10 +583,10 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
   // ── Cross-collection queries (simulating controller lookups) ──────────
 
   describe('cross-collection queries', () => {
-    let service: BrightChainMemberInitService;
+    let service: BrightChainMemberInitService<GuidV4Buffer>;
 
     beforeAll(async () => {
-      service = new BrightChainMemberInitService();
+      service = new BrightChainMemberInitService<GuidV4Buffer>();
       await service.initializeWithRbac(
         makeMemoryConfig(),
         await makeRbacInput(),

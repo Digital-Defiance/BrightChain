@@ -223,6 +223,79 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
     'Mitglied nicht gefunden',
   [BrightChainStrings.Error_QuorumError_NotEnoughMembers]:
     'Nicht genügend Mitglieder für Quorum-Operation',
+  [BrightChainStrings.Error_QuorumError_TransitionInProgress]:
+    'Operation blockiert: Übergangszeremonie läuft',
+  [BrightChainStrings.Error_QuorumError_InvalidModeTransition]:
+    'Ungültiger Betriebsmodusübergang',
+  [BrightChainStrings.Error_QuorumError_InsufficientMembersForTransition]:
+    'Nicht genügend Mitglieder für die Übergangszeremonie',
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyExists]:
+    'Mitglied existiert bereits im Quorum',
+  [BrightChainStrings.Error_QuorumError_InsufficientRemainingMembers]:
+    'Mitglied kann nicht entfernt werden: verbleibende Mitglieder wären unter dem Schwellenwert',
+  [BrightChainStrings.Error_QuorumError_MemberBanned]:
+    'Mitglied ist im Netzwerk gesperrt',
+  [BrightChainStrings.Error_QuorumError_MemberSuspended]:
+    'Mitglied ist im Netzwerk suspendiert',
+  [BrightChainStrings.Error_QuorumError_DuplicateProposal]:
+    'Doppelte Vorschlags-ID',
+  [BrightChainStrings.Error_QuorumError_ProposalExpired]:
+    'Vorschlag ist abgelaufen',
+  [BrightChainStrings.Error_QuorumError_DuplicateVote]:
+    'Doppelte Abstimmung von diesem Mitglied',
+  [BrightChainStrings.Error_QuorumError_VoterNotOnProposal]:
+    'Abstimmender ist kein aktives Mitglied dieses Vorschlags',
+  [BrightChainStrings.Error_QuorumError_AuthenticationFailed]:
+    'Authentifizierung fehlgeschlagen',
+  [BrightChainStrings.Error_QuorumError_VotingLocked]:
+    'Abstimmung ist aufgrund wiederholter Authentifizierungsfehler gesperrt',
+  [BrightChainStrings.Error_QuorumError_MissingAttachment]:
+    'Vorschlag erfordert einen Anhang, aber keiner wurde bereitgestellt',
+  [BrightChainStrings.Error_QuorumError_AttachmentNotRetrievable]:
+    'Referenzierter Anhang-CBL ist nicht abrufbar',
+  [BrightChainStrings.Error_QuorumError_RedistributionFailed]:
+    'Anteilsumverteilung fehlgeschlagen',
+  [BrightChainStrings.Error_QuorumError_InsufficientSharesForReconstruction]:
+    'Nicht genügend Anteile für die Schlüsselrekonstruktion',
+  [BrightChainStrings.Error_QuorumError_KeyReconstructionValidationFailed]:
+    'Rekonstruierter Schlüssel hat die Validierung nicht bestanden',
+  [BrightChainStrings.Error_QuorumError_IdentityPermanentlyUnrecoverable]:
+    'Identität ist aufgrund abgelaufener Verjährungsfrist dauerhaft nicht wiederherstellbar',
+  [BrightChainStrings.Error_QuorumError_InvalidMembershipProof]:
+    'Ungültiger Mitgliedschaftsnachweis',
+  [BrightChainStrings.Error_QuorumError_MissingMembershipProof]:
+    'Fehlender Mitgliedschaftsnachweis für anonymen Inhalt',
+  [BrightChainStrings.Error_QuorumError_AliasAlreadyTaken]:
+    'Alias ist bereits registriert',
+  [BrightChainStrings.Error_QuorumError_AliasNotFound]: 'Alias nicht gefunden',
+  [BrightChainStrings.Error_QuorumError_AliasInactive]:
+    'Alias wurde deaktiviert',
+  [BrightChainStrings.Error_QuorumError_IdentitySealingFailed]:
+    'Identitätsversiegelungspipeline fehlgeschlagen',
+  [BrightChainStrings.Error_QuorumError_ShardVerificationFailed]:
+    'Identitätsfragmentverifizierung fehlgeschlagen',
+  [BrightChainStrings.Error_QuorumError_QuorumDatabaseUnavailable]:
+    'Quorum-Datenbank ist nicht verfügbar',
+  [BrightChainStrings.Error_QuorumError_TransactionFailed]:
+    'Datenbanktransaktion fehlgeschlagen',
+  [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
+    'Integrität der Prüfkette beeinträchtigt',
+  [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
+    'Inhaltssignatur stimmt nicht mit der beanspruchten Identität überein',
+  [BrightChainStrings.Error_IdentityValidationError_UnregisteredAlias]:
+    'Alias ist nicht registriert',
+  [BrightChainStrings.Error_IdentityValidationError_InactiveAlias]:
+    'Alias ist inaktiv',
+  [BrightChainStrings.Error_IdentityValidationError_InvalidMembershipProof]:
+    'Ungültiger Mitgliedschaftsnachweis',
+  [BrightChainStrings.Error_IdentityValidationError_MissingMembershipProof]:
+    'Fehlender Mitgliedschaftsnachweis für anonymen Inhalt',
+  [BrightChainStrings.Error_IdentityValidationError_BannedUser]:
+    'Inhaltsersteller ist gesperrt',
+  [BrightChainStrings.Error_IdentityValidationError_SuspendedUser]:
+    'Inhaltsersteller ist suspendiert',
+  [BrightChainStrings.Error_IdentityValidationError_ShardVerificationFailed]:
+    'Identitätsfragmentverifizierung fehlgeschlagen',
 
   // System Keyring Errors
   [BrightChainStrings.Error_SystemKeyringError_KeyNotFoundTemplate]:

@@ -2,6 +2,7 @@ import {
   EmailString,
   EnergyAccount,
   EnergyAccountStore,
+  IRecoveryResponse,
   MemberStore,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
@@ -15,6 +16,7 @@ import { IAuthToken } from '../interfaces/auth-token';
 import { ITokenPayload } from '../interfaces/token-payload';
 import { DefaultBackendIdType } from '../shared-types';
 import { BaseService } from './base';
+import { BrightChainAuthenticationProvider } from './brightchain-authentication-provider';
 import { EmailService } from './email';
 
 const BCRYPT_ROUNDS = 12;
@@ -26,6 +28,7 @@ export class AuthService<
   private energyStore: EnergyAccountStore;
   private emailService: EmailService<TID>;
   private jwtSecret: string;
+  private authProvider?: BrightChainAuthenticationProvider<TID>;
 
   constructor(
     application: IBrightChainApplication<TID>,
@@ -33,12 +36,14 @@ export class AuthService<
     energyStore: EnergyAccountStore,
     emailService: EmailService<TID>,
     jwtSecret: string,
+    authProvider?: BrightChainAuthenticationProvider<TID>,
   ) {
     super(application);
     this.memberStore = memberStore;
     this.energyStore = energyStore;
     this.emailService = emailService;
     this.jwtSecret = jwtSecret;
+    this.authProvider = authProvider;
   }
 
   async register(
@@ -66,10 +71,11 @@ export class AuthService<
       contactEmail: new EmailString(email),
     });
 
-    const memberId = reference.id.toString();
-    const idBytes = reference.id as Uint8Array;
-    const memberChecksum =
-      ServiceProvider.getInstance().checksumService.calculateChecksum(idBytes);
+    // Use idProvider for proper serialization round-trip
+    const sp = ServiceProvider.getInstance();
+    const memberId = sp.idProvider.idToString(reference.id);
+    const idRawBytes = sp.idProvider.toBytes(reference.id);
+    const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
 
     // Store password hash in member's private profile
     await this.storePasswordHash(reference.id, passwordHash);
@@ -112,10 +118,11 @@ export class AuthService<
       throw new Error('Invalid credentials');
     }
 
-    const memberId = reference.id.toString();
-    const idBytes = reference.id as Uint8Array;
-    const memberChecksum =
-      ServiceProvider.getInstance().checksumService.calculateChecksum(idBytes);
+    // Use idProvider for proper serialization round-trip
+    const sp = ServiceProvider.getInstance();
+    const memberId = sp.idProvider.idToString(reference.id);
+    const idRawBytes = sp.idProvider.toBytes(reference.id);
+    const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
 
     const energyAccount = await this.energyStore.getOrCreate(memberChecksum);
 
@@ -169,6 +176,55 @@ export class AuthService<
       throw new Error('No password hash found for member');
     }
     return passwordHash;
+  }
+
+  async changePassword(
+    memberId: Uint8Array,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const storedHash = await this.getPasswordHash(memberId);
+    const isValid = await bcrypt.compare(currentPassword, storedHash);
+    if (!isValid) {
+      throw new Error('Invalid credentials');
+    }
+    const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+    await this.storePasswordHash(memberId, newHash);
+  }
+
+  async recoverWithMnemonic(
+    email: string,
+    mnemonic: SecureString,
+    newPassword?: string,
+  ): Promise<IRecoveryResponse<string>> {
+    if (!this.authProvider) {
+      throw new Error('Authentication provider not configured');
+    }
+
+    // Authenticate via mnemonic — throws "Invalid credentials" on
+    // unknown email or invalid mnemonic (no email enumeration).
+    const result = await this.authProvider.authenticateWithMnemonic(
+      email,
+      mnemonic,
+    );
+
+    const memberId = result.userId;
+    const member = result.userMember;
+
+    // Sign a JWT for the recovered session
+    const token = this.signToken(memberId, member.name, member.type);
+
+    // If a new password was provided, hash and persist it
+    if (newPassword) {
+      const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+      await this.storePasswordHash(member.id as Uint8Array, newHash);
+    }
+
+    return {
+      token,
+      memberId,
+      passwordReset: !!newPassword,
+    };
   }
 
   private async sendWelcomeEmail(
