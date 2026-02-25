@@ -449,7 +449,8 @@ export class PooledMemoryBlockStore
       structuredType === StructuredBlockType.ExtendedCBL ||
       structuredType === StructuredBlockType.MessageCBL ||
       structuredType === StructuredBlockType.SuperCBL ||
-      structuredType === StructuredBlockType.VaultCBL
+      structuredType === StructuredBlockType.VaultCBL ||
+      structuredType === StructuredBlockType.TarballCBL
     );
   }
 

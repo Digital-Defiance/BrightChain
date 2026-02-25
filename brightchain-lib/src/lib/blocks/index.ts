@@ -14,5 +14,6 @@ export * from './memoryTuple';
 export * from './parity';
 export * from './random';
 export * from './rawData';
+export * from './tcbl';
 export * from './vcbl';
 export * from './whitened';

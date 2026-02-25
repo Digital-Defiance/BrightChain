@@ -125,8 +125,9 @@ function buildCandidateEntries<TID extends PlatformID>(
   poolId: string,
 ): IMemberIndexDocument[] {
   const now = new Date().toISOString();
+  const idProvider = getEnhancedNodeIdProvider<TID>();
   return [input.systemUser, input.adminUser, input.memberUser].map((user) => ({
-    id: user.id.toString('hex'),
+    id: idProvider.idToString(user.id),
     // Zero-filled sentinel — replaced when the member's actual CBL blocks are written
     publicCBL: '0'.repeat(64),
     privateCBL: '0'.repeat(64),
@@ -229,11 +230,14 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
       }
     }
 
-    // Step 6: idempotency check
+    // Step 6: idempotency check — query only the candidate IDs, not the full collection
     const collection = db.collection<IMemberIndexDocument>(
       MEMBER_INDEX_COLLECTION,
     );
-    const existing = await collection.find({}).toArray();
+    const candidateIds = candidates.map((c) => c.id);
+    const existing = await collection
+      .find({ id: { $in: candidateIds } } as never)
+      .toArray();
     const existingIds = new Set(existing.map((e) => e.id));
 
     const toInsert = candidates.filter((c) => !existingIds.has(c.id));
@@ -551,33 +555,56 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     const userRolesModel = userRolesModelForValidation;
     const mnemonicsModel = mnemonicsModelForValidation;
 
-    // Idempotency check: read existing stored _ids via the raw collection.
-    const existingRoles = await rolesModel.collection.find({}).toArray();
-    const existingUsers = await usersModel.collection.find({}).toArray();
-    const existingUserRoles = await userRolesModel.collection
-      .find({})
-      .toArray();
-    const existingMnemonics = await mnemonicsModel.collection
-      .find({})
-      .toArray();
+    // Idempotency check: query only the candidates we're about to insert,
+    // NOT the entire collection. This avoids full-collection scans at scale.
 
-    // Stored _id values are already hex strings — no conversion needed.
-    const existingRoleIds = new Set(existingRoles.map((r) => r._id));
+    // Roles — match by stable role name (System, Admin, Member)
+    const candidateRoleNames = roleDocuments.map((d) => d.name);
+    const existingRoles = await rolesModel.collection
+      .find({ name: { $in: candidateRoleNames } } as never)
+      .toArray();
+    const existingRoleNames = new Set(existingRoles.map((r) => r.name));
+
+    // Users — match by stable email address (the only reliably known field)
+    const candidateEmails = userDocuments.map((d) => d.email);
+    const existingUsers = await usersModel.collection
+      .find({ email: { $in: candidateEmails } } as never)
+      .toArray();
+    const existingUserEmails = new Set(existingUsers.map((u) => u.email));
+
+    // User-roles — match by the userId+roleId of users/roles we found
     const existingUserIds = new Set(existingUsers.map((u) => u._id));
-    const existingUserRoleIds = new Set(existingUserRoles.map((ur) => ur._id));
+    const existingUserRoles =
+      existingUserIds.size > 0
+        ? await userRolesModel.collection
+            .find({ userId: { $in: [...existingUserIds] } } as never)
+            .toArray()
+        : [];
+    const existingUserRolePairs = new Set(
+      existingUserRoles.map((ur) => `${ur.userId}:${ur.roleId}`),
+    );
+
+    // Mnemonics — match by the _id values we're about to insert
+    const candidateMnemonicIds = mnemonicDocuments.map((d) =>
+      String(mnemonicsModel.dehydrate(d)['_id']),
+    );
+    const existingMnemonics = await mnemonicsModel.collection
+      .find({ _id: { $in: candidateMnemonicIds } } as never)
+      .toArray();
     const existingMnemonicIds = new Set(existingMnemonics.map((m) => m._id));
 
-    // Compare typed documents against stored hex strings by dehydrating the _id.
+    // Compare typed documents against existing data using stable fields.
     const rolesToInsert = roleDocuments.filter(
-      (d) => !existingRoleIds.has(String(rolesModel.dehydrate(d)['_id'])),
+      (d) => !existingRoleNames.has(d.name),
     );
     const usersToInsert = userDocuments.filter(
-      (d) => !existingUserIds.has(String(usersModel.dehydrate(d)['_id'])),
+      (d) => !existingUserEmails.has(d.email),
     );
-    const userRolesToInsert = userRoleDocuments.filter(
-      (d) =>
-        !existingUserRoleIds.has(String(userRolesModel.dehydrate(d)['_id'])),
-    );
+    const userRolesToInsert = userRoleDocuments.filter((d) => {
+      const dehydrated = userRolesModel.dehydrate(d);
+      const pair = `${dehydrated['userId']}:${dehydrated['roleId']}`;
+      return !existingUserRolePairs.has(pair);
+    });
     const mnemonicsToInsert = mnemonicDocuments.filter(
       (d) =>
         !existingMnemonicIds.has(String(mnemonicsModel.dehydrate(d)['_id'])),

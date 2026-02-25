@@ -1140,4 +1140,30 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     'ブロックタイプ {TYPE} に登録されたクリエイターがありません',
   [BrightChainStrings.TestMember_MemberNotFoundTemplate]:
     'メンバー {KEY} が見つかりません',
+
+  // TCBL (Tarball CBL) Errors
+  [BrightChainStrings.Error_TcblError_InvalidHeader]:
+    'TCBLヘッダーが無効です：マジックプレフィックスまたはタイプバイトが欠落しているか不正です',
+  [BrightChainStrings.Error_TcblError_ManifestChecksumMismatch]:
+    'TCBLマニフェストのチェックサムが計算されたチェックサムと一致しません',
+  [BrightChainStrings.Error_TcblError_ManifestCountMismatch]:
+    'TCBLマニフェストのエントリ数が実際のエントリ記述子の数と一致しません',
+  [BrightChainStrings.Error_TcblError_ManifestCorrupted]:
+    'TCBLマニフェストデータが破損しているか不正です',
+  [BrightChainStrings.Error_TcblError_ManifestTruncated]:
+    'TCBLマニフェストデータが切り詰められています',
+  [BrightChainStrings.Error_TcblError_EntryNotFound]:
+    'TCBLエントリがマニフェストに見つかりません',
+  [BrightChainStrings.Error_TcblError_FileNameTooLong]:
+    'TCBLエントリのファイル名が最大許容長を超えています',
+  [BrightChainStrings.Error_TcblError_MimeTypeTooLong]:
+    'TCBLエントリのMIMEタイプが最大許容長を超えています',
+  [BrightChainStrings.Error_TcblError_PathTraversal]:
+    'TCBLエントリのファイル名にパストラバーサルシーケンスが含まれています',
+  [BrightChainStrings.Error_TcblError_DecompressionFailed]:
+    'TCBLアーカイブペイロードの解凍に失敗しました',
+  [BrightChainStrings.Error_TcblError_DecryptionFailed]:
+    'TCBLアーカイブペイロードの復号に失敗しました',
+  [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
+    'TCBLマニフェストバージョンはサポートされていません',
 };

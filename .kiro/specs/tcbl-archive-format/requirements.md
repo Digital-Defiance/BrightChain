@@ -2,17 +2,17 @@
 
 ## Introduction
 
-TCBL (Tarball CBL) is a new archive/bundle block type for BrightChain that functions as a tarball-like container. It allows multiple files and data entries to be bundled into a single CBL structure. TCBL extends the existing ECBL (Encrypted CBL) infrastructure, leveraging the `contentType` field already supported by ECBLs. Like a traditional tarball, compression (bzip2) and encryption (ECIES) are applied to the whole archive rather than individual entries, keeping the design simple and consistent. This makes TCBL a flexible general-purpose container format across BrightChain — not limited to any single subsystem such as quorum proposals.
+TCBL (Tarball CBL) is a new archive/bundle block type for BrightChain that functions as a tarball-like container. It allows multiple files and data entries to be bundled into a single CBL structure. TCBL extends the existing CBL infrastructure, leveraging the `contentType` field already supported by ECBLs. Like a traditional tarball, optional bzip2 compression is applied to the whole archive rather than individual entries, keeping the design simple and consistent. Encryption is handled externally via the existing `EncryptedBlock` wrapper pattern — the same composition-based approach used by CBL, ExtendedCBL, and VCBL — rather than being built into the TCBL itself. This makes TCBL a flexible general-purpose container format across BrightChain — not limited to any single subsystem such as quorum proposals.
 
 ## Glossary
 
 - **TCBL**: Tarball Constituent Block List — an archive container block type that bundles multiple file/data entries into a single CBL structure with a manifest.
 - **CBL**: Constituent Block List — the base block type that stores references (addresses) to other blocks, enabling data reconstruction.
-- **ECBL**: Encrypted Constituent Block List — a CBL that has been encrypted via ECIES for one or more recipients.
 - **ExtendedCBL**: A CBL variant that adds file name and MIME type metadata to the base CBL header.
+- **EncryptedBlock**: A composition-based wrapper block that encrypts any block type (including TCBL) using ECIES. There is no specialized encrypted CBL class; encryption is always applied externally via this wrapper.
 - **Manifest**: A table of contents embedded in the TCBL that describes all contained entries and their metadata (file name, MIME type, data length, CBL address).
 - **Entry**: A single file or data item within a TCBL archive, represented by its own CBL address and associated manifest metadata.
-- **ECIES**: Elliptic Curve Integrated Encryption Scheme — the asymmetric encryption system used by BrightChain for block encryption.
+- **ECIES**: Elliptic Curve Integrated Encryption Scheme — the asymmetric encryption system used by BrightChain for block encryption, applied externally via `EncryptedBlock`.
 - **Bzip2**: A block-sorting compression algorithm used for optional whole-archive compression of a TCBL.
 - **Block_Store**: The storage layer responsible for persisting and retrieving blocks, including CBL whitening operations (`storeCBLWithWhitening` / `retrieveCBL`).
 - **StructuredBlockType**: An enumeration of structured block header type identifiers (second byte after the 0xBC magic prefix).
@@ -21,6 +21,7 @@ TCBL (Tarball CBL) is a new archive/bundle block type for BrightChain that funct
 - **Manifest_Serializer**: The component responsible for serializing and deserializing the TCBL manifest to and from a binary representation.
 - **TCBL_Builder**: The component responsible for constructing a TCBL from a set of input entries.
 - **TCBL_Reader**: The component responsible for reading and extracting entries from an existing TCBL.
+- **ITcblArchiveOptions**: Configuration interface for TCBL construction, containing only a `compress?: boolean` field. Encryption is not part of this interface since it is handled externally by the `EncryptedBlock` wrapper.
 
 ## Requirements
 
@@ -70,11 +71,12 @@ TCBL (Tarball CBL) is a new archive/bundle block type for BrightChain that funct
 2. THE TCBL_Builder SHALL store each entry as an individual CBL via the Block_Store and record the resulting CBL address in the manifest.
 3. THE TCBL_Builder SHALL construct the manifest from all entry descriptors and serialize the manifest using the Manifest_Serializer.
 4. THE TCBL_Builder SHALL assemble the complete TCBL payload (serialized manifest plus entry CBL addresses).
-5. WHEN whole-archive bzip2 compression is requested, THE TCBL_Builder SHALL compress the assembled TCBL payload before storing it as a CBL.
-6. WHEN whole-archive ECIES encryption is requested, THE TCBL_Builder SHALL encrypt the TCBL payload (after optional compression) using BrightChain ECIES infrastructure with the specified recipient public keys.
+5. WHEN whole-archive bzip2 compression is requested via `ITcblArchiveOptions.compress`, THE TCBL_Builder SHALL compress the assembled TCBL payload before storing it as a CBL.
+6. WHEN whole-archive bzip2 compression is not requested, THE TCBL_Builder SHALL store the TCBL payload uncompressed.
 7. THE TCBL_Builder SHALL store the final TCBL payload as a single CBL with `StructuredBlockType.TarballCBL` in the header.
 8. THE TCBL_Builder SHALL use the `TID` generic type parameter for frontend/backend DTO compatibility, consistent with existing CBL classes.
 9. THE TCBL_Builder SHALL accept an `ICBLServices<TID>` parameter for dependency injection, consistent with existing CBL constructor patterns.
+10. THE TCBL_Builder SHALL set the compression flag in the TCBL header when bzip2 compression is applied.
 
 ### Requirement 5: TCBL Reading and Extraction
 
@@ -82,13 +84,13 @@ TCBL (Tarball CBL) is a new archive/bundle block type for BrightChain that funct
 
 #### Acceptance Criteria
 
-1. WHEN the TCBL payload is encrypted, THE TCBL_Reader SHALL decrypt the whole archive using BrightChain ECIES infrastructure before parsing.
-2. WHEN the TCBL payload is compressed, THE TCBL_Reader SHALL decompress the whole archive using bzip2 after decryption (if applicable) before parsing.
-3. THE TCBL_Reader SHALL parse the TCBL header and deserialize the manifest using the Manifest_Serializer.
-4. THE TCBL_Reader SHALL provide a method to enumerate all entry descriptors from the manifest without extracting entry data.
-5. WHEN a specific entry is requested by index or file name, THE TCBL_Reader SHALL retrieve the entry CBL data from the Block_Store using the address recorded in the manifest.
-6. IF the manifest checksum does not match the computed checksum of the manifest data, THEN THE TCBL_Reader SHALL throw an integrity error.
-7. IF a requested entry index or file name does not exist in the manifest, THEN THE TCBL_Reader SHALL throw a descriptive not-found error.
+1. WHEN the TCBL payload is compressed, THE TCBL_Reader SHALL decompress the whole archive using bzip2 before parsing.
+2. THE TCBL_Reader SHALL parse the TCBL header and deserialize the manifest using the Manifest_Serializer.
+3. THE TCBL_Reader SHALL provide a method to enumerate all entry descriptors from the manifest without extracting entry data.
+4. WHEN a specific entry is requested by index or file name, THE TCBL_Reader SHALL retrieve the entry CBL data from the Block_Store using the address recorded in the manifest.
+5. IF the manifest checksum does not match the computed checksum of the manifest data, THEN THE TCBL_Reader SHALL throw an integrity error.
+6. IF a requested entry index or file name does not exist in the manifest, THEN THE TCBL_Reader SHALL throw a descriptive not-found error.
+7. THE TCBL_Reader SHALL receive already-decrypted TCBL data as input; decryption of the `EncryptedBlock` wrapper is the caller's responsibility.
 
 ### Requirement 6: Transparent Detection and Polymorphic Handling
 
@@ -101,22 +103,22 @@ TCBL (Tarball CBL) is a new archive/bundle block type for BrightChain that funct
 3. THE TCBL class SHALL extend `ConstituentBlockListBlock<TID>` (or the appropriate CBL base), so that any code accepting a CBL reference can also accept a TCBL reference.
 4. WHEN a consumer retrieves a CBL that is a TCBL, THE system SHALL allow the consumer to upcast the CBL to a TCBL and access manifest and entry operations.
 5. WHEN a consumer retrieves a CBL that is not a TCBL, THE system SHALL continue to handle the CBL using existing CBL logic without modification.
+6. WHEN a consumer retrieves an `EncryptedBlock` with `BlockType.EncryptedTarballConstituentBlockListBlock`, THE system SHALL identify the block as an encrypted TCBL, and after decryption the inner data SHALL be a plain TCBL.
 
-### Requirement 7: Whole-Archive Compression and Encryption
+### Requirement 7: Whole-Archive Compression and External Encryption
 
-**User Story:** As a BrightChain user, I want optional bzip2 compression and ECIES encryption applied to the entire TCBL archive (like a traditional tarball), so that the design stays simple and all entries are uniformly protected or compressed.
+**User Story:** As a BrightChain user, I want optional bzip2 compression applied internally to the TCBL archive and ECIES encryption applied externally via the `EncryptedBlock` wrapper, so that the design stays simple, consistent with the rest of BrightChain, and all entries are uniformly protected or compressed.
 
 #### Acceptance Criteria
 
 1. WHEN whole-archive compression is enabled, THE TCBL_Builder SHALL compress the entire assembled TCBL payload using bzip2 before storage.
 2. WHEN whole-archive compression is disabled, THE TCBL_Builder SHALL store the TCBL payload uncompressed.
-3. WHEN whole-archive encryption is enabled, THE TCBL_Builder SHALL encrypt the entire TCBL payload (after optional compression) using BrightChain ECIES infrastructure with the specified recipient public keys.
-4. WHEN whole-archive encryption is disabled, THE TCBL_Builder SHALL store the TCBL payload in plaintext (or compressed plaintext if compression is enabled).
-5. WHEN both compression and encryption are enabled, THE TCBL_Builder SHALL compress first, then encrypt (compress-then-encrypt order).
-6. WHEN both compression and encryption are enabled for retrieval, THE TCBL_Reader SHALL decrypt first, then decompress (decrypt-then-decompress order).
+3. THE TCBL header SHALL include a compression flag indicating whether the archive payload is bzip2-compressed, so that the TCBL_Reader knows whether to decompress during retrieval.
+4. THE TCBL header SHALL NOT include an encryption flag; encryption status is indicated externally by the block type being `BlockType.EncryptedTarballConstituentBlockListBlock` when wrapped in an `EncryptedBlock`.
+5. WHEN encryption is desired, THE caller SHALL wrap the completed TCBL in an `EncryptedBlock` using the existing `EncryptedBlockFactory` / `EncryptedBlockCreator` pattern with the specified recipient public keys, consistent with how CBL, ExtendedCBL, and VCBL handle encryption.
+6. WHEN both compression and encryption are desired, THE compression SHALL be applied internally by the TCBL_Builder first, and then the caller SHALL wrap the resulting TCBL in an `EncryptedBlock` (compress-then-encrypt order).
 7. FOR ALL TCBLs where compression is enabled, compressing then decompressing the archive payload SHALL produce data identical to the original payload (round-trip property).
-8. FOR ALL TCBLs where encryption is enabled, encrypting then decrypting the archive payload SHALL produce data identical to the pre-encryption payload (round-trip property).
-9. THE TCBL header SHALL include flags indicating whether the archive is compressed and/or encrypted, so that the TCBL_Reader knows which operations to apply during retrieval.
+8. FOR ALL encrypted TCBLs, encrypting then decrypting the `EncryptedBlock` wrapper SHALL produce data identical to the plain TCBL payload (round-trip property, validated by the existing `EncryptedBlock` infrastructure).
 
 ### Requirement 8: TCBL Storage and Retrieval
 

@@ -1237,4 +1237,30 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
     'Для типу блоку {TYPE} не зареєстровано творця',
   [BrightChainStrings.TestMember_MemberNotFoundTemplate]:
     'Учасника {KEY} не знайдено',
+
+  // TCBL (Tarball CBL) Errors
+  [BrightChainStrings.Error_TcblError_InvalidHeader]:
+    'Недійсний заголовок TCBL: відсутній або неправильний магічний префікс або байт типу',
+  [BrightChainStrings.Error_TcblError_ManifestChecksumMismatch]:
+    'Контрольна сума маніфесту TCBL не збігається з обчисленою контрольною сумою',
+  [BrightChainStrings.Error_TcblError_ManifestCountMismatch]:
+    'Кількість записів маніфесту TCBL не збігається з фактичною кількістю дескрипторів записів',
+  [BrightChainStrings.Error_TcblError_ManifestCorrupted]:
+    'Дані маніфесту TCBL пошкоджені або неправильно сформовані',
+  [BrightChainStrings.Error_TcblError_ManifestTruncated]:
+    'Дані маніфесту TCBL обрізані',
+  [BrightChainStrings.Error_TcblError_EntryNotFound]:
+    'Запис TCBL не знайдено в маніфесті',
+  [BrightChainStrings.Error_TcblError_FileNameTooLong]:
+    "Ім'я файлу запису TCBL перевищує максимально допустиму довжину",
+  [BrightChainStrings.Error_TcblError_MimeTypeTooLong]:
+    'MIME-тип запису TCBL перевищує максимально допустиму довжину',
+  [BrightChainStrings.Error_TcblError_PathTraversal]:
+    "Ім'я файлу запису TCBL містить послідовності обходу шляху",
+  [BrightChainStrings.Error_TcblError_DecompressionFailed]:
+    'Не вдалося розпакувати корисне навантаження архіву TCBL',
+  [BrightChainStrings.Error_TcblError_DecryptionFailed]:
+    'Не вдалося розшифрувати корисне навантаження архіву TCBL',
+  [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
+    'Версія маніфесту TCBL не підтримується',
 };

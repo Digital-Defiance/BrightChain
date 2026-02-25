@@ -14,8 +14,10 @@ import {
   EncryptedBlockMetadata,
   getGlobalServiceProvider,
   ICBLStore,
+  isTarballCblData,
   StoreError,
   StoreErrorType,
+  TarballConstituentBlockListBlock,
 } from '@brightchain/brightchain-lib';
 import { arraysEqual, Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import {
@@ -188,15 +190,16 @@ export class DiskCBLStore<
           true,
         );
 
-        const decryptedCbl = new ConstituentBlockListBlock(
-          (
+        const decryptedData = (
             await getGlobalServiceProvider<TID>().blockService.decryptMultiple(
               this._activeUser,
               multiEncryptedCbl,
             )
-          ).data,
-          this._activeUser,
-        );
+          ).data;
+
+        const decryptedCbl = isTarballCblData(decryptedData)
+          ? new TarballConstituentBlockListBlock<TID>(decryptedData, this._activeUser)
+          : new ConstituentBlockListBlock<TID>(decryptedData, this._activeUser);
 
         if (!decryptedCbl.validateSignature()) {
           throw new CblError(CblErrorType.InvalidSignature);
@@ -223,16 +226,17 @@ export class DiskCBLStore<
           this._activeUser,
         );
 
-        const decryptedCbl = new ConstituentBlockListBlock<TID>(
-          (
+        const decryptedData = (
             await getGlobalServiceProvider<TID>().blockService.decrypt(
               this._activeUser,
               encryptedCbl,
               BlockType.ConstituentBlockList,
             )
-          ).data,
-          this._activeUser,
-        );
+          ).data;
+
+        const decryptedCbl = isTarballCblData(decryptedData)
+          ? new TarballConstituentBlockListBlock<TID>(decryptedData, this._activeUser)
+          : new ConstituentBlockListBlock<TID>(decryptedData, this._activeUser);
 
         if (!decryptedCbl.validateSignature()) {
           throw new CblError(CblErrorType.InvalidSignature);
@@ -257,8 +261,10 @@ export class DiskCBLStore<
         ? this._activeUser
         : await hydrateGuid(cblInfo.creatorId);
 
-    // Create the appropriate CBL type
-    const cbl = new ConstituentBlockListBlock<TID>(cblData, creator);
+    // Create the appropriate CBL type — detect TCBL by structured block header (Req 6.2)
+    const cbl = isTarballCblData(cblData)
+      ? new TarballConstituentBlockListBlock<TID>(cblData, creator)
+      : new ConstituentBlockListBlock<TID>(cblData, creator);
     if (!cbl.validateSignature()) {
       throw new CblError(CblErrorType.InvalidSignature);
     }

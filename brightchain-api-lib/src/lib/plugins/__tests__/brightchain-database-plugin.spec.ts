@@ -25,7 +25,7 @@ import type { DefaultBackendIdType } from '../../shared-types';
 jest.setTimeout(60_000);
 
 // Initialize BrightChain global services before any tests run.
-// The plugin's seedMembers() writes blocks via BrightChainDb.withTransaction,
+// The plugin's seedWithRbac() writes blocks via BrightChainDb.withTransaction,
 // which creates RawDataBlock instances that require the global ServiceProvider.
 beforeAll(() => {
   initializeBrightChain();
