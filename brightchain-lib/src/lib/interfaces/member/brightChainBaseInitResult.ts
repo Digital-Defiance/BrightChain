@@ -1,3 +1,6 @@
+import { PlatformID } from '@digitaldefiance/ecies-lib';
+import { IBrightChainMemberInitInput } from './brightChainMemberInitInput';
+
 /**
  * Base result returned by BrightChainMemberInitService.initialize().
  *
@@ -10,7 +13,11 @@
  * dependency: brightchain-db depends on brightchain-lib, so brightchain-lib
  * must NOT import from brightchain-db.
  */
-export interface IBrightChainBaseInitResult<TDb = unknown> {
+export interface IBrightChainBaseInitResult<
+  TDb = unknown,
+  TID extends PlatformID = PlatformID,
+> {
+  input: IBrightChainMemberInitInput<TID>;
   /** True when all candidate members were already present — no writes performed. */
   alreadyInitialized: boolean;
   /** Number of member index entries inserted in this call. */

@@ -22,6 +22,7 @@
  */
 
 import { CONSTANTS as BaseConstants } from '@brightchain/brightchain-lib';
+import { GuidV4Provider } from '@digitaldefiance/ecies-lib';
 import { WRAPPED_KEY } from '@digitaldefiance/node-ecies-lib';
 import { createExpressConstants } from '@digitaldefiance/node-express-suite';
 import { IApiConstants } from './interfaces/api-constants';
@@ -54,4 +55,7 @@ export const Constants: IApiConstants = {
   ...expressConsts,
   PBKDF2_PROFILES: expressConsts.PBKDF2_PROFILES,
   WRAPPED_KEY,
+  // BrightChain uses GuidV4 (16-byte) IDs rather than ObjectId (12-byte).
+  // This ensures Environment generates GUIDs for systemId/adminId/memberId.
+  idProvider: new GuidV4Provider(),
 };

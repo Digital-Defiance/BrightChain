@@ -1,10 +1,8 @@
 /**
- * Platform-agnostic base data interface for backup code count query responses.
+ * Platform-agnostic base data interface for code count responses.
  * Used by both frontend and backend consumers.
+ * Matches express-suite IApiCodeCountResponse shape (minus IApiMessageResponse).
  */
 export interface ICodeCountResponseData {
-  /**
-   * Number of remaining backup codes
-   */
-  count: number;
+  codeCount: number;
 }

@@ -789,6 +789,9 @@ export class MemberStore<
           passwordHash:
             changes.privateChanges?.passwordHash ??
             currentProfile.privateProfile?.passwordHash,
+          backupCodes:
+            changes.privateChanges?.backupCodes ??
+            currentProfile.privateProfile?.backupCodes,
           settings: changes.privateChanges?.settings ??
             currentProfile.privateProfile?.settings ?? {
               autoReplication: true,

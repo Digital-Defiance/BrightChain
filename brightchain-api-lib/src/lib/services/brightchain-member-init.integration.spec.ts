@@ -101,11 +101,11 @@ describe('BrightChainMemberInitService — integration', () => {
 
   describe('in-memory block store', () => {
     it('inserts system, admin, and member users on first call', async () => {
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
       const config = makeMemoryConfig();
       const input = makeInput();
 
-      const result: IBrightChainBaseInitResult<BrightChainDb> =
+      const result: IBrightChainBaseInitResult<BrightChainDb, GuidV4Buffer> =
         await service.initialize(config, input);
 
       expect(result.alreadyInitialized).toBe(false);
@@ -116,7 +116,7 @@ describe('BrightChainMemberInitService — integration', () => {
     });
 
     it('stores documents with correct field values', async () => {
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
       const config = makeMemoryConfig();
       const input = makeInput();
 
@@ -146,7 +146,7 @@ describe('BrightChainMemberInitService — integration', () => {
     });
 
     it('system user gets MemberType.System', async () => {
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
       await service.initialize(makeMemoryConfig(), makeInput());
 
       const collection =
@@ -158,7 +158,7 @@ describe('BrightChainMemberInitService — integration', () => {
     });
 
     it('is idempotent — second call returns alreadyInitialized:true with no new inserts', async () => {
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
       const config = makeMemoryConfig();
       const input = makeInput();
 
@@ -177,7 +177,7 @@ describe('BrightChainMemberInitService — integration', () => {
     });
 
     it('partial idempotency — only missing members are inserted', async () => {
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
       const config = makeMemoryConfig();
       const input = makeInput();
 
@@ -199,7 +199,7 @@ describe('BrightChainMemberInitService — integration', () => {
     });
 
     it('rejects invalid user id and throws MemberIndexSchemaValidationError', async () => {
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
       const config = makeMemoryConfig();
 
       // Empty string fails ShortHexGuidPrimitive validation
@@ -211,7 +211,7 @@ describe('BrightChainMemberInitService — integration', () => {
     });
 
     it('leaves collection empty when schema validation fails', async () => {
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
       const config = makeMemoryConfig();
       const input = makeInput('', ADMIN_ID, MEMBER_ID);
 
@@ -226,7 +226,7 @@ describe('BrightChainMemberInitService — integration', () => {
     });
 
     it('exposes memberCblIndex after initialize()', async () => {
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
       await service.initialize(makeMemoryConfig(), makeInput());
 
       expect(service.memberCblIndex).toBeDefined();
@@ -247,7 +247,7 @@ describe('BrightChainMemberInitService — integration', () => {
     });
 
     it('inserts 3 members using a real disk store', async () => {
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
       const config = makeDiskConfig(tmpDir);
 
       const result = await service.initialize(config, makeInput());
@@ -261,13 +261,13 @@ describe('BrightChainMemberInitService — integration', () => {
       const config = makeDiskConfig(tmpDir);
       const input = makeInput();
 
-      const service1 = new BrightChainMemberInitService();
+      const service1 = new BrightChainMemberInitService<GuidV4Buffer>();
       const first = await service1.initialize(config, input);
       expect(first.insertedCount).toBe(3);
 
       // A second instance with the same disk path shares the persistent head registry
       // file — it loads the existing heads and finds all 3 documents already present.
-      const service2 = new BrightChainMemberInitService();
+      const service2 = new BrightChainMemberInitService<GuidV4Buffer>();
       const second = await service2.initialize(config, input);
       expect(second.alreadyInitialized).toBe(true);
       expect(second.insertedCount).toBe(0);
@@ -275,7 +275,7 @@ describe('BrightChainMemberInitService — integration', () => {
     });
 
     it('stores correct field values on disk', async () => {
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
       const config = makeDiskConfig(tmpDir);
 
       await service.initialize(config, makeInput());

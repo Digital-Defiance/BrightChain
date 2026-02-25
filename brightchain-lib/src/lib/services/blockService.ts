@@ -123,11 +123,16 @@ export class BlockService<TID extends PlatformID = Uint8Array> {
   }
 
   /**
-   * Generate random data using browser crypto
+   * Generate random data using browser crypto.
+   * Chunks calls to comply with the 65 536-byte getRandomValues() limit.
    */
   private generateRandomData(length: number): Uint8Array {
     const data = new Uint8Array(length);
-    crypto.getRandomValues(data);
+    const MAX_CHUNK = 65_536;
+    for (let offset = 0; offset < length; offset += MAX_CHUNK) {
+      const end = Math.min(offset + MAX_CHUNK, length);
+      crypto.getRandomValues(data.subarray(offset, end));
+    }
     return data;
   }
 

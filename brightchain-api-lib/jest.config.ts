@@ -9,6 +9,7 @@ export default {
       {
         tsconfig: '<rootDir>/tsconfig.spec.json',
         useESM: true,
+        diagnostics: false,
       },
     ],
   },

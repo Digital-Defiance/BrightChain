@@ -31,9 +31,11 @@ export interface IEnergyAccount {
 }
 
 /**
- * DTO for energy account serialization
+ * DTO for energy account serialization.
+ * Compatible with BsonDocument (Record<string, unknown>) for storage.
  */
 export interface IEnergyAccountDto {
+  [key: string]: unknown;
   memberId: string;
   balance: number;
   earned: number;

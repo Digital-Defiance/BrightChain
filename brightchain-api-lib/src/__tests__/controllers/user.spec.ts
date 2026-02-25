@@ -63,7 +63,7 @@ function fakeRequest(
 ): HandlerParams[0] {
   const obj: Record<string, unknown> = { body, headers: {} };
   if (user !== undefined) {
-    obj['user'] = user;
+    obj['user'] = { id: user.memberId, username: user.username };
   }
   return obj as unknown as HandlerParams[0];
 }
@@ -193,17 +193,18 @@ describe('UserController Error Handling', () => {
         new SecureString('securepassword123'),
       );
 
-      // Look up the member to get the raw ID bytes, then compute the hex
-      // checksum the same way the controller does via Checksum.fromHex.
+      // Look up the member to get the raw ID bytes, then compute both the
+      // UUID string (for the controller's idFromString) and the checksum
+      // (for seeding the energy store).
       const refs = await isolatedMemberStore.queryIndex({
         name: 'profileuser',
       });
       const idBytes = refs[0].id as Uint8Array;
-      const memberChecksum =
-        ServiceProvider.getInstance().checksumService.calculateChecksum(
-          idBytes,
-        );
-      const memberHex = memberChecksum.toString();
+      const sp = ServiceProvider.getInstance();
+      const typedId = sp.idProvider.fromBytes(idBytes);
+      const memberUuid = sp.idProvider.idToString(typedId);
+      const idRawBytes = sp.idProvider.toBytes(typedId);
+      const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
 
       // Seed the energy store with an account for this member
       const energyAccount =
@@ -221,10 +222,10 @@ describe('UserController Error Handling', () => {
 
       const req = fakeRequest(
         {},
-        { memberId: memberHex, username: 'profileuser' },
+        { memberId: memberUuid, username: 'profileuser' },
       );
 
-      const result = await controller.testHandlers.profile(
+      const result = await controller.testHandlers.getProfile(
         req,
         stubRes,
         stubNext,
@@ -241,8 +242,8 @@ describe('UserController Error Handling', () => {
           profile?: unknown;
         };
       };
-      expect(response.message).toBe('Profile retrieved');
-      expect(response.data.memberId).toBe(memberHex);
+      expect(response.message).toBe('Settings retrieved successfully');
+      expect(response.data.memberId).toBe(memberUuid);
       expect(typeof response.data.energyBalance).toBe('number');
 
       // Profile metadata should NOT be present since getMemberProfile threw
@@ -269,17 +270,18 @@ describe('UserController Error Handling', () => {
         new SecureString('securepassword123'),
       );
 
-      // Look up the member to get the raw ID bytes, then compute the hex
-      // checksum the same way the controller does via Checksum.fromHex.
+      // Look up the member to get the raw ID bytes, then compute the UUID
+      // string (for the controller's idFromString) and the checksum (for
+      // seeding the energy store).
       const refs = await isolatedMemberStore.queryIndex({
         name: 'updateuser',
       });
       const idBytes = refs[0].id as Uint8Array;
-      const memberChecksum =
-        ServiceProvider.getInstance().checksumService.calculateChecksum(
-          idBytes,
-        );
-      const memberHex = memberChecksum.toString();
+      const sp = ServiceProvider.getInstance();
+      const typedId = sp.idProvider.fromBytes(idBytes);
+      const memberUuid = sp.idProvider.idToString(typedId);
+      const idRawBytes = sp.idProvider.toBytes(typedId);
+      const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
 
       // Seed the energy store so handleUpdateProfile can retrieve the account
       const energyAccount =
@@ -299,7 +301,7 @@ describe('UserController Error Handling', () => {
             preferredRegions: ['us-east'],
           },
         },
-        { memberId: memberHex, username: 'updateuser' },
+        { memberId: memberUuid, username: 'updateuser' },
       );
 
       const result = await controller.testHandlers.updateProfile(
@@ -311,7 +313,7 @@ describe('UserController Error Handling', () => {
       expect(result.statusCode).toBe(500);
       expect(result.response).toHaveProperty('message');
       expect((result.response as { message: string }).message).toBe(
-        'Failed to update profile',
+        'An unexpected error occurred',
       );
 
       jest.restoreAllMocks();

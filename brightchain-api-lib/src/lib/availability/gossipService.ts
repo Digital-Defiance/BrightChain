@@ -18,6 +18,8 @@ import {
   MessageDeliveryMetadata,
   PoolAnnouncementMetadata,
   PoolId,
+  QuorumProposalMetadata,
+  QuorumVoteMetadata,
   validateGossipConfig,
 } from '@brightchain/brightchain-lib';
 import { ECIESService } from '@digitaldefiance/node-ecies-lib';
@@ -133,6 +135,25 @@ export class GossipService implements IGossipService {
    * @see Requirements 4.4
    */
   private deliveryAckHandlers: Set<(announcement: BlockAnnouncement) => void> =
+    new Set();
+
+  /**
+   * Registered quorum proposal handlers.
+   * Called when a BlockAnnouncement of type 'quorum_proposal' is received.
+   *
+   * @see Requirements 5.5
+   */
+  private quorumProposalHandlers: Set<
+    (announcement: BlockAnnouncement) => void
+  > = new Set();
+
+  /**
+   * Registered quorum vote handlers.
+   * Called when a BlockAnnouncement of type 'quorum_vote' is received.
+   *
+   * @see Requirements 7.3
+   */
+  private quorumVoteHandlers: Set<(announcement: BlockAnnouncement) => void> =
     new Set();
 
   /**
@@ -488,6 +509,44 @@ export class GossipService implements IGossipService {
       return;
     }
 
+    // Case 0e: Quorum proposal announcements — dispatch to quorum proposal handlers and forward (Req 5.5)
+    if (announcement.type === 'quorum_proposal') {
+      if (!announcement.quorumProposal) return;
+
+      for (const handler of this.quorumProposalHandlers) {
+        try {
+          handler(announcement);
+        } catch {
+          // Ignore handler errors to prevent one handler from affecting others
+        }
+      }
+
+      // Forward with decremented TTL
+      if (announcement.ttl > 0) {
+        this.queueAnnouncement({ ...announcement, ttl: announcement.ttl - 1 });
+      }
+      return;
+    }
+
+    // Case 0f: Quorum vote announcements — dispatch to quorum vote handlers and forward (Req 7.3)
+    if (announcement.type === 'quorum_vote') {
+      if (!announcement.quorumVote) return;
+
+      for (const handler of this.quorumVoteHandlers) {
+        try {
+          handler(announcement);
+        } catch {
+          // Ignore handler errors to prevent one handler from affecting others
+        }
+      }
+
+      // Forward with decremented TTL
+      if (announcement.ttl > 0) {
+        this.queueAnnouncement({ ...announcement, ttl: announcement.ttl - 1 });
+      }
+      return;
+    }
+
     // Case 1: Ack announcements — dispatch to delivery ack handlers only
     if (announcement.type === 'ack') {
       for (const handler of this.deliveryAckHandlers) {
@@ -789,7 +848,10 @@ export class GossipService implements IGossipService {
     announcements: BlockAnnouncement[],
   ): boolean {
     return announcements.some(
-      (a) => a.messageDelivery !== undefined || a.deliveryAck !== undefined,
+      (a) =>
+        a.messageDelivery !== undefined ||
+        a.deliveryAck !== undefined ||
+        a.quorumVote !== undefined,
     );
   }
 
@@ -968,5 +1030,85 @@ export class GossipService implements IGossipService {
    */
   offDeliveryAck(handler: (announcement: BlockAnnouncement) => void): void {
     this.deliveryAckHandlers.delete(handler);
+  }
+
+  /**
+   * Announce a quorum proposal to the network via priority gossip.
+   * Creates a BlockAnnouncement of type 'quorum_proposal' with the proposal metadata
+   * and queues it for propagation using high-priority fanout/TTL.
+   *
+   * @param metadata - The quorum proposal metadata to announce
+   * @see Requirements 5.2, 5.3
+   */
+  async announceQuorumProposal(
+    metadata: QuorumProposalMetadata,
+  ): Promise<void> {
+    const announcement: BlockAnnouncement = {
+      type: 'quorum_proposal',
+      blockId: metadata.proposalId,
+      nodeId: this.peerProvider.getLocalNodeId(),
+      timestamp: new Date(),
+      ttl: this.config.messagePriority.high.ttl,
+      quorumProposal: metadata,
+    };
+    this.queueAnnouncement(announcement);
+  }
+
+  /**
+   * Announce a quorum vote to the network via priority gossip.
+   * Creates a BlockAnnouncement of type 'quorum_vote' with the vote metadata
+   * and queues it for propagation using high-priority fanout/TTL.
+   *
+   * @param metadata - The quorum vote metadata to announce
+   * @see Requirements 7.1, 7.2
+   */
+  async announceQuorumVote(metadata: QuorumVoteMetadata): Promise<void> {
+    const announcement: BlockAnnouncement = {
+      type: 'quorum_vote',
+      blockId: metadata.proposalId,
+      nodeId: this.peerProvider.getLocalNodeId(),
+      timestamp: new Date(),
+      ttl: this.config.messagePriority.high.ttl,
+      quorumVote: metadata,
+    };
+    this.queueAnnouncement(announcement);
+  }
+
+  /**
+   * Register a handler for quorum proposal events.
+   *
+   * @param handler - Function to call when a quorum proposal announcement is received
+   * @see Requirements 5.5
+   */
+  onQuorumProposal(handler: (announcement: BlockAnnouncement) => void): void {
+    this.quorumProposalHandlers.add(handler);
+  }
+
+  /**
+   * Remove a quorum proposal event handler.
+   *
+   * @param handler - The handler to remove
+   */
+  offQuorumProposal(handler: (announcement: BlockAnnouncement) => void): void {
+    this.quorumProposalHandlers.delete(handler);
+  }
+
+  /**
+   * Register a handler for quorum vote events.
+   *
+   * @param handler - Function to call when a quorum vote announcement is received
+   * @see Requirements 7.3
+   */
+  onQuorumVote(handler: (announcement: BlockAnnouncement) => void): void {
+    this.quorumVoteHandlers.add(handler);
+  }
+
+  /**
+   * Remove a quorum vote event handler.
+   *
+   * @param handler - The handler to remove
+   */
+  offQuorumVote(handler: (announcement: BlockAnnouncement) => void): void {
+    this.quorumVoteHandlers.delete(handler);
   }
 }

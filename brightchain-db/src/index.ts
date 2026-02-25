@@ -2,42 +2,137 @@
  * @brightchain/db
  *
  * A MongoDB-like document database backed by BrightChain's block store.
- *
- * Core engine modules (query engine, update engine, cursor, indexing,
- * aggregation, schema validation, errors, transactions, Collection,
- * InMemoryDatabase, etc.) are re-exported from @brightchain/brightchain-lib.
- *
- * Persistence-specific modules (PersistentHeadRegistry, PooledStoreAdapter,
- * CBLIndex, expressMiddleware, BrightChainDb) remain in this package.
  */
 
-// ============================================================================
-// Core Engine – re-exported from brightchain-lib's db barrel
-// ============================================================================
-// Includes: types, uuidGenerator, errors, queryEngine, updateEngine, cursor,
-// indexing, aggregation, schemaValidation, InMemoryHeadRegistry, transaction,
-// Collection, calculateBlockId, InMemoryDatabase, InMemoryDatabaseOptions
-export * from '@brightchain/brightchain-lib/lib/db';
+// Core types
+export type {
+  AggregationStage,
+  BsonDocument,
+  BulkWriteOperation,
+  BulkWriteOptions,
+  BulkWriteResult,
+  ChangeEvent,
+  ChangeEventType,
+  ChangeListener,
+  ClientSession,
+  CollectionOptions,
+  CursorSession,
+  DeleteResult,
+  DocumentId,
+  FilterOperator,
+  FilterQuery,
+  FindOptions,
+  IndexOptions,
+  IndexSpec,
+  InsertManyResult,
+  InsertOneResult,
+  LogicalOperators,
+  ProjectionSpec,
+  ReadPreference,
+  ReplaceResult,
+  SortSpec,
+  TextIndexOptions,
+  UpdateOperators,
+  UpdateOptions,
+  UpdateQuery,
+  UpdateResult,
+  WriteConcern,
+  WriteOptions,
+} from './lib/types';
 
-// ============================================================================
-// Persistence-specific modules (Node.js / Express)
-// ============================================================================
-
-// BrightChainDb – extends InMemoryDatabase with disk persistence
+// Database & Collection
+export { Collection, HeadRegistry, calculateBlockId } from './lib/collection';
+export type {
+  CollectionResolver,
+  ICollectionHeadRegistry,
+} from './lib/collection';
 export { BrightChainDb } from './lib/database';
 export type { BrightChainDbOptions } from './lib/database';
 
-// PersistentHeadRegistry – disk-backed head tracking
-export { PersistentHeadRegistry } from './lib/headRegistry';
+// Head registries
+export {
+  InMemoryHeadRegistry,
+  PersistentHeadRegistry,
+} from './lib/headRegistry';
 export type { HeadRegistryOptions } from './lib/headRegistry';
 
-// PooledStoreAdapter – pool-scoped block store adapter
+// Pooled store adapter
 export { PooledStoreAdapter } from './lib/pooledStoreAdapter';
 
-// CBL Index – higher-level CBL index with persistence concerns
+// Re-exports from brightchain-lib for backward compatibility
+export {
+  InMemoryDatabase,
+  createDefaultUuidGenerator,
+} from '@brightchain/brightchain-lib';
+
+// CBL Index
 export { CBLIndex } from './lib/cblIndex';
 export type { CBLIndexOptions } from './lib/cblIndex';
 
-// Express middleware – REST API router for BrightChainDb
+// Model
+export { Model, TypedCursor } from './lib/model';
+export type { ModelOptions } from './lib/model';
+
+// Cursor
+export { Cursor } from './lib/cursor';
+
+// Query engine
+export {
+  applyProjection,
+  compareValues,
+  deepEquals,
+  getTextSearchFields,
+  matchesFilter,
+  setTextSearchFields,
+  sortDocuments,
+  tokenize,
+} from './lib/queryEngine';
+
+// Update engine
+export { applyUpdate, isOperatorUpdate } from './lib/updateEngine';
+
+// Aggregation
+export { runAggregation } from './lib/aggregation';
+
+// Indexing
+export {
+  CollectionIndex,
+  DuplicateKeyError,
+  IndexManager,
+} from './lib/indexing';
+
+// Transactions
+export { DbSession } from './lib/transaction';
+export type {
+  CommitCallback,
+  JournalOp,
+  RollbackCallback,
+} from './lib/transaction';
+
+// Express middleware
 export { createDbRouter } from './lib/expressMiddleware';
 export type { DbRouterOptions } from './lib/expressMiddleware';
+
+// Errors
+export {
+  BrightChainDbError,
+  BulkWriteError,
+  DocumentNotFoundError,
+  IndexError,
+  TransactionError,
+  ValidationError,
+  WriteConcernError,
+} from './lib/errors';
+export type {
+  BulkWriteOperationError,
+  ValidationFieldError,
+  WriteConcernSpec,
+} from './lib/errors';
+
+// Schema validation
+export { applyDefaults, validateDocument } from './lib/schemaValidation';
+export type {
+  CollectionSchema,
+  FieldSchema,
+  SchemaType,
+} from './lib/schemaValidation';

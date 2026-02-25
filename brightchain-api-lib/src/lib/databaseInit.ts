@@ -10,10 +10,12 @@
 import type {
   IBlockStore,
   IBrightChainInitData,
+  IEnergyAccountDto,
   IInitResult,
 } from '@brightchain/brightchain-lib';
 import {
   BlockSize,
+  EnergyAccount,
   EnergyAccountStore,
   MemberStore,
 } from '@brightchain/brightchain-lib';
@@ -21,9 +23,9 @@ import { BrightChainDb } from '@brightchain/db';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { constants as fsConstants } from 'fs';
 import { access, mkdir } from 'fs/promises';
-import { BrightChainDbDocumentStoreAdapter } from './adapters/brightChainDbDocumentStoreAdapter';
 import { Environment } from './environment';
 import { BlockStoreFactory } from './factories/blockStoreFactory';
+import { createEnergyAccountHydrationSchema } from './hydration/energyAccountHydration';
 
 /**
  * Validate that the given directory path exists and is accessible.
@@ -56,8 +58,9 @@ async function validateDataDir(dirPath: string): Promise<void> {
  * - If `blockStorePath` is not set: creates a MemoryBlockStore, logs a warning,
  *   and creates a BrightChainDb with an InMemoryHeadRegistry.
  *
- * Then initializes MemberStore, EnergyAccountStore (backed by BrightChainDb
- * as IDocumentStore), and loads persisted energy accounts.
+ * Registers an `energy_accounts` Model on BrightChainDb with the energy account
+ * hydration schema, then passes the Model (as ITypedCollection) directly to
+ * EnergyAccountStore — no adapter needed.
  *
  * @returns An IInitResult containing the initialized stores on success,
  *          or a failure result with a descriptive error message.
@@ -68,11 +71,18 @@ export async function brightchainDatabaseInit<TID extends PlatformID>(
   try {
     const blockStorePath = environment.blockStorePath;
     const blockSize: BlockSize = environment.blockStoreBlockSize;
+    const devPoolName = environment.devDatabasePoolName;
 
     let blockStore: IBlockStore;
     let dataDir: string | undefined;
 
-    if (blockStorePath) {
+    if (devPoolName) {
+      // DEV_DATABASE is set — use ephemeral in-memory store for development
+      console.info(
+        `[BrightChain] DEV_DATABASE="${devPoolName}" — using ephemeral MemoryBlockStore. Data will not persist across restarts.`,
+      );
+      blockStore = BlockStoreFactory.createMemoryStore({ blockSize });
+    } else if (blockStorePath) {
       // Validate path accessibility, create if needed
       await validateDataDir(blockStorePath);
 
@@ -82,25 +92,37 @@ export async function brightchainDatabaseInit<TID extends PlatformID>(
       });
       dataDir = blockStorePath;
     } else {
-      console.warn(
-        '[BrightChain] No BRIGHTCHAIN_BLOCKSTORE_PATH set — using ephemeral MemoryBlockStore. Data will not persist across restarts.',
+      throw new Error(
+        'Neither DEV_DATABASE nor BRIGHTCHAIN_BLOCKSTORE_PATH is set. ' +
+          'Set DEV_DATABASE to a pool name for in-memory development mode, ' +
+          'or set BRIGHTCHAIN_BLOCKSTORE_PATH for persistent disk storage.',
       );
-      blockStore = BlockStoreFactory.createMemoryStore({ blockSize });
     }
 
     // Create BrightChainDb — uses PersistentHeadRegistry when dataDir is set,
     // InMemoryHeadRegistry otherwise.
-    const db = new BrightChainDb(blockStore, dataDir ? { dataDir } : undefined);
+    const db = new BrightChainDb(
+      blockStore,
+      dataDir ? { name: dataDir } : undefined,
+    );
+
+    // Mark the db as connected (no-op for block-store-backed DB, but sets
+    // the isConnected() flag that consumers check).
     await db.connect();
 
-    // Wrap BrightChainDb as IDocumentStore for EnergyAccountStore
-    const documentStore = new BrightChainDbDocumentStoreAdapter(db);
+    // Register the energy_accounts Model with hydration schema.
+    // The Model satisfies ITypedCollection<IEnergyAccountDto, EnergyAccount>
+    // so EnergyAccountStore can use it directly — no adapter needed.
+    const energyAccountModel = db.model<IEnergyAccountDto, EnergyAccount>(
+      'energy_accounts',
+      { hydration: createEnergyAccountHydrationSchema() },
+    );
 
     // Initialize stores
     const memberStore = new MemberStore(blockStore);
-    const energyStore = new EnergyAccountStore(documentStore);
+    const energyStore = new EnergyAccountStore(energyAccountModel);
 
-    // Load persisted energy accounts (no-op if no document store)
+    // Load persisted energy accounts (no-op if no typed collection)
     try {
       await energyStore.loadFromStore();
     } catch (loadError: unknown) {
@@ -115,7 +137,7 @@ export async function brightchainDatabaseInit<TID extends PlatformID>(
       success: true,
       backend: {
         blockStore,
-        db: documentStore,
+        db,
         memberStore,
         energyStore,
       },

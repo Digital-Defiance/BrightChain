@@ -9,6 +9,11 @@
  * _Requirements: 6.3, 6.4, 6.5_
  */
 
+import {
+  initializeBrightChain,
+  ServiceLocator,
+  ServiceProvider,
+} from '@brightchain/brightchain-lib';
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import { Environment } from '../../environment';
 import { BrightChainAuthenticationProvider } from '../../services/brightchain-authentication-provider';
@@ -18,6 +23,14 @@ import '../../factories/blockStoreFactory';
 import type { DefaultBackendIdType } from '../../shared-types';
 
 jest.setTimeout(60_000);
+
+// Initialize BrightChain global services before any tests run.
+// The plugin's seedMembers() writes blocks via BrightChainDb.withTransaction,
+// which creates RawDataBlock instances that require the global ServiceProvider.
+beforeAll(() => {
+  initializeBrightChain();
+  ServiceLocator.setServiceProvider(ServiceProvider.getInstance());
+});
 
 /**
  * Required env vars for Environment construction.
@@ -48,8 +61,10 @@ function setupEnv(): () => void {
   saved['BRIGHTCHAIN_BLOCKSTORE_PATH'] =
     process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
   saved['BLOCKSTORE_PATH'] = process.env['BLOCKSTORE_PATH'];
+  saved['DEV_DATABASE'] = process.env['DEV_DATABASE'];
   delete process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
   delete process.env['BLOCKSTORE_PATH'];
+  process.env['DEV_DATABASE'] = 'ephemeral-plugin-test';
 
   return () => {
     for (const [key, value] of Object.entries(saved)) {
@@ -230,9 +245,6 @@ describe('Accessors throw descriptive errors when disconnected', () => {
       case 'brightChainDb':
         void plugin.brightChainDb;
         break;
-      case 'documentStore':
-        void plugin.documentStore;
-        break;
       case 'database':
         void plugin.database;
         break;
@@ -246,7 +258,6 @@ describe('Accessors throw descriptive errors when disconnected', () => {
     { name: 'memberStore' },
     { name: 'energyStore' },
     { name: 'brightChainDb' },
-    { name: 'documentStore' },
     { name: 'database' },
   ];
 

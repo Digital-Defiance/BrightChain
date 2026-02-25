@@ -55,12 +55,15 @@ function setupEnv(blockStorePath?: string): () => void {
   saved['BRIGHTCHAIN_BLOCKSTORE_PATH'] =
     process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
   saved['BLOCKSTORE_PATH'] = process.env['BLOCKSTORE_PATH'];
+  saved['DEV_DATABASE'] = process.env['DEV_DATABASE'];
 
   if (blockStorePath !== undefined) {
     process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'] = blockStorePath;
+    delete process.env['DEV_DATABASE'];
   } else {
     delete process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
     delete process.env['BLOCKSTORE_PATH'];
+    process.env['DEV_DATABASE'] = 'ephemeral-unit';
   }
 
   return () => {
@@ -76,13 +79,16 @@ function setupEnv(blockStorePath?: string): () => void {
 
 describe('brightchainDatabaseInit – unit tests', () => {
   let warnSpy: jest.SpyInstance;
+  let infoSpy: jest.SpyInstance;
 
   beforeEach(() => {
     warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    infoSpy = jest.spyOn(console, 'info').mockImplementation();
   });
 
   afterEach(() => {
     warnSpy.mockRestore();
+    infoSpy.mockRestore();
   });
 
   /**
@@ -132,7 +138,7 @@ describe('brightchainDatabaseInit – unit tests', () => {
    * THE App SHALL fall back to MemoryBlockStore and InMemoryHeadRegistry
    * with a logged warning.
    */
-  it('missing dataDir falls back to memory with warning', async () => {
+  it('DEV_DATABASE mode uses ephemeral memory store', async () => {
     const restoreEnv = setupEnv(undefined);
 
     try {
@@ -148,8 +154,8 @@ describe('brightchainDatabaseInit – unit tests', () => {
       expect(backend.memberStore).toBeInstanceOf(MemberStore);
       expect(backend.energyStore).toBeInstanceOf(EnergyAccountStore);
 
-      // A warning about ephemeral mode should have been logged
-      expect(warnSpy).toHaveBeenCalledWith(
+      // An info message about ephemeral mode should have been logged
+      expect(infoSpy).toHaveBeenCalledWith(
         expect.stringContaining('ephemeral MemoryBlockStore'),
       );
     } finally {

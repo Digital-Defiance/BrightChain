@@ -6,7 +6,6 @@ export * from './lib/transforms';
 export * from './lib/services';
 
 // Database initialization
-export * from './lib/adapters/brightChainDbDocumentStoreAdapter';
 export * from './lib/databaseInit';
 
 // API lib exports

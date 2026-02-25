@@ -44,8 +44,8 @@ const MEMBER_ID = '586fab6e1d9b4710be7b95dda1e051a1';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function makeService(): BrightChainMemberInitService {
-  return new BrightChainMemberInitService();
+function makeService(): BrightChainMemberInitService<GuidV4Buffer> {
+  return new BrightChainMemberInitService<GuidV4Buffer>();
 }
 
 function makeConfig(
