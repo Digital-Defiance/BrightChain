@@ -26,7 +26,6 @@ import type {
   FilterOperator,
   FilterQuery,
   FindOptions,
-  IClientSession,
   IndexOptions,
   IndexSpec,
   InsertManyResult,
@@ -69,7 +68,6 @@ type _AssertDocumentId = DocumentId;
 type _AssertFilterOperator = FilterOperator<string>;
 type _AssertFilterQuery = FilterQuery<BsonDocument>;
 type _AssertFindOptions = FindOptions;
-type _AssertIClientSession = IClientSession;
 type _AssertIndexOptions = IndexOptions;
 type _AssertIndexSpec = IndexSpec;
 type _AssertInsertManyResult = InsertManyResult;

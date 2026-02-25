@@ -225,6 +225,14 @@ export * from './secureStorage';
 export * from './quorumError';
 
 // ============================================================================
+// Identity Validation Errors
+// ============================================================================
+/**
+ * Identity validation errors for content ingestion pipeline.
+ */
+export * from './identityValidationError';
+
+// ============================================================================
 // Sealing Errors
 // ============================================================================
 /**

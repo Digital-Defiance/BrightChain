@@ -19,6 +19,18 @@ import { Checksum } from '../../types/checksum';
 import { ServiceProvider } from '../service.provider';
 
 /**
+ * Fill a Uint8Array with cryptographically random bytes, working around the
+ * Web Crypto API limit of 65 536 bytes per `getRandomValues()` call.
+ */
+function cryptoFillRandom(buffer: Uint8Array): void {
+  const MAX_CHUNK = 65_536;
+  for (let offset = 0; offset < buffer.length; offset += MAX_CHUNK) {
+    const end = Math.min(offset + MAX_CHUNK, buffer.length);
+    crypto.getRandomValues(buffer.subarray(offset, end));
+  }
+}
+
+/**
  * Service for creating and managing member CBLs
  */
 export class MemberCblService<TID extends PlatformID = Uint8Array> {
@@ -114,7 +126,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
         while (missingBlocks > 0) {
           // Create dummy blocks to fill the gap with the same size as the original blocks
           const dummyData = new Uint8Array(chunkSize); // Use consistent chunk size
-          crypto.getRandomValues(dummyData);
+          cryptoFillRandom(dummyData);
 
           // Calculate proper checksum for the dummy block
           const dummyChecksum =

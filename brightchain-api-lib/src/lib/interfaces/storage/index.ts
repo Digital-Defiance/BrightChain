@@ -3,6 +3,7 @@ export type * from './collection';
 export type * from './database';
 export type * from './database-lifecycle-hooks';
 export type * from './document-types';
+export type * from './storedDocumentTypes';
 
 // Collection schemas (runtime values)
 export { MEMBER_INDEX_SCHEMA } from './memberIndexSchema';

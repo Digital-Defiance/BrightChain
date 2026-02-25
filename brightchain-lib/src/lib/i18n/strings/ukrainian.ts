@@ -228,6 +228,79 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_QuorumError_MemberNotFound]: 'Учасник не знайдений',
   [BrightChainStrings.Error_QuorumError_NotEnoughMembers]:
     'Недостатньо учасників для операції кворуму',
+  [BrightChainStrings.Error_QuorumError_TransitionInProgress]:
+    'Операцію заблоковано: церемонія переходу в процесі',
+  [BrightChainStrings.Error_QuorumError_InvalidModeTransition]:
+    'Недійсний перехід операційного режиму',
+  [BrightChainStrings.Error_QuorumError_InsufficientMembersForTransition]:
+    'Недостатньо учасників для початку церемонії переходу',
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyExists]:
+    'Учасник вже існує в кворумі',
+  [BrightChainStrings.Error_QuorumError_InsufficientRemainingMembers]:
+    'Неможливо видалити учасника: залишок учасників буде нижче порогу',
+  [BrightChainStrings.Error_QuorumError_MemberBanned]:
+    'Учасника заблоковано в мережі',
+  [BrightChainStrings.Error_QuorumError_MemberSuspended]:
+    'Учасника призупинено в мережі',
+  [BrightChainStrings.Error_QuorumError_DuplicateProposal]:
+    'Дублікат ідентифікатора пропозиції',
+  [BrightChainStrings.Error_QuorumError_ProposalExpired]:
+    'Термін дії пропозиції закінчився',
+  [BrightChainStrings.Error_QuorumError_DuplicateVote]:
+    'Дублікат голосу від цього учасника',
+  [BrightChainStrings.Error_QuorumError_VoterNotOnProposal]:
+    'Голосуючий не є активним учасником цієї пропозиції',
+  [BrightChainStrings.Error_QuorumError_AuthenticationFailed]:
+    'Помилка автентифікації',
+  [BrightChainStrings.Error_QuorumError_VotingLocked]:
+    'Голосування заблоковано через повторні помилки автентифікації',
+  [BrightChainStrings.Error_QuorumError_MissingAttachment]:
+    'Пропозиція потребує вкладення, але його не надано',
+  [BrightChainStrings.Error_QuorumError_AttachmentNotRetrievable]:
+    'Посилання на вкладення CBL недоступне',
+  [BrightChainStrings.Error_QuorumError_RedistributionFailed]:
+    'Перерозподіл часток не вдався',
+  [BrightChainStrings.Error_QuorumError_InsufficientSharesForReconstruction]:
+    'Недостатньо часток для відновлення ключа',
+  [BrightChainStrings.Error_QuorumError_KeyReconstructionValidationFailed]:
+    'Відновлений ключ не пройшов перевірку',
+  [BrightChainStrings.Error_QuorumError_IdentityPermanentlyUnrecoverable]:
+    'Ідентичність назавжди невідновна через закінчення строку давності',
+  [BrightChainStrings.Error_QuorumError_InvalidMembershipProof]:
+    'Недійсне підтвердження членства',
+  [BrightChainStrings.Error_QuorumError_MissingMembershipProof]:
+    'Відсутнє підтвердження членства для анонімного контенту',
+  [BrightChainStrings.Error_QuorumError_AliasAlreadyTaken]:
+    'Псевдонім вже зареєстровано',
+  [BrightChainStrings.Error_QuorumError_AliasNotFound]: 'Псевдонім не знайдено',
+  [BrightChainStrings.Error_QuorumError_AliasInactive]:
+    'Псевдонім деактивовано',
+  [BrightChainStrings.Error_QuorumError_IdentitySealingFailed]:
+    'Конвеєр запечатування ідентичності не вдався',
+  [BrightChainStrings.Error_QuorumError_ShardVerificationFailed]:
+    'Перевірка фрагментів ідентичності не вдалася',
+  [BrightChainStrings.Error_QuorumError_QuorumDatabaseUnavailable]:
+    'База даних кворуму недоступна',
+  [BrightChainStrings.Error_QuorumError_TransactionFailed]:
+    'Транзакція бази даних не вдалася',
+  [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
+    'Цілісність ланцюга аудиту порушена',
+  [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
+    'Підпис контенту не відповідає заявленій ідентичності',
+  [BrightChainStrings.Error_IdentityValidationError_UnregisteredAlias]:
+    'Псевдонім не зареєстровано',
+  [BrightChainStrings.Error_IdentityValidationError_InactiveAlias]:
+    'Псевдонім неактивний',
+  [BrightChainStrings.Error_IdentityValidationError_InvalidMembershipProof]:
+    'Недійсне підтвердження членства',
+  [BrightChainStrings.Error_IdentityValidationError_MissingMembershipProof]:
+    'Відсутнє підтвердження членства для анонімного контенту',
+  [BrightChainStrings.Error_IdentityValidationError_BannedUser]:
+    'Автора контенту заблоковано',
+  [BrightChainStrings.Error_IdentityValidationError_SuspendedUser]:
+    'Автора контенту призупинено',
+  [BrightChainStrings.Error_IdentityValidationError_ShardVerificationFailed]:
+    'Перевірка фрагментів ідентичності не вдалася',
 
   // System Keyring Errors
   [BrightChainStrings.Error_SystemKeyringError_KeyNotFoundTemplate]:

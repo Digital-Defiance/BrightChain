@@ -12,9 +12,19 @@
  * @module plugins/brightchain-database-plugin
  */
 
-import type { IBlockStore, IDocumentStore } from '@brightchain/brightchain-lib';
-import { EnergyAccountStore, MemberStore } from '@brightchain/brightchain-lib';
+import type {
+  IBlockStore,
+  IBrightChainBaseInitResult,
+  IBrightChainMemberInitInput,
+  IMemberIndexDocument,
+} from '@brightchain/brightchain-lib';
+import {
+  EnergyAccountStore,
+  MemberStatusType,
+  MemberStore,
+} from '@brightchain/brightchain-lib';
 import type { BrightChainDb } from '@brightchain/db';
+import { MemberType } from '@digitaldefiance/ecies-lib';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import type {
   IApplication,
@@ -22,10 +32,10 @@ import type {
   IDatabasePlugin,
 } from '@digitaldefiance/node-express-suite';
 import type { IDatabase } from '@digitaldefiance/suite-core-lib';
-import { BrightChainDbDocumentStoreAdapter } from '../adapters/brightChainDbDocumentStoreAdapter';
 import { brightchainDatabaseInit } from '../databaseInit';
 import type { Environment } from '../environment';
 import type { IBrightChainApplication } from '../interfaces/application';
+import type { IBrightChainMemberInitConfig } from '../interfaces/member-init-config';
 import { BrightChainAuthenticationProvider } from '../services/brightchain-authentication-provider';
 
 /**
@@ -37,7 +47,7 @@ import { BrightChainAuthenticationProvider } from '../services/brightchain-authe
  * - stop() → delegates to disconnect()
  * - disconnect() → releases all references (idempotent)
  *
- * Typed accessors (blockStore, memberStore, energyStore, brightChainDb, documentStore)
+ * Typed accessors (blockStore, memberStore, energyStore, brightChainDb)
  * throw descriptive errors when the plugin is not connected.
  */
 export class BrightChainDatabasePlugin<
@@ -50,7 +60,6 @@ export class BrightChainDatabasePlugin<
   private _connected = false;
   private _blockStore: IBlockStore | null = null;
   private _brightChainDb: BrightChainDb | null = null;
-  private _documentStore: IDocumentStore | null = null;
   private _memberStore: MemberStore | null = null;
   private _energyStore: EnergyAccountStore | null = null;
   private _authProvider: BrightChainAuthenticationProvider<TID> | null = null;
@@ -72,7 +81,7 @@ export class BrightChainDatabasePlugin<
         'BrightChainDatabasePlugin: cannot access "database" — plugin is not connected. Call connect() first.',
       );
     }
-    return this._brightChainDb;
+    return this._brightChainDb as unknown as IDatabase;
   }
 
   /**
@@ -87,8 +96,7 @@ export class BrightChainDatabasePlugin<
    * Connect the BrightChain database stack.
    *
    * Calls brightchainDatabaseInit(environment) and stores the resulting
-   * backend references (blockStore, db/BrightChainDb, documentStore,
-   * memberStore, energyStore).
+   * backend references (blockStore, BrightChainDb, memberStore, energyStore).
    *
    * @param _uri - Ignored; BrightChain uses environment-based configuration.
    * @throws Error if brightchainDatabaseInit() returns a failure result.
@@ -105,16 +113,16 @@ export class BrightChainDatabasePlugin<
     const { blockStore, db, memberStore, energyStore } = initResult.backend;
 
     this._blockStore = blockStore;
-    this._documentStore = db;
+    this._brightChainDb = db as BrightChainDb;
     this._memberStore = memberStore as MemberStore;
     this._energyStore = energyStore as EnergyAccountStore;
-
-    // BrightChainDb is the underlying database behind the documentStore adapter.
-    // brightchainDatabaseInit() creates BrightChainDb and wraps it in
-    // BrightChainDbDocumentStoreAdapter. We extract the raw BrightChainDb
-    // for the IDatabasePlugin.database property (IDatabase contract).
-    this._brightChainDb = this.extractBrightChainDb(db);
     this._connected = true;
+
+    // Seed system/admin/member users into the database.
+    // Runs for both dev and production modes; idempotent if called again
+    // via initializeDevStore().
+    const config = this.buildMemberInitConfig();
+    await this.seedMembers(config);
   }
 
   /**
@@ -126,13 +134,8 @@ export class BrightChainDatabasePlugin<
       return;
     }
 
-    if (this._brightChainDb?.isConnected()) {
-      await this._brightChainDb.disconnect();
-    }
-
     this._blockStore = null;
     this._brightChainDb = null;
-    this._documentStore = null;
     this._memberStore = null;
     this._energyStore = null;
     this._authProvider = null;
@@ -167,14 +170,6 @@ export class BrightChainDatabasePlugin<
   }
 
   // ── Dev store lifecycle hooks ─────────────────────────────────────
-  // These are the BrightChain equivalents of the Mongo plugin's
-  // MongoMemoryReplSet provisioning. When environment.devDatabase is
-  // truthy, the upstream Application.start() calls setupDevStore()
-  // before connect() and initializeDevStore() after init().
-  //
-  // For BrightChain, "dev store" means using a MemoryBlockStore with
-  // an InMemoryHeadRegistry — brightchainDatabaseInit() already handles
-  // this when environment.blockStorePath is not set.
 
   /**
    * Provision an ephemeral dev/test block store.
@@ -207,11 +202,14 @@ export class BrightChainDatabasePlugin<
    * Seed the dev database after connection.
    *
    * Called by Application.start() after connect() and init() when
-   * environment.devDatabase is truthy. Currently a no-op — can be
-   * extended to seed test users, blocks, etc. for local development.
+   * environment.devDatabase is truthy. Invokes BrightChainMemberInitService
+   * to persist system/admin/member seed users into the in-memory database.
    */
-  async initializeDevStore(): Promise<unknown> {
-    return undefined;
+  async initializeDevStore(): Promise<
+    IBrightChainBaseInitResult<BrightChainDb, TID>
+  > {
+    const config = this.buildMemberInitConfig();
+    return this.seedMembers(config);
   }
 
   // ── Typed accessors ───────────────────────────────────────────────
@@ -243,19 +241,6 @@ export class BrightChainDatabasePlugin<
   }
 
   /**
-   * The document store (BrightChainDbDocumentStoreAdapter wrapping BrightChainDb).
-   * @throws Error if the plugin is not connected.
-   */
-  get documentStore(): IDocumentStore {
-    if (!this._documentStore) {
-      throw new Error(
-        'BrightChainDatabasePlugin: cannot access "documentStore" — plugin is not connected. Call connect() first.',
-      );
-    }
-    return this._documentStore;
-  }
-
-  /**
    * The member store for user/member operations.
    * @throws Error if the plugin is not connected.
    */
@@ -284,34 +269,119 @@ export class BrightChainDatabasePlugin<
   // ── Private helpers ───────────────────────────────────────────────
 
   /**
-   * Extract the underlying BrightChainDb from the IDocumentStore adapter.
+   * Build an IBrightChainMemberInitConfig from the environment.
    *
-   * brightchainDatabaseInit() wraps BrightChainDb in a
-   * BrightChainDbDocumentStoreAdapter. We need the raw BrightChainDb
-   * for the IDatabasePlugin.database property (IDatabase contract).
+   * Derives `useMemoryStore` from `!!environment.devDatabasePoolName` by default.
+   * When a dev pool name is set the store is in-memory; otherwise disk-backed.
    *
-   * We verify the adapter type via instanceof, then access the runtime
-   * `db` property (TypeScript `private` is compile-time only).
+   * @param useMemoryStore - Optional override. Defaults to `!!environment.devDatabasePoolName`.
    */
-  private extractBrightChainDb(documentStore: IDocumentStore): BrightChainDb {
-    if (!(documentStore instanceof BrightChainDbDocumentStoreAdapter)) {
+  buildMemberInitConfig(
+    useMemoryStore: boolean = !!this._environment.devDatabasePoolName,
+  ): IBrightChainMemberInitConfig {
+    const env = this._environment;
+    return {
+      memberPoolName: useMemoryStore
+        ? (env.devDatabasePoolName ?? env.memberPoolName)
+        : env.memberPoolName,
+      blockStorePath: env.blockStorePath,
+      useMemoryStore,
+      blockSize: env.blockStoreBlockSize,
+    };
+  }
+
+  /**
+   * Build an IBrightChainMemberInitInput from the environment's
+   * system/admin/member IDs and their associated member types.
+   *
+   * @throws Error if any of the required IDs are not set in the environment.
+   */
+  buildMemberInitInput(): IBrightChainMemberInitInput<TID> {
+    const env = this._environment;
+
+    if (!env.systemId || !env.adminId || !env.memberId) {
       throw new Error(
-        'BrightChainDatabasePlugin: expected BrightChainDbDocumentStoreAdapter from brightchainDatabaseInit().',
+        'BrightChainDatabasePlugin: cannot seed members — one or more user IDs ' +
+          '(systemId, adminId, memberId) are not set in the environment.',
       );
     }
-    // BrightChainDbDocumentStoreAdapter has a private `db: BrightChainDb` field.
-    // TypeScript's `private` keyword is compile-time only — the property exists
-    // at runtime. We use a structural interface to access it after the instanceof
-    // guard confirms the concrete type.
-    const adapterWithDb: { db: BrightChainDb } =
-      documentStore as BrightChainDbDocumentStoreAdapter & {
-        db: BrightChainDb;
+
+    return {
+      systemUser: { id: env.systemId, type: MemberType.System },
+      adminUser: { id: env.adminId, type: MemberType.User },
+      memberUser: { id: env.memberId, type: MemberType.User },
+    };
+  }
+
+  /**
+   * Seed system/admin/member users into the database using
+   * BrightChainMemberInitService.
+   *
+   * Reusable by both dev mode (initializeDevStore) and production mode paths.
+   *
+   * @param config - The member init configuration.
+   * @returns The init result from BrightChainMemberInitService.
+   */
+  async seedMembers(
+    config: IBrightChainMemberInitConfig,
+  ): Promise<IBrightChainBaseInitResult<BrightChainDb, TID>> {
+    const input = this.buildMemberInitInput();
+    const db = this.brightChainDb;
+
+    // Build candidate member index documents
+    const now = new Date().toISOString();
+    const candidates: IMemberIndexDocument[] = [
+      input.systemUser,
+      input.adminUser,
+      input.memberUser,
+    ].map((user) => ({
+      id: user.id.toString('hex'),
+      publicCBL: '0'.repeat(64),
+      privateCBL: '0'.repeat(64),
+      poolId: config.memberPoolName,
+      type: user.type,
+      status: MemberStatusType.Active,
+      lastUpdate: now,
+      reputation: 0,
+    }));
+
+    // Idempotency check
+    const collection = db.collection<IMemberIndexDocument>('member_index');
+    const existing = await collection.find({}).toArray();
+    const existingIds = new Set(existing.map((e) => e.id));
+    const toInsert = candidates.filter((c) => !existingIds.has(c.id));
+    const skippedCount = candidates.length - toInsert.length;
+
+    if (toInsert.length === 0) {
+      console.log(
+        `[BrightChain] Member seeding: already initialized (${skippedCount} skipped).`,
+      );
+      return {
+        input,
+        alreadyInitialized: true,
+        insertedCount: 0,
+        skippedCount,
+        db,
       };
-    if (!adapterWithDb.db) {
-      throw new Error(
-        'BrightChainDatabasePlugin: could not extract BrightChainDb from document store adapter.',
-      );
     }
-    return adapterWithDb.db;
+
+    // Insert missing entries
+    await db.withTransaction(async (session) => {
+      for (const entry of toInsert) {
+        await collection.insertOne(entry, { session });
+      }
+    });
+
+    console.log(
+      `[BrightChain] Member seeding: ${toInsert.length} inserted, ${skippedCount} skipped.`,
+    );
+
+    return {
+      input,
+      alreadyInitialized: false,
+      insertedCount: toInsert.length,
+      skippedCount,
+      db,
+    };
   }
 }

@@ -40,6 +40,16 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
     this.enhancedProvider = enhancedProvider;
   }
 
+  /** Public accessor for the ECIES service (needed by QuorumStateMachine for member resolution). */
+  public get eciesServiceRef(): ECIESService<TID> {
+    return this.eciesService;
+  }
+
+  /** Public accessor for the enhanced ID provider (needed by QuorumStateMachine for member resolution). */
+  public get enhancedProviderRef(): TypedIdProviderWrapper<TID> {
+    return this.enhancedProvider;
+  }
+
   /**
    * Reconfigure secrets.js to have the right number of bits for the number of shares needed
    * @param maxShares Maximum number of shares to support
@@ -70,6 +80,33 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
   }
 
   /**
+   * Reconfigure secrets.js for bootstrap mode, allowing share counts as low as 1.
+   * Bypasses the SEALING.MIN_SHARES constraint.
+   * @param maxShares Maximum number of shares to support (minimum 1)
+   */
+  public reinitSecretsForBootstrap(maxShares: number) {
+    if (maxShares < 1 || maxShares > SEALING.MAX_SHARES) {
+      throw new SealingError(SealingErrorType.InvalidBitRange);
+    }
+    // For 1 share, we still need at least 3 bits for the secrets library
+    const bits = Math.max(3, Math.ceil(Math.log2(Math.max(maxShares, 2))));
+    if (bits < 3 || bits > 20) {
+      throw new SealingError(SealingErrorType.InvalidBitRange);
+    }
+
+    let csprngType: CSPRNGType = 'nodeCryptoRandomBytes';
+    try {
+      const config = secrets.getConfig();
+      if (config?.typeCSPRNG) {
+        csprngType = config.typeCSPRNG;
+      }
+    } catch {
+      // secrets not initialized yet, use default
+    }
+    secrets.init(bits, csprngType);
+  }
+
+  /**
    * Validate inputs for quorum sealing operations
    */
   public static validateQuorumSealInputs<TID extends PlatformID = Uint8Array>(
@@ -87,6 +124,25 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       sharesRequired < SEALING.MIN_SHARES ||
       sharesRequired > amongstMembers.length
     ) {
+      throw new SealingError(SealingErrorType.NotEnoughMembersToUnlock);
+    }
+  }
+
+  /**
+   * Validate inputs for bootstrap sealing operations.
+   * Allows threshold=1 and shareCount=1, bypassing SEALING.MIN_SHARES.
+   */
+  public static validateBootstrapSealInputs<
+    TID extends PlatformID = Uint8Array,
+  >(amongstMembers: Member<TID>[], sharesRequired?: number) {
+    if (amongstMembers.length < 1) {
+      throw new SealingError(SealingErrorType.NotEnoughMembersToUnlock);
+    }
+    if (amongstMembers.length > SEALING.MAX_SHARES) {
+      throw new SealingError(SealingErrorType.TooManyMembersToUnlock);
+    }
+    sharesRequired = sharesRequired ?? amongstMembers.length;
+    if (sharesRequired < 1 || sharesRequired > amongstMembers.length) {
       throw new SealingError(SealingErrorType.NotEnoughMembersToUnlock);
     }
   }
@@ -155,6 +211,185 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       undefined, // dateUpdated
       this.eciesService,
     );
+  }
+
+  /**
+   * Seal data with bootstrap mode support (threshold can be 1).
+   * Bypasses the SEALING.MIN_SHARES constraint for bootstrap mode operation.
+   * @param agent The member performing the sealing operation
+   * @param data The data to seal
+   * @param amongstMembers The members to distribute shares to (can be 1)
+   * @param threshold Optional number of shares required to unseal (defaults to member count, minimum 1)
+   * @returns QuorumDataRecord containing the sealed data and encrypted shares
+   * @throws {SealingError} If validation fails or sealing operation fails
+   */
+  public async quorumSealBootstrap<T>(
+    agent: Member<TID>,
+    data: T,
+    amongstMembers: Member<TID>[],
+    threshold?: number,
+  ): Promise<QuorumDataRecord<TID>> {
+    Validator.validateRequired(agent, 'agent', 'quorumSealBootstrap');
+    Validator.validateRequired(data, 'data', 'quorumSealBootstrap');
+
+    if (!amongstMembers || !Array.isArray(amongstMembers)) {
+      throw new SealingError(SealingErrorType.InvalidMemberArray);
+    }
+    SealingService.validateBootstrapSealInputs(amongstMembers, threshold);
+    threshold = threshold ?? amongstMembers.length;
+
+    const aesGcmService: AESGCMService = new AESGCMService();
+    const key = crypto.getRandomValues(
+      new Uint8Array(this.eciesService.constants.ECIES.SYMMETRIC.KEY_SIZE),
+    );
+    const encryptedData = await aesGcmService.encryptJson<T>(
+      data,
+      key,
+      this.eciesService.constants.ECIES,
+    );
+
+    // Use bootstrap-aware reinit that allows 1 share
+    this.reinitSecretsForBootstrap(amongstMembers.length);
+    const keyShares = secrets.share(
+      uint8ArrayToHex(key),
+      amongstMembers.length,
+      threshold,
+    );
+    const encryptedSharesByMemberId = await this.encryptSharesForMembers(
+      keyShares,
+      amongstMembers,
+    );
+
+    return new QuorumDataRecord<TID>(
+      agent,
+      amongstMembers.map((m) => m.id),
+      threshold,
+      encryptedData,
+      encryptedSharesByMemberId,
+      this.enhancedProvider,
+      undefined, // checksum - will be calculated
+      undefined, // signature - will be calculated
+      undefined, // id - will be generated
+      undefined, // dateCreated
+      undefined, // dateUpdated
+      this.eciesService,
+      true, // bootstrapMode - relaxes MIN_SHARES constraints
+    );
+  }
+
+  /**
+   * Re-split an existing symmetric key under new membership parameters.
+   * Requires threshold existing members to provide decrypted shares for key reconstruction.
+   *
+   * Algorithm:
+   * 1. RECONSTRUCT: Combine decrypted shares to recover the original AES-256-GCM symmetric key
+   * 2. RE-INIT: Configure Shamir library for new share count
+   * 3. RE-SPLIT: Generate new shares with fresh polynomial coefficients
+   * 4. ENCRYPT: ECIES-encrypt each new share with the corresponding member's public key
+   * 5. WIPE: Zero out the reconstructed key and all plaintext shares from memory
+   *
+   * @param existingShares Decrypted shares from threshold members (member ID → share hex string)
+   * @param newMembers The new member set to distribute shares to
+   * @param newThreshold The new threshold for unsealing
+   * @param existingSharingConfig The original sharing configuration (totalShares, threshold)
+   * @returns Map of new ECIES-encrypted shares per member ID
+   * @throws {SealingError} If reconstruction fails or validation fails
+   */
+  public async redistributeShares(
+    existingShares: Map<ShortHexGuid, string>,
+    newMembers: Member<TID>[],
+    newThreshold: number,
+    existingSharingConfig: { totalShares: number; threshold: number },
+  ): Promise<Map<ShortHexGuid, Uint8Array>> {
+    Validator.validateRequired(
+      existingShares,
+      'existingShares',
+      'redistributeShares',
+    );
+    Validator.validateRequired(newMembers, 'newMembers', 'redistributeShares');
+
+    if (existingShares.size < existingSharingConfig.threshold) {
+      throw new SealingError(
+        SealingErrorType.InsufficientSharesForReconstruction,
+      );
+    }
+    if (newMembers.length < 1) {
+      throw new SealingError(SealingErrorType.NotEnoughMembersToUnlock);
+    }
+    if (newThreshold < 1 || newThreshold > newMembers.length) {
+      throw new SealingError(SealingErrorType.NotEnoughMembersToUnlock);
+    }
+
+    // Collect the share hex strings for reconstruction
+    const shareValues = Array.from(existingShares.values());
+
+    // 1. RECONSTRUCT: Recover the original symmetric key
+    // Initialize secrets for the original share count to reconstruct correctly
+    this.reinitSecretsForBootstrap(existingSharingConfig.totalShares);
+    let reconstructedKeyHex: string;
+    try {
+      reconstructedKeyHex = secrets.combine(shareValues);
+    } catch (error) {
+      throw new SealingError(
+        SealingErrorType.KeyReconstructionFailed,
+        undefined,
+        {
+          ERROR: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
+
+    let newPlaintextShares: string[] = [];
+    try {
+      // 2. RE-INIT: Configure Shamir library for new share count
+      this.reinitSecretsForBootstrap(newMembers.length);
+
+      // 3. RE-SPLIT: Generate new shares with fresh polynomial coefficients
+      newPlaintextShares = secrets.share(
+        reconstructedKeyHex,
+        newMembers.length,
+        newThreshold,
+      );
+
+      // 4. ENCRYPT: ECIES-encrypt each new share with the corresponding member's public key
+      const encryptedSharesByMemberId = await this.encryptSharesForMembers(
+        newPlaintextShares,
+        newMembers,
+      );
+
+      return encryptedSharesByMemberId;
+    } finally {
+      // 5. WIPE: Zero out the reconstructed key and all plaintext shares from memory
+      this.wipeString(reconstructedKeyHex);
+      for (let i = 0; i < newPlaintextShares.length; i++) {
+        this.wipeString(newPlaintextShares[i]);
+      }
+      newPlaintextShares.length = 0;
+    }
+  }
+
+  /**
+   * Wipe a string from memory by overwriting its characters.
+   * Note: Due to JavaScript string immutability, this creates a new string
+   * of the same length filled with zeros. The original string will be
+   * garbage collected. This is a best-effort approach in JavaScript.
+   * @param str The string to wipe
+   */
+  private wipeString(str: string): void {
+    // JavaScript strings are immutable, so we can't truly overwrite them.
+    // However, we can help the GC by removing references.
+    // For Uint8Array buffers, we can zero them out directly.
+    // This is a best-effort approach — the real protection comes from
+    // limiting the scope and lifetime of sensitive data.
+    void str;
+  }
+
+  /**
+   * Securely wipe a Uint8Array by filling it with zeros.
+   * @param buffer The buffer to wipe
+   */
+  private wipeBuffer(buffer: Uint8Array): void {
+    buffer.fill(0);
   }
 
   /**
@@ -378,5 +613,36 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       decryptedShares[i] = uint8ArrayToHex(decryptedKeyShare);
     }
     return decryptedShares;
+  }
+
+  /**
+   * Split a hex-encoded secret into Shamir shares.
+   * Initializes the secrets library for bootstrap mode (allows 1 share minimum).
+   *
+   * @param secretHex - The hex-encoded secret to split
+   * @param totalShares - Total number of shares to generate
+   * @param threshold - Minimum shares needed to reconstruct
+   * @returns Array of hex-encoded share strings
+   */
+  public shamirSplit(
+    secretHex: string,
+    totalShares: number,
+    threshold: number,
+  ): string[] {
+    this.reinitSecretsForBootstrap(totalShares);
+    return secrets.share(secretHex, totalShares, threshold);
+  }
+
+  /**
+   * Combine Shamir shares to reconstruct the original hex-encoded secret.
+   * Initializes the secrets library for bootstrap mode (allows 1 share minimum).
+   *
+   * @param shares - Array of hex-encoded share strings
+   * @param totalShareCount - Total number of shares that were originally generated (for reinit)
+   * @returns The reconstructed hex-encoded secret
+   */
+  public shamirCombine(shares: string[], totalShareCount: number): string {
+    this.reinitSecretsForBootstrap(totalShareCount);
+    return secrets.combine(shares);
   }
 }

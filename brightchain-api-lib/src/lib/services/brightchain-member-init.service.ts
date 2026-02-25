@@ -30,12 +30,16 @@ import {
 import {
   BrightChainDb,
   CBLIndex,
+  HeadRegistry,
   validateDocument,
   ValidationError,
 } from '@brightchain/db';
 import { Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
-import { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib';
+import {
+  getEnhancedNodeIdProvider,
+  PlatformID,
+} from '@digitaldefiance/node-ecies-lib';
 import {
   AccountStatus,
   IMnemonicBase,
@@ -45,6 +49,12 @@ import {
 } from '@digitaldefiance/suite-core-lib';
 import { BrightChainApiStrings } from '../enumerations/brightChainApiStrings';
 import { MemberIndexSchemaValidationError } from '../errors/memberIndexSchemaValidationError';
+import {
+  createMnemonicHydrationSchema,
+  createRoleHydrationSchema,
+  createUserHydrationSchema,
+  createUserRoleHydrationSchema,
+} from '../hydration';
 import { IBrightChainMemberInitConfig } from '../interfaces/member-init-config';
 import type { CollectionSchema } from '../interfaces/storage/document-types';
 import { MEMBER_INDEX_SCHEMA } from '../interfaces/storage/memberIndexSchema';
@@ -56,6 +66,12 @@ import {
   ROLE_SCHEMA,
   ROLES_COLLECTION,
 } from '../interfaces/storage/roleSchema';
+import type {
+  IStoredMnemonic,
+  IStoredRole,
+  IStoredUser,
+  IStoredUserRole,
+} from '../interfaces/storage/storedDocumentTypes';
 import {
   USER_ROLE_SCHEMA,
   USER_ROLES_COLLECTION,
@@ -65,6 +81,7 @@ import {
   USERS_COLLECTION,
 } from '../interfaces/storage/userSchema';
 import { DiskBlockStore } from '../stores/diskBlockStore';
+import { serializeForStorage as serializeForStorageUtil } from '../utils/serialization';
 export type { IBrightChainMemberInitConfig } from '../interfaces/member-init-config';
 
 /** Well-known collection name for the member index. */
@@ -103,8 +120,8 @@ function validateDocumentSafe(
 
 // ─── Candidate entry builder (not exported) ───────────────────────────────────
 
-function buildCandidateEntries(
-  input: IBrightChainMemberInitInput<GuidV4Buffer>,
+function buildCandidateEntries<TID extends PlatformID>(
+  input: IBrightChainMemberInitInput<TID>,
   poolId: string,
 ): IMemberIndexDocument[] {
   const now = new Date().toISOString();
@@ -130,7 +147,7 @@ function buildCandidateEntries(
  * The service is idempotent: calling initialize() multiple times with the same
  * users will not create duplicate entries.
  */
-export class BrightChainMemberInitService {
+export class BrightChainMemberInitService<TID extends PlatformID> {
   private _db: BrightChainDb | undefined;
   private _memberCblIndex: CBLIndex | undefined;
 
@@ -166,7 +183,7 @@ export class BrightChainMemberInitService {
    *
    * Steps:
    *  1. Build the appropriate block store (disk or memory)
-   *  2. Create and connect BrightChainDb (with PersistentHeadRegistry when disk)
+   *  2. Create BrightChainDb with an isolated HeadRegistry
    *  3. Create CBLIndex for the member pool
    *  4. Build candidate IMemberIndexDocument entries
    *  5. Validate all candidates against MEMBER_INDEX_SCHEMA (pre-transaction)
@@ -175,8 +192,8 @@ export class BrightChainMemberInitService {
    */
   async initialize(
     config: IBrightChainMemberInitConfig,
-    input: IBrightChainMemberInitInput<GuidV4Buffer>,
-  ): Promise<IBrightChainBaseInitResult<BrightChainDb>> {
+    input: IBrightChainMemberInitInput<TID>,
+  ): Promise<IBrightChainBaseInitResult<BrightChainDb, TID>> {
     const useDisk = !!config.blockStorePath && !config.useMemoryStore;
 
     // Steps 1-3: only run once per service instance.
@@ -187,12 +204,12 @@ export class BrightChainMemberInitService {
 
       const db = new BrightChainDb(blockStore, {
         name: config.memberPoolName,
-        poolId: config.memberPoolName,
-        // PersistentHeadRegistry when disk — ensures heads survive restarts
-        ...(useDisk ? { dataDir: config.blockStorePath } : {}),
+        // Use PersistentHeadRegistry for disk stores so data survives across
+        // service instances; use an isolated in-memory registry otherwise.
+        ...(useDisk
+          ? { dataDir: config.blockStorePath! }
+          : { headRegistry: HeadRegistry.createIsolated() }),
       });
-      // Load persisted head pointers from disk (no-op for InMemoryHeadRegistry)
-      await db.getHeadRegistry().load();
       await db.connect();
       this._db = db;
 
@@ -202,7 +219,7 @@ export class BrightChainMemberInitService {
     const db = this._db;
 
     // Step 4: build candidates
-    const candidates = buildCandidateEntries(input, config.memberPoolName);
+    const candidates = buildCandidateEntries<TID>(input, config.memberPoolName);
 
     // Step 5: validate before touching the DB
     for (const candidate of candidates) {
@@ -223,7 +240,13 @@ export class BrightChainMemberInitService {
     const skippedCount = candidates.length - toInsert.length;
 
     if (toInsert.length === 0) {
-      return { alreadyInitialized: true, insertedCount: 0, skippedCount, db };
+      return {
+        input,
+        alreadyInitialized: true,
+        insertedCount: 0,
+        skippedCount,
+        db,
+      };
     }
 
     // Step 7: insert in a single transaction
@@ -234,11 +257,57 @@ export class BrightChainMemberInitService {
     });
 
     return {
+      input,
       alreadyInitialized: false,
       insertedCount: toInsert.length,
       skippedCount,
       db,
     };
+  }
+
+  // ── Model registration ───────────────────────────────────────────────────
+
+  /**
+   * Register typed Models for all RBAC collections on the given BrightChainDb.
+   *
+   * After this call, `db.model('roles')`, `db.model('users')`, etc. return
+   * Model instances that auto-serialize on writes and auto-rehydrate on reads.
+   *
+   * Idempotent — skips registration if models are already present.
+   */
+  private registerRbacModels(db: BrightChainDb): void {
+    const idProvider = getEnhancedNodeIdProvider<TID>();
+
+    if (!db.hasModel(ROLES_COLLECTION)) {
+      db.model<IStoredRole, IRoleBase<TID, Date, string>>(ROLES_COLLECTION, {
+        schema: ROLE_SCHEMA,
+        hydration: createRoleHydrationSchema<TID>(idProvider),
+      });
+    }
+    if (!db.hasModel(USERS_COLLECTION)) {
+      db.model<IStoredUser, IUserBase<TID, Date, string, AccountStatus>>(
+        USERS_COLLECTION,
+        {
+          schema: USER_SCHEMA,
+          hydration: createUserHydrationSchema<TID>(idProvider),
+        },
+      );
+    }
+    if (!db.hasModel(USER_ROLES_COLLECTION)) {
+      db.model<IStoredUserRole, IUserRoleBase<TID, Date>>(
+        USER_ROLES_COLLECTION,
+        {
+          schema: USER_ROLE_SCHEMA,
+          hydration: createUserRoleHydrationSchema<TID>(idProvider),
+        },
+      );
+    }
+    if (!db.hasModel(MNEMONICS_COLLECTION)) {
+      db.model<IStoredMnemonic, IMnemonicBase<TID>>(MNEMONICS_COLLECTION, {
+        schema: MNEMONIC_SCHEMA,
+        hydration: createMnemonicHydrationSchema<TID>(idProvider),
+      });
+    }
   }
 
   // ── RBAC initialization ─────────────────────────────────────────────────
@@ -247,11 +316,11 @@ export class BrightChainMemberInitService {
    * Build a role document for insertion into the roles collection.
    * Returns a plain data object satisfying IRoleBase — no Document wrapper needed.
    */
-  private static buildRoleDocument(
-    user: IBrightChainUserInitEntry<GuidV4Buffer>,
-    systemUserId: GuidV4Buffer,
+  private static buildRoleDocument<TID extends PlatformID>(
+    user: IBrightChainUserInitEntry<TID>,
+    systemUserId: TID,
     now: Date,
-  ): IRoleBase<GuidV4Buffer, Date, string> {
+  ): IRoleBase<TID, Date, string> {
     return {
       _id: user.roleId,
       name: user.roleName,
@@ -270,11 +339,11 @@ export class BrightChainMemberInitService {
    * Build a user document for insertion into the users collection.
    * Returns a plain data object satisfying IUserBase — no Document wrapper needed.
    */
-  private static buildUserDocument(
-    user: IBrightChainUserInitEntry<GuidV4Buffer>,
-    systemUserId: GuidV4Buffer,
+  private static buildUserDocument<TID extends PlatformID>(
+    user: IBrightChainUserInitEntry<TID>,
+    systemUserId: TID,
     now: Date,
-  ): IUserBase<GuidV4Buffer, Date, string, AccountStatus> {
+  ): IUserBase<TID, Date, string, AccountStatus> {
     return {
       _id: user.fullId,
       username: user.username,
@@ -302,11 +371,11 @@ export class BrightChainMemberInitService {
    * Build a user-role junction document for insertion into the user-roles collection.
    * Returns a plain data object satisfying IUserRoleBase — no Document wrapper needed.
    */
-  private static buildUserRoleDocument(
-    user: IBrightChainUserInitEntry<GuidV4Buffer>,
-    systemUserId: GuidV4Buffer,
+  private static buildUserRoleDocument<TID extends PlatformID>(
+    user: IBrightChainUserInitEntry<TID>,
+    systemUserId: TID,
     now: Date,
-  ): IUserRoleBase<GuidV4Buffer, Date> {
+  ): IUserRoleBase<TID, Date> {
     return {
       _id: user.userRoleId,
       userId: user.fullId,
@@ -322,9 +391,9 @@ export class BrightChainMemberInitService {
    * Build a mnemonic document for insertion into the mnemonics collection.
    * Returns a plain data object satisfying IMnemonicBase — no Document wrapper needed.
    */
-  private static buildMnemonicDocument(
-    user: IBrightChainUserInitEntry<GuidV4Buffer>,
-  ): IMnemonicBase<GuidV4Buffer> {
+  private static buildMnemonicDocument<TID extends PlatformID>(
+    user: IBrightChainUserInitEntry<TID>,
+  ): IMnemonicBase<TID> {
     return {
       _id: user.mnemonicDocId,
       hmac: user.mnemonicHmac,
@@ -333,40 +402,17 @@ export class BrightChainMemberInitService {
 
   /**
    * Serialize a typed RBAC document for storage/validation.
-   * Converts GuidV4Buffer values to their canonical string form and
-   * Date values to ISO strings so the document satisfies the all-string
-   * collection schemas.
+   * Delegates to the standalone serializeForStorage utility.
+   *
+   * @template T - The input typed document (e.g. IRoleBase<TID, Date, string>)
+   * @template TStored - The expected stored output type (e.g. IStoredRole).
+   *   When omitted, returns a generic Record.
    */
-  private static serializeForStorage<T extends object>(
-    doc: T,
-  ): Record<
-    string,
-    | string
-    | boolean
-    | number
-    | Record<string, string | number>
-    | Array<Record<string, string | number>>
-  > {
-    const result: Record<
-      string,
-      | string
-      | boolean
-      | number
-      | Record<string, string | number>
-      | Array<Record<string, string | number>>
-    > = {};
-    for (const [key, value] of Object.entries(doc)) {
-      if (value instanceof Date) {
-        result[key] = value.toISOString();
-      } else if (Buffer.isBuffer(value) && 'asFullHexGuid' in value) {
-        result[key] = (value as GuidV4Buffer).asFullHexGuid;
-      } else if (Buffer.isBuffer(value)) {
-        result[key] = value.toString('hex');
-      } else {
-        result[key] = value;
-      }
-    }
-    return result;
+  static serializeForStorage<
+    T extends object,
+    TStored extends Record<string, unknown> = Record<string, unknown>,
+  >(doc: T): TStored {
+    return serializeForStorageUtil<T, TStored>(doc);
   }
 
   /**
@@ -376,6 +422,8 @@ export class BrightChainMemberInitService {
    * (IRoleBase, IUserBase, etc.) without needing an index signature.
    * Serializes the document before validation so GuidV4Buffer and Date
    * values are converted to the string types the schemas expect.
+   *
+   * @deprecated Prefer using Model.validate() which handles dehydration internally.
    */
   private static validateRbacDocument<T extends object>(
     doc: T,
@@ -416,10 +464,10 @@ export class BrightChainMemberInitService {
    */
   async initializeWithRbac(
     config: IBrightChainMemberInitConfig,
-    input: IBrightChainRbacInitInput<GuidV4Buffer>,
-  ): Promise<IBrightChainInitResult<GuidV4Buffer, BrightChainDb>> {
+    input: IBrightChainRbacInitInput<TID>,
+  ): Promise<IBrightChainInitResult<TID, BrightChainDb>> {
     // Steps 1-7: delegate to the base initialize() for member_index entries
-    const memberInitInput: IBrightChainMemberInitInput<GuidV4Buffer> = {
+    const memberInitInput: IBrightChainMemberInitInput<TID> = {
       systemUser: { id: input.systemUser.id, type: input.systemUser.type },
       adminUser: { id: input.adminUser.id, type: input.adminUser.type },
       memberUser: { id: input.memberUser.id, type: input.memberUser.type },
@@ -433,96 +481,106 @@ export class BrightChainMemberInitService {
 
     // Step 8: Build RBAC documents
     const roleDocuments = users.map((u) =>
-      BrightChainMemberInitService.buildRoleDocument(u, systemUserId, now),
+      BrightChainMemberInitService.buildRoleDocument<TID>(u, systemUserId, now),
     );
     const userDocuments = users.map((u) =>
-      BrightChainMemberInitService.buildUserDocument(u, systemUserId, now),
+      BrightChainMemberInitService.buildUserDocument<TID>(u, systemUserId, now),
     );
     const userRoleDocuments = users.map((u) =>
-      BrightChainMemberInitService.buildUserRoleDocument(u, systemUserId, now),
+      BrightChainMemberInitService.buildUserRoleDocument<TID>(
+        u,
+        systemUserId,
+        now,
+      ),
     );
     const mnemonicDocuments = users.map((u) =>
-      BrightChainMemberInitService.buildMnemonicDocument(u),
+      BrightChainMemberInitService.buildMnemonicDocument<TID>(u),
     );
 
-    // Validate all RBAC documents before touching the DB
+    // Validate all RBAC documents via the Model layer before touching the DB.
+    // Model.validate() dehydrates internally and checks against the schema.
+    // We register models first so validate() is available.
+    this.registerRbacModels(db);
+
+    const rolesModelForValidation = db.model<
+      IStoredRole,
+      IRoleBase<TID, Date, string>
+    >(ROLES_COLLECTION);
+    const usersModelForValidation = db.model<
+      IStoredUser,
+      IUserBase<TID, Date, string, AccountStatus>
+    >(USERS_COLLECTION);
+    const userRolesModelForValidation = db.model<
+      IStoredUserRole,
+      IUserRoleBase<TID, Date>
+    >(USER_ROLES_COLLECTION);
+    const mnemonicsModelForValidation = db.model<
+      IStoredMnemonic,
+      IMnemonicBase<TID>
+    >(MNEMONICS_COLLECTION);
+
     for (const doc of roleDocuments) {
-      const errors = BrightChainMemberInitService.validateRbacDocument(
-        doc,
-        ROLE_SCHEMA,
-        ROLES_COLLECTION,
-      );
+      const errors = rolesModelForValidation.validate(doc);
       if (errors.length > 0) {
         throw new MemberIndexSchemaValidationError(errors);
       }
     }
     for (const doc of userDocuments) {
-      const errors = BrightChainMemberInitService.validateRbacDocument(
-        doc,
-        USER_SCHEMA,
-        USERS_COLLECTION,
-      );
+      const errors = usersModelForValidation.validate(doc);
       if (errors.length > 0) {
         throw new MemberIndexSchemaValidationError(errors);
       }
     }
     for (const doc of userRoleDocuments) {
-      const errors = BrightChainMemberInitService.validateRbacDocument(
-        doc,
-        USER_ROLE_SCHEMA,
-        USER_ROLES_COLLECTION,
-      );
+      const errors = userRolesModelForValidation.validate(doc);
       if (errors.length > 0) {
         throw new MemberIndexSchemaValidationError(errors);
       }
     }
     for (const doc of mnemonicDocuments) {
-      const errors = BrightChainMemberInitService.validateRbacDocument(
-        doc,
-        MNEMONIC_SCHEMA,
-        MNEMONICS_COLLECTION,
-      );
+      const errors = mnemonicsModelForValidation.validate(doc);
       if (errors.length > 0) {
         throw new MemberIndexSchemaValidationError(errors);
       }
     }
 
-    // Step 9: Idempotency check for each RBAC collection
-    const rolesCollection =
-      db.collection<Record<string, unknown>>(ROLES_COLLECTION);
-    const usersCollection =
-      db.collection<Record<string, unknown>>(USERS_COLLECTION);
-    const userRolesCollection = db.collection<Record<string, unknown>>(
-      USER_ROLES_COLLECTION,
-    );
-    const mnemonicsCollection =
-      db.collection<Record<string, unknown>>(MNEMONICS_COLLECTION);
+    // Step 9: Models are already registered above — retrieve them for
+    // idempotency checks and inserts.
+    const rolesModel = rolesModelForValidation;
+    const usersModel = usersModelForValidation;
+    const userRolesModel = userRolesModelForValidation;
+    const mnemonicsModel = mnemonicsModelForValidation;
 
-    const existingRoles = await rolesCollection.find({}).toArray();
-    const existingUsers = await usersCollection.find({}).toArray();
-    const existingUserRoles = await userRolesCollection.find({}).toArray();
-    const existingMnemonics = await mnemonicsCollection.find({}).toArray();
+    // Idempotency check: read existing stored _ids via the raw collection.
+    const existingRoles = await rolesModel.collection.find({}).toArray();
+    const existingUsers = await usersModel.collection.find({}).toArray();
+    const existingUserRoles = await userRolesModel.collection
+      .find({})
+      .toArray();
+    const existingMnemonics = await mnemonicsModel.collection
+      .find({})
+      .toArray();
 
-    const existingRoleIds = new Set(existingRoles.map((r) => String(r['_id'])));
-    const existingUserIds = new Set(existingUsers.map((u) => String(u['_id'])));
-    const existingUserRoleIds = new Set(
-      existingUserRoles.map((ur) => String(ur['_id'])),
-    );
-    const existingMnemonicIds = new Set(
-      existingMnemonics.map((m) => String(m['_id'])),
-    );
+    // Stored _id values are already hex strings — no conversion needed.
+    const existingRoleIds = new Set(existingRoles.map((r) => r._id));
+    const existingUserIds = new Set(existingUsers.map((u) => u._id));
+    const existingUserRoleIds = new Set(existingUserRoles.map((ur) => ur._id));
+    const existingMnemonicIds = new Set(existingMnemonics.map((m) => m._id));
 
+    // Compare typed documents against stored hex strings by dehydrating the _id.
     const rolesToInsert = roleDocuments.filter(
-      (d) => !existingRoleIds.has(d._id.asFullHexGuid),
+      (d) => !existingRoleIds.has(String(rolesModel.dehydrate(d)['_id'])),
     );
     const usersToInsert = userDocuments.filter(
-      (d) => !existingUserIds.has(d._id.asFullHexGuid),
+      (d) => !existingUserIds.has(String(usersModel.dehydrate(d)['_id'])),
     );
     const userRolesToInsert = userRoleDocuments.filter(
-      (d) => !existingUserRoleIds.has(d._id.asFullHexGuid),
+      (d) =>
+        !existingUserRoleIds.has(String(userRolesModel.dehydrate(d)['_id'])),
     );
     const mnemonicsToInsert = mnemonicDocuments.filter(
-      (d) => !existingMnemonicIds.has(d._id.asFullHexGuid),
+      (d) =>
+        !existingMnemonicIds.has(String(mnemonicsModel.dehydrate(d)['_id'])),
     );
 
     const totalToInsert =
@@ -531,30 +589,30 @@ export class BrightChainMemberInitService {
       userRolesToInsert.length +
       mnemonicsToInsert.length;
 
-    // Step 10: Insert missing RBAC documents in a single transaction
+    // Step 10: Insert missing RBAC documents in a single transaction.
+    // Model.insertOne auto-dehydrates typed → stored and validates against
+    // the schema, so no manual serializeForStorage calls are needed.
     if (totalToInsert > 0) {
       await db.withTransaction(async (session) => {
         for (const doc of rolesToInsert) {
-          await rolesCollection.insertOne(
-            BrightChainMemberInitService.serializeForStorage(doc),
-            { session },
-          );
+          await rolesModel.collection.insertOne(rolesModel.dehydrate(doc), {
+            session,
+          });
         }
         for (const doc of mnemonicsToInsert) {
-          await mnemonicsCollection.insertOne(
-            BrightChainMemberInitService.serializeForStorage(doc),
+          await mnemonicsModel.collection.insertOne(
+            mnemonicsModel.dehydrate(doc),
             { session },
           );
         }
         for (const doc of usersToInsert) {
-          await usersCollection.insertOne(
-            BrightChainMemberInitService.serializeForStorage(doc),
-            { session },
-          );
+          await usersModel.collection.insertOne(usersModel.dehydrate(doc), {
+            session,
+          });
         }
         for (const doc of userRolesToInsert) {
-          await userRolesCollection.insertOne(
-            BrightChainMemberInitService.serializeForStorage(doc),
+          await userRolesModel.collection.insertOne(
+            userRolesModel.dehydrate(doc),
             { session },
           );
         }
@@ -562,6 +620,7 @@ export class BrightChainMemberInitService {
     }
 
     return {
+      input,
       alreadyInitialized: baseResult.alreadyInitialized && totalToInsert === 0,
       insertedCount: baseResult.insertedCount + totalToInsert,
       skippedCount: baseResult.skippedCount,
@@ -575,7 +634,7 @@ export class BrightChainMemberInitService {
       systemMnemonic: input.systemUser.plaintextMnemonic ?? '',
       systemPassword: input.systemUser.plaintextPassword ?? '',
       systemBackupCodes: input.systemUser.plaintextBackupCodes ?? [],
-      systemMember: {} as Member<GuidV4Buffer>, // placeholder — caller creates Member
+      systemMember: {} as Member<TID>, // placeholder — caller creates Member
       // Admin user flat fields
       adminRole: roleDocuments[1],
       adminUser: userDocuments[1],
@@ -585,7 +644,7 @@ export class BrightChainMemberInitService {
       adminMnemonic: input.adminUser.plaintextMnemonic ?? '',
       adminPassword: input.adminUser.plaintextPassword ?? '',
       adminBackupCodes: input.adminUser.plaintextBackupCodes ?? [],
-      adminMember: {} as Member<GuidV4Buffer>, // placeholder
+      adminMember: {} as Member<TID>, // placeholder
       // Member user flat fields
       memberRole: roleDocuments[2],
       memberUser: userDocuments[2],
@@ -595,7 +654,7 @@ export class BrightChainMemberInitService {
       memberMnemonic: input.memberUser.plaintextMnemonic ?? '',
       memberPassword: input.memberUser.plaintextPassword ?? '',
       memberBackupCodes: input.memberUser.plaintextBackupCodes ?? [],
-      memberMember: {} as Member<GuidV4Buffer>, // placeholder
+      memberMember: {} as Member<TID>, // placeholder
     };
   }
 
@@ -605,9 +664,9 @@ export class BrightChainMemberInitService {
    * Map an IBrightChainUserInitEntry to an IBrightChainUserCredentials bundle.
    * Plaintext fields default to empty string / empty array when absent.
    */
-  private static buildUserCredentials(
-    entry: IBrightChainUserInitEntry<GuidV4Buffer>,
-  ): IBrightChainUserCredentials<GuidV4Buffer> {
+  private static buildUserCredentials<TID extends PlatformID>(
+    entry: IBrightChainUserInitEntry<TID>,
+  ): IBrightChainUserCredentials<TID> {
     return {
       id: entry.id,
       fullId: entry.fullId,
@@ -642,9 +701,9 @@ export class BrightChainMemberInitService {
   /**
    * Print a single user's credentials block.
    */
-  private static printUserCredentials(
+  private static printUserCredentials<TID extends PlatformID>(
     label: string,
-    creds: IBrightChainUserCredentials<GuidV4Buffer>,
+    creds: IBrightChainUserCredentials<TID>,
   ): void {
     const log = (msg: string) => console.log(msg);
     log(`  ${label} ID:           ${creds.id}`);
@@ -671,8 +730,8 @@ export class BrightChainMemberInitService {
    * Print a formatted summary of the BrightChain server init results,
    * including full credentials for each user.
    */
-  static printServerInitResults(
-    result: IBrightChainServerInitResult<GuidV4Buffer, BrightChainDb>,
+  static printServerInitResults<TID extends PlatformID>(
+    result: IBrightChainServerInitResult<TID, BrightChainDb>,
     config: IBrightChainMemberInitConfig,
   ): void {
     const log = (msg: string) => console.log(msg);
@@ -702,9 +761,9 @@ export class BrightChainMemberInitService {
    * Kept for backward compatibility — delegates to printServerInitResults
    * when a full result is available, otherwise prints minimal info.
    */
-  static printInitResults(
-    input: IBrightChainMemberInitInput<GuidV4Buffer>,
-    result: IBrightChainInitResult<GuidV4Buffer, BrightChainDb>,
+  static printBaseInitResults<TID extends PlatformID>(
+    input: IBrightChainMemberInitInput<TID>,
+    result: IBrightChainBaseInitResult<BrightChainDb, TID>,
     config: IBrightChainMemberInitConfig,
   ): void {
     const log = (msg: string) => console.log(msg);
@@ -723,7 +782,50 @@ export class BrightChainMemberInitService {
 
     const entries: Array<{
       label: string;
-      entry: IBrightChainMemberEntry<GuidV4Buffer>;
+      entry: IBrightChainMemberEntry<TID>;
+    }> = [
+      { label: 'System', entry: input.systemUser },
+      { label: 'Admin', entry: input.adminUser },
+      { label: 'Member', entry: input.memberUser },
+    ];
+
+    for (const { label, entry } of entries) {
+      log(`  ${label} ID:       ${entry.id}`);
+      log(`  ${label} Type:     ${this.memberTypeLabel(entry.type)}`);
+      log('');
+    }
+
+    log('=== End BrightChain Member Initialization ===');
+    log('');
+  }
+
+  /**
+   * Print a formatted summary of the BrightChain member init results.
+   * Kept for backward compatibility — delegates to printServerInitResults
+   * when a full result is available, otherwise prints minimal info.
+   */
+  static printInitResults<TID extends PlatformID>(
+    input: IBrightChainMemberInitInput<TID>,
+    result: IBrightChainInitResult<TID, BrightChainDb>,
+    config: IBrightChainMemberInitConfig,
+  ): void {
+    const log = (msg: string) => console.log(msg);
+
+    log('');
+    log('=== BrightChain Member Initialization Results ===');
+    log('');
+    log(`  Pool:           ${config.memberPoolName}`);
+    log(
+      `  Block Store:    ${config.blockStorePath ?? 'in-memory (ephemeral)'}`,
+    );
+    log(`  Already Init:   ${result.alreadyInitialized}`);
+    log(`  Inserted:       ${result.insertedCount}`);
+    log(`  Skipped:        ${result.skippedCount}`);
+    log('');
+
+    const entries: Array<{
+      label: string;
+      entry: IBrightChainMemberEntry<TID>;
     }> = [
       { label: 'System', entry: input.systemUser },
       { label: 'Admin', entry: input.adminUser },
@@ -745,14 +847,14 @@ export class BrightChainMemberInitService {
    * IBrightChainServerInitResult. This keeps the initialize() method lean
    * while allowing callers to enrich the result with environment credentials.
    */
-  static buildServerInitResult(
-    baseResult: IBrightChainInitResult<GuidV4Buffer, BrightChainDb>,
+  static buildServerInitResult<TID extends PlatformID>(
+    baseResult: IBrightChainInitResult<TID, BrightChainDb>,
     credentials: {
-      system: IBrightChainUserCredentials<GuidV4Buffer>;
-      admin: IBrightChainUserCredentials<GuidV4Buffer>;
-      member: IBrightChainUserCredentials<GuidV4Buffer>;
+      system: IBrightChainUserCredentials<TID>;
+      admin: IBrightChainUserCredentials<TID>;
+      member: IBrightChainUserCredentials<TID>;
     },
-  ): IBrightChainServerInitResult<GuidV4Buffer, BrightChainDb> {
+  ): IBrightChainServerInitResult<TID, BrightChainDb> {
     return {
       ...baseResult,
       system: credentials.system,
@@ -765,10 +867,10 @@ export class BrightChainMemberInitService {
    * Format the full server init result as .env variable lines.
    * Outputs all credential fields matching the .env.example layout.
    */
-  static formatDotEnv(credentials: {
-    system: IBrightChainUserCredentials<GuidV4Buffer>;
-    admin: IBrightChainUserCredentials<GuidV4Buffer>;
-    member: IBrightChainUserCredentials<GuidV4Buffer>;
+  static formatDotEnv<TID extends PlatformID>(credentials: {
+    system: IBrightChainUserCredentials<TID>;
+    admin: IBrightChainUserCredentials<TID>;
+    member: IBrightChainUserCredentials<TID>;
   }): string {
     const { admin, member, system } = credentials;
     const lines: string[] = [

@@ -321,6 +321,14 @@ describe('Feature: move-node-types-to-api-lib, Property 3: Every API response wr
         return true;
       }
 
+      // Check for named re-export (e.g. export type { IFoo } from '...')
+      const namedReExportPattern = new RegExp(
+        `export\\s+(?:type\\s+)?\\{[^}]*\\b${interfaceName}\\b[^}]*\\}`,
+      );
+      if (namedReExportPattern.test(content)) {
+        return true;
+      }
+
       // Check for re-export via barrel (export type * from or export { ... })
       if (fileName === 'index.ts') {
         // The barrel uses `export type * from './...'` so the interface

@@ -19,4 +19,10 @@ export interface QuorumDataRecordDto {
   sharesRequired: number;
   dateCreated: Date;
   dateUpdated: Date;
+  /** Epoch number at sealing time */
+  epochNumber: number;
+  /** True if the document was sealed in bootstrap mode */
+  sealedUnderBootstrap: boolean;
+  /** Link to identity recovery record if applicable */
+  identityRecoveryRecordId?: ShortHexGuid;
 }

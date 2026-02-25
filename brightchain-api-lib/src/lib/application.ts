@@ -1,9 +1,17 @@
 import {
+  AliasRegistry,
+  AuditLogService,
   EnergyLedger,
   IAvailabilityService,
+  IdentitySealingPipeline,
+  IdentityValidator,
   IDiscoveryProtocol,
   IReconciliationService,
+  MembershipProofService,
+  QuorumStateMachine,
+  ServiceProvider,
 } from '@brightchain/brightchain-lib';
+import { BrightChainDb } from '@brightchain/db';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   debugLog,
@@ -16,6 +24,7 @@ import { Server } from 'http';
 import { AppConstants } from './appConstants';
 import { GossipService } from './availability/gossipService';
 import { PoolDiscoveryService } from './availability/poolDiscoveryService';
+import { QuorumGossipHandler } from './availability/quorumGossipHandler';
 import { createBlockDocumentStore } from './datastore/block-document-store-factory';
 import {
   DocumentCollection,
@@ -28,7 +37,20 @@ import { BrightChainDatabasePlugin } from './plugins/brightchain-database-plugin
 import { configureBrightChainApp } from './plugins/configure-brightchain-app';
 import { ApiRouter } from './routers/api';
 import { AppRouter } from './routers/app';
-import { AuthService, EmailService, SecureKeyStorage } from './services';
+import {
+  AuthService,
+  BackupCodeService,
+  BrightChainMemberInitService,
+  BrightChainSessionAdapter,
+  CLIOperatorPrompt,
+  ContentAwareBlocksService,
+  ContentIngestionService,
+  EmailService,
+  IdentityExpirationScheduler,
+  QuorumDatabaseAdapter,
+  SecureKeyStorage,
+} from './services';
+import { BrightChainAuthenticationProvider } from './services/brightchain-authentication-provider';
 import { ClientWebSocketServer } from './services/clientWebSocketServer';
 import { EventNotificationSystem } from './services/eventNotificationSystem';
 import { MessagePassingService } from './services/messagePassingService';
@@ -63,6 +85,15 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   private clientWsServer: ClientWebSocketServer | null = null;
   private messagePassingService: MessagePassingService | null = null;
   private upnpManager: UpnpManager | null = null;
+
+  // ── Quorum subsystem ──────────────────────────────────────────────
+  private quorumDbAdapter: QuorumDatabaseAdapter<TID> | null = null;
+  private quorumStateMachine: QuorumStateMachine<TID> | null = null;
+  private identityExpirationScheduler: IdentityExpirationScheduler<TID> | null =
+    null;
+  private quorumGossipHandler: QuorumGossipHandler<TID> | null = null;
+  private contentAwareBlocksService: ContentAwareBlocksService<TID> | null =
+    null;
 
   /**
    * Captured HTTP server reference for WebSocket attachment.
@@ -108,14 +139,31 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   }
 
   /**
-   * Get a collection from the BrightChain document store by name.
-   * Overrides the upstream Mongoose-specific `getModel()` to delegate
-   * to the BlockDocumentStore's collection() method.
+   * Get a model or collection from the BrightChain document store by name.
+   *
+   * If a typed Model has been registered on the BrightChainDb instance
+   * (via `db.model()`), returns that Model — giving callers automatic
+   * hydration/dehydration. Otherwise falls back to a raw DocumentCollection.
+   *
+   * Overrides the upstream Mongoose-specific `getModel()`.
    */
-  // @ts-expect-error — BrightChain returns DocumentCollection, not mongoose Model
+  // @ts-expect-error — BrightChain returns DocumentCollection | Model, not mongoose Model
   public override getModel<U extends DocumentRecord>(
     modelName: string,
   ): DocumentCollection<U> {
+    // Prefer a registered Model when available
+    try {
+      const db = this._plugin.brightChainDb;
+      if (db.hasModel(modelName)) {
+        // Return the Model instance — callers that know the typed shape
+        // can cast to Model<TStored, TTyped>. The Model also exposes
+        // .collection for raw access, so it's a superset of functionality.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return db.model(modelName) as any;
+      }
+    } catch {
+      // Plugin not connected yet — fall through to document store
+    }
     return this._brightchainDocumentStore.collection<U>(modelName);
   }
 
@@ -142,33 +190,60 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     // After super.start(), the plugin lifecycle is complete:
     //   plugin.connect() → brightchainDatabaseInit()
     //   plugin.init(app) → BrightChainAuthenticationProvider created
+    //   (dev mode) initializeDevStore() → seedMembers(useMemoryStore=true)
     // Retrieve stores from the plugin instead of calling brightchainDatabaseInit() directly.
+
+    // Production-mode member seeding: when DEV_DATABASE is NOT set, the upstream
+    // lifecycle does not call initializeDevStore(). We seed members here with
+    // useMemoryStore=false so system/admin/member users are persisted to the
+    // disk-backed database.
+    if (!this.environment.devDatabase) {
+      const prodConfig = this._plugin.buildMemberInitConfig();
+      const memberResult = await this._plugin.seedMembers(prodConfig);
+      BrightChainMemberInitService.printBaseInitResults<TID>(
+        memberResult.input,
+        memberResult,
+        prodConfig,
+      );
+    }
 
     await this.keyStorage.initializeFromEnvironment();
 
     const blockStore = this._plugin.blockStore;
-    const documentStore = this._plugin.documentStore;
+    const brightChainDb = this._plugin.brightChainDb;
     const memberStore = this._plugin.memberStore;
     const energyStore = this._plugin.energyStore;
 
     const energyLedger = new EnergyLedger();
     const emailService = new EmailService<TID>(this);
+    const authProvider = this._plugin.authenticationProvider as
+      | BrightChainAuthenticationProvider<TID>
+      | undefined;
     const authService = new AuthService<TID>(
       this,
       memberStore,
       energyStore,
       emailService,
       this.environment.jwtSecret,
+      authProvider,
     );
 
     // Register services from plugin stores and additional services
     this.services.register('blockStore', () => blockStore);
-    this.services.register('db', () => documentStore);
+    this.services.register('db', () => brightChainDb);
     this.services.register('memberStore', () => memberStore);
     this.services.register('energyStore', () => energyStore);
     this.services.register('energyLedger', () => energyLedger);
     this.services.register('emailService', () => emailService);
     this.services.register('auth', () => authService);
+
+    // BackupCodeService — singleton backed by MemberStore
+    const backupCodeService = new BackupCodeService(memberStore);
+    this.services.register('backupCodeService', () => backupCodeService);
+
+    // BrightChainSessionAdapter — singleton backed by BrightChainDb
+    const sessionAdapter = new BrightChainSessionAdapter(brightChainDb);
+    this.services.register('sessionAdapter', () => sessionAdapter);
 
     // EventNotificationSystem for WebSocket events
     this.eventSystem = new EventNotificationSystem();
@@ -204,6 +279,169 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
       this.apiRouter.setSyncEventSystem(this.eventSystem);
     }
 
+    // ── Quorum subsystem initialization ─────────────────────────────
+    // Task 23.1: Initialize QuorumDatabaseAdapter with pool ID "quorum-system"
+    try {
+      const quorumDb = new BrightChainDb(blockStore, {
+        name: 'quorum-system',
+        poolId: 'quorum-system',
+      });
+      this.quorumDbAdapter = new QuorumDatabaseAdapter<TID>(quorumDb);
+      this.services.register('quorumDbAdapter', () => this.quorumDbAdapter);
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ ready ] Quorum database adapter initialized (pool: quorum-system)',
+      );
+
+      // Task 23.2: Initialize QuorumStateMachine with dependencies
+      const serviceProvider = ServiceProvider.getInstance<TID>();
+      const sealingService = serviceProvider.sealingService;
+      const eciesService = serviceProvider.eciesService;
+
+      // AuditLogService needs a signing member — use the system member from
+      // the plugin if available, otherwise defer audit log creation.
+      // For now, create without block store persistence (audit entries go to DB only).
+      const auditLogService = new AuditLogService<TID>(
+        this.quorumDbAdapter,
+        // The signing member is set when the node operator is configured.
+        // At startup we pass null — appendEntry will skip signature generation.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        null as any,
+        // ECIESService<TID> is runtime-compatible with ECIESService; cast needed
+        // because AuditLogService imports the base ECIESService type.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        eciesService as any,
+      );
+      this.services.register('auditLogService', () => auditLogService);
+
+      // Create IdentitySealingPipeline for content ingestion
+      const identitySealingPipeline = new IdentitySealingPipeline<TID>(
+        this.quorumDbAdapter,
+        sealingService,
+        eciesService,
+        () => this.quorumStateMachine!.getCurrentEpoch(),
+        () => this.quorumDbAdapter!.getStatuteConfig(),
+      );
+      this.services.register(
+        'identitySealingPipeline',
+        () => identitySealingPipeline,
+      );
+
+      // Create AliasRegistry
+      const aliasRegistry = new AliasRegistry<TID>(
+        this.quorumDbAdapter,
+        identitySealingPipeline,
+        eciesService,
+        () => this.quorumStateMachine!.getCurrentEpoch(),
+      );
+      this.services.register('aliasRegistry', () => aliasRegistry);
+
+      // Create the QuorumStateMachine — central coordinator
+      // GossipService is wired externally via setPoolDiscoveryService.
+      // We pass a no-op stub until the real gossip service is available.
+      // The QuorumGossipHandler (Task 23.4) bridges gossip ↔ state machine.
+      const gossipStub = {
+        announceQuorumProposal: async () => {},
+        announceQuorumVote: async () => {},
+        onQuorumProposal: () => {},
+        offQuorumProposal: () => {},
+        onQuorumVote: () => {},
+        offQuorumVote: () => {},
+      };
+      this.quorumStateMachine = new QuorumStateMachine<TID>(
+        this.quorumDbAdapter,
+        sealingService,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        gossipStub as any,
+        auditLogService,
+        aliasRegistry,
+      );
+      this.services.register(
+        'quorumStateMachine',
+        () => this.quorumStateMachine,
+      );
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ ready ] Quorum state machine initialized',
+      );
+
+      // Task 23.3: Start IdentityExpirationScheduler
+      this.identityExpirationScheduler = new IdentityExpirationScheduler<TID>(
+        this.quorumDbAdapter,
+        auditLogService,
+      );
+      this.identityExpirationScheduler.start();
+      this.services.register(
+        'identityExpirationScheduler',
+        () => this.identityExpirationScheduler,
+      );
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ ready ] Identity expiration scheduler started',
+      );
+
+      // Task 23.4: Register gossip message handlers for quorum_proposal and quorum_vote
+      // The QuorumGossipHandler is created here but gossip service binding
+      // happens when setQuorumGossipService() is called externally.
+      // For now, store the state machine reference so it can be wired later.
+      this.services.register(
+        'quorumGossipHandlerFactory',
+        () => (gossipService: GossipService) => {
+          this.quorumGossipHandler = new QuorumGossipHandler<TID>(
+            gossipService,
+            this.quorumStateMachine!,
+            this.quorumDbAdapter!,
+          );
+          this.quorumGossipHandler.start();
+          this.services.register(
+            'quorumGossipHandler',
+            () => this.quorumGossipHandler,
+          );
+          debugLog(
+            this.environment.debug,
+            'log',
+            '[ ready ] Quorum gossip handlers registered (quorum_proposal, quorum_vote)',
+          );
+        },
+      );
+
+      // Task 23.5: Wire content ingestion middleware (IdentityValidator + IdentitySealingPipeline)
+      const membershipProofService = new MembershipProofService<TID>();
+      const identityValidator = new IdentityValidator<TID>(
+        this.quorumDbAdapter,
+        eciesService,
+        membershipProofService,
+      );
+      this.services.register('identityValidator', () => identityValidator);
+
+      const contentIngestionService = new ContentIngestionService<TID>(
+        identityValidator,
+        identitySealingPipeline,
+      );
+      this.services.register(
+        'contentIngestionService',
+        () => contentIngestionService,
+      );
+
+      // CLIOperatorPrompt for interactive voting
+      const operatorPrompt = new CLIOperatorPrompt();
+      this.services.register('operatorPrompt', () => operatorPrompt);
+
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ ready ] Quorum subsystem fully initialized',
+      );
+    } catch (quorumErr) {
+      console.warn(
+        '[ warning ] Quorum subsystem initialization failed, continuing without quorum:',
+        quorumErr,
+      );
+    }
+
     // UPnP port mapping (non-fatal on failure)
     try {
       if (this.environment.upnp?.enabled) {
@@ -232,6 +470,34 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
 
   public override async stop(): Promise<void> {
     // BrightChain-specific cleanup first, then delegate to upstream
+
+    // ── Quorum subsystem shutdown ─────────────────────────────────────
+    // Task 23.3: Stop ExpirationScheduler (graceful cleanup)
+    if (this.identityExpirationScheduler) {
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ stopping ] Identity expiration scheduler',
+      );
+      this.identityExpirationScheduler.stop();
+      this.identityExpirationScheduler = null;
+    }
+
+    // Task 23.4: Unregister gossip handlers
+    if (this.quorumGossipHandler) {
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ stopping ] Quorum gossip handlers',
+      );
+      this.quorumGossipHandler.stop();
+      this.quorumGossipHandler = null;
+    }
+
+    // Clean up quorum references
+    this.quorumStateMachine = null;
+    this.quorumDbAdapter = null;
+    this.contentAwareBlocksService = null;
 
     // Shutdown UPnP port mappings
     if (this.upnpManager) {
@@ -393,6 +659,16 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
         );
       }
     });
+
+    // Task 23.4: Wire quorum gossip handlers when gossip service becomes available
+    if (this.services.has('quorumGossipHandlerFactory')) {
+      const gossipHandlerFactory = this.services.get<
+        (gs: GossipService) => void
+      >('quorumGossipHandlerFactory');
+      if (gossipHandlerFactory) {
+        gossipHandlerFactory(gossipService);
+      }
+    }
 
     // Pass to IntrospectionController via ApiRouter
     if (this.apiRouter) {

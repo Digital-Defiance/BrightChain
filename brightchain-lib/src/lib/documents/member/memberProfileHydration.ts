@@ -101,6 +101,9 @@ export const privateMemberProfileHydrationSchema = <
       ...(storage.passwordHash !== undefined
         ? { passwordHash: storage.passwordHash }
         : {}),
+      ...(storage.backupCodes !== undefined
+        ? { backupCodes: storage.backupCodes.map((c) => ({ ...c })) }
+        : {}),
       settings: (() => {
         const { autoReplication, minRedundancy, preferredRegions, ...rest } =
           storage.settings ?? {};
@@ -174,6 +177,9 @@ export const privateMemberProfileHydrationSchema = <
       blockedPeers: blockedPeersHex,
       ...(hydrated.passwordHash !== undefined
         ? { passwordHash: hydrated.passwordHash }
+        : {}),
+      ...(hydrated.backupCodes !== undefined
+        ? { backupCodes: hydrated.backupCodes.map((c) => ({ ...c })) }
         : {}),
       settings: {
         autoReplication,

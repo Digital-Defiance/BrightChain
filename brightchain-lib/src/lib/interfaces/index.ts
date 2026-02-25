@@ -18,6 +18,7 @@ export type * from './document';
 export type * from './dto';
 export type * from './encryptionConsts';
 export type * from './encryptionLength';
+export type * from './energyAccount';
 export type * from './energyTransaction';
 export type * from './handleableErrorOptions';
 export type * from './i18nConstants';
@@ -54,6 +55,7 @@ export type * from './tokenUser';
 export type * from './tuple';
 export type * from './tupleConfig';
 export type * from './userDto';
+export type * from './userManagement';
 export type * from './walletSeed';
 
 // Message passing interfaces (uses `export *` because messaging contains runtime functions like createMailbox)
@@ -88,3 +90,21 @@ export * from './clientProtocol';
 // Branded DTO definitions (runtime-identifiable types for API/WebSocket boundaries)
 // Uses `export *` because branded modules contain runtime values (primitives, opaque types, serializers)
 export * from './branded';
+
+// Quorum bootstrap redesign interfaces
+export type * from './aliasRecord';
+export type * from './auditLogEntry';
+export type * from './chainedAuditLogEntry';
+export * from './contentWithIdentity';
+export type * from './identityRecoveryRecord';
+export type * from './operationalState';
+export type * from './proposal';
+export type * from './quorumDocumentMetadata';
+export type * from './quorumEpoch';
+export type * from './quorumMetrics';
+export type * from './redistributionJournalEntry';
+export * from './statuteConfig';
+export type * from './vote';
+
+// Quorum API base data interfaces (shared with frontend)
+export * from './api';
