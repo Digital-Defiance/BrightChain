@@ -15,7 +15,13 @@
         "outputPath": "dist/brightchain-lib",
         "main": "brightchain-lib/src/index.ts",
         "tsConfig": "brightchain-lib/tsconfig.lib.json",
-        "assets": ["brightchain-lib/*.md"]
+        "assets": [
+          {
+            "input": "brightchain-lib",
+            "glob": "*.md",
+            "output": "."
+          }
+        ]
       }
     },
     "publish": {
