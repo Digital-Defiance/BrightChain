@@ -36,6 +36,12 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
   public readonly sharesRequired: number;
   public readonly dateCreated: Date;
   public readonly dateUpdated: Date;
+  /** Epoch number at sealing time */
+  public readonly epochNumber: number;
+  /** True if the document was sealed in bootstrap mode */
+  public readonly sealedUnderBootstrap: boolean;
+  /** Link to identity recovery record if applicable */
+  public readonly identityRecoveryRecordId?: ShortHexGuid;
 
   constructor(
     creator: Member<TID>,
@@ -50,6 +56,10 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
     dateCreated?: Date,
     dateUpdated?: Date,
     eciesService?: ECIESService<TID>,
+    bootstrapMode?: boolean,
+    epochNumber?: number,
+    sealedUnderBootstrap?: boolean,
+    identityRecoveryRecordId?: ShortHexGuid,
   ) {
     this.enhancedProvider = enhancedProvider;
     this.eciesService = eciesService ?? createECIESService<TID>();
@@ -59,7 +69,7 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
       this.id = this.enhancedProvider.generateTyped();
     }
 
-    if (memberIDs.length != 0 && memberIDs.length < 2) {
+    if (!bootstrapMode && memberIDs.length != 0 && memberIDs.length < 2) {
       throw new TranslatableBrightChainError(
         BrightChainStrings.QuorumDataRecord_MustShareWithAtLeastTwoMembers,
       );
@@ -70,7 +80,7 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
         BrightChainStrings.QuorumDataRecord_SharesRequiredExceedsMembers,
       );
     }
-    if (sharesRequired != -1 && sharesRequired < 2) {
+    if (!bootstrapMode && sharesRequired != -1 && sharesRequired < 2) {
       throw new TranslatableBrightChainError(
         BrightChainStrings.QuorumDataRecord_SharesRequiredMustBeAtLeastTwo,
       );
@@ -113,6 +123,11 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
     };
     this.dateCreated = dateCreated ?? now();
     this.dateUpdated = dateUpdated ?? now();
+
+    // Metadata fields
+    this.epochNumber = epochNumber ?? 0;
+    this.sealedUnderBootstrap = sealedUnderBootstrap ?? bootstrapMode ?? false;
+    this.identityRecoveryRecordId = identityRecoveryRecordId;
   }
   public toDto(): QuorumDataRecordDto {
     const encryptedSharesByMemberId: { [key: string]: HexString } = {};
@@ -139,6 +154,9 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
       sharesRequired: this.sharesRequired,
       dateCreated: this.dateCreated,
       dateUpdated: this.dateUpdated,
+      epochNumber: this.epochNumber,
+      sealedUnderBootstrap: this.sealedUnderBootstrap,
+      identityRecoveryRecordId: this.identityRecoveryRecordId,
     };
   }
   public static fromDto<TID extends PlatformID = Uint8Array>(
@@ -176,6 +194,10 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
       dto.dateCreated,
       dto.dateUpdated,
       eciesServiceToUse,
+      dto.sealedUnderBootstrap, // bootstrapMode - use sealedUnderBootstrap to relax constraints on deserialization
+      dto.epochNumber,
+      dto.sealedUnderBootstrap,
+      dto.identityRecoveryRecordId,
     );
   }
   public toJson(): string {

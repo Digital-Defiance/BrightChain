@@ -1,8 +1,7 @@
-import { SecureString } from '@digitaldefiance/ecies-lib';
-
 /**
  * Platform-agnostic base data interface for successful user registration responses.
  * Used by both frontend and backend consumers.
+ * Matches express-suite IApiRegistrationResponse shape.
  */
 export interface IRegistrationResponseData {
   /**
@@ -13,5 +12,5 @@ export interface IRegistrationResponseData {
   /**
    * Array of backup codes for account recovery
    */
-  backupCodes: SecureString[];
+  backupCodes: Array<string>;
 }

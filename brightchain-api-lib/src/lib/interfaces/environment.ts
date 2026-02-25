@@ -51,7 +51,14 @@ export interface IEnvironment<TID extends PlatformID> extends Omit<
   blockStoreBlockSize: BlockSize;
 
   /**
-   * Prefer in-memory document store (useful for demo/tests)
+   * Prefer in-memory document store (useful for demo/tests).
+   * @deprecated Derived from `DEV_DATABASE` presence — use `devDatabasePoolName` instead.
    */
   useMemoryDocumentStore: boolean;
+
+  /**
+   * Pool name for the in-memory dev database.
+   * Set when `DEV_DATABASE` env var is a non-empty string; `undefined` otherwise.
+   */
+  devDatabasePoolName: string | undefined;
 }

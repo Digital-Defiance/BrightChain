@@ -25,6 +25,7 @@ export * from './extendedCblErrorType';
 export * from './fecErrorType';
 export * from './handleTupleErrorType';
 export * from './healthStatus';
+export * from './identityValidationErrorType';
 export * from './invalidEmailErrorType';
 export * from './isolatedKeyErrorType';
 export * from './keyFragmentType';
@@ -78,3 +79,8 @@ export * from './communication';
 
 // Message passing enumerations
 export * from './messaging';
+
+// Quorum bootstrap redesign enumerations
+export * from './proposalActionType';
+export * from './proposalStatus';
+export * from './quorumOperationalMode';

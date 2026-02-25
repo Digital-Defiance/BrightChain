@@ -12,7 +12,11 @@
  * @module services/brightchain-authentication-provider
  */
 
-import { MemberStatusType, MemberStore } from '@brightchain/brightchain-lib';
+import {
+  MemberStatusType,
+  MemberStore,
+  ServiceProvider,
+} from '@brightchain/brightchain-lib';
 import type { SecureString } from '@digitaldefiance/ecies-lib';
 import { MemberType } from '@digitaldefiance/ecies-lib';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -96,20 +100,22 @@ export class BrightChainAuthenticationProvider<
   constructor(private readonly application: IBrightChainApplication<TID>) {}
 
   /** Resolve MemberStore from the service container. */
-  private getMemberStore(): MemberStore {
-    return this.application.services.get('memberStore') as MemberStore;
+  private getMemberStore(): MemberStore<TID> {
+    return this.application.services.get('memberStore') as MemberStore<TID>;
   }
 
   async findUserById(
     userId: string,
   ): Promise<IAuthenticatedUser<TLanguage> | null> {
     const memberStore = this.getMemberStore();
-    const idBytes = Buffer.from(userId, 'hex') as unknown as Uint8Array;
+    // Deserialize the GUID string back to a typed ID (round-trips with idToString)
+    const idProvider = ServiceProvider.getInstance<TID>().idProvider;
+    const id = idProvider.idFromString(userId) as unknown as TID;
 
     try {
-      const member = await memberStore.getMember(idBytes);
+      const member = await memberStore.getMember(id);
       const { publicProfile, privateProfile } =
-        await memberStore.getMemberProfile(idBytes);
+        await memberStore.getMemberProfile(id);
 
       const accountStatus = publicProfile
         ? memberStatusToAccountStatus(publicProfile.status)
@@ -133,12 +139,14 @@ export class BrightChainAuthenticationProvider<
 
   async buildRequestUserDTO(userId: string): Promise<IRequestUserDTO | null> {
     const memberStore = this.getMemberStore();
-    const idBytes = Buffer.from(userId, 'hex') as unknown as Uint8Array;
+    // Deserialize the GUID string back to a typed ID (round-trips with idToString)
+    const idProvider = ServiceProvider.getInstance<TID>().idProvider;
+    const id = idProvider.idFromString(userId) as unknown as TID;
 
     try {
-      const member = await memberStore.getMember(idBytes);
+      const member = await memberStore.getMember(id);
       const { publicProfile, privateProfile } =
-        await memberStore.getMemberProfile(idBytes);
+        await memberStore.getMemberProfile(id);
 
       if (publicProfile && publicProfile.status !== MemberStatusType.Active) {
         return null;
@@ -206,14 +214,26 @@ export class BrightChainAuthenticationProvider<
     const member = (await memberStore.getMember(
       reference.id,
     )) as unknown as Member<TID>;
-    member.loadWallet(mnemonic);
+
+    try {
+      member.loadWallet(mnemonic);
+    } catch {
+      // loadWallet throws MemberError("Invalid wallet mnemonic.") when the
+      // mnemonic is valid BIP39 but derives a different key, or a plain Error
+      // for invalid BIP39. Normalise to a consistent message.
+      throw new Error('Invalid mnemonic');
+    }
 
     if (!member.hasPrivateKey) {
       throw new Error('Invalid mnemonic');
     }
 
+    // Use idToString for proper UUID round-trip (pairs with idFromString)
+    const idProvider = ServiceProvider.getInstance<TID>().idProvider;
+    const userId = idProvider.idToString(reference.id);
+
     return {
-      userId: member.getIdString(),
+      userId,
       userMember: member,
     };
   }
@@ -248,8 +268,13 @@ export class BrightChainAuthenticationProvider<
       reference.id,
     )) as unknown as Member<TID>;
 
+    // The hydrated member is an ecies-lib Member which lacks getIdString().
+    // Convert the raw ID bytes to a hex string directly.
+    const idBytes = member.idBytes ?? (member.id as Uint8Array);
+    const userId = Buffer.from(idBytes).toString('hex');
+
     return {
-      userId: member.getIdString(),
+      userId,
       userMember: member,
     };
   }

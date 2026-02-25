@@ -15,10 +15,10 @@
 
 import * as fc from 'fast-check';
 import { EnergyAccount } from '../../energyAccount';
+import { IEnergyAccountDto } from '../../interfaces/energyAccount';
 import {
-  IDocumentCollection,
-  IDocumentCursor,
-  IDocumentStore,
+  ITypedCollection,
+  ITypedCursor,
 } from '../../interfaces/storage/documentStore';
 import { EnergyAccountStore } from '../../stores/energyAccountStore';
 import { Checksum } from '../../types/checksum';
@@ -153,82 +153,80 @@ describe('EnergyAccount Serialization Property-Based Tests', () => {
 });
 
 // ══════════════════════════════════════════════════════════════
-// In-Memory IDocumentStore for Testing
+// In-Memory ITypedCollection for Testing
 // ══════════════════════════════════════════════════════════════
 
 /**
- * In-memory implementation of IDocumentCollection for testing.
- * Stores documents as a simple array and matches filters by
- * shallow key equality.
+ * In-memory implementation of ITypedCollection for testing.
+ *
+ * Stores documents as IEnergyAccountDto (the stored form) and
+ * hydrates/dehydrates using EnergyAccount.fromDto/toDto, mirroring
+ * what the real Model does.
  */
-class InMemoryDocumentCollection<
-  T extends Record<string, unknown>,
-> implements IDocumentCollection<T> {
-  private docs: T[] = [];
+class InMemoryTypedCollection implements ITypedCollection<
+  IEnergyAccountDto,
+  EnergyAccount
+> {
+  private docs: IEnergyAccountDto[] = [];
 
-  async find(filter: Partial<T>): Promise<IDocumentCursor<T>> {
-    const filterKeys = Object.keys(filter) as (keyof T)[];
+  find(filter?: Partial<IEnergyAccountDto>): ITypedCursor<EnergyAccount> {
+    const filterKeys = filter
+      ? (Object.keys(filter) as (keyof IEnergyAccountDto)[])
+      : [];
     const matched =
       filterKeys.length === 0
         ? [...this.docs]
         : this.docs.filter((doc) =>
-            filterKeys.every((k) => doc[k] === filter[k]),
+            filterKeys.every((k) => doc[k] === filter![k]),
           );
-    return { toArray: async () => matched };
+    return {
+      toArray: async () => matched.map((d) => EnergyAccount.fromDto(d)),
+    };
+  }
+
+  async findOne(
+    filter?: Partial<IEnergyAccountDto>,
+  ): Promise<EnergyAccount | null> {
+    const results = await this.find(filter).toArray();
+    return results.length > 0 ? results[0] : null;
   }
 
   async replaceOne(
-    filter: Partial<T>,
-    doc: T,
+    filter: Partial<IEnergyAccountDto>,
+    replacement: EnergyAccount,
     options?: { upsert?: boolean },
-  ): Promise<void> {
-    const filterKeys = Object.keys(filter) as (keyof T)[];
+  ): Promise<unknown> {
+    const dto = replacement.toDto();
+    const filterKeys = Object.keys(filter) as (keyof IEnergyAccountDto)[];
     const idx = this.docs.findIndex((d) =>
       filterKeys.every((k) => d[k] === filter[k]),
     );
     if (idx >= 0) {
-      this.docs[idx] = doc;
+      this.docs[idx] = dto;
     } else if (options?.upsert) {
-      this.docs.push(doc);
+      this.docs.push(dto);
     }
+    return {};
   }
 
-  async deleteOne(filter: Partial<T>): Promise<boolean> {
-    const filterKeys = Object.keys(filter) as (keyof T)[];
+  async deleteOne(filter: Partial<IEnergyAccountDto>): Promise<unknown> {
+    const filterKeys = Object.keys(filter) as (keyof IEnergyAccountDto)[];
     const idx = this.docs.findIndex((d) =>
       filterKeys.every((k) => d[k] === filter[k]),
     );
     if (idx >= 0) {
       this.docs.splice(idx, 1);
-      return true;
+      return { deletedCount: 1 };
     }
-    return false;
-  }
-}
-
-/**
- * In-memory implementation of IDocumentStore for testing.
- * Collections are created lazily and shared by name, so two
- * EnergyAccountStore instances backed by the same InMemoryDocumentStore
- * see the same underlying data.
- */
-class InMemoryDocumentStore implements IDocumentStore {
-  private collections = new Map<string, InMemoryDocumentCollection<never>>();
-  private connected = false;
-
-  collection<T>(name: string): IDocumentCollection<T> {
-    if (!this.collections.has(name)) {
-      this.collections.set(name, new InMemoryDocumentCollection<never>());
-    }
-    return this.collections.get(name) as unknown as IDocumentCollection<T>;
+    return { deletedCount: 0 };
   }
 
-  async connect(): Promise<void> {
-    this.connected = true;
+  dehydrate(typed: EnergyAccount): IEnergyAccountDto {
+    return typed.toDto();
   }
 
-  isConnected(): boolean {
-    return this.connected;
+  hydrate(stored: IEnergyAccountDto): EnergyAccount {
+    return EnergyAccount.fromDto(stored);
   }
 }
 
@@ -242,7 +240,7 @@ describe('EnergyAccountStore Persistence Property-Based Tests', () => {
    *
    * For any set of EnergyAccount objects stored via EnergyAccountStore.set(),
    * creating a new EnergyAccountStore instance backed by the same
-   * IDocumentStore and calling loadFromStore() shall recover all accounts
+   * ITypedCollection and calling loadFromStore() shall recover all accounts
    * with equivalent field values.
    *
    * **Validates: Requirements 7.1, 7.2, 7.3**
@@ -258,15 +256,15 @@ describe('EnergyAccountStore Persistence Property-Based Tests', () => {
         }),
         async (accounts) => {
           // ── Phase 1: Store accounts via the first store ──
-          const backingStore = new InMemoryDocumentStore();
-          const store1 = new EnergyAccountStore(backingStore);
+          const backingCollection = new InMemoryTypedCollection();
+          const store1 = new EnergyAccountStore(backingCollection);
 
           for (const account of accounts) {
             await store1.set(account.memberId, account);
           }
 
           // ── Phase 2: Create a fresh store from the same backing ──
-          const store2 = new EnergyAccountStore(backingStore);
+          const store2 = new EnergyAccountStore(backingCollection);
           await store2.loadFromStore();
 
           // ── Phase 3: Verify all accounts recovered ──

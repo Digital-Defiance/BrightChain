@@ -9,6 +9,7 @@
  * @module plugins/configure-brightchain-app
  */
 
+import { initializeBrightChain } from '@brightchain/brightchain-lib';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   GuidV4Provider,
@@ -75,6 +76,11 @@ export function configureBrightChainApp<TID extends PlatformID>(
 
   // 2. Register node runtime configuration
   registerNodeRuntimeConfiguration('guid-config', constants);
+
+  // 2b. Initialize BrightChain library (registers BRIGHTCHAIN_CONFIG_KEY
+  //     config with GuidV4Provider and creates the ServiceProvider singleton
+  //     so that getGlobalServiceProvider() works during seedMembers).
+  initializeBrightChain();
 
   // 3. Create and register database plugin
   const plugin = new BrightChainDatabasePlugin<TID>(environment);

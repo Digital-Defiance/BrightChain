@@ -293,8 +293,8 @@ async function makeRbacInput(): Promise<
  */
 async function runRbacInitAndVerify(
   config: IBrightChainMemberInitConfig,
-): Promise<{ service: BrightChainMemberInitService }> {
-  const service = new BrightChainMemberInitService();
+): Promise<{ service: BrightChainMemberInitService<GuidV4Buffer> }> {
+  const service = new BrightChainMemberInitService<GuidV4Buffer>();
   const input = await makeRbacInput();
   const result = await service.initializeWithRbac(config, input);
 
@@ -391,11 +391,11 @@ async function runRbacInitAndVerify(
  * member_index collection and return the init result + hash.
  */
 async function runInitAndVerify(config: IBrightChainMemberInitConfig): Promise<{
-  result: IBrightChainBaseInitResult<BrightChainDb>;
+  result: IBrightChainBaseInitResult<BrightChainDb, GuidV4Buffer>;
   entries: IMemberIndexDocument[];
   hash: string;
 }> {
-  const service = new BrightChainMemberInitService();
+  const service = new BrightChainMemberInitService<GuidV4Buffer>();
   const result = await service.initialize(config, TEST_INPUT);
 
   expect(result.insertedCount).toBe(3);
@@ -478,7 +478,7 @@ describe('E2E: BrightChainMemberInitService – memory and disk block stores', (
         blockSize: BlockSize.Small,
       };
 
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
 
       // First init
       const first = await service.initialize(config, TEST_INPUT);
@@ -522,7 +522,7 @@ describe('E2E: BrightChainMemberInitService – memory and disk block stores', (
         blockSize: BlockSize.Small,
       };
 
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
 
       const first = await service.initialize(config, TEST_INPUT);
       expect(first.insertedCount).toBe(3);
@@ -582,7 +582,7 @@ describe('E2E: BrightChainMemberInitService – memory and disk block stores', (
         memberPoolName: 'RbacE2E-Memory-Idempotent',
         useMemoryStore: true,
       };
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
       const input = await makeRbacInput();
 
       const first = await service.initializeWithRbac(config, input);
@@ -632,7 +632,7 @@ describe('E2E: BrightChainMemberInitService – memory and disk block stores', (
         blockStorePath: tempDir,
         blockSize: BlockSize.Small,
       };
-      const service = new BrightChainMemberInitService();
+      const service = new BrightChainMemberInitService<GuidV4Buffer>();
       const input = await makeRbacInput();
 
       const first = await service.initializeWithRbac(config, input);

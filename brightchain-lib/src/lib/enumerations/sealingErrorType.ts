@@ -7,4 +7,6 @@ export enum SealingErrorType {
   EncryptedShareNotFound = 'EncryptedShareNotFound',
   MemberNotFound = 'MemberNotFound',
   FailedToSeal = 'FailedToSeal',
+  InsufficientSharesForReconstruction = 'InsufficientSharesForReconstruction',
+  KeyReconstructionFailed = 'KeyReconstructionFailed',
 }

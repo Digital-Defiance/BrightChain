@@ -13,8 +13,14 @@
  * **Validates: Requirements 1.2, 1.4, 1.5**
  */
 
-import type { IBlockStore, IDocumentStore } from '@brightchain/brightchain-lib';
-import { EnergyAccountStore, MemberStore } from '@brightchain/brightchain-lib';
+import type { IBlockStore } from '@brightchain/brightchain-lib';
+import {
+  EnergyAccountStore,
+  initializeBrightChain,
+  MemberStore,
+  ServiceLocator,
+  ServiceProvider,
+} from '@brightchain/brightchain-lib';
 import type { BrightChainDb } from '@brightchain/db';
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import fc from 'fast-check';
@@ -28,6 +34,14 @@ import '../../factories/blockStoreFactory';
 import type { DefaultBackendIdType } from '../../shared-types';
 
 jest.setTimeout(180_000);
+
+// Initialize BrightChain global services before any tests run.
+// The plugin's seedMembers() writes blocks via BrightChainDb.withTransaction,
+// which creates RawDataBlock instances that require the global ServiceProvider.
+beforeAll(() => {
+  initializeBrightChain();
+  ServiceLocator.setServiceProvider(ServiceProvider.getInstance());
+});
 
 /** Create a unique temp directory for each test run */
 async function makeTempDir(): Promise<string> {
@@ -69,12 +83,15 @@ function setupEnv(blockStorePath?: string): () => void {
   saved['BRIGHTCHAIN_BLOCKSTORE_PATH'] =
     process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
   saved['BLOCKSTORE_PATH'] = process.env['BLOCKSTORE_PATH'];
+  saved['DEV_DATABASE'] = process.env['DEV_DATABASE'];
 
   if (blockStorePath !== undefined) {
     process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'] = blockStorePath;
+    delete process.env['DEV_DATABASE'];
   } else {
     delete process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
     delete process.env['BLOCKSTORE_PATH'];
+    process.env['DEV_DATABASE'] = 'ephemeral-pbt';
   }
 
   return () => {
@@ -176,13 +193,6 @@ describe('Property 1: Connect establishes all stores and database', () => {
             expect(brightChainDb).toBeDefined();
             expect(brightChainDb).not.toBeNull();
             expect(brightChainDb.isConnected()).toBe(true);
-
-            // Assert: documentStore accessor returns non-null IDocumentStore
-            const documentStore: IDocumentStore = plugin.documentStore;
-            expect(documentStore).toBeDefined();
-            expect(documentStore).not.toBeNull();
-            expect(typeof documentStore.collection).toBe('function');
-            expect(typeof documentStore.isConnected).toBe('function');
           } finally {
             // Cleanup: disconnect plugin, restore env, remove temp dir
             if (plugin?.isConnected()) {
@@ -212,7 +222,6 @@ describe('Property 2: Accessor state consistency', () => {
     'memberStore',
     'energyStore',
     'brightChainDb',
-    'documentStore',
     'database',
   ] as const;
 
@@ -306,7 +315,6 @@ describe('Property 3: Connect then disconnect round-trip', () => {
     'memberStore',
     'energyStore',
     'brightChainDb',
-    'documentStore',
     'database',
   ] as const;
 
