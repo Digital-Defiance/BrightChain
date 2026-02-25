@@ -676,7 +676,8 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
       structuredType === StructuredBlockType.ExtendedCBL ||
       structuredType === StructuredBlockType.MessageCBL ||
       structuredType === StructuredBlockType.SuperCBL ||
-      structuredType === StructuredBlockType.VaultCBL
+      structuredType === StructuredBlockType.VaultCBL ||
+      structuredType === StructuredBlockType.TarballCBL
     );
   }
 

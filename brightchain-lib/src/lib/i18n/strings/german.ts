@@ -1241,4 +1241,30 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
     'Kein Ersteller für Blocktyp {TYPE} registriert',
   [BrightChainStrings.TestMember_MemberNotFoundTemplate]:
     'Mitglied {KEY} nicht gefunden',
+
+  // TCBL (Tarball CBL) Errors
+  [BrightChainStrings.Error_TcblError_InvalidHeader]:
+    'Ungültiger TCBL-Header: fehlender oder falscher Magic-Prefix oder Typ-Byte',
+  [BrightChainStrings.Error_TcblError_ManifestChecksumMismatch]:
+    'TCBL-Manifest-Prüfsumme stimmt nicht mit der berechneten Prüfsumme überein',
+  [BrightChainStrings.Error_TcblError_ManifestCountMismatch]:
+    'TCBL-Manifest-Eintragsanzahl stimmt nicht mit der tatsächlichen Anzahl der Eintrags-Deskriptoren überein',
+  [BrightChainStrings.Error_TcblError_ManifestCorrupted]:
+    'TCBL-Manifest-Daten sind beschädigt oder fehlerhaft',
+  [BrightChainStrings.Error_TcblError_ManifestTruncated]:
+    'TCBL-Manifest-Daten sind abgeschnitten',
+  [BrightChainStrings.Error_TcblError_EntryNotFound]:
+    'TCBL-Eintrag im Manifest nicht gefunden',
+  [BrightChainStrings.Error_TcblError_FileNameTooLong]:
+    'TCBL-Eintrags-Dateiname überschreitet die maximal zulässige Länge',
+  [BrightChainStrings.Error_TcblError_MimeTypeTooLong]:
+    'TCBL-Eintrags-MIME-Typ überschreitet die maximal zulässige Länge',
+  [BrightChainStrings.Error_TcblError_PathTraversal]:
+    'TCBL-Eintrags-Dateiname enthält Pfad-Traversal-Sequenzen',
+  [BrightChainStrings.Error_TcblError_DecompressionFailed]:
+    'Dekomprimierung der TCBL-Archiv-Nutzlast fehlgeschlagen',
+  [BrightChainStrings.Error_TcblError_DecryptionFailed]:
+    'Entschlüsselung der TCBL-Archiv-Nutzlast fehlgeschlagen',
+  [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
+    'TCBL-Manifest-Version wird nicht unterstützt',
 };

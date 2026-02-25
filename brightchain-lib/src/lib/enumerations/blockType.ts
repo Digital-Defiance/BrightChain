@@ -95,6 +95,15 @@ export enum BlockType {
   VaultConstituentBlockList = 22,
 
   /**
+   * A Tarball CBL that bundles multiple file/data entries into a single CBL archive.
+   * Features:
+   * 1. Manifest with entry descriptors (file name, MIME type, data length, CBL address)
+   * 2. Optional whole-archive bzip2 compression
+   * 3. Optional whole-archive ECIES encryption
+   */
+  TarballConstituentBlockList = 23,
+
+  /**
    * An encrypted block with ownership information.
    * Features:
    * 1. Data encryption
@@ -124,6 +133,11 @@ export enum BlockType {
   EncryptedVaultConstituentBlockListBlock = 34,
 
   /**
+   * An encrypted Tarball CBL archive.
+   */
+  EncryptedTarballConstituentBlockListBlock = 35,
+
+  /**
    * A reference to a block stored elsewhere.
    * Features:
    * 1. Lazy loading
@@ -141,6 +155,7 @@ export const EphemeralBlockTypes: readonly BlockType[] = [
   BlockType.EphemeralOwnedDataBlock,
   BlockType.ExtendedConstituentBlockListBlock,
   BlockType.VaultConstituentBlockList,
+  BlockType.TarballConstituentBlockList,
   BlockType.FECData,
   BlockType.OwnerFreeWhitenedBlock,
   BlockType.Random,
@@ -154,6 +169,7 @@ export const EncryptedBlockTypes: readonly BlockType[] = [
   BlockType.EncryptedConstituentBlockListBlock,
   BlockType.EncryptedExtendedConstituentBlockListBlock,
   BlockType.EncryptedVaultConstituentBlockListBlock,
+  BlockType.EncryptedTarballConstituentBlockListBlock,
   BlockType.EncryptedOwnedDataBlock,
 ] as const;
 

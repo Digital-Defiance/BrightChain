@@ -6,21 +6,12 @@ import {
   BrightChainMemberInitService,
   configureBrightChainApp,
   DefaultBackendIdType,
+  RbacInputBuilder,
   type IBrightChainMemberInitConfig,
+  type IRbacUserInput,
 } from '@brightchain/brightchain-api-lib';
-import type {
-  IBrightChainRbacInitInput,
-  IBrightChainUserCredentials,
-  IBrightChainUserInitEntry,
-  IPasswordWrappedPrivateKey,
-} from '@brightchain/brightchain-lib';
 import { initializeBrightChain } from '@brightchain/brightchain-lib';
-import {
-  EmailString,
-  IECIESConfig,
-  MemberType,
-  SecureString,
-} from '@digitaldefiance/ecies-lib';
+import { IECIESConfig, MemberType } from '@digitaldefiance/ecies-lib';
 import {
   CoreLanguageCode,
   GlobalActiveContext,
@@ -30,23 +21,20 @@ import {
   ECIESService,
   GuidV4Buffer,
   GuidV4Provider,
-  Member,
   registerNodeRuntimeConfiguration,
 } from '@digitaldefiance/node-ecies-lib';
 import {
-  BackupCode,
   BaseApplication,
   createNoOpDatabase,
   debugLog,
   IConstants,
-  KeyWrappingService,
 } from '@digitaldefiance/node-express-suite';
 import {
   getSuiteCoreI18nEngine,
   getSuiteCoreTranslation,
   SuiteCoreStringKey,
 } from '@digitaldefiance/suite-core-lib';
-import { createHmac, randomBytes } from 'crypto';
+import { randomBytes } from 'crypto';
 import { appendFileSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -321,316 +309,132 @@ async function main() {
       blockSize: bcEnv.blockStoreBlockSize,
     };
 
-    // ── Create ECIES members from mnemonics to get key pairs ──────────
-    const keyWrappingService = new KeyWrappingService();
-
     // HMAC secret for mnemonic uniqueness checks
     const hmacSecretHex =
       bcEnv.get('MNEMONIC_HMAC_SECRET') ?? randomBytes(32).toString('hex');
     appendEnvVar(envFilePath, 'MNEMONIC_HMAC_SECRET', hmacSecretHex);
-    const hmacSecretBuf = Buffer.from(hmacSecretHex, 'hex');
 
     // Persist encryption key so subsequent runs reuse the same value
     const encryptionKeyHex =
       bcEnv.get('MNEMONIC_ENCRYPTION_KEY') ?? randomBytes(32).toString('hex');
     appendEnvVar(envFilePath, 'MNEMONIC_ENCRYPTION_KEY', encryptionKeyHex);
 
-    /**
-     * Build a full IBrightChainUserInitEntry for a single user.
-     * Creates the ECIES member, wraps the private key, encrypts the mnemonic,
-     * generates backup codes, and computes the mnemonic HMAC.
-     */
-    function buildUserInitEntry(
-      shortId: GuidV4Buffer,
-      fullId: GuidV4Buffer,
-      memberType: MemberType,
-      username: string,
-      email: string,
-      mnemonic: SecureString | undefined,
-      password: SecureString | undefined,
-      roleId: GuidV4Buffer,
-      userRoleId: GuidV4Buffer,
-      roleName: string,
-      roleAdmin: boolean,
-      roleMember: boolean,
-      roleSystem: boolean,
-      systemMember: Member<DefaultBackendIdType> | undefined,
-    ): {
-      entry: IBrightChainUserInitEntry<GuidV4Buffer>;
-      creds: IBrightChainUserCredentials<GuidV4Buffer>;
-      member: Member<DefaultBackendIdType>;
-      encryptingMember: Member<DefaultBackendIdType>;
-    } {
-      // Create ECIES member from mnemonic
-      const { member, mnemonic: resolvedMnemonic } =
-        Member.newMember<DefaultBackendIdType>(
-          eciesService,
-          memberType,
-          username,
-          new EmailString(email),
-          mnemonic,
-        );
-
-      // Generate password if not provided
-      const resolvedPassword =
-        password ??
-        new SecureString(
-          Array.from(randomBytes(16))
-            .map((b) => String.fromCharCode(33 + (b % 94)))
-            .join(''),
-        );
-
-      // Wrap private key with password
-      let wrappedKey: IPasswordWrappedPrivateKey | undefined;
-      if (member.privateKey) {
-        const wrapped = keyWrappingService.wrapSecret(
-          member.privateKey,
-          resolvedPassword,
-          constants,
-        );
-        wrappedKey = {
-          salt: wrapped.salt,
-          iv: wrapped.iv,
-          authTag: wrapped.authTag,
-          ciphertext: wrapped.ciphertext,
-          iterations: wrapped.iterations,
-        };
-      }
-
-      // Encrypt mnemonic for recovery using the member's public key
-      const mnemonicRecovery = member
-        .encryptData(Buffer.from(resolvedMnemonic.value ?? '', 'utf-8'))
-        .toString('hex');
-
-      // Compute mnemonic HMAC for uniqueness checks
-      const mnemonicHmac = createHmac('sha256', hmacSecretBuf)
-        .update(Buffer.from(resolvedMnemonic.value ?? '', 'utf-8'))
-        .digest('hex');
-
-      // Generate mnemonic document ID
-      const mnemonicDocId = generateGuidId();
-
-      // Generate and encrypt backup codes
-      const rawBackupCodes = BackupCode.generateBackupCodes(constants);
-      // BackupCode.encryptBackupCodes is async — we'll handle this outside
-      // For now, build the entry with empty backup codes; we'll fill them in after await
-      const publicKeyHex = member.publicKey.toString('hex');
-
-      const entry: IBrightChainUserInitEntry<GuidV4Buffer> = {
-        id: shortId,
-        type: memberType,
-        fullId,
-        username,
-        email,
-        publicKeyHex,
-        passwordWrappedPrivateKey: wrappedKey,
-        mnemonicRecovery,
-        mnemonicHmac,
-        backupCodes: [], // filled in after async encryption
-        roleId,
-        userRoleId,
-        mnemonicDocId,
-        roleName,
-        roleAdmin,
-        roleMember,
-        roleSystem,
-        plaintextMnemonic: resolvedMnemonic.value ?? '',
-        plaintextPassword: resolvedPassword.value ?? '',
-        plaintextBackupCodes: [], // filled in after async backup code generation
-      };
-
-      const creds: IBrightChainUserCredentials<GuidV4Buffer> = {
-        id: shortId,
-        fullId,
-        type: memberType,
-        username,
-        email,
-        mnemonic: resolvedMnemonic.value ?? '(not set)',
-        password: resolvedPassword.value ?? '(not set)',
-        backupCodes: rawBackupCodes.map((c) => c.value ?? ''),
-        publicKeyHex,
-        roleId,
-        userRoleId,
-      };
-
-      return { entry, creds, member, encryptingMember: systemMember ?? member };
-    }
-
-    // Build system user first (needed as createdBy for others)
-    const systemResult = buildUserInitEntry(
-      bcEnv.systemId,
-      bcEnv.systemId,
-      MemberType.System,
-      bcEnv.get('SYSTEM_USERNAME') ?? 'system',
-      bcEnv.get('SYSTEM_EMAIL') ?? bcEnv.emailSender,
-      bcEnv.systemMnemonic,
-      bcEnv.systemPassword,
-      systemRoleId,
-      systemUserRoleId,
-      'System',
-      true,
-      true,
-      true,
-      undefined,
-    );
-
-    // Build admin and member users (system member encrypts their backup codes)
-    const adminResult = buildUserInitEntry(
-      bcEnv.adminId,
-      bcEnv.adminId,
-      MemberType.User,
-      bcEnv.get('ADMIN_USERNAME') ?? 'admin',
-      bcEnv.get('ADMIN_EMAIL') ?? bcEnv.emailSender,
-      bcEnv.adminMnemonic,
-      bcEnv.adminPassword,
-      adminRoleId,
-      adminUserRoleId,
-      'Admin',
-      true,
-      true,
-      false,
-      systemResult.member,
-    );
-
-    const memberResult = buildUserInitEntry(
-      bcEnv.memberId,
-      bcEnv.memberId,
-      MemberType.User,
-      bcEnv.get('MEMBER_USERNAME') ?? 'member',
-      bcEnv.get('MEMBER_EMAIL') ?? bcEnv.emailSender,
-      bcEnv.memberMnemonic,
-      bcEnv.memberPassword,
-      memberRoleId,
-      memberUserRoleId,
-      'Member',
-      false,
-      true,
-      false,
-      systemResult.member,
-    );
-
-    // Generate and encrypt backup codes (async operation)
-    const generateBackupCodes = (): BackupCode[] =>
-      Array.from(
-        { length: constants.BACKUP_CODES.Count },
-        () => new BackupCode(BackupCode.generateBackupCode()),
-      );
-    const systemBackupCodes = generateBackupCodes();
-    const adminBackupCodes = generateBackupCodes();
-    const memberBackupCodes = generateBackupCodes();
-
-    const [encSystemCodes, encAdminCodes, encMemberCodes] = await Promise.all([
-      BackupCode.encryptBackupCodes(
-        systemResult.member,
-        systemResult.encryptingMember,
-        systemBackupCodes,
-      ),
-      BackupCode.encryptBackupCodes(
-        adminResult.member,
-        adminResult.encryptingMember,
-        adminBackupCodes,
-      ),
-      BackupCode.encryptBackupCodes(
-        memberResult.member,
-        memberResult.encryptingMember,
-        memberBackupCodes,
-      ),
-    ]);
-
-    // Fill in encrypted backup codes on the entries
-    systemResult.entry.backupCodes = encSystemCodes;
-    adminResult.entry.backupCodes = encAdminCodes;
-    memberResult.entry.backupCodes = encMemberCodes;
-
-    // Fill in plaintext backup codes on the entries so initializeWithRbac() can wire them through
-    systemResult.entry.plaintextBackupCodes = systemBackupCodes.map(
-      (c) => c.value ?? '',
-    );
-    adminResult.entry.plaintextBackupCodes = adminBackupCodes.map(
-      (c) => c.value ?? '',
-    );
-    memberResult.entry.plaintextBackupCodes = memberBackupCodes.map(
-      (c) => c.value ?? '',
-    );
-
-    // Update credential backup codes with the raw (unencrypted) values for display
-    systemResult.creds.backupCodes = systemBackupCodes.map(
-      (c) => c.value ?? '',
-    );
-    adminResult.creds.backupCodes = adminBackupCodes.map((c) => c.value ?? '');
-    memberResult.creds.backupCodes = memberBackupCodes.map(
-      (c) => c.value ?? '',
-    );
-
-    // Build the full RBAC init input
-    const rbacInput: IBrightChainRbacInitInput<GuidV4Buffer> = {
-      systemUser: systemResult.entry,
-      adminUser: adminResult.entry,
-      memberUser: memberResult.entry,
+    // Build user inputs from environment
+    const userInputs: {
+      system: IRbacUserInput<GuidV4Buffer>;
+      admin: IRbacUserInput<GuidV4Buffer>;
+      member: IRbacUserInput<GuidV4Buffer>;
+    } = {
+      system: {
+        id: bcEnv.systemId,
+        fullId: bcEnv.systemId,
+        type: MemberType.System,
+        username: bcEnv.get('SYSTEM_USERNAME') ?? 'system',
+        email: bcEnv.get('SYSTEM_EMAIL') ?? bcEnv.emailSender,
+        roleId: systemRoleId,
+        userRoleId: systemUserRoleId,
+        roleName: 'System',
+        roleAdmin: true,
+        roleMember: true,
+        roleSystem: true,
+        mnemonic: bcEnv.systemMnemonic,
+        password: bcEnv.systemPassword,
+      },
+      admin: {
+        id: bcEnv.adminId,
+        fullId: bcEnv.adminId,
+        type: MemberType.User,
+        username: bcEnv.get('ADMIN_USERNAME') ?? 'admin',
+        email: bcEnv.get('ADMIN_EMAIL') ?? bcEnv.emailSender,
+        roleId: adminRoleId,
+        userRoleId: adminUserRoleId,
+        roleName: 'Admin',
+        roleAdmin: true,
+        roleMember: true,
+        roleSystem: false,
+        mnemonic: bcEnv.adminMnemonic,
+        password: bcEnv.adminPassword,
+      },
+      member: {
+        id: bcEnv.memberId,
+        fullId: bcEnv.memberId,
+        type: MemberType.User,
+        username: bcEnv.get('MEMBER_USERNAME') ?? 'member',
+        email: bcEnv.get('MEMBER_EMAIL') ?? bcEnv.emailSender,
+        roleId: memberRoleId,
+        userRoleId: memberUserRoleId,
+        roleName: 'Member',
+        roleAdmin: false,
+        roleMember: true,
+        roleSystem: false,
+        mnemonic: bcEnv.memberMnemonic,
+        password: bcEnv.memberPassword,
+      },
     };
 
-    const brightChainMemberInitService =
-      new BrightChainMemberInitService<GuidV4Buffer>();
-    const brightChainInitResult =
-      await brightChainMemberInitService.initializeWithRbac(
+    // Use the shared RbacInputBuilder to generate all key material
+    const builder = new RbacInputBuilder<GuidV4Buffer>({
+      hmacSecretHex,
+      constants,
+    });
+    const buildResult = await builder.buildAll(userInputs);
+
+    try {
+      const brightChainMemberInitService =
+        new BrightChainMemberInitService<GuidV4Buffer>();
+      const brightChainInitResult =
+        await brightChainMemberInitService.initializeWithRbac(
+          initConfig,
+          buildResult.rbacInput,
+        );
+
+      if (brightChainInitResult.alreadyInitialized) {
+        debugLog(
+          bcEnv.debug,
+          'log',
+          BrightChainApiStrings.BrightChainMemberInitServiceAlreadyInitialized.replace(
+            '%d',
+            String(brightChainInitResult.skippedCount),
+          ),
+        );
+      } else {
+        debugLog(
+          bcEnv.debug,
+          'log',
+          BrightChainApiStrings.BrightChainMemberInitServiceInitialized.replace(
+            '%d',
+            String(brightChainInitResult.insertedCount),
+          ).replace('%d', String(brightChainInitResult.skippedCount)),
+        );
+      }
+
+      // Build the full server init result
+      const serverInitResult =
+        BrightChainMemberInitService.buildServerInitResult<GuidV4Buffer>(
+          brightChainInitResult,
+          buildResult.credentials,
+        );
+
+      // Print formatted credential results
+      BrightChainMemberInitService.printServerInitResults<GuidV4Buffer>(
+        serverInitResult,
         initConfig,
-        rbacInput,
       );
 
-    if (brightChainInitResult.alreadyInitialized) {
+      // Print .env format for convenience
+      debugLog(bcEnv.debug, 'log', '=== .env format ===');
       debugLog(
         bcEnv.debug,
         'log',
-        BrightChainApiStrings.BrightChainMemberInitServiceAlreadyInitialized.replace(
-          '%d',
-          String(brightChainInitResult.skippedCount),
+        BrightChainMemberInitService.formatDotEnv<GuidV4Buffer>(
+          buildResult.credentials,
         ),
       );
-    } else {
-      debugLog(
-        bcEnv.debug,
-        'log',
-        BrightChainApiStrings.BrightChainMemberInitServiceInitialized.replace(
-          '%d',
-          String(brightChainInitResult.insertedCount),
-        ).replace('%d', String(brightChainInitResult.skippedCount)),
-      );
+      debugLog(bcEnv.debug, 'log', '=== End .env format ===');
+    } finally {
+      // Dispose ECIES members to clean up secure memory
+      RbacInputBuilder.disposeMembers(buildResult.members);
     }
-
-    // Build the full server init result
-    const serverInitResult =
-      BrightChainMemberInitService.buildServerInitResult<GuidV4Buffer>(
-        brightChainInitResult,
-        {
-          system: systemResult.creds,
-          admin: adminResult.creds,
-          member: memberResult.creds,
-        },
-      );
-
-    // Print formatted credential results
-    BrightChainMemberInitService.printServerInitResults<GuidV4Buffer>(
-      serverInitResult,
-      initConfig,
-    );
-
-    // Print .env format for convenience
-    debugLog(bcEnv.debug, 'log', '=== .env format ===');
-    debugLog(
-      bcEnv.debug,
-      'log',
-      BrightChainMemberInitService.formatDotEnv<GuidV4Buffer>({
-        system: systemResult.creds,
-        admin: adminResult.creds,
-        member: memberResult.creds,
-      }),
-    );
-    debugLog(bcEnv.debug, 'log', '=== End .env format ===');
-
-    // Dispose ECIES members to clean up secure memory
-    systemResult.member.dispose();
-    adminResult.member.dispose();
-    memberResult.member.dispose();
 
     exitCode = 0;
   } catch (brightChainErr) {

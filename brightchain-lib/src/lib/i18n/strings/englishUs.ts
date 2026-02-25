@@ -1233,6 +1233,32 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
     'No creator registered for block type {TYPE}',
   [BrightChainStrings.TestMember_MemberNotFoundTemplate]:
     'Member {KEY} not found',
+
+  // TCBL (Tarball CBL) Errors
+  [BrightChainStrings.Error_TcblError_InvalidHeader]:
+    'Invalid TCBL header: missing or incorrect magic prefix or type byte',
+  [BrightChainStrings.Error_TcblError_ManifestChecksumMismatch]:
+    'TCBL manifest checksum does not match computed checksum',
+  [BrightChainStrings.Error_TcblError_ManifestCountMismatch]:
+    'TCBL manifest entry count does not match actual number of entry descriptors',
+  [BrightChainStrings.Error_TcblError_ManifestCorrupted]:
+    'TCBL manifest data is corrupted or malformed',
+  [BrightChainStrings.Error_TcblError_ManifestTruncated]:
+    'TCBL manifest data is truncated',
+  [BrightChainStrings.Error_TcblError_EntryNotFound]:
+    'TCBL entry not found in manifest',
+  [BrightChainStrings.Error_TcblError_FileNameTooLong]:
+    'TCBL entry file name exceeds maximum allowed length',
+  [BrightChainStrings.Error_TcblError_MimeTypeTooLong]:
+    'TCBL entry MIME type exceeds maximum allowed length',
+  [BrightChainStrings.Error_TcblError_PathTraversal]:
+    'TCBL entry file name contains path traversal sequences',
+  [BrightChainStrings.Error_TcblError_DecompressionFailed]:
+    'Failed to decompress TCBL archive payload',
+  [BrightChainStrings.Error_TcblError_DecryptionFailed]:
+    'Failed to decrypt TCBL archive payload',
+  [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
+    'TCBL manifest version is not supported',
 };
 
 export default AmericanEnglishStrings;

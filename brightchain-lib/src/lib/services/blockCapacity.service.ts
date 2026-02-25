@@ -123,7 +123,9 @@ export class BlockCapacityCalculator<TID extends PlatformID = Uint8Array> {
         return { alignCapacityToTuple: false };
 
       case BlockType.ConstituentBlockList:
-      case BlockType.EncryptedConstituentBlockListBlock: {
+      case BlockType.EncryptedConstituentBlockListBlock:
+      case BlockType.TarballConstituentBlockList:
+      case BlockType.EncryptedTarballConstituentBlockListBlock: {
         // Use dynamic base header size instead of static constant
         const baseHeaderSize = this.calculateCBLBaseHeaderSize();
         details.typeSpecificOverhead += baseHeaderSize + ECIES.SIGNATURE_SIZE;

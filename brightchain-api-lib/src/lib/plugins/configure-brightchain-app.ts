@@ -79,7 +79,7 @@ export function configureBrightChainApp<TID extends PlatformID>(
 
   // 2b. Initialize BrightChain library (registers BRIGHTCHAIN_CONFIG_KEY
   //     config with GuidV4Provider and creates the ServiceProvider singleton
-  //     so that getGlobalServiceProvider() works during seedMembers).
+  //     so that getGlobalServiceProvider() works during seedWithRbac).
   initializeBrightChain();
 
   // 3. Create and register database plugin
