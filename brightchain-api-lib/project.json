@@ -13,7 +13,13 @@
         "outputPath": "dist/brightchain-api-lib",
         "main": "brightchain-api-lib/src/index.ts",
         "tsConfig": "brightchain-api-lib/tsconfig.lib.json",
-        "assets": ["brightchain-api-lib/*.md"]
+        "assets": [
+          {
+            "input": "brightchain-api-lib",
+            "glob": "*.md",
+            "output": "."
+          }
+        ]
       },
       "dependsOn": ["^build"]
     },
