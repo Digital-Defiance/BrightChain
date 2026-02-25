@@ -108,3 +108,6 @@ export type * from './vote';
 
 // Quorum API base data interfaces (shared with frontend)
 export * from './api';
+
+// TCBL archive interfaces (manifest, entry descriptors, options)
+export type * from './tcbl';

@@ -14,29 +14,31 @@
 
 import type {
   IBlockStore,
-  IBrightChainBaseInitResult,
-  IBrightChainMemberInitInput,
+  IBrightChainInitResult,
   IMemberIndexDocument,
 } from '@brightchain/brightchain-lib';
-import {
-  EnergyAccountStore,
-  MemberStatusType,
-  MemberStore,
-} from '@brightchain/brightchain-lib';
+import { EnergyAccountStore, MemberStore } from '@brightchain/brightchain-lib';
 import type { BrightChainDb } from '@brightchain/db';
 import { MemberType } from '@digitaldefiance/ecies-lib';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import { GuidV4Provider } from '@digitaldefiance/node-ecies-lib';
 import type {
   IApplication,
   IAuthenticationProvider,
   IDatabasePlugin,
 } from '@digitaldefiance/node-express-suite';
 import type { IDatabase } from '@digitaldefiance/suite-core-lib';
+import { randomBytes } from 'crypto';
 import { brightchainDatabaseInit } from '../databaseInit';
 import type { Environment } from '../environment';
 import type { IBrightChainApplication } from '../interfaces/application';
 import type { IBrightChainMemberInitConfig } from '../interfaces/member-init-config';
+import { BrightChainMemberInitService } from '../services';
 import { BrightChainAuthenticationProvider } from '../services/brightchain-authentication-provider';
+import {
+  type IRbacUserInput,
+  RbacInputBuilder,
+} from '../services/rbac-input-builder';
 
 /**
  * BrightChain database plugin implementing IDatabasePlugin<TID>.
@@ -117,12 +119,6 @@ export class BrightChainDatabasePlugin<
     this._memberStore = memberStore as MemberStore;
     this._energyStore = energyStore as EnergyAccountStore;
     this._connected = true;
-
-    // Seed system/admin/member users into the database.
-    // Runs for both dev and production modes; idempotent if called again
-    // via initializeDevStore().
-    const config = this.buildMemberInitConfig();
-    await this.seedMembers(config);
   }
 
   /**
@@ -202,14 +198,14 @@ export class BrightChainDatabasePlugin<
    * Seed the dev database after connection.
    *
    * Called by Application.start() after connect() and init() when
-   * environment.devDatabase is truthy. Invokes BrightChainMemberInitService
-   * to persist system/admin/member seed users into the in-memory database.
+   * environment.devDatabase is truthy. Uses RbacInputBuilder to generate
+   * ephemeral credentials and calls initializeWithRbac() for a fully
+   * functional dev database. Prints credentials so dev users can log in.
    */
   async initializeDevStore(): Promise<
-    IBrightChainBaseInitResult<BrightChainDb, TID>
+    IBrightChainInitResult<TID, BrightChainDb>
   > {
-    const config = this.buildMemberInitConfig();
-    return this.seedMembers(config);
+    return this.seedWithRbac(true);
   }
 
   // ── Typed accessors ───────────────────────────────────────────────
@@ -291,12 +287,18 @@ export class BrightChainDatabasePlugin<
   }
 
   /**
-   * Build an IBrightChainMemberInitInput from the environment's
-   * system/admin/member IDs and their associated member types.
+   * Build IRbacUserInput entries for all three users from the environment.
    *
-   * @throws Error if any of the required IDs are not set in the environment.
+   * Reads IDs, mnemonics, passwords, role IDs, and usernames/emails from
+   * the environment. Generates GUIDs for any missing role/user-role IDs.
+   *
+   * @throws Error if any of the required user IDs are not set.
    */
-  buildMemberInitInput(): IBrightChainMemberInitInput<TID> {
+  buildRbacUserInputs(): {
+    system: IRbacUserInput<TID>;
+    admin: IRbacUserInput<TID>;
+    member: IRbacUserInput<TID>;
+  } {
     const env = this._environment;
 
     if (!env.systemId || !env.adminId || !env.memberId) {
@@ -306,82 +308,138 @@ export class BrightChainDatabasePlugin<
       );
     }
 
+    const guidProvider = new GuidV4Provider();
+    const generateId = (): TID =>
+      guidProvider.fromBytes(guidProvider.generate()) as TID;
+
     return {
-      systemUser: { id: env.systemId, type: MemberType.System },
-      adminUser: { id: env.adminId, type: MemberType.User },
-      memberUser: { id: env.memberId, type: MemberType.User },
+      system: {
+        id: env.systemId,
+        fullId: env.systemId,
+        type: MemberType.System,
+        username: env.get('SYSTEM_USERNAME') ?? 'system',
+        email: env.get('SYSTEM_EMAIL') ?? env.emailSender,
+        roleId: env.systemRoleId ?? generateId(),
+        userRoleId: env.systemUserRoleId ?? generateId(),
+        roleName: 'System',
+        roleAdmin: true,
+        roleMember: true,
+        roleSystem: true,
+        mnemonic: env.systemMnemonic,
+        password: env.systemPassword,
+      },
+      admin: {
+        id: env.adminId,
+        fullId: env.adminId,
+        type: MemberType.User,
+        username: env.get('ADMIN_USERNAME') ?? 'admin',
+        email: env.get('ADMIN_EMAIL') ?? env.emailSender,
+        roleId: env.adminRoleId ?? generateId(),
+        userRoleId: env.adminUserRoleId ?? generateId(),
+        roleName: 'Admin',
+        roleAdmin: true,
+        roleMember: true,
+        roleSystem: false,
+        mnemonic: env.adminMnemonic,
+        password: env.adminPassword,
+      },
+      member: {
+        id: env.memberId,
+        fullId: env.memberId,
+        type: MemberType.User,
+        username: env.get('MEMBER_USERNAME') ?? 'member',
+        email: env.get('MEMBER_EMAIL') ?? env.emailSender,
+        roleId: env.memberRoleId ?? generateId(),
+        userRoleId: env.memberUserRoleId ?? generateId(),
+        roleName: 'Member',
+        roleAdmin: false,
+        roleMember: true,
+        roleSystem: false,
+        mnemonic: env.memberMnemonic,
+        password: env.memberPassword,
+      },
     };
   }
 
   /**
-   * Seed system/admin/member users into the database using
-   * BrightChainMemberInitService.
-   *
-   * Reusable by both dev mode (initializeDevStore) and production mode paths.
-   *
-   * @param config - The member init configuration.
-   * @returns The init result from BrightChainMemberInitService.
+   * Check whether the database is empty (no member_index entries).
+   * Used to guard against auto-seeding a production database that was
+   * already initialized by brightchain-inituserdb.
    */
-  async seedMembers(
-    config: IBrightChainMemberInitConfig,
-  ): Promise<IBrightChainBaseInitResult<BrightChainDb, TID>> {
-    const input = this.buildMemberInitInput();
+  async isDatabaseEmpty(): Promise<boolean> {
     const db = this.brightChainDb;
-
-    // Build candidate member index documents
-    const now = new Date().toISOString();
-    const candidates: IMemberIndexDocument[] = [
-      input.systemUser,
-      input.adminUser,
-      input.memberUser,
-    ].map((user) => ({
-      id: user.id.toString('hex'),
-      publicCBL: '0'.repeat(64),
-      privateCBL: '0'.repeat(64),
-      poolId: config.memberPoolName,
-      type: user.type,
-      status: MemberStatusType.Active,
-      lastUpdate: now,
-      reputation: 0,
-    }));
-
-    // Idempotency check
     const collection = db.collection<IMemberIndexDocument>('member_index');
-    const existing = await collection.find({}).toArray();
-    const existingIds = new Set(existing.map((e) => e.id));
-    const toInsert = candidates.filter((c) => !existingIds.has(c.id));
-    const skippedCount = candidates.length - toInsert.length;
+    const existing = await collection.find({}).limit(1).toArray();
+    return existing.length === 0;
+  }
 
-    if (toInsert.length === 0) {
-      console.log(
-        `[BrightChain] Member seeding: already initialized (${skippedCount} skipped).`,
+  /**
+   * Full RBAC seeding using RbacInputBuilder + initializeWithRbac().
+   *
+   * Generates key material, builds all RBAC documents, and inserts them.
+   * When `printCredentials` is true, prints the full credential summary
+   * (for dev/ephemeral mode so users can log in via the frontend).
+   *
+   * @param printCredentials - Whether to print credentials to console.
+   * @returns The full init result from initializeWithRbac().
+   */
+  async seedWithRbac(
+    printCredentials: boolean,
+  ): Promise<IBrightChainInitResult<TID, BrightChainDb>> {
+    const config = this.buildMemberInitConfig();
+    const userInputs = this.buildRbacUserInputs();
+
+    const hmacSecretHex =
+      this._environment.get('MNEMONIC_HMAC_SECRET') ??
+      randomBytes(32).toString('hex');
+
+    const builder = new RbacInputBuilder<TID>({ hmacSecretHex });
+    const buildResult = await builder.buildAll(userInputs);
+
+    try {
+      const service = new BrightChainMemberInitService<TID>();
+      const initResult = await service.initializeWithRbac(
+        config,
+        buildResult.rbacInput,
       );
-      return {
-        input,
-        alreadyInitialized: true,
-        insertedCount: 0,
-        skippedCount,
-        db,
-      };
+
+      if (printCredentials) {
+        const serverResult =
+          BrightChainMemberInitService.buildServerInitResult<TID>(
+            initResult,
+            buildResult.credentials,
+          );
+        BrightChainMemberInitService.printServerInitResults<TID>(
+          serverResult,
+          config,
+        );
+      }
+
+      return initResult;
+    } finally {
+      RbacInputBuilder.disposeMembers(buildResult.members);
+    }
+  }
+
+  /**
+   * Seed a production (disk-backed) database ONLY if it is completely empty.
+   *
+   * If the database already has member_index entries, this is a no-op —
+   * the assumption is that brightchain-inituserdb was already run.
+   * Prints credentials when seeding occurs so the operator can capture them.
+   */
+  async seedProductionIfEmpty(): Promise<void> {
+    const empty = await this.isDatabaseEmpty();
+    if (!empty) {
+      console.log(
+        '[BrightChain] Production database already initialized — skipping auto-seed.',
+      );
+      return;
     }
 
-    // Insert missing entries
-    await db.withTransaction(async (session) => {
-      for (const entry of toInsert) {
-        await collection.insertOne(entry, { session });
-      }
-    });
-
     console.log(
-      `[BrightChain] Member seeding: ${toInsert.length} inserted, ${skippedCount} skipped.`,
+      '[BrightChain] Production database is empty — seeding with full RBAC...',
     );
-
-    return {
-      input,
-      alreadyInitialized: false,
-      insertedCount: toInsert.length,
-      skippedCount,
-      db,
-    };
+    await this.seedWithRbac(true);
   }
 }

@@ -76,6 +76,7 @@ export function detectBlockFormat(
       StructuredBlockType.SuperCBL,
       StructuredBlockType.ExtendedCBL,
       StructuredBlockType.MessageCBL,
+      StructuredBlockType.TarballCBL,
     ];
 
     if (!validTypes.includes(structuredBlockType)) {
@@ -184,6 +185,8 @@ function mapStructuredToBlockType(
       // SuperCBL doesn't have a BlockType enum value yet
       // Return CBL as the base type
       return BlockType.ConstituentBlockList;
+    case StructuredBlockType.TarballCBL:
+      return BlockType.TarballConstituentBlockList;
     default:
       return BlockType.Unknown;
   }
@@ -223,6 +226,10 @@ function getHeaderEndOffset(
   switch (blockType) {
     case StructuredBlockType.CBL:
       // Base CBL header with dynamic creator ID length
+      return baseHeaderSize;
+
+    case StructuredBlockType.TarballCBL:
+      // Tarball CBL uses the same base header structure as CBL
       return baseHeaderSize;
 
     case StructuredBlockType.ExtendedCBL:
@@ -351,4 +358,24 @@ function parseMessageHeaderEnd(data: Uint8Array, idLength: number): number {
   } catch {
     return -1;
   }
+}
+
+/**
+ * Check whether raw CBL data has a TarballCBL structured block header.
+ *
+ * This is a lightweight check that inspects only the first two bytes:
+ *   byte 0 = 0xBC (magic prefix)
+ *   byte 1 = StructuredBlockType.TarballCBL (0x07)
+ *
+ * @param data - Raw block data
+ * @returns `true` if the data starts with a TarballCBL header
+ *
+ * @see Requirement 6.2 — block detection logic recognises TarballCBL
+ */
+export function isTarballCblData(data: Uint8Array): boolean {
+  return (
+    data.length >= 2 &&
+    data[0] === BLOCK_HEADER.MAGIC_PREFIX &&
+    data[1] === StructuredBlockType.TarballCBL
+  );
 }

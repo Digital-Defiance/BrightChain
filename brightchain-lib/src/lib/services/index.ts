@@ -1,6 +1,7 @@
 export * from './aliasRegistry';
 export * from './auditLogService';
 export * from './blockCapacity.service';
+export * from './blockFormatService';
 export * from './blockService';
 export * from './cblService';
 export * from './checksum.service';
