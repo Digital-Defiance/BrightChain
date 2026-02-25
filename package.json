@@ -1,6 +1,6 @@
 {
   "name": "brightchain",
-  "version": "0.21.0",
+  "version": "0.21.1",
   "license": "MIT",
   "workspaces": [
     "brightchain-lib",
@@ -61,9 +61,9 @@
     "@digitaldefiance/i18n-lib": "4.6.4"
   },
   "dependencies": {
-    "@brightchain/brightchain-api-lib": "^0.21.0",
-    "@brightchain/brightchain-lib": "^0.21.0",
-    "@brightchain/db": "^0.21.0",
+    "@brightchain/brightchain-api-lib": "^0.21.1",
+    "@brightchain/brightchain-lib": "^0.21.1",
+    "@brightchain/db": "^0.21.1",
     "@digitaldefiance/branded-enum": "0.0.7",
     "@digitaldefiance/branded-interface": "0.0.5",
     "@digitaldefiance/ecies-lib": "^4.19.6",

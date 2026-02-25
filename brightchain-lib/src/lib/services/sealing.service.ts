@@ -249,16 +249,34 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
     );
 
     // Use bootstrap-aware reinit that allows 1 share
-    this.reinitSecretsForBootstrap(amongstMembers.length);
-    const keyShares = secrets.share(
-      uint8ArrayToHex(key),
-      amongstMembers.length,
-      threshold,
-    );
-    const encryptedSharesByMemberId = await this.encryptSharesForMembers(
-      keyShares,
-      amongstMembers,
-    );
+    // The secrets library requires both share count AND threshold to be at least 2.
+    // For a single-member bootstrap, we skip Shamir splitting entirely and encrypt
+    // the raw key hex directly as the member's "share". On unseal, secrets.combine()
+    // with a single share that IS the full key hex will return it as-is.
+    let encryptedSharesByMemberId: Map<ShortHexGuid, Uint8Array>;
+    if (amongstMembers.length === 1 && threshold === 1) {
+      // Single member: store the raw key hex as their share
+      const rawKeyHex = uint8ArrayToHex(key);
+      encryptedSharesByMemberId = await this.encryptSharesForMembers(
+        [rawKeyHex],
+        amongstMembers,
+      );
+    } else {
+      const effectiveShareCount = Math.max(amongstMembers.length, 2);
+      const effectiveThreshold = Math.max(threshold, 2);
+      this.reinitSecretsForBootstrap(effectiveShareCount);
+      const keyShares = secrets.share(
+        uint8ArrayToHex(key),
+        effectiveShareCount,
+        effectiveThreshold,
+      );
+      // Only distribute shares to actual members
+      const memberShares = keyShares.slice(0, amongstMembers.length);
+      encryptedSharesByMemberId = await this.encryptSharesForMembers(
+        memberShares,
+        amongstMembers,
+      );
+    }
 
     return new QuorumDataRecord<TID>(
       agent,
