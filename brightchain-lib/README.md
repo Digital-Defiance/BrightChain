@@ -354,6 +354,72 @@ const capacity = cblService.calculateCBLAddressCapacity(
 console.log(`CBL can hold ${capacity} block references`);
 ```
 
+### TCBL Archives (Tarball CBL)
+
+TCBL is a tarball-like archive format built on top of CBL. It bundles multiple files into a single block with a manifest, supporting optional bzip2 compression and external ECIES encryption via the `EncryptedBlock` wrapper.
+
+#### Building a TCBL Archive
+
+```typescript
+import {
+  TcblBuilder,
+  TcblReader,
+  BlockSize,
+} from '@brightchain/brightchain-lib';
+
+// Create a builder
+const builder = new TcblBuilder(creator, BlockSize.Small, blockStore);
+
+// Add entries
+await builder.addEntry({
+  fileName: 'readme.txt',
+  mimeType: 'text/plain',
+  data: new TextEncoder().encode('Hello, TCBL!'),
+});
+await builder.addEntry({
+  fileName: 'config.json',
+  mimeType: 'application/json',
+  data: new TextEncoder().encode('{"key": "value"}'),
+});
+
+// Build the archive (with optional compression)
+const tcblBlock = await builder.build();
+```
+
+#### Reading a TCBL Archive
+
+```typescript
+// Open the archive for reading
+const reader = new TcblReader(tcblBlock, blockStore);
+await reader.open();
+
+// List entries without extracting data
+const entries = reader.listEntries();
+for (const entry of entries) {
+  console.log(`${entry.fileName} (${entry.mimeType}, ${entry.originalDataLength} bytes)`);
+}
+
+// Extract by name or index
+const data = await reader.getEntryByName('readme.txt');
+const firstEntry = await reader.getEntryByIndex(0);
+```
+
+#### Compression and Encryption
+
+```typescript
+// Enable bzip2 compression
+const builder = new TcblBuilder(creator, BlockSize.Small, blockStore, undefined, {
+  compress: true,
+});
+
+// For encryption, wrap the completed TCBL in an EncryptedBlock
+const tcbl = await builder.build();
+const encrypted = await EncryptedBlockCreator.from(
+  tcbl,
+  recipientPublicKeys,
+);
+```
+
 ### Service Provider Pattern
 
 BrightChain uses a service provider pattern for dependency injection:

@@ -22,6 +22,7 @@ export * from './nativeRsFecService';
 export * from './presenceService';
 export * from './quorum';
 export * from './quorumDatabaseAdapter';
+export * from './rbac-input-builder';
 export * from './requestUser';
 export * from './role';
 export * from './secureKeyStorage';

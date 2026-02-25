@@ -84,3 +84,6 @@ export * from './messaging';
 export * from './proposalActionType';
 export * from './proposalStatus';
 export * from './quorumOperationalMode';
+
+// TCBL (Tarball CBL) enumerations
+export * from './tcblErrorType';

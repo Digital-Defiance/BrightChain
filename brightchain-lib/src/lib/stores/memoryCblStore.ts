@@ -1,6 +1,7 @@
 import { arraysEqual, Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { ConstituentBlockListBlock } from '../blocks/cbl';
 import { EncryptedBlock } from '../blocks/encrypted';
+import { TarballConstituentBlockListBlock } from '../blocks/tcbl';
 import { EncryptedBlockMetadata } from '../encryptedBlockMetadata';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockEncryptionType } from '../enumerations/blockEncryptionType';
@@ -11,6 +12,7 @@ import { StoreErrorType } from '../enumerations/storeErrorType';
 import { CblError } from '../errors/cblError';
 import { StoreError } from '../errors/storeError';
 import { ICBLStore } from '../interfaces/storage/cblStore';
+import { isTarballCblData } from '../services/blockFormatService';
 import { ServiceLocator } from '../services/serviceLocator';
 import { Checksum } from '../types';
 
@@ -117,15 +119,19 @@ export class MemoryCBLStore<
           true,
         );
 
-        const decryptedCbl = new ConstituentBlockListBlock(
-          (
-            await blockService.decryptMultiple(
+        const decryptedData = (
+          await blockService.decryptMultiple(
+            this._activeUser,
+            multiEncryptedCbl,
+          )
+        ).data;
+
+        const decryptedCbl = isTarballCblData(decryptedData)
+          ? new TarballConstituentBlockListBlock<TID>(
+              decryptedData,
               this._activeUser,
-              multiEncryptedCbl,
             )
-          ).data,
-          this._activeUser,
-        );
+          : new ConstituentBlockListBlock<TID>(decryptedData, this._activeUser);
 
         if (!decryptedCbl.validateSignature()) {
           throw new CblError(CblErrorType.InvalidSignature);
@@ -151,16 +157,20 @@ export class MemoryCBLStore<
           this._activeUser,
         );
 
-        const decryptedCbl = new ConstituentBlockListBlock<TID>(
-          (
-            await blockService.decrypt(
+        const decryptedData = (
+          await blockService.decrypt(
+            this._activeUser,
+            encryptedCbl,
+            BlockType.ConstituentBlockList,
+          )
+        ).data;
+
+        const decryptedCbl = isTarballCblData(decryptedData)
+          ? new TarballConstituentBlockListBlock<TID>(
+              decryptedData,
               this._activeUser,
-              encryptedCbl,
-              BlockType.ConstituentBlockList,
             )
-          ).data,
-          this._activeUser,
-        );
+          : new ConstituentBlockListBlock<TID>(decryptedData, this._activeUser);
 
         if (!decryptedCbl.validateSignature()) {
           throw new CblError(CblErrorType.InvalidSignature);
@@ -183,7 +193,10 @@ export class MemoryCBLStore<
         ? this._activeUser
         : await hydrateGuid(cblInfo.creatorId);
 
-    const cbl = new ConstituentBlockListBlock<TID>(cblData, creator);
+    // Detect TCBL by inspecting the structured block header (Req 6.2)
+    const cbl = isTarballCblData(cblData)
+      ? new TarballConstituentBlockListBlock<TID>(cblData, creator)
+      : new ConstituentBlockListBlock<TID>(cblData, creator);
     if (!cbl.validateSignature()) {
       throw new CblError(CblErrorType.InvalidSignature);
     }

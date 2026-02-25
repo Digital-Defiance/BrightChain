@@ -1113,4 +1113,28 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.EncryptedBlockCreator_NoCreatorRegisteredTemplate]:
     '没有为区块类型 {TYPE} 注册创建者',
   [BrightChainStrings.TestMember_MemberNotFoundTemplate]: '未找到成员 {KEY}',
+
+  // TCBL (Tarball CBL) Errors
+  [BrightChainStrings.Error_TcblError_InvalidHeader]:
+    'TCBL头部无效：缺少或不正确的魔术前缀或类型字节',
+  [BrightChainStrings.Error_TcblError_ManifestChecksumMismatch]:
+    'TCBL清单校验和与计算的校验和不匹配',
+  [BrightChainStrings.Error_TcblError_ManifestCountMismatch]:
+    'TCBL清单条目计数与实际条目描述符数量不匹配',
+  [BrightChainStrings.Error_TcblError_ManifestCorrupted]:
+    'TCBL清单数据已损坏或格式错误',
+  [BrightChainStrings.Error_TcblError_ManifestTruncated]: 'TCBL清单数据被截断',
+  [BrightChainStrings.Error_TcblError_EntryNotFound]: '在清单中未找到TCBL条目',
+  [BrightChainStrings.Error_TcblError_FileNameTooLong]:
+    'TCBL条目文件名超过最大允许长度',
+  [BrightChainStrings.Error_TcblError_MimeTypeTooLong]:
+    'TCBL条目MIME类型超过最大允许长度',
+  [BrightChainStrings.Error_TcblError_PathTraversal]:
+    'TCBL条目文件名包含路径遍历序列',
+  [BrightChainStrings.Error_TcblError_DecompressionFailed]:
+    'TCBL存档有效载荷解压缩失败',
+  [BrightChainStrings.Error_TcblError_DecryptionFailed]:
+    'TCBL存档有效载荷解密失败',
+  [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
+    'TCBL清单版本不受支持',
 };

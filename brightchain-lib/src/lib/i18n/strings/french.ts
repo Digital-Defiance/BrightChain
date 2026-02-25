@@ -1243,4 +1243,30 @@ export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
     'Aucun créateur enregistré pour le type de bloc {TYPE}',
   [BrightChainStrings.TestMember_MemberNotFoundTemplate]:
     'Membre {KEY} introuvable',
+
+  // TCBL (Tarball CBL) Errors
+  [BrightChainStrings.Error_TcblError_InvalidHeader]:
+    'En-tête TCBL invalide : préfixe magique ou octet de type manquant ou incorrect',
+  [BrightChainStrings.Error_TcblError_ManifestChecksumMismatch]:
+    'La somme de contrôle du manifeste TCBL ne correspond pas à la somme calculée',
+  [BrightChainStrings.Error_TcblError_ManifestCountMismatch]:
+    "Le nombre d'entrées du manifeste TCBL ne correspond pas au nombre réel de descripteurs",
+  [BrightChainStrings.Error_TcblError_ManifestCorrupted]:
+    'Les données du manifeste TCBL sont corrompues ou malformées',
+  [BrightChainStrings.Error_TcblError_ManifestTruncated]:
+    'Les données du manifeste TCBL sont tronquées',
+  [BrightChainStrings.Error_TcblError_EntryNotFound]:
+    'Entrée TCBL introuvable dans le manifeste',
+  [BrightChainStrings.Error_TcblError_FileNameTooLong]:
+    "Le nom de fichier de l'entrée TCBL dépasse la longueur maximale autorisée",
+  [BrightChainStrings.Error_TcblError_MimeTypeTooLong]:
+    "Le type MIME de l'entrée TCBL dépasse la longueur maximale autorisée",
+  [BrightChainStrings.Error_TcblError_PathTraversal]:
+    "Le nom de fichier de l'entrée TCBL contient des séquences de traversée de chemin",
+  [BrightChainStrings.Error_TcblError_DecompressionFailed]:
+    "Échec de la décompression de la charge utile de l'archive TCBL",
+  [BrightChainStrings.Error_TcblError_DecryptionFailed]:
+    "Échec du déchiffrement de la charge utile de l'archive TCBL",
+  [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
+    "La version du manifeste TCBL n'est pas prise en charge",
 };

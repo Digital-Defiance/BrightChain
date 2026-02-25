@@ -40,7 +40,6 @@ import { AppRouter } from './routers/app';
 import {
   AuthService,
   BackupCodeService,
-  BrightChainMemberInitService,
   BrightChainSessionAdapter,
   CLIOperatorPrompt,
   ContentAwareBlocksService,
@@ -167,7 +166,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     return this._brightchainDocumentStore.collection<U>(modelName);
   }
 
-  public override async start(mongoUri?: string): Promise<void> {
+  public override async start(dbUri?: string): Promise<void> {
     // Intercept expressApp.listen to capture the HTTP server reference.
     // The upstream Application creates the server internally via expressApp.listen(),
     // but stores it in a private field we cannot access from a subclass.
@@ -181,7 +180,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     // Delegate to upstream — handles: middleware init, router setup, error handler,
     // HTTP server on :port, greenlock/HTTPS on :443, dev-HTTPS, _ready = true
     // Pass undefined to skip mongoose connection.
-    await super.start(mongoUri);
+    await super.start(dbUri);
 
     // Restore original listen to avoid side effects on subsequent calls
     this.expressApp.listen = originalListen;
@@ -190,21 +189,14 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     // After super.start(), the plugin lifecycle is complete:
     //   plugin.connect() → brightchainDatabaseInit()
     //   plugin.init(app) → BrightChainAuthenticationProvider created
-    //   (dev mode) initializeDevStore() → seedMembers(useMemoryStore=true)
+    //   (dev mode) initializeDevStore() → seedWithRbac()
     // Retrieve stores from the plugin instead of calling brightchainDatabaseInit() directly.
 
     // Production-mode member seeding: when DEV_DATABASE is NOT set, the upstream
-    // lifecycle does not call initializeDevStore(). We seed members here with
-    // useMemoryStore=false so system/admin/member users are persisted to the
-    // disk-backed database.
+    // lifecycle does not call initializeDevStore(). Only seed if the database
+    // is completely empty (i.e. brightchain-inituserdb was never run).
     if (!this.environment.devDatabase) {
-      const prodConfig = this._plugin.buildMemberInitConfig();
-      const memberResult = await this._plugin.seedMembers(prodConfig);
-      BrightChainMemberInitService.printBaseInitResults<TID>(
-        memberResult.input,
-        memberResult,
-        prodConfig,
-      );
+      await this._plugin.seedProductionIfEmpty();
     }
 
     await this.keyStorage.initializeFromEnvironment();

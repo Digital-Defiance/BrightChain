@@ -33,7 +33,17 @@ export interface Proposal<TID extends PlatformID = Uint8Array> {
   expiresAt: Date;
   /** Timestamp of proposal creation */
   createdAt: Date;
-  /** Optional CBL reference for supporting documentation */
+  /**
+   * Optional CBL reference for supporting documentation.
+   *
+   * This field is type-agnostic: it accepts both regular CBL identifiers
+   * and TCBL (Tarball CBL) identifiers without discrimination. When the
+   * attachment is a TCBL, consumers can use {@link enumerateAttachmentEntries}
+   * to enumerate all bundled entries from the manifest. When it is a plain
+   * CBL, the same utility returns a single-entry list.
+   *
+   * @see Requirement 9.1 — accepts both CBL and TCBL identifiers
+   */
   attachmentCblId?: string;
   /** Epoch number at proposal creation */
   epochNumber: number;
@@ -54,7 +64,17 @@ export interface ProposalInput<TID extends PlatformID = Uint8Array> {
   actionPayload: Record<string, unknown>;
   /** Timestamp after which the proposal expires */
   expiresAt: Date;
-  /** Optional CBL reference for supporting documentation */
+  /**
+   * Optional CBL reference for supporting documentation.
+   *
+   * This field is type-agnostic: it accepts both regular CBL identifiers
+   * and TCBL (Tarball CBL) identifiers without discrimination. When the
+   * attachment is a TCBL, consumers can use {@link enumerateAttachmentEntries}
+   * to enumerate all bundled entries from the manifest. When it is a plain
+   * CBL, the same utility returns a single-entry list.
+   *
+   * @see Requirement 9.1 — accepts both CBL and TCBL identifiers
+   */
   attachmentCblId?: string;
   /** Generic marker for DTO compatibility */
   _platformId?: TID;

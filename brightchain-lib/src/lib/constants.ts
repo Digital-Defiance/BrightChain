@@ -97,6 +97,11 @@ export enum StructuredBlockType {
    * Vault CBL - CBL with vault header and entry property records
    */
   VaultCBL = 0x06,
+
+  /**
+   * Tarball CBL - archive container bundling multiple entries into a single CBL
+   */
+  TarballCBL = 0x07,
 }
 
 /**
