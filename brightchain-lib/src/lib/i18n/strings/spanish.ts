@@ -1248,4 +1248,30 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     'No hay creador registrado para el tipo de bloque {TYPE}',
   [BrightChainStrings.TestMember_MemberNotFoundTemplate]:
     'Miembro {KEY} no encontrado',
+
+  // TCBL (Tarball CBL) Errors
+  [BrightChainStrings.Error_TcblError_InvalidHeader]:
+    'Encabezado TCBL no válido: prefijo mágico o byte de tipo faltante o incorrecto',
+  [BrightChainStrings.Error_TcblError_ManifestChecksumMismatch]:
+    'La suma de verificación del manifiesto TCBL no coincide con la suma calculada',
+  [BrightChainStrings.Error_TcblError_ManifestCountMismatch]:
+    'El recuento de entradas del manifiesto TCBL no coincide con el número real de descriptores',
+  [BrightChainStrings.Error_TcblError_ManifestCorrupted]:
+    'Los datos del manifiesto TCBL están corruptos o malformados',
+  [BrightChainStrings.Error_TcblError_ManifestTruncated]:
+    'Los datos del manifiesto TCBL están truncados',
+  [BrightChainStrings.Error_TcblError_EntryNotFound]:
+    'Entrada TCBL no encontrada en el manifiesto',
+  [BrightChainStrings.Error_TcblError_FileNameTooLong]:
+    'El nombre de archivo de la entrada TCBL excede la longitud máxima permitida',
+  [BrightChainStrings.Error_TcblError_MimeTypeTooLong]:
+    'El tipo MIME de la entrada TCBL excede la longitud máxima permitida',
+  [BrightChainStrings.Error_TcblError_PathTraversal]:
+    'El nombre de archivo de la entrada TCBL contiene secuencias de recorrido de ruta',
+  [BrightChainStrings.Error_TcblError_DecompressionFailed]:
+    'Error al descomprimir la carga útil del archivo TCBL',
+  [BrightChainStrings.Error_TcblError_DecryptionFailed]:
+    'Error al descifrar la carga útil del archivo TCBL',
+  [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
+    'La versión del manifiesto TCBL no es compatible',
 };

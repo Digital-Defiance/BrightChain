@@ -442,7 +442,9 @@ describe('Block Format Detection Service - Property Tests', () => {
                 val !== StructuredBlockType.CBL &&
                 val !== StructuredBlockType.SuperCBL &&
                 val !== StructuredBlockType.ExtendedCBL &&
-                val !== StructuredBlockType.MessageCBL,
+                val !== StructuredBlockType.MessageCBL &&
+                val !== StructuredBlockType.VaultCBL &&
+                val !== StructuredBlockType.TarballCBL,
             ),
           fc.uint8Array({ minLength: 102, maxLength: 102 }), // Use CBL content size
           fc.uint8Array({

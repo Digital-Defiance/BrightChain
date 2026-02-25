@@ -1137,6 +1137,23 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   EncryptedBlockCreator_NoCreatorRegisteredTemplate:
     'EncryptedBlockCreator_NoCreatorRegisteredTemplate',
   TestMember_MemberNotFoundTemplate: 'TestMember_MemberNotFoundTemplate',
+
+  // TCBL (Tarball CBL) Errors
+  Error_TcblError_InvalidHeader: 'Error_TcblError_InvalidHeader',
+  Error_TcblError_ManifestChecksumMismatch:
+    'Error_TcblError_ManifestChecksumMismatch',
+  Error_TcblError_ManifestCountMismatch:
+    'Error_TcblError_ManifestCountMismatch',
+  Error_TcblError_ManifestCorrupted: 'Error_TcblError_ManifestCorrupted',
+  Error_TcblError_ManifestTruncated: 'Error_TcblError_ManifestTruncated',
+  Error_TcblError_EntryNotFound: 'Error_TcblError_EntryNotFound',
+  Error_TcblError_FileNameTooLong: 'Error_TcblError_FileNameTooLong',
+  Error_TcblError_MimeTypeTooLong: 'Error_TcblError_MimeTypeTooLong',
+  Error_TcblError_PathTraversal: 'Error_TcblError_PathTraversal',
+  Error_TcblError_DecompressionFailed: 'Error_TcblError_DecompressionFailed',
+  Error_TcblError_DecryptionFailed: 'Error_TcblError_DecryptionFailed',
+  Error_TcblError_InvalidManifestVersion:
+    'Error_TcblError_InvalidManifestVersion',
 } as const);
 
 export type BrightChainStringKey = BrandedStringKeyValue<

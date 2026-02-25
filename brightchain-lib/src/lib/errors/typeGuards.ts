@@ -52,6 +52,7 @@ import { EciesError } from './eciesError';
 import { EnhancedValidationError } from './enhancedValidationError';
 import { FactoryPatternViolationError } from './factoryPatternViolationError';
 import { FecError } from './fecError';
+import { TcblError } from './tcblError';
 import { TypedError } from './typedError';
 import { ValidationError } from './validationError';
 
@@ -126,6 +127,27 @@ export function isEciesError(error: unknown): error is EciesError {
  */
 export function isCblError(error: unknown): error is CblError {
   return error instanceof CblError;
+}
+
+/**
+ * Type guard to check if a value is a TcblError instance.
+ *
+ * @param error - The value to check
+ * @returns true if the value is a TcblError instance
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   tcblReader.open();
+ * } catch {
+ *   if (isTcblError(error)) {
+ *     console.error(`TCBL error (${error.errorType}): ${error.message}`);
+ *   }
+ * }
+ * ```
+ */
+export function isTcblError(error: unknown): error is TcblError {
+  return error instanceof TcblError;
 }
 
 /**
