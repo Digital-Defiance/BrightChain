@@ -22,7 +22,7 @@ export class QuorumDocumentSchema<TID extends PlatformID = Uint8Array> {
   public isString(value: unknown): boolean {
     return typeof value === 'string';
   }
-  public isShortHexGuidArray(value: unknown): boolean {
+  public isHexArray(value: unknown): boolean {
     return (
       Array.isArray(value) &&
       value.every((v) => this.isString(v) && /^[0-9a-f]{32}$/i.test(v))

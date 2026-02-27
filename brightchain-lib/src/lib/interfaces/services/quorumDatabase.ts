@@ -9,7 +9,7 @@
  * @see Requirements 9, 10
  */
 
-import { PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { PlatformID } from '@digitaldefiance/ecies-lib';
 import { QuorumDataRecord } from '../../quorumDataRecord';
 import { AliasRecord } from '../aliasRecord';
 import { QuorumAuditLogEntry } from '../auditLogEntry';
@@ -66,7 +66,7 @@ export interface IQuorumDatabase<TID extends PlatformID = Uint8Array> {
    * @param memberId - The member ID
    * @returns The member, or null if not found
    */
-  getMember(memberId: ShortHexGuid): Promise<IQuorumMember<TID> | null>;
+  getMember(memberId: TID): Promise<IQuorumMember<TID> | null>;
 
   /**
    * List all active members in the quorum.
@@ -87,7 +87,7 @@ export interface IQuorumDatabase<TID extends PlatformID = Uint8Array> {
    * @param docId - The document ID
    * @returns The document, or null if not found
    */
-  getDocument(docId: ShortHexGuid): Promise<QuorumDataRecord<TID> | null>;
+  getDocument(docId: TID): Promise<QuorumDataRecord<TID> | null>;
 
   /**
    * List documents sealed under a specific epoch with pagination.
@@ -115,7 +115,7 @@ export interface IQuorumDatabase<TID extends PlatformID = Uint8Array> {
    * @param proposalId - The proposal ID
    * @returns The proposal, or null if not found
    */
-  getProposal(proposalId: ShortHexGuid): Promise<Proposal<TID> | null>;
+  getProposal(proposalId: TID): Promise<Proposal<TID> | null>;
 
   /**
    * Persist a vote.
@@ -128,7 +128,7 @@ export interface IQuorumDatabase<TID extends PlatformID = Uint8Array> {
    * @param proposalId - The proposal ID
    * @returns Array of votes for the proposal
    */
-  getVotesForProposal(proposalId: ShortHexGuid): Promise<Vote<TID>[]>;
+  getVotesForProposal(proposalId: TID): Promise<Vote<TID>[]>;
 
   // === Identity Recovery Records ===
 
@@ -143,15 +143,13 @@ export interface IQuorumDatabase<TID extends PlatformID = Uint8Array> {
    * @param recordId - The record ID
    * @returns The record, or null if not found
    */
-  getIdentityRecord(
-    recordId: ShortHexGuid,
-  ): Promise<IdentityRecoveryRecord<TID> | null>;
+  getIdentityRecord(recordId: TID): Promise<IdentityRecoveryRecord<TID> | null>;
 
   /**
    * Delete an identity recovery record (used by expiration scheduler).
    * @param recordId - The record ID to delete
    */
-  deleteIdentityRecord(recordId: ShortHexGuid): Promise<void>;
+  deleteIdentityRecord(recordId: TID): Promise<void>;
 
   /**
    * List expired identity recovery records with pagination.
@@ -194,13 +192,13 @@ export interface IQuorumDatabase<TID extends PlatformID = Uint8Array> {
    * Append an audit log entry.
    * @param entry - The audit log entry to append
    */
-  appendAuditEntry(entry: QuorumAuditLogEntry): Promise<void>;
+  appendAuditEntry(entry: QuorumAuditLogEntry<TID>): Promise<void>;
 
   /**
    * Get the latest chained audit log entry (needed for chain linking).
    * @returns The latest chained entry, or null if the log is empty
    */
-  getLatestAuditEntry(): Promise<ChainedAuditLogEntry | null>;
+  getLatestAuditEntry(): Promise<ChainedAuditLogEntry<TID> | null>;
 
   // === Redistribution Journal ===
 

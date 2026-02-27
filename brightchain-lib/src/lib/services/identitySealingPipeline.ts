@@ -10,9 +10,9 @@
 
 import {
   ECIESService,
+  HexString,
   hexToUint8Array,
   PlatformID,
-  ShortHexGuid,
   TypedIdProviderWrapper,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
@@ -179,7 +179,7 @@ export class IdentitySealingPipeline<
       const modifiedContent = this.replaceIdentity(content, mode, aliasName);
 
       // 6. Encrypt each shard with the corresponding member's public key via ECIES
-      const encryptedShardsByMemberId = new Map<ShortHexGuid, Uint8Array>();
+      const encryptedShardsByMemberId = new Map<TID, Uint8Array>();
       const encoder = new TextEncoder();
       for (let i = 0; i < memberCount; i++) {
         const memberId = epoch.memberIds[i];
@@ -203,11 +203,11 @@ export class IdentitySealingPipeline<
       const expiresAt = await this.computeExpiresAt(content.contentType, now);
       const recordId = uint8ArrayToHex(
         this.enhancedProvider.toBytes(this.enhancedProvider.generateTyped()),
-      ) as ShortHexGuid;
+      ) as HexString;
 
       const recoveryRecord: IdentityRecoveryRecord<TID> = {
-        id: recordId,
-        contentId: content.contentId,
+        id: recordId as unknown as TID,
+        contentId: content.contentId as unknown as TID,
         contentType: content.contentType,
         encryptedShardsByMemberId,
         memberIds: [...epoch.memberIds],
@@ -256,10 +256,12 @@ export class IdentitySealingPipeline<
    * @throws QuorumError with IdentityPermanentlyUnrecoverable if record not found
    */
   async recoverIdentity(
-    recoveryRecordId: ShortHexGuid,
-    decryptedShares: Map<ShortHexGuid, string>,
+    recoveryRecordId: HexString,
+    decryptedShares: Map<HexString, string>,
   ): Promise<TID> {
-    const record = await this.db.getIdentityRecord(recoveryRecordId);
+    const record = await this.db.getIdentityRecord(
+      recoveryRecordId as unknown as TID,
+    );
     if (!record) {
       throw new QuorumError(QuorumErrorType.IdentityPermanentlyUnrecoverable);
     }

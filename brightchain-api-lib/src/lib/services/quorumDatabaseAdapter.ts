@@ -27,8 +27,9 @@ import {
 } from '@brightchain/brightchain-lib';
 import type { BrightChainDb, BsonDocument } from '@brightchain/db';
 import {
+  HexString,
+  IIdProvider,
   PlatformID,
-  ShortHexGuid,
   SignatureUint8Array,
 } from '@digitaldefiance/ecies-lib';
 
@@ -115,9 +116,7 @@ interface OperationalStateDoc extends BsonDocument {
 
 // ─── Serialization Helpers ──────────────────────────────────────────────────
 
-function serializeMap(
-  map: Map<ShortHexGuid, Uint8Array>,
-): Record<string, string> {
+function serializeMap(map: Map<HexString, Uint8Array>): Record<string, string> {
   const result: Record<string, string> = {};
   for (const [key, value] of map.entries()) {
     result[key] = Buffer.from(value).toString('base64');
@@ -127,10 +126,10 @@ function serializeMap(
 
 function deserializeMap(
   obj: Record<string, string>,
-): Map<ShortHexGuid, Uint8Array> {
-  const map = new Map<ShortHexGuid, Uint8Array>();
+): Map<HexString, Uint8Array> {
+  const map = new Map<HexString, Uint8Array>();
   for (const [key, value] of Object.entries(obj)) {
-    map.set(key as ShortHexGuid, Buffer.from(value, 'base64'));
+    map.set(key as HexString, Buffer.from(value, 'base64'));
   }
   return map;
 }
@@ -184,14 +183,12 @@ function deserializeEpoch<TID extends PlatformID>(
 ): QuorumEpoch<TID> {
   return {
     epochNumber: data['epochNumber'] as number,
-    memberIds: data['memberIds'] as ShortHexGuid[],
+    memberIds: data['memberIds'] as TID[],
     threshold: data['threshold'] as number,
     mode: data['mode'] as QuorumEpoch<TID>['mode'],
     createdAt: new Date(data['createdAt'] as string),
     previousEpochNumber: data['previousEpochNumber'] as number | undefined,
-    innerQuorumMemberIds: data['innerQuorumMemberIds'] as
-      | ShortHexGuid[]
-      | undefined,
+    innerQuorumMemberIds: data['innerQuorumMemberIds'] as TID[] | undefined,
   };
 }
 
@@ -199,9 +196,10 @@ function deserializeEpoch<TID extends PlatformID>(
 
 function serializeMember<TID extends PlatformID>(
   member: IQuorumMember<TID>,
+  idProvider: IIdProvider<TID>,
 ): Record<string, unknown> {
   return {
-    id: member.id,
+    id: idProvider.idToString(member.id),
     publicKey: serializeUint8Array(member.publicKey),
     metadata: member.metadata,
     isActive: member.isActive,
@@ -212,9 +210,15 @@ function serializeMember<TID extends PlatformID>(
 
 function deserializeMember<TID extends PlatformID>(
   data: Record<string, unknown>,
+  idProvider: IIdProvider<TID>,
 ): IQuorumMember<TID> {
+  const rawId = data['id'];
+  const id = idProvider.parseSafe(String(rawId));
+  if (id === undefined) {
+    throw new Error(`Invalid member ID in stored document: ${rawId}`);
+  }
   return {
-    id: data['id'] as ShortHexGuid,
+    id,
     publicKey: deserializeUint8Array(data['publicKey'] as string),
     metadata: data['metadata'] as IQuorumMember<TID>['metadata'],
     isActive: data['isActive'] as boolean,
@@ -227,13 +231,14 @@ function deserializeMember<TID extends PlatformID>(
 
 function serializeProposal<TID extends PlatformID>(
   proposal: Proposal<TID>,
+  idProvider: IIdProvider<TID>,
 ): Record<string, unknown> {
   return {
-    id: proposal.id,
+    id: idProvider.idToString(proposal.id),
     description: proposal.description,
     actionType: proposal.actionType,
     actionPayload: proposal.actionPayload,
-    proposerMemberId: proposal.proposerMemberId,
+    proposerMemberId: idProvider.idToString(proposal.proposerMemberId),
     status: proposal.status,
     requiredThreshold: proposal.requiredThreshold,
     expiresAt: proposal.expiresAt.toISOString(),
@@ -245,13 +250,26 @@ function serializeProposal<TID extends PlatformID>(
 
 function deserializeProposal<TID extends PlatformID>(
   data: Record<string, unknown>,
+  idProvider: IIdProvider<TID>,
 ): Proposal<TID> {
+  const rawId = data['id'];
+  const id = idProvider.parseSafe(String(rawId));
+  if (id === undefined) {
+    throw new Error(`Invalid proposal ID in stored document: ${rawId}`);
+  }
+  const rawProposerId = data['proposerMemberId'];
+  const proposerMemberId = idProvider.parseSafe(String(rawProposerId));
+  if (proposerMemberId === undefined) {
+    throw new Error(
+      `Invalid proposerMemberId in stored document: ${rawProposerId}`,
+    );
+  }
   return {
-    id: data['id'] as ShortHexGuid,
+    id,
     description: data['description'] as string,
     actionType: data['actionType'] as Proposal<TID>['actionType'],
     actionPayload: data['actionPayload'] as Record<string, unknown>,
-    proposerMemberId: data['proposerMemberId'] as ShortHexGuid,
+    proposerMemberId,
     status: data['status'] as Proposal<TID>['status'],
     requiredThreshold: data['requiredThreshold'] as number,
     expiresAt: new Date(data['expiresAt'] as string),
@@ -265,10 +283,11 @@ function deserializeProposal<TID extends PlatformID>(
 
 function serializeVote<TID extends PlatformID>(
   vote: Vote<TID>,
+  idProvider: IIdProvider<TID>,
 ): Record<string, unknown> {
   return {
-    proposalId: vote.proposalId,
-    voterMemberId: vote.voterMemberId,
+    proposalId: idProvider.idToString(vote.proposalId),
+    voterMemberId: idProvider.idToString(vote.voterMemberId),
     decision: vote.decision,
     comment: vote.comment,
     encryptedShare: vote.encryptedShare
@@ -280,10 +299,21 @@ function serializeVote<TID extends PlatformID>(
 
 function deserializeVote<TID extends PlatformID>(
   data: Record<string, unknown>,
+  idProvider: IIdProvider<TID>,
 ): Vote<TID> {
+  const rawProposalId = data['proposalId'];
+  const proposalId = idProvider.parseSafe(String(rawProposalId));
+  if (proposalId === undefined) {
+    throw new Error(`Invalid proposalId in stored vote: ${rawProposalId}`);
+  }
+  const rawVoterId = data['voterMemberId'];
+  const voterMemberId = idProvider.parseSafe(String(rawVoterId));
+  if (voterMemberId === undefined) {
+    throw new Error(`Invalid voterMemberId in stored vote: ${rawVoterId}`);
+  }
   return {
-    proposalId: data['proposalId'] as ShortHexGuid,
-    voterMemberId: data['voterMemberId'] as ShortHexGuid,
+    proposalId,
+    voterMemberId,
     decision: data['decision'] as Vote<TID>['decision'],
     comment: data['comment'] as string | undefined,
     encryptedShare: data['encryptedShare']
@@ -297,13 +327,16 @@ function deserializeVote<TID extends PlatformID>(
 
 function serializeIdentityRecord<TID extends PlatformID>(
   record: IdentityRecoveryRecord<TID>,
+  idProvider: IIdProvider<TID>,
 ): Record<string, unknown> {
   return {
-    id: record.id,
-    contentId: record.contentId,
+    id: idProvider.idToString(record.id),
+    contentId: idProvider.idToString(record.contentId),
     contentType: record.contentType,
-    encryptedShardsByMemberId: serializeMap(record.encryptedShardsByMemberId),
-    memberIds: record.memberIds,
+    encryptedShardsByMemberId: serializeMap(
+      record.encryptedShardsByMemberId as unknown as Map<HexString, Uint8Array>,
+    ),
+    memberIds: record.memberIds.map((mid) => idProvider.idToString(mid)),
     threshold: record.threshold,
     epochNumber: record.epochNumber,
     expiresAt: record.expiresAt.toISOString(),
@@ -315,15 +348,38 @@ function serializeIdentityRecord<TID extends PlatformID>(
 
 function deserializeIdentityRecord<TID extends PlatformID>(
   data: Record<string, unknown>,
+  idProvider: IIdProvider<TID>,
 ): IdentityRecoveryRecord<TID> {
+  const rawId = data['id'];
+  const id = idProvider.parseSafe(String(rawId));
+  if (id === undefined) {
+    throw new Error(`Invalid identity record ID in stored document: ${rawId}`);
+  }
+  const rawContentId = data['contentId'];
+  const contentId = idProvider.parseSafe(String(rawContentId));
+  if (contentId === undefined) {
+    throw new Error(
+      `Invalid contentId in stored identity record: ${rawContentId}`,
+    );
+  }
+  const rawMemberIds = data['memberIds'] as string[];
+  const memberIds: TID[] = rawMemberIds.map((rawMid, i) => {
+    const mid = idProvider.parseSafe(String(rawMid));
+    if (mid === undefined) {
+      throw new Error(
+        `Invalid memberIds[${i}] in stored identity record: ${rawMid}`,
+      );
+    }
+    return mid;
+  });
   return {
-    id: data['id'] as ShortHexGuid,
-    contentId: data['contentId'] as ShortHexGuid,
+    id,
+    contentId,
     contentType: data['contentType'] as string,
     encryptedShardsByMemberId: deserializeMap(
       data['encryptedShardsByMemberId'] as Record<string, string>,
-    ),
-    memberIds: data['memberIds'] as ShortHexGuid[],
+    ) as unknown as Map<TID, Uint8Array>,
+    memberIds,
     threshold: data['threshold'] as number,
     epochNumber: data['epochNumber'] as number,
     expiresAt: new Date(data['expiresAt'] as string),
@@ -339,12 +395,15 @@ function deserializeIdentityRecord<TID extends PlatformID>(
 
 function serializeAlias<TID extends PlatformID>(
   alias: AliasRecord<TID>,
+  idProvider: IIdProvider<TID>,
 ): Record<string, unknown> {
   return {
     aliasName: alias.aliasName,
-    ownerMemberId: alias.ownerMemberId,
+    ownerMemberId: idProvider.idToString(alias.ownerMemberId),
     aliasPublicKey: serializeUint8Array(alias.aliasPublicKey),
-    identityRecoveryRecordId: alias.identityRecoveryRecordId,
+    identityRecoveryRecordId: idProvider.idToString(
+      alias.identityRecoveryRecordId,
+    ),
     isActive: alias.isActive,
     registeredAt: alias.registeredAt.toISOString(),
     deactivatedAt: alias.deactivatedAt?.toISOString(),
@@ -354,12 +413,25 @@ function serializeAlias<TID extends PlatformID>(
 
 function deserializeAlias<TID extends PlatformID>(
   data: Record<string, unknown>,
+  idProvider: IIdProvider<TID>,
 ): AliasRecord<TID> {
+  const rawOwnerId = data['ownerMemberId'];
+  const ownerMemberId = idProvider.parseSafe(String(rawOwnerId));
+  if (ownerMemberId === undefined) {
+    throw new Error(`Invalid ownerMemberId in stored alias: ${rawOwnerId}`);
+  }
+  const rawRecordId = data['identityRecoveryRecordId'];
+  const identityRecoveryRecordId = idProvider.parseSafe(String(rawRecordId));
+  if (identityRecoveryRecordId === undefined) {
+    throw new Error(
+      `Invalid identityRecoveryRecordId in stored alias: ${rawRecordId}`,
+    );
+  }
   return {
     aliasName: data['aliasName'] as string,
-    ownerMemberId: data['ownerMemberId'] as ShortHexGuid,
+    ownerMemberId,
     aliasPublicKey: deserializeUint8Array(data['aliasPublicKey'] as string),
-    identityRecoveryRecordId: data['identityRecoveryRecordId'] as ShortHexGuid,
+    identityRecoveryRecordId,
     isActive: data['isActive'] as boolean,
     registeredAt: new Date(data['registeredAt'] as string),
     deactivatedAt: data['deactivatedAt']
@@ -371,21 +443,31 @@ function deserializeAlias<TID extends PlatformID>(
 
 // ─── AuditLogEntry Serialization ────────────────────────────────────────────
 
-function serializeAuditEntry(
-  entry: QuorumAuditLogEntry,
+function serializeAuditEntry<TID extends PlatformID>(
+  entry: QuorumAuditLogEntry<TID>,
+  idProvider: IIdProvider<TID>,
 ): Record<string, unknown> {
   const base: Record<string, unknown> = {
-    id: entry.id,
+    id: idProvider.idToString(entry.id),
     eventType: entry.eventType,
-    proposalId: entry.proposalId,
-    targetMemberId: entry.targetMemberId,
-    proposerMemberId: entry.proposerMemberId,
+    proposalId:
+      entry.proposalId !== undefined
+        ? idProvider.idToString(entry.proposalId)
+        : undefined,
+    targetMemberId:
+      entry.targetMemberId !== undefined
+        ? idProvider.idToString(entry.targetMemberId)
+        : undefined,
+    proposerMemberId:
+      entry.proposerMemberId !== undefined
+        ? idProvider.idToString(entry.proposerMemberId)
+        : undefined,
     attachmentCblId: entry.attachmentCblId,
     details: entry.details,
     timestamp: entry.timestamp.toISOString(),
   };
   // If this is a ChainedAuditLogEntry, also serialize chain fields
-  const chained = entry as Partial<ChainedAuditLogEntry>;
+  const chained = entry as Partial<ChainedAuditLogEntry<TID>>;
   if (chained.contentHash !== undefined) {
     base['previousEntryHash'] = chained.previousEntryHash;
     base['contentHash'] = chained.contentHash;
@@ -398,15 +480,30 @@ function serializeAuditEntry(
   return base;
 }
 
-function deserializeChainedAuditEntry(
+function deserializeChainedAuditEntry<TID extends PlatformID>(
   data: Record<string, unknown>,
-): ChainedAuditLogEntry {
+  idProvider: IIdProvider<TID>,
+): ChainedAuditLogEntry<TID> {
+  const rawId = data['id'];
+  const id = idProvider.parseSafe(String(rawId));
+  if (id === undefined) {
+    throw new Error(`Invalid audit entry ID in stored document: ${rawId}`);
+  }
+  // Optional TID fields — validate if present
+  const parseOptionalId = (raw: unknown): TID | undefined => {
+    if (raw === undefined || raw === null) return undefined;
+    const parsed = idProvider.parseSafe(String(raw));
+    if (parsed === undefined) {
+      throw new Error(`Invalid optional ID in stored audit entry: ${raw}`);
+    }
+    return parsed;
+  };
   return {
-    id: data['id'] as ShortHexGuid,
-    eventType: data['eventType'] as ChainedAuditLogEntry['eventType'],
-    proposalId: data['proposalId'] as ShortHexGuid | undefined,
-    targetMemberId: data['targetMemberId'] as ShortHexGuid | undefined,
-    proposerMemberId: data['proposerMemberId'] as ShortHexGuid | undefined,
+    id,
+    eventType: data['eventType'] as ChainedAuditLogEntry<TID>['eventType'],
+    proposalId: parseOptionalId(data['proposalId']),
+    targetMemberId: parseOptionalId(data['targetMemberId']),
+    proposerMemberId: parseOptionalId(data['proposerMemberId']),
     attachmentCblId: data['attachmentCblId'] as string | undefined,
     details: data['details'] as Record<string, unknown>,
     timestamp: new Date(data['timestamp'] as string),
@@ -438,9 +535,9 @@ function deserializeJournalEntry(
   data: Record<string, unknown>,
 ): RedistributionJournalEntry {
   return {
-    documentId: data['documentId'] as ShortHexGuid,
+    documentId: data['documentId'] as HexString,
     oldShares: deserializeMap(data['oldShares'] as Record<string, string>),
-    oldMemberIds: data['oldMemberIds'] as ShortHexGuid[],
+    oldMemberIds: data['oldMemberIds'] as HexString[],
     oldThreshold: data['oldThreshold'] as number,
     oldEpoch: data['oldEpoch'] as number,
   };
@@ -504,9 +601,11 @@ export class QuorumDatabaseAdapter<
   TID extends PlatformID = Uint8Array,
 > implements IQuorumDatabase<TID> {
   private readonly db: BrightChainDb;
+  private readonly idProvider: IIdProvider<TID>;
 
-  constructor(db: BrightChainDb) {
+  constructor(db: BrightChainDb, idProvider: IIdProvider<TID>) {
     this.db = db;
+    this.idProvider = idProvider;
   }
 
   // === Epoch Management ===
@@ -553,37 +652,41 @@ export class QuorumDatabaseAdapter<
 
   async saveMember(member: IQuorumMember<TID>): Promise<void> {
     const col = this.db.collection<MemberDoc>(COLLECTION_MEMBERS);
-    const existing = await col.findOne({ memberId: member.id });
+    const serializedId = this.idProvider.idToString(member.id);
+    const existing = await col.findOne({ memberId: serializedId });
     if (existing) {
       await col.updateOne(
-        { memberId: member.id },
+        { memberId: serializedId },
         {
           $set: {
             isActive: member.isActive,
-            data: serializeMember(member),
+            data: serializeMember(member, this.idProvider),
           },
         },
       );
     } else {
       await col.insertOne({
-        memberId: member.id,
+        memberId: serializedId,
         isActive: member.isActive,
-        data: serializeMember(member),
+        data: serializeMember(member, this.idProvider),
       });
     }
   }
 
-  async getMember(memberId: ShortHexGuid): Promise<IQuorumMember<TID> | null> {
+  async getMember(memberId: TID): Promise<IQuorumMember<TID> | null> {
     const col = this.db.collection<MemberDoc>(COLLECTION_MEMBERS);
-    const doc = await col.findOne({ memberId });
+    const serializedId = this.idProvider.idToString(memberId);
+    const doc = await col.findOne({ memberId: serializedId });
     if (!doc) return null;
-    return deserializeMember<TID>(doc.data);
+    return deserializeMember<TID>(doc.data, this.idProvider);
   }
 
   async listActiveMembers(): Promise<IQuorumMember<TID>[]> {
     const col = this.db.collection<MemberDoc>(COLLECTION_MEMBERS);
     const docs = await col.find({ isActive: true }).toArray();
-    return docs.map((doc: MemberDoc) => deserializeMember<TID>(doc.data));
+    return docs.map((doc: MemberDoc) =>
+      deserializeMember<TID>(doc.data, this.idProvider),
+    );
   }
 
   // === Sealed Documents ===
@@ -612,11 +715,10 @@ export class QuorumDatabaseAdapter<
     }
   }
 
-  async getDocument(
-    docId: ShortHexGuid,
-  ): Promise<QuorumDataRecord<TID> | null> {
+  async getDocument(docId: TID): Promise<QuorumDataRecord<TID> | null> {
     const col = this.db.collection<DocumentDoc>(COLLECTION_DOCUMENTS);
-    const doc = await col.findOne({ docId });
+    const serializedId = this.idProvider.idToString(docId);
+    const doc = await col.findOne({ docId: serializedId });
     if (!doc) return null;
     // Return the stored DTO data — callers use QuorumDataRecord.fromDto
     // to reconstruct the full object with crypto services.
@@ -643,54 +745,61 @@ export class QuorumDatabaseAdapter<
 
   async saveProposal(proposal: Proposal<TID>): Promise<void> {
     const col = this.db.collection<ProposalDoc>(COLLECTION_PROPOSALS);
-    const existing = await col.findOne({ proposalId: proposal.id });
+    const serializedId = this.idProvider.idToString(proposal.id);
+    const existing = await col.findOne({ proposalId: serializedId });
     if (existing) {
       await col.updateOne(
-        { proposalId: proposal.id },
-        { $set: { data: serializeProposal(proposal) } },
+        { proposalId: serializedId },
+        { $set: { data: serializeProposal(proposal, this.idProvider) } },
       );
     } else {
       await col.insertOne({
-        proposalId: proposal.id,
-        data: serializeProposal(proposal),
+        proposalId: serializedId,
+        data: serializeProposal(proposal, this.idProvider),
       });
     }
   }
 
-  async getProposal(proposalId: ShortHexGuid): Promise<Proposal<TID> | null> {
+  async getProposal(proposalId: TID): Promise<Proposal<TID> | null> {
     const col = this.db.collection<ProposalDoc>(COLLECTION_PROPOSALS);
-    const doc = await col.findOne({ proposalId });
+    const serializedId = this.idProvider.idToString(proposalId);
+    const doc = await col.findOne({ proposalId: serializedId });
     if (!doc) return null;
-    return deserializeProposal<TID>(doc.data);
+    return deserializeProposal<TID>(doc.data, this.idProvider);
   }
 
   async saveVote(vote: Vote<TID>): Promise<void> {
     const col = this.db.collection<VoteDoc>(COLLECTION_VOTES);
+    const serializedProposalId = this.idProvider.idToString(vote.proposalId);
+    const serializedVoterId = this.idProvider.idToString(vote.voterMemberId);
     const existing = await col.findOne({
-      proposalId: vote.proposalId,
-      voterMemberId: vote.voterMemberId,
+      proposalId: serializedProposalId,
+      voterMemberId: serializedVoterId,
     });
     if (existing) {
       await col.updateOne(
         {
-          proposalId: vote.proposalId,
-          voterMemberId: vote.voterMemberId,
+          proposalId: serializedProposalId,
+          voterMemberId: serializedVoterId,
         },
-        { $set: { data: serializeVote(vote) } },
+        { $set: { data: serializeVote(vote, this.idProvider) } },
       );
     } else {
       await col.insertOne({
-        proposalId: vote.proposalId,
-        voterMemberId: vote.voterMemberId,
-        data: serializeVote(vote),
+        proposalId: serializedProposalId,
+        voterMemberId: serializedVoterId,
+        data: serializeVote(vote, this.idProvider),
       });
     }
   }
 
-  async getVotesForProposal(proposalId: ShortHexGuid): Promise<Vote<TID>[]> {
+  async getVotesForProposal(proposalId: TID): Promise<Vote<TID>[]> {
     const col = this.db.collection<VoteDoc>(COLLECTION_VOTES);
-    const docs = await col.find({ proposalId }).toArray();
-    return docs.map((d: VoteDoc) => deserializeVote<TID>(d.data));
+    const serializedId = this.idProvider.idToString(proposalId);
+    const docs = await col.find({ proposalId: serializedId }).toArray();
+    return docs.map((d: VoteDoc) =>
+      deserializeVote<TID>(d.data, this.idProvider),
+    );
   }
 
   // === Identity Recovery Records ===
@@ -699,42 +808,45 @@ export class QuorumDatabaseAdapter<
     const col = this.db.collection<IdentityRecordDoc>(
       COLLECTION_IDENTITY_RECORDS,
     );
-    const existing = await col.findOne({ recordId: record.id });
+    const serializedId = this.idProvider.idToString(record.id);
+    const existing = await col.findOne({ recordId: serializedId });
     if (existing) {
       await col.updateOne(
-        { recordId: record.id },
+        { recordId: serializedId },
         {
           $set: {
             expiresAt: record.expiresAt.toISOString(),
-            data: serializeIdentityRecord(record),
+            data: serializeIdentityRecord(record, this.idProvider),
           },
         },
       );
     } else {
       await col.insertOne({
-        recordId: record.id,
+        recordId: serializedId,
         expiresAt: record.expiresAt.toISOString(),
-        data: serializeIdentityRecord(record),
+        data: serializeIdentityRecord(record, this.idProvider),
       });
     }
   }
 
   async getIdentityRecord(
-    recordId: ShortHexGuid,
+    recordId: TID,
   ): Promise<IdentityRecoveryRecord<TID> | null> {
     const col = this.db.collection<IdentityRecordDoc>(
       COLLECTION_IDENTITY_RECORDS,
     );
-    const doc = await col.findOne({ recordId });
+    const serializedId = this.idProvider.idToString(recordId);
+    const doc = await col.findOne({ recordId: serializedId });
     if (!doc) return null;
-    return deserializeIdentityRecord<TID>(doc.data);
+    return deserializeIdentityRecord<TID>(doc.data, this.idProvider);
   }
 
-  async deleteIdentityRecord(recordId: ShortHexGuid): Promise<void> {
+  async deleteIdentityRecord(recordId: TID): Promise<void> {
     const col = this.db.collection<IdentityRecordDoc>(
       COLLECTION_IDENTITY_RECORDS,
     );
-    await col.deleteOne({ recordId });
+    const serializedId = this.idProvider.idToString(recordId);
+    await col.deleteOne({ recordId: serializedId });
   }
 
   async listExpiredIdentityRecords(
@@ -757,7 +869,7 @@ export class QuorumDatabaseAdapter<
     const start = page * pageSize;
     const paged = expired.slice(start, start + pageSize);
     return paged.map((d: IdentityRecordDoc) =>
-      deserializeIdentityRecord<TID>(d.data),
+      deserializeIdentityRecord<TID>(d.data, this.idProvider),
     );
   }
 
@@ -772,7 +884,7 @@ export class QuorumDatabaseAdapter<
         {
           $set: {
             isActive: alias.isActive,
-            data: serializeAlias(alias),
+            data: serializeAlias(alias, this.idProvider),
           },
         },
       );
@@ -780,7 +892,7 @@ export class QuorumDatabaseAdapter<
       await col.insertOne({
         aliasName: alias.aliasName,
         isActive: alias.isActive,
-        data: serializeAlias(alias),
+        data: serializeAlias(alias, this.idProvider),
       });
     }
   }
@@ -789,7 +901,7 @@ export class QuorumDatabaseAdapter<
     const col = this.db.collection<AliasDoc>(COLLECTION_ALIASES);
     const doc = await col.findOne({ aliasName });
     if (!doc) return null;
-    return deserializeAlias<TID>(doc.data);
+    return deserializeAlias<TID>(doc.data, this.idProvider);
   }
 
   async isAliasAvailable(aliasName: string): Promise<boolean> {
@@ -801,20 +913,20 @@ export class QuorumDatabaseAdapter<
 
   // === Audit Log ===
 
-  async appendAuditEntry(entry: QuorumAuditLogEntry): Promise<void> {
+  async appendAuditEntry(entry: QuorumAuditLogEntry<TID>): Promise<void> {
     const col = this.db.collection<AuditLogDoc>(COLLECTION_AUDIT_LOG);
     await col.insertOne({
-      entryId: entry.id,
+      entryId: this.idProvider.idToString(entry.id),
       timestamp: entry.timestamp.toISOString(),
-      data: serializeAuditEntry(entry),
+      data: serializeAuditEntry(entry, this.idProvider),
     });
   }
 
-  async getLatestAuditEntry(): Promise<ChainedAuditLogEntry | null> {
+  async getLatestAuditEntry(): Promise<ChainedAuditLogEntry<TID> | null> {
     const col = this.db.collection<AuditLogDoc>(COLLECTION_AUDIT_LOG);
     const docs = await col.find({}).sort({ timestamp: -1 }).limit(1).toArray();
     if (docs.length === 0) return null;
-    return deserializeChainedAuditEntry(docs[0].data);
+    return deserializeChainedAuditEntry<TID>(docs[0].data, this.idProvider);
   }
 
   // === Redistribution Journal ===

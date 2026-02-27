@@ -6,6 +6,10 @@ import {
   GossipConfig,
   MessageDeliveryMetadata,
 } from '../../interfaces/availability/gossipService';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 /**
  * Property tests for Message Receipt Triggers Correct Ack
@@ -69,7 +73,7 @@ describe('Feature: unified-gossip-delivery, Property 6: Message receipt triggers
 
         const ackAnnouncement: BlockAnnouncement = {
           type: 'ack',
-          blockId: ackMetadata.messageId,
+          blockId: bid(ackMetadata.messageId),
           nodeId: localNodeId,
           timestamp: new Date(),
           ttl: config.defaultTtl,
@@ -96,8 +100,10 @@ describe('Feature: unified-gossip-delivery, Property 6: Message receipt triggers
       messageId: nonEmptyStringArb,
       recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
       priority: fc.constantFrom('normal' as const, 'high' as const),
-      blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-      cblBlockId: nonEmptyStringArb,
+      blockIds: fc
+        .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+        .map((arr) => arr.map((s) => bid(s))),
+      cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
       ackRequired: fc.constant(true),
     });
 
@@ -107,14 +113,16 @@ describe('Feature: unified-gossip-delivery, Property 6: Message receipt triggers
       messageId: nonEmptyStringArb,
       recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
       priority: fc.constantFrom('normal' as const, 'high' as const),
-      blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-      cblBlockId: nonEmptyStringArb,
+      blockIds: fc
+        .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+        .map((arr) => arr.map((s) => bid(s))),
+      cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
       ackRequired: fc.constant(false),
     });
 
   /** Generates the base fields common to all BlockAnnouncements */
   const baseAnnouncementFieldsArb = fc.record({
-    blockId: nonEmptyStringArb,
+    blockId: nonEmptyStringArb.map((s) => bid(s)),
     nodeId: nonEmptyStringArb,
     timestamp: fc.date(),
     ttl: fc.integer({ min: 1, max: 10 }),
@@ -184,8 +192,8 @@ describe('Feature: unified-gossip-delivery, Property 6: Message receipt triggers
           messageId,
           recipientIds: finalRecipients,
           priority,
-          blockIds,
-          cblBlockId,
+          blockIds: blockIds.map((s) => bid(s)),
+          cblBlockId: bid(cblBlockId),
           ackRequired: true,
         };
 
@@ -640,7 +648,7 @@ describe('Feature: unified-gossip-delivery, Property 7: Non-local recipients for
 
           const ackAnnouncement: BlockAnnouncement = {
             type: 'ack',
-            blockId: ackMetadata.messageId,
+            blockId: bid(ackMetadata.messageId),
             nodeId: localNodeId,
             timestamp: new Date(),
             ttl: config.defaultTtl,
@@ -680,14 +688,16 @@ describe('Feature: unified-gossip-delivery, Property 7: Non-local recipients for
     messageId: nonEmptyStringArb,
     recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
     priority: fc.constantFrom('normal' as const, 'high' as const),
-    blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-    cblBlockId: nonEmptyStringArb,
+    blockIds: fc
+      .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+      .map((arr) => arr.map((s) => bid(s))),
+    cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
     ackRequired: fc.boolean(),
   });
 
   /** Generates the base fields common to all BlockAnnouncements */
   const baseAnnouncementFieldsArb = fc.record({
-    blockId: nonEmptyStringArb,
+    blockId: nonEmptyStringArb.map((s) => bid(s)),
     nodeId: nonEmptyStringArb,
     timestamp: fc.date(),
     ttl: fc.integer({ min: 1, max: 10 }),

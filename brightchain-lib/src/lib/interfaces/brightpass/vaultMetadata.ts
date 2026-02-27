@@ -1,3 +1,4 @@
+import type { BlockId } from '../branded/primitives/blockId';
 import { EntryPropertyRecord } from './entryPropertyRecord';
 import { VaultEntryType } from './vaultEntry';
 
@@ -9,7 +10,7 @@ export interface VaultMetadata {
   updatedAt: Date;
   entryCount: number;
   sharedWith: string[];
-  vcblBlockId: string;
+  vcblBlockId: BlockId;
 }
 
 export interface DecryptedVault {

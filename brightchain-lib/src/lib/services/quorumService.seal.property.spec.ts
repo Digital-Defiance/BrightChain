@@ -16,7 +16,6 @@ import {
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
 import { SealingErrorType } from '../enumerations/sealingErrorType';
@@ -91,7 +90,7 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
 
             // Create 3 members (minimum for meaningful quorum)
             const memberData: IMemberWithMnemonic<GuidV4Uint8Array>[] = [];
-            const memberIds: ShortHexGuid[] = [];
+            const memberIds: GuidV4Uint8Array[] = [];
 
             for (let i = 0; i < 3; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;
@@ -156,7 +155,7 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
 
             // Create 4 members
             const memberData: IMemberWithMnemonic<GuidV4Uint8Array>[] = [];
-            const memberIds: ShortHexGuid[] = [];
+            const memberIds: GuidV4Uint8Array[] = [];
 
             for (let i = 0; i < 4; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;
@@ -236,7 +235,7 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
 
             // Create 3 members
             const memberData: IMemberWithMnemonic<GuidV4Uint8Array>[] = [];
-            const memberIds: ShortHexGuid[] = [];
+            const memberIds: GuidV4Uint8Array[] = [];
 
             for (let i = 0; i < 3; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;
@@ -305,7 +304,7 @@ describe('QuorumService Seal/Unseal Property Tests', () => {
 
             // Create 2 members (minimum)
             const memberData: IMemberWithMnemonic<GuidV4Uint8Array>[] = [];
-            const memberIds: ShortHexGuid[] = [];
+            const memberIds: GuidV4Uint8Array[] = [];
 
             for (let i = 0; i < 2; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;

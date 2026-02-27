@@ -34,6 +34,7 @@ import {
   validateDocument,
   ValidationError,
 } from '@brightchain/db';
+import type { IIdProvider } from '@digitaldefiance/ecies-lib';
 import { Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
 import {
@@ -123,9 +124,9 @@ function validateDocumentSafe(
 function buildCandidateEntries<TID extends PlatformID>(
   input: IBrightChainMemberInitInput<TID>,
   poolId: string,
+  idProvider: IIdProvider<TID>,
 ): IMemberIndexDocument[] {
   const now = new Date().toISOString();
-  const idProvider = getEnhancedNodeIdProvider<TID>();
   return [input.systemUser, input.adminUser, input.memberUser].map((user) => ({
     id: idProvider.idToString(user.id),
     // Zero-filled sentinel — replaced when the member's actual CBL blocks are written
@@ -220,7 +221,12 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     const db = this._db;
 
     // Step 4: build candidates
-    const candidates = buildCandidateEntries<TID>(input, config.memberPoolName);
+    const idProvider = getEnhancedNodeIdProvider<TID>();
+    const candidates = buildCandidateEntries<TID>(
+      input,
+      config.memberPoolName,
+      idProvider,
+    );
 
     // Step 5: validate before touching the DB
     for (const candidate of candidates) {

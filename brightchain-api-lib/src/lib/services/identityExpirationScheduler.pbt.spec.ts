@@ -18,12 +18,56 @@ import {
   QuorumErrorType,
   StatuteOfLimitationsConfig,
 } from '@brightchain/brightchain-lib';
-import { ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString, ShortHexGuid } from '@digitaldefiance/ecies-lib';
 import * as fc from 'fast-check';
 import { IdentityExpirationScheduler } from './identityExpirationScheduler';
 
 // Set a longer timeout for property-based tests
 jest.setTimeout(120000);
+
+/**
+ * Minimal mock IIdProvider<HexString> for PBT tests.
+ * Generates 32-char hex IDs matching ShortHexGuid format.
+ */
+const mockIdProvider = {
+  byteLength: 16,
+  name: 'MockHexProvider',
+  generate(): Uint8Array {
+    const bytes = new Uint8Array(16);
+    for (let i = 0; i < 16; i++) bytes[i] = Math.floor(Math.random() * 256);
+    return bytes;
+  },
+  validate(id: Uint8Array): boolean {
+    return id.length === 16;
+  },
+  serialize(id: Uint8Array): string {
+    return Buffer.from(id).toString('hex');
+  },
+  deserialize(str: string): Uint8Array {
+    return new Uint8Array(Buffer.from(str, 'hex'));
+  },
+  toBytes(id: HexString): Uint8Array {
+    return new Uint8Array(Buffer.from(id, 'hex'));
+  },
+  fromBytes(bytes: Uint8Array): HexString {
+    return Buffer.from(bytes).toString('hex') as HexString;
+  },
+  equals(a: HexString, b: HexString): boolean {
+    return a === b;
+  },
+  clone(id: HexString): HexString {
+    return id;
+  },
+  idToString(id: HexString): string {
+    return id;
+  },
+  idFromString(str: string): HexString {
+    return str as HexString;
+  },
+  parseSafe(str: string): HexString | undefined {
+    return /^[0-9a-f]{32}$/.test(str) ? (str as HexString) : undefined;
+  },
+};
 
 /**
  * Creates a minimal mock IQuorumDatabase with in-memory identity record storage.
@@ -195,10 +239,15 @@ describe('P11: Temporal Expiration Permanence', () => {
           }
 
           // Run the expiration scheduler
-          const scheduler = new IdentityExpirationScheduler(db, undefined, {
-            intervalMs: 86400000,
-            batchSize: 100,
-          });
+          const scheduler = new IdentityExpirationScheduler(
+            db,
+            undefined,
+            {
+              intervalMs: 86400000,
+              batchSize: 100,
+            },
+            mockIdProvider,
+          );
           const result = await scheduler.runOnce();
 
           // All records should be deleted
@@ -234,10 +283,15 @@ describe('P11: Temporal Expiration Permanence', () => {
         await db.saveIdentityRecord(record);
 
         // Run the expiration scheduler
-        const scheduler = new IdentityExpirationScheduler(db, undefined, {
-          intervalMs: 86400000,
-          batchSize: 100,
-        });
+        const scheduler = new IdentityExpirationScheduler(
+          db,
+          undefined,
+          {
+            intervalMs: 86400000,
+            batchSize: 100,
+          },
+          mockIdProvider,
+        );
         await scheduler.runOnce();
 
         // Simulate the IDENTITY_DISCLOSURE check from QuorumStateMachine
@@ -288,10 +342,15 @@ describe('P11: Temporal Expiration Permanence', () => {
             await db.saveIdentityRecord(record);
           }
 
-          const scheduler = new IdentityExpirationScheduler(db, undefined, {
-            intervalMs: 86400000,
-            batchSize: 100,
-          });
+          const scheduler = new IdentityExpirationScheduler(
+            db,
+            undefined,
+            {
+              intervalMs: 86400000,
+              batchSize: 100,
+            },
+            mockIdProvider,
+          );
           await scheduler.runOnce();
 
           // One audit entry per deleted record
@@ -331,10 +390,15 @@ describe('P11: Temporal Expiration Permanence', () => {
           await db.saveIdentityRecord(record);
         }
 
-        const scheduler = new IdentityExpirationScheduler(db, undefined, {
-          intervalMs: 86400000,
-          batchSize,
-        });
+        const scheduler = new IdentityExpirationScheduler(
+          db,
+          undefined,
+          {
+            intervalMs: 86400000,
+            batchSize,
+          },
+          mockIdProvider,
+        );
         const result = await scheduler.runOnce();
 
         expect(result.nextBatchAvailable).toBe(true);

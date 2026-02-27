@@ -12,8 +12,8 @@
 
 import {
   ECIESService,
+  HexString,
   PlatformID,
-  ShortHexGuid,
   SignatureUint8Array,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
@@ -26,8 +26,8 @@ import {
   IdentityMode,
 } from '../interfaces/contentWithIdentity';
 import {
-  IIdentityValidator,
   IdentityValidationResult,
+  IIdentityValidator,
 } from '../interfaces/services/identityValidator';
 import { IMembershipProofService } from '../interfaces/services/membershipProof';
 import { IQuorumDatabase } from '../interfaces/services/quorumDatabase';
@@ -98,7 +98,7 @@ export class IdentityValidator<
     // 2. Determine identity mode from recovery record if present
     if (content.identityRecoveryRecordId) {
       const record = await this.db.getIdentityRecord(
-        content.identityRecoveryRecordId,
+        content.identityRecoveryRecordId as unknown as TID,
       );
       if (
         record &&
@@ -110,7 +110,7 @@ export class IdentityValidator<
     }
 
     // 3. Default: real identity validation
-    const creatorHex = uint8ArrayToHex(creatorIdBytes) as ShortHexGuid;
+    const creatorHex = uint8ArrayToHex(creatorIdBytes) as HexString;
     return this.validateRealIdentity(content, creatorHex);
   }
 
@@ -123,9 +123,9 @@ export class IdentityValidator<
    */
   private async validateRealIdentity(
     content: ContentWithIdentity<TID>,
-    memberId: ShortHexGuid,
+    memberId: HexString,
   ): Promise<IdentityValidationResult> {
-    const member = await this.db.getMember(memberId);
+    const member = await this.db.getMember(memberId as unknown as TID);
 
     if (!member || !member.isActive) {
       throw new IdentityValidationError(
@@ -206,7 +206,9 @@ export class IdentityValidator<
     return {
       valid: true,
       identityMode: IdentityMode.Alias,
-      resolvedMemberId: alias.ownerMemberId,
+      resolvedMemberId: uint8ArrayToHex(
+        this.toBytes(alias.ownerMemberId as TID),
+      ) as HexString,
     };
   }
 

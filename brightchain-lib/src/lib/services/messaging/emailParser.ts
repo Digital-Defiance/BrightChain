@@ -47,6 +47,7 @@ import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEnc
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import { EmailError } from '../../errors/messaging/emailError';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import type { IAttachmentMetadata } from '../../interfaces/messaging/attachmentMetadata';
 import {
   IAddress,
@@ -1328,7 +1329,7 @@ export class EmailParser {
     const now = new Date();
     const metadata: IEmailMetadata = {
       // IBlockMetadata fields (defaults for parsed emails)
-      blockId: messageId,
+      blockId: messageId as BlockId,
       createdAt: now,
       expiresAt: null,
       durabilityLevel: DurabilityLevel.Standard,

@@ -12,6 +12,7 @@
  */
 
 import {
+  asBlockId,
   AttachmentReference,
   AuditAction,
   AuditLogEntry,
@@ -41,6 +42,7 @@ import {
   VaultSerializer,
   VCBLBlock,
   VCBLService,
+  type BlockId,
 } from '@brightchain/brightchain-lib';
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { v4 as uuidv4 } from 'uuid';
@@ -420,7 +422,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     // Calculate new checksum
     const checksumService = new ChecksumService();
     const newVcblChecksum = checksumService.calculateChecksum(encryptedVcbl);
-    const newVcblBlockId = newVcblChecksum.toHex();
+    const newVcblBlockId = (newVcblChecksum.toHex() as unknown as BlockId);
 
     // Remove old VCBL from block store if it exists
     if (indexEntry.vcblBlockId) {
@@ -488,7 +490,9 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
 
     // Create VCBL using VCBLService if available (Req 3.1, 3.2)
     let vcblChecksum: Checksum | null = null;
-    let vcblBlockId = uuidv4(); // fallback simulated block ID
+    let vcblBlockId: BlockId = asBlockId(
+      '0000000000000000000000000000000000000000000000000000000000000000',
+    ); // placeholder until VCBL is created
 
     if (this.vcblService && this.member) {
       // Create empty VCBL header with no entries
@@ -514,7 +518,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
 
       // Store the encrypted VCBL in the block store
       await this.blockStore.put(vcblChecksum.toHex(), encryptedVcbl);
-      vcblBlockId = vcblChecksum.toHex();
+      vcblBlockId = (vcblChecksum.toHex() as unknown as BlockId);
     }
 
     const metadata: VaultMetadata = {
@@ -1563,7 +1567,12 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
 
     // Create attachment reference
     const attachmentId = uuidv4();
-    const blockId = uuidv4(); // simulated block storage
+    // Generate a proper BlockId from the file content checksum
+    const checksumService = new ChecksumService();
+    const fileChecksum = checksumService.calculateChecksum(
+      new Uint8Array(file),
+    );
+    const blockId = (fileChecksum.toHex() as unknown as BlockId);
     const reference: AttachmentReference = {
       id: attachmentId,
       filename,

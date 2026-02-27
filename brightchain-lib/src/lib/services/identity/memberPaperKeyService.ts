@@ -181,11 +181,11 @@ export class MemberPaperKeyService<TId = string> {
     const metadata = this.findPaperKey(memberId, paperKeyId);
 
     if (metadata.revokedAt) {
-      throw new PaperKeyRevokedError(String(paperKeyId));
+      throw new PaperKeyRevokedError(`${paperKeyId}`);
     }
 
     if (metadata.usedAt) {
-      throw new PaperKeyAlreadyUsedError(String(paperKeyId));
+      throw new PaperKeyAlreadyUsedError(`${paperKeyId}`);
     }
 
     metadata.usedAt = new Date();
@@ -215,7 +215,7 @@ export class MemberPaperKeyService<TId = string> {
     const metadata = this.findPaperKey(memberId, paperKeyId);
 
     if (metadata.revokedAt) {
-      throw new PaperKeyRevokedError(String(paperKeyId));
+      throw new PaperKeyRevokedError(`${paperKeyId}`);
     }
 
     metadata.revokedAt = new Date();
@@ -315,12 +315,12 @@ export class MemberPaperKeyService<TId = string> {
   private findPaperKey(memberId: TId, paperKeyId: TId): IPaperKeyMetadata<TId> {
     const keys = this.paperKeysByMember.get(memberId);
     if (!keys) {
-      throw new PaperKeyNotFoundError(String(paperKeyId));
+      throw new PaperKeyNotFoundError(`${paperKeyId}`);
     }
 
     const found = keys.find((pk) => pk.id === paperKeyId);
     if (!found) {
-      throw new PaperKeyNotFoundError(String(paperKeyId));
+      throw new PaperKeyNotFoundError(`${paperKeyId}`);
     }
 
     return found;

@@ -95,7 +95,7 @@ class ExplodingMessageStore {
   }
 
   set(message: ICommunicationMessage): void {
-    this.messages.set(String(message.id), message);
+    this.messages.set(message.id as string, message);
   }
 
   getAll(): ICommunicationMessage[] {

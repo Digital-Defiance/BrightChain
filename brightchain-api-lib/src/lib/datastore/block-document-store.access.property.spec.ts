@@ -21,10 +21,10 @@ import {
 } from '@brightchain/brightchain-lib';
 import {
   EmailString,
+  HexString,
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 import fc from 'fast-check';
@@ -116,7 +116,7 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
 
             // Create 3 members
             const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-            const memberIds: ShortHexGuid[] = [];
+            const memberIds: HexString[] = [];
 
             for (let i = 0; i < 3; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;
@@ -205,7 +205,7 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
             const random = Math.floor(Math.random() * 1000000);
 
             // Create 2 members
-            const memberIds: ShortHexGuid[] = [];
+            const memberIds: HexString[] = [];
             for (let i = 0; i < 2; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;
               const memberWithMnemonic = createTestMember(
@@ -238,7 +238,7 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
             }
 
             // A random member ID should also have access (unencrypted = public)
-            const randomMemberId = 'random-member-id' as ShortHexGuid;
+            const randomMemberId = 'random-member-id' as HexString;
             const randomHasAccess = await collection.hasAccess(
               doc._id!,
               randomMemberId,

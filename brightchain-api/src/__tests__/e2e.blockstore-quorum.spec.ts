@@ -32,7 +32,6 @@ import {
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib';
@@ -335,7 +334,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       // Create 5 members
       const memberCount = 5;
       const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-      const memberIds: ShortHexGuid[] = [];
+      const memberIds: GuidV4Buffer[] = [];
 
       for (let i = 0; i < memberCount; i++) {
         const memberWithMnemonic = createTestMember(
@@ -409,7 +408,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       // Create 4 members
       const memberCount = 4;
       const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-      const memberIds: ShortHexGuid[] = [];
+      const memberIds: GuidV4Buffer[] = [];
 
       for (let i = 0; i < memberCount; i++) {
         const memberWithMnemonic = createTestMember(
@@ -454,7 +453,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       // Create 4 members
       const memberCount = 4;
       const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-      const memberIds: ShortHexGuid[] = [];
+      const memberIds: GuidV4Buffer[] = [];
 
       for (let i = 0; i < memberCount; i++) {
         const memberWithMnemonic = createTestMember(
@@ -515,7 +514,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
 
       // Create 3 members
       const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-      const memberIds: ShortHexGuid[] = [];
+      const memberIds: GuidV4Buffer[] = [];
 
       for (let i = 0; i < 3; i++) {
         const memberWithMnemonic = createTestMember(
@@ -567,7 +566,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
 
       // Create 2 members (minimum)
       const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-      const memberIds: ShortHexGuid[] = [];
+      const memberIds: GuidV4Buffer[] = [];
 
       for (let i = 0; i < 2; i++) {
         const memberWithMnemonic = createTestMember(
@@ -639,7 +638,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
 
       // Create quorum members
       const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-      const memberIds: ShortHexGuid[] = [];
+      const memberIds: GuidV4Buffer[] = [];
 
       for (let i = 0; i < 3; i++) {
         const memberWithMnemonic = createTestMember(
@@ -724,7 +723,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
 
       // Create 5 members
       const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-      const memberIds: ShortHexGuid[] = [];
+      const memberIds: GuidV4Buffer[] = [];
 
       for (let i = 0; i < 5; i++) {
         const memberWithMnemonic = createTestMember(
@@ -809,7 +808,7 @@ describe('E2E: Block Storage and Quorum Integration', () => {
       // Create 4 shareholders (e.g., company executives)
       const shareholders: {
         member: IMemberWithMnemonic<GuidV4Buffer>;
-        id: ShortHexGuid;
+        id: GuidV4Buffer;
         role: string;
       }[] = [];
 

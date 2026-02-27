@@ -1,3 +1,4 @@
+import type { BlockId } from '@brightchain/brightchain-lib';
 import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
 
 /**
@@ -5,7 +6,7 @@ import { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
  * Returns raw block data as base64-encoded string.
  */
 export interface IBlockDataResponse extends IApiMessageResponse {
-  blockId: string;
+  blockId: BlockId;
   data: string; // base64-encoded block data
   [key: string]: unknown;
 }

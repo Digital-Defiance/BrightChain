@@ -8,7 +8,7 @@
  * @see Requirements 1-7, 10-13
  */
 
-import { Member, PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { QuorumOperationalMode } from '../../enumerations/quorumOperationalMode';
 import { Proposal, ProposalInput } from '../proposal';
 import { QuorumEpoch } from '../quorumEpoch';
@@ -81,7 +81,7 @@ export interface IQuorumStateMachine<TID extends PlatformID = Uint8Array> {
    * @throws QuorumError with InsufficientRemainingMembers if removal would drop below threshold
    */
   removeMember(
-    memberId: ShortHexGuid,
+    memberId: TID,
     redistributionConfig?: Partial<RedistributionConfig>,
   ): Promise<QuorumEpoch<TID>>;
 
@@ -91,7 +91,7 @@ export interface IQuorumStateMachine<TID extends PlatformID = Uint8Array> {
    * @param proposal - The proposal input
    * @returns The created Proposal with assigned ID and status
    */
-  submitProposal(proposal: ProposalInput<TID>): Promise<Proposal<TID>>;
+  submitProposal(proposal: ProposalInput): Promise<Proposal<TID>>;
 
   /**
    * Submit a vote on a pending proposal.
@@ -106,7 +106,7 @@ export interface IQuorumStateMachine<TID extends PlatformID = Uint8Array> {
    * @param proposalId - The proposal ID
    * @returns The proposal, or null if not found
    */
-  getProposal(proposalId: ShortHexGuid): Promise<Proposal<TID> | null>;
+  getProposal(proposalId: TID): Promise<Proposal<TID> | null>;
 
   /**
    * Seal a document so it can only be accessed when enough quorum members agree.
@@ -121,7 +121,7 @@ export interface IQuorumStateMachine<TID extends PlatformID = Uint8Array> {
   sealDocument<T>(
     agent: Member<TID>,
     document: T,
-    memberIds: ShortHexGuid[],
+    memberIds: TID[],
     sharesRequired?: number,
   ): Promise<SealedDocumentResult<TID>>;
 
@@ -134,7 +134,7 @@ export interface IQuorumStateMachine<TID extends PlatformID = Uint8Array> {
    * @returns The unsealed document
    */
   unsealDocument<T>(
-    documentId: ShortHexGuid,
+    documentId: TID,
     membersWithPrivateKey: Member<TID>[],
   ): Promise<T>;
 

@@ -8,6 +8,7 @@
  * enforcement across randomly generated inputs.
  */
 
+import type { BlockId } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
@@ -57,10 +58,10 @@ const identifierArb: fc.Arbitrary<string> = fc
   .map((chars) => chars.join(''));
 
 /** Arbitrary for a unique block ID pair. */
-const blockIdPairArb: fc.Arbitrary<{ blockId1: string; blockId2: string }> = fc
+const blockIdPairArb: fc.Arbitrary<{ blockId1: BlockId; blockId2: BlockId }> = fc
   .tuple(identifierArb, identifierArb)
   .filter(([a, b]) => a !== b)
-  .map(([a, b]) => ({ blockId1: `blk-${a}`, blockId2: `blk-${b}` }));
+  .map(([a, b]) => ({ blockId1: `blk-${a}` as BlockId, blockId2: `blk-${b}` as BlockId }));
 
 /** Arbitrary for a user collection name. */
 const collectionNameArb: fc.Arbitrary<string> = fc.constantFrom(
@@ -135,8 +136,8 @@ describe('CBLIndex User-Level Tracking Property-Based Tests', () => {
 
           // Add some entries in collection2 as noise
           for (let i = 0; i < extraCount; i++) {
-            const noiseId1 = `noise1-${i}`;
-            const noiseId2 = `noise2-${i}`;
+            const noiseId1 = `noise1-${i}` as BlockId;
+            const noiseId2 = `noise2-${i}` as BlockId;
             await seedBlocks(store, noiseId1, noiseId2);
             await index.addEntry({
               magnetUrl: `magnet:?pbt-noise=${i}`,

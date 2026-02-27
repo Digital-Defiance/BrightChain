@@ -12,10 +12,10 @@ import {
   ECIESService,
   EmailString,
   GuidV4Uint8Array,
+  HexString,
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import * as fc from 'fast-check';
@@ -47,17 +47,17 @@ function createMockDatabase(
 ): IQuorumDatabase<GuidV4Uint8Array> {
   const aliases = new Map<string, AliasRecord<GuidV4Uint8Array>>();
   const identityRecords = new Map<
-    ShortHexGuid,
+    HexString,
     IdentityRecoveryRecord<GuidV4Uint8Array>
   >();
 
-  const memberLookup = new Map<ShortHexGuid, IQuorumMember<GuidV4Uint8Array>>();
+  const memberLookup = new Map<HexString, IQuorumMember<GuidV4Uint8Array>>();
   for (const m of memberPool) {
     const memberId = uint8ArrayToHex(
       enhancedProvider.toBytes(m.member.id),
-    ) as ShortHexGuid;
+    ) as HexString;
     memberLookup.set(memberId, {
-      id: memberId,
+      id: m.member.id,
       publicKey: m.member.publicKey,
       metadata: { name: m.member.name },
       isActive: true,
@@ -74,7 +74,10 @@ function createMockDatabase(
     }),
     saveMember: jest.fn(async () => {}),
     getMember: jest.fn(
-      async (memberId: ShortHexGuid) => memberLookup.get(memberId) ?? null,
+      async (memberId: GuidV4Uint8Array) =>
+        memberLookup.get(
+          uint8ArrayToHex(memberId as Uint8Array) as HexString,
+        ) ?? null,
     ),
     listActiveMembers: jest.fn(async () => Array.from(memberLookup.values())),
     saveDocument: jest.fn(async () => {}),
@@ -86,14 +89,22 @@ function createMockDatabase(
     getVotesForProposal: jest.fn(async () => []),
     saveIdentityRecord: jest.fn(
       async (record: IdentityRecoveryRecord<GuidV4Uint8Array>) => {
-        identityRecords.set(record.id, record);
+        identityRecords.set(
+          uint8ArrayToHex(record.id as Uint8Array) as HexString,
+          record,
+        );
       },
     ),
     getIdentityRecord: jest.fn(
-      async (recordId: ShortHexGuid) => identityRecords.get(recordId) ?? null,
+      async (recordId: GuidV4Uint8Array) =>
+        identityRecords.get(
+          uint8ArrayToHex(recordId as Uint8Array) as HexString,
+        ) ?? null,
     ),
-    deleteIdentityRecord: jest.fn(async (recordId: ShortHexGuid) => {
-      identityRecords.delete(recordId);
+    deleteIdentityRecord: jest.fn(async (recordId: GuidV4Uint8Array) => {
+      identityRecords.delete(
+        uint8ArrayToHex(recordId as Uint8Array) as HexString,
+      );
     }),
     listExpiredIdentityRecords: jest.fn(async () => []),
     saveAlias: jest.fn(async (alias: AliasRecord<GuidV4Uint8Array>) => {
@@ -163,12 +174,7 @@ describe('AliasRegistry Property-Based Tests', () => {
   ): QuorumEpoch<GuidV4Uint8Array> {
     return {
       epochNumber: 1,
-      memberIds: memberPool
-        .slice(0, memberCount)
-        .map(
-          (m) =>
-            uint8ArrayToHex(idProvider.toBytes(m.member.id)) as ShortHexGuid,
-        ),
+      memberIds: memberPool.slice(0, memberCount).map((m) => m.member.id),
       threshold,
       mode: QuorumOperationalMode.Quorum,
       createdAt: new Date(),
@@ -221,10 +227,10 @@ describe('AliasRegistry Property-Based Tests', () => {
 
             const memberAId = uint8ArrayToHex(
               idProvider.toBytes(memberA.member.id),
-            ) as ShortHexGuid;
+            ) as HexString;
             const memberBId = uint8ArrayToHex(
               idProvider.toBytes(memberB.member.id),
-            ) as ShortHexGuid;
+            ) as HexString;
 
             const epoch = createEpoch(5, 3);
             const db = createMockDatabase(memberPool.slice(0, 5), idProvider);

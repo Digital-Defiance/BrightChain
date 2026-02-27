@@ -21,7 +21,7 @@ import { EnergyAccountStore, MemberStore } from '@brightchain/brightchain-lib';
 import type { BrightChainDb } from '@brightchain/db';
 import { MemberType } from '@digitaldefiance/ecies-lib';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
-import { GuidV4Provider } from '@digitaldefiance/node-ecies-lib';
+import { getEnhancedNodeIdProvider } from '@digitaldefiance/node-ecies-lib';
 import type {
   IApplication,
   IAuthenticationProvider,
@@ -308,9 +308,9 @@ export class BrightChainDatabasePlugin<
       );
     }
 
-    const guidProvider = new GuidV4Provider();
+    const idProvider = getEnhancedNodeIdProvider<TID>();
     const generateId = (): TID =>
-      guidProvider.fromBytes(guidProvider.generate()) as TID;
+      idProvider.fromBytes(idProvider.generate()) as TID;
 
     return {
       system: {

@@ -9,7 +9,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { ICBLIndexEntry } from '@brightchain/brightchain-lib';
+import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
@@ -59,10 +59,10 @@ const identifierArb: fc.Arbitrary<string> = fc
   .map((chars) => chars.join(''));
 
 /** Arbitrary for a unique block ID pair. */
-const blockIdPairArb: fc.Arbitrary<{ blockId1: string; blockId2: string }> = fc
+const blockIdPairArb: fc.Arbitrary<{ blockId1: BlockId; blockId2: BlockId }> = fc
   .tuple(identifierArb, identifierArb)
   .filter(([a, b]) => a !== b)
-  .map(([a, b]) => ({ blockId1: `blk-${a}`, blockId2: `blk-${b}` }));
+  .map(([a, b]) => ({ blockId1: `blk-${a}` as BlockId, blockId2: `blk-${b}` as BlockId }));
 
 /** Arbitrary for a valid block size (power of 2, typical CBL sizes). */
 const blockSizeArb: fc.Arbitrary<number> = fc.constantFrom(128, 256, 512, 1024);
@@ -74,8 +74,8 @@ function makeRemoteEntry(
   return {
     _id: `remote-${Math.random().toString(36).slice(2, 10)}`,
     magnetUrl: `magnet:?xt=urn:brightchain:cbl&bs=256&b1=default1&b2=default2`,
-    blockId1: 'default-block-1',
-    blockId2: 'default-block-2',
+    blockId1: 'default-block-1' as BlockId,
+    blockId2: 'default-block-2' as BlockId,
     blockSize: 256,
     createdAt: new Date('2025-01-15T10:00:00Z'),
     visibility: CBLVisibility.Private,

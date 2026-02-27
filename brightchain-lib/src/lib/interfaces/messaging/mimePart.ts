@@ -13,6 +13,8 @@
  * Requirements: 5.1, 6.1, 6.2, 6.3, 7.1, 7.2
  */
 
+import type { BlockId } from '../branded/primitives/blockId';
+
 /**
  * RFC 2045 Content-Type header representation.
  *
@@ -202,7 +204,7 @@ export interface IMimePart {
    * Used when the part content is too large for inline storage
    * and is stored as separate blocks in the block store.
    */
-  bodyBlockIds?: string[];
+  bodyBlockIds?: BlockId[];
 
   /**
    * Nested parts for multipart types.

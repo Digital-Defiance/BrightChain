@@ -9,11 +9,11 @@ import {
   AESGCMService,
   EmailString,
   GuidV4Uint8Array,
+  HexString,
   hexToUint8Array,
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import type { Shares } from '@digitaldefiance/secrets';
@@ -179,11 +179,11 @@ describe('SealingService Property-Based Tests', () => {
             );
 
             // Build the existingShares map (memberId hex → share hex)
-            const existingSharesMap = new Map<ShortHexGuid, string>();
+            const existingSharesMap = new Map<HexString, string>();
             for (let i = 0; i < thresholdMembers.length; i++) {
               const memberIdHex = uint8ArrayToHex(
                 idProvider.toBytes(thresholdMembers[i].id),
-              ) as ShortHexGuid;
+              ) as HexString;
               existingSharesMap.set(memberIdHex, decryptedShares[i]);
             }
 
@@ -211,7 +211,7 @@ describe('SealingService Property-Based Tests', () => {
             for (const member of newMemberSubset) {
               const memberIdHex = uint8ArrayToHex(
                 idProvider.toBytes(member.id),
-              ) as ShortHexGuid;
+              ) as HexString;
               const encryptedShare = newEncryptedShares.get(memberIdHex);
               expect(encryptedShare).toBeDefined();
               if (!encryptedShare || !member.privateKey) continue;

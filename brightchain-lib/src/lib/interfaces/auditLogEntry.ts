@@ -6,7 +6,7 @@
  * @see Requirements 13.6, 13.7
  */
 
-import { ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { PlatformID } from '@digitaldefiance/ecies-lib';
 
 /**
  * Union of all auditable event types in the quorum system.
@@ -36,18 +36,19 @@ export type AuditEventType =
 
 /**
  * An entry in the quorum audit log.
+ * @template TID - Platform ID type for frontend/backend DTO compatibility
  */
-export interface QuorumAuditLogEntry {
+export interface QuorumAuditLogEntry<TID extends PlatformID = Uint8Array> {
   /** Unique entry identifier */
-  id: ShortHexGuid;
+  id: TID;
   /** The type of auditable event */
   eventType: AuditEventType;
   /** Related proposal ID, if applicable */
-  proposalId?: ShortHexGuid;
+  proposalId?: TID;
   /** Target member ID, if applicable */
-  targetMemberId?: ShortHexGuid;
+  targetMemberId?: TID;
   /** Proposer member ID, if applicable */
-  proposerMemberId?: ShortHexGuid;
+  proposerMemberId?: TID;
   /** Attached CBL ID, if applicable */
   attachmentCblId?: string;
   /** Additional event-specific details */

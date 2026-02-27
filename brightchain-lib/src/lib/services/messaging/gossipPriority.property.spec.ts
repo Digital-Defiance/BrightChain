@@ -6,6 +6,10 @@ import {
   MessageDeliveryMetadata,
   PriorityGossipConfig,
 } from '../../interfaces/availability/gossipService';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 /**
  * Property tests for Priority-Based Fanout and TTL
@@ -50,7 +54,7 @@ describe('Feature: unified-gossip-delivery, Property 5: Priority-based fanout an
   ): BlockAnnouncement {
     return {
       type: 'add',
-      blockId,
+      blockId: bid(blockId),
       nodeId: 'local-node',
       timestamp: new Date(),
       ttl: config.defaultTtl,
@@ -121,8 +125,10 @@ describe('Feature: unified-gossip-delivery, Property 5: Priority-based fanout an
       messageId: nonEmptyStringArb,
       recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
       priority: fc.constant(priority),
-      blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-      cblBlockId: nonEmptyStringArb,
+      blockIds: fc
+        .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+        .map((arr) => arr.map((s) => bid(s))),
+      cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
       ackRequired: fc.boolean(),
     });
 
@@ -131,8 +137,10 @@ describe('Feature: unified-gossip-delivery, Property 5: Priority-based fanout an
     messageId: nonEmptyStringArb,
     recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
     priority: fc.constantFrom('normal' as const, 'high' as const),
-    blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-    cblBlockId: nonEmptyStringArb,
+    blockIds: fc
+      .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+      .map((arr) => arr.map((s) => bid(s))),
+    cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
     ackRequired: fc.boolean(),
   });
 

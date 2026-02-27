@@ -9,6 +9,8 @@
  * @module emailDelivery
  */
 
+import type { PlatformID } from '@digitaldefiance/ecies-lib';
+
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 
 /**
@@ -62,9 +64,9 @@ export enum EmailDeliveryStatus {
  * @see Requirement 12.2 - Delivery receipts with timestamps
  * @see Requirement 12.3 - Delivery timestamps per recipient
  */
-export interface IDeliveryReceipt {
+export interface IDeliveryReceipt<TID extends PlatformID = string> {
   /** Recipient identifier (e.g., user ID or address) */
-  recipientId: string;
+  recipientId: TID;
 
   /** Recipient's home node identifier */
   recipientNode: string;

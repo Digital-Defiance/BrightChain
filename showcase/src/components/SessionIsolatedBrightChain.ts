@@ -7,6 +7,7 @@
  */
 
 import {
+  BlockId,
   BlockInfo,
   BlockSize,
   CBLMagnetComponents,
@@ -634,12 +635,12 @@ export interface FileReceiptWithWhitening extends FileReceipt {
    * Whitening information (if CBL was whitened)
    */
   whitening?: {
-    blockId1: string;
-    blockId2: string;
+    blockId1: BlockId;
+    blockId2: BlockId;
     blockSize: number;
     magnetUrl: string;
-    block1ParityIds?: string[];
-    block2ParityIds?: string[];
+    block1ParityIds?: BlockId[];
+    block2ParityIds?: BlockId[];
     isEncrypted?: boolean;
   };
 }

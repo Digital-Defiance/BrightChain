@@ -6,7 +6,7 @@
  * @see Requirements 6, 7
  */
 
-import { PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { PlatformID } from '@digitaldefiance/ecies-lib';
 
 /**
  * A quorum member's response to a Proposal.
@@ -14,9 +14,9 @@ import { PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
  */
 export interface Vote<TID extends PlatformID = Uint8Array> {
   /** ID of the proposal being voted on */
-  proposalId: ShortHexGuid;
+  proposalId: TID;
   /** ID of the voting member */
-  voterMemberId: ShortHexGuid;
+  voterMemberId: TID;
   /** Vote decision */
   decision: 'approve' | 'reject';
   /** Optional comment, max 1024 characters */
@@ -25,8 +25,6 @@ export interface Vote<TID extends PlatformID = Uint8Array> {
   encryptedShare?: Uint8Array;
   /** Timestamp of vote creation */
   createdAt: Date;
-  /** Generic marker for DTO compatibility */
-  _platformId?: TID;
 }
 
 /**
@@ -35,13 +33,11 @@ export interface Vote<TID extends PlatformID = Uint8Array> {
  */
 export interface VoteInput<TID extends PlatformID = Uint8Array> {
   /** ID of the proposal being voted on */
-  proposalId: ShortHexGuid;
+  proposalId: TID;
   /** ID of the voting member (optional — defaults to local node member) */
-  voterMemberId?: ShortHexGuid;
+  voterMemberId?: TID;
   /** Vote decision */
   decision: 'approve' | 'reject';
   /** Optional comment */
   comment?: string;
-  /** Generic marker for DTO compatibility */
-  _platformId?: TID;
 }

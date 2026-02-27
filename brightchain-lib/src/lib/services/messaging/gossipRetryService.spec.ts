@@ -20,11 +20,14 @@ import {
   IGossipService,
   MessageDeliveryMetadata,
 } from '../../interfaces/availability/gossipService';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import {
   GossipRetryService,
   IDeliveryStatusStore,
   IMessageEventEmitter,
 } from './gossipRetryService';
+
+const bid = (s: string) => s as unknown as BlockId;
 
 // Helper to create a mock gossip service
 function createMockGossipService(): jest.Mocked<
@@ -76,8 +79,8 @@ function createSampleMetadata(
     messageId: 'msg-1',
     recipientIds: ['recipient-1', 'recipient-2'],
     priority: 'normal',
-    blockIds: ['block-1', 'block-2'],
-    cblBlockId: 'cbl-1',
+    blockIds: [bid('block-1'), bid('block-2')],
+    cblBlockId: bid('cbl-1'),
     ackRequired: true,
     ...overrides,
   };
@@ -110,12 +113,16 @@ describe('GossipRetryService', () => {
     it('should register a pending delivery with all recipients set to Announced', () => {
       const metadata = createSampleMetadata();
 
-      retryService.trackDelivery('msg-1', ['block-1', 'block-2'], metadata);
+      retryService.trackDelivery(
+        'msg-1',
+        [bid('block-1'), bid('block-2')],
+        metadata,
+      );
 
       const pending = retryService.getPendingDelivery('msg-1');
       expect(pending).toBeDefined();
       expect(pending!.messageId).toBe('msg-1');
-      expect(pending!.blockIds).toEqual(['block-1', 'block-2']);
+      expect(pending!.blockIds).toEqual([bid('block-1'), bid('block-2')]);
       expect(pending!.metadata).toBe(metadata);
       expect(pending!.retryCount).toBe(0);
       expect(pending!.recipientStatuses.get('recipient-1')).toBe(
@@ -131,7 +138,7 @@ describe('GossipRetryService', () => {
       const now = new Date('2024-01-01T00:00:00Z');
       jest.setSystemTime(now);
 
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       const pending = retryService.getPendingDelivery('msg-1');
       expect(pending!.nextRetryAt.getTime()).toBe(
@@ -144,14 +151,14 @@ describe('GossipRetryService', () => {
 
       retryService.trackDelivery(
         'msg-1',
-        ['block-1'],
+        [bid('block-1')],
         createSampleMetadata({ messageId: 'msg-1' }),
       );
       expect(retryService.getPendingCount()).toBe(1);
 
       retryService.trackDelivery(
         'msg-2',
-        ['block-2'],
+        [bid('block-2')],
         createSampleMetadata({ messageId: 'msg-2' }),
       );
       expect(retryService.getPendingCount()).toBe(2);
@@ -161,7 +168,7 @@ describe('GossipRetryService', () => {
   describe('handleAck', () => {
     it('should update recipient status on delivered ack', () => {
       const metadata = createSampleMetadata();
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       const ack: DeliveryAckMetadata = {
         messageId: 'msg-1',
@@ -184,7 +191,7 @@ describe('GossipRetryService', () => {
 
     it('should update metadata store on ack', () => {
       const metadata = createSampleMetadata();
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       const ack: DeliveryAckMetadata = {
         messageId: 'msg-1',
@@ -217,7 +224,7 @@ describe('GossipRetryService', () => {
 
     it('should ignore ack for unknown recipient', () => {
       const metadata = createSampleMetadata();
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       const ack: DeliveryAckMetadata = {
         messageId: 'msg-1',
@@ -234,7 +241,7 @@ describe('GossipRetryService', () => {
       const metadata = createSampleMetadata({
         recipientIds: ['recipient-1'],
       });
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // First deliver
       retryService.handleAck({
@@ -261,7 +268,7 @@ describe('GossipRetryService', () => {
       const metadata = createSampleMetadata({
         recipientIds: ['recipient-1', 'recipient-2'],
       });
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // Deliver to first recipient
       retryService.handleAck({
@@ -296,7 +303,7 @@ describe('GossipRetryService', () => {
       const metadata = createSampleMetadata({
         recipientIds: ['recipient-1'],
       });
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // Deliver then read
       retryService.handleAck({
@@ -315,7 +322,7 @@ describe('GossipRetryService', () => {
         messageId: 'msg-2',
         recipientIds: ['r1', 'r2'],
       });
-      retryService.trackDelivery('msg-2', ['block-1'], metadata2);
+      retryService.trackDelivery('msg-2', [bid('block-1')], metadata2);
 
       retryService.handleAck({
         messageId: 'msg-2',
@@ -342,7 +349,7 @@ describe('GossipRetryService', () => {
       const metadata = createSampleMetadata({
         recipientIds: ['recipient-1', 'recipient-2'],
       });
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       retryService.handleAck({
         messageId: 'msg-1',
@@ -361,7 +368,7 @@ describe('GossipRetryService', () => {
       const metadata = createSampleMetadata({
         recipientIds: ['recipient-1', 'recipient-2'],
       });
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       retryService.handleAck({
         messageId: 'msg-1',
@@ -383,14 +390,18 @@ describe('GossipRetryService', () => {
       jest.setSystemTime(now);
 
       const metadata = createSampleMetadata();
-      retryService.trackDelivery('msg-1', ['block-1', 'block-2'], metadata);
+      retryService.trackDelivery(
+        'msg-1',
+        [bid('block-1'), bid('block-2')],
+        metadata,
+      );
 
       // Advance past the initial timeout (30s)
       jest.setSystemTime(new Date(now.getTime() + 31000));
       retryService.checkRetries();
 
       expect(gossipService.announceMessage).toHaveBeenCalledWith(
-        ['block-1', 'block-2'],
+        [bid('block-1'), bid('block-2')],
         metadata,
       );
     });
@@ -400,7 +411,7 @@ describe('GossipRetryService', () => {
       jest.setSystemTime(now);
 
       const metadata = createSampleMetadata();
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // Advance only 20s (before 30s timeout)
       jest.setSystemTime(new Date(now.getTime() + 20000));
@@ -414,7 +425,7 @@ describe('GossipRetryService', () => {
       jest.setSystemTime(now);
 
       const metadata = createSampleMetadata();
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // First retry at 30s
       jest.setSystemTime(new Date(now.getTime() + 31000));
@@ -429,7 +440,7 @@ describe('GossipRetryService', () => {
       jest.setSystemTime(now);
 
       const metadata = createSampleMetadata();
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // Retry 1: after 30s, next retry at +30s
       jest.setSystemTime(new Date(now.getTime() + 31000));
@@ -486,7 +497,7 @@ describe('GossipRetryService', () => {
       const metadata = createSampleMetadata({
         recipientIds: ['r1', 'r2'],
       });
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // Deliver to r1 only
       retryService.handleAck({
@@ -526,7 +537,7 @@ describe('GossipRetryService', () => {
       const metadata = createSampleMetadata({
         recipientIds: ['r1'],
       });
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // Exhaust retries
       let currentTime = now.getTime();
@@ -555,7 +566,7 @@ describe('GossipRetryService', () => {
       const metadata = createSampleMetadata({
         recipientIds: ['r1', 'r2'],
       });
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // Deliver to r1
       retryService.handleAck({
@@ -598,7 +609,7 @@ describe('GossipRetryService', () => {
       jest.setSystemTime(now);
 
       const metadata = createSampleMetadata();
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // Advance past timeout
       jest.advanceTimersByTime(31000);
@@ -613,7 +624,7 @@ describe('GossipRetryService', () => {
       retryService.start();
 
       const metadata = createSampleMetadata();
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       retryService.stop();
 
@@ -631,7 +642,7 @@ describe('GossipRetryService', () => {
       jest.setSystemTime(now);
 
       const metadata = createSampleMetadata();
-      retryService.trackDelivery('msg-1', ['block-1'], metadata);
+      retryService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       jest.advanceTimersByTime(31000);
 
@@ -676,7 +687,7 @@ describe('GossipRetryService', () => {
       const metadata = createSampleMetadata({
         recipientIds: ['r1'],
       });
-      customService.trackDelivery('msg-1', ['block-1'], metadata);
+      customService.trackDelivery('msg-1', [bid('block-1')], metadata);
 
       // Exhaust 2 retries
       let currentTime = now.getTime();

@@ -8,6 +8,7 @@
  * @see cross-node-eventual-consistency design, Section 3
  */
 
+import type { BlockId } from '../branded/primitives/blockId';
 import { PoolId } from '../storage/pooledBlockStore';
 
 /**
@@ -65,7 +66,7 @@ export interface IBlockFetcher {
    *                 is stored in the specified pool and its metadata is validated
    * @returns The fetch result with data and attempt details
    */
-  fetchBlock(blockId: string, poolId?: PoolId): Promise<BlockFetchResult>;
+  fetchBlock(blockId: BlockId, poolId?: PoolId): Promise<BlockFetchResult>;
 
   /** Check if a node is currently available (not in cooldown) */
   isNodeAvailable(nodeId: string): boolean;
