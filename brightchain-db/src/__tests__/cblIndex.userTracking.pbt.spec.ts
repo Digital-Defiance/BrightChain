@@ -58,10 +58,14 @@ const identifierArb: fc.Arbitrary<string> = fc
   .map((chars) => chars.join(''));
 
 /** Arbitrary for a unique block ID pair. */
-const blockIdPairArb: fc.Arbitrary<{ blockId1: BlockId; blockId2: BlockId }> = fc
-  .tuple(identifierArb, identifierArb)
-  .filter(([a, b]) => a !== b)
-  .map(([a, b]) => ({ blockId1: `blk-${a}` as BlockId, blockId2: `blk-${b}` as BlockId }));
+const blockIdPairArb: fc.Arbitrary<{ blockId1: BlockId; blockId2: BlockId }> =
+  fc
+    .tuple(identifierArb, identifierArb)
+    .filter(([a, b]) => a !== b)
+    .map(([a, b]) => ({
+      blockId1: `blk-${a}` as BlockId,
+      blockId2: `blk-${b}` as BlockId,
+    }));
 
 /** Arbitrary for a user collection name. */
 const collectionNameArb: fc.Arbitrary<string> = fc.constantFrom(

@@ -20,6 +20,7 @@ import type {
 } from '@brightchain/brightchain-lib';
 import {
   BlockSize,
+  getBrightChainIdProvider,
   IBrightChainBaseInitResult,
   IBrightChainInitResult,
   IBrightChainMemberInitInput,
@@ -37,10 +38,7 @@ import {
 import type { IIdProvider } from '@digitaldefiance/ecies-lib';
 import { Member, MemberType } from '@digitaldefiance/ecies-lib';
 import { LanguageCodes } from '@digitaldefiance/i18n-lib';
-import {
-  getEnhancedNodeIdProvider,
-  PlatformID,
-} from '@digitaldefiance/node-ecies-lib';
+import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   AccountStatus,
   IMnemonicBase,
@@ -152,6 +150,11 @@ function buildCandidateEntries<TID extends PlatformID>(
 export class BrightChainMemberInitService<TID extends PlatformID> {
   private _db: BrightChainDb | undefined;
   private _memberCblIndex: CBLIndex | undefined;
+  private readonly _idProvider: IIdProvider<TID>;
+
+  constructor(idProvider?: IIdProvider<TID>) {
+    this._idProvider = idProvider ?? getBrightChainIdProvider<TID>();
+  }
 
   /**
    * The initialised BrightChainDb instance.
@@ -221,7 +224,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     const db = this._db;
 
     // Step 4: build candidates
-    const idProvider = getEnhancedNodeIdProvider<TID>();
+    const idProvider = this._idProvider;
     const candidates = buildCandidateEntries<TID>(
       input,
       config.memberPoolName,
@@ -286,7 +289,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
    * Idempotent — skips registration if models are already present.
    */
   private registerRbacModels(db: BrightChainDb): void {
-    const idProvider = getEnhancedNodeIdProvider<TID>();
+    const idProvider = this._idProvider;
 
     if (!db.hasModel(ROLES_COLLECTION)) {
       db.model<IStoredRole, IRoleBase<TID, Date, string>>(ROLES_COLLECTION, {

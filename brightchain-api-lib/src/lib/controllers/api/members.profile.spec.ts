@@ -20,6 +20,20 @@ const createMockApplication = () => {
             if (id instanceof Uint8Array) return id;
             return Buffer.from(id);
           }),
+          parseSafe: jest.fn((str: string) => {
+            // Accept any non-empty string as valid for test purposes
+            if (!str || typeof str !== 'string') return undefined;
+            try {
+              return Buffer.from(str, 'hex');
+            } catch {
+              return undefined;
+            }
+          }),
+          idFromString: jest.fn((str: string) => Buffer.from(str, 'hex')),
+          toString: jest.fn((id: any, _format: string) => {
+            if (Buffer.isBuffer(id)) return id.toString('hex');
+            return String(id);
+          }),
         };
       }
       return null;

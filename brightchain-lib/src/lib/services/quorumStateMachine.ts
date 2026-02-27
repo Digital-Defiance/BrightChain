@@ -16,7 +16,7 @@ import {
   PlatformID,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import { v4 as uuidv4 } from 'uuid';
+import { parse as uuidParse, v4 as uuidv4 } from 'uuid';
 import { ProposalActionType } from '../enumerations/proposalActionType';
 import { ProposalStatus } from '../enumerations/proposalStatus';
 import { QuorumErrorType } from '../enumerations/quorumErrorType';
@@ -1193,7 +1193,11 @@ export class QuorumStateMachine<
     const requiredThreshold = this.getRequiredThreshold(proposal.actionType);
 
     // Assign unique ID and create the full proposal
-    const proposalId = uuidv4() as unknown as TID;
+    // Use uuidParse to get a proper Uint8Array (16 bytes) from the UUID string,
+    // then cast to TID so toBytes() works correctly downstream.
+    const proposalId = this.sealingService['enhancedProvider'].fromBytes(
+      new Uint8Array(uuidParse(uuidv4())),
+    ) as unknown as TID;
     const now = new Date();
 
     const fullProposal: Proposal<TID> = {

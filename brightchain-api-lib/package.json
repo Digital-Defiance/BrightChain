@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightchain-api-lib",
-  "version": "0.23.0",
+  "version": "0.23.1",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "files": [
@@ -9,8 +9,8 @@
   ],
   "dependencies": {
     "@aws-sdk/client-ses": "^3.859.0",
-    "@brightchain/brightchain-lib": "^0.23.0",
-    "@brightchain/db": "^0.23.0",
+    "@brightchain/brightchain-lib": "^0.23.1",
+    "@brightchain/db": "^0.23.1",
     "@digitaldefiance/branded-enum": "^0.0.7",
     "@digitaldefiance/ecies-lib": "^4.19.13",
     "@digitaldefiance/enclave-bridge-client": "^1.1.0",

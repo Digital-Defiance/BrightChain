@@ -15,6 +15,7 @@
 import type {
   IBlockStore,
   IBrightChainInitResult,
+  IBrightChainMemberInitInput,
   IMemberIndexDocument,
 } from '@brightchain/brightchain-lib';
 import { EnergyAccountStore, MemberStore } from '@brightchain/brightchain-lib';
@@ -119,6 +120,11 @@ export class BrightChainDatabasePlugin<
     this._memberStore = memberStore as MemberStore;
     this._energyStore = energyStore as EnergyAccountStore;
     this._connected = true;
+
+    // In production mode (no dev pool), auto-seed if the database is empty.
+    if (!this._environment.devDatabasePoolName) {
+      await this.seedProductionIfEmpty();
+    }
   }
 
   /**
@@ -287,6 +293,27 @@ export class BrightChainDatabasePlugin<
   }
 
   /**
+   * Build IBrightChainMemberInitInput from the environment.
+   * Returns {systemUser, adminUser, memberUser} shaped for BrightChainMemberInitService.
+   *
+   * @throws Error if any of the required user IDs are not set.
+   */
+  buildMemberInitInput(): IBrightChainMemberInitInput<TID> {
+    const env = this._environment;
+    if (!env.systemId || !env.adminId || !env.memberId) {
+      throw new Error(
+        'BrightChainDatabasePlugin: cannot build member init input — one or more user IDs ' +
+          '(systemId, adminId, memberId) are not set in the environment.',
+      );
+    }
+    return {
+      systemUser: { id: env.systemId, type: MemberType.System },
+      adminUser: { id: env.adminId, type: MemberType.User },
+      memberUser: { id: env.memberId, type: MemberType.User },
+    };
+  }
+
+  /**
    * Build IRbacUserInput entries for all three users from the environment.
    *
    * Reads IDs, mnemonics, passwords, role IDs, and usernames/emails from
@@ -325,8 +352,8 @@ export class BrightChainDatabasePlugin<
         roleAdmin: true,
         roleMember: true,
         roleSystem: true,
-        mnemonic: env.systemMnemonic,
-        password: env.systemPassword,
+        mnemonic: env.systemMnemonic?.hasValue ? env.systemMnemonic : undefined,
+        password: env.systemPassword?.hasValue ? env.systemPassword : undefined,
       },
       admin: {
         id: env.adminId,
@@ -340,8 +367,8 @@ export class BrightChainDatabasePlugin<
         roleAdmin: true,
         roleMember: true,
         roleSystem: false,
-        mnemonic: env.adminMnemonic,
-        password: env.adminPassword,
+        mnemonic: env.adminMnemonic?.hasValue ? env.adminMnemonic : undefined,
+        password: env.adminPassword?.hasValue ? env.adminPassword : undefined,
       },
       member: {
         id: env.memberId,
@@ -355,8 +382,8 @@ export class BrightChainDatabasePlugin<
         roleAdmin: false,
         roleMember: true,
         roleSystem: false,
-        mnemonic: env.memberMnemonic,
-        password: env.memberPassword,
+        mnemonic: env.memberMnemonic?.hasValue ? env.memberMnemonic : undefined,
+        password: env.memberPassword?.hasValue ? env.memberPassword : undefined,
       },
     };
   }
@@ -380,6 +407,9 @@ export class BrightChainDatabasePlugin<
    * When `printCredentials` is true, prints the full credential summary
    * (for dev/ephemeral mode so users can log in via the frontend).
    *
+   * After seeding, updates the plugin's internal db reference to the one
+   * the service created, so plugin.brightChainDb reflects the seeded data.
+   *
    * @param printCredentials - Whether to print credentials to console.
    * @returns The full init result from initializeWithRbac().
    */
@@ -402,6 +432,11 @@ export class BrightChainDatabasePlugin<
         config,
         buildResult.rbacInput,
       );
+
+      // The service creates its own BrightChainDb internally. Update our
+      // reference so plugin.brightChainDb always points to the db that
+      // actually holds the seeded data.
+      this._brightChainDb = initResult.db;
 
       if (printCredentials) {
         const serverResult =

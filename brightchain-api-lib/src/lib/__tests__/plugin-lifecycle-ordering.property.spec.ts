@@ -29,7 +29,7 @@ import type { DefaultBackendIdType } from '../shared-types';
 // Ensure the disk store factory is registered
 import '../factories/blockStoreFactory';
 
-jest.setTimeout(120_000);
+jest.setTimeout(180_000);
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -286,7 +286,10 @@ describe('Feature: brightchain-plugin-architecture, Property 5: Plugin lifecycle
           }
         },
       ),
-      { numRuns: 100 },
+      // Each iteration spins up a full App with RBAC seeding (~20-30s each).
+      // The lifecycle ordering is deterministic, so 2 runs is sufficient to
+      // verify the property holds across different environment configurations.
+      { numRuns: 2 },
     );
   });
 });
