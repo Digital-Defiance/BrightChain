@@ -1,7 +1,7 @@
 import {
+  HexString,
   Member,
   PlatformID,
-  ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { BaseBlock } from '../../blocks/base';
@@ -69,11 +69,11 @@ export class MemberDocument<
   private readonly _blockSize: BlockSize;
 
   /**
-   * Get the document ID as ShortHexGuid
+   * Get the document ID as HexString
    */
-  public override get id(): ShortHexGuid {
-    // Use uint8ArrayToHex for consistent ShortHexGuid format
-    return uint8ArrayToHex(this.originalPublicMember.idBytes) as ShortHexGuid;
+  public override get id(): HexString {
+    // Use uint8ArrayToHex for consistent HexString format
+    return uint8ArrayToHex(this.originalPublicMember.idBytes) as HexString;
   }
 
   /**

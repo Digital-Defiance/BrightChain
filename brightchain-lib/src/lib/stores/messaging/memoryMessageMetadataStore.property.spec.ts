@@ -15,8 +15,12 @@ import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 import { MemoryMessageMetadataStore } from './memoryMessageMetadataStore';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 describe('Message Metadata Round-Trip Property Tests', () => {
   let _store: MemoryMessageMetadataStore;
@@ -76,7 +80,7 @@ describe('Message Metadata Round-Trip Property Tests', () => {
           const testStore = new MemoryMessageMetadataStore();
 
           const metadata: IMessageMetadata = {
-            blockId,
+            blockId: bid(blockId),
             createdAt: new Date(),
             expiresAt,
             durabilityLevel: DurabilityLevel.Standard,
@@ -99,7 +103,9 @@ describe('Message Metadata Round-Trip Property Tests', () => {
           };
 
           await testStore.storeMessageMetadata(metadata);
-          const retrieved = (await testStore.get(blockId)) as IMessageMetadata;
+          const retrieved = (await testStore.get(
+            bid(blockId),
+          )) as IMessageMetadata;
 
           expect(retrieved).toBeDefined();
           expect(retrieved!.messageType).toBe(messageType);

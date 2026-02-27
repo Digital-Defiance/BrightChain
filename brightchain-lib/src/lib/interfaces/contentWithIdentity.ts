@@ -7,7 +7,7 @@
  * @see Requirements 14, 16
  */
 
-import { PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString, PlatformID } from '@digitaldefiance/ecies-lib';
 
 /**
  * Identity mode for content publication.
@@ -29,7 +29,7 @@ export interface ContentWithIdentity<TID extends PlatformID = Uint8Array> {
   /** Creator's identity (real ID, alias ID, or Anonymous_ID) */
   creatorId: TID;
   /** Unique content identifier */
-  contentId: ShortHexGuid;
+  contentId: HexString;
   /** Content type (block, message, post) */
   contentType: string;
   /** Content signature */
@@ -37,5 +37,5 @@ export interface ContentWithIdentity<TID extends PlatformID = Uint8Array> {
   /** Ring signature membership proof (required for anonymous content) */
   membershipProof?: Uint8Array;
   /** Link to identity recovery record after sealing */
-  identityRecoveryRecordId?: ShortHexGuid;
+  identityRecoveryRecordId?: HexString;
 }

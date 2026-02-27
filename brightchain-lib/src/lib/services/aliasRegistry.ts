@@ -11,9 +11,8 @@
 
 import {
   ECIESService,
+  HexString,
   PlatformID,
-  ShortHexGuid,
-  uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { QuorumErrorType } from '../enumerations/quorumErrorType';
 import { QuorumError } from '../errors/quorumError';
@@ -63,7 +62,7 @@ export class AliasRegistry<TID extends PlatformID = Uint8Array> {
    */
   async registerAlias(
     aliasName: string,
-    ownerMemberId: ShortHexGuid,
+    ownerMemberId: HexString,
     ownerPublicKey: Uint8Array,
   ): Promise<AliasRecord<TID>> {
     // 1. Validate alias uniqueness
@@ -86,7 +85,10 @@ export class AliasRegistry<TID extends PlatformID = Uint8Array> {
     );
     const creatorId = idProvider.fromBytes(ownerMemberIdBytes);
 
-    const contentId = uint8ArrayToHex(idProvider.generate()) as ShortHexGuid;
+    const contentId = idProvider.toString(
+      idProvider.generate(),
+      'hex',
+    ) as HexString;
 
     const sealResult = await this.identitySealingPipeline.sealIdentity(
       {
@@ -105,9 +107,9 @@ export class AliasRegistry<TID extends PlatformID = Uint8Array> {
 
     const aliasRecord: AliasRecord<TID> = {
       aliasName,
-      ownerMemberId,
+      ownerMemberId: ownerMemberId as unknown as TID,
       aliasPublicKey: aliasKeyPair.publicKey,
-      identityRecoveryRecordId: sealResult.recoveryRecordId,
+      identityRecoveryRecordId: sealResult.recoveryRecordId as unknown as TID,
       isActive: true,
       registeredAt: now,
       epochNumber: epoch.epochNumber,
@@ -161,7 +163,7 @@ export class AliasRegistry<TID extends PlatformID = Uint8Array> {
    */
   async lookupAlias(
     aliasName: string,
-    decryptedShares: Map<ShortHexGuid, string>,
+    decryptedShares: Map<HexString, string>,
   ): Promise<TID> {
     const alias = await this.db.getAlias(aliasName);
     if (!alias) {
@@ -169,7 +171,7 @@ export class AliasRegistry<TID extends PlatformID = Uint8Array> {
     }
 
     return this.identitySealingPipeline.recoverIdentity(
-      alias.identityRecoveryRecordId,
+      alias.identityRecoveryRecordId as unknown as HexString,
       decryptedShares,
     );
   }

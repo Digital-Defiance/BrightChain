@@ -1,3 +1,5 @@
+import { ServiceProvider } from '@brightchain/brightchain-lib';
+import { IIdProvider, PlatformID } from '@digitaldefiance/ecies-lib';
 import { randomUUID } from 'crypto';
 import {
   DocumentCollection,
@@ -7,6 +9,24 @@ import {
   QueryBuilder,
   QueryResultType,
 } from './document-store';
+
+/**
+ * Resolve an ID generator function from the given provider, or fall back
+ * to the global ServiceProvider, or finally to crypto.randomUUID().
+ */
+function resolveIdGenerator(
+  idProvider?: IIdProvider<PlatformID>,
+): () => string {
+  if (idProvider) {
+    return () => idProvider.serialize(idProvider.generate());
+  }
+  try {
+    const provider = ServiceProvider.getInstance().idProvider;
+    return () => provider.serialize(provider.generate());
+  } catch {
+    return () => randomUUID();
+  }
+}
 
 // In-memory implementation of QueryBuilder for document queries
 class MemoryQuery<T extends QueryResultType> implements QueryBuilder<T> {
@@ -79,9 +99,12 @@ function matchFilter<T extends DocumentRecord>(
   });
 }
 
-function ensureId(doc: DocumentRecord): DocumentRecord {
+function ensureId(
+  doc: DocumentRecord,
+  generateId: () => string,
+): DocumentRecord {
   if (!doc._id) {
-    doc._id = randomUUID();
+    doc._id = generateId();
   }
   return doc;
 }
@@ -90,6 +113,8 @@ class MemoryCollection<
   T extends DocumentRecord,
 > implements DocumentCollection<T> {
   private readonly data: T[] = [];
+
+  constructor(private readonly generateId: () => string) {}
 
   private querySingle(filter?: Partial<T>): QueryBuilder<T> {
     return new MemoryQuery<T>(async () => {
@@ -143,14 +168,17 @@ class MemoryCollection<
   }
 
   async create(doc: T): Promise<T> {
-    const withId = ensureId({ ...(doc as DocumentRecord) }) as T;
+    const withId = ensureId(
+      { ...(doc as DocumentRecord) },
+      this.generateId,
+    ) as T;
     this.data.push(withId);
     return withId;
   }
 
   async insertMany(docs: T[]): Promise<T[]> {
     const inserted = docs.map(
-      (d) => ensureId({ ...(d as DocumentRecord) }) as T,
+      (d) => ensureId({ ...(d as DocumentRecord) }, this.generateId) as T,
     );
     this.data.push(...inserted);
     return inserted;
@@ -172,7 +200,10 @@ class MemoryCollection<
   async replaceOne(filter: Partial<T>, doc: T) {
     const idx = this.data.findIndex((d) => matchFilter(d, filter));
     if (idx === -1) return { modifiedCount: 0, matchedCount: 0 };
-    this.data[idx] = ensureId({ ...(doc as DocumentRecord) }) as T;
+    this.data[idx] = ensureId(
+      { ...(doc as DocumentRecord) },
+      this.generateId,
+    ) as T;
     return { modifiedCount: 1, matchedCount: 1 };
   }
 
@@ -234,10 +265,18 @@ export class MemoryDocumentStore implements DocumentStore {
     string,
     MemoryCollection<DocumentRecord>
   >();
+  private readonly generateId: () => string;
+
+  constructor(idProvider?: IIdProvider<PlatformID>) {
+    this.generateId = resolveIdGenerator(idProvider);
+  }
 
   collection<T extends DocumentRecord>(name: string): DocumentCollection<T> {
     if (!this.collections.has(name)) {
-      this.collections.set(name, new MemoryCollection<DocumentRecord>());
+      this.collections.set(
+        name,
+        new MemoryCollection<DocumentRecord>(this.generateId),
+      );
     }
     return this.collections.get(name) as MemoryCollection<T>;
   }

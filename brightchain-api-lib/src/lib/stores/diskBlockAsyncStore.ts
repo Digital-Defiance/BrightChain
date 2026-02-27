@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
+  asBlockId,
   BaseBlock,
   BLOCK_HEADER,
   BlockDataType,
@@ -41,6 +42,7 @@ import {
   validatePoolId,
   xorArrays,
   XorService,
+  type BlockId,
 } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { randomBytes } from 'crypto';
@@ -58,6 +60,15 @@ import { DiskBlockStore } from './diskBlockStore';
  * Parity block file extension pattern: {blockId}.p{index}
  */
 const PARITY_FILE_EXTENSION_PREFIX = '.p';
+
+/**
+ * Cast a raw hex string to BlockId without validation.
+ * Used for opaque storage keys (e.g. SHA3-512 checksums from URL params)
+ * that are not semantic BlockIds but must satisfy the branded type.
+ */
+function toStorageKey(hex: string): BlockId {
+  return hex as unknown as BlockId;
+}
 
 /**
  * DiskBlockAsyncStore provides asynchronous operations for storing and retrieving blocks from disk.
@@ -116,8 +127,8 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param key - The key as Checksum or string
    * @returns The key as hex string
    */
-  protected override keyToHex(key: Checksum | string): string {
-    return typeof key === 'string' ? key : key.toHex();
+  protected override keyToHex(key: Checksum | string): BlockId {
+    return toStorageKey(typeof key === 'string' ? key : key.toHex());
   }
 
   /**
@@ -1034,11 +1045,14 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     );
 
     // Store parity blocks as separate files
-    const parityBlockIds: string[] = [];
+    const parityBlockIds: BlockId[] = [];
     for (let i = 0; i < parityData.length; i++) {
       const parityFilePath = this.parityPath(keyChecksum, blockSize, i);
       await writeFile(parityFilePath, Buffer.from(parityData[i].data));
-      parityBlockIds.push(`${keyHex}.p${i}`);
+      // Parity IDs are synthetic — use padded hex format for BlockId compatibility
+      const parityHex =
+        `${keyHex}`.slice(0, 62) + i.toString(16).padStart(2, '0');
+      parityBlockIds.push(asBlockId(parityHex));
     }
 
     // Update metadata with parity block IDs
@@ -1478,7 +1492,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
 
     // Perform XOR operation using the existing xor method
     const brightenedBlock = await this.xor(allBlockHandles, destBlockMetadata);
-    const brightenedBlockId = brightenedBlock.idChecksum.toHex();
+    const brightenedBlockId = toStorageKey(brightenedBlock.idChecksum.toHex());
 
     // Store the brightened block if it doesn't already exist
     const brightenedBlockExists = await this.has(brightenedBlockId);
@@ -1488,7 +1502,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
 
     // Get the random block IDs as hex strings
     const randomBlockIds = randomBlockChecksums.map((checksum) =>
-      checksum.toHex(),
+      toStorageKey(checksum.toHex()),
     );
 
     return {
@@ -1549,7 +1563,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
 
     // Track stored blocks for rollback on failure
     let block1Stored = false;
-    let block1Id = '';
+    let block1Id: BlockId = toStorageKey('0'.repeat(64));
 
     try {
       // 4. Store first block (R - the randomizer block)
@@ -1563,16 +1577,16 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
         await this.setData(block1, options);
         block1Stored = true;
       }
-      block1Id = block1Checksum.toHex();
+      block1Id = toStorageKey(block1Checksum.toHex());
 
       // 5. Store second block (CBL XOR R)
       const block2 = new RawDataBlock(this._blockSize, xorResult);
       await this.setData(block2, options);
-      const block2Id = block2.idChecksum.toHex();
+      const block2Id = toStorageKey(block2.idChecksum.toHex());
 
       // 6. Get parity block IDs if FEC redundancy was applied
-      let block1ParityIds: string[] | undefined;
-      let block2ParityIds: string[] | undefined;
+      let block1ParityIds: BlockId[] | undefined;
+      let block2ParityIds: BlockId[] | undefined;
 
       const block1Meta = await this.getMetadata(block1Id);
       if (block1Meta?.parityBlockIds?.length) {
@@ -1780,18 +1794,24 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     const p1Param = params.get('p1');
     const p2Param = params.get('p2');
     const block1ParityIds = p1Param
-      ? p1Param.split(',').filter((id) => id)
+      ? p1Param
+          .split(',')
+          .filter((id) => id)
+          .map(toStorageKey)
       : undefined;
     const block2ParityIds = p2Param
-      ? p2Param.split(',').filter((id) => id)
+      ? p2Param
+          .split(',')
+          .filter((id) => id)
+          .map(toStorageKey)
       : undefined;
 
     // Parse encryption flag
     const isEncrypted = params.get('enc') === '1';
 
     return {
-      blockId1,
-      blockId2,
+      blockId1: toStorageKey(blockId1),
+      blockId2: toStorageKey(blockId2),
       blockSize,
       block1ParityIds,
       block2ParityIds,

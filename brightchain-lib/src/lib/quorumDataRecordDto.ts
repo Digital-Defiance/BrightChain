@@ -1,13 +1,12 @@
 import {
   ChecksumString,
   HexString,
-  ShortHexGuid,
   SignatureString,
 } from '@digitaldefiance/ecies-lib';
 
 export interface QuorumDataRecordDto {
-  id: ShortHexGuid;
-  creatorId: ShortHexGuid;
+  id: HexString;
+  creatorId: HexString;
   encryptedData: HexString;
   encryptedSharesByMemberId: { [key: string]: HexString };
   /**
@@ -15,7 +14,7 @@ export interface QuorumDataRecordDto {
    */
   checksum: ChecksumString;
   signature: SignatureString;
-  memberIDs: ShortHexGuid[];
+  memberIDs: HexString[];
   sharesRequired: number;
   dateCreated: Date;
   dateUpdated: Date;
@@ -24,5 +23,5 @@ export interface QuorumDataRecordDto {
   /** True if the document was sealed in bootstrap mode */
   sealedUnderBootstrap: boolean;
   /** Link to identity recovery record if applicable */
-  identityRecoveryRecordId?: ShortHexGuid;
+  identityRecoveryRecordId?: HexString;
 }

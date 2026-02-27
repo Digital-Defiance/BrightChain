@@ -32,6 +32,10 @@ export { initializeBrightChain } from './lib/init';
 // Export Checksum type for working with block IDs
 export { Checksum } from './lib/types/checksum';
 
+// Export BlockId branded type and helpers
+export { asBlockId } from './lib/interfaces/branded/primitives/blockId';
+export type { BlockId } from './lib/interfaces/branded/primitives/blockId';
+
 // Export services
 export { CBLService } from './lib/services/cblService';
 export { ChecksumService } from './lib/services/checksum.service';

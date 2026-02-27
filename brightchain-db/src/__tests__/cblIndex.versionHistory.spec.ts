@@ -8,7 +8,7 @@
  * Validates: Requirements 27.4, 27.5, 27.6, 27.7, 27.8, 27.9
  */
 
-import type { ICBLIndexEntry } from '@brightchain/brightchain-lib';
+import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightChainDb } from '../lib/database';
@@ -34,9 +34,9 @@ function makeCBLIndex(): {
 /** Seed two blocks in the store and return their IDs. */
 async function seedBlocks(
   store: MockBlockStore,
-): Promise<{ blockId1: string; blockId2: string }> {
-  const blockId1 = 'block-aaa-111';
-  const blockId2 = 'block-bbb-222';
+): Promise<{ blockId1: BlockId; blockId2: BlockId }> {
+  const blockId1 = 'block-aaa-111' as BlockId;
+  const blockId2 = 'block-bbb-222' as BlockId;
   await store.put(blockId1, new Uint8Array([1, 2, 3]));
   await store.put(blockId2, new Uint8Array([4, 5, 6]));
   return { blockId1, blockId2 };
@@ -56,8 +56,8 @@ function makeVersionEntry(
 > {
   return {
     magnetUrl: `magnet:v-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    blockId1: 'block-aaa-111',
-    blockId2: 'block-bbb-222',
+    blockId1: 'block-aaa-111' as BlockId,
+    blockId2: 'block-bbb-222' as BlockId,
     blockSize: 256,
     createdAt: new Date(),
     visibility: CBLVisibility.Private,

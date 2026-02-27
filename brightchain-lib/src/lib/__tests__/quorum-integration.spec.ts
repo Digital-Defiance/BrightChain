@@ -18,10 +18,10 @@ import {
   ECIESService,
   EmailString,
   GuidV4Uint8Array,
+  HexString,
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
   SignatureUint8Array,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
@@ -78,13 +78,13 @@ type TID = GuidV4Uint8Array;
 
 interface InMemoryDb extends IQuorumDatabase<TID> {
   _epochs: Map<number, QuorumEpoch<TID>>;
-  _members: Map<ShortHexGuid, IQuorumMember<TID>>;
+  _members: Map<TID, IQuorumMember<TID>>;
   _documents: Map<string, QuorumDataRecord<TID>>;
-  _proposals: Map<ShortHexGuid, Proposal<TID>>;
-  _votes: Map<ShortHexGuid, Vote<TID>[]>;
-  _identityRecords: Map<ShortHexGuid, IdentityRecoveryRecord<TID>>;
+  _proposals: Map<TID, Proposal<TID>>;
+  _votes: Map<TID, Vote<TID>[]>;
+  _identityRecords: Map<TID, IdentityRecoveryRecord<TID>>;
   _aliases: Map<string, AliasRecord<TID>>;
-  _auditEntries: ChainedAuditLogEntry[];
+  _auditEntries: ChainedAuditLogEntry<TID>[];
   _journalEntries: RedistributionJournalEntry[];
   _statuteConfig: StatuteOfLimitationsConfig | null;
   _operationalState: OperationalState | null;
@@ -92,13 +92,13 @@ interface InMemoryDb extends IQuorumDatabase<TID> {
 
 function createInMemoryDb(): InMemoryDb {
   const epochs = new Map<number, QuorumEpoch<TID>>();
-  const members = new Map<ShortHexGuid, IQuorumMember<TID>>();
+  const members = new Map<TID, IQuorumMember<TID>>();
   const documents = new Map<string, QuorumDataRecord<TID>>();
-  const proposals = new Map<ShortHexGuid, Proposal<TID>>();
-  const votes = new Map<ShortHexGuid, Vote<TID>[]>();
-  const identityRecords = new Map<ShortHexGuid, IdentityRecoveryRecord<TID>>();
+  const proposals = new Map<TID, Proposal<TID>>();
+  const votes = new Map<TID, Vote<TID>[]>();
+  const identityRecords = new Map<TID, IdentityRecoveryRecord<TID>>();
   const aliases = new Map<string, AliasRecord<TID>>();
-  const auditEntries: ChainedAuditLogEntry[] = [];
+  const auditEntries: ChainedAuditLogEntry<TID>[] = [];
   const journalEntries: RedistributionJournalEntry[] = [];
   let statuteConfig: StatuteOfLimitationsConfig | null = null;
   let operationalState: OperationalState | null = null;
@@ -132,7 +132,7 @@ function createInMemoryDb(): InMemoryDb {
     saveMember: jest.fn(async (m: IQuorumMember<TID>) => {
       members.set(m.id, m);
     }),
-    getMember: jest.fn(async (id: ShortHexGuid) => members.get(id) ?? null),
+    getMember: jest.fn(async (id: TID) => members.get(id) ?? null),
     listActiveMembers: jest.fn(async () =>
       Array.from(members.values()).filter((m) => m.isActive),
     ),
@@ -142,10 +142,15 @@ function createInMemoryDb(): InMemoryDb {
       const idHex = uint8ArrayToHex(doc.enhancedProvider.toBytes(doc.id));
       documents.set(idHex, doc);
     }),
-    getDocument: jest.fn(async (docId: ShortHexGuid) => {
+    getDocument: jest.fn(async (docId: TID) => {
+      const docIdHex = uint8ArrayToHex(docId as Uint8Array);
       // Try direct lookup and also iterate
       for (const [key, doc] of documents) {
-        if (key === docId || key.startsWith(docId) || docId.startsWith(key)) {
+        if (
+          key === docIdHex ||
+          key.startsWith(docIdHex) ||
+          docIdHex.startsWith(key)
+        ) {
           return doc;
         }
       }
@@ -164,7 +169,7 @@ function createInMemoryDb(): InMemoryDb {
     saveProposal: jest.fn(async (p: Proposal<TID>) => {
       proposals.set(p.id, p);
     }),
-    getProposal: jest.fn(async (id: ShortHexGuid) => proposals.get(id) ?? null),
+    getProposal: jest.fn(async (id: TID) => proposals.get(id) ?? null),
 
     // Votes
     saveVote: jest.fn(async (v: Vote<TID>) => {
@@ -172,18 +177,16 @@ function createInMemoryDb(): InMemoryDb {
       existing.push(v);
       votes.set(v.proposalId, existing);
     }),
-    getVotesForProposal: jest.fn(
-      async (id: ShortHexGuid) => votes.get(id) ?? [],
-    ),
+    getVotesForProposal: jest.fn(async (id: TID) => votes.get(id) ?? []),
 
     // Identity Records
     saveIdentityRecord: jest.fn(async (r: IdentityRecoveryRecord<TID>) => {
       identityRecords.set(r.id, r);
     }),
     getIdentityRecord: jest.fn(
-      async (id: ShortHexGuid) => identityRecords.get(id) ?? null,
+      async (id: TID) => identityRecords.get(id) ?? null,
     ),
-    deleteIdentityRecord: jest.fn(async (id: ShortHexGuid) => {
+    deleteIdentityRecord: jest.fn(async (id: TID) => {
       identityRecords.delete(id);
     }),
     listExpiredIdentityRecords: jest.fn(
@@ -204,12 +207,14 @@ function createInMemoryDb(): InMemoryDb {
 
     // Audit
     appendAuditEntry: jest.fn(async (entry: QuorumAuditLogEntry) => {
-      auditEntries.push(entry as ChainedAuditLogEntry);
+      auditEntries.push(entry as ChainedAuditLogEntry<TID>);
     }),
-    getLatestAuditEntry: jest.fn(async () => {
-      if (auditEntries.length === 0) return null;
-      return auditEntries[auditEntries.length - 1];
-    }),
+    getLatestAuditEntry: jest.fn(
+      async (): Promise<ChainedAuditLogEntry<TID> | null> => {
+        if (auditEntries.length === 0) return null;
+        return auditEntries[auditEntries.length - 1];
+      },
+    ),
 
     // Journal
     saveJournalEntry: jest.fn(async (e: RedistributionJournalEntry) => {
@@ -326,8 +331,8 @@ function createTestMember(name: string): IMemberWithMnemonic<TID> {
   );
 }
 
-function getMemberHexId(member: Member<TID>): ShortHexGuid {
-  return uint8ArrayToHex(member.idBytes) as ShortHexGuid;
+function getMemberHexId(member: Member<TID>): HexString {
+  return uint8ArrayToHex(member.idBytes) as HexString;
 }
 
 function computeContentDigest(content: ContentWithIdentity<TID>): Uint8Array {
@@ -376,7 +381,7 @@ describe('Quorum Integration Tests', () => {
       const sealResult = await qsm.sealDocument(
         memberPool[0].member,
         secretDoc,
-        [getMemberHexId(memberPool[0].member)],
+        [memberPool[0].member.id],
         1,
       );
       expect(sealResult.documentId).toBeDefined();
@@ -445,7 +450,7 @@ describe('Quorum Integration Tests', () => {
       // Submit approve vote from member 0
       await qsm.submitVote({
         proposalId: proposal.id,
-        voterMemberId: getMemberHexId(memberPool[0].member),
+        voterMemberId: memberPool[0].member.id,
         decision: 'approve',
       });
 
@@ -455,7 +460,7 @@ describe('Quorum Integration Tests', () => {
       // Submit approve vote from member 1 (reaches threshold of 2)
       await qsm.submitVote({
         proposalId: proposal.id,
-        voterMemberId: getMemberHexId(memberPool[1].member),
+        voterMemberId: memberPool[1].member.id,
         decision: 'approve',
       });
 
@@ -492,12 +497,12 @@ describe('Quorum Integration Tests', () => {
       // Two rejections make approval impossible (only 1 member left, need 2)
       await qsm.submitVote({
         proposalId: proposal.id,
-        voterMemberId: getMemberHexId(memberPool[0].member),
+        voterMemberId: memberPool[0].member.id,
         decision: 'reject',
       });
       await qsm.submitVote({
         proposalId: proposal.id,
-        voterMemberId: getMemberHexId(memberPool[1].member),
+        voterMemberId: memberPool[1].member.id,
         decision: 'reject',
       });
 
@@ -522,7 +527,7 @@ describe('Quorum Integration Tests', () => {
       // Create epoch
       const epoch: QuorumEpoch<TID> = {
         epochNumber: 1,
-        memberIds: members.map((m) => getMemberHexId(m.member)),
+        memberIds: members.map((m) => m.member.id),
         threshold,
         mode: QuorumOperationalMode.Quorum,
         createdAt: new Date(),
@@ -531,11 +536,12 @@ describe('Quorum Integration Tests', () => {
 
       // Register members in db
       for (const m of members) {
-        const hexId = getMemberHexId(m.member);
-        db._members.set(hexId, {
-          id: hexId,
+        db._members.set(m.member.id, {
+          id: m.member.id,
           publicKey: m.member.publicKey,
-          metadata: { name: `Member-${hexId.substring(0, 8)}` },
+          metadata: {
+            name: `Member-${getMemberHexId(m.member).substring(0, 8)}`,
+          },
           isActive: true,
           status: MemberStatusType.Active,
           createdAt: new Date(),
@@ -568,7 +574,7 @@ describe('Quorum Integration Tests', () => {
     it('should process content with real identity mode', async () => {
       const { members } = setupServices(3, 2);
       const creator = members[0].member;
-      const contentId = uuidv4() as ShortHexGuid;
+      const contentId = uuidv4() as HexString;
 
       // Create content signed by the real member
       const content: ContentWithIdentity<TID> = {
@@ -603,7 +609,9 @@ describe('Quorum Integration Tests', () => {
       );
 
       // Verify recovery record was stored
-      const record = await db.getIdentityRecord(sealResult.recoveryRecordId);
+      const record = await db.getIdentityRecord(
+        sealResult.recoveryRecordId as unknown as TID,
+      );
       expect(record).not.toBeNull();
       expect(record!.identityMode).toBe(IdentityMode.Real);
     });
@@ -611,7 +619,7 @@ describe('Quorum Integration Tests', () => {
     it('should process content with anonymous identity mode', async () => {
       const { members } = setupServices(3, 2);
       const creator = members[0].member;
-      const contentId = uuidv4() as ShortHexGuid;
+      const contentId = uuidv4() as HexString;
 
       // Generate membership proof (ring signature)
       const memberPublicKeys = members.map((m) => m.member.publicKey);
@@ -653,7 +661,9 @@ describe('Quorum Integration Tests', () => {
       expect(modifiedCreatorBytes).toBeDefined();
 
       // Verify recovery record was stored
-      const record = await db.getIdentityRecord(sealResult.recoveryRecordId);
+      const record = await db.getIdentityRecord(
+        sealResult.recoveryRecordId as unknown as TID,
+      );
       expect(record).not.toBeNull();
       expect(record!.identityMode).toBe(IdentityMode.Anonymous);
     });
@@ -688,7 +698,7 @@ describe('Quorum Integration Tests', () => {
       );
 
       const creator = memberPool[0].member;
-      const contentId = uuidv4() as ShortHexGuid;
+      const contentId = uuidv4() as HexString;
       const content: ContentWithIdentity<TID> = {
         creatorId: creator.id,
         contentId,
@@ -704,7 +714,9 @@ describe('Quorum Integration Tests', () => {
       const recoveryRecordId = sealResult.recoveryRecordId;
 
       // Verify recovery record exists
-      const record = await db.getIdentityRecord(recoveryRecordId);
+      const record = await db.getIdentityRecord(
+        recoveryRecordId as unknown as TID,
+      );
       expect(record).not.toBeNull();
 
       // Submit IDENTITY_DISCLOSURE proposal with attachment
@@ -713,7 +725,7 @@ describe('Quorum Integration Tests', () => {
         actionType: ProposalActionType.IDENTITY_DISCLOSURE,
         actionPayload: {
           targetRecoveryRecordId: recoveryRecordId,
-          targetMemberId: getMemberHexId(creator),
+          targetMemberId: creator.id,
         },
         expiresAt: new Date(Date.now() + 3600000),
         attachmentCblId: 'cbl-court-order-12345',
@@ -725,12 +737,12 @@ describe('Quorum Integration Tests', () => {
       // Vote to approve from 2 members (meets threshold)
       await qsm.submitVote({
         proposalId: proposal.id,
-        voterMemberId: getMemberHexId(memberPool[0].member),
+        voterMemberId: memberPool[0].member.id,
         decision: 'approve',
       });
       await qsm.submitVote({
         proposalId: proposal.id,
-        voterMemberId: getMemberHexId(memberPool[1].member),
+        voterMemberId: memberPool[1].member.id,
         decision: 'approve',
       });
 
@@ -777,15 +789,19 @@ describe('Quorum Integration Tests', () => {
 
       // Create an identity recovery record with expiration in the past
       const pastDate = new Date(Date.now() - 1000); // 1 second ago
+      const sp = ServiceProvider.getInstance<TID>();
       const record: IdentityRecoveryRecord<TID> = {
-        id: uuidv4() as ShortHexGuid,
-        contentId: uuidv4() as ShortHexGuid,
+        id: sp.idProvider.generateTyped(),
+        contentId: sp.idProvider.generateTyped(),
         contentType: 'post',
         encryptedShardsByMemberId: new Map([
-          ['member1' as ShortHexGuid, new Uint8Array([1, 2, 3])],
-          ['member2' as ShortHexGuid, new Uint8Array([4, 5, 6])],
+          [sp.idProvider.generateTyped(), new Uint8Array([1, 2, 3])],
+          [sp.idProvider.generateTyped(), new Uint8Array([4, 5, 6])],
         ]),
-        memberIds: ['member1' as ShortHexGuid, 'member2' as ShortHexGuid],
+        memberIds: [
+          sp.idProvider.generateTyped(),
+          sp.idProvider.generateTyped(),
+        ],
         threshold: 2,
         epochNumber: 1,
         expiresAt: pastDate,
@@ -822,14 +838,15 @@ describe('Quorum Integration Tests', () => {
       const db = createInMemoryDb();
 
       const futureDate = new Date(Date.now() + 86400000 * 365); // 1 year from now
+      const sp2 = ServiceProvider.getInstance<TID>();
       const record: IdentityRecoveryRecord<TID> = {
-        id: uuidv4() as ShortHexGuid,
-        contentId: uuidv4() as ShortHexGuid,
+        id: sp2.idProvider.generateTyped(),
+        contentId: sp2.idProvider.generateTyped(),
         contentType: 'message',
         encryptedShardsByMemberId: new Map([
-          ['member1' as ShortHexGuid, new Uint8Array([1, 2, 3])],
+          [sp2.idProvider.generateTyped(), new Uint8Array([1, 2, 3])],
         ]),
-        memberIds: ['member1' as ShortHexGuid],
+        memberIds: [sp2.idProvider.generateTyped()],
         threshold: 1,
         epochNumber: 1,
         expiresAt: futureDate,
@@ -865,25 +882,26 @@ describe('Quorum Integration Tests', () => {
       );
 
       // Perform multiple operations that generate audit entries
+      const auditSp = ServiceProvider.getInstance<TID>();
       const entry1 = await auditLogService.appendEntry({
-        id: uuidv4() as ShortHexGuid,
+        id: auditSp.idProvider.generateTyped(),
         eventType: 'epoch_created',
         details: { epochNumber: 1, memberCount: 3 },
         timestamp: new Date(),
       });
 
       const entry2 = await auditLogService.appendEntry({
-        id: uuidv4() as ShortHexGuid,
+        id: auditSp.idProvider.generateTyped(),
         eventType: 'member_added',
-        targetMemberId: 'new-member-id' as ShortHexGuid,
+        targetMemberId: auditSp.idProvider.generateTyped(),
         details: { memberName: 'David' },
         timestamp: new Date(),
       });
 
       const entry3 = await auditLogService.appendEntry({
-        id: uuidv4() as ShortHexGuid,
+        id: auditSp.idProvider.generateTyped(),
         eventType: 'proposal_created',
-        proposalId: 'proposal-1' as ShortHexGuid,
+        proposalId: auditSp.idProvider.generateTyped(),
         details: { actionType: 'CUSTOM' },
         timestamp: new Date(),
       });
@@ -912,15 +930,16 @@ describe('Quorum Integration Tests', () => {
         eciesService,
       );
 
+      const tamperSp = ServiceProvider.getInstance<TID>();
       const entry1 = await auditLogService.appendEntry({
-        id: uuidv4() as ShortHexGuid,
+        id: tamperSp.idProvider.generateTyped(),
         eventType: 'epoch_created',
         details: { epochNumber: 1 },
         timestamp: new Date(),
       });
 
       const entry2 = await auditLogService.appendEntry({
-        id: uuidv4() as ShortHexGuid,
+        id: tamperSp.idProvider.generateTyped(),
         eventType: 'member_added',
         details: { memberName: 'Bob' },
         timestamp: new Date(),
@@ -951,15 +970,16 @@ describe('Quorum Integration Tests', () => {
         eciesService,
       );
 
+      const detailsSp = ServiceProvider.getInstance<TID>();
       const entry1 = await auditLogService.appendEntry({
-        id: uuidv4() as ShortHexGuid,
+        id: detailsSp.idProvider.generateTyped(),
         eventType: 'epoch_created',
         details: { epochNumber: 1 },
         timestamp: new Date(),
       });
 
       // Tamper with the details (contentHash won't match recomputed hash)
-      const tamperedEntry1: ChainedAuditLogEntry = {
+      const tamperedEntry1: ChainedAuditLogEntry<TID> = {
         ...entry1,
         details: { epochNumber: 999, hacked: true },
       };
@@ -987,7 +1007,7 @@ describe('Quorum Integration Tests', () => {
       ];
       await qsm.initialize(members, 2);
 
-      const memberIds = members.map((m) => getMemberHexId(m));
+      const memberIds = members.map((m) => m.id);
 
       // Seal a document
       const secretDoc = { data: 'sensitive-info', key: 12345 };
@@ -1013,9 +1033,7 @@ describe('Quorum Integration Tests', () => {
 
       // Verify the new epoch has the correct member count
       const currentEpoch = await qsm.getCurrentEpoch();
-      expect(currentEpoch.memberIds).toContain(
-        getMemberHexId(memberPool[3].member),
-      );
+      expect(currentEpoch.memberIds).toContain(memberPool[3].member.id);
     });
 
     it('should reject member removal when it would drop below threshold', async () => {
@@ -1027,9 +1045,9 @@ describe('Quorum Integration Tests', () => {
       await qsm.initialize([memberPool[0].member, memberPool[1].member], 2);
 
       // Try to remove a member — would drop below threshold
-      await expect(
-        qsm.removeMember(getMemberHexId(memberPool[0].member)),
-      ).rejects.toThrow(QuorumError);
+      await expect(qsm.removeMember(memberPool[0].member.id)).rejects.toThrow(
+        QuorumError,
+      );
     });
 
     it('should remove a member and trigger redistribution', async () => {
@@ -1046,7 +1064,7 @@ describe('Quorum Integration Tests', () => {
       ];
       await qsm.initialize(members, 2);
 
-      const memberIds = members.map((m) => getMemberHexId(m));
+      const memberIds = members.map((m) => m.id);
 
       // Seal a document
       await qsm.sealDocument(
@@ -1057,19 +1075,13 @@ describe('Quorum Integration Tests', () => {
       );
 
       // Remove member 3 (David)
-      const newEpoch = await qsm.removeMember(
-        getMemberHexId(memberPool[3].member),
-      );
+      const newEpoch = await qsm.removeMember(memberPool[3].member.id);
       expect(newEpoch.epochNumber).toBe(2);
       expect(newEpoch.memberIds).toHaveLength(3);
-      expect(newEpoch.memberIds).not.toContain(
-        getMemberHexId(memberPool[3].member),
-      );
+      expect(newEpoch.memberIds).not.toContain(memberPool[3].member.id);
 
       // Verify member is marked inactive
-      const removedMember = await db.getMember(
-        getMemberHexId(memberPool[3].member),
-      );
+      const removedMember = await db.getMember(memberPool[3].member.id);
       expect(removedMember).not.toBeNull();
       expect(removedMember!.isActive).toBe(false);
 

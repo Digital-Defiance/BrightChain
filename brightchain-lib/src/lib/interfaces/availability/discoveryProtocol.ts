@@ -8,6 +8,7 @@
  * @see Requirements 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8
  */
 
+import type { BlockId } from '../branded/primitives/blockId';
 import type { ICBLIndexEntry } from '../storage/cblIndex';
 import { PoolId } from '../storage/pooledBlockStore';
 import { BloomFilter, PoolScopedBloomFilter } from './blockRegistry';
@@ -23,7 +24,7 @@ export interface DiscoveryResult {
   /**
    * The block ID that was searched for
    */
-  blockId: string;
+  blockId: BlockId;
 
   /**
    * Whether the block was found on any peer
@@ -212,7 +213,7 @@ export interface IDiscoveryProtocol {
    * @returns Promise resolving to discovery result with locations
    * @see Requirements 4.1, 4.2, 4.3, 5.1, 5.2, 5.3, 5.4, 5.5
    */
-  discoverBlock(blockId: string, poolId?: PoolId): Promise<DiscoveryResult>;
+  discoverBlock(blockId: BlockId, poolId?: PoolId): Promise<DiscoveryResult>;
 
   /**
    * Query a specific peer for a block.
@@ -223,7 +224,7 @@ export interface IDiscoveryProtocol {
    * @returns Promise resolving to the query result
    * @see Requirements 5.3
    */
-  queryPeer(peerId: string, blockId: string): Promise<PeerQueryResult>;
+  queryPeer(peerId: string, blockId: BlockId): Promise<PeerQueryResult>;
 
   /**
    * Get cached discovery results for a block.
@@ -233,7 +234,7 @@ export interface IDiscoveryProtocol {
    * @returns Cached location records or null if not cached
    * @see Requirements 5.8
    */
-  getCachedLocations(blockId: string): ILocationRecord[] | null;
+  getCachedLocations(blockId: BlockId): ILocationRecord[] | null;
 
   /**
    * Clear the discovery cache for a specific block.
@@ -241,7 +242,7 @@ export interface IDiscoveryProtocol {
    *
    * @param blockId - The block ID to clear from cache
    */
-  clearCache(blockId: string): void;
+  clearCache(blockId: BlockId): void;
 
   /**
    * Clear the entire discovery cache.

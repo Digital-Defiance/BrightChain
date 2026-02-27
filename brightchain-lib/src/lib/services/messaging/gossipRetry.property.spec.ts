@@ -7,6 +7,7 @@ import {
   IGossipService,
   MessageDeliveryMetadata,
 } from '../../interfaces/availability/gossipService';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 import {
   GossipRetryService,
@@ -14,6 +15,9 @@ import {
   IMessageEventEmitter,
   RetryConfig,
 } from './gossipRetryService';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 /**
  * Property tests for Retry with Exponential Backoff
@@ -126,8 +130,10 @@ describe('Feature: unified-gossip-delivery, Property 10: Retry with exponential 
         maxLength: 5,
       }),
       priority: fc.constantFrom('normal' as const, 'high' as const),
-      blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-      cblBlockId: nonEmptyStringArb,
+      blockIds: fc
+        .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+        .map((arr) => arr.map((s) => bid(s))),
+      cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
       ackRequired: fc.constant(true),
     });
 
@@ -702,8 +708,10 @@ describe('Feature: unified-gossip-delivery, Property 11: Max retries exhausted m
         maxLength: 5,
       }),
       priority: fc.constantFrom('normal' as const, 'high' as const),
-      blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-      cblBlockId: nonEmptyStringArb,
+      blockIds: fc
+        .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+        .map((arr) => arr.map((s) => bid(s))),
+      cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
       ackRequired: fc.constant(true),
     });
 
@@ -983,8 +991,10 @@ describe('Feature: unified-gossip-delivery, Property 11: Max retries exhausted m
         .uniqueArray(nonEmptyStringArb, { minLength: 2, maxLength: 6 })
         .filter((arr) => arr.length >= 2),
       priority: fc.constantFrom('normal' as const, 'high' as const),
-      blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-      cblBlockId: nonEmptyStringArb,
+      blockIds: fc
+        .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+        .map((arr) => arr.map((s) => bid(s))),
+      cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
       ackRequired: fc.constant(true),
     });
 

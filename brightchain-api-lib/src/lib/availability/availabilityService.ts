@@ -8,6 +8,7 @@
  * @see Requirements 1.7, 7.2, 7.3, 7.4, 7.5, 7.7, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 14.1, 14.2, 14.3, 14.4, 14.5, 14.6
  */
 
+import type { BlockId } from '@brightchain/brightchain-lib';
 import {
   AvailabilityEvent,
   AvailabilityEventHandler,
@@ -123,7 +124,7 @@ export class AvailabilityService implements IAvailabilityService {
    * @returns Promise resolving to the block's availability state
    * @see Requirements 1.7, 11.1
    */
-  async getAvailabilityState(blockId: string): Promise<AvailabilityState> {
+  async getAvailabilityState(blockId: BlockId): Promise<AvailabilityState> {
     // Check local registry first
     if (this.registry.hasLocal(blockId)) {
       return AvailabilityState.Local;
@@ -147,7 +148,7 @@ export class AvailabilityService implements IAvailabilityService {
    * @see Requirements 11.2
    */
   async getBlockLocations(
-    blockId: string,
+    blockId: BlockId,
     poolId?: PoolId,
   ): Promise<ILocationRecord[]> {
     const data = this.blockData.get(blockId);
@@ -180,7 +181,7 @@ export class AvailabilityService implements IAvailabilityService {
    * @returns Promise resolving to location query result
    * @see Requirements 11.5, 11.6
    */
-  async queryBlockLocation(blockId: string): Promise<LocationQueryResult> {
+  async queryBlockLocation(blockId: BlockId): Promise<LocationQueryResult> {
     const state = await this.getAvailabilityState(blockId);
     const locations = await this.getBlockLocations(blockId);
 
@@ -207,8 +208,8 @@ export class AvailabilityService implements IAvailabilityService {
    * @returns Promise resolving to array of block IDs
    * @see Requirements 11.3
    */
-  async listBlocksByState(state: AvailabilityState): Promise<string[]> {
-    const blockIds: string[] = [];
+  async listBlocksByState(state: AvailabilityState): Promise<BlockId[]> {
+    const blockIds: BlockId[] = [];
 
     // For Local state, use registry
     if (state === AvailabilityState.Local) {
@@ -218,7 +219,7 @@ export class AvailabilityService implements IAvailabilityService {
     // For other states, scan block data
     for (const [blockId, data] of this.blockData) {
       if (data.state === state) {
-        blockIds.push(blockId);
+        blockIds.push(blockId as BlockId);
       }
     }
 
@@ -291,7 +292,7 @@ export class AvailabilityService implements IAvailabilityService {
    * @see Requirements 2.4, 14.2
    */
   async updateLocation(
-    blockId: string,
+    blockId: BlockId,
     location: ILocationRecord,
   ): Promise<void> {
     let data = this.blockData.get(blockId);
@@ -345,7 +346,7 @@ export class AvailabilityService implements IAvailabilityService {
    * @param nodeId - The node ID to remove from locations
    * @see Requirements 2.5, 14.3
    */
-  async removeLocation(blockId: string, nodeId: string): Promise<void> {
+  async removeLocation(blockId: BlockId, nodeId: string): Promise<void> {
     const data = this.blockData.get(blockId);
     if (!data) {
       return;
@@ -383,7 +384,7 @@ export class AvailabilityService implements IAvailabilityService {
    * @see Requirements 14.1
    */
   async setAvailabilityState(
-    blockId: string,
+    blockId: BlockId,
     state: AvailabilityState,
   ): Promise<void> {
     let data = this.blockData.get(blockId);
@@ -637,7 +638,7 @@ export class AvailabilityService implements IAvailabilityService {
 
         this.emitEvent({
           type: 'state_changed',
-          blockId,
+          blockId: blockId as BlockId,
           oldState,
           newState: AvailabilityState.Orphaned,
           timestamp: new Date(),
@@ -740,14 +741,14 @@ export class AvailabilityService implements IAvailabilityService {
   /**
    * Get block data directly (for testing).
    */
-  getBlockData(blockId: string): BlockLocationData | undefined {
+  getBlockData(blockId: BlockId): BlockLocationData | undefined {
     return this.blockData.get(blockId);
   }
 
   /**
    * Set block data directly (for testing).
    */
-  setBlockData(blockId: string, data: BlockLocationData): void {
+  setBlockData(blockId: BlockId, data: BlockLocationData): void {
     this.blockData.set(blockId, data);
   }
 }

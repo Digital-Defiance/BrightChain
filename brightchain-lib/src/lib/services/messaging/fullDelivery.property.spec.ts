@@ -4,7 +4,11 @@ import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 /**
  * Helper to check if all recipients have acknowledged
@@ -54,7 +58,7 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
     fc.assert(
       fc.property(fc.string(), fc.string(), (messageId, senderId) => {
         const metadata: IMessageMetadata = {
-          blockId: messageId,
+          blockId: bid(messageId),
           messageType: 'test',
           senderId,
           recipients: [],
@@ -105,7 +109,7 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
           }
 
           const metadata: IMessageMetadata = {
-            blockId: messageId,
+            blockId: bid(messageId),
             messageType: 'test',
             senderId,
             recipients: uniqueRecipients,
@@ -161,7 +165,7 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
           }
 
           const metadata: IMessageMetadata = {
-            blockId: messageId,
+            blockId: bid(messageId),
             messageType: 'test',
             senderId,
             recipients: uniqueRecipients,
@@ -215,7 +219,7 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
           }
 
           const metadata: IMessageMetadata = {
-            blockId: messageId,
+            blockId: bid(messageId),
             messageType: 'test',
             senderId,
             recipients: uniqueRecipients,
@@ -263,7 +267,7 @@ describe('Feature: message-passing-and-events, Property: Full Delivery Detection
           deliveryStatus.set(recipient, DeliveryStatus.Delivered);
 
           const metadata: IMessageMetadata = {
-            blockId: messageId,
+            blockId: bid(messageId),
             messageType: 'test',
             senderId,
             recipients: [recipient],

@@ -9,6 +9,7 @@
  */
 
 import {
+  asBlockId,
   AvailabilityState,
   BaseBlock,
   BlockFetcherConfig,
@@ -40,6 +41,7 @@ import {
   RawDataBlock,
   ReadConcern,
   RecoveryResult,
+  type BlockId,
 } from '@brightchain/brightchain-lib';
 
 // Re-export so existing consumers of this module continue to work
@@ -333,7 +335,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    */
   private async fetchBlockConsistent(
     key: Checksum,
-    blockId: string,
+    blockId: BlockId,
   ): Promise<RawDataBlock> {
     const result = await this.blockFetcher!.fetchBlock(blockId);
 
@@ -366,7 +368,7 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    */
   private async fetchBlockAvailable(
     key: Checksum,
-    blockId: string,
+    blockId: BlockId,
   ): Promise<RawDataBlock> {
     const fetcherConfig = this.blockFetcher!.getConfig();
     const initialWaitMs = fetcherConfig.initialWaitMs;
@@ -938,14 +940,14 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
   /**
    * Convert a key to hex string format.
    */
-  private keyToHex(key: Checksum | string): string {
-    return typeof key === 'string' ? key : key.toHex();
+  private keyToHex(key: Checksum | string): BlockId {
+    return (typeof key === 'string' ? key : key.toHex()) as unknown as BlockId;
   }
 
   /**
    * Update access metadata for a block.
    */
-  private async updateAccessMetadata(blockId: string): Promise<void> {
+  private async updateAccessMetadata(blockId: BlockId): Promise<void> {
     try {
       // Update location record with new lastSeen timestamp
       const locationRecord: ILocationRecord = {

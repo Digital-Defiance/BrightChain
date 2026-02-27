@@ -15,7 +15,6 @@ import {
   GuidV4Uint8Array,
   Member,
   MemberType,
-  ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
 import { initializeBrightChain } from '../init';
@@ -123,7 +122,7 @@ describe('QuorumService Member Management Property Tests', () => {
           fc.integer({ min: 1, max: 5 }),
           async (memberCount) => {
             const testService = new QuorumService<GuidV4Uint8Array>();
-            const addedMemberIds: ShortHexGuid[] = [];
+            const addedMemberIds: GuidV4Uint8Array[] = [];
 
             // Add multiple members with unique emails using timestamp + index + random
             const timestamp = Date.now();
@@ -224,7 +223,7 @@ describe('QuorumService Member Management Property Tests', () => {
             const testService = new QuorumService<GuidV4Uint8Array>();
 
             const member = await testService.getMember(
-              randomId as ShortHexGuid,
+              randomId as unknown as GuidV4Uint8Array,
             );
             expect(member).toBeNull();
           },

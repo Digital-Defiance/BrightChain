@@ -7,12 +7,16 @@ import {
   IGossipService,
   MessageDeliveryMetadata,
 } from '../../interfaces/availability/gossipService';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 import {
   GossipRetryService,
   IDeliveryStatusStore,
   IMessageEventEmitter,
 } from './gossipRetryService';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 /**
  * Property tests for Ack Updates Delivery Status in Metadata Store
@@ -128,8 +132,10 @@ describe('Feature: unified-gossip-delivery, Property 8: Ack updates delivery sta
         .map((ids) => [...new Set(ids)])
         .filter((ids) => ids.length > 0),
       priority: fc.constantFrom('normal' as const, 'high' as const),
-      blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-      cblBlockId: nonEmptyStringArb,
+      blockIds: fc
+        .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+        .map((arr) => arr.map((s) => bid(s))),
+      cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
       ackRequired: fc.constant(true),
     });
 
@@ -286,11 +292,13 @@ describe('Feature: unified-gossip-delivery, Property 8: Ack updates delivery sta
           messageId: nonEmptyStringArb,
           recipientIds: fc.constant([r1, r2]),
           priority: fc.constantFrom('normal' as const, 'high' as const),
-          blockIds: fc.array(nonEmptyStringArb, {
-            minLength: 1,
-            maxLength: 5,
-          }),
-          cblBlockId: nonEmptyStringArb,
+          blockIds: fc
+            .array(nonEmptyStringArb, {
+              minLength: 1,
+              maxLength: 5,
+            })
+            .map((arr) => arr.map((s) => bid(s))),
+          cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
           ackRequired: fc.constant(true),
         }),
       );
@@ -579,8 +587,10 @@ describe('Feature: unified-gossip-delivery, Property 8: Ack updates delivery sta
           .map((ids) => [...new Set(ids)])
           .filter((ids) => ids.length >= 2),
         priority: fc.constantFrom('normal' as const, 'high' as const),
-        blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-        cblBlockId: nonEmptyStringArb,
+        blockIds: fc
+          .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+          .map((arr) => arr.map((s) => bid(s))),
+        cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
         ackRequired: fc.constant(true),
       });
 
@@ -839,8 +849,10 @@ describe('Feature: unified-gossip-delivery, Property 9: All-recipients-delivered
       messageId: nonEmptyStringArb,
       recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 1 }),
       priority: fc.constantFrom('normal' as const, 'high' as const),
-      blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-      cblBlockId: nonEmptyStringArb,
+      blockIds: fc
+        .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+        .map((arr) => arr.map((s) => bid(s))),
+      cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
       ackRequired: fc.constant(true),
     });
 
@@ -856,8 +868,10 @@ describe('Feature: unified-gossip-delivery, Property 9: All-recipients-delivered
         .map((ids) => [...new Set(ids)])
         .filter((ids) => ids.length >= 2),
       priority: fc.constantFrom('normal' as const, 'high' as const),
-      blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-      cblBlockId: nonEmptyStringArb,
+      blockIds: fc
+        .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+        .map((arr) => arr.map((s) => bid(s))),
+      cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
       ackRequired: fc.constant(true),
     });
 
@@ -872,8 +886,10 @@ describe('Feature: unified-gossip-delivery, Property 9: All-recipients-delivered
         .map((ids) => [...new Set(ids)])
         .filter((ids) => ids.length > 0),
       priority: fc.constantFrom('normal' as const, 'high' as const),
-      blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-      cblBlockId: nonEmptyStringArb,
+      blockIds: fc
+        .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+        .map((arr) => arr.map((s) => bid(s))),
+      cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
       ackRequired: fc.constant(true),
     });
 

@@ -5,6 +5,10 @@ import {
   MessageDeliveryMetadata,
   validateBlockAnnouncement,
 } from '../../interfaces/availability/gossipService';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 /**
  * Property tests for BlockAnnouncement field validation
@@ -29,8 +33,10 @@ describe('Feature: unified-gossip-delivery, Property 1: Announcement field valid
     messageId: nonEmptyStringArb,
     recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
     priority: fc.constantFrom('normal' as const, 'high' as const),
-    blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-    cblBlockId: nonEmptyStringArb,
+    blockIds: fc
+      .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+      .map((arr) => arr.map((s) => bid(s))),
+    cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
     ackRequired: fc.boolean(),
   });
 
@@ -49,7 +55,7 @@ describe('Feature: unified-gossip-delivery, Property 1: Announcement field valid
 
   /** Generates the base fields common to all BlockAnnouncements */
   const baseAnnouncementFieldsArb = fc.record({
-    blockId: nonEmptyStringArb,
+    blockId: nonEmptyStringArb.map((s) => bid(s)),
     nodeId: nonEmptyStringArb,
     timestamp: fc.date(),
     ttl: fc.integer({ min: 1, max: 10 }),
@@ -219,8 +225,10 @@ describe('Feature: unified-gossip-delivery, Property 2: Announcement metadata co
     messageId: nonEmptyStringArb,
     recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
     priority: fc.constantFrom('normal' as const, 'high' as const),
-    blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-    cblBlockId: nonEmptyStringArb,
+    blockIds: fc
+      .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+      .map((arr) => arr.map((s) => bid(s))),
+    cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
     ackRequired: fc.boolean(),
   });
 
@@ -239,7 +247,7 @@ describe('Feature: unified-gossip-delivery, Property 2: Announcement metadata co
 
   /** Generates the base fields common to all BlockAnnouncements */
   const baseAnnouncementFieldsArb = fc.record({
-    blockId: nonEmptyStringArb,
+    blockId: nonEmptyStringArb.map((s) => bid(s)),
     nodeId: nonEmptyStringArb,
     timestamp: fc.date(),
     ttl: fc.integer({ min: 1, max: 10 }),
@@ -253,7 +261,6 @@ describe('Feature: unified-gossip-delivery, Property 2: Announcement metadata co
   );
 
   // --- Property Tests ---
-
   /**
    * Property 2a: The type field of any valid BlockAnnouncement must be one of 'add', 'remove', or 'ack'.
    * For any valid announcement that passes validation, the type is always in the allowed set.

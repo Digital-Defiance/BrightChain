@@ -22,7 +22,7 @@ import {
   QuorumVoteMetadata,
   VoteInput,
 } from '@brightchain/brightchain-lib';
-import { PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { PlatformID } from '@digitaldefiance/ecies-lib';
 
 /**
  * Interface for retrieving and caching CBL attachment content.
@@ -123,7 +123,7 @@ export class QuorumGossipHandler<TID extends PlatformID = Uint8Array> {
 
     // Check if proposal already exists in the database
     const existingProposal = await this.db.getProposal(
-      metadata.proposalId as ShortHexGuid,
+      metadata.proposalId as unknown as TID,
     );
     if (existingProposal) {
       this.seenProposalIds.add(metadata.proposalId);
@@ -132,7 +132,7 @@ export class QuorumGossipHandler<TID extends PlatformID = Uint8Array> {
 
     // Validate proposer is an active quorum member
     const proposerMember = await this.db.getMember(
-      metadata.proposerMemberId as ShortHexGuid,
+      metadata.proposerMemberId as unknown as TID,
     );
     if (!proposerMember || !proposerMember.isActive) {
       return; // Silently discard — invalid proposer
@@ -181,7 +181,7 @@ export class QuorumGossipHandler<TID extends PlatformID = Uint8Array> {
 
     // Validate voter is an active quorum member
     const voterMember = await this.db.getMember(
-      metadata.voterMemberId as ShortHexGuid,
+      metadata.voterMemberId as unknown as TID,
     );
     if (!voterMember || !voterMember.isActive) {
       return; // Silently discard — invalid voter
@@ -189,7 +189,7 @@ export class QuorumGossipHandler<TID extends PlatformID = Uint8Array> {
 
     // Validate the referenced proposal exists and is pending
     const proposal = await this.db.getProposal(
-      metadata.proposalId as ShortHexGuid,
+      metadata.proposalId as unknown as TID,
     );
     if (!proposal || proposal.status !== ProposalStatus.Pending) {
       return; // Silently discard — no matching pending proposal
@@ -215,7 +215,7 @@ export class QuorumGossipHandler<TID extends PlatformID = Uint8Array> {
    */
   private deserializeProposalMetadata(
     metadata: QuorumProposalMetadata,
-  ): ProposalInput<TID> {
+  ): ProposalInput {
     let actionPayload: Record<string, unknown>;
     try {
       actionPayload = JSON.parse(metadata.actionPayload) as Record<
@@ -251,8 +251,8 @@ export class QuorumGossipHandler<TID extends PlatformID = Uint8Array> {
     metadata: QuorumVoteMetadata,
   ): VoteInput<TID> {
     return {
-      proposalId: metadata.proposalId as ShortHexGuid,
-      voterMemberId: metadata.voterMemberId as ShortHexGuid,
+      proposalId: metadata.proposalId as unknown as TID,
+      voterMemberId: metadata.voterMemberId as unknown as TID,
       decision: metadata.decision,
       comment: metadata.comment,
     };

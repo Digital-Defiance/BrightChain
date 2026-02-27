@@ -7,14 +7,15 @@ import {
   IReconciliationService,
   IReplicationNodeResult,
   isPooledBlockStore,
+  type BlockId,
 } from '@brightchain/brightchain-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   ApiErrorResponse,
   ApiRequestHandler,
-  TypedHandlers,
   routeConfig,
+  TypedHandlers,
 } from '@digitaldefiance/node-express-suite';
 import {
   IGetBlockDataRequest,
@@ -266,12 +267,14 @@ export class SyncController<
   }> {
     try {
       const typedReq = req as unknown as IReplicateBlockRequest;
-      const { blockId } = typedReq.params;
+      const { blockId: rawBlockId } = typedReq.params;
       const { targetNodeIds } = typedReq.body;
 
-      if (!blockId) {
+      if (!rawBlockId) {
         return validationError('Missing required parameter: blockId');
       }
+
+      const blockId = rawBlockId as unknown as BlockId;
 
       if (!targetNodeIds || !Array.isArray(targetNodeIds)) {
         return validationError(
@@ -370,12 +373,15 @@ export class SyncController<
     response: IBlockLocationsResponse | ApiErrorResponse;
   }> {
     try {
-      const { blockId } = (req as unknown as IGetBlockLocationsRequest).params;
+      const { blockId: rawBlockId } = (
+        req as unknown as IGetBlockLocationsRequest
+      ).params;
 
-      if (!blockId) {
+      if (!rawBlockId) {
         return validationError('Missing required parameter: blockId');
       }
 
+      const blockId = rawBlockId as unknown as BlockId;
       const availabilityService = this.getAvailabilityService();
       const locations = await availabilityService.getBlockLocations(blockId);
 
@@ -407,12 +413,13 @@ export class SyncController<
   }> {
     try {
       const typedReq = req as IGetBlockDataRequest;
-      const { blockId } = typedReq.params;
+      const { blockId: rawBlockId } = typedReq.params;
 
-      if (!blockId) {
+      if (!rawBlockId) {
         return validationError('Missing required parameter: blockId');
       }
 
+      const blockId = rawBlockId as unknown as BlockId;
       const store = this.getBlockStore();
       const poolId = typedReq.query?.poolId;
 
@@ -486,8 +493,9 @@ export class SyncController<
 
       for (const blockId of blockIds) {
         try {
-          const locations =
-            await availabilityService.getBlockLocations(blockId);
+          const locations = await availabilityService.getBlockLocations(
+            blockId as unknown as BlockId,
+          );
 
           if (locations.length === 0) {
             // No known locations - unknown status

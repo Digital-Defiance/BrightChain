@@ -3,6 +3,7 @@ import {
   BlockStoreOptions,
   DurabilityLevel,
   StoreError,
+  type BlockId,
 } from '@brightchain/brightchain-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -11,8 +12,8 @@ import {
   ApiRequestHandler,
   ControllerRegistry,
   IStatusCodeResponse,
-  TypedHandlers,
   routeConfig,
+  TypedHandlers,
 } from '@digitaldefiance/node-express-suite';
 import { IBrightChainApplication } from '../../interfaces/application';
 import {
@@ -387,12 +388,14 @@ export class BlocksController<
     req: Parameters<ApiRequestHandler<IGetBlockResponse | ApiErrorResponse>>[0],
   ): Promise<IStatusCodeResponse<IGetBlockResponse | ApiErrorResponse>> {
     try {
-      const { blockId } = (req as unknown as GetBlockRequest).params;
+      const { blockId: rawBlockId } = (req as unknown as GetBlockRequest)
+        .params;
 
-      if (!blockId) {
+      if (!rawBlockId) {
         return validationError('Missing required parameter: blockId');
       }
 
+      const blockId = rawBlockId as unknown as BlockId;
       const block = await this.blocksService.getBlock(blockId);
 
       return {
@@ -453,12 +456,15 @@ export class BlocksController<
     IStatusCodeResponse<IGetBlockMetadataResponse | ApiErrorResponse>
   > {
     try {
-      const { blockId } = (req as unknown as GetBlockMetadataRequest).params;
+      const { blockId: rawBlockId } = (
+        req as unknown as GetBlockMetadataRequest
+      ).params;
 
-      if (!blockId) {
+      if (!rawBlockId) {
         return validationError('Missing required parameter: blockId');
       }
 
+      const blockId = rawBlockId as unknown as BlockId;
       const metadata = await this.blocksService.getBlockMetadata(blockId);
 
       if (!metadata) {
@@ -510,12 +516,14 @@ export class BlocksController<
     >[0],
   ): Promise<IStatusCodeResponse<IDeleteBlockResponse | ApiErrorResponse>> {
     try {
-      const { blockId } = (req as unknown as DeleteBlockRequest).params;
+      const { blockId: rawBlockId } = (req as unknown as DeleteBlockRequest)
+        .params;
 
-      if (!blockId) {
+      if (!rawBlockId) {
         return validationError('Missing required parameter: blockId');
       }
 
+      const blockId = rawBlockId as unknown as BlockId;
       await this.blocksService.deleteBlock(blockId);
 
       return {
@@ -569,12 +577,12 @@ export class BlocksController<
     >[0],
   ): Promise<IStatusCodeResponse<IBrightenBlockResponse | ApiErrorResponse>> {
     try {
-      const { blockId, randomBlockCount } = (
+      const { blockId: rawBlockId, randomBlockCount } = (
         req as unknown as BrightenBlockRequest
       ).body;
 
       // Validate required fields
-      if (!blockId) {
+      if (!rawBlockId) {
         return validationError('Missing required field: blockId');
       }
 
@@ -582,6 +590,7 @@ export class BlocksController<
         return validationError('randomBlockCount must be a positive integer');
       }
 
+      const blockId = rawBlockId as unknown as BlockId;
       const result = await this.blocksService.brightenBlock(
         blockId,
         randomBlockCount,

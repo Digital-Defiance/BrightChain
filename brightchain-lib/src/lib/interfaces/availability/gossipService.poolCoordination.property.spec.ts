@@ -1,10 +1,13 @@
 import fc from 'fast-check';
+import type { BlockId } from '../branded/primitives/blockId';
 import {
   BlockAnnouncement,
   DeliveryAckMetadata,
   MessageDeliveryMetadata,
   validateBlockAnnouncement,
 } from './gossipService';
+
+const bid = (s: string) => s as unknown as BlockId;
 
 /**
  * Property tests for BlockAnnouncement poolId validation
@@ -46,7 +49,7 @@ describe('Feature: cross-node-pool-coordination, Property 3: Announcement valida
 
   /** Generates the base fields common to all BlockAnnouncements */
   const baseAnnouncementFieldsArb = fc.record({
-    blockId: nonEmptyStringArb,
+    blockId: nonEmptyStringArb.map((s) => bid(s)),
     nodeId: nonEmptyStringArb,
     timestamp: fc.date(),
     ttl: fc.integer({ min: 1, max: 10 }),
@@ -57,8 +60,10 @@ describe('Feature: cross-node-pool-coordination, Property 3: Announcement valida
     messageId: nonEmptyStringArb,
     recipientIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
     priority: fc.constantFrom('normal' as const, 'high' as const),
-    blockIds: fc.array(nonEmptyStringArb, { minLength: 1, maxLength: 5 }),
-    cblBlockId: nonEmptyStringArb,
+    blockIds: fc
+      .array(nonEmptyStringArb, { minLength: 1, maxLength: 5 })
+      .map((arr) => arr.map((s) => bid(s))),
+    cblBlockId: nonEmptyStringArb.map((s) => bid(s)),
     ackRequired: fc.boolean(),
   });
 

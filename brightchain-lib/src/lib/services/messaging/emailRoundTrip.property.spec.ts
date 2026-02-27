@@ -21,6 +21,7 @@ import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import {
   createMailbox,
   type IMailbox,
@@ -33,6 +34,9 @@ import {
 } from '../../interfaces/messaging/mimePart';
 import { EmailParser } from './emailParser';
 import { EmailSerializer } from './emailSerializer';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 // Feature: email-messaging-protocol, Property 1: Email Metadata Round-Trip
 
@@ -324,7 +328,7 @@ const arbEmailMetadata: fc.Arbitrary<IEmailMetadata> = fc
       const now = new Date();
       const metadata: IEmailMetadata = {
         // IBlockMetadata fields
-        blockId: messageId,
+        blockId: bid(messageId),
         createdAt: now,
         expiresAt: null,
         durabilityLevel: DurabilityLevel.Standard,
@@ -560,7 +564,7 @@ describe('Email Round-Trip Property Tests', () => {
           ) => {
             const now = new Date();
             const original: IEmailMetadata = {
-              blockId: messageId,
+              blockId: bid(messageId),
               createdAt: now,
               expiresAt: null,
               durabilityLevel: DurabilityLevel.Standard,
@@ -646,7 +650,7 @@ describe('Email Round-Trip Property Tests', () => {
           ) => {
             const now = new Date();
             const original: IEmailMetadata = {
-              blockId: messageId,
+              blockId: bid(messageId),
               createdAt: now,
               expiresAt: null,
               durabilityLevel: DurabilityLevel.Standard,

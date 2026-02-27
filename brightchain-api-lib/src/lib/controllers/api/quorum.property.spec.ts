@@ -18,9 +18,9 @@ import {
 } from '@brightchain/brightchain-lib';
 import {
   EmailString,
+  HexString,
   Member,
   MemberType,
-  ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 import * as fc from 'fast-check';
@@ -34,7 +34,7 @@ beforeAll(() => {
 interface TestMemberData {
   member: Member<GuidV4Buffer>;
   mnemonic: string;
-  memberId: ShortHexGuid;
+  memberId: HexString;
 }
 
 const createTestMember = (name: string): TestMemberData => {
@@ -49,7 +49,7 @@ const createTestMember = (name: string): TestMemberData => {
   const idProvider = ServiceProvider.getInstance<GuidV4Buffer>().idProvider;
   const memberId = Buffer.from(idProvider.toBytes(member.id)).toString(
     'hex',
-  ) as ShortHexGuid;
+  ) as HexString;
   return { member, mnemonic: mnemonic.value ?? '', memberId };
 };
 

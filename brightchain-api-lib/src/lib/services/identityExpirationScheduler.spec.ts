@@ -19,29 +19,75 @@ import {
   QuorumAuditLogEntry,
   StatuteOfLimitationsConfig,
 } from '@brightchain/brightchain-lib';
-import { ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString } from '@digitaldefiance/ecies-lib';
 import { IdentityExpirationScheduler } from './identityExpirationScheduler';
+
+// ─── Mock ID Provider ───────────────────────────────────────────────────────
+
+/**
+ * Minimal mock IIdProvider<HexString> for tests.
+ * Generates 32-char hex IDs matching ShortHexGuid format.
+ */
+const mockIdProvider = {
+  byteLength: 16,
+  name: 'MockHexProvider',
+  generate(): Uint8Array {
+    const bytes = new Uint8Array(16);
+    for (let i = 0; i < 16; i++) bytes[i] = Math.floor(Math.random() * 256);
+    return bytes;
+  },
+  validate(id: Uint8Array): boolean {
+    return id.length === 16;
+  },
+  serialize(id: Uint8Array): string {
+    return Buffer.from(id).toString('hex');
+  },
+  deserialize(str: string): Uint8Array {
+    return new Uint8Array(Buffer.from(str, 'hex'));
+  },
+  toBytes(id: HexString): Uint8Array {
+    return new Uint8Array(Buffer.from(id, 'hex'));
+  },
+  fromBytes(bytes: Uint8Array): HexString {
+    return Buffer.from(bytes).toString('hex') as HexString;
+  },
+  equals(a: HexString, b: HexString): boolean {
+    return a === b;
+  },
+  clone(id: HexString): HexString {
+    return id;
+  },
+  idToString(id: HexString): string {
+    return id;
+  },
+  idFromString(str: string): HexString {
+    return str as HexString;
+  },
+  parseSafe(str: string): HexString | undefined {
+    return /^[0-9a-f]{32}$/.test(str) ? (str as HexString) : undefined;
+  },
+} as import('@digitaldefiance/ecies-lib').IIdProvider<HexString>;
 
 // ─── Test Helpers ───────────────────────────────────────────────────────────
 
-function makeShortHexGuid(suffix: string): ShortHexGuid {
-  return suffix.padStart(32, '0') as ShortHexGuid;
+function makeHexString(suffix: string): HexString {
+  return suffix.padStart(32, '0') as HexString;
 }
 
 function makeExpiredRecord(
   id: string,
   contentType = 'post',
   hoursAgoExpired = 24,
-): IdentityRecoveryRecord {
+): IdentityRecoveryRecord<HexString> {
   const now = Date.now();
   return {
-    id: makeShortHexGuid(id),
-    contentId: makeShortHexGuid(`content-${id}`),
+    id: makeHexString(id),
+    contentId: makeHexString(`content-${id}`),
     contentType,
     encryptedShardsByMemberId: new Map([
-      [makeShortHexGuid('member1'), new Uint8Array([1, 2, 3])],
+      [makeHexString('member1'), new Uint8Array([1, 2, 3])],
     ]),
-    memberIds: [makeShortHexGuid('member1')],
+    memberIds: [makeHexString('member1')],
     threshold: 1,
     epochNumber: 1,
     expiresAt: new Date(now - hoursAgoExpired * 3600000),
@@ -50,16 +96,16 @@ function makeExpiredRecord(
   };
 }
 
-function makeNonExpiredRecord(id: string): IdentityRecoveryRecord {
+function makeNonExpiredRecord(id: string): IdentityRecoveryRecord<HexString> {
   const now = Date.now();
   return {
-    id: makeShortHexGuid(id),
-    contentId: makeShortHexGuid(`content-${id}`),
+    id: makeHexString(id),
+    contentId: makeHexString(`content-${id}`),
     contentType: 'post',
     encryptedShardsByMemberId: new Map([
-      [makeShortHexGuid('member1'), new Uint8Array([1, 2, 3])],
+      [makeHexString('member1'), new Uint8Array([1, 2, 3])],
     ]),
-    memberIds: [makeShortHexGuid('member1')],
+    memberIds: [makeHexString('member1')],
     threshold: 1,
     epochNumber: 1,
     expiresAt: new Date(now + 365 * 24 * 3600000), // 1 year in the future
@@ -72,29 +118,34 @@ function makeNonExpiredRecord(id: string): IdentityRecoveryRecord {
  * Creates a mock IQuorumDatabase with in-memory identity record storage.
  */
 function createMockDatabase(options?: {
-  failOnDelete?: Set<ShortHexGuid>;
-}): IQuorumDatabase & {
-  identityRecords: Map<ShortHexGuid, IdentityRecoveryRecord>;
-  auditEntries: QuorumAuditLogEntry[];
+  failOnDelete?: Set<HexString>;
+}): IQuorumDatabase<HexString> & {
+  identityRecords: Map<HexString, IdentityRecoveryRecord<HexString>>;
+  auditEntries: QuorumAuditLogEntry<HexString>[];
   statuteConfig: StatuteOfLimitationsConfig | null;
 } {
-  const identityRecords = new Map<ShortHexGuid, IdentityRecoveryRecord>();
-  const auditEntries: QuorumAuditLogEntry[] = [];
+  const identityRecords = new Map<
+    HexString,
+    IdentityRecoveryRecord<HexString>
+  >();
+  const auditEntries: QuorumAuditLogEntry<HexString>[] = [];
   let statuteConfig: StatuteOfLimitationsConfig | null = null;
-  const failOnDelete = options?.failOnDelete ?? new Set<ShortHexGuid>();
+  const failOnDelete = options?.failOnDelete ?? new Set<HexString>();
 
   return {
     identityRecords,
     auditEntries,
     statuteConfig,
 
-    saveIdentityRecord: jest.fn(async (record: IdentityRecoveryRecord) => {
-      identityRecords.set(record.id, record);
-    }),
-    getIdentityRecord: jest.fn(async (recordId: ShortHexGuid) => {
+    saveIdentityRecord: jest.fn(
+      async (record: IdentityRecoveryRecord<HexString>) => {
+        identityRecords.set(record.id, record);
+      },
+    ),
+    getIdentityRecord: jest.fn(async (recordId: HexString) => {
       return identityRecords.get(recordId) ?? null;
     }),
-    deleteIdentityRecord: jest.fn(async (recordId: ShortHexGuid) => {
+    deleteIdentityRecord: jest.fn(async (recordId: HexString) => {
       if (failOnDelete.has(recordId)) {
         throw new Error(`Simulated delete failure for ${recordId}`);
       }
@@ -102,7 +153,7 @@ function createMockDatabase(options?: {
     }),
     listExpiredIdentityRecords: jest.fn(
       async (before: Date, _page: number, pageSize: number) => {
-        const expired: IdentityRecoveryRecord[] = [];
+        const expired: IdentityRecoveryRecord<HexString>[] = [];
         for (const record of identityRecords.values()) {
           if (record.expiresAt < before) {
             expired.push(record);
@@ -113,7 +164,7 @@ function createMockDatabase(options?: {
       },
     ),
 
-    appendAuditEntry: jest.fn(async (entry: QuorumAuditLogEntry) => {
+    appendAuditEntry: jest.fn(async (entry: QuorumAuditLogEntry<HexString>) => {
       auditEntries.push(entry);
     }),
     getLatestAuditEntry: jest.fn(async () => null),
@@ -163,10 +214,15 @@ describe('IdentityExpirationScheduler', () => {
       await db.saveIdentityRecord(r1);
       await db.saveIdentityRecord(r2);
 
-      const scheduler = new IdentityExpirationScheduler(db, undefined, {
-        intervalMs: 86400000,
-        batchSize: 100,
-      });
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        {
+          intervalMs: 86400000,
+          batchSize: 100,
+        },
+        mockIdProvider,
+      );
       const result = await scheduler.runOnce();
 
       expect(result.deletedCount).toBe(2);
@@ -183,10 +239,15 @@ describe('IdentityExpirationScheduler', () => {
       const r1 = makeNonExpiredRecord('1');
       await db.saveIdentityRecord(r1);
 
-      const scheduler = new IdentityExpirationScheduler(db, undefined, {
-        intervalMs: 86400000,
-        batchSize: 100,
-      });
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        {
+          intervalMs: 86400000,
+          batchSize: 100,
+        },
+        mockIdProvider,
+      );
       const result = await scheduler.runOnce();
 
       expect(result.deletedCount).toBe(0);
@@ -204,10 +265,15 @@ describe('IdentityExpirationScheduler', () => {
       await db.saveIdentityRecord(r1);
       await db.saveIdentityRecord(r2);
 
-      const scheduler = new IdentityExpirationScheduler(db, undefined, {
-        intervalMs: 86400000,
-        batchSize: 100,
-      });
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        {
+          intervalMs: 86400000,
+          batchSize: 100,
+        },
+        mockIdProvider,
+      );
       await scheduler.runOnce();
 
       expect(db.auditEntries).toHaveLength(2);
@@ -220,21 +286,26 @@ describe('IdentityExpirationScheduler', () => {
     });
 
     it('should report failedIds when deletion fails', async () => {
-      const failId = makeShortHexGuid('fail1');
+      const failId = makeHexString('fail1');
       const db = createMockDatabase({ failOnDelete: new Set([failId]) });
 
       const r1 = makeExpiredRecord('1');
-      const rFail: IdentityRecoveryRecord = {
+      const rFail: IdentityRecoveryRecord<HexString> = {
         ...makeExpiredRecord('fail1'),
         id: failId,
       };
       await db.saveIdentityRecord(r1);
       await db.saveIdentityRecord(rFail);
 
-      const scheduler = new IdentityExpirationScheduler(db, undefined, {
-        intervalMs: 86400000,
-        batchSize: 100,
-      });
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        {
+          intervalMs: 86400000,
+          batchSize: 100,
+        },
+        mockIdProvider,
+      );
       const result = await scheduler.runOnce();
 
       // One succeeded, one failed
@@ -252,10 +323,15 @@ describe('IdentityExpirationScheduler', () => {
         await db.saveIdentityRecord(makeExpiredRecord(`batch-${i}`));
       }
 
-      const scheduler = new IdentityExpirationScheduler(db, undefined, {
-        intervalMs: 86400000,
-        batchSize,
-      });
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        {
+          intervalMs: 86400000,
+          batchSize,
+        },
+        mockIdProvider,
+      );
       const result = await scheduler.runOnce();
 
       expect(result.deletedCount).toBe(batchSize);
@@ -270,10 +346,15 @@ describe('IdentityExpirationScheduler', () => {
         await db.saveIdentityRecord(makeExpiredRecord(`partial-${i}`));
       }
 
-      const scheduler = new IdentityExpirationScheduler(db, undefined, {
-        intervalMs: 86400000,
-        batchSize,
-      });
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        {
+          intervalMs: 86400000,
+          batchSize,
+        },
+        mockIdProvider,
+      );
       const result = await scheduler.runOnce();
 
       expect(result.deletedCount).toBe(3);
@@ -284,10 +365,15 @@ describe('IdentityExpirationScheduler', () => {
   describe('start/stop lifecycle', () => {
     it('should start and stop without errors', () => {
       const db = createMockDatabase();
-      const scheduler = new IdentityExpirationScheduler(db, undefined, {
-        intervalMs: 86400000,
-        batchSize: 100,
-      });
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        {
+          intervalMs: 86400000,
+          batchSize: 100,
+        },
+        mockIdProvider,
+      );
 
       expect(scheduler.isRunning).toBe(false);
 
@@ -300,10 +386,15 @@ describe('IdentityExpirationScheduler', () => {
 
     it('should be idempotent on start (no error on double start)', () => {
       const db = createMockDatabase();
-      const scheduler = new IdentityExpirationScheduler(db, undefined, {
-        intervalMs: 86400000,
-        batchSize: 100,
-      });
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        {
+          intervalMs: 86400000,
+          batchSize: 100,
+        },
+        mockIdProvider,
+      );
 
       scheduler.start();
       // Second start should not throw
@@ -315,10 +406,15 @@ describe('IdentityExpirationScheduler', () => {
 
     it('should be safe to stop when not running', () => {
       const db = createMockDatabase();
-      const scheduler = new IdentityExpirationScheduler(db, undefined, {
-        intervalMs: 86400000,
-        batchSize: 100,
-      });
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        {
+          intervalMs: 86400000,
+          batchSize: 100,
+        },
+        mockIdProvider,
+      );
 
       expect(() => scheduler.stop()).not.toThrow();
       expect(scheduler.isRunning).toBe(false);
@@ -326,7 +422,12 @@ describe('IdentityExpirationScheduler', () => {
 
     it('should use default config when none provided', () => {
       const db = createMockDatabase();
-      const scheduler = new IdentityExpirationScheduler(db);
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        undefined,
+        mockIdProvider,
+      );
 
       // Should not throw — defaults are applied internally
       expect(scheduler.isRunning).toBe(false);
@@ -345,10 +446,15 @@ describe('IdentityExpirationScheduler', () => {
       };
       await db.saveStatuteConfig(config);
 
-      const scheduler = new IdentityExpirationScheduler(db, undefined, {
-        intervalMs: 86400000,
-        batchSize: 100,
-      });
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        {
+          intervalMs: 86400000,
+          batchSize: 100,
+        },
+        mockIdProvider,
+      );
       const loaded = await scheduler.loadStatuteConfig();
 
       expect(loaded.defaultDurations.get('post')).toBe(365 * 24 * 3600000);
@@ -360,10 +466,15 @@ describe('IdentityExpirationScheduler', () => {
 
     it('should return default config when none stored', async () => {
       const db = createMockDatabase();
-      const scheduler = new IdentityExpirationScheduler(db, undefined, {
-        intervalMs: 86400000,
-        batchSize: 100,
-      });
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        {
+          intervalMs: 86400000,
+          batchSize: 100,
+        },
+        mockIdProvider,
+      );
       const loaded = await scheduler.loadStatuteConfig();
 
       expect(loaded.defaultDurations.size).toBe(0);
@@ -381,10 +492,15 @@ describe('IdentityExpirationScheduler', () => {
       };
       await db.saveStatuteConfig(config);
 
-      const scheduler = new IdentityExpirationScheduler(db, undefined, {
-        intervalMs: 86400000,
-        batchSize: 100,
-      });
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        {
+          intervalMs: 86400000,
+          batchSize: 100,
+        },
+        mockIdProvider,
+      );
       const createdAt = new Date('2024-01-01T00:00:00Z');
       const expiresAt = await scheduler.computeExpirationDate(
         'post',
@@ -402,10 +518,15 @@ describe('IdentityExpirationScheduler', () => {
       };
       await db.saveStatuteConfig(config);
 
-      const scheduler = new IdentityExpirationScheduler(db, undefined, {
-        intervalMs: 86400000,
-        batchSize: 100,
-      });
+      const scheduler = new IdentityExpirationScheduler(
+        db,
+        undefined,
+        {
+          intervalMs: 86400000,
+          batchSize: 100,
+        },
+        mockIdProvider,
+      );
       const createdAt = new Date('2024-01-01T00:00:00Z');
       const expiresAt = await scheduler.computeExpirationDate(
         'unknown_type',

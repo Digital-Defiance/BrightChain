@@ -145,15 +145,19 @@ export class MockBlockStore implements IBlockStore {
   }
   async storeCBLWithWhitening(cblData: Uint8Array): Promise<CBLStorageResult> {
     // Generate two deterministic block IDs from the data
-    const blockId1 = `cbl-block1-${this.blocks.size}-${Date.now()}`;
-    const blockId2 = `cbl-block2-${this.blocks.size}-${Date.now()}`;
+    const blockId1Str = `cbl-block1-${this.blocks.size}-${Date.now()}`;
+    const blockId2Str = `cbl-block2-${this.blocks.size}-${Date.now()}`;
 
     // Store the original data under blockId1, and a random XOR component under blockId2
     // For mock purposes, we store the raw data under blockId1 and a marker under blockId2
-    this.blocks.set(blockId1, new Uint8Array(cblData));
-    this.blocks.set(blockId2, new Uint8Array([0xfe, 0xed])); // marker
+    this.blocks.set(blockId1Str, new Uint8Array(cblData));
+    this.blocks.set(blockId2Str, new Uint8Array([0xfe, 0xed])); // marker
 
-    const magnetUrl = `magnet:?xt=urn:brightchain:cbl&bs=256&b1=${blockId1}&b2=${blockId2}`;
+    const magnetUrl = `magnet:?xt=urn:brightchain:cbl&bs=256&b1=${blockId1Str}&b2=${blockId2Str}`;
+
+    const blockId1 = blockId1Str as any;
+
+    const blockId2 = blockId2Str as any;
     return {
       blockId1,
       blockId2,
@@ -179,9 +183,13 @@ export class MockBlockStore implements IBlockStore {
   parseCBLMagnetUrl(magnetUrl: string): CBLMagnetComponents {
     const url = new URL(magnetUrl);
     const params = url.searchParams;
+
+    const blockId1 = (params.get('b1') ?? '') as any;
+
+    const blockId2 = (params.get('b2') ?? '') as any;
     return {
-      blockId1: params.get('b1') ?? '',
-      blockId2: params.get('b2') ?? '',
+      blockId1,
+      blockId2,
       blockSize: parseInt(params.get('bs') ?? '0', 10),
       isEncrypted: params.get('enc') === '1',
     };

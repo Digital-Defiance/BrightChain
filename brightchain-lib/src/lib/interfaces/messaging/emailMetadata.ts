@@ -1,3 +1,5 @@
+import type { PlatformID } from '@digitaldefiance/ecies-lib';
+
 import { IMailbox } from './emailAddress';
 import { IMessageMetadata } from './messageMetadata';
 import {
@@ -70,9 +72,14 @@ export interface IResentHeaderBlock {
  * - Resent headers for forwarding per Section 3.6.6
  * - Delivery tracking extensions for BrightChain cross-node delivery
  *
+ * @template TID - Platform ID type for frontend/backend DTO compatibility.
+ *   Defaults to `string` for backward compatibility.
+ *
  * @see Requirements 1.1, 1.2, 1.3, 1.4, 1.5, 1.6
  */
-export interface IEmailMetadata extends IMessageMetadata {
+export interface IEmailMetadata<
+  TID extends PlatformID = string,
+> extends IMessageMetadata<TID> {
   // ─── RFC 5322 Originator Fields (Section 3.6.2) ───────────────────────
 
   /**
@@ -266,7 +273,7 @@ export interface IEmailMetadata extends IMessageMetadata {
    *
    * @see Requirement 12.1
    */
-  deliveryReceipts: Map<string, IDeliveryReceipt>;
+  deliveryReceipts: Map<TID, IDeliveryReceipt<TID>>;
 
   /**
    * Read receipts per recipient.
@@ -274,7 +281,7 @@ export interface IEmailMetadata extends IMessageMetadata {
    *
    * @see Requirement 12.3
    */
-  readReceipts: Map<string, Date>;
+  readReceipts: Map<TID, Date>;
 
   // ─── Resent Headers for Forwarding (RFC 5322 Section 3.6.6) ───────────
 

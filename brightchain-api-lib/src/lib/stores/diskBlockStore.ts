@@ -1,4 +1,5 @@
 import {
+  asBlockId,
   BaseBlock,
   BlockHandle,
   BlockSize,
@@ -30,6 +31,7 @@ import {
   unpadCblData,
   xorArrays,
   XorService,
+  type BlockId,
 } from '@brightchain/brightchain-lib';
 import { existsSync, mkdirSync, readFileSync } from 'fs';
 import {
@@ -41,6 +43,14 @@ import {
   writeFile,
 } from 'fs/promises';
 import { join } from 'path';
+
+/**
+ * Cast a hex string to BlockId without length validation.
+ * SHA3-512 checksums produce 128-char hex which is valid but fails asBlockId's 64-char check.
+ */
+function toStorageKey(hex: string): BlockId {
+  return hex as unknown as BlockId;
+}
 
 /**
  * DiskBlockStore provides filesystem-backed block storage implementing IBlockStore.
@@ -147,8 +157,8 @@ export class DiskBlockStore implements IBlockStore {
 
   // ─── Key Conversion Helpers ─────────────────────────────────────────
 
-  protected keyToHex(key: Checksum | string): string {
-    return typeof key === 'string' ? key : key.toHex();
+  protected keyToHex(key: Checksum | string): BlockId {
+    return toStorageKey(typeof key === 'string' ? key : key.toHex());
   }
 
   protected hexToChecksum(hex: string): Checksum {
@@ -260,7 +270,7 @@ export class DiskBlockStore implements IBlockStore {
     block: RawDataBlock,
     options?: BlockStoreOptions,
   ): Promise<void> {
-    const keyHex = block.idChecksum.toHex();
+    const keyHex = toStorageKey(block.idChecksum.toHex());
     const filePath = this.blockFilePath(keyHex);
 
     // Idempotent — block already exists
@@ -479,12 +489,12 @@ export class DiskBlockStore implements IBlockStore {
     await mkdir(parDir, { recursive: true });
 
     const checksumService = getGlobalServiceProvider().checksumService;
-    const parityBlockIds: string[] = [];
+    const parityBlockIds: BlockId[] = [];
 
     for (let i = 0; i < parityData.length; i++) {
-      const parityId = checksumService
-        .calculateChecksum(parityData[i].data)
-        .toHex();
+      const parityId = toStorageKey(
+        checksumService.calculateChecksum(parityData[i].data).toHex(),
+      );
       parityBlockIds.push(parityId);
       await writeFile(
         join(parDir, `${i}.parity`),
@@ -718,7 +728,7 @@ export class DiskBlockStore implements IBlockStore {
 
     const brightenedData = XorService.xorMultiple(allBlockData);
     const brightenedBlock = new RawDataBlock(this._blockSize, brightenedData);
-    const brightenedBlockId = brightenedBlock.idChecksum.toHex();
+    const brightenedBlockId = toStorageKey(brightenedBlock.idChecksum.toHex());
 
     if (!(await this.has(brightenedBlockId))) {
       await this.setData(brightenedBlock);
@@ -726,7 +736,7 @@ export class DiskBlockStore implements IBlockStore {
 
     return {
       brightenedBlockId,
-      randomBlockIds: randomBlockChecksums.map((c) => c.toHex()),
+      randomBlockIds: randomBlockChecksums.map((c) => toStorageKey(c.toHex())),
       originalBlockId: keyHex,
     };
   }
@@ -754,7 +764,7 @@ export class DiskBlockStore implements IBlockStore {
     const xorResult = xorArrays(paddedCbl, randomBlock);
 
     let block1Stored = false;
-    let block1Id = '';
+    let block1Id: BlockId = asBlockId('0'.repeat(64));
 
     try {
       const block1 = new RawDataBlock(this._blockSize, randomBlock);
@@ -764,14 +774,14 @@ export class DiskBlockStore implements IBlockStore {
         await this.setData(block1, options);
         block1Stored = true;
       }
-      block1Id = block1Checksum.toHex();
+      block1Id = toStorageKey(block1Checksum.toHex());
 
       const block2 = new RawDataBlock(this._blockSize, xorResult);
       await this.setData(block2, options);
-      const block2Id = block2.idChecksum.toHex();
+      const block2Id = toStorageKey(block2.idChecksum.toHex());
 
-      let block1ParityIds: string[] | undefined;
-      let block2ParityIds: string[] | undefined;
+      let block1ParityIds: BlockId[] | undefined;
+      let block2ParityIds: BlockId[] | undefined;
 
       const block1Meta = await this.getMetadata(block1Id);
       if (block1Meta?.parityBlockIds?.length) {
@@ -892,17 +902,23 @@ export class DiskBlockStore implements IBlockStore {
     const p1Param = params.get('p1');
     const p2Param = params.get('p2');
     const block1ParityIds = p1Param
-      ? p1Param.split(',').filter((id) => id)
+      ? p1Param
+          .split(',')
+          .filter((id) => id)
+          .map((id) => toStorageKey(id))
       : undefined;
     const block2ParityIds = p2Param
-      ? p2Param.split(',').filter((id) => id)
+      ? p2Param
+          .split(',')
+          .filter((id) => id)
+          .map((id) => toStorageKey(id))
       : undefined;
 
     const isEncrypted = params.get('enc') === '1';
 
     return {
-      blockId1,
-      blockId2,
+      blockId1: toStorageKey(blockId1),
+      blockId2: toStorageKey(blockId2),
       blockSize,
       block1ParityIds,
       block2ParityIds,

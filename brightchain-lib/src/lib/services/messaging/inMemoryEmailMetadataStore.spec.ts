@@ -17,10 +17,13 @@ import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { createMailbox } from '../../interfaces/messaging/emailAddress';
 import type { IEmailMetadata } from '../../interfaces/messaging/emailMetadata';
 import { createContentType } from '../../interfaces/messaging/mimePart';
 import { InMemoryEmailMetadataStore } from './inMemoryEmailMetadataStore';
+
+const bid = (s: string) => s as unknown as BlockId;
 
 const USER = 'alice@example.com';
 
@@ -29,7 +32,7 @@ function buildEmail(
 ): IEmailMetadata {
   const now = new Date();
   return {
-    blockId: overrides.messageId,
+    blockId: bid(overrides.messageId),
     createdAt: now,
     expiresAt: null,
     durabilityLevel: DurabilityLevel.Standard,
@@ -134,7 +137,7 @@ describe('InMemoryEmailMetadataStore', () => {
               mimeType: 'application/pdf',
               size: 1024,
               cblMagnetUrl: 'magnet:?xt=urn:cbl:abc',
-              blockIds: ['block1'],
+              blockIds: [bid('block1')],
               checksum: 'abc',
             },
           ],

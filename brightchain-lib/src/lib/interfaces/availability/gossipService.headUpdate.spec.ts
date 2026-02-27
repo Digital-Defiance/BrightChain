@@ -7,11 +7,15 @@
  * Validates: Requirements 2.1
  */
 
+import type { BlockId } from '../branded/primitives/blockId';
 import {
   BlockAnnouncement,
   HeadUpdateMetadata,
   validateBlockAnnouncement,
 } from './gossipService';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 /** Helper to build a valid head_update announcement. */
 function makeHeadUpdateAnnouncement(
@@ -19,7 +23,7 @@ function makeHeadUpdateAnnouncement(
 ): BlockAnnouncement {
   return {
     type: 'head_update',
-    blockId: 'abc123def456',
+    blockId: bid('abc123def456'),
     nodeId: 'node-1',
     timestamp: new Date(),
     ttl: 3,
@@ -51,7 +55,7 @@ describe('validateBlockAnnouncement – head_update type (Req 2.1)', () => {
   });
 
   it('should reject head_update with empty blockId', () => {
-    const announcement = makeHeadUpdateAnnouncement({ blockId: '' });
+    const announcement = makeHeadUpdateAnnouncement({ blockId: bid('') });
     expect(validateBlockAnnouncement(announcement)).toBe(false);
   });
 
@@ -81,8 +85,8 @@ describe('validateBlockAnnouncement – head_update type (Req 2.1)', () => {
         messageId: 'msg-1',
         recipientIds: ['r1'],
         priority: 'normal',
-        blockIds: ['b1'],
-        cblBlockId: 'cbl-1',
+        blockIds: [bid('b1')],
+        cblBlockId: bid('cbl-1'),
         ackRequired: false,
       },
     });
@@ -106,8 +110,8 @@ describe('validateBlockAnnouncement – head_update type (Req 2.1)', () => {
       cblIndexEntry: {
         _id: 'entry-1',
         magnetUrl: 'magnet:test',
-        blockId1: 'b1',
-        blockId2: 'b2',
+        blockId1: bid('b1'),
+        blockId2: bid('b2'),
         blockSize: 256,
         createdAt: new Date(),
         visibility: 'private' as never,

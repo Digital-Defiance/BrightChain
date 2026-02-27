@@ -7,6 +7,7 @@
  * @see Requirements 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8
  */
 
+import type { BlockId } from '@brightchain/brightchain-lib';
 import {
   BloomFilter,
   CBLMetadataSearchHit,
@@ -70,7 +71,7 @@ export interface IPeerNetworkProvider {
    */
   queryPeerForBlock(
     peerId: string,
-    blockId: string,
+    blockId: BlockId,
     timeoutMs: number,
   ): Promise<boolean>;
 
@@ -129,7 +130,7 @@ export class DiscoveryProtocol implements IDiscoveryProtocol {
    * @returns Promise resolving to discovery result with locations
    * @see Requirements 5.1, 5.2, 5.3, 5.4, 5.5
    */
-  async discoverBlock(blockId: string): Promise<DiscoveryResult> {
+  async discoverBlock(blockId: BlockId): Promise<DiscoveryResult> {
     const startTime = Date.now();
 
     // Check cache first
@@ -196,7 +197,7 @@ export class DiscoveryProtocol implements IDiscoveryProtocol {
    * @returns Promise resolving to the query result
    * @see Requirements 5.3
    */
-  async queryPeer(peerId: string, blockId: string): Promise<PeerQueryResult> {
+  async queryPeer(peerId: string, blockId: BlockId): Promise<PeerQueryResult> {
     const startTime = Date.now();
 
     try {
@@ -228,7 +229,7 @@ export class DiscoveryProtocol implements IDiscoveryProtocol {
    * @returns Cached location records or null if not cached or expired
    * @see Requirements 5.8
    */
-  getCachedLocations(blockId: string): ILocationRecord[] | null {
+  getCachedLocations(blockId: BlockId): ILocationRecord[] | null {
     const entry = this.cache.get(blockId);
     if (!entry) {
       return null;
@@ -249,7 +250,7 @@ export class DiscoveryProtocol implements IDiscoveryProtocol {
    *
    * @param blockId - The block ID to clear from cache
    */
-  clearCache(blockId: string): void {
+  clearCache(blockId: BlockId): void {
     this.cache.delete(blockId);
   }
 
@@ -339,7 +340,7 @@ export class DiscoveryProtocol implements IDiscoveryProtocol {
    */
   private async filterPeersWithBloomFilters(
     peerIds: string[],
-    blockId: string,
+    blockId: BlockId,
   ): Promise<string[]> {
     const peersToQuery: string[] = [];
 
@@ -379,7 +380,7 @@ export class DiscoveryProtocol implements IDiscoveryProtocol {
    */
   private async queryPeersWithConcurrencyLimit(
     peerIds: string[],
-    blockId: string,
+    blockId: BlockId,
   ): Promise<PeerQueryResult[]> {
     const results: PeerQueryResult[] = [];
     const pending: Promise<void>[] = [];
@@ -441,7 +442,7 @@ export class DiscoveryProtocol implements IDiscoveryProtocol {
    * @param blockId - Block ID to cache
    * @param locations - Location records to cache
    */
-  private cacheResults(blockId: string, locations: ILocationRecord[]): void {
+  private cacheResults(blockId: BlockId, locations: ILocationRecord[]): void {
     this.cache.set(blockId, {
       locations: [...locations],
       cachedAt: Date.now(),

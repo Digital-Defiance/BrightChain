@@ -19,6 +19,7 @@ import {
   IContentIngestionService,
   IdentityValidationError,
   QuorumError,
+  type BlockId,
 } from '@brightchain/brightchain-lib';
 import { Member, PlatformID } from '@digitaldefiance/ecies-lib';
 import { DefaultBackendIdType } from '../shared-types';
@@ -123,31 +124,25 @@ export class ContentAwareBlocksService<
   async getBlock(
     blockId: string,
   ): Promise<{ data: Buffer; metadata?: IBlockMetadata }> {
-    return this.blocksService.getBlock(blockId);
+    return this.blocksService.getBlock(blockId as unknown as BlockId);
   }
 
-  /**
-   * Get block metadata (passthrough to BlocksService).
-   */
   async getBlockMetadata(blockId: string): Promise<IBlockMetadata | null> {
-    return this.blocksService.getBlockMetadata(blockId);
+    return this.blocksService.getBlockMetadata(blockId as unknown as BlockId);
   }
 
-  /**
-   * Delete a block (passthrough to BlocksService).
-   */
   async deleteBlock(blockId: string): Promise<void> {
-    return this.blocksService.deleteBlock(blockId);
+    return this.blocksService.deleteBlock(blockId as unknown as BlockId);
   }
 
-  /**
-   * Brighten a block (passthrough to BlocksService).
-   */
   async brightenBlock(
     blockId: string,
     randomBlockCount: number,
   ): Promise<BrightenResult> {
-    return this.blocksService.brightenBlock(blockId, randomBlockCount);
+    return this.blocksService.brightenBlock(
+      blockId as unknown as BlockId,
+      randomBlockCount,
+    );
   }
 
   /**

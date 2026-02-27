@@ -4,6 +4,10 @@ import {
   DEFAULT_GOSSIP_CONFIG,
   GossipConfig,
 } from '../../interfaces/availability/gossipService';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 /**
  * Property tests for Backward Compatibility of Non-Message Announcements
@@ -26,7 +30,7 @@ describe('Feature: unified-gossip-delivery, Property 3: Backward compatibility',
    */
   function createPlainBlockAnnouncement(
     config: GossipConfig,
-    blockId: string,
+    blockId: BlockId,
     nodeId: string,
   ): BlockAnnouncement {
     return {
@@ -44,7 +48,7 @@ describe('Feature: unified-gossip-delivery, Property 3: Backward compatibility',
    */
   function createPlainRemovalAnnouncement(
     config: GossipConfig,
-    blockId: string,
+    blockId: BlockId,
     nodeId: string,
   ): BlockAnnouncement {
     return {
@@ -115,7 +119,7 @@ describe('Feature: unified-gossip-delivery, Property 3: Backward compatibility',
   /** Generates a plain 'add' BlockAnnouncement (no messageDelivery, no deliveryAck) */
   const plainAddAnnouncementArb: fc.Arbitrary<BlockAnnouncement> = fc
     .record({
-      blockId: nonEmptyStringArb,
+      blockId: nonEmptyStringArb.map((s) => bid(s)),
       nodeId: nonEmptyStringArb,
       timestamp: fc.date(),
       ttl: ttlArb,
@@ -128,7 +132,7 @@ describe('Feature: unified-gossip-delivery, Property 3: Backward compatibility',
   /** Generates a plain 'remove' BlockAnnouncement (no messageDelivery, no deliveryAck) */
   const plainRemoveAnnouncementArb: fc.Arbitrary<BlockAnnouncement> = fc
     .record({
-      blockId: nonEmptyStringArb,
+      blockId: nonEmptyStringArb.map((s) => bid(s)),
       nodeId: nonEmptyStringArb,
       timestamp: fc.date(),
       ttl: ttlArb,
@@ -222,7 +226,7 @@ describe('Feature: unified-gossip-delivery, Property 3: Backward compatibility',
           // Simulate announceBlock
           const addAnnouncement = createPlainBlockAnnouncement(
             config,
-            blockId,
+            bid(blockId),
             nodeId,
           );
           expect(addAnnouncement.ttl).toBe(config.defaultTtl);
@@ -232,7 +236,7 @@ describe('Feature: unified-gossip-delivery, Property 3: Backward compatibility',
           // Simulate announceRemoval
           const removeAnnouncement = createPlainRemovalAnnouncement(
             config,
-            blockId,
+            bid(blockId),
             nodeId,
           );
           expect(removeAnnouncement.ttl).toBe(config.defaultTtl);
@@ -315,7 +319,7 @@ describe('Feature: unified-gossip-delivery, Property 3: Backward compatibility',
         // announceBlock behavior
         const addAnnouncement = createPlainBlockAnnouncement(
           config,
-          blockId,
+          bid(blockId),
           nodeId,
         );
         expect(addAnnouncement.ttl).toBe(3);
@@ -327,7 +331,7 @@ describe('Feature: unified-gossip-delivery, Property 3: Backward compatibility',
         // announceRemoval behavior
         const removeAnnouncement = createPlainRemovalAnnouncement(
           config,
-          blockId,
+          bid(blockId),
           nodeId,
         );
         expect(removeAnnouncement.ttl).toBe(3);
@@ -360,12 +364,12 @@ describe('Feature: unified-gossip-delivery, Property 3: Backward compatibility',
           // Create plain announcements
           const addAnnouncement = createPlainBlockAnnouncement(
             config,
-            blockId,
+            bid(blockId),
             nodeId,
           );
           const removeAnnouncement = createPlainRemovalAnnouncement(
             config,
-            blockId,
+            bid(blockId),
             nodeId,
           );
 

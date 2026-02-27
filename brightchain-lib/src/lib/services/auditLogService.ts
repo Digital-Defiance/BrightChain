@@ -53,7 +53,9 @@ export interface IAuditBlockStorePersistence {
  * since they are computed after the content hash.
  */
 export function serializeEntryForHashing(
-  entry: QuorumAuditLogEntry & { previousEntryHash?: string | null },
+  entry: QuorumAuditLogEntry<PlatformID> & {
+    previousEntryHash?: string | null;
+  },
 ): string {
   const obj: Record<string, unknown> = {
     id: entry.id,
@@ -135,7 +137,9 @@ export class AuditLogService<TID extends PlatformID = Uint8Array> {
    * @param entry - The base audit log entry to append
    * @returns The fully chained audit log entry
    */
-  async appendEntry(entry: QuorumAuditLogEntry): Promise<ChainedAuditLogEntry> {
+  async appendEntry(
+    entry: QuorumAuditLogEntry<TID>,
+  ): Promise<ChainedAuditLogEntry<TID>> {
     // 1. Get the latest entry for chain linking
     const latestEntry = await this.db.getLatestAuditEntry();
     const previousEntryHash = latestEntry?.contentHash ?? null;
@@ -172,7 +176,7 @@ export class AuditLogService<TID extends PlatformID = Uint8Array> {
     }
 
     // 5. Build the chained entry
-    const chainedEntry: ChainedAuditLogEntry = {
+    const chainedEntry: ChainedAuditLogEntry<TID> = {
       ...entry,
       previousEntryHash,
       contentHash,
@@ -204,7 +208,7 @@ export class AuditLogService<TID extends PlatformID = Uint8Array> {
    */
   async verifyChain(
     signerPublicKey: Uint8Array,
-    entries: ChainedAuditLogEntry[],
+    entries: ChainedAuditLogEntry<TID>[],
   ): Promise<boolean> {
     if (entries.length === 0) {
       return true;

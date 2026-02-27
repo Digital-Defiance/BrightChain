@@ -1,4 +1,5 @@
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import type { BlockId } from '../branded/primitives/blockId';
 import { IBlockMetadata } from './blockMetadata';
 
 /**
@@ -27,7 +28,7 @@ export interface IBlockMetadataStore {
    * @param blockId - The unique identifier of the block
    * @returns The block's metadata, or null if not found
    */
-  get(blockId: string): Promise<IBlockMetadata | null>;
+  get(blockId: BlockId): Promise<IBlockMetadata | null>;
 
   /**
    * Update metadata for an existing block.
@@ -35,14 +36,14 @@ export interface IBlockMetadataStore {
    * @param updates - Partial metadata updates to apply
    * @throws Error if no metadata exists for this blockId
    */
-  update(blockId: string, updates: Partial<IBlockMetadata>): Promise<void>;
+  update(blockId: BlockId, updates: Partial<IBlockMetadata>): Promise<void>;
 
   /**
    * Delete metadata for a block.
    * @param blockId - The unique identifier of the block
    * @throws Error if no metadata exists for this blockId
    */
-  delete(blockId: string): Promise<void>;
+  delete(blockId: BlockId): Promise<void>;
 
   /**
    * Find all blocks that have expired (expiresAt is in the past).
@@ -62,5 +63,5 @@ export interface IBlockMetadataStore {
    * @param blockId - The unique identifier of the block
    * @throws Error if no metadata exists for this blockId
    */
-  recordAccess(blockId: string): Promise<void>;
+  recordAccess(blockId: BlockId): Promise<void>;
 }

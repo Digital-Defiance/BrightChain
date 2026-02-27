@@ -1,9 +1,9 @@
 import {
   ECIESService,
+  HexString,
   hexToUint8Array,
   Member,
   PlatformID,
-  ShortHexGuid,
   TypedIdProviderWrapper,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
@@ -35,20 +35,20 @@ export class BrightChainQuorum<TID extends PlatformID = Uint8Array> {
   /**
    * Quorum members collection, keys may or may not be loaded for a given member
    */
-  private readonly _members: SimpleStore<ShortHexGuid, Member<TID>>;
+  private readonly _members: SimpleStore<HexString, Member<TID>>;
 
   /**
    * Collection of public keys for each member of the quorum.
    * This may include members not on this node.
    * Never erase, only add/update.
    */
-  private readonly _memberPublicKeysByMemberId: ArrayStore<ShortHexGuid>;
+  private readonly _memberPublicKeysByMemberId: ArrayStore<HexString>;
 
   /**
    * Collection of encrypted documents that this quorum node has taken responsibility for
    */
   private readonly _documentsById: SimpleStore<
-    ShortHexGuid,
+    HexString,
     QuorumDataRecord<TID>
   >;
 
@@ -72,12 +72,9 @@ export class BrightChainQuorum<TID extends PlatformID = Uint8Array> {
       eciesService ?? createECIESService<TID>(),
       idProvider,
     );
-    this._members = new SimpleStore<ShortHexGuid, Member<TID>>();
-    this._memberPublicKeysByMemberId = new ArrayStore<ShortHexGuid>();
-    this._documentsById = new SimpleStore<
-      ShortHexGuid,
-      QuorumDataRecord<TID>
-    >();
+    this._members = new SimpleStore<HexString, Member<TID>>();
+    this._memberPublicKeysByMemberId = new ArrayStore<HexString>();
+    this._documentsById = new SimpleStore<HexString, QuorumDataRecord<TID>>();
 
     this.nodeAgent = nodeAgent;
     this.name = name;
@@ -94,7 +91,7 @@ export class BrightChainQuorum<TID extends PlatformID = Uint8Array> {
     const provider = getBrightChainIdProvider<TID>();
     const hexMemberId = uint8ArrayToHex(
       provider.toBytes(member.id),
-    ) as ShortHexGuid;
+    ) as HexString;
     this._members.set(hexMemberId, member);
     this._memberPublicKeysByMemberId.set(hexMemberId, member.publicKey);
   }
@@ -105,7 +102,7 @@ export class BrightChainQuorum<TID extends PlatformID = Uint8Array> {
    * @param id
    * @returns
    */
-  public hasDocument(id: ShortHexGuid): boolean {
+  public hasDocument(id: HexString): boolean {
     return this._documentsById.has(id);
   }
 
@@ -130,9 +127,7 @@ export class BrightChainQuorum<TID extends PlatformID = Uint8Array> {
       sharesRequired,
     );
     this._documentsById.set(
-      uint8ArrayToHex(
-        this._enhancedProvider.toBytes(newDoc.id),
-      ) as ShortHexGuid,
+      this._enhancedProvider.toString(newDoc.id, 'hex') as HexString,
       newDoc,
     );
     return newDoc;
@@ -145,8 +140,8 @@ export class BrightChainQuorum<TID extends PlatformID = Uint8Array> {
    * @returns
    */
   public async getDocument<T>(
-    id: ShortHexGuid,
-    memberIds: ShortHexGuid[],
+    id: HexString,
+    memberIds: HexString[],
   ): Promise<T> {
     const doc = this._documentsById.get(id);
     if (!doc) {
@@ -169,7 +164,7 @@ export class BrightChainQuorum<TID extends PlatformID = Uint8Array> {
    * @param id
    * @param members
    */
-  public canUnlock(id: ShortHexGuid, members: Member<TID>[]): boolean {
+  public canUnlock(id: HexString, members: Member<TID>[]): boolean {
     const doc = this._documentsById.get(id);
     if (!doc) {
       throw new QuorumError(QuorumErrorType.DocumentNotFound);
@@ -182,7 +177,7 @@ export class BrightChainQuorum<TID extends PlatformID = Uint8Array> {
         const provider = getBrightChainIdProvider<TID>();
         const memberGuidId = uint8ArrayToHex(
           provider.toBytes(m.id),
-        ) as ShortHexGuid;
+        ) as HexString;
         return doc.memberIDs.includes(memberGuidId as unknown as TID);
       })
     );

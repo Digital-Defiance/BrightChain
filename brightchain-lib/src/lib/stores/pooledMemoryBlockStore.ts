@@ -10,6 +10,7 @@ import { StoreErrorType } from '../enumerations/storeErrorType';
 import { PoolDeletionError } from '../errors/poolDeletionError';
 import { StoreError } from '../errors/storeError';
 import { translate } from '../i18n';
+import type { BlockId } from '../interfaces/branded/primitives/blockId';
 import { IFecService } from '../interfaces/services/fecService';
 import {
   BlockStoreOptions,
@@ -38,6 +39,15 @@ import { Checksum } from '../types/checksum';
 import { padToBlockSize, unpadCblData, xorArrays } from '../utils/xorUtils';
 import { MemoryBlockMetadataStore } from './memoryBlockMetadataStore';
 import { MemoryBlockStore } from './memoryBlockStore';
+
+/**
+ * Cast a raw hex string to BlockId without validation.
+ * Used internally where the key is a SHA3-512 checksum (128 hex chars)
+ * used as an opaque storage key, not a semantic BlockId (64 hex chars).
+ */
+function toStorageKey(hex: string): BlockId {
+  return hex as unknown as BlockId;
+}
 
 /**
  * In-memory implementation of IPooledBlockStore.
@@ -163,7 +173,7 @@ export class PooledMemoryBlockStore
 
     // Create metadata with poolId
     const metadata = createDefaultBlockMetadata(
-      hash,
+      toStorageKey(hash),
       data.length,
       hash,
       options,
@@ -175,7 +185,9 @@ export class PooledMemoryBlockStore
       // Metadata may already exist if the same hash was stored in another pool
       // Update poolId on existing metadata
       if (this.getMetadataStore().has(hash)) {
-        await this.getMetadataStore().update(hash, { poolId: pool });
+        await this.getMetadataStore().update(toStorageKey(hash), {
+          poolId: pool,
+        });
       }
     }
 
@@ -560,19 +572,21 @@ export class PooledMemoryBlockStore
 
     // Track stored blocks for rollback on failure
     let block1Stored = false;
-    let block1Id = '';
+    let block1Id: BlockId = toStorageKey('0'.repeat(128));
 
     try {
       // 4. Store first block (R - the randomizer) in the pool
-      block1Id = await this.putInPool(pool, randomBlock, options);
+      block1Id = toStorageKey(await this.putInPool(pool, randomBlock, options));
       block1Stored = true;
 
       // 5. Store second block (CBL XOR R) in the pool
-      const block2Id = await this.putInPool(pool, xorResult, options);
+      const block2Id = toStorageKey(
+        await this.putInPool(pool, xorResult, options),
+      );
 
       // 6. Get parity block IDs if FEC redundancy was applied
-      let block1ParityIds: string[] | undefined;
-      let block2ParityIds: string[] | undefined;
+      let block1ParityIds: BlockId[] | undefined;
+      let block2ParityIds: BlockId[] | undefined;
 
       const block1Meta = await this.getMetadata(block1Id);
       if (block1Meta?.parityBlockIds?.length) {
@@ -735,7 +749,7 @@ export class PooledMemoryBlockStore
     key: Checksum | string,
   ): Promise<IBlockMetadata | null> {
     const hash = typeof key === 'string' ? key : key.toHex();
-    return this.getMetadataStore().get(hash);
+    return this.getMetadataStore().get(toStorageKey(hash));
   }
 
   public override async updateMetadata(
@@ -748,7 +762,7 @@ export class PooledMemoryBlockStore
         KEY: hash,
       });
     }
-    await this.getMetadataStore().update(hash, updates);
+    await this.getMetadataStore().update(toStorageKey(hash), updates);
   }
 
   // =========================================================================

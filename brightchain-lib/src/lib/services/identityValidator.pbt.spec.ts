@@ -12,10 +12,10 @@ import {
   ECIESService,
   EmailString,
   GuidV4Uint8Array,
+  HexString,
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
@@ -36,7 +36,7 @@ jest.setTimeout(120000);
  * Create a mock database with the given member pool.
  */
 function createMockDatabase(
-  memberLookup: Map<ShortHexGuid, IQuorumMember<GuidV4Uint8Array>>,
+  memberLookup: Map<HexString, IQuorumMember<GuidV4Uint8Array>>,
 ): IQuorumDatabase<GuidV4Uint8Array> {
   return {
     saveEpoch: jest.fn(async () => {}),
@@ -46,7 +46,10 @@ function createMockDatabase(
     }),
     saveMember: jest.fn(async () => {}),
     getMember: jest.fn(
-      async (memberId: ShortHexGuid) => memberLookup.get(memberId) ?? null,
+      async (memberId: GuidV4Uint8Array) =>
+        memberLookup.get(
+          uint8ArrayToHex(memberId as Uint8Array) as HexString,
+        ) ?? null,
     ),
     listActiveMembers: jest.fn(async () => Array.from(memberLookup.values())),
     saveDocument: jest.fn(async () => {}),
@@ -141,12 +144,12 @@ describe('IdentityValidator Property-Based Tests', () => {
             const claimed = memberPool[claimedIdx];
 
             const claimedId = idProvider.toBytes(claimed.member.id);
-            const claimedHex = uint8ArrayToHex(claimedId) as ShortHexGuid;
+            const claimedHex = uint8ArrayToHex(claimedId) as HexString;
 
             // Build content with claimed member's ID
             const content: ContentWithIdentity<GuidV4Uint8Array> = {
               creatorId: claimed.member.id,
-              contentId: `test-${contentSuffix}` as ShortHexGuid,
+              contentId: `test-${contentSuffix}` as HexString,
               contentType: 'block',
               signature: new Uint8Array(64), // placeholder, will be replaced
             };
@@ -163,11 +166,11 @@ describe('IdentityValidator Property-Based Tests', () => {
 
             // Set up database with the claimed member
             const memberLookup = new Map<
-              ShortHexGuid,
+              HexString,
               IQuorumMember<GuidV4Uint8Array>
             >();
             memberLookup.set(claimedHex, {
-              id: claimedHex,
+              id: claimed.member.id,
               publicKey: claimed.member.publicKey,
               metadata: { name: claimed.member.name },
               isActive: true,
@@ -208,11 +211,11 @@ describe('IdentityValidator Property-Based Tests', () => {
           async (memberIdx, contentSuffix) => {
             const m = memberPool[memberIdx];
             const memberId = idProvider.toBytes(m.member.id);
-            const memberHex = uint8ArrayToHex(memberId) as ShortHexGuid;
+            const memberHex = uint8ArrayToHex(memberId) as HexString;
 
             const content: ContentWithIdentity<GuidV4Uint8Array> = {
               creatorId: m.member.id,
-              contentId: `valid-${contentSuffix}` as ShortHexGuid,
+              contentId: `valid-${contentSuffix}` as HexString,
               contentType: 'block',
               signature: new Uint8Array(64),
             };
@@ -226,11 +229,11 @@ describe('IdentityValidator Property-Based Tests', () => {
             );
 
             const memberLookup = new Map<
-              ShortHexGuid,
+              HexString,
               IQuorumMember<GuidV4Uint8Array>
             >();
             memberLookup.set(memberHex, {
-              id: memberHex,
+              id: m.member.id,
               publicKey: m.member.publicKey,
               metadata: { name: m.member.name },
               isActive: true,
