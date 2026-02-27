@@ -53,21 +53,22 @@ const SYSTEM_ID = '15e070c81ab3446e8caa787d30d1d1d6';
 const ADMIN_ID = '6aba638bb9b6432b9c79a339e3776d69';
 const MEMBER_ID = '586fab6e1d9b4710be7b95dda1e051a1';
 
-const SYSTEM_FULL_ID = 'b40c689a-4819-4a2c-b303-085bc0d49954';
-const ADMIN_FULL_ID = '56bdd544-91d4-4f8c-90a8-d4a4bda3e9f9';
-const MEMBER_FULL_ID = '83aa5069-9d38-4920-938d-5f23c51da297';
+// Short hex (32-char, no dashes) — matches the stored format produced by serializeForStorage
+const SYSTEM_FULL_ID = 'b40c689a48194a2cb303085bc0d49954';
+const ADMIN_FULL_ID = '56bdd54491d44f8c90a8d4a4bda3e9f9';
+const MEMBER_FULL_ID = '83aa50699d384920938d5f23c51da297';
 
-const SYSTEM_ROLE_ID = '22e235f1-1364-4723-b532-51bd4f540200';
-const ADMIN_ROLE_ID = 'fe76ff84-8355-4ef3-bc36-e61be02daf81';
-const MEMBER_ROLE_ID = '8ee7c136-b01f-41e9-a444-825f84fe59f9';
+const SYSTEM_ROLE_ID = '22e235f113644723b53251bd4f540200';
+const ADMIN_ROLE_ID = 'fe76ff8483554ef3bc36e61be02daf81';
+const MEMBER_ROLE_ID = '8ee7c136b01f41e9a444825f84fe59f9';
 
-const SYSTEM_USER_ROLE_ID = '43f3f97d-6b10-4065-a0c9-aa826ed04f9f';
-const ADMIN_USER_ROLE_ID = 'f6602523-f9b3-4d9d-8bcc-fe2cc6003a58';
-const MEMBER_USER_ROLE_ID = 'cefa30ae-8f17-47b0-8319-2395b26b6a23';
+const SYSTEM_USER_ROLE_ID = '43f3f97d6b104065a0c9aa826ed04f9f';
+const ADMIN_USER_ROLE_ID = 'f6602523f9b34d9d8bccfe2cc6003a58';
+const MEMBER_USER_ROLE_ID = 'cefa30ae8f1747b083192395b26b6a23';
 
-const SYSTEM_MNEMONIC_DOC_ID = 'bd4e724f-743e-40a4-8770-6b04598cd156';
-const ADMIN_MNEMONIC_DOC_ID = '3b4dfdc6-1699-40ca-b29d-9d7203f15fa7';
-const MEMBER_MNEMONIC_DOC_ID = 'a01197d6-82fa-4053-a030-1ab1b6f7b1fc';
+const SYSTEM_MNEMONIC_DOC_ID = 'bd4e724f743e40a487706b04598cd156';
+const ADMIN_MNEMONIC_DOC_ID = '3b4dfdc6169940cab29d9d7203f15fa7';
+const MEMBER_MNEMONIC_DOC_ID = 'a01197d682fa4053a0301ab1b6f7b1fc';
 
 const VALID_POOL = 'RbacIntegrationPool';
 const HMAC_SECRET = Buffer.from('a'.repeat(64), 'hex');

@@ -1,5 +1,4 @@
 import {
-  asBlockId,
   BlockSize,
   blockSizeToSizeString,
   DeliveryStatus,
