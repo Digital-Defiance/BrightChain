@@ -213,7 +213,7 @@ describe('Category 5 — Block ID branded type (Validates: Requirements 1.9)', (
     // that complements the compile-time branded type safety
     expect(() => asBlockId('not-a-valid-block-id')).toThrow();
 
-    // A valid 64-char lowercase hex string is accepted
+    // A valid 64-char lowercase hex string is accepted (SHA-256 = 32 bytes = 64 hex chars)
     const validHex = 'a'.repeat(64);
     const blockId = asBlockId(validHex);
 

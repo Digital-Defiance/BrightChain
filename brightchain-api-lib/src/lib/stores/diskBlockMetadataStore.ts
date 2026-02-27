@@ -1,14 +1,16 @@
 import {
-  asBlockId,
   BlockSize,
   blockSizeToSizeString,
-  type BlockId,
   IBlockMetadata,
   IBlockMetadataStore,
   ReplicationStatus,
   StoreError,
   StoreErrorType,
+  type BlockId,
 } from '@brightchain/brightchain-lib';
+import { existsSync, mkdirSync } from 'fs';
+import { readdir, readFile, stat, unlink, writeFile } from 'fs/promises';
+import { join } from 'path';
 
 /**
  * Cast a raw hex string to BlockId without validation.
@@ -18,9 +20,6 @@ import {
 function toStorageKey(hex: string): BlockId {
   return hex as unknown as BlockId;
 }
-import { existsSync, mkdirSync } from 'fs';
-import { readdir, readFile, stat, unlink, writeFile } from 'fs/promises';
-import { join } from 'path';
 
 /**
  * Version number for the metadata file format.

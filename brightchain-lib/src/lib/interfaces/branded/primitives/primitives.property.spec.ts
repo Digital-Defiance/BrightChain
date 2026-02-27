@@ -38,9 +38,11 @@ const validEmailArb: fc.Arbitrary<string> = fc
   )
   .map(([local, domain, tld]) => `${local}@${domain}.${tld}`);
 
-/** Generates valid BlockId strings: exactly 64 lowercase hex chars */
-const validBlockIdArb: fc.Arbitrary<string> =
-  fc.stringMatching(/^[0-9a-f]{64}$/);
+/** Generates valid BlockId strings: 64-char (SHA-256) or 128-char (SHA3-512) lowercase hex */
+const validBlockIdArb: fc.Arbitrary<string> = fc.oneof(
+  fc.stringMatching(/^[0-9a-f]{64}$/),
+  fc.stringMatching(/^[0-9a-f]{128}$/),
+);
 
 /** Generates valid PoolId strings: 1–64 chars, only [a-zA-Z0-9_-] */
 const validPoolIdArb: fc.Arbitrary<string> = fc.stringMatching(
@@ -70,10 +72,10 @@ const invalidEmailArb: fc.Arbitrary<string> = fc
   .string({ minLength: 0, maxLength: 30 })
   .filter((s) => !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
 
-/** Generates strings that are NOT valid BlockIds (wrong length or wrong chars) */
+/** Generates strings that are NOT valid BlockIds (not 64 or 128 lowercase hex chars) */
 const invalidBlockIdArb: fc.Arbitrary<string> = fc
-  .string({ minLength: 0, maxLength: 128 })
-  .filter((s) => !/^[0-9a-f]{64}$/.test(s));
+  .string({ minLength: 0, maxLength: 256 })
+  .filter((s) => !/^[0-9a-f]{64}$/.test(s) && !/^[0-9a-f]{128}$/.test(s));
 
 /** Generates strings that are NOT valid PoolIds (empty, too long, or invalid chars) */
 const invalidPoolIdArb: fc.Arbitrary<string> = fc
@@ -180,7 +182,7 @@ describe('Property 1: Branded primitive validation correctness', () => {
   // BlockId — Requirement 1.3
   // -------------------------------------------------------------------------
   describe('BlockIdPrimitive', () => {
-    it('validate() returns true for all valid 64-char lowercase hex strings', () => {
+    it('validate() returns true for all valid 64-char or 128-char lowercase hex strings', () => {
       fc.assert(
         fc.property(validBlockIdArb, (value: string) => {
           expect(BlockIdPrimitive.validate(value)).toBe(true);
@@ -189,7 +191,7 @@ describe('Property 1: Branded primitive validation correctness', () => {
       );
     });
 
-    it('validate() returns false for strings that do not match /^[0-9a-f]{64}$/', () => {
+    it('validate() returns false for strings that do not match /^[0-9a-f]{64}$/ or /^[0-9a-f]{128}$/', () => {
       fc.assert(
         fc.property(invalidBlockIdArb, (value: string) => {
           expect(BlockIdPrimitive.validate(value)).toBe(false);
