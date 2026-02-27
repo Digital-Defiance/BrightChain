@@ -100,7 +100,10 @@ describe('CBLIndex – addEntry', () => {
 
     await expect(
       index.addEntry(
-        makeEntry({ blockId1: 'nonexistent' as BlockId, blockId2: 'block-bbb-222' as BlockId }),
+        makeEntry({
+          blockId1: 'nonexistent' as BlockId,
+          blockId2: 'block-bbb-222' as BlockId,
+        }),
       ),
     ).rejects.toThrow('Block validation failed');
   });
@@ -111,7 +114,10 @@ describe('CBLIndex – addEntry', () => {
 
     await expect(
       index.addEntry(
-        makeEntry({ blockId1: 'block-aaa-111' as BlockId, blockId2: 'nonexistent' as BlockId }),
+        makeEntry({
+          blockId1: 'block-aaa-111' as BlockId,
+          blockId2: 'nonexistent' as BlockId,
+        }),
       ),
     ).rejects.toThrow('Block validation failed');
   });
@@ -120,7 +126,12 @@ describe('CBLIndex – addEntry', () => {
     const { index } = makeCBLIndex();
 
     await expect(
-      index.addEntry(makeEntry({ blockId1: 'nope1' as BlockId, blockId2: 'nope2' as BlockId })),
+      index.addEntry(
+        makeEntry({
+          blockId1: 'nope1' as BlockId,
+          blockId2: 'nope2' as BlockId,
+        }),
+      ),
     ).rejects.toThrow('Block validation failed');
   });
 });

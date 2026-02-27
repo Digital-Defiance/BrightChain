@@ -422,7 +422,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     // Calculate new checksum
     const checksumService = new ChecksumService();
     const newVcblChecksum = checksumService.calculateChecksum(encryptedVcbl);
-    const newVcblBlockId = (newVcblChecksum.toHex() as unknown as BlockId);
+    const newVcblBlockId = newVcblChecksum.toHex() as unknown as BlockId;
 
     // Remove old VCBL from block store if it exists
     if (indexEntry.vcblBlockId) {
@@ -518,7 +518,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
 
       // Store the encrypted VCBL in the block store
       await this.blockStore.put(vcblChecksum.toHex(), encryptedVcbl);
-      vcblBlockId = (vcblChecksum.toHex() as unknown as BlockId);
+      vcblBlockId = vcblChecksum.toHex() as unknown as BlockId;
     }
 
     const metadata: VaultMetadata = {
@@ -1572,7 +1572,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     const fileChecksum = checksumService.calculateChecksum(
       new Uint8Array(file),
     );
-    const blockId = (fileChecksum.toHex() as unknown as BlockId);
+    const blockId = fileChecksum.toHex() as unknown as BlockId;
     const reference: AttachmentReference = {
       id: attachmentId,
       filename,

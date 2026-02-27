@@ -1,7 +1,6 @@
 import {
   ECIESService,
   EmailString,
-  hexToUint8Array,
   Member,
   PlatformID,
   SecureString,
@@ -377,9 +376,8 @@ export class MemberStore<
       });
 
       // Step 10: Update index
-      const provider = ServiceProvider.getInstance<TID>().idProvider;
       const indexEntry: IMemberIndexEntry<TID> = {
-        id: provider.fromBytes(hexToUint8Array(doc!.id)),
+        id: member.id,
         publicCBL: publicBlock.idChecksum, // Use the actual block checksum
         privateCBL: privateBlock.idChecksum, // Use the actual block checksum
         publicProfileCBL: publicProfileBlock.idChecksum, // Profile public data
@@ -430,9 +428,7 @@ export class MemberStore<
     // Return reference
     return {
       reference: {
-        id: ServiceProvider.getInstance<TID>().idProvider.fromBytes(
-          hexToUint8Array(doc!.id),
-        ),
+        id: member.id,
         type: doc!.type,
         dateVerified: new Date(),
         publicCBL: publicBlock.idChecksum, // Use the actual block checksum
