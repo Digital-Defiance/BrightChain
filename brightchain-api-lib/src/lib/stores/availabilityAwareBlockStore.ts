@@ -9,7 +9,6 @@
  */
 
 import {
-  asBlockId,
   AvailabilityState,
   BaseBlock,
   BlockFetcherConfig,

@@ -26,8 +26,11 @@ export const publicMemberProfileHydrationSchema = <
     storage: IPublicMemberProfileStorageData,
   ): IPublicMemberProfileHydratedData<TID> => {
     const provider = ServiceProvider.getInstance<TID>().idProvider;
-    const idBytes =
+    const rawBytes =
       typeof storage.id === 'string' ? hexToUint8Array(storage.id) : storage.id;
+    // Use a plain Uint8Array copy to avoid cross-realm TypedArray issues in Jest
+    // and ensure .buffer points to an isolated ArrayBuffer of the correct size.
+    const idBytes = new Uint8Array(rawBytes);
     const id = provider.fromBytes(idBytes);
 
     return {
@@ -84,8 +87,10 @@ export const privateMemberProfileHydrationSchema = <
     storage: IPrivateMemberProfileStorageData,
   ): IPrivateMemberProfileHydratedData<TID> => {
     const provider = ServiceProvider.getInstance<TID>().idProvider;
-    const idBytes =
+    const rawBytes =
       typeof storage.id === 'string' ? hexToUint8Array(storage.id) : storage.id;
+    // Use a plain Uint8Array copy to avoid cross-realm TypedArray issues in Jest
+    const idBytes = new Uint8Array(rawBytes);
     const id = provider.fromBytes(idBytes);
 
     return {

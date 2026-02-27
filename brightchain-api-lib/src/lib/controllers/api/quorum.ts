@@ -209,14 +209,29 @@ interface SerializedQuorumMember {
 }
 
 /**
+ * Safely serialize a TID to a hex string.
+ * If the id is already a string, returns it directly.
+ * Falls back to String(id) if the ServiceProvider is unavailable.
+ */
+function idToHex<TID extends PlatformID>(id: TID): string {
+  if (typeof id === 'string') return id;
+  try {
+    return ServiceProvider.getInstance<TID>().idProvider.toString(id, 'hex');
+  } catch {
+    return Buffer.isBuffer(id) || id instanceof Uint8Array
+      ? Buffer.from(id).toString('hex')
+      : String(id);
+  }
+}
+
+/**
  * Serialize a quorum member for API response
  */
 function serializeMember<TID extends PlatformID>(
   member: IQuorumMember<TID>,
 ): SerializedQuorumMember {
-  const sp = ServiceProvider.getInstance<TID>();
   return {
-    id: sp.idProvider.toString(member.id, 'hex'),
+    id: idToHex(member.id),
     publicKey: Buffer.from(member.publicKey).toString('hex'),
     metadata: member.metadata,
     isActive: member.isActive,
@@ -1181,16 +1196,12 @@ export class QuorumController<
         attachmentCblId: body.attachmentCblId,
       });
 
-      const sp = ServiceProvider.getInstance<TID>();
       const proposalData: IProposalData = {
-        id: sp.idProvider.toString(proposal.id, 'hex'),
+        id: idToHex(proposal.id),
         description: proposal.description,
         actionType: proposal.actionType,
         actionPayload: proposal.actionPayload,
-        proposerMemberId: sp.idProvider.toString(
-          proposal.proposerMemberId,
-          'hex',
-        ),
+        proposerMemberId: idToHex(proposal.proposerMemberId),
         status: proposal.status,
         requiredThreshold: proposal.requiredThreshold,
         expiresAt: proposal.expiresAt.toISOString(),
@@ -1244,16 +1255,12 @@ export class QuorumController<
         return notFoundError('Proposal', proposalId);
       }
 
-      const sp = ServiceProvider.getInstance<TID>();
       const proposalData: IProposalData = {
-        id: sp.idProvider.toString(proposal.id, 'hex'),
+        id: idToHex(proposal.id),
         description: proposal.description,
         actionType: proposal.actionType,
         actionPayload: proposal.actionPayload,
-        proposerMemberId: sp.idProvider.toString(
-          proposal.proposerMemberId,
-          'hex',
-        ),
+        proposerMemberId: idToHex(proposal.proposerMemberId),
         status: proposal.status,
         requiredThreshold: proposal.requiredThreshold,
         expiresAt: proposal.expiresAt.toISOString(),
@@ -1351,21 +1358,13 @@ export class QuorumController<
 
       const epochData: IEpochData = {
         epochNumber: epoch.epochNumber,
-        memberIds: epoch.memberIds.map((id) =>
-          ServiceProvider.getInstance<GuidV4Buffer>().idProvider.toString(
-            id as unknown as GuidV4Buffer,
-            'hex',
-          ),
-        ),
+        memberIds: epoch.memberIds.map((id) => idToHex(id as unknown as TID)),
         threshold: epoch.threshold,
         mode: epoch.mode,
         createdAt: epoch.createdAt.toISOString(),
         previousEpochNumber: epoch.previousEpochNumber,
         innerQuorumMemberIds: epoch.innerQuorumMemberIds?.map((id) =>
-          ServiceProvider.getInstance<GuidV4Buffer>().idProvider.toString(
-            id as unknown as GuidV4Buffer,
-            'hex',
-          ),
+          idToHex(id as unknown as TID),
         ),
       };
 

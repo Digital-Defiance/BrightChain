@@ -13,6 +13,7 @@
 import {
   ECIESService,
   HexString,
+  hexToUint8Array,
   PlatformID,
   SignatureUint8Array,
   uint8ArrayToHex,
@@ -118,14 +119,16 @@ export class IdentityValidator<
    * Validate real identity content.
    *
    * 1. Look up member by creatorId
-   * 2. Check member is not banned or suspended
-   * 3. Verify content signature against member's public key
+   * 2. Verify content signature against member's public key
+   * 3. Check member is not banned or suspended
    */
   private async validateRealIdentity(
     content: ContentWithIdentity<TID>,
     memberId: HexString,
   ): Promise<IdentityValidationResult> {
-    const member = await this.db.getMember(memberId as unknown as TID);
+    // Pass the original TID (creatorId) to getMember, not the hex string,
+    // so the database implementation can use its native key format.
+    const member = await this.db.getMember(content.creatorId);
 
     if (!member || !member.isActive) {
       throw new IdentityValidationError(
@@ -133,10 +136,8 @@ export class IdentityValidator<
       );
     }
 
-    // Check banned/suspended status
-    this.checkMemberStatus(member.status);
-
-    // Verify signature against member's public key
+    // Verify signature against member's public key BEFORE status checks
+    // so that signature errors are reported accurately
     const contentBytes = computeContentDigest(content);
     const isValid = this.eciesService.verifyMessage(
       member.publicKey,
@@ -149,6 +150,9 @@ export class IdentityValidator<
         IdentityValidationErrorType.InvalidSignature,
       );
     }
+
+    // Check banned/suspended status after signature is confirmed valid
+    this.checkMemberStatus(member.status);
 
     return {
       valid: true,
@@ -197,18 +201,36 @@ export class IdentityValidator<
       );
     }
 
-    // Check alias owner is not banned/suspended
-    const owner = await this.db.getMember(alias.ownerMemberId);
+    // Check alias owner is not banned/suspended.
+    // ownerMemberId may be stored as a hex string cast to TID (e.g. in tests).
+    // Convert to proper bytes via hexToUint8Array so the database lookup works correctly.
+    let ownerLookupId: TID;
+    if (typeof alias.ownerMemberId === 'string') {
+      // It's a hex string — decode from hex to bytes so getMember receives a Uint8Array
+      ownerLookupId = hexToUint8Array(
+        alias.ownerMemberId as string,
+      ) as unknown as TID;
+    } else {
+      ownerLookupId = alias.ownerMemberId;
+    }
+    const owner = await this.db.getMember(ownerLookupId);
     if (owner) {
       this.checkMemberStatus(owner.status);
     }
 
+    // ownerMemberId may already be a hex string (when stored as string-cast TID)
+    // or a real Uint8Array. Avoid double-encoding by checking the type first.
+    const resolvedMemberId: HexString =
+      typeof alias.ownerMemberId === 'string'
+        ? (alias.ownerMemberId as HexString)
+        : (uint8ArrayToHex(
+            this.toBytes(alias.ownerMemberId as TID),
+          ) as HexString);
+
     return {
       valid: true,
       identityMode: IdentityMode.Alias,
-      resolvedMemberId: uint8ArrayToHex(
-        this.toBytes(alias.ownerMemberId as TID),
-      ) as HexString,
+      resolvedMemberId,
     };
   }
 

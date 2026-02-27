@@ -168,12 +168,7 @@ export class RbacInputBuilder<TID extends PlatformID> {
     );
 
     const resolvedPassword =
-      input.password ??
-      new SecureString(
-        Array.from(randomBytes(16))
-          .map((b) => String.fromCharCode(33 + (b % 94)))
-          .join(''),
-      );
+      input.password ?? RbacInputBuilder.generatePassword();
 
     // Wrap private key with password
     let wrappedKey: IPasswordWrappedPrivateKey | undefined;
@@ -334,6 +329,39 @@ export class RbacInputBuilder<TID extends PlatformID> {
         member: memberResult.member,
       },
     };
+  }
+
+  /**
+   * Generate a random password that satisfies the PasswordRegex:
+   * at least 8 chars, with at least one letter, one digit, and one special char.
+   */
+  static generatePassword(): SecureString {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    const digits = '0123456789';
+    const specials = '!@#$%^&*()_+-=[]{};\':"|,.<>/?';
+    const all = letters + digits + specials;
+
+    const pick = (charset: string): string => {
+      const bytes = randomBytes(4);
+      return charset[bytes.readUInt32BE(0) % charset.length];
+    };
+
+    // Guarantee at least one from each required class
+    const required = [pick(letters), pick(digits), pick(specials)];
+
+    // Fill remaining 13 chars from the full set
+    const rest = Array.from(randomBytes(13)).map(
+      (b) => all[b % all.length],
+    );
+
+    // Shuffle all 16 chars using Fisher-Yates with crypto randomness
+    const chars = [...required, ...rest];
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = randomBytes(1)[0] % (i + 1);
+      [chars[i], chars[j]] = [chars[j], chars[i]];
+    }
+
+    return new SecureString(chars.join(''));
   }
 
   /**
