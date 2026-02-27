@@ -17,6 +17,7 @@ import {
   IGossipService,
   MessageDeliveryMetadata,
 } from '../../interfaces/availability/gossipService';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 
 /**
@@ -73,7 +74,7 @@ export interface PendingDelivery {
   /** The message ID being tracked */
   messageId: string;
   /** Block IDs containing the message content */
-  blockIds: string[];
+  blockIds: BlockId[];
   /** The original delivery metadata for re-announcement */
   metadata: MessageDeliveryMetadata;
   /** Per-recipient delivery status */
@@ -148,7 +149,7 @@ export class GossipRetryService {
    */
   trackDelivery(
     messageId: string,
-    blockIds: string[],
+    blockIds: BlockId[],
     metadata: MessageDeliveryMetadata,
   ): void {
     const recipientStatuses = new Map<string, DeliveryStatus>();

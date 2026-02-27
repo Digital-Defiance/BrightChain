@@ -15,6 +15,7 @@ import { AvailabilityState } from '../../enumerations/availabilityState';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
+import type { BlockId } from '../branded/primitives/blockId';
 import {
   blockMetadataWithLocationFromJSON,
   blockMetadataWithLocationToJSON,
@@ -23,6 +24,8 @@ import {
   locationRecordFromJSON,
   locationRecordToJSON,
 } from './locationRecord';
+
+const bid = (s: string) => s as unknown as BlockId;
 
 /**
  * Generate a valid node ID (alphanumeric string)
@@ -69,7 +72,9 @@ const arbHexString = (minLength: number, maxLength: number) =>
 /**
  * Generate a valid block ID
  */
-const arbBlockId = arbHexString(32, 64);
+const arbBlockId: fc.Arbitrary<BlockId> = arbHexString(32, 64).map((s) =>
+  bid(s),
+);
 
 /**
  * Generate a valid availability state
@@ -249,7 +254,7 @@ describe('Location Metadata Serialization Property Tests', () => {
     it('should handle edge cases in serialization', () => {
       // Test with empty location records
       const metadataWithEmptyRecords: IBlockMetadataWithLocation = {
-        blockId: 'abc123',
+        blockId: bid('abc123'),
         createdAt: new Date('2024-01-01'),
         expiresAt: null,
         durabilityLevel: DurabilityLevel.Standard,
@@ -272,7 +277,7 @@ describe('Location Metadata Serialization Property Tests', () => {
       const deserialized = blockMetadataWithLocationFromJSON(serialized);
 
       expect(deserialized.locationRecords).toEqual([]);
-      expect(deserialized.blockId).toBe('abc123');
+      expect(deserialized.blockId).toBe(bid('abc123'));
     });
 
     it('should reject invalid serialized data', () => {
@@ -307,7 +312,7 @@ describe('Location Metadata Serialization Property Tests', () => {
       // Invalid availability state
       expect(() => {
         blockMetadataWithLocationFromJSON({
-          blockId: 'abc123',
+          blockId: bid('abc123'),
           createdAt: '2024-01-01T00:00:00.000Z',
           expiresAt: null,
           durabilityLevel: DurabilityLevel.Standard,

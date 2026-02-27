@@ -10,6 +10,7 @@
  * - Backend: TId = GuidV4Buffer or similar
  */
 
+import type { BlockId } from '../branded/primitives/blockId';
 import type { PoolId } from './pooledBlockStore';
 
 /**
@@ -50,9 +51,9 @@ export interface ICBLIndexEntry<TId = string> {
   /** Full magnet URL for CBL reconstruction */
   magnetUrl: string;
   /** First XOR component block ID (hex) */
-  blockId1: string;
+  blockId1: BlockId;
   /** Second XOR component block ID (hex) */
-  blockId2: string;
+  blockId2: BlockId;
   /** Block size used for storage */
   blockSize: number;
   /** Pool this CBL belongs to (undefined = default pool) */
@@ -69,8 +70,8 @@ export interface ICBLIndexEntry<TId = string> {
   metadata?: ICBLMetadata;
   /** FEC parity block IDs for each XOR component */
   parityBlockIds?: {
-    block1: string[];
-    block2: string[];
+    block1: BlockId[];
+    block2: BlockId[];
   };
   /** User collection/folder this entry belongs to */
   userCollection?: string;

@@ -36,8 +36,8 @@ jest.mock('../cblBase', () => {
   return originalModule;
 });
 
-// Mock bzip2-wasm since it uses ESM/import.meta which Jest cannot handle
-jest.mock('bzip2-wasm', () => {
+// Mock @digitaldefiance/bzip2-wasm since it uses ESM/import.meta which Jest cannot handle
+jest.mock('@digitaldefiance/bzip2-wasm', () => {
   return {
     __esModule: true,
     default: class MockBZip2 {

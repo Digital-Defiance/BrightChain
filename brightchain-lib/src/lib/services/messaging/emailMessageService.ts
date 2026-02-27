@@ -28,6 +28,8 @@ import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import { EmailError } from '../../errors/messaging/emailError';
 import type { IGossipService } from '../../interfaces/availability/gossipService';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
+import { asBlockId } from '../../interfaces/branded/primitives/blockId';
 import type { IAttachmentMetadata } from '../../interfaces/messaging/attachmentMetadata';
 import type { IMailbox } from '../../interfaces/messaging/emailAddress';
 import { type IDeliveryReceipt } from '../../interfaces/messaging/emailDelivery';
@@ -624,7 +626,7 @@ export class EmailMessageService {
 
     const metadata: IEmailMetadata = {
       // IBlockMetadata fields
-      blockId: brightchainMessageId,
+      blockId: brightchainMessageId as BlockId,
       createdAt: now,
       expiresAt: null,
       durabilityLevel: DurabilityLevel.Standard,
@@ -653,7 +655,7 @@ export class EmailMessageService {
       acknowledgments: new Map(),
       encryptionScheme: email.encryptionScheme ?? MessageEncryptionScheme.NONE,
       isCBL: false,
-      cblBlockIds: [brightchainMessageId],
+      cblBlockIds: [brightchainMessageId as BlockId],
 
       // IEmailMetadata fields
       from: email.from,
@@ -1481,7 +1483,7 @@ export class EmailMessageService {
 
     return {
       ...original,
-      blockId: `${original.blockId}-tocc`,
+      blockId: `${original.blockId}-tocc` as BlockId,
       bcc: undefined,
       recipients: filteredRecipients,
       deliveryStatus: filteredDeliveryStatus,
@@ -1527,7 +1529,7 @@ export class EmailMessageService {
 
     return {
       ...original,
-      blockId: `${original.blockId}-bcc-${bccRecipient.address}`,
+      blockId: `${original.blockId}-bcc-${bccRecipient.address}` as BlockId,
       to: [...original.to, bccRecipient],
       bcc: undefined,
       recipients: [...toCcAddresses, bccRecipient.address],
@@ -1619,7 +1621,7 @@ export class EmailMessageService {
     const cblMagnetUrl = `magnet:?xt=urn:cbl:${sha256Checksum}`;
 
     // Generate block ID based on the checksum
-    const blockId = `cbl-block-${sha256Checksum}`;
+    const blockId = asBlockId(sha256Checksum.padEnd(64, '0').slice(0, 64));
 
     // Persist attachment content if the store supports it
     if (this.metadataStore.storeAttachmentContent) {

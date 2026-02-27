@@ -22,14 +22,14 @@ import {
   QuorumError,
   QuorumErrorType,
 } from '@brightchain/brightchain-lib';
-import { ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString } from '@digitaldefiance/ecies-lib';
 import { ContentIngestionService } from './contentIngestionService';
 
 // ─── Test Helpers ───────────────────────────────────────────────────────────
 
-const MOCK_CONTENT_ID = 'aabbccdd11223344aabbccdd11223344' as ShortHexGuid;
-const MOCK_MEMBER_ID = '11223344aabbccdd11223344aabbccdd' as ShortHexGuid;
-const MOCK_RECOVERY_ID = 'eeff00112233445566778899aabbccdd' as ShortHexGuid;
+const MOCK_CONTENT_ID = 'aabbccdd11223344aabbccdd11223344' as HexString;
+const MOCK_MEMBER_ID = '11223344aabbccdd11223344aabbccdd' as HexString;
+const MOCK_RECOVERY_ID = 'eeff00112233445566778899aabbccdd' as HexString;
 
 function makeContent(
   overrides?: Partial<ContentWithIdentity<Uint8Array>>,

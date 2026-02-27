@@ -1,4 +1,4 @@
-import { ShortHexGuid, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
+import { HexString, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import { EnergyTransaction } from '../interfaces/energyTransaction';
 import { Checksum } from '../types/checksum';
 
@@ -7,8 +7,8 @@ import { Checksum } from '../types/checksum';
  * Provides audit trail of all energy flows
  */
 export class EnergyLedger {
-  private transactions: Map<ShortHexGuid, EnergyTransaction>;
-  private byMember: Map<ShortHexGuid, ShortHexGuid[]>;
+  private transactions: Map<HexString, EnergyTransaction>;
+  private byMember: Map<HexString, HexString[]>;
 
   constructor() {
     this.transactions = new Map();
@@ -19,13 +19,13 @@ export class EnergyLedger {
    * Add transaction to ledger
    */
   add(transaction: EnergyTransaction): void {
-    const txId = uint8ArrayToHex(transaction.id.toUint8Array()) as ShortHexGuid;
+    const txId = uint8ArrayToHex(transaction.id.toUint8Array()) as HexString;
     this.transactions.set(txId, transaction);
 
     // Index by source
     const sourceId = uint8ArrayToHex(
       transaction.source.toUint8Array(),
-    ) as ShortHexGuid;
+    ) as HexString;
     if (!this.byMember.has(sourceId)) {
       this.byMember.set(sourceId, []);
     }
@@ -34,7 +34,7 @@ export class EnergyLedger {
     // Index by destination
     const destId = uint8ArrayToHex(
       transaction.destination.toUint8Array(),
-    ) as ShortHexGuid;
+    ) as HexString;
     if (!this.byMember.has(destId)) {
       this.byMember.set(destId, []);
     }
@@ -45,7 +45,7 @@ export class EnergyLedger {
    * Get transaction by ID
    */
   get(txId: Checksum): EnergyTransaction | undefined {
-    const key = uint8ArrayToHex(txId.toUint8Array()) as ShortHexGuid;
+    const key = uint8ArrayToHex(txId.toUint8Array()) as HexString;
     return this.transactions.get(key);
   }
 
@@ -53,7 +53,7 @@ export class EnergyLedger {
    * Get all transactions for a member
    */
   getByMember(memberId: Checksum): EnergyTransaction[] {
-    const key = uint8ArrayToHex(memberId.toUint8Array()) as ShortHexGuid;
+    const key = uint8ArrayToHex(memberId.toUint8Array()) as HexString;
     const txIds = this.byMember.get(key) || [];
     return txIds
       .map((id) => this.transactions.get(id))

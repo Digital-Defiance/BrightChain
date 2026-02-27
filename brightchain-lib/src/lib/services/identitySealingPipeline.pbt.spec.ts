@@ -13,10 +13,10 @@ import {
   ECIESService,
   EmailString,
   GuidV4Uint8Array,
+  HexString,
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import * as fc from 'fast-check';
@@ -47,18 +47,18 @@ function createMockDatabase(
   >['idProvider'],
 ): IQuorumDatabase<GuidV4Uint8Array> {
   const identityRecords = new Map<
-    ShortHexGuid,
+    HexString,
     IdentityRecoveryRecord<GuidV4Uint8Array>
   >();
 
-  // Build member lookup by ShortHexGuid
-  const memberLookup = new Map<ShortHexGuid, IQuorumMember<GuidV4Uint8Array>>();
+  // Build member lookup by HexString
+  const memberLookup = new Map<HexString, IQuorumMember<GuidV4Uint8Array>>();
   for (const m of memberPool) {
     const memberId = uint8ArrayToHex(
       enhancedProvider.toBytes(m.member.id),
-    ) as ShortHexGuid;
+    ) as HexString;
     memberLookup.set(memberId, {
-      id: memberId,
+      id: m.member.id,
       publicKey: m.member.publicKey,
       metadata: { name: m.member.name },
       isActive: true,
@@ -75,7 +75,10 @@ function createMockDatabase(
     }),
     saveMember: jest.fn(async () => {}),
     getMember: jest.fn(
-      async (memberId: ShortHexGuid) => memberLookup.get(memberId) ?? null,
+      async (memberId: GuidV4Uint8Array) =>
+        memberLookup.get(
+          uint8ArrayToHex(memberId as Uint8Array) as HexString,
+        ) ?? null,
     ),
     listActiveMembers: jest.fn(async () => Array.from(memberLookup.values())),
     saveDocument: jest.fn(async () => {}),
@@ -87,14 +90,15 @@ function createMockDatabase(
     getVotesForProposal: jest.fn(async () => []),
     saveIdentityRecord: jest.fn(
       async (record: IdentityRecoveryRecord<GuidV4Uint8Array>) => {
-        identityRecords.set(record.id, record);
+        identityRecords.set(record.id as unknown as HexString, record);
       },
     ),
     getIdentityRecord: jest.fn(
-      async (recordId: ShortHexGuid) => identityRecords.get(recordId) ?? null,
+      async (recordId: GuidV4Uint8Array) =>
+        identityRecords.get(recordId as unknown as HexString) ?? null,
     ),
-    deleteIdentityRecord: jest.fn(async (recordId: ShortHexGuid) => {
-      identityRecords.delete(recordId);
+    deleteIdentityRecord: jest.fn(async (recordId: GuidV4Uint8Array) => {
+      identityRecords.delete(recordId as unknown as HexString);
     }),
     listExpiredIdentityRecords: jest.fn(async () => []),
     saveAlias: jest.fn(async () => {}),
@@ -158,9 +162,7 @@ describe('IdentitySealingPipeline Property-Based Tests', () => {
     const members = memberPool.slice(0, memberCount);
     return {
       epochNumber: 1,
-      memberIds: members.map(
-        (m) => uint8ArrayToHex(idProvider.toBytes(m.member.id)) as ShortHexGuid,
-      ),
+      memberIds: members.map((m) => m.member.id),
       threshold,
       mode: QuorumOperationalMode.Quorum,
       createdAt: new Date(),
@@ -174,7 +176,7 @@ describe('IdentitySealingPipeline Property-Based Tests', () => {
       creatorId,
       contentId: uint8ArrayToHex(
         idProvider.toBytes(idProvider.generateTyped()),
-      ) as ShortHexGuid,
+      ) as HexString,
       contentType: 'post',
       signature: new Uint8Array([1, 2, 3, 4]),
     };
@@ -183,15 +185,23 @@ describe('IdentitySealingPipeline Property-Based Tests', () => {
   async function decryptShards(
     record: IdentityRecoveryRecord<GuidV4Uint8Array>,
     memberCount: number,
-  ): Promise<Map<ShortHexGuid, string>> {
-    const decryptedShares = new Map<ShortHexGuid, string>();
+  ): Promise<Map<HexString, string>> {
+    const decryptedShares = new Map<HexString, string>();
     const members = memberPool.slice(0, memberCount);
 
     for (const m of members) {
       const memberId = uint8ArrayToHex(
         idProvider.toBytes(m.member.id),
-      ) as ShortHexGuid;
-      const encryptedShard = record.encryptedShardsByMemberId.get(memberId);
+      ) as HexString;
+      // encryptedShardsByMemberId is keyed by GuidV4Uint8Array (TID)
+      // find the matching shard by comparing hex representations
+      let encryptedShard: Uint8Array | undefined;
+      for (const [shardKey, shardVal] of record.encryptedShardsByMemberId) {
+        if (uint8ArrayToHex(shardKey as Uint8Array) === memberId) {
+          encryptedShard = shardVal;
+          break;
+        }
+      }
       if (encryptedShard && m.member.privateKey) {
         const decrypted = await eciesService.decryptWithLengthAndHeader(
           m.member.privateKey.value,
@@ -297,12 +307,14 @@ describe('IdentitySealingPipeline Property-Based Tests', () => {
             }
 
             // Recover the identity using threshold shares
-            const record = await db.getIdentityRecord(result.recoveryRecordId);
+            const record = await db.getIdentityRecord(
+              result.recoveryRecordId as unknown as GuidV4Uint8Array,
+            );
             expect(record).not.toBeNull();
 
             const allShares = await decryptShards(record!, memberCount);
             // Take exactly threshold shares
-            const thresholdShares = new Map<ShortHexGuid, string>();
+            const thresholdShares = new Map<HexString, string>();
             let count = 0;
             for (const [k, v] of allShares) {
               if (count >= threshold) break;

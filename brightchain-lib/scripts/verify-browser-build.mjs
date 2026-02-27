@@ -20,9 +20,9 @@ try {
       // Peer / workspace dependencies
       '@digitaldefiance/*',
       '@brightchain/*',
-      // bzip2-wasm uses Node.js built-ins (path, fs, module) and import.meta;
+      // @digitaldefiance/bzip2-wasm uses Node.js built-ins (path, fs, module) and import.meta;
       // browser consumers would provide their own WASM loader
-      'bzip2-wasm',
+      '@digitaldefiance/bzip2-wasm',
     ],
     logLevel: 'warning',
     // Treat any remaining Node.js built-in imports as errors

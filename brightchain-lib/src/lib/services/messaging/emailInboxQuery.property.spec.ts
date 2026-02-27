@@ -18,6 +18,7 @@ import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import {
   createMailbox,
   type IMailbox,
@@ -25,6 +26,9 @@ import {
 import type { IEmailMetadata } from '../../interfaces/messaging/emailMetadata';
 import { createContentType } from '../../interfaces/messaging/mimePart';
 import { InMemoryEmailMetadataStore } from './inMemoryEmailMetadataStore';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 // Feature: email-messaging-protocol, Property 12: Inbox Query Correctness
 
@@ -55,7 +59,7 @@ function buildEmail(
 ): IEmailMetadata {
   const allRecipients = [...to, ...cc, ...bcc].map((m) => m.address);
   return {
-    blockId: messageId,
+    blockId: bid(messageId),
     createdAt: date,
     expiresAt: null,
     durabilityLevel: DurabilityLevel.Standard,

@@ -3,6 +3,7 @@ import { BrightChainStrings } from '../../enumerations/brightChainStrings';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
+import type { BlockId } from '../branded/primitives/blockId';
 import { IBlockMetadata } from '../storage/blockMetadata';
 import { PoolId, isValidPoolId } from '../storage/pooledBlockStore';
 
@@ -103,7 +104,7 @@ export interface SerializedLocationRecord {
  * Serializable representation of IBlockMetadataWithLocation
  */
 export interface SerializedBlockMetadataWithLocation {
-  blockId: string;
+  blockId: BlockId;
   createdAt: string;
   expiresAt: string | null;
   durabilityLevel: string;
@@ -371,7 +372,7 @@ export function blockMetadataWithLocationFromJSON(
     createdAt,
     expiresAt,
     durabilityLevel: serialized.durabilityLevel as DurabilityLevel,
-    parityBlockIds: [...serialized.parityBlockIds],
+    parityBlockIds: [...serialized.parityBlockIds] as BlockId[],
     accessCount: serialized.accessCount,
     lastAccessedAt,
     replicationStatus: serialized.replicationStatus as ReplicationStatus,

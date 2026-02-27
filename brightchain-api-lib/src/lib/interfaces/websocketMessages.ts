@@ -2,6 +2,8 @@
  * WebSocket message interfaces for the Block Availability and Discovery Protocol
  */
 
+import type { BlockId } from '@brightchain/brightchain-lib';
+
 import {
   DiscoveryMessageType,
   GossipMessageType,
@@ -57,7 +59,7 @@ export interface IBloomFilterResponse {
 export interface IBlockQueryMessage {
   type: DiscoveryMessageType.BLOCK_QUERY;
   payload: {
-    blockId: string;
+    blockId: BlockId;
     requestingNodeId: string;
   };
   timestamp: string;
@@ -70,7 +72,7 @@ export interface IBlockQueryMessage {
 export interface IBlockQueryResponse {
   type: DiscoveryMessageType.BLOCK_QUERY_RESPONSE;
   payload: {
-    blockId: string;
+    blockId: BlockId;
     hasBlock: boolean;
     nodeId: string;
   };
@@ -98,7 +100,7 @@ export interface IManifestResponse {
   type: DiscoveryMessageType.MANIFEST_RESPONSE;
   payload: {
     nodeId: string;
-    blockIds: string[];
+    blockIds: BlockId[];
     generatedAt: string;
     checksum: string;
   };
@@ -114,7 +116,7 @@ export interface IManifestResponse {
 export interface IBlockAnnouncementMessage {
   type: GossipMessageType.BLOCK_ANNOUNCEMENT;
   payload: {
-    blockId: string;
+    blockId: BlockId;
     nodeId: string;
     ttl: number;
   };
@@ -127,7 +129,7 @@ export interface IBlockAnnouncementMessage {
 export interface IBlockRemovalMessage {
   type: GossipMessageType.BLOCK_REMOVAL;
   payload: {
-    blockId: string;
+    blockId: BlockId;
     nodeId: string;
     ttl: number;
   };
@@ -210,15 +212,15 @@ export interface IAnnouncementBatchMessage {
   payload: {
     announcements: Array<{
       type: 'add' | 'remove' | 'ack';
-      blockId: string;
+      blockId: BlockId;
       nodeId: string;
       ttl: number;
       messageDelivery?: {
         messageId: string;
         recipientIds: string[];
         priority: 'normal' | 'high';
-        blockIds: string[];
-        cblBlockId: string;
+        blockIds: BlockId[];
+        cblBlockId: BlockId;
         ackRequired: boolean;
       };
       deliveryAck?: {

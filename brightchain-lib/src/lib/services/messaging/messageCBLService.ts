@@ -11,6 +11,8 @@ import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import { MessageError } from '../../errors/messaging/messageError';
 import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
 import { translate } from '../../i18n';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
+import { asBlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 import { IMessageMetadataStore } from '../../interfaces/messaging/messageMetadataStore';
 import {
@@ -75,7 +77,7 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
       );
     }
 
-    const contentBlockIds: string[] = [];
+    const contentBlockIds: BlockId[] = [];
     const blockSize = this.blockStore.blockSize;
     const payloadPerBlock = blockSize as number;
     const totalBlocks = Math.ceil(content.length / payloadPerBlock);
@@ -94,7 +96,7 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
 
         const block = new RawDataBlock(blockSize, blockData, new Date());
         await this.retryOperation(() => this.blockStore.setData(block));
-        contentBlockIds.push(block.idChecksum.toHex());
+        contentBlockIds.push(asBlockId(block.idChecksum.toHex()));
       }
 
       const blockIdsArray = this.serializeBlockIds(contentBlockIds);
@@ -124,7 +126,7 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
 
       if (this.metadataStore) {
         const metadata: IMessageMetadata = {
-          blockId: messageId,
+          blockId: messageId as BlockId,
           size: blockSize,
           createdAt: new Date(),
           expiresAt: null,
@@ -226,7 +228,7 @@ export class MessageCBLService<TID extends PlatformID = Uint8Array> {
     messageId: string,
   ): Promise<IMessageMetadata | null> {
     if (!this.metadataStore) return null;
-    const metadata = await this.metadataStore.get(messageId);
+    const metadata = await this.metadataStore.get(messageId as BlockId);
     return metadata as IMessageMetadata | null;
   }
 

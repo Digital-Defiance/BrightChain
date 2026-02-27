@@ -9,7 +9,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import type { ICBLIndexEntry } from '@brightchain/brightchain-lib';
+import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
@@ -59,10 +59,10 @@ const identifierArb: fc.Arbitrary<string> = fc
   .map((chars) => chars.join(''));
 
 /** Arbitrary for a unique block ID pair. */
-const blockIdPairArb: fc.Arbitrary<{ blockId1: string; blockId2: string }> = fc
+const blockIdPairArb: fc.Arbitrary<{ blockId1: BlockId; blockId2: BlockId }> = fc
   .tuple(identifierArb, identifierArb)
   .filter(([a, b]) => a !== b)
-  .map(([a, b]) => ({ blockId1: `blk-${a}`, blockId2: `blk-${b}` }));
+  .map(([a, b]) => ({ blockId1: `blk-${a}` as BlockId, blockId2: `blk-${b}` as BlockId }));
 
 // ══════════════════════════════════════════════════════════════
 // Tests

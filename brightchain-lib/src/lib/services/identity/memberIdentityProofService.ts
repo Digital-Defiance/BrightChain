@@ -147,7 +147,7 @@ export class MemberIdentityProofService<TId = string> {
     const proof = this.findProof(memberId, proofId);
 
     if (proof.verificationStatus === VerificationStatus.REVOKED) {
-      throw new ProofAlreadyRevokedError(String(proofId));
+      throw new ProofAlreadyRevokedError(`${proofId}`);
     }
 
     proof.verificationStatus = VerificationStatus.REVOKED;
@@ -278,7 +278,7 @@ export class MemberIdentityProofService<TId = string> {
     const proofs = this.proofsByMember.get(memberId) ?? [];
     const proof = proofs.find((p) => p.id === proofId);
     if (!proof) {
-      throw new ProofNotFoundError(String(proofId));
+      throw new ProofNotFoundError(`${proofId}`);
     }
     return proof;
   }

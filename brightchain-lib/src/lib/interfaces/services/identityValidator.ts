@@ -7,7 +7,7 @@
  * @see Requirements 16
  */
 
-import { PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString, PlatformID } from '@digitaldefiance/ecies-lib';
 import { IdentityValidationErrorType } from '../../enumerations/identityValidationErrorType';
 import { ContentWithIdentity, IdentityMode } from '../contentWithIdentity';
 
@@ -20,7 +20,7 @@ export interface IdentityValidationResult {
   /** The detected identity mode */
   identityMode: IdentityMode;
   /** The resolved real member ID (for real/alias modes) */
-  resolvedMemberId?: ShortHexGuid;
+  resolvedMemberId?: HexString;
   /** Validation error type if valid is false */
   errorType?: IdentityValidationErrorType;
 }

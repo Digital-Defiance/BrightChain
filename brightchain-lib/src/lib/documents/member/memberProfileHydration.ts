@@ -55,7 +55,7 @@ export const publicMemberProfileHydrationSchema = <
       if (hydrated.id instanceof Uint8Array) {
         return uint8ArrayToHex(hydrated.id);
       }
-      return uint8ArrayToHex(provider.toBytes(hydrated.id));
+      return provider.toString(hydrated.id, 'hex');
     })();
 
     return {
@@ -140,7 +140,7 @@ export const privateMemberProfileHydrationSchema = <
       if (hydrated.id instanceof Uint8Array) {
         return uint8ArrayToHex(hydrated.id);
       }
-      return uint8ArrayToHex(provider.toBytes(hydrated.id));
+      return provider.toString(hydrated.id, 'hex');
     })();
 
     // Convert peer IDs to hex strings for JSON serialization
@@ -151,7 +151,7 @@ export const privateMemberProfileHydrationSchema = <
       if (peerId instanceof Uint8Array) {
         return uint8ArrayToHex(peerId);
       }
-      return uint8ArrayToHex(provider.toBytes(peerId));
+      return provider.toString(peerId, 'hex');
     });
 
     const blockedPeersHex = hydrated.blockedPeers.map((peerId) => {
@@ -161,7 +161,7 @@ export const privateMemberProfileHydrationSchema = <
       if (peerId instanceof Uint8Array) {
         return uint8ArrayToHex(peerId);
       }
-      return uint8ArrayToHex(provider.toBytes(peerId));
+      return provider.toString(peerId, 'hex');
     });
 
     const {

@@ -26,7 +26,7 @@ import {
   QuorumVoteMetadata,
   VoteInput,
 } from '@brightchain/brightchain-lib';
-import { ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString } from '@digitaldefiance/ecies-lib';
 import {
   ICBLContentProvider,
   QuorumGossipHandler,
@@ -34,12 +34,12 @@ import {
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-const MEMBER_A = 'aaaa0000' as ShortHexGuid;
-const MEMBER_B = 'bbbb1111' as ShortHexGuid;
-const PROPOSAL_ID = 'pppp0001' as ShortHexGuid;
+const MEMBER_A = 'aaaa0000' as HexString;
+const MEMBER_B = 'bbbb1111' as HexString;
+const PROPOSAL_ID = 'pppp0001' as HexString;
 const CBL_ID = 'cbl-attachment-001';
 
-function makeMember(id: ShortHexGuid, isActive = true) {
+function makeMember(id: HexString, isActive = true) {
   return {
     id,
     publicKey: new Uint8Array([1, 2, 3]),
@@ -179,16 +179,16 @@ function createMockGossipService(): IGossipService & {
 }
 
 function createMockDatabase(options?: {
-  members?: Map<ShortHexGuid, ReturnType<typeof makeMember>>;
-  proposals?: Map<ShortHexGuid, Proposal>;
+  members?: Map<HexString, ReturnType<typeof makeMember>>;
+  proposals?: Map<HexString, Proposal>;
 }): IQuorumDatabase {
   const members =
     options?.members ?? new Map([[MEMBER_A, makeMember(MEMBER_A)]]);
   const proposals = options?.proposals ?? new Map();
 
   return {
-    getMember: jest.fn(async (id: ShortHexGuid) => members.get(id) ?? null),
-    getProposal: jest.fn(async (id: ShortHexGuid) => proposals.get(id) ?? null),
+    getMember: jest.fn(async (id: HexString) => members.get(id) ?? null),
+    getProposal: jest.fn(async (id: HexString) => proposals.get(id) ?? null),
     listActiveMembers: jest.fn(async () =>
       Array.from(members.values()).filter((m) => m.isActive),
     ),
@@ -444,7 +444,7 @@ describe('QuorumGossipHandler', () => {
   describe('invalid proposer/voter message rejection', () => {
     it('should reject proposal from unknown member', async () => {
       const metadata = makeProposalMetadata({
-        proposerMemberId: 'unknown-member-id' as ShortHexGuid,
+        proposerMemberId: 'unknown-member-id' as HexString,
       });
       const announcement = makeProposalAnnouncement(metadata);
 
@@ -483,7 +483,7 @@ describe('QuorumGossipHandler', () => {
       );
 
       const metadata = makeVoteMetadata({
-        voterMemberId: 'unknown-voter' as ShortHexGuid,
+        voterMemberId: 'unknown-voter' as HexString,
       });
       const announcement = makeVoteAnnouncement(metadata);
 
@@ -635,7 +635,7 @@ describe('QuorumGossipHandler', () => {
     });
 
     it('should allow votes from different members on the same proposal', async () => {
-      const memberC = 'cccc2222' as ShortHexGuid;
+      const memberC = 'cccc2222' as HexString;
       const dbWithProposal = createMockDatabase({
         members: new Map([
           [MEMBER_A, makeMember(MEMBER_A)],
@@ -749,7 +749,7 @@ describe('QuorumGossipHandler', () => {
       // Second proposal with same attachment (different proposal ID)
       handler.clearDeduplicationState();
       const metadata2 = makeProposalMetadata({
-        proposalId: 'pppp0002' as ShortHexGuid,
+        proposalId: 'pppp0002' as HexString,
         attachmentCblId: CBL_ID,
       });
       await handlerWithCBL.handleProposalAnnouncement(

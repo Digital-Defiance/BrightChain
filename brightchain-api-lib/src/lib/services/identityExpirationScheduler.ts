@@ -17,10 +17,10 @@ import {
   IExpirationScheduler,
   IQuorumDatabase,
   QuorumAuditLogEntry,
+  ServiceProvider,
   StatuteOfLimitationsConfig,
 } from '@brightchain/brightchain-lib';
-import { PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
-import { v4 as uuidv4 } from 'uuid';
+import { HexString, IIdProvider, PlatformID } from '@digitaldefiance/ecies-lib';
 
 /** Default interval: 24 hours in milliseconds */
 const DEFAULT_INTERVAL_MS = 86400000;
@@ -47,13 +47,18 @@ export class IdentityExpirationScheduler<
   private timer: ReturnType<typeof setInterval> | null = null;
   private running = false;
 
+  private readonly idProvider: IIdProvider<TID>;
+
   constructor(
     private readonly db: IQuorumDatabase<TID>,
     private readonly auditLogService?: AuditLogService<TID>,
     config?: Partial<ExpirationSchedulerConfig>,
+    idProvider?: IIdProvider<TID>,
   ) {
     this.intervalMs = config?.intervalMs ?? DEFAULT_INTERVAL_MS;
     this.batchSize = config?.batchSize ?? DEFAULT_BATCH_SIZE;
+    this.idProvider =
+      idProvider ?? ServiceProvider.getInstance<TID>().idProvider;
   }
 
   /**
@@ -108,7 +113,7 @@ export class IdentityExpirationScheduler<
     );
 
     let deletedCount = 0;
-    const failedIds: ShortHexGuid[] = [];
+    const failedIds: HexString[] = [];
 
     for (const record of expiredRecords) {
       try {
@@ -126,7 +131,7 @@ export class IdentityExpirationScheduler<
 
         deletedCount++;
       } catch {
-        failedIds.push(record.id);
+        failedIds.push(this.idProvider.idToString(record.id) as HexString);
       }
     }
 
@@ -181,8 +186,8 @@ export class IdentityExpirationScheduler<
     eventType: AuditEventType,
     details: Record<string, unknown>,
   ): Promise<void> {
-    const entry: QuorumAuditLogEntry = {
-      id: uuidv4() as ShortHexGuid,
+    const entry: QuorumAuditLogEntry<TID> = {
+      id: this.idProvider.fromBytes(this.idProvider.generate()),
       eventType,
       details,
       timestamp: new Date(),

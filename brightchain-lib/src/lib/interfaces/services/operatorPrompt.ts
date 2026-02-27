@@ -7,7 +7,7 @@
  * @see Requirements 6
  */
 
-import { ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString } from '@digitaldefiance/ecies-lib';
 import { ProposalActionType } from '../../enumerations/proposalActionType';
 
 /**
@@ -15,7 +15,7 @@ import { ProposalActionType } from '../../enumerations/proposalActionType';
  */
 export interface ProposalDisplay {
   /** Unique proposal identifier */
-  proposalId: ShortHexGuid;
+  proposalId: HexString;
   /** Human-readable proposal description */
   description: string;
   /** The type of action this proposal triggers */
@@ -23,7 +23,7 @@ export interface ProposalDisplay {
   /** Machine-readable action payload */
   actionPayload: Record<string, unknown>;
   /** ID of the member who submitted the proposal */
-  proposerMemberId: ShortHexGuid;
+  proposerMemberId: HexString;
   /** Timestamp after which the proposal expires */
   expiresAt: Date;
   /** Optional CBL reference for attached documentation */
@@ -68,5 +68,5 @@ export interface IOperatorPrompt {
    * @param proposalId - The proposal ID to check
    * @returns True if voting is locked for this proposal
    */
-  isLocked(proposalId: ShortHexGuid): boolean;
+  isLocked(proposalId: HexString): boolean;
 }

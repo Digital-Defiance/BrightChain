@@ -19,6 +19,7 @@ import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEnc
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import type { IGossipService } from '../../interfaces/availability/gossipService';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import type { IMailbox } from '../../interfaces/messaging/emailAddress';
 import { createMailbox } from '../../interfaces/messaging/emailAddress';
 import type { IEmailMetadata } from '../../interfaces/messaging/emailMetadata';
@@ -70,12 +71,15 @@ const arbReferences: fc.Arbitrary<string[]> = fc.array(arbMessageId, {
 
 // ─── Test Helpers ───────────────────────────────────────────────────────────
 
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
+
 function buildMockMetadata(overrides: Partial<IEmailMetadata>): IEmailMetadata {
   const now = new Date();
   const from = createMailbox('sender', 'example.com');
   const to = [createMailbox('recipient', 'example.com')];
   return {
-    blockId: 'block-1',
+    blockId: bid('block-1'),
     createdAt: now,
     expiresAt: null,
     durabilityLevel: DurabilityLevel.Standard,

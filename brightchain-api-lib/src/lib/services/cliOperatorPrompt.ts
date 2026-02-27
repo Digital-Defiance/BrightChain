@@ -17,7 +17,7 @@ import {
   OperatorVoteResult,
   ProposalDisplay,
 } from '@brightchain/brightchain-lib';
-import { ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString } from '@digitaldefiance/ecies-lib';
 import * as readline from 'readline';
 import { Writable } from 'stream';
 
@@ -61,7 +61,7 @@ const DEFAULT_CONFIG: CLIOperatorPromptConfig = {
  */
 export class CLIOperatorPrompt implements IOperatorPrompt {
   private readonly config: CLIOperatorPromptConfig;
-  private readonly lockoutMap: Map<ShortHexGuid, LockoutState> = new Map();
+  private readonly lockoutMap: Map<HexString, LockoutState> = new Map();
   private readonly rlFactory: () => readline.Interface;
   private readonly output: Writable;
 
@@ -86,7 +86,7 @@ export class CLIOperatorPrompt implements IOperatorPrompt {
    * Returns true if the operator has exceeded the maximum failed attempts
    * and the cooldown period has not yet elapsed.
    */
-  isLocked(proposalId: ShortHexGuid): boolean {
+  isLocked(proposalId: HexString): boolean {
     const state = this.lockoutMap.get(proposalId);
     if (!state || state.lockedAt === null) {
       return false;
@@ -218,7 +218,7 @@ export class CLIOperatorPrompt implements IOperatorPrompt {
    * Record a failed authentication attempt for a proposal.
    * If the maximum attempts are reached, trigger lockout.
    */
-  private recordFailedAttempt(proposalId: ShortHexGuid): void {
+  private recordFailedAttempt(proposalId: HexString): void {
     let state = this.lockoutMap.get(proposalId);
     if (!state) {
       state = { failedAttempts: 0, lockedAt: null };
@@ -234,14 +234,14 @@ export class CLIOperatorPrompt implements IOperatorPrompt {
    * Record a failed attempt externally (for use when authentication
    * is validated outside this class, e.g., by the QuorumStateMachine).
    */
-  recordAuthFailure(proposalId: ShortHexGuid): void {
+  recordAuthFailure(proposalId: HexString): void {
     this.recordFailedAttempt(proposalId);
   }
 
   /**
    * Reset failed attempts for a proposal (on successful authentication).
    */
-  private resetAttempts(proposalId: ShortHexGuid): void {
+  private resetAttempts(proposalId: HexString): void {
     this.lockoutMap.delete(proposalId);
   }
 }

@@ -4,6 +4,7 @@ import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import type { BlockId } from '../branded/primitives/blockId';
 import {
   ContentTransferEncoding,
   IAttachmentMetadata,
@@ -18,6 +19,9 @@ import {
 /**
  * Helper to create a minimal valid IMailbox.
  */
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
+
 function createMailbox(
   localPart: string,
   domain: string,
@@ -67,7 +71,7 @@ function createMinimalEmailMetadata(
 
   return {
     // IBlockMetadata fields
-    blockId: 'test-block-id',
+    blockId: bid('test-block-id'),
     createdAt: new Date('2024-01-01T00:00:00Z'),
     expiresAt: null,
     durabilityLevel: DurabilityLevel.Standard,
@@ -326,7 +330,7 @@ describe('IEmailMetadata Interface', () => {
         mimeType: 'application/pdf',
         size: 1024000,
         cblMagnetUrl: 'magnet:?xt=urn:brightchain:abc123',
-        blockIds: ['block1', 'block2'],
+        blockIds: [bid('block1'), bid('block2')],
         checksum: 'sha3-abc123',
         contentMd5: 'md5-xyz789',
       };
@@ -474,7 +478,7 @@ describe('IEmailMetadata Interface', () => {
             mimeType: 'application/pdf',
             size: 2048,
             cblMagnetUrl: 'magnet:?xt=urn:brightchain:def456',
-            blockIds: ['b1', 'b2'],
+            blockIds: [bid('b1'), bid('b2')],
             checksum: 'sha3-def456',
           },
         ],
@@ -545,7 +549,7 @@ describe('IEmailMetadata Interface', () => {
         contentType: createContentType('application', 'pdf'),
         contentTransferEncoding: ContentTransferEncoding.Base64,
         contentDisposition: { type: 'attachment', filename: 'doc.pdf' },
-        bodyBlockIds: ['block-1', 'block-2'],
+        bodyBlockIds: [bid('block-1'), bid('block-2')],
         size: 50000,
       };
 

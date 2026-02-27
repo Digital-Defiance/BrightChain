@@ -7,7 +7,7 @@
  * @see Requirements 14, 17
  */
 
-import { PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { PlatformID } from '@digitaldefiance/ecies-lib';
 import { IdentityMode } from './contentWithIdentity';
 
 /**
@@ -16,15 +16,15 @@ import { IdentityMode } from './contentWithIdentity';
  */
 export interface IdentityRecoveryRecord<TID extends PlatformID = Uint8Array> {
   /** Unique record identifier */
-  id: ShortHexGuid;
+  id: TID;
   /** Reference to the content this identity belongs to */
-  contentId: ShortHexGuid;
+  contentId: TID;
   /** Content type: block, message, post */
   contentType: string;
   /** ECIES-encrypted identity shards per quorum member */
-  encryptedShardsByMemberId: Map<ShortHexGuid, Uint8Array>;
+  encryptedShardsByMemberId: Map<TID, Uint8Array>;
   /** Members holding shards */
-  memberIds: ShortHexGuid[];
+  memberIds: TID[];
   /** Shares needed to recover the identity */
   threshold: number;
   /** Epoch at creation */
@@ -37,6 +37,4 @@ export interface IdentityRecoveryRecord<TID extends PlatformID = Uint8Array> {
   identityMode: IdentityMode;
   /** Alias name if mode is alias */
   aliasName?: string;
-  /** Generic marker for DTO compatibility */
-  _platformId?: TID;
 }

@@ -896,16 +896,15 @@ export class MemberStore<
    */
   public async deleteMember(id: TID): Promise<void> {
     const provider = ServiceProvider.getInstance<TID>().idProvider;
-    const indexEntry = this.memberIndex.get(
-      uint8ArrayToHex(provider.toBytes(id)),
-    );
+    const idHex = provider.toString(id, 'hex');
+    const indexEntry = this.memberIndex.get(idHex);
     if (!indexEntry) {
       throw new MemberError(MemberErrorType.MemberNotFound);
     }
 
     // Find and remove from name index
     for (const [name, memberId] of this.nameIndex.entries()) {
-      if (memberId === uint8ArrayToHex(provider.toBytes(id))) {
+      if (memberId === idHex) {
         this.nameIndex.delete(name);
         break;
       }
@@ -913,18 +912,18 @@ export class MemberStore<
 
     // Find and remove from email index
     for (const [email, memberId] of this.emailIndex.entries()) {
-      if (memberId === uint8ArrayToHex(provider.toBytes(id))) {
+      if (memberId === idHex) {
         this.emailIndex.delete(email);
         break;
       }
     }
 
     // Remove from indices
-    this.memberIndex.delete(uint8ArrayToHex(provider.toBytes(id)));
+    this.memberIndex.delete(idHex);
     if (indexEntry.region) {
       const regionSet = this.regionIndex.get(indexEntry.region);
       if (regionSet) {
-        regionSet.delete(uint8ArrayToHex(provider.toBytes(id)));
+        regionSet.delete(idHex);
       }
     }
 
@@ -937,7 +936,7 @@ export class MemberStore<
    */
   public async updateIndex(entry: IMemberIndexEntry<TID>): Promise<void> {
     const provider = ServiceProvider.getInstance<TID>().idProvider;
-    const id = uint8ArrayToHex(provider.toBytes(entry.id));
+    const id = provider.toString(entry.id, 'hex');
     const oldEntry = this.memberIndex.get(id);
 
     // Update region index if region changed

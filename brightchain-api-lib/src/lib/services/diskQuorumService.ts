@@ -1,5 +1,6 @@
 import {
   BlockSize,
+  CanUnlockResult,
   IFecService,
   IQuorumMember,
   QuorumDataRecord,
@@ -11,9 +12,9 @@ import {
   SealedDocumentResult,
 } from '@brightchain/brightchain-lib';
 import {
+  HexString,
   hexToUint8Array,
   Member,
-  ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -29,7 +30,7 @@ import { DefaultBackendIdType } from '../types/backend-id';
  * Storage format for quorum member documents
  */
 interface QuorumMemberDocument extends DocumentRecord {
-  memberId: ShortHexGuid;
+  memberId: HexString;
   publicKey: string; // hex encoded
   metadata: QuorumMemberMetadata;
   isActive: boolean;
@@ -41,13 +42,13 @@ interface QuorumMemberDocument extends DocumentRecord {
  * Storage format for quorum document records
  */
 interface QuorumDocumentDocument extends DocumentRecord {
-  documentId: ShortHexGuid;
-  creatorId: ShortHexGuid;
+  documentId: HexString;
+  creatorId: HexString;
   encryptedData: string; // hex encoded
   encryptedSharesByMemberId: Record<string, string>; // memberId -> hex encoded share
   checksum: string; // hex encoded
   signature: string; // hex encoded
-  memberIds: ShortHexGuid[];
+  memberIds: HexString[];
   sharesRequired: number;
   dateCreated: string; // ISO date
   dateUpdated: string; // ISO date
@@ -109,7 +110,7 @@ export class DiskQuorumService<
 
     // Persist to disk
     const memberDoc: QuorumMemberDocument = {
-      memberId: quorumMember.id,
+      memberId: this.enhancedProvider.toString(member.id, 'hex') as HexString,
       publicKey: uint8ArrayToHex(member.publicKey),
       metadata: quorumMember.metadata,
       isActive: quorumMember.isActive,
@@ -122,12 +123,15 @@ export class DiskQuorumService<
     return quorumMember;
   }
 
-  override async removeMember(memberId: ShortHexGuid): Promise<void> {
+  override async removeMember(memberId: TID): Promise<void> {
     // Call parent to update in-memory state
     await super.removeMember(memberId);
 
     // Update on disk - find and update the member document
-    const members = await this.memberCollection.find({ memberId }).exec();
+    const memberIdHex = this.tidToHex(memberId);
+    const members = await this.memberCollection
+      .find({ memberId: memberIdHex })
+      .exec();
     if (members && members.length > 0) {
       const memberDoc = members[0];
       memberDoc.isActive = false;
@@ -141,9 +145,7 @@ export class DiskQuorumService<
     }
   }
 
-  override async getMember(
-    memberId: ShortHexGuid,
-  ): Promise<IQuorumMember<TID> | null> {
+  override async getMember(memberId: TID): Promise<IQuorumMember<TID> | null> {
     // First check in-memory cache
     const cached = await super.getMember(memberId);
     if (cached) {
@@ -151,13 +153,16 @@ export class DiskQuorumService<
     }
 
     // Load from disk if not in memory
-    const memberDoc = await this.memberCollection.findOne({ memberId }).exec();
+    const memberIdHex = this.tidToHex(memberId);
+    const memberDoc = await this.memberCollection
+      .findOne({ memberId: memberIdHex })
+      .exec();
     if (!memberDoc) {
       return null;
     }
 
     return {
-      id: memberDoc.memberId,
+      id: this.enhancedProvider.idFromString(memberDoc.memberId) as TID,
       publicKey: hexToUint8Array(memberDoc.publicKey),
       metadata: memberDoc.metadata,
       isActive: memberDoc.isActive,
@@ -177,7 +182,7 @@ export class DiskQuorumService<
     }
 
     return memberDocs.map((doc: QuorumMemberDocument) => ({
-      id: doc.memberId,
+      id: this.enhancedProvider.idFromString(doc.memberId) as TID,
       publicKey: hexToUint8Array(doc.publicKey),
       metadata: doc.metadata,
       isActive: doc.isActive,
@@ -191,7 +196,7 @@ export class DiskQuorumService<
   override async sealDocument<T>(
     agent: Member<TID>,
     document: T,
-    memberIds: ShortHexGuid[],
+    memberIds: TID[],
     sharesRequired?: number,
   ): Promise<SealedDocumentResult<TID>> {
     // Call parent to seal and store in memory
@@ -203,17 +208,18 @@ export class DiskQuorumService<
     );
 
     // Get the sealed document from parent's in-memory store
-    const sealedDoc = this.documents.get(result.documentId);
+    const docHexId = this.tidToHex(result.documentId);
+    const sealedDoc = this.documents.get(docHexId);
 
-    // Persist to disk
+    // Persist to disk — store IDs as hex strings for serialization
     const docRecord: QuorumDocumentDocument = {
-      documentId: result.documentId,
-      creatorId: uint8ArrayToHex(agent.idBytes) as ShortHexGuid,
+      documentId: docHexId,
+      creatorId: this.enhancedProvider.toString(agent.id, 'hex') as HexString,
       encryptedData: uint8ArrayToHex(sealedDoc.encryptedData),
       encryptedSharesByMemberId: this.serializeShares(sealedDoc),
       checksum: sealedDoc.checksum.toHex(),
       signature: uint8ArrayToHex(sealedDoc.signature),
-      memberIds: result.memberIds,
+      memberIds: memberIds.map((id) => this.tidToHex(id)),
       sharesRequired: result.sharesRequired,
       dateCreated: sealedDoc.dateCreated.toISOString(),
       dateUpdated: sealedDoc.dateUpdated.toISOString(),
@@ -226,7 +232,7 @@ export class DiskQuorumService<
 
   /**
    * Serialize encrypted shares from QuorumDataRecord to storage format
-   * Note: encryptedSharesByMemberId uses ShortHexGuid keys (already hex strings)
+   * Note: encryptedSharesByMemberId uses HexString keys (already hex strings)
    */
   private serializeShares(doc: QuorumDataRecord<TID>): Record<string, string> {
     const shares: Record<string, string> = {};
@@ -234,7 +240,7 @@ export class DiskQuorumService<
       memberIdHex,
       share,
     ] of doc.encryptedSharesByMemberId.entries()) {
-      // memberIdHex is already a ShortHexGuid (hex string), no conversion needed
+      // memberIdHex is already a HexString (hex string), no conversion needed
       shares[memberIdHex] = uint8ArrayToHex(share);
     }
     return shares;
@@ -243,8 +249,8 @@ export class DiskQuorumService<
   // === Document Management Overrides ===
 
   override async getDocument(
-    documentId: ShortHexGuid,
-  ): Promise<QuorumDocumentInfo | null> {
+    documentId: TID,
+  ): Promise<QuorumDocumentInfo<TID> | null> {
     // First check in-memory cache
     const cached = await super.getDocument(documentId);
     if (cached) {
@@ -252,25 +258,28 @@ export class DiskQuorumService<
     }
 
     // Load from disk if not in memory
+    const documentIdHex = this.tidToHex(documentId);
     const docRecord = await this.documentCollection
-      .findOne({ documentId })
+      .findOne({ documentId: documentIdHex })
       .exec();
     if (!docRecord) {
       return null;
     }
 
     return {
-      id: docRecord.documentId,
-      memberIds: docRecord.memberIds,
+      id: this.enhancedProvider.idFromString(docRecord.documentId) as TID,
+      memberIds: docRecord.memberIds.map(
+        (hex) => this.enhancedProvider.idFromString(hex) as TID,
+      ),
       sharesRequired: docRecord.sharesRequired,
       createdAt: new Date(docRecord.dateCreated),
-      creatorId: docRecord.creatorId,
+      creatorId: this.enhancedProvider.idFromString(docRecord.creatorId) as TID,
     };
   }
 
   override async listDocuments(
-    memberId?: ShortHexGuid,
-  ): Promise<QuorumDocumentInfo[]> {
+    memberId?: TID,
+  ): Promise<QuorumDocumentInfo<TID>[]> {
     // Load all documents from disk
     const allDocs = await this.documentCollection.find({}).exec();
 
@@ -278,16 +287,21 @@ export class DiskQuorumService<
       return [];
     }
 
-    const result: QuorumDocumentInfo[] = [];
+    const memberIdHex = memberId ? this.tidToHex(memberId) : undefined;
+    const result: QuorumDocumentInfo<TID>[] = [];
     for (const docRecord of allDocs) {
       // Filter by member if specified
-      if (!memberId || docRecord.memberIds.includes(memberId)) {
+      if (!memberIdHex || docRecord.memberIds.includes(memberIdHex)) {
         result.push({
-          id: docRecord.documentId,
-          memberIds: docRecord.memberIds,
+          id: this.enhancedProvider.idFromString(docRecord.documentId) as TID,
+          memberIds: docRecord.memberIds.map(
+            (hex) => this.enhancedProvider.idFromString(hex) as TID,
+          ),
           sharesRequired: docRecord.sharesRequired,
           createdAt: new Date(docRecord.dateCreated),
-          creatorId: docRecord.creatorId,
+          creatorId: this.enhancedProvider.idFromString(
+            docRecord.creatorId,
+          ) as TID,
         });
       }
     }
@@ -295,45 +309,43 @@ export class DiskQuorumService<
     return result;
   }
 
-  override async deleteDocument(documentId: ShortHexGuid): Promise<void> {
+  override async deleteDocument(documentId: TID): Promise<void> {
     // Call parent to remove from in-memory tracking
     await super.deleteDocument(documentId);
 
     // Delete from disk
-    await this.documentCollection.deleteOne({ documentId });
+    const documentIdHex = this.tidToHex(documentId);
+    await this.documentCollection.deleteOne({ documentId: documentIdHex });
   }
 
   override async canUnlock(
-    documentId: ShortHexGuid,
-    memberIds: ShortHexGuid[],
-  ): Promise<{
-    canUnlock: boolean;
-    sharesProvided: number;
-    sharesRequired: number;
-    missingMembers: ShortHexGuid[];
-  }> {
+    documentId: TID,
+    memberIds: TID[],
+  ): Promise<CanUnlockResult<TID>> {
     // First try in-memory
-    if (this.documents.has(documentId)) {
+    const documentIdHex = this.tidToHex(documentId);
+    if (this.documents.has(documentIdHex)) {
       return super.canUnlock(documentId, memberIds);
     }
 
     // Load from disk
     const docRecord = await this.documentCollection
-      .findOne({ documentId })
+      .findOne({ documentId: documentIdHex })
       .exec();
     if (!docRecord) {
       throw new QuorumError(QuorumErrorType.DocumentNotFound);
     }
 
-    const docMemberIds = docRecord.memberIds;
+    const docMemberIdHexes = docRecord.memberIds;
+    const memberIdHexes = memberIds.map((id) => this.tidToHex(id));
 
     // Find which provided members are actually in the document
-    const validMemberIds = memberIds.filter((id: ShortHexGuid) =>
-      docMemberIds.includes(id),
+    const validMemberIds = memberIds.filter((id) =>
+      docMemberIdHexes.includes(this.tidToHex(id)),
     );
-    const missingMembers = docMemberIds.filter(
-      (id: ShortHexGuid) => !memberIds.includes(id),
-    );
+    const missingMembers = docMemberIdHexes
+      .filter((hex) => !memberIdHexes.includes(hex))
+      .map((hex) => this.enhancedProvider.idFromString(hex) as TID);
 
     return {
       canUnlock: validMemberIds.length >= docRecord.sharesRequired,
@@ -347,13 +359,14 @@ export class DiskQuorumService<
    * Load a document from disk into memory for unsealing
    * This is needed because unsealDocument requires the full QuorumDataRecord
    */
-  async loadDocumentForUnseal(documentId: ShortHexGuid): Promise<void> {
-    if (this.documents.has(documentId)) {
+  async loadDocumentForUnseal(documentId: TID): Promise<void> {
+    const documentIdHex = this.tidToHex(documentId);
+    if (this.documents.has(documentIdHex)) {
       return; // Already in memory
     }
 
     const docRecord = await this.documentCollection
-      .findOne({ documentId })
+      .findOne({ documentId: documentIdHex })
       .exec();
     if (!docRecord) {
       throw new QuorumError(QuorumErrorType.DocumentNotFound);

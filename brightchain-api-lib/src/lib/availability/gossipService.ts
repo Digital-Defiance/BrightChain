@@ -8,6 +8,7 @@
  * @see Requirements 6.1, 6.2, 6.3, 6.4, 6.5, 6.6
  */
 
+import type { BlockId } from '@brightchain/brightchain-lib';
 import {
   AnnouncementHandler,
   BlockAnnouncement,
@@ -207,7 +208,7 @@ export class GossipService implements IGossipService {
    * @param poolId - Optional pool the block belongs to
    * @see Requirements 6.1, 1.1, 6.3
    */
-  async announceBlock(blockId: string, poolId?: PoolId): Promise<void> {
+  async announceBlock(blockId: BlockId, poolId?: PoolId): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'add',
       blockId,
@@ -227,7 +228,7 @@ export class GossipService implements IGossipService {
    * @param poolId - Optional pool the block belonged to
    * @see Requirements 6.5, 1.1
    */
-  async announceRemoval(blockId: string, poolId?: PoolId): Promise<void> {
+  async announceRemoval(blockId: BlockId, poolId?: PoolId): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'remove',
       blockId,
@@ -250,7 +251,7 @@ export class GossipService implements IGossipService {
   async announcePoolDeletion(poolId: PoolId): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'pool_deleted',
-      blockId: '',
+      blockId: '' as BlockId,
       poolId,
       nodeId: this.peerProvider.getLocalNodeId(),
       timestamp: new Date(),
@@ -276,7 +277,7 @@ export class GossipService implements IGossipService {
   ): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'pool_announce',
-      blockId: '',
+      blockId: '' as BlockId,
       poolId,
       nodeId: this.peerProvider.getLocalNodeId(),
       timestamp: new Date(),
@@ -297,7 +298,7 @@ export class GossipService implements IGossipService {
   async announcePoolRemoval(poolId: PoolId): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'pool_remove',
-      blockId: '',
+      blockId: '' as BlockId,
       poolId,
       nodeId: this.peerProvider.getLocalNodeId(),
       timestamp: new Date(),
@@ -317,7 +318,7 @@ export class GossipService implements IGossipService {
   async announceCBLIndexUpdate(entry: ICBLIndexEntry): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'cbl_index_update',
-      blockId: '',
+      blockId: '' as BlockId,
       poolId: entry.poolId ?? ('default' as PoolId),
       cblIndexEntry: entry,
       nodeId: this.peerProvider.getLocalNodeId(),
@@ -338,7 +339,7 @@ export class GossipService implements IGossipService {
   async announceCBLIndexDelete(entry: ICBLIndexEntry): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'cbl_index_delete',
-      blockId: '',
+      blockId: '' as BlockId,
       poolId: entry.poolId ?? ('default' as PoolId),
       cblIndexEntry: entry,
       nodeId: this.peerProvider.getLocalNodeId(),
@@ -362,7 +363,7 @@ export class GossipService implements IGossipService {
   async announceHeadUpdate(
     dbName: string,
     collectionName: string,
-    blockId: string,
+    blockId: BlockId,
   ): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'head_update',
@@ -379,7 +380,7 @@ export class GossipService implements IGossipService {
     this.queueAnnouncement(announcement);
   }
 
-  async announceACLUpdate(poolId: string, aclBlockId: string): Promise<void> {
+  async announceACLUpdate(poolId: string, aclBlockId: BlockId): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'acl_update',
       blockId: aclBlockId,
@@ -960,7 +961,7 @@ export class GossipService implements IGossipService {
     for (const blockId of blockIds) {
       const announcement: BlockAnnouncement = {
         type: 'add',
-        blockId,
+        blockId: blockId as unknown as BlockId,
         nodeId: this.peerProvider.getLocalNodeId(),
         timestamp: new Date(),
         ttl,
@@ -981,7 +982,7 @@ export class GossipService implements IGossipService {
   async sendDeliveryAck(ack: DeliveryAckMetadata): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'ack',
-      blockId: ack.messageId,
+      blockId: ack.messageId as unknown as BlockId,
       nodeId: this.peerProvider.getLocalNodeId(),
       timestamp: new Date(),
       ttl: this.config.defaultTtl,
@@ -1045,7 +1046,7 @@ export class GossipService implements IGossipService {
   ): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'quorum_proposal',
-      blockId: metadata.proposalId,
+      blockId: metadata.proposalId as unknown as BlockId,
       nodeId: this.peerProvider.getLocalNodeId(),
       timestamp: new Date(),
       ttl: this.config.messagePriority.high.ttl,
@@ -1065,7 +1066,7 @@ export class GossipService implements IGossipService {
   async announceQuorumVote(metadata: QuorumVoteMetadata): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'quorum_vote',
-      blockId: metadata.proposalId,
+      blockId: metadata.proposalId as unknown as BlockId,
       nodeId: this.peerProvider.getLocalNodeId(),
       timestamp: new Date(),
       ttl: this.config.messagePriority.high.ttl,

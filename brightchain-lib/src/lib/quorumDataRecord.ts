@@ -5,7 +5,6 @@ import {
   hexToUint8Array,
   Member,
   PlatformID,
-  ShortHexGuid,
   SignatureUint8Array,
   TypedIdProviderWrapper,
   uint8ArrayToHex,
@@ -25,7 +24,7 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
 
   public readonly id: TID;
   public readonly encryptedData: Uint8Array;
-  public readonly encryptedSharesByMemberId: Map<ShortHexGuid, Uint8Array>;
+  public readonly encryptedSharesByMemberId: Map<HexString, Uint8Array>;
   /**
    * sha-3 hash of the encrypted data
    */
@@ -41,14 +40,14 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
   /** True if the document was sealed in bootstrap mode */
   public readonly sealedUnderBootstrap: boolean;
   /** Link to identity recovery record if applicable */
-  public readonly identityRecoveryRecordId?: ShortHexGuid;
+  public readonly identityRecoveryRecordId?: HexString;
 
   constructor(
     creator: Member<TID>,
     memberIDs: TID[],
     sharesRequired: number,
     encryptedData: Uint8Array,
-    encryptedSharesByMemberId: Map<ShortHexGuid, Uint8Array>,
+    encryptedSharesByMemberId: Map<HexString, Uint8Array>,
     enhancedProvider: TypedIdProviderWrapper<TID>,
     checksum?: Checksum,
     signature?: SignatureUint8Array,
@@ -59,7 +58,7 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
     bootstrapMode?: boolean,
     epochNumber?: number,
     sealedUnderBootstrap?: boolean,
-    identityRecoveryRecordId?: ShortHexGuid,
+    identityRecoveryRecordId?: HexString,
   ) {
     this.enhancedProvider = enhancedProvider;
     this.eciesService = eciesService ?? createECIESService<TID>();
@@ -135,12 +134,11 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
       encryptedSharesByMemberId[k] = uint8ArrayToHex(v) as HexString;
     });
     return {
-      id: uint8ArrayToHex(
-        this.enhancedProvider.toBytes(this.id),
-      ) as ShortHexGuid,
-      creatorId: uint8ArrayToHex(
-        this.enhancedProvider.toBytes(this.creator.id),
-      ) as ShortHexGuid,
+      id: this.enhancedProvider.toString(this.id, 'hex') as HexString,
+      creatorId: this.enhancedProvider.toString(
+        this.creator.id,
+        'hex',
+      ) as HexString,
       encryptedData: uint8ArrayToHex(this.encryptedData) as HexString,
       encryptedSharesByMemberId,
       checksum: this.checksum.toHex() as ChecksumString,
@@ -148,8 +146,7 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
         this.signature,
       ),
       memberIDs: this.memberIDs.map(
-        (id) =>
-          uint8ArrayToHex(this.enhancedProvider.toBytes(id)) as ShortHexGuid,
+        (id) => this.enhancedProvider.toString(id, 'hex') as HexString,
       ),
       sharesRequired: this.sharesRequired,
       dateCreated: this.dateCreated,
@@ -170,10 +167,10 @@ export class QuorumDataRecord<TID extends PlatformID = Uint8Array> {
     const eciesServiceToUse = eciesService ?? createECIESService<TID>();
     const checksumService = new ChecksumService();
 
-    const encryptedSharesByMemberId = new Map<ShortHexGuid, Uint8Array>();
+    const encryptedSharesByMemberId = new Map<HexString, Uint8Array>();
     Object.keys(dto.encryptedSharesByMemberId).forEach((k) => {
       encryptedSharesByMemberId.set(
-        k as ShortHexGuid,
+        k as HexString,
         hexToUint8Array(dto.encryptedSharesByMemberId[k]),
       );
     });
