@@ -10,7 +10,6 @@ import {
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import { ProposalActionType } from '../enumerations/proposalActionType';
 import { ProposalStatus } from '../enumerations/proposalStatus';
@@ -34,15 +33,15 @@ jest.setTimeout(30000);
 function createMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
   savedEpochs: QuorumEpoch<GuidV4Uint8Array>[];
   savedOperationalStates: OperationalState[];
-  proposals: Map<ShortHexGuid, Proposal<GuidV4Uint8Array>>;
-  votes: Map<ShortHexGuid, Vote<GuidV4Uint8Array>[]>;
+  proposals: Map<GuidV4Uint8Array, Proposal<GuidV4Uint8Array>>;
+  votes: Map<GuidV4Uint8Array, Vote<GuidV4Uint8Array>[]>;
   activeMembers: IQuorumMember<GuidV4Uint8Array>[];
 } {
   const epochs = new Map<number, QuorumEpoch<GuidV4Uint8Array>>();
   const savedEpochs: QuorumEpoch<GuidV4Uint8Array>[] = [];
   const savedOperationalStates: OperationalState[] = [];
-  const proposals = new Map<ShortHexGuid, Proposal<GuidV4Uint8Array>>();
-  const votes = new Map<ShortHexGuid, Vote<GuidV4Uint8Array>[]>();
+  const proposals = new Map<GuidV4Uint8Array, Proposal<GuidV4Uint8Array>>();
+  const votes = new Map<GuidV4Uint8Array, Vote<GuidV4Uint8Array>[]>();
   const activeMembers: IQuorumMember<GuidV4Uint8Array>[] = [];
   let operationalState: OperationalState | null = null;
 
@@ -71,7 +70,7 @@ function createMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
       else activeMembers.push(member);
     }),
     getMember: jest.fn(
-      async (memberId: ShortHexGuid) =>
+      async (memberId: GuidV4Uint8Array) =>
         activeMembers.find((m) => m.id === memberId) ?? null,
     ),
     listActiveMembers: jest.fn(async () => [...activeMembers]),
@@ -82,7 +81,7 @@ function createMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
       proposals.set(proposal.id, proposal);
     }),
     getProposal: jest.fn(
-      async (proposalId: ShortHexGuid) => proposals.get(proposalId) ?? null,
+      async (proposalId: GuidV4Uint8Array) => proposals.get(proposalId) ?? null,
     ),
     saveVote: jest.fn(async (vote: Vote<GuidV4Uint8Array>) => {
       const existing = votes.get(vote.proposalId) ?? [];
@@ -90,7 +89,7 @@ function createMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
       votes.set(vote.proposalId, existing);
     }),
     getVotesForProposal: jest.fn(
-      async (proposalId: ShortHexGuid) => votes.get(proposalId) ?? [],
+      async (proposalId: GuidV4Uint8Array) => votes.get(proposalId) ?? [],
     ),
     saveIdentityRecord: jest.fn(async () => {}),
     getIdentityRecord: jest.fn(async () => null),
@@ -303,7 +302,8 @@ describe('QuorumStateMachine Unit Tests', () => {
         createMockGossipService(),
       );
       await sm.initialize(getMembers(3), 2);
-      expect(await sm.getProposal('nonexistent' as ShortHexGuid)).toBeNull();
+      const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
+      expect(await sm.getProposal(sp.idProvider.generateTyped())).toBeNull();
     });
 
     it('should return a proposal after it is submitted', async () => {
@@ -334,9 +334,10 @@ describe('QuorumStateMachine Unit Tests', () => {
         sealingService,
         createMockGossipService(),
       );
-      await expect(sm.getProposal('test' as ShortHexGuid)).rejects.toThrow(
-        QuorumError,
-      );
+      const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
+      await expect(
+        sm.getProposal(sp.idProvider.generateTyped()),
+      ).rejects.toThrow(QuorumError);
     });
   });
 
@@ -348,9 +349,10 @@ describe('QuorumStateMachine Unit Tests', () => {
         createMockGossipService(),
       );
       await sm.initialize(getMembers(3), 2);
+      const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
 
       try {
-        await sm.unsealDocument('nonexistent' as ShortHexGuid, []);
+        await sm.unsealDocument(sp.idProvider.generateTyped(), []);
         fail('Expected QuorumError to be thrown');
       } catch (e) {
         expect(e).toBeInstanceOf(QuorumError);
@@ -364,8 +366,9 @@ describe('QuorumStateMachine Unit Tests', () => {
         sealingService,
         createMockGossipService(),
       );
+      const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
       await expect(
-        sm.unsealDocument('test' as ShortHexGuid, []),
+        sm.unsealDocument(sp.idProvider.generateTyped(), []),
       ).rejects.toThrow(QuorumError);
     });
   });

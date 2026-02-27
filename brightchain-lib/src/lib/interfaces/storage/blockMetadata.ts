@@ -1,6 +1,7 @@
 import { RawDataBlock } from '../../blocks/rawData';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import type { BlockId } from '../branded/primitives/blockId';
 
 import { PoolId } from './pooledBlockStore';
 
@@ -13,7 +14,7 @@ export interface IBlockMetadata {
   /**
    * Unique identifier for the block (typically the checksum as hex string)
    */
-  blockId: string;
+  blockId: BlockId;
 
   /**
    * Timestamp when the block was created/stored
@@ -34,7 +35,7 @@ export interface IBlockMetadata {
   /**
    * IDs of parity blocks generated for this data block using Reed-Solomon encoding
    */
-  parityBlockIds: string[];
+  parityBlockIds: BlockId[];
 
   /**
    * Number of times this block has been accessed
@@ -129,17 +130,17 @@ export interface BrightenResult {
   /**
    * The checksum/ID of the resulting brightened block
    */
-  brightenedBlockId: string;
+  brightenedBlockId: BlockId;
 
   /**
    * The checksums/IDs of the random blocks used in the XOR operation
    */
-  randomBlockIds: string[];
+  randomBlockIds: BlockId[];
 
   /**
    * The checksum/ID of the original source block
    */
-  originalBlockId: string;
+  originalBlockId: BlockId;
 }
 
 /**
@@ -152,7 +153,7 @@ export interface BrightenResult {
  * @returns Default metadata for the block
  */
 export function createDefaultBlockMetadata(
-  blockId: string,
+  blockId: BlockId,
   size: number,
   checksum: string,
   options?: BlockStoreOptions,

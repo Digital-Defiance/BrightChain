@@ -893,8 +893,12 @@ import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEnc
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import type { BlockAnnouncement } from '../../interfaces/availability/gossipService';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { createContentType } from '../../interfaces/messaging/mimePart';
 import { InMemoryEmailMetadataStore } from './inMemoryEmailMetadataStore';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on Receipt', () => {
   /**
@@ -1014,7 +1018,7 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
 
           const announcement: BlockAnnouncement = {
             type: 'add',
-            blockId: cblBlockId,
+            blockId: bid(cblBlockId),
             nodeId: 'sender-node-001',
             timestamp: new Date(),
             ttl: 5,
@@ -1022,8 +1026,8 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
               messageId,
               recipientIds,
               priority: 'normal',
-              blockIds,
-              cblBlockId,
+              blockIds: blockIds.map((s) => bid(s)),
+              cblBlockId: bid(cblBlockId),
               ackRequired: true,
             },
           };
@@ -1088,7 +1092,7 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
 
           const announcement: BlockAnnouncement = {
             type: 'add',
-            blockId: cblBlockId,
+            blockId: bid(cblBlockId),
             nodeId: 'sender-node-001',
             timestamp: new Date(),
             ttl: 5,
@@ -1096,8 +1100,8 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
               messageId,
               recipientIds: allRecipientIds,
               priority: 'normal',
-              blockIds,
-              cblBlockId,
+              blockIds: blockIds.map((s) => bid(s)),
+              cblBlockId: bid(cblBlockId),
               ackRequired: true,
             },
           };
@@ -1158,7 +1162,7 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
 
           const announcement: BlockAnnouncement = {
             type: 'add',
-            blockId: cblBlockId,
+            blockId: bid(cblBlockId),
             nodeId: 'sender-node-001',
             timestamp: new Date(),
             ttl: 5,
@@ -1166,8 +1170,8 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
               messageId,
               recipientIds,
               priority: 'normal',
-              blockIds,
-              cblBlockId,
+              blockIds: blockIds.map((s) => bid(s)),
+              cblBlockId: bid(cblBlockId),
               ackRequired: true,
             },
           };
@@ -1218,7 +1222,7 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
           // Announcement without messageDelivery (plain block announcement)
           const announcement: BlockAnnouncement = {
             type: 'add',
-            blockId,
+            blockId: bid(blockId),
             nodeId: 'sender-node-001',
             timestamp: new Date(),
             ttl: 3,
@@ -1281,7 +1285,7 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
 
           const announcement: BlockAnnouncement = {
             type: 'add',
-            blockId: cblBlockId,
+            blockId: bid(cblBlockId),
             nodeId: 'sender-node-001',
             timestamp: new Date(),
             ttl: 5,
@@ -1289,8 +1293,8 @@ describe('Feature: unified-gossip-delivery, Property 14: Email Inbox Indexing on
               messageId,
               recipientIds,
               priority: 'normal',
-              blockIds,
-              cblBlockId,
+              blockIds: blockIds.map((s) => bid(s)),
+              cblBlockId: bid(cblBlockId),
               ackRequired: true,
             },
           };

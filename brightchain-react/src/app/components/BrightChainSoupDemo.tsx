@@ -15,7 +15,6 @@ import {
   BlockInfo,
   BlockSize,
   CBLService,
-  CBLStorageResult,
   Checksum,
   ChecksumService,
   FileReceipt,
@@ -199,8 +198,9 @@ export const BrightChainSoupDemo: React.FC = () => {
 
   // Whitening / magnet state
   const [enableWhitening, setEnableWhitening] = useState(false);
-  const [whiteningResult, setWhiteningResult] =
-    useState<CBLStorageResult | null>(null);
+  const [whiteningResult, setWhiteningResult] = useState<NonNullable<
+    FileReceiptWithWhitening['whitening']
+  > | null>(null);
   const [magnetUrlInput, setMagnetUrlInput] = useState('');
   const [showMagnetInput, setShowMagnetInput] = useState(false);
   const [showCblUpload, setShowCblUpload] = useState(false);

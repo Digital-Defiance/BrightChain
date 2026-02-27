@@ -1,4 +1,4 @@
-import { ShortHexGuid, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
+import { HexString, uint8ArrayToHex } from '@digitaldefiance/ecies-lib';
 import { EnergyAccount } from '../energyAccount';
 import { IEnergyAccountDto } from '../interfaces/energyAccount';
 import { ITypedCollection } from '../interfaces/storage/documentStore';
@@ -14,7 +14,7 @@ import { Checksum } from '../types/checksum';
  * hydrate the in-memory map on startup.
  */
 export class EnergyAccountStore {
-  private accounts: Map<ShortHexGuid, EnergyAccount>;
+  private accounts: Map<HexString, EnergyAccount>;
   private readonly typedCollection: ITypedCollection<
     IEnergyAccountDto,
     EnergyAccount
@@ -38,7 +38,7 @@ export class EnergyAccountStore {
 
     for (const account of docs) {
       // The collection already hydrates — account is an EnergyAccount
-      const key = account.memberId.toHex() as ShortHexGuid;
+      const key = account.memberId.toHex() as HexString;
       this.accounts.set(key, account);
     }
   }
@@ -47,7 +47,7 @@ export class EnergyAccountStore {
    * Get account by member ID
    */
   get(memberId: Checksum): EnergyAccount | undefined {
-    const key = uint8ArrayToHex(memberId.toUint8Array()) as ShortHexGuid;
+    const key = uint8ArrayToHex(memberId.toUint8Array()) as HexString;
     return this.accounts.get(key);
   }
 
@@ -68,7 +68,7 @@ export class EnergyAccountStore {
    * (if configured).
    */
   async set(memberId: Checksum, account: EnergyAccount): Promise<void> {
-    const key = uint8ArrayToHex(memberId.toUint8Array()) as ShortHexGuid;
+    const key = uint8ArrayToHex(memberId.toUint8Array()) as HexString;
     this.accounts.set(key, account);
 
     if (this.typedCollection) {
@@ -84,7 +84,7 @@ export class EnergyAccountStore {
    * Check if account exists
    */
   has(memberId: Checksum): boolean {
-    const key = uint8ArrayToHex(memberId.toUint8Array()) as ShortHexGuid;
+    const key = uint8ArrayToHex(memberId.toUint8Array()) as HexString;
     return this.accounts.has(key);
   }
 
@@ -92,7 +92,7 @@ export class EnergyAccountStore {
    * Delete account
    */
   delete(memberId: Checksum): boolean {
-    const key = uint8ArrayToHex(memberId.toUint8Array()) as ShortHexGuid;
+    const key = uint8ArrayToHex(memberId.toUint8Array()) as HexString;
     return this.accounts.delete(key);
   }
 

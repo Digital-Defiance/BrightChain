@@ -268,10 +268,9 @@ export class BrightChainAuthenticationProvider<
       reference.id,
     )) as unknown as Member<TID>;
 
-    // The hydrated member is an ecies-lib Member which lacks getIdString().
-    // Convert the raw ID bytes to a hex string directly.
-    const idBytes = member.idBytes ?? (member.id as Uint8Array);
-    const userId = Buffer.from(idBytes).toString('hex');
+    // Use idToString for proper UUID round-trip (pairs with idFromString)
+    const idProvider = ServiceProvider.getInstance<TID>().idProvider;
+    const userId = idProvider.idToString(reference.id);
 
     return {
       userId,

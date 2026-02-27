@@ -164,7 +164,7 @@ export class TcblBuilder<TID extends PlatformID = Uint8Array> {
     let manifestData: Uint8Array;
     if (this.compress) {
       // Dynamic import to avoid ESM/CJS issues at module load time
-      const BZip2Module = await import('bzip2-wasm');
+      const BZip2Module = await import('@digitaldefiance/bzip2-wasm');
       const BZip2 = BZip2Module.default;
       const bzip2 = new BZip2();
       await bzip2.init();

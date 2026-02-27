@@ -1,10 +1,14 @@
 import { describe, expect, it } from '@jest/globals';
+import type { BlockId } from '../branded/primitives/blockId';
 import {
   ContentTransferEncoding,
   createContentType,
   IContentDisposition,
   IMimePart,
 } from './mimePart';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 describe('IContentType Interface', () => {
   describe('createContentType utility', () => {
@@ -200,10 +204,11 @@ describe('IMimePart Interface', () => {
     const part: IMimePart = {
       contentType: createContentType('application', 'pdf'),
       contentTransferEncoding: ContentTransferEncoding.Base64,
-      bodyBlockIds: ['block-1', 'block-2'],
-      size: 50000,
+      bodyBlockIds: [bid('block-1'), bid('block-2')],
+      size: 0,
     };
-    expect(part.contentTransferEncoding).toBe('base64');
+    expect(part.contentTransferEncoding).toBe(ContentTransferEncoding.Base64);
+    expect(part.bodyBlockIds).toHaveLength(2);
   });
 
   it('should support Content-Disposition for attachments', () => {
@@ -215,7 +220,7 @@ describe('IMimePart Interface', () => {
         filename: 'document.pdf',
         size: 50000,
       },
-      bodyBlockIds: ['block-1'],
+      bodyBlockIds: [bid('block-1')],
       size: 50000,
     };
     expect(part.contentDisposition?.type).toBe('attachment');
@@ -258,10 +263,14 @@ describe('IMimePart Interface', () => {
     const part: IMimePart = {
       contentType: createContentType('video', 'mp4'),
       contentTransferEncoding: ContentTransferEncoding.Base64,
-      bodyBlockIds: ['block-a', 'block-b', 'block-c'],
+      bodyBlockIds: [bid('block-a'), bid('block-b'), bid('block-c')],
       size: 10_000_000,
     };
-    expect(part.bodyBlockIds).toEqual(['block-a', 'block-b', 'block-c']);
+    expect(part.bodyBlockIds).toEqual([
+      bid('block-a'),
+      bid('block-b'),
+      bid('block-c'),
+    ]);
     expect(part.body).toBeUndefined();
   });
 
@@ -319,7 +328,7 @@ describe('IMimePart Interface', () => {
       contentType: createContentType('application', 'pdf'),
       contentTransferEncoding: ContentTransferEncoding.Base64,
       contentDisposition: { type: 'attachment', filename: 'doc.pdf' },
-      bodyBlockIds: ['block-1'],
+      bodyBlockIds: [bid('block-1')],
       size: 50000,
     };
     const mixedPart: IMimePart = {

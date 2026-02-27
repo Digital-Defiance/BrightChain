@@ -7,18 +7,18 @@
  * @see Design: Transition Ceremony Algorithm — Rollback Mechanism
  */
 
-import { ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString } from '@digitaldefiance/ecies-lib';
 
 /**
  * Journal entry for share redistribution rollback support.
  */
 export interface RedistributionJournalEntry {
   /** ID of the document being redistributed */
-  documentId: ShortHexGuid;
+  documentId: HexString;
   /** Original encrypted shares before redistribution */
-  oldShares: Map<ShortHexGuid, Uint8Array>;
+  oldShares: Map<HexString, Uint8Array>;
   /** Original member IDs before redistribution */
-  oldMemberIds: ShortHexGuid[];
+  oldMemberIds: HexString[];
   /** Original threshold before redistribution */
   oldThreshold: number;
   /** Original epoch number before redistribution */

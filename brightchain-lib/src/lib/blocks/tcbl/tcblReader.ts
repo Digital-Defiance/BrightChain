@@ -108,7 +108,7 @@ export class TcblReader<TID extends PlatformID = Uint8Array> {
         const uncompressedLength = view.getUint32(1, false);
         const compressedData = rawPayload.subarray(5);
 
-        const BZip2Module = await import('bzip2-wasm');
+        const BZip2Module = await import('@digitaldefiance/bzip2-wasm');
         const BZip2 = BZip2Module.default;
         const bzip2 = new BZip2();
         await bzip2.init();

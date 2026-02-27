@@ -12,11 +12,11 @@ import {
   AESGCMService,
   EmailString,
   GuidV4Uint8Array,
+  HexString,
   hexToUint8Array,
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import type { Shares } from '@digitaldefiance/secrets';
@@ -232,7 +232,7 @@ describe('QuorumStateMachine Property-Based Tests', () => {
     const epochs = new Map<number, QuorumEpoch<GuidV4Uint8Array>>();
     const savedEpochs: QuorumEpoch<GuidV4Uint8Array>[] = [];
     const savedOperationalStates: OperationalState[] = [];
-    const members = new Map<ShortHexGuid, IQuorumMember<GuidV4Uint8Array>>();
+    const members = new Map<HexString, IQuorumMember<GuidV4Uint8Array>>();
     let operationalState: OperationalState | null = null;
 
     return {
@@ -254,10 +254,16 @@ describe('QuorumStateMachine Property-Based Tests', () => {
       }),
 
       saveMember: jest.fn(async (member: IQuorumMember<GuidV4Uint8Array>) => {
-        members.set(member.id, member);
+        members.set(
+          uint8ArrayToHex(member.id as Uint8Array) as HexString,
+          member,
+        );
       }),
-      getMember: jest.fn(async (memberId: ShortHexGuid) => {
-        return members.get(memberId) ?? null;
+      getMember: jest.fn(async (memberId: GuidV4Uint8Array) => {
+        return (
+          members.get(uint8ArrayToHex(memberId as Uint8Array) as HexString) ??
+          null
+        );
       }),
       listActiveMembers: jest.fn(async () => {
         return Array.from(members.values()).filter((m) => m.isActive);
@@ -472,9 +478,7 @@ describe('QuorumStateMachine Property-Based Tests', () => {
             const epochNumbers: number[] = [initEpoch.epochNumber];
 
             // Track current member IDs for add/remove decisions
-            const currentMemberIds = initialMembers.map(
-              (m) => uint8ArrayToHex(m.idBytes) as ShortHexGuid,
-            );
+            const currentMemberIds = initialMembers.map((m) => m.id);
             let nextPoolIndex = initialCount;
 
             for (const isAdd of operations) {
@@ -485,9 +489,7 @@ describe('QuorumStateMachine Property-Based Tests', () => {
                 const newEpoch = await sm.addMember(memberToAdd, {
                   name: `Added-${nextPoolIndex}`,
                 });
-                currentMemberIds.push(
-                  uint8ArrayToHex(memberToAdd.idBytes) as ShortHexGuid,
-                );
+                currentMemberIds.push(memberToAdd.id);
                 epochNumbers.push(newEpoch.epochNumber);
               } else if (!isAdd && currentMemberIds.length > threshold) {
                 // Remove the last member (safe since count > threshold)
@@ -560,11 +562,11 @@ describe('QuorumStateMachine Property-Based Tests', () => {
               0,
               originalThreshold,
             );
-            const existingSharesMap = new Map<ShortHexGuid, string>();
+            const existingSharesMap = new Map<HexString, string>();
             for (let i = 0; i < thresholdMembers.length; i++) {
               const memberIdHex = uint8ArrayToHex(
                 idProvider.toBytes(thresholdMembers[i].id),
-              ) as ShortHexGuid;
+              ) as HexString;
               existingSharesMap.set(memberIdHex, allOriginalDecryptedShares[i]);
             }
 
@@ -589,7 +591,7 @@ describe('QuorumStateMachine Property-Based Tests', () => {
             const remainingMember = newMembers[0];
             const remainingMemberIdHex = uint8ArrayToHex(
               idProvider.toBytes(remainingMember.id),
-            ) as ShortHexGuid;
+            ) as HexString;
             const encryptedNewShare =
               newEncryptedShares.get(remainingMemberIdHex);
             expect(encryptedNewShare).toBeDefined();
@@ -678,9 +680,7 @@ describe('QuorumStateMachine Property-Based Tests', () => {
             await sm.initialize(members, threshold);
 
             // Try to remove any member — should fail since N-1 < T
-            const memberIdToRemove = uint8ArrayToHex(
-              members[0].idBytes,
-            ) as ShortHexGuid;
+            const memberIdToRemove = members[0].id;
 
             try {
               await sm.removeMember(memberIdToRemove);
@@ -723,9 +723,7 @@ describe('QuorumStateMachine Property-Based Tests', () => {
             await sm.initialize(members, threshold);
 
             // Remove the last member — should succeed since N-1 >= T
-            const memberIdToRemove = uint8ArrayToHex(
-              members[memberCount - 1].idBytes,
-            ) as ShortHexGuid;
+            const memberIdToRemove = members[memberCount - 1].id;
 
             const newEpoch = await sm.removeMember(memberIdToRemove);
 
@@ -763,7 +761,7 @@ describe('QuorumStateMachine Property-Based Tests', () => {
       const epochs = new Map<number, QuorumEpoch<GuidV4Uint8Array>>();
       const savedEpochs: QuorumEpoch<GuidV4Uint8Array>[] = [];
       const savedOperationalStates: OperationalState[] = [];
-      const members = new Map<ShortHexGuid, IQuorumMember<GuidV4Uint8Array>>();
+      const members = new Map<HexString, IQuorumMember<GuidV4Uint8Array>>();
       const documents = new Map<string, QuorumDataRecord<GuidV4Uint8Array>>();
       const journalEntries = new Map<number, RedistributionJournalEntry[]>();
       let operationalState: OperationalState | null = null;
@@ -797,10 +795,16 @@ describe('QuorumStateMachine Property-Based Tests', () => {
         }),
 
         saveMember: jest.fn(async (member: IQuorumMember<GuidV4Uint8Array>) => {
-          members.set(member.id, member);
+          members.set(
+            uint8ArrayToHex(member.id as Uint8Array) as HexString,
+            member,
+          );
         }),
-        getMember: jest.fn(async (memberId: ShortHexGuid) => {
-          return members.get(memberId) ?? null;
+        getMember: jest.fn(async (memberId: GuidV4Uint8Array) => {
+          return (
+            members.get(uint8ArrayToHex(memberId as Uint8Array) as HexString) ??
+            null
+          );
         }),
         listActiveMembers: jest.fn(async () => {
           return Array.from(members.values()).filter((m) => m.isActive);
@@ -818,12 +822,13 @@ describe('QuorumStateMachine Property-Based Tests', () => {
             }
             const docHexId = uint8ArrayToHex(
               doc.enhancedProvider.toBytes(doc.id),
-            ) as ShortHexGuid;
+            ) as HexString;
             documents.set(docHexId, doc);
           },
         ),
-        getDocument: jest.fn(async (docId: ShortHexGuid) => {
-          return documents.get(docId) ?? null;
+        getDocument: jest.fn(async (docId: GuidV4Uint8Array) => {
+          const docHexKey = uint8ArrayToHex(docId as Uint8Array) as HexString;
+          return documents.get(docHexKey) ?? null;
         }),
         listDocumentsByEpoch: jest.fn(
           async (epochNumber: number, _page: number, _pageSize: number) => {
@@ -926,7 +931,7 @@ describe('QuorumStateMachine Property-Based Tests', () => {
               );
               const docHexId = uint8ArrayToHex(
                 sealed.enhancedProvider.toBytes(sealed.id),
-              ) as ShortHexGuid;
+              ) as HexString;
               mockDb.documents.set(docHexId, docWithEpoch);
             }
 
@@ -934,7 +939,7 @@ describe('QuorumStateMachine Property-Based Tests', () => {
             const allMembers = memberPool.slice(0, 4).map((m) => m.member);
             const fakeActiveMembers: IQuorumMember<GuidV4Uint8Array>[] =
               allMembers.map((m) => ({
-                id: uint8ArrayToHex(m.idBytes) as ShortHexGuid,
+                id: m.id,
                 publicKey: m.publicKey,
                 metadata: { name: `Member` },
                 isActive: true,
@@ -1026,7 +1031,7 @@ describe('QuorumStateMachine Property-Based Tests', () => {
               );
               const docHexId = uint8ArrayToHex(
                 sealed.enhancedProvider.toBytes(sealed.id),
-              ) as ShortHexGuid;
+              ) as HexString;
               mockDb.documents.set(docHexId, docWithEpoch);
             }
 
@@ -1034,7 +1039,7 @@ describe('QuorumStateMachine Property-Based Tests', () => {
             const allMembers = memberPool.slice(0, 4).map((m) => m.member);
             const fakeActiveMembers: IQuorumMember<GuidV4Uint8Array>[] =
               allMembers.map((m) => ({
-                id: uint8ArrayToHex(m.idBytes) as ShortHexGuid,
+                id: m.id,
                 publicKey: m.publicKey,
                 metadata: { name: `Member` },
                 isActive: true,
@@ -1112,7 +1117,7 @@ describe('QuorumStateMachine Property-Based Tests', () => {
             // via addMember (which would change mode to Quorum)
             const fakeActiveMembers: IQuorumMember<GuidV4Uint8Array>[] =
               allMembers.map((m) => ({
-                id: uint8ArrayToHex(m.idBytes) as ShortHexGuid,
+                id: m.id,
                 publicKey: m.publicKey,
                 metadata: { name: `Member` },
                 isActive: true,
@@ -1129,21 +1134,14 @@ describe('QuorumStateMachine Property-Based Tests', () => {
             // Override listDocumentsByEpoch to test blocking mid-transition
             (mockDb.listDocumentsByEpoch as jest.Mock).mockImplementation(
               async () => {
-                const memberId = uint8ArrayToHex(
-                  allMembers[0].idBytes,
-                ) as ShortHexGuid;
-                const member2Id = uint8ArrayToHex(
-                  allMembers[1].idBytes,
-                ) as ShortHexGuid;
-
                 try {
                   if (operationIndex === 0) {
                     await sm.sealDocument(allMembers[0], { test: 'data' }, [
-                      memberId,
-                      member2Id,
+                      allMembers[0].id,
+                      allMembers[1].id,
                     ]);
                   } else if (operationIndex === 1) {
-                    await sm.unsealDocument('test-doc-id' as ShortHexGuid, [
+                    await sm.unsealDocument(idProvider.generateTyped(), [
                       allMembers[0],
                     ]);
                   } else {
@@ -1191,15 +1189,15 @@ describe('QuorumStateMachine Property-Based Tests', () => {
   function createVotingMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
     savedEpochs: QuorumEpoch<GuidV4Uint8Array>[];
     savedOperationalStates: OperationalState[];
-    proposals: Map<ShortHexGuid, Proposal<GuidV4Uint8Array>>;
-    votes: Map<ShortHexGuid, Vote<GuidV4Uint8Array>[]>;
+    proposals: Map<HexString, Proposal<GuidV4Uint8Array>>;
+    votes: Map<HexString, Vote<GuidV4Uint8Array>[]>;
   } {
     const epochs = new Map<number, QuorumEpoch<GuidV4Uint8Array>>();
     const savedEpochs: QuorumEpoch<GuidV4Uint8Array>[] = [];
     const savedOperationalStates: OperationalState[] = [];
-    const members = new Map<ShortHexGuid, IQuorumMember<GuidV4Uint8Array>>();
-    const proposals = new Map<ShortHexGuid, Proposal<GuidV4Uint8Array>>();
-    const votes = new Map<ShortHexGuid, Vote<GuidV4Uint8Array>[]>();
+    const members = new Map<HexString, IQuorumMember<GuidV4Uint8Array>>();
+    const proposals = new Map<HexString, Proposal<GuidV4Uint8Array>>();
+    const votes = new Map<HexString, Vote<GuidV4Uint8Array>[]>();
     let operationalState: OperationalState | null = null;
 
     return {
@@ -1223,10 +1221,16 @@ describe('QuorumStateMachine Property-Based Tests', () => {
       }),
 
       saveMember: jest.fn(async (member: IQuorumMember<GuidV4Uint8Array>) => {
-        members.set(member.id, member);
+        members.set(
+          uint8ArrayToHex(member.id as Uint8Array) as HexString,
+          member,
+        );
       }),
-      getMember: jest.fn(async (memberId: ShortHexGuid) => {
-        return members.get(memberId) ?? null;
+      getMember: jest.fn(async (memberId: GuidV4Uint8Array) => {
+        return (
+          members.get(uint8ArrayToHex(memberId as Uint8Array) as HexString) ??
+          null
+        );
       }),
       listActiveMembers: jest.fn(async () => {
         return Array.from(members.values()).filter((m) => m.isActive);
@@ -1237,18 +1241,29 @@ describe('QuorumStateMachine Property-Based Tests', () => {
       listDocumentsByEpoch: jest.fn(async () => []),
 
       saveProposal: jest.fn(async (proposal: Proposal<GuidV4Uint8Array>) => {
-        proposals.set(proposal.id, proposal);
+        proposals.set(
+          uint8ArrayToHex(proposal.id as Uint8Array) as HexString,
+          proposal,
+        );
       }),
-      getProposal: jest.fn(async (proposalId: ShortHexGuid) => {
-        return proposals.get(proposalId) ?? null;
+      getProposal: jest.fn(async (proposalId: GuidV4Uint8Array) => {
+        return (
+          proposals.get(
+            uint8ArrayToHex(proposalId as Uint8Array) as HexString,
+          ) ?? null
+        );
       }),
       saveVote: jest.fn(async (vote: Vote<GuidV4Uint8Array>) => {
-        const existing = votes.get(vote.proposalId) ?? [];
+        const key = uint8ArrayToHex(vote.proposalId as Uint8Array) as HexString;
+        const existing = votes.get(key) ?? [];
         existing.push(vote);
-        votes.set(vote.proposalId, existing);
+        votes.set(key, existing);
       }),
-      getVotesForProposal: jest.fn(async (proposalId: ShortHexGuid) => {
-        return votes.get(proposalId) ?? [];
+      getVotesForProposal: jest.fn(async (proposalId: GuidV4Uint8Array) => {
+        return (
+          votes.get(uint8ArrayToHex(proposalId as Uint8Array) as HexString) ??
+          []
+        );
       }),
 
       saveIdentityRecord: jest.fn(async () => {}),
@@ -1319,25 +1334,26 @@ describe('QuorumStateMachine Property-Based Tests', () => {
             expect(proposal.requiredThreshold).toBe(threshold);
 
             // Submit exactly threshold approve votes from distinct members
-            const memberIds = members.map(
-              (m) => uint8ArrayToHex(m.idBytes) as ShortHexGuid,
-            );
-
             for (let i = 0; i < threshold; i++) {
               await sm.submitVote({
                 proposalId: proposal.id,
-                voterMemberId: memberIds[i],
+                voterMemberId: members[i].id,
                 decision: 'approve',
               });
             }
 
             // Verify proposal is now approved
-            const updatedProposal = mockDb.proposals.get(proposal.id);
+            const updatedProposal = mockDb.proposals.get(
+              uint8ArrayToHex(proposal.id as Uint8Array) as HexString,
+            );
             expect(updatedProposal).toBeDefined();
             expect(updatedProposal?.status).toBe(ProposalStatus.Approved);
 
             // Verify exactly threshold votes were recorded
-            const recordedVotes = mockDb.votes.get(proposal.id) ?? [];
+            const recordedVotes =
+              mockDb.votes.get(
+                uint8ArrayToHex(proposal.id as Uint8Array) as HexString,
+              ) ?? [];
             expect(recordedVotes).toHaveLength(threshold);
           },
         ),
@@ -1376,20 +1392,18 @@ describe('QuorumStateMachine Property-Based Tests', () => {
             });
 
             // Submit threshold - 1 approve votes (not enough)
-            const memberIds = members.map(
-              (m) => uint8ArrayToHex(m.idBytes) as ShortHexGuid,
-            );
-
             for (let i = 0; i < threshold - 1; i++) {
               await sm.submitVote({
                 proposalId: proposal.id,
-                voterMemberId: memberIds[i],
+                voterMemberId: members[i].id,
                 decision: 'approve',
               });
             }
 
             // Verify proposal is still pending (not approved)
-            const updatedProposal = mockDb.proposals.get(proposal.id);
+            const updatedProposal = mockDb.proposals.get(
+              uint8ArrayToHex(proposal.id as Uint8Array) as HexString,
+            );
             expect(updatedProposal).toBeDefined();
             expect(updatedProposal?.status).toBe(ProposalStatus.Pending);
           },
@@ -1424,7 +1438,7 @@ describe('QuorumStateMachine Property-Based Tests', () => {
               expiresAt: new Date(Date.now() + 3600000),
             });
 
-            const voterId = uint8ArrayToHex(members[0].idBytes) as ShortHexGuid;
+            const voterId = members[0].id;
 
             // First vote should succeed
             await sm.submitVote({
@@ -1451,11 +1465,16 @@ describe('QuorumStateMachine Property-Based Tests', () => {
             }
 
             // Only one vote should be recorded
-            const recordedVotes = mockDb.votes.get(proposal.id) ?? [];
+            const recordedVotes =
+              mockDb.votes.get(
+                uint8ArrayToHex(proposal.id as Uint8Array) as HexString,
+              ) ?? [];
             expect(recordedVotes).toHaveLength(1);
 
             // Proposal should still be pending (only 1 approve, threshold is 2)
-            const updatedProposal = mockDb.proposals.get(proposal.id);
+            const updatedProposal = mockDb.proposals.get(
+              uint8ArrayToHex(proposal.id as Uint8Array) as HexString,
+            );
             expect(updatedProposal?.status).toBe(ProposalStatus.Pending);
           },
         ),

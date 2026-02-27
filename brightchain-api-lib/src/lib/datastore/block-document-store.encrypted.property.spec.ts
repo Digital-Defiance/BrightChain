@@ -20,10 +20,10 @@ import {
 } from '@brightchain/brightchain-lib';
 import {
   EmailString,
+  HexString,
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 import fc from 'fast-check';
@@ -121,7 +121,7 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
 
             // Create 3 members (minimum for meaningful quorum)
             const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-            const memberIds: ShortHexGuid[] = [];
+            const memberIds: HexString[] = [];
 
             for (let i = 0; i < 3; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;
@@ -215,7 +215,7 @@ describe('BlockDocumentStore Encrypted Document Property Tests', () => {
 
             // Create 3 members
             const memberData: IMemberWithMnemonic<GuidV4Buffer>[] = [];
-            const memberIds: ShortHexGuid[] = [];
+            const memberIds: HexString[] = [];
 
             for (let i = 0; i < 3; i++) {
               const uniqueSuffix = `${timestamp}${random}${i}`;

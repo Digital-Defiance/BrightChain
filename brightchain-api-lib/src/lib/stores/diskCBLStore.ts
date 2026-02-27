@@ -191,14 +191,17 @@ export class DiskCBLStore<
         );
 
         const decryptedData = (
-            await getGlobalServiceProvider<TID>().blockService.decryptMultiple(
-              this._activeUser,
-              multiEncryptedCbl,
-            )
-          ).data;
+          await getGlobalServiceProvider<TID>().blockService.decryptMultiple(
+            this._activeUser,
+            multiEncryptedCbl,
+          )
+        ).data;
 
         const decryptedCbl = isTarballCblData(decryptedData)
-          ? new TarballConstituentBlockListBlock<TID>(decryptedData, this._activeUser)
+          ? new TarballConstituentBlockListBlock<TID>(
+              decryptedData,
+              this._activeUser,
+            )
           : new ConstituentBlockListBlock<TID>(decryptedData, this._activeUser);
 
         if (!decryptedCbl.validateSignature()) {
@@ -227,15 +230,18 @@ export class DiskCBLStore<
         );
 
         const decryptedData = (
-            await getGlobalServiceProvider<TID>().blockService.decrypt(
-              this._activeUser,
-              encryptedCbl,
-              BlockType.ConstituentBlockList,
-            )
-          ).data;
+          await getGlobalServiceProvider<TID>().blockService.decrypt(
+            this._activeUser,
+            encryptedCbl,
+            BlockType.ConstituentBlockList,
+          )
+        ).data;
 
         const decryptedCbl = isTarballCblData(decryptedData)
-          ? new TarballConstituentBlockListBlock<TID>(decryptedData, this._activeUser)
+          ? new TarballConstituentBlockListBlock<TID>(
+              decryptedData,
+              this._activeUser,
+            )
           : new ConstituentBlockListBlock<TID>(decryptedData, this._activeUser);
 
         if (!decryptedCbl.validateSignature()) {

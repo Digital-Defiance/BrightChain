@@ -266,6 +266,12 @@ export interface CollectionOptions {
   writeConcern?: WriteConcern;
   /** Read preference for all read operations on this collection */
   readPreference?: ReadPreference;
+  /**
+   * Custom ID generator function for document IDs.
+   * When provided, this replaces the default `randomUUID().replace(/-/g, '')`
+   * so that all generated IDs are consistent with the configured ID provider.
+   */
+  idGenerator?: () => string;
 }
 
 // ═══════════════════════════════════════════════════════

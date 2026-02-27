@@ -20,6 +20,7 @@ export type * from './healthResponse';
 export type * from './identityProofResponses';
 export type * from './listNodesResponse';
 export type * from './loginResponseData';
+export type * from './memberProfileData';
 export type * from './membersResponseData';
 export type * from './mnemonicResponseData';
 export type * from './passwordChangeResponse';

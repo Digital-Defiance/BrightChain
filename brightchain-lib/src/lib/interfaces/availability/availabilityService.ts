@@ -10,6 +10,7 @@
  */
 
 import { AvailabilityState } from '../../enumerations/availabilityState';
+import type { BlockId } from '../branded/primitives/blockId';
 import { PoolId } from '../storage/pooledBlockStore';
 import { ILocationRecord } from './locationRecord';
 import { ReconciliationResult } from './reconciliationService';
@@ -64,20 +65,20 @@ export interface AvailabilityStatistics {
 export type AvailabilityEvent =
   | {
       type: 'state_changed';
-      blockId: string;
+      blockId: BlockId;
       oldState: AvailabilityState;
       newState: AvailabilityState;
       timestamp: Date;
     }
   | {
       type: 'location_added';
-      blockId: string;
+      blockId: BlockId;
       location: ILocationRecord;
       timestamp: Date;
     }
   | {
       type: 'location_removed';
-      blockId: string;
+      blockId: BlockId;
       nodeId: string;
       timestamp: Date;
     }
@@ -134,7 +135,7 @@ export interface LocationQueryResult {
   /**
    * The block ID queried
    */
-  blockId: string;
+  blockId: BlockId;
 
   /**
    * Current availability state
@@ -216,7 +217,7 @@ export interface IAvailabilityService {
    * @returns Promise resolving to the block's availability state
    * @see Requirements 1.7, 11.1
    */
-  getAvailabilityState(blockId: string): Promise<AvailabilityState>;
+  getAvailabilityState(blockId: BlockId): Promise<AvailabilityState>;
 
   /**
    * Get all known locations for a block, optionally filtered by pool.
@@ -227,7 +228,7 @@ export interface IAvailabilityService {
    * @see Requirements 11.2, 5.3, 5.5
    */
   getBlockLocations(
-    blockId: string,
+    blockId: BlockId,
     poolId?: PoolId,
   ): Promise<ILocationRecord[]>;
 
@@ -238,7 +239,7 @@ export interface IAvailabilityService {
    * @returns Promise resolving to location query result
    * @see Requirements 11.5, 11.6
    */
-  queryBlockLocation(blockId: string): Promise<LocationQueryResult>;
+  queryBlockLocation(blockId: BlockId): Promise<LocationQueryResult>;
 
   /**
    * List all blocks in a specific availability state.
@@ -247,7 +248,7 @@ export interface IAvailabilityService {
    * @returns Promise resolving to array of block IDs
    * @see Requirements 11.3
    */
-  listBlocksByState(state: AvailabilityState): Promise<string[]>;
+  listBlocksByState(state: AvailabilityState): Promise<BlockId[]>;
 
   /**
    * Get statistics about block availability distribution.
@@ -268,7 +269,7 @@ export interface IAvailabilityService {
    * @returns Promise that resolves when the update is complete
    * @see Requirements 2.4, 14.2
    */
-  updateLocation(blockId: string, location: ILocationRecord): Promise<void>;
+  updateLocation(blockId: BlockId, location: ILocationRecord): Promise<void>;
 
   /**
    * Remove a location record for a block.
@@ -279,7 +280,7 @@ export interface IAvailabilityService {
    * @returns Promise that resolves when the removal is complete
    * @see Requirements 2.5, 14.3
    */
-  removeLocation(blockId: string, nodeId: string): Promise<void>;
+  removeLocation(blockId: BlockId, nodeId: string): Promise<void>;
 
   /**
    * Set the availability state for a block.
@@ -291,7 +292,7 @@ export interface IAvailabilityService {
    * @see Requirements 14.1
    */
   setAvailabilityState(
-    blockId: string,
+    blockId: BlockId,
     state: AvailabilityState,
   ): Promise<void>;
 

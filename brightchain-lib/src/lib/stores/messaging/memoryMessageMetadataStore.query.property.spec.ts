@@ -4,8 +4,12 @@ import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 import { MemoryMessageMetadataStore } from './memoryMessageMetadataStore';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 describe('Feature: message-passing-and-events, Property 23: Comprehensive Message Query Filtering', () => {
   it('should correctly filter messages by all query criteria', async () => {
@@ -50,7 +54,7 @@ describe('Feature: message-passing-and-events, Property 23: Comprehensive Messag
 
           for (const msg of uniqueMessages) {
             const metadata: IMessageMetadata = {
-              blockId: msg.blockId,
+              blockId: bid(msg.blockId),
               size: BlockSize.Small,
               createdAt: msg.timestamp,
               expiresAt: new Date(msg.timestamp.getTime() + 86400000),

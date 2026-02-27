@@ -116,7 +116,7 @@ export class ExplodingMessageService {
     },
   ): void {
     if (message.exploded) {
-      throw new MessageAlreadyExplodedError(String(message.id));
+      throw new MessageAlreadyExplodedError(message.id as string);
     }
 
     const hasTimeExpiration =
@@ -175,7 +175,7 @@ export class ExplodingMessageService {
    */
   static markRead(message: ICommunicationMessage, memberId: string): boolean {
     if (message.exploded) {
-      throw new MessageAlreadyExplodedError(String(message.id));
+      throw new MessageAlreadyExplodedError(message.id as string);
     }
 
     if (!message.readBy) {
@@ -254,7 +254,7 @@ export class ExplodingMessageService {
    */
   static explode(message: ICommunicationMessage): IExplodingMessageEvent {
     if (message.exploded) {
-      throw new MessageAlreadyExplodedError(String(message.id));
+      throw new MessageAlreadyExplodedError(message.id as string);
     }
 
     const reason = ExplodingMessageService.checkExpiration(message);
@@ -267,8 +267,8 @@ export class ExplodingMessageService {
 
     return {
       type: CommunicationEventType.MESSAGE_EXPLODED,
-      messageId: String(message.id),
-      contextId: String(message.contextId),
+      messageId: message.id as string,
+      contextId: message.contextId as string,
       contextType: message.contextType,
       reason: reason ?? 'time_expired',
       explodedAt: message.explodedAt,
@@ -310,8 +310,8 @@ export class ExplodingMessageService {
             reason === 'time_expired'
               ? CommunicationEventType.MESSAGE_EXPIRED
               : CommunicationEventType.MESSAGE_READ_COUNT_EXCEEDED,
-          messageId: String(message.id),
-          contextId: String(message.contextId),
+          messageId: message.id as string,
+          contextId: message.contextId as string,
           contextType: message.contextType,
           reason,
           explodedAt: currentTime,

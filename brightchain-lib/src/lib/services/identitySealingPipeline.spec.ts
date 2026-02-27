@@ -8,10 +8,10 @@ import {
   ECIESService,
   EmailString,
   GuidV4Uint8Array,
+  HexString,
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { QuorumOperationalMode } from '../enumerations/quorumOperationalMode';
@@ -40,20 +40,20 @@ function createMockDatabase(
     typeof ServiceProvider.getInstance<GuidV4Uint8Array>
   >['idProvider'],
 ): IQuorumDatabase<GuidV4Uint8Array> & {
-  identityRecords: Map<ShortHexGuid, IdentityRecoveryRecord<GuidV4Uint8Array>>;
+  identityRecords: Map<HexString, IdentityRecoveryRecord<GuidV4Uint8Array>>;
 } {
   const identityRecords = new Map<
-    ShortHexGuid,
+    HexString,
     IdentityRecoveryRecord<GuidV4Uint8Array>
   >();
 
-  const memberLookup = new Map<ShortHexGuid, IQuorumMember<GuidV4Uint8Array>>();
+  const memberLookup = new Map<HexString, IQuorumMember<GuidV4Uint8Array>>();
   for (const m of memberPool) {
     const memberId = uint8ArrayToHex(
       enhancedProvider.toBytes(m.member.id),
-    ) as ShortHexGuid;
+    ) as HexString;
     memberLookup.set(memberId, {
-      id: memberId,
+      id: m.member.id,
       publicKey: m.member.publicKey,
       metadata: { name: m.member.name },
       isActive: true,
@@ -71,7 +71,10 @@ function createMockDatabase(
     }),
     saveMember: jest.fn(async () => {}),
     getMember: jest.fn(
-      async (memberId: ShortHexGuid) => memberLookup.get(memberId) ?? null,
+      async (memberId: GuidV4Uint8Array) =>
+        memberLookup.get(
+          uint8ArrayToHex(memberId as Uint8Array) as HexString,
+        ) ?? null,
     ),
     listActiveMembers: jest.fn(async () => Array.from(memberLookup.values())),
     saveDocument: jest.fn(async () => {}),
@@ -83,14 +86,15 @@ function createMockDatabase(
     getVotesForProposal: jest.fn(async () => []),
     saveIdentityRecord: jest.fn(
       async (record: IdentityRecoveryRecord<GuidV4Uint8Array>) => {
-        identityRecords.set(record.id, record);
+        identityRecords.set(record.id as unknown as HexString, record);
       },
     ),
     getIdentityRecord: jest.fn(
-      async (recordId: ShortHexGuid) => identityRecords.get(recordId) ?? null,
+      async (recordId: GuidV4Uint8Array) =>
+        identityRecords.get(recordId as unknown as HexString) ?? null,
     ),
-    deleteIdentityRecord: jest.fn(async (recordId: ShortHexGuid) => {
-      identityRecords.delete(recordId);
+    deleteIdentityRecord: jest.fn(async (recordId: GuidV4Uint8Array) => {
+      identityRecords.delete(recordId as unknown as HexString);
     }),
     listExpiredIdentityRecords: jest.fn(async () => []),
     saveAlias: jest.fn(async () => {}),
@@ -144,12 +148,7 @@ describe('IdentitySealingPipeline Unit Tests', () => {
   ): QuorumEpoch<GuidV4Uint8Array> {
     return {
       epochNumber: 1,
-      memberIds: memberPool
-        .slice(0, memberCount)
-        .map(
-          (m) =>
-            uint8ArrayToHex(idProvider.toBytes(m.member.id)) as ShortHexGuid,
-        ),
+      memberIds: memberPool.slice(0, memberCount).map((m) => m.member.id),
       threshold,
       mode: QuorumOperationalMode.Quorum,
       createdAt: new Date(),
@@ -163,7 +162,7 @@ describe('IdentitySealingPipeline Unit Tests', () => {
       creatorId,
       contentId: uint8ArrayToHex(
         idProvider.toBytes(idProvider.generateTyped()),
-      ) as ShortHexGuid,
+      ) as HexString,
       contentType: 'post',
       signature: new Uint8Array([1, 2, 3, 4]),
     };
@@ -185,16 +184,24 @@ describe('IdentitySealingPipeline Unit Tests', () => {
   async function decryptShards(
     record: IdentityRecoveryRecord<GuidV4Uint8Array>,
     memberCount: number,
-  ): Promise<Map<ShortHexGuid, string>> {
-    const decryptedShares = new Map<ShortHexGuid, string>();
+  ): Promise<Map<HexString, string>> {
+    const decryptedShares = new Map<HexString, string>();
     const members = memberPool.slice(0, memberCount);
     const decoder = new TextDecoder();
 
     for (const m of members) {
       const memberId = uint8ArrayToHex(
         idProvider.toBytes(m.member.id),
-      ) as ShortHexGuid;
-      const encryptedShard = record.encryptedShardsByMemberId.get(memberId);
+      ) as HexString;
+      // encryptedShardsByMemberId is keyed by GuidV4Uint8Array (TID)
+      // find the matching shard by comparing hex representations
+      let encryptedShard: Uint8Array | undefined;
+      for (const [shardKey, shardVal] of record.encryptedShardsByMemberId) {
+        if (uint8ArrayToHex(shardKey as Uint8Array) === memberId) {
+          encryptedShard = shardVal;
+          break;
+        }
+      }
       if (encryptedShard && m.member.privateKey) {
         const decrypted = await eciesService.decryptWithLengthAndHeader(
           m.member.privateKey.value,
@@ -227,7 +234,9 @@ describe('IdentitySealingPipeline Unit Tests', () => {
         result.recoveryRecordId,
       );
       // DB should have the record
-      const record = await db.getIdentityRecord(result.recoveryRecordId);
+      const record = await db.getIdentityRecord(
+        result.recoveryRecordId as unknown as GuidV4Uint8Array,
+      );
       expect(record).not.toBeNull();
       expect(record!.identityMode).toBe(IdentityMode.Real);
       expect(record!.threshold).toBe(2);
@@ -254,7 +263,9 @@ describe('IdentitySealingPipeline Unit Tests', () => {
         idProvider.equals(result.modifiedContent.creatorId, creator.id),
       ).toBe(false);
       // Recovery record should store alias name
-      const record = await db.getIdentityRecord(result.recoveryRecordId);
+      const record = await db.getIdentityRecord(
+        result.recoveryRecordId as unknown as GuidV4Uint8Array,
+      );
       expect(record).not.toBeNull();
       expect(record!.identityMode).toBe(IdentityMode.Alias);
       expect(record!.aliasName).toBe('MyAlias');
@@ -289,7 +300,9 @@ describe('IdentitySealingPipeline Unit Tests', () => {
       const creatorBytes = idProvider.toBytes(result.modifiedContent.creatorId);
       expect(creatorBytes.every((b) => b === 0)).toBe(true);
       // Recovery record should exist
-      const record = await db.getIdentityRecord(result.recoveryRecordId);
+      const record = await db.getIdentityRecord(
+        result.recoveryRecordId as unknown as GuidV4Uint8Array,
+      );
       expect(record).not.toBeNull();
       expect(record!.identityMode).toBe(IdentityMode.Anonymous);
     });
@@ -309,9 +322,11 @@ describe('IdentitySealingPipeline Unit Tests', () => {
       );
 
       // Decrypt all shards and use threshold (2) of them
-      const record = await db.getIdentityRecord(result.recoveryRecordId);
+      const record = await db.getIdentityRecord(
+        result.recoveryRecordId as unknown as GuidV4Uint8Array,
+      );
       const allShares = await decryptShards(record!, 3);
-      const thresholdShares = new Map<ShortHexGuid, string>();
+      const thresholdShares = new Map<HexString, string>();
       let count = 0;
       for (const [k, v] of allShares) {
         if (count >= 2) break;
@@ -333,7 +348,7 @@ describe('IdentitySealingPipeline Unit Tests', () => {
       const pipeline = createPipeline(db, epoch);
 
       await expect(
-        pipeline.recoverIdentity('nonexistent' as ShortHexGuid, new Map()),
+        pipeline.recoverIdentity('nonexistent' as HexString, new Map()),
       ).rejects.toThrow(QuorumError);
     });
 
@@ -346,9 +361,11 @@ describe('IdentitySealingPipeline Unit Tests', () => {
       const result = await pipeline.sealIdentity(content, IdentityMode.Real);
 
       // Provide only 1 share when threshold is 2
-      const record = await db.getIdentityRecord(result.recoveryRecordId);
+      const record = await db.getIdentityRecord(
+        result.recoveryRecordId as unknown as GuidV4Uint8Array,
+      );
       const allShares = await decryptShards(record!, 3);
-      const oneShare = new Map<ShortHexGuid, string>();
+      const oneShare = new Map<HexString, string>();
       const firstEntry = allShares.entries().next();
       if (!firstEntry.done) {
         oneShare.set(firstEntry.value[0], firstEntry.value[1]);

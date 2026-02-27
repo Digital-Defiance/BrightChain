@@ -1,4 +1,5 @@
-import { MemberStore, uint8ArrayToHex } from '@brightchain/brightchain-lib';
+import { MemberStore } from '@brightchain/brightchain-lib';
+import { IIdProvider } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -17,14 +18,6 @@ import {
 import { IRequestUser } from '../../interfaces/request-user';
 import { DefaultBackendIdType } from '../../shared-types';
 import { BaseController } from '../base';
-
-/**
- * Type-safe ID provider interface
- */
-interface IIdProvider<TID> {
-  fromString?(id: string): TID;
-  toBytes?(id: TID): Uint8Array;
-}
 
 /**
  * Helper type for member request with typed properties
@@ -108,13 +101,34 @@ export class MembersController<
         };
       }
 
-      // Convert string ID to TID type
+      // Resolve the canonical idProvider from the service container
       const idProvider = this.application.services.get('idProvider') as
         | IIdProvider<TID>
         | undefined;
-      const memberIdBytes = idProvider?.fromString
-        ? idProvider.fromString(memberId)
-        : Buffer.from(memberId, 'hex');
+
+      if (!idProvider) {
+        return {
+          statusCode: 500,
+          response: {
+            message: 'ID provider service not available',
+            error: 'ID_PROVIDER_UNAVAILABLE',
+          },
+        };
+      }
+
+      // Validate the member ID before converting — reject invalid formats with HTTP 400
+      const parsedId = idProvider.parseSafe(memberId);
+      if (parsedId === undefined || parsedId === null) {
+        return {
+          statusCode: 400,
+          response: {
+            message: 'Invalid member ID format',
+            error: 'INVALID_ID',
+          },
+        };
+      }
+
+      const memberIdBytes = idProvider.idFromString(memberId);
 
       // Fetch profile data
       const { publicProfile, privateProfile } =
@@ -124,11 +138,7 @@ export class MembersController<
       const response: IMemberProfileResponse = {
         publicProfile: publicProfile
           ? {
-              id: uint8ArrayToHex(
-                idProvider?.toBytes
-                  ? idProvider.toBytes(publicProfile.id)
-                  : (publicProfile.id as Uint8Array),
-              ),
+              id: idProvider.toString(publicProfile.id, 'hex'),
               status: publicProfile.status,
               reputation: publicProfile.reputation,
               storageQuota: publicProfile.storageQuota.toString(),
@@ -137,30 +147,18 @@ export class MembersController<
               dateCreated: publicProfile.dateCreated.toISOString(),
               dateUpdated: publicProfile.dateUpdated.toISOString(),
             }
-          : (null as unknown as IMemberPublicProfileResponse), // Fallback for TypeScript
+          : (null as unknown as IMemberPublicProfileResponse),
       } as IMemberProfileResponse;
 
       // Include private profile only if requested by the member themselves
       if (privateProfile && request.user?.id === memberId) {
         response.privateProfile = {
-          id: uint8ArrayToHex(
-            idProvider?.toBytes
-              ? idProvider.toBytes(privateProfile.id)
-              : (privateProfile.id as Uint8Array),
-          ),
+          id: idProvider.toString(privateProfile.id, 'hex'),
           trustedPeers: privateProfile.trustedPeers.map((peerId) =>
-            uint8ArrayToHex(
-              idProvider?.toBytes
-                ? idProvider.toBytes(peerId)
-                : (peerId as Uint8Array),
-            ),
+            idProvider.toString(peerId, 'hex'),
           ),
           blockedPeers: privateProfile.blockedPeers.map((peerId) =>
-            uint8ArrayToHex(
-              idProvider?.toBytes
-                ? idProvider.toBytes(peerId)
-                : (peerId as Uint8Array),
-            ),
+            idProvider.toString(peerId, 'hex'),
           ),
           settings: privateProfile.settings,
           activityLog: privateProfile.activityLog.map((entry) => ({

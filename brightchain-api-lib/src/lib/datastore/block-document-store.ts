@@ -2,8 +2,14 @@ import {
   getGlobalServiceProvider,
   IBlockStore,
   IQuorumService,
+  ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { Member, PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import {
+  HexString,
+  IIdProvider,
+  Member,
+  PlatformID,
+} from '@digitaldefiance/ecies-lib';
 import { randomUUID } from 'crypto';
 import {
   DocumentCollection,
@@ -29,7 +35,7 @@ export interface CreateDocumentOptions<TID extends PlatformID = Uint8Array> {
   /**
    * IDs of members who will receive shares (required if encrypt is true)
    */
-  memberIds?: ShortHexGuid[];
+  memberIds?: TID[];
   /**
    * Number of shares required to unseal (defaults to all members)
    */
@@ -51,8 +57,8 @@ export interface RetrieveDocumentOptions<TID extends PlatformID = Uint8Array> {
  */
 interface EncryptedDocumentMetadata {
   isEncrypted: boolean;
-  sealedDocumentId?: ShortHexGuid;
-  memberIds?: ShortHexGuid[];
+  sealedDocumentId?: HexString;
+  memberIds?: HexString[];
   sharesRequired?: number;
   createdAt?: string;
 }
@@ -196,6 +202,7 @@ function decodeDoc<T extends DocumentRecord>(buf: Buffer): T {
 
 class BlockCollection<
   T extends DocumentRecord,
+  TID extends PlatformID = PlatformID,
 > implements DocumentCollection<T> {
   private readonly index = new Map<string, string>(); // _id -> blockId
   private readonly registryKey: string; // key for looking up index block ID in registry
@@ -205,8 +212,10 @@ class BlockCollection<
   constructor(
     private readonly store: IBlockStore,
     private readonly collectionName: string,
-    private readonly quorumService?: IQuorumService<PlatformID>,
+    private readonly quorumService?: IQuorumService<TID>,
     private readonly storeId: string = 'default',
+    private readonly generateId: () => string = () =>
+      randomUUID().replace(/-/g, ''),
   ) {
     // Registry key is used to look up the latest index block ID
     this.registryKey = CollectionHeadRegistry.makeKey(storeId, collectionName);
@@ -280,7 +289,7 @@ class BlockCollection<
   }
 
   private resolveBlockId(id?: DocumentId): string {
-    return id ?? randomUUID().replace(/-/g, '');
+    return id ?? this.generateId();
   }
 
   private async writeDoc(doc: T, existingId?: string): Promise<T> {
@@ -374,7 +383,7 @@ class BlockCollection<
    * @param options - Options for retrieving encrypted documents
    * @returns The document (decrypted if it was encrypted)
    */
-  async findByIdDecrypted<TID extends PlatformID = Uint8Array>(
+  async findByIdDecrypted(
     id: DocumentId,
     options?: RetrieveDocumentOptions<TID>,
   ): Promise<T | null> {
@@ -405,10 +414,14 @@ class BlockCollection<
         throw new Error('Encrypted document is missing sealed document ID');
       }
 
+      // Convert stored HexString back to TID via idProvider
+      const sp = ServiceProvider.getInstance<TID>();
+      const documentTid = sp.idProvider.idFromString(sealedDocId);
+
       // Unseal the document using QuorumService
       const unsealedDoc = await this.quorumService.unsealDocument<T>(
-        sealedDocId,
-        options.membersWithPrivateKey as Member<PlatformID>[],
+        documentTid,
+        options.membersWithPrivateKey,
       );
 
       // Return the unsealed document with the original _id
@@ -457,7 +470,7 @@ class BlockCollection<
    * @param memberId - The member ID to check access for
    * @returns True if the member has access (either unencrypted or member is in the encryption list)
    */
-  async hasAccess(id: DocumentId, memberId: ShortHexGuid): Promise<boolean> {
+  async hasAccess(id: DocumentId, memberId: HexString): Promise<boolean> {
     const doc = await this.readDoc(id);
     if (!doc) {
       return false;
@@ -481,7 +494,7 @@ class BlockCollection<
    * @returns Array of documents the member has access to
    */
   async findAccessibleBy(
-    memberId: ShortHexGuid,
+    memberId: HexString,
     filter?: Partial<T>,
   ): Promise<T[]> {
     await this.ensureIndexLoaded();
@@ -514,7 +527,7 @@ class BlockCollection<
    * @returns The first document the member has access to, or null
    */
   async findOneAccessibleBy(
-    memberId: ShortHexGuid,
+    memberId: HexString,
     filter?: Partial<T>,
   ): Promise<T | null> {
     await this.ensureIndexLoaded();
@@ -545,7 +558,7 @@ class BlockCollection<
    * @returns The count of documents the member has access to
    */
   async countAccessibleBy(
-    memberId: ShortHexGuid,
+    memberId: HexString,
     filter?: Partial<T>,
   ): Promise<number> {
     const docs = await this.findAccessibleBy(memberId, filter);
@@ -583,14 +596,8 @@ class BlockCollection<
   }
 
   async create(doc: T): Promise<T>;
-  async create<TID extends PlatformID = Uint8Array>(
-    doc: T,
-    options?: CreateDocumentOptions<TID>,
-  ): Promise<T>;
-  async create<TID extends PlatformID = Uint8Array>(
-    doc: T,
-    options?: CreateDocumentOptions<TID>,
-  ): Promise<T> {
+  async create(doc: T, options?: CreateDocumentOptions<TID>): Promise<T>;
+  async create(doc: T, options?: CreateDocumentOptions<TID>): Promise<T> {
     await this.ensureIndexLoaded();
 
     // Handle encryption if requested
@@ -609,19 +616,25 @@ class BlockCollection<
 
       // Seal the document using QuorumService
       const sealedResult = await this.quorumService.sealDocument(
-        options.agent as Member<PlatformID>,
+        options.agent,
         doc,
         options.memberIds,
         options.sharesRequired,
       );
 
       // Store metadata about the encrypted document
+      const sp = ServiceProvider.getInstance<TID>();
       const internalDoc: InternalDocumentRecord = {
         ...doc,
         __encryptionMetadata: {
           isEncrypted: true,
-          sealedDocumentId: sealedResult.documentId,
-          memberIds: sealedResult.memberIds,
+          sealedDocumentId: sp.idProvider.toString(
+            sealedResult.documentId,
+            'hex',
+          ) as HexString,
+          memberIds: sealedResult.memberIds.map(
+            (id) => sp.idProvider.toString(id, 'hex') as HexString,
+          ),
           sharesRequired: sealedResult.sharesRequired,
           createdAt: sealedResult.createdAt.toISOString(),
         },
@@ -757,34 +770,59 @@ class BlockCollection<
   }
 }
 
-export class BlockDocumentStore implements DocumentStore {
+export class BlockDocumentStore<
+  TID extends PlatformID = PlatformID,
+> implements DocumentStore {
   private readonly collections = new Map<
     string,
-    BlockCollection<DocumentRecord>
+    BlockCollection<DocumentRecord, TID>
   >();
   private readonly storeId: string;
+  private readonly generateId: () => string;
 
   constructor(
     private readonly blockStore: IBlockStore,
-    private readonly quorumService?: IQuorumService<PlatformID>,
+    private readonly quorumService?: IQuorumService<TID>,
+    idProvider?: IIdProvider<TID>,
   ) {
+    // Resolve the ID provider: use the injected one, fall back to ServiceProvider
+    const resolvedProvider = idProvider ?? this.resolveIdProvider();
+    if (resolvedProvider) {
+      this.generateId = () =>
+        resolvedProvider.serialize(resolvedProvider.generate());
+    } else {
+      this.generateId = () => randomUUID().replace(/-/g, '');
+    }
     // Generate a unique store ID for this instance
-    this.storeId = randomUUID().replace(/-/g, '');
+    this.storeId = this.generateId();
+  }
+
+  /**
+   * Attempt to resolve the ID provider from the global ServiceProvider.
+   * Returns undefined if the ServiceProvider is not yet initialized.
+   */
+  private resolveIdProvider(): IIdProvider<TID> | undefined {
+    try {
+      return ServiceProvider.getInstance<TID>().idProvider;
+    } catch {
+      return undefined;
+    }
   }
 
   collection<T extends DocumentRecord>(name: string): DocumentCollection<T> {
     if (!this.collections.has(name)) {
       this.collections.set(
         name,
-        new BlockCollection<DocumentRecord>(
+        new BlockCollection<DocumentRecord, TID>(
           this.blockStore,
           name,
           this.quorumService,
           this.storeId,
+          this.generateId,
         ),
       );
     }
-    return this.collections.get(name) as BlockCollection<T>;
+    return this.collections.get(name) as BlockCollection<T, TID>;
   }
 
   /**
@@ -794,21 +832,22 @@ export class BlockDocumentStore implements DocumentStore {
    */
   encryptedCollection<T extends DocumentRecord>(
     name: string,
-  ): BlockCollection<T> {
+  ): BlockCollection<T, TID> {
     if (!this.quorumService) {
       throw new Error('QuorumService is required for encrypted collections');
     }
     if (!this.collections.has(name)) {
       this.collections.set(
         name,
-        new BlockCollection<DocumentRecord>(
+        new BlockCollection<DocumentRecord, TID>(
           this.blockStore,
           name,
           this.quorumService,
           this.storeId,
+          this.generateId,
         ),
       );
     }
-    return this.collections.get(name) as BlockCollection<T>;
+    return this.collections.get(name) as BlockCollection<T, TID>;
   }
 }

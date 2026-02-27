@@ -14,10 +14,8 @@ import {
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import * as fc from 'fast-check';
-import { v4 as uuidv4 } from 'uuid';
 import { initializeBrightChain } from '../init';
 import {
   AuditEventType,
@@ -71,8 +69,12 @@ const arbAuditEntry = fc
     detailValue: fc.string({ minLength: 0, maxLength: 50 }),
   })
   .map(
-    ({ eventType, detailKey, detailValue }): QuorumAuditLogEntry => ({
-      id: uuidv4() as ShortHexGuid,
+    ({
+      eventType,
+      detailKey,
+      detailValue,
+    }): QuorumAuditLogEntry<GuidV4Uint8Array> => ({
+      id: ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider.generateTyped(),
       eventType,
       details: { [detailKey]: detailValue },
       timestamp: new Date(),
@@ -83,9 +85,9 @@ const arbAuditEntry = fc
  * Creates a mock IQuorumDatabase that tracks chained audit entries in memory.
  */
 function createAuditMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
-  chainedEntries: ChainedAuditLogEntry[];
+  chainedEntries: ChainedAuditLogEntry<GuidV4Uint8Array>[];
 } {
-  const chainedEntries: ChainedAuditLogEntry[] = [];
+  const chainedEntries: ChainedAuditLogEntry<GuidV4Uint8Array>[] = [];
 
   const noop = async () => {};
   const nullAsync = async () => null;
@@ -93,16 +95,17 @@ function createAuditMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
   return {
     chainedEntries,
     appendAuditEntry: jest.fn(async (entry: QuorumAuditLogEntry) => {
-      // Store as ChainedAuditLogEntry if it has chain fields
-      const chained = entry as ChainedAuditLogEntry;
+      const chained = entry as ChainedAuditLogEntry<GuidV4Uint8Array>;
       if (chained.contentHash !== undefined) {
         chainedEntries.push(chained);
       }
     }),
-    getLatestAuditEntry: jest.fn(async () => {
-      if (chainedEntries.length === 0) return null;
-      return chainedEntries[chainedEntries.length - 1];
-    }),
+    getLatestAuditEntry: jest.fn(
+      async (): Promise<ChainedAuditLogEntry<GuidV4Uint8Array> | null> => {
+        if (chainedEntries.length === 0) return null;
+        return chainedEntries[chainedEntries.length - 1];
+      },
+    ),
     // Stubs for the rest of IQuorumDatabase
     saveEpoch: jest.fn(noop),
     getEpoch: jest.fn(nullAsync),
@@ -169,7 +172,7 @@ describe('P12: Audit Chain Integrity', () => {
           );
 
           // Append all entries
-          const chainedEntries: ChainedAuditLogEntry[] = [];
+          const chainedEntries: ChainedAuditLogEntry<GuidV4Uint8Array>[] = [];
           for (const entry of entries) {
             const chained = await service.appendEntry(entry);
             chainedEntries.push(chained);
@@ -235,7 +238,7 @@ describe('P12: Audit Chain Integrity', () => {
           );
 
           // Build a valid chain
-          const chainedEntries: ChainedAuditLogEntry[] = [];
+          const chainedEntries: ChainedAuditLogEntry<GuidV4Uint8Array>[] = [];
           for (const entry of entries) {
             const chained = await service.appendEntry(entry);
             chainedEntries.push(chained);

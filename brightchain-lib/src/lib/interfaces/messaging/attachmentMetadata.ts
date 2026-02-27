@@ -1,3 +1,5 @@
+import type { BlockId } from '../branded/primitives/blockId';
+
 /**
  * Attachment metadata with CBL storage reference.
  *
@@ -40,7 +42,7 @@ export interface IAttachmentMetadata {
   cblMagnetUrl: string;
 
   /** Constituent block IDs that make up the attachment in the CBL */
-  blockIds: string[];
+  blockIds: BlockId[];
 
   // ─── Integrity ─────────────────────────────────────────────────────────
 

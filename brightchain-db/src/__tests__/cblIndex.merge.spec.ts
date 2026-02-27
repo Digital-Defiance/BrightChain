@@ -8,7 +8,7 @@
  * Validates: Requirements 8.2, 8.3, 8.6
  */
 
-import type { ICBLIndexEntry } from '@brightchain/brightchain-lib';
+import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
 import { BrightChainDb } from '../lib/database';
@@ -36,10 +36,10 @@ async function seedBlocks(
   store: MockBlockStore,
   id1 = 'block-aaa-111',
   id2 = 'block-bbb-222',
-): Promise<{ blockId1: string; blockId2: string }> {
+): Promise<{ blockId1: BlockId; blockId2: BlockId }> {
   await store.put(id1, new Uint8Array([1, 2, 3]));
   await store.put(id2, new Uint8Array([4, 5, 6]));
-  return { blockId1: id1, blockId2: id2 };
+  return { blockId1: id1 as BlockId, blockId2: id2 as BlockId };
 }
 
 /** Build a full ICBLIndexEntry as if it came from a remote peer. */
@@ -50,8 +50,8 @@ function makeRemoteEntry(
     _id: 'remote-entry-001',
     magnetUrl:
       'magnet:?xt=urn:brightchain:cbl&bs=256&b1=block-aaa-111&b2=block-bbb-222',
-    blockId1: 'block-aaa-111',
-    blockId2: 'block-bbb-222',
+    blockId1: 'block-aaa-111' as BlockId,
+    blockId2: 'block-bbb-222' as BlockId,
     blockSize: 256,
     createdAt: new Date('2025-01-15T10:00:00Z'),
     visibility: CBLVisibility.Private,
@@ -169,7 +169,7 @@ describe('CBLIndex – mergeEntry conflict detection (Req 8.3)', () => {
     const remote = makeRemoteEntry({
       _id: 'remote-conflict',
       magnetUrl: 'magnet:conflict-test',
-      blockId1: 'different-block-111',
+      blockId1: 'different-block-111' as BlockId,
       blockId2,
       blockSize: 256,
     });
@@ -231,7 +231,7 @@ describe('CBLIndex – mergeEntry conflict detection (Req 8.3)', () => {
       makeRemoteEntry({
         _id: 'remote-preserve',
         magnetUrl: 'magnet:preserve-both',
-        blockId1: 'different-block-xxx',
+        blockId1: 'different-block-xxx' as BlockId,
         blockId2,
         blockSize: 256,
       }),

@@ -8,6 +8,7 @@
  * @see Requirements 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8
  */
 
+import type { BlockId } from '@brightchain/brightchain-lib';
 import {
   BlockManifest,
   CBLIndexManifest,
@@ -64,7 +65,7 @@ export interface IManifestProvider {
    * @param timestamp - When the block was seen
    */
   updateBlockLocation(
-    blockId: string,
+    blockId: BlockId,
     nodeId: string,
     timestamp: Date,
   ): Promise<void>;
@@ -76,7 +77,7 @@ export interface IManifestProvider {
    * @returns 'local' | 'remote' | 'cached' | 'orphaned' | 'unknown'
    */
   getBlockAvailabilityState(
-    blockId: string,
+    blockId: BlockId,
   ): Promise<'local' | 'remote' | 'cached' | 'orphaned' | 'unknown'>;
 
   /**
@@ -86,14 +87,14 @@ export interface IManifestProvider {
    * @param state - The new state
    */
   updateBlockAvailabilityState(
-    blockId: string,
+    blockId: BlockId,
     state: 'local' | 'remote' | 'cached' | 'orphaned' | 'unknown',
   ): Promise<void>;
 
   /**
    * Get all orphaned block IDs.
    */
-  getOrphanedBlockIds(): Promise<string[]>;
+  getOrphanedBlockIds(): Promise<BlockId[]>;
 
   /**
    * Send a pending sync item to a peer.
@@ -114,7 +115,7 @@ export interface IManifestProvider {
    * @param blockId - The block ID to check
    * @param nodeId - The node to check
    */
-  getBlockTimestamp(blockId: string, nodeId: string): Promise<Date | null>;
+  getBlockTimestamp(blockId: BlockId, nodeId: string): Promise<Date | null>;
 
   // === Pool-Scoped Manifest Operations ===
 
@@ -159,7 +160,7 @@ export interface IManifestProvider {
    */
   storeBlockInPool?(
     poolId: PoolId,
-    blockId: string,
+    blockId: BlockId,
     peerId: string,
     data?: Uint8Array,
   ): Promise<void>;
@@ -173,7 +174,7 @@ export interface IManifestProvider {
    * @param poolId - The pool the block belongs to
    */
   updateBlockLocationWithPool?(
-    blockId: string,
+    blockId: BlockId,
     nodeId: string,
     timestamp: Date,
     poolId: PoolId,
@@ -1116,7 +1117,7 @@ export class ReconciliationService implements IReconciliationService {
 
       this.pendingSyncQueue = data.items.map((item) => ({
         type: item.type,
-        blockId: item.blockId,
+        blockId: item.blockId as BlockId,
         timestamp: new Date(item.timestamp),
       }));
     } catch (error) {

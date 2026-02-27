@@ -3,6 +3,7 @@ import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { TranslatableBrightChainError } from '../../errors/translatableBrightChainError';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 import { SchemaDefinition } from '../../sharedTypes';
 
@@ -102,14 +103,15 @@ export const MessageMetadataSchema: Partial<
   cblBlockIds: {
     type: Array,
     required: false,
-    serialize: (value: string[] | undefined): string[] | null => value ?? null,
-    hydrate: (value: unknown): string[] | undefined => {
+    serialize: (value: BlockId[] | undefined): string[] | null =>
+      value ? (value as string[]) : null,
+    hydrate: (value: unknown): BlockId[] | undefined => {
       if (value === undefined || value === null) return undefined;
       if (!Array.isArray(value))
         throw new TranslatableBrightChainError(
           BrightChainStrings.Error_MessageMetadataSchema_InvalidCBLBlockIDsFormat,
         );
-      return value;
+      return value as BlockId[];
     },
   },
 };

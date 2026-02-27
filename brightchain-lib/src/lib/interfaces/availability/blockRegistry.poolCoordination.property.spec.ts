@@ -1,4 +1,5 @@
 import fc from 'fast-check';
+import type { BlockId } from '../branded/primitives/blockId';
 import { PoolId } from '../storage/pooledBlockStore';
 import {
   BlockManifest,
@@ -7,6 +8,9 @@ import {
   PoolScopedBloomFilter,
   PoolScopedManifest,
 } from './blockRegistry';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 /**
  * Property tests for IBlockRegistry pool-scoped manifest and Bloom filter export
@@ -23,22 +27,22 @@ import {
  * Tracks block-to-pool associations and generates pool-scoped manifests and Bloom filters.
  */
 class InMemoryBlockRegistry implements IBlockRegistry {
-  private readonly blocks: Map<string, PoolId | undefined> = new Map();
+  private readonly blocks: Map<BlockId, PoolId | undefined> = new Map();
   private readonly nodeId: string;
 
   constructor(nodeId = 'test-node') {
     this.nodeId = nodeId;
   }
 
-  addLocal(blockId: string, poolId?: PoolId): void {
+  addLocal(blockId: BlockId, poolId?: PoolId): void {
     this.blocks.set(blockId, poolId);
   }
 
-  removeLocal(blockId: string, _poolId?: PoolId): void {
+  removeLocal(blockId: BlockId, _poolId?: PoolId): void {
     this.blocks.delete(blockId);
   }
 
-  hasLocal(blockId: string): boolean {
+  hasLocal(blockId: BlockId): boolean {
     return this.blocks.has(blockId);
   }
 
@@ -46,7 +50,7 @@ class InMemoryBlockRegistry implements IBlockRegistry {
     return this.blocks.size;
   }
 
-  getLocalBlockIds(): string[] {
+  getLocalBlockIds(): BlockId[] {
     return Array.from(this.blocks.keys());
   }
 
@@ -56,7 +60,7 @@ class InMemoryBlockRegistry implements IBlockRegistry {
       hashCount: 3,
       bitCount: 1024,
       itemCount: this.blocks.size,
-      mightContain: (blockId: string) => this.blocks.has(blockId),
+      mightContain: (blockId: string) => this.blocks.has(bid(blockId)),
     };
   }
 
@@ -87,7 +91,7 @@ class InMemoryBlockRegistry implements IBlockRegistry {
         mightContain: (key: string) => {
           const prefix = `${poolId}:`;
           if (key.startsWith(prefix)) {
-            return blockSet.has(key.slice(prefix.length));
+            return blockSet.has(bid(key.slice(prefix.length)));
           }
           return false;
         },
@@ -111,8 +115,8 @@ class InMemoryBlockRegistry implements IBlockRegistry {
   }
 
   /** Groups blocks by their pool ID. Blocks without a pool use '__default__'. */
-  private groupBlocksByPool(): Map<PoolId, string[]> {
-    const pools = new Map<PoolId, string[]>();
+  private groupBlocksByPool(): Map<PoolId, BlockId[]> {
+    const pools = new Map<PoolId, BlockId[]>();
     for (const [blockId, poolId] of this.blocks.entries()) {
       const key = poolId ?? '__default__';
       const list = pools.get(key);
@@ -193,7 +197,7 @@ describe('Feature: cross-node-pool-coordination, Property 7: Pool-scoped manifes
   ): InMemoryBlockRegistry {
     const registry = new InMemoryBlockRegistry();
     for (const [blockId, poolId] of assignments.entries()) {
-      registry.addLocal(blockId, poolId);
+      registry.addLocal(bid(blockId), poolId);
     }
     return registry;
   }
@@ -238,7 +242,7 @@ describe('Feature: cross-node-pool-coordination, Property 7: Pool-scoped manifes
 
         for (const [poolId, blockIds] of manifest.pools.entries()) {
           for (const blockId of blockIds) {
-            expect(assignments.get(blockId)).toBe(poolId);
+            expect(assignments.get(blockId as unknown as string)).toBe(poolId);
           }
         }
       }),
@@ -260,11 +264,11 @@ describe('Feature: cross-node-pool-coordination, Property 7: Pool-scoped manifes
         const seen = new Map<string, PoolId>();
         for (const [poolId, blockIds] of manifest.pools.entries()) {
           for (const blockId of blockIds) {
-            const previousPool = seen.get(blockId);
+            const previousPool = seen.get(blockId as unknown as string);
             if (previousPool !== undefined) {
               expect(previousPool).toBe(poolId);
             }
-            seen.set(blockId, poolId);
+            seen.set(blockId as unknown as string, poolId);
           }
         }
       }),
@@ -379,7 +383,7 @@ describe('Feature: cross-node-pool-coordination, Property 10: Pool-scoped Bloom 
     const registry = new InMemoryBlockRegistry();
     for (const [poolId, blockIds] of poolBlocks.entries()) {
       for (const blockId of blockIds) {
-        registry.addLocal(blockId, poolId);
+        registry.addLocal(bid(blockId), poolId);
       }
     }
     return registry;
@@ -403,7 +407,7 @@ describe('Feature: cross-node-pool-coordination, Property 10: Pool-scoped Bloom 
 
           for (const blockId of blockIds) {
             const key = `${poolId}:${blockId}`;
-            expect(poolFilter!.mightContain(key)).toBe(true);
+            expect(poolFilter!.mightContain(bid(key))).toBe(true);
           }
         }
       }),
@@ -443,7 +447,7 @@ describe('Feature: cross-node-pool-coordination, Property 10: Pool-scoped Bloom 
                 expect(qFilter).toBeDefined();
 
                 const crossKey = `${poolQ}:${blockId}`;
-                expect(qFilter!.mightContain(crossKey)).toBe(false);
+                expect(qFilter!.mightContain(bid(crossKey))).toBe(false);
               }
             }
           }
@@ -467,7 +471,9 @@ describe('Feature: cross-node-pool-coordination, Property 10: Pool-scoped Bloom 
 
         for (const blockIds of poolBlocks.values()) {
           for (const blockId of blockIds) {
-            expect(scopedFilter.globalFilter.mightContain(blockId)).toBe(true);
+            expect(scopedFilter.globalFilter.mightContain(bid(blockId))).toBe(
+              true,
+            );
           }
         }
       }),
@@ -514,7 +520,7 @@ describe('Feature: cross-node-pool-coordination, Property 10: Pool-scoped Bloom 
 
           for (const blockId of blockIds) {
             // Bare blockId without prefix should not match
-            expect(poolFilter!.mightContain(blockId)).toBe(false);
+            expect(poolFilter!.mightContain(bid(blockId))).toBe(false);
           }
         }
       }),

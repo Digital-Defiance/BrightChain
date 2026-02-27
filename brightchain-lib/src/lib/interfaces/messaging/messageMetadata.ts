@@ -1,6 +1,9 @@
+import type { PlatformID } from '@digitaldefiance/ecies-lib';
+
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
+import type { BlockId } from '../branded/primitives/blockId';
 import { IBlockMetadata } from '../storage/blockMetadata';
 
 /**
@@ -17,26 +20,32 @@ import { IBlockMetadata } from '../storage/blockMetadata';
  * For messages larger than a single block, isCBL will be true and cblBlockIds
  * will contain the constituent block IDs for reconstruction.
  *
+ * @template TID - Platform ID type for frontend/backend DTO compatibility.
+ *   Defaults to `string` for backward compatibility. Backend code can use
+ *   `IMessageMetadata<GuidV4Uint8Array>` while frontend uses `IMessageMetadata<string>`.
+ *
  * @see Requirements 1.3, 1.4, 1.5, 2.1, 3.5, 6.3, 10.2
  */
-export interface IMessageMetadata extends IBlockMetadata {
+export interface IMessageMetadata<
+  TID extends PlatformID = string,
+> extends IBlockMetadata {
   /** Application-defined message type */
   messageType: string;
 
   /** Node ID of sender */
-  senderId: string;
+  senderId: TID;
 
   /** Recipient node IDs (empty = broadcast) */
-  recipients: string[];
+  recipients: TID[];
 
   /** Message priority level */
   priority: MessagePriority;
 
   /** Delivery status per recipient */
-  deliveryStatus: Map<string, DeliveryStatus>;
+  deliveryStatus: Map<TID, DeliveryStatus>;
 
   /** Acknowledgment timestamps per recipient */
-  acknowledgments: Map<string, Date>;
+  acknowledgments: Map<TID, Date>;
 
   /** Encryption scheme used */
   encryptionScheme: MessageEncryptionScheme;
@@ -45,5 +54,5 @@ export interface IMessageMetadata extends IBlockMetadata {
   isCBL: boolean;
 
   /** Block IDs for CBL reconstruction */
-  cblBlockIds?: string[];
+  cblBlockIds?: BlockId[];
 }

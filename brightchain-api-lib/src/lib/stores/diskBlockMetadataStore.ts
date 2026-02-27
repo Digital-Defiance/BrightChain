@@ -1,12 +1,23 @@
 import {
+  asBlockId,
   BlockSize,
   blockSizeToSizeString,
+  type BlockId,
   IBlockMetadata,
   IBlockMetadataStore,
   ReplicationStatus,
   StoreError,
   StoreErrorType,
 } from '@brightchain/brightchain-lib';
+
+/**
+ * Cast a raw hex string to BlockId without validation.
+ * Used for opaque storage keys (e.g. SHA3-512 checksums)
+ * that are not semantic BlockIds but must satisfy the branded type.
+ */
+function toStorageKey(hex: string): BlockId {
+  return hex as unknown as BlockId;
+}
 import { existsSync, mkdirSync } from 'fs';
 import { readdir, readFile, stat, unlink, writeFile } from 'fs/promises';
 import { join } from 'path';
@@ -153,12 +164,12 @@ export class DiskBlockMetadataStore implements IBlockMetadataStore {
    */
   private deserializeMetadata(file: BlockMetadataFile): IBlockMetadata {
     return {
-      blockId: file.blockId,
+      blockId: toStorageKey(file.blockId),
       createdAt: new Date(file.createdAt),
       expiresAt: file.expiresAt ? new Date(file.expiresAt) : null,
       durabilityLevel:
         file.durabilityLevel as IBlockMetadata['durabilityLevel'],
-      parityBlockIds: [...file.parityBlockIds],
+      parityBlockIds: [...file.parityBlockIds].map((id) => toStorageKey(id)),
       accessCount: file.accessCount,
       lastAccessedAt: new Date(file.lastAccessedAt),
       replicationStatus: file.replicationStatus as ReplicationStatus,

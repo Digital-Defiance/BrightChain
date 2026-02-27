@@ -6,6 +6,7 @@ import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { ReplicationStatus } from '../../enumerations/replicationStatus';
 import { EmailError } from '../../errors/messaging/emailError';
 import type { IGossipService } from '../../interfaces/availability/gossipService';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { createMailbox } from '../../interfaces/messaging/emailAddress';
 import type { IEmailMetadata } from '../../interfaces/messaging/emailMetadata';
 import { createContentType } from '../../interfaces/messaging/mimePart';
@@ -21,6 +22,9 @@ import {
   type IReplyInput,
 } from './emailMessageService';
 import type { MessageCBLService } from './messageCBLService';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 /**
  * Unit tests for EmailMessageService class structure (Task 8.1).
@@ -662,7 +666,7 @@ describe('EmailMessageService', () => {
       const now = new Date();
       return {
         // IBlockMetadata fields
-        blockId: '<mock-block-id>',
+        blockId: bid('<mock-block-id>'),
         createdAt: now,
         expiresAt: null,
         durabilityLevel: DurabilityLevel.Standard,
@@ -775,7 +779,7 @@ describe('EmailMessageService', () => {
     ): IEmailMetadata {
       const now = new Date();
       return {
-        blockId: '<mock-block-id>',
+        blockId: bid('<mock-block-id>'),
         createdAt: now,
         expiresAt: null,
         durabilityLevel: DurabilityLevel.Standard,
@@ -942,7 +946,7 @@ describe('EmailMessageService', () => {
     function buildMockMetadata(): IEmailMetadata {
       const now = new Date();
       return {
-        blockId: '<mock-block-id>',
+        blockId: bid('<mock-block-id>'),
         createdAt: now,
         expiresAt: null,
         durabilityLevel: DurabilityLevel.Standard,
@@ -1185,7 +1189,7 @@ describe('EmailMessageService', () => {
     it('getEmailContent() should return attachment metadata', async () => {
       const now = new Date();
       const mockMetadata: IEmailMetadata = {
-        blockId: '<mock-block-id>',
+        blockId: bid('<mock-block-id>'),
         createdAt: now,
         expiresAt: null,
         durabilityLevel: DurabilityLevel.Standard,
@@ -1224,7 +1228,7 @@ describe('EmailMessageService', () => {
             mimeType: 'application/pdf',
             size: 1024,
             cblMagnetUrl: 'magnet:?xt=urn:cbl:abc123',
-            blockIds: ['cbl-block-abc123'],
+            blockIds: [bid('cbl-block-abc123')],
             checksum: 'abc123',
             contentMd5: 'dGVzdA==',
           },

@@ -1,5 +1,9 @@
 import { describe, expect, it } from '@jest/globals';
+import type { BlockId } from '../branded/primitives/blockId';
 import { IAttachmentMetadata } from './attachmentMetadata';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 /**
  * Helper to create a minimal valid IAttachmentMetadata object.
@@ -12,7 +16,7 @@ function createAttachmentMetadata(
     mimeType: 'application/pdf',
     size: 102400,
     cblMagnetUrl: 'magnet:?xt=urn:brightchain:abc123def456',
-    blockIds: ['block-001', 'block-002'],
+    blockIds: [bid('block-001'), bid('block-002')],
     checksum: 'sha3-a1b2c3d4e5f6',
     ...overrides,
   };
@@ -84,7 +88,7 @@ describe('IAttachmentMetadata Interface', () => {
     it('should store attachment as ExtendedCBL with magnet URL', () => {
       const attachment = createAttachmentMetadata({
         cblMagnetUrl: 'magnet:?xt=urn:brightchain:xyz789',
-        blockIds: ['blk-a', 'blk-b', 'blk-c'],
+        blockIds: [bid('blk-a'), bid('blk-b'), bid('blk-c')],
       });
       expect(attachment.cblMagnetUrl).toContain('magnet:');
       expect(attachment.blockIds).toHaveLength(3);
@@ -92,7 +96,7 @@ describe('IAttachmentMetadata Interface', () => {
 
     it('should support single block attachment', () => {
       const attachment = createAttachmentMetadata({
-        blockIds: ['single-block'],
+        blockIds: [bid('single-block')],
         size: 512,
       });
       expect(attachment.blockIds).toHaveLength(1);
@@ -101,7 +105,7 @@ describe('IAttachmentMetadata Interface', () => {
     it('should support large attachments with many blocks', () => {
       const manyBlockIds = Array.from({ length: 100 }, (_, i) => `block-${i}`);
       const attachment = createAttachmentMetadata({
-        blockIds: manyBlockIds,
+        blockIds: manyBlockIds.map((s) => bid(s)),
         size: 25 * 1024 * 1024, // 25MB
       });
       expect(attachment.blockIds).toHaveLength(100);

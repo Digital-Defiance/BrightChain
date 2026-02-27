@@ -1,45 +1,41 @@
-import { MemberStatusType } from '@brightchain/brightchain-lib';
+import {
+  IMemberPrivateProfileData,
+  IMemberProfileData,
+  IMemberPublicProfileData,
+} from '@brightchain/brightchain-lib';
 
 /**
- * Public member profile data for API responses
+ * Public member profile data for API responses.
+ *
+ * Extends the platform-agnostic `IMemberPublicProfileData<string>` base from
+ * brightchain-lib, following the IBaseData<TData> workspace convention.
+ * The `[key: string]: unknown` index signature is required by the Express
+ * response body typing in this layer.
  */
-export interface IMemberPublicProfileResponse {
+export interface IMemberPublicProfileResponse extends IMemberPublicProfileData<string> {
   [key: string]: unknown;
-  id: string;
-  status: MemberStatusType;
-  reputation: number;
-  storageQuota: string; // BigInt as string for JSON serialization
-  storageUsed: string; // BigInt as string for JSON serialization
-  lastActive: string; // ISO date string
-  dateCreated: string; // ISO date string
-  dateUpdated: string; // ISO date string
 }
 
 /**
- * Private member profile data for API responses (only for authorized users)
+ * Private member profile data for API responses (only for authorized users).
+ *
+ * Extends the platform-agnostic `IMemberPrivateProfileData<string>` base from
+ * brightchain-lib.
  */
-export interface IMemberPrivateProfileResponse {
+export interface IMemberPrivateProfileResponse extends IMemberPrivateProfileData<string> {
   [key: string]: unknown;
-  id: string;
-  trustedPeers: string[]; // Array of member IDs
-  blockedPeers: string[]; // Array of member IDs
-  settings: Record<string, unknown>;
-  activityLog: Array<{
-    action: string;
-    timestamp: string; // ISO date string
-    details?: Record<string, unknown>;
-  }>;
-  dateCreated: string; // ISO date string
-  dateUpdated: string; // ISO date string
 }
 
 /**
- * Combined member profile response
+ * Combined member profile response.
+ *
+ * Extends the platform-agnostic `IMemberProfileData<string>` base from
+ * brightchain-lib, narrowing the profile types to the API response variants.
  */
-export interface IMemberProfileResponse {
+export interface IMemberProfileResponse extends IMemberProfileData<string> {
   [key: string]: unknown;
   publicProfile: IMemberPublicProfileResponse;
-  privateProfile?: IMemberPrivateProfileResponse; // Only included for authorized users
+  privateProfile?: IMemberPrivateProfileResponse;
 }
 
 /**

@@ -10,10 +10,10 @@
 
 import {
   EmailString,
+  HexString,
   Member,
   MemberType,
   PlatformID,
-  ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { v4 as uuidv4 } from 'uuid';
@@ -31,6 +31,7 @@ import {
   QuorumProposalMetadata,
   QuorumVoteMetadata,
 } from '../interfaces/availability/gossipService';
+import type { BlockId } from '../interfaces/branded/primitives/blockId';
 import { OperationalState } from '../interfaces/operationalState';
 import { Proposal, ProposalInput } from '../interfaces/proposal';
 import { QuorumEpoch } from '../interfaces/quorumEpoch';
@@ -132,7 +133,9 @@ export class QuorumStateMachine<
 
         // Roll back already-re-split documents from journal
         for (const entry of journalEntries) {
-          const doc = await this.db.getDocument(entry.documentId);
+          const doc = await this.db.getDocument(
+            entry.documentId as unknown as TID,
+          );
           if (!doc) {
             continue;
           }
@@ -206,11 +209,12 @@ export class QuorumStateMachine<
 
     // Save members to database
     for (const member of members) {
-      const hexId = uint8ArrayToHex(member.idBytes) as ShortHexGuid;
       const quorumMember: IQuorumMember<TID> = {
-        id: hexId,
+        id: member.id,
         publicKey: member.publicKey,
-        metadata: { name: `Member-${hexId.substring(0, 8)}` },
+        metadata: {
+          name: `Member-${uint8ArrayToHex(member.idBytes).substring(0, 8)}`,
+        },
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -219,9 +223,7 @@ export class QuorumStateMachine<
     }
 
     // Create epoch 1
-    const memberIds = members.map(
-      (m) => uint8ArrayToHex(m.idBytes) as ShortHexGuid,
-    );
+    const memberIds = members.map((m) => m.id);
     const epoch: QuorumEpoch<TID> = {
       epochNumber: 1,
       memberIds,
@@ -264,7 +266,7 @@ export class QuorumStateMachine<
 
     // Restore each document from its journal entry
     for (const entry of journalEntries) {
-      const doc = await this.db.getDocument(entry.documentId);
+      const doc = await this.db.getDocument(entry.documentId as unknown as TID);
       if (!doc) {
         continue;
       }
@@ -348,7 +350,7 @@ export class QuorumStateMachine<
    * @returns The newly created QuorumEpoch
    */
   private async createNextEpoch(
-    memberIds: ShortHexGuid[],
+    memberIds: TID[],
     threshold: number,
     mode: QuorumOperationalMode,
     previousEpochNumber?: number,
@@ -396,10 +398,10 @@ export class QuorumStateMachine<
   private async emitAuditEntry(
     eventType: AuditEventType,
     details: Record<string, unknown>,
-    targetMemberId?: ShortHexGuid,
+    targetMemberId?: TID,
   ): Promise<void> {
-    const entry: QuorumAuditLogEntry = {
-      id: uuidv4() as ShortHexGuid,
+    const entry: QuorumAuditLogEntry<TID> = {
+      id: uuidv4() as unknown as TID,
       eventType,
       targetMemberId,
       details,
@@ -426,17 +428,18 @@ export class QuorumStateMachine<
     quorumMembers: IQuorumMember<TID>[],
   ): Member<TID>[] {
     return quorumMembers.map((qm) => {
+      const idHex = uint8ArrayToHex(
+        this.sealingService['enhancedProvider'].toBytes(qm.id),
+      );
       return new Member<TID>(
         this.sealingService.eciesServiceRef,
         MemberType.User,
-        qm.metadata.name || `Member-${qm.id.substring(0, 8)}`,
-        new EmailString(`${qm.id.substring(0, 8)}@quorum.local`),
+        qm.metadata.name || `Member-${idHex.substring(0, 8)}`,
+        new EmailString(`${idHex.substring(0, 8)}@quorum.local`),
         qm.publicKey,
         undefined, // no private key
         undefined, // no wallet
-        this.sealingService.enhancedProviderRef.fromBytes(
-          new Uint8Array(Buffer.from(qm.id, 'hex')),
-        ) as TID,
+        qm.id,
       );
     });
   }
@@ -463,8 +466,8 @@ export class QuorumStateMachine<
     newThreshold: number,
     oldSharingConfig: { totalShares: number; threshold: number },
     config: RedistributionConfig,
-  ): Promise<ShortHexGuid[]> {
-    const failedDocIds: ShortHexGuid[] = [];
+  ): Promise<HexString[]> {
+    const failedDocIds: HexString[] = [];
     let page = 0;
     let processed = 0;
     let totalEstimate = 0;
@@ -489,7 +492,7 @@ export class QuorumStateMachine<
       for (const doc of docs) {
         const docHexId = uint8ArrayToHex(
           doc.enhancedProvider.toBytes(doc.id),
-        ) as ShortHexGuid;
+        ) as HexString;
 
         try {
           // Decrypt shares from threshold members
@@ -499,11 +502,11 @@ export class QuorumStateMachine<
           );
 
           // Build a map of memberId -> decrypted share hex
-          const sharesMap = new Map<ShortHexGuid, string>();
+          const sharesMap = new Map<HexString, string>();
           for (let i = 0; i < thresholdMembers.length; i++) {
             const memberId = uint8ArrayToHex(
               thresholdMembers[i].idBytes,
-            ) as ShortHexGuid;
+            ) as HexString;
             sharesMap.set(memberId, decryptedShares[i]);
           }
 
@@ -639,7 +642,7 @@ export class QuorumStateMachine<
     const batchSize = 100;
     let page = 0;
     let docs: QuorumDataRecord<TID>[];
-    const failedDocIds: ShortHexGuid[] = [];
+    const failedDocIds: HexString[] = [];
 
     try {
       // Emit share_redistribution_started
@@ -658,14 +661,11 @@ export class QuorumStateMachine<
         for (const doc of docs) {
           const docHexId = uint8ArrayToHex(
             doc.enhancedProvider.toBytes(doc.id),
-          ) as ShortHexGuid;
+          ) as HexString;
 
           // Save journal entry BEFORE modifying the document
           const oldMemberHexIds = doc.memberIDs.map(
-            (mid) =>
-              uint8ArrayToHex(
-                doc.enhancedProvider.toBytes(mid),
-              ) as ShortHexGuid,
+            (mid) => doc.enhancedProvider.toString(mid, 'hex') as HexString,
           );
           const journalEntry: RedistributionJournalEntry = {
             documentId: docHexId,
@@ -684,11 +684,11 @@ export class QuorumStateMachine<
             );
 
             // Build shares map
-            const sharesMap = new Map<ShortHexGuid, string>();
+            const sharesMap = new Map<HexString, string>();
             for (let i = 0; i < newMemberObjects.length; i++) {
               const memberId = uint8ArrayToHex(
                 newMemberObjects[i].idBytes,
-              ) as ShortHexGuid;
+              ) as HexString;
               sharesMap.set(memberId, decryptedShares[i]);
             }
 
@@ -792,7 +792,7 @@ export class QuorumStateMachine<
    * @returns The new QuorumEpoch in Quorum mode
    */
   async createTransitionEpoch(
-    memberIds: ShortHexGuid[],
+    memberIds: TID[],
     threshold: number,
   ): Promise<QuorumEpoch<TID>> {
     return this.createNextEpoch(
@@ -822,17 +822,17 @@ export class QuorumStateMachine<
     this.ensureInitialized();
     this.ensureNotTransitioning();
 
-    const hexId = uint8ArrayToHex(member.idBytes) as ShortHexGuid;
+    const hexId = uint8ArrayToHex(member.idBytes) as HexString;
 
     // Check if member already exists
-    const existing = await this.db.getMember(hexId);
+    const existing = await this.db.getMember(member.id);
     if (existing && existing.isActive) {
       throw new QuorumError(QuorumErrorType.MemberAlreadyExists);
     }
 
     // Save the new member
     const quorumMember: IQuorumMember<TID> = {
-      id: hexId,
+      id: member.id,
       publicKey: member.publicKey,
       metadata,
       isActive: true,
@@ -847,7 +847,7 @@ export class QuorumStateMachine<
     const previousMemberIds = this.currentEpochData?.memberIds ?? [];
 
     // Build new member list
-    const newMemberIds = [...previousMemberIds, hexId];
+    const newMemberIds = [...previousMemberIds, member.id];
 
     // Determine mode and threshold for the new epoch
     const newMode =
@@ -875,7 +875,7 @@ export class QuorumStateMachine<
         previousEpochNumber,
         memberCount: newMemberIds.length,
       },
-      hexId,
+      member.id,
     );
 
     // Trigger batched share redistribution for documents in the previous epoch
@@ -963,7 +963,7 @@ export class QuorumStateMachine<
    * @throws QuorumError with MemberNotFound if the member is not in the current epoch
    */
   async removeMember(
-    memberId: ShortHexGuid,
+    memberId: TID,
     redistributionConfig?: Partial<RedistributionConfig>,
   ): Promise<QuorumEpoch<TID>> {
     this.ensureInitialized();
@@ -1166,7 +1166,7 @@ export class QuorumStateMachine<
    * @returns The created Proposal with assigned ID and status
    * @throws QuorumError with MissingAttachment if IDENTITY_DISCLOSURE lacks attachmentCblId
    */
-  async submitProposal(proposal: ProposalInput<TID>): Promise<Proposal<TID>> {
+  async submitProposal(proposal: ProposalInput): Promise<Proposal<TID>> {
     this.ensureInitialized();
     this.ensureNotTransitioning();
 
@@ -1193,7 +1193,7 @@ export class QuorumStateMachine<
     const requiredThreshold = this.getRequiredThreshold(proposal.actionType);
 
     // Assign unique ID and create the full proposal
-    const proposalId = uuidv4() as ShortHexGuid;
+    const proposalId = uuidv4() as unknown as TID;
     const now = new Date();
 
     const fullProposal: Proposal<TID> = {
@@ -1202,7 +1202,7 @@ export class QuorumStateMachine<
       actionType: proposal.actionType,
       actionPayload: proposal.actionPayload,
       proposerMemberId: (proposal.actionPayload['proposerMemberId'] ??
-        this.currentEpochData.memberIds[0]) as ShortHexGuid,
+        this.currentEpochData.memberIds[0]) as TID,
       status: ProposalStatus.Pending,
       requiredThreshold,
       expiresAt: proposal.expiresAt,
@@ -1214,16 +1214,22 @@ export class QuorumStateMachine<
     // Store as pending in the database
     await this.db.saveProposal(fullProposal);
 
-    // Announce via gossip
+    // Announce via gossip (gossip layer uses serialized HexString format)
     const gossipMetadata: QuorumProposalMetadata = {
-      proposalId: fullProposal.id,
+      proposalId: uint8ArrayToHex(
+        this.sealingService['enhancedProvider'].toBytes(fullProposal.id as TID),
+      ) as HexString,
       description: fullProposal.description,
       actionType: fullProposal.actionType,
       actionPayload: JSON.stringify(fullProposal.actionPayload),
-      proposerMemberId: fullProposal.proposerMemberId,
+      proposerMemberId: uint8ArrayToHex(
+        this.sealingService['enhancedProvider'].toBytes(
+          fullProposal.proposerMemberId as TID,
+        ),
+      ) as HexString,
       expiresAt: fullProposal.expiresAt,
       requiredThreshold: fullProposal.requiredThreshold,
-      attachmentCblId: fullProposal.attachmentCblId,
+      attachmentCblId: fullProposal.attachmentCblId as BlockId | undefined,
     };
     await this.gossipService.announceQuorumProposal(gossipMetadata);
 
@@ -1311,10 +1317,18 @@ export class QuorumStateMachine<
     };
     await this.db.saveVote(fullVote);
 
-    // Announce via gossip
+    // Announce via gossip (gossip layer uses serialized HexString format)
     const gossipMetadata: QuorumVoteMetadata = {
-      proposalId: fullVote.proposalId,
-      voterMemberId: fullVote.voterMemberId,
+      proposalId: uint8ArrayToHex(
+        this.sealingService['enhancedProvider'].toBytes(
+          fullVote.proposalId as TID,
+        ),
+      ) as HexString,
+      voterMemberId: uint8ArrayToHex(
+        this.sealingService['enhancedProvider'].toBytes(
+          fullVote.voterMemberId as TID,
+        ),
+      ) as HexString,
       decision: fullVote.decision,
       comment: fullVote.comment,
     };
@@ -1568,7 +1582,7 @@ export class QuorumStateMachine<
     // Check if the identity record still exists (not expired/deleted)
     if (targetRecordId) {
       const record = await this.db.getIdentityRecord(
-        targetRecordId as ShortHexGuid,
+        targetRecordId as unknown as TID,
       );
       if (!record) {
         // Identity has been permanently deleted by expiration scheduler
@@ -1617,7 +1631,7 @@ export class QuorumStateMachine<
       );
       await this.aliasRegistry.registerAlias(
         aliasName,
-        ownerMemberId as ShortHexGuid,
+        ownerMemberId as HexString,
         ownerPublicKey,
       );
     }
@@ -1659,7 +1673,7 @@ export class QuorumStateMachine<
 
     if (targetRecordId && newExpiresAt) {
       const record = await this.db.getIdentityRecord(
-        targetRecordId as ShortHexGuid,
+        targetRecordId as unknown as TID,
       );
       if (record) {
         const updatedRecord = {
@@ -1686,7 +1700,7 @@ export class QuorumStateMachine<
   ): Promise<void> {
     const innerQuorumMemberIds = proposal.actionPayload[
       'innerQuorumMemberIds'
-    ] as ShortHexGuid[] | undefined;
+    ] as TID[] | undefined;
 
     if (this.currentEpochData && innerQuorumMemberIds) {
       // Create a new epoch with the updated inner quorum
@@ -1725,7 +1739,7 @@ export class QuorumStateMachine<
   /**
    * Get a proposal by its ID.
    */
-  async getProposal(proposalId: ShortHexGuid): Promise<Proposal<TID> | null> {
+  async getProposal(proposalId: TID): Promise<Proposal<TID> | null> {
     this.ensureInitialized();
     return this.db.getProposal(proposalId);
   }
@@ -1742,7 +1756,7 @@ export class QuorumStateMachine<
   async sealDocument<T>(
     agent: Member<TID>,
     document: T,
-    memberIds: ShortHexGuid[],
+    memberIds: TID[],
     sharesRequired?: number,
   ): Promise<SealedDocumentResult<TID>> {
     this.ensureInitialized();
@@ -1756,14 +1770,20 @@ export class QuorumStateMachine<
 
     // Resolve members from the active member list
     const activeMembers = await this.db.listActiveMembers();
-    const memberMap = new Map<ShortHexGuid, IQuorumMember<TID>>();
+    const memberMap = new Map<string, IQuorumMember<TID>>();
     for (const m of activeMembers) {
-      memberMap.set(m.id, m);
+      const key = uint8ArrayToHex(
+        this.sealingService['enhancedProvider'].toBytes(m.id),
+      );
+      memberMap.set(key, m);
     }
 
     // Validate all requested member IDs exist
     for (const mid of memberIds) {
-      if (!memberMap.has(mid)) {
+      const key = uint8ArrayToHex(
+        this.sealingService['enhancedProvider'].toBytes(mid),
+      );
+      if (!memberMap.has(key)) {
         throw new QuorumError(QuorumErrorType.MemberNotFound);
       }
     }
@@ -1774,9 +1794,14 @@ export class QuorumStateMachine<
       : (sharesRequired ?? this.currentEpochData.threshold);
 
     // Resolve full Member objects for the requested member IDs
-    const sealMembers = memberIds
-      .map((mid) => memberMap.get(mid))
-      .filter((m): m is IQuorumMember<TID> => m !== undefined);
+    const sealMembers: IQuorumMember<TID>[] = [];
+    for (const mid of memberIds) {
+      const key = uint8ArrayToHex(
+        this.sealingService['enhancedProvider'].toBytes(mid),
+      );
+      const m = memberMap.get(key);
+      if (m) sealMembers.push(m);
+    }
     const resolvedMembers = this.resolveMembersFromRecords(sealMembers);
 
     // Delegate to SealingService
@@ -1797,15 +1822,11 @@ export class QuorumStateMachine<
       );
     }
 
-    const docHexId = uint8ArrayToHex(
-      sealedDoc.enhancedProvider.toBytes(sealedDoc.id),
-    ) as ShortHexGuid;
-
     // Save to database
     await this.db.saveDocument(sealedDoc);
 
     return {
-      documentId: docHexId,
+      documentId: sealedDoc.id,
       encryptedData: sealedDoc.encryptedData,
       memberIds,
       sharesRequired: sealedDoc.sharesRequired,
@@ -1821,7 +1842,7 @@ export class QuorumStateMachine<
    * Returns generic error on failure without revealing which check failed (Req 8.4-8.6).
    */
   async unsealDocument<T>(
-    documentId: ShortHexGuid,
+    documentId: TID,
     membersWithPrivateKey: Member<TID>[],
   ): Promise<T> {
     this.ensureInitialized();

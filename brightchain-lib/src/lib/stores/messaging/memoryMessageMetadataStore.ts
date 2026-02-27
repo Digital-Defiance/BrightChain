@@ -1,6 +1,7 @@
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { StoreErrorType } from '../../enumerations/storeErrorType';
 import { StoreError } from '../../errors/storeError';
+import type { BlockId } from '../../interfaces/branded/primitives/blockId';
 import { IMessageMetadata } from '../../interfaces/messaging/messageMetadata';
 import {
   IMessageMetadataStore,
@@ -73,7 +74,7 @@ export class MemoryMessageMetadataStore
 
     meta.deliveryStatus.set(recipientId, status);
     // Also update the base metadata store
-    await this.update(messageId, meta);
+    await this.update(messageId as BlockId, meta);
   }
 
   async recordAcknowledgment(
@@ -90,7 +91,7 @@ export class MemoryMessageMetadataStore
     meta.acknowledgments.set(recipientId, timestamp);
     meta.deliveryStatus.set(recipientId, DeliveryStatus.Delivered);
     // Also update the base metadata store
-    await this.update(messageId, meta);
+    await this.update(messageId as BlockId, meta);
   }
 
   async getMessagesByRecipient(

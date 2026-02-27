@@ -1,6 +1,7 @@
 import { ReplicationStatus } from '../enumerations/replicationStatus';
 import { StoreErrorType } from '../enumerations/storeErrorType';
 import { StoreError } from '../errors/storeError';
+import type { BlockId } from '../interfaces/branded/primitives/blockId';
 import { IBlockMetadata } from '../interfaces/storage/blockMetadata';
 import { IBlockMetadataStore } from '../interfaces/storage/blockMetadataStore';
 
@@ -38,7 +39,7 @@ export class MemoryBlockMetadataStore implements IBlockMetadataStore {
    * @param blockId - The unique identifier of the block
    * @returns The block's metadata, or null if not found
    */
-  public async get(blockId: string): Promise<IBlockMetadata | null> {
+  public async get(blockId: BlockId): Promise<IBlockMetadata | null> {
     const meta = this.metadata.get(blockId);
     if (!meta) {
       return null;
@@ -54,7 +55,7 @@ export class MemoryBlockMetadataStore implements IBlockMetadataStore {
    * @throws StoreError if no metadata exists for this blockId
    */
   public async update(
-    blockId: string,
+    blockId: BlockId,
     updates: Partial<IBlockMetadata>,
   ): Promise<void> {
     const existing = this.metadata.get(blockId);
@@ -79,7 +80,7 @@ export class MemoryBlockMetadataStore implements IBlockMetadataStore {
    * @param blockId - The unique identifier of the block
    * @throws StoreError if no metadata exists for this blockId
    */
-  public async delete(blockId: string): Promise<void> {
+  public async delete(blockId: BlockId): Promise<void> {
     if (!this.metadata.has(blockId)) {
       throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
         KEY: blockId,
@@ -129,7 +130,7 @@ export class MemoryBlockMetadataStore implements IBlockMetadataStore {
    * @param blockId - The unique identifier of the block
    * @throws StoreError if no metadata exists for this blockId
    */
-  public async recordAccess(blockId: string): Promise<void> {
+  public async recordAccess(blockId: BlockId): Promise<void> {
     const existing = this.metadata.get(blockId);
     if (!existing) {
       throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
@@ -164,7 +165,7 @@ export class MemoryBlockMetadataStore implements IBlockMetadataStore {
    * @param blockId - The unique identifier of the block
    * @returns True if metadata exists
    */
-  public has(blockId: string): boolean {
+  public has(blockId: BlockId | string): boolean {
     return this.metadata.has(blockId);
   }
 

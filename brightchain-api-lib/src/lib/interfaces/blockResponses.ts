@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { IBlockMetadata } from '@brightchain/brightchain-lib';
+import { type BlockId, IBlockMetadata } from '@brightchain/brightchain-lib';
 
 export interface IGetBlockResponse {
-  blockId: string;
+  blockId: BlockId;
   data: Buffer;
   canRead: boolean;
   canPersist: boolean;
@@ -11,27 +11,27 @@ export interface IGetBlockResponse {
 }
 
 export interface IStoreBlockResponse {
-  blockId: string;
+  blockId: BlockId;
   success: boolean;
   metadata?: IBlockMetadata;
   [key: string]: any; // Add index signature for ApiResponse compatibility
 }
 
 export interface IGetBlockMetadataResponse {
-  blockId: string;
+  blockId: BlockId;
   metadata: IBlockMetadata;
   [key: string]: any; // Add index signature for ApiResponse compatibility
 }
 
 export interface IDeleteBlockResponse {
-  blockId: string;
+  blockId: BlockId;
   success: boolean;
   [key: string]: any; // Add index signature for ApiResponse compatibility
 }
 
 export interface IBrightenBlockResponse {
-  brightenedBlockId: string;
-  randomBlockIds: string[];
-  originalBlockId: string;
+  brightenedBlockId: BlockId;
+  randomBlockIds: BlockId[];
+  originalBlockId: BlockId;
   [key: string]: any; // Add index signature for ApiResponse compatibility
 }

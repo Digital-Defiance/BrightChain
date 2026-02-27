@@ -54,14 +54,14 @@ export const memberHydrationSchema = <
     const votingPublicKeyHex = hydrated.votingPublicKey?.n?.toString(16) || '0';
     const provider = ServiceProvider.getInstance<TID>().idProvider;
 
-    // Handle ID conversion - use toBytes + uint8ArrayToHex for consistent hex format
+    // Handle ID conversion - use provider.toString for consistent hex format
     let idString: string;
     if (typeof hydrated.id === 'string') {
       idString = hydrated.id;
     } else if (hydrated.id instanceof Uint8Array) {
       idString = uint8ArrayToHex(hydrated.id);
     } else {
-      idString = uint8ArrayToHex(provider.toBytes(hydrated.id));
+      idString = provider.toString(hydrated.id, 'hex');
     }
 
     let creatorIdString: string;
@@ -72,7 +72,7 @@ export const memberHydrationSchema = <
     } else if (hydrated.creatorId instanceof Uint8Array) {
       creatorIdString = uint8ArrayToHex(hydrated.creatorId);
     } else {
-      creatorIdString = uint8ArrayToHex(provider.toBytes(hydrated.creatorId));
+      creatorIdString = provider.toString(hydrated.creatorId, 'hex');
     }
 
     return {
