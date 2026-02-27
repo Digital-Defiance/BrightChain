@@ -1,3 +1,5 @@
+import type { PlatformID } from '@digitaldefiance/ecies-lib';
+
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { MessagePriority } from '../../enumerations/messaging/messagePriority';
 import { IBlockMetadataStore } from '../storage/blockMetadataStore';
@@ -20,11 +22,14 @@ export interface MessageQueryOptions {
 /**
  * Message query parameters for filtering messages.
  *
+ * @template TID - Platform ID type for frontend/backend DTO compatibility.
+ *   Defaults to `string` for backward compatibility.
+ *
  * @see Requirements 9.1, 9.2, 9.3, 9.4
  */
-export interface MessageQuery {
-  recipientId?: string;
-  senderId?: string;
+export interface MessageQuery<TID extends PlatformID = string> {
+  recipientId?: TID;
+  senderId?: TID;
   messageType?: string;
   startDate?: Date;
   endDate?: Date;
@@ -40,21 +45,26 @@ export interface MessageQuery {
  * Extends IBlockMetadataStore with message-specific operations for
  * storing, querying, and tracking message delivery status.
  *
+ * @template TID - Platform ID type for frontend/backend DTO compatibility.
+ *   Defaults to `string` for backward compatibility.
+ *
  * @see Requirements 1.3, 9.1, 9.2, 9.3, 9.4, 10.2
  */
-export interface IMessageMetadataStore extends IBlockMetadataStore {
+export interface IMessageMetadataStore<
+  TID extends PlatformID = string,
+> extends IBlockMetadataStore {
   /**
    * Store message metadata.
    * @param metadata - Message metadata to store
    */
-  storeMessageMetadata(metadata: IMessageMetadata): Promise<void>;
+  storeMessageMetadata(metadata: IMessageMetadata<TID>): Promise<void>;
 
   /**
    * Query messages by various criteria.
    * @param query - Query parameters
    * @returns Array of matching message metadata
    */
-  queryMessages(query: MessageQuery): Promise<IMessageMetadata[]>;
+  queryMessages(query: MessageQuery<TID>): Promise<IMessageMetadata<TID>[]>;
 
   /**
    * Update delivery status for a recipient.
@@ -64,7 +74,7 @@ export interface IMessageMetadataStore extends IBlockMetadataStore {
    */
   updateDeliveryStatus(
     messageId: string,
-    recipientId: string,
+    recipientId: TID,
     status: DeliveryStatus,
   ): Promise<void>;
 
@@ -76,7 +86,7 @@ export interface IMessageMetadataStore extends IBlockMetadataStore {
    */
   recordAcknowledgment(
     messageId: string,
-    recipientId: string,
+    recipientId: TID,
     timestamp: Date,
   ): Promise<void>;
 
@@ -87,9 +97,9 @@ export interface IMessageMetadataStore extends IBlockMetadataStore {
    * @returns Array of message metadata for the recipient
    */
   getMessagesByRecipient(
-    recipientId: string,
+    recipientId: TID,
     options?: MessageQueryOptions,
-  ): Promise<IMessageMetadata[]>;
+  ): Promise<IMessageMetadata<TID>[]>;
 
   /**
    * Get messages by sender.
@@ -98,7 +108,7 @@ export interface IMessageMetadataStore extends IBlockMetadataStore {
    * @returns Array of message metadata from the sender
    */
   getMessagesBySender(
-    senderId: string,
+    senderId: TID,
     options?: MessageQueryOptions,
-  ): Promise<IMessageMetadata[]>;
+  ): Promise<IMessageMetadata<TID>[]>;
 }

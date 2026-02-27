@@ -1,8 +1,8 @@
 import {
   ECIESService,
+  HexString,
   Member,
   PlatformID,
-  ShortHexGuid,
   TypedIdProviderWrapper,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
@@ -37,16 +37,13 @@ export class QuorumService<
 
   // In-memory stores for members and documents
   // Subclasses can override with persistent storage
-  protected readonly members: SimpleStore<ShortHexGuid, IQuorumMember<TID>>;
-  protected readonly membersByMember: SimpleStore<ShortHexGuid, Member<TID>>;
-  protected readonly documents: SimpleStore<
-    ShortHexGuid,
-    QuorumDataRecord<TID>
-  >;
+  protected readonly members: SimpleStore<HexString, IQuorumMember<TID>>;
+  protected readonly membersByMember: SimpleStore<HexString, Member<TID>>;
+  protected readonly documents: SimpleStore<HexString, QuorumDataRecord<TID>>;
 
   // Track IDs for iteration (SimpleStore doesn't support iteration)
-  protected readonly memberIds: Set<ShortHexGuid> = new Set();
-  protected readonly documentIds: Set<ShortHexGuid> = new Set();
+  protected readonly memberIds: Set<HexString> = new Set();
+  protected readonly documentIds: Set<HexString> = new Set();
 
   constructor(
     idProvider?: TypedIdProviderWrapper<TID>,
@@ -61,18 +58,16 @@ export class QuorumService<
       this.eciesService,
       this.enhancedProvider,
     );
-    this.members = new SimpleStore<ShortHexGuid, IQuorumMember<TID>>();
-    this.membersByMember = new SimpleStore<ShortHexGuid, Member<TID>>();
-    this.documents = new SimpleStore<ShortHexGuid, QuorumDataRecord<TID>>();
+    this.members = new SimpleStore<HexString, IQuorumMember<TID>>();
+    this.membersByMember = new SimpleStore<HexString, Member<TID>>();
+    this.documents = new SimpleStore<HexString, QuorumDataRecord<TID>>();
   }
 
   /**
-   * Convert a member ID to hex string format
+   * Convert a TID to hex string format for internal storage keys
    */
-  protected memberIdToHex(memberId: TID): ShortHexGuid {
-    return uint8ArrayToHex(
-      this.enhancedProvider.toBytes(memberId),
-    ) as ShortHexGuid;
+  protected tidToHex(id: TID): HexString {
+    return this.enhancedProvider.toString(id, 'hex') as HexString;
   }
 
   // === Member Management ===
@@ -83,11 +78,11 @@ export class QuorumService<
   ): Promise<IQuorumMember<TID>> {
     // Use member.idBytes directly instead of converting through provider
     // This ensures we get the correct bytes regardless of provider configuration
-    const hexId = uint8ArrayToHex(member.idBytes) as ShortHexGuid;
+    const hexId = uint8ArrayToHex(member.idBytes) as HexString;
     const now = new Date();
 
     const quorumMember: IQuorumMember<TID> = {
-      id: hexId,
+      id: member.id,
       publicKey: member.publicKey,
       metadata,
       isActive: true,
@@ -102,33 +97,37 @@ export class QuorumService<
     return quorumMember;
   }
 
-  async removeMember(memberId: ShortHexGuid): Promise<void> {
-    if (!this.members.has(memberId)) {
+  async removeMember(memberId: TID): Promise<void> {
+    const hexId = this.tidToHex(memberId);
+    if (!this.members.has(hexId)) {
       throw new QuorumError(QuorumErrorType.MemberNotFound);
     }
 
     // Get the member and mark as inactive rather than deleting
     // This preserves their ability to participate in existing documents
-    const member = this.members.get(memberId);
+    const member = this.members.get(hexId);
     member.isActive = false;
     member.updatedAt = new Date();
-    this.members.set(memberId, member);
+    this.members.set(hexId, member);
     // Note: We don't remove from memberIds because the member still exists
   }
 
-  async getMember(memberId: ShortHexGuid): Promise<IQuorumMember<TID> | null> {
-    if (!this.members.has(memberId)) {
+  async getMember(memberId: TID): Promise<IQuorumMember<TID> | null> {
+    const hexId = this.tidToHex(memberId);
+    if (!this.members.has(hexId)) {
       return null;
     }
-    return this.members.get(memberId);
+    return this.members.get(hexId);
   }
 
   async listMembers(): Promise<IQuorumMember<TID>[]> {
     const result: IQuorumMember<TID>[] = [];
-    for (const memberId of this.memberIds) {
-      const member = await this.getMember(memberId);
-      if (member && member.isActive) {
-        result.push(member);
+    for (const hexId of this.memberIds) {
+      if (this.members.has(hexId)) {
+        const member = this.members.get(hexId);
+        if (member && member.isActive) {
+          result.push(member);
+        }
       }
     }
     return result;
@@ -139,7 +138,7 @@ export class QuorumService<
   async sealDocument<T>(
     agent: Member<TID>,
     document: T,
-    memberIds: ShortHexGuid[],
+    memberIds: TID[],
     sharesRequired?: number,
   ): Promise<SealedDocumentResult<TID>> {
     // Validate member count
@@ -150,10 +149,11 @@ export class QuorumService<
     // Get Member objects for the specified IDs
     const members: Member<TID>[] = [];
     for (const memberId of memberIds) {
-      if (!this.membersByMember.has(memberId)) {
+      const hexId = this.tidToHex(memberId);
+      if (!this.membersByMember.has(hexId)) {
         throw new QuorumError(QuorumErrorType.MemberNotFound);
       }
-      members.push(this.membersByMember.get(memberId));
+      members.push(this.membersByMember.get(hexId));
     }
 
     // Seal the document using the sealing service
@@ -166,14 +166,15 @@ export class QuorumService<
 
     // Store the sealed document
     // Use the document's own enhancedProvider to convert the ID to bytes
-    const docHexId = uint8ArrayToHex(
-      sealedDoc.enhancedProvider.toBytes(sealedDoc.id),
-    ) as ShortHexGuid;
+    const docHexId = this.enhancedProvider.toString(
+      sealedDoc.id,
+      'hex',
+    ) as HexString;
     this.documents.set(docHexId, sealedDoc);
     this.documentIds.add(docHexId);
 
     return {
-      documentId: docHexId,
+      documentId: sealedDoc.id,
       encryptedData: sealedDoc.encryptedData,
       memberIds,
       sharesRequired: sealedDoc.sharesRequired,
@@ -184,14 +185,15 @@ export class QuorumService<
   // === Document Unsealing ===
 
   async unsealDocument<T>(
-    documentId: ShortHexGuid,
+    documentId: TID,
     membersWithPrivateKey: Member<TID>[],
   ): Promise<T> {
-    if (!this.documents.has(documentId)) {
+    const hexId = this.tidToHex(documentId);
+    if (!this.documents.has(hexId)) {
       throw new QuorumError(QuorumErrorType.DocumentNotFound);
     }
 
-    const doc = this.documents.get(documentId);
+    const doc = this.documents.get(hexId);
 
     // Unseal using the sealing service
     return await this.sealingService.quorumUnseal<T>(
@@ -202,74 +204,98 @@ export class QuorumService<
 
   // === Document Management ===
 
-  async getDocument(
-    documentId: ShortHexGuid,
-  ): Promise<QuorumDocumentInfo | null> {
-    if (!this.documents.has(documentId)) {
+  async getDocument(documentId: TID): Promise<QuorumDocumentInfo<TID> | null> {
+    const hexId = this.tidToHex(documentId);
+    if (!this.documents.has(hexId)) {
       return null;
     }
 
-    const doc = this.documents.get(documentId);
-    const creatorHexId = uint8ArrayToHex(
-      this.enhancedProvider.toBytes(doc.creator.id),
-    ) as ShortHexGuid;
+    const doc = this.documents.get(hexId);
 
     return {
-      id: documentId,
-      memberIds: doc.memberIDs.map(
-        (id) =>
-          uint8ArrayToHex(this.enhancedProvider.toBytes(id)) as ShortHexGuid,
-      ),
+      id: doc.id,
+      memberIds: doc.memberIDs,
       sharesRequired: doc.sharesRequired,
       createdAt: doc.dateCreated,
-      creatorId: creatorHexId,
+      creatorId: doc.creator.id,
     };
   }
 
-  async listDocuments(memberId?: ShortHexGuid): Promise<QuorumDocumentInfo[]> {
-    const result: QuorumDocumentInfo[] = [];
-    for (const docId of this.documentIds) {
-      const doc = await this.getDocument(docId);
-      if (doc) {
+  async listDocuments(memberId?: TID): Promise<QuorumDocumentInfo<TID>[]> {
+    const result: QuorumDocumentInfo<TID>[] = [];
+    const memberHexId = memberId ? this.tidToHex(memberId) : undefined;
+    for (const docHexId of this.documentIds) {
+      if (this.documents.has(docHexId)) {
+        const doc = this.documents.get(docHexId);
         // Filter by member if specified
-        if (!memberId || doc.memberIds.includes(memberId)) {
-          result.push(doc);
+        if (!memberHexId) {
+          result.push({
+            id: doc.id,
+            memberIds: doc.memberIDs,
+            sharesRequired: doc.sharesRequired,
+            createdAt: doc.dateCreated,
+            creatorId: doc.creator.id,
+          });
+        } else {
+          const docMemberHexIds = doc.memberIDs.map(
+            (id) => this.enhancedProvider.toString(id, 'hex') as HexString,
+          );
+          if (docMemberHexIds.includes(memberHexId)) {
+            result.push({
+              id: doc.id,
+              memberIds: doc.memberIDs,
+              sharesRequired: doc.sharesRequired,
+              createdAt: doc.dateCreated,
+              creatorId: doc.creator.id,
+            });
+          }
         }
       }
     }
     return result;
   }
 
-  async deleteDocument(documentId: ShortHexGuid): Promise<void> {
-    if (!this.documents.has(documentId)) {
+  async deleteDocument(documentId: TID): Promise<void> {
+    const hexId = this.tidToHex(documentId);
+    if (!this.documents.has(hexId)) {
       throw new QuorumError(QuorumErrorType.DocumentNotFound);
     }
 
     // Remove from tracking - the document remains in SimpleStore but won't be listed
-    this.documentIds.delete(documentId);
+    this.documentIds.delete(hexId);
   }
 
   async canUnlock(
-    documentId: ShortHexGuid,
-    memberIds: ShortHexGuid[],
-  ): Promise<CanUnlockResult> {
-    if (!this.documents.has(documentId)) {
+    documentId: TID,
+    memberIds: TID[],
+  ): Promise<CanUnlockResult<TID>> {
+    const hexId = this.tidToHex(documentId);
+    if (!this.documents.has(hexId)) {
       throw new QuorumError(QuorumErrorType.DocumentNotFound);
     }
 
-    const doc = this.documents.get(documentId);
-    const docMemberIds = doc.memberIDs.map(
-      (id) =>
-        uint8ArrayToHex(this.enhancedProvider.toBytes(id)) as ShortHexGuid,
+    const doc = this.documents.get(hexId);
+    const docMemberHexIds = doc.memberIDs.map(
+      (id) => this.enhancedProvider.toString(id, 'hex') as HexString,
     );
 
+    // Convert provided memberIds to hex for comparison
+    const providedHexIds = memberIds.map((id) => this.tidToHex(id));
+
     // Find which provided members are actually in the document
-    const validMemberIds = memberIds.filter((id) => docMemberIds.includes(id));
-    const missingMembers = docMemberIds.filter((id) => !memberIds.includes(id));
+    const validCount = providedHexIds.filter((id) =>
+      docMemberHexIds.includes(id),
+    ).length;
+
+    // Find missing members (doc members not in provided list)
+    const missingMembers = doc.memberIDs.filter((id) => {
+      const hex = this.enhancedProvider.toString(id, 'hex') as HexString;
+      return !providedHexIds.includes(hex);
+    });
 
     return {
-      canUnlock: validMemberIds.length >= doc.sharesRequired,
-      sharesProvided: validMemberIds.length,
+      canUnlock: validCount >= doc.sharesRequired,
+      sharesProvided: validCount,
       sharesRequired: doc.sharesRequired,
       missingMembers,
     };

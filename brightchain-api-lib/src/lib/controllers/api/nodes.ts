@@ -5,14 +5,15 @@ import {
   ILocationRecord,
   INodeInfo,
   NodeStatus,
+  type BlockId,
 } from '@brightchain/brightchain-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   ApiErrorResponse,
   ApiRequestHandler,
-  TypedHandlers,
   routeConfig,
+  TypedHandlers,
 } from '@digitaldefiance/node-express-suite';
 import {
   IDiscoverBlockRequest,
@@ -401,8 +402,9 @@ export class NodesController<
       }
 
       const discoveryProtocol = this.getDiscoveryProtocol();
-      const result: DiscoveryResult =
-        await discoveryProtocol.discoverBlock(blockId);
+      const result: DiscoveryResult = await discoveryProtocol.discoverBlock(
+        blockId as unknown as BlockId,
+      );
 
       // Convert locations to response format
       const locations = result.locations.map((loc: ILocationRecord) => ({

@@ -8,7 +8,7 @@
  * @see Requirements 14
  */
 
-import { PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString, PlatformID } from '@digitaldefiance/ecies-lib';
 import { ContentWithIdentity, IdentityMode } from '../contentWithIdentity';
 
 /**
@@ -19,7 +19,7 @@ export interface IdentitySealingResult<TID extends PlatformID = Uint8Array> {
   /** Content with identity field replaced according to the selected mode */
   modifiedContent: ContentWithIdentity<TID>;
   /** ID of the stored identity recovery record */
-  recoveryRecordId: ShortHexGuid;
+  recoveryRecordId: HexString;
 }
 
 /**
@@ -60,7 +60,7 @@ export interface IIdentitySealingPipeline<TID extends PlatformID = Uint8Array> {
    * @throws QuorumError with InsufficientSharesForReconstruction if not enough shares
    */
   recoverIdentity(
-    recoveryRecordId: ShortHexGuid,
-    decryptedShares: Map<ShortHexGuid, string>,
+    recoveryRecordId: HexString,
+    decryptedShares: Map<HexString, string>,
   ): Promise<TID>;
 }

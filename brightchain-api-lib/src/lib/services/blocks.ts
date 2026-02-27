@@ -1,4 +1,5 @@
 import {
+  type BlockId,
   BlockStoreOptions,
   BrightenResult,
   IBlockMetadata,
@@ -31,30 +32,31 @@ export class BlocksService<TID extends PlatformID = DefaultBackendIdType>
     _canRead: boolean = true,
     _canPersist: boolean = true,
     options?: BlockStoreOptions,
-  ): Promise<{ blockId: string; metadata?: IBlockMetadata }> {
-    const blockId = await this.blockStore.storeBlock(dataBuffer, options);
-    const metadata = await this.blockStore.getBlockMetadata(blockId);
+  ): Promise<{ blockId: BlockId; metadata?: IBlockMetadata }> {
+    const blockIdStr = await this.blockStore.storeBlock(dataBuffer, options);
+    const blockId = blockIdStr as unknown as BlockId;
+    const metadata = await this.blockStore.getBlockMetadata(blockIdStr);
     return { blockId, metadata: metadata ?? undefined };
   }
 
   async getBlock(
-    blockId: string,
+    blockId: BlockId,
   ): Promise<{ data: Buffer; metadata?: IBlockMetadata }> {
     const data = await this.blockStore.getBlock(blockId);
     const metadata = await this.blockStore.getBlockMetadata(blockId);
     return { data, metadata: metadata ?? undefined };
   }
 
-  async getBlockMetadata(blockId: string): Promise<IBlockMetadata | null> {
+  async getBlockMetadata(blockId: BlockId): Promise<IBlockMetadata | null> {
     return this.blockStore.getBlockMetadata(blockId);
   }
 
-  async deleteBlock(blockId: string): Promise<void> {
+  async deleteBlock(blockId: BlockId): Promise<void> {
     return this.blockStore.deleteBlock(blockId);
   }
 
   async brightenBlock(
-    blockId: string,
+    blockId: BlockId,
     randomBlockCount: number,
   ): Promise<BrightenResult> {
     return this.blockStore.brightenBlock(blockId, randomBlockCount);

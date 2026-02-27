@@ -14,9 +14,7 @@ import {
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
-import { v4 as uuidv4 } from 'uuid';
 import { initializeBrightChain } from '../init';
 import { QuorumAuditLogEntry } from '../interfaces/auditLogEntry';
 import { ChainedAuditLogEntry } from '../interfaces/chainedAuditLogEntry';
@@ -35,9 +33,9 @@ jest.setTimeout(30000);
  * Creates a mock IQuorumDatabase that tracks chained audit entries in memory.
  */
 function createAuditMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
-  chainedEntries: ChainedAuditLogEntry[];
+  chainedEntries: ChainedAuditLogEntry<GuidV4Uint8Array>[];
 } {
-  const chainedEntries: ChainedAuditLogEntry[] = [];
+  const chainedEntries: ChainedAuditLogEntry<GuidV4Uint8Array>[] = [];
 
   const noop = async () => {};
   const nullAsync = async () => null;
@@ -45,15 +43,17 @@ function createAuditMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
   return {
     chainedEntries,
     appendAuditEntry: jest.fn(async (entry: QuorumAuditLogEntry) => {
-      const chained = entry as ChainedAuditLogEntry;
+      const chained = entry as ChainedAuditLogEntry<GuidV4Uint8Array>;
       if (chained.contentHash !== undefined) {
         chainedEntries.push(chained);
       }
     }),
-    getLatestAuditEntry: jest.fn(async () => {
-      if (chainedEntries.length === 0) return null;
-      return chainedEntries[chainedEntries.length - 1];
-    }),
+    getLatestAuditEntry: jest.fn(
+      async (): Promise<ChainedAuditLogEntry<GuidV4Uint8Array> | null> => {
+        if (chainedEntries.length === 0) return null;
+        return chainedEntries[chainedEntries.length - 1];
+      },
+    ),
     saveEpoch: jest.fn(noop),
     getEpoch: jest.fn(nullAsync),
     getCurrentEpoch: jest.fn(async () => {
@@ -89,10 +89,10 @@ function createAuditMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
 }
 
 function makeEntry(
-  eventType: QuorumAuditLogEntry['eventType'] = 'epoch_created',
-): QuorumAuditLogEntry {
+  eventType: QuorumAuditLogEntry<GuidV4Uint8Array>['eventType'] = 'epoch_created',
+): QuorumAuditLogEntry<GuidV4Uint8Array> {
   return {
-    id: uuidv4() as ShortHexGuid,
+    id: ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider.generateTyped(),
     eventType,
     details: { test: true },
     timestamp: new Date(),
@@ -200,8 +200,10 @@ describe('AuditLogService', () => {
         storeCBLWithWhitening: jest.fn(async (data: Uint8Array) => {
           storedData.push(data);
           return {
-            blockId1: 'block1-abc',
-            blockId2: 'block2-def',
+            blockId1:
+              'block1-abc' as unknown as import('../interfaces/branded/primitives/blockId').BlockId,
+            blockId2:
+              'block2-def' as unknown as import('../interfaces/branded/primitives/blockId').BlockId,
             blockSize: 256,
             magnetUrl: 'magnet:?test',
           };
@@ -232,7 +234,7 @@ describe('AuditLogService', () => {
         eciesService,
       );
 
-      const entries: ChainedAuditLogEntry[] = [];
+      const entries: ChainedAuditLogEntry<GuidV4Uint8Array>[] = [];
       const eventTypes: QuorumAuditLogEntry['eventType'][] = [
         'epoch_created',
         'member_added',
@@ -293,7 +295,7 @@ describe('AuditLogService', () => {
         eciesService,
       );
 
-      const entries: ChainedAuditLogEntry[] = [];
+      const entries: ChainedAuditLogEntry<GuidV4Uint8Array>[] = [];
       for (let i = 0; i < 4; i++) {
         entries.push(await service.appendEntry(makeEntry()));
       }
@@ -314,7 +316,7 @@ describe('AuditLogService', () => {
       );
 
       const chained = await service.appendEntry(makeEntry());
-      const tampered: ChainedAuditLogEntry = {
+      const tampered: ChainedAuditLogEntry<GuidV4Uint8Array> = {
         ...chained,
         contentHash: 'tampered_hash_value',
       };
@@ -336,7 +338,7 @@ describe('AuditLogService', () => {
       const second = await service.appendEntry(makeEntry());
 
       // Break the link
-      const tampered: ChainedAuditLogEntry = {
+      const tampered: ChainedAuditLogEntry<GuidV4Uint8Array> = {
         ...second,
         previousEntryHash: 'wrong_hash',
       };
@@ -355,7 +357,7 @@ describe('AuditLogService', () => {
       );
 
       const chained = await service.appendEntry(makeEntry());
-      const tampered: ChainedAuditLogEntry = {
+      const tampered: ChainedAuditLogEntry<GuidV4Uint8Array> = {
         ...chained,
         previousEntryHash: 'should_be_null',
       };
@@ -391,8 +393,10 @@ describe('AuditLogService', () => {
 
   describe('serializeEntryForHashing', () => {
     it('should produce deterministic output for the same input', () => {
-      const entry: QuorumAuditLogEntry & { previousEntryHash: null } = {
-        id: 'test-id' as ShortHexGuid,
+      const entry: QuorumAuditLogEntry<GuidV4Uint8Array> & {
+        previousEntryHash: null;
+      } = {
+        id: ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider.generateTyped(),
         eventType: 'epoch_created',
         details: { key: 'value' },
         timestamp: new Date('2024-01-01T00:00:00.000Z'),
@@ -405,8 +409,10 @@ describe('AuditLogService', () => {
     });
 
     it('should exclude signature and blockIds from serialization', () => {
-      const entry: QuorumAuditLogEntry & { previousEntryHash: null } = {
-        id: 'test-id' as ShortHexGuid,
+      const entry: QuorumAuditLogEntry<GuidV4Uint8Array> & {
+        previousEntryHash: null;
+      } = {
+        id: ServiceProvider.getInstance<GuidV4Uint8Array>().idProvider.generateTyped(),
         eventType: 'epoch_created',
         details: {},
         timestamp: new Date('2024-01-01T00:00:00.000Z'),
@@ -420,11 +426,14 @@ describe('AuditLogService', () => {
     });
 
     it('should include optional fields when present', () => {
-      const entry: QuorumAuditLogEntry & { previousEntryHash: null } = {
-        id: 'test-id' as ShortHexGuid,
+      const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
+      const entry: QuorumAuditLogEntry<GuidV4Uint8Array> & {
+        previousEntryHash: null;
+      } = {
+        id: sp.idProvider.generateTyped(),
         eventType: 'proposal_created',
-        proposalId: 'prop-123' as ShortHexGuid,
-        targetMemberId: 'member-456' as ShortHexGuid,
+        proposalId: sp.idProvider.generateTyped(),
+        targetMemberId: sp.idProvider.generateTyped(),
         details: {},
         timestamp: new Date('2024-01-01T00:00:00.000Z'),
         previousEntryHash: null,

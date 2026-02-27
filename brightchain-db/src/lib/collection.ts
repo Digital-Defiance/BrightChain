@@ -57,6 +57,9 @@ import {
 } from './types';
 import { applyUpdate, isOperatorUpdate } from './updateEngine';
 
+/** Default ID generator: 32-char hex (UUID without dashes) */
+const defaultIdGenerator = (): string => randomUUID().replace(/-/g, '');
+
 /**
  * Calculate a content-addressable block ID from data.
  * Uses SHA3-512, the same algorithm as BrightChain's ChecksumService,
@@ -119,6 +122,8 @@ export class Collection<T extends BsonDocument = BsonDocument> {
   private ttlTimers = new Map<string, ReturnType<typeof setInterval>>();
   /** Text index config: field name → weight */
   private textIndexFields: Record<string, number> = {};
+  /** ID generator for new documents */
+  private readonly generateId: () => string;
 
   constructor(
     public readonly name: string,
@@ -129,6 +134,7 @@ export class Collection<T extends BsonDocument = BsonDocument> {
   ) {
     if (options?.writeConcern) this.writeConcern = options.writeConcern;
     if (options?.readPreference) this.readPreference = options.readPreference;
+    this.generateId = options?.idGenerator ?? defaultIdGenerator;
   }
 
   /** Set the collection resolver for cross-collection operations */
@@ -236,7 +242,7 @@ export class Collection<T extends BsonDocument = BsonDocument> {
   }
 
   private async writeDoc(doc: T, logicalId?: DocumentId): Promise<T> {
-    const id = logicalId ?? doc._id ?? randomUUID().replace(/-/g, '');
+    const id = logicalId ?? doc._id ?? this.generateId();
     const docWithId = { ...doc, _id: id } as T;
 
     const payload = Buffer.from(JSON.stringify(docWithId), 'utf8');
@@ -315,7 +321,7 @@ export class Collection<T extends BsonDocument = BsonDocument> {
 
     if (options?.session && (options.session as DbSession).inTransaction) {
       const session = options.session as DbSession;
-      const id = doc._id ?? randomUUID().replace(/-/g, '');
+      const id = doc._id ?? this.generateId();
       const docWithId = { ...doc, _id: id } as T;
       const validated = this.validateBeforeWrite(docWithId);
       session.addOp({ type: 'insert', collection: this.name, doc: validated });

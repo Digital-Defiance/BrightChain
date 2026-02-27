@@ -2,7 +2,6 @@ import {
   GuidV4Uint8Array,
   Member,
   PlatformID,
-  ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
 
@@ -20,7 +19,7 @@ export interface QuorumMemberMetadata {
  * @template TID - Platform ID type (string, Uint8Array, or Buffer-based types)
  */
 export interface IQuorumMember<TID extends PlatformID = GuidV4Uint8Array> {
-  id: ShortHexGuid;
+  id: TID;
   publicKey: Uint8Array;
   metadata: QuorumMemberMetadata;
   isActive: boolean;
@@ -28,15 +27,14 @@ export interface IQuorumMember<TID extends PlatformID = GuidV4Uint8Array> {
   status?: MemberStatusType;
   createdAt: Date;
   updatedAt: Date;
-  // Reserved for future use with TID
-  _platformId?: TID;
 }
 
 /**
  * A share provided by a member for unsealing
+ * @template TID - Platform ID type (string, Uint8Array, or Buffer-based types)
  */
-export interface MemberShare {
-  memberId: ShortHexGuid;
+export interface MemberShare<TID extends PlatformID = GuidV4Uint8Array> {
+  memberId: TID;
   decryptedShare: string;
 }
 
@@ -47,34 +45,34 @@ export interface MemberShare {
 export interface SealedDocumentResult<
   TID extends PlatformID = GuidV4Uint8Array,
 > {
-  documentId: ShortHexGuid;
+  documentId: TID;
   encryptedData: Uint8Array;
-  memberIds: ShortHexGuid[];
+  memberIds: TID[];
   sharesRequired: number;
   createdAt: Date;
-  // Reserved for future use with TID
-  _platformId?: TID;
 }
 
 /**
  * Information about a sealed quorum document
+ * @template TID - Platform ID type (string, Uint8Array, or Buffer-based types)
  */
-export interface QuorumDocumentInfo {
-  id: ShortHexGuid;
-  memberIds: ShortHexGuid[];
+export interface QuorumDocumentInfo<TID extends PlatformID = GuidV4Uint8Array> {
+  id: TID;
+  memberIds: TID[];
   sharesRequired: number;
   createdAt: Date;
-  creatorId: ShortHexGuid;
+  creatorId: TID;
 }
 
 /**
  * Result of checking if a document can be unlocked
+ * @template TID - Platform ID type (string, Uint8Array, or Buffer-based types)
  */
-export interface CanUnlockResult {
+export interface CanUnlockResult<TID extends PlatformID = GuidV4Uint8Array> {
   canUnlock: boolean;
   sharesProvided: number;
   sharesRequired: number;
-  missingMembers: ShortHexGuid[];
+  missingMembers: TID[];
 }
 
 /**
@@ -102,14 +100,14 @@ export interface IQuorumService<TID extends PlatformID = GuidV4Uint8Array> {
    * existing documents they are part of.
    * @param memberId - The ID of the member to remove
    */
-  removeMember(memberId: ShortHexGuid): Promise<void>;
+  removeMember(memberId: TID): Promise<void>;
 
   /**
    * Get a member by their ID
    * @param memberId - The ID of the member to retrieve
    * @returns The member record, or null if not found
    */
-  getMember(memberId: ShortHexGuid): Promise<IQuorumMember<TID> | null>;
+  getMember(memberId: TID): Promise<IQuorumMember<TID> | null>;
 
   /**
    * List all active members in the quorum
@@ -130,7 +128,7 @@ export interface IQuorumService<TID extends PlatformID = GuidV4Uint8Array> {
   sealDocument<T>(
     agent: Member<TID>,
     document: T,
-    memberIds: ShortHexGuid[],
+    memberIds: TID[],
     sharesRequired?: number,
   ): Promise<SealedDocumentResult<TID>>;
 
@@ -143,7 +141,7 @@ export interface IQuorumService<TID extends PlatformID = GuidV4Uint8Array> {
    * @returns The unsealed document
    */
   unsealDocument<T>(
-    documentId: ShortHexGuid,
+    documentId: TID,
     membersWithPrivateKey: Member<TID>[],
   ): Promise<T>;
 
@@ -154,20 +152,20 @@ export interface IQuorumService<TID extends PlatformID = GuidV4Uint8Array> {
    * @param documentId - The ID of the document
    * @returns Document information, or null if not found
    */
-  getDocument(documentId: ShortHexGuid): Promise<QuorumDocumentInfo | null>;
+  getDocument(documentId: TID): Promise<QuorumDocumentInfo<TID> | null>;
 
   /**
    * List all documents, optionally filtered by member
    * @param memberId - Optional member ID to filter by
    * @returns Array of document information
    */
-  listDocuments(memberId?: ShortHexGuid): Promise<QuorumDocumentInfo[]>;
+  listDocuments(memberId?: TID): Promise<QuorumDocumentInfo<TID>[]>;
 
   /**
    * Delete a sealed document
    * @param documentId - The ID of the document to delete
    */
-  deleteDocument(documentId: ShortHexGuid): Promise<void>;
+  deleteDocument(documentId: TID): Promise<void>;
 
   /**
    * Check if a set of members can unlock a document
@@ -175,8 +173,5 @@ export interface IQuorumService<TID extends PlatformID = GuidV4Uint8Array> {
    * @param memberIds - IDs of members who would provide shares
    * @returns Result indicating if unlock is possible
    */
-  canUnlock(
-    documentId: ShortHexGuid,
-    memberIds: ShortHexGuid[],
-  ): Promise<CanUnlockResult>;
+  canUnlock(documentId: TID, memberIds: TID[]): Promise<CanUnlockResult<TID>>;
 }

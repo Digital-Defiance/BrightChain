@@ -7,6 +7,7 @@
  * @see Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.7
  */
 
+import type { BlockId } from '@brightchain/brightchain-lib';
 import {
   BlockManifest,
   BloomFilter,
@@ -76,7 +77,7 @@ class BloomFilterWrapper implements BloomFilter {
   /**
    * Check if an item might exist in the filter.
    */
-  mightContain(blockId: string): boolean {
+  mightContain(blockId: BlockId): boolean {
     return this.filter.has(blockId);
   }
 
@@ -177,7 +178,7 @@ export class BlockRegistry implements IBlockRegistry {
    * @param blockId - The block ID to check
    * @returns true if the block exists locally
    */
-  hasLocal(blockId: string): boolean {
+  hasLocal(blockId: BlockId): boolean {
     return this.localBlocks.has(blockId);
   }
 
@@ -187,7 +188,7 @@ export class BlockRegistry implements IBlockRegistry {
    * @param blockId - The block ID to add
    * @param poolId - Optional pool the block belongs to
    */
-  addLocal(blockId: string, poolId?: PoolId): void {
+  addLocal(blockId: BlockId, poolId?: PoolId): void {
     if (!this.localBlocks.has(blockId)) {
       this.localBlocks.add(blockId);
       this.bloomFilterDirty = true;
@@ -209,7 +210,7 @@ export class BlockRegistry implements IBlockRegistry {
    * @param blockId - The block ID to remove
    * @param poolId - Optional pool the block belonged to
    */
-  removeLocal(blockId: string, poolId?: PoolId): void {
+  removeLocal(blockId: BlockId, poolId?: PoolId): void {
     if (!this.localBlocks.has(blockId)) {
       return;
     }
@@ -242,8 +243,8 @@ export class BlockRegistry implements IBlockRegistry {
    *
    * @returns Array of all block IDs in the local registry
    */
-  getLocalBlockIds(): string[] {
-    return Array.from(this.localBlocks);
+  getLocalBlockIds(): BlockId[] {
+    return Array.from(this.localBlocks) as unknown as BlockId[];
   }
 
   /**
@@ -384,15 +385,16 @@ export class BlockRegistry implements IBlockRegistry {
    *
    * @returns Map of poolId to array of block IDs
    */
-  private groupBlocksByPool(): Map<PoolId, string[]> {
-    const pools = new Map<PoolId, string[]>();
+  private groupBlocksByPool(): Map<PoolId, BlockId[]> {
+    const pools = new Map<PoolId, BlockId[]>();
     for (const blockId of this.localBlocks) {
       const poolId = this.blockPoolMap.get(blockId) ?? '__default__';
+      const bid = blockId as unknown as BlockId;
       const list = pools.get(poolId);
       if (list) {
-        list.push(blockId);
+        list.push(bid);
       } else {
-        pools.set(poolId, [blockId]);
+        pools.set(poolId, [bid]);
       }
     }
     return pools;

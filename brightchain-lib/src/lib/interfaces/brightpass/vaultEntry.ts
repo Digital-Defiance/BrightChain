@@ -1,3 +1,5 @@
+import type { BlockId } from '../branded/primitives/blockId';
+
 export type VaultEntryType =
   | 'login'
   | 'secure_note'
@@ -57,6 +59,6 @@ export interface AttachmentReference {
   filename: string;
   mimeType: string;
   sizeBytes: number;
-  blockId: string;
+  blockId: BlockId;
   isCbl: boolean;
 }

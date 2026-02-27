@@ -9,8 +9,9 @@
  * @see Requirements 1.1, 1.2, 1.3, 1.5, 1.6, 10.1 (Unified Gossip Delivery)
  */
 
-import type { ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import type { HexString } from '@digitaldefiance/ecies-lib';
 import { ProposalActionType } from '../../enumerations/proposalActionType';
+import type { BlockId } from '../branded/primitives/blockId';
 import type { ICBLIndexEntry } from '../storage/cblIndex';
 import { PoolId, isValidPoolId } from '../storage/pooledBlockStore';
 
@@ -32,10 +33,10 @@ export interface MessageDeliveryMetadata {
   priority: 'normal' | 'high';
 
   /** Block IDs containing the message content */
-  blockIds: string[];
+  blockIds: BlockId[];
 
   /** The CBL block ID that serves as the manifest for this delivery */
-  cblBlockId: string;
+  cblBlockId: BlockId;
 
   /** Whether the recipient should send a delivery acknowledgment */
   ackRequired: boolean;
@@ -106,7 +107,7 @@ export interface PoolAnnouncementMetadata {
  */
 export interface QuorumProposalMetadata {
   /** Unique identifier for the proposal */
-  proposalId: ShortHexGuid;
+  proposalId: HexString;
 
   /** Human-readable description of the proposal (max 4096 chars) */
   description: string;
@@ -118,7 +119,7 @@ export interface QuorumProposalMetadata {
   actionPayload: string;
 
   /** Member ID of the proposer */
-  proposerMemberId: ShortHexGuid;
+  proposerMemberId: HexString;
 
   /** Timestamp after which the proposal expires */
   expiresAt: Date;
@@ -127,7 +128,7 @@ export interface QuorumProposalMetadata {
   requiredThreshold: number;
 
   /** Optional CBL reference for supporting documentation (e.g., legal orders) */
-  attachmentCblId?: string;
+  attachmentCblId?: BlockId;
 }
 
 /**
@@ -139,10 +140,10 @@ export interface QuorumProposalMetadata {
  */
 export interface QuorumVoteMetadata {
   /** The proposal ID this vote is for */
-  proposalId: ShortHexGuid;
+  proposalId: HexString;
 
   /** Member ID of the voter */
-  voterMemberId: ShortHexGuid;
+  voterMemberId: HexString;
 
   /** The vote decision */
   decision: 'approve' | 'reject';
@@ -196,7 +197,7 @@ export interface BlockAnnouncement {
   /**
    * The block ID being announced (hex string)
    */
-  blockId: string;
+  blockId: BlockId;
 
   /**
    * The node ID that originated this announcement
@@ -264,7 +265,7 @@ export interface BlockAnnouncement {
    *
    * @see Requirements 13.4
    */
-  aclBlockId?: string;
+  aclBlockId?: BlockId;
 
   /**
    * Optional pool announcement metadata for pool lifecycle gossip.
@@ -400,7 +401,7 @@ export interface IGossipService {
    * @returns Promise that resolves when the announcement is queued
    * @see Requirements 6.1, 1.1, 6.3
    */
-  announceBlock(blockId: string, poolId?: PoolId): Promise<void>;
+  announceBlock(blockId: BlockId, poolId?: PoolId): Promise<void>;
 
   /**
    * Announce block removal to the network.
@@ -411,7 +412,7 @@ export interface IGossipService {
    * @returns Promise that resolves when the announcement is queued
    * @see Requirements 6.5, 2.2
    */
-  announceRemoval(blockId: string, poolId?: PoolId): Promise<void>;
+  announceRemoval(blockId: BlockId, poolId?: PoolId): Promise<void>;
 
   /**
    * Announce that a pool has been deleted.
@@ -457,7 +458,7 @@ export interface IGossipService {
   announceHeadUpdate(
     dbName: string,
     collectionName: string,
-    blockId: string,
+    blockId: BlockId,
   ): Promise<void>;
 
   /**
@@ -470,7 +471,7 @@ export interface IGossipService {
    * @returns Promise that resolves when the announcement is queued
    * @see Requirements 13.4
    */
-  announceACLUpdate(poolId: string, aclBlockId: string): Promise<void>;
+  announceACLUpdate(poolId: string, aclBlockId: BlockId): Promise<void>;
 
   /**
    * Handle an incoming block announcement from a peer.
@@ -544,7 +545,7 @@ export interface IGossipService {
    * @see Requirements 3.1 (message-aware gossip delivery)
    */
   announceMessage(
-    blockIds: string[],
+    blockIds: BlockId[],
     metadata: MessageDeliveryMetadata,
   ): Promise<void>;
 

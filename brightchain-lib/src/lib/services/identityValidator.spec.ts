@@ -11,10 +11,10 @@ import {
   ECIESService,
   EmailString,
   GuidV4Uint8Array,
+  HexString,
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
@@ -53,9 +53,9 @@ function computeContentDigest(
  * Create a mock database with configurable member lookup, aliases, and identity records.
  */
 function createMockDatabase(opts: {
-  members?: Map<ShortHexGuid, IQuorumMember<GuidV4Uint8Array>>;
+  members?: Map<HexString, IQuorumMember<GuidV4Uint8Array>>;
   aliases?: Map<string, AliasRecord<GuidV4Uint8Array>>;
-  identityRecords?: Map<ShortHexGuid, IdentityRecoveryRecord<GuidV4Uint8Array>>;
+  identityRecords?: Map<HexString, IdentityRecoveryRecord<GuidV4Uint8Array>>;
 }): IQuorumDatabase<GuidV4Uint8Array> {
   const members = opts.members ?? new Map();
   const aliases = opts.aliases ?? new Map();
@@ -69,7 +69,9 @@ function createMockDatabase(opts: {
     }),
     saveMember: jest.fn(async () => {}),
     getMember: jest.fn(
-      async (memberId: ShortHexGuid) => members.get(memberId) ?? null,
+      async (memberId: GuidV4Uint8Array) =>
+        members.get(uint8ArrayToHex(memberId as Uint8Array) as HexString) ??
+        null,
     ),
     listActiveMembers: jest.fn(async () => Array.from(members.values())),
     saveDocument: jest.fn(async () => {}),
@@ -81,7 +83,8 @@ function createMockDatabase(opts: {
     getVotesForProposal: jest.fn(async () => []),
     saveIdentityRecord: jest.fn(async () => {}),
     getIdentityRecord: jest.fn(
-      async (recordId: ShortHexGuid) => identityRecords.get(recordId) ?? null,
+      async (recordId: GuidV4Uint8Array) =>
+        identityRecords.get(recordId as unknown as HexString) ?? null,
     ),
     deleteIdentityRecord: jest.fn(async () => {}),
     listExpiredIdentityRecords: jest.fn(async () => []),
@@ -135,13 +138,13 @@ describe('IdentityValidator Unit Tests', () => {
   function buildMemberLookup(
     indices: number[],
     overrides?: Partial<IQuorumMember<GuidV4Uint8Array>>,
-  ): Map<ShortHexGuid, IQuorumMember<GuidV4Uint8Array>> {
-    const map = new Map<ShortHexGuid, IQuorumMember<GuidV4Uint8Array>>();
+  ): Map<HexString, IQuorumMember<GuidV4Uint8Array>> {
+    const map = new Map<HexString, IQuorumMember<GuidV4Uint8Array>>();
     for (const idx of indices) {
       const m = memberPool[idx].member;
-      const hex = uint8ArrayToHex(idProvider.toBytes(m.id)) as ShortHexGuid;
+      const hex = uint8ArrayToHex(idProvider.toBytes(m.id)) as HexString;
       map.set(hex, {
-        id: hex,
+        id: m.id,
         publicKey: m.publicKey,
         metadata: { name: m.name },
         isActive: true,
@@ -171,13 +174,11 @@ describe('IdentityValidator Unit Tests', () => {
   describe('Real identity validation', () => {
     it('should accept content with valid signature from known member', async () => {
       const m = memberPool[0].member;
-      const memberId = uint8ArrayToHex(
-        idProvider.toBytes(m.id),
-      ) as ShortHexGuid;
+      const memberId = uint8ArrayToHex(idProvider.toBytes(m.id)) as HexString;
 
       let content: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: m.id,
-        contentId: 'test-real-valid' as ShortHexGuid,
+        contentId: 'test-real-valid' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64),
       };
@@ -201,7 +202,7 @@ describe('IdentityValidator Unit Tests', () => {
 
       const content: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: m.id,
-        contentId: 'test-real-invalid' as ShortHexGuid,
+        contentId: 'test-real-invalid' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64), // zeroed = invalid
       };
@@ -231,7 +232,7 @@ describe('IdentityValidator Unit Tests', () => {
 
       let content: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: m.id,
-        contentId: 'test-unknown' as ShortHexGuid,
+        contentId: 'test-unknown' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64),
       };
@@ -259,7 +260,7 @@ describe('IdentityValidator Unit Tests', () => {
 
       let content: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: m.id,
-        contentId: 'test-banned' as ShortHexGuid,
+        contentId: 'test-banned' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64),
       };
@@ -293,7 +294,7 @@ describe('IdentityValidator Unit Tests', () => {
 
       let content: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: m.id,
-        contentId: 'test-suspended' as ShortHexGuid,
+        contentId: 'test-suspended' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64),
       };
@@ -332,15 +333,15 @@ describe('IdentityValidator Unit Tests', () => {
       const owner = memberPool[0].member;
       const ownerId = uint8ArrayToHex(
         idProvider.toBytes(owner.id),
-      ) as ShortHexGuid;
+      ) as HexString;
 
       // Create alias record
       const aliases = new Map<string, AliasRecord<GuidV4Uint8Array>>();
       aliases.set('TestAlias', {
         aliasName: 'TestAlias',
-        ownerMemberId: ownerId,
+        ownerMemberId: ownerId as unknown as GuidV4Uint8Array,
         aliasPublicKey: aliasKeyPair.publicKey,
-        identityRecoveryRecordId: 'recovery-1' as ShortHexGuid,
+        identityRecoveryRecordId: 'recovery-1' as unknown as GuidV4Uint8Array,
         isActive: true,
         registeredAt: new Date(),
         epochNumber: 1,
@@ -348,15 +349,15 @@ describe('IdentityValidator Unit Tests', () => {
 
       // Create identity recovery record linking to alias
       const identityRecords = new Map<
-        ShortHexGuid,
+        HexString,
         IdentityRecoveryRecord<GuidV4Uint8Array>
       >();
-      identityRecords.set('recovery-1' as ShortHexGuid, {
-        id: 'recovery-1' as ShortHexGuid,
-        contentId: 'alias-content-1' as ShortHexGuid,
+      identityRecords.set('recovery-1' as HexString, {
+        id: 'recovery-1' as unknown as GuidV4Uint8Array,
+        contentId: 'alias-content-1' as unknown as GuidV4Uint8Array,
         contentType: 'block',
         encryptedShardsByMemberId: new Map(),
-        memberIds: [ownerId],
+        memberIds: [ownerId as unknown as GuidV4Uint8Array],
         threshold: 1,
         epochNumber: 1,
         expiresAt: new Date(Date.now() + 86400000),
@@ -369,10 +370,10 @@ describe('IdentityValidator Unit Tests', () => {
       const fakeCreatorId = idProvider.generateTyped();
       let content: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: fakeCreatorId,
-        contentId: 'alias-content-1' as ShortHexGuid,
+        contentId: 'alias-content-1' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64),
-        identityRecoveryRecordId: 'recovery-1' as ShortHexGuid,
+        identityRecoveryRecordId: 'recovery-1' as HexString,
       };
 
       // Sign with alias private key
@@ -401,12 +402,12 @@ describe('IdentityValidator Unit Tests', () => {
 
       // Identity record points to a non-existent alias
       const identityRecords = new Map<
-        ShortHexGuid,
+        HexString,
         IdentityRecoveryRecord<GuidV4Uint8Array>
       >();
-      identityRecords.set('recovery-missing' as ShortHexGuid, {
-        id: 'recovery-missing' as ShortHexGuid,
-        contentId: 'alias-missing' as ShortHexGuid,
+      identityRecords.set('recovery-missing' as HexString, {
+        id: 'recovery-missing' as unknown as GuidV4Uint8Array,
+        contentId: 'alias-missing' as unknown as GuidV4Uint8Array,
         contentType: 'block',
         encryptedShardsByMemberId: new Map(),
         memberIds: [],
@@ -420,10 +421,10 @@ describe('IdentityValidator Unit Tests', () => {
 
       const content: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: fakeCreatorId,
-        contentId: 'alias-missing' as ShortHexGuid,
+        contentId: 'alias-missing' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64),
-        identityRecoveryRecordId: 'recovery-missing' as ShortHexGuid,
+        identityRecoveryRecordId: 'recovery-missing' as HexString,
       };
 
       const db = createMockDatabase({ identityRecords });
@@ -447,14 +448,15 @@ describe('IdentityValidator Unit Tests', () => {
     it('should reject content with inactive alias', async () => {
       const mnemonic = eciesService.generateNewMnemonic();
       const aliasKeyPair = eciesService.mnemonicToSimpleKeyPair(mnemonic);
-      const ownerId = 'owner-1' as ShortHexGuid;
+      const ownerId = 'owner-1' as HexString;
 
       const aliases = new Map<string, AliasRecord<GuidV4Uint8Array>>();
       aliases.set('InactiveAlias', {
         aliasName: 'InactiveAlias',
-        ownerMemberId: ownerId,
+        ownerMemberId: ownerId as unknown as GuidV4Uint8Array,
         aliasPublicKey: aliasKeyPair.publicKey,
-        identityRecoveryRecordId: 'recovery-inactive' as ShortHexGuid,
+        identityRecoveryRecordId:
+          'recovery-inactive' as unknown as GuidV4Uint8Array,
         isActive: false,
         registeredAt: new Date(),
         deactivatedAt: new Date(),
@@ -462,12 +464,12 @@ describe('IdentityValidator Unit Tests', () => {
       });
 
       const identityRecords = new Map<
-        ShortHexGuid,
+        HexString,
         IdentityRecoveryRecord<GuidV4Uint8Array>
       >();
-      identityRecords.set('recovery-inactive' as ShortHexGuid, {
-        id: 'recovery-inactive' as ShortHexGuid,
-        contentId: 'alias-inactive' as ShortHexGuid,
+      identityRecords.set('recovery-inactive' as HexString, {
+        id: 'recovery-inactive' as unknown as GuidV4Uint8Array,
+        contentId: 'alias-inactive' as unknown as GuidV4Uint8Array,
         contentType: 'block',
         encryptedShardsByMemberId: new Map(),
         memberIds: [],
@@ -482,10 +484,10 @@ describe('IdentityValidator Unit Tests', () => {
       const fakeCreatorId = idProvider.generateTyped();
       const content: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: fakeCreatorId,
-        contentId: 'alias-inactive' as ShortHexGuid,
+        contentId: 'alias-inactive' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64),
-        identityRecoveryRecordId: 'recovery-inactive' as ShortHexGuid,
+        identityRecoveryRecordId: 'recovery-inactive' as HexString,
       };
 
       const db = createMockDatabase({ aliases, identityRecords });
@@ -513,29 +515,30 @@ describe('IdentityValidator Unit Tests', () => {
       const owner = memberPool[0].member;
       const ownerId = uint8ArrayToHex(
         idProvider.toBytes(owner.id),
-      ) as ShortHexGuid;
+      ) as HexString;
 
       const aliases = new Map<string, AliasRecord<GuidV4Uint8Array>>();
       aliases.set('BannedOwnerAlias', {
         aliasName: 'BannedOwnerAlias',
-        ownerMemberId: ownerId,
+        ownerMemberId: ownerId as unknown as GuidV4Uint8Array,
         aliasPublicKey: aliasKeyPair.publicKey,
-        identityRecoveryRecordId: 'recovery-banned' as ShortHexGuid,
+        identityRecoveryRecordId:
+          'recovery-banned' as unknown as GuidV4Uint8Array,
         isActive: true,
         registeredAt: new Date(),
         epochNumber: 1,
       });
 
       const identityRecords = new Map<
-        ShortHexGuid,
+        HexString,
         IdentityRecoveryRecord<GuidV4Uint8Array>
       >();
-      identityRecords.set('recovery-banned' as ShortHexGuid, {
-        id: 'recovery-banned' as ShortHexGuid,
-        contentId: 'alias-banned-owner' as ShortHexGuid,
+      identityRecords.set('recovery-banned' as HexString, {
+        id: 'recovery-banned' as unknown as GuidV4Uint8Array,
+        contentId: 'alias-banned-owner' as unknown as GuidV4Uint8Array,
         contentType: 'block',
         encryptedShardsByMemberId: new Map(),
-        memberIds: [ownerId],
+        memberIds: [ownerId as unknown as GuidV4Uint8Array],
         threshold: 1,
         epochNumber: 1,
         expiresAt: new Date(Date.now() + 86400000),
@@ -547,10 +550,10 @@ describe('IdentityValidator Unit Tests', () => {
       const fakeCreatorId = idProvider.generateTyped();
       let content: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: fakeCreatorId,
-        contentId: 'alias-banned-owner' as ShortHexGuid,
+        contentId: 'alias-banned-owner' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64),
-        identityRecoveryRecordId: 'recovery-banned' as ShortHexGuid,
+        identityRecoveryRecordId: 'recovery-banned' as HexString,
       };
 
       // Sign with alias key (valid signature)
@@ -592,7 +595,7 @@ describe('IdentityValidator Unit Tests', () => {
 
       const content: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: anonymousId,
-        contentId: 'test-anon-no-proof' as ShortHexGuid,
+        contentId: 'test-anon-no-proof' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64),
         // No membershipProof
@@ -622,7 +625,7 @@ describe('IdentityValidator Unit Tests', () => {
 
       const content: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: anonymousId,
-        contentId: 'test-anon-bad-proof' as ShortHexGuid,
+        contentId: 'test-anon-bad-proof' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64),
         membershipProof: new Uint8Array(128), // garbage proof
@@ -652,7 +655,7 @@ describe('IdentityValidator Unit Tests', () => {
 
       const content: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: anonymousId,
-        contentId: 'test-anon-valid' as ShortHexGuid,
+        contentId: 'test-anon-valid' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64),
       };
@@ -689,7 +692,7 @@ describe('IdentityValidator Unit Tests', () => {
       // Generate proof for different content
       const otherContent: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: anonymousId,
-        contentId: 'other-content' as ShortHexGuid,
+        contentId: 'other-content' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64),
       };
@@ -707,7 +710,7 @@ describe('IdentityValidator Unit Tests', () => {
       // Use the proof on different content
       const content: ContentWithIdentity<GuidV4Uint8Array> = {
         creatorId: anonymousId,
-        contentId: 'actual-content' as ShortHexGuid,
+        contentId: 'actual-content' as HexString,
         contentType: 'block',
         signature: new Uint8Array(64),
         membershipProof: proof,

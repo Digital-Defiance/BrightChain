@@ -1,4 +1,5 @@
 import {
+  asBlockId,
   BlockSize,
   blockSizeToSizeString,
   DeliveryStatus,
@@ -10,11 +11,20 @@ import {
   MessageQueryOptions,
   StoreError,
   StoreErrorType,
+  type BlockId,
 } from '@brightchain/brightchain-lib';
 import { existsSync } from 'fs';
 import { readdir, readFile, stat, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { DiskBlockMetadataStore } from './diskBlockMetadataStore';
+
+/**
+ * Cast a hex string to BlockId without length validation.
+ * SHA3-512 checksums produce 128-char hex which is valid but fails asBlockId's 64-char check.
+ */
+function toStorageKey(hex: string): BlockId {
+  return hex as unknown as BlockId;
+}
 
 const MESSAGE_METADATA_FILE_VERSION = 1;
 const MESSAGE_METADATA_FILE_EXTENSION = '.mm.json';
@@ -101,12 +111,12 @@ export class DiskMessageMetadataStore
     file: MessageMetadataFile,
   ): IMessageMetadata {
     return {
-      blockId: file.blockId,
+      blockId: toStorageKey(file.blockId),
       createdAt: new Date(file.createdAt),
       expiresAt: file.expiresAt ? new Date(file.expiresAt) : null,
       durabilityLevel:
         file.durabilityLevel as IMessageMetadata['durabilityLevel'],
-      parityBlockIds: [...file.parityBlockIds],
+      parityBlockIds: [...file.parityBlockIds].map((id) => toStorageKey(id)),
       accessCount: file.accessCount,
       lastAccessedAt: new Date(file.lastAccessedAt),
       replicationStatus:
@@ -127,7 +137,9 @@ export class DiskMessageMetadataStore
       ),
       encryptionScheme: file.encryptionScheme as MessageEncryptionScheme,
       isCBL: file.isCBL,
-      cblBlockIds: file.cblBlockIds ? [...file.cblBlockIds] : undefined,
+      cblBlockIds: file.cblBlockIds
+        ? [...file.cblBlockIds].map((id) => toStorageKey(id))
+        : undefined,
     };
   }
 

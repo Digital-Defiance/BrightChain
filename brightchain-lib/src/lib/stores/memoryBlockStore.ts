@@ -15,6 +15,7 @@ import { FecError } from '../errors/fecError';
 import { StoreError } from '../errors/storeError';
 import { TranslatableBrightChainError } from '../errors/translatableBrightChainError';
 import { translate } from '../i18n';
+import type { BlockId } from '../interfaces/branded/primitives/blockId';
 import { IFecService, ParityData } from '../interfaces/services/fecService';
 import {
   BlockStoreOptions,
@@ -34,6 +35,15 @@ import { XorService } from '../services/xor';
 import { Checksum } from '../types/checksum';
 import { padToBlockSize, unpadCblData, xorArrays } from '../utils/xorUtils';
 import { MemoryBlockMetadataStore } from './memoryBlockMetadataStore';
+
+/**
+ * Cast a raw hex string to BlockId without validation.
+ * Used internally where the key is a SHA3-512 checksum (128 hex chars)
+ * used as an opaque storage key, not a semantic BlockId (64 hex chars).
+ */
+function toStorageKey(hex: string): BlockId {
+  return hex as unknown as BlockId;
+}
 
 /**
  * Browser-compatible in-memory block store using Uint8Array.
@@ -143,7 +153,7 @@ export class MemoryBlockStore implements IBlockStore {
 
     // Record access in metadata
     if (this.metadataStore.has(keyHex)) {
-      await this.metadataStore.recordAccess(keyHex);
+      await this.metadataStore.recordAccess(toStorageKey(keyHex));
     }
 
     return block;
@@ -173,8 +183,10 @@ export class MemoryBlockStore implements IBlockStore {
     this.blocks.set(keyHex, block);
 
     // Create metadata for the block
+    // keyHex is the SHA3-512 checksum hex (128 chars) used as the storage key.
+    // We cast it directly to BlockId since it serves as an opaque storage key here.
     const metadata = createDefaultBlockMetadata(
-      keyHex,
+      keyHex as unknown as BlockId,
       block.data.length,
       keyHex,
       options,
@@ -213,7 +225,7 @@ export class MemoryBlockStore implements IBlockStore {
 
     // Delete metadata (if exists)
     if (this.metadataStore.has(keyHex)) {
-      await this.metadataStore.delete(keyHex);
+      await this.metadataStore.delete(toStorageKey(keyHex));
     }
   }
 
@@ -321,7 +333,7 @@ export class MemoryBlockStore implements IBlockStore {
     key: Checksum | string,
   ): Promise<IBlockMetadata | null> {
     const keyHex = this.keyToHex(key);
-    return this.metadataStore.get(keyHex);
+    return this.metadataStore.get(toStorageKey(keyHex));
   }
 
   /**
@@ -339,7 +351,7 @@ export class MemoryBlockStore implements IBlockStore {
         KEY: keyHex,
       });
     }
-    await this.metadataStore.update(keyHex, updates);
+    await this.metadataStore.update(toStorageKey(keyHex), updates);
   }
 
   // === FEC/Durability Operations ===
@@ -396,10 +408,12 @@ export class MemoryBlockStore implements IBlockStore {
     // Calculate actual checksums for parity blocks
     const checksumService = ServiceLocator.getServiceProvider().checksumService;
     const parityBlockIds = parityData.map((parity) =>
-      checksumService.calculateChecksum(new Uint8Array(parity.data)).toHex(),
+      toStorageKey(
+        checksumService.calculateChecksum(new Uint8Array(parity.data)).toHex(),
+      ),
     );
     if (this.metadataStore.has(keyHex)) {
-      await this.metadataStore.update(keyHex, { parityBlockIds });
+      await this.metadataStore.update(toStorageKey(keyHex), { parityBlockIds });
     }
 
     // Return parity block IDs as Checksum
@@ -415,7 +429,7 @@ export class MemoryBlockStore implements IBlockStore {
     const keyHex = this.keyToHex(key);
 
     // Get metadata to find parity block IDs
-    const metadata = await this.metadataStore.get(keyHex);
+    const metadata = await this.metadataStore.get(toStorageKey(keyHex));
     if (!metadata) {
       return [];
     }
@@ -465,7 +479,7 @@ export class MemoryBlockStore implements IBlockStore {
     }
 
     // Get metadata for original size
-    const metadata = await this.metadataStore.get(keyHex);
+    const metadata = await this.metadataStore.get(toStorageKey(keyHex));
     if (!metadata) {
       return {
         success: false,
@@ -605,7 +619,7 @@ export class MemoryBlockStore implements IBlockStore {
   ): Promise<void> {
     const keyHex = this.keyToHex(key);
 
-    const metadata = await this.metadataStore.get(keyHex);
+    const metadata = await this.metadataStore.get(toStorageKey(keyHex));
     if (!metadata) {
       throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
         KEY: keyHex,
@@ -626,7 +640,7 @@ export class MemoryBlockStore implements IBlockStore {
       replicationStatus = ReplicationStatus.UnderReplicated;
     }
 
-    await this.metadataStore.update(keyHex, {
+    await this.metadataStore.update(toStorageKey(keyHex), {
       replicaNodeIds,
       replicationStatus,
     });
@@ -643,7 +657,7 @@ export class MemoryBlockStore implements IBlockStore {
   ): Promise<void> {
     const keyHex = this.keyToHex(key);
 
-    const metadata = await this.metadataStore.get(keyHex);
+    const metadata = await this.metadataStore.get(toStorageKey(keyHex));
     if (!metadata) {
       throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
         KEY: keyHex,
@@ -667,7 +681,7 @@ export class MemoryBlockStore implements IBlockStore {
       }
     }
 
-    await this.metadataStore.update(keyHex, {
+    await this.metadataStore.update(toStorageKey(keyHex), {
       replicaNodeIds,
       replicationStatus,
     });
@@ -737,13 +751,13 @@ export class MemoryBlockStore implements IBlockStore {
 
     // Get the random block IDs as hex strings
     const randomBlockIds = randomBlockChecksums.map((checksum) =>
-      checksum.toHex(),
+      toStorageKey(checksum.toHex()),
     );
 
     return {
-      brightenedBlockId,
+      brightenedBlockId: toStorageKey(brightenedBlockId),
       randomBlockIds,
-      originalBlockId: keyHex,
+      originalBlockId: toStorageKey(keyHex),
     };
   }
 
@@ -804,7 +818,7 @@ export class MemoryBlockStore implements IBlockStore {
 
     // Track stored blocks for rollback on failure
     let block1Stored = false;
-    let block1Id = '';
+    let block1Id: BlockId = toStorageKey('0'.repeat(128));
 
     try {
       // 4. Store first block (R - the randomizer block)
@@ -818,16 +832,16 @@ export class MemoryBlockStore implements IBlockStore {
         await this.setData(block1, options);
         block1Stored = true;
       }
-      block1Id = block1Checksum.toHex();
+      block1Id = toStorageKey(block1Checksum.toHex());
 
       // 5. Store second block (CBL XOR R)
       const block2 = new RawDataBlock(this._blockSize, xorResult);
       await this.setData(block2, options);
-      const block2Id = block2.idChecksum.toHex();
+      const block2Id = toStorageKey(block2.idChecksum.toHex());
 
       // 6. Get parity block IDs if FEC redundancy was applied
-      let block1ParityIds: string[] | undefined;
-      let block2ParityIds: string[] | undefined;
+      let block1ParityIds: BlockId[] | undefined;
+      let block2ParityIds: BlockId[] | undefined;
 
       const block1Meta = await this.getMetadata(block1Id);
       if (block1Meta?.parityBlockIds?.length) {
@@ -1054,18 +1068,24 @@ export class MemoryBlockStore implements IBlockStore {
     const p1Param = params.get('p1');
     const p2Param = params.get('p2');
     const block1ParityIds = p1Param
-      ? p1Param.split(',').filter((id) => id)
+      ? p1Param
+          .split(',')
+          .filter((id) => id)
+          .map(toStorageKey)
       : undefined;
     const block2ParityIds = p2Param
-      ? p2Param.split(',').filter((id) => id)
+      ? p2Param
+          .split(',')
+          .filter((id) => id)
+          .map(toStorageKey)
       : undefined;
 
     // Parse encryption flag
     const isEncrypted = params.get('enc') === '1';
 
     return {
-      blockId1,
-      blockId2,
+      blockId1: toStorageKey(blockId1),
+      blockId2: toStorageKey(blockId2),
       blockSize,
       block1ParityIds,
       block2ParityIds,

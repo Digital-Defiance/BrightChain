@@ -2,7 +2,7 @@ import {
   ProposalActionType,
   ProposalDisplay,
 } from '@brightchain/brightchain-lib';
-import { ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString } from '@digitaldefiance/ecies-lib';
 import * as readline from 'readline';
 import { PassThrough } from 'stream';
 import { CLIOperatorPrompt } from './cliOperatorPrompt';
@@ -40,11 +40,11 @@ function createMockRlFactory(answers: string[]): () => readline.Interface {
  */
 function makeProposal(overrides?: Partial<ProposalDisplay>): ProposalDisplay {
   return {
-    proposalId: 'aabbccdd11223344aabbccdd11223344' as ShortHexGuid,
+    proposalId: 'aabbccdd11223344aabbccdd11223344' as HexString,
     description: 'Test proposal description',
     actionType: ProposalActionType.ADD_MEMBER,
     actionPayload: { memberId: 'test-member' },
-    proposerMemberId: '11223344aabbccdd11223344aabbccdd' as ShortHexGuid,
+    proposerMemberId: '11223344aabbccdd11223344aabbccdd' as HexString,
     expiresAt: new Date('2025-12-31T23:59:59Z'),
     ...overrides,
   };
@@ -117,7 +117,7 @@ describe('CLIOperatorPrompt', () => {
   describe('authentication lockout', () => {
     it('should lock after 3 consecutive failures (default config)', () => {
       const prompt = new CLIOperatorPrompt();
-      const proposalId = 'aabbccdd11223344aabbccdd11223344' as ShortHexGuid;
+      const proposalId = 'aabbccdd11223344aabbccdd11223344' as HexString;
 
       expect(prompt.isLocked(proposalId)).toBe(false);
 
@@ -133,7 +133,7 @@ describe('CLIOperatorPrompt', () => {
 
     it('should lock after custom maxAttempts', () => {
       const prompt = new CLIOperatorPrompt({ maxAttempts: 2 });
-      const proposalId = 'aabbccdd11223344aabbccdd11223344' as ShortHexGuid;
+      const proposalId = 'aabbccdd11223344aabbccdd11223344' as HexString;
 
       prompt.recordAuthFailure(proposalId);
       expect(prompt.isLocked(proposalId)).toBe(false);
@@ -159,8 +159,8 @@ describe('CLIOperatorPrompt', () => {
 
     it('should track lockout independently per proposal', () => {
       const prompt = new CLIOperatorPrompt();
-      const proposalA = 'aaaa000011112222aaaa000011112222' as ShortHexGuid;
-      const proposalB = 'bbbb000011112222bbbb000011112222' as ShortHexGuid;
+      const proposalA = 'aaaa000011112222aaaa000011112222' as HexString;
+      const proposalB = 'bbbb000011112222bbbb000011112222' as HexString;
 
       // Lock proposal A
       prompt.recordAuthFailure(proposalA);
@@ -189,7 +189,7 @@ describe('CLIOperatorPrompt', () => {
     it('should unlock after cooldown period expires', () => {
       const cooldownMs = 5_000;
       const prompt = new CLIOperatorPrompt({ cooldownMs });
-      const proposalId = 'aabbccdd11223344aabbccdd11223344' as ShortHexGuid;
+      const proposalId = 'aabbccdd11223344aabbccdd11223344' as HexString;
 
       // Lock it
       prompt.recordAuthFailure(proposalId);
@@ -229,7 +229,7 @@ describe('CLIOperatorPrompt', () => {
     it('should reset failed attempts counter after cooldown expires', () => {
       const cooldownMs = 1_000;
       const prompt = new CLIOperatorPrompt({ cooldownMs });
-      const proposalId = 'aabbccdd11223344aabbccdd11223344' as ShortHexGuid;
+      const proposalId = 'aabbccdd11223344aabbccdd11223344' as HexString;
 
       // Lock it
       prompt.recordAuthFailure(proposalId);
@@ -269,14 +269,14 @@ describe('CLIOperatorPrompt', () => {
 
     it('should return false for unknown proposal IDs', () => {
       const prompt = new CLIOperatorPrompt();
-      const unknownId = 'ffff000011112222ffff000011112222' as ShortHexGuid;
+      const unknownId = 'ffff000011112222ffff000011112222' as HexString;
       expect(prompt.isLocked(unknownId)).toBe(false);
     });
 
     it('should transition: unlocked → locked → unlocked (after cooldown)', () => {
       const cooldownMs = 2_000;
       const prompt = new CLIOperatorPrompt({ cooldownMs });
-      const proposalId = 'aabbccdd11223344aabbccdd11223344' as ShortHexGuid;
+      const proposalId = 'aabbccdd11223344aabbccdd11223344' as HexString;
 
       // Initially unlocked
       expect(prompt.isLocked(proposalId)).toBe(false);

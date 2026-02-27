@@ -8,7 +8,7 @@
  * @see Design: Content Ingestion Pipeline Integration (Task 19)
  */
 
-import { PlatformID, ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString, PlatformID } from '@digitaldefiance/ecies-lib';
 import { IdentityValidationErrorType } from '../../enumerations/identityValidationErrorType';
 import { ContentWithIdentity, IdentityMode } from '../contentWithIdentity';
 
@@ -22,11 +22,11 @@ export interface ContentIngestionResult<TID extends PlatformID = Uint8Array> {
   /** The content with identity replaced (after sealing) */
   processedContent: ContentWithIdentity<TID>;
   /** The identity recovery record ID (from sealing pipeline) */
-  recoveryRecordId: ShortHexGuid;
+  recoveryRecordId: HexString;
   /** The detected identity mode */
   identityMode: IdentityMode;
   /** The resolved real member ID (for real/alias modes) */
-  resolvedMemberId?: ShortHexGuid;
+  resolvedMemberId?: HexString;
 }
 
 /**

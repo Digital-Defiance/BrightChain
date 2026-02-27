@@ -6,10 +6,14 @@
  * Validates: Requirements 8.1, 8.6
  */
 
+import type { BlockId } from '../branded/primitives/blockId';
 import type { ICBLIndexEntry } from '../storage/cblIndex';
 import { CBLVisibility } from '../storage/cblIndex';
 import type { BlockAnnouncement } from './gossipService';
 import { validateBlockAnnouncement } from './gossipService';
+
+/** Cast a test string to BlockId without validation — for test data only. */
+const bid = (s: string) => s as unknown as BlockId;
 
 /** Build a minimal valid CBL index entry for testing. */
 function makeCBLIndexEntry(
@@ -18,8 +22,8 @@ function makeCBLIndexEntry(
   return {
     _id: 'entry-001',
     magnetUrl: 'magnet:?xt=urn:brightchain:cbl&bs=256&b1=abc123&b2=def456',
-    blockId1: 'abc123',
-    blockId2: 'def456',
+    blockId1: bid('abc123'),
+    blockId2: bid('def456'),
     blockSize: 256,
     createdAt: new Date(),
     visibility: CBLVisibility.Private,
@@ -34,7 +38,7 @@ function makeBaseAnnouncement(
 ): BlockAnnouncement {
   return {
     type: 'cbl_index_update',
-    blockId: '',
+    blockId: bid(''),
     nodeId: 'node-001',
     timestamp: new Date(),
     ttl: 3,
@@ -85,7 +89,7 @@ describe('validateBlockAnnouncement – cbl_index_update type (Req 8.1)', () => 
   it('should reject cbl_index_update with empty blockId1', () => {
     const announcement = makeBaseAnnouncement({
       type: 'cbl_index_update',
-      cblIndexEntry: makeCBLIndexEntry({ blockId1: '' }),
+      cblIndexEntry: makeCBLIndexEntry({ blockId1: bid('') }),
     });
     expect(validateBlockAnnouncement(announcement)).toBe(false);
   });
@@ -93,7 +97,7 @@ describe('validateBlockAnnouncement – cbl_index_update type (Req 8.1)', () => 
   it('should reject cbl_index_update with empty blockId2', () => {
     const announcement = makeBaseAnnouncement({
       type: 'cbl_index_update',
-      cblIndexEntry: makeCBLIndexEntry({ blockId2: '' }),
+      cblIndexEntry: makeCBLIndexEntry({ blockId2: bid('') }),
     });
     expect(validateBlockAnnouncement(announcement)).toBe(false);
   });
@@ -105,8 +109,8 @@ describe('validateBlockAnnouncement – cbl_index_update type (Req 8.1)', () => 
         messageId: 'msg-1',
         recipientIds: ['user-1'],
         priority: 'normal',
-        blockIds: ['block-1'],
-        cblBlockId: 'cbl-1',
+        blockIds: [bid('block-1')],
+        cblBlockId: bid('cbl-1'),
         ackRequired: false,
       },
     });
@@ -159,8 +163,8 @@ describe('validateBlockAnnouncement – cbl_index_delete type (Req 8.6)', () => 
         messageId: 'msg-1',
         recipientIds: ['user-1'],
         priority: 'normal',
-        blockIds: ['block-1'],
-        cblBlockId: 'cbl-1',
+        blockIds: [bid('block-1')],
+        cblBlockId: bid('cbl-1'),
         ackRequired: false,
       },
     });

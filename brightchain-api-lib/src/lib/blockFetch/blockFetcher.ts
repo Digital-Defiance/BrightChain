@@ -29,6 +29,7 @@ import {
   isPooledBlockStore,
   PoolId,
   PoolMismatchError,
+  type BlockId,
 } from '@brightchain/brightchain-lib';
 
 /**
@@ -87,7 +88,9 @@ export class BlockFetcher implements IBlockFetcher {
     blockId: string,
     poolId?: PoolId,
   ): Promise<BlockFetchResult> {
-    const locations = await this.availabilityService.getBlockLocations(blockId);
+    const locations = await this.availabilityService.getBlockLocations(
+      blockId as unknown as BlockId,
+    );
     const candidateNodes = locations
       .map((loc) => loc.nodeId)
       .filter((nodeId) => this.isNodeAvailable(nodeId));

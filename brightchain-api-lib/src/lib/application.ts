@@ -278,7 +278,10 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
         name: 'quorum-system',
         poolId: 'quorum-system',
       });
-      this.quorumDbAdapter = new QuorumDatabaseAdapter<TID>(quorumDb);
+      this.quorumDbAdapter = new QuorumDatabaseAdapter<TID>(
+        quorumDb,
+        ServiceProvider.getInstance<TID>().idProvider,
+      );
       this.services.register('quorumDbAdapter', () => this.quorumDbAdapter);
       debugLog(
         this.environment.debug,

@@ -13,10 +13,10 @@
 import {
   EmailString,
   GuidV4Uint8Array,
+  HexString,
   IMemberWithMnemonic,
   Member,
   MemberType,
-  ShortHexGuid,
 } from '@digitaldefiance/ecies-lib';
 import fc from 'fast-check';
 import { initializeBrightChain } from './init';
@@ -126,7 +126,7 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
             // Create a member lookup function for deserialization
             const memberMap = new Map<string, Member<GuidV4Uint8Array>>();
             for (const m of members) {
-              const hexId = uint8ArrayToHex(m.member.idBytes) as ShortHexGuid;
+              const hexId = uint8ArrayToHex(m.member.idBytes) as HexString;
               memberMap.set(hexId, m.member);
             }
 
@@ -137,7 +137,7 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
                 ServiceProvider.getInstance<GuidV4Uint8Array>();
               const hexId = uint8ArrayToHex(
                 serviceProvider.idProvider.toBytes(memberId),
-              ) as ShortHexGuid;
+              ) as HexString;
               const member = memberMap.get(hexId);
               if (!member) {
                 throw new Error(`Member not found: ${hexId}`);
@@ -215,7 +215,7 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
             // Create a member lookup function for deserialization
             const memberMap = new Map<string, Member<GuidV4Uint8Array>>();
             for (const m of members) {
-              const hexId = uint8ArrayToHex(m.member.idBytes) as ShortHexGuid;
+              const hexId = uint8ArrayToHex(m.member.idBytes) as HexString;
               memberMap.set(hexId, m.member);
             }
 
@@ -226,7 +226,7 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
                 ServiceProvider.getInstance<GuidV4Uint8Array>();
               const hexId = uint8ArrayToHex(
                 serviceProvider.idProvider.toBytes(memberId),
-              ) as ShortHexGuid;
+              ) as HexString;
               const member = memberMap.get(hexId);
               if (!member) {
                 throw new Error(`Member not found: ${hexId}`);
@@ -332,7 +332,7 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
             // Create a member lookup function for deserialization
             const memberMap = new Map<string, Member<GuidV4Uint8Array>>();
             for (const m of members) {
-              const hexId = uint8ArrayToHex(m.member.idBytes) as ShortHexGuid;
+              const hexId = uint8ArrayToHex(m.member.idBytes) as HexString;
               memberMap.set(hexId, m.member);
             }
 
@@ -343,7 +343,7 @@ describe('QuorumDataRecord Serialization Property Tests', () => {
                 ServiceProvider.getInstance<GuidV4Uint8Array>();
               const hexId = uint8ArrayToHex(
                 serviceProvider.idProvider.toBytes(memberId),
-              ) as ShortHexGuid;
+              ) as HexString;
               const member = memberMap.get(hexId);
               if (!member) {
                 throw new Error(`Member not found: ${hexId}`);

@@ -27,8 +27,58 @@ import {
   Vote,
 } from '@brightchain/brightchain-lib';
 import { BrightChainDb, HeadRegistry } from '@brightchain/db';
-import { ShortHexGuid, SignatureUint8Array } from '@digitaldefiance/ecies-lib';
+import {
+  HexString,
+  IIdProvider,
+  SignatureUint8Array,
+} from '@digitaldefiance/ecies-lib';
 import { QuorumDatabaseAdapter } from './quorumDatabaseAdapter';
+
+// ─── Mock ID Provider ───────────────────────────────────────────────────────
+
+/**
+ * Minimal mock IIdProvider<HexString> for tests.
+ * Generates 32-char hex IDs matching ShortHexGuid format.
+ */
+const mockIdProvider: IIdProvider<HexString> = {
+  byteLength: 16,
+  name: 'MockHexProvider',
+  generate(): Uint8Array {
+    const bytes = new Uint8Array(16);
+    for (let i = 0; i < 16; i++) bytes[i] = Math.floor(Math.random() * 256);
+    return bytes;
+  },
+  validate(id: Uint8Array): boolean {
+    return id.length === 16;
+  },
+  serialize(id: Uint8Array): string {
+    return Buffer.from(id).toString('hex');
+  },
+  deserialize(str: string): Uint8Array {
+    return new Uint8Array(Buffer.from(str, 'hex'));
+  },
+  toBytes(id: HexString): Uint8Array {
+    return new Uint8Array(Buffer.from(id, 'hex'));
+  },
+  fromBytes(bytes: Uint8Array): HexString {
+    return Buffer.from(bytes).toString('hex') as HexString;
+  },
+  equals(a: HexString, b: HexString): boolean {
+    return a === b;
+  },
+  clone(id: HexString): HexString {
+    return id;
+  },
+  idToString(id: HexString): string {
+    return id;
+  },
+  idFromString(str: string): HexString {
+    return str as HexString;
+  },
+  parseSafe(str: string): HexString | undefined {
+    return /^[0-9a-f]{32}$/.test(str) ? (str as HexString) : undefined;
+  },
+};
 
 // ─── Test Helpers ───────────────────────────────────────────────────────────
 
@@ -42,16 +92,18 @@ function createTestDb(): BrightChainDb {
   });
 }
 
-function makeShortHexGuid(suffix: string): ShortHexGuid {
-  return suffix.padStart(32, '0') as ShortHexGuid;
+function makeHexString(suffix: string): HexString {
+  // Convert suffix to hex by encoding each char as 2 hex digits, then pad to 32 chars
+  const hexSuffix = Buffer.from(suffix, 'ascii').toString('hex');
+  return hexSuffix.padStart(32, '0').slice(-32) as HexString;
 }
 
 function makeEpoch(
   epochNumber: number,
-  memberIds: ShortHexGuid[] = [],
+  memberIds: HexString[] = [],
   threshold = 2,
   mode: QuorumOperationalMode = QuorumOperationalMode.Bootstrap,
-): QuorumEpoch {
+): QuorumEpoch<HexString> {
   return {
     epochNumber,
     memberIds,
@@ -62,7 +114,7 @@ function makeEpoch(
   };
 }
 
-function makeMember(id: ShortHexGuid, isActive = true): IQuorumMember {
+function makeMember(id: HexString, isActive = true): IQuorumMember<HexString> {
   const metadata: QuorumMemberMetadata = {
     name: `Member ${id.slice(-4)}`,
     email: `member-${id.slice(-4)}@test.com`,
@@ -78,15 +130,15 @@ function makeMember(id: ShortHexGuid, isActive = true): IQuorumMember {
 }
 
 function makeProposal(
-  id: ShortHexGuid,
+  id: HexString,
   status: ProposalStatus = ProposalStatus.Pending,
-): Proposal {
+): Proposal<HexString> {
   return {
     id,
     description: 'Test proposal',
     actionType: ProposalActionType.ADD_MEMBER,
-    actionPayload: { memberId: makeShortHexGuid('abc') },
-    proposerMemberId: makeShortHexGuid('proposer1'),
+    actionPayload: { memberId: makeHexString('abc') },
+    proposerMemberId: makeHexString('proposer1'),
     status,
     requiredThreshold: 2,
     expiresAt: new Date('2025-01-01T00:00:00Z'),
@@ -96,10 +148,10 @@ function makeProposal(
 }
 
 function makeVote(
-  proposalId: ShortHexGuid,
-  voterMemberId: ShortHexGuid,
+  proposalId: HexString,
+  voterMemberId: HexString,
   decision: 'approve' | 'reject' = 'approve',
-): Vote {
+): Vote<HexString> {
   return {
     proposalId,
     voterMemberId,
@@ -112,18 +164,18 @@ function makeVote(
 }
 
 function makeIdentityRecord(
-  id: ShortHexGuid,
+  id: HexString,
   expiresAt: Date,
-): IdentityRecoveryRecord {
-  const shards = new Map<ShortHexGuid, Uint8Array>();
-  shards.set(makeShortHexGuid('m1'), new Uint8Array([1, 2, 3]));
-  shards.set(makeShortHexGuid('m2'), new Uint8Array([4, 5, 6]));
+): IdentityRecoveryRecord<HexString> {
+  const shards = new Map<HexString, Uint8Array>();
+  shards.set(makeHexString('m1'), new Uint8Array([1, 2, 3]));
+  shards.set(makeHexString('m2'), new Uint8Array([4, 5, 6]));
   return {
     id,
-    contentId: makeShortHexGuid('content1'),
+    contentId: makeHexString('content1'),
     contentType: 'post',
-    encryptedShardsByMemberId: shards,
-    memberIds: [makeShortHexGuid('m1'), makeShortHexGuid('m2')],
+    encryptedShardsByMemberId: shards as unknown as Map<HexString, Uint8Array>,
+    memberIds: [makeHexString('m1'), makeHexString('m2')],
     threshold: 2,
     epochNumber: 1,
     expiresAt,
@@ -132,12 +184,12 @@ function makeIdentityRecord(
   };
 }
 
-function makeAlias(aliasName: string, isActive = true): AliasRecord {
+function makeAlias(aliasName: string, isActive = true): AliasRecord<HexString> {
   return {
     aliasName,
-    ownerMemberId: makeShortHexGuid('owner1'),
+    ownerMemberId: makeHexString('owner1'),
     aliasPublicKey: new Uint8Array([7, 8, 9]),
-    identityRecoveryRecordId: makeShortHexGuid('recovery1'),
+    identityRecoveryRecordId: makeHexString('recovery1'),
     isActive,
     registeredAt: new Date('2024-01-01T00:00:00Z'),
     epochNumber: 1,
@@ -145,9 +197,9 @@ function makeAlias(aliasName: string, isActive = true): AliasRecord {
 }
 
 function makeChainedAuditEntry(
-  id: ShortHexGuid,
+  id: HexString,
   timestamp: Date,
-): ChainedAuditLogEntry {
+): ChainedAuditLogEntry<HexString> {
   return {
     id,
     eventType: 'epoch_created',
@@ -162,15 +214,15 @@ function makeChainedAuditEntry(
 }
 
 function makeJournalEntry(
-  documentId: ShortHexGuid,
+  documentId: HexString,
   oldEpoch: number,
 ): RedistributionJournalEntry {
-  const oldShares = new Map<ShortHexGuid, Uint8Array>();
-  oldShares.set(makeShortHexGuid('m1'), new Uint8Array([1, 2]));
+  const oldShares = new Map<HexString, Uint8Array>();
+  oldShares.set(makeHexString('m1'), new Uint8Array([1, 2]));
   return {
     documentId,
     oldShares,
-    oldMemberIds: [makeShortHexGuid('m1')],
+    oldMemberIds: [makeHexString('m1')],
     oldThreshold: 1,
     oldEpoch,
   };
@@ -180,7 +232,7 @@ function makeJournalEntry(
 
 describe('QuorumDatabaseAdapter', () => {
   let db: BrightChainDb;
-  let adapter: QuorumDatabaseAdapter;
+  let adapter: QuorumDatabaseAdapter<HexString>;
 
   beforeAll(() => {
     initializeBrightChain();
@@ -192,20 +244,20 @@ describe('QuorumDatabaseAdapter', () => {
 
   beforeEach(() => {
     db = createTestDb();
-    adapter = new QuorumDatabaseAdapter(db);
+    adapter = new QuorumDatabaseAdapter(db, mockIdProvider);
   });
 
   // === Epoch CRUD ===
 
   describe('epoch CRUD', () => {
     it('should save and retrieve an epoch', async () => {
-      const epoch = makeEpoch(1, [makeShortHexGuid('m1')]);
+      const epoch = makeEpoch(1, [makeHexString('m1')]);
       await adapter.saveEpoch(epoch);
       const retrieved = await adapter.getEpoch(1);
       expect(retrieved).not.toBeNull();
       expect(retrieved!.epochNumber).toBe(1);
       expect(retrieved!.mode).toBe(QuorumOperationalMode.Bootstrap);
-      expect(retrieved!.memberIds).toEqual([makeShortHexGuid('m1')]);
+      expect(retrieved!.memberIds).toEqual([makeHexString('m1')]);
     });
 
     it('should return null for non-existent epoch', async () => {
@@ -214,11 +266,11 @@ describe('QuorumDatabaseAdapter', () => {
     });
 
     it('should update an existing epoch', async () => {
-      const epoch = makeEpoch(1, [makeShortHexGuid('m1')]);
+      const epoch = makeEpoch(1, [makeHexString('m1')]);
       await adapter.saveEpoch(epoch);
       const updated = makeEpoch(
         1,
-        [makeShortHexGuid('m1'), makeShortHexGuid('m2')],
+        [makeHexString('m1'), makeHexString('m2')],
         2,
         QuorumOperationalMode.Quorum,
       );
@@ -247,38 +299,38 @@ describe('QuorumDatabaseAdapter', () => {
 
   describe('member CRUD', () => {
     it('should save and retrieve a member', async () => {
-      const member = makeMember(makeShortHexGuid('m1'));
+      const member = makeMember(makeHexString('m1'));
       await adapter.saveMember(member);
-      const retrieved = await adapter.getMember(makeShortHexGuid('m1'));
+      const retrieved = await adapter.getMember(makeHexString('m1'));
       expect(retrieved).not.toBeNull();
-      expect(retrieved!.id).toBe(makeShortHexGuid('m1'));
+      expect(retrieved!.id).toBe(makeHexString('m1'));
       expect(retrieved!.isActive).toBe(true);
-      expect(retrieved!.metadata.name).toContain('00m1');
+      expect(retrieved!.metadata.name).toContain(makeHexString('m1').slice(-4));
     });
 
     it('should return null for non-existent member', async () => {
-      const result = await adapter.getMember(makeShortHexGuid('missing'));
+      const result = await adapter.getMember(makeHexString('missing'));
       expect(result).toBeNull();
     });
 
     it('should update an existing member', async () => {
-      const member = makeMember(makeShortHexGuid('m1'));
+      const member = makeMember(makeHexString('m1'));
       await adapter.saveMember(member);
-      const updated = makeMember(makeShortHexGuid('m1'), false);
+      const updated = makeMember(makeHexString('m1'), false);
       await adapter.saveMember(updated);
-      const retrieved = await adapter.getMember(makeShortHexGuid('m1'));
+      const retrieved = await adapter.getMember(makeHexString('m1'));
       expect(retrieved!.isActive).toBe(false);
     });
 
     it('should list only active members', async () => {
-      await adapter.saveMember(makeMember(makeShortHexGuid('m1'), true));
-      await adapter.saveMember(makeMember(makeShortHexGuid('m2'), false));
-      await adapter.saveMember(makeMember(makeShortHexGuid('m3'), true));
+      await adapter.saveMember(makeMember(makeHexString('m1'), true));
+      await adapter.saveMember(makeMember(makeHexString('m2'), false));
+      await adapter.saveMember(makeMember(makeHexString('m3'), true));
       const active = await adapter.listActiveMembers();
       expect(active).toHaveLength(2);
       const ids = active.map((m) => m.id);
-      expect(ids).toContain(makeShortHexGuid('m1'));
-      expect(ids).toContain(makeShortHexGuid('m3'));
+      expect(ids).toContain(makeHexString('m1'));
+      expect(ids).toContain(makeHexString('m3'));
     });
   });
 
@@ -286,28 +338,28 @@ describe('QuorumDatabaseAdapter', () => {
 
   describe('proposal CRUD', () => {
     it('should save and retrieve a proposal', async () => {
-      const proposal = makeProposal(makeShortHexGuid('p1'));
+      const proposal = makeProposal(makeHexString('p1'));
       await adapter.saveProposal(proposal);
-      const retrieved = await adapter.getProposal(makeShortHexGuid('p1'));
+      const retrieved = await adapter.getProposal(makeHexString('p1'));
       expect(retrieved).not.toBeNull();
-      expect(retrieved!.id).toBe(makeShortHexGuid('p1'));
+      expect(retrieved!.id).toBe(makeHexString('p1'));
       expect(retrieved!.status).toBe(ProposalStatus.Pending);
     });
 
     it('should return null for non-existent proposal', async () => {
-      const result = await adapter.getProposal(makeShortHexGuid('missing'));
+      const result = await adapter.getProposal(makeHexString('missing'));
       expect(result).toBeNull();
     });
 
     it('should update an existing proposal', async () => {
-      const proposal = makeProposal(makeShortHexGuid('p1'));
+      const proposal = makeProposal(makeHexString('p1'));
       await adapter.saveProposal(proposal);
       const updated = makeProposal(
-        makeShortHexGuid('p1'),
+        makeHexString('p1'),
         ProposalStatus.Approved,
       );
       await adapter.saveProposal(updated);
-      const retrieved = await adapter.getProposal(makeShortHexGuid('p1'));
+      const retrieved = await adapter.getProposal(makeHexString('p1'));
       expect(retrieved!.status).toBe(ProposalStatus.Approved);
     });
   });
@@ -316,9 +368,9 @@ describe('QuorumDatabaseAdapter', () => {
 
   describe('vote CRUD', () => {
     it('should save and retrieve votes for a proposal', async () => {
-      const proposalId = makeShortHexGuid('p1');
-      const vote1 = makeVote(proposalId, makeShortHexGuid('v1'), 'approve');
-      const vote2 = makeVote(proposalId, makeShortHexGuid('v2'), 'reject');
+      const proposalId = makeHexString('p1');
+      const vote1 = makeVote(proposalId, makeHexString('v1'), 'approve');
+      const vote2 = makeVote(proposalId, makeHexString('v2'), 'reject');
       await adapter.saveVote(vote1);
       await adapter.saveVote(vote2);
       const votes = await adapter.getVotesForProposal(proposalId);
@@ -329,13 +381,13 @@ describe('QuorumDatabaseAdapter', () => {
     });
 
     it('should return empty array for proposal with no votes', async () => {
-      const votes = await adapter.getVotesForProposal(makeShortHexGuid('none'));
+      const votes = await adapter.getVotesForProposal(makeHexString('none'));
       expect(votes).toHaveLength(0);
     });
 
     it('should update an existing vote (same voter, same proposal)', async () => {
-      const proposalId = makeShortHexGuid('p1');
-      const voterId = makeShortHexGuid('v1');
+      const proposalId = makeHexString('p1');
+      const voterId = makeHexString('v1');
       await adapter.saveVote(makeVote(proposalId, voterId, 'reject'));
       await adapter.saveVote(makeVote(proposalId, voterId, 'approve'));
       const votes = await adapter.getVotesForProposal(proposalId);
@@ -344,8 +396,8 @@ describe('QuorumDatabaseAdapter', () => {
     });
 
     it('should preserve encrypted share on approve votes', async () => {
-      const proposalId = makeShortHexGuid('p1');
-      const vote = makeVote(proposalId, makeShortHexGuid('v1'), 'approve');
+      const proposalId = makeHexString('p1');
+      const vote = makeVote(proposalId, makeHexString('v1'), 'approve');
       await adapter.saveVote(vote);
       const votes = await adapter.getVotesForProposal(proposalId);
       expect(votes[0].encryptedShare).toEqual(new Uint8Array([10, 20, 30]));
@@ -357,34 +409,30 @@ describe('QuorumDatabaseAdapter', () => {
   describe('identity recovery record CRUD', () => {
     it('should save and retrieve an identity record', async () => {
       const record = makeIdentityRecord(
-        makeShortHexGuid('ir1'),
+        makeHexString('ir1'),
         new Date('2025-06-01T00:00:00Z'),
       );
       await adapter.saveIdentityRecord(record);
-      const retrieved = await adapter.getIdentityRecord(
-        makeShortHexGuid('ir1'),
-      );
+      const retrieved = await adapter.getIdentityRecord(makeHexString('ir1'));
       expect(retrieved).not.toBeNull();
-      expect(retrieved!.id).toBe(makeShortHexGuid('ir1'));
+      expect(retrieved!.id).toBe(makeHexString('ir1'));
       expect(retrieved!.identityMode).toBe(IdentityMode.Anonymous);
       expect(retrieved!.encryptedShardsByMemberId.size).toBe(2);
     });
 
     it('should return null for non-existent identity record', async () => {
-      const result = await adapter.getIdentityRecord(
-        makeShortHexGuid('missing'),
-      );
+      const result = await adapter.getIdentityRecord(makeHexString('missing'));
       expect(result).toBeNull();
     });
 
     it('should delete an identity record', async () => {
       const record = makeIdentityRecord(
-        makeShortHexGuid('ir1'),
+        makeHexString('ir1'),
         new Date('2025-06-01T00:00:00Z'),
       );
       await adapter.saveIdentityRecord(record);
-      await adapter.deleteIdentityRecord(makeShortHexGuid('ir1'));
-      const result = await adapter.getIdentityRecord(makeShortHexGuid('ir1'));
+      await adapter.deleteIdentityRecord(makeHexString('ir1'));
+      const result = await adapter.getIdentityRecord(makeHexString('ir1'));
       expect(result).toBeNull();
     });
 
@@ -392,16 +440,16 @@ describe('QuorumDatabaseAdapter', () => {
       const now = new Date('2024-06-01T00:00:00Z');
       // Expired: expiresAt before "now"
       const expired1 = makeIdentityRecord(
-        makeShortHexGuid('ir1'),
+        makeHexString('ir1'),
         new Date('2024-03-01T00:00:00Z'),
       );
       const expired2 = makeIdentityRecord(
-        makeShortHexGuid('ir2'),
+        makeHexString('ir2'),
         new Date('2024-05-01T00:00:00Z'),
       );
       // Not expired: expiresAt after "now"
       const notExpired = makeIdentityRecord(
-        makeShortHexGuid('ir3'),
+        makeHexString('ir3'),
         new Date('2025-01-01T00:00:00Z'),
       );
       await adapter.saveIdentityRecord(expired1);
@@ -411,8 +459,8 @@ describe('QuorumDatabaseAdapter', () => {
       const result = await adapter.listExpiredIdentityRecords(now, 0, 10);
       expect(result).toHaveLength(2);
       const ids = result.map((r) => r.id);
-      expect(ids).toContain(makeShortHexGuid('ir1'));
-      expect(ids).toContain(makeShortHexGuid('ir2'));
+      expect(ids).toContain(makeHexString('ir1'));
+      expect(ids).toContain(makeHexString('ir2'));
     });
 
     it('should paginate expired identity records', async () => {
@@ -420,7 +468,7 @@ describe('QuorumDatabaseAdapter', () => {
       // Create 5 expired records
       for (let i = 1; i <= 5; i++) {
         const record = makeIdentityRecord(
-          makeShortHexGuid(`ir${i}`),
+          makeHexString(`ir${i}`),
           new Date(`2024-0${i}-01T00:00:00Z`),
         );
         await adapter.saveIdentityRecord(record);
@@ -487,13 +535,13 @@ describe('QuorumDatabaseAdapter', () => {
       // We store a chained entry (with chain fields) since getLatestAuditEntry
       // deserializes as ChainedAuditLogEntry
       const entry = makeChainedAuditEntry(
-        makeShortHexGuid('a1'),
+        makeHexString('a1'),
         new Date('2024-01-01T00:00:00Z'),
       );
       await adapter.appendAuditEntry(entry);
       const latest = await adapter.getLatestAuditEntry();
       expect(latest).not.toBeNull();
-      expect(latest!.id).toBe(makeShortHexGuid('a1'));
+      expect(latest!.id).toBe(makeHexString('a1'));
       expect(latest!.contentHash).toBe('abc123');
     });
 
@@ -504,17 +552,17 @@ describe('QuorumDatabaseAdapter', () => {
 
     it('should return the most recent entry by timestamp', async () => {
       const entry1 = makeChainedAuditEntry(
-        makeShortHexGuid('a1'),
+        makeHexString('a1'),
         new Date('2024-01-01T00:00:00Z'),
       );
       const entry2 = makeChainedAuditEntry(
-        makeShortHexGuid('a2'),
+        makeHexString('a2'),
         new Date('2024-06-01T00:00:00Z'),
       );
       await adapter.appendAuditEntry(entry1);
       await adapter.appendAuditEntry(entry2);
       const latest = await adapter.getLatestAuditEntry();
-      expect(latest!.id).toBe(makeShortHexGuid('a2'));
+      expect(latest!.id).toBe(makeHexString('a2'));
     });
   });
 
@@ -522,9 +570,9 @@ describe('QuorumDatabaseAdapter', () => {
 
   describe('redistribution journal', () => {
     it('should save and retrieve journal entries by epoch', async () => {
-      const entry1 = makeJournalEntry(makeShortHexGuid('d1'), 1);
-      const entry2 = makeJournalEntry(makeShortHexGuid('d2'), 1);
-      const entry3 = makeJournalEntry(makeShortHexGuid('d3'), 2);
+      const entry1 = makeJournalEntry(makeHexString('d1'), 1);
+      const entry2 = makeJournalEntry(makeHexString('d2'), 1);
+      const entry3 = makeJournalEntry(makeHexString('d3'), 2);
       await adapter.saveJournalEntry(entry1);
       await adapter.saveJournalEntry(entry2);
       await adapter.saveJournalEntry(entry3);
@@ -542,15 +590,9 @@ describe('QuorumDatabaseAdapter', () => {
     });
 
     it('should delete journal entries by epoch', async () => {
-      await adapter.saveJournalEntry(
-        makeJournalEntry(makeShortHexGuid('d1'), 1),
-      );
-      await adapter.saveJournalEntry(
-        makeJournalEntry(makeShortHexGuid('d2'), 1),
-      );
-      await adapter.saveJournalEntry(
-        makeJournalEntry(makeShortHexGuid('d3'), 2),
-      );
+      await adapter.saveJournalEntry(makeJournalEntry(makeHexString('d1'), 1));
+      await adapter.saveJournalEntry(makeJournalEntry(makeHexString('d2'), 1));
+      await adapter.saveJournalEntry(makeJournalEntry(makeHexString('d3'), 2));
 
       await adapter.deleteJournalEntries(1);
 
@@ -562,10 +604,10 @@ describe('QuorumDatabaseAdapter', () => {
     });
 
     it('should preserve Map fields through round-trip', async () => {
-      const entry = makeJournalEntry(makeShortHexGuid('d1'), 1);
+      const entry = makeJournalEntry(makeHexString('d1'), 1);
       await adapter.saveJournalEntry(entry);
       const entries = await adapter.getJournalEntries(1);
-      expect(entries[0].oldShares.get(makeShortHexGuid('m1'))).toEqual(
+      expect(entries[0].oldShares.get(makeHexString('m1'))).toEqual(
         new Uint8Array([1, 2]),
       );
     });
@@ -684,11 +726,14 @@ describe('QuorumDatabaseAdapter', () => {
 
     it('should return false when database operations fail', async () => {
       // Create an adapter backed by a mock db that throws on collection access
-      const brokenAdapter = new QuorumDatabaseAdapter({
-        collection: () => {
-          throw new Error('pool corrupted');
-        },
-      } as unknown as BrightChainDb);
+      const brokenAdapter = new QuorumDatabaseAdapter(
+        {
+          collection: () => {
+            throw new Error('pool corrupted');
+          },
+        } as unknown as BrightChainDb,
+        mockIdProvider,
+      );
       const available = await brokenAdapter.isAvailable();
       expect(available).toBe(false);
     });

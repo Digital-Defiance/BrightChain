@@ -2,10 +2,10 @@
 import {
   AESGCMService,
   ECIESService,
+  HexString,
   hexToUint8Array,
   Member,
   PlatformID,
-  ShortHexGuid,
   TypedIdProviderWrapper,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
@@ -253,7 +253,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
     // For a single-member bootstrap, we skip Shamir splitting entirely and encrypt
     // the raw key hex directly as the member's "share". On unseal, secrets.combine()
     // with a single share that IS the full key hex will return it as-is.
-    let encryptedSharesByMemberId: Map<ShortHexGuid, Uint8Array>;
+    let encryptedSharesByMemberId: Map<HexString, Uint8Array>;
     if (amongstMembers.length === 1 && threshold === 1) {
       // Single member: store the raw key hex as their share
       const rawKeyHex = uint8ArrayToHex(key);
@@ -314,11 +314,11 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
    * @throws {SealingError} If reconstruction fails or validation fails
    */
   public async redistributeShares(
-    existingShares: Map<ShortHexGuid, string>,
+    existingShares: Map<HexString, string>,
     newMembers: Member<TID>[],
     newThreshold: number,
     existingSharingConfig: { totalShares: number; threshold: number },
-  ): Promise<Map<ShortHexGuid, Uint8Array>> {
+  ): Promise<Map<HexString, Uint8Array>> {
     Validator.validateRequired(
       existingShares,
       'existingShares',
@@ -460,9 +460,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
         throw new SealingError(SealingErrorType.MissingPrivateKeys);
       }
       const encryptedKeyShareHex = document.encryptedSharesByMemberId.get(
-        uint8ArrayToHex(
-          this.enhancedProvider.toBytes(member.id),
-        ) as ShortHexGuid,
+        this.enhancedProvider.toString(member.id, 'hex') as HexString,
       );
       if (!encryptedKeyShareHex) {
         throw new SealingError(SealingErrorType.EncryptedShareNotFound);
@@ -553,7 +551,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
   public async encryptSharesForMembers(
     shares: Shares,
     members: Member<TID>[],
-  ): Promise<Map<ShortHexGuid, Uint8Array>> {
+  ): Promise<Map<HexString, Uint8Array>> {
     // Validate required inputs
     Validator.validateRequired(shares, 'shares', 'encryptSharesForMembers');
     Validator.validateRequired(members, 'members', 'encryptSharesForMembers');
@@ -562,7 +560,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
       throw new SealingError(SealingErrorType.NotEnoughMembersToUnlock);
     }
     const memberIds = members.map((v) => v.id);
-    const encryptedSharesByMemberId = new Map<ShortHexGuid, Uint8Array>();
+    const encryptedSharesByMemberId = new Map<HexString, Uint8Array>();
     for (let i = 0; i < memberIds.length; i++) {
       const memberId = memberIds[i];
       const member = members.find((v) => v.id == memberId);
@@ -576,9 +574,7 @@ export class SealingService<TID extends PlatformID = Uint8Array> {
         hexToUint8Array(shareForMember),
       );
       encryptedSharesByMemberId.set(
-        uint8ArrayToHex(
-          this.enhancedProvider.toBytes(member.id),
-        ) as ShortHexGuid,
+        this.enhancedProvider.toString(member.id, 'hex') as HexString,
         encryptedKeyShare,
       );
     }

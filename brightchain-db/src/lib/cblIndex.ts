@@ -10,6 +10,7 @@
 import {
   CBLVisibility,
   isPooledBlockStore,
+  type BlockId,
   type CBLIndexManifest,
   type CBLIndexManifestEntry,
   type IBlockStore,
@@ -75,6 +76,13 @@ export interface CBLIndexOptions {
    * @see Requirements 8.1, 8.6
    */
   gossipService?: IGossipService;
+
+  /**
+   * Custom ID generator function for CBL index entry IDs.
+   * When provided, this replaces the default `randomUUID()`
+   * so that all generated IDs are consistent with the configured ID provider.
+   */
+  idGenerator?: () => string;
 }
 
 /**
@@ -93,6 +101,7 @@ export class CBLIndex {
   private readonly dbName: string;
   private readonly enableRecovery: boolean;
   private readonly gossipService?: IGossipService;
+  private readonly generateId: () => string;
 
   constructor(
     db: BrightChainDb,
@@ -109,6 +118,7 @@ export class CBLIndex {
     this.dbName = db.name;
     this.enableRecovery = options?.enableRecovery ?? true;
     this.gossipService = options?.gossipService;
+    this.generateId = options?.idGenerator ?? (() => randomUUID());
   }
 
   /**
@@ -375,10 +385,10 @@ export class CBLIndex {
 
             this.sequenceCounter++;
             const entry: CBLIndexDocument = {
-              _id: randomUUID(),
+              _id: this.generateId(),
               magnetUrl,
-              blockId1: hash,
-              blockId2: hash, // placeholder
+              blockId1: hash as unknown as BlockId,
+              blockId2: hash as unknown as BlockId, // placeholder
               blockSize: data.length,
               poolId: pool,
               createdAt: new Date(),
@@ -441,7 +451,7 @@ export class CBLIndex {
     this.sequenceCounter++;
     const fullEntry: CBLIndexDocument = {
       ...entry,
-      _id: randomUUID(),
+      _id: this.generateId(),
       sequenceNumber: this.sequenceCounter,
     };
 
@@ -474,7 +484,7 @@ export class CBLIndex {
   /**
    * Look up entries by block ID (matches either blockId1 or blockId2).
    */
-  async getByBlockId(blockId: string): Promise<ICBLIndexEntry[]> {
+  async getByBlockId(blockId: BlockId): Promise<ICBLIndexEntry[]> {
     return this.collection
       .find({
         $or: [{ blockId1: blockId }, { blockId2: blockId }],
@@ -814,7 +824,7 @@ export class CBLIndex {
       // 1. Flag the existing entry
       const existingConflicts = existing.conflictsWith ?? [];
       // We'll use the incoming entry's _id (or generate one) for cross-referencing
-      const newId = entry._id || randomUUID();
+      const newId = entry._id || this.generateId();
       if (!existingConflicts.includes(newId)) {
         existingConflicts.push(newId);
       }
@@ -845,7 +855,7 @@ export class CBLIndex {
     this.sequenceCounter++;
     const newEntry: CBLIndexDocument = {
       ...entry,
-      _id: entry._id || randomUUID(),
+      _id: entry._id || this.generateId(),
       sequenceNumber: this.sequenceCounter,
     };
     await this.collection.insertOne(newEntry);

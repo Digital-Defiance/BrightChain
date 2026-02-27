@@ -8,6 +8,7 @@
  * @see Requirements 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 10.1, 10.2, 10.3, 10.4, 10.5
  */
 
+import type { BlockId } from '../branded/primitives/blockId';
 import { PoolId } from '../storage/pooledBlockStore';
 
 /**
@@ -51,7 +52,7 @@ export interface PendingSyncItem {
   /**
    * The block ID affected by this operation
    */
-  blockId: string;
+  blockId: BlockId;
 
   /**
    * Timestamp when the operation occurred
@@ -78,7 +79,7 @@ export interface ReconciliationError {
   /**
    * The block ID involved in the error (if applicable)
    */
-  blockId?: string;
+  blockId?: BlockId;
 
   /**
    * Description of the error
@@ -224,13 +225,13 @@ export type ReconciliationEvent =
   | {
       type: 'orphan_resolved';
       timestamp: Date;
-      blockId: string;
+      blockId: BlockId;
       sourceNodeId: string;
     }
   | {
       type: 'conflict_resolved';
       timestamp: Date;
-      blockId: string;
+      blockId: BlockId;
       winningNodeId: string;
     }
   | {

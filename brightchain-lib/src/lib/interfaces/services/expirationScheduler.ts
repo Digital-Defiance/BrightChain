@@ -7,7 +7,7 @@
  * @see Requirements 17
  */
 
-import { ShortHexGuid } from '@digitaldefiance/ecies-lib';
+import { HexString } from '@digitaldefiance/ecies-lib';
 
 /**
  * Configuration for the expiration scheduler.
@@ -26,7 +26,7 @@ export interface ExpirationResult {
   /** Number of identity recovery records successfully deleted */
   deletedCount: number;
   /** IDs of records that failed to delete */
-  failedIds: ShortHexGuid[];
+  failedIds: HexString[];
   /** True if the batch was full, indicating more expired records may exist */
   nextBatchAvailable: boolean;
 }

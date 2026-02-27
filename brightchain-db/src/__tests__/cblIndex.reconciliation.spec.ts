@@ -9,6 +9,7 @@
  */
 
 import type {
+  BlockId,
   CBLIndexManifest,
   ICBLIndexEntry,
 } from '@brightchain/brightchain-lib';
@@ -39,10 +40,10 @@ async function seedBlocks(
   store: MockBlockStore,
   id1 = 'block-aaa-111',
   id2 = 'block-bbb-222',
-): Promise<{ blockId1: string; blockId2: string }> {
+): Promise<{ blockId1: BlockId; blockId2: BlockId }> {
   await store.put(id1, new Uint8Array([1, 2, 3]));
   await store.put(id2, new Uint8Array([4, 5, 6]));
-  return { blockId1: id1, blockId2: id2 };
+  return { blockId1: id1 as BlockId, blockId2: id2 as BlockId };
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -79,8 +80,8 @@ describe('CBLIndex – getCBLIndexManifest (Req 8.4)', () => {
     await seedBlocks(store, 'block-ccc-333', 'block-ddd-444');
     await index.addEntry({
       magnetUrl: 'magnet:pool-b-entry-1',
-      blockId1: 'block-ccc-333',
-      blockId2: 'block-ddd-444',
+      blockId1: 'block-ccc-333' as BlockId,
+      blockId2: 'block-ddd-444' as BlockId,
       blockSize: 256,
       poolId: 'pool-b',
       createdAt: new Date(),
@@ -111,8 +112,8 @@ describe('CBLIndex – getCBLIndexManifest (Req 8.4)', () => {
     await seedBlocks(store, 'block-eee-555', 'block-fff-666');
     await index.addEntry({
       magnetUrl: 'magnet:deleted-entry',
-      blockId1: 'block-eee-555',
-      blockId2: 'block-fff-666',
+      blockId1: 'block-eee-555' as BlockId,
+      blockId2: 'block-fff-666' as BlockId,
       blockSize: 256,
       poolId: 'pool-a',
       createdAt: new Date(),
@@ -132,8 +133,8 @@ describe('CBLIndex – getCBLIndexManifest (Req 8.4)', () => {
 
     // Add 3 entries to the same pool
     for (let i = 0; i < 3; i++) {
-      const id1 = `block-${i}-a`;
-      const id2 = `block-${i}-b`;
+      const id1 = `block-${i}-a` as BlockId;
+      const id2 = `block-${i}-b` as BlockId;
       await seedBlocks(store, id1, id2);
       await index.addEntry({
         magnetUrl: `magnet:entry-${i}`,
@@ -178,8 +179,8 @@ describe('CBLIndex – reconcileCBLIndex (Req 8.4)', () => {
   /** Build a full ICBLIndexEntry as if it came from a remote peer. */
   function makeRemoteEntry(
     magnetUrl: string,
-    blockId1: string,
-    blockId2: string,
+    blockId1: BlockId,
+    blockId2: BlockId,
     poolId: string,
   ): ICBLIndexEntry {
     return {

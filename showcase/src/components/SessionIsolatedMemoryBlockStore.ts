@@ -13,6 +13,7 @@
 import {
   BaseBlock,
   BlockHandle,
+  BlockId,
   BlockSize,
   CBLMagnetComponents,
   CBLStorageResult,
@@ -20,6 +21,7 @@ import {
   Checksum,
   IBlockStore,
   RawDataBlock,
+  asBlockId,
   constantTimeXor,
   createBlockHandle,
   lengthToClosestBlockSize,
@@ -469,7 +471,7 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
     const xorResult = constantTimeXor(paddedCbl, randomBlock);
 
     let block1Stored = false;
-    let block1Id = '';
+    let block1Id: BlockId = '' as unknown as BlockId;
 
     try {
       const block1 = new RawDataBlock(cblBlockSize, randomBlock);
@@ -479,11 +481,11 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
         await this.setData(block1);
         block1Stored = true;
       }
-      block1Id = toHexKey(block1Checksum);
+      block1Id = asBlockId(toHexKey(block1Checksum));
 
       const block2 = new RawDataBlock(cblBlockSize, xorResult);
       await this.setData(block2);
-      const block2Id = toHexKey(block2.idChecksum);
+      const block2Id = asBlockId(toHexKey(block2.idChecksum));
 
       const magnetUrl = this.generateCBLMagnetUrl(
         block1Id,
@@ -667,18 +669,24 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
     const p1Param = params.get('p1');
     const p2Param = params.get('p2');
     const block1ParityIds = p1Param
-      ? p1Param.split(',').filter((id) => id)
+      ? p1Param
+          .split(',')
+          .filter((id) => id)
+          .map((id) => id as unknown as BlockId)
       : undefined;
     const block2ParityIds = p2Param
-      ? p2Param.split(',').filter((id) => id)
+      ? p2Param
+          .split(',')
+          .filter((id) => id)
+          .map((id) => id as unknown as BlockId)
       : undefined;
 
     // Parse encryption flag
     const isEncrypted = params.get('enc') === '1';
 
     return {
-      blockId1,
-      blockId2,
+      blockId1: blockId1 as unknown as BlockId,
+      blockId2: blockId2 as unknown as BlockId,
       blockSize,
       block1ParityIds,
       block2ParityIds,

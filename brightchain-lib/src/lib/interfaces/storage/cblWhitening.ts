@@ -1,3 +1,4 @@
+import type { BlockId } from '../branded/primitives/blockId';
 import { BlockStoreOptions } from './blockMetadata';
 
 /**
@@ -8,12 +9,12 @@ export interface CBLStorageResult {
   /**
    * First block ID - one of the XOR components (hex string)
    */
-  blockId1: string;
+  blockId1: BlockId;
 
   /**
    * Second block ID - the other XOR component (hex string)
    */
-  blockId2: string;
+  blockId2: BlockId;
 
   /**
    * The block size used for storage
@@ -28,12 +29,12 @@ export interface CBLStorageResult {
   /**
    * Parity block IDs for block 1 (if FEC redundancy enabled)
    */
-  block1ParityIds?: string[];
+  block1ParityIds?: BlockId[];
 
   /**
    * Parity block IDs for block 2 (if FEC redundancy enabled)
    */
-  block2ParityIds?: string[];
+  block2ParityIds?: BlockId[];
 
   /**
    * Whether the CBL is encrypted
@@ -49,12 +50,12 @@ export interface CBLMagnetComponents {
   /**
    * First block ID (hex string)
    */
-  blockId1: string;
+  blockId1: BlockId;
 
   /**
    * Second block ID (hex string)
    */
-  blockId2: string;
+  blockId2: BlockId;
 
   /**
    * Block size in bytes
@@ -64,12 +65,12 @@ export interface CBLMagnetComponents {
   /**
    * Parity block IDs for block 1 (if present in URL)
    */
-  block1ParityIds?: string[];
+  block1ParityIds?: BlockId[];
 
   /**
    * Parity block IDs for block 2 (if present in URL)
    */
-  block2ParityIds?: string[];
+  block2ParityIds?: BlockId[];
 
   /**
    * Whether the CBL is encrypted

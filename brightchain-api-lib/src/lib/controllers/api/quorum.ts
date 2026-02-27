@@ -23,7 +23,6 @@ import {
   Member,
   MemberType,
   SecureString,
-  ShortHexGuid,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
@@ -140,7 +139,7 @@ interface GetDocumentRequest {
 }
 
 interface GetDocumentResponse extends IApiMessageResponse {
-  document: QuorumDocumentInfo;
+  document: QuorumDocumentInfo<GuidV4Buffer>;
   [key: string]: any;
 }
 
@@ -153,7 +152,9 @@ interface CanUnlockRequest {
   };
 }
 
-interface CanUnlockResponse extends IApiMessageResponse, CanUnlockResult {
+interface CanUnlockResponse
+  extends IApiMessageResponse, Omit<CanUnlockResult, 'missingMembers'> {
+  missingMembers: string[];
   [key: string]: any;
 }
 
@@ -213,8 +214,9 @@ interface SerializedQuorumMember {
 function serializeMember<TID extends PlatformID>(
   member: IQuorumMember<TID>,
 ): SerializedQuorumMember {
+  const sp = ServiceProvider.getInstance<TID>();
   return {
-    id: member.id,
+    id: sp.idProvider.toString(member.id, 'hex'),
     publicKey: Buffer.from(member.publicKey).toString('hex'),
     metadata: member.metadata,
     isActive: member.isActive,
@@ -651,7 +653,7 @@ export class QuorumController<
       }
 
       const quorumService = this.quorumServiceWrapper.getService();
-      await quorumService.removeMember(memberId as ShortHexGuid);
+      await quorumService.removeMember(memberId as unknown as GuidV4Buffer);
 
       return {
         statusCode: 200,
@@ -765,7 +767,7 @@ export class QuorumController<
       const result = await quorumService.sealDocument(
         agent,
         document,
-        memberIds as ShortHexGuid[],
+        memberIds as unknown as GuidV4Buffer[],
         sharesRequired,
       );
 
@@ -773,8 +775,17 @@ export class QuorumController<
         statusCode: 201,
         response: {
           message: 'Document sealed successfully',
-          documentId: result.documentId,
-          memberIds: result.memberIds,
+          documentId:
+            ServiceProvider.getInstance<GuidV4Buffer>().idProvider.toString(
+              result.documentId,
+              'hex',
+            ),
+          memberIds: result.memberIds.map((id) =>
+            ServiceProvider.getInstance<GuidV4Buffer>().idProvider.toString(
+              id,
+              'hex',
+            ),
+          ),
           sharesRequired: result.sharesRequired,
           createdAt: result.createdAt.toISOString(),
         },
@@ -856,7 +867,7 @@ export class QuorumController<
 
       // Check if document exists and if we have enough shares
       const docInfo = await quorumService.getDocument(
-        documentId as ShortHexGuid,
+        documentId as unknown as GuidV4Buffer,
       );
       if (!docInfo) {
         return notFoundError('Document', documentId);
@@ -864,10 +875,10 @@ export class QuorumController<
 
       // Check if provided members can unlock the document
       const memberIds = memberCredentials.map(
-        (c) => c.memberId as ShortHexGuid,
+        (c) => c.memberId as unknown as GuidV4Buffer,
       );
       const canUnlockResult = await quorumService.canUnlock(
-        documentId as ShortHexGuid,
+        documentId as unknown as GuidV4Buffer,
         memberIds,
       );
 
@@ -887,7 +898,7 @@ export class QuorumController<
       for (const cred of memberCredentials) {
         // Get the stored member info to get their metadata
         const storedMember = await quorumService.getMember(
-          cred.memberId as ShortHexGuid,
+          cred.memberId as unknown as GuidV4Buffer,
         );
         if (!storedMember) {
           return notFoundError('Member', cred.memberId);
@@ -943,7 +954,7 @@ export class QuorumController<
 
       // Unseal the document
       const unsealedDocument = await quorumService.unsealDocument(
-        documentId as ShortHexGuid,
+        documentId as unknown as GuidV4Buffer,
         membersWithPrivateKey,
       );
 
@@ -1004,7 +1015,7 @@ export class QuorumController<
 
       const quorumService = this.quorumServiceWrapper.getService();
       const document = await quorumService.getDocument(
-        documentId as ShortHexGuid,
+        documentId as unknown as GuidV4Buffer,
       );
 
       if (!document) {
@@ -1071,11 +1082,11 @@ export class QuorumController<
 
       const memberIds = memberIdsStr
         .split(',')
-        .map((id) => id.trim()) as ShortHexGuid[];
+        .map((id) => id.trim()) as unknown as GuidV4Buffer[];
 
       const quorumService = this.quorumServiceWrapper.getService();
       const result = await quorumService.canUnlock(
-        documentId as ShortHexGuid,
+        documentId as unknown as GuidV4Buffer,
         memberIds,
       );
 
@@ -1083,7 +1094,15 @@ export class QuorumController<
         statusCode: 200,
         response: {
           message: 'Can-unlock check completed',
-          ...result,
+          canUnlock: result.canUnlock,
+          sharesProvided: result.sharesProvided,
+          sharesRequired: result.sharesRequired,
+          missingMembers: result.missingMembers.map((id) =>
+            ServiceProvider.getInstance<GuidV4Buffer>().idProvider.toString(
+              id,
+              'hex',
+            ),
+          ),
         },
       };
     } catch (_error) {
@@ -1162,12 +1181,16 @@ export class QuorumController<
         attachmentCblId: body.attachmentCblId,
       });
 
+      const sp = ServiceProvider.getInstance<TID>();
       const proposalData: IProposalData = {
-        id: proposal.id,
+        id: sp.idProvider.toString(proposal.id, 'hex'),
         description: proposal.description,
         actionType: proposal.actionType,
         actionPayload: proposal.actionPayload,
-        proposerMemberId: proposal.proposerMemberId,
+        proposerMemberId: sp.idProvider.toString(
+          proposal.proposerMemberId,
+          'hex',
+        ),
         status: proposal.status,
         requiredThreshold: proposal.requiredThreshold,
         expiresAt: proposal.expiresAt.toISOString(),
@@ -1215,18 +1238,22 @@ export class QuorumController<
       }
 
       const proposal = await this.quorumStateMachine!.getProposal(
-        proposalId as ShortHexGuid,
+        proposalId as unknown as TID,
       );
       if (!proposal) {
         return notFoundError('Proposal', proposalId);
       }
 
+      const sp = ServiceProvider.getInstance<TID>();
       const proposalData: IProposalData = {
-        id: proposal.id,
+        id: sp.idProvider.toString(proposal.id, 'hex'),
         description: proposal.description,
         actionType: proposal.actionType,
         actionPayload: proposal.actionPayload,
-        proposerMemberId: proposal.proposerMemberId,
+        proposerMemberId: sp.idProvider.toString(
+          proposal.proposerMemberId,
+          'hex',
+        ),
         status: proposal.status,
         requiredThreshold: proposal.requiredThreshold,
         expiresAt: proposal.expiresAt.toISOString(),
@@ -1324,12 +1351,22 @@ export class QuorumController<
 
       const epochData: IEpochData = {
         epochNumber: epoch.epochNumber,
-        memberIds: epoch.memberIds,
+        memberIds: epoch.memberIds.map((id) =>
+          ServiceProvider.getInstance<GuidV4Buffer>().idProvider.toString(
+            id as unknown as GuidV4Buffer,
+            'hex',
+          ),
+        ),
         threshold: epoch.threshold,
         mode: epoch.mode,
         createdAt: epoch.createdAt.toISOString(),
         previousEpochNumber: epoch.previousEpochNumber,
-        innerQuorumMemberIds: epoch.innerQuorumMemberIds,
+        innerQuorumMemberIds: epoch.innerQuorumMemberIds?.map((id) =>
+          ServiceProvider.getInstance<GuidV4Buffer>().idProvider.toString(
+            id as unknown as GuidV4Buffer,
+            'hex',
+          ),
+        ),
       };
 
       return {

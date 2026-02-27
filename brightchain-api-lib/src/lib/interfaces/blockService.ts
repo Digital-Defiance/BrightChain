@@ -1,4 +1,5 @@
 import {
+  type BlockId,
   BlockStoreOptions,
   BrightenResult,
   IBlockMetadata,
@@ -12,18 +13,18 @@ export interface IBlockService {
     canRead?: boolean,
     canPersist?: boolean,
     options?: BlockStoreOptions,
-  ): Promise<{ blockId: string; metadata?: IBlockMetadata }>;
+  ): Promise<{ blockId: BlockId; metadata?: IBlockMetadata }>;
 
   getBlock(
-    blockId: string,
+    blockId: BlockId,
   ): Promise<{ data: Buffer; metadata?: IBlockMetadata }>;
 
-  getBlockMetadata(blockId: string): Promise<IBlockMetadata | null>;
+  getBlockMetadata(blockId: BlockId): Promise<IBlockMetadata | null>;
 
-  deleteBlock(blockId: string): Promise<void>;
+  deleteBlock(blockId: BlockId): Promise<void>;
 
   brightenBlock(
-    blockId: string,
+    blockId: BlockId,
     randomBlockCount: number,
   ): Promise<BrightenResult>;
 }

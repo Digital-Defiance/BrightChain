@@ -7,6 +7,7 @@
  * @see Requirements 3.1, 3.5, 3.6, 3.7, 4.5
  */
 
+import type { BlockId } from '../branded/primitives/blockId';
 import { PoolId } from '../storage/pooledBlockStore';
 
 /**
@@ -45,7 +46,7 @@ export interface BloomFilter {
    * @param blockId - The block ID to check
    * @returns true if the block might exist, false if it definitely does not
    */
-  mightContain(blockId: string): boolean;
+  mightContain(blockId: BlockId): boolean;
 }
 
 /**
@@ -63,7 +64,7 @@ export interface BlockManifest {
   /**
    * Array of all block IDs stored on the node
    */
-  blockIds: string[];
+  blockIds: BlockId[];
 
   /**
    * Timestamp when the manifest was generated
@@ -101,7 +102,7 @@ export interface PoolScopedManifest {
   /** Unique identifier of the node that generated this manifest */
   nodeId: string;
   /** Block IDs grouped by pool */
-  pools: Map<PoolId, string[]>;
+  pools: Map<PoolId, BlockId[]>;
   /** Timestamp when the manifest was generated */
   generatedAt: Date;
   /** Checksum of the manifest for integrity verification */
@@ -124,7 +125,7 @@ export interface IBlockRegistry {
    * @param blockId - The block ID to check
    * @returns true if the block exists locally
    */
-  hasLocal(blockId: string): boolean;
+  hasLocal(blockId: BlockId): boolean;
 
   /**
    * Add a block to the local registry
@@ -132,7 +133,7 @@ export interface IBlockRegistry {
    * @param blockId - The block ID to add
    * @param poolId - Optional pool the block belongs to
    */
-  addLocal(blockId: string, poolId?: PoolId): void;
+  addLocal(blockId: BlockId, poolId?: PoolId): void;
 
   /**
    * Remove a block from the local registry
@@ -140,7 +141,7 @@ export interface IBlockRegistry {
    * @param blockId - The block ID to remove
    * @param poolId - Optional pool the block belonged to
    */
-  removeLocal(blockId: string, poolId?: PoolId): void;
+  removeLocal(blockId: BlockId, poolId?: PoolId): void;
 
   /**
    * Get count of local blocks
@@ -154,7 +155,7 @@ export interface IBlockRegistry {
    *
    * @returns Array of all block IDs in the local registry
    */
-  getLocalBlockIds(): string[];
+  getLocalBlockIds(): BlockId[];
 
   /**
    * Export a Bloom filter representation of the registry.
