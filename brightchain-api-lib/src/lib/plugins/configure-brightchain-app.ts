@@ -21,7 +21,10 @@ import type {
 } from '@digitaldefiance/node-express-suite';
 import { AppConstants } from '../appConstants';
 import type { Environment } from '../environment';
-import { BrightChainDatabasePlugin } from './brightchain-database-plugin';
+import {
+  BrightChainDatabasePlugin,
+  type IBrightChainDatabasePluginOptions,
+} from './brightchain-database-plugin';
 
 /**
  * Result returned by {@link configureBrightChainApp}.
@@ -53,6 +56,7 @@ export function configureBrightChainApp<TID extends PlatformID>(
   app: IApplication<TID>,
   environment: Environment<TID>,
   constants: IConstants = AppConstants,
+  pluginOptions: IBrightChainDatabasePluginOptions = {},
 ): ConfigureBrightChainResult<TID> {
   // 1. Configure GUID provider and sync all derived constants
   const guidProvider = new GuidV4Provider();
@@ -83,7 +87,7 @@ export function configureBrightChainApp<TID extends PlatformID>(
   initializeBrightChain();
 
   // 3. Create and register database plugin
-  const plugin = new BrightChainDatabasePlugin<TID>(environment);
+  const plugin = new BrightChainDatabasePlugin<TID>(environment, pluginOptions);
 
   // Application (HTTP) exposes useDatabasePlugin() which stores the plugin
   // reference AND registers it with the PluginManager. BaseApplication (CLI)
