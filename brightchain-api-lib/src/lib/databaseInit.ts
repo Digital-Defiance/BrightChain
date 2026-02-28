@@ -101,9 +101,14 @@ export async function brightchainDatabaseInit<TID extends PlatformID>(
 
     // Create BrightChainDb — uses PersistentHeadRegistry when dataDir is set,
     // InMemoryHeadRegistry otherwise.
+    // IMPORTANT: name must match what BrightChainMemberInitService uses
+    // (config.memberPoolName) so the head registry keys are consistent across
+    // the plugin's db and the seeding service's db.
     const db = new BrightChainDb(
       blockStore,
-      dataDir ? { name: dataDir } : undefined,
+      dataDir
+        ? { name: environment.memberPoolName, dataDir }
+        : undefined,
     );
 
     // Mark the db as connected (no-op for block-store-backed DB, but sets
