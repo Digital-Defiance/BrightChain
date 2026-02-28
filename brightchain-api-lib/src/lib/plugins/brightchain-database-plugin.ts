@@ -53,6 +53,15 @@ import {
  * Typed accessors (blockStore, memberStore, energyStore, brightChainDb)
  * throw descriptive errors when the plugin is not connected.
  */
+export interface IBrightChainDatabasePluginOptions {
+  /**
+   * When true, skip the automatic production seed in connect().
+   * Use this when the caller (e.g. brightchain-inituserdb) will perform
+   * its own controlled seeding after connect() returns.
+   */
+  skipAutoSeed?: boolean;
+}
+
 export class BrightChainDatabasePlugin<
   TID extends PlatformID,
 > implements IDatabasePlugin<TID> {
@@ -60,6 +69,7 @@ export class BrightChainDatabasePlugin<
   public readonly version = '1.0.0';
 
   private readonly _environment: Environment<TID>;
+  private readonly _skipAutoSeed: boolean;
   private _connected = false;
   private _blockStore: IBlockStore | null = null;
   private _brightChainDb: BrightChainDb | null = null;
@@ -67,8 +77,12 @@ export class BrightChainDatabasePlugin<
   private _energyStore: EnergyAccountStore | null = null;
   private _authProvider: BrightChainAuthenticationProvider<TID> | null = null;
 
-  constructor(environment: Environment<TID>) {
+  constructor(
+    environment: Environment<TID>,
+    options: IBrightChainDatabasePluginOptions = {},
+  ) {
     this._environment = environment;
+    this._skipAutoSeed = options.skipAutoSeed ?? false;
   }
 
   // ── IDatabasePlugin contract ──────────────────────────────────────
@@ -121,8 +135,10 @@ export class BrightChainDatabasePlugin<
     this._energyStore = energyStore as EnergyAccountStore;
     this._connected = true;
 
-    // In production mode (no dev pool), auto-seed if the database is empty.
-    if (!this._environment.devDatabasePoolName) {
+    // In production mode (no dev pool), auto-seed if the database is empty —
+    // unless the caller has opted out (e.g. brightchain-inituserdb, which
+    // performs its own controlled seeding after connect() returns).
+    if (!this._environment.devDatabasePoolName && !this._skipAutoSeed) {
       await this.seedProductionIfEmpty();
     }
   }
