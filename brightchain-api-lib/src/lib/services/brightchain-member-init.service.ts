@@ -79,7 +79,7 @@ import {
   USER_SCHEMA,
   USERS_COLLECTION,
 } from '../interfaces/storage/userSchema';
-import { DiskBlockStore } from '../stores/diskBlockStore';
+import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
 import { serializeForStorage as serializeForStorageUtil } from '../utils/serialization';
 export type { IBrightChainMemberInitConfig } from '../interfaces/member-init-config';
 
@@ -97,8 +97,8 @@ function buildMemoryBlockStore(
 function buildDiskBlockStore(
   storePath: string,
   blockSize: BlockSize = BlockSize.Medium,
-): DiskBlockStore {
-  return new DiskBlockStore({ storePath, blockSize });
+): DiskBlockAsyncStore {
+  return new DiskBlockAsyncStore({ storePath, blockSize });
 }
 
 // ─── Validation helper (not exported) ────────────────────────────────────────
