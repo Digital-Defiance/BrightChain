@@ -29,7 +29,7 @@
     <% } else if (devScripts && devScripts.length > 0) { %>
     <%/* Dev: un-hashed runtime/main/vendor chunks served from /static/js/ */%>
     <% devScripts.forEach(function(script) { %>
-    <script nonce="<%= cspNonce %>" src="static/js/<%= script %>"></script>
+    <script nonce="<%= cspNonce %>" type="module" src="static/js/<%= script %>"></script>
     <% }); %>
     <% } %>
   </body>
