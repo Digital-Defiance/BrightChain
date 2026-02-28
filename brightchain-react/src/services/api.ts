@@ -4,8 +4,18 @@ import { LanguageCodes } from '@digitaldefiance/i18n-lib';
 import axios from 'axios';
 import { environment } from '../environments/environment';
 
+const getApiBaseUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const appConfig = (window as { APP_CONFIG?: { apiUrl?: string } }).APP_CONFIG;
+    if (appConfig?.apiUrl) {
+      return appConfig.apiUrl;
+    }
+  }
+  return environment.apiUrl || '/api';
+};
+
 const api = axios.create({
-  baseURL: environment.apiUrl,
+  baseURL: getApiBaseUrl(),
 });
 
 api.interceptors.request.use((config) => {
