@@ -447,6 +447,7 @@ export class BrightChainDatabasePlugin<
         BrightChainMemberInitService.printServerInitResults<TID>(
           serverResult,
           config,
+          getEnhancedNodeIdProvider<TID>(),
         );
       }
 

@@ -419,6 +419,7 @@ async function main() {
       BrightChainMemberInitService.printServerInitResults<GuidV4Buffer>(
         serverInitResult,
         initConfig,
+        guidProvider,
       );
 
       // Print .env format for convenience
@@ -428,6 +429,7 @@ async function main() {
         'log',
         BrightChainMemberInitService.formatDotEnv<GuidV4Buffer>(
           buildResult.credentials,
+          guidProvider,
         ),
       );
       debugLog(bcEnv.debug, 'log', '=== End .env format ===');
