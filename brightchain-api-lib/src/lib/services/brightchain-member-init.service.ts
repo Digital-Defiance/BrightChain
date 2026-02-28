@@ -126,7 +126,7 @@ function buildCandidateEntries<TID extends PlatformID>(
 ): IMemberIndexDocument[] {
   const now = new Date().toISOString();
   return [input.systemUser, input.adminUser, input.memberUser].map((user) => ({
-    id: idProvider.idToString(user.id),
+    id: idProvider.idToString(user.id).replace(/-/g, ''),
     // Zero-filled sentinel — replaced when the member's actual CBL blocks are written
     publicCBL: '0'.repeat(64),
     privateCBL: '0'.repeat(64),
@@ -740,10 +740,13 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   private static printUserCredentials<TID extends PlatformID>(
     label: string,
     creds: IBrightChainUserCredentials<TID>,
+    idProvider: IIdProvider<TID>,
   ): void {
     const log = (msg: string) => console.log(msg);
-    log(`  ${label} ID:           ${creds.id}`);
-    log(`  ${label} Full ID:      ${creds.fullId}`);
+    // Normalize to ShortHexGuid (32-char hex, no dashes) for consistency
+    const idHex = (id: TID) => idProvider.idToString(id).replace(/-/g, '');
+    log(`  ${label} ID:           ${idHex(creds.id)}`);
+    log(`  ${label} Full ID:      ${idHex(creds.fullId)}`);
     log(`  ${label} Type:         ${this.memberTypeLabel(creds.type)}`);
     log(`  ${label} Username:     ${creds.username}`);
     log(`  ${label} Email:        ${creds.email}`);
@@ -753,10 +756,10 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
       log(`  ${label} Public Key:   ${creds.publicKeyHex}`);
     }
     if (creds.roleId) {
-      log(`  ${label} Role ID:      ${creds.roleId}`);
+      log(`  ${label} Role ID:      ${idHex(creds.roleId)}`);
     }
     if (creds.userRoleId) {
-      log(`  ${label} User Role ID: ${creds.userRoleId}`);
+      log(`  ${label} User Role ID: ${idHex(creds.userRoleId)}`);
     }
     log(`  ${label} Backup Codes: ${creds.backupCodes.join(', ')}`);
     log('');
@@ -769,6 +772,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   static printServerInitResults<TID extends PlatformID>(
     result: IBrightChainServerInitResult<TID, BrightChainDb>,
     config: IBrightChainMemberInitConfig,
+    idProvider: IIdProvider<TID>,
   ): void {
     const log = (msg: string) => console.log(msg);
 
@@ -784,9 +788,9 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     log(`  Skipped:        ${result.skippedCount}`);
     log('');
 
-    this.printUserCredentials('System', result.system);
-    this.printUserCredentials('Admin', result.admin);
-    this.printUserCredentials('Member', result.member);
+    this.printUserCredentials('System', result.system, idProvider);
+    this.printUserCredentials('Admin', result.admin, idProvider);
+    this.printUserCredentials('Member', result.member, idProvider);
 
     log('=== End BrightChain Account Credentials ===');
     log('');
@@ -801,6 +805,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     input: IBrightChainMemberInitInput<TID>,
     result: IBrightChainBaseInitResult<BrightChainDb, TID>,
     config: IBrightChainMemberInitConfig,
+    idProvider: IIdProvider<TID>,
   ): void {
     const log = (msg: string) => console.log(msg);
 
@@ -826,7 +831,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     ];
 
     for (const { label, entry } of entries) {
-      log(`  ${label} ID:       ${entry.id}`);
+      log(`  ${label} ID:       ${idProvider.idToString(entry.id)}`);
       log(`  ${label} Type:     ${this.memberTypeLabel(entry.type)}`);
       log('');
     }
@@ -844,6 +849,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     input: IBrightChainMemberInitInput<TID>,
     result: IBrightChainInitResult<TID, BrightChainDb>,
     config: IBrightChainMemberInitConfig,
+    idProvider: IIdProvider<TID>,
   ): void {
     const log = (msg: string) => console.log(msg);
 
@@ -869,7 +875,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     ];
 
     for (const { label, entry } of entries) {
-      log(`  ${label} ID:       ${entry.id}`);
+      log(`  ${label} ID:       ${idProvider.idToString(entry.id)}`);
       log(`  ${label} Type:     ${this.memberTypeLabel(entry.type)}`);
       log('');
     }
@@ -903,32 +909,37 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
    * Format the full server init result as .env variable lines.
    * Outputs all credential fields matching the .env.example layout.
    */
-  static formatDotEnv<TID extends PlatformID>(credentials: {
-    system: IBrightChainUserCredentials<TID>;
-    admin: IBrightChainUserCredentials<TID>;
-    member: IBrightChainUserCredentials<TID>;
-  }): string {
+  static formatDotEnv<TID extends PlatformID>(
+    credentials: {
+      system: IBrightChainUserCredentials<TID>;
+      admin: IBrightChainUserCredentials<TID>;
+      member: IBrightChainUserCredentials<TID>;
+    },
+    idProvider: IIdProvider<TID>,
+  ): string {
     const { admin, member, system } = credentials;
+    const idStr = (id: TID | undefined): string =>
+      id ? idProvider.idToString(id) : '';
     const lines: string[] = [
-      `ADMIN_ID="${admin.fullId}"`,
+      `ADMIN_ID="${idStr(admin.fullId)}"`,
       `ADMIN_MNEMONIC="${admin.mnemonic}"`,
-      `ADMIN_ROLE_ID="${admin.roleId ?? ''}"`,
-      `ADMIN_USER_ROLE_ID="${admin.userRoleId ?? ''}"`,
+      `ADMIN_ROLE_ID="${idStr(admin.roleId)}"`,
+      `ADMIN_USER_ROLE_ID="${idStr(admin.userRoleId)}"`,
       `ADMIN_PASSWORD="${admin.password}"`,
       '',
-      `MEMBER_ID="${member.fullId}"`,
+      `MEMBER_ID="${idStr(member.fullId)}"`,
       `MEMBER_MNEMONIC="${member.mnemonic}"`,
-      `MEMBER_ROLE_ID="${member.roleId ?? ''}"`,
+      `MEMBER_ROLE_ID="${idStr(member.roleId)}"`,
       `MEMBER_PASSWORD="${member.password}"`,
-      `MEMBER_USER_ROLE_ID="${member.userRoleId ?? ''}"`,
+      `MEMBER_USER_ROLE_ID="${idStr(member.userRoleId)}"`,
       '',
       '# System credentials used to sign system messages',
-      `SYSTEM_ID="${system.fullId}"`,
+      `SYSTEM_ID="${idStr(system.fullId)}"`,
       `SYSTEM_MNEMONIC="${system.mnemonic}"`,
       `SYSTEM_PUBLIC_KEY="${system.publicKeyHex ?? ''}"`,
-      `SYSTEM_ROLE_ID="${system.roleId ?? ''}"`,
+      `SYSTEM_ROLE_ID="${idStr(system.roleId)}"`,
       `SYSTEM_PASSWORD="${system.password}"`,
-      `SYSTEM_USER_ROLE_ID="${system.userRoleId ?? ''}"`,
+      `SYSTEM_USER_ROLE_ID="${idStr(system.userRoleId)}"`,
     ];
     return lines.join('\n');
   }

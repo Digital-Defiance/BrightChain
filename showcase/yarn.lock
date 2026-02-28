@@ -324,6 +324,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@digitaldefiance/ecies-lib@npm:^4.19.15":
+  version: 4.19.15
+  resolution: "@digitaldefiance/ecies-lib@npm:4.19.15"
+  dependencies:
+    "@digitaldefiance/i18n-lib": "npm:4.6.4"
+    "@ethereumjs/wallet": "npm:^2.0.4"
+    "@noble/curves": "npm:^1.4.2"
+    "@noble/hashes": "npm:^1.4.0"
+    "@scure/bip32": "npm:^1.4.0"
+    bson: "npm:^6.10.4"
+    crc-32: "npm:^1.2.2"
+    js-sha3: "npm:^0.9.3"
+    paillier-bigint: "npm:^3.4.1"
+    ts-brand: "npm:^0.2.0"
+  checksum: 10c0/cdae62c1cc6f6e8fd0b6f07e6ea4210e2f0218f41caffcf45a2fb357cd4356c333b3784dcf5e37a3a2c108024bd91dc61fc3b2106fcc58e75646cc7b235c4cef
+  languageName: node
+  linkType: hard
+
 "@digitaldefiance/i18n-lib@npm:4.6.4, @digitaldefiance/i18n-lib@npm:^4.6.4":
   version: 4.6.4
   resolution: "@digitaldefiance/i18n-lib@npm:4.6.4"
@@ -2494,7 +2512,7 @@ __metadata:
   resolution: "brightchain-showcase@workspace:."
   dependencies:
     "@brightchain/brightchain-lib": "npm:^0.23.0"
-    "@digitaldefiance/ecies-lib": "npm:^4.19.13"
+    "@digitaldefiance/ecies-lib": "npm:^4.19.15"
     "@digitaldefiance/i18n-lib": "npm:^4.6.4"
     "@esbuild-plugins/node-globals-polyfill": "npm:^0.2.3"
     "@esbuild-plugins/node-modules-polyfill": "npm:^0.2.2"
