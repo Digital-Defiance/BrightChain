@@ -159,7 +159,11 @@ async function main() {
 
   // Shared setup: registers the database plugin and syncs AppConstants.
   // The GuidV4Provider is already configured on BrightChainConstants above.
-  const { plugin } = configureBrightChainApp(app, env);
+  // skipAutoSeed: true — inituserdb owns the seeding; we don't want the plugin
+  // to auto-seed during connect() and then have us try to seed again below.
+  const { plugin } = configureBrightChainApp(app, env, constants, {
+    skipAutoSeed: true,
+  });
 
   // Cast to BrightChainEnvironment for access to BrightChain-specific properties
   const bcEnv = app.environment as BrightChainEnvironment;
@@ -337,8 +341,8 @@ async function main() {
         roleAdmin: true,
         roleMember: true,
         roleSystem: true,
-        mnemonic: bcEnv.systemMnemonic,
-        password: bcEnv.systemPassword,
+        mnemonic: bcEnv.systemMnemonic?.hasValue ? bcEnv.systemMnemonic : undefined,
+        password: bcEnv.systemPassword?.hasValue ? bcEnv.systemPassword : undefined,
       },
       admin: {
         id: bcEnv.adminId,
@@ -352,8 +356,8 @@ async function main() {
         roleAdmin: true,
         roleMember: true,
         roleSystem: false,
-        mnemonic: bcEnv.adminMnemonic,
-        password: bcEnv.adminPassword,
+        mnemonic: bcEnv.adminMnemonic?.hasValue ? bcEnv.adminMnemonic : undefined,
+        password: bcEnv.adminPassword?.hasValue ? bcEnv.adminPassword : undefined,
       },
       member: {
         id: bcEnv.memberId,
@@ -367,8 +371,8 @@ async function main() {
         roleAdmin: false,
         roleMember: true,
         roleSystem: false,
-        mnemonic: bcEnv.memberMnemonic,
-        password: bcEnv.memberPassword,
+        mnemonic: bcEnv.memberMnemonic?.hasValue ? bcEnv.memberMnemonic : undefined,
+        password: bcEnv.memberPassword?.hasValue ? bcEnv.memberPassword : undefined,
       },
     };
 
