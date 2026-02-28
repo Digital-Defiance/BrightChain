@@ -5,21 +5,32 @@
     <title><%= title %></title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
+    <script nonce="<%= cspNonce %>"></script>
+    <base href="<%= baseHref %>" />
     <script nonce="<%= cspNonce %>">
       window.APP_CONFIG = {
         apiUrl: '<%= siteUrl %>/api',
         serverUrl: '<%= siteUrl %>',
         hostname: '<%= hostname %>',
-        siteTitle: '<%= title %>'
+        siteTitle: '<%= title %>',
+        server: '<%= server %>'
       };
     </script>
-    <base href="<%= baseHref %>" />
-    <script nonce="<%= cspNonce %>" type="module" src="<%= siteUrl %><%= baseHref %>static/js/runtime.js"></script>
-    <script nonce="<%= cspNonce %>" src="<%= siteUrl %><%= baseHref %>static/js/main.js"></script>
-    <script nonce="<%= cspNonce %>" src="<%= siteUrl %><%= baseHref %>static/js/vendor.js"></script>
+    <% if (cssFile) { %>
+    <link rel="stylesheet" href="<%= cssFile %>" />
+    <% } %>
     <script nonce="<%= cspNonce %>" src="https://kit.fontawesome.com/<%= fontawesomeKitId %>.js" crossorigin="anonymous"></script>
   </head>
   <body>
     <div id="root"></div>
+    <% if (jsFile) { %>
+    <%/* Production: single hashed bundle */%>
+    <script nonce="<%= cspNonce %>" type="module" src="<%= jsFile %>"></script>
+    <% } else if (devScripts && devScripts.length > 0) { %>
+    <%/* Dev: un-hashed runtime/main/vendor chunks served from /static/js/ */%>
+    <% devScripts.forEach(function(script) { %>
+    <script nonce="<%= cspNonce %>" src="static/js/<%= script %>"></script>
+    <% }); %>
+    <% } %>
   </body>
 </html>
