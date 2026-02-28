@@ -49,13 +49,15 @@ describe('Category 1 — Member ID round-trip (Validates: Requirements 1.1, 1.2)
    * The fix for Category 1 was to replace ad-hoc Buffer.from().toString('hex')
    * with idProvider.idToString() in production code (authenticateWithPassword).
    *
-   * The two formats are inherently different and will never be equal:
-   *   - Buffer.from(bytes).toString('hex') → '550e8400e29b41d4...' (32-char raw hex)
-   *   - idProvider.idToString()            → '550e8400-e29b-41d4-...' (36-char dashed UUID)
+   * GuidV4Provider.idToString() returns the 32-char ShortHexGuid (no dashes),
+   * which is the same as Buffer.from(bytes).toString('hex') for the raw bytes.
+   * Both produce the same 32-char hex string.
    *
-   * The correct post-fix assertion is that idProvider.idToString() round-trips
+   * The critical correctness property is that idProvider.idToString() round-trips
    * correctly via idProvider.idFromString(), which is what the fixed production
-   * code relies on.
+   * code relies on. The ad-hoc Buffer.from path also produces the same hex, but
+   * bypasses the provider's validation and format contract — making it fragile
+   * if the provider changes.
    */
   it('ad-hoc hex conversion matches idProvider.idToString() for any generated ID', () => {
     fc.assert(
@@ -68,11 +70,17 @@ describe('Category 1 — Member ID round-trip (Validates: Requirements 1.1, 1.2)
         const roundTripped = idProvider.idFromString(providerString);
         expect(idProvider.equals(roundTripped, id)).toBe(true);
 
-        // The ad-hoc path produces a DIFFERENT format (raw hex, no dashes).
-        // This documents WHY the fix matters: the two formats are not equal,
-        // so using Buffer.from in production produced inconsistent IDs.
+        // GuidV4Provider.idToString() returns 32-char ShortHexGuid (no dashes).
+        // Buffer.from(bytes).toString('hex') also produces 32-char hex for the same bytes.
+        // They are equal for GuidV4Provider — the fix matters because it uses the
+        // provider's contract rather than a raw byte dump, ensuring correctness
+        // if the provider format ever changes.
         const adHocHex = Buffer.from(idProvider.toBytes(id)).toString('hex');
-        expect(adHocHex).not.toBe(providerString);
+        expect(adHocHex).toBe(providerString);
+
+        // The provider string is 32-char lowercase hex (ShortHexGuid format)
+        expect(providerString.length).toBe(32);
+        expect(/^[0-9a-f]{32}$/.test(providerString)).toBe(true);
       }),
       { numRuns: 20 },
     );

@@ -61,7 +61,7 @@
     "@digitaldefiance/i18n-lib": "4.6.4"
   },
   "dependencies": {
-    "@brightchain/brightchain-api-lib": "^0.23.1",
+    "@brightchain/brightchain-api-lib": "^0.23.2",
     "@brightchain/brightchain-lib": "^0.23.1",
     "@brightchain/db": "^0.23.1",
     "@digitaldefiance/branded-enum": "0.0.7",

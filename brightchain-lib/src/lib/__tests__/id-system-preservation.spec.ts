@@ -254,31 +254,38 @@ describe('P7f — shortHexGuidArb test arbitrary (Validates: Requirements 3.8)',
 // ===========================================================================
 describe('P7g — ID persistence format (Validates: Requirements 3.9)', () => {
   /**
-   * guidProvider.idToString() produces full hex-with-dashes format (36 chars),
-   * and asShortHexGuid produces 32-char hex (no dashes).
+   * GuidV4Provider.idToString() returns the 32-char ShortHexGuid (no dashes).
+   * This is the canonical storage format used throughout the system.
+   * asFullHexGuid produces the 36-char dashed format (for logging / .env persistence).
+   * asShortHexGuid and idToString() produce the same 32-char hex.
    */
-  it('idToString() produces 36-char dashed format, asShortHexGuid produces 32-char hex', () => {
+  it('idToString() produces 32-char ShortHexGuid, asFullHexGuid produces 36-char dashed format', () => {
     fc.assert(
       fc.property(fc.constant(null), () => {
         const rawBytes = idProvider.generate();
         const guid = idProvider.fromBytes(rawBytes);
 
-        // idToString() should produce full hex-with-dashes: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-        const fullString = idProvider.idToString(guid);
-        expect(fullString.length).toBe(36);
+        // idToString() returns 32-char ShortHexGuid (no dashes) — the canonical storage format
+        const shortHexString = idProvider.idToString(guid);
+        expect(shortHexString.length).toBe(32);
+        expect(/^[0-9a-f]{32}$/.test(shortHexString)).toBe(true);
+
+        // asShortHexGuid is the same as idToString()
+        const shortHex = (guid as GuidUint8Array).asShortHexGuid;
+        expect(shortHex.length).toBe(32);
+        expect(shortHex).toBe(shortHexString);
+
+        // asFullHexGuid produces the 36-char dashed format used for .env persistence
+        const fullHex = (guid as GuidUint8Array).asFullHexGuid;
+        expect(fullHex.length).toBe(36);
         expect(
           /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(
-            fullString,
+            fullHex,
           ),
         ).toBe(true);
 
-        // asShortHexGuid should produce 32-char hex (no dashes)
-        const shortHex = (guid as GuidUint8Array).asShortHexGuid;
-        expect(shortHex.length).toBe(32);
-        expect(/^[0-9a-f]{32}$/.test(shortHex)).toBe(true);
-
-        // The short hex should be the full string with dashes removed
-        expect(shortHex).toBe(fullString.replace(/-/g, ''));
+        // The short hex is the full hex with dashes removed
+        expect(shortHex).toBe(fullHex.replace(/-/g, ''));
       }),
       { numRuns: 100 },
     );
