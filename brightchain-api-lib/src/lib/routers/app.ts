@@ -3,7 +3,9 @@ import {
   IApplication,
   AppRouter as UpstreamAppRouter,
 } from '@digitaldefiance/node-express-suite';
+import { existsSync } from 'fs';
 import { NextFunction, Request, Response } from 'express';
+import { join } from 'path';
 import { Environment } from '../environment';
 import { DefaultBackendIdType } from '../shared-types';
 import { ApiRouter } from './api';
@@ -40,6 +42,9 @@ export class AppRouter<
   /**
    * Override the upstream's renderIndex to inject BrightChain-specific
    * template locals (fontAwesomeKitId, custom tagline, etc.).
+   *
+   * Production build: hashed assets/index-[hash].js → jsFile is set
+   * Dev build: static/js/main.js + runtime.js + vendor.js → devScripts is set
    */
   public override renderIndex(
     req: Request,
@@ -50,8 +55,17 @@ export class AppRouter<
       res.type('application/javascript');
     }
 
+    // Production: hashed bundle in assets/
     const jsFile = this.getAssetFilename(this.assetsDir, /^index-.*\.js$/);
     const cssFile = this.getAssetFilename(this.assetsDir, /^index-.*\.css$/);
+
+    // Dev: un-hashed files emitted directly into reactDistDir
+    const devScripts = !jsFile
+      ? ['runtime.js', 'main.js', 'vendor.js'].filter((f) =>
+          existsSync(join(this.reactDistDir, f)),
+        )
+      : [];
+
     const environment = this.application.environment as Environment<TID>;
 
     const locals = {
@@ -59,6 +73,8 @@ export class AppRouter<
       fontawesomeKitId: environment.fontAwesomeKitId,
       jsFile: jsFile ? `assets/${jsFile}` : undefined,
       cssFile: cssFile ? `assets/${cssFile}` : undefined,
+      // Dev-mode script list (empty in production)
+      devScripts,
     };
 
     this.renderTemplate(req, res, next, 'index', locals);
