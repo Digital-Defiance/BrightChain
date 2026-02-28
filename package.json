@@ -1,6 +1,6 @@
 {
   "name": "brightchain",
-  "version": "0.23.5",
+  "version": "0.23.6",
   "license": "MIT",
   "workspaces": [
     "brightchain-lib",
@@ -17,6 +17,7 @@
     "tools"
   ],
   "scripts": {
+    "new:secret": "node -e \"console.log (require('crypto').randomBytes(32).toString ('hex'));\"",
     "build:all": "NODE_ENV=production npx nx run-many --target=build --all --configuration=production",
     "build:all:dev": "NODE_ENV=development npx nx run-many --target=build --all --configuration=development",
     "build:all:dev:stream": "NODE_ENV=development npx nx run-many --target=build --all --configuration=development --outputStyle=stream",
@@ -61,7 +62,7 @@
     "@digitaldefiance/i18n-lib": "4.6.4"
   },
   "dependencies": {
-    "@brightchain/brightchain-api-lib": "^0.23.5",
+    "@brightchain/brightchain-api-lib": "^0.23.6",
     "@brightchain/brightchain-lib": "^0.23.5",
     "@brightchain/db": "^0.23.5",
     "@digitaldefiance/branded-enum": "0.0.7",
