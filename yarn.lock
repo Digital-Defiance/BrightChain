@@ -2010,7 +2010,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@brightchain/brightchain-api-lib@npm:^0.23.1, @brightchain/brightchain-api-lib@workspace:brightchain-api-lib":
+"@brightchain/brightchain-api-lib@npm:^0.23.2, @brightchain/brightchain-api-lib@workspace:brightchain-api-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-api-lib@workspace:brightchain-api-lib"
   dependencies:
@@ -12031,7 +12031,7 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.14.5"
     "@babel/preset-react": "npm:^7.14.5"
-    "@brightchain/brightchain-api-lib": "npm:^0.23.1"
+    "@brightchain/brightchain-api-lib": "npm:^0.23.2"
     "@brightchain/brightchain-lib": "npm:^0.23.1"
     "@brightchain/db": "npm:^0.23.1"
     "@digitaldefiance/branded-enum": "npm:0.0.7"

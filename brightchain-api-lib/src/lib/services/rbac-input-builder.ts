@@ -350,9 +350,7 @@ export class RbacInputBuilder<TID extends PlatformID> {
     const required = [pick(letters), pick(digits), pick(specials)];
 
     // Fill remaining 13 chars from the full set
-    const rest = Array.from(randomBytes(13)).map(
-      (b) => all[b % all.length],
-    );
+    const rest = Array.from(randomBytes(13)).map((b) => all[b % all.length]);
 
     // Shuffle all 16 chars using Fisher-Yates with crypto randomness
     const chars = [...required, ...rest];
