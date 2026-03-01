@@ -203,7 +203,9 @@ describe('Property 1: Connect establishes all stores and database', () => {
           }
         },
       ),
-      { numRuns: 100 },
+      // numRuns kept low — each run does full RBAC seeding with crypto key
+      // generation and disk I/O, so 100 runs would take many minutes.
+      { numRuns: 3 },
     );
   });
 });

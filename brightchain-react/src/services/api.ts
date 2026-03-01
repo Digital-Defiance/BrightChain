@@ -6,7 +6,8 @@ import { environment } from '../environments/environment';
 
 const getApiBaseUrl = (): string => {
   if (typeof window !== 'undefined') {
-    const appConfig = (window as { APP_CONFIG?: { apiUrl?: string } }).APP_CONFIG;
+    const appConfig = (window as { APP_CONFIG?: { apiUrl?: string } })
+      .APP_CONFIG;
     if (appConfig?.apiUrl) {
       return appConfig.apiUrl;
     }

@@ -8,6 +8,8 @@
  */
 
 import { App, Environment } from '@brightchain/brightchain-api-lib';
+import { EmailString } from '@brightchain/brightchain-lib';
+import { MemberType, SecureString } from '@digitaldefiance/ecies-lib';
 import { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib';
 import { AddressInfo, createServer } from 'net';
 import { join } from 'path';
@@ -477,9 +479,6 @@ describe('UserController E2E', () => {
     let sigSize = 64;
 
     beforeAll(async () => {
-      const { SecureString } = await import('@digitaldefiance/ecies-lib');
-      const { EmailString } = await import('@brightchain/brightchain-lib');
-      const { MemberType } = await import('@digitaldefiance/ecies-lib');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const memberStore = server.app.services.get<any>('memberStore');
 
