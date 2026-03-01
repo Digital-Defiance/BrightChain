@@ -7,7 +7,7 @@ import {
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
 import { MemberType, SecureString } from '@digitaldefiance/ecies-lib';
-import { Member, PlatformID, SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
+import { ECIESService, Member, PlatformID, SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
 import { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
@@ -303,6 +303,9 @@ export class AuthService<
       : { email: email!, limit: 1 };
     const results = await this.memberStore.queryIndex(query);
     if (results.length === 0) {
+      console.warn(
+        `[AuthService] verifyDirectLoginChallenge: no member found for ${username ? `username="${username}"` : `email="${email}"`}`,
+      );
       throw new Error('Invalid credentials');
     }
 
@@ -312,10 +315,18 @@ export class AuthService<
       reference.id,
     )) as unknown as Member<TID>;
 
-    // 4. Verify user's signature on the signed portion of the challenge
+    // 4. Verify user's signature on the signed portion of the challenge.
+    // getMember() returns a browser-ecies-lib Member (ServiceProvider uses ecies-lib,
+    // not node-ecies-lib). Use node-ecies-lib ECIESService directly to verify so we
+    // get the correct Node.js crypto path rather than the browser fallback.
     const signedData = requestBuffer.subarray(0, signedDataLength);
     const userSigBuf = Buffer.from(signature, 'hex') as SignatureBuffer;
-    if (!member.verify(userSigBuf, signedData)) {
+    const nodeEcies = new ECIESService();
+    const publicKeyBuf = Buffer.from(member.publicKey);
+    if (!nodeEcies.verifyMessage(publicKeyBuf, signedData, userSigBuf)) {
+      console.warn(
+        `[AuthService] verifyDirectLoginChallenge: signature verification failed for member "${member.name}" (id=${sp.idProvider.idToString(reference.id as unknown as TID)})`,
+      );
       throw new Error('Invalid credentials');
     }
 
