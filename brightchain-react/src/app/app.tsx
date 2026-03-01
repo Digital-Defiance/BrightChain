@@ -3,7 +3,7 @@ import {
   i18nEngine,
   ISuiteCoreConstants,
 } from '@brightchain/brightchain-lib';
-import { IECIESConfig } from '@digitaldefiance/ecies-lib';
+import { ECIES_CONFIG } from '@digitaldefiance/ecies-lib';
 import {
   ApiAccess,
   AppThemeProvider,
@@ -63,14 +63,7 @@ const getApiBaseUrl = (): string => {
 
 const API_BASE_URL: string = getApiBaseUrl();
 
-const eciesConfig: IECIESConfig = {
-  curveName: 'secp256k1',
-  primaryKeyDerivationPath: "m/44'/0'/0'/0/0",
-  mnemonicStrength: 256,
-  symmetricAlgorithm: 'aes-256-gcm',
-  symmetricKeyBits: 256,
-  symmetricKeyMode: 'gcm',
-};
+const eciesConfig = ECIES_CONFIG;
 
 const AuthProviderWithNavigation: FC<{ children: React.ReactNode }> = ({
   children,
