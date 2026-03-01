@@ -7,9 +7,11 @@ import {
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
 import { MemberType, SecureString } from '@digitaldefiance/ecies-lib';
-import { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import { Member, PlatformID, SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
+import { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import { SchemaCollection } from '../enumerations/schema-collection';
 import { IBrightChainApplication } from '../interfaces/application';
 import { IAuthCredentials } from '../interfaces/auth-credentials';
 import { IAuthToken } from '../interfaces/auth-token';
@@ -18,6 +20,7 @@ import { DefaultBackendIdType } from '../shared-types';
 import { BaseService } from './base';
 import { BrightChainAuthenticationProvider } from './brightchain-authentication-provider';
 import { EmailService } from './email';
+import { SystemUserService } from '@digitaldefiance/node-express-suite';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -225,6 +228,120 @@ export class AuthService<
       memberId,
       passwordReset: !!newPassword,
     };
+  }
+
+  /**
+   * Verifies a direct login challenge response — mirrors express-suite
+   * UserService.verifyDirectLoginChallenge() but without Mongo/transactions.
+   *
+   * Challenge format (hex): time(8) + nonce(32) + serverSignature(SIGNATURE_SIZE)
+   * The client signs the entire challenge buffer with their private key.
+   *
+   * @throws Error('Invalid challenge') on bad format / expired / bad signatures
+   * @throws Error('Invalid credentials') on unknown user
+   * @throws Error('Challenge already used') on replay
+   */
+  async verifyDirectLoginChallenge(
+    serverSignedRequest: string,
+    signature: string,
+    username?: string,
+    email?: string,
+  ): Promise<{ member: Member<TID>; memberId: string; userDTO: IRequestUserDTO | null }> {
+    const minBytes =
+      8 + 32 + this.application.constants.ECIES.SIGNATURE_SIZE;
+    if (serverSignedRequest.length < minBytes * 2) {
+      throw new Error('Invalid challenge');
+    }
+
+    const requestBuffer = Buffer.from(serverSignedRequest, 'hex');
+
+    // Parse: time(8) + nonce(32) + serverSignature(SIGNATURE_SIZE)
+    let offset = 0;
+    const time = requestBuffer.subarray(offset, 8);
+    offset += 8;
+    const nonce = requestBuffer.subarray(offset, 40);
+    offset += 32;
+    const serverSignature = requestBuffer.subarray(
+      offset,
+      this.application.constants.ECIES.SIGNATURE_SIZE + 40,
+    );
+    offset += this.application.constants.ECIES.SIGNATURE_SIZE;
+    const signedDataLength = offset;
+
+    if (offset !== requestBuffer.length) {
+      throw new Error('Invalid challenge');
+    }
+
+    // 1. Validate challenge is not expired
+    const timeMs = time.readBigUInt64BE();
+    if (
+      new Date().getTime() - Number(timeMs) >
+      this.application.constants.LoginChallengeExpiration
+    ) {
+      throw new Error('Challenge expired');
+    }
+
+    // 2. Verify server's signature on time+nonce
+    // Member.verify(signature, data) — signature first, data second
+    const systemUser = SystemUserService.getSystemUser(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.application.environment as any,
+      this.application.constants,
+    );
+    if (
+      !systemUser.verify(
+        serverSignature as SignatureBuffer,
+        Buffer.concat([time, nonce]),
+      )
+    ) {
+      throw new Error('Invalid challenge');
+    }
+
+    // 3. Look up user by username or email
+    const query = username
+      ? { name: username, limit: 1 }
+      : { email: email!, limit: 1 };
+    const results = await this.memberStore.queryIndex(query);
+    if (results.length === 0) {
+      throw new Error('Invalid credentials');
+    }
+
+    const reference = results[0];
+    const sp = ServiceProvider.getInstance<TID>();
+    const member = (await this.memberStore.getMember(
+      reference.id,
+    )) as unknown as Member<TID>;
+
+    // 4. Verify user's signature on the signed portion of the challenge
+    const signedData = requestBuffer.subarray(0, signedDataLength);
+    const userSigBuf = Buffer.from(signature, 'hex') as SignatureBuffer;
+    if (!member.verify(userSigBuf, signedData)) {
+      throw new Error('Invalid credentials');
+    }
+
+    // 5. Replay prevention — store used nonce
+    const nonceHex = nonce.toString('hex');
+    const memberId = sp.idProvider.idToString(reference.id as unknown as TID);
+    const db = this.application.services.get<import('@brightchain/db').BrightChainDb>('db');
+    const tokenCollection = db.collection<{
+      userId: string;
+      token: string;
+    }>(SchemaCollection.UsedDirectLoginToken);
+    const existing = await tokenCollection.findOne({
+      userId: memberId,
+      token: nonceHex,
+    });
+    if (existing) {
+      throw new Error('Challenge already used');
+    }
+    await tokenCollection.insertOne({ userId: memberId, token: nonceHex });
+
+    // 6. Build IRequestUserDTO via auth provider
+    const userDTO = this.authProvider
+      ? await this.authProvider.buildRequestUserDTO(memberId)
+      : null;
+
+    return { member, memberId, userDTO };
   }
 
   private async sendWelcomeEmail(
