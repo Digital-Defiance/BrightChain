@@ -7,7 +7,13 @@ import {
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
 import { MemberType, SecureString } from '@digitaldefiance/ecies-lib';
-import { ECIESService, Member, PlatformID, SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
+import {
+  ECIESService,
+  Member,
+  PlatformID,
+  SignatureBuffer,
+} from '@digitaldefiance/node-ecies-lib';
+import { SystemUserService } from '@digitaldefiance/node-express-suite';
 import { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
@@ -20,7 +26,6 @@ import { DefaultBackendIdType } from '../shared-types';
 import { BaseService } from './base';
 import { BrightChainAuthenticationProvider } from './brightchain-authentication-provider';
 import { EmailService } from './email';
-import { SystemUserService } from '@digitaldefiance/node-express-suite';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -246,9 +251,12 @@ export class AuthService<
     signature: string,
     username?: string,
     email?: string,
-  ): Promise<{ member: Member<TID>; memberId: string; userDTO: IRequestUserDTO | null }> {
-    const minBytes =
-      8 + 32 + this.application.constants.ECIES.SIGNATURE_SIZE;
+  ): Promise<{
+    member: Member<TID>;
+    memberId: string;
+    userDTO: IRequestUserDTO | null;
+  }> {
+    const minBytes = 8 + 32 + this.application.constants.ECIES.SIGNATURE_SIZE;
     if (serverSignedRequest.length < minBytes * 2) {
       throw new Error('Invalid challenge');
     }
@@ -288,20 +296,35 @@ export class AuthService<
       this.application.environment as any,
       this.application.constants,
     );
+    console.info(
+      `[AuthService] verifyDirectLoginChallenge: verifying server signature — serverSig.length=${serverSignature.length} SIGNATURE_SIZE=${this.application.constants.ECIES.SIGNATURE_SIZE}`,
+    );
     if (
       !systemUser.verify(
         serverSignature as SignatureBuffer,
         Buffer.concat([time, nonce]),
       )
     ) {
+      console.warn(
+        `[AuthService] verifyDirectLoginChallenge: server signature check FAILED — challenge may be stale or from a different server key`,
+      );
       throw new Error('Invalid challenge');
     }
+    console.info(
+      `[AuthService] verifyDirectLoginChallenge: server signature OK`,
+    );
 
     // 3. Look up user by username or email
     const query = username
       ? { name: username, limit: 1 }
       : { email: email!, limit: 1 };
+    console.info(
+      `[AuthService] verifyDirectLoginChallenge: querying index for ${username ? `username="${username}"` : `email="${email}"`}`,
+    );
     const results = await this.memberStore.queryIndex(query);
+    console.info(
+      `[AuthService] verifyDirectLoginChallenge: queryIndex returned ${results.length} result(s)`,
+    );
     if (results.length === 0) {
       console.warn(
         `[AuthService] verifyDirectLoginChallenge: no member found for ${username ? `username="${username}"` : `email="${email}"`}`,
@@ -311,9 +334,25 @@ export class AuthService<
 
     const reference = results[0];
     const sp = ServiceProvider.getInstance<TID>();
-    const member = (await this.memberStore.getMember(
-      reference.id,
-    )) as unknown as Member<TID>;
+    console.info(
+      `[AuthService] verifyDirectLoginChallenge: found reference id=${sp.idProvider.idToString(reference.id as unknown as TID)} type=${reference.type}`,
+    );
+
+    let member: Member<TID>;
+    try {
+      member = (await this.memberStore.getMember(
+        reference.id,
+      )) as unknown as Member<TID>;
+      console.info(
+        `[AuthService] verifyDirectLoginChallenge: getMember() succeeded, name="${member.name}" publicKey.length=${member.publicKey?.length ?? 'undefined'}`,
+      );
+    } catch (getMemberError) {
+      console.error(
+        `[AuthService] verifyDirectLoginChallenge: getMember() threw:`,
+        getMemberError,
+      );
+      throw new Error('Invalid credentials');
+    }
 
     // 4. Verify user's signature on the signed portion of the challenge.
     // getMember() returns a browser-ecies-lib Member (ServiceProvider uses ecies-lib,
@@ -323,9 +362,12 @@ export class AuthService<
     const userSigBuf = Buffer.from(signature, 'hex') as SignatureBuffer;
     const nodeEcies = new ECIESService();
     const publicKeyBuf = Buffer.from(member.publicKey);
+    console.info(
+      `[AuthService] verifyDirectLoginChallenge: verifying signature — signedData.length=${signedData.length} sig.length=${userSigBuf.length} pubKey.length=${publicKeyBuf.length}`,
+    );
     if (!nodeEcies.verifyMessage(publicKeyBuf, signedData, userSigBuf)) {
       console.warn(
-        `[AuthService] verifyDirectLoginChallenge: signature verification failed for member "${member.name}" (id=${sp.idProvider.idToString(reference.id as unknown as TID)})`,
+        `[AuthService] verifyDirectLoginChallenge: signature verification failed for member "${member.name}" (id=${sp.idProvider.idToString(reference.id as unknown as TID)}) pubKey=${publicKeyBuf.toString('hex')}`,
       );
       throw new Error('Invalid credentials');
     }
@@ -333,7 +375,10 @@ export class AuthService<
     // 5. Replay prevention — store used nonce
     const nonceHex = nonce.toString('hex');
     const memberId = sp.idProvider.idToString(reference.id as unknown as TID);
-    const db = this.application.services.get<import('@brightchain/db').BrightChainDb>('db');
+    const db =
+      this.application.services.get<import('@brightchain/db').BrightChainDb>(
+        'db',
+      );
     const tokenCollection = db.collection<{
       userId: string;
       token: string;

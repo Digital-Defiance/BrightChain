@@ -3,8 +3,8 @@ import {
   IApplication,
   AppRouter as UpstreamAppRouter,
 } from '@digitaldefiance/node-express-suite';
-import { existsSync } from 'fs';
 import { NextFunction, Request, Response } from 'express';
+import { existsSync } from 'fs';
 import { join } from 'path';
 import { Environment } from '../environment';
 import { DefaultBackendIdType } from '../shared-types';

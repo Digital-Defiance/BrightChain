@@ -21,10 +21,10 @@ import {
   Application as UpstreamApplication,
 } from '@digitaldefiance/node-express-suite';
 import { Server } from 'http';
-import { Constants } from './constants';
 import { GossipService } from './availability/gossipService';
 import { PoolDiscoveryService } from './availability/poolDiscoveryService';
 import { QuorumGossipHandler } from './availability/quorumGossipHandler';
+import { Constants } from './constants';
 import { createBlockDocumentStore } from './datastore/block-document-store-factory';
 import {
   DocumentCollection,
