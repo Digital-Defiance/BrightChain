@@ -341,8 +341,12 @@ async function main() {
         roleAdmin: true,
         roleMember: true,
         roleSystem: true,
-        mnemonic: bcEnv.systemMnemonic?.hasValue ? bcEnv.systemMnemonic : undefined,
-        password: bcEnv.systemPassword?.hasValue ? bcEnv.systemPassword : undefined,
+        mnemonic: bcEnv.systemMnemonic?.hasValue
+          ? bcEnv.systemMnemonic
+          : undefined,
+        password: bcEnv.systemPassword?.hasValue
+          ? bcEnv.systemPassword
+          : undefined,
       },
       admin: {
         id: bcEnv.adminId,
@@ -356,8 +360,12 @@ async function main() {
         roleAdmin: true,
         roleMember: true,
         roleSystem: false,
-        mnemonic: bcEnv.adminMnemonic?.hasValue ? bcEnv.adminMnemonic : undefined,
-        password: bcEnv.adminPassword?.hasValue ? bcEnv.adminPassword : undefined,
+        mnemonic: bcEnv.adminMnemonic?.hasValue
+          ? bcEnv.adminMnemonic
+          : undefined,
+        password: bcEnv.adminPassword?.hasValue
+          ? bcEnv.adminPassword
+          : undefined,
       },
       member: {
         id: bcEnv.memberId,
@@ -371,8 +379,12 @@ async function main() {
         roleAdmin: false,
         roleMember: true,
         roleSystem: false,
-        mnemonic: bcEnv.memberMnemonic?.hasValue ? bcEnv.memberMnemonic : undefined,
-        password: bcEnv.memberPassword?.hasValue ? bcEnv.memberPassword : undefined,
+        mnemonic: bcEnv.memberMnemonic?.hasValue
+          ? bcEnv.memberMnemonic
+          : undefined,
+        password: bcEnv.memberPassword?.hasValue
+          ? bcEnv.memberPassword
+          : undefined,
       },
     };
 

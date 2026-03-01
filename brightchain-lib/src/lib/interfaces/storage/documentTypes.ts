@@ -82,3 +82,24 @@ export interface ValidationFieldError {
   message: string;
   value?: unknown;
 }
+
+/**
+ * Minimal collection interface used by MemberStore for DB-backed queries.
+ * Typed as a structural interface so brightchain-lib stays free of
+ * any @brightchain/db or Node.js-specific dependencies.
+ */
+export interface IMinimalCollection<T extends BsonDocument = BsonDocument> {
+  findOne(filter: Partial<T>): Promise<T | null>;
+  find(filter: Partial<T>): { toArray(): Promise<T[]> };
+  insertOne(doc: T): Promise<unknown>;
+}
+
+/**
+ * Minimal database interface used by MemberStore for DB-backed queries.
+ * Implemented by BrightChainDb (structural compatibility — no import needed).
+ */
+export interface IMemberStoreDb {
+  collection<T extends BsonDocument = BsonDocument>(
+    name: string,
+  ): IMinimalCollection<T>;
+}

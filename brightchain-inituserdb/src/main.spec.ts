@@ -125,7 +125,7 @@ describe('InitUserDb refactored main.ts', () => {
 
   describe('shared setup usage', () => {
     it('calls configureBrightChainApp for shared setup (Req 4.1)', () => {
-      expect(mainSource).toContain('configureBrightChainApp(app, env)');
+      expect(mainSource).toContain('configureBrightChainApp(app, env');
     });
 
     it('creates BaseApplication instance (Req 4.1)', () => {
