@@ -21,7 +21,7 @@ import {
   Application as UpstreamApplication,
 } from '@digitaldefiance/node-express-suite';
 import { Server } from 'http';
-import { AppConstants } from './appConstants';
+import { Constants } from './constants';
 import { GossipService } from './availability/gossipService';
 import { PoolDiscoveryService } from './availability/poolDiscoveryService';
 import { QuorumGossipHandler } from './availability/quorumGossipHandler';
@@ -108,8 +108,8 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
       (app: IApplication<TID>) => new ApiRouter<TID>(app as App<TID>),
       // cspConfig — undefined; BrightChain's Middlewares.init handles CSP
       undefined,
-      // constants
-      AppConstants,
+      // constants — use BrightChain-specific constants (Site: 'BrightChain', etc.)
+      Constants,
       // appRouterFactory — creates BrightChain's AppRouter wrapping the ApiRouter
       (apiRouter) => new AppRouter<TID>(apiRouter as ApiRouter<TID>),
       // customInitMiddleware — wrap Middlewares.init to match upstream signature
@@ -531,6 +531,14 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
 
     // Upstream handles: greenlockManager.stop(), server.close(), db disconnect, _ready = false
     await super.stop();
+  }
+
+  /**
+   * Get the underlying HTTP server instance.
+   * Useful for tests that need to determine the bound port after start().
+   */
+  public get httpServer(): Server | null {
+    return this._httpServer;
   }
 
   public getController<T = unknown>(name: string): T {
