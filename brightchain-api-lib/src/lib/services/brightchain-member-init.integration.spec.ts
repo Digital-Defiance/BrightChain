@@ -137,9 +137,9 @@ describe('BrightChainMemberInitService — integration', () => {
         expect(doc.poolId).toBe(VALID_POOL);
         expect(doc.status).toBe(MemberStatusType.Active);
         expect(doc.reputation).toBe(0);
-        // Zero-filled CBL sentinels
-        expect(doc.publicCBL).toBe('0'.repeat(64));
-        expect(doc.privateCBL).toBe('0'.repeat(64));
+        // Zero-filled CBL sentinels (128 hex chars = 64 bytes for SHA3-512)
+        expect(doc.publicCBL).toBe('0'.repeat(128));
+        expect(doc.privateCBL).toBe('0'.repeat(128));
         expect(typeof doc.lastUpdate).toBe('string');
         expect(() => new Date(doc.lastUpdate)).not.toThrow();
       }
@@ -293,8 +293,8 @@ describe('BrightChainMemberInitService — integration', () => {
       for (const doc of docs) {
         expect(doc.poolId).toBe(VALID_POOL);
         expect(doc.status).toBe(MemberStatusType.Active);
-        expect(doc.publicCBL).toBe('0'.repeat(64));
-        expect(doc.privateCBL).toBe('0'.repeat(64));
+        expect(doc.publicCBL).toBe('0'.repeat(128));
+        expect(doc.privateCBL).toBe('0'.repeat(128));
       }
     });
   });
