@@ -125,17 +125,25 @@ function buildCandidateEntries<TID extends PlatformID>(
   idProvider: IIdProvider<TID>,
 ): IMemberIndexDocument[] {
   const now = new Date().toISOString();
-  return [input.systemUser, input.adminUser, input.memberUser].map((user) => ({
-    id: idProvider.idToString(user.id).replace(/-/g, ''),
-    // Zero-filled sentinel — replaced when the member's actual CBL blocks are written
-    publicCBL: '0'.repeat(64),
-    privateCBL: '0'.repeat(64),
-    poolId,
-    type: user.type,
-    status: MemberStatusType.Active,
-    lastUpdate: now,
-    reputation: 0,
-  }));
+  return [input.systemUser, input.adminUser, input.memberUser].map((user) => {
+    const idStr = idProvider.idToString(user.id);
+    if (!idStr) {
+      throw new MemberIndexSchemaValidationError([
+        { field: 'id', message: 'User ID is invalid or empty', value: user.id },
+      ]);
+    }
+    return {
+      id: idStr.replace(/-/g, ''),
+      // Zero-filled sentinel — replaced when the member's actual CBL blocks are written
+      publicCBL: '0'.repeat(64),
+      privateCBL: '0'.repeat(64),
+      poolId,
+      type: user.type,
+      status: MemberStatusType.Active,
+      lastUpdate: now,
+      reputation: 0,
+    };
+  });
 }
 
 // ─── Service ─────────────────────────────────────────────────────────────────
@@ -744,7 +752,14 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   ): void {
     const log = (msg: string) => console.log(msg);
     // Normalize to ShortHexGuid (32-char hex, no dashes) for consistency
-    const idHex = (id: TID) => idProvider.idToString(id).replace(/-/g, '');
+    const idHex = (id: TID) => {
+      try {
+        const s = idProvider.idToString(id);
+        return s ? s.replace(/-/g, '') : String(id);
+      } catch {
+        return String(id);
+      }
+    };
     log(`  ${label} ID:           ${idHex(creds.id)}`);
     log(`  ${label} Full ID:      ${idHex(creds.fullId)}`);
     log(`  ${label} Type:         ${this.memberTypeLabel(creds.type)}`);

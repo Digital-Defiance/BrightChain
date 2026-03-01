@@ -622,7 +622,7 @@ describe('E2E: BrightChainMemberInitService – memory and disk block stores', (
       const config: IBrightChainMemberInitConfig = {
         memberPoolName: 'RbacE2E-Disk',
         blockStorePath: tempDir,
-        blockSize: BlockSize.Small,
+        blockSize: BlockSize.Medium,
       };
       await runRbacInitAndVerify(config);
     });
@@ -631,7 +631,7 @@ describe('E2E: BrightChainMemberInitService – memory and disk block stores', (
       const config: IBrightChainMemberInitConfig = {
         memberPoolName: 'RbacE2E-Disk-Idempotent',
         blockStorePath: tempDir,
-        blockSize: BlockSize.Small,
+        blockSize: BlockSize.Medium,
       };
       const service = new BrightChainMemberInitService<GuidV4Buffer>();
       const input = await makeRbacInput();
