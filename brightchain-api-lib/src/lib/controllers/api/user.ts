@@ -18,15 +18,18 @@ import {
   Controller,
   DecoratorBaseController,
   Get,
+  IApiChallengeResponse,
   IApiMessageResponse,
   IStatusCodeResponse,
   Post,
   Put,
+  SystemUserService,
 } from '@digitaldefiance/node-express-suite';
 import {
   getSuiteCoreTranslation,
   SuiteCoreStringKey,
 } from '@digitaldefiance/suite-core-lib';
+import { randomBytes } from 'crypto';
 import type { NextFunction, Request, Response } from 'express';
 import { IBrightChainApplication } from '../../interfaces/application';
 import {
@@ -59,6 +62,24 @@ interface IUpdateProfileRequest {
     minRedundancy?: number;
     preferredRegions?: string[];
   };
+}
+
+/**
+ * Shape of req.user as set by the JWT auth middleware.
+ * The middleware sets `memberId` (not `id`), so we accept both for
+ * backward-compatibility with any callers that set `id` directly.
+ */
+interface IRequestUser {
+  id?: string;
+  memberId?: string;
+  username: string;
+}
+
+/** Extract the member ID from req.user, preferring memberId over id. */
+function getUserId(user: IRequestUser): string {
+  const id = user.memberId ?? user.id;
+  if (!id) throw new Error('No member ID on request user');
+  return id;
 }
 
 @Controller()
@@ -195,7 +216,7 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    const user = (req as { user?: { id: string; username: string } }).user;
+    const user = (req as { user?: IRequestUser }).user;
 
     if (!user) {
       throw new HandleableError(
@@ -207,9 +228,9 @@ export class UserController<
     }
 
     try {
-      // Deserialize the GUID string back to typed ID (round-trips with idToString)
+      const memberId = getUserId(user);
       const sp = ServiceProvider.getInstance();
-      const typedId = sp.idProvider.idFromString(user.id);
+      const typedId = sp.idProvider.idFromString(memberId);
       const idRawBytes = sp.idProvider.toBytes(typedId);
       const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
 
@@ -248,7 +269,7 @@ export class UserController<
       }
 
       const userProfile: IUserProfile<string> = {
-        memberId: user.id,
+        memberId,
         username: user.username,
         email,
         energyBalance: energyAccount.balance,
@@ -292,7 +313,7 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    const user = (req as { user?: { id: string; username: string } }).user;
+    const user = (req as { user?: IRequestUser }).user;
 
     if (!user) {
       throw new HandleableError(
@@ -304,10 +325,10 @@ export class UserController<
     }
 
     try {
+      const memberId = getUserId(user);
       const updateData = req.body as unknown as IUpdateProfileRequest;
-      // Deserialize the GUID string back to typed ID (round-trips with idToString)
       const sp = ServiceProvider.getInstance();
-      const typedId = sp.idProvider.idFromString(user.id);
+      const typedId = sp.idProvider.idFromString(memberId);
       const idRawBytes = sp.idProvider.toBytes(typedId);
       const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
 
@@ -360,7 +381,7 @@ export class UserController<
       }
 
       const userProfile: IUserProfile<string> = {
-        memberId: user.id,
+        memberId,
         username: user.username,
         email,
         energyBalance: energyAccount.balance,
@@ -417,7 +438,7 @@ export class UserController<
       };
     }
 
-    const user = (req as { user?: { id: string; username: string } }).user;
+    const user = (req as { user?: IRequestUser }).user;
 
     if (!user) {
       throw new HandleableError(
@@ -429,12 +450,12 @@ export class UserController<
     }
 
     try {
+      const memberId = getUserId(user);
       const { currentPassword, newPassword } =
         req.body as unknown as IPasswordChangeRequest;
 
-      // Deserialize the GUID string back to typed ID (round-trips with idToString)
       const sp = ServiceProvider.getInstance();
-      const typedId = sp.idProvider.idFromString(user.id);
+      const typedId = sp.idProvider.idFromString(memberId);
 
       const authService = this.application.services.get<AuthService>('auth');
       await authService.changePassword(typedId, currentPassword, newPassword);
@@ -446,7 +467,7 @@ export class UserController<
             SuiteCoreStringKey.PasswordChange_Success,
           ),
           data: {
-            memberId: user.id,
+            memberId,
             success: true,
           },
         } as IApiPasswordChangeResponse,
@@ -489,7 +510,7 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    const user = (req as { user?: { id: string; username: string } }).user;
+    const user = (req as { user?: IRequestUser }).user;
 
     if (!user) {
       throw new HandleableError(
@@ -501,9 +522,9 @@ export class UserController<
     }
 
     try {
-      // Deserialize the GUID string back to typed ID (round-trips with idToString)
+      const memberId = getUserId(user);
       const sp = ServiceProvider.getInstance();
-      const typedId = sp.idProvider.idFromString(user.id);
+      const typedId = sp.idProvider.idFromString(memberId);
 
       const backupCodeService =
         this.application.services.get<BackupCodeService>('backupCodeService');
@@ -542,7 +563,7 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    const user = (req as { user?: { id: string; username: string } }).user;
+    const user = (req as { user?: IRequestUser }).user;
 
     if (!user) {
       throw new HandleableError(
@@ -554,9 +575,9 @@ export class UserController<
     }
 
     try {
-      // Deserialize the GUID string back to typed ID (round-trips with idToString)
+      const memberId = getUserId(user);
       const sp = ServiceProvider.getInstance();
-      const typedId = sp.idProvider.idFromString(user.id);
+      const typedId = sp.idProvider.idFromString(memberId);
 
       const backupCodeService =
         this.application.services.get<BackupCodeService>('backupCodeService');
@@ -669,7 +690,7 @@ export class UserController<
     _res: Response,
     _next: NextFunction,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    const user = (req as { user?: { id: string; username: string } }).user;
+    const user = (req as { user?: IRequestUser }).user;
 
     if (!user) {
       throw new HandleableError(
@@ -730,5 +751,39 @@ export class UserController<
         },
       };
     }
+  }
+
+  @Post('/request-direct-login')
+  async requestDirectLogin(
+    _req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiChallengeResponse | ApiErrorResponse>> {
+    const systemUser = SystemUserService.getSystemUser(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.application.environment as any,
+      this.application.constants,
+    );
+    const time = Buffer.alloc(8);
+    time.writeBigUInt64BE(BigInt(new Date().getTime()));
+    const nonce = randomBytes(32);
+    const signature = systemUser.sign(Buffer.concat([time, nonce]));
+    const challenge = Buffer.concat([time, nonce, signature]).toString('hex');
+
+    return {
+      statusCode: 200,
+      response: {
+        challenge,
+        message: getSuiteCoreTranslation(
+          SuiteCoreStringKey.Login_ChallengeGenerated,
+        ),
+        serverPublicKey:
+          (
+            this.application.environment as {
+              systemPublicKeyHex?: string;
+            }
+          ).systemPublicKeyHex ?? '',
+      },
+    };
   }
 }
