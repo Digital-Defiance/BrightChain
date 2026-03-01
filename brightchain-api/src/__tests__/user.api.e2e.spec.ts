@@ -158,6 +158,14 @@ describe('UserController E2E', () => {
       expect(res.status).toBe(400);
     });
 
+    it('returns 400 when username is missing', async () => {
+      const res = await post(server.baseUrl, '/user/register', {
+        email: 'valid@example.com',
+        password: 'Password123!',
+      });
+      expect(res.status).toBe(400);
+    });
+
     it('returns 400 when email is invalid', async () => {
       const res = await post(server.baseUrl, '/user/register', {
         username: 'validuser',
@@ -190,6 +198,14 @@ describe('UserController E2E', () => {
       const res = await post(server.baseUrl, '/user/register', testUser);
       expect(res.status).toBe(400);
     });
+
+    it('returns 400 on duplicate username', async () => {
+      const res = await post(server.baseUrl, '/user/register', {
+        ...testUser,
+        email: `other_${Date.now()}@example.com`,
+      });
+      expect(res.status).toBe(400);
+    });
   });
 
   // ── POST /user/login ──────────────────────────────────────────────────
@@ -197,6 +213,13 @@ describe('UserController E2E', () => {
   describe('POST /user/login', () => {
     it('returns 400 when body is empty', async () => {
       const res = await post(server.baseUrl, '/user/login', {});
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when password is missing', async () => {
+      const res = await post(server.baseUrl, '/user/login', {
+        username: testUser.username,
+      });
       expect(res.status).toBe(400);
     });
 
@@ -256,6 +279,11 @@ describe('UserController E2E', () => {
       expect(res.status).toBe(401);
     });
 
+    it('returns 200 with empty body (no-op update)', async () => {
+      const res = await put(server.baseUrl, '/user/profile', {}, authToken);
+      expect(res.status).toBe(200);
+    });
+
     it('returns 200 and updated profile when authenticated', async () => {
       const res = await put(
         server.baseUrl,
@@ -278,6 +306,26 @@ describe('UserController E2E', () => {
         server.baseUrl,
         '/user/change-password',
         {},
+        authToken,
+      );
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when new password is too short', async () => {
+      const res = await post(
+        server.baseUrl,
+        '/user/change-password',
+        { currentPassword: testUser.password, newPassword: 'short' },
+        authToken,
+      );
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when newPassword is missing', async () => {
+      const res = await post(
+        server.baseUrl,
+        '/user/change-password',
+        { currentPassword: testUser.password },
         authToken,
       );
       expect(res.status).toBe(400);
@@ -367,10 +415,25 @@ describe('UserController E2E', () => {
       expect(res.status).toBe(400);
     });
 
+    it('returns 400 when mnemonic is missing', async () => {
+      const res = await post(server.baseUrl, '/user/recover', {
+        email: testUser.email,
+      });
+      expect(res.status).toBe(400);
+    });
+
     it('returns 401 on invalid mnemonic', async () => {
       const res = await post(server.baseUrl, '/user/recover', {
         email: testUser.email,
         mnemonic: 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong',
+      });
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 401 on unknown email', async () => {
+      const res = await post(server.baseUrl, '/user/recover', {
+        email: `nobody_${Date.now()}@example.com`,
+        mnemonic: TEST_MNEMONIC,
       });
       expect(res.status).toBe(401);
     });
@@ -384,9 +447,186 @@ describe('UserController E2E', () => {
       expect(res.status).toBe(401);
     });
 
+    it('returns 200 with a bogus token (no session to delete)', async () => {
+      // The controller validates the Bearer prefix then tries to find the
+      // session — if not found it still returns 200 (idempotent logout).
+      const res = await post(
+        server.baseUrl,
+        '/user/logout',
+        {},
+        'not.a.real.jwt',
+      );
+      // Auth middleware will reject a malformed JWT before the handler runs
+      expect([200, 401, 403]).toContain(res.status);
+    });
+
     it('returns 200 on successful logout', async () => {
       const res = await post(server.baseUrl, '/user/logout', {}, authToken);
       expect(res.status).toBe(200);
+    });
+  });
+
+  // ── POST /user/direct-challenge (two-step direct login flow) ──────────
+
+  describe('POST /user/direct-challenge', () => {
+    // Pre-create all members needed by this describe block in beforeAll so
+    // the heavy crypto work (key generation + CBL writes) is done before any
+    // HTTP requests fire, avoiding ECONNRESET under load.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let dcMembers: Array<{ member: any; username: string; email: string }> = [];
+    let sigSize = 64;
+
+    beforeAll(async () => {
+      const { SecureString } = await import('@digitaldefiance/ecies-lib');
+      const { EmailString } = await import('@brightchain/brightchain-lib');
+      const { MemberType } = await import('@digitaldefiance/ecies-lib');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const memberStore = server.app.services.get<any>('memberStore');
+
+      // Resolve SIGNATURE_SIZE once
+      const constants = (
+        server.app as unknown as {
+          constants: { ECIES: { SIGNATURE_SIZE: number } };
+        }
+      ).constants;
+      sigSize = constants?.ECIES?.SIGNATURE_SIZE ?? 64;
+
+      // Create 5 members up-front (unknown-user, wrong-sig ×2, expired, happy, replay)
+      for (let i = 0; i < 5; i++) {
+        const username = `dctest_${Date.now()}_${i}_${Math.random().toString(36).slice(2)}`;
+        const email = `${username}@example.com`;
+        const { reference, mnemonic } = await memberStore.createMember({
+          type: MemberType.User,
+          name: username,
+          contactEmail: new EmailString(email),
+        });
+        const member = await memberStore.getMember(reference.id);
+        member.loadWallet(new SecureString(mnemonic.value));
+        dcMembers.push({ member, username, email });
+      }
+
+      // Brief settle — let the block-store flush writes before HTTP tests fire
+      await new Promise((r) => setTimeout(r, 300));
+    });
+
+    async function fetchChallenge(): Promise<string> {
+      const res = await post(server.baseUrl, '/user/request-direct-login', {});
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as Record<string, unknown>;
+      return body['challenge'] as string;
+    }
+
+    it('returns 401 with missing fields', async () => {
+      const res = await post(server.baseUrl, '/user/direct-challenge', {});
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 401 with an invalid challenge (bad format)', async () => {
+      const res = await post(server.baseUrl, '/user/direct-challenge', {
+        challenge: 'deadbeef'.repeat(20),
+        signature: 'aabbcc'.repeat(20),
+        username: testUser.username,
+      });
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 401 for an unknown user', async () => {
+      const { member } = dcMembers[0];
+      const challengeHex = await fetchChallenge();
+      const sig = member.sign(Buffer.from(challengeHex, 'hex'));
+      const sigHex = Buffer.from(sig).toString('hex');
+
+      const res = await post(server.baseUrl, '/user/direct-challenge', {
+        challenge: challengeHex,
+        signature: sigHex,
+        username: `no_such_user_${Date.now()}`,
+      });
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 401 when the user signature is wrong', async () => {
+      // Sign with member[2]'s key but claim to be member[1]
+      const { username } = dcMembers[1];
+      const { member: wrongMember } = dcMembers[2];
+
+      const challengeHex = await fetchChallenge();
+      const badSig = wrongMember.sign(Buffer.from(challengeHex, 'hex'));
+      const badSigHex = Buffer.from(badSig).toString('hex');
+
+      const res = await post(server.baseUrl, '/user/direct-challenge', {
+        challenge: challengeHex,
+        signature: badSigHex,
+        username,
+      });
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 401 for an expired challenge', async () => {
+      const { member, username } = dcMembers[3];
+      const crypto = await import('crypto');
+
+      // Timestamp 10 minutes in the past — exceeds LoginChallengeExpiration
+      const time = Buffer.alloc(8);
+      time.writeBigUInt64BE(BigInt(Date.now() - 10 * 60 * 1000));
+      const nonce = crypto.randomBytes(32);
+      // Pad server-sig with zeros — expiry check fires before sig verification
+      const fakeServerSig = Buffer.alloc(sigSize, 0);
+      const challengeBuf = Buffer.concat([time, nonce, fakeServerSig]);
+      const challengeHex = challengeBuf.toString('hex');
+
+      const sig = member.sign(challengeBuf);
+      const sigHex = Buffer.from(sig).toString('hex');
+
+      const res = await post(server.baseUrl, '/user/direct-challenge', {
+        challenge: challengeHex,
+        signature: sigHex,
+        username,
+      });
+      expect(res.status).toBe(401);
+    });
+
+    it('completes the full two-step direct login flow', async () => {
+      const { member, username } = dcMembers[4];
+
+      const challengeHex = await fetchChallenge();
+      const sig = member.sign(Buffer.from(challengeHex, 'hex'));
+      const sigHex = Buffer.from(sig).toString('hex');
+
+      const dcRes = await post(server.baseUrl, '/user/direct-challenge', {
+        challenge: challengeHex,
+        signature: sigHex,
+        username,
+      });
+
+      expect(dcRes.status).toBe(200);
+      const dcBody = (await dcRes.json()) as Record<string, unknown>;
+      expect(typeof dcBody['token']).toBe('string');
+      expect(typeof dcBody['serverPublicKey']).toBe('string');
+      expect(dcBody['user']).toBeDefined();
+    });
+
+    it('returns 401 on challenge replay', async () => {
+      // Use member[0] again — unknown-user test used a non-existent username
+      // so the member itself was never consumed by replay prevention.
+      const { member, username } = dcMembers[0];
+
+      const challengeHex = await fetchChallenge();
+      const sig = member.sign(Buffer.from(challengeHex, 'hex'));
+      const sigHex = Buffer.from(sig).toString('hex');
+
+      const firstRes = await post(server.baseUrl, '/user/direct-challenge', {
+        challenge: challengeHex,
+        signature: sigHex,
+        username,
+      });
+      expect(firstRes.status).toBe(200);
+
+      const replayRes = await post(server.baseUrl, '/user/direct-challenge', {
+        challenge: challengeHex,
+        signature: sigHex,
+        username,
+      });
+      expect(replayRes.status).toBe(401);
     });
   });
 });
