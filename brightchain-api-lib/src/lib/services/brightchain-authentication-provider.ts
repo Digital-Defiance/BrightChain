@@ -13,6 +13,7 @@
  */
 
 import {
+  EmailString,
   MemberStatusType,
   MemberStore,
   ServiceProvider,
@@ -132,7 +133,59 @@ export class BrightChainAuthenticationProvider<
         lastLogin: publicProfile?.lastActive?.toISOString(),
       };
     } catch {
-      // MemberNotFound or other retrieval failure
+      // getMember() fails for seeded users (no CBL blocks). Fall back to the
+      // DB `users` collection which is always populated by initializeWithRbac.
+      return this.findUserByIdFromDb(userId, id);
+    }
+  }
+
+  /**
+   * DB-backed fallback for findUserById.
+   * Queries the `users` collection directly — works for seeded users whose
+   * CBL blocks are not stored in the block store.
+   */
+  private async findUserByIdFromDb(
+    userId: string,
+    id: TID,
+  ): Promise<IAuthenticatedUser<TLanguage> | null> {
+    try {
+      const db =
+        this.application.services.get<import('@brightchain/db').BrightChainDb>(
+          'db',
+        );
+      if (!db) return null;
+
+      const sp = ServiceProvider.getInstance<TID>();
+      const idHex = sp.idProvider.toString(id, 'hex');
+
+      const usersCol = db.collection<{
+        _id?: string;
+        email?: string;
+        accountStatus?: string;
+        timezone?: string;
+        siteLanguage?: string;
+        lastLogin?: string;
+      }>('users');
+
+      let userDoc = await usersCol.findOne({ _id: idHex } as never);
+      if (!userDoc) {
+        const dashed = idHex.replace(
+          /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+          '$1-$2-$3-$4-$5',
+        );
+        userDoc = await usersCol.findOne({ _id: dashed } as never);
+      }
+      if (!userDoc) return null;
+
+      return {
+        id: userId,
+        accountStatus: userDoc.accountStatus ?? 'Active',
+        email: userDoc.email ?? '',
+        siteLanguage: (userDoc.siteLanguage as TLanguage | undefined),
+        timezone: userDoc.timezone ?? 'UTC',
+        lastLogin: userDoc.lastLogin,
+      };
+    } catch {
       return null;
     }
   }
@@ -172,6 +225,90 @@ export class BrightChainAuthenticationProvider<
         lastLogin: publicProfile?.lastActive?.toISOString(),
       };
     } catch {
+      // getMember() fails for seeded users (no CBL blocks). Fall back to the
+      // DB `users` collection which is always populated by initializeWithRbac.
+      return this.buildRequestUserDTOFromDb(userId, id);
+    }
+  }
+
+  /**
+   * DB-backed fallback for buildRequestUserDTO.
+   * Queries the `users` collection directly — works for seeded users whose
+   * CBL blocks are not stored in the block store.
+   */
+  private async buildRequestUserDTOFromDb(
+    userId: string,
+    id: TID,
+  ): Promise<IRequestUserDTO | null> {
+    try {
+      const db =
+        this.application.services.get<import('@brightchain/db').BrightChainDb>(
+          'db',
+        );
+      if (!db) return null;
+
+      const sp = ServiceProvider.getInstance<TID>();
+      const idHex = sp.idProvider.toString(id, 'hex');
+
+      const usersCol = db.collection<{
+        _id?: string;
+        username?: string;
+        email?: string;
+        accountStatus?: string;
+        emailVerified?: boolean;
+        directChallenge?: boolean;
+        timezone?: string;
+        siteLanguage?: string;
+        darkMode?: boolean;
+        currency?: string;
+        lastLogin?: string;
+      }>('users');
+
+      // Try short hex (no dashes) first, then dashed UUID form
+      let userDoc = await usersCol.findOne({ _id: idHex } as never);
+      if (!userDoc) {
+        const dashed = idHex.replace(
+          /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+          '$1-$2-$3-$4-$5',
+        );
+        userDoc = await usersCol.findOne({ _id: dashed } as never);
+      }
+      if (!userDoc) return null;
+
+      if (
+        userDoc.accountStatus &&
+        userDoc.accountStatus !== 'Active'
+      ) {
+        return null;
+      }
+
+      // Determine MemberType from the member_index entry
+      const memberStore = this.getMemberStore();
+      const results = await memberStore.queryIndex({
+        email: userDoc.email,
+        limit: 1,
+      });
+      const memberType =
+        results.length > 0 ? results[0].type : MemberType.User;
+
+      const rolePrivileges = memberTypeToRolePrivileges(memberType);
+      const roleDTO = memberTypeToRoleDTO(memberType, userId);
+
+      return {
+        id: userId,
+        email: userDoc.email ?? '',
+        username: userDoc.username ?? '',
+        roles: [roleDTO],
+        rolePrivileges,
+        emailVerified: userDoc.emailVerified ?? true,
+        timezone: userDoc.timezone ?? 'UTC',
+        siteLanguage: userDoc.siteLanguage ?? 'en',
+        darkMode: userDoc.darkMode ?? false,
+        currency: userDoc.currency ?? 'USD',
+        directChallenge: userDoc.directChallenge ?? false,
+        lastLogin: userDoc.lastLogin,
+      };
+    } catch {
       return null;
     }
   }
@@ -209,23 +346,69 @@ export class BrightChainAuthenticationProvider<
 
     const reference = results[0];
 
-    // Hydrate the full member, then load the wallet from the mnemonic
-    // to make the private key available.
-    const member = (await memberStore.getMember(
-      reference.id,
-    )) as unknown as Member<TID>;
-
+    // Try to hydrate the full member from CBL blocks first.
+    // For seeded users (no CBL blocks), fall back to constructing a member
+    // from the mnemonic and verifying the derived public key matches the
+    // stored public key.
+    let member: Member<TID>;
     try {
-      member.loadWallet(mnemonic);
-    } catch {
-      // loadWallet throws MemberError("Invalid wallet mnemonic.") when the
-      // mnemonic is valid BIP39 but derives a different key, or a plain Error
-      // for invalid BIP39. Normalise to a consistent message.
-      throw new Error('Invalid mnemonic');
-    }
+      member = (await memberStore.getMember(
+        reference.id,
+      )) as unknown as Member<TID>;
 
-    if (!member.hasPrivateKey) {
-      throw new Error('Invalid mnemonic');
+      try {
+        member.loadWallet(mnemonic);
+      } catch {
+        throw new Error('Invalid mnemonic');
+      }
+
+      if (!member.hasPrivateKey) {
+        throw new Error('Invalid mnemonic');
+      }
+    } catch (err) {
+      // If getMember failed (seeded user without CBL blocks), reconstruct
+      // from the mnemonic and verify the public key matches.
+      if (
+        err instanceof Error &&
+        (err.message === 'Invalid mnemonic')
+      ) {
+        throw err;
+      }
+
+      // Get the stored public key to verify the mnemonic derives the right key
+      const storedPubKeyHex = await memberStore.getMemberPublicKeyHex(
+        reference.id,
+      );
+      if (!storedPubKeyHex) {
+        throw new Error('Invalid credentials');
+      }
+
+      const sp = ServiceProvider.getInstance<TID>();
+      const eciesService =
+        sp.eciesService as unknown as import('@digitaldefiance/node-ecies-lib').ECIESService<TID>;
+      const { member: reconstructed } = Member.newMember<TID>(
+        eciesService,
+        reference.type,
+        'recovered', // placeholder name — overridden below
+        new EmailString(email),
+        mnemonic,
+      );
+
+      // Verify the derived public key matches the stored one
+      const derivedPubKeyHex = Buffer.from(
+        reconstructed.publicKey,
+      ).toString('hex');
+      if (derivedPubKeyHex !== storedPubKeyHex) {
+        throw new Error('Invalid mnemonic');
+      }
+
+      // Patch the reconstructed member with the correct ID
+      Object.defineProperty(reconstructed, 'id', {
+        get: () => reference.id,
+        configurable: true,
+      });
+
+      member = reconstructed as unknown as Member<TID>;
     }
 
     // Use idToString for proper UUID round-trip (pairs with idFromString)
@@ -252,9 +435,21 @@ export class BrightChainAuthenticationProvider<
 
     const reference = results[0];
 
-    // Retrieve stored password hash from private profile
-    const { privateProfile } = await memberStore.getMemberProfile(reference.id);
-    const storedHash = privateProfile?.passwordHash;
+    // Retrieve stored password hash from private profile.
+    // For seeded users without CBL blocks, getMemberProfile will throw.
+    // Fall back to the DB `users` collection for the password hash.
+    let storedHash: string | undefined;
+    try {
+      const { privateProfile } = await memberStore.getMemberProfile(
+        reference.id,
+      );
+      storedHash = privateProfile?.passwordHash;
+    } catch {
+      // Seeded users — no profile CBL blocks. The password hash is not
+      // stored in the users collection by default (only mnemonic-based
+      // auth is configured for seeded users), so this will likely fail.
+    }
+
     if (!storedHash) {
       throw new Error('Password authentication not configured for this member');
     }
@@ -264,9 +459,29 @@ export class BrightChainAuthenticationProvider<
       throw new Error('Invalid credentials');
     }
 
-    const member = (await memberStore.getMember(
-      reference.id,
-    )) as unknown as Member<TID>;
+    // Try to hydrate from CBL blocks; fall back to a shell member for seeded users
+    let member: Member<TID>;
+    try {
+      member = (await memberStore.getMember(
+        reference.id,
+      )) as unknown as Member<TID>;
+    } catch {
+      // Seeded user without CBL blocks — create a shell member
+      const sp = ServiceProvider.getInstance<TID>();
+      const eciesService =
+        sp.eciesService as unknown as import('@digitaldefiance/node-ecies-lib').ECIESService<TID>;
+      const { member: shell } = Member.newMember<TID>(
+        eciesService,
+        reference.type,
+        email, // placeholder
+        new EmailString(email),
+      );
+      Object.defineProperty(shell, 'id', {
+        get: () => reference.id,
+        configurable: true,
+      });
+      member = shell as unknown as Member<TID>;
+    }
 
     // Use idToString for proper UUID round-trip (pairs with idFromString)
     const idProvider = ServiceProvider.getInstance<TID>().idProvider;

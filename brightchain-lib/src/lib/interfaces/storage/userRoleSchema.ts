@@ -31,4 +31,7 @@ export const USER_ROLE_SCHEMA: CollectionSchema = {
   additionalProperties: true,
   validationLevel: 'strict',
   validationAction: 'error',
+  indexes: [
+    { fields: { userId: 1, roleId: 1 }, options: { unique: true } },
+  ],
 };

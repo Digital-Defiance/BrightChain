@@ -727,6 +727,20 @@ export class Collection<T extends BsonDocument = BsonDocument> {
    */
   setSchema(schema: CollectionSchema): void {
     this.schema = schema;
+    // Auto-create indexes declared in the schema.
+    // Build from the in-memory docCache (synchronous) so indexes are
+    // fully populated before the next write — no race conditions.
+    if (schema.indexes) {
+      for (const idx of schema.indexes) {
+        const name = this.indexManager.createIndex(idx.fields, idx.options);
+        const index = this.indexManager.getIndex(name);
+        if (index) {
+          for (const doc of this.docCache.values()) {
+            index.addDocument(doc);
+          }
+        }
+      }
+    }
   }
 
   /**

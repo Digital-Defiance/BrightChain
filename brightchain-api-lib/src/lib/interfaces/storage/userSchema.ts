@@ -58,4 +58,8 @@ export const USER_SCHEMA: CollectionSchema = {
   additionalProperties: true,
   validationLevel: 'strict',
   validationAction: 'error',
+  indexes: [
+    { fields: { username: 1 }, options: { unique: true } },
+    { fields: { email: 1 }, options: { unique: true } },
+  ],
 };

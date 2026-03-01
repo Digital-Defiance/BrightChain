@@ -26,4 +26,5 @@ export const MEMBER_INDEX_SCHEMA: CollectionSchema = {
   additionalProperties: true,
   validationLevel: 'strict',
   validationAction: 'error',
+  indexes: [{ fields: { id: 1 }, options: { unique: true } }],
 };
