@@ -18,7 +18,12 @@ import type {
   IBrightChainMemberInitInput,
   IMemberIndexDocument,
 } from '@brightchain/brightchain-lib';
-import { EnergyAccountStore, MemberStore } from '@brightchain/brightchain-lib';
+import {
+  Checksum,
+  EnergyAccountStore,
+  MemberStatusType,
+  MemberStore,
+} from '@brightchain/brightchain-lib';
 import type { BrightChainDb } from '@brightchain/db';
 import { MemberType } from '@digitaldefiance/ecies-lib';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -76,6 +81,9 @@ export class BrightChainDatabasePlugin<
   private _memberStore: MemberStore | null = null;
   private _energyStore: EnergyAccountStore | null = null;
   private _authProvider: BrightChainAuthenticationProvider<TID> | null = null;
+  /** Stored result from the most recent seedWithRbac() / initializeDevStore() call. */
+  private _lastInitResult: IBrightChainInitResult<TID, BrightChainDb> | null =
+    null;
 
   constructor(
     environment: Environment<TID>,
@@ -107,6 +115,15 @@ export class BrightChainDatabasePlugin<
    */
   get authenticationProvider(): IAuthenticationProvider<TID> | undefined {
     return this._authProvider ?? undefined;
+  }
+
+  /**
+   * The result from the most recent seedWithRbac() / initializeDevStore() call.
+   * Useful in tests to retrieve credentials (e.g. memberMnemonic) without
+   * calling seedWithRbac() a second time (which would generate new random keys).
+   */
+  get lastInitResult(): IBrightChainInitResult<TID, BrightChainDb> | null {
+    return this._lastInitResult;
   }
 
   /**
@@ -464,6 +481,51 @@ export class BrightChainDatabasePlugin<
       // actually holds the seeded data.
       this._brightChainDb = initResult.db;
 
+      // Populate MemberStore in-memory indexes for seeded users.
+      // The init service writes directly to the DB member_index collection
+      // but never calls MemberStore.updateIndex(), leaving the in-memory
+      // nameIndex/emailIndex empty. Without this, queryIndex({ name: ... })
+      // would miss seeded users unless the DB fallback fires.
+      if (this._memberStore) {
+        const ms = this._memberStore as MemberStore<TID>;
+        const idProvider = getEnhancedNodeIdProvider<TID>();
+        const seededUsers = [
+          {
+            entry: buildResult.rbacInput.systemUser,
+            result: initResult,
+            prefix: 'system' as const,
+          },
+          {
+            entry: buildResult.rbacInput.adminUser,
+            result: initResult,
+            prefix: 'admin' as const,
+          },
+          {
+            entry: buildResult.rbacInput.memberUser,
+            result: initResult,
+            prefix: 'member' as const,
+          },
+        ];
+        for (const { entry } of seededUsers) {
+          // Build a sentinel Checksum for seeded users (no real CBL blocks)
+          const sentinelHex = '0'.repeat(128);
+          const sentinelChecksum = Checksum.fromHex(sentinelHex);
+          await ms.updateIndex({
+            id: entry.id,
+            publicCBL: sentinelChecksum,
+            privateCBL: sentinelChecksum,
+            type: entry.type,
+            status: MemberStatusType.Active,
+            lastUpdate: new Date(),
+            reputation: 0,
+            name: entry.username,
+            email: entry.email,
+          });
+        }
+        // Re-attach DB reference (seedWithRbac replaces _brightChainDb)
+        ms.setDb(this._brightChainDb);
+      }
+
       if (printCredentials) {
         const serverResult =
           BrightChainMemberInitService.buildServerInitResult<TID>(
@@ -477,6 +539,7 @@ export class BrightChainDatabasePlugin<
         );
       }
 
+      this._lastInitResult = initResult;
       return initResult;
     } finally {
       RbacInputBuilder.disposeMembers(buildResult.members);
