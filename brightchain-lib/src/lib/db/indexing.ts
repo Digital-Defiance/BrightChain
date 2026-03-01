@@ -230,15 +230,62 @@ export class IndexManager {
    * @throws DuplicateKeyError if a unique constraint is violated.
    */
   addDocument(doc: BsonDocument): void {
-    // Validate first (so we don't partially index if one fails)
-    const toAdd: CollectionIndex[] = [];
-    for (const index of this.indexes.values()) {
-      toAdd.push(index);
+    const allIndexes = Array.from(this.indexes.values());
+
+    // Phase 1: dry-run uniqueness checks on all indexes BEFORE mutating any.
+    // This prevents partial indexing if a later index would reject the doc.
+    for (const index of allIndexes) {
+      if (index.unique) {
+        const key = this.extractKeyForIndex(index, doc);
+        if (key === undefined) continue; // sparse – skip
+        const docId = doc._id;
+        if (!docId) continue;
+        const existing = this.lookupKeyInIndex(index, key);
+        if (existing && existing.size > 0 && !existing.has(docId)) {
+          throw new DuplicateKeyError(index.name, key);
+        }
+      }
     }
-    // Add to all
-    for (const index of toAdd) {
+
+    // Phase 2: all checks passed — add to every index.
+    for (const index of allIndexes) {
       index.addDocument(doc);
     }
+  }
+
+  /**
+   * Extract the index key from a document for a given index.
+   * Mirrors CollectionIndex.extractKey for pre-validation.
+   */
+  private extractKeyForIndex(
+    index: CollectionIndex,
+    doc: BsonDocument,
+  ): string | undefined {
+    const parts: unknown[] = [];
+    for (const field of Object.keys(index.spec)) {
+      const value = getNestedValue(doc as Record<string, unknown>, field);
+      if (value === undefined && index.sparse) return undefined;
+      parts.push(value ?? null);
+    }
+    return JSON.stringify(parts);
+  }
+
+  /**
+   * Look up existing entries for a key in a specific index.
+   */
+  private lookupKeyInIndex(
+    index: CollectionIndex,
+    key: string,
+  ): Set<DocumentId> | undefined {
+    // Access the internal entries map via the index's lookup mechanism.
+    // We construct a synthetic query that matches the key exactly.
+    const fields = Object.keys(index.spec);
+    const keyParts: unknown[] = JSON.parse(key);
+    const query: Record<string, unknown> = {};
+    for (let i = 0; i < fields.length; i++) {
+      query[fields[i]] = keyParts[i];
+    }
+    return index.lookup(query);
   }
 
   /**

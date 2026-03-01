@@ -18,4 +18,5 @@ export const MNEMONIC_SCHEMA: CollectionSchema = {
   additionalProperties: true,
   validationLevel: 'strict',
   validationAction: 'error',
+  indexes: [{ fields: { hmac: 1 }, options: { unique: true } }],
 };
