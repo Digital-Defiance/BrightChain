@@ -297,7 +297,7 @@ export class AuthService<
       this.application.constants,
     );
     console.info(
-      `[AuthService] verifyDirectLoginChallenge: verifying server signature — serverSig.length=${serverSignature.length} SIGNATURE_SIZE=${this.application.constants.ECIES.SIGNATURE_SIZE}`,
+      `[AuthService] verifyDirectLoginChallenge: verifying server signature`,
     );
     if (
       !systemUser.verify(
@@ -306,25 +306,16 @@ export class AuthService<
       )
     ) {
       console.warn(
-        `[AuthService] verifyDirectLoginChallenge: server signature check FAILED — challenge may be stale or from a different server key`,
+        `[AuthService] verifyDirectLoginChallenge: server signature check FAILED`,
       );
       throw new Error('Invalid challenge');
     }
-    console.info(
-      `[AuthService] verifyDirectLoginChallenge: server signature OK`,
-    );
 
     // 3. Look up user by username or email
     const query = username
       ? { name: username, limit: 1 }
       : { email: email!, limit: 1 };
-    console.info(
-      `[AuthService] verifyDirectLoginChallenge: querying index for ${username ? `username="${username}"` : `email="${email}"`}`,
-    );
     const results = await this.memberStore.queryIndex(query);
-    console.info(
-      `[AuthService] verifyDirectLoginChallenge: queryIndex returned ${results.length} result(s)`,
-    );
     if (results.length === 0) {
       console.warn(
         `[AuthService] verifyDirectLoginChallenge: no member found for ${username ? `username="${username}"` : `email="${email}"`}`,
@@ -334,9 +325,6 @@ export class AuthService<
 
     const reference = results[0];
     const sp = ServiceProvider.getInstance<TID>();
-    console.info(
-      `[AuthService] verifyDirectLoginChallenge: found reference id=${sp.idProvider.idToString(reference.id as unknown as TID)} type=${reference.type}`,
-    );
 
     // 4. Verify user's signature on the signed portion of the challenge.
     // We get the public key via getMemberPublicKeyHex() which reads from the
@@ -356,43 +344,9 @@ export class AuthService<
       throw new Error('Invalid credentials');
     }
     const publicKeyBuf = Buffer.from(publicKeyHex, 'hex');
-    console.info(
-      `[AuthService] verifyDirectLoginChallenge: verifying signature — signedData.length=${signedData.length} sig.length=${userSigBuf.length} pubKey.length=${publicKeyBuf.length} pubKey=${publicKeyHex}`,
-    );
     if (!nodeEcies.verifyMessage(publicKeyBuf, signedData, userSigBuf)) {
-      // Diagnostic: try to recover the public key from the signature to see
-      // what key the client actually used to sign.
-      try {
-        const { sha256 } = await import('@noble/hashes/sha2');
-        const { secp256k1 } = await import('@noble/curves/secp256k1');
-        const hash = sha256(signedData);
-        // Try all 4 recovery IDs
-        for (let recovery = 0; recovery < 4; recovery++) {
-          try {
-            const sig = secp256k1.Signature.fromCompact(userSigBuf).addRecoveryBit(recovery);
-            const recoveredPoint = sig.recoverPublicKey(hash);
-            const recoveredHex = recoveredPoint.toHex(true);
-            if (recoveredHex !== publicKeyHex) {
-              console.warn(
-                `[AuthService] verifyDirectLoginChallenge: recovered pubKey (recovery=${recovery}): ${recoveredHex} — MISMATCH with stored ${publicKeyHex}`,
-              );
-            } else {
-              console.warn(
-                `[AuthService] verifyDirectLoginChallenge: recovered pubKey (recovery=${recovery}): ${recoveredHex} — MATCHES stored key (unexpected)`,
-              );
-            }
-          } catch {
-            // invalid recovery id, skip
-          }
-        }
-      } catch (diagErr) {
-        console.warn(`[AuthService] verifyDirectLoginChallenge: diagnostic recovery failed:`, diagErr);
-      }
       console.warn(
-        `[AuthService] verifyDirectLoginChallenge: signature verification failed for id=${sp.idProvider.idToString(reference.id as unknown as TID)} pubKey=${publicKeyHex}`,
-      );
-      console.warn(
-        `[AuthService] verifyDirectLoginChallenge: challenge=${serverSignedRequest.substring(0, 40)}... sig=${signature.substring(0, 40)}...`,
+        `[AuthService] verifyDirectLoginChallenge: signature verification failed for id=${sp.idProvider.idToString(reference.id as unknown as TID)}`,
       );
       throw new Error('Invalid credentials');
     }
