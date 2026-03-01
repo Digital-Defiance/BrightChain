@@ -99,6 +99,10 @@ export interface IMemberIndexEntry<TID extends PlatformID = Uint8Array> {
   lastUpdate: Date;
   region?: string;
   reputation: number;
+  /** Member display name — used to populate the in-memory name→id index. */
+  name?: string;
+  /** Member contact email — used to populate the in-memory email→id index. */
+  email?: string;
 }
 
 /**
@@ -164,6 +168,13 @@ export interface IMemberStore<TID extends PlatformID = Uint8Array> {
     data: INewMemberData,
   ): Promise<{ reference: IMemberReference<TID>; mnemonic: SecureString }>;
   getMember(id: TID): Promise<Member<TID>>;
+  /**
+   * Returns the hex-encoded public key for a member.
+   * Reads from the `users` DB collection when available (fast path for
+   * seeded users whose CBL blocks are not stored). Falls back to getMember()
+   * for members created via createMember() which do have CBL blocks.
+   */
+  getMemberPublicKeyHex(id: TID): Promise<string | null>;
   updateMember(id: TID, changes: IMemberChanges<TID>): Promise<void>;
   deleteMember(id: TID): Promise<void>;
 
