@@ -205,8 +205,8 @@ describe('BrightChainMemberInitService — unit', () => {
             expect(doc?.poolId).toBe(VALID_POOL);
             expect(doc?.status).toBe(MemberStatusType.Active);
             expect(doc?.reputation).toBe(0);
-            expect(doc?.publicCBL).toBe('0'.repeat(64));
-            expect(doc?.privateCBL).toBe('0'.repeat(64));
+            expect(doc?.publicCBL).toBe('0'.repeat(128));
+            expect(doc?.privateCBL).toBe('0'.repeat(128));
           }
         }),
         { numRuns: 100 },
