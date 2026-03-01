@@ -345,9 +345,38 @@ export class AuthService<
     }
     const publicKeyBuf = Buffer.from(publicKeyHex, 'hex');
     if (!nodeEcies.verifyMessage(publicKeyBuf, signedData, userSigBuf)) {
+      // Diagnostic: log lengths and hex snippets to identify data mismatch
       console.warn(
-        `[AuthService] verifyDirectLoginChallenge: signature verification failed for id=${sp.idProvider.idToString(reference.id as unknown as TID)}`,
+        `[AuthService] verifyDirectLoginChallenge: FAILED — signedData.length=${signedData.length} sig.length=${userSigBuf.length} pubKey=${publicKeyHex}`,
       );
+      console.warn(
+        `[AuthService] verifyDirectLoginChallenge: signedData(hex)=${signedData.toString('hex').substring(0, 80)}...`,
+      );
+      console.warn(
+        `[AuthService] verifyDirectLoginChallenge: signature(hex)=${signature.substring(0, 80)}...`,
+      );
+      // Verify the server can sign+verify with the same key to rule out library issues
+      try {
+        const { sha256 } = await import('@noble/hashes/sha2');
+        const { secp256k1 } = await import('@noble/curves/secp256k1');
+        const hash = sha256(signedData);
+        const directResult = secp256k1.verify(userSigBuf, hash, publicKeyBuf, { prehash: false });
+        console.warn(
+          `[AuthService] verifyDirectLoginChallenge: direct secp256k1.verify=${directResult}`,
+        );
+        // Try recovering the signing public key
+        for (let recovery = 0; recovery < 2; recovery++) {
+          try {
+            const sig = secp256k1.Signature.fromCompact(userSigBuf).addRecoveryBit(recovery);
+            const recovered = sig.recoverPublicKey(hash).toHex(true);
+            console.warn(
+              `[AuthService] verifyDirectLoginChallenge: recovered(${recovery})=${recovered} match=${recovered === publicKeyHex}`,
+            );
+          } catch { /* skip */ }
+        }
+      } catch (e) {
+        console.warn(`[AuthService] diagnostic error:`, e);
+      }
       throw new Error('Invalid credentials');
     }
 
