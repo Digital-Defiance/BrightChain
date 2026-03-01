@@ -360,8 +360,39 @@ export class AuthService<
       `[AuthService] verifyDirectLoginChallenge: verifying signature — signedData.length=${signedData.length} sig.length=${userSigBuf.length} pubKey.length=${publicKeyBuf.length} pubKey=${publicKeyHex}`,
     );
     if (!nodeEcies.verifyMessage(publicKeyBuf, signedData, userSigBuf)) {
+      // Diagnostic: try to recover the public key from the signature to see
+      // what key the client actually used to sign.
+      try {
+        const { sha256 } = await import('@noble/hashes/sha2');
+        const { secp256k1 } = await import('@noble/curves/secp256k1');
+        const hash = sha256(signedData);
+        // Try all 4 recovery IDs
+        for (let recovery = 0; recovery < 4; recovery++) {
+          try {
+            const sig = secp256k1.Signature.fromCompact(userSigBuf).addRecoveryBit(recovery);
+            const recoveredPoint = sig.recoverPublicKey(hash);
+            const recoveredHex = recoveredPoint.toHex(true);
+            if (recoveredHex !== publicKeyHex) {
+              console.warn(
+                `[AuthService] verifyDirectLoginChallenge: recovered pubKey (recovery=${recovery}): ${recoveredHex} — MISMATCH with stored ${publicKeyHex}`,
+              );
+            } else {
+              console.warn(
+                `[AuthService] verifyDirectLoginChallenge: recovered pubKey (recovery=${recovery}): ${recoveredHex} — MATCHES stored key (unexpected)`,
+              );
+            }
+          } catch {
+            // invalid recovery id, skip
+          }
+        }
+      } catch (diagErr) {
+        console.warn(`[AuthService] verifyDirectLoginChallenge: diagnostic recovery failed:`, diagErr);
+      }
       console.warn(
         `[AuthService] verifyDirectLoginChallenge: signature verification failed for id=${sp.idProvider.idToString(reference.id as unknown as TID)} pubKey=${publicKeyHex}`,
+      );
+      console.warn(
+        `[AuthService] verifyDirectLoginChallenge: challenge=${serverSignedRequest.substring(0, 40)}... sig=${signature.substring(0, 40)}...`,
       );
       throw new Error('Invalid credentials');
     }
