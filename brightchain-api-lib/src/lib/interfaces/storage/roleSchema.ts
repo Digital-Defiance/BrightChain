@@ -41,4 +41,5 @@ export const ROLE_SCHEMA: CollectionSchema = {
   additionalProperties: true,
   validationLevel: 'strict',
   validationAction: 'error',
+  indexes: [{ fields: { name: 1 }, options: { unique: true } }],
 };
