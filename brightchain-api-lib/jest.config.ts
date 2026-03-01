@@ -23,7 +23,7 @@ export default {
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../coverage/brightchain-api-lib',
   testTimeout: 180000,
-  maxWorkers: 1,
+  maxWorkers: 4,
   moduleNameMapper: {
     '^@brightchain/brightchain-lib$':
       '<rootDir>/../brightchain-lib/src/index.ts',

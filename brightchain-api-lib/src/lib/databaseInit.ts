@@ -106,9 +106,7 @@ export async function brightchainDatabaseInit<TID extends PlatformID>(
     // the plugin's db and the seeding service's db.
     const db = new BrightChainDb(
       blockStore,
-      dataDir
-        ? { name: environment.memberPoolName, dataDir }
-        : undefined,
+      dataDir ? { name: environment.memberPoolName, dataDir } : undefined,
     );
 
     // Mark the db as connected (no-op for block-store-backed DB, but sets

@@ -135,6 +135,10 @@ export class BrightChainDatabasePlugin<
     this._energyStore = energyStore as EnergyAccountStore;
     this._connected = true;
 
+    // Give MemberStore a DB reference so queryIndex() can do O(1) DB-backed
+    // lookups instead of requiring the full member list loaded into memory.
+    (this._memberStore as MemberStore<TID>).setDb(this._brightChainDb);
+
     // In production mode (no dev pool), auto-seed if the database is empty —
     // unless the caller has opted out (e.g. brightchain-inituserdb, which
     // performs its own controlled seeding after connect() returns).
@@ -227,7 +231,13 @@ export class BrightChainDatabasePlugin<
   async initializeDevStore(): Promise<
     IBrightChainInitResult<TID, BrightChainDb>
   > {
-    return this.seedWithRbac(true);
+    const result = await this.seedWithRbac(true);
+    // After seeding, update the MemberStore's DB reference so queryIndex()
+    // can find the freshly seeded members via DB-backed lookups.
+    if (this._memberStore && this._brightChainDb) {
+      (this._memberStore as MemberStore<TID>).setDb(this._brightChainDb);
+    }
+    return result;
   }
 
   // ── Typed accessors ───────────────────────────────────────────────

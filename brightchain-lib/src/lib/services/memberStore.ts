@@ -31,6 +31,7 @@ import {
   IMemberStore,
   INewMemberData,
 } from '../interfaces/member/memberData';
+import { IMemberIndexDocument } from '../interfaces/member/memberIndexDocument';
 import {
   IPrivateMemberProfileHydratedData,
   IPrivateMemberProfileStorageData,
@@ -38,6 +39,8 @@ import {
   IPublicMemberProfileStorageData,
 } from '../interfaces/member/profileStorage';
 import { IBlockStore } from '../interfaces/storage/blockStore';
+import { IMemberStoreDb } from '../interfaces/storage/documentTypes';
+import { Checksum } from '../types/checksum';
 import { MemberCblService } from './member/memberCblService';
 import { ServiceProvider } from './service.provider';
 
@@ -52,13 +55,25 @@ export class MemberStore<
   private readonly regionIndex: Map<string, Set<string>>;
   private readonly nameIndex: Map<string, string>; // name -> member ID mapping
   private readonly emailIndex: Map<string, string>; // email -> member ID mapping
+  /** Optional DB reference for scalable, DB-backed queryIndex lookups. */
+  private _db: IMemberStoreDb | null;
 
-  constructor(blockStore: IBlockStore) {
+  constructor(blockStore: IBlockStore, db?: IMemberStoreDb) {
     this.blockStore = blockStore;
     this.memberIndex = new Map<string, IMemberIndexEntry<TID>>();
     this.regionIndex = new Map<string, Set<string>>();
     this.nameIndex = new Map<string, string>();
     this.emailIndex = new Map<string, string>();
+    this._db = db ?? null;
+  }
+
+  /**
+   * Attach (or replace) the DB reference after construction.
+   * Called by the plugin after connect() so MemberStore can query
+   * the persisted member_index and users collections directly.
+   */
+  public setDb(db: IMemberStoreDb): void {
+    this._db = db;
   }
 
   /**
@@ -958,22 +973,36 @@ export class MemberStore<
   }
 
   /**
-   * Query the member index
+   * Query the member index.
+   *
+   * When a `name` or `email` criterion is provided and the in-memory index is
+   * empty (e.g. after a server restart), falls back to querying the persisted
+   * `users` and `member_index` collections via the optional `_db` reference.
+   * This avoids loading the entire member list into memory for large databases.
    */
   public async queryIndex(
     criteria: IMemberQueryCriteria<TID>,
   ): Promise<IMemberReference<TID>[]> {
+    const sp = ServiceProvider.getInstance<TID>();
+
+    // ── DB-backed fast path for name/email lookups ────────────────────────
+    // Use this when the in-memory index is empty AND we have a DB reference.
+    // Covers the common post-restart case without loading all members.
+    if (
+      this._db &&
+      this.memberIndex.size === 0 &&
+      (criteria.name || criteria.email)
+    ) {
+      return this._queryIndexFromDb(criteria);
+    }
+
+    // ── In-memory path ────────────────────────────────────────────────────
     let results = Array.from(this.memberIndex.values());
 
     // Apply filters
     if (criteria.id) {
       results = results.filter(
-        (entry) =>
-          criteria.id &&
-          ServiceProvider.getInstance<TID>().idProvider.equals(
-            entry.id,
-            criteria.id,
-          ),
+        (entry) => criteria.id && sp.idProvider.equals(entry.id, criteria.id),
       );
     }
     if (criteria.name) {
@@ -981,9 +1010,7 @@ export class MemberStore<
       if (memberId) {
         results = results.filter(
           (entry) =>
-            uint8ArrayToHex(
-              ServiceProvider.getInstance<TID>().idProvider.toBytes(entry.id),
-            ) === memberId,
+            uint8ArrayToHex(sp.idProvider.toBytes(entry.id)) === memberId,
         );
       } else {
         results = [];
@@ -994,9 +1021,7 @@ export class MemberStore<
       if (memberId) {
         results = results.filter(
           (entry) =>
-            uint8ArrayToHex(
-              ServiceProvider.getInstance<TID>().idProvider.toBytes(entry.id),
-            ) === memberId,
+            uint8ArrayToHex(sp.idProvider.toBytes(entry.id)) === memberId,
         );
       } else {
         results = [];
@@ -1035,10 +1060,86 @@ export class MemberStore<
     return results.map((entry) => ({
       id: entry.id,
       type: entry.type,
-      status: entry.status,
       dateVerified: entry.lastUpdate,
       publicCBL: entry.publicCBL,
     }));
+  }
+
+  /**
+   * DB-backed queryIndex for name/email lookups.
+   *
+   * Queries `users` for the member ID, then `member_index` for CBL checksums.
+   * Returns at most `criteria.limit` results (default 1 for name/email lookups).
+   * Does NOT load the full member list — O(1) DB lookups.
+   */
+  private async _queryIndexFromDb(
+    criteria: IMemberQueryCriteria<TID>,
+  ): Promise<IMemberReference<TID>[]> {
+    if (!this._db) return [];
+    const sp = ServiceProvider.getInstance<TID>();
+
+    // Look up the user document by username or email
+    const usersCol = this._db.collection<{
+      _id?: string;
+      username: string;
+      email: string;
+    }>('users');
+
+    let userDoc: { _id?: string; username: string; email: string } | null =
+      null;
+    if (criteria.name) {
+      userDoc = await usersCol.findOne({ username: criteria.name } as never);
+    } else if (criteria.email) {
+      userDoc = await usersCol.findOne({ email: criteria.email } as never);
+    }
+
+    if (!userDoc || !userDoc._id) return [];
+
+    const idHex = (userDoc._id as string).replace(/-/g, '');
+
+    // Look up the member_index document for CBL checksums
+    const indexCol = this._db.collection<IMemberIndexDocument>('member_index');
+    const indexDoc = await indexCol.findOne({ id: idHex } as never);
+    if (!indexDoc) return [];
+
+    // Reconstruct the typed ID and index entry
+    let typedId: TID;
+    try {
+      typedId = sp.idProvider.idFromString(idHex) as TID;
+    } catch {
+      return [];
+    }
+
+    const entry: IMemberIndexEntry<TID> = {
+      id: typedId,
+      publicCBL: Checksum.fromHex(indexDoc.publicCBL),
+      privateCBL: Checksum.fromHex(indexDoc.privateCBL),
+      ...(indexDoc.publicProfileCBL
+        ? { publicProfileCBL: Checksum.fromHex(indexDoc.publicProfileCBL) }
+        : {}),
+      ...(indexDoc.privateProfileCBL
+        ? { privateProfileCBL: Checksum.fromHex(indexDoc.privateProfileCBL) }
+        : {}),
+      type: indexDoc.type,
+      status: indexDoc.status ?? MemberStatusType.Active,
+      lastUpdate: new Date(indexDoc.lastUpdate),
+      region: indexDoc.region,
+      reputation: indexDoc.reputation ?? 0,
+    };
+
+    // Cache in the in-memory index for subsequent calls in this session
+    this.memberIndex.set(idHex, entry);
+    if (criteria.name) this.nameIndex.set(criteria.name, idHex);
+    if (criteria.email) this.emailIndex.set(criteria.email, idHex);
+
+    return [
+      {
+        id: typedId,
+        type: entry.type,
+        dateVerified: entry.lastUpdate,
+        publicCBL: entry.publicCBL,
+      },
+    ];
   }
 
   /**
