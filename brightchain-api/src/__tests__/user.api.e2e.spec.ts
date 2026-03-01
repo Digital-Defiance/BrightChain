@@ -10,8 +10,14 @@
 import { App, Environment } from '@brightchain/brightchain-api-lib';
 import { EmailString } from '@brightchain/brightchain-lib';
 import { MemberType, SecureString } from '@digitaldefiance/ecies-lib';
-import { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib';
+import {
+  GuidV4Buffer,
+  ECIESService as NodeECIESService,
+  Member as NodeMember,
+} from '@digitaldefiance/node-ecies-lib';
+import { mkdtempSync, rmSync } from 'fs';
 import { AddressInfo, createServer } from 'net';
+import { tmpdir } from 'os';
 import { join } from 'path';
 
 jest.setTimeout(120_000);
@@ -118,6 +124,113 @@ async function put(
 }
 
 // ── Test Suite ────────────────────────────────────────────────────────────
+
+// ── RBAC-seeded direct-challenge suite ───────────────────────────────────────
+// This suite boots a production-mode server (no DEV_DATABASE), seeds via
+// seedWithRbac(), then verifies direct-challenge works for the seeded member.
+// This is the path that was broken: seeded users have no CBL blocks, so
+// getMember() fails — the fix reads publicKey from the users collection instead.
+
+describe('UserController E2E — RBAC-seeded direct-challenge', () => {
+  let server: TestServer;
+
+  beforeAll(async () => {
+    const port = await getFreePort();
+    // Use a separate in-memory pool so this suite is isolated from the main suite.
+    // Members come exclusively from seedWithRbac() — no pre-registered users.
+    process.env['JWT_SECRET'] = JWT_SECRET;
+    process.env['MNEMONIC_HMAC_SECRET'] = MNEMONIC_HMAC_SECRET;
+    process.env['MNEMONIC_ENCRYPTION_KEY'] = MNEMONIC_ENCRYPTION_KEY;
+    process.env['DEV_DATABASE'] = 'rbac-e2e-test-pool';
+    process.env['DEBUG'] = 'false';
+    process.env['PORT'] = String(port);
+    process.env['HOST'] = '127.0.0.1';
+    process.env['UPNP_ENABLED'] = 'false';
+    process.env['LETS_ENCRYPT_ENABLED'] = 'false';
+    process.env['SYSTEM_MNEMONIC'] = TEST_MNEMONIC;
+    process.env['MEMBER_POOL_NAME'] = 'BrightChain';
+    process.env['USE_TRANSACTIONS'] = 'false';
+    process.env['DISABLE_EMAIL_SEND'] = 'true';
+    process.env['API_DIST_DIR'] = join(
+      process.cwd(),
+      'dist',
+      'brightchain-api',
+    );
+    process.env['REACT_DIST_DIR'] = join(
+      process.cwd(),
+      'dist',
+      'brightchain-react',
+    );
+
+    const env = new Environment(undefined, false, false);
+    const app = new App<GuidV4Buffer>(env as Environment<GuidV4Buffer>);
+    await app.start();
+    server = { app, baseUrl: `http://127.0.0.1:${port}` };
+  });
+
+  afterAll(async () => {
+    await server.app.stop();
+  });
+
+  it('direct-challenge succeeds for the RBAC-seeded member user', async () => {
+    // Use lastInitResult from the plugin — this is the result from the
+    // seedWithRbac() call that happened during app.start(). Calling
+    // seedWithRbac() again would generate a NEW random mnemonic/keypair
+    // that doesn't match what's stored in the DB.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const plugin = (server.app as any)._plugin;
+    const initResult = plugin.lastInitResult;
+    expect(initResult).not.toBeNull();
+
+    const memberMnemonic: string = initResult.memberMnemonic;
+    const memberUsername: string = initResult.memberUsername;
+    const memberEmail: string = initResult.memberEmail;
+
+    expect(typeof memberMnemonic).toBe('string');
+    expect(memberMnemonic.split(' ').length).toBeGreaterThanOrEqual(12);
+
+    // Reconstruct the member using the same ECIESService + EciesConfig that
+    // RbacInputBuilder uses — this produces the same keypair from the mnemonic.
+    const ecies = new NodeECIESService();
+    const mnemonic = new SecureString(memberMnemonic);
+    const { member } = NodeMember.newMember<GuidV4Buffer>(
+      ecies as never,
+      MemberType.User,
+      memberUsername,
+      new EmailString(memberEmail),
+      mnemonic,
+    );
+
+    // Fetch a fresh challenge from the server
+    const challengeRes = await post(
+      server.baseUrl,
+      '/user/request-direct-login',
+      {},
+    );
+    expect(challengeRes.status).toBe(200);
+    const challengeBody = (await challengeRes.json()) as Record<
+      string,
+      unknown
+    >;
+    const challengeHex = challengeBody['challenge'] as string;
+
+    // Sign the challenge with the member's private key
+    const sig = member.sign(Buffer.from(challengeHex, 'hex'));
+    const sigHex = Buffer.from(sig).toString('hex');
+
+    const dcRes = await post(server.baseUrl, '/user/direct-challenge', {
+      challenge: challengeHex,
+      signature: sigHex,
+      username: memberUsername,
+    });
+
+    expect(dcRes.status).toBe(200);
+    const dcBody = (await dcRes.json()) as Record<string, unknown>;
+    expect(typeof dcBody['token']).toBe('string');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 describe('UserController E2E', () => {
   let server: TestServer;
@@ -627,5 +740,138 @@ describe('UserController E2E', () => {
       });
       expect(replayRes.status).toBe(401);
     });
+  });
+});
+
+// ── Disk-backed e2e suite ────────────────────────────────────────────────────
+// Validates the same core flows (register, login, direct-challenge) against a
+// real DiskBlockAsyncStore + PersistentHeadRegistry backed by a temp directory.
+// This catches bugs that only manifest with persistent storage (e.g. nested
+// block layout, head registry serialization, blockstore path resolution).
+
+describe('UserController E2E — disk-backed store', () => {
+  let server: TestServer;
+  let tmpDir: string;
+
+  const diskTestUser = {
+    username: `diskuser_${Date.now()}`,
+    email: `diskuser_${Date.now()}@example.com`,
+    password: 'DiskPassword123!',
+  };
+
+  beforeAll(async () => {
+    tmpDir = mkdtempSync(join(tmpdir(), 'bc-e2e-disk-'));
+    const port = await getFreePort();
+
+    process.env['JWT_SECRET'] = JWT_SECRET;
+    process.env['MNEMONIC_HMAC_SECRET'] = MNEMONIC_HMAC_SECRET;
+    process.env['MNEMONIC_ENCRYPTION_KEY'] = MNEMONIC_ENCRYPTION_KEY;
+    delete process.env['DEV_DATABASE'];
+    process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'] = tmpDir;
+    process.env['DEBUG'] = 'false';
+    process.env['PORT'] = String(port);
+    process.env['HOST'] = '127.0.0.1';
+    process.env['UPNP_ENABLED'] = 'false';
+    process.env['LETS_ENCRYPT_ENABLED'] = 'false';
+    process.env['SYSTEM_MNEMONIC'] = TEST_MNEMONIC;
+    process.env['MEMBER_POOL_NAME'] = 'BrightChain';
+    process.env['USE_TRANSACTIONS'] = 'false';
+    process.env['DISABLE_EMAIL_SEND'] = 'true';
+    process.env['API_DIST_DIR'] = join(
+      process.cwd(),
+      'dist',
+      'brightchain-api',
+    );
+    process.env['REACT_DIST_DIR'] = join(
+      process.cwd(),
+      'dist',
+      'brightchain-react',
+    );
+    // Placeholder — app.start() overwrites after DB init
+    process.env['SYSTEM_PUBLIC_KEY'] = '04' + '00'.repeat(64);
+
+    const env = new Environment(undefined, false, false);
+    const app = new App<GuidV4Buffer>(env as Environment<GuidV4Buffer>);
+    await app.start();
+    server = { app, baseUrl: `http://127.0.0.1:${port}` };
+  });
+
+  afterAll(async () => {
+    await server.app.stop();
+    // Clean up temp directory
+    try {
+      rmSync(tmpDir, { recursive: true, force: true });
+    } catch {
+      // best-effort cleanup
+    }
+    // Restore DEV_DATABASE for any subsequent suites
+    delete process.env['BRIGHTCHAIN_BLOCKSTORE_PATH'];
+    process.env['DEV_DATABASE'] = 'user-e2e-test-pool';
+  });
+
+  it('registers a user on disk-backed store', async () => {
+    const res = await post(server.baseUrl, '/user/register', diskTestUser);
+    expect(res.status).toBe(201);
+    const body = (await res.json()) as Record<string, unknown>;
+    const data = body['data'] as Record<string, unknown>;
+    expect(typeof data['token']).toBe('string');
+    expect(typeof data['memberId']).toBe('string');
+  });
+
+  it('logs in the registered user on disk-backed store', async () => {
+    const res = await post(server.baseUrl, '/user/login', {
+      username: diskTestUser.username,
+      password: diskTestUser.password,
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    const data = body['data'] as Record<string, unknown>;
+    expect(typeof data['token']).toBe('string');
+  });
+
+  it('direct-challenge works for RBAC-seeded member on disk-backed store', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const plugin = (server.app as any)._plugin;
+    const initResult = plugin.lastInitResult;
+    expect(initResult).not.toBeNull();
+
+    const memberMnemonic: string = initResult.memberMnemonic;
+    const memberUsername: string = initResult.memberUsername;
+    const memberEmail: string = initResult.memberEmail;
+
+    const ecies = new NodeECIESService();
+    const mnemonic = new SecureString(memberMnemonic);
+    const { member } = NodeMember.newMember<GuidV4Buffer>(
+      ecies as never,
+      MemberType.User,
+      memberUsername,
+      new EmailString(memberEmail),
+      mnemonic,
+    );
+
+    const challengeRes = await post(
+      server.baseUrl,
+      '/user/request-direct-login',
+      {},
+    );
+    expect(challengeRes.status).toBe(200);
+    const challengeBody = (await challengeRes.json()) as Record<
+      string,
+      unknown
+    >;
+    const challengeHex = challengeBody['challenge'] as string;
+
+    const sig = member.sign(Buffer.from(challengeHex, 'hex'));
+    const sigHex = Buffer.from(sig).toString('hex');
+
+    const dcRes = await post(server.baseUrl, '/user/direct-challenge', {
+      challenge: challengeHex,
+      signature: sigHex,
+      username: memberUsername,
+    });
+
+    expect(dcRes.status).toBe(200);
+    const dcBody = (await dcRes.json()) as Record<string, unknown>;
+    expect(typeof dcBody['token']).toBe('string');
   });
 });

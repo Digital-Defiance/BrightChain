@@ -338,38 +338,63 @@ export class AuthService<
       `[AuthService] verifyDirectLoginChallenge: found reference id=${sp.idProvider.idToString(reference.id as unknown as TID)} type=${reference.type}`,
     );
 
+    // 4. Verify user's signature on the signed portion of the challenge.
+    // We get the public key via getMemberPublicKeyHex() which reads from the
+    // `users` DB collection (fast path for seeded users whose CBL blocks are
+    // not stored) and falls back to getMember() for CBL-backed members.
+    const signedData = requestBuffer.subarray(0, signedDataLength);
+    const userSigBuf = Buffer.from(signature, 'hex') as SignatureBuffer;
+    const nodeEcies = new ECIESService();
+
+    const publicKeyHex = await this.memberStore.getMemberPublicKeyHex(
+      reference.id,
+    );
+    if (!publicKeyHex) {
+      console.warn(
+        `[AuthService] verifyDirectLoginChallenge: could not resolve public key for id=${sp.idProvider.idToString(reference.id as unknown as TID)}`,
+      );
+      throw new Error('Invalid credentials');
+    }
+    const publicKeyBuf = Buffer.from(publicKeyHex, 'hex');
+    console.info(
+      `[AuthService] verifyDirectLoginChallenge: verifying signature — signedData.length=${signedData.length} sig.length=${userSigBuf.length} pubKey.length=${publicKeyBuf.length} pubKey=${publicKeyHex}`,
+    );
+    if (!nodeEcies.verifyMessage(publicKeyBuf, signedData, userSigBuf)) {
+      console.warn(
+        `[AuthService] verifyDirectLoginChallenge: signature verification failed for id=${sp.idProvider.idToString(reference.id as unknown as TID)} pubKey=${publicKeyHex}`,
+      );
+      throw new Error('Invalid credentials');
+    }
+
+    // Resolve the Member object for the return value — needed for the JWT
+    // and userDTO. For seeded users without CBL blocks, getMember() will
+    // throw; in that case we synthesise a minimal shell using only the
+    // fields callers actually need (name, type, id, publicKey).
     let member: Member<TID>;
     try {
       member = (await this.memberStore.getMember(
         reference.id,
       )) as unknown as Member<TID>;
-      console.info(
-        `[AuthService] verifyDirectLoginChallenge: getMember() succeeded, name="${member.name}" publicKey.length=${member.publicKey?.length ?? 'undefined'}`,
+    } catch {
+      // Seeded users don't have CBL blocks — synthesise a shell.
+      // signToken() only needs member.name and member.type; publicKey is
+      // already verified above so we can safely expose it here too.
+      const resolvedName = username ?? email ?? 'unknown';
+      const resolvedEmail = email ?? `${resolvedName}@brightchain.local`;
+      const sp2 = ServiceProvider.getInstance<TID>();
+      const eciesService = sp2.eciesService as unknown as ECIESService<TID>;
+      const { member: shell } = Member.newMember<TID>(
+        eciesService,
+        reference.type,
+        resolvedName,
+        new EmailString(resolvedEmail),
       );
-    } catch (getMemberError) {
-      console.error(
-        `[AuthService] verifyDirectLoginChallenge: getMember() threw:`,
-        getMemberError,
-      );
-      throw new Error('Invalid credentials');
-    }
-
-    // 4. Verify user's signature on the signed portion of the challenge.
-    // getMember() returns a browser-ecies-lib Member (ServiceProvider uses ecies-lib,
-    // not node-ecies-lib). Use node-ecies-lib ECIESService directly to verify so we
-    // get the correct Node.js crypto path rather than the browser fallback.
-    const signedData = requestBuffer.subarray(0, signedDataLength);
-    const userSigBuf = Buffer.from(signature, 'hex') as SignatureBuffer;
-    const nodeEcies = new ECIESService();
-    const publicKeyBuf = Buffer.from(member.publicKey);
-    console.info(
-      `[AuthService] verifyDirectLoginChallenge: verifying signature — signedData.length=${signedData.length} sig.length=${userSigBuf.length} pubKey.length=${publicKeyBuf.length}`,
-    );
-    if (!nodeEcies.verifyMessage(publicKeyBuf, signedData, userSigBuf)) {
-      console.warn(
-        `[AuthService] verifyDirectLoginChallenge: signature verification failed for member "${member.name}" (id=${sp.idProvider.idToString(reference.id as unknown as TID)}) pubKey=${publicKeyBuf.toString('hex')}`,
-      );
-      throw new Error('Invalid credentials');
+      const verifiedPublicKey = Buffer.from(publicKeyHex, 'hex');
+      Object.defineProperties(shell, {
+        id: { get: () => reference.id, configurable: true },
+        publicKey: { get: () => verifiedPublicKey, configurable: true },
+      });
+      member = shell as unknown as Member<TID>;
     }
 
     // 5. Replay prevention — store used nonce
