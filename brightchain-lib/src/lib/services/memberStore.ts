@@ -402,14 +402,10 @@ export class MemberStore<
         lastUpdate: new Date(),
         region: data.region,
         reputation: 0,
+        name: data.name,
+        email: data.contactEmail.toString(),
       };
       await this.updateIndex(indexEntry);
-
-      // Add to name index
-      this.nameIndex.set(data.name, doc!.id);
-
-      // Add to email index
-      this.emailIndex.set(data.contactEmail.toString(), doc!.id);
 
       rollbackOperations.push(async () => {
         if (doc) {
@@ -532,6 +528,60 @@ export class MemberStore<
         throw error;
       }
       throw new MemberError(MemberErrorType.FailedToHydrateMember);
+    }
+  }
+
+  /**
+   * Returns the hex-encoded public key for a member.
+   *
+   * Fast path: when a DB reference is set, queries the `users` collection
+   * directly for `publicKey` (stored as hex by buildUserDocument). This
+   * avoids loading CBL blocks, which are not written for seeded users.
+   *
+   * Fallback: calls getMember() for members created via createMember() that
+   * do have real CBL blocks in the block store.
+   */
+  public async getMemberPublicKeyHex(id: TID): Promise<string | null> {
+    // Fast path — DB-backed lookup via users collection
+    if (this._db) {
+      const sp = ServiceProvider.getInstance<TID>();
+      // Build the idHex the same way _queryIndexFromDb does: strip dashes
+      const idHex = uint8ArrayToHex(sp.idProvider.toBytes(id));
+
+      // Try looking up by the hex id (matches _id stored as ShortHexGuid)
+      const usersCol = this._db.collection<{
+        _id?: string;
+        publicKey?: string;
+      }>('users');
+
+      // _id in users is stored as the fullId (with or without dashes depending
+      // on the hydration schema). Try both forms.
+      let userDoc = await usersCol.findOne({ _id: idHex } as never);
+      if (!userDoc) {
+        // Try dashed UUID form
+        const dashed = idHex.replace(
+          /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+          '$1-$2-$3-$4-$5',
+        );
+        userDoc = await usersCol.findOne({ _id: dashed } as never);
+      }
+
+      if (userDoc?.publicKey) {
+        console.info(
+          `[MemberStore] getMemberPublicKeyHex: found publicKey in users collection for id=${idHex}`,
+        );
+        return userDoc.publicKey;
+      }
+    }
+
+    // Fallback — reconstruct from CBL blocks (works for createMember() members)
+    try {
+      const member = await this.getMember(id);
+      return member.publicKey
+        ? Buffer.from(member.publicKey).toString('hex')
+        : null;
+    } catch {
+      return null;
     }
   }
 
@@ -968,6 +1018,22 @@ export class MemberStore<
       }
     }
 
+    // Update name index — remove old mapping if name changed
+    if (entry.name) {
+      if (oldEntry?.name && oldEntry.name !== entry.name) {
+        this.nameIndex.delete(oldEntry.name);
+      }
+      this.nameIndex.set(entry.name, id);
+    }
+
+    // Update email index — remove old mapping if email changed
+    if (entry.email) {
+      if (oldEntry?.email && oldEntry.email !== entry.email) {
+        this.emailIndex.delete(oldEntry.email);
+      }
+      this.emailIndex.set(entry.email, id);
+    }
+
     // Update member index
     this.memberIndex.set(id, entry);
   }
@@ -986,14 +1052,16 @@ export class MemberStore<
     const sp = ServiceProvider.getInstance<TID>();
 
     // ── DB-backed fast path for name/email lookups ────────────────────────
-    // Use this when the in-memory index is empty AND we have a DB reference.
-    // Covers the common post-restart case without loading all members.
-    if (
-      this._db &&
-      this.memberIndex.size === 0 &&
-      (criteria.name || criteria.email)
-    ) {
-      return this._queryIndexFromDb(criteria);
+    // Use when the in-memory index is empty OR when a name/email lookup
+    // misses the in-memory name/email indexes (e.g. seeded users that were
+    // written directly to the DB via initializeWithRbac, bypassing
+    // createMember, so nameIndex/emailIndex were never populated).
+    if (this._db && (criteria.name || criteria.email)) {
+      const nameHit = criteria.name && this.nameIndex.has(criteria.name);
+      const emailHit = criteria.email && this.emailIndex.has(criteria.email);
+      if (this.memberIndex.size === 0 || (!nameHit && !emailHit)) {
+        return this._queryIndexFromDb(criteria);
+      }
     }
 
     // ── In-memory path ────────────────────────────────────────────────────
