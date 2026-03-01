@@ -388,7 +388,9 @@ export class BrightChainDatabasePlugin<
         fullId: env.systemId,
         type: MemberType.System,
         username: env.get('SYSTEM_USERNAME') ?? 'system',
-        email: env.get('SYSTEM_EMAIL') ?? env.emailSender,
+        email:
+          env.get('SYSTEM_EMAIL') ??
+          `system@${env.emailSender.split('@')[1] ?? 'brightchain.org'}`,
         roleId: env.systemRoleId ?? generateId(),
         userRoleId: env.systemUserRoleId ?? generateId(),
         roleName: 'System',
@@ -403,7 +405,9 @@ export class BrightChainDatabasePlugin<
         fullId: env.adminId,
         type: MemberType.User,
         username: env.get('ADMIN_USERNAME') ?? 'admin',
-        email: env.get('ADMIN_EMAIL') ?? env.emailSender,
+        email:
+          env.get('ADMIN_EMAIL') ??
+          `admin@${env.emailSender.split('@')[1] ?? 'brightchain.org'}`,
         roleId: env.adminRoleId ?? generateId(),
         userRoleId: env.adminUserRoleId ?? generateId(),
         roleName: 'Admin',
@@ -418,7 +422,9 @@ export class BrightChainDatabasePlugin<
         fullId: env.memberId,
         type: MemberType.User,
         username: env.get('MEMBER_USERNAME') ?? 'member',
-        email: env.get('MEMBER_EMAIL') ?? env.emailSender,
+        email:
+          env.get('MEMBER_EMAIL') ??
+          `member@${env.emailSender.split('@')[1] ?? 'brightchain.org'}`,
         roleId: env.memberRoleId ?? generateId(),
         userRoleId: env.memberUserRoleId ?? generateId(),
         roleName: 'Member',
@@ -488,7 +494,6 @@ export class BrightChainDatabasePlugin<
       // would miss seeded users unless the DB fallback fires.
       if (this._memberStore) {
         const ms = this._memberStore as MemberStore<TID>;
-        const idProvider = getEnhancedNodeIdProvider<TID>();
         const seededUsers = [
           {
             entry: buildResult.rbacInput.systemUser,
