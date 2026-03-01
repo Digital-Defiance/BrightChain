@@ -134,9 +134,10 @@ function buildCandidateEntries<TID extends PlatformID>(
     }
     return {
       id: idStr.replace(/-/g, ''),
-      // Zero-filled sentinel — replaced when the member's actual CBL blocks are written
-      publicCBL: '0'.repeat(64),
-      privateCBL: '0'.repeat(64),
+      // Zero-filled sentinel — replaced when the member's actual CBL blocks are written.
+      // Must be 128 hex chars (64 bytes) to match SHA3-512 / CHECKSUM.SHA3_BUFFER_LENGTH.
+      publicCBL: '0'.repeat(128),
+      privateCBL: '0'.repeat(128),
       poolId,
       type: user.type,
       status: MemberStatusType.Active,

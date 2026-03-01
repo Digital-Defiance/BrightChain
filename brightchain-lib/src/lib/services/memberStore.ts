@@ -1,4 +1,5 @@
 import {
+  CHECKSUM,
   ECIESService,
   EmailString,
   Member,
@@ -1178,15 +1179,23 @@ export class MemberStore<
       return [];
     }
 
+    // Normalise checksum hex strings read from the DB.
+    // Legacy sentinel values may be 64 hex chars (32 bytes) instead of the
+    // correct 128 hex chars (64 bytes for SHA3-512). Pad with trailing zeros
+    // so Checksum.fromHex() doesn't throw.
+    const expectedHexLen = CHECKSUM.SHA3_BUFFER_LENGTH * 2; // 128
+    const padCBL = (hex: string): string =>
+      hex.length < expectedHexLen ? hex.padEnd(expectedHexLen, '0') : hex;
+
     const entry: IMemberIndexEntry<TID> = {
       id: typedId,
-      publicCBL: Checksum.fromHex(indexDoc.publicCBL),
-      privateCBL: Checksum.fromHex(indexDoc.privateCBL),
+      publicCBL: Checksum.fromHex(padCBL(indexDoc.publicCBL)),
+      privateCBL: Checksum.fromHex(padCBL(indexDoc.privateCBL)),
       ...(indexDoc.publicProfileCBL
-        ? { publicProfileCBL: Checksum.fromHex(indexDoc.publicProfileCBL) }
+        ? { publicProfileCBL: Checksum.fromHex(padCBL(indexDoc.publicProfileCBL)) }
         : {}),
       ...(indexDoc.privateProfileCBL
-        ? { privateProfileCBL: Checksum.fromHex(indexDoc.privateProfileCBL) }
+        ? { privateProfileCBL: Checksum.fromHex(padCBL(indexDoc.privateProfileCBL)) }
         : {}),
       type: indexDoc.type,
       status: indexDoc.status ?? MemberStatusType.Active,
