@@ -1269,4 +1269,26 @@ export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
     "Échec du déchiffrement de la charge utile de l'archive TCBL",
   [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
     "La version du manifeste TCBL n'est pas prise en charge",
+
+  // Dashboard
+  [BrightChainStrings.Dashboard_Title]: 'Votre tableau de bord',
+  [BrightChainStrings.Dashboard_EnergyBalance]: 'Solde énergétique',
+  [BrightChainStrings.Dashboard_AvailableCredits]:
+    "Crédits d'énergie disponibles",
+  [BrightChainStrings.Dashboard_Reputation]: 'Réputation',
+  [BrightChainStrings.Dashboard_ReputationScore]:
+    'Score de réputation du réseau',
+  [BrightChainStrings.Dashboard_EnergyEarned]: 'Énergie gagnée',
+  [BrightChainStrings.Dashboard_EarnedDescription]:
+    'Total gagné en fournissant des ressources',
+  [BrightChainStrings.Dashboard_EnergySpent]: 'Énergie dépensée',
+  [BrightChainStrings.Dashboard_SpentDescription]:
+    'Total dépensé en opérations',
+  [BrightChainStrings.Dashboard_Loading]: 'Chargement...',
+  [BrightChainStrings.Dashboard_FailedToLoadBalance]:
+    'Échec du chargement du solde',
+  [BrightChainStrings.Dashboard_FailedToLoadReputation]:
+    'Échec du chargement de la réputation',
+  [BrightChainStrings.Dashboard_FailedToLoadData]:
+    'Échec du chargement des données',
 };

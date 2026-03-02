@@ -1267,4 +1267,26 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
     'Entschlüsselung der TCBL-Archiv-Nutzlast fehlgeschlagen',
   [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
     'TCBL-Manifest-Version wird nicht unterstützt',
+
+  // Dashboard
+  [BrightChainStrings.Dashboard_Title]: 'Ihr Dashboard',
+  [BrightChainStrings.Dashboard_EnergyBalance]: 'Energieguthaben',
+  [BrightChainStrings.Dashboard_AvailableCredits]:
+    'Verfügbare Energieguthaben',
+  [BrightChainStrings.Dashboard_Reputation]: 'Reputation',
+  [BrightChainStrings.Dashboard_ReputationScore]:
+    'Netzwerk-Reputationswert',
+  [BrightChainStrings.Dashboard_EnergyEarned]: 'Energie verdient',
+  [BrightChainStrings.Dashboard_EarnedDescription]:
+    'Gesamt verdient durch Bereitstellung von Ressourcen',
+  [BrightChainStrings.Dashboard_EnergySpent]: 'Energie verbraucht',
+  [BrightChainStrings.Dashboard_SpentDescription]:
+    'Gesamt verbraucht für Operationen',
+  [BrightChainStrings.Dashboard_Loading]: 'Laden...',
+  [BrightChainStrings.Dashboard_FailedToLoadBalance]:
+    'Guthaben konnte nicht geladen werden',
+  [BrightChainStrings.Dashboard_FailedToLoadReputation]:
+    'Reputation konnte nicht geladen werden',
+  [BrightChainStrings.Dashboard_FailedToLoadData]:
+    'Daten konnten nicht geladen werden',
 };
