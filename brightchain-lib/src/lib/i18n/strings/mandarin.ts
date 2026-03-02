@@ -1137,4 +1137,20 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
     'TCBL存档有效载荷解密失败',
   [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
     'TCBL清单版本不受支持',
+
+  // Dashboard
+  [BrightChainStrings.Dashboard_Title]: '您的仪表板',
+  [BrightChainStrings.Dashboard_EnergyBalance]: '能量余额',
+  [BrightChainStrings.Dashboard_AvailableCredits]: '可用能量积分',
+  [BrightChainStrings.Dashboard_Reputation]: '声誉',
+  [BrightChainStrings.Dashboard_ReputationScore]: '网络声誉评分',
+  [BrightChainStrings.Dashboard_EnergyEarned]: '已获得能量',
+  [BrightChainStrings.Dashboard_EarnedDescription]:
+    '通过提供资源获得的总量',
+  [BrightChainStrings.Dashboard_EnergySpent]: '已消耗能量',
+  [BrightChainStrings.Dashboard_SpentDescription]: '用于操作的总消耗量',
+  [BrightChainStrings.Dashboard_Loading]: '加载中...',
+  [BrightChainStrings.Dashboard_FailedToLoadBalance]: '加载余额失败',
+  [BrightChainStrings.Dashboard_FailedToLoadReputation]: '加载声誉失败',
+  [BrightChainStrings.Dashboard_FailedToLoadData]: '加载数据失败',
 };
