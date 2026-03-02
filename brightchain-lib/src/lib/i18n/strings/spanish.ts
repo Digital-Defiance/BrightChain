@@ -1274,4 +1274,26 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     'Error al descifrar la carga útil del archivo TCBL',
   [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
     'La versión del manifiesto TCBL no es compatible',
+
+  // Dashboard
+  [BrightChainStrings.Dashboard_Title]: 'Tu panel de control',
+  [BrightChainStrings.Dashboard_EnergyBalance]: 'Saldo de energía',
+  [BrightChainStrings.Dashboard_AvailableCredits]:
+    'Créditos de energía disponibles',
+  [BrightChainStrings.Dashboard_Reputation]: 'Reputación',
+  [BrightChainStrings.Dashboard_ReputationScore]:
+    'Puntuación de reputación de la red',
+  [BrightChainStrings.Dashboard_EnergyEarned]: 'Energía ganada',
+  [BrightChainStrings.Dashboard_EarnedDescription]:
+    'Total ganado por proporcionar recursos',
+  [BrightChainStrings.Dashboard_EnergySpent]: 'Energía gastada',
+  [BrightChainStrings.Dashboard_SpentDescription]:
+    'Total gastado en operaciones',
+  [BrightChainStrings.Dashboard_Loading]: 'Cargando...',
+  [BrightChainStrings.Dashboard_FailedToLoadBalance]:
+    'Error al cargar el saldo',
+  [BrightChainStrings.Dashboard_FailedToLoadReputation]:
+    'Error al cargar la reputación',
+  [BrightChainStrings.Dashboard_FailedToLoadData]:
+    'Error al cargar los datos',
 };

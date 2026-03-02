@@ -1166,4 +1166,26 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     'TCBLアーカイブペイロードの復号に失敗しました',
   [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
     'TCBLマニフェストバージョンはサポートされていません',
+
+  // Dashboard
+  [BrightChainStrings.Dashboard_Title]: 'ダッシュボード',
+  [BrightChainStrings.Dashboard_EnergyBalance]: 'エネルギー残高',
+  [BrightChainStrings.Dashboard_AvailableCredits]:
+    '利用可能なエネルギークレジット',
+  [BrightChainStrings.Dashboard_Reputation]: 'レピュテーション',
+  [BrightChainStrings.Dashboard_ReputationScore]:
+    'ネットワークレピュテーションスコア',
+  [BrightChainStrings.Dashboard_EnergyEarned]: '獲得エネルギー',
+  [BrightChainStrings.Dashboard_EarnedDescription]:
+    'リソース提供による総獲得量',
+  [BrightChainStrings.Dashboard_EnergySpent]: '消費エネルギー',
+  [BrightChainStrings.Dashboard_SpentDescription]:
+    'オペレーションに費やした総量',
+  [BrightChainStrings.Dashboard_Loading]: '読み込み中...',
+  [BrightChainStrings.Dashboard_FailedToLoadBalance]:
+    '残高の読み込みに失敗しました',
+  [BrightChainStrings.Dashboard_FailedToLoadReputation]:
+    'レピュテーションの読み込みに失敗しました',
+  [BrightChainStrings.Dashboard_FailedToLoadData]:
+    'データの読み込みに失敗しました',
 };

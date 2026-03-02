@@ -1263,4 +1263,26 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
     'Не вдалося розшифрувати корисне навантаження архіву TCBL',
   [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
     'Версія маніфесту TCBL не підтримується',
+
+  // Dashboard
+  [BrightChainStrings.Dashboard_Title]: 'Ваша панель керування',
+  [BrightChainStrings.Dashboard_EnergyBalance]: 'Баланс енергії',
+  [BrightChainStrings.Dashboard_AvailableCredits]:
+    'Доступні енергетичні кредити',
+  [BrightChainStrings.Dashboard_Reputation]: 'Репутація',
+  [BrightChainStrings.Dashboard_ReputationScore]:
+    'Оцінка репутації мережі',
+  [BrightChainStrings.Dashboard_EnergyEarned]: 'Зароблена енергія',
+  [BrightChainStrings.Dashboard_EarnedDescription]:
+    'Загалом зароблено за надання ресурсів',
+  [BrightChainStrings.Dashboard_EnergySpent]: 'Витрачена енергія',
+  [BrightChainStrings.Dashboard_SpentDescription]:
+    'Загалом витрачено на операції',
+  [BrightChainStrings.Dashboard_Loading]: 'Завантаження...',
+  [BrightChainStrings.Dashboard_FailedToLoadBalance]:
+    'Не вдалося завантажити баланс',
+  [BrightChainStrings.Dashboard_FailedToLoadReputation]:
+    'Не вдалося завантажити репутацію',
+  [BrightChainStrings.Dashboard_FailedToLoadData]:
+    'Не вдалося завантажити дані',
 };

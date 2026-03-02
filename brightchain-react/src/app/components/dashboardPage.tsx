@@ -1,4 +1,9 @@
 import {
+  BrightChainComponentId,
+  BrightChainStrings,
+} from '@brightchain/brightchain-lib';
+import { useI18n } from '@digitaldefiance/express-suite-react-components';
+import {
   Box,
   Card,
   CardContent,
@@ -22,13 +27,17 @@ const DashboardPage: FC = () => {
     null,
   );
   const [loading, setLoading] = useState(true);
+  const { tComponent } = useI18n();
+
+  const t = (key: string) => tComponent(BrightChainComponentId, key);
 
   useEffect(() => {
     const fetchEnergyBalance = async () => {
       try {
         const response = await authenticatedApi.get('/energy/balance');
-        if (response.data.data) {
-          setEnergyBalance(response.data.data);
+        const d = response.data.data ?? response.data;
+        if (d && typeof d.balance === 'number') {
+          setEnergyBalance(d);
         }
       } catch (error) {
         console.error('Failed to fetch energy balance:', error);
@@ -44,7 +53,7 @@ const DashboardPage: FC = () => {
     <Container maxWidth="md">
       <Box my={4}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
-          Your Dashboard
+          {t(BrightChainStrings.Dashboard_Title)}
         </Typography>
 
         <Grid container spacing={3} mt={2}>
@@ -52,46 +61,24 @@ const DashboardPage: FC = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Energy Balance
+                  {t(BrightChainStrings.Dashboard_EnergyBalance)}
                 </Typography>
                 {loading ? (
-                  <Typography>Loading...</Typography>
+                  <Typography>
+                    {t(BrightChainStrings.Dashboard_Loading)}
+                  </Typography>
                 ) : energyBalance ? (
                   <>
                     <Typography variant="h3" color="primary">
                       {energyBalance.balance.toFixed(2)} J
                     </Typography>
                     <Typography variant="body2" color="text.secondary" mt={1}>
-                      Available energy credits
-                    </Typography>
-                  </>
-                ) : (
-                  <Typography color="error">Failed to load balance</Typography>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Reputation
-                </Typography>
-                {loading ? (
-                  <Typography>Loading...</Typography>
-                ) : energyBalance ? (
-                  <>
-                    <Typography variant="h3" color="secondary">
-                      {(energyBalance.reputation * 100).toFixed(1)}%
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" mt={1}>
-                      Network reputation score
+                      {t(BrightChainStrings.Dashboard_AvailableCredits)}
                     </Typography>
                   </>
                 ) : (
                   <Typography color="error">
-                    Failed to load reputation
+                    {t(BrightChainStrings.Dashboard_FailedToLoadBalance)}
                   </Typography>
                 )}
               </CardContent>
@@ -102,21 +89,25 @@ const DashboardPage: FC = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Energy Earned
+                  {t(BrightChainStrings.Dashboard_Reputation)}
                 </Typography>
                 {loading ? (
-                  <Typography>Loading...</Typography>
+                  <Typography>
+                    {t(BrightChainStrings.Dashboard_Loading)}
+                  </Typography>
                 ) : energyBalance ? (
                   <>
-                    <Typography variant="h4">
-                      {energyBalance.earned.toFixed(2)} J
+                    <Typography variant="h3" color="secondary">
+                      {(energyBalance.reputation * 100).toFixed(1)}%
                     </Typography>
                     <Typography variant="body2" color="text.secondary" mt={1}>
-                      Total earned from providing resources
+                      {t(BrightChainStrings.Dashboard_ReputationScore)}
                     </Typography>
                   </>
                 ) : (
-                  <Typography color="error">Failed to load data</Typography>
+                  <Typography color="error">
+                    {t(BrightChainStrings.Dashboard_FailedToLoadReputation)}
+                  </Typography>
                 )}
               </CardContent>
             </Card>
@@ -126,21 +117,53 @@ const DashboardPage: FC = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
-                  Energy Spent
+                  {t(BrightChainStrings.Dashboard_EnergyEarned)}
                 </Typography>
                 {loading ? (
-                  <Typography>Loading...</Typography>
+                  <Typography>
+                    {t(BrightChainStrings.Dashboard_Loading)}
+                  </Typography>
+                ) : energyBalance ? (
+                  <>
+                    <Typography variant="h4">
+                      {energyBalance.earned.toFixed(2)} J
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" mt={1}>
+                      {t(BrightChainStrings.Dashboard_EarnedDescription)}
+                    </Typography>
+                  </>
+                ) : (
+                  <Typography color="error">
+                    {t(BrightChainStrings.Dashboard_FailedToLoadData)}
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  {t(BrightChainStrings.Dashboard_EnergySpent)}
+                </Typography>
+                {loading ? (
+                  <Typography>
+                    {t(BrightChainStrings.Dashboard_Loading)}
+                  </Typography>
                 ) : energyBalance ? (
                   <>
                     <Typography variant="h4">
                       {energyBalance.spent.toFixed(2)} J
                     </Typography>
                     <Typography variant="body2" color="text.secondary" mt={1}>
-                      Total spent on operations
+                      {t(BrightChainStrings.Dashboard_SpentDescription)}
                     </Typography>
                   </>
                 ) : (
-                  <Typography color="error">Failed to load data</Typography>
+                  <Typography color="error">
+                    {t(BrightChainStrings.Dashboard_FailedToLoadData)}
+                  </Typography>
                 )}
               </CardContent>
             </Card>
