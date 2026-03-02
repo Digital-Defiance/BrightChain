@@ -11,43 +11,20 @@
     "strict": true,
     "target": "es2020",
     "module": "esnext",
-    "lib": [
-      "es2020",
-      "dom"
-    ],
-    "types": [
-      "node",
-      "jest"
-    ],
+    "lib": ["es2020", "dom"],
+    "types": ["node", "jest"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@brightchain/brightchain-lib": [
-        "brightchain-lib/src/index.ts"
-      ],
-      "@brightchain/brightchain-lib/*": [
-        "brightchain-lib/src/*"
-      ],
-      "@brightchain/brightchain-inituserdb/*": [
-        "brightchain-inituserdb/src/*",
-      ],
-      "@brightchain/brightchain-api-lib": [
-        "brightchain-api-lib/src/index.ts"
-      ],
-      "@brightchain/brightchain-api-lib/*": [
-        "brightchain-api-lib/src/*"
-      ],
-      "@brightchain/db": [
-        "brightchain-db/src/index.ts"
-      ],
-      "@brightchain/db/*": [
-        "brightchain-db/src/*"
-      ]
+      "@brightchain/brightchain-lib": ["brightchain-lib/src/index.ts"],
+      "@brightchain/brightchain-lib/*": ["brightchain-lib/src/*"],
+      "@brightchain/brightchain-inituserdb/*": ["brightchain-inituserdb/src/*"],
+      "@brightchain/brightchain-api-lib": ["brightchain-api-lib/src/index.ts"],
+      "@brightchain/brightchain-api-lib/*": ["brightchain-api-lib/src/*"],
+      "@brightchain/db": ["brightchain-db/src/index.ts"],
+      "@brightchain/db/*": ["brightchain-db/src/*"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "tmp"
-  ]
+  "exclude": ["node_modules", "tmp"]
 }
