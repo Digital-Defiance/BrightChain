@@ -27,6 +27,7 @@ import {
 } from '@digitaldefiance/node-express-suite';
 import {
   getSuiteCoreTranslation,
+  IRequestUserDTO,
   SuiteCoreStringKey,
 } from '@digitaldefiance/suite-core-lib';
 import { randomBytes } from 'crypto';
@@ -38,6 +39,7 @@ import {
   IApiLoginResponse,
   IApiPasswordChangeResponse,
   IApiRecoveryResponse,
+  IApiRequestUserResponse,
 } from '../../interfaces/responses';
 import {
   IAuthApiResponse,
@@ -870,4 +872,268 @@ export class UserController<
       };
     }
   }
+
+  /**
+   * GET /verify — returns the authenticated user's DTO.
+   * The auth middleware already populates req.user with a full IRequestUserDTO
+   * via buildRequestUserDTO, so we just return it.
+   */
+  @Get('/verify', { auth: true })
+  async verify(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiRequestUserResponse | ApiErrorResponse>> {
+    if (!req.user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    const user = req.user as IRequestUserDTO;
+    return {
+      statusCode: 200,
+      response: {
+        message: getSuiteCoreTranslation(
+          SuiteCoreStringKey.Validation_TokenValid,
+        ),
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          roles: user.roles || [],
+          rolePrivileges: user.rolePrivileges,
+          timezone: user.timezone,
+          currency: user.currency,
+          emailVerified: user.emailVerified,
+          darkMode: user.darkMode,
+          siteLanguage: user.siteLanguage,
+          directChallenge: user.directChallenge,
+          ...(user.lastLogin && { lastLogin: user.lastLogin }),
+        },
+      },
+    };
+  }
+
+  /**
+   * GET /settings — returns the authenticated user's settings.
+   */
+  @Get('/settings', { auth: true })
+  async getSettings(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    if (!req.user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    const user = req.user as IRequestUserDTO;
+    return {
+      statusCode: 200,
+      response: {
+        message: getSuiteCoreTranslation(
+          SuiteCoreStringKey.Settings_RetrievedSuccess,
+        ),
+        settings: {
+          email: user.email || '',
+          timezone: user.timezone || '',
+          currency: user.currency || '',
+          siteLanguage: user.siteLanguage || '',
+          darkMode: user.darkMode || false,
+          directChallenge: user.directChallenge || false,
+        },
+      } as IApiMessageResponse,
+    };
+  }
+
+  /**
+   * POST /settings — updates the authenticated user's settings.
+   */
+  @Post('/settings', { auth: true })
+  async updateSettings(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiRequestUserResponse | ApiErrorResponse>> {
+    if (!req.user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    try {
+      const user = req.user as IRequestUserDTO;
+      const memberId = user.id;
+      const { email, timezone, siteLanguage, currency, darkMode, directChallenge } =
+        req.body as {
+          email?: string;
+          timezone?: string;
+          siteLanguage?: string;
+          currency?: string;
+          darkMode?: boolean;
+          directChallenge?: boolean;
+        };
+
+      const sp = ServiceProvider.getInstance();
+      const typedId = sp.idProvider.idFromString(memberId);
+      const idHex = sp.idProvider.toString(typedId, 'hex');
+
+      // Update user-facing settings (timezone, darkMode, etc.) in the DB
+      // users collection. These are NOT part of the member store's
+      // IPrivateMemberData.settings (which tracks replication/storage config).
+      try {
+        const db =
+          this.application.services.get<import('@brightchain/db').BrightChainDb>('db');
+        if (db) {
+          const usersCol = db.collection('users');
+          const updateFields: Record<string, unknown> = {};
+          if (email !== undefined) updateFields['email'] = email;
+          if (timezone !== undefined) updateFields['timezone'] = timezone;
+          if (siteLanguage !== undefined) updateFields['siteLanguage'] = siteLanguage;
+          if (currency !== undefined) updateFields['currency'] = currency;
+          if (darkMode !== undefined) updateFields['darkMode'] = darkMode;
+          if (directChallenge !== undefined) updateFields['directChallenge'] = directChallenge;
+
+          if (Object.keys(updateFields).length > 0) {
+            await usersCol.updateOne(
+              { _id: idHex } as never,
+              { $set: updateFields } as never,
+            );
+          }
+        }
+      } catch {
+        // DB update is best-effort
+      }
+
+      // Build updated user DTO
+      const updatedUser: IRequestUserDTO = {
+        ...user,
+        ...(email !== undefined && { email }),
+        ...(timezone !== undefined && { timezone }),
+        ...(siteLanguage !== undefined && { siteLanguage }),
+        ...(currency !== undefined && { currency }),
+        ...(darkMode !== undefined && { darkMode }),
+        ...(directChallenge !== undefined && { directChallenge }),
+      };
+
+      return {
+        statusCode: 200,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Settings_SaveSuccess,
+          ),
+          user: updatedUser,
+        },
+      };
+    } catch {
+      return {
+        statusCode: 500,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_UnexpectedError,
+          ),
+          error: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_UnexpectedError,
+          ),
+        },
+      };
+    }
+  }
+
+  /**
+   * GET /refresh-token — re-signs the JWT and returns a new token + user DTO.
+   */
+  @Get('/refresh-token', { auth: true })
+  async refreshToken(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiLoginResponse | ApiErrorResponse>> {
+    if (!req.user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    try {
+      const user = req.user as IRequestUserDTO;
+      const authService = this.application.services.get<AuthService>('auth');
+
+      // Verify the current token is still valid
+      const authHeader = String(
+        (req as { headers: { authorization?: string } }).headers
+          ?.authorization ?? '',
+      );
+      if (!authHeader.startsWith('Bearer ')) {
+        return {
+          statusCode: 401,
+          response: {
+            message: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_TokenMissing,
+            ),
+            error: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_TokenMissing,
+            ),
+          },
+        };
+      }
+
+      const oldToken = authHeader.slice('Bearer '.length);
+      const decoded = await authService.verifyToken(oldToken);
+
+      // Re-sign with fresh expiry
+      const newToken = authService.signToken(
+        decoded.memberId,
+        decoded.username,
+        decoded.type,
+      );
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const env = this.application.environment as any;
+      const serverPublicKey: string = env.systemPublicKeyHex ?? '';
+
+      return {
+        statusCode: 200,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_Success,
+          ),
+          user,
+          token: newToken,
+          serverPublicKey,
+        },
+        headers: {
+          Authorization: `Bearer ${newToken}`,
+        },
+      } as IStatusCodeResponse<IApiLoginResponse>;
+    } catch {
+      return {
+        statusCode: 500,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_UnexpectedError,
+          ),
+          error: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_UnexpectedError,
+          ),
+        },
+      };
+    }
+  }
+
 }
