@@ -19,6 +19,11 @@
     <% if (cssFile) { %>
     <link rel="stylesheet" href="<%= cssFile %>" />
     <% } %>
+    <% if (typeof webpackCss !== 'undefined' && webpackCss && webpackCss.length > 0) { %>
+    <% webpackCss.forEach(function(css) { %>
+    <link rel="stylesheet" href="static/js/<%= css %>" />
+    <% }); %>
+    <% } %>
     <script nonce="<%= cspNonce %>" src="https://kit.fontawesome.com/<%= fontawesomeKitId %>.js" crossorigin="anonymous"></script>
   </head>
   <body>
