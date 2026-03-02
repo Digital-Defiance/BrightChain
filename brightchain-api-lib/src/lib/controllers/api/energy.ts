@@ -1,7 +1,7 @@
 import {
-  Checksum,
   EnergyAccountStore,
   EnergyLedger,
+  ServiceProvider,
 } from '@brightchain/brightchain-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -59,7 +59,7 @@ export class EnergyController<
       ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
     >[0],
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    const user = (req as { user?: { memberId: string } }).user;
+    const user = (req as { user?: { id: string; memberId?: string } }).user;
 
     if (!user) {
       return {
@@ -72,20 +72,15 @@ export class EnergyController<
     }
 
     try {
+      const memberId = user.memberId ?? user.id;
+      const sp = ServiceProvider.getInstance();
+      const typedId = sp.idProvider.idFromString(memberId);
+      const idRawBytes = sp.idProvider.toBytes(typedId);
+      const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
+
       const energyStore =
         this.application.services.get<EnergyAccountStore>('energyStore');
-      const memberChecksum = Checksum.fromHex(user.memberId);
-      const account = energyStore.get(memberChecksum);
-
-      if (!account) {
-        return {
-          statusCode: 404,
-          response: {
-            message: 'Energy account not found',
-            error: 'Energy account not found',
-          },
-        };
-      }
+      const account = await energyStore.getOrCreate(memberChecksum);
 
       return {
         statusCode: 200,
@@ -114,7 +109,7 @@ export class EnergyController<
       ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>
     >[0],
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    const user = (req as { user?: { memberId: string } }).user;
+    const user = (req as { user?: { id: string; memberId?: string } }).user;
 
     if (!user) {
       return {
@@ -127,9 +122,14 @@ export class EnergyController<
     }
 
     try {
+      const memberId = user.memberId ?? user.id;
+      const sp = ServiceProvider.getInstance();
+      const typedId = sp.idProvider.idFromString(memberId);
+      const idRawBytes = sp.idProvider.toBytes(typedId);
+      const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
+
       const energyLedger =
         this.application.services.get<EnergyLedger>('energyLedger');
-      const memberChecksum = Checksum.fromHex(user.memberId);
       const transactions = energyLedger.getByMember(memberChecksum);
 
       // Map transactions to API response format
