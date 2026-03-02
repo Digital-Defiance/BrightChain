@@ -554,6 +554,158 @@ describe('UserController E2E', () => {
     });
   });
 
+  // ── GET /user/verify ──────────────────────────────────────────────────
+
+  describe('GET /user/verify', () => {
+    it('returns 401 without auth token', async () => {
+      const res = await get(server.baseUrl, '/user/verify');
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 200 with user DTO when authenticated', async () => {
+      const res = await get(server.baseUrl, '/user/verify', authToken);
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as Record<string, unknown>;
+      expect(typeof body['message']).toBe('string');
+      const user = body['user'] as Record<string, unknown>;
+      expect(typeof user['id']).toBe('string');
+      expect(user['username']).toBe(testUser.username);
+      expect(user['email']).toBe(testUser.email);
+      expect(typeof user['emailVerified']).toBe('boolean');
+      expect(typeof user['darkMode']).toBe('boolean');
+      expect(typeof user['timezone']).toBe('string');
+      expect(typeof user['siteLanguage']).toBe('string');
+      expect(typeof user['currency']).toBe('string');
+      expect(Array.isArray(user['roles'])).toBe(true);
+      expect(typeof user['rolePrivileges']).toBe('object');
+    });
+  });
+
+  // ── GET /user/settings ────────────────────────────────────────────────
+
+  describe('GET /user/settings', () => {
+    it('returns 401 without auth token', async () => {
+      const res = await get(server.baseUrl, '/user/settings');
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 200 with settings when authenticated', async () => {
+      const res = await get(server.baseUrl, '/user/settings', authToken);
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as Record<string, unknown>;
+      expect(typeof body['message']).toBe('string');
+      const settings = body['settings'] as Record<string, unknown>;
+      expect(typeof settings['email']).toBe('string');
+      expect(typeof settings['timezone']).toBe('string');
+      expect(typeof settings['currency']).toBe('string');
+      expect(typeof settings['siteLanguage']).toBe('string');
+      expect(typeof settings['darkMode']).toBe('boolean');
+      expect(typeof settings['directChallenge']).toBe('boolean');
+    });
+  });
+
+  // ── POST /user/settings ───────────────────────────────────────────────
+
+  describe('POST /user/settings', () => {
+    it('returns 401 without auth token', async () => {
+      const res = await post(server.baseUrl, '/user/settings', {});
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 200 and updates settings when authenticated', async () => {
+      const res = await post(
+        server.baseUrl,
+        '/user/settings',
+        { timezone: 'America/New_York', darkMode: true },
+        authToken,
+      );
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as Record<string, unknown>;
+      expect(typeof body['message']).toBe('string');
+      const user = body['user'] as Record<string, unknown>;
+      expect(user['timezone']).toBe('America/New_York');
+      expect(user['darkMode']).toBe(true);
+    });
+
+    it('returns 200 with empty body (no-op update)', async () => {
+      const res = await post(server.baseUrl, '/user/settings', {}, authToken);
+      expect(res.status).toBe(200);
+    });
+  });
+
+  // ── GET /user/refresh-token ───────────────────────────────────────────
+
+  describe('GET /user/refresh-token', () => {
+    it('returns 401 without auth token', async () => {
+      const res = await get(server.baseUrl, '/user/refresh-token');
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 200 with new token and user DTO when authenticated', async () => {
+      const res = await get(
+        server.baseUrl,
+        '/user/refresh-token',
+        authToken,
+      );
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as Record<string, unknown>;
+      expect(typeof body['message']).toBe('string');
+      expect(typeof body['token']).toBe('string');
+      expect(body['token']).not.toBe(''); // non-empty new token
+      const user = body['user'] as Record<string, unknown>;
+      expect(typeof user['id']).toBe('string');
+      expect(user['username']).toBe(testUser.username);
+      expect(typeof body['serverPublicKey']).toBe('string');
+
+      // The new token should also be valid
+      const verifyRes = await get(
+        server.baseUrl,
+        '/user/verify',
+        body['token'] as string,
+      );
+      expect(verifyRes.status).toBe(200);
+    });
+  });
+
+  // ── GET /energy/balance ───────────────────────────────────────────────
+
+  describe('GET /energy/balance', () => {
+    it('returns 401 without auth token', async () => {
+      const res = await get(server.baseUrl, '/energy/balance');
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 200 with balance data when authenticated', async () => {
+      const res = await get(server.baseUrl, '/energy/balance', authToken);
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as Record<string, unknown>;
+      expect(typeof body['message']).toBe('string');
+      expect(typeof body['balance']).toBe('number');
+    });
+  });
+
+  // ── GET /energy/transactions ──────────────────────────────────────────
+
+  describe('GET /energy/transactions', () => {
+    it('returns 401 without auth token', async () => {
+      const res = await get(server.baseUrl, '/energy/transactions');
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 200 with transactions list when authenticated', async () => {
+      const res = await get(
+        server.baseUrl,
+        '/energy/transactions',
+        authToken,
+      );
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as Record<string, unknown>;
+      expect(typeof body['message']).toBe('string');
+      expect(Array.isArray(body['transactions'])).toBe(true);
+      expect(typeof body['count']).toBe('number');
+    });
+  });
+
   // ── POST /user/logout ─────────────────────────────────────────────────
 
   describe('POST /user/logout', () => {
