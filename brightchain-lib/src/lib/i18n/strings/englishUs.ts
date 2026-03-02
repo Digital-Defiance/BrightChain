@@ -1259,6 +1259,25 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
     'Failed to decrypt TCBL archive payload',
   [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
     'TCBL manifest version is not supported',
+
+  // Dashboard
+  [BrightChainStrings.Dashboard_Title]: 'Your Dashboard',
+  [BrightChainStrings.Dashboard_EnergyBalance]: 'Energy Balance',
+  [BrightChainStrings.Dashboard_AvailableCredits]: 'Available energy credits',
+  [BrightChainStrings.Dashboard_Reputation]: 'Reputation',
+  [BrightChainStrings.Dashboard_ReputationScore]: 'Network reputation score',
+  [BrightChainStrings.Dashboard_EnergyEarned]: 'Energy Earned',
+  [BrightChainStrings.Dashboard_EarnedDescription]:
+    'Total earned from providing resources',
+  [BrightChainStrings.Dashboard_EnergySpent]: 'Energy Spent',
+  [BrightChainStrings.Dashboard_SpentDescription]:
+    'Total spent on operations',
+  [BrightChainStrings.Dashboard_Loading]: 'Loading...',
+  [BrightChainStrings.Dashboard_FailedToLoadBalance]:
+    'Failed to load balance',
+  [BrightChainStrings.Dashboard_FailedToLoadReputation]:
+    'Failed to load reputation',
+  [BrightChainStrings.Dashboard_FailedToLoadData]: 'Failed to load data',
 };
 
 export default AmericanEnglishStrings;

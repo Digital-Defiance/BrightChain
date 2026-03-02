@@ -1154,6 +1154,21 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   Error_TcblError_DecryptionFailed: 'Error_TcblError_DecryptionFailed',
   Error_TcblError_InvalidManifestVersion:
     'Error_TcblError_InvalidManifestVersion',
+
+  // Dashboard
+  Dashboard_Title: 'Dashboard_Title',
+  Dashboard_EnergyBalance: 'Dashboard_EnergyBalance',
+  Dashboard_AvailableCredits: 'Dashboard_AvailableCredits',
+  Dashboard_Reputation: 'Dashboard_Reputation',
+  Dashboard_ReputationScore: 'Dashboard_ReputationScore',
+  Dashboard_EnergyEarned: 'Dashboard_EnergyEarned',
+  Dashboard_EarnedDescription: 'Dashboard_EarnedDescription',
+  Dashboard_EnergySpent: 'Dashboard_EnergySpent',
+  Dashboard_SpentDescription: 'Dashboard_SpentDescription',
+  Dashboard_Loading: 'Dashboard_Loading',
+  Dashboard_FailedToLoadBalance: 'Dashboard_FailedToLoadBalance',
+  Dashboard_FailedToLoadReputation: 'Dashboard_FailedToLoadReputation',
+  Dashboard_FailedToLoadData: 'Dashboard_FailedToLoadData',
 } as const);
 
 export type BrightChainStringKey = BrandedStringKeyValue<
