@@ -4,7 +4,7 @@
   "sourceRoot": "brightchain-react/src",
   "projectType": "application",
   "tags": [],
-  "implicitDependencies": ["brightchain-lib", "brightchain-api"],
+  "implicitDependencies": ["brightchain-lib", "brightchain-api", "brightmail-react-components", "brightpass-react-components"],
   "targets": {
     "build": {
       "executor": "@nx/webpack:webpack",

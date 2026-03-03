@@ -2,6 +2,8 @@
  * Common types used throughout brightchain-db
  */
 
+import type { StoreLock } from './storeLock';
+
 /** A document ID – opaque string */
 export type DocumentId = string;
 
@@ -272,6 +274,8 @@ export interface CollectionOptions {
    * so that all generated IDs are consistent with the configured ID provider.
    */
   idGenerator?: () => string;
+  /** Optional store-level lock for cross-platform mutual exclusion */
+  storeLock?: StoreLock;
 }
 
 // ═══════════════════════════════════════════════════════

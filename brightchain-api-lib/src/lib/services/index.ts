@@ -11,6 +11,7 @@ export * from './contentAwareBlocksService';
 export * from './contentIngestionService';
 export * from './diskQuorumService';
 export * from './email';
+export * from './fakeEmailService';
 export * from './eventNotificationSystem';
 export { WasmFecService } from './fec';
 export * from './fecServiceFactory';

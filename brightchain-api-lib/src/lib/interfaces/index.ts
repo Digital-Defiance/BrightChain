@@ -34,3 +34,6 @@ export type * from './token-user';
 export type * from './userApiResponse';
 export type * from './wallet-seed';
 export type * from './websocketMessages';
+
+// BrightPass API response interfaces
+export type * from './brightpass';
