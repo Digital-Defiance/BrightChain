@@ -40,8 +40,9 @@ export const SITE: ISiteConsts = {
  */
 export const THEME_COLORS = {
   CHAIN_BLUE: '#1976d2' as const,
-  CHAIN_BLUE_LIGHT: '#42a5f5' as const,
-  CHAIN_BLUE_DARK: '#1565c0' as const,
+  CHAIN_BLUE_LIGHT: '#46b6fd' as const,
+  CHAIN_BLUE_DARK: '#0a60d0' as const,
+  TAGLINE_COLOR: '#ffffff' as const,
   BRIGHT_CYAN: '#00bcd4' as const,
   BRIGHT_CYAN_LIGHT: '#4dd0e1' as const,
   BRIGHT_CYAN_DARK: '#0097a7' as const,

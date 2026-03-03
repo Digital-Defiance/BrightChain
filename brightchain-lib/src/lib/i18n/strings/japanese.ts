@@ -1188,4 +1188,44 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     'レピュテーションの読み込みに失敗しました',
   [BrightChainStrings.Dashboard_FailedToLoadData]:
     'データの読み込みに失敗しました',
+
+  // BrightMail
+  [BrightChainStrings.BrightMail_MenuLabel]: 'BrightMail',
+  [BrightChainStrings.BrightMail_Inbox_Title]: '受信トレイ',
+  [BrightChainStrings.BrightMail_Inbox_Empty]: 'メールはまだありません',
+  [BrightChainStrings.BrightMail_Inbox_Error]:
+    '受信トレイの読み込みに失敗しました',
+  [BrightChainStrings.BrightMail_Inbox_Retry]: '再試行',
+  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]:
+    '{COUNT} 件未読',
+  [BrightChainStrings.BrightMail_Compose_Title]: '作成',
+  [BrightChainStrings.BrightMail_Compose_To]: '宛先',
+  [BrightChainStrings.BrightMail_Compose_Cc]: 'Cc',
+  [BrightChainStrings.BrightMail_Compose_Bcc]: 'Bcc',
+  [BrightChainStrings.BrightMail_Compose_Subject]: '件名',
+  [BrightChainStrings.BrightMail_Compose_Body]: 'メッセージ',
+  [BrightChainStrings.BrightMail_Compose_Send]: '送信',
+  [BrightChainStrings.BrightMail_Compose_SendSuccess]:
+    'メールが正常に送信されました',
+  [BrightChainStrings.BrightMail_Compose_SendError]:
+    'メールの送信に失敗しました',
+  [BrightChainStrings.BrightMail_Compose_InvalidRecipient]:
+    '有効な宛先を少なくとも1つ追加してください',
+  [BrightChainStrings.BrightMail_Compose_Attachments]: '添付ファイル',
+  [BrightChainStrings.BrightMail_Thread_Error]:
+    'スレッドの読み込みに失敗しました',
+  [BrightChainStrings.BrightMail_Thread_BackToInbox]: '受信トレイに戻る',
+  [BrightChainStrings.BrightMail_Thread_Reply]: '返信',
+  [BrightChainStrings.BrightMail_Thread_Forward]: '転送',
+  [BrightChainStrings.BrightMail_Delete_Confirm]:
+    '本当に削除しますか？',
+  [BrightChainStrings.BrightMail_Delete_ConfirmBulkTemplate]:
+    '選択した {COUNT} 件のメールを削除しますか？',
+  [BrightChainStrings.BrightMail_Delete_Success]: 'メールが削除されました',
+  [BrightChainStrings.BrightMail_Delete_ErrorTemplate]:
+    'メールの削除に失敗しました：{MESSAGE_ID}',
+  [BrightChainStrings.BrightMail_Action_Delete]: '削除',
+  [BrightChainStrings.BrightMail_Action_MarkAsRead]: '既読にする',
+  [BrightChainStrings.BrightMail_Action_Cancel]: 'キャンセル',
+  [BrightChainStrings.BrightMail_Loading]: '読み込み中...',
 };

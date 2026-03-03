@@ -33,6 +33,15 @@ jest.mock('./components/BrightChainSoupDemo', () => ({
 jest.mock('@brightchain/brightchain-lib', () => ({
   constants: { CONSTANTS: {} },
   CoreConstants: { Site: 'BrightChain' },
+  BrightChainComponentId: 'BrightChain',
+  BrightChainStrings: new Proxy(
+    {},
+    { get: (_target: unknown, prop: string) => `BrightChain:${String(prop)}` },
+  ),
+  BrightPassStrings: new Proxy(
+    {},
+    { get: (_target: unknown, prop: string) => `BrightPass:${String(prop)}` },
+  ),
   CONSTANTS: {
     THEME_COLORS: {
       CHAIN_BLUE: '#1976d2',
@@ -45,6 +54,17 @@ jest.mock('@brightchain/brightchain-lib', () => ({
       ALERT_ORANGE: '#ed6c02',
       SECURE_GREEN: '#2e7d32',
     },
+  },
+  THEME_COLORS: {
+    CHAIN_BLUE: '#1976d2',
+    CHAIN_BLUE_LIGHT: '#42a5f5',
+    CHAIN_BLUE_DARK: '#1565c0',
+    BRIGHT_CYAN: '#00bcd4',
+    BRIGHT_CYAN_LIGHT: '#4dd0e1',
+    BRIGHT_CYAN_DARK: '#0097a7',
+    ERROR_RED: '#d32f2f',
+    ALERT_ORANGE: '#ed6c02',
+    SECURE_GREEN: '#2e7d32',
   },
   i18nEngine: {
     translate: jest.fn((key: string) => key),
@@ -85,6 +105,16 @@ import App from './app';
 
 // Mock all suite components and i18n to avoid dependency on real backend/auth.
 jest.mock('@digitaldefiance/express-suite-react-components', () => ({
+  createAuthenticatedApiClient: jest.fn(() => ({
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+    interceptors: { request: { use: jest.fn() }, response: { use: jest.fn() } },
+  })),
+  AuthenticatedApiProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="authenticated-api-provider">{children}</div>
+  ),
   AppThemeProvider: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="app-theme-provider">{children}</div>
   ),
@@ -104,6 +134,8 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   BackupCodeLoginWrapper: () => <div>BackupCodeLoginWrapper</div>,
   BackupCodesWrapper: () => <div>BackupCodesWrapper</div>,
   ChangePasswordFormWrapper: () => <div>ChangePasswordFormWrapper</div>,
+  ForgotPasswordFormWrapper: () => <div>ForgotPasswordFormWrapper</div>,
+  ResetPasswordFormWrapper: () => <div>ResetPasswordFormWrapper</div>,
   LoginFormWrapper: () => <div>LoginFormWrapper</div>,
   LogoutPageWrapper: () => <div>LogoutPageWrapper</div>,
   PrivateRoute: ({ children }: { children: React.ReactNode }) => (
@@ -120,6 +152,14 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   UnAuthRoute: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   UserSettingsFormWrapper: () => <div>UserSettingsFormWrapper</div>,
   VerifyEmailPageWrapper: () => <div>VerifyEmailPageWrapper</div>,
+  useI18n: () => ({
+    tComponent: (_componentId: string, key: string) => key,
+    t: (key: string) => key,
+    language: 'en',
+    setLanguage: jest.fn(),
+  }),
+  createMenuType: (value: string) => value,
+  IMenuConfig: {},
 }));
 
 jest.mock('@digitaldefiance/i18n-lib', () => ({

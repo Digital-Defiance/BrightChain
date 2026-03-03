@@ -40,6 +40,11 @@ import {
   BrightChainStringKey,
   BrightChainStrings,
 } from '../enumerations/brightChainStrings';
+import {
+  BrightPassComponentId,
+  BrightPassStrings,
+} from '../enumerations/brightPassStrings';
+import type { BrightPassStringKeyValue } from '../enumerations/brightPassStrings';
 import type { IBrightChainI18nConstants } from '../interfaces/i18nConstants';
 import {
   AmericanEnglishStrings,
@@ -51,6 +56,16 @@ import {
   SpanishStrings,
   UkrainianStrings,
 } from './strings';
+import {
+  BrightPassAmericanEnglishStrings,
+  BrightPassBritishEnglishStrings,
+  BrightPassFrenchStrings,
+  BrightPassGermanStrings,
+  BrightPassJapaneseStrings,
+  BrightPassMandarinStrings,
+  BrightPassSpanishStrings,
+  BrightPassUkrainianStrings,
+} from './strings/brightpass';
 
 // Re-export BrightChainComponentId for backward compatibility
 export { BrightChainComponentId };
@@ -97,6 +112,47 @@ export function createBrightChainComponentPackage(): I18nComponentPackage {
   };
 }
 
+/**
+ * Master strings collection for the BrightPass component.
+ * These are the translations specific to the BrightPass password manager.
+ */
+export const BrightPassComponentStrings: BrandedMasterStringsCollection<
+  typeof BrightPassStrings,
+  CoreLanguageCode
+> = {
+  [LanguageCodes.EN_US]: BrightPassAmericanEnglishStrings,
+  [LanguageCodes.EN_GB]: BrightPassBritishEnglishStrings,
+  [LanguageCodes.FR]: BrightPassFrenchStrings,
+  [LanguageCodes.ZH_CN]: BrightPassMandarinStrings,
+  [LanguageCodes.ES]: BrightPassSpanishStrings,
+  [LanguageCodes.UK]: BrightPassUkrainianStrings,
+  [LanguageCodes.DE]: BrightPassGermanStrings,
+  [LanguageCodes.JA]: BrightPassJapaneseStrings,
+};
+
+/**
+ * Create BrightPass component configuration
+ */
+export function createBrightPassComponentConfig(): ComponentConfig {
+  return {
+    id: BrightPassComponentId,
+    strings: BrightPassComponentStrings,
+    aliases: ['BrightPassStrings'],
+  };
+}
+
+/**
+ * Creates an I18nComponentPackage bundling the BrightPass ComponentConfig
+ * with its branded string key enum. Use this with createI18nSetup's
+ * libraryComponents array.
+ */
+export function createBrightPassComponentPackage(): I18nComponentPackage {
+  return {
+    config: createBrightPassComponentConfig(),
+    stringKeyEnum: BrightPassStrings,
+  };
+}
+
 let _brightChainI18nEngine: I18nEngine | null = null;
 let _i18nSetupResult: I18nSetupResult<typeof BrightChainStrings> | null = null;
 
@@ -124,6 +180,7 @@ export function getBrightChainI18nEngine(): I18nEngine {
     libraryComponents: [
       createSuiteCoreComponentPackage(),
       createEciesComponentPackage(),
+      createBrightPassComponentPackage(),
     ],
   });
 
@@ -311,7 +368,12 @@ export type { BrightChainStringKey, BrightChainStringKeyValue };
 export type RegisteredStringKey =
   | BrightChainStringKeyValue
   | EciesStringKeyValue
-  | SuiteCoreStringKeyValue;
+  | SuiteCoreStringKeyValue
+  | BrightPassStringKeyValue;
 
 // Re-export i18n constants interface
 export type { IBrightChainI18nConstants } from '../interfaces/i18nConstants';
+
+// Re-export BrightPass for convenience
+export { BrightPassComponentId, BrightPassStrings };
+export type { BrightPassStringKeyValue };
