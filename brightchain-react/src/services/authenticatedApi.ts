@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { createAuthenticatedApiClient } from '@digitaldefiance/express-suite-react-components';
 import { environment } from '../environments/environment';
 
 const getApiBaseUrl = (): string => {
@@ -12,16 +12,6 @@ const getApiBaseUrl = (): string => {
   return environment.apiUrl || '/api';
 };
 
-const authenticatedApi = axios.create({
-  baseURL: getApiBaseUrl(),
-});
-
-authenticatedApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
-  }
-  return config;
-});
+const authenticatedApi = createAuthenticatedApiClient(getApiBaseUrl());
 
 export default authenticatedApi;

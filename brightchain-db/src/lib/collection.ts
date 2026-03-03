@@ -57,6 +57,8 @@ import {
 } from './types';
 import { applyUpdate, isOperatorUpdate } from './updateEngine';
 
+import { StoreLock } from './storeLock';
+
 /** Default ID generator: 32-char hex (UUID without dashes) */
 const defaultIdGenerator = (): string => randomUUID().replace(/-/g, '');
 
@@ -124,6 +126,8 @@ export class Collection<T extends BsonDocument = BsonDocument> {
   private textIndexFields: Record<string, number> = {};
   /** ID generator for new documents */
   private readonly generateId: () => string;
+  /** Optional store-level lock for write serialization */
+  private storeLock?: StoreLock;
 
   constructor(
     public readonly name: string,
@@ -135,11 +139,17 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     if (options?.writeConcern) this.writeConcern = options.writeConcern;
     if (options?.readPreference) this.readPreference = options.readPreference;
     this.generateId = options?.idGenerator ?? defaultIdGenerator;
+    if (options?.storeLock) this.storeLock = options.storeLock;
   }
 
   /** Set the collection resolver for cross-collection operations */
   setCollectionResolver(resolver: CollectionResolver): void {
     this.collectionResolver = resolver;
+  }
+
+  /** Set the store lock for write serialization */
+  setStoreLock(lock: StoreLock): void {
+    this.storeLock = lock;
   }
 
   // ═══════════════════════════════════════════════════════
@@ -318,6 +328,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
    */
   async insertOne(doc: T, options?: WriteOptions): Promise<InsertOneResult> {
     await this.ensureLoaded();
+    // StoreLock: insertOne
+    if (this.storeLock) await this.storeLock.acquire();
+    try {
 
     if (options?.session && (options.session as DbSession).inTransaction) {
       const session = options.session as DbSession;
@@ -332,6 +345,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     const written = await this.writeDoc(validated);
     this.emitChange('insert', written);
     return { acknowledged: true, insertedId: written._id! };
+  } finally {
+      if (this.storeLock) await this.storeLock.release();
+    }
   }
 
   /**
@@ -342,6 +358,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     options?: WriteOptions,
   ): Promise<InsertManyResult> {
     await this.ensureLoaded();
+    // StoreLock: insertMany
+    if (this.storeLock) await this.storeLock.acquire();
+    try {
     const insertedIds: Record<number, DocumentId> = {};
 
     for (let i = 0; i < docs.length; i++) {
@@ -354,6 +373,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
       insertedCount: docs.length,
       insertedIds,
     };
+  } finally {
+      if (this.storeLock) await this.storeLock.release();
+    }
   }
 
   /**
@@ -458,6 +480,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     options?: UpdateOptions,
   ): Promise<UpdateResult> {
     await this.ensureLoaded();
+    // StoreLock: updateOne
+    if (this.storeLock) await this.storeLock.acquire();
+    try {
 
     const doc = await this.findOne(filter);
 
@@ -522,6 +547,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
       modifiedCount: 1,
       upsertedCount: 0,
     };
+  } finally {
+      if (this.storeLock) await this.storeLock.release();
+    }
   }
 
   /**
@@ -533,6 +561,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     options?: WriteOptions,
   ): Promise<UpdateResult> {
     await this.ensureLoaded();
+    // StoreLock: updateMany
+    if (this.storeLock) await this.storeLock.acquire();
+    try {
     const docs = await this.find(filter).toArray();
     let modified = 0;
 
@@ -559,6 +590,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
       modifiedCount: modified,
       upsertedCount: 0,
     };
+  } finally {
+      if (this.storeLock) await this.storeLock.release();
+    }
   }
 
   /**
@@ -569,6 +603,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     options?: WriteOptions,
   ): Promise<DeleteResult> {
     await this.ensureLoaded();
+    // StoreLock: deleteOne
+    if (this.storeLock) await this.storeLock.acquire();
+    try {
     const doc = await this.findOne(filter);
     if (!doc) return { acknowledged: true, deletedCount: 0 };
 
@@ -585,6 +622,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     const removed = await this.removeDoc(doc._id!);
     if (removed) this.emitChange('delete', doc);
     return { acknowledged: true, deletedCount: removed ? 1 : 0 };
+  } finally {
+      if (this.storeLock) await this.storeLock.release();
+    }
   }
 
   /**
@@ -595,6 +635,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     options?: WriteOptions,
   ): Promise<DeleteResult> {
     await this.ensureLoaded();
+    // StoreLock: deleteMany
+    if (this.storeLock) await this.storeLock.acquire();
+    try {
     const docs = await this.find(filter).toArray();
     let deleted = 0;
 
@@ -617,6 +660,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     }
 
     return { acknowledged: true, deletedCount: deleted };
+  } finally {
+      if (this.storeLock) await this.storeLock.release();
+    }
   }
 
   /**
@@ -628,6 +674,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     options?: UpdateOptions,
   ): Promise<ReplaceResult> {
     await this.ensureLoaded();
+    // StoreLock: replaceOne
+    if (this.storeLock) await this.storeLock.acquire();
+    try {
     const doc = await this.findOne(filter);
 
     if (!doc && options?.upsert) {
@@ -659,6 +708,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
       modifiedCount: 1,
       upsertedCount: 0,
     };
+  } finally {
+      if (this.storeLock) await this.storeLock.release();
+    }
   }
 
   /**
@@ -1172,6 +1224,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
    */
   async drop(): Promise<void> {
     await this.ensureLoaded();
+    // StoreLock: drop
+    if (this.storeLock) await this.storeLock.acquire();
+    try {
     // Stop all TTL timers
     for (const timer of this.ttlTimers.values()) {
       clearInterval(timer);
@@ -1185,6 +1240,9 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     this.docIndex.clear();
     this.docCache.clear();
     await this.headRegistry.removeHead(this.dbName, this.name);
+  } finally {
+      if (this.storeLock) await this.storeLock.release();
+    }
   }
 
   /** Configure the query engine's text search fields from our text index */

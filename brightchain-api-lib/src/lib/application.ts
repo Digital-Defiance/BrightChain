@@ -49,6 +49,8 @@ import {
   QuorumDatabaseAdapter,
   SecureKeyStorage,
 } from './services';
+import { FakeEmailService } from './services/fakeEmailService';
+import { createTestEmailRouter } from './routers/testEmailRouter';
 import { BrightChainAuthenticationProvider } from './services/brightchain-authentication-provider';
 import { ClientWebSocketServer } from './services/clientWebSocketServer';
 import { EventNotificationSystem } from './services/eventNotificationSystem';
@@ -207,7 +209,23 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     const energyStore = this._plugin.energyStore;
 
     const energyLedger = new EnergyLedger();
-    const emailService = new EmailService<TID>(this);
+
+    // Use FakeEmailService when email sending is disabled (E2E test mode),
+    // otherwise use the production SES-based EmailService.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const emailService: any = this.environment.disableEmailSend
+      ? FakeEmailService.getInstance()
+      : new EmailService<TID>(this);
+
+    if (this.environment.disableEmailSend) {
+      this.expressApp.use(createTestEmailRouter());
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ ready ] FakeEmailService and TestEmailRouter mounted (DISABLE_EMAIL_SEND=true)',
+      );
+    }
+
     const authProvider = this._plugin.authenticationProvider as
       | BrightChainAuthenticationProvider<TID>
       | undefined;

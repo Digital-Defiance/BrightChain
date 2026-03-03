@@ -119,7 +119,7 @@ export const SplashPage: FC = () => {
             {
               icon: '🔒',
               label: 'Owner-Free Storage',
-              text: 'Data appears random, eliminating copyright concerns',
+              text: 'Cryptographic randomness removes storage liability',
             },
             {
               icon: '⚡',

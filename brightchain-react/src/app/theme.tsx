@@ -79,6 +79,17 @@ export const createAppTheme = (mode: PaletteMode) =>
       },
     },
     components: {
+      MuiAppBar: {
+        styleOverrides: {
+          root: {
+            background:
+              mode === 'light'
+                ? 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)'
+                : 'linear-gradient(135deg, #0a0a14 0%, #0d1117 100%)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+          },
+        },
+      },
       MuiButton: {
         styleOverrides: {
           root: {

@@ -1,0 +1,40 @@
+{
+  "name": "@brightchain/brightpass-react-components",
+  "version": "0.1.0",
+  "description": "BrightPass React UI components for BrightChain password manager",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digital-Defiance/BrightChain.git",
+    "directory": "brightpass-react-components"
+  },
+  "homepage": "https://github.com/Digital-Defiance/BrightChain#readme",
+  "bugs": {
+    "url": "https://github.com/Digital-Defiance/BrightChain/issues"
+  },
+  "keywords": [
+    "brightchain",
+    "brightpass",
+    "password-manager",
+    "react",
+    "components"
+  ],
+  "author": "Digital Defiance",
+  "license": "MIT",
+  "peerDependencies": {
+    "@brightchain/brightchain-lib": "*",
+    "@digitaldefiance/express-suite-react-components": "*",
+    "@digitaldefiance/i18n-lib": "*",
+    "@mui/icons-material": "*",
+    "@mui/material": "*",
+    "axios": "*",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.0.0"
+  }
+}

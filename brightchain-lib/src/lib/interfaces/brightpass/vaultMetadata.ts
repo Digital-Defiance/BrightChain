@@ -18,6 +18,23 @@ export interface DecryptedVault {
   propertyRecords: EntryPropertyRecord[];
 }
 
+/**
+ * Generic decrypted vault following the IBaseData<TID> workspace convention.
+ *
+ * - Frontend uses `IDecryptedVault<string>` (default)
+ * - Backend uses `IDecryptedVault<GuidV4Buffer>`
+ *
+ * @template TID - ID type. Defaults to `string` for frontend/JSON compatibility.
+ */
+export interface IDecryptedVault<TID = string> {
+  id: TID;
+  name: string;
+  ownerId: TID;
+  propertyRecords: EntryPropertyRecord[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface EntrySearchQuery {
   text?: string;
   type?: VaultEntryType;
@@ -29,6 +46,26 @@ export interface AutofillPayload {
   vaultId: string;
   entries: Array<{
     entryId: string;
+    title: string;
+    username: string;
+    password: string;
+    siteUrl: string;
+    totpCode?: string;
+  }>;
+}
+
+/**
+ * Generic autofill payload following the IBaseData<TID> workspace convention.
+ *
+ * - Frontend uses `IAutofillPayload<string>` (default)
+ * - Backend uses `IAutofillPayload<GuidV4Buffer>`
+ *
+ * @template TID - ID type. Defaults to `string` for frontend/JSON compatibility.
+ */
+export interface IAutofillPayload<TID = string> {
+  vaultId: TID;
+  entries: Array<{
+    entryId: TID;
     title: string;
     username: string;
     password: string;
