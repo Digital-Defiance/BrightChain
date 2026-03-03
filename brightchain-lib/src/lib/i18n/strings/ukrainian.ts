@@ -1285,4 +1285,46 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
     'Не вдалося завантажити репутацію',
   [BrightChainStrings.Dashboard_FailedToLoadData]:
     'Не вдалося завантажити дані',
+
+  // BrightMail
+  [BrightChainStrings.BrightMail_MenuLabel]: 'BrightMail',
+  [BrightChainStrings.BrightMail_Inbox_Title]: 'Вхідні',
+  [BrightChainStrings.BrightMail_Inbox_Empty]:
+    'Електронних листів ще немає',
+  [BrightChainStrings.BrightMail_Inbox_Error]:
+    'Не вдалося завантажити вхідні',
+  [BrightChainStrings.BrightMail_Inbox_Retry]: 'Повторити',
+  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]:
+    '{COUNT} непрочитаних',
+  [BrightChainStrings.BrightMail_Compose_Title]: 'Написати',
+  [BrightChainStrings.BrightMail_Compose_To]: 'Кому',
+  [BrightChainStrings.BrightMail_Compose_Cc]: 'Копія',
+  [BrightChainStrings.BrightMail_Compose_Bcc]: 'Прихована копія',
+  [BrightChainStrings.BrightMail_Compose_Subject]: 'Тема',
+  [BrightChainStrings.BrightMail_Compose_Body]: 'Повідомлення',
+  [BrightChainStrings.BrightMail_Compose_Send]: 'Надіслати',
+  [BrightChainStrings.BrightMail_Compose_SendSuccess]:
+    'Електронний лист успішно надіслано',
+  [BrightChainStrings.BrightMail_Compose_SendError]:
+    'Не вдалося надіслати електронний лист',
+  [BrightChainStrings.BrightMail_Compose_InvalidRecipient]:
+    'Будь ласка, додайте принаймні одного дійсного одержувача',
+  [BrightChainStrings.BrightMail_Compose_Attachments]: 'Вкладення',
+  [BrightChainStrings.BrightMail_Thread_Error]:
+    'Не вдалося завантажити ланцюжок',
+  [BrightChainStrings.BrightMail_Thread_BackToInbox]: 'Назад до вхідних',
+  [BrightChainStrings.BrightMail_Thread_Reply]: 'Відповісти',
+  [BrightChainStrings.BrightMail_Thread_Forward]: 'Переслати',
+  [BrightChainStrings.BrightMail_Delete_Confirm]:
+    'Ви впевнені, що хочете видалити?',
+  [BrightChainStrings.BrightMail_Delete_ConfirmBulkTemplate]:
+    'Видалити {COUNT} вибраних листів?',
+  [BrightChainStrings.BrightMail_Delete_Success]: 'Лист видалено',
+  [BrightChainStrings.BrightMail_Delete_ErrorTemplate]:
+    'Не вдалося видалити лист: {MESSAGE_ID}',
+  [BrightChainStrings.BrightMail_Action_Delete]: 'Видалити',
+  [BrightChainStrings.BrightMail_Action_MarkAsRead]:
+    'Позначити як прочитане',
+  [BrightChainStrings.BrightMail_Action_Cancel]: 'Скасувати',
+  [BrightChainStrings.BrightMail_Loading]: 'Завантаження...',
 };

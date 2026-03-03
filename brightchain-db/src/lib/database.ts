@@ -15,6 +15,7 @@ import {
   ICollectionHeadRegistry,
 } from './collection';
 import { PersistentHeadRegistry } from './headRegistry';
+import { StoreLock } from './storeLock';
 import { Model, ModelOptions } from './model';
 import { PooledStoreAdapter } from './pooledStoreAdapter';
 import { DbSession, JournalOp } from './transaction';
@@ -63,6 +64,8 @@ export class BrightChainDb {
   /** Registered models: name → Model instance */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private readonly models = new Map<string, Model<any, any>>();
+  /** Store-level lock for cross-platform write serialization */
+  private readonly storeLock?: StoreLock;
 
   constructor(blockStore: IBlockStore, options?: BrightChainDbOptions) {
     // Wrap the store in a PooledStoreAdapter when poolId is provided
@@ -85,6 +88,11 @@ export class BrightChainDb {
       this.headRegistry = HeadRegistry.createIsolated();
     }
     this.cursorTimeoutMs = options?.cursorTimeoutMs ?? 300_000;
+
+    // Create store-level lock when a data directory is available
+    if (options?.dataDir) {
+      this.storeLock = new StoreLock(options.dataDir);
+    }
   }
 
   /**
@@ -139,12 +147,15 @@ export class BrightChainDb {
     options?: CollectionOptions,
   ): Collection<T> {
     if (!this.collections.has(name)) {
+      const collOptions = this.storeLock
+        ? { ...options, storeLock: this.storeLock }
+        : options;
       const coll = new Collection<T>(
         name,
         this.store,
         this.name,
         this.headRegistry,
-        options,
+        collOptions,
       );
       // Wire up cross-collection resolver for $lookup
       coll.setCollectionResolver((collName: string) =>

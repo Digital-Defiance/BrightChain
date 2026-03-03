@@ -1,0 +1,387 @@
+/**
+ * Unit tests for ThreadView component.
+ *
+ * Tests: thread load and display, mark as read on open, reply/forward
+ * button behavior, delete from thread, error state with back link.
+ *
+ * Requirements: 5.1, 5.2, 5.3, 5.6, 5.7
+ */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import '@testing-library/jest-dom';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
+
+// ─── Mocks ──────────────────────────────────────────────────────────────────
+
+const mockNavigate = jest.fn();
+const mockParams: Record<string, string> = { messageId: 'msg-thread-1' };
+
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate,
+  useParams: () => mockParams,
+  Link: ({ children, to, ...props }: any) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
+jest.mock('@digitaldefiance/ecies-lib', () => ({
+  IECIESConfig: {},
+  Member: { newMember: jest.fn() },
+  EmailString: jest.fn(),
+}));
+
+jest.mock('@digitaldefiance/suite-core-lib', () => ({
+  SuiteCoreComponentId: 'suite-core',
+  SuiteCoreStringKey: new Proxy(
+    {},
+    {
+      get: (_t: unknown, p: string | symbol) => `suite-core:${String(p)}`,
+    },
+  ),
+  SuiteCoreStringKeyValue: {},
+}));
+
+jest.mock('@brightchain/brightchain-lib', () => ({
+  BrightChainComponentId: 'brightchain',
+  BrightChainStrings: new Proxy(
+    {},
+    { get: (_t: unknown, p: string | symbol) => String(p) },
+  ),
+}));
+
+jest.mock('@digitaldefiance/express-suite-react-components', () => ({
+  useI18n: () => ({
+    tComponent: (_componentId: string, key: string) => key,
+    t: (key: string) => key,
+    changeLanguage: jest.fn(),
+    currentLanguage: 'en',
+  }),
+}));
+
+const mockSendEmail = jest.fn();
+const mockQueryInbox = jest.fn();
+const mockGetEmail = jest.fn();
+const mockGetEmailContent = jest.fn();
+const mockGetEmailThread = jest.fn();
+const mockGetDeliveryStatus = jest.fn();
+const mockReplyToEmail = jest.fn();
+const mockForwardEmail = jest.fn();
+const mockMarkAsRead = jest.fn();
+const mockDeleteEmail = jest.fn();
+const mockGetUnreadCount = jest.fn();
+
+jest.mock('../hooks/useEmailApi', () => ({
+  __esModule: true,
+  useEmailApi: () => ({
+    sendEmail: mockSendEmail,
+    queryInbox: mockQueryInbox,
+    getEmail: mockGetEmail,
+    getEmailContent: mockGetEmailContent,
+    getEmailThread: mockGetEmailThread,
+    getDeliveryStatus: mockGetDeliveryStatus,
+    replyToEmail: mockReplyToEmail,
+    forwardEmail: mockForwardEmail,
+    markAsRead: mockMarkAsRead,
+    deleteEmail: mockDeleteEmail,
+    getUnreadCount: mockGetUnreadCount,
+  }),
+}));
+
+// Import after mocks
+import ThreadView from '../ThreadView';
+
+const mockedApi = {
+  sendEmail: mockSendEmail,
+  queryInbox: mockQueryInbox,
+  getEmail: mockGetEmail,
+  getEmailContent: mockGetEmailContent,
+  getEmailThread: mockGetEmailThread,
+  getDeliveryStatus: mockGetDeliveryStatus,
+  replyToEmail: mockReplyToEmail,
+  forwardEmail: mockForwardEmail,
+  markAsRead: mockMarkAsRead,
+  deleteEmail: mockDeleteEmail,
+  getUnreadCount: mockGetUnreadCount,
+};
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function makeThreadEmail(
+  id: string,
+  isRead = false,
+  subject = 'Thread Subject',
+  dateStr = '2024-06-15T10:00:00Z',
+) {
+  return {
+    messageId: id,
+    from: {
+      localPart: 'alice',
+      domain: 'example.com',
+      displayName: 'Alice',
+      get address() {
+        return `${this.localPart}@${this.domain}`;
+      },
+    },
+    to: [
+      {
+        localPart: 'bob',
+        domain: 'example.com',
+        displayName: 'Bob',
+        get address() {
+          return `${this.localPart}@${this.domain}`;
+        },
+      },
+    ],
+    cc: [
+      {
+        localPart: 'carol',
+        domain: 'example.com',
+        displayName: 'Carol',
+        get address() {
+          return `${this.localPart}@${this.domain}`;
+        },
+      },
+    ],
+    subject,
+    date: new Date(dateStr),
+    textBody: 'Hello from the thread',
+    readReceipts: isRead ? new Map([['user1', new Date()]]) : new Map(),
+    deliveryReceipts: new Map(),
+    customHeaders: new Map(),
+    deliveryStatus: new Map(),
+    acknowledgments: new Map(),
+    mimeVersion: '1.0',
+    contentType: {
+      type: 'text',
+      subtype: 'plain',
+      parameters: new Map(),
+      get mediaType() {
+        return 'text/plain';
+      },
+    },
+    messageType: 'email',
+    senderId: 'test',
+    recipients: [],
+    priority: 1,
+    encryptionScheme: 'none',
+    isCBL: false,
+    blockId: 'test-block',
+    createdAt: new Date(),
+    expiresAt: null,
+    durabilityLevel: 0,
+    parityBlockIds: [],
+    accessCount: 0,
+    lastAccessedAt: new Date(),
+    replicationStatus: 0,
+    targetReplicationFactor: 0,
+    replicaNodeIds: [],
+    size: 0,
+    checksum: 'test',
+  } as any;
+}
+
+// ─── Tests ──────────────────────────────────────────────────────────────────
+
+describe('ThreadView', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockNavigate.mockClear();
+  });
+
+  /**
+   * Requirement 5.1: Thread load and display in chronological order
+   * Requirement 5.2: Each message shows sender, To, Cc, date, subject, body
+   */
+  it('fetches and displays thread emails in chronological order', async () => {
+    const emails = [
+      makeThreadEmail('msg-2', true, 'Re: Hello', '2024-06-16T10:00:00Z'),
+      makeThreadEmail('msg-1', true, 'Hello', '2024-06-15T10:00:00Z'),
+    ];
+    mockedApi.getEmailThread.mockResolvedValue(emails);
+    mockedApi.markAsRead.mockResolvedValue({} as any);
+
+    await act(async () => {
+      render(<ThreadView />);
+    });
+
+    expect(mockedApi.getEmailThread).toHaveBeenCalledWith('msg-thread-1');
+
+    // Both messages rendered
+    expect(screen.getByTestId('thread-message-msg-1')).toBeInTheDocument();
+    expect(screen.getByTestId('thread-message-msg-2')).toBeInTheDocument();
+
+    // Verify chronological order: msg-1 (earlier) should appear before msg-2
+    const messages = screen.getByTestId('thread-view').querySelectorAll('[data-testid^="thread-message-"]');
+    expect(messages[0].getAttribute('data-testid')).toBe('thread-message-msg-1');
+    expect(messages[1].getAttribute('data-testid')).toBe('thread-message-msg-2');
+
+    // Verify message content
+    expect(screen.getAllByText('Alice').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Bob/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Carol/).length).toBeGreaterThanOrEqual(1);
+  });
+
+  /**
+   * Requirement 5.3: Auto mark-as-read on open
+   */
+  it('calls markAsRead for unread emails in the thread', async () => {
+    const emails = [
+      makeThreadEmail('msg-unread-1', false),
+      makeThreadEmail('msg-read-1', true),
+    ];
+    mockedApi.getEmailThread.mockResolvedValue(emails);
+    mockedApi.markAsRead.mockResolvedValue({} as any);
+
+    await act(async () => {
+      render(<ThreadView />);
+    });
+
+    // markAsRead should be called for the unread email only
+    expect(mockedApi.markAsRead).toHaveBeenCalledWith('msg-unread-1');
+    // The read email should NOT trigger markAsRead
+    expect(mockedApi.markAsRead).not.toHaveBeenCalledWith('msg-read-1');
+  });
+
+  /**
+   * Requirement 5.6: Delete from thread
+   */
+  it('deletes an email from the thread after confirmation', async () => {
+    const emails = [
+      makeThreadEmail('msg-del-1', true),
+      makeThreadEmail('msg-del-2', true),
+    ];
+    mockedApi.getEmailThread.mockResolvedValue(emails);
+    mockedApi.markAsRead.mockResolvedValue({} as any);
+    mockedApi.deleteEmail.mockResolvedValue({} as any);
+
+    await act(async () => {
+      render(<ThreadView />);
+    });
+
+    // Click delete on first message
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('delete-btn-msg-del-1'));
+    });
+
+    // Confirm dialog should appear
+    expect(screen.getByText('BrightMail_Delete_Confirm')).toBeInTheDocument();
+
+    // Confirm deletion — click the contained variant (confirm button in dialog)
+    const confirmButtons = screen.getAllByText('BrightMail_Action_Delete');
+    const dialogConfirmBtn = confirmButtons.find(
+      (btn) => btn.closest('.MuiDialogActions-root') !== null,
+    );
+    await act(async () => {
+      fireEvent.click(dialogConfirmBtn!);
+    });
+
+    expect(mockedApi.deleteEmail).toHaveBeenCalledWith('msg-del-1');
+
+    // Email removed from view
+    await waitFor(() => {
+      expect(screen.queryByTestId('thread-message-msg-del-1')).not.toBeInTheDocument();
+    });
+    expect(screen.getByTestId('thread-message-msg-del-2')).toBeInTheDocument();
+  });
+
+  /**
+   * Requirement 5.7: Error state with back-to-inbox link
+   */
+  it('displays error state with back-to-inbox link on fetch failure', async () => {
+    mockedApi.getEmailThread.mockRejectedValue(new Error('Thread not found'));
+
+    await act(async () => {
+      render(<ThreadView />);
+    });
+
+    expect(screen.getByTestId('thread-error')).toBeInTheDocument();
+    expect(screen.getByText('BrightMail_Thread_Error')).toBeInTheDocument();
+
+    const backLink = screen.getByTestId('back-to-inbox');
+    expect(backLink).toBeInTheDocument();
+    expect(backLink).toHaveAttribute('href', '/brightmail');
+  });
+
+  /**
+   * Requirement 5.4: Reply button opens ComposeView pre-filled for reply
+   */
+  it('opens compose view for reply when reply button is clicked', async () => {
+    const emails = [makeThreadEmail('msg-reply-1', true, 'Hello')];
+    mockedApi.getEmailThread.mockResolvedValue(emails);
+    mockedApi.markAsRead.mockResolvedValue({} as any);
+
+    await act(async () => {
+      render(<ThreadView />);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('reply-btn-msg-reply-1'));
+    });
+
+    // ComposeView should be rendered with reply pre-fill
+    expect(screen.getByTestId('compose-form')).toBeInTheDocument();
+    // To field should have the original sender
+    const toField = screen.getByLabelText('BrightMail_Compose_To');
+    expect(toField).toHaveValue('alice@example.com');
+    // Subject should have Re: prefix
+    const subjectField = screen.getByLabelText('BrightMail_Compose_Subject');
+    expect(subjectField).toHaveValue('Re: Hello');
+  });
+
+  /**
+   * Requirement 5.5: Forward button opens ComposeView pre-filled for forward
+   */
+  it('opens compose view for forward when forward button is clicked', async () => {
+    const emails = [makeThreadEmail('msg-fwd-1', true, 'Hello')];
+    mockedApi.getEmailThread.mockResolvedValue(emails);
+    mockedApi.markAsRead.mockResolvedValue({} as any);
+
+    await act(async () => {
+      render(<ThreadView />);
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('forward-btn-msg-fwd-1'));
+    });
+
+    // ComposeView should be rendered with forward pre-fill
+    expect(screen.getByTestId('compose-form')).toBeInTheDocument();
+    // To field should be empty
+    const toField = screen.getByLabelText('BrightMail_Compose_To');
+    expect(toField).toHaveValue('');
+    // Subject should have Fwd: prefix
+    const subjectField = screen.getByLabelText('BrightMail_Compose_Subject');
+    expect(subjectField).toHaveValue('Fwd: Hello');
+  });
+
+  /**
+   * Loading state
+   */
+  it('displays loading state while fetching thread', async () => {
+    let resolveThread!: (value: any) => void;
+    mockedApi.getEmailThread.mockReturnValue(
+      new Promise((resolve) => {
+        resolveThread = resolve;
+      }),
+    );
+
+    await act(async () => {
+      render(<ThreadView />);
+    });
+
+    expect(screen.getByTestId('thread-loading')).toBeInTheDocument();
+
+    await act(async () => {
+      resolveThread([]);
+    });
+  });
+});

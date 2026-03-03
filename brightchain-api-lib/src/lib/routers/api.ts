@@ -19,6 +19,7 @@ import {
 import { AppConstants } from '../appConstants';
 import { PoolDiscoveryService } from '../availability/poolDiscoveryService';
 import { BlocksController } from '../controllers/api/blocks';
+import { BrightPassController } from '../controllers/api/brightpass';
 import { CBLController } from '../controllers/api/cbl';
 import { ChannelController } from '../controllers/api/channels';
 import { ConversationController } from '../controllers/api/conversations';
@@ -52,6 +53,7 @@ export class ApiRouter<
   TID extends PlatformID = DefaultBackendIdType,
 > extends BaseRouter<TID> {
   private readonly blocksController: BlocksController<TID>;
+  private readonly brightPassController: BrightPassController<TID>;
   private readonly channelController: ChannelController<TID>;
   private readonly conversationController: ConversationController<TID>;
   private readonly docsController: DocsController<TID>;
@@ -103,6 +105,7 @@ export class ApiRouter<
 
     this.userController = new UserController<TID>(application);
     this.blocksController = new BlocksController(application);
+    this.brightPassController = new BrightPassController(application);
     this.channelController = new ChannelController(application);
     this.conversationController = new ConversationController(application);
     this.docsController = new DocsController(application);
@@ -120,6 +123,7 @@ export class ApiRouter<
 
     this.router.use('/user', this.userController.router);
     this.router.use('/blocks', this.blocksController.router);
+    this.router.use('/brightpass', this.brightPassController.router);
     this.router.use('/channels', this.channelController.router);
     this.router.use('/conversations', this.conversationController.router);
     this.router.use('/docs', this.docsController.router);
