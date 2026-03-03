@@ -23,7 +23,13 @@
       "@brightchain/brightchain-api-lib": ["brightchain-api-lib/src/index.ts"],
       "@brightchain/brightchain-api-lib/*": ["brightchain-api-lib/src/*"],
       "@brightchain/db": ["brightchain-db/src/index.ts"],
-      "@brightchain/db/*": ["brightchain-db/src/*"]
+      "@brightchain/db/*": ["brightchain-db/src/*"],
+      "@brightchain/brightmail-react-components": [
+        "brightmail-react-components/src/index.ts"
+      ],
+      "@brightchain/brightpass-react-components": [
+        "brightpass-react-components/src/index.ts"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]

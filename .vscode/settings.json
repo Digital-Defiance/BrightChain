@@ -12,5 +12,6 @@
     "javascriptreact",
     "typescript",
     "typescriptreact"
-  ]
+  ],
+  "typescript.autoClosingTags": false
 }
