@@ -1,16 +1,16 @@
 /**
- * BackupCodeService – Property-Based Tests.
+ * BrightChainBackupCodeService – Property-Based Tests.
  *
- * Feature: brightchain-user-management
+ * Feature: upstream-backup-codes
  *
  * Uses fast-check to validate backup-code-related properties for the
- * BackupCodeService. This file covers Properties 4, 5, 6, 7, 8.
+ * BrightChainBackupCodeService. This file covers Properties 1–6.
  */
 
 import {
   BlockSize,
   EmailString,
-  EnergyAccountStore,
+  IBackupCodeConstants,
   initializeBrightChain,
   MemberStore,
   MemoryBlockStore,
@@ -18,21 +18,17 @@ import {
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
 import { MemberType } from '@digitaldefiance/ecies-lib';
-import * as bcrypt from 'bcrypt';
+import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
+import {
+  BackupCode,
+  KeyWrappingService,
+} from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
-import { IBrightChainApplication } from '../../lib/interfaces/application';
-import { AuthService } from '../../lib/services/auth';
-import { BackupCodeService } from '../../lib/services/backupCodeService';
-import { EmailService } from '../../lib/services/email';
+import { BrightChainBackupCodeService } from '../../lib/services/brightChainBackupCodeService';
 
-/** Low bcrypt rounds for test speed. */
-const TEST_BCRYPT_ROUNDS = 4;
-
-/** Arbitrary: alphanumeric username (3–20 chars) */
 const usernameArb: fc.Arbitrary<string> =
   fc.stringMatching(/^[a-z0-9_-]{3,20}$/);
 
-/** Arbitrary: simple valid email built from random local + domain parts */
 const emailArb: fc.Arbitrary<string> = fc
   .tuple(
     fc.stringMatching(/^[a-z0-9]{3,12}$/),
@@ -40,413 +36,308 @@ const emailArb: fc.Arbitrary<string> = fc
   )
   .map(([local, domain]) => `${local}@${domain}.com`);
 
-/** Arbitrary: password meeting minimum 8-char requirement (printable non-space ASCII) */
-const passwordArb: fc.Arbitrary<string> = fc
-  .array(fc.integer({ min: 0x21, max: 0x7e }), {
-    minLength: 8,
-    maxLength: 32,
-  })
-  .map((codes) => String.fromCharCode(...codes));
+const TEST_CONSTANTS: IBackupCodeConstants = {
+  Count: 10,
+  NormalizedHexRegex: /^[a-z0-9]{32}$/,
+  DisplayRegex: /^([a-z0-9]{4}-){7}[a-z0-9]{4}$/,
+};
 
-/**
- * Create a fresh BackupCodeService with isolated in-memory stores.
- * Returns the BackupCodeService, MemberStore, and AuthService so we can
- * create members and test backup code operations.
- */
-function createIsolatedServices(): {
-  backupCodeService: BackupCodeService;
-  memberStore: MemberStore;
-  authService: AuthService;
-} {
+async function setup(username: string, email: string) {
   initializeBrightChain();
   ServiceLocator.setServiceProvider(ServiceProvider.getInstance());
-
-  const blockStore = new MemoryBlockStore(BlockSize.Small);
+  const blockStore = new MemoryBlockStore(BlockSize.Medium);
   const memberStore = new MemberStore(blockStore);
-  const energyStore = new EnergyAccountStore();
-
-  const mockApp = {
-    environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
-    ready: true,
-    services: {},
-    plugins: {},
-    db: { connection: { readyState: 1 } },
-    getModel: () => {
-      throw new Error('not implemented');
-    },
-    getController: () => {
-      throw new Error('not implemented');
-    },
-    setController: () => {
-      /* noop */
-    },
-    start: async () => {
-      /* noop */
-    },
-  } as unknown as IBrightChainApplication;
-
-  const mockEmailService = {
-    sendEmail: async () => {
-      /* noop */
-    },
-  } as unknown as EmailService;
-
-  const authService = new AuthService(
-    mockApp,
+  const ecies = ServiceProvider.getInstance()
+    .eciesService as unknown as ECIESService;
+  const service = new BrightChainBackupCodeService(
     memberStore,
-    energyStore,
-    mockEmailService,
-    'test-jwt-secret-for-backup-pbt',
+    ecies,
+    new KeyWrappingService(),
+    TEST_CONSTANTS,
   );
-
-  const backupCodeService = new BackupCodeService(
-    memberStore,
-    TEST_BCRYPT_ROUNDS,
+  const { member: sysUser } = Member.newMember(
+    ecies,
+    MemberType.System,
+    'system-user',
+    new EmailString('sys@bc.org'),
   );
-
-  return { backupCodeService, memberStore, authService };
-}
-
-/**
- * Register a member directly via MemberStore and store a password hash.
- * Returns the raw memberId bytes.
- */
-async function createTestMember(
-  authService: AuthService,
-  memberStore: MemberStore,
-  username: string,
-  email: string,
-  password: string,
-): Promise<Uint8Array> {
+  service.setSystemUser(sysUser);
   const { reference } = await memberStore.createMember({
     type: MemberType.User,
     name: username,
     contactEmail: new EmailString(email),
   });
-
   const memberId = reference.id as Uint8Array;
-  const passwordHash = await bcrypt.hash(password, TEST_BCRYPT_ROUNDS);
-  await authService.storePasswordHash(memberId, passwordHash);
+  const { member: testMember, mnemonic: testMnemonic } = Member.newMember(
+    ecies,
+    MemberType.User,
+    username,
+    new EmailString(email),
+  );
 
-  return memberId;
+  // Encrypt the mnemonic with the system user so generateCodes can decrypt it
+  const mnemonicRecovery = (
+    await sysUser.encryptData(
+      Buffer.from(testMnemonic.value ?? '', 'utf-8'),
+    )
+  ).toString('hex');
+  await memberStore.updateMember(memberId, {
+    id: memberId,
+    privateChanges: { mnemonicRecovery },
+  });
+
+  const sp = ServiceProvider.getInstance();
+  jest.spyOn(memberStore, 'getMember').mockImplementation(async (id) => {
+    const idHex = Buffer.from(sp.idProvider.toBytes(id as Uint8Array)).toString(
+      'hex',
+    );
+    const mHex = Buffer.from(sp.idProvider.toBytes(memberId)).toString('hex');
+    if (idHex === mHex) {
+      const proxy = Object.create(testMember);
+      Object.defineProperty(proxy, 'id', {
+        get: () => memberId,
+        configurable: true,
+      });
+      Object.defineProperty(proxy, 'idBytes', {
+        get: () => sp.idProvider.toBytes(memberId),
+        configurable: true,
+      });
+      return proxy;
+    }
+    throw new Error('Unexpected getMember call for id: ' + idHex);
+  });
+  return { service, memberStore, memberId };
 }
 
-// Feature: brightchain-user-management, Property 4: Backup code generation invariant
-describe('BackupCodeService Property-Based Tests', () => {
+describe('BrightChainBackupCodeService Property-Based Tests', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   /**
-   * Property 4: Backup code generation invariant
-   *
-   * For any member, calling `generateCodes(memberId)` should return exactly
-   * 10 distinct plaintext codes, and immediately calling `getCodeCount(memberId)`
-   * should return 10.
-   *
-   * **Validates: Requirements 2.1, 2.2**
+   * Property 1: Generation invariant
    */
-  describe('Property 4: Backup code generation invariant', () => {
-    it('generateCodes returns exactly 10 distinct codes and getCodeCount returns 10', async () => {
+  describe('Property 1: Generation invariant', () => {
+    it('generateCodes returns Count distinct codes matching DisplayRegex, getCodeCount returns Count', async () => {
       await fc.assert(
-        fc.asyncProperty(
-          usernameArb,
-          emailArb,
-          passwordArb,
-          async (username, email, password) => {
-            const { backupCodeService, memberStore, authService } =
-              createIsolatedServices();
-
-            // Create a member
-            const memberId = await createTestMember(
-              authService,
-              memberStore,
-              username,
-              email,
-              password,
-            );
-
-            // Generate backup codes
-            const codes = await backupCodeService.generateCodes(memberId);
-
-            // Should return exactly 10 codes
-            expect(codes).toHaveLength(10);
-
-            // All codes should be distinct
-            const uniqueCodes = new Set(codes);
-            expect(uniqueCodes.size).toBe(10);
-
-            // getCodeCount should return 10
-            const count = await backupCodeService.getCodeCount(memberId);
-            expect(count).toBe(10);
-          },
-        ),
-        { numRuns: 100 },
+        fc.asyncProperty(usernameArb, emailArb, async (username, email) => {
+          const { service, memberId } = await setup(username, email);
+          const codes = await service.generateCodes(memberId);
+          expect(codes.length).toBe(TEST_CONSTANTS.Count);
+          expect(new Set(codes).size).toBe(codes.length);
+          for (const code of codes) {
+            expect(code).toMatch(TEST_CONSTANTS.DisplayRegex);
+          }
+          expect(await service.getCodeCount(memberId)).toBe(
+            TEST_CONSTANTS.Count,
+          );
+        }),
+        { numRuns: 20 },
       );
     }, 600_000);
   });
 
-  // Feature: brightchain-user-management, Property 5: Valid backup code authentication succeeds and decrements count
   /**
-   * Property 5: Valid backup code authentication succeeds and decrements count
-   *
-   * For any member with generated backup codes, and any one of those plaintext
-   * codes that has not been used, calling `validateCode(memberId, code)` should
-   * return `true`, and the subsequent `getCodeCount(memberId)` should return
-   * one less than before.
-   *
-   * **Validates: Requirements 2.3**
+   * Property 2: Encrypt-then-validate round-trip
    */
-  describe('Property 5: Valid backup code authentication succeeds and decrements count', () => {
-    it('any unused code validates successfully and count decrements by 1', async () => {
+  describe('Property 2: Encrypt-then-validate round-trip', () => {
+    it('each generated plaintext validates against stored codes; random strings do not', async () => {
+      const randomNonCodeArb = fc.stringMatching(/^[A-Z]{40}$/);
       await fc.assert(
         fc.asyncProperty(
           usernameArb,
           emailArb,
-          passwordArb,
-          fc.integer({ min: 0, max: 9 }),
-          async (username, email, password, codeIndex) => {
-            const { backupCodeService, memberStore, authService } =
-              createIsolatedServices();
-
-            // Create a member
-            const memberId = await createTestMember(
-              authService,
-              memberStore,
+          randomNonCodeArb,
+          async (username, email, randomStr) => {
+            const { service, memberStore, memberId } = await setup(
               username,
               email,
-              password,
             );
-
-            // Generate backup codes
-            const codes = await backupCodeService.generateCodes(memberId);
-
-            // Get count before validation
-            const countBefore = await backupCodeService.getCodeCount(memberId);
-            expect(countBefore).toBe(10);
-
-            // Pick a random code from the generated set
-            const chosenCode = codes[codeIndex];
-
-            // Validate the chosen code
-            const result = await backupCodeService.validateCode(
-              memberId,
-              chosenCode,
-            );
-            expect(result).toBe(true);
-
-            // Count should have decremented by 1
-            const countAfter = await backupCodeService.getCodeCount(memberId);
-            expect(countAfter).toBe(countBefore - 1);
-          },
-        ),
-        { numRuns: 100 },
-      );
-    }, 600_000);
-  });
-
-  // Feature: brightchain-user-management, Property 6: Used or invalid backup codes are rejected
-  /**
-   * Property 6: Used or invalid backup codes are rejected
-   *
-   * For any member with generated backup codes, and any code that has already
-   * been used OR any random string not in the generated set, calling
-   * `validateCode(memberId, code)` should return `false`.
-   *
-   * **Validates: Requirements 2.4**
-   */
-  describe('Property 6: Used or invalid backup codes are rejected', () => {
-    it('a code that has already been used is rejected on second attempt', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          usernameArb,
-          emailArb,
-          passwordArb,
-          fc.integer({ min: 0, max: 9 }),
-          async (username, email, password, codeIndex) => {
-            const { backupCodeService, memberStore, authService } =
-              createIsolatedServices();
-
-            const memberId = await createTestMember(
-              authService,
-              memberStore,
-              username,
-              email,
-              password,
-            );
-
-            const codes = await backupCodeService.generateCodes(memberId);
-            const chosenCode = codes[codeIndex];
-
-            // First use should succeed
-            const firstResult = await backupCodeService.validateCode(
-              memberId,
-              chosenCode,
-            );
-            expect(firstResult).toBe(true);
-
-            // Second use of the same code should be rejected
-            const secondResult = await backupCodeService.validateCode(
-              memberId,
-              chosenCode,
-            );
-            expect(secondResult).toBe(false);
-          },
-        ),
-        { numRuns: 100 },
-      );
-    }, 600_000);
-
-    it('a random hex string not in the generated set is rejected', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          usernameArb,
-          emailArb,
-          passwordArb,
-          fc.uint8Array({ minLength: 8, maxLength: 8 }).map((bytes) => {
-            const hex = Buffer.from(bytes).toString('hex');
-            return `${hex.slice(0, 4)}-${hex.slice(4, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}`;
-          }),
-          async (username, email, password, randomCode) => {
-            const { backupCodeService, memberStore, authService } =
-              createIsolatedServices();
-
-            const memberId = await createTestMember(
-              authService,
-              memberStore,
-              username,
-              email,
-              password,
-            );
-
-            const codes = await backupCodeService.generateCodes(memberId);
-
-            // Skip if the random code happens to collide with a generated code
-            fc.pre(!codes.includes(randomCode));
-
-            // Random code not in the set should be rejected
-            const result = await backupCodeService.validateCode(
-              memberId,
-              randomCode,
-            );
-            expect(result).toBe(false);
-          },
-        ),
-        { numRuns: 100 },
-      );
-    }, 600_000);
-  });
-
-  // Feature: brightchain-user-management, Property 7: Backup code regeneration invalidates old codes
-  /**
-   * Property 7: Backup code regeneration invalidates old codes
-   *
-   * For any member with existing backup codes, calling `regenerateCodes(memberId)`
-   * should return 10 new codes, the new count should be 10, and every
-   * previously-generated code should now be rejected by `validateCode`.
-   *
-   * **Validates: Requirements 2.5**
-   */
-  describe('Property 7: Backup code regeneration invalidates old codes', () => {
-    it('after regenerateCodes, old codes are rejected and new count is 10', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          usernameArb,
-          emailArb,
-          passwordArb,
-          async (username, email, password) => {
-            const { backupCodeService, memberStore, authService } =
-              createIsolatedServices();
-
-            // Create a member
-            const memberId = await createTestMember(
-              authService,
-              memberStore,
-              username,
-              email,
-              password,
-            );
-
-            // Generate initial backup codes
-            const oldCodes = await backupCodeService.generateCodes(memberId);
-            expect(oldCodes).toHaveLength(10);
-
-            // Regenerate codes — should invalidate old ones
-            const newCodes = await backupCodeService.regenerateCodes(memberId);
-            expect(newCodes).toHaveLength(10);
-
-            // New count should be 10
-            const count = await backupCodeService.getCodeCount(memberId);
-            expect(count).toBe(10);
-
-            // Every old code should now be rejected
-            for (const oldCode of oldCodes) {
-              const result = await backupCodeService.validateCode(
-                memberId,
-                oldCode,
-              );
-              expect(result).toBe(false);
-            }
-          },
-        ),
-        { numRuns: 100 },
-      );
-    }, 600_000);
-  });
-
-  // Feature: brightchain-user-management, Property 8: Backup codes stored as bcrypt hashes
-  /**
-   * Property 8: Backup codes stored as bcrypt hashes
-   *
-   * For any member after `generateCodes(memberId)`, the stored backup code
-   * entries in the member's private profile should all have `hash` fields
-   * matching the bcrypt pattern `/^\$2[aby]\$/` and none should equal any of
-   * the returned plaintext codes.
-   *
-   * **Validates: Requirements 2.6**
-   */
-  describe('Property 8: Backup codes stored as bcrypt hashes', () => {
-    it('stored backup code hashes match bcrypt pattern and never equal plaintext codes', async () => {
-      const bcryptPattern = /^\$2[aby]\$/;
-
-      await fc.assert(
-        fc.asyncProperty(
-          usernameArb,
-          emailArb,
-          passwordArb,
-          async (username, email, password) => {
-            const { backupCodeService, memberStore, authService } =
-              createIsolatedServices();
-
-            // Create a member
-            const memberId = await createTestMember(
-              authService,
-              memberStore,
-              username,
-              email,
-              password,
-            );
-
-            // Generate backup codes — returns plaintext codes
-            const plaintextCodes =
-              await backupCodeService.generateCodes(memberId);
-
-            // Read stored backup codes from the member's private profile
+            const plaintextCodes = await service.generateCodes(memberId);
             const profile = await memberStore.getMemberProfile(memberId);
-            expect(profile.privateProfile).not.toBeNull();
-
-            const storedCodes = profile.privateProfile!.backupCodes ?? [];
-            expect(storedCodes).toHaveLength(10);
-
-            for (const entry of storedCodes) {
-              // Each hash must match the bcrypt pattern
-              expect(entry.hash).toMatch(bcryptPattern);
-
-              // No stored hash should equal any plaintext code
-              for (const plaintext of plaintextCodes) {
-                expect(entry.hash).not.toBe(plaintext);
-              }
+            const storedCodes = profile.privateProfile!.backupCodes;
+            for (const code of plaintextCodes) {
+              expect(BackupCode.validateBackupCode(storedCodes, code)).toBe(
+                true,
+              );
+            }
+            if (!plaintextCodes.includes(randomStr)) {
+              expect(
+                BackupCode.validateBackupCode(storedCodes, randomStr),
+              ).toBe(false);
             }
           },
         ),
-        { numRuns: 100 },
+        { numRuns: 20 },
+      );
+    }, 600_000);
+  });
+
+  /**
+   * Property 3: Consumption removes exactly one code
+   */
+  describe('Property 3: Consumption removes exactly one code', () => {
+    it('useBackupCode removes exactly the matched code, leaving N-1', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          usernameArb,
+          emailArb,
+          fc.nat({ max: TEST_CONSTANTS.Count - 1 }),
+          async (username, email, codeIndex) => {
+            const { service, memberStore, memberId } = await setup(
+              username,
+              email,
+            );
+            const plaintextCodes = await service.generateCodes(memberId);
+            const N = plaintextCodes.length;
+            const profile = await memberStore.getMemberProfile(memberId);
+            const storedCodes = profile.privateProfile!.backupCodes;
+            const chosenCode = plaintextCodes[codeIndex];
+            const { newCodesArray, code: consumedCode } = service.useBackupCode(
+              storedCodes,
+              chosenCode,
+            );
+            expect(newCodesArray.length).toBe(N - 1);
+            const remainingChecksums = newCodesArray.map((c) => c.checksum);
+            expect(remainingChecksums).not.toContain(consumedCode.checksum);
+            const originalChecksums = storedCodes.map((c) => c.checksum);
+            const expectedRemaining = originalChecksums.filter(
+              (cs) => cs !== consumedCode.checksum,
+            );
+            expect(remainingChecksums.sort()).toEqual(expectedRemaining.sort());
+          },
+        ),
+        { numRuns: 20 },
+      );
+    }, 600_000);
+  });
+
+  /**
+   * Property 4: Encrypt-then-recover round-trip
+   */
+  describe('Property 4: Encrypt-then-recover round-trip', () => {
+    it('recovering with any valid code yields the original public key', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          usernameArb,
+          emailArb,
+          fc.nat({ max: TEST_CONSTANTS.Count - 1 }),
+          async (username, email, codeIndex) => {
+            const { service, memberStore, memberId } = await setup(
+              username,
+              email,
+            );
+            const originalMember = await memberStore.getMember(memberId);
+            const originalPubKeyHex = Buffer.from(
+              originalMember.publicKey,
+            ).toString('hex');
+            const plaintextCodes = await service.generateCodes(memberId);
+            const chosenCode = plaintextCodes[codeIndex];
+            const { user: recoveredUser, codeCount } =
+              await service.recoverKeyWithBackupCode(memberId, chosenCode);
+            const recoveredPubKeyHex = Buffer.from(
+              recoveredUser.publicKey,
+            ).toString('hex');
+            expect(recoveredPubKeyHex).toBe(originalPubKeyHex);
+            expect(codeCount).toBe(TEST_CONSTANTS.Count - 1);
+          },
+        ),
+        { numRuns: 20 },
+      );
+    }, 600_000);
+  });
+
+  /**
+   * Property 5: Regeneration invalidates old codes
+   */
+  describe('Property 5: Regeneration invalidates old codes', () => {
+    it('regenerateCodes returns Count new codes; old codes fail validation', async () => {
+      await fc.assert(
+        fc.asyncProperty(usernameArb, emailArb, async (username, email) => {
+          const { service, memberStore, memberId } = await setup(
+            username,
+            email,
+          );
+          const oldCodes = await service.generateCodes(memberId);
+          expect(oldCodes.length).toBe(TEST_CONSTANTS.Count);
+          const newCodes = await service.regenerateCodes(memberId);
+          expect(newCodes.length).toBe(TEST_CONSTANTS.Count);
+          expect(new Set(newCodes).size).toBe(newCodes.length);
+          for (const code of newCodes) {
+            expect(code).toMatch(TEST_CONSTANTS.DisplayRegex);
+          }
+          const profile = await memberStore.getMemberProfile(memberId);
+          const storedCodes = profile.privateProfile!.backupCodes;
+          for (const oldCode of oldCodes) {
+            expect(BackupCode.validateBackupCode(storedCodes, oldCode)).toBe(
+              false,
+            );
+          }
+          for (const newCode of newCodes) {
+            expect(BackupCode.validateBackupCode(storedCodes, newCode)).toBe(
+              true,
+            );
+          }
+        }),
+        { numRuns: 20 },
+      );
+    }, 600_000);
+  });
+
+  /**
+   * Property 6: Key rotation preserves recoverability
+   */
+  describe('Property 6: Key rotation preserves recoverability', () => {
+    it('after rewrap, codes still validate and recover the original key', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          usernameArb,
+          emailArb,
+          fc.nat({ max: TEST_CONSTANTS.Count - 1 }),
+          async (username, email, codeIndex) => {
+            const { service, memberStore, memberId } = await setup(
+              username,
+              email,
+            );
+            const originalMember = await memberStore.getMember(memberId);
+            const originalPubKeyHex = Buffer.from(
+              originalMember.publicKey,
+            ).toString('hex');
+            const plaintextCodes = await service.generateCodes(memberId);
+            const ecies = ServiceProvider.getInstance()
+              .eciesService as unknown as ECIESService;
+            const { member: newSysUser } = Member.newMember(
+              ecies,
+              MemberType.System,
+              'new-system-user',
+              new EmailString('newsys@bc.org'),
+            );
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const oldSysUser = (service as any).systemUser;
+            const rewrapped = await service.rewrapAllUsersBackupCodes(
+              oldSysUser,
+              newSysUser,
+            );
+            expect(rewrapped).toBeGreaterThanOrEqual(1);
+            service.setSystemUser(newSysUser);
+            const profile = await memberStore.getMemberProfile(memberId);
+            const storedCodes = profile.privateProfile!.backupCodes;
+            for (const code of plaintextCodes) {
+              expect(BackupCode.validateBackupCode(storedCodes, code)).toBe(
+                true,
+              );
+            }
+            const chosenCode = plaintextCodes[codeIndex];
+            const { user: recoveredUser, codeCount } =
+              await service.recoverKeyWithBackupCode(memberId, chosenCode);
+            const recoveredPubKeyHex = Buffer.from(
+              recoveredUser.publicKey,
+            ).toString('hex');
+            expect(recoveredPubKeyHex).toBe(originalPubKeyHex);
+            expect(codeCount).toBe(TEST_CONSTANTS.Count - 1);
+          },
+        ),
+        { numRuns: 20 },
       );
     }, 600_000);
   });

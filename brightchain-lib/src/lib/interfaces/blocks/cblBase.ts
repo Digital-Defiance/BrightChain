@@ -8,9 +8,8 @@ import { IEphemeralBlock } from './ephemeral';
 /**
  * Shared interface for CBL/ECBL
  */
-export interface ICBLCore<
-  TID extends PlatformID = Uint8Array,
-> extends IEphemeralBlock<TID> {
+export interface ICBLCore<TID extends PlatformID = Uint8Array>
+  extends IEphemeralBlock<TID> {
   /**
    * Creator ID of the CBL
    */

@@ -7,8 +7,7 @@
  * Requirements: 3.3, 3.4, 3.5
  */
 
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { BrightPassStrings } from '@brightchain/brightchain-lib';
 import {
   Alert,
   Button,
@@ -18,7 +17,8 @@ import {
   DialogTitle,
   TextField,
 } from '@mui/material';
-import { BrightPassStrings } from '@brightchain/brightchain-lib';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useBrightPass } from '../context/BrightPassProvider';
 import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 

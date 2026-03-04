@@ -1,6 +1,6 @@
 /**
  * @fileoverview Serialization utility for converting typed RBAC documents
- * to their stored (all-string) representation for BrightChainDb.
+ * to their stored (all-string) representation for BrightDB.
  *
  * Converts GUID values (GuidV4Buffer / GuidUint8Array) to short hex strings,
  * BSON ObjectId values to hex strings, Date values to ISO strings, and plain

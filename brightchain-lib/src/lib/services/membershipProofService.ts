@@ -195,9 +195,9 @@ function scalarMultiply(a: Uint8Array, b: Uint8Array): Uint8Array {
  *
  * @template TID - Platform ID type for frontend/backend DTO compatibility
  */
-export class MembershipProofService<
-  TID extends PlatformID = Uint8Array,
-> implements IMembershipProofService<TID> {
+export class MembershipProofService<TID extends PlatformID = Uint8Array>
+  implements IMembershipProofService<TID>
+{
   /** Generic marker for DTO compatibility */
   _platformId?: TID;
 

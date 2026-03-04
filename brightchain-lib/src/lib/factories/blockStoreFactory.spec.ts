@@ -9,12 +9,23 @@ describe('BlockStoreFactory', () => {
   });
 
   describe('createMemoryStore', () => {
-    it('should return a MemoryBlockStore', () => {
+    it('should return a MemoryBlockStore with supportedBlockSizes', () => {
       const store = BlockStoreFactory.createMemoryStore({
-        blockSize: BlockSize.Small,
+        supportedBlockSizes: [BlockSize.Small],
       });
       expect(store).toBeInstanceOf(MemoryBlockStore);
-      expect(store.blockSize).toBe(BlockSize.Small);
+      expect(store.supportedBlockSizes).toEqual([BlockSize.Small]);
+    });
+
+    it('should support multiple block sizes', () => {
+      const store = BlockStoreFactory.createMemoryStore({
+        supportedBlockSizes: [BlockSize.Small, BlockSize.Medium],
+      });
+      expect(store).toBeInstanceOf(MemoryBlockStore);
+      expect(store.supportedBlockSizes).toEqual([
+        BlockSize.Small,
+        BlockSize.Medium,
+      ]);
     });
   });
 
@@ -22,55 +33,57 @@ describe('BlockStoreFactory', () => {
     it('should fall back to MemoryBlockStore when no factory is registered', () => {
       const store = BlockStoreFactory.createDiskStore({
         storePath: '/tmp/test',
-        blockSize: BlockSize.Small,
+        supportedBlockSizes: [BlockSize.Small],
       });
       expect(store).toBeInstanceOf(MemoryBlockStore);
-      expect(store.blockSize).toBe(BlockSize.Small);
+      expect(store.supportedBlockSizes).toEqual([BlockSize.Small]);
     });
 
     it('should use the registered factory when one is provided', () => {
-      const mockStore: IBlockStore = {
-        blockSize: BlockSize.Medium,
-      } as IBlockStore;
+      const mockStore = {
+        supportedBlockSizes: [BlockSize.Medium],
+      } as unknown as IBlockStore;
 
       BlockStoreFactory.registerDiskStoreFactory(() => mockStore);
 
       const store = BlockStoreFactory.createDiskStore({
         storePath: '/tmp/test',
-        blockSize: BlockSize.Medium,
+        supportedBlockSizes: [BlockSize.Medium],
       });
       expect(store).toBe(mockStore);
     });
 
     it('should pass config to the registered factory', () => {
       const factoryFn = jest.fn().mockReturnValue({
-        blockSize: BlockSize.Large,
-      } as IBlockStore);
+        supportedBlockSizes: [BlockSize.Large],
+      } as unknown as IBlockStore);
 
       BlockStoreFactory.registerDiskStoreFactory(factoryFn);
 
       BlockStoreFactory.createDiskStore({
         storePath: '/data/blocks',
-        blockSize: BlockSize.Large,
+        supportedBlockSizes: [BlockSize.Large],
       });
 
       expect(factoryFn).toHaveBeenCalledWith({
         storePath: '/data/blocks',
-        blockSize: BlockSize.Large,
+        supportedBlockSizes: [BlockSize.Large],
       });
     });
   });
 
   describe('clearDiskStoreFactory', () => {
     it('should revert to fallback after clearing', () => {
-      const mockStore = { blockSize: BlockSize.Small } as IBlockStore;
+      const mockStore = {
+        supportedBlockSizes: [BlockSize.Small],
+      } as unknown as IBlockStore;
       BlockStoreFactory.registerDiskStoreFactory(() => mockStore);
 
       // Registered factory is active
       expect(
         BlockStoreFactory.createDiskStore({
           storePath: '/tmp/test',
-          blockSize: BlockSize.Small,
+          supportedBlockSizes: [BlockSize.Small],
         }),
       ).toBe(mockStore);
 
@@ -78,7 +91,7 @@ describe('BlockStoreFactory', () => {
       BlockStoreFactory.clearDiskStoreFactory();
       const store = BlockStoreFactory.createDiskStore({
         storePath: '/tmp/test',
-        blockSize: BlockSize.Small,
+        supportedBlockSizes: [BlockSize.Small],
       });
       expect(store).toBeInstanceOf(MemoryBlockStore);
     });

@@ -1,5 +1,5 @@
-import { test, expect } from './fixtures';
 import { test as base, expect as baseExpect } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 /**
  * Backup Codes UI E2E Tests.
@@ -49,9 +49,9 @@ test.describe('Backup Codes Page (authenticated)', () => {
       .click();
 
     // Verify backup codes are displayed — they render as <li> elements containing <pre> tags
-    await expect(
-      authenticatedPage.locator('li pre').first(),
-    ).toBeVisible({ timeout: 15000 });
+    await expect(authenticatedPage.locator('li pre').first()).toBeVisible({
+      timeout: 15000,
+    });
 
     // Verify multiple codes are generated (API returns 10 codes)
     const codeCount = await authenticatedPage.locator('li pre').count();
@@ -64,60 +64,62 @@ test.describe('Backup Codes Page (authenticated)', () => {
  * since /backup-code is a login alternative, not a protected route.
  */
 base.describe('Backup Code Login Page (unauthenticated)', () => {
-  base('displays backup code login form with expected fields', async ({
-    page,
-  }) => {
-    // Requirement 3.3: navigate to /backup-code, verify the form renders
-    await page.goto('/backup-code');
+  base(
+    'displays backup code login form with expected fields',
+    async ({ page }) => {
+      // Requirement 3.3: navigate to /backup-code, verify the form renders
+      await page.goto('/backup-code');
 
-    // Verify the heading "Backup Code Login" is visible
-    await baseExpect(
-      page.getByRole('heading', { name: /backup code login/i }),
-    ).toBeVisible({ timeout: 15000 });
+      // Verify the heading "Backup Code Login" is visible
+      await baseExpect(
+        page.getByRole('heading', { name: /backup code login/i }),
+      ).toBeVisible({ timeout: 15000 });
 
-    // Verify the email field is visible (default login type is email)
-    await baseExpect(page.locator('#email')).toBeVisible();
+      // Verify the email field is visible (default login type is email)
+      await baseExpect(page.locator('#email')).toBeVisible();
 
-    // Verify the backup code input field
-    await baseExpect(page.locator('#code')).toBeVisible();
+      // Verify the backup code input field
+      await baseExpect(page.locator('#code')).toBeVisible();
 
-    // Verify the submit button "Login with Backup Code"
-    await baseExpect(
-      page.getByRole('button', { name: /login with backup code/i }),
-    ).toBeVisible();
-  });
+      // Verify the submit button "Login with Backup Code"
+      await baseExpect(
+        page.getByRole('button', { name: /login with backup code/i }),
+      ).toBeVisible();
+    },
+  );
 
-  base('shows error when submitting an invalid backup code', async ({
-    page,
-  }) => {
-    // Requirement 3.4: submit an invalid backup code, verify an error message is displayed
-    await page.goto('/backup-code');
+  base(
+    'shows error when submitting an invalid backup code',
+    async ({ page }) => {
+      // Requirement 3.4: submit an invalid backup code, verify an error message is displayed
+      await page.goto('/backup-code');
 
-    // Wait for the form to render
-    await baseExpect(
-      page.getByRole('heading', { name: /backup code login/i }),
-    ).toBeVisible({ timeout: 15000 });
+      // Wait for the form to render
+      await baseExpect(
+        page.getByRole('heading', { name: /backup code login/i }),
+      ).toBeVisible({ timeout: 15000 });
 
-    // Fill in email with a test value
-    await page.locator('#email').fill('invalid@test.brightchain.local');
+      // Fill in email with a test value
+      await page.locator('#email').fill('invalid@test.brightchain.local');
 
-    // Fill in an obviously invalid backup code
-    await page.locator('#code').fill('INVALID-CODE-12345');
+      // Fill in an obviously invalid backup code
+      await page.locator('#code').fill('INVALID-CODE-12345');
 
-    // Submit the form
-    await page
-      .getByRole('button', { name: /login with backup code/i })
-      .click();
+      // Submit the form
+      await page
+        .getByRole('button', { name: /login with backup code/i })
+        .click();
 
-    // Verify an error message is displayed — either a validation error from Formik
-    // (helperText on the field) or an API error (Typography color="error")
-    const validationError = page.locator('#code-helper-text');
-    const apiError = page.locator('text=error').or(
-      page.getByText(/invalid|error|failed/i),
-    );
+      // Verify an error message is displayed — either a validation error from Formik
+      // (helperText on the field) or an API error (Typography color="error")
+      const validationError = page.locator('#code-helper-text');
+      const apiError = page
+        .locator('text=error')
+        .or(page.getByText(/invalid|error|failed/i));
 
-    await baseExpect(
-      validationError.or(apiError),
-    ).toBeVisible({ timeout: 10000 });
-  });
+      await baseExpect(validationError.or(apiError)).toBeVisible({
+        timeout: 10000,
+      });
+    },
+  );
 });

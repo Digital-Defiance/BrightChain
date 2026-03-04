@@ -86,10 +86,31 @@ function checksumFromHex(hex: string): Checksum {
  */
 export class SessionIsolatedBrightChain {
   private blockStore: SessionIsolatedMemoryBlockStore;
-  private blockSize: BlockSize;
+  private _supportedBlockSizes: readonly BlockSize[];
 
-  constructor(blockSize: BlockSize = BlockSize.Small) {
-    this.blockSize = blockSize;
+  /**
+   * @deprecated Use `supportedBlockSizes` instead.
+   * Returns the first supported block size for backward compatibility.
+   */
+  public get blockSize(): BlockSize {
+    return this._supportedBlockSizes[0];
+  }
+
+  /**
+   * The block sizes supported by this instance.
+   */
+  public get supportedBlockSizes(): readonly BlockSize[] {
+    return this._supportedBlockSizes;
+  }
+
+  /**
+   * @param blockSizes - A single BlockSize or array of BlockSize values.
+   *                     Defaults to BlockSize.Small for backward compatibility.
+   */
+  constructor(blockSizes: BlockSize | readonly BlockSize[] = BlockSize.Small) {
+    this._supportedBlockSizes = Array.isArray(blockSizes)
+      ? blockSizes
+      : [blockSizes];
 
     // Initialize BrightChain library if not already initialized
     try {
@@ -98,7 +119,11 @@ export class SessionIsolatedBrightChain {
       console.warn('BrightChain initialization:', error);
     }
 
-    this.blockStore = new SessionIsolatedMemoryBlockStore(blockSize);
+    // SessionIsolatedMemoryBlockStore still takes a single blockSize for now;
+    // pass the first supported size to maintain demo compatibility.
+    this.blockStore = new SessionIsolatedMemoryBlockStore(
+      this._supportedBlockSizes[0],
+    );
 
     console.log(
       `SessionIsolatedBrightChain initialized with session: ${this.blockStore.getSessionId()}`,

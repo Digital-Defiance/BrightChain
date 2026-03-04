@@ -11,7 +11,12 @@ import * as jwt from 'jsonwebtoken';
 import { URL } from 'url';
 import { WebSocket, WebSocketServer } from 'ws';
 import { ITokenPayload } from '../interfaces/token-payload';
-import { EventNotificationSystem } from './eventNotificationSystem';
+import {
+  EventNotificationSystem,
+  IEventFilter,
+  ISystemEventBroadcaster,
+  SystemEvent,
+} from './eventNotificationSystem';
 
 /**
  * Member context for an authenticated WebSocket session.
@@ -33,6 +38,8 @@ interface IClientSession {
   memberContext: IWsMemberContext;
   subscribedEvents: Set<ClientEventType>;
   lastPong: number;
+  /** Named rooms this session has joined (for targeted broadcast) */
+  rooms: Set<string>;
 }
 
 /** Default idle timeout before sending a ping (ms). */
@@ -108,14 +115,21 @@ export function shouldDeliverEvent(
  *
  * @see Requirements 9.1–9.7, 11.3, 11.4
  */
-export class ClientWebSocketServer {
+export class ClientWebSocketServer implements ISystemEventBroadcaster {
   private wss: WebSocketServer;
   private sessions: Map<WebSocket, IClientSession> = new Map();
   private jwtSecret: string;
-  private eventNotificationSystem: EventNotificationSystem;
   private idleTimeoutMs: number;
   private tokenGraceMs: number;
   private tokenWarningBeforeMs: number;
+  /** External message handlers registered by plugins */
+  private externalHandlers = new Map<
+    string,
+    (ws: WebSocket, session: Readonly<IClientSession>, message: unknown) => void
+  >();
+
+  /** Event filter per session for system events (EventNotificationSystem) */
+  private systemEventFilters = new Map<WebSocket, IEventFilter>();
 
   private pingInterval: ReturnType<typeof setInterval> | null = null;
   private tokenCheckInterval: ReturnType<typeof setInterval> | null = null;
@@ -123,7 +137,12 @@ export class ClientWebSocketServer {
   constructor(
     server: Server,
     jwtSecret: string,
-    eventNotificationSystem: EventNotificationSystem,
+    /**
+     * @deprecated EventNotificationSystem parameter is no longer used.
+     * Kept for backward compatibility — pass `null` for new code.
+     * The event system now calls setBroadcaster() on this server instead.
+     */
+    _eventNotificationSystem?: EventNotificationSystem | null,
     options?: {
       idleTimeoutMs?: number;
       tokenGraceMs?: number;
@@ -132,7 +151,6 @@ export class ClientWebSocketServer {
     },
   ) {
     this.jwtSecret = jwtSecret;
-    this.eventNotificationSystem = eventNotificationSystem;
     this.idleTimeoutMs = options?.idleTimeoutMs ?? DEFAULT_IDLE_TIMEOUT_MS;
     this.tokenGraceMs = options?.tokenGraceMs ?? DEFAULT_TOKEN_GRACE_MS;
     this.tokenWarningBeforeMs =
@@ -281,6 +299,7 @@ export class ClientWebSocketServer {
       memberContext,
       subscribedEvents: new Set(),
       lastPong: Date.now(),
+      rooms: new Set(),
     };
     this.sessions.set(ws, session);
 
@@ -297,10 +316,12 @@ export class ClientWebSocketServer {
 
     ws.on('close', () => {
       this.sessions.delete(ws);
+      this.systemEventFilters.delete(ws);
     });
 
     ws.on('error', () => {
       this.sessions.delete(ws);
+      this.systemEventFilters.delete(ws);
       try {
         ws.close();
       } catch {
@@ -324,6 +345,12 @@ export class ClientWebSocketServer {
       const message = JSON.parse(data.toString());
       if (message.action === 'subscribe' || message.action === 'unsubscribe') {
         this.handleSubscription(ws, session, message as ISubscriptionMessage);
+      } else if (
+        typeof message.type === 'string' &&
+        this.externalHandlers.has(message.type)
+      ) {
+        // Delegate to registered external handler (e.g. BrightHub)
+        this.externalHandlers.get(message.type)!(ws, session, message);
       } else {
         ws.send(
           JSON.stringify({
@@ -509,6 +536,189 @@ export class ClientWebSocketServer {
     }, this.idleTimeoutMs / 2);
   }
 
+  // ── Room management ──────────────────────────────────────────────────
+
+  /**
+   * Add a session to a named room for targeted broadcast.
+   * Rooms are lightweight groupings — a session can be in many rooms.
+   */
+  joinRoom(ws: WebSocket, room: string): void {
+    const session = this.sessions.get(ws);
+    if (session) {
+      session.rooms.add(room);
+    }
+  }
+
+  /**
+   * Remove a session from a named room.
+   */
+  leaveRoom(ws: WebSocket, room: string): void {
+    const session = this.sessions.get(ws);
+    if (session) {
+      session.rooms.delete(room);
+    }
+  }
+
+  /**
+   * Get all sessions currently in a named room.
+   */
+  getSessionsInRoom(room: string): IClientSession[] {
+    const result: IClientSession[] = [];
+    for (const session of this.sessions.values()) {
+      if (session.rooms.has(room)) {
+        result.push(session);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Send a JSON payload to all sessions in a room.
+   */
+  broadcastToRoom(room: string, payload: unknown): void {
+    const data = JSON.stringify(payload);
+    for (const session of this.sessions.values()) {
+      if (session.rooms.has(room) && session.ws.readyState === WebSocket.OPEN) {
+        try {
+          session.ws.send(data);
+        } catch {
+          // Connection will be cleaned up on close/error
+        }
+      }
+    }
+  }
+
+  /**
+   * Send a JSON payload to all sessions in a room except one.
+   */
+  broadcastToRoomExcept(
+    room: string,
+    payload: unknown,
+    excludeWs: WebSocket,
+  ): void {
+    const data = JSON.stringify(payload);
+    for (const session of this.sessions.values()) {
+      if (
+        session.rooms.has(room) &&
+        session.ws !== excludeWs &&
+        session.ws.readyState === WebSocket.OPEN
+      ) {
+        try {
+          session.ws.send(data);
+        } catch {
+          // Connection will be cleaned up on close/error
+        }
+      }
+    }
+  }
+
+  /**
+   * Get all sessions for a specific member (multi-device support).
+   */
+  getSessionsForMember(memberId: string): IClientSession[] {
+    const result: IClientSession[] = [];
+    for (const session of this.sessions.values()) {
+      if (session.memberContext.memberId === memberId) {
+        result.push(session);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Send a JSON payload to all sessions belonging to a specific member.
+   */
+  sendToMember(memberId: string, payload: unknown): void {
+    const data = JSON.stringify(payload);
+    for (const session of this.sessions.values()) {
+      if (
+        session.memberContext.memberId === memberId &&
+        session.ws.readyState === WebSocket.OPEN
+      ) {
+        try {
+          session.ws.send(data);
+        } catch {
+          // Connection will be cleaned up on close/error
+        }
+      }
+    }
+  }
+
+  /**
+   * Check if a member has any active sessions.
+   */
+  isMemberOnline(memberId: string): boolean {
+    for (const session of this.sessions.values()) {
+      if (session.memberContext.memberId === memberId) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Register an external message handler for a specific message type.
+   * This allows plugins (like BrightHubWebSocketHandler) to extend
+   * the server's message handling without modifying this class.
+   */
+  registerMessageHandler(
+    messageType: string,
+    handler: (
+      ws: WebSocket,
+      session: Readonly<IClientSession>,
+      message: unknown,
+    ) => void,
+  ): void {
+    this.externalHandlers.set(messageType, handler);
+  }
+
+  // ── System event broadcasting (ISystemEventBroadcaster) ──────────────
+
+  /**
+   * Broadcast a system event (from EventNotificationSystem) to all
+   * connected sessions. Respects per-session system event filters set
+   * via setSystemEventFilter() or the legacy subscribe action.
+   */
+  broadcastSystemEvent(event: SystemEvent, _filter?: IEventFilter): void {
+    const payload = JSON.stringify(event);
+
+    for (const [ws, session] of this.sessions.entries()) {
+      if (session.ws.readyState !== WebSocket.OPEN) continue;
+
+      // Check per-session filter if one exists
+      const sessionFilter = this.systemEventFilters.get(ws);
+      if (sessionFilter) {
+        // Use EventNotificationSystem's static filter matching
+        if (
+          !EventNotificationSystem.matchesFilterStatic(event, sessionFilter)
+        ) {
+          continue;
+        }
+      }
+
+      try {
+        session.ws.send(payload);
+      } catch {
+        // Connection will be cleaned up on close/error
+      }
+    }
+  }
+
+  /**
+   * Set a system event filter for a specific session.
+   * Only system events matching this filter will be delivered to the session.
+   */
+  setSystemEventFilter(ws: WebSocket, filter: IEventFilter): void {
+    this.systemEventFilters.set(ws, filter);
+  }
+
+  /**
+   * Remove the system event filter for a session.
+   */
+  clearSystemEventFilter(ws: WebSocket): void {
+    this.systemEventFilters.delete(ws);
+  }
+
   // ── Public API ──────────────────────────────────────────────────────
 
   /**
@@ -546,6 +756,7 @@ export class ClientWebSocketServer {
       }
     }
     this.sessions.clear();
+    this.systemEventFilters.clear();
 
     if (callback) {
       this.wss.close(callback);

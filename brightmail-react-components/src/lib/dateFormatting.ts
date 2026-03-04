@@ -15,10 +15,7 @@
  *                 Defaults to `undefined` which uses the runtime default locale.
  * @returns A non-empty locale-formatted date string.
  */
-export function formatDateLocale(
-  date: Date | string,
-  locale?: string,
-): string {
+export function formatDateLocale(date: Date | string, locale?: string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   if (isNaN(d.getTime())) {
     return '';

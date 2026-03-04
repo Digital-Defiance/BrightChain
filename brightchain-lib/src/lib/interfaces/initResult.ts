@@ -22,7 +22,7 @@ export interface IInitResult<TBackend = unknown> {
  */
 export interface IBrightChainInitData {
   blockStore: IBlockStore;
-  /** The BrightChainDb instance (typed as unknown to avoid circular dep) */
+  /** The BrightDb instance (typed as unknown to avoid circular dep) */
   db: unknown;
   memberStore: unknown;
   energyStore: unknown;

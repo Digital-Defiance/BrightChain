@@ -2,12 +2,12 @@
  * @fileoverview BrightChain database plugin for the express-suite plugin architecture.
  *
  * Implements IDatabasePlugin<TID> to encapsulate the BrightChain database stack
- * lifecycle: block stores, BrightChainDb, member/energy stores, and the
+ * lifecycle: block stores, BrightDb, member/energy stores, and the
  * authentication provider. The plugin is registered via Application.useDatabasePlugin()
  * and participates in the standard plugin lifecycle (connect → init → stop).
  *
- * BrightChainDb already implements IDatabase from express-suite, so the plugin's
- * `database` property returns the BrightChainDb instance directly — no adapter needed.
+ * BrightDb already implements IDatabase from express-suite, so the plugin's
+ * `database` property returns the BrightDb instance directly — no adapter needed.
  *
  * @module plugins/brightchain-database-plugin
  */
@@ -24,7 +24,7 @@ import {
   MemberStatusType,
   MemberStore,
 } from '@brightchain/brightchain-lib';
-import type { BrightChainDb } from '@brightchain/db';
+import type { BrightDb } from '@brightchain/db';
 import { MemberType } from '@digitaldefiance/ecies-lib';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { getEnhancedNodeIdProvider } from '@digitaldefiance/node-ecies-lib';
@@ -55,7 +55,7 @@ import {
  * - stop() → delegates to disconnect()
  * - disconnect() → releases all references (idempotent)
  *
- * Typed accessors (blockStore, memberStore, energyStore, brightChainDb)
+ * Typed accessors (blockStore, memberStore, energyStore, brightDb)
  * throw descriptive errors when the plugin is not connected.
  */
 export interface IBrightChainDatabasePluginOptions {
@@ -67,9 +67,9 @@ export interface IBrightChainDatabasePluginOptions {
   skipAutoSeed?: boolean;
 }
 
-export class BrightChainDatabasePlugin<
-  TID extends PlatformID,
-> implements IDatabasePlugin<TID> {
+export class BrightChainDatabasePlugin<TID extends PlatformID>
+  implements IDatabasePlugin<TID>
+{
   public readonly name = 'brightchain-database';
   public readonly version = '1.0.0';
 
@@ -77,13 +77,12 @@ export class BrightChainDatabasePlugin<
   private readonly _skipAutoSeed: boolean;
   private _connected = false;
   private _blockStore: IBlockStore | null = null;
-  private _brightChainDb: BrightChainDb | null = null;
+  private _brightDb: BrightDb | null = null;
   private _memberStore: MemberStore | null = null;
   private _energyStore: EnergyAccountStore | null = null;
   private _authProvider: BrightChainAuthenticationProvider<TID> | null = null;
   /** Stored result from the most recent seedWithRbac() / initializeDevStore() call. */
-  private _lastInitResult: IBrightChainInitResult<TID, BrightChainDb> | null =
-    null;
+  private _lastInitResult: IBrightChainInitResult<TID, BrightDb> | null = null;
 
   constructor(
     environment: Environment<TID>,
@@ -97,16 +96,16 @@ export class BrightChainDatabasePlugin<
 
   /**
    * The IDatabase instance this plugin manages.
-   * BrightChainDb implements IDatabase directly, so no adapter is needed.
+   * BrightDb implements IDatabase directly, so no adapter is needed.
    * @throws Error if the plugin is not connected.
    */
   get database(): IDatabase {
-    if (!this._brightChainDb) {
+    if (!this._brightDb) {
       throw new Error(
         'BrightChainDatabasePlugin: cannot access "database" — plugin is not connected. Call connect() first.',
       );
     }
-    return this._brightChainDb as unknown as IDatabase;
+    return this._brightDb as unknown as IDatabase;
   }
 
   /**
@@ -122,7 +121,7 @@ export class BrightChainDatabasePlugin<
    * Useful in tests to retrieve credentials (e.g. memberMnemonic) without
    * calling seedWithRbac() a second time (which would generate new random keys).
    */
-  get lastInitResult(): IBrightChainInitResult<TID, BrightChainDb> | null {
+  get lastInitResult(): IBrightChainInitResult<TID, BrightDb> | null {
     return this._lastInitResult;
   }
 
@@ -130,7 +129,7 @@ export class BrightChainDatabasePlugin<
    * Connect the BrightChain database stack.
    *
    * Calls brightchainDatabaseInit(environment) and stores the resulting
-   * backend references (blockStore, BrightChainDb, memberStore, energyStore).
+   * backend references (blockStore, BrightDb, memberStore, energyStore).
    *
    * @param _uri - Ignored; BrightChain uses environment-based configuration.
    * @throws Error if brightchainDatabaseInit() returns a failure result.
@@ -147,14 +146,14 @@ export class BrightChainDatabasePlugin<
     const { blockStore, db, memberStore, energyStore } = initResult.backend;
 
     this._blockStore = blockStore;
-    this._brightChainDb = db as BrightChainDb;
+    this._brightDb = db as BrightDb;
     this._memberStore = memberStore as MemberStore;
     this._energyStore = energyStore as EnergyAccountStore;
     this._connected = true;
 
     // Give MemberStore a DB reference so queryIndex() can do O(1) DB-backed
     // lookups instead of requiring the full member list loaded into memory.
-    (this._memberStore as MemberStore<TID>).setDb(this._brightChainDb);
+    (this._memberStore as MemberStore<TID>).setDb(this._brightDb);
 
     // In production mode (no dev pool), auto-seed if the database is empty —
     // unless the caller has opted out (e.g. brightchain-inituserdb, which
@@ -174,7 +173,7 @@ export class BrightChainDatabasePlugin<
     }
 
     this._blockStore = null;
-    this._brightChainDb = null;
+    this._brightDb = null;
     this._memberStore = null;
     this._energyStore = null;
     this._authProvider = null;
@@ -245,14 +244,12 @@ export class BrightChainDatabasePlugin<
    * ephemeral credentials and calls initializeWithRbac() for a fully
    * functional dev database. Prints credentials so dev users can log in.
    */
-  async initializeDevStore(): Promise<
-    IBrightChainInitResult<TID, BrightChainDb>
-  > {
+  async initializeDevStore(): Promise<IBrightChainInitResult<TID, BrightDb>> {
     const result = await this.seedWithRbac(true);
     // After seeding, update the MemberStore's DB reference so queryIndex()
     // can find the freshly seeded members via DB-backed lookups.
-    if (this._memberStore && this._brightChainDb) {
-      (this._memberStore as MemberStore<TID>).setDb(this._brightChainDb);
+    if (this._memberStore && this._brightDb) {
+      (this._memberStore as MemberStore<TID>).setDb(this._brightDb);
     }
     return result;
   }
@@ -273,16 +270,16 @@ export class BrightChainDatabasePlugin<
   }
 
   /**
-   * The BrightChainDb instance (implements IDatabase).
+   * The BrightDb instance (implements IDatabase).
    * @throws Error if the plugin is not connected.
    */
-  get brightChainDb(): BrightChainDb {
-    if (!this._brightChainDb) {
+  get brightDb(): BrightDb {
+    if (!this._brightDb) {
       throw new Error(
-        'BrightChainDatabasePlugin: cannot access "brightChainDb" — plugin is not connected. Call connect() first.',
+        'BrightChainDatabasePlugin: cannot access "brightDb" — plugin is not connected. Call connect() first.',
       );
     }
-    return this._brightChainDb;
+    return this._brightDb;
   }
 
   /**
@@ -443,7 +440,7 @@ export class BrightChainDatabasePlugin<
    * already initialized by brightchain-inituserdb.
    */
   async isDatabaseEmpty(): Promise<boolean> {
-    const db = this.brightChainDb;
+    const db = this.brightDb;
     const collection = db.collection<IMemberIndexDocument>('member_index');
     const existing = await collection.find({}).limit(1).toArray();
     return existing.length === 0;
@@ -457,14 +454,14 @@ export class BrightChainDatabasePlugin<
    * (for dev/ephemeral mode so users can log in via the frontend).
    *
    * After seeding, updates the plugin's internal db reference to the one
-   * the service created, so plugin.brightChainDb reflects the seeded data.
+   * the service created, so plugin.brightDb reflects the seeded data.
    *
    * @param printCredentials - Whether to print credentials to console.
    * @returns The full init result from initializeWithRbac().
    */
   async seedWithRbac(
     printCredentials: boolean,
-  ): Promise<IBrightChainInitResult<TID, BrightChainDb>> {
+  ): Promise<IBrightChainInitResult<TID, BrightDb>> {
     const config = this.buildMemberInitConfig();
     const userInputs = this.buildRbacUserInputs();
 
@@ -482,10 +479,10 @@ export class BrightChainDatabasePlugin<
         buildResult.rbacInput,
       );
 
-      // The service creates its own BrightChainDb internally. Update our
-      // reference so plugin.brightChainDb always points to the db that
+      // The service creates its own BrightDb internally. Update our
+      // reference so plugin.brightDb always points to the db that
       // actually holds the seeded data.
-      this._brightChainDb = initResult.db;
+      this._brightDb = initResult.db;
 
       // Populate MemberStore in-memory indexes for seeded users.
       // The init service writes directly to the DB member_index collection
@@ -527,8 +524,8 @@ export class BrightChainDatabasePlugin<
             email: entry.email,
           });
         }
-        // Re-attach DB reference (seedWithRbac replaces _brightChainDb)
-        ms.setDb(this._brightChainDb);
+        // Re-attach DB reference (seedWithRbac replaces _brightDb)
+        ms.setDb(this._brightDb);
       }
 
       if (printCredentials) {

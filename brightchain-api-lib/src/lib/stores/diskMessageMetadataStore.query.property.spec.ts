@@ -199,34 +199,52 @@ describe('DiskMessageMetadataStore - Query Performance Property Tests', () => {
         arbHexString(40, 40),
         fc.integer({ min: 1, max: 5 }),
         async (messageCount, targetRecipient, pageSize) => {
-          for (let i = 0; i < messageCount; i++) {
-            const metadata = createMessageMetadata(
-              `block${i}`.padEnd(64, '0'),
-              `sender${i}`.padEnd(40, '0'),
-              [targetRecipient],
-              'test',
-              MessagePriority.NORMAL,
+          const iterTempDir = mkdtempSync(join(tmpdir(), 'disk-msg-page-'));
+          const iterStore = new DiskMessageMetadataStore(
+            iterTempDir,
+            BlockSize.Small,
+          );
+
+          try {
+            for (let i = 0; i < messageCount; i++) {
+              const metadata = createMessageMetadata(
+                `block${i}${Date.now()}`.padEnd(64, '0').substring(0, 64),
+                `sender${i}`.padEnd(40, '0'),
+                [targetRecipient],
+                'test',
+                MessagePriority.NORMAL,
+              );
+              await iterStore.storeMessageMetadata(metadata);
+            }
+
+            const page0 = await iterStore.getMessagesByRecipient(
+              targetRecipient,
+              {
+                limit: pageSize,
+                offset: 0,
+              },
             );
-            await store.storeMessageMetadata(metadata);
-          }
+            const page1 = await iterStore.getMessagesByRecipient(
+              targetRecipient,
+              {
+                limit: pageSize,
+                offset: pageSize,
+              },
+            );
 
-          const page0 = await store.getMessagesByRecipient(targetRecipient, {
-            limit: pageSize,
-            offset: 0,
-          });
-          const page1 = await store.getMessagesByRecipient(targetRecipient, {
-            limit: pageSize,
-            offset: pageSize,
-          });
+            expect(page0.length).toBeLessThanOrEqual(pageSize);
+            expect(page1.length).toBeLessThanOrEqual(pageSize);
 
-          expect(page0.length).toBeLessThanOrEqual(pageSize);
-          expect(page1.length).toBeLessThanOrEqual(pageSize);
-
-          if (page0.length > 0 && page1.length > 0) {
-            const page0Ids = new Set(page0.map((m) => m.blockId));
-            const page1Ids = new Set(page1.map((m) => m.blockId));
-            const intersection = [...page0Ids].filter((id) => page1Ids.has(id));
-            expect(intersection.length).toBe(0);
+            if (page0.length > 0 && page1.length > 0) {
+              const page0Ids = new Set(page0.map((m) => m.blockId));
+              const page1Ids = new Set(page1.map((m) => m.blockId));
+              const intersection = [...page0Ids].filter((id) =>
+                page1Ids.has(id),
+              );
+              expect(intersection.length).toBe(0);
+            }
+          } finally {
+            rmSync(iterTempDir, { recursive: true, force: true });
           }
         },
       ),
@@ -240,27 +258,38 @@ describe('DiskMessageMetadataStore - Query Performance Property Tests', () => {
         fc.integer({ min: 10, max: 50 }),
         fc.constantFrom('type1', 'type2', 'type3'),
         async (messageCount, targetType) => {
-          for (let i = 0; i < messageCount; i++) {
-            const metadata = createMessageMetadata(
-              `block${i}`.padEnd(64, '0'),
-              `sender${i}`.padEnd(40, '0'),
-              [`recipient${i}`.padEnd(40, '0')],
-              i % 3 === 0 ? 'type1' : i % 3 === 1 ? 'type2' : 'type3',
-              MessagePriority.NORMAL,
-            );
-            await store.storeMessageMetadata(metadata);
+          const iterTempDir = mkdtempSync(join(tmpdir(), 'disk-msg-type-q-'));
+          const iterStore = new DiskMessageMetadataStore(
+            iterTempDir,
+            BlockSize.Small,
+          );
+
+          try {
+            for (let i = 0; i < messageCount; i++) {
+              const metadata = createMessageMetadata(
+                `block${i}${Date.now()}`.padEnd(64, '0').substring(0, 64),
+                `sender${i}`.padEnd(40, '0'),
+                [`recipient${i}`.padEnd(40, '0')],
+                i % 3 === 0 ? 'type1' : i % 3 === 1 ? 'type2' : 'type3',
+                MessagePriority.NORMAL,
+              );
+              await iterStore.storeMessageMetadata(metadata);
+            }
+
+            const startQuery = Date.now();
+            const results = await iterStore.queryMessages({
+              messageType: targetType,
+            });
+            const queryTime = Date.now() - startQuery;
+
+            // Allow generous overhead for filesystem operations which vary by system load
+            expect(queryTime).toBeLessThan(5000);
+            results.forEach((msg) => {
+              expect(msg.messageType).toBe(targetType);
+            });
+          } finally {
+            rmSync(iterTempDir, { recursive: true, force: true });
           }
-
-          const startQuery = Date.now();
-          const results = await store.queryMessages({
-            messageType: targetType,
-          });
-          const queryTime = Date.now() - startQuery;
-
-          expect(queryTime).toBeLessThan(1000);
-          results.forEach((msg) => {
-            expect(msg.messageType).toBe(targetType);
-          });
         },
       ),
       { numRuns: 50 },

@@ -14,7 +14,7 @@ import {
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { BrightChainDb, InMemoryHeadRegistry } from '@brightchain/db';
+import { BrightDb, InMemoryHeadRegistry } from '@brightchain/db';
 import { createHash } from 'crypto';
 import * as fc from 'fast-check';
 import {
@@ -24,14 +24,14 @@ import {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-/** Create a fresh in-memory BrightChainDb for test isolation. */
-function createTestDb(): BrightChainDb {
+/** Create a fresh in-memory BrightDb for test isolation. */
+function createTestDb(): BrightDb {
   initializeBrightChain();
   ServiceLocator.setServiceProvider(ServiceProvider.getInstance());
 
   const store = new MemoryBlockStore(BlockSize.Small);
   const registry = InMemoryHeadRegistry.createIsolated();
-  return new BrightChainDb(store, {
+  return new BrightDb(store, {
     name: 'session-test-db',
     headRegistry: registry,
     poolId: 'session-test',

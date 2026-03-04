@@ -3,7 +3,7 @@
  */
 
 import {
-  BrightChainDbError,
+  BrightDbError,
   BulkWriteError,
   DocumentNotFoundError,
   IndexError,
@@ -12,14 +12,14 @@ import {
   WriteConcernError,
 } from '../lib/errors';
 
-describe('BrightChainDbError (base)', () => {
+describe('BrightDbError (base)', () => {
   it('should store message and code', () => {
-    const err = new BrightChainDbError('something broke', 42);
+    const err = new BrightDbError('something broke', 42);
     expect(err.message).toBe('something broke');
     expect(err.code).toBe(42);
-    expect(err.name).toBe('BrightChainDbError');
+    expect(err.name).toBe('BrightDbError');
     expect(err).toBeInstanceOf(Error);
-    expect(err).toBeInstanceOf(BrightChainDbError);
+    expect(err).toBeInstanceOf(BrightDbError);
   });
 });
 
@@ -30,7 +30,7 @@ describe('DocumentNotFoundError', () => {
     expect(err.documentId).toBe('abc-123');
     expect(err.code).toBe(404);
     expect(err.name).toBe('DocumentNotFoundError');
-    expect(err).toBeInstanceOf(BrightChainDbError);
+    expect(err).toBeInstanceOf(BrightDbError);
     expect(err.message).toContain('users');
     expect(err.message).toContain('abc-123');
   });
@@ -49,7 +49,7 @@ describe('ValidationError', () => {
     expect(err.validationErrors).toHaveLength(2);
     expect(err.validationErrors[0].field).toBe('name');
     expect(err.validationErrors[1].value).toBe('oops');
-    expect(err).toBeInstanceOf(BrightChainDbError);
+    expect(err).toBeInstanceOf(BrightDbError);
   });
 });
 
@@ -59,7 +59,7 @@ describe('TransactionError', () => {
     expect(err.code).toBe(251);
     expect(err.name).toBe('TransactionError');
     expect(err.sessionId).toBe('sess-1');
-    expect(err).toBeInstanceOf(BrightChainDbError);
+    expect(err).toBeInstanceOf(BrightDbError);
   });
 
   it('should work without sessionId', () => {
@@ -74,7 +74,7 @@ describe('IndexError', () => {
     expect(err.code).toBe(86);
     expect(err.name).toBe('IndexError');
     expect(err.indexName).toBe('idx_name');
-    expect(err).toBeInstanceOf(BrightChainDbError);
+    expect(err).toBeInstanceOf(BrightDbError);
   });
 });
 
@@ -85,7 +85,7 @@ describe('WriteConcernError', () => {
     expect(err.code).toBe(64);
     expect(err.name).toBe('WriteConcernError');
     expect(err.writeConcern).toEqual(wc);
-    expect(err).toBeInstanceOf(BrightChainDbError);
+    expect(err).toBeInstanceOf(BrightDbError);
   });
 });
 
@@ -102,6 +102,6 @@ describe('BulkWriteError', () => {
     expect(err.successCount).toBe(4);
     expect(err.message).toContain('2 error(s)');
     expect(err.message).toContain('4 succeeded');
-    expect(err).toBeInstanceOf(BrightChainDbError);
+    expect(err).toBeInstanceOf(BrightDbError);
   });
 });

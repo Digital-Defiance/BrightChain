@@ -461,6 +461,12 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
     'Operation not implemented',
   [BrightChainStrings.Error_StoreError_InsufficientRandomBlocksTemplate]:
     'Insufficient random blocks available: requested {REQUESTED}, available {AVAILABLE}',
+  [BrightChainStrings.Error_StoreError_FactoryNotRegistered]:
+    'Block store factory not registered for the requested store type',
+  [BrightChainStrings.Error_StoreError_CloudOperationFailedTemplate]:
+    'Cloud storage operation {OPERATION} failed for block {BLOCK_CHECKSUM}: {ORIGINAL_ERROR}',
+  [BrightChainStrings.Error_StoreError_CloudAuthenticationFailedTemplate]:
+    'Cloud storage authentication failed for operation {OPERATION}: {ORIGINAL_ERROR}',
 
   // NOTE: Secure storage errors moved to EciesStringKey in @digitaldefiance/ecies-lib
 
@@ -1260,6 +1266,87 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
     'TCBL manifest version is not supported',
 
+  // Splash
+  [BrightChainStrings.Splash_Welcome]: 'Welcome to BrightChain',
+  [BrightChainStrings.Splash_NextGenInfrastructure]:
+    'The Decentralized App Platform',
+  [BrightChainStrings.Splash_SoupCanDemo]: 'Soup Can Demo',
+  [BrightChainStrings.Splash_SoupCanDemoDescription]:
+    'See how BrightChain breaks data into blocks and mixes them with random data using XOR operations for Owner-Free Storage.',
+  [BrightChainStrings.Splash_StoragePools]: 'Storage Pools',
+  [BrightChainStrings.Splash_StoragePoolsDescription]:
+    'Explore namespace-isolated pools, content-addressed blocks, pool-scoped whitening, and cross-pool isolation guarantees.',
+  [BrightChainStrings.Splash_Messaging]: 'Messaging',
+  [BrightChainStrings.Splash_MessagingDescription]:
+    'ECIES-encrypted direct messages, pool-shared group chats, channels with visibility modes, exploding messages, and presence.',
+  [BrightChainStrings.Splash_BrightPass]: 'BrightPass',
+  [BrightChainStrings.Splash_BrightPassDescription]:
+    'Decentralised password vault with credential storage, password generation, breach checking, and TOTP/2FA setup.',
+  [BrightChainStrings.Splash_Database]: 'Database',
+  [BrightChainStrings.Splash_DatabaseDescription]:
+    'Document database with copy-on-write blocks, pool isolation, optimistic concurrency transactions, and aggregation pipelines.',
+  [BrightChainStrings.Splash_IdentityAndSecurity]: 'Identity & Security',
+  [BrightChainStrings.Splash_IdentityAndSecurityDescription]:
+    'Paper key backup, device management, identity proofs across platforms, and profile search in the public key directory.',
+  [BrightChainStrings.Splash_TrySoupCanDemo]: 'Try the Soup Can Demo',
+  [BrightChainStrings.Splash_GetStarted]: 'Get Started',
+  [BrightChainStrings.Splash_WhatIsBrightChain]: 'What is BrightChain?',
+  [BrightChainStrings.Splash_WhatIsBrightChainDescription]:
+    'BrightChain revolutionizes data storage using the "Bright Block Soup" concept. Your files are broken into blocks and mixed with random data using XOR operations, making them appear completely random while maintaining perfect security.',
+  [BrightChainStrings.Splash_OwnerFreeStorage]: 'Owner-Free Storage',
+  [BrightChainStrings.Splash_OwnerFreeStorageDescription]:
+    'Cryptographic randomness removes storage liability',
+  [BrightChainStrings.Splash_EnergyEfficient]: 'Energy Efficient',
+  [BrightChainStrings.Splash_EnergyEfficientDescription]:
+    'No wasteful proof-of-work mining',
+  [BrightChainStrings.Splash_Decentralized]: 'Decentralized',
+  [BrightChainStrings.Splash_DecentralizedDescription]:
+    'Distributed across the network',
+  [BrightChainStrings.Splash_AnonymousYetAccountable]:
+    'Anonymous yet Accountable',
+  [BrightChainStrings.Splash_AnonymousYetAccountableDescription]:
+    'Privacy with moderation capabilities',
+  [BrightChainStrings.Splash_ExploreThePlatform]: 'Explore the Platform',
+  [BrightChainStrings.Splash_InteractiveDemos]:
+    'Interactive demos showcasing BrightChain&rsquo;s core capabilities',
+  [BrightChainStrings.Splash_LaunchDemo]: 'Launch Demo',
+
+  // Splash - BrightStack
+  [BrightChainStrings.Splash_BuildWithBrightStack]: 'Build with BrightStack',
+  [BrightChainStrings.Splash_BuildWithBrightStackDescription]:
+    'BrightStack is the full-stack paradigm for decentralized apps: BrightChain + Express + React + Node. If you know the MERN stack, you already know BrightStack.',
+  [BrightChainStrings.Splash_BrightStackSubtitle]:
+    'Swap MongoDB for BrightDb. Keep everything else.',
+  [BrightChainStrings.Splash_BrightDb]: 'BrightDb',
+  [BrightChainStrings.Splash_BrightDbDescription]:
+    'MongoDB-like document database on the Owner-Free Filesystem. Full CRUD, queries, indexes, transactions, and aggregation pipelines.',
+  [BrightChainStrings.Splash_FamiliarApi]: 'Familiar API',
+  [BrightChainStrings.Splash_FamiliarApiDescription]:
+    'Same patterns you use with MongoDB — collections, find, insert, update — but every document is stored as privacy-preserving whitened blocks.',
+  [BrightChainStrings.Splash_BuiltOnBrightStack]: 'Built on BrightStack',
+  [BrightChainStrings.Splash_BuiltOnBrightStackDescription]:
+    'BrightPass, BrightMail, and BrightHub were all built on BrightStack, proving that decentralized app development can be as easy as traditional full-stack.',
+  [BrightChainStrings.Splash_OpenSource]: 'Open Source',
+  [BrightChainStrings.Splash_OpenSourceDescription]:
+    'BrightChain is fully open source. Build your own dApps on BrightStack and contribute to the decentralized future.',
+
+  // Splash - Not a Cryptocurrency
+  [BrightChainStrings.Splash_NotACryptocurrency]: 'Not a Cryptocurrency',
+  [BrightChainStrings.Splash_NotACryptocurrencyDescription]:
+    'When you hear "blockchain," you probably think Bitcoin. BrightChain is fundamentally different — there is no currency, no proof of work, and no mining. Instead of burning energy to mint coins, BrightChain values real contributions of storage and compute.',
+  [BrightChainStrings.Splash_NoCurrency]: 'No Currency',
+  [BrightChainStrings.Splash_NoCurrencyDescription]:
+    'BrightChain has no coin, no token, and no speculative asset. It is infrastructure, not finance.',
+  [BrightChainStrings.Splash_NoMining]: 'No Mining',
+  [BrightChainStrings.Splash_NoMiningDescription]:
+    'No proof of work, no wasted energy. Every cycle of computation serves a useful purpose.',
+  [BrightChainStrings.Splash_Joules]: 'Joules, Not Coins',
+  [BrightChainStrings.Splash_JoulesDescription]:
+    'Contributions of storage and compute are tracked in Joules — a unit tied to real-world energy costs, not market speculation.',
+  [BrightChainStrings.Splash_RealWorldValue]: 'Real-World Value',
+  [BrightChainStrings.Splash_RealWorldValueDescription]:
+    'Joule values are set by formula based on actual costs, and we refine that formula over time — no trading, no volatility.',
+
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'Your Dashboard',
   [BrightChainStrings.Dashboard_EnergyBalance]: 'Energy Balance',
@@ -1270,11 +1357,9 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Dashboard_EarnedDescription]:
     'Total earned from providing resources',
   [BrightChainStrings.Dashboard_EnergySpent]: 'Energy Spent',
-  [BrightChainStrings.Dashboard_SpentDescription]:
-    'Total spent on operations',
+  [BrightChainStrings.Dashboard_SpentDescription]: 'Total spent on operations',
   [BrightChainStrings.Dashboard_Loading]: 'Loading...',
-  [BrightChainStrings.Dashboard_FailedToLoadBalance]:
-    'Failed to load balance',
+  [BrightChainStrings.Dashboard_FailedToLoadBalance]: 'Failed to load balance',
   [BrightChainStrings.Dashboard_FailedToLoadReputation]:
     'Failed to load reputation',
   [BrightChainStrings.Dashboard_FailedToLoadData]: 'Failed to load data',
@@ -1285,8 +1370,7 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.BrightMail_Inbox_Empty]: 'No emails yet',
   [BrightChainStrings.BrightMail_Inbox_Error]: 'Failed to load inbox',
   [BrightChainStrings.BrightMail_Inbox_Retry]: 'Retry',
-  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]:
-    '{COUNT} unread',
+  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]: '{COUNT} unread',
   [BrightChainStrings.BrightMail_Compose_Title]: 'Compose',
   [BrightChainStrings.BrightMail_Compose_To]: 'To',
   [BrightChainStrings.BrightMail_Compose_Cc]: 'Cc',

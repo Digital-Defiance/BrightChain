@@ -247,7 +247,7 @@ describe('Bug Condition Exploration — Property 1: Member Init Service Never Ca
      * **Validates: Requirements 1.1, 2.1, 2.3**
      *
      * For any valid dev pool name, after connect() + initializeDevStore(),
-     * the member_index collection in the BrightChainDb should contain
+     * the member_index collection in the BrightDb should contain
      * documents for system, admin, and member users.
      *
      * On UNFIXED code: initializeDevStore() is a no-op, so no documents
@@ -270,7 +270,7 @@ describe('Bug Condition Exploration — Property 1: Member Init Service Never Ca
 
           // After initializeDevStore(), the database should contain
           // member index documents for system, admin, and member users.
-          const db = plugin.brightChainDb;
+          const db = plugin.brightDb;
           const collection = db.collection<IMemberIndexDocument>(
             MEMBER_INDEX_COLLECTION,
           );
@@ -340,7 +340,7 @@ describe('Bug Condition Exploration — Property 1: Member Init Service Never Ca
       // In production mode, initializeDevStore() is NOT called by the upstream
       // lifecycle. The fix should add a seeding path that runs after connect().
       // For now, we check if the database has member index documents.
-      const db = plugin.brightChainDb;
+      const db = plugin.brightDb;
       const collection = db.collection<IMemberIndexDocument>(
         MEMBER_INDEX_COLLECTION,
       );

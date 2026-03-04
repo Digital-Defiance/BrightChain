@@ -1,5 +1,5 @@
 /**
- * Common types used throughout brightchain-db
+ * Common types used throughout BrightDB
  */
 
 import type { StoreLock } from './storeLock';
@@ -87,9 +87,9 @@ export type ProjectionSpec<T = BsonDocument> = {
 } & Record<string, 1 | 0>;
 
 /**
- * Index specification: 1 = ascending, -1 = descending
+ * Index specification: 1 = ascending, -1 = descending, 'text' = text index
  */
-export type IndexSpec = Record<string, 1 | -1>;
+export type IndexSpec = Record<string, 1 | -1 | 'text'>;
 
 /**
  * Options for index creation

@@ -146,6 +146,10 @@ class InMemoryPooledBlockStore implements IPooledBlockStore {
     return BlockSize.Small;
   }
 
+  get supportedBlockSizes(): readonly BlockSize[] {
+    return [BlockSize.Small];
+  }
+
   // ── Pool-Scoped Operations ──
 
   async hasInPool(pool: PoolId, hash: string): Promise<boolean> {
@@ -324,7 +328,10 @@ class InMemoryPooledBlockStore implements IPooledBlockStore {
     this.metadata.delete(hex);
   }
 
-  async getRandomBlocks(_count: number): Promise<Checksum[]> {
+  async getRandomBlocks(
+    _count: number,
+    _blockSize: BlockSize,
+  ): Promise<Checksum[]> {
     return [];
   }
 

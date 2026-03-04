@@ -642,6 +642,7 @@ describe('BrightPass API — Sharing', () => {
 describe('BrightPass API — Emergency Access', () => {
   let token: string;
   let trusteeMemberId: string;
+  let trusteeMemberId2: string;
   let vaultId: string;
 
   beforeAll(async () => {
@@ -650,6 +651,9 @@ describe('BrightPass API — Emergency Access', () => {
 
     const trustee = await registerUser('trustee');
     trusteeMemberId = trustee.memberId;
+
+    const trustee2 = await registerUser('trustee2');
+    trusteeMemberId2 = trustee2.memberId;
 
     const vaultRes = await axios.post(
       `${BASE}/vaults`,
@@ -675,8 +679,8 @@ describe('BrightPass API — Emergency Access', () => {
     const res = await axios.post(
       `${BASE}/vaults/${vaultId}/emergency-access`,
       {
-        threshold: 1,
-        trustees: [trusteeMemberId],
+        threshold: 2,
+        trustees: [trusteeMemberId, trusteeMemberId2],
       },
       authHeader(token),
     );

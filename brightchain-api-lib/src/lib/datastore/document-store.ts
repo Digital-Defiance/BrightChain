@@ -19,9 +19,8 @@ export interface QueryResult<T extends QueryResultType> {
   ): Promise<TResult1 | TResult2>;
 }
 
-export interface QueryBuilder<
-  T extends QueryResultType,
-> extends QueryResult<T> {
+export interface QueryBuilder<T extends QueryResultType>
+  extends QueryResult<T> {
   select(_: unknown): QueryBuilder<T>;
   populate(_: unknown): QueryBuilder<T>;
   sort(_: unknown): QueryBuilder<T>;

@@ -11,6 +11,11 @@
  * Requirements: 4.10, 14.4
  */
 
+import type {
+  EntryPropertyRecord,
+  IDecryptedVault,
+  VaultMetadata,
+} from '@brightchain/brightchain-lib';
 import React, {
   createContext,
   useCallback,
@@ -19,11 +24,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import type {
-  EntryPropertyRecord,
-  IDecryptedVault,
-  VaultMetadata,
-} from '@brightchain/brightchain-lib';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
 
 /** Default inactivity timeout in milliseconds (15 minutes). */
@@ -96,8 +96,10 @@ export const BrightPassProvider: React.FC<BrightPassProviderProps> = ({
 
   const unlockVault = useCallback(
     async (vaultId: string, masterPassword: string): Promise<void> => {
-      const decrypted: IDecryptedVault<string> =
-        await brightPassApi.openVault(vaultId, masterPassword);
+      const decrypted: IDecryptedVault<string> = await brightPassApi.openVault(
+        vaultId,
+        masterPassword,
+      );
 
       // Build metadata from the decrypted response. The API returns a flat
       // IDecryptedVault<string>; we reconstruct VaultMetadata for consumers.

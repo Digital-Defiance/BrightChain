@@ -24,8 +24,7 @@ export function generateCredentials(): {
   email: string;
   password: string;
 } {
-  const id =
-    Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   return {
     username: `e2e_${id}`,
     email: `e2e_${id}@test.brightchain.local`,

@@ -27,8 +27,8 @@ import {
 } from '@mui/material';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
+import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 
 /**
  * Pure function to classify password strength based on entropy bits.

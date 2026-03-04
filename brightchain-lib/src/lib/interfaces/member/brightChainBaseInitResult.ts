@@ -9,7 +9,7 @@ import { IBrightChainMemberInitInput } from './brightChainMemberInitInput';
  * (IBrightChainInitResult) extends this with all flat credential fields.
  *
  * The `db` field is typed as a generic `TDb` (defaulting to `unknown`)
- * rather than importing `BrightChainDb` directly. This avoids a circular
+ * rather than importing `BrightDb` directly. This avoids a circular
  * dependency: brightchain-db depends on brightchain-lib, so brightchain-lib
  * must NOT import from brightchain-db.
  */
@@ -25,7 +25,7 @@ export interface IBrightChainBaseInitResult<
   /** Number of candidate members skipped because they were already present. */
   skippedCount: number;
   /**
-   * The initialised BrightChainDb instance.
+   * The initialised BrightDb instance.
    * Typed as TDb to avoid a circular dependency with brightchain-db.
    */
   db: TDb;

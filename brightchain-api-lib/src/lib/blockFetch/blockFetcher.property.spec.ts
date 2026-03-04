@@ -180,6 +180,9 @@ class MockStore {
   get blockSize(): number {
     return 0;
   }
+  get supportedBlockSizes(): readonly number[] {
+    return [];
+  }
   async has(_key: string): Promise<boolean> {
     return false;
   }

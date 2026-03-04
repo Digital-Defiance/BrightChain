@@ -11,7 +11,7 @@
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import { MockBlockStore } from './helpers/mockBlockStore';
 
@@ -19,11 +19,11 @@ import { MockBlockStore } from './helpers/mockBlockStore';
 function makeCBLIndex(): {
   index: CBLIndex;
   store: MockBlockStore;
-  db: BrightChainDb;
+  db: BrightDb;
 } {
   const store = new MockBlockStore();
   const registry = InMemoryHeadRegistry.createIsolated();
-  const db = new BrightChainDb(store as any, {
+  const db = new BrightDb(store as any, {
     name: 'testdb',
     headRegistry: registry,
   });

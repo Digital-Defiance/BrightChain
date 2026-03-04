@@ -134,6 +134,10 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
     return this._blockSize;
   }
 
+  public get supportedBlockSizes(): readonly BlockSize[] {
+    return [this._blockSize];
+  }
+
   /**
    * Get the current session ID
    */
@@ -248,7 +252,10 @@ export class SessionIsolatedMemoryBlockStore implements IBlockStore {
   /**
    * Get random block checksums from the store
    */
-  public async getRandomBlocks(count: number): Promise<Checksum[]> {
+  public async getRandomBlocks(
+    count: number,
+    blockSize: BlockSize,
+  ): Promise<Checksum[]> {
     const allKeys = Array.from(this.blocks.keys());
     const result: Checksum[] = [];
 

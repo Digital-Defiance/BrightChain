@@ -34,7 +34,7 @@ describe('MemberStore Integration Tests - End-to-End Member Lifecycle', () => {
 
     // Create member store with memory block store
     blockStore = BlockStoreFactory.createMemoryStore({
-      blockSize: BlockSize.Small,
+      supportedBlockSizes: [BlockSize.Small],
     });
     memberStore = new MemberStore<GuidV4Uint8Array>(blockStore);
   });

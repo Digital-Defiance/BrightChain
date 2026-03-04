@@ -17,9 +17,12 @@ import {
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { SecureString } from '@digitaldefiance/ecies-lib';
+import { EmailString, MemberType, SecureString } from '@digitaldefiance/ecies-lib';
+import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
+import { SystemUserService } from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
 import * as jwt from 'jsonwebtoken';
+import { AppConstants } from '../../lib/appConstants';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { AuthService } from '../../lib/services/auth';
 import { EmailService } from '../../lib/services/email';
@@ -39,7 +42,7 @@ function createIsolatedAuthService(): AuthService {
 
   const mockApp = {
     environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
+    constants: AppConstants,
     ready: true,
     services: {},
     plugins: {},
@@ -63,6 +66,17 @@ function createIsolatedAuthService(): AuthService {
       /* noop */
     },
   } as unknown as EmailService;
+
+  // Pre-populate the SystemUserService singleton
+  (SystemUserService as any)['systemUser'] = null;
+  const ecies = ServiceProvider.getInstance().eciesService as unknown as ECIESService;
+  const { member: sysUser } = Member.newMember(
+    ecies,
+    MemberType.System,
+    AppConstants.SystemUser,
+    new EmailString(AppConstants.SystemEmail),
+  );
+  SystemUserService.setSystemUser(sysUser, AppConstants);
 
   return new AuthService(
     mockApp,
@@ -323,7 +337,7 @@ describe('Property 8: Profile retrieval completeness', () => {
 
     const mockApp = {
       environment: { mongo: { useTransactions: false }, debug: false },
-      constants: {},
+      constants: AppConstants,
       ready: true,
       services: {},
       plugins: {},
@@ -347,6 +361,17 @@ describe('Property 8: Profile retrieval completeness', () => {
         /* noop */
       },
     } as unknown as EmailService;
+
+    // Pre-populate the SystemUserService singleton
+    (SystemUserService as any)['systemUser'] = null;
+    const ecies = ServiceProvider.getInstance().eciesService as unknown as ECIESService;
+    const { member: sysUser } = Member.newMember(
+      ecies,
+      MemberType.System,
+      AppConstants.SystemUser,
+      new EmailString(AppConstants.SystemEmail),
+    );
+    SystemUserService.setSystemUser(sysUser, AppConstants);
 
     const authService = new AuthService(
       mockApp,
@@ -560,7 +585,7 @@ describe('Property 9: Profile settings update persistence round-trip', () => {
 
     const mockApp = {
       environment: { mongo: { useTransactions: false }, debug: false },
-      constants: {},
+      constants: AppConstants,
       ready: true,
       services: {},
       plugins: {},
@@ -584,6 +609,17 @@ describe('Property 9: Profile settings update persistence round-trip', () => {
         /* noop */
       },
     } as unknown as EmailService;
+
+    // Pre-populate the SystemUserService singleton
+    (SystemUserService as any)['systemUser'] = null;
+    const ecies = ServiceProvider.getInstance().eciesService as unknown as ECIESService;
+    const { member: sysUser } = Member.newMember(
+      ecies,
+      MemberType.System,
+      AppConstants.SystemUser,
+      new EmailString(AppConstants.SystemEmail),
+    );
+    SystemUserService.setSystemUser(sysUser, AppConstants);
 
     const authService = new AuthService(
       mockApp,

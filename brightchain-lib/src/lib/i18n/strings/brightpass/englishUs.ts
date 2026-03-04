@@ -93,8 +93,7 @@ export const BrightPassAmericanEnglishStrings: StringsCollection<BrightPassStrin
     [BrightPassStrings.VaultList_ConfirmDelete]: 'Delete Vault',
     [BrightPassStrings.VaultList_ConfirmDeleteMessage]:
       'Enter your master password to delete vault "{NAME}". This action cannot be undone.',
-    [BrightPassStrings.VaultList_EnterMasterPassword]:
-      'Enter master password',
+    [BrightPassStrings.VaultList_EnterMasterPassword]: 'Enter master password',
     [BrightPassStrings.VaultList_Cancel]: 'Cancel',
     [BrightPassStrings.VaultList_Confirm]: 'Confirm',
     [BrightPassStrings.VaultList_Unlock]: 'Unlock',
@@ -156,11 +155,15 @@ export const BrightPassAmericanEnglishStrings: StringsCollection<BrightPassStrin
     [BrightPassStrings.Emergency_Title]: 'Emergency Access',
     [BrightPassStrings.Emergency_Configure]: 'Configure',
     [BrightPassStrings.Emergency_Recover]: 'Recover',
-    [BrightPassStrings.Emergency_Threshold]: 'Threshold (minimum trustees required)',
-    [BrightPassStrings.Emergency_Trustees]: 'Trustee member IDs (comma-separated)',
+    [BrightPassStrings.Emergency_Threshold]:
+      'Threshold (minimum trustees required)',
+    [BrightPassStrings.Emergency_Trustees]:
+      'Trustee member IDs (comma-separated)',
     [BrightPassStrings.Emergency_Shares]: 'Encrypted share {INDEX}',
-    [BrightPassStrings.Emergency_InsufficientShares]: 'Insufficient shares. At least {THRESHOLD} shares are required.',
-    [BrightPassStrings.Emergency_InvalidThreshold]: 'Threshold must be between 1 and the number of trustees.',
+    [BrightPassStrings.Emergency_InsufficientShares]:
+      'Insufficient shares. At least {THRESHOLD} shares are required.',
+    [BrightPassStrings.Emergency_InvalidThreshold]:
+      'Threshold must be between 1 and the number of trustees.',
     [BrightPassStrings.Emergency_Close]: 'Close',
     [BrightPassStrings.Emergency_Error]: 'An error occurred. Please try again.',
     [BrightPassStrings.Emergency_Success]: 'Operation completed successfully.',
@@ -171,7 +174,8 @@ export const BrightPassAmericanEnglishStrings: StringsCollection<BrightPassStrin
     [BrightPassStrings.Share_Add]: 'Add',
     [BrightPassStrings.Share_Revoke]: 'Revoke',
     [BrightPassStrings.Share_CurrentRecipients]: 'Current Recipients',
-    [BrightPassStrings.Share_NoRecipients]: 'This vault is not shared with anyone yet.',
+    [BrightPassStrings.Share_NoRecipients]:
+      'This vault is not shared with anyone yet.',
     [BrightPassStrings.Share_Close]: 'Close',
     [BrightPassStrings.Share_Error]: 'An error occurred. Please try again.',
 
@@ -182,11 +186,14 @@ export const BrightPassAmericanEnglishStrings: StringsCollection<BrightPassStrin
     [BrightPassStrings.Import_Import]: 'Import',
     [BrightPassStrings.Import_Close]: 'Close',
     [BrightPassStrings.Import_Summary]: 'Import Summary',
-    [BrightPassStrings.Import_Imported]: '{COUNT} entries imported successfully',
+    [BrightPassStrings.Import_Imported]:
+      '{COUNT} entries imported successfully',
     [BrightPassStrings.Import_Skipped]: '{COUNT} entries skipped',
     [BrightPassStrings.Import_Errors]: 'Row {INDEX}: {MESSAGE}',
-    [BrightPassStrings.Import_InvalidFormat]: 'The uploaded file does not match the selected format.',
-    [BrightPassStrings.Import_Error]: 'An error occurred during import. Please try again.',
+    [BrightPassStrings.Import_InvalidFormat]:
+      'The uploaded file does not match the selected format.',
+    [BrightPassStrings.Import_Error]:
+      'An error occurred during import. Please try again.',
 
     // Errors
     [BrightPassStrings.Error_InvalidMasterPassword]: 'Invalid master password.',

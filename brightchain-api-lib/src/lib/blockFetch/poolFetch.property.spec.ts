@@ -181,6 +181,9 @@ class MockPooledStore {
   get blockSize(): number {
     return 0;
   }
+  get supportedBlockSizes(): readonly number[] {
+    return [];
+  }
 
   async has(key: string): Promise<boolean> {
     return this.poolBlocks.has(key);

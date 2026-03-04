@@ -1,0 +1,9 @@
+{
+  "name": "walkthroughs-docs-tests",
+  "version": "1.0.0",
+  "description": "Tests for walkthroughs documentation code examples.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  }
+}

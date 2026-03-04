@@ -247,7 +247,7 @@ export * from './stores/energyLedger';
  */
 export {
   // db errors (ValidationError renamed to avoid collision with top-level ValidationError)
-  BrightChainDbError,
+  BrightDbError,
   BulkWriteError,
   // collection
   Collection,

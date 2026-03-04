@@ -1,5 +1,5 @@
 /**
- * Express middleware/router for BrightChainDb.
+ * Express middleware/router for BrightDB.
  *
  * Provides a REST API for interacting with the document database:
  *
@@ -26,7 +26,7 @@
  */
 
 import type { Request, Response, Router } from 'express';
-import { BrightChainDb } from './database';
+import { BrightDb } from './database';
 
 /**
  * Options for the DB router.
@@ -39,7 +39,7 @@ export interface DbRouterOptions {
 }
 
 /**
- * Create an Express router that provides REST access to a BrightChainDb instance.
+ * Create an Express router that provides REST access to a BrightDb instance.
  *
  * @param db - The database instance
  * @param options - Router options
@@ -48,17 +48,17 @@ export interface DbRouterOptions {
  * @example
  * ```typescript
  * import express from 'express';
- * import { BrightChainDb, createDbRouter } from '@brightchain/db';
+ * import { BrightDb, createDbRouter } from '@brightchain/db';
  *
  * const app = express();
  * app.use(express.json());
  *
- * const db = new BrightChainDb(blockStore);
+ * const db = new BrightDb(blockStore);
  * app.use('/api/db', createDbRouter(db));
  * ```
  */
 export function createDbRouter(
-  db: BrightChainDb,
+  db: BrightDb,
   options?: DbRouterOptions,
 ): Router {
   // Dynamic import to avoid hard dependency on express at module level

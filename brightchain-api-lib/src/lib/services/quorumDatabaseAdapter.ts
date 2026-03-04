@@ -1,7 +1,7 @@
 /**
- * QuorumDatabaseAdapter — BrightChainDb-backed implementation of IQuorumDatabase.
+ * QuorumDatabaseAdapter — BrightDB-backed implementation of IQuorumDatabase.
  *
- * Uses a dedicated BrightChainDb instance with pool ID "quorum-system" for
+ * Uses a dedicated BrightDb instance with pool ID "quorum-system" for
  * isolated storage of all quorum-related data. Each data type is stored in
  * a separate collection.
  *
@@ -25,7 +25,7 @@ import {
   StatuteOfLimitationsConfig,
   Vote,
 } from '@brightchain/brightchain-lib';
-import type { BrightChainDb, BsonDocument } from '@brightchain/db';
+import type { BrightDb, BsonDocument } from '@brightchain/db';
 import {
   HexString,
   IIdProvider,
@@ -590,20 +590,20 @@ function deserializeOperationalState(
 // ─── QuorumDatabaseAdapter ──────────────────────────────────────────────────
 
 /**
- * BrightChainDb-backed implementation of IQuorumDatabase.
+ * BrightDB-backed implementation of IQuorumDatabase.
  *
  * Uses a dedicated pool ID ("quorum-system") for isolated storage.
  * Each data type is stored in a separate collection.
  *
  * @template TID - Platform ID type for frontend/backend DTO compatibility
  */
-export class QuorumDatabaseAdapter<
-  TID extends PlatformID = Uint8Array,
-> implements IQuorumDatabase<TID> {
-  private readonly db: BrightChainDb;
+export class QuorumDatabaseAdapter<TID extends PlatformID = Uint8Array>
+  implements IQuorumDatabase<TID>
+{
+  private readonly db: BrightDb;
   private readonly idProvider: IIdProvider<TID>;
 
-  constructor(db: BrightChainDb, idProvider: IIdProvider<TID>) {
+  constructor(db: BrightDb, idProvider: IIdProvider<TID>) {
     this.db = db;
     this.idProvider = idProvider;
   }

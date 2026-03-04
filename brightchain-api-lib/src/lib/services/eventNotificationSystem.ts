@@ -6,7 +6,6 @@ import {
   IMessageMetadata,
   PresenceStatus,
 } from '@brightchain/brightchain-lib';
-import { WebSocket } from 'ws';
 
 export enum MessageEventType {
   MESSAGE_STORED = 'message:stored',
@@ -90,6 +89,20 @@ export interface IEventFilter {
 }
 
 /**
+ * Interface for broadcasting system events to connected clients.
+ * Implemented by ClientWebSocketServer to unify all WebSocket delivery
+ * through a single connection per client.
+ */
+export interface ISystemEventBroadcaster {
+  /**
+   * Broadcast a system event to all connected clients whose subscriptions
+   * match the event. The broadcaster is responsible for serialisation and
+   * filter matching.
+   */
+  broadcastSystemEvent(event: SystemEvent, filter?: IEventFilter): void;
+}
+
+/**
  * Event Notification System for real-time message, block, and partition updates
  *
  * Supports:
@@ -97,44 +110,73 @@ export interface IEventFilter {
  * - Block events: availability_changed, replicated
  * - Partition events: entered, exited
  *
+ * Delegates WebSocket delivery to an ISystemEventBroadcaster (typically
+ * ClientWebSocketServer) so that all real-time events flow through a
+ * single unified WebSocket connection per client.
+ *
  * @requirements 4.5, 5.2, 5.4
  */
 export class EventNotificationSystem {
-  private subscriptions = new Map<WebSocket, IEventFilter>();
+  private broadcaster: ISystemEventBroadcaster | null = null;
   private eventHistory: SystemEvent[] = [];
   private readonly maxHistorySize = 1000;
   private readonly retentionMs = 24 * 60 * 60 * 1000; // 24 hours
+  /** @deprecated Legacy filter storage for backward compat with MessageEventsWebSocketHandler */
+  private legacyFilters = new Map<unknown, IEventFilter>();
 
   /**
-   * Subscribe to events
+   * Set the broadcaster that delivers events to connected clients.
+   * Called once during application startup after both EventNotificationSystem
+   * and ClientWebSocketServer are created.
    */
-  subscribe(ws: WebSocket, filter?: IEventFilter): void {
-    this.subscriptions.set(ws, filter || {});
-
-    ws.on('close', () => {
-      this.subscriptions.delete(ws);
-    });
+  setBroadcaster(broadcaster: ISystemEventBroadcaster): void {
+    this.broadcaster = broadcaster;
   }
 
   /**
-   * Unsubscribe from events
+   * Subscribe a WebSocket connection to receive events, optionally filtered.
+   * Automatically unsubscribes on WebSocket close.
    */
-  unsubscribe(ws: WebSocket): void {
-    this.subscriptions.delete(ws);
+  subscribe(ws: unknown, filter?: IEventFilter): void {
+    this.legacyFilters.set(ws, filter || {});
+    // Auto-unsubscribe on close if ws has an `on` method (i.e. is a WebSocket)
+    if (ws && typeof (ws as { on?: unknown }).on === 'function') {
+      (ws as { on: (event: string, handler: () => void) => void }).on(
+        'close',
+        () => {
+          this.legacyFilters.delete(ws);
+        },
+      );
+    }
   }
 
   /**
-   * Get the number of active subscriptions
+   * Unsubscribe a WebSocket connection from events.
+   */
+  unsubscribe(ws: unknown): void {
+    this.legacyFilters.delete(ws);
+  }
+
+  /**
+   * Get the current number of subscribed WebSocket connections.
    */
   getSubscriptionCount(): number {
-    return this.subscriptions.size;
+    return this.legacyFilters.size;
   }
 
   /**
-   * Check if a WebSocket is subscribed
+   * Check whether a WebSocket is currently subscribed.
    */
-  isSubscribed(ws: WebSocket): boolean {
-    return this.subscriptions.has(ws);
+  isSubscribed(ws: unknown): boolean {
+    return this.legacyFilters.has(ws);
+  }
+
+  /**
+   * Get the filter for a legacy subscriber (used by MessageEventsWebSocketHandler).
+   * @deprecated Will be removed when MessageEventsWebSocketHandler is retired.
+   */
+  getFilter(ws: unknown): IEventFilter | undefined {
+    return this.legacyFilters.get(ws);
   }
 
   /**
@@ -535,17 +577,46 @@ export class EventNotificationSystem {
   }
 
   private broadcastEvent(event: SystemEvent): void {
-    for (const [ws, filter] of this.subscriptions.entries()) {
-      if (
-        this.matchesFilter(event, filter) &&
-        ws.readyState === WebSocket.OPEN
-      ) {
-        ws.send(JSON.stringify(event));
+    // Delegate to external broadcaster if set
+    if (this.broadcaster) {
+      this.broadcaster.broadcastSystemEvent(event);
+    }
+
+    // Send directly to all subscribed WebSocket connections
+    const serialized = JSON.stringify(event);
+    for (const [ws, filter] of this.legacyFilters) {
+      const socket = ws as {
+        readyState?: number;
+        send?: (data: string) => void;
+      };
+      // Only send to open connections (readyState 1 = OPEN)
+      if (socket.readyState !== 1) continue;
+      // Apply filter if present
+      if (filter && Object.keys(filter).length > 0) {
+        if (!this.matchesFilter(event, filter)) continue;
+      }
+      if (typeof socket.send === 'function') {
+        socket.send(serialized);
       }
     }
   }
 
-  private matchesFilter(event: SystemEvent, filter: IEventFilter): boolean {
+  /**
+   * Check whether an event matches a given filter.
+   * Public so that broadcasters can reuse the same filter logic.
+   */
+  matchesFilter(event: SystemEvent, filter: IEventFilter): boolean {
+    return EventNotificationSystem.matchesFilterStatic(event, filter);
+  }
+
+  /**
+   * Static version of matchesFilter for use by broadcasters that don't
+   * hold an EventNotificationSystem instance.
+   */
+  static matchesFilterStatic(
+    event: SystemEvent,
+    filter: IEventFilter,
+  ): boolean {
     // Check event type filter
     if (filter.types && filter.types.length > 0) {
       if (!filter.types.includes(event.type as EventType)) {
@@ -554,7 +625,7 @@ export class EventNotificationSystem {
     }
 
     // For message events, check senderId and recipientId
-    if (this.isMessageEvent(event)) {
+    if (EventNotificationSystem.isMessageEventStatic(event)) {
       if (filter.senderId && event.metadata.senderId !== filter.senderId) {
         return false;
       }
@@ -567,13 +638,27 @@ export class EventNotificationSystem {
     }
 
     // For block events, check blockId
-    if (this.isBlockEvent(event)) {
+    if (EventNotificationSystem.isBlockEventStatic(event)) {
       if (filter.blockId && event.data.blockId !== filter.blockId) {
         return false;
       }
     }
 
     return true;
+  }
+
+  private static isMessageEventStatic(
+    event: SystemEvent,
+  ): event is IMessageEvent {
+    return Object.values(MessageEventType).includes(
+      event.type as MessageEventType,
+    );
+  }
+
+  private static isBlockEventStatic(
+    event: SystemEvent,
+  ): event is IBlockAvailabilityEvent | IBlockReplicatedEvent {
+    return Object.values(BlockEventType).includes(event.type as BlockEventType);
   }
 
   private isMessageEvent(event: SystemEvent): event is IMessageEvent {

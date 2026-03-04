@@ -26,7 +26,15 @@ import type {
  */
 export interface IBlockStore {
   /**
-   * The block size for this store
+   * The block sizes supported by this store.
+   * A store only accepts blocks whose blockSize is in this array.
+   * Different nodes may support different subsets of block sizes.
+   */
+  readonly supportedBlockSizes: readonly BlockSize[];
+
+  /**
+   * Backward-compatible getter: returns the first supported block size.
+   * @deprecated Use supportedBlockSizes instead.
    */
   readonly blockSize: BlockSize;
 
@@ -55,9 +63,11 @@ export interface IBlockStore {
   deleteData(key: Checksum): Promise<void>;
 
   /**
-   * Get random block checksums from the store
+   * Get random block checksums from the store for a specific block size.
+   * @param count - Number of random block checksums to return
+   * @param blockSize - The block size pool to draw from (must be in supportedBlockSizes)
    */
-  getRandomBlocks(count: number): Promise<Checksum[]>;
+  getRandomBlocks(count: number, blockSize: BlockSize): Promise<Checksum[]>;
 
   /**
    * Get a handle to a block (for compatibility with existing code)

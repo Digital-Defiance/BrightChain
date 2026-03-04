@@ -20,8 +20,8 @@ import {
 } from '@mui/material';
 import React, { useCallback, useState } from 'react';
 
-import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
+import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 
 /* ------------------------------------------------------------------ */
 /*  Pure helper functions — exported for property-based testing        */
@@ -80,7 +80,9 @@ export const BreachCheckWidget: React.FC<BreachCheckWidgetProps> = ({
     }
   }, [password]);
 
-  const breachMessage = result ? formatBreachMessage(result.breached, result.count) : null;
+  const breachMessage = result
+    ? formatBreachMessage(result.breached, result.count)
+    : null;
 
   return (
     <Box>

@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/db",
-  "version": "0.23.25",
+  "version": "0.24.1",
   "description": "MongoDB-like document database driver backed by BrightChain block store",
   "license": "MIT",
   "main": "./src/index.js",
@@ -13,9 +13,9 @@
     "@noble/hashes": "^1.4.0"
   },
   "peerDependencies": {
-    "@brightchain/brightchain-lib": "^0.23.25",
+    "@brightchain/brightchain-lib": "^0.24.1",
     "@digitaldefiance/branded-interface": "^0.0.5",
-    "@digitaldefiance/node-express-suite": "^4.19.15",
+    "@digitaldefiance/node-express-suite": "^4.20.0",
     "express": ">=5.0.0"
   }
 }

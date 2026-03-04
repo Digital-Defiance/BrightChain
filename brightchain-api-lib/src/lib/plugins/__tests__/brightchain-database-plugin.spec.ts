@@ -25,7 +25,7 @@ import type { DefaultBackendIdType } from '../../shared-types';
 jest.setTimeout(60_000);
 
 // Initialize BrightChain global services before any tests run.
-// The plugin's seedWithRbac() writes blocks via BrightChainDb.withTransaction,
+// The plugin's seedWithRbac() writes blocks via BrightDb.withTransaction,
 // which creates RawDataBlock instances that require the global ServiceProvider.
 beforeAll(() => {
   initializeBrightChain();
@@ -242,8 +242,8 @@ describe('Accessors throw descriptive errors when disconnected', () => {
       case 'energyStore':
         void plugin.energyStore;
         break;
-      case 'brightChainDb':
-        void plugin.brightChainDb;
+      case 'brightDb':
+        void plugin.brightDb;
         break;
       case 'database':
         void plugin.database;
@@ -257,7 +257,7 @@ describe('Accessors throw descriptive errors when disconnected', () => {
     { name: 'blockStore' },
     { name: 'memberStore' },
     { name: 'energyStore' },
-    { name: 'brightChainDb' },
+    { name: 'brightDb' },
     { name: 'database' },
   ];
 

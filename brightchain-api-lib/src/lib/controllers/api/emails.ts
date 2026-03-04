@@ -206,7 +206,9 @@ export class EmailController<
    */
   private getMessagePassingService(): MessagePassingService {
     if (!this.messagePassingService) {
-      throw new Error('MessagePassingService not initialized');
+      const error = new Error('MessagePassingService not initialized');
+      (error as any).isServiceUnavailable = true;
+      throw error;
     }
     return this.messagePassingService;
   }
@@ -698,6 +700,19 @@ export class EmailController<
     statusCode: number;
     response: ApiErrorResponse;
   } {
+    // Handle service unavailable (MessagePassingService not initialized)
+    if (error instanceof Error && (error as any).isServiceUnavailable) {
+      return {
+        statusCode: 503,
+        response: {
+          error: {
+            code: 'SERVICE_UNAVAILABLE',
+            message: 'Email service is not available. Please try again later.',
+          },
+        } as ApiErrorResponse,
+      };
+    }
+
     if (isEmailError(error)) {
       const emailError = error as EmailError;
       switch (emailError.errorType) {

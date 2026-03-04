@@ -28,7 +28,7 @@ describe('MemberStore - Profile Operations', () => {
 
     // Create member store with memory block store
     const blockStore = BlockStoreFactory.createMemoryStore({
-      blockSize: BlockSize.Small,
+      supportedBlockSizes: [BlockSize.Small],
     });
     memberStore = new MemberStore<GuidV4Uint8Array>(blockStore);
   });
@@ -158,7 +158,7 @@ describe('MemberStore - Profile Operations', () => {
     });
 
     it('should throw error for non-existent member', async () => {
-      const { member: nonExistentMember } = Member.newMember(
+      const { member: nonExistentMember } = Member.newMember<GuidV4Uint8Array>(
         eciesService,
         MemberType.User,
         'non-existent',

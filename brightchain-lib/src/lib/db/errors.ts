@@ -15,13 +15,13 @@ export type { ValidationFieldError };
 /**
  * Base class for all brightchain-db errors.
  */
-export class BrightChainDbError extends Error {
+export class BrightDbError extends Error {
   /** Numeric error code (MongoDB-style) */
   public readonly code: number;
 
   constructor(message: string, code: number) {
     super(message);
-    this.name = 'BrightChainDbError';
+    this.name = 'BrightDbError';
     this.code = code;
   }
 }
@@ -31,7 +31,7 @@ export class BrightChainDbError extends Error {
 /**
  * Thrown when a document is not found by _id.
  */
-export class DocumentNotFoundError extends BrightChainDbError {
+export class DocumentNotFoundError extends BrightDbError {
   public readonly documentId: string;
   public readonly collection: string;
 
@@ -58,7 +58,7 @@ export class DocumentNotFoundError extends BrightChainDbError {
 /**
  * Thrown when a document fails schema validation.
  */
-export class ValidationError extends BrightChainDbError {
+export class ValidationError extends BrightDbError {
   /** Field-level validation failures */
   public readonly validationErrors: ValidationFieldError[];
   public readonly collection: string;
@@ -80,7 +80,7 @@ export class ValidationError extends BrightChainDbError {
 /**
  * Thrown when a transaction operation is invalid (e.g. commit without active txn).
  */
-export class TransactionError extends BrightChainDbError {
+export class TransactionError extends BrightDbError {
   public readonly sessionId?: string;
 
   constructor(message: string, sessionId?: string) {
@@ -95,7 +95,7 @@ export class TransactionError extends BrightChainDbError {
 /**
  * Thrown when an index operation fails.
  */
-export class IndexError extends BrightChainDbError {
+export class IndexError extends BrightDbError {
   public readonly indexName?: string;
 
   constructor(message: string, indexName?: string) {
@@ -110,7 +110,7 @@ export class IndexError extends BrightChainDbError {
 /**
  * Thrown when a write concern cannot be satisfied.
  */
-export class WriteConcernError extends BrightChainDbError {
+export class WriteConcernError extends BrightDbError {
   public readonly writeConcern: WriteConcernSpec;
 
   constructor(message: string, writeConcern: WriteConcernSpec) {
@@ -135,7 +135,7 @@ export interface WriteConcernSpec {
 /**
  * Thrown when one or more operations in a bulk write fail.
  */
-export class BulkWriteError extends BrightChainDbError {
+export class BulkWriteError extends BrightDbError {
   /** The individual write errors indexed by operation position */
   public readonly writeErrors: BulkWriteOperationError[];
   /** Count of operations that succeeded */

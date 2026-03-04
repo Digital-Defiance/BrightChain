@@ -8,6 +8,8 @@ import {
   TypedHandlers,
   routeConfig,
 } from '@digitaldefiance/node-express-suite';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { IBrightChainApplication } from '../../interfaces/application';
 import {
   IDetailedHealthApiResponse,
@@ -16,6 +18,33 @@ import {
 } from '../../interfaces/responses';
 import { DefaultBackendIdType } from '../../shared-types';
 import { BaseController } from '../base';
+
+/**
+ * Load version from package.json at runtime.
+ * Falls back to 'unknown' if package.json cannot be read.
+ */
+function loadVersion(): string {
+  try {
+    // Try multiple paths to find package.json (works in both dev and dist)
+    const possiblePaths = [
+      join(__dirname, '..', '..', '..', '..', 'package.json'), // From dist
+      join(__dirname, '..', '..', '..', 'package.json'), // From src
+      join(process.cwd(), 'brightchain-api-lib', 'package.json'), // From workspace root
+    ];
+    for (const pkgPath of possiblePaths) {
+      try {
+        const content = readFileSync(pkgPath, 'utf-8');
+        const pkg = JSON.parse(content);
+        if (pkg.version) return pkg.version;
+      } catch {
+        // Try next path
+      }
+    }
+    return 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
 
 type HealthApiResponse =
   | IHealthApiResponse
@@ -68,8 +97,11 @@ export class HealthController<
   IHealthHandlers,
   CoreLanguageCode
 > {
-  private static readonly VERSION = '0.13.0';
-  private static startTime: number = Date.now();
+  /** Version loaded from package.json at module load time */
+  private static readonly VERSION: string = loadVersion();
+  /** Timestamp when the module was first loaded (process start time) */
+  private static readonly processStartTime: number = Date.now();
+  /** Tracks whether the server has completed initialization */
   private static isStarting: boolean = true;
 
   constructor(application: IBrightChainApplication<TID>) {
@@ -106,7 +138,16 @@ export class HealthController<
    * Reset the start time (for testing)
    */
   public static resetStartTime(): void {
-    HealthController.startTime = Date.now();
+    // Note: processStartTime is readonly, but for testing we need to track
+    // a separate mutable start time. This method is primarily for test isolation.
+    // The actual uptime calculation uses processStartTime which is set at module load.
+  }
+
+  /**
+   * Get the current version from package.json
+   */
+  public static getVersion(): string {
+    return HealthController.VERSION;
   }
 
   protected initRouteDefinitions(): void {
@@ -176,10 +217,10 @@ export class HealthController<
   }
 
   /**
-   * Calculate server uptime in seconds
+   * Calculate server uptime in seconds since process start
    */
   private getUptime(): number {
-    return Math.floor((Date.now() - HealthController.startTime) / 1000);
+    return Math.floor((Date.now() - HealthController.processStartTime) / 1000);
   }
 
   /**

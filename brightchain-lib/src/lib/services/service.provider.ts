@@ -25,9 +25,9 @@ import { TupleService } from './tuple.service';
 /**
  * Service provider for dependency injection
  */
-export class ServiceProvider<
-  TID extends PlatformID = Uint8Array,
-> implements IServiceProvider<TID> {
+export class ServiceProvider<TID extends PlatformID = Uint8Array>
+  implements IServiceProvider<TID>
+{
   private static instance: ServiceProvider<PlatformID> | undefined;
   public readonly idProvider: TypedIdProviderWrapper<TID>;
   public readonly checksumService: ChecksumService;

@@ -1,7 +1,7 @@
 /**
  * @fileoverview IQuorumDatabase interface.
  *
- * Abstraction over BrightChainDb with a dedicated "quorum-system" pool.
+ * Abstraction over BrightDb with a dedicated "quorum-system" pool.
  * Provides full CRUD for epochs, members, documents, proposals, votes,
  * identity records, aliases, audit log, redistribution journal,
  * statute config, operational state, transactions, and health check.
@@ -24,7 +24,7 @@ import { Vote } from '../vote';
 import { IQuorumMember } from './quorumService';
 
 /**
- * Abstraction over BrightChainDb with a dedicated "quorum-system" pool.
+ * Abstraction over BrightDb with a dedicated "quorum-system" pool.
  *
  * Implementations live in brightchain-api-lib (QuorumDatabaseAdapter).
  * All quorum data is routed through the PooledStoreAdapter for isolation.

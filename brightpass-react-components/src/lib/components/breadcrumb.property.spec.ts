@@ -22,7 +22,7 @@ jest.mock('@brightchain/brightchain-lib', () => ({
   },
 }));
 
-import { buildBreadcrumbs, BreadcrumbItem } from './BreadcrumbNav';
+import { BreadcrumbItem, buildBreadcrumbs } from './BreadcrumbNav';
 
 // ---------------------------------------------------------------------------
 // Identity translation function — returns the key as-is
@@ -54,29 +54,32 @@ const arbVaultName = fc.string({ minLength: 1, maxLength: 30 });
  * Arbitrary valid BrightPass route with optional vault name.
  * Returns [pathname, optionalVaultName].
  */
-const arbBrightPassRoute: fc.Arbitrary<[string, string | undefined]> =
-  fc.oneof(
-    // /brightpass (root)
-    fc.constant(['/brightpass', undefined] as [string, string | undefined]),
-    // /brightpass/vault/{uuid}
-    fc.tuple(arbUuid, arbVaultName).map(
+const arbBrightPassRoute: fc.Arbitrary<[string, string | undefined]> = fc.oneof(
+  // /brightpass (root)
+  fc.constant(['/brightpass', undefined] as [string, string | undefined]),
+  // /brightpass/vault/{uuid}
+  fc
+    .tuple(arbUuid, arbVaultName)
+    .map(
       ([uuid, name]) =>
         [`/brightpass/vault/${uuid}`, name] as [string, string | undefined],
     ),
-    // /brightpass/vault/{uuid}/audit
-    fc.tuple(arbUuid, arbVaultName).map(
+  // /brightpass/vault/{uuid}/audit
+  fc
+    .tuple(arbUuid, arbVaultName)
+    .map(
       ([uuid, name]) =>
         [`/brightpass/vault/${uuid}/audit`, name] as [
           string,
           string | undefined,
         ],
     ),
-    // /brightpass/tools/generator
-    fc.constant(['/brightpass/tools/generator', undefined] as [
-      string,
-      string | undefined,
-    ]),
-  );
+  // /brightpass/tools/generator
+  fc.constant(['/brightpass/tools/generator', undefined] as [
+    string,
+    string | undefined,
+  ]),
+);
 
 // ---------------------------------------------------------------------------
 // Tests

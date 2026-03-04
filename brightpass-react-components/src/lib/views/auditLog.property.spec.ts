@@ -53,26 +53,34 @@ jest.mock('../components/BreadcrumbNav', () => ({
 }));
 
 // Import AFTER mocks
+import type { AuditEntry } from './AuditLogView';
 import {
-  sortAuditEntries,
   filterAuditEntries,
   formatAuditEntry,
+  sortAuditEntries,
 } from './AuditLogView';
-import type { AuditEntry } from './AuditLogView';
 
 const ACTION_TYPES = [
-  'VAULT_CREATED', 'VAULT_OPENED', 'ENTRY_CREATED', 'ENTRY_READ',
-  'ENTRY_UPDATED', 'ENTRY_DELETED', 'VAULT_SHARED', 'VAULT_SHARE_REVOKED',
-  'EMERGENCY_CONFIGURED', 'EMERGENCY_RECOVERED',
+  'VAULT_CREATED',
+  'VAULT_OPENED',
+  'ENTRY_CREATED',
+  'ENTRY_READ',
+  'ENTRY_UPDATED',
+  'ENTRY_DELETED',
+  'VAULT_SHARED',
+  'VAULT_SHARE_REVOKED',
+  'EMERGENCY_CONFIGURED',
+  'EMERGENCY_RECOVERED',
 ];
 
 const auditEntryArb = fc.record<AuditEntry>({
   id: fc.uuid(),
-  timestamp: fc.integer({ min: 1577836800000, max: 1893456000000 }).map((ms) => new Date(ms).toISOString()),
+  timestamp: fc
+    .integer({ min: 1577836800000, max: 1893456000000 })
+    .map((ms) => new Date(ms).toISOString()),
   actionType: fc.constantFrom(...ACTION_TYPES),
   memberId: fc.uuid(),
 });
-
 
 describe('Property 16: Audit log entry rendering completeness', () => {
   it('formatAuditEntry returns non-empty formattedTimestamp and actionLabel', () => {
@@ -101,13 +109,10 @@ describe('Property 16: Audit log entry rendering completeness', () => {
 describe('Property 17: Audit log action type filtering', () => {
   it('returns all entries when filter is null', () => {
     fc.assert(
-      fc.property(
-        fc.array(auditEntryArb, { maxLength: 50 }),
-        (entries) => {
-          const filtered = filterAuditEntries(entries, null);
-          expect(filtered.length).toBe(entries.length);
-        },
-      ),
+      fc.property(fc.array(auditEntryArb, { maxLength: 50 }), (entries) => {
+        const filtered = filterAuditEntries(entries, null);
+        expect(filtered.length).toBe(entries.length);
+      }),
       { numRuns: 100 },
     );
   });
@@ -132,33 +137,27 @@ describe('Property 17: Audit log action type filtering', () => {
 describe('Property 18: Audit log chronological ordering', () => {
   it('sorts entries in reverse chronological order (newest first)', () => {
     fc.assert(
-      fc.property(
-        fc.array(auditEntryArb, { maxLength: 50 }),
-        (entries) => {
-          const sorted = sortAuditEntries(entries);
-          for (let i = 0; i < sorted.length - 1; i++) {
-            const a = new Date(sorted[i].timestamp).getTime();
-            const b = new Date(sorted[i + 1].timestamp).getTime();
-            expect(a).toBeGreaterThanOrEqual(b);
-          }
-        },
-      ),
+      fc.property(fc.array(auditEntryArb, { maxLength: 50 }), (entries) => {
+        const sorted = sortAuditEntries(entries);
+        for (let i = 0; i < sorted.length - 1; i++) {
+          const a = new Date(sorted[i].timestamp).getTime();
+          const b = new Date(sorted[i + 1].timestamp).getTime();
+          expect(a).toBeGreaterThanOrEqual(b);
+        }
+      }),
       { numRuns: 100 },
     );
   });
 
   it('preserves all entries (no entries lost or duplicated)', () => {
     fc.assert(
-      fc.property(
-        fc.array(auditEntryArb, { maxLength: 50 }),
-        (entries) => {
-          const sorted = sortAuditEntries(entries);
-          expect(sorted.length).toBe(entries.length);
-          const sortedIds = sorted.map((e) => e.id).sort();
-          const originalIds = [...entries].map((e) => e.id).sort();
-          expect(sortedIds).toEqual(originalIds);
-        },
-      ),
+      fc.property(fc.array(auditEntryArb, { maxLength: 50 }), (entries) => {
+        const sorted = sortAuditEntries(entries);
+        expect(sorted.length).toBe(entries.length);
+        const sortedIds = sorted.map((e) => e.id).sort();
+        const originalIds = [...entries].map((e) => e.id).sort();
+        expect(sortedIds).toEqual(originalIds);
+      }),
       { numRuns: 100 },
     );
   });

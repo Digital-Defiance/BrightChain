@@ -31,9 +31,7 @@ import { matchSiteUrl } from './useBrightPassAutofill';
 import { isAllowedOrigin } from './useBrightPassExtensionBridge';
 
 describe('Property 19: Autofill site URL matching', () => {
-  const alphaChar = fc.constantFrom(
-    ...'abcdefghijklmnopqrstuvwxyz'.split(''),
-  );
+  const alphaChar = fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz'.split(''));
   const domainLabel = fc
     .array(alphaChar, { minLength: 2, maxLength: 8 })
     .map((arr) => arr.join(''));
@@ -49,7 +47,9 @@ describe('Property 19: Autofill site URL matching', () => {
         fc.constantFrom('http://', 'https://'),
         fc.constantFrom('http://', 'https://'),
         (domain, proto1, proto2) => {
-          expect(matchSiteUrl(`${proto1}${domain}`, `${proto2}${domain}`)).toBe(true);
+          expect(matchSiteUrl(`${proto1}${domain}`, `${proto2}${domain}`)).toBe(
+            true,
+          );
         },
       ),
       { numRuns: 100 },
@@ -64,7 +64,10 @@ describe('Property 19: Autofill site URL matching', () => {
         domainLabel,
         (domain, path1, path2) => {
           expect(
-            matchSiteUrl(`https://${domain}/${path1}`, `https://${domain}/${path2}`),
+            matchSiteUrl(
+              `https://${domain}/${path1}`,
+              `https://${domain}/${path2}`,
+            ),
           ).toBe(true);
         },
       ),
@@ -74,14 +77,12 @@ describe('Property 19: Autofill site URL matching', () => {
 
   it('does not match when hostnames differ', () => {
     fc.assert(
-      fc.property(
-        domainArb,
-        domainArb,
-        (domain1, domain2) => {
-          fc.pre(domain1 !== domain2);
-          expect(matchSiteUrl(`https://${domain1}`, `https://${domain2}`)).toBe(false);
-        },
-      ),
+      fc.property(domainArb, domainArb, (domain1, domain2) => {
+        fc.pre(domain1 !== domain2);
+        expect(matchSiteUrl(`https://${domain1}`, `https://${domain2}`)).toBe(
+          false,
+        );
+      }),
       { numRuns: 100 },
     );
   });
@@ -135,18 +136,17 @@ describe('Property 20: PostMessage origin validation', () => {
   it('supports wildcard patterns', () => {
     const allowlist = ['https://*.example.com'];
     expect(isAllowedOrigin('https://app.example.com', allowlist)).toBe(true);
-    expect(isAllowedOrigin('https://sub.app.example.com', allowlist)).toBe(true);
+    expect(isAllowedOrigin('https://sub.app.example.com', allowlist)).toBe(
+      true,
+    );
     expect(isAllowedOrigin('https://evil.com', allowlist)).toBe(false);
   });
 
   it('rejects all origins when allowlist is empty', () => {
     fc.assert(
-      fc.property(
-        fc.string({ minLength: 1, maxLength: 50 }),
-        (origin) => {
-          expect(isAllowedOrigin(origin, [])).toBe(false);
-        },
-      ),
+      fc.property(fc.string({ minLength: 1, maxLength: 50 }), (origin) => {
+        expect(isAllowedOrigin(origin, [])).toBe(false);
+      }),
       { numRuns: 100 },
     );
   });
