@@ -259,7 +259,7 @@ describe('DiskBlockStore', () => {
 
   describe('getRandomBlocks()', () => {
     it('should return empty array when store is empty', async () => {
-      const result = await store.getRandomBlocks(5);
+      const result = await store.getRandomBlocks(5, BlockSize.Small);
       expect(result).toEqual([]);
     });
 
@@ -267,7 +267,7 @@ describe('DiskBlockStore', () => {
       const block = createTestBlock();
       await store.setData(block);
 
-      const result = await store.getRandomBlocks(1);
+      const result = await store.getRandomBlocks(1, BlockSize.Small);
       expect(result.length).toBe(1);
     });
   });

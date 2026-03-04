@@ -109,9 +109,9 @@ function ensureId(
   return doc;
 }
 
-class MemoryCollection<
-  T extends DocumentRecord,
-> implements DocumentCollection<T> {
+class MemoryCollection<T extends DocumentRecord>
+  implements DocumentCollection<T>
+{
   private readonly data: T[] = [];
 
   constructor(private readonly generateId: () => string) {}

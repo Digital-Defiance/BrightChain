@@ -7,7 +7,6 @@
  * IBaseData<TID> workspace convention.
  */
 
-import type { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
 import type {
   AuditLogEntry,
   AutofillPayload,
@@ -18,10 +17,10 @@ import type {
   IGeneratedPassword,
   ImportResult,
   ITotpCode,
-  ITotpValidation,
   VaultEntry,
   VaultMetadata,
 } from '@brightchain/brightchain-lib';
+import type { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
 
 // ─── Vault Responses ────────────────────────────────────────────
 

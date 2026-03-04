@@ -8,6 +8,10 @@
     "e2e": {
       "executor": "@nx/playwright:playwright",
       "outputs": ["{workspaceRoot}/dist/.playwright/brightchain-react-e2e"],
+      "dependsOn": [
+        "brightchain-api:build",
+        "brightchain-react:build"
+      ],
       "options": {
         "config": "brightchain-react-e2e/playwright.config.ts"
       }

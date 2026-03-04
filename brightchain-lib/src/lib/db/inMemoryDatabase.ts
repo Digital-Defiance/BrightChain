@@ -2,7 +2,7 @@
  * InMemoryDatabase – a platform-agnostic IDatabase implementation.
  *
  * Uses MemoryBlockStore and InMemoryHeadRegistry for storage, requiring
- * no Node.js APIs. This is the base class that BrightChainDb in
+ * no Node.js APIs. This is the base class that BrightDb in
  * brightchain-db extends to add disk persistence.
  *
  * Usage:
@@ -48,7 +48,7 @@ export interface InMemoryDatabaseOptions {
 /**
  * The main in-memory database driver – analogous to MongoDB's `Db` class.
  *
- * Designed to be extended by `BrightChainDb` in brightchain-db which adds
+ * Designed to be extended by `BrightDb` in brightchain-db which adds
  * persistence-specific options (dataDir, poolId, PersistentHeadRegistry).
  */
 export class InMemoryDatabase implements IDatabase {

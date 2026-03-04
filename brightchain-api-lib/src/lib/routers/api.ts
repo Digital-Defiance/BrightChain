@@ -8,10 +8,18 @@ import {
   IReconciliationService,
   PermissionService,
 } from '@brightchain/brightchain-lib';
+import {
+  IConnectionService,
+  IDiscoveryService,
+  IFeedService,
+  IMessagingService,
+  INotificationService,
+  IPostService,
+  IUserProfileService,
+} from '@brightchain/brighthub-lib';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import { ECIESService, PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
-  BackupCodeService,
   JwtService,
   KeyWrappingService,
   RoleService,
@@ -19,6 +27,13 @@ import {
 import { AppConstants } from '../appConstants';
 import { PoolDiscoveryService } from '../availability/poolDiscoveryService';
 import { BlocksController } from '../controllers/api/blocks';
+import {
+  BrightHubConnectionController,
+  BrightHubMessagingController,
+  BrightHubNotificationController,
+  BrightHubPostController,
+  BrightHubTimelineController,
+} from '../controllers/api/brighthub';
 import { BrightPassController } from '../controllers/api/brightpass';
 import { CBLController } from '../controllers/api/cbl';
 import { ChannelController } from '../controllers/api/channels';
@@ -69,6 +84,11 @@ export class ApiRouter<
   private readonly scblController: SCBLController<TID>;
   private readonly syncController: SyncController<TID>;
   private readonly userController: UserController<TID>;
+  private readonly brightHubPostController: BrightHubPostController<TID>;
+  private readonly brightHubMessagingController: BrightHubMessagingController<TID>;
+  private readonly brightHubNotificationController: BrightHubNotificationController<TID>;
+  private readonly brightHubConnectionController: BrightHubConnectionController<TID>;
+  private readonly brightHubTimelineController: BrightHubTimelineController<TID>;
   private introspectionController: IntrospectionController<TID> | null = null;
   private readonly brightchainApplication: IBrightChainApplication<TID>;
   private readonly jwtService: JwtService<TID>;
@@ -76,7 +96,6 @@ export class ApiRouter<
   private readonly roleService: RoleService<TID>;
   private readonly keyWrappingService: KeyWrappingService;
   private readonly eciesService: ECIESService<TID>;
-  private readonly backupCodeService: BackupCodeService<TID>;
   /**
    * Constructor for the API router
    */
@@ -96,12 +115,6 @@ export class ApiRouter<
       symmetricKeyMode: AppConstants.ECIES.SYMMETRIC.MODE,
     };
     this.eciesService = new ECIESService<TID>(config);
-    this.backupCodeService = new BackupCodeService<TID>(
-      application,
-      this.eciesService,
-      this.keyWrappingService,
-      this.roleService,
-    );
 
     this.userController = new UserController<TID>(application);
     this.blocksController = new BlocksController(application);
@@ -121,6 +134,21 @@ export class ApiRouter<
     this.scblController = new SCBLController(application);
     this.syncController = new SyncController(application);
 
+    // BrightHub controllers
+    this.brightHubPostController = new BrightHubPostController(application);
+    this.brightHubMessagingController = new BrightHubMessagingController(
+      application,
+    );
+    this.brightHubNotificationController = new BrightHubNotificationController(
+      application,
+    );
+    this.brightHubConnectionController = new BrightHubConnectionController(
+      application,
+    );
+    this.brightHubTimelineController = new BrightHubTimelineController(
+      application,
+    );
+
     this.router.use('/user', this.userController.router);
     this.router.use('/blocks', this.blocksController.router);
     this.router.use('/brightpass', this.brightPassController.router);
@@ -138,6 +166,19 @@ export class ApiRouter<
     this.router.use('/cbl', this.cblController.router);
     this.router.use('/scbl', this.scblController.router);
     this.router.use('/sync', this.syncController.router);
+
+    // BrightHub routes
+    this.router.use('/brighthub/posts', this.brightHubPostController.router);
+    this.router.use(
+      '/brighthub/messages',
+      this.brightHubMessagingController.router,
+    );
+    this.router.use(
+      '/brighthub/notifications',
+      this.brightHubNotificationController.router,
+    );
+    this.router.use('/brighthub', this.brightHubConnectionController.router);
+    this.router.use('/brighthub', this.brightHubTimelineController.router);
   }
 
   /**
@@ -290,6 +331,100 @@ export class ApiRouter<
    */
   public getChannelController(): typeof this.channelController {
     return this.channelController;
+  }
+
+  // ─── BrightHub service injection ─────────────────────────────────
+
+  /**
+   * Set the PostService for the BrightHub post controller.
+   * @requirements 11.1-11.5
+   */
+  public setBrightHubPostService(service: IPostService): void {
+    this.brightHubPostController.setPostService(service);
+  }
+
+  /**
+   * Set the MessagingService for the BrightHub messaging controller.
+   * @requirements 45.1-45.28
+   */
+  public setBrightHubMessagingService(service: IMessagingService): void {
+    this.brightHubMessagingController.setMessagingService(service);
+  }
+
+  /**
+   * Set the NotificationService for the BrightHub notification controller.
+   * @requirements 57.1-57.12
+   */
+  public setBrightHubNotificationService(service: INotificationService): void {
+    this.brightHubNotificationController.setNotificationService(service);
+  }
+
+  /**
+   * Set the ConnectionService for the BrightHub connection controller.
+   * @requirements 34.1-34.22
+   */
+  public setBrightHubConnectionService(service: IConnectionService): void {
+    this.brightHubConnectionController.setConnectionService(service);
+  }
+
+  /**
+   * Set the DiscoveryService for the BrightHub connection controller.
+   * @requirements 34.10
+   */
+  public setBrightHubDiscoveryService(service: IDiscoveryService): void {
+    this.brightHubConnectionController.setDiscoveryService(service);
+  }
+
+  /**
+   * Set the UserProfileService for BrightHub controllers that need it.
+   * @requirements 11.8, 34.1
+   */
+  public setBrightHubUserProfileService(service: IUserProfileService): void {
+    this.brightHubConnectionController.setUserProfileService(service);
+    this.brightHubTimelineController.setUserProfileService(service);
+  }
+
+  /**
+   * Set the FeedService for the BrightHub timeline controller.
+   * @requirements 11.6-11.11
+   */
+  public setBrightHubFeedService(service: IFeedService): void {
+    this.brightHubTimelineController.setFeedService(service);
+  }
+
+  /**
+   * Get the BrightHub post controller instance.
+   */
+  public getBrightHubPostController(): BrightHubPostController<TID> {
+    return this.brightHubPostController;
+  }
+
+  /**
+   * Get the BrightHub messaging controller instance.
+   */
+  public getBrightHubMessagingController(): BrightHubMessagingController<TID> {
+    return this.brightHubMessagingController;
+  }
+
+  /**
+   * Get the BrightHub notification controller instance.
+   */
+  public getBrightHubNotificationController(): BrightHubNotificationController<TID> {
+    return this.brightHubNotificationController;
+  }
+
+  /**
+   * Get the BrightHub connection controller instance.
+   */
+  public getBrightHubConnectionController(): BrightHubConnectionController<TID> {
+    return this.brightHubConnectionController;
+  }
+
+  /**
+   * Get the BrightHub timeline controller instance.
+   */
+  public getBrightHubTimelineController(): BrightHubTimelineController<TID> {
+    return this.brightHubTimelineController;
   }
 
   // ─── Introspection controller wiring ────────────────────────────────

@@ -73,7 +73,8 @@ export interface EducationalModeActions {
  * Educational mode context
  */
 export interface EducationalModeContextType
-  extends EducationalModeState, EducationalModeActions {}
+  extends EducationalModeState,
+    EducationalModeActions {}
 
 const EducationalModeContext = createContext<EducationalModeContextType | null>(
   null,

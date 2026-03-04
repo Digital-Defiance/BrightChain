@@ -197,6 +197,10 @@ class MockBlockStore implements IBlockStore {
     return BlockSize.Small;
   }
 
+  get supportedBlockSizes(): readonly BlockSize[] {
+    return [BlockSize.Small];
+  }
+
   async has(key: Checksum | string): Promise<boolean> {
     const keyHex = typeof key === 'string' ? key : key.toHex();
     return this.blocks.has(keyHex);
@@ -235,7 +239,10 @@ class MockBlockStore implements IBlockStore {
     this.blocks.delete(keyHex);
   }
 
-  async getRandomBlocks(_count: number): Promise<Checksum[]> {
+  async getRandomBlocks(
+    _count: number,
+    _blockSize: BlockSize,
+  ): Promise<Checksum[]> {
     return [];
   }
 

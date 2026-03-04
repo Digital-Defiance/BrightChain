@@ -40,9 +40,9 @@ export interface NetworkDocument<TID extends PlatformID = Uint8Array> {
 /**
  * Base class for network documents that will be stored in CBLs
  */
-export abstract class BaseNetworkDocument<
-  TID extends PlatformID = Uint8Array,
-> implements NetworkDocument<TID> {
+export abstract class BaseNetworkDocument<TID extends PlatformID = Uint8Array>
+  implements NetworkDocument<TID>
+{
   id: TID;
   type: 'NODE' | 'PEER' | 'BLOCK_INDEX' | 'METADATA';
   version: number;

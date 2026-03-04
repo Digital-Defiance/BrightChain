@@ -109,6 +109,12 @@ export const privateMemberProfileHydrationSchema = <
       ...(storage.backupCodes !== undefined
         ? { backupCodes: storage.backupCodes.map((c) => ({ ...c })) }
         : {}),
+      ...(storage.passwordWrappedPrivateKey !== undefined
+        ? { passwordWrappedPrivateKey: { ...storage.passwordWrappedPrivateKey } }
+        : {}),
+      ...(storage.mnemonicRecovery !== undefined
+        ? { mnemonicRecovery: storage.mnemonicRecovery }
+        : {}),
       settings: (() => {
         const { autoReplication, minRedundancy, preferredRegions, ...rest } =
           storage.settings ?? {};
@@ -185,6 +191,12 @@ export const privateMemberProfileHydrationSchema = <
         : {}),
       ...(hydrated.backupCodes !== undefined
         ? { backupCodes: hydrated.backupCodes.map((c) => ({ ...c })) }
+        : {}),
+      ...(hydrated.passwordWrappedPrivateKey !== undefined
+        ? { passwordWrappedPrivateKey: { ...hydrated.passwordWrappedPrivateKey } }
+        : {}),
+      ...(hydrated.mnemonicRecovery !== undefined
+        ? { mnemonicRecovery: hydrated.mnemonicRecovery }
         : {}),
       settings: {
         autoReplication,

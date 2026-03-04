@@ -201,7 +201,7 @@ describe('Storage Integration Tests', () => {
       }
 
       // Request random blocks
-      const randomBlocks = await blockStore.getRandomBlocks(5);
+      const randomBlocks = await blockStore.getRandomBlocks(5, blockSize);
 
       expect(randomBlocks).toBeDefined();
       expect(randomBlocks.length).toBeLessThanOrEqual(5);
@@ -224,13 +224,13 @@ describe('Storage Integration Tests', () => {
       }
 
       // Request more blocks than available
-      const randomBlocks = await blockStore.getRandomBlocks(10);
+      const randomBlocks = await blockStore.getRandomBlocks(10, blockSize);
 
       expect(randomBlocks.length).toBeLessThanOrEqual(numBlocks);
     });
 
     it('should handle zero count request gracefully', async () => {
-      const randomBlocks = await blockStore.getRandomBlocks(0);
+      const randomBlocks = await blockStore.getRandomBlocks(0, blockSize);
 
       expect(randomBlocks).toBeDefined();
       expect(randomBlocks.length).toBe(0);

@@ -7,9 +7,8 @@ import {
 import { BlockEncryptionType } from '../../enumerations/blockEncryptionType';
 import { IEphemeralBlock } from './ephemeral';
 
-export interface IEncryptedBlock<
-  TID extends PlatformID = Uint8Array,
-> extends IEphemeralBlock<TID> {
+export interface IEncryptedBlock<TID extends PlatformID = Uint8Array>
+  extends IEphemeralBlock<TID> {
   /**
    * The type of encryption used for the block
    */

@@ -3,7 +3,7 @@ import type { MemberStatusType } from '../../enumerations/memberStatusType';
 import type { BsonDocument } from '../storage/documentTypes';
 
 /**
- * Serialisable document shape for the member_index collection in BrightChainDb.
+ * Serialisable document shape for the member_index collection in BrightDb.
  * All IDs and checksums are stored as strings.
  */
 export interface IMemberIndexDocument extends BsonDocument {

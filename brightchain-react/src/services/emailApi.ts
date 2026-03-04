@@ -8,11 +8,11 @@ export {
   createEmailApiClient,
   handleApiCall,
   type EmailApiClient,
-  type MailboxInput,
-  type SendEmailParams,
-  type InboxQueryParams,
-  type ReplyParams,
   type ForwardParams,
+  type InboxQueryParams,
+  type MailboxInput,
+  type ReplyParams,
+  type SendEmailParams,
 } from '@brightchain/brightmail-react-components';
 
 export { useEmailApi } from '@brightchain/brightmail-react-components';

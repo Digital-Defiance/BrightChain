@@ -30,7 +30,7 @@ describe('MemberDocument Integration Tests', () => {
 
     // Create member store with memory block store
     const blockStore = BlockStoreFactory.createMemoryStore({
-      blockSize: BlockSize.Small,
+      supportedBlockSizes: [BlockSize.Small],
     });
     memberStore = new MemberStore(blockStore);
   });

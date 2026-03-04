@@ -7,7 +7,7 @@
  *
  * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9
  */
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import axios from 'axios';
 import fc from 'fast-check';
 import { registerViaApi, type AuthResult } from './fixtures';
@@ -218,13 +218,20 @@ test.describe('BrightPass Password Generation', () => {
   test('should generate a non-empty password (POST /api/brightpass/generate-password)', async () => {
     const res = await axios.post(
       `${BASE_URL}/api/brightpass/generate-password`,
-      { length: 16, uppercase: true, lowercase: true, numbers: true, symbols: true },
+      {
+        length: 16,
+        uppercase: true,
+        lowercase: true,
+        numbers: true,
+        symbols: true,
+      },
       authHeader(auth.token),
     );
     expect(res.status).toBe(200);
     expect(res.data.success).toBe(true);
-    expect(typeof res.data.data.password).toBe('string');
-    expect(res.data.data.password.length).toBeGreaterThan(0);
+    // API returns { password: { password: string, entropy, strength } }
+    expect(typeof res.data.data.password.password).toBe('string');
+    expect(res.data.data.password.password.length).toBeGreaterThan(0);
   });
 });
 
@@ -248,7 +255,9 @@ test.describe('BrightPass Property Tests', () => {
         // Vault names: non-empty alphanumeric strings (avoid special chars that might cause issues)
         fc.stringMatching(/^[a-zA-Z0-9 _-]{1,50}$/),
         // Master passwords: at least 8 chars with mixed content
-        fc.string({ minLength: 8, maxLength: 64 }).filter((s) => s.trim().length >= 8),
+        fc
+          .string({ minLength: 8, maxLength: 64 })
+          .filter((s) => s.trim().length >= 8),
         async (vaultName: string, masterPassword: string) => {
           // Create vault
           const createRes = await axios.post(
@@ -324,14 +333,28 @@ test.describe('BrightPass Property Tests', () => {
         // Usernames: non-empty alphanumeric
         fc.stringMatching(/^[a-zA-Z0-9_]{1,30}$/),
         // Passwords: non-empty strings
-        fc.string({ minLength: 1, maxLength: 64 }).filter((s) => s.trim().length > 0),
+        fc
+          .string({ minLength: 1, maxLength: 64 })
+          .filter((s) => s.trim().length > 0),
         // Entry titles: non-empty strings
         fc.stringMatching(/^[a-zA-Z0-9 _-]{1,50}$/),
-        async (siteUrl: string, username: string, password: string, title: string) => {
+        async (
+          siteUrl: string,
+          username: string,
+          password: string,
+          title: string,
+        ) => {
           // Create entry
           const createRes = await axios.post(
             `${BASE_URL}/api/brightpass/vaults/${propVaultId}/entries`,
-            { type: 'login', title, siteUrl, username, password, favorite: false },
+            {
+              type: 'login',
+              title,
+              siteUrl,
+              username,
+              password,
+              favorite: false,
+            },
             authHeader(auth.token),
           );
           expect(createRes.status).toBe(200);
@@ -396,7 +419,9 @@ test.describe('BrightPass Property Tests', () => {
         // Vault names
         fc.stringMatching(/^[a-zA-Z0-9 _-]{1,30}$/),
         // Master passwords
-        fc.string({ minLength: 8, maxLength: 32 }).filter((s) => s.trim().length >= 8),
+        fc
+          .string({ minLength: 8, maxLength: 32 })
+          .filter((s) => s.trim().length >= 8),
         async (vaultName: string, masterPassword: string) => {
           // Create and open a vault
           const createRes = await axios.post(
@@ -414,7 +439,14 @@ test.describe('BrightPass Property Tests', () => {
           // Create an entry in the vault
           const entryRes = await axios.post(
             `${BASE_URL}/api/brightpass/vaults/${vid}/entries`,
-            { type: 'login', title: 'del-test', siteUrl: 'https://del.test', username: 'u', password: 'p', favorite: false },
+            {
+              type: 'login',
+              title: 'del-test',
+              siteUrl: 'https://del.test',
+              username: 'u',
+              password: 'p',
+              favorite: false,
+            },
             authHeader(auth.token),
           );
           const eid = entryRes.data.data.entry.id;
@@ -441,10 +473,10 @@ test.describe('BrightPass Property Tests', () => {
           }
 
           // Delete the vault
-          await axios.delete(
-            `${BASE_URL}/api/brightpass/vaults/${vid}`,
-            { ...authHeader(auth.token), data: { masterPassword } },
-          );
+          await axios.delete(`${BASE_URL}/api/brightpass/vaults/${vid}`, {
+            ...authHeader(auth.token),
+            data: { masterPassword },
+          });
 
           // Subsequent listing should not include the vault
           const listRes = await axios.get(
@@ -497,9 +529,10 @@ test.describe('BrightPass Property Tests', () => {
           );
           expect(res.status).toBe(200);
           expect(res.data.success).toBe(true);
-          expect(typeof res.data.data.password).toBe('string');
-          expect(res.data.data.password.length).toBeGreaterThan(0);
-          expect(res.data.data.password.length).toBe(length);
+          // API returns { password: { password: string, entropy, strength } }
+          expect(typeof res.data.data.password.password).toBe('string');
+          expect(res.data.data.password.password.length).toBeGreaterThan(0);
+          expect(res.data.data.password.password.length).toBe(length);
         },
       ),
       { numRuns: 100 },

@@ -97,7 +97,8 @@ function memberTypeToRoleDTO(type: MemberType, memberId: string): IRoleDTO {
 export class BrightChainAuthenticationProvider<
   TID extends PlatformID = Buffer,
   TLanguage extends string = string,
-> implements IAuthenticationProvider<TID, TLanguage> {
+> implements IAuthenticationProvider<TID, TLanguage>
+{
   constructor(private readonly application: IBrightChainApplication<TID>) {}
 
   /** Resolve MemberStore from the service container. */
@@ -150,9 +151,7 @@ export class BrightChainAuthenticationProvider<
   ): Promise<IAuthenticatedUser<TLanguage> | null> {
     try {
       const db =
-        this.application.services.get<import('@brightchain/db').BrightChainDb>(
-          'db',
-        );
+        this.application.services.get<import('@brightchain/db').BrightDb>('db');
       if (!db) return null;
 
       const sp = ServiceProvider.getInstance<TID>();
@@ -181,7 +180,7 @@ export class BrightChainAuthenticationProvider<
         id: userId,
         accountStatus: userDoc.accountStatus ?? 'Active',
         email: userDoc.email ?? '',
-        siteLanguage: (userDoc.siteLanguage as TLanguage | undefined),
+        siteLanguage: userDoc.siteLanguage as TLanguage | undefined,
         timezone: userDoc.timezone ?? 'UTC',
         lastLogin: userDoc.lastLogin,
       };
@@ -210,6 +209,35 @@ export class BrightChainAuthenticationProvider<
       const roleDTO = memberTypeToRoleDTO(member.type, memberId);
       const settings = privateProfile?.settings ?? {};
 
+      // Check the `users` collection for settings overrides persisted by
+      // updateSettings (which writes to the DB, not the member store).
+      let dbSettings: Record<string, unknown> = {};
+      try {
+        const db =
+          this.application.services.get<import('@brightchain/db').BrightDb>(
+            'db',
+          );
+        if (db) {
+          const sp = ServiceProvider.getInstance<TID>();
+          const idHex = sp.idProvider.toString(id, 'hex');
+          const settingsCol =
+            db.collection<Record<string, unknown>>('user_settings');
+          let userDoc = await settingsCol.findOne({ _id: idHex } as never);
+          if (!userDoc) {
+            const dashed = idHex.replace(
+              /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+              '$1-$2-$3-$4-$5',
+            );
+            userDoc = await settingsCol.findOne({ _id: dashed } as never);
+          }
+          if (userDoc) {
+            dbSettings = userDoc;
+          }
+        }
+      } catch {
+        // DB lookup is best-effort; fall through to member store settings
+      }
+
       return {
         id: memberId,
         email: member.email.toString(),
@@ -217,11 +245,26 @@ export class BrightChainAuthenticationProvider<
         roles: [roleDTO],
         rolePrivileges,
         emailVerified: true, // BrightChain members are verified at creation
-        timezone: (settings['timezone'] as string) ?? 'UTC',
-        siteLanguage: (settings['siteLanguage'] as string) ?? 'en',
-        darkMode: (settings['darkMode'] as boolean) ?? false,
-        currency: (settings['currency'] as string) ?? 'USD',
-        directChallenge: (settings['directChallenge'] as boolean) ?? false,
+        timezone:
+          (dbSettings['timezone'] as string) ??
+          (settings['timezone'] as string) ??
+          'UTC',
+        siteLanguage:
+          (dbSettings['siteLanguage'] as string) ??
+          (settings['siteLanguage'] as string) ??
+          'en',
+        darkMode:
+          (dbSettings['darkMode'] as boolean) ??
+          (settings['darkMode'] as boolean) ??
+          false,
+        currency:
+          (dbSettings['currency'] as string) ??
+          (settings['currency'] as string) ??
+          'USD',
+        directChallenge:
+          (dbSettings['directChallenge'] as boolean) ??
+          (settings['directChallenge'] as boolean) ??
+          false,
         lastLogin: publicProfile?.lastActive?.toISOString(),
       };
     } catch {
@@ -242,9 +285,7 @@ export class BrightChainAuthenticationProvider<
   ): Promise<IRequestUserDTO | null> {
     try {
       const db =
-        this.application.services.get<import('@brightchain/db').BrightChainDb>(
-          'db',
-        );
+        this.application.services.get<import('@brightchain/db').BrightDb>('db');
       if (!db) return null;
 
       const sp = ServiceProvider.getInstance<TID>();
@@ -275,10 +316,7 @@ export class BrightChainAuthenticationProvider<
       }
       if (!userDoc) return null;
 
-      if (
-        userDoc.accountStatus &&
-        userDoc.accountStatus !== 'Active'
-      ) {
+      if (userDoc.accountStatus && userDoc.accountStatus !== 'Active') {
         return null;
       }
 
@@ -288,8 +326,7 @@ export class BrightChainAuthenticationProvider<
         email: userDoc.email,
         limit: 1,
       });
-      const memberType =
-        results.length > 0 ? results[0].type : MemberType.User;
+      const memberType = results.length > 0 ? results[0].type : MemberType.User;
 
       const rolePrivileges = memberTypeToRolePrivileges(memberType);
       const roleDTO = memberTypeToRoleDTO(memberType, userId);
@@ -368,10 +405,7 @@ export class BrightChainAuthenticationProvider<
     } catch (err) {
       // If getMember failed (seeded user without CBL blocks), reconstruct
       // from the mnemonic and verify the public key matches.
-      if (
-        err instanceof Error &&
-        (err.message === 'Invalid mnemonic')
-      ) {
+      if (err instanceof Error && err.message === 'Invalid mnemonic') {
         throw err;
       }
 
@@ -395,9 +429,9 @@ export class BrightChainAuthenticationProvider<
       );
 
       // Verify the derived public key matches the stored one
-      const derivedPubKeyHex = Buffer.from(
-        reconstructed.publicKey,
-      ).toString('hex');
+      const derivedPubKeyHex = Buffer.from(reconstructed.publicKey).toString(
+        'hex',
+      );
       if (derivedPubKeyHex !== storedPubKeyHex) {
         throw new Error('Invalid mnemonic');
       }

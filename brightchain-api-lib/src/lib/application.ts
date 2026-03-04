@@ -1,22 +1,27 @@
 import {
   AliasRegistry,
   AuditLogService,
+  BlockSize,
   EnergyLedger,
   IAvailabilityService,
+  IBackupCodeConstants,
   IdentitySealingPipeline,
   IdentityValidator,
   IDiscoveryProtocol,
   IReconciliationService,
   MembershipProofService,
+  MemberStore,
   QuorumStateMachine,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { BrightChainDb } from '@brightchain/db';
+import { BrightDb } from '@brightchain/db';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   debugLog,
   IApplication,
   IConstants,
+  KeyWrappingService,
+  SystemUserService,
   UpnpManager,
   Application as UpstreamApplication,
 } from '@digitaldefiance/node-express-suite';
@@ -25,6 +30,7 @@ import { GossipService } from './availability/gossipService';
 import { PoolDiscoveryService } from './availability/poolDiscoveryService';
 import { QuorumGossipHandler } from './availability/quorumGossipHandler';
 import { Constants } from './constants';
+import { SessionsController } from './controllers/api/sessions';
 import { createBlockDocumentStore } from './datastore/block-document-store-factory';
 import {
   DocumentCollection,
@@ -37,23 +43,31 @@ import { BrightChainDatabasePlugin } from './plugins/brightchain-database-plugin
 import { configureBrightChainApp } from './plugins/configure-brightchain-app';
 import { ApiRouter } from './routers/api';
 import { AppRouter } from './routers/app';
+import { createTestEmailRouter } from './routers/testEmailRouter';
 import {
   AuthService,
-  BackupCodeService,
+  BrightChainBackupCodeService,
   BrightChainSessionAdapter,
   CLIOperatorPrompt,
+  ConnectionService,
   ContentAwareBlocksService,
   ContentIngestionService,
+  DiscoveryService,
   EmailService,
+  FeedService,
   IdentityExpirationScheduler,
+  MessagingService,
+  NotificationService,
+  PostService,
   QuorumDatabaseAdapter,
   SecureKeyStorage,
+  UserProfileService,
 } from './services';
-import { FakeEmailService } from './services/fakeEmailService';
-import { createTestEmailRouter } from './routers/testEmailRouter';
 import { BrightChainAuthenticationProvider } from './services/brightchain-authentication-provider';
+import { wrapCollection } from './services/brighthub/collectionAdapter';
 import { ClientWebSocketServer } from './services/clientWebSocketServer';
 import { EventNotificationSystem } from './services/eventNotificationSystem';
+import { FakeEmailService } from './services/fakeEmailService';
 import { MessagePassingService } from './services/messagePassingService';
 import { WebSocketMessageServer } from './services/webSocketMessageServer';
 
@@ -106,8 +120,14 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   constructor(environment: Environment<TID>) {
     super(
       environment,
-      // apiRouterFactory — creates BrightChain's ApiRouter
-      (app: IApplication<TID>) => new ApiRouter<TID>(app as App<TID>),
+      // apiRouterFactory — creates BrightChain's ApiRouter and captures the reference
+      (app: IApplication<TID>) => {
+        const router = new ApiRouter<TID>(app as App<TID>);
+        // Capture the ApiRouter reference so BrightChain-specific service
+        // wiring can use it after super.start() completes.
+        (app as App<TID>).apiRouter = router;
+        return router;
+      },
       // cspConfig — undefined; BrightChain's Middlewares.init handles CSP
       undefined,
       // constants — use BrightChain-specific constants (Site: 'BrightChain', etc.)
@@ -126,6 +146,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     this.keyStorage = SecureKeyStorage.getInstance();
     this._brightchainDocumentStore = createBlockDocumentStore({
       useMemory: true,
+      blockSize: BlockSize.Medium,
     });
   }
 
@@ -142,7 +163,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   /**
    * Get a model or collection from the BrightChain document store by name.
    *
-   * If a typed Model has been registered on the BrightChainDb instance
+   * If a typed Model has been registered on the BrightDb instance
    * (via `db.model()`), returns that Model — giving callers automatic
    * hydration/dehydration. Otherwise falls back to a raw DocumentCollection.
    *
@@ -154,7 +175,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   ): DocumentCollection<U> {
     // Prefer a registered Model when available
     try {
-      const db = this._plugin.brightChainDb;
+      const db = this._plugin.brightDb;
       if (db.hasModel(modelName)) {
         // Return the Model instance — callers that know the typed shape
         // can cast to Model<TStored, TTyped>. The Model also exposes
@@ -187,6 +208,14 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     // Restore original listen to avoid side effects on subsequent calls
     this.expressApp.listen = originalListen;
 
+    // Increase HTTP keep-alive timeout to prevent ECONNRESET errors.
+    // Node.js defaults to 5s which can cause connection resets when clients
+    // (e.g. axios) reuse connections after brief idle periods between requests.
+    if (this._httpServer) {
+      this._httpServer.keepAliveTimeout = 65_000; // 65s (> typical LB 60s)
+      this._httpServer.headersTimeout = 66_000; // must be > keepAliveTimeout
+    }
+
     // ── BrightChain-specific initialization ──────────────────────────
     // After super.start(), the plugin lifecycle is complete:
     //   plugin.connect() → brightchainDatabaseInit()
@@ -204,7 +233,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     await this.keyStorage.initializeFromEnvironment();
 
     const blockStore = this._plugin.blockStore;
-    const brightChainDb = this._plugin.brightChainDb;
+    const brightDb = this._plugin.brightDb;
     const memberStore = this._plugin.memberStore;
     const energyStore = this._plugin.energyStore;
 
@@ -240,20 +269,53 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
 
     // Register services from plugin stores and additional services
     this.services.register('blockStore', () => blockStore);
-    this.services.register('db', () => brightChainDb);
+    this.services.register('db', () => brightDb);
     this.services.register('memberStore', () => memberStore);
     this.services.register('energyStore', () => energyStore);
     this.services.register('energyLedger', () => energyLedger);
     this.services.register('emailService', () => emailService);
     this.services.register('auth', () => authService);
 
-    // BackupCodeService — singleton backed by MemberStore
-    const backupCodeService = new BackupCodeService(memberStore);
+    // BrightChainBackupCodeService — singleton backed by MemberStore + crypto services
+    const serviceProvider = ServiceProvider.getInstance<TID>();
+    const eciesService = serviceProvider.eciesService;
+    const keyWrappingService = new KeyWrappingService();
+    const backupCodeService = new BrightChainBackupCodeService<TID>(
+      memberStore as MemberStore<TID>,
+      // Cast: ecies-lib ECIESService → node-ecies-lib ECIESService (structurally compatible at runtime)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      eciesService as any,
+      keyWrappingService,
+      Constants.BACKUP_CODES as IBackupCodeConstants,
+    );
     this.services.register('backupCodeService', () => backupCodeService);
 
-    // BrightChainSessionAdapter — singleton backed by BrightChainDb
-    const sessionAdapter = new BrightChainSessionAdapter(brightChainDb);
+    // Wire system user into BrightChainBackupCodeService after seeding.
+    // SystemUserService.getSystemUser() returns the node-ecies-lib Member
+    // singleton (with encryptData/decryptData) that was initialized from
+    // the SYSTEM_MNEMONIC env var during app startup.
+    try {
+      const systemUser = SystemUserService.getSystemUser(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.environment as any,
+        this.constants,
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      backupCodeService.setSystemUser(systemUser as any);
+    } catch {
+      // System user may not be available in minimal test environments
+      console.warn(
+        '[App] SystemUserService.getSystemUser() unavailable — backup code generation will fail until system user is set.',
+      );
+    }
+
+    // BrightChainSessionAdapter — singleton backed by BrightDb
+    const sessionAdapter = new BrightChainSessionAdapter(brightDb);
     this.services.register('sessionAdapter', () => sessionAdapter);
+
+    // SessionsController — handles JWT token verification for authenticated routes
+    const sessionsController = new SessionsController<TID>(this);
+    this.setController('sessions', sessionsController);
 
     // EventNotificationSystem for WebSocket events
     this.eventSystem = new EventNotificationSystem();
@@ -274,13 +336,17 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
       this.clientWsServer = new ClientWebSocketServer(
         this._httpServer,
         this.environment.jwtSecret,
-        this.eventSystem,
       );
       this.services.register('clientWsServer', () => this.clientWsServer);
+
+      // Wire EventNotificationSystem to broadcast through ClientWebSocketServer
+      // This unifies all real-time event delivery through a single WebSocket connection
+      this.eventSystem.setBroadcaster(this.clientWsServer);
+
       debugLog(
         this.environment.debug,
         'log',
-        '[ ready ] Client WebSocket server initialized',
+        '[ ready ] Client WebSocket server initialized (unified event delivery)',
       );
     }
 
@@ -289,10 +355,54 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
       this.apiRouter.setSyncEventSystem(this.eventSystem);
     }
 
+    // ── BrightHub social services initialization ────────────────────
+    if (this.apiRouter) {
+      // BrightHub services expect a Collection<T> interface with
+      // .findOne().exec(), .updateOne(filter, fields).exec() patterns.
+      // BrightDb's DocumentCollection has a different API, so we wrap
+      // each collection via CollectionAdapter (see collectionAdapter.ts).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const realApp = this as any;
+      const appForCollections = {
+        getModel<T>(name: string) {
+          return wrapCollection<T>(realApp.getModel(name));
+        },
+      };
+      const postService = new PostService(appForCollections);
+      const feedService = new FeedService(appForCollections);
+      const messagingService = new MessagingService(appForCollections);
+      const notificationService = new NotificationService(appForCollections);
+      const connectionService = new ConnectionService(appForCollections);
+      const discoveryService = new DiscoveryService(appForCollections);
+      const userProfileService = new UserProfileService(appForCollections);
+
+      this.services.register('postService', () => postService);
+      this.services.register('feedService', () => feedService);
+      this.services.register('messagingService', () => messagingService);
+      this.services.register('notificationService', () => notificationService);
+      this.services.register('connectionService', () => connectionService);
+      this.services.register('discoveryService', () => discoveryService);
+      this.services.register('userProfileService', () => userProfileService);
+
+      this.apiRouter.setBrightHubPostService(postService);
+      this.apiRouter.setBrightHubFeedService(feedService);
+      this.apiRouter.setBrightHubMessagingService(messagingService);
+      this.apiRouter.setBrightHubNotificationService(notificationService);
+      this.apiRouter.setBrightHubConnectionService(connectionService);
+      this.apiRouter.setBrightHubDiscoveryService(discoveryService);
+      this.apiRouter.setBrightHubUserProfileService(userProfileService);
+
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ ready ] BrightHub social services initialized',
+      );
+    }
+
     // ── Quorum subsystem initialization ─────────────────────────────
     // Task 23.1: Initialize QuorumDatabaseAdapter with pool ID "quorum-system"
     try {
-      const quorumDb = new BrightChainDb(blockStore, {
+      const quorumDb = new BrightDb(blockStore, {
         name: 'quorum-system',
         poolId: 'quorum-system',
       });

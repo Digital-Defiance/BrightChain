@@ -16,7 +16,9 @@ import {
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { SecureString } from '@digitaldefiance/ecies-lib';
+import { EmailString, MemberType, SecureString } from '@digitaldefiance/ecies-lib';
+import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
+import { SystemUserService } from '@digitaldefiance/node-express-suite';
 import * as bcrypt from 'bcrypt';
 import * as fc from 'fast-check';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
@@ -26,6 +28,7 @@ import {
   IValidationResult,
   validatePasswordChange,
 } from '../../lib/validation/userValidation';
+import { AppConstants } from '../../lib/appConstants';
 
 /** Arbitrary that produces valid passwords (>= 8 chars, printable ASCII). */
 const validPassword: fc.Arbitrary<string> =
@@ -83,7 +86,7 @@ function createIsolatedAuthServiceAndStore(): {
 
   const mockApp = {
     environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
+    constants: AppConstants,
     ready: true,
     services: {},
     plugins: {},
@@ -107,6 +110,17 @@ function createIsolatedAuthServiceAndStore(): {
       /* noop */
     },
   } as unknown as EmailService;
+
+  // Pre-populate the SystemUserService singleton
+  (SystemUserService as any)['systemUser'] = null;
+  const ecies = ServiceProvider.getInstance().eciesService as unknown as ECIESService;
+  const { member: sysUser } = Member.newMember(
+    ecies,
+    MemberType.System,
+    AppConstants.SystemUser,
+    new EmailString(AppConstants.SystemEmail),
+  );
+  SystemUserService.setSystemUser(sysUser, AppConstants);
 
   const authService = new AuthService(
     mockApp,

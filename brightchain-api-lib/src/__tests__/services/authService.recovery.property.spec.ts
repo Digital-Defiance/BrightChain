@@ -24,6 +24,7 @@ import * as fc from 'fast-check';
 import * as jwt from 'jsonwebtoken';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { ITokenPayload } from '../../lib/interfaces/token-payload';
+import { AppConstants } from '../../lib/appConstants';
 import { AuthService } from '../../lib/services/auth';
 import { BrightChainAuthenticationProvider } from '../../lib/services/brightchain-authentication-provider';
 import { EmailService } from '../../lib/services/email';
@@ -78,7 +79,7 @@ function createIsolatedAuthServiceAndStore(): {
       debug: false,
       jwtSecret: JWT_SECRET,
     },
-    constants: {},
+    constants: AppConstants,
     ready: true,
     services,
     plugins: {},

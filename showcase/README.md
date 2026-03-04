@@ -1,10 +1,26 @@
 # BrightChain Showcase
 
-This is the GitHub Pages showcase site for **BrightChain**, the revolutionary decentralized infrastructure platform combining advanced cryptography, distributed storage, and democratic governance. Built with React, TypeScript, and Vite.
+This is the GitHub Pages showcase site for **BrightChain** and the **BrightStack** platform — a full-stack paradigm for building decentralized applications using BrightChain + Express + React + Node.js. Built with React, TypeScript, and Vite.
 
-## About BrightChain
+## About BrightChain & BrightStack
 
-BrightChain provides a complete platform for building decentralized digital societies:
+BrightChain provides a complete platform for building decentralized applications and digital societies. With **BrightDB** (`@brightchain/db`) — a MongoDB-like document database on top of the Owner-Free Filesystem — any developer familiar with the MERN stack can build decentralized apps by simply swapping MongoDB for BrightDB. BrightDB and three production applications (BrightPass, BrightMail, BrightHub) have already been built on BrightStack, proving the platform's ease of use.
+
+### BrightStack: Build dApps the Way You Already Know
+
+BrightStack is the full-stack paradigm: **BrightChain + Express + React + Node.js**. If you know the MERN stack, you know BrightStack — just swap MongoDB for BrightDB.
+
+- **BrightDB** (`@brightchain/db`) — MongoDB-like document database on the Owner-Free Filesystem
+  - Full CRUD, rich query operators, indexes, transactions, aggregation pipelines
+  - Express middleware for instant REST endpoints
+  - Change streams for real-time subscriptions
+  - Every document stored as privacy-preserving whitened blocks
+
+- **Apps Built on BrightStack**:
+  - **BrightDB** — MongoDB-like document database on the Owner-Free Filesystem
+  - **BrightPass** — Decentralized password manager (1Password-competitive)
+  - **BrightMail** — Encrypted email with RFC 5322 compliance
+  - **BrightHub** — Collaboration platform for decentralized teams
 
 ### Foundation Layer
 - **Owner-Free File System (OFFS)** - Decentralized storage with plausible deniability and legal protection

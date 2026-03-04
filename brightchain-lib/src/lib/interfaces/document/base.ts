@@ -80,11 +80,8 @@ export interface IDocument<TStorage, _THydrated, TOperational> {
 /**
  * Document with private data support
  */
-export interface IPrivateDocument<
-  TStorage,
-  THydrated,
-  TOperational,
-> extends IDocument<TStorage, THydrated, TOperational> {
+export interface IPrivateDocument<TStorage, THydrated, TOperational>
+  extends IDocument<TStorage, THydrated, TOperational> {
   /**
    * Set private data provider
    */

@@ -1,5 +1,5 @@
 import { GuidV4Uint8Array, PlatformID } from '@digitaldefiance/ecies-lib';
-import type { IBackupCode } from '@digitaldefiance/suite-core-lib';
+import type { IStoredBackupCode } from '../userManagement';
 import type { IBrightChainMemberEntry } from './brightChainMemberEntry';
 import type { IPasswordWrappedPrivateKey } from './passwordWrappedPrivateKey';
 
@@ -24,7 +24,7 @@ export interface IBrightChainUserInitEntry<
   /** HMAC of the mnemonic for uniqueness checks */
   mnemonicHmac: string;
   /** Encrypted backup codes */
-  backupCodes: IBackupCode[];
+  backupCodes: IStoredBackupCode[];
   /** Role document _id */
   roleId: TID;
   /** User-role junction document _id */

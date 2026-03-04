@@ -4,12 +4,20 @@ import {
   IConstants,
 } from '@digitaldefiance/node-express-suite';
 
-import { BlockSize } from '@brightchain/brightchain-lib';
+import {
+  BlockSize,
+  BlockStoreType,
+  validBlockSizes,
+} from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { IUpnpConfig, UpnpConfig } from '@digitaldefiance/node-express-suite';
 import { join } from 'path';
 import { Constants } from './constants';
-import { IEnvironment } from './interfaces/environment';
+import {
+  IAzureEnvironmentConfig,
+  IEnvironment,
+  IS3EnvironmentConfig,
+} from './interfaces/environment';
 import { IEnvironmentAws } from './interfaces/environment-aws';
 import { DefaultBackendIdType } from './shared-types';
 
@@ -21,9 +29,12 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
   private _fontAwesomeKitId: string;
   private _aws: IEnvironmentAws;
   private _blockStorePath?: string;
-  private _blockStoreBlockSize: BlockSize;
+  private _blockStoreBlockSizes: BlockSize[];
   private _useMemoryDocumentStore: boolean;
   private _devDatabasePoolName: string | undefined;
+  private _blockStoreType: BlockStoreType;
+  private _azureConfig?: IAzureEnvironmentConfig;
+  private _s3Config?: IS3EnvironmentConfig;
 
   private _adminId: TID | undefined;
   public override get adminId(): TID | undefined {
@@ -82,10 +93,22 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
     this._blockStorePath =
       envObj['BRIGHTCHAIN_BLOCKSTORE_PATH'] ?? envObj['BLOCKSTORE_PATH'];
 
-    const parsedSize = envObj['BRIGHTCHAIN_BLOCKSIZE_BYTES']
-      ? Number.parseInt(envObj['BRIGHTCHAIN_BLOCKSIZE_BYTES'], 10)
-      : undefined;
-    this._blockStoreBlockSize = (parsedSize ?? BlockSize.Medium) as BlockSize;
+    const rawBlockSizes = envObj['BRIGHTCHAIN_BLOCKSIZE_BYTES'];
+    if (rawBlockSizes) {
+      const parsed = rawBlockSizes
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter((s: string) => s.length > 0)
+        .map((s: string) => Number.parseInt(s, 10) as BlockSize);
+      // Validate each parsed value is a known BlockSize
+      const validated = parsed.filter((bs: BlockSize) =>
+        validBlockSizes.includes(bs),
+      );
+      this._blockStoreBlockSizes =
+        validated.length > 0 ? validated : [BlockSize.Medium];
+    } else {
+      this._blockStoreBlockSizes = [BlockSize.Medium];
+    }
 
     this._useMemoryDocumentStore = Boolean(envObj['USE_MEMORY_DOCSTORE']);
 
@@ -104,6 +127,73 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
       ),
       region: envObj['AWS_REGION'] ?? 'us-east-1',
     };
+
+    // --- Cloud block store configuration ---
+    const rawStoreType = (
+      envObj['BRIGHTCHAIN_BLOCKSTORE_TYPE'] ?? 'disk'
+    ).toLowerCase();
+    if (
+      !Object.values(BlockStoreType).includes(rawStoreType as BlockStoreType)
+    ) {
+      throw new Error(
+        `Invalid BRIGHTCHAIN_BLOCKSTORE_TYPE "${rawStoreType}". ` +
+          `Valid values: ${Object.values(BlockStoreType).join(', ')}`,
+      );
+    }
+    this._blockStoreType = rawStoreType as BlockStoreType;
+
+    if (this._blockStoreType === BlockStoreType.AzureBlob) {
+      const connectionString = envObj['AZURE_STORAGE_CONNECTION_STRING'];
+      const accountName = envObj['AZURE_STORAGE_ACCOUNT_NAME'];
+      const containerName = envObj['AZURE_STORAGE_CONTAINER_NAME'];
+
+      const missing: string[] = [];
+      if (!connectionString && !accountName) {
+        missing.push(
+          'AZURE_STORAGE_CONNECTION_STRING or AZURE_STORAGE_ACCOUNT_NAME',
+        );
+      }
+      if (!containerName) {
+        missing.push('AZURE_STORAGE_CONTAINER_NAME');
+      }
+      if (missing.length > 0) {
+        throw new Error(
+          `Missing required environment variables for Azure block store: ${missing.join(', ')}`,
+        );
+      }
+
+      this._azureConfig = {
+        region: envObj['AWS_REGION'] ?? 'eastus',
+        containerOrBucketName: containerName!,
+        supportedBlockSizes: this._blockStoreBlockSizes,
+        connectionString: connectionString,
+        accountName: accountName,
+        accountKey: envObj['AZURE_STORAGE_ACCOUNT_KEY'],
+        useManagedIdentity:
+          !connectionString && !envObj['AZURE_STORAGE_ACCOUNT_KEY'],
+      };
+    }
+
+    if (this._blockStoreType === BlockStoreType.S3) {
+      const bucketName = envObj['AWS_S3_BUCKET_NAME'];
+
+      if (!bucketName) {
+        throw new Error(
+          'Missing required environment variable for S3 block store: AWS_S3_BUCKET_NAME',
+        );
+      }
+
+      this._s3Config = {
+        region: envObj['AWS_REGION'] ?? 'us-east-1',
+        containerOrBucketName: bucketName,
+        supportedBlockSizes: this._blockStoreBlockSizes,
+        keyPrefix: envObj['AWS_S3_KEY_PREFIX'],
+        accessKeyId: envObj['AWS_ACCESS_KEY_ID'],
+        secretAccessKey: envObj['AWS_SECRET_ACCESS_KEY'],
+        useIamRole:
+          !envObj['AWS_ACCESS_KEY_ID'] && !envObj['AWS_SECRET_ACCESS_KEY'],
+      };
+    }
 
     // Override defaults if needed
     if (!envObj['JWT_SECRET']) {
@@ -146,8 +236,19 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
     return this._blockStorePath;
   }
 
+  /**
+   * Configured block sizes for block-backed document store (plural).
+   * Parsed from the comma-separated `BRIGHTCHAIN_BLOCKSIZE_BYTES` env var.
+   */
+  public get blockStoreBlockSizes(): readonly BlockSize[] {
+    return this._blockStoreBlockSizes;
+  }
+
+  /**
+   * @deprecated Use `blockStoreBlockSizes` instead. Returns the first configured block size.
+   */
   public get blockStoreBlockSize(): BlockSize {
-    return this._blockStoreBlockSize;
+    return this._blockStoreBlockSizes[0];
   }
 
   public get useMemoryDocumentStore(): boolean {
@@ -160,5 +261,29 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
    */
   public get devDatabasePoolName(): string | undefined {
     return this._devDatabasePoolName;
+  }
+
+  /**
+   * The active block store backend type.
+   * Defaults to `BlockStoreType.Disk` when `BRIGHTCHAIN_BLOCKSTORE_TYPE` is unset.
+   */
+  public get blockStoreType(): BlockStoreType {
+    return this._blockStoreType;
+  }
+
+  /**
+   * Azure Blob Storage configuration.
+   * Only populated when `blockStoreType` is `BlockStoreType.AzureBlob`.
+   */
+  public get azureConfig(): IAzureEnvironmentConfig | undefined {
+    return this._azureConfig;
+  }
+
+  /**
+   * Amazon S3 configuration.
+   * Only populated when `blockStoreType` is `BlockStoreType.S3`.
+   */
+  public get s3Config(): IS3EnvironmentConfig | undefined {
+    return this._s3Config;
   }
 }

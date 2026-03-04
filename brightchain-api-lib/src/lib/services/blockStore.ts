@@ -5,6 +5,7 @@ import {
   Checksum,
   IBlockMetadata,
   IFecService,
+  lengthToClosestBlockSize,
   RawDataBlock,
 } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -39,12 +40,12 @@ export class BlockStoreService<
     super(application);
     const storePath =
       this.application.environment.blockStorePath ?? 'tmp/blockstore';
-    const blockSize = (
-      this.application.environment.blockStoreBlockSize
-        ? this.application.environment.blockStoreBlockSize
-        : BlockSize.Medium
-    ) as BlockSize;
-    this.store = new DiskBlockAsyncStore({ storePath, blockSize });
+    const envSizes = this.application.environment.blockStoreBlockSizes;
+    const supportedBlockSizes: readonly BlockSize[] =
+      envSizes && envSizes.length > 0
+        ? envSizes
+        : [BlockSize.Medium];
+    this.store = new DiskBlockAsyncStore({ storePath, supportedBlockSizes });
 
     // Start FEC service initialization in the background
     this.initializeFecService();
@@ -109,12 +110,34 @@ export class BlockStoreService<
     return this.store.getFecService();
   }
 
-  getBlockSize(): BlockSize {
-    return this.store.blockSize;
+  /**
+   * Get the supported block sizes for this service.
+   */
+  getSupportedBlockSizes(): readonly BlockSize[] {
+    return this.store.supportedBlockSizes;
   }
 
-  async storeBlock(data: Buffer, options?: BlockStoreOptions): Promise<string> {
-    const block = new RawDataBlock(this.store.blockSize, data);
+  /**
+   * @deprecated Use getSupportedBlockSizes() instead. Returns the first supported block size.
+   */
+  getBlockSize(): BlockSize {
+    return this.store.supportedBlockSizes[0];
+  }
+
+  async storeBlock(
+    data: Buffer,
+    options?: BlockStoreOptions,
+    blockSize?: BlockSize,
+  ): Promise<string> {
+    const resolvedSize = blockSize ?? lengthToClosestBlockSize(data.length);
+
+    if (!this.store.supportedBlockSizes.includes(resolvedSize)) {
+      throw new Error(
+        `Block size ${resolvedSize} is not supported. Supported sizes: [${this.store.supportedBlockSizes.join(', ')}]`,
+      );
+    }
+
+    const block = new RawDataBlock(resolvedSize, data);
     const blockId = block.idChecksum.toHex();
     await this.store.setData(block, options);
     return blockId;

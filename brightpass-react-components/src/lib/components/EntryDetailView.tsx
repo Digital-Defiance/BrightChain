@@ -40,8 +40,8 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
+import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 
 export interface EntryDetailViewProps {
   vaultId: string;
@@ -66,9 +66,7 @@ const EntryDetailView: React.FC<EntryDetailViewProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Track which sensitive fields are revealed
-  const [revealedFields, setRevealedFields] = useState<Set<string>>(
-    new Set(),
-  );
+  const [revealedFields, setRevealedFields] = useState<Set<string>>(new Set());
 
   // Breach check state (login entries only)
   const [breachResult, setBreachResult] = useState<IBreachCheckResult | null>(
@@ -234,9 +232,7 @@ const EntryDetailView: React.FC<EntryDetailViewProps> = ({
 
   /** Renders type-specific fields for a secure note entry. */
   const renderSecureNoteFields = (e: SecureNoteEntry) => (
-    <>
-      {renderField(t(BrightPassStrings.EntryDetail_Content), e.content)}
-    </>
+    <>{renderField(t(BrightPassStrings.EntryDetail_Content), e.content)}</>
   );
 
   /** Renders type-specific fields for a credit card entry. */
@@ -255,11 +251,7 @@ const EntryDetailView: React.FC<EntryDetailViewProps> = ({
         t(BrightPassStrings.EntryDetail_ExpirationDate),
         e.expirationDate,
       )}
-      {renderSensitiveField(
-        t(BrightPassStrings.EntryDetail_CVV),
-        e.cvv,
-        'cvv',
-      )}
+      {renderSensitiveField(t(BrightPassStrings.EntryDetail_CVV), e.cvv, 'cvv')}
     </>
   );
 

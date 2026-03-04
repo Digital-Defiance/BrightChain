@@ -1,9 +1,11 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
 /Lumen
+express-suite
 test-outputs/
 test-output.*
 brightchain-lib/.cache/
+.npmrc
 .env
 .qodo/
 
@@ -58,3 +60,5 @@ Thumbs.db
 
 #Ignore cursor AI rules
 .cursor/rules/codacy.mdc
+
+vite.config.*.timestamp*

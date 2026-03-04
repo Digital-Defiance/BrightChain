@@ -14,16 +14,14 @@ export const BrightPassMandarinStrings: StringsCollection<BrightPassStringKey> =
     [BrightPassStrings.VaultList_CreateVault]: '创建保险库',
     [BrightPassStrings.VaultList_DeleteVault]: '删除保险库',
     [BrightPassStrings.VaultList_SharedWith]: '与{COUNT}位成员共享',
-    [BrightPassStrings.VaultList_NoVaults]:
-      '暂无保险库。创建一个开始使用吧。',
+    [BrightPassStrings.VaultList_NoVaults]: '暂无保险库。创建一个开始使用吧。',
 
     // Vault Detail
     [BrightPassStrings.VaultDetail_Title]: '保险库: {NAME}',
     [BrightPassStrings.VaultDetail_AddEntry]: '添加条目',
     [BrightPassStrings.VaultDetail_LockVault]: '锁定保险库',
     [BrightPassStrings.VaultDetail_Search]: '搜索条目…',
-    [BrightPassStrings.VaultDetail_NoEntries]:
-      '暂无条目。添加一个开始使用吧。',
+    [BrightPassStrings.VaultDetail_NoEntries]: '暂无条目。添加一个开始使用吧。',
     [BrightPassStrings.VaultDetail_Favorite]: '收藏',
     [BrightPassStrings.VaultDetail_ConfirmLockTitle]: '锁定保险库？',
     [BrightPassStrings.VaultDetail_ConfirmLockMessage]:
@@ -67,10 +65,8 @@ export const BrightPassMandarinStrings: StringsCollection<BrightPassStringKey> =
     [BrightPassStrings.Breach_Title]: '泄露检查',
     [BrightPassStrings.Breach_Check]: '检查泄露',
     [BrightPassStrings.Breach_Password]: '要检查的密码',
-    [BrightPassStrings.Breach_Found]:
-      '此密码在{COUNT}次数据泄露中被发现。',
-    [BrightPassStrings.Breach_NotFound]:
-      '此密码未在任何已知数据泄露中被发现。',
+    [BrightPassStrings.Breach_Found]: '此密码在{COUNT}次数据泄露中被发现。',
+    [BrightPassStrings.Breach_NotFound]: '此密码未在任何已知数据泄露中被发现。',
 
     // Entry Detail
     [BrightPassStrings.EntryDetail_Title]: '条目详情',
@@ -119,8 +115,7 @@ export const BrightPassMandarinStrings: StringsCollection<BrightPassStringKey> =
       '输入base32密钥或otpauth:// URI',
 
     // SearchBar
-    [BrightPassStrings.SearchBar_Placeholder]:
-      '按标题、标签或URL搜索\u2026',
+    [BrightPassStrings.SearchBar_Placeholder]: '按标题、标签或URL搜索\u2026',
     [BrightPassStrings.SearchBar_FilterFavorites]: '收藏',
     [BrightPassStrings.SearchBar_NoResults]: '未找到匹配的条目',
 
@@ -131,8 +126,10 @@ export const BrightPassMandarinStrings: StringsCollection<BrightPassStringKey> =
     [BrightPassStrings.Emergency_Threshold]: '阈值（所需最少受托人数）',
     [BrightPassStrings.Emergency_Trustees]: '受托人成员ID（逗号分隔）',
     [BrightPassStrings.Emergency_Shares]: '加密份额 {INDEX}',
-    [BrightPassStrings.Emergency_InsufficientShares]: '份额不足。至少需要{THRESHOLD}个份额。',
-    [BrightPassStrings.Emergency_InvalidThreshold]: '阈值必须在1和受托人数量之间。',
+    [BrightPassStrings.Emergency_InsufficientShares]:
+      '份额不足。至少需要{THRESHOLD}个份额。',
+    [BrightPassStrings.Emergency_InvalidThreshold]:
+      '阈值必须在1和受托人数量之间。',
     [BrightPassStrings.Emergency_Close]: '关闭',
     [BrightPassStrings.Emergency_Error]: '发生错误，请重试。',
     [BrightPassStrings.Emergency_Success]: '操作成功完成。',

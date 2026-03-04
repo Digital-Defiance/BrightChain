@@ -54,9 +54,9 @@ const VALIDATION_ERROR_MESSAGES: Record<IdentityValidationErrorType, string> = {
  *
  * @template TID - Platform ID type for frontend/backend DTO compatibility
  */
-export class ContentIngestionService<
-  TID extends PlatformID = Uint8Array,
-> implements IContentIngestionService<TID> {
+export class ContentIngestionService<TID extends PlatformID = Uint8Array>
+  implements IContentIngestionService<TID>
+{
   constructor(
     private readonly identityValidator: IIdentityValidator<TID>,
     private readonly identitySealingPipeline: IIdentitySealingPipeline<TID>,

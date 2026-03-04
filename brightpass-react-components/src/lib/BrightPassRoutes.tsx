@@ -13,10 +13,10 @@
  * Requirements: 14.1, 14.2
  */
 
-import React, { lazy, Suspense } from 'react';
-import { Route, Routes } from 'react-router-dom';
 import { PrivateRoute } from '@digitaldefiance/express-suite-react-components';
 import { Box, CircularProgress } from '@mui/material';
+import React, { lazy, Suspense } from 'react';
+import { Route, Routes } from 'react-router-dom';
 import { BrightPassProvider } from './context/BrightPassProvider';
 
 // Lazy-loaded view components for code splitting.

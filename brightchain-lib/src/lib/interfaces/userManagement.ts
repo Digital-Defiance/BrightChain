@@ -41,13 +41,16 @@ export interface IRecoveryResponse<TId = string> {
 
 /**
  * A single stored backup code entry.
- * The plaintext code is never persisted — only its bcrypt hash.
+ * Matches the upstream IBackupCode shape from @digitaldefiance/suite-core-lib.
+ * The plaintext code is never persisted — only its encrypted form.
  */
 export interface IStoredBackupCode {
-  /** bcrypt hash of the plaintext code */
-  hash: string;
-  /** true once the code has been consumed */
-  used: boolean;
-  /** epoch ms when the code was generated */
-  createdAt: number;
+  /** Backup code scheme version (e.g. "1.0.0") */
+  version: string;
+  /** Hex-encoded random salt used for HKDF-SHA256 checksum and Argon2id KDF */
+  checksumSalt: string;
+  /** Hex-encoded HKDF-SHA256 checksum for constant-time validation */
+  checksum: string;
+  /** Hex-encoded ECIES-wrapped AEAD ciphertext of the user's private key */
+  encrypted: string;
 }

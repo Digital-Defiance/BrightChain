@@ -220,9 +220,15 @@ describe('ThreadView', () => {
     expect(screen.getByTestId('thread-message-msg-2')).toBeInTheDocument();
 
     // Verify chronological order: msg-1 (earlier) should appear before msg-2
-    const messages = screen.getByTestId('thread-view').querySelectorAll('[data-testid^="thread-message-"]');
-    expect(messages[0].getAttribute('data-testid')).toBe('thread-message-msg-1');
-    expect(messages[1].getAttribute('data-testid')).toBe('thread-message-msg-2');
+    const messages = screen
+      .getByTestId('thread-view')
+      .querySelectorAll('[data-testid^="thread-message-"]');
+    expect(messages[0].getAttribute('data-testid')).toBe(
+      'thread-message-msg-1',
+    );
+    expect(messages[1].getAttribute('data-testid')).toBe(
+      'thread-message-msg-2',
+    );
 
     // Verify message content
     expect(screen.getAllByText('Alice').length).toBeGreaterThanOrEqual(1);
@@ -288,7 +294,9 @@ describe('ThreadView', () => {
 
     // Email removed from view
     await waitFor(() => {
-      expect(screen.queryByTestId('thread-message-msg-del-1')).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('thread-message-msg-del-1'),
+      ).not.toBeInTheDocument();
     });
     expect(screen.getByTestId('thread-message-msg-del-2')).toBeInTheDocument();
   });

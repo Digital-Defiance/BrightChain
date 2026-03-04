@@ -1,0 +1,39 @@
+{
+  "name": "brightchain-azure-store",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "brightchain-azure-store/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:cloud"],
+  "implicitDependencies": ["brightchain-lib", "brightchain-api-lib"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/brightchain-azure-store",
+        "main": "brightchain-azure-store/src/index.ts",
+        "tsConfig": "brightchain-azure-store/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "brightchain-azure-store",
+            "glob": "*.md",
+            "output": "."
+          }
+        ]
+      },
+      "dependsOn": ["^build"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "brightchain-azure-store/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "cache": true
+    }
+  }
+}

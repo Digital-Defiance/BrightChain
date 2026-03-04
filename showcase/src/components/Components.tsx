@@ -335,8 +335,8 @@ const Components = () => {
           Capabilities
         </h2>
         <p className="components-subtitle">
-          Advanced cryptography, decentralized storage, and democratic
-          governance for the next generation of blockchain
+          The Decentralized App Platform — advanced cryptography, decentralized
+          storage, and democratic governance
         </p>
 
         <motion.div
@@ -346,19 +346,18 @@ const Components = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <h3>
-            The <em>revolutionary</em> blockchain that combines{' '}
+            BrightChain revolutionizes data storage using the{' '}
+            <em>&ldquo;Bright Block Soup&rdquo;</em> concept — combining{' '}
             <em>advanced cryptography</em>, <em>decentralized storage</em>, and{' '}
             <em>democratic governance</em>.
           </h3>
           <p>
-            <strong>
-              BrightChain reimagines blockchain technology from the ground up
-            </strong>{' '}
-            — eliminating mining waste while delivering unprecedented
-            capabilities. From homomorphic voting to brokered anonymity, from
-            distributed file storage to quorum-based governance, BrightChain
-            offers <strong>everything needed</strong> for the next generation of
-            decentralized applications.
+            Your files are broken into blocks and mixed with random data using
+            XOR operations, making them appear completely random while
+            maintaining perfect security. From homomorphic voting to brokered
+            anonymity, from distributed file storage to quorum-based governance,
+            BrightChain offers <strong>everything needed</strong> for the next
+            generation of decentralized applications.
           </p>
           <div className="problem-solution">
             <div className="problem">
@@ -400,31 +399,31 @@ const Components = () => {
           </div>
           <div className="value-props">
             <div className="value-prop">
-              <strong>♻️ Zero Mining Waste</strong>
+              <strong>🔒 Owner-Free Storage</strong>
               <p>
-                All computation serves useful purposes - no wasteful mining,
-                sustainable blockchain
+                Cryptographic randomness removes storage liability — no single
+                block contains identifiable content
               </p>
             </div>
             <div className="value-prop">
-              <strong>🔐 Advanced Cryptography</strong>
+              <strong>⚡ Energy Efficient</strong>
               <p>
-                ECIES + AES-256-GCM encryption, homomorphic voting, and
-                cross-platform determinism
+                No wasteful proof-of-work mining — all computation serves useful
+                purposes
               </p>
             </div>
             <div className="value-prop">
-              <strong>🌐 Decentralized Storage</strong>
+              <strong>🌐 Decentralized</strong>
               <p>
-                IPFS-like P2P storage utilizing wasted space on personal devices
-                with legal protection
+                Distributed across the network — IPFS-like P2P storage utilizing
+                wasted space on personal devices
               </p>
             </div>
             <div className="value-prop">
-              <strong>🎭 Brokered Anonymity</strong>
+              <strong>🎭 Anonymous yet Accountable</strong>
               <p>
-                Privacy with accountability - anonymous posting with
-                time-limited identity recovery via quorum
+                Privacy with moderation capabilities — brokered anonymity via
+                quorum consensus
               </p>
             </div>
             <div className="value-prop">
@@ -439,6 +438,13 @@ const Components = () => {
               <p>
                 Democratic decision-making with configurable thresholds and
                 mathematical security
+              </p>
+            </div>
+            <div className="value-prop">
+              <strong>🚀 Build with BrightStack</strong>
+              <p>
+                BrightChain + Express + React + Node — swap MongoDB for
+                BrightDB, keep everything else
               </p>
             </div>
           </div>

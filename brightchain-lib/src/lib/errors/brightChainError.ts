@@ -24,6 +24,8 @@
  * @see Requirements 4.1, 4.2, 4.3, 4.4, 13.1, 13.2, 13.3, 13.4, 13.6
  */
 export abstract class BrightChainError extends Error {
+  public override readonly cause?: Error;
+
   /**
    * Creates a new BrightChainError instance.
    *
@@ -36,10 +38,11 @@ export abstract class BrightChainError extends Error {
     public readonly type: string,
     message: string,
     public readonly context?: Record<string, unknown>,
-    public readonly cause?: Error,
+    cause?: Error,
   ) {
     super(message);
     this.name = this.constructor.name;
+    this.cause = cause;
 
     // Maintain proper stack trace in V8 environments (Node.js, Chrome)
     if (Error.captureStackTrace) {
@@ -69,7 +72,7 @@ export abstract class BrightChainError extends Error {
       type: this.type,
       message: this.message,
       context: this.context,
-      cause: this.cause?.message,
+      cause: this.cause instanceof Error ? this.cause.message : undefined,
       stack: this.stack,
     };
   }

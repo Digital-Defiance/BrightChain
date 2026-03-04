@@ -171,7 +171,7 @@ export class IdentityProofService {
 
     // Requirement 4.3: Sign with SECP256k1 private key
     const statementBytes = stringToUint8Array(statement);
-    const signature: SignatureUint8Array = member.sign(statementBytes);
+    const signature = member.sign(statementBytes) as SignatureUint8Array;
     const signatureHex = uint8ArrayToHex(signature);
 
     return {

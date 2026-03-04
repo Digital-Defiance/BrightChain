@@ -92,7 +92,7 @@ type _AssertWriteOptions = WriteOptions;
 describe('Re-export compatibility: core engine classes', () => {
   const coreClasses = [
     'Collection',
-    'BrightChainDb',
+    'BrightDb',
     'InMemoryHeadRegistry',
     'InMemoryDatabase',
     'Cursor',
@@ -145,7 +145,7 @@ describe('Re-export compatibility: core engine functions', () => {
 
 describe('Re-export compatibility: error classes', () => {
   const errorClasses = [
-    'BrightChainDbError',
+    'BrightDbError',
     'BulkWriteError',
     'DocumentNotFoundError',
     'IndexError',

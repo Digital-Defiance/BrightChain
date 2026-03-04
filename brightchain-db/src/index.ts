@@ -46,8 +46,8 @@ export type {
   CollectionResolver,
   ICollectionHeadRegistry,
 } from './lib/collection';
-export { BrightChainDb } from './lib/database';
-export type { BrightChainDbOptions } from './lib/database';
+export { BrightDb } from './lib/database';
+export type { BrightDbOptions } from './lib/database';
 
 // Head registries
 export {
@@ -115,7 +115,7 @@ export type { DbRouterOptions } from './lib/expressMiddleware';
 
 // Errors
 export {
-  BrightChainDbError,
+  BrightDbError,
   BulkWriteError,
   DocumentNotFoundError,
   IndexError,
@@ -136,3 +136,6 @@ export type {
   FieldSchema,
   SchemaType,
 } from './lib/schemaValidation';
+
+// BrightHub Social Network Schemas
+export * from './lib/schemas';

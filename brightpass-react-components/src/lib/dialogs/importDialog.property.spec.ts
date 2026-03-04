@@ -30,7 +30,7 @@ jest.mock('../hooks/useBrightPassApi', () => ({
 }));
 
 // Import AFTER mocks
-import { getAcceptedFileTypes, formatImportSummary } from './ImportDialog';
+import { formatImportSummary, getAcceptedFileTypes } from './ImportDialog';
 
 const KNOWN_FORMATS = [
   '1password_1pux',
@@ -47,13 +47,10 @@ const KNOWN_FORMATS = [
 describe('Property 14: Import format to file type mapping', () => {
   it('returns non-empty extensions for all known formats', () => {
     fc.assert(
-      fc.property(
-        fc.constantFrom(...KNOWN_FORMATS),
-        (format) => {
-          const result = getAcceptedFileTypes(format);
-          expect(result.extensions.length).toBeGreaterThan(0);
-        },
-      ),
+      fc.property(fc.constantFrom(...KNOWN_FORMATS), (format) => {
+        const result = getAcceptedFileTypes(format);
+        expect(result.extensions.length).toBeGreaterThan(0);
+      }),
       { numRuns: 100 },
     );
   });
@@ -61,9 +58,9 @@ describe('Property 14: Import format to file type mapping', () => {
   it('returns empty extensions for unknown formats', () => {
     fc.assert(
       fc.property(
-        fc.string({ minLength: 1, maxLength: 30 }).filter(
-          (s) => !(KNOWN_FORMATS as readonly string[]).includes(s),
-        ),
+        fc
+          .string({ minLength: 1, maxLength: 30 })
+          .filter((s) => !(KNOWN_FORMATS as readonly string[]).includes(s)),
         (format) => {
           const result = getAcceptedFileTypes(format);
           expect(result.extensions).toEqual([]);
@@ -75,16 +72,19 @@ describe('Property 14: Import format to file type mapping', () => {
   });
 
   it('CSV formats return .csv extension', () => {
-    const csvFormats = ['1password_csv', 'lastpass_csv', 'bitwarden_csv', 'chrome_csv', 'firefox_csv'];
+    const csvFormats = [
+      '1password_csv',
+      'lastpass_csv',
+      'bitwarden_csv',
+      'chrome_csv',
+      'firefox_csv',
+    ];
     fc.assert(
-      fc.property(
-        fc.constantFrom(...csvFormats),
-        (format) => {
-          const result = getAcceptedFileTypes(format);
-          expect(result.extensions).toContain('.csv');
-          expect(result.mimeTypes).toContain('text/csv');
-        },
-      ),
+      fc.property(fc.constantFrom(...csvFormats), (format) => {
+        const result = getAcceptedFileTypes(format);
+        expect(result.extensions).toContain('.csv');
+        expect(result.mimeTypes).toContain('text/csv');
+      }),
       { numRuns: 100 },
     );
   });
@@ -92,28 +92,22 @@ describe('Property 14: Import format to file type mapping', () => {
   it('JSON formats return .json extension', () => {
     const jsonFormats = ['bitwarden_json', 'dashlane_json'];
     fc.assert(
-      fc.property(
-        fc.constantFrom(...jsonFormats),
-        (format) => {
-          const result = getAcceptedFileTypes(format);
-          expect(result.extensions).toContain('.json');
-          expect(result.mimeTypes).toContain('application/json');
-        },
-      ),
+      fc.property(fc.constantFrom(...jsonFormats), (format) => {
+        const result = getAcceptedFileTypes(format);
+        expect(result.extensions).toContain('.json');
+        expect(result.mimeTypes).toContain('application/json');
+      }),
       { numRuns: 100 },
     );
   });
 
   it('is deterministic — same format always yields same result', () => {
     fc.assert(
-      fc.property(
-        fc.constantFrom(...KNOWN_FORMATS),
-        (format) => {
-          const a = getAcceptedFileTypes(format);
-          const b = getAcceptedFileTypes(format);
-          expect(a).toEqual(b);
-        },
-      ),
+      fc.property(fc.constantFrom(...KNOWN_FORMATS), (format) => {
+        const a = getAcceptedFileTypes(format);
+        const b = getAcceptedFileTypes(format);
+        expect(a).toEqual(b);
+      }),
       { numRuns: 100 },
     );
   });
@@ -140,7 +134,10 @@ describe('Property 15: Import result rendering completeness', () => {
       fc.property(
         fc.nat({ max: 10000 }),
         fc.nat({ max: 10000 }),
-        fc.array(fc.string({ minLength: 1, maxLength: 50 }), { minLength: 1, maxLength: 20 }),
+        fc.array(fc.string({ minLength: 1, maxLength: 50 }), {
+          minLength: 1,
+          maxLength: 20,
+        }),
         (imported, skipped, errors) => {
           const summary = formatImportSummary({ imported, skipped, errors });
           expect(summary.hasErrors).toBe(true);
@@ -156,7 +153,11 @@ describe('Property 15: Import result rendering completeness', () => {
         fc.nat({ max: 10000 }),
         fc.nat({ max: 10000 }),
         (imported, skipped) => {
-          const summary = formatImportSummary({ imported, skipped, errors: [] });
+          const summary = formatImportSummary({
+            imported,
+            skipped,
+            errors: [],
+          });
           expect(summary.hasErrors).toBe(false);
         },
       ),

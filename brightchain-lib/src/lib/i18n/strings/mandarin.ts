@@ -413,6 +413,12 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_StoreError_NotImplemented]: '操作未实现',
   [BrightChainStrings.Error_StoreError_InsufficientRandomBlocksTemplate]:
     '可用随机块不足：请求 {REQUESTED}，可用 {AVAILABLE}',
+  [BrightChainStrings.Error_StoreError_FactoryNotRegistered]:
+    '未为请求的存储类型注册块存储工厂',
+  [BrightChainStrings.Error_StoreError_CloudOperationFailedTemplate]:
+    '云存储操作 {OPERATION} 对块 {BLOCK_CHECKSUM} 失败：{ORIGINAL_ERROR}',
+  [BrightChainStrings.Error_StoreError_CloudAuthenticationFailedTemplate]:
+    '云存储认证对操作 {OPERATION} 失败：{ORIGINAL_ERROR}',
 
   // Sealing Errors
   [BrightChainStrings.Error_SealingError_MissingPrivateKeys]:
@@ -1138,6 +1144,84 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
     'TCBL清单版本不受支持',
 
+  // Splash
+  [BrightChainStrings.Splash_Welcome]: '欢迎使用BrightChain',
+  [BrightChainStrings.Splash_NextGenInfrastructure]: '去中心化应用平台',
+  [BrightChainStrings.Splash_SoupCanDemo]: '汤罐演示',
+  [BrightChainStrings.Splash_SoupCanDemoDescription]:
+    '了解BrightChain如何将数据分解为块，并使用XOR操作将其与随机数据混合，以实现无所有者存储。',
+  [BrightChainStrings.Splash_StoragePools]: '存储池',
+  [BrightChainStrings.Splash_StoragePoolsDescription]:
+    '探索命名空间隔离的池、内容寻址块、池范围白化和跨池隔离保证。',
+  [BrightChainStrings.Splash_Messaging]: '消息传递',
+  [BrightChainStrings.Splash_MessagingDescription]:
+    'ECIES加密的直接消息、池共享群聊、具有可见性模式的频道、阅后即焚消息和在线状态。',
+  [BrightChainStrings.Splash_BrightPass]: 'BrightPass',
+  [BrightChainStrings.Splash_BrightPassDescription]:
+    '去中心化密码保险库，具有凭据存储、密码生成、泄露检查和TOTP/2FA设置功能。',
+  [BrightChainStrings.Splash_Database]: '数据库',
+  [BrightChainStrings.Splash_DatabaseDescription]:
+    '具有写时复制块、池隔离、乐观并发事务和聚合管道的文档数据库。',
+  [BrightChainStrings.Splash_IdentityAndSecurity]: '身份与安全',
+  [BrightChainStrings.Splash_IdentityAndSecurityDescription]:
+    '纸质密钥备份、设备管理、跨平台身份证明以及公钥目录中的个人资料搜索。',
+  [BrightChainStrings.Splash_TrySoupCanDemo]: '试用汤罐演示',
+  [BrightChainStrings.Splash_GetStarted]: '开始使用',
+  [BrightChainStrings.Splash_WhatIsBrightChain]: '什么是BrightChain？',
+  [BrightChainStrings.Splash_WhatIsBrightChainDescription]:
+    'BrightChain使用"明亮区块汤"概念革新数据存储。您的文件被分解为块，并使用XOR操作与随机数据混合，使它们看起来完全随机，同时保持完美的安全性。',
+  [BrightChainStrings.Splash_OwnerFreeStorage]: '无所有者存储',
+  [BrightChainStrings.Splash_OwnerFreeStorageDescription]:
+    '加密随机性消除存储责任',
+  [BrightChainStrings.Splash_EnergyEfficient]: '节能高效',
+  [BrightChainStrings.Splash_EnergyEfficientDescription]:
+    '无浪费的工作量证明挖矿',
+  [BrightChainStrings.Splash_Decentralized]: '去中心化',
+  [BrightChainStrings.Splash_DecentralizedDescription]: '分布在整个网络',
+  [BrightChainStrings.Splash_AnonymousYetAccountable]: '匿名但可问责',
+  [BrightChainStrings.Splash_AnonymousYetAccountableDescription]:
+    '具有审核功能的隐私保护',
+  [BrightChainStrings.Splash_ExploreThePlatform]: '探索平台',
+  [BrightChainStrings.Splash_InteractiveDemos]:
+    '展示BrightChain核心功能的互动演示',
+  [BrightChainStrings.Splash_LaunchDemo]: '启动演示',
+
+  // Splash - BrightStack
+  [BrightChainStrings.Splash_BuildWithBrightStack]: '使用BrightStack构建',
+  [BrightChainStrings.Splash_BuildWithBrightStackDescription]:
+    'BrightStack是去中心化应用的全栈范式：BrightChain + Express + React + Node。如果你了解MERN技术栈，你就已经了解BrightStack了。',
+  [BrightChainStrings.Splash_BrightStackSubtitle]:
+    '将MongoDB替换为BrightDb，其他保持不变。',
+  [BrightChainStrings.Splash_BrightDb]: 'BrightDb',
+  [BrightChainStrings.Splash_BrightDbDescription]:
+    '基于Owner-Free文件系统的MongoDB兼容文档数据库。完整的CRUD、查询、索引、事务和聚合管道。',
+  [BrightChainStrings.Splash_FamiliarApi]: '熟悉的API',
+  [BrightChainStrings.Splash_FamiliarApiDescription]:
+    '与MongoDB相同的模式 — 集合、find、insert、update — 但每个文档都以保护隐私的白化块形式存储。',
+  [BrightChainStrings.Splash_BuiltOnBrightStack]: '基于BrightStack构建',
+  [BrightChainStrings.Splash_BuiltOnBrightStackDescription]:
+    'BrightPass、BrightMail和BrightHub都基于BrightStack构建，证明了去中心化应用开发可以像传统全栈开发一样简单。',
+  [BrightChainStrings.Splash_OpenSource]: '开源',
+  [BrightChainStrings.Splash_OpenSourceDescription]:
+    'BrightChain完全开源。在BrightStack上构建你自己的dApp，为去中心化的未来做出贡献。',
+
+  // Splash - 不是加密货币
+  [BrightChainStrings.Splash_NotACryptocurrency]: '不是加密货币',
+  [BrightChainStrings.Splash_NotACryptocurrencyDescription]:
+    '听到"区块链"，你可能会想到比特币。BrightChain从根本上不同——没有货币，没有工作量证明，没有挖矿。BrightChain不是燃烧能源来铸造代币，而是重视存储和计算的实际贡献。',
+  [BrightChainStrings.Splash_NoCurrency]: '没有货币',
+  [BrightChainStrings.Splash_NoCurrencyDescription]:
+    'BrightChain没有代币、没有通证、没有投机资产。它是基础设施，不是金融。',
+  [BrightChainStrings.Splash_NoMining]: '没有挖矿',
+  [BrightChainStrings.Splash_NoMiningDescription]:
+    '没有工作量证明，没有能源浪费。每一个计算周期都服务于有用的目的。',
+  [BrightChainStrings.Splash_Joules]: '焦耳，不是代币',
+  [BrightChainStrings.Splash_JoulesDescription]:
+    '存储和计算的贡献以焦耳为单位追踪——一个与实际能源成本挂钩的单位，而非市场投机。',
+  [BrightChainStrings.Splash_RealWorldValue]: '现实世界价值',
+  [BrightChainStrings.Splash_RealWorldValueDescription]:
+    '焦耳的价值由基于实际成本的公式设定，我们会随时间不断完善该公式——没有交易，没有波动。',
+
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: '您的仪表板',
   [BrightChainStrings.Dashboard_EnergyBalance]: '能量余额',
@@ -1145,8 +1229,7 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Dashboard_Reputation]: '声誉',
   [BrightChainStrings.Dashboard_ReputationScore]: '网络声誉评分',
   [BrightChainStrings.Dashboard_EnergyEarned]: '已获得能量',
-  [BrightChainStrings.Dashboard_EarnedDescription]:
-    '通过提供资源获得的总量',
+  [BrightChainStrings.Dashboard_EarnedDescription]: '通过提供资源获得的总量',
   [BrightChainStrings.Dashboard_EnergySpent]: '已消耗能量',
   [BrightChainStrings.Dashboard_SpentDescription]: '用于操作的总消耗量',
   [BrightChainStrings.Dashboard_Loading]: '加载中...',
@@ -1160,8 +1243,7 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.BrightMail_Inbox_Empty]: '暂无邮件',
   [BrightChainStrings.BrightMail_Inbox_Error]: '加载收件箱失败',
   [BrightChainStrings.BrightMail_Inbox_Retry]: '重试',
-  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]:
-    '{COUNT} 封未读',
+  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]: '{COUNT} 封未读',
   [BrightChainStrings.BrightMail_Compose_Title]: '撰写',
   [BrightChainStrings.BrightMail_Compose_To]: '收件人',
   [BrightChainStrings.BrightMail_Compose_Cc]: '抄送',

@@ -46,9 +46,7 @@ function throwBrightPassError(error: unknown): never {
     const bpError: IBrightPassError = {
       code: (body?.code as string) ?? `HTTP_${error.response.status}`,
       message:
-        (body?.message as string) ??
-        (body?.error as string) ??
-        error.message,
+        (body?.message as string) ?? (body?.error as string) ?? error.message,
       details: (body?.details as Record<string, unknown>) ?? undefined,
     };
     throw bpError;
@@ -110,24 +108,17 @@ class BrightPassApiService {
     }
   }
 
-  async deleteVault(
-    vaultId: string,
-    masterPassword: string,
-  ): Promise<void> {
+  async deleteVault(vaultId: string, masterPassword: string): Promise<void> {
     try {
-      await this.api.delete(
-        `${BASE}/vaults/${encodeURIComponent(vaultId)}`,
-        { data: { masterPassword } },
-      );
+      await this.api.delete(`${BASE}/vaults/${encodeURIComponent(vaultId)}`, {
+        data: { masterPassword },
+      });
     } catch (error) {
       throwBrightPassError(error);
     }
   }
 
-  async createEntry(
-    vaultId: string,
-    entry: VaultEntry,
-  ): Promise<VaultEntry> {
+  async createEntry(vaultId: string, entry: VaultEntry): Promise<VaultEntry> {
     try {
       const res = await this.api.post<
         BrightPassSuccessResponse<{ entry: VaultEntry }>
@@ -308,7 +299,9 @@ class BrightPassApiService {
     try {
       const res = await this.api.post<
         BrightPassSuccessResponse<{ vault: IDecryptedVault<string> }>
-      >(`${BASE}/vaults/${encodeURIComponent(vaultId)}/emergency-recover`, { shares });
+      >(`${BASE}/vaults/${encodeURIComponent(vaultId)}/emergency-recover`, {
+        shares,
+      });
       return extractData(res.data).vault;
     } catch (error) {
       throwBrightPassError(error);
@@ -321,9 +314,10 @@ class BrightPassApiService {
     fileBase64: string,
   ): Promise<ImportResult> {
     try {
-      const res = await this.api.post<
-        BrightPassSuccessResponse<ImportResult>
-      >(`${BASE}/vaults/${encodeURIComponent(vaultId)}/import`, { format, fileContent: fileBase64 });
+      const res = await this.api.post<BrightPassSuccessResponse<ImportResult>>(
+        `${BASE}/vaults/${encodeURIComponent(vaultId)}/import`,
+        { format, fileContent: fileBase64 },
+      );
       return extractData(res.data);
     } catch (error) {
       throwBrightPassError(error);

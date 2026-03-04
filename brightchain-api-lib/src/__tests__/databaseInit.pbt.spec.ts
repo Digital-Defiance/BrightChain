@@ -156,11 +156,11 @@ describe('Database Init Property-Based Tests', () => {
             expect(typeof blockStore.getData).toBe('function');
             expect(typeof blockStore.setData).toBe('function');
 
-            // Verify types: db is a BrightChainDb instance (typed as unknown in IBrightChainInitData)
+            // Verify types: db is a BrightDb instance (typed as unknown in IBrightChainInitData)
             const db = backend.db;
             expect(db).toBeDefined();
             expect(db).not.toBeNull();
-            // BrightChainDb has collection() and withTransaction()
+            // BrightDb has collection() and withTransaction()
             expect(typeof (db as Record<string, unknown>).collection).toBe(
               'function',
             );

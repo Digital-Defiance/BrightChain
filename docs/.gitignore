@@ -1,0 +1,3 @@
+# Ignore Jekyll build output
+_site/
+Gemfile.lock

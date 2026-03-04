@@ -6,7 +6,7 @@
 
 import { runAggregation } from '../lib/aggregation';
 import { Collection, HeadRegistry } from '../lib/collection';
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import { BulkWriteError, ValidationError } from '../lib/errors';
 import { tokenize } from '../lib/queryEngine';
 import { CollectionSchema } from '../lib/schemaValidation';
@@ -28,11 +28,11 @@ function makeCollection(
 }
 
 function makeDb(store?: MockBlockStore): {
-  db: BrightChainDb;
+  db: BrightDb;
   store: MockBlockStore;
 } {
   const s = store ?? new MockBlockStore();
-  const db = new BrightChainDb(s as any, {
+  const db = new BrightDb(s as any, {
     name: 'testdb',
     cursorTimeoutMs: 500,
   });
@@ -479,7 +479,7 @@ describe('Write concern / Read preference', () => {
 // Cursor-based pagination (database level)
 // ═══════════════════════════════════════════════════════════════
 
-describe('BrightChainDb cursor sessions', () => {
+describe('BrightDb cursor sessions', () => {
   it('should create and retrieve a cursor session', () => {
     const { db } = makeDb();
     const cursor = db.createCursorSession({

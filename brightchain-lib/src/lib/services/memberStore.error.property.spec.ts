@@ -39,7 +39,7 @@ describe('MemberStore Error Handling Property Tests', () => {
   beforeEach(() => {
     ServiceProvider.getInstance<GuidV4Uint8Array>();
     blockStore = BlockStoreFactory.createMemoryStore({
-      blockSize: BlockSize.Small,
+      supportedBlockSizes: [BlockSize.Small],
     });
     memberStore = new MemberStore<GuidV4Uint8Array>(blockStore);
   });

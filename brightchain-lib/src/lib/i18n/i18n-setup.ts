@@ -40,11 +40,16 @@ import {
   BrightChainStringKey,
   BrightChainStrings,
 } from '../enumerations/brightChainStrings';
+import type { BrightHubStringKeyValue } from '../enumerations/brightHubStrings';
+import {
+  BrightHubComponentId,
+  BrightHubStrings,
+} from '../enumerations/brightHubStrings';
+import type { BrightPassStringKeyValue } from '../enumerations/brightPassStrings';
 import {
   BrightPassComponentId,
   BrightPassStrings,
 } from '../enumerations/brightPassStrings';
-import type { BrightPassStringKeyValue } from '../enumerations/brightPassStrings';
 import type { IBrightChainI18nConstants } from '../interfaces/i18nConstants';
 import {
   AmericanEnglishStrings,
@@ -56,6 +61,16 @@ import {
   SpanishStrings,
   UkrainianStrings,
 } from './strings';
+import {
+  BrightHubAmericanEnglishStrings,
+  BrightHubBritishEnglishStrings,
+  BrightHubFrenchStrings,
+  BrightHubGermanStrings,
+  BrightHubJapaneseStrings,
+  BrightHubMandarinStrings,
+  BrightHubSpanishStrings,
+  BrightHubUkrainianStrings,
+} from './strings/brighthub';
 import {
   BrightPassAmericanEnglishStrings,
   BrightPassBritishEnglishStrings,
@@ -131,6 +146,47 @@ export const BrightPassComponentStrings: BrandedMasterStringsCollection<
 };
 
 /**
+ * Master strings collection for the BrightHub component.
+ * These are the translations specific to the BrightHub social network.
+ */
+export const BrightHubComponentStrings: BrandedMasterStringsCollection<
+  typeof BrightHubStrings,
+  CoreLanguageCode
+> = {
+  [LanguageCodes.EN_US]: BrightHubAmericanEnglishStrings,
+  [LanguageCodes.EN_GB]: BrightHubBritishEnglishStrings,
+  [LanguageCodes.FR]: BrightHubFrenchStrings,
+  [LanguageCodes.ZH_CN]: BrightHubMandarinStrings,
+  [LanguageCodes.ES]: BrightHubSpanishStrings,
+  [LanguageCodes.UK]: BrightHubUkrainianStrings,
+  [LanguageCodes.DE]: BrightHubGermanStrings,
+  [LanguageCodes.JA]: BrightHubJapaneseStrings,
+};
+
+/**
+ * Create BrightHub component configuration
+ */
+export function createBrightHubComponentConfig(): ComponentConfig {
+  return {
+    id: BrightHubComponentId,
+    strings: BrightHubComponentStrings,
+    aliases: ['BrightHubStrings'],
+  };
+}
+
+/**
+ * Creates an I18nComponentPackage bundling the BrightHub ComponentConfig
+ * with its branded string key enum. Use this with createI18nSetup's
+ * libraryComponents array.
+ */
+export function createBrightHubComponentPackage(): I18nComponentPackage {
+  return {
+    config: createBrightHubComponentConfig(),
+    stringKeyEnum: BrightHubStrings,
+  };
+}
+
+/**
  * Create BrightPass component configuration
  */
 export function createBrightPassComponentConfig(): ComponentConfig {
@@ -181,6 +237,7 @@ export function getBrightChainI18nEngine(): I18nEngine {
       createSuiteCoreComponentPackage(),
       createEciesComponentPackage(),
       createBrightPassComponentPackage(),
+      createBrightHubComponentPackage(),
     ],
   });
 
@@ -369,7 +426,8 @@ export type RegisteredStringKey =
   | BrightChainStringKeyValue
   | EciesStringKeyValue
   | SuiteCoreStringKeyValue
-  | BrightPassStringKeyValue;
+  | BrightPassStringKeyValue
+  | BrightHubStringKeyValue;
 
 // Re-export i18n constants interface
 export type { IBrightChainI18nConstants } from '../interfaces/i18nConstants';
@@ -377,3 +435,7 @@ export type { IBrightChainI18nConstants } from '../interfaces/i18nConstants';
 // Re-export BrightPass for convenience
 export { BrightPassComponentId, BrightPassStrings };
 export type { BrightPassStringKeyValue };
+
+// Re-export BrightHub for convenience
+export { BrightHubComponentId, BrightHubStrings };
+export type { BrightHubStringKeyValue };
