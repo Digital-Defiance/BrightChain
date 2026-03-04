@@ -26,9 +26,8 @@ import { IBlockMetadata } from '../storage/blockMetadata';
  *
  * @see Requirements 1.3, 1.4, 1.5, 2.1, 3.5, 6.3, 10.2
  */
-export interface IMessageMetadata<
-  TID extends PlatformID = string,
-> extends IBlockMetadata {
+export interface IMessageMetadata<TID extends PlatformID = string>
+  extends IBlockMetadata {
   /** Application-defined message type */
   messageType: string;
 

@@ -77,8 +77,8 @@ describe('InitUserDb refactored main.ts', () => {
   // ── Database drop uses plugin (Req 4.4) ────────────────────────────────
 
   describe('database drop uses plugin', () => {
-    it('uses plugin.brightChainDb.dropDatabase() for --drop (Req 4.4)', () => {
-      expect(mainSource).toContain('plugin.brightChainDb.dropDatabase()');
+    it('uses plugin.brightDb.dropDatabase() for --drop (Req 4.4)', () => {
+      expect(mainSource).toContain('plugin.brightDb.dropDatabase()');
     });
 
     it('does not use app.db.connection for drop (Req 4.4)', () => {

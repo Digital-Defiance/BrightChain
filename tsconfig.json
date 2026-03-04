@@ -15,6 +15,13 @@
     "brightchain-react-e2e/**/*.ts",
     "brightchain-test-utils/**/*.ts",
     "brightchain-inituserdb/**/*.ts",
+    "brighthub-lib/**/*.ts",
+    "brighthub-react-components/**/*.ts",
+    "brighthub-react-components/**/*.tsx",
+    "brightmail-react-components/**/*.ts",
+    "brightmail-react-components/**/*.tsx",
+    "brightpass-react-components/**/*.ts",
+    "brightpass-react-components/**/*.tsx",
     "showcase/**/*.ts",
     "showcase/**/*.tsx"
   ],

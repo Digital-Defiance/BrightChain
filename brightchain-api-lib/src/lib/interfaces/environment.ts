@@ -8,10 +8,8 @@ import {
 } from '@digitaldefiance/node-express-suite';
 import { IEnvironmentAws } from './environment-aws';
 
-export interface IEnvironment<TID extends PlatformID> extends Omit<
-  IEnvironmentBase<TID>,
-  'adminId' | 'idAdapter'
-> {
+export interface IEnvironment<TID extends PlatformID>
+  extends Omit<IEnvironmentBase<TID>, 'adminId' | 'idAdapter'> {
   adminId: any;
   idAdapter(bytes: Uint8Array): HexString;
 
@@ -31,7 +29,7 @@ export interface IEnvironment<TID extends PlatformID> extends Omit<
   aws: IEnvironmentAws;
 
   /**
-   * Whether to use transactions for brightchain-db operations
+   * Whether to use transactions for BrightDB operations
    */
   useTransactions: boolean;
 

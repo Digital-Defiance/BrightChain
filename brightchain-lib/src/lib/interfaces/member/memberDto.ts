@@ -1,9 +1,8 @@
 import { HexString, MemberType } from '@digitaldefiance/ecies-lib';
 import { IBasicObjectDTO } from '../basicObjectDto';
 
-export interface IMemberDTO<
-  D extends Date | string = Date,
-> extends IBasicObjectDTO<HexString, D> {
+export interface IMemberDTO<D extends Date | string = Date>
+  extends IBasicObjectDTO<HexString, D> {
   id: HexString;
   type: MemberType;
   name: string;

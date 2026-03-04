@@ -24,8 +24,8 @@ import {
 } from '@mui/material';
 import { FC, memo, useCallback, useEffect, useState } from 'react';
 
-import { MailboxInput } from './services/emailApi';
 import { useEmailApi } from './hooks/useEmailApi';
+import { MailboxInput } from './services/emailApi';
 
 // ─── Exported utility functions (tested by property tests) ──────────────────
 
@@ -254,7 +254,9 @@ const ComposeView: FC<ComposeViewProps> = ({
         fullWidth
         margin="normal"
         required
-        inputProps={{ 'aria-label': t(BrightChainStrings.BrightMail_Compose_To) }}
+        inputProps={{
+          'aria-label': t(BrightChainStrings.BrightMail_Compose_To),
+        }}
       />
       <TextField
         id="compose-cc"
@@ -263,7 +265,9 @@ const ComposeView: FC<ComposeViewProps> = ({
         onChange={(e) => setCc(e.target.value)}
         fullWidth
         margin="normal"
-        inputProps={{ 'aria-label': t(BrightChainStrings.BrightMail_Compose_Cc) }}
+        inputProps={{
+          'aria-label': t(BrightChainStrings.BrightMail_Compose_Cc),
+        }}
       />
       <TextField
         id="compose-bcc"
@@ -272,7 +276,9 @@ const ComposeView: FC<ComposeViewProps> = ({
         onChange={(e) => setBcc(e.target.value)}
         fullWidth
         margin="normal"
-        inputProps={{ 'aria-label': t(BrightChainStrings.BrightMail_Compose_Bcc) }}
+        inputProps={{
+          'aria-label': t(BrightChainStrings.BrightMail_Compose_Bcc),
+        }}
       />
       <TextField
         id="compose-subject"
@@ -281,7 +287,9 @@ const ComposeView: FC<ComposeViewProps> = ({
         onChange={(e) => setSubject(e.target.value)}
         fullWidth
         margin="normal"
-        inputProps={{ 'aria-label': t(BrightChainStrings.BrightMail_Compose_Subject) }}
+        inputProps={{
+          'aria-label': t(BrightChainStrings.BrightMail_Compose_Subject),
+        }}
       />
       <TextField
         id="compose-body"
@@ -292,7 +300,9 @@ const ComposeView: FC<ComposeViewProps> = ({
         margin="normal"
         multiline
         minRows={4}
-        inputProps={{ 'aria-label': t(BrightChainStrings.BrightMail_Compose_Body) }}
+        inputProps={{
+          'aria-label': t(BrightChainStrings.BrightMail_Compose_Body),
+        }}
       />
 
       {attachments.length > 0 && (

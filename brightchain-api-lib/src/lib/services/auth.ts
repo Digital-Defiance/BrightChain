@@ -360,19 +360,26 @@ export class AuthService<
         const { sha256 } = await import('@noble/hashes/sha2');
         const { secp256k1 } = await import('@noble/curves/secp256k1');
         const hash = sha256(signedData);
-        const directResult = secp256k1.verify(userSigBuf, hash, publicKeyBuf, { prehash: false });
+        const directResult = secp256k1.verify(userSigBuf, hash, publicKeyBuf, {
+          prehash: false,
+        });
         console.warn(
           `[AuthService] verifyDirectLoginChallenge: direct secp256k1.verify=${directResult}`,
         );
         // Try recovering the signing public key
         for (let recovery = 0; recovery < 2; recovery++) {
           try {
-            const sig = secp256k1.Signature.fromCompact(userSigBuf).addRecoveryBit(recovery);
+            const sig =
+              secp256k1.Signature.fromCompact(userSigBuf).addRecoveryBit(
+                recovery,
+              );
             const recovered = sig.recoverPublicKey(hash).toHex(true);
             console.warn(
               `[AuthService] verifyDirectLoginChallenge: recovered(${recovery})=${recovered} match=${recovered === publicKeyHex}`,
             );
-          } catch { /* skip */ }
+          } catch {
+            /* skip */
+          }
         }
       } catch (e) {
         console.warn(`[AuthService] diagnostic error:`, e);
@@ -415,9 +422,7 @@ export class AuthService<
     const nonceHex = nonce.toString('hex');
     const memberId = sp.idProvider.idToString(reference.id as unknown as TID);
     const db =
-      this.application.services.get<import('@brightchain/db').BrightChainDb>(
-        'db',
-      );
+      this.application.services.get<import('@brightchain/db').BrightDb>('db');
     const tokenCollection = db.collection<{
       userId: string;
       token: string;

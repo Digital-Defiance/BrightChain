@@ -45,6 +45,7 @@ export interface IMemberOperational<I extends string | DefaultBackendIdType> {
 /**
  * Extended operational interface for test members
  */
-export interface ITestMemberOperational extends IMemberOperational<DefaultBackendIdType> {
+export interface ITestMemberOperational
+  extends IMemberOperational<DefaultBackendIdType> {
   get mnemonic(): SecureString | undefined;
 }

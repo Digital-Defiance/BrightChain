@@ -8,7 +8,7 @@
  * Thrown when an encryption operation fails.
  */
 export class EncryptionError extends Error {
-  readonly cause?: Error;
+  override readonly cause?: Error;
 
   constructor(message: string, cause?: unknown) {
     super(message);
@@ -24,7 +24,7 @@ export class EncryptionError extends Error {
  * Thrown when a decryption operation fails (wrong key, corrupted data, etc.).
  */
 export class DecryptionError extends Error {
-  readonly cause?: Error;
+  override readonly cause?: Error;
 
   constructor(message: string, cause?: unknown) {
     super(message);

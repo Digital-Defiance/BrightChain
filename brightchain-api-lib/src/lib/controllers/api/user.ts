@@ -976,15 +976,21 @@ export class UserController<
     try {
       const user = req.user as IRequestUserDTO;
       const memberId = user.id;
-      const { email, timezone, siteLanguage, currency, darkMode, directChallenge } =
-        req.body as {
-          email?: string;
-          timezone?: string;
-          siteLanguage?: string;
-          currency?: string;
-          darkMode?: boolean;
-          directChallenge?: boolean;
-        };
+      const {
+        email,
+        timezone,
+        siteLanguage,
+        currency,
+        darkMode,
+        directChallenge,
+      } = req.body as {
+        email?: string;
+        timezone?: string;
+        siteLanguage?: string;
+        currency?: string;
+        darkMode?: boolean;
+        directChallenge?: boolean;
+      };
 
       const sp = ServiceProvider.getInstance();
       const typedId = sp.idProvider.idFromString(memberId);
@@ -995,21 +1001,26 @@ export class UserController<
       // IPrivateMemberData.settings (which tracks replication/storage config).
       try {
         const db =
-          this.application.services.get<import('@brightchain/db').BrightChainDb>('db');
+          this.application.services.get<import('@brightchain/db').BrightDb>(
+            'db',
+          );
         if (db) {
-          const usersCol = db.collection('users');
+          const usersCol = db.collection('user_settings');
           const updateFields: Record<string, unknown> = {};
           if (email !== undefined) updateFields['email'] = email;
           if (timezone !== undefined) updateFields['timezone'] = timezone;
-          if (siteLanguage !== undefined) updateFields['siteLanguage'] = siteLanguage;
+          if (siteLanguage !== undefined)
+            updateFields['siteLanguage'] = siteLanguage;
           if (currency !== undefined) updateFields['currency'] = currency;
           if (darkMode !== undefined) updateFields['darkMode'] = darkMode;
-          if (directChallenge !== undefined) updateFields['directChallenge'] = directChallenge;
+          if (directChallenge !== undefined)
+            updateFields['directChallenge'] = directChallenge;
 
           if (Object.keys(updateFields).length > 0) {
             await usersCol.updateOne(
               { _id: idHex } as never,
               { $set: updateFields } as never,
+              { upsert: true } as never,
             );
           }
         }
@@ -1110,9 +1121,7 @@ export class UserController<
       return {
         statusCode: 200,
         response: {
-          message: getSuiteCoreTranslation(
-            SuiteCoreStringKey.Common_Success,
-          ),
+          message: getSuiteCoreTranslation(SuiteCoreStringKey.Common_Success),
           user,
           token: newToken,
           serverPublicKey,
@@ -1135,5 +1144,4 @@ export class UserController<
       };
     }
   }
-
 }

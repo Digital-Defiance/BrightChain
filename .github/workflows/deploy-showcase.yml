@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'showcase/**'
+      - 'docs/**'
       - '.github/workflows/deploy-showcase.yml'
   workflow_dispatch:
 
@@ -40,13 +41,41 @@ jobs:
           cd showcase
           yarn install --immutable
 
-      - name: Build showcase
+
+      - name: Build showcase (React)
         run: |
           cd showcase
           yarn build
 
-      - name: Add .nojekyll file
-        run: touch ./showcase/dist/.nojekyll
+      - name: Setup Ruby for Jekyll
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: docs
+
+      - name: Build Jekyll docs
+        run: |
+          cd docs
+          bundle exec jekyll build --destination _site --baseurl /docs
+        env:
+          JEKYLL_ENV: production
+
+      - name: Merge docs into showcase dist
+        run: |
+          mkdir -p ./showcase/dist/docs
+          cp -r ./docs/_site/* ./showcase/dist/docs/
+
+      - name: Add CNAME
+        run: |
+          cp CNAME ./showcase/dist/CNAME
+
+      - name: Fail if docs output is missing
+        run: |
+          if [ ! -f ./showcase/dist/docs/index.html ]; then
+            echo 'Jekyll docs output missing! Build or copy step failed.'
+            exit 1
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

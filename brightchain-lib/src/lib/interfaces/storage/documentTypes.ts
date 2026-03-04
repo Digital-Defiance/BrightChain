@@ -96,7 +96,7 @@ export interface IMinimalCollection<T extends BsonDocument = BsonDocument> {
 
 /**
  * Minimal database interface used by MemberStore for DB-backed queries.
- * Implemented by BrightChainDb (structural compatibility — no import needed).
+ * Implemented by BrightDb (structural compatibility — no import needed).
  */
 export interface IMemberStoreDb {
   collection<T extends BsonDocument = BsonDocument>(

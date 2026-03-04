@@ -8,7 +8,7 @@
     "sourceMap": true,
     "composite": true,
     "module": "CommonJS",
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "types": ["node"]
   },
   "include": [
@@ -26,6 +26,9 @@
   "references": [
     {
       "path": "../brightchain-lib/tsconfig.lib.json"
+    },
+    {
+      "path": "../brighthub-lib/tsconfig.lib.json"
     }
   ]
 }

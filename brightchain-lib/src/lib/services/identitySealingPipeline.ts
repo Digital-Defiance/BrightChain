@@ -60,9 +60,9 @@ function wipeBuffer(buffer: Uint8Array): void {
  *
  * @template TID - Platform ID type for frontend/backend DTO compatibility
  */
-export class IdentitySealingPipeline<
-  TID extends PlatformID = Uint8Array,
-> implements IIdentitySealingPipeline<TID> {
+export class IdentitySealingPipeline<TID extends PlatformID = Uint8Array>
+  implements IIdentitySealingPipeline<TID>
+{
   constructor(
     private readonly db: IQuorumDatabase<TID>,
     private readonly sealingService: SealingService<TID>,

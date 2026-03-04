@@ -80,16 +80,16 @@ export const BrightPassUkrainianStrings: StringsCollection<BrightPassStringKey> 
     [BrightPassStrings.EntryDetail_ConfirmDelete]: 'Видалити запис',
     [BrightPassStrings.EntryDetail_ConfirmDeleteMessage]:
       'Ви впевнені, що хочете видалити цей запис? Цю дію неможливо скасувати.',
-    [BrightPassStrings.EntryDetail_Username]: 'Ім\'я користувача',
+    [BrightPassStrings.EntryDetail_Username]: "Ім'я користувача",
     [BrightPassStrings.EntryDetail_Password]: 'Пароль',
     [BrightPassStrings.EntryDetail_SiteUrl]: 'URL сайту',
     [BrightPassStrings.EntryDetail_TotpSecret]: 'TOTP секрет',
     [BrightPassStrings.EntryDetail_Content]: 'Вміст',
-    [BrightPassStrings.EntryDetail_CardholderName]: 'Ім\'я власника картки',
+    [BrightPassStrings.EntryDetail_CardholderName]: "Ім'я власника картки",
     [BrightPassStrings.EntryDetail_CardNumber]: 'Номер картки',
     [BrightPassStrings.EntryDetail_ExpirationDate]: 'Термін дії',
     [BrightPassStrings.EntryDetail_CVV]: 'CVV',
-    [BrightPassStrings.EntryDetail_FirstName]: 'Ім\'я',
+    [BrightPassStrings.EntryDetail_FirstName]: "Ім'я",
     [BrightPassStrings.EntryDetail_LastName]: 'Прізвище',
     [BrightPassStrings.EntryDetail_Email]: 'Електронна пошта',
     [BrightPassStrings.EntryDetail_Phone]: 'Телефон',
@@ -123,31 +123,37 @@ export const BrightPassUkrainianStrings: StringsCollection<BrightPassStringKey> 
     [BrightPassStrings.SearchBar_Placeholder]:
       'Пошук за назвою, тегами або URL\u2026',
     [BrightPassStrings.SearchBar_FilterFavorites]: 'Обране',
-    [BrightPassStrings.SearchBar_NoResults]:
-      'Відповідних записів не знайдено',
+    [BrightPassStrings.SearchBar_NoResults]: 'Відповідних записів не знайдено',
 
     // Emergency Access Dialog
     [BrightPassStrings.Emergency_Title]: 'Екстрений доступ',
     [BrightPassStrings.Emergency_Configure]: 'Налаштувати',
     [BrightPassStrings.Emergency_Recover]: 'Відновити',
-    [BrightPassStrings.Emergency_Threshold]: 'Поріг (мінімальна кількість довірених осіб)',
+    [BrightPassStrings.Emergency_Threshold]:
+      'Поріг (мінімальна кількість довірених осіб)',
     [BrightPassStrings.Emergency_Trustees]: 'ID довірених осіб (через кому)',
     [BrightPassStrings.Emergency_Shares]: 'Зашифрована частка {INDEX}',
-    [BrightPassStrings.Emergency_InsufficientShares]: 'Недостатньо часток. Потрібно щонайменше {THRESHOLD} часток.',
-    [BrightPassStrings.Emergency_InvalidThreshold]: 'Поріг повинен бути від 1 до кількості довірених осіб.',
+    [BrightPassStrings.Emergency_InsufficientShares]:
+      'Недостатньо часток. Потрібно щонайменше {THRESHOLD} часток.',
+    [BrightPassStrings.Emergency_InvalidThreshold]:
+      'Поріг повинен бути від 1 до кількості довірених осіб.',
     [BrightPassStrings.Emergency_Close]: 'Закрити',
-    [BrightPassStrings.Emergency_Error]: 'Сталася помилка. Будь ласка, спробуйте ще раз.',
+    [BrightPassStrings.Emergency_Error]:
+      'Сталася помилка. Будь ласка, спробуйте ще раз.',
     [BrightPassStrings.Emergency_Success]: 'Операцію успішно завершено.',
 
     // Share Dialog
     [BrightPassStrings.Share_Title]: 'Поділитися сховищем',
-    [BrightPassStrings.Share_SearchMembers]: 'Пошук учасників за іменем або електронною поштою',
+    [BrightPassStrings.Share_SearchMembers]:
+      'Пошук учасників за іменем або електронною поштою',
     [BrightPassStrings.Share_Add]: 'Додати',
     [BrightPassStrings.Share_Revoke]: 'Скасувати доступ',
     [BrightPassStrings.Share_CurrentRecipients]: 'Поточні отримувачі',
-    [BrightPassStrings.Share_NoRecipients]: 'Це сховище ще ні з ким не поділено.',
+    [BrightPassStrings.Share_NoRecipients]:
+      'Це сховище ще ні з ким не поділено.',
     [BrightPassStrings.Share_Close]: 'Закрити',
-    [BrightPassStrings.Share_Error]: 'Сталася помилка. Будь ласка, спробуйте ще раз.',
+    [BrightPassStrings.Share_Error]:
+      'Сталася помилка. Будь ласка, спробуйте ще раз.',
 
     // Import Dialog
     [BrightPassStrings.Import_Title]: 'Імпорт записів',
@@ -159,8 +165,10 @@ export const BrightPassUkrainianStrings: StringsCollection<BrightPassStringKey> 
     [BrightPassStrings.Import_Imported]: '{COUNT} записів успішно імпортовано',
     [BrightPassStrings.Import_Skipped]: '{COUNT} записів пропущено',
     [BrightPassStrings.Import_Errors]: 'Рядок {INDEX}: {MESSAGE}',
-    [BrightPassStrings.Import_InvalidFormat]: 'Завантажений файл не відповідає обраному формату.',
-    [BrightPassStrings.Import_Error]: 'Під час імпорту сталася помилка. Будь ласка, спробуйте ще раз.',
+    [BrightPassStrings.Import_InvalidFormat]:
+      'Завантажений файл не відповідає обраному формату.',
+    [BrightPassStrings.Import_Error]:
+      'Під час імпорту сталася помилка. Будь ласка, спробуйте ще раз.',
 
     // Audit Log
     [BrightPassStrings.AuditLog_Title]: 'Журнал аудиту',
@@ -168,8 +176,10 @@ export const BrightPassUkrainianStrings: StringsCollection<BrightPassStringKey> 
     [BrightPassStrings.AuditLog_Action]: 'Дія',
     [BrightPassStrings.AuditLog_Member]: 'ID учасника',
     [BrightPassStrings.AuditLog_FilterAll]: 'Усі дії',
-    [BrightPassStrings.AuditLog_NoEntries]: 'Записів журналу аудиту не знайдено.',
-    [BrightPassStrings.AuditLog_Error]: 'Не вдалося завантажити журнал аудиту. Будь ласка, спробуйте ще раз.',
+    [BrightPassStrings.AuditLog_NoEntries]:
+      'Записів журналу аудиту не знайдено.',
+    [BrightPassStrings.AuditLog_Error]:
+      'Не вдалося завантажити журнал аудиту. Будь ласка, спробуйте ще раз.',
 
     // Errors
     [BrightPassStrings.Error_InvalidMasterPassword]:

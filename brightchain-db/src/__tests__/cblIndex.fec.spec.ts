@@ -11,7 +11,7 @@
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import { MockBlockStore } from './helpers/mockBlockStore';
 
@@ -50,11 +50,11 @@ class FecTrackingMockBlockStore extends MockBlockStore {
 function makeCBLIndex(parityCount = 0): {
   index: CBLIndex;
   store: FecTrackingMockBlockStore;
-  db: BrightChainDb;
+  db: BrightDb;
 } {
   const store = new FecTrackingMockBlockStore();
   const registry = InMemoryHeadRegistry.createIsolated();
-  const db = new BrightChainDb(store as never, {
+  const db = new BrightDb(store as never, {
     name: 'testdb',
     headRegistry: registry,
   });
@@ -104,7 +104,7 @@ describe('CBLIndex FEC redundancy (Requirement 7.1)', () => {
       // Construct without options at all
       const store = new FecTrackingMockBlockStore();
       const registry = InMemoryHeadRegistry.createIsolated();
-      const db = new BrightChainDb(store as never, {
+      const db = new BrightDb(store as never, {
         name: 'testdb',
         headRegistry: registry,
       });

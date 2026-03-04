@@ -52,13 +52,13 @@ import { environment } from '../environments/environment';
 import '../styles.scss';
 import BrightChainLogo from './components/BrightChainLogo';
 import { BrightChainSoupDemo } from './components/BrightChainSoupDemo';
-import DashboardPage from './components/dashboardPage';
+import DashboardPage from './components/DashboardPage';
 import { BrightPassDemo } from './components/showcase/BrightPassDemo';
 import { DatabaseDemo } from './components/showcase/DatabaseDemo';
 import { IdentityDemo } from './components/showcase/IdentityDemo';
 import { MessagingDemo } from './components/showcase/MessagingDemo';
 import { StoragePoolsDemo } from './components/showcase/StoragePoolsDemo';
-import { SplashPage } from './components/splashPage';
+import { SplashPage } from './components/SplashPage';
 import { createAppTheme } from './theme';
 
 // BrightMail components from the @brightchain/brightmail-react-components library

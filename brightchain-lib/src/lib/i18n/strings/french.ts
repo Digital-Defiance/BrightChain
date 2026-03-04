@@ -1270,6 +1270,72 @@ export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
     "La version du manifeste TCBL n'est pas prise en charge",
 
+  // Splash
+  [BrightChainStrings.Splash_Welcome]: 'Bienvenue sur BrightChain',
+  [BrightChainStrings.Splash_NextGenInfrastructure]:
+    "La Plateforme d'Applications Décentralisées",
+  [BrightChainStrings.Splash_SoupCanDemo]: 'Démo Boîte de Conserve',
+  [BrightChainStrings.Splash_SoupCanDemoDescription]:
+    "Découvrez comment BrightChain divise les données en blocs et les mélange avec des données aléatoires à l'aide d'opérations XOR pour un stockage sans propriétaire.",
+  [BrightChainStrings.Splash_StoragePools]: 'Pools de Stockage',
+  [BrightChainStrings.Splash_StoragePoolsDescription]:
+    "Explorez les pools isolés par espace de noms, les blocs adressés par contenu, le blanchiment limité au pool et les garanties d'isolation inter-pools.",
+  [BrightChainStrings.Splash_Messaging]: 'Messagerie',
+  [BrightChainStrings.Splash_MessagingDescription]:
+    'Messages directs chiffrés ECIES, discussions de groupe partagées par pool, canaux avec modes de visibilité, messages éphémères et présence.',
+  [BrightChainStrings.Splash_BrightPass]: 'BrightPass',
+  [BrightChainStrings.Splash_BrightPassDescription]:
+    "Coffre-fort de mots de passe décentralisé avec stockage d'identifiants, génération de mots de passe, vérification de violations et configuration TOTP/2FA.",
+  [BrightChainStrings.Splash_Database]: 'Base de données',
+  [BrightChainStrings.Splash_DatabaseDescription]:
+    "Base de données documentaire avec blocs en copie sur écriture, isolation de pool, transactions à concurrence optimiste et pipelines d'agrégation.",
+  [BrightChainStrings.Splash_IdentityAndSecurity]: 'Identité et Sécurité',
+  [BrightChainStrings.Splash_IdentityAndSecurityDescription]:
+    "Sauvegarde de clé papier, gestion des appareils, preuves d'identité sur toutes les plateformes et recherche de profils dans l'annuaire de clés publiques.",
+  [BrightChainStrings.Splash_TrySoupCanDemo]:
+    'Essayer la Démo Boîte de Conserve',
+  [BrightChainStrings.Splash_GetStarted]: 'Commencer',
+  [BrightChainStrings.Splash_WhatIsBrightChain]: "Qu'est-ce que BrightChain ?",
+  [BrightChainStrings.Splash_WhatIsBrightChainDescription]:
+    'BrightChain révolutionne le stockage de données en utilisant le concept de "Soupe de Blocs Brillants". Vos fichiers sont divisés en blocs et mélangés avec des données aléatoires à l\'aide d\'opérations XOR, les faisant apparaître complètement aléatoires tout en maintenant une sécurité parfaite.',
+  [BrightChainStrings.Splash_OwnerFreeStorage]: 'Stockage sans Propriétaire',
+  [BrightChainStrings.Splash_OwnerFreeStorageDescription]:
+    'Le caractère aléatoire cryptographique élimine la responsabilité du stockage',
+  [BrightChainStrings.Splash_EnergyEfficient]: 'Économe en Énergie',
+  [BrightChainStrings.Splash_EnergyEfficientDescription]:
+    'Pas de minage par preuve de travail gaspilleur',
+  [BrightChainStrings.Splash_Decentralized]: 'Décentralisé',
+  [BrightChainStrings.Splash_DecentralizedDescription]:
+    'Distribué sur le réseau',
+  [BrightChainStrings.Splash_AnonymousYetAccountable]:
+    'Anonyme mais Responsable',
+  [BrightChainStrings.Splash_AnonymousYetAccountableDescription]:
+    'Confidentialité avec capacités de modération',
+  [BrightChainStrings.Splash_ExploreThePlatform]: 'Explorer la Plateforme',
+  [BrightChainStrings.Splash_InteractiveDemos]:
+    'Démos interactives présentant les capacités principales de BrightChain',
+  [BrightChainStrings.Splash_LaunchDemo]: 'Lancer la Démo',
+
+  // Splash - BrightStack
+  [BrightChainStrings.Splash_BuildWithBrightStack]:
+    'Construire avec BrightStack',
+  [BrightChainStrings.Splash_BuildWithBrightStackDescription]:
+    'BrightStack est le paradigme full-stack pour les applications décentralisées : BrightChain + Express + React + Node. Si vous connaissez la stack MERN, vous connaissez déjà BrightStack.',
+  [BrightChainStrings.Splash_BrightStackSubtitle]:
+    'Remplacez MongoDB par BrightDb. Gardez tout le reste.',
+  [BrightChainStrings.Splash_BrightDb]: 'BrightDb',
+  [BrightChainStrings.Splash_BrightDbDescription]:
+    "Base de données documentaire compatible MongoDB sur le système de fichiers Owner-Free. CRUD complet, requêtes, index, transactions et pipelines d'agrégation.",
+  [BrightChainStrings.Splash_FamiliarApi]: 'API familière',
+  [BrightChainStrings.Splash_FamiliarApiDescription]:
+    'Les mêmes patterns que MongoDB — collections, find, insert, update — mais chaque document est stocké sous forme de blocs blanchis préservant la vie privée.',
+  [BrightChainStrings.Splash_BuiltOnBrightStack]: 'Construit sur BrightStack',
+  [BrightChainStrings.Splash_BuiltOnBrightStackDescription]:
+    "BrightPass, BrightMail et BrightHub ont tous été construits sur BrightStack, prouvant que le développement d'applications décentralisées peut être aussi simple que le full-stack traditionnel.",
+  [BrightChainStrings.Splash_OpenSource]: 'Open Source',
+  [BrightChainStrings.Splash_OpenSourceDescription]:
+    "BrightChain est entièrement open source. Construisez vos propres dApps sur BrightStack et contribuez à l'avenir décentralisé.",
+
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'Votre tableau de bord',
   [BrightChainStrings.Dashboard_EnergyBalance]: 'Solde énergétique',

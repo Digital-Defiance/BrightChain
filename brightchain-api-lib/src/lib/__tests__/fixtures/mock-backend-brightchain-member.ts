@@ -24,7 +24,9 @@ const createMockWallet = (): Wallet =>
     sign: () => Buffer.from(faker.string.hexadecimal({ length: 128 }), 'hex'),
   }) as any;
 
-export class MockBackendMember implements IMemberOperational<DefaultBackendIdType> {
+export class MockBackendMember
+  implements IMemberOperational<DefaultBackendIdType>
+{
   private _id: DefaultBackendIdType;
   private _type: MemberType;
   private _name: string;

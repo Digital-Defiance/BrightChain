@@ -1155,6 +1155,53 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   Error_TcblError_InvalidManifestVersion:
     'Error_TcblError_InvalidManifestVersion',
 
+  // Splash
+  Splash_Welcome: 'Splash_Welcome',
+  Splash_NextGenInfrastructure: 'Splash_NextGenInfrastructure',
+  Splash_SoupCanDemo: 'Splash_SoupCanDemo',
+  Splash_SoupCanDemoDescription: 'Splash_SoupCanDemoDescription',
+  Splash_StoragePools: 'Splash_StoragePools',
+  Splash_StoragePoolsDescription: 'Splash_StoragePoolsDescription',
+  Splash_Messaging: 'Splash_Messaging',
+  Splash_MessagingDescription: 'Splash_MessagingDescription',
+  Splash_BrightPass: 'Splash_BrightPass',
+  Splash_BrightPassDescription: 'Splash_BrightPassDescription',
+  Splash_Database: 'Splash_Database',
+  Splash_DatabaseDescription: 'Splash_DatabaseDescription',
+  Splash_IdentityAndSecurity: 'Splash_IdentityAndSecurity',
+  Splash_IdentityAndSecurityDescription:
+    'Splash_IdentityAndSecurityDescription',
+  Splash_TrySoupCanDemo: 'Splash_TrySoupCanDemo',
+  Splash_GetStarted: 'Splash_GetStarted',
+  Splash_WhatIsBrightChain: 'Splash_WhatIsBrightChain',
+  Splash_WhatIsBrightChainDescription: 'Splash_WhatIsBrightChainDescription',
+  Splash_OwnerFreeStorage: 'Splash_OwnerFreeStorage',
+  Splash_OwnerFreeStorageDescription: 'Splash_OwnerFreeStorageDescription',
+  Splash_EnergyEfficient: 'Splash_EnergyEfficient',
+  Splash_EnergyEfficientDescription: 'Splash_EnergyEfficientDescription',
+  Splash_Decentralized: 'Splash_Decentralized',
+  Splash_DecentralizedDescription: 'Splash_DecentralizedDescription',
+  Splash_AnonymousYetAccountable: 'Splash_AnonymousYetAccountable',
+  Splash_AnonymousYetAccountableDescription:
+    'Splash_AnonymousYetAccountableDescription',
+  Splash_ExploreThePlatform: 'Splash_ExploreThePlatform',
+  Splash_InteractiveDemos: 'Splash_InteractiveDemos',
+  Splash_LaunchDemo: 'Splash_LaunchDemo',
+
+  // Splash - BrightStack
+  Splash_BuildWithBrightStack: 'Splash_BuildWithBrightStack',
+  Splash_BuildWithBrightStackDescription:
+    'Splash_BuildWithBrightStackDescription',
+  Splash_BrightStackSubtitle: 'Splash_BrightStackSubtitle',
+  Splash_BrightDb: 'Splash_BrightDb',
+  Splash_BrightDbDescription: 'Splash_BrightDbDescription',
+  Splash_FamiliarApi: 'Splash_FamiliarApi',
+  Splash_FamiliarApiDescription: 'Splash_FamiliarApiDescription',
+  Splash_BuiltOnBrightStack: 'Splash_BuiltOnBrightStack',
+  Splash_BuiltOnBrightStackDescription: 'Splash_BuiltOnBrightStackDescription',
+  Splash_OpenSource: 'Splash_OpenSource',
+  Splash_OpenSourceDescription: 'Splash_OpenSourceDescription',
+
   // Dashboard
   Dashboard_Title: 'Dashboard_Title',
   Dashboard_EnergyBalance: 'Dashboard_EnergyBalance',
@@ -1176,8 +1223,7 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   BrightMail_Inbox_Empty: 'BrightMail_Inbox_Empty',
   BrightMail_Inbox_Error: 'BrightMail_Inbox_Error',
   BrightMail_Inbox_Retry: 'BrightMail_Inbox_Retry',
-  BrightMail_Inbox_UnreadCountTemplate:
-    'BrightMail_Inbox_UnreadCountTemplate',
+  BrightMail_Inbox_UnreadCountTemplate: 'BrightMail_Inbox_UnreadCountTemplate',
   BrightMail_Compose_Title: 'BrightMail_Compose_Title',
   BrightMail_Compose_To: 'BrightMail_Compose_To',
   BrightMail_Compose_Cc: 'BrightMail_Compose_Cc',
@@ -1187,8 +1233,7 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   BrightMail_Compose_Send: 'BrightMail_Compose_Send',
   BrightMail_Compose_SendSuccess: 'BrightMail_Compose_SendSuccess',
   BrightMail_Compose_SendError: 'BrightMail_Compose_SendError',
-  BrightMail_Compose_InvalidRecipient:
-    'BrightMail_Compose_InvalidRecipient',
+  BrightMail_Compose_InvalidRecipient: 'BrightMail_Compose_InvalidRecipient',
   BrightMail_Compose_Attachments: 'BrightMail_Compose_Attachments',
   BrightMail_Thread_Error: 'BrightMail_Thread_Error',
   BrightMail_Thread_BackToInbox: 'BrightMail_Thread_BackToInbox',

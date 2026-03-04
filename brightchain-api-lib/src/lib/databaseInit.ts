@@ -19,7 +19,7 @@ import {
   EnergyAccountStore,
   MemberStore,
 } from '@brightchain/brightchain-lib';
-import { BrightChainDb } from '@brightchain/db';
+import { BrightDb } from '@brightchain/db';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { constants as fsConstants } from 'fs';
 import { access, mkdir } from 'fs/promises';
@@ -54,11 +54,11 @@ async function validateDataDir(dirPath: string): Promise<void> {
  *
  * Reads `blockStorePath` and `blockStoreBlockSize` from the Environment:
  * - If `blockStorePath` is set: validates the path, creates a DiskBlockStore,
- *   and creates a BrightChainDb with a PersistentHeadRegistry via `dataDir`.
+ *   and creates a BrightDb with a PersistentHeadRegistry via `dataDir`.
  * - If `blockStorePath` is not set: creates a MemoryBlockStore, logs a warning,
- *   and creates a BrightChainDb with an InMemoryHeadRegistry.
+ *   and creates a BrightDb with an InMemoryHeadRegistry.
  *
- * Registers an `energy_accounts` Model on BrightChainDb with the energy account
+ * Registers an `energy_accounts` Model on BrightDB with the energy account
  * hydration schema, then passes the Model (as ITypedCollection) directly to
  * EnergyAccountStore — no adapter needed.
  *
@@ -99,12 +99,12 @@ export async function brightchainDatabaseInit<TID extends PlatformID>(
       );
     }
 
-    // Create BrightChainDb — uses PersistentHeadRegistry when dataDir is set,
+    // Create BrightDb — uses PersistentHeadRegistry when dataDir is set,
     // InMemoryHeadRegistry otherwise.
     // IMPORTANT: name must match what BrightChainMemberInitService uses
     // (config.memberPoolName) so the head registry keys are consistent across
     // the plugin's db and the seeding service's db.
-    const db = new BrightChainDb(
+    const db = new BrightDb(
       blockStore,
       dataDir ? { name: environment.memberPoolName, dataDir } : undefined,
     );

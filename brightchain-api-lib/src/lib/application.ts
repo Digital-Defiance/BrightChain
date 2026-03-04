@@ -11,7 +11,7 @@ import {
   QuorumStateMachine,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { BrightChainDb } from '@brightchain/db';
+import { BrightDb } from '@brightchain/db';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   debugLog,
@@ -25,6 +25,7 @@ import { GossipService } from './availability/gossipService';
 import { PoolDiscoveryService } from './availability/poolDiscoveryService';
 import { QuorumGossipHandler } from './availability/quorumGossipHandler';
 import { Constants } from './constants';
+import { SessionsController } from './controllers/api/sessions';
 import { createBlockDocumentStore } from './datastore/block-document-store-factory';
 import {
   DocumentCollection,
@@ -37,6 +38,7 @@ import { BrightChainDatabasePlugin } from './plugins/brightchain-database-plugin
 import { configureBrightChainApp } from './plugins/configure-brightchain-app';
 import { ApiRouter } from './routers/api';
 import { AppRouter } from './routers/app';
+import { createTestEmailRouter } from './routers/testEmailRouter';
 import {
   AuthService,
   BackupCodeService,
@@ -49,11 +51,10 @@ import {
   QuorumDatabaseAdapter,
   SecureKeyStorage,
 } from './services';
-import { FakeEmailService } from './services/fakeEmailService';
-import { createTestEmailRouter } from './routers/testEmailRouter';
 import { BrightChainAuthenticationProvider } from './services/brightchain-authentication-provider';
 import { ClientWebSocketServer } from './services/clientWebSocketServer';
 import { EventNotificationSystem } from './services/eventNotificationSystem';
+import { FakeEmailService } from './services/fakeEmailService';
 import { MessagePassingService } from './services/messagePassingService';
 import { WebSocketMessageServer } from './services/webSocketMessageServer';
 
@@ -142,7 +143,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   /**
    * Get a model or collection from the BrightChain document store by name.
    *
-   * If a typed Model has been registered on the BrightChainDb instance
+   * If a typed Model has been registered on the BrightDb instance
    * (via `db.model()`), returns that Model — giving callers automatic
    * hydration/dehydration. Otherwise falls back to a raw DocumentCollection.
    *
@@ -154,7 +155,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   ): DocumentCollection<U> {
     // Prefer a registered Model when available
     try {
-      const db = this._plugin.brightChainDb;
+      const db = this._plugin.brightDb;
       if (db.hasModel(modelName)) {
         // Return the Model instance — callers that know the typed shape
         // can cast to Model<TStored, TTyped>. The Model also exposes
@@ -204,7 +205,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     await this.keyStorage.initializeFromEnvironment();
 
     const blockStore = this._plugin.blockStore;
-    const brightChainDb = this._plugin.brightChainDb;
+    const brightDb = this._plugin.brightDb;
     const memberStore = this._plugin.memberStore;
     const energyStore = this._plugin.energyStore;
 
@@ -240,7 +241,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
 
     // Register services from plugin stores and additional services
     this.services.register('blockStore', () => blockStore);
-    this.services.register('db', () => brightChainDb);
+    this.services.register('db', () => brightDb);
     this.services.register('memberStore', () => memberStore);
     this.services.register('energyStore', () => energyStore);
     this.services.register('energyLedger', () => energyLedger);
@@ -251,9 +252,13 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     const backupCodeService = new BackupCodeService(memberStore);
     this.services.register('backupCodeService', () => backupCodeService);
 
-    // BrightChainSessionAdapter — singleton backed by BrightChainDb
-    const sessionAdapter = new BrightChainSessionAdapter(brightChainDb);
+    // BrightChainSessionAdapter — singleton backed by BrightDb
+    const sessionAdapter = new BrightChainSessionAdapter(brightDb);
     this.services.register('sessionAdapter', () => sessionAdapter);
+
+    // SessionsController — handles JWT token verification for authenticated routes
+    const sessionsController = new SessionsController<TID>(this);
+    this.setController('sessions', sessionsController);
 
     // EventNotificationSystem for WebSocket events
     this.eventSystem = new EventNotificationSystem();
@@ -274,13 +279,17 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
       this.clientWsServer = new ClientWebSocketServer(
         this._httpServer,
         this.environment.jwtSecret,
-        this.eventSystem,
       );
       this.services.register('clientWsServer', () => this.clientWsServer);
+
+      // Wire EventNotificationSystem to broadcast through ClientWebSocketServer
+      // This unifies all real-time event delivery through a single WebSocket connection
+      this.eventSystem.setBroadcaster(this.clientWsServer);
+
       debugLog(
         this.environment.debug,
         'log',
-        '[ ready ] Client WebSocket server initialized',
+        '[ ready ] Client WebSocket server initialized (unified event delivery)',
       );
     }
 
@@ -292,7 +301,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     // ── Quorum subsystem initialization ─────────────────────────────
     // Task 23.1: Initialize QuorumDatabaseAdapter with pool ID "quorum-system"
     try {
-      const quorumDb = new BrightChainDb(blockStore, {
+      const quorumDb = new BrightDb(blockStore, {
         name: 'quorum-system',
         poolId: 'quorum-system',
       });

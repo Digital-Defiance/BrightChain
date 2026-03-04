@@ -48,9 +48,9 @@ import { ServiceProvider } from './service.provider';
 /**
  * Service for storing and retrieving member data
  */
-export class MemberStore<
-  TID extends PlatformID = Uint8Array,
-> implements IMemberStore<TID> {
+export class MemberStore<TID extends PlatformID = Uint8Array>
+  implements IMemberStore<TID>
+{
   private readonly blockStore: IBlockStore;
   private readonly memberIndex: Map<string, IMemberIndexEntry<TID>>;
   private readonly regionIndex: Map<string, Set<string>>;
@@ -1192,10 +1192,18 @@ export class MemberStore<
       publicCBL: Checksum.fromHex(padCBL(indexDoc.publicCBL)),
       privateCBL: Checksum.fromHex(padCBL(indexDoc.privateCBL)),
       ...(indexDoc.publicProfileCBL
-        ? { publicProfileCBL: Checksum.fromHex(padCBL(indexDoc.publicProfileCBL)) }
+        ? {
+            publicProfileCBL: Checksum.fromHex(
+              padCBL(indexDoc.publicProfileCBL),
+            ),
+          }
         : {}),
       ...(indexDoc.privateProfileCBL
-        ? { privateProfileCBL: Checksum.fromHex(padCBL(indexDoc.privateProfileCBL)) }
+        ? {
+            privateProfileCBL: Checksum.fromHex(
+              padCBL(indexDoc.privateProfileCBL),
+            ),
+          }
         : {}),
       type: indexDoc.type,
       status: indexDoc.status ?? MemberStatusType.Active,

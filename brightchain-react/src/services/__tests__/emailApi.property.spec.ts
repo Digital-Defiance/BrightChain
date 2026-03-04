@@ -36,8 +36,9 @@ jest.mock('@brightchain/brightmail-react-components', () => {
             .response?.data?.error?.message
         ) {
           throw new Error(
-            (error as { response: { data: { error: { message: string } } } })
-              .response.data.error.message,
+            (
+              error as { response: { data: { error: { message: string } } } }
+            ).response.data.error.message,
           );
         }
         throw error;

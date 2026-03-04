@@ -4,11 +4,12 @@
  * AuthenticatedApiProvider.
  */
 
-import { useMemo } from 'react';
 import { useAuthenticatedApi } from '@digitaldefiance/express-suite-react-components';
+import type { AxiosInstance } from 'axios';
+import { useMemo } from 'react';
 import BrightPassApiService from '../services/BrightPassApiService';
 
 export const useBrightPassApi = () => {
   const api = useAuthenticatedApi();
-  return useMemo(() => new BrightPassApiService(api), [api]);
+  return useMemo(() => new BrightPassApiService(api as AxiosInstance), [api]);
 };

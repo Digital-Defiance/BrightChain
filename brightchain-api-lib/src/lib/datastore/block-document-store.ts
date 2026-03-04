@@ -203,7 +203,8 @@ function decodeDoc<T extends DocumentRecord>(buf: Buffer): T {
 class BlockCollection<
   T extends DocumentRecord,
   TID extends PlatformID = PlatformID,
-> implements DocumentCollection<T> {
+> implements DocumentCollection<T>
+{
   private readonly index = new Map<string, string>(); // _id -> blockId
   private readonly registryKey: string; // key for looking up index block ID in registry
   private indexLoaded = false;
@@ -770,9 +771,9 @@ class BlockCollection<
   }
 }
 
-export class BlockDocumentStore<
-  TID extends PlatformID = PlatformID,
-> implements DocumentStore {
+export class BlockDocumentStore<TID extends PlatformID = PlatformID>
+  implements DocumentStore
+{
   private readonly collections = new Map<
     string,
     BlockCollection<DocumentRecord, TID>

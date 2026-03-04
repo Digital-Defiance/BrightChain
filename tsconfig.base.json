@@ -3,15 +3,15 @@
   "compilerOptions": {
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
+    "moduleResolution": "Bundler",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
     "strict": true,
-    "target": "es2020",
-    "module": "esnext",
-    "lib": ["es2020", "dom"],
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM"],
     "types": ["node", "jest"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
@@ -29,7 +29,15 @@
       ],
       "@brightchain/brightpass-react-components": [
         "brightpass-react-components/src/index.ts"
-      ]
+      ],
+      "@brightchain/brighthub-react-components": [
+        "brighthub-react-components/src/index.ts"
+      ],
+      "@brightchain/brighthub-react-components/*": [
+        "brighthub-react-components/src/*"
+      ],
+      "@brightchain/brighthub-lib": ["brighthub-lib/src/index.ts"],
+      "@brightchain/brighthub-lib/*": ["brighthub-lib/src/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

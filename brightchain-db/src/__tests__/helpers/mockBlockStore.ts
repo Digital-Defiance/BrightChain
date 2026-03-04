@@ -1,7 +1,7 @@
 /**
  * In-memory mock of IBlockStore for testing.
  *
- * Implements only the methods that brightchain-db actually uses:
+ * Implements only the methods that BrightDB actually uses:
  *   has(key), get(key), put(key, data), delete(key)
  *
  * All other IBlockStore methods throw "not implemented" so tests catch

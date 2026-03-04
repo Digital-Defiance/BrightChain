@@ -8,10 +8,10 @@
  * count, and — if sharedWith.length > 0 — a shared icon indicator.
  */
 
+import type { VaultMetadata } from '@brightchain/brightchain-lib';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import fc from 'fast-check';
 import React from 'react';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
-import type { VaultMetadata } from '@brightchain/brightchain-lib';
 
 // ---------------------------------------------------------------------------
 // Mocks — set up before importing the component under test.
@@ -191,9 +191,7 @@ describe('Property 3: Vault list item rendering completeness', () => {
         await waitFor(() => {
           expect(screen.getByText(vault.name)).toBeTruthy();
         });
-        expect(
-          screen.getByText(String(vault.sharedWith.length)),
-        ).toBeTruthy();
+        expect(screen.getByText(String(vault.sharedWith.length))).toBeTruthy();
         expect(screen.getByTestId('PeopleIcon')).toBeTruthy();
 
         cleanup();

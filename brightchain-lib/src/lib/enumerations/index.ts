@@ -52,6 +52,7 @@ export * from './storeErrorType';
 export * from './streamErrorType';
 // LanguageCodes has been removed - use LanguageCodes from '@digitaldefiance/i18n-lib' instead
 export * from './brightChainStrings';
+export * from './brightHubStrings';
 export * from './brightPassStrings';
 export * from './symmetricErrorType';
 export * from './systemKeyringErrorType';

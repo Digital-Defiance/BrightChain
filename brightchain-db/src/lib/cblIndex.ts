@@ -1,5 +1,5 @@
 /**
- * CBLIndex – higher-level CBL index built on top of a brightchain-db Collection.
+ * CBLIndex – higher-level CBL index built on top of a BrightDB Collection.
  *
  * Tracks whitened CBL storage results with metadata, pool scoping,
  * user-level organization, and file version history.
@@ -20,7 +20,7 @@ import {
 } from '@brightchain/brightchain-lib';
 import { randomUUID } from 'crypto';
 import { type Collection, type ICollectionHeadRegistry } from './collection';
-import type { BrightChainDb } from './database';
+import type { BrightDb } from './database';
 import type { BsonDocument, FilterQuery, SortSpec } from './types';
 
 /**
@@ -86,7 +86,7 @@ export interface CBLIndexOptions {
 }
 
 /**
- * Higher-level CBL index built on top of a brightchain-db Collection.
+ * Higher-level CBL index built on top of a BrightDB Collection.
  * Tracks whitened CBL storage results with metadata, pool scoping,
  * and user-level organization.
  */
@@ -104,7 +104,7 @@ export class CBLIndex {
   private readonly generateId: () => string;
 
   constructor(
-    db: BrightChainDb,
+    db: BrightDb,
     blockStore: IBlockStore,
     options?: CBLIndexOptions,
   ) {

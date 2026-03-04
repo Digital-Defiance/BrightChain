@@ -1,8 +1,8 @@
 /**
- * BrightChainDb – the top-level database object.
+ * BrightDB – the top-level database object.
  *
  * Usage:
- *   const db = new BrightChainDb(blockStore, { name: 'mydb' });
+ *   const db = new BrightDb(blockStore, { name: 'mydb' });
  *   const users = db.collection('users');
  *   await users.insertOne({ name: 'Alice' });
  */
@@ -15,9 +15,9 @@ import {
   ICollectionHeadRegistry,
 } from './collection';
 import { PersistentHeadRegistry } from './headRegistry';
-import { StoreLock } from './storeLock';
 import { Model, ModelOptions } from './model';
 import { PooledStoreAdapter } from './pooledStoreAdapter';
+import { StoreLock } from './storeLock';
 import { DbSession, JournalOp } from './transaction';
 import {
   BsonDocument,
@@ -28,9 +28,9 @@ import {
 } from './types';
 
 /**
- * Options for creating a BrightChainDb instance.
+ * Options for creating a BrightDb instance.
  */
-export interface BrightChainDbOptions {
+export interface BrightDbOptions {
   /** Database name (default: 'brightchain') */
   name?: string;
   /** Custom head registry (for testing isolation) */
@@ -46,7 +46,7 @@ export interface BrightChainDbOptions {
 /**
  * The main database driver – analogous to MongoDB's `Db` class.
  */
-export class BrightChainDb {
+export class BrightDb {
   public readonly name: string;
   private readonly store: IBlockStore;
   private readonly collections = new Map<string, Collection>();
@@ -67,7 +67,7 @@ export class BrightChainDb {
   /** Store-level lock for cross-platform write serialization */
   private readonly storeLock?: StoreLock;
 
-  constructor(blockStore: IBlockStore, options?: BrightChainDbOptions) {
+  constructor(blockStore: IBlockStore, options?: BrightDbOptions) {
     // Wrap the store in a PooledStoreAdapter when poolId is provided
     // and the store supports pool operations.
     if (options?.poolId && isPooledBlockStore(blockStore)) {

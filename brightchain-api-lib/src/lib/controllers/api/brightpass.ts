@@ -574,10 +574,37 @@ export class BrightPassController<
   ) {
     try {
       const options = (req as unknown as { body: any }).body;
+      // Map 'digits' to 'numbers' for backward compatibility with tests
+      if (options.digits !== undefined && options.numbers === undefined) {
+        options.numbers = options.digits;
+        delete options.digits;
+      }
       // validate throws on invalid options
       PasswordGenerator.validate(options);
-      const password = PasswordGenerator.generate(options);
-      return ok({ password });
+      const passwordStr = PasswordGenerator.generate(options);
+
+      // Calculate entropy: log2(charset_size^length)
+      let charsetSize = 0;
+      if (options.uppercase) charsetSize += 26;
+      if (options.lowercase) charsetSize += 26;
+      if (options.numbers) charsetSize += 10;
+      if (options.symbols) charsetSize += 26; // approximate symbol count
+      const entropy = Math.floor(options.length * Math.log2(charsetSize || 1));
+
+      // Determine strength based on entropy
+      let strength: 'weak' | 'fair' | 'strong' | 'very_strong';
+      if (entropy < 40) strength = 'weak';
+      else if (entropy < 60) strength = 'fair';
+      else if (entropy < 80) strength = 'strong';
+      else strength = 'very_strong';
+
+      return ok({
+        password: {
+          password: passwordStr,
+          entropy,
+          strength,
+        },
+      });
     } catch (error) {
       return mapBrightPassError(error);
     }
@@ -591,8 +618,19 @@ export class BrightPassController<
       if (!secret) {
         return validationError('Missing required field: secret');
       }
-      const code = TOTPEngine.generate(secret);
-      return ok({ code });
+      const codeStr = TOTPEngine.generate(secret);
+
+      // Calculate remaining seconds in the current 30-second period
+      const now = Math.floor(Date.now() / 1000);
+      const period = 30;
+      const remainingSeconds = period - (now % period);
+
+      return ok({
+        code: {
+          code: codeStr,
+          remainingSeconds,
+        },
+      });
     } catch (error) {
       return mapBrightPassError(error);
     }

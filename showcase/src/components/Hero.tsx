@@ -34,9 +34,7 @@ const Hero = ({ scrollY }: HeroProps) => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1, duration: 0.6 }}
         >
-          <span className="badge-text">
-            🌟 Next-Generation Decentralized Infrastructure
-          </span>
+          <span className="badge-text">🌟 The Decentralized App Platform</span>
         </motion.div>
 
         <motion.h1
@@ -63,14 +61,21 @@ const Hero = ({ scrollY }: HeroProps) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.8 }}
         >
-          Revolutionary Blockchain Without the Waste: Decentralized storage,
-          homomorphic voting, and brokered anonymity—all powered by
+          BrightChain revolutionizes data storage using the &ldquo;Bright Block
+          Soup&rdquo; concept. Your files are broken into blocks and mixed with
+          random data using XOR operations, making them appear completely random
+          while maintaining perfect security.
           <br />
-          advanced cryptography and innovative governance mechanisms.
+          <br />
+          <strong>Not a cryptocurrency.</strong> No coins, no mining, no proof
+          of work. BrightChain values real contributions of storage and compute,
+          tracked in Joules &mdash; a unit tied to real-world energy costs, not
+          market speculation.
           <br />
           <span className="hero-highlight">
-            🔐 ECIES + AES-256-GCM • 🗳️ Homomorphic Voting • 🌐 P2P Storage • 🎭
-            Brokered Anonymity • ⚡ Zero Mining Waste • 💾 Storage Over Power
+            🔒 Owner-Free Storage • ⚡ Energy Efficient • 🌐 Decentralized • 🎭
+            Anonymous yet Accountable • 🗳️ Homomorphic Voting • 💾 Storage Over
+            Power
           </span>
         </motion.p>
 
