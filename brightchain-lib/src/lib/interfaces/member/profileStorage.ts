@@ -1,5 +1,6 @@
 import { MemberStatusType } from '../../enumerations/memberStatusType';
 import { IStoredBackupCode } from '../userManagement';
+import { IPasswordWrappedPrivateKey } from './passwordWrappedPrivateKey';
 
 /**
  * Storage format for public member profile data - all serializable types
@@ -42,8 +43,14 @@ export interface IPrivateMemberProfileStorageData {
   /** bcrypt password hash — present only for members with password-based auth */
   passwordHash?: string;
 
-  /** Stored backup codes — bcrypt-hashed, one-time-use recovery codes */
+  /** Stored backup codes — encrypted per the upstream Argon2id/AEAD/ECIES scheme (see IStoredBackupCode) */
   backupCodes?: IStoredBackupCode[];
+
+  /** Password-wrapped ECIES private key (AES-256-GCM + PBKDF2) */
+  passwordWrappedPrivateKey?: IPasswordWrappedPrivateKey;
+
+  /** Mnemonic encrypted with the system user's ECIES public key (hex-encoded) */
+  mnemonicRecovery?: string;
 
   // Preferences
   settings: {
@@ -89,8 +96,12 @@ export interface IPrivateMemberProfileHydratedData<TID = Uint8Array> {
   blockedPeers: TID[];
   /** bcrypt password hash — present only for members with password-based auth */
   passwordHash?: string;
-  /** Stored backup codes — bcrypt-hashed, one-time-use recovery codes */
+  /** Stored backup codes — encrypted per the upstream Argon2id/AEAD/ECIES scheme (see IStoredBackupCode) */
   backupCodes?: IStoredBackupCode[];
+  /** Password-wrapped ECIES private key (AES-256-GCM + PBKDF2) */
+  passwordWrappedPrivateKey?: IPasswordWrappedPrivateKey;
+  /** Mnemonic encrypted with the system user's ECIES public key (hex-encoded) */
+  mnemonicRecovery?: string;
   settings: {
     autoReplication?: boolean;
     minRedundancy?: number;

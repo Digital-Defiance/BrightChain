@@ -11,6 +11,7 @@ export * from './blockMetadataErrorType';
 export * from './blockServiceErrorType';
 export * from './blockSize';
 export * from './blockStatusType';
+export * from './blockStoreType';
 export * from './blockType';
 export * from './blockValidationErrorType';
 export * from './breadCrumbTraceLevel';
@@ -52,6 +53,7 @@ export * from './storeErrorType';
 export * from './streamErrorType';
 // LanguageCodes has been removed - use LanguageCodes from '@digitaldefiance/i18n-lib' instead
 export * from './brightChainStrings';
+export * from './brightHubStrings';
 export * from './brightPassStrings';
 export * from './symmetricErrorType';
 export * from './systemKeyringErrorType';

@@ -26,7 +26,7 @@ import {
   MemberStatusType,
   resetInitialization,
 } from '@brightchain/brightchain-lib';
-import { BrightChainDb } from '@brightchain/db';
+import { BrightDb } from '@brightchain/db';
 import {
   EmailString,
   type IECIESConfig,
@@ -302,7 +302,7 @@ async function runRbacInitAndVerify(
   expect(result.alreadyInitialized).toBe(false);
   // 3 member_index + 3 roles + 3 users + 3 user-roles + 3 mnemonics = 15
   expect(result.insertedCount).toBe(15);
-  expect(result.db).toBeInstanceOf(BrightChainDb);
+  expect(result.db).toBeInstanceOf(BrightDb);
 
   const db = service.db;
 
@@ -392,7 +392,7 @@ async function runRbacInitAndVerify(
  * member_index collection and return the init result + hash.
  */
 async function runInitAndVerify(config: IBrightChainMemberInitConfig): Promise<{
-  result: IBrightChainBaseInitResult<BrightChainDb, GuidV4Buffer>;
+  result: IBrightChainBaseInitResult<BrightDb, GuidV4Buffer>;
   entries: IMemberIndexDocument[];
   hash: string;
 }> {

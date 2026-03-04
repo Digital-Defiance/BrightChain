@@ -40,11 +40,13 @@ function validateSize(data: Uint8Array, blockSize: BlockSize): Uint8Array {
 
 export class MemoryBlockStoreAdapter implements IBlockStore {
   public readonly blockSize: BlockSize;
+  public readonly supportedBlockSizes: readonly BlockSize[];
   private readonly store: MemoryBlockStore;
 
   constructor(config: { blockSize: BlockSize }) {
     this.store = new MemoryBlockStore(config.blockSize);
     this.blockSize = config.blockSize;
+    this.supportedBlockSizes = [config.blockSize];
   }
 
   public async put(
@@ -77,8 +79,11 @@ export class MemoryBlockStoreAdapter implements IBlockStore {
     await this.store.deleteData(key);
   }
 
-  public async getRandomBlocks(count: number): Promise<Checksum[]> {
-    return this.store.getRandomBlocks(count);
+  public async getRandomBlocks(
+    count: number,
+    blockSize: BlockSize,
+  ): Promise<Checksum[]> {
+    return this.store.getRandomBlocks(count, blockSize);
   }
 
   public get<T extends BaseBlock>(checksum: Checksum | string): BlockHandle<T> {

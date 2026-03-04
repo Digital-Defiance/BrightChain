@@ -35,28 +35,22 @@ import { formatBreachMessage } from './BreachCheckWidget';
 describe('Property 12: Breach result display correctness', () => {
   it('returns warning severity when breached is true', () => {
     fc.assert(
-      fc.property(
-        fc.nat({ max: 1_000_000 }),
-        (count) => {
-          const result = formatBreachMessage(true, count);
-          expect(result.severity).toBe('warning');
-          expect(result.messageKey).toBe('Breach_Found');
-        },
-      ),
+      fc.property(fc.nat({ max: 1_000_000 }), (count) => {
+        const result = formatBreachMessage(true, count);
+        expect(result.severity).toBe('warning');
+        expect(result.messageKey).toBe('Breach_Found');
+      }),
       { numRuns: 100 },
     );
   });
 
   it('returns success severity when breached is false', () => {
     fc.assert(
-      fc.property(
-        fc.nat({ max: 1_000_000 }),
-        (count) => {
-          const result = formatBreachMessage(false, count);
-          expect(result.severity).toBe('success');
-          expect(result.messageKey).toBe('Breach_NotFound');
-        },
-      ),
+      fc.property(fc.nat({ max: 1_000_000 }), (count) => {
+        const result = formatBreachMessage(false, count);
+        expect(result.severity).toBe('success');
+        expect(result.messageKey).toBe('Breach_NotFound');
+      }),
       { numRuns: 100 },
     );
   });

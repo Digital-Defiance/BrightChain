@@ -1,0 +1,20 @@
+# BrightChain
+
+> A unified cryptographic platform and Refractory Network for privacy-preserving decentralized applications.
+
+## Core Documentation
+- [Vision](https://github.brightchain.org/docs/overview/brightchain-vision.html): The fundamental philosophy of Owner-Free storage and digital defiance.
+- [Architecture](https://github.brightchain.org/docs/architecture/): High-level system design of the BrightChain ecosystem.
+- [Security Analysis](https://github.brightchain.org/docs/security/ecies-paillier-bridge-analysis.html): Deep dive into the ECIES-to-Paillier Key Bridge.
+
+## Storage System
+- [The Soup Market](https://github.brightchain.org/docs/storage/storage-market.html): XOR-whitened TUPLE storage and Block Soup mechanics.
+- [Member Storage](https://github.brightchain.org/docs/storage/member-storage.html): How identity interacts with the decentralized filesystem.
+
+## Developer Toolkit (The BrightStack)
+- [BrightDB](https://github.brightchain.org/docs/storage/storage-overview.html): MongoDB-compatible document database running on the Refractory Network.
+- [Lumen Client Protocol](https://github.brightchain.org/docs/networking/lumen-client-protocol.html): Implementation guide for Node-less client access.
+
+## Optional & Reference
+- [Roadmap](https://github.brightchain.org/docs/roadmaps/roadmap.html): Current implementation status and future milestones.
+- [GitHub Repository](https://github.com/Digital-Defiance/BrightChain): Source code and issue tracking.

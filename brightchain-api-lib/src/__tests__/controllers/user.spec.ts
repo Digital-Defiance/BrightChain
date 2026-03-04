@@ -19,14 +19,17 @@ import {
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { SecureString } from '@digitaldefiance/ecies-lib';
+import { EmailString, MemberType, SecureString } from '@digitaldefiance/ecies-lib';
+import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
 import {
   ApiErrorResponse,
   ApiRequestHandler,
   IApiMessageResponse,
   ServiceContainer,
+  SystemUserService,
 } from '@digitaldefiance/node-express-suite';
 import { UserController } from '../../lib/controllers/api/user';
+import { AppConstants } from '../../lib/appConstants';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { AuthService } from '../../lib/services/auth';
 import { EmailService } from '../../lib/services/email';
@@ -92,7 +95,7 @@ function createTestEnvironment() {
 
   const mockApp = {
     environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
+    constants: AppConstants,
     ready: true,
     services,
     plugins: {},
@@ -117,6 +120,17 @@ function createTestEnvironment() {
     },
   } as unknown as EmailService;
 
+  // Pre-populate the SystemUserService singleton so AuthService.register()
+  // can encrypt mnemonics without requiring SYSTEM_MNEMONIC env var.
+  const ecies = ServiceProvider.getInstance().eciesService as unknown as ECIESService;
+  const { member: sysUser } = Member.newMember(
+    ecies,
+    MemberType.System,
+    AppConstants.SystemUser,
+    new EmailString(AppConstants.SystemEmail),
+  );
+  SystemUserService.setSystemUser(sysUser, AppConstants);
+
   const authService = new AuthService(
     mockApp,
     memberStore,
@@ -135,6 +149,11 @@ function createTestEnvironment() {
 }
 
 describe('UserController Error Handling', () => {
+  // Reset the SystemUserService singleton before each test to avoid
+  // cross-contamination between isolated test environments.
+  beforeEach(() => {
+    (SystemUserService as any)['systemUser'] = null;
+  });
   /**
    * Requirement 3.5: IF member creation fails in the MemberStore,
    * THEN THE AuthService SHALL propagate the error and THE UserController
@@ -190,7 +209,7 @@ describe('UserController Error Handling', () => {
       await isolatedAuth.register(
         'profileuser',
         'profile@example.com',
-        new SecureString('securepassword123'),
+        new SecureString('Secure!password123'),
       );
 
       // Look up the member to get the raw ID bytes, then compute both the
@@ -267,7 +286,7 @@ describe('UserController Error Handling', () => {
       await isolatedAuth.register(
         'updateuser',
         'update@example.com',
-        new SecureString('securepassword123'),
+        new SecureString('Secure!password123'),
       );
 
       // Look up the member to get the raw ID bytes, then compute the UUID

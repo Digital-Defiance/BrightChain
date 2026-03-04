@@ -9,19 +9,22 @@
  * - Symmetric encryption (AES-256-GCM with a shared key)
  * - S/MIME-style digital signatures (sign with sender's private key, verify with public key)
  *
+ * Uses cross-platform crypto utilities (Web Crypto API) so this works
+ * in both Node.js and browser environments.
+ *
  * @see Requirements 16.1, 16.3, 16.4, 16.5, 16.6, 16.7, 16.8
  */
 
-import {
-  createCipheriv,
-  createDecipheriv,
-  createHash,
-  randomBytes,
-} from 'crypto';
 import { BlockECIES } from '../../access/ecies';
 import { EmailErrorType } from '../../enumerations/messaging/emailErrorType';
 import { MessageEncryptionScheme } from '../../enumerations/messaging/messageEncryptionScheme';
 import { EmailError } from '../../errors/messaging/emailError';
+import {
+  aes256GcmDecrypt,
+  aes256GcmEncrypt,
+  crossPlatformRandomBytes,
+  crossPlatformSha256,
+} from '../../utils/crossPlatformCrypto';
 
 // ─── Encryption Metadata Interfaces ─────────────────────────────────────────
 
@@ -134,13 +137,15 @@ export class EmailEncryptionService {
   ): Promise<IEncryptedEmailContent> {
     try {
       // Generate a random AES-256-GCM key and IV
-      const symmetricKey = randomBytes(32);
-      const iv = randomBytes(12);
+      const symmetricKey = crossPlatformRandomBytes(32);
+      const iv = crossPlatformRandomBytes(12);
 
       // Encrypt content with AES-256-GCM
-      const cipher = createCipheriv('aes-256-gcm', symmetricKey, iv);
-      const encrypted = Buffer.concat([cipher.update(content), cipher.final()]);
-      const authTag = cipher.getAuthTag();
+      const { ciphertext: encrypted, authTag } = await aes256GcmEncrypt(
+        symmetricKey,
+        content,
+        iv,
+      );
 
       // Encrypt the symmetric key with the recipient's ECIES public key
       const encryptedKey = await BlockECIES.encrypt(
@@ -153,12 +158,12 @@ export class EmailEncryptionService {
       encryptedKeys.set(recipientAddress, encryptedKey);
 
       return {
-        encryptedContent: new Uint8Array(encrypted),
+        encryptedContent: encrypted,
         encryptionMetadata: {
           scheme: MessageEncryptionScheme.RECIPIENT_KEYS,
           encryptedKeys,
-          iv: new Uint8Array(iv),
-          authTag: new Uint8Array(authTag),
+          iv,
+          authTag,
           isSigned: false,
         },
       };
@@ -182,10 +187,10 @@ export class EmailEncryptionService {
    *
    * @see Requirement 16.1 - Support SYMMETRIC encryption scheme
    */
-  encryptContentSymmetric(
+  async encryptContentSymmetric(
     content: Uint8Array,
     sharedKey: Uint8Array,
-  ): IEncryptedEmailContent {
+  ): Promise<IEncryptedEmailContent> {
     try {
       if (sharedKey.length !== 32) {
         throw new EmailError(
@@ -195,17 +200,19 @@ export class EmailEncryptionService {
         );
       }
 
-      const iv = randomBytes(12);
-      const cipher = createCipheriv('aes-256-gcm', sharedKey, iv);
-      const encrypted = Buffer.concat([cipher.update(content), cipher.final()]);
-      const authTag = cipher.getAuthTag();
+      const iv = crossPlatformRandomBytes(12);
+      const { ciphertext: encrypted, authTag } = await aes256GcmEncrypt(
+        sharedKey,
+        content,
+        iv,
+      );
 
       return {
-        encryptedContent: new Uint8Array(encrypted),
+        encryptedContent: encrypted,
         encryptionMetadata: {
           scheme: MessageEncryptionScheme.SHARED_KEY,
-          iv: new Uint8Array(iv),
-          authTag: new Uint8Array(authTag),
+          iv,
+          authTag,
           isSigned: false,
         },
       };
@@ -271,18 +278,14 @@ export class EmailEncryptionService {
       );
 
       // Decrypt the content with the recovered symmetric key
-      const decipher = createDecipheriv(
-        'aes-256-gcm',
+      const decrypted = await aes256GcmDecrypt(
         symmetricKey,
+        encryptedContent,
         metadata.iv,
+        metadata.authTag,
       );
-      decipher.setAuthTag(metadata.authTag);
-      const decrypted = Buffer.concat([
-        decipher.update(encryptedContent),
-        decipher.final(),
-      ]);
 
-      return new Uint8Array(decrypted);
+      return decrypted;
     } catch (error) {
       if (error instanceof EmailError) throw error;
       throw new EmailError(
@@ -302,11 +305,11 @@ export class EmailEncryptionService {
    * @returns Decrypted plaintext content
    * @throws {EmailError} If decryption fails
    */
-  decryptContentSymmetric(
+  async decryptContentSymmetric(
     encryptedContent: Uint8Array,
     metadata: IEmailEncryptionMetadata,
     sharedKey: Uint8Array,
-  ): Uint8Array {
+  ): Promise<Uint8Array> {
     try {
       if (!metadata.iv || !metadata.authTag) {
         throw new EmailError(
@@ -315,14 +318,14 @@ export class EmailEncryptionService {
         );
       }
 
-      const decipher = createDecipheriv('aes-256-gcm', sharedKey, metadata.iv);
-      decipher.setAuthTag(metadata.authTag);
-      const decrypted = Buffer.concat([
-        decipher.update(encryptedContent),
-        decipher.final(),
-      ]);
+      const decrypted = await aes256GcmDecrypt(
+        sharedKey,
+        encryptedContent,
+        metadata.iv,
+        metadata.authTag,
+      );
 
-      return new Uint8Array(decrypted);
+      return decrypted;
     } catch (error) {
       if (error instanceof EmailError) throw error;
       throw new EmailError(
@@ -363,13 +366,15 @@ export class EmailEncryptionService {
 
     try {
       // 1. Generate a random AES-256-GCM key and IV
-      const symmetricKey = randomBytes(32);
-      const iv = randomBytes(12);
+      const symmetricKey = crossPlatformRandomBytes(32);
+      const iv = crossPlatformRandomBytes(12);
 
       // 2. Encrypt content once with the symmetric key
-      const cipher = createCipheriv('aes-256-gcm', symmetricKey, iv);
-      const encrypted = Buffer.concat([cipher.update(content), cipher.final()]);
-      const authTag = cipher.getAuthTag();
+      const { ciphertext: encrypted, authTag } = await aes256GcmEncrypt(
+        symmetricKey,
+        content,
+        iv,
+      );
 
       // 3. Encrypt the symmetric key for each recipient
       const encryptedKeys = new Map<string, Uint8Array>();
@@ -393,12 +398,12 @@ export class EmailEncryptionService {
       }
 
       return {
-        encryptedContent: new Uint8Array(encrypted),
+        encryptedContent: encrypted,
         encryptionMetadata: {
           scheme: MessageEncryptionScheme.RECIPIENT_KEYS,
           encryptedKeys,
-          iv: new Uint8Array(iv),
-          authTag: new Uint8Array(authTag),
+          iv,
+          authTag,
           isSigned: false,
         },
       };
@@ -428,14 +433,14 @@ export class EmailEncryptionService {
    *
    * @see Requirement 16.5 - S/MIME signatures for sender authentication
    */
-  signContent(
+  async signContent(
     content: Uint8Array,
     senderPrivateKey: Uint8Array,
     senderPublicKey: Uint8Array,
-  ): ISignatureResult {
+  ): Promise<ISignatureResult> {
     try {
       // Create SHA-256 hash of the content
-      const hash = createHash('sha256').update(content).digest();
+      const hash = await crossPlatformSha256(content);
 
       // Sign the hash using HMAC with the private key as the key.
       // This provides a deterministic signature that can be verified
@@ -443,12 +448,13 @@ export class EmailEncryptionService {
       // In a full S/MIME implementation, this would use ECDSA.
       // Here we use HMAC-SHA256 as a simplified signing mechanism
       // that works with the existing key infrastructure.
-      const hmac = createHash('sha256')
-        .update(Buffer.concat([senderPrivateKey, hash]))
-        .digest();
+      const combined = new Uint8Array(senderPrivateKey.length + hash.length);
+      combined.set(senderPrivateKey, 0);
+      combined.set(hash, senderPrivateKey.length);
+      const hmac = await crossPlatformSha256(combined);
 
       return {
-        signature: new Uint8Array(hmac),
+        signature: hmac,
         signerPublicKey: senderPublicKey,
       };
     } catch (error) {
@@ -475,16 +481,17 @@ export class EmailEncryptionService {
    *
    * @see Requirement 16.8 - Verify sender's signature on decryption
    */
-  verifySignature(
+  async verifySignature(
     content: Uint8Array,
     signature: Uint8Array,
     signerPrivateKey: Uint8Array,
-  ): boolean {
+  ): Promise<boolean> {
     try {
-      const hash = createHash('sha256').update(content).digest();
-      const expectedSignature = createHash('sha256')
-        .update(Buffer.concat([signerPrivateKey, hash]))
-        .digest();
+      const hash = await crossPlatformSha256(content);
+      const combined = new Uint8Array(signerPrivateKey.length + hash.length);
+      combined.set(signerPrivateKey, 0);
+      combined.set(hash, signerPrivateKey.length);
+      const expectedSignature = await crossPlatformSha256(combined);
 
       // Constant-time comparison to prevent timing attacks
       if (signature.length !== expectedSignature.length) return false;
@@ -523,7 +530,7 @@ export class EmailEncryptionService {
     senderPublicKey: Uint8Array,
   ): Promise<IPerRecipientEncryptionResult> {
     // 1. Sign the plaintext content
-    const { signature, signerPublicKey } = this.signContent(
+    const { signature, signerPublicKey } = await this.signContent(
       content,
       senderPrivateKey,
       senderPublicKey,
@@ -573,7 +580,7 @@ export class EmailEncryptionService {
 
     // 2. Verify signature if present
     if (metadata.isSigned && metadata.signature) {
-      const isValid = this.verifySignature(
+      const isValid = await this.verifySignature(
         decrypted,
         metadata.signature,
         signerPrivateKey,

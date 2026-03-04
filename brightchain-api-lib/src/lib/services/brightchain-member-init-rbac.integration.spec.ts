@@ -18,7 +18,7 @@ import {
   initializeBrightChain,
   resetInitialization,
 } from '@brightchain/brightchain-lib';
-import { BrightChainDb } from '@brightchain/db';
+import { BrightDb } from '@brightchain/db';
 import {
   EmailString,
   type IECIESConfig,
@@ -278,7 +278,7 @@ describe('BrightChainMemberInitService.initializeWithRbac — integration', () =
     expect(result.alreadyInitialized).toBe(false);
     // 3 member_index + 3 roles + 3 users + 3 user-roles + 3 mnemonics = 15
     expect(result.insertedCount).toBe(15);
-    expect(result.db).toBeInstanceOf(BrightChainDb);
+    expect(result.db).toBeInstanceOf(BrightDb);
   });
 
   // ── Roles collection ──────────────────────────────────────────────────

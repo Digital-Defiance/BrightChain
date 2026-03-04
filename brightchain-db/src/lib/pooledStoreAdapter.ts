@@ -45,6 +45,10 @@ export class PooledStoreAdapter implements IBlockStore {
     return this.inner.blockSize;
   }
 
+  public get supportedBlockSizes(): readonly BlockSize[] {
+    return this.inner.supportedBlockSizes;
+  }
+
   // === Pool-scoped core block operations ===
 
   public async has(key: Checksum | string): Promise<boolean> {
@@ -68,7 +72,10 @@ export class PooledStoreAdapter implements IBlockStore {
     await this.inner.deleteFromPool(this.poolId, key.toHex());
   }
 
-  public async getRandomBlocks(count: number): Promise<Checksum[]> {
+  public async getRandomBlocks(
+    count: number,
+    blockSize: BlockSize,
+  ): Promise<Checksum[]> {
     return this.inner.getRandomBlocksFromPool(this.poolId, count);
   }
 

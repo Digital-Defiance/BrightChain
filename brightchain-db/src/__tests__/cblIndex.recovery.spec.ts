@@ -15,7 +15,7 @@
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import { MockBlockStore, MockPooledBlockStore } from './helpers/mockBlockStore';
 
@@ -94,7 +94,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
     it('should recover entries from a snapshot', async () => {
       const store = new MockBlockStore();
       const registry = InMemoryHeadRegistry.createIsolated();
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb',
         headRegistry: registry,
       });
@@ -106,7 +106,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
       const magnetUrl = await index.snapshot();
 
       // Restore into a fresh index on the same store
-      const db2 = new BrightChainDb(store as any, {
+      const db2 = new BrightDb(store as any, {
         name: 'testdb2',
         headRegistry: registry,
       });
@@ -120,7 +120,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
     it('should restore the sequence counter so new entries continue numbering', async () => {
       const store = new MockBlockStore();
       const registry = InMemoryHeadRegistry.createIsolated();
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb',
         headRegistry: registry,
       });
@@ -132,7 +132,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
       await index.addEntry(makeEntry('&v=3'));
       const magnetUrl = await index.snapshot();
 
-      const db2 = new BrightChainDb(store as any, {
+      const db2 = new BrightDb(store as any, {
         name: 'testdb-seq',
         headRegistry: registry,
       });
@@ -146,7 +146,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
     it('should recover soft-deleted entries from snapshot', async () => {
       const store = new MockBlockStore();
       const registry = InMemoryHeadRegistry.createIsolated();
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb',
         headRegistry: registry,
       });
@@ -157,7 +157,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
       await index.softDelete(entry.magnetUrl);
       const magnetUrl = await index.snapshot();
 
-      const db2 = new BrightChainDb(store as any, {
+      const db2 = new BrightDb(store as any, {
         name: 'testdb-del',
         headRegistry: registry,
       });
@@ -173,7 +173,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
     it('should persist snapshot magnet URL in head registry for recovery', async () => {
       const store = new MockBlockStore();
       const registry = InMemoryHeadRegistry.createIsolated();
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb',
         headRegistry: registry,
       });
@@ -199,7 +199,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
       const registry = InMemoryHeadRegistry.createIsolated();
       await registry.setHead('testdb-fec', '__cbl_index__', 'head-block-123');
 
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb-fec',
         headRegistry: registry,
       });
@@ -222,7 +222,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
         'head-block-missing',
       );
 
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb-fec-fail',
         headRegistry: registry,
       });
@@ -256,7 +256,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
       await store.putInPool('test-pool', cblData2);
       await store.putInPool('test-pool', nonCblData);
 
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb-scan',
         headRegistry: registry,
       });
@@ -296,7 +296,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
         new Uint8Array([0xbc, 0x01, 0x02, 0x03, 0x04]),
       );
 
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb-warn',
         headRegistry: registry,
       });
@@ -325,7 +325,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
       await store.putInPool('pool-a', new Uint8Array([0x00, 0x01, 0x02, 0x03]));
       await store.putInPool('pool-a', new Uint8Array([0xff, 0xfe, 0xfd, 0xfc]));
 
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb-nocbl',
         headRegistry: registry,
       });
@@ -352,7 +352,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
         new Uint8Array([0xbc, 0x01, 0x02, 0x03, 0x04]),
       );
 
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb-small',
         headRegistry: registry,
       });
@@ -380,7 +380,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
       const setupStore = new MockBlockStore();
       // Share the same underlying block data
       const setupRegistry = InMemoryHeadRegistry.createIsolated();
-      const setupDb = new BrightChainDb(setupStore as any, {
+      const setupDb = new BrightDb(setupStore as any, {
         name: 'setup',
         headRegistry: setupRegistry,
       });
@@ -403,7 +403,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
       );
       await registry.setHead('testdb-order', '__cbl_index__', 'fake-head');
 
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb-order',
         headRegistry: registry,
       });
@@ -426,7 +426,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
       const registry = InMemoryHeadRegistry.createIsolated();
       await registry.setHead('testdb-nofec', '__cbl_index__', 'head-block-xyz');
 
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb-nofec',
         headRegistry: registry,
       });
@@ -450,7 +450,7 @@ describe('CBLIndex recovery (Requirements 7.4, 7.5)', () => {
         new Uint8Array([0xbc, 0x01, 0x02, 0x03, 0x04]),
       );
 
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb-norecovery',
         headRegistry: registry,
       });

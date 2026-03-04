@@ -456,6 +456,12 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
     'Операція не реалізована',
   [BrightChainStrings.Error_StoreError_InsufficientRandomBlocksTemplate]:
     'Недостатньо випадкових блоків: запитано {REQUESTED}, доступно {AVAILABLE}',
+  [BrightChainStrings.Error_StoreError_FactoryNotRegistered]:
+    'Фабрику сховища блоків не зареєстровано для запитаного типу сховища',
+  [BrightChainStrings.Error_StoreError_CloudOperationFailedTemplate]:
+    'Операція хмарного сховища {OPERATION} не вдалася для блоку {BLOCK_CHECKSUM}: {ORIGINAL_ERROR}',
+  [BrightChainStrings.Error_StoreError_CloudAuthenticationFailedTemplate]:
+    'Автентифікація хмарного сховища не вдалася для операції {OPERATION}: {ORIGINAL_ERROR}',
 
   // Sealing Errors
   [BrightChainStrings.Error_SealingError_MissingPrivateKeys]:
@@ -1264,14 +1270,95 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
     'Версія маніфесту TCBL не підтримується',
 
+  // Splash
+  [BrightChainStrings.Splash_Welcome]: 'Ласкаво просимо до BrightChain',
+  [BrightChainStrings.Splash_NextGenInfrastructure]:
+    'Платформа децентралізованих додатків',
+  [BrightChainStrings.Splash_SoupCanDemo]: 'Демо Консервної Банки',
+  [BrightChainStrings.Splash_SoupCanDemoDescription]:
+    'Подивіться, як BrightChain розбиває дані на блоки та змішує їх з випадковими даними за допомогою операцій XOR для зберігання без власника.',
+  [BrightChainStrings.Splash_StoragePools]: 'Пули Зберігання',
+  [BrightChainStrings.Splash_StoragePoolsDescription]:
+    'Досліджуйте пули, ізольовані за простором імен, блоки з адресацією за вмістом, відбілювання в межах пулу та гарантії ізоляції між пулами.',
+  [BrightChainStrings.Splash_Messaging]: 'Обмін повідомленнями',
+  [BrightChainStrings.Splash_MessagingDescription]:
+    'Прямі повідомлення з шифруванням ECIES, групові чати зі спільним пулом, канали з режимами видимості, повідомлення, що зникають, та присутність.',
+  [BrightChainStrings.Splash_BrightPass]: 'BrightPass',
+  [BrightChainStrings.Splash_BrightPassDescription]:
+    'Децентралізоване сховище паролів зі зберіганням облікових даних, генерацією паролів, перевіркою витоків та налаштуванням TOTP/2FA.',
+  [BrightChainStrings.Splash_Database]: 'База даних',
+  [BrightChainStrings.Splash_DatabaseDescription]:
+    'Документна база даних з блоками копіювання при записі, ізоляцією пулів, оптимістичними транзакціями паралельності та конвеєрами агрегації.',
+  [BrightChainStrings.Splash_IdentityAndSecurity]: 'Ідентичність та Безпека',
+  [BrightChainStrings.Splash_IdentityAndSecurityDescription]:
+    'Резервне копіювання паперового ключа, керування пристроями, докази ідентичності на різних платформах та пошук профілів у каталозі відкритих ключів.',
+  [BrightChainStrings.Splash_TrySoupCanDemo]:
+    'Спробувати Демо Консервної Банки',
+  [BrightChainStrings.Splash_GetStarted]: 'Почати',
+  [BrightChainStrings.Splash_WhatIsBrightChain]: 'Що таке BrightChain?',
+  [BrightChainStrings.Splash_WhatIsBrightChainDescription]:
+    'BrightChain революціонізує зберігання даних, використовуючи концепцію "Яскравого Блокового Супу". Ваші файли розбиваються на блоки та змішуються з випадковими даними за допомогою операцій XOR, роблячи їх повністю випадковими, зберігаючи при цьому ідеальну безпеку.',
+  [BrightChainStrings.Splash_OwnerFreeStorage]: 'Зберігання без Власника',
+  [BrightChainStrings.Splash_OwnerFreeStorageDescription]:
+    'Криптографічна випадковість усуває відповідальність за зберігання',
+  [BrightChainStrings.Splash_EnergyEfficient]: 'Енергоефективний',
+  [BrightChainStrings.Splash_EnergyEfficientDescription]:
+    'Без марнотратного майнінгу з доказом роботи',
+  [BrightChainStrings.Splash_Decentralized]: 'Децентралізований',
+  [BrightChainStrings.Splash_DecentralizedDescription]:
+    'Розподілений по мережі',
+  [BrightChainStrings.Splash_AnonymousYetAccountable]:
+    'Анонімний, але Підзвітний',
+  [BrightChainStrings.Splash_AnonymousYetAccountableDescription]:
+    'Конфіденційність з можливостями модерації',
+  [BrightChainStrings.Splash_ExploreThePlatform]: 'Дослідити Платформу',
+  [BrightChainStrings.Splash_InteractiveDemos]:
+    'Інтерактивні демонстрації основних можливостей BrightChain',
+  [BrightChainStrings.Splash_LaunchDemo]: 'Запустити Демо',
+
+  // Splash - BrightStack
+  [BrightChainStrings.Splash_BuildWithBrightStack]: 'Створюйте з BrightStack',
+  [BrightChainStrings.Splash_BuildWithBrightStackDescription]:
+    'BrightStack — це повностекова парадигма для децентралізованих додатків: BrightChain + Express + React + Node. Якщо ви знаєте стек MERN, ви вже знаєте BrightStack.',
+  [BrightChainStrings.Splash_BrightStackSubtitle]:
+    'Замініть MongoDB на BrightDb. Решту залиште як є.',
+  [BrightChainStrings.Splash_BrightDb]: 'BrightDb',
+  [BrightChainStrings.Splash_BrightDbDescription]:
+    'MongoDB-сумісна документна база даних на файловій системі Owner-Free. Повний CRUD, запити, індекси, транзакції та конвеєри агрегації.',
+  [BrightChainStrings.Splash_FamiliarApi]: 'Знайомий API',
+  [BrightChainStrings.Splash_FamiliarApiDescription]:
+    'Ті самі патерни, що й у MongoDB — колекції, find, insert, update — але кожен документ зберігається як відбілений блок, що захищає конфіденційність.',
+  [BrightChainStrings.Splash_BuiltOnBrightStack]: 'Побудовано на BrightStack',
+  [BrightChainStrings.Splash_BuiltOnBrightStackDescription]:
+    'BrightPass, BrightMail та BrightHub побудовані на BrightStack, доводячи, що розробка децентралізованих додатків може бути такою ж простою, як традиційна повностекова розробка.',
+  [BrightChainStrings.Splash_OpenSource]: 'Відкритий код',
+  [BrightChainStrings.Splash_OpenSourceDescription]:
+    'BrightChain повністю відкритий. Створюйте власні dApp на BrightStack та робіть внесок у децентралізоване майбутнє.',
+
+  // Splash - Не криптовалюта
+  [BrightChainStrings.Splash_NotACryptocurrency]: 'Не криптовалюта',
+  [BrightChainStrings.Splash_NotACryptocurrencyDescription]:
+    'Коли ви чуєте "блокчейн", ви, ймовірно, думаєте про Bitcoin. BrightChain принципово інший — немає валюти, немає доказу роботи, немає майнінгу. Замість спалювання енергії для карбування монет, BrightChain цінує реальний внесок у зберігання та обчислення.',
+  [BrightChainStrings.Splash_NoCurrency]: 'Без валюти',
+  [BrightChainStrings.Splash_NoCurrencyDescription]:
+    'BrightChain не має монети, токена чи спекулятивного активу. Це інфраструктура, а не фінанси.',
+  [BrightChainStrings.Splash_NoMining]: 'Без майнінгу',
+  [BrightChainStrings.Splash_NoMiningDescription]:
+    'Без доказу роботи, без марнування енергії. Кожен цикл обчислень служить корисній меті.',
+  [BrightChainStrings.Splash_Joules]: 'Джоулі, а не монети',
+  [BrightChainStrings.Splash_JoulesDescription]:
+    "Внесок у зберігання та обчислення відстежується в Джоулях — одиниці, прив'язаній до реальних витрат на енергію, а не до ринкових спекуляцій.",
+  [BrightChainStrings.Splash_RealWorldValue]: 'Реальна цінність',
+  [BrightChainStrings.Splash_RealWorldValueDescription]:
+    'Значення Джоулів встановлюються за формулою на основі фактичних витрат, і ми вдосконалюємо цю формулу з часом — без торгівлі, без волатильності.',
+
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'Ваша панель керування',
   [BrightChainStrings.Dashboard_EnergyBalance]: 'Баланс енергії',
   [BrightChainStrings.Dashboard_AvailableCredits]:
     'Доступні енергетичні кредити',
   [BrightChainStrings.Dashboard_Reputation]: 'Репутація',
-  [BrightChainStrings.Dashboard_ReputationScore]:
-    'Оцінка репутації мережі',
+  [BrightChainStrings.Dashboard_ReputationScore]: 'Оцінка репутації мережі',
   [BrightChainStrings.Dashboard_EnergyEarned]: 'Зароблена енергія',
   [BrightChainStrings.Dashboard_EarnedDescription]:
     'Загалом зароблено за надання ресурсів',
@@ -1289,10 +1376,8 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
   // BrightMail
   [BrightChainStrings.BrightMail_MenuLabel]: 'BrightMail',
   [BrightChainStrings.BrightMail_Inbox_Title]: 'Вхідні',
-  [BrightChainStrings.BrightMail_Inbox_Empty]:
-    'Електронних листів ще немає',
-  [BrightChainStrings.BrightMail_Inbox_Error]:
-    'Не вдалося завантажити вхідні',
+  [BrightChainStrings.BrightMail_Inbox_Empty]: 'Електронних листів ще немає',
+  [BrightChainStrings.BrightMail_Inbox_Error]: 'Не вдалося завантажити вхідні',
   [BrightChainStrings.BrightMail_Inbox_Retry]: 'Повторити',
   [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]:
     '{COUNT} непрочитаних',
@@ -1323,8 +1408,7 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.BrightMail_Delete_ErrorTemplate]:
     'Не вдалося видалити лист: {MESSAGE_ID}',
   [BrightChainStrings.BrightMail_Action_Delete]: 'Видалити',
-  [BrightChainStrings.BrightMail_Action_MarkAsRead]:
-    'Позначити як прочитане',
+  [BrightChainStrings.BrightMail_Action_MarkAsRead]: 'Позначити як прочитане',
   [BrightChainStrings.BrightMail_Action_Cancel]: 'Скасувати',
   [BrightChainStrings.BrightMail_Loading]: 'Завантаження...',
 };

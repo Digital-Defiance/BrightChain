@@ -7,7 +7,7 @@
  */
 
 import type { IHydrationSchema } from '@brightchain/brightchain-lib';
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import { Model, TypedCursor } from '../lib/model';
 import type { CollectionSchema } from '../lib/schemaValidation';
@@ -71,14 +71,14 @@ const ITEM_SCHEMA: CollectionSchema = {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function makeDb(name = 'testdb'): BrightChainDb {
+function makeDb(name = 'testdb'): BrightDb {
   const store = new MockBlockStore();
   const registry = InMemoryHeadRegistry.createIsolated();
-  return new BrightChainDb(store as any, { name, headRegistry: registry });
+  return new BrightDb(store as any, { name, headRegistry: registry });
 }
 
 function makeModel(
-  db: BrightChainDb,
+  db: BrightDb,
   collectionName = 'items',
   schema?: CollectionSchema,
 ): Model<IStoredItem, ITypedItem> {
@@ -472,7 +472,7 @@ describe('Model — convenience', () => {
 // db.model() registry integration
 // ══════════════════════════════════════════════════════════════
 
-describe('BrightChainDb.model() registry', () => {
+describe('BrightDb.model() registry', () => {
   it('should register and retrieve a model', () => {
     const db = makeDb();
     const model = db.model<IStoredItem, ITypedItem>('items', {

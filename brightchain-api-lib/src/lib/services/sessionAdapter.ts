@@ -1,11 +1,11 @@
 import { createHash, randomUUID } from 'crypto';
 
-import type { BrightChainDb, BsonDocument } from '@brightchain/db';
+import type { BrightDb, BsonDocument } from '@brightchain/db';
 
 const COLLECTION_SESSIONS = 'sessions';
 
 /**
- * Shape of a session document stored in BrightChainDb.
+ * Shape of a session document stored in BrightDB.
  * Exported so consumers (tests, controllers) can reference the type.
  */
 export interface ISessionDocument {
@@ -23,7 +23,7 @@ export interface ISessionDocument {
 
 /**
  * Internal document shape that extends BsonDocument for storage in
- * BrightChainDb collections.
+ * BrightDB collections.
  */
 interface SessionDoc extends BsonDocument {
   sessionId: string;
@@ -39,15 +39,15 @@ function sha256Hex(value: string): string {
 }
 
 /**
- * Manages user sessions backed by a BrightChainDb `sessions` collection.
+ * Manages user sessions backed by a BrightDB `sessions` collection.
  *
  * Token hashes use SHA-256 (not bcrypt) so that `validateToken` can
  * query by hash without a per-row compare.
  */
 export class BrightChainSessionAdapter {
-  private readonly db: BrightChainDb;
+  private readonly db: BrightDb;
 
-  constructor(db: BrightChainDb) {
+  constructor(db: BrightDb) {
     this.db = db;
   }
 
@@ -128,7 +128,7 @@ export class BrightChainSessionAdapter {
     const col = this.db.collection<SessionDoc>(COLLECTION_SESSIONS);
     const now = Date.now();
 
-    // BrightChainDb's filter engine supports $lt on numeric fields.
+    // BrightDB's filter engine supports $lt on numeric fields.
     const result = await col.deleteMany({ expiresAt: { $lt: now } });
     return result.deletedCount;
   }

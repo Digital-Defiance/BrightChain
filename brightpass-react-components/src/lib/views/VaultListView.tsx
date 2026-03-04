@@ -40,8 +40,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import BreadcrumbNav from '../components/BreadcrumbNav';
 import CreateVaultDialog from '../components/CreateVaultDialog';
 import MasterPasswordPrompt from '../components/MasterPasswordPrompt';
-import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
+import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 
 /** Formats a Date for display in the vault list. */
 function formatDate(date: Date): string {

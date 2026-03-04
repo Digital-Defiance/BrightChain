@@ -3,14 +3,11 @@
  *
  * Feature: comprehensive-e2e-tests
  */
-import fc from 'fast-check';
 import express from 'express';
+import fc from 'fast-check';
 import request from 'supertest';
-import {
-  FakeEmailService,
-  CapturedEmail,
-} from '../fakeEmailService';
 import { createTestEmailRouter } from '../../routers/testEmailRouter';
+import { FakeEmailService } from '../fakeEmailService';
 
 // --- Arbitraries ---
 
@@ -86,10 +83,10 @@ describe('FakeEmailService – Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           emailArb,
-          fc.array(
-            fc.tuple(subjectArb, textBodyArb, htmlBodyArb),
-            { minLength: 1, maxLength: 10 },
-          ),
+          fc.array(fc.tuple(subjectArb, textBodyArb, htmlBodyArb), {
+            minLength: 1,
+            maxLength: 10,
+          }),
           async (to, emailData) => {
             service.clear();
 
@@ -180,10 +177,10 @@ describe('FakeEmailService – Property Tests', () => {
     it('clear() causes getEmails to return empty arrays for all recipients', async () => {
       await fc.assert(
         fc.asyncProperty(
-          fc.array(
-            fc.tuple(emailArb, subjectArb, textBodyArb, htmlBodyArb),
-            { minLength: 1, maxLength: 20 },
-          ),
+          fc.array(fc.tuple(emailArb, subjectArb, textBodyArb, htmlBodyArb), {
+            minLength: 1,
+            maxLength: 20,
+          }),
           async (emailData) => {
             service.clear();
 
@@ -282,6 +279,12 @@ describe('FakeEmailService – Property Tests', () => {
       return a;
     }
 
+    // Create app once to avoid server churn across property iterations
+    let app: express.Express;
+    beforeEach(() => {
+      app = createApp();
+    });
+
     it('GET /api/test/emails/:address returns emails stored via sendEmail', async () => {
       await fc.assert(
         fc.asyncProperty(
@@ -294,7 +297,6 @@ describe('FakeEmailService – Property Tests', () => {
 
             await service.sendEmail(to, subject, text, html);
 
-            const app = createApp();
             const res = await request(app)
               .get(`/api/test/emails/${encodeURIComponent(to)}`)
               .expect(200);
@@ -316,10 +318,10 @@ describe('FakeEmailService – Property Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           emailArb,
-          fc.array(
-            fc.tuple(subjectArb, textBodyArb, htmlBodyArb),
-            { minLength: 1, maxLength: 5 },
-          ),
+          fc.array(fc.tuple(subjectArb, textBodyArb, htmlBodyArb), {
+            minLength: 1,
+            maxLength: 5,
+          }),
           async (to, emailData) => {
             service.clear();
 
@@ -327,7 +329,6 @@ describe('FakeEmailService – Property Tests', () => {
               await service.sendEmail(to, subject, text, html);
             }
 
-            const app = createApp();
             const res = await request(app)
               .get(`/api/test/emails/${encodeURIComponent(to)}`)
               .expect(200);
@@ -351,7 +352,6 @@ describe('FakeEmailService – Property Tests', () => {
         fc.asyncProperty(emailArb, async (to) => {
           service.clear();
 
-          const app = createApp();
           const res = await request(app)
             .get(`/api/test/emails/${encodeURIComponent(to)}`)
             .expect(200);

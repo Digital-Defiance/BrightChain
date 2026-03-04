@@ -1,5 +1,5 @@
 /**
- * @fileoverview Serialized ("stored") document interfaces for BrightChainDb collections.
+ * @fileoverview Serialized ("stored") document interfaces for BrightDB collections.
  *
  * These represent the actual shape of documents as they exist in the database:
  * all IDs are hex strings, all dates are ISO-8601 strings, and every interface

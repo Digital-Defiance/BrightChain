@@ -219,8 +219,9 @@ describe('IDeliveryReceipt Interface', () => {
   describe('Re-export compatibility', () => {
     it('should be importable from emailMetadata re-exports', async () => {
       // Verify the re-export path works for the enum (runtime value)
-      const { EmailDeliveryStatus: ReExportedStatus } =
-        await import('./emailMetadata');
+      const { EmailDeliveryStatus: ReExportedStatus } = await import(
+        './emailMetadata'
+      );
       expect(ReExportedStatus.Delivered).toBe('delivered');
       expect(ReExportedStatus.Pending).toBe('pending');
     });

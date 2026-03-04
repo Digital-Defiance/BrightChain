@@ -8,7 +8,6 @@
  * Requirements: 2.1, 2.2, 2.3, 2.4, 8.3
  */
 
-import { AxiosInstance, AxiosResponse, isAxiosError } from 'axios';
 import {
   IApiEnvelope,
   IDeleteEmailResponse,
@@ -23,6 +22,7 @@ import {
   IReplyToEmailResponse,
   ISendEmailResponse,
 } from '@brightchain/brightchain-lib';
+import { AxiosInstance, AxiosResponse, isAxiosError } from 'axios';
 
 // ─── Request param interfaces ───────────────────────────────────────────────
 
@@ -97,58 +97,90 @@ export async function handleApiCall<T>(
 export function createEmailApiClient(api: AxiosInstance) {
   return {
     sendEmail: (params: SendEmailParams) =>
-      handleApiCall<ISendEmailResponse extends IApiEnvelope<infer D> ? D : never>(
-        () => api.post<ISendEmailResponse>('/emails', params),
-      ),
+      handleApiCall<
+        ISendEmailResponse extends IApiEnvelope<infer D> ? D : never
+      >(() => api.post<ISendEmailResponse>('/emails', params)),
 
     queryInbox: (params?: InboxQueryParams) =>
-      handleApiCall<IQueryInboxResponse extends IApiEnvelope<infer D> ? D : never>(
-        () => api.get<IQueryInboxResponse>('/emails/inbox', { params }),
-      ),
+      handleApiCall<
+        IQueryInboxResponse extends IApiEnvelope<infer D> ? D : never
+      >(() => api.get<IQueryInboxResponse>('/emails/inbox', { params })),
 
     getUnreadCount: () =>
-      handleApiCall<IGetUnreadCountResponse extends IApiEnvelope<infer D> ? D : never>(
-        () => api.get<IGetUnreadCountResponse>('/emails/inbox/unread-count'),
-      ),
+      handleApiCall<
+        IGetUnreadCountResponse extends IApiEnvelope<infer D> ? D : never
+      >(() => api.get<IGetUnreadCountResponse>('/emails/inbox/unread-count')),
 
     getEmail: (messageId: string) =>
-      handleApiCall<IGetEmailResponse extends IApiEnvelope<infer D> ? D : never>(
-        () => api.get<IGetEmailResponse>(`/emails/${encodeURIComponent(messageId)}`),
+      handleApiCall<
+        IGetEmailResponse extends IApiEnvelope<infer D> ? D : never
+      >(() =>
+        api.get<IGetEmailResponse>(`/emails/${encodeURIComponent(messageId)}`),
       ),
 
     getEmailContent: (messageId: string) =>
-      handleApiCall<IGetEmailContentResponse extends IApiEnvelope<infer D> ? D : never>(
-        () => api.get<IGetEmailContentResponse>(`/emails/${encodeURIComponent(messageId)}/content`),
+      handleApiCall<
+        IGetEmailContentResponse extends IApiEnvelope<infer D> ? D : never
+      >(() =>
+        api.get<IGetEmailContentResponse>(
+          `/emails/${encodeURIComponent(messageId)}/content`,
+        ),
       ),
 
     getEmailThread: (messageId: string) =>
-      handleApiCall<IGetEmailThreadResponse extends IApiEnvelope<infer D> ? D : never>(
-        () => api.get<IGetEmailThreadResponse>(`/emails/${encodeURIComponent(messageId)}/thread`),
+      handleApiCall<
+        IGetEmailThreadResponse extends IApiEnvelope<infer D> ? D : never
+      >(() =>
+        api.get<IGetEmailThreadResponse>(
+          `/emails/${encodeURIComponent(messageId)}/thread`,
+        ),
       ),
 
     getDeliveryStatus: (messageId: string) =>
-      handleApiCall<IGetDeliveryStatusResponse extends IApiEnvelope<infer D> ? D : never>(
-        () => api.get<IGetDeliveryStatusResponse>(`/emails/${encodeURIComponent(messageId)}/delivery-status`),
+      handleApiCall<
+        IGetDeliveryStatusResponse extends IApiEnvelope<infer D> ? D : never
+      >(() =>
+        api.get<IGetDeliveryStatusResponse>(
+          `/emails/${encodeURIComponent(messageId)}/delivery-status`,
+        ),
       ),
 
     replyToEmail: (messageId: string, body: ReplyParams) =>
-      handleApiCall<IReplyToEmailResponse extends IApiEnvelope<infer D> ? D : never>(
-        () => api.post<IReplyToEmailResponse>(`/emails/${encodeURIComponent(messageId)}/reply`, body),
+      handleApiCall<
+        IReplyToEmailResponse extends IApiEnvelope<infer D> ? D : never
+      >(() =>
+        api.post<IReplyToEmailResponse>(
+          `/emails/${encodeURIComponent(messageId)}/reply`,
+          body,
+        ),
       ),
 
     forwardEmail: (messageId: string, body: ForwardParams) =>
-      handleApiCall<IForwardEmailResponse extends IApiEnvelope<infer D> ? D : never>(
-        () => api.post<IForwardEmailResponse>(`/emails/${encodeURIComponent(messageId)}/forward`, body),
+      handleApiCall<
+        IForwardEmailResponse extends IApiEnvelope<infer D> ? D : never
+      >(() =>
+        api.post<IForwardEmailResponse>(
+          `/emails/${encodeURIComponent(messageId)}/forward`,
+          body,
+        ),
       ),
 
     markAsRead: (messageId: string) =>
-      handleApiCall<IMarkAsReadResponse extends IApiEnvelope<infer D> ? D : never>(
-        () => api.post<IMarkAsReadResponse>(`/emails/${encodeURIComponent(messageId)}/read`),
+      handleApiCall<
+        IMarkAsReadResponse extends IApiEnvelope<infer D> ? D : never
+      >(() =>
+        api.post<IMarkAsReadResponse>(
+          `/emails/${encodeURIComponent(messageId)}/read`,
+        ),
       ),
 
     deleteEmail: (messageId: string) =>
-      handleApiCall<IDeleteEmailResponse extends IApiEnvelope<infer D> ? D : never>(
-        () => api.delete<IDeleteEmailResponse>(`/emails/${encodeURIComponent(messageId)}`),
+      handleApiCall<
+        IDeleteEmailResponse extends IApiEnvelope<infer D> ? D : never
+      >(() =>
+        api.delete<IDeleteEmailResponse>(
+          `/emails/${encodeURIComponent(messageId)}`,
+        ),
       ),
   };
 }

@@ -27,6 +27,9 @@
     },
     {
       "path": "../brightchain-db"
+    },
+    {
+      "path": "../brighthub-lib"
     }
   ]
 }

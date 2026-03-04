@@ -58,7 +58,7 @@ describe('Backward Compatibility - Pool Scoping', () => {
       }
 
       // getRandomBlocks should return checksums from the global store
-      const result = await store.getRandomBlocks(3);
+      const result = await store.getRandomBlocks(3, blockSize);
 
       expect(result.length).toBeLessThanOrEqual(3);
       expect(result.length).toBeGreaterThan(0);
@@ -71,7 +71,7 @@ describe('Backward Compatibility - Pool Scoping', () => {
 
     it('should return empty array when global store is empty', async () => {
       const store = new MemoryBlockStore(BlockSize.Small);
-      const result = await store.getRandomBlocks(5);
+      const result = await store.getRandomBlocks(5, BlockSize.Small);
       expect(result).toEqual([]);
     });
 
@@ -87,7 +87,7 @@ describe('Backward Compatibility - Pool Scoping', () => {
         await store.put(block.idChecksum, data);
       }
 
-      const result = await store.getRandomBlocks(10);
+      const result = await store.getRandomBlocks(10, blockSize);
       expect(result.length).toBe(2);
     });
   });

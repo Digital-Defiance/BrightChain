@@ -111,6 +111,7 @@ export class MemberCblService<TID extends PlatformID = Uint8Array> {
         // Get random blocks, excluding the original block
         let randomBlocks = await this.blockStore.getRandomBlocks(
           TUPLE.SIZE - 1,
+          blockSize,
         );
 
         // Filter out the original block from random blocks

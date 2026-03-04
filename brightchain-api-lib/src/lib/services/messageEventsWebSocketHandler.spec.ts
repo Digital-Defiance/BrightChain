@@ -9,7 +9,9 @@ import { EventEmitter } from 'events';
 import { WebSocket } from 'ws';
 import {
   EventNotificationSystem,
+  ISystemEventBroadcaster,
   MessageEventType,
+  SystemEvent,
 } from './eventNotificationSystem';
 import { MessageEventsWebSocketHandler } from './messageEventsWebSocketHandler';
 
@@ -30,6 +32,24 @@ describe('Task 13.5: WebSocket /messages/events endpoint', () => {
         return mockWs;
       }),
     }) as unknown as WebSocket;
+
+    // Wire a mock broadcaster that forwards system events to mockWs,
+    // respecting per-subscriber filters stored in the legacy eventSystem map
+    const mockBroadcaster: ISystemEventBroadcaster = {
+      broadcastSystemEvent(event: SystemEvent): void {
+        if ((mockWs as unknown as { readyState: number }).readyState === 1) {
+          const filter = eventSystem.getFilter(mockWs);
+          if (
+            filter &&
+            !EventNotificationSystem.matchesFilterStatic(event, filter)
+          ) {
+            return;
+          }
+          (mockWs.send as jest.Mock)(JSON.stringify(event));
+        }
+      },
+    };
+    eventSystem.setBroadcaster(mockBroadcaster);
   });
 
   it('should subscribe WebSocket on connection', () => {

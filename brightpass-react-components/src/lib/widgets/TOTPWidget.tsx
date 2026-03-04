@@ -9,16 +9,11 @@
 
 import type { ITotpCode } from '@brightchain/brightchain-lib';
 import { BrightPassStrings } from '@brightchain/brightchain-lib';
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Typography,
-} from '@mui/material';
+import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
+import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 
 /* ------------------------------------------------------------------ */
 /*  Pure helper functions — exported for property-based testing        */

@@ -7,8 +7,8 @@
  * Requirements: 13.1, 13.3
  */
 
-import { useCallback, useEffect, useState } from 'react';
 import type { IAutofillPayload } from '@brightchain/brightchain-lib';
+import { useCallback, useEffect, useState } from 'react';
 import { useBrightPassApi } from './useBrightPassApi';
 
 type AutofillEntry = IAutofillPayload<string>['entries'][number];
@@ -81,7 +81,9 @@ export function useBrightPassAutofill(
       setEntries(payload.entries);
     } catch (err) {
       setError(
-        err instanceof Error ? err : new Error(String((err as Record<string, unknown>).message ?? err)),
+        err instanceof Error
+          ? err
+          : new Error(String((err as Record<string, unknown>).message ?? err)),
       );
       setEntries([]);
     } finally {

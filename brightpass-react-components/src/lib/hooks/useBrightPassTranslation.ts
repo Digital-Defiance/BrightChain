@@ -1,8 +1,8 @@
+import type { BrightPassStringKey } from '@brightchain/brightchain-lib';
 import {
   BrightPassComponentId,
   getBrightChainI18nEngine,
 } from '@brightchain/brightchain-lib';
-import type { BrightPassStringKey } from '@brightchain/brightchain-lib';
 
 /**
  * Hook that wraps the i18n engine for BrightPass components.

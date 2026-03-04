@@ -13,8 +13,7 @@ export const BrightPassSpanishStrings: StringsCollection<BrightPassStringKey> =
     [BrightPassStrings.VaultList_Title]: 'Bóvedas',
     [BrightPassStrings.VaultList_CreateVault]: 'Crear bóveda',
     [BrightPassStrings.VaultList_DeleteVault]: 'Eliminar bóveda',
-    [BrightPassStrings.VaultList_SharedWith]:
-      'Compartida con {COUNT} miembros',
+    [BrightPassStrings.VaultList_SharedWith]: 'Compartida con {COUNT} miembros',
     [BrightPassStrings.VaultList_NoVaults]:
       'No hay bóvedas aún. Crea una para comenzar.',
 
@@ -130,24 +129,32 @@ export const BrightPassSpanishStrings: StringsCollection<BrightPassStringKey> =
     [BrightPassStrings.Emergency_Title]: 'Acceso de emergencia',
     [BrightPassStrings.Emergency_Configure]: 'Configurar',
     [BrightPassStrings.Emergency_Recover]: 'Recuperar',
-    [BrightPassStrings.Emergency_Threshold]: 'Umbral (mínimo de fideicomisarios requeridos)',
-    [BrightPassStrings.Emergency_Trustees]: 'IDs de fideicomisarios (separados por comas)',
+    [BrightPassStrings.Emergency_Threshold]:
+      'Umbral (mínimo de fideicomisarios requeridos)',
+    [BrightPassStrings.Emergency_Trustees]:
+      'IDs de fideicomisarios (separados por comas)',
     [BrightPassStrings.Emergency_Shares]: 'Parte cifrada {INDEX}',
-    [BrightPassStrings.Emergency_InsufficientShares]: 'Partes insuficientes. Se requieren al menos {THRESHOLD} partes.',
-    [BrightPassStrings.Emergency_InvalidThreshold]: 'El umbral debe estar entre 1 y el número de fideicomisarios.',
+    [BrightPassStrings.Emergency_InsufficientShares]:
+      'Partes insuficientes. Se requieren al menos {THRESHOLD} partes.',
+    [BrightPassStrings.Emergency_InvalidThreshold]:
+      'El umbral debe estar entre 1 y el número de fideicomisarios.',
     [BrightPassStrings.Emergency_Close]: 'Cerrar',
-    [BrightPassStrings.Emergency_Error]: 'Ocurrió un error. Por favor, inténtelo de nuevo.',
+    [BrightPassStrings.Emergency_Error]:
+      'Ocurrió un error. Por favor, inténtelo de nuevo.',
     [BrightPassStrings.Emergency_Success]: 'Operación completada con éxito.',
 
     // Share Dialog
     [BrightPassStrings.Share_Title]: 'Compartir bóveda',
-    [BrightPassStrings.Share_SearchMembers]: 'Buscar miembros por nombre o correo',
+    [BrightPassStrings.Share_SearchMembers]:
+      'Buscar miembros por nombre o correo',
     [BrightPassStrings.Share_Add]: 'Agregar',
     [BrightPassStrings.Share_Revoke]: 'Revocar',
     [BrightPassStrings.Share_CurrentRecipients]: 'Destinatarios actuales',
-    [BrightPassStrings.Share_NoRecipients]: 'Esta bóveda aún no se comparte con nadie.',
+    [BrightPassStrings.Share_NoRecipients]:
+      'Esta bóveda aún no se comparte con nadie.',
     [BrightPassStrings.Share_Close]: 'Cerrar',
-    [BrightPassStrings.Share_Error]: 'Ocurrió un error. Por favor, inténtelo de nuevo.',
+    [BrightPassStrings.Share_Error]:
+      'Ocurrió un error. Por favor, inténtelo de nuevo.',
 
     // Import Dialog
     [BrightPassStrings.Import_Title]: 'Importar entradas',
@@ -156,11 +163,14 @@ export const BrightPassSpanishStrings: StringsCollection<BrightPassStringKey> =
     [BrightPassStrings.Import_Import]: 'Importar',
     [BrightPassStrings.Import_Close]: 'Cerrar',
     [BrightPassStrings.Import_Summary]: 'Resumen de importación',
-    [BrightPassStrings.Import_Imported]: '{COUNT} entradas importadas con éxito',
+    [BrightPassStrings.Import_Imported]:
+      '{COUNT} entradas importadas con éxito',
     [BrightPassStrings.Import_Skipped]: '{COUNT} entradas omitidas',
     [BrightPassStrings.Import_Errors]: 'Fila {INDEX}: {MESSAGE}',
-    [BrightPassStrings.Import_InvalidFormat]: 'El archivo subido no coincide con el formato seleccionado.',
-    [BrightPassStrings.Import_Error]: 'Ocurrió un error durante la importación. Por favor, inténtelo de nuevo.',
+    [BrightPassStrings.Import_InvalidFormat]:
+      'El archivo subido no coincide con el formato seleccionado.',
+    [BrightPassStrings.Import_Error]:
+      'Ocurrió un error durante la importación. Por favor, inténtelo de nuevo.',
 
     // Audit Log
     [BrightPassStrings.AuditLog_Title]: 'Registro de auditoría',
@@ -168,8 +178,10 @@ export const BrightPassSpanishStrings: StringsCollection<BrightPassStringKey> =
     [BrightPassStrings.AuditLog_Action]: 'Acción',
     [BrightPassStrings.AuditLog_Member]: 'ID del miembro',
     [BrightPassStrings.AuditLog_FilterAll]: 'Todas las acciones',
-    [BrightPassStrings.AuditLog_NoEntries]: 'No se encontraron entradas en el registro de auditoría.',
-    [BrightPassStrings.AuditLog_Error]: 'Error al cargar el registro de auditoría. Por favor, inténtelo de nuevo.',
+    [BrightPassStrings.AuditLog_NoEntries]:
+      'No se encontraron entradas en el registro de auditoría.',
+    [BrightPassStrings.AuditLog_Error]:
+      'Error al cargar el registro de auditoría. Por favor, inténtelo de nuevo.',
 
     // Errors
     [BrightPassStrings.Error_InvalidMasterPassword]:

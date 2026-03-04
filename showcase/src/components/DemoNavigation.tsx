@@ -37,6 +37,15 @@ const navigationItems: NavigationItem[] = [
   },
 ];
 
+const externalLinks = [
+  {
+    label: 'Docs',
+    icon: '📚',
+    href: '/docs/',
+    description: 'Project documentation',
+  },
+];
+
 interface DemoNavigationProps {
   currentMode?: DemoMode;
   onModeChange?: (mode: DemoMode) => void;
@@ -104,6 +113,17 @@ export const DemoNavigation: React.FC<DemoNavigationProps> = ({
               )}
             </Link>
           ))}
+          {externalLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              className="nav-item"
+              title={link.description}
+            >
+              <span className="nav-icon">{link.icon}</span>
+              <span className="nav-label">{link.label}</span>
+            </a>
+          ))}
         </div>
 
         {/* Mobile Menu Button */}
@@ -143,6 +163,20 @@ export const DemoNavigation: React.FC<DemoNavigationProps> = ({
                   <span className="nav-description">{item.description}</span>
                 </div>
               </Link>
+            ))}
+            {externalLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                className="mobile-nav-item"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span className="nav-icon">{link.icon}</span>
+                <div className="nav-content">
+                  <span className="nav-label">{link.label}</span>
+                  <span className="nav-description">{link.description}</span>
+                </div>
+              </a>
             ))}
           </motion.div>
         )}

@@ -12,7 +12,8 @@ import {
  * The `[key: string]: unknown` index signature is required by the Express
  * response body typing in this layer.
  */
-export interface IMemberPublicProfileResponse extends IMemberPublicProfileData<string> {
+export interface IMemberPublicProfileResponse
+  extends IMemberPublicProfileData<string> {
   [key: string]: unknown;
 }
 
@@ -22,7 +23,8 @@ export interface IMemberPublicProfileResponse extends IMemberPublicProfileData<s
  * Extends the platform-agnostic `IMemberPrivateProfileData<string>` base from
  * brightchain-lib.
  */
-export interface IMemberPrivateProfileResponse extends IMemberPrivateProfileData<string> {
+export interface IMemberPrivateProfileResponse
+  extends IMemberPrivateProfileData<string> {
   [key: string]: unknown;
 }
 

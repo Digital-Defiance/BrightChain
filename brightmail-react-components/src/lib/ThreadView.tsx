@@ -24,10 +24,10 @@ import {
 import { FC, memo, useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
-import { useEmailApi } from './hooks/useEmailApi';
 import ComposeView from './ComposeView';
 import ConfirmDialog from './ConfirmDialog';
 import { formatDateTimeLocale } from './dateFormatting';
+import { useEmailApi } from './hooks/useEmailApi';
 
 // ─── Exported utility functions (tested by property tests) ──────────────────
 
@@ -86,15 +86,12 @@ const ThreadView: FC = () => {
     setError(null);
     try {
       const thread = await emailApi.getEmailThread(messageId);
-      const sorted = sortByDateAscending(
-        Array.isArray(thread) ? thread : [],
-      );
+      const sorted = sortByDateAscending(Array.isArray(thread) ? thread : []);
       setEmails(sorted);
 
       // Auto mark-as-read for unread emails
       for (const email of sorted) {
-        const isRead =
-          email.readReceipts && email.readReceipts.size > 0;
+        const isRead = email.readReceipts && email.readReceipts.size > 0;
         if (!isRead) {
           try {
             await emailApi.markAsRead(email.messageId);
@@ -119,9 +116,7 @@ const ThreadView: FC = () => {
     if (!deleteTarget) return;
     try {
       await emailApi.deleteEmail(deleteTarget);
-      setEmails((prev) =>
-        prev.filter((e) => e.messageId !== deleteTarget),
-      );
+      setEmails((prev) => prev.filter((e) => e.messageId !== deleteTarget));
       setSnackbar({
         open: true,
         message: t(BrightChainStrings.BrightMail_Delete_Success),
@@ -256,7 +251,11 @@ const ThreadView: FC = () => {
             {formatDateTimeLocale(email.date)}
           </Typography>
 
-          <Typography variant="subtitle1" sx={{ mt: 1 }} data-testid="message-subject">
+          <Typography
+            variant="subtitle1"
+            sx={{ mt: 1 }}
+            data-testid="message-subject"
+          >
             {email.subject ?? ''}
           </Typography>
 
@@ -275,9 +274,7 @@ const ThreadView: FC = () => {
               size="small"
               variant="outlined"
               data-testid={`reply-btn-${email.messageId}`}
-              onClick={() =>
-                setComposeMode({ type: 'reply', email })
-              }
+              onClick={() => setComposeMode({ type: 'reply', email })}
             >
               {t(BrightChainStrings.BrightMail_Thread_Reply)}
             </Button>
@@ -285,9 +282,7 @@ const ThreadView: FC = () => {
               size="small"
               variant="outlined"
               data-testid={`forward-btn-${email.messageId}`}
-              onClick={() =>
-                setComposeMode({ type: 'forward', email })
-              }
+              onClick={() => setComposeMode({ type: 'forward', email })}
             >
               {t(BrightChainStrings.BrightMail_Thread_Forward)}
             </Button>

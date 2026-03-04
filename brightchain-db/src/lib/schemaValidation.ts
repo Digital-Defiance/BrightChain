@@ -1,5 +1,5 @@
 /**
- * Schema validation for brightchain-db collections.
+ * Schema validation for BrightDB collections.
  *
  * Provides a lightweight JSON-Schema-like validator that can enforce
  * document structure on insert and update operations.

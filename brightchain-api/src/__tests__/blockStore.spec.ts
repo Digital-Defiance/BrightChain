@@ -2,11 +2,13 @@ import {
   BlockStoreService,
   IBrightChainApplication,
 } from '@brightchain/brightchain-api-lib';
-import type { BlockSize } from '@brightchain/brightchain-lib';
 import {
+  BlockSize,
   ChecksumService,
+  lengthToClosestBlockSize,
   RawDataBlock,
   ServiceLocator,
+  validBlockSizes,
 } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { promises as fs } from 'fs';
@@ -39,13 +41,14 @@ describe('BlockStoreService', () => {
 
   it('stores and retrieves a block round-trip with checksum-derived id', async () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'blockstore-'));
-    const blockSize = 4096 as BlockSize;
+    const blockSize = BlockSize.Small;
 
     // Create a mock app with proper environment that returns the temp directory
     const mockApp = {
       id: 'test-app',
       environment: {
         blockStorePath: tmpDir,
+        blockStoreBlockSizes: [...validBlockSizes],
         blockStoreBlockSize: blockSize,
       },
       getController: () => {
@@ -69,9 +72,12 @@ describe('BlockStoreService', () => {
 
     expect(stored.equals(payload)).toBe(true);
 
-    // Verify the ID matches the checksum that the block class derives
+    // Verify the ID matches the checksum that the block class derives.
+    // storeBlock resolves to the closest block size for the payload length,
+    // which for 11 bytes is BlockSize.Message (512).
+    const resolvedSize = lengthToClosestBlockSize(payload.length);
     const expectedId = Buffer.from(
-      new RawDataBlock(blockSize, payload).idChecksum.toBuffer(),
+      new RawDataBlock(resolvedSize, payload).idChecksum.toBuffer(),
     ).toString('hex');
     expect(blockId).toBe(expectedId);
 

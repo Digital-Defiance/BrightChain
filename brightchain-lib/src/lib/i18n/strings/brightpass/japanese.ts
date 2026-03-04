@@ -25,7 +25,8 @@ export const BrightPassJapaneseStrings: StringsCollection<BrightPassStringKey> =
     [BrightPassStrings.VaultDetail_NoEntries]:
       'エントリがありません。追加して始めましょう。',
     [BrightPassStrings.VaultDetail_Favorite]: 'お気に入り',
-    [BrightPassStrings.VaultDetail_ConfirmLockTitle]: '保管庫をロックしますか？',
+    [BrightPassStrings.VaultDetail_ConfirmLockTitle]:
+      '保管庫をロックしますか？',
     [BrightPassStrings.VaultDetail_ConfirmLockMessage]:
       'ページから離れます。保管庫をロックしますか？',
     [BrightPassStrings.VaultDetail_Cancel]: 'キャンセル',
@@ -122,8 +123,7 @@ export const BrightPassJapaneseStrings: StringsCollection<BrightPassStringKey> =
     [BrightPassStrings.SearchBar_Placeholder]:
       'タイトル、タグ、またはURLで検索\u2026',
     [BrightPassStrings.SearchBar_FilterFavorites]: 'お気に入り',
-    [BrightPassStrings.SearchBar_NoResults]:
-      '一致するエントリが見つかりません',
+    [BrightPassStrings.SearchBar_NoResults]: '一致するエントリが見つかりません',
 
     // Emergency Access Dialog
     [BrightPassStrings.Emergency_Title]: '緊急アクセス',
@@ -132,10 +132,13 @@ export const BrightPassJapaneseStrings: StringsCollection<BrightPassStringKey> =
     [BrightPassStrings.Emergency_Threshold]: 'しきい値（必要な最小受託者数）',
     [BrightPassStrings.Emergency_Trustees]: '受託者メンバーID（カンマ区切り）',
     [BrightPassStrings.Emergency_Shares]: '暗号化シェア {INDEX}',
-    [BrightPassStrings.Emergency_InsufficientShares]: 'シェアが不足しています。少なくとも{THRESHOLD}個のシェアが必要です。',
-    [BrightPassStrings.Emergency_InvalidThreshold]: 'しきい値は1から受託者数の間でなければなりません。',
+    [BrightPassStrings.Emergency_InsufficientShares]:
+      'シェアが不足しています。少なくとも{THRESHOLD}個のシェアが必要です。',
+    [BrightPassStrings.Emergency_InvalidThreshold]:
+      'しきい値は1から受託者数の間でなければなりません。',
     [BrightPassStrings.Emergency_Close]: '閉じる',
-    [BrightPassStrings.Emergency_Error]: 'エラーが発生しました。もう一度お試しください。',
+    [BrightPassStrings.Emergency_Error]:
+      'エラーが発生しました。もう一度お試しください。',
     [BrightPassStrings.Emergency_Success]: '操作が正常に完了しました。',
 
     // Share Dialog
@@ -144,9 +147,11 @@ export const BrightPassJapaneseStrings: StringsCollection<BrightPassStringKey> =
     [BrightPassStrings.Share_Add]: '追加',
     [BrightPassStrings.Share_Revoke]: '取り消し',
     [BrightPassStrings.Share_CurrentRecipients]: '現在の共有先',
-    [BrightPassStrings.Share_NoRecipients]: 'この保管庫はまだ誰とも共有されていません。',
+    [BrightPassStrings.Share_NoRecipients]:
+      'この保管庫はまだ誰とも共有されていません。',
     [BrightPassStrings.Share_Close]: '閉じる',
-    [BrightPassStrings.Share_Error]: 'エラーが発生しました。もう一度お試しください。',
+    [BrightPassStrings.Share_Error]:
+      'エラーが発生しました。もう一度お試しください。',
 
     // Import Dialog
     [BrightPassStrings.Import_Title]: 'エントリをインポート',
@@ -155,11 +160,15 @@ export const BrightPassJapaneseStrings: StringsCollection<BrightPassStringKey> =
     [BrightPassStrings.Import_Import]: 'インポート',
     [BrightPassStrings.Import_Close]: '閉じる',
     [BrightPassStrings.Import_Summary]: 'インポート結果',
-    [BrightPassStrings.Import_Imported]: '{COUNT}件のエントリが正常にインポートされました',
-    [BrightPassStrings.Import_Skipped]: '{COUNT}件のエントリがスキップされました',
+    [BrightPassStrings.Import_Imported]:
+      '{COUNT}件のエントリが正常にインポートされました',
+    [BrightPassStrings.Import_Skipped]:
+      '{COUNT}件のエントリがスキップされました',
     [BrightPassStrings.Import_Errors]: '行{INDEX}: {MESSAGE}',
-    [BrightPassStrings.Import_InvalidFormat]: 'アップロードされたファイルは選択されたフォーマットと一致しません。',
-    [BrightPassStrings.Import_Error]: 'インポート中にエラーが発生しました。もう一度お試しください。',
+    [BrightPassStrings.Import_InvalidFormat]:
+      'アップロードされたファイルは選択されたフォーマットと一致しません。',
+    [BrightPassStrings.Import_Error]:
+      'インポート中にエラーが発生しました。もう一度お試しください。',
 
     // Audit Log
     [BrightPassStrings.AuditLog_Title]: '監査ログ',
@@ -167,8 +176,10 @@ export const BrightPassJapaneseStrings: StringsCollection<BrightPassStringKey> =
     [BrightPassStrings.AuditLog_Action]: 'アクション',
     [BrightPassStrings.AuditLog_Member]: 'メンバーID',
     [BrightPassStrings.AuditLog_FilterAll]: 'すべてのアクション',
-    [BrightPassStrings.AuditLog_NoEntries]: '監査ログのエントリが見つかりません。',
-    [BrightPassStrings.AuditLog_Error]: '監査ログの読み込みに失敗しました。もう一度お試しください。',
+    [BrightPassStrings.AuditLog_NoEntries]:
+      '監査ログのエントリが見つかりません。',
+    [BrightPassStrings.AuditLog_Error]:
+      '監査ログの読み込みに失敗しました。もう一度お試しください。',
 
     // Errors
     [BrightPassStrings.Error_InvalidMasterPassword]:

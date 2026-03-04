@@ -32,7 +32,7 @@ describe('MemberCblService Integrity Verification Property Tests', () => {
 
     // Create member store with memory block store
     blockStore = BlockStoreFactory.createMemoryStore({
-      blockSize: BlockSize.Small,
+      supportedBlockSizes: [BlockSize.Small],
     });
     memberCblService = new MemberCblService<GuidV4Uint8Array>(blockStore);
   });

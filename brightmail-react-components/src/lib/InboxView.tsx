@@ -25,10 +25,10 @@ import { FC, memo, useCallback, useEffect, useRef, useState } from 'react';
 
 // EmailApiClient is provided by the consuming application (brightchain-react)
 // via tsconfig path mapping: @brightchain/brightchain-react/services/emailApi
-import { useEmailApi } from './hooks/useEmailApi';
 import { buildDeleteErrorMessage, bulkDelete } from './bulkActions';
 import ConfirmDialog from './ConfirmDialog';
 import EmailListTable from './EmailListTable';
+import { useEmailApi } from './hooks/useEmailApi';
 
 // ─── Scroll position preservation ─────────────────────────────────────
 const SCROLL_STORAGE_KEY = 'brightmail-inbox-scroll';
@@ -252,9 +252,7 @@ const InboxView: FC = () => {
     setDeleteConfirmOpen(false);
     const ids = Array.from(state.selectedIds);
 
-    const { failed } = await bulkDelete(ids, (id) =>
-      emailApi.deleteEmail(id),
-    );
+    const { failed } = await bulkDelete(ids, (id) => emailApi.deleteEmail(id));
 
     if (failed.length > 0) {
       const template = t(BrightChainStrings.BrightMail_Delete_ErrorTemplate);

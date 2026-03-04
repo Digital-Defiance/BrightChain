@@ -27,9 +27,10 @@ import {
 } from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
 import { UserController } from '../../lib/controllers/api/user';
+import { AppConstants } from '../../lib/appConstants';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { AuthService } from '../../lib/services/auth';
-import { BackupCodeService } from '../../lib/services/backupCodeService';
+import { BrightChainBackupCodeService } from '../../lib/services/brightChainBackupCodeService';
 import { EmailService } from '../../lib/services/email';
 import { BrightChainSessionAdapter } from '../../lib/services/sessionAdapter';
 
@@ -91,7 +92,7 @@ function createTestEnvironment(): {
 
   const mockApp = {
     environment: { mongo: { useTransactions: false }, debug: false },
-    constants: {},
+    constants: AppConstants,
     ready: true,
     services,
     plugins: {},
@@ -124,7 +125,9 @@ function createTestEnvironment(): {
     JWT_SECRET,
   );
 
-  const backupCodeService = new BackupCodeService(memberStore, 4);
+  // Register a stub backup code service — these tests only exercise
+  // unauthenticated 401 paths, so the service is never invoked.
+  const backupCodeService = {} as unknown as BrightChainBackupCodeService;
 
   // Create a mock session adapter with minimal implementation
   const mockSessionAdapter = {

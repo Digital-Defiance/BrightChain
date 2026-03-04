@@ -8,8 +8,8 @@
  * Requirements: 1.1, 1.2, 1.3, 7.3, 11.1
  */
 
-import { cleanup, render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
@@ -62,14 +62,14 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
 }));
 
 // Import after mocks
-import BrightMailLayout from '../BrightMailLayout';
 import {
   MemoryRouter,
-  Routes,
-  Route,
   Navigate,
+  Route,
+  Routes,
   useLocation,
 } from 'react-router-dom';
+import BrightMailLayout from '../BrightMailLayout';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -79,18 +79,14 @@ const FakePrivateRoute: React.FC<{
 }> = ({ isAuthenticated, children }) => {
   const location = useLocation();
   if (!isAuthenticated) {
-    return (
-      <Navigate to="/login" state={{ from: location }} replace />
-    );
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
   return <>{children}</>;
 };
 
 function LocationDisplay() {
   const location = useLocation();
-  return (
-    <div data-testid="location-display">{location.pathname}</div>
-  );
+  return <div data-testid="location-display">{location.pathname}</div>;
 }
 
 function renderWithRouter(
@@ -98,9 +94,7 @@ function renderWithRouter(
   initialEntries: string[] = ['/brightmail'],
 ) {
   return render(
-    <MemoryRouter initialEntries={initialEntries}>
-      {ui}
-    </MemoryRouter>,
+    <MemoryRouter initialEntries={initialEntries}>{ui}</MemoryRouter>,
   );
 }
 
@@ -164,10 +158,7 @@ describe('BrightMailLayout', () => {
         >
           <Route index element={<div>Inbox</div>} />
         </Route>
-        <Route
-          path="/login"
-          element={<div data-testid="login">Login</div>}
-        />
+        <Route path="/login" element={<div data-testid="login">Login</div>} />
       </Routes>,
     );
 
@@ -203,13 +194,9 @@ describe('BrightMailLayout', () => {
       </Routes>,
     );
 
-    expect(
-      screen.queryByText('BrightMail_MenuLabel'),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText('BrightMail_MenuLabel')).not.toBeInTheDocument();
     expect(screen.getByTestId('login')).toBeInTheDocument();
-    expect(
-      screen.getByTestId('location-display').textContent,
-    ).toBe('/login');
+    expect(screen.getByTestId('location-display').textContent).toBe('/login');
   });
 
   /**
@@ -274,9 +261,7 @@ describe('BrightMailLayout', () => {
       </MemoryRouter>,
     );
 
-    expect(
-      screen.getByText('Correo BrightMail'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Correo BrightMail')).toBeInTheDocument();
     expect(screen.getByText('Redactar')).toBeInTheDocument();
   });
 });

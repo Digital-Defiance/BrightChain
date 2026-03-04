@@ -129,7 +129,7 @@ export class MemberDocument<
     this._blockSize = config?.blockSize ?? BlockSize.Small;
     // Create a unique block store for each document instance to avoid conflicts
     const blockStore = BlockStoreFactory.createMemoryStore({
-      blockSize: this._blockSize,
+      supportedBlockSizes: [this._blockSize],
     });
     this.cblService = new MemberCblService(blockStore);
 

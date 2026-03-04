@@ -95,7 +95,7 @@ export class MemberProfileDocument<TID extends PlatformID = Uint8Array> {
     this._blockSize = config?.blockSize ?? BlockSize.Small;
 
     const blockStore = BlockStoreFactory.createMemoryStore({
-      blockSize: this._blockSize,
+      supportedBlockSizes: [this._blockSize],
     });
     this.cblService = new MemberCblService(blockStore);
   }

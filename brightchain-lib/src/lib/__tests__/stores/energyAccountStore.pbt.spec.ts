@@ -163,10 +163,9 @@ describe('EnergyAccount Serialization Property-Based Tests', () => {
  * hydrates/dehydrates using EnergyAccount.fromDto/toDto, mirroring
  * what the real Model does.
  */
-class InMemoryTypedCollection implements ITypedCollection<
-  IEnergyAccountDto,
-  EnergyAccount
-> {
+class InMemoryTypedCollection
+  implements ITypedCollection<IEnergyAccountDto, EnergyAccount>
+{
   private docs: IEnergyAccountDto[] = [];
 
   find(filter?: Partial<IEnergyAccountDto>): ITypedCursor<EnergyAccount> {

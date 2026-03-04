@@ -5,11 +5,12 @@
  * Indexes are stored as sorted maps from stringified key values to sets of document IDs.
  */
 
-import type { IndexOptions, IndexSpec } from '@digitaldefiance/suite-core-lib';
+import type { IndexOptions } from '@digitaldefiance/suite-core-lib';
 import type {
   BsonDocument,
   DocumentId,
 } from '../interfaces/storage/documentTypes';
+import type { IndexSpec } from './types';
 
 /**
  * Represents a single index on a collection.

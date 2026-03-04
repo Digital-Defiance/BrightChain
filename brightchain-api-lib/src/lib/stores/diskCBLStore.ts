@@ -35,9 +35,9 @@ import { join } from 'path';
  * Maintains an index of CBL addresses and their associated block tuples.
  * Supports both encrypted and plain CBLs.
  */
-export class DiskCBLStore<
-  TID extends PlatformID = Uint8Array,
-> implements ICBLStore<TID> {
+export class DiskCBLStore<TID extends PlatformID = Uint8Array>
+  implements ICBLStore<TID>
+{
   private readonly _storePath: string;
   private readonly _cblPath: string;
   private readonly _indexPath: string;

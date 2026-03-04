@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures';
+import { expect, test } from './fixtures';
 
 /**
  * User Settings UI E2E Tests.
@@ -64,7 +64,7 @@ test.describe('User Settings Page', () => {
 
     // Verify success message appears
     await expect(
-      authenticatedPage.getByRole('alert').filter({ hasText: /saved successfully/i }),
+      authenticatedPage.locator('.MuiAlert-standardSuccess'),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -87,7 +87,9 @@ test.describe('User Settings Page', () => {
 
     // Verify success message appears
     await expect(
-      authenticatedPage.getByRole('alert').filter({ hasText: /saved successfully/i }),
+      authenticatedPage
+        .getByRole('alert')
+        .filter({ hasText: /saved successfully/i }),
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -119,7 +121,9 @@ test.describe('User Settings Page', () => {
 
     // Wait for success message
     await expect(
-      authenticatedPage.getByRole('alert').filter({ hasText: /saved successfully/i }),
+      authenticatedPage
+        .getByRole('alert')
+        .filter({ hasText: /saved successfully/i }),
     ).toBeVisible({ timeout: 10000 });
 
     // Reload the page

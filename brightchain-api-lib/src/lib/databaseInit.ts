@@ -15,11 +15,12 @@ import type {
 } from '@brightchain/brightchain-lib';
 import {
   BlockSize,
+  BlockStoreType,
   EnergyAccount,
   EnergyAccountStore,
   MemberStore,
 } from '@brightchain/brightchain-lib';
-import { BrightChainDb } from '@brightchain/db';
+import { BrightDb } from '@brightchain/db';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { constants as fsConstants } from 'fs';
 import { access, mkdir } from 'fs/promises';
@@ -52,13 +53,13 @@ async function validateDataDir(dirPath: string): Promise<void> {
 /**
  * Initialize the BrightChain database stack.
  *
- * Reads `blockStorePath` and `blockStoreBlockSize` from the Environment:
+ * Reads `blockStorePath` and `blockStoreBlockSizes` from the Environment:
  * - If `blockStorePath` is set: validates the path, creates a DiskBlockStore,
- *   and creates a BrightChainDb with a PersistentHeadRegistry via `dataDir`.
+ *   and creates a BrightDb with a PersistentHeadRegistry via `dataDir`.
  * - If `blockStorePath` is not set: creates a MemoryBlockStore, logs a warning,
- *   and creates a BrightChainDb with an InMemoryHeadRegistry.
+ *   and creates a BrightDb with an InMemoryHeadRegistry.
  *
- * Registers an `energy_accounts` Model on BrightChainDb with the energy account
+ * Registers an `energy_accounts` Model on BrightDB with the energy account
  * hydration schema, then passes the Model (as ITypedCollection) directly to
  * EnergyAccountStore — no adapter needed.
  *
@@ -70,7 +71,8 @@ export async function brightchainDatabaseInit<TID extends PlatformID>(
 ): Promise<IInitResult<IBrightChainInitData>> {
   try {
     const blockStorePath = environment.blockStorePath;
-    const blockSize: BlockSize = environment.blockStoreBlockSize;
+    const supportedBlockSizes: readonly BlockSize[] =
+      environment.blockStoreBlockSizes;
     const devPoolName = environment.devDatabasePoolName;
 
     let blockStore: IBlockStore;
@@ -81,14 +83,22 @@ export async function brightchainDatabaseInit<TID extends PlatformID>(
       console.info(
         `[BrightChain] DEV_DATABASE="${devPoolName}" — using ephemeral MemoryBlockStore. Data will not persist across restarts.`,
       );
-      blockStore = BlockStoreFactory.createMemoryStore({ blockSize });
+      blockStore = BlockStoreFactory.createMemoryStore({ supportedBlockSizes });
+    } else if (environment.blockStoreType === BlockStoreType.AzureBlob) {
+      // Factory must have been registered by the consuming app importing
+      // '@brightchain/azure-store' at its entry point.
+      blockStore = BlockStoreFactory.createAzureStore(environment.azureConfig!);
+    } else if (environment.blockStoreType === BlockStoreType.S3) {
+      // Factory must have been registered by the consuming app importing
+      // '@brightchain/s3-store' at its entry point.
+      blockStore = BlockStoreFactory.createS3Store(environment.s3Config!);
     } else if (blockStorePath) {
       // Validate path accessibility, create if needed
       await validateDataDir(blockStorePath);
 
       blockStore = BlockStoreFactory.createDiskStore({
         storePath: blockStorePath,
-        blockSize,
+        supportedBlockSizes,
       });
       dataDir = blockStorePath;
     } else {
@@ -99,12 +109,12 @@ export async function brightchainDatabaseInit<TID extends PlatformID>(
       );
     }
 
-    // Create BrightChainDb — uses PersistentHeadRegistry when dataDir is set,
+    // Create BrightDb — uses PersistentHeadRegistry when dataDir is set,
     // InMemoryHeadRegistry otherwise.
     // IMPORTANT: name must match what BrightChainMemberInitService uses
     // (config.memberPoolName) so the head registry keys are consistent across
     // the plugin's db and the seeding service's db.
-    const db = new BrightChainDb(
+    const db = new BrightDb(
       blockStore,
       dataDir ? { name: environment.memberPoolName, dataDir } : undefined,
     );

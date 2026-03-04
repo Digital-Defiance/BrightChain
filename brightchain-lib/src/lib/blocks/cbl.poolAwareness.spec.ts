@@ -36,7 +36,7 @@ describe('CBL Pool Awareness (Task 10.1)', () => {
     const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
     eciesService = sp.eciesService;
     blockStore = BlockStoreFactory.createMemoryStore({
-      blockSize: BlockSize.Small,
+      supportedBlockSizes: [BlockSize.Small],
     });
     memberCblService = new MemberCblService<GuidV4Uint8Array>(blockStore);
   });

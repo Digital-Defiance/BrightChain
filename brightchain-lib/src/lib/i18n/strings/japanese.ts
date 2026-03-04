@@ -419,6 +419,12 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     '操作は実装されていません',
   [BrightChainStrings.Error_StoreError_InsufficientRandomBlocksTemplate]:
     '利用可能なランダムブロックが不足しています: 要求 {REQUESTED}、利用可能 {AVAILABLE}',
+  [BrightChainStrings.Error_StoreError_FactoryNotRegistered]:
+    '要求されたストアタイプのブロックストアファクトリが登録されていません',
+  [BrightChainStrings.Error_StoreError_CloudOperationFailedTemplate]:
+    'クラウドストレージ操作 {OPERATION} がブロック {BLOCK_CHECKSUM} で失敗しました: {ORIGINAL_ERROR}',
+  [BrightChainStrings.Error_StoreError_CloudAuthenticationFailedTemplate]:
+    'クラウドストレージ認証が操作 {OPERATION} で失敗しました: {ORIGINAL_ERROR}',
   [BrightChainStrings.Error_TupleError_InvalidTupleSize]: '無効なタプルサイズ',
   [BrightChainStrings.Error_TupleError_BlockSizeMismatch]:
     'タプル内のすべてのブロックは同じサイズである必要があります',
@@ -1167,6 +1173,88 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
     'TCBLマニフェストバージョンはサポートされていません',
 
+  // Splash
+  [BrightChainStrings.Splash_Welcome]: 'BrightChainへようこそ',
+  [BrightChainStrings.Splash_NextGenInfrastructure]:
+    '分散型アプリケーションプラットフォーム',
+  [BrightChainStrings.Splash_SoupCanDemo]: 'スープ缶デモ',
+  [BrightChainStrings.Splash_SoupCanDemoDescription]:
+    'BrightChainがデータをブロックに分割し、XOR演算を使用してランダムデータと混合することで、所有者不在ストレージを実現する仕組みをご覧ください。',
+  [BrightChainStrings.Splash_StoragePools]: 'ストレージプール',
+  [BrightChainStrings.Splash_StoragePoolsDescription]:
+    'ネームスペース分離されたプール、コンテンツアドレス指定ブロック、プールスコープのホワイトニング、およびクロスプール分離保証を探索します。',
+  [BrightChainStrings.Splash_Messaging]: 'メッセージング',
+  [BrightChainStrings.Splash_MessagingDescription]:
+    'ECIES暗号化されたダイレクトメッセージ、プール共有グループチャット、可視性モード付きチャンネル、消滅メッセージ、およびプレゼンス。',
+  [BrightChainStrings.Splash_BrightPass]: 'BrightPass',
+  [BrightChainStrings.Splash_BrightPassDescription]:
+    '認証情報の保存、パスワード生成、侵害チェック、TOTP/2FA設定を備えた分散型パスワード保管庫。',
+  [BrightChainStrings.Splash_Database]: 'データベース',
+  [BrightChainStrings.Splash_DatabaseDescription]:
+    'コピーオンライトブロック、プール分離、楽観的並行性トランザクション、集約パイプラインを備えたドキュメントデータベース。',
+  [BrightChainStrings.Splash_IdentityAndSecurity]:
+    'アイデンティティとセキュリティ',
+  [BrightChainStrings.Splash_IdentityAndSecurityDescription]:
+    'ペーパーキーバックアップ、デバイス管理、プラットフォーム間のアイデンティティ証明、公開鍵ディレクトリでのプロファイル検索。',
+  [BrightChainStrings.Splash_TrySoupCanDemo]: 'スープ缶デモを試す',
+  [BrightChainStrings.Splash_GetStarted]: '始める',
+  [BrightChainStrings.Splash_WhatIsBrightChain]: 'BrightChainとは？',
+  [BrightChainStrings.Splash_WhatIsBrightChainDescription]:
+    'BrightChainは「ブライトブロックスープ」コンセプトを使用してデータストレージを革新します。ファイルはブロックに分割され、XOR演算を使用してランダムデータと混合されることで、完全にランダムに見えながら完璧なセキュリティを維持します。',
+  [BrightChainStrings.Splash_OwnerFreeStorage]: '所有者不在ストレージ',
+  [BrightChainStrings.Splash_OwnerFreeStorageDescription]:
+    '暗号学的ランダム性がストレージの責任を排除',
+  [BrightChainStrings.Splash_EnergyEfficient]: 'エネルギー効率的',
+  [BrightChainStrings.Splash_EnergyEfficientDescription]:
+    '無駄なプルーフオブワークマイニングなし',
+  [BrightChainStrings.Splash_Decentralized]: '分散型',
+  [BrightChainStrings.Splash_DecentralizedDescription]:
+    'ネットワーク全体に分散',
+  [BrightChainStrings.Splash_AnonymousYetAccountable]:
+    '匿名でありながら説明責任あり',
+  [BrightChainStrings.Splash_AnonymousYetAccountableDescription]:
+    'モデレーション機能を備えたプライバシー',
+  [BrightChainStrings.Splash_ExploreThePlatform]: 'プラットフォームを探索',
+  [BrightChainStrings.Splash_InteractiveDemos]:
+    'BrightChainの主要機能を紹介するインタラクティブデモ',
+  [BrightChainStrings.Splash_LaunchDemo]: 'デモを起動',
+
+  // Splash - BrightStack
+  [BrightChainStrings.Splash_BuildWithBrightStack]: 'BrightStackで構築する',
+  [BrightChainStrings.Splash_BuildWithBrightStackDescription]:
+    'BrightStackは分散型アプリケーションのためのフルスタックパラダイムです：BrightChain + Express + React + Node。MERNスタックを知っていれば、BrightStackも使えます。',
+  [BrightChainStrings.Splash_BrightStackSubtitle]:
+    'MongoDBをBrightDbに置き換えるだけ。他はそのまま。',
+  [BrightChainStrings.Splash_BrightDb]: 'BrightDb',
+  [BrightChainStrings.Splash_BrightDbDescription]:
+    'Owner-Freeファイルシステム上のMongoDB互換ドキュメントデータベース。完全なCRUD、クエリ、インデックス、トランザクション、集約パイプラインをサポート。',
+  [BrightChainStrings.Splash_FamiliarApi]: 'おなじみのAPI',
+  [BrightChainStrings.Splash_FamiliarApiDescription]:
+    'MongoDBと同じパターン — コレクション、find、insert、update — ただし、すべてのドキュメントはプライバシーを保護するホワイトニングブロックとして保存されます。',
+  [BrightChainStrings.Splash_BuiltOnBrightStack]: 'BrightStack上に構築',
+  [BrightChainStrings.Splash_BuiltOnBrightStackDescription]:
+    'BrightPass、BrightMail、BrightHubはすべてBrightStack上に構築されており、分散型アプリ開発が従来のフルスタック開発と同じくらい簡単であることを証明しています。',
+  [BrightChainStrings.Splash_OpenSource]: 'オープンソース',
+  [BrightChainStrings.Splash_OpenSourceDescription]:
+    'BrightChainは完全にオープンソースです。BrightStack上で独自のdAppを構築し、分散型の未来に貢献しましょう。',
+
+  // Splash - 暗号通貨ではない
+  [BrightChainStrings.Splash_NotACryptocurrency]: '暗号通貨ではありません',
+  [BrightChainStrings.Splash_NotACryptocurrencyDescription]:
+    '「ブロックチェーン」と聞くと、ビットコインを思い浮かべるでしょう。BrightChainは根本的に異なります — 通貨もなく、プルーフ・オブ・ワークもなく、マイニングもありません。コインを鋳造するためにエネルギーを浪費する代わりに、BrightChainはストレージとコンピューティングの実際の貢献を重視します。',
+  [BrightChainStrings.Splash_NoCurrency]: '通貨なし',
+  [BrightChainStrings.Splash_NoCurrencyDescription]:
+    'BrightChainにはコイン、トークン、投機的資産はありません。金融ではなく、インフラストラクチャです。',
+  [BrightChainStrings.Splash_NoMining]: 'マイニングなし',
+  [BrightChainStrings.Splash_NoMiningDescription]:
+    'プルーフ・オブ・ワークなし、エネルギーの無駄なし。すべての計算サイクルが有用な目的に使われます。',
+  [BrightChainStrings.Splash_Joules]: 'コインではなくジュール',
+  [BrightChainStrings.Splash_JoulesDescription]:
+    'ストレージとコンピューティングの貢献はジュールで追跡されます — 市場の投機ではなく、実際のエネルギーコストに結びついた単位です。',
+  [BrightChainStrings.Splash_RealWorldValue]: '現実世界の価値',
+  [BrightChainStrings.Splash_RealWorldValueDescription]:
+    'ジュールの値は実際のコストに基づく公式で設定され、時間とともにその公式を改善していきます — 取引なし、変動なし。',
+
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'ダッシュボード',
   [BrightChainStrings.Dashboard_EnergyBalance]: 'エネルギー残高',
@@ -1196,8 +1284,7 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.BrightMail_Inbox_Error]:
     '受信トレイの読み込みに失敗しました',
   [BrightChainStrings.BrightMail_Inbox_Retry]: '再試行',
-  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]:
-    '{COUNT} 件未読',
+  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]: '{COUNT} 件未読',
   [BrightChainStrings.BrightMail_Compose_Title]: '作成',
   [BrightChainStrings.BrightMail_Compose_To]: '宛先',
   [BrightChainStrings.BrightMail_Compose_Cc]: 'Cc',
@@ -1217,8 +1304,7 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.BrightMail_Thread_BackToInbox]: '受信トレイに戻る',
   [BrightChainStrings.BrightMail_Thread_Reply]: '返信',
   [BrightChainStrings.BrightMail_Thread_Forward]: '転送',
-  [BrightChainStrings.BrightMail_Delete_Confirm]:
-    '本当に削除しますか？',
+  [BrightChainStrings.BrightMail_Delete_Confirm]: '本当に削除しますか？',
   [BrightChainStrings.BrightMail_Delete_ConfirmBulkTemplate]:
     '選択した {COUNT} 件のメールを削除しますか？',
   [BrightChainStrings.BrightMail_Delete_Success]: 'メールが削除されました',

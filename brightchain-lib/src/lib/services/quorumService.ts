@@ -28,9 +28,9 @@ import { ServiceProvider } from './service.provider';
  * This service wraps the existing BrightChainQuorum and SealingService to provide
  * a clean API for quorum operations.
  */
-export class QuorumService<
-  TID extends PlatformID = Uint8Array,
-> implements IQuorumService<TID> {
+export class QuorumService<TID extends PlatformID = Uint8Array>
+  implements IQuorumService<TID>
+{
   protected readonly sealingService: SealingService<TID>;
   protected readonly enhancedProvider: TypedIdProviderWrapper<TID>;
   protected readonly eciesService: ECIESService<TID>;
