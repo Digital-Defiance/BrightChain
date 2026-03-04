@@ -744,7 +744,7 @@ export class EmailMessageService {
             );
           }
 
-          const result = encryptionService.encryptContentSymmetric(
+          const result = await encryptionService.encryptContentSymmetric(
             bodyContent,
             email.sharedKey,
           );
@@ -754,7 +754,7 @@ export class EmailMessageService {
 
           // Optionally sign
           if (email.senderPrivateKey && email.senderPublicKey) {
-            const sig = encryptionService.signContent(
+            const sig = await encryptionService.signContent(
               bodyContent,
               email.senderPrivateKey,
               email.senderPublicKey,
@@ -1431,7 +1431,7 @@ export class EmailMessageService {
 
     const content = new TextEncoder().encode(bodyContent);
     const encryptionService = new EmailEncryptionService();
-    const verified = encryptionService.verifySignature(
+    const verified = await encryptionService.verifySignature(
       content,
       metadata.contentSignature,
       signerPrivateKey,

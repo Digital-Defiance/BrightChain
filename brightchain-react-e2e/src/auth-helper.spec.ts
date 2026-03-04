@@ -5,9 +5,9 @@
  *
  * These are unit-style property tests that do NOT require a browser context.
  */
-import { test, expect } from '@playwright/test';
-import fc from 'fast-check';
+import { expect, test } from '@playwright/test';
 import axios, { AxiosError } from 'axios';
+import fc from 'fast-check';
 import { generateCredentials, registerViaApi } from './fixtures';
 
 test.describe('Auth Helper – Property Tests', () => {
@@ -20,23 +20,20 @@ test.describe('Auth Helper – Property Tests', () => {
      * **Validates: Requirements 1.4**
      */
     fc.assert(
-      fc.property(
-        fc.integer({ min: 2, max: 50 }),
-        (n: number) => {
-          const usernames = new Set<string>();
-          const emails = new Set<string>();
+      fc.property(fc.integer({ min: 2, max: 50 }), (n: number) => {
+        const usernames = new Set<string>();
+        const emails = new Set<string>();
 
-          for (let i = 0; i < n; i++) {
-            const creds = generateCredentials();
-            usernames.add(creds.username);
-            emails.add(creds.email);
-          }
+        for (let i = 0; i < n; i++) {
+          const creds = generateCredentials();
+          usernames.add(creds.username);
+          emails.add(creds.email);
+        }
 
-          // Every username and email must be unique
-          expect(usernames.size).toBe(n);
-          expect(emails.size).toBe(n);
-        },
-      ),
+        // Every username and email must be unique
+        expect(usernames.size).toBe(n);
+        expect(emails.size).toBe(n);
+      }),
       { numRuns: 100 },
     );
   });

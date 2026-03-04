@@ -7,6 +7,7 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
 import { Checksum } from '../../types/checksum';
+import { IPasswordWrappedPrivateKey } from './passwordWrappedPrivateKey';
 import { IStoredBackupCode } from '../userManagement';
 
 /**
@@ -53,8 +54,14 @@ export interface IPrivateMemberData<TID extends PlatformID = Uint8Array> {
   /** bcrypt password hash — present only for members with password-based auth */
   passwordHash?: string;
 
-  /** Stored backup codes — bcrypt-hashed, one-time-use recovery codes */
+  /** Stored backup codes — encrypted per the upstream Argon2id/AEAD/ECIES scheme (see IStoredBackupCode) */
   backupCodes?: IStoredBackupCode[];
+
+  /** Password-wrapped ECIES private key (AES-256-GCM + PBKDF2) */
+  passwordWrappedPrivateKey?: IPasswordWrappedPrivateKey;
+
+  /** Mnemonic encrypted with the system user's ECIES public key (hex-encoded) */
+  mnemonicRecovery?: string;
 
   // Network
   trustedPeers: TID[];

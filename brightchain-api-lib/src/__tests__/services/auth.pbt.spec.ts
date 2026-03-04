@@ -15,12 +15,15 @@ import {
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { SecureString } from '@digitaldefiance/ecies-lib';
+import { EmailString, MemberType, SecureString } from '@digitaldefiance/ecies-lib';
+import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
+import { SystemUserService } from '@digitaldefiance/node-express-suite';
 import * as bcrypt from 'bcrypt';
 import * as fc from 'fast-check';
 import * as jwt from 'jsonwebtoken';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { IAuthCredentials } from '../../lib/interfaces/auth-credentials';
+import { AppConstants } from '../../lib/appConstants';
 import { AuthService } from '../../lib/services/auth';
 import { EmailService } from '../../lib/services/email';
 
@@ -128,7 +131,7 @@ describe('AuthService Property-Based Tests', () => {
       // and does not access its properties during register/login flows.
       const mockApp = {
         environment: { mongo: { useTransactions: false }, debug: false },
-        constants: {},
+        constants: AppConstants,
         ready: true,
         services: {},
         plugins: {},
@@ -153,6 +156,17 @@ describe('AuthService Property-Based Tests', () => {
           /* noop */
         },
       } as unknown as EmailService;
+
+      // Pre-populate the SystemUserService singleton
+      (SystemUserService as any)['systemUser'] = null;
+      const ecies = ServiceProvider.getInstance().eciesService as unknown as ECIESService;
+      const { member: sysUser } = Member.newMember(
+        ecies,
+        MemberType.System,
+        AppConstants.SystemUser,
+        new EmailString(AppConstants.SystemEmail),
+      );
+      SystemUserService.setSystemUser(sysUser, AppConstants);
 
       return new AuthService(
         mockApp,
@@ -242,7 +256,7 @@ describe('AuthService Property-Based Tests', () => {
 
       const mockApp = {
         environment: { mongo: { useTransactions: false }, debug: false },
-        constants: {},
+        constants: AppConstants,
         ready: true,
         services: {},
         plugins: {},
@@ -266,6 +280,17 @@ describe('AuthService Property-Based Tests', () => {
           /* noop */
         },
       } as unknown as EmailService;
+
+      // Pre-populate the SystemUserService singleton
+      (SystemUserService as any)['systemUser'] = null;
+      const ecies = ServiceProvider.getInstance().eciesService as unknown as ECIESService;
+      const { member: sysUser } = Member.newMember(
+        ecies,
+        MemberType.System,
+        AppConstants.SystemUser,
+        new EmailString(AppConstants.SystemEmail),
+      );
+      SystemUserService.setSystemUser(sysUser, AppConstants);
 
       return new AuthService(
         mockApp,
@@ -358,7 +383,7 @@ describe('AuthService Property-Based Tests', () => {
 
       const mockApp = {
         environment: { mongo: { useTransactions: false }, debug: false },
-        constants: {},
+        constants: AppConstants,
         ready: true,
         services: {},
         plugins: {},
@@ -382,6 +407,17 @@ describe('AuthService Property-Based Tests', () => {
           /* noop */
         },
       } as unknown as EmailService;
+
+      // Pre-populate the SystemUserService singleton
+      (SystemUserService as any)['systemUser'] = null;
+      const ecies = ServiceProvider.getInstance().eciesService as unknown as ECIESService;
+      const { member: sysUser } = Member.newMember(
+        ecies,
+        MemberType.System,
+        AppConstants.SystemUser,
+        new EmailString(AppConstants.SystemEmail),
+      );
+      SystemUserService.setSystemUser(sysUser, AppConstants);
 
       return new AuthService(
         mockApp,

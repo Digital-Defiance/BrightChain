@@ -22,7 +22,7 @@ describe('MemberProfileHydration', () => {
 
   beforeEach(() => {
     const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
-    const { member } = Member.newMember(
+    const { member } = Member.newMember<GuidV4Uint8Array>(
       sp.eciesService,
       MemberType.User,
       'test-user',
@@ -129,7 +129,7 @@ describe('MemberProfileHydration', () => {
 
     beforeEach(() => {
       const sp = ServiceProvider.getInstance<GuidV4Uint8Array>();
-      const { member: peer1 } = Member.newMember(
+      const { member: peer1 } = Member.newMember<GuidV4Uint8Array>(
         sp.eciesService,
         MemberType.User,
         'peer1',
@@ -137,7 +137,7 @@ describe('MemberProfileHydration', () => {
       );
       peerId1 = peer1.id;
 
-      const { member: peer2 } = Member.newMember(
+      const { member: peer2 } = Member.newMember<GuidV4Uint8Array>(
         sp.eciesService,
         MemberType.User,
         'peer2',

@@ -67,7 +67,7 @@ function toStorageKey(hex: string): BlockId {
  */
 export class DiskBlockStore implements IBlockStore {
   protected readonly _storePath: string;
-  protected readonly _blockSize: BlockSize;
+  protected readonly _supportedBlockSizes: readonly BlockSize[];
 
   /**
    * Optional FEC service for parity generation and recovery.
@@ -79,17 +79,33 @@ export class DiskBlockStore implements IBlockStore {
    */
   private dirsEnsured = false;
 
-  constructor(config: { storePath: string; blockSize: BlockSize }) {
+  constructor(
+    config:
+      | { storePath: string; supportedBlockSizes: readonly BlockSize[] }
+      | { storePath: string; blockSize: BlockSize },
+  ) {
     if (!config.storePath) {
       throw new StoreError(StoreErrorType.StorePathRequired);
     }
 
-    if (!config.blockSize) {
+    // Support both old single-blockSize and new supportedBlockSizes config
+    const sizes: readonly BlockSize[] =
+      'supportedBlockSizes' in config
+        ? config.supportedBlockSizes
+        : [config.blockSize];
+
+    if (sizes.length === 0) {
       throw new StoreError(StoreErrorType.BlockSizeRequired);
     }
 
+    for (const size of sizes) {
+      if (!size) {
+        throw new StoreError(StoreErrorType.BlockSizeRequired);
+      }
+    }
+
     this._storePath = config.storePath;
-    this._blockSize = config.blockSize;
+    this._supportedBlockSizes = sizes;
 
     // Ensure store path exists
     if (!existsSync(config.storePath)) {
@@ -99,8 +115,16 @@ export class DiskBlockStore implements IBlockStore {
 
   // ─── Public Accessors ───────────────────────────────────────────────
 
+  public get supportedBlockSizes(): readonly BlockSize[] {
+    return this._supportedBlockSizes;
+  }
+
+  /**
+   * Backward-compatible getter: returns the first supported block size.
+   * @deprecated Use supportedBlockSizes instead.
+   */
   public get blockSize(): BlockSize {
-    return this._blockSize;
+    return this._supportedBlockSizes[0];
   }
 
   public get storePath(): string {
@@ -258,7 +282,11 @@ export class DiskBlockStore implements IBlockStore {
     }
 
     const data = await readFile(filePath);
-    const block = new RawDataBlock(this._blockSize, new Uint8Array(data));
+    // Use the first supported block size for the simple layout (subclasses override for complex layout)
+    const block = new RawDataBlock(
+      this._supportedBlockSizes[0],
+      new Uint8Array(data),
+    );
 
     // Record access in metadata
     await this.touchMetadataAccess(keyHex);
@@ -270,6 +298,11 @@ export class DiskBlockStore implements IBlockStore {
     block: RawDataBlock,
     options?: BlockStoreOptions,
   ): Promise<void> {
+    // Validate block size membership
+    if (!this._supportedBlockSizes.includes(block.blockSize)) {
+      throw new StoreError(StoreErrorType.BlockValidationFailed);
+    }
+
     const keyHex = toStorageKey(block.idChecksum.toHex());
     const filePath = this.blockFilePath(keyHex);
 
@@ -357,7 +390,14 @@ export class DiskBlockStore implements IBlockStore {
     }
   }
 
-  public async getRandomBlocks(count: number): Promise<Checksum[]> {
+  public async getRandomBlocks(
+    count: number,
+    blockSize: BlockSize,
+  ): Promise<Checksum[]> {
+    if (!this._supportedBlockSizes.includes(blockSize)) {
+      throw new StoreError(StoreErrorType.BlockValidationFailed);
+    }
+
     try {
       await access(this.blocksDir);
     } catch {
@@ -396,7 +436,7 @@ export class DiskBlockStore implements IBlockStore {
     return createBlockHandle<T>(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       RawDataBlock as any,
-      this._blockSize,
+      this._supportedBlockSizes[0],
       new Uint8Array(data),
       checksum,
       true,
@@ -410,9 +450,9 @@ export class DiskBlockStore implements IBlockStore {
     options?: BlockStoreOptions,
   ): Promise<void> {
     const effectiveSize =
-      data.length > (this._blockSize as number)
+      data.length > (this._supportedBlockSizes[0] as number)
         ? lengthToClosestBlockSize(data.length)
-        : this._blockSize;
+        : this._supportedBlockSizes[0];
     const block = new RawDataBlock(effectiveSize, data);
     await this.setData(block, options);
   }
@@ -565,7 +605,7 @@ export class DiskBlockStore implements IBlockStore {
 
       if (result.recovered) {
         const recoveredBlock = new RawDataBlock(
-          this._blockSize,
+          this._supportedBlockSizes[0],
           new Uint8Array(result.data),
         );
         await this.ensureDirs();
@@ -710,7 +750,10 @@ export class DiskBlockStore implements IBlockStore {
       });
     }
 
-    const randomBlockChecksums = await this.getRandomBlocks(randomBlockCount);
+    const randomBlockChecksums = await this.getRandomBlocks(
+      randomBlockCount,
+      this._supportedBlockSizes[0],
+    );
     if (randomBlockChecksums.length < randomBlockCount) {
       throw new StoreError(StoreErrorType.InsufficientRandomBlocks, undefined, {
         REQUESTED: randomBlockCount.toString(),
@@ -727,7 +770,10 @@ export class DiskBlockStore implements IBlockStore {
     }
 
     const brightenedData = XorService.xorMultiple(allBlockData);
-    const brightenedBlock = new RawDataBlock(this._blockSize, brightenedData);
+    const brightenedBlock = new RawDataBlock(
+      this._supportedBlockSizes[0],
+      brightenedData,
+    );
     const brightenedBlockId = toStorageKey(brightenedBlock.idChecksum.toHex());
 
     if (!(await this.has(brightenedBlockId))) {
@@ -753,10 +799,10 @@ export class DiskBlockStore implements IBlockStore {
       });
     }
 
-    const paddedCbl = padToBlockSize(cblData, this._blockSize);
-    if (paddedCbl.length > this._blockSize) {
+    const paddedCbl = padToBlockSize(cblData, this._supportedBlockSizes[0]);
+    if (paddedCbl.length > this._supportedBlockSizes[0]) {
       throw new StoreError(StoreErrorType.BlockValidationFailed, undefined, {
-        ERROR: `CBL data too large: padded size (${paddedCbl.length}) exceeds block size (${this._blockSize})`,
+        ERROR: `CBL data too large: padded size (${paddedCbl.length}) exceeds block size (${this._supportedBlockSizes[0]})`,
       });
     }
 
@@ -767,7 +813,10 @@ export class DiskBlockStore implements IBlockStore {
     let block1Id: BlockId = asBlockId('0'.repeat(64));
 
     try {
-      const block1 = new RawDataBlock(this._blockSize, randomBlock);
+      const block1 = new RawDataBlock(
+        this._supportedBlockSizes[0],
+        randomBlock,
+      );
       const block1Checksum = block1.idChecksum;
 
       if (!(await this.has(block1Checksum))) {
@@ -776,7 +825,7 @@ export class DiskBlockStore implements IBlockStore {
       }
       block1Id = toStorageKey(block1Checksum.toHex());
 
-      const block2 = new RawDataBlock(this._blockSize, xorResult);
+      const block2 = new RawDataBlock(this._supportedBlockSizes[0], xorResult);
       await this.setData(block2, options);
       const block2Id = toStorageKey(block2.idChecksum.toHex());
 
@@ -796,7 +845,7 @@ export class DiskBlockStore implements IBlockStore {
       const magnetUrl = this.generateCBLMagnetUrl(
         block1Id,
         block2Id,
-        this._blockSize,
+        this._supportedBlockSizes[0],
         block1ParityIds,
         block2ParityIds,
         options?.isEncrypted,
@@ -805,7 +854,7 @@ export class DiskBlockStore implements IBlockStore {
       return {
         blockId1: block1Id,
         blockId2: block2Id,
-        blockSize: this._blockSize,
+        blockSize: this._supportedBlockSizes[0],
         magnetUrl,
         block1ParityIds,
         block2ParityIds,

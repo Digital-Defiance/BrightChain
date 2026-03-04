@@ -57,8 +57,11 @@ function toStorageKey(hex: string): BlockId {
  * @see IBlockStore for the interface definition
  */
 export class MemoryBlockStore implements IBlockStore {
-  private readonly blocks = new Map<string, RawDataBlock>();
-  private readonly _blockSize: BlockSize;
+  /**
+   * Per-size block maps. Only maps for configured supportedBlockSizes are initialized.
+   */
+  private readonly blocks = new Map<BlockSize, Map<string, RawDataBlock>>();
+  private readonly _supportedBlockSizes: readonly BlockSize[];
 
   /**
    * Optional FEC service for parity generation and recovery.
@@ -79,22 +82,36 @@ export class MemoryBlockStore implements IBlockStore {
 
   /**
    * Create a new MemoryBlockStore.
-   * @param blockSize - The block size for this store
+   * @param blockSizeOrSizes - A single BlockSize (backward compat) or an array of supported BlockSize values
    * @param fecService - Optional FEC service for parity generation and recovery
    * @param metadataStore - Optional metadata store (creates new one if not provided)
    */
   constructor(
-    blockSize: BlockSize,
+    blockSizeOrSizes: BlockSize | readonly BlockSize[],
     fecService?: IFecService | null,
     metadataStore?: MemoryBlockMetadataStore,
   ) {
-    this._blockSize = blockSize;
+    this._supportedBlockSizes = Array.isArray(blockSizeOrSizes)
+      ? blockSizeOrSizes
+      : [blockSizeOrSizes];
+    // Initialize per-size maps only for configured sizes
+    for (const size of this._supportedBlockSizes) {
+      this.blocks.set(size, new Map<string, RawDataBlock>());
+    }
     this.fecService = fecService ?? null;
     this.metadataStore = metadataStore ?? new MemoryBlockMetadataStore();
   }
 
+  public get supportedBlockSizes(): readonly BlockSize[] {
+    return this._supportedBlockSizes;
+  }
+
+  /**
+   * Backward-compatible getter: returns the first supported block size.
+   * @deprecated Use supportedBlockSizes instead.
+   */
   public get blockSize(): BlockSize {
-    return this._blockSize;
+    return this._supportedBlockSizes[0];
   }
 
   /**
@@ -132,35 +149,73 @@ export class MemoryBlockStore implements IBlockStore {
   }
 
   /**
-   * Check if a block exists
+   * Find a block by key across all configured size maps.
+   * @returns The block if found, or undefined
    */
-  public async has(key: Checksum | string): Promise<boolean> {
-    const keyHex = this.keyToHex(key);
-    return this.blocks.has(keyHex);
+  private findBlock(keyHex: string): RawDataBlock | undefined {
+    for (const sizeMap of this.blocks.values()) {
+      const block = sizeMap.get(keyHex);
+      if (block) return block;
+    }
+    return undefined;
   }
 
   /**
-   * Get a block's data
+   * Check if a block exists in any size map (synchronous, no metadata).
+   */
+  private hasBlock(keyHex: string): boolean {
+    for (const sizeMap of this.blocks.values()) {
+      if (sizeMap.has(keyHex)) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Set a block directly in the correct size map (for internal use like recovery).
+   */
+  private setBlock(keyHex: string, block: RawDataBlock): void {
+    const sizeMap = this.blocks.get(block.blockSize);
+    if (sizeMap) {
+      sizeMap.set(keyHex, block);
+    }
+  }
+
+  /**
+   * Check if a block exists (searches across all configured size maps)
+   */
+  public async has(key: Checksum | string): Promise<boolean> {
+    const keyHex = this.keyToHex(key);
+    for (const sizeMap of this.blocks.values()) {
+      if (sizeMap.has(keyHex)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Get a block's data (searches across all configured size maps)
    */
   public async getData(key: Checksum): Promise<RawDataBlock> {
     const keyHex = this.keyToHex(key);
-    const block = this.blocks.get(keyHex);
-    if (!block) {
-      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
-        KEY: keyHex,
-      });
+    for (const sizeMap of this.blocks.values()) {
+      const block = sizeMap.get(keyHex);
+      if (block) {
+        // Record access in metadata
+        if (this.metadataStore.has(keyHex)) {
+          await this.metadataStore.recordAccess(toStorageKey(keyHex));
+        }
+        return block;
+      }
     }
-
-    // Record access in metadata
-    if (this.metadataStore.has(keyHex)) {
-      await this.metadataStore.recordAccess(toStorageKey(keyHex));
-    }
-
-    return block;
+    throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+      KEY: keyHex,
+    });
   }
 
   /**
    * Store a block's data with optional durability settings.
+   * Validates that block.blockSize is in supportedBlockSizes before accepting.
    * @param block - The block to store
    * @param options - Optional storage options including durability level and expiration
    */
@@ -168,8 +223,19 @@ export class MemoryBlockStore implements IBlockStore {
     block: RawDataBlock,
     options?: BlockStoreOptions,
   ): Promise<void> {
+    // Validate block size membership
+    if (!this._supportedBlockSizes.includes(block.blockSize)) {
+      throw new StoreError(StoreErrorType.BlockValidationFailed);
+    }
+
     const keyHex = block.idChecksum.toHex();
-    if (this.blocks.has(keyHex)) {
+
+    // Check idempotency across all size maps
+    const sizeMap = this.blocks.get(block.blockSize);
+    if (!sizeMap) {
+      throw new StoreError(StoreErrorType.BlockValidationFailed);
+    }
+    if (sizeMap.has(keyHex)) {
       return; // Idempotent - block already exists
     }
 
@@ -179,12 +245,10 @@ export class MemoryBlockStore implements IBlockStore {
       throw new StoreError(StoreErrorType.BlockValidationFailed);
     }
 
-    // Store the block
-    this.blocks.set(keyHex, block);
+    // Store the block in the correct size-specific map
+    sizeMap.set(keyHex, block);
 
     // Create metadata for the block
-    // keyHex is the SHA3-512 checksum hex (128 chars) used as the storage key.
-    // We cast it directly to BlockId since it serves as an opaque storage key here.
     const metadata = createDefaultBlockMetadata(
       keyHex as unknown as BlockId,
       block.data.length,
@@ -209,16 +273,22 @@ export class MemoryBlockStore implements IBlockStore {
   }
 
   /**
-   * Delete a block's data (and associated parity blocks and metadata)
+   * Delete a block's data (and associated parity blocks and metadata).
+   * Searches across all configured size maps.
    */
   public async deleteData(key: Checksum): Promise<void> {
     const keyHex = this.keyToHex(key);
-    if (!this.blocks.has(keyHex)) {
+    let found = false;
+    for (const sizeMap of this.blocks.values()) {
+      if (sizeMap.has(keyHex)) {
+        sizeMap.delete(keyHex);
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
       throw new StoreError(StoreErrorType.KeyNotFound);
     }
-
-    // Delete the block data
-    this.blocks.delete(keyHex);
 
     // Delete parity blocks
     this.parityBlocks.delete(keyHex);
@@ -230,10 +300,22 @@ export class MemoryBlockStore implements IBlockStore {
   }
 
   /**
-   * Get random block checksums from the store
+   * Get random block checksums from the store for a specific block size.
+   * @param count - Number of random block checksums to return
+   * @param blockSize - The block size pool to draw from (must be in supportedBlockSizes)
    */
-  public async getRandomBlocks(count: number): Promise<Checksum[]> {
-    const allKeys = Array.from(this.blocks.keys());
+  public async getRandomBlocks(
+    count: number,
+    blockSize: BlockSize,
+  ): Promise<Checksum[]> {
+    if (!this._supportedBlockSizes.includes(blockSize)) {
+      throw new StoreError(StoreErrorType.BlockValidationFailed);
+    }
+    const sizeMap = this.blocks.get(blockSize);
+    if (!sizeMap) {
+      return [];
+    }
+    const allKeys = Array.from(sizeMap.keys());
     const result: Checksum[] = [];
 
     const actualCount = Math.min(count, allKeys.length);
@@ -248,20 +330,27 @@ export class MemoryBlockStore implements IBlockStore {
   }
 
   /**
-   * Store a block's data (alias for setData)
+   * Store raw data with a key (convenience method).
+   * Uses the first supported block size for block creation.
    */
   public async put(
     key: Checksum | string,
     data: Uint8Array,
     options?: BlockStoreOptions,
   ): Promise<void> {
+    // Determine the appropriate block size for this data
+    const targetSize =
+      this._supportedBlockSizes.find(
+        (size) => size === BlockSize.Unknown || data.length <= (size as number),
+      ) ?? this._supportedBlockSizes[0];
+
     if (
-      this._blockSize !== BlockSize.Unknown &&
-      data.length > (this._blockSize as number)
+      targetSize !== BlockSize.Unknown &&
+      data.length > (targetSize as number)
     ) {
       throw new StoreError(StoreErrorType.BlockValidationFailed);
     }
-    const block = new RawDataBlock(this._blockSize, data);
+    const block = new RawDataBlock(targetSize, data);
     await this.setData(block, options);
   }
 
@@ -285,41 +374,50 @@ export class MemoryBlockStore implements IBlockStore {
   }
 
   /**
-   * Clear all blocks, metadata, and parity data
+   * Clear all blocks, metadata, and parity data across all size maps
    */
   public clear(): void {
-    this.blocks.clear();
+    for (const sizeMap of this.blocks.values()) {
+      sizeMap.clear();
+    }
     this.parityBlocks.clear();
     this.metadataStore.clear();
   }
 
   /**
-   * Get total number of blocks
+   * Get total number of blocks across all size maps
    */
   public size(): number {
-    return this.blocks.size;
+    let total = 0;
+    for (const sizeMap of this.blocks.values()) {
+      total += sizeMap.size;
+    }
+    return total;
   }
 
   /**
-   * Get a handle to a block
+   * Get a handle to a block (searches across all configured size maps)
    */
   public get<T extends BaseBlock>(key: Checksum | string): BlockHandle<T> {
     const keyHex = this.keyToHex(key);
-    const block = this.blocks.get(keyHex);
-    if (!block) {
-      throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
-        KEY: keyHex,
-      });
+    for (const sizeMap of this.blocks.values()) {
+      const block = sizeMap.get(keyHex);
+      if (block) {
+        const checksum =
+          typeof key === 'string' ? this.hexToChecksum(key) : key;
+        return createBlockHandle(
+          RawDataBlock as any,
+          block.blockSize,
+          block.data,
+          checksum,
+          block.canRead,
+          block.canPersist,
+        ) as BlockHandle<T>;
+      }
     }
-    const checksum = typeof key === 'string' ? this.hexToChecksum(key) : key;
-    return createBlockHandle(
-      RawDataBlock as any,
-      block.blockSize,
-      block.data,
-      checksum,
-      block.canRead,
-      block.canPersist,
-    ) as BlockHandle<T>;
+    throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
+      KEY: keyHex,
+    });
   }
 
   // === Metadata Operations ===
@@ -379,7 +477,7 @@ export class MemoryBlockStore implements IBlockStore {
     }
 
     // Check if block exists
-    const block = this.blocks.get(keyHex);
+    const block = this.findBlock(keyHex);
     if (!block) {
       throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
         KEY: keyHex,
@@ -491,7 +589,7 @@ export class MemoryBlockStore implements IBlockStore {
 
     try {
       // Get corrupted data if block still exists
-      const existingBlock = this.blocks.get(keyHex);
+      const existingBlock = this.findBlock(keyHex);
       const corruptedData = existingBlock ? existingBlock.data : null;
 
       // Attempt recovery
@@ -502,14 +600,18 @@ export class MemoryBlockStore implements IBlockStore {
       );
 
       if (result.recovered) {
+        // Determine the block size from existing block or first supported size
+        const recoveryBlockSize = existingBlock
+          ? existingBlock.blockSize
+          : this._supportedBlockSizes[0];
         // Create a new block with recovered data
         const recoveredBlock = new RawDataBlock(
-          this._blockSize,
+          recoveryBlockSize,
           new Uint8Array(result.data),
         );
 
-        // Update the stored block
-        this.blocks.set(keyHex, recoveredBlock);
+        // Update the stored block in the correct size map
+        this.setBlock(keyHex, recoveredBlock);
 
         return {
           success: true,
@@ -547,18 +649,18 @@ export class MemoryBlockStore implements IBlockStore {
     // Check if FEC service is available
     if (!this.fecService) {
       // Without FEC service, we can only verify the block exists
-      return this.blocks.has(keyHex);
+      return this.hasBlock(keyHex);
     }
 
     // Check if FEC service is available in the environment
     const isAvailable = await this.fecService.isAvailable();
     if (!isAvailable) {
       // Without FEC service, we can only verify the block exists
-      return this.blocks.has(keyHex);
+      return this.hasBlock(keyHex);
     }
 
     // Get block data
-    const block = this.blocks.get(keyHex);
+    const block = this.findBlock(keyHex);
     if (!block) {
       return false;
     }
@@ -706,15 +808,18 @@ export class MemoryBlockStore implements IBlockStore {
     const keyHex = this.keyToHex(key);
 
     // Verify source block exists
-    const sourceBlock = this.blocks.get(keyHex);
+    const sourceBlock = this.findBlock(keyHex);
     if (!sourceBlock) {
       throw new StoreError(StoreErrorType.KeyNotFound, undefined, {
         KEY: keyHex,
       });
     }
 
-    // Get random blocks for XOR operation
-    const randomBlockChecksums = await this.getRandomBlocks(randomBlockCount);
+    // Get random blocks for XOR operation (same size as source block)
+    const randomBlockChecksums = await this.getRandomBlocks(
+      randomBlockCount,
+      sourceBlock.blockSize,
+    );
 
     // Check if we have enough random blocks
     if (randomBlockChecksums.length < randomBlockCount) {
@@ -740,12 +845,15 @@ export class MemoryBlockStore implements IBlockStore {
     // Perform XOR operation using XorService: source XOR random1 XOR random2 XOR ...
     const brightenedData = XorService.xorMultiple(allBlockData);
 
-    // Create the brightened block
-    const brightenedBlock = new RawDataBlock(this._blockSize, brightenedData);
+    // Create the brightened block (same size as source)
+    const brightenedBlock = new RawDataBlock(
+      sourceBlock.blockSize,
+      brightenedData,
+    );
     const brightenedBlockId = brightenedBlock.idChecksum.toHex();
 
     // Store the brightened block if it doesn't already exist
-    if (!this.blocks.has(brightenedBlockId)) {
+    if (!this.hasBlock(brightenedBlockId)) {
       await this.setData(brightenedBlock);
     }
 
@@ -793,16 +901,18 @@ export class MemoryBlockStore implements IBlockStore {
     }
 
     // 1. Pad CBL to block size (includes length prefix)
-    const paddedCbl = padToBlockSize(cblData, this._blockSize);
+    // Use the first supported block size for CBL operations
+    const cblBlockSize = this._supportedBlockSizes[0];
+    const paddedCbl = padToBlockSize(cblData, cblBlockSize);
 
     // Validate that padded CBL fits within block size
-    if (paddedCbl.length > this._blockSize) {
+    if (paddedCbl.length > cblBlockSize) {
       throw new StoreError(StoreErrorType.BlockValidationFailed, undefined, {
         ERROR: translate(
           BrightChainStrings.MemoryBlockStore_CBLDataTooLargeTemplate,
           {
             LENGTH: paddedCbl.length,
-            BLOCK_SIZE: this._blockSize,
+            BLOCK_SIZE: cblBlockSize,
           },
         ),
       });
@@ -824,7 +934,7 @@ export class MemoryBlockStore implements IBlockStore {
       // 4. Store first block (R - the randomizer block)
       // Note: If this was selected from existing blocks, it's already stored
       // We still create a block handle for it to get the ID
-      const block1 = new RawDataBlock(this._blockSize, randomBlock);
+      const block1 = new RawDataBlock(cblBlockSize, randomBlock);
       const block1Checksum = block1.idChecksum;
 
       // Only store if not already in the store
@@ -835,7 +945,7 @@ export class MemoryBlockStore implements IBlockStore {
       block1Id = toStorageKey(block1Checksum.toHex());
 
       // 5. Store second block (CBL XOR R)
-      const block2 = new RawDataBlock(this._blockSize, xorResult);
+      const block2 = new RawDataBlock(cblBlockSize, xorResult);
       await this.setData(block2, options);
       const block2Id = toStorageKey(block2.idChecksum.toHex());
 
@@ -857,7 +967,7 @@ export class MemoryBlockStore implements IBlockStore {
       const magnetUrl = this.generateCBLMagnetUrl(
         block1Id,
         block2Id,
-        this._blockSize,
+        cblBlockSize,
         block1ParityIds,
         block2ParityIds,
         options?.isEncrypted,
@@ -866,7 +976,7 @@ export class MemoryBlockStore implements IBlockStore {
       return {
         blockId1: block1Id,
         blockId2: block2Id,
-        blockSize: this._blockSize,
+        blockSize: cblBlockSize,
         magnetUrl,
         block1ParityIds,
         block2ParityIds,
@@ -897,8 +1007,13 @@ export class MemoryBlockStore implements IBlockStore {
    * @returns A Uint8Array containing the randomizer data
    */
   private async selectOrGenerateRandomizer(size: number): Promise<Uint8Array> {
-    // Get all block IDs from the store
-    const blockIds = Array.from(this.blocks.keys());
+    // Collect all block keys across all size maps
+    const blockIds: string[] = [];
+    for (const sizeMap of this.blocks.values()) {
+      for (const key of sizeMap.keys()) {
+        blockIds.push(key);
+      }
+    }
 
     // If we have existing blocks, try to use one as a randomizer
     if (blockIds.length > 0) {
@@ -907,7 +1022,7 @@ export class MemoryBlockStore implements IBlockStore {
       const selectedBlockId = blockIds[randomIndex];
 
       try {
-        const block = this.blocks.get(selectedBlockId);
+        const block = this.findBlock(selectedBlockId);
         if (block && block.data.length >= size) {
           // Use the first 'size' bytes of the existing block as the randomizer
           return block.data.slice(0, size);

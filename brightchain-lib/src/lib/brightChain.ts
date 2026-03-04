@@ -31,11 +31,35 @@ export interface FileReceipt {
 
 export class BrightChain {
   private blockStore: IBlockStore;
-  private blockSize: BlockSize;
+  private _supportedBlockSizes: readonly BlockSize[];
 
-  constructor(blockSize: BlockSize = BlockSize.Small) {
-    this.blockSize = blockSize;
-    this.blockStore = BlockStoreFactory.createMemoryStore({ blockSize });
+  /**
+   * @deprecated Use `supportedBlockSizes` instead.
+   * Returns the first supported block size for backward compatibility.
+   */
+  public get blockSize(): BlockSize {
+    return this._supportedBlockSizes[0];
+  }
+
+  /**
+   * The block sizes supported by this BrightChain instance.
+   */
+  public get supportedBlockSizes(): readonly BlockSize[] {
+    return this._supportedBlockSizes;
+  }
+
+  /**
+   * Create a BrightChain instance.
+   * @param blockSizes - A single BlockSize or array of BlockSize values to support.
+   *                     Defaults to [BlockSize.Small] for backward compatibility.
+   */
+  constructor(blockSizes: BlockSize | readonly BlockSize[] = BlockSize.Small) {
+    this._supportedBlockSizes = Array.isArray(blockSizes)
+      ? blockSizes
+      : [blockSizes];
+    this.blockStore = BlockStoreFactory.createMemoryStore({
+      supportedBlockSizes: this._supportedBlockSizes,
+    });
   }
 
   async storeFile(

@@ -77,9 +77,8 @@ export interface IResentHeaderBlock {
  *
  * @see Requirements 1.1, 1.2, 1.3, 1.4, 1.5, 1.6
  */
-export interface IEmailMetadata<
-  TID extends PlatformID = string,
-> extends IMessageMetadata<TID> {
+export interface IEmailMetadata<TID extends PlatformID = string>
+  extends IMessageMetadata<TID> {
   // ─── RFC 5322 Originator Fields (Section 3.6.2) ───────────────────────
 
   /**

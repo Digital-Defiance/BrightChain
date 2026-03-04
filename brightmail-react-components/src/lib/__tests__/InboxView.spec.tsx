@@ -7,9 +7,14 @@
  * Requirements: 3.1, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9
  */
 
-import { render, screen, act, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import React from 'react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 
@@ -316,9 +321,7 @@ describe('InboxView', () => {
       fireEvent.click(row);
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith(
-      '/brightmail/thread/msg-123',
-    );
+    expect(mockNavigate).toHaveBeenCalledWith('/brightmail/thread/msg-123');
   });
 
   /**

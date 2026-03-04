@@ -1,4 +1,5 @@
 export * from './blocks';
+export * from './brighthub';
 export * from './brightpass';
 export * from './cbl';
 export * from './channels';

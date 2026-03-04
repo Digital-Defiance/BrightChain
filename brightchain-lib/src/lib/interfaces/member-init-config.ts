@@ -5,7 +5,7 @@ import { BlockSize } from '../enumerations';
  * Contains only what the service needs — no Mongoose, no Express.
  */
 export interface IBrightChainMemberInitConfig {
-  /** Pool name used as the BrightChainDb name and poolId */
+  /** Pool name used as the BrightDb name and poolId */
   memberPoolName: string;
   /**
    * Filesystem path for the disk block store.

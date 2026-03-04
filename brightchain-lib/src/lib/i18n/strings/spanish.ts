@@ -461,6 +461,12 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     'Operación no implementada',
   [BrightChainStrings.Error_StoreError_InsufficientRandomBlocksTemplate]:
     'Bloques aleatorios insuficientes disponibles: solicitados {REQUESTED}, disponibles {AVAILABLE}',
+  [BrightChainStrings.Error_StoreError_FactoryNotRegistered]:
+    'Fábrica de almacén de bloques no registrada para el tipo de almacén solicitado',
+  [BrightChainStrings.Error_StoreError_CloudOperationFailedTemplate]:
+    'La operación de almacenamiento en la nube {OPERATION} falló para el bloque {BLOCK_CHECKSUM}: {ORIGINAL_ERROR}',
+  [BrightChainStrings.Error_StoreError_CloudAuthenticationFailedTemplate]:
+    'La autenticación de almacenamiento en la nube falló para la operación {OPERATION}: {ORIGINAL_ERROR}',
 
   // Sealing Errors
   [BrightChainStrings.Error_SealingError_MissingPrivateKeys]:
@@ -1275,6 +1281,89 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_TcblError_InvalidManifestVersion]:
     'La versión del manifiesto TCBL no es compatible',
 
+  // Splash
+  [BrightChainStrings.Splash_Welcome]: 'Bienvenido a BrightChain',
+  [BrightChainStrings.Splash_NextGenInfrastructure]:
+    'La Plataforma de Aplicaciones Descentralizadas',
+  [BrightChainStrings.Splash_SoupCanDemo]: 'Demo de Lata de Sopa',
+  [BrightChainStrings.Splash_SoupCanDemoDescription]:
+    'Vea cómo BrightChain divide los datos en bloques y los mezcla con datos aleatorios usando operaciones XOR para almacenamiento sin propietario.',
+  [BrightChainStrings.Splash_StoragePools]: 'Pools de Almacenamiento',
+  [BrightChainStrings.Splash_StoragePoolsDescription]:
+    'Explore pools aislados por espacio de nombres, bloques direccionados por contenido, blanqueamiento con alcance de pool y garantías de aislamiento entre pools.',
+  [BrightChainStrings.Splash_Messaging]: 'Mensajería',
+  [BrightChainStrings.Splash_MessagingDescription]:
+    'Mensajes directos cifrados con ECIES, chats grupales compartidos por pool, canales con modos de visibilidad, mensajes efímeros y presencia.',
+  [BrightChainStrings.Splash_BrightPass]: 'BrightPass',
+  [BrightChainStrings.Splash_BrightPassDescription]:
+    'Bóveda de contraseñas descentralizada con almacenamiento de credenciales, generación de contraseñas, verificación de brechas y configuración TOTP/2FA.',
+  [BrightChainStrings.Splash_Database]: 'Base de datos',
+  [BrightChainStrings.Splash_DatabaseDescription]:
+    'Base de datos de documentos con bloques de copia en escritura, aislamiento de pool, transacciones de concurrencia optimista y pipelines de agregación.',
+  [BrightChainStrings.Splash_IdentityAndSecurity]: 'Identidad y Seguridad',
+  [BrightChainStrings.Splash_IdentityAndSecurityDescription]:
+    'Respaldo de clave en papel, gestión de dispositivos, pruebas de identidad entre plataformas y búsqueda de perfiles en el directorio de claves públicas.',
+  [BrightChainStrings.Splash_TrySoupCanDemo]: 'Probar la Demo de Lata de Sopa',
+  [BrightChainStrings.Splash_GetStarted]: 'Comenzar',
+  [BrightChainStrings.Splash_WhatIsBrightChain]: '¿Qué es BrightChain?',
+  [BrightChainStrings.Splash_WhatIsBrightChainDescription]:
+    'BrightChain revoluciona el almacenamiento de datos utilizando el concepto de "Sopa de Bloques Brillantes". Sus archivos se dividen en bloques y se mezclan con datos aleatorios usando operaciones XOR, haciéndolos aparecer completamente aleatorios mientras mantienen una seguridad perfecta.',
+  [BrightChainStrings.Splash_OwnerFreeStorage]:
+    'Almacenamiento sin Propietario',
+  [BrightChainStrings.Splash_OwnerFreeStorageDescription]:
+    'La aleatoriedad criptográfica elimina la responsabilidad del almacenamiento',
+  [BrightChainStrings.Splash_EnergyEfficient]: 'Eficiente en Energía',
+  [BrightChainStrings.Splash_EnergyEfficientDescription]:
+    'Sin minería derrochadora de prueba de trabajo',
+  [BrightChainStrings.Splash_Decentralized]: 'Descentralizado',
+  [BrightChainStrings.Splash_DecentralizedDescription]:
+    'Distribuido en toda la red',
+  [BrightChainStrings.Splash_AnonymousYetAccountable]:
+    'Anónimo pero Responsable',
+  [BrightChainStrings.Splash_AnonymousYetAccountableDescription]:
+    'Privacidad con capacidades de moderación',
+  [BrightChainStrings.Splash_ExploreThePlatform]: 'Explorar la Plataforma',
+  [BrightChainStrings.Splash_InteractiveDemos]:
+    'Demos interactivas que muestran las capacidades principales de BrightChain',
+  [BrightChainStrings.Splash_LaunchDemo]: 'Iniciar Demo',
+
+  // Splash - BrightStack
+  [BrightChainStrings.Splash_BuildWithBrightStack]: 'Construye con BrightStack',
+  [BrightChainStrings.Splash_BuildWithBrightStackDescription]:
+    'BrightStack es el paradigma full-stack para aplicaciones descentralizadas: BrightChain + Express + React + Node. Si conoces la stack MERN, ya conoces BrightStack.',
+  [BrightChainStrings.Splash_BrightStackSubtitle]:
+    'Cambia MongoDB por BrightDb. Mantén todo lo demás.',
+  [BrightChainStrings.Splash_BrightDb]: 'BrightDb',
+  [BrightChainStrings.Splash_BrightDbDescription]:
+    'Base de datos documental compatible con MongoDB sobre el sistema de archivos Owner-Free. CRUD completo, consultas, índices, transacciones y pipelines de agregación.',
+  [BrightChainStrings.Splash_FamiliarApi]: 'API familiar',
+  [BrightChainStrings.Splash_FamiliarApiDescription]:
+    'Los mismos patrones que usas con MongoDB — colecciones, find, insert, update — pero cada documento se almacena como bloques blanqueados que preservan la privacidad.',
+  [BrightChainStrings.Splash_BuiltOnBrightStack]:
+    'Construido sobre BrightStack',
+  [BrightChainStrings.Splash_BuiltOnBrightStackDescription]:
+    'BrightPass, BrightMail y BrightHub fueron construidos sobre BrightStack, demostrando que el desarrollo de aplicaciones descentralizadas puede ser tan fácil como el full-stack tradicional.',
+  [BrightChainStrings.Splash_OpenSource]: 'Código Abierto',
+  [BrightChainStrings.Splash_OpenSourceDescription]:
+    'BrightChain es completamente de código abierto. Construye tus propias dApps sobre BrightStack y contribuye al futuro descentralizado.',
+
+  // Splash - No es una Criptomoneda
+  [BrightChainStrings.Splash_NotACryptocurrency]: 'No es una Criptomoneda',
+  [BrightChainStrings.Splash_NotACryptocurrencyDescription]:
+    'Cuando escuchas "blockchain", probablemente piensas en Bitcoin. BrightChain es fundamentalmente diferente — no hay moneda, no hay prueba de trabajo y no hay minería. En lugar de quemar energía para acuñar monedas, BrightChain valora las contribuciones reales de almacenamiento y cómputo.',
+  [BrightChainStrings.Splash_NoCurrency]: 'Sin Moneda',
+  [BrightChainStrings.Splash_NoCurrencyDescription]:
+    'BrightChain no tiene moneda, ni token, ni activo especulativo. Es infraestructura, no finanzas.',
+  [BrightChainStrings.Splash_NoMining]: 'Sin Minería',
+  [BrightChainStrings.Splash_NoMiningDescription]:
+    'Sin prueba de trabajo, sin energía desperdiciada. Cada ciclo de cómputo sirve un propósito útil.',
+  [BrightChainStrings.Splash_Joules]: 'Joules, No Monedas',
+  [BrightChainStrings.Splash_JoulesDescription]:
+    'Las contribuciones de almacenamiento y cómputo se rastrean en Joules — una unidad vinculada a costos energéticos reales, no a la especulación del mercado.',
+  [BrightChainStrings.Splash_RealWorldValue]: 'Valor del Mundo Real',
+  [BrightChainStrings.Splash_RealWorldValueDescription]:
+    'Los valores de Joules se establecen por fórmula basada en costos reales, y refinamos esa fórmula con el tiempo — sin comercio, sin volatilidad.',
+
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'Tu panel de control',
   [BrightChainStrings.Dashboard_EnergyBalance]: 'Saldo de energía',
@@ -1294,8 +1383,7 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     'Error al cargar el saldo',
   [BrightChainStrings.Dashboard_FailedToLoadReputation]:
     'Error al cargar la reputación',
-  [BrightChainStrings.Dashboard_FailedToLoadData]:
-    'Error al cargar los datos',
+  [BrightChainStrings.Dashboard_FailedToLoadData]: 'Error al cargar los datos',
 
   // BrightMail
   [BrightChainStrings.BrightMail_MenuLabel]: 'BrightMail',
@@ -1305,8 +1393,7 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.BrightMail_Inbox_Error]:
     'Error al cargar la bandeja de entrada',
   [BrightChainStrings.BrightMail_Inbox_Retry]: 'Reintentar',
-  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]:
-    '{COUNT} sin leer',
+  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]: '{COUNT} sin leer',
   [BrightChainStrings.BrightMail_Compose_Title]: 'Redactar',
   [BrightChainStrings.BrightMail_Compose_To]: 'Para',
   [BrightChainStrings.BrightMail_Compose_Cc]: 'Cc',
@@ -1331,7 +1418,8 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     '¿Está seguro de que desea eliminar?',
   [BrightChainStrings.BrightMail_Delete_ConfirmBulkTemplate]:
     '¿Eliminar {COUNT} correos seleccionados?',
-  [BrightChainStrings.BrightMail_Delete_Success]: 'Correo electrónico eliminado',
+  [BrightChainStrings.BrightMail_Delete_Success]:
+    'Correo electrónico eliminado',
   [BrightChainStrings.BrightMail_Delete_ErrorTemplate]:
     'Error al eliminar el correo electrónico: {MESSAGE_ID}',
   [BrightChainStrings.BrightMail_Action_Delete]: 'Eliminar',

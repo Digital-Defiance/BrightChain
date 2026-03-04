@@ -20,7 +20,7 @@ import {
   MemberStatusType,
   resetInitialization,
 } from '@brightchain/brightchain-lib';
-import { BrightChainDb } from '@brightchain/db';
+import { BrightDb } from '@brightchain/db';
 import { MemberType } from '@digitaldefiance/ecies-lib';
 import { GuidV4Buffer, GuidV4Provider } from '@digitaldefiance/node-ecies-lib';
 import fc from 'fast-check';
@@ -149,7 +149,7 @@ describe('BrightChainMemberInitService — unit', () => {
         makeConfig({ useMemoryStore: true }),
         makeInput(),
       );
-      expect(service.db).toBeInstanceOf(BrightChainDb);
+      expect(service.db).toBeInstanceOf(BrightDb);
       expect(service.db.isConnected()).toBe(true);
     });
 
@@ -162,7 +162,7 @@ describe('BrightChainMemberInitService — unit', () => {
           useMemoryStore: false,
         });
         await service.initialize(config, makeInput());
-        expect(service.db).toBeInstanceOf(BrightChainDb);
+        expect(service.db).toBeInstanceOf(BrightDb);
         expect(service.db.isConnected()).toBe(true);
       } finally {
         rmSync(tmpDir, { recursive: true, force: true });

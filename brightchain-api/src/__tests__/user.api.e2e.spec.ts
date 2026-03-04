@@ -642,11 +642,7 @@ describe('UserController E2E', () => {
     });
 
     it('returns 200 with new token and user DTO when authenticated', async () => {
-      const res = await get(
-        server.baseUrl,
-        '/user/refresh-token',
-        authToken,
-      );
+      const res = await get(server.baseUrl, '/user/refresh-token', authToken);
       expect(res.status).toBe(200);
       const body = (await res.json()) as Record<string, unknown>;
       expect(typeof body['message']).toBe('string');
@@ -693,11 +689,7 @@ describe('UserController E2E', () => {
     });
 
     it('returns 200 with transactions list when authenticated', async () => {
-      const res = await get(
-        server.baseUrl,
-        '/energy/transactions',
-        authToken,
-      );
+      const res = await get(server.baseUrl, '/energy/transactions', authToken);
       expect(res.status).toBe(200);
       const body = (await res.json()) as Record<string, unknown>;
       expect(typeof body['message']).toBe('string');

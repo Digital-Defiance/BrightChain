@@ -1,7 +1,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/e3f269c473254e0aa9d8f49acb0686ac)](https://app.codacy.com/gh/Digital-Defiance/BrightChain/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 <div align="center">
-  <img src="./brightchain-react/src/assets/images/BrightChain-Square-white.png" />
+  <img src="./brightchain-react/src/assets/images/brightchain-black.png" />
 </div>
 
 # BrightChain: Privacy. Participation. Power.
@@ -28,7 +28,7 @@ BrightChain integrates several groundbreaking technologies:
 
 - **Advanced Blockchain Architecture**: Built on Ethereum's keyspace and foundation but engineered without proof-of-work constraints, offering improved efficiency and sustainability
 - **Hierarchical Storage System**: Super CBL (Constituent Block List) architecture enabling efficient storage of files of any size through recursive hierarchical structures
-- **Decentralized Storage**: A peer-to-peer distributed file system enabling secure, resilient data storage across the network
+- **BrightDB** (`@brightchain/db`) — a MongoDB-like document database built on a peer-to-peer distributed file system enabling secure, resilient data storage across the network
 - **Messaging System**: Secure, decentralized message passing with encryption, routing, delivery tracking, and gossip protocol for epidemic-style propagation built on the block store
 - **Email System**: RFC 5322/2045 compliant email with threading, BCC privacy, attachments, inbox operations, delivery tracking, and multiple encryption schemes (ECIES, shared key, S/MIME)
 - **Communication System**: Discord-competitive communication platform with Signal-grade encryption, featuring direct messaging, group chats, and channels with real-time presence, typing indicators, role-based permissions, and four visibility modes

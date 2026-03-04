@@ -22,12 +22,12 @@ describe('EmailEncryptionService', () => {
   // ─── Symmetric Encryption (Requirement 16.1) ─────────────────────────
 
   describe('encryptContentSymmetric / decryptContentSymmetric', () => {
-    it('should encrypt and decrypt content with a shared symmetric key', () => {
+    it('should encrypt and decrypt content with a shared symmetric key', async () => {
       const content = new TextEncoder().encode('Hello, encrypted world!');
       const sharedKey = randomBytes(32);
 
       const { encryptedContent, encryptionMetadata } =
-        service.encryptContentSymmetric(content, sharedKey);
+        await service.encryptContentSymmetric(content, sharedKey);
 
       // Encrypted content should differ from plaintext
       expect(Buffer.from(encryptedContent).toString()).not.toBe(
@@ -41,7 +41,7 @@ describe('EmailEncryptionService', () => {
       expect(encryptionMetadata.isSigned).toBe(false);
 
       // Decrypt
-      const decrypted = service.decryptContentSymmetric(
+      const decrypted = await service.decryptContentSymmetric(
         encryptedContent,
         encryptionMetadata,
         sharedKey,
@@ -50,41 +50,41 @@ describe('EmailEncryptionService', () => {
       expect(Buffer.from(decrypted).toString()).toBe('Hello, encrypted world!');
     });
 
-    it('should fail decryption with wrong key', () => {
+    it('should fail decryption with wrong key', async () => {
       const content = new TextEncoder().encode('Secret message');
       const correctKey = randomBytes(32);
       const wrongKey = randomBytes(32);
 
       const { encryptedContent, encryptionMetadata } =
-        service.encryptContentSymmetric(content, correctKey);
+        await service.encryptContentSymmetric(content, correctKey);
 
-      expect(() =>
+      await expect(
         service.decryptContentSymmetric(
           encryptedContent,
           encryptionMetadata,
           wrongKey,
         ),
-      ).toThrow(EmailError);
+      ).rejects.toThrow(EmailError);
     });
 
-    it('should reject keys that are not 32 bytes', () => {
+    it('should reject keys that are not 32 bytes', async () => {
       const content = new TextEncoder().encode('test');
       const shortKey = randomBytes(16);
 
-      expect(() => service.encryptContentSymmetric(content, shortKey)).toThrow(
-        EmailError,
-      );
+      await expect(
+        service.encryptContentSymmetric(content, shortKey),
+      ).rejects.toThrow(EmailError);
     });
 
-    it('should fail decryption with missing IV', () => {
+    it('should fail decryption with missing IV', async () => {
       const content = new TextEncoder().encode('test');
       const key = randomBytes(32);
-      const { encryptedContent } = service.encryptContentSymmetric(
+      const { encryptedContent } = await service.encryptContentSymmetric(
         content,
         key,
       );
 
-      expect(() =>
+      await expect(
         service.decryptContentSymmetric(
           encryptedContent,
           {
@@ -93,19 +93,19 @@ describe('EmailEncryptionService', () => {
           },
           key,
         ),
-      ).toThrow(EmailError);
+      ).rejects.toThrow(EmailError);
     });
   });
 
   // ─── Signing (Requirement 16.5, 16.8) ────────────────────────────────
 
   describe('signContent / verifySignature', () => {
-    it('should sign content and verify the signature', () => {
+    it('should sign content and verify the signature', async () => {
       const content = new TextEncoder().encode('Signed message');
       const privateKey = randomBytes(32);
       const publicKey = randomBytes(33);
 
-      const { signature, signerPublicKey } = service.signContent(
+      const { signature, signerPublicKey } = await service.signContent(
         content,
         privateKey,
         publicKey,
@@ -116,39 +116,59 @@ describe('EmailEncryptionService', () => {
       expect(signerPublicKey).toBe(publicKey);
 
       // Verify
-      const isValid = service.verifySignature(content, signature, privateKey);
+      const isValid = await service.verifySignature(
+        content,
+        signature,
+        privateKey,
+      );
       expect(isValid).toBe(true);
     });
 
-    it('should reject signature with wrong private key', () => {
+    it('should reject signature with wrong private key', async () => {
       const content = new TextEncoder().encode('Signed message');
       const privateKey = randomBytes(32);
       const wrongKey = randomBytes(32);
       const publicKey = randomBytes(33);
 
-      const { signature } = service.signContent(content, privateKey, publicKey);
+      const { signature } = await service.signContent(
+        content,
+        privateKey,
+        publicKey,
+      );
 
-      const isValid = service.verifySignature(content, signature, wrongKey);
+      const isValid = await service.verifySignature(
+        content,
+        signature,
+        wrongKey,
+      );
       expect(isValid).toBe(false);
     });
 
-    it('should reject signature for tampered content', () => {
+    it('should reject signature for tampered content', async () => {
       const content = new TextEncoder().encode('Original message');
       const privateKey = randomBytes(32);
       const publicKey = randomBytes(33);
 
-      const { signature } = service.signContent(content, privateKey, publicKey);
+      const { signature } = await service.signContent(
+        content,
+        privateKey,
+        publicKey,
+      );
 
       const tampered = new TextEncoder().encode('Tampered message');
-      const isValid = service.verifySignature(tampered, signature, privateKey);
+      const isValid = await service.verifySignature(
+        tampered,
+        signature,
+        privateKey,
+      );
       expect(isValid).toBe(false);
     });
 
-    it('should reject signature with wrong length', () => {
+    it('should reject signature with wrong length', async () => {
       const content = new TextEncoder().encode('test');
       const privateKey = randomBytes(32);
 
-      const isValid = service.verifySignature(
+      const isValid = await service.verifySignature(
         content,
         new Uint8Array(16), // wrong length
         privateKey,
@@ -182,11 +202,11 @@ describe('EmailEncryptionService', () => {
   // ─── Encryption Metadata (Requirement 16.7) ──────────────────────────
 
   describe('encryption metadata', () => {
-    it('should include correct scheme in symmetric encryption metadata', () => {
+    it('should include correct scheme in symmetric encryption metadata', async () => {
       const content = new TextEncoder().encode('test');
       const key = randomBytes(32);
 
-      const { encryptionMetadata } = service.encryptContentSymmetric(
+      const { encryptionMetadata } = await service.encryptContentSymmetric(
         content,
         key,
       );
@@ -200,12 +220,12 @@ describe('EmailEncryptionService', () => {
       expect(encryptionMetadata.authTag!.length).toBe(16); // AES-GCM auth tag is 16 bytes
     });
 
-    it('should produce different IVs for different encryptions', () => {
+    it('should produce different IVs for different encryptions', async () => {
       const content = new TextEncoder().encode('test');
       const key = randomBytes(32);
 
-      const result1 = service.encryptContentSymmetric(content, key);
-      const result2 = service.encryptContentSymmetric(content, key);
+      const result1 = await service.encryptContentSymmetric(content, key);
+      const result2 = await service.encryptContentSymmetric(content, key);
 
       // IVs should be different (random)
       expect(

@@ -14,7 +14,7 @@ import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { Collection } from '../lib/collection';
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import {
   InMemoryHeadRegistry,
   PersistentHeadRegistry,
@@ -292,11 +292,11 @@ describe('Schema-driven unique indexes (in-memory)', () => {
     });
   });
 
-  describe('schema applied via BrightChainDb', () => {
+  describe('schema applied via BrightDb', () => {
     it('should auto-create indexes when schema is set on db collection', () => {
       const store = new MockBlockStore();
       const registry = InMemoryHeadRegistry.createIsolated();
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb',
         headRegistry: registry,
       });
@@ -311,7 +311,7 @@ describe('Schema-driven unique indexes (in-memory)', () => {
     it('should enforce uniqueness through the database collection', async () => {
       const store = new MockBlockStore();
       const registry = InMemoryHeadRegistry.createIsolated();
-      const db = new BrightChainDb(store as any, {
+      const db = new BrightDb(store as any, {
         name: 'testdb',
         headRegistry: registry,
       });
@@ -351,7 +351,7 @@ describe('Schema-driven unique indexes (disk-backed)', () => {
 
   it('should create indexes and enforce uniqueness with PooledMemoryBlockStore', async () => {
     const store = new PooledMemoryBlockStore(BlockSize.Small);
-    const db = new BrightChainDb(store, { name: 'disk-test', dataDir });
+    const db = new BrightDb(store, { name: 'disk-test', dataDir });
     const coll = db.collection('users');
     coll.setSchema(TEST_USER_SCHEMA);
 
@@ -371,7 +371,7 @@ describe('Schema-driven unique indexes (disk-backed)', () => {
 
   it('should allow non-duplicate inserts with disk-backed store', async () => {
     const store = new PooledMemoryBlockStore(BlockSize.Small);
-    const db = new BrightChainDb(store, { name: 'disk-test', dataDir });
+    const db = new BrightDb(store, { name: 'disk-test', dataDir });
     const coll = db.collection('users');
     coll.setSchema(TEST_USER_SCHEMA);
 
@@ -393,7 +393,7 @@ describe('Schema-driven unique indexes (disk-backed)', () => {
 
   it('should enforce compound unique index with disk-backed store', async () => {
     const store = new PooledMemoryBlockStore(BlockSize.Small);
-    const db = new BrightChainDb(store, { name: 'disk-test', dataDir });
+    const db = new BrightDb(store, { name: 'disk-test', dataDir });
     const coll = db.collection('user-roles');
     coll.setSchema(TEST_COMPOUND_SCHEMA);
 
@@ -415,7 +415,7 @@ describe('Schema-driven unique indexes (disk-backed)', () => {
     const store = new PooledMemoryBlockStore(BlockSize.Small);
 
     // Instance 1: insert a user
-    const db1 = new BrightChainDb(store, {
+    const db1 = new BrightDb(store, {
       name: 'persist-unique',
       dataDir,
     });
@@ -430,7 +430,7 @@ describe('Schema-driven unique indexes (disk-backed)', () => {
     // Instance 2: re-open, re-apply schema, try duplicate
     const registry2 = new PersistentHeadRegistry({ dataDir });
     await registry2.load();
-    const db2 = new BrightChainDb(store, {
+    const db2 = new BrightDb(store, {
       name: 'persist-unique',
       headRegistry: registry2,
     });

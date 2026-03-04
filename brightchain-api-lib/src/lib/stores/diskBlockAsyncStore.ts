@@ -93,7 +93,11 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    */
   protected override fecService: IFecService | null = null;
 
-  constructor(config: { storePath: string; blockSize: BlockSize }) {
+  constructor(
+    config:
+      | { storePath: string; supportedBlockSizes: readonly BlockSize[] }
+      | { storePath: string; blockSize: BlockSize },
+  ) {
     super(config);
     this.metadataStore = new DiskBlockMetadataStore(config.storePath);
   }
@@ -145,13 +149,16 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param key - The block's checksum
    * @returns The block size if found, null otherwise
    */
+  /**
+   * Find the block size for a given checksum by searching configured supportedBlockSizes directories.
+   * @param key - The block's checksum
+   * @returns The block size if found, null otherwise
+   */
   private async findBlockSize(key: Checksum): Promise<BlockSize | null> {
-    for (const size of Object.values(BlockSize).filter(
-      (v) => typeof v === 'number',
-    )) {
-      const blockPath = this.blockPath(key, size as BlockSize);
+    for (const size of this.supportedBlockSizes) {
+      const blockPath = this.blockPath(key, size);
       if (existsSync(blockPath)) {
-        return size as BlockSize;
+        return size;
       }
     }
     return null;
@@ -333,10 +340,21 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
   /**
    * Store a block's data with optional durability settings
    */
+  /**
+   * Store a block's data with optional durability settings.
+   * Validates that block.blockSize is in supportedBlockSizes before accepting.
+   */
   public override async setData(
     block: RawDataBlock,
     options?: BlockStoreOptions,
   ): Promise<void> {
+    // Membership validation: reject blocks whose size is not supported
+    if (!this.supportedBlockSizes.includes(block.blockSize)) {
+      throw new StoreError(StoreErrorType.BlockValidationFailed, undefined, {
+        ERROR: `Block size ${block.blockSize} is not in supportedBlockSizes [${this.supportedBlockSizes.join(', ')}]`,
+      });
+    }
+
     const keyHex = this.keyToHex(block.idChecksum);
     const blockPath = this.blockPath(block.idChecksum, block.blockSize);
     if (existsSync(blockPath)) {
@@ -423,7 +441,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
       checksumStream.on('checksum', (checksumBuffer) => {
         try {
           const block = new RawDataBlock(
-            this._blockSize,
+            destBlockMetadata.size,
             writeStream.data,
             new Date(destBlockMetadata.dateCreated),
             checksumBuffer,
@@ -509,12 +527,29 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
    * @param count - Maximum number of blocks to return
    * @returns Array of random block checksums
    */
-  public override async getRandomBlocks(count: number): Promise<Checksum[]> {
+  /**
+   * Get random block checksums from the store for a specific block size.
+   * Scans the non-pool directory structure (storePath/blockSize/char1/char2/hash)
+   * used by the legacy setData/getData methods.
+   * @param count - Maximum number of blocks to return
+   * @param blockSize - The block size to draw from (must be in supportedBlockSizes)
+   * @returns Array of random block checksums
+   */
+  public override async getRandomBlocks(
+    count: number,
+    blockSize: BlockSize,
+  ): Promise<Checksum[]> {
     if (count <= 0) {
       return [];
     }
 
-    const blockSizeString = blockSizeToSizeString(this._blockSize);
+    if (!this.supportedBlockSizes.includes(blockSize)) {
+      throw new StoreError(StoreErrorType.BlockValidationFailed, undefined, {
+        ERROR: `Block size ${blockSize} is not in supportedBlockSizes [${this.supportedBlockSizes.join(', ')}]`,
+      });
+    }
+
+    const blockSizeString = blockSizeToSizeString(blockSize);
     const basePath = join(this._storePath, blockSizeString);
     if (!existsSync(basePath)) {
       return [];
@@ -945,12 +980,10 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     options?: BlockStoreOptions,
   ): Promise<void> {
     const keyChecksum = typeof key === 'string' ? Checksum.fromHex(key) : key;
-    const block = new RawDataBlock(
-      this._blockSize,
-      data,
-      new Date(),
-      keyChecksum,
-    );
+    // Determine block size: find existing block size on disk, or fall back to first supported size
+    const existingSize = await this.findBlockSize(keyChecksum);
+    const putBlockSize = existingSize ?? this.blockSize;
+    const block = new RawDataBlock(putBlockSize, data, new Date(), keyChecksum);
     await this.setData(block, options);
   }
 
@@ -1192,9 +1225,9 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
       );
 
       if (result.recovered) {
-        // Create a new block with recovered data
+        // Create a new block with recovered data — use the size found on disk
         const recoveredBlock = new RawDataBlock(
-          this._blockSize,
+          blockSize,
           new Uint8Array(result.data),
         );
 
@@ -1460,7 +1493,10 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     // const blockPath = this.blockPath(keyChecksum, blockSize);
 
     // Get random blocks for XOR operation
-    const randomBlockChecksums = await this.getRandomBlocks(randomBlockCount);
+    const randomBlockChecksums = await this.getRandomBlocks(
+      randomBlockCount,
+      blockSize,
+    );
 
     // Check if we have enough random blocks
     if (randomBlockChecksums.length < randomBlockCount) {
@@ -1483,10 +1519,10 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
 
     // Create metadata for the brightened block
     const destBlockMetadata = new BlockMetadata(
-      this._blockSize,
+      blockSize,
       BlockType.RawData,
       BlockDataType.EphemeralStructuredData,
-      this._blockSize, // lengthWithoutPadding - use full block size for XOR result
+      blockSize, // lengthWithoutPadding - use full block size for XOR result
       new Date(),
     );
 
@@ -1544,12 +1580,12 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
     }
 
     // 1. Pad CBL to block size (includes length prefix)
-    const paddedCbl = padToBlockSize(cblData, this._blockSize);
+    const paddedCbl = padToBlockSize(cblData, this.blockSize);
 
     // Validate that padded CBL fits within block size
-    if (paddedCbl.length > this._blockSize) {
+    if (paddedCbl.length > this.blockSize) {
       throw new StoreError(StoreErrorType.BlockValidationFailed, undefined, {
-        ERROR: `CBL data too large: padded size (${paddedCbl.length}) exceeds block size (${this._blockSize}). Use a larger block size or smaller CBL.`,
+        ERROR: `CBL data too large: padded size (${paddedCbl.length}) exceeds block size (${this.blockSize}). Use a larger block size or smaller CBL.`,
       });
     }
 
@@ -1569,7 +1605,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
       // 4. Store first block (R - the randomizer block)
       // Note: If this was selected from existing blocks, it's already stored
       // We still create a block handle for it to get the ID
-      const block1 = new RawDataBlock(this._blockSize, randomBlock);
+      const block1 = new RawDataBlock(this.blockSize, randomBlock);
       const block1Checksum = block1.idChecksum;
 
       // Only store if not already in the store
@@ -1580,7 +1616,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
       block1Id = toStorageKey(block1Checksum.toHex());
 
       // 5. Store second block (CBL XOR R)
-      const block2 = new RawDataBlock(this._blockSize, xorResult);
+      const block2 = new RawDataBlock(this.blockSize, xorResult);
       await this.setData(block2, options);
       const block2Id = toStorageKey(block2.idChecksum.toHex());
 
@@ -1602,7 +1638,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
       const magnetUrl = this.generateCBLMagnetUrl(
         block1Id,
         block2Id,
-        this._blockSize,
+        this.blockSize,
         block1ParityIds,
         block2ParityIds,
         options?.isEncrypted,
@@ -1611,7 +1647,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
       return {
         blockId1: block1Id,
         blockId2: block2Id,
-        blockSize: this._blockSize,
+        blockSize: this.blockSize,
         magnetUrl,
         block1ParityIds,
         block2ParityIds,
@@ -1646,7 +1682,7 @@ export class DiskBlockAsyncStore extends DiskBlockStore implements IBlockStore {
   ): Promise<Uint8Array> {
     // Try to get a random block from the store
     try {
-      const randomBlocks = await this.getRandomBlocks(1);
+      const randomBlocks = await this.getRandomBlocks(1, this.blockSize);
       if (randomBlocks.length > 0) {
         const block = await this.getData(randomBlocks[0]);
         if (block && block.data.length >= size) {

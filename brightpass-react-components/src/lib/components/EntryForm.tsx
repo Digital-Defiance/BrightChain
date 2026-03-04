@@ -18,7 +18,6 @@ import type {
   SecureNoteEntry,
   VaultEntry,
   VaultEntryType,
-  BrightPassStringKey,
 } from '@brightchain/brightchain-lib';
 import { BrightPassStrings } from '@brightchain/brightchain-lib';
 import {
@@ -33,8 +32,8 @@ import {
   TextField,
 } from '@mui/material';
 import React, { useCallback, useMemo, useState } from 'react';
-import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
+import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 
 export interface EntryFormProps {
   vaultId: string;
@@ -50,7 +49,10 @@ const ENTRY_TYPES: VaultEntryType[] = [
   'identity',
 ];
 
-const TYPE_TO_STRING_KEY: Record<VaultEntryType, string & keyof typeof BrightPassStrings> = {
+const TYPE_TO_STRING_KEY: Record<
+  VaultEntryType,
+  string & keyof typeof BrightPassStrings
+> = {
   login: 'EntryType_Login',
   secure_note: 'EntryType_SecureNote',
   credit_card: 'EntryType_CreditCard',
@@ -217,9 +219,7 @@ const EntryForm: React.FC<EntryFormProps> = ({
   const [common, setCommon] = useState<CommonFields>(() =>
     getInitialCommon(entry),
   );
-  const [login, setLogin] = useState<LoginFields>(() =>
-    getInitialLogin(entry),
-  );
+  const [login, setLogin] = useState<LoginFields>(() => getInitialLogin(entry));
   const [secureNote, setSecureNote] = useState<SecureNoteFields>(() =>
     getInitialSecureNote(entry),
   );
@@ -233,10 +233,7 @@ const EntryForm: React.FC<EntryFormProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const tabIndex = useMemo(
-    () => ENTRY_TYPES.indexOf(activeType),
-    [activeType],
-  );
+  const tabIndex = useMemo(() => ENTRY_TYPES.indexOf(activeType), [activeType]);
 
   const handleTabChange = useCallback(
     (_: React.SyntheticEvent, newIndex: number) => {

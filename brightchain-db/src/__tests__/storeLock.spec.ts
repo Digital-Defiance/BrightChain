@@ -5,9 +5,9 @@
  */
 
 import { promises as fs } from 'fs';
-import { join } from 'path';
-import { tmpdir } from 'os';
 import { mkdtemp, rm } from 'fs/promises';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { StoreLock } from '../lib/storeLock';
 
 describe('StoreLock', () => {
@@ -63,7 +63,10 @@ describe('StoreLock', () => {
   describe('contention behavior', () => {
     it('second lock should block until first is released', async () => {
       const lock1 = new StoreLock(tempDir, { maxRetries: 5, retryDelayMs: 10 });
-      const lock2 = new StoreLock(tempDir, { maxRetries: 50, retryDelayMs: 10 });
+      const lock2 = new StoreLock(tempDir, {
+        maxRetries: 50,
+        retryDelayMs: 10,
+      });
 
       await lock1.acquire();
 

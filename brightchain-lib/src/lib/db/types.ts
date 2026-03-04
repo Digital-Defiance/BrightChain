@@ -35,7 +35,6 @@ export type {
   FindOptions,
   IClientSession,
   IndexOptions,
-  IndexSpec,
   InsertManyResult,
   InsertOneResult,
   LogicalOperators,
@@ -51,3 +50,9 @@ export type {
   WriteConcern,
   WriteOptions,
 } from '@digitaldefiance/suite-core-lib';
+
+/**
+ * Index specification: 1 = ascending, -1 = descending, 'text' = text index
+ * This extends the base type from suite-core-lib to support text indexes.
+ */
+export type IndexSpec = Record<string, 1 | -1 | 'text'>;

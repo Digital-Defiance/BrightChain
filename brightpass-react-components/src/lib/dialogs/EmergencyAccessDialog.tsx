@@ -30,8 +30,8 @@ import {
 } from '@mui/material';
 import React, { useCallback, useState } from 'react';
 
-import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
+import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 
 /**
  * Pure helper: returns true when `1 <= threshold <= trusteesCount` and `trusteesCount >= 1`.
@@ -169,16 +169,13 @@ export const EmergencyAccessDialog: React.FC<EmergencyAccessDialogProps> = ({
     }
   }, [vaultId, shareInputs, t, onSuccess]);
 
-  const handleShareInputChange = useCallback(
-    (index: number, value: string) => {
-      setShareInputs((prev) => {
-        const next = [...prev];
-        next[index] = value;
-        return next;
-      });
-    },
-    [],
-  );
+  const handleShareInputChange = useCallback((index: number, value: string) => {
+    setShareInputs((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  }, []);
 
   const addShareInput = useCallback(() => {
     setShareInputs((prev) => [...prev, '']);
@@ -216,10 +213,7 @@ export const EmergencyAccessDialog: React.FC<EmergencyAccessDialogProps> = ({
             label={t(BrightPassStrings.Emergency_Configure)}
             value="configure"
           />
-          <Tab
-            label={t(BrightPassStrings.Emergency_Recover)}
-            value="recover"
-          />
+          <Tab label={t(BrightPassStrings.Emergency_Recover)} value="recover" />
         </Tabs>
 
         {error && (
@@ -304,7 +298,11 @@ export const EmergencyAccessDialog: React.FC<EmergencyAccessDialogProps> = ({
             variant="contained"
             onClick={handleConfigure}
             disabled={loading || !isThresholdValid}
-            startIcon={loading ? <CircularProgress size={16} color="inherit" /> : undefined}
+            startIcon={
+              loading ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : undefined
+            }
           >
             {t(BrightPassStrings.Emergency_Configure)}
           </Button>
@@ -313,8 +311,14 @@ export const EmergencyAccessDialog: React.FC<EmergencyAccessDialogProps> = ({
           <Button
             variant="contained"
             onClick={handleRecover}
-            disabled={loading || shareInputs.every((s) => s.trim().length === 0)}
-            startIcon={loading ? <CircularProgress size={16} color="inherit" /> : undefined}
+            disabled={
+              loading || shareInputs.every((s) => s.trim().length === 0)
+            }
+            startIcon={
+              loading ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : undefined
+            }
           >
             {t(BrightPassStrings.Emergency_Recover)}
           </Button>

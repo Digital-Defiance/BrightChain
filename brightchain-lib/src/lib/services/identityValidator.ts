@@ -68,9 +68,9 @@ function computeContentDigest(
  *
  * @template TID - Platform ID type for frontend/backend DTO compatibility
  */
-export class IdentityValidator<
-  TID extends PlatformID = Uint8Array,
-> implements IIdentityValidator<TID> {
+export class IdentityValidator<TID extends PlatformID = Uint8Array>
+  implements IIdentityValidator<TID>
+{
   constructor(
     private readonly db: IQuorumDatabase<TID>,
     private readonly eciesService: ECIESService<TID>,

@@ -39,9 +39,9 @@ const DEFAULT_BATCH_SIZE = 100;
  *
  * @template TID - Platform ID type for frontend/backend DTO compatibility
  */
-export class IdentityExpirationScheduler<
-  TID extends PlatformID = Uint8Array,
-> implements IExpirationScheduler {
+export class IdentityExpirationScheduler<TID extends PlatformID = Uint8Array>
+  implements IExpirationScheduler
+{
   private readonly intervalMs: number;
   private readonly batchSize: number;
   private timer: ReturnType<typeof setInterval> | null = null;

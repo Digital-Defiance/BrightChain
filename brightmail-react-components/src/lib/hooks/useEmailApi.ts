@@ -4,11 +4,12 @@
  * AuthenticatedApiProvider.
  */
 
-import { useMemo } from 'react';
 import { useAuthenticatedApi } from '@digitaldefiance/express-suite-react-components';
+import type { AxiosInstance } from 'axios';
+import { useMemo } from 'react';
 import { createEmailApiClient } from '../services/emailApi';
 
 export const useEmailApi = () => {
   const api = useAuthenticatedApi();
-  return useMemo(() => createEmailApiClient(api), [api]);
+  return useMemo(() => createEmailApiClient(api as AxiosInstance), [api]);
 };

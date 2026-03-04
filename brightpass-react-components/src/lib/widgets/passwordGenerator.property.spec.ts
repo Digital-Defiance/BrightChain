@@ -73,26 +73,20 @@ describe('Property 8: Password strength classification', () => {
 
   it('returns "very_strong" for entropy >= 80', () => {
     fc.assert(
-      fc.property(
-        fc.double({ min: 80, max: 500, noNaN: true }),
-        (entropy) => {
-          expect(classifyStrength(entropy)).toBe('very_strong');
-        },
-      ),
+      fc.property(fc.double({ min: 80, max: 500, noNaN: true }), (entropy) => {
+        expect(classifyStrength(entropy)).toBe('very_strong');
+      }),
       { numRuns: 100 },
     );
   });
 
   it('is deterministic — same entropy always yields same strength', () => {
     fc.assert(
-      fc.property(
-        fc.double({ min: 0, max: 500, noNaN: true }),
-        (entropy) => {
-          const first = classifyStrength(entropy);
-          const second = classifyStrength(entropy);
-          expect(first).toBe(second);
-        },
-      ),
+      fc.property(fc.double({ min: 0, max: 500, noNaN: true }), (entropy) => {
+        const first = classifyStrength(entropy);
+        const second = classifyStrength(entropy);
+        expect(first).toBe(second);
+      }),
       { numRuns: 100 },
     );
   });

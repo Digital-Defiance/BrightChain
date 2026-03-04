@@ -14,14 +14,14 @@
  * Requirements: 14.3
  */
 
+import type { BrightPassStringKey } from '@brightchain/brightchain-lib';
+import { BrightPassStrings } from '@brightchain/brightchain-lib';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import { Breadcrumbs, Link, Typography } from '@mui/material';
 import React from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { Breadcrumbs, Link, Typography } from '@mui/material';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import { BrightPassStrings } from '@brightchain/brightchain-lib';
-import type { BrightPassStringKey } from '@brightchain/brightchain-lib';
-import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 import { useBrightPass } from '../context/BrightPassProvider';
+import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 
 export interface BreadcrumbItem {
   label: string;

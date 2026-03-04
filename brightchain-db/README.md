@@ -1,4 +1,4 @@
-# @brightchain/db
+# BrightDB (`@brightchain/db`)
 
 A MongoDB-like document database driver backed by BrightChain's block store.
 
@@ -19,10 +19,16 @@ It supports:
 - **Express middleware** – drop-in router for REST access to collections
 - **Change streams** – subscribe to insert/update/delete events
 
+> **Terminology Note**
+> - **BrightDB** — the user-facing product name for this database component
+> - `BrightDb` — the TypeScript class name (used in code)
+> - `@brightchain/db` — the npm package name (used in imports)
+> - `brightchain-db` — the directory and Nx project name
+
 ## Quick Start
 
 ```typescript
-import { BrightChainDb } from '@brightchain/brightchain-db';
+import { BrightDb } from '@brightchain/brightchain-db';
 import { MemoryBlockStoreAdapter } from '@brightchain/brightchain-lib';
 import { BlockSize } from '@brightchain/brightchain-lib';
 
@@ -30,7 +36,7 @@ import { BlockSize } from '@brightchain/brightchain-lib';
 const blockStore = new MemoryBlockStoreAdapter({ blockSize: BlockSize.Medium });
 
 // Open a database
-const db = new BrightChainDb(blockStore);
+const db = new BrightDb(blockStore);
 
 // Get a collection
 const users = db.collection('users');

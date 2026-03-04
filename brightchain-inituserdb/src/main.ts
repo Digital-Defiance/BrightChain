@@ -187,14 +187,14 @@ async function main() {
   let exitCode = 1;
 
   // Manually drive the plugin lifecycle for the CLI tool:
-  // 1. Connect the database plugin (initializes BrightChainDb, stores)
+  // 1. Connect the database plugin (initializes BrightDb, stores)
   await plugin.connect();
   // 2. Initialize all plugins (creates auth provider, etc.)
   await app.plugins.initAll(app);
 
   if (shouldDropDatabase) {
     try {
-      await plugin.brightChainDb.dropDatabase();
+      await plugin.brightDb.dropDatabase();
       debugLog(
         bcEnv.detailedDebug,
         'log',
@@ -303,7 +303,7 @@ async function main() {
     `User IDs — system: ${systemId}, admin: ${adminId}, member: ${memberId}`,
   );
 
-  // BrightChain member init — persist system/admin/member users into BrightChainDb
+  // BrightChain member init — persist system/admin/member users into BrightDb
   // with full RBAC documents (roles, users, user-roles, mnemonics)
   try {
     const initConfig: IBrightChainMemberInitConfig = {

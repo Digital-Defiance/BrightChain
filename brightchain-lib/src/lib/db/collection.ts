@@ -85,9 +85,9 @@ export type CollectionResolver = (name: string) => Collection;
 /**
  * A single document collection backed by a BrightChain block store.
  */
-export class Collection<
-  T extends BsonDocument = BsonDocument,
-> implements ICollection<T> {
+export class Collection<T extends BsonDocument = BsonDocument>
+  implements ICollection<T>
+{
   /** In-memory document index: logical _id → block checksum */
   private readonly docIndex = new Map<DocumentId, string>();
   /** In-memory document cache for fast reads */

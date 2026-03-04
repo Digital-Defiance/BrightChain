@@ -2,8 +2,10 @@ import { ModelName } from './enumerations/model-name';
 import { SchemaCollection } from './enumerations/schema-collection';
 
 // Re-export SignatureBuffer and GuidV4Buffer from node-ecies-lib for internal use
-export type { SignatureBuffer } from '@digitaldefiance/node-ecies-lib';
-export type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
+export type {
+  GuidV4Buffer,
+  SignatureBuffer,
+} from '@digitaldefiance/node-ecies-lib';
 
 // Database-agnostic type aliases (mongo removed)
 /* eslint-disable @typescript-eslint/no-explicit-any */

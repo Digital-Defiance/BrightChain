@@ -1,12 +1,12 @@
 /**
- * @fileoverview BrightChainMemberInitService — initialises BrightChainDb and
+ * @fileoverview BrightChainMemberInitService — initialises BrightDB and
  * persists system/admin/member users as IMemberIndexDocument entries.
  *
  * Design constraints:
  *  - NO imports from @digitaldefiance/node-express-suite (no Mongoose, no Express)
  *  - NO `any` / `unknown` in the public API surface
  *  - NO `as any` / `as unknown` casts
- *  - All writes go through BrightChainDb.withTransaction exclusively
+ *  - All writes go through BrightDb.withTransaction exclusively
  */
 
 import type {
@@ -29,7 +29,7 @@ import {
   MemoryBlockStore,
 } from '@brightchain/brightchain-lib';
 import {
-  BrightChainDb,
+  BrightDb,
   CBLIndex,
   HeadRegistry,
   validateDocument,
@@ -150,14 +150,14 @@ function buildCandidateEntries<TID extends PlatformID>(
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 /**
- * Initialises a BrightChainDb instance and persists system/admin/member users
+ * Initialises a BrightDB instance and persists system/admin/member users
  * as IMemberIndexDocument entries in the member index collection.
  *
  * The service is idempotent: calling initialize() multiple times with the same
  * users will not create duplicate entries.
  */
 export class BrightChainMemberInitService<TID extends PlatformID> {
-  private _db: BrightChainDb | undefined;
+  private _db: BrightDb | undefined;
   private _memberCblIndex: CBLIndex | undefined;
   private readonly _idProvider: IIdProvider<TID>;
 
@@ -166,10 +166,10 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   }
 
   /**
-   * The initialised BrightChainDb instance.
+   * The initialised BrightDb instance.
    * @throws Error if initialize() has not been called yet.
    */
-  get db(): BrightChainDb {
+  get db(): BrightDb {
     if (!this._db) {
       throw new Error(
         BrightChainApiStrings.BrightChainMemberInitServiceNotInitialized,
@@ -192,12 +192,12 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   }
 
   /**
-   * Initialise the block store and BrightChainDb, then persist any missing
+   * Initialise the block store and BrightDB, then persist any missing
    * member index entries.
    *
    * Steps:
    *  1. Build the appropriate block store (disk or memory)
-   *  2. Create BrightChainDb with an isolated HeadRegistry
+   *  2. Create BrightDb with an isolated HeadRegistry
    *  3. Create CBLIndex for the member pool
    *  4. Build candidate IMemberIndexDocument entries
    *  5. Validate all candidates against MEMBER_INDEX_SCHEMA (pre-transaction)
@@ -207,7 +207,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   async initialize(
     config: IBrightChainMemberInitConfig,
     input: IBrightChainMemberInitInput<TID>,
-  ): Promise<IBrightChainBaseInitResult<BrightChainDb, TID>> {
+  ): Promise<IBrightChainBaseInitResult<BrightDb, TID>> {
     const useDisk = !!config.blockStorePath && !config.useMemoryStore;
 
     // Steps 1-3: only run once per service instance.
@@ -216,7 +216,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
         ? buildDiskBlockStore(config.blockStorePath!, config.blockSize)
         : buildMemoryBlockStore(config.blockSize);
 
-      const db = new BrightChainDb(blockStore, {
+      const db = new BrightDb(blockStore, {
         name: config.memberPoolName,
         // Use PersistentHeadRegistry for disk stores so data survives across
         // service instances; use an isolated in-memory registry otherwise.
@@ -290,14 +290,14 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   // ── Model registration ───────────────────────────────────────────────────
 
   /**
-   * Register typed Models for all RBAC collections on the given BrightChainDb.
+   * Register typed Models for all RBAC collections on the given BrightDB instance.
    *
    * After this call, `db.model('roles')`, `db.model('users')`, etc. return
    * Model instances that auto-serialize on writes and auto-rehydrate on reads.
    *
    * Idempotent — skips registration if models are already present.
    */
-  private registerRbacModels(db: BrightChainDb): void {
+  private registerRbacModels(db: BrightDb): void {
     const idProvider = this._idProvider;
 
     if (!db.hasModel(ROLES_COLLECTION)) {
@@ -468,7 +468,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   }
 
   /**
-   * Initialise the block store and BrightChainDb, then persist member index
+   * Initialise the block store and BrightDB, then persist member index
    * entries AND full RBAC documents (roles, users, user-roles, mnemonics).
    *
    * This is the full-featured init that mirrors the Mongoose
@@ -487,7 +487,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   async initializeWithRbac(
     config: IBrightChainMemberInitConfig,
     input: IBrightChainRbacInitInput<TID>,
-  ): Promise<IBrightChainInitResult<TID, BrightChainDb>> {
+  ): Promise<IBrightChainInitResult<TID, BrightDb>> {
     // Steps 1-7: delegate to the base initialize() for member_index entries
     const memberInitInput: IBrightChainMemberInitInput<TID> = {
       systemUser: { id: input.systemUser.id, type: input.systemUser.type },
@@ -786,7 +786,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
    * including full credentials for each user.
    */
   static printServerInitResults<TID extends PlatformID>(
-    result: IBrightChainServerInitResult<TID, BrightChainDb>,
+    result: IBrightChainServerInitResult<TID, BrightDb>,
     config: IBrightChainMemberInitConfig,
     idProvider: IIdProvider<TID>,
   ): void {
@@ -819,7 +819,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
    */
   static printBaseInitResults<TID extends PlatformID>(
     input: IBrightChainMemberInitInput<TID>,
-    result: IBrightChainBaseInitResult<BrightChainDb, TID>,
+    result: IBrightChainBaseInitResult<BrightDb, TID>,
     config: IBrightChainMemberInitConfig,
     idProvider: IIdProvider<TID>,
   ): void {
@@ -863,7 +863,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
    */
   static printInitResults<TID extends PlatformID>(
     input: IBrightChainMemberInitInput<TID>,
-    result: IBrightChainInitResult<TID, BrightChainDb>,
+    result: IBrightChainInitResult<TID, BrightDb>,
     config: IBrightChainMemberInitConfig,
     idProvider: IIdProvider<TID>,
   ): void {
@@ -906,13 +906,13 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
    * while allowing callers to enrich the result with environment credentials.
    */
   static buildServerInitResult<TID extends PlatformID>(
-    baseResult: IBrightChainInitResult<TID, BrightChainDb>,
+    baseResult: IBrightChainInitResult<TID, BrightDb>,
     credentials: {
       system: IBrightChainUserCredentials<TID>;
       admin: IBrightChainUserCredentials<TID>;
       member: IBrightChainUserCredentials<TID>;
     },
-  ): IBrightChainServerInitResult<TID, BrightChainDb> {
+  ): IBrightChainServerInitResult<TID, BrightDb> {
     return {
       ...baseResult,
       system: credentials.system,

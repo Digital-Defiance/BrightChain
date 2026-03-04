@@ -14,9 +14,9 @@
  * should throw an `IBrightPassError` containing all three fields.
  */
 
-import fc from 'fast-check';
-import { AxiosError, AxiosHeaders } from 'axios';
 import type { IBrightPassError } from '@brightchain/brightchain-lib';
+import { AxiosError, AxiosHeaders } from 'axios';
+import fc from 'fast-check';
 
 // Create mock axios instance for testing
 const mockGet = jest.fn();
@@ -95,7 +95,9 @@ describe('Feature: brightpass-frontend, Properties 1 & 2: BrightPassApiService',
   let service: BrightPassApiService;
 
   beforeEach(() => {
-    service = new BrightPassApiService(mockAxios as unknown as import('axios').AxiosInstance);
+    service = new BrightPassApiService(
+      mockAxios as unknown as import('axios').AxiosInstance,
+    );
     jest.clearAllMocks();
   });
 
@@ -277,21 +279,18 @@ describe('Feature: brightpass-frontend, Properties 1 & 2: BrightPassApiService',
      */
     it('maps non-Axios errors to NETWORK_ERROR IBrightPassError', async () => {
       await fc.assert(
-        fc.asyncProperty(
-          arbNonEmptyString,
-          async (errorMessage) => {
-            mockGet.mockRejectedValueOnce(new Error(errorMessage));
+        fc.asyncProperty(arbNonEmptyString, async (errorMessage) => {
+          mockGet.mockRejectedValueOnce(new Error(errorMessage));
 
-            try {
-              await service.listVaults();
-              expect(true).toBe(false);
-            } catch (err) {
-              const bpError = err as IBrightPassError;
-              expect(bpError.code).toBe('NETWORK_ERROR');
-              expect(bpError.message).toBe(errorMessage);
-            }
-          },
-        ),
+          try {
+            await service.listVaults();
+            expect(true).toBe(false);
+          } catch (err) {
+            const bpError = err as IBrightPassError;
+            expect(bpError.code).toBe('NETWORK_ERROR');
+            expect(bpError.message).toBe(errorMessage);
+          }
+        }),
         { numRuns: 100 },
       );
     });

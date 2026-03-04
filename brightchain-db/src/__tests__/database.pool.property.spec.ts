@@ -3,7 +3,7 @@
  *
  * **Feature: pool-based-storage-isolation, Property 12: Database pool routing**
  *
- * *For any* document inserted into a BrightChainDb instance configured with a poolId,
+ * *For any* document inserted into a BrightDb instance configured with a poolId,
  * the underlying `IPooledBlockStore` contains the document's block in the configured
  * pool (verifiable via `hasInPool`).
  *
@@ -15,7 +15,7 @@ import {
   PooledMemoryBlockStore,
 } from '@brightchain/brightchain-lib';
 import fc from 'fast-check';
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
 
 // Property tests can be slow due to async operations
@@ -58,13 +58,13 @@ describe('Database Pool Property Tests', () => {
     /**
      * **Property 12: Database pool routing**
      *
-     * For any document inserted into a BrightChainDb instance configured with
+     * For any document inserted into a BrightDb instance configured with
      * a poolId, the underlying IPooledBlockStore contains at least one block
      * in the configured pool (verifiable via listBlocksInPool / hasInPool).
      *
      * **Validates: Requirements 10.2**
      */
-    it('documents inserted via a pooled BrightChainDb are stored in the configured pool', async () => {
+    it('documents inserted via a pooled BrightDb are stored in the configured pool', async () => {
       await fc.assert(
         fc.asyncProperty(
           validPoolIdArb,
@@ -73,9 +73,9 @@ describe('Database Pool Property Tests', () => {
             // 1. Create a PooledMemoryBlockStore (in-memory)
             const store = new PooledMemoryBlockStore(BlockSize.Small);
 
-            // 2. Create a BrightChainDb with that store and the random poolId
+            // 2. Create a BrightDb with that store and the random poolId
             const registry = InMemoryHeadRegistry.createIsolated();
-            const db = new BrightChainDb(store, {
+            const db = new BrightDb(store, {
               name: 'test-pool-routing',
               headRegistry: registry,
               poolId,
@@ -108,13 +108,13 @@ describe('Database Pool Property Tests', () => {
     });
 
     /**
-     * Documents inserted via a pooled BrightChainDb should NOT appear in
+     * Documents inserted via a pooled BrightDb should NOT appear in
      * other pools. This verifies the routing is correct — blocks go to
      * the configured pool and nowhere else.
      *
      * **Validates: Requirements 10.2**
      */
-    it('documents inserted via a pooled BrightChainDb do not appear in other pools', async () => {
+    it('documents inserted via a pooled BrightDb do not appear in other pools', async () => {
       await fc.assert(
         fc.asyncProperty(
           validPoolIdArb,
@@ -132,7 +132,7 @@ describe('Database Pool Property Tests', () => {
             const registry = InMemoryHeadRegistry.createIsolated();
 
             // Create db scoped to poolA
-            const db = new BrightChainDb(store, {
+            const db = new BrightDb(store, {
               name: 'test-isolation',
               headRegistry: registry,
               poolId: poolA,
@@ -163,7 +163,7 @@ describe('Database Pool Property Tests', () => {
     /**
      * **Property 13: Database drop deletes pool**
      *
-     * For any BrightChainDb instance configured with a poolId, dropping the
+     * For any BrightDb instance configured with a poolId, dropping the
      * database causes `listPools()` on the underlying store to no longer
      * include that poolId.
      *
@@ -178,9 +178,9 @@ describe('Database Pool Property Tests', () => {
             // 1. Create a PooledMemoryBlockStore
             const store = new PooledMemoryBlockStore(BlockSize.Small);
 
-            // 2. Create a BrightChainDb with the random poolId
+            // 2. Create a BrightDb with the random poolId
             const registry = InMemoryHeadRegistry.createIsolated();
-            const db = new BrightChainDb(store, {
+            const db = new BrightDb(store, {
               name: 'test-drop',
               headRegistry: registry,
               poolId,

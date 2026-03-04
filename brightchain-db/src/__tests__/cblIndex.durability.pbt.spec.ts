@@ -19,7 +19,7 @@ import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import { MockBlockStore } from './helpers/mockBlockStore';
 
@@ -31,12 +31,12 @@ import { MockBlockStore } from './helpers/mockBlockStore';
 function makeCBLIndex(): {
   index: CBLIndex;
   store: MockBlockStore;
-  db: BrightChainDb;
+  db: BrightDb;
   registry: ReturnType<typeof InMemoryHeadRegistry.createIsolated>;
 } {
   const store = new MockBlockStore();
   const registry = InMemoryHeadRegistry.createIsolated();
-  const db = new BrightChainDb(store as any, {
+  const db = new BrightDb(store as any, {
     name: 'pbt-durability-db',
     headRegistry: registry,
   });
@@ -154,7 +154,7 @@ describe('CBLIndex Durability Property-Based Tests', () => {
 
           // Restore into a fresh index on the same store
           const registry2 = InMemoryHeadRegistry.createIsolated();
-          const db2 = new BrightChainDb(store as any, {
+          const db2 = new BrightDb(store as any, {
             name: 'pbt-durability-db-restored',
             headRegistry: registry2,
           });

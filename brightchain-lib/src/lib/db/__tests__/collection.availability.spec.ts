@@ -44,6 +44,7 @@ function mockRawDataBlock(data: Uint8Array): RawDataBlock {
 function createMockStore() {
   return {
     blockSize: BlockSize.Small,
+    supportedBlockSizes: [BlockSize.Small],
     isInPartitionMode: jest.fn().mockReturnValue(false),
     getData: jest.fn() as jest.Mock,
     get: jest.fn() as jest.Mock,

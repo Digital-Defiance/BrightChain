@@ -9,9 +9,10 @@
  * Requirements: 12.1, 12.2, 12.3, 12.4
  */
 
-import { AuditAction, BrightPassStrings } from '@brightchain/brightchain-lib';
 import type { AuditLogEntry } from '@brightchain/brightchain-lib';
+import { AuditAction, BrightPassStrings } from '@brightchain/brightchain-lib';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import type { SelectChangeEvent } from '@mui/material';
 import {
   Alert,
   Box,
@@ -28,12 +29,11 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import BreadcrumbNav from '../components/BreadcrumbNav';
-import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
+import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 
 /**
  * Lightweight view-layer type for audit entries used by pure helper functions.
@@ -158,20 +158,30 @@ const AuditLogView: React.FC = () => {
     setActionFilter(event.target.value);
   };
 
-  const displayed = sortAuditEntries(filterAuditEntries(entries, actionFilter || null));
+  const displayed = sortAuditEntries(
+    filterAuditEntries(entries, actionFilter || null),
+  );
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <BreadcrumbNav />
 
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Typography variant="h4" component="h1">
           {t(BrightPassStrings.AuditLog_Title)}
         </Typography>
 
         <FormControl size="small" sx={{ minWidth: 220 }}>
           <InputLabel id="audit-action-filter-label">
-            <FilterListIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'middle' }} />
+            <FilterListIcon
+              fontSize="small"
+              sx={{ mr: 0.5, verticalAlign: 'middle' }}
+            />
             {t(BrightPassStrings.AuditLog_Action)}
           </InputLabel>
           <Select
@@ -181,7 +191,9 @@ const AuditLogView: React.FC = () => {
             label={t(BrightPassStrings.AuditLog_Action)}
             onChange={handleFilterChange}
           >
-            <MenuItem value="">{t(BrightPassStrings.AuditLog_FilterAll)}</MenuItem>
+            <MenuItem value="">
+              {t(BrightPassStrings.AuditLog_FilterAll)}
+            </MenuItem>
             {AUDIT_ACTION_VALUES.map((action) => (
               <MenuItem key={action} value={action}>
                 {action}
@@ -215,7 +227,8 @@ const AuditLogView: React.FC = () => {
             </TableHead>
             <TableBody>
               {displayed.map((entry) => {
-                const { formattedTimestamp, actionLabel } = formatAuditEntry(entry);
+                const { formattedTimestamp, actionLabel } =
+                  formatAuditEntry(entry);
                 return (
                   <TableRow key={entry.id}>
                     <TableCell>{formattedTimestamp}</TableCell>

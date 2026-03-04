@@ -10,9 +10,6 @@
  * **Validates: Requirements 4.7**
  */
 
-import fc from 'fast-check';
-import React from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
 import type {
   CreditCardEntry,
   IdentityEntry,
@@ -20,6 +17,8 @@ import type {
   SecureNoteEntry,
   VaultEntry,
 } from '@brightchain/brightchain-lib';
+import { cleanup, render, screen } from '@testing-library/react';
+import fc from 'fast-check';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -192,17 +191,13 @@ describe('Property 6: Edit form pre-population round-trip', () => {
       fc.property(arbVaultEntry, (entry) => {
         cleanup();
 
-        render(
-          <EntryForm vaultId="test-vault" entry={entry} />,
-        );
+        render(<EntryForm vaultId="test-vault" entry={entry} />);
 
         // Title
         expect(getFieldValue('EntryForm_FieldTitle')).toBe(entry.title);
 
         // Notes: undefined → ''
-        expect(getFieldValue('EntryForm_FieldNotes')).toBe(
-          entry.notes ?? '',
-        );
+        expect(getFieldValue('EntryForm_FieldNotes')).toBe(entry.notes ?? '');
 
         // Tags: joined with ', '
         const expectedTags = entry.tags?.join(', ') ?? '';
@@ -224,9 +219,7 @@ describe('Property 6: Edit form pre-population round-trip', () => {
       fc.property(arbLoginEntry, (entry) => {
         cleanup();
 
-        render(
-          <EntryForm vaultId="test-vault" entry={entry} />,
-        );
+        render(<EntryForm vaultId="test-vault" entry={entry} />);
 
         expect(getFieldValue('EntryDetail_SiteUrl')).toBe(entry.siteUrl);
         expect(getFieldValue('EntryDetail_Username')).toBe(entry.username);
@@ -246,9 +239,7 @@ describe('Property 6: Edit form pre-population round-trip', () => {
       fc.property(arbSecureNoteEntry, (entry) => {
         cleanup();
 
-        render(
-          <EntryForm vaultId="test-vault" entry={entry} />,
-        );
+        render(<EntryForm vaultId="test-vault" entry={entry} />);
 
         expect(getFieldValue('EntryDetail_Content')).toBe(entry.content);
 
@@ -263,16 +254,12 @@ describe('Property 6: Edit form pre-population round-trip', () => {
       fc.property(arbCreditCardEntry, (entry) => {
         cleanup();
 
-        render(
-          <EntryForm vaultId="test-vault" entry={entry} />,
-        );
+        render(<EntryForm vaultId="test-vault" entry={entry} />);
 
         expect(getFieldValue('EntryDetail_CardholderName')).toBe(
           entry.cardholderName,
         );
-        expect(getFieldValue('EntryDetail_CardNumber')).toBe(
-          entry.cardNumber,
-        );
+        expect(getFieldValue('EntryDetail_CardNumber')).toBe(entry.cardNumber);
         expect(getFieldValue('EntryDetail_ExpirationDate')).toBe(
           entry.expirationDate,
         );
@@ -289,17 +276,13 @@ describe('Property 6: Edit form pre-population round-trip', () => {
       fc.property(arbIdentityEntry, (entry) => {
         cleanup();
 
-        render(
-          <EntryForm vaultId="test-vault" entry={entry} />,
-        );
+        render(<EntryForm vaultId="test-vault" entry={entry} />);
 
         expect(getFieldValue('EntryDetail_FirstName')).toBe(entry.firstName);
         expect(getFieldValue('EntryDetail_LastName')).toBe(entry.lastName);
         expect(getFieldValue('EntryDetail_Email')).toBe(entry.email ?? '');
         expect(getFieldValue('EntryDetail_Phone')).toBe(entry.phone ?? '');
-        expect(getFieldValue('EntryDetail_Address')).toBe(
-          entry.address ?? '',
-        );
+        expect(getFieldValue('EntryDetail_Address')).toBe(entry.address ?? '');
 
         cleanup();
       }),

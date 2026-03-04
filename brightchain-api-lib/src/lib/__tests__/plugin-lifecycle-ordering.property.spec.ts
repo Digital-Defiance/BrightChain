@@ -114,7 +114,7 @@ function checkAccessorsAvailable(
       plugin.blockStore != null &&
       plugin.memberStore != null &&
       plugin.energyStore != null &&
-      plugin.brightChainDb != null &&
+      plugin.brightDb != null &&
       plugin.database != null
     );
   } catch {

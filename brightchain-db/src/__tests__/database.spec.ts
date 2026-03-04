@@ -1,25 +1,25 @@
 /**
- * BrightChainDb – comprehensive tests.
+ * BrightDB – comprehensive tests.
  *
  * Tests the top-level database API: collection management,
  * session/transaction lifecycle, cross-collection transactions,
  * and the withTransaction convenience helper.
  */
 
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import { MockBlockStore } from './helpers/mockBlockStore';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 function makeDb(name = 'testdb'): {
-  db: BrightChainDb;
+  db: BrightDb;
   store: MockBlockStore;
   registry: InMemoryHeadRegistry;
 } {
   const store = new MockBlockStore();
   const registry = InMemoryHeadRegistry.createIsolated();
-  const db = new BrightChainDb(store as any, { name, headRegistry: registry });
+  const db = new BrightDb(store as any, { name, headRegistry: registry });
   return { db, store, registry };
 }
 
@@ -27,10 +27,10 @@ function makeDb(name = 'testdb'): {
 // Constructor & basic properties
 // ══════════════════════════════════════════════════════════════
 
-describe('BrightChainDb – basics', () => {
+describe('BrightDb – basics', () => {
   it('should create a database with default name', () => {
     const store = new MockBlockStore();
-    const db = new BrightChainDb(store as any, {
+    const db = new BrightDb(store as any, {
       headRegistry: InMemoryHeadRegistry.createIsolated(),
     });
     expect(db.name).toBe('brightchain');
@@ -46,7 +46,7 @@ describe('BrightChainDb – basics', () => {
 // Collection management
 // ══════════════════════════════════════════════════════════════
 
-describe('BrightChainDb – collections', () => {
+describe('BrightDb – collections', () => {
   it('should create collections lazily', () => {
     const { db } = makeDb();
     const users = db.collection('users');
@@ -90,7 +90,7 @@ describe('BrightChainDb – collections', () => {
 // dropCollection
 // ══════════════════════════════════════════════════════════════
 
-describe('BrightChainDb – dropCollection', () => {
+describe('BrightDb – dropCollection', () => {
   it('should drop an existing collection', async () => {
     const { db } = makeDb();
     const coll = db.collection('todrop');
@@ -124,7 +124,7 @@ describe('BrightChainDb – dropCollection', () => {
 // CRUD through the database
 // ══════════════════════════════════════════════════════════════
 
-describe('BrightChainDb – CRUD through collections', () => {
+describe('BrightDb – CRUD through collections', () => {
   it('should insert and find documents', async () => {
     const { db } = makeDb();
     const users = db.collection('users');
@@ -156,7 +156,7 @@ describe('BrightChainDb – CRUD through collections', () => {
 // Sessions & Transactions
 // ══════════════════════════════════════════════════════════════
 
-describe('BrightChainDb – sessions', () => {
+describe('BrightDb – sessions', () => {
   it('should start a session with a unique id', () => {
     const { db } = makeDb();
     const s1 = db.startSession();
@@ -209,7 +209,7 @@ describe('BrightChainDb – sessions', () => {
 // withTransaction helper
 // ══════════════════════════════════════════════════════════════
 
-describe('BrightChainDb – withTransaction', () => {
+describe('BrightDb – withTransaction', () => {
   it('should commit on success', async () => {
     const { db } = makeDb();
     const users = db.collection('users');
@@ -286,15 +286,15 @@ describe('BrightChainDb – withTransaction', () => {
 // Edge cases
 // ══════════════════════════════════════════════════════════════
 
-describe('BrightChainDb – edge cases', () => {
+describe('BrightDb – edge cases', () => {
   it('should handle collections with same name across different databases', () => {
     const store = new MockBlockStore();
     const registry = InMemoryHeadRegistry.createIsolated();
-    const db1 = new BrightChainDb(store as any, {
+    const db1 = new BrightDb(store as any, {
       name: 'db1',
       headRegistry: registry,
     });
-    const db2 = new BrightChainDb(store as any, {
+    const db2 = new BrightDb(store as any, {
       name: 'db2',
       headRegistry: registry,
     });

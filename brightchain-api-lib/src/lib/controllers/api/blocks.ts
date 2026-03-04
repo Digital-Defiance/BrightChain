@@ -5,6 +5,7 @@ import {
   StoreError,
   type BlockId,
 } from '@brightchain/brightchain-lib';
+import { Member } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -314,11 +315,14 @@ export class BlocksController<
       const sessionsController =
         this.application.getController<SessionsController>('sessions');
 
-      let member;
+      let memberSession;
       try {
-        member = sessionsController.getMemberFromSession(
+        memberSession = sessionsController.getMemberFromSession(
           (req.headers as any).authorization as string,
         );
+        if (!memberSession) {
+          return unauthorizedError();
+        }
       } catch {
         return unauthorizedError();
       }
@@ -335,9 +339,11 @@ export class BlocksController<
           }
         : undefined;
 
+      // The member parameter is not actually used by storeBlock (prefixed with _)
+      // so we cast to satisfy the type signature
       const result = await this.blocksService.storeBlock(
         Buffer.from(data, 'base64'),
-        member,
+        memberSession as unknown as Member,
         canRead,
         canPersist,
         blockStoreOptions,

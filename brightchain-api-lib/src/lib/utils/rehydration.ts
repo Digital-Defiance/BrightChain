@@ -1,6 +1,6 @@
 /**
  * @fileoverview Rehydration utilities for converting stored (serialized)
- * BrightChainDb documents back into their typed in-memory representations.
+ * BrightDB documents back into their typed in-memory representations.
  *
  * Each stored document has all IDs as hex strings and all dates as ISO-8601
  * strings. Rehydration converts these back to TID (via IIdProvider.idFromString)

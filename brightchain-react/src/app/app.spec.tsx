@@ -145,6 +145,9 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   TDivBranded: (_props: Record<string, unknown>) => (
     <div data-testid="branded-div">BrightChain</div>
   ),
+  TImgAlt: (_props: Record<string, unknown>) => (
+    <img data-testid="img-alt" alt="mock" />
+  ),
   TopMenu: ({ Logo }: { Logo: React.ReactNode }) => (
     <div data-testid="top-menu">{Logo}</div>
   ),
@@ -182,7 +185,7 @@ describe('App', () => {
         <App />
       </MemoryRouter>,
     );
-    const element = screen.getByText(/Welcome to BrightChain/i);
+    const element = screen.getByText(/Splash_Welcome/i);
     expect(element).toBeTruthy();
   });
 });

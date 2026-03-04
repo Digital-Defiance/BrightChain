@@ -78,9 +78,9 @@ function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
  *
  * @template TID - Platform ID type for frontend/backend DTO compatibility
  */
-export class QuorumStateMachine<
-  TID extends PlatformID = Uint8Array,
-> implements IQuorumStateMachine<TID> {
+export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
+  implements IQuorumStateMachine<TID>
+{
   private mode: QuorumOperationalMode | null = null;
   private currentEpochData: QuorumEpoch<TID> | null = null;
   private configuredThreshold = 0;

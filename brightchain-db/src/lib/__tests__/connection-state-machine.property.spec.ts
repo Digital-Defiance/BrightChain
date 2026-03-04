@@ -1,9 +1,9 @@
 /**
- * @fileoverview Property-based test for BrightChainDb connection state machine.
+ * @fileoverview Property-based test for BrightDB connection state machine.
  *
  * **Feature: mongo-compatible-document-store, Property 1: Connection state machine**
  *
- * For any BrightChainDb instance and any sequence of connect and disconnect
+ * For any BrightDb instance and any sequence of connect and disconnect
  * calls (with arbitrary URI strings including undefined), isConnected() SHALL
  * return true if the last lifecycle call was connect, and false if the last
  * lifecycle call was disconnect (or if no lifecycle call has been made).
@@ -14,7 +14,7 @@
 
 import fc from 'fast-check';
 import { MockBlockStore } from '../../__tests__/helpers/mockBlockStore';
-import { BrightChainDb } from '../database';
+import { BrightDb } from '../database';
 
 // Property tests can be slow due to async operations
 jest.setTimeout(60000);
@@ -54,11 +54,11 @@ const arbLifecycleSequence: fc.Arbitrary<LifecycleOp[]> = fc.array(
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-function createDb(): BrightChainDb {
+function createDb(): BrightDb {
   const store = new MockBlockStore();
   // MockBlockStore is a test double that doesn't fully implement IBlockStore;
   // existing tests use `as any` for this (see enhancements.spec.ts).
-  return new BrightChainDb(store as any, {
+  return new BrightDb(store as any, {
     name: 'test-connection-state',
   });
 }

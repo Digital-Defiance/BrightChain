@@ -1,5 +1,5 @@
 /**
- * @fileoverview Unit tests for BrightChainDb pool integration.
+ * @fileoverview Unit tests for BrightDB pool integration.
  *
  * Tests:
  * 1. Constructor with poolId wraps store in PooledStoreAdapter
@@ -14,7 +14,7 @@ import {
   DEFAULT_POOL,
   PooledMemoryBlockStore,
 } from '@brightchain/brightchain-lib';
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
 
 /**
@@ -30,7 +30,7 @@ async function collectAsyncIterable(
   return results;
 }
 
-describe('BrightChainDb pool integration', () => {
+describe('BrightDb pool integration', () => {
   // ══════════════════════════════════════════════════════════════
   // Test 1: Constructor with poolId wraps store in adapter
   // ══════════════════════════════════════════════════════════════
@@ -41,7 +41,7 @@ describe('BrightChainDb pool integration', () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
       const registry = InMemoryHeadRegistry.createIsolated();
 
-      const db = new BrightChainDb(store, {
+      const db = new BrightDb(store, {
         name: 'pooled-db',
         headRegistry: registry,
         poolId,
@@ -67,7 +67,7 @@ describe('BrightChainDb pool integration', () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
       const registry = InMemoryHeadRegistry.createIsolated();
 
-      const db = new BrightChainDb(store, {
+      const db = new BrightDb(store, {
         name: 'pooled-db',
         headRegistry: registry,
         poolId,
@@ -99,7 +99,7 @@ describe('BrightChainDb pool integration', () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
       const registry = InMemoryHeadRegistry.createIsolated();
 
-      const db = new BrightChainDb(store, {
+      const db = new BrightDb(store, {
         name: 'unpooled-db',
         headRegistry: registry,
         // No poolId — uses store directly
@@ -134,13 +134,13 @@ describe('BrightChainDb pool integration', () => {
       const registryA = InMemoryHeadRegistry.createIsolated();
       const registryB = InMemoryHeadRegistry.createIsolated();
 
-      const dbA = new BrightChainDb(store, {
+      const dbA = new BrightDb(store, {
         name: 'db-alpha',
         headRegistry: registryA,
         poolId: poolA,
       });
 
-      const dbB = new BrightChainDb(store, {
+      const dbB = new BrightDb(store, {
         name: 'db-beta',
         headRegistry: registryB,
         poolId: poolB,
@@ -182,13 +182,13 @@ describe('BrightChainDb pool integration', () => {
       const registryA = InMemoryHeadRegistry.createIsolated();
       const registryB = InMemoryHeadRegistry.createIsolated();
 
-      const dbA = new BrightChainDb(store, {
+      const dbA = new BrightDb(store, {
         name: 'ws-one',
         headRegistry: registryA,
         poolId: poolA,
       });
 
-      const dbB = new BrightChainDb(store, {
+      const dbB = new BrightDb(store, {
         name: 'ws-two',
         headRegistry: registryB,
         poolId: poolB,

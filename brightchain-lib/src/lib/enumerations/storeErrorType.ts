@@ -18,4 +18,7 @@ export enum StoreErrorType {
   BlockDeletionFailed = 'BlockDeletionFailed',
   NotImplemented = 'NotImplemented',
   InsufficientRandomBlocks = 'InsufficientRandomBlocks',
+  FactoryNotRegistered = 'FactoryNotRegistered',
+  CloudOperationFailed = 'CloudOperationFailed',
+  CloudAuthenticationFailed = 'CloudAuthenticationFailed',
 }

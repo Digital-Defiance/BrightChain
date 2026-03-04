@@ -12,7 +12,7 @@ import type { BlockId } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib';
 import * as fc from 'fast-check';
 import { CBLIndex } from '../lib/cblIndex';
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import { MockBlockStore } from './helpers/mockBlockStore';
 
@@ -24,11 +24,11 @@ import { MockBlockStore } from './helpers/mockBlockStore';
 function makeCBLIndex(): {
   index: CBLIndex;
   store: MockBlockStore;
-  db: BrightChainDb;
+  db: BrightDb;
 } {
   const store = new MockBlockStore();
   const registry = InMemoryHeadRegistry.createIsolated();
-  const db = new BrightChainDb(store as never, {
+  const db = new BrightDb(store as never, {
     name: 'pbt-user-db',
     headRegistry: registry,
   });

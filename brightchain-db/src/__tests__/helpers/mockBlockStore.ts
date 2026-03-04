@@ -1,7 +1,7 @@
 /**
  * In-memory mock of IBlockStore for testing.
  *
- * Implements only the methods that brightchain-db actually uses:
+ * Implements only the methods that BrightDB actually uses:
  *   has(key), get(key), put(key, data), delete(key)
  *
  * All other IBlockStore methods throw "not implemented" so tests catch
@@ -97,6 +97,9 @@ export class MockBlockStore implements IBlockStore {
 
   get blockSize(): any {
     return 0;
+  }
+  get supportedBlockSizes(): any {
+    return [];
   }
   async getData(): Promise<any> {
     throw new Error('not implemented');

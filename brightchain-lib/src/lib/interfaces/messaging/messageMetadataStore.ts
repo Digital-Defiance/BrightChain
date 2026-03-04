@@ -50,9 +50,8 @@ export interface MessageQuery<TID extends PlatformID = string> {
  *
  * @see Requirements 1.3, 9.1, 9.2, 9.3, 9.4, 10.2
  */
-export interface IMessageMetadataStore<
-  TID extends PlatformID = string,
-> extends IBlockMetadataStore {
+export interface IMessageMetadataStore<TID extends PlatformID = string>
+  extends IBlockMetadataStore {
   /**
    * Store message metadata.
    * @param metadata - Message metadata to store

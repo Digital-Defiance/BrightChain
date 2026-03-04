@@ -88,7 +88,10 @@ describe('PooledStoreAdapter Pool Routing Property Tests', () => {
               const adapter = new PooledStoreAdapter(innerStore, targetPool);
 
               // 3. Call getRandomBlocks on the adapter
-              const checksums = await adapter.getRandomBlocks(requestCount);
+              const checksums = await adapter.getRandomBlocks(
+                requestCount,
+                blockSize,
+              );
 
               // 4. Every returned checksum must exist in the configured pool
               for (const checksum of checksums) {
@@ -139,7 +142,10 @@ describe('PooledStoreAdapter Pool Routing Property Tests', () => {
 
             // Request more than available
             const largeRequest = numBlocks + 10;
-            const checksums = await adapter.getRandomBlocks(largeRequest);
+            const checksums = await adapter.getRandomBlocks(
+              largeRequest,
+              blockSize,
+            );
 
             // Should return at most numBlocks (no error)
             expect(checksums.length).toBeLessThanOrEqual(numBlocks);
