@@ -20,9 +20,9 @@ import { Checksum } from '../types';
  * Memory-based CBLStore for Constituent Block Lists (CBLs).
  * Supports both encrypted and plain CBLs.
  */
-export class MemoryCBLStore<
-  TID extends PlatformID = Uint8Array,
-> implements ICBLStore<TID> {
+export class MemoryCBLStore<TID extends PlatformID = Uint8Array>
+  implements ICBLStore<TID>
+{
   private readonly _storage = new Map<string, Uint8Array>();
   private readonly _blockSize: BlockSize;
   private _activeUser?: Member<TID>;

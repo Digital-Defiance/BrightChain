@@ -31,8 +31,8 @@ import {
 } from '@mui/material';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
+import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 
 /**
  * Maps an ImportFormat to the accepted file extensions and MIME types.
@@ -151,7 +151,9 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
 
       if (file) {
         const accepted = getAcceptedFileTypes(format);
-        const fileExt = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+        const fileExt = file.name
+          .substring(file.name.lastIndexOf('.'))
+          .toLowerCase();
         const extMatch = accepted.extensions.includes(fileExt);
         const mimeMatch =
           accepted.mimeTypes.length === 0 ||
@@ -200,10 +202,9 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
   }, [selectedFile, vaultId, format, t, onImportComplete]);
 
   const accepted = getAcceptedFileTypes(format);
-  const acceptString = [
-    ...accepted.extensions,
-    ...accepted.mimeTypes,
-  ].join(',');
+  const acceptString = [...accepted.extensions, ...accepted.mimeTypes].join(
+    ',',
+  );
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -225,9 +226,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
           {/* Format selector */}
           <Select
             value={format}
-            onChange={(e) =>
-              handleFormatChange(e.target.value as ImportFormat)
-            }
+            onChange={(e) => handleFormatChange(e.target.value as ImportFormat)}
             fullWidth
             size="small"
             disabled={loading}
@@ -247,7 +246,9 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
             startIcon={<UploadFileIcon />}
             disabled={loading}
           >
-            {selectedFile ? selectedFile.name : t(BrightPassStrings.Import_Upload)}
+            {selectedFile
+              ? selectedFile.name
+              : t(BrightPassStrings.Import_Upload)}
             <input
               ref={fileInputRef}
               type="file"
@@ -257,9 +258,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
             />
           </Button>
 
-          {error && (
-            <Alert severity="error">{error}</Alert>
-          )}
+          {error && <Alert severity="error">{error}</Alert>}
 
           {/* Import summary */}
           {result && (
@@ -274,9 +273,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
               </Typography>
               <Typography variant="body2">
                 {t(BrightPassStrings.Import_Skipped, {
-                  COUNT: String(
-                    result.totalRecords - result.successfulImports,
-                  ),
+                  COUNT: String(result.totalRecords - result.successfulImports),
                 })}
               </Typography>
               {result.errors.length > 0 && (

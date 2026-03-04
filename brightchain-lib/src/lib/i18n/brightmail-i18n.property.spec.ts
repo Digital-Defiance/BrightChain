@@ -29,8 +29,8 @@ describe('Feature: brightmail-frontend, Property Tests', () => {
     { name: 'Japanese', translations: JapaneseStrings },
   ];
 
-  const brightMailKeys = Object.values(BrightChainStrings).filter(
-    (key) => key.startsWith('BrightMail_'),
+  const brightMailKeys = Object.values(BrightChainStrings).filter((key) =>
+    key.startsWith('BrightMail_'),
   );
 
   /**

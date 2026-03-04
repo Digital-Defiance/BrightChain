@@ -109,7 +109,12 @@ describe('DiskBlockAsyncStore', () => {
       );
     });
 
-    it('should allow storing blocks of any size', async () => {
+    it('should allow storing blocks of supported sizes', async () => {
+      // Create a store that supports both Message and Tiny sizes
+      const multiSizeStore = new DiskBlockAsyncStore({
+        storePath: testDir,
+        supportedBlockSizes: [BlockSize.Message, BlockSize.Tiny],
+      });
       const checksumService = ServiceProvider.getInstance().checksumService;
       const wrongSizeData = new Uint8Array(BlockSize.Tiny);
       wrongSizeData.fill(120);
@@ -126,8 +131,8 @@ describe('DiskBlockAsyncStore', () => {
         true,
       );
 
-      await store.setData(block);
-      const exists = await store.has(checksum);
+      await multiSizeStore.setData(block);
+      const exists = await multiSizeStore.has(checksum);
       expect(exists).toBe(true);
     });
 

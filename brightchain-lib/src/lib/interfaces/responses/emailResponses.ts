@@ -28,10 +28,8 @@ import { IEmailMetadata } from '../messaging/emailMetadata';
 // but JSON.stringify converts Maps to `{}`. The controller converts the Map
 // to a Record before responding, so the *response* type must reflect that.
 
-export interface ISendEmailResultSerialized extends Omit<
-  ISendEmailResult,
-  'deliveryStatus'
-> {
+export interface ISendEmailResultSerialized
+  extends Omit<ISendEmailResult, 'deliveryStatus'> {
   deliveryStatus: Record<string, IDeliveryReceipt>;
 }
 

@@ -6,6 +6,7 @@ export type * from './cblIndex';
 export { CBLVisibility } from './cblIndex';
 export type * from './cblStore';
 export type * from './cblWhitening';
+export type * from './cloudBlockStoreConfig';
 export type * from './documentStore';
 export type * from './encryptedPool';
 export { EncryptionMode } from './encryptedPool';

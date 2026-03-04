@@ -342,7 +342,10 @@ export class PooledMemoryBlockStore
    * Override getRandomBlocks to use Default_Pool for backward compatibility.
    * Delegates to getRandomBlocksFromPool with DEFAULT_POOL.
    */
-  public override async getRandomBlocks(count: number): Promise<Checksum[]> {
+  public override async getRandomBlocks(
+    count: number,
+    blockSize: BlockSize,
+  ): Promise<Checksum[]> {
     return this.getRandomBlocksFromPool(DEFAULT_POOL, count);
   }
 

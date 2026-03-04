@@ -25,3 +25,6 @@ export type * from './api-store-cbl-response';
 export type * from './api-sync-request-response';
 export type * from './block-data-response';
 export type * from './block-location-response';
+
+// BrightHub Social Network responses
+export type * from './brighthub';

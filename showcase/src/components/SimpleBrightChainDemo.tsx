@@ -201,8 +201,9 @@ export const SimpleBrightChainDemo: React.FC = () => {
     const initBrightChain = async () => {
       try {
         // Dynamic import to avoid build issues
-        const { BrightChain, BlockSize } =
-          await import('@brightchain/brightchain-lib');
+        const { BrightChain, BlockSize } = await import(
+          '@brightchain/brightchain-lib'
+        );
 
         // Browser version doesn't need initialization
         setBrightChain(new BrightChain(BlockSize.Small));

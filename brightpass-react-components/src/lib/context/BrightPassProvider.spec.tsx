@@ -12,9 +12,8 @@
  * Requirements: 4.10, 14.4
  */
 
-import React from 'react';
-import { render, act, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { act, render, screen } from '@testing-library/react';
 
 // Mock the API hook before importing the provider
 const mockOpenVault = jest.fn();
@@ -27,9 +26,9 @@ jest.mock('../hooks/useBrightPassApi', () => ({
 
 import {
   BrightPassProvider,
-  useBrightPass,
   DEFAULT_AUTO_LOCK_MS,
   HIDDEN_TAB_LOCK_MS,
+  useBrightPass,
 } from './BrightPassProvider';
 
 // ---------------------------------------------------------------------------

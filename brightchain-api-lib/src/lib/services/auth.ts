@@ -13,7 +13,10 @@ import {
   PlatformID,
   SignatureBuffer,
 } from '@digitaldefiance/node-ecies-lib';
-import { SystemUserService } from '@digitaldefiance/node-express-suite';
+import {
+  KeyWrappingService,
+  SystemUserService,
+} from '@digitaldefiance/node-express-suite';
 import { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
@@ -73,7 +76,7 @@ export class AuthService<
     }
     const passwordHash = await bcrypt.hash(passwordValue, BCRYPT_ROUNDS);
 
-    const { reference } = await this.memberStore.createMember({
+    const { reference, mnemonic } = await this.memberStore.createMember({
       type: MemberType.User,
       name: username,
       contactEmail: new EmailString(email),
@@ -85,8 +88,62 @@ export class AuthService<
     const idRawBytes = sp.idProvider.toBytes(reference.id);
     const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
 
-    // Store password hash in member's private profile
-    await this.storePasswordHash(reference.id, passwordHash);
+    // Reconstruct the member from the mnemonic so we have the private key.
+    // createMember() generates the keypair internally but only returns a
+    // reference — we need the live Member with private key to wrap it.
+    const eciesService =
+      sp.eciesService as unknown as import('@digitaldefiance/node-ecies-lib').ECIESService<typeof reference.id>;
+    const { member: liveMember } = Member.newMember(
+      eciesService,
+      MemberType.User,
+      username,
+      new EmailString(email),
+      mnemonic,
+    );
+
+    // Password-wrap the private key (AES-256-GCM + PBKDF2) — matches RBAC seeding
+    let passwordWrappedPrivateKey:
+      | import('@brightchain/brightchain-lib').IPasswordWrappedPrivateKey
+      | undefined;
+    if (liveMember.privateKey) {
+      const keyWrappingService = new KeyWrappingService();
+      const wrapped = keyWrappingService.wrapSecret(
+        liveMember.privateKey,
+        password,
+        this.application.constants,
+      );
+      passwordWrappedPrivateKey = {
+        salt: wrapped.salt,
+        iv: wrapped.iv,
+        authTag: wrapped.authTag,
+        ciphertext: wrapped.ciphertext,
+        iterations: wrapped.iterations,
+      };
+    }
+
+    // Encrypt the mnemonic with the system user's ECIES public key for
+    // server-side recovery (backup code generation, key rotation, etc.)
+    const systemUser = SystemUserService.getSystemUser(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.application.environment as any,
+      this.application.constants,
+    );
+    const mnemonicRecovery = (
+      await systemUser.encryptData(
+        Buffer.from(mnemonic.value ?? '', 'utf-8'),
+      )
+    ).toString('hex');
+
+    // Store password hash, wrapped private key, and encrypted mnemonic
+    // in the member's private profile
+    await this.memberStore.updateMember(reference.id, {
+      id: reference.id,
+      privateChanges: {
+        passwordHash,
+        passwordWrappedPrivateKey,
+        mnemonicRecovery,
+      },
+    });
 
     const energyAccount = EnergyAccount.createWithTrialCredits(memberChecksum);
     await this.energyStore.set(memberChecksum, energyAccount);
@@ -94,6 +151,9 @@ export class AuthService<
     await this.sendWelcomeEmail(email, username);
 
     const token = this.signToken(memberId, username, reference.type);
+
+    // Dispose the live member to zero out private key material
+    liveMember.dispose();
 
     return {
       token,
@@ -360,19 +420,26 @@ export class AuthService<
         const { sha256 } = await import('@noble/hashes/sha2');
         const { secp256k1 } = await import('@noble/curves/secp256k1');
         const hash = sha256(signedData);
-        const directResult = secp256k1.verify(userSigBuf, hash, publicKeyBuf, { prehash: false });
+        const directResult = secp256k1.verify(userSigBuf, hash, publicKeyBuf, {
+          prehash: false,
+        });
         console.warn(
           `[AuthService] verifyDirectLoginChallenge: direct secp256k1.verify=${directResult}`,
         );
         // Try recovering the signing public key
         for (let recovery = 0; recovery < 2; recovery++) {
           try {
-            const sig = secp256k1.Signature.fromCompact(userSigBuf).addRecoveryBit(recovery);
+            const sig =
+              secp256k1.Signature.fromCompact(userSigBuf).addRecoveryBit(
+                recovery,
+              );
             const recovered = sig.recoverPublicKey(hash).toHex(true);
             console.warn(
               `[AuthService] verifyDirectLoginChallenge: recovered(${recovery})=${recovered} match=${recovered === publicKeyHex}`,
             );
-          } catch { /* skip */ }
+          } catch {
+            /* skip */
+          }
         }
       } catch (e) {
         console.warn(`[AuthService] diagnostic error:`, e);
@@ -415,9 +482,7 @@ export class AuthService<
     const nonceHex = nonce.toString('hex');
     const memberId = sp.idProvider.idToString(reference.id as unknown as TID);
     const db =
-      this.application.services.get<import('@brightchain/db').BrightChainDb>(
-        'db',
-      );
+      this.application.services.get<import('@brightchain/db').BrightDb>('db');
     const tokenCollection = db.collection<{
       userId: string;
       token: string;

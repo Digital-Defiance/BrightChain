@@ -7,7 +7,7 @@
  * after calling connect() on a BrightChainDatabasePlugin, isConnected()
  * should return true, the database property should return a non-null
  * IDatabase-compatible object, and all typed accessors (blockStore,
- * memberStore, energyStore, brightChainDb, documentStore) should return
+ * memberStore, energyStore, brightDb, documentStore) should return
  * non-null values.
  *
  * **Validates: Requirements 1.2, 1.4, 1.5**
@@ -21,7 +21,7 @@ import {
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import type { BrightChainDb } from '@brightchain/db';
+import type { BrightDb } from '@brightchain/db';
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import fc from 'fast-check';
 import { promises as fs } from 'fs';
@@ -36,7 +36,7 @@ import type { DefaultBackendIdType } from '../../shared-types';
 jest.setTimeout(180_000);
 
 // Initialize BrightChain global services before any tests run.
-// The plugin's seedWithRbac() writes blocks via BrightChainDb.withTransaction,
+// The plugin's seedWithRbac() writes blocks via BrightDb.withTransaction,
 // which creates RawDataBlock instances that require the global ServiceProvider.
 beforeAll(() => {
   initializeBrightChain();
@@ -188,11 +188,11 @@ describe('Property 1: Connect establishes all stores and database', () => {
             expect(energyStore).not.toBeNull();
             expect(energyStore).toBeInstanceOf(EnergyAccountStore);
 
-            // Assert: brightChainDb accessor returns non-null BrightChainDb
-            const brightChainDb: BrightChainDb = plugin.brightChainDb;
-            expect(brightChainDb).toBeDefined();
-            expect(brightChainDb).not.toBeNull();
-            expect(brightChainDb.isConnected()).toBe(true);
+            // Assert: brightDb accessor returns non-null BrightDb
+            const brightDb: BrightDb = plugin.brightDb;
+            expect(brightDb).toBeDefined();
+            expect(brightDb).not.toBeNull();
+            expect(brightDb.isConnected()).toBe(true);
           } finally {
             // Cleanup: disconnect plugin, restore env, remove temp dir
             if (plugin?.isConnected()) {
@@ -223,7 +223,7 @@ describe('Property 2: Accessor state consistency', () => {
     'blockStore',
     'memberStore',
     'energyStore',
-    'brightChainDb',
+    'brightDb',
     'database',
   ] as const;
 
@@ -316,7 +316,7 @@ describe('Property 3: Connect then disconnect round-trip', () => {
     'blockStore',
     'memberStore',
     'energyStore',
-    'brightChainDb',
+    'brightDb',
     'database',
   ] as const;
 

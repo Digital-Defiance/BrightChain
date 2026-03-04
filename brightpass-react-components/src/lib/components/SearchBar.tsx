@@ -26,8 +26,8 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
+import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 
 /** All entry types available as filter chips. */
 const ENTRY_TYPES: VaultEntryType[] = [
@@ -154,17 +154,11 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
       const searchQuery = {
         text: query || undefined,
-        type:
-          activeTypes.size === 1
-            ? Array.from(activeTypes)[0]
-            : undefined,
+        type: activeTypes.size === 1 ? Array.from(activeTypes)[0] : undefined,
         favorite: favoritesOnly || undefined,
       };
 
-      const results = await brightPassApi.searchEntries(
-        vaultId,
-        searchQuery,
-      );
+      const results = await brightPassApi.searchEntries(vaultId, searchQuery);
       onServerSearch(results);
     },
     [query, activeTypes, favoritesOnly, vaultId, onServerSearch],

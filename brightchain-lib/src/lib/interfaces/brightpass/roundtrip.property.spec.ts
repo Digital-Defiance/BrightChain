@@ -10,35 +10,35 @@
  */
 
 import * as fc from 'fast-check';
-import { AuditAction } from './auditLog';
+import type { BlockId } from '../branded/primitives/blockId';
 import type { AuditLogEntry } from './auditLog';
+import { AuditAction } from './auditLog';
 import type { IBreachCheckResult } from './breachCheck';
 import type { IBrightPassError } from './brightPassError';
 import type { EmergencyAccessConfig } from './emergencyAccess';
 import type { EntryPropertyRecord } from './entryPropertyRecord';
 import type { ImportResult } from './importTypes';
 import type {
-  IPasswordGenerationOptions,
   IGeneratedPassword,
+  IPasswordGenerationOptions,
 } from './passwordGeneration';
 import type { ITotpCode, ITotpValidation } from './totp';
 import type {
-  LoginEntry,
-  SecureNoteEntry,
+  AttachmentReference,
   CreditCardEntry,
   IdentityEntry,
+  LoginEntry,
+  SecureNoteEntry,
   VaultEntry,
-  AttachmentReference,
 } from './vaultEntry';
 import type {
-  VaultMetadata,
   AutofillPayload,
-  IDecryptedVault,
-  IAutofillPayload,
-  EntrySearchQuery,
   DecryptedVault,
+  EntrySearchQuery,
+  IAutofillPayload,
+  IDecryptedVault,
+  VaultMetadata,
 } from './vaultMetadata';
-import type { BlockId } from '../branded/primitives/blockId';
 
 // ---------------------------------------------------------------------------
 // Helpers

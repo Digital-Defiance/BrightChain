@@ -26,7 +26,7 @@ import {
   StatuteOfLimitationsConfig,
   Vote,
 } from '@brightchain/brightchain-lib';
-import { BrightChainDb, HeadRegistry } from '@brightchain/db';
+import { BrightDb, HeadRegistry } from '@brightchain/db';
 import {
   HexString,
   IIdProvider,
@@ -82,10 +82,10 @@ const mockIdProvider: IIdProvider<HexString> = {
 
 // ─── Test Helpers ───────────────────────────────────────────────────────────
 
-function createTestDb(): BrightChainDb {
+function createTestDb(): BrightDb {
   const store = new MemoryBlockStore(BlockSize.Small);
   const registry = HeadRegistry.createIsolated();
-  return new BrightChainDb(store, {
+  return new BrightDb(store, {
     name: 'quorum-test-db',
     headRegistry: registry,
     poolId: 'quorum-system',
@@ -231,7 +231,7 @@ function makeJournalEntry(
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
 describe('QuorumDatabaseAdapter', () => {
-  let db: BrightChainDb;
+  let db: BrightDb;
   let adapter: QuorumDatabaseAdapter<HexString>;
 
   beforeAll(() => {
@@ -731,7 +731,7 @@ describe('QuorumDatabaseAdapter', () => {
           collection: () => {
             throw new Error('pool corrupted');
           },
-        } as unknown as BrightChainDb,
+        } as unknown as BrightDb,
         mockIdProvider,
       );
       const available = await brokenAdapter.isAvailable();

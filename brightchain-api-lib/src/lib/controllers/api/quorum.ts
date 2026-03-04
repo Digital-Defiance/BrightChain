@@ -26,8 +26,8 @@ import {
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
+import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
-import type { GuidV4Buffer } from '@digitaldefiance/node-ecies-lib/src/types/guid-versions';
 import {
   ApiErrorResponse,
   ApiRequestHandler,
@@ -153,7 +153,8 @@ interface CanUnlockRequest {
 }
 
 interface CanUnlockResponse
-  extends IApiMessageResponse, Omit<CanUnlockResult, 'missingMembers'> {
+  extends IApiMessageResponse,
+    Omit<CanUnlockResult, 'missingMembers'> {
   missingMembers: string[];
   [key: string]: any;
 }

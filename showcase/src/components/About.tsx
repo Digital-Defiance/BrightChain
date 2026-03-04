@@ -51,12 +51,25 @@ const About = () => {
               enables democratic participation.
             </p>
             <p>
-              <strong>BrightChain</strong> embodies this vision by reimagining
-              blockchain technology from the ground up. By eliminating mining
-              waste, monetizing unused storage, and implementing revolutionary
-              features like homomorphic voting and brokered anonymity, we've
-              created a platform that works for everyone—from individual users
-              to global organizations.
+              <strong>BrightChain</strong> revolutionizes data storage using the
+              &ldquo;Bright Block Soup&rdquo; concept. Your files are broken
+              into blocks and mixed with random data using XOR operations,
+              making them appear completely random while maintaining perfect
+              security. By eliminating mining waste, monetizing unused storage,
+              and implementing features like homomorphic voting and brokered
+              anonymity, we&rsquo;ve created a platform that works for everyone.
+            </p>
+            <p>
+              <strong>Not a Cryptocurrency.</strong> When you hear
+              &ldquo;blockchain,&rdquo; you probably think Bitcoin. BrightChain
+              has no currency, no proof of work, and no mining. Instead of
+              burning energy to mint coins, BrightChain values real
+              contributions of storage and compute. Those contributions are
+              tracked in a unit called the <strong>Joule</strong>, which is tied
+              to real-world energy costs by formula &mdash; not market
+              speculation. You can&rsquo;t mine Joules or trade them; they
+              reflect actual resource costs, and we refine that formula over
+              time.
             </p>
             <p>
               <strong>The Storage vs. Power Density Advantage</strong>: Every
@@ -72,18 +85,32 @@ const About = () => {
               be all in and make the most out of our vast storage resources
               spread out across the globe.
             </p>
+
+            <h3 className="about-heading" style={{ marginTop: '2rem' }}>
+              <FaCode /> Build with BrightStack
+            </h3>
             <p>
-              Built on <strong>Ethereum's keyspace</strong> but departing from
-              traditional proof-of-work systems, BrightChain combines the{' '}
-              <strong>Owner-Free File System</strong> for legal protection with
-              advanced cryptography (ECIES, AES-256-GCM, Paillier homomorphic
-              encryption) to deliver unprecedented capabilities.
+              <strong>BrightStack</strong> is the full-stack paradigm for
+              decentralized apps: BrightChain + Express + React + Node. If you
+              know the MERN stack, you already know BrightStack &mdash; just
+              swap MongoDB for <strong>BrightDB</strong>.
+            </p>
+            <p>
+              <strong>BrightDB</strong> is a MongoDB-like document database on
+              the Owner-Free Filesystem with full CRUD, queries, indexes,
+              transactions, and aggregation pipelines. Same patterns you use
+              with MongoDB &mdash; collections, find, insert, update &mdash; but
+              every document is stored as privacy-preserving whitened blocks.
+            </p>
+            <p>
+              BrightPass, BrightMail, and BrightHub were all built on
+              BrightStack, proving that decentralized app development can be as
+              easy as traditional full-stack.
             </p>
             <p className="highlight-text">
-              <FaCode /> <strong>100% Open Source.</strong> BrightChain is
-              freely available under the MIT License. Every line of code is open
-              for inspection, improvement, and contribution. Join us in building
-              the future of decentralized infrastructure.
+              <FaCode /> <strong>100% Open Source.</strong> BrightChain is fully
+              open source under the MIT License. Build your own dApps on
+              BrightStack and contribute to the decentralized future.
             </p>
           </motion.div>
 
@@ -97,10 +124,11 @@ const About = () => {
               <div className="feature-icon">
                 <FaHeart />
               </div>
-              <h4>Open Source First</h4>
+              <h4>Owner-Free Storage</h4>
               <p>
-                MIT licensed and community-driven. Every line of code is open
-                for inspection, improvement, and contribution.
+                Cryptographic randomness removes storage liability. No single
+                block contains identifiable content, providing legal immunity
+                for node operators.
               </p>
             </motion.div>
 
@@ -113,10 +141,10 @@ const About = () => {
               <div className="feature-icon">
                 <FaCode />
               </div>
-              <h4>Revolutionary Technology</h4>
+              <h4>Energy Efficient</h4>
               <p>
-                Cutting-edge cryptography, homomorphic voting, and decentralized
-                storage that pushes the boundaries of what's possible.
+                No wasteful proof-of-work mining. All computation serves useful
+                purposes — storage, verification, and network operations.
               </p>
             </motion.div>
 
@@ -129,10 +157,10 @@ const About = () => {
               <div className="feature-icon">
                 <FaUsers />
               </div>
-              <h4>Community Driven</h4>
+              <h4>Anonymous yet Accountable</h4>
               <p>
-                Built for the people, by the people. We listen to feedback and
-                continuously improve based on real-world needs.
+                Privacy with moderation capabilities. Brokered anonymity
+                balances privacy with accountability via quorum consensus.
               </p>
             </motion.div>
           </div>
@@ -173,12 +201,7 @@ const About = () => {
               <FaGithub />
               Visit BrightChain on GitHub
             </a>
-            <a
-              href="https://github.com/Digital-Defiance/BrightChain/blob/main/docs/BrightChain%20Summary.md"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-secondary"
-            >
+            <a href="/docs/" className="btn btn-secondary">
               <FaCode />
               Read the Documentation
             </a>
@@ -218,6 +241,8 @@ const About = () => {
             <a href="/demo" rel="noopener noreferrer">
               Interactive Demo
             </a>
+            {' • '}
+            <a href="/docs/">Documentation</a>
           </p>
         </div>
       </motion.div>

@@ -47,6 +47,12 @@ export class StoreError extends TypedError<StoreErrorType> {
         BrightChainStrings.Error_StoreError_NotImplemented,
       [StoreErrorType.InsufficientRandomBlocks]:
         BrightChainStrings.Error_StoreError_InsufficientRandomBlocksTemplate,
+      [StoreErrorType.FactoryNotRegistered]:
+        BrightChainStrings.Error_StoreError_FactoryNotRegistered,
+      [StoreErrorType.CloudOperationFailed]:
+        BrightChainStrings.Error_StoreError_CloudOperationFailedTemplate,
+      [StoreErrorType.CloudAuthenticationFailed]:
+        BrightChainStrings.Error_StoreError_CloudAuthenticationFailedTemplate,
     };
   }
   public readonly params?: { [key: string]: string | number };

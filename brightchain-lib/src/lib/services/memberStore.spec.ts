@@ -40,7 +40,7 @@ describe('MemberStore Unit Tests', () => {
 
     // Create member store with memory block store
     const blockStore = BlockStoreFactory.createMemoryStore({
-      blockSize: BlockSize.Small,
+      supportedBlockSizes: [BlockSize.Small],
     });
     memberStore = new MemberStore<GuidV4Uint8Array>(blockStore);
   });

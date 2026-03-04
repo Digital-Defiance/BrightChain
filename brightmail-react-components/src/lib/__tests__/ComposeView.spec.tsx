@@ -121,8 +121,12 @@ describe('ComposeView', () => {
     expect(screen.getByLabelText('BrightMail_Compose_To')).toBeInTheDocument();
     expect(screen.getByLabelText('BrightMail_Compose_Cc')).toBeInTheDocument();
     expect(screen.getByLabelText('BrightMail_Compose_Bcc')).toBeInTheDocument();
-    expect(screen.getByLabelText('BrightMail_Compose_Subject')).toBeInTheDocument();
-    expect(screen.getByLabelText('BrightMail_Compose_Body')).toBeInTheDocument();
+    expect(
+      screen.getByLabelText('BrightMail_Compose_Subject'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByLabelText('BrightMail_Compose_Body'),
+    ).toBeInTheDocument();
     expect(screen.getByTestId('send-button')).toBeInTheDocument();
   });
 
@@ -190,9 +194,7 @@ describe('ComposeView', () => {
     render(<ComposeView />);
 
     const toField = screen.getByLabelText('BrightMail_Compose_To');
-    const subjectField = screen.getByLabelText(
-      'BrightMail_Compose_Subject',
-    );
+    const subjectField = screen.getByLabelText('BrightMail_Compose_Subject');
 
     fireEvent.change(toField, { target: { value: 'user@example.com' } });
     fireEvent.change(subjectField, { target: { value: 'Test Subject' } });
@@ -232,9 +234,7 @@ describe('ComposeView', () => {
     render(<ComposeView replyTo={replyTo} />);
 
     const toField = screen.getByLabelText('BrightMail_Compose_To');
-    const subjectField = screen.getByLabelText(
-      'BrightMail_Compose_Subject',
-    );
+    const subjectField = screen.getByLabelText('BrightMail_Compose_Subject');
     const bodyField = screen.getByLabelText('BrightMail_Compose_Body');
 
     expect(toField).toHaveValue('alice@example.com');
@@ -255,9 +255,7 @@ describe('ComposeView', () => {
     render(<ComposeView forwardFrom={forwardFrom} />);
 
     const toField = screen.getByLabelText('BrightMail_Compose_To');
-    const subjectField = screen.getByLabelText(
-      'BrightMail_Compose_Subject',
-    );
+    const subjectField = screen.getByLabelText('BrightMail_Compose_Subject');
     const bodyField = screen.getByLabelText('BrightMail_Compose_Body');
 
     expect(toField).toHaveValue('');

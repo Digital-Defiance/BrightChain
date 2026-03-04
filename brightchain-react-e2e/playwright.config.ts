@@ -41,7 +41,8 @@ export default defineConfig({
     url: 'http://localhost:3000/api/health',
     reuseExistingServer: !process.env.CI,
     cwd: workspaceRoot,
-    timeout: 180_000,
+    /* Increased timeout to allow for build time (serve-full builds both API and React) */
+    timeout: 300_000,
   },
   projects: [
     {

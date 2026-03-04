@@ -161,6 +161,10 @@ class MockPooledBlockStore implements IPooledBlockStore {
     return BlockSize.Small;
   }
 
+  get supportedBlockSizes(): readonly BlockSize[] {
+    return [BlockSize.Small];
+  }
+
   // ── Pool-scoped operations ──
 
   async hasInPool(pool: PoolId, hash: string): Promise<boolean> {
@@ -307,7 +311,10 @@ class MockPooledBlockStore implements IPooledBlockStore {
     this.blocks.delete(keyHex);
   }
 
-  async getRandomBlocks(_count: number): Promise<Checksum[]> {
+  async getRandomBlocks(
+    _count: number,
+    _blockSize: BlockSize,
+  ): Promise<Checksum[]> {
     return [];
   }
 

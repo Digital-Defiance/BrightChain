@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <script>
-      // GitHub Pages SPA redirect handler
-      // This script takes the current URL and converts the path and query
-      // string into a format that can be read by the SPA router
-      sessionStorage.redirect = location.href;
+      // Only redirect to SPA for non-/docs/ routes
+      if (!location.pathname.startsWith('/docs/')) {
+        sessionStorage.redirect = location.href;
+        window.location.replace('/');
+      }
+      // If /docs/, do nothing: let GitHub Pages try to serve the static file
     </script>
-    <meta http-equiv="refresh" content="0;URL='/'"></meta>
   </head>
-  <body>
-  </body>
+  <body></body>
 </html>

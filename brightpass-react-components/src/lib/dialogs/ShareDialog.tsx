@@ -30,8 +30,8 @@ import {
 } from '@mui/material';
 import React, { useCallback, useState } from 'react';
 
-import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
+import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 
 interface ShareDialogProps {
   /** The vault ID to manage sharing for. */
@@ -211,9 +211,7 @@ export const ShareDialog: React.FC<ShareDialogProps> = ({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>
-          {t(BrightPassStrings.Share_Close)}
-        </Button>
+        <Button onClick={onClose}>{t(BrightPassStrings.Share_Close)}</Button>
       </DialogActions>
     </Dialog>
   );

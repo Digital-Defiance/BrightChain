@@ -3,15 +3,13 @@ import BlockType from '../../enumerations/blockType';
 import { IBaseBlock } from './base';
 
 // Forward declaration to avoid circular dependency
-export interface IEncryptedBlockBase<
-  TID extends PlatformID = Uint8Array,
-> extends IBaseBlock {
+export interface IEncryptedBlockBase<TID extends PlatformID = Uint8Array>
+  extends IBaseBlock {
   get recipientWithKey(): Member<TID>;
 }
 
-export interface IEphemeralBlock<
-  TID extends PlatformID = Uint8Array,
-> extends IBaseBlock {
+export interface IEphemeralBlock<TID extends PlatformID = Uint8Array>
+  extends IBaseBlock {
   /**
    * Block creation timestamp.
    * Used for:

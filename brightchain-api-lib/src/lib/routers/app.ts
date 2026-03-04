@@ -80,17 +80,15 @@ export class AppRouter<
    * Finds Nx webpack hashed filenames in reactDistDir matching a pattern
    * like main.{hash}.js or runtime.{hash}.js.
    */
-  private findHashedFiles(
-    baseName: string,
-    ext: string,
-  ): string | undefined {
+  private findHashedFiles(baseName: string, ext: string): string | undefined {
     try {
-      const pattern = new RegExp(
-        `^${baseName}\\.[a-f0-9]+\\.${ext}$`,
-      );
+      const pattern = new RegExp(`^${baseName}\\.[a-f0-9]+\\.${ext}$`);
       const files = readdirSync(this.reactDistDir, 'utf8');
       // Sort descending by name to get the latest hash if multiple exist
-      return files.filter((f) => pattern.test(f)).sort().pop();
+      return files
+        .filter((f) => pattern.test(f))
+        .sort()
+        .pop();
     } catch {
       return undefined;
     }

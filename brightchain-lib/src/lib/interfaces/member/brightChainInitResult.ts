@@ -15,13 +15,13 @@ import { IBrightChainBaseInitResult } from './brightChainBaseInitResult';
  * credential fields for the three RBAC users (system, admin, member).
  *
  * NOTE: The `db` field is typed as a generic `TDb` (defaulting to `unknown`)
- * rather than importing `BrightChainDb` directly. This avoids a circular
+ * rather than importing `BrightDb` directly. This avoids a circular
  * dependency: brightchain-db depends on brightchain-lib, so brightchain-lib
  * must NOT import from brightchain-db. Callers in brightchain-api-lib (which
  * does depend on brightchain-db) can narrow the type by supplying the
- * concrete `BrightChainDb` type argument:
+ * concrete `BrightDb` type argument:
  *
- *   IBrightChainInitResult<GuidV4Buffer, BrightChainDb>
+ *   IBrightChainInitResult<GuidV4Buffer, BrightDb>
  *
  * Document fields use the suite-core-lib base interfaces directly (e.g.
  * `IRoleBase<TID, Date>`) rather than the `BaseDocument` intersection aliases
@@ -29,10 +29,8 @@ import { IBrightChainBaseInitResult } from './brightChainBaseInitResult';
  * which cannot be naturally constructed — the build methods produce plain data
  * objects that satisfy the base interface, not `Document<TID>` wrapper instances.
  */
-export interface IBrightChainInitResult<
-  TID extends PlatformID,
-  TDb = unknown,
-> extends IBrightChainBaseInitResult<TDb, TID> {
+export interface IBrightChainInitResult<TID extends PlatformID, TDb = unknown>
+  extends IBrightChainBaseInitResult<TDb, TID> {
   adminRole: IRoleBase<TID, Date, string>;
   adminUser: IUserBase<TID, Date, string, AccountStatus>;
   adminUsername: string;

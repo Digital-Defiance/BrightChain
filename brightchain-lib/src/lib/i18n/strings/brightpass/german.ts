@@ -121,31 +121,37 @@ export const BrightPassGermanStrings: StringsCollection<BrightPassStringKey> = {
   [BrightPassStrings.SearchBar_Placeholder]:
     'Nach Titel, Tags oder URL suchen\u2026',
   [BrightPassStrings.SearchBar_FilterFavorites]: 'Favoriten',
-  [BrightPassStrings.SearchBar_NoResults]:
-    'Keine passenden Einträge gefunden',
+  [BrightPassStrings.SearchBar_NoResults]: 'Keine passenden Einträge gefunden',
 
   // Emergency Access Dialog
   [BrightPassStrings.Emergency_Title]: 'Notfallzugriff',
   [BrightPassStrings.Emergency_Configure]: 'Konfigurieren',
   [BrightPassStrings.Emergency_Recover]: 'Wiederherstellen',
-  [BrightPassStrings.Emergency_Threshold]: 'Schwellenwert (Mindestanzahl erforderlicher Treuhänder)',
+  [BrightPassStrings.Emergency_Threshold]:
+    'Schwellenwert (Mindestanzahl erforderlicher Treuhänder)',
   [BrightPassStrings.Emergency_Trustees]: 'Treuhänder-IDs (kommagetrennt)',
   [BrightPassStrings.Emergency_Shares]: 'Verschlüsselter Anteil {INDEX}',
-  [BrightPassStrings.Emergency_InsufficientShares]: 'Unzureichende Anteile. Mindestens {THRESHOLD} Anteile sind erforderlich.',
-  [BrightPassStrings.Emergency_InvalidThreshold]: 'Der Schwellenwert muss zwischen 1 und der Anzahl der Treuhänder liegen.',
+  [BrightPassStrings.Emergency_InsufficientShares]:
+    'Unzureichende Anteile. Mindestens {THRESHOLD} Anteile sind erforderlich.',
+  [BrightPassStrings.Emergency_InvalidThreshold]:
+    'Der Schwellenwert muss zwischen 1 und der Anzahl der Treuhänder liegen.',
   [BrightPassStrings.Emergency_Close]: 'Schließen',
-  [BrightPassStrings.Emergency_Error]: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
+  [BrightPassStrings.Emergency_Error]:
+    'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
   [BrightPassStrings.Emergency_Success]: 'Vorgang erfolgreich abgeschlossen.',
 
   // Share Dialog
   [BrightPassStrings.Share_Title]: 'Tresor teilen',
-  [BrightPassStrings.Share_SearchMembers]: 'Mitglieder nach Name oder E-Mail suchen',
+  [BrightPassStrings.Share_SearchMembers]:
+    'Mitglieder nach Name oder E-Mail suchen',
   [BrightPassStrings.Share_Add]: 'Hinzufügen',
   [BrightPassStrings.Share_Revoke]: 'Widerrufen',
   [BrightPassStrings.Share_CurrentRecipients]: 'Aktuelle Empfänger',
-  [BrightPassStrings.Share_NoRecipients]: 'Dieser Tresor wird noch mit niemandem geteilt.',
+  [BrightPassStrings.Share_NoRecipients]:
+    'Dieser Tresor wird noch mit niemandem geteilt.',
   [BrightPassStrings.Share_Close]: 'Schließen',
-  [BrightPassStrings.Share_Error]: 'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
+  [BrightPassStrings.Share_Error]:
+    'Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
 
   // Import Dialog
   [BrightPassStrings.Import_Title]: 'Einträge importieren',
@@ -154,11 +160,14 @@ export const BrightPassGermanStrings: StringsCollection<BrightPassStringKey> = {
   [BrightPassStrings.Import_Import]: 'Importieren',
   [BrightPassStrings.Import_Close]: 'Schließen',
   [BrightPassStrings.Import_Summary]: 'Import-Zusammenfassung',
-  [BrightPassStrings.Import_Imported]: '{COUNT} Einträge erfolgreich importiert',
+  [BrightPassStrings.Import_Imported]:
+    '{COUNT} Einträge erfolgreich importiert',
   [BrightPassStrings.Import_Skipped]: '{COUNT} Einträge übersprungen',
   [BrightPassStrings.Import_Errors]: 'Zeile {INDEX}: {MESSAGE}',
-  [BrightPassStrings.Import_InvalidFormat]: 'Die hochgeladene Datei entspricht nicht dem ausgewählten Format.',
-  [BrightPassStrings.Import_Error]: 'Beim Import ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.',
+  [BrightPassStrings.Import_InvalidFormat]:
+    'Die hochgeladene Datei entspricht nicht dem ausgewählten Format.',
+  [BrightPassStrings.Import_Error]:
+    'Beim Import ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.',
 
   // Audit Log
   [BrightPassStrings.AuditLog_Title]: 'Prüfprotokoll',
@@ -166,8 +175,10 @@ export const BrightPassGermanStrings: StringsCollection<BrightPassStringKey> = {
   [BrightPassStrings.AuditLog_Action]: 'Aktion',
   [BrightPassStrings.AuditLog_Member]: 'Mitglieds-ID',
   [BrightPassStrings.AuditLog_FilterAll]: 'Alle Aktionen',
-  [BrightPassStrings.AuditLog_NoEntries]: 'Keine Prüfprotokolleinträge gefunden.',
-  [BrightPassStrings.AuditLog_Error]: 'Prüfprotokoll konnte nicht geladen werden. Bitte versuchen Sie es erneut.',
+  [BrightPassStrings.AuditLog_NoEntries]:
+    'Keine Prüfprotokolleinträge gefunden.',
+  [BrightPassStrings.AuditLog_Error]:
+    'Prüfprotokoll konnte nicht geladen werden. Bitte versuchen Sie es erneut.',
 
   // Errors
   [BrightPassStrings.Error_InvalidMasterPassword]:

@@ -74,7 +74,7 @@ export function calculateBlockId(data: Buffer | Uint8Array): string {
 }
 
 /**
- * Minimal head-registry contract used by Collection and BrightChainDb.
+ * Minimal head-registry contract used by Collection and BrightDb.
  *
  * Both the legacy concrete HeadRegistry (sync) and IHeadRegistry implementations
  * (InMemoryHeadRegistry, PersistentHeadRegistry) satisfy this interface
@@ -331,21 +331,24 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     // StoreLock: insertOne
     if (this.storeLock) await this.storeLock.acquire();
     try {
+      if (options?.session && (options.session as DbSession).inTransaction) {
+        const session = options.session as DbSession;
+        const id = doc._id ?? this.generateId();
+        const docWithId = { ...doc, _id: id } as T;
+        const validated = this.validateBeforeWrite(docWithId);
+        session.addOp({
+          type: 'insert',
+          collection: this.name,
+          doc: validated,
+        });
+        return { acknowledged: true, insertedId: id };
+      }
 
-    if (options?.session && (options.session as DbSession).inTransaction) {
-      const session = options.session as DbSession;
-      const id = doc._id ?? this.generateId();
-      const docWithId = { ...doc, _id: id } as T;
-      const validated = this.validateBeforeWrite(docWithId);
-      session.addOp({ type: 'insert', collection: this.name, doc: validated });
-      return { acknowledged: true, insertedId: id };
-    }
-
-    const validated = this.validateBeforeWrite(doc);
-    const written = await this.writeDoc(validated);
-    this.emitChange('insert', written);
-    return { acknowledged: true, insertedId: written._id! };
-  } finally {
+      const validated = this.validateBeforeWrite(doc);
+      const written = await this.writeDoc(validated);
+      this.emitChange('insert', written);
+      return { acknowledged: true, insertedId: written._id! };
+    } finally {
       if (this.storeLock) await this.storeLock.release();
     }
   }
@@ -361,19 +364,19 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     // StoreLock: insertMany
     if (this.storeLock) await this.storeLock.acquire();
     try {
-    const insertedIds: Record<number, DocumentId> = {};
+      const insertedIds: Record<number, DocumentId> = {};
 
-    for (let i = 0; i < docs.length; i++) {
-      const result = await this.insertOne(docs[i], options);
-      insertedIds[i] = result.insertedId;
-    }
+      for (let i = 0; i < docs.length; i++) {
+        const result = await this.insertOne(docs[i], options);
+        insertedIds[i] = result.insertedId;
+      }
 
-    return {
-      acknowledged: true,
-      insertedCount: docs.length,
-      insertedIds,
-    };
-  } finally {
+      return {
+        acknowledged: true,
+        insertedCount: docs.length,
+        insertedIds,
+      };
+    } finally {
       if (this.storeLock) await this.storeLock.release();
     }
   }
@@ -483,47 +486,62 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     // StoreLock: updateOne
     if (this.storeLock) await this.storeLock.acquire();
     try {
+      const doc = await this.findOne(filter);
 
-    const doc = await this.findOne(filter);
-
-    if (!doc && options?.upsert) {
-      const baseDoc = {} as T;
-      // Apply filter as initial fields (for exact matches)
-      for (const [key, value] of Object.entries(filter)) {
-        if (!key.startsWith('$') && typeof value !== 'object') {
-          (baseDoc as Record<string, unknown>)[key] = value;
+      if (!doc && options?.upsert) {
+        const baseDoc = {} as T;
+        // Apply filter as initial fields (for exact matches)
+        for (const [key, value] of Object.entries(filter)) {
+          if (!key.startsWith('$') && typeof value !== 'object') {
+            (baseDoc as Record<string, unknown>)[key] = value;
+          }
         }
+        const updated = applyUpdate(baseDoc, update);
+        const result = await this.insertOne(updated, options);
+        return {
+          acknowledged: true,
+          matchedCount: 0,
+          modifiedCount: 0,
+          upsertedCount: 1,
+          upsertedId: result.insertedId,
+        };
       }
-      const updated = applyUpdate(baseDoc, update);
-      const result = await this.insertOne(updated, options);
-      return {
-        acknowledged: true,
-        matchedCount: 0,
-        modifiedCount: 0,
-        upsertedCount: 1,
-        upsertedId: result.insertedId,
-      };
-    }
 
-    if (!doc) {
-      return {
-        acknowledged: true,
-        matchedCount: 0,
-        modifiedCount: 0,
-        upsertedCount: 0,
-      };
-    }
+      if (!doc) {
+        return {
+          acknowledged: true,
+          matchedCount: 0,
+          modifiedCount: 0,
+          upsertedCount: 0,
+        };
+      }
 
-    if (options?.session && (options.session as DbSession).inTransaction) {
-      const session = options.session as DbSession;
+      if (options?.session && (options.session as DbSession).inTransaction) {
+        const session = options.session as DbSession;
+        const updated = applyUpdate(doc, update);
+        const validated = this.validateBeforeWrite(updated as T, true);
+        session.addOp({
+          type: 'update',
+          collection: this.name,
+          docId: doc._id!,
+          before: doc,
+          after: validated,
+        });
+        return {
+          acknowledged: true,
+          matchedCount: 1,
+          modifiedCount: 1,
+          upsertedCount: 0,
+        };
+      }
+
       const updated = applyUpdate(doc, update);
       const validated = this.validateBeforeWrite(updated as T, true);
-      session.addOp({
-        type: 'update',
-        collection: this.name,
-        docId: doc._id!,
-        before: doc,
-        after: validated,
+      await this.writeDoc(validated, doc._id);
+      this.emitChange('update', updated as T, {
+        updatedFields: isOperatorUpdate(update)
+          ? ((update as Record<string, unknown>)['$set'] as Partial<T>)
+          : undefined,
       });
       return {
         acknowledged: true,
@@ -531,23 +549,7 @@ export class Collection<T extends BsonDocument = BsonDocument> {
         modifiedCount: 1,
         upsertedCount: 0,
       };
-    }
-
-    const updated = applyUpdate(doc, update);
-    const validated = this.validateBeforeWrite(updated as T, true);
-    await this.writeDoc(validated, doc._id);
-    this.emitChange('update', updated as T, {
-      updatedFields: isOperatorUpdate(update)
-        ? ((update as Record<string, unknown>)['$set'] as Partial<T>)
-        : undefined,
-    });
-    return {
-      acknowledged: true,
-      matchedCount: 1,
-      modifiedCount: 1,
-      upsertedCount: 0,
-    };
-  } finally {
+    } finally {
       if (this.storeLock) await this.storeLock.release();
     }
   }
@@ -564,33 +566,33 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     // StoreLock: updateMany
     if (this.storeLock) await this.storeLock.acquire();
     try {
-    const docs = await this.find(filter).toArray();
-    let modified = 0;
+      const docs = await this.find(filter).toArray();
+      let modified = 0;
 
-    for (const doc of docs) {
-      const updated = applyUpdate(doc, update);
-      if (options?.session && (options.session as DbSession).inTransaction) {
-        (options.session as DbSession).addOp({
-          type: 'update',
-          collection: this.name,
-          docId: doc._id!,
-          before: doc,
-          after: updated,
-        });
-      } else {
-        await this.writeDoc(updated as T, doc._id);
-        this.emitChange('update', updated as T);
+      for (const doc of docs) {
+        const updated = applyUpdate(doc, update);
+        if (options?.session && (options.session as DbSession).inTransaction) {
+          (options.session as DbSession).addOp({
+            type: 'update',
+            collection: this.name,
+            docId: doc._id!,
+            before: doc,
+            after: updated,
+          });
+        } else {
+          await this.writeDoc(updated as T, doc._id);
+          this.emitChange('update', updated as T);
+        }
+        modified++;
       }
-      modified++;
-    }
 
-    return {
-      acknowledged: true,
-      matchedCount: docs.length,
-      modifiedCount: modified,
-      upsertedCount: 0,
-    };
-  } finally {
+      return {
+        acknowledged: true,
+        matchedCount: docs.length,
+        modifiedCount: modified,
+        upsertedCount: 0,
+      };
+    } finally {
       if (this.storeLock) await this.storeLock.release();
     }
   }
@@ -606,23 +608,23 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     // StoreLock: deleteOne
     if (this.storeLock) await this.storeLock.acquire();
     try {
-    const doc = await this.findOne(filter);
-    if (!doc) return { acknowledged: true, deletedCount: 0 };
+      const doc = await this.findOne(filter);
+      if (!doc) return { acknowledged: true, deletedCount: 0 };
 
-    if (options?.session && (options.session as DbSession).inTransaction) {
-      (options.session as DbSession).addOp({
-        type: 'delete',
-        collection: this.name,
-        docId: doc._id!,
-        doc,
-      });
-      return { acknowledged: true, deletedCount: 1 };
-    }
+      if (options?.session && (options.session as DbSession).inTransaction) {
+        (options.session as DbSession).addOp({
+          type: 'delete',
+          collection: this.name,
+          docId: doc._id!,
+          doc,
+        });
+        return { acknowledged: true, deletedCount: 1 };
+      }
 
-    const removed = await this.removeDoc(doc._id!);
-    if (removed) this.emitChange('delete', doc);
-    return { acknowledged: true, deletedCount: removed ? 1 : 0 };
-  } finally {
+      const removed = await this.removeDoc(doc._id!);
+      if (removed) this.emitChange('delete', doc);
+      return { acknowledged: true, deletedCount: removed ? 1 : 0 };
+    } finally {
       if (this.storeLock) await this.storeLock.release();
     }
   }
@@ -638,29 +640,29 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     // StoreLock: deleteMany
     if (this.storeLock) await this.storeLock.acquire();
     try {
-    const docs = await this.find(filter).toArray();
-    let deleted = 0;
+      const docs = await this.find(filter).toArray();
+      let deleted = 0;
 
-    for (const doc of docs) {
-      if (options?.session && (options.session as DbSession).inTransaction) {
-        (options.session as DbSession).addOp({
-          type: 'delete',
-          collection: this.name,
-          docId: doc._id!,
-          doc,
-        });
-        deleted++;
-      } else {
-        const removed = await this.removeDoc(doc._id!);
-        if (removed) {
-          this.emitChange('delete', doc);
+      for (const doc of docs) {
+        if (options?.session && (options.session as DbSession).inTransaction) {
+          (options.session as DbSession).addOp({
+            type: 'delete',
+            collection: this.name,
+            docId: doc._id!,
+            doc,
+          });
           deleted++;
+        } else {
+          const removed = await this.removeDoc(doc._id!);
+          if (removed) {
+            this.emitChange('delete', doc);
+            deleted++;
+          }
         }
       }
-    }
 
-    return { acknowledged: true, deletedCount: deleted };
-  } finally {
+      return { acknowledged: true, deletedCount: deleted };
+    } finally {
       if (this.storeLock) await this.storeLock.release();
     }
   }
@@ -677,38 +679,38 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     // StoreLock: replaceOne
     if (this.storeLock) await this.storeLock.acquire();
     try {
-    const doc = await this.findOne(filter);
+      const doc = await this.findOne(filter);
 
-    if (!doc && options?.upsert) {
-      const result = await this.insertOne(replacement, options);
+      if (!doc && options?.upsert) {
+        const result = await this.insertOne(replacement, options);
+        return {
+          acknowledged: true,
+          matchedCount: 0,
+          modifiedCount: 0,
+          upsertedCount: 1,
+          upsertedId: result.insertedId,
+        };
+      }
+
+      if (!doc) {
+        return {
+          acknowledged: true,
+          matchedCount: 0,
+          modifiedCount: 0,
+          upsertedCount: 0,
+        };
+      }
+
+      const replacementWithId = { ...replacement, _id: doc._id } as T;
+      await this.writeDoc(replacementWithId, doc._id);
+      this.emitChange('replace', replacementWithId);
       return {
         acknowledged: true,
-        matchedCount: 0,
-        modifiedCount: 0,
-        upsertedCount: 1,
-        upsertedId: result.insertedId,
-      };
-    }
-
-    if (!doc) {
-      return {
-        acknowledged: true,
-        matchedCount: 0,
-        modifiedCount: 0,
+        matchedCount: 1,
+        modifiedCount: 1,
         upsertedCount: 0,
       };
-    }
-
-    const replacementWithId = { ...replacement, _id: doc._id } as T;
-    await this.writeDoc(replacementWithId, doc._id);
-    this.emitChange('replace', replacementWithId);
-    return {
-      acknowledged: true,
-      matchedCount: 1,
-      modifiedCount: 1,
-      upsertedCount: 0,
-    };
-  } finally {
+    } finally {
       if (this.storeLock) await this.storeLock.release();
     }
   }
@@ -1227,20 +1229,20 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     // StoreLock: drop
     if (this.storeLock) await this.storeLock.acquire();
     try {
-    // Stop all TTL timers
-    for (const timer of this.ttlTimers.values()) {
-      clearInterval(timer);
-    }
-    this.ttlTimers.clear();
-    // Remove all index entries
-    for (const id of this.docIndex.keys()) {
-      const doc = this.docCache.get(id);
-      if (doc) this.indexManager.removeDocument(doc);
-    }
-    this.docIndex.clear();
-    this.docCache.clear();
-    await this.headRegistry.removeHead(this.dbName, this.name);
-  } finally {
+      // Stop all TTL timers
+      for (const timer of this.ttlTimers.values()) {
+        clearInterval(timer);
+      }
+      this.ttlTimers.clear();
+      // Remove all index entries
+      for (const id of this.docIndex.keys()) {
+        const doc = this.docCache.get(id);
+        if (doc) this.indexManager.removeDocument(doc);
+      }
+      this.docIndex.clear();
+      this.docCache.clear();
+      await this.headRegistry.removeHead(this.dbName, this.name);
+    } finally {
       if (this.storeLock) await this.storeLock.release();
     }
   }

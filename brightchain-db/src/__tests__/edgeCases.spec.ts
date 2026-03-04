@@ -1,5 +1,5 @@
 /**
- * Deep edge-case and boundary tests for brightchain-db.
+ * Deep edge-case and boundary tests for BrightDB.
  *
  * Covers areas not exercised by the module-specific tests:
  *   - Query engine: $elemMatch, $type, $all, nested dot-path queries
@@ -13,7 +13,7 @@
 import { runAggregation } from '../lib/aggregation';
 import { HeadRegistry } from '../lib/collection';
 import { Cursor } from '../lib/cursor';
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import {
   applyProjection,
   deepEquals,
@@ -29,7 +29,7 @@ import { MockBlockStore } from './helpers/mockBlockStore';
 function makeDb() {
   const store = new MockBlockStore();
   const registry = HeadRegistry.createIsolated();
-  const db = new BrightChainDb(store as any, {
+  const db = new BrightDb(store as any, {
     name: 'edgedb',
     headRegistry: registry,
   });

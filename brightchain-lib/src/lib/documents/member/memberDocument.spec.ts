@@ -28,13 +28,13 @@ describe('MemberDocument', () => {
     eciesService = sp.eciesService;
 
     // Create test members
-    const { member: pub } = Member.newMember(
+    const { member: pub } = Member.newMember<GuidV4Uint8Array>(
       eciesService,
       MemberType.User,
       'testuser',
       new EmailString('test@example.com'),
     );
-    const { member: priv } = Member.newMember(
+    const { member: priv } = Member.newMember<GuidV4Uint8Array>(
       eciesService,
       MemberType.User,
       'testuser-private',

@@ -13,7 +13,7 @@
 import type { BlockId, ICBLIndexEntry } from '@brightchain/brightchain-lib';
 import { CBLVisibility } from '@brightchain/brightchain-lib';
 import { CBLIndex } from '../lib/cblIndex';
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import { InMemoryHeadRegistry } from '../lib/headRegistry';
 import { MockBlockStore } from './helpers/mockBlockStore';
 
@@ -23,11 +23,11 @@ import { MockBlockStore } from './helpers/mockBlockStore';
 function makeCBLIndex(snapshotInterval = 0): {
   index: CBLIndex;
   store: MockBlockStore;
-  db: BrightChainDb;
+  db: BrightDb;
 } {
   const store = new MockBlockStore();
   const registry = InMemoryHeadRegistry.createIsolated();
-  const db = new BrightChainDb(store as never, {
+  const db = new BrightDb(store as never, {
     name: 'testdb',
     headRegistry: registry,
   });
@@ -150,7 +150,7 @@ describe('CBLIndex snapshot and restore (Requirements 7.2, 7.3)', () => {
 
       // Create a new index on the same store (simulating restart)
       const registry2 = InMemoryHeadRegistry.createIsolated();
-      const db2 = new BrightChainDb(store as never, {
+      const db2 = new BrightDb(store as never, {
         name: 'testdb2',
         headRegistry: registry2,
       });
@@ -198,7 +198,7 @@ describe('CBLIndex snapshot and restore (Requirements 7.2, 7.3)', () => {
 
       // Restore into a new index
       const registry2 = InMemoryHeadRegistry.createIsolated();
-      const db2 = new BrightChainDb(store as never, {
+      const db2 = new BrightDb(store as never, {
         name: 'testdb2',
         headRegistry: registry2,
       });
@@ -225,7 +225,7 @@ describe('CBLIndex snapshot and restore (Requirements 7.2, 7.3)', () => {
 
       // Restore into a new index
       const registry2 = InMemoryHeadRegistry.createIsolated();
-      const db2 = new BrightChainDb(store as never, {
+      const db2 = new BrightDb(store as never, {
         name: 'testdb2',
         headRegistry: registry2,
       });
@@ -380,7 +380,7 @@ describe('CBLIndex snapshot and restore (Requirements 7.2, 7.3)', () => {
 
       // Restore into a new index
       const registry2 = InMemoryHeadRegistry.createIsolated();
-      const db2 = new BrightChainDb(store as never, {
+      const db2 = new BrightDb(store as never, {
         name: 'testdb2',
         headRegistry: registry2,
       });
@@ -420,7 +420,7 @@ describe('CBLIndex snapshot and restore (Requirements 7.2, 7.3)', () => {
 
       // Restore into a new index
       const registry2 = InMemoryHeadRegistry.createIsolated();
-      const db2 = new BrightChainDb(store as never, {
+      const db2 = new BrightDb(store as never, {
         name: 'testdb2',
         headRegistry: registry2,
       });

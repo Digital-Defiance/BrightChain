@@ -5,7 +5,7 @@
  *  - An in-memory block store (fast, no I/O)
  *  - A disk-backed block store (real filesystem, cleaned up after each test)
  *
- * These tests exercise the real BrightChainDb, real schema validation, and
+ * These tests exercise the real BrightDB, real schema validation, and
  * real transaction semantics — no mocks of the storage layer.
  */
 
@@ -17,7 +17,7 @@ import {
   MemberStatusType,
   resetInitialization,
 } from '@brightchain/brightchain-lib';
-import { BrightChainDb } from '@brightchain/db';
+import { BrightDb } from '@brightchain/db';
 import { MemberType } from '@digitaldefiance/ecies-lib';
 import { GuidV4Buffer, GuidV4Provider } from '@digitaldefiance/node-ecies-lib';
 import { mkdtempSync, rmSync } from 'fs';
@@ -105,13 +105,13 @@ describe('BrightChainMemberInitService — integration', () => {
       const config = makeMemoryConfig();
       const input = makeInput();
 
-      const result: IBrightChainBaseInitResult<BrightChainDb, GuidV4Buffer> =
+      const result: IBrightChainBaseInitResult<BrightDb, GuidV4Buffer> =
         await service.initialize(config, input);
 
       expect(result.alreadyInitialized).toBe(false);
       expect(result.insertedCount).toBe(3);
       expect(result.skippedCount).toBe(0);
-      expect(result.db).toBeInstanceOf(BrightChainDb);
+      expect(result.db).toBeInstanceOf(BrightDb);
       expect(result.db.isConnected()).toBe(true);
     });
 

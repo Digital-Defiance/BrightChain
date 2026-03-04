@@ -13,7 +13,6 @@
  * Requirements: 13.2, 13.4, 13.5, 13.6
  */
 
-import { useCallback, useEffect, useMemo } from 'react';
 import type {
   EntryPropertyRecord,
   IBreachCheckResult,
@@ -21,6 +20,7 @@ import type {
   IPasswordGenerationOptions,
   VaultMetadata,
 } from '@brightchain/brightchain-lib';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useBrightPassApi } from './useBrightPassApi';
 
 /** Default origin allowlist — empty by default (no origins allowed). */
@@ -55,10 +55,7 @@ export interface UseBrightPassExtensionBridgeResult {
  *
  * Exported for property-based testing (Property 20).
  */
-export function isAllowedOrigin(
-  origin: string,
-  allowlist: string[],
-): boolean {
+export function isAllowedOrigin(origin: string, allowlist: string[]): boolean {
   const lowerOrigin = origin.toLowerCase();
   for (const entry of allowlist) {
     const lowerEntry = entry.toLowerCase();
@@ -96,19 +93,14 @@ export function useBrightPassExtensionBridge(
   }, [brightPassApi]);
 
   const searchEntries = useCallback(
-    async (
-      vaultId: string,
-      query: string,
-    ): Promise<EntryPropertyRecord[]> => {
+    async (vaultId: string, query: string): Promise<EntryPropertyRecord[]> => {
       return brightPassApi.searchEntries(vaultId, { text: query });
     },
     [brightPassApi],
   );
 
   const generatePassword = useCallback(
-    async (
-      opts: IPasswordGenerationOptions,
-    ): Promise<IGeneratedPassword> => {
+    async (opts: IPasswordGenerationOptions): Promise<IGeneratedPassword> => {
       return brightPassApi.generatePassword(opts);
     },
     [brightPassApi],
@@ -147,10 +139,7 @@ export function useBrightPassExtensionBridge(
       if (!siteUrl || !vaultId) return;
 
       try {
-        const payload = await brightPassApi.getAutofill(
-          vaultId,
-          siteUrl,
-        );
+        const payload = await brightPassApi.getAutofill(vaultId, siteUrl);
         event.source?.postMessage(
           { type: 'BRIGHTPASS_AUTOFILL_RESPONSE', payload },
           { targetOrigin: event.origin },

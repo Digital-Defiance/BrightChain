@@ -13,6 +13,7 @@ import {
   BaseBlock,
   BlockFetcherConfig,
   BlockHandle,
+  BlockSize,
   BlockStoreOptions,
   BrightenResult,
   CBLMagnetComponents,
@@ -228,6 +229,10 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    */
   get blockSize() {
     return this.innerStore.blockSize;
+  }
+
+  get supportedBlockSizes(): readonly BlockSize[] {
+    return this.innerStore.supportedBlockSizes;
   }
 
   // === Core Block Operations ===
@@ -536,8 +541,11 @@ export class AvailabilityAwareBlockStore implements IBlockStore {
    * @param count - Maximum number of blocks to return
    * @returns Array of random block checksums
    */
-  async getRandomBlocks(count: number): Promise<Checksum[]> {
-    return this.innerStore.getRandomBlocks(count);
+  async getRandomBlocks(
+    count: number,
+    blockSize: BlockSize,
+  ): Promise<Checksum[]> {
+    return this.innerStore.getRandomBlocks(count, blockSize);
   }
 
   /**

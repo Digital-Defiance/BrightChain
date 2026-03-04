@@ -29,7 +29,10 @@ jest.mock('@digitaldefiance/suite-core-lib', () => ({
   SuiteCoreComponentId: 'suite-core',
   SuiteCoreStringKey: new Proxy(
     {},
-    { get: (_target: unknown, prop: string | symbol) => `suite-core:${String(prop)}` },
+    {
+      get: (_target: unknown, prop: string | symbol) =>
+        `suite-core:${String(prop)}`,
+    },
   ),
   SuiteCoreStringKeyValue: {},
 }));
@@ -80,16 +83,20 @@ import EmailListTable from '../EmailListTable';
  * Generates a minimal IMailbox-like object with computed address getter.
  */
 const arbMailbox = () =>
-  fc.record({
-    localPart: fc.stringMatching(/^[a-z][a-z0-9]{0,9}$/),
-    domain: fc.stringMatching(/^[a-z][a-z0-9]{0,5}\.[a-z]{2,3}$/),
-    displayName: fc.option(fc.string({ minLength: 1, maxLength: 30 }), { nil: undefined }),
-  }).map((m) => ({
-    ...m,
-    get address(): string {
-      return `${this.localPart}@${this.domain}`;
-    },
-  }));
+  fc
+    .record({
+      localPart: fc.stringMatching(/^[a-z][a-z0-9]{0,9}$/),
+      domain: fc.stringMatching(/^[a-z][a-z0-9]{0,5}\.[a-z]{2,3}$/),
+      displayName: fc.option(fc.string({ minLength: 1, maxLength: 30 }), {
+        nil: undefined,
+      }),
+    })
+    .map((m) => ({
+      ...m,
+      get address(): string {
+        return `${this.localPart}@${this.domain}`;
+      },
+    }));
 
 /**
  * Generates a minimal IEmailMetadata-like object with the fields
@@ -97,45 +104,58 @@ const arbMailbox = () =>
  * readReceipts.
  */
 const arbEmailMetadata = () =>
-  fc.record({
-    messageId: fc.stringMatching(/^<[a-z0-9]{4,10}@[a-z]{3,6}\.[a-z]{2,3}>$/),
-    from: arbMailbox(),
-    subject: fc.option(fc.string({ minLength: 1, maxLength: 60 }), { nil: undefined }),
-    date: fc.date({ min: new Date('2000-01-01'), max: new Date('2030-12-31') }).filter((d) => !isNaN(d.getTime())),
-    isRead: fc.boolean(),
-  }).map((e) => ({
-    ...e,
-    // EmailListTable checks readReceipts.size to determine read status
-    readReceipts: e.isRead ? new Map([['user1', new Date()]]) : new Map(),
-    // Provide minimal required fields that the component doesn't use but TS expects
-    to: [],
-    cc: [],
-    bcc: [],
-    mimeVersion: '1.0',
-    contentType: { type: 'text', subtype: 'plain', parameters: new Map(), get mediaType() { return 'text/plain'; } },
-    customHeaders: new Map(),
-    deliveryReceipts: new Map(),
-    deliveryStatus: new Map(),
-    acknowledgments: new Map(),
-    messageType: 'email',
-    senderId: 'test',
-    recipients: [],
-    priority: 1,
-    encryptionScheme: 'none',
-    isCBL: false,
-    blockId: 'test-block',
-    createdAt: new Date(),
-    expiresAt: null,
-    durabilityLevel: 0,
-    parityBlockIds: [],
-    accessCount: 0,
-    lastAccessedAt: new Date(),
-    replicationStatus: 0,
-    targetReplicationFactor: 0,
-    replicaNodeIds: [],
-    size: 0,
-    checksum: 'test',
-  }));
+  fc
+    .record({
+      messageId: fc.stringMatching(/^<[a-z0-9]{4,10}@[a-z]{3,6}\.[a-z]{2,3}>$/),
+      from: arbMailbox(),
+      subject: fc.option(fc.string({ minLength: 1, maxLength: 60 }), {
+        nil: undefined,
+      }),
+      date: fc
+        .date({ min: new Date('2000-01-01'), max: new Date('2030-12-31') })
+        .filter((d) => !isNaN(d.getTime())),
+      isRead: fc.boolean(),
+    })
+    .map((e) => ({
+      ...e,
+      // EmailListTable checks readReceipts.size to determine read status
+      readReceipts: e.isRead ? new Map([['user1', new Date()]]) : new Map(),
+      // Provide minimal required fields that the component doesn't use but TS expects
+      to: [],
+      cc: [],
+      bcc: [],
+      mimeVersion: '1.0',
+      contentType: {
+        type: 'text',
+        subtype: 'plain',
+        parameters: new Map(),
+        get mediaType() {
+          return 'text/plain';
+        },
+      },
+      customHeaders: new Map(),
+      deliveryReceipts: new Map(),
+      deliveryStatus: new Map(),
+      acknowledgments: new Map(),
+      messageType: 'email',
+      senderId: 'test',
+      recipients: [],
+      priority: 1,
+      encryptionScheme: 'none',
+      isCBL: false,
+      blockId: 'test-block',
+      createdAt: new Date(),
+      expiresAt: null,
+      durabilityLevel: 0,
+      parityBlockIds: [],
+      accessCount: 0,
+      lastAccessedAt: new Date(),
+      replicationStatus: 0,
+      targetReplicationFactor: 0,
+      replicaNodeIds: [],
+      size: 0,
+      checksum: 'test',
+    }));
 
 // ─── Property Tests ─────────────────────────────────────────────────────────
 
@@ -188,13 +208,17 @@ describe('Feature: brightmail-frontend, Property 3: Inbox Row Rendering Complete
             }
 
             // 3. Date: verify a formatted date string is present
-            const dateCells = row.querySelectorAll('[data-testid="email-date"]');
+            const dateCells = row.querySelectorAll(
+              '[data-testid="email-date"]',
+            );
             expect(dateCells.length).toBe(1);
             const dateText = dateCells[0].textContent ?? '';
             expect(dateText.length).toBeGreaterThan(0);
 
             // 4. Read/unread indicator: check the status cell exists
-            const statusCells = row.querySelectorAll('[data-testid="email-status"]');
+            const statusCells = row.querySelectorAll(
+              '[data-testid="email-status"]',
+            );
             expect(statusCells.length).toBe(1);
             const statusLabel = statusCells[0].getAttribute('aria-label');
             const isRead = email.readReceipts.size > 0;
@@ -210,11 +234,11 @@ describe('Feature: brightmail-frontend, Property 3: Inbox Row Rendering Complete
 // ─── Import ComposeView utility functions ───────────────────────────────────
 
 import {
-  isValidEmail,
-  parseEmailAddress,
-  mapRecipientsToMailboxes,
-  getReplyPrefill,
   getForwardPrefill,
+  getReplyPrefill,
+  isValidEmail,
+  mapRecipientsToMailboxes,
+  parseEmailAddress,
 } from '../ComposeView';
 
 // ─── Additional Generators ──────────────────────────────────────────────────
@@ -497,7 +521,7 @@ describe('Feature: brightmail-frontend, Property 9: Reply and Forward Pre-fill M
 
 // ─── Import ThreadView utility functions ────────────────────────────────────
 
-import { sortByDateAscending, getMailboxDisplay } from '../ThreadView';
+import { getMailboxDisplay, sortByDateAscending } from '../ThreadView';
 
 // ─── Property 7: Thread Chronological Ordering ─────────────────────────────
 
@@ -570,13 +594,22 @@ describe('Feature: brightmail-frontend, Property 8: Thread Message Rendering Com
     fc.assert(
       fc.property(
         fc.record({
-          messageId: fc.stringMatching(/^<[a-z0-9]{4,10}@[a-z]{3,6}\.[a-z]{2,3}>$/),
+          messageId: fc.stringMatching(
+            /^<[a-z0-9]{4,10}@[a-z]{3,6}\.[a-z]{2,3}>$/,
+          ),
           from: arbMailbox(),
           to: fc.array(arbMailbox(), { minLength: 1, maxLength: 3 }),
           cc: fc.array(arbMailbox(), { minLength: 0, maxLength: 2 }),
-          subject: fc.option(fc.string({ minLength: 1, maxLength: 60 }), { nil: undefined }),
-          date: fc.date({ min: new Date('2000-01-01'), max: new Date('2030-12-31') }),
-          textBody: fc.option(fc.string({ minLength: 1, maxLength: 200 }), { nil: undefined }),
+          subject: fc.option(fc.string({ minLength: 1, maxLength: 60 }), {
+            nil: undefined,
+          }),
+          date: fc.date({
+            min: new Date('2000-01-01'),
+            max: new Date('2030-12-31'),
+          }),
+          textBody: fc.option(fc.string({ minLength: 1, maxLength: 200 }), {
+            nil: undefined,
+          }),
         }),
         (emailData: any) => {
           // Build a thread message element matching ThreadView's rendering
@@ -605,24 +638,52 @@ describe('Feature: brightmail-frontend, Property 8: Thread Message Rendering Com
 
           // Build the rendered element matching ThreadView structure
           const children = [
-            React.createElement('div', { 'data-testid': 'message-from', key: 'from' }, senderDisplay),
-            React.createElement('div', { 'data-testid': 'message-to', key: 'to' }, `To: ${toDisplay}`),
+            React.createElement(
+              'div',
+              { 'data-testid': 'message-from', key: 'from' },
+              senderDisplay,
+            ),
+            React.createElement(
+              'div',
+              { 'data-testid': 'message-to', key: 'to' },
+              `To: ${toDisplay}`,
+            ),
           ];
 
           if (ccDisplay) {
             children.push(
-              React.createElement('div', { 'data-testid': 'message-cc', key: 'cc' }, `Cc: ${ccDisplay}`),
+              React.createElement(
+                'div',
+                { 'data-testid': 'message-cc', key: 'cc' },
+                `Cc: ${ccDisplay}`,
+              ),
             );
           }
 
           children.push(
-            React.createElement('div', { 'data-testid': 'message-date', key: 'date' }, dateStr),
-            React.createElement('div', { 'data-testid': 'message-subject', key: 'subject' }, emailData.subject ?? ''),
-            React.createElement('div', { 'data-testid': 'message-body', key: 'body' }, emailData.textBody ?? ''),
+            React.createElement(
+              'div',
+              { 'data-testid': 'message-date', key: 'date' },
+              dateStr,
+            ),
+            React.createElement(
+              'div',
+              { 'data-testid': 'message-subject', key: 'subject' },
+              emailData.subject ?? '',
+            ),
+            React.createElement(
+              'div',
+              { 'data-testid': 'message-body', key: 'body' },
+              emailData.textBody ?? '',
+            ),
           );
 
           const { container } = render(
-            React.createElement('div', { 'data-testid': `thread-message-${emailData.messageId}` }, ...children),
+            React.createElement(
+              'div',
+              { 'data-testid': `thread-message-${emailData.messageId}` },
+              ...children,
+            ),
           );
 
           const text = container.textContent ?? '';
@@ -679,10 +740,9 @@ describe('Feature: brightmail-frontend, Property 8: Thread Message Rendering Com
   });
 });
 
-
 // ─── Import bulk action utilities ───────────────────────────────────────────
 
-import { bulkDelete, buildDeleteErrorMessage } from '../bulkActions';
+import { buildDeleteErrorMessage, bulkDelete } from '../bulkActions';
 
 // ─── Property 10: Bulk Delete Invokes All Selected IDs ──────────────────────
 
@@ -774,7 +834,6 @@ describe('Feature: brightmail-frontend, Property 10: Bulk Delete Invokes All Sel
   });
 });
 
-
 // ─── Property 11: Delete Error Identifies Failed Email ──────────────────────
 
 describe('Feature: brightmail-frontend, Property 11: Delete Error Identifies Failed Email', () => {
@@ -838,7 +897,6 @@ describe('Feature: brightmail-frontend, Property 11: Delete Error Identifies Fai
   });
 });
 
-
 // ─── Import date formatting utility ─────────────────────────────────────────
 
 import { formatDateLocale, formatDateTimeLocale } from '../dateFormatting';
@@ -857,12 +915,22 @@ describe('Feature: brightmail-frontend, Property 12: Locale-Aware Date Formattin
    * **Validates: Requirements 7.4**
    */
 
-  const supportedLocales = ['en-US', 'en-GB', 'fr', 'zh-CN', 'es', 'uk', 'de', 'ja'];
+  const supportedLocales = [
+    'en-US',
+    'en-GB',
+    'fr',
+    'zh-CN',
+    'es',
+    'uk',
+    'de',
+    'ja',
+  ];
 
   const arbLocale = () => fc.constantFrom(...supportedLocales);
 
   const arbDate = () =>
-    fc.date({ min: new Date('2000-01-01'), max: new Date('2030-12-31') })
+    fc
+      .date({ min: new Date('2000-01-01'), max: new Date('2030-12-31') })
       .filter((d) => !isNaN(d.getTime()));
 
   it('formatDateLocale always returns a non-empty string for any date and locale', () => {
@@ -918,7 +986,6 @@ describe('Feature: brightmail-frontend, Property 12: Locale-Aware Date Formattin
   });
 });
 
-
 // ─── Property 15: All BrightMail Routes Require Authentication ──────────────
 
 /**
@@ -930,7 +997,13 @@ describe('Feature: brightmail-frontend, Property 12: Locale-Aware Date Formattin
  * and verify the redirect happens for randomly-generated thread IDs.
  */
 
-import { MemoryRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import {
+  MemoryRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from 'react-router-dom';
 
 /**
  * Minimal PrivateRoute replica matching the real component's logic:
@@ -942,7 +1015,11 @@ const FakePrivateRoute: React.FC<{
 }> = ({ isAuthenticated, children }) => {
   const location = useLocation();
   if (!isAuthenticated) {
-    return React.createElement(Navigate, { to: '/login', state: { from: location }, replace: true });
+    return React.createElement(Navigate, {
+      to: '/login',
+      state: { from: location },
+      replace: true,
+    });
   }
   return React.createElement(React.Fragment, null, children);
 };
@@ -952,7 +1029,11 @@ const FakePrivateRoute: React.FC<{
  */
 function LocationDisplay() {
   const location = useLocation();
-  return React.createElement('div', { 'data-testid': 'location-display' }, location.pathname);
+  return React.createElement(
+    'div',
+    { 'data-testid': 'location-display' },
+    location.pathname,
+  );
 }
 
 /**
@@ -973,64 +1054,61 @@ describe('Feature: brightmail-frontend, Property 15: All BrightMail Routes Requi
    */
   it('unauthenticated access to static BrightMail routes redirects to /login', () => {
     fc.assert(
-      fc.property(
-        fc.constantFrom(...BRIGHTMAIL_ROUTES),
-        (route: string) => {
-          cleanup();
-          const { getByTestId, queryByText } = render(
+      fc.property(fc.constantFrom(...BRIGHTMAIL_ROUTES), (route: string) => {
+        cleanup();
+        const { getByTestId, queryByText } = render(
+          React.createElement(
+            MemoryRouter,
+            { initialEntries: [route] },
             React.createElement(
-              MemoryRouter,
-              { initialEntries: [route] },
-              React.createElement(
-                Routes,
-                null,
-                React.createElement(Route, {
-                  path: '/brightmail',
-                  element: React.createElement(
-                    FakePrivateRoute,
-                    { isAuthenticated: false },
-                    React.createElement('div', null, 'PROTECTED_CONTENT'),
-                  ),
-                  children: [
-                    React.createElement(Route, {
-                      index: true,
-                      key: 'index',
-                      element: React.createElement('div', null, 'INBOX'),
-                    }),
-                    React.createElement(Route, {
-                      path: 'compose',
-                      key: 'compose',
-                      element: React.createElement('div', null, 'COMPOSE'),
-                    }),
-                    React.createElement(Route, {
-                      path: 'thread/:messageId',
-                      key: 'thread',
-                      element: React.createElement('div', null, 'THREAD'),
-                    }),
-                  ],
-                }),
-                React.createElement(Route, {
-                  path: '/login',
-                  element: React.createElement(
-                    React.Fragment,
-                    null,
-                    React.createElement('div', null, 'LOGIN_PAGE'),
-                    React.createElement(LocationDisplay),
-                  ),
-                }),
-              ),
+              Routes,
+              null,
+              React.createElement(Route, {
+                path: '/brightmail',
+                element: React.createElement(
+                  FakePrivateRoute,
+                  { isAuthenticated: false },
+                  React.createElement('div', null, 'PROTECTED_CONTENT'),
+                ),
+                children: [
+                  React.createElement(Route, {
+                    index: true,
+                    key: 'index',
+                    element: React.createElement('div', null, 'INBOX'),
+                  }),
+                  React.createElement(Route, {
+                    path: 'compose',
+                    key: 'compose',
+                    element: React.createElement('div', null, 'COMPOSE'),
+                  }),
+                  React.createElement(Route, {
+                    path: 'thread/:messageId',
+                    key: 'thread',
+                    element: React.createElement('div', null, 'THREAD'),
+                  }),
+                ],
+              }),
+              React.createElement(Route, {
+                path: '/login',
+                element: React.createElement(
+                  React.Fragment,
+                  null,
+                  React.createElement('div', null, 'LOGIN_PAGE'),
+                  React.createElement(LocationDisplay),
+                ),
+              }),
             ),
-          );
+          ),
+        );
 
-          // Protected content must NOT be visible
-          expect(queryByText('PROTECTED_CONTENT')).toBeNull();
-          expect(queryByText('INBOX')).toBeNull();
-          expect(queryByText('COMPOSE')).toBeNull();
+        // Protected content must NOT be visible
+        expect(queryByText('PROTECTED_CONTENT')).toBeNull();
+        expect(queryByText('INBOX')).toBeNull();
+        expect(queryByText('COMPOSE')).toBeNull();
 
-          // Must have redirected to /login
-          expect(getByTestId('location-display').textContent).toBe('/login');
-        },
-      ),
+        // Must have redirected to /login
+        expect(getByTestId('location-display').textContent).toBe('/login');
+      }),
       { numRuns: 100 },
     );
   });

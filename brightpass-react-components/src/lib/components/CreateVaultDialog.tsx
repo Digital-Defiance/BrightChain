@@ -8,7 +8,7 @@
  * Requirements: 3.6, 3.7
  */
 
-import React, { useState } from 'react';
+import { BrightPassStrings } from '@brightchain/brightchain-lib';
 import {
   Alert,
   Button,
@@ -18,9 +18,9 @@ import {
   DialogTitle,
   TextField,
 } from '@mui/material';
-import { BrightPassStrings } from '@brightchain/brightchain-lib';
-import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
+import React, { useState } from 'react';
 import { useBrightPassApi } from '../hooks/useBrightPassApi';
+import { useBrightPassTranslation } from '../hooks/useBrightPassTranslation';
 
 export interface CreateVaultDialogProps {
   /** Whether the dialog is open. */

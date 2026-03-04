@@ -1,10 +1,10 @@
 /**
- * @fileoverview Integration tests for HeadRegistry with BrightChainDb.
+ * @fileoverview Integration tests for HeadRegistry with BrightDB.
  *
  * Tests:
- * 1. BrightChainDb with `dataDir` uses PersistentHeadRegistry (data persists across instances)
- * 2. BrightChainDb without `dataDir` or `headRegistry` uses InMemoryHeadRegistry (backward compat)
- * 3. BrightChainDb with explicit `headRegistry` uses that registry
+ * 1. BrightDb with `dataDir` uses PersistentHeadRegistry (data persists across instances)
+ * 2. BrightDb without `dataDir` or `headRegistry` uses InMemoryHeadRegistry (backward compat)
+ * 3. BrightDb with explicit `headRegistry` uses that registry
  * 4. File locking under concurrent access (multiple PersistentHeadRegistry instances)
  *
  * Requirements: 1.1, 1.5, 1.6
@@ -17,7 +17,7 @@ import {
 import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { BrightChainDb } from '../lib/database';
+import { BrightDb } from '../lib/database';
 import {
   InMemoryHeadRegistry,
   PersistentHeadRegistry,
@@ -33,12 +33,12 @@ async function cleanupDir(dir: string): Promise<void> {
   await fs.rm(dir, { recursive: true, force: true });
 }
 
-describe('HeadRegistry integration with BrightChainDb', () => {
+describe('HeadRegistry integration with BrightDb', () => {
   // ══════════════════════════════════════════════════════════════
   // Test 1: dataDir → PersistentHeadRegistry (data survives restart)
   // ══════════════════════════════════════════════════════════════
 
-  describe('BrightChainDb with dataDir option', () => {
+  describe('BrightDb with dataDir option', () => {
     let dataDir: string;
 
     beforeEach(async () => {
@@ -49,11 +49,11 @@ describe('HeadRegistry integration with BrightChainDb', () => {
       await cleanupDir(dataDir);
     });
 
-    it('should persist collection data across BrightChainDb instances', async () => {
+    it('should persist collection data across BrightDb instances', async () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
 
       // First instance: insert a document
-      const db1 = new BrightChainDb(store, { name: 'persist-db', dataDir });
+      const db1 = new BrightDb(store, { name: 'persist-db', dataDir });
       const coll1 = db1.collection('users');
       await coll1.insertOne({ _id: 'u1', name: 'Alice' });
 
@@ -73,7 +73,7 @@ describe('HeadRegistry integration with BrightChainDb', () => {
 
     it('should create the head-registry.json file in the specified dataDir', async () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
-      const db = new BrightChainDb(store, { name: 'test-db', dataDir });
+      const db = new BrightDb(store, { name: 'test-db', dataDir });
       const coll = db.collection('items');
       await coll.insertOne({ _id: 'i1', value: 42 });
 
@@ -83,11 +83,11 @@ describe('HeadRegistry integration with BrightChainDb', () => {
       expect(stat.size).toBeGreaterThan(0);
     });
 
-    it('should restore head pointers when a new BrightChainDb loads from the same dataDir', async () => {
+    it('should restore head pointers when a new BrightDb loads from the same dataDir', async () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
 
       // Instance 1: insert documents into two collections
-      const db1 = new BrightChainDb(store, { name: 'mydb', dataDir });
+      const db1 = new BrightDb(store, { name: 'mydb', dataDir });
       const users1 = db1.collection('users');
       await users1.insertOne({ _id: 'u1', name: 'Alice' });
       const orders1 = db1.collection('orders');
@@ -102,7 +102,7 @@ describe('HeadRegistry integration with BrightChainDb', () => {
       expect(registry2.getHead('mydb', 'orders')).toBeDefined();
 
       // Create a new db with the loaded registry and same store
-      const db2 = new BrightChainDb(store, {
+      const db2 = new BrightDb(store, {
         name: 'mydb',
         headRegistry: registry2,
       });
@@ -124,10 +124,10 @@ describe('HeadRegistry integration with BrightChainDb', () => {
   // Test 2: No dataDir, no headRegistry → InMemoryHeadRegistry
   // ══════════════════════════════════════════════════════════════
 
-  describe('BrightChainDb without dataDir or headRegistry (backward compatibility)', () => {
+  describe('BrightDb without dataDir or headRegistry (backward compatibility)', () => {
     it('should use InMemoryHeadRegistry by default', async () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
-      const db = new BrightChainDb(store, { name: 'inmem-db' });
+      const db = new BrightDb(store, { name: 'inmem-db' });
 
       // Insert and retrieve should work
       const coll = db.collection('docs');
@@ -143,7 +143,7 @@ describe('HeadRegistry integration with BrightChainDb', () => {
       try {
         const store = new PooledMemoryBlockStore(BlockSize.Small);
         // No dataDir passed — should be purely in-memory
-        const db = new BrightChainDb(store, { name: 'no-disk-db' });
+        const db = new BrightDb(store, { name: 'no-disk-db' });
         const coll = db.collection('items');
         await coll.insertOne({ _id: 'i1', value: 'test' });
 
@@ -155,16 +155,16 @@ describe('HeadRegistry integration with BrightChainDb', () => {
       }
     });
 
-    it('should lose data when a new BrightChainDb is created (no persistence)', async () => {
+    it('should lose data when a new BrightDb is created (no persistence)', async () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
 
       // Instance 1: insert a document
-      const db1 = new BrightChainDb(store, { name: 'ephemeral-db' });
+      const db1 = new BrightDb(store, { name: 'ephemeral-db' });
       const coll1 = db1.collection('notes');
       await coll1.insertOne({ _id: 'n1', content: 'important' });
 
       // Instance 2: new db with same store but fresh InMemoryHeadRegistry
-      const db2 = new BrightChainDb(store, { name: 'ephemeral-db' });
+      const db2 = new BrightDb(store, { name: 'ephemeral-db' });
       const coll2 = db2.collection('notes');
 
       // The document should not be found (head pointer was lost)
@@ -177,12 +177,12 @@ describe('HeadRegistry integration with BrightChainDb', () => {
   // Test 3: Explicit headRegistry option takes precedence
   // ══════════════════════════════════════════════════════════════
 
-  describe('BrightChainDb with explicit headRegistry option', () => {
+  describe('BrightDb with explicit headRegistry option', () => {
     it('should use the provided headRegistry instead of creating one', async () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
       const customRegistry = InMemoryHeadRegistry.createIsolated();
 
-      const db = new BrightChainDb(store, {
+      const db = new BrightDb(store, {
         name: 'custom-db',
         headRegistry: customRegistry,
       });
@@ -201,7 +201,7 @@ describe('HeadRegistry integration with BrightChainDb', () => {
         const customRegistry = InMemoryHeadRegistry.createIsolated();
 
         // Both headRegistry and dataDir provided — headRegistry wins
-        const db = new BrightChainDb(store, {
+        const db = new BrightDb(store, {
           name: 'priority-db',
           headRegistry: customRegistry,
           dataDir,
@@ -229,7 +229,7 @@ describe('HeadRegistry integration with BrightChainDb', () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
       const sharedRegistry = InMemoryHeadRegistry.createIsolated();
 
-      const db = new BrightChainDb(store, {
+      const db = new BrightDb(store, {
         name: 'shared-db',
         headRegistry: sharedRegistry,
       });
@@ -287,7 +287,7 @@ describe('HeadRegistry integration with BrightChainDb', () => {
 
     it('should not corrupt the registry file under rapid concurrent writes', async () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
-      const db = new BrightChainDb(store, { name: 'concurrent-db', dataDir });
+      const db = new BrightDb(store, { name: 'concurrent-db', dataDir });
 
       // Rapidly create multiple collections and insert documents concurrently
       const promises: Promise<void>[] = [];
@@ -311,7 +311,7 @@ describe('HeadRegistry integration with BrightChainDb', () => {
 
     it('should not leave stale lock files after concurrent operations', async () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
-      const db = new BrightChainDb(store, { name: 'lock-db', dataDir });
+      const db = new BrightDb(store, { name: 'lock-db', dataDir });
 
       // Multiple concurrent inserts
       const coll = db.collection('items');
@@ -330,12 +330,12 @@ describe('HeadRegistry integration with BrightChainDb', () => {
       expect(lockExists).toBe(false);
     });
 
-    it('should produce a valid registry after interleaved writes from two BrightChainDb instances', async () => {
+    it('should produce a valid registry after interleaved writes from two BrightDb instances', async () => {
       const store = new PooledMemoryBlockStore(BlockSize.Small);
 
       // Two db instances sharing the same dataDir (simulating process restart overlap)
-      const db1 = new BrightChainDb(store, { name: 'db-a', dataDir });
-      const db2 = new BrightChainDb(store, { name: 'db-b', dataDir });
+      const db1 = new BrightDb(store, { name: 'db-a', dataDir });
+      const db2 = new BrightDb(store, { name: 'db-b', dataDir });
 
       // Interleaved writes
       const coll1 = db1.collection('alpha');

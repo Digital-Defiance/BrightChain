@@ -8,8 +8,12 @@
  * **Validates: Requirements 4.1, 4.2, 4.4, 5.1, 5.3, 5.4**
  */
 
-import fc from 'fast-check';
-import React from 'react';
+import type {
+  CreditCardEntry,
+  EntryPropertyRecord,
+  LoginEntry,
+  VaultEntryType,
+} from '@brightchain/brightchain-lib';
 import {
   cleanup,
   fireEvent,
@@ -17,12 +21,8 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
-import type {
-  CreditCardEntry,
-  EntryPropertyRecord,
-  LoginEntry,
-  VaultEntryType,
-} from '@brightchain/brightchain-lib';
+import fc from 'fast-check';
+import React from 'react';
 
 // ---------------------------------------------------------------------------
 // Mocks — must be set up before importing components under test.
@@ -68,13 +68,9 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => jest.fn(),
   useParams: () => ({ vaultId: 'test-vault-id' }),
   useLocation: () => ({ pathname: '/brightpass/vault/test-vault-id' }),
-  Link: ({
-    children,
-    to,
-  }: {
-    children: React.ReactNode;
-    to: string;
-  }) => <a href={to}>{children}</a>,
+  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
+    <a href={to}>{children}</a>
+  ),
 }));
 
 const mockUseBrightPass = jest.fn();
@@ -95,9 +91,9 @@ jest.mock('../components/MasterPasswordPrompt', () => ({
 }));
 
 // Import components and functions under test AFTER mocks
-import VaultDetailView from './VaultDetailView';
 import EntryDetailView from '../components/EntryDetailView';
 import { filterEntries } from '../components/SearchBar';
+import VaultDetailView from './VaultDetailView';
 
 // ---------------------------------------------------------------------------
 // Arbitraries
@@ -146,9 +142,7 @@ const arbPassword: fc.Arbitrary<string> = fc.stringMatching(
 );
 
 /** Arbitrary for a credit card number string. */
-const arbCardNumber: fc.Arbitrary<string> = fc.stringMatching(
-  /^[0-9]{13,19}$/,
-);
+const arbCardNumber: fc.Arbitrary<string> = fc.stringMatching(/^[0-9]{13,19}$/);
 
 /** Arbitrary for a CVV string. */
 const arbCvv: fc.Arbitrary<string> = fc.stringMatching(/^[0-9]{3,4}$/);
@@ -186,7 +180,6 @@ const arbCreditCardEntry: fc.Arbitrary<CreditCardEntry> = fc.record({
   expirationDate: fc.constant('12/25'),
   cvv: arbCvv,
 });
-
 
 // ---------------------------------------------------------------------------
 // Property 4: Entry list rendering completeness
@@ -302,9 +295,7 @@ describe('Property 5: Sensitive field masking', () => {
           Promise.resolve({ breached: false, count: 0 }),
         );
 
-        render(
-          <EntryDetailView vaultId="test-vault" entryId={entry.id} />,
-        );
+        render(<EntryDetailView vaultId="test-vault" entryId={entry.id} />);
 
         // Wait for the toggle button to appear — entry fully loaded
         const toggleButton = await screen.findByLabelText(
@@ -314,9 +305,9 @@ describe('Property 5: Sensitive field masking', () => {
         );
 
         // Verify masked field is present
-        expect(
-          screen.getAllByDisplayValue(MASK).length,
-        ).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByDisplayValue(MASK).length).toBeGreaterThanOrEqual(
+          1,
+        );
 
         // Click the toggle button to reveal
         fireEvent.click(toggleButton);
@@ -344,9 +335,7 @@ describe('Property 5: Sensitive field masking', () => {
 
         mockGetEntry.mockImplementation(() => Promise.resolve(entry));
 
-        render(
-          <EntryDetailView vaultId="test-vault" entryId={entry.id} />,
-        );
+        render(<EntryDetailView vaultId="test-vault" entryId={entry.id} />);
 
         // Wait for toggle buttons to appear — entry is fully loaded
         await waitFor(
@@ -370,9 +359,7 @@ describe('Property 5: Sensitive field masking', () => {
         expect(screen.getByDisplayValue(entry.cardNumber)).toBeTruthy();
 
         // Re-query — the remaining ShowPassword toggle is for cvv
-        fireEvent.click(
-          screen.getByLabelText('EntryDetail_ShowPassword'),
-        );
+        fireEvent.click(screen.getByLabelText('EntryDetail_ShowPassword'));
 
         // cvv should now be visible
         expect(screen.getByDisplayValue(entry.cvv)).toBeTruthy();
@@ -383,7 +370,6 @@ describe('Property 5: Sensitive field masking', () => {
     );
   }, 120_000);
 });
-
 
 // ---------------------------------------------------------------------------
 // Property 7: Client-side entry filtering (pure function test)

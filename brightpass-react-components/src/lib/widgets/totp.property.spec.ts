@@ -32,20 +32,32 @@ jest.mock('../hooks/useBrightPassApi', () => ({
 
 // Import AFTER mocks
 import {
-  formatTotpCode,
   calculateRemainingSeconds,
+  formatTotpCode,
   isValidBase32,
   isValidOtpauthUri,
   isValidTotpSecret,
 } from './TOTPWidget';
 
-
 describe('Property 9: TOTP code format', () => {
   it('formats 6-digit codes as "XXX XXX"', () => {
-    const digitChar = fc.constantFrom('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+    const digitChar = fc.constantFrom(
+      '0',
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+    );
     fc.assert(
       fc.property(
-        fc.array(digitChar, { minLength: 6, maxLength: 6 }).map((arr) => arr.join('')),
+        fc
+          .array(digitChar, { minLength: 6, maxLength: 6 })
+          .map((arr) => arr.join('')),
         (code) => {
           const formatted = formatTotpCode(code);
           expect(formatted).toBe(`${code.slice(0, 3)} ${code.slice(3)}`);
@@ -59,7 +71,9 @@ describe('Property 9: TOTP code format', () => {
   it('returns non-6-digit codes unchanged', () => {
     fc.assert(
       fc.property(
-        fc.string({ minLength: 1, maxLength: 20 }).filter((s) => s.length !== 6),
+        fc
+          .string({ minLength: 1, maxLength: 20 })
+          .filter((s) => s.length !== 6),
         (code) => {
           expect(formatTotpCode(code)).toBe(code);
         },
@@ -74,7 +88,7 @@ describe('Property 10: TOTP countdown accuracy', () => {
     fc.assert(
       fc.property(
         fc.nat({ max: 2_000_000_000_000 }), // timestampMs up to ~2033
-        fc.integer({ min: 1, max: 120 }),     // period in seconds
+        fc.integer({ min: 1, max: 120 }), // period in seconds
         (timestampMs, period) => {
           const remaining = calculateRemainingSeconds(timestampMs, period);
           expect(remaining).toBeGreaterThanOrEqual(0);
@@ -108,7 +122,9 @@ describe('Property 11: TOTP secret input validation', () => {
     const base32Char = fc.constantFrom(...base32Chars.split(''));
     fc.assert(
       fc.property(
-        fc.array(base32Char, { minLength: 1, maxLength: 32 }).map((arr) => arr.join('')),
+        fc
+          .array(base32Char, { minLength: 1, maxLength: 32 })
+          .map((arr) => arr.join('')),
         (secret) => {
           expect(isValidBase32(secret)).toBe(true);
           expect(isValidTotpSecret(secret)).toBe(true);
@@ -120,11 +136,17 @@ describe('Property 11: TOTP secret input validation', () => {
 
   it('accepts valid otpauth:// URIs with base32 secret', () => {
     const base32Char = fc.constantFrom(...base32Chars.split(''));
-    const alphaNum = fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789'.split(''));
+    const alphaNum = fc.constantFrom(
+      ...'abcdefghijklmnopqrstuvwxyz0123456789'.split(''),
+    );
     fc.assert(
       fc.property(
-        fc.array(base32Char, { minLength: 8, maxLength: 32 }).map((arr) => arr.join('')),
-        fc.array(alphaNum, { minLength: 1, maxLength: 20 }).map((arr) => arr.join('')),
+        fc
+          .array(base32Char, { minLength: 8, maxLength: 32 })
+          .map((arr) => arr.join('')),
+        fc
+          .array(alphaNum, { minLength: 1, maxLength: 20 })
+          .map((arr) => arr.join('')),
         (secret, issuer) => {
           const uri = `otpauth://totp/${issuer}:user@example.com?secret=${secret}&issuer=${issuer}`;
           expect(isValidOtpauthUri(uri)).toBe(true);
@@ -143,9 +165,11 @@ describe('Property 11: TOTP secret input validation', () => {
   it('rejects strings with invalid base32 characters (when not otpauth URI)', () => {
     fc.assert(
       fc.property(
-        fc.string({ minLength: 1, maxLength: 20 }).filter(
-          (s) => !/^[A-Z2-7]+=*$/i.test(s) && !s.startsWith('otpauth://'),
-        ),
+        fc
+          .string({ minLength: 1, maxLength: 20 })
+          .filter(
+            (s) => !/^[A-Z2-7]+=*$/i.test(s) && !s.startsWith('otpauth://'),
+          ),
         (invalid) => {
           expect(isValidTotpSecret(invalid)).toBe(false);
         },
