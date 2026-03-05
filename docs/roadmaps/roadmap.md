@@ -35,9 +35,7 @@ BrightChain is in its initial stages. Key achievements include:
 
 - **Objective**: Implement replication mechanisms.
 - **Tasks**:
-  - Develop custom TCP/UDP methods for replication.
-  - Integrate replication with the FASTER KV store.
-  - Ensure data integrity and consistency during replication.
+  - Further develop gossip block replication/distribution mechanisms
 
 ### 3.3 Collaboration
 
