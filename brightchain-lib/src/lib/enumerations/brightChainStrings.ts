@@ -335,6 +335,12 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   Error_StoreError_NotImplemented: 'Error_StoreError_NotImplemented',
   Error_StoreError_InsufficientRandomBlocksTemplate:
     'Error_StoreError_InsufficientRandomBlocksTemplate',
+  Error_StoreError_FactoryNotRegistered:
+    'Error_StoreError_FactoryNotRegistered',
+  Error_StoreError_CloudOperationFailedTemplate:
+    'Error_StoreError_CloudOperationFailedTemplate',
+  Error_StoreError_CloudAuthenticationFailedTemplate:
+    'Error_StoreError_CloudAuthenticationFailedTemplate',
 
   // NOTE: Secure Storage error strings moved to @digitaldefiance/suite-core-lib SuiteCoreStringKey
   // Use SuiteCoreStringKey for: Error_SecureStorageDecryptedValueLengthMismatch,
@@ -1201,6 +1207,19 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   Splash_BuiltOnBrightStackDescription: 'Splash_BuiltOnBrightStackDescription',
   Splash_OpenSource: 'Splash_OpenSource',
   Splash_OpenSourceDescription: 'Splash_OpenSourceDescription',
+
+  // Splash - Not a Cryptocurrency
+  Splash_NotACryptocurrency: 'Splash_NotACryptocurrency',
+  Splash_NotACryptocurrencyDescription:
+    'Splash_NotACryptocurrencyDescription',
+  Splash_NoCurrency: 'Splash_NoCurrency',
+  Splash_NoCurrencyDescription: 'Splash_NoCurrencyDescription',
+  Splash_NoMining: 'Splash_NoMining',
+  Splash_NoMiningDescription: 'Splash_NoMiningDescription',
+  Splash_Joules: 'Splash_Joules',
+  Splash_JoulesDescription: 'Splash_JoulesDescription',
+  Splash_RealWorldValue: 'Splash_RealWorldValue',
+  Splash_RealWorldValueDescription: 'Splash_RealWorldValueDescription',
 
   // Dashboard
   Dashboard_Title: 'Dashboard_Title',

@@ -460,6 +460,12 @@ export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
     'Opération non implémentée',
   [BrightChainStrings.Error_StoreError_InsufficientRandomBlocksTemplate]:
     'Blocs aléatoires insuffisants disponibles : demandé {REQUESTED}, disponible {AVAILABLE}',
+  [BrightChainStrings.Error_StoreError_FactoryNotRegistered]:
+    'Fabrique de magasin de blocs non enregistrée pour le type de magasin demandé',
+  [BrightChainStrings.Error_StoreError_CloudOperationFailedTemplate]:
+    'L\'opération de stockage cloud {OPERATION} a échoué pour le bloc {BLOCK_CHECKSUM} : {ORIGINAL_ERROR}',
+  [BrightChainStrings.Error_StoreError_CloudAuthenticationFailedTemplate]:
+    'L\'authentification du stockage cloud a échoué pour l\'opération {OPERATION} : {ORIGINAL_ERROR}',
 
   // Sealing Errors
   [BrightChainStrings.Error_SealingError_MissingPrivateKeys]:
@@ -1335,6 +1341,24 @@ export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Splash_OpenSource]: 'Open Source',
   [BrightChainStrings.Splash_OpenSourceDescription]:
     "BrightChain est entièrement open source. Construisez vos propres dApps sur BrightStack et contribuez à l'avenir décentralisé.",
+
+  // Splash - Pas une Cryptomonnaie
+  [BrightChainStrings.Splash_NotACryptocurrency]:
+    'Pas une Cryptomonnaie',
+  [BrightChainStrings.Splash_NotACryptocurrencyDescription]:
+    'Quand vous entendez « blockchain », vous pensez probablement au Bitcoin. BrightChain est fondamentalement différent — il n\'y a pas de monnaie, pas de preuve de travail et pas de minage. Au lieu de brûler de l\'énergie pour frapper des pièces, BrightChain valorise les contributions réelles en stockage et en calcul.',
+  [BrightChainStrings.Splash_NoCurrency]: 'Pas de Monnaie',
+  [BrightChainStrings.Splash_NoCurrencyDescription]:
+    'BrightChain n\'a pas de pièce, pas de jeton et pas d\'actif spéculatif. C\'est de l\'infrastructure, pas de la finance.',
+  [BrightChainStrings.Splash_NoMining]: 'Pas de Minage',
+  [BrightChainStrings.Splash_NoMiningDescription]:
+    'Pas de preuve de travail, pas d\'énergie gaspillée. Chaque cycle de calcul sert un objectif utile.',
+  [BrightChainStrings.Splash_Joules]: 'Des Joules, pas des Pièces',
+  [BrightChainStrings.Splash_JoulesDescription]:
+    'Les contributions en stockage et en calcul sont suivies en Joules — une unité liée aux coûts énergétiques réels, pas à la spéculation du marché.',
+  [BrightChainStrings.Splash_RealWorldValue]: 'Valeur Réelle',
+  [BrightChainStrings.Splash_RealWorldValueDescription]:
+    'Les valeurs des Joules sont fixées par une formule basée sur les coûts réels, et nous affinons cette formule au fil du temps — pas de trading, pas de volatilité.',
 
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'Votre tableau de bord',

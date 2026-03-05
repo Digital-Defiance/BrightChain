@@ -461,6 +461,12 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
     'Operation not implemented',
   [BrightChainStrings.Error_StoreError_InsufficientRandomBlocksTemplate]:
     'Insufficient random blocks available: requested {REQUESTED}, available {AVAILABLE}',
+  [BrightChainStrings.Error_StoreError_FactoryNotRegistered]:
+    'Block store factory not registered for the requested store type',
+  [BrightChainStrings.Error_StoreError_CloudOperationFailedTemplate]:
+    'Cloud storage operation {OPERATION} failed for block {BLOCK_CHECKSUM}: {ORIGINAL_ERROR}',
+  [BrightChainStrings.Error_StoreError_CloudAuthenticationFailedTemplate]:
+    'Cloud storage authentication failed for operation {OPERATION}: {ORIGINAL_ERROR}',
 
   // NOTE: Secure storage errors moved to EciesStringKey in @digitaldefiance/ecies-lib
 
@@ -1323,6 +1329,23 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Splash_OpenSource]: 'Open Source',
   [BrightChainStrings.Splash_OpenSourceDescription]:
     'BrightChain is fully open source. Build your own dApps on BrightStack and contribute to the decentralized future.',
+
+  // Splash - Not a Cryptocurrency
+  [BrightChainStrings.Splash_NotACryptocurrency]: 'Not a Cryptocurrency',
+  [BrightChainStrings.Splash_NotACryptocurrencyDescription]:
+    'When you hear "blockchain," you probably think Bitcoin. BrightChain is fundamentally different — there is no currency, no proof of work, and no mining. Instead of burning energy to mint coins, BrightChain values real contributions of storage and compute.',
+  [BrightChainStrings.Splash_NoCurrency]: 'No Currency',
+  [BrightChainStrings.Splash_NoCurrencyDescription]:
+    'BrightChain has no coin, no token, and no speculative asset. It is infrastructure, not finance.',
+  [BrightChainStrings.Splash_NoMining]: 'No Mining',
+  [BrightChainStrings.Splash_NoMiningDescription]:
+    'No proof of work, no wasted energy. Every cycle of computation serves a useful purpose.',
+  [BrightChainStrings.Splash_Joules]: 'Joules, Not Coins',
+  [BrightChainStrings.Splash_JoulesDescription]:
+    'Contributions of storage and compute are tracked in Joules — a unit tied to real-world energy costs, not market speculation.',
+  [BrightChainStrings.Splash_RealWorldValue]: 'Real-World Value',
+  [BrightChainStrings.Splash_RealWorldValueDescription]:
+    'Joule values are set by formula based on actual costs, and we refine that formula over time — no trading, no volatility.',
 
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'Your Dashboard',

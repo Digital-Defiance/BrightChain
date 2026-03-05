@@ -35,7 +35,7 @@ describe('MemberProfileDocument', () => {
     eciesService = sp.eciesService;
 
     // Create test member for signing
-    const { member } = Member.newMember(
+    const { member } = Member.newMember<GuidV4Uint8Array>(
       eciesService,
       MemberType.User,
       'test-signer',
@@ -215,7 +215,7 @@ describe('MemberProfileDocument', () => {
         privateProfileData,
       );
 
-      const { member: peer1 } = Member.newMember(
+      const { member: peer1 } = Member.newMember<GuidV4Uint8Array>(
         eciesService,
         MemberType.User,
         'peer1',
@@ -223,7 +223,7 @@ describe('MemberProfileDocument', () => {
       );
       peerId1 = peer1.id;
 
-      const { member: peer2 } = Member.newMember(
+      const { member: peer2 } = Member.newMember<GuidV4Uint8Array>(
         eciesService,
         MemberType.User,
         'peer2',
@@ -445,13 +445,13 @@ describe('MemberProfileDocument', () => {
         privateProfileData,
       );
 
-      const { member: peer1 } = Member.newMember(
+      const { member: peer1 } = Member.newMember<GuidV4Uint8Array>(
         eciesService,
         MemberType.User,
         'peer1',
         new EmailString('peer1@example.com'),
       );
-      const { member: peer2 } = Member.newMember(
+      const { member: peer2 } = Member.newMember<GuidV4Uint8Array>(
         eciesService,
         MemberType.User,
         'peer2',

@@ -42,7 +42,7 @@ export interface IPrivateMemberProfileStorageData {
   /** bcrypt password hash — present only for members with password-based auth */
   passwordHash?: string;
 
-  /** Stored backup codes — bcrypt-hashed, one-time-use recovery codes */
+  /** Stored backup codes — encrypted per the upstream Argon2id/AEAD/ECIES scheme (see IStoredBackupCode) */
   backupCodes?: IStoredBackupCode[];
 
   // Preferences
@@ -89,7 +89,7 @@ export interface IPrivateMemberProfileHydratedData<TID = Uint8Array> {
   blockedPeers: TID[];
   /** bcrypt password hash — present only for members with password-based auth */
   passwordHash?: string;
-  /** Stored backup codes — bcrypt-hashed, one-time-use recovery codes */
+  /** Stored backup codes — encrypted per the upstream Argon2id/AEAD/ECIES scheme (see IStoredBackupCode) */
   backupCodes?: IStoredBackupCode[];
   settings: {
     autoReplication?: boolean;

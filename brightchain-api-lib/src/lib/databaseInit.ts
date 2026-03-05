@@ -15,6 +15,7 @@ import type {
 } from '@brightchain/brightchain-lib';
 import {
   BlockSize,
+  BlockStoreType,
   EnergyAccount,
   EnergyAccountStore,
   MemberStore,
@@ -82,6 +83,18 @@ export async function brightchainDatabaseInit<TID extends PlatformID>(
         `[BrightChain] DEV_DATABASE="${devPoolName}" — using ephemeral MemoryBlockStore. Data will not persist across restarts.`,
       );
       blockStore = BlockStoreFactory.createMemoryStore({ blockSize });
+    } else if (
+      environment.blockStoreType === BlockStoreType.AzureBlob
+    ) {
+      // Factory must have been registered by the consuming app importing
+      // '@brightchain/azure-store' at its entry point.
+      blockStore = BlockStoreFactory.createAzureStore(environment.azureConfig!);
+    } else if (
+      environment.blockStoreType === BlockStoreType.S3
+    ) {
+      // Factory must have been registered by the consuming app importing
+      // '@brightchain/s3-store' at its entry point.
+      blockStore = BlockStoreFactory.createS3Store(environment.s3Config!);
     } else if (blockStorePath) {
       // Validate path accessibility, create if needed
       await validateDataDir(blockStorePath);

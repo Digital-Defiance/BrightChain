@@ -419,6 +419,12 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     '操作は実装されていません',
   [BrightChainStrings.Error_StoreError_InsufficientRandomBlocksTemplate]:
     '利用可能なランダムブロックが不足しています: 要求 {REQUESTED}、利用可能 {AVAILABLE}',
+  [BrightChainStrings.Error_StoreError_FactoryNotRegistered]:
+    '要求されたストアタイプのブロックストアファクトリが登録されていません',
+  [BrightChainStrings.Error_StoreError_CloudOperationFailedTemplate]:
+    'クラウドストレージ操作 {OPERATION} がブロック {BLOCK_CHECKSUM} で失敗しました: {ORIGINAL_ERROR}',
+  [BrightChainStrings.Error_StoreError_CloudAuthenticationFailedTemplate]:
+    'クラウドストレージ認証が操作 {OPERATION} で失敗しました: {ORIGINAL_ERROR}',
   [BrightChainStrings.Error_TupleError_InvalidTupleSize]: '無効なタプルサイズ',
   [BrightChainStrings.Error_TupleError_BlockSizeMismatch]:
     'タプル内のすべてのブロックは同じサイズである必要があります',
@@ -1231,6 +1237,24 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Splash_OpenSource]: 'オープンソース',
   [BrightChainStrings.Splash_OpenSourceDescription]:
     'BrightChainは完全にオープンソースです。BrightStack上で独自のdAppを構築し、分散型の未来に貢献しましょう。',
+
+  // Splash - 暗号通貨ではない
+  [BrightChainStrings.Splash_NotACryptocurrency]:
+    '暗号通貨ではありません',
+  [BrightChainStrings.Splash_NotACryptocurrencyDescription]:
+    '「ブロックチェーン」と聞くと、ビットコインを思い浮かべるでしょう。BrightChainは根本的に異なります — 通貨もなく、プルーフ・オブ・ワークもなく、マイニングもありません。コインを鋳造するためにエネルギーを浪費する代わりに、BrightChainはストレージとコンピューティングの実際の貢献を重視します。',
+  [BrightChainStrings.Splash_NoCurrency]: '通貨なし',
+  [BrightChainStrings.Splash_NoCurrencyDescription]:
+    'BrightChainにはコイン、トークン、投機的資産はありません。金融ではなく、インフラストラクチャです。',
+  [BrightChainStrings.Splash_NoMining]: 'マイニングなし',
+  [BrightChainStrings.Splash_NoMiningDescription]:
+    'プルーフ・オブ・ワークなし、エネルギーの無駄なし。すべての計算サイクルが有用な目的に使われます。',
+  [BrightChainStrings.Splash_Joules]: 'コインではなくジュール',
+  [BrightChainStrings.Splash_JoulesDescription]:
+    'ストレージとコンピューティングの貢献はジュールで追跡されます — 市場の投機ではなく、実際のエネルギーコストに結びついた単位です。',
+  [BrightChainStrings.Splash_RealWorldValue]: '現実世界の価値',
+  [BrightChainStrings.Splash_RealWorldValueDescription]:
+    'ジュールの値は実際のコストに基づく公式で設定され、時間とともにその公式を改善していきます — 取引なし、変動なし。',
 
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'ダッシュボード',

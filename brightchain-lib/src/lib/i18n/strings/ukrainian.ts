@@ -456,6 +456,12 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
     'Операція не реалізована',
   [BrightChainStrings.Error_StoreError_InsufficientRandomBlocksTemplate]:
     'Недостатньо випадкових блоків: запитано {REQUESTED}, доступно {AVAILABLE}',
+  [BrightChainStrings.Error_StoreError_FactoryNotRegistered]:
+    'Фабрику сховища блоків не зареєстровано для запитаного типу сховища',
+  [BrightChainStrings.Error_StoreError_CloudOperationFailedTemplate]:
+    'Операція хмарного сховища {OPERATION} не вдалася для блоку {BLOCK_CHECKSUM}: {ORIGINAL_ERROR}',
+  [BrightChainStrings.Error_StoreError_CloudAuthenticationFailedTemplate]:
+    'Автентифікація хмарного сховища не вдалася для операції {OPERATION}: {ORIGINAL_ERROR}',
 
   // Sealing Errors
   [BrightChainStrings.Error_SealingError_MissingPrivateKeys]:
@@ -1328,6 +1334,24 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Splash_OpenSource]: 'Відкритий код',
   [BrightChainStrings.Splash_OpenSourceDescription]:
     'BrightChain повністю відкритий. Створюйте власні dApp на BrightStack та робіть внесок у децентралізоване майбутнє.',
+
+  // Splash - Не криптовалюта
+  [BrightChainStrings.Splash_NotACryptocurrency]:
+    'Не криптовалюта',
+  [BrightChainStrings.Splash_NotACryptocurrencyDescription]:
+    'Коли ви чуєте "блокчейн", ви, ймовірно, думаєте про Bitcoin. BrightChain принципово інший — немає валюти, немає доказу роботи, немає майнінгу. Замість спалювання енергії для карбування монет, BrightChain цінує реальний внесок у зберігання та обчислення.',
+  [BrightChainStrings.Splash_NoCurrency]: 'Без валюти',
+  [BrightChainStrings.Splash_NoCurrencyDescription]:
+    'BrightChain не має монети, токена чи спекулятивного активу. Це інфраструктура, а не фінанси.',
+  [BrightChainStrings.Splash_NoMining]: 'Без майнінгу',
+  [BrightChainStrings.Splash_NoMiningDescription]:
+    'Без доказу роботи, без марнування енергії. Кожен цикл обчислень служить корисній меті.',
+  [BrightChainStrings.Splash_Joules]: 'Джоулі, а не монети',
+  [BrightChainStrings.Splash_JoulesDescription]:
+    'Внесок у зберігання та обчислення відстежується в Джоулях — одиниці, прив\'язаній до реальних витрат на енергію, а не до ринкових спекуляцій.',
+  [BrightChainStrings.Splash_RealWorldValue]: 'Реальна цінність',
+  [BrightChainStrings.Splash_RealWorldValueDescription]:
+    'Значення Джоулів встановлюються за формулою на основі фактичних витрат, і ми вдосконалюємо цю формулу з часом — без торгівлі, без волатильності.',
 
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'Ваша панель керування',

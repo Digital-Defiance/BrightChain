@@ -22,6 +22,8 @@
 
 <!-- nx configuration end-->
 
+- use yarn, not pnpm
+
 - npx nx test --testPathPattern doesn't exist. It is --testPathPatterns plural
 
 - In general, whether an error is viewed as 'pre-existing' or not, unless otherwise specified, we generally want to fix it. If it is a large task, prompt the user.

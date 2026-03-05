@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { BlockSize } from '@brightchain/brightchain-lib';
+import {
+  BlockSize,
+  BlockStoreType,
+  ICloudBlockStoreConfig,
+} from '@brightchain/brightchain-lib';
 import { HexString } from '@digitaldefiance/ecies-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -7,6 +11,32 @@ import {
   IUpnpConfig,
 } from '@digitaldefiance/node-express-suite';
 import { IEnvironmentAws } from './environment-aws';
+
+/**
+ * Azure-specific cloud block store configuration fields.
+ * Extends ICloudBlockStoreConfig with Azure Blob Storage auth options.
+ * Defined here (not in brightchain-azure-store) so brightchain-api-lib
+ * stays free of static cloud SDK dependencies.
+ */
+export interface IAzureEnvironmentConfig extends ICloudBlockStoreConfig {
+  connectionString?: string;
+  accountName?: string;
+  accountKey?: string;
+  useManagedIdentity?: boolean;
+}
+
+/**
+ * S3-specific cloud block store configuration fields.
+ * Extends ICloudBlockStoreConfig with S3 auth options.
+ * Defined here (not in brightchain-s3-store) so brightchain-api-lib
+ * stays free of static cloud SDK dependencies.
+ */
+export interface IS3EnvironmentConfig extends ICloudBlockStoreConfig {
+  accessKeyId?: string;
+  secretAccessKey?: string;
+  useIamRole?: boolean;
+  endpoint?: string;
+}
 
 export interface IEnvironment<TID extends PlatformID>
   extends Omit<IEnvironmentBase<TID>, 'adminId' | 'idAdapter'> {
@@ -59,4 +89,22 @@ export interface IEnvironment<TID extends PlatformID>
    * Set when `DEV_DATABASE` env var is a non-empty string; `undefined` otherwise.
    */
   devDatabasePoolName: string | undefined;
+
+  /**
+   * The active block store backend type.
+   * Defaults to `BlockStoreType.Disk` when `BRIGHTCHAIN_BLOCKSTORE_TYPE` is unset.
+   */
+  blockStoreType: BlockStoreType;
+
+  /**
+   * Azure Blob Storage configuration.
+   * Only populated when `blockStoreType` is `BlockStoreType.AzureBlob`.
+   */
+  azureConfig?: IAzureEnvironmentConfig;
+
+  /**
+   * Amazon S3 configuration.
+   * Only populated when `blockStoreType` is `BlockStoreType.S3`.
+   */
+  s3Config?: IS3EnvironmentConfig;
 }

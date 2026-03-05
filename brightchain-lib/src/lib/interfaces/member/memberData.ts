@@ -53,7 +53,7 @@ export interface IPrivateMemberData<TID extends PlatformID = Uint8Array> {
   /** bcrypt password hash — present only for members with password-based auth */
   passwordHash?: string;
 
-  /** Stored backup codes — bcrypt-hashed, one-time-use recovery codes */
+  /** Stored backup codes — encrypted per the upstream Argon2id/AEAD/ECIES scheme (see IStoredBackupCode) */
   backupCodes?: IStoredBackupCode[];
 
   // Network

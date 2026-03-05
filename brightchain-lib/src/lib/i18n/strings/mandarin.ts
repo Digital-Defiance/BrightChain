@@ -413,6 +413,12 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_StoreError_NotImplemented]: '操作未实现',
   [BrightChainStrings.Error_StoreError_InsufficientRandomBlocksTemplate]:
     '可用随机块不足：请求 {REQUESTED}，可用 {AVAILABLE}',
+  [BrightChainStrings.Error_StoreError_FactoryNotRegistered]:
+    '未为请求的存储类型注册块存储工厂',
+  [BrightChainStrings.Error_StoreError_CloudOperationFailedTemplate]:
+    '云存储操作 {OPERATION} 对块 {BLOCK_CHECKSUM} 失败：{ORIGINAL_ERROR}',
+  [BrightChainStrings.Error_StoreError_CloudAuthenticationFailedTemplate]:
+    '云存储认证对操作 {OPERATION} 失败：{ORIGINAL_ERROR}',
 
   // Sealing Errors
   [BrightChainStrings.Error_SealingError_MissingPrivateKeys]:
@@ -1198,6 +1204,24 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Splash_OpenSource]: '开源',
   [BrightChainStrings.Splash_OpenSourceDescription]:
     'BrightChain完全开源。在BrightStack上构建你自己的dApp，为去中心化的未来做出贡献。',
+
+  // Splash - 不是加密货币
+  [BrightChainStrings.Splash_NotACryptocurrency]:
+    '不是加密货币',
+  [BrightChainStrings.Splash_NotACryptocurrencyDescription]:
+    '听到"区块链"，你可能会想到比特币。BrightChain从根本上不同——没有货币，没有工作量证明，没有挖矿。BrightChain不是燃烧能源来铸造代币，而是重视存储和计算的实际贡献。',
+  [BrightChainStrings.Splash_NoCurrency]: '没有货币',
+  [BrightChainStrings.Splash_NoCurrencyDescription]:
+    'BrightChain没有代币、没有通证、没有投机资产。它是基础设施，不是金融。',
+  [BrightChainStrings.Splash_NoMining]: '没有挖矿',
+  [BrightChainStrings.Splash_NoMiningDescription]:
+    '没有工作量证明，没有能源浪费。每一个计算周期都服务于有用的目的。',
+  [BrightChainStrings.Splash_Joules]: '焦耳，不是代币',
+  [BrightChainStrings.Splash_JoulesDescription]:
+    '存储和计算的贡献以焦耳为单位追踪——一个与实际能源成本挂钩的单位，而非市场投机。',
+  [BrightChainStrings.Splash_RealWorldValue]: '现实世界价值',
+  [BrightChainStrings.Splash_RealWorldValueDescription]:
+    '焦耳的价值由基于实际成本的公式设定，我们会随时间不断完善该公式——没有交易，没有波动。',
 
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: '您的仪表板',

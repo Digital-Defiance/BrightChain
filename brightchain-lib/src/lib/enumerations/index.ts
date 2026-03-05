@@ -5,6 +5,7 @@ export * from './availabilityState';
 export * from './blockAccessErrorType';
 export * from './blockCapacityErrorType';
 export * from './blockDataType';
+export * from './blockStoreType';
 export * from './blockEncryptionType';
 export * from './blockErrorType';
 export * from './blockMetadataErrorType';

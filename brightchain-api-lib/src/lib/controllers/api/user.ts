@@ -27,6 +27,7 @@ import {
 } from '@digitaldefiance/node-express-suite';
 import {
   getSuiteCoreTranslation,
+  InvalidBackupCodeError,
   IRequestUserDTO,
   SuiteCoreStringKey,
 } from '@digitaldefiance/suite-core-lib';
@@ -47,7 +48,7 @@ import {
 } from '../../interfaces/userApiResponse';
 import {
   AuthService,
-  BackupCodeService,
+  BrightChainBackupCodeService,
   BrightChainSessionAdapter,
 } from '../../services';
 import { DefaultBackendIdType } from '../../shared-types';
@@ -530,8 +531,61 @@ export class UserController<
       const typedId = sp.idProvider.idFromString(memberId);
 
       const backupCodeService =
-        this.application.services.get<BackupCodeService>('backupCodeService');
-      const codes = await backupCodeService.generateCodes(typedId);
+        this.application.services.get<BrightChainBackupCodeService<TID>>('backupCodeService');
+      const codes = await backupCodeService.generateCodes(typedId as TID);
+
+      return {
+        statusCode: 200,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.BackupCodeRecovery_YourNewCodes,
+          ),
+          backupCodes: codes,
+        } as IApiBackupCodesResponse,
+      };
+    } catch (error) {
+      return {
+        statusCode: 500,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.BackupCodes_FailedToGenerate,
+          ),
+          error:
+            error instanceof Error
+              ? error.message
+              : getSuiteCoreTranslation(
+                  SuiteCoreStringKey.BackupCodes_FailedToGenerate,
+                ),
+        },
+      };
+    }
+  }
+
+  @Put('/backup-codes', { auth: true })
+  async regenerateBackupCodes(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    const user = (req as { user?: IRequestUser }).user;
+
+    if (!user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    try {
+      const memberId = getUserId(user);
+      const sp = ServiceProvider.getInstance();
+      const typedId = sp.idProvider.idFromString(memberId);
+
+      const backupCodeService =
+        this.application.services.get<BrightChainBackupCodeService<TID>>('backupCodeService');
+      const codes = await backupCodeService.regenerateCodes(typedId as TID);
 
       return {
         statusCode: 200,
@@ -583,8 +637,8 @@ export class UserController<
       const typedId = sp.idProvider.idFromString(memberId);
 
       const backupCodeService =
-        this.application.services.get<BackupCodeService>('backupCodeService');
-      const count = await backupCodeService.getCodeCount(typedId);
+        this.application.services.get<BrightChainBackupCodeService<TID>>('backupCodeService');
+      const count = await backupCodeService.getCodeCount(typedId as TID);
 
       return {
         statusCode: 200,
@@ -607,6 +661,93 @@ export class UserController<
               ? error.message
               : getSuiteCoreTranslation(
                   SuiteCoreStringKey.BackupCodes_FailedToFetch,
+                ),
+        },
+      };
+    }
+  }
+
+  @Post('/recover-backup', { auth: true })
+  async recoverWithBackupCode(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    const user = (req as { user?: IRequestUser }).user;
+
+    if (!user) {
+      throw new HandleableError(
+        new Error(
+          getSuiteCoreTranslation(SuiteCoreStringKey.Common_NoUserOnRequest),
+        ),
+        { statusCode: 401 },
+      );
+    }
+
+    try {
+      const { backupCode, newPassword } = req.body as {
+        backupCode: string;
+        newPassword?: string;
+      };
+
+      if (!backupCode) {
+        return {
+          statusCode: 400,
+          response: {
+            message: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_InvalidBackupCode,
+            ),
+          },
+        };
+      }
+
+      const memberId = getUserId(user);
+      const sp = ServiceProvider.getInstance();
+      const typedId = sp.idProvider.idFromString(memberId);
+
+      const backupCodeService =
+        this.application.services.get<BrightChainBackupCodeService<TID>>('backupCodeService');
+      const result = await backupCodeService.recoverKeyWithBackupCode(
+        typedId as TID,
+        backupCode,
+        newPassword,
+      );
+
+      return {
+        statusCode: 200,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.BackupCodeRecovery_Success,
+          ),
+          codeCount: result.codeCount,
+        } as IApiCodeCountResponse,
+      };
+    } catch (error) {
+      if (error instanceof InvalidBackupCodeError) {
+        return {
+          statusCode: 401,
+          response: {
+            message: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_InvalidBackupCode,
+            ),
+            error: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_InvalidBackupCode,
+            ),
+          },
+        };
+      }
+
+      return {
+        statusCode: 500,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_UnexpectedError,
+          ),
+          error:
+            error instanceof Error
+              ? error.message
+              : getSuiteCoreTranslation(
+                  SuiteCoreStringKey.Common_UnexpectedError,
                 ),
         },
       };

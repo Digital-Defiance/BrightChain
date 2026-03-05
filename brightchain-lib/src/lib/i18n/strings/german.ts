@@ -454,6 +454,12 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
     'Operation nicht implementiert',
   [BrightChainStrings.Error_StoreError_InsufficientRandomBlocksTemplate]:
     'Unzureichende Zufallsblöcke verfügbar: angefordert {REQUESTED}, verfügbar {AVAILABLE}',
+  [BrightChainStrings.Error_StoreError_FactoryNotRegistered]:
+    'Blockspeicher-Fabrik für den angeforderten Speichertyp nicht registriert',
+  [BrightChainStrings.Error_StoreError_CloudOperationFailedTemplate]:
+    'Cloud-Speicheroperation {OPERATION} für Block {BLOCK_CHECKSUM} fehlgeschlagen: {ORIGINAL_ERROR}',
+  [BrightChainStrings.Error_StoreError_CloudAuthenticationFailedTemplate]:
+    'Cloud-Speicher-Authentifizierung für Operation {OPERATION} fehlgeschlagen: {ORIGINAL_ERROR}',
 
   // Tuple Errors
   [BrightChainStrings.Error_TupleError_InvalidTupleSize]:
@@ -1332,6 +1338,24 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Splash_OpenSource]: 'Open Source',
   [BrightChainStrings.Splash_OpenSourceDescription]:
     'BrightChain ist vollständig Open Source. Erstellen Sie Ihre eigenen dApps auf BrightStack und tragen Sie zur dezentralen Zukunft bei.',
+
+  // Splash - Keine Kryptowährung
+  [BrightChainStrings.Splash_NotACryptocurrency]:
+    'Keine Kryptowährung',
+  [BrightChainStrings.Splash_NotACryptocurrencyDescription]:
+    'Wenn Sie „Blockchain" hören, denken Sie wahrscheinlich an Bitcoin. BrightChain ist grundlegend anders — es gibt keine Währung, keinen Proof of Work und kein Mining. Anstatt Energie zu verbrennen, um Münzen zu prägen, schätzt BrightChain echte Beiträge an Speicher und Rechenleistung.',
+  [BrightChainStrings.Splash_NoCurrency]: 'Keine Währung',
+  [BrightChainStrings.Splash_NoCurrencyDescription]:
+    'BrightChain hat keine Münze, keinen Token und kein spekulatives Asset. Es ist Infrastruktur, keine Finanzwelt.',
+  [BrightChainStrings.Splash_NoMining]: 'Kein Mining',
+  [BrightChainStrings.Splash_NoMiningDescription]:
+    'Kein Proof of Work, keine verschwendete Energie. Jeder Rechenzyklus dient einem nützlichen Zweck.',
+  [BrightChainStrings.Splash_Joules]: 'Joules, keine Münzen',
+  [BrightChainStrings.Splash_JoulesDescription]:
+    'Beiträge an Speicher und Rechenleistung werden in Joules erfasst — einer Einheit, die an reale Energiekosten gebunden ist, nicht an Marktspekulation.',
+  [BrightChainStrings.Splash_RealWorldValue]: 'Realer Wert',
+  [BrightChainStrings.Splash_RealWorldValueDescription]:
+    'Joule-Werte werden durch eine Formel basierend auf tatsächlichen Kosten festgelegt, und wir verfeinern diese Formel im Laufe der Zeit — kein Handel, keine Volatilität.',
 
   // Dashboard
   [BrightChainStrings.Dashboard_Title]: 'Ihr Dashboard',

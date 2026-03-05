@@ -3,11 +3,13 @@ import {
   AuditLogService,
   EnergyLedger,
   IAvailabilityService,
+  IBackupCodeConstants,
   IdentitySealingPipeline,
   IdentityValidator,
   IDiscoveryProtocol,
   IReconciliationService,
   MembershipProofService,
+  MemberStore,
   QuorumStateMachine,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
@@ -17,6 +19,7 @@ import {
   debugLog,
   IApplication,
   IConstants,
+  KeyWrappingService,
   UpnpManager,
   Application as UpstreamApplication,
 } from '@digitaldefiance/node-express-suite';
@@ -41,15 +44,22 @@ import { AppRouter } from './routers/app';
 import { createTestEmailRouter } from './routers/testEmailRouter';
 import {
   AuthService,
-  BackupCodeService,
+  BrightChainBackupCodeService,
   BrightChainSessionAdapter,
   CLIOperatorPrompt,
   ContentAwareBlocksService,
   ContentIngestionService,
+  ConnectionService,
+  DiscoveryService,
   EmailService,
+  FeedService,
   IdentityExpirationScheduler,
+  MessagingService,
+  NotificationService,
+  PostService,
   QuorumDatabaseAdapter,
   SecureKeyStorage,
+  UserProfileService,
 } from './services';
 import { BrightChainAuthenticationProvider } from './services/brightchain-authentication-provider';
 import { ClientWebSocketServer } from './services/clientWebSocketServer';
@@ -107,8 +117,14 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   constructor(environment: Environment<TID>) {
     super(
       environment,
-      // apiRouterFactory — creates BrightChain's ApiRouter
-      (app: IApplication<TID>) => new ApiRouter<TID>(app as App<TID>),
+      // apiRouterFactory — creates BrightChain's ApiRouter and captures the reference
+      (app: IApplication<TID>) => {
+        const router = new ApiRouter<TID>(app as App<TID>);
+        // Capture the ApiRouter reference so BrightChain-specific service
+        // wiring can use it after super.start() completes.
+        (app as App<TID>).apiRouter = router;
+        return router;
+      },
       // cspConfig — undefined; BrightChain's Middlewares.init handles CSP
       undefined,
       // constants — use BrightChain-specific constants (Site: 'BrightChain', etc.)
@@ -188,6 +204,14 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     // Restore original listen to avoid side effects on subsequent calls
     this.expressApp.listen = originalListen;
 
+    // Increase HTTP keep-alive timeout to prevent ECONNRESET errors.
+    // Node.js defaults to 5s which can cause connection resets when clients
+    // (e.g. axios) reuse connections after brief idle periods between requests.
+    if (this._httpServer) {
+      this._httpServer.keepAliveTimeout = 65_000; // 65s (> typical LB 60s)
+      this._httpServer.headersTimeout = 66_000; // must be > keepAliveTimeout
+    }
+
     // ── BrightChain-specific initialization ──────────────────────────
     // After super.start(), the plugin lifecycle is complete:
     //   plugin.connect() → brightchainDatabaseInit()
@@ -248,9 +272,29 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     this.services.register('emailService', () => emailService);
     this.services.register('auth', () => authService);
 
-    // BackupCodeService — singleton backed by MemberStore
-    const backupCodeService = new BackupCodeService(memberStore);
+    // BrightChainBackupCodeService — singleton backed by MemberStore + crypto services
+    const serviceProvider = ServiceProvider.getInstance<TID>();
+    const eciesService = serviceProvider.eciesService;
+    const keyWrappingService = new KeyWrappingService();
+    const backupCodeService = new BrightChainBackupCodeService<TID>(
+      memberStore as MemberStore<TID>,
+      // Cast: ecies-lib ECIESService → node-ecies-lib ECIESService (structurally compatible at runtime)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      eciesService as any,
+      keyWrappingService,
+      Constants.BACKUP_CODES as IBackupCodeConstants,
+    );
     this.services.register('backupCodeService', () => backupCodeService);
+
+    // Wire system user into BrightChainBackupCodeService after seeding.
+    // The plugin's lastInitResult carries the systemMember BackendMember
+    // created during seedWithRbac() / seedProductionIfEmpty().
+    const initResult = this._plugin.lastInitResult;
+    if (initResult?.systemMember) {
+      // Cast: ecies-lib Member → node-ecies-lib Member (structurally compatible at runtime)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      backupCodeService.setSystemUser(initResult.systemMember as any);
+    }
 
     // BrightChainSessionAdapter — singleton backed by BrightDb
     const sessionAdapter = new BrightChainSessionAdapter(brightDb);
@@ -296,6 +340,45 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     // Wire EventNotificationSystem to SyncController via the apiRouter
     if (this.apiRouter) {
       this.apiRouter.setSyncEventSystem(this.eventSystem);
+    }
+
+    // ── BrightHub social services initialization ────────────────────
+    if (this.apiRouter) {
+      // Cast needed because each BrightHub service defines its own local
+      // IApplicationWithCollections { getModel<T>(name: string): Collection<T> }
+      // which is structurally compatible but has different generic constraints
+      // than the upstream Application.getModel signature.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const appForCollections = this as any;
+      const postService = new PostService(appForCollections);
+      const feedService = new FeedService(appForCollections);
+      const messagingService = new MessagingService(appForCollections);
+      const notificationService = new NotificationService(appForCollections);
+      const connectionService = new ConnectionService(appForCollections);
+      const discoveryService = new DiscoveryService(appForCollections);
+      const userProfileService = new UserProfileService(appForCollections);
+
+      this.services.register('postService', () => postService);
+      this.services.register('feedService', () => feedService);
+      this.services.register('messagingService', () => messagingService);
+      this.services.register('notificationService', () => notificationService);
+      this.services.register('connectionService', () => connectionService);
+      this.services.register('discoveryService', () => discoveryService);
+      this.services.register('userProfileService', () => userProfileService);
+
+      this.apiRouter.setBrightHubPostService(postService);
+      this.apiRouter.setBrightHubFeedService(feedService);
+      this.apiRouter.setBrightHubMessagingService(messagingService);
+      this.apiRouter.setBrightHubNotificationService(notificationService);
+      this.apiRouter.setBrightHubConnectionService(connectionService);
+      this.apiRouter.setBrightHubDiscoveryService(discoveryService);
+      this.apiRouter.setBrightHubUserProfileService(userProfileService);
+
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ ready ] BrightHub social services initialized',
+      );
     }
 
     // ── Quorum subsystem initialization ─────────────────────────────

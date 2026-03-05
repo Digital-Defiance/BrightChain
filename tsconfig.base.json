@@ -37,7 +37,9 @@
         "brighthub-react-components/src/*"
       ],
       "@brightchain/brighthub-lib": ["brighthub-lib/src/index.ts"],
-      "@brightchain/brighthub-lib/*": ["brighthub-lib/src/*"]
+      "@brightchain/brighthub-lib/*": ["brighthub-lib/src/*"],
+      "@brightchain/azure-store": ["brightchain-azure-store/src/index.ts"],
+      "@brightchain/s3-store": ["brightchain-s3-store/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

@@ -158,7 +158,7 @@ describe('MemberStore - Profile Operations', () => {
     });
 
     it('should throw error for non-existent member', async () => {
-      const { member: nonExistentMember } = Member.newMember(
+      const { member: nonExistentMember } = Member.newMember<GuidV4Uint8Array>(
         eciesService,
         MemberType.User,
         'non-existent',

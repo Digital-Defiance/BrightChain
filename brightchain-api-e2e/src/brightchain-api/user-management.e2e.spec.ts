@@ -201,7 +201,7 @@ describe('User Management E2E', () => {
       const codeToUse = codes[0];
 
       // Use one backup code to authenticate
-      // The backup code validation is done via the BackupCodeService.validateCode
+      // The backup code validation is done via the BrightChainBackupCodeService
       // which is exposed through the login flow or a dedicated endpoint.
       // Based on the controller, backup code auth may go through the login endpoint
       // or a separate mechanism. For now, we verify via the count decrement.

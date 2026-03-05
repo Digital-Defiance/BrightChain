@@ -1,22 +1,16 @@
 // ESLint flat config (ESM) - migrated from .eslintrc.json
-import js from '@eslint/js';
 import nxPlugin from '@nx/eslint-plugin';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
-import prettierConfig from 'eslint-config-prettier';
 import prettierPlugin from 'eslint-plugin-prettier';
+import prettierConfig from 'eslint-config-prettier';
+import js from '@eslint/js';
 import globals from 'globals';
 
 export default [
   {
     name: 'root/ignores',
-    ignores: [
-      'node_modules',
-      '**/dist/**',
-      '**/tmp/**',
-      '**/coverage/**',
-      '**/.nx/**',
-    ],
+    ignores: ['node_modules', '**/dist/**', '**/tmp/**', '**/coverage/**', '**/.nx/**'],
   },
   {
     name: 'root/base',
@@ -32,7 +26,7 @@ export default [
     plugins: {
       '@nx': nxPlugin,
       '@typescript-eslint': typescriptEslint,
-      prettier: prettierPlugin,
+      'prettier': prettierPlugin,
     },
     rules: {
       'prettier/prettier': 'error',
@@ -70,17 +64,14 @@ export default [
     },
     plugins: {
       '@typescript-eslint': typescriptEslint,
-      prettier: prettierPlugin,
+      'prettier': prettierPlugin,
     },
     rules: {
       ...typescriptEslint.configs['recommended'].rules,
       ...prettierConfig.rules,
       'prettier/prettier': 'error',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
-      ],
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'no-extra-semi': 'off',
     },
   },
@@ -99,12 +90,7 @@ export default [
   },
   {
     name: 'react-files',
-    files: [
-      '**/brightchain-react/**/*.ts',
-      '**/brightchain-react/**/*.tsx',
-      '**/showcase/**/*.ts',
-      '**/showcase/**/*.tsx',
-    ],
+    files: ['**/brightchain-react/**/*.ts', '**/brightchain-react/**/*.tsx', '**/showcase/**/*.ts', '**/showcase/**/*.tsx'],
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -115,16 +101,7 @@ export default [
   },
   {
     name: 'test-files',
-    files: [
-      '**/*.spec.ts',
-      '**/*.spec.tsx',
-      '**/*.spec.js',
-      '**/*.spec.jsx',
-      '**/*.test.ts',
-      '**/*.test.tsx',
-      '**/jest.setup.ts',
-      '**/__tests__/**/*.ts',
-    ],
+    files: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.js', '**/*.spec.jsx', '**/*.test.ts', '**/*.test.tsx', '**/jest.setup.ts', '**/__tests__/**/*.ts'],
     languageOptions: {
       globals: {
         ...globals.node,
@@ -135,13 +112,7 @@ export default [
       },
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
-      ],
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
     },
-  },
-  {
-    ignores: ['**/vite.config.*.timestamp*'],
   },
 ];

@@ -2,6 +2,7 @@ export type * from './blockMetadata';
 export { createDefaultBlockMetadata } from './blockMetadata';
 export type * from './blockMetadataStore';
 export type * from './blockStore';
+export type * from './cloudBlockStoreConfig';
 export type * from './cblIndex';
 export { CBLVisibility } from './cblIndex';
 export type * from './cblStore';
