@@ -147,9 +147,10 @@ export const queryInboxValidation: ValidationChain[] = [
 
 export const getUnreadCountValidation: ValidationChain[] = [
   query('memberId')
+    .optional()
     .isString()
     .notEmpty()
-    .withMessage('memberId is required and must be a non-empty string'),
+    .withMessage('memberId must be a non-empty string when provided'),
 ];
 
 // ─── Message ID param validation ────────────────────────────────────────────

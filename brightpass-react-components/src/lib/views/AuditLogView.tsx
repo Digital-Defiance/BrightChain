@@ -148,7 +148,7 @@ const AuditLogView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [vaultId, t]);
+  }, [vaultId, brightPassApi, t]);
 
   useEffect(() => {
     fetchAuditLog();

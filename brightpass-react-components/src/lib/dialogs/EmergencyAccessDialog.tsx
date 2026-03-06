@@ -132,7 +132,7 @@ export const EmergencyAccessDialog: React.FC<EmergencyAccessDialogProps> = ({
     const filledShares = shareInputs.filter((s) => s.trim().length > 0);
     if (filledShares.length === 0) {
       setError(
-        t(BrightPassStrings.Emergency_InsufficientShares, {
+        t(BrightPassStrings.Emergency_InsufficientSharesTemplate, {
           THRESHOLD: '1',
         }),
       );
@@ -157,7 +157,7 @@ export const EmergencyAccessDialog: React.FC<EmergencyAccessDialogProps> = ({
       // Check if the error indicates insufficient shares
       if (message.toLowerCase().includes('insufficient')) {
         setError(
-          t(BrightPassStrings.Emergency_InsufficientShares, {
+          t(BrightPassStrings.Emergency_InsufficientSharesTemplate, {
             THRESHOLD: '?',
           }),
         );

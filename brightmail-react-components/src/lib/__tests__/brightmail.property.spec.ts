@@ -52,6 +52,8 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   useI18n: () => ({
     tComponent: (_componentId: string, key: string) => key,
     t: (key: string) => key,
+    tBranded: 
+      (key: string) => key,
     changeLanguage: jest.fn(),
     currentLanguage: 'en',
   }),

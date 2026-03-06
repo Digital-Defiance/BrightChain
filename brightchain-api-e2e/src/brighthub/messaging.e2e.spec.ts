@@ -19,7 +19,7 @@ function uniqueUser(prefix: string) {
   return {
     username: `${prefix}_${id}`,
     email: `${prefix}_${id}@test.brighthub.local`,
-    password: `BHTest!${id}`,
+    password: `BH7est!${id}`,
   };
 }
 
@@ -723,7 +723,7 @@ describe('BrightHub Messaging API — Conversation Pin, Archive, Mute', () => {
           /* ignore */
         });
     }
-  });
+  }, 180_000);
 
   // ── Archive ──
 

@@ -77,6 +77,8 @@ interface NotificationRecord {
   groupId?: string;
   isRead: boolean;
   createdAt: string;
+  /** Numeric timestamp (ms since epoch) for stable sort ordering */
+  createdAtMs?: number;
 }
 
 interface NotificationPreferencesRecord {
@@ -491,7 +493,7 @@ export class NotificationService implements INotificationService {
       }
     }
 
-    const now = new Date().toISOString();
+    const now = new Date();
 
     const record: NotificationRecord = {
       _id: randomUUID(),
@@ -503,7 +505,8 @@ export class NotificationService implements INotificationService {
       content: options?.content ?? '',
       clickThroughUrl: options?.clickThroughUrl ?? '',
       isRead: false,
-      createdAt: now,
+      createdAt: now.toISOString(),
+      createdAtMs: now.getTime(),
     };
 
     await this.notificationsCollection.create(record);
@@ -528,33 +531,46 @@ export class NotificationService implements INotificationService {
     // Query with reverse chronological order
     let query = this.notificationsCollection.find(filter);
     if (query.sort) {
-      query = query.sort({ createdAt: -1 });
-    }
-
-    // Cursor-based pagination: skip past cursor
-    if (options?.cursor && query.skip) {
-      const cursorIndex = parseInt(options.cursor, 10);
-      if (!isNaN(cursorIndex) && cursorIndex > 0) {
-        query = query.skip(cursorIndex);
-      }
-    }
-
-    // Fetch limit + 1 to determine hasMore
-    if (query.limit) {
-      query = query.limit(limit + 1);
+      query = query.sort({ createdAt: -1, _id: -1 });
     }
 
     const records = await query.exec();
-    const hasMore = records.length > limit;
-    const items = records
+
+    // Stable in-memory sort using createdAtMs (numeric) for precise ordering.
+    // Falls back to ISO string comparison, then _id for deterministic tiebreak.
+    records.sort((a, b) => {
+      const aMs = a.createdAtMs ?? new Date(a.createdAt).getTime();
+      const bMs = b.createdAtMs ?? new Date(b.createdAt).getTime();
+      if (bMs !== aMs) return bMs - aMs; // reverse chronological
+      return a._id < b._id ? 1 : a._id > b._id ? -1 : 0;
+    });
+
+    // Cursor-based pagination: cursor is the _id of the last item on the
+    // previous page. Find its position and start after it.
+    let startIndex = 0;
+    if (options?.cursor) {
+      // Try id-based cursor first (preferred)
+      const cursorIdx = records.findIndex((r) => r._id === options.cursor);
+      if (cursorIdx >= 0) {
+        startIndex = cursorIdx + 1;
+      } else {
+        // Fall back to offset-based cursor for backward compatibility
+        const cursorOffset = parseInt(options.cursor, 10);
+        if (!isNaN(cursorOffset) && cursorOffset > 0) {
+          startIndex = cursorOffset;
+        }
+      }
+    }
+
+    const sliced = records.slice(startIndex, startIndex + limit + 1);
+    const hasMore = sliced.length > limit;
+    const items = sliced
       .slice(0, limit)
       .map((r) => this.recordToNotification(r));
 
-    // Calculate next cursor
-    const currentOffset = options?.cursor
-      ? parseInt(options.cursor, 10) || 0
-      : 0;
-    const nextCursor = hasMore ? String(currentOffset + limit) : undefined;
+    // Use the _id of the last returned item as the cursor
+    const lastRecord = items.length > 0 ? sliced[items.length - 1] : undefined;
+    const nextCursor = hasMore && lastRecord ? lastRecord._id : undefined;
 
     return {
       items,

@@ -14,8 +14,8 @@
 .new-post-banner {
   background: linear-gradient(
     135deg,
-    rgba(0, 255, 136, 0.1),
-    rgba(0, 153, 255, 0.1)
+    rgba(45, 170, 255, 0.1),
+    rgba(0, 116, 224, 0.1)
   );
   border: 2px solid var(--accent-primary);
   border-radius: 12px;
@@ -57,7 +57,7 @@
 .blog-post-header {
   margin-bottom: 3rem;
   padding-bottom: 2rem;
-  border-bottom: 2px solid rgba(0, 255, 136, 0.2);
+  border-bottom: 2px solid rgba(45, 170, 255, 0.2);
   position: relative;
 }
 
@@ -143,7 +143,7 @@
   border-radius: 4px;
   font-family: "Fira Code", "Courier New", monospace;
   font-size: 0.9em;
-  border: 1px solid rgba(0, 255, 136, 0.2);
+  border: 1px solid rgba(45, 170, 255, 0.2);
 }
 
 .blog-post-content pre {
@@ -212,7 +212,7 @@
 }
 
 .blog-post-content th {
-  background: rgba(0, 255, 136, 0.1);
+  background: rgba(45, 170, 255, 0.1);
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -223,7 +223,7 @@
   background: linear-gradient(
     to right,
     transparent,
-    rgba(0, 255, 136, 0.5),
+    rgba(45, 170, 255, 0.5),
     transparent
   );
   margin: 3rem 0;

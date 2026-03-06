@@ -105,7 +105,7 @@ const EntryDetailView: React.FC<EntryDetailViewProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [vaultId, entryId, t]);
+  }, [vaultId, entryId, brightPassApi, t]);
 
   // Auto-check breach status for login entries
   useEffect(() => {
@@ -133,7 +133,7 @@ const EntryDetailView: React.FC<EntryDetailViewProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [entry]);
+  }, [entry, brightPassApi]);
 
   const toggleField = useCallback((fieldName: string) => {
     setRevealedFields((prev) => {
@@ -343,7 +343,7 @@ const EntryDetailView: React.FC<EntryDetailViewProps> = ({
           sx={{ mb: 2 }}
         >
           {breachResult.breached
-            ? t(BrightPassStrings.EntryDetail_BreachWarning, {
+            ? t(BrightPassStrings.EntryDetail_BreachWarningTemplate, {
                 COUNT: String(breachResult.count),
               })
             : t(BrightPassStrings.EntryDetail_BreachSafe)}

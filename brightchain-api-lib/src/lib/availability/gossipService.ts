@@ -364,6 +364,10 @@ export class GossipService implements IGossipService {
     dbName: string,
     collectionName: string,
     blockId: BlockId,
+    writeProof?: {
+      signerPublicKey: string;
+      signature: string;
+    },
   ): Promise<void> {
     const announcement: BlockAnnouncement = {
       type: 'head_update',
@@ -375,6 +379,19 @@ export class GossipService implements IGossipService {
         dbName,
         collectionName,
       },
+      // Include write proof for cross-node verification in Restricted_Mode
+      // @see Write ACL Requirements 7.1, 7.2
+      ...(writeProof
+        ? {
+            writeProof: {
+              signerPublicKey: writeProof.signerPublicKey,
+              signature: writeProof.signature,
+              dbName,
+              collectionName,
+              blockId,
+            },
+          }
+        : {}),
     };
 
     this.queueAnnouncement(announcement);
@@ -883,6 +900,7 @@ export class GossipService implements IGossipService {
         ...(a.messageDelivery ? { messageDelivery: a.messageDelivery } : {}),
         ...(a.deliveryAck ? { deliveryAck: a.deliveryAck } : {}),
         ...(a.headUpdate ? { headUpdate: a.headUpdate } : {}),
+        ...(a.writeProof ? { writeProof: a.writeProof } : {}),
       })),
     );
     const plaintext = Buffer.from(json, 'utf-8');

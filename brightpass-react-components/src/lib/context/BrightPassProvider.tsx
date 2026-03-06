@@ -96,28 +96,29 @@ export const BrightPassProvider: React.FC<BrightPassProviderProps> = ({
 
   const unlockVault = useCallback(
     async (vaultId: string, masterPassword: string): Promise<void> => {
-      const decrypted: IDecryptedVault<string> = await brightPassApi.openVault(
+      const response: any = await brightPassApi.openVault(
         vaultId,
         masterPassword,
       );
 
-      // Build metadata from the decrypted response. The API returns a flat
-      // IDecryptedVault<string>; we reconstruct VaultMetadata for consumers.
+      // API returns { metadata: {...}, propertyRecords: [] }
+      const { metadata: apiMetadata, propertyRecords } = response;
+      
       const metadata: VaultMetadata = {
-        id: decrypted.id,
-        name: decrypted.name,
-        ownerId: decrypted.ownerId,
-        createdAt: new Date(decrypted.createdAt),
-        updatedAt: new Date(decrypted.updatedAt),
-        entryCount: decrypted.propertyRecords.length,
-        sharedWith: [],
-        vcblBlockId: '' as VaultMetadata['vcblBlockId'],
+        id: apiMetadata.id,
+        name: apiMetadata.name,
+        ownerId: apiMetadata.ownerId,
+        createdAt: new Date(apiMetadata.createdAt),
+        updatedAt: new Date(apiMetadata.updatedAt),
+        entryCount: apiMetadata.entryCount,
+        sharedWith: apiMetadata.sharedWith || [],
+        vcblBlockId: apiMetadata.vcblBlockId as VaultMetadata['vcblBlockId'],
       };
 
       setVault({
-        vaultId: decrypted.id,
+        vaultId: apiMetadata.id,
         metadata,
-        propertyRecords: decrypted.propertyRecords,
+        propertyRecords: propertyRecords || [],
       });
     },
     [brightPassApi],

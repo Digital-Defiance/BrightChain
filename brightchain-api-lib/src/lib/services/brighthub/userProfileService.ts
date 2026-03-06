@@ -5,13 +5,16 @@ import {
   IBaseFollowRequest,
   IBasePrivacySettings,
   IBaseUserProfile,
+  IConnectionService,
   IFollowRequestOptions,
   IFollowResult,
+  INotificationService,
   IPaginatedResult,
   IPaginationOptions,
   IUpdateProfileOptions,
   IUserProfileService,
   MAX_BIO_LENGTH,
+  NotificationType,
   UserProfileErrorCode,
   UserProfileServiceError,
 } from '@brightchain/brighthub-lib';
@@ -135,6 +138,8 @@ export class UserProfileService implements IUserProfileService {
   private readonly followRequestsCollection: Collection<FollowRequestRecord>;
   private readonly blocksCollection: Collection<BlockRecord>;
   private readonly mutesCollection: Collection<MuteRecord>;
+  private notificationService?: INotificationService;
+  private connectionService?: IConnectionService;
 
   constructor(application: IApplicationWithCollections) {
     this.userProfilesCollection = application.getModel<UserProfileRecord>(
@@ -148,6 +153,22 @@ export class UserProfileService implements IUserProfileService {
     this.blocksCollection =
       application.getModel<BlockRecord>('brighthub_blocks');
     this.mutesCollection = application.getModel<MuteRecord>('brighthub_mutes');
+  }
+
+  /**
+   * Set the notification service for creating notifications on follow events.
+   * Called after construction to avoid circular dependency issues.
+   */
+  setNotificationService(service: INotificationService): void {
+    this.notificationService = service;
+  }
+
+  /**
+   * Set the connection service for block inheritance on lists.
+   * Called after construction to avoid circular dependency issues.
+   */
+  setConnectionService(service: IConnectionService): void {
+    this.connectionService = service;
   }
 
   /**
@@ -411,6 +432,23 @@ export class UserProfileService implements IUserProfileService {
           },
         )
         .exec();
+    }
+
+    // Create notification for the followed user
+    if (this.notificationService) {
+      try {
+        await this.notificationService.createNotification(
+          followedId,
+          NotificationType.Follow,
+          followerId,
+          {
+            content: 'started following you',
+            clickThroughUrl: `/users/${followerId}`,
+          },
+        );
+      } catch {
+        // Non-fatal: notification failure should not break the follow operation
+      }
     }
   }
 
@@ -1061,6 +1099,18 @@ export class UserProfileService implements IUserProfileService {
         status: FollowRequestStatus.Pending,
       })
       .exec();
+
+    // Remove blocked user from all lists owned by the blocker (block inheritance)
+    if (this.connectionService) {
+      try {
+        await this.connectionService.removeBlockedUserFromLists(
+          blockerId,
+          blockedId,
+        );
+      } catch {
+        // Non-fatal: list cleanup failure should not break the block operation
+      }
+    }
   }
 
   /**

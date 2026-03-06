@@ -3,16 +3,16 @@
   line-height: 1.5;
   font-weight: 400;
 
-  /* ACS Color Scheme */
+  /* BrightChain Blue Theme */
   --bg-primary: #0a0e1a;
   --bg-secondary: #111827;
   --bg-tertiary: #1f2937;
   --text-primary: #ffffff;
   --text-secondary: #9ca3af;
-  --accent-primary: #00ff88;
-  --accent-secondary: #0099ff;
-  --accent-tertiary: #ff6b9d;
-  --gradient-primary: linear-gradient(135deg, #00ff88, #0099ff);
+  --accent-primary: #2daaff; /* BrightChain blue */
+  --accent-secondary: #0074e0; /* Deep blue */
+  --accent-tertiary: #5ecbff; /* Lighter blue for highlights */
+  --gradient-primary: linear-gradient(135deg, #2daaff, #0074e0);
 
   color-scheme: dark;
   color: var(--text-primary);
@@ -101,7 +101,7 @@ a:hover {
 .btn-primary:hover {
   background: var(--accent-secondary);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 255, 136, 0.3);
+  box-shadow: 0 8px 20px rgba(45, 170, 255, 0.3);
 }
 
 .btn-secondary {

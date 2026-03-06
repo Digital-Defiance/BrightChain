@@ -1,3 +1,4 @@
+import type { IWriteAclAuditLogger } from '@brightchain/brightchain-lib';
 import {
   ChannelService,
   ConversationService,
@@ -15,6 +16,7 @@ import {
   IMessagingService,
   INotificationService,
   IPostService,
+  IThreadService,
   IUserProfileService,
 } from '@brightchain/brighthub-lib';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
@@ -25,6 +27,7 @@ import {
   RoleService,
 } from '@digitaldefiance/node-express-suite';
 import { AppConstants } from '../appConstants';
+import type { IWriteAclApiManager } from '../auth/writeAclApiRouter';
 import { PoolDiscoveryService } from '../availability/poolDiscoveryService';
 import { BlocksController } from '../controllers/api/blocks';
 import {
@@ -344,6 +347,14 @@ export class ApiRouter<
   }
 
   /**
+   * Set the thread service on the post controller.
+   * @requirements 2.2
+   */
+  public setBrightHubThreadService(service: IThreadService): void {
+    this.brightHubPostController.setThreadService(service);
+  }
+
+  /**
    * Set the MessagingService for the BrightHub messaging controller.
    * @requirements 45.1-45.28
    */
@@ -478,5 +489,25 @@ export class ApiRouter<
    */
   public getIntrospectionController(): IntrospectionController<TID> | null {
     return this.introspectionController;
+  }
+
+  /**
+   * Mount the Write ACL API router for managing Write ACLs.
+   * Should be called during application initialization when a WriteAclManager
+   * is available. The router is mounted at `/acl` alongside existing routes.
+   *
+   * @param aclManager - The WriteAclManager (or any IWriteAclApiManager) to delegate to
+   * @param auditLogger - Optional WriteAclAuditLogger for logging ACL events
+   * @see Write ACL Requirement 9.1
+   */
+  public mountWriteAclRouter(
+    aclManager: IWriteAclApiManager,
+    auditLogger?: IWriteAclAuditLogger,
+  ): void {
+    // Dynamic import to avoid circular dependency at module level
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createWriteAclApiRouter } = require('../auth/writeAclApiRouter');
+    const writeAclRouter = createWriteAclApiRouter(aclManager, auditLogger);
+    this.router.use('/', writeAclRouter);
   }
 }

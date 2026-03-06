@@ -51,11 +51,18 @@ jest.mock('@brightchain/brightchain-lib', () => ({
   ),
 }));
 
+jest.mock('@brightchain/brightchain-react-components', () => ({
+  BrightChainSubLogo: ({ subText }: { subText?: string }) => (
+    <span data-testid="brightchain-sub-logo">{subText || 'SubLogo'}</span>
+  ),
+}));
+
 jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   useI18n: () => ({
     tComponent: (_componentId: string, key: string) =>
       mockTranslations[key] || key,
     t: (key: string) => mockTranslations[key] || key,
+    tBranded: (key: string) => mockTranslations[key] || key,
     changeLanguage: jest.fn(),
     currentLanguage: 'en',
   }),
@@ -122,7 +129,7 @@ describe('BrightMailLayout', () => {
       </Routes>,
     );
 
-    expect(screen.getByText('BrightMail_MenuLabel')).toBeInTheDocument();
+    expect(screen.getByTestId('brightchain-sub-logo')).toBeInTheDocument();
     expect(screen.getByTestId('outlet')).toBeInTheDocument();
   });
 
@@ -162,7 +169,7 @@ describe('BrightMailLayout', () => {
       </Routes>,
     );
 
-    expect(screen.getByText('BrightMail_MenuLabel')).toBeInTheDocument();
+    expect(screen.getByTestId('brightchain-sub-logo')).toBeInTheDocument();
     expect(screen.queryByTestId('login')).not.toBeInTheDocument();
   });
 
@@ -216,7 +223,7 @@ describe('BrightMailLayout', () => {
       ['/brightmail/compose'],
     );
 
-    expect(screen.getByText('BrightMail_MenuLabel')).toBeInTheDocument();
+    expect(screen.getByTestId('brightchain-sub-logo')).toBeInTheDocument();
   });
 
   /**
@@ -224,7 +231,6 @@ describe('BrightMailLayout', () => {
    */
   it('re-renders text when translations change', () => {
     mockTranslations = {
-      BrightMail_MenuLabel: 'BrightMail',
       BrightMail_Compose_Title: 'Compose',
     };
 
@@ -238,12 +244,11 @@ describe('BrightMailLayout', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('BrightMail')).toBeInTheDocument();
+    expect(screen.getByTestId('brightchain-sub-logo')).toBeInTheDocument();
     expect(screen.getByText('Compose')).toBeInTheDocument();
 
     // Simulate language change
     mockTranslations = {
-      BrightMail_MenuLabel: 'Correo BrightMail',
       BrightMail_Compose_Title: 'Redactar',
     };
 
@@ -261,7 +266,6 @@ describe('BrightMailLayout', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('Correo BrightMail')).toBeInTheDocument();
     expect(screen.getByText('Redactar')).toBeInTheDocument();
   });
 });

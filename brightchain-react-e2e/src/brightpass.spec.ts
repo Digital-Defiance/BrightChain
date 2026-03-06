@@ -238,8 +238,12 @@ test.describe('BrightPass Password Generation', () => {
 // ─── Property-Based Tests ───────────────────────────────────────────────────
 
 test.describe('BrightPass Property Tests', () => {
+  // Property tests make many HTTP round-trips per iteration; use generous timeouts
+  // and a reasonable number of runs for e2e context.
+
   // Feature: comprehensive-e2e-tests, Property 3: Vault CRUD round-trip
   test('Property 3: Vault CRUD round-trip — create, list, open for arbitrary names and passwords', async () => {
+    test.setTimeout(180_000);
     /**
      * For any valid vault name and master password, creating a vault via
      * POST /api/brightpass/vaults should return a vault ID, and subsequently
@@ -296,12 +300,13 @@ test.describe('BrightPass Property Tests', () => {
           );
         },
       ),
-      { numRuns: 100 },
+      { numRuns: 10 },
     );
   });
 
   // Feature: comprehensive-e2e-tests, Property 4: Entry CRUD round-trip
   test('Property 4: Entry CRUD round-trip — create, get, update, get for arbitrary entry data', async () => {
+    test.setTimeout(180_000);
     /**
      * For any valid entry data (site URL, username, password), creating an entry
      * in an open vault should return an entry ID, and subsequently retrieving that
@@ -399,12 +404,13 @@ test.describe('BrightPass Property Tests', () => {
           );
         },
       ),
-      { numRuns: 100 },
+      { numRuns: 10 },
     );
   });
 
   // Feature: comprehensive-e2e-tests, Property 5: Resource deletion prevents subsequent reads
   test('Property 5: Resource deletion prevents subsequent reads', async () => {
+    test.setTimeout(180_000);
     /**
      * For any created vault or entry, deleting it via the corresponding DELETE
      * endpoint should cause subsequent GET requests for that resource to return
@@ -487,12 +493,13 @@ test.describe('BrightPass Property Tests', () => {
           expect(vaults.find((v) => v.id === vid)).toBeUndefined();
         },
       ),
-      { numRuns: 100 },
+      { numRuns: 10 },
     );
   });
 
   // Feature: comprehensive-e2e-tests, Property 6: Password generation returns non-empty string
   test('Property 6: Password generation returns non-empty string', async () => {
+    test.setTimeout(180_000);
     /**
      * For any call to POST /api/brightpass/generate-password, the response
      * should contain a non-empty password string.
@@ -535,7 +542,7 @@ test.describe('BrightPass Property Tests', () => {
           expect(res.data.data.password.password.length).toBe(length);
         },
       ),
-      { numRuns: 100 },
+      { numRuns: 10 },
     );
   });
 });

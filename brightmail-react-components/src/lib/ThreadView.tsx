@@ -62,11 +62,9 @@ type ComposeMode =
 // ─── Component ──────────────────────────────────────────────────────────────
 
 const ThreadView: FC = () => {
-  const { tComponent } = useI18n();
-  const t = (key: string) => tComponent(BrightChainComponentId, key);
+  const { tBranded: t } = useI18n();
   const emailApi = useEmailApi();
   const { messageId } = useParams<{ messageId: string }>();
-  const navigate = useNavigate();
 
   const [emails, setEmails] = useState<IEmailMetadata[]>([]);
   const [loading, setLoading] = useState(true);

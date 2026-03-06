@@ -11,11 +11,16 @@ import {
 } from '@brightchain/brightchain-lib';
 import React, { useCallback, useState } from 'react';
 
-// Initialize services
-const checksumService = new ChecksumService();
-ServiceLocator.setServiceProvider({
-  checksumService,
-} as unknown as ReturnType<typeof ServiceLocator.getServiceProvider>);
+// Initialize services lazily to avoid module-level instantiation issues in test environments
+let _checksumServiceInitialized = false;
+function ensureServicesInitialized() {
+  if (_checksumServiceInitialized) return;
+  _checksumServiceInitialized = true;
+  const checksumService = new ChecksumService();
+  ServiceLocator.setServiceProvider({
+    checksumService,
+  } as unknown as ReturnType<typeof ServiceLocator.getServiceProvider>);
+}
 
 interface SoupCan {
   id: string;
@@ -25,6 +30,7 @@ interface SoupCan {
 }
 
 export const SimpleSoupDemo: React.FC = () => {
+  ensureServicesInitialized();
   const [blockStore] = useState(() => new MemoryBlockStore(BlockSize.Small));
   const [message, setMessage] = useState('Hello BrightChain!');
   const [soupCans, setSoupCans] = useState<SoupCan[]>([]);
