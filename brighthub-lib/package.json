@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brighthub-lib",
-  "version": "0.24.0",
+  "version": "0.25.0",
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",

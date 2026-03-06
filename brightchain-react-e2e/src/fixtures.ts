@@ -18,6 +18,7 @@ export interface AuthResult {
 /**
  * Generate unique credentials using Date.now() + random suffix.
  * Matches the existing `uniqueUser()` pattern from user-management.e2e.spec.ts.
+ * Password always includes a letter, digit, and special character to satisfy PasswordRegex.
  */
 export function generateCredentials(): {
   username: string;
@@ -28,7 +29,7 @@ export function generateCredentials(): {
   return {
     username: `e2e_${id}`,
     email: `e2e_${id}@test.brightchain.local`,
-    password: `TestPass!${id}`,
+    password: `T3st!Pass${id}`,
   };
 }
 
@@ -94,6 +95,11 @@ export const test = base.extend<{
     await page.evaluate((token: string) => {
       localStorage.setItem('authToken', token);
     }, authResult.token);
+
+    // Reload so the AuthProvider picks up the token on its initial checkAuth().
+    // Then wait for the network to be idle so the /api/user/verify call completes
+    // and the AuthProvider sets isAuthenticated = true.
+    await page.reload({ waitUntil: 'networkidle' });
 
     await use(page);
   },

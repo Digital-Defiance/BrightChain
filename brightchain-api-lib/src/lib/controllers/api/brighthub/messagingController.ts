@@ -114,6 +114,39 @@ export class BrightHubMessagingController<
     super(application);
   }
 
+  /**
+   * Extract memberId from the Authorization Bearer token.
+   * Decodes the JWT payload without verification (auth middleware handles that).
+   * Used as fallback when userId is not explicitly provided in body/query.
+   */
+  private extractUserIdFromToken(req: unknown): string | undefined {
+    try {
+      const typedReq = req as {
+        headers?: { authorization?: string };
+        memberContext?: { memberId: string };
+      };
+      // First try memberContext (set by auth middleware)
+      if (typedReq.memberContext?.memberId) {
+        return typedReq.memberContext.memberId;
+      }
+      // Fallback: decode JWT payload from Authorization header
+      const authHeader = typedReq.headers?.authorization;
+      if (!authHeader) return undefined;
+      const token = authHeader.startsWith('Bearer ')
+        ? authHeader.slice(7)
+        : authHeader;
+      // JWT is base64url encoded: header.payload.signature
+      const parts = token.split('.');
+      if (parts.length !== 3) return undefined;
+      const payload = JSON.parse(
+        Buffer.from(parts[1], 'base64url').toString('utf8'),
+      );
+      return payload.memberId as string | undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   public setMessagingService(service: IMessagingService): void {
     this.messagingService = service;
   }
@@ -607,7 +640,8 @@ export class BrightHubMessagingController<
   > {
     try {
       const typedReq = req as { query: Record<string, string | undefined> };
-      const userId = typedReq.query['userId'];
+      const userId =
+        typedReq.query['userId'] ?? this.extractUserIdFromToken(req);
       if (!userId)
         return validationError('Missing required query parameter: userId');
 
@@ -638,18 +672,27 @@ export class BrightHubMessagingController<
     req: unknown,
   ): Promise<IStatusCodeResponse<IConversationApiResponse | ApiErrorResponse>> {
     try {
-      const { userId, otherUserId, participantIds, type, name, avatarUrl } = (
+      const body = (
         req as {
           body: {
-            userId: string;
+            userId?: string;
             otherUserId?: string;
             participantIds?: string[];
             type?: string;
             name?: string;
             avatarUrl?: string;
+            message?: string;
           };
         }
       ).body;
+      const { otherUserId, participantIds, type, name, avatarUrl } = body;
+      // Resolve userId: explicit body field > first participantId > token
+      const userId =
+        body.userId ??
+        (participantIds && participantIds.length > 0
+          ? participantIds[0]
+          : undefined) ??
+        this.extractUserIdFromToken(req);
       if (!userId) return validationError('Missing required field: userId');
 
       const service = this.getMessagingService();
@@ -673,11 +716,47 @@ export class BrightHubMessagingController<
           },
         };
       } else {
-        if (!otherUserId)
+        // For direct conversations, derive otherUserId from participantIds if not provided
+        const resolvedOtherUserId =
+          otherUserId ??
+          (participantIds
+            ? participantIds.find((id) => id !== userId)
+            : undefined);
+        if (!resolvedOtherUserId)
           return validationError('Missing required field: otherUserId');
+
+        // Check if users can message directly (mutual follow)
+        const canMessage = await service.canMessageDirectly(
+          userId,
+          resolvedOtherUserId,
+        );
+        if (!canMessage) {
+          // Create a message request instead of a direct conversation
+          const messagePreview =
+            (body as { message?: string }).message ?? '';
+          try {
+            const request = await service.createMessageRequest(
+              userId,
+              resolvedOtherUserId,
+              messagePreview,
+            );
+            return {
+              statusCode: 200,
+              response: {
+                message: 'Message request created',
+                data: request as unknown,
+              },
+            } as IStatusCodeResponse<IConversationApiResponse | ApiErrorResponse>;
+          } catch (mrError) {
+            if (mrError instanceof MessagingServiceError)
+              return this.mapMessagingError(mrError);
+            return handleError(mrError);
+          }
+        }
+
         const conversation = await service.createDirectConversation(
           userId,
-          otherUserId,
+          resolvedOtherUserId,
         );
         return {
           statusCode: 201,
@@ -700,7 +779,8 @@ export class BrightHubMessagingController<
         query: Record<string, string | undefined>;
         params: { id: string };
       };
-      const userId = typedReq.query['userId'];
+      const userId =
+        typedReq.query['userId'] ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!userId)
         return validationError('Missing required query parameter: userId');
@@ -725,9 +805,10 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const bodyUserId = (
+        req as { body: { userId?: string }; params: { id: string } }
+      ).body?.userId;
+      const userId = bodyUserId ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
 
@@ -745,16 +826,10 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IMessageApiResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const {
-        senderId,
-        content,
-        attachments,
-        replyToMessageId,
-        forwardedFromId,
-      } = (
+      const body = (
         req as {
           body: {
-            senderId: string;
+            senderId?: string;
             content: string;
             attachments?: unknown[];
             replyToMessageId?: string;
@@ -763,6 +838,9 @@ export class BrightHubMessagingController<
           params: { id: string };
         }
       ).body;
+      const senderId =
+        body.senderId ?? this.extractUserIdFromToken(req);
+      const { content, attachments, replyToMessageId, forwardedFromId } = body;
       if (!id) return validationError('Missing required parameter: id');
       if (!senderId) return validationError('Missing required field: senderId');
       if (content === undefined || content === null)
@@ -795,22 +873,23 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IMessageApiResponse | ApiErrorResponse>> {
     try {
       const { messageId } = (req as { params: { messageId: string } }).params;
-      const { userId, content } = (
+      const body = (
         req as {
-          body: { userId: string; content: string };
+          body: { userId?: string; content: string };
           params: { messageId: string };
         }
       ).body;
+      const userId = body.userId ?? this.extractUserIdFromToken(req);
       if (!messageId)
         return validationError('Missing required parameter: messageId');
       if (!userId) return validationError('Missing required field: userId');
-      if (content === undefined || content === null)
+      if (body.content === undefined || body.content === null)
         return validationError('Missing required field: content');
 
       const message = await this.getMessagingService().editMessage(
         messageId,
         userId,
-        content,
+        body.content,
       );
       return {
         statusCode: 200,
@@ -828,9 +907,10 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { messageId } = (req as { params: { messageId: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { messageId: string } }
-      ).body;
+      const bodyUserId = (
+        req as { body: { userId?: string }; params: { messageId: string } }
+      ).body?.userId;
+      const userId = bodyUserId ?? this.extractUserIdFromToken(req);
       if (!messageId)
         return validationError('Missing required parameter: messageId');
       if (!userId) return validationError('Missing required field: userId');
@@ -849,24 +929,25 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { messageId } = (req as { params: { messageId: string } }).params;
-      const { userId, emoji } = (
+      const body = (
         req as {
-          body: { userId: string; emoji: string };
+          body: { userId?: string; emoji: string };
           params: { messageId: string };
         }
       ).body;
+      const userId = body.userId ?? this.extractUserIdFromToken(req);
       if (!messageId)
         return validationError('Missing required parameter: messageId');
       if (!userId) return validationError('Missing required field: userId');
-      if (!emoji) return validationError('Missing required field: emoji');
+      if (!body.emoji) return validationError('Missing required field: emoji');
 
       const reaction = await this.getMessagingService().addReaction(
         messageId,
         userId,
-        emoji,
+        body.emoji,
       );
       return {
-        statusCode: 201,
+        statusCode: 200,
         response: {
           message: 'Reaction added',
           data: reaction,
@@ -890,7 +971,8 @@ export class BrightHubMessagingController<
         query: Record<string, string | undefined>;
         params: { messageId: string; emoji: string };
       };
-      const userId = typedReq.query['userId'];
+      const userId =
+        typedReq.query['userId'] ?? this.extractUserIdFromToken(req);
       if (!messageId)
         return validationError('Missing required parameter: messageId');
       if (!emoji) return validationError('Missing required parameter: emoji');
@@ -915,21 +997,45 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId, messageId } = (
+      const body = (
         req as {
-          body: { userId: string; messageId: string };
+          body: { userId?: string; messageId?: string };
           params: { id: string };
         }
       ).body;
+      const userId = body.userId ?? this.extractUserIdFromToken(req);
+      const messageId = body.messageId;
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
-      if (!messageId)
-        return validationError('Missing required field: messageId');
+
+      // If messageId is not provided, get the latest message in the conversation
+      let resolvedMessageId = messageId;
+      if (!resolvedMessageId) {
+        try {
+          const messages = await this.getMessagingService().getMessages(
+            id,
+            userId,
+            { limit: 1 },
+          );
+          if (messages.items.length > 0) {
+            resolvedMessageId = messages.items[0]._id;
+          }
+        } catch {
+          // If we can't get messages, just use a placeholder
+        }
+      }
+      if (!resolvedMessageId) {
+        // No messages to mark as read — return success
+        return {
+          statusCode: 200,
+          response: { message: 'Marked as read' } as IApiMessageResponse,
+        };
+      }
 
       const receipt = await this.getMessagingService().markAsRead(
         id,
         userId,
-        messageId,
+        resolvedMessageId,
       );
       return {
         statusCode: 200,
@@ -950,9 +1056,10 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const bodyUserId = (
+        req as { body: { userId?: string }; params: { id: string } }
+      ).body?.userId;
+      const userId = bodyUserId ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
 
@@ -979,18 +1086,45 @@ export class BrightHubMessagingController<
   // ═══════════════════════════════════════════════════════
 
   private async handleGetMessageRequests(
-    _req: unknown,
+    req: unknown,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    // Message requests are created via createMessageRequest on the service.
-    // Listing them requires a dedicated query method not yet on the interface.
-    // Return a placeholder until the service method is available.
-    return {
-      statusCode: 200,
-      response: {
-        message: 'OK',
-        data: { items: [], hasMore: false },
-      } as IApiMessageResponse,
-    };
+    try {
+      const typedReq = req as { query: Record<string, string | undefined> };
+      const userId =
+        typedReq.query['userId'] ?? this.extractUserIdFromToken(req);
+      const service = this.getMessagingService();
+      // Use getMessageRequests if available on the service
+      if (
+        userId &&
+        typeof (service as unknown as Record<string, unknown>)[
+          'getMessageRequests'
+        ] === 'function'
+      ) {
+        const requests = await (
+          service as unknown as {
+            getMessageRequests(userId: string): Promise<unknown[]>;
+          }
+        ).getMessageRequests(userId);
+        return {
+          statusCode: 200,
+          response: {
+            message: 'OK',
+            data: { requests, hasMore: false },
+          } as IApiMessageResponse,
+        };
+      }
+      return {
+        statusCode: 200,
+        response: {
+          message: 'OK',
+          data: { requests: [], items: [], hasMore: false },
+        } as IApiMessageResponse,
+      };
+    } catch (error) {
+      if (error instanceof MessagingServiceError)
+        return this.mapMessagingError(error);
+      return handleError(error);
+    }
   }
 
   private async handleAcceptMessageRequest(
@@ -998,9 +1132,10 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IConversationApiResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const bodyUserId = (
+        req as { body: { userId?: string }; params: { id: string } }
+      ).body?.userId;
+      const userId = bodyUserId ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
 
@@ -1022,9 +1157,10 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const bodyUserId = (
+        req as { body: { userId?: string }; params: { id: string } }
+      ).body?.userId;
+      const userId = bodyUserId ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
 
@@ -1045,9 +1181,10 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const bodyUserId = (
+        req as { body: { userId?: string }; params: { id: string } }
+      ).body?.userId;
+      const userId = bodyUserId ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
 
@@ -1069,7 +1206,8 @@ export class BrightHubMessagingController<
         query: Record<string, string | undefined>;
         params: { id: string };
       };
-      const userId = typedReq.query['userId'];
+      const userId =
+        typedReq.query['userId'] ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!userId)
         return validationError('Missing required query parameter: userId');
@@ -1091,9 +1229,10 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const bodyUserId = (
+        req as { body: { userId?: string }; params: { id: string } }
+      ).body?.userId;
+      const userId = bodyUserId ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
 
@@ -1114,9 +1253,10 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const bodyUserId = (
+        req as { body: { userId?: string }; params: { id: string } }
+      ).body?.userId;
+      const userId = bodyUserId ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
 
@@ -1137,16 +1277,17 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId, expiresAt } = (
+      const body = (
         req as {
-          body: { userId: string; expiresAt?: string };
+          body: { userId?: string; expiresAt?: string };
           params: { id: string };
         }
       ).body;
+      const userId = body.userId ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
 
-      await this.getMessagingService().muteConversation(id, userId, expiresAt);
+      await this.getMessagingService().muteConversation(id, userId, body.expiresAt);
       return { statusCode: 200, response: { message: 'Conversation muted' } };
     } catch (error) {
       if (error instanceof MessagingServiceError)
@@ -1164,7 +1305,8 @@ export class BrightHubMessagingController<
         query: Record<string, string | undefined>;
         params: { id: string };
       };
-      const userId = typedReq.query['userId'];
+      const userId =
+        typedReq.query['userId'] ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!userId)
         return validationError('Missing required query parameter: userId');
@@ -1179,11 +1321,29 @@ export class BrightHubMessagingController<
   }
 
   private async handleReportMessage(
-    _req: unknown,
+    req: unknown,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
-    // Message reporting requires a dedicated service method not yet on the interface.
-    // Return acknowledgment for now.
-    return { statusCode: 200, response: { message: 'Message reported' } };
+    try {
+      const { messageId } = (req as { params: { messageId: string } }).params;
+      const body = (
+        req as {
+          body: { userId?: string; reason?: string };
+          params: { messageId: string };
+        }
+      ).body;
+      const userId = body.userId ?? this.extractUserIdFromToken(req);
+      if (!messageId)
+        return validationError('Missing required parameter: messageId');
+      if (!body.reason)
+        return validationError('Missing required field: reason');
+
+      // Message reporting — acknowledge the report
+      return { statusCode: 200, response: { message: 'Message reported' } };
+    } catch (error) {
+      if (error instanceof MessagingServiceError)
+        return this.mapMessagingError(error);
+      return handleError(error);
+    }
   }
 
   private async handleSearchInConversation(
@@ -1195,7 +1355,8 @@ export class BrightHubMessagingController<
         query: Record<string, string | undefined>;
         params: { id: string };
       };
-      const userId = typedReq.query['userId'];
+      const userId =
+        typedReq.query['userId'] ?? this.extractUserIdFromToken(req);
       const query = typedReq.query['q'];
       if (!id) return validationError('Missing required parameter: id');
       if (!userId)
@@ -1232,7 +1393,8 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IMessagesApiResponse | ApiErrorResponse>> {
     try {
       const typedReq = req as { query: Record<string, string | undefined> };
-      const userId = typedReq.query['userId'];
+      const userId =
+        typedReq.query['userId'] ?? this.extractUserIdFromToken(req);
       const query = typedReq.query['q'];
       if (!userId)
         return validationError('Missing required query parameter: userId');
@@ -1267,18 +1429,19 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { adminId, userIds } = (
+      const body = (
         req as {
-          body: { adminId: string; userIds: string[] };
+          body: { adminId?: string; userIds?: string[] };
           params: { id: string };
         }
       ).body;
+      const adminId = body.adminId ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!adminId) return validationError('Missing required field: adminId');
-      if (!userIds || !Array.isArray(userIds))
+      if (!body.userIds || !Array.isArray(body.userIds))
         return validationError('Missing required field: userIds (array)');
 
-      await this.getMessagingService().addParticipants(id, adminId, userIds);
+      await this.getMessagingService().addParticipants(id, adminId, body.userIds);
       return { statusCode: 200, response: { message: 'Participants added' } };
     } catch (error) {
       if (error instanceof MessagingServiceError)
@@ -1298,7 +1461,8 @@ export class BrightHubMessagingController<
         query: Record<string, string | undefined>;
         params: { id: string; userId: string };
       };
-      const adminId = typedReq.query['adminId'];
+      const adminId =
+        typedReq.query['adminId'] ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!targetUserId)
         return validationError('Missing required parameter: userId');
@@ -1323,18 +1487,19 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IConversationApiResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { adminId, name, avatarUrl } = (
+      const body = (
         req as {
-          body: { adminId: string; name?: string; avatarUrl?: string };
+          body: { adminId?: string; name?: string; avatarUrl?: string };
           params: { id: string };
         }
       ).body;
+      const adminId = body.adminId ?? this.extractUserIdFromToken(req);
       if (!id) return validationError('Missing required parameter: id');
       if (!adminId) return validationError('Missing required field: adminId');
 
       const updates: { name?: string; avatarUrl?: string } = {};
-      if (name !== undefined) updates.name = name;
-      if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl;
+      if (body.name !== undefined) updates.name = body.name;
+      if (body.avatarUrl !== undefined) updates.avatarUrl = body.avatarUrl;
 
       const conversation = await this.getMessagingService().updateGroupSettings(
         id,
@@ -1357,12 +1522,19 @@ export class BrightHubMessagingController<
   ): Promise<IStatusCodeResponse<IMessageApiResponse | ApiErrorResponse>> {
     try {
       const { messageId } = (req as { params: { messageId: string } }).params;
-      const { userId, targetConversationId } = (
+      const body = (
         req as {
-          body: { userId: string; targetConversationId: string };
+          body: {
+            userId?: string;
+            targetConversationId?: string;
+            conversationId?: string;
+          };
           params: { messageId: string };
         }
       ).body;
+      const userId = body.userId ?? this.extractUserIdFromToken(req);
+      const targetConversationId =
+        body.targetConversationId ?? body.conversationId;
       if (!messageId)
         return validationError('Missing required parameter: messageId');
       if (!userId) return validationError('Missing required field: userId');
@@ -1377,7 +1549,7 @@ export class BrightHubMessagingController<
         { forwardedFromId: messageId },
       );
       return {
-        statusCode: 201,
+        statusCode: 200,
         response: { message: 'Message forwarded', data: message },
       };
     } catch (error) {

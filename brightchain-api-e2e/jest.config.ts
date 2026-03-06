@@ -6,6 +6,9 @@ export default {
   setupFiles: ['<rootDir>/src/support/test-setup.ts'],
   testEnvironment: 'node',
   testTimeout: 60_000,
+  // Run e2e tests sequentially — all tests share a single API server and
+  // concurrent crypto-heavy registrations can overwhelm it.
+  maxWorkers: 1,
   transform: {
     '^.+\\.ts$': [
       'ts-jest',

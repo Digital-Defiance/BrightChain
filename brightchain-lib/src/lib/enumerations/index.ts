@@ -90,3 +90,6 @@ export * from './quorumOperationalMode';
 
 // TCBL (Tarball CBL) enumerations
 export * from './tcblErrorType';
+
+// Write ACL enumerations
+export * from './writeMode';

@@ -43,17 +43,11 @@ const Hero = ({ scrollY }: HeroProps) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.8 }}
         >
-          BrightChain
+          <img
+            src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightchain-tx-white.png"
+            style={{ height: 137 }}
+          />
         </motion.h1>
-
-        <motion.h2
-          className="hero-subtitle gradient-text"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.8 }}
-        >
-          Privacy. Participation. Power.
-        </motion.h2>
 
         <motion.p
           className="hero-description"
@@ -61,8 +55,11 @@ const Hero = ({ scrollY }: HeroProps) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.8 }}
         >
-          BrightChain revolutionizes data storage using the &ldquo;Bright Block
-          Soup&rdquo; concept. Your files are broken into blocks and mixed with
+          BrightChain revolutionizes data storage using the &ldquo;
+          <a href="https://github.brightchain.org/docs/overview/brightchain-writeup.html">
+            Bright Block Soup
+          </a>
+          &rdquo; concept. Your files are broken into blocks and mixed with
           random data using XOR operations, making them appear completely random
           while maintaining perfect security.
           <br />

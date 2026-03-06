@@ -267,12 +267,12 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
                 {t(BrightPassStrings.Import_Summary)}
               </Typography>
               <Typography variant="body2">
-                {t(BrightPassStrings.Import_Imported, {
+                {t(BrightPassStrings.Import_ImportedTemplate, {
                   COUNT: String(result.successfulImports),
                 })}
               </Typography>
               <Typography variant="body2">
-                {t(BrightPassStrings.Import_Skipped, {
+                {t(BrightPassStrings.Import_SkippedTemplate, {
                   COUNT: String(result.totalRecords - result.successfulImports),
                 })}
               </Typography>
@@ -280,7 +280,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({
                 <Box sx={{ mt: 1 }}>
                   {result.errors.map((err, idx) => (
                     <Alert severity="warning" key={idx} sx={{ mb: 0.5 }}>
-                      {t(BrightPassStrings.Import_Errors, {
+                      {t(BrightPassStrings.Import_ErrorsTemplate, {
                         INDEX: String(err.recordIndex),
                         MESSAGE: err.error,
                       })}

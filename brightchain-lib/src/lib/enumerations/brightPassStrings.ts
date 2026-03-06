@@ -11,13 +11,14 @@ export const BrightPassStrings = createI18nStringKeys(BrightPassComponentId, {
 
   // Vault List
   VaultList_Title: 'VaultList_Title',
+  VaultList_CreateVaultName: 'VaultList_CreateVaultName',
   VaultList_CreateVault: 'VaultList_CreateVault',
   VaultList_DeleteVault: 'VaultList_DeleteVault',
-  VaultList_SharedWith: 'VaultList_SharedWith',
+  VaultList_SharedWithTemplate: 'VaultList_SharedWithTemplate',
   VaultList_NoVaults: 'VaultList_NoVaults',
 
   // Vault Detail
-  VaultDetail_Title: 'VaultDetail_Title',
+  VaultDetail_TitleNameTemplate: 'VaultDetail_TitleNameTemplate',
   VaultDetail_AddEntry: 'VaultDetail_AddEntry',
   VaultDetail_LockVault: 'VaultDetail_LockVault',
   VaultDetail_Search: 'VaultDetail_Search',
@@ -56,7 +57,7 @@ export const BrightPassStrings = createI18nStringKeys(BrightPassComponentId, {
   TOTP_Code: 'TOTP_Code',
   TOTP_CopyCode: 'TOTP_CopyCode',
   TOTP_Copied: 'TOTP_Copied',
-  TOTP_SecondsRemaining: 'TOTP_SecondsRemaining',
+  TOTP_SecondsRemainingTemplate: 'TOTP_SecondsRemainingTemplate',
   TOTP_QrCode: 'TOTP_QrCode',
   TOTP_SecretUri: 'TOTP_SecretUri',
 
@@ -64,7 +65,7 @@ export const BrightPassStrings = createI18nStringKeys(BrightPassComponentId, {
   Breach_Title: 'Breach_Title',
   Breach_Check: 'Breach_Check',
   Breach_Password: 'Breach_Password',
-  Breach_Found: 'Breach_Found',
+  Breach_FoundTemplate: 'Breach_FoundTemplate',
   Breach_NotFound: 'Breach_NotFound',
 
   // Audit Log
@@ -78,19 +79,35 @@ export const BrightPassStrings = createI18nStringKeys(BrightPassComponentId, {
 
   // Breadcrumb Navigation
   Breadcrumb_BrightPass: 'Breadcrumb_BrightPass',
-  Breadcrumb_Vault: 'Breadcrumb_Vault',
+  Breadcrumb_VaultTemplate: 'Breadcrumb_VaultTemplate',
   Breadcrumb_AuditLog: 'Breadcrumb_AuditLog',
   Breadcrumb_PasswordGenerator: 'Breadcrumb_PasswordGenerator',
   Breadcrumb_Tools: 'Breadcrumb_Tools',
 
   // Vault List Dialogs
   VaultList_ConfirmDelete: 'VaultList_ConfirmDelete',
-  VaultList_ConfirmDeleteMessage: 'VaultList_ConfirmDeleteMessage',
+  VaultList_ConfirmDeleteMessageTemplate: 'VaultList_ConfirmDeleteMessageTemplate',
   VaultList_EnterMasterPassword: 'VaultList_EnterMasterPassword',
+  VaultList_ConfirmMasterPassword: 'VaultList_ConfirmMasterPassword',
+  VaultList_PasswordsMustMatch: 'VaultList_PasswordsMustMatch',
   VaultList_Cancel: 'VaultList_Cancel',
   VaultList_Confirm: 'VaultList_Confirm',
   VaultList_Unlock: 'VaultList_Unlock',
   VaultList_UnlockVault: 'VaultList_UnlockVault',
+
+  // Validation Messages
+  Validation_VaultNameMinLengthTemplate:
+    'Validation_VaultNameMinLengthTemplate',
+  Validation_VaultNameMaxLengthTemplate:
+    'Validation_VaultNameMaxLengthTemplate',
+  Validation_VaultNameRequired: 'Validation_VaultNameRequired',
+  Validation_PasswordMinLengthTemplate: 'Validation_PasswordMinLengthTemplate',
+  Validation_PasswordUppercase: 'Validation_PasswordUppercase',
+  Validation_PasswordLowercase: 'Validation_PasswordLowercase',
+  Validation_PasswordNumber: 'Validation_PasswordNumber',
+  Validation_PasswordSpecialChar: 'Validation_PasswordSpecialChar',
+  Validation_PasswordRequired: 'Validation_PasswordRequired',
+  Validation_ConfirmPasswordRequired: 'Validation_ConfirmPasswordRequired',
 
   // Entry Detail
   EntryDetail_Title: 'EntryDetail_Title',
@@ -116,7 +133,7 @@ export const BrightPassStrings = createI18nStringKeys(BrightPassComponentId, {
   EntryDetail_Tags: 'EntryDetail_Tags',
   EntryDetail_CreatedAt: 'EntryDetail_CreatedAt',
   EntryDetail_UpdatedAt: 'EntryDetail_UpdatedAt',
-  EntryDetail_BreachWarning: 'EntryDetail_BreachWarning',
+  EntryDetail_BreachWarningTemplate: 'EntryDetail_BreachWarningTemplate',
   EntryDetail_BreachSafe: 'EntryDetail_BreachSafe',
   EntryDetail_ShowPassword: 'EntryDetail_ShowPassword',
   EntryDetail_HidePassword: 'EntryDetail_HidePassword',
@@ -146,7 +163,7 @@ export const BrightPassStrings = createI18nStringKeys(BrightPassComponentId, {
   Emergency_Threshold: 'Emergency_Threshold',
   Emergency_Trustees: 'Emergency_Trustees',
   Emergency_Shares: 'Emergency_Shares',
-  Emergency_InsufficientShares: 'Emergency_InsufficientShares',
+  Emergency_InsufficientSharesTemplate: 'Emergency_InsufficientSharesTemplate',
   Emergency_InvalidThreshold: 'Emergency_InvalidThreshold',
   Emergency_Close: 'Emergency_Close',
   Emergency_Error: 'Emergency_Error',
@@ -169,9 +186,9 @@ export const BrightPassStrings = createI18nStringKeys(BrightPassComponentId, {
   Import_Import: 'Import_Import',
   Import_Close: 'Import_Close',
   Import_Summary: 'Import_Summary',
-  Import_Imported: 'Import_Imported',
-  Import_Skipped: 'Import_Skipped',
-  Import_Errors: 'Import_Errors',
+  Import_ImportedTemplate: 'Import_ImportedTemplate',
+  Import_SkippedTemplate: 'Import_SkippedTemplate',
+  Import_ErrorsTemplate: 'Import_ErrorsTemplate',
   Import_InvalidFormat: 'Import_InvalidFormat',
   Import_Error: 'Import_Error',
 

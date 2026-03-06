@@ -35,15 +35,29 @@ jest.mock('@brightchain/brightchain-lib', () => ({
 
 const mockGetEntry = jest.fn();
 const mockCheckBreach = jest.fn();
+const mockDeleteEntry = jest.fn();
+const mockSearchEntries = jest.fn();
+
+// Stable reference — avoids infinite useEffect re-triggers caused by
+// a new object identity on every render.
+const stableBrightPassApi = {
+  get getEntry() {
+    return (...args: unknown[]) => mockGetEntry(...args);
+  },
+  get checkBreach() {
+    return (...args: unknown[]) => mockCheckBreach(...args);
+  },
+  get deleteEntry() {
+    return mockDeleteEntry;
+  },
+  get searchEntries() {
+    return mockSearchEntries;
+  },
+};
 
 jest.mock('../hooks/useBrightPassApi', () => ({
   __esModule: true,
-  useBrightPassApi: () => ({
-    getEntry: (...args: unknown[]) => mockGetEntry(...args),
-    checkBreach: (...args: unknown[]) => mockCheckBreach(...args),
-    deleteEntry: jest.fn(),
-    searchEntries: jest.fn(),
-  }),
+  useBrightPassApi: () => stableBrightPassApi,
 }));
 
 const stableT = (key: string, vars?: Record<string, string>) => {
@@ -295,9 +309,11 @@ describe('Property 5: Sensitive field masking', () => {
           Promise.resolve({ breached: false, count: 0 }),
         );
 
-        render(<EntryDetailView vaultId="test-vault" entryId={entry.id} />);
+        const { unmount } = render(
+          <EntryDetailView vaultId="test-vault" entryId={entry.id} />,
+        );
 
-        // Wait for the toggle button to appear — entry fully loaded
+        // Wait for loading to complete and the toggle button to appear
         const toggleButton = await screen.findByLabelText(
           'EntryDetail_ShowPassword',
           {},
@@ -305,17 +321,21 @@ describe('Property 5: Sensitive field masking', () => {
         );
 
         // Verify masked field is present
-        expect(screen.getAllByDisplayValue(MASK).length).toBeGreaterThanOrEqual(
-          1,
-        );
+        await waitFor(() => {
+          expect(screen.getAllByDisplayValue(MASK).length).toBeGreaterThanOrEqual(
+            1,
+          );
+        });
 
         // Click the toggle button to reveal
         fireEvent.click(toggleButton);
 
         // Now the actual password should be visible
-        expect(screen.getByDisplayValue(entry.password)).toBeTruthy();
+        await waitFor(() => {
+          expect(screen.getByDisplayValue(entry.password)).toBeTruthy();
+        });
 
-        cleanup();
+        unmount();
       }),
       { numRuns: 100 },
     );
@@ -335,7 +355,9 @@ describe('Property 5: Sensitive field masking', () => {
 
         mockGetEntry.mockImplementation(() => Promise.resolve(entry));
 
-        render(<EntryDetailView vaultId="test-vault" entryId={entry.id} />);
+        const { unmount } = render(
+          <EntryDetailView vaultId="test-vault" entryId={entry.id} />,
+        );
 
         // Wait for toggle buttons to appear — entry is fully loaded
         await waitFor(
@@ -348,7 +370,9 @@ describe('Property 5: Sensitive field masking', () => {
         );
 
         // Both cardNumber and cvv are masked
-        expect(screen.getAllByDisplayValue(MASK).length).toBe(2);
+        await waitFor(() => {
+          expect(screen.getAllByDisplayValue(MASK).length).toBe(2);
+        });
 
         // Click first toggle to reveal cardNumber
         fireEvent.click(
@@ -356,15 +380,19 @@ describe('Property 5: Sensitive field masking', () => {
         );
 
         // cardNumber should now be visible
-        expect(screen.getByDisplayValue(entry.cardNumber)).toBeTruthy();
+        await waitFor(() => {
+          expect(screen.getByDisplayValue(entry.cardNumber)).toBeTruthy();
+        });
 
         // Re-query — the remaining ShowPassword toggle is for cvv
         fireEvent.click(screen.getByLabelText('EntryDetail_ShowPassword'));
 
         // cvv should now be visible
-        expect(screen.getByDisplayValue(entry.cvv)).toBeTruthy();
+        await waitFor(() => {
+          expect(screen.getByDisplayValue(entry.cvv)).toBeTruthy();
+        });
 
-        cleanup();
+        unmount();
       }),
       { numRuns: 100 },
     );

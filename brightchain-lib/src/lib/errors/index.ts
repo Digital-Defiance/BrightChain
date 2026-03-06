@@ -346,3 +346,19 @@ export * from './blockFetchError';
  * Message passing system errors.
  */
 export * from './messaging';
+
+// ============================================================================
+// Write ACL Errors
+// ============================================================================
+/**
+ * Write ACL authorization and management errors.
+ * @see {@link WriteAuthorizationError}
+ * @see {@link AclAdminRequiredError}
+ * @see {@link CapabilityTokenExpiredError}
+ * @see {@link CapabilityTokenInvalidError}
+ * @see {@link LastAdministratorError}
+ * @see {@link AclVersionConflictError}
+ * @see {@link AclSignatureVerificationError}
+ * @see {@link WriterNotInPoolError}
+ */
+export * from './writeAclErrors';

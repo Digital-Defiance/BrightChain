@@ -23,10 +23,21 @@ jest.mock('@digitaldefiance/suite-core-lib', () => ({
 }));
 
 // Mock BrightChainSoupDemo to avoid module-level code execution
-jest.mock('./components/BrightChainSoupDemo', () => ({
+jest.mock('@brightchain/brightchain-react-components', () => ({
   BrightChainSoupDemo: () => (
     <div data-testid="soup-demo">BrightChainSoupDemo Mock</div>
   ),
+  BrightChainLogo: (props: Record<string, unknown>) => (
+    <div data-testid="brightchain-logo">BrightChainLogo Mock</div>
+  ),
+  BrightChainSubLogo: (props: Record<string, unknown>) => (
+    <span data-testid="brightchain-sub-logo">{String((props as any).subText || '')}</span>
+  ),
+  BrightPassDemo: () => <div data-testid="brightpass-demo">BrightPassDemo Mock</div>,
+  DatabaseDemo: () => <div data-testid="database-demo">DatabaseDemo Mock</div>,
+  IdentityDemo: () => <div data-testid="identity-demo">IdentityDemo Mock</div>,
+  MessagingDemo: () => <div data-testid="messaging-demo">MessagingDemo Mock</div>,
+  StoragePoolsDemo: () => <div data-testid="storage-pools-demo">StoragePoolsDemo Mock</div>,
 }));
 
 // Mock brightchain-lib to prevent i18n initialization
@@ -93,9 +104,9 @@ jest.mock('@brightchain/brightchain-lib', () => ({
   BlockSize: {
     Small: 1024,
   },
-  uint8ArrayToHex: jest.fn((arr) =>
+  uint8ArrayToHex: jest.fn((arr: Uint8Array) =>
     Array.from(arr)
-      .map((b) => b.toString(16).padStart(2, '0'))
+      .map((b: number) => b.toString(16).padStart(2, '0'))
       .join(''),
   ),
 }));
@@ -158,6 +169,7 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   useI18n: () => ({
     tComponent: (_componentId: string, key: string) => key,
     t: (key: string) => key,
+    tBranded: (key: string) => key,
     language: 'en',
     setLanguage: jest.fn(),
   }),

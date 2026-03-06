@@ -56,6 +56,13 @@ export {
 } from './lib/headRegistry';
 export type { HeadRegistryOptions } from './lib/headRegistry';
 
+// Authorized head registry (Write ACL enforcement)
+export { AuthorizedHeadRegistry } from './lib/authorizedHeadRegistry';
+
+// Write ACL management
+export { WriteAclManager } from './lib/writeAclManager';
+export type { AclChangeListener, IAclChangeEvent } from './lib/writeAclManager';
+
 // Pooled store adapter
 export { PooledStoreAdapter } from './lib/pooledStoreAdapter';
 

@@ -1,24 +1,25 @@
-import { StringsCollection } from '@digitaldefiance/i18n-lib';
+import { ComponentStrings } from '@digitaldefiance/i18n-lib';
 import {
   BrightPassStringKey,
   BrightPassStrings,
 } from '../../../enumerations/brightPassStrings';
 
-export const BrightPassAmericanEnglishStrings: StringsCollection<BrightPassStringKey> =
+export const BrightPassAmericanEnglishStrings: ComponentStrings<BrightPassStringKey> =
   {
     // Menu
     [BrightPassStrings.Menu_BrightPass]: 'BrightPass',
 
     // Vault List
     [BrightPassStrings.VaultList_Title]: 'Vaults',
+    [BrightPassStrings.VaultList_CreateVaultName]: 'Vault Name',
     [BrightPassStrings.VaultList_CreateVault]: 'Create Vault',
     [BrightPassStrings.VaultList_DeleteVault]: 'Delete Vault',
-    [BrightPassStrings.VaultList_SharedWith]: 'Shared with {COUNT} members',
+    [BrightPassStrings.VaultList_SharedWithTemplate]: 'Shared with {COUNT} members',
     [BrightPassStrings.VaultList_NoVaults]:
       'No vaults yet. Create one to get started.',
 
     // Vault Detail
-    [BrightPassStrings.VaultDetail_Title]: 'Vault: {NAME}',
+    [BrightPassStrings.VaultDetail_TitleNameTemplate]: 'Vault: {NAME}',
     [BrightPassStrings.VaultDetail_AddEntry]: 'Add Entry',
     [BrightPassStrings.VaultDetail_LockVault]: 'Lock Vault',
     [BrightPassStrings.VaultDetail_Search]: 'Search entries…',
@@ -59,7 +60,7 @@ export const BrightPassAmericanEnglishStrings: StringsCollection<BrightPassStrin
     [BrightPassStrings.TOTP_Code]: 'Current Code',
     [BrightPassStrings.TOTP_CopyCode]: 'Copy Code',
     [BrightPassStrings.TOTP_Copied]: 'Copied!',
-    [BrightPassStrings.TOTP_SecondsRemaining]: '{SECONDS}s remaining',
+    [BrightPassStrings.TOTP_SecondsRemainingTemplate]: '{SECONDS}s remaining',
     [BrightPassStrings.TOTP_QrCode]: 'QR Code',
     [BrightPassStrings.TOTP_SecretUri]: 'Secret URI',
 
@@ -67,7 +68,7 @@ export const BrightPassAmericanEnglishStrings: StringsCollection<BrightPassStrin
     [BrightPassStrings.Breach_Title]: 'Breach Check',
     [BrightPassStrings.Breach_Check]: 'Check for Breaches',
     [BrightPassStrings.Breach_Password]: 'Password to check',
-    [BrightPassStrings.Breach_Found]:
+    [BrightPassStrings.Breach_FoundTemplate]:
       'This password was found in {COUNT} data breaches.',
     [BrightPassStrings.Breach_NotFound]:
       'This password has not been found in any known data breaches.',
@@ -84,20 +85,45 @@ export const BrightPassAmericanEnglishStrings: StringsCollection<BrightPassStrin
 
     // Breadcrumb Navigation
     [BrightPassStrings.Breadcrumb_BrightPass]: 'BrightPass',
-    [BrightPassStrings.Breadcrumb_Vault]: 'Vault: {NAME}',
+    [BrightPassStrings.Breadcrumb_VaultTemplate]: 'Vault: {NAME}',
     [BrightPassStrings.Breadcrumb_AuditLog]: 'Audit Log',
     [BrightPassStrings.Breadcrumb_PasswordGenerator]: 'Password Generator',
     [BrightPassStrings.Breadcrumb_Tools]: 'Tools',
 
     // Vault List Dialogs
     [BrightPassStrings.VaultList_ConfirmDelete]: 'Delete Vault',
-    [BrightPassStrings.VaultList_ConfirmDeleteMessage]:
+    [BrightPassStrings.VaultList_ConfirmDeleteMessageTemplate]:
       'Enter your master password to delete vault "{NAME}". This action cannot be undone.',
     [BrightPassStrings.VaultList_EnterMasterPassword]: 'Enter master password',
+    [BrightPassStrings.VaultList_ConfirmMasterPassword]:
+      'Confirm master password',
+    [BrightPassStrings.VaultList_PasswordsMustMatch]:
+      'Master password and confirmation must match.',
     [BrightPassStrings.VaultList_Cancel]: 'Cancel',
     [BrightPassStrings.VaultList_Confirm]: 'Confirm',
     [BrightPassStrings.VaultList_Unlock]: 'Unlock',
     [BrightPassStrings.VaultList_UnlockVault]: 'Unlock Vault',
+
+    // Validation Messages
+    [BrightPassStrings.Validation_VaultNameMinLengthTemplate]:
+      'Vault name must be at least {MIN_LENGTH} characters',
+    [BrightPassStrings.Validation_VaultNameMaxLengthTemplate]:
+      'Vault name must be at most {MAX_LENGTH} characters',
+    [BrightPassStrings.Validation_VaultNameRequired]: 'Vault name is required',
+    [BrightPassStrings.Validation_PasswordMinLengthTemplate]:
+      'Master password must be at least {MIN_LENGTH} characters',
+    [BrightPassStrings.Validation_PasswordUppercase]:
+      'Must contain at least one uppercase letter',
+    [BrightPassStrings.Validation_PasswordLowercase]:
+      'Must contain at least one lowercase letter',
+    [BrightPassStrings.Validation_PasswordNumber]:
+      'Must contain at least one number',
+    [BrightPassStrings.Validation_PasswordSpecialChar]:
+      'Must contain at least one special character',
+    [BrightPassStrings.Validation_PasswordRequired]:
+      'Master password is required',
+    [BrightPassStrings.Validation_ConfirmPasswordRequired]:
+      'Please confirm your master password',
 
     // Entry Detail
     [BrightPassStrings.EntryDetail_Title]: 'Entry Details',
@@ -124,7 +150,7 @@ export const BrightPassAmericanEnglishStrings: StringsCollection<BrightPassStrin
     [BrightPassStrings.EntryDetail_Tags]: 'Tags',
     [BrightPassStrings.EntryDetail_CreatedAt]: 'Created',
     [BrightPassStrings.EntryDetail_UpdatedAt]: 'Updated',
-    [BrightPassStrings.EntryDetail_BreachWarning]:
+    [BrightPassStrings.EntryDetail_BreachWarningTemplate]:
       'This password was found in {COUNT} data breaches!',
     [BrightPassStrings.EntryDetail_BreachSafe]:
       'This password has not been found in any known data breaches.',
@@ -160,7 +186,7 @@ export const BrightPassAmericanEnglishStrings: StringsCollection<BrightPassStrin
     [BrightPassStrings.Emergency_Trustees]:
       'Trustee member IDs (comma-separated)',
     [BrightPassStrings.Emergency_Shares]: 'Encrypted share {INDEX}',
-    [BrightPassStrings.Emergency_InsufficientShares]:
+    [BrightPassStrings.Emergency_InsufficientSharesTemplate]:
       'Insufficient shares. At least {THRESHOLD} shares are required.',
     [BrightPassStrings.Emergency_InvalidThreshold]:
       'Threshold must be between 1 and the number of trustees.',
@@ -186,10 +212,10 @@ export const BrightPassAmericanEnglishStrings: StringsCollection<BrightPassStrin
     [BrightPassStrings.Import_Import]: 'Import',
     [BrightPassStrings.Import_Close]: 'Close',
     [BrightPassStrings.Import_Summary]: 'Import Summary',
-    [BrightPassStrings.Import_Imported]:
+    [BrightPassStrings.Import_ImportedTemplate]:
       '{COUNT} entries imported successfully',
-    [BrightPassStrings.Import_Skipped]: '{COUNT} entries skipped',
-    [BrightPassStrings.Import_Errors]: 'Row {INDEX}: {MESSAGE}',
+    [BrightPassStrings.Import_SkippedTemplate]: '{COUNT} entries skipped',
+    [BrightPassStrings.Import_ErrorsTemplate]: 'Row {INDEX}: {MESSAGE}',
     [BrightPassStrings.Import_InvalidFormat]:
       'The uploaded file does not match the selected format.',
     [BrightPassStrings.Import_Error]:

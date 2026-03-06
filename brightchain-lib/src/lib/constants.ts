@@ -193,6 +193,15 @@ export const SEALING: ISealingConsts = {
 } as const;
 
 /**
+ * Constants for vault and password validation
+ */
+export const VALIDATION = {
+  VAULT_NAME_MIN_LENGTH: 3 as const,
+  VAULT_NAME_MAX_LENGTH: 50 as const,
+  PASSWORD_MIN_LENGTH: 12 as const,
+} as const;
+
+/**
  * BrightChain constants object extending base constants from @digitaldefiance/ecies-lib.
  * Only includes BrightChain-specific constants not provided by upstream.
  */
@@ -204,15 +213,16 @@ export const CONSTANTS: IConstants = {
   BC_FEC,
   TUPLE,
   SEALING,
+  VALIDATION,
   SITE,
   THEME_COLORS,
 };
 
 export const CoreOverrides = {
   Site: 'BrightChain',
-  SiteTagline: 'Next-Generation Decentralized Infrastructure',
+  SiteTagline: 'Privacy. Participation. Power.',
   SiteDescription:
-    'The home of BrightChain, a Next-Generation Decentralized Infrastructure project.',
+    'Your files are broken into blocks and mixed with random data using XOR operations, making them appear completely random while maintaining perfect security. From homomorphic voting to brokered anonymity, from distributed file storage to quorum-based governance, BrightChain offers everything needed for the next generation of decentralized applications.',
 };
 
 export const CoreConstants: ISuiteCoreConstants = createConstants(

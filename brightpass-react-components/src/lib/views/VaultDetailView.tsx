@@ -93,7 +93,6 @@ const VaultDetailView: React.FC = () => {
   const { vault, lockVault, isVaultUnlocked } = useBrightPass();
   const navigate = useNavigate();
 
-  const [_showAddEntry, setShowAddEntry] = useState(false);
   const [showLockConfirm, setShowLockConfirm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [error, _setError] = useState<string | null>(null);
@@ -157,7 +156,7 @@ const VaultDetailView: React.FC = () => {
         mb={2}
       >
         <Typography variant="h4" component="h1">
-          {t(BrightPassStrings.VaultDetail_Title, {
+          {t(BrightPassStrings.VaultDetail_TitleNameTemplate, {
             NAME: vault.metadata.name,
           })}
         </Typography>
@@ -165,7 +164,7 @@ const VaultDetailView: React.FC = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => setShowAddEntry(true)}
+            onClick={() => navigate(`/brightpass/vaults/${vaultId}/entries/new`)}
           >
             {t(BrightPassStrings.VaultDetail_AddEntry)}
           </Button>

@@ -3,7 +3,9 @@ import {
   IBasePostData,
   ICreatePostOptions,
   IInteractionStatus,
+  INotificationService,
   IPostService,
+  NotificationType,
   PostErrorCode,
   PostServiceError,
   PostType,
@@ -125,12 +127,21 @@ export class PostService implements IPostService {
   private readonly likesCollection: Collection<LikeRecord>;
   private readonly repostsCollection: Collection<RepostRecord>;
   private readonly textFormatter = getTextFormatter();
+  private notificationService?: INotificationService;
 
   constructor(application: IApplicationWithCollections) {
     this.postsCollection = application.getModel<PostRecord>('brighthub_posts');
     this.likesCollection = application.getModel<LikeRecord>('brighthub_likes');
     this.repostsCollection =
       application.getModel<RepostRecord>('brighthub_reposts');
+  }
+
+  /**
+   * Set the notification service for creating notifications on interactions.
+   * Called after construction to avoid circular dependency issues.
+   */
+  setNotificationService(service: INotificationService): void {
+    this.notificationService = service;
   }
 
   /**
@@ -496,6 +507,24 @@ export class PostService implements IPostService {
         { likeCount: post.likeCount + 1, updatedAt: now },
       )
       .exec();
+
+    // Create notification for the post author (don't notify self-likes)
+    if (this.notificationService && post.authorId !== userId) {
+      try {
+        await this.notificationService.createNotification(
+          post.authorId,
+          NotificationType.Like,
+          userId,
+          {
+            targetId: postId,
+            content: 'liked your post',
+            clickThroughUrl: `/posts/${postId}`,
+          },
+        );
+      } catch {
+        // Non-fatal: notification failure should not break the like operation
+      }
+    }
   }
 
   /**

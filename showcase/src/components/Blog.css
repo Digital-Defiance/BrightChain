@@ -115,7 +115,7 @@
 
 .blog-post-card:hover {
   transform: translateY(-8px);
-  border-color: rgba(0, 255, 136, 0.2);
+  border-color: rgba(45, 170, 255, 0.2);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 

@@ -43,38 +43,38 @@ export const createAppTheme = (mode: PaletteMode) =>
       },
     },
     typography: {
-      fontFamily: "'Roboto', sans-serif",
+      fontFamily: "'IBM Plex Sans', sans-serif",
       h1: {
-        fontFamily: "'ConneqtRegular', sans-serif",
+        fontFamily: "'Inter', sans-serif",
         fontWeight: 400,
       },
       h2: {
-        fontFamily: "'ConneqtRegular', sans-serif",
+        fontFamily: "'Inter', sans-serif",
         fontWeight: 400,
       },
       h3: {
-        fontFamily: "'ConneqtRegular', sans-serif",
+        fontFamily: "'Inter', sans-serif",
         fontWeight: 400,
       },
       h4: {
-        fontFamily: "'ConneqtRegular', sans-serif",
+        fontFamily: "'Inter', sans-serif",
         fontWeight: 400,
       },
       h5: {
-        fontFamily: "'ConneqtRegular', sans-serif",
+        fontFamily: "'Inter', sans-serif",
         fontWeight: 400,
       },
       h6: {
-        fontFamily: "'ConneqtRegular', sans-serif",
+        fontFamily: "'Inter', sans-serif",
         fontWeight: 400,
       },
       subtitle1: {
-        fontFamily: "'ConneqtRegular', sans-serif",
+        fontFamily: "'IBM Plex Sans', sans-serif",
         fontWeight: 400,
         textTransform: 'uppercase',
       },
       body1: {
-        fontFamily: "'Roboto', sans-serif",
+        fontFamily: "'IBM Plex Sans', sans-serif",
         fontWeight: 400,
       },
     },

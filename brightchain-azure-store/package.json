@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/azure-store",
-  "version": "0.24.0",
+  "version": "0.25.0",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "files": [
@@ -10,8 +10,8 @@
   "dependencies": {
     "@azure/identity": "^4.6.0",
     "@azure/storage-blob": "^12.26.0",
-    "@brightchain/brightchain-api-lib": "^0.24.0",
-    "@brightchain/brightchain-lib": "^0.24.0",
+    "@brightchain/brightchain-api-lib": "^0.25.0",
+    "@brightchain/brightchain-lib": "^0.25.0",
     "tslib": "^2.3.0"
   }
 }

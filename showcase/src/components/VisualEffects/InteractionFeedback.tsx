@@ -16,17 +16,17 @@ const feedbackVariants = {
     low: {
       scale: 1.02,
       y: -2,
-      boxShadow: '0 4px 12px rgba(0, 255, 136, 0.2)',
+      boxShadow: '0 4px 12px rgba(45, 170, 255, 0.2)',
     },
     medium: {
       scale: 1.05,
       y: -4,
-      boxShadow: '0 8px 24px rgba(0, 255, 136, 0.3)',
+      boxShadow: '0 8px 24px rgba(45, 170, 255, 0.3)',
     },
     high: {
       scale: 1.08,
       y: -6,
-      boxShadow: '0 12px 36px rgba(0, 255, 136, 0.4)',
+      boxShadow: '0 12px 36px rgba(45, 170, 255, 0.4)',
     },
   },
   click: {
@@ -42,13 +42,13 @@ const feedbackVariants = {
   },
   focus: {
     low: {
-      boxShadow: '0 0 0 2px rgba(0, 255, 136, 0.3)',
+      boxShadow: '0 0 0 2px rgba(45, 170, 255, 0.3)',
     },
     medium: {
-      boxShadow: '0 0 0 3px rgba(0, 255, 136, 0.5)',
+      boxShadow: '0 0 0 3px rgba(45, 170, 255, 0.5)',
     },
     high: {
-      boxShadow: '0 0 0 4px rgba(0, 255, 136, 0.7)',
+      boxShadow: '0 0 0 4px rgba(45, 170, 255, 0.7)',
     },
   },
 };
@@ -56,7 +56,7 @@ const feedbackVariants = {
 export const InteractionFeedback: React.FC<InteractionFeedbackProps> = ({
   children,
   type = 'hover',
-  feedbackColor = '#00ff88',
+  feedbackColor = '#2daaff',
   intensity = 'medium',
   className = '',
   onClick,
@@ -193,7 +193,7 @@ interface PulseIndicatorProps {
 }
 
 export const PulseIndicator: React.FC<PulseIndicatorProps> = ({
-  color = '#00ff88',
+  color = '#2daaff',
   size = 12,
   className = '',
 }) => {

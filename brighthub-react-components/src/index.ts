@@ -7,6 +7,9 @@
  * @packageDocumentation
  */
 
+// Layout
+export { default as BrightHubLayout } from './lib/BrightHubLayout';
+
 // Theme Provider
 export * from './lib/theme';
 

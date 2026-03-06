@@ -174,7 +174,7 @@ export const IdleStateAnimation: React.FC<IdleStateAnimationProps> = ({
           width: '120%',
           height: '120%',
           background:
-            'radial-gradient(circle, rgba(0, 255, 136, 0.1) 0%, transparent 70%)',
+            'radial-gradient(circle, rgba(45, 170, 255, 0.1) 0%, transparent 70%)',
           pointerEvents: 'none',
           zIndex: -1,
         }}
@@ -212,7 +212,7 @@ export const BackgroundAmbient: React.FC<BackgroundAmbientProps> = ({
             height: `${50 + i * 20}px`,
             borderRadius: '50%',
             background: `radial-gradient(circle, ${
-              i % 2 === 0 ? 'rgba(0, 255, 136, 0.1)' : 'rgba(0, 153, 255, 0.1)'
+              i % 2 === 0 ? 'rgba(45, 170, 255, 0.1)' : 'rgba(0, 116, 224, 0.1)'
             } 0%, transparent 70%)`,
             left: `${10 + i * 20}%`,
             top: `${20 + i * 15}%`,

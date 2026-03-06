@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightpass-react-components",
-  "version": "0.24.1",
+  "version": "0.25.0",
   "description": "BrightPass React UI components for BrightChain password manager",
   "main": "src/index.ts",
   "types": "src/index.ts",
@@ -33,8 +33,13 @@
     "@mui/icons-material": "*",
     "@mui/material": "*",
     "axios": "*",
+    "formik": "^2.4.6",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
-    "react-router-dom": "^6.0.0"
+    "react-router-dom": "^6.0.0",
+    "yup": "^1.0.0"
+  },
+  "dependencies": {
+    "@awesome.me/kit-a20d532681": "^1.0.23"
   }
 }
