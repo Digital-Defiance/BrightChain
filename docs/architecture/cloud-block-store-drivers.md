@@ -1,7 +1,7 @@
 ---
 title: "Cloud Block Store Drivers"
 parent: "Architecture & Design"
-nav_order: 4
+nav_order: 5
 permalink: /docs/architecture/cloud-block-store-drivers/
 ---
 # Design Document: Cloud Block Store Drivers

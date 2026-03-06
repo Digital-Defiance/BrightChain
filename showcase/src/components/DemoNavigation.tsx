@@ -88,8 +88,10 @@ export const DemoNavigation: React.FC<DemoNavigationProps> = ({
     >
       <div className="nav-container">
         <Link to="/" className="nav-logo">
-          <span className="logo-icon">⚡</span>
-          <span className="logo-text">BrightChain</span>
+          <img
+            src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightchain-tx-white.png"
+            style={{ height: '36px' }}
+          />
         </Link>
 
         {/* Desktop Navigation */}

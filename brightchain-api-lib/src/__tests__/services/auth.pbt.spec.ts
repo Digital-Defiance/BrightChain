@@ -15,15 +15,19 @@ import {
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { EmailString, MemberType, SecureString } from '@digitaldefiance/ecies-lib';
+import {
+  EmailString,
+  MemberType,
+  SecureString,
+} from '@digitaldefiance/ecies-lib';
 import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
 import { SystemUserService } from '@digitaldefiance/node-express-suite';
 import * as bcrypt from 'bcrypt';
 import * as fc from 'fast-check';
 import * as jwt from 'jsonwebtoken';
+import { AppConstants } from '../../lib/appConstants';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { IAuthCredentials } from '../../lib/interfaces/auth-credentials';
-import { AppConstants } from '../../lib/appConstants';
 import { AuthService } from '../../lib/services/auth';
 import { EmailService } from '../../lib/services/email';
 
@@ -108,12 +112,21 @@ describe('AuthService Property-Based Tests', () => {
       .map(([local, domain]) => `${local}@${domain}.com`);
 
     /** Arbitrary: password meeting minimum 8-char requirement */
+    /** Must include at least one letter, one digit, and one special character to pass PasswordRegex */
     const passwordArb: fc.Arbitrary<string> = fc
-      .array(fc.integer({ min: 0x21, max: 0x7e }), {
-        minLength: 8,
-        maxLength: 32,
+      .tuple(
+        fc.stringMatching(/^[a-zA-Z]{2,10}$/),
+        fc.stringMatching(/^[0-9]{1,5}$/),
+        fc.stringMatching(/^[!@#$%^&*()_+=;:,.<>?]{1,5}$/),
+        fc.stringMatching(/^[a-zA-Z0-9!@#$%^&*()_+=;:,.<>?]{0,15}$/),
+      )
+      .map(([letters, digits, specials, padding]) => {
+        return (letters + digits + specials + padding)
+          .split('')
+          .sort(() => Math.random() - 0.5)
+          .join('');
       })
-      .map((codes) => String.fromCharCode(...codes));
+      .filter((p) => p.length >= 8 && p.length <= 32);
 
     /**
      * Create a fresh AuthService with isolated in-memory stores for each
@@ -159,12 +172,13 @@ describe('AuthService Property-Based Tests', () => {
 
       // Pre-populate the SystemUserService singleton
       (SystemUserService as any)['systemUser'] = null;
-      const ecies = ServiceProvider.getInstance().eciesService as unknown as ECIESService;
+      const ecies = ServiceProvider.getInstance()
+        .eciesService as unknown as ECIESService;
       const { member: sysUser } = Member.newMember(
         ecies,
         MemberType.System,
         AppConstants.SystemUser,
-        new EmailString(AppConstants.SystemEmail),
+        new EmailString('system@test.com'),
       );
       SystemUserService.setSystemUser(sysUser, AppConstants);
 
@@ -238,11 +252,19 @@ describe('AuthService Property-Based Tests', () => {
       .map(([local, domain]) => `${local}@${domain}.com`);
 
     const passwordArb: fc.Arbitrary<string> = fc
-      .array(fc.integer({ min: 0x21, max: 0x7e }), {
-        minLength: 8,
-        maxLength: 32,
+      .tuple(
+        fc.stringMatching(/^[a-zA-Z]{2,10}$/),
+        fc.stringMatching(/^[0-9]{1,5}$/),
+        fc.stringMatching(/^[!@#$%^&*()_+=;:,.<>?]{1,5}$/),
+        fc.stringMatching(/^[a-zA-Z0-9!@#$%^&*()_+=;:,.<>?]{0,15}$/),
+      )
+      .map(([letters, digits, specials, padding]) => {
+        return (letters + digits + specials + padding)
+          .split('')
+          .sort(() => Math.random() - 0.5)
+          .join('');
       })
-      .map((codes) => String.fromCharCode(...codes));
+      .filter((p) => p.length >= 8 && p.length <= 32);
 
     const JWT_SECRET = 'test-jwt-secret-for-pbt';
 
@@ -283,12 +305,13 @@ describe('AuthService Property-Based Tests', () => {
 
       // Pre-populate the SystemUserService singleton
       (SystemUserService as any)['systemUser'] = null;
-      const ecies = ServiceProvider.getInstance().eciesService as unknown as ECIESService;
+      const ecies = ServiceProvider.getInstance()
+        .eciesService as unknown as ECIESService;
       const { member: sysUser } = Member.newMember(
         ecies,
         MemberType.System,
         AppConstants.SystemUser,
-        new EmailString(AppConstants.SystemEmail),
+        new EmailString('system@test.com'),
       );
       SystemUserService.setSystemUser(sysUser, AppConstants);
 
@@ -367,11 +390,19 @@ describe('AuthService Property-Based Tests', () => {
       .map(([local, domain]) => `${local}@${domain}.com`);
 
     const passwordArb: fc.Arbitrary<string> = fc
-      .array(fc.integer({ min: 0x21, max: 0x7e }), {
-        minLength: 8,
-        maxLength: 32,
+      .tuple(
+        fc.stringMatching(/^[a-zA-Z]{2,10}$/),
+        fc.stringMatching(/^[0-9]{1,5}$/),
+        fc.stringMatching(/^[!@#$%^&*()_+=;:,.<>?]{1,5}$/),
+        fc.stringMatching(/^[a-zA-Z0-9!@#$%^&*()_+=;:,.<>?]{0,15}$/),
+      )
+      .map(([letters, digits, specials, padding]) => {
+        return (letters + digits + specials + padding)
+          .split('')
+          .sort(() => Math.random() - 0.5)
+          .join('');
       })
-      .map((codes) => String.fromCharCode(...codes));
+      .filter((p) => p.length >= 8 && p.length <= 32);
 
     function createIsolatedAuthService(): AuthService {
       initializeBrightChain();
@@ -410,12 +441,13 @@ describe('AuthService Property-Based Tests', () => {
 
       // Pre-populate the SystemUserService singleton
       (SystemUserService as any)['systemUser'] = null;
-      const ecies = ServiceProvider.getInstance().eciesService as unknown as ECIESService;
+      const ecies = ServiceProvider.getInstance()
+        .eciesService as unknown as ECIESService;
       const { member: sysUser } = Member.newMember(
         ecies,
         MemberType.System,
         AppConstants.SystemUser,
-        new EmailString(AppConstants.SystemEmail),
+        new EmailString('system@test.com'),
       );
       SystemUserService.setSystemUser(sysUser, AppConstants);
 

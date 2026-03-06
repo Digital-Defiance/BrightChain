@@ -345,11 +345,14 @@ const Components = () => {
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
+          {/* prettier-ignore */}
           <h3>
             BrightChain revolutionizes data storage using the{' '}
-            <em>&ldquo;Bright Block Soup&rdquo;</em> concept — combining{' '}
-            <em>advanced cryptography</em>, <em>decentralized storage</em>, and{' '}
-            <em>democratic governance</em>.
+            <em>
+              &ldquo;<a href="https://github.brightchain.org/docs/overview/brightchain-writeup.html">Bright Block Soup</a>&rdquo;
+            </em>{' '}
+            concept — combining <em>advanced cryptography</em>,{' '}
+            <em>decentralized storage</em>, and <em>democratic governance</em>.
           </h3>
           <p>
             Your files are broken into blocks and mixed with random data using

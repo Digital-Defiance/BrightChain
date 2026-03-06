@@ -1,6 +1,3 @@
-// ── Main entry (BrightPassRoutes) ─────────────────────────────────────
-export { default as BrightPassRoutes } from './lib/BrightPassRoutes';
-
 // ── Context ──────────────────────────────────────────────────────────
 export {
   BrightPassContext,
@@ -36,6 +33,7 @@ export type {
 export { useBrightPassTranslation } from './lib/hooks/useBrightPassTranslation';
 
 // ── Views ────────────────────────────────────────────────────────────
+export { default as BrightPassLayout } from './lib/views/BrightPassLayout';
 export {
   default as AuditLogView,
   filterAuditEntries,

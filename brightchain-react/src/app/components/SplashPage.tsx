@@ -26,7 +26,7 @@ interface ShowcaseCard {
 }
 
 export const SplashPage: FC = () => {
-  const { t } = useI18n();
+  const { tBranded: t } = useI18n();
   const showcaseCards: ShowcaseCard[] = [
     {
       title: t(BrightChainStrings.Splash_SoupCanDemo),

@@ -54,7 +54,7 @@
 }
 
 .camera-control-btn:hover {
-  background: rgba(0, 255, 136, 0.1);
+  background: rgba(45, 170, 255, 0.1);
   border-color: var(--accent-primary);
   transform: translateY(-2px);
 }
@@ -63,7 +63,7 @@
   background: var(--accent-primary);
   color: var(--bg-primary);
   border-color: var(--accent-primary);
-  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+  box-shadow: 0 4px 12px rgba(45, 170, 255, 0.3);
 }
 
 .camera-control-icon {
@@ -119,7 +119,7 @@
 }
 
 .hover-card:hover {
-  border-color: rgba(0, 255, 136, 0.3);
+  border-color: rgba(45, 170, 255, 0.3);
 }
 
 .pulse-indicator {
@@ -142,11 +142,11 @@
 
 /* Gradient Backgrounds */
 .gradient-bg-primary {
-  background: linear-gradient(135deg, rgba(0, 255, 136, 0.1) 0%, rgba(0, 153, 255, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(45, 170, 255, 0.1) 0%, rgba(0, 116, 224, 0.1) 100%);
 }
 
 .gradient-bg-secondary {
-  background: linear-gradient(135deg, rgba(0, 153, 255, 0.1) 0%, rgba(255, 107, 157, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(0, 116, 224, 0.1) 0%, rgba(94, 203, 255, 0.1) 100%);
 }
 
 .gradient-border {
@@ -184,7 +184,7 @@
 }
 
 .hover-glow:hover {
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+  box-shadow: 0 0 20px rgba(45, 170, 255, 0.4);
 }
 
 .hover-scale {

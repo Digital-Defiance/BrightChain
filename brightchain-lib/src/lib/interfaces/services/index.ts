@@ -12,3 +12,6 @@ export type * from './operatorPrompt';
 export type * from './quorumDatabase';
 export type * from './quorumStateMachine';
 export type * from './redistributionConfig';
+
+// Write ACL service interfaces
+export type * from './writeAclService';

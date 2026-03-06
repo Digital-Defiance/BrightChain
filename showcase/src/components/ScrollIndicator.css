@@ -28,8 +28,8 @@
   border: 2px solid var(--accent-primary);
   border-radius: 13px;
   position: relative;
-  background: rgba(0, 255, 136, 0.05);
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+  background: rgba(45, 170, 255, 0.05);
+  box-shadow: 0 0 20px rgba(45, 170, 255, 0.2);
 }
 
 .mouse-wheel {
@@ -41,7 +41,7 @@
   top: 8px;
   left: 50%;
   transform: translateX(-50%);
-  box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  box-shadow: 0 0 10px rgba(45, 170, 255, 0.5);
 }
 
 .scroll-text {
@@ -59,7 +59,7 @@
   height: 3px;
   background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
   z-index: 1001;
-  box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  box-shadow: 0 0 10px rgba(45, 170, 255, 0.5);
 }
 
 @media (max-width: 768px) {

@@ -32,8 +32,7 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  const { tComponent } = useI18n();
-  const t = (key: string) => tComponent(BrightChainComponentId, key);
+  const { tBranded: t } = useI18n();
 
   return (
     <Dialog

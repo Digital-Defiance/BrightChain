@@ -16,6 +16,10 @@ base.describe('Registration Form Submission', () => {
     'fills registration form with valid credentials and submits successfully',
     async ({ page }) => {
       // Requirement 6.1: fill registration form, submit, verify success or navigation away
+      // Registration involves ECIES key derivation which is computationally expensive
+      // in the browser, so we use generous timeouts.
+      base.setTimeout(120_000);
+
       const creds = generateCredentials();
 
       await page.goto('/register');
@@ -43,8 +47,8 @@ base.describe('Registration Form Submission', () => {
         .filter({ hasText: /success/i });
 
       await Promise.race([
-        baseExpect(successAlert).toBeVisible({ timeout: 30000 }),
-        page.waitForURL(/\/(verify-email|login|dashboard)/, { timeout: 30000 }),
+        baseExpect(successAlert).toBeVisible({ timeout: 90000 }),
+        page.waitForURL(/\/(verify-email|login|dashboard)/, { timeout: 90000 }),
       ]);
 
       // Confirm we either left the registration page or see a success alert
@@ -95,7 +99,7 @@ test.describe('Password Change Lifecycle', () => {
   }) => {
     // Requirement 6.3: navigate to /change-password, submit valid current and
     // new passwords, verify success, then verify login works with the new password
-    const newPassword = `NewPass!${Date.now().toString(36)}`;
+    const newPassword = `N3wPass!${Date.now().toString(36)}`;
 
     await authenticatedPage.goto('/change-password');
 

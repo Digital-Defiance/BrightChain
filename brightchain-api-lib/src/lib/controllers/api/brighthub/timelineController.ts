@@ -1,4 +1,5 @@
 import {
+  ApproveFollowersMode,
   FeedErrorCode,
   FeedServiceError,
   IFeedService,
@@ -43,8 +44,11 @@ interface ITimelineHandlers extends TypedHandlers {
   getUserProfile: ApiRequestHandler<
     IBrightHubUserProfileApiResponse | ApiErrorResponse
   >;
+  updateUserProfile: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   followUser: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   unfollowUser: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  blockUser: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  unblockUser: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   search: ApiRequestHandler<ITimelineApiResponse | ApiErrorResponse>;
   getUserFeed: ApiRequestHandler<ITimelineApiResponse | ApiErrorResponse>;
   getHashtagFeed: ApiRequestHandler<ITimelineApiResponse | ApiErrorResponse>;
@@ -139,6 +143,21 @@ export class BrightHubTimelineController<
           },
         },
       }),
+      routeConfig('put', '/users/:id', {
+        handlerKey: 'updateUserProfile',
+        useAuthentication: false,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Update user profile',
+          tags: ['BrightHub Users'],
+          responses: {
+            200: {
+              schema: 'UserProfileResponse',
+              description: 'Profile updated',
+            },
+          },
+        },
+      }),
       routeConfig('get', '/users/:id/feed', {
         handlerKey: 'getUserFeed',
         useAuthentication: false,
@@ -181,6 +200,30 @@ export class BrightHubTimelineController<
           },
         },
       }),
+      routeConfig('post', '/users/:id/block', {
+        handlerKey: 'blockUser',
+        useAuthentication: false,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Block a user',
+          tags: ['BrightHub Users'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'User blocked' },
+          },
+        },
+      }),
+      routeConfig('delete', '/users/:id/block', {
+        handlerKey: 'unblockUser',
+        useAuthentication: false,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Unblock a user',
+          tags: ['BrightHub Users'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'User unblocked' },
+          },
+        },
+      }),
       routeConfig('get', '/search', {
         handlerKey: 'search',
         useAuthentication: false,
@@ -220,8 +263,11 @@ export class BrightHubTimelineController<
       getHomeTimeline: this.handleGetHomeTimeline.bind(this),
       getPublicTimeline: this.handleGetPublicTimeline.bind(this),
       getUserProfile: this.handleGetUserProfile.bind(this),
+      updateUserProfile: this.handleUpdateUserProfile.bind(this),
       followUser: this.handleFollowUser.bind(this),
       unfollowUser: this.handleUnfollowUser.bind(this),
+      blockUser: this.handleBlockUser.bind(this),
+      unblockUser: this.handleUnblockUser.bind(this),
       search: this.handleSearch.bind(this),
       getUserFeed: this.handleGetUserFeed.bind(this),
       getHashtagFeed: this.handleGetHashtagFeed.bind(this),
@@ -341,6 +387,113 @@ export class BrightHubTimelineController<
         statusCode: 200,
         response: { message: 'OK', data: profile },
       };
+    } catch (error) {
+      if (error instanceof UserProfileServiceError) {
+        if (error.code === UserProfileErrorCode.UserNotFound)
+          return notFoundError('User', 'unknown');
+        return validationError(error.message);
+      }
+      return handleError(error);
+    }
+  }
+
+  /**
+   * GET /api/brighthub/users/:id/feed
+   */
+  /**
+   * PUT /api/brighthub/users/:id
+   * Update user profile including approveFollowersMode
+   */
+  private async handleUpdateUserProfile(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const body = (
+        req as { body: Record<string, unknown>; params: { id: string } }
+      ).body;
+      if (!id) return validationError('Missing required parameter: id');
+
+      const userId = (body['userId'] as string) ?? id;
+
+      // Handle approveFollowersMode separately
+      if (body['approveFollowersMode']) {
+        await this.getUserProfileService().setApproveFollowersMode(
+          userId,
+          body['approveFollowersMode'] as ApproveFollowersMode,
+        );
+      }
+
+      // Handle general profile updates
+      const updates: Record<string, unknown> = {};
+      if (body['displayName'] !== undefined)
+        updates['displayName'] = body['displayName'];
+      if (body['bio'] !== undefined) updates['bio'] = body['bio'];
+      if (body['location'] !== undefined)
+        updates['location'] = body['location'];
+      if (body['websiteUrl'] !== undefined)
+        updates['websiteUrl'] = body['websiteUrl'];
+
+      if (Object.keys(updates).length > 0) {
+        await this.getUserProfileService().updateProfile(userId, updates);
+      }
+
+      return {
+        statusCode: 200,
+        response: { message: 'Profile updated' },
+      };
+    } catch (error) {
+      if (error instanceof UserProfileServiceError) {
+        if (error.code === UserProfileErrorCode.UserNotFound)
+          return notFoundError('User', 'unknown');
+        return validationError(error.message);
+      }
+      return handleError(error);
+    }
+  }
+
+  /**
+   * POST /api/brighthub/users/:id/block
+   */
+  private async handleBlockUser(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { userId } = (
+        req as { body: { userId: string }; params: { id: string } }
+      ).body;
+      if (!id) return validationError('Missing required parameter: id');
+      if (!userId) return validationError('Missing required field: userId');
+
+      await this.getUserProfileService().blockUser(userId, id);
+      return { statusCode: 200, response: { message: 'User blocked' } };
+    } catch (error) {
+      if (error instanceof UserProfileServiceError) {
+        if (error.code === UserProfileErrorCode.UserNotFound)
+          return notFoundError('User', 'unknown');
+        return validationError(error.message);
+      }
+      return handleError(error);
+    }
+  }
+
+  /**
+   * DELETE /api/brighthub/users/:id/block
+   */
+  private async handleUnblockUser(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { userId } = (
+        req as { body: { userId: string }; params: { id: string } }
+      ).body;
+      if (!id) return validationError('Missing required parameter: id');
+      if (!userId) return validationError('Missing required field: userId');
+
+      await this.getUserProfileService().unblockUser(userId, id);
+      return { statusCode: 200, response: { message: 'User unblocked' } };
     } catch (error) {
       if (error instanceof UserProfileServiceError) {
         if (error.code === UserProfileErrorCode.UserNotFound)

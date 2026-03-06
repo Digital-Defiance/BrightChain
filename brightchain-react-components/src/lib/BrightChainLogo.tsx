@@ -1,3 +1,4 @@
+import { CONSTANTS } from '@brightchain/brightchain-lib';
 import React from 'react';
 import './BrightChainLogo.scss';
 
@@ -12,8 +13,8 @@ export interface BrightChainLogoProps {
 }
 
 export const BrightChainLogo: React.FC<BrightChainLogoProps> = ({
-  brightColor = '#0a60d0',
-  chainColor = '#46b6fd',
+  brightColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK,
+  chainColor = CONSTANTS.THEME_COLORS.CHAIN_BLUE_LIGHT,
   taglineColor = '#ffffff',
   className,
   style,

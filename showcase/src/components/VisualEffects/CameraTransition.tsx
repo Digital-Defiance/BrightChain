@@ -103,7 +103,7 @@ export const CameraTransition: React.FC<CameraTransitionProps> = ({
             right: 0,
             bottom: 0,
             background:
-              'radial-gradient(circle, rgba(0, 255, 136, 0.2) 0%, transparent 70%)',
+              'radial-gradient(circle, rgba(45, 170, 255, 0.2) 0%, transparent 70%)',
             pointerEvents: 'none',
             zIndex: 5,
           }}

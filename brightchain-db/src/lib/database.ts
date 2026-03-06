@@ -7,8 +7,15 @@
  *   await users.insertOne({ name: 'Alice' });
  */
 
-import { IBlockStore, isPooledBlockStore } from '@brightchain/brightchain-lib';
+import {
+  IBlockStore,
+  isPooledBlockStore,
+  type INodeAuthenticator,
+  type IWriteAclAuditLogger,
+  type IWriteAclService,
+} from '@brightchain/brightchain-lib';
 import { randomUUID } from 'crypto';
+import { AuthorizedHeadRegistry } from './authorizedHeadRegistry';
 import {
   Collection,
   HeadRegistry,
@@ -41,6 +48,18 @@ export interface BrightDbOptions {
   poolId?: string;
   /** Data directory for persistent storage (accepted for compatibility) */
   dataDir?: string;
+  /**
+   * Write ACL configuration. When provided, the head registry is wrapped
+   * with an AuthorizedHeadRegistry that enforces write authorization.
+   * When omitted, the database operates in Open_Mode (backward compatible).
+   *
+   * @see Requirements 1.2, 5.5
+   */
+  writeAclConfig?: {
+    aclService: IWriteAclService;
+    authenticator: INodeAuthenticator;
+    auditLogger?: IWriteAclAuditLogger;
+  };
 }
 
 /**
@@ -78,15 +97,34 @@ export class BrightDb {
       this.store = blockStore;
     }
     this.name = options?.name ?? 'brightchain';
+
+    // Resolve the base head registry
+    let baseRegistry: ICollectionHeadRegistry;
     if (options?.headRegistry) {
-      this.headRegistry = options.headRegistry;
+      baseRegistry = options.headRegistry;
     } else if (options?.dataDir) {
-      this.headRegistry = new PersistentHeadRegistry({
+      baseRegistry = new PersistentHeadRegistry({
         dataDir: options.dataDir,
       });
     } else {
-      this.headRegistry = HeadRegistry.createIsolated();
+      baseRegistry = HeadRegistry.createIsolated();
     }
+
+    // Wrap with AuthorizedHeadRegistry when write ACL config is provided.
+    // When no config exists, the registry operates in Open_Mode (backward compatible).
+    // @see Requirements 1.2, 5.5
+    if (options?.writeAclConfig) {
+      const { aclService, authenticator, auditLogger } = options.writeAclConfig;
+      this.headRegistry = new AuthorizedHeadRegistry(
+        baseRegistry as unknown as import('@brightchain/brightchain-lib').IHeadRegistry,
+        aclService,
+        authenticator,
+        auditLogger,
+      );
+    } else {
+      this.headRegistry = baseRegistry;
+    }
+
     this.cursorTimeoutMs = options?.cursorTimeoutMs ?? 300_000;
 
     // Create store-level lock when a data directory is available

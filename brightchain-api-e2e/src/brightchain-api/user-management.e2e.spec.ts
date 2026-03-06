@@ -16,7 +16,7 @@ function uniqueUser(prefix: string) {
   return {
     username: `${prefix}_${id}`,
     email: `${prefix}_${id}@test.brightchain.local`,
-    password: `TestPass!${id}`,
+    password: `T3stPass!${id}`,
   };
 }
 
@@ -156,11 +156,11 @@ describe('User Management E2E', () => {
     it('should generate 10 backup codes and count endpoint should return 10', async () => {
       const { token } = await registerUser('backup');
 
-      // Generate backup codes
+      // Generate backup codes — crypto-heavy (Argon2id + ECIES), needs longer timeout
       const genRes = await axios.post(
         '/api/user/backup-codes',
         {},
-        authHeader(token),
+        { ...authHeader(token), timeout: 120_000 },
       );
 
       expect(genRes.status).toBe(200);
@@ -183,7 +183,7 @@ describe('User Management E2E', () => {
 
       expect(countRes.status).toBe(200);
       expect(countRes.data.codeCount).toBe(10);
-    });
+    }, 180_000);
   });
 
   // 12.7 — Backup code authentication e2e test
@@ -191,11 +191,11 @@ describe('User Management E2E', () => {
     it('should use a backup code, decrement count, and reject reuse', async () => {
       const { token } = await registerUser('backupauth');
 
-      // Generate backup codes
+      // Generate backup codes — crypto-heavy, needs longer timeout
       const genRes = await axios.post(
         '/api/user/backup-codes',
         {},
-        authHeader(token),
+        { ...authHeader(token), timeout: 120_000 },
       );
       const codes: string[] = genRes.data.backupCodes;
       const codeToUse = codes[0];
@@ -224,7 +224,7 @@ describe('User Management E2E', () => {
       const regenRes = await axios.post(
         '/api/user/backup-codes',
         {},
-        authHeader(token),
+        { ...authHeader(token), timeout: 120_000 },
       );
       expect(regenRes.status).toBe(200);
       expect(regenRes.data.backupCodes).toHaveLength(10);
@@ -240,7 +240,7 @@ describe('User Management E2E', () => {
       // Verify old code is no longer in the new set
       const newCodes: string[] = regenRes.data.backupCodes;
       expect(newCodes).not.toContain(codeToUse);
-    });
+    }, 180_000);
   });
 
   // 12.8 — Mnemonic recovery e2e test

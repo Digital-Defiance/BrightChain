@@ -114,8 +114,9 @@ export abstract class CloudBlockStoreBase
     this._blockSize =
       sizes && sizes.length > 0
         ? sizes[0]
-        : ((config as unknown as Record<string, unknown>)['blockSize'] as BlockSize) ??
-          BlockSize.Medium;
+        : (((config as unknown as Record<string, unknown>)[
+            'blockSize'
+          ] as BlockSize) ?? BlockSize.Medium);
     this.indexTtlMs = indexTtlMs;
     this.listPageSize = listPageSize;
   }

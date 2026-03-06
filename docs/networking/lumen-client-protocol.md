@@ -29,7 +29,6 @@ For a Lumen client to connect to a BrightChain node, the following must be opera
 
 2. **Environment Configuration** (`brightchain-api/src/.env`)
    - `JWT_SECRET` — shared secret for signing/verifying JWT tokens (required)
-   - `SERVER_URL` — the public URL of the node
    - See `brightchain-api/src/.env.example` for all options
 
 3. **Services Wired at Startup** (handled automatically by the `App` class):

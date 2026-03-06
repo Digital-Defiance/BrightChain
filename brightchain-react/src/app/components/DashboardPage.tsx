@@ -27,9 +27,7 @@ const DashboardPage: FC = () => {
     null,
   );
   const [loading, setLoading] = useState(true);
-  const { tComponent } = useI18n();
-
-  const t = (key: string) => tComponent(BrightChainComponentId, key);
+  const { tBranded: t } = useI18n();
 
   useEffect(() => {
     const fetchEnergyBalance = async () => {
