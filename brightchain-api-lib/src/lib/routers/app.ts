@@ -152,15 +152,19 @@ export class AppRouter<
 
     const environment = this.application.environment as Environment<TID>;
 
+    const baseLocals = this.getBaseViewLocals(req, res);
     const locals = {
-      ...this.getBaseViewLocals(req, res),
-      fontawesomeKitId: environment.fontAwesomeKitId,
+      ...baseLocals,
       jsFile: jsFile ? `assets/${jsFile}` : undefined,
       cssFile: cssFile ? `assets/${cssFile}` : undefined,
       // Script list for non-Vite builds (hashed or dev)
       devScripts,
       // Additional CSS from webpack index.html
       webpackCss,
+      // Override fontAwesomeKitId after spread to ensure it's not empty
+      fontAwesomeKitId:
+        environment.fontAwesomeKitId || baseLocals['fontAwesomeKitId'] || '',
+      siteUrl: environment.serverUrl,
     };
 
     this.renderTemplate(req, res, next, 'index', locals);

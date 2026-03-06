@@ -26,8 +26,8 @@ import {
   ServiceContainer,
 } from '@digitaldefiance/node-express-suite';
 import * as fc from 'fast-check';
-import { UserController } from '../../lib/controllers/api/user';
 import { AppConstants } from '../../lib/appConstants';
+import { UserController } from '../../lib/controllers/api/user';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { AuthService } from '../../lib/services/auth';
 import { BrightChainBackupCodeService } from '../../lib/services/brightChainBackupCodeService';

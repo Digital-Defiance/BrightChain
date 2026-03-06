@@ -6,7 +6,6 @@
  */
 
 import {
-  BrightChainComponentId,
   BrightChainStrings,
   IEmailMetadata,
 } from '@brightchain/brightchain-lib';
@@ -100,8 +99,7 @@ const INITIAL_STATE: InboxState = {
 };
 
 const InboxView: FC = () => {
-  const { tComponent } = useI18n();
-  const t = (key: string) => tComponent(BrightChainComponentId, key);
+  const { tBranded: t } = useI18n();
   const emailApi = useEmailApi();
 
   const [state, setState] = useState<InboxState>(INITIAL_STATE);

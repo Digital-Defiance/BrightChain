@@ -28,7 +28,7 @@ export const ParticleSystem: React.FC<ParticleSystemProps> = ({
   x = 0,
   y = 0,
   count = 20,
-  color = '#00ff88',
+  color = '#2daaff',
   duration = 2000,
   onComplete,
   className = '',

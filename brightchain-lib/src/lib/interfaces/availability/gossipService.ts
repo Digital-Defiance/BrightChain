@@ -293,6 +293,23 @@ export interface BlockAnnouncement {
    * @see Requirements 7.1, 7.2
    */
   quorumVote?: QuorumVoteMetadata;
+
+  /**
+   * Optional write proof for head_update announcements in Restricted_Mode.
+   * Contains the original writer's signature for cross-node verification.
+   * When propagating head updates for collections with Write ACLs, the
+   * originating node includes the writer's proof so receiving nodes can
+   * verify authorization before applying the head update.
+   *
+   * @see Write ACL Requirements 7.1, 7.2
+   */
+  writeProof?: {
+    signerPublicKey: string; // hex-encoded
+    signature: string; // hex-encoded
+    dbName: string;
+    collectionName: string;
+    blockId: string;
+  };
 }
 
 /**
@@ -452,13 +469,18 @@ export interface IGossipService {
    * @param dbName - The database name containing the collection
    * @param collectionName - The collection whose head pointer was updated
    * @param blockId - The new head block ID
+   * @param writeProof - Optional write proof to include for cross-node verification in Restricted_Mode
    * @returns Promise that resolves when the announcement is queued
-   * @see Requirements 2.1
+   * @see Requirements 2.1, 7.1, 7.2
    */
   announceHeadUpdate(
     dbName: string,
     collectionName: string,
     blockId: BlockId,
+    writeProof?: {
+      signerPublicKey: string;
+      signature: string;
+    },
   ): Promise<void>;
 
   /**

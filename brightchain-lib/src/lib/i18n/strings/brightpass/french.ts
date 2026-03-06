@@ -1,23 +1,24 @@
-import { StringsCollection } from '@digitaldefiance/i18n-lib';
+import { ComponentStrings } from '@digitaldefiance/i18n-lib';
 import {
   BrightPassStringKey,
   BrightPassStrings,
 } from '../../../enumerations/brightPassStrings';
 
-export const BrightPassFrenchStrings: StringsCollection<BrightPassStringKey> = {
+export const BrightPassFrenchStrings: ComponentStrings<BrightPassStringKey> = {
   // Menu
   [BrightPassStrings.Menu_BrightPass]: 'BrightPass',
 
   // Vault List
   [BrightPassStrings.VaultList_Title]: 'Coffres-forts',
+  [BrightPassStrings.VaultList_CreateVaultName]: 'Nom du coffre-fort',
   [BrightPassStrings.VaultList_CreateVault]: 'Créer un coffre-fort',
   [BrightPassStrings.VaultList_DeleteVault]: 'Supprimer le coffre-fort',
-  [BrightPassStrings.VaultList_SharedWith]: 'Partagé avec {COUNT} membres',
+  [BrightPassStrings.VaultList_SharedWithTemplate]: 'Partagé avec {COUNT} membres',
   [BrightPassStrings.VaultList_NoVaults]:
     'Aucun coffre-fort. Créez-en un pour commencer.',
 
   // Vault Detail
-  [BrightPassStrings.VaultDetail_Title]: 'Coffre-fort : {NAME}',
+  [BrightPassStrings.VaultDetail_TitleNameTemplate]: 'Coffre-fort : {NAME}',
   [BrightPassStrings.VaultDetail_AddEntry]: 'Ajouter une entrée',
   [BrightPassStrings.VaultDetail_LockVault]: 'Verrouiller le coffre-fort',
   [BrightPassStrings.VaultDetail_Search]: 'Rechercher des entrées…',
@@ -59,7 +60,7 @@ export const BrightPassFrenchStrings: StringsCollection<BrightPassStringKey> = {
   [BrightPassStrings.TOTP_Code]: 'Code actuel',
   [BrightPassStrings.TOTP_CopyCode]: 'Copier le code',
   [BrightPassStrings.TOTP_Copied]: 'Copié !',
-  [BrightPassStrings.TOTP_SecondsRemaining]: '{SECONDS}s restantes',
+  [BrightPassStrings.TOTP_SecondsRemainingTemplate]: '{SECONDS}s restantes',
   [BrightPassStrings.TOTP_QrCode]: 'Code QR',
   [BrightPassStrings.TOTP_SecretUri]: 'URI du secret',
 
@@ -67,10 +68,66 @@ export const BrightPassFrenchStrings: StringsCollection<BrightPassStringKey> = {
   [BrightPassStrings.Breach_Title]: 'Vérification des fuites',
   [BrightPassStrings.Breach_Check]: 'Vérifier les fuites',
   [BrightPassStrings.Breach_Password]: 'Mot de passe à vérifier',
-  [BrightPassStrings.Breach_Found]:
+  [BrightPassStrings.Breach_FoundTemplate]:
     'Ce mot de passe a été trouvé dans {COUNT} fuites de données.',
   [BrightPassStrings.Breach_NotFound]:
     "Ce mot de passe n'a été trouvé dans aucune fuite de données connue.",
+
+  // Audit Log
+  [BrightPassStrings.AuditLog_Title]: "Journal d'audit",
+  [BrightPassStrings.AuditLog_Timestamp]: 'Horodatage',
+  [BrightPassStrings.AuditLog_Action]: 'Action',
+  [BrightPassStrings.AuditLog_Member]: 'ID du membre',
+  [BrightPassStrings.AuditLog_FilterAll]: 'Toutes les actions',
+  [BrightPassStrings.AuditLog_NoEntries]:
+    "Aucune entrée dans le journal d'audit.",
+  [BrightPassStrings.AuditLog_Error]:
+    "Échec du chargement du journal d'audit. Veuillez réessayer.",
+
+  // Breadcrumb Navigation
+  [BrightPassStrings.Breadcrumb_BrightPass]: 'BrightPass',
+  [BrightPassStrings.Breadcrumb_VaultTemplate]: 'Coffre-fort : {NAME}',
+  [BrightPassStrings.Breadcrumb_AuditLog]: "Journal d'audit",
+  [BrightPassStrings.Breadcrumb_PasswordGenerator]:
+    'Générateur de mot de passe',
+  [BrightPassStrings.Breadcrumb_Tools]: 'Outils',
+
+  // Vault List Dialogs
+  [BrightPassStrings.VaultList_ConfirmDelete]: 'Supprimer le coffre-fort',
+  [BrightPassStrings.VaultList_ConfirmDeleteMessageTemplate]:
+    'Entrez votre mot de passe principal pour supprimer le coffre-fort "{NAME}". Cette action est irréversible.',
+  [BrightPassStrings.VaultList_EnterMasterPassword]:
+    'Entrez le mot de passe principal',
+  [BrightPassStrings.VaultList_ConfirmMasterPassword]:
+    'Confirmez le mot de passe principal',
+  [BrightPassStrings.VaultList_PasswordsMustMatch]:
+    'Le mot de passe principal et la confirmation doivent correspondre.',
+  [BrightPassStrings.VaultList_Cancel]: 'Annuler',
+  [BrightPassStrings.VaultList_Confirm]: 'Confirmer',
+  [BrightPassStrings.VaultList_Unlock]: 'Déverrouiller',
+  [BrightPassStrings.VaultList_UnlockVault]: 'Déverrouiller le coffre-fort',
+
+  // Validation Messages
+  [BrightPassStrings.Validation_VaultNameMinLengthTemplate]:
+    'Le nom du coffre-fort doit contenir au moins {MIN_LENGTH} caractères',
+  [BrightPassStrings.Validation_VaultNameMaxLengthTemplate]:
+    'Le nom du coffre-fort doit contenir au maximum {MAX_LENGTH} caractères',
+  [BrightPassStrings.Validation_VaultNameRequired]:
+    'Le nom du coffre-fort est obligatoire',
+  [BrightPassStrings.Validation_PasswordMinLengthTemplate]:
+    'Le mot de passe principal doit contenir au moins {MIN_LENGTH} caractères',
+  [BrightPassStrings.Validation_PasswordUppercase]:
+    'Doit contenir au moins une lettre majuscule',
+  [BrightPassStrings.Validation_PasswordLowercase]:
+    'Doit contenir au moins une lettre minuscule',
+  [BrightPassStrings.Validation_PasswordNumber]:
+    'Doit contenir au moins un chiffre',
+  [BrightPassStrings.Validation_PasswordSpecialChar]:
+    'Doit contenir au moins un caractère spécial',
+  [BrightPassStrings.Validation_PasswordRequired]:
+    'Le mot de passe principal est obligatoire',
+  [BrightPassStrings.Validation_ConfirmPasswordRequired]:
+    'Veuillez confirmer votre mot de passe principal',
 
   // Entry Detail
   [BrightPassStrings.EntryDetail_Title]: "Détails de l'entrée",
@@ -97,7 +154,7 @@ export const BrightPassFrenchStrings: StringsCollection<BrightPassStringKey> = {
   [BrightPassStrings.EntryDetail_Tags]: 'Étiquettes',
   [BrightPassStrings.EntryDetail_CreatedAt]: 'Créé',
   [BrightPassStrings.EntryDetail_UpdatedAt]: 'Mis à jour',
-  [BrightPassStrings.EntryDetail_BreachWarning]:
+  [BrightPassStrings.EntryDetail_BreachWarningTemplate]:
     'Ce mot de passe a été trouvé dans {COUNT} fuites de données !',
   [BrightPassStrings.EntryDetail_BreachSafe]:
     "Ce mot de passe n'a été trouvé dans aucune fuite de données connue.",
@@ -134,7 +191,7 @@ export const BrightPassFrenchStrings: StringsCollection<BrightPassStringKey> = {
   [BrightPassStrings.Emergency_Trustees]:
     'IDs des mandataires (séparés par des virgules)',
   [BrightPassStrings.Emergency_Shares]: 'Part chiffrée {INDEX}',
-  [BrightPassStrings.Emergency_InsufficientShares]:
+  [BrightPassStrings.Emergency_InsufficientSharesTemplate]:
     'Parts insuffisantes. Au moins {THRESHOLD} parts sont requises.',
   [BrightPassStrings.Emergency_InvalidThreshold]:
     'Le seuil doit être compris entre 1 et le nombre de mandataires.',
@@ -163,24 +220,13 @@ export const BrightPassFrenchStrings: StringsCollection<BrightPassStringKey> = {
   [BrightPassStrings.Import_Import]: 'Importer',
   [BrightPassStrings.Import_Close]: 'Fermer',
   [BrightPassStrings.Import_Summary]: "Résumé de l'importation",
-  [BrightPassStrings.Import_Imported]: '{COUNT} entrées importées avec succès',
-  [BrightPassStrings.Import_Skipped]: '{COUNT} entrées ignorées',
-  [BrightPassStrings.Import_Errors]: 'Ligne {INDEX} : {MESSAGE}',
+  [BrightPassStrings.Import_ImportedTemplate]: '{COUNT} entrées importées avec succès',
+  [BrightPassStrings.Import_SkippedTemplate]: '{COUNT} entrées ignorées',
+  [BrightPassStrings.Import_ErrorsTemplate]: 'Ligne {INDEX} : {MESSAGE}',
   [BrightPassStrings.Import_InvalidFormat]:
     'Le fichier téléchargé ne correspond pas au format sélectionné.',
   [BrightPassStrings.Import_Error]:
     "Une erreur est survenue lors de l'importation. Veuillez réessayer.",
-
-  // Audit Log
-  [BrightPassStrings.AuditLog_Title]: "Journal d'audit",
-  [BrightPassStrings.AuditLog_Timestamp]: 'Horodatage',
-  [BrightPassStrings.AuditLog_Action]: 'Action',
-  [BrightPassStrings.AuditLog_Member]: 'ID du membre',
-  [BrightPassStrings.AuditLog_FilterAll]: 'Toutes les actions',
-  [BrightPassStrings.AuditLog_NoEntries]:
-    "Aucune entrée dans le journal d'audit.",
-  [BrightPassStrings.AuditLog_Error]:
-    "Échec du chargement du journal d'audit. Veuillez réessayer.",
 
   // Errors
   [BrightPassStrings.Error_InvalidMasterPassword]:
@@ -188,4 +234,6 @@ export const BrightPassFrenchStrings: StringsCollection<BrightPassStringKey> = {
   [BrightPassStrings.Error_VaultNotFound]: 'Coffre-fort introuvable.',
   [BrightPassStrings.Error_Unauthorized]:
     "Vous n'êtes pas autorisé à effectuer cette action.",
+  [BrightPassStrings.Error_Generic]:
+    'Une erreur inattendue est survenue. Veuillez réessayer.',
 };

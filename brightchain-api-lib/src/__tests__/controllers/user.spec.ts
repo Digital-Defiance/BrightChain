@@ -19,7 +19,11 @@ import {
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
-import { EmailString, MemberType, SecureString } from '@digitaldefiance/ecies-lib';
+import {
+  EmailString,
+  MemberType,
+  SecureString,
+} from '@digitaldefiance/ecies-lib';
 import { ECIESService, Member } from '@digitaldefiance/node-ecies-lib';
 import {
   ApiErrorResponse,
@@ -28,8 +32,8 @@ import {
   ServiceContainer,
   SystemUserService,
 } from '@digitaldefiance/node-express-suite';
-import { UserController } from '../../lib/controllers/api/user';
 import { AppConstants } from '../../lib/appConstants';
+import { UserController } from '../../lib/controllers/api/user';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { AuthService } from '../../lib/services/auth';
 import { EmailService } from '../../lib/services/email';
@@ -122,12 +126,13 @@ function createTestEnvironment() {
 
   // Pre-populate the SystemUserService singleton so AuthService.register()
   // can encrypt mnemonics without requiring SYSTEM_MNEMONIC env var.
-  const ecies = ServiceProvider.getInstance().eciesService as unknown as ECIESService;
+  const ecies = ServiceProvider.getInstance()
+    .eciesService as unknown as ECIESService;
   const { member: sysUser } = Member.newMember(
     ecies,
     MemberType.System,
     AppConstants.SystemUser,
-    new EmailString(AppConstants.SystemEmail),
+    new EmailString('system@test.com'),
   );
   SystemUserService.setSystemUser(sysUser, AppConstants);
 

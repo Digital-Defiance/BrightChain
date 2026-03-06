@@ -7,8 +7,8 @@ import {
 } from '@digitaldefiance/ecies-lib';
 import { MemberStatusType } from '../../enumerations/memberStatusType';
 import { Checksum } from '../../types/checksum';
-import { IPasswordWrappedPrivateKey } from './passwordWrappedPrivateKey';
 import { IStoredBackupCode } from '../userManagement';
+import { IPasswordWrappedPrivateKey } from './passwordWrappedPrivateKey';
 
 /**
  * Public member data stored in CBL

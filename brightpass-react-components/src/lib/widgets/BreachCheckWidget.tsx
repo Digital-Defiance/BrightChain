@@ -128,7 +128,7 @@ export const BreachCheckWidget: React.FC<BreachCheckWidgetProps> = ({
       {breachMessage && result && (
         <Alert severity={breachMessage.severity} sx={{ mb: 1 }}>
           {breachMessage.severity === 'warning'
-            ? t(BrightPassStrings.Breach_Found, {
+            ? t(BrightPassStrings.Breach_FoundTemplate, {
                 COUNT: String(result.count),
               })
             : t(BrightPassStrings.Breach_NotFound)}

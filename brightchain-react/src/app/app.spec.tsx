@@ -23,7 +23,7 @@ jest.mock('@digitaldefiance/suite-core-lib', () => ({
 }));
 
 // Mock BrightChainSoupDemo to avoid module-level code execution
-jest.mock('./components/BrightChainSoupDemo', () => ({
+jest.mock('@brightchain/brightchain-react-components', () => ({
   BrightChainSoupDemo: () => (
     <div data-testid="soup-demo">BrightChainSoupDemo Mock</div>
   ),

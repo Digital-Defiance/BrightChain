@@ -1,25 +1,26 @@
-import { StringsCollection } from '@digitaldefiance/i18n-lib';
+import { ComponentStrings } from '@digitaldefiance/i18n-lib';
 import {
   BrightPassStringKey,
   BrightPassStrings,
 } from '../../../enumerations/brightPassStrings';
 
-export const BrightPassUkrainianStrings: StringsCollection<BrightPassStringKey> =
+export const BrightPassUkrainianStrings: ComponentStrings<BrightPassStringKey> =
   {
     // Menu
     [BrightPassStrings.Menu_BrightPass]: 'BrightPass',
 
     // Vault List
     [BrightPassStrings.VaultList_Title]: 'Сховища',
+    [BrightPassStrings.VaultList_CreateVaultName]: 'Назва сховища',
     [BrightPassStrings.VaultList_CreateVault]: 'Створити сховище',
     [BrightPassStrings.VaultList_DeleteVault]: 'Видалити сховище',
-    [BrightPassStrings.VaultList_SharedWith]:
+    [BrightPassStrings.VaultList_SharedWithTemplate]:
       'Спільний доступ з {COUNT} учасниками',
     [BrightPassStrings.VaultList_NoVaults]:
       'Сховищ ще немає. Створіть одне, щоб почати.',
 
     // Vault Detail
-    [BrightPassStrings.VaultDetail_Title]: 'Сховище: {NAME}',
+    [BrightPassStrings.VaultDetail_TitleNameTemplate]: 'Сховище: {NAME}',
     [BrightPassStrings.VaultDetail_AddEntry]: 'Додати запис',
     [BrightPassStrings.VaultDetail_LockVault]: 'Заблокувати сховище',
     [BrightPassStrings.VaultDetail_Search]: 'Пошук записів…',
@@ -60,7 +61,7 @@ export const BrightPassUkrainianStrings: StringsCollection<BrightPassStringKey> 
     [BrightPassStrings.TOTP_Code]: 'Поточний код',
     [BrightPassStrings.TOTP_CopyCode]: 'Копіювати код',
     [BrightPassStrings.TOTP_Copied]: 'Скопійовано!',
-    [BrightPassStrings.TOTP_SecondsRemaining]: 'Залишилось {SECONDS}с',
+    [BrightPassStrings.TOTP_SecondsRemainingTemplate]: 'Залишилось {SECONDS}с',
     [BrightPassStrings.TOTP_QrCode]: 'QR-код',
     [BrightPassStrings.TOTP_SecretUri]: 'URI секрету',
 
@@ -68,10 +69,64 @@ export const BrightPassUkrainianStrings: StringsCollection<BrightPassStringKey> 
     [BrightPassStrings.Breach_Title]: 'Перевірка на витоки',
     [BrightPassStrings.Breach_Check]: 'Перевірити на витоки',
     [BrightPassStrings.Breach_Password]: 'Пароль для перевірки',
-    [BrightPassStrings.Breach_Found]:
+    [BrightPassStrings.Breach_FoundTemplate]:
       'Цей пароль знайдено у {COUNT} витоках даних.',
     [BrightPassStrings.Breach_NotFound]:
       'Цей пароль не знайдено у жодному відомому витоку даних.',
+
+    // Audit Log
+    [BrightPassStrings.AuditLog_Title]: 'Журнал аудиту',
+    [BrightPassStrings.AuditLog_Timestamp]: 'Мітка часу',
+    [BrightPassStrings.AuditLog_Action]: 'Дія',
+    [BrightPassStrings.AuditLog_Member]: 'ID учасника',
+    [BrightPassStrings.AuditLog_FilterAll]: 'Усі дії',
+    [BrightPassStrings.AuditLog_NoEntries]:
+      'Записів журналу аудиту не знайдено.',
+    [BrightPassStrings.AuditLog_Error]:
+      'Не вдалося завантажити журнал аудиту. Будь ласка, спробуйте ще раз.',
+
+    // Breadcrumb Navigation
+    [BrightPassStrings.Breadcrumb_BrightPass]: 'BrightPass',
+    [BrightPassStrings.Breadcrumb_VaultTemplate]: 'Сховище: {NAME}',
+    [BrightPassStrings.Breadcrumb_AuditLog]: 'Журнал аудиту',
+    [BrightPassStrings.Breadcrumb_PasswordGenerator]: 'Генератор паролів',
+    [BrightPassStrings.Breadcrumb_Tools]: 'Інструменти',
+
+    // Vault List Dialogs
+    [BrightPassStrings.VaultList_ConfirmDelete]: 'Видалити сховище',
+    [BrightPassStrings.VaultList_ConfirmDeleteMessageTemplate]:
+      'Введіть свій майстер-пароль, щоб видалити сховище "{NAME}". Цю дію неможливо скасувати.',
+    [BrightPassStrings.VaultList_EnterMasterPassword]: 'Введіть майстер-пароль',
+    [BrightPassStrings.VaultList_ConfirmMasterPassword]:
+      'Підтвердіть майстер-пароль',
+    [BrightPassStrings.VaultList_PasswordsMustMatch]:
+      'Головний пароль і підтвердження повинні збігатися.',
+    [BrightPassStrings.VaultList_Cancel]: 'Скасувати',
+    [BrightPassStrings.VaultList_Confirm]: 'Підтвердити',
+    [BrightPassStrings.VaultList_Unlock]: 'Розблокувати',
+    [BrightPassStrings.VaultList_UnlockVault]: 'Розблокувати сховище',
+
+    // Validation Messages
+    [BrightPassStrings.Validation_VaultNameMinLengthTemplate]:
+      'Назва сховища повинна містити щонайменше {MIN_LENGTH} символи',
+    [BrightPassStrings.Validation_VaultNameMaxLengthTemplate]:
+      'Назва сховища повинна містити не більше {MAX_LENGTH} символів',
+    [BrightPassStrings.Validation_VaultNameRequired]:
+      "Назва сховища є обов'язковою",
+    [BrightPassStrings.Validation_PasswordMinLengthTemplate]:
+      'Майстер-пароль повинен містити щонайменше {MIN_LENGTH} символів',
+    [BrightPassStrings.Validation_PasswordUppercase]:
+      'Повинен містити щонайменше одну велику літеру',
+    [BrightPassStrings.Validation_PasswordLowercase]:
+      'Повинен містити щонайменше одну малу літеру',
+    [BrightPassStrings.Validation_PasswordNumber]:
+      'Повинен містити щонайменше одну цифру',
+    [BrightPassStrings.Validation_PasswordSpecialChar]:
+      'Повинен містити щонайменше один спеціальний символ',
+    [BrightPassStrings.Validation_PasswordRequired]:
+      "Майстер-пароль є обов'язковим",
+    [BrightPassStrings.Validation_ConfirmPasswordRequired]:
+      'Будь ласка, підтвердіть свій майстер-пароль',
 
     // Entry Detail
     [BrightPassStrings.EntryDetail_Title]: 'Деталі запису',
@@ -98,7 +153,7 @@ export const BrightPassUkrainianStrings: StringsCollection<BrightPassStringKey> 
     [BrightPassStrings.EntryDetail_Tags]: 'Теги',
     [BrightPassStrings.EntryDetail_CreatedAt]: 'Створено',
     [BrightPassStrings.EntryDetail_UpdatedAt]: 'Оновлено',
-    [BrightPassStrings.EntryDetail_BreachWarning]:
+    [BrightPassStrings.EntryDetail_BreachWarningTemplate]:
       'Цей пароль знайдено у {COUNT} витоках даних!',
     [BrightPassStrings.EntryDetail_BreachSafe]:
       'Цей пароль не знайдено у жодному відомому витоку даних.',
@@ -133,7 +188,7 @@ export const BrightPassUkrainianStrings: StringsCollection<BrightPassStringKey> 
       'Поріг (мінімальна кількість довірених осіб)',
     [BrightPassStrings.Emergency_Trustees]: 'ID довірених осіб (через кому)',
     [BrightPassStrings.Emergency_Shares]: 'Зашифрована частка {INDEX}',
-    [BrightPassStrings.Emergency_InsufficientShares]:
+    [BrightPassStrings.Emergency_InsufficientSharesTemplate]:
       'Недостатньо часток. Потрібно щонайменше {THRESHOLD} часток.',
     [BrightPassStrings.Emergency_InvalidThreshold]:
       'Поріг повинен бути від 1 до кількості довірених осіб.',
@@ -162,24 +217,13 @@ export const BrightPassUkrainianStrings: StringsCollection<BrightPassStringKey> 
     [BrightPassStrings.Import_Import]: 'Імпортувати',
     [BrightPassStrings.Import_Close]: 'Закрити',
     [BrightPassStrings.Import_Summary]: 'Результати імпорту',
-    [BrightPassStrings.Import_Imported]: '{COUNT} записів успішно імпортовано',
-    [BrightPassStrings.Import_Skipped]: '{COUNT} записів пропущено',
-    [BrightPassStrings.Import_Errors]: 'Рядок {INDEX}: {MESSAGE}',
+    [BrightPassStrings.Import_ImportedTemplate]: '{COUNT} записів успішно імпортовано',
+    [BrightPassStrings.Import_SkippedTemplate]: '{COUNT} записів пропущено',
+    [BrightPassStrings.Import_ErrorsTemplate]: 'Рядок {INDEX}: {MESSAGE}',
     [BrightPassStrings.Import_InvalidFormat]:
       'Завантажений файл не відповідає обраному формату.',
     [BrightPassStrings.Import_Error]:
       'Під час імпорту сталася помилка. Будь ласка, спробуйте ще раз.',
-
-    // Audit Log
-    [BrightPassStrings.AuditLog_Title]: 'Журнал аудиту',
-    [BrightPassStrings.AuditLog_Timestamp]: 'Мітка часу',
-    [BrightPassStrings.AuditLog_Action]: 'Дія',
-    [BrightPassStrings.AuditLog_Member]: 'ID учасника',
-    [BrightPassStrings.AuditLog_FilterAll]: 'Усі дії',
-    [BrightPassStrings.AuditLog_NoEntries]:
-      'Записів журналу аудиту не знайдено.',
-    [BrightPassStrings.AuditLog_Error]:
-      'Не вдалося завантажити журнал аудиту. Будь ласка, спробуйте ще раз.',
 
     // Errors
     [BrightPassStrings.Error_InvalidMasterPassword]:
@@ -187,4 +231,6 @@ export const BrightPassUkrainianStrings: StringsCollection<BrightPassStringKey> 
     [BrightPassStrings.Error_VaultNotFound]: 'Сховище не знайдено.',
     [BrightPassStrings.Error_Unauthorized]:
       'Ви не маєте дозволу на виконання цієї дії.',
+    [BrightPassStrings.Error_Generic]:
+      'Сталася неочікувана помилка. Будь ласка, спробуйте ще раз.',
   };

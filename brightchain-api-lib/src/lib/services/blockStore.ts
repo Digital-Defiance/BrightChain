@@ -42,9 +42,7 @@ export class BlockStoreService<
       this.application.environment.blockStorePath ?? 'tmp/blockstore';
     const envSizes = this.application.environment.blockStoreBlockSizes;
     const supportedBlockSizes: readonly BlockSize[] =
-      envSizes && envSizes.length > 0
-        ? envSizes
-        : [BlockSize.Medium];
+      envSizes && envSizes.length > 0 ? envSizes : [BlockSize.Medium];
     this.store = new DiskBlockAsyncStore({ storePath, supportedBlockSizes });
 
     // Start FEC service initialization in the background

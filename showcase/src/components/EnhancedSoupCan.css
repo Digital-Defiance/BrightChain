@@ -25,14 +25,14 @@
 
 .enhanced-soup-can.highlighted {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
-  background: rgba(0, 255, 136, 0.1);
+  box-shadow: 0 0 20px rgba(45, 170, 255, 0.4);
+  background: rgba(45, 170, 255, 0.1);
 }
 
 .enhanced-soup-can.selected {
   border-color: var(--accent-secondary);
-  box-shadow: 0 0 30px rgba(0, 153, 255, 0.5);
-  background: rgba(0, 153, 255, 0.15);
+  box-shadow: 0 0 30px rgba(0, 116, 224, 0.5);
+  background: rgba(0, 116, 224, 0.15);
 }
 
 .enhanced-soup-can.animating {
@@ -42,11 +42,11 @@
 
 @keyframes soup-can-pulse {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    box-shadow: 0 0 20px rgba(45, 170, 255, 0.4);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+    box-shadow: 0 0 30px rgba(45, 170, 255, 0.6);
     transform: scale(1.05);
   }
 }
@@ -122,7 +122,7 @@
   left: -2px;
   right: -2px;
   bottom: -2px;
-  border: 1px solid rgba(0, 153, 255, 0.3);
+  border: 1px solid rgba(0, 116, 224, 0.3);
   border-radius: 18px;
   animation: pulse-ring 2s infinite;
 }
@@ -147,8 +147,8 @@
   bottom: -8px;
   background: radial-gradient(
     circle,
-    rgba(0, 255, 136, 0.3) 0%,
-    rgba(0, 255, 136, 0.15) 50%,
+    rgba(45, 170, 255, 0.3) 0%,
+    rgba(45, 170, 255, 0.15) 50%,
     transparent 70%
   );
   border-radius: 20px;

@@ -19,7 +19,7 @@ interface DataFlowAnimationProps {
 export const DataFlowAnimation: React.FC<DataFlowAnimationProps> = ({
   from,
   to,
-  color = '#00ff88',
+  color = '#2daaff',
   duration = 1.5,
   particleCount = 5,
   onComplete,

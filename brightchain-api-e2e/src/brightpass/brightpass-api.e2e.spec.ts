@@ -18,7 +18,7 @@ function uniqueUser(prefix: string) {
   return {
     username: `${prefix}_${id}`,
     email: `${prefix}_${id}@test.brightpass.local`,
-    password: `BPTest!${id}`,
+    password: `BP7est!${id}`,
   };
 }
 

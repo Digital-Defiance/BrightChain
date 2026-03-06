@@ -5,6 +5,7 @@ import {
   IRecoveryResponse,
   MemberStore,
   ServiceProvider,
+  type IPasswordWrappedPrivateKey,
 } from '@brightchain/brightchain-lib';
 import { MemberType, SecureString } from '@digitaldefiance/ecies-lib';
 import {
@@ -92,7 +93,9 @@ export class AuthService<
     // createMember() generates the keypair internally but only returns a
     // reference — we need the live Member with private key to wrap it.
     const eciesService =
-      sp.eciesService as unknown as import('@digitaldefiance/node-ecies-lib').ECIESService<typeof reference.id>;
+      sp.eciesService as unknown as import('@digitaldefiance/node-ecies-lib').ECIESService<
+        typeof reference.id
+      >;
     const { member: liveMember } = Member.newMember(
       eciesService,
       MemberType.User,
@@ -102,9 +105,7 @@ export class AuthService<
     );
 
     // Password-wrap the private key (AES-256-GCM + PBKDF2) — matches RBAC seeding
-    let passwordWrappedPrivateKey:
-      | import('@brightchain/brightchain-lib').IPasswordWrappedPrivateKey
-      | undefined;
+    let passwordWrappedPrivateKey: IPasswordWrappedPrivateKey | undefined;
     if (liveMember.privateKey) {
       const keyWrappingService = new KeyWrappingService();
       const wrapped = keyWrappingService.wrapSecret(
@@ -129,9 +130,7 @@ export class AuthService<
       this.application.constants,
     );
     const mnemonicRecovery = (
-      await systemUser.encryptData(
-        Buffer.from(mnemonic.value ?? '', 'utf-8'),
-      )
+      await systemUser.encryptData(Buffer.from(mnemonic.value ?? '', 'utf-8'))
     ).toString('hex');
 
     // Store password hash, wrapped private key, and encrypted mnemonic

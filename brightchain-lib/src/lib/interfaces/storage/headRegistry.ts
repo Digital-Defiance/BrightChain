@@ -1,3 +1,5 @@
+import type { IWriteProof } from '../auth/writeProof';
+
 /**
  * Represents a deferred head update for a block not yet available locally.
  * When the block is fetched, the deferred update can be applied.
@@ -46,11 +48,13 @@ export interface IHeadRegistry {
    * @param dbName - The database name
    * @param collectionName - The collection name
    * @param blockId - The block ID of the latest metadata block
+   * @param writeProof - Optional write proof for authorization in Restricted/OwnerOnly modes
    */
   setHead(
     dbName: string,
     collectionName: string,
     blockId: string,
+    writeProof?: IWriteProof,
   ): Promise<void>;
 
   /**
@@ -58,8 +62,13 @@ export interface IHeadRegistry {
    * Persistent implementations will remove from disk before returning.
    * @param dbName - The database name
    * @param collectionName - The collection name
+   * @param writeProof - Optional write proof for authorization in Restricted/OwnerOnly modes
    */
-  removeHead(dbName: string, collectionName: string): Promise<void>;
+  removeHead(
+    dbName: string,
+    collectionName: string,
+    writeProof?: IWriteProof,
+  ): Promise<void>;
 
   /**
    * Remove all head pointers.
@@ -102,6 +111,7 @@ export interface IHeadRegistry {
    * @param collectionName - The collection name
    * @param blockId - The announced block ID
    * @param timestamp - The timestamp from the remote node's block metadata
+   * @param writeProof - Optional write proof for authorization in Restricted/OwnerOnly modes
    * @returns true if the update was applied, false if rejected (local is newer)
    *
    * @see Requirements 2.2, 2.3
@@ -111,6 +121,7 @@ export interface IHeadRegistry {
     collectionName: string,
     blockId: string,
     timestamp: Date,
+    writeProof?: IWriteProof,
   ): Promise<boolean>;
 
   /**

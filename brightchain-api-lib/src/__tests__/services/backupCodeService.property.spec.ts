@@ -77,9 +77,7 @@ async function setup(username: string, email: string) {
 
   // Encrypt the mnemonic with the system user so generateCodes can decrypt it
   const mnemonicRecovery = (
-    await sysUser.encryptData(
-      Buffer.from(testMnemonic.value ?? '', 'utf-8'),
-    )
+    await sysUser.encryptData(Buffer.from(testMnemonic.value ?? '', 'utf-8'))
   ).toString('hex');
   await memberStore.updateMember(memberId, {
     id: memberId,

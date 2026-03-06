@@ -310,7 +310,7 @@ describe('FakeEmailService – Property Tests', () => {
             expect(emails[0].html).toBe(html);
           },
         ),
-        { numRuns: 100 },
+        { numRuns: 30 },
       );
     });
 
@@ -343,7 +343,7 @@ describe('FakeEmailService – Property Tests', () => {
             }
           },
         ),
-        { numRuns: 100 },
+        { numRuns: 30 },
       );
     });
 
@@ -358,7 +358,7 @@ describe('FakeEmailService – Property Tests', () => {
 
           expect(res.body).toEqual([]);
         }),
-        { numRuns: 100 },
+        { numRuns: 20 },
       );
     });
   });

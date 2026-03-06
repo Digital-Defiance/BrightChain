@@ -93,9 +93,9 @@
 
 .vote-cast {
   padding: 0.75rem;
-  background: rgba(74, 222, 128, 0.1);
+  background: rgba(45, 170, 255, 0.1);
   border-radius: 8px;
-  color: #4ade80;
+  color: #2daaff;
   text-align: center;
 }
 
@@ -162,10 +162,10 @@
 }
 
 .result-bar.winner {
-  background: rgba(74, 222, 128, 0.1);
+  background: rgba(45, 170, 255, 0.1);
   padding: 1rem;
   border-radius: 12px;
-  border: 2px solid #4ade80;
+  border: 2px solid #2daaff;
 }
 
 .result-header {
@@ -189,7 +189,7 @@
 }
 
 .result-bar.winner .progress-fill {
-  background: linear-gradient(90deg, #4ade80, #22c55e);
+  background: linear-gradient(90deg, #2daaff, #0074e0);
 }
 
 .reset-btn {
@@ -223,9 +223,9 @@
 
 .voted-badge {
   padding: 0.25rem 0.75rem;
-  background: rgba(74, 222, 128, 0.2);
+  background: rgba(45, 170, 255, 0.2);
   border-radius: 12px;
-  color: #4ade80;
+  color: #2daaff;
   font-size: 0.85rem;
 }
 
@@ -447,8 +447,8 @@
 }
 
 .round-tally.winner {
-  background: rgba(74, 222, 128, 0.1);
-  border: 1px solid #4ade80;
+  background: rgba(45, 170, 255, 0.1);
+  border: 1px solid #2daaff;
 }
 
 .eliminated-badge {
@@ -461,9 +461,9 @@
 
 .winner-badge {
   padding: 0.25rem 0.5rem;
-  background: rgba(74, 222, 128, 0.2);
+  background: rgba(45, 170, 255, 0.2);
   border-radius: 4px;
-  color: #4ade80;
+  color: #2daaff;
   font-size: 0.75rem;
 }
 
@@ -478,9 +478,9 @@
 
 .winner-card {
   padding: 2rem;
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.1), rgba(34, 197, 94, 0.1));
+  background: linear-gradient(135deg, rgba(45, 170, 255, 0.1), rgba(0, 116, 224, 0.1));
   border-radius: 16px;
-  border: 2px solid #4ade80;
+  border: 2px solid #2daaff;
 }
 
 .winner-emoji {
@@ -490,7 +490,7 @@
 }
 
 .winner-card h3 {
-  color: #4ade80;
+  color: #2daaff;
   margin: 0.5rem 0;
 }
 
@@ -543,9 +543,9 @@
 }
 
 .badge.secure {
-  background: rgba(74, 222, 128, 0.15);
-  border: 1px solid rgba(74, 222, 128, 0.3);
-  color: #4ade80;
+  background: rgba(45, 170, 255, 0.15);
+  border: 1px solid rgba(45, 170, 255, 0.3);
+  color: #2daaff;
 }
 
 .coming-soon {
@@ -724,7 +724,7 @@
 }
 
 .yes-btn {
-  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  background: linear-gradient(135deg, #0074e0, #005bb5) !important;
 }
 
 .no-btn {
@@ -748,8 +748,8 @@
 }
 
 .yesno-result.winner {
-  background: rgba(74, 222, 128, 0.15);
-  border-color: #4ade80;
+  background: rgba(45, 170, 255, 0.15);
+  border-color: #2daaff;
   transform: scale(1.05);
 }
 
@@ -982,7 +982,7 @@
 
 .threshold-progress {
   height: 100%;
-  background: linear-gradient(90deg, #22c55e, #16a34a);
+  background: linear-gradient(90deg, #0074e0, #005bb5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1031,7 +1031,7 @@
 }
 
 .final-yes {
-  background: linear-gradient(90deg, #22c55e, #16a34a);
+  background: linear-gradient(90deg, #0074e0, #005bb5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1140,9 +1140,9 @@
 .winner-announcement {
   text-align: center;
   padding: 2rem;
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.15), rgba(34, 197, 94, 0.15));
+  background: linear-gradient(135deg, rgba(45, 170, 255, 0.15), rgba(0, 116, 224, 0.15));
   border-radius: 16px;
-  border: 2px solid #4ade80;
+  border: 2px solid #2daaff;
   margin-top: 2rem;
 }
 
@@ -1177,8 +1177,8 @@
 }
 
 .runoff-candidate.winner {
-  background: rgba(74, 222, 128, 0.15);
-  border-color: #4ade80;
+  background: rgba(45, 170, 255, 0.15);
+  border-color: #2daaff;
   transform: scale(1.05);
 }
 
@@ -1212,7 +1212,7 @@
 .stv-winners {
   text-align: center;
   padding: 2rem;
-  background: rgba(74, 222, 128, 0.1);
+  background: rgba(45, 170, 255, 0.1);
   border-radius: 12px;
   margin-top: 2rem;
 }
@@ -1232,7 +1232,7 @@
   padding: 1.5rem;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
-  border: 2px solid #4ade80;
+  border: 2px solid #2daaff;
 }
 
 .winner-emoji {
@@ -1376,7 +1376,7 @@
 
 .consensus-support {
   height: 100%;
-  background: linear-gradient(90deg, #22c55e, #16a34a);
+  background: linear-gradient(90deg, #0074e0, #005bb5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1427,8 +1427,8 @@
 }
 
 .consensus-voter.support {
-  border-color: #22c55e;
-  background: rgba(34, 197, 94, 0.1);
+  border-color: #0074e0;
+  background: rgba(0, 116, 224, 0.1);
 }
 
 .consensus-voter.oppose {
@@ -1449,7 +1449,7 @@
 }
 
 .final-support {
-  background: linear-gradient(90deg, #22c55e, #16a34a);
+  background: linear-gradient(90deg, #0074e0, #005bb5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1506,9 +1506,9 @@
 .consent-stat {
   text-align: center;
   padding: 1.5rem;
-  background: rgba(74, 222, 128, 0.1);
+  background: rgba(45, 170, 255, 0.1);
   border-radius: 12px;
-  border: 2px solid #4ade80;
+  border: 2px solid #2daaff;
 }
 
 .consent-stat.objection {
@@ -1546,8 +1546,8 @@
 }
 
 .consent-voter.consent {
-  border-color: #22c55e;
-  background: rgba(34, 197, 94, 0.1);
+  border-color: #0074e0;
+  background: rgba(0, 116, 224, 0.1);
 }
 
 .consent-voter.objection {
@@ -1563,7 +1563,7 @@
 }
 
 .consent-btn {
-  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  background: linear-gradient(135deg, #0074e0, #005bb5) !important;
 }
 
 .objection-btn {
@@ -1577,9 +1577,9 @@
 .consent-badge {
   display: inline-block;
   padding: 0.5rem 1rem;
-  background: rgba(34, 197, 94, 0.2);
+  background: rgba(0, 116, 224, 0.2);
   border-radius: 8px;
-  color: #22c55e;
+  color: #0074e0;
   font-weight: 500;
 }
 

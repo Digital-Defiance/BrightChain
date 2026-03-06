@@ -1,13 +1,25 @@
 import {
-  BrightChainComponentId,
-  BrightChainStrings,
-  BrightPassComponentId,
-  BrightPassStrings,
+  faEnvelope,
+  faLock,
+} from '@awesome.me/kit-a20d532681/icons/classic/solid';
+import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
+import {
+  CONSTANTS,
   CoreConstants,
   i18nEngine,
   ISuiteCoreConstants,
   THEME_COLORS,
 } from '@brightchain/brightchain-lib';
+import {
+  BrightChainLogo,
+  BrightChainSoupDemo,
+  BrightChainSubLogo,
+  BrightPassDemo,
+  DatabaseDemo,
+  IdentityDemo,
+  MessagingDemo,
+  StoragePoolsDemo,
+} from '@brightchain/brightchain-react-components';
 import { ECIES_CONFIG } from '@digitaldefiance/ecies-lib';
 import {
   ApiAccess,
@@ -41,7 +53,7 @@ import {
   SuiteCoreStringKey,
   SuiteCoreStringKeyValue,
 } from '@digitaldefiance/suite-core-lib';
-import { Lock as LockIcon, Mail as MailIcon } from '@mui/icons-material';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Box, CircularProgress, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -50,43 +62,24 @@ import { Route, Routes, useNavigate } from 'react-router-dom';
 import { IncludeOnMenu } from '../enumerations/includeOnMenu';
 import { environment } from '../environments/environment';
 import '../styles.scss';
-import BrightChainLogo from './components/BrightChainLogo';
-import { BrightChainSoupDemo } from './components/BrightChainSoupDemo';
 import DashboardPage from './components/DashboardPage';
-import { BrightPassDemo } from './components/showcase/BrightPassDemo';
-import { DatabaseDemo } from './components/showcase/DatabaseDemo';
-import { IdentityDemo } from './components/showcase/IdentityDemo';
-import { MessagingDemo } from './components/showcase/MessagingDemo';
-import { StoragePoolsDemo } from './components/showcase/StoragePoolsDemo';
 import { SplashPage } from './components/SplashPage';
 import { createAppTheme } from './theme';
 
-// BrightMail components from the @brightchain/brightmail-react-components library
-const BrightMailLayout = lazy(() =>
-  import('@brightchain/brightmail-react-components').then((m) => ({
-    default: m.BrightMailLayout,
+// Lazy-loaded module routes
+const BrightMailRoutes = lazy(() =>
+  import('./brightmail-routes').then((m) => ({
+    default: m.default,
   })),
 );
-const InboxView = lazy(() =>
-  import('@brightchain/brightmail-react-components').then((m) => ({
-    default: m.InboxView,
-  })),
-);
-const ThreadView = lazy(() =>
-  import('@brightchain/brightmail-react-components').then((m) => ({
-    default: m.ThreadView,
-  })),
-);
-const ComposeView = lazy(() =>
-  import('@brightchain/brightmail-react-components').then((m) => ({
-    default: m.ComposeView,
-  })),
-);
-
-// Lazy-loaded BrightPass routes from the @brightchain/brightpass-react-components library
 const BrightPassRoutes = lazy(() =>
-  import('@brightchain/brightpass-react-components').then((m) => ({
-    default: m.BrightPassRoutes,
+  import('./brightpass-routes').then((m) => ({
+    default: m.default,
+  })),
+);
+const BrightHubRoutes = lazy(() =>
+  import('./brighthub-routes').then((m) => ({
+    default: m.BrightHubRoutes,
   })),
 );
 
@@ -159,21 +152,24 @@ const App: FC = () => {
 };
 
 const InnerApp: FC = () => {
-  const { tComponent } = useI18n();
-  const t = (key: string) => tComponent(BrightChainComponentId, key);
-  const tBrightPass = (key: string) => tComponent(BrightPassComponentId, key);
+  const { tBranded: t } = useI18n();
 
   const brightMailMenuConfig: IMenuConfig = {
     menuType: createMenuType(String(IncludeOnMenu.BrightMailMenu)),
-    menuIcon: <MailIcon />,
+    menuIcon: <FontAwesomeIcon icon={faEnvelope} />,
     priority: 15,
     options: [
       {
         id: 'brightmail',
-        label: t(BrightChainStrings.BrightMail_MenuLabel),
+        label: <BrightChainSubLogo subText="Mail" height={24} />,
         includeOnMenus: [createMenuType(String(IncludeOnMenu.BrightMailMenu))],
         index: 15,
-        icon: <MailIcon />,
+        icon: (
+          <FontAwesomeIcon
+            icon={faEnvelope}
+            style={{ color: CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK }}
+          />
+        ),
         link: '/brightmail',
         requiresAuth: true,
       },
@@ -182,23 +178,56 @@ const InnerApp: FC = () => {
 
   const brightPassMenuConfig: IMenuConfig = {
     menuType: createMenuType(String(IncludeOnMenu.BrightPassMenu)),
-    menuIcon: <LockIcon />,
+    menuIcon: <FontAwesomeIcon icon={faLock} />,
     priority: 50,
     options: [
       {
         id: 'brightpass',
-        label: tBrightPass(BrightPassStrings.Menu_BrightPass),
+        label: <BrightChainSubLogo subText="Pass" height={24} />,
         includeOnMenus: [createMenuType(String(IncludeOnMenu.BrightPassMenu))],
         index: 50,
-        icon: <LockIcon />,
+        icon: (
+          <FontAwesomeIcon
+            icon={faLock}
+            style={{ color: CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK }}
+          />
+        ),
         link: '/brightpass',
         requiresAuth: true,
       },
     ],
   };
 
+  const brightHubMenuConfig: IMenuConfig = {
+    menuType: createMenuType(String(IncludeOnMenu.BrightHubMenu)),
+    menuIcon: <FontAwesomeIcon icon={faCircleNodes} />,
+    priority: 75,
+    options: [
+      {
+        id: 'brighthub',
+        label: <BrightChainSubLogo subText="Hub" height={24} />,
+        includeOnMenus: [createMenuType(String(IncludeOnMenu.BrightHubMenu))],
+        index: 50,
+        icon: (
+          <FontAwesomeIcon
+            icon={faCircleNodes}
+            style={{ color: CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK }}
+          />
+        ),
+        link: '/brighthub',
+        requiresAuth: true,
+      },
+    ],
+  };
+
   return (
-    <MenuProvider menuConfigs={[brightMailMenuConfig, brightPassMenuConfig]}>
+    <MenuProvider
+      menuConfigs={[
+        brightMailMenuConfig,
+        brightPassMenuConfig,
+        brightHubMenuConfig,
+      ]}
+    >
       <Box className="app-container" sx={{ paddingTop: '64px' }}>
         <TopMenu
           Logo={
@@ -320,19 +349,9 @@ const InnerApp: FC = () => {
                 </PrivateRoute>
               }
             />
-            <Route
-              path="/brightmail"
-              element={
-                <PrivateRoute>
-                  <BrightMailLayout />
-                </PrivateRoute>
-              }
-            >
-              <Route index element={<InboxView />} />
-              <Route path="thread/:messageId" element={<ThreadView />} />
-              <Route path="compose" element={<ComposeView />} />
-            </Route>
+            <Route path="/brightmail/*" element={<BrightMailRoutes />} />
             <Route path="/brightpass/*" element={<BrightPassRoutes />} />
+            <Route path="/brighthub/*" element={<BrightHubRoutes />} />
           </Routes>
         </Suspense>
       </Box>

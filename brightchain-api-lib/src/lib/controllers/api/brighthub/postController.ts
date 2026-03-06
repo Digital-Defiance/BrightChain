@@ -2,8 +2,11 @@ import {
   IBasePostData,
   ICreatePostOptions,
   IPostService,
+  IThreadService,
   PostErrorCode,
   PostServiceError,
+  ThreadErrorCode,
+  ThreadServiceError,
 } from '@brightchain/brighthub-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -20,6 +23,7 @@ import { IStatusCodeResponse } from '../../../interfaces/responses';
 import {
   IPostApiResponse,
   IPostListApiResponse,
+  IThreadApiResponse,
 } from '../../../interfaces/responses/brighthub';
 import { DefaultBackendIdType } from '../../../shared-types';
 import {
@@ -33,12 +37,14 @@ import { BaseController } from '../../base';
 type PostApiResponseType =
   | IPostApiResponse
   | IPostListApiResponse
+  | IThreadApiResponse
   | IApiMessageResponse
   | ApiErrorResponse;
 
 interface IPostHandlers extends TypedHandlers {
   createPost: ApiRequestHandler<IPostApiResponse | ApiErrorResponse>;
   getPost: ApiRequestHandler<IPostApiResponse | ApiErrorResponse>;
+  getThread: ApiRequestHandler<IThreadApiResponse | ApiErrorResponse>;
   deletePost: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   likePost: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   unlikePost: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
@@ -64,6 +70,7 @@ export class BrightHubPostController<
   CoreLanguageCode
 > {
   private postService: IPostService | null = null;
+  private threadService: IThreadService | null = null;
 
   constructor(application: IBrightChainApplication<TID>) {
     super(application);
@@ -73,11 +80,22 @@ export class BrightHubPostController<
     this.postService = service;
   }
 
+  public setThreadService(service: IThreadService): void {
+    this.threadService = service;
+  }
+
   private getPostService(): IPostService {
     if (!this.postService) {
       throw new Error('PostService not initialized');
     }
     return this.postService;
+  }
+
+  private getThreadService(): IThreadService {
+    if (!this.threadService) {
+      throw new Error('ThreadService not initialized');
+    }
+    return this.threadService;
   }
 
   protected initRouteDefinitions(): void {
@@ -110,6 +128,21 @@ export class BrightHubPostController<
           tags: ['BrightHub Posts'],
           responses: {
             200: { schema: 'PostResponse', description: 'Post retrieved' },
+            404: { schema: 'ErrorResponse', description: 'Post not found' },
+          },
+        },
+      }),
+      routeConfig('get', '/:id/thread', {
+        handlerKey: 'getThread',
+        useAuthentication: false,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Get a thread by root post ID',
+          description:
+            'Retrieve a thread with root post and all nested replies.',
+          tags: ['BrightHub Posts'],
+          responses: {
+            200: { schema: 'ThreadResponse', description: 'Thread retrieved' },
             404: { schema: 'ErrorResponse', description: 'Post not found' },
           },
         },
@@ -206,6 +239,7 @@ export class BrightHubPostController<
     this.handlers = {
       createPost: this.handleCreatePost.bind(this),
       getPost: this.handleGetPost.bind(this),
+      getThread: this.handleGetThread.bind(this),
       editPost: this.handleEditPost.bind(this),
       deletePost: this.handleDeletePost.bind(this),
       likePost: this.handleLikePost.bind(this),
@@ -304,6 +338,44 @@ export class BrightHubPostController<
         response: { message: 'OK', data: post },
       };
     } catch (error) {
+      if (error instanceof PostServiceError)
+        return this.mapPostServiceError(error);
+      return handleError(error);
+    }
+  }
+
+  /**
+   * GET /api/brighthub/posts/:id/thread
+   * @requirements 2.2
+   */
+  private async handleGetThread(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IThreadApiResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      if (!id) return validationError('Missing required parameter: id');
+
+      const service = this.getThreadService();
+      const thread = await service.getThread(id);
+
+      return {
+        statusCode: 200,
+        response: { message: 'OK', data: thread },
+      };
+    } catch (error) {
+      if (error instanceof ThreadServiceError) {
+        switch (error.code) {
+          case ThreadErrorCode.PostNotFound:
+          case ThreadErrorCode.ParentPostNotFound:
+            return notFoundError('Post', 'unknown');
+          case ThreadErrorCode.EmptyContent:
+          case ThreadErrorCode.ContentTooLong:
+          case ThreadErrorCode.MaxDepthExceeded:
+            return validationError(error.message);
+          default:
+            return handleError(error);
+        }
+      }
       if (error instanceof PostServiceError)
         return this.mapPostServiceError(error);
       return handleError(error);

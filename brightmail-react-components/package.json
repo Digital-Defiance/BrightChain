@@ -34,5 +34,8 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "^6.0.0"
+  },
+  "dependencies": {
+    "@awesome.me/kit-a20d532681": "^1.0.23"
   }
 }
