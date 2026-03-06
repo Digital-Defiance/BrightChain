@@ -1,192 +1,237 @@
-import { StringsCollection } from '@digitaldefiance/i18n-lib';
+import { ComponentStrings } from '@digitaldefiance/i18n-lib';
 import {
   BrightPassStringKey,
   BrightPassStrings,
 } from '../../../enumerations/brightPassStrings';
 
-export const BrightPassSpanishStrings: StringsCollection<BrightPassStringKey> =
-  {
-    // Menu
-    [BrightPassStrings.Menu_BrightPass]: 'BrightPass',
+export const BrightPassSpanishStrings: ComponentStrings<BrightPassStringKey> = {
+  // Menu
+  [BrightPassStrings.Menu_BrightPass]: 'BrightPass',
 
-    // Vault List
-    [BrightPassStrings.VaultList_Title]: 'Bóvedas',
-    [BrightPassStrings.VaultList_CreateVault]: 'Crear bóveda',
-    [BrightPassStrings.VaultList_DeleteVault]: 'Eliminar bóveda',
-    [BrightPassStrings.VaultList_SharedWith]: 'Compartida con {COUNT} miembros',
-    [BrightPassStrings.VaultList_NoVaults]:
-      'No hay bóvedas aún. Crea una para comenzar.',
+  // Vault List
+  [BrightPassStrings.VaultList_Title]: 'Bóvedas',
+  [BrightPassStrings.VaultList_CreateVaultName]: 'Nombre de la bóveda',
+  [BrightPassStrings.VaultList_CreateVault]: 'Crear bóveda',
+  [BrightPassStrings.VaultList_DeleteVault]: 'Eliminar bóveda',
+  [BrightPassStrings.VaultList_SharedWithTemplate]: 'Compartida con {COUNT} miembros',
+  [BrightPassStrings.VaultList_NoVaults]:
+    'No hay bóvedas aún. Crea una para comenzar.',
 
-    // Vault Detail
-    [BrightPassStrings.VaultDetail_Title]: 'Bóveda: {NAME}',
-    [BrightPassStrings.VaultDetail_AddEntry]: 'Agregar entrada',
-    [BrightPassStrings.VaultDetail_LockVault]: 'Bloquear bóveda',
-    [BrightPassStrings.VaultDetail_Search]: 'Buscar entradas…',
-    [BrightPassStrings.VaultDetail_NoEntries]:
-      'No hay entradas aún. Agrega una para comenzar.',
-    [BrightPassStrings.VaultDetail_Favorite]: 'Favorito',
-    [BrightPassStrings.VaultDetail_ConfirmLockTitle]: '¿Bloquear bóveda?',
-    [BrightPassStrings.VaultDetail_ConfirmLockMessage]:
-      'Estás navegando fuera. ¿Deseas bloquear la bóveda?',
-    [BrightPassStrings.VaultDetail_Cancel]: 'Cancelar',
-    [BrightPassStrings.VaultDetail_Confirm]: 'Bloquear',
+  // Vault Detail
+  [BrightPassStrings.VaultDetail_TitleNameTemplate]: 'Bóveda: {NAME}',
+  [BrightPassStrings.VaultDetail_AddEntry]: 'Agregar entrada',
+  [BrightPassStrings.VaultDetail_LockVault]: 'Bloquear bóveda',
+  [BrightPassStrings.VaultDetail_Search]: 'Buscar entradas…',
+  [BrightPassStrings.VaultDetail_NoEntries]:
+    'No hay entradas aún. Agrega una para comenzar.',
+  [BrightPassStrings.VaultDetail_Favorite]: 'Favorito',
+  [BrightPassStrings.VaultDetail_ConfirmLockTitle]: '¿Bloquear bóveda?',
+  [BrightPassStrings.VaultDetail_ConfirmLockMessage]:
+    'Estás navegando fuera. ¿Deseas bloquear la bóveda?',
+  [BrightPassStrings.VaultDetail_Cancel]: 'Cancelar',
+  [BrightPassStrings.VaultDetail_Confirm]: 'Bloquear',
 
-    // Entry Types
-    [BrightPassStrings.EntryType_Login]: 'Inicio de sesión',
-    [BrightPassStrings.EntryType_SecureNote]: 'Nota segura',
-    [BrightPassStrings.EntryType_CreditCard]: 'Tarjeta de crédito',
-    [BrightPassStrings.EntryType_Identity]: 'Identidad',
+  // Entry Types
+  [BrightPassStrings.EntryType_Login]: 'Inicio de sesión',
+  [BrightPassStrings.EntryType_SecureNote]: 'Nota segura',
+  [BrightPassStrings.EntryType_CreditCard]: 'Tarjeta de crédito',
+  [BrightPassStrings.EntryType_Identity]: 'Identidad',
 
-    // Password Generator
-    [BrightPassStrings.PasswordGen_Title]: 'Generador de contraseñas',
-    [BrightPassStrings.PasswordGen_Length]: 'Longitud',
-    [BrightPassStrings.PasswordGen_Generate]: 'Generar',
-    [BrightPassStrings.PasswordGen_Copy]: 'Copiar',
-    [BrightPassStrings.PasswordGen_UsePassword]: 'Usar contraseña',
-    [BrightPassStrings.PasswordGen_Strength_Weak]: 'Débil',
-    [BrightPassStrings.PasswordGen_Strength_Fair]: 'Regular',
-    [BrightPassStrings.PasswordGen_Strength_Strong]: 'Fuerte',
-    [BrightPassStrings.PasswordGen_Strength_VeryStrong]: 'Muy fuerte',
-    [BrightPassStrings.PasswordGen_Uppercase]: 'Mayúsculas',
-    [BrightPassStrings.PasswordGen_Lowercase]: 'Minúsculas',
-    [BrightPassStrings.PasswordGen_Digits]: 'Dígitos',
-    [BrightPassStrings.PasswordGen_Symbols]: 'Símbolos',
-    [BrightPassStrings.PasswordGen_Copied]: '¡Copiado!',
-    [BrightPassStrings.PasswordGen_Entropy]: '{BITS} bits de entropía',
+  // Password Generator
+  [BrightPassStrings.PasswordGen_Title]: 'Generador de contraseñas',
+  [BrightPassStrings.PasswordGen_Length]: 'Longitud',
+  [BrightPassStrings.PasswordGen_Generate]: 'Generar',
+  [BrightPassStrings.PasswordGen_Copy]: 'Copiar',
+  [BrightPassStrings.PasswordGen_UsePassword]: 'Usar contraseña',
+  [BrightPassStrings.PasswordGen_Strength_Weak]: 'Débil',
+  [BrightPassStrings.PasswordGen_Strength_Fair]: 'Regular',
+  [BrightPassStrings.PasswordGen_Strength_Strong]: 'Fuerte',
+  [BrightPassStrings.PasswordGen_Strength_VeryStrong]: 'Muy fuerte',
+  [BrightPassStrings.PasswordGen_Uppercase]: 'Mayúsculas',
+  [BrightPassStrings.PasswordGen_Lowercase]: 'Minúsculas',
+  [BrightPassStrings.PasswordGen_Digits]: 'Dígitos',
+  [BrightPassStrings.PasswordGen_Symbols]: 'Símbolos',
+  [BrightPassStrings.PasswordGen_Copied]: '¡Copiado!',
+  [BrightPassStrings.PasswordGen_Entropy]: '{BITS} bits de entropía',
 
-    // TOTP
-    [BrightPassStrings.TOTP_Title]: 'Autenticador TOTP',
-    [BrightPassStrings.TOTP_Code]: 'Código actual',
-    [BrightPassStrings.TOTP_CopyCode]: 'Copiar código',
-    [BrightPassStrings.TOTP_Copied]: '¡Copiado!',
-    [BrightPassStrings.TOTP_SecondsRemaining]: '{SECONDS}s restantes',
-    [BrightPassStrings.TOTP_QrCode]: 'Código QR',
-    [BrightPassStrings.TOTP_SecretUri]: 'URI del secreto',
+  // TOTP
+  [BrightPassStrings.TOTP_Title]: 'Autenticador TOTP',
+  [BrightPassStrings.TOTP_Code]: 'Código actual',
+  [BrightPassStrings.TOTP_CopyCode]: 'Copiar código',
+  [BrightPassStrings.TOTP_Copied]: '¡Copiado!',
+  [BrightPassStrings.TOTP_SecondsRemainingTemplate]: '{SECONDS}s restantes',
+  [BrightPassStrings.TOTP_QrCode]: 'Código QR',
+  [BrightPassStrings.TOTP_SecretUri]: 'URI del secreto',
 
-    // Breach Check
-    [BrightPassStrings.Breach_Title]: 'Verificación de filtraciones',
-    [BrightPassStrings.Breach_Check]: 'Verificar filtraciones',
-    [BrightPassStrings.Breach_Password]: 'Contraseña a verificar',
-    [BrightPassStrings.Breach_Found]:
-      'Esta contraseña fue encontrada en {COUNT} filtraciones de datos.',
-    [BrightPassStrings.Breach_NotFound]:
-      'Esta contraseña no fue encontrada en ninguna filtración de datos conocida.',
+  // Breach Check
+  [BrightPassStrings.Breach_Title]: 'Verificación de filtraciones',
+  [BrightPassStrings.Breach_Check]: 'Verificar filtraciones',
+  [BrightPassStrings.Breach_Password]: 'Contraseña a verificar',
+  [BrightPassStrings.Breach_FoundTemplate]:
+    'Esta contraseña fue encontrada en {COUNT} filtraciones de datos.',
+  [BrightPassStrings.Breach_NotFound]:
+    'Esta contraseña no fue encontrada en ninguna filtración de datos conocida.',
 
-    // Entry Detail
-    [BrightPassStrings.EntryDetail_Title]: 'Detalles de la entrada',
-    [BrightPassStrings.EntryDetail_Edit]: 'Editar',
-    [BrightPassStrings.EntryDetail_Delete]: 'Eliminar',
-    [BrightPassStrings.EntryDetail_ConfirmDelete]: 'Eliminar entrada',
-    [BrightPassStrings.EntryDetail_ConfirmDeleteMessage]:
-      '¿Está seguro de que desea eliminar esta entrada? Esta acción no se puede deshacer.',
-    [BrightPassStrings.EntryDetail_Username]: 'Nombre de usuario',
-    [BrightPassStrings.EntryDetail_Password]: 'Contraseña',
-    [BrightPassStrings.EntryDetail_SiteUrl]: 'URL del sitio',
-    [BrightPassStrings.EntryDetail_TotpSecret]: 'Secreto TOTP',
-    [BrightPassStrings.EntryDetail_Content]: 'Contenido',
-    [BrightPassStrings.EntryDetail_CardholderName]: 'Nombre del titular',
-    [BrightPassStrings.EntryDetail_CardNumber]: 'Número de tarjeta',
-    [BrightPassStrings.EntryDetail_ExpirationDate]: 'Fecha de vencimiento',
-    [BrightPassStrings.EntryDetail_CVV]: 'CVV',
-    [BrightPassStrings.EntryDetail_FirstName]: 'Nombre',
-    [BrightPassStrings.EntryDetail_LastName]: 'Apellido',
-    [BrightPassStrings.EntryDetail_Email]: 'Correo electrónico',
-    [BrightPassStrings.EntryDetail_Phone]: 'Teléfono',
-    [BrightPassStrings.EntryDetail_Address]: 'Dirección',
-    [BrightPassStrings.EntryDetail_Notes]: 'Notas',
-    [BrightPassStrings.EntryDetail_Tags]: 'Etiquetas',
-    [BrightPassStrings.EntryDetail_CreatedAt]: 'Creado',
-    [BrightPassStrings.EntryDetail_UpdatedAt]: 'Actualizado',
-    [BrightPassStrings.EntryDetail_BreachWarning]:
-      '¡Esta contraseña fue encontrada en {COUNT} filtraciones de datos!',
-    [BrightPassStrings.EntryDetail_BreachSafe]:
-      'Esta contraseña no fue encontrada en ninguna filtración de datos conocida.',
-    [BrightPassStrings.EntryDetail_ShowPassword]: 'Mostrar',
-    [BrightPassStrings.EntryDetail_HidePassword]: 'Ocultar',
-    [BrightPassStrings.EntryDetail_Cancel]: 'Cancelar',
+  // Audit Log
+  [BrightPassStrings.AuditLog_Title]: 'Registro de auditoría',
+  [BrightPassStrings.AuditLog_Timestamp]: 'Marca de tiempo',
+  [BrightPassStrings.AuditLog_Action]: 'Acción',
+  [BrightPassStrings.AuditLog_Member]: 'ID del miembro',
+  [BrightPassStrings.AuditLog_FilterAll]: 'Todas las acciones',
+  [BrightPassStrings.AuditLog_NoEntries]:
+    'No se encontraron entradas en el registro de auditoría.',
+  [BrightPassStrings.AuditLog_Error]:
+    'Error al cargar el registro de auditoría. Por favor, inténtelo de nuevo.',
 
-    // Entry Form
-    [BrightPassStrings.EntryForm_Title_Create]: 'Crear entrada',
-    [BrightPassStrings.EntryForm_Title_Edit]: 'Editar entrada',
-    [BrightPassStrings.EntryForm_FieldTitle]: 'Título',
-    [BrightPassStrings.EntryForm_FieldNotes]: 'Notas',
-    [BrightPassStrings.EntryForm_FieldTags]: 'Etiquetas (separadas por comas)',
-    [BrightPassStrings.EntryForm_FieldFavorite]: 'Favorito',
-    [BrightPassStrings.EntryForm_Save]: 'Guardar',
-    [BrightPassStrings.EntryForm_Cancel]: 'Cancelar',
-    [BrightPassStrings.EntryForm_GeneratePassword]: 'Generar',
-    [BrightPassStrings.EntryForm_TotpSecretHelp]:
-      'Ingrese un secreto base32 o una URI otpauth://',
+  // Breadcrumb Navigation
+  [BrightPassStrings.Breadcrumb_BrightPass]: 'BrightPass',
+  [BrightPassStrings.Breadcrumb_VaultTemplate]: 'Bóveda: {NAME}',
+  [BrightPassStrings.Breadcrumb_AuditLog]: 'Registro de auditoría',
+  [BrightPassStrings.Breadcrumb_PasswordGenerator]: 'Generador de contraseñas',
+  [BrightPassStrings.Breadcrumb_Tools]: 'Herramientas',
 
-    // SearchBar
-    [BrightPassStrings.SearchBar_Placeholder]:
-      'Buscar por título, etiquetas o URL\u2026',
-    [BrightPassStrings.SearchBar_FilterFavorites]: 'Favoritos',
-    [BrightPassStrings.SearchBar_NoResults]:
-      'No se encontraron entradas coincidentes',
+  // Vault List Dialogs
+  [BrightPassStrings.VaultList_ConfirmDelete]: 'Eliminar bóveda',
+  [BrightPassStrings.VaultList_ConfirmDeleteMessageTemplate]:
+    'Ingrese su contraseña maestra para eliminar la bóveda "{NAME}". Esta acción no se puede deshacer.',
+  [BrightPassStrings.VaultList_EnterMasterPassword]:
+    'Ingrese la contraseña maestra',
+  [BrightPassStrings.VaultList_ConfirmMasterPassword]:
+    'Confirme la contraseña maestra',
+  [BrightPassStrings.VaultList_PasswordsMustMatch]:
+    'La contraseña maestra y la confirmación deben coincidir.',
+  [BrightPassStrings.VaultList_Cancel]: 'Cancelar',
+  [BrightPassStrings.VaultList_Confirm]: 'Confirmar',
+  [BrightPassStrings.VaultList_Unlock]: 'Desbloquear',
+  [BrightPassStrings.VaultList_UnlockVault]: 'Desbloquear bóveda',
 
-    // Emergency Access Dialog
-    [BrightPassStrings.Emergency_Title]: 'Acceso de emergencia',
-    [BrightPassStrings.Emergency_Configure]: 'Configurar',
-    [BrightPassStrings.Emergency_Recover]: 'Recuperar',
-    [BrightPassStrings.Emergency_Threshold]:
-      'Umbral (mínimo de fideicomisarios requeridos)',
-    [BrightPassStrings.Emergency_Trustees]:
-      'IDs de fideicomisarios (separados por comas)',
-    [BrightPassStrings.Emergency_Shares]: 'Parte cifrada {INDEX}',
-    [BrightPassStrings.Emergency_InsufficientShares]:
-      'Partes insuficientes. Se requieren al menos {THRESHOLD} partes.',
-    [BrightPassStrings.Emergency_InvalidThreshold]:
-      'El umbral debe estar entre 1 y el número de fideicomisarios.',
-    [BrightPassStrings.Emergency_Close]: 'Cerrar',
-    [BrightPassStrings.Emergency_Error]:
-      'Ocurrió un error. Por favor, inténtelo de nuevo.',
-    [BrightPassStrings.Emergency_Success]: 'Operación completada con éxito.',
+  // Validation Messages
+  [BrightPassStrings.Validation_VaultNameMinLengthTemplate]:
+    'El nombre de la bóveda debe tener al menos {MIN_LENGTH} caracteres',
+  [BrightPassStrings.Validation_VaultNameMaxLengthTemplate]:
+    'El nombre de la bóveda debe tener como máximo {MAX_LENGTH} caracteres',
+  [BrightPassStrings.Validation_VaultNameRequired]:
+    'El nombre de la bóveda es obligatorio',
+  [BrightPassStrings.Validation_PasswordMinLengthTemplate]:
+    'La contraseña maestra debe tener al menos {MIN_LENGTH} caracteres',
+  [BrightPassStrings.Validation_PasswordUppercase]:
+    'Debe contener al menos una letra mayúscula',
+  [BrightPassStrings.Validation_PasswordLowercase]:
+    'Debe contener al menos una letra minúscula',
+  [BrightPassStrings.Validation_PasswordNumber]:
+    'Debe contener al menos un número',
+  [BrightPassStrings.Validation_PasswordSpecialChar]:
+    'Debe contener al menos un carácter especial',
+  [BrightPassStrings.Validation_PasswordRequired]:
+    'La contraseña maestra es obligatoria',
+  [BrightPassStrings.Validation_ConfirmPasswordRequired]:
+    'Por favor confirme su contraseña maestra',
 
-    // Share Dialog
-    [BrightPassStrings.Share_Title]: 'Compartir bóveda',
-    [BrightPassStrings.Share_SearchMembers]:
-      'Buscar miembros por nombre o correo',
-    [BrightPassStrings.Share_Add]: 'Agregar',
-    [BrightPassStrings.Share_Revoke]: 'Revocar',
-    [BrightPassStrings.Share_CurrentRecipients]: 'Destinatarios actuales',
-    [BrightPassStrings.Share_NoRecipients]:
-      'Esta bóveda aún no se comparte con nadie.',
-    [BrightPassStrings.Share_Close]: 'Cerrar',
-    [BrightPassStrings.Share_Error]:
-      'Ocurrió un error. Por favor, inténtelo de nuevo.',
+  // Entry Detail
+  [BrightPassStrings.EntryDetail_Title]: 'Detalles de la entrada',
+  [BrightPassStrings.EntryDetail_Edit]: 'Editar',
+  [BrightPassStrings.EntryDetail_Delete]: 'Eliminar',
+  [BrightPassStrings.EntryDetail_ConfirmDelete]: 'Eliminar entrada',
+  [BrightPassStrings.EntryDetail_ConfirmDeleteMessage]:
+    '¿Está seguro de que desea eliminar esta entrada? Esta acción no se puede deshacer.',
+  [BrightPassStrings.EntryDetail_Username]: 'Nombre de usuario',
+  [BrightPassStrings.EntryDetail_Password]: 'Contraseña',
+  [BrightPassStrings.EntryDetail_SiteUrl]: 'URL del sitio',
+  [BrightPassStrings.EntryDetail_TotpSecret]: 'Secreto TOTP',
+  [BrightPassStrings.EntryDetail_Content]: 'Contenido',
+  [BrightPassStrings.EntryDetail_CardholderName]: 'Nombre del titular',
+  [BrightPassStrings.EntryDetail_CardNumber]: 'Número de tarjeta',
+  [BrightPassStrings.EntryDetail_ExpirationDate]: 'Fecha de vencimiento',
+  [BrightPassStrings.EntryDetail_CVV]: 'CVV',
+  [BrightPassStrings.EntryDetail_FirstName]: 'Nombre',
+  [BrightPassStrings.EntryDetail_LastName]: 'Apellido',
+  [BrightPassStrings.EntryDetail_Email]: 'Correo electrónico',
+  [BrightPassStrings.EntryDetail_Phone]: 'Teléfono',
+  [BrightPassStrings.EntryDetail_Address]: 'Dirección',
+  [BrightPassStrings.EntryDetail_Notes]: 'Notas',
+  [BrightPassStrings.EntryDetail_Tags]: 'Etiquetas',
+  [BrightPassStrings.EntryDetail_CreatedAt]: 'Creado',
+  [BrightPassStrings.EntryDetail_UpdatedAt]: 'Actualizado',
+  [BrightPassStrings.EntryDetail_BreachWarningTemplate]:
+    '¡Esta contraseña fue encontrada en {COUNT} filtraciones de datos!',
+  [BrightPassStrings.EntryDetail_BreachSafe]:
+    'Esta contraseña no fue encontrada en ninguna filtración de datos conocida.',
+  [BrightPassStrings.EntryDetail_ShowPassword]: 'Mostrar',
+  [BrightPassStrings.EntryDetail_HidePassword]: 'Ocultar',
+  [BrightPassStrings.EntryDetail_Cancel]: 'Cancelar',
 
-    // Import Dialog
-    [BrightPassStrings.Import_Title]: 'Importar entradas',
-    [BrightPassStrings.Import_SelectFormat]: 'Seleccionar formato',
-    [BrightPassStrings.Import_Upload]: 'Subir archivo',
-    [BrightPassStrings.Import_Import]: 'Importar',
-    [BrightPassStrings.Import_Close]: 'Cerrar',
-    [BrightPassStrings.Import_Summary]: 'Resumen de importación',
-    [BrightPassStrings.Import_Imported]:
-      '{COUNT} entradas importadas con éxito',
-    [BrightPassStrings.Import_Skipped]: '{COUNT} entradas omitidas',
-    [BrightPassStrings.Import_Errors]: 'Fila {INDEX}: {MESSAGE}',
-    [BrightPassStrings.Import_InvalidFormat]:
-      'El archivo subido no coincide con el formato seleccionado.',
-    [BrightPassStrings.Import_Error]:
-      'Ocurrió un error durante la importación. Por favor, inténtelo de nuevo.',
+  // Entry Form
+  [BrightPassStrings.EntryForm_Title_Create]: 'Crear entrada',
+  [BrightPassStrings.EntryForm_Title_Edit]: 'Editar entrada',
+  [BrightPassStrings.EntryForm_FieldTitle]: 'Título',
+  [BrightPassStrings.EntryForm_FieldNotes]: 'Notas',
+  [BrightPassStrings.EntryForm_FieldTags]: 'Etiquetas (separadas por comas)',
+  [BrightPassStrings.EntryForm_FieldFavorite]: 'Favorito',
+  [BrightPassStrings.EntryForm_Save]: 'Guardar',
+  [BrightPassStrings.EntryForm_Cancel]: 'Cancelar',
+  [BrightPassStrings.EntryForm_GeneratePassword]: 'Generar',
+  [BrightPassStrings.EntryForm_TotpSecretHelp]:
+    'Ingrese un secreto base32 o una URI otpauth://',
 
-    // Audit Log
-    [BrightPassStrings.AuditLog_Title]: 'Registro de auditoría',
-    [BrightPassStrings.AuditLog_Timestamp]: 'Marca de tiempo',
-    [BrightPassStrings.AuditLog_Action]: 'Acción',
-    [BrightPassStrings.AuditLog_Member]: 'ID del miembro',
-    [BrightPassStrings.AuditLog_FilterAll]: 'Todas las acciones',
-    [BrightPassStrings.AuditLog_NoEntries]:
-      'No se encontraron entradas en el registro de auditoría.',
-    [BrightPassStrings.AuditLog_Error]:
-      'Error al cargar el registro de auditoría. Por favor, inténtelo de nuevo.',
+  // SearchBar
+  [BrightPassStrings.SearchBar_Placeholder]:
+    'Buscar por título, etiquetas o URL\u2026',
+  [BrightPassStrings.SearchBar_FilterFavorites]: 'Favoritos',
+  [BrightPassStrings.SearchBar_NoResults]:
+    'No se encontraron entradas coincidentes',
 
-    // Errors
-    [BrightPassStrings.Error_InvalidMasterPassword]:
-      'Contraseña maestra inválida.',
-    [BrightPassStrings.Error_VaultNotFound]: 'Bóveda no encontrada.',
-    [BrightPassStrings.Error_Unauthorized]:
-      'No está autorizado para realizar esta acción.',
-  };
+  // Emergency Access Dialog
+  [BrightPassStrings.Emergency_Title]: 'Acceso de emergencia',
+  [BrightPassStrings.Emergency_Configure]: 'Configurar',
+  [BrightPassStrings.Emergency_Recover]: 'Recuperar',
+  [BrightPassStrings.Emergency_Threshold]:
+    'Umbral (mínimo de fideicomisarios requeridos)',
+  [BrightPassStrings.Emergency_Trustees]:
+    'IDs de fideicomisarios (separados por comas)',
+  [BrightPassStrings.Emergency_Shares]: 'Parte cifrada {INDEX}',
+  [BrightPassStrings.Emergency_InsufficientSharesTemplate]:
+    'Partes insuficientes. Se requieren al menos {THRESHOLD} partes.',
+  [BrightPassStrings.Emergency_InvalidThreshold]:
+    'El umbral debe estar entre 1 y el número de fideicomisarios.',
+  [BrightPassStrings.Emergency_Close]: 'Cerrar',
+  [BrightPassStrings.Emergency_Error]:
+    'Ocurrió un error. Por favor, inténtelo de nuevo.',
+  [BrightPassStrings.Emergency_Success]: 'Operación completada con éxito.',
+
+  // Share Dialog
+  [BrightPassStrings.Share_Title]: 'Compartir bóveda',
+  [BrightPassStrings.Share_SearchMembers]:
+    'Buscar miembros por nombre o correo',
+  [BrightPassStrings.Share_Add]: 'Agregar',
+  [BrightPassStrings.Share_Revoke]: 'Revocar',
+  [BrightPassStrings.Share_CurrentRecipients]: 'Destinatarios actuales',
+  [BrightPassStrings.Share_NoRecipients]:
+    'Esta bóveda aún no se comparte con nadie.',
+  [BrightPassStrings.Share_Close]: 'Cerrar',
+  [BrightPassStrings.Share_Error]:
+    'Ocurrió un error. Por favor, inténtelo de nuevo.',
+
+  // Import Dialog
+  [BrightPassStrings.Import_Title]: 'Importar entradas',
+  [BrightPassStrings.Import_SelectFormat]: 'Seleccionar formato',
+  [BrightPassStrings.Import_Upload]: 'Subir archivo',
+  [BrightPassStrings.Import_Import]: 'Importar',
+  [BrightPassStrings.Import_Close]: 'Cerrar',
+  [BrightPassStrings.Import_Summary]: 'Resumen de importación',
+  [BrightPassStrings.Import_ImportedTemplate]: '{COUNT} entradas importadas con éxito',
+  [BrightPassStrings.Import_SkippedTemplate]: '{COUNT} entradas omitidas',
+  [BrightPassStrings.Import_ErrorsTemplate]: 'Fila {INDEX}: {MESSAGE}',
+  [BrightPassStrings.Import_InvalidFormat]:
+    'El archivo subido no coincide con el formato seleccionado.',
+  [BrightPassStrings.Import_Error]:
+    'Ocurrió un error durante la importación. Por favor, inténtelo de nuevo.',
+
+  // Errors
+  [BrightPassStrings.Error_InvalidMasterPassword]:
+    'Contraseña maestra inválida.',
+  [BrightPassStrings.Error_VaultNotFound]: 'Bóveda no encontrada.',
+  [BrightPassStrings.Error_Unauthorized]:
+    'No está autorizado para realizar esta acción.',
+  [BrightPassStrings.Error_Generic]:
+    'Ocurrió un error inesperado. Por favor, inténtelo de nuevo.',
+};

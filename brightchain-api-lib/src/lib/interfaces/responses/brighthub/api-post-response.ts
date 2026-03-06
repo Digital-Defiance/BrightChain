@@ -1,4 +1,4 @@
-import type { IBasePostData } from '@brightchain/brighthub-lib';
+import type { IBasePostData, IBaseThread } from '@brightchain/brighthub-lib';
 import type { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
 
 /**
@@ -19,4 +19,12 @@ export interface IPostListApiResponse extends IApiMessageResponse {
     cursor?: string;
     hasMore: boolean;
   };
+}
+
+/**
+ * API response for a thread (root post + replies)
+ * @see Requirements: 2.2
+ */
+export interface IThreadApiResponse extends IApiMessageResponse {
+  data: IBaseThread<string>;
 }

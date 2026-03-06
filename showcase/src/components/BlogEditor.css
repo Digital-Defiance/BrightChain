@@ -104,7 +104,7 @@
   align-items: center;
   margin-bottom: 2rem;
   padding-bottom: 1rem;
-  border-bottom: 2px solid rgba(0, 255, 136, 0.2);
+  border-bottom: 2px solid rgba(45, 170, 255, 0.2);
 }
 
 .editor-header h1 {
@@ -185,7 +185,7 @@
 
 .w-md-editor-toolbar button:hover {
   color: var(--accent-primary) !important;
-  background: rgba(0, 255, 136, 0.1) !important;
+  background: rgba(45, 170, 255, 0.1) !important;
 }
 
 .w-md-editor-content {

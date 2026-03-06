@@ -1,7 +1,7 @@
 ---
 title: "Data Temperature and Location Management"
 parent: "Architecture & Design"
-nav_order: 5
+nav_order: 7
 permalink: /docs/architecture/data-temperature-and-location/
 ---
 # Data Temperature and Location Management

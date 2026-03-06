@@ -60,9 +60,16 @@ function TestConsumer() {
 
 function makeDecryptedVault(id = 'v1') {
   return {
-    id,
-    name: 'Test Vault',
-    ownerId: 'owner1',
+    metadata: {
+      id,
+      name: 'Test Vault',
+      ownerId: 'owner1',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+      entryCount: 1,
+      sharedWith: [],
+      vcblBlockId: undefined,
+    },
     propertyRecords: [
       {
         entryType: 'login' as const,
@@ -74,8 +81,6 @@ function makeDecryptedVault(id = 'v1') {
         siteUrl: 'https://github.com',
       },
     ],
-    createdAt: '2024-01-01T00:00:00.000Z',
-    updatedAt: '2024-01-01T00:00:00.000Z',
   };
 }
 

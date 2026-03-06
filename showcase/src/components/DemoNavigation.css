@@ -83,7 +83,7 @@
 
 .nav-item.active {
   color: var(--accent-primary);
-  background: rgba(0, 255, 136, 0.1);
+  background: rgba(45, 170, 255, 0.1);
 }
 
 .nav-icon {
@@ -169,7 +169,7 @@
 }
 
 .mobile-nav-item.active {
-  background: rgba(0, 255, 136, 0.1);
+  background: rgba(45, 170, 255, 0.1);
   color: var(--accent-primary);
 }
 

@@ -215,7 +215,7 @@ export const EnhancedSoupCan: React.FC<EnhancedSoupCanProps> = ({
                   height: '8px',
                   borderRadius: '50%',
                   backgroundColor: 'var(--accent-primary)',
-                  boxShadow: '0 0 4px rgba(0, 255, 136, 0.6)',
+                  boxShadow: '0 0 4px rgba(45, 170, 255, 0.6)',
                 }}
               />
             ))}

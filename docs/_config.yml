@@ -7,6 +7,8 @@ url: https://github.brightchain.org
 
 remote_theme: just-the-docs/just-the-docs@v0.10.0
 
+ga_tracking: G-N3M6QH8EFY
+
 # Aux links (top-right)
 aux_links:
   GitHub: https://github.com/Digital-Defiance/BrightChain

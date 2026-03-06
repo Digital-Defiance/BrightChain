@@ -138,8 +138,7 @@ const ComposeView: FC<ComposeViewProps> = ({
   forwardFrom,
   onClose,
 }) => {
-  const { tComponent } = useI18n();
-  const t = (key: string) => tComponent(BrightChainComponentId, key);
+  const { tBranded: t } = useI18n();
   const emailApi = useEmailApi();
 
   // Pre-fill from reply or forward

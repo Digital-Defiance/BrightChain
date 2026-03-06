@@ -1,18 +1,17 @@
 import {
-  BrightChainComponentId,
   BrightChainStrings,
 } from '@brightchain/brightchain-lib';
+import { BrightChainSubLogo } from '@brightchain/brightchain-react-components';
+import { faEnvelope} from '@awesome.me/kit-a20d532681/icons/classic/solid'
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
-import { Mail as MailIcon } from '@mui/icons-material';
-import { Box, Button, Container, Typography } from '@mui/material';
+import { Box, Button, Container } from '@mui/material';
 import { FC, memo } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
+import './BrightMail.scss';
 
 const BrightMailLayout: FC = () => {
-  const { tComponent } = useI18n();
+  const { tBranded: t } = useI18n();
   const navigate = useNavigate();
-
-  const t = (key: string) => tComponent(BrightChainComponentId, key);
 
   return (
     <Container maxWidth="lg">
@@ -23,10 +22,7 @@ const BrightMailLayout: FC = () => {
         my={2}
       >
         <Box display="flex" alignItems="center" gap={1}>
-          <MailIcon color="primary" />
-          <Typography variant="h5" component="h1">
-            {t(BrightChainStrings.BrightMail_MenuLabel)}
-          </Typography>
+          <BrightChainSubLogo subText="Mail" icon={faEnvelope} height={30} iconHeight={20} />
         </Box>
         <Button
           variant="contained"

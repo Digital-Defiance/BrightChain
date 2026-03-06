@@ -66,6 +66,9 @@ interface IConnectionHandlers extends TypedHandlers {
   importConnections: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   createHub: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   getHubs: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  addHubMembers: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  removeHubMembers: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  bulkMembers: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   getConnectionInsights: ApiRequestHandler<
     IApiMessageResponse | ApiErrorResponse
   >;
@@ -425,6 +428,51 @@ export class BrightHubConnectionController<
           },
         },
       }),
+      routeConfig('post', '/hubs/:id/members', {
+        handlerKey: 'addHubMembers',
+        useAuthentication: false,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Add members to a hub',
+          tags: ['BrightHub Connections'],
+          responses: {
+            200: {
+              schema: 'MessageResponse',
+              description: 'Members added to hub',
+            },
+          },
+        },
+      }),
+      routeConfig('delete', '/hubs/:id/members', {
+        handlerKey: 'removeHubMembers',
+        useAuthentication: false,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Remove members from a hub',
+          tags: ['BrightHub Connections'],
+          responses: {
+            200: {
+              schema: 'MessageResponse',
+              description: 'Members removed from hub',
+            },
+          },
+        },
+      }),
+      routeConfig('post', '/lists/:id/members/bulk', {
+        handlerKey: 'bulkMembers',
+        useAuthentication: false,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Bulk add or remove members from a list',
+          tags: ['BrightHub Connections'],
+          responses: {
+            200: {
+              schema: 'MessageResponse',
+              description: 'Bulk operation complete',
+            },
+          },
+        },
+      }),
       routeConfig('get', '/connections/:id/insights', {
         handlerKey: 'getConnectionInsights',
         useAuthentication: false,
@@ -506,6 +554,9 @@ export class BrightHubConnectionController<
       importConnections: this.handleImportConnections.bind(this),
       createHub: this.handleCreateHub.bind(this),
       getHubs: this.handleGetHubs.bind(this),
+      addHubMembers: this.handleAddHubMembers.bind(this),
+      removeHubMembers: this.handleRemoveHubMembers.bind(this),
+      bulkMembers: this.handleBulkMembers.bind(this),
       getConnectionInsights: this.handleGetConnectionInsights.bind(this),
       getFollowRequests: this.handleGetFollowRequests.bind(this),
       approveFollowRequest: this.handleApproveFollowRequest.bind(this),
@@ -558,9 +609,11 @@ export class BrightHubConnectionController<
   > {
     try {
       const typedReq = req as { query: Record<string, string | undefined> };
-      const userId = typedReq.query['userId'];
+      const userId = typedReq.query['userId'] ?? typedReq.query['ownerId'];
       if (!userId)
-        return validationError('Missing required query parameter: userId');
+        return validationError(
+          'Missing required query parameter: userId or ownerId',
+        );
 
       const options = this.parsePaginationOptions(typedReq.query);
       const result = await this.getConnectionService().getUserLists(
@@ -737,9 +790,11 @@ export class BrightHubConnectionController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const typedReq = req as { query: Record<string, string | undefined> };
-      const userId = typedReq.query['userId'];
+      const userId = typedReq.query['userId'] ?? typedReq.query['ownerId'];
       if (!userId)
-        return validationError('Missing required query parameter: userId');
+        return validationError(
+          'Missing required query parameter: userId or ownerId',
+        );
 
       const categories =
         await this.getConnectionService().getDefaultCategories(userId);
@@ -797,7 +852,14 @@ export class BrightHubConnectionController<
       });
       return {
         statusCode: 200,
-        response: { message: 'OK', data: result } as IApiMessageResponse,
+        response: {
+          message: 'OK',
+          data: {
+            suggestions: result.items,
+            cursor: result.cursor,
+            hasMore: result.hasMore,
+          },
+        } as IApiMessageResponse,
       };
     } catch (error) {
       return handleError(error);
@@ -828,7 +890,14 @@ export class BrightHubConnectionController<
       );
       return {
         statusCode: 200,
-        response: { message: 'OK', data: result } as IApiMessageResponse,
+        response: {
+          message: 'OK',
+          data: {
+            mutualConnections: result.items,
+            cursor: result.cursor,
+            hasMore: result.hasMore,
+          },
+        } as IApiMessageResponse,
       };
     } catch (error) {
       if (error instanceof ConnectionServiceError)
@@ -953,16 +1022,25 @@ export class BrightHubConnectionController<
       if (!userId) return validationError('Missing required field: userId');
       if (!data) return validationError('Missing required field: data');
 
+      // The service expects data as a JSON string, but Express parses the body
+      // so data arrives as an object. Stringify it for the service.
+      const dataStr = typeof data === 'string' ? data : JSON.stringify(data);
+
       const result = await this.getConnectionService().importConnections(
         userId,
-        data as never,
+        dataStr,
         format ?? 'json',
       );
       return {
         statusCode: 200,
         response: {
           message: 'Import complete',
-          data: result,
+          data: {
+            ...result,
+            imported: result.successCount,
+            successful: result.successCount,
+            created: result.successCount,
+          },
         } as IApiMessageResponse,
       };
     } catch (error) {
@@ -1002,14 +1080,115 @@ export class BrightHubConnectionController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const typedReq = req as { query: Record<string, string | undefined> };
-      const userId = typedReq.query['userId'];
+      const userId = typedReq.query['userId'] ?? typedReq.query['ownerId'];
       if (!userId)
-        return validationError('Missing required query parameter: userId');
+        return validationError(
+          'Missing required query parameter: userId or ownerId',
+        );
 
       const result = await this.getConnectionService().getHubs(userId);
       return {
         statusCode: 200,
         response: { message: 'OK', data: result } as IApiMessageResponse,
+      };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleAddHubMembers(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { ownerId, userIds } = (
+        req as {
+          body: { ownerId: string; userIds: string[] };
+          params: { id: string };
+        }
+      ).body;
+      if (!id) return validationError('Missing required parameter: id');
+      if (!ownerId) return validationError('Missing required field: ownerId');
+      if (!userIds || !Array.isArray(userIds))
+        return validationError('Missing required field: userIds (array)');
+
+      await this.getConnectionService().addToHub(id, ownerId, userIds);
+      return { statusCode: 200, response: { message: 'Members added to hub' } };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleRemoveHubMembers(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { ownerId, userIds } = (
+        req as {
+          body: { ownerId: string; userIds: string[] };
+          params: { id: string };
+        }
+      ).body;
+      if (!id) return validationError('Missing required parameter: id');
+      if (!ownerId) return validationError('Missing required field: ownerId');
+      if (!userIds || !Array.isArray(userIds))
+        return validationError('Missing required field: userIds (array)');
+
+      await this.getConnectionService().removeFromHub(id, ownerId, userIds);
+      return {
+        statusCode: 200,
+        response: { message: 'Members removed from hub' },
+      };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleBulkMembers(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { ownerId, action, userIds } = (
+        req as {
+          body: {
+            ownerId: string;
+            action: 'add' | 'remove';
+            userIds: string[];
+          };
+          params: { id: string };
+        }
+      ).body;
+      if (!id) return validationError('Missing required parameter: id');
+      if (!ownerId) return validationError('Missing required field: ownerId');
+      if (!action || !['add', 'remove'].includes(action))
+        return validationError('Missing or invalid field: action (add|remove)');
+      if (!userIds || !Array.isArray(userIds))
+        return validationError('Missing required field: userIds (array)');
+
+      if (action === 'add') {
+        await this.getConnectionService().addMembersToList(
+          id,
+          ownerId,
+          userIds,
+        );
+      } else {
+        await this.getConnectionService().removeMembersFromList(
+          id,
+          ownerId,
+          userIds,
+        );
+      }
+      return {
+        statusCode: 200,
+        response: { message: `Bulk ${action} complete` },
       };
     } catch (error) {
       if (error instanceof ConnectionServiceError)
@@ -1063,7 +1242,14 @@ export class BrightHubConnectionController<
       );
       return {
         statusCode: 200,
-        response: { message: 'OK', data: result } as IApiMessageResponse,
+        response: {
+          message: 'OK',
+          data: {
+            requests: result.items,
+            cursor: result.cursor,
+            hasMore: result.hasMore,
+          },
+        } as IApiMessageResponse,
       };
     } catch (error) {
       if (error instanceof UserProfileServiceError) {

@@ -257,14 +257,20 @@ export class MessagingService implements IMessagingService {
     return Math.min(Math.max(1, l), MAX_PAGE_LIMIT);
   }
 
-  private validateMessageContent(content: string): void {
-    if (!content || content.trim().length === 0) {
+  private validateMessageContent(
+    content: string,
+    options?: { allowEmpty?: boolean },
+  ): void {
+    if (!options?.allowEmpty && (!content || content.trim().length === 0)) {
       throw new MessagingServiceError(
         MessagingErrorCode.EmptyContent,
         'Message content cannot be empty',
       );
     }
-    if (this.textFormatter.getCharacterCount(content) > MAX_MESSAGE_LENGTH) {
+    if (
+      content &&
+      this.textFormatter.getCharacterCount(content) > MAX_MESSAGE_LENGTH
+    ) {
       throw new MessagingServiceError(
         MessagingErrorCode.ContentTooLong,
         `Message content exceeds maximum of ${MAX_MESSAGE_LENGTH} characters`,
@@ -616,7 +622,9 @@ export class MessagingService implements IMessagingService {
     content: string,
     options?: ISendMessageOptions,
   ): Promise<IBaseDirectMessage<string>> {
-    this.validateMessageContent(content);
+    this.validateMessageContent(content, {
+      allowEmpty: !!options?.forwardedFromId,
+    });
     this.validateAttachments(options?.attachments);
 
     await this.assertParticipant(conversationId, senderId);
@@ -1052,6 +1060,27 @@ export class MessagingService implements IMessagingService {
         status: MessageRequestStatus.Declined,
       } as Partial<MessageRequestRecord>)
       .exec();
+  }
+
+  /**
+   * Get pending message requests for a recipient user.
+   */
+  async getMessageRequests(
+    recipientId: string,
+  ): Promise<IBaseMessageRequest<string>[]> {
+    const allRequests = await this.messageRequestsCollection
+      .find({ recipientId } as Partial<MessageRequestRecord>)
+      .exec();
+    return allRequests
+      .filter((r) => r.status === MessageRequestStatus.Pending)
+      .map((r) => ({
+        _id: r._id,
+        senderId: r.senderId,
+        recipientId: r.recipientId,
+        messagePreview: r.messagePreview,
+        status: r.status as MessageRequestStatus,
+        createdAt: r.createdAt,
+      }));
   }
 
   async canMessageDirectly(

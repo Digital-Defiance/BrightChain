@@ -282,8 +282,8 @@
 
 .error-retry-btn {
   padding: 0.5rem 1rem;
-  background: rgba(0, 255, 136, 0.2);
-  border: 1px solid rgba(0, 255, 136, 0.4);
+  background: rgba(45, 170, 255, 0.2);
+  border: 1px solid rgba(45, 170, 255, 0.4);
   border-radius: 8px;
   color: var(--accent-primary);
   font-size: 0.875rem;
@@ -296,8 +296,8 @@
 }
 
 .error-retry-btn:hover {
-  background: rgba(0, 255, 136, 0.3);
-  border-color: rgba(0, 255, 136, 0.6);
+  background: rgba(45, 170, 255, 0.3);
+  border-color: rgba(45, 170, 255, 0.6);
   transform: translateY(-1px);
 }
 

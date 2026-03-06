@@ -1382,6 +1382,10 @@ export class ConnectionService implements IConnectionService {
           usernames = parsed.connections
             .map((c: { username?: string }) => c.username || '')
             .filter((u: string) => u.length > 0);
+        } else if (parsed.usernames && Array.isArray(parsed.usernames)) {
+          usernames = parsed.usernames.filter(
+            (u: unknown) => typeof u === 'string' && u.length > 0,
+          );
         } else if (Array.isArray(parsed)) {
           usernames = parsed
             .map((entry: string | { username?: string }) =>

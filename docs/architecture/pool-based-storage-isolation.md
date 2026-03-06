@@ -1,7 +1,7 @@
 ---
 title: "Pool-Based Storage Isolation Specification"
 parent: "Architecture & Design"
-nav_order: 6
+nav_order: 8
 permalink: /docs/architecture/pool-based-storage-isolation/
 ---
 # Pool-Based Storage Isolation Specification

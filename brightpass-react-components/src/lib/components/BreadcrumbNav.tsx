@@ -65,7 +65,7 @@ export function buildBreadcrumbs(
     const vaultId = segments[1];
 
     items.push({
-      label: t(BrightPassStrings.Breadcrumb_Vault, {
+      label: t(BrightPassStrings.Breadcrumb_VaultTemplate, {
         NAME: vaultName || vaultId,
       }),
       to: `/brightpass/vault/${vaultId}`,

@@ -19,7 +19,7 @@ interface AnimatedParticlesProps {
 
 export const AnimatedParticles: React.FC<AnimatedParticlesProps> = ({
   particleCount = 50,
-  colors = ['#00ff88', '#0099ff', '#ff6b9d'],
+  colors = ['#2daaff', '#0074e0', '#5ecbff'],
   speed = 0.5,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
