@@ -235,7 +235,7 @@ export const TOTPWidget: React.FC<TOTPWidgetProps> = ({
           </Box>
 
           <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            {t(BrightPassStrings.TOTP_SecondsRemaining, {
+            {t(BrightPassStrings.TOTP_SecondsRemainingTemplate, {
               SECONDS: String(remaining),
             })}
           </Typography>

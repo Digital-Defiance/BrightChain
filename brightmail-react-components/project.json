@@ -4,7 +4,7 @@
   "sourceRoot": "brightmail-react-components/src",
   "projectType": "library",
   "tags": ["type:lib", "scope:frontend"],
-  "implicitDependencies": ["brightchain-lib"],
+  "implicitDependencies": ["brightchain-lib", "brightchain-react-components"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",

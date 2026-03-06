@@ -43,7 +43,9 @@ import {
   routeConfig,
   TypedHandlers,
 } from '@digitaldefiance/node-express-suite';
+import * as jwt from 'jsonwebtoken';
 import { IBrightChainApplication } from '../../interfaces/application';
+import { ITokenPayload } from '../../interfaces/token-payload';
 import { MessagePassingService } from '../../services/messagePassingService';
 import { DefaultBackendIdType } from '../../shared-types';
 import {
@@ -215,7 +217,10 @@ export class EmailController<
 
   /**
    * Extract memberId from request body or query params.
-   * Used for identifying the authenticated user (auth disabled in test mode).
+   * Extract memberId from request body, query params, or authenticated user.
+   * Checks body and query first (for backward compatibility with explicit
+   * memberId), then falls back to req.user populated by auth middleware.
+   * As a last resort, decodes the JWT from the Authorization header.
    */
   private getMemberId(req: unknown): string {
     const body = (req as SendEmailRequestBody).body;
@@ -226,6 +231,29 @@ export class EmailController<
     }
     const query = (req as InboxQueryParams).query;
     if (query && typeof query.memberId === 'string') return query.memberId;
+
+    // Fall back to authenticated user from JWT middleware (if auth is enabled)
+    const user = (req as { user?: { memberId?: string; id?: string } }).user;
+    if (user) {
+      if (typeof user.memberId === 'string') return user.memberId;
+      if (typeof user.id === 'string') return user.id;
+    }
+
+    // Last resort: decode JWT from Authorization header directly
+    const headers = (req as { headers?: { authorization?: string } }).headers;
+    const authHeader = headers?.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.slice(7);
+        const decoded = jwt.verify(
+          token,
+          this.application.environment.jwtSecret,
+        ) as ITokenPayload;
+        if (decoded.memberId) return decoded.memberId;
+      } catch {
+        // Token invalid or expired — fall through to error
+      }
+    }
 
     throw new Error('No authenticated user');
   }

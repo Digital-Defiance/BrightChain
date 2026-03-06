@@ -65,6 +65,7 @@ import {
 } from './services';
 import { BrightChainAuthenticationProvider } from './services/brightchain-authentication-provider';
 import { wrapCollection } from './services/brighthub/collectionAdapter';
+import { createThreadService } from './services/brighthub/threadService';
 import { ClientWebSocketServer } from './services/clientWebSocketServer';
 import { EventNotificationSystem } from './services/eventNotificationSystem';
 import { FakeEmailService } from './services/fakeEmailService';
@@ -369,6 +370,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
         },
       };
       const postService = new PostService(appForCollections);
+      const threadService = createThreadService(appForCollections);
       const feedService = new FeedService(appForCollections);
       const messagingService = new MessagingService(appForCollections);
       const notificationService = new NotificationService(appForCollections);
@@ -377,6 +379,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
       const userProfileService = new UserProfileService(appForCollections);
 
       this.services.register('postService', () => postService);
+      this.services.register('threadService', () => threadService);
       this.services.register('feedService', () => feedService);
       this.services.register('messagingService', () => messagingService);
       this.services.register('notificationService', () => notificationService);
@@ -384,7 +387,15 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
       this.services.register('discoveryService', () => discoveryService);
       this.services.register('userProfileService', () => userProfileService);
 
+      // Wire notification service into services that create notifications
+      postService.setNotificationService(notificationService);
+      userProfileService.setNotificationService(notificationService);
+
+      // Wire connection service into user profile service for block inheritance
+      userProfileService.setConnectionService(connectionService);
+
       this.apiRouter.setBrightHubPostService(postService);
+      this.apiRouter.setBrightHubThreadService(threadService);
       this.apiRouter.setBrightHubFeedService(feedService);
       this.apiRouter.setBrightHubMessagingService(messagingService);
       this.apiRouter.setBrightHubNotificationService(notificationService);

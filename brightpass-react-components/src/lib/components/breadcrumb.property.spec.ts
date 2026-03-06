@@ -16,7 +16,7 @@ import fc from 'fast-check';
 jest.mock('@brightchain/brightchain-lib', () => ({
   BrightPassStrings: {
     Breadcrumb_BrightPass: 'Breadcrumb_BrightPass',
-    Breadcrumb_Vault: 'Breadcrumb_Vault',
+    Breadcrumb_VaultTemplate: 'Breadcrumb_VaultTemplate',
     Breadcrumb_AuditLog: 'Breadcrumb_AuditLog',
     Breadcrumb_PasswordGenerator: 'Breadcrumb_PasswordGenerator',
   },

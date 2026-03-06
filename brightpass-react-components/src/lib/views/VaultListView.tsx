@@ -84,7 +84,7 @@ const VaultListView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [brightPassApi, t]);
 
   useEffect(() => {
     fetchVaults();
@@ -187,7 +187,7 @@ const VaultListView: React.FC = () => {
               />
               {vault.sharedWith.length > 0 && (
                 <Tooltip
-                  title={t(BrightPassStrings.VaultList_SharedWith, {
+                  title={t(BrightPassStrings.VaultList_SharedWithTemplate, {
                     COUNT: String(vault.sharedWith.length),
                   })}
                 >
@@ -229,7 +229,7 @@ const VaultListView: React.FC = () => {
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
             {dialog.kind === 'delete'
-              ? t(BrightPassStrings.VaultList_ConfirmDeleteMessage, {
+              ? t(BrightPassStrings.VaultList_ConfirmDeleteMessageTemplate, {
                   NAME: dialog.vault.name,
                 })
               : ''}

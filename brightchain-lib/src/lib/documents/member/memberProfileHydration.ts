@@ -110,7 +110,9 @@ export const privateMemberProfileHydrationSchema = <
         ? { backupCodes: storage.backupCodes.map((c) => ({ ...c })) }
         : {}),
       ...(storage.passwordWrappedPrivateKey !== undefined
-        ? { passwordWrappedPrivateKey: { ...storage.passwordWrappedPrivateKey } }
+        ? {
+            passwordWrappedPrivateKey: { ...storage.passwordWrappedPrivateKey },
+          }
         : {}),
       ...(storage.mnemonicRecovery !== undefined
         ? { mnemonicRecovery: storage.mnemonicRecovery }
@@ -193,7 +195,11 @@ export const privateMemberProfileHydrationSchema = <
         ? { backupCodes: hydrated.backupCodes.map((c) => ({ ...c })) }
         : {}),
       ...(hydrated.passwordWrappedPrivateKey !== undefined
-        ? { passwordWrappedPrivateKey: { ...hydrated.passwordWrappedPrivateKey } }
+        ? {
+            passwordWrappedPrivateKey: {
+              ...hydrated.passwordWrappedPrivateKey,
+            },
+          }
         : {}),
       ...(hydrated.mnemonicRecovery !== undefined
         ? { mnemonicRecovery: hydrated.mnemonicRecovery }
