@@ -16,9 +16,7 @@ module.exports = composePlugins(
     // Ignore source map warnings and module not found errors for node_modules packages
     config.ignoreWarnings = [
       ...(config.ignoreWarnings || []),
-      // Ignore all source map parsing failures for node_modules
       /Failed to parse source map/,
-      // Ignore file-type and pg-hstore module not found errors (server-only dependencies)
       (warning) => {
         return (
           warning.message &&
@@ -30,6 +28,18 @@ module.exports = composePlugins(
     
     // Configure node polyfills for browser
     config.resolve = config.resolve || {};
+
+    // Stub out server-only modules that get pulled in transitively
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'file-type': false,
+      'pg-hstore': false,
+      // Heavy Node.js-only deps from brightchain-lib's dependency tree
+      'nat-pmp': false,
+      'nat-upnp': false,
+      'express': false,
+    };
+    
     config.resolve.fallback = {
       ...config.resolve.fallback,
       crypto: false,
@@ -50,27 +60,40 @@ module.exports = composePlugins(
       async_hooks: false,
     };
     
-    // Stub out server-only modules
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'file-type': false,
-      'pg-hstore': false,
-    };
-    
     // Exclude problematic Node.js-only dependencies
-    config.externals = {
-      ...config.externals,
-      'mock-aws-s3': 'commonjs mock-aws-s3',
-      'aws-sdk': 'commonjs aws-sdk',
-      'nock': 'commonjs nock',
-      'kerberos': 'commonjs kerberos',
-      '@mongodb-js/zstd': 'commonjs @mongodb-js/zstd',
-      '@aws-sdk/credential-providers': 'commonjs @aws-sdk/credential-providers',
-      'gcp-metadata': 'commonjs gcp-metadata',
-      'snappy': 'commonjs snappy',
-      'mongodb-client-encryption': 'commonjs mongodb-client-encryption',
-      'bcrypt': 'commonjs bcrypt',
-    };
+    config.externals = [
+      ...(Array.isArray(config.externals) ? config.externals : config.externals ? [config.externals] : []),
+      // Function to externalize heavy server-only packages that webpack shouldn't resolve
+      function({ request }, callback) {
+        const serverOnlyPackages = [
+          'express',
+          'nat-pmp',
+          'nat-upnp',
+          '@ethereumjs/wallet',
+          'paillier-bigint',
+          'secp256k1',
+          '@digitaldefiance/reed-solomon-erasure.wasm',
+          '@digitaldefiance/secrets',
+          '@digitaldefiance/enclave-bridge-client',
+          '@digitaldefiance/node-express-suite',
+          '@digitaldefiance/node-ecies-lib',
+          'mock-aws-s3',
+          'aws-sdk',
+          'nock',
+          'kerberos',
+          '@mongodb-js/zstd',
+          '@aws-sdk/credential-providers',
+          'gcp-metadata',
+          'snappy',
+          'mongodb-client-encryption',
+          'bcrypt',
+        ];
+        if (serverOnlyPackages.some(pkg => request === pkg || request.startsWith(pkg + '/'))) {
+          return callback(null, `commonjs ${request}`);
+        }
+        callback();
+      },
+    ];
     
     // Add module rules to ignore HTML files and problematic dependencies
     config.module = config.module || {};

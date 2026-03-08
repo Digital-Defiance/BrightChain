@@ -31,7 +31,8 @@ BrightChain is a modular, privacy-preserving decentralized platform. Its ecosyst
 | 05 | [Building a dApp](./05-building-a-dapp) | Advanced | 60 minutes | Build a full-stack decentralized application on BrightStack with identity integration and pool isolation. |
 | 06 | [Troubleshooting & FAQ](./06-troubleshooting-faq) | Beginner | 10 minutes | Resolve common installation failures, runtime errors, and find diagnostic commands. |
 | 07 | [Cloud Storage Providers](./07-cloud-storage-providers) | Intermediate | 45 minutes | Use S3 or Azure Blob as a block store for BrightChain. |
+| 08 | [Joining the Network](./08-joining-the-network) | Intermediate | 45 minutes | Spin up a node, connect to the BrightChain network, join storage pools, and understand Quorum admission. |
 
 ## Suggested Reading Order
 
-Start with the **Architecture Overview** to understand the big picture, then follow the **Quickstart** to get a local environment running. From there, explore the intermediate guides in order (Node Setup → Storage Pools → BrightDB Usage) before tackling the advanced dApp guide. Keep the **Troubleshooting & FAQ** handy as a reference throughout.
+Start with the **Architecture Overview** to understand the big picture, then follow the **Quickstart** to get a local environment running. From there, explore the intermediate guides in order (Node Setup → Storage Pools → BrightDB Usage) before tackling the advanced dApp guide. If you're a prospective node operator, read **Joining the Network** after Node Setup. Keep the **Troubleshooting & FAQ** handy as a reference throughout.

@@ -92,7 +92,7 @@ describe('Email Integration via MessagePassingService', () => {
       gossipService,
     );
 
-    service.configureEmail(emailStore);
+    service.configureEmail(emailStore, { canonicalDomain: 'brightchain' });
   });
 
   // ─── End-to-end send / receive ────────────────────────────────────
@@ -312,7 +312,7 @@ describe('Email Integration via MessagePassingService', () => {
         new EventNotificationSystem(),
         nodeAGossip,
       );
-      nodeA.configureEmail(sharedStore, { nodeId: 'node-a.brightchain' });
+      nodeA.configureEmail(sharedStore, { nodeId: 'node-a.brightchain', canonicalDomain: 'brightchain' });
 
       const nodeB = new MessagePassingService(
         createMockMessageCBL(),
@@ -320,7 +320,7 @@ describe('Email Integration via MessagePassingService', () => {
         new EventNotificationSystem(),
         nodeBGossip,
       );
-      nodeB.configureEmail(sharedStore, { nodeId: 'node-b.brightchain' });
+      nodeB.configureEmail(sharedStore, { nodeId: 'node-b.brightchain', canonicalDomain: 'brightchain' });
 
       // Alice on Node A sends to Bob on Node B
       const result = await nodeA.sendEmail({
@@ -354,7 +354,7 @@ describe('Email Integration via MessagePassingService', () => {
         new EventNotificationSystem(),
         nodeAGossip,
       );
-      nodeA.configureEmail(sharedStore, { nodeId: 'node-a.brightchain' });
+      nodeA.configureEmail(sharedStore, { nodeId: 'node-a.brightchain', canonicalDomain: 'brightchain' });
 
       const nodeC = new MessagePassingService(
         createMockMessageCBL(),
@@ -362,7 +362,7 @@ describe('Email Integration via MessagePassingService', () => {
         new EventNotificationSystem(),
         createMockGossipService(),
       );
-      nodeC.configureEmail(sharedStore, { nodeId: 'node-c.brightchain' });
+      nodeC.configureEmail(sharedStore, { nodeId: 'node-c.brightchain', canonicalDomain: 'brightchain' });
 
       await nodeA.sendEmail({
         from: createMailbox('alice', 'node-a.brightchain'),
@@ -803,7 +803,7 @@ describe('Email Integration via MessagePassingService', () => {
         new EventNotificationSystem(),
         g,
       );
-      svc.configureEmail(sharedStore, { nodeId });
+      svc.configureEmail(sharedStore, { nodeId, canonicalDomain: 'brightchain' });
       return { service: svc, gossip: g };
     }
 
@@ -1008,7 +1008,7 @@ describe('Email Integration via MessagePassingService', () => {
         new EventNotificationSystem(),
         nodeAGossip,
       );
-      nodeA.configureEmail(store, { nodeId: 'node-a.brightchain' });
+      nodeA.configureEmail(store, { nodeId: 'node-a.brightchain', canonicalDomain: 'brightchain' });
 
       const nodeB = new MessagePassingService(
         createMockMessageCBL(),
@@ -1016,7 +1016,7 @@ describe('Email Integration via MessagePassingService', () => {
         new EventNotificationSystem(),
         createMockGossipService(),
       );
-      nodeB.configureEmail(store, { nodeId: 'node-b.brightchain' });
+      nodeB.configureEmail(store, { nodeId: 'node-b.brightchain', canonicalDomain: 'brightchain' });
 
       const attachContent = new Uint8Array(
         Buffer.from('cross-node-attachment'),

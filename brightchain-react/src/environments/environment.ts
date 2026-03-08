@@ -4,8 +4,9 @@ import { IEnvironment } from '../interfaces/environment';
 const runtimeConfig = (window as any).APP_CONFIG || {};
 
 export const environment: IEnvironment = {
-  production: false,
-  debugI18n: true,
+  production: import.meta.env.PROD,
+  debugI18n: !import.meta.env.PROD,
   serverUrl: runtimeConfig.serverUrl || '',
   apiUrl: runtimeConfig.apiUrl || '/api',
+  emailDomain: 'brightchain.org',
 };

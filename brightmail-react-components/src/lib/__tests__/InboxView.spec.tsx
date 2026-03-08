@@ -24,6 +24,26 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
+const mockSetSelectedEmailId = jest.fn();
+jest.mock('../BrightMailContext', () => ({
+  __esModule: true,
+  useBrightMail: () => ({
+    sidebarOpen: true,
+    setSidebarOpen: jest.fn(),
+    composeModal: { status: 'closed' },
+    openCompose: jest.fn(),
+    minimizeCompose: jest.fn(),
+    closeCompose: jest.fn(),
+    selectedEmailId: null,
+    setSelectedEmailId: mockSetSelectedEmailId,
+  }),
+}));
+
+let mockMediaQueryResult = false;
+jest.mock('@mui/material/useMediaQuery', () => {
+  return jest.fn(() => mockMediaQueryResult);
+});
+
 jest.mock('@digitaldefiance/ecies-lib', () => ({
   IECIESConfig: {},
   Member: { newMember: jest.fn() },
@@ -171,6 +191,8 @@ describe('InboxView', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockNavigate.mockClear();
+    mockSetSelectedEmailId.mockClear();
+    mockMediaQueryResult = false; // default to narrow viewport
   });
 
   /**
@@ -189,7 +211,13 @@ describe('InboxView', () => {
       expect.objectContaining({ page: '1' }),
     );
     expect(screen.getAllByText('Sender Name').length).toBe(2);
-    expect(screen.getAllByText('Test Subject').length).toBe(2);
+    // EmailRow renders subject with " — " separator and snippet span,
+    // so use data-testid to find subject elements
+    const subjects = screen.getAllByTestId('email-subject');
+    expect(subjects.length).toBe(2);
+    subjects.forEach((el) => {
+      expect(el.textContent).toContain('Test Subject');
+    });
   });
 
   /**
@@ -306,9 +334,10 @@ describe('InboxView', () => {
   });
 
   /**
-   * Requirement 3.4: Row click navigates to thread view
+   * Requirement 3.4: Row click navigates to thread view (narrow viewport)
    */
-  it('navigates to thread view on row click', async () => {
+  it('navigates to thread view on row click (narrow viewport)', async () => {
+    mockMediaQueryResult = false; // narrow viewport
     const emails = [makeEmail('msg-123')];
     mockedApi.queryInbox.mockResolvedValue(makeInboxResult(emails));
     mockedApi.getUnreadCount.mockResolvedValue({ unreadCount: 1 });
@@ -318,11 +347,35 @@ describe('InboxView', () => {
     });
 
     const row = screen.getByTestId('email-row-msg-123');
+    const button = row.querySelector('[role="button"]') as HTMLElement;
     await act(async () => {
-      fireEvent.click(row);
+      fireEvent.click(button);
     });
 
     expect(mockNavigate).toHaveBeenCalledWith('/brightmail/thread/msg-123');
+  });
+
+  /**
+   * Requirement 1.6: Row click sets selectedEmailId on wide viewport
+   */
+  it('sets selectedEmailId on row click (wide viewport)', async () => {
+    mockMediaQueryResult = true; // wide viewport ≥1280px
+    const emails = [makeEmail('msg-456')];
+    mockedApi.queryInbox.mockResolvedValue(makeInboxResult(emails));
+    mockedApi.getUnreadCount.mockResolvedValue({ unreadCount: 1 });
+
+    await act(async () => {
+      render(<InboxView />);
+    });
+
+    const row = screen.getByTestId('email-row-msg-456');
+    const button = row.querySelector('[role="button"]') as HTMLElement;
+    await act(async () => {
+      fireEvent.click(button);
+    });
+
+    expect(mockSetSelectedEmailId).toHaveBeenCalledWith('msg-456');
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
   /**

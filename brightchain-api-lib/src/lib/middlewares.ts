@@ -67,7 +67,13 @@ export class Middlewares {
         contentSecurityPolicy: {
           directives: {
             defaultSrc: ["'self'"],
-            imgSrc: ["'self'", 'https://flagcdn.com', 'data:', 'blob:'],
+            imgSrc: [
+              "'self'",
+              'https://flagcdn.com',
+              'data:',
+              'blob:',
+              'https://raw.githubusercontent.com',
+            ],
             connectSrc: [
               "'self'",
               'http://localhost:3000',

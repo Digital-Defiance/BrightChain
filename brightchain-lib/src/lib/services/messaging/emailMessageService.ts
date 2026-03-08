@@ -19,6 +19,7 @@
  */
 
 import { sha256 } from '@noble/hashes/sha256';
+import { CoreConstants } from '../../constants';
 import { getRandomBytes } from '../../crypto/platformCrypto';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
@@ -61,6 +62,17 @@ import type { MessageCBLService } from './messageCBLService';
  * @see Requirement 8.6 - Configurable maximum total message size limit
  */
 export interface IEmailServiceConfig {
+  /**
+   * The canonical email domain for this BrightChain network instance.
+   * Recipients whose domain does not match are considered external and
+   * will be routed to the Email Gateway via a gateway-outbound gossip
+   * announcement.
+   *
+   * @see Requirement 1.1 — detect external recipients
+   * @see Requirement 8.1 — read canonical domain from CoreConstants
+   */
+  canonicalDomain: string;
+
   /**
    * Maximum size of a single attachment in bytes.
    * @default 25 * 1024 * 1024 (25MB)
@@ -128,6 +140,7 @@ export interface IEmailServiceConfig {
  * Default configuration values for EmailMessageService.
  */
 export const DEFAULT_EMAIL_SERVICE_CONFIG: IEmailServiceConfig = {
+  canonicalDomain: 'example.com',
   maxAttachmentSize: 25 * 1024 * 1024, // 25MB
   maxMessageSize: 50 * 1024 * 1024, // 50MB
   inlinePartThreshold: 64 * 1024, // 64KB
@@ -817,32 +830,64 @@ export class EmailMessageService {
     }
 
     // 5. Initiate delivery to recipients via gossip with BCC privacy handling
+    //    and external recipient routing (Requirements 1.1, 1.3, 1.4, 9.2, 9.3, 6.3).
     //
-    // BCC Privacy (Requirements 9.2, 9.3, 6.3):
+    // BCC Privacy:
     // - To/CC recipients receive a single gossip announcement WITHOUT BCC info
     // - Each BCC recipient receives their own separate gossip announcement
     // - All announcements have ackRequired=true (Requirement 6.5)
+    //
+    // External Routing (Requirements 1.1, 1.4):
+    // - Recipients whose domain ≠ canonicalDomain are external
+    // - Internal recipients: delivered via gossip as before
+    // - External recipients: routed to Email Gateway via a gateway-outbound
+    //   gossip announcement so the EmailGatewayService can pick them up
+    // - Mixed lists: both deliveries happen simultaneously
+    // - All RFC 5322 headers are preserved in the metadata (Requirement 1.3)
     try {
-      // 5a. Deliver to To/CC recipients (no BCC info)
-      const toCcRecipientIds = [
-        ...(email.to ?? []).map((m) => m.address),
-        ...(email.cc ?? []).map((m) => m.address),
+      // 5a. Deliver to To/CC recipients (no BCC info), partitioned by domain
+      const toCcMailboxes = [
+        ...(email.to ?? []),
+        ...(email.cc ?? []),
       ];
 
-      if (toCcRecipientIds.length > 0) {
+      if (toCcMailboxes.length > 0) {
+        const { internal: internalToCc, external: externalToCc } =
+          this.partitionRecipients(toCcMailboxes);
+
         const toCcMetadata = this.createBccStrippedCopy(metadata);
         await this.metadataStore.store(toCcMetadata);
-        await this.gossipService.announceMessage(
-          toCcMetadata.cblBlockIds ?? [],
-          {
-            messageId,
-            recipientIds: toCcRecipientIds,
-            priority: 'normal',
-            blockIds: toCcMetadata.cblBlockIds ?? [],
-            cblBlockId: toCcMetadata.blockId,
-            ackRequired: true,
-          },
-        );
+
+        // Deliver to internal To/CC recipients via gossip
+        if (internalToCc.length > 0) {
+          await this.gossipService.announceMessage(
+            toCcMetadata.cblBlockIds ?? [],
+            {
+              messageId,
+              recipientIds: internalToCc.map((m) => m.address),
+              priority: 'normal',
+              blockIds: toCcMetadata.cblBlockIds ?? [],
+              cblBlockId: toCcMetadata.blockId,
+              ackRequired: true,
+            },
+          );
+        }
+
+        // Route external To/CC recipients to Email Gateway via gateway-outbound gossip
+        if (externalToCc.length > 0) {
+          await this.gossipService.announceMessage(
+            toCcMetadata.cblBlockIds ?? [],
+            {
+              messageId,
+              recipientIds: externalToCc.map((m) => m.address),
+              priority: 'normal',
+              blockIds: toCcMetadata.cblBlockIds ?? [],
+              cblBlockId: toCcMetadata.blockId,
+              ackRequired: false,
+              gatewayOutbound: true,
+            },
+          );
+        }
       }
 
       // 5b. Deliver to each BCC recipient separately (BCC privacy)
@@ -852,14 +897,35 @@ export class EmailMessageService {
         for (const bccMailbox of email.bcc) {
           const bccCopy = this.createBccRecipientCopy(metadata, bccMailbox);
           await this.metadataStore.store(bccCopy);
-          await this.gossipService.announceMessage(bccCopy.cblBlockIds ?? [], {
-            messageId,
-            recipientIds: [bccMailbox.address],
-            priority: 'normal',
-            blockIds: bccCopy.cblBlockIds ?? [],
-            cblBlockId: bccCopy.blockId,
-            ackRequired: true,
-          });
+
+          if (this.isExternalMailbox(bccMailbox)) {
+            // External BCC: route to Email Gateway
+            await this.gossipService.announceMessage(
+              bccCopy.cblBlockIds ?? [],
+              {
+                messageId,
+                recipientIds: [bccMailbox.address],
+                priority: 'normal',
+                blockIds: bccCopy.cblBlockIds ?? [],
+                cblBlockId: bccCopy.blockId,
+                ackRequired: false,
+                gatewayOutbound: true,
+              },
+            );
+          } else {
+            // Internal BCC: deliver via gossip as before
+            await this.gossipService.announceMessage(
+              bccCopy.cblBlockIds ?? [],
+              {
+                messageId,
+                recipientIds: [bccMailbox.address],
+                priority: 'normal',
+                blockIds: bccCopy.cblBlockIds ?? [],
+                cblBlockId: bccCopy.blockId,
+                ackRequired: true,
+              },
+            );
+          }
         }
       }
     } catch (err) {
@@ -1441,6 +1507,52 @@ export class EmailMessageService {
   }
 
   // ─── BCC Privacy Handling ─────────────────────────────────────────
+
+  /**
+  // ─── External Recipient Routing ──────────────────────────────────────
+
+  /**
+   * Determine whether a mailbox belongs to an external domain
+   * (i.e. its domain does not match the configured canonical domain).
+   *
+   * @param mailbox - The mailbox to check
+   * @returns `true` when the mailbox domain differs from the canonical domain
+   *
+   * @see Requirement 1.1 — detect external recipients
+   */
+  private isExternalMailbox(mailbox: IMailbox): boolean {
+    const domain = mailbox.domain.toLowerCase();
+    const canonical = this.config.canonicalDomain.toLowerCase();
+    return domain !== canonical && !domain.endsWith(`.${canonical}`);
+  }
+
+  /**
+   * Partition an array of mailboxes into internal (canonical domain) and
+   * external (non-canonical domain) groups.
+   *
+   * @param mailboxes - The mailboxes to partition
+   * @returns Object with `internal` and `external` arrays
+   *
+   * @see Requirement 1.1 — detect external recipients
+   * @see Requirement 1.4 — mixed internal/external recipient handling
+   */
+  partitionRecipients(mailboxes: IMailbox[]): {
+    internal: IMailbox[];
+    external: IMailbox[];
+  } {
+    const internal: IMailbox[] = [];
+    const external: IMailbox[] = [];
+    for (const mailbox of mailboxes) {
+      if (this.isExternalMailbox(mailbox)) {
+        external.push(mailbox);
+      } else {
+        internal.push(mailbox);
+      }
+    }
+    return { internal, external };
+  }
+
+  // ─── BCC Privacy Helpers ──────────────────────────────────────────
 
   /**
    * Creates a copy of the email metadata with BCC information stripped.

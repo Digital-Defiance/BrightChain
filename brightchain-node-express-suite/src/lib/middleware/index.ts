@@ -1,0 +1,1 @@
+export { validateBody } from './validateBody';

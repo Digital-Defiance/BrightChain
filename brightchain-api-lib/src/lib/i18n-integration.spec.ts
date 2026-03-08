@@ -57,7 +57,5 @@ describe('i18n integration (api-lib): SuiteCore constants override', () => {
     const constants = engine.getConstants(SuiteCoreComponentId);
     expect(constants).toBeDefined();
     expect(constants?.['Site']).toBe(CoreConstants.Site);
-    expect(constants?.['SiteHostname']).toBe('brightchain.org');
-    expect(constants?.['SiteEmailDomain']).toBe('brightchain.org');
   });
 });

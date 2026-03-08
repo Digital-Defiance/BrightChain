@@ -129,13 +129,5 @@ describe('API Constants Implementation', () => {
     it('should have site name set to BrightChain', () => {
       expect(Constants.Site).toBe('BrightChain');
     });
-
-    it('should have site hostname set to brightchain.org', () => {
-      expect(Constants.SiteHostname).toBe('brightchain.org');
-    });
-
-    it('should have site email domain set to brightchain.org', () => {
-      expect(Constants.SiteEmailDomain).toBe('brightchain.org');
-    });
   });
 });

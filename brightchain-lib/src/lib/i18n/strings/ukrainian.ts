@@ -285,6 +285,19 @@ export const UkrainianStrings: StringsCollection<BrightChainStringKey> = {
     'Транзакція бази даних не вдалася',
   [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
     'Цілісність ланцюга аудиту порушена',
+  // Quorum Ban Mechanism Errors
+  [BrightChainStrings.Error_QuorumError_CannotBanSelf]:
+    'Учасник не може запропонувати заблокувати себе',
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyBanned]:
+    'Учасник вже заблокований',
+  [BrightChainStrings.Error_QuorumError_MemberNotBanned]:
+    'Учасник наразі не заблокований',
+  [BrightChainStrings.Error_QuorumError_NewMemberCannotProposeBan]:
+    'Учасники, прийняті в поточну епоху, не можуть пропонувати блокування',
+  [BrightChainStrings.Error_QuorumError_BanCoolingPeriodNotElapsed]:
+    'Період охолодження блокування ще не минув',
+  [BrightChainStrings.Error_QuorumError_InvalidBanRecordSignatures]:
+    'Запис про блокування не має достатньої кількості дійсних підписів кворуму',
   [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
     'Підпис контенту не відповідає заявленій ідентичності',
   [BrightChainStrings.Error_IdentityValidationError_UnregisteredAlias]:

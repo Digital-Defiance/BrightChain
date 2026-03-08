@@ -40,6 +40,15 @@ export interface MessageDeliveryMetadata {
 
   /** Whether the recipient should send a delivery acknowledgment */
   ackRequired: boolean;
+
+  /**
+   * When true, this announcement is intended for the Email Gateway to pick up
+   * for outbound SMTP delivery to external recipients. The recipientIds will
+   * contain the external email addresses that need SMTP routing.
+   *
+   * @see Requirement 1.1 — route external recipients to Email Gateway via gossip
+   */
+  gatewayOutbound?: boolean;
 }
 
 /**

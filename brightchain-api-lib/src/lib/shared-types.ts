@@ -1,37 +1,30 @@
 import { ModelName } from './enumerations/model-name';
 import { SchemaCollection } from './enumerations/schema-collection';
 
-// Re-export SignatureBuffer and GuidV4Buffer from node-ecies-lib for internal use
+// Re-export generic types from the Suite
 export type {
   GuidV4Buffer,
   SignatureBuffer,
-} from '@digitaldefiance/node-ecies-lib';
+  ClientSession,
+  DefaultBackendIdType,
+} from '@brightchain/node-express-suite';
 
-// Database-agnostic type aliases (mongo removed)
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export type ClientSession = any;
-/* eslint-enable @typescript-eslint/no-explicit-any */
-
-// Use Buffer as the default backend ID type for Node.js backend
-// Buffer is part of the PlatformID union and works with all Node.js operations
-import type { DefaultBackendIdType as DefaultBackendIdType_ } from './types/backend-id';
-export type DefaultBackendIdType = DefaultBackendIdType_;
+// Import generic interfaces from the Suite for narrowing
+import type {
+  IBlockStorageSchema as IBlockStorageSchemaBase,
+  IBlockStorageModel as IBlockStorageModelBase,
+  IBlockStorageSchemaEntry as IBlockStorageSchemaEntryBase,
+} from '@brightchain/node-express-suite';
 
 /**
- * Block storage schema definition (replaces Mongoose Schema)
+ * Block storage schema definition narrowed with domain-specific ModelName enum.
  */
-export interface IBlockStorageSchema<T> {
+export interface IBlockStorageSchema<T> extends Omit<IBlockStorageSchemaBase<T>, 'name'> {
   name: ModelName;
-  fields: Record<string, unknown>;
-  indexes?: Array<{
-    fields: Record<string, number | undefined>;
-    options?: Record<string, unknown>;
-  }>;
-  validate?: (doc: Partial<T>) => void;
 }
 
 /**
- * Block storage model definition (replaces Mongoose Model)
+ * Block storage model definition narrowed with domain-specific ModelName enum.
  */
 export interface IBlockStorageModel<T> {
   readonly modelName: ModelName;
@@ -39,9 +32,10 @@ export interface IBlockStorageModel<T> {
 }
 
 /**
- * Block storage schema entry (replaces ISchema from node-express-suite)
+ * Block storage schema entry narrowed with domain-specific enums.
  */
-export interface IBlockStorageSchemaEntry<T> {
+export interface IBlockStorageSchemaEntry<T>
+  extends Omit<IBlockStorageSchemaEntryBase<T>, 'collection' | 'model' | 'modelName' | 'schema'> {
   collection: SchemaCollection;
   model: IBlockStorageModel<T>;
   modelName: ModelName;

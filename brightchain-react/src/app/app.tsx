@@ -94,7 +94,20 @@ const getApiBaseUrl = (): string => {
   return environment.apiUrl || 'http://localhost:3000';
 };
 
+const getEmailDomain = (): string => {
+  if (typeof window !== 'undefined') {
+    const appConfig = (window as { APP_CONFIG?: { emailDomain?: string } })
+      .APP_CONFIG;
+    if (appConfig?.emailDomain) {
+      return appConfig.emailDomain;
+    }
+  }
+  return environment.emailDomain || 'example.com';
+};
+
 const API_BASE_URL: string = getApiBaseUrl();
+
+const emailDomain: string = getEmailDomain();
 
 const eciesConfig = ECIES_CONFIG;
 
@@ -124,6 +137,7 @@ const AuthProviderWithNavigation: FC<{ children: React.ReactNode }> = ({
         constants={CoreConstants as ISuiteCoreConstants}
         eciesConfig={eciesConfig}
         onLogout={handleLogout}
+        emailDomain={emailDomain}
       >
         <AuthenticatedApiProvider>{children}</AuthenticatedApiProvider>
       </AuthProvider>

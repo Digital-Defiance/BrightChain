@@ -50,6 +50,7 @@ export interface IRegistrationRequest {
   username: string;
   email: string;
   password: string;
+  mnemonic?: string; // optional BIP39 mnemonic for user-provided identity recovery
 }
 
 /**

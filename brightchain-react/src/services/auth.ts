@@ -73,6 +73,7 @@ const register = async (
   email: string,
   password: string,
   timezone: string,
+  mnemonic?: string,
 ): Promise<
   { success: boolean; message: string } | { error: string; errorType?: string }
 > => {
@@ -82,6 +83,7 @@ const register = async (
       email,
       password,
       timezone,
+      ...(mnemonic ? { mnemonic } : {}),
     });
     if (response.status !== 201) {
       return {
