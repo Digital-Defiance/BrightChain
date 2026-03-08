@@ -73,6 +73,5 @@ describe('i18n integration (react): SuiteCore constants override', () => {
     const constants = engine.getConstants(SuiteCoreComponentId);
     expect(constants).toBeDefined();
     expect(constants?.['Site']).toBe(CoreConstants.Site);
-    expect(constants?.['SiteHostname']).toBe('brightchain.org');
   });
 });

@@ -87,7 +87,11 @@ const About = () => {
             </p>
 
             <h3 className="about-heading" style={{ marginTop: '2rem' }}>
-              <FaCode /> Build with BrightStack
+              <img
+                height="40"
+                width="397"
+                src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/build-with-brightstack.png"
+              />
             </h3>
             <p>
               <strong>BrightStack</strong> is the full-stack paradigm for
@@ -111,6 +115,33 @@ const About = () => {
               <FaCode /> <strong>100% Open Source.</strong> BrightChain is fully
               open source under the MIT License. Build your own dApps on
               BrightStack and contribute to the decentralized future.
+            </p>
+
+            <h3 className="about-heading" style={{ marginTop: '2rem' }}>
+              <FaCode /> Other Implementations
+            </h3>
+            <p>
+              While this TypeScript/Node.js implementation is the primary and
+              most mature version of BrightChain, a parallel{' '}
+              <a
+                href="https://github.com/Digital-Defiance/brightchain-cpp"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <strong>C++ core library</strong>
+              </a>{' '}
+              with{' '}
+              <a
+                href="https://github.com/Digital-Defiance/BrightChain-Apple"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <strong>macOS/iOS UI</strong>
+              </a>{' '}
+              is in development. This native implementation brings BrightChain's
+              privacy and security features to Apple platforms. Both
+              repositories are in early development and not yet ready for
+              production use.
             </p>
           </motion.div>
 

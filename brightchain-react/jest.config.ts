@@ -13,5 +13,8 @@ export default {
       '<rootDir>/../brightmail-react-components/src/index.ts',
     '^@brightchain/brightpass-react-components$':
       '<rootDir>/../brightpass-react-components/src/index.ts',
+    // Mock the environment module to avoid import.meta.env in Jest
+    '^\\.\\./environments/environment$':
+      '<rootDir>/src/environments/__mocks__/environment.ts',
   },
 };

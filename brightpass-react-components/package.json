@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightpass-react-components",
-  "version": "0.25.0",
+  "version": "0.28.0",
   "description": "BrightPass React UI components for BrightChain password manager",
   "main": "src/index.ts",
   "types": "src/index.ts",

@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightchain-lib",
-  "version": "0.25.0",
+  "version": "0.28.0",
   "description": "BrightChain core library - browser-compatible blockchain storage",
   "main": "src/index.js",
   "types": "src/index.d.ts",
@@ -20,6 +20,31 @@
       "types": "./src/browser.d.ts",
       "import": "./src/browser.js",
       "require": "./src/browser.js"
+    },
+    "./lib/db/cursor": {
+      "types": "./src/lib/db/cursor.d.ts",
+      "import": "./src/lib/db/cursor.js",
+      "require": "./src/lib/db/cursor.js"
+    },
+    "./lib/db/updateEngine": {
+      "types": "./src/lib/db/updateEngine.d.ts",
+      "import": "./src/lib/db/updateEngine.js",
+      "require": "./src/lib/db/updateEngine.js"
+    },
+    "./lib/db/transaction": {
+      "types": "./src/lib/db/transaction.d.ts",
+      "import": "./src/lib/db/transaction.js",
+      "require": "./src/lib/db/transaction.js"
+    },
+    "./lib/db/inMemoryHeadRegistry": {
+      "types": "./src/lib/db/inMemoryHeadRegistry.d.ts",
+      "import": "./src/lib/db/inMemoryHeadRegistry.js",
+      "require": "./src/lib/db/inMemoryHeadRegistry.js"
+    },
+    "./lib/db/indexing": {
+      "types": "./src/lib/db/indexing.d.ts",
+      "import": "./src/lib/db/indexing.js",
+      "require": "./src/lib/db/indexing.js"
     }
   },
   "repository": {
@@ -41,21 +66,39 @@
   "author": "Digital Defiance",
   "license": "MIT",
   "dependencies": {
+    "@digitaldefiance/branded-interface": "^0.0.5",
     "@digitaldefiance/ecies-lib": "^4.20.2",
     "@digitaldefiance/i18n-lib": "^4.6.4",
+    "@digitaldefiance/reed-solomon-erasure.wasm": "^1.0.2",
+    "@digitaldefiance/secrets": "^2.0.7",
+    "@digitaldefiance/suite-core-lib": "^4.22.2",
+    "@ethereumjs/wallet": "^10.0.0",
     "@noble/hashes": "^1.4.0",
+    "@scure/bip32": "^1.4.0",
+    "@scure/bip39": "^1.5.0",
+    "blakejs": "^1.2.1",
+    "currency-codes": "^2.2.0",
+    "elliptic": "^6.6.1",
+    "email-addresses": "^5.0.0",
+    "express": ">=5.0.0",
     "nat-pmp": "^1.0.0",
     "nat-upnp": "^1.1.1",
     "otpauth": "^9.5.0",
+    "paillier-bigint": "^3.4.3",
     "qrcode": "^1.5.4",
+    "secp256k1": "^5.0.1",
+    "ts-brand": "^0.2.0",
     "tslib": "^2.3.0",
-    "uuid": "11.0.5"
+    "uuid": "11.0.5",
+    "validator": "^13.15.0"
   },
   "devDependencies": {
     "@types/nat-upnp": "^1.1.5",
     "@types/qrcode": "^1.5.6",
     "@types/uuid": "^9.0.7"
   },
+  "type": "commonjs",
+  "sideEffects": false,
   "scripts": {
     "build:dev": "npx nx build brightchain-lib --configuration=development",
     "build:prod": "npx nx build brightchain-lib --configuration=production",

@@ -2,7 +2,6 @@
 import {
   BlockSize,
   BlockStoreType,
-  ICloudBlockStoreConfig,
 } from '@brightchain/brightchain-lib';
 import { HexString } from '@digitaldefiance/ecies-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -12,31 +11,12 @@ import {
 } from '@digitaldefiance/node-express-suite';
 import { IEnvironmentAws } from './environment-aws';
 
-/**
- * Azure-specific cloud block store configuration fields.
- * Extends ICloudBlockStoreConfig with Azure Blob Storage auth options.
- * Defined here (not in brightchain-azure-store) so brightchain-api-lib
- * stays free of static cloud SDK dependencies.
- */
-export interface IAzureEnvironmentConfig extends ICloudBlockStoreConfig {
-  connectionString?: string;
-  accountName?: string;
-  accountKey?: string;
-  useManagedIdentity?: boolean;
-}
-
-/**
- * S3-specific cloud block store configuration fields.
- * Extends ICloudBlockStoreConfig with S3 auth options.
- * Defined here (not in brightchain-s3-store) so brightchain-api-lib
- * stays free of static cloud SDK dependencies.
- */
-export interface IS3EnvironmentConfig extends ICloudBlockStoreConfig {
-  accessKeyId?: string;
-  secretAccessKey?: string;
-  useIamRole?: boolean;
-  endpoint?: string;
-}
+// Import and re-export cloud config interfaces from the Suite
+import type {
+  IAzureEnvironmentConfig,
+  IS3EnvironmentConfig,
+} from '@brightchain/node-express-suite';
+export type { IAzureEnvironmentConfig, IS3EnvironmentConfig };
 
 export interface IEnvironment<TID extends PlatformID>
   extends Omit<IEnvironmentBase<TID>, 'adminId' | 'idAdapter'> {

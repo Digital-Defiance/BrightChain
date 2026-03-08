@@ -59,6 +59,35 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
   /** Optional DB reference for scalable, DB-backed queryIndex lookups. */
   private _db: IMemberStoreDb | null;
 
+  /**
+   * Safely convert a TID to its raw Uint8Array bytes.
+   *
+   * GuidV4Provider.toBytes() expects a GuidV4Uint8Array with branded getters.
+   * If the caller passes a plain Uint8Array (e.g. via an `as Uint8Array` cast),
+   * toBytes() returns undefined because the branded getter is missing.
+   * This helper detects that case and falls back to fromBytes() → toBytes()
+   * to re-wrap the raw bytes into the correct branded type first.
+   */
+  private idToBytes(id: TID): Uint8Array {
+    const sp = ServiceProvider.getInstance<TID>();
+    const bytes = sp.idProvider.toBytes(id);
+    if (bytes !== undefined && bytes !== null) {
+      return bytes;
+    }
+    // Fallback: id is a plain Uint8Array without branded getters.
+    // Re-wrap it through fromBytes to get the proper typed ID, then convert.
+    if (id instanceof Uint8Array) {
+      const typed = sp.idProvider.fromBytes(id);
+      return sp.idProvider.toBytes(typed);
+    }
+    // For string IDs, parse first
+    if (typeof id === 'string') {
+      const typed = sp.idProvider.idFromString(id);
+      return sp.idProvider.toBytes(typed);
+    }
+    throw new MemberError(MemberErrorType.MemberNotFound);
+  }
+
   constructor(blockStore: IBlockStore, db?: IMemberStoreDb) {
     this.blockStore = blockStore;
     this.memberIndex = new Map<string, IMemberIndexEntry<TID>>();
@@ -165,6 +194,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       data.type,
       data.name,
       data.contactEmail,
+      data.forceMnemonic,
     );
 
     // Create a transaction-like operation
@@ -461,7 +491,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
   public async getMember(id: TID): Promise<Member<TID>> {
     const indexEntry = this.memberIndex.get(
       uint8ArrayToHex(
-        ServiceProvider.getInstance<TID>().idProvider.toBytes(id),
+        this.idToBytes(id),
       ),
     );
     if (!indexEntry) {
@@ -547,7 +577,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
     if (this._db) {
       const sp = ServiceProvider.getInstance<TID>();
       // Build the idHex the same way _queryIndexFromDb does: strip dashes
-      const idHex = uint8ArrayToHex(sp.idProvider.toBytes(id));
+      const idHex = uint8ArrayToHex(this.idToBytes(id));
 
       // Try looking up by the hex id (matches _id stored as ShortHexGuid)
       const usersCol = this._db.collection<{
@@ -601,7 +631,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
   }> {
     const indexEntry = this.memberIndex.get(
       uint8ArrayToHex(
-        ServiceProvider.getInstance<TID>().idProvider.toBytes(id),
+        this.idToBytes(id),
       ),
     );
     if (!indexEntry) {
@@ -796,7 +826,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
     changes: IMemberChanges<TID>,
   ): Promise<void> {
     const idHex = uint8ArrayToHex(
-      ServiceProvider.getInstance<TID>().idProvider.toBytes(id),
+      this.idToBytes(id),
     );
     const indexEntry = this.memberIndex.get(idHex);
     if (!indexEntry) {
@@ -1085,7 +1115,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       if (memberId) {
         results = results.filter(
           (entry) =>
-            uint8ArrayToHex(sp.idProvider.toBytes(entry.id)) === memberId,
+            uint8ArrayToHex(this.idToBytes(entry.id)) === memberId,
         );
       } else {
         results = [];
@@ -1096,7 +1126,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       if (memberId) {
         results = results.filter(
           (entry) =>
-            uint8ArrayToHex(sp.idProvider.toBytes(entry.id)) === memberId,
+            uint8ArrayToHex(this.idToBytes(entry.id)) === memberId,
         );
       } else {
         results = [];

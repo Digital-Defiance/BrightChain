@@ -280,6 +280,19 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
     'Datenbanktransaktion fehlgeschlagen',
   [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
     'Integrität der Prüfkette beeinträchtigt',
+  // Quorum Ban Mechanism Errors
+  [BrightChainStrings.Error_QuorumError_CannotBanSelf]:
+    'Ein Mitglied kann nicht vorschlagen, sich selbst zu sperren',
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyBanned]:
+    'Mitglied ist bereits gesperrt',
+  [BrightChainStrings.Error_QuorumError_MemberNotBanned]:
+    'Mitglied ist derzeit nicht gesperrt',
+  [BrightChainStrings.Error_QuorumError_NewMemberCannotProposeBan]:
+    'In der aktuellen Epoche aufgenommene Mitglieder können keine Sperren vorschlagen',
+  [BrightChainStrings.Error_QuorumError_BanCoolingPeriodNotElapsed]:
+    'Die Abkühlungszeit der Sperre ist noch nicht abgelaufen',
+  [BrightChainStrings.Error_QuorumError_InvalidBanRecordSignatures]:
+    'Der Sperrdatensatz hat nicht genügend gültige Quorum-Signaturen',
   [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
     'Inhaltssignatur stimmt nicht mit der beanspruchten Identität überein',
   [BrightChainStrings.Error_IdentityValidationError_UnregisteredAlias]:

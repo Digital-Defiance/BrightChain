@@ -1,5 +1,1 @@
-export interface IAuthToken {
-  token: string;
-  memberId: string;
-  energyBalance: number;
-}
+export type { IAuthToken } from '@brightchain/node-express-suite';

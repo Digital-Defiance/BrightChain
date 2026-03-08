@@ -1,0 +1,43 @@
+{
+  "name": "brightchain-node-express-suite",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "brightchain-node-express-suite/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:api"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/brightchain-node-express-suite",
+        "main": "brightchain-node-express-suite/src/index.ts",
+        "tsConfig": "brightchain-node-express-suite/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "brightchain-node-express-suite",
+            "glob": "*.md",
+            "output": "."
+          },
+          {
+            "input": "brightchain-node-express-suite",
+            "glob": "package.json",
+            "output": "."
+          }
+        ]
+      },
+      "dependsOn": ["^build"]
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "brightchain-node-express-suite/jest.config.cts",
+        "passWithNoTests": true
+      },
+      "cache": true
+    }
+  }
+}

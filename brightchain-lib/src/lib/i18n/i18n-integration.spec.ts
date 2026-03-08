@@ -61,8 +61,6 @@ describe('i18n integration: SuiteCore constants override', () => {
     expect(constants?.['Site']).toBe(CoreConstants.Site);
     expect(constants?.['SiteTagline']).toBe(CoreConstants.SiteTagline);
     expect(constants?.['SiteDescription']).toBe(CoreConstants.SiteDescription);
-    expect(constants?.['SiteEmailDomain']).toBe(CoreConstants.SiteEmailDomain);
-    expect(constants?.['SiteHostname']).toBe(CoreConstants.SiteHostname);
   });
 
   it('should have constants coverage for all SuiteCore template variables', () => {
@@ -129,6 +127,7 @@ describe('i18n integration: SuiteCore constants override', () => {
         'user',
         'userId',
         'variable1',
+        'url',
         // UPPER_CASE runtime template variables
         'AVAILABLE',
         'BRAND',

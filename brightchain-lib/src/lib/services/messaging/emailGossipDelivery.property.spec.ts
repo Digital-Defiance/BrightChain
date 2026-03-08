@@ -38,6 +38,12 @@ import type { MessageCBLService } from './messageCBLService';
 // ─── Generators ─────────────────────────────────────────────────────────────
 
 /**
+ * The canonical domain used in property tests.
+ * All generated mailboxes use this domain so they are treated as internal.
+ */
+const TEST_CANONICAL_DOMAIN = 'test-internal.org';
+
+/**
  * Generator for valid email local-parts.
  * Constrained to simple alphanumeric strings to pass email validation.
  */
@@ -46,14 +52,10 @@ const arbLocalPart: fc.Arbitrary<string> =
 
 /**
  * Generator for valid email domains.
- * Produces realistic domain names that pass RFC validation.
+ * Uses the fixed TEST_CANONICAL_DOMAIN so all addresses are internal
+ * (matching the canonicalDomain in the test service config).
  */
-const arbDomain: fc.Arbitrary<string> = fc
-  .tuple(
-    fc.stringMatching(/^[a-z]{2,10}$/),
-    fc.constantFrom('com', 'org', 'net', 'io'),
-  )
-  .map(([name, tld]) => `${name}.${tld}`);
+const arbDomain: fc.Arbitrary<string> = fc.constant(TEST_CANONICAL_DOMAIN);
 
 /**
  * Generator for valid IMailbox objects using createMailbox().
@@ -153,7 +155,7 @@ function createTestService() {
     {} as MessageCBLService,
     metadataStoreMock,
     gossipServiceMock,
-    { nodeId: 'test-node.brightchain.org' },
+    { nodeId: 'test-node.brightchain.org', canonicalDomain: TEST_CANONICAL_DOMAIN },
   );
 
   return { service, storeCalls, announceCalls, announceMessageMock };

@@ -98,6 +98,61 @@ export const createAppTheme = (mode: PaletteMode) =>
           },
         },
       },
+      MuiListItemButton: {
+        styleOverrides: {
+          root: {
+            transition: 'background-color 150ms ease',
+            '&:hover': {
+              backgroundColor:
+                mode === 'light'
+                  ? 'rgba(0, 0, 0, 0.04)'
+                  : 'rgba(255, 255, 255, 0.08)',
+            },
+            '&.Mui-selected': {
+              backgroundColor:
+                mode === 'light'
+                  ? 'rgba(25, 118, 210, 0.08)'
+                  : 'rgba(25, 118, 210, 0.16)',
+            },
+            '&.Mui-focusVisible': {
+              outline: `2px solid ${CONSTANTS.THEME_COLORS.CHAIN_BLUE}`,
+              outlineOffset: -2,
+            },
+          },
+        },
+      },
+      MuiIconButton: {
+        styleOverrides: {
+          root: {
+            transition: 'background-color 150ms ease',
+            '&:hover': {
+              backgroundColor:
+                mode === 'light'
+                  ? 'rgba(0, 0, 0, 0.04)'
+                  : 'rgba(255, 255, 255, 0.08)',
+            },
+          },
+        },
+      },
+      MuiFab: {
+        styleOverrides: {
+          root: {
+            backgroundColor: CONSTANTS.THEME_COLORS.CHAIN_BLUE,
+            color: '#ffffff',
+            transition: 'background-color 200ms ease',
+            '&:hover': {
+              backgroundColor: CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK,
+            },
+          },
+        },
+      },
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            transition: 'background-color 150ms ease, box-shadow 150ms ease',
+          },
+        },
+      },
     },
   });
 

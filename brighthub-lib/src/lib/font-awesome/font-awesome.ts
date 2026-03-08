@@ -1,6 +1,5 @@
-import * as fs from 'fs';
+import { all, IconDefinition } from '@awesome.me/kit-a20d532681/icons';
 import * as cssProperties from 'known-css-properties';
-import * as path from 'path';
 import postcss, { Declaration, Root } from 'postcss';
 
 import { FontAwesomeTextStyleTypeEnum } from '../fontawesome-text-class';
@@ -104,50 +103,12 @@ export const DisallowedIconPropertyRegex =
   /^(display|position|top|left|right|bottom|z-index|margin|padding)$/;
 
 /**
- * Get all available icon names from the Font Awesome kit metadata.
- * Reads from the kit's icons.json metadata file.
- * @returns Array of unique icon names
+ * All available icon names from the Font Awesome kit, derived at runtime
+ * from the kit's ES module exports. No filesystem access needed.
  */
-export function getIconNames(): string[] {
-  try {
-    // Try to find the kit's icons.json metadata file
-    const possiblePaths = [
-      // When running from workspace root
-      path.join(
-        process.cwd(),
-        'node_modules/@awesome.me/kit-a20d532681/icons/metadata/icons.json',
-      ),
-      // When running from brighthub-lib directory
-      path.join(
-        process.cwd(),
-        '../node_modules/@awesome.me/kit-a20d532681/icons/metadata/icons.json',
-      ),
-      // Resolve from this file's location
-      path.join(
-        __dirname,
-        '../../../../node_modules/@awesome.me/kit-a20d532681/icons/metadata/icons.json',
-      ),
-    ];
-
-    for (const iconPath of possiblePaths) {
-      if (fs.existsSync(iconPath)) {
-        const iconsData = JSON.parse(fs.readFileSync(iconPath, 'utf-8'));
-        return Object.keys(iconsData);
-      }
-    }
-
-    // Fallback: return empty array if metadata not found
-    console.warn(
-      'FontAwesome kit icons.json not found, icon validation will be disabled',
-    );
-    return [];
-  } catch (error) {
-    console.warn('Error loading FontAwesome icon names:', error);
-    return [];
-  }
-}
-
-export const FontAwesomeIconNames = getIconNames();
+export const FontAwesomeIconNames: readonly string[] = [
+  ...new Set(all.map((icon: IconDefinition) => icon.iconName)),
+];
 
 /**
  * Extract icon details from icon markup.
