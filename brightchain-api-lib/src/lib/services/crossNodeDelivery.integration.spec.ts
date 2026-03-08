@@ -105,7 +105,7 @@ function createTestNode(
     new EventNotificationSystem(),
     gossipService,
   );
-  messageService.configureEmail(emailStore, { nodeId });
+  messageService.configureEmail(emailStore, { nodeId, canonicalDomain: 'test' });
 
   return new Promise<TestNode>((resolve) => {
     httpServer.listen(port, '127.0.0.1', () => {

@@ -19,6 +19,7 @@ import {
   IThreadService,
   IUserProfileService,
 } from '@brightchain/brighthub-lib';
+import { BrightDbApiRouter, BrightDbUserController } from '@brightchain/node-express-suite';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import { ECIESService, PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -62,14 +63,22 @@ import { EmailService } from '../services/email';
 import { EventNotificationSystem } from '../services/eventNotificationSystem';
 import { MessagePassingService } from '../services/messagePassingService';
 import { DefaultBackendIdType } from '../shared-types';
-import { BaseRouter } from './base';
 
 /**
- * Router for the API
+ * Router for the API.
+ *
+ * Extends BrightDbApiRouter (which provides base user auth routes) and adds
+ * all BrightChain domain-specific controllers: blocks, energy, messaging,
+ * channels, groups, BrightHub social, introspection, etc.
+ *
+ * The base BrightDbApiRouter mounts BrightDbUserController at /user.
+ * This class replaces it with the domain-specific UserController that adds
+ * backup codes and direct-challenge verification.
  */
 export class ApiRouter<
   TID extends PlatformID = DefaultBackendIdType,
-> extends BaseRouter<TID> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+> extends BrightDbApiRouter<TID, any> {
   private readonly blocksController: BlocksController<TID>;
   private readonly brightPassController: BrightPassController<TID>;
   private readonly channelController: ChannelController<TID>;
@@ -86,7 +95,7 @@ export class ApiRouter<
   private readonly cblController: CBLController<TID>;
   private readonly scblController: SCBLController<TID>;
   private readonly syncController: SyncController<TID>;
-  private readonly userController: UserController<TID>;
+  protected declare readonly userController: UserController<TID>;
   private readonly brightHubPostController: BrightHubPostController<TID>;
   private readonly brightHubMessagingController: BrightHubMessagingController<TID>;
   private readonly brightHubNotificationController: BrightHubNotificationController<TID>;
@@ -119,7 +128,6 @@ export class ApiRouter<
     };
     this.eciesService = new ECIESService<TID>(config);
 
-    this.userController = new UserController<TID>(application);
     this.blocksController = new BlocksController(application);
     this.brightPassController = new BrightPassController(application);
     this.channelController = new ChannelController(application);
@@ -152,7 +160,6 @@ export class ApiRouter<
       application,
     );
 
-    this.router.use('/user', this.userController.router);
     this.router.use('/blocks', this.blocksController.router);
     this.router.use('/brightpass', this.brightPassController.router);
     this.router.use('/channels', this.channelController.router);
@@ -182,6 +189,16 @@ export class ApiRouter<
     );
     this.router.use('/brighthub', this.brightHubConnectionController.router);
     this.router.use('/brighthub', this.brightHubTimelineController.router);
+  }
+
+  /**
+   * Factory override: creates the domain-specific UserController
+   * (with backup codes, direct-challenge, BrightHub profile creation).
+   */
+  protected override createUserController(
+    application: IBrightChainApplication<TID>,
+  ): UserController<TID> {
+    return new UserController<TID>(application);
   }
 
   /**

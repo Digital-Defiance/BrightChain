@@ -20,6 +20,11 @@
             "input": "brightchain-lib",
             "glob": "*.md",
             "output": "."
+          },
+          {
+            "input": "brightchain-lib",
+            "glob": "package.json",
+            "output": "."
           }
         ]
       }

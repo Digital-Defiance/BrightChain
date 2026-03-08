@@ -1,12 +1,16 @@
+// Re-export the generic factory and options type from @brightchain/node-express-suite
+// with backward-compatible DiskBlockAsyncStore integration
+import {
+  BlockDocumentStoreOptions as SuiteBlockDocumentStoreOptions,
+  createBlockDocumentStore as suiteCreateBlockDocumentStore,
+} from '@brightchain/node-express-suite';
 import {
   BlockSize,
   IBlockStore,
   IQuorumService,
-  MemoryBlockStore,
 } from '@brightchain/brightchain-lib';
 import { PlatformID } from '@digitaldefiance/ecies-lib';
 import { DiskBlockAsyncStore } from '../stores/diskBlockAsyncStore';
-import { BlockDocumentStore } from './block-document-store';
 import { DocumentStore } from './document-store';
 
 export type BlockDocumentStoreOptions = {
@@ -23,30 +27,21 @@ export type BlockDocumentStoreOptions = {
 /**
  * Create a BlockDocumentStore backed by either a provided BlockStore, a disk store, or an in-memory store.
  * Optionally supports encryption via QuorumService.
+ *
+ * This api-lib version automatically injects DiskBlockAsyncStore for disk-backed stores,
+ * maintaining backward compatibility with existing consumers.
  */
 export function createBlockDocumentStore(
   options: BlockDocumentStoreOptions,
 ): DocumentStore {
-  const blockSize = options.blockSize ?? BlockSize.Small;
-
-  if (options.blockStore) {
-    return new BlockDocumentStore(options.blockStore, options.quorumService);
-  }
-
-  if (options.useMemory) {
-    const memoryStore = new MemoryBlockStore(blockSize);
-    return new BlockDocumentStore(memoryStore, options.quorumService);
-  }
-
-  if (options.storePath) {
-    const diskStore = new DiskBlockAsyncStore({
-      storePath: options.storePath,
-      blockSize,
-    });
-    return new BlockDocumentStore(diskStore, options.quorumService);
-  }
-
-  throw new Error(
-    'createBlockDocumentStore requires a blockStore, storePath, or useMemory=true',
-  );
+  // Convert to suite options, injecting DiskBlockAsyncStore as the disk factory
+  const suiteOptions: SuiteBlockDocumentStoreOptions = {
+    ...options,
+    diskBlockStoreFactory: (opts) =>
+      new DiskBlockAsyncStore({
+        storePath: opts.storePath,
+        blockSize: opts.blockSize,
+      }),
+  };
+  return suiteCreateBlockDocumentStore(suiteOptions);
 }

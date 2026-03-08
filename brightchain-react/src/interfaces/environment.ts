@@ -3,4 +3,5 @@ export interface IEnvironment {
   debugI18n: boolean;
   serverUrl: string;
   apiUrl: string;
+  emailDomain: string;
 }

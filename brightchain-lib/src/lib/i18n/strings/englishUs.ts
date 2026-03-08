@@ -289,6 +289,19 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
   // Quorum Audit Errors
   [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
     'Audit chain integrity compromised',
+  // Quorum Ban Mechanism Errors
+  [BrightChainStrings.Error_QuorumError_CannotBanSelf]:
+    'A member cannot propose to ban themselves',
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyBanned]:
+    'Member is already banned',
+  [BrightChainStrings.Error_QuorumError_MemberNotBanned]:
+    'Member is not currently banned',
+  [BrightChainStrings.Error_QuorumError_NewMemberCannotProposeBan]:
+    'Members admitted in the current epoch cannot propose bans',
+  [BrightChainStrings.Error_QuorumError_BanCoolingPeriodNotElapsed]:
+    'Ban cooling period has not yet elapsed',
+  [BrightChainStrings.Error_QuorumError_InvalidBanRecordSignatures]:
+    'Ban record does not have sufficient valid quorum signatures',
   // Identity Validation Errors
   [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
     'Content signature does not match claimed identity',

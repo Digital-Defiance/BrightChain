@@ -357,9 +357,23 @@ describe('Feature: brightdb-write-acls, Property 14: API Admin Authentication En
             break;
           }
           case 'post-tokens': {
-            // Use a deliberately wrong signature
+            // Compute the actual token payload hash so we can ensure the
+            // signature's first byte differs from it (the MockAuthenticator
+            // checks signature[0] === challenge[0]).
+            const granteeKeyInvalid = Uint8Array.from(
+              Buffer.from('cc'.repeat(33), 'hex'),
+            );
+            const granteeHexInvalid =
+              Buffer.from(granteeKeyInvalid).toString('hex');
+            const expiresAtInvalid = new Date(Date.now() + 3600000);
+            const collNameInvalid = '';
+            const tokenPayloadMsgInvalid = `${granteeHexInvalid}:${dbName}:${collNameInvalid}:${expiresAtInvalid.toISOString()}`;
+            const tokenPayloadInvalid = sha256(
+              new TextEncoder().encode(tokenPayloadMsgInvalid),
+            );
             const wrongSig = new Uint8Array(64);
-            wrongSig[0] = 0xff;
+            // Ensure first byte differs from the payload hash
+            wrongSig[0] = (tokenPayloadInvalid[0] + 1) % 256;
             const wrongSigHex = Buffer.from(wrongSig).toString('hex');
 
             res = await request(app)
@@ -367,8 +381,8 @@ describe('Feature: brightdb-write-acls, Property 14: API Admin Authentication En
               .set('X-Acl-Admin-Signature', wrongSigHex)
               .set('X-Acl-Admin-PublicKey', adminKeyHex)
               .send({
-                granteePublicKey: 'cc'.repeat(33),
-                expiresAt: new Date(Date.now() + 3600000).toISOString(),
+                granteePublicKey: granteeHexInvalid,
+                expiresAt: expiresAtInvalid.toISOString(),
                 grantorSignature: wrongSigHex,
                 grantorPublicKey: adminKeyHex,
               });

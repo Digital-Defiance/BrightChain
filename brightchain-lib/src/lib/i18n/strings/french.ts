@@ -287,6 +287,19 @@ export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
     'La transaction de base de données a échoué',
   [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
     "L'intégrité de la chaîne d'audit est compromise",
+  // Quorum Ban Mechanism Errors
+  [BrightChainStrings.Error_QuorumError_CannotBanSelf]:
+    'Un membre ne peut pas proposer de se bannir lui-même',
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyBanned]:
+    'Le membre est déjà banni',
+  [BrightChainStrings.Error_QuorumError_MemberNotBanned]:
+    "Le membre n'est pas actuellement banni",
+  [BrightChainStrings.Error_QuorumError_NewMemberCannotProposeBan]:
+    "Les membres admis dans l'époque actuelle ne peuvent pas proposer de bannissements",
+  [BrightChainStrings.Error_QuorumError_BanCoolingPeriodNotElapsed]:
+    "La période de refroidissement du bannissement n'est pas encore écoulée",
+  [BrightChainStrings.Error_QuorumError_InvalidBanRecordSignatures]:
+    "L'enregistrement de bannissement ne possède pas suffisamment de signatures valides du quorum",
   [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
     "La signature du contenu ne correspond pas à l'identité déclarée",
   [BrightChainStrings.Error_IdentityValidationError_UnregisteredAlias]:

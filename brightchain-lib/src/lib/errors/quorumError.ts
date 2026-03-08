@@ -88,6 +88,19 @@ export class QuorumError extends TypedError<QuorumErrorType> {
       // Audit errors
       [QuorumErrorType.AuditChainCorrupted]:
         BrightChainStrings.Error_QuorumError_AuditChainCorrupted,
+      // Ban mechanism errors
+      [QuorumErrorType.CannotBanSelf]:
+        BrightChainStrings.Error_QuorumError_CannotBanSelf,
+      [QuorumErrorType.MemberAlreadyBanned]:
+        BrightChainStrings.Error_QuorumError_MemberAlreadyBanned,
+      [QuorumErrorType.MemberNotBanned]:
+        BrightChainStrings.Error_QuorumError_MemberNotBanned,
+      [QuorumErrorType.NewMemberCannotProposeBan]:
+        BrightChainStrings.Error_QuorumError_NewMemberCannotProposeBan,
+      [QuorumErrorType.BanCoolingPeriodNotElapsed]:
+        BrightChainStrings.Error_QuorumError_BanCoolingPeriodNotElapsed,
+      [QuorumErrorType.InvalidBanRecordSignatures]:
+        BrightChainStrings.Error_QuorumError_InvalidBanRecordSignatures,
     };
   }
   constructor(type: QuorumErrorType, _language?: string) {

@@ -51,6 +51,18 @@ import { AliasRegistry } from './aliasRegistry';
 import { AuditLogService } from './auditLogService';
 import { ChecksumService } from './checksum.service';
 import { SealingService } from './sealing.service';
+import { MemberStatusType } from '../enumerations/memberStatusType';
+import {
+  IBanConfig,
+  DEFAULT_BAN_CONFIG,
+  normalizeBanConfig,
+} from '../interfaces/network/banConfig';
+import { IBanRecord } from '../interfaces/network/banRecord';
+import { BanListCache } from './banListCache';
+import {
+  BanProposalValidator,
+  IBanValidationDataProvider,
+} from './banProposalValidator';
 
 /**
  * Constant-time comparison of two Uint8Array buffers.
@@ -87,6 +99,11 @@ export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
   private initialized = false;
   private readonly checksumService = new ChecksumService();
 
+  // Ban mechanism
+  private readonly banConfig: IBanConfig;
+  private readonly banListCache: BanListCache<TID>;
+  private readonly banProposalValidator: BanProposalValidator<TID>;
+
   // Metrics tracking
   private metricsData = {
     proposalsTotal: 0,
@@ -104,7 +121,17 @@ export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
     private readonly gossipService: IGossipService,
     private readonly auditLogService?: AuditLogService<TID>,
     private readonly aliasRegistry?: AliasRegistry<TID>,
-  ) {}
+    banConfig?: Partial<IBanConfig>,
+  ) {
+    this.banConfig = normalizeBanConfig(banConfig);
+    this.banListCache = new BanListCache<TID>(
+      this.sealingService['enhancedProvider'],
+    );
+    this.banProposalValidator = new BanProposalValidator<TID>(
+      this.db as unknown as IBanValidationDataProvider<TID>,
+      this.sealingService['enhancedProvider'],
+    );
+  }
 
   /**
    * Initialize the quorum system.
@@ -1136,6 +1163,15 @@ export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
       return this.configuredThreshold;
     }
 
+    // BAN_MEMBER and UNBAN_MEMBER always require supermajority of full membership
+    if (
+      actionType === ProposalActionType.BAN_MEMBER ||
+      actionType === ProposalActionType.UNBAN_MEMBER
+    ) {
+      const memberCount = this.currentEpochData.memberIds.length;
+      return Math.ceil(memberCount * this.banConfig.banSupermajorityThreshold);
+    }
+
     const memberCount = this.currentEpochData.memberIds.length;
     const innerQuorum = this.currentEpochData.innerQuorumMemberIds;
 
@@ -1189,6 +1225,30 @@ export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
       throw new QuorumError(QuorumErrorType.Uninitialized);
     }
 
+    // Validate BAN_MEMBER proposals (Sybil protections)
+    if (proposal.actionType === ProposalActionType.BAN_MEMBER) {
+      const proposerId = proposal.actionPayload['proposerMemberId'] as TID;
+      const targetMemberId = proposal.actionPayload['targetMemberId'] as TID;
+      if (proposerId && targetMemberId) {
+        await this.banProposalValidator.validateBanProposal(
+          proposerId,
+          targetMemberId,
+          this.currentEpochData,
+        );
+      }
+    }
+
+    // Validate UNBAN_MEMBER target is actually banned
+    if (proposal.actionType === ProposalActionType.UNBAN_MEMBER) {
+      const targetMemberId = proposal.actionPayload['targetMemberId'] as TID;
+      if (targetMemberId) {
+        const target = await this.db.getMember(targetMemberId);
+        if (!target || target.status !== MemberStatusType.Banned) {
+          throw new QuorumError(QuorumErrorType.MemberNotBanned);
+        }
+      }
+    }
+
     // Determine the required threshold based on inner quorum routing
     const requiredThreshold = this.getRequiredThreshold(proposal.actionType);
 
@@ -1213,6 +1273,13 @@ export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
       createdAt: now,
       attachmentCblId: proposal.attachmentCblId,
       epochNumber: this.currentEpochData.epochNumber,
+      // Set cooling period for ban/unban proposals
+      coolingPeriodEndsAt:
+        proposal.actionType === ProposalActionType.BAN_MEMBER
+          ? new Date(now.getTime() + this.banConfig.banCoolingPeriodMs)
+          : proposal.actionType === ProposalActionType.UNBAN_MEMBER
+            ? new Date(now.getTime() + this.banConfig.unbanCoolingPeriodMs)
+            : undefined,
     };
 
     // Store as pending in the database
@@ -1359,7 +1426,12 @@ export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
    * @param proposal - The proposal to tally votes for
    */
   private async tallyVotes(proposal: Proposal<TID>): Promise<void> {
-    const votes = await this.db.getVotesForProposal(proposal.id);
+    let votes = await this.db.getVotesForProposal(proposal.id);
+
+    // For BAN_MEMBER proposals, filter out proposer-ally votes (Sybil protection)
+    if (proposal.actionType === ProposalActionType.BAN_MEMBER) {
+      votes = await this.banProposalValidator.filterVotes(proposal, votes);
+    }
 
     // Count distinct votes (duplicates already prevented by submitVote)
     const approveCount = votes.filter((v) => v.decision === 'approve').length;
@@ -1367,6 +1439,16 @@ export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
 
     // Check if threshold is reached for approval
     if (approveCount >= proposal.requiredThreshold) {
+      // Enforce cooling period for ban/unban proposals
+      if (
+        proposal.coolingPeriodEndsAt &&
+        new Date() < proposal.coolingPeriodEndsAt
+      ) {
+        // Threshold reached but cooling period not elapsed — defer execution
+        // The proposal stays Pending and will be re-evaluated later
+        return;
+      }
+
       // Mark as approved
       const approvedProposal: Proposal<TID> = {
         ...proposal,
@@ -1495,6 +1577,12 @@ export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
         break;
       case ProposalActionType.CUSTOM:
         await this.executeCustomAction(proposal);
+        break;
+      case ProposalActionType.BAN_MEMBER:
+        await this.executeBanMember(proposal);
+        break;
+      case ProposalActionType.UNBAN_MEMBER:
+        await this.executeUnbanMember(proposal);
         break;
     }
   }
@@ -1741,6 +1829,118 @@ export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
   }
 
   /**
+   * Execute a BAN_MEMBER proposal.
+   *
+   * Sets the target member's status to Banned, creates a ban record with
+   * approval signatures from the proposal's votes, persists it, updates
+   * the local ban list cache, and emits an audit log entry.
+   *
+   * If the target is a quorum member, also triggers removal logic
+   * (share redistribution).
+   */
+  private async executeBanMember(proposal: Proposal<TID>): Promise<void> {
+    const targetMemberId = proposal.actionPayload['targetMemberId'] as TID;
+    const reason = (proposal.actionPayload['reason'] as string) ?? 'No reason provided';
+
+    // Update member status to Banned
+    const target = await this.db.getMember(targetMemberId);
+    if (target) {
+      const bannedMember: IQuorumMember<TID> = {
+        ...target,
+        status: MemberStatusType.Banned,
+      };
+      await this.db.saveMember(bannedMember);
+    }
+
+    // Collect approval signatures from votes
+    const votes = await this.db.getVotesForProposal(proposal.id);
+    const approvalSignatures = votes
+      .filter((v) => v.decision === 'approve' && v.signature)
+      .map((v) => ({
+        memberId: v.voterMemberId,
+        signature: v.signature as Uint8Array,
+      }));
+
+    // Create ban record
+    const banRecord: IBanRecord<TID> = {
+      memberId: targetMemberId,
+      reason,
+      proposalId: proposal.id,
+      epoch: proposal.epochNumber,
+      bannedAt: new Date(),
+      evidenceBlockIds: proposal.actionPayload['evidenceBlockIds'] as string[] | undefined,
+      approvalSignatures,
+      requiredSignatures: proposal.requiredThreshold,
+    };
+
+    // Persist ban record to database
+    if ('saveBanRecord' in this.db) {
+      await (this.db as IQuorumDatabase<TID> & { saveBanRecord(record: IBanRecord<TID>): Promise<void> }).saveBanRecord(banRecord);
+    }
+
+    // Update local cache
+    this.banListCache.addBan(banRecord);
+
+    // Emit audit entry
+    await this.emitAuditEntry('member_banned', {
+      proposalId: proposal.id,
+      targetMemberId,
+      reason,
+      epoch: proposal.epochNumber,
+    });
+
+    // If target is a quorum member, trigger removal (share redistribution)
+    if (
+      this.currentEpochData &&
+      this.currentEpochData.memberIds.some((id) => {
+        const idHex = uint8ArrayToHex(
+          this.sealingService['enhancedProvider'].toBytes(id),
+        );
+        const targetHex = uint8ArrayToHex(
+          this.sealingService['enhancedProvider'].toBytes(targetMemberId),
+        );
+        return idHex === targetHex;
+      })
+    ) {
+      await this.executeRemoveMember(proposal);
+    }
+  }
+
+  /**
+   * Execute an UNBAN_MEMBER proposal.
+   *
+   * Restores the target member's status to Active, removes the ban record,
+   * updates the local ban list cache, and emits an audit log entry.
+   */
+  private async executeUnbanMember(proposal: Proposal<TID>): Promise<void> {
+    const targetMemberId = proposal.actionPayload['targetMemberId'] as TID;
+
+    // Update member status to Active
+    const target = await this.db.getMember(targetMemberId);
+    if (target) {
+      const unbannedMember: IQuorumMember<TID> = {
+        ...target,
+        status: MemberStatusType.Active,
+      };
+      await this.db.saveMember(unbannedMember);
+    }
+
+    // Remove ban record from database
+    if ('deleteBanRecord' in this.db) {
+      await (this.db as IQuorumDatabase<TID> & { deleteBanRecord(memberId: TID): Promise<void> }).deleteBanRecord(targetMemberId);
+    }
+
+    // Update local cache
+    this.banListCache.removeBan(targetMemberId);
+
+    // Emit audit entry
+    await this.emitAuditEntry('member_unbanned', {
+      proposalId: proposal.id,
+      targetMemberId,
+    });
+  }
+
+  /**
    * Get a proposal by its ID.
    */
   async getProposal(proposalId: TID): Promise<Proposal<TID> | null> {
@@ -1938,5 +2138,15 @@ export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
   /** Get the configured threshold for this quorum. */
   getConfiguredThreshold(): number {
     return this.configuredThreshold;
+  }
+
+  /** Get the ban list cache for enforcement point checks. */
+  getBanListCache(): BanListCache<TID> {
+    return this.banListCache;
+  }
+
+  /** Get the ban configuration. */
+  getBanConfig(): IBanConfig {
+    return this.banConfig;
   }
 }

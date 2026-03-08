@@ -1,3 +1,7 @@
+export type * from './banConfig';
+export type * from './banListCache';
+export type * from './banRecord';
+export { DEFAULT_BAN_CONFIG, MIN_BAN_CONFIG, normalizeBanConfig } from './banConfig';
 export type * from './node';
 export type * from './nodeAdvertisement';
 export type * from './nodeConfig';

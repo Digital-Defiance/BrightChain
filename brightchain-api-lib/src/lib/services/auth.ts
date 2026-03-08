@@ -1,13 +1,9 @@
 import {
   EmailString,
-  EnergyAccount,
-  EnergyAccountStore,
-  IRecoveryResponse,
   MemberStore,
+  EnergyAccountStore,
   ServiceProvider,
-  type IPasswordWrappedPrivateKey,
 } from '@brightchain/brightchain-lib';
-import { MemberType, SecureString } from '@digitaldefiance/ecies-lib';
 import {
   ECIESService,
   Member,
@@ -15,32 +11,30 @@ import {
   SignatureBuffer,
 } from '@digitaldefiance/node-ecies-lib';
 import {
-  KeyWrappingService,
+  BrightDbAuthService,
+  SchemaCollection,
+} from '@brightchain/node-express-suite';
+import {
   SystemUserService,
 } from '@digitaldefiance/node-express-suite';
 import { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
-import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
-import { SchemaCollection } from '../enumerations/schema-collection';
 import { IBrightChainApplication } from '../interfaces/application';
-import { IAuthCredentials } from '../interfaces/auth-credentials';
-import { IAuthToken } from '../interfaces/auth-token';
-import { ITokenPayload } from '../interfaces/token-payload';
 import { DefaultBackendIdType } from '../shared-types';
-import { BaseService } from './base';
 import { BrightChainAuthenticationProvider } from './brightchain-authentication-provider';
 import { EmailService } from './email';
 
-const BCRYPT_ROUNDS = 12;
-
+/**
+ * BrightChain domain-specific AuthService.
+ *
+ * Extends the generic BrightDbAuthService with:
+ * - verifyDirectLoginChallenge (ECIES signature-based login)
+ * - SES-based welcome email via EmailService
+ */
 export class AuthService<
   TID extends PlatformID = DefaultBackendIdType,
-> extends BaseService<TID> {
-  private memberStore: MemberStore;
-  private energyStore: EnergyAccountStore;
+> extends BrightDbAuthService<TID> {
   private emailService: EmailService<TID>;
-  private jwtSecret: string;
-  private authProvider?: BrightChainAuthenticationProvider<TID>;
+  private brightchainApplication: IBrightChainApplication<TID>;
 
   constructor(
     application: IBrightChainApplication<TID>,
@@ -50,248 +44,43 @@ export class AuthService<
     jwtSecret: string,
     authProvider?: BrightChainAuthenticationProvider<TID>,
   ) {
-    super(application);
-    this.memberStore = memberStore;
-    this.energyStore = energyStore;
+    // IBrightChainApplication extends IApplication which is compatible with
+    // IBrightDbApplication for the fields BrightDbAuthService needs
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    super(application as any, memberStore, energyStore, jwtSecret, authProvider as any);
     this.emailService = emailService;
-    this.jwtSecret = jwtSecret;
-    this.authProvider = authProvider;
+    this.brightchainApplication = application;
   }
 
-  async register(
+  /**
+   * Override sendWelcomeEmail to use the SES-based EmailService.
+   */
+  protected override async sendWelcomeEmail(
+    email: string,
     username: string,
-    email: string,
-    password: SecureString,
-    _mnemonic?: SecureString,
-  ): Promise<IAuthToken> {
-    // Check for duplicate email
-    const existing = await this.memberStore.queryIndex({ email });
-    if (existing.length > 0) {
-      throw new Error('Email already registered');
-    }
-
-    // Hash password before member creation
-    const passwordValue = password.value;
-    if (!passwordValue) {
-      throw new Error('Password value is empty');
-    }
-    const passwordHash = await bcrypt.hash(passwordValue, BCRYPT_ROUNDS);
-
-    const { reference, mnemonic } = await this.memberStore.createMember({
-      type: MemberType.User,
-      name: username,
-      contactEmail: new EmailString(email),
-    });
-
-    // Use idProvider for proper serialization round-trip
-    const sp = ServiceProvider.getInstance();
-    const memberId = sp.idProvider.idToString(reference.id);
-    const idRawBytes = sp.idProvider.toBytes(reference.id);
-    const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
-
-    // Reconstruct the member from the mnemonic so we have the private key.
-    // createMember() generates the keypair internally but only returns a
-    // reference — we need the live Member with private key to wrap it.
-    const eciesService =
-      sp.eciesService as unknown as import('@digitaldefiance/node-ecies-lib').ECIESService<
-        typeof reference.id
-      >;
-    const { member: liveMember } = Member.newMember(
-      eciesService,
-      MemberType.User,
-      username,
-      new EmailString(email),
-      mnemonic,
-    );
-
-    // Password-wrap the private key (AES-256-GCM + PBKDF2) — matches RBAC seeding
-    let passwordWrappedPrivateKey: IPasswordWrappedPrivateKey | undefined;
-    if (liveMember.privateKey) {
-      const keyWrappingService = new KeyWrappingService();
-      const wrapped = keyWrappingService.wrapSecret(
-        liveMember.privateKey,
-        password,
-        this.application.constants,
-      );
-      passwordWrappedPrivateKey = {
-        salt: wrapped.salt,
-        iv: wrapped.iv,
-        authTag: wrapped.authTag,
-        ciphertext: wrapped.ciphertext,
-        iterations: wrapped.iterations,
-      };
-    }
-
-    // Encrypt the mnemonic with the system user's ECIES public key for
-    // server-side recovery (backup code generation, key rotation, etc.)
-    const systemUser = SystemUserService.getSystemUser(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.application.environment as any,
-      this.application.constants,
-    );
-    const mnemonicRecovery = (
-      await systemUser.encryptData(Buffer.from(mnemonic.value ?? '', 'utf-8'))
-    ).toString('hex');
-
-    // Store password hash, wrapped private key, and encrypted mnemonic
-    // in the member's private profile
-    await this.memberStore.updateMember(reference.id, {
-      id: reference.id,
-      privateChanges: {
-        passwordHash,
-        passwordWrappedPrivateKey,
-        mnemonicRecovery,
-      },
-    });
-
-    const energyAccount = EnergyAccount.createWithTrialCredits(memberChecksum);
-    await this.energyStore.set(memberChecksum, energyAccount);
-
-    await this.sendWelcomeEmail(email, username);
-
-    const token = this.signToken(memberId, username, reference.type);
-
-    // Dispose the live member to zero out private key material
-    liveMember.dispose();
-
-    return {
-      token,
-      memberId,
-      energyBalance: energyAccount.balance,
-    };
-  }
-
-  async login(credentials: IAuthCredentials): Promise<IAuthToken> {
-    // Look up member by username
-    const results = await this.memberStore.queryIndex({
-      name: credentials.username,
-      limit: 1,
-    });
-
-    if (results.length === 0) {
-      throw new Error('Invalid credentials');
-    }
-
-    const reference = results[0];
-
-    // Retrieve stored password hash and verify
-    const storedHash = await this.getPasswordHash(reference.id);
-    const passwordValue = credentials.password.value;
-    if (!passwordValue) {
-      throw new Error('Password value is empty');
-    }
-    const isValid = await bcrypt.compare(passwordValue, storedHash);
-    if (!isValid) {
-      throw new Error('Invalid credentials');
-    }
-
-    // Use idProvider for proper serialization round-trip
-    const sp = ServiceProvider.getInstance();
-    const memberId = sp.idProvider.idToString(reference.id);
-    const idRawBytes = sp.idProvider.toBytes(reference.id);
-    const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
-
-    const energyAccount = await this.energyStore.getOrCreate(memberChecksum);
-
-    const token = this.signToken(
-      memberId,
-      credentials.username,
-      reference.type,
-    );
-
-    return {
-      token,
-      memberId,
-      energyBalance: energyAccount.balance,
-    };
-  }
-
-  signToken(memberId: string, username: string, type: MemberType): string {
-    const payload: Omit<ITokenPayload, 'iat' | 'exp'> = {
-      memberId,
-      username,
-      type,
-    };
-
-    return jwt.sign(payload, this.jwtSecret, {
-      expiresIn: '7d',
-    });
-  }
-
-  async verifyToken(token: string): Promise<ITokenPayload> {
-    try {
-      const decoded = jwt.verify(token, this.jwtSecret) as ITokenPayload;
-      return decoded;
-    } catch {
-      throw new Error('Invalid token');
-    }
-  }
-
-  async storePasswordHash(memberId: Uint8Array, hash: string): Promise<void> {
-    await this.memberStore.updateMember(memberId, {
-      id: memberId,
-      privateChanges: {
-        passwordHash: hash,
-      },
-    });
-  }
-
-  async getPasswordHash(memberId: Uint8Array): Promise<string> {
-    const profile = await this.memberStore.getMemberProfile(memberId);
-    const passwordHash = profile.privateProfile?.passwordHash;
-    if (!passwordHash) {
-      throw new Error('No password hash found for member');
-    }
-    return passwordHash;
-  }
-
-  async changePassword(
-    memberId: Uint8Array,
-    currentPassword: string,
-    newPassword: string,
   ): Promise<void> {
-    const storedHash = await this.getPasswordHash(memberId);
-    const isValid = await bcrypt.compare(currentPassword, storedHash);
-    if (!isValid) {
-      throw new Error('Invalid credentials');
-    }
-    const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
-    await this.storePasswordHash(memberId, newHash);
-  }
-
-  async recoverWithMnemonic(
-    email: string,
-    mnemonic: SecureString,
-    newPassword?: string,
-  ): Promise<IRecoveryResponse<string>> {
-    if (!this.authProvider) {
-      throw new Error('Authentication provider not configured');
+    if (!this.emailService) {
+      console.log(
+        `[EmailService disabled] Would send welcome email to ${email}`,
+      );
+      return;
     }
 
-    // Authenticate via mnemonic — throws "Invalid credentials" on
-    // unknown email or invalid mnemonic (no email enumeration).
-    const result = await this.authProvider.authenticateWithMnemonic(
-      email,
-      mnemonic,
-    );
+    const subject = 'Welcome to BrightChain';
+    const text = `Welcome ${username}!\n\nYour account has been created successfully. You've been credited with 1000 Joules to get started.\n\nBest regards,\nThe BrightChain Team`;
+    const html = `
+      <h1>Welcome to BrightChain!</h1>
+      <p>Hi ${username},</p>
+      <p>Your account has been created successfully.</p>
+      <p><strong>You've been credited with 1000 Joules to get started.</strong></p>
+      <p>Best regards,<br/>The BrightChain Team</p>
+    `;
 
-    const memberId = result.userId;
-    const member = result.userMember;
-
-    // Sign a JWT for the recovered session
-    const token = this.signToken(memberId, member.name, member.type);
-
-    // If a new password was provided, hash and persist it
-    if (newPassword) {
-      const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
-      await this.storePasswordHash(member.id as Uint8Array, newHash);
+    try {
+      await this.emailService.sendEmail(email, subject, text, html);
+    } catch (error) {
+      console.error('Failed to send welcome email:', error);
     }
-
-    return {
-      token,
-      memberId,
-      passwordReset: !!newPassword,
-    };
   }
 
   /**
@@ -315,7 +104,7 @@ export class AuthService<
     memberId: string;
     userDTO: IRequestUserDTO | null;
   }> {
-    const minBytes = 8 + 32 + this.application.constants.ECIES.SIGNATURE_SIZE;
+    const minBytes = 8 + 32 + this.brightchainApplication.constants.ECIES.SIGNATURE_SIZE;
     if (serverSignedRequest.length < minBytes * 2) {
       throw new Error('Invalid challenge');
     }
@@ -330,9 +119,9 @@ export class AuthService<
     offset += 32;
     const serverSignature = requestBuffer.subarray(
       offset,
-      this.application.constants.ECIES.SIGNATURE_SIZE + 40,
+      this.brightchainApplication.constants.ECIES.SIGNATURE_SIZE + 40,
     );
-    offset += this.application.constants.ECIES.SIGNATURE_SIZE;
+    offset += this.brightchainApplication.constants.ECIES.SIGNATURE_SIZE;
     const signedDataLength = offset;
 
     if (offset !== requestBuffer.length) {
@@ -343,7 +132,7 @@ export class AuthService<
     const timeMs = time.readBigUInt64BE();
     if (
       new Date().getTime() - Number(timeMs) >
-      this.application.constants.LoginChallengeExpiration
+      this.brightchainApplication.constants.LoginChallengeExpiration
     ) {
       throw new Error('Challenge expired');
     }
@@ -352,8 +141,8 @@ export class AuthService<
     // Member.verify(signature, data) — signature first, data second
     const systemUser = SystemUserService.getSystemUser(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.application.environment as any,
-      this.application.constants,
+      this.brightchainApplication.environment as any,
+      this.brightchainApplication.constants,
     );
     console.info(
       `[AuthService] verifyDirectLoginChallenge: verifying server signature`,
@@ -481,7 +270,7 @@ export class AuthService<
     const nonceHex = nonce.toString('hex');
     const memberId = sp.idProvider.idToString(reference.id as unknown as TID);
     const db =
-      this.application.services.get<import('@brightchain/db').BrightDb>('db');
+      this.brightchainApplication.services.get<import('@brightchain/db').BrightDb>('db');
     const tokenCollection = db.collection<{
       userId: string;
       token: string;
@@ -501,33 +290,5 @@ export class AuthService<
       : null;
 
     return { member, memberId, userDTO };
-  }
-
-  private async sendWelcomeEmail(
-    email: string,
-    username: string,
-  ): Promise<void> {
-    if (!this.emailService) {
-      console.log(
-        `[EmailService disabled] Would send welcome email to ${email}`,
-      );
-      return;
-    }
-
-    const subject = 'Welcome to BrightChain';
-    const text = `Welcome ${username}!\n\nYour account has been created successfully. You've been credited with 1000 Joules to get started.\n\nBest regards,\nThe BrightChain Team`;
-    const html = `
-      <h1>Welcome to BrightChain!</h1>
-      <p>Hi ${username},</p>
-      <p>Your account has been created successfully.</p>
-      <p><strong>You've been credited with 1000 Joules to get started.</strong></p>
-      <p>Best regards,<br/>The BrightChain Team</p>
-    `;
-
-    try {
-      await this.emailService.sendEmail(email, subject, text, html);
-    } catch (error) {
-      console.error('Failed to send welcome email:', error);
-    }
   }
 }
