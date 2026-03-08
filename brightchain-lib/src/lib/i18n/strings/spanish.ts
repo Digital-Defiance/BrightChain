@@ -287,6 +287,19 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
     'La transacción de base de datos falló',
   [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
     'La integridad de la cadena de auditoría está comprometida',
+  // Quorum Ban Mechanism Errors
+  [BrightChainStrings.Error_QuorumError_CannotBanSelf]:
+    'Un miembro no puede proponer prohibirse a sí mismo',
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyBanned]:
+    'El miembro ya está prohibido',
+  [BrightChainStrings.Error_QuorumError_MemberNotBanned]:
+    'El miembro no está actualmente prohibido',
+  [BrightChainStrings.Error_QuorumError_NewMemberCannotProposeBan]:
+    'Los miembros admitidos en la época actual no pueden proponer prohibiciones',
+  [BrightChainStrings.Error_QuorumError_BanCoolingPeriodNotElapsed]:
+    'El período de enfriamiento de la prohibición aún no ha transcurrido',
+  [BrightChainStrings.Error_QuorumError_InvalidBanRecordSignatures]:
+    'El registro de prohibición no tiene suficientes firmas válidas del quórum',
   [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
     'La firma del contenido no coincide con la identidad declarada',
   [BrightChainStrings.Error_IdentityValidationError_UnregisteredAlias]:

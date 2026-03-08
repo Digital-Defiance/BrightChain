@@ -45,6 +45,15 @@
       ],
       "@brightchain/node-express-suite": [
         "brightchain-node-express-suite/src/index.ts"
+      ],
+      "@awesome.me/kit-a20d532681/icons": [
+        "node_modules/@awesome.me/kit-a20d532681/icons/modules/index"
+      ],
+      "@awesome.me/kit-a20d532681/icons/*": [
+        "node_modules/@awesome.me/kit-a20d532681/icons/modules/*"
+      ],
+      "@digitaldefiance/node-ecies-lib/src/*": [
+        "node_modules/@digitaldefiance/node-ecies-lib/src/*"
       ]
     }
   },

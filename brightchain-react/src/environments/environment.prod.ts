@@ -7,4 +7,5 @@ export const environment: IEnvironment = {
   debugI18n: false,
   serverUrl: runtimeConfig.serverUrl || '',
   apiUrl: runtimeConfig.apiUrl || '/api',
+  emailDomain: 'brightchain.org',
 };

@@ -47,6 +47,13 @@ export interface Proposal<TID extends PlatformID = Uint8Array> {
   attachmentCblId?: string;
   /** Epoch number at proposal creation */
   epochNumber: number;
+  /**
+   * Optional cooling period end timestamp.
+   * When set, the proposal cannot be executed until this time has passed,
+   * even if the vote threshold is reached early.
+   * Used by BAN_MEMBER and UNBAN_MEMBER proposals.
+   */
+  coolingPeriodEndsAt?: Date;
 }
 
 /**

@@ -241,6 +241,7 @@ describe('UserController E2E', () => {
     username: `e2euser_${Date.now()}`,
     email: `e2euser_${Date.now()}@example.com`,
     password: 'TestPassword123!',
+    timezone: 'UTC',
   };
 
   beforeAll(async () => {
@@ -301,6 +302,10 @@ describe('UserController E2E', () => {
 
     it('returns 201 and a token on valid registration', async () => {
       const res = await post(server.baseUrl, '/user/register', testUser);
+      if (res.status !== 201) {
+        const errBody = await res.clone().text();
+        console.error('Registration failed:', res.status, errBody);
+      }
       expect(res.status).toBe(201);
       const body = (await res.json()) as Record<string, unknown>;
       expect(typeof body['message']).toBe('string');
@@ -901,6 +906,7 @@ describe('UserController E2E — disk-backed store', () => {
     username: `diskuser_${Date.now()}`,
     email: `diskuser_${Date.now()}@example.com`,
     password: 'DiskPassword123!',
+    timezone: 'UTC',
   };
 
   beforeAll(async () => {
@@ -955,6 +961,10 @@ describe('UserController E2E — disk-backed store', () => {
 
   it('registers a user on disk-backed store', async () => {
     const res = await post(server.baseUrl, '/user/register', diskTestUser);
+    if (res.status !== 201) {
+      const errBody = await res.clone().text();
+      console.error('Registration failed:', res.status, errBody);
+    }
     expect(res.status).toBe(201);
     const body = (await res.json()) as Record<string, unknown>;
     const data = body['data'] as Record<string, unknown>;

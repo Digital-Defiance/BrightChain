@@ -18,6 +18,11 @@
             "input": "brightchain-api-lib",
             "glob": "*.md",
             "output": "."
+          },
+          {
+            "input": "brightchain-api-lib",
+            "glob": "package.json",
+            "output": "."
           }
         ]
       },

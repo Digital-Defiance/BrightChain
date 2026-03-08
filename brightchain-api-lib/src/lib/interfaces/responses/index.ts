@@ -26,5 +26,8 @@ export type * from './api-sync-request-response';
 export type * from './block-data-response';
 export type * from './block-location-response';
 
+// Email Gateway responses
+export type * from './emailGatewayResponses';
+
 // BrightHub Social Network responses
 export type * from './brighthub';

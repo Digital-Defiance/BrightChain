@@ -113,8 +113,7 @@ async function main() {
   }
 
   const envFilePath = join(
-    BaseApplication.distDir,
-    'brightchain-inituserdb',
+    __dirname,
     '.env',
   );
 

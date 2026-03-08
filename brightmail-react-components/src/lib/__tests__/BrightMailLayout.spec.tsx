@@ -1,11 +1,11 @@
 /**
- * Unit tests for BrightMail menu integration and routing.
+ * Unit tests for the refactored BrightMailLayout three-panel shell.
  *
- * Tests: menu item visible when authenticated, hidden when not,
- * click navigates to /brightmail, route registration, language change
- * re-renders text.
+ * Tests: BrightMailProvider wrapping, Sidebar rendering, Outlet rendering,
+ * hamburger toggle on narrow viewports, reading pane at wide breakpoints,
+ * route integration.
  *
- * Requirements: 1.1, 1.2, 1.3, 7.3, 11.1
+ * Requirements: 1.1, 1.2, 1.5, 1.6, 1.8
  */
 
 import '@testing-library/jest-dom';
@@ -15,13 +15,26 @@ import React from 'react';
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 
 const mockNavigate = jest.fn();
+const mockLocation = { pathname: '/brightmail' };
+
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    useLocation: () => mockLocation,
     Outlet: () => <div data-testid="outlet">Outlet Content</div>,
   };
+});
+
+// Track useMediaQuery calls to control breakpoints
+// Variable must be prefixed with "mock" to be accessible inside jest.mock()
+let mockMediaQueryResults: Record<string, boolean> = {};
+
+jest.mock('@mui/material/useMediaQuery', () => {
+  return jest.fn((query: string) => {
+    return mockMediaQueryResults[query] ?? false;
+  });
 });
 
 jest.mock('@digitaldefiance/ecies-lib', () => ({
@@ -41,8 +54,6 @@ jest.mock('@digitaldefiance/suite-core-lib', () => ({
   SuiteCoreStringKeyValue: {},
 }));
 
-let mockTranslations: Record<string, string> = {};
-
 jest.mock('@brightchain/brightchain-lib', () => ({
   BrightChainComponentId: 'brightchain',
   BrightChainStrings: new Proxy(
@@ -59,50 +70,46 @@ jest.mock('@brightchain/brightchain-react-components', () => ({
 
 jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   useI18n: () => ({
-    tComponent: (_componentId: string, key: string) =>
-      mockTranslations[key] || key,
-    t: (key: string) => mockTranslations[key] || key,
-    tBranded: (key: string) => mockTranslations[key] || key,
+    tComponent: (_componentId: string, key: string) => key,
+    t: (key: string) => key,
+    tBranded: (key: string) => key,
     changeLanguage: jest.fn(),
     currentLanguage: 'en',
   }),
 }));
 
 // Import after mocks
-import {
-  MemoryRouter,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-} from 'react-router-dom';
 import BrightMailLayout from '../BrightMailLayout';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-const FakePrivateRoute: React.FC<{
-  isAuthenticated: boolean;
-  children?: React.ReactNode;
-}> = ({ isAuthenticated, children }) => {
-  const location = useLocation();
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+function setBreakpoint(mode: 'mobile' | 'tablet' | 'desktop' | 'wide') {
+  switch (mode) {
+    case 'mobile':
+      mockMediaQueryResults = {
+        '(min-width:961px)': false,
+        '(min-width:1280px)': false,
+      };
+      break;
+    case 'tablet':
+      mockMediaQueryResults = {
+        '(min-width:961px)': false,
+        '(min-width:1280px)': false,
+      };
+      break;
+    case 'desktop':
+      mockMediaQueryResults = {
+        '(min-width:961px)': true,
+        '(min-width:1280px)': false,
+      };
+      break;
+    case 'wide':
+      mockMediaQueryResults = {
+        '(min-width:961px)': true,
+        '(min-width:1280px)': true,
+      };
+      break;
   }
-  return <>{children}</>;
-};
-
-function LocationDisplay() {
-  const location = useLocation();
-  return <div data-testid="location-display">{location.pathname}</div>;
-}
-
-function renderWithRouter(
-  ui: React.ReactElement,
-  initialEntries: string[] = ['/brightmail'],
-) {
-  return render(
-    <MemoryRouter initialEntries={initialEntries}>{ui}</MemoryRouter>,
-  );
 }
 
 // ─── Tests ──────────────────────────────────────────────────────────────────
@@ -110,7 +117,8 @@ function renderWithRouter(
 describe('BrightMailLayout', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockTranslations = {};
+    mockMediaQueryResults = {};
+    mockLocation.pathname = '/brightmail';
   });
 
   afterEach(() => {
@@ -118,154 +126,76 @@ describe('BrightMailLayout', () => {
   });
 
   /**
-   * Requirement 11.1: Route registration — /brightmail renders layout
+   * Requirement 1.5: Center content area renders Outlet
    */
-  it('renders BrightMailLayout at /brightmail route', () => {
-    renderWithRouter(
-      <Routes>
-        <Route path="/brightmail" element={<BrightMailLayout />}>
-          <Route index element={<div>Inbox</div>} />
-        </Route>
-      </Routes>,
-    );
-
-    expect(screen.getByTestId('brightchain-sub-logo')).toBeInTheDocument();
+  it('renders Outlet in the center content area', () => {
+    setBreakpoint('desktop');
+    render(<BrightMailLayout />);
     expect(screen.getByTestId('outlet')).toBeInTheDocument();
   });
 
   /**
-   * Requirement 1.2: Compose button navigates to /brightmail/compose
+   * Requirement 1.1: Sidebar renders on desktop viewports
    */
-  it('compose button navigates to /brightmail/compose', () => {
-    renderWithRouter(
-      <Routes>
-        <Route path="/brightmail" element={<BrightMailLayout />}>
-          <Route index element={<div>Inbox</div>} />
-        </Route>
-      </Routes>,
-    );
-
-    fireEvent.click(screen.getByText('BrightMail_Compose_Title'));
-    expect(mockNavigate).toHaveBeenCalledWith('/brightmail/compose');
-  });
-
-  /**
-   * Requirement 1.1: Authenticated user sees BrightMail content
-   */
-  it('authenticated user can access /brightmail', () => {
-    renderWithRouter(
-      <Routes>
-        <Route
-          path="/brightmail"
-          element={
-            <FakePrivateRoute isAuthenticated={true}>
-              <BrightMailLayout />
-            </FakePrivateRoute>
-          }
-        >
-          <Route index element={<div>Inbox</div>} />
-        </Route>
-        <Route path="/login" element={<div data-testid="login">Login</div>} />
-      </Routes>,
-    );
-
+  it('renders Sidebar with navigation on desktop', () => {
+    setBreakpoint('desktop');
+    render(<BrightMailLayout />);
+    // Sidebar renders the logo
     expect(screen.getByTestId('brightchain-sub-logo')).toBeInTheDocument();
-    expect(screen.queryByTestId('login')).not.toBeInTheDocument();
+    // Sidebar renders nav items
+    expect(screen.getByText('Inbox')).toBeInTheDocument();
+    expect(screen.getByText('Sent')).toBeInTheDocument();
+    expect(screen.getByText('Drafts')).toBeInTheDocument();
+    expect(screen.getByText('Trash')).toBeInTheDocument();
   });
 
   /**
-   * Requirement 1.3: Unauthenticated user is redirected
+   * Requirement 1.2: Hamburger icon appears on narrow viewports
    */
-  it('unauthenticated user is redirected from /brightmail', () => {
-    renderWithRouter(
-      <Routes>
-        <Route
-          path="/brightmail"
-          element={
-            <FakePrivateRoute isAuthenticated={false}>
-              <BrightMailLayout />
-            </FakePrivateRoute>
-          }
-        >
-          <Route index element={<div>Inbox</div>} />
-        </Route>
-        <Route
-          path="/login"
-          element={
-            <>
-              <div data-testid="login">Login</div>
-              <LocationDisplay />
-            </>
-          }
-        />
-      </Routes>,
-    );
-
-    expect(screen.queryByText('BrightMail_MenuLabel')).not.toBeInTheDocument();
-    expect(screen.getByTestId('login')).toBeInTheDocument();
-    expect(screen.getByTestId('location-display').textContent).toBe('/login');
+  it('shows hamburger toggle button on narrow viewports', () => {
+    setBreakpoint('mobile');
+    render(<BrightMailLayout />);
+    const hamburger = screen.getByLabelText('Toggle sidebar');
+    expect(hamburger).toBeInTheDocument();
   });
 
   /**
-   * Requirement 11.1: Nested route /brightmail/compose works
+   * Requirement 1.2: No hamburger on desktop
    */
-  it('renders layout for nested /brightmail/compose route', () => {
-    renderWithRouter(
-      <Routes>
-        <Route path="/brightmail" element={<BrightMailLayout />}>
-          <Route index element={<div>Inbox</div>} />
-          <Route
-            path="compose"
-            element={<div data-testid="compose">Compose</div>}
-          />
-        </Route>
-      </Routes>,
-      ['/brightmail/compose'],
-    );
-
-    expect(screen.getByTestId('brightchain-sub-logo')).toBeInTheDocument();
+  it('does not show hamburger on desktop viewports', () => {
+    setBreakpoint('desktop');
+    render(<BrightMailLayout />);
+    expect(screen.queryByLabelText('Toggle sidebar')).not.toBeInTheDocument();
   });
 
   /**
-   * Requirement 7.3: Language change re-renders text
+   * Requirement 1.6: Reading pane appears at ≥1280px
    */
-  it('re-renders text when translations change', () => {
-    mockTranslations = {
-      BrightMail_Compose_Title: 'Compose',
-    };
+  it('renders reading pane placeholder on wide desktop', () => {
+    setBreakpoint('wide');
+    render(<BrightMailLayout />);
+    expect(screen.getByText('Select an email to read')).toBeInTheDocument();
+  });
 
-    const { rerender } = render(
-      <MemoryRouter initialEntries={['/brightmail']}>
-        <Routes>
-          <Route path="/brightmail" element={<BrightMailLayout />}>
-            <Route index element={<div>Inbox</div>} />
-          </Route>
-        </Routes>
-      </MemoryRouter>,
-    );
+  /**
+   * Requirement 1.6: Reading pane hidden below 1280px
+   */
+  it('does not render reading pane below 1280px', () => {
+    setBreakpoint('desktop');
+    render(<BrightMailLayout />);
+    expect(
+      screen.queryByText('Select an email to read'),
+    ).not.toBeInTheDocument();
+  });
 
-    expect(screen.getByTestId('brightchain-sub-logo')).toBeInTheDocument();
-    expect(screen.getByText('Compose')).toBeInTheDocument();
-
-    // Simulate language change
-    mockTranslations = {
-      BrightMail_Compose_Title: 'Redactar',
-    };
-
-    // Force remount to pick up new translations (simulates i18n context change)
-    rerender(
-      <MemoryRouter initialEntries={['/brightmail']}>
-        <Routes>
-          <Route
-            path="/brightmail"
-            element={<BrightMailLayout key="lang-es" />}
-          >
-            <Route index element={<div>Inbox</div>} />
-          </Route>
-        </Routes>
-      </MemoryRouter>,
-    );
-
-    expect(screen.getByText('Redactar')).toBeInTheDocument();
+  /**
+   * Requirement 1.8: BrightMailProvider wraps children (context available)
+   */
+  it('wraps layout with BrightMailProvider (compose FAB works)', () => {
+    setBreakpoint('desktop');
+    render(<BrightMailLayout />);
+    // The Compose FAB is rendered by Sidebar which uses useBrightMail()
+    // If context wasn't provided, this would throw
+    expect(screen.getByLabelText('Compose')).toBeInTheDocument();
   });
 });

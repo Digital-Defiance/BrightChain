@@ -29,6 +29,8 @@ export default {
       '<rootDir>/../brightchain-lib/src/index.ts',
     '^@brightchain/brightchain-api-lib$':
       '<rootDir>/../brightchain-api-lib/src/index.ts',
+    '^@brightchain/node-express-suite$':
+      '<rootDir>/../brightchain-node-express-suite/src/index.ts',
     '^@brightchain/s3-store$': '<rootDir>/src/index.ts',
     '^uuid$': '<rootDir>/../node_modules/uuid/dist/cjs/index.js',
   },

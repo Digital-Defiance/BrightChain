@@ -24,6 +24,7 @@ import {
   RedistributionJournalEntry,
   StatuteOfLimitationsConfig,
   Vote,
+  IBanRecord,
 } from '@brightchain/brightchain-lib';
 import type { BrightDb, BsonDocument } from '@brightchain/db';
 import {
@@ -46,6 +47,7 @@ const COLLECTION_AUDIT_LOG = 'audit_log';
 const COLLECTION_REDISTRIBUTION_JOURNAL = 'redistribution_journal';
 const COLLECTION_STATUTE_CONFIG = 'statute_config';
 const COLLECTION_OPERATIONAL_STATE = 'operational_state';
+const COLLECTION_BAN_RECORDS = 'ban_records';
 
 /** Dedicated pool ID for quorum data isolation */
 export const QUORUM_SYSTEM_POOL_ID = 'quorum-system';
@@ -111,6 +113,11 @@ interface StatuteConfigDoc extends BsonDocument {
 
 interface OperationalStateDoc extends BsonDocument {
   key: string;
+  data: Record<string, unknown>;
+}
+
+interface BanRecordDoc extends BsonDocument {
+  memberId: string;
   data: Record<string, unknown>;
 }
 
@@ -1034,5 +1041,94 @@ export class QuorumDatabaseAdapter<TID extends PlatformID = Uint8Array>
     } catch {
       return false;
     }
+  }
+
+  // === Ban Records ===
+
+  async saveBanRecord(record: IBanRecord<TID>): Promise<void> {
+    const col = this.db.collection<BanRecordDoc>(COLLECTION_BAN_RECORDS);
+    const memberId = this.idProvider.idToString(record.memberId);
+    const data: Record<string, unknown> = {
+      memberId: memberId,
+      reason: record.reason,
+      proposalId: this.idProvider.idToString(record.proposalId),
+      epoch: record.epoch,
+      bannedAt: record.bannedAt.toISOString(),
+      evidenceBlockIds: record.evidenceBlockIds,
+      approvalSignatures: record.approvalSignatures.map((sig) => ({
+        memberId: this.idProvider.idToString(sig.memberId),
+        signature: serializeUint8Array(sig.signature),
+      })),
+      requiredSignatures: record.requiredSignatures,
+    };
+    const existing = await col.findOne({ memberId });
+    if (existing) {
+      await col.updateOne({ memberId }, { $set: { data } });
+    } else {
+      await col.insertOne({ memberId, data });
+    }
+  }
+
+  async deleteBanRecord(memberId: TID): Promise<void> {
+    const col = this.db.collection<BanRecordDoc>(COLLECTION_BAN_RECORDS);
+    const id = this.idProvider.idToString(memberId);
+    await col.deleteOne({ memberId: id });
+  }
+
+  async getBanRecord(memberId: TID): Promise<IBanRecord<TID> | null> {
+    const col = this.db.collection<BanRecordDoc>(COLLECTION_BAN_RECORDS);
+    const id = this.idProvider.idToString(memberId);
+    const doc = await col.findOne({ memberId: id });
+    if (!doc) return null;
+    return this.deserializeBanRecord(doc.data);
+  }
+
+  async getAllBanRecords(): Promise<IBanRecord<TID>[]> {
+    const col = this.db.collection<BanRecordDoc>(COLLECTION_BAN_RECORDS);
+    const docs = await col.find({}).toArray();
+    return docs.map((doc: BanRecordDoc) => this.deserializeBanRecord(doc.data));
+  }
+
+  async getMemberAdmissionProposerId(memberId: TID): Promise<TID | null> {
+    // Look up the ADD_MEMBER proposal that admitted this member.
+    // If no such proposal exists, the member is a founder.
+    const col = this.db.collection<ProposalDoc>(COLLECTION_PROPOSALS);
+    const memberIdStr = this.idProvider.idToString(memberId);
+    const docs = await col
+      .find({})
+      .toArray();
+    for (const doc of docs) {
+      const data = doc.data;
+      if (
+        data['actionType'] === 'ADD_MEMBER' &&
+        data['status'] === 'APPROVED'
+      ) {
+        const payload = data['actionPayload'] as Record<string, unknown> | undefined;
+        if (payload && payload['targetMemberId'] === memberIdStr) {
+          const proposerId = data['proposerMemberId'] as string;
+          if (proposerId) {
+            return this.idProvider.idFromString(proposerId);
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  private deserializeBanRecord(data: Record<string, unknown>): IBanRecord<TID> {
+    const sigs = (data['approvalSignatures'] as Array<{ memberId: string; signature: string }>) ?? [];
+    return {
+      memberId: this.idProvider.idFromString(data['memberId'] as string),
+      reason: data['reason'] as string,
+      proposalId: this.idProvider.idFromString(data['proposalId'] as string),
+      epoch: data['epoch'] as number,
+      bannedAt: new Date(data['bannedAt'] as string),
+      evidenceBlockIds: data['evidenceBlockIds'] as string[] | undefined,
+      approvalSignatures: sigs.map((sig) => ({
+        memberId: this.idProvider.idFromString(sig.memberId),
+        signature: deserializeUint8Array(sig.signature),
+      })),
+      requiredSignatures: data['requiredSignatures'] as number,
+    };
   }
 }

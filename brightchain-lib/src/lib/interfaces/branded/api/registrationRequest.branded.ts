@@ -12,6 +12,12 @@ const registrationRequestSchema: InterfaceSchema = {
     type: 'string',
     validate: (v: unknown) => typeof v === 'string' && v.length > 0,
   },
+  mnemonic: {
+    type: 'string',
+    optional: true,
+    validate: (v: unknown) =>
+      v === undefined || (typeof v === 'string' && v.trim().length > 0),
+  },
 };
 
 export const RegistrationRequestDef = createBrandedInterface<

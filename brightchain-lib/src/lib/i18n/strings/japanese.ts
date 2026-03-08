@@ -264,6 +264,19 @@ export const JapaneseStrings: StringsCollection<BrightChainStringKey> = {
     'データベーストランザクションが失敗しました',
   [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
     '監査チェーンの整合性が損なわれています',
+  // Quorum Ban Mechanism Errors
+  [BrightChainStrings.Error_QuorumError_CannotBanSelf]:
+    'メンバーは自分自身の追放を提案できません',
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyBanned]:
+    'メンバーは既に追放されています',
+  [BrightChainStrings.Error_QuorumError_MemberNotBanned]:
+    'メンバーは現在追放されていません',
+  [BrightChainStrings.Error_QuorumError_NewMemberCannotProposeBan]:
+    '現在のエポックで承認されたメンバーは追放を提案できません',
+  [BrightChainStrings.Error_QuorumError_BanCoolingPeriodNotElapsed]:
+    '追放のクーリング期間がまだ経過していません',
+  [BrightChainStrings.Error_QuorumError_InvalidBanRecordSignatures]:
+    '追放記録に十分な有効なクォーラム署名がありません',
   [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
     'コンテンツの署名が主張されたアイデンティティと一致しません',
   [BrightChainStrings.Error_IdentityValidationError_UnregisteredAlias]:

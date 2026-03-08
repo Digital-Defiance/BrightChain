@@ -146,6 +146,8 @@ export interface INewMemberData {
   name: string;
   contactEmail: EmailString;
   region?: string;
+  /** When provided, the member keypair is derived from this mnemonic instead of generating a random one. */
+  forceMnemonic?: SecureString;
   settings?: {
     autoReplication?: boolean;
     minRedundancy?: number;

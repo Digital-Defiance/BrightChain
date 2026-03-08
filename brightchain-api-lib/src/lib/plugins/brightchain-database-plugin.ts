@@ -1,13 +1,9 @@
 /**
  * @fileoverview BrightChain database plugin for the express-suite plugin architecture.
  *
- * Implements IDatabasePlugin<TID> to encapsulate the BrightChain database stack
- * lifecycle: block stores, BrightDb, member/energy stores, and the
- * authentication provider. The plugin is registered via Application.useDatabasePlugin()
- * and participates in the standard plugin lifecycle (connect → init → stop).
- *
- * BrightDb already implements IDatabase from express-suite, so the plugin's
- * `database` property returns the BrightDb instance directly — no adapter needed.
+ * Extends BrightDbDatabasePlugin from @brightchain/node-express-suite with
+ * domain-specific store initialization (MemberStore, EnergyAccountStore),
+ * RBAC seeding, and the BrightChain authentication provider.
  *
  * @module plugins/brightchain-database-plugin
  */
@@ -25,15 +21,14 @@ import {
   MemberStore,
 } from '@brightchain/brightchain-lib';
 import type { BrightDb } from '@brightchain/db';
+import {
+  BrightDbDatabasePlugin,
+  type IBrightDbDatabasePluginOptions,
+} from '@brightchain/node-express-suite';
 import { MemberType } from '@digitaldefiance/ecies-lib';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { getEnhancedNodeIdProvider } from '@digitaldefiance/node-ecies-lib';
-import type {
-  IApplication,
-  IAuthenticationProvider,
-  IDatabasePlugin,
-} from '@digitaldefiance/node-express-suite';
-import type { IDatabase } from '@digitaldefiance/suite-core-lib';
+import type { IApplication } from '@digitaldefiance/node-express-suite';
 import { randomBytes } from 'crypto';
 import { brightchainDatabaseInit } from '../databaseInit';
 import type { Environment } from '../environment';
@@ -47,18 +42,11 @@ import {
 } from '../services/rbac-input-builder';
 
 /**
- * BrightChain database plugin implementing IDatabasePlugin<TID>.
- *
- * Owns the full database lifecycle:
- * - connect() → calls brightchainDatabaseInit() and stores backend references
- * - init(app) → creates BrightChainAuthenticationProvider
- * - stop() → delegates to disconnect()
- * - disconnect() → releases all references (idempotent)
- *
- * Typed accessors (blockStore, memberStore, energyStore, brightDb)
- * throw descriptive errors when the plugin is not connected.
+ * BrightChain-specific database plugin options.
+ * Extends the generic BrightDB plugin options.
  */
-export interface IBrightChainDatabasePluginOptions {
+export interface IBrightChainDatabasePluginOptions
+  extends IBrightDbDatabasePluginOptions {
   /**
    * When true, skip the automatic production seed in connect().
    * Use this when the caller (e.g. brightchain-inituserdb) will perform
@@ -67,20 +55,22 @@ export interface IBrightChainDatabasePluginOptions {
   skipAutoSeed?: boolean;
 }
 
+/**
+ * BrightChain database plugin extending BrightDbDatabasePlugin.
+ *
+ * Adds domain-specific functionality on top of the generic BrightDB lifecycle:
+ * - MemberStore and EnergyAccountStore initialization
+ * - RBAC seeding (seedWithRbac, seedProductionIfEmpty)
+ * - BrightChainAuthenticationProvider creation
+ * - Domain-specific dev store initialization
+ */
 export class BrightChainDatabasePlugin<TID extends PlatformID>
-  implements IDatabasePlugin<TID>
+  extends BrightDbDatabasePlugin<TID>
 {
-  public readonly name = 'brightchain-database';
-  public readonly version = '1.0.0';
+  public override readonly name = 'brightchain-database';
 
-  private readonly _environment: Environment<TID>;
-  private readonly _skipAutoSeed: boolean;
-  private _connected = false;
-  private _blockStore: IBlockStore | null = null;
-  private _brightDb: BrightDb | null = null;
   private _memberStore: MemberStore | null = null;
   private _energyStore: EnergyAccountStore | null = null;
-  private _authProvider: BrightChainAuthenticationProvider<TID> | null = null;
   /** Stored result from the most recent seedWithRbac() / initializeDevStore() call. */
   private _lastInitResult: IBrightChainInitResult<TID, BrightDb> | null = null;
 
@@ -88,33 +78,10 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
     environment: Environment<TID>,
     options: IBrightChainDatabasePluginOptions = {},
   ) {
-    this._environment = environment;
-    this._skipAutoSeed = options.skipAutoSeed ?? false;
+    super(environment, options);
   }
 
-  // ── IDatabasePlugin contract ──────────────────────────────────────
-
-  /**
-   * The IDatabase instance this plugin manages.
-   * BrightDb implements IDatabase directly, so no adapter is needed.
-   * @throws Error if the plugin is not connected.
-   */
-  get database(): IDatabase {
-    if (!this._brightDb) {
-      throw new Error(
-        'BrightChainDatabasePlugin: cannot access "database" — plugin is not connected. Call connect() first.',
-      );
-    }
-    return this._brightDb as unknown as IDatabase;
-  }
-
-  /**
-   * Authentication provider created during init().
-   * Returns undefined before init() is called.
-   */
-  get authenticationProvider(): IAuthenticationProvider<TID> | undefined {
-    return this._authProvider ?? undefined;
-  }
+  // ── Overrides ─────────────────────────────────────────────────────
 
   /**
    * The result from the most recent seedWithRbac() / initializeDevStore() call.
@@ -128,14 +95,19 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
   /**
    * Connect the BrightChain database stack.
    *
-   * Calls brightchainDatabaseInit(environment) and stores the resulting
-   * backend references (blockStore, BrightDb, memberStore, energyStore).
+   * Uses the domain-specific brightchainDatabaseInit (from api-lib) which
+   * wraps the generic init and adds MemberStore + EnergyAccountStore via
+   * the modelRegistrations callback.
+   *
+   * Does NOT call super.connect() because the domain init handles everything.
    *
    * @param _uri - Ignored; BrightChain uses environment-based configuration.
    * @throws Error if brightchainDatabaseInit() returns a failure result.
    */
-  async connect(_uri?: string): Promise<void> {
-    const initResult = await brightchainDatabaseInit(this._environment);
+  override async connect(_uri?: string): Promise<void> {
+    const initResult = await brightchainDatabaseInit(
+      this._environment as Environment<TID>,
+    );
 
     if (!initResult.success || !initResult.backend) {
       throw new Error(
@@ -164,27 +136,17 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
   }
 
   /**
-   * Disconnect and release all backend references.
+   * Disconnect and release all backend references (including domain stores).
    * Idempotent — calling when already disconnected completes without error.
    */
-  async disconnect(): Promise<void> {
+  override async disconnect(): Promise<void> {
     if (!this._connected) {
       return;
     }
 
-    this._blockStore = null;
-    this._brightDb = null;
     this._memberStore = null;
     this._energyStore = null;
-    this._authProvider = null;
-    this._connected = false;
-  }
-
-  /**
-   * Whether the database is currently connected.
-   */
-  isConnected(): boolean {
-    return this._connected;
+    await super.disconnect();
   }
 
   /**
@@ -194,32 +156,20 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
    *
    * @param app - The application instance (must implement IBrightChainApplication).
    */
-  async init(app: IApplication<TID>): Promise<void> {
+  override async init(app: IApplication<TID>): Promise<void> {
     this._authProvider = new BrightChainAuthenticationProvider(
       app as IBrightChainApplication<TID>,
     );
-  }
-
-  /**
-   * Stop the plugin. Delegates to disconnect() for cleanup.
-   */
-  async stop(): Promise<void> {
-    await this.disconnect();
+    // Delegate to base class — triggers initializeDevStore() in dev mode
+    await super.init(app);
   }
 
   // ── Dev store lifecycle hooks ─────────────────────────────────────
 
   /**
    * Provision an ephemeral dev/test block store.
-   *
-   * Called by Application.start() before connect() when
-   * environment.devDatabase is truthy. BrightChain doesn't use
-   * connection URIs — the memory vs disk decision is driven by
-   * environment.blockStorePath (absent → memory). This hook
-   * signals that we're in dev mode and returns an empty string
-   * (no URI concept for block stores).
    */
-  async setupDevStore(): Promise<string> {
+  override async setupDevStore(): Promise<string> {
     console.log(
       '[BrightChain] Dev database mode — using ephemeral MemoryBlockStore + InMemoryHeadRegistry.',
     );
@@ -227,24 +177,12 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
   }
 
   /**
-   * Tear down the ephemeral dev/test block store.
-   *
-   * Called during stop() flow. Our disconnect() already releases
-   * all in-memory references, so this is a no-op beyond logging.
-   */
-  async teardownDevStore(): Promise<void> {
-    // disconnect() handles all cleanup — nothing extra needed
-  }
-
-  /**
    * Seed the dev database after connection.
    *
-   * Called by Application.start() after connect() and init() when
-   * environment.devDatabase is truthy. Uses RbacInputBuilder to generate
-   * ephemeral credentials and calls initializeWithRbac() for a fully
-   * functional dev database. Prints credentials so dev users can log in.
+   * Uses RbacInputBuilder to generate ephemeral credentials and calls
+   * initializeWithRbac() for a fully functional dev database.
    */
-  async initializeDevStore(): Promise<IBrightChainInitResult<TID, BrightDb>> {
+  override async initializeDevStore(): Promise<IBrightChainInitResult<TID, BrightDb>> {
     const result = await this.seedWithRbac(true);
     // After seeding, update the MemberStore's DB reference so queryIndex()
     // can find the freshly seeded members via DB-backed lookups.
@@ -254,33 +192,7 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
     return result;
   }
 
-  // ── Typed accessors ───────────────────────────────────────────────
-
-  /**
-   * The block store backing the BrightChain database.
-   * @throws Error if the plugin is not connected.
-   */
-  get blockStore(): IBlockStore {
-    if (!this._blockStore) {
-      throw new Error(
-        'BrightChainDatabasePlugin: cannot access "blockStore" — plugin is not connected. Call connect() first.',
-      );
-    }
-    return this._blockStore;
-  }
-
-  /**
-   * The BrightDb instance (implements IDatabase).
-   * @throws Error if the plugin is not connected.
-   */
-  get brightDb(): BrightDb {
-    if (!this._brightDb) {
-      throw new Error(
-        'BrightChainDatabasePlugin: cannot access "brightDb" — plugin is not connected. Call connect() first.',
-      );
-    }
-    return this._brightDb;
-  }
+  // ── Domain-specific typed accessors ───────────────────────────────
 
   /**
    * The member store for user/member operations.
@@ -308,7 +220,7 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
     return this._energyStore;
   }
 
-  // ── Private helpers ───────────────────────────────────────────────
+  // ── Domain-specific helpers ───────────────────────────────────────
 
   /**
    * Build an IBrightChainMemberInitConfig from the environment.
@@ -321,7 +233,7 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
   buildMemberInitConfig(
     useMemoryStore: boolean = !!this._environment.devDatabasePoolName,
   ): IBrightChainMemberInitConfig {
-    const env = this._environment;
+    const env = this._environment as Environment<TID>;
     return {
       memberPoolName: useMemoryStore
         ? (env.devDatabasePoolName ?? env.memberPoolName)
@@ -339,7 +251,7 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
    * @throws Error if any of the required user IDs are not set.
    */
   buildMemberInitInput(): IBrightChainMemberInitInput<TID> {
-    const env = this._environment;
+    const env = this._environment as Environment<TID>;
     if (!env.systemId || !env.adminId || !env.memberId) {
       throw new Error(
         'BrightChainDatabasePlugin: cannot build member init input — one or more user IDs ' +
@@ -366,7 +278,7 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
     admin: IRbacUserInput<TID>;
     member: IRbacUserInput<TID>;
   } {
-    const env = this._environment;
+    const env = this._environment as Environment<TID>;
 
     if (!env.systemId || !env.adminId || !env.memberId) {
       throw new Error(
@@ -385,9 +297,7 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
         fullId: env.systemId,
         type: MemberType.System,
         username: env.get('SYSTEM_USERNAME') ?? 'system',
-        email:
-          env.get('SYSTEM_EMAIL') ??
-          `system@${env.emailSender.split('@')[1] ?? 'brightchain.org'}`,
+        email: env.systemEmail.email,
         roleId: env.systemRoleId ?? generateId(),
         userRoleId: env.systemUserRoleId ?? generateId(),
         roleName: 'System',
@@ -402,9 +312,7 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
         fullId: env.adminId,
         type: MemberType.User,
         username: env.get('ADMIN_USERNAME') ?? 'admin',
-        email:
-          env.get('ADMIN_EMAIL') ??
-          `admin@${env.emailSender.split('@')[1] ?? 'brightchain.org'}`,
+        email: env.adminEmail.email,
         roleId: env.adminRoleId ?? generateId(),
         userRoleId: env.adminUserRoleId ?? generateId(),
         roleName: 'Admin',
@@ -419,9 +327,7 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
         fullId: env.memberId,
         type: MemberType.User,
         username: env.get('MEMBER_USERNAME') ?? 'member',
-        email:
-          env.get('MEMBER_EMAIL') ??
-          `member@${env.emailSender.split('@')[1] ?? 'brightchain.org'}`,
+        email: env.memberEmail.email,
         roleId: env.memberRoleId ?? generateId(),
         userRoleId: env.memberUserRoleId ?? generateId(),
         roleName: 'Member',
