@@ -5,8 +5,8 @@
     "declaration": true,
     "declarationMap": true,
     "composite": true,
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],

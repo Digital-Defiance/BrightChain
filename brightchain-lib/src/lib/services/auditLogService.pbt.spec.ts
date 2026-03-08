@@ -137,6 +137,11 @@ function createAuditMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
     saveOperationalState: jest.fn(noop),
     getOperationalState: jest.fn(nullAsync),
     withTransaction: jest.fn(async <R>(fn: () => Promise<R>) => fn()),
+    saveBanRecord: jest.fn(async () => {}),
+    deleteBanRecord: jest.fn(async () => {}),
+    getBanRecord: jest.fn(async () => null),
+    getAllBanRecords: jest.fn(async () => []),
+    getMemberAdmissionProposerId: jest.fn(async () => null),
     isAvailable: jest.fn(async () => true),
   };
 }

@@ -251,8 +251,6 @@ export function getBrightChainI18nEngine(): I18nEngine {
     Site: CoreConstants.Site,
     SiteTagline: CoreConstants.SiteTagline,
     SiteDescription: CoreConstants.SiteDescription,
-    SiteEmailDomain: CoreConstants.SiteEmailDomain,
-    SiteHostname: CoreConstants.SiteHostname,
     EmailTokenResendIntervalMinutes:
       CoreConstants.EmailTokenResendIntervalMinutes,
   };

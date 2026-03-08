@@ -29,6 +29,14 @@ export enum QuorumErrorType {
   MissingAttachment = 'MISSING_ATTACHMENT',
   AttachmentNotRetrievable = 'ATTACHMENT_NOT_RETRIEVABLE',
 
+  // Ban mechanism errors
+  CannotBanSelf = 'CANNOT_BAN_SELF',
+  MemberAlreadyBanned = 'MEMBER_ALREADY_BANNED',
+  MemberNotBanned = 'MEMBER_NOT_BANNED',
+  NewMemberCannotProposeBan = 'NEW_MEMBER_CANNOT_PROPOSE_BAN',
+  BanCoolingPeriodNotElapsed = 'BAN_COOLING_PERIOD_NOT_ELAPSED',
+  InvalidBanRecordSignatures = 'INVALID_BAN_RECORD_SIGNATURES',
+
   // Share redistribution errors
   RedistributionFailed = 'REDISTRIBUTION_FAILED',
   InsufficientSharesForReconstruction = 'INSUFFICIENT_SHARES_FOR_RECONSTRUCTION',

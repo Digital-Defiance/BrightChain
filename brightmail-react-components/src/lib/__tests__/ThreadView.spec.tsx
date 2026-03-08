@@ -2,9 +2,10 @@
  * Unit tests for ThreadView component.
  *
  * Tests: thread load and display, mark as read on open, reply/forward
- * button behavior, delete from thread, error state with back link.
+ * button behavior (now via openCompose context), delete from thread,
+ * error state with back link, collapsible messages, inline reply box.
  *
- * Requirements: 5.1, 5.2, 5.3, 5.6, 5.7
+ * Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 7.3, 8.6
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -94,6 +95,21 @@ jest.mock('../hooks/useEmailApi', () => ({
     markAsRead: mockMarkAsRead,
     deleteEmail: mockDeleteEmail,
     getUnreadCount: mockGetUnreadCount,
+  }),
+}));
+
+const mockOpenCompose = jest.fn();
+
+jest.mock('../BrightMailContext', () => ({
+  useBrightMail: () => ({
+    openCompose: mockOpenCompose,
+    sidebarOpen: true,
+    setSidebarOpen: jest.fn(),
+    composeModal: { status: 'closed' },
+    minimizeCompose: jest.fn(),
+    closeCompose: jest.fn(),
+    selectedEmailId: null,
+    setSelectedEmailId: jest.fn(),
   }),
 }));
 
@@ -196,11 +212,12 @@ describe('ThreadView', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockNavigate.mockClear();
+    mockOpenCompose.mockClear();
   });
 
   /**
-   * Requirement 5.1: Thread load and display in chronological order
-   * Requirement 5.2: Each message shows sender, To, Cc, date, subject, body
+   * Requirement 6.1, 6.3: Thread load and display in chronological order
+   * with collapsible messages — last message expanded, others collapsed.
    */
   it('fetches and displays thread emails in chronological order', async () => {
     const emails = [
@@ -231,10 +248,62 @@ describe('ThreadView', () => {
       'thread-message-msg-2',
     );
 
-    // Verify message content
+    // Verify sender name is visible in headers of both messages
     expect(screen.getAllByText('Alice').length).toBeGreaterThanOrEqual(1);
+    // Bob and Carol are in expanded content — only visible in the last (expanded) message
     expect(screen.getAllByText(/Bob/).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/Carol/).length).toBeGreaterThanOrEqual(1);
+  });
+
+  /**
+   * Requirement 6.1, 6.3, 8.6: Collapse state and aria-expanded
+   */
+  it('renders last message expanded and earlier messages collapsed with aria-expanded', async () => {
+    const emails = [
+      makeThreadEmail('msg-1', true, 'Hello', '2024-06-15T10:00:00Z'),
+      makeThreadEmail('msg-2', true, 'Re: Hello', '2024-06-16T10:00:00Z'),
+    ];
+    mockedApi.getEmailThread.mockResolvedValue(emails);
+    mockedApi.markAsRead.mockResolvedValue({} as any);
+
+    await act(async () => {
+      render(<ThreadView />);
+    });
+
+    // msg-1 (earlier) should be collapsed
+    const msg1 = screen.getByTestId('thread-message-msg-1');
+    expect(msg1.getAttribute('aria-expanded')).toBe('false');
+
+    // msg-2 (most recent) should be expanded
+    const msg2 = screen.getByTestId('thread-message-msg-2');
+    expect(msg2.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  /**
+   * Requirement 6.2: Click collapsed message to expand it
+   */
+  it('expands a collapsed message when its header is clicked', async () => {
+    const emails = [
+      makeThreadEmail('msg-1', true, 'Hello', '2024-06-15T10:00:00Z'),
+      makeThreadEmail('msg-2', true, 'Re: Hello', '2024-06-16T10:00:00Z'),
+    ];
+    mockedApi.getEmailThread.mockResolvedValue(emails);
+    mockedApi.markAsRead.mockResolvedValue({} as any);
+
+    await act(async () => {
+      render(<ThreadView />);
+    });
+
+    // msg-1 starts collapsed
+    const msg1 = screen.getByTestId('thread-message-msg-1');
+    expect(msg1.getAttribute('aria-expanded')).toBe('false');
+
+    // Click the header to expand
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('thread-header-msg-1'));
+    });
+
+    expect(msg1.getAttribute('aria-expanded')).toBe('true');
   });
 
   /**
@@ -263,8 +332,8 @@ describe('ThreadView', () => {
    */
   it('deletes an email from the thread after confirmation', async () => {
     const emails = [
-      makeThreadEmail('msg-del-1', true),
-      makeThreadEmail('msg-del-2', true),
+      makeThreadEmail('msg-del-1', true, 'Hello', '2024-06-15T10:00:00Z'),
+      makeThreadEmail('msg-del-2', true, 'Re: Hello', '2024-06-16T10:00:00Z'),
     ];
     mockedApi.getEmailThread.mockResolvedValue(emails);
     mockedApi.markAsRead.mockResolvedValue({} as any);
@@ -274,9 +343,9 @@ describe('ThreadView', () => {
       render(<ThreadView />);
     });
 
-    // Click delete on first message
+    // msg-del-2 is the most recent (expanded), click delete on it
     await act(async () => {
-      fireEvent.click(screen.getByTestId('delete-btn-msg-del-1'));
+      fireEvent.click(screen.getByTestId('delete-btn-msg-del-2'));
     });
 
     // Confirm dialog should appear
@@ -291,15 +360,15 @@ describe('ThreadView', () => {
       fireEvent.click(dialogConfirmBtn!);
     });
 
-    expect(mockedApi.deleteEmail).toHaveBeenCalledWith('msg-del-1');
+    expect(mockedApi.deleteEmail).toHaveBeenCalledWith('msg-del-2');
 
     // Email removed from view
     await waitFor(() => {
       expect(
-        screen.queryByTestId('thread-message-msg-del-1'),
+        screen.queryByTestId('thread-message-msg-del-2'),
       ).not.toBeInTheDocument();
     });
-    expect(screen.getByTestId('thread-message-msg-del-2')).toBeInTheDocument();
+    expect(screen.getByTestId('thread-message-msg-del-1')).toBeInTheDocument();
   });
 
   /**
@@ -321,9 +390,9 @@ describe('ThreadView', () => {
   });
 
   /**
-   * Requirement 5.4: Reply button opens ComposeView pre-filled for reply
+   * Requirement 6.6: Reply button calls openCompose with reply prefill
    */
-  it('opens compose view for reply when reply button is clicked', async () => {
+  it('calls openCompose with reply prefill when reply button is clicked', async () => {
     const emails = [makeThreadEmail('msg-reply-1', true, 'Hello')];
     mockedApi.getEmailThread.mockResolvedValue(emails);
     mockedApi.markAsRead.mockResolvedValue({} as any);
@@ -336,20 +405,21 @@ describe('ThreadView', () => {
       fireEvent.click(screen.getByTestId('reply-btn-msg-reply-1'));
     });
 
-    // ComposeView should be rendered with reply pre-fill
-    expect(screen.getByTestId('compose-form')).toBeInTheDocument();
-    // To field should have the original sender
-    const toField = screen.getByLabelText('BrightMail_Compose_To');
-    expect(toField).toHaveValue('alice@example.com');
-    // Subject should have Re: prefix
-    const subjectField = screen.getByLabelText('BrightMail_Compose_Subject');
-    expect(subjectField).toHaveValue('Re: Hello');
+    // openCompose should be called with reply prefill
+    expect(mockOpenCompose).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mode: 'reply',
+        to: ['alice@example.com'],
+        subject: 'Re: Hello',
+        inReplyTo: 'msg-reply-1',
+      }),
+    );
   });
 
   /**
-   * Requirement 5.5: Forward button opens ComposeView pre-filled for forward
+   * Requirement 6.6: Forward button calls openCompose with forward prefill
    */
-  it('opens compose view for forward when forward button is clicked', async () => {
+  it('calls openCompose with forward prefill when forward button is clicked', async () => {
     const emails = [makeThreadEmail('msg-fwd-1', true, 'Hello')];
     mockedApi.getEmailThread.mockResolvedValue(emails);
     mockedApi.markAsRead.mockResolvedValue({} as any);
@@ -362,20 +432,37 @@ describe('ThreadView', () => {
       fireEvent.click(screen.getByTestId('forward-btn-msg-fwd-1'));
     });
 
-    // ComposeView should be rendered with forward pre-fill
-    expect(screen.getByTestId('compose-form')).toBeInTheDocument();
-    // To field should be empty
-    const toField = screen.getByLabelText('BrightMail_Compose_To');
-    expect(toField).toHaveValue('');
-    // Subject should have Fwd: prefix
-    const subjectField = screen.getByLabelText('BrightMail_Compose_Subject');
-    expect(subjectField).toHaveValue('Fwd: Hello');
+    // openCompose should be called with forward prefill
+    expect(mockOpenCompose).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mode: 'forward',
+        to: [],
+        subject: 'Fwd: Hello',
+      }),
+    );
   });
 
   /**
-   * Loading state
+   * Requirement 6.5: Inline reply box below most recent message
    */
-  it('displays loading state while fetching thread', async () => {
+  it('displays inline reply box below the most recent message', async () => {
+    const emails = [makeThreadEmail('msg-1', true, 'Hello')];
+    mockedApi.getEmailThread.mockResolvedValue(emails);
+    mockedApi.markAsRead.mockResolvedValue({} as any);
+
+    await act(async () => {
+      render(<ThreadView />);
+    });
+
+    expect(screen.getByTestId('inline-reply-box')).toBeInTheDocument();
+    expect(screen.getByTestId('inline-reply-input')).toBeInTheDocument();
+    expect(screen.getByTestId('inline-reply-send')).toBeInTheDocument();
+  });
+
+  /**
+   * Loading state — skeleton loaders (Requirement 3.9, 7.4)
+   */
+  it('displays skeleton loaders while fetching thread', async () => {
     let resolveThread!: (value: any) => void;
     mockedApi.getEmailThread.mockReturnValue(
       new Promise((resolve) => {
@@ -389,8 +476,47 @@ describe('ThreadView', () => {
 
     expect(screen.getByTestId('thread-loading')).toBeInTheDocument();
 
+    // Should render 3 skeleton message blocks
+    expect(screen.getByTestId('thread-skeleton-0')).toBeInTheDocument();
+    expect(screen.getByTestId('thread-skeleton-1')).toBeInTheDocument();
+    expect(screen.getByTestId('thread-skeleton-2')).toBeInTheDocument();
+
     await act(async () => {
       resolveThread([]);
     });
+  });
+
+  /**
+   * Requirement 6.4: Expanded messages show action toolbar with Tooltip labels
+   */
+  it('shows action toolbar with Reply, Forward, Delete on expanded messages', async () => {
+    const emails = [makeThreadEmail('msg-1', true, 'Hello')];
+    mockedApi.getEmailThread.mockResolvedValue(emails);
+    mockedApi.markAsRead.mockResolvedValue({} as any);
+
+    await act(async () => {
+      render(<ThreadView />);
+    });
+
+    // Single message is the most recent, so it's expanded
+    expect(screen.getByTestId('reply-btn-msg-1')).toBeInTheDocument();
+    expect(screen.getByTestId('forward-btn-msg-1')).toBeInTheDocument();
+    expect(screen.getByTestId('delete-btn-msg-1')).toBeInTheDocument();
+  });
+
+  /**
+   * Requirement 6.3: Single-message thread renders expanded (no collapse)
+   */
+  it('renders a single-message thread fully expanded', async () => {
+    const emails = [makeThreadEmail('msg-single', true, 'Solo Message')];
+    mockedApi.getEmailThread.mockResolvedValue(emails);
+    mockedApi.markAsRead.mockResolvedValue({} as any);
+
+    await act(async () => {
+      render(<ThreadView />);
+    });
+
+    const msg = screen.getByTestId('thread-message-msg-single');
+    expect(msg.getAttribute('aria-expanded')).toBe('true');
   });
 });

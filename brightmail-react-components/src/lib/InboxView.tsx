@@ -20,13 +20,16 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { FC, memo, useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // EmailApiClient is provided by the consuming application (brightchain-react)
 // via tsconfig path mapping: @brightchain/brightchain-react/services/emailApi
+import { useBrightMail } from './BrightMailContext';
 import { buildDeleteErrorMessage, bulkDelete } from './bulkActions';
 import ConfirmDialog from './ConfirmDialog';
-import EmailListTable from './EmailListTable';
+import EmailList from './EmailList';
 import { useEmailApi } from './hooks/useEmailApi';
 
 // ─── Scroll position preservation ─────────────────────────────────────
@@ -98,9 +101,17 @@ const INITIAL_STATE: InboxState = {
   selectedIds: new Set(),
 };
 
-const InboxView: FC = () => {
+export interface InboxViewProps {
+  /** Mail folder to display. Defaults to 'inbox'. */
+  folder?: 'inbox' | 'sent' | 'drafts' | 'trash';
+}
+
+const InboxView: FC<InboxViewProps> = ({ folder = 'inbox' }) => {
   const { tBranded: t } = useI18n();
   const emailApi = useEmailApi();
+  const navigate = useNavigate();
+  const { setSelectedEmailId } = useBrightMail();
+  const isWideDesktop = useMediaQuery('(min-width:1280px)');
 
   const [state, setState] = useState<InboxState>(INITIAL_STATE);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -296,6 +307,18 @@ const InboxView: FC = () => {
 
   const hasSelection = state.selectedIds.size > 0;
 
+  // ─── Email click: wide → reading pane, narrow → navigate ──────────
+  const handleEmailClick = useCallback(
+    (messageId: string) => {
+      if (isWideDesktop) {
+        setSelectedEmailId(messageId);
+      } else {
+        navigate(`/brightmail/thread/${encodeURIComponent(messageId)}`);
+      }
+    },
+    [isWideDesktop, setSelectedEmailId, navigate],
+  );
+
   // ─── Render ─────────────────────────────────────────────────────────
 
   // Loading skeleton
@@ -408,11 +431,13 @@ const InboxView: FC = () => {
         sx={{ maxHeight: '70vh', overflowY: 'auto' }}
         data-testid="inbox-scroll-container"
       >
-        <EmailListTable
+        <EmailList
           emails={state.emails}
           selectedIds={state.selectedIds}
           onToggleSelect={handleToggleSelect}
           onToggleSelectAll={handleToggleSelectAll}
+          onEmailClick={handleEmailClick}
+          loading={false}
         />
         {state.loadingMore && (
           <Box display="flex" justifyContent="center" py={2}>

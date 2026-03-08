@@ -1,3 +1,4 @@
+import { CoreConstants } from '../../constants';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { EmailErrorType } from '../../enumerations/messaging/emailErrorType';
@@ -309,6 +310,7 @@ describe('EmailMessageService', () => {
   describe('DEFAULT_EMAIL_SERVICE_CONFIG', () => {
     it('should have all required fields with correct default values', () => {
       expect(DEFAULT_EMAIL_SERVICE_CONFIG).toEqual({
+        canonicalDomain: 'example.com',
         maxAttachmentSize: 25 * 1024 * 1024,
         maxMessageSize: 50 * 1024 * 1024,
         inlinePartThreshold: 64 * 1024,
@@ -366,7 +368,7 @@ describe('EmailMessageService', () => {
         mockMessageCBLService,
         metadataStoreMock,
         gossipServiceMock,
-        { nodeId: 'test-node.brightchain.org' },
+        { nodeId: 'test-node.brightchain.org', canonicalDomain: 'example.com' },
       );
     });
 
@@ -1461,6 +1463,318 @@ describe('EmailMessageService', () => {
       };
 
       await expect(service.sendEmail(email)).rejects.toThrow(EmailError);
+    });
+  });
+
+  // ─── Mixed Internal/External Recipient Routing (Requirement 1.4) ──────
+
+  describe('mixed internal/external recipient routing', () => {
+    const CANONICAL_DOMAIN = 'brightchain.org';
+    let service: EmailMessageService;
+    let storeMock: jest.Mock;
+    let announceMessageMock: jest.Mock;
+
+    beforeEach(() => {
+      storeMock = jest.fn().mockResolvedValue(undefined);
+      announceMessageMock = jest.fn().mockResolvedValue(undefined);
+
+      const metadataStoreMock: IEmailMetadataStore = {
+        store: storeMock,
+        get: jest.fn(),
+        delete: jest.fn(),
+        update: jest.fn(),
+        queryInbox: jest.fn(),
+        getUnreadCount: jest.fn(),
+        markAsRead: jest.fn(),
+        getThread: jest.fn(),
+        getRootMessage: jest.fn(),
+      };
+
+      const gossipServiceMock = {
+        announceBlock: jest.fn(),
+        announceRemoval: jest.fn(),
+        handleAnnouncement: jest.fn(),
+        onAnnouncement: jest.fn(),
+        offAnnouncement: jest.fn(),
+        getPendingAnnouncements: jest.fn().mockReturnValue([]),
+        flushAnnouncements: jest.fn(),
+        start: jest.fn(),
+        stop: jest.fn(),
+        getConfig: jest.fn(),
+        announceMessage: announceMessageMock,
+        sendDeliveryAck: jest.fn(),
+        onMessageDelivery: jest.fn(),
+        offMessageDelivery: jest.fn(),
+        onDeliveryAck: jest.fn(),
+        offDeliveryAck: jest.fn(),
+      } as unknown as IGossipService;
+
+      service = new EmailMessageService(
+        {} as MessageCBLService,
+        metadataStoreMock,
+        gossipServiceMock,
+        { canonicalDomain: CANONICAL_DOMAIN },
+      );
+    });
+
+    it('should deliver all-internal recipients via gossip without gatewayOutbound', async () => {
+      const email: IEmailInput = {
+        from: createMailbox('sender', CANONICAL_DOMAIN),
+        to: [
+          createMailbox('alice', CANONICAL_DOMAIN),
+          createMailbox('bob', CANONICAL_DOMAIN),
+        ],
+        subject: 'Internal only',
+        textBody: 'Hello internal team',
+      };
+
+      const result = await service.sendEmail(email);
+      expect(result.success).toBe(true);
+
+      // Should have exactly one announceMessage call for internal To/CC
+      expect(announceMessageMock).toHaveBeenCalledTimes(1);
+      const call = announceMessageMock.mock.calls[0][1];
+      expect(call.recipientIds).toEqual([
+        `alice@${CANONICAL_DOMAIN}`,
+        `bob@${CANONICAL_DOMAIN}`,
+      ]);
+      expect(call.ackRequired).toBe(true);
+      expect(call.gatewayOutbound).toBeUndefined();
+    });
+
+    it('should route all-external recipients via gateway-outbound gossip', async () => {
+      const email: IEmailInput = {
+        from: createMailbox('sender', CANONICAL_DOMAIN),
+        to: [
+          createMailbox('ext1', 'gmail.com'),
+          createMailbox('ext2', 'yahoo.com'),
+        ],
+        subject: 'External only',
+        textBody: 'Hello external world',
+      };
+
+      const result = await service.sendEmail(email);
+      expect(result.success).toBe(true);
+
+      // Should have exactly one announceMessage call for external To/CC
+      expect(announceMessageMock).toHaveBeenCalledTimes(1);
+      const call = announceMessageMock.mock.calls[0][1];
+      expect(call.recipientIds).toEqual([
+        'ext1@gmail.com',
+        'ext2@yahoo.com',
+      ]);
+      expect(call.gatewayOutbound).toBe(true);
+      expect(call.ackRequired).toBe(false);
+    });
+
+    it('should split mixed To/CC: internal via gossip (ackRequired), external via gateway', async () => {
+      const email: IEmailInput = {
+        from: createMailbox('sender', CANONICAL_DOMAIN),
+        to: [
+          createMailbox('alice', CANONICAL_DOMAIN),
+          createMailbox('ext1', 'gmail.com'),
+        ],
+        cc: [
+          createMailbox('bob', CANONICAL_DOMAIN),
+          createMailbox('ext2', 'outlook.com'),
+        ],
+        subject: 'Mixed recipients',
+        textBody: 'Hello everyone',
+      };
+
+      const result = await service.sendEmail(email);
+      expect(result.success).toBe(true);
+
+      // Two announceMessage calls: one for internal To/CC, one for external To/CC
+      expect(announceMessageMock).toHaveBeenCalledTimes(2);
+
+      const calls = announceMessageMock.mock.calls.map((c) => c[1]);
+
+      // Internal To/CC call
+      const internalCall = calls.find((c) => !c.gatewayOutbound);
+      expect(internalCall).toBeDefined();
+      expect(internalCall.recipientIds).toEqual(
+        expect.arrayContaining([
+          `alice@${CANONICAL_DOMAIN}`,
+          `bob@${CANONICAL_DOMAIN}`,
+        ]),
+      );
+      expect(internalCall.ackRequired).toBe(true);
+
+      // External To/CC call
+      const externalCall = calls.find((c) => c.gatewayOutbound === true);
+      expect(externalCall).toBeDefined();
+      expect(externalCall.recipientIds).toEqual(
+        expect.arrayContaining([
+          'ext1@gmail.com',
+          'ext2@outlook.com',
+        ]),
+      );
+      expect(externalCall.ackRequired).toBe(false);
+    });
+
+    it('should handle mixed BCC: internal BCC via gossip, external BCC via gateway', async () => {
+      const email: IEmailInput = {
+        from: createMailbox('sender', CANONICAL_DOMAIN),
+        to: [createMailbox('alice', CANONICAL_DOMAIN)],
+        bcc: [
+          createMailbox('bcc-internal', CANONICAL_DOMAIN),
+          createMailbox('bcc-external', 'proton.me'),
+        ],
+        subject: 'BCC test',
+        textBody: 'Secret copies',
+      };
+
+      const result = await service.sendEmail(email);
+      expect(result.success).toBe(true);
+
+      // Calls: 1 for To (internal), 1 for internal BCC, 1 for external BCC = 3
+      expect(announceMessageMock).toHaveBeenCalledTimes(3);
+
+      const calls = announceMessageMock.mock.calls.map((c) => c[1]);
+
+      // Internal BCC: individual gossip, ackRequired=true, no gatewayOutbound
+      const internalBccCall = calls.find(
+        (c) =>
+          c.recipientIds.length === 1 &&
+          c.recipientIds[0] === `bcc-internal@${CANONICAL_DOMAIN}`,
+      );
+      expect(internalBccCall).toBeDefined();
+      expect(internalBccCall.ackRequired).toBe(true);
+      expect(internalBccCall.gatewayOutbound).toBeUndefined();
+
+      // External BCC: individual gateway-outbound gossip
+      const externalBccCall = calls.find(
+        (c) =>
+          c.recipientIds.length === 1 &&
+          c.recipientIds[0] === 'bcc-external@proton.me',
+      );
+      expect(externalBccCall).toBeDefined();
+      expect(externalBccCall.gatewayOutbound).toBe(true);
+      expect(externalBccCall.ackRequired).toBe(false);
+    });
+
+    it('should handle mixed To + BCC with both internal and external in each', async () => {
+      const email: IEmailInput = {
+        from: createMailbox('sender', CANONICAL_DOMAIN),
+        to: [
+          createMailbox('to-internal', CANONICAL_DOMAIN),
+          createMailbox('to-external', 'gmail.com'),
+        ],
+        bcc: [
+          createMailbox('bcc-internal', CANONICAL_DOMAIN),
+          createMailbox('bcc-external', 'yahoo.com'),
+        ],
+        subject: 'Full mix',
+        textBody: 'Complex routing',
+      };
+
+      const result = await service.sendEmail(email);
+      expect(result.success).toBe(true);
+
+      // Calls: internal To/CC (1) + external To/CC (1) + internal BCC (1) + external BCC (1) = 4
+      expect(announceMessageMock).toHaveBeenCalledTimes(4);
+
+      const calls = announceMessageMock.mock.calls.map((c) => c[1]);
+
+      // Internal To
+      const internalToCall = calls.find(
+        (c) =>
+          !c.gatewayOutbound &&
+          c.recipientIds.includes(`to-internal@${CANONICAL_DOMAIN}`) &&
+          c.recipientIds.length > 0 &&
+          !c.recipientIds.includes(`bcc-internal@${CANONICAL_DOMAIN}`),
+      );
+      expect(internalToCall).toBeDefined();
+      expect(internalToCall.ackRequired).toBe(true);
+
+      // External To
+      const externalToCall = calls.find(
+        (c) =>
+          c.gatewayOutbound === true &&
+          c.recipientIds.includes('to-external@gmail.com'),
+      );
+      expect(externalToCall).toBeDefined();
+      expect(externalToCall.ackRequired).toBe(false);
+
+      // Internal BCC
+      const internalBccCall = calls.find(
+        (c) =>
+          c.recipientIds.length === 1 &&
+          c.recipientIds[0] === `bcc-internal@${CANONICAL_DOMAIN}`,
+      );
+      expect(internalBccCall).toBeDefined();
+      expect(internalBccCall.ackRequired).toBe(true);
+      expect(internalBccCall.gatewayOutbound).toBeUndefined();
+
+      // External BCC
+      const externalBccCall = calls.find(
+        (c) =>
+          c.recipientIds.length === 1 &&
+          c.recipientIds[0] === 'bcc-external@yahoo.com',
+      );
+      expect(externalBccCall).toBeDefined();
+      expect(externalBccCall.gatewayOutbound).toBe(true);
+      expect(externalBccCall.ackRequired).toBe(false);
+    });
+
+    describe('partitionRecipients', () => {
+      it('should split mailboxes by domain (case-insensitive)', () => {
+        const mailboxes = [
+          createMailbox('alice', CANONICAL_DOMAIN),
+          createMailbox('bob', 'BRIGHTCHAIN.ORG'),
+          createMailbox('charlie', 'BrightChain.Org'),
+          createMailbox('ext1', 'gmail.com'),
+          createMailbox('ext2', 'YAHOO.COM'),
+        ];
+
+        const { internal, external } =
+          service.partitionRecipients(mailboxes);
+
+        expect(internal).toHaveLength(3);
+        expect(internal.map((m) => m.localPart)).toEqual([
+          'alice',
+          'bob',
+          'charlie',
+        ]);
+
+        expect(external).toHaveLength(2);
+        expect(external.map((m) => m.localPart)).toEqual(['ext1', 'ext2']);
+      });
+
+      it('should return all internal when all match canonical domain', () => {
+        const mailboxes = [
+          createMailbox('a', CANONICAL_DOMAIN),
+          createMailbox('b', CANONICAL_DOMAIN),
+        ];
+
+        const { internal, external } =
+          service.partitionRecipients(mailboxes);
+
+        expect(internal).toHaveLength(2);
+        expect(external).toHaveLength(0);
+      });
+
+      it('should return all external when none match canonical domain', () => {
+        const mailboxes = [
+          createMailbox('x', 'other.com'),
+          createMailbox('y', 'another.org'),
+        ];
+
+        const { internal, external } =
+          service.partitionRecipients(mailboxes);
+
+        expect(internal).toHaveLength(0);
+        expect(external).toHaveLength(2);
+      });
+
+      it('should return empty arrays for empty input', () => {
+        const { internal, external } =
+          service.partitionRecipients([]);
+
+        expect(internal).toHaveLength(0);
+        expect(external).toHaveLength(0);
+      });
     });
   });
 });

@@ -22,6 +22,8 @@ export type AuditEventType =
   | 'epoch_created'
   | 'member_added'
   | 'member_removed'
+  | 'member_banned'
+  | 'member_unbanned'
   | 'transition_ceremony_started'
   | 'transition_ceremony_completed'
   | 'transition_ceremony_failed'

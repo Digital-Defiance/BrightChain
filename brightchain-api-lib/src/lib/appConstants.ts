@@ -11,7 +11,7 @@ import { LocalhostConstants } from '@digitaldefiance/node-express-suite';
  * - Validation regexes (PasswordRegex, UsernameRegex, MnemonicRegex, etc.)
  * - Token lengths and expirations (EmailTokenLength, EmailTokenExpiration, etc.)
  * - Cryptographic constants (ECIES, PBKDF2, BACKUP_CODES, etc.)
- * - Site configuration (Site, SiteHostname, SiteEmailDomain, etc.)
+ * - Site configuration (Site, etc.)
  */
 export const AppConstants: typeof LocalhostConstants & {
   HmacRegex: RegExp;

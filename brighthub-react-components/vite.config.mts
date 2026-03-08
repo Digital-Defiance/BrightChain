@@ -9,6 +9,7 @@ import dts from 'vite-plugin-dts';
 export default defineConfig(() => ({
   root: import.meta.dirname,
   cacheDir: '../node_modules/.vite/brighthub-react-components',
+
   plugins: [
     react(),
     nxViteTsPaths(),
@@ -43,7 +44,22 @@ export default defineConfig(() => ({
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      external: [
+        'react',
+        'react-dom',
+        'react/jsx-runtime',
+        /^@brightchain\//,
+        /^@digitaldefiance\//,
+        /^@awesome\.me\//,
+        /^@mui\//,
+        /^@emotion\//,
+        /^@fortawesome\//,
+        /^@scure\//,
+        /^@noble\//,
+        'crypto',
+        'fs',
+        'path',
+      ],
     },
   },
 }));
