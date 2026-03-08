@@ -27,16 +27,12 @@ import { WRAPPED_KEY } from '@digitaldefiance/node-ecies-lib';
 import { createExpressConstants } from '@digitaldefiance/node-express-suite';
 import { IApiConstants } from './interfaces/api-constants';
 
-const expressConsts = createExpressConstants(
-  'brightchain.org',
-  'brightchain.org',
-  {
-    Site: 'BrightChain',
-    SiteTagline: 'Privacy. Participation. Power.',
-    SiteDescription:
-      'Your files are broken into blocks and mixed with random data using XOR operations, making them appear completely random while maintaining perfect security. From homomorphic voting to brokered anonymity, from distributed file storage to quorum-based governance, BrightChain offers everything needed for the next generation of decentralized applications.',
-  },
-);
+const expressConsts = createExpressConstants({
+  Site: 'BrightChain',
+  SiteTagline: 'Privacy. Participation. Power.',
+  SiteDescription:
+    'Your files are broken into blocks and mixed with random data using XOR operations, making them appear completely random while maintaining perfect security. From homomorphic voting to brokered anonymity, from distributed file storage to quorum-based governance, BrightChain offers everything needed for the next generation of decentralized applications.',
+});
 
 /**
  * API Constants extending from @digitaldefiance/node-express-suite

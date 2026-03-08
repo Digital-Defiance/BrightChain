@@ -95,12 +95,23 @@ test.describe('BrightMail Menu & Navigation', () => {
       timeout: 10000,
     });
 
-    // Verify inbox content is visible
+    // Verify inbox content is visible (must NOT be an error state)
+    // First, ensure no error indicator is shown — SERVICE_UNAVAILABLE should fail the test
+    const inboxError = authenticatedPage.locator('[data-testid="inbox-error"]');
+    const errorVisible = await inboxError
+      .isVisible({ timeout: 3000 })
+      .catch(() => false);
+    if (errorVisible) {
+      const errorText = await inboxError.textContent();
+      throw new Error(
+        `Inbox failed to load — error state displayed: ${errorText}`,
+      );
+    }
+
     const inboxIndicator = authenticatedPage
       .getByText(/inbox/i)
       .or(authenticatedPage.locator('[data-testid="inbox-loading"]'))
-      .or(authenticatedPage.locator('[data-testid="inbox-empty"]'))
-      .or(authenticatedPage.locator('[data-testid="inbox-error"]'));
+      .or(authenticatedPage.locator('[data-testid="inbox-empty"]'));
 
     await expect(inboxIndicator.first()).toBeVisible({
       timeout: 15000,
@@ -515,12 +526,22 @@ test.describe('BrightMail Empty Inbox', () => {
       // If the user has emails, the table is acceptable
       await expect(emailTable).toBeVisible();
     } else {
-      // Loading or error state
+      // Only loading state is acceptable — error state means the service is broken
+      const error = authenticatedPage.locator('[data-testid="inbox-error"]');
+      const errorVisible = await error
+        .isVisible({ timeout: 3000 })
+        .catch(() => false);
+      if (errorVisible) {
+        const errorText = await error.textContent();
+        throw new Error(
+          `Inbox failed to load — error state displayed: ${errorText}`,
+        );
+      }
+
       const loading = authenticatedPage.locator(
         '[data-testid="inbox-loading"]',
       );
-      const error = authenticatedPage.locator('[data-testid="inbox-error"]');
-      await expect(loading.or(error).or(emptyState)).toBeVisible({
+      await expect(loading.or(emptyState)).toBeVisible({
         timeout: 15000,
       });
     }

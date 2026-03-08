@@ -22,6 +22,7 @@ import { RedistributionJournalEntry } from '../redistributionJournalEntry';
 import { StatuteOfLimitationsConfig } from '../statuteConfig';
 import { Vote } from '../vote';
 import { IQuorumMember } from './quorumService';
+import { IBanRecord } from '../network/banRecord';
 
 /**
  * Abstraction over BrightDb with a dedicated "quorum-system" pool.
@@ -267,4 +268,40 @@ export interface IQuorumDatabase<TID extends PlatformID = Uint8Array> {
    * @returns True if the database is available and healthy
    */
   isAvailable(): Promise<boolean>;
+
+  // === Ban Records ===
+
+  /**
+   * Persist a ban record.
+   * @param record - The ban record to save
+   */
+  saveBanRecord(record: IBanRecord<TID>): Promise<void>;
+
+  /**
+   * Delete a ban record (used when unbanning a member).
+   * @param memberId - The banned member's ID
+   */
+  deleteBanRecord(memberId: TID): Promise<void>;
+
+  /**
+   * Retrieve a ban record by member ID.
+   * @param memberId - The member ID
+   * @returns The ban record, or null if not banned
+   */
+  getBanRecord(memberId: TID): Promise<IBanRecord<TID> | null>;
+
+  /**
+   * Get all active ban records.
+   * @returns Array of all active ban records
+   */
+  getAllBanRecords(): Promise<IBanRecord<TID>[]>;
+
+  /**
+   * Get the member ID of whoever proposed the admission of a given member.
+   * Returns null if the member was a founding member (no proposer).
+   * Used by BanProposalValidator for Sybil protection.
+   * @param memberId - The member whose admission proposer to look up
+   * @returns The proposer's member ID, or null
+   */
+  getMemberAdmissionProposerId(memberId: TID): Promise<TID | null>;
 }

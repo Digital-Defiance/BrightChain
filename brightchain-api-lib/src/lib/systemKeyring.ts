@@ -54,7 +54,7 @@ export class SystemKeyring implements IKeyring {
     }
 
     try {
-      const { SecureEnclaveKeyring } = await import('./secureEnclaveKeyring');
+      const { SecureEnclaveKeyring } = await import('./secureEnclaveKeyring.js');
       return await SecureEnclaveKeyring.isAvailable();
     } catch {
       return false;
@@ -123,7 +123,7 @@ export class SystemKeyring implements IKeyring {
       if (isMacOSAppleSilicon && this.useSecureEnclave !== false) {
         try {
           const { SecureEnclaveKeyring } = await import(
-            './secureEnclaveKeyring'
+            './secureEnclaveKeyring.js'
           );
           const isAvailable = await SecureEnclaveKeyring.isAvailable();
 

@@ -257,6 +257,19 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_QuorumError_TransactionFailed]: '数据库事务失败',
   [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
     '审计链完整性受损',
+  // Quorum Ban Mechanism Errors
+  [BrightChainStrings.Error_QuorumError_CannotBanSelf]:
+    '成员不能提议封禁自己',
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyBanned]:
+    '成员已被封禁',
+  [BrightChainStrings.Error_QuorumError_MemberNotBanned]:
+    '成员当前未被封禁',
+  [BrightChainStrings.Error_QuorumError_NewMemberCannotProposeBan]:
+    '在当前纪元中加入的成员不能提议封禁',
+  [BrightChainStrings.Error_QuorumError_BanCoolingPeriodNotElapsed]:
+    '封禁冷却期尚未结束',
+  [BrightChainStrings.Error_QuorumError_InvalidBanRecordSignatures]:
+    '封禁记录没有足够的有效法定人数签名',
   [BrightChainStrings.Error_IdentityValidationError_InvalidSignature]:
     '内容签名与声明的身份不匹配',
   [BrightChainStrings.Error_IdentityValidationError_UnregisteredAlias]:

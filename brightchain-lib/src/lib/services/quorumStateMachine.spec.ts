@@ -111,6 +111,11 @@ function createMockDatabase(): IQuorumDatabase<GuidV4Uint8Array> & {
     }),
     getOperationalState: jest.fn(async () => operationalState),
     withTransaction: jest.fn(async <R>(fn: () => Promise<R>) => fn()),
+    saveBanRecord: jest.fn(async () => {}),
+    deleteBanRecord: jest.fn(async () => {}),
+    getBanRecord: jest.fn(async () => null),
+    getAllBanRecords: jest.fn(async () => []),
+    getMemberAdmissionProposerId: jest.fn(async () => null),
     isAvailable: jest.fn(async () => true),
   };
 }

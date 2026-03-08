@@ -462,17 +462,33 @@ describe('CBL Controller API Integration Tests', () => {
             const cblData = generateCblData(seed);
             const cblBase64 = Buffer.from(cblData).toString('base64');
 
-            const response = await request(app).post('/api/cbl/store').send({
-              cblData: cblBase64,
-              durabilityLevel,
-            });
+            // Retry once on transient connection errors (ECONNRESET)
+            let response;
+            for (let attempt = 0; attempt < 2; attempt++) {
+              try {
+                response = await request(app).post('/api/cbl/store').send({
+                  cblData: cblBase64,
+                  durabilityLevel,
+                });
+                break;
+              } catch (err: unknown) {
+                const message =
+                  err instanceof Error ? err.message : String(err);
+                if (attempt === 0 && message.includes('ECONNRESET')) {
+                  // Wait briefly before retry
+                  await new Promise((r) => setTimeout(r, 50));
+                  continue;
+                }
+                throw err;
+              }
+            }
 
-            if (response.status !== 200) {
+            if (response!.status !== 200) {
               throw new Error(
-                `Store failed for seed=${seed} durability=${durabilityLevel}: status=${response.status} body=${JSON.stringify(response.body)}`,
+                `Store failed for seed=${seed} durability=${durabilityLevel}: status=${response!.status} body=${JSON.stringify(response!.body)}`,
               );
             }
-            expect(response.body.success).toBe(true);
+            expect(response!.body.success).toBe(true);
           },
         ),
         { numRuns: 15 },

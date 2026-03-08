@@ -1,13 +1,22 @@
+import {
+  faComment,
+  faDatabase,
+  faIdBadge,
+} from '@awesome.me/kit-a20d532681/icons/classic/solid';
+import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { motion } from 'framer-motion';
+import { JSX } from 'react';
 import { FaExternalLinkAlt } from 'react-icons/fa';
 import { SiNpm } from 'react-icons/si';
 import { useInView } from 'react-intersection-observer';
 import './Components.css';
 
 interface Feature {
-  title: string;
+  title?: string;
+  logo?: JSX.Element;
   description: string;
-  icon: string;
+  icon: string | JSX.Element;
   tech: string[];
   highlights: string[];
   category: 'Storage' | 'Cryptography' | 'Governance' | 'Network' | 'Identity';
@@ -16,6 +25,34 @@ interface Feature {
 }
 
 const features: Feature[] = [
+  {
+    logo: (
+      <img
+        src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightdb.png"
+        height="40"
+        width="187"
+      />
+    ),
+    icon: <FontAwesomeIcon icon={faDatabase} />,
+    description:
+      'MongoDB-competitive document database storing data on the Owner-Free Filesystem. Every document transparently stored as whitened blocks with TUPLE architecture for plausible deniability.',
+    tech: ['Document Store', 'ACID Transactions', 'Aggregation Pipeline'],
+    category: 'Storage',
+    highlights: [
+      'MongoDB-like API: collections, CRUD, queries, indexes, transactions',
+      '15 query operators: $eq, $ne, $gt, $gte, $lt, $lte, $in, $nin, $regex, $exists, $and, $or, $not, $nor, $elemMatch',
+      'Aggregation pipeline: $match, $group, $sort, $limit, $skip, $project, $unwind, $count, $addFields, $lookup',
+      'Single-field, compound, and unique indexes with B-tree structures',
+      'Multi-document ACID transactions with commit/abort and optimistic concurrency',
+      'Change streams for real-time insert/update/delete event subscriptions',
+      'Express REST middleware for drop-in API access to collections',
+      'TTL indexes for automatic document expiration',
+      'Schema validation with strict/moderate levels and default values',
+      'Full-text search with weighted fields and $text operator',
+      'Copy-on-write storage: blocks never deleted, only mappings updated',
+      'Every document stored as 3-block TUPLE (data + 2 randomizers) for plausible deniability',
+    ],
+  },
   {
     title: 'Owner-Free File System (OFFS)',
     icon: '🗄️',
@@ -49,7 +86,13 @@ const features: Feature[] = [
     ],
   },
   {
-    title: 'Email System',
+    logo: (
+      <img
+        src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightmail.png"
+        height="40"
+        width="187"
+      />
+    ),
     icon: '📧',
     description:
       'RFC 5322/2045 compliant email with threading, BCC privacy, attachments, inbox operations, and delivery tracking. Full email composition, sending, and retrieval built on messaging infrastructure.',
@@ -68,8 +111,14 @@ const features: Feature[] = [
     ],
   },
   {
-    title: 'Communication System',
-    icon: '💬',
+    logo: (
+      <img
+        src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightchat.png"
+        height="40"
+        width="187"
+      />
+    ),
+    icon: <FontAwesomeIcon icon={faComment} />,
     description:
       'Discord-competitive communication platform with Signal-grade end-to-end encryption. Direct messaging, group chats, and channels with real-time presence, typing indicators, and role-based permissions.',
     tech: ['E2E Encryption', 'WebSocket', 'Key Rotation', 'RBAC'],
@@ -87,7 +136,13 @@ const features: Feature[] = [
     ],
   },
   {
-    title: 'BrightPass Password Manager',
+    logo: (
+      <img
+        src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightpass.png"
+        height="40"
+        width="187"
+      />
+    ),
     icon: '🔑',
     description:
       '1Password-competitive password keychain with VCBL architecture for efficient encrypted credential storage. TOTP/2FA, breach detection, emergency access, and import from major password managers.',
@@ -107,7 +162,13 @@ const features: Feature[] = [
     ],
   },
   {
-    title: 'Homomorphic Voting System',
+    logo: (
+      <img
+        src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightvote.png"
+        height="40"
+        width="187"
+      />
+    ),
     icon: '🗳️',
     description:
       'Privacy-preserving elections using Paillier homomorphic encryption with ECDH-derived keys. Supports 15+ voting methods from simple plurality to complex ranked choice with government compliance features.',
@@ -123,6 +184,34 @@ const features: Feature[] = [
       '128-bit security level with Miller-Rabin primality testing (256 rounds)',
       'Cross-platform determinism (Node.js and browser environments)',
       'Timing attack resistance with constant-time operations',
+    ],
+  },
+  {
+    logo: (
+      <img
+        src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brighthub.png"
+        height="40"
+        width="187"
+      />
+    ),
+    icon: <FontAwesomeIcon icon={faCircleNodes} />,
+    description:
+      'Twitter-competitive decentralized social network with unique FontAwesome icon markup syntax. Posts, threads, DMs, connection lists, hubs for privacy, and real-time notifications via WebSocket.',
+    tech: ['WebSocket', 'Real-time Messaging', 'Connection Management'],
+    category: 'Network',
+    highlights: [
+      'Posts with 280-char limit, markdown, and unique {{icon}} syntax for FontAwesome',
+      'Threaded conversations with 10-level nesting and reply hierarchies',
+      'Connection lists, categories, and hubs for organizing relationships',
+      'Direct messaging with read receipts, typing indicators, and reactions',
+      'Group conversations (up to 50 participants) with admin roles',
+      'Message requests for non-followers with accept/decline workflow',
+      'Real-time notifications via WebSocket with smart grouping',
+      'Notification preferences: quiet hours, DND mode, per-category settings',
+      'Protected accounts with follow request approval workflow',
+      'Connection insights: strength calculation, mutual connections, suggestions',
+      'Hub-based content visibility for private group sharing',
+      'Rich text formatting with XSS prevention and emoji support',
     ],
   },
   {
@@ -198,8 +287,14 @@ const features: Feature[] = [
     ],
   },
   {
-    title: 'Decentralized Identity Provider',
-    icon: '🎭',
+    logo: (
+      <img
+        src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightid.png"
+        height="40"
+        width="187"
+      />
+    ),
+    icon: <FontAwesomeIcon icon={faIdBadge} />,
     description:
       'Sophisticated identity management ensuring user privacy and control. Support for registered aliases, anonymous posting, and cryptographic identity verification.',
     tech: ['Public Key Infrastructure', 'BIP39/32', 'Identity Management'],
@@ -463,8 +558,13 @@ const Components = () => {
               transition={{ delay: index * 0.1, duration: 0.6 }}
             >
               <div className="component-header">
-                <div className="component-icon">{feature.icon}</div>
-                <h3>{feature.title}</h3>
+                {feature.title && (
+                  <>
+                    <div className="component-icon">{feature.icon}</div>
+                    <h3>{feature.title}</h3>
+                  </>
+                )}
+                {feature.logo && feature.logo}
                 <span
                   className={`component-badge ${feature.category.toLowerCase()}`}
                 >

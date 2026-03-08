@@ -18,6 +18,11 @@
             "input": "brightchain-db",
             "glob": "*.md",
             "output": "."
+          },
+          {
+            "input": "brightchain-db",
+            "glob": "package.json",
+            "output": "."
           }
         ]
       },

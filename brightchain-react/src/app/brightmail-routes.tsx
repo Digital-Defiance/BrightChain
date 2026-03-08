@@ -5,14 +5,18 @@
  * Wrapped in PrivateRoute for auth enforcement.
  *
  * Routes:
- *   /brightmail                → InboxView
- *   /brightmail/compose        → ComposeView
+ *   /brightmail                → InboxView (inbox folder)
+ *   /brightmail/sent           → InboxView (sent folder)
+ *   /brightmail/drafts         → InboxView (drafts folder)
+ *   /brightmail/trash          → InboxView (trash folder)
  *   /brightmail/thread/:id     → ThreadView
  *
- * Requirements: 3.1, 3.2, 3.3
+ * Compose is handled by ComposeModal overlay (no dedicated route).
+ *
+ * Requirements: 1.3, 1.7, 3.1, 3.2, 3.3
  */
 
-import { BrightMailLayout, ComposeView, InboxView, ThreadView } from '@brightchain/brightmail-react-components';
+import { BrightMailLayout, InboxView, ThreadView } from '@brightchain/brightmail-react-components';
 import { PrivateRoute } from '@digitaldefiance/express-suite-react-components';
 import { Box, CircularProgress } from '@mui/material';
 import React, { lazy, Suspense } from 'react';
@@ -31,7 +35,9 @@ export const BrightMailRoutes: React.FC = () => {
         <Routes>
           <Route element={<BrightMailLayout />}>
             <Route index element={<InboxView />} />
-            <Route path="compose" element={<ComposeView />} />
+            <Route path="sent" element={<InboxView folder="sent" />} />
+            <Route path="drafts" element={<InboxView folder="drafts" />} />
+            <Route path="trash" element={<InboxView folder="trash" />} />
             <Route path="thread/:messageId" element={<ThreadView />} />
           </Route>
         </Routes>

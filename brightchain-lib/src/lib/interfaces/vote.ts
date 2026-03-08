@@ -23,6 +23,8 @@ export interface Vote<TID extends PlatformID = Uint8Array> {
   comment?: string;
   /** ECIES-encrypted share to proposer's public key, present only on approve */
   encryptedShare?: Uint8Array;
+  /** Digital signature of the vote for ban record attestation */
+  signature?: Uint8Array;
   /** Timestamp of vote creation */
   createdAt: Date;
 }

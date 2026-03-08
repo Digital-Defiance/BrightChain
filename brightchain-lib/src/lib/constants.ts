@@ -225,11 +225,8 @@ export const CoreOverrides = {
     'Your files are broken into blocks and mixed with random data using XOR operations, making them appear completely random while maintaining perfect security. From homomorphic voting to brokered anonymity, from distributed file storage to quorum-based governance, BrightChain offers everything needed for the next generation of decentralized applications.',
 };
 
-export const CoreConstants: ISuiteCoreConstants = createConstants(
-  'brightchain.org',
-  'brightchain.org',
-  CoreOverrides,
-);
+export const CoreConstants: ISuiteCoreConstants =
+  createConstants(CoreOverrides);
 
 export type { ISuiteCoreConstants };
 

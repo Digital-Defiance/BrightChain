@@ -8,13 +8,18 @@ import {
   IdentitySealingPipeline,
   IdentityValidator,
   IDiscoveryProtocol,
+  InMemoryEmailMetadataStore,
   IReconciliationService,
   MembershipProofService,
   MemberStore,
+  MemoryMessageMetadataStore,
   QuorumStateMachine,
   ServiceProvider,
+  type IGossipService,
+  type MessageCBLService,
 } from '@brightchain/brightchain-lib';
 import { BrightDb } from '@brightchain/db';
+import { BrightDbApplication } from '@brightchain/node-express-suite';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   debugLog,
@@ -23,9 +28,7 @@ import {
   KeyWrappingService,
   SystemUserService,
   UpnpManager,
-  Application as UpstreamApplication,
 } from '@digitaldefiance/node-express-suite';
-import { Server } from 'http';
 import { GossipService } from './availability/gossipService';
 import { PoolDiscoveryService } from './availability/poolDiscoveryService';
 import { QuorumGossipHandler } from './availability/quorumGossipHandler';
@@ -85,7 +88,7 @@ import { WebSocketMessageServer } from './services/webSocketMessageServer';
  * Database integration is handled by the BrightChainDatabasePlugin, registered
  * via configureBrightChainApp() during construction.
  */
-export class App<TID extends PlatformID> extends UpstreamApplication<
+export class App<TID extends PlatformID> extends BrightDbApplication<
   TID,
   Environment<TID>,
   IConstants,
@@ -110,13 +113,6 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
   private quorumGossipHandler: QuorumGossipHandler<TID> | null = null;
   private contentAwareBlocksService: ContentAwareBlocksService<TID> | null =
     null;
-
-  /**
-   * Captured HTTP server reference for WebSocket attachment.
-   * The upstream Application stores the server as a private field,
-   * so we intercept expressApp.listen() to capture it here.
-   */
-  private _httpServer: Server | null = null;
 
   constructor(environment: Environment<TID>) {
     super(
@@ -354,6 +350,91 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     // Wire EventNotificationSystem to SyncController via the apiRouter
     if (this.apiRouter) {
       this.apiRouter.setSyncEventSystem(this.eventSystem);
+    }
+
+    // ── Email subsystem (MessagePassingService) initialization ──────
+    // The MessagePassingService is required by the EmailController to handle
+    // inbox queries, send/receive, thread views, etc. Without it, all email
+    // endpoints return SERVICE_UNAVAILABLE (503).
+    // We create a local instance with in-memory stores and a no-op gossip stub.
+    // When a real GossipService is wired later (via setPoolDiscoveryService),
+    // setMessagePassingService() can replace this with a fully-connected instance.
+    // @see Requirements 14.1, 14.2
+    try {
+      const messageCBL = {
+        createMessage: async () => ({
+          messageId: `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          contentBlockIds: [] as string[],
+          magnetUrl: '',
+        }),
+        getMessageMetadata: async () => null,
+        getMessageContent: async () => null,
+      } as unknown as MessageCBLService;
+
+      const messageMetadataStore = new MemoryMessageMetadataStore();
+      const emailMetadataStore = new InMemoryEmailMetadataStore();
+
+      // No-op gossip stub — real gossip is wired externally via setPoolDiscoveryService
+      const gossipStubForEmail: IGossipService = {
+        announceBlock: async () => {},
+        announceRemoval: async () => {},
+        announcePoolDeletion: async () => {},
+        announceCBLIndexUpdate: async () => {},
+        announceCBLIndexDelete: async () => {},
+        announceHeadUpdate: async () => {},
+        announceACLUpdate: async () => {},
+        handleAnnouncement: async () => {},
+        onAnnouncement: () => {},
+        offAnnouncement: () => {},
+        getPendingAnnouncements: () => [],
+        flushAnnouncements: async () => {},
+        start: () => {},
+        stop: async () => {},
+        getConfig: () => ({}) as ReturnType<IGossipService['getConfig']>,
+        announceMessage: async () => {},
+        sendDeliveryAck: async () => {},
+        onMessageDelivery: () => {},
+        offMessageDelivery: () => {},
+        onDeliveryAck: () => {},
+        offDeliveryAck: () => {},
+        announceQuorumProposal: async () => {},
+        announceQuorumVote: async () => {},
+        onQuorumProposal: () => {},
+        offQuorumProposal: () => {},
+        onQuorumVote: () => {},
+        offQuorumVote: () => {},
+      };
+
+      const mps = new MessagePassingService(
+        messageCBL,
+        messageMetadataStore as never,
+        this.eventSystem,
+        gossipStubForEmail,
+      );
+      mps.configureEmail(emailMetadataStore, {
+        canonicalDomain: this.environment.emailDomain,
+      });
+
+      // Store on the App instance and register with the service container
+      this.messagePassingService = mps;
+      this.services.register('messagePassingService', () => mps);
+
+      // Wire to both the messages controller and the email controller
+      if (this.apiRouter) {
+        this.apiRouter.setMessagePassingService(mps);
+        this.apiRouter.setMessagePassingServiceForEmail(mps);
+      }
+
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ ready ] MessagePassingService initialized (email subsystem active)',
+      );
+    } catch (emailSubsystemErr) {
+      console.warn(
+        '[ warning ] Email subsystem initialization failed, email endpoints will return 503:',
+        emailSubsystemErr,
+      );
     }
 
     // ── BrightHub social services initialization ────────────────────
@@ -672,14 +753,6 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     await super.stop();
   }
 
-  /**
-   * Get the underlying HTTP server instance.
-   * Useful for tests that need to determine the bound port after start().
-   */
-  public get httpServer(): Server | null {
-    return this._httpServer;
-  }
-
   public getController<T = unknown>(name: string): T {
     return this.controllers.get(name) as T;
   }
@@ -732,6 +805,7 @@ export class App<TID extends PlatformID> extends UpstreamApplication<
     this.services.register('messagePassingService', () => service);
     if (this.apiRouter) {
       this.apiRouter.setMessagePassingService(service);
+      this.apiRouter.setMessagePassingServiceForEmail(service);
     }
   }
 

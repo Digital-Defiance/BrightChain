@@ -14,11 +14,12 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { FC } from 'react';
+import { FC, JSX } from 'react';
 import { Link } from 'react-router-dom';
 import brightChainLogo from '../../assets/images/brightchain.png';
 
 interface ShowcaseCard {
+  logo?: JSX.Element;
   title: string;
   icon: string;
   description: string;
@@ -41,24 +42,52 @@ export const SplashPage: FC = () => {
       path: '/showcase/storage-pools',
     },
     {
+      logo: (
+        <img
+          src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightchat.png"
+          height="40"
+          width="187"
+        />
+      ),
       title: t(BrightChainStrings.Splash_Messaging),
       icon: '💬',
       description: t(BrightChainStrings.Splash_MessagingDescription),
       path: '/showcase/messaging',
     },
     {
+      logo: (
+        <img
+          src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightpass.png"
+          height="40"
+          width="187"
+        />
+      ),
       title: t(BrightChainStrings.Splash_BrightPass),
       icon: '🔑',
       description: t(BrightChainStrings.Splash_BrightPassDescription),
       path: '/showcase/brightpass',
     },
     {
+      logo: (
+        <img
+          src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightdb.png"
+          height="40"
+          width="187"
+        />
+      ),
       title: t(BrightChainStrings.Splash_Database),
       icon: '📦',
       description: t(BrightChainStrings.Splash_DatabaseDescription),
       path: '/showcase/database',
     },
     {
+      logo: (
+        <img
+          src="https://raw.githubusercontent.com/Digital-Defiance/BrightChain/main/brightchain-react/src/assets/images/brightid.png"
+          height="40"
+          width="187"
+        />
+      ),
       title: t(BrightChainStrings.Splash_IdentityAndSecurity),
       icon: '🛡️',
       description: t(BrightChainStrings.Splash_IdentityAndSecurityDescription),
@@ -289,7 +318,7 @@ export const SplashPage: FC = () => {
               >
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Typography variant="h6" gutterBottom>
-                    {card.icon} {card.title}
+                    {card.logo || `${card.icon} ${card.title}`}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     {card.description}

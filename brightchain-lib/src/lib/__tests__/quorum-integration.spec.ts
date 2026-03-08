@@ -248,6 +248,13 @@ function createInMemoryDb(): InMemoryDb {
     // Transaction
     withTransaction: jest.fn(async <R>(fn: () => Promise<R>) => fn()),
 
+    // Ban records
+    saveBanRecord: jest.fn(async () => {}),
+    deleteBanRecord: jest.fn(async () => {}),
+    getBanRecord: jest.fn(async () => null),
+    getAllBanRecords: jest.fn(async () => []),
+    getMemberAdmissionProposerId: jest.fn(async () => null),
+
     // Health
     isAvailable: jest.fn(async () => true),
   };

@@ -646,6 +646,17 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   Error_QuorumError_MissingAttachment: 'Error_QuorumError_MissingAttachment',
   Error_QuorumError_AttachmentNotRetrievable:
     'Error_QuorumError_AttachmentNotRetrievable',
+  // Quorum Ban Mechanism Errors
+  Error_QuorumError_CannotBanSelf: 'Error_QuorumError_CannotBanSelf',
+  Error_QuorumError_MemberAlreadyBanned:
+    'Error_QuorumError_MemberAlreadyBanned',
+  Error_QuorumError_MemberNotBanned: 'Error_QuorumError_MemberNotBanned',
+  Error_QuorumError_NewMemberCannotProposeBan:
+    'Error_QuorumError_NewMemberCannotProposeBan',
+  Error_QuorumError_BanCoolingPeriodNotElapsed:
+    'Error_QuorumError_BanCoolingPeriodNotElapsed',
+  Error_QuorumError_InvalidBanRecordSignatures:
+    'Error_QuorumError_InvalidBanRecordSignatures',
   // Quorum Share Redistribution Errors
   Error_QuorumError_RedistributionFailed:
     'Error_QuorumError_RedistributionFailed',

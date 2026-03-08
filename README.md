@@ -1,7 +1,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/e3f269c473254e0aa9d8f49acb0686ac)](https://app.codacy.com/gh/Digital-Defiance/BrightChain/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 <div align="center">
-  <img src="./brightchain-react/src/assets/images/brightchain-black.png" />
+  <img src="./brightchain-react/src/assets/images/brightchain-bg-black.png" />
 </div>
 
 # BrightChain: Privacy. Participation. Power.
