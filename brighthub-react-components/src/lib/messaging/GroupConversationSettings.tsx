@@ -7,7 +7,7 @@
  * Implements Requirements 44.9, 61.4
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import type { IBaseGroupConversation } from '@brightchain/brighthub-lib';
 import { GroupParticipantRole } from '@brightchain/brighthub-lib';
 import {

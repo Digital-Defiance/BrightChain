@@ -59,6 +59,13 @@ jest.mock('@brightchain/brightchain-lib', () => ({
   ),
 }));
 
+jest.mock('@brightchain/brightmail-lib', () => ({
+  BrightMailStrings: new Proxy(
+    {},
+    { get: (_t: unknown, p: string | symbol) => String(p) },
+  ),
+}));
+
 jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   useI18n: () => ({
     tComponent: (_componentId: string, key: string) => key,
@@ -349,10 +356,10 @@ describe('ThreadView', () => {
     });
 
     // Confirm dialog should appear
-    expect(screen.getByText('BrightMail_Delete_Confirm')).toBeInTheDocument();
+    expect(screen.getByText('Delete_Confirm')).toBeInTheDocument();
 
     // Confirm deletion — click the contained variant (confirm button in dialog)
-    const confirmButtons = screen.getAllByText('BrightMail_Action_Delete');
+    const confirmButtons = screen.getAllByText('Action_Delete');
     const dialogConfirmBtn = confirmButtons.find(
       (btn) => btn.closest('.MuiDialogActions-root') !== null,
     );
@@ -382,7 +389,7 @@ describe('ThreadView', () => {
     });
 
     expect(screen.getByTestId('thread-error')).toBeInTheDocument();
-    expect(screen.getByText('BrightMail_Thread_Error')).toBeInTheDocument();
+    expect(screen.getByText('Thread_Error')).toBeInTheDocument();
 
     const backLink = screen.getByTestId('back-to-inbox');
     expect(backLink).toBeInTheDocument();

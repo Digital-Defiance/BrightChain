@@ -62,6 +62,13 @@ jest.mock('@brightchain/brightchain-lib', () => ({
   ),
 }));
 
+jest.mock('@brightchain/brightmail-lib', () => ({
+  BrightMailStrings: new Proxy(
+    {},
+    { get: (_t: unknown, p: string | symbol) => String(p) },
+  ),
+}));
+
 jest.mock('@brightchain/brightchain-react-components', () => ({
   BrightChainSubLogo: ({ subText }: { subText?: string }) => (
     <span data-testid="brightchain-sub-logo">{subText || 'SubLogo'}</span>
