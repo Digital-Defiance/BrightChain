@@ -1,7 +1,6 @@
 {
   "name": "@brightchain/node-express-suite",
-  "version": "0.28.0",
-  "private": false,
+  "version": "0.29.0",
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -9,11 +8,11 @@
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
+    "@brightchain/brightchain-lib": "^0.29.0",
+    "@brightchain/db": "^0.29.0",
     "@digitaldefiance/branded-interface": "^0.0.5",
-    "@digitaldefiance/node-ecies-lib": "^4.20.0",
-    "@digitaldefiance/node-express-suite": "^4.22.2",
-    "@brightchain/brightchain-lib": "^0.28.0",
-    "@brightchain/db": "^0.28.0",
+    "@digitaldefiance/node-ecies-lib": "^4.23.0",
+    "@digitaldefiance/node-express-suite": "^4.23.2",
     "bcrypt": "^5.0.0",
     "jsonwebtoken": "^9.0.0"
   }

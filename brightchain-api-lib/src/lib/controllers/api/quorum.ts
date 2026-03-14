@@ -216,12 +216,16 @@ interface SerializedQuorumMember {
  */
 function idToHex<TID extends PlatformID>(id: TID): string {
   if (typeof id === 'string') return id;
+  // After the string check, id is a binary type (Buffer/Uint8Array).
+  // Cast to unknown first to satisfy TS narrowing on generic constraints.
+  const binaryId = id as unknown;
   try {
     return ServiceProvider.getInstance<TID>().idProvider.toString(id, 'hex');
   } catch {
-    return Buffer.isBuffer(id) || id instanceof Uint8Array
-      ? Buffer.from(id).toString('hex')
-      : String(id);
+    return Buffer.isBuffer(binaryId) ||
+      binaryId instanceof Uint8Array
+      ? Buffer.from(binaryId as Uint8Array).toString('hex')
+      : String(binaryId);
   }
 }
 

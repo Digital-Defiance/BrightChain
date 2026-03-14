@@ -53,6 +53,7 @@ describe('Feature: brighthub-social-network, Thread_Service Property Tests', () 
     isEdited: boolean;
     editedAt?: string;
     hubIds?: string[];
+    isBlogPost: boolean;
     isDeleted: boolean;
     createdAt: string;
     updatedAt: string;
@@ -119,6 +120,7 @@ describe('Feature: brighthub-social-network, Thread_Service Property Tests', () 
       replyCount: 0,
       quoteCount: 0,
       isEdited: false,
+      isBlogPost: true,
       isDeleted: false,
       createdAt: now,
       updatedAt: now,

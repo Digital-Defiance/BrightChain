@@ -40,6 +40,8 @@ export interface IBasePostData<TId> {
   editedAt?: TId extends string ? string : Date;
   /** Hub IDs for restricted visibility */
   hubIds?: TId[];
+  /** Whether this post uses blog-style markdown rendering */
+  isBlogPost: boolean;
   /** Whether the post has been soft-deleted */
   isDeleted: boolean;
   /** Timestamp when the post was created */

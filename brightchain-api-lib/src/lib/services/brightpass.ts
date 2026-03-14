@@ -168,8 +168,8 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
   private readonly vcblService: VCBLService<TID>;
   /** Block service for encryption/decryption (injected) */
   private readonly blockService: BlockService<TID>;
-  /** Member for block creation (injected) */
-  private readonly member: Member<TID>;
+  /** Member for block creation (injected or set via setMember) */
+  private member: Member<TID>;
 
   /** vaultId → StoredVault for vault data management */
   private readonly vaults = new Map<string, StoredVault>();
@@ -200,6 +200,19 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
     this.vcblService = vcblService as VCBLService<TID>;
     this.blockService = blockService ?? new BlockService<TID>();
     this.member = member as Member<TID>;
+  }
+
+  /**
+   * Set the per-request Member after construction.
+   * This addresses the architectural mismatch where Member is per-request
+   * (resolved from JWT session) but the service is constructed once per controller.
+   *
+   * @param member - The authenticated Member for the current request
+   *
+   * Requirements: 2.1
+   */
+  setMember(member: Member<TID>): void {
+    this.member = member;
   }
 
   /** bcrypt cost factor - 12 rounds provides ~300ms hash time on modern hardware */
@@ -333,6 +346,7 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
    */
   private entryToPropertyRecord(entry: VaultEntry): EntryPropertyRecord {
     return {
+      id: entry.id,
       entryType: entry.type,
       title: entry.title,
       tags: entry.tags ?? [],
@@ -368,6 +382,16 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
       throw new VaultNotFoundError(vaultId);
     }
     return vault;
+  }
+
+  /**
+   * Get the property records for a vault.
+   * Returns the in-memory property records without requiring master password.
+   * The vault must have been opened at least once in this session.
+   */
+  getVaultPropertyRecords(vaultId: string): EntryPropertyRecord[] {
+    const vault = this.getVaultOrThrow(vaultId);
+    return [...vault.propertyRecords];
   }
 
   /**
@@ -658,13 +682,17 @@ export class BrightPassService<TID extends PlatformID = Uint8Array> {
         // Extract entry addresses from VCBL (Req 3.4)
         const entryAddresses = vcblBlock.addresses;
 
-        // Update in-memory vault with parsed data for consistency
-        vault.propertyRecords = [...propertyRecords];
-        vault.blockIds = entryAddresses.map((addr) => addr.toHex());
+        // Update in-memory vault with parsed data for consistency,
+        // but only if the VCBL actually has records. When the VCBL is stale
+        // (e.g. block store update was skipped), preserve in-memory state.
+        if (propertyRecords.length > 0 || vault.entries.size === 0) {
+          vault.propertyRecords = [...propertyRecords];
+          vault.blockIds = entryAddresses.map((addr) => addr.toHex());
+        }
 
         return {
           metadata: { ...vault.metadata },
-          propertyRecords: [...propertyRecords],
+          propertyRecords: [...vault.propertyRecords],
         };
       }
     }

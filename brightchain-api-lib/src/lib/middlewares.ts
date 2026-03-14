@@ -94,6 +94,7 @@ export class Middlewares {
               "'self'",
               "'unsafe-inline'",
               'https://fonts.googleapis.com',
+              'https://ka-f.fontawesome.com',
             ],
             fontSrc: [
               "'self'",

@@ -13,3 +13,6 @@ export type { PostCardProps } from './PostCard';
 
 export { PostComposer } from './PostComposer';
 export type { PostComposerProps, PostComposerSubmitData } from './PostComposer';
+
+export { MarkupHelpDialog } from './MarkupHelpDialog';
+export type { MarkupHelpDialogProps } from './MarkupHelpDialog';
