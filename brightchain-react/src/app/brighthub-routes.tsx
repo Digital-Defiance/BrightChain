@@ -7,7 +7,7 @@
  *
  * @requirements 38.15-38.19, 45.1-45.28
  */
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import type {
   IBaseNotification,
   IBaseNotificationPreferences,

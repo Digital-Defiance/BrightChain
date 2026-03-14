@@ -1,5 +1,5 @@
 import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import { BrightChainSubLogo } from '@brightchain/brightchain-react-components';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import { Box, Button, Container } from '@mui/material';

@@ -14,8 +14,8 @@
  * Requirements: 14.3
  */
 
-import type { BrightPassStringKey } from '@brightchain/brightchain-lib';
-import { BrightPassStrings } from '@brightchain/brightchain-lib';
+import type { BrightPassStringKey } from '@brightchain/brightpass-lib';
+import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Breadcrumbs, Link, Typography } from '@mui/material';
 import React from 'react';

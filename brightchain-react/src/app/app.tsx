@@ -9,8 +9,13 @@ import {
   CoreConstants,
   i18nEngine,
   ISuiteCoreConstants,
+  registerI18nComponentPackage,
   THEME_COLORS,
 } from '@brightchain/brightchain-lib';
+import { createBrightChatComponentPackage } from '@brightchain/brightchat-lib';
+import { createBrightHubComponentPackage } from '@brightchain/brighthub-lib';
+import { createBrightMailComponentPackage } from '@brightchain/brightmail-lib';
+import { createBrightPassComponentPackage } from '@brightchain/brightpass-lib';
 import {
   BrightChainLogo,
   BrightChainSoupDemo,
@@ -44,7 +49,6 @@ import {
   TopMenu,
   TranslatedTitle,
   UnAuthRoute,
-  useI18n,
   UserSettingsFormWrapper,
   VerifyEmailPageWrapper,
 } from '@digitaldefiance/express-suite-react-components';
@@ -66,6 +70,13 @@ import '../styles.scss';
 import DashboardPage from './components/DashboardPage';
 import { SplashPage } from './components/SplashPage';
 import { createAppTheme } from './theme';
+
+// Register sub-component i18n packages with the BrightChain engine.
+// Must run after i18nEngine import above triggers engine creation.
+registerI18nComponentPackage(createBrightMailComponentPackage());
+registerI18nComponentPackage(createBrightHubComponentPackage());
+registerI18nComponentPackage(createBrightPassComponentPackage());
+registerI18nComponentPackage(createBrightChatComponentPackage());
 
 // Lazy-loaded module routes
 const BrightMailRoutes = lazy(() =>

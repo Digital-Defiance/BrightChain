@@ -1376,42 +1376,6 @@ export const AmericanEnglishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Dashboard_FailedToLoadReputation]:
     'Failed to load reputation',
   [BrightChainStrings.Dashboard_FailedToLoadData]: 'Failed to load data',
-
-  // BrightMail
-  [BrightChainStrings.BrightMail_MenuLabel]: 'BrightMail',
-  [BrightChainStrings.BrightMail_Inbox_Title]: 'Inbox',
-  [BrightChainStrings.BrightMail_Inbox_Empty]: 'No emails yet',
-  [BrightChainStrings.BrightMail_Inbox_Error]: 'Failed to load inbox',
-  [BrightChainStrings.BrightMail_Inbox_Retry]: 'Retry',
-  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]: '{COUNT} unread',
-  [BrightChainStrings.BrightMail_Compose_Title]: 'Compose',
-  [BrightChainStrings.BrightMail_Compose_To]: 'To',
-  [BrightChainStrings.BrightMail_Compose_Cc]: 'Cc',
-  [BrightChainStrings.BrightMail_Compose_Bcc]: 'Bcc',
-  [BrightChainStrings.BrightMail_Compose_Subject]: 'Subject',
-  [BrightChainStrings.BrightMail_Compose_Body]: 'Message',
-  [BrightChainStrings.BrightMail_Compose_Send]: 'Send',
-  [BrightChainStrings.BrightMail_Compose_SendSuccess]:
-    'Email sent successfully',
-  [BrightChainStrings.BrightMail_Compose_SendError]: 'Failed to send email',
-  [BrightChainStrings.BrightMail_Compose_InvalidRecipient]:
-    'Please add at least one valid recipient',
-  [BrightChainStrings.BrightMail_Compose_Attachments]: 'Attachments',
-  [BrightChainStrings.BrightMail_Thread_Error]: 'Failed to load thread',
-  [BrightChainStrings.BrightMail_Thread_BackToInbox]: 'Back to Inbox',
-  [BrightChainStrings.BrightMail_Thread_Reply]: 'Reply',
-  [BrightChainStrings.BrightMail_Thread_Forward]: 'Forward',
-  [BrightChainStrings.BrightMail_Delete_Confirm]:
-    'Are you sure you want to delete?',
-  [BrightChainStrings.BrightMail_Delete_ConfirmBulkTemplate]:
-    'Delete {COUNT} selected emails?',
-  [BrightChainStrings.BrightMail_Delete_Success]: 'Email deleted',
-  [BrightChainStrings.BrightMail_Delete_ErrorTemplate]:
-    'Failed to delete email: {MESSAGE_ID}',
-  [BrightChainStrings.BrightMail_Action_Delete]: 'Delete',
-  [BrightChainStrings.BrightMail_Action_MarkAsRead]: 'Mark as Read',
-  [BrightChainStrings.BrightMail_Action_Cancel]: 'Cancel',
-  [BrightChainStrings.BrightMail_Loading]: 'Loading...',
 };
 
 export default AmericanEnglishStrings;

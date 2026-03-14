@@ -8,7 +8,7 @@
  */
 
 import type { ITotpCode } from '@brightchain/brightchain-lib';
-import { BrightPassStrings } from '@brightchain/brightchain-lib';
+import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 

@@ -49,6 +49,13 @@ jest.mock('@brightchain/brightchain-lib', () => ({
   ),
 }));
 
+jest.mock('@brightchain/brightmail-lib', () => ({
+  BrightMailStrings: new Proxy(
+    {},
+    { get: (_t: unknown, p: string | symbol) => String(p) },
+  ),
+}));
+
 jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   useI18n: () => ({
     tComponent: (_componentId: string, key: string) => key,
@@ -119,14 +126,14 @@ describe('ComposeView', () => {
   it('renders all form fields with labels', () => {
     render(<ComposeView />);
 
-    expect(screen.getByLabelText('BrightMail_Compose_To')).toBeInTheDocument();
-    expect(screen.getByLabelText('BrightMail_Compose_Cc')).toBeInTheDocument();
-    expect(screen.getByLabelText('BrightMail_Compose_Bcc')).toBeInTheDocument();
+    expect(screen.getByLabelText('Compose_To')).toBeInTheDocument();
+    expect(screen.getByLabelText('Compose_Cc')).toBeInTheDocument();
+    expect(screen.getByLabelText('Compose_Bcc')).toBeInTheDocument();
     expect(
-      screen.getByLabelText('BrightMail_Compose_Subject'),
+      screen.getByLabelText('Compose_Subject'),
     ).toBeInTheDocument();
     expect(
-      screen.getByLabelText('BrightMail_Compose_Body'),
+      screen.getByLabelText('Compose_Body'),
     ).toBeInTheDocument();
     expect(screen.getByTestId('send-button')).toBeInTheDocument();
   });
@@ -147,7 +154,7 @@ describe('ComposeView', () => {
   it('send button is enabled when To field has a valid email', () => {
     render(<ComposeView />);
 
-    const toField = screen.getByLabelText('BrightMail_Compose_To');
+    const toField = screen.getByLabelText('Compose_To');
     fireEvent.change(toField, { target: { value: 'user@example.com' } });
 
     const sendButton = screen.getByTestId('send-button');
@@ -163,7 +170,7 @@ describe('ComposeView', () => {
 
     render(<ComposeView onClose={onClose} />);
 
-    const toField = screen.getByLabelText('BrightMail_Compose_To');
+    const toField = screen.getByLabelText('Compose_To');
     fireEvent.change(toField, { target: { value: 'user@example.com' } });
 
     await act(async () => {
@@ -173,7 +180,7 @@ describe('ComposeView', () => {
     // Success snackbar should appear
     await waitFor(() => {
       expect(
-        screen.getByText('BrightMail_Compose_SendSuccess'),
+        screen.getByText('Compose_SendSuccess'),
       ).toBeInTheDocument();
     });
 
@@ -194,8 +201,8 @@ describe('ComposeView', () => {
 
     render(<ComposeView />);
 
-    const toField = screen.getByLabelText('BrightMail_Compose_To');
-    const subjectField = screen.getByLabelText('BrightMail_Compose_Subject');
+    const toField = screen.getByLabelText('Compose_To');
+    const subjectField = screen.getByLabelText('Compose_Subject');
 
     fireEvent.change(toField, { target: { value: 'user@example.com' } });
     fireEvent.change(subjectField, { target: { value: 'Test Subject' } });
@@ -207,7 +214,7 @@ describe('ComposeView', () => {
     // Error snackbar should appear
     await waitFor(() => {
       expect(
-        screen.getByText('BrightMail_Compose_SendError'),
+        screen.getByText('Compose_SendError'),
       ).toBeInTheDocument();
     });
 
@@ -234,9 +241,9 @@ describe('ComposeView', () => {
 
     render(<ComposeView replyTo={replyTo} />);
 
-    const toField = screen.getByLabelText('BrightMail_Compose_To');
-    const subjectField = screen.getByLabelText('BrightMail_Compose_Subject');
-    const bodyField = screen.getByLabelText('BrightMail_Compose_Body');
+    const toField = screen.getByLabelText('Compose_To');
+    const subjectField = screen.getByLabelText('Compose_Subject');
+    const bodyField = screen.getByLabelText('Compose_Body');
 
     expect(toField).toHaveValue('alice@example.com');
     expect(subjectField).toHaveValue('Re: Hello');
@@ -255,9 +262,9 @@ describe('ComposeView', () => {
 
     render(<ComposeView forwardFrom={forwardFrom} />);
 
-    const toField = screen.getByLabelText('BrightMail_Compose_To');
-    const subjectField = screen.getByLabelText('BrightMail_Compose_Subject');
-    const bodyField = screen.getByLabelText('BrightMail_Compose_Body');
+    const toField = screen.getByLabelText('Compose_To');
+    const subjectField = screen.getByLabelText('Compose_Subject');
+    const bodyField = screen.getByLabelText('Compose_Body');
 
     expect(toField).toHaveValue('');
     expect(subjectField).toHaveValue('Fwd: Hello');
@@ -271,11 +278,11 @@ describe('ComposeView', () => {
   it('shows validation message when To has invalid input', () => {
     render(<ComposeView />);
 
-    const toField = screen.getByLabelText('BrightMail_Compose_To');
+    const toField = screen.getByLabelText('Compose_To');
     fireEvent.change(toField, { target: { value: 'not-an-email' } });
 
     expect(
-      screen.getByText('BrightMail_Compose_InvalidRecipient'),
+      screen.getByText('Compose_InvalidRecipient'),
     ).toBeInTheDocument();
   });
 

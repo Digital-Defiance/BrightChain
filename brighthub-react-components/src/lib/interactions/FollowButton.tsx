@@ -8,7 +8,7 @@
  * Implements Requirement 12.8
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import { PersonAdd, PersonRemove } from '@mui/icons-material';
 import { Button } from '@mui/material';
 import { useState } from 'react';

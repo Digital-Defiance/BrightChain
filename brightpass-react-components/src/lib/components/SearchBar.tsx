@@ -13,7 +13,7 @@ import type {
   EntryPropertyRecord,
   VaultEntryType,
 } from '@brightchain/brightchain-lib';
-import { BrightPassStrings } from '@brightchain/brightchain-lib';
+import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import SearchIcon from '@mui/icons-material/Search';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';

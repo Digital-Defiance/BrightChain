@@ -24,6 +24,13 @@ jest.mock('@brightchain/brightchain-lib', () => ({
   ),
 }));
 
+jest.mock('@brightchain/brightmail-lib', () => ({
+  BrightMailStrings: new Proxy(
+    {},
+    { get: (_t: unknown, p: string | symbol) => String(p) },
+  ),
+}));
+
 jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   useI18n: () => ({
     tComponent: (_componentId: string, key: string) => key,

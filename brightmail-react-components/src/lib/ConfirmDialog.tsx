@@ -1,7 +1,5 @@
-import {
-  BrightChainComponentId,
-  BrightChainStrings,
-} from '@brightchain/brightchain-lib';
+import { BrightChainComponentId } from '@brightchain/brightchain-lib';
+import { BrightMailStrings } from '@brightchain/brightmail-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import {
   Button,
@@ -50,10 +48,10 @@ const ConfirmDialog: FC<ConfirmDialogProps> = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onCancel} autoFocus>
-          {cancelLabel ?? t(BrightChainStrings.BrightMail_Action_Cancel)}
+          {cancelLabel ?? t(BrightMailStrings.Action_Cancel)}
         </Button>
         <Button onClick={onConfirm} color="error" variant="contained">
-          {confirmLabel ?? t(BrightChainStrings.BrightMail_Action_Delete)}
+          {confirmLabel ?? t(BrightMailStrings.Action_Delete)}
         </Button>
       </DialogActions>
     </Dialog>

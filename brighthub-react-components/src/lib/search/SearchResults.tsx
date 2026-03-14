@@ -8,7 +8,7 @@
  * Implements Requirement 12.7
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import { IBasePostData, IBaseUserProfile } from '@brightchain/brighthub-lib';
 import { Search } from '@mui/icons-material';
 import { Box, CircularProgress, Tab, Tabs, Typography } from '@mui/material';
