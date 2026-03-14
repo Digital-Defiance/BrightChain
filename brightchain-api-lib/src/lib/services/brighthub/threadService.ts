@@ -45,6 +45,7 @@ interface PostRecord {
   isEdited: boolean;
   editedAt?: string;
   hubIds?: string[];
+  isBlogPost: boolean;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -128,6 +129,7 @@ export class ThreadService implements IThreadService {
       isEdited: record.isEdited,
       editedAt: record.editedAt,
       hubIds: record.hubIds,
+      isBlogPost: record.isBlogPost,
       isDeleted: record.isDeleted,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
@@ -274,6 +276,7 @@ export class ThreadService implements IThreadService {
       replyCount: 0,
       quoteCount: 0,
       isEdited: false,
+      isBlogPost: false,
       isDeleted: false,
       createdAt: now,
       updatedAt: now,

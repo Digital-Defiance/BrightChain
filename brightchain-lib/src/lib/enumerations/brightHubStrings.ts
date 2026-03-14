@@ -35,6 +35,13 @@ export const BrightHubStrings = createI18nStringKeys(BrightHubComponentId, {
   PostComposer_SubmitPost: 'PostComposer_SubmitPost',
   PostComposer_Post: 'PostComposer_Post',
   PostComposer_Reply: 'PostComposer_Reply',
+  PostComposer_Preview: 'PostComposer_Preview',
+  PostComposer_PreviewAriaLabel: 'PostComposer_PreviewAriaLabel',
+  PostComposer_MarkupHelp: 'PostComposer_MarkupHelp',
+  PostComposer_MarkupHelpAriaLabel: 'PostComposer_MarkupHelpAriaLabel',
+  PostComposer_MarkupHelpClose: 'PostComposer_MarkupHelpClose',
+  PostComposer_MarkupHelpTabPost: 'PostComposer_MarkupHelpTabPost',
+  PostComposer_MarkupHelpTabIcons: 'PostComposer_MarkupHelpTabIcons',
 
   // Timeline
   Timeline_AriaLabel: 'Timeline_AriaLabel',

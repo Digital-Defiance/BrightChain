@@ -48,6 +48,10 @@ export type IPromoteToGroupResponse<
 
 // ─── Group responses ────────────────────────────────────────────────────────
 
+export type IListGroupsResponse<TId = string, TData = string> = IApiEnvelope<
+  IPaginatedResult<IGroup<TId, TData>>
+>;
+
 export type ICreateGroupResponse<TId = string, TData = string> = IApiEnvelope<
   IGroup<TId, TData>
 >;

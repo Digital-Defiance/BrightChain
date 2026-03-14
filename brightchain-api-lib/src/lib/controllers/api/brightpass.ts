@@ -1,11 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
+  BlockService,
   BreachDetector,
+  CBLService,
+  ChecksumService,
   EncryptedShare,
   ImportFormat,
   PasswordGenerator,
+  ServiceProvider,
   TOTPEngine,
+  VCBLService,
 } from '@brightchain/brightchain-lib';
+import {
+  EmailString,
+  Member,
+  MemberType,
+} from '@digitaldefiance/ecies-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -51,6 +61,7 @@ interface BrightPassHandlers extends TypedHandlers {
   openVault: ApiRequestHandler<BrightPassApiResponse>;
   deleteVault: ApiRequestHandler<BrightPassApiResponse>;
   createEntry: ApiRequestHandler<BrightPassApiResponse>;
+  listEntries: ApiRequestHandler<BrightPassApiResponse>;
   getEntry: ApiRequestHandler<BrightPassApiResponse>;
   updateEntry: ApiRequestHandler<BrightPassApiResponse>;
   deleteEntry: ApiRequestHandler<BrightPassApiResponse>;
@@ -145,11 +156,34 @@ export class BrightPassController<
   BrightPassHandlers,
   CoreLanguageCode
 > {
-  private brightPassService: BrightPassService;
+  private brightPassService: BrightPassService<TID>;
 
   constructor(application: IBrightChainApplication<TID>) {
     super(application);
-    this.brightPassService = new BrightPassService();
+
+    // Attempt to wire VCBLService and BlockService from ServiceProvider.
+    // If ServiceProvider is not initialized (e.g. in test environments),
+    // fall back to the current no-args behavior (graceful degradation).
+    try {
+      const serviceProvider = ServiceProvider.getInstance<TID>();
+      const checksumService = new ChecksumService();
+      const cblService = new CBLService<TID>(
+        checksumService,
+        serviceProvider.eciesService,
+        serviceProvider.idProvider,
+      );
+      const vcblService = new VCBLService<TID>(cblService, checksumService);
+      const blockService = serviceProvider.blockService;
+
+      this.brightPassService = new BrightPassService(
+        undefined, // blockStore — defaults to MemoryBlockStore inside BrightPassService
+        vcblService,
+        blockService,
+      );
+    } catch {
+      // ServiceProvider not yet initialized — degrade gracefully
+      this.brightPassService = new BrightPassService<TID>();
+    }
   }
 
   private getAuthMemberId(req: { headers: any }): string {
@@ -221,6 +255,16 @@ export class BrightPassController<
           summary: 'Add entry to vault',
           tags: ['BrightPass'],
           responses: { 200: { description: 'Entry created' } },
+        },
+      }),
+      routeConfig('get', '/vaults/:vaultId/entries', {
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        handlerKey: 'listEntries',
+        openapi: {
+          summary: 'List entries in a vault',
+          tags: ['BrightPass'],
+          responses: { 200: { description: 'Entry list' } },
         },
       }),
       routeConfig('get', '/vaults/:vaultId/entries/:entryId', {
@@ -391,6 +435,7 @@ export class BrightPassController<
       openVault: this.handleOpenVault.bind(this),
       deleteVault: this.handleDeleteVault.bind(this),
       createEntry: this.handleCreateEntry.bind(this),
+      listEntries: this.handleListEntries.bind(this),
       getEntry: this.handleGetEntry.bind(this),
       updateEntry: this.handleUpdateEntry.bind(this),
       deleteEntry: this.handleDeleteEntry.bind(this),
@@ -422,6 +467,25 @@ export class BrightPassController<
       if (!name || !masterPassword) {
         return validationError('Missing required fields: name, masterPassword');
       }
+
+      // Inject per-request Member so the VCBL creation branch is entered.
+      // The Member is needed for signing the VCBL header (creator.idBytes).
+      // We create an ephemeral Member via ServiceProvider's eciesService;
+      // if ServiceProvider is unavailable, we skip (graceful degradation —
+      // createVault still works, just without VCBL block creation).
+      try {
+        const serviceProvider = ServiceProvider.getInstance<TID>();
+        const { member } = Member.newMember<TID>(
+          serviceProvider.eciesService,
+          MemberType.User,
+          memberId,
+          new EmailString(`${memberId}@brightchain.local`),
+        );
+        this.brightPassService.setMember(member);
+      } catch {
+        // ServiceProvider not initialized — degrade gracefully
+      }
+
       const metadata = await this.brightPassService.createVault(
         memberId,
         name,
@@ -490,6 +554,18 @@ export class BrightPassController<
   }
 
   // ─── Entry CRUD Handlers ──────────────────────────────────────
+
+  private async handleListEntries(
+    req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],
+  ) {
+    try {
+      const { vaultId } = (req as unknown as { params: VaultIdParams }).params;
+      const vault = this.brightPassService.getVaultPropertyRecords(vaultId);
+      return ok({ entries: vault as any });
+    } catch (error) {
+      return mapBrightPassError(error);
+    }
+  }
 
   private async handleCreateEntry(
     req: Parameters<ApiRequestHandler<BrightPassApiResponse>>[0],

@@ -1,6 +1,7 @@
 import { VaultEntryType } from './vaultEntry';
 
 export interface EntryPropertyRecord {
+  id?: string;
   entryType: VaultEntryType;
   title: string;
   tags: string[];

@@ -30,11 +30,14 @@ export class VCBLService<TID extends PlatformID = Uint8Array> {
 
   serializePropertyRecord(record: EntryPropertyRecord): Uint8Array {
     const encoder = new TextEncoder();
+    const idBytes = encoder.encode(record.id ?? '');
     const titleBytes = encoder.encode(record.title);
     const tagsBytes = encoder.encode(record.tags.join(','));
     const siteUrlBytes = encoder.encode(record.siteUrl);
 
     const size =
+      2 +
+      idBytes.length + // id length + id
       1 + // entryType
       2 +
       titleBytes.length + // title length + title
@@ -49,6 +52,12 @@ export class VCBLService<TID extends PlatformID = Uint8Array> {
     const buffer = new Uint8Array(size);
     const view = new DataView(buffer.buffer);
     let offset = 0;
+
+    // id (2 bytes length + data)
+    view.setUint16(offset, idBytes.length, false);
+    offset += 2;
+    buffer.set(idBytes, offset);
+    offset += idBytes.length;
 
     // entryType (1 byte)
     const typeMap = { login: 0, secure_note: 1, credit_card: 2, identity: 3 };
@@ -99,6 +108,20 @@ export class VCBLService<TID extends PlatformID = Uint8Array> {
     const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
     const decoder = new TextDecoder();
     let currentOffset = offset;
+
+    // id
+    const idLength = view.getUint16(currentOffset, false);
+    currentOffset += 2;
+    if (currentOffset + idLength > data.length) {
+      throw new CblError(
+        CblErrorType.InvalidStructure,
+        'Id length exceeds data bounds',
+      );
+    }
+    const id = idLength > 0
+      ? decoder.decode(data.subarray(currentOffset, currentOffset + idLength))
+      : undefined;
+    currentOffset += idLength;
 
     // entryType
     const typeMap = [
@@ -184,6 +207,7 @@ export class VCBLService<TID extends PlatformID = Uint8Array> {
 
     return {
       record: {
+        id,
         entryType,
         title,
         tags,

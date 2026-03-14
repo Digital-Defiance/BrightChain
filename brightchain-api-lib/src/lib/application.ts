@@ -147,12 +147,6 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
     });
   }
 
-  /**
-   * Get the BrightChain document store.
-   * Overrides the upstream Mongoose-specific `db` getter since BrightChain
-   * uses its own BlockDocumentStore instead of Mongoose.
-   */
-  // @ts-expect-error — BrightChain returns DocumentStore, not typeof mongoose
   public override get db(): DocumentStore {
     return this._brightchainDocumentStore;
   }

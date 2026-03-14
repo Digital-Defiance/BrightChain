@@ -1,3 +1,4 @@
+import { faComment } from '@awesome.me/kit-a20d532681/icons/chisel/regular';
 import {
   faEnvelope,
   faLock,
@@ -80,6 +81,11 @@ const BrightPassRoutes = lazy(() =>
 const BrightHubRoutes = lazy(() =>
   import('./brighthub-routes').then((m) => ({
     default: m.BrightHubRoutes,
+  })),
+);
+const BrightChatRoutes = lazy(() =>
+  import('./brightchat-routes').then((m) => ({
+    default: m.default,
   })),
 );
 
@@ -166,8 +172,6 @@ const App: FC = () => {
 };
 
 const InnerApp: FC = () => {
-  const { tBranded: t } = useI18n();
-
   const brightMailMenuConfig: IMenuConfig = {
     menuType: createMenuType(String(IncludeOnMenu.BrightMailMenu)),
     menuIcon: <FontAwesomeIcon icon={faEnvelope} />,
@@ -186,6 +190,11 @@ const InnerApp: FC = () => {
         ),
         link: '/brightmail',
         requiresAuth: true,
+        additionalSx: {
+          '& > svg': {
+            marginRight: '3px',
+          },
+        },
       },
     ],
   };
@@ -208,6 +217,11 @@ const InnerApp: FC = () => {
         ),
         link: '/brightpass',
         requiresAuth: true,
+        additionalSx: {
+          '& > svg': {
+            marginRight: '3px',
+          },
+        },
       },
     ],
   };
@@ -230,6 +244,38 @@ const InnerApp: FC = () => {
         ),
         link: '/brighthub',
         requiresAuth: true,
+        additionalSx: {
+          '& > svg': {
+            marginRight: '3px',
+          },
+        },
+      },
+    ],
+  };
+
+  const brightChatMenuConfig: IMenuConfig = {
+    menuType: createMenuType(String(IncludeOnMenu.BrightChatMenu)),
+    menuIcon: <FontAwesomeIcon icon={faComment} />,
+    priority: 100,
+    options: [
+      {
+        id: 'brightchat',
+        label: <BrightChainSubLogo subText="Chat" height={24} />,
+        includeOnMenus: [createMenuType(String(IncludeOnMenu.BrightChatMenu))],
+        index: 75,
+        icon: (
+          <FontAwesomeIcon
+            icon={faComment}
+            style={{ color: CONSTANTS.THEME_COLORS.CHAIN_BLUE_DARK }}
+          />
+        ),
+        link: '/brightchat',
+        requiresAuth: true,
+        additionalSx: {
+          '& > svg': {
+            marginRight: '3px',
+          },
+        },
       },
     ],
   };
@@ -240,6 +286,7 @@ const InnerApp: FC = () => {
         brightMailMenuConfig,
         brightPassMenuConfig,
         brightHubMenuConfig,
+        brightChatMenuConfig,
       ]}
     >
       <Box className="app-container" sx={{ paddingTop: '64px' }}>
@@ -366,6 +413,7 @@ const InnerApp: FC = () => {
             <Route path="/brightmail/*" element={<BrightMailRoutes />} />
             <Route path="/brightpass/*" element={<BrightPassRoutes />} />
             <Route path="/brighthub/*" element={<BrightHubRoutes />} />
+            <Route path="/brightchat/*" element={<BrightChatRoutes />} />
           </Routes>
         </Suspense>
       </Box>

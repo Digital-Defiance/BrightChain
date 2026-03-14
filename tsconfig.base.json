@@ -36,6 +36,10 @@
       "@brightchain/brighthub-react-components/*": [
         "brighthub-react-components/src/*"
       ],
+      "@brightchain/brightchat-lib": ["brightchat-lib/src/index.ts"],
+      "@brightchain/brightchat-react-components": [
+        "brightchat-react-components/src/index.ts"
+      ],
       "@brightchain/brighthub-lib": ["brighthub-lib/src/index.ts"],
       "@brightchain/brighthub-lib/*": ["brighthub-lib/src/*"],
       "@brightchain/azure-store": ["brightchain-azure-store/src/index.ts"],

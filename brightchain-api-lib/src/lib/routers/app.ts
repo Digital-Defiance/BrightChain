@@ -67,10 +67,11 @@ export class AppRouter<
   ): string {
     let result = super.applyIndexReplacements(html, locals);
 
-    // Inject Font Awesome kit script before </head> if kitId is configured
+    // Inject Font Awesome kit script before </head> if kitId is configured.
+    // The nonce is required because 'strict-dynamic' disables host-based allowlisting.
     const kitId = (locals as BrightChainIndexLocals).fontAwesomeKitId;
-    if (kitId) {
-      const faScript = `<script src="https://kit.fontawesome.com/${kitId}.js" crossorigin="anonymous"></script>`;
+    if (kitId && locals.cspNonce) {
+      const faScript = `<script nonce="${locals.cspNonce}" src="https://kit.fontawesome.com/${kitId}.js" crossorigin="anonymous"></script>`;
       result = result.replace('</head>', `${faScript}\n</head>`);
     }
 

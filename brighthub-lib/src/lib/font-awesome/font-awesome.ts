@@ -1,64 +1,118 @@
-import { all, IconDefinition } from '@awesome.me/kit-a20d532681/icons';
+import {
+  all,
+  byPrefixAndName,
+  IconDefinition,
+} from '@awesome.me/kit-a20d532681/icons';
+import type {
+  IconPrefix as FAIconPrefix,
+  IconFamily,
+  IconStyle,
+} from '@fortawesome/fontawesome-common-types';
 import * as cssProperties from 'known-css-properties';
 import postcss, { Declaration, Root } from 'postcss';
 
 import { FontAwesomeTextStyleTypeEnum } from '../fontawesome-text-class';
 
 export const DefaultIconClass = FontAwesomeTextStyleTypeEnum.Regular;
-export const FontAwesomeIconPrefixes = [
-  'fab',
-  'fal',
-  'far',
-  'fas',
-  'fat',
-  'fad',
-  'fasl',
-  'fasr',
-  'fass',
-  'fast',
-  'fasds',
-] as const;
-export const FontAwesomeIconPrefixStrings = [
-  'fab',
-  'fal',
-  'far',
-  'fas',
-  'fat',
-  'fad',
-  'fasl',
-  'fasr',
-  'fass',
-  'fast',
-  'fasds',
+
+/**
+ * All valid icon prefixes, derived at runtime from the kit's byPrefixAndName export.
+ * No need to maintain a hardcoded list — this updates automatically when the kit changes.
+ */
+export const FontAwesomeIconPrefixStrings: string[] =
+  Object.keys(byPrefixAndName).sort();
+export const FontAwesomeIconPrefixes =
+  FontAwesomeIconPrefixStrings as readonly string[];
+export type FontAwesomeIconPrefix = FAIconPrefix;
+
+/**
+ * Mapping from prefix to family+style, derived from the kit's module structure.
+ * The kit imports follow the pattern: `./family/style.mjs` → prefix.
+ * We derive this from the icon data itself: each icon carries its prefix,
+ * and the fontawesome-common-types package defines the canonical family/style types.
+ *
+ * For the markup parser, we care about the CSS class names (family + style),
+ * which are the values users type in `{{ solid heart }}` or `{{ sharpsolid heart }}`.
+ */
+
+/**
+ * All valid icon style names that can be used in markup.
+ * Derived from the canonical IconStyle type plus compound family-style names
+ * (e.g., 'sharpsolid') that the markup parser supports.
+ *
+ * The base styles come from @fortawesome/fontawesome-common-types IconStyle:
+ * solid, regular, light, thin, duotone, brands, semibold
+ *
+ * We also include family names from IconFamily that can be used as style qualifiers:
+ * classic, sharp, sharp-duotone, chisel, etch, graphite, jelly, jelly-duo,
+ * jelly-fill, notdog, notdog-duo, slab, slab-press, thumbprint, utility,
+ * utility-duo, utility-fill, whiteboard
+ */
+const BASE_STYLES: IconStyle[] = [
+  'solid',
+  'regular',
+  'light',
+  'thin',
+  'duotone',
+  'brands',
+  'semibold',
 ];
-export type FontAwesomeIconPrefix = (typeof FontAwesomeIconPrefixes)[number];
-export const FontAwesomeIconStyles = [
+const FAMILIES: IconFamily[] = [
   'classic',
   'duotone',
-  'light',
-  'regular',
-  'solid',
-  'thin',
-  'brands',
-  'sharpsolid',
-] as const;
-export const FontAwesomeIconStyleStrings = [
-  'classic',
-  'duotone',
-  'light',
-  'regular',
-  'solid',
-  'thin',
-  'brands',
-  'sharpsolid',
+  'sharp',
+  'sharp-duotone',
+  'chisel',
+  'etch',
+  'graphite',
+  'jelly',
+  'jelly-duo',
+  'jelly-fill',
+  'notdog',
+  'notdog-duo',
+  'slab',
+  'slab-press',
+  'thumbprint',
+  'utility',
+  'utility-duo',
+  'utility-fill',
+  'whiteboard',
 ];
-export type FontAwesomeIconStyle = (typeof FontAwesomeIconStyles)[number];
+
+/**
+ * Combined set of all valid style/family strings accepted in icon markup.
+ * Includes base styles, family names, and legacy compound names like 'sharpsolid'.
+ */
+export const FontAwesomeIconStyleStrings: string[] = [
+  ...new Set([
+    ...BASE_STYLES,
+    ...FAMILIES,
+    // Legacy compound name kept for backward compatibility
+    'sharpsolid',
+  ]),
+].sort();
+export const FontAwesomeIconStyles =
+  FontAwesomeIconStyleStrings as readonly string[];
+export type FontAwesomeIconStyle = IconStyle | IconFamily | 'sharpsolid';
+
+/**
+ * Valid additional CSS utility classes for Font Awesome icons.
+ * These are sizing and animation classes defined by the FA CSS framework.
+ * See: https://docs.fontawesome.com/web/style/size
+ * See: https://docs.fontawesome.com/web/style/animate
+ *
+ * Note: These are CSS utility classes, not derived from icon data.
+ * They must be updated if Font Awesome adds new utility classes.
+ */
 export const FontAwesomeAdditionalClasses = [
+  // Relative sizing (t-shirt sizes)
+  '2xs',
   'xs',
   'sm',
   'lg',
   'xl',
   '2xl',
+  // Literal sizing (1x–10x)
   '1x',
   '2x',
   '3x',
@@ -69,33 +123,46 @@ export const FontAwesomeAdditionalClasses = [
   '8x',
   '9x',
   '10x',
+  // Animations
   'spin',
-  'pulse',
+  'spin-reverse',
+  'spin-pulse',
+  'pulse', // deprecated alias for spin-pulse
   'beat',
+  'beat-fade',
+  'bounce',
   'fade',
   'flip',
+  'shake',
+  // Rotation & flipping
+  'rotate-90',
+  'rotate-180',
+  'rotate-270',
+  'rotate-by',
+  'flip-horizontal',
+  'flip-vertical',
+  'flip-both',
+  // Fixed width & canvas
+  'fw',
+  'width-auto',
+  // Bordered & pulled
+  'border',
+  'pull-start',
+  'pull-end',
+  'pull-left', // legacy alias for pull-start
+  'pull-right', // legacy alias for pull-end
+  // Stacking
+  'stack-1x',
+  'stack-2x',
+  'inverse',
+  // Duotone
+  'swap-opacity',
+  // Lists
+  'li',
+  'ul',
 ] as const;
-export const FontAwesomeAdditionalClassStrings = [
-  'xs',
-  'sm',
-  'lg',
-  'xl',
-  '2xl',
-  '1x',
-  '2x',
-  '3x',
-  '4x',
-  '5x',
-  '6x',
-  '7x',
-  '8x',
-  '9x',
-  '10x',
-  'spin',
-  'pulse',
-  'beat',
-  'fade',
-  'flip',
+export const FontAwesomeAdditionalClassStrings: string[] = [
+  ...FontAwesomeAdditionalClasses,
 ];
 export type FontAwesomeAdditionalClass =
   (typeof FontAwesomeAdditionalClasses)[number];
@@ -181,7 +248,10 @@ function isValidCSSProperty(declaration: string): boolean {
     return false;
   }
 
-  const [property, value] = declaration.split(':').map((str) => str.trim());
+  const [property, ...valueParts] = declaration
+    .split(':')
+    .map((str) => str.trim());
+  const value = valueParts.join(':').trim();
 
   if (!property || !value) {
     return false;
@@ -199,7 +269,7 @@ function isValidCSSProperty(declaration: string): boolean {
 
   // Validate value structure
   const valueRegex =
-    /^[-+]?[0-9]*\.?[0-9]+(px|em|rem|%)?|auto|inherit|initial|none$/;
+    /^([-+]?[0-9]*\.?[0-9]+(px|em|rem|%)?|auto|inherit|initial|none)$/;
   const colorRegex = /^#[0-9A-Fa-f]{3,6}$|^[a-zA-Z]+$/;
   if (!valueRegex.test(value) && !colorRegex.test(value)) {
     return false;
@@ -239,7 +309,7 @@ function isValidCSS(cssString: string): boolean {
 
       // Validate value structure
       const valueRegex =
-        /^[-+]?[0-9]*\.?[0-9]+(px|em|rem|%)?|auto|inherit|initial|none$/;
+        /^([-+]?[0-9]*\.?[0-9]+(px|em|rem|%)?|auto|inherit|initial|none)$/;
       const colorRegex = /^#[0-9A-Fa-f]{3,6}$|^[a-zA-Z]+$/;
       if (!valueRegex.test(value) && !colorRegex.test(value)) {
         throw new Error(`Invalid value: ${value}`);
@@ -276,7 +346,7 @@ export function isValidIconMarkup(markup: string): boolean {
     return false;
   }
 
-  const parts = content.split(';', 2);
+  const parts = content.split(/;(.*)/s);
   const mainPart = parts[0].trim();
   const stylePart = parts[1] ? parts[1].trim() : '';
 

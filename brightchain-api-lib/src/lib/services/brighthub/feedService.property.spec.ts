@@ -48,6 +48,7 @@ interface PostRecord {
   isEdited: boolean;
   editedAt?: string;
   hubIds?: string[];
+  isBlogPost: boolean;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -150,6 +151,7 @@ function postRecordArb(
     quoteCount: 0,
     isEdited: false,
     hubIds: options?.hubIds,
+    isBlogPost: (options?.postType ?? PostType.Original) !== PostType.Reply && (options?.postType ?? PostType.Original) !== PostType.Repost,
     isDeleted: options?.isDeleted ?? false,
     createdAt,
     updatedAt: createdAt,
