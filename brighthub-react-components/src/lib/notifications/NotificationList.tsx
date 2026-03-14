@@ -7,7 +7,7 @@
  * Implements Requirements 12.6, 53.4, 53.9, 53.10, 61.4
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import type { IBaseNotification } from '@brightchain/brighthub-lib';
 import {
   Box,

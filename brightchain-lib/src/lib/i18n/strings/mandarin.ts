@@ -1249,38 +1249,4 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Dashboard_FailedToLoadBalance]: '加载余额失败',
   [BrightChainStrings.Dashboard_FailedToLoadReputation]: '加载声誉失败',
   [BrightChainStrings.Dashboard_FailedToLoadData]: '加载数据失败',
-
-  // BrightMail
-  [BrightChainStrings.BrightMail_MenuLabel]: 'BrightMail',
-  [BrightChainStrings.BrightMail_Inbox_Title]: '收件箱',
-  [BrightChainStrings.BrightMail_Inbox_Empty]: '暂无邮件',
-  [BrightChainStrings.BrightMail_Inbox_Error]: '加载收件箱失败',
-  [BrightChainStrings.BrightMail_Inbox_Retry]: '重试',
-  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]: '{COUNT} 封未读',
-  [BrightChainStrings.BrightMail_Compose_Title]: '撰写',
-  [BrightChainStrings.BrightMail_Compose_To]: '收件人',
-  [BrightChainStrings.BrightMail_Compose_Cc]: '抄送',
-  [BrightChainStrings.BrightMail_Compose_Bcc]: '密送',
-  [BrightChainStrings.BrightMail_Compose_Subject]: '主题',
-  [BrightChainStrings.BrightMail_Compose_Body]: '正文',
-  [BrightChainStrings.BrightMail_Compose_Send]: '发送',
-  [BrightChainStrings.BrightMail_Compose_SendSuccess]: '邮件发送成功',
-  [BrightChainStrings.BrightMail_Compose_SendError]: '邮件发送失败',
-  [BrightChainStrings.BrightMail_Compose_InvalidRecipient]:
-    '请添加至少一个有效的收件人',
-  [BrightChainStrings.BrightMail_Compose_Attachments]: '附件',
-  [BrightChainStrings.BrightMail_Thread_Error]: '加载会话失败',
-  [BrightChainStrings.BrightMail_Thread_BackToInbox]: '返回收件箱',
-  [BrightChainStrings.BrightMail_Thread_Reply]: '回复',
-  [BrightChainStrings.BrightMail_Thread_Forward]: '转发',
-  [BrightChainStrings.BrightMail_Delete_Confirm]: '确定要删除吗？',
-  [BrightChainStrings.BrightMail_Delete_ConfirmBulkTemplate]:
-    '删除 {COUNT} 封选中的邮件？',
-  [BrightChainStrings.BrightMail_Delete_Success]: '邮件已删除',
-  [BrightChainStrings.BrightMail_Delete_ErrorTemplate]:
-    '删除邮件失败：{MESSAGE_ID}',
-  [BrightChainStrings.BrightMail_Action_Delete]: '删除',
-  [BrightChainStrings.BrightMail_Action_MarkAsRead]: '标记为已读',
-  [BrightChainStrings.BrightMail_Action_Cancel]: '取消',
-  [BrightChainStrings.BrightMail_Loading]: '加载中...',
 };

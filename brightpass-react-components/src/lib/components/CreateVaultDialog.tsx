@@ -8,7 +8,8 @@
  * Requirements: 3.6, 3.7
  */
 
-import { BrightPassStrings, VALIDATION } from '@brightchain/brightchain-lib';
+import { VALIDATION } from '@brightchain/brightchain-lib';
+import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import {
   Alert,
   Button,

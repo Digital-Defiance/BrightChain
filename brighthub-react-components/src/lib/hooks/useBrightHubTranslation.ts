@@ -1,8 +1,6 @@
-import type { BrightHubStringKey } from '@brightchain/brightchain-lib';
-import {
-  BrightHubComponentId,
-  getBrightChainI18nEngine,
-} from '@brightchain/brightchain-lib';
+import type { BrightHubStringKey } from '@brightchain/brighthub-lib';
+import { BrightHubComponentId } from '@brightchain/brighthub-lib';
+import { getBrightChainI18nEngine } from '@brightchain/brightchain-lib';
 
 /**
  * Hook that wraps the i18n engine for BrightHub components.

@@ -9,8 +9,8 @@
  * Implements Requirement 12.4
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
 import {
+  BrightHubStrings,
   IBasePostData,
   IBaseThread,
   IBaseUserProfile,
@@ -116,7 +116,7 @@ function ReplyThread({
   onRepost?: (postId: string) => void;
   onPostClick?: (postId: string) => void;
   t: (
-    key: import('@brightchain/brightchain-lib').BrightHubStringKey,
+    key: import('@brightchain/brighthub-lib').BrightHubStringKey,
     vars?: Record<string, string>,
   ) => string;
 }) {

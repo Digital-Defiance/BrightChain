@@ -17,7 +17,7 @@ import type {
 import {
   BrightPassStrings,
   type BrightPassStringKey,
-} from '@brightchain/brightchain-lib';
+} from '@brightchain/brightpass-lib';
 import AddIcon from '@mui/icons-material/Add';
 import BadgeIcon from '@mui/icons-material/Badge';
 import CreditCardIcon from '@mui/icons-material/CreditCard';

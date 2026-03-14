@@ -7,10 +7,10 @@
  */
 
 import {
-  BrightChainStrings,
   IEmailMetadata,
   IMailbox,
 } from '@brightchain/brightchain-lib';
+import { BrightMailStrings } from '@brightchain/brightmail-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ForwardIcon from '@mui/icons-material/Forward';
@@ -159,13 +159,13 @@ const ThreadView: FC = () => {
       setEmails((prev) => prev.filter((e) => e.messageId !== deleteTarget));
       setSnackbar({
         open: true,
-        message: t(BrightChainStrings.BrightMail_Delete_Success),
+        message: t(BrightMailStrings.Delete_Success),
         severity: 'success',
       });
     } catch {
       setSnackbar({
         open: true,
-        message: t(BrightChainStrings.BrightMail_Delete_ErrorTemplate).replace(
+        message: t(BrightMailStrings.Delete_ErrorTemplate).replace(
           '{MESSAGE_ID}',
           deleteTarget,
         ),
@@ -242,7 +242,7 @@ const ThreadView: FC = () => {
       setReplyText('');
       setSnackbar({
         open: true,
-        message: t(BrightChainStrings.BrightMail_Compose_SendSuccess),
+        message: t(BrightMailStrings.Compose_SendSuccess),
         severity: 'success',
       });
       // Refresh thread to show the new reply
@@ -250,7 +250,7 @@ const ThreadView: FC = () => {
     } catch {
       setSnackbar({
         open: true,
-        message: t(BrightChainStrings.BrightMail_Compose_SendError),
+        message: t(BrightMailStrings.Compose_SendError),
         severity: 'error',
       });
     }
@@ -297,7 +297,7 @@ const ThreadView: FC = () => {
     return (
       <Box data-testid="thread-error">
         <Alert severity="error" role="alert">
-          {t(BrightChainStrings.BrightMail_Thread_Error)}
+          {t(BrightMailStrings.Thread_Error)}
         </Alert>
         <Button
           component={Link}
@@ -306,7 +306,7 @@ const ThreadView: FC = () => {
           sx={{ mt: 1 }}
           data-testid="back-to-inbox"
         >
-          {t(BrightChainStrings.BrightMail_Thread_BackToInbox)}
+          {t(BrightMailStrings.Thread_BackToInbox)}
         </Button>
       </Box>
     );
@@ -322,7 +322,7 @@ const ThreadView: FC = () => {
         sx={{ mb: 2 }}
         data-testid="back-to-inbox"
       >
-        {t(BrightChainStrings.BrightMail_Thread_BackToInbox)}
+        {t(BrightMailStrings.Thread_BackToInbox)}
       </Button>
 
       {emails.map((email) => {
@@ -425,33 +425,33 @@ const ThreadView: FC = () => {
 
                 {/* Action toolbar */}
                 <Box display="flex" gap={1} mt={2}>
-                  <Tooltip title={t(BrightChainStrings.BrightMail_Thread_Reply)}>
+                  <Tooltip title={t(BrightMailStrings.Thread_Reply)}>
                     <IconButton
                       size="small"
                       data-testid={`reply-btn-${email.messageId}`}
                       onClick={() => handleReply(email)}
-                      aria-label={t(BrightChainStrings.BrightMail_Thread_Reply)}
+                      aria-label={t(BrightMailStrings.Thread_Reply)}
                     >
                       <ReplyIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title={t(BrightChainStrings.BrightMail_Thread_Forward)}>
+                  <Tooltip title={t(BrightMailStrings.Thread_Forward)}>
                     <IconButton
                       size="small"
                       data-testid={`forward-btn-${email.messageId}`}
                       onClick={() => handleForward(email)}
-                      aria-label={t(BrightChainStrings.BrightMail_Thread_Forward)}
+                      aria-label={t(BrightMailStrings.Thread_Forward)}
                     >
                       <ForwardIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title={t(BrightChainStrings.BrightMail_Action_Delete)}>
+                  <Tooltip title={t(BrightMailStrings.Action_Delete)}>
                     <IconButton
                       size="small"
                       color="error"
                       data-testid={`delete-btn-${email.messageId}`}
                       onClick={() => setDeleteTarget(email.messageId)}
-                      aria-label={t(BrightChainStrings.BrightMail_Action_Delete)}
+                      aria-label={t(BrightMailStrings.Action_Delete)}
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
@@ -467,14 +467,14 @@ const ThreadView: FC = () => {
       {emails.length > 0 && (
         <Paper variant="outlined" sx={{ p: 2 }} data-testid="inline-reply-box">
           <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            {t(BrightChainStrings.BrightMail_Thread_Reply)}
+            {t(BrightMailStrings.Thread_Reply)}
           </Typography>
           <TextField
             fullWidth
             multiline
             minRows={2}
             maxRows={6}
-            placeholder={t(BrightChainStrings.BrightMail_Thread_Reply)}
+            placeholder={t(BrightMailStrings.Thread_Reply)}
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             data-testid="inline-reply-input"
@@ -488,15 +488,15 @@ const ThreadView: FC = () => {
             disabled={!replyText.trim()}
             data-testid="inline-reply-send"
           >
-            {t(BrightChainStrings.BrightMail_Compose_Send)}
+            {t(BrightMailStrings.Compose_Send)}
           </Button>
         </Paper>
       )}
 
       <ConfirmDialog
         open={deleteTarget !== null}
-        title={t(BrightChainStrings.BrightMail_Action_Delete)}
-        message={t(BrightChainStrings.BrightMail_Delete_Confirm)}
+        title={t(BrightMailStrings.Action_Delete)}
+        message={t(BrightMailStrings.Delete_Confirm)}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />

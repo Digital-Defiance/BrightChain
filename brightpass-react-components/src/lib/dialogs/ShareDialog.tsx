@@ -8,7 +8,7 @@
  * Requirements: 9.1, 9.2, 9.3, 9.4
  */
 
-import { BrightPassStrings } from '@brightchain/brightchain-lib';
+import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';

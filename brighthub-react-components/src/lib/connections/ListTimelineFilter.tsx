@@ -9,7 +9,7 @@
  * Implements Requirements 35.14, 61.4
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import ClearIcon from '@mui/icons-material/Clear';
 import {
   Box,

@@ -8,7 +8,7 @@
  * Implements Requirements 52.1-52.10, 61.4
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import type {
   IBaseNotification,
   INotificationActions,

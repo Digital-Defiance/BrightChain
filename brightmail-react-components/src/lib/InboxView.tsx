@@ -5,10 +5,8 @@
  * Requirements: 3.1, 3.2, 3.3, 3.5, 3.6, 3.7, 3.8, 3.9, 7.1
  */
 
-import {
-  BrightChainStrings,
-  IEmailMetadata,
-} from '@brightchain/brightchain-lib';
+import { IEmailMetadata } from '@brightchain/brightchain-lib';
+import { BrightMailStrings } from '@brightchain/brightmail-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import {
   Alert,
@@ -264,7 +262,7 @@ const InboxView: FC<InboxViewProps> = ({ folder = 'inbox' }) => {
     const { failed } = await bulkDelete(ids, (id) => emailApi.deleteEmail(id));
 
     if (failed.length > 0) {
-      const template = t(BrightChainStrings.BrightMail_Delete_ErrorTemplate);
+      const template = t(BrightMailStrings.Delete_ErrorTemplate);
       setSnackbar({
         open: true,
         message: failed
@@ -275,7 +273,7 @@ const InboxView: FC<InboxViewProps> = ({ folder = 'inbox' }) => {
     } else {
       setSnackbar({
         open: true,
-        message: t(BrightChainStrings.BrightMail_Delete_Success),
+        message: t(BrightMailStrings.Delete_Success),
         severity: 'success',
       });
     }
@@ -326,10 +324,10 @@ const InboxView: FC<InboxViewProps> = ({ folder = 'inbox' }) => {
     return (
       <Box data-testid="inbox-loading">
         <Typography variant="h6">
-          {t(BrightChainStrings.BrightMail_Inbox_Title)}
+          {t(BrightMailStrings.Inbox_Title)}
         </Typography>
         <Typography variant="body2" aria-live="polite">
-          {t(BrightChainStrings.BrightMail_Loading)}
+          {t(BrightMailStrings.Loading)}
         </Typography>
         {Array.from({ length: 5 }).map((_, i) => (
           <Skeleton key={i} variant="rectangular" height={48} sx={{ my: 1 }} />
@@ -343,10 +341,10 @@ const InboxView: FC<InboxViewProps> = ({ folder = 'inbox' }) => {
     return (
       <Box data-testid="inbox-error">
         <Typography variant="h6">
-          {t(BrightChainStrings.BrightMail_Inbox_Title)}
+          {t(BrightMailStrings.Inbox_Title)}
         </Typography>
         <Alert severity="error" role="alert">
-          {t(BrightChainStrings.BrightMail_Inbox_Error)}
+          {t(BrightMailStrings.Inbox_Error)}
         </Alert>
         <Button
           onClick={() => fetchInbox(1)}
@@ -354,7 +352,7 @@ const InboxView: FC<InboxViewProps> = ({ folder = 'inbox' }) => {
           sx={{ mt: 1 }}
           data-testid="inbox-retry"
         >
-          {t(BrightChainStrings.BrightMail_Inbox_Retry)}
+          {t(BrightMailStrings.Inbox_Retry)}
         </Button>
       </Box>
     );
@@ -365,21 +363,21 @@ const InboxView: FC<InboxViewProps> = ({ folder = 'inbox' }) => {
     return (
       <Box data-testid="inbox-empty">
         <Typography variant="h6">
-          {t(BrightChainStrings.BrightMail_Inbox_Title)}
+          {t(BrightMailStrings.Inbox_Title)}
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mt: 2 }}>
-          {t(BrightChainStrings.BrightMail_Inbox_Empty)}
+          {t(BrightMailStrings.Inbox_Empty)}
         </Typography>
       </Box>
     );
   }
 
   const unreadText = t(
-    BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate,
+    BrightMailStrings.Inbox_UnreadCountTemplate,
   ).replace('{COUNT}', String(state.unreadCount));
 
   const bulkDeleteMessage = t(
-    BrightChainStrings.BrightMail_Delete_ConfirmBulkTemplate,
+    BrightMailStrings.Delete_ConfirmBulkTemplate,
   ).replace('{COUNT}', String(state.selectedIds.size));
 
   return (
@@ -391,7 +389,7 @@ const InboxView: FC<InboxViewProps> = ({ folder = 'inbox' }) => {
         mb={1}
       >
         <Typography variant="h6">
-          {t(BrightChainStrings.BrightMail_Inbox_Title)}
+          {t(BrightMailStrings.Inbox_Title)}
         </Typography>
         <Typography
           variant="body2"
@@ -414,14 +412,14 @@ const InboxView: FC<InboxViewProps> = ({ folder = 'inbox' }) => {
             variant="outlined"
             onClick={() => setDeleteConfirmOpen(true)}
           >
-            {t(BrightChainStrings.BrightMail_Action_Delete)}
+            {t(BrightMailStrings.Action_Delete)}
           </Button>
           <Button
             size="small"
             variant="outlined"
             onClick={handleBulkMarkAsRead}
           >
-            {t(BrightChainStrings.BrightMail_Action_MarkAsRead)}
+            {t(BrightMailStrings.Action_MarkAsRead)}
           </Button>
         </Toolbar>
       )}
@@ -448,7 +446,7 @@ const InboxView: FC<InboxViewProps> = ({ folder = 'inbox' }) => {
 
       <ConfirmDialog
         open={deleteConfirmOpen}
-        title={t(BrightChainStrings.BrightMail_Action_Delete)}
+        title={t(BrightMailStrings.Action_Delete)}
         message={bulkDeleteMessage}
         onConfirm={handleBulkDelete}
         onCancel={() => setDeleteConfirmOpen(false)}

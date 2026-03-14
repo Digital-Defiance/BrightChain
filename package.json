@@ -1,6 +1,6 @@
 {
   "name": "brightchain",
-  "version": "0.29.6",
+  "version": "0.29.7",
   "license": "MIT",
   "workspaces": [
     "brightchain-lib",
@@ -22,6 +22,7 @@
     "brighthub-react-components",
     "brightchain-azure-store",
     "brightchain-s3-store",
+    "brightmail-lib",
     "showcase",
     "tools"
   ],
@@ -44,6 +45,8 @@
     "build:brightmail-react-components:prod": "NODE_ENV=production npx nx build brightmail-react-components --configuration=production",
     "build:brightchat-react-components:prod": "NODE_ENV=production npx nx build brightchat-react-components --configuration=production",
     "build:brightchat-lib:prod": "NODE_ENV=production npx nx build brightchat-lib --configuration=production",
+    "build:brightpass-lib:prod": "NODE_ENV=production npx nx build brightpass-lib --configuration=production",
+    "build:brightmail-lib:prod": "NODE_ENV=production npx nx build brightmail-lib --configuration=production",
     "brightchain-lib:build:dev": "npx nx run brightchain-lib:build:development --configuration=development",
     "brightchain-lib:build": "npx nx run brightchain-lib:build:production --configuration=production",
     "brightchain-lib:test": "NODE_OPTIONS='--max-old-space-size=8192' npx nx test brightchain-lib",
@@ -94,7 +97,7 @@
     "@digitaldefiance/branded-interface": "0.0.5",
     "@digitaldefiance/bzip2-wasm": "^1.1.1",
     "@digitaldefiance/ecies-lib": "^4.20.2",
-    "@digitaldefiance/express-suite-react-components": "^4.22.3",
+    "@digitaldefiance/express-suite-react-components": "^4.22.5",
     "@digitaldefiance/i18n-lib": "^4.6.4",
     "@digitaldefiance/node-ecies-lib": "^4.23.0",
     "@digitaldefiance/node-express-suite": "4.23.2",

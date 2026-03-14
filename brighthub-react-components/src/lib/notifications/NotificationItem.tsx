@@ -8,7 +8,7 @@
  * Implements Requirements 53.3, 53.7, 53.8, 54.7, 61.4, 61.6
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import type { IBaseNotification } from '@brightchain/brighthub-lib';
 import { Delete, DoneAll, ExpandLess, ExpandMore } from '@mui/icons-material';
 import {

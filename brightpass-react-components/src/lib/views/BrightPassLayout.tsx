@@ -1,6 +1,6 @@
 import {
   BrightPassStrings,
-} from '@brightchain/brightchain-lib';
+} from '@brightchain/brightpass-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import { BrightChainSubLogo } from '@brightchain/brightchain-react-components';
 import { Box, Button, Container, Typography } from '@mui/material';
