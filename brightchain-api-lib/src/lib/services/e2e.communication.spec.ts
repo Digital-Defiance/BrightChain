@@ -197,9 +197,31 @@ async function buildMultiNodeEnv(count: number): Promise<{
     chController.setChannelService(channelService);
     chController.setPermissionService(permissionService);
 
-    app.use('/api/conversations', convController.router);
-    app.use('/api/groups', grpController.router);
-    app.use('/api/channels', chController.router);
+    // Bypass JWT auth for e2e tests: override authenticateRequest to just call next()
+    // while populating req.user from body/query memberId/senderId so getMemberId() works.
+    const bypassAuth = async (
+      _route: unknown,
+      req: any,
+      _res: any,
+      next: () => void,
+    ) => {
+      const id =
+        req.body?.senderId ??
+        req.body?.memberId ??
+        req.body?.requesterId ??
+        req.query?.memberId;
+      if (id) {
+        req.user = { id, email: `${id}@test.local` };
+      }
+      next();
+    };
+    (convController as any).authenticateRequest = bypassAuth;
+    (grpController as any).authenticateRequest = bypassAuth;
+    (chController as any).authenticateRequest = bypassAuth;
+
+    app.use('/api/brightchat/conversations', convController.router);
+    app.use('/api/brightchat/groups', grpController.router);
+    app.use('/api/brightchat/channels', chController.router);
 
     // Start on a random available port
     const server = await new Promise<Server>((resolve) => {
@@ -265,7 +287,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Alice sends via node-0
       const sendRes = await request(node0.app)
-        .post('/api/conversations')
+        .post('/api/brightchat/conversations')
         .send({
           senderId: 'alice',
           recipientId: 'bob',
@@ -280,7 +302,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Bob lists conversations via node-1
       const listRes = await request(node1.app)
-        .get('/api/conversations')
+        .get('/api/brightchat/conversations')
         .query({ memberId: 'bob' })
         .expect(200);
 
@@ -290,7 +312,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       // Bob retrieves messages via node-1
       const convId = message.contextId;
       const msgRes = await request(node1.app)
-        .get(`/api/conversations/${convId}/messages`)
+        .get(`/api/brightchat/conversations/${convId}/messages`)
         .query({ memberId: 'bob' })
         .expect(200);
 
@@ -306,7 +328,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Alice sends to carol via node-0
       await request(node0.app)
-        .post('/api/conversations')
+        .post('/api/brightchat/conversations')
         .send({
           senderId: 'alice',
           recipientId: 'carol',
@@ -318,7 +340,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Alice sends to dave via node-2
       await request(node2.app)
-        .post('/api/conversations')
+        .post('/api/brightchat/conversations')
         .send({
           senderId: 'alice',
           recipientId: 'dave',
@@ -328,7 +350,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // List via node-0
       const listRes = await request(node0.app)
-        .get('/api/conversations')
+        .get('/api/brightchat/conversations')
         .query({ memberId: 'alice' })
         .expect(200);
 
@@ -347,7 +369,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const [node0, node1, node2] = env.nodes;
 
       const sendRes = await request(node0.app)
-        .post('/api/conversations')
+        .post('/api/brightchat/conversations')
         .send({
           senderId: 'alice',
           recipientId: 'bob',
@@ -359,13 +381,13 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Delete via node-1
       await request(node1.app)
-        .delete(`/api/conversations/${contextId}/messages/${messageId}`)
+        .delete(`/api/brightchat/conversations/${contextId}/messages/${messageId}`)
         .query({ memberId: 'alice' })
         .expect(200);
 
       // Verify via node-2
       const msgRes = await request(node2.app)
-        .get(`/api/conversations/${contextId}/messages`)
+        .get(`/api/brightchat/conversations/${contextId}/messages`)
         .query({ memberId: 'bob' })
         .expect(200);
 
@@ -382,12 +404,12 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Non-existent
       const err1 = await request(node0.app)
-        .post('/api/conversations')
+        .post('/api/brightchat/conversations')
         .send({ senderId: 'alice', recipientId: 'nonexistent', content: 'hi' });
 
       // Blocked
       const err2 = await request(node0.app)
-        .post('/api/conversations')
+        .post('/api/brightchat/conversations')
         .send({ senderId: 'alice', recipientId: 'dave', content: 'hi' });
 
       // Same error shape — no info leakage
@@ -408,7 +430,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Create group via node-0
       const createRes = await request(node0.app)
-        .post('/api/groups')
+        .post('/api/brightchat/groups')
         .send({
           memberId: 'alice',
           name: 'Cross-Node Team',
@@ -423,7 +445,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Send message via node-1
       const sendRes = await request(node1.app)
-        .post(`/api/groups/${groupId}/messages`)
+        .post(`/api/brightchat/groups/${groupId}/messages`)
         .send({ memberId: 'bob', content: 'Hello from node-1!' })
         .expect(201);
 
@@ -431,7 +453,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Retrieve via node-2
       const msgRes = await request(node2.app)
-        .get(`/api/groups/${groupId}/messages`)
+        .get(`/api/brightchat/groups/${groupId}/messages`)
         .query({ memberId: 'carol' })
         .expect(200);
 
@@ -448,7 +470,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const [, , node2] = env.nodes;
 
       const metaRes = await request(node2.app)
-        .get(`/api/groups/${groupId}`)
+        .get(`/api/brightchat/groups/${groupId}`)
         .query({ memberId: 'alice' })
         .expect(200);
 
@@ -464,13 +486,13 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const [node0, , node2] = env.nodes;
 
       await request(node0.app)
-        .post(`/api/groups/${groupId}/members`)
+        .post(`/api/brightchat/groups/${groupId}/members`)
         .send({ memberId: 'alice', memberIds: ['dave'] })
         .expect(200);
 
       // Dave reads messages via node-2
       const msgRes = await request(node2.app)
-        .get(`/api/groups/${groupId}/messages`)
+        .get(`/api/brightchat/groups/${groupId}/messages`)
         .query({ memberId: 'dave' })
         .expect(200);
 
@@ -483,7 +505,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const oldKey = env.groupService.getSymmetricKey(groupId)!;
 
       await request(node1.app)
-        .delete(`/api/groups/${groupId}/members/dave`)
+        .delete(`/api/brightchat/groups/${groupId}/members/dave`)
         .query({ memberId: 'alice' })
         .expect(200);
 
@@ -497,7 +519,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const oldKey = env.groupService.getSymmetricKey(groupId)!;
 
       await request(node2.app)
-        .post(`/api/groups/${groupId}/leave`)
+        .post(`/api/brightchat/groups/${groupId}/leave`)
         .send({ memberId: 'carol' })
         .expect(200);
 
@@ -516,7 +538,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Create via node-0
       const createRes = await request(node0.app)
-        .post('/api/channels')
+        .post('/api/brightchat/channels')
         .send({
           memberId: 'alice',
           name: 'cross-node-general',
@@ -530,19 +552,19 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Join via node-1
       await request(node1.app)
-        .post(`/api/channels/${channelId}/join`)
+        .post(`/api/brightchat/channels/${channelId}/join`)
         .send({ memberId: 'bob' })
         .expect(200);
 
       // Join via node-2
       await request(node2.app)
-        .post(`/api/channels/${channelId}/join`)
+        .post(`/api/brightchat/channels/${channelId}/join`)
         .send({ memberId: 'carol' })
         .expect(200);
 
       // Send via node-2
       const sendRes = await request(node2.app)
-        .post(`/api/channels/${channelId}/messages`)
+        .post(`/api/brightchat/channels/${channelId}/messages`)
         .send({ memberId: 'carol', content: 'Hello from node-2 channel!' })
         .expect(201);
 
@@ -552,7 +574,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Retrieve via node-0
       const msgRes = await request(node0.app)
-        .get(`/api/channels/${channelId}/messages`)
+        .get(`/api/brightchat/channels/${channelId}/messages`)
         .query({ memberId: 'alice' })
         .expect(200);
 
@@ -568,7 +590,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const [node0, node1] = env.nodes;
 
       await request(node0.app)
-        .post('/api/channels')
+        .post('/api/brightchat/channels')
         .send({
           memberId: 'alice',
           name: 'invisible-cross',
@@ -578,7 +600,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Bob lists channels via node-1 — should not see invisible channel
       const listRes = await request(node1.app)
-        .get('/api/channels')
+        .get('/api/brightchat/channels')
         .query({ memberId: 'bob' })
         .expect(200);
 
@@ -592,7 +614,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const [node0, node1, node2] = env.nodes;
 
       const privChannel = await request(node0.app)
-        .post('/api/channels')
+        .post('/api/brightchat/channels')
         .send({
           memberId: 'alice',
           name: 'invite-cross-node',
@@ -604,7 +626,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Create invite via node-0
       const inviteRes = await request(node0.app)
-        .post(`/api/channels/${privId}/invites`)
+        .post(`/api/brightchat/channels/${privId}/invites`)
         .send({ memberId: 'alice', maxUses: 2, expiresInMs: 60000 })
         .expect(201);
 
@@ -612,19 +634,19 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Redeem via node-1
       await request(node1.app)
-        .post(`/api/channels/${privId}/invites/${token}/redeem`)
+        .post(`/api/brightchat/channels/${privId}/invites/${token}/redeem`)
         .send({ memberId: 'bob' })
         .expect(200);
 
       // Redeem via node-2
       await request(node2.app)
-        .post(`/api/channels/${privId}/invites/${token}/redeem`)
+        .post(`/api/brightchat/channels/${privId}/invites/${token}/redeem`)
         .send({ memberId: 'carol' })
         .expect(200);
 
       // Third redemption should fail (exhausted)
       const failRes = await request(node0.app)
-        .post(`/api/channels/${privId}/invites/${token}/redeem`)
+        .post(`/api/brightchat/channels/${privId}/invites/${token}/redeem`)
         .send({ memberId: 'dave' });
 
       expect(failRes.body.error).toBeDefined();
@@ -634,7 +656,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const [node0, node1] = env.nodes;
 
       const ch = await request(node0.app)
-        .post('/api/channels')
+        .post('/api/brightchat/channels')
         .send({
           memberId: 'alice',
           name: 'morph-cross',
@@ -644,7 +666,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Bob can see it via node-1
       let listRes = await request(node1.app)
-        .get('/api/channels')
+        .get('/api/brightchat/channels')
         .query({ memberId: 'bob' })
         .expect(200);
       expect(
@@ -655,13 +677,13 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Change to secret via node-0
       await request(node0.app)
-        .put(`/api/channels/${ch.body.data.id}`)
+        .put(`/api/brightchat/channels/${ch.body.data.id}`)
         .send({ memberId: 'alice', visibility: ChannelVisibility.SECRET })
         .expect(200);
 
       // Bob can no longer see it via node-1
       listRes = await request(node1.app)
-        .get('/api/channels')
+        .get('/api/brightchat/channels')
         .query({ memberId: 'bob' })
         .expect(200);
       expect(
@@ -679,26 +701,26 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const [node0, node1, node2] = env.nodes;
 
       const group = await request(node0.app)
-        .post('/api/groups')
+        .post('/api/brightchat/groups')
         .send({ memberId: 'alice', name: 'Edit Cross', memberIds: ['bob'] })
         .expect(201);
 
       const gid = group.body.data.id;
 
       const msg = await request(node0.app)
-        .post(`/api/groups/${gid}/messages`)
+        .post(`/api/brightchat/groups/${gid}/messages`)
         .send({ memberId: 'alice', content: 'original text' })
         .expect(201);
 
       // Edit via node-1
       await request(node1.app)
-        .put(`/api/groups/${gid}/messages/${msg.body.data.id}`)
+        .put(`/api/brightchat/groups/${gid}/messages/${msg.body.data.id}`)
         .send({ memberId: 'alice', content: 'edited text' })
         .expect(200);
 
       // Verify via node-2
       const msgRes = await request(node2.app)
-        .get(`/api/groups/${gid}/messages`)
+        .get(`/api/brightchat/groups/${gid}/messages`)
         .query({ memberId: 'bob' })
         .expect(200);
 
@@ -714,26 +736,26 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const [node0, node1, node2] = env.nodes;
 
       const group = await request(node0.app)
-        .post('/api/groups')
+        .post('/api/brightchat/groups')
         .send({ memberId: 'alice', name: 'Pin Cross', memberIds: ['bob'] })
         .expect(201);
 
       const gid = group.body.data.id;
 
       const msg = await request(node0.app)
-        .post(`/api/groups/${gid}/messages`)
+        .post(`/api/brightchat/groups/${gid}/messages`)
         .send({ memberId: 'alice', content: 'pin me' })
         .expect(201);
 
       // Pin via node-0
       await request(node0.app)
-        .post(`/api/groups/${gid}/messages/${msg.body.data.id}/pin`)
+        .post(`/api/brightchat/groups/${gid}/messages/${msg.body.data.id}/pin`)
         .send({ memberId: 'alice' })
         .expect(200);
 
       // Verify pinned via node-2
       const metaRes = await request(node2.app)
-        .get(`/api/groups/${gid}`)
+        .get(`/api/brightchat/groups/${gid}`)
         .query({ memberId: 'bob' })
         .expect(200);
 
@@ -741,12 +763,12 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Unpin via node-1
       await request(node1.app)
-        .delete(`/api/groups/${gid}/messages/${msg.body.data.id}/pin`)
+        .delete(`/api/brightchat/groups/${gid}/messages/${msg.body.data.id}/pin`)
         .send({ memberId: 'alice' })
         .expect(200);
 
       const metaRes2 = await request(node0.app)
-        .get(`/api/groups/${gid}`)
+        .get(`/api/brightchat/groups/${gid}`)
         .query({ memberId: 'alice' })
         .expect(200);
 
@@ -759,7 +781,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const [node0, node1, node2] = env.nodes;
 
       const ch = await request(node0.app)
-        .post('/api/channels')
+        .post('/api/brightchat/channels')
         .send({
           memberId: 'alice',
           name: 'react-cross',
@@ -769,18 +791,18 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       const chId = ch.body.data.id;
       await request(node1.app)
-        .post(`/api/channels/${chId}/join`)
+        .post(`/api/brightchat/channels/${chId}/join`)
         .send({ memberId: 'bob' })
         .expect(200);
 
       const msg = await request(node0.app)
-        .post(`/api/channels/${chId}/messages`)
+        .post(`/api/brightchat/channels/${chId}/messages`)
         .send({ memberId: 'alice', content: 'react to this' })
         .expect(201);
 
       // Add reaction via node-1
       const reactRes = await request(node1.app)
-        .post(`/api/channels/${chId}/messages/${msg.body.data.id}/reactions`)
+        .post(`/api/brightchat/channels/${chId}/messages/${msg.body.data.id}/reactions`)
         .send({ memberId: 'bob', emoji: '🎉' })
         .expect(201);
 
@@ -788,7 +810,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Verify reaction exists via node-2 (read messages)
       let msgRes = await request(node2.app)
-        .get(`/api/channels/${chId}/messages`)
+        .get(`/api/brightchat/channels/${chId}/messages`)
         .query({ memberId: 'alice' })
         .expect(200);
 
@@ -800,14 +822,14 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       // Remove reaction via node-2
       await request(node2.app)
         .delete(
-          `/api/channels/${chId}/messages/${msg.body.data.id}/reactions/${reactionId}`,
+          `/api/brightchat/channels/${chId}/messages/${msg.body.data.id}/reactions/${reactionId}`,
         )
         .query({ memberId: 'bob' })
         .expect(200);
 
       // Verify removed via node-0
       msgRes = await request(node0.app)
-        .get(`/api/channels/${chId}/messages`)
+        .get(`/api/brightchat/channels/${chId}/messages`)
         .query({ memberId: 'alice' })
         .expect(200);
 
@@ -825,7 +847,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const [node0, node1] = env.nodes;
 
       const group = await request(node0.app)
-        .post('/api/groups')
+        .post('/api/brightchat/groups')
         .send({
           memberId: 'alice',
           name: 'Perms Cross',
@@ -837,20 +859,20 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Bob (member) cannot remove carol via node-1
       const failRes = await request(node1.app)
-        .delete(`/api/groups/${gid}/members/carol`)
+        .delete(`/api/brightchat/groups/${gid}/members/carol`)
         .query({ memberId: 'bob' });
 
       expect(failRes.body.error).toBeDefined();
 
       // Promote bob to admin via node-0
       await request(node0.app)
-        .put(`/api/groups/${gid}/roles/bob`)
+        .put(`/api/brightchat/groups/${gid}/roles/bob`)
         .send({ memberId: 'alice', role: DefaultRole.ADMIN })
         .expect(200);
 
       // Now bob can remove carol via node-1
       await request(node1.app)
-        .delete(`/api/groups/${gid}/members/carol`)
+        .delete(`/api/brightchat/groups/${gid}/members/carol`)
         .query({ memberId: 'bob' })
         .expect(200);
     });
@@ -859,7 +881,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const [node0, node1] = env.nodes;
 
       const ch = await request(node0.app)
-        .post('/api/channels')
+        .post('/api/brightchat/channels')
         .send({
           memberId: 'alice',
           name: 'mute-cross',
@@ -869,19 +891,19 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       const chId = ch.body.data.id;
       await request(node1.app)
-        .post(`/api/channels/${chId}/join`)
+        .post(`/api/brightchat/channels/${chId}/join`)
         .send({ memberId: 'bob' })
         .expect(200);
 
       // Mute bob via node-0
       await request(node0.app)
-        .post(`/api/channels/${chId}/mute/bob`)
+        .post(`/api/brightchat/channels/${chId}/mute/bob`)
         .send({ memberId: 'alice', durationMs: 5000 })
         .expect(200);
 
       // Bob cannot send via node-1
       const failRes = await request(node1.app)
-        .post(`/api/channels/${chId}/messages`)
+        .post(`/api/brightchat/channels/${chId}/messages`)
         .send({ memberId: 'bob', content: 'muted msg' });
 
       expect(failRes.body.error).toBeDefined();
@@ -891,7 +913,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const [node0, node1, node2] = env.nodes;
 
       const ch = await request(node0.app)
-        .post('/api/channels')
+        .post('/api/brightchat/channels')
         .send({
           memberId: 'alice',
           name: 'kick-cross',
@@ -901,7 +923,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       const chId = ch.body.data.id;
       await request(node1.app)
-        .post(`/api/channels/${chId}/join`)
+        .post(`/api/brightchat/channels/${chId}/join`)
         .send({ memberId: 'bob' })
         .expect(200);
 
@@ -909,7 +931,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Kick via node-1
       await request(node1.app)
-        .post(`/api/channels/${chId}/kick/bob`)
+        .post(`/api/brightchat/channels/${chId}/kick/bob`)
         .send({ memberId: 'alice' })
         .expect(200);
 
@@ -918,7 +940,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Bob cannot send via node-2
       const failRes = await request(node2.app)
-        .post(`/api/channels/${chId}/messages`)
+        .post(`/api/brightchat/channels/${chId}/messages`)
         .send({ memberId: 'bob', content: 'kicked msg' });
 
       expect(failRes.body.error).toBeDefined();
@@ -933,7 +955,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const ws = env.subscribeWs();
 
       const group = await request(node0.app)
-        .post('/api/groups')
+        .post('/api/brightchat/groups')
         .send({ memberId: 'alice', name: 'Events Cross', memberIds: ['bob'] })
         .expect(201);
 
@@ -941,7 +963,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Send via node-1
       const sendRes = await request(node1.app)
-        .post(`/api/groups/${gid}/messages`)
+        .post(`/api/brightchat/groups/${gid}/messages`)
         .send({ memberId: 'bob', content: 'event test' })
         .expect(201);
 
@@ -1008,7 +1030,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const [node0, node1] = env.nodes;
 
       const group = await request(node0.app)
-        .post('/api/groups')
+        .post('/api/brightchat/groups')
         .send({ memberId: 'alice', name: 'Paginate Cross', memberIds: ['bob'] })
         .expect(201);
 
@@ -1018,7 +1040,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       const sentIds: string[] = [];
       for (let i = 0; i < 12; i++) {
         const res = await request(node0.app)
-          .post(`/api/groups/${gid}/messages`)
+          .post(`/api/brightchat/groups/${gid}/messages`)
           .send({ memberId: 'alice', content: `msg-${i}` })
           .expect(201);
         sentIds.push(res.body.data.id);
@@ -1033,7 +1055,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
         if (cursor) query['cursor'] = cursor;
 
         const page = await request(node1.app)
-          .get(`/api/groups/${gid}/messages`)
+          .get(`/api/brightchat/groups/${gid}/messages`)
           .query(query)
           .expect(200);
 
@@ -1058,7 +1080,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // DM via node-0
       await request(node0.app)
-        .post('/api/conversations')
+        .post('/api/brightchat/conversations')
         .send({
           senderId: 'alice',
           recipientId: 'bob',
@@ -1068,18 +1090,18 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // Group via node-1
       const group = await request(node1.app)
-        .post('/api/groups')
+        .post('/api/brightchat/groups')
         .send({ memberId: 'alice', name: 'Search Cross', memberIds: ['bob'] })
         .expect(201);
 
       await request(node1.app)
-        .post(`/api/groups/${group.body.data.id}/messages`)
+        .post(`/api/brightchat/groups/${group.body.data.id}/messages`)
         .send({ memberId: 'alice', content: 'deployment keyword in group' })
         .expect(201);
 
       // Channel via node-2
       const ch = await request(node2.app)
-        .post('/api/channels')
+        .post('/api/brightchat/channels')
         .send({
           memberId: 'alice',
           name: 'search-cross-ch',
@@ -1088,12 +1110,12 @@ describe('Communication API – Multi-Node E2E Integration', () => {
         .expect(201);
 
       await request(node2.app)
-        .post(`/api/channels/${ch.body.data.id}/join`)
+        .post(`/api/brightchat/channels/${ch.body.data.id}/join`)
         .send({ memberId: 'bob' })
         .expect(200);
 
       await request(node2.app)
-        .post(`/api/channels/${ch.body.data.id}/messages`)
+        .post(`/api/brightchat/channels/${ch.body.data.id}/messages`)
         .send({ memberId: 'alice', content: 'deployment keyword in channel' })
         .expect(201);
 
@@ -1120,7 +1142,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // 1. Alice DMs bob via node-0
       const dm = await request(node0.app)
-        .post('/api/conversations')
+        .post('/api/brightchat/conversations')
         .send({
           senderId: 'alice',
           recipientId: 'bob',
@@ -1130,7 +1152,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // 2. Bob replies via node-1
       await request(node1.app)
-        .post('/api/conversations')
+        .post('/api/brightchat/conversations')
         .send({
           senderId: 'bob',
           recipientId: 'alice',
@@ -1149,31 +1171,31 @@ describe('Communication API – Multi-Node E2E Integration', () => {
 
       // 4. Carol sends to group via node-2
       await request(node2.app)
-        .post(`/api/groups/${group.id}/messages`)
+        .post(`/api/brightchat/groups/${group.id}/messages`)
         .send({ memberId: 'carol', content: 'Thanks for adding me!' })
         .expect(201);
 
       // 5. Alice edits a message via node-0
       const editMsg = await request(node0.app)
-        .post(`/api/groups/${group.id}/messages`)
+        .post(`/api/brightchat/groups/${group.id}/messages`)
         .send({ memberId: 'alice', content: 'typo here' })
         .expect(201);
 
       await request(node0.app)
-        .put(`/api/groups/${group.id}/messages/${editMsg.body.data.id}`)
+        .put(`/api/brightchat/groups/${group.id}/messages/${editMsg.body.data.id}`)
         .send({ memberId: 'alice', content: 'fixed typo' })
         .expect(200);
 
       // 6. Pin via node-1
       await request(node1.app)
-        .post(`/api/groups/${group.id}/messages/${editMsg.body.data.id}/pin`)
+        .post(`/api/brightchat/groups/${group.id}/messages/${editMsg.body.data.id}/pin`)
         .send({ memberId: 'alice' })
         .expect(200);
 
       // 7. React via node-2
       await request(node2.app)
         .post(
-          `/api/groups/${group.id}/messages/${editMsg.body.data.id}/reactions`,
+          `/api/brightchat/groups/${group.id}/messages/${editMsg.body.data.id}/reactions`,
         )
         .send({ memberId: 'carol', emoji: '🎉' })
         .expect(201);
@@ -1181,7 +1203,7 @@ describe('Communication API – Multi-Node E2E Integration', () => {
       // 8. Carol leaves via node-2 — key rotation
       const keyBefore = env.groupService.getSymmetricKey(group.id)!;
       await request(node2.app)
-        .post(`/api/groups/${group.id}/leave`)
+        .post(`/api/brightchat/groups/${group.id}/leave`)
         .send({ memberId: 'carol' })
         .expect(200);
       const keyAfter = env.groupService.getSymmetricKey(group.id)!;

@@ -393,6 +393,149 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
   }
 
   /**
+   * Verify a direct-login challenge: validate the server signature, look up
+   * the user by username/email, verify the user's signature, and return the
+   * member + JWT-ready data.
+   *
+   * This is the base implementation that works with MemberStore alone.
+   * Subclasses in brightchain-api-lib add replay prevention and richer
+   * user DTO building.
+   */
+  async verifyDirectLoginChallenge(
+    serverSignedRequest: string,
+    signature: string,
+    username?: string,
+    email?: string,
+  ): Promise<{
+    member: Member<TID>;
+    memberId: string;
+    userDTO: import('@digitaldefiance/suite-core-lib').IRequestUserDTO | null;
+  }> {
+    const SIGNATURE_SIZE = this.application.constants.ECIES.SIGNATURE_SIZE;
+    const minBytes = 8 + 32 + SIGNATURE_SIZE;
+    if (serverSignedRequest.length < minBytes * 2) {
+      throw new Error('Invalid challenge');
+    }
+
+    const requestBuffer = Buffer.from(serverSignedRequest, 'hex');
+
+    // Parse: time(8) + nonce(32) + serverSignature(SIGNATURE_SIZE)
+    let offset = 0;
+    const time = requestBuffer.subarray(offset, 8);
+    offset += 8;
+    const nonce = requestBuffer.subarray(offset, 40);
+    offset += 32;
+    const serverSignature = requestBuffer.subarray(offset, SIGNATURE_SIZE + 40);
+    offset += SIGNATURE_SIZE;
+    const signedDataLength = offset;
+
+    if (offset !== requestBuffer.length) {
+      throw new Error('Invalid challenge');
+    }
+
+    // 1. Validate challenge is not expired
+    const timeMs = time.readBigUInt64BE();
+    const elapsed = new Date().getTime() - Number(timeMs);
+    const expiration = this.application.constants.LoginChallengeExpiration;
+    if (elapsed > expiration) {
+      throw new Error('Challenge expired');
+    }
+
+    // 2. Verify server's signature on time+nonce
+    const systemUser = SystemUserService.getSystemUser(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.application.environment as any,
+      this.application.constants,
+    );
+    const serverSigValid = systemUser.verify(
+      serverSignature as import('@digitaldefiance/node-ecies-lib').SignatureBuffer,
+      Buffer.concat([time, nonce]),
+    );
+    if (!serverSigValid) {
+      throw new Error('Invalid challenge');
+    }
+
+    // 3. Look up user by username or email
+    const query = username
+      ? { name: username, limit: 1 }
+      : { email: email!, limit: 1 };
+    const results = await this.memberStore.queryIndex(query);
+    if (results.length === 0) {
+      throw new Error('Invalid credentials');
+    }
+
+    const reference = results[0];
+    const sp = ServiceProvider.getInstance<TID>();
+
+    // 4. Verify user's signature on the signed portion of the challenge
+    const signedData = requestBuffer.subarray(0, signedDataLength);
+    const userSigBuf = Buffer.from(signature, 'hex') as import('@digitaldefiance/node-ecies-lib').SignatureBuffer;
+    const nodeEcies = new ECIESService();
+
+    const publicKeyHex = await this.memberStore.getMemberPublicKeyHex(
+      reference.id,
+    );
+    if (!publicKeyHex) {
+      throw new Error('Invalid credentials');
+    }
+    const publicKeyBuf = Buffer.from(publicKeyHex, 'hex');
+    const userSigValid = nodeEcies.verifyMessage(publicKeyBuf, signedData, userSigBuf);
+    if (!userSigValid) {
+      throw new Error('Invalid credentials');
+    }
+
+    // 5. Resolve the Member object — for seeded users without CBL blocks,
+    //    getMember() will throw; synthesise a minimal shell in that case.
+    let member: Member<TID>;
+    try {
+      member = (await this.memberStore.getMember(
+        reference.id,
+      )) as unknown as Member<TID>;
+    } catch {
+      const resolvedName = username ?? email ?? 'unknown';
+      const resolvedEmail = email ?? `${resolvedName}@brightchain.local`;
+      const eciesService =
+        sp.eciesService as unknown as ECIESService<TID>;
+      const { member: shell } = Member.newMember<TID>(
+        eciesService,
+        reference.type,
+        resolvedName,
+        new EmailString(resolvedEmail),
+      );
+      const verifiedPublicKey = Buffer.from(publicKeyHex, 'hex');
+      Object.defineProperties(shell, {
+        id: { get: () => reference.id, configurable: true },
+        publicKey: { get: () => verifiedPublicKey, configurable: true },
+      });
+      member = shell as unknown as Member<TID>;
+    }
+
+    // 6. Replay prevention — store used nonce in the document store
+    const nonceHex = nonce.toString('hex');
+    const memberId = sp.idProvider.idToString(reference.id as unknown as TID);
+    const tokenCollection = this.application.db.collection<{
+      _id?: string;
+      userId: string;
+      token: string;
+    }>('used_direct_login_tokens');
+    const existing = await tokenCollection.findOne({
+      userId: memberId,
+      token: nonceHex,
+    } as Partial<{ _id?: string; userId: string; token: string }>).exec();
+    if (existing) {
+      throw new Error('Challenge already used');
+    }
+    await tokenCollection.create({ userId: memberId, token: nonceHex } as { _id?: string; userId: string; token: string });
+
+    // 7. Build user DTO via auth provider if available
+    const userDTO = this.authProvider
+      ? await this.authProvider.buildRequestUserDTO(memberId)
+      : null;
+
+    return { member, memberId, userDTO };
+  }
+
+  /**
    * Override in subclasses to send a welcome email via your preferred service.
    * Default implementation logs to console.
    */

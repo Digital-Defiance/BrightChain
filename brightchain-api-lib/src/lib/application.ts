@@ -2,7 +2,10 @@ import {
   AliasRegistry,
   AuditLogService,
   BlockSize,
+  ChannelService,
+  ConversationService,
   EnergyLedger,
+  GroupService,
   IAvailabilityService,
   IBackupCodeConstants,
   IdentitySealingPipeline,
@@ -13,6 +16,7 @@ import {
   MembershipProofService,
   MemberStore,
   MemoryMessageMetadataStore,
+  PermissionService,
   QuorumStateMachine,
   ServiceProvider,
   type IGossipService,
@@ -482,6 +486,42 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
         this.environment.debug,
         'log',
         '[ ready ] BrightHub social services initialized',
+      );
+    }
+
+    // ── BrightChat communication services initialization ────────────
+    if (this.apiRouter) {
+      const permissionService = new PermissionService();
+      const conversationService = new ConversationService();
+      const groupService = new GroupService(permissionService);
+      const channelService = new ChannelService(permissionService);
+
+      // Wire group promotion handler so conversations can be promoted to groups
+      conversationService.setGroupPromotionHandler(
+        (conversationId, participants, newMemberIds, messages, requesterId) =>
+          groupService.createGroupFromConversation(
+            conversationId,
+            participants,
+            newMemberIds,
+            messages,
+            requesterId,
+          ),
+      );
+
+      this.services.register('permissionService', () => permissionService);
+      this.services.register('conversationService', () => conversationService);
+      this.services.register('groupService', () => groupService);
+      this.services.register('channelService', () => channelService);
+
+      this.apiRouter.setConversationService(conversationService);
+      this.apiRouter.setGroupService(groupService);
+      this.apiRouter.setChannelService(channelService);
+      this.apiRouter.setPermissionService(permissionService);
+
+      debugLog(
+        this.environment.debug,
+        'log',
+        '[ ready ] BrightChat communication services initialized',
       );
     }
 

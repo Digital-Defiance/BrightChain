@@ -710,6 +710,94 @@ export class BrightDbUserController<
     };
   }
 
+  @Post('/direct-challenge')
+  async directChallenge(
+    req: Request,
+    _res: Response,
+    _next: NextFunction,
+  ): Promise<IStatusCodeResponse<IApiLoginResponse | ApiErrorResponse>> {
+    const { challenge, signature, username, email } = req.body as {
+      challenge?: string;
+      signature?: string;
+      username?: string;
+      email?: string;
+    };
+
+    try {
+      const authService =
+        this.application.services.get<BrightDbAuthService<TID>>('auth');
+      if (!authService) {
+        throw new Error('Auth service not available — ensure BrightDbDatabasePlugin.init() ran');
+      }
+      const { member, memberId, userDTO } =
+        await authService.verifyDirectLoginChallenge(
+          String(challenge),
+          String(signature),
+          username ? String(username) : undefined,
+          email ? String(email) : undefined,
+        );
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const env = this.application.environment as any;
+      const serverPublicKey: string = env.systemPublicKeyHex ?? '';
+
+      const token = authService.signToken(memberId, member.name, member.type);
+
+      const response: IApiLoginResponse = {
+        message: getSuiteCoreTranslation(SuiteCoreStringKey.LoggedIn_Success),
+        user: userDTO ?? {
+          id: memberId,
+          username: member.name,
+          email: member.email.toString(),
+          roles: [],
+          rolePrivileges: {
+            admin: false,
+            member: true,
+            child: false,
+            system: false,
+          },
+          emailVerified: true,
+          timezone: 'UTC',
+          siteLanguage: 'en',
+          darkMode: false,
+          currency: 'USD',
+          directChallenge: false,
+        },
+        token,
+        serverPublicKey,
+      };
+
+      return { statusCode: 200, response };
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unexpected error';
+      if (
+        msg === 'Challenge expired' ||
+        msg === 'Invalid challenge' ||
+        msg === 'Invalid credentials' ||
+        msg === 'Challenge already used'
+      ) {
+        return {
+          statusCode: 401,
+          response: {
+            message: getSuiteCoreTranslation(
+              SuiteCoreStringKey.Validation_InvalidCredentials,
+            ),
+            error: msg,
+          },
+        };
+      }
+      return {
+        statusCode: 500,
+        response: {
+          message: getSuiteCoreTranslation(
+            SuiteCoreStringKey.Common_UnexpectedError,
+          ),
+          error: msg,
+        },
+      };
+    }
+  }
+
   /**
    * GET /verify — returns the authenticated user's DTO.
    * The auth middleware already populates req.user with a full IRequestUserDTO
