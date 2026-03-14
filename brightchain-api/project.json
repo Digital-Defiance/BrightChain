@@ -18,12 +18,7 @@
         "main": "brightchain-api/src/main.ts",
         "tsConfig": "brightchain-api/tsconfig.app.json",
         "assets": [
-          "brightchain-api/src/assets",
-          {
-            "input": "brightchain-api/src/views",
-            "glob": "**/*",
-            "output": "views"
-          }
+          "brightchain-api/src/assets"
         ],
         "generatePackageJson": true,
         "esbuildOptions": {

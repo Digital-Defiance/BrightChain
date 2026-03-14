@@ -40,14 +40,9 @@ function setupDistDirs(): void {
   tmpDistDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bc-lifecycle-'));
   const reactDist = path.join(tmpDistDir, 'dist', 'react');
   const apiDist = path.join(tmpDistDir, 'dist', 'api');
-  const viewsDir = path.join(apiDist, 'views');
   fs.mkdirSync(reactDist, { recursive: true });
-  fs.mkdirSync(viewsDir, { recursive: true });
+  fs.mkdirSync(apiDist, { recursive: true });
   fs.writeFileSync(path.join(reactDist, 'index.html'), '<html></html>');
-  fs.writeFileSync(
-    path.join(viewsDir, 'index.ejs'),
-    '<html><%- locals.title %></html>',
-  );
   process.env['REACT_DIST_DIR'] = reactDist;
   process.env['API_DIST_DIR'] = apiDist;
 }

@@ -75,10 +75,15 @@ JWT_SECRET=your-secret-key-here
 ## Testing
 
 ```bash
-# Register
+# Register (server-generated mnemonic)
 curl -X POST http://localhost:3000/api/user/register \
   -H "Content-Type: application/json" \
   -d '{"username":"alice","email":"alice@example.com","password":"secret123"}'
+
+# Register (user-provided mnemonic — optional)
+curl -X POST http://localhost:3000/api/user/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"alice","email":"alice@example.com","password":"secret123","mnemonic":"abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"}'
 
 # Login
 curl -X POST http://localhost:3000/api/user/login \

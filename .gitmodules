@@ -1,3 +1,9 @@
 [submodule "reed-solomon-erasure.wasm"]
 	path = reed-solomon-erasure.wasm
 	url = https://github.com/Digital-Defiance/reed-solomon-erasure.wasm.git
+[submodule "brightchat-lib"]
+	path = brightchat-lib
+	url = https://github.com/Digital-Defiance/brightchat-lib.git
+[submodule "brightchat-react-components"]
+	path = brightchat-react-components
+	url = https://github.com/Digital-Defiance/brightchat-react-components.git

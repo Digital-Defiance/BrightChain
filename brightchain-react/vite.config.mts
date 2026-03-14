@@ -32,8 +32,8 @@ export default defineConfig(({ mode }) => ({
         /^@digitaldefiance\/node-ecies-lib/,
       ],
       output: {
-        // Name the entry chunk distinctly so the API's EJS template
-        // (which looks for /^index-.*\.js$/) picks the right file.
+        // Name the entry chunk distinctly so the API server can
+        // identify the correct entry point in the dist directory.
         entryFileNames: 'assets/app-[hash].js',
         manualChunks(id: string) {
           // Only split out the heaviest, self-contained vendor groups.

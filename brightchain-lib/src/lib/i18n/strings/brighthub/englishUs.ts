@@ -35,6 +35,14 @@ export const BrightHubAmericanEnglishStrings: StringsCollection<BrightHubStringK
     [BrightHubStrings.PostComposer_SubmitPost]: 'Submit post',
     [BrightHubStrings.PostComposer_Post]: 'Post',
     [BrightHubStrings.PostComposer_Reply]: 'Reply',
+    [BrightHubStrings.PostComposer_Preview]: 'Preview',
+    [BrightHubStrings.PostComposer_PreviewAriaLabel]: 'Post content preview',
+    [BrightHubStrings.PostComposer_MarkupHelp]: 'Formatting help',
+    [BrightHubStrings.PostComposer_MarkupHelpAriaLabel]:
+      'Post formatting and markup reference',
+    [BrightHubStrings.PostComposer_MarkupHelpClose]: 'Close',
+    [BrightHubStrings.PostComposer_MarkupHelpTabPost]: 'Post formatting',
+    [BrightHubStrings.PostComposer_MarkupHelpTabIcons]: 'Icon markup',
 
     // Timeline
     [BrightHubStrings.Timeline_AriaLabel]: 'Timeline',
