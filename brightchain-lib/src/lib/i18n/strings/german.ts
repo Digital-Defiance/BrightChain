@@ -1388,44 +1388,4 @@ export const GermanStrings: StringsCollection<BrightChainStringKey> = {
     'Reputation konnte nicht geladen werden',
   [BrightChainStrings.Dashboard_FailedToLoadData]:
     'Daten konnten nicht geladen werden',
-
-  // BrightMail
-  [BrightChainStrings.BrightMail_MenuLabel]: 'BrightMail',
-  [BrightChainStrings.BrightMail_Inbox_Title]: 'Posteingang',
-  [BrightChainStrings.BrightMail_Inbox_Empty]: 'Noch keine E-Mails',
-  [BrightChainStrings.BrightMail_Inbox_Error]:
-    'Posteingang konnte nicht geladen werden',
-  [BrightChainStrings.BrightMail_Inbox_Retry]: 'Erneut versuchen',
-  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]:
-    '{COUNT} ungelesen',
-  [BrightChainStrings.BrightMail_Compose_Title]: 'Verfassen',
-  [BrightChainStrings.BrightMail_Compose_To]: 'An',
-  [BrightChainStrings.BrightMail_Compose_Cc]: 'Cc',
-  [BrightChainStrings.BrightMail_Compose_Bcc]: 'Bcc',
-  [BrightChainStrings.BrightMail_Compose_Subject]: 'Betreff',
-  [BrightChainStrings.BrightMail_Compose_Body]: 'Nachricht',
-  [BrightChainStrings.BrightMail_Compose_Send]: 'Senden',
-  [BrightChainStrings.BrightMail_Compose_SendSuccess]:
-    'E-Mail erfolgreich gesendet',
-  [BrightChainStrings.BrightMail_Compose_SendError]:
-    'E-Mail konnte nicht gesendet werden',
-  [BrightChainStrings.BrightMail_Compose_InvalidRecipient]:
-    'Bitte fügen Sie mindestens einen gültigen Empfänger hinzu',
-  [BrightChainStrings.BrightMail_Compose_Attachments]: 'Anhänge',
-  [BrightChainStrings.BrightMail_Thread_Error]:
-    'Thread konnte nicht geladen werden',
-  [BrightChainStrings.BrightMail_Thread_BackToInbox]: 'Zurück zum Posteingang',
-  [BrightChainStrings.BrightMail_Thread_Reply]: 'Antworten',
-  [BrightChainStrings.BrightMail_Thread_Forward]: 'Weiterleiten',
-  [BrightChainStrings.BrightMail_Delete_Confirm]:
-    'Sind Sie sicher, dass Sie löschen möchten?',
-  [BrightChainStrings.BrightMail_Delete_ConfirmBulkTemplate]:
-    '{COUNT} ausgewählte E-Mails löschen?',
-  [BrightChainStrings.BrightMail_Delete_Success]: 'E-Mail gelöscht',
-  [BrightChainStrings.BrightMail_Delete_ErrorTemplate]:
-    'E-Mail konnte nicht gelöscht werden: {MESSAGE_ID}',
-  [BrightChainStrings.BrightMail_Action_Delete]: 'Löschen',
-  [BrightChainStrings.BrightMail_Action_MarkAsRead]: 'Als gelesen markieren',
-  [BrightChainStrings.BrightMail_Action_Cancel]: 'Abbrechen',
-  [BrightChainStrings.BrightMail_Loading]: 'Wird geladen...',
 };

@@ -1393,45 +1393,4 @@ export const FrenchStrings: StringsCollection<BrightChainStringKey> = {
     'Échec du chargement de la réputation',
   [BrightChainStrings.Dashboard_FailedToLoadData]:
     'Échec du chargement des données',
-
-  // BrightMail
-  [BrightChainStrings.BrightMail_MenuLabel]: 'BrightMail',
-  [BrightChainStrings.BrightMail_Inbox_Title]: 'Boîte de réception',
-  [BrightChainStrings.BrightMail_Inbox_Empty]: 'Aucun e-mail pour le moment',
-  [BrightChainStrings.BrightMail_Inbox_Error]:
-    'Échec du chargement de la boîte de réception',
-  [BrightChainStrings.BrightMail_Inbox_Retry]: 'Réessayer',
-  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]:
-    '{COUNT} non lu(s)',
-  [BrightChainStrings.BrightMail_Compose_Title]: 'Rédiger',
-  [BrightChainStrings.BrightMail_Compose_To]: 'À',
-  [BrightChainStrings.BrightMail_Compose_Cc]: 'Cc',
-  [BrightChainStrings.BrightMail_Compose_Bcc]: 'Cci',
-  [BrightChainStrings.BrightMail_Compose_Subject]: 'Objet',
-  [BrightChainStrings.BrightMail_Compose_Body]: 'Message',
-  [BrightChainStrings.BrightMail_Compose_Send]: 'Envoyer',
-  [BrightChainStrings.BrightMail_Compose_SendSuccess]:
-    'E-mail envoyé avec succès',
-  [BrightChainStrings.BrightMail_Compose_SendError]:
-    "Échec de l'envoi de l'e-mail",
-  [BrightChainStrings.BrightMail_Compose_InvalidRecipient]:
-    'Veuillez ajouter au moins un destinataire valide',
-  [BrightChainStrings.BrightMail_Compose_Attachments]: 'Pièces jointes',
-  [BrightChainStrings.BrightMail_Thread_Error]:
-    'Échec du chargement du fil de discussion',
-  [BrightChainStrings.BrightMail_Thread_BackToInbox]:
-    'Retour à la boîte de réception',
-  [BrightChainStrings.BrightMail_Thread_Reply]: 'Répondre',
-  [BrightChainStrings.BrightMail_Thread_Forward]: 'Transférer',
-  [BrightChainStrings.BrightMail_Delete_Confirm]:
-    'Êtes-vous sûr de vouloir supprimer ?',
-  [BrightChainStrings.BrightMail_Delete_ConfirmBulkTemplate]:
-    'Supprimer {COUNT} e-mails sélectionnés ?',
-  [BrightChainStrings.BrightMail_Delete_Success]: 'E-mail supprimé',
-  [BrightChainStrings.BrightMail_Delete_ErrorTemplate]:
-    "Échec de la suppression de l'e-mail : {MESSAGE_ID}",
-  [BrightChainStrings.BrightMail_Action_Delete]: 'Supprimer',
-  [BrightChainStrings.BrightMail_Action_MarkAsRead]: 'Marquer comme lu',
-  [BrightChainStrings.BrightMail_Action_Cancel]: 'Annuler',
-  [BrightChainStrings.BrightMail_Loading]: 'Chargement...',
 };

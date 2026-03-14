@@ -7,7 +7,7 @@
  * Implements Requirements 44.7, 61.4
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import { Check, DoneAll } from '@mui/icons-material';
 import { Box, Tooltip, Typography } from '@mui/material';
 import { useBrightHubTranslation } from '../hooks/useBrightHubTranslation';

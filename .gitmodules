@@ -7,3 +7,12 @@
 [submodule "brightchat-react-components"]
 	path = brightchat-react-components
 	url = https://github.com/Digital-Defiance/brightchat-react-components.git
+[submodule "brightmail-lib"]
+	path = brightmail-lib
+	url = https://github.com/Digital-Defiance/brightmail-lib.git
+[submodule "brighthub-lib"]
+	path = brighthub-lib
+	url = https://github.com/Digital-Defiance/brighthub-lib.git
+[submodule "brightpass-lib"]
+	path = brightpass-lib
+	url = https://github.com/Digital-Defiance/brightpass-lib.git

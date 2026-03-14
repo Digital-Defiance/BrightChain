@@ -14,7 +14,7 @@ import type {
 import {
   BrightPassStrings,
   type BrightPassStringKey,
-} from '@brightchain/brightchain-lib';
+} from '@brightchain/brightpass-lib';
 import {
   Box,
   Button,

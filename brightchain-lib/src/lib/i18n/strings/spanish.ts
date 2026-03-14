@@ -1397,46 +1397,4 @@ export const SpanishStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Dashboard_FailedToLoadReputation]:
     'Error al cargar la reputación',
   [BrightChainStrings.Dashboard_FailedToLoadData]: 'Error al cargar los datos',
-
-  // BrightMail
-  [BrightChainStrings.BrightMail_MenuLabel]: 'BrightMail',
-  [BrightChainStrings.BrightMail_Inbox_Title]: 'Bandeja de entrada',
-  [BrightChainStrings.BrightMail_Inbox_Empty]:
-    'Aún no hay correos electrónicos',
-  [BrightChainStrings.BrightMail_Inbox_Error]:
-    'Error al cargar la bandeja de entrada',
-  [BrightChainStrings.BrightMail_Inbox_Retry]: 'Reintentar',
-  [BrightChainStrings.BrightMail_Inbox_UnreadCountTemplate]: '{COUNT} sin leer',
-  [BrightChainStrings.BrightMail_Compose_Title]: 'Redactar',
-  [BrightChainStrings.BrightMail_Compose_To]: 'Para',
-  [BrightChainStrings.BrightMail_Compose_Cc]: 'Cc',
-  [BrightChainStrings.BrightMail_Compose_Bcc]: 'Cco',
-  [BrightChainStrings.BrightMail_Compose_Subject]: 'Asunto',
-  [BrightChainStrings.BrightMail_Compose_Body]: 'Mensaje',
-  [BrightChainStrings.BrightMail_Compose_Send]: 'Enviar',
-  [BrightChainStrings.BrightMail_Compose_SendSuccess]:
-    'Correo electrónico enviado con éxito',
-  [BrightChainStrings.BrightMail_Compose_SendError]:
-    'Error al enviar el correo electrónico',
-  [BrightChainStrings.BrightMail_Compose_InvalidRecipient]:
-    'Por favor, añada al menos un destinatario válido',
-  [BrightChainStrings.BrightMail_Compose_Attachments]: 'Archivos adjuntos',
-  [BrightChainStrings.BrightMail_Thread_Error]:
-    'Error al cargar el hilo de conversación',
-  [BrightChainStrings.BrightMail_Thread_BackToInbox]:
-    'Volver a la bandeja de entrada',
-  [BrightChainStrings.BrightMail_Thread_Reply]: 'Responder',
-  [BrightChainStrings.BrightMail_Thread_Forward]: 'Reenviar',
-  [BrightChainStrings.BrightMail_Delete_Confirm]:
-    '¿Está seguro de que desea eliminar?',
-  [BrightChainStrings.BrightMail_Delete_ConfirmBulkTemplate]:
-    '¿Eliminar {COUNT} correos seleccionados?',
-  [BrightChainStrings.BrightMail_Delete_Success]:
-    'Correo electrónico eliminado',
-  [BrightChainStrings.BrightMail_Delete_ErrorTemplate]:
-    'Error al eliminar el correo electrónico: {MESSAGE_ID}',
-  [BrightChainStrings.BrightMail_Action_Delete]: 'Eliminar',
-  [BrightChainStrings.BrightMail_Action_MarkAsRead]: 'Marcar como leído',
-  [BrightChainStrings.BrightMail_Action_Cancel]: 'Cancelar',
-  [BrightChainStrings.BrightMail_Loading]: 'Cargando...',
 };

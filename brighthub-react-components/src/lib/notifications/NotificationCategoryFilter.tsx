@@ -7,8 +7,8 @@
  * Implements Requirements 53.6, 55.10, 61.4
  */
 
-import type { BrightHubStringKeyValue } from '@brightchain/brightchain-lib';
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import type { BrightHubStringKeyValue } from '@brightchain/brighthub-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import { NotificationCategory } from '@brightchain/brighthub-lib';
 import { Chip, Stack, Typography } from '@mui/material';
 import type { FC } from 'react';

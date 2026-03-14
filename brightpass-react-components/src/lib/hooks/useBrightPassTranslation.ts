@@ -1,8 +1,10 @@
-import type { BrightPassStringKey } from '@brightchain/brightchain-lib';
 import {
-  BrightPassComponentId,
   getBrightChainI18nEngine,
 } from '@brightchain/brightchain-lib';
+import type { BrightPassStringKey } from '@brightchain/brightpass-lib';
+import {
+  BrightPassComponentId,
+} from '@brightchain/brightpass-lib';
 import { useCallback } from 'react';
 
 /**
