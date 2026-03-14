@@ -10,8 +10,8 @@
 
 import fc from 'fast-check';
 
-// Mock brightchain-lib to avoid the heavy ECIES/GUID init chain
-jest.mock('@brightchain/brightchain-lib', () => ({
+// Mock brightpass-lib to provide BrightPassStrings without the heavy init chain
+jest.mock('@brightchain/brightpass-lib', () => ({
   __esModule: true,
   BrightPassStrings: new Proxy({}, { get: (_target, prop) => String(prop) }),
 }));

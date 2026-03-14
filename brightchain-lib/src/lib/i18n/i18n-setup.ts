@@ -7,6 +7,11 @@
  * - ECIES component (via createEciesComponentPackage)
  * - BrightChain component (translations defined here)
  *
+ * Sub-components (BrightHub, BrightPass, BrightMail, BrightChat) are NOT
+ * registered here. They live in their own libs and should be registered
+ * at the app level via registerI18nComponentPackage() after the engine
+ * is created.
+ *
  * All components support translateStringKey for direct branded enum translation.
  */
 import {
@@ -40,16 +45,6 @@ import {
   BrightChainStringKey,
   BrightChainStrings,
 } from '../enumerations/brightChainStrings';
-import type { BrightHubStringKeyValue } from '../enumerations/brightHubStrings';
-import {
-  BrightHubComponentId,
-  BrightHubStrings,
-} from '../enumerations/brightHubStrings';
-import type { BrightPassStringKeyValue } from '../enumerations/brightPassStrings';
-import {
-  BrightPassComponentId,
-  BrightPassStrings,
-} from '../enumerations/brightPassStrings';
 import type { IBrightChainI18nConstants } from '../interfaces/i18nConstants';
 import {
   AmericanEnglishStrings,
@@ -61,26 +56,6 @@ import {
   SpanishStrings,
   UkrainianStrings,
 } from './strings';
-import {
-  BrightHubAmericanEnglishStrings,
-  BrightHubBritishEnglishStrings,
-  BrightHubFrenchStrings,
-  BrightHubGermanStrings,
-  BrightHubJapaneseStrings,
-  BrightHubMandarinStrings,
-  BrightHubSpanishStrings,
-  BrightHubUkrainianStrings,
-} from './strings/brighthub';
-import {
-  BrightPassAmericanEnglishStrings,
-  BrightPassBritishEnglishStrings,
-  BrightPassFrenchStrings,
-  BrightPassGermanStrings,
-  BrightPassJapaneseStrings,
-  BrightPassMandarinStrings,
-  BrightPassSpanishStrings,
-  BrightPassUkrainianStrings,
-} from './strings/brightpass';
 
 // Re-export BrightChainComponentId for backward compatibility
 export { BrightChainComponentId };
@@ -127,90 +102,28 @@ export function createBrightChainComponentPackage(): I18nComponentPackage {
   };
 }
 
-/**
- * Master strings collection for the BrightPass component.
- * These are the translations specific to the BrightPass password manager.
- */
-export const BrightPassComponentStrings: BrandedMasterStringsCollection<
-  typeof BrightPassStrings,
-  CoreLanguageCode
-> = {
-  [LanguageCodes.EN_US]: BrightPassAmericanEnglishStrings,
-  [LanguageCodes.EN_GB]: BrightPassBritishEnglishStrings,
-  [LanguageCodes.FR]: BrightPassFrenchStrings,
-  [LanguageCodes.ZH_CN]: BrightPassMandarinStrings,
-  [LanguageCodes.ES]: BrightPassSpanishStrings,
-  [LanguageCodes.UK]: BrightPassUkrainianStrings,
-  [LanguageCodes.DE]: BrightPassGermanStrings,
-  [LanguageCodes.JA]: BrightPassJapaneseStrings,
-};
-
-/**
- * Master strings collection for the BrightHub component.
- * These are the translations specific to the BrightHub social network.
- */
-export const BrightHubComponentStrings: BrandedMasterStringsCollection<
-  typeof BrightHubStrings,
-  CoreLanguageCode
-> = {
-  [LanguageCodes.EN_US]: BrightHubAmericanEnglishStrings,
-  [LanguageCodes.EN_GB]: BrightHubBritishEnglishStrings,
-  [LanguageCodes.FR]: BrightHubFrenchStrings,
-  [LanguageCodes.ZH_CN]: BrightHubMandarinStrings,
-  [LanguageCodes.ES]: BrightHubSpanishStrings,
-  [LanguageCodes.UK]: BrightHubUkrainianStrings,
-  [LanguageCodes.DE]: BrightHubGermanStrings,
-  [LanguageCodes.JA]: BrightHubJapaneseStrings,
-};
-
-/**
- * Create BrightHub component configuration
- */
-export function createBrightHubComponentConfig(): ComponentConfig {
-  return {
-    id: BrightHubComponentId,
-    strings: BrightHubComponentStrings,
-    aliases: ['BrightHubStrings'],
-  };
-}
-
-/**
- * Creates an I18nComponentPackage bundling the BrightHub ComponentConfig
- * with its branded string key enum. Use this with createI18nSetup's
- * libraryComponents array.
- */
-export function createBrightHubComponentPackage(): I18nComponentPackage {
-  return {
-    config: createBrightHubComponentConfig(),
-    stringKeyEnum: BrightHubStrings,
-  };
-}
-
-/**
- * Create BrightPass component configuration
- */
-export function createBrightPassComponentConfig(): ComponentConfig {
-  return {
-    id: BrightPassComponentId,
-    strings: BrightPassComponentStrings,
-    aliases: ['BrightPassStrings'],
-  };
-}
-
-/**
- * Creates an I18nComponentPackage bundling the BrightPass ComponentConfig
- * with its branded string key enum. Use this with createI18nSetup's
- * libraryComponents array.
- */
-export function createBrightPassComponentPackage(): I18nComponentPackage {
-  return {
-    config: createBrightPassComponentConfig(),
-    stringKeyEnum: BrightPassStrings,
-  };
-}
-
 let _brightChainI18nEngine: I18nEngine | null = null;
 let _i18nSetupResult: I18nSetupResult<typeof BrightChainStrings> | null = null;
+
+/**
+ * Register an I18nComponentPackage with the BrightChain i18n engine.
+ *
+ * Call this after the engine is created (e.g., at app startup) to register
+ * sub-component packages (BrightHub, BrightPass, BrightMail, BrightChat)
+ * that live in their own libs.
+ *
+ * @param pkg - The component package to register
+ */
+export function registerI18nComponentPackage(pkg: I18nComponentPackage): void {
+  const engine = getBrightChainI18nEngine();
+  engine.registerIfNotExists(pkg.config);
+  if (pkg.stringKeyEnum) {
+    engine.registerStringKeyEnum(pkg.stringKeyEnum);
+  }
+  if (pkg.constants) {
+    engine.registerConstants(pkg.config.id, pkg.constants);
+  }
+}
 
 /**
  * Get or create the BrightChain i18n engine.
@@ -221,6 +134,9 @@ let _i18nSetupResult: I18nSetupResult<typeof BrightChainStrings> | null = null;
  * - Library component registration (SuiteCore, ECIES)
  * - BrightChain component and branded enum registration
  * - GlobalActiveContext initialization
+ *
+ * Sub-components (BrightHub, BrightPass, BrightMail, BrightChat) are
+ * registered separately via registerI18nComponentPackage().
  */
 export function getBrightChainI18nEngine(): I18nEngine {
   if (_brightChainI18nEngine && I18nEngine.hasInstance('default')) {
@@ -236,8 +152,6 @@ export function getBrightChainI18nEngine(): I18nEngine {
     libraryComponents: [
       createSuiteCoreComponentPackage(),
       createEciesComponentPackage(),
-      createBrightPassComponentPackage(),
-      createBrightHubComponentPackage(),
     ],
   });
 
@@ -305,7 +219,8 @@ export const i18nContext: IActiveContext<CoreLanguageCode> = {
 
 /**
  * Translate any registered branded string key.
- * Works with EciesStringKey, SuiteCoreStringKey, BrightChainStrings.
+ * Works with EciesStringKey, SuiteCoreStringKey, BrightChainStrings,
+ * and any sub-component keys registered via registerI18nComponentPackage().
  *
  * The engine's built-in browser-safe fallback handles Symbol mismatch
  * in bundled environments (Vite/webpack) automatically — no manual
@@ -418,22 +333,16 @@ export type { BrightChainStringKey, BrightChainStringKeyValue };
 
 /**
  * Union type of all registered branded string keys.
- * Use this for type-safe translation calls.
+ *
+ * NOTE: Sub-component key types (BrightPass, BrightHub, BrightMail, BrightChat)
+ * are imported from the enum files in brightchain-lib/enumerations/ for type
+ * compatibility. The actual translations and component packages live in the
+ * respective libs (brightpass-lib, brighthub-lib, brightmail-lib, brightchat-lib).
  */
 export type RegisteredStringKey =
   | BrightChainStringKeyValue
   | EciesStringKeyValue
-  | SuiteCoreStringKeyValue
-  | BrightPassStringKeyValue
-  | BrightHubStringKeyValue;
+  | SuiteCoreStringKeyValue;
 
 // Re-export i18n constants interface
 export type { IBrightChainI18nConstants } from '../interfaces/i18nConstants';
-
-// Re-export BrightPass for convenience
-export { BrightPassComponentId, BrightPassStrings };
-export type { BrightPassStringKeyValue };
-
-// Re-export BrightHub for convenience
-export { BrightHubComponentId, BrightHubStrings };
-export type { BrightHubStringKeyValue };

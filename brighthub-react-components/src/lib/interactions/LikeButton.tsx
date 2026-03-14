@@ -8,7 +8,7 @@
  * Implements Requirement 12.9
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import { Favorite, FavoriteBorder } from '@mui/icons-material';
 import { Box, IconButton, Typography } from '@mui/material';
 import { useBrightHubTranslation } from '../hooks/useBrightHubTranslation';

@@ -9,7 +9,7 @@
  */
 
 import type { IBreachCheckResult } from '@brightchain/brightchain-lib';
-import { BrightPassStrings } from '@brightchain/brightchain-lib';
+import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import {
   Alert,
   Box,

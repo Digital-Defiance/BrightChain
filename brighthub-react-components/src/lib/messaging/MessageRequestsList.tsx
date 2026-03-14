@@ -7,7 +7,7 @@
  * Implements Requirements 44.4, 61.4
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import type { IBaseMessageRequest } from '@brightchain/brighthub-lib';
 import { MessageRequestStatus } from '@brightchain/brighthub-lib';
 import { Check, Close } from '@mui/icons-material';

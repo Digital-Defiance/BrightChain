@@ -7,6 +7,8 @@
  * Requirements: 1.1, 1.2, 1.3, 1.4, 1.7, 2.1, 2.2, 2.3, 2.4, 8.1
  */
 import { BrightChainSubLogo } from '@brightchain/brightchain-react-components';
+import { BrightMailStrings } from '@brightchain/brightmail-lib';
+import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import { faEnvelope } from '@awesome.me/kit-a20d532681/icons/classic/solid';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DraftsIcon from '@mui/icons-material/Drafts';
@@ -30,11 +32,11 @@ export const SIDEBAR_WIDTH = 240;
 
 /** Navigation items rendered in the sidebar. */
 const NAV_ITEMS = [
-  { label: 'Inbox', icon: <InboxIcon />, route: '/brightmail' },
-  { label: 'Sent', icon: <SendIcon />, route: '/brightmail/sent' },
-  { label: 'Drafts', icon: <DraftsIcon />, route: '/brightmail/drafts' },
-  { label: 'Trash', icon: <DeleteIcon />, route: '/brightmail/trash' },
-  { label: 'Labels', icon: <LabelIcon />, route: '/brightmail/labels' },
+  { stringKey: BrightMailStrings.Nav_Inbox, icon: <InboxIcon />, route: '/brightmail' },
+  { stringKey: BrightMailStrings.Nav_Sent, icon: <SendIcon />, route: '/brightmail/sent' },
+  { stringKey: BrightMailStrings.Nav_Drafts, icon: <DraftsIcon />, route: '/brightmail/drafts' },
+  { stringKey: BrightMailStrings.Nav_Trash, icon: <DeleteIcon />, route: '/brightmail/trash' },
+  { stringKey: BrightMailStrings.Nav_Labels, icon: <LabelIcon />, route: '/brightmail/labels' },
 ] as const;
 
 // ─── Props ──────────────────────────────────────────────────────────────────
@@ -57,6 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onNavigate,
 }) => {
   const { openCompose } = useBrightMail();
+  const { tBranded: t } = useI18n();
   const listRef = useRef<HTMLUListElement>(null);
 
   /**
@@ -132,14 +135,14 @@ const Sidebar: React.FC<SidebarProps> = ({
           color="primary"
           variant={isExpanded ? 'extended' : 'circular'}
           onClick={() => openCompose()}
-          aria-label="Compose"
+          aria-label={t(BrightMailStrings.Nav_Compose)}
           sx={{
             width: isExpanded ? '100%' : undefined,
             textTransform: 'none',
           }}
         >
           <EditIcon sx={{ mr: isExpanded ? 1 : 0 }} />
-          {isExpanded && 'Compose'}
+          {isExpanded && t(BrightMailStrings.Nav_Compose)}
         </Fab>
       </Box>
 
@@ -147,7 +150,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <List
         ref={listRef}
         role="menu"
-        aria-label="Mail folders"
+        aria-label={t(BrightMailStrings.Nav_MailFolders)}
         onKeyDown={handleListKeyDown}
       >
         {NAV_ITEMS.map((item) => {
@@ -173,7 +176,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               }}
             >
               <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.label} />
+              <ListItemText primary={t(item.stringKey)} />
             </ListItemButton>
           );
         })}

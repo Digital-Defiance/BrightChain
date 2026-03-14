@@ -1245,38 +1245,6 @@ export const BrightChainStrings = createI18nStringKeys(BrightChainComponentId, {
   Dashboard_FailedToLoadBalance: 'Dashboard_FailedToLoadBalance',
   Dashboard_FailedToLoadReputation: 'Dashboard_FailedToLoadReputation',
   Dashboard_FailedToLoadData: 'Dashboard_FailedToLoadData',
-
-  // BrightMail
-  BrightMail_MenuLabel: 'BrightMail_MenuLabel',
-  BrightMail_Inbox_Title: 'BrightMail_Inbox_Title',
-  BrightMail_Inbox_Empty: 'BrightMail_Inbox_Empty',
-  BrightMail_Inbox_Error: 'BrightMail_Inbox_Error',
-  BrightMail_Inbox_Retry: 'BrightMail_Inbox_Retry',
-  BrightMail_Inbox_UnreadCountTemplate: 'BrightMail_Inbox_UnreadCountTemplate',
-  BrightMail_Compose_Title: 'BrightMail_Compose_Title',
-  BrightMail_Compose_To: 'BrightMail_Compose_To',
-  BrightMail_Compose_Cc: 'BrightMail_Compose_Cc',
-  BrightMail_Compose_Bcc: 'BrightMail_Compose_Bcc',
-  BrightMail_Compose_Subject: 'BrightMail_Compose_Subject',
-  BrightMail_Compose_Body: 'BrightMail_Compose_Body',
-  BrightMail_Compose_Send: 'BrightMail_Compose_Send',
-  BrightMail_Compose_SendSuccess: 'BrightMail_Compose_SendSuccess',
-  BrightMail_Compose_SendError: 'BrightMail_Compose_SendError',
-  BrightMail_Compose_InvalidRecipient: 'BrightMail_Compose_InvalidRecipient',
-  BrightMail_Compose_Attachments: 'BrightMail_Compose_Attachments',
-  BrightMail_Thread_Error: 'BrightMail_Thread_Error',
-  BrightMail_Thread_BackToInbox: 'BrightMail_Thread_BackToInbox',
-  BrightMail_Thread_Reply: 'BrightMail_Thread_Reply',
-  BrightMail_Thread_Forward: 'BrightMail_Thread_Forward',
-  BrightMail_Delete_Confirm: 'BrightMail_Delete_Confirm',
-  BrightMail_Delete_ConfirmBulkTemplate:
-    'BrightMail_Delete_ConfirmBulkTemplate',
-  BrightMail_Delete_Success: 'BrightMail_Delete_Success',
-  BrightMail_Delete_ErrorTemplate: 'BrightMail_Delete_ErrorTemplate',
-  BrightMail_Action_Delete: 'BrightMail_Action_Delete',
-  BrightMail_Action_MarkAsRead: 'BrightMail_Action_MarkAsRead',
-  BrightMail_Action_Cancel: 'BrightMail_Action_Cancel',
-  BrightMail_Loading: 'BrightMail_Loading',
 } as const);
 
 export type BrightChainStringKey = BrandedStringKeyValue<

@@ -13,9 +13,7 @@
  * - Rendered via React Portal at document root
  */
 
-import {
-  BrightChainStrings,
-} from '@brightchain/brightchain-lib';
+import { BrightMailStrings } from '@brightchain/brightmail-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import CloseIcon from '@mui/icons-material/Close';
 import MinimizeIcon from '@mui/icons-material/Minimize';
@@ -310,7 +308,7 @@ const ComposeModalInner: FC<ComposeModalProps> = ({
 
       setSnackbar({
         open: true,
-        message: t(BrightChainStrings.BrightMail_Compose_SendSuccess),
+        message: t(BrightMailStrings.Compose_SendSuccess),
         severity: 'success',
       });
 
@@ -318,7 +316,7 @@ const ComposeModalInner: FC<ComposeModalProps> = ({
     } catch {
       setSnackbar({
         open: true,
-        message: t(BrightChainStrings.BrightMail_Compose_SendError),
+        message: t(BrightMailStrings.Compose_SendError),
         severity: 'error',
       });
     } finally {
@@ -412,44 +410,44 @@ const ComposeModalInner: FC<ComposeModalProps> = ({
       <RecipientChipInput
         value={to}
         onChange={setTo}
-        label={t(BrightChainStrings.BrightMail_Compose_To)}
+        label={t(BrightMailStrings.Compose_To)}
       />
       <RecipientChipInput
         value={cc}
         onChange={setCc}
-        label={t(BrightChainStrings.BrightMail_Compose_Cc)}
+        label={t(BrightMailStrings.Compose_Cc)}
       />
       <RecipientChipInput
         value={bcc}
         onChange={setBcc}
-        label={t(BrightChainStrings.BrightMail_Compose_Bcc)}
+        label={t(BrightMailStrings.Compose_Bcc)}
       />
       <TextField
-        label={t(BrightChainStrings.BrightMail_Compose_Subject)}
+        label={t(BrightMailStrings.Compose_Subject)}
         value={subject}
         onChange={(e) => setSubject(e.target.value)}
         fullWidth
         size="small"
         inputProps={{
-          'aria-label': t(BrightChainStrings.BrightMail_Compose_Subject),
+          'aria-label': t(BrightMailStrings.Compose_Subject),
         }}
       />
       <TextField
         data-testid="compose-body-field"
-        label={t(BrightChainStrings.BrightMail_Compose_Body)}
+        label={t(BrightMailStrings.Compose_Body)}
         value={body}
         onChange={(e) => setBody(e.target.value)}
         fullWidth
         multiline
         minRows={isMobile ? 8 : 4}
         inputProps={{
-          'aria-label': t(BrightChainStrings.BrightMail_Compose_Body),
+          'aria-label': t(BrightMailStrings.Compose_Body),
         }}
       />
 
       {!hasValidRecipient && to.length > 0 && (
         <Typography variant="caption" color="error" role="alert">
-          {t(BrightChainStrings.BrightMail_Compose_InvalidRecipient)}
+          {t(BrightMailStrings.Compose_InvalidRecipient)}
         </Typography>
       )}
 
@@ -460,7 +458,7 @@ const ComposeModalInner: FC<ComposeModalProps> = ({
           disabled={!hasValidRecipient || sending}
           data-testid="compose-send-button"
         >
-          {t(BrightChainStrings.BrightMail_Compose_Send)}
+          {t(BrightMailStrings.Compose_Send)}
         </Button>
       </Box>
     </Box>
@@ -492,7 +490,7 @@ const ComposeModalInner: FC<ComposeModalProps> = ({
         </Typography>
         <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
           <Button onClick={handleCancelDiscard}>
-            {t(BrightChainStrings.BrightMail_Action_Cancel)}
+            {t(BrightMailStrings.Action_Cancel)}
           </Button>
           <Button
             variant="contained"
