@@ -22,10 +22,12 @@ import {
 } from '@brightchain/brightchain-lib';
 import type { BrightDb } from '@brightchain/db';
 import {
+  BrightDbAuthService,
   BrightDbDatabasePlugin,
+  type IBrightDbApplication,
   type IBrightDbDatabasePluginOptions,
 } from '@brightchain/node-express-suite';
-import { MemberType } from '@digitaldefiance/ecies-lib';
+import { MemberType, SecureString } from '@digitaldefiance/ecies-lib';
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import { getEnhancedNodeIdProvider } from '@digitaldefiance/node-ecies-lib';
 import type { IApplication } from '@digitaldefiance/node-express-suite';
@@ -160,8 +162,34 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
     this._authProvider = new BrightChainAuthenticationProvider(
       app as IBrightChainApplication<TID>,
     );
-    // Delegate to base class — triggers initializeDevStore() in dev mode
-    await super.init(app);
+
+    // Register the SAME MemberStore instance that connect() created
+    // (this._memberStore) rather than letting the base class create a
+    // second, disconnected instance.  seedWithRbac() populates the
+    // in-memory indexes on this._memberStore, so the auth service must
+    // share the same reference — otherwise queryIndex() sees empty
+    // indexes and a stale DB handle.
+    if (this._memberStore && this._energyStore) {
+      const memberStore = this._memberStore;
+      const energyStore = this._energyStore;
+
+      app.services.register('blockStore', () => this._blockStore);
+      app.services.register('db', () => this._brightDb);
+      app.services.register('memberStore', () => memberStore);
+      app.services.register('energyStore', () => energyStore);
+
+      const authService = new BrightDbAuthService<TID>(
+        app as IBrightDbApplication<TID>,
+        memberStore as unknown as MemberStore,
+        energyStore,
+        app.environment.jwtSecret,
+      );
+      app.services.register('auth', () => authService);
+    } else {
+      // Fallback: if connect() hasn't populated domain stores yet,
+      // delegate to the base class which creates its own instances.
+      await super.init(app);
+    }
   }
 
   // ── Dev store lifecycle hooks ─────────────────────────────────────
@@ -445,6 +473,21 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
           config,
           getEnhancedNodeIdProvider<TID>(),
         );
+      }
+
+      // Update the environment with the generated system credentials so that
+      // SystemUserService.getSystemUser() can reconstruct the system member
+      // from the mnemonic. Without this, the env still holds the original
+      // (possibly empty) SYSTEM_MNEMONIC from the .env file, causing
+      // "Invalid mnemonic" errors on requestDirectLogin.
+      const env = this._environment as Environment<TID>;
+      const systemMnemonic = buildResult.credentials.system.mnemonic;
+      const systemPublicKeyHex = buildResult.credentials.system.publicKeyHex;
+      if (systemMnemonic) {
+        env.setEnvironment('systemMnemonic', new SecureString(systemMnemonic));
+      }
+      if (systemPublicKeyHex) {
+        env.setEnvironment('systemPublicKeyHex', systemPublicKeyHex);
       }
 
       this._lastInitResult = initResult;

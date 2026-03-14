@@ -102,6 +102,7 @@ import {
   validationError,
 } from '../../utils/errorResponse';
 import { BaseController } from '../base';
+import { SessionsController } from './sessions';
 
 type ChannelApiResponse =
   | ICreateChannelResponse
@@ -308,6 +309,24 @@ export class ChannelController<
    * Falls back to body/query memberId for testing.
    */
   private getMemberId(req: unknown): string {
+    // Try JWT session first
+    const typedReq = req as { headers?: { authorization?: string } };
+    if (typedReq.headers?.authorization) {
+      try {
+        const sessionsController =
+          this.application.getController<SessionsController>('sessions');
+        const member = sessionsController.getMemberFromSession(
+          typedReq.headers.authorization,
+        );
+        if (member) {
+          return member.id.toString();
+        }
+      } catch {
+        // Fall through to body/query fallback
+      }
+    }
+
+    // Fallback: body.memberId / body.requesterId (testing)
     const body = (req as CreateChannelBody).body;
     if (body && typeof body === 'object') {
       const bodyRecord = body as Record<string, unknown>;
@@ -323,79 +342,79 @@ export class ChannelController<
   }
 
   protected initRouteDefinitions(): void {
-    const noAuth = {
-      useAuthentication: false,
+    const auth = {
+      useAuthentication: true,
       useCryptoAuthentication: false,
     };
 
     this.routeDefinitions = [
       routeConfig('post', '/', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'createChannel',
         validation: () => createChannelValidation,
       }),
       routeConfig('get', '/', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'listChannels',
         validation: () => listChannelsValidation,
       }),
       routeConfig('get', '/:channelId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getChannel',
         validation: () => channelIdParamValidation,
       }),
       routeConfig('put', '/:channelId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'updateChannel',
         validation: () => updateChannelValidation,
       }),
       routeConfig('delete', '/:channelId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'deleteChannel',
         validation: () => channelIdParamValidation,
       }),
       routeConfig('post', '/:channelId/join', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'joinChannel',
         validation: () => joinChannelValidation,
       }),
       routeConfig('post', '/:channelId/leave', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'leaveChannel',
         validation: () => leaveChannelValidation,
       }),
       routeConfig('post', '/:channelId/messages', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'sendMessage',
         validation: () => sendChannelMessageValidation,
       }),
       routeConfig('get', '/:channelId/messages', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getMessages',
         validation: () => getChannelMessagesValidation,
       }),
       routeConfig('get', '/:channelId/messages/search', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'searchMessages',
         validation: () => searchChannelMessagesValidation,
       }),
       routeConfig('post', '/:channelId/invites', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'createInvite',
         validation: () => createInviteValidation,
       }),
       routeConfig('post', '/:channelId/invites/:token/redeem', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'redeemInvite',
         validation: () => redeemInviteValidation,
       }),
       routeConfig('put', '/:channelId/roles/:memberId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'assignRole',
         validation: () => assignChannelRoleValidation,
       }),
       routeConfig('post', '/:channelId/messages/:messageId/reactions', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'addReaction',
         validation: () => addChannelReactionValidation,
       }),
@@ -403,33 +422,33 @@ export class ChannelController<
         'delete',
         '/:channelId/messages/:messageId/reactions/:reactionId',
         {
-          ...noAuth,
+          ...auth,
           handlerKey: 'removeReaction',
           validation: () => removeChannelReactionValidation,
         },
       ),
       routeConfig('put', '/:channelId/messages/:messageId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'editMessage',
         validation: () => editChannelMessageValidation,
       }),
       routeConfig('post', '/:channelId/messages/:messageId/pin', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'pinMessage',
         validation: () => pinChannelMessageValidation,
       }),
       routeConfig('delete', '/:channelId/messages/:messageId/pin', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'unpinMessage',
         validation: () => pinChannelMessageValidation,
       }),
       routeConfig('post', '/:channelId/mute/:memberId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'muteMember',
         validation: () => muteChannelMemberValidation,
       }),
       routeConfig('post', '/:channelId/kick/:memberId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'kickMember',
         validation: () => kickChannelMemberValidation,
       }),
