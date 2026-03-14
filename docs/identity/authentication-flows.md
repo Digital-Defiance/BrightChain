@@ -46,11 +46,17 @@ BrightChain authentication combines several mechanisms:
 Browser                          API
   │                               │
   │  POST /user/register          │
-  │  { username, email, password }│
+  │  { username, email, password, │
+  │    mnemonic? }                │
   │──────────────────────────────>│
   │                               │── validate fields
+  │                               │── if mnemonic provided:
+  │                               │     validate format (MnemonicRegex)
+  │                               │     compute HMAC, check uniqueness
+  │                               │     create Member with forceMnemonic
+  │                               │── else:
+  │                               │     create Member (server-generated)
   │                               │── hash password (bcrypt)
-  │                               │── create Member
   │                               │── create EnergyAccount (1000J trial)
   │                               │── create BrightHub social profile
   │                               │── sign JWT
@@ -64,7 +70,9 @@ Browser                          API
   │    redirected to login page)  │
 ```
 
-The mnemonic is generated during member creation and should be displayed to the user once for safekeeping. It is the only way to recover the account if the password is lost (aside from backup codes).
+The mnemonic is generated during member creation (or provided by the user) and should be displayed to the user once for safekeeping. It is the only way to recover the account if the password is lost (aside from backup codes).
+
+Optionally, the user can supply their own BIP39 mnemonic phrase (12, 15, 18, 21, or 24 words). When provided, the server validates the format against `MnemonicRegex`, checks HMAC-based uniqueness (to prevent two accounts sharing the same mnemonic), and passes it to `Member.newMember` via the `forceMnemonic` parameter to derive the user's cryptographic identity deterministically. If the mnemonic's HMAC already exists, registration is rejected with a `Validation_MnemonicInUse` error.
 
 ### Frontend code path
 
@@ -72,6 +80,7 @@ The mnemonic is generated during member creation and should be displayed to the 
 // brightchain-react/src/services/auth.ts
 const result = await api.post('/user/register', {
   username, email, password, timezone,
+  ...(mnemonic ? { mnemonic } : {}),
 });
 // Returns { success: true, message } on 201
 // Returns { error, errorType? } on failure

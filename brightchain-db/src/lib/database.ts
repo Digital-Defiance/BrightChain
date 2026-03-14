@@ -353,6 +353,13 @@ export class BrightDb {
   }
 
   /**
+   * Alias for {@link startSession} — provided for MongoDB driver compatibility.
+   */
+  session(): ClientSession {
+    return this.startSession();
+  }
+
+  /**
    * Convenience: run a callback within a transaction.
    * Automatically commits on success, aborts on error.
    */

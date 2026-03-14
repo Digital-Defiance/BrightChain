@@ -23,9 +23,7 @@ import { BrightDbApiRouter, BrightDbUserController } from '@brightchain/node-exp
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import { ECIESService, PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
-  JwtService,
   KeyWrappingService,
-  RoleService,
 } from '@digitaldefiance/node-express-suite';
 import { AppConstants } from '../appConstants';
 import type { IWriteAclApiManager } from '../auth/writeAclApiRouter';
@@ -103,9 +101,7 @@ export class ApiRouter<
   private readonly brightHubTimelineController: BrightHubTimelineController<TID>;
   private introspectionController: IntrospectionController<TID> | null = null;
   private readonly brightchainApplication: IBrightChainApplication<TID>;
-  private readonly jwtService: JwtService<TID>;
   private readonly emailService: EmailService<TID>;
-  private readonly roleService: RoleService<TID>;
   private readonly keyWrappingService: KeyWrappingService;
   private readonly eciesService: ECIESService<TID>;
   /**
@@ -114,8 +110,6 @@ export class ApiRouter<
   constructor(application: IBrightChainApplication<TID>) {
     super(application);
     this.brightchainApplication = application;
-    this.jwtService = new JwtService<TID>(application);
-    this.roleService = new RoleService<TID>(application);
     this.emailService = new EmailService<TID>(application);
     this.keyWrappingService = new KeyWrappingService();
     const config: IECIESConfig = {

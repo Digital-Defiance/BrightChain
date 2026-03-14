@@ -36,6 +36,14 @@ export const BrightHubJapaneseStrings: StringsCollection<BrightHubStringKey> = {
   [BrightHubStrings.PostComposer_SubmitPost]: '投稿を送信',
   [BrightHubStrings.PostComposer_Post]: '投稿',
   [BrightHubStrings.PostComposer_Reply]: '返信',
+  [BrightHubStrings.PostComposer_Preview]: 'プレビュー',
+  [BrightHubStrings.PostComposer_PreviewAriaLabel]: '投稿内容のプレビュー',
+  [BrightHubStrings.PostComposer_MarkupHelp]: '書式ヘルプ',
+  [BrightHubStrings.PostComposer_MarkupHelpAriaLabel]:
+    '投稿の書式とマークアップリファレンス',
+  [BrightHubStrings.PostComposer_MarkupHelpClose]: '閉じる',
+  [BrightHubStrings.PostComposer_MarkupHelpTabPost]: '投稿の書式',
+  [BrightHubStrings.PostComposer_MarkupHelpTabIcons]: 'アイコンマークアップ',
 
   // Timeline
   [BrightHubStrings.Timeline_AriaLabel]: 'タイムライン',
