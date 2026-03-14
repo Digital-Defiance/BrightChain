@@ -8,8 +8,8 @@
  * Implements Requirements 35.7, 61.4
  */
 
-import type { BrightHubStringKey } from '@brightchain/brightchain-lib';
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import type { BrightHubStringKey } from '@brightchain/brighthub-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import { ConnectionStrength } from '@brightchain/brighthub-lib';
 import { Box, Typography } from '@mui/material';
 import { useBrightHubTranslation } from '../hooks/useBrightHubTranslation';

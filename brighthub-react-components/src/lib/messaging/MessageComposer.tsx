@@ -7,7 +7,7 @@
  * Implements Requirements 44.3, 61.4
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import { AttachFile, Close, Send } from '@mui/icons-material';
 import {
   Box,

@@ -36,6 +36,8 @@
       "@brightchain/brighthub-react-components/*": [
         "brighthub-react-components/src/*"
       ],
+      "@brightchain/brightmail-lib": ["brightmail-lib/src/index.ts"],
+      "@brightchain/brightpass-lib": ["brightpass-lib/src/index.ts"],
       "@brightchain/brightchat-lib": ["brightchat-lib/src/index.ts"],
       "@brightchain/brightchat-react-components": [
         "brightchat-react-components/src/index.ts"

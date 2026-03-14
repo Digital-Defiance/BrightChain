@@ -7,7 +7,7 @@
  * Requirements: 3.3, 3.4, 3.5
  */
 
-import { BrightPassStrings } from '@brightchain/brightchain-lib';
+import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import {
   Alert,
   Button,

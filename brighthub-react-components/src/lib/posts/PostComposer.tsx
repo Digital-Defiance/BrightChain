@@ -9,7 +9,7 @@
  * Implements Requirement 12.2
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import {
   IBaseHub,
   IBasePostData,

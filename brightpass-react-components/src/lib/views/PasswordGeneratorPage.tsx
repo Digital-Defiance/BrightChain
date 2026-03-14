@@ -7,7 +7,7 @@
  * Requirements: 6.6
  */
 
-import { BrightPassStrings } from '@brightchain/brightchain-lib';
+import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import { Container, Typography } from '@mui/material';
 import React from 'react';
 import BreadcrumbNav from '../components/BreadcrumbNav';

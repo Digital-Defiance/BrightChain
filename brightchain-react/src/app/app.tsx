@@ -9,6 +9,7 @@ import {
   CoreConstants,
   i18nEngine,
   ISuiteCoreConstants,
+  registerI18nComponentPackage,
   THEME_COLORS,
 } from '@brightchain/brightchain-lib';
 import {
@@ -21,6 +22,13 @@ import {
   MessagingDemo,
   StoragePoolsDemo,
 } from '@brightchain/brightchain-react-components';
+import { createBrightChatComponentPackage } from '@brightchain/brightchat-lib';
+import { createBrightHubComponentPackage } from '@brightchain/brighthub-lib';
+import {
+  BrightMailStrings,
+  createBrightMailComponentPackage,
+} from '@brightchain/brightmail-lib';
+import { createBrightPassComponentPackage } from '@brightchain/brightpass-lib';
 import { ECIES_CONFIG } from '@digitaldefiance/ecies-lib';
 import {
   ApiAccess,
@@ -37,6 +45,7 @@ import {
   LoginFormWrapper,
   LogoutPageWrapper,
   MenuProvider,
+  MenuTypes,
   PrivateRoute,
   RegisterFormWrapper,
   ResetPasswordFormWrapper,
@@ -55,6 +64,10 @@ import {
   SuiteCoreStringKeyValue,
 } from '@digitaldefiance/suite-core-lib';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DraftsIcon from '@mui/icons-material/Drafts';
+import LabelIcon from '@mui/icons-material/Label';
+import SendIcon from '@mui/icons-material/Send';
 import { Box, CircularProgress, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -66,6 +79,13 @@ import '../styles.scss';
 import DashboardPage from './components/DashboardPage';
 import { SplashPage } from './components/SplashPage';
 import { createAppTheme } from './theme';
+
+// Register sub-component i18n packages with the BrightChain engine.
+// Must run after i18nEngine import above triggers engine creation.
+registerI18nComponentPackage(createBrightMailComponentPackage());
+registerI18nComponentPackage(createBrightHubComponentPackage());
+registerI18nComponentPackage(createBrightPassComponentPackage());
+registerI18nComponentPackage(createBrightChatComponentPackage());
 
 // Lazy-loaded module routes
 const BrightMailRoutes = lazy(() =>
@@ -172,6 +192,8 @@ const App: FC = () => {
 };
 
 const InnerApp: FC = () => {
+  const { tBranded: t } = useI18n();
+  const mailMenu = createMenuType(String(IncludeOnMenu.BrightMailMenu));
   const brightMailMenuConfig: IMenuConfig = {
     menuType: createMenuType(String(IncludeOnMenu.BrightMailMenu)),
     menuIcon: <FontAwesomeIcon icon={faEnvelope} />,
@@ -180,7 +202,7 @@ const InnerApp: FC = () => {
       {
         id: 'brightmail',
         label: <BrightChainSubLogo subText="Mail" height={24} />,
-        includeOnMenus: [createMenuType(String(IncludeOnMenu.BrightMailMenu))],
+        includeOnMenus: [mailMenu, MenuTypes.SideMenu],
         index: 15,
         icon: (
           <FontAwesomeIcon
@@ -196,6 +218,42 @@ const InnerApp: FC = () => {
           },
         },
       },
+      {
+        id: 'brightmail-sent',
+        label: t(BrightMailStrings.Nav_Sent),
+        includeOnMenus: [mailMenu, MenuTypes.SideMenu],
+        index: 20,
+        icon: <SendIcon />,
+        link: '/brightmail/sent',
+        requiresAuth: true,
+      },
+      {
+        id: 'brightmail-drafts',
+        label: t(BrightMailStrings.Nav_Drafts),
+        includeOnMenus: [mailMenu, MenuTypes.SideMenu],
+        index: 25,
+        icon: <DraftsIcon />,
+        link: '/brightmail/drafts',
+        requiresAuth: true,
+      },
+      {
+        id: 'brightmail-trash',
+        label: t(BrightMailStrings.Nav_Trash),
+        includeOnMenus: [mailMenu, MenuTypes.SideMenu],
+        index: 30,
+        icon: <DeleteIcon />,
+        link: '/brightmail/trash',
+        requiresAuth: true,
+      },
+      {
+        id: 'brightmail-labels',
+        label: t(BrightMailStrings.Nav_Labels),
+        includeOnMenus: [mailMenu, MenuTypes.SideMenu],
+        index: 35,
+        icon: <LabelIcon />,
+        link: '/brightmail/labels',
+        requiresAuth: true,
+      },
     ],
   };
 
@@ -207,7 +265,10 @@ const InnerApp: FC = () => {
       {
         id: 'brightpass',
         label: <BrightChainSubLogo subText="Pass" height={24} />,
-        includeOnMenus: [createMenuType(String(IncludeOnMenu.BrightPassMenu))],
+        includeOnMenus: [
+          createMenuType(String(IncludeOnMenu.BrightPassMenu)),
+          MenuTypes.SideMenu,
+        ],
         index: 50,
         icon: (
           <FontAwesomeIcon
@@ -234,8 +295,11 @@ const InnerApp: FC = () => {
       {
         id: 'brighthub',
         label: <BrightChainSubLogo subText="Hub" height={24} />,
-        includeOnMenus: [createMenuType(String(IncludeOnMenu.BrightHubMenu))],
-        index: 50,
+        includeOnMenus: [
+          createMenuType(String(IncludeOnMenu.BrightHubMenu)),
+          MenuTypes.SideMenu,
+        ],
+        index: 75,
         icon: (
           <FontAwesomeIcon
             icon={faCircleNodes}
@@ -261,8 +325,11 @@ const InnerApp: FC = () => {
       {
         id: 'brightchat',
         label: <BrightChainSubLogo subText="Chat" height={24} />,
-        includeOnMenus: [createMenuType(String(IncludeOnMenu.BrightChatMenu))],
-        index: 75,
+        includeOnMenus: [
+          createMenuType(String(IncludeOnMenu.BrightChatMenu)),
+          MenuTypes.SideMenu,
+        ],
+        index: 100,
         icon: (
           <FontAwesomeIcon
             icon={faComment}

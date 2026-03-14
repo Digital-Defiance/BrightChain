@@ -12,7 +12,7 @@
  */
 
 import type { EncryptedShare } from '@brightchain/brightchain-lib';
-import { BrightPassStrings } from '@brightchain/brightchain-lib';
+import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   Alert,

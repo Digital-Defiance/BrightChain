@@ -9,7 +9,7 @@
  * Implements Requirements 35.11, 61.4
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import {
   ApproveFollowersMode,
   IBasePrivacySettings,
