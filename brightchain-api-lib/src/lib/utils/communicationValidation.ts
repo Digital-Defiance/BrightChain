@@ -69,6 +69,14 @@ export const promoteConversationValidation: ValidationChain[] = [
 
 // ─── Group validations ──────────────────────────────────────────────────────
 
+export const listGroupsValidation: ValidationChain[] = [
+  query('cursor').optional().isString().withMessage('cursor must be a string'),
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage('limit must be an integer between 1 and 100'),
+];
+
 export const createGroupValidation: ValidationChain[] = [
   body('name')
     .isString()

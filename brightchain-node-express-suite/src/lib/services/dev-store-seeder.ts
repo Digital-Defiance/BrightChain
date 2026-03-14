@@ -19,7 +19,7 @@ import {
 } from '@brightchain/brightchain-lib';
 import type { BrightDb } from '@brightchain/db';
 import { EmailString, MemberType } from '@digitaldefiance/ecies-lib';
-import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
+import { ECIESService, type PlatformID } from '@digitaldefiance/node-ecies-lib';
 import type { SecureString } from '@digitaldefiance/ecies-lib';
 
 /**
@@ -30,6 +30,7 @@ export interface IDevMemberResult {
   name: string;
   email: string;
   mnemonic: string;
+  publicKeyHex: string;
   id: string;
   type: MemberType;
 }
@@ -82,13 +83,19 @@ export async function seedDevStore<TID extends PlatformID>(
   db: BrightDb,
   poolName: string,
   emailDomain = 'example.com',
+  existingMemberStore?: MemberStore<TID>,
 ): Promise<IDevStoreSeederResult> {
   // MemberStore.createMember() depends on ServiceProvider (eciesService, cblService).
   // initializeBrightChain() is idempotent — safe to call even if already initialized.
   initializeBrightChain();
 
-  const memberStore = new MemberStore<TID>(blockStore, db);
+  const memberStore = existingMemberStore ?? new MemberStore<TID>(blockStore, db);
   const results: IDevMemberResult[] = [];
+
+  // Create a node-ecies-lib ECIESService for deriving public keys from mnemonics.
+  // ServiceProvider stores the base ecies-lib ECIESService which does NOT have
+  // walletToSimpleKeyPairBuffer — only the node-ecies-lib subclass does.
+  const eciesService = new ECIESService<TID>();
 
   for (const def of DEFAULT_DEV_MEMBERS) {
     const email = `${def.name}@${emailDomain}`;
@@ -100,14 +107,60 @@ export async function seedDevStore<TID extends PlatformID>(
 
     const { reference, mnemonic } = await memberStore.createMember(memberData);
 
+    // Derive the public key hex from the mnemonic so callers can update
+    // the environment (e.g. SYSTEM_PUBLIC_KEY) without a second round-trip.
+    let publicKeyHex = '';
+    try {
+      const { wallet } = eciesService.walletAndSeedFromMnemonic(mnemonic);
+      const keyPair = eciesService.walletToSimpleKeyPairBuffer(wallet);
+      publicKeyHex = keyPair.publicKey.toString('hex');
+    } catch (err) {
+      console.warn(
+        `[dev-store-seeder] Failed to derive publicKeyHex for ${def.name}:`,
+        err instanceof Error ? err.message : err,
+      );
+    }
+
     results.push({
       label: def.label,
       name: def.name,
       email,
       mnemonic: (mnemonic as SecureString).value ?? '',
+      publicKeyHex,
       id: String(reference.id),
       type: def.type,
     });
+
+    // Store the public key in the 'users' collection so that
+    // getMemberPublicKeyHex() can find it via the fast DB lookup path.
+    // Without this, the fallback getMember() path returns undefined
+    // because it strips the public key during CBL hydration.
+    if (publicKeyHex) {
+      try {
+        const usersCol = db.collection<{
+          _id?: string;
+          publicKey?: string;
+          username?: string;
+          email?: string;
+          type?: number;
+        }>('users');
+        const idHex = Buffer.from(
+          reference.id as unknown as Uint8Array,
+        ).toString('hex');
+        await usersCol.insertOne({
+          _id: idHex,
+          publicKey: publicKeyHex,
+          username: def.name,
+          email,
+          type: def.type,
+        } as never);
+      } catch (err) {
+        console.warn(
+          `[dev-store-seeder] Failed to store publicKey in users collection for ${def.name}:`,
+          err instanceof Error ? err.message : err,
+        );
+      }
+    }
   }
 
   return { members: results, poolName };

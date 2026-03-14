@@ -34,6 +34,7 @@ import {
   IGetGroupMessagesResponse,
   IGetGroupResponse,
   ILeaveGroupResponse,
+  IListGroupsResponse,
   IPinMessageResponse,
   IRemoveGroupMemberResponse,
   IRemoveReactionResponse,
@@ -64,6 +65,7 @@ import {
   getGroupMessagesValidation,
   groupIdParamValidation,
   leaveGroupValidation,
+  listGroupsValidation,
   pinGroupMessageValidation,
   removeGroupMemberValidation,
   removeGroupReactionValidation,
@@ -77,9 +79,11 @@ import {
   validationError,
 } from '../../utils/errorResponse';
 import { BaseController } from '../base';
+import { SessionsController } from './sessions';
 
 type GroupApiResponse =
   | ICreateGroupResponse
+  | IListGroupsResponse
   | IGetGroupResponse
   | ISendGroupMessageResponse
   | IGetGroupMessagesResponse
@@ -96,6 +100,7 @@ type GroupApiResponse =
 
 interface GroupHandlers extends TypedHandlers {
   createGroup: ApiRequestHandler<ICreateGroupResponse | ApiErrorResponse>;
+  listGroups: ApiRequestHandler<IListGroupsResponse | ApiErrorResponse>;
   getGroup: ApiRequestHandler<IGetGroupResponse | ApiErrorResponse>;
   sendMessage: ApiRequestHandler<ISendGroupMessageResponse | ApiErrorResponse>;
   getMessages: ApiRequestHandler<IGetGroupMessagesResponse | ApiErrorResponse>;
@@ -229,6 +234,24 @@ export class GroupController<
    * Falls back to body/query memberId for testing.
    */
   private getMemberId(req: unknown): string {
+    // Try JWT session first
+    const typedReq = req as { headers?: { authorization?: string } };
+    if (typedReq.headers?.authorization) {
+      try {
+        const sessionsController =
+          this.application.getController<SessionsController>('sessions');
+        const member = sessionsController.getMemberFromSession(
+          typedReq.headers.authorization,
+        );
+        if (member) {
+          return member.id.toString();
+        }
+      } catch {
+        // Fall through to body/query fallback
+      }
+    }
+
+    // Fallback: body.memberId / body.requesterId (testing)
     const body = (req as CreateGroupBody).body;
     if (body && typeof body === 'object') {
       const bodyRecord = body as Record<string, unknown>;
@@ -244,54 +267,59 @@ export class GroupController<
   }
 
   protected initRouteDefinitions(): void {
-    const noAuth = {
-      useAuthentication: false,
+    const auth = {
+      useAuthentication: true,
       useCryptoAuthentication: false,
     };
 
     this.routeDefinitions = [
       routeConfig('post', '/', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'createGroup',
         validation: () => createGroupValidation,
       }),
+      routeConfig('get', '/', {
+        ...auth,
+        handlerKey: 'listGroups',
+        validation: () => listGroupsValidation,
+      }),
       routeConfig('get', '/:groupId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getGroup',
         validation: () => groupIdParamValidation,
       }),
       routeConfig('post', '/:groupId/messages', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'sendMessage',
         validation: () => sendGroupMessageValidation,
       }),
       routeConfig('get', '/:groupId/messages', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getMessages',
         validation: () => getGroupMessagesValidation,
       }),
       routeConfig('post', '/:groupId/members', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'addMembers',
         validation: () => addGroupMembersValidation,
       }),
       routeConfig('delete', '/:groupId/members/:memberId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'removeMember',
         validation: () => removeGroupMemberValidation,
       }),
       routeConfig('post', '/:groupId/leave', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'leaveGroup',
         validation: () => leaveGroupValidation,
       }),
       routeConfig('put', '/:groupId/roles/:memberId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'assignRole',
         validation: () => assignGroupRoleValidation,
       }),
       routeConfig('post', '/:groupId/messages/:messageId/reactions', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'addReaction',
         validation: () => addGroupReactionValidation,
       }),
@@ -299,23 +327,23 @@ export class GroupController<
         'delete',
         '/:groupId/messages/:messageId/reactions/:reactionId',
         {
-          ...noAuth,
+          ...auth,
           handlerKey: 'removeReaction',
           validation: () => removeGroupReactionValidation,
         },
       ),
       routeConfig('put', '/:groupId/messages/:messageId', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'editMessage',
         validation: () => editGroupMessageValidation,
       }),
       routeConfig('post', '/:groupId/messages/:messageId/pin', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'pinMessage',
         validation: () => pinGroupMessageValidation,
       }),
       routeConfig('delete', '/:groupId/messages/:messageId/pin', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'unpinMessage',
         validation: () => pinGroupMessageValidation,
       }),
@@ -323,6 +351,7 @@ export class GroupController<
 
     this.handlers = {
       createGroup: this.handleCreateGroup.bind(this),
+      listGroups: this.handleListGroups.bind(this),
       getGroup: this.handleGetGroup.bind(this),
       sendMessage: this.handleSendMessage.bind(this),
       getMessages: this.handleGetMessages.bind(this),
@@ -363,6 +392,41 @@ export class GroupController<
           data: group,
           message: 'Group created',
         } satisfies ICreateGroupResponse,
+      };
+    } catch (error) {
+      return this.mapServiceError(error);
+    }
+  }
+
+  /** GET / — List groups for the authenticated member. */
+  private async handleListGroups(req: unknown): Promise<{
+    statusCode: number;
+    response: IListGroupsResponse | ApiErrorResponse;
+  }> {
+    try {
+      const { cursor, limit } = (req as GetMessagesQuery).query;
+      const memberId = this.getMemberId(req);
+      const service = this.getGroupService();
+
+      const allGroups = service.listGroupsForMember(memberId);
+      const parsedLimit = limit ? parseInt(limit, 10) : 20;
+      const startIndex = cursor
+        ? allGroups.findIndex((g) => g.id === cursor) + 1
+        : 0;
+      const page = allGroups.slice(startIndex, startIndex + parsedLimit);
+      const hasMore = startIndex + parsedLimit < allGroups.length;
+
+      return {
+        statusCode: 200,
+        response: {
+          status: 'success',
+          data: {
+            items: page,
+            cursor: hasMore ? page[page.length - 1]?.id : undefined,
+            hasMore,
+          },
+          message: 'Groups listed',
+        } satisfies IListGroupsResponse,
       };
     } catch (error) {
       return this.mapServiceError(error);
