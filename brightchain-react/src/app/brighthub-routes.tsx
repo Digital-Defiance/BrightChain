@@ -112,6 +112,7 @@ const emptyThread: IBaseThread<string> = {
     replyCount: 0,
     quoteCount: 0,
     isEdited: false,
+    isBlogPost: false,
     isDeleted: false,
     updatedAt: '',
     createdBy: '',

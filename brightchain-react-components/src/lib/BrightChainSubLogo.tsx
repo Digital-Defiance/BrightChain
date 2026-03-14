@@ -32,7 +32,7 @@ export const BrightChainSubLogo: React.FC<BrightChainSubLogoProps> = ({
     style={{
       display: 'flex',
       alignItems: 'center',
-      gap: '8px',
+      gap: '3px',
       height,
       ...style,
     }}

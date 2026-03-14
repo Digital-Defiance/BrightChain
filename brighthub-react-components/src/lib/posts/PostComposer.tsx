@@ -14,6 +14,8 @@ import {
   IBaseHub,
   IBasePostData,
   IBaseUserProfile,
+  getCharacterCount,
+  parsePostContent,
 } from '@brightchain/brighthub-lib';
 import {
   Close,
@@ -21,8 +23,10 @@ import {
   EmojiEmotions,
   FormatBold,
   FormatItalic,
+  HelpOutline,
   Image,
   Send,
+  Visibility,
 } from '@mui/icons-material';
 import {
   Avatar,
@@ -37,6 +41,7 @@ import {
   MenuItem,
   Select,
   TextField,
+  ToggleButton,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -48,6 +53,7 @@ import {
   useState,
 } from 'react';
 import { useBrightHubTranslation } from '../hooks/useBrightHubTranslation';
+import { MarkupHelpDialog } from './MarkupHelpDialog';
 
 /** Maximum character count for a post */
 const MAX_CHAR_COUNT = 280;
@@ -91,6 +97,8 @@ export interface PostComposerSubmitData {
   replyToId?: string;
   /** ID of the post being quoted */
   quotedPostId?: string;
+  /** Whether this is a blog post (enables full markdown rendering) */
+  isBlogPost: boolean;
 }
 
 /**
@@ -117,10 +125,27 @@ export function PostComposer({
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
   const [selectedHubIds, setSelectedHubIds] = useState<string[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const charCount = content.length;
+  // Top-level posts are blog posts (markdown enabled), replies are not
+  const isReply = !!replyTo;
+  const isBlogPost = !isReply;
+
+  const previewHtml = useMemo(
+    () =>
+      showPreview && content.trim()
+        ? parsePostContent(content, isBlogPost)
+        : '',
+    [showPreview, content, isBlogPost],
+  );
+
+  const charCount = useMemo(
+    () => getCharacterCount(content, isBlogPost),
+    [content, isBlogPost],
+  );
   const charRemaining = MAX_CHAR_COUNT - charCount;
   const isOverLimit = charRemaining < 0;
   const canSubmit = content.trim().length > 0 && !isOverLimit && !isSubmitting;
@@ -206,6 +231,7 @@ export function PostComposer({
       hubIds: selectedHubIds,
       replyToId: replyTo?._id,
       quotedPostId: quotedPost?._id,
+      isBlogPost: isBlogPost,
     });
   };
 
@@ -259,6 +285,7 @@ export function PostComposer({
             value={content}
             onChange={handleContentChange}
             disabled={isSubmitting}
+            sx={{ display: showPreview ? 'none' : undefined }}
             slotProps={{
               input: {
                 disableUnderline: true,
@@ -270,6 +297,21 @@ export function PostComposer({
               },
             }}
           />
+
+          {/* Preview panel */}
+          {showPreview && content.trim() && (
+            <Box
+              aria-label={t(BrightHubStrings.PostComposer_PreviewAriaLabel)}
+              sx={{
+                minHeight: 80,
+                py: 1,
+                '& p': { m: 0 },
+                wordBreak: 'break-word',
+                fontSize: '1.1rem',
+              }}
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
+            />
+          )}
 
           {/* Quoted post preview */}
           {quotedPost && (
@@ -396,7 +438,7 @@ export function PostComposer({
             }}
           >
             {/* Formatting toolbar */}
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
               <Tooltip title={t(BrightHubStrings.PostComposer_Bold)}>
                 <IconButton
                   size="small"
@@ -454,6 +496,27 @@ export function PostComposer({
                 onChange={handleFileSelect}
                 aria-hidden="true"
               />
+              <Tooltip title={t(BrightHubStrings.PostComposer_Preview)}>
+                <ToggleButton
+                  value="preview"
+                  selected={showPreview}
+                  onChange={() => setShowPreview((prev) => !prev)}
+                  size="small"
+                  aria-label={t(BrightHubStrings.PostComposer_Preview)}
+                  sx={{ border: 'none', p: 0.5 }}
+                >
+                  <Visibility sx={{ fontSize: 20 }} />
+                </ToggleButton>
+              </Tooltip>
+              <Tooltip title={t(BrightHubStrings.PostComposer_MarkupHelp)}>
+                <IconButton
+                  size="small"
+                  onClick={() => setShowHelp(true)}
+                  aria-label={t(BrightHubStrings.PostComposer_MarkupHelp)}
+                >
+                  <HelpOutline sx={{ fontSize: 20 }} />
+                </IconButton>
+              </Tooltip>
             </Box>
 
             {/* Character count and submit */}
@@ -499,6 +562,10 @@ export function PostComposer({
           </Box>
         </Box>
       </Box>
+      <MarkupHelpDialog
+        open={showHelp}
+        onClose={() => setShowHelp(false)}
+      />
     </Card>
   );
 }

@@ -248,6 +248,7 @@ describe('Feature: brighthub-social-network, Post_Service Property Tests', () =>
               replyCount: 0,
               quoteCount: 0,
               isEdited: false,
+              isBlogPost: true,
               isDeleted: false,
               createdAt: oldTimestamp,
               updatedAt: oldTimestamp,

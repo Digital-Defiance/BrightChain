@@ -12,6 +12,7 @@ import { VCBLService } from './vcblService';
 
 const arbitraryEntryPropertyRecord = (): fc.Arbitrary<EntryPropertyRecord> =>
   fc.record({
+    id: fc.uuid(),
     entryType: fc.constantFrom(
       'login',
       'secure_note',
@@ -63,6 +64,7 @@ describe('VCBLService', () => {
             0,
           );
 
+          expect(result.id).toBe(record.id);
           expect(result.entryType).toBe(record.entryType);
           expect(result.title).toBe(record.title);
           expect(result.tags).toEqual(record.tags);
@@ -91,6 +93,7 @@ describe('VCBLService', () => {
 
             expect(result.length).toBe(records.length);
             for (let i = 0; i < records.length; i++) {
+              expect(result[i].id).toBe(records[i].id);
               expect(result[i].entryType).toBe(records[i].entryType);
               expect(result[i].title).toBe(records[i].title);
               expect(result[i].tags).toEqual(records[i].tags);

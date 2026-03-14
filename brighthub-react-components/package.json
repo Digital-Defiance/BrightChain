@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brighthub-react-components",
-  "version": "0.28.0",
+  "version": "0.29.1",
   "description": "React components for BrightHub social network module",
   "main": "./index.js",
   "module": "./index.mjs",

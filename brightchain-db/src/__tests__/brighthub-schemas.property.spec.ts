@@ -88,6 +88,7 @@ const arbPost = fc.record({
   isEdited: fc.boolean(),
   editedAt: fc.option(arbTimestamp, { nil: undefined }),
   hubIds: fc.option(fc.array(arbId), { nil: undefined }),
+  isBlogPost: fc.boolean(),
   isDeleted: fc.boolean(),
   createdAt: arbTimestamp,
   updatedAt: arbTimestamp,

@@ -31,7 +31,6 @@ export * from './lib/routers';
 export * from './lib/availability';
 export * from './lib/blockFetch';
 export * from './lib/utils/errorResponse';
-export * from './lib/utils/type-converters';
 
 // Validation utilities
 export * from './lib/validation/userValidation';

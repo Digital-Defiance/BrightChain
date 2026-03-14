@@ -1,3 +1,12 @@
+/// <reference path="./markdown-it-plugins.d.ts" />
+import MarkdownIt from 'markdown-it';
+import markdownItAbbr from 'markdown-it-abbr';
+import markdownItContainer from 'markdown-it-container';
+import markdownItDeflist from 'markdown-it-deflist';
+import markdownItFootnote from 'markdown-it-footnote';
+import markdownItMark from 'markdown-it-mark';
+import markdownItToc from 'markdown-it-table-of-contents';
+import markdownItTaskLists from 'markdown-it-task-lists';
 import sanitizeHtml from 'sanitize-html';
 import { v4 } from 'uuid';
 import {
@@ -7,24 +16,14 @@ import {
 } from './font-awesome/font-awesome';
 import customFootnote from './markdownit-footnote-currenturl';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const MarkdownIt = require('markdown-it');
-
 const markdownItPlugins = [
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  { plugin: require('markdown-it-task-lists'), options: { enabled: true } },
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  { plugin: require('markdown-it-mark') },
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  { plugin: require('markdown-it-table-of-contents') },
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  { plugin: require('markdown-it-deflist') },
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  { plugin: require('markdown-it-container'), options: 'info' },
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  { plugin: require('markdown-it-abbr') },
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  { plugin: require('markdown-it-footnote') },
+  { plugin: markdownItTaskLists, options: { enabled: true } },
+  { plugin: markdownItMark },
+  { plugin: markdownItToc },
+  { plugin: markdownItDeflist },
+  { plugin: markdownItContainer, options: 'info' },
+  { plugin: markdownItAbbr },
+  { plugin: markdownItFootnote },
   { plugin: customFootnote },
 ];
 

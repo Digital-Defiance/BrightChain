@@ -37,6 +37,7 @@ interface PostRecord {
   isEdited: boolean;
   editedAt?: string;
   hubIds?: string[];
+  isBlogPost: boolean;
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -219,6 +220,7 @@ export class FeedService implements IFeedService {
       isEdited: record.isEdited,
       editedAt: record.editedAt,
       hubIds: record.hubIds,
+      isBlogPost: record.isBlogPost,
       isDeleted: record.isDeleted,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,

@@ -7,6 +7,8 @@ export {
   Application,
   createExpressConstants,
   AppRouter,
+  AbstractJwtService,
+  AbstractRoleService,
 } from '@digitaldefiance/node-express-suite';
 
 export type {
@@ -15,4 +17,6 @@ export type {
   IAuthenticationProvider,
   IDatabasePlugin,
   IEnvironment,
+  IJwtService,
+  IRoleService,
 } from '@digitaldefiance/node-express-suite';
