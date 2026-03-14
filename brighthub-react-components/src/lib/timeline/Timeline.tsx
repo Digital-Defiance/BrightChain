@@ -8,7 +8,7 @@
  * Implements Requirement 12.3
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import { IBasePostData, IBaseUserProfile } from '@brightchain/brighthub-lib';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { useCallback, useEffect, useRef } from 'react';

@@ -11,7 +11,7 @@
  */
 
 import type { VaultMetadata } from '@brightchain/brightchain-lib';
-import { BrightPassStrings } from '@brightchain/brightchain-lib';
+import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import LockIcon from '@mui/icons-material/Lock';

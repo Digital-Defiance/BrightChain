@@ -10,7 +10,8 @@
  */
 
 import type { AuditLogEntry } from '@brightchain/brightchain-lib';
-import { AuditAction, BrightPassStrings } from '@brightchain/brightchain-lib';
+import { AuditAction } from '@brightchain/brightchain-lib';
+import { BrightPassStrings } from '@brightchain/brightpass-lib';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import type { SelectChangeEvent } from '@mui/material';
 import {

@@ -49,10 +49,7 @@ jest.mock('@brightchain/brightchain-lib', () => ({
     {},
     { get: (_target: unknown, prop: string) => `BrightChain:${String(prop)}` },
   ),
-  BrightPassStrings: new Proxy(
-    {},
-    { get: (_target: unknown, prop: string) => `BrightPass:${String(prop)}` },
-  ),
+
   CONSTANTS: {
     THEME_COLORS: {
       CHAIN_BLUE: '#1976d2',

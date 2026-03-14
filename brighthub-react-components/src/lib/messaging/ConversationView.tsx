@@ -7,7 +7,7 @@
  * Implements Requirements 44.2, 61.4
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import type { IBaseDirectMessage } from '@brightchain/brighthub-lib';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { useBrightHubTranslation } from '../hooks/useBrightHubTranslation';

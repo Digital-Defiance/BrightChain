@@ -7,7 +7,7 @@
  * Implements Requirements 44.8, 61.4
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import { AddReaction } from '@mui/icons-material';
 import { Box, Chip, IconButton, Tooltip } from '@mui/material';
 import { useBrightHubTranslation } from '../hooks/useBrightHubTranslation';

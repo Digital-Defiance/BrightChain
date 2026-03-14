@@ -5,11 +5,8 @@
  * Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.4, 5.5, 12.3
  */
 
-import {
-  BrightChainComponentId,
-  BrightChainStrings,
-  IMailbox,
-} from '@brightchain/brightchain-lib';
+import { BrightChainComponentId, IMailbox } from '@brightchain/brightchain-lib';
+import { BrightMailStrings } from '@brightchain/brightmail-lib';
 import { useI18n } from '@digitaldefiance/express-suite-react-components';
 import {
   Alert,
@@ -224,7 +221,7 @@ const ComposeView: FC<ComposeViewProps> = ({
 
       setSnackbar({
         open: true,
-        message: t(BrightChainStrings.BrightMail_Compose_SendSuccess),
+        message: t(BrightMailStrings.Compose_SendSuccess),
         severity: 'success',
       });
 
@@ -235,7 +232,7 @@ const ComposeView: FC<ComposeViewProps> = ({
     } catch {
       setSnackbar({
         open: true,
-        message: t(BrightChainStrings.BrightMail_Compose_SendError),
+        message: t(BrightMailStrings.Compose_SendError),
         severity: 'error',
       });
     } finally {
@@ -247,52 +244,52 @@ const ComposeView: FC<ComposeViewProps> = ({
     <Box component="form" noValidate data-testid="compose-form">
       <TextField
         id="compose-to"
-        label={t(BrightChainStrings.BrightMail_Compose_To)}
+        label={t(BrightMailStrings.Compose_To)}
         value={to}
         onChange={(e) => setTo(e.target.value)}
         fullWidth
         margin="normal"
         required
         inputProps={{
-          'aria-label': t(BrightChainStrings.BrightMail_Compose_To),
+          'aria-label': t(BrightMailStrings.Compose_To),
         }}
       />
       <TextField
         id="compose-cc"
-        label={t(BrightChainStrings.BrightMail_Compose_Cc)}
+        label={t(BrightMailStrings.Compose_Cc)}
         value={cc}
         onChange={(e) => setCc(e.target.value)}
         fullWidth
         margin="normal"
         inputProps={{
-          'aria-label': t(BrightChainStrings.BrightMail_Compose_Cc),
+          'aria-label': t(BrightMailStrings.Compose_Cc),
         }}
       />
       <TextField
         id="compose-bcc"
-        label={t(BrightChainStrings.BrightMail_Compose_Bcc)}
+        label={t(BrightMailStrings.Compose_Bcc)}
         value={bcc}
         onChange={(e) => setBcc(e.target.value)}
         fullWidth
         margin="normal"
         inputProps={{
-          'aria-label': t(BrightChainStrings.BrightMail_Compose_Bcc),
+          'aria-label': t(BrightMailStrings.Compose_Bcc),
         }}
       />
       <TextField
         id="compose-subject"
-        label={t(BrightChainStrings.BrightMail_Compose_Subject)}
+        label={t(BrightMailStrings.Compose_Subject)}
         value={subject}
         onChange={(e) => setSubject(e.target.value)}
         fullWidth
         margin="normal"
         inputProps={{
-          'aria-label': t(BrightChainStrings.BrightMail_Compose_Subject),
+          'aria-label': t(BrightMailStrings.Compose_Subject),
         }}
       />
       <TextField
         id="compose-body"
-        label={t(BrightChainStrings.BrightMail_Compose_Body)}
+        label={t(BrightMailStrings.Compose_Body)}
         value={body}
         onChange={(e) => setBody(e.target.value)}
         fullWidth
@@ -300,14 +297,14 @@ const ComposeView: FC<ComposeViewProps> = ({
         multiline
         minRows={4}
         inputProps={{
-          'aria-label': t(BrightChainStrings.BrightMail_Compose_Body),
+          'aria-label': t(BrightMailStrings.Compose_Body),
         }}
       />
 
       {attachments.length > 0 && (
         <Box mt={1}>
           <Typography variant="subtitle2">
-            {t(BrightChainStrings.BrightMail_Compose_Attachments)}
+            {t(BrightMailStrings.Compose_Attachments)}
           </Typography>
           <List dense data-testid="attachment-list">
             {attachments.map((att, idx) => (
@@ -329,7 +326,7 @@ const ComposeView: FC<ComposeViewProps> = ({
           role="alert"
           data-testid="validation-error"
         >
-          {t(BrightChainStrings.BrightMail_Compose_InvalidRecipient)}
+          {t(BrightMailStrings.Compose_InvalidRecipient)}
         </Typography>
       )}
 
@@ -340,7 +337,7 @@ const ComposeView: FC<ComposeViewProps> = ({
           disabled={!hasValidRecipient || sending}
           data-testid="send-button"
         >
-          {t(BrightChainStrings.BrightMail_Compose_Send)}
+          {t(BrightMailStrings.Compose_Send)}
         </Button>
         {onClose && (
           <Button
@@ -348,7 +345,7 @@ const ComposeView: FC<ComposeViewProps> = ({
             onClick={onClose}
             data-testid="cancel-button"
           >
-            {t(BrightChainStrings.BrightMail_Action_Cancel)}
+            {t(BrightMailStrings.Action_Cancel)}
           </Button>
         )}
       </Box>

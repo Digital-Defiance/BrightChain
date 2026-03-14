@@ -67,6 +67,13 @@ jest.mock('@brightchain/brightchain-lib', () => ({
   ),
 }));
 
+jest.mock('@brightchain/brightmail-lib', () => ({
+  BrightMailStrings: new Proxy(
+    {},
+    { get: (_t: unknown, p: string | symbol) => String(p) },
+  ),
+}));
+
 jest.mock('@digitaldefiance/express-suite-react-components', () => ({
   useI18n: () => ({
     tComponent: (_componentId: string, key: string) => key,
@@ -255,7 +262,7 @@ describe('InboxView', () => {
     });
 
     expect(screen.getByTestId('inbox-empty')).toBeInTheDocument();
-    expect(screen.getByText('BrightMail_Inbox_Empty')).toBeInTheDocument();
+    expect(screen.getByText('Inbox_Empty')).toBeInTheDocument();
   });
 
   /**
@@ -270,7 +277,7 @@ describe('InboxView', () => {
     });
 
     expect(screen.getByTestId('inbox-error')).toBeInTheDocument();
-    expect(screen.getByText('BrightMail_Inbox_Error')).toBeInTheDocument();
+    expect(screen.getByText('Inbox_Error')).toBeInTheDocument();
 
     // Retry
     mockedApi.queryInbox.mockResolvedValue(
@@ -327,9 +334,9 @@ describe('InboxView', () => {
     });
 
     expect(screen.getByTestId('bulk-actions')).toBeInTheDocument();
-    expect(screen.getByText('BrightMail_Action_Delete')).toBeInTheDocument();
+    expect(screen.getByText('Action_Delete')).toBeInTheDocument();
     expect(
-      screen.getByText('BrightMail_Action_MarkAsRead'),
+      screen.getByText('Action_MarkAsRead'),
     ).toBeInTheDocument();
   });
 

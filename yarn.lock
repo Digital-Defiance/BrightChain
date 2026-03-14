@@ -2531,6 +2531,8 @@ __metadata:
 "@brightchain/brightchat-lib@workspace:brightchat-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchat-lib@workspace:brightchat-lib"
+  dependencies:
+    "@digitaldefiance/i18n-lib": "npm:^4.6.4"
   peerDependencies:
     "@brightchain/brightchain-lib": "*"
   languageName: unknown
@@ -2558,6 +2560,7 @@ __metadata:
   resolution: "@brightchain/brighthub-lib@workspace:brighthub-lib"
   dependencies:
     "@awesome.me/kit-a20d532681": "npm:^1.0.23"
+    "@digitaldefiance/i18n-lib": "npm:^4.6.4"
     "@types/markdown-it": "npm:^14.1.2"
     "@types/sanitize-html": "npm:^2.16.0"
     "@types/uuid": "npm:^11.0.0"
@@ -2586,6 +2589,16 @@ __metadata:
     "@mui/material": ">=5.0.0"
     react: ">=18.0.0"
     react-dom: ">=18.0.0"
+  languageName: unknown
+  linkType: soft
+
+"@brightchain/brightmail-lib@workspace:brightmail-lib":
+  version: 0.0.0-use.local
+  resolution: "@brightchain/brightmail-lib@workspace:brightmail-lib"
+  dependencies:
+    "@digitaldefiance/i18n-lib": "npm:^4.6.4"
+  peerDependencies:
+    "@brightchain/brightchain-lib": "*"
   languageName: unknown
   linkType: soft
 

@@ -8,7 +8,7 @@
  * Implements Requirement 12.5
  */
 
-import { BrightHubStrings } from '@brightchain/brightchain-lib';
+import { BrightHubStrings } from '@brightchain/brighthub-lib';
 import {
   ConnectionStrength,
   IBaseUserProfile,
