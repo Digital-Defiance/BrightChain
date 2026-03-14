@@ -94,7 +94,7 @@ export class AuthService<
    * @throws Error('Invalid credentials') on unknown user
    * @throws Error('Challenge already used') on replay
    */
-  async verifyDirectLoginChallenge(
+  override async verifyDirectLoginChallenge(
     serverSignedRequest: string,
     signature: string,
     username?: string,

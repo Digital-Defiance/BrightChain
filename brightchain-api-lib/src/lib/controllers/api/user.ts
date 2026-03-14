@@ -95,7 +95,7 @@ export class UserController<
   }
 
   @Post('/direct-challenge')
-  async directChallenge(
+  override async directChallenge(
     req: Request,
     _res: Response,
     _next: NextFunction,

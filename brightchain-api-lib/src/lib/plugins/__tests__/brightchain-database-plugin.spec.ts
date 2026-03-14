@@ -190,9 +190,13 @@ describe('init() creates auth provider correctly', () => {
     expect(plugin.authenticationProvider).toBeUndefined();
 
     // Create a minimal mock app satisfying IBrightChainApplication
+    const serviceMap = new Map();
     const mockApp = {
       environment: env,
-      services: new Map(),
+      services: {
+        get: (key: string) => serviceMap.get(key),
+        register: (key: string, factory: () => unknown) => serviceMap.set(key, factory()),
+      },
       getController: () => undefined,
       setController: () => undefined,
     };

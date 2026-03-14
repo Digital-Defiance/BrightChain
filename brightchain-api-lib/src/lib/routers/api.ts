@@ -156,11 +156,11 @@ export class ApiRouter<
 
     this.router.use('/blocks', this.blocksController.router);
     this.router.use('/brightpass', this.brightPassController.router);
-    this.router.use('/channels', this.channelController.router);
-    this.router.use('/conversations', this.conversationController.router);
+    this.router.use('/brightchat/channels', this.channelController.router);
+    this.router.use('/brightchat/conversations', this.conversationController.router);
     this.router.use('/docs', this.docsController.router);
     this.router.use('/emails', this.emailController.router);
-    this.router.use('/groups', this.groupController.router);
+    this.router.use('/brightchat/groups', this.groupController.router);
     this.router.use('/i18n', this.i18nController.router);
     this.router.use('/energy', this.energyController.router);
     this.router.use('/health', this.healthController.router);
