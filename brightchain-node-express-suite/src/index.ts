@@ -30,6 +30,7 @@ export { BlockDocumentStore, CollectionHeadRegistry } from './lib/datastore/bloc
 export * from './lib/datastore/block-document-store-factory';
 export * from './lib/datastore/document-store';
 export { MemoryDocumentStore } from './lib/datastore/memory-document-store';
+export { BrightDbDocumentStoreAdapter } from './lib/datastore/bright-db-document-store-adapter';
 
 // Validation
 export type { IValidationError, IValidationResult } from './lib/validation/userValidation';
