@@ -8,8 +8,9 @@
  * Implements Requirements 51.1, 51.2, 51.7, 53.1, 61.4
  */
 
+import { faBell } from '@awesome.me/kit-a20d532681/icons/classic/solid';
 import { BrightHubStrings } from '@brightchain/brighthub-lib';
-import { Notifications } from '@mui/icons-material';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Badge, IconButton, Tooltip } from '@mui/material';
 import { useBrightHubTranslation } from '../hooks/useBrightHubTranslation';
 
@@ -54,7 +55,7 @@ export function NotificationBell({
           max={99}
           invisible={unreadCount === 0}
         >
-          <Notifications />
+          <FontAwesomeIcon icon={faBell} />
         </Badge>
       </IconButton>
     </Tooltip>

@@ -34,8 +34,6 @@ import {
   MessageRequestsList,
   MessagingInbox,
   NewConversationDialog,
-  NotificationBell,
-  NotificationDropdown,
   NotificationList,
   NotificationPreferences,
   PostComposer,
@@ -49,7 +47,7 @@ import {
   useI18n,
 } from '@digitaldefiance/express-suite-react-components';
 import { Box, Button, CircularProgress } from '@mui/material';
-import { FC, useCallback, useEffect, useRef, useState } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 import { Outlet, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 
 /* ── Stub / default data ───────────────────────────────────── */
@@ -162,6 +160,8 @@ const PrivacyPage: FC = () => (
 
 const MessagingInboxPage: FC = () => {
   const api = useAuthenticatedApi();
+  const { userData } = useAuth();
+  const userId = userData?.id;
   const navigate = useNavigate();
   const [conversations, setConversations] = useState<InboxConversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -171,9 +171,10 @@ const MessagingInboxPage: FC = () => {
   >([]);
 
   useEffect(() => {
+    if (!userId) return;
     let cancelled = false;
     api
-      .get('/api/brighthub/messages/conversations')
+      .get(`/brighthub/messages/conversations?userId=${userId}`)
       .then((res) => {
         if (!cancelled && res.data?.data) {
           const convs = (res.data.data as unknown[]).map((c: unknown) => {
@@ -206,7 +207,7 @@ const MessagingInboxPage: FC = () => {
         return;
       }
       api
-        .get(`/api/brighthub/search?q=${encodeURIComponent(query)}&type=users`)
+        .get(`/brighthub/search?q=${encodeURIComponent(query)}&type=users&userId=${userId}`)
         .then((res) => {
           const users = (res.data?.data?.users ?? []) as {
             _id: string;
@@ -228,10 +229,10 @@ const MessagingInboxPage: FC = () => {
 
   const handleStartConversation = useCallback(
     (userIds: string[], groupName?: string) => {
-      const body: Record<string, unknown> = { participantIds: userIds };
+      const body: Record<string, unknown> = { participantIds: userIds, userId };
       if (groupName) body['groupName'] = groupName;
       api
-        .post('/api/brighthub/messages/conversations', body)
+        .post('/brighthub/messages/conversations', body)
         .then((res) => {
           const convId = res.data?.data?._id;
           if (convId) navigate(`/brighthub/messages/${convId}`);
@@ -263,11 +264,14 @@ const MessagingInboxPage: FC = () => {
 
 const MessageRequestsPage: FC = () => {
   const api = useAuthenticatedApi();
+  const { userData } = useAuth();
+  const userId = userData?.id;
   const [requests, setRequests] = useState<never[]>([]);
 
   useEffect(() => {
+    if (!userId) return;
     api
-      .get('/api/brighthub/messages/requests')
+      .get(`/brighthub/messages/requests?userId=${userId}`)
       .then((res) => {
         if (res.data?.data) setRequests(res.data.data as never[]);
       })
@@ -286,7 +290,7 @@ const ConversationPage: FC = () => {
   useEffect(() => {
     if (!id) return;
     api
-      .get(`/api/brighthub/messages/conversations/${id}`)
+      .get(`/brighthub/messages/conversations/${id}?userId=${userData?.id}`)
       .then((res) => {
         if (res.data?.data?.messages) setMessages(res.data.data.messages);
       })
@@ -300,7 +304,8 @@ const ConversationPage: FC = () => {
       onSend={(content) => {
         if (!id) return;
         api
-          .post(`/api/brighthub/messages/conversations/${id}/messages`, {
+          .post(`/brighthub/messages/conversations/${id}/messages`, {
+            userId: userData?.id,
             content,
           })
           .catch(() => {});
@@ -313,6 +318,8 @@ const ConversationPage: FC = () => {
 
 const NotificationsPage: FC = () => {
   const api = useAuthenticatedApi();
+  const { userData } = useAuth();
+  const userId = userData?.id;
   const [notifications, setNotifications] = useState<
     IBaseNotification<string>[]
   >([]);
@@ -320,9 +327,10 @@ const NotificationsPage: FC = () => {
   const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
+    if (!userId) return;
     let cancelled = false;
     api
-      .get('/api/brighthub/notifications')
+      .get(`/brighthub/notifications?userId=${userId}`)
       .then((res) => {
         if (!cancelled && res.data?.data) {
           const data = res.data.data;
@@ -341,7 +349,7 @@ const NotificationsPage: FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [api]);
+  }, [api, userId]);
 
   return (
     <NotificationList
@@ -349,10 +357,10 @@ const NotificationsPage: FC = () => {
       loading={loading}
       hasMore={hasMore}
       onMarkRead={(id) => {
-        api.post(`/api/brighthub/notifications/${id}/read`).catch(() => {});
+        api.post(`/brighthub/notifications/${id}/read`, { userId }).catch(() => {});
       }}
       onDelete={(id) => {
-        api.delete(`/api/brighthub/notifications/${id}`).catch(() => {});
+        api.delete(`/brighthub/notifications/${id}?userId=${userId}`).catch(() => {});
         setNotifications((prev) => prev.filter((n) => n._id !== id));
       }}
     />
@@ -361,24 +369,27 @@ const NotificationsPage: FC = () => {
 
 const NotificationPrefsPage: FC = () => {
   const api = useAuthenticatedApi();
+  const { userData } = useAuth();
+  const userId = userData?.id;
   const [prefs, setPrefs] =
     useState<IBaseNotificationPreferences<string>>(emptyNotifPrefs);
 
   useEffect(() => {
+    if (!userId) return;
     api
-      .get('/api/brighthub/notifications/preferences')
+      .get(`/brighthub/notifications/preferences?userId=${userId}`)
       .then((res) => {
         if (res.data?.data) setPrefs(res.data.data);
       })
       .catch(() => {});
-  }, [api]);
+  }, [api, userId]);
 
   return (
     <NotificationPreferences
       preferences={prefs}
       onSave={(updated) => {
         api
-          .put('/api/brighthub/notifications/preferences', updated)
+          .put('/brighthub/notifications/preferences', { ...updated, userId })
           .catch(() => {});
       }}
     />
@@ -389,17 +400,20 @@ const NotificationPrefsPage: FC = () => {
 
 const TimelinePage: FC = () => {
   const api = useAuthenticatedApi();
+  const { userData } = useAuth();
+  const userId = userData?.id;
   const [posts, setPosts] = useState<IBasePostData<string>[]>([]);
 
   useEffect(() => {
+    if (!userId) return;
     api
-      .get('/api/brighthub/timeline/home')
+      .get(`/brighthub/timeline/home?userId=${userId}`)
       .then((res) => {
         if (res.data?.data?.posts) setPosts(res.data.data.posts);
         else if (Array.isArray(res.data?.data)) setPosts(res.data.data);
       })
       .catch(() => {});
-  }, [api]);
+  }, [api, userId]);
 
   return (
     <Box>
@@ -421,7 +435,7 @@ const ThreadPage: FC = () => {
     if (!id) return;
     let cancelled = false;
     api
-      .get(`/api/brighthub/posts/${id}/thread`)
+      .get(`/brighthub/posts/${id}/thread`)
       .then((res) => {
         if (!cancelled && res.data?.data) {
           setThread(res.data.data);
@@ -464,7 +478,7 @@ const ProfilePage: FC = () => {
     if (!id) return;
     let cancelled = false;
     api
-      .get(`/api/brighthub/users/${id}`)
+      .get(`/brighthub/users/${id}?userId=${userData?.id}`)
       .then((res) => {
         if (!cancelled && res.data?.data) {
           setUser(res.data.data);
@@ -494,12 +508,12 @@ const ProfilePage: FC = () => {
     if (!id) return;
     if (isFollowing) {
       api
-        .delete(`/api/brighthub/users/${id}/follow`)
+        .delete(`/brighthub/users/${id}/follow?userId=${userData?.id}`)
         .then(() => setIsFollowing(false))
         .catch(() => {});
     } else {
       api
-        .post(`/api/brighthub/users/${id}/follow`)
+        .post(`/brighthub/users/${id}/follow`, { userId: userData?.id })
         .then(() => setIsFollowing(true))
         .catch(() => {});
     }
@@ -536,77 +550,8 @@ const ProfilePage: FC = () => {
 
 /** Internal layout with notification bell in header */
 const BrightHubRoutesLayout: FC = () => {
-  const api = useAuthenticatedApi();
-  const navigate = useNavigate();
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [dropdownNotifs, setDropdownNotifs] = useState<
-    IBaseNotification<string>[]
-  >([]);
-  const bellRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    api
-      .get('/api/brighthub/notifications/unread-count')
-      .then((res) => {
-        const count = res.data?.data?.count ?? res.data?.data ?? 0;
-        setUnreadCount(typeof count === 'number' ? count : 0);
-      })
-      .catch(() => {});
-  }, [api]);
-
-  const handleBellClick = useCallback(() => {
-    setDropdownOpen((prev) => !prev);
-    if (!dropdownOpen) {
-      api
-        .get('/api/brighthub/notifications?limit=10')
-        .then((res) => {
-          const data = res.data?.data;
-          if (Array.isArray(data)) setDropdownNotifs(data);
-          else if (data?.notifications) setDropdownNotifs(data.notifications);
-        })
-        .catch(() => {});
-    }
-  }, [api, dropdownOpen]);
-
   return (
     <Box>
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          px: 2,
-          py: 1,
-        }}
-      >
-        <Box ref={bellRef} component="span">
-          <NotificationBell
-            unreadCount={unreadCount}
-            onClick={handleBellClick}
-          />
-        </Box>
-        <NotificationDropdown
-          open={dropdownOpen}
-          anchorEl={bellRef.current}
-          notifications={dropdownNotifs}
-          onClose={() => setDropdownOpen(false)}
-          onViewAll={() => {
-            setDropdownOpen(false);
-            navigate('/brighthub/notifications');
-          }}
-          onMarkAllRead={() => {
-            api
-              .post('/api/brighthub/notifications/read-all')
-              .then(() => {
-                setUnreadCount(0);
-                setDropdownNotifs((prev) =>
-                  prev.map((n) => ({ ...n, isRead: true })),
-                );
-              })
-              .catch(() => {});
-          }}
-        />
-      </Box>
       <Outlet />
     </Box>
   );

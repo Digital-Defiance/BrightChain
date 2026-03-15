@@ -37,6 +37,7 @@ import {
   BrightHubTimelineController,
 } from '../controllers/api/brighthub';
 import { BrightPassController } from '../controllers/api/brightpass';
+
 import { CBLController } from '../controllers/api/cbl';
 import { ChannelController } from '../controllers/api/channels';
 import { ConversationController } from '../controllers/api/conversations';
@@ -55,6 +56,7 @@ import { NodesController } from '../controllers/api/nodes';
 import { QuorumController } from '../controllers/api/quorum';
 import { SCBLController } from '../controllers/api/scbl';
 import { SyncController } from '../controllers/api/sync';
+import { UnifiedNotificationController } from '../controllers/api/unifiedNotifications';
 import { UserController } from '../controllers/api/user';
 import { IBrightChainApplication } from '../interfaces';
 import { EmailService } from '../services/email';
@@ -99,6 +101,7 @@ export class ApiRouter<
   private readonly brightHubNotificationController: BrightHubNotificationController<TID>;
   private readonly brightHubConnectionController: BrightHubConnectionController<TID>;
   private readonly brightHubTimelineController: BrightHubTimelineController<TID>;
+  private readonly unifiedNotificationController: UnifiedNotificationController<TID>;
   private introspectionController: IntrospectionController<TID> | null = null;
   private readonly brightchainApplication: IBrightChainApplication<TID>;
   private readonly emailService: EmailService<TID>;
@@ -154,6 +157,11 @@ export class ApiRouter<
       application,
     );
 
+    // Unified notification aggregation controller
+    this.unifiedNotificationController = new UnifiedNotificationController(
+      application,
+    );
+
     this.router.use('/blocks', this.blocksController.router);
     this.router.use('/brightpass', this.brightPassController.router);
     this.router.use('/brightchat/channels', this.channelController.router);
@@ -183,6 +191,12 @@ export class ApiRouter<
     );
     this.router.use('/brighthub', this.brightHubConnectionController.router);
     this.router.use('/brighthub', this.brightHubTimelineController.router);
+
+    // Unified notification aggregation
+    this.router.use(
+      '/unified-notifications',
+      this.unifiedNotificationController.router,
+    );
   }
 
   /**
@@ -324,6 +338,7 @@ export class ApiRouter<
     service: MessagePassingService,
   ): void {
     this.emailController.setMessagePassingService(service);
+    this.unifiedNotificationController.setMessagePassingService(service);
   }
 
   /**
@@ -379,6 +394,7 @@ export class ApiRouter<
    */
   public setBrightHubNotificationService(service: INotificationService): void {
     this.brightHubNotificationController.setNotificationService(service);
+    this.unifiedNotificationController.setNotificationService(service);
   }
 
   /**

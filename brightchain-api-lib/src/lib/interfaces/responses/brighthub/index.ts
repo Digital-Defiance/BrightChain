@@ -20,5 +20,8 @@ export type * from './api-post-response';
 // Timeline responses
 export type * from './api-timeline-response';
 
+// Unified notification responses
+export type * from './api-unified-notification-response';
+
 // User profile responses
 export type * from './api-user-profile-response';
