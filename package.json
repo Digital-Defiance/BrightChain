@@ -1,6 +1,6 @@
 {
   "name": "brightchain",
-  "version": "0.29.6",
+  "version": "0.29.7",
   "license": "MIT",
   "workspaces": [
     "brightchain-lib",
@@ -97,7 +97,7 @@
     "@digitaldefiance/branded-interface": "0.0.5",
     "@digitaldefiance/bzip2-wasm": "^1.1.1",
     "@digitaldefiance/ecies-lib": "^4.20.2",
-    "@digitaldefiance/express-suite-react-components": "^4.22.3",
+    "@digitaldefiance/express-suite-react-components": "^4.22.5",
     "@digitaldefiance/i18n-lib": "^4.6.4",
     "@digitaldefiance/node-ecies-lib": "^4.23.0",
     "@digitaldefiance/node-express-suite": "4.23.2",
