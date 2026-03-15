@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightmail-react-components",
-  "version": "0.29.7",
+  "version": "0.29.9",
   "description": "BrightMail React UI components for BrightChain email interface",
   "main": "src/index.ts",
   "types": "src/index.ts",
