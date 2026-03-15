@@ -19,4 +19,5 @@ export * from './quorum';
 export * from './scbl';
 export * from './sessions';
 export * from './sync';
+export * from './unifiedNotifications';
 export * from './user';

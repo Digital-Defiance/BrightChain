@@ -48,6 +48,7 @@ export type * from './signedToken';
 export type * from './simpleStore';
 export type * from './simpleStoreAsync';
 export type * from './singleEncryptedBlockDetails';
+export type * from './unifiedNotificationCounts';
 export * from './storage';
 export type * from './successMessage';
 export type * from './symmetricEncryptionResults';

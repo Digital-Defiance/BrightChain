@@ -22,7 +22,10 @@ import {
   MessagingDemo,
   StoragePoolsDemo,
 } from '@brightchain/brightchain-react-components';
-import { createBrightChatComponentPackage } from '@brightchain/brightchat-lib';
+import {
+  BrightChatStrings,
+  createBrightChatComponentPackage,
+} from '@brightchain/brightchat-lib';
 import { createBrightHubComponentPackage } from '@brightchain/brighthub-lib';
 import {
   BrightMailStrings,
@@ -66,6 +69,8 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DraftsIcon from '@mui/icons-material/Drafts';
+import ForumIcon from '@mui/icons-material/Forum';
+import GroupIcon from '@mui/icons-material/Group';
 import LabelIcon from '@mui/icons-material/Label';
 import SendIcon from '@mui/icons-material/Send';
 import { Box, CircularProgress, CssBaseline } from '@mui/material';
@@ -77,8 +82,15 @@ import { IncludeOnMenu } from '../enumerations/includeOnMenu';
 import { environment } from '../environments/environment';
 import '../styles.scss';
 import DashboardPage from './components/DashboardPage';
+import { GlobalNotificationBell } from './components/GlobalNotificationBell';
 import { SplashPage } from './components/SplashPage';
 import { createAppTheme } from './theme';
+
+const UnifiedNotificationsPage = lazy(() =>
+  import('./components/UnifiedNotificationsPage').then((m) => ({
+    default: m.default,
+  })),
+);
 
 // Register sub-component i18n packages with the BrightChain engine.
 // Must run after i18nEngine import above triggers engine creation.
@@ -193,9 +205,12 @@ const App: FC = () => {
 
 const InnerApp: FC = () => {
   const { tBranded: t } = useI18n();
+  const chatMenu = createMenuType(String(IncludeOnMenu.BrightChatMenu));
+  const hubMenu = createMenuType(String(IncludeOnMenu.BrightHubMenu));
   const mailMenu = createMenuType(String(IncludeOnMenu.BrightMailMenu));
+  const passMenu = createMenuType(String(IncludeOnMenu.BrightPassMenu));
   const brightMailMenuConfig: IMenuConfig = {
-    menuType: createMenuType(String(IncludeOnMenu.BrightMailMenu)),
+    menuType: mailMenu,
     menuIcon: <FontAwesomeIcon icon={faEnvelope} />,
     priority: 15,
     options: [
@@ -258,7 +273,7 @@ const InnerApp: FC = () => {
   };
 
   const brightPassMenuConfig: IMenuConfig = {
-    menuType: createMenuType(String(IncludeOnMenu.BrightPassMenu)),
+    menuType: passMenu,
     menuIcon: <FontAwesomeIcon icon={faLock} />,
     priority: 50,
     options: [
@@ -288,17 +303,14 @@ const InnerApp: FC = () => {
   };
 
   const brightHubMenuConfig: IMenuConfig = {
-    menuType: createMenuType(String(IncludeOnMenu.BrightHubMenu)),
+    menuType: hubMenu,
     menuIcon: <FontAwesomeIcon icon={faCircleNodes} />,
     priority: 75,
     options: [
       {
         id: 'brighthub',
         label: <BrightChainSubLogo subText="Hub" height={24} />,
-        includeOnMenus: [
-          createMenuType(String(IncludeOnMenu.BrightHubMenu)),
-          MenuTypes.SideMenu,
-        ],
+        includeOnMenus: [hubMenu, MenuTypes.SideMenu],
         index: 75,
         icon: (
           <FontAwesomeIcon
@@ -318,17 +330,14 @@ const InnerApp: FC = () => {
   };
 
   const brightChatMenuConfig: IMenuConfig = {
-    menuType: createMenuType(String(IncludeOnMenu.BrightChatMenu)),
+    menuType: chatMenu,
     menuIcon: <FontAwesomeIcon icon={faComment} />,
     priority: 100,
     options: [
       {
         id: 'brightchat',
         label: <BrightChainSubLogo subText="Chat" height={24} />,
-        includeOnMenus: [
-          createMenuType(String(IncludeOnMenu.BrightChatMenu)),
-          MenuTypes.SideMenu,
-        ],
+        includeOnMenus: [chatMenu, MenuTypes.SideMenu],
         index: 100,
         icon: (
           <FontAwesomeIcon
@@ -343,6 +352,24 @@ const InnerApp: FC = () => {
             marginRight: '3px',
           },
         },
+      },
+      {
+        id: 'brightchat-groups',
+        label: t(BrightChatStrings.Nav_Groups),
+        includeOnMenus: [chatMenu, MenuTypes.SideMenu],
+        index: 115,
+        icon: <GroupIcon />,
+        link: '/brightchat/groups',
+        requiresAuth: true,
+      },
+      {
+        id: 'brightchat-channels',
+        label: t(BrightChatStrings.Nav_Channels),
+        includeOnMenus: [chatMenu, MenuTypes.SideMenu],
+        index: 130,
+        icon: <ForumIcon />,
+        link: '/brightchat/channels',
+        requiresAuth: true,
       },
     ],
   };
@@ -369,6 +396,7 @@ const InnerApp: FC = () => {
           }
           constants={CoreConstants}
           showTitle={false}
+          actions={<GlobalNotificationBell />}
         />
         <Suspense
           fallback={
@@ -481,6 +509,14 @@ const InnerApp: FC = () => {
             <Route path="/brightpass/*" element={<BrightPassRoutes />} />
             <Route path="/brighthub/*" element={<BrightHubRoutes />} />
             <Route path="/brightchat/*" element={<BrightChatRoutes />} />
+            <Route
+              path="/notifications"
+              element={
+                <PrivateRoute>
+                  <UnifiedNotificationsPage />
+                </PrivateRoute>
+              }
+            />
           </Routes>
         </Suspense>
       </Box>
