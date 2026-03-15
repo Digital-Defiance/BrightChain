@@ -1,6 +1,6 @@
 {
   "name": "brightchain",
-  "version": "0.29.7",
+  "version": "0.29.9",
   "license": "MIT",
   "workspaces": [
     "brightchain-lib",
@@ -14,6 +14,7 @@
     "brightchain-react-e2e",
     "brightchain-react-components",
     "brightchain-test-utils",
+    "brightchain-node-express-suite",
     "brightchat-lib",
     "brightchat-react-components",
     "brightmail-react-components",
@@ -23,6 +24,7 @@
     "brightchain-azure-store",
     "brightchain-s3-store",
     "brightmail-lib",
+    "brightpass-lib",
     "showcase",
     "tools"
   ],
@@ -34,8 +36,9 @@
     "build:all:prod": "NODE_OPTIONS='--max-old-space-size=16384' NODE_ENV=production npx nx run-many --target=build --all --configuration=production",
     "build:all:dev:logged": "yarn build:all:dev --outputStyle=stream 2>&1 | ansifilter -o build.log",
     "build:node-express-suite:prod": "NODE_ENV=production npx nx build brightchain-node-express-suite --configuration=production",
-    "build:hub-lib:prod": "NODE_ENV=production npx nx build brighthub-lib --configuration=production",
+    "build:lib:prod": "NODE_ENV=production npx nx build brightchain-lib --configuration=production",
     "build:api-lib:prod": "NODE_ENV=production npx nx build brightchain-api-lib --configuration=production",
+    "build:hub-lib:prod": "NODE_ENV=production npx nx build brighthub-lib --configuration=production",
     "build:db:prod": "NODE_ENV=production npx nx build brightchain-db --configuration=production",
     "build:brightchain-azure-store:prod": "NODE_ENV=production npx nx build brightchain-azure-store --configuration=production",
     "build:brightchain-s3-store:prod": "NODE_ENV=production npx nx build brightchain-s3-store --configuration=production",
@@ -90,14 +93,14 @@
     "@digitaldefiance/i18n-lib": "4.6.4"
   },
   "dependencies": {
-    "@brightchain/brightchain-api-lib": "^0.29.7",
-    "@brightchain/brightchain-lib": "^0.29.0",
-    "@brightchain/db": "^0.29.0",
+    "@brightchain/brightchain-api-lib": "^0.29.8",
+    "@brightchain/brightchain-lib": "^0.29.8",
+    "@brightchain/db": "^0.29.8",
     "@digitaldefiance/branded-enum": "0.0.7",
     "@digitaldefiance/branded-interface": "0.0.5",
     "@digitaldefiance/bzip2-wasm": "^1.1.1",
     "@digitaldefiance/ecies-lib": "^4.20.2",
-    "@digitaldefiance/express-suite-react-components": "^4.22.5",
+    "@digitaldefiance/express-suite-react-components": "^4.22.6",
     "@digitaldefiance/i18n-lib": "^4.6.4",
     "@digitaldefiance/node-ecies-lib": "^4.23.0",
     "@digitaldefiance/node-express-suite": "4.23.2",
