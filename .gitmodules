@@ -19,3 +19,6 @@
 [submodule "brightmail-react-components"]
 	path = brightmail-react-components
 	url = https://github.com/Digital-Defiance/brightmail-react-components.git
+[submodule "brightpass-react-components"]
+	path = brightpass-react-components
+	url = https://github.com/Digital-Defiance/brightpass-react-components.git
