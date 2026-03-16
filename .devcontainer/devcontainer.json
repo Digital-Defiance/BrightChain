@@ -14,7 +14,10 @@
   // "features": {},
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   "forwardPorts": [
+    25,
     443,
+    587,
+    2526,
     3000,
     4200,
     27017

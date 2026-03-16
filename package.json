@@ -1,6 +1,6 @@
 {
   "name": "brightchain",
-  "version": "0.29.9",
+  "version": "0.29.11",
   "license": "MIT",
   "workspaces": [
     "brightchain-lib",
@@ -93,9 +93,9 @@
     "@digitaldefiance/i18n-lib": "4.6.4"
   },
   "dependencies": {
-    "@brightchain/brightchain-api-lib": "^0.29.8",
-    "@brightchain/brightchain-lib": "^0.29.8",
-    "@brightchain/db": "^0.29.8",
+    "@brightchain/brightchain-api-lib": "^0.29.11",
+    "@brightchain/brightchain-lib": "^0.29.10",
+    "@brightchain/db": "^0.29.10",
     "@digitaldefiance/branded-enum": "0.0.7",
     "@digitaldefiance/branded-interface": "0.0.5",
     "@digitaldefiance/bzip2-wasm": "^1.1.1",
@@ -118,6 +118,12 @@
     "@mui/x-date-pickers": "^8.23.0",
     "@sendgrid/mail": "^8.1.4",
     "@swc/helpers": "0.5.15",
+    "@tiptap/core": "^3.20.2",
+    "@tiptap/extension-link": "^3.20.2",
+    "@tiptap/extension-underline": "^3.20.2",
+    "@tiptap/pm": "^3.20.2",
+    "@tiptap/react": "^3.20.2",
+    "@tiptap/starter-kit": "^3.20.2",
     "axios": "^1.6.0",
     "bcrypt": "^5.1.1",
     "bip39": "^3.1.0",
