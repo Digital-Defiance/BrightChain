@@ -422,6 +422,7 @@ This propagates the new domain to all registered components:
 
 ## Related Documentation
 
+- [Test Mode Guide](./email-gateway-test-mode.md) — Local development and testing setup
 - [Postfix Setup Guide](./email-gateway-postfix-setup.md) — OS-level Postfix installation and configuration
 - [Email System Architecture](./email-system-architecture.md) — internal email system overview
 - [Communication System Architecture](./communication-system-architecture.md) — direct messages, groups, channels

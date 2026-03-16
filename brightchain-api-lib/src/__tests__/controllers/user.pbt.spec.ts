@@ -29,7 +29,7 @@ import * as jwt from 'jsonwebtoken';
 import { AppConstants } from '../../lib/appConstants';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { AuthService } from '../../lib/services/auth';
-import { EmailService } from '../../lib/services/email';
+import { SESEmailService } from '../../lib/services/sesEmail';
 
 const JWT_SECRET = 'test-jwt-secret-for-pbt';
 
@@ -69,7 +69,7 @@ function createIsolatedAuthService(): AuthService {
     sendEmail: async () => {
       /* noop */
     },
-  } as unknown as EmailService;
+  } as unknown as SESEmailService;
 
   // Pre-populate the SystemUserService singleton
   (SystemUserService as any)['systemUser'] = null;
@@ -374,7 +374,7 @@ describe('Property 8: Profile retrieval completeness', () => {
       sendEmail: async () => {
         /* noop */
       },
-    } as unknown as EmailService;
+    } as unknown as SESEmailService;
 
     // Pre-populate the SystemUserService singleton
     (SystemUserService as any)['systemUser'] = null;
@@ -632,7 +632,7 @@ describe('Property 9: Profile settings update persistence round-trip', () => {
       sendEmail: async () => {
         /* noop */
       },
-    } as unknown as EmailService;
+    } as unknown as SESEmailService;
 
     // Pre-populate the SystemUserService singleton
     (SystemUserService as any)['systemUser'] = null;

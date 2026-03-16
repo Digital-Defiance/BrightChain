@@ -1,6 +1,6 @@
 {
   "name": "@brightchain/brightchain-api-lib",
-  "version": "0.29.12",
+  "version": "0.29.15",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "files": [

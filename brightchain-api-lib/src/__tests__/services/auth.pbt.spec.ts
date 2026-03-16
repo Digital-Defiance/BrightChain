@@ -29,7 +29,7 @@ import { AppConstants } from '../../lib/appConstants';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { IAuthCredentials } from '../../lib/interfaces/auth-credentials';
 import { AuthService } from '../../lib/services/auth';
-import { EmailService } from '../../lib/services/email';
+import { SESEmailService } from '../../lib/services/sesEmail';
 
 /**
  * Arbitrary that produces non-empty printable ASCII strings (0x21–0x7e)
@@ -168,7 +168,7 @@ describe('AuthService Property-Based Tests', () => {
         sendEmail: async () => {
           /* noop */
         },
-      } as unknown as EmailService;
+      } as unknown as SESEmailService;
 
       // Pre-populate the SystemUserService singleton
       (SystemUserService as any)['systemUser'] = null;
@@ -301,7 +301,7 @@ describe('AuthService Property-Based Tests', () => {
         sendEmail: async () => {
           /* noop */
         },
-      } as unknown as EmailService;
+      } as unknown as SESEmailService;
 
       // Pre-populate the SystemUserService singleton
       (SystemUserService as any)['systemUser'] = null;
@@ -437,7 +437,7 @@ describe('AuthService Property-Based Tests', () => {
         sendEmail: async () => {
           /* noop */
         },
-      } as unknown as EmailService;
+      } as unknown as SESEmailService;
 
       // Pre-populate the SystemUserService singleton
       (SystemUserService as any)['systemUser'] = null;
