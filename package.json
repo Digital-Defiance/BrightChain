@@ -1,6 +1,6 @@
 {
   "name": "brightchain",
-  "version": "0.29.15",
+  "version": "0.29.16",
   "license": "MIT",
   "workspaces": [
     "brightchain-lib",
