@@ -22,13 +22,16 @@ import {
   type IGossipService,
   type MessageCBLService,
 } from '@brightchain/brightchain-lib';
+import { ServiceKeys } from '@digitaldefiance/node-express-suite';
 import { BrightDb } from '@brightchain/db';
 import { BrightDbApplication } from '@brightchain/node-express-suite';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   debugLog,
+  DummyEmailService,
   IApplication,
   IConstants,
+  IEmailService,
   KeyWrappingService,
   SystemUserService,
   UpnpManager,
@@ -44,6 +47,7 @@ import {
   DocumentRecord,
   DocumentStore,
 } from './datastore/document-store';
+import { EmailServices } from './enumerations/email-services';
 import { Environment } from './environment';
 import { Middlewares } from './middlewares';
 import { BrightChainDatabasePlugin } from './plugins/brightchain-database-plugin';
@@ -60,14 +64,15 @@ import {
   ContentAwareBlocksService,
   ContentIngestionService,
   DiscoveryService,
-  EmailService,
   FeedService,
   IdentityExpirationScheduler,
   MessagingService,
   NotificationService,
+  PostfixEmailService,
   PostService,
   QuorumDatabaseAdapter,
   SecureKeyStorage,
+  SESEmailService,
   UserProfileService,
 } from './services';
 import { BrightChainAuthenticationProvider } from './services/brightchain-authentication-provider';
@@ -237,9 +242,30 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
     // Use FakeEmailService when email sending is disabled (E2E test mode),
     // otherwise use the production SES-based EmailService.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const emailService: any = this.environment.disableEmailSend
+    const emailServiceFactories: Record<EmailServices, () => IEmailService> = {
+      // no-op mailer
+      [EmailServices.Dummy]: () => new DummyEmailService<TID>(this),
+      // sends mail with postfix
+      [EmailServices.Postfix]: () => new PostfixEmailService<TID>(this),
+      // sends mail with amazon ses
+      [EmailServices.SES]: () => new SESEmailService<TID>(this),
+      // captures mail for testing purposes
+      [EmailServices.Fake]: () => FakeEmailService.getInstance(),
+    };
+
+    const emailService = this.environment.disableEmailSend
       ? FakeEmailService.getInstance()
-      : new EmailService<TID>(this);
+      : emailServiceFactories[this.environment.emailService]();
+    /* register with the service container so that
+     * API router sets up email notifications correctly
+     */
+    this.services.register(ServiceKeys.EMAIL, () => emailService);
+
+    debugLog(
+      this.environment.debug,
+      'log',
+      `[ ready ] Email service configured: ${this.environment.emailService}`,
+    );
 
     if (this.environment.disableEmailSend) {
       this.expressApp.use(createTestEmailRouter());
@@ -268,7 +294,6 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
     this.services.register('memberStore', () => memberStore);
     this.services.register('energyStore', () => energyStore);
     this.services.register('energyLedger', () => energyLedger);
-    this.services.register('emailService', () => emailService);
     this.services.register('auth', () => authService);
 
     // BrightChainBackupCodeService — singleton backed by MemberStore + crypto services
@@ -421,6 +446,21 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
       if (this.apiRouter) {
         this.apiRouter.setMessagePassingService(mps);
         this.apiRouter.setMessagePassingServiceForEmail(mps);
+
+        // Wire user registry so verify-recipient can resolve local users.
+        // Delegates to MemberStore.queryIndex({ email }) which checks both
+        // the in-memory index and the DB-backed fallback path.
+        this.apiRouter.setEmailUserRegistry({
+          hasUser: async (email: string): Promise<boolean> => {
+            try {
+              const results = await memberStore.queryIndex({ email });
+              return results.length > 0;
+            } catch {
+              return false;
+            }
+          },
+        });
+        this.apiRouter.setEmailDomain(this.environment.emailDomain);
       }
 
       debugLog(

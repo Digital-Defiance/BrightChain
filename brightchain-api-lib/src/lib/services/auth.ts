@@ -1,9 +1,13 @@
 import {
   EmailString,
-  MemberStore,
   EnergyAccountStore,
+  MemberStore,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
+import {
+  BrightDbAuthService,
+  SchemaCollection,
+} from '@brightchain/node-express-suite';
 import {
   ECIESService,
   Member,
@@ -11,17 +15,13 @@ import {
   SignatureBuffer,
 } from '@digitaldefiance/node-ecies-lib';
 import {
-  BrightDbAuthService,
-  SchemaCollection,
-} from '@brightchain/node-express-suite';
-import {
+  IEmailService,
   SystemUserService,
 } from '@digitaldefiance/node-express-suite';
 import { IRequestUserDTO } from '@digitaldefiance/suite-core-lib';
 import { IBrightChainApplication } from '../interfaces/application';
 import { DefaultBackendIdType } from '../shared-types';
 import { BrightChainAuthenticationProvider } from './brightchain-authentication-provider';
-import { EmailService } from './email';
 
 /**
  * BrightChain domain-specific AuthService.
@@ -33,21 +33,29 @@ import { EmailService } from './email';
 export class AuthService<
   TID extends PlatformID = DefaultBackendIdType,
 > extends BrightDbAuthService<TID> {
-  private emailService: EmailService<TID>;
+  private emailService: IEmailService;
   private brightchainApplication: IBrightChainApplication<TID>;
 
   constructor(
     application: IBrightChainApplication<TID>,
     memberStore: MemberStore,
     energyStore: EnergyAccountStore,
-    emailService: EmailService<TID>,
+    emailService: IEmailService,
     jwtSecret: string,
     authProvider?: BrightChainAuthenticationProvider<TID>,
   ) {
     // IBrightChainApplication extends IApplication which is compatible with
     // IBrightDbApplication for the fields BrightDbAuthService needs
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    super(application as any, memberStore, energyStore, jwtSecret, authProvider as any);
+    super(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      application as any,
+      memberStore,
+      energyStore,
+      jwtSecret,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      authProvider as any,
+    );
     this.emailService = emailService;
     this.brightchainApplication = application;
   }
@@ -104,7 +112,8 @@ export class AuthService<
     memberId: string;
     userDTO: IRequestUserDTO | null;
   }> {
-    const minBytes = 8 + 32 + this.brightchainApplication.constants.ECIES.SIGNATURE_SIZE;
+    const minBytes =
+      8 + 32 + this.brightchainApplication.constants.ECIES.SIGNATURE_SIZE;
     if (serverSignedRequest.length < minBytes * 2) {
       throw new Error('Invalid challenge');
     }
@@ -270,7 +279,9 @@ export class AuthService<
     const nonceHex = nonce.toString('hex');
     const memberId = sp.idProvider.idToString(reference.id as unknown as TID);
     const db =
-      this.brightchainApplication.services.get<import('@brightchain/db').BrightDb>('db');
+      this.brightchainApplication.services.get<
+        import('@brightchain/db').BrightDb
+      >('db');
     const tokenCollection = db.collection<{
       userId: string;
       token: string;

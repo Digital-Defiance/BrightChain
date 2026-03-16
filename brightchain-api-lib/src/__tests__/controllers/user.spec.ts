@@ -36,7 +36,7 @@ import { AppConstants } from '../../lib/appConstants';
 import { UserController } from '../../lib/controllers/api/user';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { AuthService } from '../../lib/services/auth';
-import { EmailService } from '../../lib/services/email';
+import { SESEmailService } from '../../lib/services/sesEmail';
 
 const JWT_SECRET = 'test-jwt-secret-for-unit';
 
@@ -122,7 +122,7 @@ function createTestEnvironment() {
     sendEmail: async () => {
       /* noop */
     },
-  } as unknown as EmailService;
+  } as unknown as SESEmailService;
 
   // Pre-populate the SystemUserService singleton so AuthService.register()
   // can encrypt mnemonics without requiring SYSTEM_MNEMONIC env var.

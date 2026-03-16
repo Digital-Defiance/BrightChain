@@ -17,16 +17,69 @@ import {
 } from '@brightchain/brightchain-lib';
 
 /**
+ * Test mode configuration for the Email Gateway.
+ *
+ * When `testMode.enabled` is true, the gateway operates in a localhost-only
+ * sandbox that doesn't require real DNS, MX records, or external connectivity.
+ *
+ * @see Requirement 8.8 — Test mode for local development
+ */
+export interface ITestModeConfig {
+  /** Whether test mode is enabled. env: GATEWAY_TEST_MODE. */
+  enabled: boolean;
+
+  /**
+   * When true, outbound mail is captured to the catchall directory instead
+   * of being delivered via SMTP. Useful for inspecting sent messages.
+   * env: GATEWAY_TEST_CATCHALL.
+   */
+  catchallEnabled: boolean;
+
+  /**
+   * Directory where caught outbound messages are stored (Maildir format).
+   * env: GATEWAY_TEST_CATCHALL_DIR.
+   */
+  catchallDirectory: string;
+
+  /**
+   * When true, skip DKIM signing (useful when no real key is available).
+   * env: GATEWAY_TEST_SKIP_DKIM.
+   */
+  skipDkim: boolean;
+
+  /**
+   * When true, skip spam filtering (useful when SpamAssassin/Rspamd not running).
+   * env: GATEWAY_TEST_SKIP_SPAM.
+   */
+  skipSpamFilter: boolean;
+
+  /**
+   * When true, accept all recipients without querying the lookup service.
+   * env: GATEWAY_TEST_ACCEPT_ALL_RECIPIENTS.
+   */
+  acceptAllRecipients: boolean;
+
+  /**
+   * List of test recipient addresses that are always accepted (even if not
+   * in the user registry). Comma-separated. env: GATEWAY_TEST_RECIPIENTS.
+   */
+  testRecipients: string[];
+}
+
+/**
  * Complete configuration for the Email Gateway.
  *
  * Each field maps to an environment variable (noted in comments) with a
  * default value applied by `loadGatewayConfig()` when the variable is unset.
  *
- * @see Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7
+ * @see Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8
  */
 export interface IEmailGatewayConfig {
   /** Canonical email domain for this BrightChain instance (from environment.emailDomain / EMAIL_DOMAIN env var). Req 8.1 */
   canonicalDomain: string;
+
+  /** Test mode configuration for local development. Req 8.8 */
+  testMode: ITestModeConfig;
 
   /** Postfix MTA hostname. env: GATEWAY_POSTFIX_HOST. Req 8.2 */
   postfixHost: string;
@@ -104,11 +157,40 @@ const DEFAULT_RETRY_MAX_DURATION = 48 * 60 * 60 * 1000;
 /** Default retry base interval: 60 seconds in ms */
 const DEFAULT_RETRY_BASE_INTERVAL = 60_000;
 
+/** Default test catchall directory */
+const DEFAULT_TEST_CATCHALL_DIR = '/var/spool/brightchain/catchall/';
+
 /** Default probable spam score threshold */
 const DEFAULT_SPAM_PROBABLE = 5.0;
 
 /** Default definite spam score threshold */
 const DEFAULT_SPAM_DEFINITE = 10.0;
+
+/**
+ * Parse a boolean from an environment variable.
+ * Accepts 'true', '1', 'yes' as truthy values (case-insensitive).
+ */
+function envBool(name: string, defaultValue: boolean): boolean {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') {
+    return defaultValue;
+  }
+  return ['true', '1', 'yes'].includes(raw.toLowerCase());
+}
+
+/**
+ * Parse a comma-separated list from an environment variable.
+ */
+function envList(name: string, defaultValue: string[]): string[] {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') {
+    return defaultValue;
+  }
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
 
 /**
  * Parse an integer from an environment variable, returning a default if unset or invalid.
@@ -143,15 +225,38 @@ function envString(name: string, defaultValue: string): string {
 }
 
 /**
+ * Load the test mode configuration from environment variables.
+ *
+ * @returns A fully populated `ITestModeConfig`.
+ */
+function loadTestModeConfig(): ITestModeConfig {
+  return {
+    enabled: envBool('GATEWAY_TEST_MODE', false),
+    catchallEnabled: envBool('GATEWAY_TEST_CATCHALL', false),
+    catchallDirectory: envString(
+      'GATEWAY_TEST_CATCHALL_DIR',
+      DEFAULT_TEST_CATCHALL_DIR,
+    ),
+    skipDkim: envBool('GATEWAY_TEST_SKIP_DKIM', false),
+    skipSpamFilter: envBool('GATEWAY_TEST_SKIP_SPAM', false),
+    acceptAllRecipients: envBool('GATEWAY_TEST_ACCEPT_ALL_RECIPIENTS', false),
+    testRecipients: envList('GATEWAY_TEST_RECIPIENTS', []),
+  };
+}
+
+/**
  * Load the Email Gateway configuration from environment variables.
  *
  * The canonical domain is read from the `EMAIL_DOMAIN` env var (matching
  * `environment.emailDomain`). All other settings are read from their
  * respective `GATEWAY_*` env vars with sensible defaults.
  *
+ * When `GATEWAY_TEST_MODE=true`, the gateway operates in a localhost-only
+ * sandbox suitable for development and testing without real DNS or MX records.
+ *
  * @returns A fully populated `IEmailGatewayConfig`.
  *
- * @see Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7
+ * @see Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8
  */
 export function loadGatewayConfig(): IEmailGatewayConfig {
   const postfixUser = process.env['GATEWAY_POSTFIX_USER'];
@@ -159,6 +264,7 @@ export function loadGatewayConfig(): IEmailGatewayConfig {
 
   return {
     canonicalDomain: envString('EMAIL_DOMAIN', 'example.com'),
+    testMode: loadTestModeConfig(),
     postfixHost: envString('GATEWAY_POSTFIX_HOST', 'localhost'),
     postfixPort: envInt('GATEWAY_POSTFIX_PORT', 25),
     postfixAuth:
@@ -207,5 +313,33 @@ export function loadGatewayConfig(): IEmailGatewayConfig {
       'GATEWAY_RETRY_BASE_INTERVAL',
       DEFAULT_RETRY_BASE_INTERVAL,
     ),
+  };
+}
+
+/**
+ * Create a test mode configuration preset for local development.
+ *
+ * This is a convenience function that returns a config with all test mode
+ * features enabled, suitable for devcontainer or CI environments.
+ *
+ * @param overrides - Optional overrides for specific config values
+ * @returns A fully populated `IEmailGatewayConfig` with test mode enabled
+ */
+export function createTestModeConfig(
+  overrides?: Partial<IEmailGatewayConfig>,
+): IEmailGatewayConfig {
+  const baseConfig = loadGatewayConfig();
+  return {
+    ...baseConfig,
+    testMode: {
+      enabled: true,
+      catchallEnabled: true,
+      catchallDirectory: DEFAULT_TEST_CATCHALL_DIR,
+      skipDkim: true,
+      skipSpamFilter: true,
+      acceptAllRecipients: true,
+      testRecipients: [],
+    },
+    ...overrides,
   };
 }
