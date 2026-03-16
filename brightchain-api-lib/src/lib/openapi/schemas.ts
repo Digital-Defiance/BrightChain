@@ -583,6 +583,82 @@ export const BrightChainSchemas: Record<string, any> = {
     },
   },
 
+  // ─── Email schemas ──────────────────────────────────────────────────
+
+  RecipientVerificationResult: {
+    type: 'object',
+    properties: {
+      username: { type: 'string', description: 'The local-part username that was checked' },
+      exists: { type: 'boolean', description: 'Whether the username exists on this server' },
+    },
+    required: ['username', 'exists'],
+  },
+
+  RecipientVerificationResponse: {
+    type: 'object',
+    properties: {
+      status: { type: 'string', enum: ['success', 'error'] },
+      data: { $ref: '#/components/schemas/RecipientVerificationResult' },
+      error: {
+        type: 'object',
+        properties: {
+          code: { type: 'string' },
+          message: { type: 'string' },
+        },
+      },
+    },
+  },
+
+  MailboxInput: {
+    type: 'object',
+    properties: {
+      displayName: { type: 'string' },
+      localPart: { type: 'string' },
+      domain: { type: 'string' },
+    },
+    required: ['localPart', 'domain'],
+  },
+
+  AttachmentInput: {
+    type: 'object',
+    properties: {
+      filename: { type: 'string' },
+      mimeType: { type: 'string' },
+      data: { type: 'string', format: 'byte', description: 'Base64-encoded file data' },
+    },
+    required: ['filename', 'mimeType', 'data'],
+  },
+
+  SendEmailRequest: {
+    type: 'object',
+    properties: {
+      from: { $ref: '#/components/schemas/MailboxInput' },
+      to: { type: 'array', items: { $ref: '#/components/schemas/MailboxInput' } },
+      cc: { type: 'array', items: { $ref: '#/components/schemas/MailboxInput' } },
+      bcc: { type: 'array', items: { $ref: '#/components/schemas/MailboxInput' } },
+      subject: { type: 'string' },
+      textBody: { type: 'string' },
+      htmlBody: { type: 'string' },
+      attachments: { type: 'array', items: { $ref: '#/components/schemas/AttachmentInput' } },
+      encryptionScheme: { type: 'string', enum: ['none', 'ecies', 'smime'], description: 'Encryption scheme for the email' },
+    },
+    required: ['from'],
+  },
+
+  SendEmailResponse: {
+    type: 'object',
+    properties: {
+      status: { type: 'string', enum: ['success', 'error'] },
+      data: {
+        type: 'object',
+        properties: {
+          messageId: { type: 'string' },
+          deliveryStatus: { type: 'object', additionalProperties: { type: 'string' } },
+        },
+      },
+    },
+  },
+
   // OpenAPI spec schema (for the docs endpoint itself)
   OpenAPISpec: {
     type: 'object',
