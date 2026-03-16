@@ -153,3 +153,21 @@ export * from './dateUtils';
  * @see {@link paginateItems}
  */
 export * from './pagination';
+
+// ============================================================================
+// Attachment Validation Utilities
+// ============================================================================
+/**
+ * Email attachment validation and file size formatting utilities.
+ *
+ * Provides pure functions shared between frontend and backend for:
+ * - Validating individual attachment sizes against a maximum
+ * - Validating cumulative attachment sizes
+ * - Formatting byte counts into human-readable strings (B, KB, MB, GB)
+ *
+ * @see {@link validateAttachmentSize}
+ * @see {@link validateTotalAttachmentSize}
+ * @see {@link formatFileSize}
+ * @see {@link MAX_ATTACHMENT_SIZE_BYTES}
+ */
+export * from './attachmentValidation';
