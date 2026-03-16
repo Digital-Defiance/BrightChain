@@ -4,10 +4,10 @@
  * Validates that `loadGatewayConfig()` correctly reads from environment
  * variables (including EMAIL_DOMAIN), applying defaults when variables are unset.
  *
- * @see Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7
+ * @see Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8
  */
 
-import { loadGatewayConfig } from './emailGatewayConfig';
+import { createTestModeConfig, loadGatewayConfig } from './emailGatewayConfig';
 
 describe('loadGatewayConfig', () => {
   const originalEnv = process.env;
@@ -157,5 +157,108 @@ describe('loadGatewayConfig', () => {
     expect(config.postfixPort).toBe(25);
     expect(config.maxMessageSizeBytes).toBe(25 * 1024 * 1024);
     expect(config.spamThresholds.probableSpamScore).toBe(5.0);
+  });
+
+  describe('test mode configuration', () => {
+    beforeEach(() => {
+      // Clear all test mode env vars
+      delete process.env['GATEWAY_TEST_MODE'];
+      delete process.env['GATEWAY_TEST_CATCHALL'];
+      delete process.env['GATEWAY_TEST_CATCHALL_DIR'];
+      delete process.env['GATEWAY_TEST_SKIP_DKIM'];
+      delete process.env['GATEWAY_TEST_SKIP_SPAM'];
+      delete process.env['GATEWAY_TEST_ACCEPT_ALL_RECIPIENTS'];
+      delete process.env['GATEWAY_TEST_RECIPIENTS'];
+    });
+
+    it('should default test mode to disabled', () => {
+      const config = loadGatewayConfig();
+      expect(config.testMode.enabled).toBe(false);
+      expect(config.testMode.catchallEnabled).toBe(false);
+      expect(config.testMode.skipDkim).toBe(false);
+      expect(config.testMode.skipSpamFilter).toBe(false);
+      expect(config.testMode.acceptAllRecipients).toBe(false);
+      expect(config.testMode.testRecipients).toEqual([]);
+    });
+
+    it('should enable test mode from GATEWAY_TEST_MODE env var', () => {
+      process.env['GATEWAY_TEST_MODE'] = 'true';
+      const config = loadGatewayConfig();
+      expect(config.testMode.enabled).toBe(true);
+    });
+
+    it('should accept various truthy values for boolean env vars', () => {
+      process.env['GATEWAY_TEST_MODE'] = '1';
+      process.env['GATEWAY_TEST_CATCHALL'] = 'yes';
+      process.env['GATEWAY_TEST_SKIP_DKIM'] = 'TRUE';
+
+      const config = loadGatewayConfig();
+
+      expect(config.testMode.enabled).toBe(true);
+      expect(config.testMode.catchallEnabled).toBe(true);
+      expect(config.testMode.skipDkim).toBe(true);
+    });
+
+    it('should read catchall directory from env var', () => {
+      process.env['GATEWAY_TEST_CATCHALL_DIR'] = '/custom/catchall/';
+      const config = loadGatewayConfig();
+      expect(config.testMode.catchallDirectory).toBe('/custom/catchall/');
+    });
+
+    it('should parse comma-separated test recipients', () => {
+      process.env['GATEWAY_TEST_RECIPIENTS'] =
+        'alice@test.local, bob@test.local, charlie@test.local';
+      const config = loadGatewayConfig();
+      expect(config.testMode.testRecipients).toEqual([
+        'alice@test.local',
+        'bob@test.local',
+        'charlie@test.local',
+      ]);
+    });
+
+    it('should handle empty test recipients', () => {
+      process.env['GATEWAY_TEST_RECIPIENTS'] = '';
+      const config = loadGatewayConfig();
+      expect(config.testMode.testRecipients).toEqual([]);
+    });
+
+    it('should filter empty entries from test recipients', () => {
+      process.env['GATEWAY_TEST_RECIPIENTS'] = 'alice@test.local,,bob@test.local,';
+      const config = loadGatewayConfig();
+      expect(config.testMode.testRecipients).toEqual([
+        'alice@test.local',
+        'bob@test.local',
+      ]);
+    });
+  });
+
+  describe('createTestModeConfig', () => {
+    it('should create a config with all test mode features enabled', () => {
+      const config = createTestModeConfig();
+
+      expect(config.testMode.enabled).toBe(true);
+      expect(config.testMode.catchallEnabled).toBe(true);
+      expect(config.testMode.skipDkim).toBe(true);
+      expect(config.testMode.skipSpamFilter).toBe(true);
+      expect(config.testMode.acceptAllRecipients).toBe(true);
+    });
+
+    it('should allow overriding specific config values', () => {
+      const config = createTestModeConfig({
+        canonicalDomain: 'custom.local',
+        postfixPort: 2525,
+      });
+
+      expect(config.canonicalDomain).toBe('custom.local');
+      expect(config.postfixPort).toBe(2525);
+      expect(config.testMode.enabled).toBe(true);
+    });
+
+    it('should use default catchall directory', () => {
+      const config = createTestModeConfig();
+      expect(config.testMode.catchallDirectory).toBe(
+        '/var/spool/brightchain/catchall/',
+      );
+    });
   });
 });

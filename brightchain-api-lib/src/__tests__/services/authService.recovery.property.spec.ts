@@ -27,7 +27,7 @@ import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { ITokenPayload } from '../../lib/interfaces/token-payload';
 import { AuthService } from '../../lib/services/auth';
 import { BrightChainAuthenticationProvider } from '../../lib/services/brightchain-authentication-provider';
-import { EmailService } from '../../lib/services/email';
+import { SESEmailService } from '../../lib/services/sesEmail';
 
 const JWT_SECRET = 'test-jwt-secret-for-recovery-pbt';
 
@@ -102,7 +102,7 @@ function createIsolatedAuthServiceAndStore(): {
     sendEmail: async () => {
       /* noop */
     },
-  } as unknown as EmailService;
+  } as unknown as SESEmailService;
 
   const authProvider = new BrightChainAuthenticationProvider(mockApp);
 

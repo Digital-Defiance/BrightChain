@@ -28,7 +28,7 @@ import * as fc from 'fast-check';
 import { AppConstants } from '../../lib/appConstants';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { AuthService } from '../../lib/services/auth';
-import { EmailService } from '../../lib/services/email';
+import { SESEmailService } from '../../lib/services/sesEmail';
 import {
   IValidationResult,
   validatePasswordChange,
@@ -127,7 +127,7 @@ function createIsolatedAuthServiceAndStore(): {
     sendEmail: async () => {
       /* noop */
     },
-  } as unknown as EmailService;
+  } as unknown as SESEmailService;
 
   // Pre-populate the SystemUserService singleton
   (SystemUserService as any)['systemUser'] = null;

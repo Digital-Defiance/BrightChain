@@ -1,13 +1,15 @@
-import { HexString, SecureString } from '@digitaldefiance/ecies-lib';
-import { IConstants } from '@digitaldefiance/node-express-suite';
 import { BrightDbEnvironment } from '@brightchain/node-express-suite';
+import { HexString, SecureString } from '@digitaldefiance/ecies-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
-import { IUpnpConfig, UpnpConfig } from '@digitaldefiance/node-express-suite';
+import {
+  IConstants,
+  IUpnpConfig,
+  UpnpConfig,
+} from '@digitaldefiance/node-express-suite';
 import { join } from 'path';
 import { Constants } from './constants';
-import {
-  IEnvironment,
-} from './interfaces/environment';
+import { EmailServices } from './enumerations/email-services';
+import { IEnvironment } from './interfaces/environment';
 import { IEnvironmentAws } from './interfaces/environment-aws';
 import { DefaultBackendIdType } from './shared-types';
 
@@ -18,31 +20,8 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
   private _upnp: IUpnpConfig;
   private _fontAwesomeKitId: string;
   private _aws: IEnvironmentAws;
-
-  private _adminId: TID | undefined;
-  public override get adminId(): TID | undefined {
-    return this._adminId;
-  }
-  public override set adminId(value: TID | undefined) {
-    this._adminId = value;
-  }
-
   private _useTransactions: boolean;
-
-  /**
-   * Use transactions for database operations (default: true)
-   */
-  public get useTransactions(): boolean {
-    return this._useTransactions;
-  }
-
-  public get idAdapter(): (bytes: Uint8Array) => HexString {
-    return (bytes: Uint8Array) => {
-      // Convert bytes to hex-based ID string; datastore layer owns actual ID type
-      const hex = Buffer.from(bytes).toString('hex');
-      return hex.slice(0, 24) as HexString;
-    };
-  }
+  private _emailService: EmailServices;
 
   constructor(
     path?: string,
@@ -72,6 +51,15 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
       region: envObj['AWS_REGION'] ?? 'us-east-1',
     };
 
+    const emailServiceRaw = (envObj['EMAIL_SERVICE'] ?? EmailServices.Fake)
+      .toUpperCase()
+      .trim();
+    this._emailService = Object.values(EmailServices).includes(
+      emailServiceRaw as EmailServices,
+    )
+      ? (emailServiceRaw as EmailServices)
+      : EmailServices.Fake;
+
     // Override defaults if needed
     if (!envObj['JWT_SECRET']) {
       this.setEnvironment('jwtSecret', 'd!6!7al-6urnb46-s3cr3t!');
@@ -97,15 +85,65 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
     }
   }
 
+  /**
+   * Use transactions for database operations (default: true)
+   */
+  public get useTransactions(): boolean {
+    return this._useTransactions;
+  }
+
+  private _adminId: TID | undefined;
+  /**
+   * Admin ID (default: generated UUID)
+   */
+  public override get adminId(): TID | undefined {
+    return this._adminId;
+  }
+  /**
+   * Admin ID (default: generated UUID)
+   */
+  public override set adminId(value: TID | undefined) {
+    this._adminId = value;
+  }
+
+  /**
+   * ID adapter for converting byte arrays to IDs
+   */
+  public get idAdapter(): (bytes: Uint8Array) => HexString {
+    return (bytes: Uint8Array) => {
+      // Convert bytes to hex-based ID string; datastore layer owns actual ID type
+      const hex = Buffer.from(bytes).toString('hex');
+      return hex.slice(0, 24) as HexString;
+    };
+  }
+
+  /**
+   * UPnP Configuration
+   * If set, UPnP will be used to automatically configure port forwarding
+   * on compatible routers.
+   */
   public get upnp(): IUpnpConfig {
     return this._upnp;
   }
 
+  /**
+   * The FontAwesome kit ID
+   */
   public get fontAwesomeKitId(): string {
     return this._fontAwesomeKitId;
   }
 
+  /**
+   * AWS configuration
+   */
   public get aws(): IEnvironmentAws {
     return this._aws;
+  }
+
+  /**
+   * Email service to use for sending emails (default: EmailServices.Fake)
+   */
+  public get emailService(): EmailServices {
+    return this._emailService;
   }
 }

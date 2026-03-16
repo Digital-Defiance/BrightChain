@@ -48,6 +48,10 @@ RUN mkdir -p /var/spool/brightchain/incoming/new \
 COPY brightchain-maildrop /usr/local/bin/brightchain-maildrop
 RUN chmod +x /usr/local/bin/brightchain-maildrop
 
+# Install the test email helper script
+COPY test-email.sh /usr/local/bin/test-email
+RUN chmod +x /usr/local/bin/test-email
+
 # Generate a dev-only DKIM key pair
 RUN mkdir -p /etc/dkim \
     && opendkim-genkey -s default -d brightchain.org -D /etc/dkim \

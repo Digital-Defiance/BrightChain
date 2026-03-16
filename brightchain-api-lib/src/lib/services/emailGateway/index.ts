@@ -21,3 +21,4 @@ export * from './outboundQueue';
 export * from './outboundQueueStore';
 export * from './recipientLookupService';
 export * from './retryBackoff';
+export * from './testModeTransports';

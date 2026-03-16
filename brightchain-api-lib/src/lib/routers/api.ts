@@ -59,7 +59,7 @@ import { SyncController } from '../controllers/api/sync';
 import { UnifiedNotificationController } from '../controllers/api/unifiedNotifications';
 import { UserController } from '../controllers/api/user';
 import { IBrightChainApplication } from '../interfaces';
-import { EmailService } from '../services/email';
+import { SESEmailService } from '../services/sesEmail';
 import { EventNotificationSystem } from '../services/eventNotificationSystem';
 import { MessagePassingService } from '../services/messagePassingService';
 import { DefaultBackendIdType } from '../shared-types';
@@ -104,7 +104,7 @@ export class ApiRouter<
   private readonly unifiedNotificationController: UnifiedNotificationController<TID>;
   private introspectionController: IntrospectionController<TID> | null = null;
   private readonly brightchainApplication: IBrightChainApplication<TID>;
-  private readonly emailService: EmailService<TID>;
+  private readonly emailService: SESEmailService<TID>;
   private readonly keyWrappingService: KeyWrappingService;
   private readonly eciesService: ECIESService<TID>;
   /**
@@ -113,7 +113,7 @@ export class ApiRouter<
   constructor(application: IBrightChainApplication<TID>) {
     super(application);
     this.brightchainApplication = application;
-    this.emailService = new EmailService<TID>(application);
+    this.emailService = new SESEmailService<TID>(application);
     this.keyWrappingService = new KeyWrappingService();
     const config: IECIESConfig = {
       curveName: AppConstants.ECIES.CURVE_NAME,
@@ -339,6 +339,26 @@ export class ApiRouter<
   ): void {
     this.emailController.setMessagePassingService(service);
     this.unifiedNotificationController.setMessagePassingService(service);
+  }
+
+  /**
+   * Set the user registry for recipient verification on the EmailController.
+   * The registry is used by the verify-recipient endpoint to check whether
+   * a local user exists before accepting mail.
+   */
+  public setEmailUserRegistry(
+    registry: { hasUser(email: string): Promise<boolean> },
+  ): void {
+    this.emailController.setUserRegistry(registry);
+  }
+
+  /**
+   * Set the local email domain on the EmailController.
+   * Used to construct full email addresses from usernames during
+   * recipient verification.
+   */
+  public setEmailDomain(domain: string): void {
+    this.emailController.setEmailDomain(domain);
   }
 
   /**
