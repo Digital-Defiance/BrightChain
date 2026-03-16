@@ -1,6 +1,6 @@
 {
   "name": "brightchain",
-  "version": "0.29.11",
+  "version": "0.29.12",
   "license": "MIT",
   "workspaces": [
     "brightchain-lib",
@@ -93,9 +93,9 @@
     "@digitaldefiance/i18n-lib": "4.6.4"
   },
   "dependencies": {
-    "@brightchain/brightchain-api-lib": "^0.29.11",
+    "@brightchain/brightchain-api-lib": "^0.29.12",
     "@brightchain/brightchain-lib": "^0.29.10",
-    "@brightchain/db": "^0.29.10",
+    "@brightchain/db": "^0.29.11",
     "@digitaldefiance/branded-enum": "0.0.7",
     "@digitaldefiance/branded-interface": "0.0.5",
     "@digitaldefiance/bzip2-wasm": "^1.1.1",
@@ -103,7 +103,7 @@
     "@digitaldefiance/express-suite-react-components": "^4.22.6",
     "@digitaldefiance/i18n-lib": "^4.6.4",
     "@digitaldefiance/node-ecies-lib": "^4.23.0",
-    "@digitaldefiance/node-express-suite": "4.23.2",
+    "@digitaldefiance/node-express-suite": "4.23.4",
     "@digitaldefiance/reed-solomon-erasure.wasm": "^1.0.2",
     "@digitaldefiance/secrets": "^2.0.7",
     "@digitaldefiance/suite-core-lib": "^4.22.2",
