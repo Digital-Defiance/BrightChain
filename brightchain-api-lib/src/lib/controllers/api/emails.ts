@@ -21,6 +21,8 @@ import {
   createMailbox,
   EmailError,
   EmailErrorType,
+  formatFileSize,
+  IApiEnvelope,
   IDeleteEmailResponse,
   IForwardEmailResponse,
   IGetDeliveryStatusResponse,
@@ -31,15 +33,23 @@ import {
   IInboxQuery,
   IMarkAsReadResponse,
   IQueryInboxResponse,
+  IRecipientVerificationResult,
   IReplyToEmailResponse,
   isEmailError,
   ISendEmailResponse,
+  MAX_ATTACHMENT_SIZE_BYTES,
+  MessageEncryptionScheme,
+  RECIPIENT_VERIFY_RATE_LIMIT,
+  RECIPIENT_VERIFY_WINDOW_MS,
+  validateAttachmentSize,
+  validateTotalAttachmentSize,
 } from '@brightchain/brightchain-lib';
 import { CoreLanguageCode } from '@digitaldefiance/i18n-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
   ApiErrorResponse,
   ApiRequestHandler,
+  ControllerRegistry,
   routeConfig,
   TypedHandlers,
 } from '@digitaldefiance/node-express-suite';
@@ -60,6 +70,7 @@ import {
   queryInboxValidation,
   replyEmailValidation,
   sendEmailValidation,
+  verifyRecipientValidation,
 } from '../../utils/emailValidation';
 import {
   handleError,
@@ -83,6 +94,7 @@ type EmailApiResponse =
   | IForwardEmailResponse
   | IMarkAsReadResponse
   | IGetDeliveryStatusResponse
+  | IApiEnvelope<IRecipientVerificationResult>
   | ApiErrorResponse;
 
 // ─── Handler interface ──────────────────────────────────────────────────────
@@ -99,6 +111,7 @@ interface EmailHandlers extends TypedHandlers {
   forwardEmail: ApiRequestHandler<EmailApiResponse>;
   markAsRead: ApiRequestHandler<EmailApiResponse>;
   deleteEmail: ApiRequestHandler<EmailApiResponse>;
+  verifyRecipient: ApiRequestHandler<EmailApiResponse>;
 }
 
 // ─── Request body/param interfaces ──────────────────────────────────────────
@@ -107,6 +120,12 @@ interface MailboxInput {
   displayName?: string;
   localPart: string;
   domain: string;
+}
+
+interface AttachmentInputBody {
+  filename: string;
+  mimeType: string;
+  data: string; // base64-encoded
 }
 
 interface SendEmailRequestBody {
@@ -119,6 +138,8 @@ interface SendEmailRequestBody {
     textBody?: string;
     htmlBody?: string;
     memberId?: string;
+    attachments?: AttachmentInputBody[];
+    encryptionScheme?: string;
   };
 }
 
@@ -191,6 +212,24 @@ export class EmailController<
 > {
   private messagePassingService: MessagePassingService | null = null;
 
+  /**
+   * In-memory per-user rate limit map for verify-recipient endpoint.
+   * Maps userId → array of request timestamps (sliding window).
+   */
+  private verifyRecipientRateLimitMap = new Map<string, number[]>();
+
+  /**
+   * Optional user registry for recipient verification.
+   * When set, the verify-recipient endpoint delegates to this registry.
+   */
+  private userRegistry: { hasUser(email: string): Promise<boolean> } | null = null;
+
+  /**
+   * The local email domain used for constructing full email addresses
+   * from usernames during recipient verification.
+   */
+  private emailDomain = 'brightchain.org';
+
   constructor(application: IBrightChainApplication<TID>) {
     super(application);
   }
@@ -200,6 +239,20 @@ export class EmailController<
    */
   public setMessagePassingService(service: MessagePassingService): void {
     this.messagePassingService = service;
+  }
+
+  /**
+   * Set the user registry for recipient verification.
+   */
+  public setUserRegistry(registry: { hasUser(email: string): Promise<boolean> }): void {
+    this.userRegistry = registry;
+  }
+
+  /**
+   * Set the local email domain for recipient verification.
+   */
+  public setEmailDomain(domain: string): void {
+    this.emailDomain = domain;
   }
 
   /**
@@ -272,6 +325,23 @@ export class EmailController<
         ...noAuth,
         handlerKey: 'sendEmail',
         validation: () => sendEmailValidation,
+        openapi: {
+          summary: 'Send a new email',
+          description:
+            'Send an email with optional attachments (max 25 MB total) and encryption scheme.',
+          tags: ['Email'],
+          requestBody: { schema: 'SendEmailRequest' },
+          responses: {
+            201: {
+              schema: 'SendEmailResponse',
+              description: 'Email sent successfully',
+            },
+            400: {
+              schema: 'ErrorResponse',
+              description: 'Validation error (invalid attachment, encryption scheme, etc.)',
+            },
+          },
+        },
       }),
       // GET /inbox — Query inbox (BEFORE /:messageId to avoid param conflict)
       routeConfig('get', '/inbox', {
@@ -284,6 +354,46 @@ export class EmailController<
         ...noAuth,
         handlerKey: 'getUnreadCount',
         validation: () => getUnreadCountValidation,
+      }),
+      // GET /verify-recipient/:username (BEFORE /:messageId to avoid param conflict)
+      routeConfig('get', '/verify-recipient/:username', {
+        ...noAuth,
+        handlerKey: 'verifyRecipient',
+        validation: () => verifyRecipientValidation,
+        openapi: {
+          summary: 'Verify local recipient existence',
+          description:
+            'Check whether a local username exists on this BrightChain server. ' +
+            'Requires JWT authentication. Rate limited to 10 requests per minute per user.',
+          tags: ['Email'],
+          parameters: [
+            {
+              name: 'username',
+              in: 'path',
+              required: true,
+              schema: { type: 'string', pattern: '^[a-zA-Z0-9]+$' },
+              description: 'Alphanumeric username to verify',
+            },
+          ],
+          responses: {
+            200: {
+              schema: 'RecipientVerificationResponse',
+              description: 'Verification result with username and exists flag',
+            },
+            400: {
+              schema: 'ErrorResponse',
+              description: 'Invalid username format',
+            },
+            401: {
+              schema: 'ErrorResponse',
+              description: 'Authentication required',
+            },
+            429: {
+              schema: 'ErrorResponse',
+              description: 'Rate limit exceeded',
+            },
+          },
+        },
       }),
       // GET /:messageId — Get email metadata
       routeConfig('get', '/:messageId', {
@@ -347,7 +457,15 @@ export class EmailController<
       forwardEmail: this.handleForwardEmail.bind(this),
       markAsRead: this.handleMarkAsRead.bind(this),
       deleteEmail: this.handleDeleteEmail.bind(this),
+      verifyRecipient: this.handleVerifyRecipient.bind(this),
     };
+
+    // Register with OpenAPI registry
+    ControllerRegistry.register(
+      '/emails',
+      'EmailController',
+      this.routeDefinitions,
+    );
   }
 
   // ─── Handler Methods (Task 3.3) ────────────────────────────────────
@@ -361,9 +479,83 @@ export class EmailController<
     response: ISendEmailResponse | ApiErrorResponse;
   }> {
     try {
-      const { from, to, cc, bcc, subject, textBody, htmlBody } = (
+      const { from, to, cc, bcc, subject, textBody, htmlBody, attachments, encryptionScheme } = (
         req as SendEmailRequestBody
       ).body;
+
+      // ── Attachment validation (Requirements 7.3, 7.4) ───────────────
+      if (attachments && attachments.length > 0) {
+        const decodedSizes: number[] = [];
+
+        for (const att of attachments) {
+          // Validate base64 data
+          let decoded: Buffer;
+          try {
+            decoded = Buffer.from(att.data, 'base64');
+            // Check if the data is valid base64 by re-encoding and comparing length
+            if (decoded.length === 0 && att.data.length > 0) {
+              return {
+                statusCode: 400,
+                response: {
+                  status: 'error' as const,
+                  data: null as unknown as ISendEmailResponse['data'],
+                  error: { code: 'INVALID_BASE64', message: `Invalid base64 data for attachment '${att.filename}'` },
+                },
+              };
+            }
+          } catch {
+            return {
+              statusCode: 400,
+              response: {
+                status: 'error' as const,
+                data: null as unknown as ISendEmailResponse['data'],
+                error: { code: 'INVALID_BASE64', message: `Invalid base64 data for attachment '${att.filename}'` },
+              },
+            };
+          }
+
+          // Per-file size validation
+          if (!validateAttachmentSize(decoded.length, MAX_ATTACHMENT_SIZE_BYTES)) {
+            return {
+              statusCode: 400,
+              response: {
+                status: 'error' as const,
+                data: null as unknown as ISendEmailResponse['data'],
+                error: { code: 'ATTACHMENT_TOO_LARGE', message: `Attachment '${att.filename}' exceeds ${formatFileSize(MAX_ATTACHMENT_SIZE_BYTES)} limit` },
+              },
+            };
+          }
+
+          decodedSizes.push(decoded.length);
+        }
+
+        // Cumulative size validation
+        if (!validateTotalAttachmentSize(decodedSizes, MAX_ATTACHMENT_SIZE_BYTES)) {
+          return {
+            statusCode: 400,
+            response: {
+              status: 'error' as const,
+              data: null as unknown as ISendEmailResponse['data'],
+              error: { code: 'TOTAL_SIZE_EXCEEDED', message: `Total attachment size exceeds ${formatFileSize(MAX_ATTACHMENT_SIZE_BYTES)} limit` },
+            },
+          };
+        }
+      }
+
+      // ── Encryption scheme validation (Requirement 7.5) ──────────────
+      if (encryptionScheme !== undefined) {
+        const validSchemes = Object.values(MessageEncryptionScheme) as string[];
+        if (!validSchemes.includes(encryptionScheme)) {
+          return {
+            statusCode: 400,
+            response: {
+              status: 'error' as const,
+              data: null as unknown as ISendEmailResponse['data'],
+              error: { code: 'INVALID_ENCRYPTION_SCHEME', message: `Invalid encryption scheme: '${encryptionScheme}'` },
+            },
+          };
+        }
+      }
 
       const service = this.getMessagePassingService();
 
@@ -710,6 +902,100 @@ export class EmailController<
         response: {
           status: 'success' as const,
           data: { deleted: true },
+        },
+      };
+    } catch (error) {
+      return this.mapServiceError(error);
+    }
+  }
+
+  // ─── Rate Limiting (Task 13.2) ──────────────────────────────────────
+
+  /**
+   * Check per-user rate limit for verify-recipient endpoint.
+   * Uses a sliding window approach: max RECIPIENT_VERIFY_RATE_LIMIT requests
+   * per RECIPIENT_VERIFY_WINDOW_MS per authenticated user.
+   *
+   * Returns true if the request is allowed, false if rate limited.
+   */
+  private checkVerifyRecipientRateLimit(userId: string): boolean {
+    const now = Date.now();
+    const windowStart = now - RECIPIENT_VERIFY_WINDOW_MS;
+
+    let timestamps = this.verifyRecipientRateLimitMap.get(userId);
+    if (!timestamps) {
+      timestamps = [];
+      this.verifyRecipientRateLimitMap.set(userId, timestamps);
+    }
+
+    // Remove expired timestamps outside the sliding window
+    const filtered = timestamps.filter((ts) => ts > windowStart);
+    this.verifyRecipientRateLimitMap.set(userId, filtered);
+
+    if (filtered.length >= RECIPIENT_VERIFY_RATE_LIMIT) {
+      return false;
+    }
+
+    filtered.push(now);
+    return true;
+  }
+
+  // ─── Verify Recipient Handler (Task 13.1) ─────────────────────────
+
+  /**
+   * GET /api/emails/verify-recipient/:username
+   * Check if a local username exists on this server.
+   * Requires authentication. Rate limited per user.
+   */
+  private async handleVerifyRecipient(req: unknown): Promise<{
+    statusCode: number;
+    response: IApiEnvelope<IRecipientVerificationResult> | ApiErrorResponse;
+  }> {
+    try {
+      // Require authentication
+      let userId: string;
+      try {
+        userId = this.getMemberId(req);
+      } catch {
+        return {
+          statusCode: 401,
+          response: {
+            error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+          } as ApiErrorResponse,
+        };
+      }
+
+      // Rate limit check
+      if (!this.checkVerifyRecipientRateLimit(userId)) {
+        return {
+          statusCode: 429,
+          response: {
+            error: { code: 'RATE_LIMITED', message: 'Rate limit exceeded. Try again later.' },
+          } as ApiErrorResponse,
+        };
+      }
+
+      const { username } = (req as { params: { username: string } }).params;
+
+      // Delegate to user registry to check if user exists
+      let exists = false;
+      if (this.userRegistry) {
+        try {
+          const emailAddress = `${username}@${this.emailDomain}`;
+          exists = await this.userRegistry.hasUser(emailAddress);
+        } catch {
+          // Registry unavailable — default to false
+          exists = false;
+        }
+      }
+
+      const result: IRecipientVerificationResult = { username, exists };
+
+      return {
+        statusCode: 200,
+        response: {
+          status: 'success' as const,
+          data: result,
         },
       };
     } catch (error) {

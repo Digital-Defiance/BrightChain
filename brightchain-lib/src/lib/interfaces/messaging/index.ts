@@ -7,3 +7,4 @@ export * from './messageMetadata';
 export * from './messageMetadataStore';
 export * from './messageSystemConfig';
 export * from './mimePart';
+export * from './recipientVerification';

@@ -72,6 +72,10 @@ export interface IPrivateMemberData<TID extends PlatformID = Uint8Array> {
     autoReplication: boolean;
     minRedundancy: number;
     preferredRegions: string[];
+    /** PEM-encoded X.509 certificate for S/MIME encryption and signing */
+    smimeCertificate?: string;
+    /** ASCII-armored GPG public key */
+    gpgPublicKey?: string;
   };
 
   // History

@@ -252,3 +252,14 @@ export const getEmailThreadValidation: ValidationChain[] = [
 export const getDeliveryStatusValidation: ValidationChain[] = [
   param('messageId').isString().notEmpty().withMessage('messageId is required'),
 ];
+
+// ─── Verify Recipient validations ───────────────────────────────────────────
+
+export const verifyRecipientValidation: ValidationChain[] = [
+  param('username')
+    .isString()
+    .notEmpty()
+    .withMessage('username is required')
+    .matches(/^[a-zA-Z0-9]+$/)
+    .withMessage('username must be alphanumeric'),
+];

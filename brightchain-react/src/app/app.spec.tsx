@@ -49,6 +49,8 @@ jest.mock('@brightchain/brightchain-lib', () => ({
     {},
     { get: (_target: unknown, prop: string) => `BrightChain:${String(prop)}` },
   ),
+  registerI18nComponentPackage: jest.fn(),
+  ISuiteCoreConstants: {},
 
   CONSTANTS: {
     THEME_COLORS: {
@@ -171,10 +173,12 @@ jest.mock('@digitaldefiance/express-suite-react-components', () => ({
     setLanguage: jest.fn(),
   }),
   createMenuType: (value: string) => value,
+  MenuTypes: { SideMenu: 'SideMenu' },
   IMenuConfig: {},
 }));
 
 jest.mock('@digitaldefiance/i18n-lib', () => ({
+  ...jest.requireActual('@digitaldefiance/i18n-lib'),
   LanguageRegistry: { getCodeLabelMap: () => ({ en: 'English' }) },
 }));
 
