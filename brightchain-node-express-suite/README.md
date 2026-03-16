@@ -81,7 +81,7 @@ yarn add @brightchain/node-express-suite
 {
   "@digitaldefiance/branded-interface": "^0.0.5",
   "@digitaldefiance/node-ecies-lib": "^4.20.0",
-  "@digitaldefiance/node-express-suite": "^4.23.1",
+  "@digitaldefiance/node-express-suite": "^4.23.4",
   "@brightchain/brightchain-lib": "^0.25.0",
   "@brightchain/db": "^0.25.0"
 }
