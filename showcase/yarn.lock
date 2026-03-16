@@ -236,9 +236,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@brightchain/brightchain-lib@npm:^0.28.0":
-  version: 0.28.0
-  resolution: "@brightchain/brightchain-lib@npm:0.28.0"
+"@brightchain/brightchain-lib@npm:^0.29.10":
+  version: 0.29.10
+  resolution: "@brightchain/brightchain-lib@npm:0.29.10"
   dependencies:
     "@digitaldefiance/branded-interface": "npm:^0.0.5"
     "@digitaldefiance/ecies-lib": "npm:^4.20.2"
@@ -265,7 +265,7 @@ __metadata:
     tslib: "npm:^2.3.0"
     uuid: "npm:11.0.5"
     validator: "npm:^13.15.0"
-  checksum: 10c0/115762e8b889341914132e5ace0744e16340cc2cd5429c9750d2a0a472d1f5e8967087dcef0cb6039bb0f34b2f06d3673686210e465ea9716f1b57b489a489af
+  checksum: 10c0/274b2506cd8db917424e2724b58f51804ed4cbbd1ba4cc835279f67f61dd5d34188597731463fdbd84bb9aebfd55018a99a3ce13dc5c6c8d1de929d22e1a86f1
   languageName: node
   linkType: hard
 
@@ -2599,7 +2599,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "brightchain-showcase@workspace:."
   dependencies:
-    "@brightchain/brightchain-lib": "npm:^0.28.0"
+    "@brightchain/brightchain-lib": "npm:^0.29.10"
     "@digitaldefiance/ecies-lib": "npm:^4.20.2"
     "@digitaldefiance/i18n-lib": "npm:^4.6.4"
     "@esbuild-plugins/node-globals-polyfill": "npm:^0.2.3"

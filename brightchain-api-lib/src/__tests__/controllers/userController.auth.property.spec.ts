@@ -31,7 +31,7 @@ import { UserController } from '../../lib/controllers/api/user';
 import { IBrightChainApplication } from '../../lib/interfaces/application';
 import { AuthService } from '../../lib/services/auth';
 import { BrightChainBackupCodeService } from '../../lib/services/brightChainBackupCodeService';
-import { EmailService } from '../../lib/services/email';
+import { SESEmailService } from '../../lib/services/sesEmail';
 import { BrightChainSessionAdapter } from '../../lib/services/sessionAdapter';
 
 const JWT_SECRET = 'test-jwt-secret-for-auth-property';
@@ -115,7 +115,7 @@ function createTestEnvironment(): {
     sendEmail: async () => {
       /* noop */
     },
-  } as unknown as EmailService;
+  } as unknown as SESEmailService;
 
   const authService = new AuthService(
     mockApp,

@@ -21,6 +21,7 @@ export type * from './member-init-config';
 export type * from './members-handlers';
 export type * from './multi-encrypted-message';
 export type * from './multi-encrypted-parsed-header';
+export type * from './postfix-email-service-config';
 export type * from './request-user';
 export type * from './requests';
 export type * from './responses';

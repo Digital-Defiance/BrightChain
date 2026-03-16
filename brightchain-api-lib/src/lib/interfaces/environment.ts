@@ -16,6 +16,7 @@ import type {
   IAzureEnvironmentConfig,
   IS3EnvironmentConfig,
 } from '@brightchain/node-express-suite';
+import { EmailServices } from '../enumerations/email-services';
 export type { IAzureEnvironmentConfig, IS3EnvironmentConfig };
 
 export interface IEnvironment<TID extends PlatformID>
@@ -92,4 +93,8 @@ export interface IEnvironment<TID extends PlatformID>
    * Only populated when `blockStoreType` is `BlockStoreType.S3`.
    */
   s3Config?: IS3EnvironmentConfig;
+  /**
+   * The email service provider to use for sending emails
+   */
+  emailService: EmailServices;
 }

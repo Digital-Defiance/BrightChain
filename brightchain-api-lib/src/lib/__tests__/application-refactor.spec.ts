@@ -186,7 +186,7 @@ describe('App – service registrations after start()', () => {
   });
 
   it('registers emailService (Req 7.1)', () => {
-    expect(app.services.has('emailService')).toBe(true);
+    expect(app.services.has('email')).toBe(true);
   });
 
   it('registers auth service (Req 7.1)', () => {
