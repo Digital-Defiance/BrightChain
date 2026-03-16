@@ -2400,20 +2400,20 @@ __metadata:
   dependencies:
     "@azure/identity": "npm:^4.6.0"
     "@azure/storage-blob": "npm:^12.26.0"
-    "@brightchain/brightchain-api-lib": "npm:^0.29.11"
+    "@brightchain/brightchain-api-lib": "npm:^0.29.12"
     "@brightchain/brightchain-lib": "npm:^0.29.8"
     tslib: "npm:^2.3.0"
   languageName: unknown
   linkType: soft
 
-"@brightchain/brightchain-api-lib@npm:^0.29.11, @brightchain/brightchain-api-lib@workspace:brightchain-api-lib":
+"@brightchain/brightchain-api-lib@npm:^0.29.12, @brightchain/brightchain-api-lib@workspace:brightchain-api-lib":
   version: 0.0.0-use.local
   resolution: "@brightchain/brightchain-api-lib@workspace:brightchain-api-lib"
   dependencies:
     "@aws-sdk/client-ses": "npm:^3.859.0"
     "@brightchain/brightchain-lib": "npm:^0.29.10"
-    "@brightchain/db": "npm:^0.29.10"
-    "@brightchain/node-express-suite": "npm:^0.29.16"
+    "@brightchain/db": "npm:^0.29.11"
+    "@brightchain/node-express-suite": "npm:^0.29.17"
     "@digitaldefiance/branded-enum": "npm:^0.0.7"
     "@digitaldefiance/ecies-lib": "npm:^4.20.2"
     "@digitaldefiance/enclave-bridge-client": "npm:^1.1.0"
@@ -2648,7 +2648,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@brightchain/db@npm:^0.29.10, @brightchain/db@workspace:brightchain-db":
+"@brightchain/db@npm:^0.29.11, @brightchain/db@workspace:brightchain-db":
   version: 0.0.0-use.local
   resolution: "@brightchain/db@workspace:brightchain-db"
   dependencies:
@@ -2656,22 +2656,22 @@ __metadata:
   peerDependencies:
     "@brightchain/brightchain-lib": ^0.29.10
     "@digitaldefiance/branded-interface": ^0.0.5
-    "@digitaldefiance/node-express-suite": ^4.23.2
+    "@digitaldefiance/node-express-suite": ^4.23.4
     express: ">=5.0.0"
   languageName: unknown
   linkType: soft
 
-"@brightchain/node-express-suite@npm:^0.29.16, @brightchain/node-express-suite@workspace:brightchain-node-express-suite":
+"@brightchain/node-express-suite@npm:^0.29.17, @brightchain/node-express-suite@workspace:brightchain-node-express-suite":
   version: 0.0.0-use.local
   resolution: "@brightchain/node-express-suite@workspace:brightchain-node-express-suite"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
     "@brightchain/brightchain-lib": ^0.29.10
-    "@brightchain/db": ^0.29.10
+    "@brightchain/db": ^0.29.11
     "@digitaldefiance/branded-interface": ^0.0.5
     "@digitaldefiance/node-ecies-lib": ^4.23.0
-    "@digitaldefiance/node-express-suite": ^4.23.2
+    "@digitaldefiance/node-express-suite": ^4.23.4
     bcrypt: ^5.0.0
     jsonwebtoken: ^9.0.0
   languageName: unknown
@@ -2682,7 +2682,7 @@ __metadata:
   resolution: "@brightchain/s3-store@workspace:brightchain-s3-store"
   dependencies:
     "@aws-sdk/client-s3": "npm:^3.700.0"
-    "@brightchain/brightchain-api-lib": "npm:^0.29.11"
+    "@brightchain/brightchain-api-lib": "npm:^0.29.12"
     "@brightchain/brightchain-lib": "npm:^0.29.8"
     tslib: "npm:^2.3.0"
   languageName: unknown
@@ -2929,9 +2929,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@digitaldefiance/node-express-suite@npm:4.23.2":
-  version: 4.23.2
-  resolution: "@digitaldefiance/node-express-suite@npm:4.23.2"
+"@digitaldefiance/node-express-suite@npm:4.23.4":
+  version: 4.23.4
+  resolution: "@digitaldefiance/node-express-suite@npm:4.23.4"
   dependencies:
     "@digitaldefiance/branded-interface": "npm:^0.0.5"
     "@digitaldefiance/ecies-lib": "npm:4.20.2"
@@ -2953,7 +2953,7 @@ __metadata:
     nat-upnp: "npm:^1.1.1"
     reflect-metadata: "npm:^0.2.2"
     zod: "npm:^3.24.0"
-  checksum: 10c0/e2eedf7ef25bf7f904d599462adf7901c8894b7397085f802f694f8aa51b358c327bc39d7d81446b034d18d954d51eae4cf8d59833e7a5bc47b74603dbd15093
+  checksum: 10c0/30fafe0146abf97c78f662a735f9b66423feec1aa2b9cad26806bc1afdc1bc43211ae2445173ea1d2809d0dc215d12ffe5bfadc916d71fb6525447b373b460b8
   languageName: node
   linkType: hard
 
@@ -13834,9 +13834,9 @@ __metadata:
   dependencies:
     "@babel/core": "npm:^7.14.5"
     "@babel/preset-react": "npm:^7.14.5"
-    "@brightchain/brightchain-api-lib": "npm:^0.29.11"
+    "@brightchain/brightchain-api-lib": "npm:^0.29.12"
     "@brightchain/brightchain-lib": "npm:^0.29.10"
-    "@brightchain/db": "npm:^0.29.10"
+    "@brightchain/db": "npm:^0.29.11"
     "@digitaldefiance/branded-enum": "npm:0.0.7"
     "@digitaldefiance/branded-interface": "npm:0.0.5"
     "@digitaldefiance/bzip2-wasm": "npm:^1.1.1"
@@ -13845,7 +13845,7 @@ __metadata:
     "@digitaldefiance/express-suite-test-utils": "npm:^1.1.0"
     "@digitaldefiance/i18n-lib": "npm:^4.6.4"
     "@digitaldefiance/node-ecies-lib": "npm:^4.23.0"
-    "@digitaldefiance/node-express-suite": "npm:4.23.2"
+    "@digitaldefiance/node-express-suite": "npm:4.23.4"
     "@digitaldefiance/reed-solomon-erasure.wasm": "npm:^1.0.2"
     "@digitaldefiance/secrets": "npm:^2.0.7"
     "@digitaldefiance/suite-core-lib": "npm:^4.22.2"
