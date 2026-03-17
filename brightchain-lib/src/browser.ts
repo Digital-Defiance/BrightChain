@@ -71,3 +71,16 @@ export { Ledger } from './lib/ledger/ledger';
 export { LedgerChainValidator } from './lib/ledger/ledgerChainValidator';
 export { LedgerEntrySerializer } from './lib/ledger/ledgerEntrySerializer';
 export { MemberSignerAdapter } from './lib/ledger/memberSignerAdapter';
+
+// Ledger - Governance
+export { GovernancePayloadSerializer } from './lib/ledger/governancePayloadSerializer';
+export type { IGenesisPayloadData } from './lib/ledger/governancePayloadSerializer';
+export { AuthorizedSignerSet } from './lib/ledger/authorizedSignerSet';
+export { SignerRole } from './lib/interfaces/ledger/signerRole';
+export { SignerStatus } from './lib/interfaces/ledger/signerStatus';
+export { QuorumType } from './lib/interfaces/ledger/quorumPolicy';
+export { GovernanceActionType } from './lib/interfaces/ledger/governanceAction';
+export type { IAuthorizedSigner } from './lib/interfaces/ledger/authorizedSigner';
+export type { IQuorumPolicy } from './lib/interfaces/ledger/quorumPolicy';
+export type { IGovernanceAction } from './lib/interfaces/ledger/governanceAction';
+export type { IGovernancePayload } from './lib/interfaces/ledger/governancePayload';

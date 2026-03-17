@@ -13,21 +13,33 @@
  * subclass that allows a caller-specified checksum to differ from the
  * content hash.
  *
+ * Governance support: the Ledger enforces role-based access control via an
+ * AuthorizedSignerSet. The genesis entry must be a governance genesis payload
+ * containing the initial signer set and quorum policy. Subsequent governance
+ * entries require admin role and quorum satisfaction.
+ *
  * @see Design: Block Chain Ledger — Ledger
- * @see Requirements 5.1–5.6, 6.1–6.6, 7.1–7.5, 10.1–10.4, 11.2–11.4
+ * @see Requirements 5.1–5.6, 6.1–6.6, 7.1–7.5, 10.1–10.4, 11.2–11.4,
+ *      12.2–12.8, 13.1–13.9, 14.1–14.7, 15.1–15.5, 17.6–17.9, 18.5–18.7
  */
 
+import { SignatureUint8Array } from '@digitaldefiance/ecies-lib';
 import { RawDataBlock } from '../blocks/rawData';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockSize } from '../enumerations/blockSize';
 import { BlockType } from '../enumerations/blockType';
 import { LedgerError, LedgerErrorType } from '../errors/ledgerError';
+import { IAuthorizedSigner } from '../interfaces/ledger/authorizedSigner';
+import { IGovernanceAction } from '../interfaces/ledger/governanceAction';
 import { ILedgerEntry } from '../interfaces/ledger/ledgerEntry';
 import { ILedgerSigner } from '../interfaces/ledger/ledgerSigner';
+import { IQuorumPolicy } from '../interfaces/ledger/quorumPolicy';
 import { IBlockStore } from '../interfaces/storage/blockStore';
 import { ChecksumService } from '../services/checksum.service';
 import { Checksum } from '../types/checksum';
 import { padToBlockSize, unpadCblData } from '../utils/xorUtils';
+import { AuthorizedSignerSet } from './authorizedSignerSet';
+import { GovernancePayloadSerializer } from './governancePayloadSerializer';
 import { LedgerEntrySerializer } from './ledgerEntrySerializer';
 
 /** Magic bytes identifying a ledger metadata block: "LMET" in ASCII. */
@@ -81,6 +93,9 @@ class LedgerMetadataBlock extends RawDataBlock {
  * Maintains an in-memory index (sequenceNumber → block Checksum) for O(1)
  * lookups and persists a metadata block after each append for cold-start
  * reconstruction via `Ledger.load()`.
+ *
+ * Enforces role-based access control via an AuthorizedSignerSet when
+ * governance is enabled (i.e., when a GovernancePayloadSerializer is provided).
  */
 export class Ledger {
   private readonly index: Map<number, Checksum> = new Map();
@@ -88,12 +103,14 @@ export class Ledger {
   private _length = 0;
   private _head: Checksum | null = null;
   private _headEntryHash: Checksum | null = null;
+  private _authorizedSignerSet: AuthorizedSignerSet | null = null;
 
   constructor(
     private readonly store: IBlockStore,
     private readonly blockSize: BlockSize,
     private readonly serializer: LedgerEntrySerializer,
     private readonly ledgerId: string,
+    private readonly governanceSerializer?: GovernancePayloadSerializer,
   ) {}
 
   // ── Public getters ────────────────────────────────────────────────
@@ -108,70 +125,153 @@ export class Ledger {
     return this._head;
   }
 
+  /** Current quorum policy, or undefined if governance not initialized. */
+  get quorumPolicy(): IQuorumPolicy | undefined {
+    return this._authorizedSignerSet?.quorumPolicy;
+  }
+
   // ── Append ────────────────────────────────────────────────────────
 
   /**
    * Append a new entry to the ledger.
    * Returns the Checksum of the stored block.
+   *
+   * If governance is enabled:
+   * - Genesis entry (sequenceNumber 0) must be a governance genesis payload.
+   * - Subsequent entries require the signer to be authorized (active admin or writer).
    */
   async append(payload: Uint8Array, signer: ILedgerSigner): Promise<Checksum> {
     const sequenceNumber = this._length;
-    const previousEntryHash = this._headEntryHash;
-    const timestamp = new Date();
 
-    // 1. Compute entryHash
-    const partial = {
-      sequenceNumber,
-      timestamp,
-      previousEntryHash,
-      signerPublicKey: signer.publicKey,
-      payload,
-    };
-    const entryHash = this.serializer.computeEntryHash(partial);
-
-    // 2. Sign the entryHash
-    const signature = signer.sign(entryHash.toUint8Array());
-
-    // 3. Build full entry
-    const entry: ILedgerEntry = { ...partial, entryHash, signature };
-
-    // 4. Serialize and pad
-    const serialized = this.serializer.serialize(entry);
-    const padded = padToBlockSize(serialized, this.blockSize);
-
-    // 5. Create RawDataBlock and store
-    const block = new RawDataBlock(
-      this.blockSize,
-      padded,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      true,
-      true,
-      this.checksumService,
-    );
-    const blockChecksum = block.idChecksum;
-
-    // Req 5.5: On BlockStore failure, do not update chain head or index.
-    // If setData throws, we propagate the error before updating state.
-    await this.store.setData(block);
-
-    // 6. Update in-memory state (only after successful store)
-    this.index.set(sequenceNumber, blockChecksum);
-    this._length = sequenceNumber + 1;
-    this._head = blockChecksum;
-    this._headEntryHash = entryHash;
-
-    // 7. Persist metadata block
-    try {
-      await this.persistMetadata();
-    } catch {
-      // Metadata persistence failure is non-fatal for the append itself;
-      // the entry is already stored.
+    // Governance: handle genesis entry
+    if (sequenceNumber === 0 && this.governanceSerializer) {
+      return this.appendGenesisEntry(payload, signer);
     }
 
-    return blockChecksum;
+    // Governance: check authorization for non-genesis entries
+    if (this._authorizedSignerSet) {
+      if (!this._authorizedSignerSet.canAppend(signer.publicKey)) {
+        throw new LedgerError(
+          LedgerErrorType.UnauthorizedSigner,
+          'Signer is not authorized to append entries',
+        );
+      }
+    }
+
+    return this.appendInternal(payload, signer);
+  }
+
+  /**
+   * Append a governance entry. Requires admin role and quorum satisfaction.
+   *
+   * @param actions - Governance actions to apply
+   * @param primarySigner - The primary signer (must be active admin)
+   * @param cosigners - Additional signers for quorum (each provides their own signature over the actions)
+   */
+  async appendGovernance(
+    actions: IGovernanceAction[],
+    primarySigner: ILedgerSigner,
+    cosigners?: { signer: ILedgerSigner; signature: SignatureUint8Array }[],
+  ): Promise<Checksum> {
+    if (!this.governanceSerializer) {
+      throw new LedgerError(
+        LedgerErrorType.UnauthorizedGovernance,
+        'Governance is not enabled on this ledger',
+      );
+    }
+
+    if (!this._authorizedSignerSet) {
+      throw new LedgerError(
+        LedgerErrorType.UnauthorizedGovernance,
+        'Authorized signer set not initialized (no genesis entry)',
+      );
+    }
+
+    // Verify primary signer is active admin
+    if (!this._authorizedSignerSet.isActiveAdmin(primarySigner.publicKey)) {
+      throw new LedgerError(
+        LedgerErrorType.UnauthorizedGovernance,
+        'Primary signer is not an active admin',
+      );
+    }
+
+    // Validate actions speculatively (clone to check safety constraints)
+    const speculative = this._authorizedSignerSet.clone();
+    for (const action of actions) {
+      speculative.applyAction(action); // throws on safety violation
+    }
+
+    // Serialize actions for signing
+    const actionsForSigning =
+      this.governanceSerializer.serializeActionsForSigning(actions);
+
+    // Collect cosignatures
+    const cosignatures: {
+      signerPublicKey: Uint8Array;
+      signature: SignatureUint8Array;
+    }[] = [];
+
+    // Primary signer signs the actions
+    const primarySignature = primarySigner.sign(actionsForSigning);
+    cosignatures.push({
+      signerPublicKey: primarySigner.publicKey,
+      signature: primarySignature,
+    });
+
+    // Add additional cosigner signatures
+    if (cosigners) {
+      for (const cosigner of cosigners) {
+        if (
+          !this._authorizedSignerSet.isActiveAdmin(cosigner.signer.publicKey)
+        ) {
+          throw new LedgerError(
+            LedgerErrorType.UnauthorizedGovernance,
+            'Cosigner is not an active admin',
+          );
+        }
+        cosignatures.push({
+          signerPublicKey: cosigner.signer.publicKey,
+          signature: cosigner.signature,
+        });
+      }
+    }
+
+    // Verify quorum
+    const signerKeys = cosignatures.map((c) => c.signerPublicKey);
+    if (!this._authorizedSignerSet.verifyQuorum(signerKeys)) {
+      throw new LedgerError(
+        LedgerErrorType.QuorumNotMet,
+        `Quorum not met: have ${signerKeys.length} signatures, need ${this._authorizedSignerSet.requiredSignatures}`,
+      );
+    }
+
+    // Build governance payload
+    const governancePayload = this.governanceSerializer.serialize({
+      actions,
+      cosignatures,
+    });
+
+    // Append as regular entry
+    const checksum = await this.appendInternal(governancePayload, primarySigner);
+
+    // Apply governance actions to the live signer set (after successful persistence)
+    for (const action of actions) {
+      this._authorizedSignerSet.applyAction(action);
+    }
+
+    return checksum;
+  }
+
+  // ── Signer info ───────────────────────────────────────────────────
+
+  /** Get info about a specific signer. */
+  getSignerInfo(publicKey: Uint8Array): IAuthorizedSigner | undefined {
+    return this._authorizedSignerSet?.getSigner(publicKey);
+  }
+
+  /** Get the full current authorized signer set. */
+  getAuthorizedSigners(): IAuthorizedSigner[] {
+    return this._authorizedSignerSet?.getAllSigners() ?? [];
   }
 
   // ── Read operations ───────────────────────────────────────────────
@@ -227,6 +327,129 @@ export class Ledger {
       return null;
     }
     return this.getEntry(this._length - 1);
+  }
+
+  // ── Private: genesis entry handling ───────────────────────────────
+
+  /**
+   * Handle the genesis entry for a governance-enabled ledger.
+   * The payload must be a governance genesis payload containing the
+   * initial signer set and quorum policy.
+   */
+  private async appendGenesisEntry(
+    payload: Uint8Array,
+    signer: ILedgerSigner,
+  ): Promise<Checksum> {
+    if (!this.governanceSerializer) {
+      throw new LedgerError(
+        LedgerErrorType.UnauthorizedGovernance,
+        'Governance serializer not available',
+      );
+    }
+
+    // Verify payload is a governance genesis payload
+    if (!GovernancePayloadSerializer.isGovernancePayload(payload)) {
+      throw new LedgerError(
+        LedgerErrorType.UnauthorizedGovernance,
+        'Genesis entry must be a governance genesis payload (0x01 prefix)',
+      );
+    }
+
+    // Deserialize to extract genesis data
+    const parsed = this.governanceSerializer.deserialize(payload);
+    if (!parsed.genesis) {
+      throw new LedgerError(
+        LedgerErrorType.UnauthorizedGovernance,
+        'Genesis entry must use genesis subtype (0x00)',
+      );
+    }
+
+    // Initialize the authorized signer set
+    this._authorizedSignerSet = new AuthorizedSignerSet(
+      parsed.genesis.signers as IAuthorizedSigner[],
+      parsed.genesis.quorumPolicy,
+    );
+
+    // Verify the signer is in the initial set and authorized
+    if (!this._authorizedSignerSet.canAppend(signer.publicKey)) {
+      // Roll back
+      this._authorizedSignerSet = null;
+      throw new LedgerError(
+        LedgerErrorType.UnauthorizedSigner,
+        'Genesis signer is not authorized in the initial signer set',
+      );
+    }
+
+    // Append the genesis entry
+    return this.appendInternal(payload, signer);
+  }
+
+  // ── Private: core append logic ────────────────────────────────────
+
+  /**
+   * Internal append logic shared by regular and governance appends.
+   * Does NOT check authorization — callers must do that first.
+   */
+  private async appendInternal(
+    payload: Uint8Array,
+    signer: ILedgerSigner,
+  ): Promise<Checksum> {
+    const sequenceNumber = this._length;
+    const previousEntryHash = this._headEntryHash;
+    const timestamp = new Date();
+
+    // 1. Compute entryHash
+    const partial = {
+      sequenceNumber,
+      timestamp,
+      previousEntryHash,
+      signerPublicKey: signer.publicKey,
+      payload,
+    };
+    const entryHash = this.serializer.computeEntryHash(partial);
+
+    // 2. Sign the entryHash
+    const signature = signer.sign(entryHash.toUint8Array());
+
+    // 3. Build full entry
+    const entry: ILedgerEntry = { ...partial, entryHash, signature };
+
+    // 4. Serialize and pad
+    const serialized = this.serializer.serialize(entry);
+    const padded = padToBlockSize(serialized, this.blockSize);
+
+    // 5. Create RawDataBlock and store
+    const block = new RawDataBlock(
+      this.blockSize,
+      padded,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      true,
+      true,
+      this.checksumService,
+    );
+    const blockChecksum = block.idChecksum;
+
+    // Req 5.5: On BlockStore failure, do not update chain head or index.
+    await this.store.setData(block);
+
+    // 6. Update in-memory state (only after successful store)
+    this.index.set(sequenceNumber, blockChecksum);
+    this._length = sequenceNumber + 1;
+    this._head = blockChecksum;
+    this._headEntryHash = entryHash;
+
+    // 7. Persist metadata block
+    try {
+      await this.persistMetadata();
+    } catch {
+      // Metadata persistence failure is non-fatal for the append itself;
+      // the entry is already stored.
+    }
+
+    return blockChecksum;
   }
 
   // ── Metadata persistence ──────────────────────────────────────────
@@ -312,10 +535,6 @@ export class Ledger {
 
   /**
    * Persist the metadata block to the store under a deterministic key.
-   *
-   * Uses a LedgerMetadataBlock (validation-exempt RawDataBlock subclass)
-   * so the block can be stored at the deterministic checksum derived from
-   * the ledgerId, even though the content hash differs.
    */
   private async persistMetadata(): Promise<void> {
     const metadataBytes = this.serializeMetadata();
@@ -343,15 +562,23 @@ export class Ledger {
    * 3. If not found, return empty ledger
    * 4. Parse metadata to get head checksum, length, and index
    * 5. Restore headEntryHash by reading the head entry
-   * 6. Return populated ledger
+   * 6. Replay governance entries to reconstruct AuthorizedSignerSet
+   * 7. Return populated ledger
    */
   static async load(
     store: IBlockStore,
     blockSize: BlockSize,
     serializer: LedgerEntrySerializer,
     ledgerId: string,
+    governanceSerializer?: GovernancePayloadSerializer,
   ): Promise<Ledger> {
-    const ledger = new Ledger(store, blockSize, serializer, ledgerId);
+    const ledger = new Ledger(
+      store,
+      blockSize,
+      serializer,
+      ledgerId,
+      governanceSerializer,
+    );
     const metadataKey = ledger.computeMetadataKey();
 
     const hasMetadata = await store.has(metadataKey);
@@ -391,7 +618,48 @@ export class Ledger {
       // Degraded state — reads still work via index
     }
 
+    // Replay governance entries to reconstruct AuthorizedSignerSet
+    if (governanceSerializer) {
+      await ledger.replayGovernance();
+    }
+
     return ledger;
+  }
+
+  /**
+   * Replay all entries from genesis to head to reconstruct the
+   * AuthorizedSignerSet from governance entries.
+   */
+  private async replayGovernance(): Promise<void> {
+    if (!this.governanceSerializer || this._length === 0) {
+      return;
+    }
+
+    for (let i = 0; i < this._length; i++) {
+      const entry = await this.getEntry(i);
+
+      if (i === 0) {
+        // Genesis entry — must be governance genesis
+        if (GovernancePayloadSerializer.isGovernancePayload(entry.payload)) {
+          const parsed = this.governanceSerializer.deserialize(entry.payload);
+          if (parsed.genesis) {
+            this._authorizedSignerSet = new AuthorizedSignerSet(
+              parsed.genesis.signers as IAuthorizedSigner[],
+              parsed.genesis.quorumPolicy,
+            );
+          }
+        }
+      } else if (
+        this._authorizedSignerSet &&
+        GovernancePayloadSerializer.isGovernancePayload(entry.payload)
+      ) {
+        // Governance amendment entry — apply actions
+        const parsed = this.governanceSerializer.deserialize(entry.payload);
+        for (const action of parsed.actions) {
+          this._authorizedSignerSet.applyAction(action);
+        }
+      }
+    }
   }
 
   /**

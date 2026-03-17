@@ -15,7 +15,12 @@ export type LedgerValidationErrorType =
   | 'sequence_gap'
   | 'genesis_invalid'
   | 'previous_hash_mismatch'
-  | 'deserialization_error';
+  | 'deserialization_error'
+  | 'unauthorized_signer'
+  | 'unauthorized_governance'
+  | 'quorum_not_met'
+  | 'governance_safety_violation'
+  | 'invalid_governance_payload';
 
 /** Describes a single validation failure at a specific entry. */
 export interface ILedgerValidationError {
