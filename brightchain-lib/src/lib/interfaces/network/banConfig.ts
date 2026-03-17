@@ -55,9 +55,7 @@ export const MIN_BAN_CONFIG = {
 /**
  * Validate and normalize ban configuration, clamping to minimums.
  */
-export function normalizeBanConfig(
-  partial?: Partial<IBanConfig>,
-): IBanConfig {
+export function normalizeBanConfig(partial?: Partial<IBanConfig>): IBanConfig {
   const config = { ...DEFAULT_BAN_CONFIG, ...partial };
   return {
     banCoolingPeriodMs: Math.max(

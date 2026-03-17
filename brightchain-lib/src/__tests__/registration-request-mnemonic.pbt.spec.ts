@@ -64,10 +64,14 @@ describe('Feature: user-provided-mnemonic-brightchain, Property 1: Branded schem
 
   it('accepts payloads with a non-empty string mnemonic (Req 1.1, 1.3)', () => {
     fc.assert(
-      fc.property(validBasePayloadArb, nonEmptyMnemonicArb, (base, mnemonic) => {
-        const payload = { ...base, mnemonic };
-        expect(RegistrationRequestDef.validate(payload)).toBe(true);
-      }),
+      fc.property(
+        validBasePayloadArb,
+        nonEmptyMnemonicArb,
+        (base, mnemonic) => {
+          const payload = { ...base, mnemonic };
+          expect(RegistrationRequestDef.validate(payload)).toBe(true);
+        },
+      ),
       { numRuns: 100 },
     );
   });
@@ -84,7 +88,10 @@ describe('Feature: user-provided-mnemonic-brightchain, Property 1: Branded schem
 
   it('rejects payloads with a whitespace-only mnemonic (Req 1.3)', () => {
     const whitespaceOnlyArb = fc
-      .array(fc.constantFrom(' ', '\t', '\n', '\r'), { minLength: 1, maxLength: 10 })
+      .array(fc.constantFrom(' ', '\t', '\n', '\r'), {
+        minLength: 1,
+        maxLength: 10,
+      })
       .map((chars) => chars.join(''));
 
     fc.assert(

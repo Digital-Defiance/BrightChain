@@ -258,12 +258,9 @@ export const MandarinStrings: StringsCollection<BrightChainStringKey> = {
   [BrightChainStrings.Error_QuorumError_AuditChainCorrupted]:
     '审计链完整性受损',
   // Quorum Ban Mechanism Errors
-  [BrightChainStrings.Error_QuorumError_CannotBanSelf]:
-    '成员不能提议封禁自己',
-  [BrightChainStrings.Error_QuorumError_MemberAlreadyBanned]:
-    '成员已被封禁',
-  [BrightChainStrings.Error_QuorumError_MemberNotBanned]:
-    '成员当前未被封禁',
+  [BrightChainStrings.Error_QuorumError_CannotBanSelf]: '成员不能提议封禁自己',
+  [BrightChainStrings.Error_QuorumError_MemberAlreadyBanned]: '成员已被封禁',
+  [BrightChainStrings.Error_QuorumError_MemberNotBanned]: '成员当前未被封禁',
   [BrightChainStrings.Error_QuorumError_NewMemberCannotProposeBan]:
     '在当前纪元中加入的成员不能提议封禁',
   [BrightChainStrings.Error_QuorumError_BanCoolingPeriodNotElapsed]:

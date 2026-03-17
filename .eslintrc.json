@@ -40,6 +40,9 @@
         "plugin:@typescript-eslint/recommended",
         "plugin:prettier/recommended"
       ],
+      "parserOptions": {
+        "projectService": true
+      },
       "rules": {
         "@typescript-eslint/no-extra-semi": "error",
         "@typescript-eslint/explicit-module-boundary-types": "off",

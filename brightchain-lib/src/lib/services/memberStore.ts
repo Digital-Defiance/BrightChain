@@ -490,9 +490,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
    */
   public async getMember(id: TID): Promise<Member<TID>> {
     const indexEntry = this.memberIndex.get(
-      uint8ArrayToHex(
-        this.idToBytes(id),
-      ),
+      uint8ArrayToHex(this.idToBytes(id)),
     );
     if (!indexEntry) {
       throw new MemberError(MemberErrorType.MemberNotFound);
@@ -575,7 +573,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
   public async getMemberPublicKeyHex(id: TID): Promise<string | null> {
     // Fast path — DB-backed lookup via users collection
     if (this._db) {
-      const sp = ServiceProvider.getInstance<TID>();
+      const _sp = ServiceProvider.getInstance<TID>();
       // Build the idHex the same way _queryIndexFromDb does: strip dashes
       const idHex = uint8ArrayToHex(this.idToBytes(id));
 
@@ -630,9 +628,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
     privateProfile: IPrivateMemberProfileHydratedData<TID> | null;
   }> {
     const indexEntry = this.memberIndex.get(
-      uint8ArrayToHex(
-        this.idToBytes(id),
-      ),
+      uint8ArrayToHex(this.idToBytes(id)),
     );
     if (!indexEntry) {
       throw new MemberError(MemberErrorType.MemberNotFound);
@@ -825,9 +821,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
     id: TID,
     changes: IMemberChanges<TID>,
   ): Promise<void> {
-    const idHex = uint8ArrayToHex(
-      this.idToBytes(id),
-    );
+    const idHex = uint8ArrayToHex(this.idToBytes(id));
     const indexEntry = this.memberIndex.get(idHex);
     if (!indexEntry) {
       throw new MemberError(MemberErrorType.MemberNotFound);
@@ -1114,8 +1108,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       const memberId = this.nameIndex.get(criteria.name);
       if (memberId) {
         results = results.filter(
-          (entry) =>
-            uint8ArrayToHex(this.idToBytes(entry.id)) === memberId,
+          (entry) => uint8ArrayToHex(this.idToBytes(entry.id)) === memberId,
         );
       } else {
         results = [];
@@ -1125,8 +1118,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       const memberId = this.emailIndex.get(criteria.email);
       if (memberId) {
         results = results.filter(
-          (entry) =>
-            uint8ArrayToHex(this.idToBytes(entry.id)) === memberId,
+          (entry) => uint8ArrayToHex(this.idToBytes(entry.id)) === memberId,
         );
       } else {
         results = [];

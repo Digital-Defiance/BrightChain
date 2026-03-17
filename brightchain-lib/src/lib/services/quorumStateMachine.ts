@@ -17,6 +17,7 @@ import {
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
 import { parse as uuidParse, v4 as uuidv4 } from 'uuid';
+import { MemberStatusType } from '../enumerations/memberStatusType';
 import { ProposalActionType } from '../enumerations/proposalActionType';
 import { ProposalStatus } from '../enumerations/proposalStatus';
 import { QuorumErrorType } from '../enumerations/quorumErrorType';
@@ -32,6 +33,11 @@ import {
   QuorumVoteMetadata,
 } from '../interfaces/availability/gossipService';
 import type { BlockId } from '../interfaces/branded/primitives/blockId';
+import {
+  IBanConfig,
+  normalizeBanConfig,
+} from '../interfaces/network/banConfig';
+import { IBanRecord } from '../interfaces/network/banRecord';
 import { OperationalState } from '../interfaces/operationalState';
 import { Proposal, ProposalInput } from '../interfaces/proposal';
 import { QuorumEpoch } from '../interfaces/quorumEpoch';
@@ -49,20 +55,13 @@ import { Vote, VoteInput } from '../interfaces/vote';
 import { QuorumDataRecord } from '../quorumDataRecord';
 import { AliasRegistry } from './aliasRegistry';
 import { AuditLogService } from './auditLogService';
-import { ChecksumService } from './checksum.service';
-import { SealingService } from './sealing.service';
-import { MemberStatusType } from '../enumerations/memberStatusType';
-import {
-  IBanConfig,
-  DEFAULT_BAN_CONFIG,
-  normalizeBanConfig,
-} from '../interfaces/network/banConfig';
-import { IBanRecord } from '../interfaces/network/banRecord';
 import { BanListCache } from './banListCache';
 import {
   BanProposalValidator,
   IBanValidationDataProvider,
 } from './banProposalValidator';
+import { ChecksumService } from './checksum.service';
+import { SealingService } from './sealing.service';
 
 /**
  * Constant-time comparison of two Uint8Array buffers.
@@ -1840,7 +1839,8 @@ export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
    */
   private async executeBanMember(proposal: Proposal<TID>): Promise<void> {
     const targetMemberId = proposal.actionPayload['targetMemberId'] as TID;
-    const reason = (proposal.actionPayload['reason'] as string) ?? 'No reason provided';
+    const reason =
+      (proposal.actionPayload['reason'] as string) ?? 'No reason provided';
 
     // Update member status to Banned
     const target = await this.db.getMember(targetMemberId);
@@ -1868,14 +1868,20 @@ export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
       proposalId: proposal.id,
       epoch: proposal.epochNumber,
       bannedAt: new Date(),
-      evidenceBlockIds: proposal.actionPayload['evidenceBlockIds'] as string[] | undefined,
+      evidenceBlockIds: proposal.actionPayload['evidenceBlockIds'] as
+        | string[]
+        | undefined,
       approvalSignatures,
       requiredSignatures: proposal.requiredThreshold,
     };
 
     // Persist ban record to database
     if ('saveBanRecord' in this.db) {
-      await (this.db as IQuorumDatabase<TID> & { saveBanRecord(record: IBanRecord<TID>): Promise<void> }).saveBanRecord(banRecord);
+      await (
+        this.db as IQuorumDatabase<TID> & {
+          saveBanRecord(record: IBanRecord<TID>): Promise<void>;
+        }
+      ).saveBanRecord(banRecord);
     }
 
     // Update local cache
@@ -1927,7 +1933,11 @@ export class QuorumStateMachine<TID extends PlatformID = Uint8Array>
 
     // Remove ban record from database
     if ('deleteBanRecord' in this.db) {
-      await (this.db as IQuorumDatabase<TID> & { deleteBanRecord(memberId: TID): Promise<void> }).deleteBanRecord(targetMemberId);
+      await (
+        this.db as IQuorumDatabase<TID> & {
+          deleteBanRecord(memberId: TID): Promise<void>;
+        }
+      ).deleteBanRecord(targetMemberId);
     }
 
     // Update local cache

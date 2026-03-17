@@ -15,6 +15,7 @@ import { AliasRecord } from '../aliasRecord';
 import { QuorumAuditLogEntry } from '../auditLogEntry';
 import { ChainedAuditLogEntry } from '../chainedAuditLogEntry';
 import { IdentityRecoveryRecord } from '../identityRecoveryRecord';
+import { IBanRecord } from '../network/banRecord';
 import { OperationalState } from '../operationalState';
 import { Proposal } from '../proposal';
 import { QuorumEpoch } from '../quorumEpoch';
@@ -22,7 +23,6 @@ import { RedistributionJournalEntry } from '../redistributionJournalEntry';
 import { StatuteOfLimitationsConfig } from '../statuteConfig';
 import { Vote } from '../vote';
 import { IQuorumMember } from './quorumService';
-import { IBanRecord } from '../network/banRecord';
 
 /**
  * Abstraction over BrightDb with a dedicated "quorum-system" pool.

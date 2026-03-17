@@ -55,3 +55,19 @@ export type {
   CBLStorageResult,
   CBLWhiteningOptions,
 } from './lib/interfaces/storage/cblWhitening';
+
+// Ledger
+export type { ILedgerEntry } from './lib/interfaces/ledger/ledgerEntry';
+export type { ILedgerMetadata } from './lib/interfaces/ledger/ledgerMetadata';
+export type { ILedgerSignatureVerifier } from './lib/interfaces/ledger/ledgerSignatureVerifier';
+export type { ILedgerSigner } from './lib/interfaces/ledger/ledgerSigner';
+export type {
+  ILedgerValidationError,
+  IValidationResult as ILedgerValidationResult,
+  LedgerValidationErrorType,
+} from './lib/interfaces/ledger/validationResult';
+export { EciesSignatureVerifier } from './lib/ledger/eciesSignatureVerifier';
+export { Ledger } from './lib/ledger/ledger';
+export { LedgerChainValidator } from './lib/ledger/ledgerChainValidator';
+export { LedgerEntrySerializer } from './lib/ledger/ledgerEntrySerializer';
+export { MemberSignerAdapter } from './lib/ledger/memberSignerAdapter';

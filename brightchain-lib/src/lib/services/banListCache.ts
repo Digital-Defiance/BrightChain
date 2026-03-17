@@ -27,9 +27,7 @@ export class BanListCache<TID extends PlatformID = Uint8Array>
 {
   private readonly bannedMembers = new Map<HexString, IBanRecord<TID>>();
 
-  constructor(
-    private readonly idProvider: TypedIdProviderWrapper<TID>,
-  ) {}
+  constructor(private readonly idProvider: TypedIdProviderWrapper<TID>) {}
 
   private toHex(id: TID): HexString {
     return this.idProvider.toString(id, 'hex') as HexString;
