@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook: blocks commits containing "burnbag" (case-insensitive)
+# in staged file content, except for known allowlisted files.
+#
+# Override: git commit --no-verify
+# Or set: ALLOW_BURNBAG=1 git commit
+#
+
+set -euo pipefail
+
+# Escape hatch via environment variable
+if [ "${ALLOW_BURNBAG:-0}" = "1" ]; then
+  exit 0
+fi
+
+# Files that legitimately contain the name "Digital Burnbag" for submodule wiring.
+# These are name-only references, not implementation details.
+ALLOWLIST=(
+  ".gitmodules"
+  "package.json"
+  "tsconfig.base.json"
+  "brightchain-react/src/enumerations/includeOnMenu.ts"
+  "brightchain-react/src/app/app.tsx"
+)
+
+is_allowlisted() {
+  local file="$1"
+  for allowed in "${ALLOWLIST[@]}"; do
+    if [ "$file" = "$allowed" ]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Check staged file contents (not working tree) for "burnbag"
+VIOLATIONS=""
+
+while IFS= read -r -d '' file; do
+  # Skip allowlisted files
+  if is_allowlisted "$file"; then
+    continue
+  fi
+
+  # Check staged content of this file for "burnbag" (case-insensitive)
+  if git diff --cached --diff-filter=d -- "$file" | grep -iqE 'burnbag'; then
+    VIOLATIONS="${VIOLATIONS}  ${file}\n"
+  fi
+done < <(git diff --cached --name-only --diff-filter=d -z)
+
+if [ -n "$VIOLATIONS" ]; then
+  echo ""
+  echo "🚫 BLOCKED: Staged changes contain 'burnbag' references in non-allowlisted files:"
+  echo ""
+  echo -e "$VIOLATIONS"
+  echo "Digital Burnbag is a trade secret project. Only name references in"
+  echo "submodule wiring files are permitted in the public repo."
+  echo ""
+  echo "To override (use with caution):"
+  echo "  git commit --no-verify"
+  echo "  ALLOW_BURNBAG=1 git commit"
+  echo ""
+  exit 1
+fi

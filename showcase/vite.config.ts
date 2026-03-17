@@ -8,97 +8,107 @@ import { defineConfig } from 'vite';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Noble ESM aliases for production build
+// ── Canonical ESM paths for @noble packages ──────────────────────────
+// Every sub-path gets TWO entries: bare specifier AND .js-suffixed specifier.
+// This is critical because:
+//   - CJS code (ecies-lib) does require('@noble/hashes/sha2')  → bare
+//   - ESM code (@noble/curves) does import '@noble/hashes/sha2.js' → .js
+// Without both, Vite resolves them to different module instances and
+// crypto operations (sign vs verify) silently break.
+
+function nobleHashAlias(subpath: string, esmFile: string) {
+  const full = resolve(__dirname, 'node_modules/@noble/hashes/esm', esmFile);
+  return [
+    { find: `@noble/hashes/${subpath}`, replacement: full },
+    { find: `@noble/hashes/${subpath}.js`, replacement: full },
+  ];
+}
+
+function nobleCurveAlias(subpath: string, esmFile: string) {
+  const full = resolve(__dirname, 'node_modules/@noble/curves/esm', esmFile);
+  return [
+    { find: `@noble/curves/${subpath}`, replacement: full },
+    { find: `@noble/curves/${subpath}.js`, replacement: full },
+  ];
+}
+
 const nobleAliases = [
+  // @noble/hashes sub-paths
+  ...nobleHashAlias('utils', 'utils.js'),
+  ...nobleHashAlias('sha2', 'sha2.js'),
+  ...nobleHashAlias('sha256', 'sha2.js'),
+  ...nobleHashAlias('sha512', 'sha2.js'),
+  ...nobleHashAlias('sha3', 'sha3.js'),
+  ...nobleHashAlias('hmac', 'hmac.js'),
+  ...nobleHashAlias('hkdf', 'hkdf.js'),
+  ...nobleHashAlias('pbkdf2', 'pbkdf2.js'),
+  ...nobleHashAlias('scrypt', 'scrypt.js'),
+  ...nobleHashAlias('ripemd160', 'legacy.js'),
+  ...nobleHashAlias('legacy', 'legacy.js'),
+  ...nobleHashAlias('crypto', 'crypto.js'),
+  // @noble/hashes/_assert: alias to the v1.4.0 copy nested inside
+  // ethereum-cryptography. The hoisted v1.8.0 renamed { bool, bytes, number }
+  // to { abytes, anumber, aoutput }, breaking ethereum-cryptography@2.x.
+  // The v1.4.0 _assert is self-contained (no imports), so this is safe.
   {
-    find: '@noble/hashes/utils',
-    replacement: resolve(__dirname, 'node_modules/@noble/hashes/esm/utils.js'),
-  },
-  {
-    find: '@noble/hashes/sha2',
-    replacement: resolve(__dirname, 'node_modules/@noble/hashes/esm/sha2.js'),
-  },
-  {
-    find: '@noble/hashes/sha256',
-    replacement: resolve(__dirname, 'node_modules/@noble/hashes/esm/sha2.js'),
-  },
-  {
-    find: '@noble/hashes/sha512',
-    replacement: resolve(__dirname, 'node_modules/@noble/hashes/esm/sha2.js'),
-  },
-  {
-    find: '@noble/hashes/sha3',
-    replacement: resolve(__dirname, 'node_modules/@noble/hashes/esm/sha3.js'),
-  },
-  {
-    find: '@noble/hashes/hmac',
-    replacement: resolve(__dirname, 'node_modules/@noble/hashes/esm/hmac.js'),
-  },
-  {
-    find: '@noble/hashes/hkdf',
-    replacement: resolve(__dirname, 'node_modules/@noble/hashes/esm/hkdf.js'),
-  },
-  {
-    find: '@noble/hashes/pbkdf2',
-    replacement: resolve(__dirname, 'node_modules/@noble/hashes/esm/pbkdf2.js'),
-  },
-  {
-    find: '@noble/hashes/scrypt',
-    replacement: resolve(__dirname, 'node_modules/@noble/hashes/esm/scrypt.js'),
-  },
-  {
-    find: '@noble/hashes/ripemd160',
-    replacement: resolve(__dirname, 'node_modules/@noble/hashes/esm/legacy.js'),
-  },
-  {
-    find: '@noble/hashes/legacy',
-    replacement: resolve(__dirname, 'node_modules/@noble/hashes/esm/legacy.js'),
-  },
-  {
-    find: '@noble/hashes/crypto',
-    replacement: resolve(__dirname, 'node_modules/@noble/hashes/esm/crypto.js'),
-  },
-  // NOTE: @noble/hashes/_assert is intentionally NOT aliased here.
-  // ethereum-cryptography@2.x depends on @noble/hashes@1.4.0 whose _assert
-  // exports { bool, bytes, number }. The hoisted v1.8.0 removed those in
-  // favor of { abytes, anumber, aoutput }. Aliasing _assert would break
-  // ethereum-cryptography at runtime.
-  {
-    find: '@noble/curves/secp256k1',
+    find: '@noble/hashes/_assert',
     replacement: resolve(
       __dirname,
-      'node_modules/@noble/curves/esm/secp256k1.js',
+      'node_modules/ethereum-cryptography/node_modules/@noble/hashes/_assert.js',
     ),
   },
   {
-    find: '@noble/curves/ed25519',
+    find: '@noble/hashes/_assert.js',
     replacement: resolve(
       __dirname,
-      'node_modules/@noble/curves/esm/ed25519.js',
+      'node_modules/ethereum-cryptography/node_modules/@noble/hashes/_assert.js',
     ),
   },
-  {
-    find: '@noble/curves/abstract/utils',
-    replacement: resolve(
-      __dirname,
-      'node_modules/@noble/curves/esm/abstract/utils.js',
-    ),
-  },
-  {
-    find: '@noble/curves/abstract/modular',
-    replacement: resolve(
-      __dirname,
-      'node_modules/@noble/curves/esm/abstract/modular.js',
-    ),
-  },
-  {
-    find: '@noble/curves/abstract/weierstrass',
-    replacement: resolve(
-      __dirname,
-      'node_modules/@noble/curves/esm/abstract/weierstrass.js',
-    ),
-  },
+
+  // @noble/curves sub-paths
+  ...nobleCurveAlias('secp256k1', 'secp256k1.js'),
+  ...nobleCurveAlias('ed25519', 'ed25519.js'),
+  ...nobleCurveAlias('abstract/utils', 'abstract/utils.js'),
+  ...nobleCurveAlias('abstract/modular', 'abstract/modular.js'),
+  ...nobleCurveAlias('abstract/weierstrass', 'abstract/weierstrass.js'),
 ];
+
+// Build a flat object from the alias array for resolve.alias
+const nobleResolveAliases: Record<string, string> = {};
+for (const entry of nobleAliases) {
+  nobleResolveAliases[entry.find] = entry.replacement;
+}
+
+// ── esbuild plugin for optimizeDeps pre-bundling ─────────────────────
+// Rollup/Vite aliases (resolve.alias, @rollup/plugin-alias) do NOT apply
+// during esbuild's optimizeDeps pre-bundling phase. Without this plugin,
+// esbuild resolves @noble/hashes/sha2 and @noble/hashes/sha2.js to
+// different module instances, breaking sign/verify in the browser.
+function nobleEsbuildAliasPlugin() {
+  // Build a map from specifier → absolute path
+  const aliasMap = new Map<string, string>();
+  for (const entry of nobleAliases) {
+    aliasMap.set(entry.find, entry.replacement);
+  }
+
+  return {
+    name: 'noble-alias',
+    setup(build: {
+      onResolve: (
+        opts: { filter: RegExp },
+        cb: (args: { path: string }) => { path: string } | undefined,
+      ) => void;
+    }) {
+      build.onResolve({ filter: /^@noble\// }, (args: { path: string }) => {
+        const resolved = aliasMap.get(args.path);
+        if (resolved) {
+          return { path: resolved };
+        }
+        return undefined;
+      });
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -132,7 +142,6 @@ export default defineConfig({
       '@ethereumjs/wallet',
       '@scure/bip32',
       '@scure/bip39',
-      '@noble/hashes',
       '@noble/hashes/utils',
       '@noble/hashes/sha2',
       '@noble/hashes/sha256',
@@ -147,16 +156,20 @@ export default defineConfig({
       'bson',
       'uuid',
     ],
+
     esbuildOptions: {
       mainFields: ['module', 'main'],
+      plugins: [nobleEsbuildAliasPlugin()],
     },
     force: true,
   },
   resolve: {
     // NOTE: @noble/hashes is intentionally NOT deduped.
-    // ethereum-cryptography@2.x ships a nested @noble/hashes@1.4.0 with a
-    // different _assert API. Deduping would force it to use the hoisted
-    // v1.8.0, breaking the 'bool' import in ethereum-cryptography/utils.js.
+    // ethereum-cryptography@2.x ships a nested @noble/hashes@1.4.0 whose
+    // _assert exports { bool, bytes, number }. The hoisted v1.8.0 removed
+    // those. We alias _assert to the v1.4.0 copy (see nobleAliases above)
+    // but do NOT dedupe @noble/hashes itself, as that would force ALL
+    // sub-paths to v1.8.0 including _assert.
     dedupe: [
       'tslib',
       '@noble/curves',
@@ -173,66 +186,8 @@ export default defineConfig({
       ),
       // Replace js-sha3 with @noble/hashes for browser compatibility
       'js-sha3': resolve(__dirname, 'node_modules/@noble/hashes/esm/sha3.js'),
-      // Map to ESM versions of @noble packages for proper browser bundling
-      '@noble/hashes/sha2': resolve(
-        __dirname,
-        'node_modules/@noble/hashes/esm/sha2.js',
-      ),
-      '@noble/hashes/sha256': resolve(
-        __dirname,
-        'node_modules/@noble/hashes/esm/sha2.js',
-      ),
-      '@noble/hashes/sha512': resolve(
-        __dirname,
-        'node_modules/@noble/hashes/esm/sha2.js',
-      ),
-      '@noble/hashes/sha3': resolve(
-        __dirname,
-        'node_modules/@noble/hashes/esm/sha3.js',
-      ),
-      '@noble/hashes/utils': resolve(
-        __dirname,
-        'node_modules/@noble/hashes/esm/utils.js',
-      ),
-      '@noble/hashes/hmac': resolve(
-        __dirname,
-        'node_modules/@noble/hashes/esm/hmac.js',
-      ),
-      '@noble/hashes/hkdf': resolve(
-        __dirname,
-        'node_modules/@noble/hashes/esm/hkdf.js',
-      ),
-      '@noble/hashes/pbkdf2': resolve(
-        __dirname,
-        'node_modules/@noble/hashes/esm/pbkdf2.js',
-      ),
-      '@noble/hashes/scrypt': resolve(
-        __dirname,
-        'node_modules/@noble/hashes/esm/scrypt.js',
-      ),
-      '@noble/hashes/ripemd160': resolve(
-        __dirname,
-        'node_modules/@noble/hashes/esm/legacy.js',
-      ),
-      '@noble/hashes/legacy': resolve(
-        __dirname,
-        'node_modules/@noble/hashes/esm/legacy.js',
-      ),
-      // NOTE: @noble/hashes/_assert is intentionally NOT aliased.
-      // ethereum-cryptography@2.x needs @noble/hashes@1.4.0's _assert API
-      // which exports { bool, bytes, number } — incompatible with v1.8.0.
-      '@noble/hashes/crypto': resolve(
-        __dirname,
-        'node_modules/@noble/hashes/esm/crypto.js',
-      ),
-      '@noble/curves/secp256k1': resolve(
-        __dirname,
-        'node_modules/@noble/curves/esm/secp256k1.js',
-      ),
-      '@noble/curves/ed25519': resolve(
-        __dirname,
-        'node_modules/@noble/curves/esm/ed25519.js',
-      ),
+      // Spread all noble aliases into resolve.alias
+      ...nobleResolveAliases,
       // Use browser build of reed-solomon-erasure.wasm (no fs dependency)
       '@digitaldefiance/reed-solomon-erasure.wasm': resolve(
         dirname(

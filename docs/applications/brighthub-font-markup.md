@@ -1,3 +1,8 @@
+---
+title: "BrightHub Social Network - Font Awesome Icon Markup Syntax"
+parent: "Applications"
+nav_order: 3
+---
 # Font Awesome Icon Markup Syntax
 
 The icon markup syntax provides a flexible way to insert Font Awesome icons into text with optional styling. The syntax is enclosed in double curly braces `{{ }}`.

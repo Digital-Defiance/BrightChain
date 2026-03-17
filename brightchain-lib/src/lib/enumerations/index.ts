@@ -15,6 +15,7 @@ export * from './blockStoreType';
 export * from './blockType';
 export * from './blockValidationErrorType';
 export * from './breadCrumbTraceLevel';
+export * from './brightchainFeatures';
 export * from './cblErrorType';
 export * from './cpuInstructions';
 export * from './cpuRegisters';

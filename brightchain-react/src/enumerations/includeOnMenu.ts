@@ -4,6 +4,7 @@ export enum IncludeOnMenu {
   BrightMailMenu,
   BrightPassMenu,
   BrightHubMenu,
+  DigitalBurnbagMenu,
   SideMenu,
   UserMenu,
 }

@@ -1,3 +1,4 @@
+import { BrightChainFeatures } from '@brightchain/brightchain-lib';
 import { BrightDbEnvironment } from '@brightchain/node-express-suite';
 import { HexString, SecureString } from '@digitaldefiance/ecies-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -22,6 +23,7 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
   private _aws: IEnvironmentAws;
   private _useTransactions: boolean;
   private _emailService: EmailServices;
+  private _enabledFeatures: BrightChainFeatures[];
 
   constructor(
     path?: string,
@@ -50,6 +52,28 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
       ),
       region: envObj['AWS_REGION'] ?? 'us-east-1',
     };
+
+    const featureValues = Object.values(
+      BrightChainFeatures,
+    ) as BrightChainFeatures[];
+    const featureLookup = new Map<string, BrightChainFeatures>(
+      featureValues.map((v) => [v.toUpperCase(), v]),
+    );
+
+    const parsed = envObj['ENABLED_FEATURES']
+      ?.split(',')
+      .map((f: string) => featureLookup.get(f.trim().toUpperCase()))
+      .filter((f): f is BrightChainFeatures => f !== undefined);
+
+    this._enabledFeatures =
+      parsed && parsed.length > 0
+        ? parsed
+        : [
+            BrightChainFeatures.BrightChat,
+            BrightChainFeatures.BrightHub,
+            BrightChainFeatures.BrightMail,
+            BrightChainFeatures.BrightPass,
+          ];
 
     const emailServiceRaw = (envObj['EMAIL_SERVICE'] ?? EmailServices.Fake)
       .toUpperCase()
@@ -145,5 +169,12 @@ export class Environment<TID extends PlatformID = DefaultBackendIdType>
    */
   public get emailService(): EmailServices {
     return this._emailService;
+  }
+
+  /**
+   * The BrightChain features which are enabled in this instance
+   */
+  public get enabledFeatures(): BrightChainFeatures[] {
+    return this._enabledFeatures;
   }
 }

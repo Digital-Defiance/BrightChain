@@ -3,12 +3,20 @@
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "brightchain-s3-store/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:cloud"],
-  "implicitDependencies": ["brightchain-lib", "brightchain-api-lib"],
+  "tags": [
+    "type:lib",
+    "scope:cloud"
+  ],
+  "implicitDependencies": [
+    "brightchain-lib",
+    "brightchain-api-lib"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "dist/brightchain-s3-store",
         "main": "brightchain-s3-store/src/index.ts",
@@ -21,14 +29,22 @@
           }
         ]
       },
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ],
+      "configurations": {
+        "development": {},
+        "production": {}
+      }
     },
     "lint": {
       "executor": "@nx/eslint:lint"
     },
     "test": {
       "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
         "jestConfig": "brightchain-s3-store/jest.config.ts",
         "passWithNoTests": true

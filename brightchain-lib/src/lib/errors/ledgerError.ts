@@ -15,6 +15,15 @@ export enum LedgerErrorType {
   InvalidRange = 'InvalidRange',
   MetadataCorrupted = 'MetadataCorrupted',
   AppendFailed = 'AppendFailed',
+  UnauthorizedSigner = 'UnauthorizedSigner',
+  UnauthorizedGovernance = 'UnauthorizedGovernance',
+  QuorumNotMet = 'QuorumNotMet',
+  GovernanceSafetyViolation = 'GovernanceSafetyViolation',
+  InvalidStateTransition = 'InvalidStateTransition',
+  InvalidGovernanceTarget = 'InvalidGovernanceTarget',
+  MerkleProofFailed = 'MerkleProofFailed',
+  ConsistencyProofFailed = 'ConsistencyProofFailed',
+  MerkleReconstructionFailed = 'MerkleReconstructionFailed',
 }
 
 export class LedgerError extends Error {
