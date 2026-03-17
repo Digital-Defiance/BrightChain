@@ -25,3 +25,9 @@
 [submodule "brighthub-react-components"]
 	path = brighthub-react-components
 	url = https://github.com/Digital-Defiance/brighthub-react-components.git
+[submodule "digitalburnbag-react-components"]
+	path = digitalburnbag-react-components
+	url = https://github.com/Digital-Defiance/digitalburnbag-react-components.git
+[submodule "digitalburnbag-lib"]
+	path = digitalburnbag-lib
+	url = https://github.com/Digital-Defiance/digitalburnbag-lib.git

@@ -60,6 +60,14 @@
       ],
       "@digitaldefiance/node-ecies-lib/src/*": [
         "node_modules/@digitaldefiance/node-ecies-lib/src/*"
+      ],
+      "@brightchain/digitalburnbag-lib": ["digitalburnbag-lib/src/index.ts"],
+      "@brightchain/digitalburnbag-lib/*": ["digitalburnbag-lib/src/*"],
+      "@brightchain/digitalburnbag-react-components": [
+        "digitalburnbag-react-components/src/index.ts"
+      ],
+      "@brightchain/digitalburnbag-react-components/*": [
+        "digitalburnbag-react-components/src/*"
       ]
     }
   },

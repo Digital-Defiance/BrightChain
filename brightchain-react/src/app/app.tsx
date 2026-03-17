@@ -4,6 +4,7 @@ import {
   faLock,
 } from '@awesome.me/kit-a20d532681/icons/classic/solid';
 import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
+import { faShredder } from '@awesome.me/kit-a20d532681/icons/duotone/solid';
 import {
   CONSTANTS,
   CoreConstants,
@@ -205,6 +206,9 @@ const App: FC = () => {
 
 const InnerApp: FC = () => {
   const { tBranded: t } = useI18n();
+  const digitalBurnbagMenu = createMenuType(
+    String(IncludeOnMenu.DigitalBurnbagMenu),
+  );
   const chatMenu = createMenuType(String(IncludeOnMenu.BrightChatMenu));
   const hubMenu = createMenuType(String(IncludeOnMenu.BrightHubMenu));
   const mailMenu = createMenuType(String(IncludeOnMenu.BrightMailMenu));
@@ -374,9 +378,17 @@ const InnerApp: FC = () => {
     ],
   };
 
+  const digitalBurnbagMenuConfig: IMenuConfig = {
+    menuType: digitalBurnbagMenu,
+    menuIcon: <FontAwesomeIcon icon={faShredder} />,
+    priority: 125,
+    options: [],
+  };
+
   return (
     <MenuProvider
       menuConfigs={[
+        digitalBurnbagMenuConfig,
         brightMailMenuConfig,
         brightPassMenuConfig,
         brightHubMenuConfig,

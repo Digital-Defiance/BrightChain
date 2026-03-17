@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import './DemoNavigation.css';
 
-export type DemoMode = 'home' | 'interactive' | 'soup' | 'minimal' | 'blog';
+export type DemoMode = 'home' | 'interactive' | 'soup' | 'minimal' | 'blog' | 'ledger';
 
 interface NavigationItem {
   id: DemoMode;
@@ -27,6 +27,13 @@ const navigationItems: NavigationItem[] = [
     icon: '🥫',
     path: '/demo',
     description: 'Interactive block soup visualization',
+  },
+  {
+    id: 'ledger',
+    label: 'Ledger',
+    icon: '⛓️',
+    path: '/ledger',
+    description: 'Blockchain ledger with governance',
   },
   {
     id: 'blog',

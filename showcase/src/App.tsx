@@ -8,6 +8,7 @@ import BlogEditor from './components/BlogEditor';
 import BlogPost from './components/BlogPost';
 import { BrightChainSoupDemo } from './components/BrightChainSoupDemo';
 import { CompatibilityWarning } from './components/CompatibilityWarning';
+import { LedgerDemo } from './components/LedgerDemo';
 import Components from './components/Components';
 import Demo from './components/Demo';
 import { DemoNavigation } from './components/DemoNavigation';
@@ -50,6 +51,7 @@ function App() {
             <Route path="/blog/new" element={<BlogEditor />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/demo" element={<BrightChainSoupDemo />} />
+            <Route path="/ledger" element={<LedgerDemo />} />
           </Routes>
         </EducationalModeProvider>
       </AccessibilityProvider>

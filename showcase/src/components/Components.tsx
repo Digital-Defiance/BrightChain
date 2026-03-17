@@ -551,7 +551,7 @@ const Components = () => {
         <div className="components-grid">
           {features.map((feature, index) => (
             <motion.div
-              key={feature.title}
+              key={feature.title ?? `feature-${index}`}
               className="component-card card"
               initial={{ opacity: 0, y: 50 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}

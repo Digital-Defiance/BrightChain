@@ -67,6 +67,7 @@ export type {
   LedgerValidationErrorType,
 } from './lib/interfaces/ledger/validationResult';
 export { EciesSignatureVerifier } from './lib/ledger/eciesSignatureVerifier';
+export { BrowserSignatureVerifier } from './lib/ledger/browserSignatureVerifier';
 export { Ledger } from './lib/ledger/ledger';
 export { LedgerChainValidator } from './lib/ledger/ledgerChainValidator';
 export { LedgerEntrySerializer } from './lib/ledger/ledgerEntrySerializer';
