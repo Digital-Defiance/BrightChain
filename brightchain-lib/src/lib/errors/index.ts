@@ -348,6 +348,23 @@ export * from './blockFetchError';
 export * from './messaging';
 
 // ============================================================================
+// Ledger Errors
+// ============================================================================
+/**
+ * Ledger operation errors.
+ * @see {@link LedgerError}
+ * @see {@link LedgerErrorType}
+ */
+export * from './ledgerError';
+
+/**
+ * Ledger serialization errors.
+ * @see {@link LedgerSerializationError}
+ * @see {@link LedgerSerializationErrorType}
+ */
+export * from './ledgerSerializationError';
+
+// ============================================================================
 // Write ACL Errors
 // ============================================================================
 /**

@@ -14,15 +14,21 @@ describe('attachmentValidation', () => {
 
   describe('validateAttachmentSize', () => {
     it('returns true when size equals max', () => {
-      expect(validateAttachmentSize(25 * 1024 * 1024, MAX_ATTACHMENT_SIZE_BYTES)).toBe(true);
+      expect(
+        validateAttachmentSize(25 * 1024 * 1024, MAX_ATTACHMENT_SIZE_BYTES),
+      ).toBe(true);
     });
 
     it('returns true when size is below max', () => {
-      expect(validateAttachmentSize(1024, MAX_ATTACHMENT_SIZE_BYTES)).toBe(true);
+      expect(validateAttachmentSize(1024, MAX_ATTACHMENT_SIZE_BYTES)).toBe(
+        true,
+      );
     });
 
     it('returns false when size exceeds max', () => {
-      expect(validateAttachmentSize(25 * 1024 * 1024 + 1, MAX_ATTACHMENT_SIZE_BYTES)).toBe(false);
+      expect(
+        validateAttachmentSize(25 * 1024 * 1024 + 1, MAX_ATTACHMENT_SIZE_BYTES),
+      ).toBe(false);
     });
 
     it('returns true for zero bytes', () => {
@@ -32,27 +38,41 @@ describe('attachmentValidation', () => {
 
   describe('validateTotalAttachmentSize', () => {
     it('returns true for empty array', () => {
-      expect(validateTotalAttachmentSize([], MAX_ATTACHMENT_SIZE_BYTES)).toBe(true);
+      expect(validateTotalAttachmentSize([], MAX_ATTACHMENT_SIZE_BYTES)).toBe(
+        true,
+      );
     });
 
     it('returns true when all files and total are within limit', () => {
-      expect(validateTotalAttachmentSize([1024, 2048, 4096], MAX_ATTACHMENT_SIZE_BYTES)).toBe(true);
+      expect(
+        validateTotalAttachmentSize(
+          [1024, 2048, 4096],
+          MAX_ATTACHMENT_SIZE_BYTES,
+        ),
+      ).toBe(true);
     });
 
     it('returns false when a single file exceeds limit', () => {
       expect(
-        validateTotalAttachmentSize([MAX_ATTACHMENT_SIZE_BYTES + 1], MAX_ATTACHMENT_SIZE_BYTES),
+        validateTotalAttachmentSize(
+          [MAX_ATTACHMENT_SIZE_BYTES + 1],
+          MAX_ATTACHMENT_SIZE_BYTES,
+        ),
       ).toBe(false);
     });
 
     it('returns false when total exceeds limit even if individual files are within', () => {
       const size = 15 * 1024 * 1024; // 15 MB each, total 30 MB
-      expect(validateTotalAttachmentSize([size, size], MAX_ATTACHMENT_SIZE_BYTES)).toBe(false);
+      expect(
+        validateTotalAttachmentSize([size, size], MAX_ATTACHMENT_SIZE_BYTES),
+      ).toBe(false);
     });
 
     it('returns true when total exactly equals limit', () => {
       const half = MAX_ATTACHMENT_SIZE_BYTES / 2;
-      expect(validateTotalAttachmentSize([half, half], MAX_ATTACHMENT_SIZE_BYTES)).toBe(true);
+      expect(
+        validateTotalAttachmentSize([half, half], MAX_ATTACHMENT_SIZE_BYTES),
+      ).toBe(true);
     });
   });
 

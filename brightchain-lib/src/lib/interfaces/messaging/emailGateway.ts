@@ -129,7 +129,14 @@ export interface IEmailAuthenticationResult {
   /** SPF verification result */
   spf: {
     /** SPF check outcome */
-    status: 'pass' | 'fail' | 'softfail' | 'neutral' | 'none' | 'temperror' | 'permerror';
+    status:
+      | 'pass'
+      | 'fail'
+      | 'softfail'
+      | 'neutral'
+      | 'none'
+      | 'temperror'
+      | 'permerror';
     /** Additional details about the SPF check */
     details?: string;
   };

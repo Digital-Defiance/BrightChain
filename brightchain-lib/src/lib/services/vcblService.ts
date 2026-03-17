@@ -118,9 +118,10 @@ export class VCBLService<TID extends PlatformID = Uint8Array> {
         'Id length exceeds data bounds',
       );
     }
-    const id = idLength > 0
-      ? decoder.decode(data.subarray(currentOffset, currentOffset + idLength))
-      : undefined;
+    const id =
+      idLength > 0
+        ? decoder.decode(data.subarray(currentOffset, currentOffset + idLength))
+        : undefined;
     currentOffset += idLength;
 
     // entryType

@@ -344,7 +344,7 @@ export class PooledMemoryBlockStore
    */
   public override async getRandomBlocks(
     count: number,
-    blockSize: BlockSize,
+    _blockSize: BlockSize,
   ): Promise<Checksum[]> {
     return this.getRandomBlocksFromPool(DEFAULT_POOL, count);
   }
