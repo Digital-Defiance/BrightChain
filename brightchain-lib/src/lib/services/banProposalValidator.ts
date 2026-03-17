@@ -165,7 +165,9 @@ export class BanProposalValidator<TID extends PlatformID = Uint8Array> {
 
     for (const vote of votes) {
       const voterAdmissionProposerId =
-        await this.dataProvider.getMemberAdmissionProposerId(vote.voterMemberId);
+        await this.dataProvider.getMemberAdmissionProposerId(
+          vote.voterMemberId,
+        );
 
       if (voterAdmissionProposerId !== null) {
         const admissionProposerHex = this.idProvider.toString(

@@ -1,4 +1,3 @@
-import { CoreConstants } from '../../constants';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
 import { EmailErrorType } from '../../enumerations/messaging/emailErrorType';
@@ -1559,10 +1558,7 @@ describe('EmailMessageService', () => {
       // Should have exactly one announceMessage call for external To/CC
       expect(announceMessageMock).toHaveBeenCalledTimes(1);
       const call = announceMessageMock.mock.calls[0][1];
-      expect(call.recipientIds).toEqual([
-        'ext1@gmail.com',
-        'ext2@yahoo.com',
-      ]);
+      expect(call.recipientIds).toEqual(['ext1@gmail.com', 'ext2@yahoo.com']);
       expect(call.gatewayOutbound).toBe(true);
       expect(call.ackRequired).toBe(false);
     });
@@ -1605,10 +1601,7 @@ describe('EmailMessageService', () => {
       const externalCall = calls.find((c) => c.gatewayOutbound === true);
       expect(externalCall).toBeDefined();
       expect(externalCall.recipientIds).toEqual(
-        expect.arrayContaining([
-          'ext1@gmail.com',
-          'ext2@outlook.com',
-        ]),
+        expect.arrayContaining(['ext1@gmail.com', 'ext2@outlook.com']),
       );
       expect(externalCall.ackRequired).toBe(false);
     });
@@ -1728,8 +1721,7 @@ describe('EmailMessageService', () => {
           createMailbox('ext2', 'YAHOO.COM'),
         ];
 
-        const { internal, external } =
-          service.partitionRecipients(mailboxes);
+        const { internal, external } = service.partitionRecipients(mailboxes);
 
         expect(internal).toHaveLength(3);
         expect(internal.map((m) => m.localPart)).toEqual([
@@ -1748,8 +1740,7 @@ describe('EmailMessageService', () => {
           createMailbox('b', CANONICAL_DOMAIN),
         ];
 
-        const { internal, external } =
-          service.partitionRecipients(mailboxes);
+        const { internal, external } = service.partitionRecipients(mailboxes);
 
         expect(internal).toHaveLength(2);
         expect(external).toHaveLength(0);
@@ -1761,16 +1752,14 @@ describe('EmailMessageService', () => {
           createMailbox('y', 'another.org'),
         ];
 
-        const { internal, external } =
-          service.partitionRecipients(mailboxes);
+        const { internal, external } = service.partitionRecipients(mailboxes);
 
         expect(internal).toHaveLength(0);
         expect(external).toHaveLength(2);
       });
 
       it('should return empty arrays for empty input', () => {
-        const { internal, external } =
-          service.partitionRecipients([]);
+        const { internal, external } = service.partitionRecipients([]);
 
         expect(internal).toHaveLength(0);
         expect(external).toHaveLength(0);
