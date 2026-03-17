@@ -18,6 +18,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: recursive
 
       - name: Clean workspace
         run: |
@@ -32,14 +33,12 @@ jobs:
       - name: Enable Yarn Berry
         run: |
           corepack enable
-          yarn set version 4.5.3
 
       - name: Clear Yarn cache
         run: yarn cache clean
 
       - name: Install dependencies
-        run: |
-          ./do-yarn.sh --immutable
+        run: yarn install --immutable
 
       - uses: nrwl/nx-set-shas@v4
 

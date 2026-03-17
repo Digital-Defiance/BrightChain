@@ -8,5 +8,6 @@ export const environment: IEnvironment = {
   debugI18n: !import.meta.env.PROD,
   serverUrl: runtimeConfig.serverUrl || '',
   apiUrl: runtimeConfig.apiUrl || '/api',
-  emailDomain: 'brightchain.org',
+  emailDomain: runtimeConfig.emailDomain || 'brightchain.org',
+  enabledFeatures: runtimeConfig.enabledFeatures || ['BrightChat', 'BrightHub', 'BrightMail', 'BrightPass'],
 };

@@ -4,7 +4,9 @@ import {
   faLock,
 } from '@awesome.me/kit-a20d532681/icons/classic/solid';
 import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
+import { faShredder } from '@awesome.me/kit-a20d532681/icons/duotone/solid';
 import {
+  BrightChainFeatures,
   CONSTANTS,
   CoreConstants,
   i18nEngine,
@@ -130,6 +132,25 @@ const getApiBaseUrl = (): string => {
     }
   }
   return environment.apiUrl || 'http://localhost:3000';
+};
+
+const getEnabledFeatures = (): BrightChainFeatures[] => {
+  if (typeof window !== 'undefined') {
+    const appConfig = (
+      window as { APP_CONFIG?: { enabledFeatures?: string[] } }
+    ).APP_CONFIG;
+    if (appConfig?.enabledFeatures) {
+      return appConfig.enabledFeatures.map((f) => f as BrightChainFeatures);
+    }
+  }
+  return (
+    environment.enabledFeatures.map((f) => f as BrightChainFeatures) || [
+      BrightChainFeatures.BrightChat,
+      BrightChainFeatures.BrightHub,
+      BrightChainFeatures.BrightMail,
+      BrightChainFeatures.BrightPass,
+    ]
+  );
 };
 
 const getEmailDomain = (): string => {
@@ -374,15 +395,20 @@ const InnerApp: FC = () => {
     ],
   };
 
+  const featureMenuMap: [BrightChainFeatures, IMenuConfig][] = [
+    [BrightChainFeatures.BrightMail, brightMailMenuConfig],
+    [BrightChainFeatures.BrightPass, brightPassMenuConfig],
+    [BrightChainFeatures.BrightHub, brightHubMenuConfig],
+    [BrightChainFeatures.BrightChat, brightChatMenuConfig],
+  ];
+
+  const enabledFeatures = new Set(getEnabledFeatures());
+  const menuConfigs = featureMenuMap
+    .filter(([feature]) => enabledFeatures.has(feature))
+    .map(([, config]) => config);
+
   return (
-    <MenuProvider
-      menuConfigs={[
-        brightMailMenuConfig,
-        brightPassMenuConfig,
-        brightHubMenuConfig,
-        brightChatMenuConfig,
-      ]}
-    >
+    <MenuProvider menuConfigs={menuConfigs}>
       <Box className="app-container" sx={{ paddingTop: '64px' }}>
         <TopMenu
           Logo={

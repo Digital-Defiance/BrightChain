@@ -1,8 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  BlockSize,
-  BlockStoreType,
-} from '@brightchain/brightchain-lib';
+import { BlockSize, BlockStoreType, BrightChainFeatures } from '@brightchain/brightchain-lib';
 import { HexString } from '@digitaldefiance/ecies-lib';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -97,4 +94,8 @@ export interface IEnvironment<TID extends PlatformID>
    * The email service provider to use for sending emails
    */
   emailService: EmailServices;
+  /**
+   * Enabled brightchain features
+   */
+  enabledFeatures: BrightChainFeatures[];
 }

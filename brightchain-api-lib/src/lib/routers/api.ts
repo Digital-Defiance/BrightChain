@@ -1,5 +1,6 @@
 import type { IWriteAclAuditLogger } from '@brightchain/brightchain-lib';
 import {
+  BrightChainFeatures,
   ChannelService,
   ConversationService,
   GroupService,
@@ -19,12 +20,10 @@ import {
   IThreadService,
   IUserProfileService,
 } from '@brightchain/brighthub-lib';
-import { BrightDbApiRouter, BrightDbUserController } from '@brightchain/node-express-suite';
+import { BrightDbApiRouter } from '@brightchain/node-express-suite';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import { ECIESService, PlatformID } from '@digitaldefiance/node-ecies-lib';
-import {
-  KeyWrappingService,
-} from '@digitaldefiance/node-express-suite';
+import { KeyWrappingService } from '@digitaldefiance/node-express-suite';
 import { AppConstants } from '../appConstants';
 import type { IWriteAclApiManager } from '../auth/writeAclApiRouter';
 import { PoolDiscoveryService } from '../availability/poolDiscoveryService';
@@ -59,9 +58,9 @@ import { SyncController } from '../controllers/api/sync';
 import { UnifiedNotificationController } from '../controllers/api/unifiedNotifications';
 import { UserController } from '../controllers/api/user';
 import { IBrightChainApplication } from '../interfaces';
-import { SESEmailService } from '../services/sesEmail';
 import { EventNotificationSystem } from '../services/eventNotificationSystem';
 import { MessagePassingService } from '../services/messagePassingService';
+import { SESEmailService } from '../services/sesEmail';
 import { DefaultBackendIdType } from '../shared-types';
 
 /**
@@ -95,7 +94,7 @@ export class ApiRouter<
   private readonly cblController: CBLController<TID>;
   private readonly scblController: SCBLController<TID>;
   private readonly syncController: SyncController<TID>;
-  protected declare readonly userController: UserController<TID>;
+  declare protected readonly userController: UserController<TID>;
   private readonly brightHubPostController: BrightHubPostController<TID>;
   private readonly brightHubMessagingController: BrightHubMessagingController<TID>;
   private readonly brightHubNotificationController: BrightHubNotificationController<TID>;
@@ -157,18 +156,56 @@ export class ApiRouter<
       application,
     );
 
+    if (
+      application.environment.enabledFeatures.some(
+        (f) => f === BrightChainFeatures.BrightPass,
+      )
+    ) {
+      this.router.use('/brightpass', this.brightPassController.router);
+    }
+    if (
+      application.environment.enabledFeatures.some(
+        (f) => f === BrightChainFeatures.BrightChat,
+      )
+    ) {
+      this.router.use('/brightchat/channels', this.channelController.router);
+      this.router.use(
+        '/brightchat/conversations',
+        this.conversationController.router,
+      );
+      this.router.use('/brightchat/groups', this.groupController.router);
+    }
+    if (
+      application.environment.enabledFeatures.some(
+        (f) => f === BrightChainFeatures.BrightMail,
+      )
+    ) {
+      this.router.use('/emails', this.emailController.router);
+    }
+    if (
+      application.environment.enabledFeatures.some(
+        (f) => f === BrightChainFeatures.BrightHub,
+      )
+    ) {
+      this.router.use('/brighthub/posts', this.brightHubPostController.router);
+      this.router.use(
+        '/brighthub/messages',
+        this.brightHubMessagingController.router,
+      );
+      this.router.use(
+        '/brighthub/notifications',
+        this.brightHubNotificationController.router,
+      );
+      this.router.use('/brighthub', this.brightHubConnectionController.router);
+      this.router.use('/brighthub', this.brightHubTimelineController.router);
+    }
+
+    this.router.use('/docs', this.docsController.router);
+    this.router.use('/blocks', this.blocksController.router);
     // Unified notification aggregation controller
     this.unifiedNotificationController = new UnifiedNotificationController(
       application,
     );
-
-    this.router.use('/blocks', this.blocksController.router);
-    this.router.use('/brightpass', this.brightPassController.router);
-    this.router.use('/brightchat/channels', this.channelController.router);
-    this.router.use('/brightchat/conversations', this.conversationController.router);
-    this.router.use('/docs', this.docsController.router);
-    this.router.use('/emails', this.emailController.router);
-    this.router.use('/brightchat/groups', this.groupController.router);
     this.router.use('/i18n', this.i18nController.router);
     this.router.use('/energy', this.energyController.router);
     this.router.use('/health', this.healthController.router);
@@ -178,19 +215,6 @@ export class ApiRouter<
     this.router.use('/cbl', this.cblController.router);
     this.router.use('/scbl', this.scblController.router);
     this.router.use('/sync', this.syncController.router);
-
-    // BrightHub routes
-    this.router.use('/brighthub/posts', this.brightHubPostController.router);
-    this.router.use(
-      '/brighthub/messages',
-      this.brightHubMessagingController.router,
-    );
-    this.router.use(
-      '/brighthub/notifications',
-      this.brightHubNotificationController.router,
-    );
-    this.router.use('/brighthub', this.brightHubConnectionController.router);
-    this.router.use('/brighthub', this.brightHubTimelineController.router);
 
     // Unified notification aggregation
     this.router.use(
@@ -346,9 +370,9 @@ export class ApiRouter<
    * The registry is used by the verify-recipient endpoint to check whether
    * a local user exists before accepting mail.
    */
-  public setEmailUserRegistry(
-    registry: { hasUser(email: string): Promise<boolean> },
-  ): void {
+  public setEmailUserRegistry(registry: {
+    hasUser(email: string): Promise<boolean>;
+  }): void {
     this.emailController.setUserRegistry(registry);
   }
 

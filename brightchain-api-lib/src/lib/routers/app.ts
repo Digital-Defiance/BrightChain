@@ -15,6 +15,7 @@ import { ApiRouter } from './api';
 export interface BrightChainIndexLocals extends IndexLocals {
   fontAwesomeKitId: string;
   emailDomain: string;
+  enabledFeatures: string[];
 }
 
 /**
@@ -54,6 +55,7 @@ export class AppRouter<
       fontAwesomeKitId: environment.fontAwesomeKitId || '',
       emailDomain: environment.emailDomain,
       siteUrl: environment.serverUrl || base.siteUrl,
+      enabledFeatures: environment.enabledFeatures,
     };
   }
 
@@ -67,9 +69,28 @@ export class AppRouter<
   ): string {
     let result = super.applyIndexReplacements(html, locals);
 
+    const bcLocals = locals as BrightChainIndexLocals;
+
+    // Inject enabledFeatures into the APP_CONFIG that the base class serialized.
+    // We parse the JSON back out, merge our field, and re-serialize — avoids
+    // fragile regex splicing into a JSON string.
+    result = result.replace(
+      /window\.APP_CONFIG\s*=\s*(\{.*?\});/,
+      (_match, jsonStr) => {
+        try {
+          const config = JSON.parse(jsonStr);
+          config.enabledFeatures = bcLocals.enabledFeatures;
+          return `window.APP_CONFIG = ${JSON.stringify(config)};`;
+        } catch {
+          // If parsing fails for any reason, fall back to the original
+          return _match;
+        }
+      },
+    );
+
     // Inject Font Awesome kit script before </head> if kitId is configured.
     // The nonce is required because 'strict-dynamic' disables host-based allowlisting.
-    const kitId = (locals as BrightChainIndexLocals).fontAwesomeKitId;
+    const kitId = bcLocals.fontAwesomeKitId;
     if (kitId && locals.cspNonce) {
       const faScript = `<script nonce="${locals.cspNonce}" src="https://kit.fontawesome.com/${kitId}.js" crossorigin="anonymous"></script>`;
       result = result.replace('</head>', `${faScript}\n</head>`);
