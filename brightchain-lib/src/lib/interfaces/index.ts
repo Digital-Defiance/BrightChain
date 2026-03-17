@@ -48,13 +48,13 @@ export type * from './signedToken';
 export type * from './simpleStore';
 export type * from './simpleStoreAsync';
 export type * from './singleEncryptedBlockDetails';
-export type * from './unifiedNotificationCounts';
 export * from './storage';
 export type * from './successMessage';
 export type * from './symmetricEncryptionResults';
 export type * from './tokenUser';
 export type * from './tuple';
 export type * from './tupleConfig';
+export type * from './unifiedNotificationCounts';
 export type * from './userDto';
 export type * from './userManagement';
 export type * from './walletSeed';
@@ -112,3 +112,6 @@ export * from './api';
 
 // TCBL archive interfaces (manifest, entry descriptors, options)
 export type * from './tcbl';
+
+// Blockchain ledger interfaces (ledger entries, signing, validation)
+export type * from './ledger';

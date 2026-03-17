@@ -19,7 +19,6 @@
  */
 
 import { sha256 } from '@noble/hashes/sha256';
-import { CoreConstants } from '../../constants';
 import { getRandomBytes } from '../../crypto/platformCrypto';
 import { DurabilityLevel } from '../../enumerations/durabilityLevel';
 import { DeliveryStatus } from '../../enumerations/messaging/deliveryStatus';
@@ -846,10 +845,7 @@ export class EmailMessageService {
     // - All RFC 5322 headers are preserved in the metadata (Requirement 1.3)
     try {
       // 5a. Deliver to To/CC recipients (no BCC info), partitioned by domain
-      const toCcMailboxes = [
-        ...(email.to ?? []),
-        ...(email.cc ?? []),
-      ];
+      const toCcMailboxes = [...(email.to ?? []), ...(email.cc ?? [])];
 
       if (toCcMailboxes.length > 0) {
         const { internal: internalToCc, external: externalToCc } =

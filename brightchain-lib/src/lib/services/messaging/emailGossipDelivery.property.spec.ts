@@ -155,7 +155,10 @@ function createTestService() {
     {} as MessageCBLService,
     metadataStoreMock,
     gossipServiceMock,
-    { nodeId: 'test-node.brightchain.org', canonicalDomain: TEST_CANONICAL_DOMAIN },
+    {
+      nodeId: 'test-node.brightchain.org',
+      canonicalDomain: TEST_CANONICAL_DOMAIN,
+    },
   );
 
   return { service, storeCalls, announceCalls, announceMessageMock };
