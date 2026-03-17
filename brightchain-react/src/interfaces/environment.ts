@@ -4,4 +4,5 @@ export interface IEnvironment {
   serverUrl: string;
   apiUrl: string;
   emailDomain: string;
+  enabledFeatures: string[];
 }

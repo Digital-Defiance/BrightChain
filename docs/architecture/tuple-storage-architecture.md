@@ -1,7 +1,7 @@
 ---
 title: "TUPLE Storage Architecture"
 parent: "Architecture & Design"
-nav_order: 9
+nav_order: 10
 permalink: /docs/architecture/tuple-storage-architecture/
 ---
 # TUPLE Storage Architecture

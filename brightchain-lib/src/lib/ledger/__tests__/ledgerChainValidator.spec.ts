@@ -9,6 +9,8 @@ import { ILedgerEntry } from '../../interfaces/ledger/ledgerEntry';
 import { ILedgerSignatureVerifier } from '../../interfaces/ledger/ledgerSignatureVerifier';
 import { ChecksumService } from '../../services/checksum.service';
 import { Checksum } from '../../types/checksum';
+import { IncrementalMerkleTree } from '../incrementalMerkleTree';
+import { Ledger } from '../ledger';
 import { LedgerChainValidator } from '../ledgerChainValidator';
 import { LedgerEntrySerializer } from '../ledgerEntrySerializer';
 
@@ -280,6 +282,241 @@ describe('LedgerChainValidator', () => {
         (e) => e.errorType === 'previous_hash_mismatch',
       );
       expect(linkErrors.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  // ── Merkle root verification in validateAll ─────────────────────────
+
+  describe('Merkle root verification', () => {
+    it('should pass when merkleRoot matches reconstructed tree root', () => {
+      const chain = buildChain(5);
+      // Build the expected Merkle root from entry hashes
+      const entryHashes = chain.map((e) => e.entryHash);
+      const tree = IncrementalMerkleTree.fromLeaves(entryHashes, checksumService);
+      const correctRoot = tree.root;
+
+      const result = validator.validateAll(chain, correctRoot);
+
+      expect(result.isValid).toBe(true);
+      expect(result.entriesChecked).toBe(5);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should detect merkle_root_mismatch when provided root differs', () => {
+      const chain = buildChain(3);
+      const wrongRoot = makeChecksum(0xab);
+
+      const result = validator.validateAll(chain, wrongRoot);
+
+      expect(result.isValid).toBe(false);
+      const merkleErrors = result.errors.filter(
+        (e) => e.errorType === 'merkle_root_mismatch',
+      );
+      expect(merkleErrors.length).toBe(1);
+      expect(merkleErrors[0].message).toContain('Merkle root');
+    });
+
+    it('should skip Merkle validation when no merkleRoot is provided', () => {
+      const chain = buildChain(3);
+
+      // No merkleRoot argument — should behave exactly as before
+      const result = validator.validateAll(chain);
+
+      expect(result.isValid).toBe(true);
+      expect(result.entriesChecked).toBe(3);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should report both chain errors and merkle_root_mismatch together', () => {
+      const chain = buildChain(3);
+      // Tamper with entry 1's entryHash AND provide a wrong Merkle root
+      const tampered: ILedgerEntry = {
+        ...chain[1],
+        entryHash: makeChecksum(0xff),
+      };
+      chain[1] = tampered;
+      const wrongRoot = makeChecksum(0xab);
+
+      const result = validator.validateAll(chain, wrongRoot);
+
+      expect(result.isValid).toBe(false);
+      // Should have hash_mismatch errors from the tampered entry
+      const hashErrors = result.errors.filter(
+        (e) => e.errorType === 'hash_mismatch',
+      );
+      expect(hashErrors.length).toBeGreaterThanOrEqual(1);
+      // Should also have merkle_root_mismatch
+      const merkleErrors = result.errors.filter(
+        (e) => e.errorType === 'merkle_root_mismatch',
+      );
+      expect(merkleErrors.length).toBe(1);
+    });
+  });
+
+  // ── Merkle proof verification in validateRange ──────────────────────
+
+  describe('validateRange with Merkle proofs', () => {
+    it('should pass when valid Merkle proofs are provided', () => {
+      const chain = buildChain(5);
+      const entryHashes = chain.map((e) => e.entryHash);
+      const tree = IncrementalMerkleTree.fromLeaves(entryHashes, checksumService);
+      const merkleRoot = tree.root;
+
+      // Validate entries [2, 3, 4] with Merkle proofs
+      const subRange = chain.slice(2, 5);
+      const predecessor = chain[1];
+      const merkleProofs = [2, 3, 4].map((i) => tree.getInclusionProof(i));
+
+      const result = validator.validateRange(
+        subRange,
+        predecessor,
+        undefined,
+        merkleRoot,
+        merkleProofs,
+      );
+
+      expect(result.isValid).toBe(true);
+      expect(result.entriesChecked).toBe(3);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should detect mismatch when an invalid Merkle proof is provided', () => {
+      const chain = buildChain(5);
+      const entryHashes = chain.map((e) => e.entryHash);
+      const tree = IncrementalMerkleTree.fromLeaves(entryHashes, checksumService);
+      const merkleRoot = tree.root;
+
+      const subRange = chain.slice(2, 5);
+      const predecessor = chain[1];
+
+      // Get valid proofs, then corrupt one
+      const merkleProofs = [2, 3, 4].map((i) => tree.getInclusionProof(i));
+      // Replace the middle proof's leafHash with a wrong value to make it invalid
+      merkleProofs[1] = {
+        ...merkleProofs[1],
+        leafHash: makeChecksum(0xba),
+      };
+
+      const result = validator.validateRange(
+        subRange,
+        predecessor,
+        undefined,
+        merkleRoot,
+        merkleProofs,
+      );
+
+      expect(result.isValid).toBe(false);
+      const merkleErrors = result.errors.filter(
+        (e) => e.errorType === 'merkle_root_mismatch',
+      );
+      expect(merkleErrors.length).toBe(1);
+      expect(merkleErrors[0].sequenceNumber).toBe(3);
+    });
+
+    it('should skip Merkle validation when no merkleRoot is provided (existing behavior)', () => {
+      const chain = buildChain(5);
+      const subRange = chain.slice(2, 5);
+      const predecessor = chain[1];
+
+      // No merkleRoot — existing behavior preserved
+      const result = validator.validateRange(subRange, predecessor);
+
+      expect(result.isValid).toBe(true);
+      expect(result.entriesChecked).toBe(3);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should skip Merkle validation when merkleRoot is provided but merkleProofs is not', () => {
+      const chain = buildChain(5);
+      const entryHashes = chain.map((e) => e.entryHash);
+      const tree = IncrementalMerkleTree.fromLeaves(entryHashes, checksumService);
+      const merkleRoot = tree.root;
+
+      const subRange = chain.slice(2, 5);
+      const predecessor = chain[1];
+
+      // merkleRoot provided but no merkleProofs — should skip Merkle validation
+      const result = validator.validateRange(
+        subRange,
+        predecessor,
+        undefined,
+        merkleRoot,
+      );
+
+      expect(result.isValid).toBe(true);
+      expect(result.entriesChecked).toBe(3);
+      expect(result.errors).toEqual([]);
+    });
+  });
+
+  // ── validateAllParallel ─────────────────────────────────────────────
+
+  describe('validateAllParallel', () => {
+    it('should produce the same result as validateAll for a valid chain', async () => {
+      const chain = buildChain(8);
+      const sequential = validator.validateAll(chain);
+      const parallel = await validator.validateAllParallel(chain);
+
+      expect(parallel.isValid).toBe(sequential.isValid);
+      expect(parallel.entriesChecked).toBe(sequential.entriesChecked);
+      expect(parallel.errors).toEqual([]);
+    });
+
+    it('should detect a tampered entry', async () => {
+      const chain = buildChain(6);
+      // Tamper with entry 3's entryHash
+      chain[3] = { ...chain[3], entryHash: makeChecksum(0xff) };
+
+      const parallel = await validator.validateAllParallel(chain);
+
+      expect(parallel.isValid).toBe(false);
+      const hashErrors = parallel.errors.filter(
+        (e) => e.errorType === 'hash_mismatch',
+      );
+      expect(hashErrors.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should verify Merkle root when provided', async () => {
+      const chain = buildChain(5);
+      const entryHashes = chain.map((e) => e.entryHash);
+      const tree = IncrementalMerkleTree.fromLeaves(entryHashes, checksumService);
+      const correctRoot = tree.root;
+
+      const result = await validator.validateAllParallel(chain, correctRoot);
+
+      expect(result.isValid).toBe(true);
+      expect(result.entriesChecked).toBe(5);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should detect merkle_root_mismatch when provided root differs', async () => {
+      const chain = buildChain(4);
+      const wrongRoot = makeChecksum(0xab);
+
+      const result = await validator.validateAllParallel(chain, wrongRoot);
+
+      expect(result.isValid).toBe(false);
+      const merkleErrors = result.errors.filter(
+        (e) => e.errorType === 'merkle_root_mismatch',
+      );
+      expect(merkleErrors.length).toBe(1);
+    });
+
+    it('should return valid with 0 entries for empty chain', async () => {
+      const result = await validator.validateAllParallel([]);
+
+      expect(result.isValid).toBe(true);
+      expect(result.entriesChecked).toBe(0);
+      expect(result.errors).toEqual([]);
+    });
+
+    it('should handle a single-entry chain', async () => {
+      const chain = buildChain(1);
+      const sequential = validator.validateAll(chain);
+      const parallel = await validator.validateAllParallel(chain);
+
+      expect(parallel.isValid).toBe(sequential.isValid);
+      expect(parallel.entriesChecked).toBe(sequential.entriesChecked);
     });
   });
 });

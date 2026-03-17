@@ -6,4 +6,5 @@ export const environment: IEnvironment = {
   serverUrl: '',
   apiUrl: '/api',
   emailDomain: 'brightchain.org',
+  enabledFeatures: ['BrightChat', 'BrightHub', 'BrightMail', 'BrightPass'],
 };

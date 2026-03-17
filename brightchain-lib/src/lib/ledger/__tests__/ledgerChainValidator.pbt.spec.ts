@@ -16,6 +16,7 @@ import { ILedgerEntry } from '../../interfaces/ledger/ledgerEntry';
 import { ILedgerSignatureVerifier } from '../../interfaces/ledger/ledgerSignatureVerifier';
 import { ChecksumService } from '../../services/checksum.service';
 import { Checksum } from '../../types/checksum';
+import { IncrementalMerkleTree } from '../incrementalMerkleTree';
 import { LedgerChainValidator } from '../ledgerChainValidator';
 import { LedgerEntrySerializer } from '../ledgerEntrySerializer';
 
@@ -368,6 +369,92 @@ describe('Feature: block-chain-ledger, Property 10: Sub-Range Validation', () =>
           expect(result.errors).toEqual([]);
         },
       ),
+      { numRuns: 100 },
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Property 12 Tests
+// ---------------------------------------------------------------------------
+
+// Feature: block-chain-ledger-merkle-upgrade, Property 12: Parallel Validation Equals Sequential Validation
+describe('Feature: block-chain-ledger-merkle-upgrade, Property 12: Parallel Validation Equals Sequential Validation', () => {
+  const validator = new LedgerChainValidator(serializer, alwaysValidVerifier);
+
+  /**
+   * **Validates: Requirements 17.2, 17.3**
+   *
+   * For any valid ledger chain of 1–10 entries, validateAllParallel()
+   * produces the same result as validateAll(): same isValid, same
+   * entriesChecked, and same error types (sorted by sequenceNumber
+   * since parallel ordering may differ).
+   */
+  it('validateAllParallel() produces the same result as validateAll() for any valid chain', async () => {
+    await fc.assert(
+      fc.asyncProperty(arbLedgerChain(10), async (chain) => {
+        const sequential = validator.validateAll(chain);
+        const parallel = await validator.validateAllParallel(chain);
+
+        expect(parallel.isValid).toBe(sequential.isValid);
+        expect(parallel.entriesChecked).toBe(sequential.entriesChecked);
+
+        // Sort errors by sequenceNumber for comparison since parallel
+        // ordering may differ
+        const sortErrors = (
+          errors: readonly { sequenceNumber: number; errorType: string }[],
+        ) =>
+          [...errors].sort((a, b) =>
+            a.sequenceNumber !== b.sequenceNumber
+              ? a.sequenceNumber - b.sequenceNumber
+              : a.errorType.localeCompare(b.errorType),
+          );
+
+        expect(sortErrors(parallel.errors)).toEqual(
+          sortErrors(sequential.errors),
+        );
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  /**
+   * **Validates: Requirements 17.2, 17.3**
+   *
+   * For any valid ledger chain, validateAllParallel() with a Merkle root
+   * produces the same result as validateAll() with the same Merkle root.
+   */
+  it('validateAllParallel() with Merkle root produces the same result as validateAll() with Merkle root', async () => {
+    await fc.assert(
+      fc.asyncProperty(arbLedgerChain(10), async (chain) => {
+        // Build Merkle tree from entry hashes and get the root
+        const entryHashes = chain.map((e) => e.entryHash);
+        const tree = IncrementalMerkleTree.fromLeaves(
+          entryHashes,
+          checksumService,
+        );
+        const merkleRoot = tree.root;
+
+        const sequential = validator.validateAll(chain, merkleRoot);
+        const parallel = await validator.validateAllParallel(chain, merkleRoot);
+
+        expect(parallel.isValid).toBe(sequential.isValid);
+        expect(parallel.entriesChecked).toBe(sequential.entriesChecked);
+
+        // Sort errors by sequenceNumber for comparison
+        const sortErrors = (
+          errors: readonly { sequenceNumber: number; errorType: string }[],
+        ) =>
+          [...errors].sort((a, b) =>
+            a.sequenceNumber !== b.sequenceNumber
+              ? a.sequenceNumber - b.sequenceNumber
+              : a.errorType.localeCompare(b.errorType),
+          );
+
+        expect(sortErrors(parallel.errors)).toEqual(
+          sortErrors(sequential.errors),
+        );
+      }),
       { numRuns: 100 },
     );
   });

@@ -7,12 +7,20 @@
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "options": {
         "outputPath": "dist/brightchain-test-utils",
         "main": "brightchain-test-utils/src/index.ts",
         "tsConfig": "brightchain-test-utils/tsconfig.lib.json",
-        "assets": ["brightchain-test-utils/*.md"]
+        "assets": [
+          "brightchain-test-utils/*.md"
+        ]
+      },
+      "configurations": {
+        "development": {},
+        "production": {}
       }
     }
   }
