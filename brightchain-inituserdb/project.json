@@ -5,7 +5,8 @@
   "projectType": "application",
   "implicitDependencies": [
     "brightchain-lib",
-    "brightchain-api-lib"
+    "brightchain-api-lib",
+    "brightchain-azure-store"
   ],
   "tags": [],
   "targets": {
@@ -27,7 +28,8 @@
           "sourcemap": true,
           "outExtension": {
             ".js": ".js"
-          }
+          },
+          "external": ["node-forge", "ursa-optional", "argon2"]
         }
       },
       "configurations": {
@@ -37,7 +39,8 @@
             "sourcemap": false,
             "outExtension": {
               ".js": ".js"
-            }
+            },
+            "external": ["node-forge", "ursa-optional", "argon2"]
           }
         }
       }
@@ -82,6 +85,7 @@
       "options": {
         "commands": [
           "cp brightchain-inituserdb/.env dist/brightchain-inituserdb/.env",
+          "node -e \"const p=require('./dist/brightchain-inituserdb/package.json'); p.dependencies=p.dependencies||{}; p.dependencies['argon2']='0.40.3'; require('fs').writeFileSync('./dist/brightchain-inituserdb/package.json',JSON.stringify(p,null,2))\"",
           "cd dist/brightchain-inituserdb && yarn install"
         ],
         "parallel": false

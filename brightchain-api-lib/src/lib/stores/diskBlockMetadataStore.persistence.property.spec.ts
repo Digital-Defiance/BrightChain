@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for DiskBlockMetadataStore persistence
  *
- * **Feature: backend-blockstore-quorum, Property 1: Block Metadata Persistence Round-Trip**
+ * **Feature: backend-blockstore-brightTrust, Property 1: Block Metadata Persistence Round-Trip**
  * **Validates: Requirements 2.1, 2.3**
  *
  * This test suite verifies that:

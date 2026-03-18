@@ -43,6 +43,33 @@ function createMockApplication(): IBrightChainApplication {
     ready: true,
     services: {},
     plugins: {},
+    authProvider: {
+      verifyToken: async (token: string) => ({ userId: token || 'test-user' }),
+      findUserById: async (userId: string) => ({
+        id: userId,
+        accountStatus: 'Active',
+        email: 'test@example.com',
+        timezone: 'UTC',
+      }),
+      buildRequestUserDTO: async (userId: string) => ({
+        id: userId,
+        username: userId,
+        email: 'test@example.com',
+        roles: [],
+        rolePrivileges: {
+          admin: false,
+          member: true,
+          child: false,
+          system: false,
+        },
+        emailVerified: true,
+        timezone: 'UTC',
+        siteLanguage: 'en',
+        darkMode: false,
+        currency: 'USD',
+        directChallenge: false,
+      }),
+    },
     getModel: () => {
       throw new Error('not implemented');
     },
@@ -176,6 +203,19 @@ async function buildEmailMultiNodeEnv(count: number): Promise<{
   for (let i = 0; i < count; i++) {
     const app = express();
     app.use(express.json());
+    // Inject a bearer token header so authenticateToken middleware passes
+    app.use(
+      (
+        req: express.Request,
+        _res: express.Response,
+        next: express.NextFunction,
+      ) => {
+        if (!req.headers.authorization) {
+          req.headers.authorization = 'Bearer test-user';
+        }
+        next();
+      },
+    );
 
     // Each node gets its own EmailController wired to the shared service
     const emailController = new EmailController(mockApp);
@@ -509,10 +549,15 @@ describe('Email API – Multi-Node E2E Integration', () => {
       expect(messageId).toBeDefined();
 
       // 2. Check unread count via node-1 — should be 1
+      // The controller uses getMemberId(req) which reads from req.user.id
+      // (set by the auth middleware via verifyToken). Our mock verifyToken
+      // returns { userId: token }, so we set the Bearer token to the
+      // recipient's email address so getMemberId returns the right value.
       const unreadBefore = await request(env.nodes[1].app)
         .get(
           `/api/emails/inbox/unread-count?memberId=${encodeURIComponent(recipient)}`,
         )
+        .set('Authorization', `Bearer ${recipient}`)
         .expect(200);
 
       expect(unreadBefore.body.status).toBe('success');
@@ -521,6 +566,7 @@ describe('Email API – Multi-Node E2E Integration', () => {
       // 3. Mark as read via node-2
       const markRes = await request(env.nodes[2].app)
         .post(`/api/emails/${encodeURIComponent(messageId)}/read`)
+        .set('Authorization', `Bearer ${recipient}`)
         .send({ memberId: recipient })
         .expect(200);
 
@@ -532,6 +578,7 @@ describe('Email API – Multi-Node E2E Integration', () => {
         .get(
           `/api/emails/inbox/unread-count?memberId=${encodeURIComponent(recipient)}`,
         )
+        .set('Authorization', `Bearer ${recipient}`)
         .expect(200);
 
       expect(unreadAfter.body.status).toBe('success');
@@ -668,9 +715,11 @@ describe('Email API – Multi-Node E2E Integration', () => {
     });
 
     it('inbox query returns correct totalCount across nodes', async () => {
-      // Query inbox via a different node (node-2) than the senders
+      // Query inbox via a different node (node-2) than the senders.
+      // Set Bearer token to the recipient address so getMemberId returns it.
       const res = await request(env.nodes[2].app)
         .get(`/api/emails/inbox?memberId=${encodeURIComponent(recipient)}`)
+        .set('Authorization', `Bearer ${recipient}`)
         .expect(200);
 
       expect(res.body.status).toBe('success');
@@ -691,6 +740,7 @@ describe('Email API – Multi-Node E2E Integration', () => {
         .get(
           `/api/emails/inbox?memberId=${encodeURIComponent(recipient)}&page=1&pageSize=2`,
         )
+        .set('Authorization', `Bearer ${recipient}`)
         .expect(200);
 
       expect(res.body.status).toBe('success');
@@ -706,6 +756,7 @@ describe('Email API – Multi-Node E2E Integration', () => {
         .get(
           `/api/emails/inbox?memberId=${encodeURIComponent(recipient)}&page=2&pageSize=2`,
         )
+        .set('Authorization', `Bearer ${recipient}`)
         .expect(200);
 
       expect(res.body.status).toBe('success');
@@ -722,12 +773,14 @@ describe('Email API – Multi-Node E2E Integration', () => {
         .get(
           `/api/emails/inbox?memberId=${encodeURIComponent(recipient)}&page=1&pageSize=2`,
         )
+        .set('Authorization', `Bearer ${recipient}`)
         .expect(200);
 
       const res2 = await request(env.nodes[2].app)
         .get(
           `/api/emails/inbox?memberId=${encodeURIComponent(recipient)}&page=1&pageSize=2`,
         )
+        .set('Authorization', `Bearer ${recipient}`)
         .expect(200);
 
       expect(res0.body.data.totalCount).toBe(res2.body.data.totalCount);

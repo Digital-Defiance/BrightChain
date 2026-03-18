@@ -5,15 +5,32 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "@digitaldefiance/i18n-lib": "4.7.2",
+    "@digitaldefiance/suite-core-lib": "4.26.5",
+    "bip39": "^3.1.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "helmet": "^8.0.0",
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
-    "@brightchain/brightchain-lib": "^0.29.23",
+    "@brightchain/brightchain-lib": "^0.29.24",
     "@brightchain/db": "^0.29.24",
-    "@digitaldefiance/branded-interface": "^0.0.5",
-    "@digitaldefiance/node-ecies-lib": "^4.23.2",
-    "@digitaldefiance/node-express-suite": "^4.23.4",
+    "@digitaldefiance/branded-interface": "0.0.5",
+    "@digitaldefiance/node-express-suite": "4.26.8",
     "bcrypt": "^5.0.0",
     "jsonwebtoken": "^9.0.0"
+  },
+  "devDependencies": {
+    "@digitaldefiance/branded-interface": "0.0.5",
+    "@digitaldefiance/ecies-lib": "5.1.3",
+    "@digitaldefiance/node-ecies-lib": "5.1.3",
+    "@digitaldefiance/node-express-suite": "4.26.8",
+    "@types/bcrypt": "^6.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "bcrypt": "^6.0.0",
+    "jsonwebtoken": "^9.0.3"
   }
 }

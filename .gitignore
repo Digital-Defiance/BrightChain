@@ -8,6 +8,8 @@ test-outputs/
 test-output.*
 brightchain-lib/.cache/
 .npmrc
+.npmrc.bak
+.yarnrc.yml.bak
 .env
 .qodo/
 
@@ -18,6 +20,12 @@ tmp
 
 # dependencies
 node_modules
+
+# Yarn Berry - ignore cache and machine-specific state
+.yarn/cache
+.yarn/install-state.gz
+.yarn/global
+.yarn/sdks
 
 # IDEs and editors
 /.idea
@@ -64,3 +72,6 @@ Thumbs.db
 .cursor/rules/codacy.mdc
 
 vite.config.*.timestamp*
+
+# Verdaccio local cache
+.verdaccio/

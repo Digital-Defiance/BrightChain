@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import './Blog.css';
 
 interface BlogPostMeta {
@@ -16,6 +18,7 @@ interface BlogPostMeta {
 // This avoids Vite warnings about importing from public
 
 function Blog() {
+  const { t } = useShowcaseI18n();
   const [posts, setPosts] = useState<BlogPostMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -25,6 +28,7 @@ function Blog() {
     // Check if user is authenticated
     const token = sessionStorage.getItem('github_token');
     setIsAuthenticated(!!token);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const parseFrontmatter = (content: string) => {
@@ -125,10 +129,10 @@ function Blog() {
       <div className="blog-wrapper">
         <div className="blog-container">
           <div className="blog-header">
-            <h1>BrightChain Blog</h1>
-            <p>Thoughts, tutorials, and updates</p>
+            <h1>{t(ShowcaseStrings.Blog_Title)}</h1>
+            <p>{t(ShowcaseStrings.Blog_Subtitle)}</p>
           </div>
-          <div className="blog-loading">Loading posts...</div>
+          <div className="blog-loading">{t(ShowcaseStrings.Blog_Loading)}</div>
         </div>
       </div>
     );
@@ -138,23 +142,27 @@ function Blog() {
     <div className="blog-wrapper">
       <div className="blog-container">
         <div className="blog-header">
-          <h1>BrightChain Blog</h1>
-          <p>Thoughts, tutorials, and updates</p>
+          <h1>{t(ShowcaseStrings.Blog_Title)}</h1>
+          <p>{t(ShowcaseStrings.Blog_Subtitle)}</p>
           {isAuthenticated && (
             <Link to="/blog/new" className="new-post-button">
-              + New Post
+              {t(ShowcaseStrings.Blog_NewPost)}
             </Link>
           )}
         </div>
 
         <div className="blog-posts">
           {posts.length === 0 ? (
-            <p className="no-posts">No blog posts yet. Check back soon!</p>
+            <p className="no-posts">{t(ShowcaseStrings.Blog_NoPosts)}</p>
           ) : (
             posts.map((post) => (
               <article key={post.slug} className="blog-post-card">
                 <Link to={`/blog/${post.slug}`} className="blog-post-link">
-                  {post.isNew && <span className="new-badge">✨ New</span>}
+                  {post.isNew && (
+                    <span className="new-badge">
+                      {t(ShowcaseStrings.Blog_NewBadge)}
+                    </span>
+                  )}
                   <div className="blog-post-date">
                     {new Date(post.date).toLocaleDateString('en-US', {
                       year: 'numeric',
@@ -167,7 +175,11 @@ function Blog() {
                     <p className="blog-post-excerpt">{post.excerpt}</p>
                   )}
                   {post.author && (
-                    <p className="blog-post-author">By {post.author}</p>
+                    <p className="blog-post-author">
+                      {t(ShowcaseStrings.Blog_ByAuthorTemplate, {
+                        AUTHOR: post.author,
+                      })}
+                    </p>
                   )}
                 </Link>
               </article>
@@ -177,7 +189,7 @@ function Blog() {
 
         <div className="blog-footer">
           <Link to="/" className="back-link">
-            ← Back to Home
+            {t(ShowcaseStrings.Blog_BackToHome)}
           </Link>
         </div>
       </div>

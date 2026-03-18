@@ -7,7 +7,7 @@
  *   aggregate, createIndex, dropIndex, watch
  */
 
-import { IBlockStore } from '@brightchain/brightchain-lib';
+import { Checksum, IBlockStore } from '@brightchain/brightchain-lib';
 import { sha3_512 } from '@noble/hashes/sha3';
 import { randomUUID } from 'crypto';
 import { runAggregation } from './aggregation';
@@ -89,6 +89,10 @@ export interface ICollectionHeadRegistry {
     blockId: string,
   ): void | Promise<void>;
   removeHead(dbName: string, collectionName: string): void | Promise<void>;
+  /** Load persisted head pointers. No-op for in-memory implementations. */
+  load?(): Promise<void>;
+  /** Clear all head pointers. No-op for in-memory implementations. */
+  clear?(): void | Promise<void>;
 }
 
 /**
@@ -170,8 +174,11 @@ export class Collection<T extends BsonDocument = BsonDocument> {
     const headBlockId = this.headRegistry.getHead(this.dbName, this.name);
     if (headBlockId) {
       try {
-        const handle = this.store.get(headBlockId);
-        const blockData = handle.fullData;
+        // Use async getData() instead of synchronous get().fullData
+        // so cloud-backed stores can download the block data.
+        const checksum = Checksum.fromHex(headBlockId);
+        const block = await this.store.getData(checksum);
+        const blockData = block.data;
         const meta = JSON.parse(
           Buffer.from(blockData).toString('utf8'),
         ) as CollectionMeta;
@@ -189,8 +196,15 @@ export class Collection<T extends BsonDocument = BsonDocument> {
           const docs = await this.loadAllDocs();
           this.indexManager.restoreFromJSON(meta.indexes, docs);
         }
-      } catch {
-        // Head block not found – start fresh
+      } catch (err: unknown) {
+        // Head block not found or failed to parse – start fresh
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn(
+          `[Collection:${this.name}] loadFromStore failed for head ${headBlockId}: ${msg}`,
+        );
+        if (err instanceof Error && err.stack) {
+          console.warn(err.stack);
+        }
       }
     }
     this.loaded = true;

@@ -88,7 +88,10 @@ async function validateDataDir(dirPath: string): Promise<void> {
 export async function brightchainDatabaseInit(
   environment: IDatabaseInitEnvironment,
   options?: {
-    modelRegistrations?: (db: BrightDb, blockStore: IBlockStore) => void | Promise<void>;
+    modelRegistrations?: (
+      db: BrightDb,
+      blockStore: IBlockStore,
+    ) => void | Promise<void>;
   },
 ): Promise<IInitResult<IGenericInitData>> {
   try {
@@ -132,10 +135,19 @@ export async function brightchainDatabaseInit(
     }
 
     // Create BrightDb — uses PersistentHeadRegistry when dataDir is set,
-    // InMemoryHeadRegistry otherwise.
+    // CloudHeadRegistry when the block store supports it (Azure/S3),
+    // or InMemoryHeadRegistry otherwise.
+    // Cloud stores expose createHeadRegistry() which stores head pointers
+    // in the same cloud container as the blocks.
+    const cloudRegistry = blockStore.createHeadRegistry?.() ?? undefined;
+
     const db = new BrightDb(
       blockStore,
-      dataDir ? { name: environment.memberPoolName, dataDir } : undefined,
+      dataDir
+        ? { name: environment.memberPoolName, dataDir }
+        : cloudRegistry
+          ? { name: environment.memberPoolName, headRegistry: cloudRegistry }
+          : undefined,
     );
 
     // Mark the db as connected (no-op for block-store-backed DB, but sets

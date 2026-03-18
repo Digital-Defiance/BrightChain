@@ -35,13 +35,13 @@ describe('Feature: brighthub-social-network, Post_Service Property Tests', () =>
   let mockApp: ReturnType<typeof createMockApplication>;
   let postsCollection: MockCollection;
   let likesCollection: MockCollection;
-  let repostsCollection: MockCollection;
+  let _repostsCollection: MockCollection;
 
   beforeEach(() => {
     mockApp = createMockApplication();
     postsCollection = mockApp.collections.get('brighthub_posts')!;
     likesCollection = mockApp.collections.get('brighthub_likes')!;
-    repostsCollection = mockApp.collections.get('brighthub_reposts')!;
+    _repostsCollection = mockApp.collections.get('brighthub_reposts')!;
     service = createPostService(mockApp);
   });
 
@@ -181,6 +181,68 @@ describe('Feature: brighthub-social-network, Post_Service Property Tests', () =>
           },
         ),
         { numRuns: 30 },
+      );
+    });
+  });
+
+  describe('Property 1b: Hub Post Character Limit', () => {
+    /**
+     * Hub posts (with hubIds) should allow up to 10,000 characters.
+     * Timeline posts (without hubIds) should still be limited to 280.
+     *
+     * **Validates: Hub long-form discussion support**
+     */
+    it('should accept hub posts exceeding 280 characters', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          userIdArb,
+          fc.integer({ min: 281, max: 500 }),
+          async (userId, length) => {
+            const longContent = 'a'.repeat(length);
+            const post = await service.createPost(userId, longContent, {
+              hubIds: ['hub-1'],
+            });
+
+            expect(post._id).toBeDefined();
+            expect(post.content).toBe(longContent);
+            expect(post.hubIds).toContain('hub-1');
+
+            return true;
+          },
+        ),
+        { numRuns: 10 },
+      );
+    });
+
+    it('should reject hub posts exceeding 10000 characters', async () => {
+      await fc.assert(
+        fc.asyncProperty(userIdArb, async (userId) => {
+          const tooLong = 'a'.repeat(10001);
+          await expect(
+            service.createPost(userId, tooLong, { hubIds: ['hub-1'] }),
+          ).rejects.toMatchObject({
+            code: PostErrorCode.ContentTooLong,
+          });
+
+          return true;
+        }),
+        { numRuns: 5 },
+      );
+    });
+
+    it('should still reject timeline posts exceeding 280 characters', async () => {
+      await fc.assert(
+        fc.asyncProperty(userIdArb, async (userId) => {
+          const tooLong = 'a'.repeat(281);
+          await expect(
+            service.createPost(userId, tooLong),
+          ).rejects.toMatchObject({
+            code: PostErrorCode.ContentTooLong,
+          });
+
+          return true;
+        }),
+        { numRuns: 5 },
       );
     });
   });

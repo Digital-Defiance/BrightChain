@@ -2,7 +2,7 @@ name: Deploy Showcase to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, burnbag]
     paths:
       - 'showcase/**'
       - 'docs/**'
@@ -24,27 +24,54 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GH_PAT }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
-      - name: Enable Corepack
-        run: corepack enable
+      - name: Enable Yarn Berry
+        run: |
+          corepack enable
+          yarn set version 4.10.3
+
+      - name: Restore Yarn cache
+        id: yarn-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+
+      - name: Configure registries for CI
+        run: |
+          yarn config set 'npmScopes["awesome.me"].npmRegistryServer' "https://npm.fontawesome.com/"
+          yarn config set 'npmScopes["awesome.me"].npmAlwaysAuth' true
+          yarn config set 'npmScopes["awesome.me"].npmAuthToken' "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
+          yarn config set nodeLinker node-modules
+
+      - name: Ensure Yarn cache directory exists
+        run: mkdir -p .yarn/cache
 
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Install showcase dependencies
-        run: |
-          cd showcase
-          yarn install --immutable
+      # - name: Install showcase dependencies
+      #   run: |
+      #     cd showcase
+      #     yarn install --immutable
 
       - name: Build showcase (React)
         run: |
           cd showcase
           yarn build
+        env:
+          NODE_OPTIONS: '--max-old-space-size=6144'
+          GENERATE_SOURCEMAP: 'false'
+          NODE_ENV: production
 
       - name: Setup Ruby for Jekyll
         uses: ruby/setup-ruby@v1

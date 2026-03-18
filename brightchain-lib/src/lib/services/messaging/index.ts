@@ -2,6 +2,7 @@ export * from './alertMonitor';
 export * from './deliveryTimeoutService';
 export * from './emailEncryptionService';
 export * from './emailMessageService';
+export * from './emailMetadataJsonSerializer';
 export * from './emailParser';
 export * from './emailSerializer';
 // Re-export emailValidator selectively to avoid conflicts with

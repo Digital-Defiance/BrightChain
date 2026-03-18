@@ -11,9 +11,9 @@
 
 import { SignatureUint8Array } from '@digitaldefiance/ecies-lib';
 import { BlockSize } from '../../enumerations/blockSize';
+import { QuorumType } from '../../interfaces/ledger/brightTrustPolicy';
 import { GovernanceActionType } from '../../interfaces/ledger/governanceAction';
 import { ILedgerSigner } from '../../interfaces/ledger/ledgerSigner';
-import { QuorumType } from '../../interfaces/ledger/quorumPolicy';
 import { SignerRole } from '../../interfaces/ledger/signerRole';
 import { SignerStatus } from '../../interfaces/ledger/signerStatus';
 import { ChecksumService } from '../../services/checksum.service';
@@ -55,7 +55,7 @@ async function createGovernanceLedger() {
   const adminSigner = makeSigner(1);
 
   const genesisPayload = govSerializer.serializeGenesis({
-    quorumPolicy: { type: QuorumType.Threshold, threshold: 1 },
+    brightTrustPolicy: { type: QuorumType.Threshold, threshold: 1 },
     signers: [
       {
         publicKey: adminSigner.publicKey,

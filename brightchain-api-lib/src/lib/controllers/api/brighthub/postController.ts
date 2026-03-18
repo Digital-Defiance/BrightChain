@@ -51,6 +51,11 @@ interface IPostHandlers extends TypedHandlers {
   repostPost: ApiRequestHandler<IPostApiResponse | ApiErrorResponse>;
   createQuotePost: ApiRequestHandler<IPostApiResponse | ApiErrorResponse>;
   editPost: ApiRequestHandler<IPostApiResponse | ApiErrorResponse>;
+  reportPost: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  getReports: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  reviewReport: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  upvotePost: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  downvotePost: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
 }
 
 /**
@@ -102,7 +107,7 @@ export class BrightHubPostController<
     this.routeDefinitions = [
       routeConfig('post', '/', {
         handlerKey: 'createPost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Create a new post',
@@ -120,7 +125,7 @@ export class BrightHubPostController<
       }),
       routeConfig('get', '/:id', {
         handlerKey: 'getPost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get a single post',
@@ -134,7 +139,7 @@ export class BrightHubPostController<
       }),
       routeConfig('get', '/:id/thread', {
         handlerKey: 'getThread',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get a thread by root post ID',
@@ -149,7 +154,7 @@ export class BrightHubPostController<
       }),
       routeConfig('put', '/:id', {
         handlerKey: 'editPost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Edit a post',
@@ -167,7 +172,7 @@ export class BrightHubPostController<
       }),
       routeConfig('delete', '/:id', {
         handlerKey: 'deletePost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Delete a post',
@@ -181,7 +186,7 @@ export class BrightHubPostController<
       }),
       routeConfig('post', '/:id/like', {
         handlerKey: 'likePost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Like a post',
@@ -194,7 +199,7 @@ export class BrightHubPostController<
       }),
       routeConfig('delete', '/:id/like', {
         handlerKey: 'unlikePost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Unlike a post',
@@ -206,7 +211,7 @@ export class BrightHubPostController<
       }),
       routeConfig('post', '/:id/repost', {
         handlerKey: 'repostPost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Repost a post',
@@ -218,13 +223,79 @@ export class BrightHubPostController<
       }),
       routeConfig('post', '/:id/quote', {
         handlerKey: 'createQuotePost',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Create a quote post',
           tags: ['BrightHub Posts'],
           responses: {
             201: { schema: 'PostResponse', description: 'Quote post created' },
+          },
+        },
+      }),
+      routeConfig('post', '/:id/report', {
+        handlerKey: 'reportPost',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Report a post',
+          tags: ['BrightHub Posts'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'Post reported' },
+          },
+        },
+      }),
+      routeConfig('get', '/reports', {
+        handlerKey: 'getReports',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Get post reports (moderation queue)',
+          tags: ['BrightHub Posts'],
+          responses: {
+            200: {
+              schema: 'ReportsResponse',
+              description: 'Reports retrieved',
+            },
+          },
+        },
+      }),
+      routeConfig('post', '/reports/:reportId/review', {
+        handlerKey: 'reviewReport',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Review a post report (moderator action)',
+          tags: ['BrightHub Posts'],
+          responses: {
+            200: {
+              schema: 'MessageResponse',
+              description: 'Report reviewed',
+            },
+          },
+        },
+      }),
+      routeConfig('post', '/:id/upvote', {
+        handlerKey: 'upvotePost',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Upvote a post',
+          tags: ['BrightHub Posts'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'Post upvoted' },
+          },
+        },
+      }),
+      routeConfig('post', '/:id/downvote', {
+        handlerKey: 'downvotePost',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Downvote a post',
+          tags: ['BrightHub Posts'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'Post downvoted' },
           },
         },
       }),
@@ -246,6 +317,11 @@ export class BrightHubPostController<
       unlikePost: this.handleUnlikePost.bind(this),
       repostPost: this.handleRepostPost.bind(this),
       createQuotePost: this.handleCreateQuotePost.bind(this),
+      reportPost: this.handleReportPost.bind(this),
+      getReports: this.handleGetReports.bind(this),
+      reviewReport: this.handleReviewReport.bind(this),
+      upvotePost: this.handleUpvotePost.bind(this),
+      downvotePost: this.handleDownvotePost.bind(this),
     };
   }
 
@@ -391,12 +467,13 @@ export class BrightHubPostController<
   ): Promise<IStatusCodeResponse<IPostApiResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId, content } = (
-        req as {
-          body: { userId: string; content: string };
-          params: { id: string };
-        }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string; content?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
+      const content = typedReq.body.content;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
@@ -426,9 +503,12 @@ export class BrightHubPostController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
@@ -456,9 +536,13 @@ export class BrightHubPostController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      // Fall back to authenticated user id when body.userId is missing
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
@@ -485,9 +569,12 @@ export class BrightHubPostController<
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
@@ -515,9 +602,12 @@ export class BrightHubPostController<
   ): Promise<IStatusCodeResponse<IPostApiResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId } = (
-        req as { body: { userId: string }; params: { id: string } }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
@@ -544,12 +634,13 @@ export class BrightHubPostController<
   ): Promise<IStatusCodeResponse<IPostApiResponse | ApiErrorResponse>> {
     try {
       const { id } = (req as { params: { id: string } }).params;
-      const { userId, commentary } = (
-        req as {
-          body: { userId: string; commentary: string };
-          params: { id: string };
-        }
-      ).body;
+      const typedReq = req as {
+        body: { userId?: string; commentary?: string };
+        params: { id: string };
+        user?: { id?: string };
+      };
+      const userId = typedReq.body.userId ?? typedReq.user?.id;
+      const commentary = typedReq.body.commentary;
 
       if (!id) return validationError('Missing required parameter: id');
       if (!userId) return validationError('Missing required field: userId');
@@ -563,6 +654,226 @@ export class BrightHubPostController<
         statusCode: 201,
         response: { message: 'Quote post created', data: quotePost },
       };
+    } catch (error) {
+      if (error instanceof PostServiceError)
+        return this.mapPostServiceError(error);
+      return handleError(error);
+    }
+  }
+
+  /**
+   * POST /api/brighthub/posts/:id/report
+   */
+  private async handleReportPost(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const body = (
+        req as {
+          body: { userId?: string; reason?: string; hubId?: string };
+          params: { id: string };
+        }
+      ).body;
+
+      if (!id) return validationError('Missing required parameter: id');
+      if (!body.reason)
+        return validationError('Missing required field: reason');
+
+      // Verify post exists
+      const service = this.getPostService();
+      const post = await service.getPost(id);
+      if (!post) return notFoundError('Post', id);
+
+      // Persist the report
+      const reportCollection = (
+        this.application as unknown as {
+          getModel<T>(name: string): {
+            create(record: T): Promise<T>;
+          };
+        }
+      ).getModel<{
+        _id: string;
+        postId: string;
+        reporterId: string;
+        reason: string;
+        hubId?: string;
+        status: string;
+        createdAt: string;
+      }>('brighthub_post_reports');
+
+      const { randomUUID } = await import('crypto');
+      await reportCollection.create({
+        _id: randomUUID(),
+        postId: id,
+        reporterId: body.userId ?? '',
+        reason: body.reason,
+        hubId: body.hubId,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      });
+
+      return { statusCode: 200, response: { message: 'Post reported' } };
+    } catch (error) {
+      if (error instanceof PostServiceError)
+        return this.mapPostServiceError(error);
+      return handleError(error);
+    }
+  }
+
+  /**
+   * GET /api/brighthub/posts/reports
+   */
+  private async handleGetReports(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const typedReq = req as { query: Record<string, string | undefined> };
+      const status = typedReq.query['status'] ?? 'pending';
+      const hubId = typedReq.query['hubId'];
+      const limit = typedReq.query['limit']
+        ? parseInt(typedReq.query['limit'], 10)
+        : 50;
+
+      const reportCollection = (
+        this.application as unknown as {
+          getModel<T>(name: string): {
+            find(filter: Partial<T>): { exec(): Promise<T[]> };
+          };
+        }
+      ).getModel<{
+        _id: string;
+        postId: string;
+        reporterId: string;
+        reason: string;
+        hubId?: string;
+        status: string;
+        createdAt: string;
+      }>('brighthub_post_reports');
+
+      const filter: Record<string, string> = { status };
+      if (hubId) filter['hubId'] = hubId;
+
+      const reports = await reportCollection
+        .find(filter as never)
+        .exec();
+
+      return {
+        statusCode: 200,
+        response: {
+          message: 'OK',
+          data: { reports: reports.slice(0, limit) },
+        } as IApiMessageResponse,
+      };
+    } catch (error) {
+      return handleError(error);
+    }
+  }
+
+  /**
+   * POST /api/brighthub/posts/reports/:reportId/review
+   */
+  private async handleReviewReport(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { reportId } = (
+        req as { params: { reportId: string } }
+      ).params;
+      const { reviewerId, action } = (
+        req as {
+          body: { reviewerId: string; action: 'dismiss' | 'action' };
+          params: { reportId: string };
+        }
+      ).body;
+
+      if (!reportId)
+        return validationError('Missing required parameter: reportId');
+      if (!reviewerId)
+        return validationError('Missing required field: reviewerId');
+      if (!action || !['dismiss', 'action'].includes(action))
+        return validationError(
+          'Missing or invalid field: action (must be "dismiss" or "action")',
+        );
+
+      const reportCollection = (
+        this.application as unknown as {
+          getModel<T>(name: string): {
+            updateOne(
+              filter: Partial<T>,
+              update: Partial<T>,
+            ): { exec(): Promise<{ modifiedCount: number }> };
+          };
+        }
+      ).getModel<{
+        _id: string;
+        status: string;
+        reviewedBy: string;
+        reviewedAt: string;
+      }>('brighthub_post_reports');
+
+      const newStatus = action === 'dismiss' ? 'dismissed' : 'actioned';
+      await reportCollection
+        .updateOne(
+          { _id: reportId } as never,
+          {
+            status: newStatus,
+            reviewedBy: reviewerId,
+            reviewedAt: new Date().toISOString(),
+          } as never,
+        )
+        .exec();
+
+      return {
+        statusCode: 200,
+        response: { message: `Report ${newStatus}` },
+      };
+    } catch (error) {
+      return handleError(error);
+    }
+  }
+
+  /**
+   * POST /api/brighthub/posts/:id/upvote
+   */
+  private async handleUpvotePost(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { userId } = (
+        req as { body: { userId: string }; params: { id: string } }
+      ).body;
+      if (!id) return validationError('Missing required parameter: id');
+      if (!userId) return validationError('Missing required field: userId');
+
+      const service = this.getPostService();
+      await service.upvotePost(id, userId);
+      return { statusCode: 200, response: { message: 'Post upvoted' } };
+    } catch (error) {
+      if (error instanceof PostServiceError)
+        return this.mapPostServiceError(error);
+      return handleError(error);
+    }
+  }
+
+  /**
+   * POST /api/brighthub/posts/:id/downvote
+   */
+  private async handleDownvotePost(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { userId } = (
+        req as { body: { userId: string }; params: { id: string } }
+      ).body;
+      if (!id) return validationError('Missing required parameter: id');
+      if (!userId) return validationError('Missing required field: userId');
+
+      const service = this.getPostService();
+      await service.downvotePost(id, userId);
+      return { statusCode: 200, response: { message: 'Post downvoted' } };
     } catch (error) {
       if (error instanceof PostServiceError)
         return this.mapPostServiceError(error);

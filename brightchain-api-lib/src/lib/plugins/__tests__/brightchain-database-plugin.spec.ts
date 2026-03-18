@@ -195,7 +195,8 @@ describe('init() creates auth provider correctly', () => {
       environment: env,
       services: {
         get: (key: string) => serviceMap.get(key),
-        register: (key: string, factory: () => unknown) => serviceMap.set(key, factory()),
+        register: (key: string, factory: () => unknown) =>
+          serviceMap.set(key, factory()),
       },
       getController: () => undefined,
       setController: () => undefined,

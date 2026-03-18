@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for CBL serialization round-trip
  *
- * **Feature: backend-blockstore-quorum, Property 30: CBL Serialization Round-Trip**
+ * **Feature: backend-blockstore-brightTrust, Property 30: CBL Serialization Round-Trip**
  * **Validates: Requirements 16.3**
  *
  * This test suite verifies that:

@@ -11,8 +11,8 @@
 
 import type { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
-  Application as UpstreamApplication,
   AppRouter,
+  Application as UpstreamApplication,
   type IConstants,
 } from '@digitaldefiance/node-express-suite';
 import type { Server } from 'http';

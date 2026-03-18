@@ -61,12 +61,12 @@ Encryption, key management, voting security, and cryptographic analyses.
 | [EncryptedOwnedDataBlock](./security/encrypted-owned-data-block) | EncryptedOwnedDataBlock class API reference |
 
 ### Governance & Voting
-Quorum system, voting architecture, and brokered anonymity.
+BrightTrust system, voting architecture, and brokered anonymity.
 
 | Document | Description |
 |----------|-------------|
-| [Quorum System](./governance/quorum-system) | Technical deep-dive: Shamir's Secret Sharing, threshold governance |
-| [Quorum Overview](./governance/quorum-overview) | High-level quorum overview with implementation status |
+| [BrightTrust System](./governance/BrightTrust-system) | Technical deep-dive: Shamir's Secret Sharing, threshold governance |
+| [BrightTrust Overview](./governance/BrightTrust-overview) | High-level BrightTrust overview with implementation status |
 | [Voting System Architecture](./governance/voting-system-architecture) | 15+ voting methods, Paillier homomorphic encryption, audit logs |
 | [Node Management & Voting](./governance/node-management) | Node types, states, and participation in governance |
 

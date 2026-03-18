@@ -1,4 +1,7 @@
-import type { IBasePostData } from '@brightchain/brighthub-lib';
+import type {
+  IBasePostData,
+  IBaseUserProfile,
+} from '@brightchain/brighthub-lib';
 import type { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
 
 /**
@@ -8,6 +11,8 @@ import type { IApiMessageResponse } from '@digitaldefiance/node-express-suite';
 export interface ITimelineApiResponse extends IApiMessageResponse {
   data: {
     posts: IBasePostData<string>[];
+    /** Author profiles keyed by user ID */
+    authors?: Record<string, IBaseUserProfile<string>>;
     cursor?: string;
     hasMore: boolean;
   };

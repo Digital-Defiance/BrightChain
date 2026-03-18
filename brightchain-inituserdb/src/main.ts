@@ -1,3 +1,7 @@
+// Side-effect import: register AzureBlobBlockStore factory with BlockStoreFactory
+// so that brightchainDatabaseInit can create it when BRIGHTCHAIN_BLOCKSTORE_TYPE=azure.
+import '@brightchain/azure-store';
+
 import {
   AppConstants,
   BrightChainApiStrings,
@@ -112,10 +116,7 @@ async function main() {
     process.env.MNEMONIC_ENCRYPTION_KEY = randomBytes(32).toString('hex');
   }
 
-  const envFilePath = join(
-    __dirname,
-    '.env',
-  );
+  const envFilePath = join(__dirname, '.env');
 
   // Configure GuidV4Provider on BrightChainConstants BEFORE constructing
   // Environment so the upstream BaseEnvironment constructor uses the correct
@@ -249,6 +250,10 @@ async function main() {
   appendEnvVar(envFilePath, 'ADMIN_ID', adminIdFull);
   appendEnvVar(envFilePath, 'MEMBER_ID', memberIdFull);
 
+  // Persist NODE_ID from the system user's identity so the node has a stable,
+  // cryptographically-linked identity across restarts.
+  appendEnvVar(envFilePath, 'NODE_ID', systemIdFull);
+
   // Role IDs and user-role IDs: use existing values from .env or generate new ones.
   // BrightChain doesn't have Mongoose role documents, but we generate these for
   // parity with the Mongoose init flow and .env template.
@@ -310,6 +315,7 @@ async function main() {
       blockStorePath: bcEnv.blockStorePath,
       useMemoryStore: bcEnv.useMemoryDocumentStore,
       blockSize: bcEnv.blockStoreBlockSize,
+      blockStoreLabel: bcEnv.blockStoreType !== 'disk' ? bcEnv.blockStoreType : undefined,
     };
 
     // HMAC secret for mnemonic uniqueness checks
@@ -350,7 +356,7 @@ async function main() {
       admin: {
         id: bcEnv.adminId,
         fullId: bcEnv.adminId,
-        type: MemberType.User,
+        type: MemberType.Admin,
         username: bcEnv.get('ADMIN_USERNAME') ?? 'admin',
         email: bcEnv.get('ADMIN_EMAIL') ?? bcEnv.emailSender,
         roleId: adminRoleId,
@@ -401,6 +407,7 @@ async function main() {
         await brightChainMemberInitService.initializeWithRbac(
           initConfig,
           buildResult.rbacInput,
+          plugin.brightDb,
         );
 
       if (brightChainInitResult.alreadyInitialized) {

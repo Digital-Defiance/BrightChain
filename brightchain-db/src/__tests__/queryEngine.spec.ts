@@ -232,15 +232,27 @@ describe('queryEngine', () => {
       } as unknown as BsonDocument;
 
       // Same instance
-      expect(matchesFilter(docWithBinaryId, { _id: id } as FilterQuery<BsonDocument>)).toBe(true);
+      expect(
+        matchesFilter(docWithBinaryId, {
+          _id: id,
+        } as FilterQuery<BsonDocument>),
+      ).toBe(true);
 
       // Different instance, same bytes
       const idCopy = new Uint8Array([0xde, 0xad, 0xbe, 0xef]);
-      expect(matchesFilter(docWithBinaryId, { _id: idCopy } as FilterQuery<BsonDocument>)).toBe(true);
+      expect(
+        matchesFilter(docWithBinaryId, {
+          _id: idCopy,
+        } as FilterQuery<BsonDocument>),
+      ).toBe(true);
 
       // Different bytes
       const differentId = new Uint8Array([0xca, 0xfe, 0xba, 0xbe]);
-      expect(matchesFilter(docWithBinaryId, { _id: differentId } as FilterQuery<BsonDocument>)).toBe(false);
+      expect(
+        matchesFilter(docWithBinaryId, {
+          _id: differentId,
+        } as FilterQuery<BsonDocument>),
+      ).toBe(false);
     });
 
     it('should match Buffer _id fields', () => {
@@ -252,7 +264,11 @@ describe('queryEngine', () => {
 
       // Different instance, same bytes
       const idCopy = Buffer.from([0x01, 0x02, 0x03, 0x04]);
-      expect(matchesFilter(docWithBufferId, { _id: idCopy } as FilterQuery<BsonDocument>)).toBe(true);
+      expect(
+        matchesFilter(docWithBufferId, {
+          _id: idCopy,
+        } as FilterQuery<BsonDocument>),
+      ).toBe(true);
     });
   });
 

@@ -179,12 +179,15 @@ export abstract class CBLBase<TID extends PlatformID = Uint8Array>
     const signatureValid =
       creator && creator.publicKey && this.validateSignature();
 
-    // Log signature validation
-    SecurityAuditLogger.getInstance().logSignatureValidation(
-      signatureValid || false,
-      checksum.toHex(),
-      creator?.id?.toString(),
-    );
+    // Log signature validation only when it was actually performed
+    // (skip logging when public key is absent — validation was intentionally skipped)
+    if (creator && creator.publicKey) {
+      SecurityAuditLogger.getInstance().logSignatureValidation(
+        signatureValid || false,
+        checksum.toHex(),
+        creator?.id?.toString(),
+      );
+    }
 
     if (creator && creator.publicKey && !signatureValid) {
       throw new CblError(CblErrorType.InvalidSignature);

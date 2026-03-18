@@ -1,4 +1,5 @@
 import { BrightDbModelRegistry } from '../lib/bright-db-model-registry';
+import type { BrightDbCollection } from '../lib/services/bright-db-collection';
 
 describe('BrightDbModelRegistry', () => {
   let registry: BrightDbModelRegistry;
@@ -8,7 +9,9 @@ describe('BrightDbModelRegistry', () => {
   });
 
   it('register and get a collection', () => {
-    const mockCollection = { insertOne: jest.fn() } as any;
+    const mockCollection = {
+      insertOne: jest.fn(),
+    } as unknown as BrightDbCollection;
     registry.register({
       collectionName: 'users',
       collection: mockCollection,
@@ -21,15 +24,21 @@ describe('BrightDbModelRegistry', () => {
   it('has() returns true for registered models', () => {
     registry.register({
       collectionName: 'roles',
-      collection: {} as any,
+      collection: {} as unknown as BrightDbCollection,
     });
     expect(registry.has('roles')).toBe(true);
     expect(registry.has('nonexistent')).toBe(false);
   });
 
   it('list() returns all registered model names', () => {
-    registry.register({ collectionName: 'a', collection: {} as any });
-    registry.register({ collectionName: 'b', collection: {} as any });
+    registry.register({
+      collectionName: 'a',
+      collection: {} as unknown as BrightDbCollection,
+    });
+    registry.register({
+      collectionName: 'b',
+      collection: {} as unknown as BrightDbCollection,
+    });
     expect(registry.list()).toEqual(['a', 'b']);
   });
 
@@ -38,7 +47,10 @@ describe('BrightDbModelRegistry', () => {
   });
 
   it('clear() removes all registrations', () => {
-    registry.register({ collectionName: 'x', collection: {} as any });
+    registry.register({
+      collectionName: 'x',
+      collection: {} as unknown as BrightDbCollection,
+    });
     registry.clear();
     expect(registry.list()).toEqual([]);
     expect(registry.has('x')).toBe(false);
@@ -55,7 +67,7 @@ describe('BrightDbModelRegistry', () => {
     registry.register({
       collectionName: 'items',
       schema,
-      collection: {} as any,
+      collection: {} as unknown as BrightDbCollection,
     });
     const reg = registry.get('items');
     expect(reg.schema).toBe(schema);

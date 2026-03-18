@@ -17,4 +17,10 @@ export interface IBrightChainMemberInitConfig {
   useMemoryStore?: boolean;
   /** Block size for the store (defaults to BlockSize.Medium) */
   blockSize?: BlockSize;
+  /**
+   * Human-readable label for the block store backend (e.g. "azure-blob", "s3").
+   * Used only for log output. When unset, falls back to blockStorePath or
+   * "in-memory (ephemeral)".
+   */
+  blockStoreLabel?: string;
 }

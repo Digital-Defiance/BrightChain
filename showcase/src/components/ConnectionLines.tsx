@@ -1,4 +1,4 @@
-/* eslint-disable @nx/enforce-module-boundaries, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BlockInfo } from '@brightchain/brightchain-lib';
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { useEffect, useRef, useState } from 'react';

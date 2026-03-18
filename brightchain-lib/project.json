@@ -56,6 +56,13 @@
         ]
       }
     },
+    "validate-i18n": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "node tools/scripts/validate-i18n.js"
+      }
+    },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": [

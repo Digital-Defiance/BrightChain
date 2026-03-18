@@ -16,7 +16,7 @@ nav_order: 1
    - Earn credits through storage contribution
    - Participate in data replication
 
-2. Quorum Nodes
+2. BrightTrust Nodes
    - Higher trust level
    - Store sensitive data
    - Participate in governance
@@ -120,10 +120,10 @@ interface NodeSelectionCriteria {
 
 ## Voting Systems
 
-### 1. Quorum Voting
+### 1. BrightTrust Voting
 
 ```typescript
-interface QuorumVote {
+interface BrightTrustVote {
   voteId: GuidV4;
   type: 'DOCUMENT_RECONSTRUCTION' | 'MEMBER_ADDITION' | 'MEMBER_REMOVAL';
   initiator: GuidV4;
@@ -289,7 +289,7 @@ interface PollIndex {
 
 3. Implement Voting Mechanisms
 
-   - Quorum voting
+   - BrightTrust voting
    - Poll system
    - Result verification
 

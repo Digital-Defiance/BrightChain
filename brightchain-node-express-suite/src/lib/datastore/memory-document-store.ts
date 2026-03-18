@@ -1,4 +1,5 @@
 import { ServiceProvider } from '@brightchain/brightchain-lib';
+import { matchesFilter } from '@brightchain/db';
 import { IIdProvider, PlatformID } from '@digitaldefiance/ecies-lib';
 import { randomUUID } from 'crypto';
 import {
@@ -93,10 +94,10 @@ function matchFilter<T extends DocumentRecord>(
   doc: T,
   filter: Partial<T> = {},
 ): boolean {
-  return Object.entries(filter).every(([key, value]) => {
-    if (value === undefined) return true;
-    return (doc as Record<string, unknown>)[key] === value;
-  });
+  // Delegate to the full BrightDB query engine which supports all
+  // MongoDB-style operators ($or, $and, $regex, $text, $in, etc.)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return matchesFilter(doc as any, filter as any);
 }
 
 function ensureId(

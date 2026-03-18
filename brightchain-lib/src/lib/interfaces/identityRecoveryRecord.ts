@@ -1,7 +1,7 @@
 /**
  * @fileoverview IdentityRecoveryRecord interface.
  *
- * A QuorumDataRecord containing the sealed real identity of a content creator,
+ * A BrightTrustDataRecord containing the sealed real identity of a content creator,
  * referenced by the anonymized content via a shard record ID.
  *
  * @see Requirements 14, 17
@@ -21,7 +21,7 @@ export interface IdentityRecoveryRecord<TID extends PlatformID = Uint8Array> {
   contentId: TID;
   /** Content type: block, message, post */
   contentType: string;
-  /** ECIES-encrypted identity shards per quorum member */
+  /** ECIES-encrypted identity shards per BrightTrust member */
   encryptedShardsByMemberId: Map<TID, Uint8Array>;
   /** Members holding shards */
   memberIds: TID[];

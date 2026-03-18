@@ -18,10 +18,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          submodules: recursive
 
-      - name: Clean workspace
+      - name: Clean build artifacts
         run: |
-          rm -rf node_modules
           rm -rf dist
           rm -rf .cache
 
@@ -32,10 +32,24 @@ jobs:
       - name: Enable Yarn Berry
         run: |
           corepack enable
-          yarn set version 4.5.3
+          yarn set version 4.10.3
 
-      - name: Clear Yarn cache
-        run: yarn cache clean
+      - name: Restore Yarn cache
+        id: yarn-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .yarn/cache
+            .yarn/global
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-
+
+      - name: Configure registries for CI
+        run: |
+          yarn config set 'npmScopes["awesome.me"].npmRegistryServer' "https://npm.fontawesome.com/"
+          yarn config set 'npmScopes["awesome.me"].npmAlwaysAuth' true
+          yarn config set 'npmScopes["awesome.me"].npmAuthToken' "${{ secrets.FONTAWESOME_NPM_AUTH_TOKEN }}"
 
       - name: Install dependencies
         run: |

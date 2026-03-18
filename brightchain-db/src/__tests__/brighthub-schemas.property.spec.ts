@@ -59,7 +59,7 @@ const arbConnectionListMember = fc.record({
 const arbPost = fc.record({
   _id: arbId,
   authorId: arbId,
-  content: fc.string({ minLength: 1, maxLength: 280 }),
+  content: fc.string({ minLength: 1, maxLength: 10000 }),
   formattedContent: fc.string({ minLength: 1 }),
   postType: fc.constantFrom('original', 'reply', 'repost', 'quote'),
   parentPostId: fc.option(arbId, { nil: undefined }),
@@ -331,11 +331,11 @@ describe('Post Schema Validation Properties', () => {
     );
   });
 
-  it('should reject posts with content exceeding 280 characters', () => {
+  it('should reject posts with content exceeding 10000 characters', () => {
     fc.assert(
       fc.property(
         arbPost,
-        fc.string({ minLength: 281, maxLength: 500 }),
+        fc.string({ minLength: 10001, maxLength: 10500 }),
         (post, longContent) => {
           const invalidPost = { ...post, content: longContent };
           try {

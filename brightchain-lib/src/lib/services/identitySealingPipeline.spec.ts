@@ -14,17 +14,17 @@ import {
   MemberType,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import { QuorumOperationalMode } from '../enumerations/quorumOperationalMode';
-import { QuorumError } from '../errors/quorumError';
+import { BrightTrustOperationalMode } from '../enumerations/brightTrustOperationalMode';
+import { BrightTrustError } from '../errors/brightTrustError';
 import { initializeBrightChain } from '../init';
+import { BrightTrustEpoch } from '../interfaces/brightTrustEpoch';
 import {
   ContentWithIdentity,
   IdentityMode,
 } from '../interfaces/contentWithIdentity';
 import { IdentityRecoveryRecord } from '../interfaces/identityRecoveryRecord';
-import { QuorumEpoch } from '../interfaces/quorumEpoch';
-import { IQuorumDatabase } from '../interfaces/services/quorumDatabase';
-import { IQuorumMember } from '../interfaces/services/quorumService';
+import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
+import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import {
   ANONYMOUS_ID,
   IdentitySealingPipeline,
@@ -39,7 +39,7 @@ function createMockDatabase(
   enhancedProvider: ReturnType<
     typeof ServiceProvider.getInstance<GuidV4Uint8Array>
   >['idProvider'],
-): IQuorumDatabase<GuidV4Uint8Array> & {
+): IBrightTrustDatabase<GuidV4Uint8Array> & {
   identityRecords: Map<HexString, IdentityRecoveryRecord<GuidV4Uint8Array>>;
 } {
   const identityRecords = new Map<
@@ -47,7 +47,10 @@ function createMockDatabase(
     IdentityRecoveryRecord<GuidV4Uint8Array>
   >();
 
-  const memberLookup = new Map<HexString, IQuorumMember<GuidV4Uint8Array>>();
+  const memberLookup = new Map<
+    HexString,
+    IBrightTrustMember<GuidV4Uint8Array>
+  >();
   for (const m of memberPool) {
     const memberId = uint8ArrayToHex(
       enhancedProvider.toBytes(m.member.id),
@@ -150,12 +153,12 @@ describe('IdentitySealingPipeline Unit Tests', () => {
   function createEpoch(
     memberCount: number,
     threshold: number,
-  ): QuorumEpoch<GuidV4Uint8Array> {
+  ): BrightTrustEpoch<GuidV4Uint8Array> {
     return {
       epochNumber: 1,
       memberIds: memberPool.slice(0, memberCount).map((m) => m.member.id),
       threshold,
-      mode: QuorumOperationalMode.Quorum,
+      mode: BrightTrustOperationalMode.BrightTrust,
       createdAt: new Date(),
     };
   }
@@ -174,8 +177,8 @@ describe('IdentitySealingPipeline Unit Tests', () => {
   }
 
   function createPipeline(
-    db: IQuorumDatabase<GuidV4Uint8Array>,
-    epoch: QuorumEpoch<GuidV4Uint8Array>,
+    db: IBrightTrustDatabase<GuidV4Uint8Array>,
+    epoch: BrightTrustEpoch<GuidV4Uint8Array>,
   ): IdentitySealingPipeline<GuidV4Uint8Array> {
     return new IdentitySealingPipeline<GuidV4Uint8Array>(
       db,
@@ -284,7 +287,7 @@ describe('IdentitySealingPipeline Unit Tests', () => {
 
       await expect(
         pipeline.sealIdentity(content, IdentityMode.Alias),
-      ).rejects.toThrow(QuorumError);
+      ).rejects.toThrow(BrightTrustError);
     });
   });
 
@@ -354,7 +357,7 @@ describe('IdentitySealingPipeline Unit Tests', () => {
 
       await expect(
         pipeline.recoverIdentity('nonexistent' as HexString, new Map()),
-      ).rejects.toThrow(QuorumError);
+      ).rejects.toThrow(BrightTrustError);
     });
 
     it('should throw when insufficient shares provided', async () => {
@@ -378,7 +381,7 @@ describe('IdentitySealingPipeline Unit Tests', () => {
 
       await expect(
         pipeline.recoverIdentity(result.recoveryRecordId, oneShare),
-      ).rejects.toThrow(QuorumError);
+      ).rejects.toThrow(BrightTrustError);
     });
   });
 
@@ -424,7 +427,7 @@ describe('IdentitySealingPipeline Unit Tests', () => {
       // Should throw but the finally block should still run
       await expect(
         pipeline.sealIdentity(content, IdentityMode.Real),
-      ).rejects.toThrow(QuorumError);
+      ).rejects.toThrow(BrightTrustError);
 
       // Original content should be unmodified
       expect(

@@ -1,3 +1,4 @@
+export type * from './adminDashboardResponse';
 export type * from './backupCodesResponseData';
 export type * from './codeCountResponseData';
 export type * from './communicationResponses';

@@ -34,6 +34,9 @@ interface PostRecord {
   repostCount: number;
   replyCount: number;
   quoteCount: number;
+  upvoteCount?: number;
+  downvoteCount?: number;
+  score?: number;
   isEdited: boolean;
   editedAt?: string;
   hubIds?: string[];
@@ -337,6 +340,8 @@ export class FeedService implements IFeedService {
     options: {
       limit: number;
       cursor?: string;
+      sort?: 'new' | 'hot' | 'top' | 'controversial';
+      topWindow?: 'day' | 'week' | 'month' | 'all';
       blockedIds?: Set<string>;
       mutedIds?: Set<string>;
       allowedAuthorIds?: Set<string>;
@@ -376,34 +381,94 @@ export class FeedService implements IFeedService {
       });
     }
 
-    // Sort: priority connections first, then reverse chronological within each group
-    // @see Requirements: 5.10
-    if (
-      options.priorityConnectionIds &&
-      options.priorityConnectionIds.size > 0
-    ) {
+    // For 'top' sort, filter by time window first
+    if (options.sort === 'top' && options.topWindow !== 'all') {
+      const now = Date.now();
+      const windowMs =
+        options.topWindow === 'day'
+          ? 86400000
+          : options.topWindow === 'month'
+            ? 2592000000
+            : 604800000; // default week
+      filtered = filtered.filter(
+        (p) => now - new Date(p.createdAt).getTime() < windowMs,
+      );
+    }
+
+    // Sort based on requested sort order
+    const sortMode = options.sort ?? 'new';
+
+    if (sortMode === 'hot') {
+      // Hot: Reddit-style score decay — (score + replies) / (age in hours + 2)^1.5
+      // Uses post.score (upvotes - downvotes) when available, falls back to likes
+      const now = Date.now();
       filtered.sort((a, b) => {
-        const aIsPriority = options.priorityConnectionIds!.has(a.authorId)
-          ? 1
-          : 0;
-        const bIsPriority = options.priorityConnectionIds!.has(b.authorId)
-          ? 1
-          : 0;
-        // Priority posts first
-        if (aIsPriority !== bIsPriority) {
-          return bIsPriority - aIsPriority;
-        }
-        // Within same priority group, reverse chronological
+        const scoreA =
+          (a.score ?? a.likeCount) + a.replyCount + a.repostCount;
+        const scoreB =
+          (b.score ?? b.likeCount) + b.replyCount + b.repostCount;
+        const ageHoursA =
+          (now - new Date(a.createdAt).getTime()) / 3600000 + 2;
+        const ageHoursB =
+          (now - new Date(b.createdAt).getTime()) / 3600000 + 2;
+        const hotA = scoreA / Math.pow(ageHoursA, 1.5);
+        const hotB = scoreB / Math.pow(ageHoursB, 1.5);
+        return hotB - hotA;
+      });
+    } else if (sortMode === 'top') {
+      // Top: most engagement (score + reposts + replies)
+      filtered.sort((a, b) => {
+        const scoreA =
+          (a.score ?? a.likeCount) + a.repostCount + a.replyCount;
+        const scoreB =
+          (b.score ?? b.likeCount) + b.repostCount + b.replyCount;
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        // Tie-break by recency
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      });
+    } else if (sortMode === 'controversial') {
+      // Controversial: high total votes but score near zero
+      // Formula: totalVotes / (1 + |score|) — rewards high engagement with balanced voting
+      filtered.sort((a, b) => {
+        const totalA = (a.upvoteCount ?? 0) + (a.downvoteCount ?? 0) + a.likeCount;
+        const totalB = (b.upvoteCount ?? 0) + (b.downvoteCount ?? 0) + b.likeCount;
+        const absScoreA = Math.abs(a.score ?? a.likeCount);
+        const absScoreB = Math.abs(b.score ?? b.likeCount);
+        const controversyA = totalA / (1 + absScoreA);
+        const controversyB = totalB / (1 + absScoreB);
+        if (controversyA !== controversyB) return controversyB - controversyA;
         return (
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
       });
     } else {
-      // Sort by createdAt descending (reverse chronological)
-      filtered.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+      // 'new' — reverse chronological, with priority connections first if available
+      if (
+        options.priorityConnectionIds &&
+        options.priorityConnectionIds.size > 0
+      ) {
+        filtered.sort((a, b) => {
+          const aIsPriority = options.priorityConnectionIds!.has(a.authorId)
+            ? 1
+            : 0;
+          const bIsPriority = options.priorityConnectionIds!.has(b.authorId)
+            ? 1
+            : 0;
+          if (aIsPriority !== bIsPriority) {
+            return bIsPriority - aIsPriority;
+          }
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        });
+      } else {
+        filtered.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+      }
     }
 
     // Apply cursor (return posts older than cursor)
@@ -443,39 +508,42 @@ export class FeedService implements IFeedService {
   ): Promise<ITimelineResult> {
     const limit = this.getLimit(options);
 
-    // Get followed user IDs
-    const followedIds = await this.getFollowedUserIds(userId);
+    const excludeMuted = options?.excludeMuted !== false;
+
+    // Parallelize all independent lookups + the posts fetch
+    const [
+      followedIds,
+      blockedIds,
+      permanentMutedIds,
+      temporaryMutedIds,
+      priorityConnectionIds,
+      userHubIds,
+      allPosts,
+    ] = await Promise.all([
+      this.getFollowedUserIds(userId),
+      this.getBlockedUserIds(userId),
+      excludeMuted
+        ? this.getMutedUserIds(userId)
+        : Promise.resolve(new Set<string>()),
+      excludeMuted
+        ? this.getTemporarilyMutedUserIds(userId)
+        : Promise.resolve(new Set<string>()),
+      this.getPriorityConnectionIds(userId),
+      this.getUserHubIds(userId),
+      this.postsCollection.find({} as Partial<PostRecord>).exec(),
+    ]);
 
     // Include the user's own posts
     const allowedAuthorIds = new Set([userId, ...followedIds]);
 
-    // Get blocked and muted user IDs (permanent + temporary)
-    const blockedIds = await this.getBlockedUserIds(userId);
-    const permanentMutedIds =
-      options?.excludeMuted !== false
-        ? await this.getMutedUserIds(userId)
-        : new Set<string>();
-    const temporaryMutedIds =
-      options?.excludeMuted !== false
-        ? await this.getTemporarilyMutedUserIds(userId)
-        : new Set<string>();
     // Combine permanent and temporary mutes
     const mutedIds = new Set([...permanentMutedIds, ...temporaryMutedIds]);
-
-    // Get priority connections for ordering
-    const priorityConnectionIds = await this.getPriorityConnectionIds(userId);
-
-    // Get user's hub memberships for hub-restricted post visibility
-    const userHubIds = await this.getUserHubIds(userId);
-
-    // Fetch all posts (in a real system this would be a DB query with filters)
-    const allPosts = await this.postsCollection
-      .find({} as Partial<PostRecord>)
-      .exec();
 
     return this.filterAndPaginate(allPosts, {
       limit,
       cursor: options?.cursor,
+      sort: options?.sort,
+      topWindow: options?.topWindow,
       blockedIds,
       mutedIds,
       allowedAuthorIds,
@@ -687,6 +755,39 @@ export class FeedService implements IFeedService {
       mutedIds,
       allowedAuthorIds: categoryConnectionIds,
       userHubIds,
+    });
+  }
+
+  /**
+   * Get posts within a specific hub, with sort support (hot/new/top)
+   */
+  async getHubFeed(
+    hubId: string,
+    options?: ITimelineOptions,
+    requestingUserId?: string,
+  ): Promise<ITimelineResult> {
+    const limit = this.getLimit(options);
+
+    // Get blocked user IDs if a requesting user is provided
+    const blockedIds = requestingUserId
+      ? await this.getBlockedUserIds(requestingUserId)
+      : undefined;
+
+    // Fetch all posts and filter to those in this hub
+    const allPosts = await this.postsCollection
+      .find({} as Partial<PostRecord>)
+      .exec();
+
+    const hubPosts = allPosts.filter(
+      (p) => p.hubIds && p.hubIds.includes(hubId),
+    );
+
+    return this.filterAndPaginate(hubPosts, {
+      limit,
+      cursor: options?.cursor,
+      sort: options?.sort,
+      topWindow: options?.topWindow,
+      blockedIds,
     });
   }
 }

@@ -381,7 +381,7 @@ describe('BaseBlock', () => {
 
       try {
         await block.validateAsync();
-        fail('Expected validateAsync to throw');
+        throw new Error('Expected validateAsync to throw');
       } catch (error) {
         expect(error).toBeInstanceOf(ChecksumMismatchError);
         const checksumError = error as ChecksumMismatchError;

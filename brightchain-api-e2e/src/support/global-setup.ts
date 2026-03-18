@@ -4,7 +4,7 @@
  * the workspace path aliases so that transitive @brightchain/* imports
  * resolve to the .ts source files.
  */
-import { readFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { register } from 'tsconfig-paths';
 
@@ -44,7 +44,7 @@ module.exports = async function () {
   console.log('\n[e2e] Starting BrightChain API server...\n');
 
   // Configure environment for in-memory / dev mode
-  const port = process.env['PORT'] ?? '3000';
+  const port = process.env['PORT'] ?? '3001';
   process.env['DEV_DATABASE'] = 'e2e-test-pool';
   process.env['HOST'] = 'localhost';
   process.env['PORT'] = port;
@@ -54,6 +54,9 @@ module.exports = async function () {
   process.env['UPNP_ENABLED'] = 'false';
   process.env['USE_TRANSACTIONS'] = 'false';
   process.env['DISABLE_EMAIL_SEND'] = 'true';
+  // Enable all features for e2e testing including DigitalBurnbag
+  process.env['ENABLED_FEATURES'] =
+    'BrightChat,BrightHub,BrightMail,BrightPass,DigitalBurnbag';
   process.env['JWT_SECRET'] =
     'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2';
   process.env['MNEMONIC_HMAC_SECRET'] =
@@ -75,6 +78,20 @@ module.exports = async function () {
     'dist',
     'brightchain-react',
   );
+
+  // Ensure the React dist directory and a minimal index.html exist.
+  // The AppRouter requires index.html at startup; without a real React
+  // build we provide a placeholder so the API server can start.
+  const reactDistDir = resolve(workspaceRoot, 'dist', 'brightchain-react');
+  const indexHtmlPath = resolve(reactDistDir, 'index.html');
+  if (!existsSync(indexHtmlPath)) {
+    mkdirSync(reactDistDir, { recursive: true });
+    writeFileSync(
+      indexHtmlPath,
+      '<!doctype html><html><head><title>E2E</title></head><body></body></html>',
+    );
+    console.log('[e2e] Created placeholder index.html for AppRouter');
+  }
 
   // Create and start the App (no .env file — reads from process.env)
   const env = new Environment();

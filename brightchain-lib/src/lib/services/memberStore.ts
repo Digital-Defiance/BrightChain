@@ -18,6 +18,7 @@ import {
 } from '../documents/member/memberProfileHydration';
 import { BlockDataType } from '../enumerations/blockDataType';
 import { BlockType } from '../enumerations/blockType';
+import { BlockSize, lengthToClosestBlockSize } from '../enumerations/blockSize';
 import { BrightChainStrings } from '../enumerations/brightChainStrings';
 import { MemberErrorType } from '../enumerations/memberErrorType';
 import { MemberStatusType } from '../enumerations/memberStatusType';
@@ -355,7 +356,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
 
       // Step 6: Create blocks for identity CBL data
       publicBlock = new RawDataBlock(
-        this.blockStore.blockSize,
+        lengthToClosestBlockSize(publicCBLData.length),
         publicCBLData,
         doc!.dateCreated,
         undefined, // Let RawDataBlock calculate the checksum
@@ -364,7 +365,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       );
 
       privateBlock = new RawDataBlock(
-        this.blockStore.blockSize,
+        lengthToClosestBlockSize(privateCBLData.length),
         privateCBLData,
         doc!.dateCreated,
         undefined, // Let RawDataBlock calculate the checksum
@@ -374,7 +375,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
 
       // Step 7: Create blocks for profile CBL data
       publicProfileBlock = new RawDataBlock(
-        this.blockStore.blockSize,
+        lengthToClosestBlockSize(publicProfileCBLData.length),
         publicProfileCBLData,
         profileDoc!.dateCreated,
         undefined, // Let RawDataBlock calculate the checksum
@@ -383,7 +384,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       );
 
       privateProfileBlock = new RawDataBlock(
-        this.blockStore.blockSize,
+        lengthToClosestBlockSize(privateProfileCBLData.length),
         privateProfileCBLData,
         profileDoc!.dateCreated,
         undefined, // Let RawDataBlock calculate the checksum
@@ -913,9 +914,17 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
           privateProfileJson,
         );
 
-        // Create new blocks for profile data
+        // Create new blocks for profile data — pick the smallest supported
+        // block size that can hold the data.
+        const publicBlockSize = lengthToClosestBlockSize(
+          publicProfileBytes.length,
+        );
+        const privateBlockSize = lengthToClosestBlockSize(
+          privateProfileBytes.length,
+        );
+
         const newPublicProfileBlock = new RawDataBlock(
-          this.blockStore.blockSize,
+          publicBlockSize,
           publicProfileBytes,
           new Date(),
           undefined, // Let RawDataBlock calculate the checksum
@@ -924,7 +933,7 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
         );
 
         const newPrivateProfileBlock = new RawDataBlock(
-          this.blockStore.blockSize,
+          privateBlockSize,
           privateProfileBytes,
           new Date(),
           undefined, // Let RawDataBlock calculate the checksum
@@ -978,6 +987,11 @@ export class MemberStore<TID extends PlatformID = Uint8Array>
       // Re-throw the original error
       if (error instanceof MemberError) {
         throw error;
+      }
+      const detail = error instanceof Error ? error.message : String(error);
+      console.error('[MemberStore] Failed to create member blocks:', detail);
+      if (error instanceof Error && error.stack) {
+        console.error(error.stack);
       }
       throw new MemberError(MemberErrorType.FailedToCreateMemberBlocks);
     }

@@ -593,7 +593,7 @@ describe('PoolACLUpdater', () => {
 
       try {
         await updater.applyUpdate(proposal);
-        fail('Expected InsufficientQuorumError');
+        throw new Error('Expected InsufficientQuorumError');
       } catch (err) {
         expect(err).toBeInstanceOf(InsufficientQuorumError);
         const quorumErr = err as InsufficientQuorumError;

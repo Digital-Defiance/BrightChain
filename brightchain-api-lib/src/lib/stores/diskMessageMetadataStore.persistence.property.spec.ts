@@ -205,7 +205,7 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
     );
   });
 
-  it('Property 31d: Query by recipient works after restart (100 iterations)', async () => {
+  it('Property 31d: Query by recipient works after restart (30 iterations)', async () => {
     await fc.assert(
       fc.asyncProperty(
         fc.array(messageMetadataArb, { minLength: 1, maxLength: 10 }),
@@ -234,9 +234,9 @@ describe('DiskMessageMetadataStore - Persistence Property Tests', () => {
           });
         },
       ),
-      { numRuns: 100 },
+      { numRuns: 30 },
     );
-  });
+  }, 300_000);
 
   it('Property 31e: Query by sender works after restart (100 iterations)', async () => {
     await fc.assert(

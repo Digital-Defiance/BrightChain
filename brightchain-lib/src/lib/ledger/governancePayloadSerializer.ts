@@ -19,18 +19,21 @@
 
 import { SignatureUint8Array } from '@digitaldefiance/ecies-lib';
 import {
+  LedgerSerializationError,
+  LedgerSerializationErrorType,
+} from '../errors/ledgerSerializationError';
+import { IAuthorizedSigner } from '../interfaces/ledger/authorizedSigner';
+import {
+  IBrightTrustPolicy,
+  QuorumType,
+} from '../interfaces/ledger/brightTrustPolicy';
+import {
   GovernanceActionType,
   IGovernanceAction,
 } from '../interfaces/ledger/governanceAction';
 import { IGovernancePayload } from '../interfaces/ledger/governancePayload';
-import { IQuorumPolicy, QuorumType } from '../interfaces/ledger/quorumPolicy';
 import { SignerRole } from '../interfaces/ledger/signerRole';
 import { SignerStatus } from '../interfaces/ledger/signerStatus';
-import { IAuthorizedSigner } from '../interfaces/ledger/authorizedSigner';
-import {
-  LedgerSerializationError,
-  LedgerSerializationErrorType,
-} from '../errors/ledgerSerializationError';
 
 /** Governance payload type prefix byte. */
 const GOVERNANCE_PREFIX = 0x01;
@@ -103,7 +106,7 @@ const textDecoder = new TextDecoder();
  * Genesis initialization data embedded in the genesis governance payload.
  */
 export interface IGenesisPayloadData {
-  readonly quorumPolicy: IQuorumPolicy;
+  readonly brightTrustPolicy: IBrightTrustPolicy;
   readonly signers: readonly IAuthorizedSigner[];
 }
 
@@ -124,8 +127,7 @@ export class GovernancePayloadSerializer {
     const cosigBytes = this.serializeCosignatures(payload.cosignatures);
 
     // 1 (prefix) + 1 (subtype) + 2 (actionCount) + actions + 2 (cosigCount) + cosigs
-    const totalSize =
-      1 + 1 + 2 + actionBytes.length + 2 + cosigBytes.length;
+    const totalSize = 1 + 1 + 2 + actionBytes.length + 2 + cosigBytes.length;
     const result = new Uint8Array(totalSize);
     let offset = 0;
 
@@ -133,7 +135,11 @@ export class GovernancePayloadSerializer {
     result[offset++] = SUBTYPE_AMENDMENT;
 
     // Action count (uint16 BE)
-    const view = new DataView(result.buffer, result.byteOffset, result.byteLength);
+    const view = new DataView(
+      result.buffer,
+      result.byteOffset,
+      result.byteLength,
+    );
     view.setUint16(offset, payload.actions.length, false);
     offset += 2;
 
@@ -155,12 +161,11 @@ export class GovernancePayloadSerializer {
    * Serialize a genesis governance payload with initial signer set and quorum policy.
    */
   serializeGenesis(data: IGenesisPayloadData): Uint8Array {
-    const quorumBytes = this.serializeQuorumPolicy(data.quorumPolicy);
+    const quorumBytes = this.serializeQuorumPolicy(data.brightTrustPolicy);
     const signerBytes = this.serializeSignerList(data.signers);
 
     // 1 (prefix) + 1 (subtype) + quorum + 2 (signerCount) + signers + 2 (cosigCount=0)
-    const totalSize =
-      1 + 1 + quorumBytes.length + 2 + signerBytes.length + 2;
+    const totalSize = 1 + 1 + quorumBytes.length + 2 + signerBytes.length + 2;
     const result = new Uint8Array(totalSize);
     let offset = 0;
 
@@ -172,7 +177,11 @@ export class GovernancePayloadSerializer {
     offset += quorumBytes.length;
 
     // Signer count (uint16 BE)
-    const view = new DataView(result.buffer, result.byteOffset, result.byteLength);
+    const view = new DataView(
+      result.buffer,
+      result.byteOffset,
+      result.byteLength,
+    );
     view.setUint16(offset, data.signers.length, false);
     offset += 2;
 
@@ -190,7 +199,9 @@ export class GovernancePayloadSerializer {
    * Deserialize a Uint8Array (with 0x01 prefix) back into an IGovernancePayload.
    * For genesis payloads, also returns the genesis data.
    */
-  deserialize(data: Uint8Array): IGovernancePayload & { genesis?: IGenesisPayloadData } {
+  deserialize(
+    data: Uint8Array,
+  ): IGovernancePayload & { genesis?: IGenesisPayloadData } {
     if (data.length < 4) {
       throw new LedgerSerializationError(
         LedgerSerializationErrorType.DataTooShort,
@@ -224,11 +235,17 @@ export class GovernancePayloadSerializer {
   /**
    * Serialize the governance actions only (without cosignatures) for hashing/signing by co-signers.
    */
-  serializeActionsForSigning(actions: readonly IGovernanceAction[]): Uint8Array {
+  serializeActionsForSigning(
+    actions: readonly IGovernanceAction[],
+  ): Uint8Array {
     const actionBytes = this.serializeActions(actions);
     // 2 (actionCount) + actions
     const result = new Uint8Array(2 + actionBytes.length);
-    const view = new DataView(result.buffer, result.byteOffset, result.byteLength);
+    const view = new DataView(
+      result.buffer,
+      result.byteOffset,
+      result.byteLength,
+    );
     view.setUint16(0, actions.length, false);
     result.set(actionBytes, 2);
     return result;
@@ -282,11 +299,15 @@ export class GovernancePayloadSerializer {
     return concatUint8Arrays(parts);
   }
 
-  private serializeQuorumPolicy(policy: IQuorumPolicy): Uint8Array {
+  private serializeQuorumPolicy(policy: IBrightTrustPolicy): Uint8Array {
     if (policy.type === QuorumType.Threshold) {
       const result = new Uint8Array(5);
       result[0] = QUORUM_TYPE_BYTES[policy.type];
-      const view = new DataView(result.buffer, result.byteOffset, result.byteLength);
+      const view = new DataView(
+        result.buffer,
+        result.byteOffset,
+        result.byteLength,
+      );
       view.setUint32(1, policy.threshold ?? 1, false);
       return result;
     }
@@ -323,7 +344,9 @@ export class GovernancePayloadSerializer {
     return concatUint8Arrays(parts);
   }
 
-  private serializeSignerList(signers: readonly IAuthorizedSigner[]): Uint8Array {
+  private serializeSignerList(
+    signers: readonly IAuthorizedSigner[],
+  ): Uint8Array {
     const parts: Uint8Array[] = [];
     for (const signer of signers) {
       parts.push(serializePubKey(signer.publicKey));
@@ -353,7 +376,7 @@ export class GovernancePayloadSerializer {
     view: DataView,
   ): IGovernancePayload & { genesis: IGenesisPayloadData } {
     // Quorum policy
-    const { policy: quorumPolicy, bytesRead: quorumBytes } =
+    const { policy: brightTrustPolicy, bytesRead: quorumBytes } =
       this.deserializeQuorumPolicy(data, offset, view);
     offset += quorumBytes;
 
@@ -375,12 +398,17 @@ export class GovernancePayloadSerializer {
     const cosigCount = view.getUint16(offset, false);
     offset += 2;
 
-    const cosignatures = this.deserializeCosignatures(data, offset, view, cosigCount);
+    const cosignatures = this.deserializeCosignatures(
+      data,
+      offset,
+      view,
+      cosigCount,
+    );
 
     return {
       actions: [],
       cosignatures: cosignatures.cosigs,
-      genesis: { quorumPolicy, signers },
+      genesis: { brightTrustPolicy: brightTrustPolicy, signers },
     };
   }
 
@@ -407,7 +435,12 @@ export class GovernancePayloadSerializer {
     const cosigCount = view.getUint16(offset, false);
     offset += 2;
 
-    const cosignatures = this.deserializeCosignatures(data, offset, view, cosigCount);
+    const cosignatures = this.deserializeCosignatures(
+      data,
+      offset,
+      view,
+      cosigCount,
+    );
 
     return { actions, cosignatures: cosignatures.cosigs };
   }
@@ -431,7 +464,11 @@ export class GovernancePayloadSerializer {
 
     switch (actionType) {
       case GovernanceActionType.AddSigner: {
-        const { publicKey, bytesRead: pkBytes } = deserializePubKey(data, offset, view);
+        const { publicKey, bytesRead: pkBytes } = deserializePubKey(
+          data,
+          offset,
+          view,
+        );
         offset += pkBytes;
         this.ensureBytes(data, offset, 1, 'role');
         const role = BYTE_TO_ROLE[data[offset++]];
@@ -441,7 +478,11 @@ export class GovernancePayloadSerializer {
             'Invalid role byte',
           );
         }
-        const { metadata, bytesRead: metaBytes } = this.deserializeMetadata(data, offset, view);
+        const { metadata, bytesRead: metaBytes } = this.deserializeMetadata(
+          data,
+          offset,
+          view,
+        );
         offset += metaBytes;
         return {
           action: { type: actionType, publicKey, role, metadata },
@@ -451,7 +492,11 @@ export class GovernancePayloadSerializer {
       case GovernanceActionType.RemoveSigner:
       case GovernanceActionType.SuspendSigner:
       case GovernanceActionType.ReactivateSigner: {
-        const { publicKey, bytesRead: pkBytes } = deserializePubKey(data, offset, view);
+        const { publicKey, bytesRead: pkBytes } = deserializePubKey(
+          data,
+          offset,
+          view,
+        );
         offset += pkBytes;
         return {
           action: { type: actionType, publicKey } as IGovernanceAction,
@@ -459,7 +504,11 @@ export class GovernancePayloadSerializer {
         };
       }
       case GovernanceActionType.ChangeRole: {
-        const { publicKey, bytesRead: pkBytes } = deserializePubKey(data, offset, view);
+        const { publicKey, bytesRead: pkBytes } = deserializePubKey(
+          data,
+          offset,
+          view,
+        );
         offset += pkBytes;
         this.ensureBytes(data, offset, 1, 'new role');
         const newRole = BYTE_TO_ROLE[data[offset++]];
@@ -475,7 +524,11 @@ export class GovernancePayloadSerializer {
         };
       }
       case GovernanceActionType.UpdateQuorum: {
-        const { policy, bytesRead: qBytes } = this.deserializeQuorumPolicy(data, offset, view);
+        const { policy, bytesRead: qBytes } = this.deserializeQuorumPolicy(
+          data,
+          offset,
+          view,
+        );
         offset += qBytes;
         return {
           action: { type: actionType, newPolicy: policy },
@@ -483,9 +536,17 @@ export class GovernancePayloadSerializer {
         };
       }
       case GovernanceActionType.SetMemberData: {
-        const { publicKey, bytesRead: pkBytes } = deserializePubKey(data, offset, view);
+        const { publicKey, bytesRead: pkBytes } = deserializePubKey(
+          data,
+          offset,
+          view,
+        );
         offset += pkBytes;
-        const { metadata, bytesRead: metaBytes } = this.deserializeMetadata(data, offset, view);
+        const { metadata, bytesRead: metaBytes } = this.deserializeMetadata(
+          data,
+          offset,
+          view,
+        );
         offset += metaBytes;
         return {
           action: { type: actionType, publicKey, metadata },
@@ -504,7 +565,7 @@ export class GovernancePayloadSerializer {
     data: Uint8Array,
     offset: number,
     view: DataView,
-  ): { policy: IQuorumPolicy; bytesRead: number } {
+  ): { policy: IBrightTrustPolicy; bytesRead: number } {
     this.ensureBytes(data, offset, 1, 'quorum type');
     const quorumTypeByte = data[offset];
     const quorumType = BYTE_TO_QUORUM_TYPE[quorumTypeByte];
@@ -550,7 +611,9 @@ export class GovernancePayloadSerializer {
       const valueLen = view.getUint16(offset, false);
       offset += 2;
       this.ensureBytes(data, offset, valueLen, 'metadata value');
-      const value = textDecoder.decode(data.subarray(offset, offset + valueLen));
+      const value = textDecoder.decode(
+        data.subarray(offset, offset + valueLen),
+      );
       offset += valueLen;
 
       metadata.set(key, value);
@@ -566,7 +629,11 @@ export class GovernancePayloadSerializer {
   ): { signer: IAuthorizedSigner; bytesRead: number } {
     const startOffset = offset;
 
-    const { publicKey, bytesRead: pkBytes } = deserializePubKey(data, offset, view);
+    const { publicKey, bytesRead: pkBytes } = deserializePubKey(
+      data,
+      offset,
+      view,
+    );
     offset += pkBytes;
 
     this.ensureBytes(data, offset, 1, 'signer role');
@@ -587,7 +654,11 @@ export class GovernancePayloadSerializer {
       );
     }
 
-    const { metadata, bytesRead: metaBytes } = this.deserializeMetadata(data, offset, view);
+    const { metadata, bytesRead: metaBytes } = this.deserializeMetadata(
+      data,
+      offset,
+      view,
+    );
     offset += metaBytes;
 
     return {
@@ -603,10 +674,17 @@ export class GovernancePayloadSerializer {
     count: number,
   ): { cosigs: IGovernancePayload['cosignatures']; bytesRead: number } {
     const startOffset = offset;
-    const cosigs: { signerPublicKey: Uint8Array; signature: SignatureUint8Array }[] = [];
+    const cosigs: {
+      signerPublicKey: Uint8Array;
+      signature: SignatureUint8Array;
+    }[] = [];
 
     for (let i = 0; i < count; i++) {
-      const { publicKey, bytesRead: pkBytes } = deserializePubKey(data, offset, view);
+      const { publicKey, bytesRead: pkBytes } = deserializePubKey(
+        data,
+        offset,
+        view,
+      );
       offset += pkBytes;
 
       this.ensureBytes(data, offset, 64, 'cosignature');
@@ -617,7 +695,10 @@ export class GovernancePayloadSerializer {
       ) as SignatureUint8Array;
       offset += 64;
 
-      cosigs.push({ signerPublicKey: publicKey, signature: new Uint8Array(signature) as SignatureUint8Array });
+      cosigs.push({
+        signerPublicKey: publicKey,
+        signature: new Uint8Array(signature) as SignatureUint8Array,
+      });
     }
 
     return { cosigs, bytesRead: offset - startOffset };
@@ -642,7 +723,11 @@ export class GovernancePayloadSerializer {
 
 function serializePubKey(publicKey: Uint8Array): Uint8Array {
   const result = new Uint8Array(4 + publicKey.length);
-  const view = new DataView(result.buffer, result.byteOffset, result.byteLength);
+  const view = new DataView(
+    result.buffer,
+    result.byteOffset,
+    result.byteLength,
+  );
   view.setUint32(0, publicKey.length, false);
   result.set(publicKey, 4);
   return result;

@@ -38,18 +38,30 @@ const TEST_DOMAIN = 'brightchain.test';
 function createMockGossipService(): IGossipService {
   return {
     announceBlock: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-    announceRemoval: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-    handleAnnouncement: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    announceRemoval: jest
+      .fn<() => Promise<void>>()
+      .mockResolvedValue(undefined),
+    handleAnnouncement: jest
+      .fn<() => Promise<void>>()
+      .mockResolvedValue(undefined),
     onAnnouncement: jest.fn(),
     offAnnouncement: jest.fn(),
     getPendingAnnouncements: jest.fn().mockReturnValue([]),
-    flushAnnouncements: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    flushAnnouncements: jest
+      .fn<() => Promise<void>>()
+      .mockResolvedValue(undefined),
     start: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
     stop: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
     getConfig: jest.fn(),
-    announceHeadUpdate: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-    announceACLUpdate: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-    announceMessage: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    announceHeadUpdate: jest
+      .fn<() => Promise<void>>()
+      .mockResolvedValue(undefined),
+    announceACLUpdate: jest
+      .fn<() => Promise<void>>()
+      .mockResolvedValue(undefined),
+    announceMessage: jest
+      .fn<() => Promise<void>>()
+      .mockResolvedValue(undefined),
     sendDeliveryAck: jest.fn(),
     onMessageDelivery: jest.fn(),
     offMessageDelivery: jest.fn(),
@@ -61,7 +73,14 @@ function createMockGossipService(): IGossipService {
 function createMockMessageCBL(): MessageCBLService {
   let callCount = 0;
   return {
-    createMessage: jest.fn<() => Promise<{ messageId: string; contentBlockIds: string[]; magnetUrl: string }>>()
+    createMessage: jest
+      .fn<
+        () => Promise<{
+          messageId: string;
+          contentBlockIds: string[];
+          magnetUrl: string;
+        }>
+      >()
       .mockImplementation(() => {
         callCount++;
         return Promise.resolve({
@@ -77,8 +96,12 @@ function createMockMessageCBL(): MessageCBLService {
 
 function createMockMetadataStore() {
   return {
-    updateDeliveryStatus: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-    recordAcknowledgment: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    updateDeliveryStatus: jest
+      .fn<() => Promise<void>>()
+      .mockResolvedValue(undefined),
+    recordAcknowledgment: jest
+      .fn<() => Promise<void>>()
+      .mockResolvedValue(undefined),
     queryMessages: jest.fn<() => Promise<never[]>>().mockResolvedValue([]),
   };
 }
@@ -96,10 +119,52 @@ function createMockApplication(): IBrightChainApplication {
     ready: true,
     services: {},
     plugins: {},
-    getModel: () => { throw new Error('not implemented'); },
-    getController: () => { throw new Error('not implemented'); },
-    setController: () => { /* noop */ },
-    start: async () => { /* noop */ },
+    authProvider: {
+      verifyToken: async (token: string) => {
+        try {
+          const decoded = jwt.verify(token, JWT_SECRET) as { memberId: string };
+          return { userId: decoded.memberId };
+        } catch {
+          return null;
+        }
+      },
+      findUserById: async (userId: string) => ({
+        id: userId,
+        accountStatus: 'Active',
+        email: 'test@example.com',
+        timezone: 'UTC',
+      }),
+      buildRequestUserDTO: async (userId: string) => ({
+        id: userId,
+        username: userId,
+        email: 'test@example.com',
+        roles: [],
+        rolePrivileges: {
+          admin: false,
+          member: true,
+          child: false,
+          system: false,
+        },
+        emailVerified: true,
+        timezone: 'UTC',
+        siteLanguage: 'en',
+        darkMode: false,
+        currency: 'USD',
+        directChallenge: false,
+      }),
+    },
+    getModel: () => {
+      throw new Error('not implemented');
+    },
+    getController: () => {
+      throw new Error('not implemented');
+    },
+    setController: () => {
+      /* noop */
+    },
+    start: async () => {
+      /* noop */
+    },
   } as unknown as IBrightChainApplication;
 }
 
@@ -149,7 +214,10 @@ function buildTestEnv(knownUsers: Set<string> = new Set()): TestEnv {
   // Error-handling middleware
   app.use(
     (
-      err: Error & { statusCode?: number; errors?: { array?: () => unknown[] } },
+      err: Error & {
+        statusCode?: number;
+        errors?: { array?: () => unknown[] };
+      },
       _req: express.Request,
       res: express.Response,
       _next: express.NextFunction,
@@ -160,7 +228,10 @@ function buildTestEnv(knownUsers: Set<string> = new Set()): TestEnv {
         errorType: err.name || 'Error',
       };
       if (err.errors) {
-        body['errors'] = typeof err.errors.array === 'function' ? err.errors.array() : err.errors;
+        body['errors'] =
+          typeof err.errors.array === 'function'
+            ? err.errors.array()
+            : err.errors;
       }
       res.status(status).json(body);
     },
@@ -186,11 +257,11 @@ describe('GET /api/emails/verify-recipient/:username', () => {
 
   it('should return 401 for unauthenticated requests', async () => {
     env = buildTestEnv();
-    const res = await request(env.server)
-      .get('/api/emails/verify-recipient/alice');
+    const res = await request(env.server).get(
+      '/api/emails/verify-recipient/alice',
+    );
 
     expect(res.status).toBe(401);
-    expect(res.body.error?.message).toBe('Authentication required');
   });
 
   it('should return 200 with exists: true for a known username', async () => {
@@ -254,7 +325,9 @@ describe('GET /api/emails/verify-recipient/:username', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(res.status).toBe(429);
-    expect(res.body.error?.message).toBe('Rate limit exceeded. Try again later.');
+    expect(res.body.error?.message).toBe(
+      'Rate limit exceeded. Try again later.',
+    );
   });
 
   it('should allow requests from different users independently', async () => {

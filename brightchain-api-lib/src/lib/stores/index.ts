@@ -1,5 +1,6 @@
 export * from './availabilityAwareBlockStore';
 export * from './cloudBlockStoreBase';
+export * from './cloudHeadRegistry';
 export * from './diskBlockAsyncStore';
 export * from './diskBlockMetadataStore';
 export * from './diskBlockStore';

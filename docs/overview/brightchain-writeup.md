@@ -94,7 +94,7 @@ A SECP256k1 curve like Ethereum will be used.
 
 The network has a handful of different agents that perform different actions and each has its own key pair, the public key of which will be published on the network and stored in the configuration.
 
-For each agent or user, we generate a BIP39/32 mnemonic and associated keypair. The public key is recorded on the chain associated with the User's account object. The BIP39/32 mnemonic is then used as a seed to derive the private key which is not stored in the network. Whenever an action like signing occurs, this will be done on the client which will have the key in memory and the result will be sent back to the network. Each Quorum node will have an Agent account which will have its mnemonic/private key stored in the memory of the Quorum node whom they are the primary agent for.
+For each agent or user, we generate a BIP39/32 mnemonic and associated keypair. The public key is recorded on the chain associated with the User's account object. The BIP39/32 mnemonic is then used as a seed to derive the private key which is not stored in the network. Whenever an action like signing occurs, this will be done on the client which will have the key in memory and the result will be sent back to the network. Each BrightTrust node will have an Agent account which will have its mnemonic/private key stored in the memory of the BrightTrust node whom they are the primary agent for.
 
 **Implementation Status:**
 
@@ -106,57 +106,57 @@ For each agent or user, we generate a BIP39/32 mnemonic and associated keypair. 
 - ✅ Member types (Individual, Organization, Agent, etc.)
 - ✅ Member hydration/dehydration schemas
 
-Let's move on to Central Authority / The Quorum and Identity which will cover Anonymity and Moderation.
+Let's move on to Central Authority / The BrightTrust and Identity which will cover Anonymity and Moderation.
 
-### Part 3: Identity and Central Authority - The Quorum ✅ COMPLETE
+### Part 3: Identity and Central Authority - The BrightTrust ✅ COMPLETE
 
-While the entire network is decentralized, there is a segmented unit of central authority called The Quorum.
+While the entire network is decentralized, there is a segmented unit of central authority called The BrightTrust.
 
 At its core, it uses generation of a computed amount of Forward Error Correction (in the form of Shamir's Secret Sharing) pre-generated, set aside, and broken up into shards so that only once a majority of the desired/precomputed percentage is acquired, the data can be reconstructed.
 
 If you're familiar with the DNS root registry, essentially a handful of different companies and organizations all run root servers. In The Revolution Network, there will be a central, non-profit legal body and effective board of directors responsible for the data integrity of the network.
 
-Almost everything that will pass over the network will be contained in the bright block store. However, The Quorum has a unique role.
+Almost everything that will pass over the network will be contained in the bright block store. However, The BrightTrust has a unique role.
 
 Let's say that User Mallory wants to go run amok on the network and post terrible or illegal things. She is entitled to do so. Free speech is what it is. However, certain things like yelling Fire in a crowded place you can't say. Moreover people just don't like some things. We need a mechanism to be able to let people say things anonymously and yet be able to hold them to account if they've ultimately run afoul of the network code of conduct and/or the law.
 
-When Mallory joined the network, she may have registered aliases she's allowed to use (unique). User Mallory wants to post anonymously. She can either use a registered identity with the system that maps back to her original account (think of these like alias accounts), or she can just erase her identity data. Although the post will show the registered identity, no one not in the Quorum will be able to know those aliases. This is essentially part of the user database. The map of user aliases is stored encrypted in the block store and only Quorum members will have the knowledge of the magnet links to identities.
+When Mallory joined the network, she may have registered aliases she's allowed to use (unique). User Mallory wants to post anonymously. She can either use a registered identity with the system that maps back to her original account (think of these like alias accounts), or she can just erase her identity data. Although the post will show the registered identity, no one not in the BrightTrust will be able to know those aliases. This is essentially part of the user database. The map of user aliases is stored encrypted in the block store and only BrightTrust members will have the knowledge of the magnet links to identities.
 
-In TCP/IP, we break data down into packets. Any post on the network ultimately has a header a bit like a TCP/IP header. It has a source and a destination. We will use a technique called Forward Error Correction in order to do a little trick. Normally when you post, the section for your user ID must exactly match the user ID/key you authenticated with or The Revolution Network will allow you to enter one of your registered aliases (simple map) or even erase the ID entirely, but not before generating a chunk of error correction data data that gets stuck on the end which contains enough duplicate data to reconstruct errors in the source information. We generate the checksum with the actual entity/key ID of the user doing the post, before manipulating it to an alias ID or empty. The server accepting the message must inspect the message, ensure the identity is registered to the key or be anonymous and that the user is still entitled to use the network in that capacity. The message is accepted and the forward error correction data is split up into equal pieces amongst the Quorum Members.
+In TCP/IP, we break data down into packets. Any post on the network ultimately has a header a bit like a TCP/IP header. It has a source and a destination. We will use a technique called Forward Error Correction in order to do a little trick. Normally when you post, the section for your user ID must exactly match the user ID/key you authenticated with or The Revolution Network will allow you to enter one of your registered aliases (simple map) or even erase the ID entirely, but not before generating a chunk of error correction data data that gets stuck on the end which contains enough duplicate data to reconstruct errors in the source information. We generate the checksum with the actual entity/key ID of the user doing the post, before manipulating it to an alias ID or empty. The server accepting the message must inspect the message, ensure the identity is registered to the key or be anonymous and that the user is still entitled to use the network in that capacity. The message is accepted and the forward error correction data is split up into equal pieces amongst the BrightTrust Members.
 
-The Quorum is a sharded authority. Nothing can be accomplished without a majority vote.
+The BrightTrust is a sharded authority. Nothing can be accomplished without a majority vote.
 
-The Quorum is effectively a world government. Each shard keeper must then break that shard up according to their bylaws and then safeguard all that data as the independence of the network depends on keeping the governing bodies nonpartisan and able to make informed decisions together. Together. For those in the back: TOGETHER. With majority votes. Digital contracts on shards.
+The BrightTrust is effectively a world government. Each shard keeper must then break that shard up according to their bylaws and then safeguard all that data as the independence of the network depends on keeping the governing bodies nonpartisan and able to make informed decisions together. Together. For those in the back: TOGETHER. With majority votes. Digital contracts on shards.
 
-Lets say Mallory's virus or bad content goes in the network a while and is reported or a FISA warrant is issued. At this point, the Quorum must take a vote whether to turn over the identity according to the bylaws, rules of the countries involved, etc. If the answer is Yea, then the Quorum member provides their chunk of the sharded data. Without a majority of Quorum members, the identity can not be reconstructed.
+Lets say Mallory's virus or bad content goes in the network a while and is reported or a FISA warrant is issued. At this point, the BrightTrust must take a vote whether to turn over the identity according to the bylaws, rules of the countries involved, etc. If the answer is Yea, then the BrightTrust member provides their chunk of the sharded data. Without a majority of BrightTrust members, the identity can not be reconstructed.
 
 At some point the FEC data on the posts could even be expired and deleted. It might be stored separately so this can happen. Once the "statute of limitations expires" that data could be deleted and the original identity never recovered.
 
 **Implementation Status:**
 
-- ✅ BrightChainQuorum class
+- ✅ BrightChainBrightTrust class
 - ✅ Shamir's Secret Sharing via SealingService
-- ✅ QuorumDataRecord for encrypted documents
+- ✅ BrightTrustDataRecord for encrypted documents
 - ✅ Configurable threshold (2 to 1,048,575 members)
 - ✅ Document sealing/unsealing
 - ✅ Encrypted share distribution per member
 - ✅ Signature verification for all operations
 - ✅ Temporal expiration support (statute of limitations)
 - ✅ Bootstrap mode (single-node or few-node operation with reduced thresholds)
-- ✅ Transition ceremony (atomic migration from bootstrap to full quorum mode)
+- ✅ Transition ceremony (atomic migration from bootstrap to full BrightTrust mode)
 - ✅ Share redistribution on member add/remove (new Shamir polynomial, old shares invalidated)
 - ✅ Gossip-based proposal/voting with physical operator prompts
 - ✅ Brokered anonymity pipeline (identity sealing, alias registry, anonymous membership proofs)
 - ✅ Immutable chained audit log (SHA-3 hash chain, ECIES-signed, stored via CBL whitening)
-- ✅ Hierarchical quorum support (inner quorum for routine ops when members > 20)
+- ✅ Hierarchical BrightTrust support (inner BrightTrust for routine ops when members > 20)
 - ✅ Epoch-based state machine (versioned membership snapshots, monotonically increasing)
-- ✅ Pool-isolated quorum database via BrightDB
+- ✅ Pool-isolated BrightTrust database via BrightDB
 - ✅ Expiration scheduler for statute of limitations (configurable per-content-type durations)
 - ✅ Ring signature membership proofs for anonymous content
 - ✅ Identity validator for content ingestion (real, alias, and anonymous modes)
 - ✅ 18 property-based correctness tests (P1-P18)
-- ⚠️ Quorum governance bylaws - to be defined
-- ⚠️ Quorum member selection - to be established
+- ⚠️ BrightTrust governance bylaws - to be defined
+- ⚠️ BrightTrust member selection - to be established
 
 This section has now provided a means to Identify, Authenticate and Moderate users in the network.
 Next we get into the Reputation system, and ultimately how your Reputation is your Valuation.
@@ -236,7 +236,7 @@ BrightChain now has its own full-stack development paradigm: **BrightStack** (Br
 
 The stack:
 
-- **BrightChain** (`@brightchain/brightchain-lib`) — The foundation. Block storage, encryption, identity, quorum governance, voting, and the Owner-Free Filesystem.
+- **BrightChain** (`@brightchain/brightchain-lib`) — The foundation. Block storage, encryption, identity, BrightTrust governance, voting, and the Owner-Free Filesystem.
 - **BrightDB** (`@brightchain/brightchain-db`) — The database layer. A MongoDB-like document database backed by the block store. Collections, CRUD, indexes, transactions, aggregation pipelines, change streams, and an Express middleware for instant REST APIs.
 - **Express** — The API layer. Standard Express.js with BrightChain's authentication middleware and `brightchain-api-lib` for typed request/response interfaces.
 - **React** — The frontend. Standard React with BrightChain's component libraries for identity, messaging, password management, and voting UIs.
@@ -300,7 +300,7 @@ BrightChain is no longer just a blockchain alternative or a storage protocol. It
 
 - **Private by default**: All data stored in the Owner-Free Filesystem
 - **Encrypted end-to-end**: ECIES + AES-256-GCM across all layers
-- **Democratically governed**: Homomorphic voting and quorum consensus built in
+- **Democratically governed**: Homomorphic voting and BrightTrust consensus built in
 - **Familiar to build on**: MongoDB-like database, Express APIs, React frontends
 - **Legally protected**: No node operator stores meaningful data — only random blocks
 
@@ -398,7 +398,7 @@ Whitening (Brightening) operations are pool-scoped: when a CBL is stored with wh
 
 Cross-node consistency is achieved through a gossip-based protocol where nodes announce new blocks, CBL index entries, head pointer updates, and ACL changes to peers participating in the same pool. After network partitions heal, a reconciliation service exchanges block manifests and CBL index manifests (magnet URLs with sequence numbers) to identify and fetch missing data. A discovery protocol enables nodes to locate blocks and search CBL metadata (file name, MIME type, tags) across pool peers. Read concerns — Local, Available, and Consistent — let applications choose their consistency-latency tradeoff.
 
-Pool coordination layers enforce security at every boundary. An ECDSA challenge-response protocol authenticates nodes before they can interact with pool resources. Pool ACLs — stored as signed, chained blocks in the block store itself — define granular permissions (Read, Write, Replicate, Admin) per member, with quorum-based updates requiring majority admin approval. Pools support three encryption modes: `none`, `node-specific` (ECIES with the storing node's key), and `pool-shared` (AES-256-GCM with a shared key distributed via ECIES to each member). Key rotation on member removal ensures forward secrecy for new blocks without re-encrypting existing data.
+Pool coordination layers enforce security at every boundary. An ECDSA challenge-response protocol authenticates nodes before they can interact with pool resources. Pool ACLs — stored as signed, chained blocks in the block store itself — define granular permissions (Read, Write, Replicate, Admin) per member, with BrightTrust-based updates requiring majority admin approval. Pools support three encryption modes: `none`, `node-specific` (ECIES with the storing node's key), and `pool-shared` (AES-256-GCM with a shared key distributed via ECIES to each member). Key rotation on member removal ensures forward secrecy for new blocks without re-encrypting existing data.
 
 For a comprehensive reference, see [Storage Pools Architecture](../storage/storage-pools-architecture).
 
@@ -409,7 +409,7 @@ For a comprehensive reference, see [Storage Pools Architecture](../storage/stora
 - Owner-Free Filesystem (Brightening/Whitening)
 - Super CBL hierarchical storage
 - Identity management (Member system)
-- Quorum governance (Shamir's Secret Sharing)
+- BrightTrust governance (Shamir's Secret Sharing)
 - Homomorphic voting (Paillier encryption)
 - Messaging infrastructure
 - Encryption suite (ECIES + AES-256-GCM)
@@ -453,7 +453,7 @@ At the base, BrightChain provides:
 - **Owner-Free Filesystem**: Plausibly deniable storage with legal protection for node operators
 - **Super CBL Architecture**: Unlimited file sizes through hierarchical block lists
 - **Identity Management**: BIP39/32 key derivation with SECP256k1 cryptography
-- **Brokered Anonymity**: Anonymous operations with accountability through quorum consensus
+- **Brokered Anonymity**: Anonymous operations with accountability through BrightTrust consensus
 
 ### Communication Layer: Messaging & Email
 
@@ -482,7 +482,7 @@ User-facing applications:
   - Emergency access via Shamir's Secret Sharing
   - Import from major password managers
 
-### Governance Layer: Voting & Quorum
+### Governance Layer: Voting & BrightTrust
 
 Democratic decision-making infrastructure:
 
@@ -493,8 +493,8 @@ Democratic decision-making infrastructure:
   - Government compliance: Audit logs, bulletin board, verifiable receipts
   - Hierarchical aggregation for large-scale elections
 
-- **Quorum Governance**: Shamir's Secret Sharing for collective decision-making
-  - Bootstrap mode for single-node startup, with transition ceremony to full quorum
+- **BrightTrust Governance**: Shamir's Secret Sharing for collective decision-making
+  - Bootstrap mode for single-node startup, with transition ceremony to full BrightTrust
   - Gossip-based proposal/voting with physical operator authentication
   - Share redistribution on membership changes (old shares cryptographically invalidated)
   - Configurable thresholds (2 to 1,048,575 members)
@@ -502,9 +502,9 @@ Democratic decision-making infrastructure:
   - Temporal expiration for statute of limitations
   - Brokered anonymity pipeline with identity sealing, alias registry, and ring signature membership proofs
   - Immutable chained audit log with tamper detection
-  - Hierarchical quorum for scalability (inner quorum for routine ops)
+  - Hierarchical BrightTrust for scalability (inner BrightTrust for routine ops)
   - Epoch-based state machine with versioned membership snapshots
-  - Pool-isolated quorum database via BrightDB
+  - Pool-isolated BrightTrust database via BrightDB
 
 ### Integration: A Unified Platform
 
@@ -532,7 +532,7 @@ BrightChain enables:
 - Anonymous posting with brokered anonymity
 - End-to-end encrypted messaging
 - Plausibly deniable file storage
-- Quorum-based moderation
+- BrightTrust-based moderation
 
 **3. Democratic Governance**
 
@@ -593,7 +593,7 @@ BrightChain is the technology behind The Revolution Network—a protocol and eco
 
 The platform provides:
 
-- **True Anonymity with Accountability**: Brokered anonymity via quorum consensus with identity sealing pipeline, alias registry, and ring signature membership proofs
+- **True Anonymity with Accountability**: Brokered anonymity via BrightTrust consensus with identity sealing pipeline, alias registry, and ring signature membership proofs
 - **Democratic Moderation**: Community-driven governance with gossip-based proposal/voting and physical operator authentication
 - **Privacy by Design**: Owner-Free Filesystem with plausible deniability
 - **Secure Communication**: Signal-grade encryption across all channels

@@ -9,12 +9,12 @@
  * **Validates: Requirements 9.3**
  */
 
-import fc from 'fast-check';
 import type { IEmailMetadata } from '@brightchain/brightchain-lib';
 import {
   createMailbox,
   OutboundDeliveryStatus,
 } from '@brightchain/brightchain-lib';
+import fc from 'fast-check';
 
 import type { IOutboundQueueItem } from './emailGatewayService';
 import { InMemoryOutboundQueueStore } from './outboundQueueStore';
@@ -181,8 +181,8 @@ describe('OutboundQueue FIFO Ordering Property Tests', () => {
 
 // ─── Concurrency Limit Property Tests ───────────────────────────────────────
 
-import { OutboundQueue } from './outboundQueue';
 import type { IEmailGatewayConfig } from './emailGatewayConfig';
+import { OutboundQueue } from './outboundQueue';
 
 /**
  * Build a minimal IEmailGatewayConfig with the given concurrency limit.
@@ -239,7 +239,9 @@ describe('OutboundQueue Concurrency Limit Property Tests', () => {
             let maxObservedConcurrency = 0;
 
             // Handler that simulates async work and tracks concurrency
-            const handler = async (_item: IOutboundQueueItem): Promise<void> => {
+            const handler = async (
+              _item: IOutboundQueueItem,
+            ): Promise<void> => {
               activeCount++;
               if (activeCount > maxObservedConcurrency) {
                 maxObservedConcurrency = activeCount;
@@ -274,7 +276,9 @@ describe('OutboundQueue Concurrency Limit Property Tests', () => {
             queue.stop();
 
             // The max observed concurrency must never exceed the configured limit
-            expect(maxObservedConcurrency).toBeLessThanOrEqual(concurrencyLimit);
+            expect(maxObservedConcurrency).toBeLessThanOrEqual(
+              concurrencyLimit,
+            );
             // Sanity: we should have seen at least 1 concurrent handler
             expect(maxObservedConcurrency).toBeGreaterThanOrEqual(1);
           },

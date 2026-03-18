@@ -5,9 +5,10 @@
  */
 export interface IRegistrationResponseData {
   /**
-   * The user's mnemonic phrase for account recovery
+   * The user's mnemonic phrase for account recovery.
+   * Only present when server-generated (user didn't provide their own).
    */
-  mnemonic: string;
+  mnemonic?: string;
 
   /**
    * Array of backup codes for account recovery

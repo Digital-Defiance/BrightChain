@@ -1,7 +1,7 @@
 /**
  * @fileoverview IOperatorPrompt interface with ProposalDisplay and OperatorVoteResult.
  *
- * Interface for physical operator interaction during quorum voting.
+ * Interface for physical operator interaction during BrightTrust voting.
  * Implementations live in brightchain-api-lib (CLI) or brightchain-react (web UI).
  *
  * @see Requirements 6
@@ -45,7 +45,7 @@ export interface OperatorVoteResult {
 }
 
 /**
- * Interface for physical operator interaction during quorum voting.
+ * Interface for physical operator interaction during BrightTrust voting.
  *
  * No code path may release share material without going through this interface.
  * Implementations must present the full proposal description and any attachment

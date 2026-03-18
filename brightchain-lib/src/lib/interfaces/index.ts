@@ -7,6 +7,7 @@ export type * from './blockCapacity';
 export type * from './blockEncryption';
 export type * from './blockLocationInfo';
 export type * from './blocks';
+export type * from './brightTrustDataRecordActionLog';
 export type * from './checksumConsts';
 export type * from './clusterKeys';
 export type * from './constants';
@@ -33,7 +34,6 @@ export * from './network';
 export type * from './nodeInfo';
 export type * from './position';
 export type * from './privateVotingDerivation';
-export type * from './quoromDataRecordActionLog';
 export type * from './readOnlyBasicObjectDto';
 export type * from './readOnlyDataObjectDto';
 export type * from './replicationNodeResult';
@@ -81,7 +81,7 @@ export * from './events';
 export * from './blockFetch';
 
 // Auth interfaces (node authentication, pool ACL)
-// Uses `export *` because auth contains runtime values (PoolPermission enum, hasPermission, hasQuorum)
+// Uses `export *` because auth contains runtime values (PoolPermission enum, hasPermission, hasBrightTrust)
 export * from './auth';
 
 // Client protocol interfaces (Lumen–BrightChain introspection DTOs)
@@ -92,22 +92,22 @@ export * from './clientProtocol';
 // Uses `export *` because branded modules contain runtime values (primitives, opaque types, serializers)
 export * from './branded';
 
-// Quorum bootstrap redesign interfaces
+// BrightTrust bootstrap redesign interfaces
 export type * from './aliasRecord';
 export type * from './auditLogEntry';
+export type * from './brightTrustDocumentMetadata';
+export type * from './brightTrustEpoch';
+export type * from './brightTrustMetrics';
 export type * from './chainedAuditLogEntry';
 export * from './contentWithIdentity';
 export type * from './identityRecoveryRecord';
 export type * from './operationalState';
 export type * from './proposal';
-export type * from './quorumDocumentMetadata';
-export type * from './quorumEpoch';
-export type * from './quorumMetrics';
 export type * from './redistributionJournalEntry';
 export * from './statuteConfig';
 export type * from './vote';
 
-// Quorum API base data interfaces (shared with frontend)
+// BrightTrust API base data interfaces (shared with frontend)
 export * from './api';
 
 // TCBL archive interfaces (manifest, entry descriptors, options)

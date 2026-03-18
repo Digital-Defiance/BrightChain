@@ -27,7 +27,7 @@ Modern distributed storage systems often require encryption for data security. H
    - Each recipient has their own key pair
    - Key rotation affects all recipients
 
-3. **Quorum-Based Systems**
+3. **BrightTrust-Based Systems**
 
    - Data sharded across multiple keepers
    - Each shard encrypted with different keys

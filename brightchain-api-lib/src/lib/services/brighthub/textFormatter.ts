@@ -1,11 +1,13 @@
 import {
-  getCharacterCount as getCharCount,
   IFormatOptions,
   IFormattedContent,
   ITextFormatter,
   IValidationResult,
-  parsePostContent,
 } from '@brightchain/brighthub-lib';
+import {
+  getCharacterCount as getCharCount,
+  parsePostContent,
+} from '@brightchain/brighthub-lib/lib/brighthub-lib';
 import sanitizeHtml from 'sanitize-html';
 
 /**

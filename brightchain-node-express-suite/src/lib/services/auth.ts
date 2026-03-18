@@ -35,17 +35,15 @@ import {
   KeyWrappingService,
   SystemUserService,
 } from '@digitaldefiance/node-express-suite';
-import {
-  TranslatableSuiteError,
-} from '@digitaldefiance/suite-core-lib';
 import type { SuiteCoreStringKeyValue } from '@digitaldefiance/suite-core-lib';
+import { TranslatableSuiteError } from '@digitaldefiance/suite-core-lib';
 import * as bcrypt from 'bcrypt';
 import { createHmac, randomUUID } from 'crypto';
 import * as jwt from 'jsonwebtoken';
 import type { IAuthCredentials } from '../interfaces/auth-credentials';
 import type { IAuthToken } from '../interfaces/auth-token';
-import type { ITokenPayload } from '../interfaces/token-payload';
 import type { IBrightDbApplication } from '../interfaces/bright-db-application';
+import type { ITokenPayload } from '../interfaces/token-payload';
 import type { BrightDbAuthenticationProvider } from './bright-db-authentication-provider';
 
 const BCRYPT_ROUNDS = 12;
@@ -83,6 +81,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
     email: string,
     password: SecureString,
     mnemonic?: SecureString,
+    displayName?: string,
   ): Promise<IAuthToken> {
     // Check for duplicate email
     const existing = await this.memberStore.queryIndex({ email });
@@ -104,6 +103,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
     let resultMnemonic: SecureString;
     let memberId: string;
     let memberChecksum: Checksum;
+    let mnemonicHmac: string | undefined;
 
     if (mnemonic?.value) {
       // ── User-provided mnemonic path ──────────────────────────────────
@@ -115,8 +115,9 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       }
 
       // HMAC uniqueness check
-      const hmacSecretHex =
-        this.application.environment.get('MNEMONIC_HMAC_SECRET');
+      const hmacSecretHex = this.application.environment.get(
+        'MNEMONIC_HMAC_SECRET',
+      );
       if (!hmacSecretHex) {
         throw new Error('MNEMONIC_HMAC_SECRET is not configured');
       }
@@ -163,12 +164,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
         new SecureString(trimmed),
       );
       liveMember = reconstructed;
-
-      // Store the HMAC in the mnemonic collection for uniqueness tracking
-      await mnemonicsCollection.create({
-        _id: randomUUID(),
-        hmac,
-      } as never);
+      mnemonicHmac = hmac;
     } else {
       // ── Server-generated mnemonic path (existing flow) ───────────────
       const { reference, mnemonic: generatedMnemonic } =
@@ -185,8 +181,9 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       // Reconstruct the member from the mnemonic so we have the private key.
       // createMember() generates the keypair internally but only returns a
       // reference — we need the live Member with private key to wrap it.
-      const eciesService =
-        sp.eciesService as unknown as ECIESService<typeof reference.id>;
+      const eciesService = sp.eciesService as unknown as ECIESService<
+        typeof reference.id
+      >;
       const { member: reconstructed } = Member.newMember(
         eciesService,
         MemberType.User,
@@ -231,30 +228,113 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       )
     ).toString('hex');
 
-    // Store password hash, wrapped private key, and encrypted mnemonic.
-    // Use the ID that was registered in the memberStore index.
-    // In the server-generated mnemonic path, createMember() stores the member
-    // under reference.id, but the reconstructed liveMember has a different
-    // random ID. In the user-provided mnemonic path, liveMember.id is the
-    // canonical ID (though that path needs createMember support — see below).
-    // We captured the correct memberId string above for each branch, so derive
-    // the store-lookup ID from that.
+    // ── Transactional DB writes ────────────────────────────────────────
+    // Wrap all collection-level mutations in a transaction so a failure
+    // in any step rolls back the entire registration.
     const storeId = sp.idProvider.idFromString(memberId);
-    await this.memberStore.updateMember(storeId, {
-      id: storeId,
-      privateChanges: {
-        passwordHash,
-        passwordWrappedPrivateKey,
-        mnemonicRecovery,
-      },
-    });
-
     const energyAccount = EnergyAccount.createWithTrialCredits(memberChecksum);
-    await this.energyStore.set(memberChecksum, energyAccount);
+
+    const doDbWrites = async () => {
+      // 1. Update member with password hash, wrapped key, encrypted mnemonic
+      await this.memberStore.updateMember(storeId, {
+        id: storeId,
+        privateChanges: {
+          passwordHash,
+          passwordWrappedPrivateKey,
+          mnemonicRecovery,
+        },
+      });
+
+      // 2. Create energy account
+      await this.energyStore.set(memberChecksum, energyAccount);
+
+      // 3. Store mnemonic HMAC (user-provided mnemonic path only)
+      if (mnemonicHmac) {
+        const mnemonicsCollection = this.application.db.collection<
+          Record<string, unknown> & { _id?: string }
+        >('mnemonics');
+        await mnemonicsCollection.create({
+          _id: randomUUID(),
+          hmac: mnemonicHmac,
+        } as never);
+      }
+
+      // 4. Upsert user document for admin visibility
+      const usersCol = this.application.db.collection<
+        Record<string, unknown> & { _id?: string }
+      >('users');
+      const now = new Date().toISOString();
+      const publicKeyHex = liveMember.publicKey
+        ? Buffer.from(liveMember.publicKey).toString('hex')
+        : '';
+      const userDoc: Record<string, unknown> = {
+        _id: memberId,
+        username,
+        email,
+        publicKey: publicKeyHex,
+        mnemonicRecovery: mnemonicRecovery,
+        backupCodes: [],
+        accountStatus: 'Active',
+        emailVerified: false,
+        directChallenge: false,
+        timezone: 'UTC',
+        siteLanguage: 'en-US',
+        darkMode: false,
+        createdBy: memberId,
+        updatedBy: memberId,
+        createdAt: now,
+        updatedAt: now,
+      };
+      if (passwordWrappedPrivateKey) {
+        userDoc['passwordWrappedPrivateKey'] = passwordWrappedPrivateKey;
+      }
+      if (displayName) {
+        userDoc['displayName'] = displayName;
+      }
+      try {
+        await usersCol.create(userDoc as never);
+      } catch {
+        // If the doc already exists (e.g. seeded user), update it instead
+        const updateFields: Record<string, unknown> = { updatedAt: now };
+        if (displayName) {
+          updateFields['displayName'] = displayName;
+        }
+        await usersCol.updateOne(
+          { _id: memberId } as never,
+          updateFields as never,
+        );
+      }
+    };
+
+    try {
+      if (this.application.db.withTransaction) {
+        await this.application.db.withTransaction(doDbWrites);
+      } else {
+        await doDbWrites();
+      }
+    } catch (txError) {
+      // Transaction failed — all collection writes are rolled back.
+      // Clean up the member index entry that createMember() wrote
+      // (outside the transaction, since memberStore doesn't support sessions).
+      try {
+        await this.memberStore.deleteMember(storeId);
+      } catch {
+        // Best-effort cleanup
+      }
+      throw txError;
+    }
 
     await this.sendWelcomeEmail(email, username);
 
     const token = this.signToken(memberId, username, MemberType.User);
+
+    // Capture the mnemonic value before disposing the member.
+    // Only include it in the response when server-generated (user didn't
+    // provide their own) so the frontend can display it once.
+    const returnMnemonic =
+      !mnemonic?.value && resultMnemonic.value
+        ? resultMnemonic.value
+        : undefined;
 
     // Dispose the live member to zero out private key material
     liveMember.dispose();
@@ -263,6 +343,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       token,
       memberId,
       energyBalance: energyAccount.balance,
+      ...(returnMnemonic ? { mnemonic: returnMnemonic } : {}),
     };
   }
 
@@ -278,7 +359,9 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
 
     const reference = results[0];
 
-    const storedHash = await this.getPasswordHash(reference.id as unknown as TID);
+    const storedHash = await this.getPasswordHash(
+      reference.id as unknown as TID,
+    );
     const passwordValue = credentials.password.value;
     if (!passwordValue) {
       throw new Error('Password value is empty');
@@ -288,17 +371,110 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       throw new Error('Invalid credentials');
     }
 
+    // Check account status — reject locked or non-active accounts
     const sp = ServiceProvider.getInstance();
     const memberId = sp.idProvider.idToString(reference.id);
+
+    try {
+      const usersCol = this.application.db.collection<{
+        _id?: string;
+        accountStatus?: string;
+      }>('users');
+      const idHex = sp.idProvider.toString(reference.id, 'hex');
+      let userDoc = await usersCol.findOne({ _id: idHex } as never);
+      if (!userDoc) {
+        const dashed = idHex.replace(
+          /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+          '$1-$2-$3-$4-$5',
+        );
+        userDoc = await usersCol.findOne({ _id: dashed } as never);
+      }
+      if (userDoc?.accountStatus && userDoc.accountStatus !== 'Active') {
+        throw new Error('Account is locked');
+      }
+    } catch (err) {
+      // Re-throw account-locked errors; swallow DB lookup failures
+      if (err instanceof Error && err.message === 'Account is locked') {
+        throw err;
+      }
+      // DB unavailable — allow login (fail-open for DB-less setups)
+    }
+
     const idRawBytes = sp.idProvider.toBytes(reference.id);
     const memberChecksum = sp.checksumService.calculateChecksum(idRawBytes);
 
     const energyAccount = await this.energyStore.getOrCreate(memberChecksum);
 
+    // Look up RBAC roles from user-roles + roles collections so the JWT
+    // carries the correct role even when an admin has promoted/demoted the
+    // user via the admin panel (which only updates the junction table).
+    let roles: string[] | undefined;
+    try {
+      const userRolesCol = this.application.db.collection<{
+        _id?: string;
+        userId?: string;
+        roleId?: string;
+      }>('user-roles');
+      const rolesCol = this.application.db.collection<{
+        _id?: string;
+        name?: string;
+      }>('roles');
+
+      const idHex = sp.idProvider.toString(reference.id, 'hex');
+      const dashed = idHex.replace(
+        /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+        '$1-$2-$3-$4-$5',
+      );
+
+      // Try both ID formats (hex and dashed GUID)
+      let userRoleDocs = await userRolesCol
+        .find({ userId: idHex } as never)
+        .exec();
+      if (!userRoleDocs || userRoleDocs.length === 0) {
+        userRoleDocs = await userRolesCol
+          .find({ userId: dashed } as never)
+          .exec();
+      }
+      if (!userRoleDocs || userRoleDocs.length === 0) {
+        userRoleDocs = await userRolesCol
+          .find({ userId: memberId } as never)
+          .exec();
+      }
+
+      if (userRoleDocs && userRoleDocs.length > 0) {
+        const roleIds = userRoleDocs
+          .map((ur) => ur.roleId)
+          .filter(Boolean) as string[];
+        if (roleIds.length > 0) {
+          const resolvedRoles: string[] = [];
+          for (const roleId of roleIds) {
+            const roleDoc = await rolesCol
+              .findOne({ _id: roleId } as never)
+              .exec();
+            if (roleDoc?.name) {
+              // Map role names to the 'admin' role string the middleware expects
+              if (
+                roleDoc.name === 'Admin' ||
+                roleDoc.name === 'System'
+              ) {
+                resolvedRoles.push('admin');
+              }
+            }
+          }
+          if (resolvedRoles.length > 0) {
+            roles = resolvedRoles;
+          }
+        }
+      }
+    } catch {
+      // RBAC lookup failed — fall back to MemberType-based role derivation
+    }
+
     const token = this.signToken(
       memberId,
       credentials.username,
       reference.type,
+      roles,
     );
 
     return {
@@ -308,11 +484,17 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
     };
   }
 
-  signToken(memberId: string, username: string, type: MemberType): string {
+  signToken(
+    memberId: string,
+    username: string,
+    type: MemberType,
+    roles?: string[],
+  ): string {
     const payload: Omit<ITokenPayload, 'iat' | 'exp'> = {
       memberId,
       username,
       type,
+      ...(roles && roles.length > 0 ? { roles } : {}),
     };
 
     return jwt.sign(payload, this.jwtSecret, {
@@ -339,7 +521,9 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
   }
 
   async getPasswordHash(memberId: TID): Promise<string> {
-    const profile = await this.memberStore.getMemberProfile(memberId as unknown as Uint8Array);
+    const profile = await this.memberStore.getMemberProfile(
+      memberId as unknown as Uint8Array,
+    );
     const passwordHash = profile.privateProfile?.passwordHash;
     if (!passwordHash) {
       throw new Error('No password hash found for member');
@@ -469,7 +653,10 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
 
     // 4. Verify user's signature on the signed portion of the challenge
     const signedData = requestBuffer.subarray(0, signedDataLength);
-    const userSigBuf = Buffer.from(signature, 'hex') as import('@digitaldefiance/node-ecies-lib').SignatureBuffer;
+    const userSigBuf = Buffer.from(
+      signature,
+      'hex',
+    ) as import('@digitaldefiance/node-ecies-lib').SignatureBuffer;
     const nodeEcies = new ECIESService();
 
     const publicKeyHex = await this.memberStore.getMemberPublicKeyHex(
@@ -479,7 +666,11 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       throw new Error('Invalid credentials');
     }
     const publicKeyBuf = Buffer.from(publicKeyHex, 'hex');
-    const userSigValid = nodeEcies.verifyMessage(publicKeyBuf, signedData, userSigBuf);
+    const userSigValid = nodeEcies.verifyMessage(
+      publicKeyBuf,
+      signedData,
+      userSigBuf,
+    );
     if (!userSigValid) {
       throw new Error('Invalid credentials');
     }
@@ -494,8 +685,7 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
     } catch {
       const resolvedName = username ?? email ?? 'unknown';
       const resolvedEmail = email ?? `${resolvedName}@brightchain.local`;
-      const eciesService =
-        sp.eciesService as unknown as ECIESService<TID>;
+      const eciesService = sp.eciesService as unknown as ECIESService<TID>;
       const { member: shell } = Member.newMember<TID>(
         eciesService,
         reference.type,
@@ -518,14 +708,20 @@ export class BrightDbAuthService<TID extends PlatformID = Buffer> {
       userId: string;
       token: string;
     }>('used_direct_login_tokens');
-    const existing = await tokenCollection.findOne({
-      userId: memberId,
-      token: nonceHex,
-    } as Partial<{ _id?: string; userId: string; token: string }>).exec();
+    const existing = await tokenCollection
+      .findOne({
+        userId: memberId,
+        token: nonceHex,
+      } as Partial<{ _id?: string; userId: string; token: string }>)
+      .exec();
     if (existing) {
       throw new Error('Challenge already used');
     }
-    await tokenCollection.create({ userId: memberId, token: nonceHex } as { _id?: string; userId: string; token: string });
+    await tokenCollection.create({ userId: memberId, token: nonceHex } as {
+      _id?: string;
+      userId: string;
+      token: string;
+    });
 
     // 7. Build user DTO via auth provider if available
     const userDTO = this.authProvider

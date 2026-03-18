@@ -1,9 +1,10 @@
 import {
   getGlobalServiceProvider,
   IBlockStore,
-  IQuorumService,
+  IBrightTrustService,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
+import { matchesFilter } from '@brightchain/db';
 import {
   HexString,
   IIdProvider,
@@ -15,7 +16,6 @@ import {
   DocumentCollection,
   DocumentId,
   DocumentRecord,
-  DocumentStore,
   IBrightDbDocumentStore,
   QueryBuilder,
   QueryResultType,
@@ -26,7 +26,7 @@ import {
  */
 export interface CreateDocumentOptions<TID extends PlatformID = Uint8Array> {
   /**
-   * Whether to encrypt the document using quorum sealing
+   * Whether to encrypt the document using BrightTrust sealing
    */
   encrypt?: boolean;
   /**
@@ -83,7 +83,9 @@ export class CollectionHeadRegistry {
   private static instance: CollectionHeadRegistry;
   private readonly heads = new Map<string, string>();
 
-  private constructor() {}
+  private constructor() {
+    // noop
+  }
 
   static getInstance(): CollectionHeadRegistry {
     if (!CollectionHeadRegistry.instance) {
@@ -175,10 +177,10 @@ function matchFilter<T extends DocumentRecord>(
   doc: T,
   filter: Partial<T> = {},
 ): boolean {
-  return Object.entries(filter).every(([key, value]) => {
-    if (value === undefined) return true;
-    return (doc as Record<string, unknown>)[key] === value;
-  });
+  // Delegate to the full BrightDB query engine which supports all
+  // MongoDB-style operators ($or, $and, $regex, $text, $in, etc.)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return matchesFilter(doc as any, filter as any);
 }
 
 /**
@@ -214,8 +216,8 @@ class BlockCollection<
   constructor(
     private readonly store: IBlockStore,
     private readonly collectionName: string,
-    private readonly quorumService?: IQuorumService<TID>,
-    private readonly storeId: string = 'default',
+    private readonly brightTrustService?: IBrightTrustService<TID>,
+    private readonly storeId = 'default',
     private readonly generateId: () => string = () =>
       randomUUID().replace(/-/g, ''),
   ) {
@@ -397,9 +399,9 @@ class BlockCollection<
 
     const internalDoc = doc as InternalDocumentRecord;
     if (internalDoc.__encryptionMetadata?.isEncrypted) {
-      if (!this.quorumService) {
+      if (!this.brightTrustService) {
         throw new Error(
-          'QuorumService is required to decrypt encrypted documents',
+          'BrightTrustService is required to decrypt encrypted documents',
         );
       }
       if (
@@ -420,8 +422,8 @@ class BlockCollection<
       const sp = ServiceProvider.getInstance<TID>();
       const documentTid = sp.idProvider.idFromString(sealedDocId);
 
-      // Unseal the document using QuorumService
-      const unsealedDoc = await this.quorumService.unsealDocument<T>(
+      // Unseal the document using BrightTrustService
+      const unsealedDoc = await this.brightTrustService.unsealDocument<T>(
         documentTid,
         options.membersWithPrivateKey,
       );
@@ -604,8 +606,10 @@ class BlockCollection<
 
     // Handle encryption if requested
     if (options?.encrypt) {
-      if (!this.quorumService) {
-        throw new Error('QuorumService is required for encrypted documents');
+      if (!this.brightTrustService) {
+        throw new Error(
+          'BrightTrustService is required for encrypted documents',
+        );
       }
       if (!options.agent) {
         throw new Error('Agent member is required for encrypted documents');
@@ -616,8 +620,8 @@ class BlockCollection<
         );
       }
 
-      // Seal the document using QuorumService
-      const sealedResult = await this.quorumService.sealDocument(
+      // Seal the document using BrightTrustService
+      const sealedResult = await this.brightTrustService.sealDocument(
         options.agent,
         doc,
         options.memberIds,
@@ -772,7 +776,6 @@ class BlockCollection<
   }
 }
 
-
 export class BlockDocumentStore<TID extends PlatformID = PlatformID>
   implements IBrightDbDocumentStore
 {
@@ -786,7 +789,7 @@ export class BlockDocumentStore<TID extends PlatformID = PlatformID>
 
   constructor(
     private readonly blockStore: IBlockStore,
-    private readonly quorumService?: IQuorumService<TID>,
+    private readonly brightTrustService?: IBrightTrustService<TID>,
     idProvider?: IIdProvider<TID>,
   ) {
     // Resolve the ID provider: use the injected one, fall back to ServiceProvider
@@ -820,7 +823,7 @@ export class BlockDocumentStore<TID extends PlatformID = PlatformID>
         new BlockCollection<DocumentRecord, TID>(
           this.blockStore,
           name,
-          this.quorumService,
+          this.brightTrustService,
           this.storeId,
           this.generateId,
         ),
@@ -837,8 +840,10 @@ export class BlockDocumentStore<TID extends PlatformID = PlatformID>
   encryptedCollection<T extends DocumentRecord>(
     name: string,
   ): BlockCollection<T, TID> {
-    if (!this.quorumService) {
-      throw new Error('QuorumService is required for encrypted collections');
+    if (!this.brightTrustService) {
+      throw new Error(
+        'BrightTrustService is required for encrypted collections',
+      );
     }
     if (!this.collections.has(name)) {
       this.collections.set(
@@ -846,7 +851,7 @@ export class BlockDocumentStore<TID extends PlatformID = PlatformID>
         new BlockCollection<DocumentRecord, TID>(
           this.blockStore,
           name,
-          this.quorumService,
+          this.brightTrustService,
           this.storeId,
           this.generateId,
         ),

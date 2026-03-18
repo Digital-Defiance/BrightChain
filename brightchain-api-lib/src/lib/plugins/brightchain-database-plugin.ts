@@ -9,7 +9,6 @@
  */
 
 import type {
-  IBlockStore,
   IBrightChainInitResult,
   IBrightChainMemberInitInput,
   IMemberIndexDocument,
@@ -66,9 +65,9 @@ export interface IBrightChainDatabasePluginOptions
  * - BrightChainAuthenticationProvider creation
  * - Domain-specific dev store initialization
  */
-export class BrightChainDatabasePlugin<TID extends PlatformID>
-  extends BrightDbDatabasePlugin<TID>
-{
+export class BrightChainDatabasePlugin<
+  TID extends PlatformID,
+> extends BrightDbDatabasePlugin<TID> {
   public override readonly name = 'brightchain-database';
 
   private _memberStore: MemberStore | null = null;
@@ -210,7 +209,9 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
    * Uses RbacInputBuilder to generate ephemeral credentials and calls
    * initializeWithRbac() for a fully functional dev database.
    */
-  override async initializeDevStore(): Promise<IBrightChainInitResult<TID, BrightDb>> {
+  override async initializeDevStore(): Promise<
+    IBrightChainInitResult<TID, BrightDb>
+  > {
     const result = await this.seedWithRbac(true);
     // After seeding, update the MemberStore's DB reference so queryIndex()
     // can find the freshly seeded members via DB-backed lookups.
@@ -269,6 +270,7 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
       blockStorePath: env.blockStorePath,
       useMemoryStore,
       blockSize: env.blockStoreBlockSize,
+      blockStoreLabel: env.blockStoreType !== 'disk' ? env.blockStoreType : undefined,
     };
   }
 
@@ -288,7 +290,7 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
     }
     return {
       systemUser: { id: env.systemId, type: MemberType.System },
-      adminUser: { id: env.adminId, type: MemberType.User },
+      adminUser: { id: env.adminId, type: MemberType.Admin },
       memberUser: { id: env.memberId, type: MemberType.User },
     };
   }
@@ -338,7 +340,7 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
       admin: {
         id: env.adminId,
         fullId: env.adminId,
-        type: MemberType.User,
+        type: MemberType.Admin,
         username: env.get('ADMIN_USERNAME') ?? 'admin',
         email: env.adminEmail.email,
         roleId: env.adminRoleId ?? generateId(),
@@ -377,6 +379,9 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
     const db = this.brightDb;
     const collection = db.collection<IMemberIndexDocument>('member_index');
     const existing = await collection.find({}).limit(1).toArray();
+    console.log(
+      `[BrightChain] isDatabaseEmpty: member_index query returned ${existing.length} doc(s)`,
+    );
     return existing.length === 0;
   }
 
@@ -411,12 +416,17 @@ export class BrightChainDatabasePlugin<TID extends PlatformID>
       const initResult = await service.initializeWithRbac(
         config,
         buildResult.rbacInput,
+        this._brightDb ?? undefined,
       );
 
-      // The service creates its own BrightDb internally. Update our
-      // reference so plugin.brightDb always points to the db that
-      // actually holds the seeded data.
+      // The service uses the provided BrightDb when available, or creates
+      // its own internally. Update our reference so plugin.brightDb always
+      // points to the db that actually holds the seeded data.
       this._brightDb = initResult.db;
+
+      // Also sync the block store reference so services.get('blockStore')
+      // returns the same store that BrightDb is using.
+      this._blockStore = initResult.db.getBlockStore();
 
       // Populate MemberStore in-memory indexes for seeded users.
       // The init service writes directly to the DB member_index collection

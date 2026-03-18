@@ -389,9 +389,7 @@ describe('OutboundQueue', () => {
       });
 
       // Item already at max retry count
-      await store.enqueue(
-        makeItem('msg-exhausted', { retryCount: 5 }),
-      );
+      await store.enqueue(makeItem('msg-exhausted', { retryCount: 5 }));
 
       const queue = new OutboundQueue(store, config, handler, 50);
       await queue.start();

@@ -114,12 +114,24 @@ function matchOperator(value: unknown, op: FilterOperator<unknown>): boolean {
         break;
       case '$in': {
         const arr = operand as unknown[];
-        if (!arr.some((item) => deepEquals(value, item))) return false;
+        // MongoDB: if value is an array, match if any element is in $in list
+        if (Array.isArray(value)) {
+          if (!value.some((v) => arr.some((item) => deepEquals(v, item))))
+            return false;
+        } else {
+          if (!arr.some((item) => deepEquals(value, item))) return false;
+        }
         break;
       }
       case '$nin': {
         const arr = operand as unknown[];
-        if (arr.some((item) => deepEquals(value, item))) return false;
+        // MongoDB: if value is an array, fail if any element is in $nin list
+        if (Array.isArray(value)) {
+          if (value.some((v) => arr.some((item) => deepEquals(v, item))))
+            return false;
+        } else {
+          if (arr.some((item) => deepEquals(value, item))) return false;
+        }
         break;
       }
       case '$regex': {
@@ -210,8 +222,10 @@ function matchesType(value: unknown, expectedType: string): boolean {
  */
 export function deepEquals(a: unknown, b: unknown): boolean {
   if (a === b) return true;
-  if (a === null || b === null || a === undefined || b === undefined)
-    return a === b;
+  // Treat null and undefined as equal (MongoDB semantics: querying for null
+  // matches documents where the field is missing or explicitly null).
+  if ((a === null || a === undefined) && (b === null || b === undefined))
+    return true;
   if (typeof a !== typeof b) return false;
   if (a instanceof Date && b instanceof Date)
     return a.getTime() === b.getTime();

@@ -122,7 +122,7 @@ export class SCBLController<
         method: 'post',
         path: '/store',
         handlerKey: 'storeSCBL' as keyof SCBLHandlers,
-        useAuthentication: false,
+        useAuthentication: true,
         validation: [
           body('data')
             .isString()
@@ -144,7 +144,7 @@ export class SCBLController<
         method: 'get',
         path: '/retrieve',
         handlerKey: 'retrieveSCBL' as keyof SCBLHandlers,
-        useAuthentication: false,
+        useAuthentication: true,
         validation: [
           query('magnetUrl')
             .isString()

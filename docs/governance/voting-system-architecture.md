@@ -112,7 +112,7 @@ These methods support complete homomorphic encryption - votes remain encrypted t
 
 **7. Yes/No/Abstain**
 - **Description**: Binary voting with abstention option
-- **Use Cases**: Formal votes requiring quorum
+- **Use Cases**: Formal votes requiring BrightTrust
 - **Encoding**: Ternary value (0=No, 1=Yes, 2=Abstain)
 - **API**: `PollFactory.createYesNoAbstain(question, authority)`
 - **Demo**: `YesNoAbstainDemo.tsx`
@@ -743,7 +743,7 @@ The voting system works in modern browsers with Web Crypto API support:
 - [Voting Security Best Practices](../security/voting-security-best-practices) - Security guidelines
 - [ECIES-Paillier Bridge Analysis](../security/ecies-paillier-bridge-analysis) - Cryptographic analysis
 - [BrightChain Summary](../overview/brightchain-summary) - Overall system architecture
-- [Quorum Overview](./quorum-overview) - Quorum-based governance integration
+- [BrightTrust Overview](./BrightTrust-overview) - BrightTrust-based governance integration
 
 ## Future Enhancements
 

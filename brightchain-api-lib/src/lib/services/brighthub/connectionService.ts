@@ -164,9 +164,17 @@ interface TemporaryMuteRecord {
 interface HubRecord {
   _id: string;
   ownerId: string;
+  slug?: string;
   name: string;
+  description?: string;
+  rules?: string;
   memberCount: number;
+  postCount: number;
   isDefault: boolean;
+  trustTier?: string;
+  parentHubId?: string;
+  icon?: string;
+  moderatorIds?: string[];
   createdAt: string;
 }
 
@@ -178,6 +186,20 @@ interface HubMemberRecord {
   hubId: string;
   userId: string;
   addedAt: string;
+}
+
+/**
+ * Database record type for hub banned users
+ */
+interface HubBannedUserRecord {
+  _id: string;
+  hubId: string;
+  userId: string;
+  bannedBy: string;
+  reason?: string;
+  severity: 'warning' | 'temp_ban' | 'permanent_ban';
+  expiresAt?: string;
+  bannedAt: string;
 }
 
 /**
@@ -249,6 +271,7 @@ export class ConnectionService implements IConnectionService {
   private readonly temporaryMutesCollection: Collection<TemporaryMuteRecord>;
   private readonly hubsCollection: Collection<HubRecord>;
   private readonly hubMembersCollection: Collection<HubMemberRecord>;
+  private readonly hubBannedUsersCollection: Collection<HubBannedUserRecord>;
   private readonly blocksCollection: Collection<BlockRecord>;
   private readonly listFollowersCollection: Collection<ListFollowerRecord>;
 
@@ -297,6 +320,10 @@ export class ConnectionService implements IConnectionService {
     this.hubMembersCollection = application.getModel<HubMemberRecord>(
       'brighthub_hub_members',
     );
+    this.hubBannedUsersCollection =
+      application.getModel<HubBannedUserRecord>(
+        'brighthub_hub_banned_users',
+      );
     this.blocksCollection =
       application.getModel<BlockRecord>('brighthub_blocks');
     this.listFollowersCollection = application.getModel<ListFollowerRecord>(
@@ -2010,9 +2037,17 @@ export class ConnectionService implements IConnectionService {
     return {
       _id: record._id,
       ownerId: record.ownerId,
+      slug: record.slug,
       name: record.name,
+      description: record.description,
+      rules: record.rules,
       memberCount: record.memberCount,
+      postCount: record.postCount ?? 0,
       isDefault: record.isDefault,
+      trustTier: record.trustTier as IBaseHub<string>['trustTier'],
+      parentHubId: record.parentHubId,
+      icon: record.icon,
+      moderatorIds: record.moderatorIds,
       createdAt: record.createdAt,
     };
   }
@@ -2064,35 +2099,84 @@ export class ConnectionService implements IConnectionService {
   }
 
   /**
-   * Create a new hub
+   * Create a new hub (community space)
    * @see Requirements: 30.1, 30.9
    */
-  async createHub(ownerId: string, name: string): Promise<IBaseHub<string>> {
+  async createHub(
+    ownerId: string,
+    name: string,
+    options?: {
+      slug?: string;
+      description?: string;
+      rules?: string;
+      trustTier?: string;
+      parentHubId?: string;
+      icon?: string;
+    },
+  ): Promise<IBaseHub<string>> {
     this.validateHubName(name);
 
-    // Check hub limit
-    const existingHubs = await this.hubsCollection
-      .find({ ownerId } as Partial<HubRecord>)
-      .exec();
+    // Validate slug uniqueness if provided
+    if (options?.slug) {
+      const existingSlug = await this.hubsCollection
+        .findOne({ slug: options.slug } as Partial<HubRecord>)
+        .exec();
+      if (existingSlug) {
+        throw new ConnectionServiceError(
+          ConnectionServiceErrorCode.InvalidHubName,
+          `Hub slug "${options.slug}" is already taken`,
+        );
+      }
+    }
 
-    if (existingHubs.length >= MAX_HUBS_PER_USER) {
-      throw new ConnectionServiceError(
-        ConnectionServiceErrorCode.HubLimitExceeded,
-        `Cannot create more than ${MAX_HUBS_PER_USER} hubs`,
-      );
+    // Validate parent hub exists if provided
+    if (options?.parentHubId) {
+      const parent = await this.hubsCollection
+        .findOne({ _id: options.parentHubId } as Partial<HubRecord>)
+        .exec();
+      if (!parent) {
+        throw new ConnectionServiceError(
+          ConnectionServiceErrorCode.HubNotFound,
+          'Parent hub not found',
+        );
+      }
+      // Prevent nesting deeper than one level
+      if (parent.parentHubId) {
+        throw new ConnectionServiceError(
+          ConnectionServiceErrorCode.InvalidHubName,
+          'Sub-hubs cannot be nested more than one level deep',
+        );
+      }
     }
 
     const now = new Date().toISOString();
     const record: HubRecord = {
       _id: randomUUID(),
       ownerId,
+      slug: options?.slug || undefined,
       name: name.trim(),
-      memberCount: 0,
+      description: options?.description?.trim() || undefined,
+      rules: options?.rules?.trim() || undefined,
+      memberCount: 1, // Owner is automatically a member
+      postCount: 0,
       isDefault: false,
+      trustTier: options?.trustTier || 'open',
+      parentHubId: options?.parentHubId || undefined,
+      icon: options?.icon || undefined,
+      moderatorIds: [ownerId], // Owner is automatically a moderator
       createdAt: now,
     };
 
     const created = await this.hubsCollection.create(record);
+
+    // Auto-add owner as member
+    await this.hubMembersCollection.create({
+      _id: randomUUID(),
+      hubId: created._id,
+      userId: ownerId,
+      addedAt: now,
+    });
+
     return this.recordToHub(created);
   }
 
@@ -2322,12 +2406,648 @@ export class ConnectionService implements IConnectionService {
       ownerId,
       name: DEFAULT_HUB_NAME,
       memberCount: 0,
+      postCount: 0,
       isDefault: true,
       createdAt: now,
     };
 
     const created = await this.hubsCollection.create(record);
     return this.recordToHub(created);
+  }
+
+  /**
+   * Get a hub by its slug
+   */
+  async getHubBySlug(slug: string): Promise<IBaseHub<string> | null> {
+    const record = await this.hubsCollection
+      .findOne({ slug } as Partial<HubRecord>)
+      .exec();
+    return record ? this.recordToHub(record) : null;
+  }
+
+  /**
+   * Get a hub by ID or slug
+   */
+  async getHubByIdOrSlug(idOrSlug: string): Promise<IBaseHub<string> | null> {
+    // Try by slug first
+    let record = await this.hubsCollection
+      .findOne({ slug: idOrSlug } as Partial<HubRecord>)
+      .exec();
+    if (!record) {
+      // Fall back to ID
+      record = await this.hubsCollection
+        .findOne({ _id: idOrSlug } as Partial<HubRecord>)
+        .exec();
+    }
+    return record ? this.recordToHub(record) : null;
+  }
+
+  /**
+   * Explore public hubs with optional search and sorting
+   */
+  async exploreHubs(options?: {
+    sort?: 'trending' | 'new' | 'suggested';
+    query?: string;
+    limit?: number;
+    userId?: string;
+  }): Promise<IBaseHub<string>[]> {
+    const limit = options?.limit ?? 20;
+
+    // Get all non-default hubs (community hubs)
+    const allHubs = await this.hubsCollection
+      .find({ isDefault: false } as Partial<HubRecord>)
+      .exec();
+
+    let filtered = allHubs;
+
+    // Text search filter
+    if (options?.query) {
+      const q = options.query.toLowerCase();
+      filtered = filtered.filter(
+        (h) =>
+          h.name.toLowerCase().includes(q) ||
+          (h.description && h.description.toLowerCase().includes(q)) ||
+          (h.slug && h.slug.toLowerCase().includes(q)),
+      );
+    }
+
+    // Sort
+    if (options?.sort === 'new') {
+      filtered.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    } else {
+      // trending / default: sort by member count descending
+      filtered.sort((a, b) => b.memberCount - a.memberCount);
+    }
+
+    return filtered.slice(0, limit).map((r) => this.recordToHub(r));
+  }
+
+  /**
+   * Self-service join a hub (any user can join open hubs)
+   */
+  async joinHub(hubId: string, userId: string): Promise<void> {
+    const hub = await this.hubsCollection
+      .findOne({ _id: hubId } as Partial<HubRecord>)
+      .exec();
+
+    if (!hub) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotFound,
+        `Hub ${hubId} not found`,
+      );
+    }
+
+    // Check if user is banned (permanent or active temp ban)
+    const bans = await this.hubBannedUsersCollection
+      .find({ hubId, userId } as Partial<HubBannedUserRecord>)
+      .exec();
+    const activeBan = bans.find((b) => {
+      if (b.severity === 'warning') return false; // Warnings don't prevent joining
+      if (b.severity === 'permanent_ban') return true;
+      if (b.severity === 'temp_ban' && b.expiresAt) {
+        return new Date(b.expiresAt).getTime() > Date.now();
+      }
+      return false;
+    });
+    if (activeBan) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotAuthorized,
+        'You are banned from this hub',
+      );
+    }
+
+    // Check if already a member
+    const existing = await this.hubMembersCollection
+      .findOne({ hubId, userId } as Partial<HubMemberRecord>)
+      .exec();
+
+    if (existing) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.AlreadyHubMember,
+        'Already a member of this hub',
+      );
+    }
+
+    const now = new Date().toISOString();
+    await this.hubMembersCollection.create({
+      _id: randomUUID(),
+      hubId,
+      userId,
+      addedAt: now,
+    });
+
+    await this.hubsCollection
+      .updateOne(
+        { _id: hubId } as Partial<HubRecord>,
+        { memberCount: hub.memberCount + 1 } as Partial<HubRecord>,
+      )
+      .exec();
+  }
+
+  /**
+   * Self-service leave a hub
+   */
+  async leaveHub(hubId: string, userId: string): Promise<void> {
+    const hub = await this.hubsCollection
+      .findOne({ _id: hubId } as Partial<HubRecord>)
+      .exec();
+
+    if (!hub) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotFound,
+        `Hub ${hubId} not found`,
+      );
+    }
+
+    // Cannot leave if you're the owner
+    if (hub.ownerId === userId) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotAuthorized,
+        'Hub owner cannot leave. Transfer ownership or delete the hub.',
+      );
+    }
+
+    const result = await this.hubMembersCollection
+      .deleteOne({ hubId, userId } as Partial<HubMemberRecord>)
+      .exec();
+
+    if (result.deletedCount > 0) {
+      const newCount = Math.max(0, hub.memberCount - 1);
+      await this.hubsCollection
+        .updateOne(
+          { _id: hubId } as Partial<HubRecord>,
+          { memberCount: newCount } as Partial<HubRecord>,
+        )
+        .exec();
+
+      // Remove from moderators if they were one
+      if (hub.moderatorIds?.includes(userId)) {
+        const newMods = hub.moderatorIds.filter((id) => id !== userId);
+        await this.hubsCollection
+          .updateOne(
+            { _id: hubId } as Partial<HubRecord>,
+            { moderatorIds: newMods } as Partial<HubRecord>,
+          )
+          .exec();
+      }
+    }
+  }
+
+  /**
+   * Update hub settings (owner or moderator only)
+   */
+  async updateHub(
+    hubId: string,
+    userId: string,
+    updates: {
+      name?: string;
+      description?: string;
+      rules?: string;
+      trustTier?: string;
+      icon?: string;
+    },
+  ): Promise<IBaseHub<string>> {
+    const hub = await this.hubsCollection
+      .findOne({ _id: hubId } as Partial<HubRecord>)
+      .exec();
+
+    if (!hub) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotFound,
+        `Hub ${hubId} not found`,
+      );
+    }
+
+    const isMod = hub.moderatorIds?.includes(userId);
+    if (hub.ownerId !== userId && !isMod) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotAuthorized,
+        'Not authorized to modify this hub',
+      );
+    }
+
+    if (updates.name) this.validateHubName(updates.name);
+
+    const patch: Partial<HubRecord> = {};
+    if (updates.name !== undefined) patch.name = updates.name.trim();
+    if (updates.description !== undefined)
+      patch.description = updates.description.trim();
+    if (updates.rules !== undefined) patch.rules = updates.rules.trim();
+    if (updates.trustTier !== undefined) patch.trustTier = updates.trustTier;
+    if (updates.icon !== undefined) patch.icon = updates.icon;
+
+    await this.hubsCollection
+      .updateOne({ _id: hubId } as Partial<HubRecord>, patch)
+      .exec();
+
+    const updated = await this.hubsCollection
+      .findOne({ _id: hubId } as Partial<HubRecord>)
+      .exec();
+
+    return this.recordToHub(updated!);
+  }
+
+  /**
+   * Add a moderator to a hub (owner only)
+   */
+  async addModerator(
+    hubId: string,
+    ownerId: string,
+    userId: string,
+  ): Promise<void> {
+    const hub = await this.getOwnedHub(hubId, ownerId);
+    const mods = hub.moderatorIds ?? [];
+    if (!mods.includes(userId)) {
+      mods.push(userId);
+      await this.hubsCollection
+        .updateOne(
+          { _id: hubId } as Partial<HubRecord>,
+          { moderatorIds: mods } as Partial<HubRecord>,
+        )
+        .exec();
+    }
+  }
+
+  /**
+   * Remove a moderator from a hub (owner only)
+   */
+  async removeModerator(
+    hubId: string,
+    ownerId: string,
+    userId: string,
+  ): Promise<void> {
+    const hub = await this.getOwnedHub(hubId, ownerId);
+    const mods = (hub.moderatorIds ?? []).filter((id) => id !== userId);
+    await this.hubsCollection
+      .updateOne(
+        { _id: hubId } as Partial<HubRecord>,
+        { moderatorIds: mods } as Partial<HubRecord>,
+      )
+      .exec();
+  }
+
+  /**
+   * Check if a user is a member of a hub
+   */
+  async isHubMember(hubId: string, userId: string): Promise<boolean> {
+    const record = await this.hubMembersCollection
+      .findOne({ hubId, userId } as Partial<HubMemberRecord>)
+      .exec();
+    return !!record;
+  }
+
+  /**
+   * Get all hubs a user is a member of (not just owned)
+   */
+  async getUserSubscribedHubs(
+    userId: string,
+  ): Promise<IBaseHub<string>[]> {
+    const memberships = await this.hubMembersCollection
+      .find({ userId } as Partial<HubMemberRecord>)
+      .exec();
+
+    const hubs: IBaseHub<string>[] = [];
+    for (const m of memberships) {
+      const hub = await this.hubsCollection
+        .findOne({ _id: m.hubId } as Partial<HubRecord>)
+        .exec();
+      if (hub && !hub.isDefault) {
+        hubs.push(this.recordToHub(hub));
+      }
+    }
+    return hubs;
+  }
+
+  /**
+   * Get sub-hubs of a parent hub
+   */
+  async getSubHubs(parentHubId: string): Promise<IBaseHub<string>[]> {
+    const records = await this.hubsCollection
+      .find({ parentHubId } as Partial<HubRecord>)
+      .exec();
+    return records.map((r) => this.recordToHub(r));
+  }
+
+  /**
+   * Remove a post from a hub (moderator action).
+   * Strips the hub's ID from the post's hubIds array.
+   */
+  async removePostFromHub(
+    hubId: string,
+    _postId: string,
+    moderatorId: string,
+  ): Promise<void> {
+    const hub = await this.hubsCollection
+      .findOne({ _id: hubId } as Partial<HubRecord>)
+      .exec();
+    if (!hub) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotFound,
+        `Hub ${hubId} not found`,
+      );
+    }
+
+    const isMod =
+      hub.ownerId === moderatorId ||
+      (hub.moderatorIds ?? []).includes(moderatorId);
+    if (!isMod) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotAuthorized,
+        'Not authorized to moderate this hub',
+      );
+    }
+
+    // Authorization passed — the controller will handle the actual post update
+    // since it has access to the post service. This method validates permissions only.
+  }
+
+  /**
+   * Ban a user from a hub (moderator action).
+   * Removes them from membership and prevents re-joining.
+   */
+  async banFromHub(
+    hubId: string,
+    userId: string,
+    moderatorId: string,
+  ): Promise<void> {
+    const hub = await this.hubsCollection
+      .findOne({ _id: hubId } as Partial<HubRecord>)
+      .exec();
+    if (!hub) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotFound,
+        `Hub ${hubId} not found`,
+      );
+    }
+
+    const isMod =
+      hub.ownerId === moderatorId ||
+      (hub.moderatorIds ?? []).includes(moderatorId);
+    if (!isMod) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotAuthorized,
+        'Not authorized to moderate this hub',
+      );
+    }
+
+    // Cannot ban the owner
+    if (hub.ownerId === userId) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotAuthorized,
+        'Cannot ban the hub owner',
+      );
+    }
+
+    // Remove from membership
+    const result = await this.hubMembersCollection
+      .deleteOne({ hubId, userId } as Partial<HubMemberRecord>)
+      .exec();
+
+    if (result.deletedCount > 0) {
+      const newCount = Math.max(0, hub.memberCount - 1);
+      await this.hubsCollection
+        .updateOne(
+          { _id: hubId } as Partial<HubRecord>,
+          { memberCount: newCount } as Partial<HubRecord>,
+        )
+        .exec();
+    }
+
+    // Remove from moderators if they were one
+    if (hub.moderatorIds?.includes(userId)) {
+      const newMods = hub.moderatorIds.filter((id) => id !== userId);
+      await this.hubsCollection
+        .updateOne(
+          { _id: hubId } as Partial<HubRecord>,
+          { moderatorIds: newMods } as Partial<HubRecord>,
+        )
+        .exec();
+    }
+
+    // Persist the ban to prevent re-joining
+    const existing = await this.hubBannedUsersCollection
+      .findOne({ hubId, userId } as Partial<HubBannedUserRecord>)
+      .exec();
+    if (!existing) {
+      await this.hubBannedUsersCollection.create({
+        _id: randomUUID(),
+        hubId,
+        userId,
+        bannedBy: moderatorId,
+        severity: 'permanent_ban',
+        bannedAt: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * Warn a user in a hub (graduated moderation — step 1)
+   */
+  async warnInHub(
+    hubId: string,
+    userId: string,
+    moderatorId: string,
+    reason?: string,
+  ): Promise<void> {
+    const hub = await this.hubsCollection
+      .findOne({ _id: hubId } as Partial<HubRecord>)
+      .exec();
+    if (!hub) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotFound,
+        `Hub ${hubId} not found`,
+      );
+    }
+
+    const isMod =
+      hub.ownerId === moderatorId ||
+      (hub.moderatorIds ?? []).includes(moderatorId);
+    if (!isMod) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotAuthorized,
+        'Not authorized to moderate this hub',
+      );
+    }
+
+    await this.hubBannedUsersCollection.create({
+      _id: randomUUID(),
+      hubId,
+      userId,
+      bannedBy: moderatorId,
+      reason,
+      severity: 'warning',
+      bannedAt: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Temporarily ban a user from a hub (graduated moderation — step 2)
+   */
+  async tempBanFromHub(
+    hubId: string,
+    userId: string,
+    moderatorId: string,
+    durationDays: number,
+    reason?: string,
+  ): Promise<void> {
+    const hub = await this.hubsCollection
+      .findOne({ _id: hubId } as Partial<HubRecord>)
+      .exec();
+    if (!hub) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotFound,
+        `Hub ${hubId} not found`,
+      );
+    }
+
+    const isMod =
+      hub.ownerId === moderatorId ||
+      (hub.moderatorIds ?? []).includes(moderatorId);
+    if (!isMod) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotAuthorized,
+        'Not authorized to moderate this hub',
+      );
+    }
+
+    // Remove from membership
+    const result = await this.hubMembersCollection
+      .deleteOne({ hubId, userId } as Partial<HubMemberRecord>)
+      .exec();
+    if (result.deletedCount > 0) {
+      const newCount = Math.max(0, hub.memberCount - 1);
+      await this.hubsCollection
+        .updateOne(
+          { _id: hubId } as Partial<HubRecord>,
+          { memberCount: newCount } as Partial<HubRecord>,
+        )
+        .exec();
+    }
+
+    const expiresAt = new Date(
+      Date.now() + durationDays * 86400000,
+    ).toISOString();
+
+    await this.hubBannedUsersCollection.create({
+      _id: randomUUID(),
+      hubId,
+      userId,
+      bannedBy: moderatorId,
+      reason,
+      severity: 'temp_ban',
+      expiresAt,
+      bannedAt: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Unban a user from a hub (moderator action)
+   */
+  async unbanFromHub(
+    hubId: string,
+    userId: string,
+    moderatorId: string,
+  ): Promise<void> {
+    const hub = await this.hubsCollection
+      .findOne({ _id: hubId } as Partial<HubRecord>)
+      .exec();
+    if (!hub) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotFound,
+        `Hub ${hubId} not found`,
+      );
+    }
+
+    const isMod =
+      hub.ownerId === moderatorId ||
+      (hub.moderatorIds ?? []).includes(moderatorId);
+    if (!isMod) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotAuthorized,
+        'Not authorized to moderate this hub',
+      );
+    }
+
+    await this.hubBannedUsersCollection
+      .deleteOne({ hubId, userId } as Partial<HubBannedUserRecord>)
+      .exec();
+  }
+
+  /**
+   * Get banned users for a hub
+   */
+  async getBannedUsers(
+    hubId: string,
+    moderatorId: string,
+  ): Promise<HubBannedUserRecord[]> {
+    const hub = await this.hubsCollection
+      .findOne({ _id: hubId } as Partial<HubRecord>)
+      .exec();
+    if (!hub) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotFound,
+        `Hub ${hubId} not found`,
+      );
+    }
+
+    const isMod =
+      hub.ownerId === moderatorId ||
+      (hub.moderatorIds ?? []).includes(moderatorId);
+    if (!isMod) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotAuthorized,
+        'Not authorized to view banned users',
+      );
+    }
+
+    return this.hubBannedUsersCollection
+      .find({ hubId } as Partial<HubBannedUserRecord>)
+      .exec();
+  }
+
+  /**
+   * Transfer hub ownership to another user
+   */
+  async transferHubOwnership(
+    hubId: string,
+    currentOwnerId: string,
+    newOwnerId: string,
+  ): Promise<IBaseHub<string>> {
+    const hub = await this.getOwnedHub(hubId, currentOwnerId);
+
+    // Ensure new owner is a member
+    const isMember = await this.isHubMember(hubId, newOwnerId);
+    if (!isMember) {
+      throw new ConnectionServiceError(
+        ConnectionServiceErrorCode.HubNotAuthorized,
+        'New owner must be a member of the hub',
+      );
+    }
+
+    // Transfer ownership
+    const mods = hub.moderatorIds ?? [];
+    // Add new owner to moderators if not already
+    if (!mods.includes(newOwnerId)) {
+      mods.push(newOwnerId);
+    }
+
+    await this.hubsCollection
+      .updateOne(
+        { _id: hubId } as Partial<HubRecord>,
+        {
+          ownerId: newOwnerId,
+          moderatorIds: mods,
+        } as Partial<HubRecord>,
+      )
+      .exec();
+
+    const updated = await this.hubsCollection
+      .findOne({ _id: hubId } as Partial<HubRecord>)
+      .exec();
+    return this.recordToHub(updated!);
   }
 
   // ── Mutual Connections ──────────────────────────────────────────────

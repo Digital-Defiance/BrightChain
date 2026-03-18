@@ -11,12 +11,18 @@ import {
   PostType,
 } from '@brightchain/brighthub-lib';
 import { randomUUID } from 'crypto';
+import { moderateContent } from './autoModerationService';
 import { getTextFormatter } from './textFormatter';
 
 /**
- * Maximum character limit for posts
+ * Maximum character limit for timeline posts (microblog style)
  */
 export const POST_MAX_CHARACTERS = 280;
+
+/**
+ * Maximum character limit for hub posts (long-form discussions)
+ */
+export const HUB_POST_MAX_CHARACTERS = 10000;
 
 /**
  * Maximum number of media attachments per post
@@ -66,6 +72,9 @@ interface PostRecord {
   repostCount: number;
   replyCount: number;
   quoteCount: number;
+  upvoteCount: number;
+  downvoteCount: number;
+  score: number;
   isEdited: boolean;
   editedAt?: string;
   hubIds?: string[];
@@ -94,6 +103,17 @@ interface RepostRecord {
   _id: string;
   userId: string;
   postId: string;
+  createdAt: string;
+}
+
+/**
+ * Database record type for votes (upvote/downvote tracking)
+ */
+interface VoteRecord {
+  _id: string;
+  userId: string;
+  postId: string;
+  voteType: 'up' | 'down';
   createdAt: string;
 }
 
@@ -127,6 +147,7 @@ export class PostService implements IPostService {
   private readonly postsCollection: Collection<PostRecord>;
   private readonly likesCollection: Collection<LikeRecord>;
   private readonly repostsCollection: Collection<RepostRecord>;
+  private readonly votesCollection: Collection<VoteRecord>;
   private readonly textFormatter = getTextFormatter();
   private notificationService?: INotificationService;
 
@@ -135,6 +156,8 @@ export class PostService implements IPostService {
     this.likesCollection = application.getModel<LikeRecord>('brighthub_likes');
     this.repostsCollection =
       application.getModel<RepostRecord>('brighthub_reposts');
+    this.votesCollection =
+      application.getModel<VoteRecord>('brighthub_votes');
   }
 
   /**
@@ -146,10 +169,79 @@ export class PostService implements IPostService {
   }
 
   /**
+   * Set the reputation collection for tracking hub-scoped reputation.
+   */
+  setReputationCollection(
+    collection: Collection<{
+      _id: string;
+      userId: string;
+      hubId: string;
+      score: number;
+      postCount: number;
+      upvotesReceived: number;
+      lastActiveAt: string;
+    }>,
+  ): void {
+    this.reputationCollection = collection;
+  }
+
+  private reputationCollection?: Collection<{
+    _id: string;
+    userId: string;
+    hubId: string;
+    score: number;
+    postCount: number;
+    upvotesReceived: number;
+    lastActiveAt: string;
+  }>;
+
+  /**
+   * Update hub reputation for a user when they receive an upvote or create a post.
+   */
+  private async updateHubReputation(
+    authorId: string,
+    hubIds: string[] | undefined,
+    event: 'post' | 'upvote',
+  ): Promise<void> {
+    if (!this.reputationCollection || !hubIds || hubIds.length === 0) return;
+
+    const now = new Date().toISOString();
+    for (const hubId of hubIds) {
+      const existing = await this.reputationCollection
+        .findOne({ userId: authorId, hubId } as never)
+        .exec();
+
+      if (existing) {
+        const update: Record<string, unknown> = { lastActiveAt: now };
+        if (event === 'post') {
+          update['postCount'] = existing.postCount + 1;
+          update['score'] = existing.score + 1;
+        } else {
+          update['upvotesReceived'] = existing.upvotesReceived + 1;
+          update['score'] = existing.score + 1;
+        }
+        await this.reputationCollection
+          .updateOne({ _id: existing._id } as never, update as never)
+          .exec();
+      } else {
+        await this.reputationCollection.create({
+          _id: randomUUID(),
+          userId: authorId,
+          hubId,
+          score: 1,
+          postCount: event === 'post' ? 1 : 0,
+          upvotesReceived: event === 'upvote' ? 1 : 0,
+          lastActiveAt: now,
+        });
+      }
+    }
+  }
+
+  /**
    * Validate post content
    * @throws PostServiceError if content is invalid
    */
-  private validateContent(content: string): void {
+  private validateContent(content: string, maxChars?: number): void {
     // Check for empty content
     if (!content || content.trim().length === 0) {
       throw new PostServiceError(
@@ -159,11 +251,12 @@ export class PostService implements IPostService {
     }
 
     // Check character count using smart counting
+    const limit = maxChars ?? POST_MAX_CHARACTERS;
     const charCount = this.textFormatter.getCharacterCount(content);
-    if (charCount > POST_MAX_CHARACTERS) {
+    if (charCount > limit) {
       throw new PostServiceError(
         PostErrorCode.ContentTooLong,
-        `Post content exceeds maximum of ${POST_MAX_CHARACTERS} characters (current: ${charCount})`,
+        `Post content exceeds maximum of ${limit} characters (current: ${charCount})`,
       );
     }
   }
@@ -228,6 +321,9 @@ export class PostService implements IPostService {
       repostCount: record.repostCount,
       replyCount: record.replyCount,
       quoteCount: record.quoteCount,
+      upvoteCount: record.upvoteCount || 0,
+      downvoteCount: record.downvoteCount || 0,
+      score: record.score || 0,
       isEdited: record.isEdited,
       editedAt: record.editedAt,
       hubIds: record.hubIds,
@@ -249,8 +345,21 @@ export class PostService implements IPostService {
     content: string,
     options?: ICreatePostOptions,
   ): Promise<IBasePostData<string>> {
-    // Validate content
-    this.validateContent(content);
+    // Validate content — hub posts get the higher limit
+    const isHubPost = options?.hubIds && options.hubIds.length > 0;
+    this.validateContent(
+      content,
+      isHubPost ? HUB_POST_MAX_CHARACTERS : undefined,
+    );
+
+    // Auto-moderation check
+    const modResult = moderateContent(content);
+    if (modResult.decision === 'reject') {
+      throw new PostServiceError(
+        PostErrorCode.ContentTooLong, // Reuse existing error code
+        `Post rejected by auto-moderation: ${modResult.reasons.join(', ')}`,
+      );
+    }
 
     // Validate media attachments
     this.validateMediaAttachments(options?.mediaAttachments);
@@ -288,6 +397,9 @@ export class PostService implements IPostService {
       repostCount: 0,
       replyCount: 0,
       quoteCount: 0,
+      upvoteCount: 0,
+      downvoteCount: 0,
+      score: 0,
       isEdited: false,
       hubIds: options?.hubIds,
       isBlogPost: !options?.parentPostId,
@@ -312,8 +424,46 @@ export class PostService implements IPostService {
             { replyCount: parent.replyCount + 1, updatedAt: now },
           )
           .exec();
+
+        // Notify the parent post author about the reply (don't notify self-replies)
+        if (this.notificationService && parent.authorId !== authorId) {
+          try {
+            await this.notificationService.createNotification(
+              parent.authorId,
+              NotificationType.Reply,
+              authorId,
+              { targetId: parent._id, content: formatted.raw.slice(0, 100) },
+            );
+          } catch {
+            // Non-fatal
+          }
+        }
       }
     }
+
+    // Notify mentioned users
+    if (this.notificationService && formatted.mentions.length > 0) {
+      for (const mentionedUsername of formatted.mentions) {
+        // Mentions are usernames — in a real system we'd resolve to userId.
+        // For now, use the username as the recipientId (the notification service
+        // or a resolver layer would map this).
+        if (mentionedUsername !== authorId) {
+          try {
+            await this.notificationService.createNotification(
+              mentionedUsername,
+              NotificationType.Mention,
+              authorId,
+              { targetId: created._id, content: formatted.raw.slice(0, 100) },
+            );
+          } catch {
+            // Non-fatal
+          }
+        }
+      }
+    }
+
+    // Update hub reputation for the post author
+    this.updateHubReputation(authorId, options?.hubIds, 'post').catch(() => {});
 
     return this.recordToPost(created);
   }
@@ -567,6 +717,141 @@ export class PostService implements IPostService {
   }
 
   /**
+   * Upvote a post. If the user already downvoted, switches to upvote.
+   * If already upvoted, idempotent (no-op).
+   * Uses the votes collection for persistent, tamper-proof tracking.
+   */
+  async upvotePost(postId: string, userId: string): Promise<void> {
+    const post = await this.postsCollection.findOne({ _id: postId }).exec();
+    if (!post || post.isDeleted) {
+      throw new PostServiceError(PostErrorCode.PostNotFound, 'Post not found');
+    }
+
+    // Check for existing vote in the votes collection
+    const existingVote = await this.votesCollection
+      .findOne({ userId, postId })
+      .exec();
+
+    const now = new Date().toISOString();
+
+    if (existingVote) {
+      if (existingVote.voteType === 'up') {
+        // Already upvoted — idempotent
+        return;
+      }
+      // Was a downvote — switch to upvote
+      await this.votesCollection
+        .updateOne(
+          { _id: existingVote._id },
+          { voteType: 'up', createdAt: now } as Partial<VoteRecord>,
+        )
+        .exec();
+
+      // Adjust counts: remove downvote, add upvote
+      await this.postsCollection
+        .updateOne(
+          { _id: postId },
+          {
+            upvoteCount: (post.upvoteCount || 0) + 1,
+            downvoteCount: Math.max(0, (post.downvoteCount || 0) - 1),
+            score: (post.upvoteCount || 0) + 1 - Math.max(0, (post.downvoteCount || 0) - 1),
+            updatedAt: now,
+          },
+        )
+        .exec();
+    } else {
+      // New upvote
+      await this.votesCollection.create({
+        _id: randomUUID(),
+        userId,
+        postId,
+        voteType: 'up',
+        createdAt: now,
+      });
+
+      await this.postsCollection
+        .updateOne(
+          { _id: postId },
+          {
+            upvoteCount: (post.upvoteCount || 0) + 1,
+            score: (post.upvoteCount || 0) + 1 - (post.downvoteCount || 0),
+            updatedAt: now,
+          },
+        )
+        .exec();
+    }
+
+    // Update hub reputation for the post author
+    this.updateHubReputation(post.authorId, post.hubIds, 'upvote').catch(() => {});
+  }
+
+  /**
+   * Downvote a post. If the user already upvoted, switches to downvote.
+   * If already downvoted, idempotent (no-op).
+   * Uses the votes collection for persistent, tamper-proof tracking.
+   */
+  async downvotePost(postId: string, userId: string): Promise<void> {
+    const post = await this.postsCollection.findOne({ _id: postId }).exec();
+    if (!post || post.isDeleted) {
+      throw new PostServiceError(PostErrorCode.PostNotFound, 'Post not found');
+    }
+
+    // Check for existing vote
+    const existingVote = await this.votesCollection
+      .findOne({ userId, postId })
+      .exec();
+
+    const now = new Date().toISOString();
+
+    if (existingVote) {
+      if (existingVote.voteType === 'down') {
+        // Already downvoted — idempotent
+        return;
+      }
+      // Was an upvote — switch to downvote
+      await this.votesCollection
+        .updateOne(
+          { _id: existingVote._id },
+          { voteType: 'down', createdAt: now } as Partial<VoteRecord>,
+        )
+        .exec();
+
+      // Adjust counts: remove upvote, add downvote
+      await this.postsCollection
+        .updateOne(
+          { _id: postId },
+          {
+            upvoteCount: Math.max(0, (post.upvoteCount || 0) - 1),
+            downvoteCount: (post.downvoteCount || 0) + 1,
+            score: Math.max(0, (post.upvoteCount || 0) - 1) - ((post.downvoteCount || 0) + 1),
+            updatedAt: now,
+          },
+        )
+        .exec();
+    } else {
+      // New downvote
+      await this.votesCollection.create({
+        _id: randomUUID(),
+        userId,
+        postId,
+        voteType: 'down',
+        createdAt: now,
+      });
+
+      await this.postsCollection
+        .updateOne(
+          { _id: postId },
+          {
+            downvoteCount: (post.downvoteCount || 0) + 1,
+            score: (post.upvoteCount || 0) - ((post.downvoteCount || 0) + 1),
+            updatedAt: now,
+          },
+        )
+        .exec();
+    }
+  }
+
+  /**
    * Repost a post
    * @see Requirements: 3.3, 3.6
    */
@@ -617,6 +902,9 @@ export class PostService implements IPostService {
       repostCount: 0,
       replyCount: 0,
       quoteCount: 0,
+      upvoteCount: 0,
+      downvoteCount: 0,
+      score: 0,
       isEdited: false,
       isBlogPost: false,
       isDeleted: false,
@@ -635,6 +923,20 @@ export class PostService implements IPostService {
         { repostCount: post.repostCount + 1, updatedAt: now },
       )
       .exec();
+
+    // Notify the original post author about the repost
+    if (this.notificationService && post.authorId !== userId) {
+      try {
+        await this.notificationService.createNotification(
+          post.authorId,
+          NotificationType.Repost,
+          userId,
+          { targetId: postId },
+        );
+      } catch {
+        // Non-fatal
+      }
+    }
 
     return this.recordToPost(created);
   }
@@ -682,6 +984,9 @@ export class PostService implements IPostService {
       repostCount: 0,
       replyCount: 0,
       quoteCount: 0,
+      upvoteCount: 0,
+      downvoteCount: 0,
+      score: 0,
       isEdited: false,
       isBlogPost: true,
       isDeleted: false,
@@ -700,6 +1005,20 @@ export class PostService implements IPostService {
         { quoteCount: quotedPost.quoteCount + 1, updatedAt: now },
       )
       .exec();
+
+    // Notify the quoted post author
+    if (this.notificationService && quotedPost.authorId !== userId) {
+      try {
+        await this.notificationService.createNotification(
+          quotedPost.authorId,
+          NotificationType.Quote,
+          userId,
+          { targetId: postId, content: formatted.raw.slice(0, 100) },
+        );
+      } catch {
+        // Non-fatal
+      }
+    }
 
     return this.recordToPost(created);
   }

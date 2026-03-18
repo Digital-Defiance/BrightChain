@@ -31,6 +31,15 @@ const DEFAULT_PAGE_LIMIT = 20;
 const MAX_PAGE_LIMIT = 100;
 
 /**
+ * Database record type for main users collection (read-only lookup)
+ */
+interface MainUserRecord {
+  _id: string;
+  username: string;
+  email: string;
+}
+
+/**
  * Database record type for user profiles
  */
 interface UserProfileRecord {
@@ -138,8 +147,10 @@ export class UserProfileService implements IUserProfileService {
   private readonly followRequestsCollection: Collection<FollowRequestRecord>;
   private readonly blocksCollection: Collection<BlockRecord>;
   private readonly mutesCollection: Collection<MuteRecord>;
+  private readonly usersCollection: Collection<MainUserRecord>;
   private notificationService?: INotificationService;
   private connectionService?: IConnectionService;
+  private rawUserSearch?: (query: string, limit: number) => Promise<MainUserRecord[]>;
 
   constructor(application: IApplicationWithCollections) {
     this.userProfilesCollection = application.getModel<UserProfileRecord>(
@@ -153,6 +164,7 @@ export class UserProfileService implements IUserProfileService {
     this.blocksCollection =
       application.getModel<BlockRecord>('brighthub_blocks');
     this.mutesCollection = application.getModel<MuteRecord>('brighthub_mutes');
+    this.usersCollection = application.getModel<MainUserRecord>('users');
   }
 
   /**
@@ -172,6 +184,18 @@ export class UserProfileService implements IUserProfileService {
   }
 
   /**
+   * Set an optional raw user search callback for querying the main users
+   * store directly (e.g. via BrightDB). This is needed because the
+   * BlockCollection-based usersCollection may not see users that were
+   * seeded via the RBAC init (written to BrightDB, not the block index).
+   */
+  setRawUserSearch(
+    fn: (query: string, limit: number) => Promise<MainUserRecord[]>,
+  ): void {
+    this.rawUserSearch = fn;
+  }
+
+  /**
    * Create a BrightHub user profile for a newly registered user.
    * Should be called during user registration to ensure the profile exists
    * before any BrightHub social operations are attempted.
@@ -179,6 +203,7 @@ export class UserProfileService implements IUserProfileService {
   public async createProfileForUser(
     userId: string,
     username: string,
+    displayName?: string,
   ): Promise<void> {
     // Check if profile already exists (idempotent)
     const existing = await this.userProfilesCollection
@@ -190,7 +215,7 @@ export class UserProfileService implements IUserProfileService {
     await this.userProfilesCollection.create({
       _id: userId,
       username,
-      displayName: username,
+      displayName: displayName || username,
       bio: '',
       followerCount: 0,
       followingCount: 0,
@@ -210,6 +235,44 @@ export class UserProfileService implements IUserProfileService {
       createdAt: now,
       updatedAt: now,
     });
+  }
+
+  /**
+   * Ensure a BrightHub profile exists for the given user.
+   * Looks up the username from the main users collection if needed.
+   * Returns the profile record.
+   */
+  private async ensureProfile(
+    userId: string,
+  ): Promise<UserProfileRecord | null> {
+    let profile = await this.userProfilesCollection
+      .findOne({ _id: userId })
+      .exec();
+    if (profile) return profile;
+
+    // Look up username from main users collection.
+    // Only auto-create a profile when the user actually exists in the
+    // users collection — otherwise return null so callers can throw
+    // UserNotFound for truly non-existent user IDs.
+    let username = userId;
+    try {
+      const mainUser = await this.usersCollection
+        .findOne({ _id: userId })
+        .exec();
+      if (!mainUser) {
+        return null;
+      }
+      if (mainUser.username) {
+        username = mainUser.username;
+      }
+    } catch {
+      // If the users collection lookup fails, don't auto-create
+      return null;
+    }
+
+    await this.createProfileForUser(userId, username);
+    profile = await this.userProfilesCollection.findOne({ _id: userId }).exec();
+    return profile;
   }
 
   /**
@@ -324,16 +387,17 @@ export class UserProfileService implements IUserProfileService {
       );
     }
 
-    // Get target user profile
-    const targetProfile = await this.userProfilesCollection
-      .findOne({ _id: followedId })
-      .exec();
+    // Get target user profile (auto-create if needed)
+    const targetProfile = await this.ensureProfile(followedId);
     if (!targetProfile) {
       throw new UserProfileServiceError(
         UserProfileErrorCode.UserNotFound,
         'User not found',
       );
     }
+
+    // Ensure follower also has a profile
+    await this.ensureProfile(followerId);
 
     // Check if approval is required
     const needsApproval = await this.requiresApproval(
@@ -371,6 +435,20 @@ export class UserProfileService implements IUserProfileService {
       };
 
       const created = await this.followRequestsCollection.create(requestRecord);
+
+      // Notify the target user about the follow request
+      if (this.notificationService) {
+        try {
+          await this.notificationService.createNotification(
+            followedId,
+            NotificationType.FollowRequest,
+            followerId,
+            { content: options?.message?.slice(0, 100) },
+          );
+        } catch {
+          // Non-fatal
+        }
+      }
 
       return {
         success: true,
@@ -785,10 +863,29 @@ export class UserProfileService implements IUserProfileService {
   async getProfile(
     userId: string,
     requesterId?: string,
+    usernameHint?: string,
   ): Promise<IBaseUserProfile<string>> {
-    const profile = await this.userProfilesCollection
-      .findOne({ _id: userId })
-      .exec();
+    let profile = await this.ensureProfile(userId);
+
+    // If usernameHint was provided and the profile was just auto-created
+    // with a UUID as username, update it to the real username.
+    if (
+      profile &&
+      usernameHint &&
+      profile.username === userId &&
+      usernameHint !== userId
+    ) {
+      const now = new Date().toISOString();
+      await this.userProfilesCollection
+        .updateOne(
+          { _id: userId },
+          { username: usernameHint, displayName: usernameHint, updatedAt: now },
+        )
+        .exec();
+      profile = await this.userProfilesCollection
+        .findOne({ _id: userId })
+        .exec();
+    }
 
     if (!profile) {
       throw new UserProfileServiceError(
@@ -964,6 +1061,9 @@ export class UserProfileService implements IUserProfileService {
     userId: string,
     updates: IUpdateProfileOptions,
   ): Promise<IBaseUserProfile<string>> {
+    // Ensure profile exists before updating
+    await this.ensureProfile(userId);
+
     const profile = await this.userProfilesCollection
       .findOne({ _id: userId })
       .exec();
@@ -1358,6 +1458,85 @@ export class UserProfileService implements IUserProfileService {
       .exec();
 
     return updatedSettings;
+  }
+
+  /**
+   * Search for user profiles by username or display name.
+   * Uses the $text index on username and displayName for efficient
+   * server-side filtering, with a $regex fallback for substring matching
+   * when the text search yields no results.
+   */
+  async searchUsers(
+    query: string,
+    options?: IPaginationOptions,
+  ): Promise<IPaginatedResult<IBaseUserProfile<string>>> {
+    const limit = this.getLimit(options);
+
+    // Try $text search first (uses the user_search_text index)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let matched: UserProfileRecord[] = await (this.userProfilesCollection as any)
+      .find({ $text: { $search: query } })
+      .limit(limit + 1)
+      .exec();
+
+    // $text search is word-boundary based; fall back to $regex for
+    // substring matching if it returns nothing (e.g. partial username).
+    if (matched.length === 0) {
+      const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const pattern = new RegExp(escaped, 'i');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      matched = await (this.userProfilesCollection as any)
+        .find({
+          $or: [
+            { username: { $regex: pattern } },
+            { displayName: { $regex: pattern } },
+          ],
+        })
+        .limit(limit + 1)
+        .exec();
+    }
+
+    // If no BrightHub profiles matched, fall back to the main users
+    // collection so users who haven't interacted with BrightHub yet are
+    // still discoverable (e.g. for ACL principal pickers).
+    if (matched.length === 0) {
+      const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const pattern = new RegExp(escaped, 'i');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let mainUsers: MainUserRecord[] = await (this.usersCollection as any)
+        .find({
+          $or: [
+            { username: { $regex: pattern } },
+            { email: { $regex: pattern } },
+          ],
+        })
+        .limit(limit + 1)
+        .exec();
+
+      // BlockCollection may not see users seeded via RBAC init.
+      // Fall back to the raw DB search if available.
+      if (mainUsers.length === 0 && this.rawUserSearch) {
+        mainUsers = await this.rawUserSearch(query, limit + 1);
+      }
+
+      // Auto-create BrightHub profiles for discovered users
+      for (const mu of mainUsers) {
+        // The _id may be a GuidV4Buffer if the users collection is backed
+        // by a BrightDB Model that hydrates IDs. Normalize to string.
+        const id = typeof mu._id === 'string' ? mu._id : String(mu._id);
+        const profile = await this.ensureProfile(id);
+        if (profile) matched.push(profile);
+      }
+    }
+
+    const hasMore = matched.length > limit;
+    const items = matched.slice(0, limit).map((r) => this.recordToProfile(r));
+
+    return {
+      items,
+      hasMore,
+      totalCount: items.length,
+    };
   }
 }
 

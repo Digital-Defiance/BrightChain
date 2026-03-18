@@ -118,12 +118,24 @@ function matchOperator(value: unknown, op: FilterOperator<unknown>): boolean {
         break;
       case '$in': {
         const arr = operand as unknown[];
-        if (!arr.some((item) => deepEquals(value, item))) return false;
+        // MongoDB: if value is an array, match if any element is in $in list
+        if (Array.isArray(value)) {
+          if (!value.some((v) => arr.some((item) => deepEquals(v, item))))
+            return false;
+        } else {
+          if (!arr.some((item) => deepEquals(value, item))) return false;
+        }
         break;
       }
       case '$nin': {
         const arr = operand as unknown[];
-        if (arr.some((item) => deepEquals(value, item))) return false;
+        // MongoDB: if value is an array, fail if any element is in $nin list
+        if (Array.isArray(value)) {
+          if (value.some((v) => arr.some((item) => deepEquals(v, item))))
+            return false;
+        } else {
+          if (arr.some((item) => deepEquals(value, item))) return false;
+        }
         break;
       }
       case '$regex': {

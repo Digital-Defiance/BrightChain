@@ -11,6 +11,9 @@
       "cache": true,
       "dependsOn": ["^build"]
     },
+    "e2e": {
+      "cache": false
+    },
     "lint": {
       "cache": true,
       "inputs": [
@@ -67,7 +70,8 @@
       }
     }
   },
-  "nxCloudAccessToken": "NjZhYTQ0M2EtZGE0ZS00YjFlLTkzZDEtZDMyYzk2OGY5MjhifHJlYWQtd3JpdGU=",
+  "nxCloudAccessToken": "",
+  "neverConnectToCloud": true,
   "useInferencePlugins": false,
   "release": {
     "version": {

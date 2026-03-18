@@ -4,6 +4,7 @@ import {
   Application,
   json,
   NextFunction,
+  raw,
   Request,
   Response,
   urlencoded,
@@ -81,14 +82,31 @@ export class Middlewares {
               'https://*.brightchain.org',
               'https://ka-p.fontawesome.com',
             ],
+            // --- Script CSP Strategy ---
+            // 'strict-dynamic' propagates trust from nonce-bearing scripts
+            // to scripts they create. This is required because the Font
+            // Awesome kit script dynamically injects inline <script>
+            // elements for its auto-replacement feature (used by BrightHub's
+            // icon markup system with <i class="fa-..."> tags).
+            //
+            // The nonce on the Vite entry <script type="module"> plus
+            // 'strict-dynamic' allows both the entry and its static ES
+            // module imports to execute. Modern Chromium (89+) propagates
+            // 'strict-dynamic' trust through the module import graph.
+            //
+            // 'self' and host allowlists are ignored when 'strict-dynamic'
+            // is present per the CSP spec, but are kept as fallbacks for
+            // browsers that don't support 'strict-dynamic'.
             scriptSrc: [
               "'self'",
-              //"'unsafe-inline'",
               "'strict-dynamic'",
+              "'unsafe-inline'", // fallback for browsers without strict-dynamic
               'https://kit.fontawesome.com',
+              'https://ka-f.fontawesome.com',
               (req: IncomingMessage, res: ServerResponse) =>
                 `'nonce-${(res as Response).locals['cspNonce']}'`,
               `'sha256-6PKsc2tce3h07DOGUTGAjjPqKvoXMqTLynuHAwpWTL4='`, // fontawesome
+              "'wasm-unsafe-eval'", // required for bzip2 WASM module
             ],
             styleSrc: [
               "'self'",
@@ -101,13 +119,15 @@ export class Middlewares {
               'https://fonts.gstatic.com',
               'https://ka-f.fontawesome.com',
             ],
-            frameSrc: ["'self'"],
+            frameSrc: ["'self'", 'blob:'],
           },
         },
       }),
     );
     // Enable CORS
     app.use(cors(Middlewares.corsOptionsDelegate));
+    // Parse incoming requests with raw binary payloads (e.g. file upload chunks)
+    app.use(raw({ type: 'application/octet-stream', limit: '50mb' }));
     // Parse incoming requests with JSON payloads
     app.use(json());
     // Parse incoming requests with urlencoded payloads

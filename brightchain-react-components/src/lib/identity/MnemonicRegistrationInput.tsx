@@ -14,6 +14,7 @@ import {
   FormControlLabel,
   TextField,
 } from '@mui/material';
+import * as React from 'react';
 import { FC, useCallback, useState } from 'react';
 
 export interface MnemonicRegistrationInputProps {

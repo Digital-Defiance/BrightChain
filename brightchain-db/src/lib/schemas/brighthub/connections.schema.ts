@@ -256,20 +256,40 @@ export const HUBS_SCHEMA: CollectionSchema = {
   properties: {
     _id: { type: 'string', required: true },
     ownerId: { type: 'string', required: true },
-    name: { type: 'string', required: true, maxLength: 50 },
-    memberCount: { type: 'number', required: true, minimum: 0, maximum: 150 },
+    slug: { type: 'string', maxLength: 100 },
+    name: { type: 'string', required: true, maxLength: 100 },
+    description: { type: 'string', maxLength: 2000 },
+    rules: { type: 'string', maxLength: 5000 },
+    memberCount: { type: 'number', required: true, minimum: 0 },
+    postCount: { type: 'number', required: true, minimum: 0 },
     isDefault: { type: 'boolean', required: true },
+    trustTier: {
+      type: 'string',
+      enum: ['open', 'verified', 'encrypted'],
+    },
+    parentHubId: { type: 'string' },
+    icon: { type: 'string', maxLength: 500 },
+    moderatorIds: {
+      type: 'array',
+      items: { type: 'string' },
+    },
     createdAt: { type: 'string', required: true },
   },
-  required: ['ownerId', 'name', 'memberCount', 'isDefault', 'createdAt'],
+  required: ['ownerId', 'name', 'memberCount', 'postCount', 'isDefault', 'createdAt'],
   additionalProperties: false,
   validationLevel: 'strict',
   validationAction: 'error',
   indexes: [
     // User's hubs
     { fields: { ownerId: 1, createdAt: -1 } },
-    // Hub name uniqueness per owner
-    { fields: { ownerId: 1, name: 1 }, options: { unique: true } },
+    // Slug lookup (unique when present)
+    { fields: { slug: 1 }, options: { unique: true, sparse: true } },
+    // Explore: public hubs sorted by member count
+    { fields: { isDefault: 1, memberCount: -1 } },
+    // Sub-hub lookup
+    { fields: { parentHubId: 1 } },
+    // Trust tier filtering
+    { fields: { trustTier: 1, memberCount: -1 } },
   ],
 };
 
@@ -515,5 +535,46 @@ export const CONNECTION_INTERACTIONS_SCHEMA: CollectionSchema = {
     { fields: { userId: 1, strength: 1 } },
     // Time-based queries
     { fields: { userId: 1, updatedAt: -1 } },
+  ],
+};
+
+// ═══════════════════════════════════════════════════════
+// Hub Banned Users Collection
+// ═══════════════════════════════════════════════════════
+
+/** Collection name for hub banned users */
+export const HUB_BANNED_USERS_COLLECTION = 'brighthub_hub_banned_users';
+
+/**
+ * Schema definition for the hub banned users collection.
+ * Tracks users banned from specific hubs to prevent re-joining.
+ */
+export const HUB_BANNED_USERS_SCHEMA: CollectionSchema = {
+  name: 'brighthub_hub_banned_user',
+  properties: {
+    _id: { type: 'string', required: true },
+    hubId: { type: 'string', required: true },
+    userId: { type: 'string', required: true },
+    bannedBy: { type: 'string', required: true },
+    reason: { type: 'string', maxLength: 500 },
+    severity: {
+      type: 'string',
+      required: true,
+      enum: ['warning', 'temp_ban', 'permanent_ban'],
+    },
+    expiresAt: { type: 'string' },
+    bannedAt: { type: 'string', required: true },
+  },
+  required: ['hubId', 'userId', 'bannedBy', 'severity', 'bannedAt'],
+  additionalProperties: false,
+  validationLevel: 'strict',
+  validationAction: 'error',
+  indexes: [
+    // Unique: one ban per user per hub
+    { fields: { hubId: 1, userId: 1 }, options: { unique: true } },
+    // Check if user is banned from a hub
+    { fields: { userId: 1, hubId: 1 } },
+    // List banned users in a hub
+    { fields: { hubId: 1, bannedAt: -1 } },
   ],
 };

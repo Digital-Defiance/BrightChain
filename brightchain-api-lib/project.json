@@ -9,7 +9,9 @@
   ],
   "implicitDependencies": [
     "brightchain-lib",
-    "brightchain-test-utils"
+    "brightchain-test-utils",
+    "digitalburnbag-api-lib",
+    "digitalburnbag-lib"
   ],
   "targets": {
     "build": {

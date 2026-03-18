@@ -348,8 +348,9 @@ BrightChain's `AntiSpamFilter` integrates with Postfix via the milter protocol. 
 sudo apt install spamassassin spamass-milter
 
 # Enable and start
-sudo systemctl enable spamassassin
-sudo systemctl start spamassassin
+# Note: On Ubuntu 24.04+, the service is named "spamd", not "spamassassin".
+sudo systemctl enable spamd
+sudo systemctl start spamd
 sudo systemctl enable spamass-milter
 sudo systemctl start spamass-milter
 ```

@@ -207,27 +207,38 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   async initialize(
     config: IBrightChainMemberInitConfig,
     input: IBrightChainMemberInitInput<TID>,
+    existingDb?: BrightDb,
   ): Promise<IBrightChainBaseInitResult<BrightDb, TID>> {
     const useDisk = !!config.blockStorePath && !config.useMemoryStore;
 
     // Steps 1-3: only run once per service instance.
     if (!this._db) {
-      const blockStore = useDisk
-        ? buildDiskBlockStore(config.blockStorePath!, config.blockSize)
-        : buildMemoryBlockStore(config.blockSize);
+      if (existingDb) {
+        // Use the caller-provided BrightDb (e.g. from the database plugin
+        // which already created the correct store — Azure, S3, disk, etc.)
+        this._db = existingDb;
+        this._memberCblIndex = new CBLIndex(
+          existingDb,
+          existingDb.getBlockStore(),
+        );
+      } else {
+        const blockStore = useDisk
+          ? buildDiskBlockStore(config.blockStorePath!, config.blockSize)
+          : buildMemoryBlockStore(config.blockSize);
 
-      const db = new BrightDb(blockStore, {
-        name: config.memberPoolName,
-        // Use PersistentHeadRegistry for disk stores so data survives across
-        // service instances; use an isolated in-memory registry otherwise.
-        ...(useDisk
-          ? { dataDir: config.blockStorePath! }
-          : { headRegistry: HeadRegistry.createIsolated() }),
-      });
-      await db.connect();
-      this._db = db;
+        const db = new BrightDb(blockStore, {
+          name: config.memberPoolName,
+          // Use PersistentHeadRegistry for disk stores so data survives across
+          // service instances; use an isolated in-memory registry otherwise.
+          ...(useDisk
+            ? { dataDir: config.blockStorePath! }
+            : { headRegistry: HeadRegistry.createIsolated() }),
+        });
+        await db.connect();
+        this._db = db;
 
-      this._memberCblIndex = new CBLIndex(db, blockStore);
+        this._memberCblIndex = new CBLIndex(db, blockStore);
+      }
     }
 
     const db = this._db;
@@ -487,6 +498,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
   async initializeWithRbac(
     config: IBrightChainMemberInitConfig,
     input: IBrightChainRbacInitInput<TID>,
+    existingDb?: BrightDb,
   ): Promise<IBrightChainInitResult<TID, BrightDb>> {
     // Steps 1-7: delegate to the base initialize() for member_index entries
     const memberInitInput: IBrightChainMemberInitInput<TID> = {
@@ -494,7 +506,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
       adminUser: { id: input.adminUser.id, type: input.adminUser.type },
       memberUser: { id: input.memberUser.id, type: input.memberUser.type },
     };
-    const baseResult = await this.initialize(config, memberInitInput);
+    const baseResult = await this.initialize(config, memberInitInput, existingDb);
     const db = this.db;
 
     const now = new Date();
@@ -602,14 +614,13 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
       existingUserRoles.map((ur) => `${ur.userId}:${ur.roleId}`),
     );
 
-    // Mnemonics — match by the _id values we're about to insert
-    const candidateMnemonicIds = mnemonicDocuments.map((d) =>
-      String(mnemonicsModel.dehydrate(d)['_id']),
-    );
+    // Mnemonics — match by the stable hmac value (unique index), NOT _id
+    // which is a freshly generated GUID each run.
+    const candidateHmacs = mnemonicDocuments.map((d) => d.hmac);
     const existingMnemonics = await mnemonicsModel.collection
-      .find({ _id: { $in: candidateMnemonicIds } } as never)
+      .find({ hmac: { $in: candidateHmacs } } as never)
       .toArray();
-    const existingMnemonicIds = new Set(existingMnemonics.map((m) => m._id));
+    const existingMnemonicHmacs = new Set(existingMnemonics.map((m) => m.hmac));
 
     // Compare typed documents against existing data using stable fields.
     const rolesToInsert = roleDocuments.filter(
@@ -624,8 +635,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
       return !existingUserRolePairs.has(pair);
     });
     const mnemonicsToInsert = mnemonicDocuments.filter(
-      (d) =>
-        !existingMnemonicIds.has(String(mnemonicsModel.dehydrate(d)['_id'])),
+      (d) => !existingMnemonicHmacs.has(d.hmac),
     );
 
     const totalToInsert =
@@ -736,6 +746,8 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     switch (type) {
       case MemberType.System:
         return 'System';
+      case MemberType.Admin:
+        return 'Admin';
       case MemberType.User:
         return 'User';
       default:
@@ -797,7 +809,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     log('');
     log(`  Pool:           ${config.memberPoolName}`);
     log(
-      `  Block Store:    ${config.blockStorePath ?? 'in-memory (ephemeral)'}`,
+      `  Block Store:    ${config.blockStoreLabel ?? config.blockStorePath ?? 'in-memory (ephemeral)'}`,
     );
     log(`  Already Init:   ${result.alreadyInitialized}`);
     log(`  Inserted:       ${result.insertedCount}`);
@@ -830,7 +842,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     log('');
     log(`  Pool:           ${config.memberPoolName}`);
     log(
-      `  Block Store:    ${config.blockStorePath ?? 'in-memory (ephemeral)'}`,
+      `  Block Store:    ${config.blockStoreLabel ?? config.blockStorePath ?? 'in-memory (ephemeral)'}`,
     );
     log(`  Already Init:   ${result.alreadyInitialized}`);
     log(`  Inserted:       ${result.insertedCount}`);
@@ -874,7 +886,7 @@ export class BrightChainMemberInitService<TID extends PlatformID> {
     log('');
     log(`  Pool:           ${config.memberPoolName}`);
     log(
-      `  Block Store:    ${config.blockStorePath ?? 'in-memory (ephemeral)'}`,
+      `  Block Store:    ${config.blockStoreLabel ?? config.blockStorePath ?? 'in-memory (ephemeral)'}`,
     );
     log(`  Already Init:   ${result.alreadyInitialized}`);
     log(`  Inserted:       ${result.insertedCount}`);

@@ -24,7 +24,7 @@ We've implemented the **foundation** of the energy economy system:
 - CBL operations
 - Whitening operations
 - Encryption operations
-- Quorum operations
+- BrightTrust operations
 - Messaging operations
 - Reputation operations
 - Network operations
@@ -208,7 +208,7 @@ brightchain-lib/src/lib/
 - ⏳ BlockService (charge for storage)
 - ⏳ CBLService (charge for CBL operations)
 - ⏳ MessageService (charge for messaging)
-- ⏳ QuorumService (charge for quorum ops)
+- ⏳ BrightTrustService (charge for BrightTrust ops)
 
 ## Success Metrics
 

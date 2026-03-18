@@ -42,7 +42,6 @@ import {
   validationError,
 } from '../../utils/errorResponse';
 import { BaseController } from '../base';
-import { SessionsController } from './sessions';
 
 /**
  * Error codes for block API operations
@@ -311,21 +310,15 @@ export class BlocksController<
         return validationError('Missing required field: data');
       }
 
-      // Get authenticated member from session
-      const sessionsController =
-        this.application.getController<SessionsController>('sessions');
-
-      let memberSession;
-      try {
-        memberSession = sessionsController.getMemberFromSession(
-          (req.headers as any).authorization as string,
-        );
-        if (!memberSession) {
-          return unauthorizedError();
-        }
-      } catch {
+      // Get authenticated member from session (req.user set by auth middleware)
+      const user = (req as { user?: { id?: string } }).user;
+      if (!user?.id) {
         return unauthorizedError();
       }
+
+      // The member parameter is not actually used by storeBlock (prefixed with _)
+      // so we pass a minimal object to satisfy the type signature
+      const memberSession = { id: { toString: () => user.id } };
 
       // Parse options if provided
       const blockStoreOptions: BlockStoreOptions | undefined = options

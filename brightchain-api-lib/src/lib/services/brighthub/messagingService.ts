@@ -25,6 +25,8 @@ import {
   MessagingErrorCode,
   MessagingServiceError,
   TYPING_INDICATOR_TIMEOUT_MS,
+  INotificationService,
+  NotificationType,
 } from '@brightchain/brighthub-lib';
 import { randomUUID } from 'crypto';
 import { getTextFormatter } from './textFormatter';
@@ -205,6 +207,7 @@ export class MessagingService implements IMessagingService {
   private readonly blocksCollection: Collection<BlockRecord>;
   private readonly deletedConversationsCollection: Collection<DeletedConversationRecord>;
   private readonly textFormatter = getTextFormatter();
+  private notificationService?: INotificationService;
 
   constructor(application: IApplicationWithCollections) {
     this.conversationsCollection = application.getModel<ConversationRecord>(
@@ -246,6 +249,13 @@ export class MessagingService implements IMessagingService {
       application.getModel<DeletedConversationRecord>(
         'brighthub_deleted_conversations',
       );
+  }
+
+  /**
+   * Set the notification service for creating notifications on message events.
+   */
+  setNotificationService(service: INotificationService): void {
+    this.notificationService = service;
   }
 
   // ═══════════════════════════════════════════════════════
@@ -684,6 +694,30 @@ export class MessagingService implements IMessagingService {
       } as Partial<ConversationRecord>)
       .exec();
 
+    // Notify other participants about the new message
+    if (this.notificationService) {
+      const conversation = await this.conversationsCollection
+        .findOne({ _id: conversationId })
+        .exec();
+      if (conversation) {
+        const recipients = conversation.participantIds.filter(
+          (id) => id !== senderId,
+        );
+        for (const recipientId of recipients) {
+          try {
+            await this.notificationService.createNotification(
+              recipientId,
+              NotificationType.NewMessage,
+              senderId,
+              { targetId: conversationId, content: preview },
+            );
+          } catch {
+            // Non-fatal
+          }
+        }
+      }
+    }
+
     return this.recordToMessage(record);
   }
 
@@ -867,6 +901,20 @@ export class MessagingService implements IMessagingService {
     };
     await this.messageReactionsCollection.create(record);
 
+    // Notify the message author about the reaction
+    if (this.notificationService && message.senderId !== userId) {
+      try {
+        await this.notificationService.createNotification(
+          message.senderId,
+          NotificationType.MessageReaction,
+          userId,
+          { targetId: messageId, content: emoji },
+        );
+      } catch {
+        // Non-fatal
+      }
+    }
+
     return {
       _id: record._id,
       messageId: record.messageId,
@@ -1005,6 +1053,20 @@ export class MessagingService implements IMessagingService {
       createdAt: new Date().toISOString(),
     };
     await this.messageRequestsCollection.create(record);
+
+    // Notify the recipient about the message request
+    if (this.notificationService) {
+      try {
+        await this.notificationService.createNotification(
+          recipientId,
+          NotificationType.MessageRequest,
+          senderId,
+          { content: preview },
+        );
+      } catch {
+        // Non-fatal
+      }
+    }
 
     return {
       _id: record._id,

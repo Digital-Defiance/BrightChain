@@ -68,6 +68,22 @@ interface IConnectionHandlers extends TypedHandlers {
   getHubs: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   addHubMembers: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   removeHubMembers: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  exploreHubs: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  getHubDetail: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  updateHub: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  joinHub: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  leaveHub: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  addModerator: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  removeModerator: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  getSubHubs: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  banFromHub: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  unbanFromHub: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  getBannedUsers: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  getHubMembersList: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  getHubLeaderboard: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  removePostFromHub: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  transferOwnership: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  deleteHub: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   bulkMembers: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   getConnectionInsights: ApiRequestHandler<
     IApiMessageResponse | ApiErrorResponse
@@ -157,6 +173,21 @@ export class BrightHubConnectionController<
       case ConnectionServiceErrorCode.NoteTooLong:
       case ConnectionServiceErrorCode.InvalidImportFormat:
       case ConnectionServiceErrorCode.ImportRateLimited:
+      case ConnectionServiceErrorCode.AlreadyHubMember:
+      case ConnectionServiceErrorCode.InvalidHubName:
+      case ConnectionServiceErrorCode.InvalidListName:
+      case ConnectionServiceErrorCode.InvalidCategoryName:
+      case ConnectionServiceErrorCode.InvalidNoteContent:
+      case ConnectionServiceErrorCode.AlreadyMember:
+      case ConnectionServiceErrorCode.NotMember:
+      case ConnectionServiceErrorCode.CategoryAlreadyAssigned:
+      case ConnectionServiceErrorCode.CategoryNotAssigned:
+      case ConnectionServiceErrorCode.CannotDeleteDefaultCategory:
+      case ConnectionServiceErrorCode.DuplicateCategoryName:
+      case ConnectionServiceErrorCode.CannotDeleteDefaultHub:
+      case ConnectionServiceErrorCode.ListNotPublic:
+      case ConnectionServiceErrorCode.AlreadyFollowingList:
+      case ConnectionServiceErrorCode.NotFollowingList:
         return validationError(error.message);
       default:
         return handleError(error);
@@ -177,7 +208,7 @@ export class BrightHubConnectionController<
       // ── List Management (21.3) ──
       routeConfig('post', '/lists', {
         handlerKey: 'createList',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Create a connection list',
@@ -192,7 +223,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/lists', {
         handlerKey: 'getUserLists',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: "Get user's connection lists",
@@ -207,7 +238,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('put', '/lists/:id', {
         handlerKey: 'updateList',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Update a connection list',
@@ -222,7 +253,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('delete', '/lists/:id', {
         handlerKey: 'deleteList',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Delete a connection list',
@@ -234,7 +265,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/lists/:id/members', {
         handlerKey: 'addMembers',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Add members to a list',
@@ -246,7 +277,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('delete', '/lists/:id/members', {
         handlerKey: 'removeMembers',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Remove members from a list',
@@ -258,7 +289,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/lists/:id/members', {
         handlerKey: 'getListMembers',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get list members',
@@ -274,7 +305,7 @@ export class BrightHubConnectionController<
       // ── Additional Endpoints (21.4) ──
       routeConfig('get', '/connections/categories', {
         handlerKey: 'getCategories',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get connection categories',
@@ -289,7 +320,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/connections/:id/note', {
         handlerKey: 'addNote',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Add a note to a connection',
@@ -301,7 +332,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/connections/suggestions', {
         handlerKey: 'getSuggestions',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get connection suggestions',
@@ -316,7 +347,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/connections/mutual/:userId', {
         handlerKey: 'getMutualConnections',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get mutual connections',
@@ -331,7 +362,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/connections/:id/priority', {
         handlerKey: 'setPriority',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Set connection priority',
@@ -343,7 +374,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/connections/:id/quiet', {
         handlerKey: 'setQuietMode',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Set quiet mode for connection',
@@ -358,7 +389,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/connections/:id/mute/temporary', {
         handlerKey: 'setTemporaryMute',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Set temporary mute for connection',
@@ -373,7 +404,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/connections/export', {
         handlerKey: 'exportConnections',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Export connections',
@@ -388,7 +419,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/connections/import', {
         handlerKey: 'importConnections',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Import connections',
@@ -403,7 +434,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/hubs', {
         handlerKey: 'createHub',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Create a hub',
@@ -415,7 +446,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/hubs', {
         handlerKey: 'getHubs',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: "Get user's hubs",
@@ -430,7 +461,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/hubs/:id/members', {
         handlerKey: 'addHubMembers',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Add members to a hub',
@@ -445,7 +476,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('delete', '/hubs/:id/members', {
         handlerKey: 'removeHubMembers',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Remove members from a hub',
@@ -458,9 +489,205 @@ export class BrightHubConnectionController<
           },
         },
       }),
+      routeConfig('get', '/hubs/explore', {
+        handlerKey: 'exploreHubs',
+        useAuthentication: false,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Explore and discover public hubs',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'HubsResponse', description: 'Hubs retrieved' },
+          },
+        },
+      }),
+      routeConfig('get', '/hubs/:idOrSlug', {
+        handlerKey: 'getHubDetail',
+        useAuthentication: false,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Get hub detail by ID or slug',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'HubResponse', description: 'Hub retrieved' },
+            404: { schema: 'ErrorResponse', description: 'Hub not found' },
+          },
+        },
+      }),
+      routeConfig('put', '/hubs/:id', {
+        handlerKey: 'updateHub',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Update hub settings',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'HubResponse', description: 'Hub updated' },
+          },
+        },
+      }),
+      routeConfig('post', '/hubs/:idOrSlug/join', {
+        handlerKey: 'joinHub',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Join a hub',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'Joined hub' },
+          },
+        },
+      }),
+      routeConfig('post', '/hubs/:idOrSlug/leave', {
+        handlerKey: 'leaveHub',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Leave a hub',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'Left hub' },
+          },
+        },
+      }),
+      routeConfig('post', '/hubs/:id/moderators', {
+        handlerKey: 'addModerator',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Add a moderator to a hub',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'Moderator added' },
+          },
+        },
+      }),
+      routeConfig('delete', '/hubs/:id/moderators', {
+        handlerKey: 'removeModerator',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Remove a moderator from a hub',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: {
+              schema: 'MessageResponse',
+              description: 'Moderator removed',
+            },
+          },
+        },
+      }),
+      routeConfig('get', '/hubs/:id/sub-hubs', {
+        handlerKey: 'getSubHubs',
+        useAuthentication: false,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Get sub-hubs of a hub',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'HubsResponse', description: 'Sub-hubs retrieved' },
+          },
+        },
+      }),
+      routeConfig('post', '/hubs/:id/ban', {
+        handlerKey: 'banFromHub',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Ban a user from a hub',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'User banned' },
+          },
+        },
+      }),
+      routeConfig('post', '/hubs/:id/unban', {
+        handlerKey: 'unbanFromHub',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Unban a user from a hub',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'User unbanned' },
+          },
+        },
+      }),
+      routeConfig('get', '/hubs/:id/banned', {
+        handlerKey: 'getBannedUsers',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Get banned users list for a hub',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'Banned users retrieved' },
+          },
+        },
+      }),
+      routeConfig('get', '/hubs/:id/members-list', {
+        handlerKey: 'getHubMembersList',
+        useAuthentication: false,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Get hub members with profiles',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'Members retrieved' },
+          },
+        },
+      }),
+      routeConfig('get', '/hubs/:id/leaderboard', {
+        handlerKey: 'getHubLeaderboard',
+        useAuthentication: false,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Get hub reputation leaderboard',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'Leaderboard retrieved' },
+          },
+        },
+      }),
+      routeConfig('post', '/hubs/:id/remove-post', {
+        handlerKey: 'removePostFromHub',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Remove a post from a hub (moderator action)',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'MessageResponse', description: 'Post removed from hub' },
+          },
+        },
+      }),
+      routeConfig('post', '/hubs/:id/transfer', {
+        handlerKey: 'transferOwnership',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Transfer hub ownership',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            200: { schema: 'HubResponse', description: 'Ownership transferred' },
+          },
+        },
+      }),
+      routeConfig('delete', '/hubs/:id', {
+        handlerKey: 'deleteHub',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Delete a hub (owner only)',
+          tags: ['BrightHub Hubs'],
+          responses: {
+            204: { schema: 'EmptyResponse', description: 'Hub deleted' },
+          },
+        },
+      }),
       routeConfig('post', '/lists/:id/members/bulk', {
         handlerKey: 'bulkMembers',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Bulk add or remove members from a list',
@@ -475,7 +702,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/connections/:id/insights', {
         handlerKey: 'getConnectionInsights',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get connection insights',
@@ -490,7 +717,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('get', '/follow-requests', {
         handlerKey: 'getFollowRequests',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get pending follow requests',
@@ -505,7 +732,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/follow-requests/:id/approve', {
         handlerKey: 'approveFollowRequest',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Approve a follow request',
@@ -517,7 +744,7 @@ export class BrightHubConnectionController<
       }),
       routeConfig('post', '/follow-requests/:id/reject', {
         handlerKey: 'rejectFollowRequest',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Reject a follow request',
@@ -556,6 +783,22 @@ export class BrightHubConnectionController<
       getHubs: this.handleGetHubs.bind(this),
       addHubMembers: this.handleAddHubMembers.bind(this),
       removeHubMembers: this.handleRemoveHubMembers.bind(this),
+      exploreHubs: this.handleExploreHubs.bind(this),
+      getHubDetail: this.handleGetHubDetail.bind(this),
+      updateHub: this.handleUpdateHub.bind(this),
+      joinHub: this.handleJoinHub.bind(this),
+      leaveHub: this.handleLeaveHub.bind(this),
+      addModerator: this.handleAddModerator.bind(this),
+      removeModerator: this.handleRemoveModerator.bind(this),
+      getSubHubs: this.handleGetSubHubs.bind(this),
+      banFromHub: this.handleBanFromHub.bind(this),
+      unbanFromHub: this.handleUnbanFromHub.bind(this),
+      getBannedUsers: this.handleGetBannedUsers.bind(this),
+      getHubMembersList: this.handleGetHubMembersList.bind(this),
+      getHubLeaderboard: this.handleGetHubLeaderboard.bind(this),
+      removePostFromHub: this.handleRemovePostFromHub.bind(this),
+      transferOwnership: this.handleTransferOwnership.bind(this),
+      deleteHub: this.handleDeleteHub.bind(this),
       bulkMembers: this.handleBulkMembers.bind(this),
       getConnectionInsights: this.handleGetConnectionInsights.bind(this),
       getFollowRequests: this.handleGetFollowRequests.bind(this),
@@ -1054,13 +1297,31 @@ export class BrightHubConnectionController<
     req: unknown,
   ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
     try {
-      const { ownerId, name } = (
-        req as { body: { ownerId: string; name: string } }
+      const { ownerId, name, slug, description, rules, trustTier, parentHubId, icon } = (
+        req as {
+          body: {
+            ownerId: string;
+            name: string;
+            slug?: string;
+            description?: string;
+            rules?: string;
+            trustTier?: string;
+            parentHubId?: string;
+            icon?: string;
+          };
+        }
       ).body;
       if (!ownerId) return validationError('Missing required field: ownerId');
       if (!name) return validationError('Missing required field: name');
 
-      const hub = await this.getConnectionService().createHub(ownerId, name);
+      const hub = await this.getConnectionService().createHub(ownerId, name, {
+        slug,
+        description,
+        rules,
+        trustTier,
+        parentHubId,
+        icon,
+      });
       return {
         statusCode: 201,
         response: {
@@ -1086,7 +1347,9 @@ export class BrightHubConnectionController<
           'Missing required query parameter: userId or ownerId',
         );
 
-      const result = await this.getConnectionService().getHubs(userId);
+      const service = this.getConnectionService();
+      // Return subscribed hubs (hubs the user is a member of)
+      const result = await service.getUserSubscribedHubs(userId);
       return {
         statusCode: 200,
         response: { message: 'OK', data: result } as IApiMessageResponse,
@@ -1144,6 +1407,468 @@ export class BrightHubConnectionController<
         statusCode: 200,
         response: { message: 'Members removed from hub' },
       };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // New Hub Community Handlers
+  // ═══════════════════════════════════════════════════════
+
+  private async handleExploreHubs(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const typedReq = req as { query: Record<string, string | undefined> };
+      const sort = (typedReq.query['sort'] as 'trending' | 'new' | 'suggested') ?? 'trending';
+      const query = typedReq.query['q'];
+      const limit = typedReq.query['limit'] ? parseInt(typedReq.query['limit'], 10) : undefined;
+      const userId = typedReq.query['userId'];
+
+      const service = this.getConnectionService();
+      const hubs = await service.exploreHubs({ sort, query, limit, userId: userId ?? undefined });
+      return {
+        statusCode: 200,
+        response: { message: 'OK', data: { hubs } } as IApiMessageResponse,
+      };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleGetHubDetail(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { idOrSlug } = (req as { params: { idOrSlug: string } }).params;
+      const typedReq = req as { query: Record<string, string | undefined>; params: { idOrSlug: string } };
+      const userId = typedReq.query['userId'];
+
+      if (!idOrSlug) return validationError('Missing required parameter: idOrSlug');
+
+      const service = this.getConnectionService();
+
+      const hub = await service.getHubByIdOrSlug(idOrSlug);
+      if (!hub) return notFoundError('Hub', idOrSlug);
+
+      let isMember = false;
+      if (userId) {
+        isMember = await service.isHubMember(hub._id, userId);
+      }
+
+      const subHubs = await service.getSubHubs(hub._id);
+
+      return {
+        statusCode: 200,
+        response: {
+          message: 'OK',
+          data: { hub, isMember, subHubs },
+        } as IApiMessageResponse,
+      };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleUpdateHub(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { userId, name, description, rules, trustTier, icon } = (
+        req as {
+          body: {
+            userId: string;
+            name?: string;
+            description?: string;
+            rules?: string;
+            trustTier?: string;
+            icon?: string;
+          };
+          params: { id: string };
+        }
+      ).body;
+
+      if (!id) return validationError('Missing required parameter: id');
+      if (!userId) return validationError('Missing required field: userId');
+
+      const service = this.getConnectionService();
+      const hub = await service.updateHub(id, userId, { name, description, rules, trustTier, icon });
+      return {
+        statusCode: 200,
+        response: { message: 'Hub updated', data: hub } as IApiMessageResponse,
+      };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleJoinHub(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { idOrSlug } = (req as { params: { idOrSlug: string } }).params;
+      const { userId } = (req as { body: { userId: string }; params: { idOrSlug: string } }).body;
+
+      if (!idOrSlug) return validationError('Missing required parameter: idOrSlug');
+      if (!userId) return validationError('Missing required field: userId');
+
+      const service = this.getConnectionService();
+
+      const hub = await service.getHubByIdOrSlug(idOrSlug);
+      if (!hub) return notFoundError('Hub', idOrSlug);
+
+      await service.joinHub(hub._id, userId);
+      return { statusCode: 200, response: { message: 'Joined hub' } };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleLeaveHub(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { idOrSlug } = (req as { params: { idOrSlug: string } }).params;
+      const { userId } = (req as { body: { userId: string }; params: { idOrSlug: string } }).body;
+
+      if (!idOrSlug) return validationError('Missing required parameter: idOrSlug');
+      if (!userId) return validationError('Missing required field: userId');
+
+      const service = this.getConnectionService();
+
+      const hub = await service.getHubByIdOrSlug(idOrSlug);
+      if (!hub) return notFoundError('Hub', idOrSlug);
+
+      await service.leaveHub(hub._id, userId);
+      return { statusCode: 200, response: { message: 'Left hub' } };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleAddModerator(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { ownerId, userId } = (
+        req as { body: { ownerId: string; userId: string }; params: { id: string } }
+      ).body;
+
+      if (!id) return validationError('Missing required parameter: id');
+      if (!ownerId) return validationError('Missing required field: ownerId');
+      if (!userId) return validationError('Missing required field: userId');
+
+      const service = this.getConnectionService();
+      await service.addModerator(id, ownerId, userId);
+      return { statusCode: 200, response: { message: 'Moderator added' } };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleRemoveModerator(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { ownerId, userId } = (
+        req as { body: { ownerId: string; userId: string }; params: { id: string } }
+      ).body;
+
+      if (!id) return validationError('Missing required parameter: id');
+      if (!ownerId) return validationError('Missing required field: ownerId');
+      if (!userId) return validationError('Missing required field: userId');
+
+      const service = this.getConnectionService();
+      await service.removeModerator(id, ownerId, userId);
+      return { statusCode: 200, response: { message: 'Moderator removed' } };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleGetSubHubs(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      if (!id) return validationError('Missing required parameter: id');
+
+      const service = this.getConnectionService();
+      const subHubs = await service.getSubHubs(id);
+      return {
+        statusCode: 200,
+        response: { message: 'OK', data: { hubs: subHubs } } as IApiMessageResponse,
+      };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleBanFromHub(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { moderatorId, userId } = (
+        req as { body: { moderatorId: string; userId: string }; params: { id: string } }
+      ).body;
+
+      if (!id) return validationError('Missing required parameter: id');
+      if (!moderatorId) return validationError('Missing required field: moderatorId');
+      if (!userId) return validationError('Missing required field: userId');
+
+      const service = this.getConnectionService();
+      await service.banFromHub(id, userId, moderatorId);
+      return { statusCode: 200, response: { message: 'User banned from hub' } };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleUnbanFromHub(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { moderatorId, userId } = (
+        req as { body: { moderatorId: string; userId: string }; params: { id: string } }
+      ).body;
+
+      if (!id) return validationError('Missing required parameter: id');
+      if (!moderatorId) return validationError('Missing required field: moderatorId');
+      if (!userId) return validationError('Missing required field: userId');
+
+      const service = this.getConnectionService() as unknown as {
+        unbanFromHub(hubId: string, userId: string, moderatorId: string): Promise<void>;
+      };
+      await service.unbanFromHub(id, userId, moderatorId);
+      return { statusCode: 200, response: { message: 'User unbanned from hub' } };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleGetBannedUsers(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const typedReq = req as { query: Record<string, string | undefined>; params: { id: string } };
+      const moderatorId = typedReq.query['userId'] ?? typedReq.query['moderatorId'];
+
+      if (!id) return validationError('Missing required parameter: id');
+      if (!moderatorId) return validationError('Missing required query parameter: userId');
+
+      const service = this.getConnectionService() as unknown as {
+        getBannedUsers(hubId: string, moderatorId: string): Promise<unknown[]>;
+      };
+      const banned = await service.getBannedUsers(id, moderatorId);
+      return {
+        statusCode: 200,
+        response: { message: 'OK', data: { bannedUsers: banned } } as IApiMessageResponse,
+      };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleGetHubMembersList(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      if (!id) return validationError('Missing required parameter: id');
+
+      const service = this.getConnectionService();
+      const result = await service.getHubMembers(id);
+      return {
+        statusCode: 200,
+        response: { message: 'OK', data: result } as IApiMessageResponse,
+      };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleGetHubLeaderboard(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      if (!id) return validationError('Missing required parameter: id');
+
+      const limit = 20;
+      const reputationCollection = (
+        this.application as unknown as {
+          getModel<T>(name: string): {
+            find(filter: Partial<T>): { exec(): Promise<T[]> };
+          };
+        }
+      ).getModel<{
+        _id: string;
+        userId: string;
+        hubId: string;
+        score: number;
+        postCount: number;
+        upvotesReceived: number;
+        lastActiveAt: string;
+      }>('brighthub_hub_reputation');
+
+      const records = await reputationCollection
+        .find({ hubId: id } as never)
+        .exec();
+
+      // Sort by score descending
+      const sorted = records
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit);
+
+      return {
+        statusCode: 200,
+        response: {
+          message: 'OK',
+          data: { leaderboard: sorted },
+        } as IApiMessageResponse,
+      };
+    } catch (error) {
+      return handleError(error);
+    }
+  }
+
+  private async handleRemovePostFromHub(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { moderatorId, postId } = (
+        req as {
+          body: { moderatorId: string; postId: string };
+          params: { id: string };
+        }
+      ).body;
+
+      if (!id) return validationError('Missing required parameter: id');
+      if (!moderatorId)
+        return validationError('Missing required field: moderatorId');
+      if (!postId) return validationError('Missing required field: postId');
+
+      // Validate moderator permissions via connection service
+      const service = this.getConnectionService();
+      await service.removePostFromHub(id, postId, moderatorId);
+
+      // Update the post's hubIds via the application's post collection
+      const postsCollection = (
+        this.application as unknown as {
+          getModel<T>(name: string): {
+            findOne(filter: Partial<T>): { exec(): Promise<T | null> };
+            updateOne(
+              filter: Partial<T>,
+              update: Partial<T>,
+            ): { exec(): Promise<{ modifiedCount: number }> };
+          };
+        }
+      ).getModel<{ _id: string; hubIds?: string[] }>('brighthub_posts');
+
+      const post = await postsCollection
+        .findOne({ _id: postId } as never)
+        .exec();
+      if (post && post.hubIds) {
+        const newHubIds = post.hubIds.filter((hid) => hid !== id);
+        await postsCollection
+          .updateOne(
+            { _id: postId } as never,
+            { hubIds: newHubIds } as never,
+          )
+          .exec();
+      }
+
+      return {
+        statusCode: 200,
+        response: { message: 'Post removed from hub' },
+      };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleTransferOwnership(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const { ownerId, newOwnerId } = (
+        req as { body: { ownerId: string; newOwnerId: string }; params: { id: string } }
+      ).body;
+
+      if (!id) return validationError('Missing required parameter: id');
+      if (!ownerId) return validationError('Missing required field: ownerId');
+      if (!newOwnerId) return validationError('Missing required field: newOwnerId');
+
+      const service = this.getConnectionService();
+      const hub = await service.transferHubOwnership(id, ownerId, newOwnerId);
+      return {
+        statusCode: 200,
+        response: { message: 'Ownership transferred', data: hub } as IApiMessageResponse,
+      };
+    } catch (error) {
+      if (error instanceof ConnectionServiceError)
+        return this.mapConnectionError(error);
+      return handleError(error);
+    }
+  }
+
+  private async handleDeleteHub(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { id } = (req as { params: { id: string } }).params;
+      const typedReq = req as {
+        body?: { ownerId?: string };
+        query: Record<string, string | undefined>;
+        params: { id: string };
+      };
+      const ownerId =
+        typedReq.body?.ownerId ?? typedReq.query['ownerId'];
+
+      if (!id) return validationError('Missing required parameter: id');
+      if (!ownerId)
+        return validationError('Missing required field: ownerId');
+
+      const service = this.getConnectionService();
+      await service.deleteHub(id, ownerId);
+      return { statusCode: 204, response: { message: 'Hub deleted' } };
     } catch (error) {
       if (error instanceof ConnectionServiceError)
         return this.mapConnectionError(error);

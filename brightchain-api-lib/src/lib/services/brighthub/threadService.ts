@@ -12,9 +12,14 @@ import { randomUUID } from 'crypto';
 import { getTextFormatter } from './textFormatter';
 
 /**
- * Maximum character limit for replies (same as posts)
+ * Maximum character limit for timeline replies
  */
 export const REPLY_MAX_CHARACTERS = 280;
+
+/**
+ * Maximum character limit for hub thread replies
+ */
+export const HUB_REPLY_MAX_CHARACTERS = 10000;
 
 /**
  * Database record type for posts (same as PostService)
@@ -90,7 +95,7 @@ export class ThreadService implements IThreadService {
    * Validate reply content
    * @throws ThreadServiceError if content is invalid
    */
-  private validateContent(content: string): void {
+  private validateContent(content: string, maxChars?: number): void {
     if (!content || content.trim().length === 0) {
       throw new ThreadServiceError(
         ThreadErrorCode.EmptyContent,
@@ -98,11 +103,12 @@ export class ThreadService implements IThreadService {
       );
     }
 
+    const limit = maxChars ?? REPLY_MAX_CHARACTERS;
     const charCount = this.textFormatter.getCharacterCount(content);
-    if (charCount > REPLY_MAX_CHARACTERS) {
+    if (charCount > limit) {
       throw new ThreadServiceError(
         ThreadErrorCode.ContentTooLong,
-        `Reply content exceeds maximum of ${REPLY_MAX_CHARACTERS} characters (current: ${charCount})`,
+        `Reply content exceeds maximum of ${limit} characters (current: ${charCount})`,
       );
     }
   }
@@ -237,9 +243,6 @@ export class ThreadService implements IThreadService {
     authorId: string,
     content: string,
   ): Promise<IBasePostData<string>> {
-    // Validate content
-    this.validateContent(content);
-
     // Find the effective parent (handles depth limiting)
     const effectiveParentId = await this.findEffectiveParent(parentPostId);
 
@@ -254,6 +257,13 @@ export class ThreadService implements IThreadService {
         'Parent post not found',
       );
     }
+
+    // Validate content — hub thread replies get the higher limit
+    const isHubThread = parent.hubIds && parent.hubIds.length > 0;
+    this.validateContent(
+      content,
+      isHubThread ? HUB_REPLY_MAX_CHARACTERS : undefined,
+    );
 
     // Format content
     const formatted = this.textFormatter.format(content);

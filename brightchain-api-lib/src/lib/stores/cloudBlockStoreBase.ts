@@ -53,6 +53,7 @@ import {
   XorService,
   type BlockId,
 } from '@brightchain/brightchain-lib';
+import { CloudHeadRegistry } from './cloudHeadRegistry';
 
 /**
  * Cast a raw hex string to BlockId without validation.
@@ -153,6 +154,19 @@ export abstract class CloudBlockStoreBase
 
   public getFecService(): IFecService | null {
     return this.fecService;
+  }
+
+  /**
+   * Create a CloudHeadRegistry backed by this store's cloud I/O primitives.
+   * The registry stores head pointers as a JSON blob in the same container,
+   * so they persist across process restarts without local disk state.
+   */
+  public createHeadRegistry(): CloudHeadRegistry {
+    return new CloudHeadRegistry({
+      uploadObject: this.uploadObject.bind(this),
+      downloadObject: this.downloadObject.bind(this),
+      objectExists: this.objectExists.bind(this),
+    });
   }
 
   // =========================================================================
@@ -257,6 +271,9 @@ export abstract class CloudBlockStoreBase
       operation,
       blockChecksum,
       originalError: String(lastError),
+      OPERATION: operation,
+      BLOCK_CHECKSUM: blockChecksum,
+      ORIGINAL_ERROR: String(lastError),
     });
   }
 
@@ -403,8 +420,16 @@ export abstract class CloudBlockStoreBase
     // Validate block
     try {
       block.validate();
-    } catch {
-      throw new StoreError(StoreErrorType.BlockValidationFailed);
+    } catch (validationError: unknown) {
+      const detail =
+        validationError instanceof Error
+          ? validationError.message
+          : String(validationError);
+      throw new StoreError(StoreErrorType.BlockValidationFailed, undefined, {
+        ERROR: `block.validate() failed: ${detail}`,
+        blockSize: block.blockSize,
+        dataLength: block.data.length,
+      });
     }
 
     // Upload block data

@@ -27,7 +27,7 @@ export const POSTS_SCHEMA: CollectionSchema = {
   properties: {
     _id: { type: 'string', required: true },
     authorId: { type: 'string', required: true },
-    content: { type: 'string', required: true, maxLength: 280 },
+    content: { type: 'string', required: true, maxLength: 10000 },
     formattedContent: { type: 'string', required: true },
     postType: {
       type: 'string',
@@ -68,6 +68,9 @@ export const POSTS_SCHEMA: CollectionSchema = {
     repostCount: { type: 'number', required: true, minimum: 0 },
     replyCount: { type: 'number', required: true, minimum: 0 },
     quoteCount: { type: 'number', required: true, minimum: 0 },
+    upvoteCount: { type: 'number', minimum: 0 },
+    downvoteCount: { type: 'number', minimum: 0 },
+    score: { type: 'number' },
     isEdited: { type: 'boolean', required: true },
     editedAt: { type: 'string' },
     hubIds: { type: 'array', items: { type: 'string' } },
@@ -116,5 +119,57 @@ export const POSTS_SCHEMA: CollectionSchema = {
     { fields: { hubIds: 1 } },
     // Soft-delete filtering
     { fields: { isDeleted: 1, createdAt: -1 } },
+  ],
+};
+
+// ═══════════════════════════════════════════════════════
+// Post Reports Collection
+// ═══════════════════════════════════════════════════════
+
+/** Collection name for post reports */
+export const POST_REPORTS_COLLECTION = 'brighthub_post_reports';
+
+/** Report status values */
+export const POST_REPORT_STATUS_VALUES = [
+  'pending',
+  'reviewed',
+  'dismissed',
+  'actioned',
+] as const;
+
+/**
+ * Schema definition for the post reports collection.
+ * Tracks reported posts for moderation review.
+ */
+export const POST_REPORTS_SCHEMA: CollectionSchema = {
+  name: 'brighthub_post_report',
+  properties: {
+    _id: { type: 'string', required: true },
+    postId: { type: 'string', required: true },
+    reporterId: { type: 'string', required: true },
+    reason: { type: 'string', required: true, maxLength: 500 },
+    hubId: { type: 'string' },
+    status: {
+      type: 'string',
+      required: true,
+      enum: [...POST_REPORT_STATUS_VALUES],
+    },
+    reviewedBy: { type: 'string' },
+    reviewedAt: { type: 'string' },
+    createdAt: { type: 'string', required: true },
+  },
+  required: ['postId', 'reporterId', 'reason', 'status', 'createdAt'],
+  additionalProperties: false,
+  validationLevel: 'strict',
+  validationAction: 'error',
+  indexes: [
+    // Moderation queue: pending reports sorted by date
+    { fields: { status: 1, createdAt: -1 } },
+    // Reports for a specific post
+    { fields: { postId: 1 } },
+    // Reports by a specific user
+    { fields: { reporterId: 1 } },
+    // Hub-scoped moderation
+    { fields: { hubId: 1, status: 1, createdAt: -1 } },
   ],
 };

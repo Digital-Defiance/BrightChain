@@ -9,15 +9,18 @@
  * @see Requirements 12.2-12.8, 14.1-14.7, 15.1-15.5, 17.1-17.9, 18.1-18.8
  */
 
+import { LedgerError, LedgerErrorType } from '../errors/ledgerError';
 import { IAuthorizedSigner } from '../interfaces/ledger/authorizedSigner';
+import {
+  IBrightTrustPolicy,
+  QuorumType,
+} from '../interfaces/ledger/brightTrustPolicy';
 import {
   GovernanceActionType,
   IGovernanceAction,
 } from '../interfaces/ledger/governanceAction';
-import { IQuorumPolicy, QuorumType } from '../interfaces/ledger/quorumPolicy';
 import { SignerRole } from '../interfaces/ledger/signerRole';
 import { SignerStatus } from '../interfaces/ledger/signerStatus';
-import { LedgerError, LedgerErrorType } from '../errors/ledgerError';
 
 /**
  * Convert a Uint8Array public key to a hex string for use as a Map key.
@@ -30,12 +33,12 @@ function pubKeyToHex(publicKey: Uint8Array): string {
 
 export class AuthorizedSignerSet {
   private signers: Map<string, IAuthorizedSigner>;
-  private _quorumPolicy: IQuorumPolicy;
+  private _brightTrustPolicy: IBrightTrustPolicy;
   private _activeAdminCount: number;
 
   constructor(
     initialSigners: IAuthorizedSigner[],
-    initialQuorum: IQuorumPolicy,
+    initialQuorum: IBrightTrustPolicy,
   ) {
     this.signers = new Map();
     this._activeAdminCount = 0;
@@ -54,7 +57,7 @@ export class AuthorizedSignerSet {
         this._activeAdminCount++;
       }
     }
-    this._quorumPolicy = { ...initialQuorum };
+    this._brightTrustPolicy = { ...initialQuorum };
   }
 
   /** Check if a public key is authorized to append (active + admin or writer). */
@@ -72,8 +75,7 @@ export class AuthorizedSignerSet {
     const signer = this.signers.get(pubKeyToHex(publicKey));
     if (!signer) return false;
     return (
-      signer.status === SignerStatus.Active &&
-      signer.role === SignerRole.Admin
+      signer.status === SignerStatus.Active && signer.role === SignerRole.Admin
     );
   }
 
@@ -93,19 +95,23 @@ export class AuthorizedSignerSet {
   }
 
   /** Get current quorum policy. */
-  get quorumPolicy(): IQuorumPolicy {
-    return this._quorumPolicy;
+  get brightTrustPolicy(): IBrightTrustPolicy {
+    return this._brightTrustPolicy;
   }
 
   /** Compute the required number of signatures for governance. */
   get requiredSignatures(): number {
-    switch (this._quorumPolicy.type) {
+    switch (this._brightTrustPolicy.type) {
       case QuorumType.Unanimous:
         return this._activeAdminCount;
       case QuorumType.Majority:
         return Math.floor(this._activeAdminCount / 2) + 1;
       case QuorumType.Threshold:
-        return this._quorumPolicy.threshold ?? 1;
+        return this._brightTrustPolicy.threshold ?? 1;
+      default: {
+        const _exhaustive: never = this._brightTrustPolicy.type;
+        throw new Error(`Unknown quorum type: ${_exhaustive}`);
+      }
     }
   }
 
@@ -159,7 +165,7 @@ export class AuthorizedSignerSet {
       });
     }
     const cloned = new AuthorizedSignerSet(clonedSigners, {
-      ...this._quorumPolicy,
+      ...this._brightTrustPolicy,
     });
     return cloned;
   }
@@ -302,7 +308,7 @@ export class AuthorizedSignerSet {
         );
       }
     }
-    this._quorumPolicy = { ...newPolicy };
+    this._brightTrustPolicy = { ...newPolicy };
   }
 
   private applySuspendSigner(

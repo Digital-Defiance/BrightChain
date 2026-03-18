@@ -303,7 +303,7 @@ describe('Validation Consistency Property Tests', () => {
       it('should reject empty strings with EnhancedValidationError', () => {
         try {
           Validator.validateNotEmpty('', 'testField', 'testContext');
-          fail('Should have thrown');
+          throw new Error('Should have thrown');
         } catch (error) {
           expect(error).toBeInstanceOf(EnhancedValidationError);
           const validationError = error as EnhancedValidationError;
@@ -324,7 +324,7 @@ describe('Validation Consistency Property Tests', () => {
               'testContext',
             );
             // Should not reach here
-            fail('Should have thrown for whitespace string');
+            throw new Error('Should have thrown for whitespace string');
           } catch (error) {
             // Must be EnhancedValidationError
             expect(error).toBeInstanceOf(EnhancedValidationError);

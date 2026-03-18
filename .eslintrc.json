@@ -1,6 +1,6 @@
 {
   "root": true,
-  "ignorePatterns": [],
+  "ignorePatterns": ["**/out/**", "**/dist/**"],
   "plugins": ["@nx", "@typescript-eslint", "prettier", "jest"],
   "rules": {
     "prettier/prettier": "error"
@@ -44,27 +44,30 @@
         "projectService": true
       },
       "rules": {
-        "@typescript-eslint/no-extra-semi": "error",
-        "@typescript-eslint/explicit-module-boundary-types": "off",
-        "no-extra-semi": "off"
+        "@typescript-eslint/explicit-module-boundary-types": "off"
       }
     },
     {
       "files": ["*.js", "*.jsx"],
       "extends": ["plugin:@nx/javascript"],
-      "rules": {
-        "@typescript-eslint/no-extra-semi": "error",
-        "no-extra-semi": "off"
-      }
+      "rules": {}
     },
     {
-      "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx", "*.test.ts", "*.test.tsx", "**/__tests__/**/*.ts", "**/__tests__/**/*.tsx"],
+      "files": ["*.spec.ts", "*.spec.tsx", "*.spec.js", "*.spec.jsx", "*.test.ts", "*.test.tsx", "**/__tests__/**/*.ts", "**/__tests__/**/*.tsx", "**/__mocks__/**/*.ts"],
       "extends": ["plugin:jest/recommended"],
       "env": {
         "jest": true,
         "node": true
       },
-      "rules": {}
+      "rules": {
+        "jest/no-conditional-expect": "off",
+        "jest/no-jasmine-globals": "warn",
+        "jest/expect-expect": "off",
+        "jest/no-standalone-expect": "off",
+        "jest/no-done-callback": "warn",
+        "jest/no-disabled-tests": "warn",
+        "jest/no-mocks-import": "off"
+      }
     }
   ]
 }

@@ -134,6 +134,14 @@ export class BrightDb {
   }
 
   /**
+   * Expose the underlying block store.
+   * Used by the admin dashboard to gather block statistics.
+   */
+  getBlockStore(): IBlockStore {
+    return this.store;
+  }
+
+  /**
    * Expose the head registry for components that need to read head block IDs
    * (e.g. CBLIndex for FEC parity generation on metadata blocks).
    */
@@ -151,8 +159,11 @@ export class BrightDb {
    * @param _uri - Optional connection URI (accepted for API compatibility, ignored)
    */
   async connect(_uri?: string): Promise<void> {
-    // Load persisted heads from disk when using PersistentHeadRegistry.
-    if (this.headRegistry instanceof PersistentHeadRegistry) {
+    // Load persisted heads when using a persistent or cloud head registry.
+    // All IHeadRegistry implementations have load() — it's a no-op for
+    // InMemoryHeadRegistry, reads from disk for PersistentHeadRegistry,
+    // and fetches from cloud storage for CloudHeadRegistry.
+    if (typeof this.headRegistry.load === 'function') {
       await this.headRegistry.load();
     }
     this._connected = true;
@@ -280,6 +291,12 @@ export class BrightDb {
     const names = this.listCollections();
     for (const name of names) {
       await this.dropCollection(name);
+    }
+    // Clear the entire head registry — not just heads for known collections.
+    // Previous runs may have created collections that aren't instantiated
+    // in this process, leaving stale head pointers.
+    if (typeof this.headRegistry.clear === 'function') {
+      await this.headRegistry.clear();
     }
     // If this database is backed by a pool, remove the pool from the store
     if (this.pooledStore && this.poolId) {

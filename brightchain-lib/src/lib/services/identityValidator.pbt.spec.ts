@@ -24,8 +24,8 @@ import { IdentityValidationErrorType } from '../enumerations/identityValidationE
 import { IdentityValidationError } from '../errors/identityValidationError';
 import { initializeBrightChain } from '../init';
 import { ContentWithIdentity } from '../interfaces/contentWithIdentity';
-import { IQuorumDatabase } from '../interfaces/services/quorumDatabase';
-import { IQuorumMember } from '../interfaces/services/quorumService';
+import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
+import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import { IdentityValidator } from './identityValidator';
 import { MembershipProofService } from './membershipProofService';
 import { ServiceProvider } from './service.provider';
@@ -36,8 +36,8 @@ jest.setTimeout(120000);
  * Create a mock database with the given member pool.
  */
 function createMockDatabase(
-  memberLookup: Map<HexString, IQuorumMember<GuidV4Uint8Array>>,
-): IQuorumDatabase<GuidV4Uint8Array> {
+  memberLookup: Map<HexString, IBrightTrustMember<GuidV4Uint8Array>>,
+): IBrightTrustDatabase<GuidV4Uint8Array> {
   return {
     saveEpoch: jest.fn(async () => {}),
     getEpoch: jest.fn(async () => null),
@@ -172,7 +172,7 @@ describe('IdentityValidator Property-Based Tests', () => {
             // Set up database with the claimed member
             const memberLookup = new Map<
               HexString,
-              IQuorumMember<GuidV4Uint8Array>
+              IBrightTrustMember<GuidV4Uint8Array>
             >();
             memberLookup.set(claimedHex, {
               id: claimed.member.id,
@@ -235,7 +235,7 @@ describe('IdentityValidator Property-Based Tests', () => {
 
             const memberLookup = new Map<
               HexString,
-              IQuorumMember<GuidV4Uint8Array>
+              IBrightTrustMember<GuidV4Uint8Array>
             >();
             memberLookup.set(memberHex, {
               id: m.member.id,

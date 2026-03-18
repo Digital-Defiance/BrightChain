@@ -30,6 +30,12 @@
     },
     {
       "path": "../brighthub-lib"
+    },
+    {
+      "path": "../digitalburnbag-api-lib"
+    },
+    {
+      "path": "../digitalburnbag-lib"
     }
   ]
 }

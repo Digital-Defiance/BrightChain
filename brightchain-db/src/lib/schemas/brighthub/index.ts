@@ -8,6 +8,9 @@
 export {
   POSTS_COLLECTION,
   POSTS_SCHEMA,
+  POST_REPORTS_COLLECTION,
+  POST_REPORTS_SCHEMA,
+  POST_REPORT_STATUS_VALUES,
   POST_TYPE_VALUES,
 } from './posts.schema';
 
@@ -19,6 +22,9 @@ export {
   LIKES_SCHEMA,
   REPOSTS_COLLECTION,
   REPOSTS_SCHEMA,
+  VOTES_COLLECTION,
+  VOTES_SCHEMA,
+  VOTE_TYPE_VALUES,
 } from './interactions.schema';
 
 // Notifications
@@ -71,6 +77,8 @@ export {
   // Hubs
   HUBS_COLLECTION,
   HUBS_SCHEMA,
+  HUB_BANNED_USERS_COLLECTION,
+  HUB_BANNED_USERS_SCHEMA,
   HUB_MEMBERS_COLLECTION,
   HUB_MEMBERS_SCHEMA,
   MUTE_DURATION_VALUES,
@@ -128,3 +136,9 @@ export {
   REPORT_STATUS_VALUES,
   REPORT_TYPE_VALUES,
 } from './messaging.schema';
+
+// Hub Reputation
+export {
+  HUB_REPUTATION_COLLECTION,
+  HUB_REPUTATION_SCHEMA,
+} from './reputation.schema';

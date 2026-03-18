@@ -41,6 +41,8 @@ export interface IAuthResponse<TID = string> {
   token: string;
   memberId: TID;
   energyBalance: number;
+  /** Server-generated mnemonic. Only present on registration when the user didn't provide their own. */
+  mnemonic?: string;
 }
 
 /**
@@ -50,6 +52,7 @@ export interface IRegistrationRequest {
   username: string;
   email: string;
   password: string;
+  displayName?: string;
   mnemonic?: string; // optional BIP39 mnemonic for user-provided identity recovery
 }
 

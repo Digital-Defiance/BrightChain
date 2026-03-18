@@ -58,7 +58,7 @@ export interface IContentIngestionService<TID extends PlatformID = Uint8Array> {
    * @param content - The content with identity to validate and seal
    * @returns Ingestion result with processed content and recovery record ID
    * @throws IdentityValidationError if identity validation fails
-   * @throws QuorumError if identity sealing fails
+   * @throws BrightTrustError if identity sealing fails
    */
   processContent(
     content: ContentWithIdentity<TID>,

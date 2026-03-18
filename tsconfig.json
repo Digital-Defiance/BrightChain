@@ -16,7 +16,11 @@
     "brightchain-test-utils/**/*.ts",
     "brightchain-inituserdb/**/*.ts",
     "showcase/**/*.ts",
-    "showcase/**/*.tsx"
+    "showcase/**/*.tsx",
+    "brightchat-lib/**/*.ts",
+    "digitalburnbag-lib/**/*.ts",
+    "tests/**/*.ts",
+    "types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",

@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for BlockDocumentStore access control
  *
- * **Feature: backend-blockstore-quorum, Property 23: Document Store Access Control**
+ * **Feature: backend-blockstore-brightTrust, Property 23: Document Store Access Control**
  * **Validates: Requirements 13.4**
  *
  * This test suite verifies that:
@@ -12,10 +12,10 @@
 
 import {
   BlockSize,
+  BrightTrustMemberMetadata,
+  BrightTrustService,
   initializeBrightChain,
   MemoryBlockStore,
-  QuorumMemberMetadata,
-  QuorumService,
   ServiceLocator,
   ServiceProvider,
 } from '@brightchain/brightchain-lib';
@@ -80,10 +80,10 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
   }
 
   /**
-   * Helper to create a properly configured QuorumService
+   * Helper to create a properly configured BrightTrustService
    */
-  function createQuorumService(): QuorumService<GuidV4Buffer> {
-    return new QuorumService<GuidV4Buffer>();
+  function createBrightTrustService(): BrightTrustService<GuidV4Buffer> {
+    return new BrightTrustService<GuidV4Buffer>();
   }
 
   describe('Property 23: Document Store Access Control', () => {
@@ -102,11 +102,11 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
             maxLength: 5,
           }),
           async (titles: string[]) => {
-            const quorumService = createQuorumService();
+            const brightTrustService = createBrightTrustService();
             const blockStore = new MemoryBlockStore(BlockSize.Small);
             const documentStore = new BlockDocumentStore(
               blockStore,
-              quorumService,
+              brightTrustService,
             );
             const collection =
               documentStore.encryptedCollection<TestDocument>('test-access');
@@ -126,12 +126,12 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
               );
               memberData.push(memberWithMnemonic);
 
-              const metadata: QuorumMemberMetadata = {
+              const metadata: BrightTrustMemberMetadata = {
                 name: `Member${i}`,
                 email: `member${uniqueSuffix}@example.com`,
               };
 
-              const addedMember = await quorumService.addMember(
+              const addedMember = await brightTrustService.addMember(
                 memberWithMnemonic.member,
                 metadata,
               );
@@ -190,11 +190,11 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
         fc.asyncProperty(
           fc.stringMatching(/^[A-Za-z][A-Za-z0-9]{0,19}$/),
           async (title: string) => {
-            const quorumService = createQuorumService();
+            const brightTrustService = createBrightTrustService();
             const blockStore = new MemoryBlockStore(BlockSize.Small);
             const documentStore = new BlockDocumentStore(
               blockStore,
-              quorumService,
+              brightTrustService,
             );
             const collection =
               documentStore.encryptedCollection<TestDocument>(
@@ -213,12 +213,12 @@ describe('BlockDocumentStore Access Control Property Tests', () => {
                 `member${uniqueSuffix}@example.com`,
               );
 
-              const metadata: QuorumMemberMetadata = {
+              const metadata: BrightTrustMemberMetadata = {
                 name: `Member${i}`,
                 email: `member${uniqueSuffix}@example.com`,
               };
 
-              const addedMember = await quorumService.addMember(
+              const addedMember = await brightTrustService.addMember(
                 memberWithMnemonic.member,
                 metadata,
               );

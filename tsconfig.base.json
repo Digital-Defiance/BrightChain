@@ -68,8 +68,26 @@
       ],
       "@brightchain/digitalburnbag-react-components/*": [
         "digitalburnbag-react-components/src/*"
+      ],
+      "@brightchain/digitalburnbag-api-lib": [
+        "digitalburnbag-api-lib/src/index.ts"
+      ],
+      "@brightchain/digitalburnbag-api-lib/*": [
+        "digitalburnbag-api-lib/src/*"
+      ],
+      "@brightchain/digitalburnbag-sync-client": [
+        "digitalburnbag-sync-client/src/index.ts"
+      ],
+      "@brightchain/digitalburnbag-sync-client/*": [
+        "digitalburnbag-sync-client/src/*"
+      ],
+      "@brightchain/vscode-brightchain-vfs-explorer": [
+        "vscode-brightchain-vfs-explorer/src/extension.ts"
+      ],
+      "@brightchain/vscode-brightchain-vfs-explorer/*": [
+        "vscode-brightchain-vfs-explorer/src/*"
       ]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": ["node_modules", "tmp", "dist"]
 }

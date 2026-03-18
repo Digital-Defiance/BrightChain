@@ -14,7 +14,8 @@
       ],
       "options": {
         "config": "brightchain-react-e2e/playwright.config.ts"
-      }
+      },
+      "parallelism": false
     },
     "lint": {
       "executor": "@nx/eslint:lint"

@@ -11,7 +11,7 @@
     "@azure/identity": "^4.6.0",
     "@azure/storage-blob": "^12.26.0",
     "@brightchain/brightchain-api-lib": "^0.29.24",
-    "@brightchain/brightchain-lib": "^0.29.22",
+    "@brightchain/brightchain-lib": "^0.29.24",
     "tslib": "^2.3.0"
   }
 }

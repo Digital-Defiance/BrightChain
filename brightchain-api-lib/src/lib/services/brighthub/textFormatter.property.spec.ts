@@ -11,7 +11,7 @@
  * Validates: Requirements 6.4, 6.6, 7.1, 7.3, 7.5, 7.6, 16.6
  */
 
-import { getCharacterCount } from '@brightchain/brighthub-lib';
+import { getCharacterCount } from '@brightchain/brighthub-lib/lib/brighthub-lib';
 import fc from 'fast-check';
 import {
   createTextFormatter,

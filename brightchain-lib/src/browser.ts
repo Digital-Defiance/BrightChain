@@ -7,6 +7,9 @@ export * from './lib/factories/blockStoreFactory';
 export * from './lib/interfaces/storage/blockStore';
 export * from './lib/stores/memoryBlockStore';
 
+// Export constants
+export { CONSTANTS, THEME_COLORS, TUPLE, VALIDATION } from './lib/constants';
+
 // Export block classes and utilities
 export { BaseBlock } from './lib/blocks/base';
 export {
@@ -14,7 +17,14 @@ export {
   isBlockHandle,
   type BlockHandle,
 } from './lib/blocks/handle';
+export { RandomBlock } from './lib/blocks/random';
 export { RawDataBlock } from './lib/blocks/rawData';
+
+// Export ServiceLocator
+export { ServiceLocator } from './lib/services/serviceLocator';
+
+// Export utility functions
+export { uint8ArrayToHex } from './lib/utils/checksumUtils';
 
 // Export constant-time XOR utilities (browser-compatible)
 export {
@@ -42,6 +52,7 @@ export { ChecksumService } from './lib/services/checksum.service';
 export { MessageCBLService } from './lib/services/messaging/messageCBLService';
 
 // Export messaging enums and interfaces
+export { BrightChainStrings } from './lib/enumerations/brightChainStrings';
 export { DeliveryStatus } from './lib/enumerations/messaging/deliveryStatus';
 export { MessageEncryptionScheme } from './lib/enumerations/messaging/messageEncryptionScheme';
 export { MessagePriority } from './lib/enumerations/messaging/messagePriority';
@@ -66,22 +77,22 @@ export type {
   IValidationResult as ILedgerValidationResult,
   LedgerValidationErrorType,
 } from './lib/interfaces/ledger/validationResult';
-export { EciesSignatureVerifier } from './lib/ledger/eciesSignatureVerifier';
 export { BrowserSignatureVerifier } from './lib/ledger/browserSignatureVerifier';
+export { EciesSignatureVerifier } from './lib/ledger/eciesSignatureVerifier';
 export { Ledger } from './lib/ledger/ledger';
 export { LedgerChainValidator } from './lib/ledger/ledgerChainValidator';
 export { LedgerEntrySerializer } from './lib/ledger/ledgerEntrySerializer';
 export { MemberSignerAdapter } from './lib/ledger/memberSignerAdapter';
 
 // Ledger - Governance
-export { GovernancePayloadSerializer } from './lib/ledger/governancePayloadSerializer';
-export type { IGenesisPayloadData } from './lib/ledger/governancePayloadSerializer';
-export { AuthorizedSignerSet } from './lib/ledger/authorizedSignerSet';
-export { SignerRole } from './lib/interfaces/ledger/signerRole';
-export { SignerStatus } from './lib/interfaces/ledger/signerStatus';
-export { QuorumType } from './lib/interfaces/ledger/quorumPolicy';
-export { GovernanceActionType } from './lib/interfaces/ledger/governanceAction';
 export type { IAuthorizedSigner } from './lib/interfaces/ledger/authorizedSigner';
-export type { IQuorumPolicy } from './lib/interfaces/ledger/quorumPolicy';
+export { QuorumType } from './lib/interfaces/ledger/brightTrustPolicy';
+export type { IBrightTrustPolicy } from './lib/interfaces/ledger/brightTrustPolicy';
+export { GovernanceActionType } from './lib/interfaces/ledger/governanceAction';
 export type { IGovernanceAction } from './lib/interfaces/ledger/governanceAction';
 export type { IGovernancePayload } from './lib/interfaces/ledger/governancePayload';
+export { SignerRole } from './lib/interfaces/ledger/signerRole';
+export { SignerStatus } from './lib/interfaces/ledger/signerStatus';
+export { AuthorizedSignerSet } from './lib/ledger/authorizedSignerSet';
+export { GovernancePayloadSerializer } from './lib/ledger/governancePayloadSerializer';
+export type { IGenesisPayloadData } from './lib/ledger/governancePayloadSerializer';

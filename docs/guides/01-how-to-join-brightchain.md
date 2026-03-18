@@ -6,7 +6,7 @@ permalink: /guides/01-how-to-join-brightchain/
 ---
 # How to Join BrightChain
 
-This is the definitive guide for anyone who wants to participate in the BrightChain network. It covers every level of participation, from running a storage node to becoming a quorum member, and explains what you can and cannot do at each level.
+This is the definitive guide for anyone who wants to participate in the BrightChain network. It covers every level of participation, from running a storage node to becoming a BrightTrust member, and explains what you can and cannot do at each level.
 
 ## Two-Tier Identity Model
 
@@ -24,12 +24,12 @@ BrightChain has a layered participation model. You can contribute meaningfully a
 | Level | What You Do | Identity Required | Open to Anyone? | How You Get In |
 |-------|-------------|-------------------|-----------------|----------------|
 | 1. Peer Node Operator | Run a node, store and serve blocks in the main pool | Peer only | Yes | Install, configure, start |
-| 2. BrightChain Member | BrightPass, BrightMail, BrightDB, energy account, content authorship | Member (peer + member) | Yes (self-register or quorum-admitted) | Explicit registration |
+| 2. BrightChain Member | BrightPass, BrightMail, BrightDB, energy account, content authorship | Member (peer + member) | Yes (self-register or BrightTrust-admitted) | Explicit registration |
 | 3. Storage Pool Member | Participate in private, access-controlled pools (BrightDB-backed) | Peer or Member | Per-pool ACL | Pool admin adds you |
 | 4. dApp Builder | Build applications on BrightStack (BrightDB, Express, React, Node) | Peer or Member | Yes | Use the SDK |
-| 5. Quorum Member | Govern the network, hold sealed document shares | Member | By invitation only | Existing members vote you in |
+| 5. BrightTrust Member | Govern the network, hold sealed document shares | Member | By invitation only | Existing members vote you in |
 
-Most participants will be Level 1 or Level 3. That's by design. The network's value comes from widespread storage contribution, not from quorum membership or application-layer features.
+Most participants will be Level 1 or Level 3. That's by design. The network's value comes from widespread storage contribution, not from BrightTrust membership or application-layer features.
 
 ## Level 1: Running a Peer Node (Storage Only)
 
@@ -64,9 +64,9 @@ You are now contributing storage. There is no application process, no waiting pe
 - Use BrightPass, BrightMail, or energy accounts (requires member registration)
 - Author content with identity attribution (requires member registration)
 - Access private storage pools (requires pool admin to add your peer ID or member ID)
-- Vote on governance proposals (requires quorum membership)
-- Propose bans or policy changes (requires quorum membership)
-- Hold shares of sealed documents (requires quorum membership)
+- Vote on governance proposals (requires BrightTrust membership)
+- Propose bans or policy changes (requires BrightTrust membership)
+- Hold shares of sealed documents (requires BrightTrust membership)
 
 ### Opting Out of Storage Contribution
 
@@ -88,11 +88,11 @@ Member registration is an explicit, optional step that unlocks application-layer
 - **BrightMail**: Encrypted messaging
 - **Energy account**: Joule-based economy for tracking storage contribution and spending
 - **Content authorship**: Ability to author content with identity attribution
-- **Quorum eligibility**: Only members can be proposed for quorum admission
+- **BrightTrust eligibility**: Only members can be proposed for BrightTrust admission
 
 ### How to Register
 
-Registration is a separate action from starting your node. Depending on the network's configuration, you either self-register or are admitted by the quorum:
+Registration is a separate action from starting your node. Depending on the network's configuration, you either self-register or are admitted by the BrightTrust:
 
 ```typescript
 // Self-registration (if the network allows it)
@@ -113,7 +113,7 @@ Your node continues to do everything it did as a peer-only node, plus:
 - You can use BrightPass for authentication
 - You can send and receive BrightMail
 - You can author content with your identity attached
-- You become eligible for quorum membership proposals
+- You become eligible for BrightTrust membership proposals
 
 ## Level 3: Joining a Private Storage Pool
 
@@ -156,35 +156,35 @@ Key points:
 - Data isolation uses Storage Pools with optional encryption
 - Replication is decentralized via gossip and reconciliation
 
-## Level 5: Quorum Membership
+## Level 5: BrightTrust Membership
 
-The Quorum is BrightChain's governance layer. It handles sealed identity recovery, document reconstruction, network policy, and the ban mechanism.
+The BrightTrust is BrightChain's governance layer. It handles sealed identity recovery, document reconstruction, network policy, and the ban mechanism.
 
 ### Why It's Restricted
 
-Adding a quorum member triggers a full share redistribution across all sealed documents (Shamir's Secret Sharing). This is expensive and security-critical. Admitting an untrustworthy member could compromise sealed documents. Removing a bad actor is equally costly.
+Adding a BrightTrust member triggers a full share redistribution across all sealed documents (Shamir's Secret Sharing). This is expensive and security-critical. Admitting an untrustworthy member could compromise sealed documents. Removing a bad actor is equally costly.
 
 ### How to Get In
 
 1. Run a storage node reliably for a sustained period
 2. Participate actively in storage pools
-3. Build trust with existing quorum members through the community
+3. Build trust with existing BrightTrust members through the community
 4. An existing member proposes your admission (`ADD_MEMBER` proposal)
-5. Active quorum members vote — the proposal must reach the configured threshold (typically 51–75%)
+5. Active BrightTrust members vote — the proposal must reach the configured threshold (typically 51–75%)
 6. If approved, a new epoch is created and all sealed documents have their shares redistributed to include you
 
-### What Quorum Members Do
+### What BrightTrust Members Do
 
 - Vote on governance proposals (add/remove members, policy changes, bans)
 - Hold shares of sealed documents (identity recovery records, sensitive data)
 - Participate in document reconstruction when the threshold is met
-- Run Quorum Nodes with the `QUORUM` capability enabled
+- Run BrightTrust Nodes with the `BRIGHT_TRUST` capability enabled
 
-See the [Quorum Member/Operator Guide](./03-quorum-member-guide.md) for the full details.
+See the [BrightTrust Member/Operator Guide](./03-BrightTrust-member-guide.md) for the full details.
 
 ## Quick Reference: Can I Do X Without Member Registration?
 
-| Action | Peer Only? | Requires Member? | Requires Quorum? |
+| Action | Peer Only? | Requires Member? | Requires BrightTrust? |
 |--------|-----------|-------------------|-------------------|
 | Run a node and contribute storage | Yes | No | No |
 | Store and serve blocks in the main pool | Yes | No | No |
@@ -206,6 +206,6 @@ See the [Quorum Member/Operator Guide](./03-quorum-member-guide.md) for the full
 ## Next Steps
 
 - [Node Operator Guide](./02-node-operator-guide.md) — Day-to-day operations, monitoring, maintenance
-- [Quorum Member/Operator Guide](./03-quorum-member-guide.md) — Governance, voting, sealed documents
+- [BrightTrust Member/Operator Guide](./03-BrightTrust-member-guide.md) — Governance, voting, sealed documents
 - [Building a dApp](../walkthroughs/05-building-a-dapp) — Full-stack development on BrightStack
 - [Storage Pools](../walkthroughs/03-storage-pools) — Pool creation, encryption, cross-node coordination

@@ -6,13 +6,13 @@
  *
  * @see CloudBlockStoreBase for shared cloud store logic
  */
+import { DefaultAzureCredential } from '@azure/identity';
 import {
   BlobServiceClient,
   ContainerClient,
   RestError,
   StorageSharedKeyCredential,
 } from '@azure/storage-blob';
-import { DefaultAzureCredential } from '@azure/identity';
 import { CloudBlockStoreBase } from '@brightchain/brightchain-api-lib';
 import {
   ICloudBlockStoreConfig,
@@ -50,6 +50,24 @@ const AUTH_HTTP_STATUS_CODES = new Set([401, 403]);
 
 export class AzureBlobBlockStore extends CloudBlockStoreBase {
   private readonly containerClient: ContainerClient;
+  private containerEnsured = false;
+  private containerEnsurePromise: Promise<void> | null = null;
+
+  /**
+   * Lazily ensures the Azure Blob container exists, creating it if needed.
+   * Safe to call concurrently — only one createIfNotExists request is made.
+   */
+  private async ensureContainer(): Promise<void> {
+    if (this.containerEnsured) return;
+    if (!this.containerEnsurePromise) {
+      this.containerEnsurePromise = this.containerClient
+        .createIfNotExists()
+        .then(() => {
+          this.containerEnsured = true;
+        });
+    }
+    await this.containerEnsurePromise;
+  }
 
   constructor(
     config: IAzureBlobBlockStoreConfig,
@@ -104,11 +122,13 @@ export class AzureBlobBlockStore extends CloudBlockStoreBase {
   // =========================================================================
 
   protected async uploadObject(key: string, data: Uint8Array): Promise<void> {
+    await this.ensureContainer();
     const blockBlobClient = this.containerClient.getBlockBlobClient(key);
     await blockBlobClient.upload(data, data.length);
   }
 
   protected async downloadObject(key: string): Promise<Uint8Array> {
+    await this.ensureContainer();
     const blobClient = this.containerClient.getBlobClient(key);
     const response = await blobClient.download(0);
 
@@ -128,11 +148,13 @@ export class AzureBlobBlockStore extends CloudBlockStoreBase {
   }
 
   protected async deleteObject(key: string): Promise<void> {
+    await this.ensureContainer();
     const blobClient = this.containerClient.getBlobClient(key);
     await blobClient.delete();
   }
 
   protected async objectExists(key: string): Promise<boolean> {
+    await this.ensureContainer();
     const blobClient = this.containerClient.getBlobClient(key);
     try {
       await blobClient.getProperties();
@@ -149,6 +171,7 @@ export class AzureBlobBlockStore extends CloudBlockStoreBase {
     prefix: string,
     maxResults?: number,
   ): Promise<string[]> {
+    await this.ensureContainer();
     const names: string[] = [];
     const iter = this.containerClient.listBlobsFlat({ prefix });
 

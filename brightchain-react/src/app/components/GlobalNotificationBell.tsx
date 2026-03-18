@@ -7,10 +7,11 @@
  */
 import type { IUnifiedNotificationCounts } from '@brightchain/brightchain-lib';
 import type { IBaseNotification } from '@brightchain/brighthub-lib';
-import {
-  NotificationBell,
-  NotificationDropdown,
-} from '@brightchain/brighthub-react-components';
+// Import notification components directly (not via barrel) to avoid pulling
+// in the full brighthub-react-components bundle which includes PostComposer
+// and the 56MB FontAwesome icon kit.
+import { NotificationBell } from '@brightchain/brighthub-react-components/lib/notifications/NotificationBell';
+import { NotificationDropdown } from '@brightchain/brighthub-react-components/lib/notifications/NotificationDropdown';
 import {
   useAuth,
   useAuthenticatedApi,
@@ -55,7 +56,7 @@ export const GlobalNotificationBell: FC = () => {
         })
         .catch(() => {});
     }
-  }, [api, dropdownOpen]);
+  }, [api, dropdownOpen, userId]);
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', color: 'inherit' }}>

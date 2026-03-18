@@ -14,8 +14,8 @@ if [ -f ".nvmrc" ]; then
   nvm use
 fi
 
-# Set the desired Yarn version (default to 4.9.1 if not set)
-DEFAULT_YARN_VERSION=${DEFAULT_YARN_VERSION:-4.9.1}
+# Set the desired Yarn version (default to 4.13.0 if not set)
+DEFAULT_YARN_VERSION=${DEFAULT_YARN_VERSION:-4.13.0}
 
 echo "Clearing .yarnrc, .yarnrc.yml, and .yarn"
 rm -rf .yarnrc .yarnrc.yml .yarn
@@ -28,6 +28,31 @@ corepack prepare yarn@${DEFAULT_YARN_VERSION} --activate
 
 echo "Setting yarn version to ${DEFAULT_YARN_VERSION}"
 corepack yarn set version ${DEFAULT_YARN_VERSION}
+
+echo "Restoring .yarnrc.yml project settings..."
+cat > .yarnrc.yml << 'YARNRC'
+compressionLevel: mixed
+enableGlobalCache: false
+enableScripts: true
+nodeLinker: pnpm
+nmMode: hardlinks-local
+globalFolder: ./.yarn/global
+
+npmRegistryServer: "https://registry.npmjs.org"
+
+unsafeHttpWhitelist:
+  - "localhost"
+
+npmScopes:
+  "awesome.me":
+    npmAlwaysAuth: false
+    npmRegistryServer: "http://localhost:4873/"
+
+packageExtensions: {}
+YARNRC
+
+echo "Wrote .yarnrc.yml:"
+cat .yarnrc.yml
 
 echo "Yarn version after setup:"
 corepack yarn --version

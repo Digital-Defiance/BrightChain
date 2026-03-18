@@ -10,12 +10,13 @@
     "README.md"
   ],
   "dependencies": {
-    "@noble/hashes": "^1.4.0"
+    "@noble/hashes": "^1.8.0",
+    "tslib": "^2.8.1"
   },
   "peerDependencies": {
-    "@brightchain/brightchain-lib": "^0.29.22",
-    "@digitaldefiance/branded-interface": "^0.0.5",
-    "@digitaldefiance/node-express-suite": "^4.23.4",
+    "@brightchain/brightchain-lib": "^0.29.24",
+    "@digitaldefiance/branded-interface": "0.0.5",
+    "@digitaldefiance/node-express-suite": "4.26.8",
     "express": ">=5.0.0"
   },
   "scripts": {
@@ -26,5 +27,8 @@
     "test": "NODE_ENV=development npx nx test brightchain-db --configuration=development --outputStyle=stream 2>&1",
     "test:dev:16": "NODE_ENV=development npx nx test brightchain-db --maxWorkers=16 --parallel=16 --configuration=development --outputStyle=stream 2>&1",
     "test:dev:16:logged": "NODE_ENV=development npx nx test brightchain-db --maxWorkers=16 --parallel=16 --configuration=development --outputStyle=stream 2>&1 | ansifilter -o test.log"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6"
   }
 }

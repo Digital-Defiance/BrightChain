@@ -14,6 +14,7 @@ import type {
   CBLStorageResult,
   CBLWhiteningOptions,
 } from './cblWhitening';
+import type { IHeadRegistry } from './headRegistry';
 
 /**
  * Base interface for block storage operations with FEC durability and replication support.
@@ -273,4 +274,13 @@ export interface IBlockStore {
     block2ParityIds?: string[],
     isEncrypted?: boolean,
   ): string;
+
+  /**
+   * Create a head registry backed by this store's persistence layer.
+   * Cloud stores return a CloudHeadRegistry that stores head pointers
+   * in the same container as the blocks. Disk and memory stores may
+   * return undefined (they use PersistentHeadRegistry or InMemoryHeadRegistry
+   * configured separately).
+   */
+  createHeadRegistry?(): IHeadRegistry;
 }

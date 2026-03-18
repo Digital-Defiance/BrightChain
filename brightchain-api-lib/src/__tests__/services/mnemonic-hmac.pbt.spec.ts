@@ -16,9 +16,9 @@
  * **Validates: Requirements 3.1**
  */
 
-import * as fc from 'fast-check';
 import { SecureBuffer, SecureString } from '@digitaldefiance/ecies-lib';
 import { randomBytes } from 'crypto';
+import * as fc from 'fast-check';
 import { MnemonicHmacService } from '../../lib/services/mnemonic-hmac.service';
 
 /** Valid BIP39 word counts */

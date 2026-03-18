@@ -29,7 +29,7 @@ export interface IdentitySealingResult<TID extends PlatformID = Uint8Array> {
  * 1. Captures the real creator identity
  * 2. Generates Shamir shards from the identity
  * 3. Replaces the identity field (real/alias/anonymous)
- * 4. Encrypts shards per quorum member via ECIES
+ * 4. Encrypts shards per BrightTrust member via ECIES
  * 5. Stores the IdentityRecoveryRecord
  * 6. Discards the original plaintext identity from memory
  *
@@ -43,8 +43,8 @@ export interface IIdentitySealingPipeline<TID extends PlatformID = Uint8Array> {
    * @param mode - The identity mode (real, alias, or anonymous)
    * @param aliasName - Required when mode is Alias
    * @returns The modified content and recovery record ID
-   * @throws QuorumError with IdentitySealingFailed if shard generation or distribution fails
-   * @throws QuorumError with ShardVerificationFailed if shard verification fails
+   * @throws BrightTrustError with IdentitySealingFailed if shard generation or distribution fails
+   * @throws BrightTrustError with ShardVerificationFailed if shard verification fails
    */
   sealIdentity(
     content: ContentWithIdentity<TID>,
@@ -57,7 +57,7 @@ export interface IIdentitySealingPipeline<TID extends PlatformID = Uint8Array> {
    * @param recoveryRecordId - The ID of the identity recovery record
    * @param decryptedShares - Map of member ID to decrypted share string
    * @returns The recovered real identity
-   * @throws QuorumError with InsufficientSharesForReconstruction if not enough shares
+   * @throws BrightTrustError with InsufficientSharesForReconstruction if not enough shares
    */
   recoverIdentity(
     recoveryRecordId: HexString,

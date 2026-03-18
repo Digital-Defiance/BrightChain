@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useRef, useState } from 'react';
+import { useShowcaseI18n } from '../i18n/ShowcaseI18nContext';
+import { ShowcaseStrings } from '../i18n/showcaseStrings';
 import { useEducationalModeContext } from './EducationalModeProvider';
 import './EducationalTooltips.css';
 
@@ -16,6 +18,7 @@ interface TooltipPosition {
  * Educational Tooltip Component
  */
 export const EducationalTooltip: React.FC = () => {
+  const { t } = useShowcaseI18n();
   const { currentTooltip, content, hideTooltip, showGlossary } =
     useEducationalModeContext();
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -85,7 +88,7 @@ export const EducationalTooltip: React.FC = () => {
         <button
           className="tooltip-close"
           onClick={hideTooltip}
-          aria-label="Close tooltip"
+          aria-label={t(ShowcaseStrings.Edu_CloseTooltip)}
         >
           ×
         </button>
@@ -93,23 +96,23 @@ export const EducationalTooltip: React.FC = () => {
 
       <div className="tooltip-content">
         <div className="tooltip-section">
-          <h5>🔍 What's Happening</h5>
+          <h5>{t(ShowcaseStrings.Edu_WhatsHappening)}</h5>
           <p>{explanation.whatsHappening}</p>
         </div>
 
         <div className="tooltip-section">
-          <h5>💡 Why It Matters</h5>
+          <h5>{t(ShowcaseStrings.Edu_WhyItMatters)}</h5>
           <p>{explanation.whyItMatters}</p>
         </div>
 
         <div className="tooltip-section">
-          <h5>⚙️ Technical Details</h5>
+          <h5>{t(ShowcaseStrings.Edu_TechnicalDetails)}</h5>
           <p>{explanation.technicalDetails}</p>
         </div>
 
         {explanation.relatedConcepts.length > 0 && (
           <div className="tooltip-section">
-            <h5>🔗 Related Concepts</h5>
+            <h5>{t(ShowcaseStrings.Edu_RelatedConcepts)}</h5>
             <div className="concept-links">
               {explanation.relatedConcepts.map((concept) => (
                 <button
@@ -126,7 +129,7 @@ export const EducationalTooltip: React.FC = () => {
 
         {explanation.visualCues.length > 0 && (
           <div className="tooltip-section">
-            <h5>👁️ Visual Cues</h5>
+            <h5>{t(ShowcaseStrings.Edu_VisualCues)}</h5>
             <ul className="visual-cues">
               {explanation.visualCues.map((cue, index) => (
                 <li key={index}>{cue}</li>
@@ -155,6 +158,7 @@ export const ContextualHelpButton: React.FC<ContextualHelpButtonProps> = ({
   position,
   className = '',
 }) => {
+  const { t } = useShowcaseI18n();
   const { showTooltip, config } = useEducationalModeContext();
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -182,7 +186,7 @@ export const ContextualHelpButton: React.FC<ContextualHelpButtonProps> = ({
       ref={buttonRef}
       className={`contextual-help-button ${className}`}
       onClick={handleClick}
-      title="Get help with this step"
+      title={t(ShowcaseStrings.Edu_GetHelp)}
       aria-label={`Get help with ${stepId}`}
     >
       ❓
@@ -194,6 +198,7 @@ export const ContextualHelpButton: React.FC<ContextualHelpButtonProps> = ({
  * Step Explanation Panel Component
  */
 export const StepExplanationPanel: React.FC = () => {
+  const { t } = useShowcaseI18n();
   const {
     currentExplanation,
     awaitingUserAcknowledgment,
@@ -222,23 +227,23 @@ export const StepExplanationPanel: React.FC = () => {
 
       <div className="explanation-content">
         <div className="explanation-section">
-          <h4>🔍 What's Happening</h4>
+          <h4>{t(ShowcaseStrings.Edu_WhatsHappening)}</h4>
           <p>{currentExplanation.whatsHappening}</p>
         </div>
 
         <div className="explanation-section">
-          <h4>💡 Why It Matters</h4>
+          <h4>{t(ShowcaseStrings.Edu_WhyItMatters)}</h4>
           <p>{currentExplanation.whyItMatters}</p>
         </div>
 
         <div className="explanation-section">
-          <h4>⚙️ Technical Details</h4>
+          <h4>{t(ShowcaseStrings.Edu_TechnicalDetails)}</h4>
           <p>{currentExplanation.technicalDetails}</p>
         </div>
 
         {currentExplanation.relatedConcepts.length > 0 && (
           <div className="explanation-section">
-            <h4>🔗 Related Concepts</h4>
+            <h4>{t(ShowcaseStrings.Edu_RelatedConcepts)}</h4>
             <div className="concept-links">
               {currentExplanation.relatedConcepts.map((concept) => (
                 <button
@@ -257,10 +262,10 @@ export const StepExplanationPanel: React.FC = () => {
       {awaitingUserAcknowledgment && (
         <div className="explanation-actions">
           <button className="action-btn primary" onClick={acknowledgeStep}>
-            ✅ I Understand - Continue
+            {t(ShowcaseStrings.Edu_UnderstandContinue)}
           </button>
           <button className="action-btn secondary" onClick={skipStep}>
-            ⏭️ Skip This Step
+            {t(ShowcaseStrings.Edu_SkipStep)}
           </button>
         </div>
       )}
@@ -272,6 +277,7 @@ export const StepExplanationPanel: React.FC = () => {
  * Concept Glossary Modal Component
  */
 export const ConceptGlossaryModal: React.FC = () => {
+  const { t } = useShowcaseI18n();
   const {
     showGlossaryModal,
     selectedConcept,
@@ -315,11 +321,11 @@ export const ConceptGlossaryModal: React.FC = () => {
     <div className="glossary-modal-overlay" onClick={hideGlossary}>
       <div className="glossary-modal" onClick={(e) => e.stopPropagation()}>
         <div className="glossary-header">
-          <h2>📚 BrightChain Concept Glossary</h2>
+          <h2>{t(ShowcaseStrings.Edu_GlossaryTitle)}</h2>
           <button
             className="modal-close"
             onClick={hideGlossary}
-            aria-label="Close glossary"
+            aria-label={t(ShowcaseStrings.Edu_CloseGlossary)}
           >
             ×
           </button>
@@ -329,7 +335,7 @@ export const ConceptGlossaryModal: React.FC = () => {
           {selectedConceptData ? (
             <div className="concept-detail">
               <button className="back-button" onClick={() => setSearchTerm('')}>
-                ← Back to Glossary
+                {t(ShowcaseStrings.Edu_BackToGlossary)}
               </button>
 
               <div className="concept-card">
@@ -341,18 +347,18 @@ export const ConceptGlossaryModal: React.FC = () => {
                 </div>
 
                 <div className="concept-section">
-                  <h4>Definition</h4>
+                  <h4>{t(ShowcaseStrings.Edu_Definition)}</h4>
                   <p>{selectedConceptData.definition}</p>
                 </div>
 
                 <div className="concept-section">
-                  <h4>Technical Definition</h4>
+                  <h4>{t(ShowcaseStrings.Edu_TechnicalDefinition)}</h4>
                   <p>{selectedConceptData.technicalDefinition}</p>
                 </div>
 
                 {selectedConceptData.examples.length > 0 && (
                   <div className="concept-section">
-                    <h4>Examples</h4>
+                    <h4>{t(ShowcaseStrings.Edu_Examples)}</h4>
                     <ul>
                       {selectedConceptData.examples.map((example, index) => (
                         <li key={index}>{example}</li>
@@ -363,7 +369,7 @@ export const ConceptGlossaryModal: React.FC = () => {
 
                 {selectedConceptData.relatedTerms.length > 0 && (
                   <div className="concept-section">
-                    <h4>Related Terms</h4>
+                    <h4>{t(ShowcaseStrings.Edu_RelatedTerms)}</h4>
                     <div className="related-terms">
                       {selectedConceptData.relatedTerms.map((term) => (
                         <button
@@ -384,7 +390,7 @@ export const ConceptGlossaryModal: React.FC = () => {
               <div className="search-section">
                 <input
                   type="text"
-                  placeholder="Search concepts..."
+                  placeholder={t(ShowcaseStrings.Edu_SearchPlaceholder)}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="search-input"

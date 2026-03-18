@@ -34,3 +34,13 @@
 [submodule "digitalburnbag-api-lib"]
 	path = digitalburnbag-api-lib
 	url = https://github.com/Digital-Defiance/digitalburnbag-api-lib.git
+[submodule "digitalburnbag-sync-client"]
+	path = digitalburnbag-sync-client
+	url = https://github.com/Digital-Defiance/digitalburnbag-sync-client.git
+	branch = burnbag
+[submodule "digitalburnbag-desktop"]
+	path = digitalburnbag-desktop
+	url = https://github.com/Digital-Defiance/digitalburnbag-desktop.git
+[submodule "vscode-brightchain-vfs-explorer"]
+	path = vscode-brightchain-vfs-explorer
+	url = https://github.com/Digital-Defiance/vscode-brightchain-vfs-explorer.git

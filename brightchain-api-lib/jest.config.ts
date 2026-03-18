@@ -12,10 +12,24 @@ export default {
         diagnostics: false,
       },
     ],
+    '^.+\\.js$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          allowJs: true,
+          esModuleInterop: true,
+          module: 'esnext',
+          moduleResolution: 'node',
+        },
+        useESM: true,
+        diagnostics: false,
+      },
+    ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@noble|@scure|uuid)/)',
-    '/dist/',
+    '/node_modules/\\.store/(?!.*(@faker-js|@noble|@scure|@ethereumjs|uuid)-)',
+    '/node_modules/(?!(\\.store|@noble|@scure|@ethereumjs|uuid|@faker-js)/)',
+    // Only ignore workspace dist output, not dist/ inside node_modules packages
     '<rootDir>/../dist/',
   ],
   testPathIgnorePatterns: ['/node_modules/', '/dist/', '<rootDir>/../dist/'],

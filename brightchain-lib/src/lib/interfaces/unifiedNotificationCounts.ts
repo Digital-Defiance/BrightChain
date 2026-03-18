@@ -17,13 +17,20 @@ export interface IUnifiedNotificationCounts {
   chat: number;
   /** BrightPass vault/credential notification unread count */
   pass: number;
+  /** DigitalBurnbag file/folder notification unread count */
+  burnbag: number;
 }
 
 /**
  * Source module for a unified notification item.
  * Extensible as new modules are added.
  */
-export type UnifiedNotificationSource = 'hub' | 'mail' | 'chat' | 'pass';
+export type UnifiedNotificationSource =
+  | 'hub'
+  | 'mail'
+  | 'chat'
+  | 'pass'
+  | 'burnbag';
 
 /**
  * A single notification item normalized across all modules.

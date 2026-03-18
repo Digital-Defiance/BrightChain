@@ -17,23 +17,23 @@ import {
   PlatformID,
   TypedIdProviderWrapper,
 } from '@digitaldefiance/ecies-lib';
+import { BrightTrustErrorType } from '../enumerations/brightTrustErrorType';
 import { MemberStatusType } from '../enumerations/memberStatusType';
-import { QuorumErrorType } from '../enumerations/quorumErrorType';
-import { QuorumError } from '../errors/quorumError';
+import { BrightTrustError } from '../errors/brightTrustError';
+import { BrightTrustEpoch } from '../interfaces/brightTrustEpoch';
 import { Proposal } from '../interfaces/proposal';
-import { QuorumEpoch } from '../interfaces/quorumEpoch';
-import { IQuorumMember } from '../interfaces/services/quorumService';
+import { IBrightTrustMember } from '../interfaces/services/brightTrustService';
 import { Vote } from '../interfaces/vote';
 
 /**
  * Provides the data needed by the validator to check admission history.
- * Implemented by the quorum database.
+ * Implemented by the BrightTrust database.
  */
 export interface IBanValidationDataProvider<
   TID extends PlatformID = Uint8Array,
 > {
   /** Get a member by ID */
-  getMember(memberId: TID): Promise<IQuorumMember<TID> | null>;
+  getMember(memberId: TID): Promise<IBrightTrustMember<TID> | null>;
 
   /**
    * Get the member ID of whoever proposed the admission of a given member.
@@ -71,26 +71,26 @@ export class BanProposalValidator<TID extends PlatformID = Uint8Array> {
    *
    * @param proposerId - The member submitting the proposal
    * @param targetMemberId - The member to be banned
-   * @param currentEpoch - The current quorum epoch
-   * @throws QuorumError if validation fails
+   * @param currentEpoch - The current BrightTrust epoch
+   * @throws BrightTrustError if validation fails
    */
   async validateBanProposal(
     proposerId: TID,
     targetMemberId: TID,
-    currentEpoch: QuorumEpoch<TID>,
+    currentEpoch: BrightTrustEpoch<TID>,
   ): Promise<void> {
     // 1. Cannot ban yourself
     if (this.idsEqual(proposerId, targetMemberId)) {
-      throw new QuorumError(QuorumErrorType.CannotBanSelf);
+      throw new BrightTrustError(BrightTrustErrorType.CannotBanSelf);
     }
 
     // 2. Target must exist and not already be banned
     const target = await this.dataProvider.getMember(targetMemberId);
     if (!target) {
-      throw new QuorumError(QuorumErrorType.MemberNotFound);
+      throw new BrightTrustError(BrightTrustErrorType.MemberNotFound);
     }
     if (target.status === MemberStatusType.Banned) {
-      throw new QuorumError(QuorumErrorType.MemberAlreadyBanned);
+      throw new BrightTrustError(BrightTrustErrorType.MemberAlreadyBanned);
     }
 
     // 3. Proposer must not have joined in the current epoch
@@ -134,7 +134,7 @@ export class BanProposalValidator<TID extends PlatformID = Uint8Array> {
             // this member has an admission proposer, they may be new.
             // A more robust check would store the admission epoch on the member record.
             // For now, we block any member admitted in the last epoch transition.
-            // TODO: Store admissionEpoch on IQuorumMember for precise checking.
+            // TODO: Store admissionEpoch on IBrightTrustMember for precise checking.
           }
         }
       }
@@ -144,7 +144,7 @@ export class BanProposalValidator<TID extends PlatformID = Uint8Array> {
   /**
    * Filter votes on a BAN_MEMBER proposal to exclude proposer-ally votes.
    *
-   * A vote is excluded if the voter was admitted to the quorum by the same
+   * A vote is excluded if the voter was admitted to the BrightTrust by the same
    * member who submitted the ban proposal. This prevents a single member
    * from admitting allies and immediately using their votes to ban others.
    *

@@ -1,3 +1,6 @@
+// Buffer polyfill must be first — transitive deps (bloom-filters) need it
+import './polyfills';
+
 import {
   CoreLanguageCode,
   GlobalActiveContext,

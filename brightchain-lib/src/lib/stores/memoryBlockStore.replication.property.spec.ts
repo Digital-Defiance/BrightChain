@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for MemoryBlockStore replication tracking
  *
- * **Feature: backend-blockstore-quorum, Property: Replication Status Tracking**
+ * **Feature: backend-blockstore-brightTrust, Property: Replication Status Tracking**
  * **Validates: Requirements 5.1, 5.3, 5.4**
  *
  * This test suite verifies that:

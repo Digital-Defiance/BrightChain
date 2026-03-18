@@ -6,6 +6,7 @@ interface IUserDocument {
   _id: any;
   email: string;
   username: string;
+  displayName?: string;
   timezone?: string;
   lastLogin?: Date;
   emailVerified?: boolean;
@@ -21,6 +22,7 @@ export class RequestUserService {
       id: userDoc._id?.toString() || 'placeholder-id',
       email: userDoc.email,
       username: userDoc.username,
+      ...(userDoc.displayName && { displayName: userDoc.displayName }),
       timezone: userDoc.timezone || 'UTC',
       lastLogin: userDoc.lastLogin,
       emailVerified: userDoc.emailVerified || false,

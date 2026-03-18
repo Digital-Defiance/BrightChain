@@ -104,3 +104,45 @@ export const REPOSTS_SCHEMA: CollectionSchema = {
     { fields: { userId: 1, createdAt: -1 } },
   ],
 };
+
+// ═══════════════════════════════════════════════════════
+// Votes Collection
+// ═══════════════════════════════════════════════════════
+
+/** Collection name for votes */
+export const VOTES_COLLECTION = 'brighthub_votes';
+
+/** Vote type values */
+export const VOTE_TYPE_VALUES = ['up', 'down'] as const;
+
+/**
+ * Schema definition for the votes collection.
+ * Tracks upvote/downvote interactions on posts.
+ * Each user can have at most one vote per post (up or down, not both).
+ */
+export const VOTES_SCHEMA: CollectionSchema = {
+  name: 'brighthub_vote',
+  properties: {
+    _id: { type: 'string', required: true },
+    userId: { type: 'string', required: true },
+    postId: { type: 'string', required: true },
+    voteType: {
+      type: 'string',
+      required: true,
+      enum: [...VOTE_TYPE_VALUES],
+    },
+    createdAt: { type: 'string', required: true },
+  },
+  required: ['userId', 'postId', 'voteType', 'createdAt'],
+  additionalProperties: false,
+  validationLevel: 'strict',
+  validationAction: 'error',
+  indexes: [
+    // Unique constraint: one vote per user per post
+    { fields: { userId: 1, postId: 1 }, options: { unique: true } },
+    // Query votes on a post
+    { fields: { postId: 1, voteType: 1 } },
+    // Query a user's votes
+    { fields: { userId: 1, createdAt: -1 } },
+  ],
+};

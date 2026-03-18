@@ -191,6 +191,8 @@ export class NotificationService implements INotificationService {
   private readonly connectionMetadataCollection: Collection<ConnectionMetadataRecord>;
   private readonly categoryAssignmentsCollection: Collection<ConnectionCategoryAssignmentRecord>;
   private readonly connectionInteractionsCollection: Collection<ConnectionInteractionRecord>;
+  private emailService?: { sendEmail(to: string, subject: string, text: string, html: string): Promise<void> };
+  private userEmailResolver?: (userId: string) => Promise<string | null>;
 
   constructor(application: IApplicationWithCollections) {
     this.notificationsCollection = application.getModel<NotificationRecord>(
@@ -219,6 +221,59 @@ export class NotificationService implements INotificationService {
       application.getModel<ConnectionInteractionRecord>(
         'brighthub_connection_interactions',
       );
+  }
+
+  /**
+   * Set the email service for sending email notifications.
+   */
+  setEmailService(
+    service: { sendEmail(to: string, subject: string, text: string, html: string): Promise<void> },
+    userEmailResolver: (userId: string) => Promise<string | null>,
+  ): void {
+    this.emailService = service;
+    this.userEmailResolver = userEmailResolver;
+  }
+
+  /**
+   * Send an email notification if the user has email enabled for this category.
+   */
+  private async sendEmailNotification(
+    recipientId: string,
+    category: string,
+    subject: string,
+    body: string,
+  ): Promise<void> {
+    if (!this.emailService || !this.userEmailResolver) return;
+
+    try {
+      // Check if user has email enabled for this category
+      const prefs = await this.preferencesCollection
+        .findOne({ userId: recipientId } as Partial<NotificationPreferencesRecord>)
+        .exec();
+
+      if (prefs) {
+        const channelSettings = prefs.channelSettings as Record<string, boolean> | undefined;
+        if (channelSettings && channelSettings['email'] === false) return;
+
+        const catSettings = prefs.categorySettings as Record<string, { enabled?: boolean; channels?: Record<string, boolean> }> | undefined;
+        if (catSettings?.[category]) {
+          if (catSettings[category].enabled === false) return;
+          if (catSettings[category].channels?.['email'] === false) return;
+        }
+      }
+
+      const email = await this.userEmailResolver(recipientId);
+      if (!email) return;
+
+      await this.emailService.sendEmail(
+        email,
+        subject,
+        body,
+        `<p>${body}</p>`,
+      );
+    } catch {
+      // Non-fatal — email delivery failure shouldn't break notifications
+    }
   }
 
   // ═══════════════════════════════════════════════════════
@@ -510,6 +565,16 @@ export class NotificationService implements INotificationService {
     };
 
     await this.notificationsCollection.create(record);
+
+    // Send email notification if enabled
+    const notifContent = options?.content ?? type;
+    this.sendEmailNotification(
+      recipientId,
+      record.category,
+      `BrightHub: ${type}`,
+      notifContent,
+    ).catch(() => {}); // Fire and forget
+
     return this.recordToNotification(record);
   }
 
@@ -1163,6 +1228,68 @@ export class NotificationService implements INotificationService {
         count,
       );
     }
+  }
+
+  /**
+   * Generate reconnect reminder notifications for users who haven't
+   * interacted with a connection in a specified period.
+   * Intended to be called by a scheduled job (cron, setInterval, etc.)
+   *
+   * @param inactiveDays Number of days of inactivity before sending a reminder
+   * @returns Number of reminders sent
+   */
+  async generateReconnectReminders(
+    inactiveDays = 30,
+  ): Promise<number> {
+    // Get all connection metadata records
+    const allMetadata = await this.connectionMetadataCollection
+      .find({} as Partial<ConnectionMetadataRecord>)
+      .exec();
+
+    const cutoff = new Date(
+      Date.now() - inactiveDays * 86400000,
+    ).toISOString();
+    let sentCount = 0;
+
+    for (const meta of allMetadata) {
+      // Skip if last interaction is recent
+      if (meta.updatedAt > cutoff) continue;
+      // Skip muted/quiet connections
+      if (meta.isQuiet) continue;
+
+      try {
+        await this.createNotification(
+          meta.userId,
+          NotificationType.ReconnectReminder,
+          meta.connectionId,
+          {
+            content: `You haven't interacted with this connection in ${inactiveDays} days`,
+          },
+        );
+        sentCount++;
+      } catch {
+        // Skip failures (e.g., DND active)
+      }
+    }
+
+    return sentCount;
+  }
+
+  /**
+   * Create a system alert notification for a specific user.
+   * Used by admin tools for account-related alerts.
+   */
+  async createSystemAlert(
+    recipientId: string,
+    type:
+      | typeof NotificationType.SystemAlert
+      | typeof NotificationType.SecurityAlert
+      | typeof NotificationType.FeatureAnnouncement,
+    content: string,
+  ): Promise<IBaseNotification<string> | null> {
+    return this.createNotification(recipientId, type, 'system', {
+      content,
+    });
   }
 }
 

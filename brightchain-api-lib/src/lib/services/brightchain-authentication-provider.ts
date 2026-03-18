@@ -106,9 +106,49 @@ export class BrightChainAuthenticationProvider<
     return this.application.services.get('memberStore') as MemberStore<TID>;
   }
 
+  /**
+   * Check whether a member's account is locked or non-active.
+   * Queries the DB `users` collection for the accountStatus field.
+   * Throws if the account is locked; silently passes if the DB is unavailable
+   * (fail-open for setups without a users collection).
+   */
+  private async checkAccountStatus(id: TID): Promise<void> {
+    try {
+      const db =
+        this.application.services.get<import('@brightchain/db').BrightDb>('db');
+      if (!db) return;
+
+      const sp = ServiceProvider.getInstance<TID>();
+      const idHex = sp.idProvider.toString(id, 'hex');
+
+      const usersCol = db.collection<{
+        _id?: string;
+        accountStatus?: string;
+      }>('users');
+
+      let userDoc = await usersCol.findOne({ _id: idHex } as never);
+      if (!userDoc) {
+        const dashed = idHex.replace(
+          /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+          '$1-$2-$3-$4-$5',
+        );
+        userDoc = await usersCol.findOne({ _id: dashed } as never);
+      }
+
+      if (userDoc?.accountStatus && userDoc.accountStatus !== 'Active') {
+        throw new Error('Account is locked');
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message === 'Account is locked') {
+        throw err;
+      }
+      // DB unavailable — fail-open
+    }
+  }
+
   async findUserById(
     userId: string,
-  ): Promise<IAuthenticatedUser<TLanguage> | null> {
+  ): Promise<IAuthenticatedUser<TLanguage, TID> | null> {
     const memberStore = this.getMemberStore();
     // Deserialize the GUID string back to a typed ID (round-trips with idToString)
     const idProvider = ServiceProvider.getInstance<TID>().idProvider;
@@ -132,6 +172,9 @@ export class BrightChainAuthenticationProvider<
         siteLanguage: settings['siteLanguage'] as TLanguage | undefined,
         timezone: (settings['timezone'] as string) ?? 'UTC',
         lastLogin: publicProfile?.lastActive?.toISOString(),
+        // Carry the full Member object through so the middleware can
+        // attach it to req.member without a redundant MemberStore lookup.
+        member: member as unknown as Member<TID>,
       };
     } catch {
       // getMember() fails for seeded users (no CBL blocks). Fall back to the
@@ -148,7 +191,7 @@ export class BrightChainAuthenticationProvider<
   private async findUserByIdFromDb(
     userId: string,
     id: TID,
-  ): Promise<IAuthenticatedUser<TLanguage> | null> {
+  ): Promise<IAuthenticatedUser<TLanguage, TID> | null> {
     try {
       const db =
         this.application.services.get<import('@brightchain/db').BrightDb>('db');
@@ -205,8 +248,80 @@ export class BrightChainAuthenticationProvider<
       }
 
       const memberId = userId;
-      const rolePrivileges = memberTypeToRolePrivileges(member.type);
-      const roleDTO = memberTypeToRoleDTO(member.type, memberId);
+      let rolePrivileges = memberTypeToRolePrivileges(member.type);
+      let roleDTO = memberTypeToRoleDTO(member.type, memberId);
+
+      // Check the RBAC junction table (user-roles → roles) for the
+      // authoritative role. The admin panel updates user-roles but cannot
+      // change the MemberType in the member index, so we must read the
+      // actual role from the DB to reflect promotions/demotions.
+      try {
+        const db =
+          this.application.services.get<import('@brightchain/db').BrightDb>(
+            'db',
+          );
+        if (db) {
+          const sp = ServiceProvider.getInstance<TID>();
+          const idHex = sp.idProvider.toString(id, 'hex');
+
+          const userRolesCol = db.collection<{
+            userId?: unknown;
+            roleId?: unknown;
+          }>('user-roles');
+          const rolesCol = db.collection<{
+            _id?: string;
+            name?: string;
+            admin?: boolean;
+            member?: boolean;
+            system?: boolean;
+            child?: boolean;
+          }>('roles');
+
+          let userRoleDoc = await userRolesCol.findOne({
+            userId: id,
+          } as never);
+          if (!userRoleDoc) {
+            userRoleDoc = await userRolesCol.findOne({
+              userId: idHex,
+            } as never);
+          }
+          if (!userRoleDoc) {
+            userRoleDoc = await userRolesCol.findOne({
+              userId: memberId,
+            } as never);
+          }
+
+          if (userRoleDoc?.roleId) {
+            const roleDoc = await rolesCol.findOne({
+              _id: userRoleDoc.roleId,
+            } as never);
+            if (roleDoc) {
+              rolePrivileges = {
+                admin: roleDoc.admin ?? false,
+                member: roleDoc.member ?? false,
+                child: roleDoc.child ?? false,
+                system: roleDoc.system ?? false,
+              };
+              const now = new Date().toISOString();
+              roleDTO = {
+                _id: String(roleDoc._id ?? `role-${memberId}`),
+                name: roleDoc.name ?? member.type.toString(),
+                admin: roleDoc.admin ?? false,
+                member: roleDoc.member ?? false,
+                child: roleDoc.child ?? false,
+                system: roleDoc.system ?? false,
+                createdAt: now,
+                updatedAt: now,
+                createdBy: memberId,
+                updatedBy: memberId,
+              };
+            }
+          }
+        }
+      } catch {
+        // RBAC lookup is best-effort; fall through to MemberType-derived role
+      }
+
       const settings = privateProfile?.settings ?? {};
 
       // Check the `users` collection for settings overrides persisted by
@@ -220,6 +335,8 @@ export class BrightChainAuthenticationProvider<
         if (db) {
           const sp = ServiceProvider.getInstance<TID>();
           const idHex = sp.idProvider.toString(id, 'hex');
+
+          // Check user_settings first
           const settingsCol =
             db.collection<Record<string, unknown>>('user_settings');
           let userDoc = await settingsCol.findOne({ _id: idHex } as never);
@@ -233,18 +350,39 @@ export class BrightChainAuthenticationProvider<
           if (userDoc) {
             dbSettings = userDoc;
           }
+
+          // Also check the main users collection for displayName
+          if (!dbSettings['displayName']) {
+            const usersCol = db.collection<Record<string, unknown>>('users');
+            let mainDoc = await usersCol.findOne({ _id: idHex } as never);
+            if (!mainDoc) {
+              const dashed = idHex.replace(
+                /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+                '$1-$2-$3-$4-$5',
+              );
+              mainDoc = await usersCol.findOne({ _id: dashed } as never);
+            }
+            if (mainDoc?.['displayName']) {
+              dbSettings['displayName'] = mainDoc['displayName'];
+            }
+          }
         }
       } catch {
         // DB lookup is best-effort; fall through to member store settings
       }
 
-      return {
+      // Attach the full Member object as a non-interface property so the
+      // authenticateToken middleware can move it to req.member without a
+      // redundant MemberStore lookup.
+      const displayNameValue = dbSettings['displayName'] as string | undefined;
+      const dto: IRequestUserDTO & { member?: unknown } = {
         id: memberId,
         email: member.email.toString(),
         username: member.name,
         roles: [roleDTO],
         rolePrivileges,
         emailVerified: true, // BrightChain members are verified at creation
+        ...(displayNameValue ? { displayName: displayNameValue } : {}),
         timezone:
           (dbSettings['timezone'] as string) ??
           (settings['timezone'] as string) ??
@@ -266,7 +404,9 @@ export class BrightChainAuthenticationProvider<
           (settings['directChallenge'] as boolean) ??
           false,
         lastLogin: publicProfile?.lastActive?.toISOString(),
+        member,
       };
+      return dto;
     } catch {
       // getMember() fails for seeded users (no CBL blocks). Fall back to the
       // DB `users` collection which is always populated by initializeWithRbac.
@@ -295,6 +435,7 @@ export class BrightChainAuthenticationProvider<
         _id?: string;
         username?: string;
         email?: string;
+        displayName?: string;
         accountStatus?: string;
         emailVerified?: boolean;
         directChallenge?: boolean;
@@ -328,13 +469,72 @@ export class BrightChainAuthenticationProvider<
       });
       const memberType = results.length > 0 ? results[0].type : MemberType.User;
 
-      const rolePrivileges = memberTypeToRolePrivileges(memberType);
-      const roleDTO = memberTypeToRoleDTO(memberType, userId);
+      // Look up the actual role from the DB via user_roles → roles join.
+      // The role document has the authoritative admin/member/system flags.
+      let rolePrivileges = memberTypeToRolePrivileges(memberType);
+      let roleDTO = memberTypeToRoleDTO(memberType, userId);
+      try {
+        const userRolesCol = db.collection<{
+          userId?: unknown;
+          roleId?: unknown;
+        }>('user-roles');
+        const rolesCol = db.collection<{
+          _id?: string;
+          name?: string;
+          admin?: boolean;
+          member?: boolean;
+          system?: boolean;
+          child?: boolean;
+        }>('roles');
+
+        // Try both hex formats for the user ID lookup
+        let userRoleDoc = await userRolesCol.findOne({ userId: id } as never);
+        if (!userRoleDoc) {
+          userRoleDoc = await userRolesCol.findOne({ userId: idHex } as never);
+        }
+        if (!userRoleDoc) {
+          const dashed = idHex.replace(
+            /^([0-9a-f]{8})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{4})([0-9a-f]{12})$/i,
+            '$1-$2-$3-$4-$5',
+          );
+          userRoleDoc = await userRolesCol.findOne({ userId: dashed } as never);
+        }
+
+        if (userRoleDoc?.roleId) {
+          const roleDoc = await rolesCol.findOne({
+            _id: userRoleDoc.roleId,
+          } as never);
+          if (roleDoc) {
+            rolePrivileges = {
+              admin: roleDoc.admin ?? false,
+              member: roleDoc.member ?? false,
+              child: roleDoc.child ?? false,
+              system: roleDoc.system ?? false,
+            };
+            const now = new Date().toISOString();
+            roleDTO = {
+              _id: String(roleDoc._id ?? `role-${userId}`),
+              name: roleDoc.name ?? memberType.toString(),
+              admin: roleDoc.admin ?? false,
+              member: roleDoc.member ?? false,
+              child: roleDoc.child ?? false,
+              system: roleDoc.system ?? false,
+              createdAt: now,
+              updatedAt: now,
+              createdBy: userId,
+              updatedBy: userId,
+            };
+          }
+        }
+      } catch {
+        // Role lookup is best-effort; fall through to MemberType-derived privileges
+      }
 
       return {
         id: userId,
         email: userDoc.email ?? '',
         username: userDoc.username ?? '',
+        ...(userDoc.displayName && { displayName: userDoc.displayName }),
         roles: [roleDTO],
         rolePrivileges,
         emailVerified: userDoc.emailVerified ?? true,
@@ -382,6 +582,9 @@ export class BrightChainAuthenticationProvider<
     }
 
     const reference = results[0];
+
+    // Check account status — reject locked accounts
+    await this.checkAccountStatus(reference.id);
 
     // Try to hydrate the full member from CBL blocks first.
     // For seeded users (no CBL blocks), fall back to constructing a member
@@ -468,6 +671,9 @@ export class BrightChainAuthenticationProvider<
     }
 
     const reference = results[0];
+
+    // Check account status — reject locked accounts
+    await this.checkAccountStatus(reference.id);
 
     // Retrieve stored password hash from private profile.
     // For seeded users without CBL blocks, getMemberProfile will throw.

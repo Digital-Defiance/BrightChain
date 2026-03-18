@@ -56,6 +56,12 @@ interface INotificationHandlers extends TypedHandlers {
   updatePreferences: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   setQuietHours: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
   setDoNotDisturb: ApiRequestHandler<IApiMessageResponse | ApiErrorResponse>;
+  createSystemAlert: ApiRequestHandler<
+    INotificationApiResponse | ApiErrorResponse
+  >;
+  generateReconnectReminders: ApiRequestHandler<
+    IApiMessageResponse | ApiErrorResponse
+  >;
 }
 
 /**
@@ -112,7 +118,7 @@ export class BrightHubNotificationController<
     this.routeDefinitions = [
       routeConfig('get', '/', {
         handlerKey: 'getNotifications',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get notifications',
@@ -127,7 +133,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('get', '/unread-count', {
         handlerKey: 'getUnreadCount',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get unread notification count',
@@ -142,7 +148,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('post', '/:id/read', {
         handlerKey: 'markAsRead',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Mark notification as read',
@@ -157,7 +163,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('post', '/read-all', {
         handlerKey: 'markAllAsRead',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Mark all notifications as read',
@@ -172,7 +178,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('delete', '/:id', {
         handlerKey: 'deleteNotification',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Delete a notification',
@@ -187,7 +193,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('delete', '/', {
         handlerKey: 'deleteAllNotifications',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Delete all notifications',
@@ -202,7 +208,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('get', '/preferences', {
         handlerKey: 'getPreferences',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Get notification preferences',
@@ -217,7 +223,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('put', '/preferences', {
         handlerKey: 'updatePreferences',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Update notification preferences',
@@ -232,7 +238,7 @@ export class BrightHubNotificationController<
       }),
       routeConfig('post', '/preferences/quiet-hours', {
         handlerKey: 'setQuietHours',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Set quiet hours',
@@ -244,13 +250,43 @@ export class BrightHubNotificationController<
       }),
       routeConfig('post', '/preferences/dnd', {
         handlerKey: 'setDoNotDisturb',
-        useAuthentication: false,
+        useAuthentication: true,
         useCryptoAuthentication: false,
         openapi: {
           summary: 'Set Do Not Disturb',
           tags: ['BrightHub Notifications'],
           responses: {
             200: { schema: 'MessageResponse', description: 'DND set' },
+          },
+        },
+      }),
+      routeConfig('post', '/system-alert', {
+        handlerKey: 'createSystemAlert',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Create a system alert notification (admin)',
+          tags: ['BrightHub Notifications'],
+          responses: {
+            200: {
+              schema: 'NotificationResponse',
+              description: 'Alert created',
+            },
+          },
+        },
+      }),
+      routeConfig('post', '/reconnect-reminders', {
+        handlerKey: 'generateReconnectReminders',
+        useAuthentication: true,
+        useCryptoAuthentication: false,
+        openapi: {
+          summary: 'Generate reconnect reminder notifications (admin/cron)',
+          tags: ['BrightHub Notifications'],
+          responses: {
+            200: {
+              schema: 'MessageResponse',
+              description: 'Reminders generated',
+            },
           },
         },
       }),
@@ -273,6 +309,9 @@ export class BrightHubNotificationController<
       updatePreferences: this.handleUpdatePreferences.bind(this),
       setQuietHours: this.handleSetQuietHours.bind(this),
       setDoNotDisturb: this.handleSetDoNotDisturb.bind(this),
+      createSystemAlert: this.handleCreateSystemAlert.bind(this),
+      generateReconnectReminders:
+        this.handleGenerateReconnectReminders.bind(this),
     };
   }
 
@@ -553,6 +592,83 @@ export class BrightHubNotificationController<
       return {
         statusCode: 200,
         response: { message: 'Do Not Disturb configured' },
+      };
+    } catch (error) {
+      if (error instanceof NotificationServiceError)
+        return this.mapNotificationError(error);
+      return handleError(error);
+    }
+  }
+
+  /**
+   * POST /api/brighthub/notifications/system-alert
+   * Create a system/security/feature notification for a user (admin action)
+   */
+  private async handleCreateSystemAlert(
+    req: unknown,
+  ): Promise<
+    IStatusCodeResponse<INotificationApiResponse | ApiErrorResponse>
+  > {
+    try {
+      const { recipientId, type, content } = (
+        req as {
+          body: { recipientId: string; type: string; content: string };
+        }
+      ).body;
+      if (!recipientId)
+        return validationError('Missing required field: recipientId');
+      if (!type) return validationError('Missing required field: type');
+      if (!content) return validationError('Missing required field: content');
+
+      const service = this.getNotificationService();
+      const notification = await (
+        service as unknown as {
+          createSystemAlert(
+            recipientId: string,
+            type: string,
+            content: string,
+          ): Promise<unknown>;
+        }
+      ).createSystemAlert(recipientId, type, content);
+
+      return {
+        statusCode: 200,
+        response: {
+          message: 'System alert created',
+          data: notification,
+        } as INotificationApiResponse,
+      };
+    } catch (error) {
+      if (error instanceof NotificationServiceError)
+        return this.mapNotificationError(error);
+      return handleError(error);
+    }
+  }
+
+  /**
+   * POST /api/brighthub/notifications/reconnect-reminders
+   * Generate reconnect reminder notifications (admin/cron action)
+   */
+  private async handleGenerateReconnectReminders(
+    req: unknown,
+  ): Promise<IStatusCodeResponse<IApiMessageResponse | ApiErrorResponse>> {
+    try {
+      const { inactiveDays } = (
+        req as { body: { inactiveDays?: number } }
+      ).body;
+
+      const service = this.getNotificationService();
+      const count = await (
+        service as unknown as {
+          generateReconnectReminders(days?: number): Promise<number>;
+        }
+      ).generateReconnectReminders(inactiveDays);
+
+      return {
+        statusCode: 200,
+        response: {
+          message: `Generated ${count} reconnect reminders`,
+        },
       };
     } catch (error) {
       if (error instanceof NotificationServiceError)

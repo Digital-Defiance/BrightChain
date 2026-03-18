@@ -766,7 +766,7 @@ describe('Feature: brighthub-social-network, Connection_Service Property Tests',
             );
 
             expect(hubRecord!.memberCount).toBe(actualMembers.length);
-            expect(hubRecord!.memberCount).toBe(uniqueMembers.length);
+            expect(hubRecord!.memberCount).toBe(uniqueMembers.length + 1); // +1 for auto-joined owner
 
             // Remove one member
             await service.removeFromHub(hub._id, ownerId, [uniqueMembers[0]]);
@@ -777,7 +777,7 @@ describe('Feature: brighthub-social-network, Connection_Service Property Tests',
             );
 
             expect(hubAfter!.memberCount).toBe(membersAfter.length);
-            expect(hubAfter!.memberCount).toBe(uniqueMembers.length - 1);
+            expect(hubAfter!.memberCount).toBe(uniqueMembers.length); // -1 removed + 1 owner
           },
         ),
         { numRuns: 15 },
@@ -806,8 +806,8 @@ describe('Feature: brighthub-social-network, Connection_Service Property Tests',
             (r: any) => r.hubId === hub._id,
           );
 
-          expect(hubRecord!.memberCount).toBe(1);
-          expect(actualMembers.length).toBe(1);
+          expect(hubRecord!.memberCount).toBe(2);
+          expect(actualMembers.length).toBe(2);
         }),
         { numRuns: 15 },
       );

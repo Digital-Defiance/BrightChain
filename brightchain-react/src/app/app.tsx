@@ -1,10 +1,10 @@
 import { faComment } from '@awesome.me/kit-a20d532681/icons/chisel/regular';
 import {
+  faBird,
   faEnvelope,
   faLock,
 } from '@awesome.me/kit-a20d532681/icons/classic/solid';
 import { faCircleNodes } from '@awesome.me/kit-a20d532681/icons/classic/thin';
-import { faShredder } from '@awesome.me/kit-a20d532681/icons/duotone/solid';
 import {
   BrightChainFeatures,
   CONSTANTS,
@@ -15,7 +15,7 @@ import {
   THEME_COLORS,
 } from '@brightchain/brightchain-lib';
 import {
-  BrightChainLogo,
+  BrightChainLogoI18N,
   BrightChainSoupDemo,
   BrightChainSubLogo,
   BrightPassDemo,
@@ -28,12 +28,24 @@ import {
   BrightChatStrings,
   createBrightChatComponentPackage,
 } from '@brightchain/brightchat-lib';
-import { createBrightHubComponentPackage } from '@brightchain/brighthub-lib';
+import {
+  createBrightHubComponentPackage,
+  type IBaseHub,
+} from '@brightchain/brighthub-lib';
+import { useBrightHubMenuItems } from '@brightchain/brighthub-react-components';
 import {
   BrightMailStrings,
   createBrightMailComponentPackage,
 } from '@brightchain/brightmail-lib';
 import { createBrightPassComponentPackage } from '@brightchain/brightpass-lib';
+import {
+  createDigitalBurnbagComponentPackage,
+  DigitalBurnbagStrings,
+} from '@brightchain/digitalburnbag-lib';
+import {
+  BirdbagLogoBlue,
+  BirdbagLogoGrey,
+} from '@brightchain/digitalburnbag-react-components';
 import { ECIES_CONFIG } from '@digitaldefiance/ecies-lib';
 import {
   ApiAccess,
@@ -58,6 +70,8 @@ import {
   TopMenu,
   TranslatedTitle,
   UnAuthRoute,
+  useAuth,
+  useAuthenticatedApi,
   useI18n,
   UserSettingsFormWrapper,
   VerifyEmailPageWrapper,
@@ -69,20 +83,32 @@ import {
   SuiteCoreStringKeyValue,
 } from '@digitaldefiance/suite-core-lib';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import DeleteIcon from '@mui/icons-material/Delete';
 import DraftsIcon from '@mui/icons-material/Drafts';
 import ForumIcon from '@mui/icons-material/Forum';
 import GroupIcon from '@mui/icons-material/Group';
 import LabelIcon from '@mui/icons-material/Label';
 import SendIcon from '@mui/icons-material/Send';
+import TimelineIcon from '@mui/icons-material/Timeline';
 import { Box, CircularProgress, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { FC, lazy, Suspense, useCallback } from 'react';
+import {
+  FC,
+  lazy,
+  LazyExoticComponent,
+  Suspense,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { IncludeOnMenu } from '../enumerations/includeOnMenu';
 import { environment } from '../environments/environment';
 import '../styles.scss';
+import AdminDashboardPage from './components/AdminDashboardPage';
+import { AdminMenuRegistration } from './components/AdminMenuRegistration';
 import DashboardPage from './components/DashboardPage';
 import { GlobalNotificationBell } from './components/GlobalNotificationBell';
 import { SplashPage } from './components/SplashPage';
@@ -94,45 +120,36 @@ const UnifiedNotificationsPage = lazy(() =>
   })),
 );
 
-// Register sub-component i18n packages with the BrightChain engine.
-// Must run after i18nEngine import above triggers engine creation.
-registerI18nComponentPackage(createBrightMailComponentPackage());
-registerI18nComponentPackage(createBrightHubComponentPackage());
-registerI18nComponentPackage(createBrightPassComponentPackage());
-registerI18nComponentPackage(createBrightChatComponentPackage());
-
-// Lazy-loaded module routes
-const BrightMailRoutes = lazy(() =>
-  import('./brightmail-routes').then((m) => ({
+const AdminUserManagementPanel = lazy(() =>
+  import('./components/AdminUserManagementPanel').then((m) => ({
     default: m.default,
   })),
 );
-const BrightPassRoutes = lazy(() =>
-  import('./brightpass-routes').then((m) => ({
+const AdminBlockExplorerPanel = lazy(() =>
+  import('./components/AdminBlockExplorerPanel').then((m) => ({
     default: m.default,
   })),
 );
-const BrightHubRoutes = lazy(() =>
-  import('./brighthub-routes').then((m) => ({
-    default: m.BrightHubRoutes,
-  })),
-);
-const BrightChatRoutes = lazy(() =>
-  import('./brightchat-routes').then((m) => ({
+const AdminChatPanel = lazy(() =>
+  import('./components/AdminChatPanel').then((m) => ({
     default: m.default,
   })),
 );
-
-const getApiBaseUrl = (): string => {
-  if (typeof window !== 'undefined') {
-    const appConfig = (window as { APP_CONFIG?: { apiUrl?: string } })
-      .APP_CONFIG;
-    if (appConfig?.apiUrl) {
-      return appConfig.apiUrl;
-    }
-  }
-  return environment.apiUrl || 'http://localhost:3000';
-};
+const AdminHubPanel = lazy(() =>
+  import('./components/AdminHubPanel').then((m) => ({
+    default: m.default,
+  })),
+);
+const AdminMailPanel = lazy(() =>
+  import('./components/AdminMailPanel').then((m) => ({
+    default: m.default,
+  })),
+);
+const AdminPassPanel = lazy(() =>
+  import('./components/AdminPassPanel').then((m) => ({
+    default: m.default,
+  })),
+);
 
 const getEnabledFeatures = (): BrightChainFeatures[] => {
   if (typeof window !== 'undefined') {
@@ -151,6 +168,82 @@ const getEnabledFeatures = (): BrightChainFeatures[] => {
       BrightChainFeatures.BrightPass,
     ]
   );
+};
+
+const enabledFeatures = getEnabledFeatures();
+const brightChatEnabled = enabledFeatures.includes(
+  BrightChainFeatures.BrightChat,
+);
+const brightHubEnabled = enabledFeatures.includes(
+  BrightChainFeatures.BrightHub,
+);
+const brightMailEnabled = enabledFeatures.includes(
+  BrightChainFeatures.BrightMail,
+);
+const brightPassEnabled = enabledFeatures.includes(
+  BrightChainFeatures.BrightPass,
+);
+const burnbagEnabled = enabledFeatures.includes(
+  BrightChainFeatures.DigitalBurnbag,
+);
+
+// Register sub-component i18n packages with the BrightChain engine.
+// Must run after i18nEngine import above triggers engine creation.
+let BrightChatRoutes: LazyExoticComponent<FC<object>>;
+if (brightChatEnabled) {
+  registerI18nComponentPackage(createBrightChatComponentPackage());
+  BrightChatRoutes = lazy(() =>
+    import('./brightchat-routes').then((m) => ({
+      default: m.default,
+    })),
+  );
+}
+let BrightHubRoutes: LazyExoticComponent<FC<object>>;
+if (brightHubEnabled) {
+  registerI18nComponentPackage(createBrightHubComponentPackage());
+  BrightHubRoutes = lazy(() =>
+    import('./brighthub-routes').then((m) => ({
+      default: m.BrightHubRoutes,
+    })),
+  );
+}
+let BrightMailRoutes: LazyExoticComponent<FC<object>>;
+if (brightMailEnabled) {
+  registerI18nComponentPackage(createBrightMailComponentPackage());
+  BrightMailRoutes = lazy(() =>
+    import('./brightmail-routes').then((m) => ({
+      default: m.default,
+    })),
+  );
+}
+let BrightPassRoutes: LazyExoticComponent<FC<object>>;
+if (brightPassEnabled) {
+  registerI18nComponentPackage(createBrightPassComponentPackage());
+  BrightPassRoutes = lazy(() =>
+    import('./brightpass-routes').then((m) => ({
+      default: m.default,
+    })),
+  );
+}
+let BurnbagRoutes: LazyExoticComponent<FC<object>>;
+if (burnbagEnabled) {
+  registerI18nComponentPackage(createDigitalBurnbagComponentPackage());
+  BurnbagRoutes = lazy(() =>
+    import('./burnbag-routes').then((m) => ({
+      default: m.default,
+    })),
+  );
+}
+
+const getApiBaseUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const appConfig = (window as { APP_CONFIG?: { apiUrl?: string } })
+      .APP_CONFIG;
+    if (appConfig?.apiUrl) {
+      return appConfig.apiUrl;
+    }
+  }
+  return environment.apiUrl || 'http://localhost:3000';
 };
 
 const getEmailDomain = (): string => {
@@ -224,8 +317,36 @@ const App: FC = () => {
   );
 };
 
+let indexPriority = 15;
 const InnerApp: FC = () => {
   const { tBranded: t } = useI18n();
+  const { userData } = useAuth();
+  const api = useAuthenticatedApi();
+  const [subscribedHubs, setSubscribedHubs] = useState<IBaseHub<string>[]>([]);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+
+  // Fetch subscribed hubs and unread notification count for the menu
+  useEffect(() => {
+    const userId = userData?.id;
+    if (!userId) return;
+    api
+      .get(`/brighthub/hubs?userId=${userId}`)
+      .then((res: { data?: { data?: unknown } }) => {
+        const data = res.data?.data;
+        if (Array.isArray(data)) setSubscribedHubs(data);
+        else if (data && typeof data === 'object' && 'hubs' in data)
+          setSubscribedHubs((data as { hubs: IBaseHub<string>[] }).hubs);
+      })
+      .catch(() => {});
+    api
+      .get(`/brighthub/notifications/unread-count?userId=${userId}`)
+      .then((res: { data?: { data?: { unreadCount?: number } } }) => {
+        const count = res.data?.data?.unreadCount;
+        if (typeof count === 'number') setUnreadNotifCount(count);
+      })
+      .catch(() => {});
+  }, [api, userData?.id]);
+
   const digitalBurnbagMenu = createMenuType(
     String(IncludeOnMenu.DigitalBurnbagMenu),
   );
@@ -236,13 +357,13 @@ const InnerApp: FC = () => {
   const brightMailMenuConfig: IMenuConfig = {
     menuType: mailMenu,
     menuIcon: <FontAwesomeIcon icon={faEnvelope} />,
-    priority: 15,
+    priority: indexPriority,
     options: [
       {
         id: 'brightmail',
         label: <BrightChainSubLogo subText="Mail" height={24} />,
         includeOnMenus: [mailMenu, MenuTypes.SideMenu],
-        index: 15,
+        index: indexPriority,
         icon: (
           <FontAwesomeIcon
             icon={faEnvelope}
@@ -261,7 +382,7 @@ const InnerApp: FC = () => {
         id: 'brightmail-sent',
         label: t(BrightMailStrings.Nav_Sent),
         includeOnMenus: [mailMenu, MenuTypes.SideMenu],
-        index: 20,
+        index: indexPriority + 5,
         icon: <SendIcon />,
         link: '/brightmail/sent',
         requiresAuth: true,
@@ -270,7 +391,7 @@ const InnerApp: FC = () => {
         id: 'brightmail-drafts',
         label: t(BrightMailStrings.Nav_Drafts),
         includeOnMenus: [mailMenu, MenuTypes.SideMenu],
-        index: 25,
+        index: indexPriority + 10,
         icon: <DraftsIcon />,
         link: '/brightmail/drafts',
         requiresAuth: true,
@@ -279,7 +400,7 @@ const InnerApp: FC = () => {
         id: 'brightmail-trash',
         label: t(BrightMailStrings.Nav_Trash),
         includeOnMenus: [mailMenu, MenuTypes.SideMenu],
-        index: 30,
+        index: indexPriority + 15,
         icon: <DeleteIcon />,
         link: '/brightmail/trash',
         requiresAuth: true,
@@ -288,18 +409,19 @@ const InnerApp: FC = () => {
         id: 'brightmail-labels',
         label: t(BrightMailStrings.Nav_Labels),
         includeOnMenus: [mailMenu, MenuTypes.SideMenu],
-        index: 35,
+        index: indexPriority + 20,
         icon: <LabelIcon />,
         link: '/brightmail/labels',
         requiresAuth: true,
       },
     ],
   };
+  indexPriority += 100;
 
   const brightPassMenuConfig: IMenuConfig = {
     menuType: passMenu,
     menuIcon: <FontAwesomeIcon icon={faLock} />,
-    priority: 50,
+    priority: indexPriority,
     options: [
       {
         id: 'brightpass',
@@ -308,7 +430,7 @@ const InnerApp: FC = () => {
           createMenuType(String(IncludeOnMenu.BrightPassMenu)),
           MenuTypes.SideMenu,
         ],
-        index: 50,
+        index: indexPriority,
         icon: (
           <FontAwesomeIcon
             icon={faLock}
@@ -325,17 +447,24 @@ const InnerApp: FC = () => {
       },
     ],
   };
+  indexPriority += 100;
 
+  const { options: brightHubMenuItems, nextIndex } = useBrightHubMenuItems(
+    hubMenu,
+    subscribedHubs,
+    indexPriority,
+    unreadNotifCount,
+  );
   const brightHubMenuConfig: IMenuConfig = {
     menuType: hubMenu,
     menuIcon: <FontAwesomeIcon icon={faCircleNodes} />,
-    priority: 75,
+    priority: indexPriority,
     options: [
       {
         id: 'brighthub',
         label: <BrightChainSubLogo subText="Hub" height={24} />,
         includeOnMenus: [hubMenu, MenuTypes.SideMenu],
-        index: 75,
+        index: indexPriority,
         icon: (
           <FontAwesomeIcon
             icon={faCircleNodes}
@@ -350,19 +479,22 @@ const InnerApp: FC = () => {
           },
         },
       },
+      ...brightHubMenuItems,
     ],
   };
+
+  indexPriority = nextIndex;
 
   const brightChatMenuConfig: IMenuConfig = {
     menuType: chatMenu,
     menuIcon: <FontAwesomeIcon icon={faComment} />,
-    priority: 100,
+    priority: nextIndex,
     options: [
       {
         id: 'brightchat',
         label: <BrightChainSubLogo subText="Chat" height={24} />,
         includeOnMenus: [chatMenu, MenuTypes.SideMenu],
-        index: 100,
+        index: nextIndex,
         icon: (
           <FontAwesomeIcon
             icon={faComment}
@@ -381,7 +513,7 @@ const InnerApp: FC = () => {
         id: 'brightchat-groups',
         label: t(BrightChatStrings.Nav_Groups),
         includeOnMenus: [chatMenu, MenuTypes.SideMenu],
-        index: 115,
+        index: nextIndex + 5,
         icon: <GroupIcon />,
         link: '/brightchat/groups',
         requiresAuth: true,
@@ -390,20 +522,88 @@ const InnerApp: FC = () => {
         id: 'brightchat-channels',
         label: t(BrightChatStrings.Nav_Channels),
         includeOnMenus: [chatMenu, MenuTypes.SideMenu],
-        index: 130,
+        index: nextIndex + 10,
         icon: <ForumIcon />,
         link: '/brightchat/channels',
         requiresAuth: true,
       },
     ],
   };
+  indexPriority += 100;
 
   const digitalBurnbagMenuConfig: IMenuConfig = {
     menuType: digitalBurnbagMenu,
-    menuIcon: <FontAwesomeIcon icon={faShredder} />,
-    priority: 125,
-    options: [],
+    menuIcon: <BirdbagLogoGrey height={24} />,
+    priority: indexPriority,
+    options: [
+      {
+        id: 'burnbag',
+        label: (
+          <BrightChainSubLogo
+            leadText="Digital"
+            subText="Burnbag"
+            height={24}
+          />
+        ),
+        includeOnMenus: [digitalBurnbagMenu, MenuTypes.SideMenu],
+        index: indexPriority,
+        icon: <BirdbagLogoBlue height={24} />,
+        link: '/burnbag/files',
+        requiresAuth: true,
+        additionalSx: {
+          '& > svg': {
+            marginRight: '3px',
+          },
+        },
+      },
+      {
+        id: 'burnbag-shared',
+        label: t(DigitalBurnbagStrings.Nav_SharedWithMe),
+        includeOnMenus: [digitalBurnbagMenu, MenuTypes.SideMenu],
+        index: indexPriority + 5,
+        icon: <GroupIcon />,
+        link: '/burnbag/shared',
+        requiresAuth: true,
+      },
+      {
+        id: 'burnbag-trash',
+        label: t(DigitalBurnbagStrings.Nav_Trash),
+        includeOnMenus: [digitalBurnbagMenu, MenuTypes.SideMenu],
+        index: indexPriority + 10,
+        icon: <DeleteIcon />,
+        link: '/burnbag/trash',
+        requiresAuth: true,
+      },
+      {
+        id: 'burnbag-activity',
+        label: t(DigitalBurnbagStrings.Nav_Activity),
+        includeOnMenus: [digitalBurnbagMenu, MenuTypes.SideMenu],
+        index: indexPriority + 15,
+        icon: <TimelineIcon />,
+        link: '/burnbag/activity',
+        requiresAuth: true,
+      },
+      {
+        id: 'burnbag-analytics',
+        label: t(DigitalBurnbagStrings.Nav_Analytics),
+        includeOnMenus: [digitalBurnbagMenu, MenuTypes.SideMenu],
+        index: indexPriority + 20,
+        icon: <BarChartIcon />,
+        link: '/burnbag/analytics',
+        requiresAuth: true,
+      },
+      {
+        id: 'burnbag-canary',
+        label: t(DigitalBurnbagStrings.Nav_Canary),
+        includeOnMenus: [digitalBurnbagMenu, MenuTypes.SideMenu],
+        index: indexPriority + 25,
+        icon: <FontAwesomeIcon icon={faBird} />,
+        link: '/burnbag/canary',
+        requiresAuth: true,
+      },
+    ],
   };
+  indexPriority += 100;
 
   const featureMenuMap: [BrightChainFeatures, IMenuConfig][] = [
     [BrightChainFeatures.DigitalBurnbag, digitalBurnbagMenuConfig],
@@ -420,12 +620,13 @@ const InnerApp: FC = () => {
 
   return (
     <MenuProvider menuConfigs={menuConfigs}>
+      <AdminMenuRegistration />
       <Box className="app-container" sx={{ paddingTop: '64px' }}>
         <TopMenu
           Logo={
-            <BrightChainLogo
-              brightColor={THEME_COLORS.CHAIN_BLUE_DARK}
-              chainColor={THEME_COLORS.CHAIN_BLUE_LIGHT}
+            <BrightChainLogoI18N
+              primaryColor={THEME_COLORS.CHAIN_BLUE_DARK}
+              secondaryColor={THEME_COLORS.CHAIN_BLUE_LIGHT}
               taglineColor={THEME_COLORS.TAGLINE_COLOR}
               height={40}
               width={200}
@@ -458,6 +659,62 @@ const InnerApp: FC = () => {
               element={
                 <PrivateRoute>
                   <DashboardPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/dashboard"
+              element={
+                <PrivateRoute>
+                  <AdminDashboardPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <PrivateRoute>
+                  <AdminUserManagementPanel />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/blocks"
+              element={
+                <PrivateRoute>
+                  <AdminBlockExplorerPanel />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/chat"
+              element={
+                <PrivateRoute>
+                  <AdminChatPanel />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/hub"
+              element={
+                <PrivateRoute>
+                  <AdminHubPanel />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/mail"
+              element={
+                <PrivateRoute>
+                  <AdminMailPanel />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/admin/pass"
+              element={
+                <PrivateRoute>
+                  <AdminPassPanel />
                 </PrivateRoute>
               }
             />
@@ -498,7 +755,11 @@ const InnerApp: FC = () => {
               path="/register"
               element={
                 <UnAuthRoute>
-                  <RegisterFormWrapper />
+                  <RegisterFormWrapper
+                    componentProps={{
+                      disallowedEmailDomains: [emailDomain],
+                    }}
+                  />
                 </UnAuthRoute>
               }
             />
@@ -542,10 +803,21 @@ const InnerApp: FC = () => {
                 </PrivateRoute>
               }
             />
-            <Route path="/brightmail/*" element={<BrightMailRoutes />} />
-            <Route path="/brightpass/*" element={<BrightPassRoutes />} />
-            <Route path="/brighthub/*" element={<BrightHubRoutes />} />
-            <Route path="/brightchat/*" element={<BrightChatRoutes />} />
+            {BrightMailRoutes && (
+              <Route path="/brightmail/*" element={<BrightMailRoutes />} />
+            )}
+            {BrightPassRoutes && (
+              <Route path="/brightpass/*" element={<BrightPassRoutes />} />
+            )}
+            {BrightHubRoutes && (
+              <Route path="/brighthub/*" element={<BrightHubRoutes />} />
+            )}
+            {BrightChatRoutes && (
+              <Route path="/brightchat/*" element={<BrightChatRoutes />} />
+            )}
+            {BurnbagRoutes && (
+              <Route path="/burnbag/*" element={<BurnbagRoutes />} />
+            )}
             <Route
               path="/notifications"
               element={

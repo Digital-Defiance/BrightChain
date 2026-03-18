@@ -2,6 +2,7 @@ import {
   AliasRegistry,
   AuditLogService,
   BlockSize,
+  BrightTrustStateMachine,
   ChannelService,
   ConversationService,
   EnergyLedger,
@@ -17,13 +18,20 @@ import {
   MemberStore,
   MemoryMessageMetadataStore,
   PermissionService,
-  QuorumStateMachine,
   ServiceProvider,
   type IGossipService,
   type MessageCBLService,
 } from '@brightchain/brightchain-lib';
-import { ServiceKeys } from '@digitaldefiance/node-express-suite';
+import {
+  BrightTrustDBName,
+  BrightTrustPoolID,
+} from '@brightchain/brightchain-lib/lib/db';
 import { BrightDb } from '@brightchain/db';
+import {
+  createBurnbagDeps,
+  type IBurnbagExternalDeps,
+} from '@brightchain/digitalburnbag-api-lib';
+import { BrightDBName, BrightDBPoolID } from '@brightchain/digitalburnbag-lib';
 import { BrightDbApplication } from '@brightchain/node-express-suite';
 import { PlatformID } from '@digitaldefiance/node-ecies-lib';
 import {
@@ -33,12 +41,13 @@ import {
   IConstants,
   IEmailService,
   KeyWrappingService,
+  ServiceKeys,
   SystemUserService,
   UpnpManager,
 } from '@digitaldefiance/node-express-suite';
+import { BrightTrustGossipHandler } from './availability/brightTrustGossipHandler';
 import { GossipService } from './availability/gossipService';
 import { PoolDiscoveryService } from './availability/poolDiscoveryService';
-import { QuorumGossipHandler } from './availability/quorumGossipHandler';
 import { Constants } from './constants';
 import { SessionsController } from './controllers/api/sessions';
 import { createBlockDocumentStore } from './datastore/block-document-store-factory';
@@ -59,6 +68,7 @@ import {
   AuthService,
   BrightChainBackupCodeService,
   BrightChainSessionAdapter,
+  BrightTrustDatabaseAdapter,
   CLIOperatorPrompt,
   ConnectionService,
   ContentAwareBlocksService,
@@ -70,7 +80,6 @@ import {
   NotificationService,
   PostfixEmailService,
   PostService,
-  QuorumDatabaseAdapter,
   SecureKeyStorage,
   SESEmailService,
   UserProfileService,
@@ -114,12 +123,12 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
   private messagePassingService: MessagePassingService | null = null;
   private upnpManager: UpnpManager | null = null;
 
-  // ── Quorum subsystem ──────────────────────────────────────────────
-  private quorumDbAdapter: QuorumDatabaseAdapter<TID> | null = null;
-  private quorumStateMachine: QuorumStateMachine<TID> | null = null;
+  // ── BrightTrust subsystem ──────────────────────────────────────────────
+  private brightTrustDbAdapter: BrightTrustDatabaseAdapter<TID> | null = null;
+  private brightTrustStateMachine: BrightTrustStateMachine<TID> | null = null;
   private identityExpirationScheduler: IdentityExpirationScheduler<TID> | null =
     null;
-  private quorumGossipHandler: QuorumGossipHandler<TID> | null = null;
+  private brightTrustGossipHandler: BrightTrustGossipHandler<TID> | null = null;
   private contentAwareBlocksService: ContentAwareBlocksService<TID> | null =
     null;
 
@@ -157,6 +166,15 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
   }
 
   public override get db(): DocumentStore {
+    // Prefer the plugin's document store (wraps the real BrightDb that
+    // RBAC seeding and admin controllers also use). Fall back to the
+    // standalone store only before the plugin is connected.
+    try {
+      const pluginDb = this._plugin.db;
+      if (pluginDb) return pluginDb;
+    } catch {
+      // Plugin not connected yet — fall through
+    }
     return this._brightchainDocumentStore;
   }
 
@@ -241,7 +259,7 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
 
     // Use FakeEmailService when email sending is disabled (E2E test mode),
     // otherwise use the production SES-based EmailService.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const emailServiceFactories: Record<EmailServices, () => IEmailService> = {
       // no-op mailer
       [EmailServices.Dummy]: () => new DummyEmailService<TID>(this),
@@ -373,6 +391,13 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
     // Wire EventNotificationSystem to SyncController via the apiRouter
     if (this.apiRouter) {
       this.apiRouter.setSyncEventSystem(this.eventSystem);
+
+      // Provide the dashboard with the node's identity and its source so it
+      // always reports a proper node ID, even before AvailabilityService is wired.
+      this.apiRouter.setDashboardLocalNodeId(
+        this.environment.nodeId,
+        this.environment.nodeIdSource,
+      );
     }
 
     // ── Email subsystem (MessagePassingService) initialization ──────
@@ -420,12 +445,12 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
         offMessageDelivery: () => {},
         onDeliveryAck: () => {},
         offDeliveryAck: () => {},
-        announceQuorumProposal: async () => {},
-        announceQuorumVote: async () => {},
-        onQuorumProposal: () => {},
-        offQuorumProposal: () => {},
-        onQuorumVote: () => {},
-        offQuorumVote: () => {},
+        announceBrightTrustProposal: async () => {},
+        announceBrightTrustVote: async () => {},
+        onBrightTrustProposal: () => {},
+        offBrightTrustProposal: () => {},
+        onBrightTrustVote: () => {},
+        offBrightTrustVote: () => {},
       };
 
       const mps = new MessagePassingService(
@@ -513,6 +538,35 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
       // Wire connection service into user profile service for block inheritance
       userProfileService.setConnectionService(connectionService);
 
+      // Wire raw user search so searchUsers can find RBAC-seeded users
+      // that live in the BrightDB Collection but not the BlockCollection.
+      try {
+        const db = this._plugin.brightDb;
+        const usersCol = db.collection<{
+          _id: string;
+          username: string;
+          email: string;
+        }>('users');
+        userProfileService.setRawUserSearch(async (query, limit) => {
+          const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const pattern = new RegExp(escaped, 'i');
+          const cursor = usersCol.find({
+            $or: [
+              { username: { $regex: pattern } },
+              { email: { $regex: pattern } },
+            ],
+          } as never);
+          const results = await cursor.limit(limit).toArray();
+          return results.map((u) => ({
+            _id: typeof u._id === 'string' ? u._id : String(u._id),
+            username: u.username,
+            email: u.email,
+          }));
+        });
+      } catch {
+        // BrightDB not available — raw user search disabled
+      }
+
       this.apiRouter.setBrightHubPostService(postService);
       this.apiRouter.setBrightHubThreadService(threadService);
       this.apiRouter.setBrightHubFeedService(feedService);
@@ -565,25 +619,63 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
       );
     }
 
-    // ── Quorum subsystem initialization ─────────────────────────────
-    // Task 23.1: Initialize QuorumDatabaseAdapter with pool ID "quorum-system"
+    // ── Digital Burnbag file platform initialization ──────────────
+    // Wire burnbag controllers when the DigitalBurnbag feature is enabled.
+    // mountDigitalBurnbagRoutes checks the feature flag internally, so we
+    // just need to create the deps and call it.
+    if (this.apiRouter) {
+      try {
+        const burnbagDb = new BrightDb(blockStore, {
+          name: BrightDBName,
+          poolId: BrightDBPoolID,
+        });
+        const idProv = ServiceProvider.getInstance<TID>().idProvider;
+        const burnbagExternalDeps: IBurnbagExternalDeps<TID> = {
+          generateId: idProv.generateTyped.bind(idProv) as () => TID,
+          idToString: (id: TID) => idProv.idToString(id),
+          parseId: (idString: string) => idProv.idFromString(idString),
+          parseSafeId: (idString: string) => idProv.parseSafe(idString),
+        };
+        const burnbagDeps = createBurnbagDeps<TID>(
+          burnbagDb,
+          burnbagExternalDeps,
+        );
+        this.apiRouter.mountDigitalBurnbagRoutes(burnbagDeps);
+        debugLog(
+          this.environment.debug,
+          'log',
+          '[ ready ] Digital Burnbag file platform routes mounted',
+        );
+      } catch (burnbagErr) {
+        console.warn(
+          '[ warning ] Digital Burnbag initialization failed, continuing without burnbag:',
+          burnbagErr,
+        );
+      }
+    }
+
+    // ── BrightTrust subsystem initialization ─────────────────────────────
+    // Task 23.1: Initialize BrightTrustDatabaseAdapter with pool ID "BrightTrust-system"
     try {
-      const quorumDb = new BrightDb(blockStore, {
-        name: 'quorum-system',
-        poolId: 'quorum-system',
+      const brightTrustDb = new BrightDb(blockStore, {
+        name: BrightTrustDBName,
+        poolId: BrightTrustPoolID,
       });
-      this.quorumDbAdapter = new QuorumDatabaseAdapter<TID>(
-        quorumDb,
+      this.brightTrustDbAdapter = new BrightTrustDatabaseAdapter<TID>(
+        brightTrustDb,
         ServiceProvider.getInstance<TID>().idProvider,
       );
-      this.services.register('quorumDbAdapter', () => this.quorumDbAdapter);
+      this.services.register(
+        'brightTrustDbAdapter',
+        () => this.brightTrustDbAdapter,
+      );
       debugLog(
         this.environment.debug,
         'log',
-        '[ ready ] Quorum database adapter initialized (pool: quorum-system)',
+        '[ ready ] BrightTrust database adapter initialized (pool: BrightTrust-system)',
       );
 
-      // Task 23.2: Initialize QuorumStateMachine with dependencies
+      // Task 23.2: Initialize BrightTrustStateMachine with dependencies
       const serviceProvider = ServiceProvider.getInstance<TID>();
       const sealingService = serviceProvider.sealingService;
       const eciesService = serviceProvider.eciesService;
@@ -592,7 +684,7 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
       // the plugin if available, otherwise defer audit log creation.
       // For now, create without block store persistence (audit entries go to DB only).
       const auditLogService = new AuditLogService<TID>(
-        this.quorumDbAdapter,
+        this.brightTrustDbAdapter,
         // The signing member is set when the node operator is configured.
         // At startup we pass null — appendEntry will skip signature generation.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -606,11 +698,11 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
 
       // Create IdentitySealingPipeline for content ingestion
       const identitySealingPipeline = new IdentitySealingPipeline<TID>(
-        this.quorumDbAdapter,
+        this.brightTrustDbAdapter,
         sealingService,
         eciesService,
-        () => this.quorumStateMachine!.getCurrentEpoch(),
-        () => this.quorumDbAdapter!.getStatuteConfig(),
+        () => this.brightTrustStateMachine!.getCurrentEpoch(),
+        () => this.brightTrustDbAdapter!.getStatuteConfig(),
       );
       this.services.register(
         'identitySealingPipeline',
@@ -619,27 +711,27 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
 
       // Create AliasRegistry
       const aliasRegistry = new AliasRegistry<TID>(
-        this.quorumDbAdapter,
+        this.brightTrustDbAdapter,
         identitySealingPipeline,
         eciesService,
-        () => this.quorumStateMachine!.getCurrentEpoch(),
+        () => this.brightTrustStateMachine!.getCurrentEpoch(),
       );
       this.services.register('aliasRegistry', () => aliasRegistry);
 
-      // Create the QuorumStateMachine — central coordinator
+      // Create the BrightTrustStateMachine — central coordinator
       // GossipService is wired externally via setPoolDiscoveryService.
       // We pass a no-op stub until the real gossip service is available.
-      // The QuorumGossipHandler (Task 23.4) bridges gossip ↔ state machine.
+      // The BrightTrustGossipHandler (Task 23.4) bridges gossip ↔ state machine.
       const gossipStub = {
-        announceQuorumProposal: async () => {},
-        announceQuorumVote: async () => {},
-        onQuorumProposal: () => {},
-        offQuorumProposal: () => {},
-        onQuorumVote: () => {},
-        offQuorumVote: () => {},
+        announceBrightTrustProposal: async () => {},
+        announceBrightTrustVote: async () => {},
+        onBrightTrustProposal: () => {},
+        offBrightTrustProposal: () => {},
+        onBrightTrustVote: () => {},
+        offBrightTrustVote: () => {},
       };
-      this.quorumStateMachine = new QuorumStateMachine<TID>(
-        this.quorumDbAdapter,
+      this.brightTrustStateMachine = new BrightTrustStateMachine<TID>(
+        this.brightTrustDbAdapter,
         sealingService,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         gossipStub as any,
@@ -647,18 +739,18 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
         aliasRegistry,
       );
       this.services.register(
-        'quorumStateMachine',
-        () => this.quorumStateMachine,
+        'brightTrustStateMachine',
+        () => this.brightTrustStateMachine,
       );
       debugLog(
         this.environment.debug,
         'log',
-        '[ ready ] Quorum state machine initialized',
+        '[ ready ] BrightTrust state machine initialized',
       );
 
       // Task 23.3: Start IdentityExpirationScheduler
       this.identityExpirationScheduler = new IdentityExpirationScheduler<TID>(
-        this.quorumDbAdapter,
+        this.brightTrustDbAdapter,
         auditLogService,
       );
       this.identityExpirationScheduler.start();
@@ -672,27 +764,27 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
         '[ ready ] Identity expiration scheduler started',
       );
 
-      // Task 23.4: Register gossip message handlers for quorum_proposal and quorum_vote
-      // The QuorumGossipHandler is created here but gossip service binding
-      // happens when setQuorumGossipService() is called externally.
+      // Task 23.4: Register gossip message handlers for BrightTrust_proposal and brightTrust_vote
+      // The BrightTrustGossipHandler is created here but gossip service binding
+      // happens when setBrightTrustGossipService() is called externally.
       // For now, store the state machine reference so it can be wired later.
       this.services.register(
-        'quorumGossipHandlerFactory',
+        'brightTrustGossipHandlerFactory',
         () => (gossipService: GossipService) => {
-          this.quorumGossipHandler = new QuorumGossipHandler<TID>(
+          this.brightTrustGossipHandler = new BrightTrustGossipHandler<TID>(
             gossipService,
-            this.quorumStateMachine!,
-            this.quorumDbAdapter!,
+            this.brightTrustStateMachine!,
+            this.brightTrustDbAdapter!,
           );
-          this.quorumGossipHandler.start();
+          this.brightTrustGossipHandler.start();
           this.services.register(
-            'quorumGossipHandler',
-            () => this.quorumGossipHandler,
+            'brightTrustGossipHandler',
+            () => this.brightTrustGossipHandler,
           );
           debugLog(
             this.environment.debug,
             'log',
-            '[ ready ] Quorum gossip handlers registered (quorum_proposal, quorum_vote)',
+            '[ ready ] BrightTrust gossip handlers registered (brightTrust_proposal, brightTrust_vote)',
           );
         },
       );
@@ -700,7 +792,7 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
       // Task 23.5: Wire content ingestion middleware (IdentityValidator + IdentitySealingPipeline)
       const membershipProofService = new MembershipProofService<TID>();
       const identityValidator = new IdentityValidator<TID>(
-        this.quorumDbAdapter,
+        this.brightTrustDbAdapter,
         eciesService,
         membershipProofService,
       );
@@ -722,12 +814,12 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
       debugLog(
         this.environment.debug,
         'log',
-        '[ ready ] Quorum subsystem fully initialized',
+        '[ ready ] BrightTrust subsystem fully initialized',
       );
-    } catch (quorumErr) {
+    } catch (brightTrustErr) {
       console.warn(
-        '[ warning ] Quorum subsystem initialization failed, continuing without quorum:',
-        quorumErr,
+        '[ warning ] BrightTrust subsystem initialization failed, continuing without brightTrust:',
+        brightTrustErr,
       );
     }
 
@@ -760,7 +852,7 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
   public override async stop(): Promise<void> {
     // BrightChain-specific cleanup first, then delegate to upstream
 
-    // ── Quorum subsystem shutdown ─────────────────────────────────────
+    // ── BrightTrust subsystem shutdown ─────────────────────────────────────
     // Task 23.3: Stop ExpirationScheduler (graceful cleanup)
     if (this.identityExpirationScheduler) {
       debugLog(
@@ -773,19 +865,19 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
     }
 
     // Task 23.4: Unregister gossip handlers
-    if (this.quorumGossipHandler) {
+    if (this.brightTrustGossipHandler) {
       debugLog(
         this.environment.debug,
         'log',
-        '[ stopping ] Quorum gossip handlers',
+        '[ stopping ] BrightTrust gossip handlers',
       );
-      this.quorumGossipHandler.stop();
-      this.quorumGossipHandler = null;
+      this.brightTrustGossipHandler.stop();
+      this.brightTrustGossipHandler = null;
     }
 
-    // Clean up quorum references
-    this.quorumStateMachine = null;
-    this.quorumDbAdapter = null;
+    // Clean up BrightTrust references
+    this.brightTrustStateMachine = null;
+    this.brightTrustDbAdapter = null;
     this.contentAwareBlocksService = null;
 
     // Shutdown UPnP port mappings
@@ -950,11 +1042,11 @@ export class App<TID extends PlatformID> extends BrightDbApplication<
       }
     });
 
-    // Task 23.4: Wire quorum gossip handlers when gossip service becomes available
-    if (this.services.has('quorumGossipHandlerFactory')) {
+    // Task 23.4: Wire BrightTrust gossip handlers when gossip service becomes available
+    if (this.services.has('brightTrustGossipHandlerFactory')) {
       const gossipHandlerFactory = this.services.get<
         (gs: GossipService) => void
-      >('quorumGossipHandlerFactory');
+      >('brightTrustGossipHandlerFactory');
       if (gossipHandlerFactory) {
         gossipHandlerFactory(gossipService);
       }

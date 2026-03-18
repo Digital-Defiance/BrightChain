@@ -14,6 +14,7 @@ import {
 } from '@digitaldefiance/express-suite-react-components';
 import ChatIcon from '@mui/icons-material/Chat';
 import EmailIcon from '@mui/icons-material/Email';
+import FolderIcon from '@mui/icons-material/Folder';
 import LockIcon from '@mui/icons-material/Lock';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import {
@@ -34,12 +35,17 @@ import { useNavigate } from 'react-router-dom';
 
 const SOURCE_CONFIG: Record<
   UnifiedNotificationSource,
-  { label: string; color: 'primary' | 'secondary' | 'success' | 'warning'; icon: ReactElement }
+  {
+    label: string;
+    color: 'primary' | 'secondary' | 'success' | 'warning';
+    icon: ReactElement;
+  }
 > = {
   hub: { label: 'Hub', color: 'primary', icon: <NotificationsIcon /> },
   mail: { label: 'Mail', color: 'secondary', icon: <EmailIcon /> },
   chat: { label: 'Chat', color: 'success', icon: <ChatIcon /> },
   pass: { label: 'Pass', color: 'warning', icon: <LockIcon /> },
+  burnbag: { label: 'Burnbag', color: 'warning', icon: <FolderIcon /> },
 };
 
 export const UnifiedNotificationsPage: FC = () => {
@@ -65,7 +71,9 @@ export const UnifiedNotificationsPage: FC = () => {
         .then((res) => {
           const data = res.data?.data;
           if (data) {
-            setItems((prev) => (append ? [...prev, ...data.items] : data.items));
+            setItems((prev) =>
+              append ? [...prev, ...data.items] : data.items,
+            );
             setHasMore(data.hasMore ?? false);
             setCursor(data.cursor);
           }

@@ -90,12 +90,12 @@ function makeMockGossipService(): IGossipService & {
     }),
     onDeliveryAck: jest.fn(),
     offDeliveryAck: jest.fn(),
-    announceQuorumProposal: jest.fn().mockResolvedValue(undefined),
-    announceQuorumVote: jest.fn().mockResolvedValue(undefined),
-    onQuorumProposal: jest.fn(),
-    offQuorumProposal: jest.fn(),
-    onQuorumVote: jest.fn(),
-    offQuorumVote: jest.fn(),
+    announceBrightTrustProposal: jest.fn().mockResolvedValue(undefined),
+    announceBrightTrustVote: jest.fn().mockResolvedValue(undefined),
+    onBrightTrustProposal: jest.fn(),
+    offBrightTrustProposal: jest.fn(),
+    onBrightTrustVote: jest.fn(),
+    offBrightTrustVote: jest.fn(),
   } as unknown as IGossipService;
 
   return {

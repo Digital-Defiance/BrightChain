@@ -1,7 +1,7 @@
 /**
  * @fileoverview Property-based tests for MemoryBlockStore FEC operations
  *
- * **Feature: backend-blockstore-quorum, Property: Block FEC Round-Trip**
+ * **Feature: backend-blockstore-brightTrust, Property: Block FEC Round-Trip**
  * **Validates: Requirements 4.1, 4.2, 4.5, 4.6**
  *
  * This test suite verifies that:

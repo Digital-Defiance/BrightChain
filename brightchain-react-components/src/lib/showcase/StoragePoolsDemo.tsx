@@ -548,8 +548,8 @@ export const StoragePoolsDemo: React.FC = () => {
         <Typography variant="body2">
           <strong>Access Control:</strong> Each pool has an ACL (
           <code>IPoolACL</code>) stored as a signed block. Permissions (Read,
-          Write, Replicate, Admin) are checked before every operation. Quorum
-          approval from existing admins is required for ACL changes.
+          Write, Replicate, Admin) are checked before every operation.
+          BrightTrust approval from existing admins is required for ACL changes.
         </Typography>
       </Paper>
     </Container>

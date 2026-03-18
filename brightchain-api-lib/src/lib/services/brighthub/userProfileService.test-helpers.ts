@@ -9,6 +9,7 @@ import {
   ApproveFollowersMode,
   IBasePrivacySettings,
 } from '@brightchain/brighthub-lib';
+import { matchesFilter } from '@brightchain/db';
 
 /**
  * Mock collection that stores data in memory with sorting/pagination support

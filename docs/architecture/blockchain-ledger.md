@@ -8,7 +8,7 @@ permalink: /docs/architecture/block-chain-ledger/
 
 A general-purpose, append-only blockchain ledger built into `brightchain-lib`. The ledger stores cryptographically chained, digitally signed entries as `RawDataBlock` instances within any `IBlockStore` implementation. It generalizes the hash-chain pattern from `ChainedAuditLogEntry` and `AuditLogService` into a reusable, payload-agnostic ledger with deterministic binary serialization, in-memory indexing, full chain validation, role-based access control with consortium-style governance, and a Merkle tree commitment layer for O(log N) inclusion proofs, consistency proofs, and light client verification.
 
-The governance model is inspired by [Azure Confidential Ledger](https://learn.microsoft.com/en-us/azure/confidential-ledger/overview) and Microsoft's [Confidential Consortium Framework (CCF)](https://microsoft.github.io/CCF/main/overview/governance.html), providing feature parity with three roles (Administrator/Contributor/Reader), configurable quorum policies, member lifecycle states, and on-chain governance audit trails.
+The governance model is inspired by [Azure Confidential Ledger](https://learn.microsoft.com/en-us/azure/confidential-ledger/overview) and Microsoft's [Confidential Consortium Framework (CCF)](https://microsoft.github.io/CCF/main/overview/governance.html), providing feature parity with three roles (Administrator/Contributor/Reader), configurable BrightTrust policies, member lifecycle states, and on-chain governance audit trails.
 
 ## Design Decisions
 
@@ -16,8 +16,8 @@ The governance model is inspired by [Azure Confidential Ledger](https://learn.mi
 - **Thin Signer interface** — accepts `Uint8Array` (not `Buffer`) for browser compatibility, decoupled from `IMemberOperational` but compatible via `MemberSignerAdapter`.
 - **Single-block-per-entry storage** — each serialized entry is padded to the store's `BlockSize` and stored as one `RawDataBlock`, avoiding CBL whitening complexity.
 - **Metadata block** — tracks chain head, length, ledger ID, Merkle root, and frontier for cold-start reconstruction from an `IBlockStore`.
-- **On-chain governance** — all access control changes (signer additions, removals, role changes, quorum updates) are recorded as governance entries in the ledger itself, providing a complete audit trail. No out-of-band configuration.
-- **Multi-signature quorum** — governance changes require signatures from multiple administrators according to a configurable quorum policy, preventing unilateral modifications.
+- **On-chain governance** — all access control changes (signer additions, removals, role changes, BrightTrust updates) are recorded as governance entries in the ledger itself, providing a complete audit trail. No out-of-band configuration.
+- **Multi-signature BrightTrust** — governance changes require signatures from multiple administrators according to a configurable BrightTrust policy, preventing unilateral modifications.
 - **Hybrid linear-chain-plus-Merkle-tree** — the existing linear hash chain is preserved unchanged for ordering and append-only guarantees. A Merkle tree overlay provides O(log N) inclusion proofs, consistency proofs, selective disclosure, and light client support without modifying the per-entry serialization format.
 - **Frontier-based incremental Merkle updates** — the Merkle tree uses a frontier (right-spine hashes) for O(log N) per-append updates and O(log N) storage, following the RFC 6962 (Certificate Transparency) approach adapted for SHA3-512.
 - **Static proof verification** — inclusion and consistency proof verification methods are static on the `Ledger` class, requiring no `Ledger` instance, `IBlockStore`, or Node.js API. This enables browser-based light client verification.
@@ -242,7 +242,7 @@ The ledger enforces three roles, matching Azure Confidential Ledger's Administra
 
 | Role | Append Regular Entries | Append Governance Entries | Manage Signers |
 |------|----------------------|--------------------------|----------------|
-| `admin` | Yes | Yes (with quorum) | Yes |
+| `admin` | Yes | Yes (with BrightTrust) | Yes |
 | `writer` | Yes | No | No |
 | `reader` | No | No | No |
 
@@ -252,7 +252,7 @@ The genesis entry's payload contains the initial authorized signer set — an ex
 
 Each signer has a lifecycle status, inspired by CCF's member lifecycle:
 
-| Status | Can Append | Counts for Quorum | Transitions To |
+| Status | Can Append | Counts for BrightTrust | Transitions To |
 |--------|-----------|-------------------|----------------|
 | `active` | Yes (if admin/writer) | Yes (if admin) | `suspended`, `retired` |
 | `suspended` | No | No | `active`, `retired` |
@@ -275,14 +275,14 @@ Governance changes are recorded as special ledger entries whose payload begins w
 | `add_signer` | Add a public key with a role and optional metadata |
 | `remove_signer` | Retire a signer (permanent) |
 | `change_role` | Change a signer's role |
-| `update_quorum` | Change the quorum policy |
+| `update_BrightTrust` | Change the BrightTrust policy |
 | `suspend_signer` | Temporarily disable a signer |
 | `reactivate_signer` | Re-enable a suspended signer |
 | `set_member_data` | Update a signer's metadata |
 
-### Quorum Policies
+### BrightTrust Policies
 
-Governance changes require multi-signature approval according to a configurable quorum policy:
+Governance changes require multi-signature approval according to a configurable BrightTrust policy:
 
 | Policy | Required Signatures |
 |--------|-------------------|
@@ -290,7 +290,7 @@ Governance changes require multi-signature approval according to a configurable 
 | `majority` | More than half of active admins |
 | `threshold(n)` | At least N active admins |
 
-The initial quorum policy is set in the genesis entry. For single-admin ledgers, it defaults to `threshold(1)`. The quorum policy itself can be changed via `update_quorum`, but that change is subject to the current quorum — you need the existing quorum to change the quorum.
+The initial BrightTrust policy is set in the genesis entry. For single-admin ledgers, it defaults to `threshold(1)`. The BrightTrust policy itself can be changed via `update_BrightTrust`, but that change is subject to the current BrightTrust — you need the existing BrightTrust to change the BrightTrust.
 
 Governance entries carry cosignatures: the primary signer's signature (in the entry's `signature` field) plus additional admin signatures embedded in the governance payload, all over the same governance action hash.
 
@@ -311,7 +311,7 @@ The ledger enforces invariants to prevent becoming ungovernable:
 3. Ledger validates actions against safety constraints
 4. `GovernancePayloadSerializer` serializes the actions for signing
 5. All signers sign the same action hash
-6. Ledger verifies quorum is satisfied
+6. Ledger verifies BrightTrust is satisfied
 7. Full governance payload (actions + cosignatures) is serialized with `0x01` prefix
 8. Entry is appended using the standard append flow
 9. `AuthorizedSignerSet` is updated with the governance actions
@@ -415,9 +415,9 @@ After the `0x01` type prefix:
 | 2 bytes | `cosignatureCount` (uint16) |
 | variable | Cosignatures (pubKeyLen uint32 + pubKey + signature 64 bytes) |
 
-Genesis subtype additionally includes the initial quorum policy and full signer list before the actions.
+Genesis subtype additionally includes the initial BrightTrust policy and full signer list before the actions.
 
-Each governance action is serialized as a type byte (`0x00`–`0x06`) followed by action-specific fields (public key, role byte, quorum parameters, or metadata entries as appropriate).
+Each governance action is serialized as a type byte (`0x00`–`0x06`) followed by action-specific fields (public key, role byte, BrightTrust parameters, or metadata entries as appropriate).
 
 ## Data Flow: Append Entry
 
@@ -448,7 +448,7 @@ The `Ledger` maintains a `Map<number, Checksum>` mapping `sequenceNumber → blo
 The `AuthorizedSignerSet` maintains:
 
 - A `Map<string, IAuthorizedSigner>` keyed by hex-encoded public key for O(1) lookups
-- The current `IQuorumPolicy`
+- The current `IBrightTrustPolicy`
 - Cached `activeAdminCount` updated on each mutation
 
 This state is initialized from the genesis entry and updated incrementally on each governance entry during `append()` or `load()`. The `LedgerChainValidator` clones this state for speculative validation when walking the chain.
@@ -478,7 +478,7 @@ This state is initialized during `Ledger.load()` from the persisted frontier (fa
 
 ## Error Handling
 
-Serialization errors (`LedgerSerializationError`) cover invalid magic bytes, unsupported versions, truncated data, and field overflow — used for both entry serialization and proof serialization. Ledger operation errors (`LedgerError`) cover entry-not-found, invalid ranges, metadata corruption, append failures, governance errors (unauthorized signer, unauthorized governance, quorum not met, safety violations, invalid state transitions, invalid governance targets), and Merkle errors (`MerkleProofFailed` for out-of-range proof requests, `ConsistencyProofFailed` for invalid consistency proof ranges, `MerkleReconstructionFailed` for frontier restoration failures). Validation never throws — it returns `IValidationResult` with structured error descriptors including governance-specific and Merkle-specific (`merkle_root_mismatch`) error types.
+Serialization errors (`LedgerSerializationError`) cover invalid magic bytes, unsupported versions, truncated data, and field overflow — used for both entry serialization and proof serialization. Ledger operation errors (`LedgerError`) cover entry-not-found, invalid ranges, metadata corruption, append failures, governance errors (unauthorized signer, unauthorized governance, BrightTrust not met, safety violations, invalid state transitions, invalid governance targets), and Merkle errors (`MerkleProofFailed` for out-of-range proof requests, `ConsistencyProofFailed` for invalid consistency proof ranges, `MerkleReconstructionFailed` for frontier restoration failures). Validation never throws — it returns `IValidationResult` with structured error descriptors including governance-specific and Merkle-specific (`merkle_root_mismatch`) error types.
 
 ## File Organization
 
@@ -493,7 +493,7 @@ brightchain-lib/src/lib/
 │   ├── signerRole.ts               # SignerRole enum
 │   ├── signerStatus.ts             # SignerStatus enum
 │   ├── authorizedSigner.ts         # IAuthorizedSigner
-│   ├── quorumPolicy.ts             # IQuorumPolicy, QuorumType
+│   ├── brightTrustPolicy.ts        # IBrightTrustPolicy, QuorumType
 │   ├── governanceAction.ts         # GovernanceActionType, IGovernanceAction
 │   ├── governancePayload.ts        # IGovernancePayload
 │   ├── merkleProof.ts              # MerkleDirection, IMerkleProofStep, IMerkleProof
@@ -516,9 +516,9 @@ brightchain-lib/src/lib/
 
 ## Future: Distributed Network Service
 
-The current governance model collects multi-signature quorum approval upfront — the caller gathers the required admin signatures before calling `appendGovernance()`. The on-chain result is a governance entry with K-of-N admin signatures over the same payload hash. The ledger is agnostic about how those signatures were collected.
+The current governance model collects multi-signature BrightTrust approval upfront — the caller gathers the required admin signatures before calling `appendGovernance()`. The on-chain result is a governance entry with K-of-N admin signatures over the same payload hash. The ledger is agnostic about how those signatures were collected.
 
-This is architecturally equivalent to what CCF and Azure Confidential Ledger do internally. The difference is operational: CCF adds a proposal/vote protocol layer on top of its ledger so that distributed administrators on different machines can vote asynchronously. The proposal sits "open" on the network while members vote over time, and the framework calls into the ledger once the quorum resolves.
+This is architecturally equivalent to what CCF and Azure Confidential Ledger do internally. The difference is operational: CCF adds a proposal/vote protocol layer on top of its ledger so that distributed administrators on different machines can vote asynchronously. The proposal sits "open" on the network while members vote over time, and the framework calls into the ledger once the BrightTrust resolves.
 
 To evolve BrightChain into a distributed network service, the ledger data structure and governance model do not need to change. What gets added is a network protocol layer above the ledger:
 

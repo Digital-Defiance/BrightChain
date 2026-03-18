@@ -16,19 +16,19 @@ import {
   TypedIdProviderWrapper,
   uint8ArrayToHex,
 } from '@digitaldefiance/ecies-lib';
-import { QuorumErrorType } from '../enumerations/quorumErrorType';
-import { QuorumError } from '../errors/quorumError';
+import { BrightTrustErrorType } from '../enumerations/brightTrustErrorType';
+import { BrightTrustError } from '../errors/brightTrustError';
+import { BrightTrustEpoch } from '../interfaces/brightTrustEpoch';
 import {
   ContentWithIdentity,
   IdentityMode,
 } from '../interfaces/contentWithIdentity';
 import { IdentityRecoveryRecord } from '../interfaces/identityRecoveryRecord';
-import { QuorumEpoch } from '../interfaces/quorumEpoch';
+import { IBrightTrustDatabase } from '../interfaces/services/brightTrustDatabase';
 import {
   IdentitySealingResult,
   IIdentitySealingPipeline,
 } from '../interfaces/services/identitySealingPipeline';
-import { IQuorumDatabase } from '../interfaces/services/quorumDatabase';
 import { StatuteOfLimitationsConfig } from '../interfaces/statuteConfig';
 import { SealingService } from './sealing.service';
 
@@ -52,9 +52,9 @@ function wipeBuffer(buffer: Uint8Array): void {
  * 1. Captures the real creator identity before publication
  * 2. Generates Shamir shards from the identity bytes
  * 3. Replaces the identity field based on mode (real/alias/anonymous)
- * 4. Encrypts each shard with the corresponding quorum member's public key via ECIES
+ * 4. Encrypts each shard with the corresponding BrightTrust member's public key via ECIES
  * 5. Verifies shards correctly reconstruct before distributing
- * 6. Stores the IdentityRecoveryRecord in the QuorumDatabase
+ * 6. Stores the IdentityRecoveryRecord in the BrightTrustDatabase
  * 7. Attaches the recovery record ID to the content metadata
  * 8. Discards the original plaintext identity from memory
  *
@@ -64,10 +64,10 @@ export class IdentitySealingPipeline<TID extends PlatformID = Uint8Array>
   implements IIdentitySealingPipeline<TID>
 {
   constructor(
-    private readonly db: IQuorumDatabase<TID>,
+    private readonly db: IBrightTrustDatabase<TID>,
     private readonly sealingService: SealingService<TID>,
     private readonly eciesService: ECIESService<TID>,
-    private readonly currentEpoch: () => Promise<QuorumEpoch<TID>>,
+    private readonly currentEpoch: () => Promise<BrightTrustEpoch<TID>>,
     private readonly statuteConfig: () => Promise<StatuteOfLimitationsConfig | null>,
   ) {}
 
@@ -132,8 +132,8 @@ export class IdentitySealingPipeline<TID extends PlatformID = Uint8Array>
    * @param mode - The identity mode (real, alias, or anonymous)
    * @param aliasName - Required when mode is Alias
    * @returns The modified content and recovery record ID
-   * @throws QuorumError with IdentitySealingFailed if shard generation or distribution fails
-   * @throws QuorumError with ShardVerificationFailed if shard verification fails
+   * @throws BrightTrustError with IdentitySealingFailed if shard generation or distribution fails
+   * @throws BrightTrustError with ShardVerificationFailed if shard verification fails
    */
   async sealIdentity(
     content: ContentWithIdentity<TID>,
@@ -157,7 +157,7 @@ export class IdentitySealingPipeline<TID extends PlatformID = Uint8Array>
       const threshold = epoch.threshold;
 
       if (memberCount < 1) {
-        throw new QuorumError(QuorumErrorType.IdentitySealingFailed);
+        throw new BrightTrustError(BrightTrustErrorType.IdentitySealingFailed);
       }
 
       // 3. Generate Shamir shards via SealingService
@@ -168,8 +168,8 @@ export class IdentitySealingPipeline<TID extends PlatformID = Uint8Array>
           threshold,
         );
       } catch (err) {
-        if (err instanceof QuorumError) throw err;
-        throw new QuorumError(QuorumErrorType.IdentitySealingFailed);
+        if (err instanceof BrightTrustError) throw err;
+        throw new BrightTrustError(BrightTrustErrorType.IdentitySealingFailed);
       }
 
       // 4. Verify shards reconstruct correctly before distributing (Task 15.3)
@@ -185,7 +185,9 @@ export class IdentitySealingPipeline<TID extends PlatformID = Uint8Array>
         const memberId = epoch.memberIds[i];
         const memberRecord = await this.db.getMember(memberId);
         if (!memberRecord) {
-          throw new QuorumError(QuorumErrorType.IdentitySealingFailed);
+          throw new BrightTrustError(
+            BrightTrustErrorType.IdentitySealingFailed,
+          );
         }
 
         // Encode the share string as UTF-8 bytes for ECIES encryption
@@ -229,10 +231,10 @@ export class IdentitySealingPipeline<TID extends PlatformID = Uint8Array>
         recoveryRecordId: recordId,
       };
     } catch (error) {
-      if (error instanceof QuorumError) {
+      if (error instanceof BrightTrustError) {
         throw error;
       }
-      throw new QuorumError(QuorumErrorType.IdentitySealingFailed);
+      throw new BrightTrustError(BrightTrustErrorType.IdentitySealingFailed);
     } finally {
       // 9. Wipe plaintext identity from memory
       wipeBuffer(identityCopy);
@@ -252,8 +254,8 @@ export class IdentitySealingPipeline<TID extends PlatformID = Uint8Array>
    * @param recoveryRecordId - The ID of the identity recovery record
    * @param decryptedShares - Map of member ID to decrypted share hex string
    * @returns The recovered real identity
-   * @throws QuorumError with InsufficientSharesForReconstruction if not enough shares
-   * @throws QuorumError with IdentityPermanentlyUnrecoverable if record not found
+   * @throws BrightTrustError with InsufficientSharesForReconstruction if not enough shares
+   * @throws BrightTrustError with IdentityPermanentlyUnrecoverable if record not found
    */
   async recoverIdentity(
     recoveryRecordId: HexString,
@@ -263,12 +265,14 @@ export class IdentitySealingPipeline<TID extends PlatformID = Uint8Array>
       recoveryRecordId as unknown as TID,
     );
     if (!record) {
-      throw new QuorumError(QuorumErrorType.IdentityPermanentlyUnrecoverable);
+      throw new BrightTrustError(
+        BrightTrustErrorType.IdentityPermanentlyUnrecoverable,
+      );
     }
 
     if (decryptedShares.size < record.threshold) {
-      throw new QuorumError(
-        QuorumErrorType.InsufficientSharesForReconstruction,
+      throw new BrightTrustError(
+        BrightTrustErrorType.InsufficientSharesForReconstruction,
       );
     }
 
@@ -281,8 +285,8 @@ export class IdentitySealingPipeline<TID extends PlatformID = Uint8Array>
         record.memberIds.length,
       );
     } catch {
-      throw new QuorumError(
-        QuorumErrorType.InsufficientSharesForReconstruction,
+      throw new BrightTrustError(
+        BrightTrustErrorType.InsufficientSharesForReconstruction,
       );
     }
 
@@ -306,7 +310,7 @@ export class IdentitySealingPipeline<TID extends PlatformID = Uint8Array>
    * @param threshold - The number of shares needed to reconstruct
    * @param originalHex - The original identity hex string
    * @param totalShares - Total number of shares generated
-   * @throws QuorumError with ShardVerificationFailed if verification fails
+   * @throws BrightTrustError with ShardVerificationFailed if verification fails
    */
   private verifyShards(
     shares: string[],
@@ -323,11 +327,11 @@ export class IdentitySealingPipeline<TID extends PlatformID = Uint8Array>
         totalShares,
       );
     } catch {
-      throw new QuorumError(QuorumErrorType.ShardVerificationFailed);
+      throw new BrightTrustError(BrightTrustErrorType.ShardVerificationFailed);
     }
 
     if (reconstructed !== originalHex) {
-      throw new QuorumError(QuorumErrorType.ShardVerificationFailed);
+      throw new BrightTrustError(BrightTrustErrorType.ShardVerificationFailed);
     }
   }
 
@@ -354,7 +358,9 @@ export class IdentitySealingPipeline<TID extends PlatformID = Uint8Array>
 
       case IdentityMode.Alias: {
         if (!aliasName) {
-          throw new QuorumError(QuorumErrorType.IdentitySealingFailed);
+          throw new BrightTrustError(
+            BrightTrustErrorType.IdentitySealingFailed,
+          );
         }
         // Generate a deterministic alias ID using a fresh GUID.
         // The actual alias-to-identity mapping is stored in the recovery record.

@@ -18,9 +18,9 @@ import {
   type INewMemberData,
 } from '@brightchain/brightchain-lib';
 import type { BrightDb } from '@brightchain/db';
+import type { SecureString } from '@digitaldefiance/ecies-lib';
 import { EmailString, MemberType } from '@digitaldefiance/ecies-lib';
 import { ECIESService, type PlatformID } from '@digitaldefiance/node-ecies-lib';
-import type { SecureString } from '@digitaldefiance/ecies-lib';
 
 /**
  * Result of a single member creation during dev seeding.
@@ -89,7 +89,8 @@ export async function seedDevStore<TID extends PlatformID>(
   // initializeBrightChain() is idempotent — safe to call even if already initialized.
   initializeBrightChain();
 
-  const memberStore = existingMemberStore ?? new MemberStore<TID>(blockStore, db);
+  const memberStore =
+    existingMemberStore ?? new MemberStore<TID>(blockStore, db);
   const results: IDevMemberResult[] = [];
 
   // Create a node-ecies-lib ECIESService for deriving public keys from mnemonics.

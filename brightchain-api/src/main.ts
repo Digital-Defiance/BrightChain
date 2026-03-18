@@ -1,3 +1,8 @@
+// Side-effect imports: register cloud store factories with BlockStoreFactory
+// so that brightchainDatabaseInit can create them when BRIGHTCHAIN_BLOCKSTORE_TYPE
+// is set to 'azure' or 's3'. Must happen before App.start().
+import '@brightchain/azure-store';
+
 import { App, Environment } from '@brightchain/brightchain-api-lib';
 import { existsSync } from 'fs';
 import { resolve } from 'path';

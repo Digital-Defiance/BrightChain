@@ -18,10 +18,13 @@ export interface IValidationResult {
 /**
  * Validates a registration request body.
  * - username: non-empty, alphanumeric/hyphens/underscores only
- * - email: valid email format
+ * - email: valid email format, not from a disallowed domain
  * - password: minimum 8 characters
  */
-export function validateRegistration(body: unknown): IValidationResult {
+export function validateRegistration(
+  body: unknown,
+  disallowedEmailDomains?: string[],
+): IValidationResult {
   const errors: IValidationError[] = [];
   const data = body as Record<string, unknown>;
 
@@ -47,6 +50,18 @@ export function validateRegistration(body: unknown): IValidationResult {
     errors.push({ field: 'email', message: 'Email is required' });
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     errors.push({ field: 'email', message: 'Email format is invalid' });
+  } else if (disallowedEmailDomains?.length) {
+    const domain = email.slice(email.lastIndexOf('@') + 1).toLowerCase();
+    if (
+      disallowedEmailDomains
+        .filter((d): d is string => typeof d === 'string')
+        .some((d) => d.toLowerCase() === domain)
+    ) {
+      errors.push({
+        field: 'email',
+        message: `Registration with @${domain} addresses is not allowed`,
+      });
+    }
   }
 
   if (!password || typeof password !== 'string') {

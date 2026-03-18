@@ -7,22 +7,23 @@ permalink: /api-reference/brighthub-api/
 
 # BrightHub API Reference
 
-Complete HTTP API reference for BrightHub, BrightChain's decentralized social network. BrightHub provides microblogging with threaded conversations, user profiles with follow/block mechanics, timelines, direct messaging with message requests, connection management (lists, hubs, categories), and a full notification system.
+Complete HTTP API reference for BrightHub, BrightChain's decentralized social network. BrightHub provides community hubs with trust tiers, threaded discussions, user profiles with follow/block mechanics, timelines, direct messaging with message requests, connection management (lists, categories), and a full notification system.
 
 ## API Sections
 
 - [Posts](#posts-apibrighthubposts) — `/api/brighthub/posts`
+- [Hubs](#hubs-apibrighthubhubs) — `/api/brighthub/hubs`
 - [Timeline & Search](#timeline--search-apibrighthub) — `/api/brighthub/timeline`, `/api/brighthub/search`, `/api/brighthub/hashtag`
 - [User Profiles](#user-profiles-apibrighthubusers) — `/api/brighthub/users`
 - [Messaging](#messaging-apibrighthubmessages) — `/api/brighthub/messages`
-- [Connections](#connections-apibrighthub) — `/api/brighthub/lists`, `/api/brighthub/hubs`, `/api/brighthub/connections`
+- [Connections](#connections-apibrighthub) — `/api/brighthub/lists`, `/api/brighthub/connections`
 - [Notifications](#notifications-apibrighthubnotifications) — `/api/brighthub/notifications`
 
 ---
 
 # Posts (`/api/brighthub/posts`)
 
-Microblogging with support for original posts, replies, reposts, and quote posts. Posts support media attachments (max 4), mentions, hashtags, and hub-restricted visibility. Editing is allowed within a 15-minute window.
+Microblogging and long-form hub discussions with support for original posts, replies, reposts, and quote posts. Posts support media attachments (max 4), mentions, hashtags, and hub-restricted visibility. Timeline posts (without `hubIds`) have a 280-character limit; hub posts (with `hubIds`) allow up to 10,000 characters for long-form discussions. Editing is allowed within a 15-minute window.
 
 ## Endpoints Overview
 
@@ -37,6 +38,11 @@ Microblogging with support for original posts, replies, reposts, and quote posts
 | DELETE | `/:id/like` | Unlike a post |
 | POST | `/:id/repost` | Repost a post |
 | POST | `/:id/quote` | Create a quote post |
+| POST | `/:id/report` | Report a post |
+| GET | `/reports` | Get post reports (moderation queue) |
+| POST | `/reports/:reportId/review` | Review a report (moderator) |
+| POST | `/:id/upvote` | Upvote a post |
+| POST | `/:id/downvote` | Downvote a post |
 
 ---
 
@@ -363,6 +369,154 @@ Create a quote post — a repost with added commentary.
 
 ---
 
+## POST /:id/report
+
+Report a post for policy violations.
+
+**Request:**
+```json
+{
+  "userId": "user-uuid-1",
+  "reason": "Spam or misleading content",
+  "hubId": "hub-uuid"
+}
+```
+
+The `hubId` field is optional — include it when reporting a post within a specific hub context.
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "Post reported"
+}
+```
+
+**Errors:**
+- `400` — Missing required field (`reason`)
+- `404` — Post not found
+
+---
+
+## GET /reports
+
+Get post reports for the moderation queue. Admin/moderator endpoint.
+
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `status` | string | Filter by status: `pending` (default), `reviewed`, `dismissed`, `actioned` |
+| `hubId` | string | Filter by hub (for hub-scoped moderation) |
+| `limit` | number | Results per page (default 50) |
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "reports": [
+      {
+        "_id": "report-uuid",
+        "postId": "post-uuid",
+        "reporterId": "user-uuid-2",
+        "reason": "Spam or misleading content",
+        "hubId": "hub-uuid",
+        "status": "pending",
+        "createdAt": "2026-03-13T14:30:00.000Z"
+      }
+    ]
+  },
+  "message": "OK"
+}
+```
+
+**Report Statuses:**
+
+| Status | Description |
+|--------|-------------|
+| `pending` | Awaiting moderator review |
+| `reviewed` | Reviewed but no action taken |
+| `dismissed` | Report dismissed as invalid |
+| `actioned` | Action taken (post removed, user warned, etc.) |
+
+---
+
+## POST /reports/:reportId/review
+
+Review a post report. Moderator/admin action.
+
+**Request:**
+```json
+{
+  "reviewerId": "user-uuid-1",
+  "action": "dismiss"
+}
+```
+
+The `action` field must be `"dismiss"` or `"action"`.
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "Report dismissed"
+}
+```
+
+**Errors:**
+- `400` — Missing or invalid fields
+
+---
+
+## POST /:id/upvote
+
+Upvote a post. Used for hub posts with the voting system. Increments `upvoteCount` and `score`.
+
+**Request:**
+```json
+{
+  "userId": "user-uuid-2"
+}
+```
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "Post upvoted"
+}
+```
+
+**Errors:**
+- `404` — Post not found
+
+---
+
+## POST /:id/downvote
+
+Downvote a post. Used for hub posts with the voting system. Increments `downvoteCount` and decrements `score`.
+
+**Request:**
+```json
+{
+  "userId": "user-uuid-2"
+}
+```
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "Post downvoted"
+}
+```
+
+**Errors:**
+- `404` — Post not found
+
+---
+
 ## Post Types
 
 | Type | Description |
@@ -374,9 +528,713 @@ Create a quote post — a repost with added commentary.
 
 ---
 
+# Hubs (`/api/brighthub/hubs`)
+
+Community spaces with trust tiers, nested sub-hubs, moderator management, and self-service membership. Hubs are the core organizational unit of BrightHub — topic-scoped spaces where users post long-form threaded discussions.
+
+## Trust Tiers
+
+| Tier | Description |
+|------|-------------|
+| `open` | Anyone can view and post |
+| `verified` | Only BrightChain-verified identities can post |
+| `encrypted` | Content encrypted and visible only to members |
+
+## Endpoints Overview
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/` | Create a hub |
+| GET | `/` | Get user's subscribed hubs |
+| GET | `/explore` | Explore and discover public hubs |
+| GET | `/:idOrSlug` | Get hub detail by ID or slug |
+| PUT | `/:id` | Update hub settings |
+| POST | `/:idOrSlug/join` | Join a hub |
+| POST | `/:idOrSlug/leave` | Leave a hub |
+| POST | `/:id/members` | Add members to a hub (owner) |
+| DELETE | `/:id/members` | Remove members from a hub (owner) |
+| POST | `/:id/moderators` | Add a moderator (owner) |
+| DELETE | `/:id/moderators` | Remove a moderator (owner) |
+| GET | `/:id/sub-hubs` | Get sub-hubs |
+| GET | `/hubs/:hubId/posts`* | Get hub feed with sort support |
+| POST | `/:id/ban` | Ban a user from a hub (moderator) |
+| POST | `/:id/unban` | Unban a user from a hub (moderator) |
+| GET | `/:id/banned` | Get banned users list (moderator) |
+| GET | `/:id/members-list` | Get hub members with profiles |
+| GET | `/:id/leaderboard` | Get hub reputation leaderboard |
+| POST | `/:id/warn` | Warn a user in a hub (graduated moderation) |
+| POST | `/:id/temp-ban` | Temporarily ban a user from a hub |
+| POST | `/:id/remove-post` | Remove a post from a hub (moderator) |
+| POST | `/:id/transfer` | Transfer hub ownership |
+| DELETE | `/:id` | Delete a hub (owner only) |
+
+\* Hub feed endpoint is on the `/api/brighthub` base path (timeline controller).
+
+---
+
+## POST /
+
+Create a new hub. The creator becomes the owner and first moderator automatically.
+
+**Request:**
+```json
+{
+  "ownerId": "user-uuid-1",
+  "name": "Programming",
+  "slug": "programming",
+  "description": "Discuss all things code",
+  "rules": "1. Be respectful\n2. Stay on topic",
+  "trustTier": "open",
+  "parentHubId": null,
+  "icon": "💻"
+}
+```
+
+Only `ownerId` and `name` are required. `slug` is auto-generated from name if omitted. `parentHubId` creates a sub-hub (one level of nesting only).
+
+**201 Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "_id": "hub-uuid",
+    "ownerId": "user-uuid-1",
+    "slug": "programming",
+    "name": "Programming",
+    "description": "Discuss all things code",
+    "rules": "1. Be respectful\n2. Stay on topic",
+    "memberCount": 1,
+    "postCount": 0,
+    "isDefault": false,
+    "trustTier": "open",
+    "moderatorIds": ["user-uuid-1"],
+    "createdAt": "2026-03-13T10:00:00.000Z"
+  },
+  "message": "Hub created"
+}
+```
+
+**Errors:**
+- `400` — Missing required fields, slug already taken, invalid parent hub, sub-hub nesting too deep
+
+---
+
+## GET /
+
+Get hubs the authenticated user is a member of (subscribed hubs).
+
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `userId` | string | User ID (required) |
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "_id": "hub-uuid",
+      "slug": "programming",
+      "name": "Programming",
+      "description": "Discuss all things code",
+      "memberCount": 1250,
+      "postCount": 8430,
+      "trustTier": "open",
+      "createdAt": "2026-01-15T12:00:00.000Z"
+    }
+  ],
+  "message": "OK"
+}
+```
+
+---
+
+## GET /explore
+
+Discover public hubs with optional search and sorting.
+
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sort` | string | Sort order: `trending` (default), `new`, `suggested` |
+| `q` | string | Search query (filters by name, description, slug) |
+| `limit` | number | Results per page (default 20) |
+| `userId` | string | Optional user ID for personalized suggestions |
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "hubs": [
+      {
+        "_id": "hub-uuid",
+        "slug": "programming",
+        "name": "Programming",
+        "description": "Discuss all things code",
+        "memberCount": 1250,
+        "postCount": 8430,
+        "trustTier": "open",
+        "createdAt": "2026-01-15T12:00:00.000Z"
+      }
+    ]
+  },
+  "message": "OK"
+}
+```
+
+---
+
+## GET /:idOrSlug
+
+Get hub detail by ID or slug. Returns hub metadata, membership status, and sub-hubs.
+
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `userId` | string | Optional user ID (to check membership) |
+| `sort` | string | Post sort order: `hot`, `new`, `top` |
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "hub": {
+      "_id": "hub-uuid",
+      "slug": "programming",
+      "name": "Programming",
+      "description": "Discuss all things code",
+      "rules": "1. Be respectful\n2. Stay on topic",
+      "memberCount": 1250,
+      "postCount": 8430,
+      "trustTier": "open",
+      "moderatorIds": ["user-uuid-1"],
+      "createdAt": "2026-01-15T12:00:00.000Z"
+    },
+    "isMember": true,
+    "subHubs": [
+      {
+        "_id": "sub-hub-uuid",
+        "slug": "rust",
+        "name": "Rust",
+        "parentHubId": "hub-uuid",
+        "memberCount": 340
+      }
+    ]
+  },
+  "message": "OK"
+}
+```
+
+**Errors:**
+- `404` — Hub not found
+
+---
+
+## PUT /:id
+
+Update hub settings. Requires owner or moderator role.
+
+**Request:**
+```json
+{
+  "userId": "user-uuid-1",
+  "name": "Programming & CS",
+  "description": "Updated description",
+  "rules": "Updated rules",
+  "trustTier": "verified",
+  "icon": "🖥️"
+}
+```
+
+All fields except `userId` are optional.
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "data": { "_id": "hub-uuid", "name": "Programming & CS" },
+  "message": "Hub updated"
+}
+```
+
+**Errors:**
+- `403` — Not the hub owner or moderator
+- `404` — Hub not found
+
+---
+
+## POST /:idOrSlug/join
+
+Join a hub. Any user can join open hubs.
+
+**Request:**
+```json
+{
+  "userId": "user-uuid-2"
+}
+```
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "Joined hub"
+}
+```
+
+**Errors:**
+- `400` — Already a member
+- `404` — Hub not found
+
+---
+
+## POST /:idOrSlug/leave
+
+Leave a hub. The hub owner cannot leave (must transfer ownership or delete).
+
+**Request:**
+```json
+{
+  "userId": "user-uuid-2"
+}
+```
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "Left hub"
+}
+```
+
+**Errors:**
+- `403` — Hub owner cannot leave
+- `404` — Hub not found
+
+---
+
+## POST /:id/moderators
+
+Add a moderator to a hub. Only the hub owner can add moderators.
+
+**Request:**
+```json
+{
+  "ownerId": "user-uuid-1",
+  "userId": "user-uuid-2"
+}
+```
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "Moderator added"
+}
+```
+
+**Errors:**
+- `403` — Not the hub owner
+- `404` — Hub not found
+
+---
+
+## DELETE /:id/moderators
+
+Remove a moderator from a hub. Only the hub owner can remove moderators.
+
+**Request:**
+```json
+{
+  "ownerId": "user-uuid-1",
+  "userId": "user-uuid-2"
+}
+```
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "Moderator removed"
+}
+```
+
+**Errors:**
+- `403` — Not the hub owner
+- `404` — Hub not found
+
+---
+
+## GET /:id/sub-hubs
+
+Get sub-hubs of a parent hub.
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "hubs": [
+      {
+        "_id": "sub-hub-uuid",
+        "slug": "rust",
+        "name": "Rust",
+        "parentHubId": "hub-uuid",
+        "memberCount": 340,
+        "postCount": 1200,
+        "trustTier": "open"
+      }
+    ]
+  },
+  "message": "OK"
+}
+```
+
+---
+
+## POST /:id/ban
+
+Ban a user from a hub. Removes their membership and prevents re-joining. Requires moderator or owner role.
+
+**Request:**
+```json
+{
+  "moderatorId": "user-uuid-1",
+  "userId": "user-uuid-3"
+}
+```
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "User banned from hub"
+}
+```
+
+**Errors:**
+- `403` — Not a moderator/owner, or trying to ban the owner
+- `404` — Hub not found
+
+---
+
+## POST /:id/unban
+
+Unban a user from a hub. Requires moderator or owner role.
+
+**Request:**
+```json
+{
+  "moderatorId": "user-uuid-1",
+  "userId": "user-uuid-3"
+}
+```
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "User unbanned from hub"
+}
+```
+
+**Errors:**
+- `403` — Not a moderator/owner
+- `404` — Hub not found
+
+---
+
+## POST /:id/warn
+
+Issue a warning to a user in a hub (graduated moderation — step 1). Warnings are recorded but don't prevent the user from posting or joining.
+
+**Request:**
+```json
+{
+  "moderatorId": "user-uuid-1",
+  "userId": "user-uuid-3",
+  "reason": "Please follow the hub rules"
+}
+```
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "Warning issued"
+}
+```
+
+**Errors:**
+- `403` — Not a moderator/owner
+- `404` — Hub not found
+
+---
+
+## POST /:id/temp-ban
+
+Temporarily ban a user from a hub (graduated moderation — step 2). The user is removed from membership and cannot rejoin until the ban expires.
+
+**Request:**
+```json
+{
+  "moderatorId": "user-uuid-1",
+  "userId": "user-uuid-3",
+  "durationDays": 7,
+  "reason": "Repeated rule violations"
+}
+```
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "User temporarily banned for 7 days"
+}
+```
+
+**Errors:**
+- `403` — Not a moderator/owner
+- `404` — Hub not found
+
+---
+
+## Moderation Severity Levels
+
+| Severity | Effect | Duration |
+|----------|--------|----------|
+| `warning` | Recorded in moderation log, no restrictions | Permanent record |
+| `temp_ban` | Removed from hub, cannot rejoin until expiry | Configurable (days) |
+| `permanent_ban` | Removed from hub, cannot rejoin | Until manually unbanned |
+
+---
+
+## GET /:id/banned
+
+Get the list of banned users for a hub. Requires moderator or owner role.
+
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `userId` | string | Moderator/owner user ID (required) |
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "bannedUsers": [
+      {
+        "_id": "ban-uuid",
+        "hubId": "hub-uuid",
+        "userId": "user-uuid-3",
+        "bannedBy": "user-uuid-1",
+        "bannedAt": "2026-03-13T14:30:00.000Z"
+      }
+    ]
+  },
+  "message": "OK"
+}
+```
+
+**Errors:**
+- `403` — Not a moderator/owner
+- `404` — Hub not found
+
+---
+
+## POST /:id/remove-post
+
+Remove a post from a hub. Strips the hub's ID from the post's `hubIds` array. Requires moderator or owner role.
+
+**Request:**
+```json
+{
+  "moderatorId": "user-uuid-1",
+  "postId": "post-uuid"
+}
+```
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "Post removed from hub"
+}
+```
+
+**Errors:**
+- `400` — Missing required fields
+- `403` — Not a moderator/owner
+- `404` — Hub not found
+
+---
+
+## POST /:id/transfer
+
+Transfer hub ownership to another member. Only the current owner can transfer.
+
+**Request:**
+```json
+{
+  "ownerId": "user-uuid-1",
+  "newOwnerId": "user-uuid-2"
+}
+```
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "data": { "_id": "hub-uuid", "ownerId": "user-uuid-2" },
+  "message": "Ownership transferred"
+}
+```
+
+**Errors:**
+- `403` — Not the hub owner, or new owner is not a member
+- `404` — Hub not found
+
+---
+
+## DELETE /:id
+
+Delete a hub and all its memberships. Only the hub owner can delete. Cannot delete the default hub.
+
+**Request:**
+```json
+{
+  "ownerId": "user-uuid-1"
+}
+```
+
+**204 Response:** *(empty body)*
+
+**Errors:**
+- `400` — Cannot delete default hub
+- `403` — Not the hub owner
+- `404` — Hub not found
+
+---
+
+## GET /:id/members-list
+
+Get hub members with their profile information.
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "items": [
+      {
+        "_id": "user-uuid-1",
+        "username": "alice",
+        "displayName": "Alice",
+        "profilePictureUrl": "https://cdn.example.com/alice.jpg"
+      }
+    ],
+    "cursor": "next-page-cursor",
+    "hasMore": false
+  },
+  "message": "OK"
+}
+```
+
+---
+
+## GET /:id/leaderboard
+
+Get the hub reputation leaderboard — top contributors ranked by score.
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "leaderboard": [
+      {
+        "userId": "user-uuid-1",
+        "hubId": "hub-uuid",
+        "score": 450,
+        "postCount": 32,
+        "upvotesReceived": 520,
+        "lastActiveAt": "2026-03-13T14:30:00.000Z"
+      },
+      {
+        "userId": "user-uuid-2",
+        "hubId": "hub-uuid",
+        "score": 280,
+        "postCount": 18,
+        "upvotesReceived": 310,
+        "lastActiveAt": "2026-03-12T10:00:00.000Z"
+      }
+    ]
+  },
+  "message": "OK"
+}
+```
+
+---
+
+## GET /hubs/:hubId/posts
+
+Get posts within a hub with sort support. This endpoint is on the `/api/brighthub` base path (timeline controller).
+
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `userId` | string | Optional requesting user ID (for blocked user filtering) |
+| `sort` | string | Sort order: `new` (default), `hot`, `top`, `controversial` |
+| `topWindow` | string | Time window for `top` sort: `day`, `week` (default), `month`, `all` |
+| `cursor` | string | Opaque cursor for next page |
+| `limit` | number | Results per page |
+
+**Sort Algorithms:**
+
+| Sort | Algorithm |
+|------|-----------|
+| `new` | Reverse chronological (newest first) |
+| `hot` | Score decay: `(likes + replies + reposts) / (age_hours + 2)^1.5` |
+| `top` | Total engagement: `likes + reposts + replies`, filtered by time window |
+| `controversial` | Balanced votes: `totalVotes / (1 + |score|)` — high engagement with near-zero net score |
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "posts": [
+      {
+        "_id": "post-uuid",
+        "authorId": "user-uuid-1",
+        "content": "Long-form hub discussion...",
+        "hubIds": ["hub-uuid"],
+        "likeCount": 42,
+        "replyCount": 15,
+        "createdAt": "2026-03-13T10:00:00.000Z"
+      }
+    ],
+    "cursor": "next-page-cursor",
+    "hasMore": true
+  },
+  "message": "OK"
+}
+```
+
+---
+
 # Timeline & Search (`/api/brighthub`)
 
-Timelines, user feeds, hashtag feeds, and search. All timeline endpoints return paginated post lists.
+Timelines, user feeds, hashtag feeds, and search. All timeline endpoints return paginated post lists and support `sort` (`new`, `hot`, `top`) and `topWindow` (`day`, `week`, `month`, `all`) query parameters.
 
 ## Endpoints Overview
 
@@ -1532,7 +2390,7 @@ All fields except `adminId` are optional.
 
 # Connections (`/api/brighthub`)
 
-Connection management for organizing followed users into lists, hubs, and categories. Includes connection notes, suggestions, mutual connections, priority settings, quiet mode, temporary mutes, import/export, and follow request management.
+Connection management for organizing followed users into lists and categories. Includes connection notes, suggestions, mutual connections, priority settings, quiet mode, temporary mutes, import/export, and follow request management. Hub endpoints are documented in the [Hubs](#hubs-apibrighthubhubs) section.
 
 ## Endpoints Overview
 
@@ -1547,11 +2405,6 @@ Connection management for organizing followed users into lists, hubs, and catego
 | DELETE | `/lists/:id/members` | Remove members from a list |
 | GET | `/lists/:id/members` | Get list members |
 | POST | `/lists/:id/members/bulk` | Bulk add/remove members |
-| **Hubs** | | |
-| POST | `/hubs` | Create a hub |
-| GET | `/hubs` | Get user's hubs |
-| POST | `/hubs/:id/members` | Add members to a hub |
-| DELETE | `/hubs/:id/members` | Remove members from a hub |
 | **Connections** | | |
 | GET | `/connections/categories` | Get connection categories |
 | POST | `/connections/:id/note` | Add a note to a connection |
@@ -1821,119 +2674,7 @@ The `action` field must be `"add"` or `"remove"`.
 
 ---
 
-## POST /hubs
-
-Create a hub. Hubs are groups of connections used for restricting post visibility (e.g., "Close Friends" style sharing).
-
-**Request:**
-```json
-{
-  "ownerId": "user-uuid-1",
-  "name": "Close Friends"
-}
-```
-
-**201 Response:**
-```json
-{
-  "status": "success",
-  "data": {
-    "_id": "hub-uuid",
-    "ownerId": "user-uuid-1",
-    "name": "Close Friends",
-    "memberCount": 0,
-    "isDefault": false,
-    "createdAt": "2026-03-13T10:00:00.000Z"
-  },
-  "message": "Hub created"
-}
-```
-
-**Errors:**
-- `400` — Missing required fields (`ownerId`, `name`), hub limit exceeded
-
----
-
-## GET /hubs
-
-Get the user's hubs.
-
-**Query Parameters:**
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `userId` | string | User ID (required, also accepts `ownerId`) |
-
-**200 Response:**
-```json
-{
-  "status": "success",
-  "data": [
-    {
-      "_id": "hub-uuid",
-      "ownerId": "user-uuid-1",
-      "name": "Close Friends",
-      "memberCount": 8,
-      "isDefault": true,
-      "createdAt": "2026-03-13T10:00:00.000Z"
-    }
-  ],
-  "message": "OK"
-}
-```
-
----
-
-## POST /hubs/:id/members
-
-Add members to a hub.
-
-**Request:**
-```json
-{
-  "ownerId": "user-uuid-1",
-  "userIds": ["user-uuid-2", "user-uuid-3"]
-}
-```
-
-**200 Response:**
-```json
-{
-  "status": "success",
-  "message": "Members added to hub"
-}
-```
-
-**Errors:**
-- `400` — Missing required field (`userIds`), hub member limit exceeded
-- `403` — Not the hub owner
-- `404` — Hub not found
-
----
-
-## DELETE /hubs/:id/members
-
-Remove members from a hub.
-
-**Request:**
-```json
-{
-  "ownerId": "user-uuid-1",
-  "userIds": ["user-uuid-3"]
-}
-```
-
-**200 Response:**
-```json
-{
-  "status": "success",
-  "message": "Members removed from hub"
-}
-```
-
-**Errors:**
-- `403` — Not the hub owner
-- `404` — Hub not found
+> **Note:** Hub endpoints have been moved to their own top-level section. See [Hubs (`/api/brighthub/hubs`)](#hubs-apibrighthubhubs) for the full hub API including explore, join/leave, moderator management, and sub-hubs. The legacy owner-managed hub member endpoints (`POST /hubs/:id/members`, `DELETE /hubs/:id/members`) remain available for backward compatibility.
 
 ---
 
@@ -2342,6 +3083,8 @@ Notification management with per-category filtering, batch operations, preferenc
 | PUT | `/preferences` | Update notification preferences |
 | POST | `/preferences/quiet-hours` | Set quiet hours |
 | POST | `/preferences/dnd` | Set Do Not Disturb |
+| POST | `/system-alert` | Create a system alert (admin) |
+| POST | `/reconnect-reminders` | Generate reconnect reminders (admin/cron) |
 
 ---
 
@@ -2659,6 +3402,71 @@ The `expiresAt` field is optional. If omitted, DND remains active until manually
 
 ---
 
+## POST /system-alert
+
+Create a system, security, or feature announcement notification for a specific user. Admin-only endpoint.
+
+**Request:**
+```json
+{
+  "recipientId": "user-uuid-1",
+  "type": "system_alert",
+  "content": "Your account has been verified"
+}
+```
+
+**Notification Types for System Alerts:**
+
+| Type | Description |
+|------|-------------|
+| `system_alert` | Account-related alert |
+| `security_alert` | Security notification (password change, login from new device) |
+| `feature_announcement` | Product update or new feature |
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "_id": "notif-uuid",
+    "recipientId": "user-uuid-1",
+    "type": "system_alert",
+    "content": "Your account has been verified",
+    "isRead": false,
+    "createdAt": "2026-03-13T10:00:00.000Z"
+  },
+  "message": "System alert created"
+}
+```
+
+**Errors:**
+- `400` — Missing required fields
+
+---
+
+## POST /reconnect-reminders
+
+Generate reconnect reminder notifications for users with inactive connections. Intended to be called by a scheduled job (cron) or admin action.
+
+**Request:**
+```json
+{
+  "inactiveDays": 30
+}
+```
+
+The `inactiveDays` field is optional (defaults to 30).
+
+**200 Response:**
+```json
+{
+  "status": "success",
+  "message": "Generated 15 reconnect reminders"
+}
+```
+
+---
+
 # Real-Time Events
 
 BrightHub delivers real-time updates via WebSocket (Socket.IO). Clients subscribe to specific conversations and notification streams.
@@ -2678,6 +3486,7 @@ BrightHub delivers real-time updates via WebSocket (Socket.IO). Clients subscrib
 | `notification:read` | Notification marked as read |
 | `notification:deleted` | Notification deleted |
 | `notification:count` | Updated unread notification count |
+| `hub:post:new` | New post in a subscribed hub |
 
 ## Client → Server Events
 
@@ -2690,6 +3499,8 @@ BrightHub delivers real-time updates via WebSocket (Socket.IO). Clients subscrib
 | `unsubscribe:conversation` | Unsubscribe from a conversation |
 | `subscribe:notifications` | Subscribe to notification updates |
 | `unsubscribe:notifications` | Unsubscribe from notifications |
+| `subscribe:hub` | Subscribe to real-time post updates for a hub (pass `hubId`) |
+| `unsubscribe:hub` | Unsubscribe from a hub's post feed |
 
 ## Connection Constants
 

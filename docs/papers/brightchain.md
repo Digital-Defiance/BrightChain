@@ -9,7 +9,7 @@ parent: "Papers"
 Digital Defiance
 jessica@digitaldefiance.org
 
-**Abstract.** We present BrightChain, an integrated decentralized platform that unifies content-addressed storage, cryptographic identity, encrypted block types, a document database, end-to-end encrypted communication, homomorphic voting, and quorum-based governance into a single coherent system. BrightChain extends the Owner-Free Filesystem (OFF) model — in which data blocks are XOR'd with random blocks to produce plausibly deniable storage — with a layered architecture whose distinguishing feature is the pervasive use of Elliptic Curve Integrated Encryption Scheme (ECIES) as a cryptographic backbone. ECIES enables encrypted block types, multi-recipient encryption, and per-block confidentiality that the original OFF System never contemplated, transforming a storage-layer privacy mechanism into a full application platform. A novel ECDH-to-Paillier key derivation bridge deterministically derives homomorphic encryption keys from a user's existing elliptic-curve identity, enabling a single BIP39/32 mnemonic to serve as the root of trust for encryption, signing, and voting operations. We introduce *Brokered Anonymity*, a mechanism combining Shamir's Secret Sharing with a configurable statute of limitations to provide anonymous operations with recoverable accountability under quorum consensus. BrightDB, a MongoDB-compatible document database built on the privacy-preserving block store, bridges the gap between decentralized infrastructure and practical application development, enabling the BrightStack paradigm (BrightChain + Express + React + Node.js) where developers build decentralized applications using familiar MERN-stack patterns. A gossip-based delivery protocol provides epidemic-style block propagation with priority-based routing, Bloom filter discovery, and pool-scoped coordination. The system is implemented as a production TypeScript codebase with 112+ test files and 3,700+ property-based test iterations. We describe the architecture, formalize the storage and governance protocols, analyze the security properties of the key bridge, and discuss the implications of building a comprehensive application platform on a privacy-preserving foundation.
+**Abstract.** We present BrightChain, an integrated decentralized platform that unifies content-addressed storage, cryptographic identity, encrypted block types, a document database, end-to-end encrypted communication, homomorphic voting, and BrightTrust-based governance into a single coherent system. BrightChain extends the Owner-Free Filesystem (OFF) model — in which data blocks are XOR'd with random blocks to produce plausibly deniable storage — with a layered architecture whose distinguishing feature is the pervasive use of Elliptic Curve Integrated Encryption Scheme (ECIES) as a cryptographic backbone. ECIES enables encrypted block types, multi-recipient encryption, and per-block confidentiality that the original OFF System never contemplated, transforming a storage-layer privacy mechanism into a full application platform. A novel ECDH-to-Paillier key derivation bridge deterministically derives homomorphic encryption keys from a user's existing elliptic-curve identity, enabling a single BIP39/32 mnemonic to serve as the root of trust for encryption, signing, and voting operations. We introduce *Brokered Anonymity*, a mechanism combining Shamir's Secret Sharing with a configurable statute of limitations to provide anonymous operations with recoverable accountability under BrightTrust consensus. BrightDB, a MongoDB-compatible document database built on the privacy-preserving block store, bridges the gap between decentralized infrastructure and practical application development, enabling the BrightStack paradigm (BrightChain + Express + React + Node.js) where developers build decentralized applications using familiar MERN-stack patterns. A gossip-based delivery protocol provides epidemic-style block propagation with priority-based routing, Bloom filter discovery, and pool-scoped coordination. The system is implemented as a production TypeScript codebase with 112+ test files and 3,700+ property-based test iterations. We describe the architecture, formalize the storage and governance protocols, analyze the security properties of the key bridge, and discuss the implications of building a comprehensive application platform on a privacy-preserving foundation.
 
 **Keywords:** Owner-Free Filesystem, ECIES, homomorphic encryption, Paillier cryptosystem, brokered anonymity, Shamir's Secret Sharing, decentralized governance, content-addressed storage, document database, gossip protocol, privacy-preserving voting, storage pools
 
@@ -27,11 +27,11 @@ This paper makes the following contributions:
 
 1. **TUPLE Storage Model.** We formalize the 3-block storage model (data block + 2 randomizer blocks) that provides plausible deniability for all stored data, and extend it with hierarchical Constituent Block Lists (Super CBLs) supporting files of arbitrary size and pool-scoped whitening for safe namespace isolation.
 
-2. **ECIES as Cryptographic Backbone.** We describe how ECIES with AES-256-GCM permeates every layer of the system — from encrypted block types and multi-recipient document encryption to gossip announcement confidentiality and quorum share distribution — representing a fundamental departure from the XOR-only privacy model of the original OFF System.
+2. **ECIES as Cryptographic Backbone.** We describe how ECIES with AES-256-GCM permeates every layer of the system — from encrypted block types and multi-recipient document encryption to gossip announcement confidentiality and BrightTrust share distribution — representing a fundamental departure from the XOR-only privacy model of the original OFF System.
 
 3. **ECDH-to-Paillier Key Bridge.** We describe and analyze a novel key derivation scheme that deterministically generates Paillier homomorphic encryption keys from ECDH key pairs, enabling a single cryptographic identity to participate in both standard encryption and privacy-preserving voting.
 
-4. **Brokered Anonymity.** We formalize a protocol that combines identity sealing, alias registries, ring signature membership proofs, and Shamir's Secret Sharing to provide anonymous operations with time-bounded, quorum-recoverable accountability.
+4. **Brokered Anonymity.** We formalize a protocol that combines identity sealing, alias registries, ring signature membership proofs, and Shamir's Secret Sharing to provide anonymous operations with time-bounded, BrightTrust-recoverable accountability.
 
 5. **BrightDB and the BrightStack Platform.** We demonstrate that a privacy-preserving block store can serve as the foundation for a MongoDB-compatible document database (BrightDB) and a full-stack development paradigm (BrightStack), enabling developers familiar with the MERN stack to build decentralized applications with minimal paradigm shift.
 
@@ -39,7 +39,7 @@ This paper makes the following contributions:
 
 7. **Storage Pools.** We introduce lightweight namespace isolation via pool-scoped block storage, where XOR whitening components are confined within pool boundaries, enabling safe multi-tenant operation, per-pool encryption policies, and clean lifecycle management.
 
-8. **Integrated Governance.** We describe a voting system supporting 15+ methods with Paillier homomorphic tallying, and a quorum governance framework with bootstrap mode, epoch-based state management, and hierarchical delegation.
+8. **Integrated Governance.** We describe a voting system supporting 15+ methods with Paillier homomorphic tallying, and a BrightTrust governance framework with bootstrap mode, epoch-based state management, and hierarchical delegation.
 
 The remainder of this paper is organized as follows. Section 2 surveys related work. Section 3 describes the system architecture. Section 4 details the TUPLE storage model, Super CBL hierarchy, and Storage Pools. Section 5 presents the unified cryptographic identity system. Section 6 analyzes the ECIES cryptographic backbone and encrypted block types. Section 7 presents the ECDH-to-Paillier key bridge. Section 8 formalizes the Brokered Anonymity protocol. Section 9 describes the gossip delivery protocol and block propagation. Section 10 describes the governance and voting subsystems. Section 11 presents BrightDB and the BrightStack application platform. Section 12 discusses the energy economy model. Section 13 evaluates the implementation. Section 14 discusses limitations and future work. Section 15 concludes.
 
@@ -63,7 +63,7 @@ Helios [10] demonstrated web-based verifiable voting using homomorphic encryptio
 
 ### 2.3 Secret Sharing and Threshold Cryptography
 
-Shamir's Secret Sharing [12] enables a secret to be split into n shares such that any k shares can reconstruct the secret, but fewer than k shares reveal no information. BrightChain uses Shamir's scheme for two purposes: (1) quorum-based governance, where sealed documents require majority consensus to unseal, and (2) Brokered Anonymity, where a user's real identity is sharded among quorum members and can only be reconstructed through collective agreement.
+Shamir's Secret Sharing [12] enables a secret to be split into n shares such that any k shares can reconstruct the secret, but fewer than k shares reveal no information. BrightChain uses Shamir's scheme for two purposes: (1) BrightTrust-based governance, where sealed documents require majority consensus to unseal, and (2) Brokered Anonymity, where a user's real identity is sharded among BrightTrust members and can only be reconstructed through collective agreement.
 
 ### 2.4 Decentralized Identity
 
@@ -86,7 +86,7 @@ BrightChain is organized into five layers, each building on the one below. A dis
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │              Governance Layer                                │
-│   Homomorphic Voting · Quorum Consensus · Brokered Anon.    │
+│   Homomorphic Voting · BrightTrust Consensus · Brokered Anon.    │
 ├─────────────────────────────────────────────────────────────┤
 │              Application Layer                              │
 │   BrightDB · BrightPass · BrightHub · BrightMail           │
@@ -150,7 +150,7 @@ Applications built on BrightDB include BrightPass (a password manager with VCBL 
 
 ### 3.5 Governance Layer
 
-The governance layer provides two complementary mechanisms: homomorphic voting for democratic decision-making, and quorum-based consensus for sensitive operations requiring collective agreement. Both integrate with the identity layer — voters use Paillier keys derived from their ECDH identity, and quorum members use their ECDSA keys for share distribution and signature verification. The governance layer's operations are themselves stored as TUPLE blocks and coordinated via the gossip protocol, making governance a native capability of the platform rather than an external add-on.
+The governance layer provides two complementary mechanisms: homomorphic voting for democratic decision-making, and BrightTrust-based consensus for sensitive operations requiring collective agreement. Both integrate with the identity layer — voters use Paillier keys derived from their ECDH identity, and BrightTrust members use their ECDSA keys for share distribution and signature verification. The governance layer's operations are themselves stored as TUPLE blocks and coordinated via the gossip protocol, making governance a native capability of the platform rather than an external add-on.
 
 ---
 
@@ -207,7 +207,7 @@ Storage Pools provide logical namespace isolation within the block store. A pool
 
 **Pool Encryption.** Pools support three encryption modes: `None` (no encryption), `NodeSpecific` (encrypted with the storing node's ECIES key; only that node can decrypt), and `PoolShared` (encrypted with a shared AES-256-GCM key distributed to members via ECIES key wrapping). Block IDs are computed from ciphertext, so Bloom filters and block lookups work unchanged on encrypted pools.
 
-**Access Control.** Pool ACLs support four permission levels (Read, Write, Replicate, Admin) with ECDSA-authenticated nodes. ACL updates require quorum approval (>50% of Admins must sign). ACLs are stored as signed blocks in the block store itself, making them tamper-evident and auditable.
+**Access Control.** Pool ACLs support four permission levels (Read, Write, Replicate, Admin) with ECDSA-authenticated nodes. ACL updates require BrightTrust approval (>50% of Admins must sign). ACLs are stored as signed blocks in the block store itself, making them tamper-evident and auditable.
 
 ### 4.5 Forward Error Correction
 
@@ -278,7 +278,7 @@ ECIES appears at every layer of BrightChain:
 - **Identity Layer:** Member document encryption, device key provisioning
 - **Communication Layer:** Per-recipient message encryption, gossip announcement encryption for sensitive metadata (delivery info, acknowledgments), per-peer batch encryption
 - **Application Layer:** BrightPass vault encryption, BrightMail per-recipient email encryption (including S/MIME support), BrightHub channel encryption, BrightDB encrypted document storage
-- **Governance Layer:** Quorum share distribution (each Shamir share encrypted with the corresponding quorum member's public key), sealed document encryption, audit log entry signing
+- **Governance Layer:** BrightTrust share distribution (each Shamir share encrypted with the corresponding BrightTrust member's public key), sealed document encryption, audit log entry signing
 
 This pervasive use of ECIES is what transforms BrightChain from a storage system into an application platform. The encrypted block support means that any data structure — a document, a message, a vote, a credential — can be stored with both plausible deniability (via TUPLE whitening) and access control (via ECIES encryption), and delivered to specific recipients via the gossip protocol.
 
@@ -348,7 +348,7 @@ A detailed companion paper [26] provides the full algorithmic specification of t
 
 Decentralized systems face a fundamental tension between anonymity and accountability. Pure anonymity enables abuse without consequence; pure accountability eliminates privacy. The events of January 6, 2021 and the subsequent Parler network takedown illustrated this tension starkly: a platform with insufficient accountability enabled coordination of harmful activities, while the centralized response (deplatforming) demonstrated the fragility of systems dependent on corporate goodwill for continued operation.
 
-BrightChain resolves this tension through Brokered Anonymity — a protocol that provides anonymous operations by default, with identity recovery possible only through collective quorum agreement and only within a configurable time window.
+BrightChain resolves this tension through Brokered Anonymity — a protocol that provides anonymous operations by default, with identity recovery possible only through collective BrightTrust agreement and only within a configurable time window.
 
 ### 8.2 Protocol
 
@@ -359,33 +359,33 @@ The Brokered Anonymity protocol operates as follows:
 1. The system captures the member's real identity ID_real.
 2. Forward Error Correction data is generated against ID_real.
 3. The identity field is replaced with either a registered alias ID_alias or the anonymous identifier ID_anon = 0.
-4. Shamir's Secret Sharing splits the FEC data into n shares with threshold k, where n is the number of quorum members and k is the configured majority threshold.
-5. Each share is encrypted with the corresponding quorum member's public key (ECIES) and distributed.
+4. Shamir's Secret Sharing splits the FEC data into n shares with threshold k, where n is the number of BrightTrust members and k is the configured majority threshold.
+5. Each share is encrypted with the corresponding BrightTrust member's public key (ECIES) and distributed.
 6. The original plaintext identity is discarded.
 
 **Anonymous Verification.** The sealed content carries a ring signature membership proof — a zero-knowledge proof that the creator is a valid network member without revealing which one. This prevents Sybil attacks while preserving anonymity.
 
-**Identity Recovery.** If the quorum receives a valid request for identity disclosure (e.g., in response to a legal process such as a FISA warrant with attached documentation):
+**Identity Recovery.** If the BrightTrust receives a valid request for identity disclosure (e.g., in response to a legal process such as a FISA warrant with attached documentation):
 
-1. A proposal is submitted to the quorum via the gossip-based voting protocol.
-2. Each quorum member independently evaluates the request against the governance bylaws.
+1. A proposal is submitted to the BrightTrust via the gossip-based voting protocol.
+2. Each BrightTrust member independently evaluates the request against the governance bylaws.
 3. Physical operator authentication is required for each vote (preventing automated mass de-anonymization).
 4. If k or more members vote to approve, they each decrypt and provide their share.
 5. The shares are combined to reconstruct the FEC data, from which ID_real is recovered.
 
-**Temporal Expiration.** Each sealed identity has a configurable statute of limitations, with per-content-type durations. After this period, the expiration scheduler permanently deletes the identity recovery shards from all quorum members. Once expired, the real identity is permanently unrecoverable — providing true, irrevocable anonymity for historical content.
+**Temporal Expiration.** Each sealed identity has a configurable statute of limitations, with per-content-type durations. After this period, the expiration scheduler permanently deletes the identity recovery shards from all BrightTrust members. Once expired, the real identity is permanently unrecoverable — providing true, irrevocable anonymity for historical content.
 
 ### 8.3 Properties
 
-**Property 6 (Forward privacy).** After the statute of limitations expires, no coalition of quorum members — even all n members — can recover the sealed identity.
+**Property 6 (Forward privacy).** After the statute of limitations expires, no coalition of BrightTrust members — even all n members — can recover the sealed identity.
 
 **Property 7 (Threshold security).** Fewer than k shares reveal no information about the sealed identity (information-theoretic security from Shamir's scheme).
 
-**Property 8 (Accountability window).** Within the statute of limitations, a k-of-n quorum can recover the identity, providing a bounded accountability mechanism.
+**Property 8 (Accountability window).** Within the statute of limitations, a k-of-n BrightTrust can recover the identity, providing a bounded accountability mechanism.
 
-**Property 9 (Anti-automation).** Physical operator authentication for each quorum vote prevents automated mass de-anonymization, even if k quorum nodes are compromised programmatically.
+**Property 9 (Anti-automation).** Physical operator authentication for each BrightTrust vote prevents automated mass de-anonymization, even if k BrightTrust nodes are compromised programmatically.
 
-**Property 10 (Alias privacy).** The alias registry maps registered aliases to real identities, but this mapping is stored encrypted in the block store and accessible only to quorum members. No non-quorum participant can determine which aliases belong to which real identity.
+**Property 10 (Alias privacy).** The alias registry maps registered aliases to real identities, but this mapping is stored encrypted in the block store and accessible only to BrightTrust members. No non-BrightTrust participant can determine which aliases belong to which real identity.
 
 ---
 
@@ -436,19 +436,19 @@ A key challenge in gossip-based delivery is ensuring that related blocks from a 
 
 ## 10. Governance and Voting
 
-### 10.1 Quorum Governance
+### 10.1 BrightTrust Governance
 
-The BrightChain Quorum is a distributed governance body implementing threshold cryptography for collective decision-making.
+The BrightChain BrightTrust is a distributed governance body implementing threshold cryptography for collective decision-making.
 
-**Bootstrap Mode.** A new network starts in bootstrap mode with a single node or small group operating with reduced thresholds. A transition ceremony atomically migrates to full quorum mode, generating new Shamir polynomials and invalidating bootstrap-era shares.
+**Bootstrap Mode.** A new network starts in bootstrap mode with a single node or small group operating with reduced thresholds. A transition ceremony atomically migrates to full BrightTrust mode, generating new Shamir polynomials and invalidating bootstrap-era shares.
 
-**Epoch-Based State.** Quorum membership is managed through monotonically increasing epochs. Each epoch captures a versioned membership snapshot. Share redistribution on member addition or removal generates a new Shamir polynomial, cryptographically invalidating all shares from previous epochs.
+**Epoch-Based State.** BrightTrust membership is managed through monotonically increasing epochs. Each epoch captures a versioned membership snapshot. Share redistribution on member addition or removal generates a new Shamir polynomial, cryptographically invalidating all shares from previous epochs.
 
-**Hierarchical Delegation.** When quorum membership exceeds 20, an inner quorum handles routine operations (document sealing, alias management) while the full quorum is reserved for sensitive operations (identity disclosure, threshold changes, membership modifications).
+**Hierarchical Delegation.** When BrightTrust membership exceeds 20, an inner BrightTrust handles routine operations (document sealing, alias management) while the full BrightTrust is reserved for sensitive operations (identity disclosure, threshold changes, membership modifications).
 
-**Audit Trail.** All quorum operations are recorded in an immutable chained audit log — a SHA-3 hash chain where each entry is ECIES-signed by the initiating member and the log itself is stored as whitened TUPLE blocks via CBL. Tamper detection is automatic: any modification to a historical entry breaks the hash chain.
+**Audit Trail.** All BrightTrust operations are recorded in an immutable chained audit log — a SHA-3 hash chain where each entry is ECIES-signed by the initiating member and the log itself is stored as whitened TUPLE blocks via CBL. Tamper detection is automatic: any modification to a historical entry breaks the hash chain.
 
-**Gossip-Based Proposals.** Quorum proposals and votes propagate via the gossip protocol with physical operator authentication prompts. This ensures that governance operations benefit from the same decentralized delivery guarantees as all other BrightChain communications.
+**Gossip-Based Proposals.** BrightTrust proposals and votes propagate via the gossip protocol with physical operator authentication prompts. This ensures that governance operations benefit from the same decentralized delivery guarantees as all other BrightChain communications.
 
 ### 10.2 Homomorphic Voting
 
@@ -529,7 +529,7 @@ BrightStack is the full-stack development paradigm: BrightChain + Express + Reac
 
 - **Privacy by default:** All data stored as whitened TUPLE blocks
 - **End-to-end encryption:** ECIES + AES-256-GCM across all layers
-- **Democratic governance:** Homomorphic voting and quorum consensus available as primitives
+- **Democratic governance:** Homomorphic voting and BrightTrust consensus available as primitives
 - **Unified identity:** Single BIP39/32 mnemonic for all operations
 - **Decentralized replication:** Gossip-based block propagation with pool-scoped coordination
 
@@ -575,7 +575,7 @@ BrightChain is implemented in TypeScript as an Nx monorepo with the following pa
 
 | Package | Purpose |
 |---------|---------|
-| `brightchain-lib` | Core library: blocks, encryption, identity, quorum, voting, interfaces |
+| `brightchain-lib` | Core library: blocks, encryption, identity, BrightTrust, voting, interfaces |
 | `brightchain-api-lib` | Express controllers, Node.js-specific services, API response types |
 | `brightchain-db` | BrightDB document database |
 | `brightchain-api` | API server |
@@ -598,7 +598,7 @@ The implementation includes 112+ test files with comprehensive coverage:
   - Paillier homomorphism: D(E(a) · E(b)) = a + b
   - ECDH-to-Paillier determinism: same ECDH keys → same Paillier keys across platforms
   - Pool-scoped whitening: all TUPLE components belong to the same pool
-  - Quorum correctness: 18 property-based tests (P1–P18) for governance operations
+  - BrightTrust correctness: 18 property-based tests (P1–P18) for governance operations
 - **Voting tests** with 900+ test cases including stress tests with 1,000+ voters
 - **Error handling tests** with 30+ specialized error classes
 
@@ -666,9 +666,9 @@ Longer-term, the CIL/CLR smart contract system would enable BrightChain to suppo
 
 ## 15. Conclusion
 
-BrightChain demonstrates that privacy, usability, and democratic governance need not be competing priorities in decentralized systems. By integrating content-addressed storage with plausible deniability, ECIES-based encrypted block types, a unified cryptographic identity, homomorphic voting, quorum-based governance, gossip-based block delivery, and pool-scoped namespace isolation into a single platform — and by providing a MongoDB-compatible database abstraction that makes this infrastructure accessible to mainstream developers — BrightChain offers a practical path toward decentralized applications that are private by default, encrypted end-to-end, and democratically governed.
+BrightChain demonstrates that privacy, usability, and democratic governance need not be competing priorities in decentralized systems. By integrating content-addressed storage with plausible deniability, ECIES-based encrypted block types, a unified cryptographic identity, homomorphic voting, BrightTrust-based governance, gossip-based block delivery, and pool-scoped namespace isolation into a single platform — and by providing a MongoDB-compatible database abstraction that makes this infrastructure accessible to mainstream developers — BrightChain offers a practical path toward decentralized applications that are private by default, encrypted end-to-end, and democratically governed.
 
-The ECIES cryptographic backbone transforms the OFF System's storage-layer privacy into a full application platform where blocks can be both plausibly deniable and access-controlled. The ECDH-to-Paillier key bridge eliminates the key management complexity that has historically separated encryption systems from voting systems. Brokered Anonymity resolves the anonymity-accountability tension through time-bounded, quorum-recoverable identity sealing. The gossip protocol provides decentralized block delivery with priority-based routing, encrypted announcements, and coherent CBL group delivery. And BrightStack closes the gap between decentralized infrastructure and usable applications by meeting developers where they are — with familiar APIs, familiar patterns, and unfamiliar levels of privacy and security.
+The ECIES cryptographic backbone transforms the OFF System's storage-layer privacy into a full application platform where blocks can be both plausibly deniable and access-controlled. The ECDH-to-Paillier key bridge eliminates the key management complexity that has historically separated encryption systems from voting systems. Brokered Anonymity resolves the anonymity-accountability tension through time-bounded, BrightTrust-recoverable identity sealing. The gossip protocol provides decentralized block delivery with priority-based routing, encrypted announcements, and coherent CBL group delivery. And BrightStack closes the gap between decentralized infrastructure and usable applications by meeting developers where they are — with familiar APIs, familiar patterns, and unfamiliar levels of privacy and security.
 
 BrightChain is not just a blockchain alternative or a storage protocol. It is a comprehensive platform for building the next generation of digital societies — a "government in a box" where identity, voting, governance, communication, file sharing, and application development are integrated into a single privacy-preserving stack. The kitchen sink, it turns out, is exactly what was needed.
 

@@ -72,6 +72,36 @@ describe('User Management E2E', () => {
       expect(memberId.length).toBeGreaterThan(0);
       expect(typeof data.data.energyBalance).toBe('number');
     });
+
+    it('should return a 24-word mnemonic when user does not provide one', async () => {
+      const { status, mnemonic } = await registerUser('mnemonic');
+
+      expect(status).toBe(201);
+      expect(mnemonic).toBeDefined();
+      expect(typeof mnemonic).toBe('string');
+      const words = mnemonic!.trim().split(/\s+/);
+      expect(words.length).toBe(24);
+      // Each word should be a non-empty lowercase string (BIP39)
+      for (const word of words) {
+        expect(word.length).toBeGreaterThan(0);
+        expect(word).toBe(word.toLowerCase());
+      }
+    });
+
+    it('should NOT return a mnemonic when user provides their own', async () => {
+      const creds = uniqueUser('ownmnemonic');
+      const testMnemonic =
+        'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art';
+      const res = await axios.post('/api/user/register', {
+        username: creds.username,
+        email: creds.email,
+        password: creds.password,
+        mnemonic: testMnemonic,
+      });
+
+      expect(res.status).toBe(201);
+      expect(res.data.data.mnemonic).toBeUndefined();
+    });
   });
 
   // 12.3 — Login e2e test
@@ -131,7 +161,7 @@ describe('User Management E2E', () => {
           username: creds.username,
           password: creds.password,
         });
-        fail('Expected old password login to fail');
+        throw new Error('Expected old password login to fail');
       } catch (err) {
         const error = err as AxiosError<{ message: string }>;
         expect(error.response?.status).toBe(401);
@@ -287,7 +317,7 @@ describe('User Management E2E', () => {
             mnemonic: fakeMnemonic,
             newPassword: 'FallbackPass!99',
           });
-          fail('Expected recovery with invalid mnemonic to fail');
+          throw new Error('Expected recovery with invalid mnemonic to fail');
         } catch (err) {
           const error = err as AxiosError<{ message: string }>;
           expect(error.response?.status).toBe(401);

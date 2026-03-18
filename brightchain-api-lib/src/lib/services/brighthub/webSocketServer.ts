@@ -25,6 +25,11 @@ export function notificationRoom(userId: string): string {
   return `notifications:${userId}`;
 }
 
+/** Room name for a hub's post feed channel */
+export function hubRoom(hubId: string): string {
+  return `hub:${hubId}`;
+}
+
 /** Subset of ClientWebSocketServer API used by this handler */
 export interface IClientWsBridge {
   joinRoom(ws: unknown, room: string): void;
@@ -170,7 +175,7 @@ export class BrightHubWebSocketHandler {
     session: WsSession,
     message: unknown,
   ): Promise<void> {
-    const msg = message as { room?: string; conversationId?: string };
+    const msg = message as { room?: string; conversationId?: string; hubId?: string };
     if (msg.conversationId) {
       const ok = await this.deps.isParticipant(
         msg.conversationId,
@@ -186,13 +191,17 @@ export class BrightHubWebSocketHandler {
         ws,
         notificationRoom(session.memberContext.memberId),
       );
+    } else if (msg.hubId) {
+      this.bridge.joinRoom(ws, hubRoom(msg.hubId));
     }
   }
 
   private handleUnsubscribe(ws: unknown, message: unknown): void {
-    const msg = message as { conversationId?: string };
+    const msg = message as { conversationId?: string; hubId?: string };
     if (msg.conversationId) {
       this.bridge.leaveRoom(ws, conversationRoom(msg.conversationId));
+    } else if (msg.hubId) {
+      this.bridge.leaveRoom(ws, hubRoom(msg.hubId));
     }
   }
 
@@ -265,6 +274,19 @@ export class BrightHubWebSocketHandler {
       type: 'notification:count',
       unreadCount,
     });
+  }
+
+  /**
+   * Broadcast a new post to all subscribers of the hub(s) it belongs to.
+   */
+  broadcastNewHubPost(post: { _id: string; hubIds?: string[]; authorId: string }): void {
+    if (!post.hubIds || post.hubIds.length === 0) return;
+    for (const hid of post.hubIds) {
+      this.bridge.broadcastToRoom(hubRoom(hid), {
+        type: 'hub:post:new',
+        post,
+      });
+    }
   }
 
   isUserOnline(userId: string): boolean {

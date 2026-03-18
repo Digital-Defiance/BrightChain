@@ -54,6 +54,33 @@ const createMockApplication = (storePath: string) => {
     ready: true,
     services: new Map(),
     plugins: {},
+    authProvider: {
+      verifyToken: async (token: string) => ({ userId: token || 'test-user' }),
+      findUserById: async (userId: string) => ({
+        id: userId,
+        accountStatus: 'Active',
+        email: 'test@example.com',
+        timezone: 'UTC',
+      }),
+      buildRequestUserDTO: async (userId: string) => ({
+        id: userId,
+        username: userId,
+        email: 'test@example.com',
+        roles: [],
+        rolePrivileges: {
+          admin: false,
+          member: true,
+          child: false,
+          system: false,
+        },
+        emailVerified: true,
+        timezone: 'UTC',
+        siteLanguage: 'en',
+        darkMode: false,
+        currency: 'USD',
+        directChallenge: false,
+      }),
+    },
     getModel: () => {
       throw new Error('not implemented');
     },
@@ -72,6 +99,13 @@ const createTestApp = (storePath: string): Express => {
 
   const app = express();
   app.use(express.json({ limit: '50mb' }));
+  // Inject a bearer token header so authenticateToken middleware passes
+  app.use((req, _res, next) => {
+    if (!req.headers.authorization) {
+      req.headers.authorization = 'Bearer test-user';
+    }
+    next();
+  });
   app.use('/api/scbl', controller.router);
 
   return app;

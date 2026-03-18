@@ -159,14 +159,14 @@ export class DeviceController<
   // ─── Route definitions ──────────────────────────────────────────────────
 
   protected initRouteDefinitions(): void {
-    const noAuth = {
-      useAuthentication: false,
+    const auth = {
+      useAuthentication: true,
       useCryptoAuthentication: false,
     };
 
     this.routeDefinitions = [
       routeConfig('post', '/provision', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'provisionDevice',
         openapi: {
           summary: 'Provision a new device',
@@ -186,7 +186,7 @@ export class DeviceController<
         },
       }),
       routeConfig('get', '/list', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'listDevices',
         openapi: {
           summary: 'List devices for a member',
@@ -202,7 +202,7 @@ export class DeviceController<
         },
       }),
       routeConfig('post', '/:id/revoke', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'revokeDevice',
         openapi: {
           summary: 'Revoke a device',
@@ -222,7 +222,7 @@ export class DeviceController<
         },
       }),
       routeConfig('put', '/:id/rename', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'renameDevice',
         openapi: {
           summary: 'Rename a device',

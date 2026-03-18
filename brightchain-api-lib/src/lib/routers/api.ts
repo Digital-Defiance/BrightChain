@@ -8,6 +8,7 @@ import {
   IBlockStore,
   IDiscoveryProtocol,
   IReconciliationService,
+  NodeIdSource,
   PermissionService,
 } from '@brightchain/brightchain-lib';
 import {
@@ -20,6 +21,11 @@ import {
   IThreadService,
   IUserProfileService,
 } from '@brightchain/brighthub-lib';
+import {
+  type IAllBurnbagControllerDeps,
+  registerBurnbagRoutesOnRouter,
+} from '@brightchain/digitalburnbag-api-lib';
+import type { INotificationService as IBurnbagNotificationService } from '@brightchain/digitalburnbag-lib';
 import { BrightDbApiRouter } from '@brightchain/node-express-suite';
 import { IECIESConfig } from '@digitaldefiance/ecies-lib';
 import { ECIESService, PlatformID } from '@digitaldefiance/node-ecies-lib';
@@ -27,6 +33,12 @@ import { KeyWrappingService } from '@digitaldefiance/node-express-suite';
 import { AppConstants } from '../appConstants';
 import type { IWriteAclApiManager } from '../auth/writeAclApiRouter';
 import { PoolDiscoveryService } from '../availability/poolDiscoveryService';
+import { AdminBlockController } from '../controllers/api/adminBlock';
+import { AdminChatController } from '../controllers/api/adminChat';
+import { AdminHubController } from '../controllers/api/adminHub';
+import { AdminMailController } from '../controllers/api/adminMail';
+import { AdminPassController } from '../controllers/api/adminPass';
+import { AdminUserController } from '../controllers/api/adminUser';
 import { BlocksController } from '../controllers/api/blocks';
 import {
   BrightHubConnectionController,
@@ -37,9 +49,11 @@ import {
 } from '../controllers/api/brighthub';
 import { BrightPassController } from '../controllers/api/brightpass';
 
+import { BrightTrustController } from '../controllers/api/brightTrust';
 import { CBLController } from '../controllers/api/cbl';
 import { ChannelController } from '../controllers/api/channels';
 import { ConversationController } from '../controllers/api/conversations';
+import { DashboardController } from '../controllers/api/dashboard';
 import { DocsController } from '../controllers/api/docs';
 import { EmailController } from '../controllers/api/emails';
 import { EnergyController } from '../controllers/api/energy';
@@ -52,12 +66,12 @@ import {
 } from '../controllers/api/introspection';
 import { MessagesController } from '../controllers/api/messages';
 import { NodesController } from '../controllers/api/nodes';
-import { QuorumController } from '../controllers/api/quorum';
 import { SCBLController } from '../controllers/api/scbl';
 import { SyncController } from '../controllers/api/sync';
 import { UnifiedNotificationController } from '../controllers/api/unifiedNotifications';
 import { UserController } from '../controllers/api/user';
 import { IBrightChainApplication } from '../interfaces';
+import { requireAuthWithRoles } from '../middlewares/authentication';
 import { EventNotificationSystem } from '../services/eventNotificationSystem';
 import { MessagePassingService } from '../services/messagePassingService';
 import { SESEmailService } from '../services/sesEmail';
@@ -82,6 +96,7 @@ export class ApiRouter<
   private readonly brightPassController: BrightPassController<TID>;
   private readonly channelController: ChannelController<TID>;
   private readonly conversationController: ConversationController<TID>;
+  private readonly dashboardController: DashboardController<TID>;
   private readonly docsController: DocsController<TID>;
   private readonly emailController: EmailController<TID>;
   private readonly energyController: EnergyController<TID>;
@@ -90,7 +105,7 @@ export class ApiRouter<
   private readonly i18nController: I18nController<TID>;
   private readonly messagesController: MessagesController<TID>;
   private readonly nodesController: NodesController<TID>;
-  private readonly quorumController: QuorumController<TID>;
+  private readonly brightTrustController: BrightTrustController<TID>;
   private readonly cblController: CBLController<TID>;
   private readonly scblController: SCBLController<TID>;
   private readonly syncController: SyncController<TID>;
@@ -101,6 +116,12 @@ export class ApiRouter<
   private readonly brightHubConnectionController: BrightHubConnectionController<TID>;
   private readonly brightHubTimelineController: BrightHubTimelineController<TID>;
   private readonly unifiedNotificationController: UnifiedNotificationController<TID>;
+  private readonly adminUserController: AdminUserController<TID>;
+  private readonly adminBlockController: AdminBlockController<TID>;
+  private readonly adminHubController: AdminHubController<TID>;
+  private readonly adminChatController: AdminChatController<TID>;
+  private readonly adminPassController: AdminPassController<TID>;
+  private readonly adminMailController: AdminMailController<TID>;
   private introspectionController: IntrospectionController<TID> | null = null;
   private readonly brightchainApplication: IBrightChainApplication<TID>;
   private readonly emailService: SESEmailService<TID>;
@@ -128,6 +149,7 @@ export class ApiRouter<
     this.brightPassController = new BrightPassController(application);
     this.channelController = new ChannelController(application);
     this.conversationController = new ConversationController(application);
+    this.dashboardController = new DashboardController(application);
     this.docsController = new DocsController(application);
     this.emailController = new EmailController(application);
     this.energyController = new EnergyController(application);
@@ -136,7 +158,7 @@ export class ApiRouter<
     this.i18nController = new I18nController(application);
     this.messagesController = new MessagesController(application);
     this.nodesController = new NodesController(application);
-    this.quorumController = new QuorumController(application);
+    this.brightTrustController = new BrightTrustController(application);
     this.cblController = new CBLController(application);
     this.scblController = new SCBLController(application);
     this.syncController = new SyncController(application);
@@ -155,6 +177,14 @@ export class ApiRouter<
     this.brightHubTimelineController = new BrightHubTimelineController(
       application,
     );
+
+    // Admin controllers
+    this.adminUserController = new AdminUserController(application);
+    this.adminBlockController = new AdminBlockController(application);
+    this.adminHubController = new AdminHubController(application);
+    this.adminChatController = new AdminChatController(application);
+    this.adminPassController = new AdminPassController(application);
+    this.adminMailController = new AdminMailController(application);
 
     if (
       application.environment.enabledFeatures.some(
@@ -211,7 +241,7 @@ export class ApiRouter<
     this.router.use('/health', this.healthController.router);
     this.router.use('/messages', this.messagesController.router);
     this.router.use('/nodes', this.nodesController.router);
-    this.router.use('/quorum', this.quorumController.router);
+    this.router.use('/brightTrust', this.brightTrustController.router);
     this.router.use('/cbl', this.cblController.router);
     this.router.use('/scbl', this.scblController.router);
     this.router.use('/sync', this.syncController.router);
@@ -220,6 +250,43 @@ export class ApiRouter<
     this.router.use(
       '/unified-notifications',
       this.unifiedNotificationController.router,
+    );
+
+    // Admin routes — all require admin role
+    const adminAuth = requireAuthWithRoles(
+      application.environment.jwtSecret,
+      'admin',
+    );
+    this.router.use(
+      '/admin/dashboard',
+      ...adminAuth,
+      this.dashboardController.router,
+    );
+    this.router.use(
+      '/admin/users',
+      ...adminAuth,
+      this.adminUserController.router,
+    );
+    this.router.use(
+      '/admin/blocks',
+      ...adminAuth,
+      this.adminBlockController.router,
+    );
+    this.router.use('/admin/hub', ...adminAuth, this.adminHubController.router);
+    this.router.use(
+      '/admin/chat',
+      ...adminAuth,
+      this.adminChatController.router,
+    );
+    this.router.use(
+      '/admin/pass',
+      ...adminAuth,
+      this.adminPassController.router,
+    );
+    this.router.use(
+      '/admin/mail',
+      ...adminAuth,
+      this.adminMailController.router,
     );
   }
 
@@ -261,6 +328,16 @@ export class ApiRouter<
    */
   public setAvailabilityService(service: IAvailabilityService): void {
     this.nodesController.setAvailabilityService(service);
+    this.dashboardController.setAvailabilityService(service);
+  }
+
+  /**
+   * Set the local node ID on the dashboard controller.
+   * Called during app initialization so the dashboard always reports
+   * a proper node identity even before AvailabilityService is wired.
+   */
+  public setDashboardLocalNodeId(nodeId: string, source?: NodeIdSource): void {
+    this.dashboardController.setLocalNodeId(nodeId, source);
   }
 
   /**
@@ -442,6 +519,15 @@ export class ApiRouter<
   }
 
   /**
+   * Set the NotificationService for the Burnbag module in the unified notification controller.
+   */
+  public setBurnbagNotificationService(
+    service: IBurnbagNotificationService<TID>,
+  ): void {
+    this.unifiedNotificationController.setBurnbagNotificationService(service);
+  }
+
+  /**
    * Set the ConnectionService for the BrightHub connection controller.
    * @requirements 34.1-34.22
    */
@@ -580,5 +666,28 @@ export class ApiRouter<
     const { createWriteAclApiRouter } = require('../auth/writeAclApiRouter');
     const writeAclRouter = createWriteAclApiRouter(aclManager, auditLogger);
     this.router.use('/', writeAclRouter);
+  }
+
+  /**
+   * Mount Digital Burnbag file platform routes.
+   * Only mounts when the DigitalBurnbag feature is enabled.
+   * Routes are mounted at `/burnbag/*` (e.g. `/burnbag/upload`, `/burnbag/files`).
+   *
+   * @param deps - All controller dependencies for the burnbag platform
+   */
+  public mountDigitalBurnbagRoutes(deps: IAllBurnbagControllerDeps<TID>): void {
+    if (
+      !this.brightchainApplication.environment.enabledFeatures.some(
+        (f) => f === BrightChainFeatures.DigitalBurnbag,
+      )
+    ) {
+      return;
+    }
+    registerBurnbagRoutesOnRouter<TID>(
+      this.router,
+      this.brightchainApplication,
+      deps,
+      '/burnbag',
+    );
   }
 }

@@ -108,7 +108,7 @@ Potential additions to the demo:
 - **Network Simulation**: Simulate distributed storage across nodes
 - **Encryption Demo**: Show encrypted block creation
 - **Voting Integration**: Demonstrate homomorphic voting capabilities
-- **Quorum Visualization**: Show brokered anonymity in action
+- **BrightTrust Visualization**: Show brokered anonymity in action
 
 ---
 

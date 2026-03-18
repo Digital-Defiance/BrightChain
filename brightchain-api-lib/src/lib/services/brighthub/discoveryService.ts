@@ -601,7 +601,7 @@ export class DiscoveryService implements IDiscoveryService {
   async getConnectionInsights(
     userId: string,
     connectionId: string,
-    period?: InsightPeriod,
+    _period?: InsightPeriod,
   ): Promise<IBaseConnectionInsights<string>> {
     // Verify follow relationship exists
     const follow = await this.followsCollection

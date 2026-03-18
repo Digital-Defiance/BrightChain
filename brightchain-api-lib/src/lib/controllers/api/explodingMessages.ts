@@ -142,14 +142,14 @@ export class ExplodingMessagesController<
   // ─── Route definitions ──────────────────────────────────────────────────
 
   protected initRouteDefinitions(): void {
-    const noAuth = {
-      useAuthentication: false,
+    const auth = {
+      useAuthentication: true,
       useCryptoAuthentication: false,
     };
 
     this.routeDefinitions = [
       routeConfig('put', '/:id/set-expiration', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'setExpiration',
         openapi: {
           summary: 'Set message expiration',
@@ -173,7 +173,7 @@ export class ExplodingMessagesController<
         },
       }),
       routeConfig('post', '/:id/mark-read', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'markRead',
         openapi: {
           summary: 'Mark message as read',
@@ -193,7 +193,7 @@ export class ExplodingMessagesController<
         },
       }),
       routeConfig('get', '/expired', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getExpired',
         openapi: {
           summary: 'List expired messages',
@@ -209,7 +209,7 @@ export class ExplodingMessagesController<
         },
       }),
       routeConfig('post', '/:id/explode', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'explodeMessage',
         openapi: {
           summary: 'Force-explode a message',
@@ -229,7 +229,7 @@ export class ExplodingMessagesController<
         },
       }),
       routeConfig('get', '/:id/expiration-info', {
-        ...noAuth,
+        ...auth,
         handlerKey: 'getExpirationInfo',
         openapi: {
           summary: 'Get expiration info',

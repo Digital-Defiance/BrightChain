@@ -74,7 +74,7 @@ export class PooledStoreAdapter implements IBlockStore {
 
   public async getRandomBlocks(
     count: number,
-    blockSize: BlockSize,
+    _blockSize: BlockSize,
   ): Promise<Checksum[]> {
     return this.inner.getRandomBlocksFromPool(this.poolId, count);
   }

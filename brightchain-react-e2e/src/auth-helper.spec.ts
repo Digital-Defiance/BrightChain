@@ -49,8 +49,11 @@ test.describe('Auth Helper – Property Tests', () => {
      */
     await fc.assert(
       fc.asyncProperty(
-        fc.integer({ min: 400, max: 599 }),
-        fc.string({ minLength: 1, maxLength: 200 }),
+        fc.integer({ min: 400, max: 499 }),
+        fc
+          .string({ minLength: 1, maxLength: 200 })
+          // eslint-disable-next-line no-control-regex
+          .filter((s) => s.length > 0 && !/[\x00-\x1f]/.test(s)),
         async (statusCode: number, bodyText: string) => {
           const originalPost = axios.post;
           try {

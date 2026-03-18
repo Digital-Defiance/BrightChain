@@ -68,6 +68,11 @@ export interface DocumentCollection<T extends DocumentRecord> {
 
 export interface DocumentStore {
   collection<T extends DocumentRecord>(name: string): DocumentCollection<T>;
+  /**
+   * Run a callback within a transaction. Commits on success, aborts on error.
+   * Optional — only available when backed by BrightDb or similar transactional store.
+   */
+  withTransaction?<R>(fn: (session: unknown) => Promise<R>): Promise<R>;
 }
 
 /**
