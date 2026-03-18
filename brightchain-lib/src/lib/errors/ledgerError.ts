@@ -21,6 +21,9 @@ export enum LedgerErrorType {
   GovernanceSafetyViolation = 'GovernanceSafetyViolation',
   InvalidStateTransition = 'InvalidStateTransition',
   InvalidGovernanceTarget = 'InvalidGovernanceTarget',
+  MerkleProofFailed = 'MerkleProofFailed',
+  ConsistencyProofFailed = 'ConsistencyProofFailed',
+  MerkleReconstructionFailed = 'MerkleReconstructionFailed',
 }
 
 export class LedgerError extends Error {

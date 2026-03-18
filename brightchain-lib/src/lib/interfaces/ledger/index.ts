@@ -17,3 +17,9 @@ export type { IQuorumPolicy } from './quorumPolicy';
 export { GovernanceActionType } from './governanceAction';
 export type { IGovernanceAction } from './governanceAction';
 export type { IGovernancePayload } from './governancePayload';
+
+// Merkle tree proofs
+export { MerkleDirection } from './merkleProof';
+export type { IMerkleProofStep, IMerkleProof } from './merkleProof';
+export type { IConsistencyProof } from './consistencyProof';
+export type { IProofVerificationResult } from './proofVerificationResult';

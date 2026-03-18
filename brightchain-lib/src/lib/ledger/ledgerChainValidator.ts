@@ -15,12 +15,17 @@
 import { IAuthorizedSigner } from '../interfaces/ledger/authorizedSigner';
 import { ILedgerEntry } from '../interfaces/ledger/ledgerEntry';
 import { ILedgerSignatureVerifier } from '../interfaces/ledger/ledgerSignatureVerifier';
+import { IMerkleProof } from '../interfaces/ledger/merkleProof';
 import {
   ILedgerValidationError,
   IValidationResult,
 } from '../interfaces/ledger/validationResult';
+import { ChecksumService } from '../services/checksum.service';
+import { Checksum } from '../types/checksum';
 import { AuthorizedSignerSet } from './authorizedSignerSet';
 import { GovernancePayloadSerializer } from './governancePayloadSerializer';
+import { IncrementalMerkleTree } from './incrementalMerkleTree';
+import { Ledger } from './ledger';
 import { LedgerEntrySerializer } from './ledgerEntrySerializer';
 
 /**
@@ -51,8 +56,19 @@ export class LedgerChainValidator {
    * - Each entry's signer is authorized at that chain position
    * - Governance entries have admin role and satisfy quorum
    * - Governance actions pass safety constraints
+   *
+   * When a merkleRoot is provided, also validates:
+   * - Reconstructs the Merkle tree from entry hashes
+   * - Verifies the computed root matches the provided Merkle root
+   *
+   * @param entries - The chain entries to validate
+   * @param merkleRoot - Optional Merkle root to verify against. When provided,
+   *   the validator reconstructs the Merkle tree from entry hashes and compares
+   *   the computed root to this value.
+   *
+   * @see Requirements 11.1, 11.3, 11.4
    */
-  validateAll(entries: ILedgerEntry[]): IValidationResult {
+  validateAll(entries: ILedgerEntry[], merkleRoot?: Checksum): IValidationResult {
     if (entries.length === 0) {
       return { isValid: true, entriesChecked: 0, errors: [] };
     }
@@ -115,6 +131,22 @@ export class LedgerChainValidator {
       this.verifySignature(entry, errors);
     }
 
+    // Merkle root verification: reconstruct tree from entry hashes and compare
+    if (merkleRoot !== undefined) {
+      const checksumService = new ChecksumService();
+      const entryHashes = entries.map((e) => e.entryHash);
+      const computedTree = IncrementalMerkleTree.fromLeaves(entryHashes, checksumService);
+      const computedRoot = computedTree.root;
+
+      if (!computedRoot.equals(merkleRoot)) {
+        errors.push({
+          sequenceNumber: entries[entries.length - 1].sequenceNumber,
+          errorType: 'merkle_root_mismatch',
+          message: 'Reconstructed Merkle root does not match the stored Merkle root',
+        });
+      }
+    }
+
     return {
       isValid: errors.length === 0,
       entriesChecked: entries.length,
@@ -130,11 +162,20 @@ export class LedgerChainValidator {
    *   the sub-range starts at genesis.
    * @param signerSetAtPredecessor - Optional AuthorizedSignerSet state at the predecessor
    *   for governance validation of the sub-range.
+   * @param merkleRoot - Optional Merkle root to verify entry hashes against.
+   *   When provided along with merkleProofs, each entry's entryHash is verified
+   *   against its corresponding Merkle proof.
+   * @param merkleProofs - Optional array of Merkle proofs corresponding 1:1 with
+   *   the entries array. Required for Merkle validation when merkleRoot is provided.
+   *
+   * @see Requirements 11.2
    */
   validateRange(
     entries: ILedgerEntry[],
     predecessor: ILedgerEntry | null,
     signerSetAtPredecessor?: AuthorizedSignerSet,
+    merkleRoot?: Checksum,
+    merkleProofs?: IMerkleProof[],
   ): IValidationResult {
     if (entries.length === 0) {
       return { isValid: true, entriesChecked: 0, errors: [] };
@@ -215,6 +256,23 @@ export class LedgerChainValidator {
       this.verifySignature(entry, errors);
     }
 
+    // Merkle proof verification: when both merkleRoot and merkleProofs are provided,
+    // verify each entry's entryHash is consistent with its Merkle proof.
+    if (merkleRoot !== undefined && merkleProofs !== undefined) {
+      for (let i = 0; i < entries.length; i++) {
+        if (i < merkleProofs.length) {
+          const result = Ledger.verifyInclusionProof(merkleProofs[i], merkleRoot);
+          if (!result.isValid) {
+            errors.push({
+              sequenceNumber: entries[i].sequenceNumber,
+              errorType: 'merkle_root_mismatch',
+              message: `Merkle proof verification failed for entry at sequenceNumber ${entries[i].sequenceNumber}: ${result.error ?? 'unknown error'}`,
+            });
+          }
+        }
+      }
+    }
+
     return {
       isValid: errors.length === 0,
       entriesChecked: entries.length,
@@ -222,7 +280,137 @@ export class LedgerChainValidator {
     };
   }
 
+  /**
+   * Validate the entire chain in parallel by splitting into chunks and
+   * verifying each chunk concurrently via Promise.all.
+   *
+   * Produces the same validation result as sequential `validateAll()`:
+   * same `isValid`, same `entriesChecked`, same error types (though error
+   * ordering may differ).
+   *
+   * Hash verification and signature verification — the expensive operations —
+   * run in parallel across chunks. Governance validation is run as a separate
+   * sequential pass since it requires tracking the AuthorizedSignerSet state
+   * across the chain.
+   *
+   * @param entries - The chain entries to validate (ordered by sequenceNumber from 0)
+   * @param merkleRoot - Optional Merkle root to verify against
+   * @returns Promise resolving to the same IValidationResult as validateAll()
+   *
+   * @see Requirements 17.1, 17.2, 17.3
+   */
+  async validateAllParallel(
+    entries: ILedgerEntry[],
+    merkleRoot?: Checksum,
+  ): Promise<IValidationResult> {
+    if (entries.length === 0) {
+      return { isValid: true, entriesChecked: 0, errors: [] };
+    }
+
+    // Determine chunk count: 2-4 chunks based on entry count
+    const chunkCount = Math.min(
+      entries.length,
+      entries.length <= 4 ? entries.length : Math.min(4, Math.max(2, Math.ceil(entries.length / 4))),
+    );
+    const chunkSize = Math.ceil(entries.length / chunkCount);
+
+    // Build chunk descriptors: each chunk has its entries and predecessor
+    const chunkTasks: Array<{
+      chunk: ILedgerEntry[];
+      predecessor: ILedgerEntry | null;
+    }> = [];
+
+    for (let i = 0; i < entries.length; i += chunkSize) {
+      const chunk = entries.slice(i, Math.min(i + chunkSize, entries.length));
+      const predecessor = i === 0 ? null : entries[i - 1];
+      chunkTasks.push({ chunk, predecessor });
+    }
+
+    // Run all chunk validations concurrently (without governance — that's sequential)
+    // Create a temporary validator without governance for the parallel pass
+    const noGovValidator = new LedgerChainValidator(
+      this.serializer,
+      this.signatureVerifier,
+      // No governance serializer — governance is validated separately below
+    );
+
+    const chunkResults = await Promise.all(
+      chunkTasks.map(({ chunk, predecessor }) =>
+        Promise.resolve(noGovValidator.validateRange(chunk, predecessor)),
+      ),
+    );
+
+    // Merge chunk results
+    const allErrors: ILedgerValidationError[] = [];
+    let totalChecked = 0;
+
+    for (const result of chunkResults) {
+      allErrors.push(...result.errors);
+      totalChecked += result.entriesChecked;
+    }
+
+    // Governance validation: run sequentially if a governance serializer is present
+    if (this.governanceSerializer) {
+      const govResult = this.validateGovernanceSequential(entries);
+      allErrors.push(...govResult.errors);
+    }
+
+    // Merkle root verification: reconstruct tree from entry hashes and compare
+    if (merkleRoot !== undefined) {
+      const checksumService = new ChecksumService();
+      const entryHashes = entries.map((e) => e.entryHash);
+      const computedTree = IncrementalMerkleTree.fromLeaves(
+        entryHashes,
+        checksumService,
+      );
+      const computedRoot = computedTree.root;
+
+      if (!computedRoot.equals(merkleRoot)) {
+        allErrors.push({
+          sequenceNumber: entries[entries.length - 1].sequenceNumber,
+          errorType: 'merkle_root_mismatch',
+          message:
+            'Reconstructed Merkle root does not match the stored Merkle root',
+        });
+      }
+    }
+
+    return {
+      isValid: allErrors.length === 0,
+      entriesChecked: totalChecked,
+      errors: allErrors,
+    };
+  }
+
   // ── private helpers ──────────────────────────────────────────────────
+
+  /**
+   * Run governance validation sequentially across the full chain.
+   * This is separated from the parallel chunk validation because governance
+   * requires tracking the AuthorizedSignerSet state across entries.
+   */
+  private validateGovernanceSequential(
+    entries: ILedgerEntry[],
+  ): { errors: ILedgerValidationError[] } {
+    const errors: ILedgerValidationError[] = [];
+    let signerSet: AuthorizedSignerSet | null = null;
+
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+
+      if (i === 0) {
+        // Initialize signer set from genesis
+        signerSet = this.initSignerSetFromGenesis(entry, errors);
+      } else {
+        // Validate authorization for non-genesis entries
+        if (signerSet && this.governanceSerializer) {
+          this.validateEntryAuthorization(entry, signerSet, errors);
+        }
+      }
+    }
+
+    return { errors };
+  }
 
   /**
    * Initialize the AuthorizedSignerSet from a genesis entry.

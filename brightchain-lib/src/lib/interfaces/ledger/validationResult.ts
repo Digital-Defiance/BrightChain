@@ -20,7 +20,8 @@ export type LedgerValidationErrorType =
   | 'unauthorized_governance'
   | 'quorum_not_met'
   | 'governance_safety_violation'
-  | 'invalid_governance_payload';
+  | 'invalid_governance_payload'
+  | 'merkle_root_mismatch';
 
 /** Describes a single validation failure at a specific entry. */
 export interface ILedgerValidationError {
