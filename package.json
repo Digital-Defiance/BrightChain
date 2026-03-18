@@ -31,6 +31,7 @@
     "tools"
   ],
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "new:secret": "node -e \"console.log (require('crypto').randomBytes(32).toString ('hex'));\"",
     "build:all": "NODE_OPTIONS='--max-old-space-size=16384' NODE_ENV=production npx nx run-many --target=build --all --configuration=production",
     "build:all:dev": "NODE_OPTIONS='--max-old-space-size=16384' NODE_ENV=development npx nx run-many --target=build --all --configuration=development",
