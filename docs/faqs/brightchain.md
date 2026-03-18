@@ -1,7 +1,7 @@
 ---
 layout: default
 title: "BrightChain FAQ"
-parent: 'Frequently Asked Questions'
+parent: FAQs
 ---
 
 # BrightChain: The Evolutionary Successor to OFFSystem

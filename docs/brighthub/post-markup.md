@@ -1,8 +1,3 @@
----
-title: "BrightHub Social Network - Font Awesome Post Markup Syntax"
-parent: "Applications"
-nav_order: 4
----
 ## Icon Markup
 
 - Basic Icon: `{{heart}}` renders as a regular heart icon

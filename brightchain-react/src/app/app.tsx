@@ -226,6 +226,9 @@ const App: FC = () => {
 
 const InnerApp: FC = () => {
   const { tBranded: t } = useI18n();
+  const digitalBurnbagMenu = createMenuType(
+    String(IncludeOnMenu.DigitalBurnbagMenu),
+  );
   const chatMenu = createMenuType(String(IncludeOnMenu.BrightChatMenu));
   const hubMenu = createMenuType(String(IncludeOnMenu.BrightHubMenu));
   const mailMenu = createMenuType(String(IncludeOnMenu.BrightMailMenu));
@@ -395,7 +398,15 @@ const InnerApp: FC = () => {
     ],
   };
 
+  const digitalBurnbagMenuConfig: IMenuConfig = {
+    menuType: digitalBurnbagMenu,
+    menuIcon: <FontAwesomeIcon icon={faShredder} />,
+    priority: 125,
+    options: [],
+  };
+
   const featureMenuMap: [BrightChainFeatures, IMenuConfig][] = [
+    [BrightChainFeatures.DigitalBurnbag, digitalBurnbagMenuConfig],
     [BrightChainFeatures.BrightMail, brightMailMenuConfig],
     [BrightChainFeatures.BrightPass, brightPassMenuConfig],
     [BrightChainFeatures.BrightHub, brightHubMenuConfig],
